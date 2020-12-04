@@ -6,6 +6,7 @@ using Sqlbi.Bravo.Core.Services;
 using Sqlbi.Bravo.Core.Services.Interfaces;
 using Sqlbi.Bravo.Core.Settings.Interfaces;
 using Sqlbi.Bravo.UI.Framework.ViewModels;
+using Sqlbi.Bravo.UI.Views;
 using System;
 using System.Collections.ObjectModel;
 using System.Windows;
@@ -27,6 +28,9 @@ namespace Sqlbi.Bravo.UI.ViewModels
             _watcher.OnConnectionStateChanged += OnAnalysisServicesConnectionStateChanged;
 
             PrintDebug();
+
+            Tabs = new ObservableCollection<TabItem>() { TabItem.Create() };
+            SelectedTab = Tabs[0];
         }
 
         public double WindowMinWidth => 800D;
@@ -36,6 +40,52 @@ namespace Sqlbi.Bravo.UI.ViewModels
         public string WindowTitle => AppConstants.ApplicationNameLabel;
 
         public ObservableCollection<string> OutputMessages { get; set; } = new ObservableCollection<string>();
+
+
+        public ObservableCollection<NavigationItem> MenuItems { get; } = new ObservableCollection<NavigationItem>()
+        {
+            new NavigationItem{ Name = "Format Dax", Glyph = "\uE8A5", NavigationPage = typeof(SelectConnectionType) },
+            new NavigationItem{ Name = "Analyze Model", Glyph = "\uE8A5", NavigationPage = null },
+            new NavigationItem{ Name = "Manage dates", Glyph = "\uEC92", ShowComingSoon = true },
+            new NavigationItem{ Name = "Export data", Glyph = "\uE1AD", ShowComingSoon = true },
+            new NavigationItem{ Name = "Best practices", Glyph = "\uE19F", ShowComingSoon = true },
+            new NavigationItem{ Name = "Optimize model", Glyph = "\uEC4A", ShowComingSoon = true },
+        };
+
+        public ObservableCollection<NavigationItem> OptionMenuItems { get; } = new ObservableCollection<NavigationItem>()
+        {
+            new NavigationItem{ Name = "Settings", Glyph = "\uE713", NavigationPage = typeof(SettingsViewModel) }
+        };
+
+        private ObservableCollection<TabItem> _tabs;
+
+        public ObservableCollection<TabItem> Tabs
+        {
+            get
+            {
+                return _tabs;
+            }
+
+            set
+            {
+                SetProperty(ref _tabs, value);
+            }
+        }
+
+        private TabItem _selectedTab;
+
+        public TabItem SelectedTab
+        {
+            get
+            {
+                return _selectedTab;
+            }
+
+            set
+            {
+                SetProperty(ref _selectedTab, value);
+            }
+        }
 
         private void OnAnalysisServicesEvent(object sender, AnalysisServicesEventWatcherEventArgs e)
         {

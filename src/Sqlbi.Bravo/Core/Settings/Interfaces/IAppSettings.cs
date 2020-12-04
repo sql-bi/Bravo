@@ -1,5 +1,4 @@
 ﻿using Serilog.Events;
-using System.Security;
 
 namespace Sqlbi.Bravo.Core.Settings.Interfaces
 {
@@ -18,5 +17,7 @@ namespace Sqlbi.Bravo.Core.Settings.Interfaces
         string ProxyPassword { get; set; }
 
         bool UIShellBringToForegroundOnParentProcessMainWindowScreen { get; set; }
+
+        string ThemeName { get; set; }
     }
 }

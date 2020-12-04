@@ -11,6 +11,8 @@ using Sqlbi.Bravo.Core.Services;
 using Sqlbi.Bravo.Core.Services.Interfaces;
 using Sqlbi.Bravo.Core.Settings;
 using Sqlbi.Bravo.Core.Settings.Interfaces;
+using Sqlbi.Bravo.UI.Services;
+using Sqlbi.Bravo.UI.Services.Interfaces;
 using Sqlbi.Bravo.UI.ViewModels;
 using System;
 using System.IO;
@@ -110,6 +112,7 @@ namespace Sqlbi.Bravo
                 services.AddSingleton<IApplicationInstanceService, ApplicationInstanceService>();
                 services.AddSingleton<IGlobalSettingsProviderService, GlobalSettingsProviderService>();
                 services.AddSingleton<IDaxFormatterService, DaxFormatterService>();
+                services.AddSingleton<IThemeSelectorService, ThemeSelectorService>();
                 services.AddSingleton<ShellViewModel>();
                 services.AddSingleton<SideMenuViewModel>();
                 services.AddSingleton<SettingsViewModel>();
