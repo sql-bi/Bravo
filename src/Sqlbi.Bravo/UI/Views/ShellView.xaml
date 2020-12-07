@@ -50,8 +50,9 @@
 
         <DataTemplate x:Key="TabItemTemplate" DataType="{x:Type app_ui_viewmodels:TabItem}">
             <Grid>
-                <Frame Source="{Binding ContentPageSource, Mode=OneWay, Converter={app_ui_framework_valueconverters:TypePageConverter}}" />
-                <!--<Frame NavigationUIVisibility="Hidden" Source="/UI/Views/SelectConnectionType.xaml" />-->
+                <Frame
+                    Source="{Binding ContentPageSource, Mode=OneWay, Converter={app_ui_framework_valueconverters:TypePageConverter}}"
+                    NavigationUIVisibility="Hidden" />
             </Grid>
         </DataTemplate>
     </mah:MetroWindow.Resources>
@@ -68,12 +69,14 @@
         HamburgerButtonName="Open or close menu"
         IsPaneOpen="False"
         DisplayMode="CompactInline"
+        ItemCommand="{Binding ItemSelectedCommand}"
         ItemsSource="{Binding MenuItems}"
-        ItemClick="MenuItemClick"
-        OptionsItemsSource="{Binding OptionMenuItems}"
         ItemTemplate="{StaticResource MenuItemTemplate}"
+        SelectedItem="{Binding SelectedItem}"
+        OptionsItemCommand="{Binding ItemSelectedCommand}"
+        OptionsItemsSource="{Binding OptionMenuItems}"
         OptionsItemTemplate="{StaticResource MenuItemTemplate}"
-        OptionsItemClick="OptionsItemClick">
+        SelectedOptionsItem="{Binding SelectedOptionsItem}" >
         <!--<mah:HamburgerMenu.ItemTemplate>
                 <DataTemplate DataType="{x:Type app_ui_viewmodels:NavigationItem}">
                 <Grid Height="48">

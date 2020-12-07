@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Sqlbi.Bravo.UI.ViewModels;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -37,14 +38,25 @@ namespace Sqlbi.Bravo.UI.Views
             //await ShellWindow.Instance.ShowMetroDialogAsync(_customDialog);
         }
 
-        private void AttachToWindowClicked(object sender, System.Windows.RoutedEventArgs e)
+        // TODO: also need to set this when app  launched this way
+        private void AttachToWindowClicked(object sender, RoutedEventArgs e)
         {
+            var vm = DataContext as ShellViewModel;
 
+            // TODO: Get title from parent process
+            vm.SelectedTab.ConnectionName = "TOFIX: Title from ParentProcess";
+
+            vm.SelectedTab.ConnectionType = BiConnectionType.ActivePowerBiWindow;
+            vm.SelectedTab.ContentPageSource = vm.SelectedItem.NavigationPage;
         }
 
-        private void UseDummyDataClicked(object sender, System.Windows.RoutedEventArgs e)
+        private void UseDummyDataClicked(object sender, RoutedEventArgs e)
         {
+            var vm = DataContext as ShellViewModel;
 
+            vm.SelectedTab.ConnectionName = "DEMO DATA";
+            vm.SelectedTab.ConnectionType = BiConnectionType.DemoMode;
+            vm.SelectedTab.ContentPageSource = vm.SelectedItem.NavigationPage;
         }
     }
 }

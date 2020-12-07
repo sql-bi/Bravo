@@ -6,7 +6,8 @@
       xmlns:local="clr-namespace:Sqlbi.Bravo.UI.Views"
       mc:Ignorable="d" 
       d:DesignHeight="450" d:DesignWidth="800"
-      Title="SelectConnectionType">
+      Title="SelectConnectionType"
+        DataContext="{Binding Source={StaticResource ViewModelLocator}, Path=ShellViewModel}">
     <Page.Resources>
         <Style x:Key="ConnectionButton" TargetType="Button">
             <Setter Property="Background" Value="Transparent" />
@@ -30,7 +31,7 @@
         HorizontalAlignment="Stretch"
         VerticalAlignment="Stretch">
 
-        <TextBlock FontWeight="SemiBold" Style="{StaticResource HeaderTextBlockStyle}">Welcome to Bravo for Power BI</TextBlock>
+        <TextBlock FontWeight="SemiBold" Style="{StaticResource SubheaderTextBlockStyle}">Welcome to Bravo for Power BI</TextBlock>
         <Button
             HorizontalAlignment="Right"
             VerticalAlignment="Top"
