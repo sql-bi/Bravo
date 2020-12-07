@@ -1,60 +1,130 @@
-﻿<Page x:Class="Sqlbi.Bravo.UI.Views.SettingsView"
+﻿<simpleChildWindow:ChildWindow
+      x:Class="Sqlbi.Bravo.UI.Views.SettingsView"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-      xmlns:local="clr-namespace:Sqlbi.Bravo.UI.Views"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       xmlns:app_ui_framework_properties="clr-namespace:Sqlbi.Bravo.UI.Framework.Properties"
+      xmlns:simpleChildWindow="http://metro.mahapps.com/winfx/xaml/simplechildwindow"
+      xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
+      xmlns:conv="clr-namespace:Sqlbi.Bravo.UI.Framework.ValueConverters"
+      xmlns:dataModel="clr-namespace:Sqlbi.Bravo.UI.DataModel"
       mc:Ignorable="d"
       d:DesignHeight="450"
       d:DesignWidth="800"
-      Title="Connect"
       x:Name="SettingsPage"
+      Title="Settings"
+      Padding="16"
       DataContext="{Binding Source={StaticResource ViewModelLocator}, Path=SettingsViewModel}">
-    <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+
+    <simpleChildWindow:ChildWindow.Resources>
+        <conv:EnumToBooleanConverter x:Key="EnumToBooleanConverter" EnumType="dataModel:AppTheme" />
+    </simpleChildWindow:ChildWindow.Resources>
+    <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
+        <ScrollViewer Grid.Row="0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
 
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto" />
-            <ColumnDefinition Width="Auto" />
-        </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0">
 
-        <Label Grid.Row="0" Grid.Column="0" FontWeight="Bold">Key</Label>
-        <Label Grid.Row="0" Grid.Column="1" FontWeight="Bold">Value</Label>
-        <Label Grid.Row="1" Grid.Column="0" FontWeight="Bold">TelemetryEnabled</Label>
-        <CheckBox Grid.Row="1" Grid.Column="1" IsChecked="{Binding TelemetryEnabled}" />
-        <Label Grid.Row="2" Grid.Column="0" FontWeight="Bold">TelemetryLevel</Label>
-        <ComboBox Grid.Row="2" Grid.Column="1" ItemsSource="{Binding TelemetryLevels}" SelectedItem="{Binding TelemetryLevel}" />
-        <Label Grid.Row="3" Grid.Column="0" FontWeight="Bold">ProxyUseSystem</Label>
-        <CheckBox Grid.Row="3" Grid.Column="1" IsChecked="{Binding ProxyUseSystem}" />
-        <Label Grid.Row="4" Grid.Column="0" FontWeight="Bold">ProxyAddress</Label>
-        <TextBox Grid.Row="4" Grid.Column="1" IsEnabled="{Binding ProxyIsEnabled}" Text="{Binding ProxyAddress}" />
-        <Label Grid.Row="5" Grid.Column="0" FontWeight="Bold">ProxyUser</Label>
-        <TextBox Grid.Row="5" Grid.Column="1" IsEnabled="{Binding ProxyIsEnabled}" Text="{Binding ProxyUser}" />
-        <Label Grid.Row="6" Grid.Column="0" FontWeight="Bold">ProxyPassword</Label>
-        <PasswordBox Grid.Row="6" Grid.Column="1" IsEnabled="{Binding ProxyIsEnabled}" x:Name="ProxyPassword" />
-        <Label Grid.Row="7" Grid.Column="0" FontWeight="Bold">UIShellBringToForegroundOnParentProcessMainWindowScreen</Label>
-        <CheckBox Grid.Row="7" Grid.Column="1" IsChecked="{Binding UIShellBringToForegroundOnParentProcessMainWindowScreen}" />
+                    <TextBlock
+                        Style="{StaticResource BodyTextBlockStyle}"
+                        Text="Theme" />
 
-        <Button Grid.Row="8" Height="30" Width="Auto"
+                    <RadioButton
+                            GroupName="AppTheme"
+                            Content="Light"
+                            IsChecked="{Binding Theme, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Light}">
+                        <i:Interaction.Triggers>
+                            <i:EventTrigger EventName="Checked">
+                                <i:InvokeCommandAction Command="{Binding SetThemeCommand}" CommandParameter="Light" />
+                            </i:EventTrigger>
+                        </i:Interaction.Triggers>
+                    </RadioButton>
+                    <RadioButton
+                            GroupName="AppTheme"
+                            Content="Dark"
+                            IsChecked="{Binding Theme, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Dark}">
+                        <i:Interaction.Triggers>
+                            <i:EventTrigger EventName="Checked">
+                                <i:InvokeCommandAction Command="{Binding SetThemeCommand}" CommandParameter="Dark" />
+                            </i:EventTrigger>
+                        </i:Interaction.Triggers>
+                    </RadioButton>
+                    <RadioButton
+                            GroupName="AppTheme"
+                            Content="Default"
+                            IsChecked="{Binding Theme, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Default}">
+                        <i:Interaction.Triggers>
+                            <i:EventTrigger EventName="Checked">
+                                <i:InvokeCommandAction Command="{Binding SetThemeCommand}" CommandParameter="Default" />
+                            </i:EventTrigger>
+                        </i:Interaction.Triggers>
+                    </RadioButton>
+
+                    <TextBlock
+                    Text="{Binding VersionDescription, Mode=OneWay}"
+                    Style="{StaticResource BodyTextBlockStyle}" />
+
+                </StackPanel>
+
+                <Grid Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <Label Grid.Row="0" Grid.Column="0" FontWeight="Bold">Key</Label>
+                    <Label Grid.Row="0" Grid.Column="1" FontWeight="Bold">Value</Label>
+                    <Label Grid.Row="1" Grid.Column="0" FontWeight="Bold">TelemetryEnabled</Label>
+                    <CheckBox Grid.Row="1" Grid.Column="1" IsChecked="{Binding TelemetryEnabled}" />
+                    <Label Grid.Row="2" Grid.Column="0" FontWeight="Bold">TelemetryLevel</Label>
+                    <ComboBox Grid.Row="2" Grid.Column="1" ItemsSource="{Binding TelemetryLevels}" SelectedItem="{Binding TelemetryLevel}" />
+                    <Label Grid.Row="3" Grid.Column="0" FontWeight="Bold">ProxyUseSystem</Label>
+                    <CheckBox Grid.Row="3" Grid.Column="1" IsChecked="{Binding ProxyUseSystem}" />
+                    <Label Grid.Row="4" Grid.Column="0" FontWeight="Bold">ProxyAddress</Label>
+                    <TextBox Grid.Row="4" Grid.Column="1" IsEnabled="{Binding ProxyIsEnabled}" Text="{Binding ProxyAddress}" />
+                    <Label Grid.Row="5" Grid.Column="0" FontWeight="Bold">ProxyUser</Label>
+                    <TextBox Grid.Row="5" Grid.Column="1" IsEnabled="{Binding ProxyIsEnabled}" Text="{Binding ProxyUser}" />
+                    <Label Grid.Row="6" Grid.Column="0" FontWeight="Bold">ProxyPassword</Label>
+                    <PasswordBox Grid.Row="6" Grid.Column="1" IsEnabled="{Binding ProxyIsEnabled}" x:Name="ProxyPassword" />
+                    <Label Grid.Row="7" Grid.Column="0" FontWeight="Bold">UIShellBringToForegroundOnParentProcessMainWindowScreen</Label>
+                    <CheckBox Grid.Row="7" Grid.Column="1" IsChecked="{Binding UIShellBringToForegroundOnParentProcessMainWindowScreen}" />
+
+                    <Button Grid.Row="8" Height="30" Width="Auto"
                 Style="{StaticResource SpinningIconButton}" 
                 Command="{Binding SaveCommand}"
                 CommandParameter="{Binding ElementName=SettingsPage}" 
                 Content="Save"
                 app_ui_framework_properties:IsBusyAttachedProperty.Value="{Binding SaveCommandIsRunning}" />
+
+                </Grid>
+            </Grid>
+        </ScrollViewer>
+
+        <Button Grid.Row="1" Margin="16" x:Name="CloseButton" Width="80" HorizontalAlignment="Right" Style="{StaticResource StandardButton}" Click="OkClicked">Ok</Button>
     </Grid>
-</Page>
+</simpleChildWindow:ChildWindow>

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Globalization;
 using System.Linq;
-using System.Windows.Controls;
 
 namespace Sqlbi.Bravo.UI.Framework.ValueConverters
 {
@@ -9,9 +8,6 @@ namespace Sqlbi.Bravo.UI.Framework.ValueConverters
     {
         public override object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            System.Diagnostics.Debug.WriteLine(value);
-            //return (Page)Activator.CreateInstance(Type.GetType(value.ToString()));
-
             return $"/UI/Views/{value.ToString().Split('.').Last()}.xaml";
         }
 

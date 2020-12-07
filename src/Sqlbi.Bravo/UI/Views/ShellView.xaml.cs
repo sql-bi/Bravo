@@ -1,26 +1,42 @@
 ﻿using MahApps.Metro.Controls;
 using MahApps.Metro.Controls.Dialogs;
+using MahApps.Metro.SimpleChildWindow;
+using System;
+using System.Threading.Tasks;
 
 namespace Sqlbi.Bravo.UI.Views
 {
     public partial class ShellView : MetroWindow
     {
-        public ShellView() => InitializeComponent();
+        public static ShellView Instance { get; private set; }
 
-        private void OptionsItemClick(object sender, ItemClickEventArgs args)
+        public ShellView()
         {
-            Dispatcher.VerifyAccess();
-
-            ////var _customDialog = new CustomDialog();
-            ////var sc = new SettingsControl();
-            ////sc.CloseButton.Click += (s, e) => this.HideMetroDialogAsync(_customDialog);
-            ////_customDialog.Content = sc;
-            ////await this.ShowMetroDialogAsync(_customDialog);
+            InitializeComponent();
+            Instance = this;
         }
 
-        private void MenuItemClick(object sender, ItemClickEventArgs args)
+        internal async Task ShowMediaDialog(object dialogContent)
         {
+            //var _customDialog = new CustomDialog();
+            //var sc = new MediaDialog(new HowToUseBravoHelp());
+            //sc.CloseButton.Click += (s, e) => ShellView.Instance.HideMetroDialogAsync(_customDialog);
+            //_customDialog.Content = sc;
+            //await ShellView.Instance.ShowMetroDialogAsync(_customDialog);
+        }
 
+        internal async Task ShowSettings()
+        {
+            await this.ShowChildWindowAsync(new SettingsView()
+            {
+                ChildWindowHeight = ActualHeight - 100,
+                ChildWindowWidth = ActualWidth - 150
+            });
+            //var _customDialog = new CustomDialog();
+            //var sc = new SettingsView();
+            //sc.CloseButton.Click += (s, e) => ShellView.Instance.HideMetroDialogAsync(_customDialog);
+            //_customDialog.Content = sc;
+            //await ShellView.Instance.ShowMetroDialogAsync(_customDialog);
         }
     }
 }

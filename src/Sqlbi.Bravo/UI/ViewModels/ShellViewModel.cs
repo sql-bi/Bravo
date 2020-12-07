@@ -7,11 +7,11 @@ using Sqlbi.Bravo.Core.Services.Interfaces;
 using Sqlbi.Bravo.Core.Settings.Interfaces;
 using Sqlbi.Bravo.UI.Framework.Commands;
 using Sqlbi.Bravo.UI.Framework.ViewModels;
-using Sqlbi.Bravo.UI.Services.Interfaces;
 using Sqlbi.Bravo.UI.Views;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 
@@ -37,7 +37,8 @@ namespace Sqlbi.Bravo.UI.ViewModels
             SelectedTab = Tabs[0];
 
             SelectedItem = MenuItems.First();
-            ItemSelectedCommand = new RelayCommand(() => ItemSelected());
+            LastNavigation = SelectedItem;
+            ItemSelectedCommand = new RelayCommand(async () => await ItemSelected());
         }
 
         public double WindowMinWidth => 800D;
@@ -162,15 +163,16 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public NavigationItem LastNavigation { get; private set; } = null;
 
-        private void ItemSelected()
+        private async Task ItemSelected()
         {
             if (SelectedOptionsItem != null)
             {
                 if (SelectedOptionsItem.Name == "Settings")
                 {
-                    // TODO: show settings
+                    await ShellView.Instance.ShowSettings();
 
                     // Put selection focus back where it was
+                    SelectedOptionsItem = null;
                     SelectedItem = MenuItems.FirstOrDefault(mi => mi.Name == LastNavigation?.Name);
                 }
             }

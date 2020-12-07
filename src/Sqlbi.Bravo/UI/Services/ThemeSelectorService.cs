@@ -22,7 +22,7 @@ namespace Sqlbi.Bravo.UI.Services
         {
             if (theme == AppTheme.Default)
             {
-                ThemeManager.Current.ThemeSyncMode = ThemeSyncMode.SyncAll;
+                ThemeManager.Current.ThemeSyncMode = ThemeSyncMode.SyncWithAppMode;
                 ThemeManager.Current.SyncTheme();
             }
             else
