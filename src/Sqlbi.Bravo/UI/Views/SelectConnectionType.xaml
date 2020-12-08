@@ -99,7 +99,7 @@
             </Button>
         </StackPanel>
         <TextBlock  VerticalAlignment="Bottom" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" Style="{StaticResource BodyTextBlockStyle}" >
-                <Run>Bravo for Power BI is an open source tool developed and maintained by SQLBI and the GitHub community. Join us at &#x202F;</Run>
+                <Run>Bravo for Power BI is an open source tool developed and maintained by SQLBI and the GitHub community. Join us at&#x202F;</Run>
                 <Hyperlink Style="{StaticResource InlineHyperlinks}" NavigateUri="https://github.com/sql-bi/bravo" RequestNavigate="RequestNavigateHyperlink">github.com/sql-bi/bravo</Hyperlink>
         </TextBlock>
     </Grid>

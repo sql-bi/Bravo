@@ -63,7 +63,7 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-    <mah:HamburgerMenu
+            <mah:HamburgerMenu
         Grid.Row="1"
         x:Name="hamburgerMenu"
         HamburgerButtonName="Open or close menu"
@@ -77,64 +77,7 @@
         OptionsItemsSource="{Binding OptionMenuItems}"
         OptionsItemTemplate="{StaticResource MenuItemTemplate}"
         SelectedOptionsItem="{Binding SelectedOptionsItem}" >
-        <!--<mah:HamburgerMenu.ItemTemplate>
-                <DataTemplate DataType="{x:Type app_ui_viewmodels:NavigationItem}">
-                <Grid Height="48">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="48" />
-                        <ColumnDefinition />
-                    </Grid.ColumnDefinitions>
-                    <TextBlock
-                            Grid.Column="0"
-                            FontSize="16"
-                            HorizontalAlignment="Center"
-                            VerticalAlignment="Center"
-                            FontFamily="Segoe MDL2 Assets"
-                            Text="{Binding Glyph}"
-                            ToolTip="{Binding Name}" />
-                    <TextBlock
-                            Grid.Column="1"
-                            VerticalAlignment="Center"
-                            FontSize="16"
-                            Text="{Binding Name}" />
-                    <Border Background="Red"
-                            Grid.Column="1" CornerRadius="3" Margin="10,0,12,0" Padding="4,0,4,1" Visibility="{Binding ShowComingSoon, Converter={StaticResource BooleanToVisibilityConverter}}"
-                                HorizontalAlignment="Right"
-                                VerticalAlignment="Center">
-                        <TextBlock Foreground="White" FontSize="12" FontWeight="Bold">SOON</TextBlock>
-                    </Border>
-                </Grid>
-            </DataTemplate>
-        </mah:HamburgerMenu.ItemTemplate>
-        <mah:HamburgerMenu.OptionsItemTemplate>
-            <DataTemplate DataType="{x:Type vm:NavigationItem}">
-                <Grid Height="48">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="48" />
-                        <ColumnDefinition />
-                    </Grid.ColumnDefinitions>
-                    <TextBlock
-                            Grid.Column="0"
-                            FontSize="16"
-                            HorizontalAlignment="Center"
-                            VerticalAlignment="Center"
-                            FontFamily="Segoe MDL2 Assets"
-                            Text="{Binding Glyph}"
-                            ToolTip="{Binding Name}" />
-                    <TextBlock
-                            Grid.Column="1"
-                            VerticalAlignment="Center"
-                            FontSize="16"
-                            Text="{Binding Name}" />
-                </Grid>
-            </DataTemplate>
-        </mah:HamburgerMenu.OptionsItemTemplate>-->
-            <!--<Frame
-                    x:Name="shellFrame"
-                    Grid.Row="1"
-                    NavigationUIVisibility="Hidden"
-                    Focusable="False" />-->
-            <mah:HamburgerMenu.Content>
+                <mah:HamburgerMenu.Content>
                     <TabControl
                 x:Name="TabView"
                         ItemsSource="{Binding Tabs}"
@@ -146,50 +89,7 @@
                                 <Setter Property="Header" Value="{Binding Header}"/>
                             </Style>
                         </TabControl.ItemContainerStyle>
-                        <!--<TabControl.ItemTemplate>
-                            <DataTemplate>
-                            <TextBlock Text="{Binding Header}" />
-                            </DataTemplate>
-                        </TabControl.ItemTemplate>-->
-                        <!--<TabControl.ItemTemplate>
-                            <DataTemplate DataType="{x:Type app_ui_viewmodels:TabItem}">
-                            <TabItem
-                                
-                            Header="{Binding Header, Mode=OneWay}"
-                            HorizontalAlignment="Stretch"
-                            VerticalAlignment="Stretch"
-                            Content="{Binding}">
-                                
-                                --><!--IconSource="{x:Bind Icon, Mode=OneWay}">-->
-                                <!--<TabViewItem.IconSource>
-                                <BitmapIconSource UriSource="{x:Bind Icon}" />
-                                <BitmapIconSource UriSource="/Images/dataset-icon.png" />
-                            </TabViewItem.IconSource>--><!--
-                                <TabItem.ContentTemplate>
-                                        <DataTemplate DataType="{x:Type app_ui_viewmodels:TabItem}">
-                                            <Grid>
-                                                --><!--<Frame Source="{Binding ContentPageSource, Mode=OneWay}" />--><!--
-                                                <Frame Source="{Binding ContentPageSource, Mode=OneWay, Converter={app_ui_framework_valueconverters:TypePageConverter}}" />
-                                                <TextBlock Text="{Binding Header}" />
-                                                <TextBlock Text="{Binding ContentPageSource}" />
-                                            </Grid>
-                                    </DataTemplate>
-                                </TabItem.ContentTemplate>
-                            </TabItem>
-                        </DataTemplate>
-
-                    </TabControl.ItemTemplate>
-                        <TabControl.ContentTemplate>
-                            <DataTemplate DataType="{x:Type app_ui_viewmodels:TabItem}">
-                                <Grid>
-                                    --><!--<Frame Source="{Binding ContentPageSource, Mode=OneWay}" />--><!--
-                                    <Frame Source="{Binding ContentPageSource, Mode=OneWay, Converter={app_ui_framework_valueconverters:TypePageConverter}}" />
-                                    <TextBlock Text="{Binding Header}" />
-                                    <TextBlock Text="{Binding ContentPageSource}" />
-                                </Grid>
-                                </DataTemplate>
-                        </TabControl.ContentTemplate>-->
-                </TabControl>
+                    </TabControl>
             </mah:HamburgerMenu.Content>
         </mah:HamburgerMenu>
         </Grid>
