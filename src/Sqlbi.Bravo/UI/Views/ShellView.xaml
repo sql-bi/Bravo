@@ -57,11 +57,11 @@
         </DataTemplate>
     </mah:MetroWindow.Resources>
     <mah:MetroWindow.Content>
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
 
             <mah:HamburgerMenu
         Grid.Row="1"
@@ -78,33 +78,47 @@
         OptionsItemTemplate="{StaticResource MenuItemTemplate}"
         SelectedOptionsItem="{Binding SelectedOptionsItem}" >
                 <mah:HamburgerMenu.Content>
-                    <TabControl
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="5" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <TabControl Grid.Row="0"
                 x:Name="TabView"
                         ItemsSource="{Binding Tabs}"
                         TabStripPlacement="Top"
                         ContentTemplate="{StaticResource TabItemTemplate}"
                 SelectedItem="{Binding SelectedTab, Mode=TwoWay}">
-                        <TabControl.ItemContainerStyle>
-                            <Style TargetType="TabItem">
-                                <Setter Property="Header" Value="{Binding Header}"/>
-                            </Style>
-                        </TabControl.ItemContainerStyle>
-                    </TabControl>
-            </mah:HamburgerMenu.Content>
-        </mah:HamburgerMenu>
+                            <TabControl.ItemContainerStyle>
+                                <Style TargetType="TabItem">
+                                    <Setter Property="Header" Value="{Binding Header}"/>
+                                </Style>
+                            </TabControl.ItemContainerStyle>
+                        </TabControl>
+                        <GridSplitter Grid.Row="1" HorizontalAlignment="Stretch" />
+                        <ListBox Grid.Row="2" ItemsSource="{Binding OutputMessages}" />
+                    </Grid>
+                </mah:HamburgerMenu.Content>
+            </mah:HamburgerMenu>
         </Grid>
     </mah:MetroWindow.Content>
 </mah:MetroWindow>
-    
-    <!--<Border Background="{StaticResource AppBlueBrush}">
+
+<!--<Border Background="{StaticResource AppBlueBrush}">
         <Grid>            
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="250"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
-            --><!--Side menu--><!--
+            -->
+<!--Side menu-->
+<!--
             <app_ui_views:SideMenuView Grid.Column="0"/>
-            --><!--Debug menu--><!--
+            -->
+<!--Debug menu-->
+<!--
             <Grid Grid.Column="1">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*" />

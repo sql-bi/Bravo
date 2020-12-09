@@ -1,8 +1,11 @@
 ﻿using MahApps.Metro.Controls;
 using MahApps.Metro.Controls.Dialogs;
 using MahApps.Metro.SimpleChildWindow;
+using Sqlbi.Bravo.Core.Settings.Interfaces;
 using System;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
+using Sqlbi.Bravo.UI.ViewModels;
 
 namespace Sqlbi.Bravo.UI.Views
 {
@@ -14,6 +17,14 @@ namespace Sqlbi.Bravo.UI.Views
         {
             InitializeComponent();
             Instance = this;
+
+            var settings = App.ServiceProvider.GetService<IGlobalSettingsProviderService>();
+            //if (settings.Runtime.IsExecutedAsExternalToolForPowerBIDesktop)
+            if (settings.Runtime.IsExecutedAsExternalTool)
+                {
+                // TODO switch to appropriate mode
+                (this.DataContext as ShellViewModel).LaunchedViaPowerBIDesktop();
+            }
         }
 
         internal async Task ShowMediaDialog(object dialogContent)

@@ -28,11 +28,15 @@ namespace Sqlbi.Bravo.UI.ViewModels
             _watcher.OnEvent += OnAnalysisServicesEvent;
             //_watcher.OnConnectionStateChanged += OnAnalysisServicesConnectionStateChanged;
 
+            LoadedCommand = new RelayCommand(execute: async () => await LoadedAsync());
+
             InitializeCommand = new RelayCommand(execute: async () => await InitializeAsync());
             FormatCommand = new RelayCommand(execute: async () => await FormatAsync(), canExecute: () => !InitializeCommandIsEnabled && TabularObjectType != DaxFormatterTabularObjectType.None).ObserveProperties(this, nameof(TabularObjectType), nameof(InitializeCommandIsEnabled));
         }
 
         private DaxFormatterTabularObjectType TabularObjectType { get; set; }  = DaxFormatterTabularObjectType.None;
+
+        public ICommand LoadedCommand { get; set; }
 
         public ICommand InitializeCommand { get; set; }
 
@@ -111,6 +115,13 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
             FormatCommandIsEnabled = true;
             InitializeCommandIsEnabled = false;
+        }
+
+        private async Task LoadedAsync()
+        {
+            _logger.Trace();
+
+            await ExecuteCommandAsync(() => InitializeCommandIsRunning, InitializeOrRefreshFormatter);
         }
 
         private async Task InitializeAsync()

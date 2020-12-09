@@ -33,12 +33,18 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
             PrintDebug();
 
-            Tabs = new ObservableCollection<TabItem>() { TabItem.Create() };
+            Tabs = new ObservableCollection<TabItem>() { (TabItem)App.ServiceProvider.GetRequiredService(typeof(TabItem)) };
             SelectedTab = Tabs[0];
 
             SelectedItem = MenuItems.First();
             LastNavigation = SelectedItem;
             ItemSelectedCommand = new RelayCommand(async () => await ItemSelected());
+        }
+
+        internal void LaunchedViaPowerBIDesktop()
+        {
+            SelectedTab.ConnectionType = BiConnectionType.ActivePowerBiWindow;
+            SelectedTab.ContentPageSource = SelectedItem.NavigationPage;
         }
 
         public double WindowMinWidth => 800D;
