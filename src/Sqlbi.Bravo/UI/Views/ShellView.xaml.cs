@@ -27,7 +27,7 @@ namespace Sqlbi.Bravo.UI.Views
             if (settings.Runtime.IsExecutedAsExternalToolForPowerBIDesktop)
 #endif
             {
-                (DataContext as ShellViewModel).LaunchedViaPowerBIDesktop();
+                (DataContext as ShellViewModel).LaunchedViaPowerBIDesktop(settings.Runtime.ParentProcessMainWindowTitle);
             }
         }
 

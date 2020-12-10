@@ -19,6 +19,12 @@ namespace Sqlbi.Bravo.UI.ViewModels
         private readonly IAnalysisServicesEventWatcherService _watcher;
         private readonly ILogger _logger;
 
+        internal const int SubViewIndex_Start = 0;
+        internal const int SubViewIndex_ChooseFormulas = 1;
+        internal const int SubViewIndex_Progress = 2;
+        internal const int SubViewIndex_Changes = 3;
+        internal const int SubViewIndex_Finished = 4;
+
         public DaxFormatterViewModel(IDaxFormatterService formatter, IAnalysisServicesEventWatcherService watcher, ILogger<DaxFormatterViewModel> logger)
         {
             _formatter = formatter;
@@ -29,17 +35,30 @@ namespace Sqlbi.Bravo.UI.ViewModels
             _watcher.OnEvent += OnAnalysisServicesEvent;
             //_watcher.OnConnectionStateChanged += OnAnalysisServicesConnectionStateChanged;
 
+            ViewIndex = SubViewIndex_Start;
+            PreviewChanges = true;
+
             LoadedCommand = new RelayCommand(execute: async () => await LoadedAsync());
 
             InitializeCommand = new RelayCommand(execute: async () => await InitializeAsync());
-            FormatCommand = new RelayCommand(execute: async () => await FormatAsync(), canExecute: () => !InitializeCommandIsEnabled && TabularObjectType != DaxFormatterTabularObjectType.None).ObserveProperties(this, nameof(TabularObjectType), nameof(InitializeCommandIsEnabled));
+            FormatAnalyzeCommand = new RelayCommand(execute: async () => await AnalyzeAsync());
+            FormatMakeChangesCommand = new RelayCommand(execute: async () => await MakeChangesAsync(), canExecute: () => !InitializeCommandIsEnabled && TabularObjectType != DaxFormatterTabularObjectType.None).ObserveProperties(this, nameof(TabularObjectType), nameof(InitializeCommandIsEnabled));
             HelpCommand = new RelayCommand(execute: async () => await ShowHelpAsync());
             RefreshCommand = new RelayCommand(execute: async () => await RefreshAsync());
+            ChangeFormulasCommand = new RelayCommand(() => ChooseFormulas());
+            ApplySelectedFormulaChangesCommand = new RelayCommand(() => SelectedFormulasChanged());
+            OpenLogCommand = new RelayCommand(() => OpenLog());
         }
 
         private DaxFormatterTabularObjectType TabularObjectType { get; set; }  = DaxFormatterTabularObjectType.None;
 
+        public int ViewIndex { get; set; }
+
+        public bool PreviewChanges { get; set; }
+
         public ICommand LoadedCommand { get; set; }
+
+        public ICommand OpenLogCommand { get; set; }
 
         public ICommand HelpCommand { get; set; }
         
@@ -47,11 +66,17 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public ICommand InitializeCommand { get; set; }
 
+        public ICommand ChangeFormulasCommand { get; set; }
+
+        public ICommand ApplySelectedFormulaChangesCommand { get; set; }
+
         public bool InitializeCommandIsRunning { get; set; }
 
         public bool InitializeCommandIsEnabled { get; set; } = true;
 
-        public ICommand FormatCommand { get; set; }
+        public ICommand FormatAnalyzeCommand { get; set; }
+
+        public ICommand FormatMakeChangesCommand { get; set; }
 
         public bool FormatCommandIsRunning { get; set; }
 
@@ -138,6 +163,21 @@ namespace Sqlbi.Bravo.UI.ViewModels
             await ExecuteCommandAsync(() => InitializeCommandIsRunning, InitializeOrRefreshFormatter);
         }
 
+        private void ChooseFormulas()
+        {
+            ViewIndex = SubViewIndex_ChooseFormulas;
+        }
+
+        private void SelectedFormulasChanged()
+        {
+            ViewIndex = SubViewIndex_Start;
+        }
+
+        private void OpenLog()
+        {
+            // TODO: Open log file
+        }
+
         private async Task ShowHelpAsync()
         {
             await Views.ShellView.Instance.ShowMediaDialog(new HowToFormatCodeHelp());
@@ -150,7 +190,12 @@ namespace Sqlbi.Bravo.UI.ViewModels
             await ExecuteCommandAsync(() => InitializeCommandIsRunning, InitializeOrRefreshFormatter);
         }
 
-        private async Task FormatAsync()
+        private async Task AnalyzeAsync()
+        {
+            ViewIndex = SubViewIndex_Progress;
+        }
+
+        private async Task MakeChangesAsync()
         {
             _logger.Trace();
 

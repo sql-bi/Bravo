@@ -27,11 +27,21 @@ namespace Sqlbi.Bravo.UI.ViewModels
             _logger.Trace();
             _watcher.OnConnectionStateChanged += OnAnalysisServicesConnectionStateChanged;
 
+            ShowError = false;
+
             ConnectionType = BiConnectionType.UnSelected;
             ContentPageSource = typeof(SelectConnectionType);
 
             ConnectCommand = new RelayCommand(async () => await Connect());
             DisconnectCommand = new RelayCommand(async () => await Disconnect());
+            TryAgainCommand = new RelayCommand(async () => await TryAgain());
+        }
+
+        private async Task TryAgain()
+        {
+            ShowError = false;
+            _callback?.Invoke();
+            await Task.CompletedTask;
         }
 
         public string Header
@@ -89,6 +99,14 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public ICommand ConnectCommand { get; set; }
 
+        public ICommand TryAgainCommand { get; set; }
+
+        public bool ShowError { get; set; }
+
+        private Action _callback;
+
+        public string ErrorDescription { get; set; }
+
         public ICommand DisconnectCommand { get; set; }
 
         public bool ConnectCommandIsRunning { get; set; }
@@ -109,6 +127,12 @@ namespace Sqlbi.Bravo.UI.ViewModels
             await ExecuteCommandAsync(() => DisconnectCommandIsRunning, _watcher.DisconnectAsync);
         }
 
+        public void DisplayError(string errorDescription, Action callback)
+        {
+            ErrorDescription = errorDescription;
+            ShowError = true;
+            _callback = callback;
+        }
 
         [PropertyChanged.SuppressPropertyChangedWarnings]
         private void OnAnalysisServicesConnectionStateChanged(object sender, AnalysisServicesEventWatcherConnectionStateArgs e)

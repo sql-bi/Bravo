@@ -116,7 +116,7 @@ namespace Sqlbi.Bravo
                 services.AddSingleton<ShellViewModel>();
                 services.AddSingleton<SideMenuViewModel>();
                 services.AddSingleton<SettingsViewModel>();
-                // TODO: stop making this a singleton
+                // TODO: stop making this a singleton so can use in different tabs
                 services.AddSingleton<DaxFormatterViewModel>();
 
                 services.AddScoped<TabItem>();

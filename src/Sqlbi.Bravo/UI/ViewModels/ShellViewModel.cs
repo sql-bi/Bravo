@@ -42,8 +42,9 @@ namespace Sqlbi.Bravo.UI.ViewModels
             ItemSelectedCommand = new RelayCommand(async () => await ItemSelected());
         }
 
-        internal void LaunchedViaPowerBIDesktop()
+        internal void LaunchedViaPowerBIDesktop(string title)
         {
+            SelectedTab.ConnectionName = title.Replace(" - Power BI Desktop", string.Empty);
             SelectedTab.ConnectionType = BiConnectionType.ActivePowerBiWindow;
             SelectedTab.ContentPageSource = SelectedItem.NavigationPage;
         }

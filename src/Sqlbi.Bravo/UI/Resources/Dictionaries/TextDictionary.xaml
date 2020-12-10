@@ -34,7 +34,7 @@
         <Setter Property="FontSize" Value="46" />
         <Setter Property="FontWeight" Value="Light" />
     </Style>
-    
+
     <Style
         x:Key="SubheaderTextBlockStyle"
         TargetType="TextBlock" 
@@ -43,6 +43,11 @@
         <Setter Property="FontWeight" Value="Light"/>
     </Style>
 
+    <Style x:Key="SubtitleTextBlockStyle" TargetType="TextBlock" 
+       BasedOn="{StaticResource BaseTextBlockStyle}">
+        <Setter Property="FontWeight" Value="Normal"/>
+        <Setter Property="FontSize" Value="20"/>
+    </Style>
 
     <Style TargetType="Hyperlink" x:Key="InlineHyperlinks">
         <Setter Property="Foreground" Value="Red" />
@@ -78,5 +83,5 @@
             </DataTrigger>
         </Style.Triggers>
     </Style>
-    
+
 </ResourceDictionary>

@@ -53,6 +53,14 @@
                 <Frame
                     Source="{Binding ContentPageSource, Mode=OneWay, Converter={app_ui_framework_valueconverters:TypePageConverter}}"
                     NavigationUIVisibility="Hidden" />
+                <Grid Background="LightGray" Visibility="{Binding ShowError, Converter={StaticResource BooleanToVisibilityConverter}}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <TextBlock HorizontalAlignment="Center">error image</TextBlock>
+                        <TextBlock Style="{StaticResource SubtitleTextBlockStyle}">Whoops! Something went wrong...</TextBlock>
+                        <TextBlock Style="{StaticResource CaptionTextBlockStyle}" Text="{Binding ErrorDescription}" />
+                        <TextBlock><Hyperlink Style="{StaticResource InlineHyperlinks}" Command="{Binding TryAgainCommand}">Try again</Hyperlink></TextBlock>
+                    </StackPanel>
+                </Grid>
             </Grid>
         </DataTemplate>
     </mah:MetroWindow.Resources>
@@ -80,7 +88,7 @@
                 <mah:HamburgerMenu.Content>
                     <Grid>
                         <Grid.RowDefinitions>
-                            <RowDefinition Height="*" />
+                            <RowDefinition Height="3*" />
                             <RowDefinition Height="5" />
                             <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
