@@ -5,6 +5,7 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:local="clr-namespace:Sqlbi.Bravo.UI.Views"
       xmlns:app_ui_framework_properties="clr-namespace:Sqlbi.Bravo.UI.Framework.Properties"
+      xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls" 
       xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
       mc:Ignorable="d" 
       d:DesignHeight="450" 
@@ -16,7 +17,119 @@
             <i:InvokeCommandAction Command="{Binding LoadedCommand}" />
         </i:EventTrigger>
     </i:Interaction.Triggers>
-    <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+    <Grid>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <TextBlock Margin="24" Style="{StaticResource SubheaderTextBlockStyle}">Format your DAX code</TextBlock>
+
+        <Button Grid.Column="1" Command="{Binding RefreshCommand}" Padding="12" Height="48" Margin="0,8,24,0" VerticalAlignment="Top">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock
+                    FontSize="14"
+                    VerticalAlignment="Center"
+                    FontFamily="Segoe MDL2 Assets"
+                    Text="&#xE117;" />
+                <TextBlock
+                    Style="{StaticResource CaptionTextBlockStyle}"
+                    VerticalAlignment="Center">&#x202F; Synced 2 min. ago</TextBlock>
+            </StackPanel>
+        </Button>
+
+        <Button Grid.Column="2" Command="{Binding HelpCommand}" Padding="12" Height="48" Margin="0,8,12,0" VerticalAlignment="Top">
+            <TextBlock
+            FontSize="20"
+            VerticalAlignment="Top"
+            FontFamily="Segoe MDL2 Assets"
+            Text="&#xE116;" />
+        </Button>
+
+        <Grid Grid.Row="1" Grid.ColumnSpan="3" MaxWidth="560" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Row="0" Grid.ColumnSpan="3" Margin="0,12" Style="{StaticResource BodyTextBlockStyle}">Your model contains the following formulas that can be formatted:</TextBlock>
+
+            <StackPanel Grid.Row="1" Grid.ColumnSpan="2" HorizontalAlignment="Center"
+                        Margin="0,0,0,24" Orientation="Horizontal">
+                <TextBlock VerticalAlignment="Center" FontWeight="Bold" Margin="0,-4,0,0" FontSize="16" >&#x2211;&#x202F;</TextBlock>
+                <TextBlock VerticalAlignment="Center" FontWeight="Bold" Style="{StaticResource BaseTextBlockStyle}"
+                           Text="{Binding TabularObjectMeasuresCount}"/>
+                <TextBlock VerticalAlignment="Center" FontWeight="Bold" Style="{StaticResource BaseTextBlockStyle}">&#x202F;formulas</TextBlock>
+                <TextBlock VerticalAlignment="Center" Margin="30,0,0,0"><Hyperlink Style="{StaticResource InlineHyperlinks}" >Change</Hyperlink></TextBlock>
+            </StackPanel>
+
+            <Border Grid.Row="2" Grid.ColumnSpan="3" Background="LightGray" Opacity="0.5" Padding="12" Margin="0.12" />
+
+            <CheckBox x:Name="AcceptTermsCheckbox" Grid.Row="2" Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="12,12,48,12">
+                    <TextBlock TextWrapping="Wrap">
+                    <Run>By clicking "Format" you agree to </Run>
+                    <Bold>send the selected formulas to www.daxformatter.com</Bold>
+                    <Run>, a service run by SQLBI, which will not store or use them for purposes other than formatting them.</Run>
+                    </TextBlock>
+                </CheckBox>
+
+            <Grid Grid.Row="2" Grid.Column="2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+            <Image VerticalAlignment="Center" Grid.RowSpan="2" Source="/UI/Resources/Images/dax-formatter-logo.png" Stretch="Uniform" Height="70" />
+
+                <StackPanel Grid.Column="1" Margin="0,0,24,0">
+                <TextBlock Margin="0,0,0,-12" FontSize="44" FontWeight="UltraBold">DAX</TextBlock>
+                <TextBlock Margin="2,0" FontSize="16" FontWeight="Bold">FORMATTER</TextBlock>
+                </StackPanel>
+            </Grid>
+
+            <StackPanel Grid.Row="3" Grid.ColumnSpan="2" Margin="0,12,0,0" Orientation="Horizontal">
+                <mah:ToggleSwitch IsOn="True" OnContent="" OffContent="" Width="60">
+                    <mah:ToggleSwitch.Resources>
+                        <ResourceDictionary>
+                            <SolidColorBrush x:Key="MahApps.Brushes.ToggleSwitch.FillOn">Red</SolidColorBrush>
+                            <SolidColorBrush x:Key="MahApps.Brushes.ToggleSwitch.FillOnPointerOver">Red</SolidColorBrush>
+                            <SolidColorBrush x:Key="MahApps.Brushes.ToggleSwitch.FillOnPressed">DarkRed</SolidColorBrush>
+                        </ResourceDictionary>
+                    </mah:ToggleSwitch.Resources>
+                </mah:ToggleSwitch>
+
+                <TextBlock VerticalAlignment="Center">
+    <Bold>Preview</Bold>
+    <Run>formatted formulas before changing the model</Run>
+                </TextBlock>
+            </StackPanel>
+
+            <Button
+                Grid.Row="3"
+                Grid.Column="3"
+                Width="100"
+                HorizontalAlignment="Right"
+                Margin="0,12,0,0"
+                IsEnabled="{Binding ElementName=AcceptTermsCheckbox, Path=IsChecked}"
+                Style="{StaticResource StandardButton}">Format</Button>
+
+        </Grid>
+
+
+    </Grid>
+
+    <!--<Grid HorizontalAlignment="Center" VerticalAlignment="Center">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -59,5 +172,5 @@
                 IsEnabled="{Binding InitializeCommandIsEnabled}"
                 Content="Initialize (TOFIX)"
                 app_ui_framework_properties:IsBusyAttachedProperty.Value="{Binding InitializeCommandIsRunning}" />
-    </Grid>
+    </Grid>-->
 </Page>

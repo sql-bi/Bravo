@@ -124,6 +124,9 @@
     <Style x:Key="StandardButton" TargetType="Button">
         <Setter Property="Background" Value="Red" />
         <Setter Property="Foreground" Value="White" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="BorderThickness" Value="0" />
     </Style>
 
     <Style x:Key="MediaButton" TargetType="Button">

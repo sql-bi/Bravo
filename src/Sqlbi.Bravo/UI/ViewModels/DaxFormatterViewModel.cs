@@ -4,6 +4,7 @@ using Sqlbi.Bravo.Core.Helpers;
 using Sqlbi.Bravo.Core.Logging;
 using Sqlbi.Bravo.Core.Services;
 using Sqlbi.Bravo.Core.Services.Interfaces;
+using Sqlbi.Bravo.UI.DataModel;
 using Sqlbi.Bravo.UI.Framework.Commands;
 using Sqlbi.Bravo.UI.Framework.Helpers;
 using Sqlbi.Bravo.UI.Framework.ViewModels;
@@ -32,11 +33,17 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
             InitializeCommand = new RelayCommand(execute: async () => await InitializeAsync());
             FormatCommand = new RelayCommand(execute: async () => await FormatAsync(), canExecute: () => !InitializeCommandIsEnabled && TabularObjectType != DaxFormatterTabularObjectType.None).ObserveProperties(this, nameof(TabularObjectType), nameof(InitializeCommandIsEnabled));
+            HelpCommand = new RelayCommand(execute: async () => await ShowHelpAsync());
+            RefreshCommand = new RelayCommand(execute: async () => await RefreshAsync());
         }
 
         private DaxFormatterTabularObjectType TabularObjectType { get; set; }  = DaxFormatterTabularObjectType.None;
 
         public ICommand LoadedCommand { get; set; }
+
+        public ICommand HelpCommand { get; set; }
+        
+        public ICommand RefreshCommand { get; set; }
 
         public ICommand InitializeCommand { get; set; }
 
@@ -122,6 +129,18 @@ namespace Sqlbi.Bravo.UI.ViewModels
             _logger.Trace();
 
             await ExecuteCommandAsync(() => InitializeCommandIsRunning, InitializeOrRefreshFormatter);
+        }
+
+        private async Task RefreshAsync()
+        {
+            _logger.Trace();
+
+            await ExecuteCommandAsync(() => InitializeCommandIsRunning, InitializeOrRefreshFormatter);
+        }
+
+        private async Task ShowHelpAsync()
+        {
+            await Views.ShellView.Instance.ShowMediaDialog(new HowToFormatCodeHelp());
         }
 
         private async Task InitializeAsync()

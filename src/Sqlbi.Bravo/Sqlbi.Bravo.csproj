@@ -22,6 +22,7 @@
     <None Remove="UI\Resources\Images\powerbi-desktop-connect.png" />
     <None Remove="UI\Resources\Images\vertipaq-analyzer-file.png" />
     <None Remove="UI\Views\AnalyzeModelView.xaml" />
+    <None Remove="UI\Views\MediaDialog.xaml" />
     <None Remove="UI\Views\SelectConnectionType.xaml" />
   </ItemGroup>
 
@@ -31,6 +32,7 @@
     <PackageReference Include="Microsoft.AnalysisServices.NetCore.retail.amd64" Version="19.12.3-Preview" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="5.0.0-rc.2.20475.5" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="5.0.0-rc.2.20475.5" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.664.37" />
     <PackageReference Include="PropertyChanged.Fody" Version="3.2.10" />
     <PackageReference Include="Serilog" Version="2.10.1-dev-01249" />
     <PackageReference Include="Serilog.Extensions.Hosting" Version="4.0.0-dev-00051" />

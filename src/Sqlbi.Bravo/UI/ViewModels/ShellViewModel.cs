@@ -5,6 +5,7 @@ using Sqlbi.Bravo.Core.Logging;
 using Sqlbi.Bravo.Core.Services;
 using Sqlbi.Bravo.Core.Services.Interfaces;
 using Sqlbi.Bravo.Core.Settings.Interfaces;
+using Sqlbi.Bravo.UI.DataModel;
 using Sqlbi.Bravo.UI.Framework.Commands;
 using Sqlbi.Bravo.UI.Framework.ViewModels;
 using Sqlbi.Bravo.UI.Views;

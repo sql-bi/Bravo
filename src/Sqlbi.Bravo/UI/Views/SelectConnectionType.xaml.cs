@@ -1,4 +1,5 @@
-﻿using Sqlbi.Bravo.UI.ViewModels;
+﻿using Sqlbi.Bravo.UI.DataModel;
+using Sqlbi.Bravo.UI.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -27,18 +28,11 @@ namespace Sqlbi.Bravo.UI.Views
             e.Handled = true;
         }
 
-        private void HowToUseClicked(object sender, System.Windows.RoutedEventArgs e)
+        private async void HowToUseClicked(object sender, RoutedEventArgs e)
         {
-            Dispatcher.VerifyAccess();
-
-            //var _customDialog = new CustomDialog();
-            //var sc = new MediaDialog(new HowToUseBravoHelp());
-            //sc.CloseButton.Click += (s, e) => ShellWindow.Instance.HideMetroDialogAsync(_customDialog);
-            //_customDialog.Content = sc;
-            //await ShellWindow.Instance.ShowMetroDialogAsync(_customDialog);
+            await ShellView.Instance.ShowMediaDialog(new HowToUseBravoHelp());
         }
 
-        // TODO: also need to set this when app  launched this way
         private void AttachToWindowClicked(object sender, RoutedEventArgs e)
         {
             var vm = DataContext as ShellViewModel;

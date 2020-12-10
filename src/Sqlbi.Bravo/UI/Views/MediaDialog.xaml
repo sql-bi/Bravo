@@ -1,0 +1,42 @@
+﻿<simpleChildWindow:ChildWindow
+    x:Class="Sqlbi.Bravo.UI.Views.MediaDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:simpleChildWindow="http://metro.mahapps.com/winfx/xaml/simplechildwindow"
+    xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
+    mc:Ignorable="d"
+    d:DesignHeight="450" d:DesignWidth="800">
+    <Grid>
+        <Grid Margin="20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <TextBlock
+            x:Name="Title"
+            Grid.Row="0"
+            Style="{StaticResource SubheaderTextBlockStyle}" />
+
+            <TextBlock
+                x:Name="DisplayedDescription"
+                Grid.Row="1"
+                Margin="4,4,4,12"
+                Style="{StaticResource BodyTextBlockStyle}" />
+
+            <wv2:WebView2 x:Name="MediaPlayer" MinHeight="200" Grid.Row="2" />
+
+            <Button x:Name="CloseButton"
+                Style="{StaticResource StandardButton}"
+                Margin="0,10"
+                Padding="4"
+                Width="100"
+                HorizontalAlignment="Right" Click="OkClicked"
+                Grid.Row="3">Ok</Button>
+        </Grid>
+    </Grid>
+</simpleChildWindow:ChildWindow>

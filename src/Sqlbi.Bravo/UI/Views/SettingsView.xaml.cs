@@ -1,6 +1,7 @@
 ﻿using MahApps.Metro.SimpleChildWindow;
 using Sqlbi.Bravo.UI.Framework.Interfaces;
 using System.Security;
+using System.Windows;
 
 namespace Sqlbi.Bravo.UI.Views
 {
@@ -10,9 +11,6 @@ namespace Sqlbi.Bravo.UI.Views
 
         public SecureString SecurePassword => ProxyPassword.SecurePassword;
 
-        private void OkClicked(object sender, System.Windows.RoutedEventArgs e)
-        {
-            Close();
-        }
+        private void OkClicked(object sender, RoutedEventArgs e) => _ = Close();
     }
 }

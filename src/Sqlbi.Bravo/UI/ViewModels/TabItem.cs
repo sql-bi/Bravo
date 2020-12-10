@@ -8,6 +8,7 @@ using Sqlbi.Bravo.Core.Services;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Sqlbi.Bravo.UI.Framework.Commands;
+using Sqlbi.Bravo.UI.DataModel;
 
 namespace Sqlbi.Bravo.UI.ViewModels
 {

@@ -6,6 +6,7 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Sqlbi.Bravo.UI.ViewModels;
+using Sqlbi.Bravo.UI.DataModel;
 
 namespace Sqlbi.Bravo.UI.Views
 {
@@ -19,21 +20,24 @@ namespace Sqlbi.Bravo.UI.Views
             Instance = this;
 
             var settings = App.ServiceProvider.GetService<IGlobalSettingsProviderService>();
-            //if (settings.Runtime.IsExecutedAsExternalToolForPowerBIDesktop)
+
+#if DEBUG
             if (settings.Runtime.IsExecutedAsExternalTool)
-                {
-                // TODO switch to appropriate mode
-                (this.DataContext as ShellViewModel).LaunchedViaPowerBIDesktop();
+#else
+            if (settings.Runtime.IsExecutedAsExternalToolForPowerBIDesktop)
+#endif
+            {
+                (DataContext as ShellViewModel).LaunchedViaPowerBIDesktop();
             }
         }
 
-        internal async Task ShowMediaDialog(object dialogContent)
+        internal async Task ShowMediaDialog(IInAppMediaOption mediaOptions)
         {
-            //var _customDialog = new CustomDialog();
-            //var sc = new MediaDialog(new HowToUseBravoHelp());
-            //sc.CloseButton.Click += (s, e) => ShellView.Instance.HideMetroDialogAsync(_customDialog);
-            //_customDialog.Content = sc;
-            //await ShellView.Instance.ShowMetroDialogAsync(_customDialog);
+            await this.ShowChildWindowAsync(new MediaDialog(mediaOptions)
+            {
+                ChildWindowHeight = ActualHeight - 100,
+                ChildWindowWidth = ActualWidth - 150
+            });
         }
 
         internal async Task ShowSettings()
@@ -43,11 +47,6 @@ namespace Sqlbi.Bravo.UI.Views
                 ChildWindowHeight = ActualHeight - 100,
                 ChildWindowWidth = ActualWidth - 150
             });
-            //var _customDialog = new CustomDialog();
-            //var sc = new SettingsView();
-            //sc.CloseButton.Click += (s, e) => ShellView.Instance.HideMetroDialogAsync(_customDialog);
-            //_customDialog.Content = sc;
-            //await ShellView.Instance.ShowMetroDialogAsync(_customDialog);
         }
     }
 }
