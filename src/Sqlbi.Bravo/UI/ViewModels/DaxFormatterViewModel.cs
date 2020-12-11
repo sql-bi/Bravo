@@ -193,6 +193,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
         private async Task AnalyzeAsync()
         {
             ViewIndex = SubViewIndex_Progress;
+            TabularObjectType = TabularObjectType.WithFlag(DaxFormatterTabularObjectType.Measures, true);
         }
 
         private async Task MakeChangesAsync()

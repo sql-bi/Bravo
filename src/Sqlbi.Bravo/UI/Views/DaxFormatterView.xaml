@@ -25,6 +25,7 @@
         IsBannerEnabled="False"
         IsNavigationEnabled="False">
         <mah:FlipView.Items>
+            <!-- SubViewIndex_Start = 0 -->
             <mah:FlipViewItem>
                 <Grid>
 
@@ -125,28 +126,80 @@
                         </StackPanel>
 
                         <Button
-                Grid.Row="3"
-                Grid.Column="3"
-                Width="100"
-                HorizontalAlignment="Right"
-                Margin="0,12,0,0"
-                IsEnabled="{Binding ElementName=AcceptTermsCheckbox, Path=IsChecked}"
-                Command="{Binding FormatAnalyzeCommand}"
-                Style="{StaticResource StandardButton}">Format</Button>
+                            Grid.Row="3"
+                            Grid.Column="3"
+                            Width="100"
+                            HorizontalAlignment="Right"
+                            Margin="0,12,0,0"
+                            IsEnabled="{Binding ElementName=AcceptTermsCheckbox, Path=IsChecked}"
+                            Command="{Binding FormatAnalyzeCommand}"
+                            Style="{StaticResource StandardButton}">Format</Button>
 
                     </Grid>
 
 
                 </Grid>
             </mah:FlipViewItem>
+            <!-- SubViewIndex_ChooseFormulas = 1 -->
             <mah:FlipViewItem>
                 <Grid>
-                    <StackPanel>
-                        <TextBlock>Choose formulas to format</TextBlock>
-                        <Button Width="150" HorizontalAlignment="Right" Command="{Binding ApplySelectedFormulaChangesCommand}" Style="{StaticResource StandardButton}">Apply &amp; Continue</Button>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="300" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Row="0" Grid.Column="0">Choose formulas to format</TextBlock>
+                    <StackPanel Grid.Row="1" Grid.Column="0">
+                        <TextBox
+                             mah:TextBoxHelper.ButtonCommand="{Binding TextBoxButtonCmd, Mode=OneWay}"
+                             mah:TextBoxHelper.ClearTextButton="True"
+                             mah:TextBoxHelper.UseFloatingWatermark="True"
+                             mah:TextBoxHelper.Watermark="Search...">
+                            <TextBox.InputBindings>
+                                <KeyBinding Key="Return"
+                                        Command="{Binding TextBoxButtonCmd, Mode=OneWay}"
+                                        CommandParameter="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=TextBox}, Path=Text, Mode=OneWay}" />
+                            </TextBox.InputBindings>
+                            <TextBox.Style>
+                                <Style BasedOn="{StaticResource MahApps.Styles.TextBox.Search}" TargetType="{x:Type TextBox}">
+                                    <Style.Triggers>
+                                        <Trigger Property="mah:TextBoxHelper.HasText" Value="True">
+                                            <Setter Property="mah:TextBoxHelper.ButtonContent" Value="r" />
+                                            <Setter Property="mah:TextBoxHelper.ButtonContentTemplate" Value="{x:Null}" />
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBox.Style>
+                        </TextBox>
+                        <TreeView
+                              Style="{StaticResource MahApps.Styles.TreeView.Virtualized}">
+                            <TreeView.ItemTemplate>
+                                <HierarchicalDataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <CheckBox VerticalAlignment="Center" />
+                                        <ContentPresenter Content="{Binding }" />
+                                    </StackPanel>
+                                </HierarchicalDataTemplate>
+                            </TreeView.ItemTemplate>
+                            <TreeViewItem Header="Table 1" IsExpanded="true">
+                                <TreeViewItem Header="Measure 1" />
+                                <TreeViewItem Header="Measure 2" />
+                                <TreeViewItem Header="Measure 3" />
+                            </TreeViewItem>
+                            <TreeViewItem Header="Table 3" />
+                            <TreeViewItem Header="Table 3" />
+                        </TreeView>
                     </StackPanel>
+                    <TextBlock Grid.Row="1" Grid.Column="0" VerticalAlignment="Bottom">8 Selected</TextBlock>
+                    <TextBox Grid.Column="1" Grid.Row="1" VerticalScrollBarVisibility="Visible">{MEASURE ORIGINAL TEXT}</TextBox>
+                    <Button Grid.Row="2" Grid.ColumnSpan="2" Width="150" VerticalAlignment="Bottom" Margin="20" HorizontalAlignment="Right" Command="{Binding ApplySelectedFormulaChangesCommand}" Style="{StaticResource StandardButton}">Apply &amp; Continue</Button>
                 </Grid>
             </mah:FlipViewItem>
+            <!-- SubViewIndex_Progress = 2 -->
             <mah:FlipViewItem>
                 <Grid>
 
@@ -160,6 +213,7 @@
                     </StackPanel>
                 </Grid>
             </mah:FlipViewItem>
+            <!-- SubViewIndex_Changes = 3 -->
             <mah:FlipViewItem>
                 <Grid>
                     <StackPanel>
@@ -168,17 +222,59 @@
                         <TabControl Style="{DynamicResource MahApps.Styles.TabControl.Animated}"
                                 mah:TabControlHelper.Underlined="SelectedTabItem">
                             <TabItem Header="Need formatting">
-                                <TextBlock FontSize="30" Text="add items here" />
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="*" />
+                                    </Grid.RowDefinitions>
+                                    <ListView Grid.Column="0" Grid.RowSpan="4" Margin="0,0,12,0">
+                                        <ListViewItem>
+                                            <Grid>
+                                                <TextBlock VerticalAlignment="Center" FontWeight="Bold" HorizontalAlignment="Left" FontSize="16" >&#x2211; {MeasureName}</TextBlock>
+                                                <Button HorizontalAlignment="Right">x</Button>
+                                            </Grid>
+                                        </ListViewItem>
+                                        <ListViewItem>
+                                            <Grid>
+                                                <TextBlock VerticalAlignment="Center" FontWeight="Bold" HorizontalAlignment="Left" FontSize="16" >&#x2211; {MeasureName}</TextBlock>
+                                                <Button HorizontalAlignment="Right">x</Button>
+                                            </Grid>
+                                        </ListViewItem>
+                                        <ListViewItem>
+                                            <Grid>
+                                                <TextBlock VerticalAlignment="Center" FontWeight="Bold" HorizontalAlignment="Left" FontSize="16" >&#x2211; {MeasureName}</TextBlock>
+                                                <Button HorizontalAlignment="Right">x</Button>
+                                            </Grid>
+                                        </ListViewItem>
+                                    </ListView>
+                                    <TextBlock Grid.Column="1" Grid.Row="0">FROM</TextBlock>
+                                    <TextBlock Grid.Column="1" Grid.Row="1">{ORIGINAL MEASURE FORMATTING}</TextBlock>
+                                    <StackPanel Orientation="Horizontal" Grid.Column="1" Grid.Row="2">
+                                        <TextBlock>TO</TextBlock>
+                                        <Button>{copyicon}</Button>
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="1" Grid.Row="3">{UPDATED MEASURE FORMATTING}</TextBlock>
+                                </Grid>
                             </TabItem>
                             <mah:MetroTabItem Header="All formulas">
                                 <TextBlock FontSize="30" Text="add items here" />
                             </mah:MetroTabItem>
                         </TabControl>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="20">
                         <Button Width="120" Click="CancelClicked">Cancel</Button>
-                        <Button Width="120" Style="{StaticResource StandardButton}">Format</Button>
+                        <Button Width="120" Margin="20,0,0,0" Command="{Binding FormatMakeChangesCommand}" Style="{StaticResource StandardButton}">Format</Button>
                     </StackPanel>
                 </Grid>
             </mah:FlipViewItem>
+            <!-- SubViewIndex_Finished = 4 -->
             <mah:FlipViewItem>
                 <Grid>
                     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
@@ -189,11 +285,6 @@
                     </StackPanel>
 
                     <Button Style="{StaticResource StandardButton}" Margin="24" HorizontalAlignment="Right" VerticalAlignment="Bottom" Width="120" Click="DoneClicked">Done</Button>
-                </Grid>
-            </mah:FlipViewItem>
-            <mah:FlipViewItem>
-                <Grid>
-                    <TextBlock>Error</TextBlock>
                 </Grid>
             </mah:FlipViewItem>
         </mah:FlipView.Items>
