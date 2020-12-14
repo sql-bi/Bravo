@@ -40,7 +40,7 @@
                     </Grid.ColumnDefinitions>
                     <TextBlock Margin="24" Style="{StaticResource SubheaderTextBlockStyle}">Format your DAX code</TextBlock>
 
-                    <Button Grid.Column="1" Command="{Binding RefreshCommand}" Padding="12" Height="48" Margin="0,8,24,0" VerticalAlignment="Top">
+                    <Button Grid.Column="1" Command="{Binding RefreshCommand}" Style="{StaticResource SubtleButton}" Padding="12" Height="48" Margin="0,8,24,0" VerticalAlignment="Top">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock
                     FontSize="14"
@@ -53,7 +53,7 @@
                         </StackPanel>
                     </Button>
 
-                    <Button Grid.Column="2" Command="{Binding HelpCommand}" Padding="12" Height="48" Margin="0,8,12,0" VerticalAlignment="Top">
+                    <Button Grid.Column="2" Command="{Binding HelpCommand}" Style="{StaticResource SubtleButton}" Padding="12" Height="48" Margin="0,8,12,0" VerticalAlignment="Top">
                         <TextBlock
             FontSize="20"
             VerticalAlignment="Top"
