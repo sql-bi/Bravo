@@ -80,7 +80,7 @@
                         Margin="0,0,0,24" Orientation="Horizontal">
                             <TextBlock VerticalAlignment="Center" FontWeight="Bold" Margin="0,-4,0,0" FontSize="16" >&#x2211;&#x202F;&#x202F;&#x202F;&#x202F;</TextBlock>
                             <TextBlock VerticalAlignment="Center" FontWeight="Bold" Style="{StaticResource BaseTextBlockStyle}"
-                           Text="{Binding TabularObjectMeasuresCount}"/>
+                           Text="{Binding SelectionTreeData.SelectedTreeItemCount}"/>
                             <TextBlock VerticalAlignment="Center" FontWeight="Bold" Style="{StaticResource BaseTextBlockStyle}">&#x202F;&#x202F;&#x202F;formulas</TextBlock>
                             <TextBlock VerticalAlignment="Center" Margin="30,0,0,0"><Hyperlink Style="{StaticResource InlineHyperlinks}" Command="{Binding ChangeFormulasCommand}" >Change</Hyperlink></TextBlock>
                         </StackPanel>
