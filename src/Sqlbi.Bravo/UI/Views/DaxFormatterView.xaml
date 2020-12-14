@@ -162,15 +162,11 @@
                         <TextBox
                             Grid.Row="0"
                             Margin="0,8,12,8"
-                             mah:TextBoxHelper.ButtonCommand="{Binding TextBoxButtonCmd, Mode=OneWay}"
+                            Text="{Binding SelectionTreeData.SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                              mah:TextBoxHelper.ClearTextButton="True"
                              mah:TextBoxHelper.UseFloatingWatermark="True"
-                             mah:TextBoxHelper.Watermark="Search">
-                            <TextBox.InputBindings>
-                                <KeyBinding Key="Return"
-                                        Command="{Binding TextBoxButtonCmd, Mode=OneWay}"
-                                        CommandParameter="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=TextBox}, Path=Text, Mode=OneWay}" />
-                            </TextBox.InputBindings>
+                             mah:TextBoxHelper.Watermark="Search"
+                            >
                             <TextBox.Style>
                                 <Style BasedOn="{StaticResource MahApps.Styles.TextBox.Search}" TargetType="{x:Type TextBox}">
                                     <Style.Triggers>
@@ -196,7 +192,7 @@
                                 </i:EventTrigger>
                             </i:Interaction.Triggers>
                             <TreeView.ItemTemplate>
-                                <HierarchicalDataTemplate DataType="viewmodels:TreeItem" ItemsSource="{Binding Measures}">
+                                <HierarchicalDataTemplate DataType="viewmodels:TreeItem" ItemsSource="{Binding VisibleMeasures}">
 
                                     <StackPanel Orientation="Horizontal">
                                         <CheckBox VerticalAlignment="Center" IsThreeState="{Binding IsThreeState}" IsChecked="{Binding IsSelected, Mode=TwoWay}" />
