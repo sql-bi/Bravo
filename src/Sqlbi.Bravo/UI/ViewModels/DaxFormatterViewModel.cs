@@ -50,7 +50,6 @@ namespace Sqlbi.Bravo.UI.ViewModels
             ChangeFormulasCommand = new RelayCommand(() => ChooseFormulas());
             ApplySelectedFormulaChangesCommand = new RelayCommand(() => SelectedFormulasChanged());
             OpenLogCommand = new RelayCommand(() => OpenLog());
-          //  SelectedTableMeasureChangedCommand = new RelayCommand(() => )
         }
 
         private DaxFormatterTabularObjectType TabularObjectType { get; set; } = DaxFormatterTabularObjectType.None;

@@ -31,6 +31,14 @@ namespace Sqlbi.Bravo.UI.ViewModels
             {
                 if (SetProperty(ref _isSelected, value))
                 {
+                    if (Measures.Any())
+                    {
+                        foreach (var m in Measures)
+                        {
+                            m.IsSelected = value;
+                        }
+                    }
+
                     _parent.RecalculateSelectedCount();
                 }
             }
