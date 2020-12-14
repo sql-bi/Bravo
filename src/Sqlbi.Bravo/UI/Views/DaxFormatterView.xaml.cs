@@ -10,7 +10,7 @@ namespace Sqlbi.Bravo.UI.Views
 
         private void PretendProgressClicked(object sender, RoutedEventArgs e)
         {
-            var vm = (DataContext as ViewModels.DaxFormatterViewModel);
+            var vm = DataContext as ViewModels.DaxFormatterViewModel;
 
             if (vm.PreviewChanges)
             {
@@ -47,6 +47,12 @@ namespace Sqlbi.Bravo.UI.Views
         {
             (ShellView.Instance.DataContext
                 as ViewModels.ShellViewModel).SelectedTab.DisplayError("Error code: blah blah blah", null);
+        }
+
+        private void TreeviewSelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        {
+            // Quick hack for not being able to bind the selected item in WPF
+            (DataContext as ViewModels.DaxFormatterViewModel).SelectionTreeData.SelectedTreeViewItem = (ViewModels.TreeItem)e.NewValue;
         }
     }
 }

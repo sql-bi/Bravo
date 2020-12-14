@@ -8,6 +8,9 @@ using Sqlbi.Bravo.UI.DataModel;
 using Sqlbi.Bravo.UI.Framework.Commands;
 using Sqlbi.Bravo.UI.Framework.Helpers;
 using Sqlbi.Bravo.UI.Framework.ViewModels;
+using System;
+using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
@@ -18,7 +21,6 @@ namespace Sqlbi.Bravo.UI.ViewModels
         private readonly IDaxFormatterService _formatter;
         private readonly IAnalysisServicesEventWatcherService _watcher;
         private readonly ILogger _logger;
-
         internal const int SubViewIndex_Start = 0;
         internal const int SubViewIndex_ChooseFormulas = 1;
         internal const int SubViewIndex_Progress = 2;
@@ -48,9 +50,10 @@ namespace Sqlbi.Bravo.UI.ViewModels
             ChangeFormulasCommand = new RelayCommand(() => ChooseFormulas());
             ApplySelectedFormulaChangesCommand = new RelayCommand(() => SelectedFormulasChanged());
             OpenLogCommand = new RelayCommand(() => OpenLog());
+          //  SelectedTableMeasureChangedCommand = new RelayCommand(() => )
         }
 
-        private DaxFormatterTabularObjectType TabularObjectType { get; set; }  = DaxFormatterTabularObjectType.None;
+        private DaxFormatterTabularObjectType TabularObjectType { get; set; } = DaxFormatterTabularObjectType.None;
 
         public int ViewIndex { get; set; }
 
@@ -61,7 +64,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
         public ICommand OpenLogCommand { get; set; }
 
         public ICommand HelpCommand { get; set; }
-        
+
         public ICommand RefreshCommand { get; set; }
 
         public ICommand InitializeCommand { get; set; }
@@ -69,6 +72,8 @@ namespace Sqlbi.Bravo.UI.ViewModels
         public ICommand ChangeFormulasCommand { get; set; }
 
         public ICommand ApplySelectedFormulaChangesCommand { get; set; }
+
+        public ICommand SelectedTableMeasureChangedCommand { get; set; }
 
         public bool InitializeCommandIsRunning { get; set; }
 
@@ -82,8 +87,10 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public bool FormatCommandIsEnabled { get; set; }
 
+        public MeasureSelectionViewModel SelectionTreeData { get; set; }
+
         public bool TabularObjectMeasuresIsChecked
-        { 
+        {
             get => TabularObjectType.HasFlag(DaxFormatterTabularObjectType.Measures);
             set => TabularObjectType = TabularObjectType.WithFlag(DaxFormatterTabularObjectType.Measures, set: value);
         }
@@ -147,6 +154,39 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
             FormatCommandIsEnabled = true;
             InitializeCommandIsEnabled = false;
+
+            LoadMeasuresForSelection();
+        }
+
+        private void LoadMeasuresForSelection()
+        {
+            var measureList = _formatter.GetMeasures();
+
+            var msvm = new MeasureSelectionViewModel();
+
+            foreach (var measure in measureList)
+            {
+                var addedMeasure = false;
+
+                foreach (var table in msvm.Tables)
+                {
+                    if (table.Name == measure.Table.Name)
+                    {
+                        table.Measures.Add(new TreeItem(msvm) { Name = measure.Name, Formula = measure.Expression });
+                        addedMeasure = true;
+                        break;
+                    }
+                }
+
+                if (!addedMeasure)
+                {
+                    var newTable = new TreeItem(msvm) { Name = measure.Table.Name };
+                    newTable.Measures.Add(new TreeItem(msvm) { Name = measure.Name, Formula = measure.Expression });
+                    msvm.Tables.Add(newTable);
+                }
+            }
+
+            SelectionTreeData = msvm;
         }
 
         private async Task LoadedAsync()
@@ -200,6 +240,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
         {
             _logger.Trace();
 
+            //ViewIndex = SubViewIndex_Finished;
             await ExecuteCommandAsync(() => FormatCommandIsRunning, async () => await _formatter.FormatAsync(TabularObjectType));
         }
     }

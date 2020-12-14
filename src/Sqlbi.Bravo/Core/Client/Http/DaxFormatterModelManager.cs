@@ -134,6 +134,9 @@ namespace Sqlbi.Bravo.Core.Client.Http
             return count;
         }
 
+        public List<Measure> GetMeasures()
+            => _tabularObjects.Where((o) => o.Value == DaxFormatterTabularObjectType.Measures).Select(o => o.Key).Cast<Measure>().ToList();
+
         public IReadOnlyList<DaxFormatterRequest> CreateRequests(DaxFormatterTabularObjectType objectType)
         {
             _logger.Trace();

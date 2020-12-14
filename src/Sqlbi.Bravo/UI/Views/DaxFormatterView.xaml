@@ -6,7 +6,7 @@
       xmlns:local="clr-namespace:Sqlbi.Bravo.UI.Views"
       xmlns:app_ui_framework_properties="clr-namespace:Sqlbi.Bravo.UI.Framework.Properties"
       xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls" 
-      xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
+      xmlns:i="http://schemas.microsoft.com/xaml/behaviors" xmlns:viewmodels="clr-namespace:Sqlbi.Bravo.UI.ViewModels"
       mc:Ignorable="d" 
       d:DesignHeight="450" 
       d:DesignWidth="800"
@@ -74,14 +74,14 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
 
-                        <TextBlock Grid.Row="0" Grid.ColumnSpan="3" Margin="0,12" Style="{StaticResource BodyTextBlockStyle}">Your model contains the following formulas that can be formatted:</TextBlock>
+                        <TextBlock Grid.Row="0" Grid.ColumnSpan="3" Margin="0,12" Style="{StaticResource BodyTextBlockStyle}" FontSize="16">Your model contains the following formulas that can be formatted:</TextBlock>
 
                         <StackPanel Grid.Row="1" Grid.ColumnSpan="2" HorizontalAlignment="Center"
                         Margin="0,0,0,24" Orientation="Horizontal">
-                            <TextBlock VerticalAlignment="Center" FontWeight="Bold" Margin="0,-4,0,0" FontSize="16" >&#x2211;&#x202F;</TextBlock>
+                            <TextBlock VerticalAlignment="Center" FontWeight="Bold" Margin="0,-4,0,0" FontSize="16" >&#x2211;&#x202F;&#x202F;&#x202F;&#x202F;</TextBlock>
                             <TextBlock VerticalAlignment="Center" FontWeight="Bold" Style="{StaticResource BaseTextBlockStyle}"
                            Text="{Binding TabularObjectMeasuresCount}"/>
-                            <TextBlock VerticalAlignment="Center" FontWeight="Bold" Style="{StaticResource BaseTextBlockStyle}">&#x202F;formulas</TextBlock>
+                            <TextBlock VerticalAlignment="Center" FontWeight="Bold" Style="{StaticResource BaseTextBlockStyle}">&#x202F;&#x202F;&#x202F;formulas</TextBlock>
                             <TextBlock VerticalAlignment="Center" Margin="30,0,0,0"><Hyperlink Style="{StaticResource InlineHyperlinks}" Command="{Binding ChangeFormulasCommand}" >Change</Hyperlink></TextBlock>
                         </StackPanel>
 
@@ -90,8 +90,8 @@
                         <CheckBox x:Name="AcceptTermsCheckbox" Grid.Row="2" Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="12,12,48,12">
                             <TextBlock TextWrapping="Wrap">
                     <Run>By clicking "Format" you agree to </Run>
-                    <Bold>send the selected formulas to www.daxformatter.com</Bold>
-                    <Run>, a service run by SQLBI, which will not store or use them for purposes other than formatting them.</Run>
+                    <Bold>send the selected formulas to www.daxformatter.com,</Bold>
+                    <Run>a service run by SQLBI, which will not store or use them for purposes other than formatting them.</Run>
                             </TextBlock>
                         </CheckBox>
 
@@ -108,7 +108,7 @@
                             </StackPanel>
                         </Grid>
 
-                        <StackPanel Grid.Row="3" Grid.ColumnSpan="2" Margin="0,12,0,0" Orientation="Horizontal">
+                        <StackPanel Grid.Row="3" Grid.ColumnSpan="3" Margin="0,12,0,0" Orientation="Horizontal">
                             <mah:ToggleSwitch IsOn="{Binding PreviewChanges}" OnContent="" OffContent="" Width="60">
                                 <mah:ToggleSwitch.Resources>
                                     <ResourceDictionary>
@@ -119,7 +119,7 @@
                                 </mah:ToggleSwitch.Resources>
                             </mah:ToggleSwitch>
 
-                            <TextBlock VerticalAlignment="Center">
+                            <TextBlock VerticalAlignment="Center" FontSize="14">
                     <Bold>Preview</Bold>
                     <Run>formatted formulas before changing the model</Run>
                             </TextBlock>
@@ -142,7 +142,7 @@
             </mah:FlipViewItem>
             <!-- SubViewIndex_ChooseFormulas = 1 -->
             <mah:FlipViewItem>
-                <Grid>
+                <Grid Margin="24">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="300" />
                         <ColumnDefinition Width="*" />
@@ -152,13 +152,20 @@
                         <RowDefinition Height="*" />
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
-                    <TextBlock Grid.Row="0" Grid.Column="0">Choose formulas to format</TextBlock>
-                    <StackPanel Grid.Row="1" Grid.Column="0">
+                    <TextBlock Grid.Row="0" Grid.Column="0" FontSize="16">Choose formulas to format:</TextBlock>
+                    <Grid Grid.Row="1" Grid.Column="0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
                         <TextBox
+                            Grid.Row="0"
+                            Margin="0,8,12,8"
                              mah:TextBoxHelper.ButtonCommand="{Binding TextBoxButtonCmd, Mode=OneWay}"
                              mah:TextBoxHelper.ClearTextButton="True"
                              mah:TextBoxHelper.UseFloatingWatermark="True"
-                             mah:TextBoxHelper.Watermark="Search...">
+                             mah:TextBoxHelper.Watermark="Search">
                             <TextBox.InputBindings>
                                 <KeyBinding Key="Return"
                                         Command="{Binding TextBoxButtonCmd, Mode=OneWay}"
@@ -176,27 +183,41 @@
                             </TextBox.Style>
                         </TextBox>
                         <TreeView
-                              Style="{StaticResource MahApps.Styles.TreeView.Virtualized}">
+                            Grid.Row="1"
+                            ItemsSource="{Binding SelectionTreeData.Tables}"
+                              Style="{StaticResource MahApps.Styles.TreeView.Virtualized}"
+                            HorizontalAlignment="Stretch"
+                            ScrollViewer.VerticalScrollBarVisibility="Auto"
+                            SelectedItemChanged="TreeviewSelectedItemChanged"
+                            >
+                            <i:Interaction.Triggers>
+                                <i:EventTrigger EventName="SelectedItemChanged">
+                                    <i:InvokeCommandAction Command="{Binding SelectedTableMeasureChangedCommand}" />
+                                </i:EventTrigger>
+                            </i:Interaction.Triggers>
                             <TreeView.ItemTemplate>
-                                <HierarchicalDataTemplate>
+                                <HierarchicalDataTemplate DataType="viewmodels:TreeItem" ItemsSource="{Binding Measures}">
+
                                     <StackPanel Orientation="Horizontal">
-                                        <CheckBox VerticalAlignment="Center" />
-                                        <ContentPresenter Content="{Binding }" />
+                                        <CheckBox VerticalAlignment="Center" IsChecked="{Binding IsSelected, Mode=TwoWay}" />
+                                        <TextBlock Text="{Binding Name}" />
                                     </StackPanel>
                                 </HierarchicalDataTemplate>
                             </TreeView.ItemTemplate>
-                            <TreeViewItem Header="Table 1" IsExpanded="true">
-                                <TreeViewItem Header="Measure 1" />
-                                <TreeViewItem Header="Measure 2" />
-                                <TreeViewItem Header="Measure 3" />
-                            </TreeViewItem>
-                            <TreeViewItem Header="Table 3" />
-                            <TreeViewItem Header="Table 3" />
                         </TreeView>
+                    <StackPanel Grid.Row="2" Orientation="Horizontal">
+                            <TextBlock Text="{Binding SelectionTreeData.SelectedTreeItemCount}" />
+                        <TextBlock>&#x202F; Selected</TextBlock>
                     </StackPanel>
-                    <TextBlock Grid.Row="1" Grid.Column="0" VerticalAlignment="Bottom">8 Selected</TextBlock>
-                    <TextBox Grid.Column="1" Grid.Row="1" VerticalScrollBarVisibility="Visible">{MEASURE ORIGINAL TEXT}</TextBox>
-                    <Button Grid.Row="2" Grid.ColumnSpan="2" Width="150" VerticalAlignment="Bottom" Margin="20" HorizontalAlignment="Right" Command="{Binding ApplySelectedFormulaChangesCommand}" Style="{StaticResource StandardButton}">Apply &amp; Continue</Button>
+                    </Grid>
+                    <TextBox Grid.Column="1" Grid.Row="1" FontFamily="Courier New" FontSize="16" VerticalScrollBarVisibility="Visible"
+                             Text="{Binding SelectionTreeData.SelectedTreeViewItem.Formula}"
+                             IsReadOnly="True"
+                             BorderThickness="0"
+                             ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                             ScrollViewer.VerticalScrollBarVisibility="Auto"
+                             />
+                    <Button Grid.Row="2" Grid.ColumnSpan="2" Width="150" VerticalAlignment="Bottom" Margin="0,12,0,0" HorizontalAlignment="Right" Command="{Binding ApplySelectedFormulaChangesCommand}" Style="{StaticResource StandardButton}">Apply &amp; Continue</Button>
                 </Grid>
             </mah:FlipViewItem>
             <!-- SubViewIndex_Progress = 2 -->

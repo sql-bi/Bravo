@@ -7,6 +7,7 @@ using Sqlbi.Bravo.Core.Logging;
 using Sqlbi.Bravo.Core.Services.Interfaces;
 using Sqlbi.Bravo.Core.Settings.Interfaces;
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -124,5 +125,8 @@ namespace Sqlbi.Bravo.Core.Services
             Dispose(disposing: true);
             GC.SuppressFinalize(this);
         }
+
+        public List<Microsoft.AnalysisServices.Tabular.Measure> GetMeasures()
+            => _manager.GetMeasures();
     }
 }
