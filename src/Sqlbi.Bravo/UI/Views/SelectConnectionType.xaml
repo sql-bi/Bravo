@@ -1,0 +1,106 @@
+﻿<Page x:Class="Sqlbi.Bravo.UI.Views.SelectConnectionType"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:local="clr-namespace:Sqlbi.Bravo.UI.Views"
+      mc:Ignorable="d" 
+      d:DesignHeight="450" d:DesignWidth="800"
+      Title="SelectConnectionType"
+        DataContext="{Binding Source={StaticResource ViewModelLocator}, Path=ShellViewModel}">
+    <Page.Resources>
+        <Style x:Key="ConnectionButton" TargetType="Button">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="LightGray" />
+            <Setter Property="BorderThickness" Value="2" />
+            <Setter Property="Width" Value="220" />
+            <Setter Property="Height" Value="220" />
+            <Setter Property="Margin" Value="10" />
+        </Style>
+        <Style x:Key="ConnectionButtonText" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="20" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="Padding" Value="10,0" />
+            <Setter Property="TextAlignment" Value="Center" />
+        </Style>
+    </Page.Resources>
+
+    <Grid
+        Margin="40,40,40,14"
+        HorizontalAlignment="Stretch"
+        VerticalAlignment="Stretch">
+
+        <TextBlock FontWeight="SemiBold" Style="{StaticResource SubheaderTextBlockStyle}">Welcome to Bravo for Power BI</TextBlock>
+        <Button
+            HorizontalAlignment="Right"
+            VerticalAlignment="Top"
+            Click="HowToUseClicked"
+            Style="{StaticResource MediaButton}">
+            <StackPanel Orientation="Horizontal">
+
+                <TextBlock
+                            FontSize="16"
+                            VerticalAlignment="Center"
+                            FontFamily="Segoe MDL2 Assets"
+                            Text="&#xE116;" />
+                <TextBlock>&#x00A0; How to use Bravo?</TextBlock>
+            </StackPanel>
+        </Button>
+
+        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Button
+                    Grid.Column="0"
+                    Click="AttachToWindowClicked"
+                    Style="{StaticResource ConnectionButton}">
+                    <StackPanel>
+                        <Image
+                            Height="100"
+                            Source="/UI/Resources/Images/powerbi-desktop-connect.png"
+                            Stretch="Uniform" />
+                        <TextBlock Style="{StaticResource ConnectionButtonText}">
+                            Attach to an active<LineBreak />
+                            Power BI window</TextBlock>
+                    </StackPanel>
+                </Button>
+                <Button Grid.Column="1" Style="{StaticResource ConnectionButton}">
+                    <StackPanel>
+                        <Image
+                            Height="100"
+                            Source="/UI/Resources/Images/powerbi-dataset.png"
+                            Stretch="Uniform" />
+                        <TextBlock Style="{StaticResource ConnectionButtonText}">
+                            Connect to a<LineBreak />
+                            Power BI dataset</TextBlock>
+                    </StackPanel>
+                </Button>
+                <Button Grid.Column="2" Style="{StaticResource ConnectionButton}">
+                    <StackPanel>
+                        <Image
+                            Height="100"
+                            Source="/UI/Resources/Images/vertipaq-analyzer-file.png"
+                            Stretch="Uniform" />
+                        <TextBlock Style="{StaticResource ConnectionButtonText}">
+                            Open a Vertipaq<LineBreak />
+                            Analyzer file</TextBlock>
+                    </StackPanel>
+                </Button>
+            </Grid>
+            <Button HorizontalAlignment="Center" Click="UseDummyDataClicked">
+                <StackPanel>
+                    <TextBlock>Use dummy test data</TextBlock>
+                </StackPanel>
+            </Button>
+        </StackPanel>
+        <TextBlock  VerticalAlignment="Bottom" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" Style="{StaticResource BodyTextBlockStyle}" >
+                <Run>Bravo for Power BI is an open source tool developed and maintained by SQLBI and the GitHub community. Join us at&#x202F;</Run>
+                <Hyperlink Style="{StaticResource InlineHyperlinks}" NavigateUri="https://github.com/sql-bi/bravo" RequestNavigate="RequestNavigateHyperlink">github.com/sql-bi/bravo</Hyperlink>
+        </TextBlock>
+    </Grid>
+</Page>

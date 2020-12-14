@@ -3,9 +3,11 @@ using Serilog.Events;
 using Sqlbi.Bravo.Core.Helpers;
 using Sqlbi.Bravo.Core.Logging;
 using Sqlbi.Bravo.Core.Settings.Interfaces;
+using Sqlbi.Bravo.UI.DataModel;
 using Sqlbi.Bravo.UI.Framework.Commands;
 using Sqlbi.Bravo.UI.Framework.Interfaces;
 using Sqlbi.Bravo.UI.Framework.ViewModels;
+using Sqlbi.Bravo.UI.Services.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,21 +20,32 @@ namespace Sqlbi.Bravo.UI.ViewModels
     {
         private readonly IGlobalSettingsProviderService _settings;
         private readonly ILogger<SettingsViewModel> _logger;
+        private readonly IThemeSelectorService _themeSelector;
 
-        public SettingsViewModel(IGlobalSettingsProviderService settings, ILogger<SettingsViewModel> logger)
+        public SettingsViewModel(IGlobalSettingsProviderService settings, ILogger<SettingsViewModel> logger, IThemeSelectorService themeSelector)
         {
             _settings = settings;
             _logger = logger;
+            _themeSelector = themeSelector;
 
             _logger.Trace();
             SaveCommand = new RelayCommand<object>(execute: async (parameter) => await SaveAsync(parameter));
+
+            Theme = _themeSelector.GetCurrentTheme();
+            SetThemeCommand = new RelayCommand<string>(themeName =>
+            {
+                var theme = (AppTheme)Enum.Parse(typeof(AppTheme), themeName);
+                _themeSelector.SetTheme(theme);
+            });
         }
+
+        public AppTheme Theme { get; set; }
 
         public IEnumerable<LogEventLevel> TelemetryLevels => Enum.GetValues(typeof(LogEventLevel)).Cast<LogEventLevel>();
 
-        public bool TelemetryEnabled 
-        { 
-            get => _settings.Application.TelemetryEnabled; 
+        public bool TelemetryEnabled
+        {
+            get => _settings.Application.TelemetryEnabled;
             set => _settings.Application.TelemetryEnabled = value;
         }
 
@@ -71,6 +84,8 @@ namespace Sqlbi.Bravo.UI.ViewModels
         public ICommand SaveCommand { get; set; }
 
         public bool SaveCommandIsRunning { get; set; }
+
+        public ICommand SetThemeCommand { get; set; }
 
         private async Task SaveAsync(object parameter)
         {

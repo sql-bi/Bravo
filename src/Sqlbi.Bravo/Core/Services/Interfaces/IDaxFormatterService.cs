@@ -1,4 +1,6 @@
-﻿using Sqlbi.Bravo.Core.Client.Http;
+﻿using Microsoft.AnalysisServices.Tabular;
+using Sqlbi.Bravo.Core.Client.Http;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Sqlbi.Bravo.Core.Services.Interfaces
@@ -10,5 +12,7 @@ namespace Sqlbi.Bravo.Core.Services.Interfaces
         Task FormatAsync(DaxFormatterTabularObjectType objectType);
 
         int Count(DaxFormatterTabularObjectType objectType);
+
+        List<Measure> GetMeasures();
     }
 }

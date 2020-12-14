@@ -6,6 +6,7 @@ using Sqlbi.Bravo.Core.Logging;
 using Sqlbi.Bravo.Core.Services.Interfaces;
 using Sqlbi.Bravo.Core.Settings.Interfaces;
 using Sqlbi.Bravo.Core.Windows;
+using Sqlbi.Bravo.UI.Services.Interfaces;
 using System;
 using System.Threading.Tasks;
 using System.Windows;
@@ -29,6 +30,10 @@ namespace Sqlbi.Bravo
             _logger.Trace();
 
             ServiceProvider = _host.Services;
+
+            var tss = ServiceProvider.GetRequiredService<IThemeSelectorService>();
+            tss.InitializeTheme();
+
             ConfigureExceptionHandlers();
             ConfigureSingleInstanceOrShutdown();
         }

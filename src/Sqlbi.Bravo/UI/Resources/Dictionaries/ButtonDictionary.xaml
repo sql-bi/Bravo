@@ -2,13 +2,13 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:app_ui_framework_properties="clr-namespace:Sqlbi.Bravo.UI.Framework.Properties"
                     xmlns:app_ui_framework_valueconverters="clr-namespace:Sqlbi.Bravo.UI.Framework.ValueConverters">
-    
+
     <ResourceDictionary.MergedDictionaries>
         <ResourceDictionary Source="ColorDictionary.xaml" />
         <ResourceDictionary Source="FontDictionary.xaml" />
         <ResourceDictionary Source="TextDictionary.xaml" />
     </ResourceDictionary.MergedDictionaries>
-   
+
     <!--Icon button-->
     <Style x:Key="IconButton" TargetType="{x:Type Button}" BasedOn="{StaticResource BaseControlStyle}">
         <Setter Property="Background" Value="{StaticResource AppBlueBrush}" />
@@ -120,4 +120,19 @@
             </Setter.Value>
         </Setter>
     </Style>
+
+    <Style x:Key="StandardButton" TargetType="Button">
+        <Setter Property="Background" Value="Red" />
+        <Setter Property="Foreground" Value="White" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="BorderThickness" Value="0" />
+    </Style>
+
+    <Style x:Key="MediaButton" TargetType="Button">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="Gray" />
+        <Setter Property="BorderThickness" Value="0" />
+    </Style>
+
 </ResourceDictionary>

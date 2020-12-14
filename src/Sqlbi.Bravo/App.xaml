@@ -10,6 +10,11 @@
                 <ResourceDictionary Source="/UI/Resources/Dictionaries/FontDictionary.xaml" />
                 <ResourceDictionary Source="/UI/Resources/Dictionaries/ButtonDictionary.xaml" />
                 <ResourceDictionary Source="/UI/Resources/Dictionaries/TextDictionary.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Controls.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Fonts.xaml" />
+                <!--  Accent and AppTheme setting  -->
+                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Themes/Dark.Red.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Themes/Light.Red.xaml" />
             </ResourceDictionary.MergedDictionaries>
             <app_ui_framework_viewmodels:ViewModelLocator x:Key="ViewModelLocator" />
         </ResourceDictionary>

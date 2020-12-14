@@ -12,9 +12,27 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="UI\Resources\Images\dataset-icon.png" />
+    <None Remove="UI\Resources\Images\dax-formatter-logo.png" />
+    <None Remove="UI\Resources\Images\desktop-icon.png" />
+    <None Remove="UI\Resources\Images\file-icon.png" />
+    <None Remove="UI\Resources\Images\logo.png" />
+    <None Remove="UI\Resources\Images\no-icon.png" />
+    <None Remove="UI\Resources\Images\powerbi-dataset.png" />
+    <None Remove="UI\Resources\Images\powerbi-desktop-connect.png" />
+    <None Remove="UI\Resources\Images\vertipaq-analyzer-file.png" />
+    <None Remove="UI\Views\AnalyzeModelView.xaml" />
+    <None Remove="UI\Views\MediaDialog.xaml" />
+    <None Remove="UI\Views\SelectConnectionType.xaml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MahApps.Metro" Version="2.4.1" />
+    <PackageReference Include="MahApps.Metro.SimpleChildWindow" Version="2.0.0" />
     <PackageReference Include="Microsoft.AnalysisServices.NetCore.retail.amd64" Version="19.12.3-Preview" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="5.0.0-rc.2.20475.5" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="5.0.0-rc.2.20475.5" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.664.37" />
     <PackageReference Include="PropertyChanged.Fody" Version="3.2.10" />
     <PackageReference Include="Serilog" Version="2.10.1-dev-01249" />
     <PackageReference Include="Serilog.Extensions.Hosting" Version="4.0.0-dev-00051" />
@@ -47,6 +65,15 @@
     <Resource Include="UI\Resources\Fonts\FontAwesome\fa-brands-400.ttf" />
     <Resource Include="UI\Resources\Fonts\FontAwesome\fa-regular-400.ttf" />
     <Resource Include="UI\Resources\Fonts\FontAwesome\fa-solid-900.ttf" />
+    <Resource Include="UI\Resources\Images\dataset-icon.png" />
+    <Resource Include="UI\Resources\Images\dax-formatter-logo.png" />
+    <Resource Include="UI\Resources\Images\desktop-icon.png" />
+    <Resource Include="UI\Resources\Images\file-icon.png" />
+    <Resource Include="UI\Resources\Images\logo.png" />
+    <Resource Include="UI\Resources\Images\no-icon.png" />
+    <Resource Include="UI\Resources\Images\powerbi-dataset.png" />
+    <Resource Include="UI\Resources\Images\powerbi-desktop-connect.png" />
+    <Resource Include="UI\Resources\Images\vertipaq-analyzer-file.png" />
   </ItemGroup>
 
 </Project>

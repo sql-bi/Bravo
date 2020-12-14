@@ -47,12 +47,12 @@ namespace Sqlbi.Bravo.Core.Settings
         private void ParseCommandLineArgs()
         {
             var serverNameOption = new Option<string>(AppConstants.CommandLineArgumentServerNameAliases)
-            {  
+            {
                 Description = "Server name", 
                 IsRequired = true 
             };
             var databaseNameOption = new Option<string>(AppConstants.CommandLineArgumentDatabaseNameAliases)
-            { 
+            {
                 Description = "Database name", 
                 IsRequired = true 
             };

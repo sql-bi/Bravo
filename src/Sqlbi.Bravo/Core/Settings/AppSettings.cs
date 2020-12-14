@@ -32,5 +32,7 @@ namespace Sqlbi.Bravo.Core.Settings
         public string ProxyPassword { get; set; }
 
         public bool UIShellBringToForegroundOnParentProcessMainWindowScreen { get; set; } = AppConstants.ApplicationSettingsDefaultUIShellBringToForegroundOnParentProcessMainWindowScreen;
+
+        public string ThemeName { get; set; }
     }
 }
