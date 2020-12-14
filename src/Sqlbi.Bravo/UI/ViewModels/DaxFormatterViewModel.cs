@@ -50,7 +50,6 @@ namespace Sqlbi.Bravo.UI.ViewModels
             ChangeFormulasCommand = new RelayCommand(() => ChooseFormulas());
             ApplySelectedFormulaChangesCommand = new RelayCommand(() => SelectedFormulasChanged());
             OpenLogCommand = new RelayCommand(() => OpenLog());
-          //  SelectedTableMeasureChangedCommand = new RelayCommand(() => )
         }
 
         private DaxFormatterTabularObjectType TabularObjectType { get; set; } = DaxFormatterTabularObjectType.None;
@@ -172,7 +171,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
                 {
                     if (table.Name == measure.Table.Name)
                     {
-                        table.Measures.Add(new TreeItem(msvm) { Name = measure.Name, Formula = measure.Expression });
+                        table.Measures.Add(new TreeItem(msvm, table) { Name = measure.Name, Formula = measure.Expression });
                         addedMeasure = true;
                         break;
                     }
@@ -181,7 +180,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
                 if (!addedMeasure)
                 {
                     var newTable = new TreeItem(msvm) { Name = measure.Table.Name };
-                    newTable.Measures.Add(new TreeItem(msvm) { Name = measure.Name, Formula = measure.Expression });
+                    newTable.Measures.Add(new TreeItem(msvm, newTable) { Name = measure.Name, Formula = measure.Expression });
                     msvm.Tables.Add(newTable);
                 }
             }

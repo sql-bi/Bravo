@@ -80,7 +80,7 @@
                         Margin="0,0,0,24" Orientation="Horizontal">
                             <TextBlock VerticalAlignment="Center" FontWeight="Bold" Margin="0,-4,0,0" FontSize="16" >&#x2211;&#x202F;&#x202F;&#x202F;&#x202F;</TextBlock>
                             <TextBlock VerticalAlignment="Center" FontWeight="Bold" Style="{StaticResource BaseTextBlockStyle}"
-                           Text="{Binding TabularObjectMeasuresCount}"/>
+                           Text="{Binding SelectionTreeData.SelectedTreeItemCount}"/>
                             <TextBlock VerticalAlignment="Center" FontWeight="Bold" Style="{StaticResource BaseTextBlockStyle}">&#x202F;&#x202F;&#x202F;formulas</TextBlock>
                             <TextBlock VerticalAlignment="Center" Margin="30,0,0,0"><Hyperlink Style="{StaticResource InlineHyperlinks}" Command="{Binding ChangeFormulasCommand}" >Change</Hyperlink></TextBlock>
                         </StackPanel>
@@ -162,15 +162,11 @@
                         <TextBox
                             Grid.Row="0"
                             Margin="0,8,12,8"
-                             mah:TextBoxHelper.ButtonCommand="{Binding TextBoxButtonCmd, Mode=OneWay}"
+                            Text="{Binding SelectionTreeData.SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                              mah:TextBoxHelper.ClearTextButton="True"
                              mah:TextBoxHelper.UseFloatingWatermark="True"
-                             mah:TextBoxHelper.Watermark="Search">
-                            <TextBox.InputBindings>
-                                <KeyBinding Key="Return"
-                                        Command="{Binding TextBoxButtonCmd, Mode=OneWay}"
-                                        CommandParameter="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=TextBox}, Path=Text, Mode=OneWay}" />
-                            </TextBox.InputBindings>
+                             mah:TextBoxHelper.Watermark="Search"
+                            >
                             <TextBox.Style>
                                 <Style BasedOn="{StaticResource MahApps.Styles.TextBox.Search}" TargetType="{x:Type TextBox}">
                                     <Style.Triggers>
@@ -196,19 +192,19 @@
                                 </i:EventTrigger>
                             </i:Interaction.Triggers>
                             <TreeView.ItemTemplate>
-                                <HierarchicalDataTemplate DataType="viewmodels:TreeItem" ItemsSource="{Binding Measures}">
+                                <HierarchicalDataTemplate DataType="viewmodels:TreeItem" ItemsSource="{Binding VisibleMeasures}">
 
                                     <StackPanel Orientation="Horizontal">
-                                        <CheckBox VerticalAlignment="Center" IsChecked="{Binding IsSelected, Mode=TwoWay}" />
+                                        <CheckBox VerticalAlignment="Center" IsThreeState="{Binding IsThreeState}" IsChecked="{Binding IsSelected, Mode=TwoWay}" />
                                         <TextBlock Text="{Binding Name}" />
                                     </StackPanel>
                                 </HierarchicalDataTemplate>
                             </TreeView.ItemTemplate>
                         </TreeView>
-                    <StackPanel Grid.Row="2" Orientation="Horizontal">
+                        <StackPanel Grid.Row="2" Orientation="Horizontal">
                             <TextBlock Text="{Binding SelectionTreeData.SelectedTreeItemCount}" />
-                        <TextBlock>&#x202F; Selected</TextBlock>
-                    </StackPanel>
+                            <TextBlock>&#x202F; Selected</TextBlock>
+                        </StackPanel>
                     </Grid>
                     <TextBox Grid.Column="1" Grid.Row="1" FontFamily="Courier New" FontSize="16" VerticalScrollBarVisibility="Visible"
                              Text="{Binding SelectionTreeData.SelectedTreeViewItem.Formula}"
