@@ -199,16 +199,16 @@
                                 <HierarchicalDataTemplate DataType="viewmodels:TreeItem" ItemsSource="{Binding Measures}">
 
                                     <StackPanel Orientation="Horizontal">
-                                        <CheckBox VerticalAlignment="Center" IsChecked="{Binding IsSelected, Mode=TwoWay}" />
+                                        <CheckBox VerticalAlignment="Center" IsThreeState="{Binding IsThreeState}" IsChecked="{Binding IsSelected, Mode=TwoWay}" />
                                         <TextBlock Text="{Binding Name}" />
                                     </StackPanel>
                                 </HierarchicalDataTemplate>
                             </TreeView.ItemTemplate>
                         </TreeView>
-                    <StackPanel Grid.Row="2" Orientation="Horizontal">
+                        <StackPanel Grid.Row="2" Orientation="Horizontal">
                             <TextBlock Text="{Binding SelectionTreeData.SelectedTreeItemCount}" />
-                        <TextBlock>&#x202F; Selected</TextBlock>
-                    </StackPanel>
+                            <TextBlock>&#x202F; Selected</TextBlock>
+                        </StackPanel>
                     </Grid>
                     <TextBox Grid.Column="1" Grid.Row="1" FontFamily="Courier New" FontSize="16" VerticalScrollBarVisibility="Visible"
                              Text="{Binding SelectionTreeData.SelectedTreeViewItem.Formula}"

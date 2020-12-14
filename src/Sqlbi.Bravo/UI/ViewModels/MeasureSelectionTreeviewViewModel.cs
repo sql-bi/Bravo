@@ -19,9 +19,12 @@ namespace Sqlbi.Bravo.UI.ViewModels
     internal class TreeItem : BaseViewModel
     {
         private readonly MeasureSelectionViewModel _parent;
+        private readonly TreeItem _table;
         private bool? _isSelected = true;
 
         public TreeItem(MeasureSelectionViewModel parent) => _parent = parent;
+
+        public TreeItem(MeasureSelectionViewModel parent, TreeItem table) : this(parent) => _table = table;
 
         public bool? IsSelected
         {
@@ -31,11 +34,28 @@ namespace Sqlbi.Bravo.UI.ViewModels
             {
                 if (SetProperty(ref _isSelected, value))
                 {
-                    if (Measures.Any())
+                    if (Measures.Any() && value != null)
                     {
                         foreach (var m in Measures)
                         {
                             m.IsSelected = value;
+                        }
+                    }
+                    else if (_table != null)
+                    {
+                        var selected = _table?.Measures.Count(m => m.IsSelected ?? false) ?? 0;
+
+                        if (selected == 0)
+                        {
+                            _table.IsSelected = false;
+                        }
+                        else if (selected == _table.Measures.Count)
+                        {
+                            _table.IsSelected = true;
+                        }
+                        else
+                        {
+                            _table.IsSelected = null;
                         }
                     }
 
@@ -43,6 +63,8 @@ namespace Sqlbi.Bravo.UI.ViewModels
                 }
             }
         }
+
+        public bool IsThreeState  => _table == null;
 
         public string Name { get; set; }
 
