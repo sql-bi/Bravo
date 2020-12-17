@@ -31,9 +31,6 @@ namespace Sqlbi.Bravo
 
             ServiceProvider = _host.Services;
 
-            var tss = ServiceProvider.GetRequiredService<IThemeSelectorService>();
-            tss.InitializeTheme();
-
             ConfigureExceptionHandlers();
             ConfigureSingleInstanceOrShutdown();
         }
@@ -42,6 +39,9 @@ namespace Sqlbi.Bravo
         {
             _logger.Trace();
             _logger.Information(LogEvents.AppOnStartup);
+
+            var tss = ServiceProvider.GetRequiredService<IThemeSelectorService>();
+            tss.InitializeTheme(_settings.Application.ThemeName);
 
             await _host.StartAsync();
 

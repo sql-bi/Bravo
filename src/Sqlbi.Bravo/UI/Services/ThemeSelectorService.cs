@@ -12,15 +12,11 @@ namespace Sqlbi.Bravo.UI.Services
         {
         }
 
-        public void InitializeTheme()
-        {
-            var theme = GetCurrentTheme();
-            SetTheme(theme);
-        }
+        public void InitializeTheme(string themeName) => SetTheme(themeName);
 
-        public void SetTheme(AppTheme theme)
+        public void SetTheme(string themeName)
         {
-            if (theme == AppTheme.Default)
+            if (themeName.Equals("Default", StringComparison.InvariantCultureIgnoreCase))
             {
                 ThemeManager.Current.ThemeSyncMode = ThemeSyncMode.SyncWithAppMode;
                 ThemeManager.Current.SyncTheme();
@@ -29,22 +25,8 @@ namespace Sqlbi.Bravo.UI.Services
             {
                 ThemeManager.Current.ThemeSyncMode = ThemeSyncMode.SyncWithHighContrast;
                 ThemeManager.Current.SyncTheme();
-                ThemeManager.Current.ChangeTheme(Application.Current, $"{theme}.Red", SystemParameters.HighContrast);
+                ThemeManager.Current.ChangeTheme(Application.Current, $"{themeName}.Red", SystemParameters.HighContrast);
             }
-
-            App.Current.Properties["Theme"] = theme.ToString();
-        }
-
-        public AppTheme GetCurrentTheme()
-        {
-            if (App.Current.Properties.Contains("Theme"))
-            {
-                var themeName = App.Current.Properties["Theme"].ToString();
-                _ = Enum.TryParse(themeName, out AppTheme theme);
-                return theme;
-            }
-
-            return AppTheme.Default;
         }
     }
 }

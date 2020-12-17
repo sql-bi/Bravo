@@ -10,7 +10,9 @@ using Sqlbi.Bravo.UI.Framework.ViewModels;
 using Sqlbi.Bravo.UI.Services.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
@@ -31,15 +33,24 @@ namespace Sqlbi.Bravo.UI.ViewModels
             _logger.Trace();
             SaveCommand = new RelayCommand<object>(execute: async (parameter) => await SaveAsync(parameter));
 
-            Theme = _themeSelector.GetCurrentTheme();
-            SetThemeCommand = new RelayCommand<string>(themeName =>
-            {
-                var theme = (AppTheme)Enum.Parse(typeof(AppTheme), themeName);
-                _themeSelector.SetTheme(theme);
-            });
+            SetThemeCommand = new RelayCommand<string>(themeName => _themeSelector.SetTheme(themeName));
+
+            var assemblyLocation = Assembly.GetExecutingAssembly().Location;
+            var version = FileVersionInfo.GetVersionInfo(assemblyLocation).FileVersion;
+            VersionDescription = $"Bravo - {version}";
         }
 
-        public AppTheme Theme { get; set; }
+        public string VersionDescription { get; private set; }
+
+        public string Theme
+        {
+            get => _settings.Application.ThemeName;
+            set
+            {
+                _settings.Application.ThemeName = value;
+                OnPropertyChanged(nameof(Theme));
+            }
+        }
 
         public IEnumerable<LogEventLevel> TelemetryLevels => Enum.GetValues(typeof(LogEventLevel)).Cast<LogEventLevel>();
 

@@ -33,6 +33,6 @@ namespace Sqlbi.Bravo.Core.Settings
 
         public bool UIShellBringToForegroundOnParentProcessMainWindowScreen { get; set; } = AppConstants.ApplicationSettingsDefaultUIShellBringToForegroundOnParentProcessMainWindowScreen;
 
-        public string ThemeName { get; set; }
+        public string ThemeName { get; set; } = "Default";
     }
 }

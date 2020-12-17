@@ -8,7 +8,6 @@
       xmlns:simpleChildWindow="http://metro.mahapps.com/winfx/xaml/simplechildwindow"
       xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
       xmlns:conv="clr-namespace:Sqlbi.Bravo.UI.Framework.ValueConverters"
-      xmlns:dataModel="clr-namespace:Sqlbi.Bravo.UI.DataModel"
       mc:Ignorable="d"
       d:DesignHeight="450"
       d:DesignWidth="800"
@@ -18,7 +17,7 @@
       DataContext="{Binding Source={StaticResource ViewModelLocator}, Path=SettingsViewModel}">
 
     <simpleChildWindow:ChildWindow.Resources>
-        <conv:EnumToBooleanConverter x:Key="EnumToBooleanConverter" EnumType="dataModel:AppTheme" />
+        <conv:StringToBooleanConverter x:Key="StringToBooleanConverter" />
     </simpleChildWindow:ChildWindow.Resources>
     <Grid>
         <Grid.RowDefinitions>
@@ -27,12 +26,7 @@
         </Grid.RowDefinitions>
         <ScrollViewer Grid.Row="0">
             <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-
-                <StackPanel Grid.Column="0">
+                <StackPanel Margin="20">
 
                     <TextBlock
                         Style="{StaticResource BodyTextBlockStyle}"
@@ -41,7 +35,8 @@
                     <RadioButton
                             GroupName="AppTheme"
                             Content="Light"
-                            IsChecked="{Binding Theme, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Light}">
+                            Margin="0,2"
+                            IsChecked="{Binding Theme, Converter={StaticResource StringToBooleanConverter}, ConverterParameter=Light, Mode=TwoWay}">
                         <i:Interaction.Triggers>
                             <i:EventTrigger EventName="Checked">
                                 <i:InvokeCommandAction Command="{Binding SetThemeCommand}" CommandParameter="Light" />
@@ -50,8 +45,9 @@
                     </RadioButton>
                     <RadioButton
                             GroupName="AppTheme"
+                            Margin="0,2"
                             Content="Dark"
-                            IsChecked="{Binding Theme, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Dark}">
+                            IsChecked="{Binding Theme, Converter={StaticResource StringToBooleanConverter}, ConverterParameter=Dark, Mode=TwoWay}">
                         <i:Interaction.Triggers>
                             <i:EventTrigger EventName="Checked">
                                 <i:InvokeCommandAction Command="{Binding SetThemeCommand}" CommandParameter="Dark" />
@@ -60,8 +56,9 @@
                     </RadioButton>
                     <RadioButton
                             GroupName="AppTheme"
+                            Margin="0,2"
                             Content="Default"
-                            IsChecked="{Binding Theme, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Default}">
+                            IsChecked="{Binding Theme, Converter={StaticResource StringToBooleanConverter}, ConverterParameter=Default, Mode=TwoWay}">
                         <i:Interaction.Triggers>
                             <i:EventTrigger EventName="Checked">
                                 <i:InvokeCommandAction Command="{Binding SetThemeCommand}" CommandParameter="Default" />
@@ -69,13 +66,8 @@
                         </i:Interaction.Triggers>
                     </RadioButton>
 
-                    <TextBlock
-                    Text="{Binding VersionDescription, Mode=OneWay}"
-                    Style="{StaticResource BodyTextBlockStyle}" />
-
-                </StackPanel>
-
-                <Grid Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <Expander Header="Advanced" Margin="0,12">
+                <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
@@ -113,18 +105,25 @@
                     <PasswordBox Grid.Row="6" Grid.Column="1" IsEnabled="{Binding ProxyIsEnabled}" x:Name="ProxyPassword" />
                     <Label Grid.Row="7" Grid.Column="0" FontWeight="Bold">UIShellBringToForegroundOnParentProcessMainWindowScreen</Label>
                     <CheckBox Grid.Row="7" Grid.Column="1" IsChecked="{Binding UIShellBringToForegroundOnParentProcessMainWindowScreen}" />
-
-                    <Button Grid.Row="8" Height="30" Width="Auto"
-                Style="{StaticResource SpinningIconButton}" 
-                Command="{Binding SaveCommand}"
-                CommandParameter="{Binding ElementName=SettingsPage}" 
-                Content="Save"
-                app_ui_framework_properties:IsBusyAttachedProperty.Value="{Binding SaveCommandIsRunning}" />
-
                 </Grid>
+                    </Expander>
+
+                    <TextBlock
+                    Text="{Binding VersionDescription, Mode=OneWay}"
+                    Style="{StaticResource BodyTextBlockStyle}" />
+
+                </StackPanel>
+
             </Grid>
         </ScrollViewer>
 
-        <Button Grid.Row="1" Margin="16" x:Name="CloseButton" Width="80" HorizontalAlignment="Right" Style="{StaticResource StandardButton}" Click="OkClicked">Ok</Button>
+        <Button
+            Grid.Row="1"
+            Margin="16"
+            x:Name="CloseButton"
+            Width="80"
+            HorizontalAlignment="Right"
+            Style="{StaticResource StandardButton}"
+            Click="OkClicked">Ok</Button>
     </Grid>
 </simpleChildWindow:ChildWindow>

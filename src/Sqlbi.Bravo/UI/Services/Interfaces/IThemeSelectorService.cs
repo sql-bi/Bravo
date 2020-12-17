@@ -4,10 +4,8 @@ namespace Sqlbi.Bravo.UI.Services.Interfaces
 {
     public interface IThemeSelectorService
     {
-        void InitializeTheme();
+        void InitializeTheme(string themeName);
 
-        void SetTheme(AppTheme theme);
-
-        AppTheme GetCurrentTheme();
+        void SetTheme(string themeName);
     }
 }
