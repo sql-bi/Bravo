@@ -14,8 +14,20 @@ namespace Sqlbi.Bravo.UI.Views
             Title.Text = mediaOption.Title;
             DisplayedDescription.Text = mediaOption.Description;
             MediaPlayer.Source = new Uri(mediaOption.MediaLink);
+            ProgressIndicator.IsActive = false;
         }
 
         private void OkClicked(object sender, RoutedEventArgs e) => _ = Close();
+
+        private void OnMediaOpened(object sender, RoutedEventArgs e)
+        {
+            ProgressIndicator.IsActive = false;
+        }
+
+        private void OnMediaFailed(object sender, ExceptionRoutedEventArgs e)
+        {
+            // TODO: Add some logging for this?
+            ProgressIndicator.IsActive = false;
+        }
     }
 }
