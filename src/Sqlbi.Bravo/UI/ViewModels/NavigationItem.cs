@@ -11,5 +11,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
         public Type NavigationPage { get; set; }
 
         public bool ShowComingSoon { get; set; }
+
+        public bool IsEnabled => !ShowComingSoon;
     }
 }
