@@ -149,7 +149,8 @@
                 OptionsItemCommand="{Binding ItemSelectedCommand}"
                 OptionsItemsSource="{Binding OptionMenuItems}"
                 OptionsItemTemplate="{StaticResource MenuItemTemplate}"
-                SelectedOptionsItem="{Binding SelectedOptionsItem}" >
+                SelectedOptionsItem="{Binding SelectedOptionsItem}">
+
                 <mah:HamburgerMenu.Content>
                     <Grid>
                         <Grid.RowDefinitions>
