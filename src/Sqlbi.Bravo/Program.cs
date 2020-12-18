@@ -119,7 +119,7 @@ namespace Sqlbi.Bravo
                 // TODO: stop making this a singleton so can use in different tabs
                 services.AddSingleton<DaxFormatterViewModel>();
 
-                services.AddScoped<TabItem>();
+                services.AddScoped<TabItemViewModel>();
             }
 
             static void ConfigureLogging(ILoggingBuilder logging)

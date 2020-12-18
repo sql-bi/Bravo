@@ -12,14 +12,14 @@ using Sqlbi.Bravo.UI.DataModel;
 
 namespace Sqlbi.Bravo.UI.ViewModels
 {
-    internal class TabItem : BaseViewModel
+    internal class TabItemViewModel : BaseViewModel
     {
         private BiConnectionType connectionType;
 
         private readonly IAnalysisServicesEventWatcherService _watcher;
         private readonly ILogger _logger;
 
-        public TabItem(IAnalysisServicesEventWatcherService watcher, ILogger<SideMenuViewModel> logger)
+        public TabItemViewModel(IAnalysisServicesEventWatcherService watcher, ILogger<SideMenuViewModel> logger)
         {
             _logger = logger;
             _watcher = watcher;
@@ -82,6 +82,20 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public string ConnectionName { get; set; }
 
+        public string Icon
+        {
+            get
+            {
+                return ConnectionType switch
+                {
+                    BiConnectionType.ConnectedPowerBiDataset => "/ui/resources/Images/dataset-icon.png",
+                    BiConnectionType.ActivePowerBiWindow => "/ui/resources/Images/desktop-icon.png",
+                    BiConnectionType.VertipaqAnalyzerFile => "/ui/resources/Images/file-icon.png",
+                    _ => string.Empty,
+                };
+            }
+        }
+
         public BiConnectionType ConnectionType
         {
             get => connectionType;
@@ -90,12 +104,13 @@ namespace Sqlbi.Bravo.UI.ViewModels
                 if (SetProperty(ref connectionType, value))
                 {
                     OnPropertyChanged(nameof(Header));
-                    //   OnPropertyChanged(nameof(Icon));
+                    OnPropertyChanged(nameof(Icon));
                 }
             }
         }
 
-        public bool IsTabClosable { get; set; } = false;
+        // TODO: add logic for when all open tabs are closed
+        public bool IsTabClosable { get; set; } = true;
 
         public ICommand ConnectCommand { get; set; }
 
@@ -143,9 +158,6 @@ namespace Sqlbi.Bravo.UI.ViewModels
             //DisplayViewDaxFormatterCommandIsEnabled = e.Current == ConnectionState.Open;
         }
 
-        public override string ToString()
-        {
-            return Header;
-        }
+        public override string ToString() => Header;
     }
 }

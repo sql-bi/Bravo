@@ -34,7 +34,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
             PrintDebug();
 
-            Tabs = new ObservableCollection<TabItem>() { (TabItem)App.ServiceProvider.GetRequiredService(typeof(TabItem)) };
+            Tabs = new ObservableCollection<TabItemViewModel>() { (TabItemViewModel)App.ServiceProvider.GetRequiredService(typeof(TabItemViewModel)) };
             SelectedTab = Tabs[0];
 
             SelectedItem = MenuItems.First();
@@ -47,6 +47,13 @@ namespace Sqlbi.Bravo.UI.ViewModels
             SelectedTab.ConnectionName = title.Replace(" - Power BI Desktop", string.Empty);
             SelectedTab.ConnectionType = BiConnectionType.ActivePowerBiWindow;
             SelectedTab.ContentPageSource = SelectedItem.NavigationPage;
+#if DEBUG
+            if (string.IsNullOrWhiteSpace(SelectedTab.ConnectionName))
+            {
+                SelectedTab.ConnectionName = "DEBUG";
+            }
+#endif
+
         }
 
         public double WindowMinWidth => 800D;
@@ -78,9 +85,9 @@ namespace Sqlbi.Bravo.UI.ViewModels
         public NavigationItem SelectedOptionsItem { get; set; }
 
 
-        private ObservableCollection<TabItem> _tabs;
+        private ObservableCollection<TabItemViewModel> _tabs;
 
-        public ObservableCollection<TabItem> Tabs
+        public ObservableCollection<TabItemViewModel> Tabs
         {
             get
             {
@@ -93,10 +100,10 @@ namespace Sqlbi.Bravo.UI.ViewModels
             }
         }
 
-        private TabItem _selectedTab;
+        private TabItemViewModel _selectedTab;
         private NavigationItem selectedItem;
 
-        public TabItem SelectedTab
+        public TabItemViewModel SelectedTab
         {
             get
             {

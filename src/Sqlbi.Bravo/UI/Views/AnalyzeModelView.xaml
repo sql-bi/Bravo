@@ -8,7 +8,7 @@
       d:DesignHeight="450" d:DesignWidth="800"
       Title="AnalyzeModelView">
 
-    <Grid>
-        <TextBlock FontSize="60">Analyze Model</TextBlock>
+    <Grid Margin="20">
+        <TextBlock Style="{DynamicResource SubheaderTextBlockStyle}">Analyze Model</TextBlock>
     </Grid>
 </Page>
