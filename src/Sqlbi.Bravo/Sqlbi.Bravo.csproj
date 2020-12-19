@@ -12,17 +12,25 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="UI\Resources\Images\dataset-icon.png" />
+    <Compile Remove="UI\Theme\**" />
+    <EmbeddedResource Remove="UI\Theme\**" />
+    <None Remove="UI\Theme\**" />
+    <Page Remove="UI\Theme\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="UI\Controls\AnalyzeModelIcon.xaml" />
+    <None Remove="UI\Controls\DatasetIcon.xaml" />
+    <None Remove="UI\Controls\DaxFormatterIcon.xaml" />
+    <None Remove="UI\Controls\DesktopIcon.xaml" />
+    <None Remove="UI\Controls\HelpIcon.xaml" />
+    <None Remove="UI\Controls\VertipaqFileIcon.xaml" />
     <None Remove="UI\Resources\Images\dax-formatter-logo.png" />
-    <None Remove="UI\Resources\Images\desktop-icon.png" />
-    <None Remove="UI\Resources\Images\file-icon.png" />
     <None Remove="UI\Resources\Images\logo.png" />
     <None Remove="UI\Resources\Images\no-icon.png" />
     <None Remove="UI\Resources\Images\powerbi-dataset.png" />
     <None Remove="UI\Resources\Images\powerbi-desktop-connect.png" />
     <None Remove="UI\Resources\Images\vertipaq-analyzer-file.png" />
-    <None Remove="UI\Theme\Dark.Red.xaml" />
-    <None Remove="UI\Theme\Light.Red.xaml" />
     <None Remove="UI\Views\AnalyzeModelView.xaml" />
     <None Remove="UI\Views\MediaDialog.xaml" />
     <None Remove="UI\Views\SelectConnectionType.xaml" />
@@ -66,10 +74,7 @@
     <Resource Include="UI\Resources\Fonts\FontAwesome\fa-brands-400.ttf" />
     <Resource Include="UI\Resources\Fonts\FontAwesome\fa-regular-400.ttf" />
     <Resource Include="UI\Resources\Fonts\FontAwesome\fa-solid-900.ttf" />
-    <Resource Include="UI\Resources\Images\dataset-icon.png" />
     <Resource Include="UI\Resources\Images\dax-formatter-logo.png" />
-    <Resource Include="UI\Resources\Images\desktop-icon.png" />
-    <Resource Include="UI\Resources\Images\file-icon.png" />
     <Resource Include="UI\Resources\Images\logo.png" />
     <Resource Include="UI\Resources\Images\no-icon.png" />
     <Resource Include="UI\Resources\Images\powerbi-dataset.png" />

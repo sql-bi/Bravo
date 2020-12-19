@@ -13,7 +13,7 @@
         <Setter Property="TextTrimming" Value="None" />
         <Setter Property="TextWrapping" Value="Wrap" />
         <Setter Property="LineStackingStrategy" Value="MaxHeight" />
-        <Setter Property="Foreground" Value="{DynamicResource MahApps.Brushes.Text}" />
+        <Setter Property="Foreground" Value="{DynamicResource MahApps.Brushes.ThemeForeground}" />
     </Style>
 
     <Style x:Key="BodyTextBlockStyle" TargetType="TextBlock"

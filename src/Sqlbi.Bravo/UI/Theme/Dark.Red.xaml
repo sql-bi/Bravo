@@ -62,6 +62,8 @@
     <!--  *************BRUSHES START*************  -->
     <!--  PROJECT TEMPLATE BRUSHES  -->
 
+    <SolidColorBrush x:Key="Bravo.TabPanel.Background">#FF444444</SolidColorBrush>
+
     <!--  UNIVERSAL CONTROL BRUSHES  -->
     <SolidColorBrush x:Key="MahApps.Brushes.ThemeBackground" Color="{StaticResource MahApps.Colors.ThemeBackground}" options:Freeze="True" />
     <SolidColorBrush x:Key="MahApps.Brushes.ThemeForeground" Color="{StaticResource MahApps.Colors.ThemeForeground}" options:Freeze="True" />

@@ -5,6 +5,7 @@ using Sqlbi.Bravo.Core.Logging;
 using Sqlbi.Bravo.Core.Services;
 using Sqlbi.Bravo.Core.Services.Interfaces;
 using Sqlbi.Bravo.Core.Settings.Interfaces;
+using Sqlbi.Bravo.UI.Controls;
 using Sqlbi.Bravo.UI.DataModel;
 using Sqlbi.Bravo.UI.Framework.Commands;
 using Sqlbi.Bravo.UI.Framework.ViewModels;
@@ -66,8 +67,8 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public ObservableCollection<NavigationItem> MenuItems { get; } = new ObservableCollection<NavigationItem>()
         {
-            new NavigationItem{ Name = "Format Dax", Glyph = "\uE8A5", NavigationPage = typeof(DaxFormatterView) },
-            new NavigationItem{ Name = "Analyze Model", Glyph = "\uE8A5", NavigationPage = typeof(AnalyzeModelView) },
+            new NavigationItem{ Name = "Format Dax", IconControl = new DaxFormatterIcon(), NavigationPage = typeof(DaxFormatterView) },
+            new NavigationItem{ Name = "Analyze Model", IconControl = new AnalyzeModelIcon(), NavigationPage = typeof(AnalyzeModelView) },
             new NavigationItem{ Name = "Manage dates", Glyph = "\uEC92", ShowComingSoon = true },
             new NavigationItem{ Name = "Export data", Glyph = "\uE1AD", ShowComingSoon = true },
             new NavigationItem{ Name = "Best practices", Glyph = "\uE19F", ShowComingSoon = true },

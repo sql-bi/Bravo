@@ -10,6 +10,7 @@ namespace Sqlbi.Bravo.UI.Framework.ValueConverters
         {
             if (parameter is string str)
             {
+                System.Diagnostics.Debug.WriteLine($"Convert '{str}'");
                 return value.ToString().Equals(str, StringComparison.InvariantCultureIgnoreCase);
             }
 

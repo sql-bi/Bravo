@@ -82,20 +82,6 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public string ConnectionName { get; set; }
 
-        public string Icon
-        {
-            get
-            {
-                return ConnectionType switch
-                {
-                    BiConnectionType.ConnectedPowerBiDataset => "/ui/resources/Images/dataset-icon.png",
-                    BiConnectionType.ActivePowerBiWindow => "/ui/resources/Images/desktop-icon.png",
-                    BiConnectionType.VertipaqAnalyzerFile => "/ui/resources/Images/file-icon.png",
-                    _ => string.Empty,
-                };
-            }
-        }
-
         public BiConnectionType ConnectionType
         {
             get => connectionType;
@@ -104,7 +90,6 @@ namespace Sqlbi.Bravo.UI.ViewModels
                 if (SetProperty(ref connectionType, value))
                 {
                     OnPropertyChanged(nameof(Header));
-                    OnPropertyChanged(nameof(Icon));
                 }
             }
         }

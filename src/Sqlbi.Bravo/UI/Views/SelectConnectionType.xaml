@@ -3,7 +3,7 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-      xmlns:local="clr-namespace:Sqlbi.Bravo.UI.Views"
+      xmlns:local="clr-namespace:Sqlbi.Bravo.UI.Views" xmlns:controls="clr-namespace:Sqlbi.Bravo.UI.Controls"
       mc:Ignorable="d" 
       d:DesignHeight="450" d:DesignWidth="800"
       Title="SelectConnectionType"
@@ -39,11 +39,7 @@
             Style="{StaticResource MediaButton}">
             <StackPanel Orientation="Horizontal">
 
-                <TextBlock
-                            FontSize="16"
-                            VerticalAlignment="Center"
-                            FontFamily="Segoe MDL2 Assets"
-                            Text="&#xE116;" />
+                <controls:HelpIcon Height="24" />
                 <TextBlock>&#x00A0; How to use Bravo?</TextBlock>
             </StackPanel>
         </Button>

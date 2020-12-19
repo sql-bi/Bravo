@@ -3,7 +3,6 @@ using Serilog.Events;
 using Sqlbi.Bravo.Core.Helpers;
 using Sqlbi.Bravo.Core.Logging;
 using Sqlbi.Bravo.Core.Settings.Interfaces;
-using Sqlbi.Bravo.UI.DataModel;
 using Sqlbi.Bravo.UI.Framework.Commands;
 using Sqlbi.Bravo.UI.Framework.Interfaces;
 using Sqlbi.Bravo.UI.Framework.ViewModels;
@@ -47,6 +46,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
             get => _settings.Application.ThemeName;
             set
             {
+                System.Diagnostics.Debug.WriteLine($"Setting Theme to '{value}'");
                 _settings.Application.ThemeName = value;
                 OnPropertyChanged(nameof(Theme));
             }

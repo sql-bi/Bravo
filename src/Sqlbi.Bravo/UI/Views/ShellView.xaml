@@ -8,6 +8,7 @@
         xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
         xmlns:app_ui_viewmodels="clr-namespace:Sqlbi.Bravo.UI.ViewModels"
         xmlns:app_ui_framework_valueconverters="clr-namespace:Sqlbi.Bravo.UI.Framework.ValueConverters"
+        xmlns:templateSelectors="clr-namespace:Sqlbi.Bravo.UI.Framework.TemplateSelector"
         mc:Ignorable="d"
         Title="{Binding WindowTitle}"
         Height="600"
@@ -19,35 +20,86 @@
 
     <mah:MetroWindow.Resources>
         <ResourceDictionary>
-            <DataTemplate x:Key="MenuItemTemplate" DataType="{x:Type app_ui_viewmodels:NavigationItem}">
+
+            <DataTemplate x:Key="GlyphMenuItemTemplate" DataType="{x:Type app_ui_viewmodels:NavigationItem}">
                 <Grid Height="48">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="48" />
                         <ColumnDefinition />
                     </Grid.ColumnDefinitions>
                     <TextBlock
-                            Grid.Column="0"
-                            FontSize="16"
-                            HorizontalAlignment="Center"
-                            VerticalAlignment="Center"
-                            FontFamily="Segoe MDL2 Assets"
-                            Opacity="{Binding IsEnabled, Converter={app_ui_framework_valueconverters:EnabledOpacityConverter}}"
-                            Text="{Binding Glyph}"
-                            ToolTip="{Binding Name}" />
+                        Grid.Column="0"
+                        FontSize="20"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        FontFamily="Segoe MDL2 Assets"
+                        Opacity="{Binding IsEnabled, Converter={app_ui_framework_valueconverters:EnabledOpacityConverter}}"
+                        Text="{Binding Glyph}"
+                        ToolTip="{Binding Name}" />
                     <TextBlock
-                            Grid.Column="1"
-                            VerticalAlignment="Center"
-                            FontSize="16"
-                            Opacity="{Binding IsEnabled, Converter={app_ui_framework_valueconverters:EnabledOpacityConverter}}"
-                            Text="{Binding Name}" />
+                        Grid.Column="1"
+                        VerticalAlignment="Center"
+                        FontSize="16"
+                        Opacity="{Binding IsEnabled, Converter={app_ui_framework_valueconverters:EnabledOpacityConverter}}"
+                        Text="{Binding Name}" />
                     <Border Background="Red"
-                            Grid.Column="1" CornerRadius="3" Margin="10,0,12,0" Padding="4,0,4,1" Visibility="{Binding ShowComingSoon, Converter={StaticResource BooleanToVisibilityConverter}}"
-                                HorizontalAlignment="Right"
-                                VerticalAlignment="Center">
+                        Grid.Column="1" CornerRadius="3" Margin="10,0,12,0" Padding="4,0,4,1" Visibility="{Binding ShowComingSoon, Converter={StaticResource BooleanToVisibilityConverter}}"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center">
                         <TextBlock Foreground="White" FontSize="12" FontWeight="Bold">SOON</TextBlock>
                     </Border>
                 </Grid>
             </DataTemplate>
+
+            <templateSelectors:MenuItemTemplateSelector
+                x:Key="MenuItemTemplateSelector"
+                GlyphDataTemplate="{StaticResource GlyphMenuItemTemplate}">
+                <templateSelectors:MenuItemTemplateSelector.PathDataTemplate>
+                    <DataTemplate DataType="{x:Type app_ui_viewmodels:NavigationItem}">
+                        <Grid Height="48">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="48" />
+                                <ColumnDefinition />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock
+                                Grid.Column="0"
+                                FontSize="16"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                FontFamily="Segoe MDL2 Assets"
+                                Opacity="{Binding IsEnabled, Converter={app_ui_framework_valueconverters:EnabledOpacityConverter}}"
+                                Text="{Binding Glyph}"
+                                ToolTip="{Binding Name}" />
+                            <ContentControl Content="{Binding IconControl}" Width="20" Height="20" />
+                            <TextBlock
+                                Grid.Column="1"
+                                VerticalAlignment="Center"
+                                FontSize="16"
+                                Opacity="{Binding IsEnabled, Converter={app_ui_framework_valueconverters:EnabledOpacityConverter}}"
+                                Text="{Binding Name}" />
+                            <Border Background="Red"
+                                Grid.Column="1" CornerRadius="3" Margin="10,0,12,0" Padding="4,0,4,1" Visibility="{Binding ShowComingSoon, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Center">
+                                <TextBlock Foreground="White" FontSize="12" FontWeight="Bold">SOON</TextBlock>
+                            </Border>
+                        </Grid>
+                    </DataTemplate>
+                </templateSelectors:MenuItemTemplateSelector.PathDataTemplate>
+
+            </templateSelectors:MenuItemTemplateSelector>
+
+            <Style x:Key="MenuItemsContainer"
+                   BasedOn="{StaticResource MahApps.Styles.ListBoxItem.HamburgerMenuItem}"
+                   TargetType="{x:Type ListBoxItem}">
+                <Setter Property="mah:ItemHelper.ActiveSelectionBackgroundBrush" Value="Transparent" />
+                <Setter Property="mah:ItemHelper.ActiveSelectionForegroundBrush" Value="{DynamicResource MahApps.Brushes.AccentBase}" />
+                <Setter Property="mah:ItemHelper.HoverBackgroundBrush" Value="{DynamicResource MahApps.Brushes.Gray9}" />
+                <Setter Property="mah:ItemHelper.HoverSelectedBackgroundBrush" Value="{DynamicResource MahApps.Brushes.Gray9}" />
+                <Setter Property="mah:ItemHelper.HoverSelectedForegroundBrush" Value="{DynamicResource MahApps.Brushes.AccentBase}" />
+                <Setter Property="mah:ItemHelper.SelectedBackgroundBrush" Value="Transparent" />
+                <Setter Property="mah:ItemHelper.SelectedForegroundBrush" Value="{DynamicResource MahApps.Brushes.AccentBase}" />
+            </Style>
 
             <DataTemplate x:Key="TabItemContentTemplate" DataType="{x:Type app_ui_viewmodels:TabItemViewModel}">
                 <Grid>
@@ -76,24 +128,26 @@
             </DataTemplate>
 
             <Style x:Key="TabItemHeaderStyle" TargetType="TabItem">
+                <Setter Property="Foreground" Value="{DynamicResource MahApps.Brushes.Text}" />
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="{x:Type TabItem}">
                             <StackPanel x:Name="PART_Content"
                                     HorizontalAlignment="Stretch"
+                                        Background="{DynamicResource MahApps.Brushes.ThemeBackground}"
                                     VerticalAlignment="Stretch"
                                     Orientation="Horizontal">
-                                <Image Source="{Binding Icon}" Height="16" Width="16" Margin="5,0" />
+                                <ContentControl
+                                    Height="16"
+                                    Width="16"
+                                    Margin="5,0"
+                                    Content="{Binding ConnectionType, Converter={app_ui_framework_valueconverters:ConnectionIconConverter}}" />
                                 <TextBlock
                                     x:Name="ContentSite"
                                     Padding="2"
                                     Text="{Binding Header}"
                                     FontSize="12"
-                                    VerticalAlignment="Center"
-                                    FontStretch="{TemplateBinding mah:HeaderedControlHelper.HeaderFontStretch}"
-                                    FontStyle="{TemplateBinding FontStyle}"
-                                    FontWeight="{TemplateBinding mah:HeaderedControlHelper.HeaderFontWeight}"
-                                    Foreground="{DynamicResource MapApps.Brushes.Text}" />
+                                    VerticalAlignment="Center"/>
                                 <Button
                                     x:Name="PART_CloseButton"
                                     VerticalAlignment="Center"
@@ -101,7 +155,7 @@
                                     Cursor="Hand"
                                     Background="Transparent"
                                     Focusable="False"
-                                    Margin="5,0"
+                                    Margin="10,0,5,0"
                                     Height="16"
                                     Width="18"
                                     BorderThickness="0"
@@ -118,7 +172,7 @@
                             </StackPanel>
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsSelected" Value="true">
-                                    <Setter Property="Background" Value="{DynamicResource MahApps.Brushes.BackgroundSelected}" />
+                                    <Setter Property="Background" Value="{DynamicResource MahApps.Brushes.Window.Background}" />
                                 </Trigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>
@@ -140,16 +194,25 @@
                 Grid.Row="1"
                 x:Name="hamburgerMenu"
                 HamburgerButtonName="Open or close menu"
-                IsPaneOpen="False"
+                IsPaneOpen="True"
                 DisplayMode="CompactInline"
                 ItemCommand="{Binding ItemSelectedCommand}"
                 ItemsSource="{Binding MenuItems}"
-                ItemTemplate="{StaticResource MenuItemTemplate}"
+                ItemContainerStyle="{StaticResource MenuItemsContainer}"
+                ItemTemplateSelector="{StaticResource MenuItemTemplateSelector}"
                 SelectedItem="{Binding SelectedItem}"
+                PaneBackground="{DynamicResource MahApps.Brushes.Gray8}"
+                PaneForeground="{DynamicResource MahApps.Brushes.ThemeForeground}"
                 OptionsItemCommand="{Binding ItemSelectedCommand}"
                 OptionsItemsSource="{Binding OptionMenuItems}"
-                OptionsItemTemplate="{StaticResource MenuItemTemplate}"
-                SelectedOptionsItem="{Binding SelectedOptionsItem}">
+                OptionsItemTemplate="{StaticResource GlyphMenuItemTemplate}"
+                SelectedOptionsItem="{Binding SelectedOptionsItem}"
+                ShowSelectionIndicator="True">
+                <mah:HamburgerMenu.HamburgerMenuHeaderTemplate>
+                    <DataTemplate>
+                        <Image Height="40" Margin="10" Stretch="uniform" Source="/UI/Resources/Images/logo.png" />
+                    </DataTemplate>
+                </mah:HamburgerMenu.HamburgerMenuHeaderTemplate>
 
                 <mah:HamburgerMenu.Content>
                     <Grid>
@@ -161,12 +224,57 @@
 
                         <TabControl
                             Grid.Row="0"
+                            Background="{DynamicResource MahApps.Brushes.ThemeBackground}"
                             x:Name="TabView"
+                            BorderThickness="0"
                             ItemsSource="{Binding Tabs}"
                             TabStripPlacement="Top"
                             ContentTemplate="{StaticResource TabItemContentTemplate}"
                             ItemContainerStyle="{DynamicResource TabItemHeaderStyle}"
-                            SelectedItem="{Binding SelectedTab, Mode=TwoWay}" />
+                            SelectedItem="{Binding SelectedTab, Mode=TwoWay}">
+                            <TabControl.Style>
+                                <Style TargetType="{x:Type TabControl}">
+                                    <Setter Property="Template" >
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="{x:Type TabControl}">
+                                                <Grid>
+                                                    <Grid.RowDefinitions>
+                                                        <RowDefinition x:Name="RowDefinition0" Height="Auto" />
+                                                        <RowDefinition x:Name="RowDefinition1" Height="*" />
+                                                    </Grid.RowDefinitions>
+                                                    <Border x:Name="HeaderPanel"
+                                                            Grid.Row="0"
+                                                            Background="{DynamicResource MahApps.Brushes.Gray8}"
+                                                            BorderThickness="0"
+                                                            KeyboardNavigation.DirectionalNavigation="Contained"
+                                                            KeyboardNavigation.TabIndex="2"
+                                                            KeyboardNavigation.TabNavigation="Local"
+                                                            SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}">
+                                                        <TabPanel Panel.ZIndex="1"
+                                                                  IsItemsHost="true"
+                                                                  KeyboardNavigation.TabIndex="1" />
+                                                    </Border>
+                                                    <Border x:Name="ContentPanel"
+                                                            Grid.Row="1"
+                                                            Background="{TemplateBinding Background}"
+                                                            BorderBrush="{TemplateBinding BorderBrush}"
+                                                            BorderThickness="0"
+                                                            KeyboardNavigation.DirectionalNavigation="Contained"
+                                                            KeyboardNavigation.TabIndex="2"
+                                                            KeyboardNavigation.TabNavigation="Local"
+                                                            SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}">
+                                                        <ContentPresenter x:Name="PART_SelectedContentHost"
+                                                                          Margin="0"
+                                                                          ContentSource="SelectedContent"
+                                                                          SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
+                                                    </Border>
+                                                </Grid>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </TabControl.Style>
+                        </TabControl>
                         <GridSplitter Grid.Row="1" HorizontalAlignment="Stretch" />
                         <ListBox Grid.Row="2" ItemsSource="{Binding OutputMessages}" />
                     </Grid>
