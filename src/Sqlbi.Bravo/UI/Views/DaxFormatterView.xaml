@@ -184,11 +184,16 @@
                         <TreeView
                             Grid.Row="1"
                             ItemsSource="{Binding SelectionTreeData.Tables}"
-                              Style="{StaticResource MahApps.Styles.TreeView.Virtualized}"
+                            Style="{StaticResource MahApps.Styles.TreeView.Virtualized}"
                             HorizontalAlignment="Stretch"
                             ScrollViewer.VerticalScrollBarVisibility="Auto"
                             SelectedItemChanged="TreeviewSelectedItemChanged"
                             >
+                            <TreeView.Resources>
+                                <Style TargetType="{x:Type TreeViewItem}">
+                                    <Setter Property="IsExpanded" Value="True" />
+                                </Style>
+                            </TreeView.Resources>
                             <i:Interaction.Triggers>
                                 <i:EventTrigger EventName="SelectedItemChanged">
                                     <i:InvokeCommandAction Command="{Binding SelectedTableMeasureChangedCommand}" />
