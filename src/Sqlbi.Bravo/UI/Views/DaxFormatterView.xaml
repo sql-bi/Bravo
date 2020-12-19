@@ -85,7 +85,7 @@
 
                         <Border Grid.Row="2" Grid.ColumnSpan="3" Background="LightGray" Opacity="0.5" Padding="12" Margin="0.12" />
 
-                        <CheckBox x:Name="AcceptTermsCheckbox" Grid.Row="2" Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="12,12,48,12">
+                        <CheckBox x:Name="AcceptTermsCheckbox" Style="{StaticResource MahApps.Styles.CheckBox.Win10}"  Grid.Row="2" Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="12,12,48,12">
                             <TextBlock
                                 TextWrapping="Wrap"
                                 Foreground="{DynamicResource MahApps.Brushes.ThemeForeground}">
@@ -203,15 +203,15 @@
                                 <HierarchicalDataTemplate DataType="viewmodels:TreeItem" ItemsSource="{Binding VisibleMeasures}">
 
                                     <StackPanel Orientation="Horizontal">
-                                        <CheckBox VerticalAlignment="Center" IsThreeState="{Binding IsThreeState}" IsChecked="{Binding IsSelected, Mode=TwoWay}" />
+                                        <CheckBox Style="{StaticResource MahApps.Styles.CheckBox.Win10}" VerticalAlignment="Center" IsThreeState="{Binding IsThreeState}" IsChecked="{Binding IsSelected, Mode=TwoWay}" />
                                         <TextBlock Text="{Binding Name}" />
                                     </StackPanel>
                                 </HierarchicalDataTemplate>
                             </TreeView.ItemTemplate>
                         </TreeView>
-                        <StackPanel Grid.Row="2" Orientation="Horizontal">
-                            <TextBlock Text="{Binding SelectionTreeData.SelectedTreeItemCount}" />
-                            <TextBlock>&#x202F; Selected</TextBlock>
+                        <StackPanel Grid.Row="2" Margin="0,12" Orientation="Horizontal">
+                            <TextBlock Text="{Binding SelectionTreeData.SelectedTreeItemCount}" FontWeight="Bold" />
+                            <TextBlock FontWeight="Bold">&#x202F; Selected</TextBlock>
                         </StackPanel>
                     </Grid>
                     <TextBox Grid.Column="1" Grid.Row="1" FontFamily="Courier New" FontSize="16" VerticalScrollBarVisibility="Visible"
