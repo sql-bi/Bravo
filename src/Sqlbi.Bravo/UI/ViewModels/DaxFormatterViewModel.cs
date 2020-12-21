@@ -255,13 +255,28 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
             Measures.Clear();
 
+            string GetMEasureName(string id, string unformattedExpression)
+            {
+                foreach (var table in SelectionTreeData.Tables)
+                {
+                    var measureInfo = table.Measures.FirstOrDefault(t => t.Formula?.Trim() == unformattedExpression.Trim());
+
+                    if (measureInfo != null)
+                    {
+                        return measureInfo.Name;
+                    }
+                }
+
+                return id;
+            }
+
             foreach (var m in measures)
             {
                 Measures.Add(new MeasureInfoViewModel
                 {
                     Identifier = m.Key,
-                    // TODO: Need to get actual name of measure - using id as a temporary placeholder
-                    Name = m.Key,
+                    // TODO: Get names of measures at the same time as IDs and expressions - this is a workaround
+                    Name = GetMEasureName(m.Key, m.Value.Item1),
                     OriginalDax = m.Value.Item1,
                     FormatterDax = m.Value.Item2,
                 });
