@@ -91,42 +91,13 @@ namespace Sqlbi.Bravo.UI.ViewModels
             new NavigationItem{ Name = "Settings", Glyph = "\uE713", NavigationPage = typeof(SettingsViewModel) }
         };
 
-
-        public NavigationItem SelectedItem { get => selectedItem; set => selectedItem = value; }
+        public NavigationItem SelectedItem { get; set; }
 
         public NavigationItem SelectedOptionsItem { get; set; }
 
+        public ObservableCollection<TabItemViewModel> Tabs { get; set; }
 
-        private ObservableCollection<TabItemViewModel> _tabs;
-
-        public ObservableCollection<TabItemViewModel> Tabs
-        {
-            get
-            {
-                return _tabs;
-            }
-
-            set
-            {
-                SetProperty(ref _tabs, value);
-            }
-        }
-
-        private TabItemViewModel _selectedTab;
-        private NavigationItem selectedItem;
-
-        public TabItemViewModel SelectedTab
-        {
-            get
-            {
-                return _selectedTab;
-            }
-
-            set
-            {
-                SetProperty(ref _selectedTab, value);
-            }
-        }
+        public TabItemViewModel SelectedTab { get; set; }
 
         public ICommand ItemSelectedCommand { get; set; }
 
