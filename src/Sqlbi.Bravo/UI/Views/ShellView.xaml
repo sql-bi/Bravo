@@ -283,30 +283,3 @@
         </Grid>
     </mah:MetroWindow.Content>
 </mah:MetroWindow>
-
-<!--<Border Background="{StaticResource AppBlueBrush}">
-        <Grid>            
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="250"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
-            -->
-<!--Side menu-->
-<!--
-            <app_ui_views:SideMenuView Grid.Column="0"/>
-            -->
-<!--Debug menu-->
-<!--
-            <Grid Grid.Column="1">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="*" />
-                    <RowDefinition Height="5" />
-                    <RowDefinition Height="*" />
-                </Grid.RowDefinitions>
-                <Frame NavigationUIVisibility="Hidden" Content="{Binding CurrentView, Source={x:Static app_ui_viewmodels:ApplicationViewModel.Instance}, Converter={app_ui_controls_framework_valueconverters:ApplicationViewValueConverter}}"/>
-                <GridSplitter Grid.Row="1" HorizontalAlignment="Stretch" />
-                <ListBox Grid.Row="2" ItemsSource="{Binding OutputMessages}" />
-            </Grid>
-        </Grid>
-    </Border>-->
-    
