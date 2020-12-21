@@ -29,8 +29,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
         internal const int SubViewIndex_Progress = 2;
         internal const int SubViewIndex_Changes = 3;
         internal const int SubViewIndex_Finished = 4;
-
-        DispatcherTimer _timer = new DispatcherTimer();
+        private readonly DispatcherTimer _timer = new DispatcherTimer();
 
         public DaxFormatterViewModel(IDaxFormatterService formatter, IAnalysisServicesEventWatcherService watcher, ILogger<DaxFormatterViewModel> logger)
         {
