@@ -8,7 +8,7 @@ using Sqlbi.Bravo.UI.DataModel;
 using Sqlbi.Bravo.UI.Framework.Commands;
 using Sqlbi.Bravo.UI.Framework.Helpers;
 using Sqlbi.Bravo.UI.Framework.ViewModels;
-using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -88,6 +88,12 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public MeasureSelectionViewModel SelectionTreeData { get; set; }
 
+        public string ProgressDetails { get; set; }
+
+        public MeasureInfoViewModel AllFormulasSelected { get; set; }
+
+        public MeasureInfoViewModel NeedFormattingSelected { get; set; }
+
         public bool TabularObjectMeasuresIsChecked
         {
             get => TabularObjectType.HasFlag(DaxFormatterTabularObjectType.Measures);
@@ -103,6 +109,10 @@ namespace Sqlbi.Bravo.UI.ViewModels
         }
 
         public int TabularObjectCalculatedColumnsCount { get; set; }
+
+        public int MeasuresFormatted { get; set; }
+
+        public int AnalyzedMeasureCount { get; set; }
 
         public bool TabularObjectKPIsIsChecked
         {
@@ -127,6 +137,11 @@ namespace Sqlbi.Bravo.UI.ViewModels
         }
 
         public int TabularObjectCalculationItemsCount { get; set; }
+
+        public ObservableCollection<MeasureInfoViewModel> Measures { get; set; } = new ObservableCollection<MeasureInfoViewModel>();
+
+        public ObservableCollection<MeasureInfoViewModel> MeasuresNeedingFormatting
+            => new ObservableCollection<MeasureInfoViewModel>(Measures.Where(m => !m.IsAlreadyFormatted).ToList());
 
         private async void OnAnalysisServicesEvent(object sender, AnalysisServicesEventWatcherEventArgs e)
         {
@@ -231,16 +246,72 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         private async Task AnalyzeAsync()
         {
+            ProgressDetails = "Identifying formulas to format";
             ViewIndex = SubViewIndex_Progress;
+
             TabularObjectType = TabularObjectType.WithFlag(DaxFormatterTabularObjectType.Measures, true);
+
+            var measures = await _formatter.GetFormattedItems(TabularObjectType);
+
+            Measures.Clear();
+
+            foreach (var m in measures)
+            {
+                Measures.Add(new MeasureInfoViewModel
+                {
+                    Identifier = m.Key,
+                    // TODO: Need to get actual name of measure - using id as a temporary placeholder
+                    Name = m.Key,
+                    OriginalDax = m.Value.Item1,
+                    FormatterDax = m.Value.Item2,
+                });
+            }
+
+            OnPropertyChanged(nameof(MeasuresNeedingFormatting));
+
+            AnalyzedMeasureCount = Measures.Count;
+
+            if (PreviewChanges)
+            {
+                NeedFormattingSelected =
+                AllFormulasSelected = Measures.First();
+                ViewIndex = SubViewIndex_Changes;
+            }
+            else
+            {
+                ProgressDetails = "Applying formatting changes";
+                await ApplyFormattingChangesToModelAsync();
+
+                ViewIndex = SubViewIndex_Finished;
+            }
+        }
+
+        private async Task ApplyFormattingChangesToModelAsync()
+        {
+            await Task.Run(() =>
+            {
+                var toUpdate = new List<(string id, string expression)>();
+
+                foreach (var measure in Measures)
+                {
+                    if (!measure.IsAlreadyFormatted && measure.Reformat)
+                    {
+                        toUpdate.Add((measure.Identifier, measure.FormatterDax));
+                    }
+                }
+
+                // TODO: add error handling for this
+                _formatter.SaveFormattedMeasures(toUpdate);
+
+                MeasuresFormatted = toUpdate.Count;
+            });
         }
 
         private async Task MakeChangesAsync()
         {
             _logger.Trace();
 
-            //ViewIndex = SubViewIndex_Finished;
-            await ExecuteCommandAsync(() => FormatCommandIsRunning, async () => await _formatter.FormatAsync(TabularObjectType));
+            ViewIndex = SubViewIndex_Finished;
         }
     }
 }

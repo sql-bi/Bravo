@@ -136,7 +136,12 @@
                             Margin="0,12,0,0"
                             IsEnabled="{Binding ElementName=AcceptTermsCheckbox, Path=IsChecked}"
                             Command="{Binding FormatAnalyzeCommand}"
-                            Style="{StaticResource StandardButton}">Format</Button>
+                            BorderThickness="0"
+                            FontSize="14"
+                            Height="32"
+                            mah:ControlsHelper.ContentCharacterCasing="Normal"
+                            Style="{StaticResource MahApps.Styles.Button.Square.Accent}"
+                            Content="Format" />
 
                     </Grid>
 
@@ -229,7 +234,18 @@
                              Foreground="{DynamicResource MahApps.Brushes.Text}"
                              BorderThickness="0"
                              />
-                    <Button Grid.Row="2" Grid.ColumnSpan="2" Width="150" VerticalAlignment="Bottom" Margin="0,12,0,0" HorizontalAlignment="Right" Command="{Binding ApplySelectedFormulaChangesCommand}" Style="{StaticResource StandardButton}">Apply &amp; Continue</Button>
+                    <Button Grid.Row="2" Grid.ColumnSpan="2"
+                            Width="150"
+                            VerticalAlignment="Bottom"
+                            HorizontalAlignment="Right"
+                            Margin="0,12,0,0"
+                            Command="{Binding ApplySelectedFormulaChangesCommand}"
+                            BorderThickness="0"
+                            FontSize="14"
+                            Height="32"
+                            mah:ControlsHelper.ContentCharacterCasing="Normal"
+                            Style="{DynamicResource MahApps.Styles.Button.Square.Accent}"
+                            Content="Apply &amp; Continue"/>
                 </Grid>
             </mah:FlipViewItem>
             <!-- SubViewIndex_Progress = 2 -->
@@ -241,7 +257,6 @@
                         <TextBlock Style="{StaticResource CaptionTextBlockStyle}" Opacity="0.5" Text="{Binding ProgressDetails}" />
 
                         <Button Click="PretendErrorClick" >pretend error</Button>
-                        <Button Click="PretendProgressClicked" >pretend progress finished</Button>
                     </StackPanel>
                 </Grid>
             </mah:FlipViewItem>
@@ -376,8 +391,22 @@
                    
 
                     <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,10,0,0">
-                        <Button Width="120" Click="CancelClicked">Cancel</Button>
-                        <Button Width="120" Margin="20,0,0,0" Command="{Binding FormatMakeChangesCommand}" Style="{StaticResource StandardButton}">Format</Button>
+                        <Button Width="120"
+                                Click="CancelClicked"
+                                BorderThickness="0"
+                                FontSize="14"
+                                Height="32"
+                                Style="{StaticResource MahApps.Styles.Button.Flat}"
+                                Content="Cancel" />
+                        <Button Width="120"
+                                Margin="20,0,0,0"
+                                BorderThickness="0"
+                                FontSize="14"
+                                Height="32"
+                                Command="{Binding FormatMakeChangesCommand}"
+                                mah:ControlsHelper.ContentCharacterCasing="Normal"
+                                Style="{StaticResource MahApps.Styles.Button.Square.Accent}"
+                                Content="Format" />
                     </StackPanel>
                 </Grid>
             </mah:FlipViewItem>

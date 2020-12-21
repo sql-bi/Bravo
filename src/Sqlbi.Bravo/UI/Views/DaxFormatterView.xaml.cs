@@ -8,23 +8,6 @@ namespace Sqlbi.Bravo.UI.Views
     {
         public DaxFormatterView() => InitializeComponent();
 
-        private void PretendProgressClicked(object sender, RoutedEventArgs e)
-        {
-            var vm = DataContext as ViewModels.DaxFormatterViewModel;
-
-            if (vm.PreviewChanges)
-            {
-                vm.ViewIndex =
-                    ViewModels.DaxFormatterViewModel.SubViewIndex_Changes;
-            }
-            else
-            {
-                // TODO: Need to make the actual changes
-                vm.ViewIndex =
-                    ViewModels.DaxFormatterViewModel.SubViewIndex_Finished;
-            }
-        }
-
         private void CancelClicked(object sender, RoutedEventArgs e)
         {
             _ = MessageBox.Show(
