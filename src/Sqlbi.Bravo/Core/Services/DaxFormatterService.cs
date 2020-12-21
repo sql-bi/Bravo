@@ -110,14 +110,9 @@ namespace Sqlbi.Bravo.Core.Services
             {
                 var str = s.TrimStart('\r', '\n', ' ').TrimEnd('\r', '\n', ' ');
 
-                if (str.EndsWith("*^*"))
-                {
-                    return str.Substring(0, str.LastIndexOf("*^*")).TrimEnd('\r', '\n', ' ');
-                }
-                else
-                {
-                    return str;
-                }
+                return str.EndsWith("*^*")
+                    ? str.Substring(0, str.LastIndexOf("*^*")).TrimEnd('\r', '\n', ' ')
+                    : str;
             });
             var items = ids.Zip(expressions, (k, v) => (Id: k, Expression: v)).ToDictionary((z) => z.Id, (z) => z.Expression);
 

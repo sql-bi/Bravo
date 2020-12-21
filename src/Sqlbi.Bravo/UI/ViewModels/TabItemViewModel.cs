@@ -62,20 +62,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
             }
         }
 
-        private Type _contentPageSource;
-
-        public Type ContentPageSource
-        {
-            get
-            {
-                return _contentPageSource;
-            }
-
-            set
-            {
-                SetProperty(ref _contentPageSource, value);
-            }
-        }
+        public Type ContentPageSource { get; set; }
 
         public string ConnectionName { get; set; }
 
