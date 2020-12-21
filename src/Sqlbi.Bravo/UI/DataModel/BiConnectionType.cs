@@ -9,7 +9,5 @@
         ConnectedPowerBiDataset,
 
         VertipaqAnalyzerFile,
-
-        DemoMode,
     }
 }

@@ -11,7 +11,7 @@ namespace Sqlbi.Bravo.UI.Views
 
         public MediaDialog(IInAppMediaOption mediaOption) : this()
         {
-            Title.Text = mediaOption.Title;
+            DialogTitle.Text = mediaOption.Title;
             DisplayedDescription.Text = mediaOption.Description;
             MediaPlayer.Source = new Uri(mediaOption.MediaLink);
             ProgressIndicator.IsActive = false;

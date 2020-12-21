@@ -57,9 +57,6 @@ namespace Sqlbi.Bravo.UI.ViewModels
                     case BiConnectionType.VertipaqAnalyzerFile:
                         return ConnectionName;
 
-                    case BiConnectionType.DemoMode:
-                        return $"Demo data";
-
                     default: return " ";  // Empty string is treated as null by WinUI control and so shows FullName
                 }
             }

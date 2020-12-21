@@ -23,6 +23,14 @@ namespace Sqlbi.Bravo.UI.Views
 
         private void AttachToWindowClicked(object sender, RoutedEventArgs e)
         {
+            // TODO: need to know how to connect here
+            _ = MessageBox.Show(
+                "Need to know what to do here - how to attach to an active window",
+                "TODO",
+                MessageBoxButton.OK,
+                MessageBoxImage.Question);
+
+            /*
             var vm = DataContext as ShellViewModel;
 
             // TODO: Get title from parent process
@@ -30,15 +38,7 @@ namespace Sqlbi.Bravo.UI.Views
 
             vm.SelectedTab.ConnectionType = BiConnectionType.ActivePowerBiWindow;
             vm.SelectedTab.ContentPageSource = vm.SelectedItem.NavigationPage;
-        }
-
-        private void UseDummyDataClicked(object sender, RoutedEventArgs e)
-        {
-            var vm = DataContext as ShellViewModel;
-
-            vm.SelectedTab.ConnectionName = "DEMO DATA";
-            vm.SelectedTab.ConnectionType = BiConnectionType.DemoMode;
-            vm.SelectedTab.ContentPageSource = vm.SelectedItem.NavigationPage;
+            */
         }
     }
 }

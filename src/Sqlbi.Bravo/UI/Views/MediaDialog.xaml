@@ -18,7 +18,7 @@
             </Grid.RowDefinitions>
 
             <TextBlock
-            x:Name="Title"
+            x:Name="DialogTitle"
             Grid.Row="0"
             Style="{StaticResource SubheaderTextBlockStyle}" />
 

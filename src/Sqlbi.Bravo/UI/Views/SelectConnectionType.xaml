@@ -88,11 +88,6 @@
                     </StackPanel>
                 </Button>
             </Grid>
-            <Button HorizontalAlignment="Center" Click="UseDummyDataClicked">
-                <StackPanel>
-                    <TextBlock>Use dummy test data</TextBlock>
-                </StackPanel>
-            </Button>
         </StackPanel>
         <TextBlock  VerticalAlignment="Bottom" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" Style="{StaticResource BodyTextBlockStyle}" >
                 <Run>Bravo for Power BI is an open source tool developed and maintained by SQLBI and the GitHub community. Join us at&#x202F;</Run>
