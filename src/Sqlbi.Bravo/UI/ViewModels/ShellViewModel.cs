@@ -65,15 +65,26 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public ObservableCollection<string> OutputMessages { get; set; } = new ObservableCollection<string>();
 
-        public ObservableCollection<NavigationItem> MenuItems { get; } = new ObservableCollection<NavigationItem>()
+        public ObservableCollection<NavigationItem> MenuItems
         {
-            new NavigationItem{ Name = "Format Dax", IconControl = new DaxFormatterIcon(), NavigationPage = typeof(DaxFormatterView) },
-            new NavigationItem{ Name = "Analyze Model", IconControl = new AnalyzeModelIcon(), NavigationPage = typeof(AnalyzeModelView) },
-            new NavigationItem{ Name = "Manage dates", Glyph = "\uEC92", ShowComingSoon = true },
-            new NavigationItem{ Name = "Export data", Glyph = "\uE1AD", ShowComingSoon = true },
-            new NavigationItem{ Name = "Best practices", Glyph = "\uE19F", ShowComingSoon = true },
-            new NavigationItem{ Name = "Optimize model", Glyph = "\uEC4A", ShowComingSoon = true },
-        };
+            get
+            {
+                var daxIcon = new DaxFormatterIcon();
+                daxIcon.SetResourceReference(
+                    DaxFormatterIcon.ForegroundBrushProperty,
+                    "MahApps.Brushes.ThemeForeground");
+
+                return new ObservableCollection<NavigationItem>()
+                {
+                    new NavigationItem { Name = "Format Dax", IconControl = daxIcon, NavigationPage = typeof(DaxFormatterView) },
+                    new NavigationItem { Name = "Analyze Model", IconControl = new AnalyzeModelIcon(), NavigationPage = typeof(AnalyzeModelView) },
+                    new NavigationItem { Name = "Manage dates", Glyph = "\uEC92", ShowComingSoon = true },
+                    new NavigationItem { Name = "Export data", Glyph = "\uE1AD", ShowComingSoon = true },
+                    new NavigationItem { Name = "Best practices", Glyph = "\uE19F", ShowComingSoon = true },
+                    new NavigationItem { Name = "Optimize model", Glyph = "\uEC4A", ShowComingSoon = true },
+                };
+            }
+        }
 
         public ObservableCollection<NavigationItem> OptionMenuItems { get; } = new ObservableCollection<NavigationItem>()
         {

@@ -131,6 +131,7 @@ namespace Sqlbi.Bravo.UI.Controls.Parser
                 }
             }
 
+            // Handle from the last check until the end of the string
             CheckForWord(line.Length);
 
             return result;
