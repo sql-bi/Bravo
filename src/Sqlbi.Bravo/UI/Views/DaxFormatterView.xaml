@@ -155,7 +155,7 @@
                         <RowDefinition Height="*" />
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
-                    <TextBlock Grid.Row="0" Grid.Column="0" FontSize="16">Choose formulas to format:</TextBlock>
+                    <TextBlock Grid.Row="0" Grid.Column="0" Foreground="{DynamicResource MahApps.Brushes.Text}" FontSize="16">Choose formulas to format:</TextBlock>
                     <Grid Grid.Row="1" Grid.Column="0">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
@@ -193,6 +193,9 @@
                                 <Style TargetType="{x:Type TreeViewItem}">
                                     <Setter Property="IsExpanded" Value="True" />
                                 </Style>
+
+                                <!-- Brush for the selected item -->
+                                <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="{DynamicResource MahApps.Colors.Gray9}"/>
                             </TreeView.Resources>
                             <i:Interaction.Triggers>
                                 <i:EventTrigger EventName="SelectedItemChanged">
@@ -202,24 +205,29 @@
                             <TreeView.ItemTemplate>
                                 <HierarchicalDataTemplate DataType="viewmodels:TreeItem" ItemsSource="{Binding VisibleMeasures}">
 
+                                    <Grid Width="247">
                                     <StackPanel Orientation="Horizontal">
-                                        <CheckBox Style="{StaticResource MahApps.Styles.CheckBox.Win10}" VerticalAlignment="Center" IsThreeState="{Binding IsThreeState}" IsChecked="{Binding IsSelected, Mode=TwoWay}" />
-                                        <TextBlock Text="{Binding Name}" />
-                                    </StackPanel>
+                                        <CheckBox MinWidth="30" Style="{StaticResource MahApps.Styles.CheckBox.Win10}" VerticalAlignment="Center" IsThreeState="{Binding IsThreeState}" IsChecked="{Binding IsSelected, Mode=TwoWay}" />
+                                        <TextBlock VerticalAlignment="Center" Foreground="{DynamicResource MahApps.Brushes.Text}" Text="{Binding Name}" />
+                                        </StackPanel>
+                                    </Grid>
                                 </HierarchicalDataTemplate>
                             </TreeView.ItemTemplate>
                         </TreeView>
                         <StackPanel Grid.Row="2" Margin="0,12" Orientation="Horizontal">
-                            <TextBlock Text="{Binding SelectionTreeData.SelectedTreeItemCount}" FontWeight="Bold" />
-                            <TextBlock FontWeight="Bold">&#x202F; Selected</TextBlock>
+                            <TextBlock Text="{Binding SelectionTreeData.SelectedTreeItemCount}" Foreground="{DynamicResource MahApps.Brushes.Text}"  FontWeight="Bold" />
+                            <TextBlock FontWeight="Bold" Foreground="{DynamicResource MahApps.Brushes.Text}" >&#x202F; Selected</TextBlock>
                         </StackPanel>
                     </Grid>
-                    <TextBox Grid.Column="1" Grid.Row="1" FontFamily="Courier New" FontSize="16" VerticalScrollBarVisibility="Visible"
+                    <TextBox Grid.Column="1" Grid.Row="1" FontFamily="Courier New" FontSize="16"
+                             VerticalScrollBarVisibility="Visible"
+                             HorizontalScrollBarVisibility="Auto"
+                             Background="{DynamicResource MahApps.Brushes.Gray9}"
                              Text="{Binding SelectionTreeData.SelectedTreeViewItem.Formula}"
                              IsReadOnly="True"
+                             Padding="12"
+                             Foreground="{DynamicResource MahApps.Brushes.Text}"
                              BorderThickness="0"
-                             ScrollViewer.HorizontalScrollBarVisibility="Auto"
-                             ScrollViewer.VerticalScrollBarVisibility="Auto"
                              />
                     <Button Grid.Row="2" Grid.ColumnSpan="2" Width="150" VerticalAlignment="Bottom" Margin="0,12,0,0" HorizontalAlignment="Right" Command="{Binding ApplySelectedFormulaChangesCommand}" Style="{StaticResource StandardButton}">Apply &amp; Continue</Button>
                 </Grid>
@@ -227,11 +235,10 @@
             <!-- SubViewIndex_Progress = 2 -->
             <mah:FlipViewItem>
                 <Grid>
-
-                    <StackPanel>
+                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Width="300">
                         <TextBlock Style="{StaticResource SubtitleTextBlockStyle}">Processing...</TextBlock>
-                        <ProgressBar Value="40" />
-                        <TextBlock Style="{StaticResource CaptionTextBlockStyle}" Opacity="0.5">Table x, Measure Y</TextBlock>
+                        <ProgressBar IsIndeterminate="True" Margin="0,12" />
+                        <TextBlock Style="{StaticResource CaptionTextBlockStyle}" Opacity="0.5" Text="{Binding ProgressDetails}" />
 
                         <Button Click="PretendErrorClick" >pretend error</Button>
                         <Button Click="PretendProgressClicked" >pretend progress finished</Button>
@@ -240,62 +247,135 @@
             </mah:FlipViewItem>
             <!-- SubViewIndex_Changes = 3 -->
             <mah:FlipViewItem>
-                <Grid>
+                <Grid Margin="20">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="1*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
                     <StackPanel>
-                        <TextBlock
+                        <TextBlock HorizontalAlignment="Right"
+                                   FontSize="10"
                     Foreground="{DynamicResource MahApps.Brushes.Text}">Powered by DAX Formatter</TextBlock>
-                        <TextBlock
-                    Foreground="{DynamicResource MahApps.Brushes.Text}">XXX formulas have been analyzed</TextBlock>
-                        <TabControl Style="{DynamicResource MahApps.Styles.TabControl.Animated}"
-                                mah:TabControlHelper.Underlined="SelectedTabItem">
-                            <TabItem Header="Need formatting">
-                                <Grid>
+
+                        <StackPanel Orientation="Horizontal" Margin="0,20">
+                            <TextBlock FontFamily="Segoe MDL2 Assets" VerticalAlignment="Center" FontSize="24" Foreground="{DynamicResource MahApps.Brushes.Text}">&#xE001;</TextBlock>
+                            <TextBlock>&#x202F;&#x202F;&#x202F;</TextBlock>
+                            <TextBlock
+                            Foreground="{DynamicResource MahApps.Brushes.Text}"
+                            VerticalAlignment="Center" ><Run Text="{Binding AnalyzedMeasureCount}"/> formulas have been analyzed</TextBlock>
+                        </StackPanel>
+                    </StackPanel>
+                    <TabControl Style="{DynamicResource MahApps.Styles.TabControl.Animated}"
+                                Grid.Row="1"
+                                mah:HeaderedControlHelper.HeaderFontSize="16"
+                                    mah:TabControlHelper.Underlined="SelectedTabItem" >
+                        <TabControl.Resources>
+                                <DataTemplate x:Key="TabItemHeaderTemplate">
+                                    <TextBlock
+                                        Foreground="{DynamicResource MahApps.Brushes.Text}"
+                                        Text="{Binding}" />
+                                </DataTemplate>
+                        </TabControl.Resources>
+                            <TabItem Header="Need formatting"
+                                     HeaderTemplate="{StaticResource TabItemHeaderTemplate}">
+                                <Grid >
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="300" />
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="*" />
-                                    </Grid.RowDefinitions>
-                                    <ListView Grid.Column="0" Grid.RowSpan="4" Margin="0,0,12,0">
-                                        <ListViewItem>
-                                            <Grid>
-                                                <TextBlock VerticalAlignment="Center" FontWeight="Bold" HorizontalAlignment="Left" FontSize="16" >&#x2211; {MeasureName}</TextBlock>
-                                                <Button HorizontalAlignment="Right">x</Button>
-                                            </Grid>
-                                        </ListViewItem>
-                                        <ListViewItem>
-                                            <Grid>
-                                                <TextBlock VerticalAlignment="Center" FontWeight="Bold" HorizontalAlignment="Left" FontSize="16" >&#x2211; {MeasureName}</TextBlock>
-                                                <Button HorizontalAlignment="Right">x</Button>
-                                            </Grid>
-                                        </ListViewItem>
-                                        <ListViewItem>
-                                            <Grid>
-                                                <TextBlock VerticalAlignment="Center" FontWeight="Bold" HorizontalAlignment="Left" FontSize="16" >&#x2211; {MeasureName}</TextBlock>
-                                                <Button HorizontalAlignment="Right">x</Button>
-                                            </Grid>
-                                        </ListViewItem>
+                                    <ListView Grid.Column="0"
+                                              Margin="0,0,12,0"
+                                              ItemsSource="{Binding MeasuresNeedingFormatting}"
+                                              SelectedItem="{Binding NeedFormattingSelected, Mode=TwoWay}"
+                                              ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                              ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                              mah:ItemHelper.SelectedBackgroundBrush="{DynamicResource MahApps.Brushes.Gray9}">
+                                    <ListView.Resources>
+
+                                        <!-- Selected & Focused -->
+                                        <SolidColorBrush x:Key="MahApps.Brushes.Accent" Color="{StaticResource MahApps.Colors.Gray9}" />
+                                        <!-- Selected & unfocused -->
+                                        <SolidColorBrush x:Key="MahApps.Brushes.Accent2" Color="{StaticResource MahApps.Colors.Gray9}" />
+                                        <!-- mouseover -->
+                                        <SolidColorBrush x:Key="MahApps.Brushes.Accent3" Color="#99C9C9C9" />
+
+                                        <!-- Need to override this to firce it to work with our color prefs -->
+                                        <SolidColorBrush x:Key="MahApps.Brushes.Selected.Foreground" Color="{DynamicResource MahApps.Colors.ThemeForeground}" />
+                                    </ListView.Resources>
+                                        <ListView.ItemTemplate>
+                                            <DataTemplate DataType="MeasureInfoViewModel">
+                                                <TextBlock Text="{Binding Name}" />
+                                            </DataTemplate>
+                                        </ListView.ItemTemplate>
                                     </ListView>
-                                    <TextBlock Grid.Column="1" Grid.Row="0">FROM</TextBlock>
-                                    <TextBlock Grid.Column="1" Grid.Row="1">{ORIGINAL MEASURE FORMATTING}</TextBlock>
-                                    <StackPanel Orientation="Horizontal" Grid.Column="1" Grid.Row="2">
-                                        <TextBlock>TO</TextBlock>
-                                        <Button>{copyicon}</Button>
+                                    <Grid Grid.Column="1" Background="{DynamicResource MahApps.Brushes.Gray9}"
+                                          >
+                                    <ScrollViewer VerticalScrollBarVisibility="Visible"
+                                                  HorizontalScrollBarVisibility="Visible"
+                                                  Padding="12">
+                                        <StackPanel>
+                                    <TextBlock Grid.Column="1" Grid.Row="0" FontSize="12" FontWeight="Bold">FROM</TextBlock>
+                                                <TextBlock Padding="12" Grid.Column="1" Grid.Row="1" FontFamily="Courier New" FontSize="16" Text="{Binding NeedFormattingSelected.OriginalDax}"></TextBlock>
+                                    <StackPanel Orientation="Horizontal" Grid.Column="1" Grid.Row="2" Margin="0,20,0,0">
+                                                <TextBlock FontSize="12" VerticalAlignment="Center" FontWeight="Bold">TO &#x202F;&#x202F;&#x202F;&#x202F;&#x202F;&#x202F;</TextBlock>
+                                        <Button Style="{StaticResource SubtleButton}" >
+                                            <TextBlock FontSize="12" FontFamily="Segoe MDL2 Assets">&#xE16F;</TextBlock></Button>
                                     </StackPanel>
-                                    <TextBlock Grid.Column="1" Grid.Row="3">{UPDATED MEASURE FORMATTING}</TextBlock>
+                                            <controls:DaxFormattedTextBlock
+                                                Grid.Column="1" Grid.Row="3"
+                                                UncoloredText="{Binding NeedFormattingSelected.FormatterDax}"
+                                             />
+                                        </StackPanel>
+                                    </ScrollViewer>
+                                    </Grid>
                                 </Grid>
                             </TabItem>
-                            <mah:MetroTabItem Header="All formulas">
-                                <TextBlock FontSize="30" Text="add items here" />
+                        <mah:MetroTabItem Header="All formulas"
+                                     HeaderTemplate="{StaticResource TabItemHeaderTemplate}">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="300" />
+                                        <ColumnDefinition Width="1*" />
+                                    </Grid.ColumnDefinitions>
+                                    <ListView ItemsSource="{Binding Measures}"
+                                              SelectedItem="{Binding AllFormulasSelected, Mode=TwoWay}"
+                                              ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                              ScrollViewer.HorizontalScrollBarVisibility="Auto">
+                                    <ListView.Resources>
+
+                                        <!-- Selected & Focused -->
+                                        <SolidColorBrush x:Key="MahApps.Brushes.Accent" Color="{StaticResource MahApps.Colors.Gray9}" />
+                                        <!-- Selected & unfocused -->
+                                        <SolidColorBrush x:Key="MahApps.Brushes.Accent2" Color="{StaticResource MahApps.Colors.Gray9}" />
+                                        <!-- mouseover -->
+                                        <SolidColorBrush x:Key="MahApps.Brushes.Accent3" Color="#99C9C9C9" />
+
+                                        <!-- Need to override this to firce it to work with our color prefs -->
+                                        <SolidColorBrush x:Key="MahApps.Brushes.Selected.Foreground" Color="{DynamicResource MahApps.Colors.ThemeForeground}" />
+                                    </ListView.Resources>
+                                    <ListView.ItemTemplate>
+                                            <DataTemplate DataType="MeasureInfoViewModel">
+                                                <TextBlock Text="{Binding Name}" />
+                                            </DataTemplate>
+                                        </ListView.ItemTemplate>
+                                    </ListView>
+                                    <TextBox Background="{DynamicResource MahApps.Brushes.Gray9}"
+                                             Grid.Column="1" FontFamily="Courier New" FontSize="16"
+                                             VerticalScrollBarVisibility="Visible"
+                                             HorizontalScrollBarVisibility="Auto"
+                                             Text="{Binding AllFormulasSelected.OriginalDax}"
+                                             IsReadOnly="True"
+                                             Margin="12,0,0,0"
+                                             Padding="12"
+                                             BorderThickness="0"
+                                             />
+                                </Grid>
                             </mah:MetroTabItem>
                         </TabControl>
-                    </StackPanel>
+                   
 
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="20">
+                    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,10,0,0">
                         <Button Width="120" Click="CancelClicked">Cancel</Button>
                         <Button Width="120" Margin="20,0,0,0" Command="{Binding FormatMakeChangesCommand}" Style="{StaticResource StandardButton}">Format</Button>
                     </StackPanel>
@@ -306,7 +386,7 @@
                 <Grid>
                     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                         <TextBlock HorizontalAlignment="Center" FontSize="72" FontFamily="Segoe MDL2 Assets" Foreground="YellowGreen">&#xE001;</TextBlock>
-                        <TextBlock HorizontalAlignment="Center" Style="{StaticResource SubtitleTextBlockStyle}" >X formulas have been</TextBlock>
+                        <TextBlock HorizontalAlignment="Center" Style="{StaticResource SubtitleTextBlockStyle}" ><Run Text="{Binding MeasuresFormatted}" /> formulas have been</TextBlock>
                         <TextBlock HorizontalAlignment="Center" Style="{StaticResource SubtitleTextBlockStyle}">successfully formatted.</TextBlock>
                         <TextBlock HorizontalAlignment="Center" Margin="12"><Hyperlink Style="{StaticResource InlineHyperlinks}" Command="{Binding OpenLogCommand}">View log file</Hyperlink></TextBlock>
                     </StackPanel>

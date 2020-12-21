@@ -8,6 +8,8 @@ using Sqlbi.Bravo.Core.Services.Interfaces;
 using Sqlbi.Bravo.Core.Settings.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -63,6 +65,78 @@ namespace Sqlbi.Bravo.Core.Services
             }
         }
 
+        public async Task<Dictionary<string, (string, string)>> GetFormattedItems(DaxFormatterTabularObjectType objectType)
+        {
+            var origAndFormatted = await Task.Run(async () =>
+            {
+                var database = _server.Databases[_settings.Runtime.DatabaseName];
+                var requests = _manager.CreateRequests(objectType);
+
+                var measures = new Dictionary<string, (string, string)>();
+
+                foreach (var request in requests)
+                {
+                    foreach (var item in ParseRequest(request))
+                    {
+                        measures.Add(item.Key, (item.Value, null));
+                    }
+                }
+
+                var responses = _client.FormatAsync(requests);
+
+                await foreach (var response in responses)
+                {
+                    foreach (var item in ParseResponse(response))
+                    {
+                        var (original, _) = measures[item.Key];
+
+                        measures[item.Key] = (original, item.Value);
+                    }
+                }
+
+                return measures;
+            });
+
+            return origAndFormatted;
+        }
+
+        private Dictionary<string, string> ParseRequest(DaxFormatterRequest request)
+        {
+            var regex = new Regex(DaxFormatterModelManager.ExpressionIdRegexPattern, RegexOptions.None);
+            var splits = regex.Split(request.Dax).Where((i) => !string.Empty.Equals(i)).ToArray();
+
+            var ids = splits.Where((s, i) => i % 2 == 0);
+            var expressions = splits.Where((s, i) => i % 2 == 1).Select((s) =>
+            {
+                var str = s.TrimStart('\r', '\n', ' ').TrimEnd('\r', '\n', ' ');
+
+                if (str.EndsWith("*^*"))
+                {
+                    return str.Substring(0, str.LastIndexOf("*^*")).TrimEnd('\r', '\n', ' ');
+                }
+                else
+                {
+                    return str;
+                }
+            });
+            var items = ids.Zip(expressions, (k, v) => (Id: k, Expression: v)).ToDictionary((z) => z.Id, (z) => z.Expression);
+
+            return items;
+        }
+
+        private Dictionary<string, string> ParseResponse(DaxFormatterResponse response)
+        {
+            // From DaxFormatterModelManager.UpdateModelFrom
+            var regex = new Regex(DaxFormatterModelManager.ExpressionIdRegexPattern, RegexOptions.None);
+            var splits = regex.Split(response.Formatted).Where((i) => !string.Empty.Equals(i)).ToArray();
+
+            var ids = splits.Where((s, i) => i % 2 == 0);
+            var expressions = splits.Where((s, i) => i % 2 == 1).Select((s) => s.TrimStart('\r', '\n', ' ').TrimEnd('\r', '\n', ' '));
+            var items = ids.Zip(expressions, (k, v) => (Id: k, Expression: v)).ToDictionary((z) => z.Id, (z) => z.Expression);
+
+            return items;
+        }
+
         public async Task FormatAsync(DaxFormatterTabularObjectType objectType)
         {
             _logger.Trace();
@@ -97,6 +171,36 @@ namespace Sqlbi.Bravo.Core.Services
 
                             _logger.Error(LogEvents.DaxFormatterFormatSaveChangesContainsErrors, message: json);
                         }
+                    }
+                }
+            }
+        }
+
+        public void SaveFormattedMeasures(List<(string id, string expression)> measuresToUpdate)
+        {
+            var database = _server.Databases[_settings.Runtime.DatabaseName];
+
+            foreach (var (id, expression) in measuresToUpdate)
+                _manager.UpdateMeasure(id, expression);
+
+            if (database.Model.HasLocalChanges)
+                database.Update();
+
+            var operationResult = database.Model.SaveChanges();
+            if (operationResult.XmlaResults is { ContainsErrors: true })
+            {
+                foreach (XmlaResult result in operationResult.XmlaResults)
+                {
+                    foreach (XmlaMessage message in result.Messages)
+                    {
+                        var json = "{ }";
+
+                        if (message is XmlaError error)
+                            json = System.Text.Json.JsonSerializer.Serialize(error);
+                        else if (message is XmlaWarning warning)
+                            json = System.Text.Json.JsonSerializer.Serialize(warning);
+
+                        _logger.Error(LogEvents.DaxFormatterFormatSaveChangesContainsErrors, message: json);
                     }
                 }
             }

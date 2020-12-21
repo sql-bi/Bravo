@@ -21,6 +21,7 @@
   <ItemGroup>
     <None Remove="UI\Controls\AnalyzeModelIcon.xaml" />
     <None Remove="UI\Controls\DatasetIcon.xaml" />
+    <None Remove="UI\Controls\DaxFormattedTextBlock.xaml" />
     <None Remove="UI\Controls\DaxFormatterIcon.xaml" />
     <None Remove="UI\Controls\DesktopIcon.xaml" />
     <None Remove="UI\Controls\HelpIcon.xaml" />

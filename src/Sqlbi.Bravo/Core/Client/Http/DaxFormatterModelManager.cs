@@ -60,7 +60,7 @@ namespace Sqlbi.Bravo.Core.Client.Http
 
         private const string ExpressionIdTemplate = "MEASURE '_'[{0}] =";
 
-        private const string ExpressionIdRegexPattern = "(MEASURE '_'\\[[0-9a-f]{32}\\] =)";
+        internal const string ExpressionIdRegexPattern = "(MEASURE '_'\\[[0-9a-f]{32}\\] =)";
 
         public static DaxFormatterModelManager CreateFrom(Model model)
         {
@@ -235,6 +235,11 @@ namespace Sqlbi.Bravo.Core.Client.Http
                 _expressions.GetFrom(id).Update(expression);
 
             return true;
-        }        
+        }
+
+        public void UpdateMeasure(string identifier, string updatedExpression)
+        {
+            _expressions.GetFrom(identifier).Update(updatedExpression);
+        }
     }
 }

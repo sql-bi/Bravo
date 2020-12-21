@@ -11,6 +11,10 @@ namespace Sqlbi.Bravo.Core.Services.Interfaces
 
         Task FormatAsync(DaxFormatterTabularObjectType objectType);
 
+        void SaveFormattedMeasures(List<(string id, string expression)> measuresToUpdate);
+
+        Task<Dictionary<string, (string, string)>> GetFormattedItems(DaxFormatterTabularObjectType objectType);
+
         int Count(DaxFormatterTabularObjectType objectType);
 
         List<Measure> GetMeasures();
