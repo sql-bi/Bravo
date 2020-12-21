@@ -6,9 +6,9 @@ namespace Sqlbi.Bravo.UI.Controls.Parser
 {
     public static class SimpleDaxFormatter
     {
-        private const string KeyWordColor = "Purple";
-        private const string FunctionColor = "Blue";
-        private const string ParenthesisColor = "Red";
+        private static readonly Color KeyWordColor = Color.FromRgb(3, 90, 202); // "#035ACA";
+        private static readonly Color FunctionColor = Color.FromRgb(3, 90, 202); // "#035ACA";
+        private static readonly Color ParenthesisColor = Color.FromRgb(128, 128, 128); // "#808080";
 
         public static List<Inline> FormatLine(string line)
         {
@@ -25,15 +25,15 @@ namespace Sqlbi.Bravo.UI.Controls.Parser
                         break;
 
                     case ParsedTextType.Keyword:
-                        result.Add(new Run(text) { Foreground = new SolidColorBrush(Colors.Purple) });
+                        result.Add(new Run(text) { Foreground = new SolidColorBrush(KeyWordColor) });
                         break;
 
                     case ParsedTextType.Function:
-                        result.Add(new Run(text) { Foreground = new SolidColorBrush(Colors.Red) });
+                        result.Add(new Run(text) { Foreground = new SolidColorBrush(FunctionColor) });
                         break;
 
                     case ParsedTextType.Parenthesis:
-                        result.Add(new Run(text) { Foreground = new SolidColorBrush(Colors.Blue) });
+                        result.Add(new Run(text) { Foreground = new SolidColorBrush(ParenthesisColor) });
                         break;
 
                     default:

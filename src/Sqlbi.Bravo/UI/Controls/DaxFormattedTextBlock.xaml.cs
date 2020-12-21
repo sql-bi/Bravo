@@ -21,8 +21,8 @@ namespace Sqlbi.Bravo.UI.Controls
 
         public string UncoloredText
         {
-            get { return (string)GetValue(UncoloredTextProperty); }
-            set { SetValue(UncoloredTextProperty, value); }
+            get => (string)GetValue(UncoloredTextProperty);
+            set => SetValue(UncoloredTextProperty, value);
         }
 
         public static readonly DependencyProperty UncoloredTextProperty =
