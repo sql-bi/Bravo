@@ -37,5 +37,9 @@ namespace Sqlbi.Bravo.UI.Views
             // Quick hack for not being able to bind the selected item in WPF
             (DataContext as ViewModels.DaxFormatterViewModel).SelectionTreeData.SelectedTreeViewItem = (ViewModels.TreeItem)e.NewValue;
         }
+
+        private void CopyToClipboardClicked(object sender, RoutedEventArgs e) =>
+            // Doing this in code-behind for simplicity and preserving UI separation
+            Clipboard.SetText((DataContext as ViewModels.DaxFormatterViewModel).NeedFormattingSelected.FormatterDax);
     }
 }

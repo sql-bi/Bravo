@@ -332,8 +332,13 @@
                                                 <TextBlock Padding="12" Grid.Column="1" Grid.Row="1" FontFamily="Courier New" FontSize="16" Text="{Binding NeedFormattingSelected.OriginalDax}"></TextBlock>
                                     <StackPanel Orientation="Horizontal" Grid.Column="1" Grid.Row="2" Margin="0,20,0,0">
                                                 <TextBlock FontSize="12" VerticalAlignment="Center" FontWeight="Bold">TO &#x202F;&#x202F;&#x202F;&#x202F;&#x202F;&#x202F;</TextBlock>
-                                        <Button Style="{StaticResource SubtleButton}" >
-                                            <TextBlock FontSize="12" FontFamily="Segoe MDL2 Assets">&#xE16F;</TextBlock></Button>
+                                        <Button Style="{StaticResource SubtleButton}"
+                                                Click="CopyToClipboardClicked">
+                                                    <TextBlock FontSize="12"
+                                                       ToolTip="Copy to Clipboard"
+                                                       FontFamily="Segoe MDL2 Assets"
+                                                       Text="&#xE16F;"/>
+                                                </Button>
                                     </StackPanel>
                                             <controls:DaxFormattedTextBlock
                                                 Grid.Column="1" Grid.Row="3"
