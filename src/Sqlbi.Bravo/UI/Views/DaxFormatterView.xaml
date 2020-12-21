@@ -51,7 +51,7 @@
                     Text="&#xE117;" />
                             <TextBlock
                     Style="{StaticResource CaptionTextBlockStyle}"
-                    VerticalAlignment="Center">&#x202F; Synced 2 min. ago</TextBlock>
+                    VerticalAlignment="Center">&#x202F; Synced <Run Text="{Binding TimeSinceLastSync, Mode=OneWay}" /></TextBlock>
                         </StackPanel>
                     </Button>
 

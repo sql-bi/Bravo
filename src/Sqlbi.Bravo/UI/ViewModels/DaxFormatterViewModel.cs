@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Humanizer;
+using Microsoft.Extensions.Logging;
 using Sqlbi.Bravo.Core.Client.Http;
 using Sqlbi.Bravo.Core.Helpers;
 using Sqlbi.Bravo.Core.Logging;
@@ -8,11 +9,13 @@ using Sqlbi.Bravo.UI.DataModel;
 using Sqlbi.Bravo.UI.Framework.Commands;
 using Sqlbi.Bravo.UI.Framework.Helpers;
 using Sqlbi.Bravo.UI.Framework.ViewModels;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using System.Windows.Threading;
 
 namespace Sqlbi.Bravo.UI.ViewModels
 {
@@ -26,6 +29,8 @@ namespace Sqlbi.Bravo.UI.ViewModels
         internal const int SubViewIndex_Progress = 2;
         internal const int SubViewIndex_Changes = 3;
         internal const int SubViewIndex_Finished = 4;
+
+        DispatcherTimer _timer = new DispatcherTimer();
 
         public DaxFormatterViewModel(IDaxFormatterService formatter, IAnalysisServicesEventWatcherService watcher, ILogger<DaxFormatterViewModel> logger)
         {
@@ -50,6 +55,13 @@ namespace Sqlbi.Bravo.UI.ViewModels
             ChangeFormulasCommand = new RelayCommand(() => ChooseFormulas());
             ApplySelectedFormulaChangesCommand = new RelayCommand(() => SelectedFormulasChanged());
             OpenLogCommand = new RelayCommand(() => OpenLog());
+
+            _timer = new DispatcherTimer
+            {
+                Interval = new TimeSpan(0, 0, 15)
+            };
+            _timer.Tick += new EventHandler((s, e) => OnPropertyChanged(nameof(TimeSinceLastSync)));
+            _timer.Start();
         }
 
         private DaxFormatterTabularObjectType TabularObjectType { get; set; } = DaxFormatterTabularObjectType.None;
@@ -99,6 +111,13 @@ namespace Sqlbi.Bravo.UI.ViewModels
             get => TabularObjectType.HasFlag(DaxFormatterTabularObjectType.Measures);
             set => TabularObjectType = TabularObjectType.WithFlag(DaxFormatterTabularObjectType.Measures, set: value);
         }
+
+        public DateTime LastSyncTime { get; private set; }
+
+        public string TimeSinceLastSync
+            => LastSyncTime.Year == 1
+            ? "not yet"
+            : $"{(DateTime.UtcNow - LastSyncTime).Humanize(minUnit: Humanizer.Localisation.TimeUnit.Second)} ago";
 
         public int TabularObjectMeasuresCount { get; set; }
 
@@ -159,6 +178,9 @@ namespace Sqlbi.Bravo.UI.ViewModels
         {
             FormatCommandIsEnabled = false;
             await _formatter.InitilizeOrRefreshAsync();
+
+            LastSyncTime = DateTime.UtcNow;
+            OnPropertyChanged(nameof(TimeSinceLastSync));
 
             TabularObjectMeasuresCount = _formatter.Count(DaxFormatterTabularObjectType.Measures);
             TabularObjectCalculatedColumnsCount = _formatter.Count(DaxFormatterTabularObjectType.CalculatedColumns);
@@ -251,6 +273,9 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
             TabularObjectType = TabularObjectType.WithFlag(DaxFormatterTabularObjectType.Measures, true);
 
+            //var measuresOfInterest = SelectionTreeData.Tables.SelectMany(t => t.Measures.Where(m => !string.IsNullOrWhiteSpace(m.Formula) && (m.IsSelected ?? false)));
+
+            // TODO: This should not get all Measures--only the ones that are in the `measuresOfInterest` (above)
             var measures = await _formatter.GetFormattedItems(TabularObjectType);
 
             Measures.Clear();
