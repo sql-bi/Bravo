@@ -351,6 +351,8 @@ namespace Sqlbi.Bravo.UI.ViewModels
         {
             _logger.Trace();
 
+            await ApplyFormattingChangesToModelAsync();
+
             ViewIndex = SubViewIndex_Finished;
         }
     }
