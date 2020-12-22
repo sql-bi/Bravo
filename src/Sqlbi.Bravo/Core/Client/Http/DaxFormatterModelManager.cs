@@ -220,7 +220,7 @@ namespace Sqlbi.Bravo.Core.Client.Http
         {
             _logger.Trace();
 
-            // TODO: define how to handle response errors
+            // TODO REQUIREMENTS: define how to handle response errors
             if (response.Errors.Count > 0)
                 return false;
             

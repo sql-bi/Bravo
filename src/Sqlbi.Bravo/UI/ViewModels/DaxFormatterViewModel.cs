@@ -250,7 +250,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         private void OpenLog()
         {
-            // TODO: Open log file
+            // TODO REQUIREMENTS: Open log file
         }
 
         private async Task ShowHelpAsync()
@@ -274,7 +274,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
             //var measuresOfInterest = SelectionTreeData.Tables.SelectMany(t => t.Measures.Where(m => !string.IsNullOrWhiteSpace(m.Formula) && (m.IsSelected ?? false)));
 
-            // TODO: This should not get all Measures--only the ones that are in the `measuresOfInterest` (above)
+            // TODO REQUIREMENTS: This should not get all Measures--only the ones that are in the `measuresOfInterest` (above)
             var measures = await _formatter.GetFormattedItems(TabularObjectType);
 
             Measures.Clear();
@@ -299,7 +299,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
                 Measures.Add(new MeasureInfoViewModel
                 {
                     Identifier = m.Key,
-                    // TODO: Get names of measures at the same time as IDs and expressions - this is a workaround
+                    // TODO REQUIREMENTS: Get names of measures at the same time as IDs and expressions - this is a workaround
                     Name = GetMEasureName(m.Key, m.Value.Item1),
                     OriginalDax = m.Value.Item1,
                     FormatterDax = m.Value.Item2,
@@ -339,7 +339,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
                     }
                 }
 
-                // TODO: add error handling for this
+                // TODO REQUIREMENTS: add error handling for this
                 _formatter.SaveFormattedMeasures(toUpdate);
 
                 MeasuresFormatted = toUpdate.Count;

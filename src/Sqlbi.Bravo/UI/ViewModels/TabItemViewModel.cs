@@ -78,7 +78,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
             }
         }
 
-        // TODO: add logic for when all open tabs are closed
+        // TODO MATT: add logic for when all open tabs are closed
         public bool IsTabClosable { get; set; } = true;
 
         public ICommand ConnectCommand { get; set; }
