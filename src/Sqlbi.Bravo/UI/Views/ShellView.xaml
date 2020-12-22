@@ -134,7 +134,7 @@
                         <ControlTemplate TargetType="{x:Type TabItem}">
                             <StackPanel x:Name="PART_Content"
                                     HorizontalAlignment="Stretch"
-                                        Background="{DynamicResource MahApps.Brushes.ThemeBackground}"
+                                    Background="Transparent"
                                     VerticalAlignment="Stretch"
                                     Orientation="Horizontal">
                                 <ContentControl
@@ -172,7 +172,7 @@
                             </StackPanel>
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsSelected" Value="true">
-                                    <Setter Property="Background" Value="{DynamicResource MahApps.Brushes.Window.Background}" />
+                                    <Setter TargetName="PART_Content" Property="Background" Value="{DynamicResource MahApps.Brushes.Window.Background}" />
                                 </Trigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>
@@ -210,7 +210,28 @@
                 ShowSelectionIndicator="True">
                 <mah:HamburgerMenu.HamburgerMenuHeaderTemplate>
                     <DataTemplate>
+                        <Grid>
                         <Image Height="40" Margin="10" Stretch="uniform" Source="/UI/Resources/Images/logo.png" />
+
+                            <Button Height="30" Width="30"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Top"
+                                    Padding="0"
+                                    VerticalContentAlignment="Center"
+                                    HorizontalContentAlignment="Center"
+                                    Style="{DynamicResource MahApps.Styles.Button.Flat}"
+                                    Click="AddTabClicked">
+                                <Button.Resources>
+                                    <SolidColorBrush x:Key="MahApps.Brushes.Button.Flat.Background" Color="Transparent" />
+                                </Button.Resources>
+                                <Button.Content>
+                                    <TextBlock FontSize="36" Margin="0,-14,0,0"
+                                               FontWeight="Light"
+                                               Foreground="{DynamicResource MahApps.Brushes.Text}"
+                                               Text="+" />
+                                </Button.Content>
+                            </Button>
+                        </Grid>
                     </DataTemplate>
                 </mah:HamburgerMenu.HamburgerMenuHeaderTemplate>
 
@@ -250,7 +271,7 @@
                                                             KeyboardNavigation.TabIndex="2"
                                                             KeyboardNavigation.TabNavigation="Local"
                                                             SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}">
-                                                        <TabPanel Panel.ZIndex="1"
+                                                            <TabPanel Panel.ZIndex="1"
                                                                   IsItemsHost="true"
                                                                   KeyboardNavigation.TabIndex="1" />
                                                     </Border>

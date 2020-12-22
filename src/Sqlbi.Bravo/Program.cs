@@ -116,10 +116,9 @@ namespace Sqlbi.Bravo
                 services.AddSingleton<ShellViewModel>();
                 services.AddSingleton<SideMenuViewModel>();
                 services.AddSingleton<SettingsViewModel>();
-                // TODO MATT: stop making this a singleton so can use in different tabs
-                services.AddSingleton<DaxFormatterViewModel>();
 
-                services.AddScoped<TabItemViewModel>();
+                services.AddTransient<DaxFormatterViewModel>();
+                services.AddTransient<TabItemViewModel>();
             }
 
             static void ConfigureLogging(ILoggingBuilder logging)

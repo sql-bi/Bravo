@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Sqlbi.Bravo.UI.ViewModels;
 using Sqlbi.Bravo.UI.DataModel;
+using System.Linq;
 
 namespace Sqlbi.Bravo.UI.Views
 {
@@ -47,6 +48,15 @@ namespace Sqlbi.Bravo.UI.Views
                 ChildWindowHeight = ActualHeight - 100,
                 ChildWindowWidth = ActualWidth - 150
             });
+        }
+
+        private void AddTabClicked(object sender, System.Windows.RoutedEventArgs e)
+        {
+            var vm = DataContext as ShellViewModel;
+            vm.Tabs.Add((TabItemViewModel)App.ServiceProvider.GetRequiredService(typeof(TabItemViewModel)));
+
+            // Select added item so it is made visible
+            vm.SelectedTab = vm.Tabs.Last();
         }
     }
 }
