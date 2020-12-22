@@ -13,6 +13,7 @@ using Sqlbi.Bravo.UI.Views;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
@@ -41,6 +42,30 @@ namespace Sqlbi.Bravo.UI.ViewModels
             SelectedItem = MenuItems.First();
             LastNavigation = SelectedItem;
             ItemSelectedCommand = new RelayCommand(async () => await ItemSelected());
+
+            Tabs.CollectionChanged += (s, e) =>
+            {
+                // If all tabs closed ...
+                if (!Tabs.Any())
+                {
+                    // ... open a new tab
+                    // - via some threading gymnastics as it's not possible to modify the collection during the Changed event
+                    var tempthread = new Thread(() =>
+                    {
+                        Application.Current.Dispatcher.Invoke(() =>
+                        {
+                            Tabs.Add((TabItemViewModel)App.ServiceProvider.GetRequiredService(typeof(TabItemViewModel)));
+                            // Ensure the new tab is selected so the contents load
+                            SelectedTab = Tabs.First();
+                        });
+                    })
+                    {
+                        IsBackground = false,
+                        Priority = ThreadPriority.BelowNormal,
+                    };
+                    tempthread.Start();
+                }
+            };
         }
 
         internal void LaunchedViaPowerBIDesktop(string title)

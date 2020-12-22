@@ -178,7 +178,7 @@
                         </ControlTemplate>
                     </Setter.Value>
                 </Setter>
-                <Setter Property="mah:TabControlHelper.CloseButtonEnabled" Value="{Binding IsTabClosable}" />
+                <Setter Property="mah:TabControlHelper.CloseButtonEnabled" Value="True" />
             </Style>
 
         </ResourceDictionary>
