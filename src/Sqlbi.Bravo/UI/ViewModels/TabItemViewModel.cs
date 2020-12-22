@@ -19,7 +19,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
         private readonly IAnalysisServicesEventWatcherService _watcher;
         private readonly ILogger _logger;
 
-        public TabItemViewModel(IAnalysisServicesEventWatcherService watcher, ILogger<SideMenuViewModel> logger)
+        public TabItemViewModel(IAnalysisServicesEventWatcherService watcher, ILogger<TabItemViewModel> logger)
         {
             _logger = logger;
             _watcher = watcher;

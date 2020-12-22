@@ -12,14 +12,11 @@ namespace Sqlbi.Bravo.UI.Framework.TemplateSelector
 
         public override DataTemplate SelectTemplate(object item, DependencyObject container)
         {
-            if (item is NavigationItem navItem)
-            {
-                return string.IsNullOrWhiteSpace(navItem.Glyph)
+            return item is NavigationItem navItem
+                ? string.IsNullOrWhiteSpace(navItem.Glyph)
                     ? PathDataTemplate
-                    : GlyphDataTemplate;
-            }
-
-            return base.SelectTemplate(item, container);
+                    : GlyphDataTemplate
+                : base.SelectTemplate(item, container);
         }
     }
 }
