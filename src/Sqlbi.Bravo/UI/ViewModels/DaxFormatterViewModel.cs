@@ -116,7 +116,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
         public string TimeSinceLastSync
             => LastSyncTime.Year == 1
             ? "not yet"
-            : $"{(DateTime.UtcNow - LastSyncTime).Humanize(minUnit: Humanizer.Localisation.TimeUnit.Second)} ago";
+            : $"{(DateTime.UtcNow - LastSyncTime).Humanize(minUnit: Humanizer.Localisation.TimeUnit.Second).Replace("minute", "min").Replace("second", "sec")} ago";
 
         public int TabularObjectMeasuresCount { get; set; }
 
