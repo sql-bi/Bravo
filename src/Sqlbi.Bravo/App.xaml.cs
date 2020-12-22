@@ -68,7 +68,7 @@ namespace Sqlbi.Bravo
                 _logger.Error(LogEvents.TaskSchedulerUnobservedTaskException, exception);
                 MessageBox.Show(exception.Message, AppConstants.ApplicationNameLabel, MessageBoxButton.OK, MessageBoxImage.Error);
 
-                // TODO: SetObserved for UnobservedTaskException
+                // TODO REQUIREMENTS?: SetObserved for UnobservedTaskException
                 //e.SetObserved();
             };
 
@@ -89,7 +89,7 @@ namespace Sqlbi.Bravo
                     _logger.Error(LogEvents.DispatcherUnhandledException, exception);
                     MessageBox.Show(exception.Message, AppConstants.ApplicationNameLabel, MessageBoxButton.OK, MessageBoxImage.Error);
 
-                    // TODO: Handled for UnhandledException
+                    // TODO REQUIREMENTS: Handled for UnhandledException
                     //e.Handled = true;
                 };
             }

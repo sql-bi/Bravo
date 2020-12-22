@@ -23,7 +23,7 @@ namespace Sqlbi.Bravo.UI.Views
 
         private void AttachToWindowClicked(object sender, RoutedEventArgs e)
         {
-            // TODO: need to know how to connect here
+            // TODO REQUIREMENTS: need to know how to connect here
             _ = MessageBox.Show(
                 "Need to know what to do here - how to attach to an active window",
                 "TODO",
@@ -33,7 +33,6 @@ namespace Sqlbi.Bravo.UI.Views
             /*
             var vm = DataContext as ShellViewModel;
 
-            // TODO: Get title from parent process
             vm.SelectedTab.ConnectionName = "TOFIX: Title from ParentProcess";
 
             vm.SelectedTab.ConnectionType = BiConnectionType.ActivePowerBiWindow;
