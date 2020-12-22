@@ -10,5 +10,12 @@
 
     <Grid Margin="20">
         <TextBlock Style="{DynamicResource SubheaderTextBlockStyle}">Analyze Model</TextBlock>
+
+        <Border Background="Red"
+                        Grid.Column="1" CornerRadius="3"  Padding="4,0,4,1"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center">
+            <TextBlock Foreground="White" FontSize="36" FontWeight="Bold">SOON</TextBlock>
+        </Border>
     </Grid>
 </Page>
