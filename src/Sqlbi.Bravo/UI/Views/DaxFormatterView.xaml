@@ -101,8 +101,8 @@
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
 
-                            <controls:DaxFormatterIcon VerticalAlignment="Center" Grid.RowSpan="2" Margin="0" Height="70" ForegroundBrush="Red" />
-                            <controls:LogoText Grid.Column="1" Margin="10,0,24,0" Height="70" />
+                            <controls:DaxFormatterIcon VerticalAlignment="Center" Grid.RowSpan="2" Margin="0" Height="50" ForegroundBrush="Red" />
+                            <controls:LogoText Grid.Column="1" Margin="10,0,24,0" Height="50" />
                         </Grid>
 
                         <StackPanel Grid.Row="3" Grid.ColumnSpan="3" Margin="0,12,0,0" Orientation="Horizontal">
