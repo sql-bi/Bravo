@@ -39,7 +39,7 @@
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
-                    <TextBlock Margin="24" Style="{StaticResource SubheaderTextBlockStyle}">Format your DAX code</TextBlock>
+                    <TextBlock Margin="20,20,0,0" Style="{StaticResource SubheaderTextBlockStyle}">Format your DAX code</TextBlock>
 
                     <Button Grid.Column="1" Command="{Binding RefreshCommand}" Style="{StaticResource SubtleButton}" Padding="12" Height="48" Margin="0,8,24,0" VerticalAlignment="Top">
                         <StackPanel Orientation="Horizontal">

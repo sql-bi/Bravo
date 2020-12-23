@@ -113,7 +113,8 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public ObservableCollection<NavigationItem> OptionMenuItems { get; } = new ObservableCollection<NavigationItem>()
         {
-            new NavigationItem{ Name = "Settings", Glyph = "\uE713", NavigationPage = typeof(SettingsViewModel) }
+            new NavigationItem{ Name = "Sign in", Glyph = "\uE13D" },
+            new NavigationItem{ Name = "Settings", Glyph = "\uE713" },
         };
 
         public NavigationItem SelectedItem { get; set; }
@@ -193,11 +194,20 @@ namespace Sqlbi.Bravo.UI.ViewModels
                 if (SelectedOptionsItem.Name == "Settings")
                 {
                     await ShellView.Instance.ShowSettings();
+                }
+                else
+                {
+                    // TODO REQUIREMENTS: need to know how to sign in
+                    _ = MessageBox.Show(
+                        "Need to sign-in (this is placeholder UI)",
+                        "TODO",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Question);
+                }
 
                     // Put selection focus back where it was
                     SelectedOptionsItem = null;
                     SelectedItem = MenuItems.FirstOrDefault(mi => mi.Name == LastNavigation?.Name);
-                }
             }
             else if (SelectedItem != null)
             {
