@@ -1,5 +1,7 @@
-﻿using Sqlbi.Bravo.UI.DataModel;
+﻿using Microsoft.Win32;
+using Sqlbi.Bravo.UI.DataModel;
 using Sqlbi.Bravo.UI.ViewModels;
+using System;
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
@@ -25,7 +27,7 @@ namespace Sqlbi.Bravo.UI.Views
         {
             // TODO REQUIREMENTS: need to know how to connect here
             _ = MessageBox.Show(
-                "Need to know what to do here - how to attach to an active window",
+                "Need to attach to an active window",
                 "TODO",
                 MessageBoxButton.OK,
                 MessageBoxImage.Question);
@@ -38,6 +40,36 @@ namespace Sqlbi.Bravo.UI.Views
             vm.SelectedTab.ConnectionType = BiConnectionType.ActivePowerBiWindow;
             vm.SelectedTab.ContentPageSource = vm.SelectedItem.NavigationPage;
             */
+        }
+
+        private void ConnectToDatasetClicked(object sender, RoutedEventArgs e)
+        {
+            // TODO REQUIREMENTS: need to know how to connect here
+            _ = MessageBox.Show(
+                "Need to sign-in and connect to a dataset",
+                "TODO",
+                MessageBoxButton.OK,
+                MessageBoxImage.Question);
+        }
+
+        private void OpenVertipaqFileClicked(object sender, RoutedEventArgs e)
+        {
+            var openFileDialog = new OpenFileDialog {
+                CheckFileExists = true,
+                Multiselect = false,
+                Filter = "Vertipaq files (*.vpax)|*.vpax",
+                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+            };
+
+            if (openFileDialog.ShowDialog() == true)
+            {
+                // TODO REQUIREMENTS: need to load the file
+                _ = MessageBox.Show(
+                    $"Need to load the Vertipaq file: {openFileDialog.FileName}",
+                    "TODO",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Question);
+            }
         }
     }
 }
