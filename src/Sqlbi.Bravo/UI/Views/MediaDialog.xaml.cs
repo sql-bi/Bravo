@@ -26,7 +26,8 @@ namespace Sqlbi.Bravo.UI.Views
 
         private void OnMediaFailed(object sender, ExceptionRoutedEventArgs e)
         {
-            // TODO: Add some logging for this?
+            // TODO REQUIREMENTS: Add some logging for this?
+            // TODO REQUIREMENTS: What to do if can't play the specified media?
             ProgressIndicator.IsActive = false;
         }
     }

@@ -6,7 +6,7 @@ namespace Sqlbi.Bravo.Core.Logging
     {
         private enum LogEventsId: int
         {
-            DaxFormatterUnableToRetrievePowerBIDesktopFileNameFromParentProcessMainWindowTitle = 9000, // TODO: start value
+            DaxFormatterUnableToRetrievePowerBIDesktopFileNameFromParentProcessMainWindowTitle = 9000, // TODO REQUIREMENTS: start value
 
             DaxFormatterHttpClientFormatResponse,
 
