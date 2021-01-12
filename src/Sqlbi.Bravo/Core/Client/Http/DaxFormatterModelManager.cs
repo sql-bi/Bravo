@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Sqlbi.Bravo.Core.Helpers;
 using Sqlbi.Bravo.Core.Logging;
+using Sqlbi.Bravo.Core.Settings;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -137,7 +138,7 @@ namespace Sqlbi.Bravo.Core.Client.Http
         public List<Measure> GetMeasures()
             => _tabularObjects.Where((o) => o.Value == DaxFormatterTabularObjectType.Measures).Select(o => o.Key).Cast<Measure>().ToList();
 
-        public IReadOnlyList<DaxFormatterRequest> CreateRequests(DaxFormatterTabularObjectType objectType)
+        public IReadOnlyList<DaxFormatterRequest> CreateRequests(DaxFormatterTabularObjectType objectType, RuntimeSummary runtimeSummary)
         {
             _logger.Trace();
 
@@ -208,7 +209,7 @@ namespace Sqlbi.Bravo.Core.Client.Http
                 _logger.Information(LogEvents.DaxFormatterModelManagerBuildRequestFromModel, "Request expression count '{RequestExpressionCount}'", args: batch.Length);
 
                 var dax = string.Join(string.Empty, batch.Select((o) => $"{ o.Id }{ o.Expression }{ AppConstants.DaxFormatterTextFormatRequestBatchSeparator }"));
-                var request = DaxFormatterRequest.CreateFrom(_model, dax);
+                var request = DaxFormatterRequest.CreateFrom(_model, dax, runtimeSummary);
                 requests.Add(request);
             }
             while (true);

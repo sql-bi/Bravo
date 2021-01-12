@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Sqlbi.Bravo.UI.ViewModels;
 using Sqlbi.Bravo.UI.DataModel;
-using System.Linq;
 using System.Windows.Interop;
 using System.Windows;
 using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging;
+using Sqlbi.Bravo.Core.Settings;
 
 namespace Sqlbi.Bravo.UI.Views
 {
@@ -42,11 +42,20 @@ namespace Sqlbi.Bravo.UI.Views
                         System.Diagnostics.Debug.WriteLine($"DatabaseName = '{details.DbName}'");
                         System.Diagnostics.Debug.WriteLine($"ServerName = '{details.ServerName}'");
                         System.Diagnostics.Debug.WriteLine($"ParentProcessName = '{details.ParentProcName}'");
-                        System.Diagnostics.Debug.WriteLine($"ConnectionName = '{details.ConnName}'");
+                        System.Diagnostics.Debug.WriteLine($"ParentWindowTitle = '{details.ParentWindowTitle}'");
+
+                        var runtimeSummary = new RuntimeSummary
+                        {
+                            DatabaseName = details.DbName,
+                            IsExecutedAsExternalTool = true,
+                            ParentProcessMainWindowTitle = details.ParentWindowTitle,
+                            ParentProcessName = details.ParentProcName,
+                            ServerName = details.ServerName,
+                        };
 
                         var vm = DataContext as ShellViewModel;
 
-                        vm.AddNewTab(BiConnectionType.ActivePowerBiWindow, vm.SelectedItem.NavigationPage, details.ConnName);
+                        vm.AddNewTab(BiConnectionType.ActivePowerBiWindow, vm.SelectedItem.NavigationPage, runtimeSummary);
                     }
                 }
                 catch (Exception e)

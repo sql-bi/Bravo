@@ -54,7 +54,7 @@ namespace Sqlbi.Bravo
 
         public int GetWindowId(string windowName) => FindWindow(null, windowName);
 
-        public static (string DbName, string ServerName, string ParentProcName, string ConnName) ExtractDetails(ConnectionInfo connInfo)
+        public static (string DbName, string ServerName, string ParentProcName, string ParentWindowTitle) ExtractDetails(ConnectionInfo connInfo)
         {
             var details = connInfo.Details.Split('|');
 
@@ -63,11 +63,11 @@ namespace Sqlbi.Bravo
                 : (string.Empty, string.Empty, string.Empty, string.Empty);
         }
 
-        public static ConnectionInfo CreateConnectionInfo(string databaseName, string serverName, string parentProcName, string connectionName)
+        public static ConnectionInfo CreateConnectionInfo(string databaseName, string serverName, string parentProcName, string parentWindowName)
         {
             return new MessageHelper.ConnectionInfo
             {
-                Details = $"{databaseName}|{serverName}|{parentProcName}|{connectionName}"
+                Details = $"{databaseName}|{serverName}|{parentProcName}|{parentWindowName}"
             };
         }
     }

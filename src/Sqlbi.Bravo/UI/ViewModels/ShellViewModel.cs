@@ -4,6 +4,7 @@ using Sqlbi.Bravo.Core;
 using Sqlbi.Bravo.Core.Logging;
 using Sqlbi.Bravo.Core.Services;
 using Sqlbi.Bravo.Core.Services.Interfaces;
+using Sqlbi.Bravo.Core.Settings;
 using Sqlbi.Bravo.Core.Settings.Interfaces;
 using Sqlbi.Bravo.UI.Controls;
 using Sqlbi.Bravo.UI.DataModel;
@@ -79,7 +80,6 @@ namespace Sqlbi.Bravo.UI.ViewModels
                 SelectedTab.ConnectionName = "DEBUG";
             }
 #endif
-
         }
 
         public double WindowMinWidth => 800D;
@@ -187,22 +187,19 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public NavigationItem LastNavigation { get; private set; } = null;
 
-        public void AddNewTab(BiConnectionType connType = BiConnectionType.UnSelected, Type contentPageType = null, string connectionName = null)
+        public void AddNewTab(BiConnectionType connType = BiConnectionType.UnSelected, Type contentPageType = null, RuntimeSummary runtimeSummary = null)
         {
             var newTab = (TabItemViewModel)App.ServiceProvider.GetRequiredService(typeof(TabItemViewModel));
 
             newTab.ConnectionType = connType;
 
-            if (contentPageType == null)
-            {
-                newTab.ContentPageSource = typeof(SelectConnectionType);
-            }
-            else
-            {
-                newTab.ContentPageSource = contentPageType;
-            }
+            newTab.ContentPageSource = contentPageType ?? typeof(SelectConnectionType);
 
-            newTab.ConnectionName = connectionName;
+            if (runtimeSummary != null)
+            {
+                newTab.ConnectionName = runtimeSummary.ParentProcessMainWindowTitle;
+                newTab.RuntimeSummary = runtimeSummary;
+            }
 
             Tabs.Add(newTab);
 
@@ -228,9 +225,9 @@ namespace Sqlbi.Bravo.UI.ViewModels
                         MessageBoxImage.Question);
                 }
 
-                    // Put selection focus back where it was
-                    SelectedOptionsItem = null;
-                    SelectedItem = MenuItems.FirstOrDefault(mi => mi.Name == LastNavigation?.Name);
+                // Put selection focus back where it was
+                SelectedOptionsItem = null;
+                SelectedItem = MenuItems.FirstOrDefault(mi => mi.Name == LastNavigation?.Name);
             }
             else if (SelectedItem != null)
             {

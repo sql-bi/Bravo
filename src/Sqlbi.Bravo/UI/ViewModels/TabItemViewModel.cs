@@ -10,6 +10,7 @@ using System.Windows.Input;
 using Sqlbi.Bravo.UI.Framework.Commands;
 using Sqlbi.Bravo.UI.DataModel;
 using Sqlbi.Bravo.Core.Settings.Interfaces;
+using Sqlbi.Bravo.Core.Settings;
 
 namespace Sqlbi.Bravo.UI.ViewModels
 {
@@ -18,14 +19,14 @@ namespace Sqlbi.Bravo.UI.ViewModels
         private BiConnectionType connectionType;
 
         private readonly IAnalysisServicesEventWatcherService _watcher;
-        private readonly IRuntimeSettings _settings;
+        private readonly IGlobalSettingsProviderService _settings;
         private readonly ILogger _logger;
 
-        public TabItemViewModel(IAnalysisServicesEventWatcherService watcher, ILogger<TabItemViewModel> logger)
+        public TabItemViewModel(IAnalysisServicesEventWatcherService watcher, ILogger<TabItemViewModel> logger, IGlobalSettingsProviderService settings)
         {
             _logger = logger;
             _watcher = watcher;
-          //  _settings = settings;
+            _settings = settings;
             _logger.Trace();
             _watcher.OnConnectionStateChanged += OnAnalysisServicesConnectionStateChanged;
 
@@ -37,6 +38,14 @@ namespace Sqlbi.Bravo.UI.ViewModels
             ConnectCommand = new RelayCommand(async () => await Connect());
             DisconnectCommand = new RelayCommand(async () => await Disconnect());
             TryAgainCommand = new RelayCommand(async () => await TryAgain());
+
+            // Get the values for the started instance.
+            // These will be overridden if messaged to be single instance and open another tab
+            RuntimeSummary.DatabaseName = _settings.Runtime.DatabaseName;
+            RuntimeSummary.IsExecutedAsExternalTool = _settings.Runtime.IsExecutedAsExternalTool;
+            RuntimeSummary.ParentProcessMainWindowTitle = _settings.Runtime.ParentProcessMainWindowTitle;
+            RuntimeSummary.ParentProcessName = _settings.Runtime.ParentProcessName;
+            RuntimeSummary.ServerName = _settings.Runtime.ServerName;
         }
 
         private async Task TryAgain()
@@ -85,6 +94,8 @@ namespace Sqlbi.Bravo.UI.ViewModels
         public ICommand TryAgainCommand { get; set; }
 
         public bool ShowError { get; set; }
+
+        public RuntimeSummary RuntimeSummary { get; set; } = new RuntimeSummary();
 
         private Action _callback;
 

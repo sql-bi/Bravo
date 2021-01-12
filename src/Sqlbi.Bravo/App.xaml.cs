@@ -19,8 +19,6 @@ namespace Sqlbi.Bravo
         private readonly ILogger _logger;
         private readonly IGlobalSettingsProviderService _settings;
 
-        private const int WM_SETTEXT = 0x000C;
-
         public static IServiceProvider ServiceProvider { get; private set; }
 
         public App(IHost host)
@@ -117,7 +115,7 @@ namespace Sqlbi.Bravo
                     _settings.Runtime.DatabaseName,
                     _settings.Runtime.ServerName,
                     _settings.Runtime.ParentProcessName,
-                    _settings.Runtime.ParentProcessMainWindowTitle.Replace(" - Power BI Desktop", string.Empty));
+                    _settings.Runtime.ParentProcessMainWindowTitle);
 
                 var result = msg.SendConnectionInfoMessage(hWnd, 0, ci);
 

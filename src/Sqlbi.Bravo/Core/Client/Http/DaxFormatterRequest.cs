@@ -3,35 +3,33 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Sqlbi.Bravo.Core.Helpers;
 using Sqlbi.Bravo.Core.Logging;
-using Sqlbi.Bravo.Core.Settings.Interfaces;
-using Sqlbi.Bravo.UI;
+using Sqlbi.Bravo.Core.Settings;
 using System;
 
 namespace Sqlbi.Bravo.Core.Client.Http
 {
     internal class DaxFormatterRequest
     {
-        public static DaxFormatterRequest CreateFrom(Model model, string dax)
+        public static DaxFormatterRequest CreateFrom(Model model, string dax, RuntimeSummary runtimeSummary)
         {
             var serverType = model.Server.ServerMode.ToString();
             var serverName = model.Server.Name;
             var databaseName = model.Database.Name;
 
-            var settings = App.ServiceProvider.GetRequiredService<IGlobalSettingsProviderService>();
-            if (settings.Runtime.IsExecutedAsExternalToolForPowerBIDesktop)
+            if (AppConstants.PowerBIDesktopProcessName.Equals(runtimeSummary.ParentProcessName))
             {
                 serverType = "PBI Desktop";
 
-                var dashIndex = settings.Runtime.ParentProcessMainWindowTitle.LastIndexOf(" - ");
+                var dashIndex = runtimeSummary.ParentProcessMainWindowTitle.LastIndexOf(" - ");
                 if (dashIndex >= 0)
                 {
-                    var pbixName = settings.Runtime.ParentProcessMainWindowTitle.Substring(0, dashIndex);
+                    var pbixName = runtimeSummary.ParentProcessMainWindowTitle.Substring(0, dashIndex);
                     serverName = databaseName = pbixName;
                 }
                 else
                 {
                     var logger = App.ServiceProvider.GetRequiredService<ILogger<DaxFormatterRequest>>();
-                    logger.Warning(LogEvents.DaxFormatterUnableToRetrievePowerBIDesktopFileNameFromParentProcessMainWindowTitle, "ParentProcessMainWindowTitle '{ParentProcessMainWindowTitle}'", args: settings.Runtime.ParentProcessMainWindowTitle);
+                    logger.Warning(LogEvents.DaxFormatterUnableToRetrievePowerBIDesktopFileNameFromParentProcessMainWindowTitle, "ParentProcessMainWindowTitle '{ParentProcessMainWindowTitle}'", args: runtimeSummary.ParentProcessMainWindowTitle);
                 }
             }
 

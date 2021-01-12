@@ -1,4 +1,5 @@
 ﻿using Humanizer;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Sqlbi.Bravo.Core.Client.Http;
 using Sqlbi.Bravo.Core.Helpers;
@@ -274,12 +275,14 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
             //var measuresOfInterest = SelectionTreeData.Tables.SelectMany(t => t.Measures.Where(m => !string.IsNullOrWhiteSpace(m.Formula) && (m.IsSelected ?? false)));
 
+            var runtimeSummary = ((ShellViewModel)App.ServiceProvider.GetRequiredService(typeof(ShellViewModel))).SelectedTab.RuntimeSummary;
+
             // TODO REQUIREMENTS: This should not get all Measures--only the ones that are in the `measuresOfInterest` (above)
             var measures = await _formatter.GetFormattedItems(TabularObjectType);
 
             Measures.Clear();
 
-            string GetMEasureName(string id, string unformattedExpression)
+            string GetMeasureName(string id, string unformattedExpression)
             {
                 foreach (var table in SelectionTreeData.Tables)
                 {
@@ -300,7 +303,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
                 {
                     Identifier = m.Key,
                     // TODO REQUIREMENTS: Get names of measures at the same time as IDs and expressions - this is a workaround
-                    Name = GetMEasureName(m.Key, m.Value.Item1),
+                    Name = GetMeasureName(m.Key, m.Value.Item1),
                     OriginalDax = m.Value.Item1,
                     FormatterDax = m.Value.Item2,
                 });

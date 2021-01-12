@@ -138,6 +138,7 @@ namespace Sqlbi.Bravo.Core.Services
                 return trace;
             }
 
+            // TODO REQUIREMENTS: Need to know which database this should be referencing.
             XmlNode CreateFilter()
             {
                 var filter = "<And xmlns=\"http://schemas.microsoft.com/analysisservices/2003/engine\">" +
@@ -155,7 +156,7 @@ namespace Sqlbi.Bravo.Core.Services
                                     $"<ColumnID>{ (int)TraceColumn.ApplicationName }</ColumnID>" +
                                     $"<Value>{ AppConstants.ApplicationInstanceUniqueName }</Value>" +
                                 "</NotLike>" +
-                            "</And>";                
+                            "</And>";
 
                 var doc = new XmlDocument();
                 doc.LoadXml(filter);

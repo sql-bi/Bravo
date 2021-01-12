@@ -38,6 +38,9 @@ namespace Sqlbi.Bravo.Core.Helpers
         }
 
         public static string BuildConnectionString(this IGlobalSettingsProviderService settings)
+            => BuildConnectionString(settings.Runtime.ServerName, settings.Runtime.DatabaseName);
+
+        public static string BuildConnectionString(string serverName, string databaseName)
         {
             const string ProviderKey = "Provider";
             const string DataSourceKey = "Data Source";
@@ -49,8 +52,8 @@ namespace Sqlbi.Bravo.Core.Helpers
             var builder = new DbConnectionStringBuilder(useOdbcRules: false)
             {
                 { ProviderKey, "MSOLAP" },
-                { DataSourceKey, settings.Runtime.ServerName },
-                { InitialCatalogKey, settings.Runtime.DatabaseName },
+                { DataSourceKey, serverName },
+                { InitialCatalogKey, databaseName },
                 { IntegratedSecurityKey, "SSPI" },
                 { PersistSecurityInfoKey, "True" },
                 { ApplicationNameKey, AppConstants.ApplicationInstanceUniqueName }
