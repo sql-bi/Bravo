@@ -8,7 +8,6 @@ using Sqlbi.Bravo.Core.Settings.Interfaces;
 using Sqlbi.Bravo.Core.Windows;
 using Sqlbi.Bravo.UI.Services.Interfaces;
 using System;
-using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Windows;
 
@@ -102,34 +101,27 @@ namespace Sqlbi.Bravo
         {
             _logger.Trace();
 
-            //if (_settings.Runtime.IsExecutedAsExternalTool)
+            var application = ServiceProvider.GetRequiredService<IApplicationInstanceService>();
+            if (application.IsCurrentInstanceOwned)
             {
-                var application = ServiceProvider.GetRequiredService<IApplicationInstanceService>();
-                if (application.IsCurrentInstanceOwned)
-                {
-                    application.RegisterCallbackForMultipleInstanceStarted(BringToForeground);
-                }
-                else
-                {
-                    _logger.Information(LogEvents.AppShutdownForMultipleInstance);
+                application.RegisterCallbackForMultipleInstanceStarted(BringToForeground);
+            }
+            else
+            {
+                _logger.Information(LogEvents.AppShutdownForMultipleInstance);
 
-                    var msg = new MessageHelper();
-                    var hWnd = msg.GetWindowId("Sqlbi Bravo");
+                var msg = new MessageHelper();
+                var hWnd = msg.GetWindowId("Sqlbi Bravo");
 
-                    //var ci = new ConnectionInfo {
-                    //    DatabaseName = _settings.Runtime.DatabaseName,
-                    //    ServerName = _settings.Runtime.ServerName,
-                    //    ParentProcessName = _settings.Runtime.ParentProcessName,
-                    //    };
-                    var ci = new ConnectionInfo
-                    {
-                        Details = $"{_settings.Runtime.DatabaseName}|{_settings.Runtime.ServerName}|{_settings.Runtime.ParentProcessName}"
-                    };
+                var ci = MessageHelper.CreateConnectionInfo(
+                    _settings.Runtime.DatabaseName,
+                    _settings.Runtime.ServerName,
+                    _settings.Runtime.ParentProcessName,
+                    _settings.Runtime.ParentProcessMainWindowTitle.Replace(" - Power BI Desktop", string.Empty));
 
-                    var result = msg.SendConnectionInfoMessage(hWnd, 0, ci);
+                var result = msg.SendConnectionInfoMessage(hWnd, 0, ci);
 
-                    Shutdown();
-                }
+                Shutdown();
             }
         }
 
@@ -169,70 +161,5 @@ namespace Sqlbi.Bravo
 
             Dispatcher.BeginInvoke(action);
         }
-    }
-
-    //[StructLayout(LayoutKind.Sequential)]
-    //public struct CopyDataStruct
-    //{
-    //    public IntPtr dwData;
-    //    public int cbData;
-    //    public IntPtr lpData;
-    //}
-
-    // Passing multiple strings isn't reliable
-    // THis may not be the best solution but it works
-    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
-    public struct ConnectionInfo
-    {
-        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 256)]
-        public string Details;
-        //[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)]
-        //public string DatabaseName;
-        //[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)]
-        //public string ParentProcessName;
-    }
-
-    // Originally from https://gist.github.com/BoyCook/5075907#file-messagehelper
-    public class MessageHelper
-    {
-        [DllImport("User32.dll", EntryPoint = "FindWindow")]
-        public static extern Int32 FindWindow(string lpClassName, string lpWindowName);
-
-        //For use with WM_COPYDATA and COPYDATASTRUCT
-        [DllImport("User32.dll", EntryPoint = "SendMessage")]
-        public static extern int SendMessage(int hWnd, int Msg, int wParam, ref CopyDataStruct lParam);
-
-        //public const int WM_USER = 0x400;
-        public const int WM_COPYDATA = 0x4A;
-
-        //Used for WM_COPYDATA for string messages
-        public struct CopyDataStruct
-        {
-            public IntPtr dwData;
-            public int cbData;
-            public IntPtr lpData;
-        }
-
-        public int SendConnectionInfoMessage(int hWnd, int wParam, ConnectionInfo connInfo)
-        {
-            var result = 0;
-
-            if (hWnd > 0)
-            {
-                var buffer = Marshal.AllocHGlobal(Marshal.SizeOf(connInfo));
-                Marshal.StructureToPtr(connInfo, buffer, false);
-                Marshal.FreeHGlobal(buffer);
-
-                CopyDataStruct cds;
-                cds.dwData = (IntPtr)100;
-                cds.lpData = buffer;
-                cds.cbData = Marshal.SizeOf(connInfo);
-                result = SendMessage(hWnd, WM_COPYDATA, wParam, ref cds);
-            }
-
-            return result;
-        }
-
-        public int GetWindowId(string windowName) => FindWindow(null, windowName);
     }
 }

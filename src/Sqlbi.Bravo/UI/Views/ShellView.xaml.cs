@@ -29,24 +29,24 @@ namespace Sqlbi.Bravo.UI.Views
         {
             if (msg == MessageHelper.WM_COPYDATA)
             {
-                var connInfo = new ConnectionInfo();
+                var connInfo = new MessageHelper.ConnectionInfo();
                 try
                 {
                     var cp = (MessageHelper.CopyDataStruct)Marshal.PtrToStructure(lParam, typeof(MessageHelper.CopyDataStruct));
                     if (cp.cbData == Marshal.SizeOf(connInfo))
                     {
-                        connInfo = (ConnectionInfo)Marshal.PtrToStructure(cp.lpData, typeof(ConnectionInfo));
+                        connInfo = (MessageHelper.ConnectionInfo)Marshal.PtrToStructure(cp.lpData, typeof(MessageHelper.ConnectionInfo));
 
-                        var details = connInfo.Details;
+                        var details = MessageHelper.ExtractDetails(connInfo);
 
-                        var deats = details.Split('|');
+                        System.Diagnostics.Debug.WriteLine($"DatabaseName = '{details.DbName}'");
+                        System.Diagnostics.Debug.WriteLine($"ServerName = '{details.ServerName}'");
+                        System.Diagnostics.Debug.WriteLine($"ParentProcessName = '{details.ParentProcName}'");
+                        System.Diagnostics.Debug.WriteLine($"ConnectionName = '{details.ConnName}'");
 
-                        System.Diagnostics.Debug.WriteLine($"DatabaseName = '{deats[0]}'");
-                        System.Diagnostics.Debug.WriteLine($"ServerName = '{deats[1]}'");
-                        System.Diagnostics.Debug.WriteLine($"ParentProcessName = '{deats[2]}'");
-                        //System.Diagnostics.Debug.WriteLine(connInfo.DatabaseName);
-                        //System.Diagnostics.Debug.WriteLine(connInfo.ServerName);
-                        //System.Diagnostics.Debug.WriteLine(connInfo.ParentProcessName);
+                        var vm = DataContext as ShellViewModel;
+
+                        vm.AddNewTab(BiConnectionType.ActivePowerBiWindow, vm.SelectedItem.NavigationPage, details.ConnName);
                     }
                 }
                 catch (Exception e)
@@ -97,11 +97,7 @@ namespace Sqlbi.Bravo.UI.Views
 
         private void AddTabClicked(object sender, System.Windows.RoutedEventArgs e)
         {
-            var vm = DataContext as ShellViewModel;
-            vm.Tabs.Add((TabItemViewModel)App.ServiceProvider.GetRequiredService(typeof(TabItemViewModel)));
-
-            // Select added item so it is made visible
-            vm.SelectedTab = vm.Tabs.Last();
+            (DataContext as ShellViewModel).AddNewTab();
         }
     }
 }

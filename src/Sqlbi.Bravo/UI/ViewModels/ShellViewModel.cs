@@ -187,6 +187,29 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public NavigationItem LastNavigation { get; private set; } = null;
 
+        public void AddNewTab(BiConnectionType connType = BiConnectionType.UnSelected, Type contentPageType = null, string connectionName = null)
+        {
+            var newTab = (TabItemViewModel)App.ServiceProvider.GetRequiredService(typeof(TabItemViewModel));
+
+            newTab.ConnectionType = connType;
+
+            if (contentPageType == null)
+            {
+                newTab.ContentPageSource = typeof(SelectConnectionType);
+            }
+            else
+            {
+                newTab.ContentPageSource = contentPageType;
+            }
+
+            newTab.ConnectionName = connectionName;
+
+            Tabs.Add(newTab);
+
+            // Select added item so it is made visible
+            SelectedTab = Tabs.Last();
+        }
+
         private async Task ItemSelected()
         {
             if (SelectedOptionsItem != null)
