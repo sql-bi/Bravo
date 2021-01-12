@@ -15,7 +15,7 @@
         Width="850"
         MinWidth="{Binding WindowMinWidth}"
         MinHeight="{Binding WindowMinHeight}"
-        WindowStartupLocation="CenterScreen"
+        WindowStartupLocation="Manual"
         DataContext="{Binding Source={StaticResource ViewModelLocator}, Path=ShellViewModel}">
 
     <mah:MetroWindow.Resources>
@@ -105,7 +105,13 @@
                 <Grid>
                     <Frame
                     Source="{Binding ContentPageSource, Mode=OneWay, Converter={app_ui_framework_valueconverters:TypePageConverter}}"
-                    NavigationUIVisibility="Hidden" />
+                    NavigationUIVisibility="Hidden" >
+                        <i:Interaction.Triggers>
+                            <i:EventTrigger EventName="Navigating">
+                                <i:InvokeCommandAction Command="{Binding FrameNavigating}" />
+                            </i:EventTrigger>
+                        </i:Interaction.Triggers>
+                    </Frame>
                     <Grid Background="{DynamicResource MahApps.Brushes.Control.Background}" Visibility="{Binding ShowError, Converter={StaticResource BooleanToVisibilityConverter}}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                             <Viewbox Height="200" Stretch="Uniform">

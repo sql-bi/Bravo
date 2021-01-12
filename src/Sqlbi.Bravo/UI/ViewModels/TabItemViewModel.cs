@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using Sqlbi.Bravo.UI.Framework.Commands;
 using Sqlbi.Bravo.UI.DataModel;
+using Sqlbi.Bravo.Core.Settings.Interfaces;
 
 namespace Sqlbi.Bravo.UI.ViewModels
 {
@@ -17,13 +18,14 @@ namespace Sqlbi.Bravo.UI.ViewModels
         private BiConnectionType connectionType;
 
         private readonly IAnalysisServicesEventWatcherService _watcher;
+        private readonly IRuntimeSettings _settings;
         private readonly ILogger _logger;
 
         public TabItemViewModel(IAnalysisServicesEventWatcherService watcher, ILogger<TabItemViewModel> logger)
         {
             _logger = logger;
             _watcher = watcher;
-
+          //  _settings = settings;
             _logger.Trace();
             _watcher.OnConnectionStateChanged += OnAnalysisServicesConnectionStateChanged;
 

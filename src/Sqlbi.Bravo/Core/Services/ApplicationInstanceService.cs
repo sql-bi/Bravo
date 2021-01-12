@@ -24,7 +24,8 @@ namespace Sqlbi.Bravo.Core.Services
 
             _logger.Trace();
             _instanceEventWait = new EventWaitHandle(initialState: false, mode: EventResetMode.AutoReset, name: $"{  _settings.Runtime.ExternalToolInstanceId }|{ nameof(EventWaitHandle) }");
-            _instanceMutex = new Mutex(initiallyOwned: true, name: $"{  _settings.Runtime.ExternalToolInstanceId }|{ nameof(Mutex) }", out _instanceOwned);
+            //_instanceMutex = new Mutex(initiallyOwned: true, name: $"{  _settings.Runtime.ExternalToolInstanceId }|{ nameof(Mutex) }", out _instanceOwned);
+            _instanceMutex = new Mutex(initiallyOwned: true, name: $"{ nameof(Sqlbi.Bravo) }|{ nameof(Mutex) }", out _instanceOwned);
 
             GC.KeepAlive(_instanceMutex);
         }
