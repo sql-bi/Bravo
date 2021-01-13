@@ -105,13 +105,8 @@
                 <Grid>
                     <Frame
                     Source="{Binding ContentPageSource, Mode=OneWay, Converter={app_ui_framework_valueconverters:TypePageConverter}}"
-                    NavigationUIVisibility="Hidden" >
-                        <i:Interaction.Triggers>
-                            <i:EventTrigger EventName="Navigating">
-                                <i:InvokeCommandAction Command="{Binding FrameNavigating}" />
-                            </i:EventTrigger>
-                        </i:Interaction.Triggers>
-                    </Frame>
+                    DataContext="{Binding }"
+                        NavigationUIVisibility="Hidden" />
                     <Grid Background="{DynamicResource MahApps.Brushes.Control.Background}" Visibility="{Binding ShowError, Converter={StaticResource BooleanToVisibilityConverter}}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                             <Viewbox Height="200" Stretch="Uniform">
@@ -299,6 +294,22 @@
                                             </ControlTemplate>
                                         </Setter.Value>
                                     </Setter>
+                                    <Setter Property="mah:ScrollViewerHelper.IsHorizontalScrollWheelEnabled" Value="True" />
+                                    <Setter Property="mah:TabControlHelper.Transition" Value="Left" />
+                                    <Style.Triggers>
+                                        <Trigger Property="TabStripPlacement" Value="Top">
+                                            <Setter Property="Template" Value="{StaticResource MahApps.Templates.TabControl.AnimatedSingleRow.Horizontal}" />
+                                        </Trigger>
+                                        <Trigger Property="TabStripPlacement" Value="Bottom">
+                                            <Setter Property="Template" Value="{StaticResource MahApps.Templates.TabControl.AnimatedSingleRow.Horizontal}" />
+                                        </Trigger>
+                                        <Trigger Property="TabStripPlacement" Value="Left">
+                                            <Setter Property="Template" Value="{StaticResource MahApps.Templates.TabControl.AnimatedSingleRow.Vertical}" />
+                                        </Trigger>
+                                        <Trigger Property="TabStripPlacement" Value="Right">
+                                            <Setter Property="Template" Value="{StaticResource MahApps.Templates.TabControl.AnimatedSingleRow.Vertical}" />
+                                        </Trigger>
+                                    </Style.Triggers>
                                 </Style>
                             </TabControl.Style>
                         </TabControl>
