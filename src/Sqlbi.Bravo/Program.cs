@@ -111,13 +111,12 @@ namespace Sqlbi.Bravo
                 services.AddSingleton<IAnalysisServicesEventWatcherService, AnalysisServicesEventWatcherService>();
                 services.AddSingleton<IApplicationInstanceService, ApplicationInstanceService>();
                 services.AddSingleton<IGlobalSettingsProviderService, GlobalSettingsProviderService>();
-                services.AddSingleton<IDaxFormatterService, DaxFormatterService>();
                 services.AddSingleton<IThemeSelectorService, ThemeSelectorService>();
                 services.AddSingleton<ShellViewModel>();
                 services.AddSingleton<SideMenuViewModel>();
                 services.AddSingleton<SettingsViewModel>();
 
-                // Make IDaxFormatterService as each DaxFormatterViewModel will need a unique one with a separate connection
+                // Make IDaxFormatterService transient as each DaxFormatterViewModel will need a unique one with a separate connection
                 services.AddTransient<IDaxFormatterService, DaxFormatterService>();
                 // Make DaxFormatterViewModel transient as need a new one for each instance (within each tab)
                 services.AddTransient<DaxFormatterViewModel>();

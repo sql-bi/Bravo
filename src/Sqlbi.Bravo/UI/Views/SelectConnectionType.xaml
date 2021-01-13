@@ -1,14 +1,13 @@
-﻿<Page x:Class="Sqlbi.Bravo.UI.Views.SelectConnectionType"
+﻿<UserControl
+      x:Class="Sqlbi.Bravo.UI.Views.SelectConnectionType"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-      xmlns:local="clr-namespace:Sqlbi.Bravo.UI.Views" xmlns:controls="clr-namespace:Sqlbi.Bravo.UI.Controls"
-      mc:Ignorable="d" 
-      d:DesignHeight="450" d:DesignWidth="800"
-      Title="SelectConnectionType"
-        DataContext="{Binding Source={StaticResource ViewModelLocator}, Path=ShellViewModel}">
-    <Page.Resources>
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:controls="clr-namespace:Sqlbi.Bravo.UI.Controls"
+      mc:Ignorable="d"
+      d:DesignHeight="450" d:DesignWidth="800">
+    <UserControl.Resources>
         <Style x:Key="ConnectionButton" TargetType="Button" BasedOn="{StaticResource MahApps.Styles.Button.Flat}">
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderBrush" Value="#66CCCCCC" />
@@ -26,7 +25,7 @@
             <Setter Property="Padding" Value="10,0" />
             <Setter Property="TextAlignment" Value="Center" />
         </Style>
-    </Page.Resources>
+    </UserControl.Resources>
 
     <Grid
         Margin="20,20,20,14"
@@ -97,4 +96,4 @@
                 <Hyperlink Style="{StaticResource InlineHyperlinks}" NavigateUri="https://github.com/sql-bi/bravo" RequestNavigate="RequestNavigateHyperlink">github.com/sql-bi/bravo</Hyperlink>
         </TextBlock>
     </Grid>
-</Page>
+</UserControl>

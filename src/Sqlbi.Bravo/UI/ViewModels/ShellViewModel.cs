@@ -73,7 +73,12 @@ namespace Sqlbi.Bravo.UI.ViewModels
         {
             SelectedTab.ConnectionName = title.Replace(" - Power BI Desktop", string.Empty);
             SelectedTab.ConnectionType = BiConnectionType.ActivePowerBiWindow;
-            SelectedTab.ContentPageSource = SelectedItem.NavigationPage;
+            SelectedTab.ShowSubPage(SelectedItem?.SubPageInTab ?? SubPage.DaxFormatter);
+
+            if (SelectedItem == null)
+            {
+                SelectedItem = MenuItems.First();
+            }
 #if DEBUG
             if (string.IsNullOrWhiteSpace(SelectedTab.ConnectionName))
             {
@@ -101,8 +106,8 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
                 return new ObservableCollection<NavigationItem>()
                 {
-                    new NavigationItem { Name = "Format Dax", IconControl = daxIcon, NavigationPage = typeof(DaxFormatterView) },
-                    new NavigationItem { Name = "Analyze Model", IconControl = new AnalyzeModelIcon(), NavigationPage = typeof(AnalyzeModelView) },
+                    new NavigationItem { Name = "Format DAX", IconControl = daxIcon, SubPageInTab = SubPage.DaxFormatter },
+                    new NavigationItem { Name = "Analyze Model", IconControl = new AnalyzeModelIcon(), SubPageInTab = SubPage.AnalyzeModel },
                     new NavigationItem { Name = "Manage dates", Glyph = "\uEC92", ShowComingSoon = true },
                     new NavigationItem { Name = "Export data", Glyph = "\uE1AD", ShowComingSoon = true },
                     new NavigationItem { Name = "Best practices", Glyph = "\uE19F", ShowComingSoon = true },
@@ -187,17 +192,16 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public NavigationItem LastNavigation { get; private set; } = null;
 
-        public void AddNewTab(BiConnectionType connType = BiConnectionType.UnSelected, Type contentPageType = null, RuntimeSummary runtimeSummary = null)
+        public void AddNewTab(BiConnectionType connType = BiConnectionType.UnSelected, SubPage subPage = SubPage.SelectConnection, RuntimeSummary runtimeSummary = null)
         {
             var newTab = (TabItemViewModel)App.ServiceProvider.GetRequiredService(typeof(TabItemViewModel));
 
             newTab.ConnectionType = connType;
-
-            newTab.ContentPageSource = contentPageType ?? typeof(SelectConnectionType);
+            newTab.ShowSubPage(subPage);
 
             if (runtimeSummary != null)
             {
-                newTab.ConnectionName = runtimeSummary.ParentProcessMainWindowTitle;
+                newTab.ConnectionName = runtimeSummary.ParentProcessMainWindowTitle.Replace(" - Power BI Desktop", string.Empty);
                 newTab.RuntimeSummary = runtimeSummary;
             }
 
@@ -238,7 +242,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
                     if (SelectedTab.ConnectionType != BiConnectionType.UnSelected)
                     {
-                        SelectedTab.ContentPageSource = SelectedItem.NavigationPage;
+                        SelectedTab.ShowSubPage(SelectedItem.SubPageInTab);
                     }
                 }
                 else

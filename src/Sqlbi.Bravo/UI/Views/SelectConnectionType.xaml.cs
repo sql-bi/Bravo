@@ -8,7 +8,7 @@ using System.Windows.Controls;
 
 namespace Sqlbi.Bravo.UI.Views
 {
-    public partial class SelectConnectionType : Page
+    public partial class SelectConnectionType : UserControl
     {
         public SelectConnectionType() => InitializeComponent();
 
@@ -31,15 +31,6 @@ namespace Sqlbi.Bravo.UI.Views
                 "TODO",
                 MessageBoxButton.OK,
                 MessageBoxImage.Question);
-
-            /*
-            var vm = DataContext as ShellViewModel;
-
-            vm.SelectedTab.ConnectionName = "TOFIX: Title from ParentProcess";
-
-            vm.SelectedTab.ConnectionType = BiConnectionType.ActivePowerBiWindow;
-            vm.SelectedTab.ContentPageSource = vm.SelectedItem.NavigationPage;
-            */
         }
 
         private void ConnectToDatasetClicked(object sender, RoutedEventArgs e)

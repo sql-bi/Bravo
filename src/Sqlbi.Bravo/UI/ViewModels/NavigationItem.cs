@@ -10,7 +10,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public object IconControl { get; set; }
 
-        public Type NavigationPage { get; set; }
+        public SubPage SubPageInTab { get; set; }
 
         public bool ShowComingSoon { get; set; }
 

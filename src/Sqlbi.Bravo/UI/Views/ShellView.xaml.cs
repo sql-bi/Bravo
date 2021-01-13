@@ -11,12 +11,15 @@ using System.Windows;
 using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging;
 using Sqlbi.Bravo.Core.Settings;
+using System.Linq;
 
 namespace Sqlbi.Bravo.UI.Views
 {
     public partial class ShellView : MetroWindow
     {
         public static ShellView Instance { get; private set; }
+
+        private ShellViewModel ViewModel => DataContext as ShellViewModel;
 
         protected override void OnSourceInitialized(EventArgs e)
         {
@@ -53,9 +56,11 @@ namespace Sqlbi.Bravo.UI.Views
                             ServerName = details.ServerName,
                         };
 
-                        var vm = DataContext as ShellViewModel;
+                        // Creating the tab (& VMs) may not trigger the loaded event when expected
+                        ViewModel.AddNewTab(BiConnectionType.ActivePowerBiWindow, ViewModel.SelectedItem.SubPageInTab, runtimeSummary);
 
-                        vm.AddNewTab(BiConnectionType.ActivePowerBiWindow, vm.SelectedItem.NavigationPage, runtimeSummary);
+                        // Run the initialize command now to ensure it's run
+                        ViewModel.SelectedTab.DaxFormatterVm.InitializeCommand.Execute(null);
                     }
                 }
                 catch (Exception e)
@@ -105,8 +110,45 @@ namespace Sqlbi.Bravo.UI.Views
         }
 
         private void AddTabClicked(object sender, System.Windows.RoutedEventArgs e)
+            => ViewModel.AddNewTab();
+
+        // WHen the selected tab changes update the selected menu item accordingly
+        private void OnSelectedTabChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         {
-            (DataContext as ShellViewModel).AddNewTab();
+            var selTab = ViewModel.SelectedTab;
+
+            void Select(string menuItemName)
+            {
+                // Update selected menu item
+                ViewModel.SelectedItem = ViewModel.MenuItems.FirstOrDefault(mi => mi.Name == menuItemName);
+
+                // Binding doesn't updated the selected indicator - but this does
+                for (var i = 0; i < ViewModel.MenuItems.Count; i++)
+                {
+                    if (ViewModel.MenuItems[i].Name == menuItemName)
+                    {
+                        hamburgerMenu.SelectedIndex = i;
+                        break;
+                    }
+                }
+            }
+
+            if (selTab != null)
+            {
+                if (selTab.ShowSelectConnection)
+                {
+                    ViewModel.SelectedItem = null;
+                    hamburgerMenu.SelectedIndex = -1;
+                }
+                else if (selTab.ShowDaxFormatter)
+                {
+                    Select("Format DAX");
+                }
+                else if (selTab.ShowAnalyzeModel)
+                {
+                    Select("Analyze Model");
+                }
+            }
         }
     }
 }
