@@ -40,7 +40,7 @@
                     </Grid.ColumnDefinitions>
                     <TextBlock Margin="20,20,0,0" Style="{StaticResource SubheaderTextBlockStyle}">Format your DAX code</TextBlock>
 
-                    <Button Grid.Column="1" Command="{Binding RefreshCommand}" Style="{StaticResource SubtleButton}" Padding="12" Height="48" Margin="0,8,24,0" VerticalAlignment="Top">
+                    <Button Grid.Column="1" Command="{Binding RefreshCommand}" Style="{StaticResource SubtleButton}" Margin="0,8,24,0">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock
                     FontSize="14"
@@ -54,7 +54,7 @@
                         </StackPanel>
                     </Button>
 
-                    <Button Grid.Column="2" Command="{Binding HelpCommand}" Style="{StaticResource SubtleButton}" Padding="12" Height="48" Margin="0,8,12,0" VerticalAlignment="Top">
+                    <Button Grid.Column="2" Command="{Binding HelpCommand}" Style="{StaticResource SubtleButton}" Margin="0,8,12,0">
                         <controls:HelpIcon />
                     </Button>
 
@@ -84,7 +84,7 @@
 
                         <Border Grid.Row="2" Grid.ColumnSpan="3" Background="LightGray" Opacity="0.1" Padding="12" Margin="0.12" />
 
-                        <CheckBox x:Name="AcceptTermsCheckbox" Style="{StaticResource MahApps.Styles.CheckBox.Win10}" Grid.Row="2" Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="12,12,48,12">
+                        <CheckBox x:Name="AcceptTermsCheckbox" Cursor="Hand" Style="{StaticResource MahApps.Styles.CheckBox.Win10}" Grid.Row="2" Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="12,12,48,12">
                             <TextBlock
                                 TextWrapping="Wrap"
                                 Foreground="{DynamicResource MahApps.Brushes.ThemeForeground}">
@@ -105,7 +105,7 @@
                         </Grid>
 
                         <StackPanel Grid.Row="3" Grid.ColumnSpan="3" Margin="0,12,0,0" Orientation="Horizontal">
-                            <mah:ToggleSwitch IsOn="{Binding PreviewChanges}" OnContent="" OffContent="" Width="60">
+                            <mah:ToggleSwitch IsOn="{Binding PreviewChanges}" Cursor="Hand" OnContent="" OffContent="" Width="60">
                                 <mah:ToggleSwitch.Resources>
                                     <ResourceDictionary>
                                         <SolidColorBrush x:Key="MahApps.Brushes.ToggleSwitch.FillOn">Red</SolidColorBrush>
