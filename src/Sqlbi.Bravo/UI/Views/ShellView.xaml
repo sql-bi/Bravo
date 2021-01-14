@@ -132,6 +132,7 @@
                             <TextBlock Style="{StaticResource SubtitleTextBlockStyle}">Whoops! Something went wrong...</TextBlock>
                             <TextBlock Style="{StaticResource CaptionTextBlockStyle}" Text="{Binding ErrorDescription}" />
                             <TextBlock><Hyperlink Style="{StaticResource InlineHyperlinks}" Command="{Binding TryAgainCommand}">Try again</Hyperlink></TextBlock>
+                            <mah:ProgressRing Foreground="Red" HorizontalAlignment="Center" Height="24" IsActive="{Binding IsRetrying}" />
                         </StackPanel>
                     </Grid>
                 </Grid>

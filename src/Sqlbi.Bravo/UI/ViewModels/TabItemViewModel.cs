@@ -1,5 +1,4 @@
-﻿using Sqlbi.Bravo.UI.Views;
-using Sqlbi.Bravo.UI.Framework.ViewModels;
+﻿using Sqlbi.Bravo.UI.Framework.ViewModels;
 using System;
 using Sqlbi.Bravo.Core.Services.Interfaces;
 using Microsoft.Extensions.Logging;
@@ -23,6 +22,8 @@ namespace Sqlbi.Bravo.UI.ViewModels
         private readonly IGlobalSettingsProviderService _settings;
         private readonly ILogger _logger;
         private DaxFormatterViewModel _daxFormatterVm;
+
+        public bool IsRetrying { get; set; } = false;
 
         public TabItemViewModel(IAnalysisServicesEventWatcherService watcher, ILogger<TabItemViewModel> logger, IGlobalSettingsProviderService settings)
         {
@@ -52,9 +53,26 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         private async Task TryAgain()
         {
-            ShowError = false;
-            _callback?.Invoke();
-            await Task.CompletedTask;
+            if (IsRetrying)
+                return;
+
+            try
+            {
+                IsRetrying = true;
+                await _callback?.Invoke();
+
+                // As there was no exception assume the retry worked and stop showing the error message.
+                ShowError = false;
+            }
+            catch (Exception exc)
+            {
+                System.Diagnostics.Debug.WriteLine(exc);
+                ErrorDescription = exc.Message;
+            }
+            finally
+            {
+                IsRetrying = false;
+            }
         }
 
         public string Header
@@ -159,7 +177,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public RuntimeSummary RuntimeSummary { get; set; } = new RuntimeSummary();
 
-        private Action _callback;
+        private Func<Task> _callback;
         private bool showDaxFormatter;
         private bool showSelectConnection;
         private bool showAnalyzeModel;
@@ -186,7 +204,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
             await ExecuteCommandAsync(() => DisconnectCommandIsRunning, _watcher.DisconnectAsync);
         }
 
-        public void DisplayError(string errorDescription, Action callback)
+        public void DisplayError(string errorDescription, Func<Task> callback)
         {
             ErrorDescription = errorDescription;
             ShowError = true;

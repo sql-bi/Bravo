@@ -229,14 +229,30 @@ namespace Sqlbi.Bravo.UI.ViewModels
         {
             _logger.Trace();
 
-            await ExecuteCommandAsync(() => InitializeCommandIsRunning, InitializeOrRefreshFormatter);
+            try
+            {
+                await ExecuteCommandAsync(() => InitializeCommandIsRunning, InitializeOrRefreshFormatter);
+            }
+            catch (Exception exc)
+            {
+                var shellVm = App.ServiceProvider.GetRequiredService<ShellViewModel>();
+                shellVm.SelectedTab.DisplayError($"Unable to connect{Environment.NewLine}{exc.Message}", InitializeOrRefreshFormatter);
+            }
         }
 
         private async Task RefreshAsync()
         {
             _logger.Trace();
 
-            await ExecuteCommandAsync(() => InitializeCommandIsRunning, InitializeOrRefreshFormatter);
+            try
+            {
+                await ExecuteCommandAsync(() => InitializeCommandIsRunning, InitializeOrRefreshFormatter);
+            }
+            catch (Exception exc)
+            {
+                var shellVm = App.ServiceProvider.GetRequiredService<ShellViewModel>();
+                shellVm.SelectedTab.DisplayError($"Unable to connect{Environment.NewLine}{exc.Message}", InitializeOrRefreshFormatter);
+            }
         }
 
         private void ChooseFormulas()
