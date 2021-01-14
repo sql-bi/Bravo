@@ -25,12 +25,6 @@ namespace Sqlbi.Bravo.UI.Views
                 MessageBoxImage.Question);
         }
 
-        private void PretendErrorClick(object sender, RoutedEventArgs e)
-        {
-            (ShellView.Instance.DataContext
-                as ViewModels.ShellViewModel).SelectedTab.DisplayError("Error code: blah blah blah", null);
-        }
-
         private void TreeviewSelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e) =>
             // Quick hack for not being able to bind the selected item in WPF
             (DataContext as ViewModels.DaxFormatterViewModel).SelectionTreeData.SelectedTreeViewItem = (ViewModels.TreeItem)e.NewValue;

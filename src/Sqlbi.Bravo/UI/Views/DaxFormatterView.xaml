@@ -247,8 +247,6 @@
                         <TextBlock Style="{StaticResource SubtitleTextBlockStyle}">Processing...</TextBlock>
                         <ProgressBar IsIndeterminate="True" Margin="0,12" />
                         <TextBlock Style="{StaticResource CaptionTextBlockStyle}" Opacity="0.5" Text="{Binding ProgressDetails}" />
-
-                        <Button Click="PretendErrorClick" >pretend error</Button>
                     </StackPanel>
                 </Grid>
             </mah:FlipViewItem>
