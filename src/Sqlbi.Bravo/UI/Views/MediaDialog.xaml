@@ -36,7 +36,6 @@
             <Button x:Name="CloseButton"
                 Style="{StaticResource StandardButton}"
                 Margin="0,10,0,0"
-                Padding="4"
                 Width="100"
                 HorizontalAlignment="Right" Click="OkClicked"
                 Grid.Row="3">Ok</Button>

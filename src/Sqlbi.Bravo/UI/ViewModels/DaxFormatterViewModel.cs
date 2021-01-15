@@ -66,6 +66,8 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         private DaxFormatterTabularObjectType TabularObjectType { get; set; } = DaxFormatterTabularObjectType.None;
 
+        public TabItemViewModel ParentTab { get; set; }
+
         public int ViewIndex { get; set; }
 
         public bool PreviewChanges { get; set; }
@@ -235,8 +237,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
             }
             catch (Exception exc)
             {
-                var shellVm = App.ServiceProvider.GetRequiredService<ShellViewModel>();
-                shellVm.SelectedTab.DisplayError($"Unable to connect{Environment.NewLine}{exc.Message}", InitializeOrRefreshFormatter);
+                ParentTab.DisplayError($"Unable to connect{Environment.NewLine}{exc.Message}", InitializeOrRefreshFormatter);
             }
         }
 
@@ -250,8 +251,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
             }
             catch (Exception exc)
             {
-                var shellVm = App.ServiceProvider.GetRequiredService<ShellViewModel>();
-                shellVm.SelectedTab.DisplayError($"Unable to connect{Environment.NewLine}{exc.Message}", InitializeOrRefreshFormatter);
+                ParentTab.DisplayError($"Unable to connect{Environment.NewLine}{exc.Message}", InitializeOrRefreshFormatter);
             }
         }
 
