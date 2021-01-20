@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Sqlbi.Bravo.Core.Logging;
+using Sqlbi.Bravo.Core.Services.Interfaces;
 using Sqlbi.Bravo.UI.DataModel;
 using Sqlbi.Bravo.UI.Framework.Commands;
 using Sqlbi.Bravo.UI.Framework.ViewModels;
@@ -15,14 +16,16 @@ namespace Sqlbi.Bravo.UI.ViewModels
 {
     internal class AnalyzeModelViewModel : BaseViewModel
     {
+        private readonly IAnalyzeModelService _modelService;
         private readonly ILogger _logger;
         internal const int SubViewIndex_Loading = 0;
         internal const int SubViewIndex_Summary = 1;
         internal const int SubViewIndex_Details = 2;
         private readonly DispatcherTimer _timer = new DispatcherTimer();
 
-        public AnalyzeModelViewModel(ILogger<DaxFormatterViewModel> logger)
+        public AnalyzeModelViewModel(IAnalyzeModelService service, ILogger<DaxFormatterViewModel> logger)
         {
+            _modelService = service;
             _logger = logger;
             _logger.Trace();
             ViewIndex = SubViewIndex_Loading;
@@ -109,6 +112,8 @@ namespace Sqlbi.Bravo.UI.ViewModels
                 "TODO",
                 MessageBoxButton.OK,
                 MessageBoxImage.Question);
+
+            await Task.CompletedTask;
         }
 
         private async Task ShowHelpAsync()
@@ -136,6 +141,9 @@ namespace Sqlbi.Bravo.UI.ViewModels
         {
             LoadingDetails = "Connecting to data";
             await Task.Delay(1000);
+
+            await _modelService.InitilizeOrRefreshAsync();
+
             LoadingDetails = "retrieving data";
             await Task.Delay(1000);
             LoadingDetails = "Analyzing model";
