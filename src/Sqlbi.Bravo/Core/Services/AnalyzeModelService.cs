@@ -74,9 +74,7 @@ namespace Sqlbi.Bravo.Core.Services
         }
 
         public DateTime GetLastSyncTime()
-        {
-            return _vpaModel?.Model?.ExtractionDate ?? DateTime.MinValue;
-        }
+            => _vpaModel?.Model?.ExtractionDate ?? DateTime.MinValue;
 
         public (long DatasetSize, int ColumnCount) GetDatasetSummary()
             => (_vpaModel.Tables.Sum(t => t.ColumnsTotalSize), _vpaModel.Columns.Count());
@@ -85,6 +83,10 @@ namespace Sqlbi.Bravo.Core.Services
             // TODO REQUIREMENTS: change this to use .IsReferenced (or similar) once available.
             // Currently using IsHidden as a proxy so rest of functionality can be implemented.
             _vpaModel.Columns.Where(c => !c.IsHidden).ToList();
+
+        public IEnumerable<VpaColumn> GetAllColumns() => _vpaModel?.Columns;
+
+        public IEnumerable<VpaTable> GetAllTables() => _vpaModel?.Tables;
 
         private static string GetConnectionString(string dataSourceOrConnectionString, string databaseName)
         {

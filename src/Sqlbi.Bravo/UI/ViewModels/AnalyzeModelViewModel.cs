@@ -92,6 +92,10 @@ namespace Sqlbi.Bravo.UI.ViewModels
             }
         }
 
+        public IEnumerable<VpaColumn> AllColumns => _modelService.GetAllColumns();
+
+        public IEnumerable<VpaTable> AllTables => _modelService.GetAllTables();
+
         public string TimeSinceLastSync
                     => LastSyncTime.Year == 1
                     ? "not yet"
@@ -169,6 +173,8 @@ namespace Sqlbi.Bravo.UI.ViewModels
             UpdateSummary();
 
             OnPropertyChanged(nameof(LastSyncTime));
+            OnPropertyChanged(nameof(AllColumns));
+            OnPropertyChanged(nameof(AllTables));
 
             ViewIndex = SubViewIndex_Summary;
         }

@@ -6,7 +6,8 @@
       xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
       xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
       xmlns:controls="clr-namespace:Sqlbi.Bravo.UI.Controls"
-       mc:Ignorable="d"
+      xmlns:valueconverters="clr-namespace:Sqlbi.Bravo.UI.Framework.ValueConverters"
+      mc:Ignorable="d"
       d:DesignHeight="450" d:DesignWidth="800">
     <i:Interaction.Triggers>
         <i:EventTrigger EventName="Loaded">
@@ -97,7 +98,40 @@
                                 <Run>:</Run>
                             </TextBlock>
                             <Grid Margin="0,20,0,0">
-                                <TextBlock>datagrid will go here</TextBlock>
+                                <DataGrid
+                                    ItemsSource="{Binding UnusedColumns}"
+                                    ScrollViewer.HorizontalScrollBarVisibility="Visible"
+                                    ScrollViewer.VerticalScrollBarVisibility="Visible"
+                                    AutoGenerateColumns="False">
+                                    <DataGrid.Columns>
+                                        <DataGridTemplateColumn Header="Column" SortMemberPath="ColumnName">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock FontFamily="Segoe MDL2 Assets" Margin="0,4,0,0">&#xE7BA;</TextBlock>
+                                                        <TextBlock>&#x2002;</TextBlock>
+                                                        <TextBlock Text="{Binding ColumnName}" />
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                        <DataGridTextColumn Header="Table" Binding="{Binding Table.TableName, Mode=OneWay}" />
+                                        <DataGridTemplateColumn Header="Size" SortMemberPath="TotalSize">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Text="{Binding TotalSize, Converter={valueconverters:BytesToStringConverter}}" />
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                        <DataGridTemplateColumn Header="Weight" SortMemberPath="PercentageDatabase" CanUserResize="False">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Text="{Binding PercentageDatabase, Converter={valueconverters:DoubleToFormattedPercentageConverter}}" />
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                    </DataGrid.Columns>
+                                </DataGrid>
                             </Grid>
                         </StackPanel>
                     </Grid>
@@ -108,7 +142,8 @@
                             HorizontalAlignment="Right"
                             Margin="0,10,20,20"
                             Style="{StaticResource StandardButton}"
-                            Content="More details" />
+                            Content="More details"
+                            Command="{Binding MoreDetailsCommand}" />
                 </Grid>
             </mah:FlipViewItem>
             <!-- SubViewIndex_Details = 2 -->
@@ -169,11 +204,54 @@
 
                         <TabItem Header="Tables"
                                      HeaderTemplate="{StaticResource TabItemHeaderTemplate}">
-                            <TextBlock>Grid goes here</TextBlock>
+                            <DataGrid
+                                ItemsSource="{Binding AllTables}"
+                                AutoGenerateColumns="False">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="" Binding="{Binding TableName}" />
+                                    <DataGridTextColumn Header="Cardinality" />
+                                    <DataGridTemplateColumn Header="Size" SortMemberPath="TotalSize">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding TableSize, Converter={valueconverters:BytesToStringConverter}}" />
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Header="Weight" SortMemberPath="PercentageDatabase" CanUserResize="False">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding PercentageDatabase, Converter={valueconverters:DoubleToFormattedPercentageConverter}}" />
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
                         </TabItem>
                         <TabItem Header="Columns"
                                      HeaderTemplate="{StaticResource TabItemHeaderTemplate}">
-                            <TextBlock>Grid goes here</TextBlock>
+                            <DataGrid
+                                ItemsSource="{Binding AllColumns}"
+                                AutoGenerateColumns="False">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Column" Binding="{Binding ColumnName}" />
+                                    <DataGridTextColumn Header="Table" Binding="{Binding Table.TableName, Mode=OneWay}" />
+                                    <DataGridTextColumn Header="Cardinality" Binding="{Binding ColumnCardinality}" />
+                                    <DataGridTemplateColumn Header="Size" SortMemberPath="TotalSize">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding TotalSize, Converter={valueconverters:BytesToStringConverter}}" />
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Header="Weight" SortMemberPath="PercentageDatabase" CanUserResize="False">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding PercentageDatabase, Converter={valueconverters:DoubleToFormattedPercentageConverter}}" />
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
                         </TabItem>
                     </TabControl>
                     <Grid Grid.Row="1" Grid.Column="1" Margin="20,40,20,20">

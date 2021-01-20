@@ -13,6 +13,10 @@ namespace Sqlbi.Bravo.Core.Services.Interfaces
 
         List<VpaColumn> GetUnusedColumns();
 
+        IEnumerable<VpaColumn> GetAllColumns();
+
+        IEnumerable<VpaTable> GetAllTables();
+
         DateTime GetLastSyncTime();
     }
 }
