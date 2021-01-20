@@ -17,9 +17,6 @@ namespace Sqlbi.Bravo.UI.Views
 {
     public partial class AnalyzeModelView : UserControl
     {
-        public AnalyzeModelView()
-        {
-            InitializeComponent();
-        }
+        public AnalyzeModelView() => InitializeComponent();
     }
 }

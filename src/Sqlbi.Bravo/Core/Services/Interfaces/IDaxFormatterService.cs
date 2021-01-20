@@ -5,11 +5,6 @@ using System.Threading.Tasks;
 
 namespace Sqlbi.Bravo.Core.Services.Interfaces
 {
-    internal interface IAnalyzeModelService
-    {
-        Task InitilizeOrRefreshAsync();
-    }
-
     internal interface IDaxFormatterService
     {
         Task InitilizeOrRefreshAsync();

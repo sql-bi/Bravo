@@ -7,7 +7,7 @@ namespace Sqlbi.Bravo
     public class MessageHelper
     {
         [DllImport("User32.dll", EntryPoint = "FindWindow")]
-        public static extern Int32 FindWindow(string lpClassName, string lpWindowName);
+        public static extern int FindWindow(string lpClassName, string lpWindowName);
 
         //For use with WM_COPYDATA and COPYDATASTRUCT
         [DllImport("User32.dll", EntryPoint = "SendMessage")]

@@ -1,4 +1,5 @@
-﻿using Humanizer;
+﻿using Dax.ViewModel;
+using Humanizer;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Sqlbi.Bravo.Core.Logging;
@@ -7,6 +8,8 @@ using Sqlbi.Bravo.UI.DataModel;
 using Sqlbi.Bravo.UI.Framework.Commands;
 using Sqlbi.Bravo.UI.Framework.ViewModels;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
@@ -22,6 +25,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
         internal const int SubViewIndex_Summary = 1;
         internal const int SubViewIndex_Details = 2;
         private readonly DispatcherTimer _timer = new DispatcherTimer();
+        private List<VpaColumn> _unusedColumns;
 
         public AnalyzeModelViewModel(IAnalyzeModelService service, ILogger<DaxFormatterViewModel> logger)
         {
@@ -49,7 +53,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public string ConnectionName => ParentTab.ConnectionName;
 
-        public DateTime LastSyncTime { get; private set; }
+        public DateTime LastSyncTime => _modelService.GetLastSyncTime();
 
         public bool LoadOrRefreshCommandIsRunning { get; set; }
 
@@ -69,10 +73,29 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public int ViewIndex { get; set; }
 
+        public string DatasetSize { get; set; }
+
+        public int DatasetColumnCount { get; set; }
+
+        public int UnusedColumnCount => UnusedColumns?.Count ?? 0;
+
+        public string UnusedColumnsSize => UnusedColumns?.Sum(c => c.TotalSize).Bytes().ToString("#.#") ?? "-";
+
+        public List<VpaColumn> UnusedColumns
+        {
+            get => _unusedColumns;
+            set
+            {
+                SetProperty(ref _unusedColumns, value);
+                OnPropertyChanged(nameof(UnusedColumnCount));
+                OnPropertyChanged(nameof(UnusedColumnsSize));
+            }
+        }
+
         public string TimeSinceLastSync
-            => LastSyncTime.Year == 1
-            ? "not yet"
-            : $"{(DateTime.UtcNow - LastSyncTime).Humanize(minUnit: Humanizer.Localisation.TimeUnit.Second).Replace("minute", "min").Replace("second", "sec")} ago";
+                    => LastSyncTime.Year == 1
+                    ? "not yet"
+                    : $"{(DateTime.UtcNow - LastSyncTime).Humanize(minUnit: Humanizer.Localisation.TimeUnit.Second).Replace("minute", "min").Replace("second", "sec")} ago";
 
         private async Task LoadedAsync()
         {
@@ -136,20 +159,27 @@ namespace Sqlbi.Bravo.UI.ViewModels
             await Task.CompletedTask;
         }
 
-        // TODO: REQUIREMENTS: NEED AN ACTUAL IMPLEMENTATION HERE
         private async Task InitializeOrRefreshModelAnalyzer()
         {
             LoadingDetails = "Connecting to data";
-            await Task.Delay(1000);
 
             await _modelService.InitilizeOrRefreshAsync();
 
-            LoadingDetails = "retrieving data";
-            await Task.Delay(1000);
             LoadingDetails = "Analyzing model";
-            await Task.Delay(2000);
+            UpdateSummary();
+
+            OnPropertyChanged(nameof(LastSyncTime));
 
             ViewIndex = SubViewIndex_Summary;
+        }
+
+        private void UpdateSummary()
+        {
+            var summary = _modelService.GetDatasetSummary();
+            DatasetSize = summary.DatasetSize.Bytes().ToString("#.#");
+            DatasetColumnCount = summary.ColumnCount;
+
+            UnusedColumns = _modelService.GetUnusedColumns();
         }
     }
 }

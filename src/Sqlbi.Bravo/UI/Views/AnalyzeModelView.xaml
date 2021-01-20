@@ -79,20 +79,20 @@
                         <StackPanel Grid.Column="1">
                             <TextBlock HorizontalAlignment="Left">
                                 <Run>Your dataset is </Run>
-                                <Run FontWeight="Bold" Text="350MB" />
+                                <Run FontWeight="Bold" Text="{Binding DatasetSize}" />
                                 <Run> large, and contains </Run>
-                                <Run FontWeight="Bold" Text="135" />
+                                <Run FontWeight="Bold" Text="{Binding DatasetColumnCount, Mode=OneWay}" />
                                 <Run> columns.</Run>
                             </TextBlock>
                             <TextBlock HorizontalAlignment="Left" Margin="0,12">
                                 <Run>The following </Run>
-                                <Run FontWeight="Bold" Text="10" />
+                                <Run FontWeight="Bold" Text="{Binding UnusedColumnCount, Mode=OneWay}" />
                                 <Run> columns are not used in the model;</Run>
                             </TextBlock>
                             <TextBlock HorizontalAlignment="Left" Margin="0,-12,0,0">
                                 <Run>remove them to </Run>
                                 <Run Foreground="Green" FontWeight="Bold">save</Run>
-                                <Run FontWeight="Bold" Foreground="Green" Text="220MB" />
+                                <Run FontWeight="Bold" Foreground="Green" Text="{Binding UnusedColumnsSize, Mode=OneWay}" />
                                 <Run FontWeight="Bold" Foreground="Green">of space</Run>
                                 <Run>:</Run>
                             </TextBlock>
