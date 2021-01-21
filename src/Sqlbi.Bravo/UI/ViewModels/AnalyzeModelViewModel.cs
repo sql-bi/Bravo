@@ -81,6 +81,17 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public string UnusedColumnsSize => UnusedColumns?.Sum(c => c.TotalSize).Bytes().ToString("#.#") ?? "-";
 
+        public int TableCount => AllTables?.Count() ?? 0;
+
+        public int AllColumnCount => AllColumns?.Count() ?? 0;
+
+        public int MeasuresCount => AllTables?.Sum(t => t.Measures.Count()) ?? 0;
+
+        public string TotalDbSize => AllTables?.Sum(t => t.TableSize).Bytes().ToString("#.#") ?? "-";
+
+        // TODO REQUIREMENTS: Need to know how to get this value
+        public int? MaxRowsCount => null;
+
         public List<VpaColumn> UnusedColumns
         {
             get => _unusedColumns;
@@ -89,6 +100,10 @@ namespace Sqlbi.Bravo.UI.ViewModels
                 SetProperty(ref _unusedColumns, value);
                 OnPropertyChanged(nameof(UnusedColumnCount));
                 OnPropertyChanged(nameof(UnusedColumnsSize));
+                OnPropertyChanged(nameof(TableCount));
+                OnPropertyChanged(nameof(AllColumnCount));
+                OnPropertyChanged(nameof(MeasuresCount));
+                OnPropertyChanged(nameof(TotalDbSize));
             }
         }
 

@@ -42,11 +42,13 @@
                         <RowDefinition Height="*" />
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
-                    <TextBlock Grid.Row="0" Margin="20,20,0,0" Style="{StaticResource SubheaderTextBlockStyle}" Text="{Binding ConnectionName}" />
+                    <TextBlock Grid.Row="0" Margin="20,20,0,10" Style="{StaticResource SubheaderTextBlockStyle}" Text="{Binding ConnectionName}" />
 
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-
-                        <Button Command="{Binding RefreshCommand}" Style="{StaticResource SubtleButton}" Margin="0,8,24,0">
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button
+                            Command="{Binding RefreshCommand}"
+                            Style="{StaticResource SubtleButton}"
+                            Margin="0,0,16,0">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock
                                     FontSize="14"
@@ -59,14 +61,14 @@
                                     VerticalAlignment="Center">&#x202F; Synced <Run Text="{Binding TimeSinceLastSync, Mode=OneWay}" /></TextBlock>
                             </StackPanel>
                         </Button>
-                        <Button Style="{StaticResource SubtleButton}" Margin="0,8,24,0" Command="{Binding ExportVpaxCommand}">
+                        <Button Style="{StaticResource SubtleButton}" Margin="0,0,12,0" Command="{Binding ExportVpaxCommand}">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock VerticalAlignment="Center" FontFamily="Segoe MDL2 Assets" xml:space="preserve">&#xEDE1;&#x0020;</TextBlock>
                                 <TextBlock VerticalAlignment="Center">VPAX</TextBlock>
                             </StackPanel>
                         </Button>
 
-                        <Button Command="{Binding HelpCommand}" Style="{StaticResource SubtleButton}" Margin="0,8,12,0">
+                        <Button Command="{Binding HelpCommand}" Style="{StaticResource SubtleButton}" Margin="0">
                             <controls:HelpIcon />
                         </Button>
                     </StackPanel>
@@ -76,8 +78,12 @@
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
-                            <controls:AnalyzeModelIcon Grid.Column="0" Margin="12,0" Height="24" VerticalAlignment="Top" />
-                        <StackPanel Grid.Column="1">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                            <controls:AnalyzeModelIcon Grid.Column="0" Grid.Row="0" Margin="12,0" Height="24" VerticalAlignment="Top" />
+                        <StackPanel Grid.Column="1" Grid.Row="0">
                             <TextBlock HorizontalAlignment="Left">
                                 <Run>Your dataset is </Run>
                                 <Run FontWeight="Bold" Text="{Binding DatasetSize}" />
@@ -94,14 +100,12 @@
                                 <Run>remove them to </Run>
                                 <Run Foreground="Green" FontWeight="Bold">save</Run>
                                 <Run FontWeight="Bold" Foreground="Green" Text="{Binding UnusedColumnsSize, Mode=OneWay}" />
-                                <Run FontWeight="Bold" Foreground="Green">of space</Run>
-                                <Run>:</Run>
+                                <Run FontWeight="Bold" Foreground="Green">of space</Run><Run>:</Run>
                             </TextBlock>
-                            <Grid Margin="0,20,0,0">
-                                <DataGrid
+                        </StackPanel>
+                           
+                            <DataGrid Grid.Column="1" Grid.Row="1" Margin="0,20,0,0"
                                     ItemsSource="{Binding UnusedColumns}"
-                                    ScrollViewer.HorizontalScrollBarVisibility="Visible"
-                                    ScrollViewer.VerticalScrollBarVisibility="Visible"
                                     AutoGenerateColumns="False">
                                     <DataGrid.Columns>
                                         <DataGridTemplateColumn Header="Column" SortMemberPath="ColumnName">
@@ -132,8 +136,6 @@
                                         </DataGridTemplateColumn>
                                     </DataGrid.Columns>
                                 </DataGrid>
-                            </Grid>
-                        </StackPanel>
                     </Grid>
 
                     <Button
@@ -163,7 +165,7 @@
                             HorizontalAlignment="Left">&#xE112;</Button>
 
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Grid.ColumnSpan="2">
-                        <Button Command="{Binding RefreshCommand}" Style="{StaticResource SubtleButton}" Margin="0,8,24,0">
+                        <Button Command="{Binding RefreshCommand}" Style="{StaticResource SubtleButton}" Margin="0,0,16,0">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock
                                     FontSize="14"
@@ -176,14 +178,14 @@
                                     VerticalAlignment="Center">&#x202F; Synced <Run Text="{Binding TimeSinceLastSync, Mode=OneWay}" /></TextBlock>
                             </StackPanel>
                         </Button>
-                        <Button Style="{StaticResource SubtleButton}" Margin="0,8,24,0" Command="{Binding ExportVpaxCommand}">
+                        <Button Style="{StaticResource SubtleButton}" Margin="0,0,12,0" Command="{Binding ExportVpaxCommand}">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock VerticalAlignment="Center" FontFamily="Segoe MDL2 Assets" xml:space="preserve">&#xEDE1;&#x0020;</TextBlock>
                                 <TextBlock VerticalAlignment="Center">VPAX</TextBlock>
                             </StackPanel>
                         </Button>
 
-                        <Button Command="{Binding HelpCommand}" Style="{StaticResource SubtleButton}" Margin="0,8,12,0">
+                        <Button Command="{Binding HelpCommand}" Style="{StaticResource SubtleButton}" Margin="0">
                             <controls:HelpIcon />
                         </Button>
                     </StackPanel>
@@ -235,7 +237,13 @@
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="Column" Binding="{Binding ColumnName}" />
                                     <DataGridTextColumn Header="Table" Binding="{Binding Table.TableName, Mode=OneWay}" />
-                                    <DataGridTextColumn Header="Cardinality" Binding="{Binding ColumnCardinality}" />
+                                    <DataGridTemplateColumn Header="Cardinality" SortMemberPath="ColumnCardinality">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding ColumnCardinality, Converter={valueconverters:SimplifyNumberConverter}}" />
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
                                     <DataGridTemplateColumn Header="Size" SortMemberPath="TotalSize">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
@@ -266,25 +274,25 @@
                         </Grid.ColumnDefinitions>
                         <StackPanel Orientation="Horizontal" Grid.ColumnSpan="2">
                             <controls:AnalyzeModelIcon Height="36" Margin="0,0,10,0" />
-                            <TextBlock Text="350MB" FontSize="36" FontWeight="Bold" />
+                            <TextBlock Text="{Binding TotalDbSize, Mode=OneWay}" FontSize="36" FontWeight="Bold" />
                         </StackPanel>
                         <StackPanel Grid.Row="1">
                             <TextBlock>
-                                <Run Text="25" />
+                                <Run Text="{Binding TableCount, Mode=OneWay}" />
                                 <Run>tables</Run>
                             </TextBlock>
-                            <TextBlock>
-                                <Run Text="135" />
+                            <TextBlock Margin="0,0,12,0">
+                                <Run Text="{Binding AllColumnCount, Mode=OneWay}" />
                                 <Run>columns</Run>
                             </TextBlock>
                         </StackPanel>
                         <StackPanel Grid.Row="1" Grid.Column="1">
                             <TextBlock>
-                                <Run Text="1.2K" />
+                                <Run Text="{Binding MeasuresCount, Converter={valueconverters:SimplifyNumberConverter}, Mode=OneWay}" />
                                 <Run>measures</Run>
                             </TextBlock>
                             <TextBlock>
-                                <Run Text="2.1M" />
+                                <Run Text="{Binding MaxRowsCount, Converter={valueconverters:SimplifyNumberConverter}, Mode=OneWay}" />
                                 <Run>max rows</Run>
                             </TextBlock>
                         </StackPanel>
