@@ -40,6 +40,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
             RefreshCommand = new RelayCommand(execute: async () => await RefreshAsync());
             MoreDetailsCommand = new RelayCommand(execute: async () => await ShowMoreDetailsAsync());
             BackCommand = new RelayCommand(execute: async () => await BackAsync());
+            WarningHelpCommand = new RelayCommand(execute: async () => await ShowWarningHelpAsync());
 
             _timer = new DispatcherTimer
             {
@@ -60,6 +61,8 @@ namespace Sqlbi.Bravo.UI.ViewModels
         public ICommand LoadedCommand { get; set; }
 
         public ICommand HelpCommand { get; set; }
+
+        public ICommand WarningHelpCommand { get; set; }
 
         public ICommand ExportVpaxCommand { get; set; }
 
@@ -164,6 +167,12 @@ namespace Sqlbi.Bravo.UI.ViewModels
             await Views.ShellView.Instance.ShowMediaDialog(new HowToAnalyzeModelHelp());
         }
 
+        private async Task ShowWarningHelpAsync()
+        {
+            _logger.Trace();
+            await Views.ShellView.Instance.ShowMediaDialog(new ColumnOptimizationHelp());
+        }
+
         private async Task ShowMoreDetailsAsync()
         {
             ViewIndex = SubViewIndex_Details;
@@ -200,7 +209,8 @@ namespace Sqlbi.Bravo.UI.ViewModels
             DatasetSize = summary.DatasetSize.Bytes().ToString("#.#");
             DatasetColumnCount = summary.ColumnCount;
 
-            UnusedColumns = _modelService.GetUnusedColumns();
+            // Sort these here so the DataGrid doesn't ahve to worry about loading all rows to be able to sort
+            UnusedColumns = _modelService.GetUnusedColumns().OrderByDescending(c => c.PercentageDatabase).ToList();
         }
     }
 }

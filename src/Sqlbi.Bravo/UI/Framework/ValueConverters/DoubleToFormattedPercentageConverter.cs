@@ -9,7 +9,7 @@ namespace Sqlbi.Bravo.UI.Framework.ValueConverters
         {
             if (value is double val)
             {
-                var str = val.ToString();
+                var str = (val * 100).ToString();
 
                 // This is a crude formatter for showing one significant figure
                 // For simplicity it rounds down.
@@ -34,7 +34,7 @@ namespace Sqlbi.Bravo.UI.Framework.ValueConverters
                 }
                 else
                 {
-                    return val.ToString("#0.#' %'");
+                    return (val * 100).ToString("#0.#' %'");
                 }
             }
 

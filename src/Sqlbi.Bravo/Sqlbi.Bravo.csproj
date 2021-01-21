@@ -13,6 +13,7 @@
 
   <PropertyGroup>
     <RestoreSources>$(RestoreSources);./nupkgs;https://api.nuget.org/v3/index.json</RestoreSources>
+    <ApplicationIcon>BravoLogo.ico</ApplicationIcon>
   </PropertyGroup>
 
     <ItemGroup>
@@ -31,6 +32,7 @@
     <None Remove="UI\Controls\HelpIcon.xaml" />
     <None Remove="UI\Controls\LogoText.xaml" />
     <None Remove="UI\Controls\VertipaqFileIcon.xaml" />
+    <None Remove="UI\Controls\WarningWithTooltip.xaml" />
     <None Remove="UI\Resources\Images\logo.png" />
     <None Remove="UI\Resources\Images\powerbi-dataset.png" />
     <None Remove="UI\Resources\Images\powerbi-desktop-connect.png" />

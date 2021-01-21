@@ -9,6 +9,16 @@
       xmlns:valueconverters="clr-namespace:Sqlbi.Bravo.UI.Framework.ValueConverters"
       mc:Ignorable="d"
       d:DesignHeight="450" d:DesignWidth="800">
+    <UserControl.Resources>
+        <Style x:Key="StandardColumnHeader"
+               BasedOn="{StaticResource MahApps.Styles.DataGridColumnHeader}"
+               TargetType="{x:Type DataGridColumnHeader}">
+            <Setter Property="mah:ControlsHelper.ContentCharacterCasing" Value="Normal"/>
+        </Style>
+
+        <SolidColorBrush x:Key="MahApps.Brushes.DataGrid.Selection.Background" Color="{DynamicResource MahApps.Colors.Accent4}" />
+        <SolidColorBrush x:Key="MahApps.Brushes.DataGrid.Selection.Background.Inactive" Color="{DynamicResource MahApps.Colors.Accent4}" />
+    </UserControl.Resources>
     <i:Interaction.Triggers>
         <i:EventTrigger EventName="Loaded">
             <i:InvokeCommandAction Command="{Binding LoadedCommand}" />
@@ -105,32 +115,32 @@
                         </StackPanel>
                            
                             <DataGrid Grid.Column="1" Grid.Row="1" Margin="0,20,0,0"
-                                    ItemsSource="{Binding UnusedColumns}"
-                                    AutoGenerateColumns="False">
+                                      ItemsSource="{Binding UnusedColumns}"
+                                      EnableRowVirtualization="False"
+                                      BeginningEdit="DatagridEditingHandler"
+                                      ColumnHeaderStyle="{StaticResource StandardColumnHeader}"
+                                      AutoGenerateColumns="False">
                                     <DataGrid.Columns>
-                                        <DataGridTemplateColumn Header="Column" SortMemberPath="ColumnName">
+                                        <DataGridTemplateColumn CanUserReorder="False" CanUserSort="False" CanUserResize="False">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
-                                                    <StackPanel Orientation="Horizontal">
-                                                        <TextBlock FontFamily="Segoe MDL2 Assets" Margin="0,4,0,0">&#xE7BA;</TextBlock>
-                                                        <TextBlock>&#x2002;</TextBlock>
-                                                        <TextBlock Text="{Binding ColumnName}" />
-                                                    </StackPanel>
+                                                    <TextBlock FontFamily="Segoe MDL2 Assets" Margin="0,4,0,0">&#xE7BA;</TextBlock>
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>
                                         </DataGridTemplateColumn>
-                                        <DataGridTextColumn Header="Table" Binding="{Binding Table.TableName, Mode=OneWay}" />
-                                        <DataGridTemplateColumn Header="Size" SortMemberPath="TotalSize">
+                                <DataGridTextColumn Header="Column" Binding="{Binding ColumnName}" CanUserReorder="False" SortMemberPath="ColumnName"/>
+                                        <DataGridTextColumn Header="Table" CanUserReorder="False" Binding="{Binding Table.TableName, Mode=OneWay}" />
+                                <DataGridTemplateColumn Header="Size" CanUserReorder="False" SortMemberPath="TotalSize">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
-                                                    <TextBlock Text="{Binding TotalSize, Converter={valueconverters:BytesToStringConverter}}" />
+                                                    <TextBlock Text="{Binding TotalSize, Converter={valueconverters:BytesToStringConverter}}" Margin="8,0" />
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>
                                         </DataGridTemplateColumn>
-                                        <DataGridTemplateColumn Header="Weight" SortMemberPath="PercentageDatabase" CanUserResize="False">
+                                <DataGridTemplateColumn Header="Weight" SortMemberPath="PercentageDatabase" CanUserReorder="False" CanUserResize="False" SortDirection="Descending">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
-                                                    <TextBlock Text="{Binding PercentageDatabase, Converter={valueconverters:DoubleToFormattedPercentageConverter}}" />
+                                            <TextBlock Text="{Binding PercentageDatabase, Converter={valueconverters:DoubleToFormattedPercentageConverter}}" Margin="8,0" />
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>
                                         </DataGridTemplateColumn>
@@ -190,12 +200,12 @@
                         </Button>
                     </StackPanel>
 
-
                     <TabControl Style="{DynamicResource MahApps.Styles.TabControl.Animated}"
                                 Grid.Row="1"
                                 Grid.Column="0"
+                                Margin="20,0"
                                 mah:HeaderedControlHelper.HeaderFontSize="16"
-                                    mah:TabControlHelper.Underlined="SelectedTabItem" >
+                                mah:TabControlHelper.Underlined="SelectedTabItem" >
                         <TabControl.Resources>
                             <DataTemplate x:Key="TabItemHeaderTemplate">
                                 <TextBlock
@@ -205,9 +215,11 @@
                         </TabControl.Resources>
 
                         <TabItem Header="Tables"
-                                     HeaderTemplate="{StaticResource TabItemHeaderTemplate}">
+                                 HeaderTemplate="{StaticResource TabItemHeaderTemplate}">
                             <DataGrid
                                 ItemsSource="{Binding AllTables}"
+                                BeginningEdit="DatagridEditingHandler"
+                                ColumnHeaderStyle="{StaticResource StandardColumnHeader}"
                                 AutoGenerateColumns="False">
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="" Binding="{Binding TableName}" />
@@ -215,14 +227,14 @@
                                     <DataGridTemplateColumn Header="Size" SortMemberPath="TotalSize">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <TextBlock Text="{Binding TableSize, Converter={valueconverters:BytesToStringConverter}}" />
+                                                <TextBlock Text="{Binding TableSize, Converter={valueconverters:BytesToStringConverter}}" Margin="4,0" />
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
-                                    <DataGridTemplateColumn Header="Weight" SortMemberPath="PercentageDatabase" CanUserResize="False">
+                                    <DataGridTemplateColumn Header="% DB" SortMemberPath="PercentageDatabase" CanUserResize="False">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <TextBlock Text="{Binding PercentageDatabase, Converter={valueconverters:DoubleToFormattedPercentageConverter}}" />
+                                                <TextBlock Text="{Binding PercentageDatabase, Converter={valueconverters:DoubleToFormattedPercentageConverter}}" Margin="4,0" />
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
@@ -230,31 +242,59 @@
                             </DataGrid>
                         </TabItem>
                         <TabItem Header="Columns"
-                                     HeaderTemplate="{StaticResource TabItemHeaderTemplate}">
+                                 HeaderTemplate="{StaticResource TabItemHeaderTemplate}">
                             <DataGrid
                                 ItemsSource="{Binding AllColumns}"
+                                ColumnHeaderStyle="{StaticResource StandardColumnHeader}"
+                                EnableRowVirtualization="True"
+                                GridLinesVisibility="Horizontal"
+                                BeginningEdit="DatagridEditingHandler"
                                 AutoGenerateColumns="False">
                                 <DataGrid.Columns>
-                                    <DataGridTextColumn Header="Column" Binding="{Binding ColumnName}" />
-                                    <DataGridTextColumn Header="Table" Binding="{Binding Table.TableName, Mode=OneWay}" />
-                                    <DataGridTemplateColumn Header="Cardinality" SortMemberPath="ColumnCardinality">
+                                    <DataGridTemplateColumn Width="20" CanUserResize="False" CanUserReorder="False" SortMemberPath="IsHidden">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <TextBlock Text="{Binding ColumnCardinality, Converter={valueconverters:SimplifyNumberConverter}}" />
+                                                <controls:WarningWithTooltip Margin="4,4,0,0" Visibility="{Binding IsHidden, Converter={StaticResource BooleanToVisibilityConverter}}" />
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
-                                    <DataGridTemplateColumn Header="Size" SortMemberPath="TotalSize">
+                                    <DataGridCheckBoxColumn
+                                        ElementStyle="{DynamicResource MahApps.Styles.CheckBox.DataGrid.Win10}"
+                                        Width="48"
+                                        CanUserResize="False"
+                                        CanUserReorder="False"
+                                        CanUserSort="False"
+                                        EditingElementStyle="{DynamicResource MetroDataGridCheckBox}"
+                                        Binding="{Binding RelativeSource={RelativeSource AncestorType=DataGridRow}, Path=IsSelected, Mode=OneWay}" />
+                                    <DataGridTextColumn Header="Column" Binding="{Binding ColumnName}" CanUserReorder="False" />
+                                    <DataGridTextColumn Header="Table" Binding="{Binding Table.TableName, Mode=OneWay}" CanUserReorder="False" />
+                                    <DataGridTemplateColumn SortMemberPath="ColumnCardinality" CanUserReorder="False">
+                                        <DataGridTemplateColumn.HeaderTemplate>
+                                            <DataTemplate>
+                                                <StackPanel Orientation="Horizontal" ToolTip="Number of unique entries">
+                                                    <TextBlock>Cardinality&#x00A0;</TextBlock>
+                                                    <TextBlock FontFamily="Segoe Symbol" >&#x20DD;</TextBlock>
+                                                    <TextBlock FontFamily="Segoe Symbol" FontSize="10" Margin="5,3,0,0">?</TextBlock>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.HeaderTemplate>
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <TextBlock Text="{Binding TotalSize, Converter={valueconverters:BytesToStringConverter}}" />
+                                                <TextBlock Text="{Binding ColumnCardinality, Converter={valueconverters:SimplifyNumberConverter}}" HorizontalAlignment="Right" Margin="8,0" />
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
-                                    <DataGridTemplateColumn Header="Weight" SortMemberPath="PercentageDatabase" CanUserResize="False">
+                                    <DataGridTemplateColumn Header="Size" SortMemberPath="TotalSize" CanUserReorder="False">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <TextBlock Text="{Binding PercentageDatabase, Converter={valueconverters:DoubleToFormattedPercentageConverter}}" />
+                                                <TextBlock Text="{Binding TotalSize, Converter={valueconverters:BytesToStringConverter}}" Margin="4,0" />
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Header="Weight" SortMemberPath="PercentageDatabase" CanUserReorder="False" CanUserResize="False">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding PercentageDatabase, Converter={valueconverters:DoubleToFormattedPercentageConverter}}" Margin="8,0,4,0" />
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
@@ -273,8 +313,8 @@
                             <ColumnDefinition Width="1*" />
                         </Grid.ColumnDefinitions>
                         <StackPanel Orientation="Horizontal" Grid.ColumnSpan="2">
-                            <controls:AnalyzeModelIcon Height="36" Margin="0,0,10,0" />
-                            <TextBlock Text="{Binding TotalDbSize, Mode=OneWay}" FontSize="36" FontWeight="Bold" />
+                            <controls:AnalyzeModelIcon Height="40" Margin="0,8,10,6" />
+                            <TextBlock Text="{Binding TotalDbSize, Mode=OneWay}" FontSize="40" FontWeight="DemiBold" />
                         </StackPanel>
                         <StackPanel Grid.Row="1">
                             <TextBlock>
