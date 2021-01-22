@@ -243,7 +243,13 @@
                         </TabItem>
                         <TabItem Header="Columns"
                                  HeaderTemplate="{StaticResource TabItemHeaderTemplate}">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
                             <DataGrid
+                                x:Name="ColDataGrid"
                                 ItemsSource="{Binding AllColumns}"
                                 ColumnHeaderStyle="{StaticResource StandardColumnHeader}"
                                 EnableRowVirtualization="True"
@@ -251,7 +257,7 @@
                                 BeginningEdit="DatagridEditingHandler"
                                 AutoGenerateColumns="False">
                                 <DataGrid.Columns>
-                                    <DataGridTemplateColumn Width="20" CanUserResize="False" CanUserReorder="False" SortMemberPath="IsHidden">
+                                    <DataGridTemplateColumn x:Name="ColWarningColumn" Width="20" CanUserResize="False" CanUserReorder="False" SortMemberPath="IsHidden">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <controls:WarningWithTooltip Margin="4,4,0,0" Visibility="{Binding IsHidden, Converter={StaticResource BooleanToVisibilityConverter}}" />
@@ -259,6 +265,7 @@
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
                                     <DataGridCheckBoxColumn
+                                        x:Name="ColCheckboxColumn"
                                         ElementStyle="{DynamicResource MahApps.Styles.CheckBox.DataGrid.Win10}"
                                         Width="48"
                                         CanUserResize="False"
@@ -266,9 +273,9 @@
                                         CanUserSort="False"
                                         EditingElementStyle="{DynamicResource MetroDataGridCheckBox}"
                                         Binding="{Binding RelativeSource={RelativeSource AncestorType=DataGridRow}, Path=IsSelected, Mode=OneWay}" />
-                                    <DataGridTextColumn Header="Column" Binding="{Binding ColumnName}" CanUserReorder="False" />
-                                    <DataGridTextColumn Header="Table" Binding="{Binding Table.TableName, Mode=OneWay}" CanUserReorder="False" />
-                                    <DataGridTemplateColumn SortMemberPath="ColumnCardinality" CanUserReorder="False">
+                                    <DataGridTextColumn x:Name="ColColumnNameColumn" Header="Column" Binding="{Binding ColumnName}" CanUserReorder="False" />
+                                        <DataGridTextColumn x:Name="ColTableNameColumn" Header="Table" Binding="{Binding Table.TableName, Mode=OneWay}" CanUserReorder="False" />
+                                        <DataGridTemplateColumn  x:Name="ColCardinalityColumn" SortMemberPath="ColumnCardinality" CanUserReorder="False">
                                         <DataGridTemplateColumn.HeaderTemplate>
                                             <DataTemplate>
                                                 <StackPanel Orientation="Horizontal" ToolTip="Number of unique entries">
@@ -284,22 +291,49 @@
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
-                                    <DataGridTemplateColumn Header="Size" SortMemberPath="TotalSize" CanUserReorder="False">
+                                        <DataGridTemplateColumn x:Name="ColSizeColumn" Header="Size" SortMemberPath="TotalSize" CanUserReorder="False">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <TextBlock Text="{Binding TotalSize, Converter={valueconverters:BytesToStringConverter}}" Margin="4,0" />
-                                            </DataTemplate>
+                                                    <StackPanel>
+                                                <TextBlock Text="{Binding TotalSize, Converter={valueconverters:BytesToStringConverter}}" HorizontalAlignment="Right" Margin="4,4,4,0" />
+                                                        <mah:MetroProgressBar
+                                                            HorizontalAlignment="Stretch"
+                                                            Minimum="0"
+                                                            Maximum="{Binding ElementName=ColDataGrid, Path=DataContext.LargestColumnSize}"
+                                                            Value="{Binding TotalSize, Mode=OneWay}"
+                                                            MinHeight="4"
+                                                            Height="4"
+                                                            Background="Transparent"
+                                                            FlowDirection="RightToLeft" />
+                                                    </StackPanel>
+                                                </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
-                                    <DataGridTemplateColumn Header="Weight" SortMemberPath="PercentageDatabase" CanUserReorder="False" CanUserResize="False">
+                                        <DataGridTemplateColumn x:Name="ColWeightColumn" Header="Weight" SortMemberPath="PercentageDatabase" CanUserReorder="False" CanUserResize="False">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <TextBlock Text="{Binding PercentageDatabase, Converter={valueconverters:DoubleToFormattedPercentageConverter}}" Margin="8,0,4,0" />
+                                                    <TextBlock Text="{Binding PercentageDatabase, Converter={valueconverters:DoubleToFormattedPercentageConverter}}" HorizontalAlignment="Right" Margin="8,0,4,0" />
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
                                 </DataGrid.Columns>
                             </DataGrid>
+                                <StackPanel Grid.Row="1" Orientation="Horizontal">
+                                    <TextBlock Width="{Binding ElementName=ColWarningColumn,Path=ActualWidth}" />
+                                    <TextBlock Width="{Binding ElementName=ColCheckboxColumn,Path=ActualWidth}" />
+                                    <TextBlock Width="{Binding ElementName=ColColumnNameColumn,Path=ActualWidth}"
+                                               Margin="5,0,0,0" FontWeight="Bold"
+                                               Text="{Binding ElementName=ColDataGrid, Path=SelectedItems, Mode=OneWay}" />
+                                    <TextBlock Width="{Binding ElementName=ColTableNameColumn,Path=ActualWidth}" />
+                                    <TextBlock Width="{Binding ElementName=ColCardinalityColumn,Path=ActualWidth}" />
+                                    <TextBlock Width="{Binding ElementName=ColSizeColumn,Path=ActualWidth}"
+                                               FontWeight="Bold" Margin="5,0,0,0"
+                                               Text="Footer2" />
+                                    <TextBlock Width="{Binding ElementName=ColWeightColumn,Path=ActualWidth}"
+                                               FontWeight="Bold" Margin="5,0,0,0"
+                                               Text="Footer3" />
+                                </StackPanel>
+                            </Grid>
                         </TabItem>
                     </TabControl>
                     <Grid Grid.Row="1" Grid.Column="1" Margin="20,40,20,20">

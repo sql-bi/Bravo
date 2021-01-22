@@ -95,6 +95,8 @@ namespace Sqlbi.Bravo.UI.ViewModels
         // TODO REQUIREMENTS: Need to know how to get this value
         public int? MaxRowsCount => null;
 
+        public long LargestColumnSize { get; set; }
+
         public List<VpaColumn> UnusedColumns
         {
             get => _unusedColumns;
@@ -194,7 +196,10 @@ namespace Sqlbi.Bravo.UI.ViewModels
             await _modelService.InitilizeOrRefreshAsync();
 
             LoadingDetails = "Analyzing model";
-            UpdateSummary();
+
+            await Task.Run(() => UpdateSummary());
+
+            //UpdateSummary();
 
             OnPropertyChanged(nameof(LastSyncTime));
             OnPropertyChanged(nameof(AllColumns));
@@ -209,8 +214,9 @@ namespace Sqlbi.Bravo.UI.ViewModels
             DatasetSize = summary.DatasetSize.Bytes().ToString("#.#");
             DatasetColumnCount = summary.ColumnCount;
 
-            // Sort these here so the DataGrid doesn't ahve to worry about loading all rows to be able to sort
+            // Sort these here so the DataGrid doesn't have to worry about loading all rows to be able to sort
             UnusedColumns = _modelService.GetUnusedColumns().OrderByDescending(c => c.PercentageDatabase).ToList();
+            LargestColumnSize = AllColumns?.Max(c => c.TotalSize) ?? 0;
         }
     }
 }
