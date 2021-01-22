@@ -256,26 +256,27 @@
                                 EnableRowVirtualization="True"
                                 GridLinesVisibility="Horizontal"
                                 BeginningEdit="DatagridEditingHandler"
+                                mah:DataGridHelper.EnableCellEditAssist="True"
                                 AutoGenerateColumns="False">
                                 <DataGrid.Columns>
                                     <DataGridTemplateColumn x:Name="ColWarningColumn" Width="20" CanUserResize="False" CanUserReorder="False" SortMemberPath="IsHidden">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <controls:WarningWithTooltip Margin="4,4,0,0" Visibility="{Binding IsHidden, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                                                <controls:WarningWithTooltip Margin="4,4,0,0" Visibility="{Binding IsRequired, Converter={StaticResource BooleanToVisibilityConverter}}" />
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
                                     <DataGridCheckBoxColumn
                                         x:Name="ColCheckboxColumn"
-                                        ElementStyle="{DynamicResource MahApps.Styles.CheckBox.DataGrid.Win10}"
                                         Width="48"
                                         CanUserResize="False"
                                         CanUserReorder="False"
                                         CanUserSort="False"
+                                        ElementStyle="{DynamicResource MahApps.Styles.CheckBox.DataGrid.Win10}"
                                         EditingElementStyle="{DynamicResource MetroDataGridCheckBox}"
-                                        Binding="{Binding RelativeSource={RelativeSource AncestorType=DataGridRow}, Path=IsSelected, Mode=OneWay}" />
+                                        Binding="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                                     <DataGridTextColumn x:Name="ColColumnNameColumn" Header="Column" Binding="{Binding ColumnName}" CanUserReorder="False" />
-                                        <DataGridTextColumn x:Name="ColTableNameColumn" Header="Table" Binding="{Binding Table.TableName, Mode=OneWay}" CanUserReorder="False" />
+                                        <DataGridTextColumn x:Name="ColTableNameColumn" Header="Table" Binding="{Binding TableName, Mode=OneWay}" CanUserReorder="False" />
                                         <DataGridTemplateColumn  x:Name="ColCardinalityColumn" SortMemberPath="ColumnCardinality" CanUserReorder="False">
                                         <DataGridTemplateColumn.HeaderTemplate>
                                             <DataTemplate>
@@ -319,20 +320,24 @@
                                     </DataGridTemplateColumn>
                                 </DataGrid.Columns>
                             </DataGrid>
-                                <StackPanel Grid.Row="1" Orientation="Horizontal">
+                                <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,20">
                                     <TextBlock Width="{Binding ElementName=ColWarningColumn,Path=ActualWidth}" />
                                     <TextBlock Width="{Binding ElementName=ColCheckboxColumn,Path=ActualWidth}" />
                                     <TextBlock Width="{Binding ElementName=ColColumnNameColumn,Path=ActualWidth}"
-                                               Margin="5,0,0,0" FontWeight="Bold"
-                                               Text="{Binding ElementName=ColDataGrid, Path=SelectedItems, Mode=OneWay}" />
+                                               Margin="5,0,0,0" FontWeight="Bold">
+                                        <Run Text="{Binding SelectedColumnCount, Mode=OneWay}" />
+                                        <Run Text=" Selected"/>
+                                    </TextBlock>
                                     <TextBlock Width="{Binding ElementName=ColTableNameColumn,Path=ActualWidth}" />
                                     <TextBlock Width="{Binding ElementName=ColCardinalityColumn,Path=ActualWidth}" />
                                     <TextBlock Width="{Binding ElementName=ColSizeColumn,Path=ActualWidth}"
                                                FontWeight="Bold" Margin="5,0,0,0"
-                                               Text="Footer2" />
+                                               HorizontalAlignment="Right"
+                                               Text="?? MB" />
                                     <TextBlock Width="{Binding ElementName=ColWeightColumn,Path=ActualWidth}"
                                                FontWeight="Bold" Margin="5,0,0,0"
-                                               Text="Footer3" />
+                                               HorizontalAlignment="Right"
+                                               Text="?? %" />
                                 </StackPanel>
                             </Grid>
                         </TabItem>

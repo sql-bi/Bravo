@@ -26,6 +26,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
         internal const int SubViewIndex_Details = 2;
         private readonly DispatcherTimer _timer = new DispatcherTimer();
         private List<VpaColumn> _unusedColumns;
+        private List<VpaColumnViewModel> _allColumnsCache;
 
         public AnalyzeModelViewModel(IAnalyzeModelService service, ILogger<DaxFormatterViewModel> logger)
         {
@@ -112,9 +113,22 @@ namespace Sqlbi.Bravo.UI.ViewModels
             }
         }
 
-        public IEnumerable<VpaColumn> AllColumns => _modelService.GetAllColumns();
+        public IEnumerable<VpaColumnViewModel> AllColumns
+        {
+            get
+            {
+                if (_allColumnsCache == null)
+                {
+                    _allColumnsCache =
+                    _modelService.GetAllColumns()?.Select(c => new VpaColumnViewModel(this, c)).ToList();
+                }
+                return _allColumnsCache;
+            }
+        }
 
         public IEnumerable<VpaTable> AllTables => _modelService.GetAllTables();
+
+        public int SelectedColumnCount => AllColumns.Count(c => c.IsSelected);
 
         public string TimeSinceLastSync
                     => LastSyncTime.Year == 1
@@ -199,8 +213,6 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
             await Task.Run(() => UpdateSummary());
 
-            //UpdateSummary();
-
             OnPropertyChanged(nameof(LastSyncTime));
             OnPropertyChanged(nameof(AllColumns));
             OnPropertyChanged(nameof(AllTables));
@@ -210,6 +222,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         private void UpdateSummary()
         {
+            _allColumnsCache = null;
             var summary = _modelService.GetDatasetSummary();
             DatasetSize = summary.DatasetSize.Bytes().ToString("#.#");
             DatasetColumnCount = summary.ColumnCount;
