@@ -16,8 +16,9 @@
             <Setter Property="mah:ControlsHelper.ContentCharacterCasing" Value="Normal"/>
         </Style>
 
-        <SolidColorBrush x:Key="MahApps.Brushes.DataGrid.Selection.Background" Color="{DynamicResource MahApps.Colors.Accent4}" />
-        <SolidColorBrush x:Key="MahApps.Brushes.DataGrid.Selection.Background.Inactive" Color="{DynamicResource MahApps.Colors.Accent4}" />
+        <SolidColorBrush x:Key="MahApps.Brushes.DataGrid.Selection.Background" Color="Transparent" />
+        <SolidColorBrush x:Key="MahApps.Brushes.DataGrid.Selection.Background.Inactive" Color="Transparent" />
+        <SolidColorBrush x:Key="MahApps.Brushes.DataGrid.Selection.Background.MouseOver" Color="{DynamicResource MahApps.Colors.Accent4}" />
     </UserControl.Resources>
     <i:Interaction.Triggers>
         <i:EventTrigger EventName="Loaded">
