@@ -16,6 +16,10 @@
             <Setter Property="mah:ControlsHelper.ContentCharacterCasing" Value="Normal"/>
         </Style>
 
+        <Style BasedOn="{StaticResource MahApps.Styles.TreeViewItem}" TargetType="TreeViewItem">
+            <Setter Property="mah:ItemHelper.HoverBackgroundBrush" Value="{DynamicResource MahApps.Brushes.ThemeBackground}" />
+        </Style>
+
         <SolidColorBrush x:Key="MahApps.Brushes.DataGrid.Selection.Background" Color="Transparent" />
         <SolidColorBrush x:Key="MahApps.Brushes.DataGrid.Selection.Background.Inactive" Color="Transparent" />
         <SolidColorBrush x:Key="MahApps.Brushes.DataGrid.Selection.Background.MouseOver" Color="{DynamicResource MahApps.Colors.Accent4}" />
@@ -217,30 +221,143 @@
 
                         <TabItem Header="Tables"
                                  HeaderTemplate="{StaticResource TabItemHeaderTemplate}">
-                            <DataGrid
-                                ItemsSource="{Binding AllTables}"
-                                BeginningEdit="DatagridEditingHandler"
-                                ColumnHeaderStyle="{StaticResource StandardColumnHeader}"
-                                AutoGenerateColumns="False">
-                                <DataGrid.Columns>
-                                    <DataGridTextColumn Header="" Binding="{Binding TableName}" />
-                                    <DataGridTextColumn Header="Cardinality" />
-                                    <DataGridTemplateColumn Header="Size" SortMemberPath="TotalSize">
-                                        <DataGridTemplateColumn.CellTemplate>
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <DockPanel>
+                                    <ListView DockPanel.Dock="Top">
+                                        <ListView.View>
+                                            <GridView>
+                                                <GridViewColumn Header="" Width="64" x:Name="padding" />
+                                                <GridViewColumn Header="" Width="200" x:Name="tblNameColHdr" />
+                                                <GridViewColumn Header="Cardinality" Width="110" x:Name="tblCardinalityColHdr">
+                                                    <GridViewColumn.HeaderTemplate>
+                                                        <DataTemplate>
+                                                            <StackPanel Orientation="Horizontal" ToolTip="Number of unique entries">
+                                                                <TextBlock>Cardinality&#x00A0;</TextBlock>
+                                                                <TextBlock FontFamily="Segoe Symbol" >&#x20DD;</TextBlock>
+                                                                <TextBlock FontFamily="Segoe Symbol" FontSize="10" Margin="5,3,0,0">?</TextBlock>
+                                                            </StackPanel>
+                                                        </DataTemplate>
+                                                    </GridViewColumn.HeaderTemplate>
+                                                </GridViewColumn>
+                                                <GridViewColumn Header="Size" Width="90" x:Name="tblSizeColHdr">
+                                                    <GridViewColumn.HeaderTemplate>
+                                                        <DataTemplate>
+                                                            <TextBlock>Size</TextBlock>
+                                                        </DataTemplate>
+                                                    </GridViewColumn.HeaderTemplate>
+                                                </GridViewColumn>
+                                                <GridViewColumn Header="% DB" Width="80" x:Name="tblDbPctColHdr" />
+                                            </GridView>
+                                        </ListView.View>
+                                    </ListView>
+                                    <TreeView ItemsSource="{Binding AllTableColumns}"
+                                      Background="{DynamicResource MahApps.Brushes.ThemeBackground}"
+                                      Margin="-20,0,0,0">
+                                        <TreeView.ItemTemplate>
                                             <DataTemplate>
-                                                <TextBlock Text="{Binding TableSize, Converter={valueconverters:BytesToStringConverter}}" Margin="4,0" />
+                                                <TreeViewItem ItemsSource="{Binding Columns}">
+                                                    <TreeViewItem.Header>
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="30" />
+                                                                <ColumnDefinition Width="{Binding ElementName=tblNameColHdr, Path=ActualWidth}" />
+                                                                <ColumnDefinition Width="{Binding ElementName=tblCardinalityColHdr, Path=ActualWidth}" />
+                                                                <ColumnDefinition Width="{Binding ElementName=tblSizeColHdr, Path=ActualWidth}" />
+                                                                <ColumnDefinition Width="{Binding ElementName=tblDbPctColHdr, Path=ActualWidth}" />
+                                                            </Grid.ColumnDefinitions>
+                                                            <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource MahApps.Styles.CheckBox.Win10}" />
+                                                            <TextBlock Text="{Binding TableName, Mode=OneWay}"
+                                                                   VerticalAlignment="Center"
+                                                                   Grid.Column="1"/>
+                                                            <TextBlock Text="{Binding Cardinality, Mode=OneWay, Converter={valueconverters:SimplifyNumberConverter}}"
+                                                                   Margin="5,0"
+                                                                   HorizontalAlignment="Right"
+                                                                   VerticalAlignment="Center"
+                                                                   Grid.Column="2"/>
+                                                            <TextBlock Text="{Binding TotalSize, Mode=OneWay, Converter={valueconverters:BytesToStringConverter}}"
+                                                               HorizontalAlignment="Right"
+                                                               VerticalAlignment="Center"
+                                                               Margin="5,0"
+                                                               Grid.Column="3"/>
+                                                            <TextBlock Text="{Binding PercentageDatabase, Mode=OneWay, Converter={valueconverters:DoubleToFormattedPercentageConverter}}"
+                                                               HorizontalAlignment="Right"
+                                                               VerticalAlignment="Center"
+                                                               Margin="5,0"
+                                                               Grid.Column="4"/>
+                                                        </Grid>
+                                                    </TreeViewItem.Header>
+                                                    <TreeViewItem.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <Grid Margin="0">
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="30" />
+                                                                    <ColumnDefinition Width="{Binding ElementName=tblNameColHdr, Path=ActualWidth}" MaxWidth="{Binding ElementName=tblNameColHdr, Path=ActualWidth}" />
+                                                                    <ColumnDefinition Width="{Binding ElementName=tblCardinalityColHdr, Path=ActualWidth}" />
+                                                                    <ColumnDefinition Width="{Binding ElementName=tblSizeColHdr, Path=ActualWidth}" />
+                                                                    <ColumnDefinition Width="{Binding ElementName=tblDbPctColHdr, Path=ActualWidth}" />
+                                                                </Grid.ColumnDefinitions>
+                                                                <controls:WarningWithTooltip Margin="-32,9,0,0" Visibility="{Binding IsRequired, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                                                                <CheckBox Margin="-12,0,0,0" IsChecked="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource MahApps.Styles.CheckBox.Win10}" />
+                                                                <TextBlock Margin="-10,0,0,0" Text="{Binding ColumnName, Mode=OneWay}" VerticalAlignment="Center" Grid.Column="1"/>
+                                                                <TextBlock Margin="-10,0,15,0"
+                                                                       Text="{Binding Cardinality, Mode=OneWay, Converter={valueconverters:SimplifyNumberConverter}}"
+                                                                       HorizontalAlignment="Right"
+                                                                       VerticalAlignment="Center"
+                                                                       Grid.Column="2"/>
+                                                                <StackPanel Grid.Column="3" Margin="-10,0,15,0">
+                                                                    <TextBlock
+                                                                       HorizontalAlignment="Right"
+                                                                       VerticalAlignment="Center"
+                                                                       Text="{Binding TotalSize, Mode=OneWay, Converter={valueconverters:BytesToStringConverter}}"/>
+                                                                    <mah:MetroProgressBar
+                                                                HorizontalAlignment="Stretch"
+                                                                Minimum="0"
+                                                                Maximum="{Binding ElementName=ColDataGrid, Path=DataContext.LargestColumnSize}"
+                                                                Value="{Binding TotalSize, Mode=OneWay}"
+                                                                MinHeight="4"
+                                                                Height="4"
+                                                                Background="Transparent"
+                                                                FlowDirection="RightToLeft" />
+                                                                </StackPanel>
+                                                                <TextBlock Margin="-10,0,15,0"
+                                                                       HorizontalAlignment="Right"
+                                                                       VerticalAlignment="Center"
+                                                                       Text="{Binding PercentageDatabase, Mode=OneWay, Converter={valueconverters:DoubleToFormattedPercentageConverter}}" Grid.Column="4"/>
+                                                            </Grid>
+                                                        </DataTemplate>
+                                                    </TreeViewItem.ItemTemplate>
+                                                </TreeViewItem>
                                             </DataTemplate>
-                                        </DataGridTemplateColumn.CellTemplate>
-                                    </DataGridTemplateColumn>
-                                    <DataGridTemplateColumn Header="% DB" SortMemberPath="PercentageDatabase" CanUserResize="False">
-                                        <DataGridTemplateColumn.CellTemplate>
-                                            <DataTemplate>
-                                                <TextBlock Text="{Binding PercentageDatabase, Converter={valueconverters:DoubleToFormattedPercentageConverter}}" Margin="4,0" />
-                                            </DataTemplate>
-                                        </DataGridTemplateColumn.CellTemplate>
-                                    </DataGridTemplateColumn>
-                                </DataGrid.Columns>
-                            </DataGrid>
+                                        </TreeView.ItemTemplate>
+                                    </TreeView>
+                                </DockPanel>
+                                    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,20">
+                                    <TextBlock Width="{Binding ElementName=padding,Path=ActualWidth}" />
+                                    <TextBlock Width="{Binding ElementName=tblNameColHdr,Path=ActualWidth}"
+                                               Margin="5,0,0,0" FontWeight="Bold">
+                                        <Run Text="{Binding SelectedColumnCount, Mode=OneWay}" />
+                                        <Run Text=" Selected"/>
+                                    </TextBlock>
+                                    <TextBlock Width="{Binding ElementName=tblCardinalityColHdr,Path=ActualWidth}" />
+                                    <!-- Wrap these textblocks in Grids so can right align content -->
+                                    <Grid Width="{Binding ElementName=tblSizeColHdr,Path=ActualWidth}">
+                                        <TextBlock
+                                               FontWeight="Bold" Margin="0,0,8,0"
+                                               HorizontalAlignment="Right"
+                                               Text="{Binding SelectedColumnSize, Mode=OneWay, Converter={valueconverters:BytesToStringConverter}}" />
+                                    </Grid>
+                                    <Grid Width="{Binding ElementName=tblDbPctColHdr,Path=ActualWidth}">
+                                        <TextBlock
+                                               FontWeight="Bold" Margin="5,0,8,0"
+                                               HorizontalAlignment="Right"
+                                               Text="{Binding SelectedColumnWeight, Mode=OneWay, Converter={valueconverters:DoubleToFormattedPercentageConverter}}" />
+                                    </Grid>
+                                </StackPanel>
+                            </Grid>
                         </TabItem>
                         <TabItem Header="Columns"
                                  HeaderTemplate="{StaticResource TabItemHeaderTemplate}">
@@ -267,17 +384,17 @@
                                             </DataGridTemplateColumn.CellTemplate>
                                         </DataGridTemplateColumn>
                                         <DataGridCheckBoxColumn
-                                        x:Name="ColCheckboxColumn"
-                                        Width="48"
-                                        CanUserResize="False"
-                                        CanUserReorder="False"
-                                        CanUserSort="False"
-                                        ElementStyle="{DynamicResource MahApps.Styles.CheckBox.DataGrid.Win10}"
-                                        EditingElementStyle="{DynamicResource MetroDataGridCheckBox}"
-                                        Binding="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                            x:Name="ColCheckboxColumn"
+                                            Width="48"
+                                            CanUserResize="False"
+                                            CanUserReorder="False"
+                                            CanUserSort="False"
+                                            ElementStyle="{DynamicResource MahApps.Styles.CheckBox.DataGrid.Win10}"
+                                            EditingElementStyle="{DynamicResource MetroDataGridCheckBox}"
+                                            Binding="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                                         <DataGridTextColumn x:Name="ColColumnNameColumn" Header="Column" Binding="{Binding ColumnName}" CanUserReorder="False" />
                                         <DataGridTextColumn x:Name="ColTableNameColumn" Header="Table" Binding="{Binding TableName, Mode=OneWay}" CanUserReorder="False" />
-                                        <DataGridTemplateColumn  x:Name="ColCardinalityColumn" SortMemberPath="ColumnCardinality" CanUserReorder="False">
+                                        <DataGridTemplateColumn  x:Name="ColCardinalityColumn" SortMemberPath="Cardinality" CanUserReorder="False">
                                             <DataGridTemplateColumn.HeaderTemplate>
                                                 <DataTemplate>
                                                     <StackPanel Orientation="Horizontal" ToolTip="Number of unique entries">
@@ -289,7 +406,7 @@
                                             </DataGridTemplateColumn.HeaderTemplate>
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
-                                                    <TextBlock Text="{Binding ColumnCardinality, Converter={valueconverters:SimplifyNumberConverter}}" HorizontalAlignment="Right" Margin="8,0" />
+                                                    <TextBlock Text="{Binding Cardinality, Converter={valueconverters:SimplifyNumberConverter}}" HorizontalAlignment="Right" Margin="8,0" />
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>
                                         </DataGridTemplateColumn>
@@ -333,7 +450,7 @@
                                     <!-- Wrap these textblocks in Grids so can right align content -->
                                     <Grid Width="{Binding ElementName=ColSizeColumn,Path=ActualWidth}">
                                         <TextBlock
-                                               FontWeight="Bold" Margin="0,0,8,0"
+                                               FontWeight="Bold" Margin="-50,0,8,0"
                                                HorizontalAlignment="Right"
                                                Text="{Binding SelectedColumnSize, Mode=OneWay, Converter={valueconverters:BytesToStringConverter}}" />
                                     </Grid>
@@ -347,7 +464,7 @@
                             </Grid>
                         </TabItem>
                     </TabControl>
-                    <Grid Grid.Row="1" Grid.Column="1" Margin="20,40,20,20">
+                    <Grid Grid.Row="1" Grid.Column="1" Margin="20">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />

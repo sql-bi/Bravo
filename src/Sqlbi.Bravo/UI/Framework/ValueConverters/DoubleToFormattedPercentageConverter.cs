@@ -9,9 +9,11 @@ namespace Sqlbi.Bravo.UI.Framework.ValueConverters
         {
             if (value is double val)
             {
-                return val < 0.001
-                    ? "<0.1 %"
-                    : (val * 100).ToString("#0.#' %'");
+                return val > 0
+                    ? val < 0.001
+                        ? "<0.1 %"
+                        : (val * 100).ToString("#0.#' %'")
+                    : string.Empty;
             }
 
             return string.Empty;

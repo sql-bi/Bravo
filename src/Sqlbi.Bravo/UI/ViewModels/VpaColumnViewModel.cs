@@ -19,12 +19,12 @@ namespace Sqlbi.Bravo.UI.ViewModels
             IsRequired = vpaColumn.IsHidden;
             ColumnName = vpaColumn.ColumnName;
             TableName = vpaColumn.Table.TableName;
-            ColumnCardinality = vpaColumn.ColumnCardinality;
+            Cardinality = vpaColumn.ColumnCardinality;
             TotalSize = vpaColumn.TotalSize;
             PercentageDatabase = vpaColumn.PercentageDatabase;
         }
 
-        public bool IsSelected
+        public virtual bool IsSelected
         {
             get => _isSelected;
             set
@@ -43,7 +43,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public string TableName { get; set; }
 
-        public long ColumnCardinality { get; set; }
+        public long Cardinality { get; set; }
 
         public long TotalSize { get; set; }
 

@@ -25,8 +25,8 @@ namespace Sqlbi.Bravo.UI.ViewModels
         internal const int SubViewIndex_Summary = 1;
         internal const int SubViewIndex_Details = 2;
         private readonly DispatcherTimer _timer = new DispatcherTimer();
+        private readonly List<VpaTableColumnViewModel> _allTablesCache = new List<VpaTableColumnViewModel>();
         private List<VpaColumn> _unusedColumns;
-        private List<VpaColumnViewModel> _allColumnsCache;
 
         public AnalyzeModelViewModel(IAnalyzeModelService service, ILogger<DaxFormatterViewModel> logger)
         {
@@ -113,18 +113,43 @@ namespace Sqlbi.Bravo.UI.ViewModels
             }
         }
 
-        public IEnumerable<VpaColumnViewModel> AllColumns
+        public IEnumerable<VpaTableColumnViewModel> AllTableColumns
         {
             get
             {
-                if (_allColumnsCache == null)
+                if (!_allTablesCache.Any())
                 {
-                    _allColumnsCache =
-                    _modelService.GetAllColumns()?.Select(c => new VpaColumnViewModel(this, c)).ToList();
+                    VpaTableColumnViewModel currentTable = null;
+
+                    var cols = _modelService.GetAllColumns();
+
+                    if (cols != null)
+                    {
+                        foreach (var col in cols)
+                        {
+                            if (currentTable == null || currentTable.TableName != col.Table.TableName)
+                            {
+                                currentTable = new VpaTableColumnViewModel(this, col, true);
+                                currentTable.TotalSize = col.Table.ColumnsTotalSize;
+                                currentTable.PercentageDatabase = col.Table.PercentageDatabase;
+                                _allTablesCache.Add(currentTable);
+                            }
+                            else
+                            {
+                                // Table doesn't expose this so have to sum it manually.
+                                currentTable.Cardinality += col.ColumnCardinality;
+
+                                currentTable.Columns.Add(new VpaTableColumnViewModel(this, col, false));
+                            }
+                        }
+                    }
                 }
-                return _allColumnsCache;
+
+                return _allTablesCache;
             }
         }
+
+        public IEnumerable<VpaColumnViewModel> AllColumns => AllTableColumns?.SelectMany(t => t.Columns);
 
         public IEnumerable<VpaTable> AllTables => _modelService.GetAllTables();
 
@@ -218,19 +243,21 @@ namespace Sqlbi.Bravo.UI.ViewModels
             await Task.Run(() => UpdateSummary());
 
             OnPropertyChanged(nameof(LastSyncTime));
-            OnPropertyChanged(nameof(AllColumns));
             OnPropertyChanged(nameof(AllTables));
+            OnPropertyChanged(nameof(AllTableColumns));
+            OnPropertyChanged(nameof(AllColumns));
+            OnPropertyChanged(nameof(AllColumnCount));
 
             ViewIndex = SubViewIndex_Summary;
         }
 
         private void UpdateSummary()
         {
-            _allColumnsCache = null;
+            _allTablesCache.Clear();
             var summary = _modelService.GetDatasetSummary();
             DatasetSize = summary.DatasetSize.Bytes().ToString("#.#");
             DatasetColumnCount = summary.ColumnCount;
-            LargestColumnSize = AllColumns?.Max(c => c.TotalSize) ?? 0;
+            LargestColumnSize = AllColumns?.Any() ?? false ? AllColumns?.Max(c => c.TotalSize) ?? 0 : 0;
 
             // Sort these here so the DataGrid doesn't have to worry about loading all rows to be able to sort
             UnusedColumns = _modelService.GetUnusedColumns().OrderByDescending(c => c.PercentageDatabase).ToList();

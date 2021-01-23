@@ -9,7 +9,9 @@ namespace Sqlbi.Bravo.UI.Framework.ValueConverters
         public override object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             return value is long val
-                ? val.Bytes().ToString("#.#")
+                ? val > 0
+                    ? val.Bytes().ToString("#.#")
+                    : string.Empty
                 : string.Empty;
         }
 
