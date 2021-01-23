@@ -93,7 +93,7 @@
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
-                            <controls:AnalyzeModelIcon Grid.Column="0" Grid.Row="0" Margin="12,0" Height="24" VerticalAlignment="Top" />
+                        <controls:AnalyzeModelIcon Grid.Column="0" Grid.Row="0" Margin="12,0" Height="24" VerticalAlignment="Top" />
                         <StackPanel Grid.Column="1" Grid.Row="0">
                             <TextBlock HorizontalAlignment="Left">
                                 <Run>Your dataset is </Run>
@@ -114,39 +114,39 @@
                                 <Run FontWeight="Bold" Foreground="Green">of space</Run><Run>:</Run>
                             </TextBlock>
                         </StackPanel>
-                           
-                            <DataGrid Grid.Column="1" Grid.Row="1" Margin="0,20,0,0"
+
+                        <DataGrid Grid.Column="1" Grid.Row="1" Margin="0,20,0,0"
                                       ItemsSource="{Binding UnusedColumns}"
                                       EnableRowVirtualization="False"
                                       BeginningEdit="DatagridEditingHandler"
                                       ColumnHeaderStyle="{StaticResource StandardColumnHeader}"
                                       AutoGenerateColumns="False">
-                                    <DataGrid.Columns>
-                                        <DataGridTemplateColumn CanUserReorder="False" CanUserSort="False" CanUserResize="False">
-                                            <DataGridTemplateColumn.CellTemplate>
-                                                <DataTemplate>
-                                                    <TextBlock FontFamily="Segoe MDL2 Assets" Margin="0,4,0,0">&#xE7BA;</TextBlock>
-                                                </DataTemplate>
-                                            </DataGridTemplateColumn.CellTemplate>
-                                        </DataGridTemplateColumn>
+                            <DataGrid.Columns>
+                                <DataGridTemplateColumn CanUserReorder="False" CanUserSort="False" CanUserResize="False">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock FontFamily="Segoe MDL2 Assets" Margin="0,4,0,0">&#xE7BA;</TextBlock>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
                                 <DataGridTextColumn Header="Column" Binding="{Binding ColumnName}" CanUserReorder="False" SortMemberPath="ColumnName"/>
-                                        <DataGridTextColumn Header="Table" CanUserReorder="False" Binding="{Binding Table.TableName, Mode=OneWay}" />
+                                <DataGridTextColumn Header="Table" CanUserReorder="False" Binding="{Binding Table.TableName, Mode=OneWay}" />
                                 <DataGridTemplateColumn Header="Size" CanUserReorder="False" SortMemberPath="TotalSize">
-                                            <DataGridTemplateColumn.CellTemplate>
-                                                <DataTemplate>
-                                                    <TextBlock Text="{Binding TotalSize, Converter={valueconverters:BytesToStringConverter}}" Margin="8,0" />
-                                                </DataTemplate>
-                                            </DataGridTemplateColumn.CellTemplate>
-                                        </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding TotalSize, Converter={valueconverters:BytesToStringConverter}}" Margin="8,0" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
                                 <DataGridTemplateColumn Header="Weight" SortMemberPath="PercentageDatabase" CanUserReorder="False" CanUserResize="False" SortDirection="Descending">
-                                            <DataGridTemplateColumn.CellTemplate>
-                                                <DataTemplate>
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
                                             <TextBlock Text="{Binding PercentageDatabase, Converter={valueconverters:DoubleToFormattedPercentageConverter}}" Margin="8,0" />
-                                                </DataTemplate>
-                                            </DataGridTemplateColumn.CellTemplate>
-                                        </DataGridTemplateColumn>
-                                    </DataGrid.Columns>
-                                </DataGrid>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
                     </Grid>
 
                     <Button
@@ -249,7 +249,7 @@
                                     <RowDefinition Height="*" />
                                     <RowDefinition Height="Auto" />
                                 </Grid.RowDefinitions>
-                            <DataGrid
+                                <DataGrid
                                 x:Name="ColDataGrid"
                                 ItemsSource="{Binding AllColumns}"
                                 ColumnHeaderStyle="{StaticResource StandardColumnHeader}"
@@ -258,15 +258,15 @@
                                 BeginningEdit="DatagridEditingHandler"
                                 mah:DataGridHelper.EnableCellEditAssist="True"
                                 AutoGenerateColumns="False">
-                                <DataGrid.Columns>
-                                    <DataGridTemplateColumn x:Name="ColWarningColumn" Width="20" CanUserResize="False" CanUserReorder="False" SortMemberPath="IsHidden">
-                                        <DataGridTemplateColumn.CellTemplate>
-                                            <DataTemplate>
-                                                <controls:WarningWithTooltip Margin="4,4,0,0" Visibility="{Binding IsRequired, Converter={StaticResource BooleanToVisibilityConverter}}" />
-                                            </DataTemplate>
-                                        </DataGridTemplateColumn.CellTemplate>
-                                    </DataGridTemplateColumn>
-                                    <DataGridCheckBoxColumn
+                                    <DataGrid.Columns>
+                                        <DataGridTemplateColumn x:Name="ColWarningColumn" Width="20" CanUserResize="False" CanUserReorder="False" SortMemberPath="IsHidden">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <controls:WarningWithTooltip Margin="4,4,0,0" Visibility="{Binding IsRequired, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                        <DataGridCheckBoxColumn
                                         x:Name="ColCheckboxColumn"
                                         Width="48"
                                         CanUserResize="False"
@@ -275,29 +275,29 @@
                                         ElementStyle="{DynamicResource MahApps.Styles.CheckBox.DataGrid.Win10}"
                                         EditingElementStyle="{DynamicResource MetroDataGridCheckBox}"
                                         Binding="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                                    <DataGridTextColumn x:Name="ColColumnNameColumn" Header="Column" Binding="{Binding ColumnName}" CanUserReorder="False" />
+                                        <DataGridTextColumn x:Name="ColColumnNameColumn" Header="Column" Binding="{Binding ColumnName}" CanUserReorder="False" />
                                         <DataGridTextColumn x:Name="ColTableNameColumn" Header="Table" Binding="{Binding TableName, Mode=OneWay}" CanUserReorder="False" />
                                         <DataGridTemplateColumn  x:Name="ColCardinalityColumn" SortMemberPath="ColumnCardinality" CanUserReorder="False">
-                                        <DataGridTemplateColumn.HeaderTemplate>
-                                            <DataTemplate>
-                                                <StackPanel Orientation="Horizontal" ToolTip="Number of unique entries">
-                                                    <TextBlock>Cardinality&#x00A0;</TextBlock>
-                                                    <TextBlock FontFamily="Segoe Symbol" >&#x20DD;</TextBlock>
-                                                    <TextBlock FontFamily="Segoe Symbol" FontSize="10" Margin="5,3,0,0">?</TextBlock>
-                                                </StackPanel>
-                                            </DataTemplate>
-                                        </DataGridTemplateColumn.HeaderTemplate>
-                                        <DataGridTemplateColumn.CellTemplate>
-                                            <DataTemplate>
-                                                <TextBlock Text="{Binding ColumnCardinality, Converter={valueconverters:SimplifyNumberConverter}}" HorizontalAlignment="Right" Margin="8,0" />
-                                            </DataTemplate>
-                                        </DataGridTemplateColumn.CellTemplate>
-                                    </DataGridTemplateColumn>
+                                            <DataGridTemplateColumn.HeaderTemplate>
+                                                <DataTemplate>
+                                                    <StackPanel Orientation="Horizontal" ToolTip="Number of unique entries">
+                                                        <TextBlock>Cardinality&#x00A0;</TextBlock>
+                                                        <TextBlock FontFamily="Segoe Symbol" >&#x20DD;</TextBlock>
+                                                        <TextBlock FontFamily="Segoe Symbol" FontSize="10" Margin="5,3,0,0">?</TextBlock>
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.HeaderTemplate>
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Text="{Binding ColumnCardinality, Converter={valueconverters:SimplifyNumberConverter}}" HorizontalAlignment="Right" Margin="8,0" />
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
                                         <DataGridTemplateColumn x:Name="ColSizeColumn" Header="Size" SortMemberPath="TotalSize" CanUserReorder="False">
-                                        <DataGridTemplateColumn.CellTemplate>
-                                            <DataTemplate>
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
                                                     <StackPanel>
-                                                <TextBlock Text="{Binding TotalSize, Converter={valueconverters:BytesToStringConverter}}" HorizontalAlignment="Right" Margin="4,4,4,0" />
+                                                        <TextBlock Text="{Binding TotalSize, Converter={valueconverters:BytesToStringConverter}}" HorizontalAlignment="Right" Margin="4,4,4,0" />
                                                         <mah:MetroProgressBar
                                                             HorizontalAlignment="Stretch"
                                                             Minimum="0"
@@ -309,17 +309,17 @@
                                                             FlowDirection="RightToLeft" />
                                                     </StackPanel>
                                                 </DataTemplate>
-                                        </DataGridTemplateColumn.CellTemplate>
-                                    </DataGridTemplateColumn>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
                                         <DataGridTemplateColumn x:Name="ColWeightColumn" Header="Weight" SortMemberPath="PercentageDatabase" CanUserReorder="False" CanUserResize="False">
-                                        <DataGridTemplateColumn.CellTemplate>
-                                            <DataTemplate>
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
                                                     <TextBlock Text="{Binding PercentageDatabase, Converter={valueconverters:DoubleToFormattedPercentageConverter}}" HorizontalAlignment="Right" Margin="8,0,4,0" />
-                                            </DataTemplate>
-                                        </DataGridTemplateColumn.CellTemplate>
-                                    </DataGridTemplateColumn>
-                                </DataGrid.Columns>
-                            </DataGrid>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                    </DataGrid.Columns>
+                                </DataGrid>
                                 <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,20">
                                     <TextBlock Width="{Binding ElementName=ColWarningColumn,Path=ActualWidth}" />
                                     <TextBlock Width="{Binding ElementName=ColCheckboxColumn,Path=ActualWidth}" />
@@ -330,14 +330,19 @@
                                     </TextBlock>
                                     <TextBlock Width="{Binding ElementName=ColTableNameColumn,Path=ActualWidth}" />
                                     <TextBlock Width="{Binding ElementName=ColCardinalityColumn,Path=ActualWidth}" />
-                                    <TextBlock Width="{Binding ElementName=ColSizeColumn,Path=ActualWidth}"
-                                               FontWeight="Bold" Margin="5,0,0,0"
+                                    <!-- Wrap these textblocks in Grids so can right align content -->
+                                    <Grid Width="{Binding ElementName=ColSizeColumn,Path=ActualWidth}">
+                                        <TextBlock
+                                               FontWeight="Bold" Margin="0,0,8,0"
                                                HorizontalAlignment="Right"
-                                               Text="?? MB" />
-                                    <TextBlock Width="{Binding ElementName=ColWeightColumn,Path=ActualWidth}"
-                                               FontWeight="Bold" Margin="5,0,0,0"
+                                               Text="{Binding SelectedColumnSize, Mode=OneWay, Converter={valueconverters:BytesToStringConverter}}" />
+                                    </Grid>
+                                    <Grid Width="{Binding ElementName=ColWeightColumn,Path=ActualWidth}">
+                                        <TextBlock
+                                               FontWeight="Bold" Margin="5,0,8,0"
                                                HorizontalAlignment="Right"
-                                               Text="?? %" />
+                                               Text="{Binding SelectedColumnWeight, Mode=OneWay, Converter={valueconverters:DoubleToFormattedPercentageConverter}}" />
+                                    </Grid>
                                 </StackPanel>
                             </Grid>
                         </TabItem>

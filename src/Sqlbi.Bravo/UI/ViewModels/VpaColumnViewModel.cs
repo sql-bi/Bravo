@@ -31,6 +31,8 @@ namespace Sqlbi.Bravo.UI.ViewModels
             {
                 if (SetProperty(ref _isSelected, value)){
                     parent.OnPropertyChanged(nameof(AnalyzeModelViewModel.SelectedColumnCount));
+                    parent.OnPropertyChanged(nameof(AnalyzeModelViewModel.SelectedColumnSize));
+                    parent.OnPropertyChanged(nameof(AnalyzeModelViewModel.SelectedColumnWeight));
                 }
             }
         }

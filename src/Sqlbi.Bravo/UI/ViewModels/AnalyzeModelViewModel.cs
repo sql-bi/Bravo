@@ -128,7 +128,11 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public IEnumerable<VpaTable> AllTables => _modelService.GetAllTables();
 
-        public int SelectedColumnCount => AllColumns.Count(c => c.IsSelected);
+        public int? SelectedColumnCount => AllColumns?.Count(c => c.IsSelected) ?? 0;
+
+        public long? SelectedColumnSize => AllColumns?.Where(c => c.IsSelected).Sum(c => c.TotalSize);
+
+        public double? SelectedColumnWeight => AllColumns?.Where(c => c.IsSelected).Sum(c => c.PercentageDatabase);
 
         public string TimeSinceLastSync
                     => LastSyncTime.Year == 1
@@ -226,10 +230,10 @@ namespace Sqlbi.Bravo.UI.ViewModels
             var summary = _modelService.GetDatasetSummary();
             DatasetSize = summary.DatasetSize.Bytes().ToString("#.#");
             DatasetColumnCount = summary.ColumnCount;
+            LargestColumnSize = AllColumns?.Max(c => c.TotalSize) ?? 0;
 
             // Sort these here so the DataGrid doesn't have to worry about loading all rows to be able to sort
             UnusedColumns = _modelService.GetUnusedColumns().OrderByDescending(c => c.PercentageDatabase).ToList();
-            LargestColumnSize = AllColumns?.Max(c => c.TotalSize) ?? 0;
         }
     }
 }
