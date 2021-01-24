@@ -376,7 +376,7 @@
                                 mah:DataGridHelper.EnableCellEditAssist="True"
                                 AutoGenerateColumns="False">
                                     <DataGrid.Columns>
-                                        <DataGridTemplateColumn x:Name="ColWarningColumn" Width="20" CanUserResize="False" CanUserReorder="False" SortMemberPath="IsHidden">
+                                        <DataGridTemplateColumn x:Name="ColWarningColumn" Width="20" CanUserResize="False" CanUserReorder="False" SortMemberPath="IsRequired">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
                                                     <controls:WarningWithTooltip Margin="4,4,0,0" Visibility="{Binding IsRequired, Converter={StaticResource BooleanToVisibilityConverter}}" />
