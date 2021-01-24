@@ -10,6 +10,7 @@ using Sqlbi.Bravo.Core.Settings.Interfaces;
 using Sqlbi.Bravo.UI.ViewModels;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;

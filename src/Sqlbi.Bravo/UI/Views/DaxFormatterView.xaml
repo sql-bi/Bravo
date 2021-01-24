@@ -130,11 +130,7 @@
                             Margin="0,12,0,0"
                             IsEnabled="{Binding ElementName=AcceptTermsCheckbox, Path=IsChecked}"
                             Command="{Binding FormatAnalyzeCommand}"
-                            BorderThickness="0"
-                            FontSize="14"
-                            Height="32"
-                            mah:ControlsHelper.ContentCharacterCasing="Normal"
-                            Style="{StaticResource MahApps.Styles.Button.Square.Accent}"
+                            Style="{StaticResource StandardButton}"
                             Content="Format" />
                     </Grid>
                 </Grid>
@@ -232,11 +228,7 @@
                             HorizontalAlignment="Right"
                             Margin="0,12,0,0"
                             Command="{Binding ApplySelectedFormulaChangesCommand}"
-                            BorderThickness="0"
-                            FontSize="14"
-                            Height="32"
-                            mah:ControlsHelper.ContentCharacterCasing="Normal"
-                            Style="{DynamicResource MahApps.Styles.Button.Square.Accent}"
+                            Style="{DynamicResource StandardButton}"
                             Content="Apply &amp; Continue"/>
                 </Grid>
             </mah:FlipViewItem>
@@ -407,12 +399,8 @@
                                 Content="Cancel" />
                         <Button Width="120"
                                 Margin="20,0,0,0"
-                                BorderThickness="0"
-                                FontSize="14"
-                                Height="32"
                                 Command="{Binding FormatMakeChangesCommand}"
-                                mah:ControlsHelper.ContentCharacterCasing="Normal"
-                                Style="{StaticResource MahApps.Styles.Button.Square.Accent}"
+                                Style="{StaticResource StandardButton}"
                                 Content="Format" />
                     </StackPanel>
                 </Grid>

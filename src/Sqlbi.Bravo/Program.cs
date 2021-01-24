@@ -116,10 +116,12 @@ namespace Sqlbi.Bravo
                 services.AddSingleton<SideMenuViewModel>();
                 services.AddSingleton<SettingsViewModel>();
 
-                // Make IDaxFormatterService transient as each DaxFormatterViewModel will need a unique one with a separate connection
+                // Make these services transient as each ViewModel will need a unique one with a separate connection
                 services.AddTransient<IDaxFormatterService, DaxFormatterService>();
-                // Make DaxFormatterViewModel transient as need a new one for each instance (within each tab)
+                services.AddTransient<IAnalyzeModelService, AnalyzeModelService>();
+                // Make these ViewModels transient as need a new one for each instance (within each tab)
                 services.AddTransient<DaxFormatterViewModel>();
+                services.AddTransient<AnalyzeModelViewModel>();
                 // Make TabItemViewModel as need a new one for each tab
                 services.AddTransient<TabItemViewModel>();
             }

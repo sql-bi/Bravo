@@ -110,10 +110,11 @@
                         Visibility="{Binding ElementName=window, Path=DataContext.SelectedTab.ShowDaxFormatter, Converter={StaticResource BooleanToVisibilityConverter}}"
                         />
                     <app_ui_views:AnalyzeModelView
-                        Visibility="{Binding ShowAnalyzeModel, Converter={StaticResource BooleanToVisibilityConverter}}"
+                        DataContext="{Binding AnalyzeModelVm}"
+                        Visibility="{Binding ElementName=window, Path=DataContext.SelectedTab.ShowAnalyzeModel, Converter={StaticResource BooleanToVisibilityConverter}}"
                         />
                     <app_ui_views:SelectConnectionType
-                        Visibility="{Binding ShowSelectConnection, Converter={StaticResource BooleanToVisibilityConverter}}"
+                        Visibility="{Binding ElementName=window, Path=DataContext.SelectedTab.ShowSelectConnection, Converter={StaticResource BooleanToVisibilityConverter}}"
                         />
 
                     <Grid Background="{DynamicResource MahApps.Brushes.Control.Background}" Visibility="{Binding ShowError, Converter={StaticResource BooleanToVisibilityConverter}}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">

@@ -22,6 +22,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
         private readonly IGlobalSettingsProviderService _settings;
         private readonly ILogger _logger;
         private DaxFormatterViewModel _daxFormatterVm;
+        private AnalyzeModelViewModel _analyzeModelVm;
 
         public bool IsRetrying { get; set; } = false;
 
@@ -100,9 +101,24 @@ namespace Sqlbi.Bravo.UI.ViewModels
                 if (_daxFormatterVm == null)
                 {
                     _daxFormatterVm = App.ServiceProvider.GetRequiredService<DaxFormatterViewModel>();
+                    _daxFormatterVm.ParentTab = this;
                 }
 
                 return _daxFormatterVm;
+            }
+        }
+
+        public AnalyzeModelViewModel AnalyzeModelVm
+        {
+            get
+            {
+                if (_analyzeModelVm == null)
+                {
+                    _analyzeModelVm = App.ServiceProvider.GetRequiredService<AnalyzeModelViewModel>();
+                    _analyzeModelVm.ParentTab = this;
+                }
+
+                return _analyzeModelVm;
             }
         }
 

@@ -3,17 +3,505 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
+      xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
+      xmlns:controls="clr-namespace:Sqlbi.Bravo.UI.Controls"
+      xmlns:valueconverters="clr-namespace:Sqlbi.Bravo.UI.Framework.ValueConverters"
       mc:Ignorable="d"
       d:DesignHeight="450" d:DesignWidth="800">
+    <UserControl.Resources>
+        <Style x:Key="StandardColumnHeader"
+               BasedOn="{StaticResource MahApps.Styles.DataGridColumnHeader}"
+               TargetType="{x:Type DataGridColumnHeader}">
+            <Setter Property="mah:ControlsHelper.ContentCharacterCasing" Value="Normal"/>
+        </Style>
 
-    <Grid Margin="20">
-        <TextBlock Style="{DynamicResource SubheaderTextBlockStyle}">Analyze Model</TextBlock>
+        <Style BasedOn="{StaticResource MahApps.Styles.TreeViewItem}" TargetType="TreeViewItem">
+            <Setter Property="mah:ItemHelper.HoverBackgroundBrush" Value="{DynamicResource MahApps.Brushes.ThemeBackground}" />
+        </Style>
 
-        <Border Background="Red"
-                        Grid.Column="1" CornerRadius="3"  Padding="4,0,4,1"
-                            HorizontalAlignment="Center"
-                            VerticalAlignment="Center">
-            <TextBlock Foreground="White" FontSize="36" FontWeight="Bold">SOON</TextBlock>
-        </Border>
-    </Grid>
+        <SolidColorBrush x:Key="MahApps.Brushes.DataGrid.Selection.Background" Color="Transparent" />
+        <SolidColorBrush x:Key="MahApps.Brushes.DataGrid.Selection.Background.Inactive" Color="Transparent" />
+        <SolidColorBrush x:Key="MahApps.Brushes.DataGrid.Selection.Background.MouseOver" Color="{DynamicResource MahApps.Colors.Accent4}" />
+    </UserControl.Resources>
+    <i:Interaction.Triggers>
+        <i:EventTrigger EventName="Loaded">
+            <i:InvokeCommandAction Command="{Binding LoadedCommand}" />
+        </i:EventTrigger>
+    </i:Interaction.Triggers>
+
+    <mah:FlipView
+        BorderThickness="0"
+        MouseHoverBorderEnabled="False"
+        ShowIndex="False"
+        SelectedIndex="{Binding ViewIndex}"
+        IsBannerEnabled="False"
+        IsNavigationEnabled="False">
+        <mah:FlipView.Items>
+
+            <!-- SubViewIndex_Loading = 0 -->
+            <mah:FlipViewItem>
+                <Grid>
+                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Width="300">
+                        <TextBlock Style="{StaticResource SubtitleTextBlockStyle}">Loading...</TextBlock>
+                        <ProgressBar IsIndeterminate="True" Margin="0,12" />
+                        <TextBlock Style="{StaticResource CaptionTextBlockStyle}" Opacity="0.5" Text="{Binding LoadingDetails}" />
+                    </StackPanel>
+                </Grid>
+            </mah:FlipViewItem>
+            <!-- SubViewIndex_Summary = 1 -->
+            <mah:FlipViewItem>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Row="0" Margin="20,20,0,10" Style="{StaticResource SubheaderTextBlockStyle}" Text="{Binding ConnectionName}" />
+
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button
+                            Command="{Binding RefreshCommand}"
+                            Style="{StaticResource SubtleButton}"
+                            Margin="0,0,16,0">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock
+                                    FontSize="14"
+                                    VerticalAlignment="Center"
+                                    FontFamily="Segoe MDL2 Assets"
+                                    Foreground="{DynamicResource MahApps.Brushes.Text}"
+                                    Text="&#xE117;" />
+                                <TextBlock
+                                    Style="{StaticResource CaptionTextBlockStyle}"
+                                    VerticalAlignment="Center">&#x202F; Synced <Run Text="{Binding TimeSinceLastSync, Mode=OneWay}" /></TextBlock>
+                            </StackPanel>
+                        </Button>
+                        <Button Style="{StaticResource SubtleButton}" Margin="0,0,12,0" Command="{Binding ExportVpaxCommand}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock VerticalAlignment="Center" FontFamily="Segoe MDL2 Assets" xml:space="preserve">&#xEDE1;&#x0020;</TextBlock>
+                                <TextBlock VerticalAlignment="Center">VPAX</TextBlock>
+                            </StackPanel>
+                        </Button>
+
+                        <Button Command="{Binding HelpCommand}" Style="{StaticResource SubtleButton}" Margin="0">
+                            <controls:HelpIcon />
+                        </Button>
+                    </StackPanel>
+
+                    <Grid Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <controls:AnalyzeModelIcon Grid.Column="0" Grid.Row="0" Margin="12,0" Height="24" VerticalAlignment="Top" />
+                        <StackPanel Grid.Column="1" Grid.Row="0">
+                            <TextBlock HorizontalAlignment="Left">
+                                <Run>Your dataset is </Run>
+                                <Run FontWeight="Bold" Text="{Binding DatasetSize}" />
+                                <Run> large, and contains </Run>
+                                <Run FontWeight="Bold" Text="{Binding DatasetColumnCount, Mode=OneWay}" />
+                                <Run> columns.</Run>
+                            </TextBlock>
+                            <TextBlock HorizontalAlignment="Left" Margin="0,12">
+                                <Run>The following </Run>
+                                <Run FontWeight="Bold" Text="{Binding UnusedColumnCount, Mode=OneWay}" />
+                                <Run> columns are not used in the model;</Run>
+                            </TextBlock>
+                            <TextBlock HorizontalAlignment="Left" Margin="0,-12,0,0">
+                                <Run>remove them to </Run>
+                                <Run Foreground="Green" FontWeight="Bold">save</Run>
+                                <Run FontWeight="Bold" Foreground="Green" Text="{Binding UnusedColumnsSize, Mode=OneWay}" />
+                                <Run FontWeight="Bold" Foreground="Green">of space</Run><Run>:</Run>
+                            </TextBlock>
+                        </StackPanel>
+
+                        <DataGrid Grid.Column="1" Grid.Row="1" Margin="0,20,0,0"
+                                      ItemsSource="{Binding UnusedColumns}"
+                                      EnableRowVirtualization="False"
+                                      BeginningEdit="DatagridEditingHandler"
+                                      ColumnHeaderStyle="{StaticResource StandardColumnHeader}"
+                                      AutoGenerateColumns="False">
+                            <DataGrid.Columns>
+                                <DataGridTemplateColumn CanUserReorder="False" CanUserSort="False" CanUserResize="False">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock FontFamily="Segoe MDL2 Assets" Margin="0,4,0,0">&#xE7BA;</TextBlock>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTextColumn Header="Column" Binding="{Binding ColumnName}" CanUserReorder="False" SortMemberPath="ColumnName"/>
+                                <DataGridTextColumn Header="Table" CanUserReorder="False" Binding="{Binding Table.TableName, Mode=OneWay}" />
+                                <DataGridTemplateColumn Header="Size" CanUserReorder="False" SortMemberPath="TotalSize">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding TotalSize, Converter={valueconverters:BytesToStringConverter}}" Margin="8,0" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn Header="Weight" SortMemberPath="PercentageDatabase" CanUserReorder="False" CanUserResize="False" SortDirection="Descending">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding PercentageDatabase, Converter={valueconverters:DoubleToFormattedPercentageConverter}}" Margin="8,0" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Grid>
+
+                    <Button
+                            Grid.Row="2"
+                            Width="120"
+                            HorizontalAlignment="Right"
+                            Margin="0,10,20,20"
+                            Style="{StaticResource StandardButton}"
+                            Content="More details"
+                            Command="{Binding MoreDetailsCommand}" />
+                </Grid>
+            </mah:FlipViewItem>
+            <!-- SubViewIndex_Details = 2 -->
+            <mah:FlipViewItem>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="1*" />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Button Style="{StaticResource SubtleButton}"
+                            Command="{Binding BackCommand}"
+                            FontFamily="Segoe MDL2 Assets"
+                            HorizontalAlignment="Left">&#xE112;</Button>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Grid.ColumnSpan="2">
+                        <Button Command="{Binding RefreshCommand}" Style="{StaticResource SubtleButton}" Margin="0,0,16,0">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock
+                                    FontSize="14"
+                                    VerticalAlignment="Center"
+                                    FontFamily="Segoe MDL2 Assets"
+                                    Foreground="{DynamicResource MahApps.Brushes.Text}"
+                                    Text="&#xE117;" />
+                                <TextBlock
+                                    Style="{StaticResource CaptionTextBlockStyle}"
+                                    VerticalAlignment="Center">&#x202F; Synced <Run Text="{Binding TimeSinceLastSync, Mode=OneWay}" /></TextBlock>
+                            </StackPanel>
+                        </Button>
+                        <Button Style="{StaticResource SubtleButton}" Margin="0,0,12,0" Command="{Binding ExportVpaxCommand}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock VerticalAlignment="Center" FontFamily="Segoe MDL2 Assets" xml:space="preserve">&#xEDE1;&#x0020;</TextBlock>
+                                <TextBlock VerticalAlignment="Center">VPAX</TextBlock>
+                            </StackPanel>
+                        </Button>
+
+                        <Button Command="{Binding HelpCommand}" Style="{StaticResource SubtleButton}" Margin="0">
+                            <controls:HelpIcon />
+                        </Button>
+                    </StackPanel>
+
+                    <TabControl Style="{DynamicResource MahApps.Styles.TabControl.Animated}"
+                                Grid.Row="1"
+                                Grid.Column="0"
+                                Margin="20,0"
+                                mah:HeaderedControlHelper.HeaderFontSize="16"
+                                mah:TabControlHelper.Underlined="SelectedTabItem" >
+                        <TabControl.Resources>
+                            <DataTemplate x:Key="TabItemHeaderTemplate">
+                                <TextBlock
+                                        Foreground="{DynamicResource MahApps.Brushes.Text}"
+                                        Text="{Binding}" />
+                            </DataTemplate>
+                        </TabControl.Resources>
+
+                        <TabItem Header="Tables"
+                                 HeaderTemplate="{StaticResource TabItemHeaderTemplate}">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <DockPanel>
+                                    <ListView DockPanel.Dock="Top">
+                                        <ListView.View>
+                                            <GridView>
+                                                <GridViewColumn Header="" Width="64" x:Name="padding" />
+                                                <GridViewColumn Header="" Width="200" x:Name="tblNameColHdr" />
+                                                <GridViewColumn Header="Cardinality" Width="110" x:Name="tblCardinalityColHdr">
+                                                    <GridViewColumn.HeaderTemplate>
+                                                        <DataTemplate>
+                                                            <StackPanel Orientation="Horizontal" ToolTip="Number of unique entries">
+                                                                <TextBlock>Cardinality&#x00A0;</TextBlock>
+                                                                <TextBlock FontFamily="Segoe Symbol" >&#x20DD;</TextBlock>
+                                                                <TextBlock FontFamily="Segoe Symbol" FontSize="10" Margin="5,3,0,0">?</TextBlock>
+                                                            </StackPanel>
+                                                        </DataTemplate>
+                                                    </GridViewColumn.HeaderTemplate>
+                                                </GridViewColumn>
+                                                <GridViewColumn Header="Size" Width="90" x:Name="tblSizeColHdr">
+                                                    <GridViewColumn.HeaderTemplate>
+                                                        <DataTemplate>
+                                                            <TextBlock>Size</TextBlock>
+                                                        </DataTemplate>
+                                                    </GridViewColumn.HeaderTemplate>
+                                                </GridViewColumn>
+                                                <GridViewColumn Header="% DB" Width="80" x:Name="tblDbPctColHdr" />
+                                            </GridView>
+                                        </ListView.View>
+                                    </ListView>
+                                    <TreeView ItemsSource="{Binding AllTableColumns}"
+                                      Background="{DynamicResource MahApps.Brushes.ThemeBackground}"
+                                      Margin="-20,0,0,0">
+                                        <TreeView.ItemTemplate>
+                                            <DataTemplate>
+                                                <TreeViewItem ItemsSource="{Binding Columns}">
+                                                    <TreeViewItem.Header>
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="30" />
+                                                                <ColumnDefinition Width="{Binding ElementName=tblNameColHdr, Path=ActualWidth}" />
+                                                                <ColumnDefinition Width="{Binding ElementName=tblCardinalityColHdr, Path=ActualWidth}" />
+                                                                <ColumnDefinition Width="{Binding ElementName=tblSizeColHdr, Path=ActualWidth}" />
+                                                                <ColumnDefinition Width="{Binding ElementName=tblDbPctColHdr, Path=ActualWidth}" />
+                                                            </Grid.ColumnDefinitions>
+                                                            <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource MahApps.Styles.CheckBox.Win10}" />
+                                                            <TextBlock Text="{Binding TableName, Mode=OneWay}"
+                                                                   VerticalAlignment="Center"
+                                                                   Grid.Column="1"/>
+                                                            <TextBlock Text="{Binding Cardinality, Mode=OneWay, Converter={valueconverters:SimplifyNumberConverter}}"
+                                                                   Margin="5,0"
+                                                                   HorizontalAlignment="Right"
+                                                                   VerticalAlignment="Center"
+                                                                   Grid.Column="2"/>
+                                                            <TextBlock Text="{Binding TotalSize, Mode=OneWay, Converter={valueconverters:BytesToStringConverter}}"
+                                                               HorizontalAlignment="Right"
+                                                               VerticalAlignment="Center"
+                                                               Margin="5,0"
+                                                               Grid.Column="3"/>
+                                                            <TextBlock Text="{Binding PercentageDatabase, Mode=OneWay, Converter={valueconverters:DoubleToFormattedPercentageConverter}}"
+                                                               HorizontalAlignment="Right"
+                                                               VerticalAlignment="Center"
+                                                               Margin="5,0"
+                                                               Grid.Column="4"/>
+                                                        </Grid>
+                                                    </TreeViewItem.Header>
+                                                    <TreeViewItem.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <Grid Margin="0">
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="30" />
+                                                                    <ColumnDefinition Width="{Binding ElementName=tblNameColHdr, Path=ActualWidth}" MaxWidth="{Binding ElementName=tblNameColHdr, Path=ActualWidth}" />
+                                                                    <ColumnDefinition Width="{Binding ElementName=tblCardinalityColHdr, Path=ActualWidth}" />
+                                                                    <ColumnDefinition Width="{Binding ElementName=tblSizeColHdr, Path=ActualWidth}" />
+                                                                    <ColumnDefinition Width="{Binding ElementName=tblDbPctColHdr, Path=ActualWidth}" />
+                                                                </Grid.ColumnDefinitions>
+                                                                <controls:WarningWithTooltip Margin="-32,9,0,0" Visibility="{Binding IsRequired, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                                                                <CheckBox Margin="-12,0,0,0" IsChecked="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource MahApps.Styles.CheckBox.Win10}" />
+                                                                <TextBlock Margin="-10,0,0,0" Text="{Binding ColumnName, Mode=OneWay}" VerticalAlignment="Center" Grid.Column="1"/>
+                                                                <TextBlock Margin="-10,0,15,0"
+                                                                       Text="{Binding Cardinality, Mode=OneWay, Converter={valueconverters:SimplifyNumberConverter}}"
+                                                                       HorizontalAlignment="Right"
+                                                                       VerticalAlignment="Center"
+                                                                       Grid.Column="2"/>
+                                                                <StackPanel Grid.Column="3" Margin="-10,0,15,0">
+                                                                    <TextBlock
+                                                                       HorizontalAlignment="Right"
+                                                                       VerticalAlignment="Center"
+                                                                       Text="{Binding TotalSize, Mode=OneWay, Converter={valueconverters:BytesToStringConverter}}"/>
+                                                                    <mah:MetroProgressBar
+                                                                HorizontalAlignment="Stretch"
+                                                                Minimum="0"
+                                                                Maximum="{Binding ElementName=ColDataGrid, Path=DataContext.LargestColumnSize}"
+                                                                Value="{Binding TotalSize, Mode=OneWay}"
+                                                                MinHeight="4"
+                                                                Height="4"
+                                                                Background="Transparent"
+                                                                FlowDirection="RightToLeft" />
+                                                                </StackPanel>
+                                                                <TextBlock Margin="-10,0,15,0"
+                                                                       HorizontalAlignment="Right"
+                                                                       VerticalAlignment="Center"
+                                                                       Text="{Binding PercentageDatabase, Mode=OneWay, Converter={valueconverters:DoubleToFormattedPercentageConverter}}" Grid.Column="4"/>
+                                                            </Grid>
+                                                        </DataTemplate>
+                                                    </TreeViewItem.ItemTemplate>
+                                                </TreeViewItem>
+                                            </DataTemplate>
+                                        </TreeView.ItemTemplate>
+                                    </TreeView>
+                                </DockPanel>
+                                    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,20">
+                                    <TextBlock Width="{Binding ElementName=padding,Path=ActualWidth}" />
+                                    <TextBlock Width="{Binding ElementName=tblNameColHdr,Path=ActualWidth}"
+                                               Margin="5,0,0,0" FontWeight="Bold">
+                                        <Run Text="{Binding SelectedColumnCount, Mode=OneWay}" />
+                                        <Run Text=" Selected"/>
+                                    </TextBlock>
+                                    <TextBlock Width="{Binding ElementName=tblCardinalityColHdr,Path=ActualWidth}" />
+                                    <!-- Wrap these textblocks in Grids so can right align content -->
+                                    <Grid Width="{Binding ElementName=tblSizeColHdr,Path=ActualWidth}">
+                                        <TextBlock
+                                               FontWeight="Bold" Margin="0,0,8,0"
+                                               HorizontalAlignment="Right"
+                                               Text="{Binding SelectedColumnSize, Mode=OneWay, Converter={valueconverters:BytesToStringConverter}}" />
+                                    </Grid>
+                                    <Grid Width="{Binding ElementName=tblDbPctColHdr,Path=ActualWidth}">
+                                        <TextBlock
+                                               FontWeight="Bold" Margin="5,0,8,0"
+                                               HorizontalAlignment="Right"
+                                               Text="{Binding SelectedColumnWeight, Mode=OneWay, Converter={valueconverters:DoubleToFormattedPercentageConverter}}" />
+                                    </Grid>
+                                </StackPanel>
+                            </Grid>
+                        </TabItem>
+                        <TabItem Header="Columns"
+                                 HeaderTemplate="{StaticResource TabItemHeaderTemplate}">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <DataGrid
+                                x:Name="ColDataGrid"
+                                ItemsSource="{Binding AllColumns}"
+                                ColumnHeaderStyle="{StaticResource StandardColumnHeader}"
+                                EnableRowVirtualization="True"
+                                GridLinesVisibility="Horizontal"
+                                BeginningEdit="DatagridEditingHandler"
+                                mah:DataGridHelper.EnableCellEditAssist="True"
+                                AutoGenerateColumns="False">
+                                    <DataGrid.Columns>
+                                        <DataGridTemplateColumn x:Name="ColWarningColumn" Width="20" CanUserResize="False" CanUserReorder="False" SortMemberPath="IsHidden">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <controls:WarningWithTooltip Margin="4,4,0,0" Visibility="{Binding IsRequired, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                        <DataGridCheckBoxColumn
+                                            x:Name="ColCheckboxColumn"
+                                            Width="48"
+                                            CanUserResize="False"
+                                            CanUserReorder="False"
+                                            CanUserSort="False"
+                                            ElementStyle="{DynamicResource MahApps.Styles.CheckBox.DataGrid.Win10}"
+                                            EditingElementStyle="{DynamicResource MetroDataGridCheckBox}"
+                                            Binding="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                        <DataGridTextColumn x:Name="ColColumnNameColumn" Header="Column" Binding="{Binding ColumnName}" CanUserReorder="False" />
+                                        <DataGridTextColumn x:Name="ColTableNameColumn" Header="Table" Binding="{Binding TableName, Mode=OneWay}" CanUserReorder="False" />
+                                        <DataGridTemplateColumn  x:Name="ColCardinalityColumn" SortMemberPath="Cardinality" CanUserReorder="False">
+                                            <DataGridTemplateColumn.HeaderTemplate>
+                                                <DataTemplate>
+                                                    <StackPanel Orientation="Horizontal" ToolTip="Number of unique entries">
+                                                        <TextBlock>Cardinality&#x00A0;</TextBlock>
+                                                        <TextBlock FontFamily="Segoe Symbol" >&#x20DD;</TextBlock>
+                                                        <TextBlock FontFamily="Segoe Symbol" FontSize="10" Margin="5,3,0,0">?</TextBlock>
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.HeaderTemplate>
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Text="{Binding Cardinality, Converter={valueconverters:SimplifyNumberConverter}}" HorizontalAlignment="Right" Margin="8,0" />
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                        <DataGridTemplateColumn x:Name="ColSizeColumn" Header="Size" SortMemberPath="TotalSize" CanUserReorder="False">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <StackPanel>
+                                                        <TextBlock Text="{Binding TotalSize, Converter={valueconverters:BytesToStringConverter}}" HorizontalAlignment="Right" Margin="4,4,4,0" />
+                                                        <mah:MetroProgressBar
+                                                            HorizontalAlignment="Stretch"
+                                                            Minimum="0"
+                                                            Maximum="{Binding ElementName=ColDataGrid, Path=DataContext.LargestColumnSize}"
+                                                            Value="{Binding TotalSize, Mode=OneWay}"
+                                                            MinHeight="4"
+                                                            Height="4"
+                                                            Background="Transparent"
+                                                            FlowDirection="RightToLeft" />
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                        <DataGridTemplateColumn x:Name="ColWeightColumn" Header="Weight" SortMemberPath="PercentageDatabase" CanUserReorder="False" CanUserResize="False">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Text="{Binding PercentageDatabase, Converter={valueconverters:DoubleToFormattedPercentageConverter}}" HorizontalAlignment="Right" Margin="8,0,4,0" />
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                                <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,20">
+                                    <TextBlock Width="{Binding ElementName=ColWarningColumn,Path=ActualWidth}" />
+                                    <TextBlock Width="{Binding ElementName=ColCheckboxColumn,Path=ActualWidth}" />
+                                    <TextBlock Width="{Binding ElementName=ColColumnNameColumn,Path=ActualWidth}"
+                                               Margin="5,0,0,0" FontWeight="Bold">
+                                        <Run Text="{Binding SelectedColumnCount, Mode=OneWay}" />
+                                        <Run Text=" Selected"/>
+                                    </TextBlock>
+                                    <TextBlock Width="{Binding ElementName=ColTableNameColumn,Path=ActualWidth}" />
+                                    <TextBlock Width="{Binding ElementName=ColCardinalityColumn,Path=ActualWidth}" />
+                                    <!-- Wrap these textblocks in Grids so can right align content -->
+                                    <Grid Width="{Binding ElementName=ColSizeColumn,Path=ActualWidth}">
+                                        <TextBlock
+                                               FontWeight="Bold" Margin="-50,0,8,0"
+                                               HorizontalAlignment="Right"
+                                               Text="{Binding SelectedColumnSize, Mode=OneWay, Converter={valueconverters:BytesToStringConverter}}" />
+                                    </Grid>
+                                    <Grid Width="{Binding ElementName=ColWeightColumn,Path=ActualWidth}">
+                                        <TextBlock
+                                               FontWeight="Bold" Margin="5,0,8,0"
+                                               HorizontalAlignment="Right"
+                                               Text="{Binding SelectedColumnWeight, Mode=OneWay, Converter={valueconverters:DoubleToFormattedPercentageConverter}}" />
+                                    </Grid>
+                                </StackPanel>
+                            </Grid>
+                        </TabItem>
+                    </TabControl>
+                    <Grid Grid.Row="1" Grid.Column="1" Margin="20">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="1*" />
+                            <ColumnDefinition Width="1*" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Orientation="Horizontal" Grid.ColumnSpan="2">
+                            <controls:AnalyzeModelIcon Height="40" Margin="0,8,10,6" />
+                            <TextBlock Text="{Binding TotalDbSize, Mode=OneWay}" FontSize="40" FontWeight="DemiBold" />
+                        </StackPanel>
+                        <StackPanel Grid.Row="1">
+                            <TextBlock>
+                                <Run Text="{Binding TableCount, Mode=OneWay}" />
+                                <Run>tables</Run>
+                            </TextBlock>
+                            <TextBlock Margin="0,0,12,0">
+                                <Run Text="{Binding AllColumnCount, Mode=OneWay}" />
+                                <Run>columns</Run>
+                            </TextBlock>
+                        </StackPanel>
+                        <StackPanel Grid.Row="1" Grid.Column="1">
+                            <TextBlock>
+                                <Run Text="{Binding MeasuresCount, Converter={valueconverters:SimplifyNumberConverter}, Mode=OneWay}" />
+                                <Run>measures</Run>
+                            </TextBlock>
+                            <TextBlock>
+                                <Run Text="{Binding MaxRowsCount, Converter={valueconverters:SimplifyNumberConverter}, Mode=OneWay}" />
+                                <Run>max rows</Run>
+                            </TextBlock>
+                        </StackPanel>
+                        <TextBlock Grid.Row="2" Grid.ColumnSpan="2">treemap goes here</TextBlock>
+                    </Grid>
+                </Grid>
+            </mah:FlipViewItem>
+        </mah:FlipView.Items>
+    </mah:FlipView>
 </UserControl>
