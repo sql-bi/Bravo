@@ -25,11 +25,12 @@ namespace Sqlbi.Bravo.UI.ViewModels
         private readonly IDaxFormatterService _formatter;
         private readonly IAnalysisServicesEventWatcherService _watcher;
         private readonly ILogger _logger;
-        internal const int SubViewIndex_Start = 0;
-        internal const int SubViewIndex_ChooseFormulas = 1;
-        internal const int SubViewIndex_Progress = 2;
-        internal const int SubViewIndex_Changes = 3;
-        internal const int SubViewIndex_Finished = 4;
+        internal const int SubViewIndex_Loading = 0;
+        internal const int SubViewIndex_Start = 1;
+        internal const int SubViewIndex_ChooseFormulas = 2;
+        internal const int SubViewIndex_Progress = 3;
+        internal const int SubViewIndex_Changes = 4;
+        internal const int SubViewIndex_Finished = 5;
         private readonly DispatcherTimer _timer = new DispatcherTimer();
 
         public DaxFormatterViewModel(IDaxFormatterService formatter, IAnalysisServicesEventWatcherService watcher, ILogger<DaxFormatterViewModel> logger)
@@ -42,7 +43,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
             _watcher.OnEvent += OnAnalysisServicesEvent;
             //_watcher.OnConnectionStateChanged += OnAnalysisServicesConnectionStateChanged;
 
-            ViewIndex = SubViewIndex_Start;
+            ViewIndex = SubViewIndex_Loading;
             PreviewChanges = true;
 
             LoadedCommand = new RelayCommand(execute: async () => await LoadedAsync());
@@ -114,6 +115,8 @@ namespace Sqlbi.Bravo.UI.ViewModels
             set => TabularObjectType = TabularObjectType.WithFlag(DaxFormatterTabularObjectType.Measures, set: value);
         }
 
+        public string LoadingDetails { get; set; }
+
         public DateTime LastSyncTime { get; private set; }
 
         public string TimeSinceLastSync
@@ -179,6 +182,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
         private async Task InitializeOrRefreshFormatter()
         {
             FormatCommandIsEnabled = false;
+            LoadingDetails = "Connecting to data";
             await _formatter.InitilizeOrRefreshAsync();
 
             LastSyncTime = DateTime.UtcNow;
@@ -233,7 +237,12 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
             try
             {
-                await ExecuteCommandAsync(() => InitializeCommandIsRunning, InitializeOrRefreshFormatter);
+                await ExecuteCommandAsync(() => InitializeCommandIsRunning, async () =>
+                {
+                    await InitializeOrRefreshFormatter();
+                    ViewIndex = SubViewIndex_Start;
+                });
+                
             }
             catch (Exception exc)
             {

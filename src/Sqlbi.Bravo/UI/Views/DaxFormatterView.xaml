@@ -25,7 +25,18 @@
         IsBannerEnabled="False"
         IsNavigationEnabled="False">
         <mah:FlipView.Items>
-            <!-- SubViewIndex_Start = 0 -->
+
+            <!-- SubViewIndex_Loading = 0 -->
+            <mah:FlipViewItem>
+                <Grid>
+                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Width="300">
+                        <TextBlock Style="{StaticResource SubtitleTextBlockStyle}">Loading...</TextBlock>
+                        <ProgressBar IsIndeterminate="True" Margin="0,12" />
+                        <TextBlock Style="{StaticResource CaptionTextBlockStyle}" Opacity="0.5" Text="{Binding LoadingDetails}" />
+                    </StackPanel>
+                </Grid>
+            </mah:FlipViewItem>
+            <!-- SubViewIndex_Start = 1 -->
             <mah:FlipViewItem>
                 <Grid>
 
@@ -135,7 +146,7 @@
                     </Grid>
                 </Grid>
             </mah:FlipViewItem>
-            <!-- SubViewIndex_ChooseFormulas = 1 -->
+            <!-- SubViewIndex_ChooseFormulas = 2 -->
             <mah:FlipViewItem>
                 <Grid Margin="24">
                     <Grid.ColumnDefinitions>
@@ -232,7 +243,7 @@
                             Content="Apply &amp; Continue"/>
                 </Grid>
             </mah:FlipViewItem>
-            <!-- SubViewIndex_Progress = 2 -->
+            <!-- SubViewIndex_Progress = 3 -->
             <mah:FlipViewItem>
                 <Grid>
                     <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Width="300">
@@ -242,7 +253,7 @@
                     </StackPanel>
                 </Grid>
             </mah:FlipViewItem>
-            <!-- SubViewIndex_Changes = 3 -->
+            <!-- SubViewIndex_Changes = 4 -->
             <mah:FlipViewItem>
                 <Grid Margin="20">
                     <Grid.RowDefinitions>
@@ -405,7 +416,7 @@
                     </StackPanel>
                 </Grid>
             </mah:FlipViewItem>
-            <!-- SubViewIndex_Finished = 4 -->
+            <!-- SubViewIndex_Finished = 5 -->
             <mah:FlipViewItem>
                 <Grid>
                     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
