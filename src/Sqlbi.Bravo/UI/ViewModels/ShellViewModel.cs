@@ -118,6 +118,9 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public ObservableCollection<NavigationItem> OptionMenuItems { get; } = new ObservableCollection<NavigationItem>()
         {
+#if DEBUG
+            new NavigationItem{ Name = "Show debug info", Glyph = "\uE7B3" },
+#endif
             new NavigationItem{ Name = "Sign in", Glyph = "\uE13D" },
             new NavigationItem{ Name = "Settings", Glyph = "\uE713" },
         };
@@ -218,6 +221,10 @@ namespace Sqlbi.Bravo.UI.ViewModels
                 if (SelectedOptionsItem.Name == "Settings")
                 {
                     await ShellView.Instance.ShowSettings();
+                }
+                else if (SelectedOptionsItem.Name == "Show debug info")
+                {
+                    await ShellView.Instance.ShowDebugInfo();
                 }
                 else
                 {
