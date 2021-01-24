@@ -126,5 +126,7 @@ namespace Sqlbi.Bravo.Core.Services
             Dispose(disposing: true);
             GC.SuppressFinalize(this);
         }
+
+        public Model GetModelForExport() => _daxModel;
     }
 }

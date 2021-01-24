@@ -1,4 +1,5 @@
-﻿using Dax.ViewModel;
+﻿using Dax.Metadata;
+using Dax.ViewModel;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -18,5 +19,7 @@ namespace Sqlbi.Bravo.Core.Services.Interfaces
         IEnumerable<VpaTable> GetAllTables();
 
         DateTime GetLastSyncTime();
+
+        Model GetModelForExport();
     }
 }

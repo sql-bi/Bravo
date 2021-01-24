@@ -1,7 +1,9 @@
 ﻿using Dax.ViewModel;
+using Dax.Vpax.Tools;
 using Humanizer;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Win32;
 using Sqlbi.Bravo.Core.Logging;
 using Sqlbi.Bravo.Core.Services.Interfaces;
 using Sqlbi.Bravo.UI.DataModel;
@@ -129,9 +131,12 @@ namespace Sqlbi.Bravo.UI.ViewModels
                         {
                             if (currentTable == null || currentTable.TableName != col.Table.TableName)
                             {
-                                currentTable = new VpaTableColumnViewModel(this, col, true);
-                                currentTable.TotalSize = col.Table.ColumnsTotalSize;
-                                currentTable.PercentageDatabase = col.Table.PercentageDatabase;
+                                currentTable = new VpaTableColumnViewModel(this, col, true)
+                                {
+                                    TotalSize = col.Table.ColumnsTotalSize,
+                                    PercentageDatabase = col.Table.PercentageDatabase
+                                };
+
                                 _allTablesCache.Add(currentTable);
                             }
                             else
@@ -197,11 +202,18 @@ namespace Sqlbi.Bravo.UI.ViewModels
         {
             _logger.Trace();
 
-            _ = MessageBox.Show(
-                "Need to know what to do here",
-                "TODO",
-                MessageBoxButton.OK,
-                MessageBoxImage.Question);
+            var saveFileDialog = new SaveFileDialog
+            {
+                FileName = $"{ParentTab.ConnectionName}.vpax",
+                Filter = "VPAX (*.vpax)|*.vpax",
+                DefaultExt = ".vpax",
+                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
+            };
+
+            if (saveFileDialog.ShowDialog() == true)
+            {
+                VpaxTools.ExportVpax(saveFileDialog.FileName, _modelService.GetModelForExport());
+            }
 
             await Task.CompletedTask;
         }
