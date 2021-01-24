@@ -109,7 +109,16 @@ namespace Sqlbi.Bravo.UI.Views
             });
         }
 
-        private void AddTabClicked(object sender, System.Windows.RoutedEventArgs e)
+        internal async Task ShowDebugInfo()
+        {
+            await this.ShowChildWindowAsync(new DebugInfo()
+            {
+                ChildWindowHeight = ActualHeight - 100,
+                ChildWindowWidth = ActualWidth - 150
+            });
+        }
+
+            private void AddTabClicked(object sender, System.Windows.RoutedEventArgs e)
             => ViewModel.AddNewTab();
 
         // WHen the selected tab changes update the selected menu item accordingly
