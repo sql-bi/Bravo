@@ -1,10 +1,9 @@
-﻿using System;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 
 namespace Sqlbi.Bravo.UI.Views
 {
-    public partial class DaxFormatterView : Page
+    public partial class DaxFormatterView : UserControl
     {
         public DaxFormatterView() => InitializeComponent();
 
@@ -26,17 +25,9 @@ namespace Sqlbi.Bravo.UI.Views
                 MessageBoxImage.Question);
         }
 
-        private void PretendErrorClick(object sender, RoutedEventArgs e)
-        {
-            (ShellView.Instance.DataContext
-                as ViewModels.ShellViewModel).SelectedTab.DisplayError("Error code: blah blah blah", null);
-        }
-
-        private void TreeviewSelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
-        {
+        private void TreeviewSelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e) =>
             // Quick hack for not being able to bind the selected item in WPF
             (DataContext as ViewModels.DaxFormatterViewModel).SelectionTreeData.SelectedTreeViewItem = (ViewModels.TreeItem)e.NewValue;
-        }
 
         private void CopyToClipboardClicked(object sender, RoutedEventArgs e) =>
             // Doing this in code-behind for simplicity and preserving UI separation

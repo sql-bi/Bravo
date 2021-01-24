@@ -15,10 +15,7 @@ using System.Windows.Shapes;
 
 namespace Sqlbi.Bravo.UI.Views
 {
-    /// <summary>
-    /// Interaction logic for AnalyzeModelView.xaml
-    /// </summary>
-    public partial class AnalyzeModelView : Page
+    public partial class AnalyzeModelView : UserControl
     {
         public AnalyzeModelView()
         {

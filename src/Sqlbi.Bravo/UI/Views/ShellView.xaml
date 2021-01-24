@@ -6,6 +6,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
+        xmlns:app_ui_views="clr-namespace:Sqlbi.Bravo.UI.Views"
         xmlns:app_ui_viewmodels="clr-namespace:Sqlbi.Bravo.UI.ViewModels"
         xmlns:app_ui_framework_valueconverters="clr-namespace:Sqlbi.Bravo.UI.Framework.ValueConverters"
         xmlns:templateSelectors="clr-namespace:Sqlbi.Bravo.UI.Framework.TemplateSelector"
@@ -15,7 +16,8 @@
         Width="850"
         MinWidth="{Binding WindowMinWidth}"
         MinHeight="{Binding WindowMinHeight}"
-        WindowStartupLocation="CenterScreen"
+        WindowStartupLocation="Manual"
+        x:Name="window"
         DataContext="{Binding Source={StaticResource ViewModelLocator}, Path=ShellViewModel}">
 
     <mah:MetroWindow.Resources>
@@ -103,9 +105,17 @@
 
             <DataTemplate x:Key="TabItemContentTemplate" DataType="{x:Type app_ui_viewmodels:TabItemViewModel}">
                 <Grid>
-                    <Frame
-                    Source="{Binding ContentPageSource, Mode=OneWay, Converter={app_ui_framework_valueconverters:TypePageConverter}}"
-                    NavigationUIVisibility="Hidden" />
+                    <app_ui_views:DaxFormatterView
+                        DataContext="{Binding DaxFormatterVm}"
+                        Visibility="{Binding ElementName=window, Path=DataContext.SelectedTab.ShowDaxFormatter, Converter={StaticResource BooleanToVisibilityConverter}}"
+                        />
+                    <app_ui_views:AnalyzeModelView
+                        Visibility="{Binding ShowAnalyzeModel, Converter={StaticResource BooleanToVisibilityConverter}}"
+                        />
+                    <app_ui_views:SelectConnectionType
+                        Visibility="{Binding ShowSelectConnection, Converter={StaticResource BooleanToVisibilityConverter}}"
+                        />
+
                     <Grid Background="{DynamicResource MahApps.Brushes.Control.Background}" Visibility="{Binding ShowError, Converter={StaticResource BooleanToVisibilityConverter}}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                             <Viewbox Height="200" Stretch="Uniform">
@@ -122,6 +132,7 @@
                             <TextBlock Style="{StaticResource SubtitleTextBlockStyle}">Whoops! Something went wrong...</TextBlock>
                             <TextBlock Style="{StaticResource CaptionTextBlockStyle}" Text="{Binding ErrorDescription}" />
                             <TextBlock><Hyperlink Style="{StaticResource InlineHyperlinks}" Command="{Binding TryAgainCommand}">Try again</Hyperlink></TextBlock>
+                            <mah:ProgressRing Foreground="Red" HorizontalAlignment="Center" Height="24" IsActive="{Binding IsRetrying}" />
                         </StackPanel>
                     </Grid>
                 </Grid>
@@ -200,7 +211,7 @@
                 ItemsSource="{Binding MenuItems}"
                 ItemContainerStyle="{StaticResource MenuItemsContainer}"
                 ItemTemplateSelector="{StaticResource MenuItemTemplateSelector}"
-                SelectedItem="{Binding SelectedItem}"
+                SelectedItem="{Binding SelectedItem, Mode=TwoWay}"
                 PaneBackground="{DynamicResource MahApps.Brushes.Gray8}"
                 PaneForeground="{DynamicResource MahApps.Brushes.ThemeForeground}"
                 OptionsItemCommand="{Binding ItemSelectedCommand}"
@@ -252,6 +263,7 @@
                             TabStripPlacement="Top"
                             ContentTemplate="{StaticResource TabItemContentTemplate}"
                             ItemContainerStyle="{DynamicResource TabItemHeaderStyle}"
+                            SelectionChanged="OnSelectedTabChanged"
                             SelectedItem="{Binding SelectedTab, Mode=TwoWay}">
                             <TabControl.Style>
                                 <Style TargetType="{x:Type TabControl}">
@@ -293,6 +305,22 @@
                                             </ControlTemplate>
                                         </Setter.Value>
                                     </Setter>
+                                    <Setter Property="mah:ScrollViewerHelper.IsHorizontalScrollWheelEnabled" Value="True" />
+                                    <Setter Property="mah:TabControlHelper.Transition" Value="Left" />
+                                    <Style.Triggers>
+                                        <Trigger Property="TabStripPlacement" Value="Top">
+                                            <Setter Property="Template" Value="{StaticResource MahApps.Templates.TabControl.AnimatedSingleRow.Horizontal}" />
+                                        </Trigger>
+                                        <Trigger Property="TabStripPlacement" Value="Bottom">
+                                            <Setter Property="Template" Value="{StaticResource MahApps.Templates.TabControl.AnimatedSingleRow.Horizontal}" />
+                                        </Trigger>
+                                        <Trigger Property="TabStripPlacement" Value="Left">
+                                            <Setter Property="Template" Value="{StaticResource MahApps.Templates.TabControl.AnimatedSingleRow.Vertical}" />
+                                        </Trigger>
+                                        <Trigger Property="TabStripPlacement" Value="Right">
+                                            <Setter Property="Template" Value="{StaticResource MahApps.Templates.TabControl.AnimatedSingleRow.Vertical}" />
+                                        </Trigger>
+                                    </Style.Triggers>
                                 </Style>
                             </TabControl.Style>
                         </TabControl>

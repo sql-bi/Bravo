@@ -1,5 +1,4 @@
-﻿using Sqlbi.Bravo.UI.Views;
-using Sqlbi.Bravo.UI.Framework.ViewModels;
+﻿using Sqlbi.Bravo.UI.Framework.ViewModels;
 using System;
 using Sqlbi.Bravo.Core.Services.Interfaces;
 using Microsoft.Extensions.Logging;
@@ -9,6 +8,9 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using Sqlbi.Bravo.UI.Framework.Commands;
 using Sqlbi.Bravo.UI.DataModel;
+using Sqlbi.Bravo.Core.Settings.Interfaces;
+using Sqlbi.Bravo.Core.Settings;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Sqlbi.Bravo.UI.ViewModels
 {
@@ -17,31 +19,60 @@ namespace Sqlbi.Bravo.UI.ViewModels
         private BiConnectionType connectionType;
 
         private readonly IAnalysisServicesEventWatcherService _watcher;
+        private readonly IGlobalSettingsProviderService _settings;
         private readonly ILogger _logger;
+        private DaxFormatterViewModel _daxFormatterVm;
 
-        public TabItemViewModel(IAnalysisServicesEventWatcherService watcher, ILogger<TabItemViewModel> logger)
+        public bool IsRetrying { get; set; } = false;
+
+        public TabItemViewModel(IAnalysisServicesEventWatcherService watcher, ILogger<TabItemViewModel> logger, IGlobalSettingsProviderService settings)
         {
             _logger = logger;
             _watcher = watcher;
-
+            _settings = settings;
             _logger.Trace();
             _watcher.OnConnectionStateChanged += OnAnalysisServicesConnectionStateChanged;
 
             ShowError = false;
 
             ConnectionType = BiConnectionType.UnSelected;
-            ContentPageSource = typeof(SelectConnectionType);
+            ShowSelectConnection = true;
 
             ConnectCommand = new RelayCommand(async () => await Connect());
             DisconnectCommand = new RelayCommand(async () => await Disconnect());
             TryAgainCommand = new RelayCommand(async () => await TryAgain());
+
+            // Get the values for the started instance.
+            // These will be overridden if messaged to be single instance and open another tab
+            RuntimeSummary.DatabaseName = _settings.Runtime.DatabaseName;
+            RuntimeSummary.IsExecutedAsExternalTool = _settings.Runtime.IsExecutedAsExternalTool;
+            RuntimeSummary.ParentProcessMainWindowTitle = _settings.Runtime.ParentProcessMainWindowTitle;
+            RuntimeSummary.ParentProcessName = _settings.Runtime.ParentProcessName;
+            RuntimeSummary.ServerName = _settings.Runtime.ServerName;
         }
 
         private async Task TryAgain()
         {
-            ShowError = false;
-            _callback?.Invoke();
-            await Task.CompletedTask;
+            if (IsRetrying)
+                return;
+
+            try
+            {
+                IsRetrying = true;
+                await _callback?.Invoke();
+
+                // As there was no exception assume the retry worked and stop showing the error message.
+                ShowError = false;
+            }
+            catch (Exception exc)
+            {
+                System.Diagnostics.Debug.WriteLine(exc);
+                ErrorDescription = exc.Message;
+            }
+            finally
+            {
+                IsRetrying = false;
+            }
         }
 
         public string Header
@@ -62,7 +93,67 @@ namespace Sqlbi.Bravo.UI.ViewModels
             }
         }
 
-        public Type ContentPageSource { get; set; }
+        public DaxFormatterViewModel DaxFormatterVm
+        {
+            get
+            {
+                if (_daxFormatterVm == null)
+                {
+                    _daxFormatterVm = App.ServiceProvider.GetRequiredService<DaxFormatterViewModel>();
+                }
+
+                return _daxFormatterVm;
+            }
+        }
+
+        public bool ShowDaxFormatter
+        {
+            get => showDaxFormatter;
+            set
+            {
+                if (value)
+                {
+                    DoNotShowAnything();
+                }
+
+                SetProperty(ref showDaxFormatter, value);
+            }
+        }
+
+        public bool ShowAnalyzeModel
+        {
+            get => showAnalyzeModel;
+            set
+            {
+                if (value)
+                {
+                    DoNotShowAnything();
+                }
+
+                SetProperty(ref showAnalyzeModel, value);
+            }
+        }
+
+        public bool ShowSelectConnection
+        {
+            get => showSelectConnection;
+            set
+            {
+                if (value)
+                {
+                    DoNotShowAnything();
+                }
+
+                SetProperty(ref showSelectConnection, value);
+            }
+        }
+
+        private void DoNotShowAnything()
+        {
+            ShowDaxFormatter = false;
+            ShowAnalyzeModel = false;
+            ShowSelectConnection = false;
+        }
 
         public string ConnectionName { get; set; }
 
@@ -84,7 +175,12 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public bool ShowError { get; set; }
 
-        private Action _callback;
+        public RuntimeSummary RuntimeSummary { get; set; } = new RuntimeSummary();
+
+        private Func<Task> _callback;
+        private bool showDaxFormatter;
+        private bool showSelectConnection;
+        private bool showAnalyzeModel;
 
         public string ErrorDescription { get; set; }
 
@@ -108,7 +204,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
             await ExecuteCommandAsync(() => DisconnectCommandIsRunning, _watcher.DisconnectAsync);
         }
 
-        public void DisplayError(string errorDescription, Action callback)
+        public void DisplayError(string errorDescription, Func<Task> callback)
         {
             ErrorDescription = errorDescription;
             ShowError = true;
@@ -125,5 +221,28 @@ namespace Sqlbi.Bravo.UI.ViewModels
         }
 
         public override string ToString() => Header;
+
+        internal void ShowSubPage(SubPage? subPageInTab)
+        {
+            if (subPageInTab == null)
+            {
+                subPageInTab = SubPage.SelectConnection;
+            }
+
+            switch (subPageInTab)
+            {
+                case SubPage.SelectConnection:
+                    ShowSelectConnection = true;
+                    break;
+                case SubPage.DaxFormatter:
+                    ShowDaxFormatter = true;
+                    break;
+                case SubPage.AnalyzeModel:
+                    ShowAnalyzeModel = true;
+                    break;
+                default:
+                    break;
+            }
+        }
     }
 }

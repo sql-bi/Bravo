@@ -24,7 +24,8 @@ namespace Sqlbi.Bravo
         public App(IHost host)
         {
             _host = host;
-
+            // Uncomment this to enable debugging when launched from PBIDesktop
+            ////System.Diagnostics.Debugger.Launch();
             _settings = _host.Services.GetRequiredService<IGlobalSettingsProviderService>();
             _logger = _host.Services.GetRequiredService<ILogger<App>>();
             _logger.Trace();
@@ -99,18 +100,27 @@ namespace Sqlbi.Bravo
         {
             _logger.Trace();
 
-            if (_settings.Runtime.IsExecutedAsExternalTool)
+            var application = ServiceProvider.GetRequiredService<IApplicationInstanceService>();
+            if (application.IsCurrentInstanceOwned)
             {
-                var application = ServiceProvider.GetRequiredService<IApplicationInstanceService>();
-                if (application.IsCurrentInstanceOwned)
-                {
-                    application.RegisterCallbackForMultipleInstanceStarted(BringToForeground);
-                }
-                else
-                {
-                    _logger.Information(LogEvents.AppShutdownForMultipleInstance);                    
-                    Shutdown();
-                }
+                application.RegisterCallbackForMultipleInstanceStarted(BringToForeground);
+            }
+            else
+            {
+                _logger.Information(LogEvents.AppShutdownForMultipleInstance);
+
+                var msg = new MessageHelper();
+                var hWnd = msg.GetWindowId("Sqlbi Bravo");
+
+                var ci = MessageHelper.CreateConnectionInfo(
+                    _settings.Runtime.DatabaseName,
+                    _settings.Runtime.ServerName,
+                    _settings.Runtime.ParentProcessName,
+                    _settings.Runtime.ParentProcessMainWindowTitle);
+
+                var result = msg.SendConnectionInfoMessage(hWnd, 0, ci);
+
+                Shutdown();
             }
         }
 

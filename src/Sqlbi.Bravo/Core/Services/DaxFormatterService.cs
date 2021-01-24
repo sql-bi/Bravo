@@ -1,4 +1,5 @@
 ﻿using Microsoft.AnalysisServices;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Sqlbi.Bravo.Core.Client.Http;
 using Sqlbi.Bravo.Core.Client.Http.Interfaces;
@@ -6,6 +7,7 @@ using Sqlbi.Bravo.Core.Helpers;
 using Sqlbi.Bravo.Core.Logging;
 using Sqlbi.Bravo.Core.Services.Interfaces;
 using Sqlbi.Bravo.Core.Settings.Interfaces;
+using Sqlbi.Bravo.UI.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -51,13 +53,15 @@ namespace Sqlbi.Bravo.Core.Services
 
             void InitilizeOrRefresh()
             {
+                var runtimeSummary = ((ShellViewModel)App.ServiceProvider.GetRequiredService(typeof(ShellViewModel))).SelectedTab.RuntimeSummary;
+
                 if (_server.Connected == false)
                 {
-                    var connectionString = _settings.BuildConnectionString();
+                    var connectionString = AnalysisServicesHelper.BuildConnectionString(runtimeSummary.ServerName, runtimeSummary.DatabaseName);
                     _server.Connect(connectionString);
                 }
 
-                var database = _server.Databases[_settings.Runtime.DatabaseName];
+                var database = _server.Databases[runtimeSummary.DatabaseName];
                 database.Model.Sync(new Microsoft.AnalysisServices.Tabular.SyncOptions { DiscardLocalChanges = true });
                 database.Refresh();
 
@@ -69,8 +73,9 @@ namespace Sqlbi.Bravo.Core.Services
         {
             var origAndFormatted = await Task.Run(async () =>
             {
-                var database = _server.Databases[_settings.Runtime.DatabaseName];
-                var requests = _manager.CreateRequests(objectType);
+                var shellVm = (ShellViewModel)App.ServiceProvider.GetRequiredService(typeof(ShellViewModel));
+
+                var requests = _manager.CreateRequests(objectType, shellVm.SelectedTab.RuntimeSummary);
 
                 var measures = new Dictionary<string, (string, string)>();
 
@@ -140,8 +145,9 @@ namespace Sqlbi.Bravo.Core.Services
 
             async Task Format()
             {
-                var database = _server.Databases[_settings.Runtime.DatabaseName];
-                var requests = _manager.CreateRequests(objectType);
+                var runtimeSummary = ((ShellViewModel)App.ServiceProvider.GetRequiredService(typeof(ShellViewModel))).SelectedTab.RuntimeSummary;
+                var database = _server.Databases[runtimeSummary.DatabaseName];
+                var requests = _manager.CreateRequests(objectType, runtimeSummary);
                 var responses = _client.FormatAsync(requests);
 
                 await foreach (var response in responses)
@@ -173,7 +179,8 @@ namespace Sqlbi.Bravo.Core.Services
 
         public void SaveFormattedMeasures(List<(string id, string expression)> measuresToUpdate)
         {
-            var database = _server.Databases[_settings.Runtime.DatabaseName];
+            var runtimeSummary = ((ShellViewModel)App.ServiceProvider.GetRequiredService(typeof(ShellViewModel))).SelectedTab.RuntimeSummary;
+            var database = _server.Databases[runtimeSummary.DatabaseName];
 
             foreach (var (id, expression) in measuresToUpdate)
                 _manager.UpdateMeasure(id, expression);

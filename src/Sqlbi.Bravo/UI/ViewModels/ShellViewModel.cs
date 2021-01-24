@@ -4,6 +4,7 @@ using Sqlbi.Bravo.Core;
 using Sqlbi.Bravo.Core.Logging;
 using Sqlbi.Bravo.Core.Services;
 using Sqlbi.Bravo.Core.Services.Interfaces;
+using Sqlbi.Bravo.Core.Settings;
 using Sqlbi.Bravo.Core.Settings.Interfaces;
 using Sqlbi.Bravo.UI.Controls;
 using Sqlbi.Bravo.UI.DataModel;
@@ -72,14 +73,18 @@ namespace Sqlbi.Bravo.UI.ViewModels
         {
             SelectedTab.ConnectionName = title.Replace(" - Power BI Desktop", string.Empty);
             SelectedTab.ConnectionType = BiConnectionType.ActivePowerBiWindow;
-            SelectedTab.ContentPageSource = SelectedItem.NavigationPage;
+            SelectedTab.ShowSubPage(SelectedItem?.SubPageInTab ?? SubPage.DaxFormatter);
+
+            if (SelectedItem == null)
+            {
+                SelectedItem = MenuItems.First();
+            }
 #if DEBUG
             if (string.IsNullOrWhiteSpace(SelectedTab.ConnectionName))
             {
                 SelectedTab.ConnectionName = "DEBUG";
             }
 #endif
-
         }
 
         public double WindowMinWidth => 800D;
@@ -101,8 +106,8 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
                 return new ObservableCollection<NavigationItem>()
                 {
-                    new NavigationItem { Name = "Format Dax", IconControl = daxIcon, NavigationPage = typeof(DaxFormatterView) },
-                    new NavigationItem { Name = "Analyze Model", IconControl = new AnalyzeModelIcon(), NavigationPage = typeof(AnalyzeModelView) },
+                    new NavigationItem { Name = "Format DAX", IconControl = daxIcon, SubPageInTab = SubPage.DaxFormatter },
+                    new NavigationItem { Name = "Analyze Model", IconControl = new AnalyzeModelIcon(), SubPageInTab = SubPage.AnalyzeModel },
                     new NavigationItem { Name = "Manage dates", Glyph = "\uEC92", ShowComingSoon = true },
                     new NavigationItem { Name = "Export data", Glyph = "\uE1AD", ShowComingSoon = true },
                     new NavigationItem { Name = "Best practices", Glyph = "\uE19F", ShowComingSoon = true },
@@ -187,6 +192,25 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public NavigationItem LastNavigation { get; private set; } = null;
 
+        public void AddNewTab(BiConnectionType connType = BiConnectionType.UnSelected, SubPage subPage = SubPage.SelectConnection, RuntimeSummary runtimeSummary = null)
+        {
+            var newTab = (TabItemViewModel)App.ServiceProvider.GetRequiredService(typeof(TabItemViewModel));
+
+            newTab.ConnectionType = connType;
+            newTab.ShowSubPage(subPage);
+
+            if (runtimeSummary != null)
+            {
+                newTab.ConnectionName = runtimeSummary.ParentProcessMainWindowTitle.Replace(" - Power BI Desktop", string.Empty);
+                newTab.RuntimeSummary = runtimeSummary;
+            }
+
+            Tabs.Add(newTab);
+
+            // Select added item so it is made visible
+            SelectedTab = Tabs.Last();
+        }
+
         private async Task ItemSelected()
         {
             if (SelectedOptionsItem != null)
@@ -205,9 +229,9 @@ namespace Sqlbi.Bravo.UI.ViewModels
                         MessageBoxImage.Question);
                 }
 
-                    // Put selection focus back where it was
-                    SelectedOptionsItem = null;
-                    SelectedItem = MenuItems.FirstOrDefault(mi => mi.Name == LastNavigation?.Name);
+                // Put selection focus back where it was
+                SelectedOptionsItem = null;
+                SelectedItem = MenuItems.FirstOrDefault(mi => mi.Name == LastNavigation?.Name);
             }
             else if (SelectedItem != null)
             {
@@ -218,7 +242,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
                     if (SelectedTab.ConnectionType != BiConnectionType.UnSelected)
                     {
-                        SelectedTab.ContentPageSource = SelectedItem.NavigationPage;
+                        SelectedTab.ShowSubPage(SelectedItem.SubPageInTab);
                     }
                 }
                 else
