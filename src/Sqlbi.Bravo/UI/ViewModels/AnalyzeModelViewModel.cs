@@ -13,7 +13,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
 
@@ -176,6 +175,8 @@ namespace Sqlbi.Bravo.UI.ViewModels
             try
             {
                 await ExecuteCommandAsync(() => LoadOrRefreshCommandIsRunning, InitializeOrRefreshModelAnalyzer);
+
+                ViewIndex = SubViewIndex_Summary;
             }
             catch (Exception exc)
             {
@@ -190,7 +191,18 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
             try
             {
-                await ExecuteCommandAsync(() => LoadOrRefreshCommandIsRunning, InitializeOrRefreshModelAnalyzer);
+                var lastIndex = ViewIndex;
+
+                try
+                {
+                    ViewIndex = SubViewIndex_Loading;
+
+                    await ExecuteCommandAsync(() => LoadOrRefreshCommandIsRunning, InitializeOrRefreshModelAnalyzer);
+                }
+                finally
+                {
+                    ViewIndex = lastIndex;
+                }
             }
             catch (Exception exc)
             {
@@ -254,13 +266,11 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
             await Task.Run(() => UpdateSummary());
 
-            OnPropertyChanged(nameof(LastSyncTime));
+            OnPropertyChanged(nameof(TimeSinceLastSync));
             OnPropertyChanged(nameof(AllTables));
             OnPropertyChanged(nameof(AllTableColumns));
             OnPropertyChanged(nameof(AllColumns));
             OnPropertyChanged(nameof(AllColumnCount));
-
-            ViewIndex = SubViewIndex_Summary;
         }
 
         private void UpdateSummary()
