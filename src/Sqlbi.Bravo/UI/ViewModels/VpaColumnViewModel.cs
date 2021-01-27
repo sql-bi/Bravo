@@ -1,9 +1,12 @@
 ﻿using Dax.ViewModel;
+using Sqlbi.Bravo.UI.Controls;
 using Sqlbi.Bravo.UI.Framework.ViewModels;
+using System.Windows;
+using System.Windows.Media;
 
 namespace Sqlbi.Bravo.UI.ViewModels
 {
-    internal class VpaColumnViewModel : BaseViewModel
+    internal class VpaColumnViewModel : BaseViewModel, ITreeMapInfo
     {
         private readonly AnalyzeModelViewModel parent;
         private bool _isSelected;
@@ -33,6 +36,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
                     parent.OnPropertyChanged(nameof(AnalyzeModelViewModel.SelectedColumnCount));
                     parent.OnPropertyChanged(nameof(AnalyzeModelViewModel.SelectedColumnSize));
                     parent.OnPropertyChanged(nameof(AnalyzeModelViewModel.SelectedColumnWeight));
+                    OnPropertyChanged(nameof(OverlayVisibility));
                 }
             }
         }
@@ -48,5 +52,11 @@ namespace Sqlbi.Bravo.UI.ViewModels
         public long TotalSize { get; set; }
 
         public double PercentageDatabase { get; set; }
+
+        public long Size => TotalSize;
+
+        public Color RectangleColor => Colors.Red;
+
+        public Visibility OverlayVisibility => IsSelected ? Visibility.Collapsed : Visibility.Visible;
     }
 }
