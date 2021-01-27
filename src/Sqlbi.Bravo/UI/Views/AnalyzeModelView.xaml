@@ -36,6 +36,7 @@
         ShowIndex="False"
         SelectedIndex="{Binding ViewIndex}"
         IsBannerEnabled="False"
+        SelectionChanged="FlipViewSelectionChanged"
         IsNavigationEnabled="False">
         <mah:FlipView.Items>
 
@@ -231,7 +232,7 @@
                                         <ListView.View>
                                             <GridView>
                                                 <GridViewColumn Header="" Width="64" x:Name="padding" />
-                                                <GridViewColumn Header="" Width="200" x:Name="tblNameColHdr" />
+                                                <GridViewColumn Header="" Width="150" x:Name="tblNameColHdr" />
                                                 <GridViewColumn Header="Cardinality" Width="110" x:Name="tblCardinalityColHdr">
                                                     <GridViewColumn.HeaderTemplate>
                                                         <DataTemplate>
@@ -498,7 +499,7 @@
                                 <Run>max rows</Run>
                             </TextBlock>
                         </StackPanel>
-                        <TextBlock Grid.Row="2" Grid.ColumnSpan="2">treemap goes here</TextBlock>
+                        <controls:TreeMapGrid x:Name="TreeMap" Grid.Row="2" Grid.ColumnSpan="2" Width="250" Height="300" />
                     </Grid>
                 </Grid>
             </mah:FlipViewItem>
