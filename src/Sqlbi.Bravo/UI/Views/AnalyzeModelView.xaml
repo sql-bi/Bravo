@@ -302,9 +302,9 @@
                                                                     <ColumnDefinition Width="{Binding ElementName=tblSizeColHdr, Path=ActualWidth}" />
                                                                     <ColumnDefinition Width="{Binding ElementName=tblDbPctColHdr, Path=ActualWidth}" />
                                                                 </Grid.ColumnDefinitions>
-                                                                <controls:WarningWithTooltip Margin="-32,9,0,0" Visibility="{Binding IsRequired, Converter={StaticResource BooleanToVisibilityConverter}}" />
-                                                                <CheckBox Margin="-12,0,0,0" IsChecked="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource MahApps.Styles.CheckBox.Win10}" />
-                                                                <TextBlock Margin="-10,0,0,0" Text="{Binding ColumnName, Mode=OneWay}" VerticalAlignment="Center" Grid.Column="1"/>
+                                                                <controls:WarningWithTooltip Margin="-10,9,0,0" Visibility="{Binding IsRequired, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                                                                <CheckBox Margin="12,0,-6,0" IsChecked="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource MahApps.Styles.CheckBox.Win10}" />
+                                                                <TextBlock Margin="12,0,0,0" Text="{Binding ColumnName, Mode=OneWay}" VerticalAlignment="Center" Grid.Column="1"/>
                                                                 <TextBlock Margin="-10,0,15,0"
                                                                        Text="{Binding Cardinality, Mode=OneWay, Converter={valueconverters:SimplifyNumberConverter}}"
                                                                        HorizontalAlignment="Right"
