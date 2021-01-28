@@ -183,7 +183,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
         {
             FormatCommandIsEnabled = false;
             LoadingDetails = "Connecting to data";
-            await _formatter.InitilizeOrRefreshAsync();
+            await _formatter.InitilizeOrRefreshAsync(ParentTab.RuntimeSummary);
 
             LastSyncTime = DateTime.UtcNow;
             OnPropertyChanged(nameof(TimeSinceLastSync));
@@ -300,10 +300,10 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
             //var measuresOfInterest = SelectionTreeData.Tables.SelectMany(t => t.Measures.Where(m => !string.IsNullOrWhiteSpace(m.Formula) && (m.IsSelected ?? false)));
 
-            var runtimeSummary = ((ShellViewModel)App.ServiceProvider.GetRequiredService(typeof(ShellViewModel))).SelectedTab.RuntimeSummary;
+            var runtimeSummary = ParentTab.RuntimeSummary;
 
             // TODO REQUIREMENTS: This should not get all Measures--only the ones that are in the `measuresOfInterest` (above)
-            var measures = await _formatter.GetFormattedItems(TabularObjectType);
+            var measures = await _formatter.GetFormattedItems(TabularObjectType, runtimeSummary);
 
             Measures.Clear();
 
@@ -367,8 +367,8 @@ namespace Sqlbi.Bravo.UI.ViewModels
                     }
                 }
 
-                // TODO REQUIREMENTS: add error handling for this
-                _formatter.SaveFormattedMeasures(toUpdate);
+                // TODO: add error handling for this
+                _formatter.SaveFormattedMeasures(toUpdate, ParentTab.RuntimeSummary);
 
                 MeasuresFormatted = toUpdate.Count;
             });

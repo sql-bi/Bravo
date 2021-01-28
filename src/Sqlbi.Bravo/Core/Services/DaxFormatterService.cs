@@ -6,6 +6,7 @@ using Sqlbi.Bravo.Core.Client.Http.Interfaces;
 using Sqlbi.Bravo.Core.Helpers;
 using Sqlbi.Bravo.Core.Logging;
 using Sqlbi.Bravo.Core.Services.Interfaces;
+using Sqlbi.Bravo.Core.Settings;
 using Sqlbi.Bravo.Core.Settings.Interfaces;
 using Sqlbi.Bravo.UI.ViewModels;
 using System;
@@ -38,7 +39,7 @@ namespace Sqlbi.Bravo.Core.Services
             _server = new Server();
         }
 
-        public async Task InitilizeOrRefreshAsync()
+        public async Task InitilizeOrRefreshAsync(RuntimeSummary runtimeSummary)
         {
             _logger.Trace();
 
@@ -54,8 +55,6 @@ namespace Sqlbi.Bravo.Core.Services
 
             void InitilizeOrRefresh()
             {
-                var runtimeSummary = ((ShellViewModel)App.ServiceProvider.GetRequiredService(typeof(ShellViewModel))).SelectedTab.RuntimeSummary;
-
                 if (_server.Connected == false)
                 {
                     var connectionString = AnalysisServicesHelper.BuildConnectionString(runtimeSummary.ServerName, runtimeSummary.DatabaseName);
@@ -70,13 +69,13 @@ namespace Sqlbi.Bravo.Core.Services
             }
         }
 
-        public async Task<Dictionary<string, (string, string)>> GetFormattedItems(DaxFormatterTabularObjectType objectType)
+        public async Task<Dictionary<string, (string, string)>> GetFormattedItems(DaxFormatterTabularObjectType objectType, RuntimeSummary runtimeSummary)
         {
             var origAndFormatted = await Task.Run(async () =>
             {
                 var shellVm = (ShellViewModel)App.ServiceProvider.GetRequiredService(typeof(ShellViewModel));
 
-                var requests = _manager.CreateRequests(objectType, shellVm.SelectedTab.RuntimeSummary);
+                var requests = _manager.CreateRequests(objectType, runtimeSummary);
 
                 var measures = new Dictionary<string, (string, string)>();
 
@@ -138,7 +137,7 @@ namespace Sqlbi.Bravo.Core.Services
             return items;
         }
 
-        public async Task FormatAsync(DaxFormatterTabularObjectType objectType)
+        public async Task FormatAsync(DaxFormatterTabularObjectType objectType, RuntimeSummary runtimeSummary)
         {
             _logger.Trace();
 
@@ -146,7 +145,6 @@ namespace Sqlbi.Bravo.Core.Services
 
             async Task Format()
             {
-                var runtimeSummary = ((ShellViewModel)App.ServiceProvider.GetRequiredService(typeof(ShellViewModel))).SelectedTab.RuntimeSummary;
                 var database = _server.Databases[runtimeSummary.DatabaseName];
                 var requests = _manager.CreateRequests(objectType, runtimeSummary);
                 var responses = _client.FormatAsync(requests);
@@ -178,9 +176,8 @@ namespace Sqlbi.Bravo.Core.Services
             }
         }
 
-        public void SaveFormattedMeasures(List<(string id, string expression)> measuresToUpdate)
+        public void SaveFormattedMeasures(List<(string id, string expression)> measuresToUpdate, RuntimeSummary runtimeSummary)
         {
-            var runtimeSummary = ((ShellViewModel)App.ServiceProvider.GetRequiredService(typeof(ShellViewModel))).SelectedTab.RuntimeSummary;
             var database = _server.Databases[runtimeSummary.DatabaseName];
 
             foreach (var (id, expression) in measuresToUpdate)

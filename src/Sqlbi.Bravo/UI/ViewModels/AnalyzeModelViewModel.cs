@@ -180,8 +180,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
             }
             catch (Exception exc)
             {
-                var shellVm = App.ServiceProvider.GetRequiredService<ShellViewModel>();
-                shellVm.SelectedTab.DisplayError($"Unable to connect{Environment.NewLine}{exc.Message}", InitializeOrRefreshModelAnalyzer);
+                ParentTab.DisplayError($"Unable to connect{Environment.NewLine}{exc.Message}", InitializeOrRefreshModelAnalyzer);
             }
         }
 
@@ -260,7 +259,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
         {
             LoadingDetails = "Connecting to data";
 
-            await _modelService.InitilizeOrRefreshAsync();
+            await _modelService.InitilizeOrRefreshAsync(ParentTab.RuntimeSummary);
 
             LoadingDetails = "Analyzing model";
 

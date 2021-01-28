@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Sqlbi.Bravo.Core.Logging;
 using Sqlbi.Bravo.Core.Services.Interfaces;
+using Sqlbi.Bravo.Core.Settings;
 using Sqlbi.Bravo.UI.ViewModels;
 using System;
 using System.Collections.Generic;
@@ -33,7 +34,7 @@ namespace Sqlbi.Bravo.Core.Services
             _server = new Server();
         }
 
-        public async Task InitilizeOrRefreshAsync()
+        public async Task InitilizeOrRefreshAsync(RuntimeSummary runtimeSummary)
         {
             _logger.Trace();
 
@@ -49,8 +50,6 @@ namespace Sqlbi.Bravo.Core.Services
 
             void InitilizeOrRefresh()
             {
-                var runtimeSummary = ((ShellViewModel)App.ServiceProvider.GetRequiredService(typeof(ShellViewModel))).SelectedTab.RuntimeSummary;
-
                 if (_server.Connected == false)
                 {
                     _server.Connect(runtimeSummary.ServerName);

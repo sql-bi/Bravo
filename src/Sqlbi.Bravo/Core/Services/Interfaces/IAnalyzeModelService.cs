@@ -1,5 +1,6 @@
 ﻿using Dax.Metadata;
 using Dax.ViewModel;
+using Sqlbi.Bravo.Core.Settings;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -8,7 +9,7 @@ namespace Sqlbi.Bravo.Core.Services.Interfaces
 {
     internal interface IAnalyzeModelService
     {
-        Task InitilizeOrRefreshAsync();
+        Task InitilizeOrRefreshAsync(RuntimeSummary runtimeSummary);
 
         (long DatasetSize, int ColumnCount) GetDatasetSummary();
 
