@@ -16,7 +16,6 @@ namespace Sqlbi.Bravo.UI.Services
 
         public void SetTheme(string themeName)
         {
-            System.Diagnostics.Debug.WriteLine($"Settings theme to '{themeName}'");
             if (themeName.Equals("Default", StringComparison.InvariantCultureIgnoreCase))
             {
                 // Forcibly match the system theme

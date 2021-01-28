@@ -32,79 +32,90 @@ namespace Sqlbi.Bravo.UI.ViewModels
             _logger.Trace();
             SaveCommand = new RelayCommand<object>(execute: async (parameter) => await SaveAsync(parameter));
 
-            SetThemeCommand = new RelayCommand<string>(themeName => _themeSelector.SetTheme(themeName));
-
-            var assemblyLocation = Assembly.GetExecutingAssembly().Location;
-            var version = FileVersionInfo.GetVersionInfo(assemblyLocation).FileVersion;
-            VersionDescription = $"Bravo - {version}";
-        }
-
-        public string VersionDescription { get; private set; }
-
-        public string Theme
-        {
-            get => _settings.Application.ThemeName;
-            set
+            SetThemeCommand = new RelayCommand<string>(themeName =>
             {
-                System.Diagnostics.Debug.WriteLine($"Setting Theme to '{value}'");
-                _settings.Application.ThemeName = value;
-                OnPropertyChanged(nameof(Theme));
-            }
+                Mouse.OverrideCursor = Cursors.Wait;
+                try
+                {
+                    _themeSelector.SetTheme(themeName);
+                }
+                finally
+                {
+                    Mouse.OverrideCursor = null;
+                }
+            });
+
+    var assemblyLocation = Assembly.GetExecutingAssembly().Location;
+    var version = FileVersionInfo.GetVersionInfo(assemblyLocation).FileVersion;
+    VersionDescription = $"Bravo - {version}";
         }
 
-        public IEnumerable<LogEventLevel> TelemetryLevels => Enum.GetValues(typeof(LogEventLevel)).Cast<LogEventLevel>();
+public string VersionDescription { get; private set; }
 
-        public bool TelemetryEnabled
-        {
-            get => _settings.Application.TelemetryEnabled;
-            set => _settings.Application.TelemetryEnabled = value;
-        }
+public string Theme
+{
+    get => _settings.Application.ThemeName;
+    set
+    {
+        System.Diagnostics.Debug.WriteLine($"Setting Theme to '{value}'");
+        _settings.Application.ThemeName = value;
+        OnPropertyChanged(nameof(Theme));
+    }
+}
 
-        public LogEventLevel TelemetryLevel
-        {
-            get => _settings.Application.TelemetryLevel;
-            set => _settings.Application.TelemetryLevel = value;
-        }
+public IEnumerable<LogEventLevel> TelemetryLevels => Enum.GetValues(typeof(LogEventLevel)).Cast<LogEventLevel>();
 
-        public bool ProxyUseSystem
-        {
-            get => _settings.Application.ProxyUseSystem;
-            set => _settings.Application.ProxyUseSystem = value;
-        }
+public bool TelemetryEnabled
+{
+    get => _settings.Application.TelemetryEnabled;
+    set => _settings.Application.TelemetryEnabled = value;
+}
 
-        public string ProxyAddress
-        {
-            get => _settings.Application.ProxyAddress;
-            set => _settings.Application.ProxyAddress = value;
-        }
+public LogEventLevel TelemetryLevel
+{
+    get => _settings.Application.TelemetryLevel;
+    set => _settings.Application.TelemetryLevel = value;
+}
 
-        public string ProxyUser
-        {
-            get => _settings.Application.ProxyUser;
-            set => _settings.Application.ProxyUser = value;
-        }
+public bool ProxyUseSystem
+{
+    get => _settings.Application.ProxyUseSystem;
+    set => _settings.Application.ProxyUseSystem = value;
+}
 
-        public bool ProxyIsEnabled => !ProxyUseSystem;
+public string ProxyAddress
+{
+    get => _settings.Application.ProxyAddress;
+    set => _settings.Application.ProxyAddress = value;
+}
 
-        public bool UIShellBringToForegroundOnParentProcessMainWindowScreen
-        {
-            get => _settings.Application.UIShellBringToForegroundOnParentProcessMainWindowScreen;
-            set => _settings.Application.UIShellBringToForegroundOnParentProcessMainWindowScreen = value;
-        }
+public string ProxyUser
+{
+    get => _settings.Application.ProxyUser;
+    set => _settings.Application.ProxyUser = value;
+}
 
-        public ICommand SaveCommand { get; set; }
+public bool ProxyIsEnabled => !ProxyUseSystem;
 
-        public bool SaveCommandIsRunning { get; set; }
+public bool UIShellBringToForegroundOnParentProcessMainWindowScreen
+{
+    get => _settings.Application.UIShellBringToForegroundOnParentProcessMainWindowScreen;
+    set => _settings.Application.UIShellBringToForegroundOnParentProcessMainWindowScreen = value;
+}
 
-        public ICommand SetThemeCommand { get; set; }
+public ICommand SaveCommand { get; set; }
 
-        private async Task SaveAsync(object parameter)
-        {
-            _logger.Trace();
+public bool SaveCommandIsRunning { get; set; }
 
-            _settings.Application.ProxyPassword = ProxyUseSystem ? default : (parameter as ISecurePassword).SecurePassword.ToProtectedString();
+public ICommand SetThemeCommand { get; set; }
 
-            await ExecuteCommandAsync(() => SaveCommandIsRunning, _settings.SaveAsync);
-        }
+private async Task SaveAsync(object parameter)
+{
+    _logger.Trace();
+
+    _settings.Application.ProxyPassword = ProxyUseSystem ? default : (parameter as ISecurePassword).SecurePassword.ToProtectedString();
+
+    await ExecuteCommandAsync(() => SaveCommandIsRunning, _settings.SaveAsync);
+}
     }
 }
