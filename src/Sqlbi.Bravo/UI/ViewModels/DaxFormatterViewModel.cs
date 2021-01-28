@@ -1,5 +1,4 @@
 ﻿using Humanizer;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Sqlbi.Bravo.Core.Client.Http;
 using Sqlbi.Bravo.Core.Helpers;
@@ -32,6 +31,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
         internal const int SubViewIndex_Changes = 4;
         internal const int SubViewIndex_Finished = 5;
         private readonly DispatcherTimer _timer = new DispatcherTimer();
+        private bool _initialized = false;
 
         public DaxFormatterViewModel(IDaxFormatterService formatter, IAnalysisServicesEventWatcherService watcher, ILogger<DaxFormatterViewModel> logger)
         {
@@ -45,8 +45,6 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
             ViewIndex = SubViewIndex_Loading;
             PreviewChanges = true;
-
-            LoadedCommand = new RelayCommand(execute: async () => await LoadedAsync());
 
             InitializeCommand = new RelayCommand(execute: async () => await InitializeAsync());
             FormatAnalyzeCommand = new RelayCommand(execute: async () => await AnalyzeAsync());
@@ -72,8 +70,6 @@ namespace Sqlbi.Bravo.UI.ViewModels
         public int ViewIndex { get; set; }
 
         public bool PreviewChanges { get; set; }
-
-        public ICommand LoadedCommand { get; set; }
 
         public ICommand OpenLogCommand { get; set; }
 
@@ -198,6 +194,8 @@ namespace Sqlbi.Bravo.UI.ViewModels
             InitializeCommandIsEnabled = false;
 
             LoadMeasuresForSelection();
+
+            _initialized = true;
         }
 
         private void LoadMeasuresForSelection()
@@ -231,22 +229,12 @@ namespace Sqlbi.Bravo.UI.ViewModels
             SelectionTreeData = msvm;
         }
 
-        private async Task LoadedAsync()
+        internal void EnsureInitialized()
         {
-            _logger.Trace();
-
-            try
+            if (!_initialized)
             {
-                await ExecuteCommandAsync(() => InitializeCommandIsRunning, async () =>
-                {
-                    await InitializeOrRefreshFormatter();
-                    ViewIndex = SubViewIndex_Start;
-                });
-                
-            }
-            catch (Exception exc)
-            {
-                ParentTab.DisplayError($"Unable to connect{Environment.NewLine}{exc.Message}", InitializeOrRefreshFormatter);
+                // Hacky way to call async method because can't make this async as called from a setter
+                Task.Run(() => RefreshAsync()).GetAwaiter().GetResult();
             }
         }
 
@@ -256,7 +244,12 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
             try
             {
-                await ExecuteCommandAsync(() => InitializeCommandIsRunning, InitializeOrRefreshFormatter);
+                await ExecuteCommandAsync(() => InitializeCommandIsRunning,
+                    async () =>
+                    {
+                        await InitializeOrRefreshFormatter();
+                        ViewIndex = SubViewIndex_Start;
+                    });
             }
             catch (Exception exc)
             {

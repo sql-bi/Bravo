@@ -52,7 +52,7 @@ namespace Sqlbi.Bravo.Core.Services
             {
                 if (_server.Connected == false)
                 {
-                    _server.Connect(runtimeSummary.ServerName);
+                    _server.Connect(runtimeSummary?.ServerName);
                 }
 
                 var db = _server.Databases[runtimeSummary.DatabaseName];

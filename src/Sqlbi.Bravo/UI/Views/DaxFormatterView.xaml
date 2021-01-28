@@ -12,11 +12,6 @@
       d:DesignWidth="800"
       Background="{DynamicResource MahApps.Brushes.ThemeBackground}"
       >
-    <i:Interaction.Triggers>
-        <i:EventTrigger EventName="Loaded">
-            <i:InvokeCommandAction Command="{Binding LoadedCommand}" />
-        </i:EventTrigger>
-    </i:Interaction.Triggers>
     <mah:FlipView
         BorderThickness="0"
         MouseHoverBorderEnabled="False"

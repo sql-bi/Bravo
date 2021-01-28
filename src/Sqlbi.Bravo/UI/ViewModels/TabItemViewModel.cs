@@ -129,6 +129,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
             {
                 if (value)
                 {
+                    DaxFormatterVm.EnsureInitialized();
                     DoNotShowAnything();
                 }
 
@@ -143,6 +144,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
             {
                 if (value)
                 {
+                    AnalyzeModelVm.EnsureInitialized();
                     DoNotShowAnything();
                 }
 

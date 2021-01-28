@@ -1,7 +1,6 @@
 ﻿using Dax.ViewModel;
 using Dax.Vpax.Tools;
 using Humanizer;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 using Sqlbi.Bravo.Core.Logging;
@@ -28,6 +27,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
         private readonly DispatcherTimer _timer = new DispatcherTimer();
         private readonly List<VpaTableColumnViewModel> _allTablesCache = new List<VpaTableColumnViewModel>();
         private List<VpaColumn> _unusedColumns;
+        private bool _initialized = false;
 
         public AnalyzeModelViewModel(IAnalyzeModelService service, ILogger<DaxFormatterViewModel> logger)
         {
@@ -36,7 +36,6 @@ namespace Sqlbi.Bravo.UI.ViewModels
             _logger.Trace();
             ViewIndex = SubViewIndex_Loading;
 
-            LoadedCommand = new RelayCommand(execute: async () => await LoadedAsync());
             HelpCommand = new RelayCommand(execute: async () => await ShowHelpAsync());
             ExportVpaxCommand = new RelayCommand(execute: async () => await ExportVpaxAsync());
             RefreshCommand = new RelayCommand(execute: async () => await RefreshAsync());
@@ -59,8 +58,6 @@ namespace Sqlbi.Bravo.UI.ViewModels
         public DateTime LastSyncTime => _modelService.GetLastSyncTime();
 
         public bool LoadOrRefreshCommandIsRunning { get; set; }
-
-        public ICommand LoadedCommand { get; set; }
 
         public ICommand HelpCommand { get; set; }
 
@@ -153,6 +150,16 @@ namespace Sqlbi.Bravo.UI.ViewModels
             }
         }
 
+        internal void EnsureInitialized()
+        {
+            if (!_initialized)
+            {
+                Task.Run(() => RefreshAsync()).GetAwaiter().GetResult();
+
+                ViewIndex = SubViewIndex_Summary;
+            }
+        }
+
         public IEnumerable<VpaColumnViewModel> AllColumns => AllTableColumns?.SelectMany(t => t.Columns);
 
         public IEnumerable<VpaTable> AllTables => _modelService.GetAllTables();
@@ -167,22 +174,6 @@ namespace Sqlbi.Bravo.UI.ViewModels
                     => LastSyncTime.Year == 1
                     ? "not yet"
                     : $"{(DateTime.UtcNow - LastSyncTime).Humanize(minUnit: Humanizer.Localisation.TimeUnit.Second).Replace("minute", "min").Replace("second", "sec")} ago";
-
-        private async Task LoadedAsync()
-        {
-            _logger.Trace();
-
-            try
-            {
-                await ExecuteCommandAsync(() => LoadOrRefreshCommandIsRunning, InitializeOrRefreshModelAnalyzer);
-
-                ViewIndex = SubViewIndex_Summary;
-            }
-            catch (Exception exc)
-            {
-                ParentTab.DisplayError($"Unable to connect{Environment.NewLine}{exc.Message}", InitializeOrRefreshModelAnalyzer);
-            }
-        }
 
         private async Task RefreshAsync()
         {
@@ -264,12 +255,15 @@ namespace Sqlbi.Bravo.UI.ViewModels
             LoadingDetails = "Analyzing model";
 
             await Task.Run(() => UpdateSummary());
+            //Task.Run(() => RefreshAsync()).GetAwaiter().GetResult();
 
             OnPropertyChanged(nameof(TimeSinceLastSync));
             OnPropertyChanged(nameof(AllTables));
             OnPropertyChanged(nameof(AllTableColumns));
             OnPropertyChanged(nameof(AllColumns));
             OnPropertyChanged(nameof(AllColumnCount));
+
+            _initialized = true;
         }
 
         private void UpdateSummary()
