@@ -1,4 +1,5 @@
-﻿using Dax.ViewModel;
+﻿using Dax.Metadata;
+using Dax.ViewModel;
 using Dax.Vpax.Tools;
 using Humanizer;
 using Microsoft.Extensions.Logging;
@@ -58,6 +59,11 @@ namespace Sqlbi.Bravo.UI.ViewModels
         public DateTime LastSyncTime => _modelService.GetLastSyncTime();
 
         public bool LoadOrRefreshCommandIsRunning { get; set; }
+
+        internal void OverrideDaxModel(Model daxModel)
+        {
+            _modelService.OverrideDaxModel(daxModel);
+        }
 
         public ICommand HelpCommand { get; set; }
 
@@ -255,7 +261,6 @@ namespace Sqlbi.Bravo.UI.ViewModels
             LoadingDetails = "Analyzing model";
 
             await Task.Run(() => UpdateSummary());
-            //Task.Run(() => RefreshAsync()).GetAwaiter().GetResult();
 
             OnPropertyChanged(nameof(TimeSinceLastSync));
             OnPropertyChanged(nameof(AllTables));

@@ -22,5 +22,7 @@ namespace Sqlbi.Bravo.Core.Services.Interfaces
         DateTime GetLastSyncTime();
 
         Model GetModelForExport();
+
+        void OverrideDaxModel(Model daxModel);
     }
 }

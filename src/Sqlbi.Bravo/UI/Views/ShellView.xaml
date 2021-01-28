@@ -183,7 +183,7 @@
                                 </Button>
                             </StackPanel>
                             <ControlTemplate.Triggers>
-                                <Trigger Property="IsSelected" Value="true">
+                                <Trigger Property="IsSelected" Value="True">
                                     <Setter TargetName="PART_Content" Property="Background" Value="{DynamicResource MahApps.Brushes.Window.Background}" />
                                 </Trigger>
                             </ControlTemplate.Triggers>

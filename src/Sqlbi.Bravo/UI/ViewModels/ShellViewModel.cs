@@ -25,6 +25,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
     {
         private readonly IAnalysisServicesEventWatcherService _watcher;
         private readonly ILogger _logger;
+        private NavigationItem selectedItem;
 
         public ShellViewModel(IAnalysisServicesEventWatcherService watcher, ILogger<ShellViewModel> logger)
         {
@@ -40,8 +41,8 @@ namespace Sqlbi.Bravo.UI.ViewModels
             Tabs = new ObservableCollection<TabItemViewModel>() { (TabItemViewModel)App.ServiceProvider.GetRequiredService(typeof(TabItemViewModel)) };
             SelectedTab = Tabs[0];
 
-            SelectedItem = MenuItems.First();
-            LastNavigation = SelectedItem;
+           // SelectedItem = MenuItems.First();
+           // LastNavigation = SelectedItem;
             ItemSelectedCommand = new RelayCommand(async () => await ItemSelected());
 
             Tabs.CollectionChanged += (s, e) =>
@@ -125,7 +126,18 @@ namespace Sqlbi.Bravo.UI.ViewModels
             new NavigationItem{ Name = "Settings", Glyph = "\uE713" },
         };
 
-        public NavigationItem SelectedItem { get; set; }
+        public NavigationItem SelectedItem
+        {
+            get => selectedItem;
+            set
+            {
+                if (selectedItem?.Name != value?.Name)
+                {
+                    selectedItem = value;
+                    OnPropertyChanged(nameof(SelectedItem));
+                }
+            }
+        }
 
         public NavigationItem SelectedOptionsItem { get; set; }
 
@@ -245,11 +257,19 @@ namespace Sqlbi.Bravo.UI.ViewModels
                 // LastNavigation is used to avoid navigating to where already are
                 if (!SelectedItem.ShowComingSoon && SelectedItem.Name != (LastNavigation?.Name ?? string.Empty))
                 {
-                    LastNavigation = SelectedItem;
-
-                    if (SelectedTab.ConnectionType != BiConnectionType.UnSelected)
+                    if (SelectedItem.SubPageInTab != SubPage.AnalyzeModel
+                     && SelectedTab.RuntimeSummary.UsingLocalModelForAnanlysis)
                     {
-                        SelectedTab.ShowSubPage(SelectedItem.SubPageInTab);
+                        SelectedItem = MenuItems.FirstOrDefault(mi => mi.SubPageInTab == SubPage.AnalyzeModel);
+                    }
+                    else
+                    {
+                        LastNavigation = SelectedItem;
+
+                        if (SelectedTab.ConnectionType != BiConnectionType.UnSelected)
+                        {
+                            SelectedTab.ShowSubPage(SelectedItem.SubPageInTab);
+                        }
                     }
                 }
                 else
@@ -257,6 +277,8 @@ namespace Sqlbi.Bravo.UI.ViewModels
                     // If an item that isn't enabled is selected put the selection indicator back where it was
                     SelectedItem = MenuItems.FirstOrDefault(mi => mi.Name == LastNavigation?.Name);
                 }
+
+                Task.Run(() => {OnPropertyChanged(nameof(SelectedItem)); });
             }
         }
     }
