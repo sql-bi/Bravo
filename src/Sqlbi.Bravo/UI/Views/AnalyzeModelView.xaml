@@ -20,6 +20,7 @@
             <Setter Property="mah:ItemHelper.HoverBackgroundBrush" Value="{DynamicResource MahApps.Brushes.ThemeBackground}" />
         </Style>
 
+        <SolidColorBrush x:Key="MahApps.Brushes.DataGrid.Selection.Text" Color="{DynamicResource MahApps.Colors.ThemeForeground}" />
         <SolidColorBrush x:Key="MahApps.Brushes.DataGrid.Selection.Text.MouseOver" Color="{DynamicResource MahApps.Colors.ThemeForeground}" />
         <SolidColorBrush x:Key="MahApps.Brushes.DataGrid.Selection.Background" Color="Transparent" />
         <SolidColorBrush x:Key="MahApps.Brushes.DataGrid.Selection.Background.Inactive" Color="Transparent" />
