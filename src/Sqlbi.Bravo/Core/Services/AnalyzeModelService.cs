@@ -49,7 +49,6 @@ namespace Sqlbi.Bravo.Core.Services
 
             void InitilizeOrRefresh()
             {
-                // TODO: add error handling for if this fails
                 var runtimeSummary = ((ShellViewModel)App.ServiceProvider.GetRequiredService(typeof(ShellViewModel))).SelectedTab.RuntimeSummary;
 
                 if (_server.Connected == false)
