@@ -25,7 +25,6 @@ namespace Sqlbi.Bravo.UI.ViewModels
     {
         private readonly IAnalysisServicesEventWatcherService _watcher;
         private readonly ILogger _logger;
-        private NavigationItem selectedItem;
 
         public ShellViewModel(IAnalysisServicesEventWatcherService watcher, ILogger<ShellViewModel> logger)
         {
@@ -41,8 +40,6 @@ namespace Sqlbi.Bravo.UI.ViewModels
             Tabs = new ObservableCollection<TabItemViewModel>() { (TabItemViewModel)App.ServiceProvider.GetRequiredService(typeof(TabItemViewModel)) };
             SelectedTab = Tabs[0];
 
-           // SelectedItem = MenuItems.First();
-           // LastNavigation = SelectedItem;
             ItemSelectedCommand = new RelayCommand(async () => await ItemSelected());
 
             Tabs.CollectionChanged += (s, e) =>
@@ -117,6 +114,9 @@ namespace Sqlbi.Bravo.UI.ViewModels
             }
         }
 
+        public static int FormatDaxItemIndex => 0;
+        public static int AnalyzeModelItemIndex => 1;
+
         public ObservableCollection<NavigationItem> OptionMenuItems { get; } = new ObservableCollection<NavigationItem>()
         {
 #if DEBUG
@@ -126,18 +126,12 @@ namespace Sqlbi.Bravo.UI.ViewModels
             new NavigationItem{ Name = "Settings", Glyph = "\uE713" },
         };
 
-        public NavigationItem SelectedItem
-        {
-            get => selectedItem;
-            set
-            {
-                if (selectedItem?.Name != value?.Name)
-                {
-                    selectedItem = value;
-                    OnPropertyChanged(nameof(SelectedItem));
-                }
-            }
-        }
+        public NavigationItem SelectedItem { get; set; }
+
+        // Bind (and track) both SelectedItem and SelectedIndex
+        // because just tracking the SelectedItem is unreliable
+        // and can lead to selection highlighting getting out of sync.
+        public int SelectedIndex { get; set; }
 
         public NavigationItem SelectedOptionsItem { get; set; }
 
@@ -207,6 +201,8 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public NavigationItem LastNavigation { get; private set; } = null;
 
+        public int LastGoodSelectedIndex { get; set; } = -1;
+
         public void AddNewTab(BiConnectionType connType = BiConnectionType.UnSelected, SubPage subPage = SubPage.SelectConnection, RuntimeSummary runtimeSummary = null)
         {
             var newTab = (TabItemViewModel)App.ServiceProvider.GetRequiredService(typeof(TabItemViewModel));
@@ -261,10 +257,26 @@ namespace Sqlbi.Bravo.UI.ViewModels
                      && SelectedTab.RuntimeSummary.UsingLocalModelForAnanlysis)
                     {
                         SelectedItem = MenuItems.FirstOrDefault(mi => mi.SubPageInTab == SubPage.AnalyzeModel);
+                        SelectedIndex = AnalyzeModelItemIndex;
                     }
                     else
                     {
                         LastNavigation = SelectedItem;
+
+                        switch (SelectedItem.SubPageInTab)
+                        {
+                            case SubPage.SelectConnection:
+                                LastGoodSelectedIndex = -1;
+                                break;
+                            case SubPage.DaxFormatter:
+                                LastGoodSelectedIndex = FormatDaxItemIndex;
+                                break;
+                            case SubPage.AnalyzeModel:
+                                LastGoodSelectedIndex = AnalyzeModelItemIndex;
+                                break;
+                            default:
+                                break;
+                        }
 
                         if (SelectedTab.ConnectionType != BiConnectionType.UnSelected)
                         {
@@ -276,9 +288,8 @@ namespace Sqlbi.Bravo.UI.ViewModels
                 {
                     // If an item that isn't enabled is selected put the selection indicator back where it was
                     SelectedItem = MenuItems.FirstOrDefault(mi => mi.Name == LastNavigation?.Name);
+                    SelectedIndex = LastGoodSelectedIndex;
                 }
-
-                Task.Run(() => {OnPropertyChanged(nameof(SelectedItem)); });
             }
         }
     }

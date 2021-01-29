@@ -1,18 +1,20 @@
-﻿using Sqlbi.Bravo.UI.Framework.ViewModels;
-using System;
-using System.Linq;
-using Sqlbi.Bravo.Core.Services.Interfaces;
+﻿using Dax.Metadata;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Sqlbi.Bravo.Core.Logging;
 using Sqlbi.Bravo.Core.Services;
-using System.Threading.Tasks;
-using System.Windows.Input;
-using Sqlbi.Bravo.UI.Framework.Commands;
-using Sqlbi.Bravo.UI.DataModel;
-using Sqlbi.Bravo.Core.Settings.Interfaces;
+using Sqlbi.Bravo.Core.Services.Interfaces;
 using Sqlbi.Bravo.Core.Settings;
-using Microsoft.Extensions.DependencyInjection;
-using Dax.Metadata;
+using Sqlbi.Bravo.Core.Settings.Interfaces;
+using Sqlbi.Bravo.UI.DataModel;
+using Sqlbi.Bravo.UI.Framework.Commands;
+using Sqlbi.Bravo.UI.Framework.ViewModels;
+using System;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Input;
 
 namespace Sqlbi.Bravo.UI.ViewModels
 {
@@ -257,6 +259,8 @@ namespace Sqlbi.Bravo.UI.ViewModels
                 subPageInTab = SubPage.SelectConnection;
             }
 
+            var shellVm = (ShellViewModel)App.ServiceProvider.GetRequiredService(typeof(ShellViewModel));
+
             switch (subPageInTab)
             {
                 case SubPage.SelectConnection:
@@ -266,22 +270,21 @@ namespace Sqlbi.Bravo.UI.ViewModels
                     if (!RuntimeSummary.UsingLocalModelForAnanlysis)
                     {
                         ShowDaxFormatter = true;
+                        shellVm.SelectedIndex = ShellViewModel.FormatDaxItemIndex;
                     }
                     else
                     {
                         ShowAnalyzeModel = true;
+                        shellVm.SelectedIndex = ShellViewModel.AnalyzeModelItemIndex;
                     }
                     break;
                 case SubPage.AnalyzeModel:
                     ShowAnalyzeModel = true;
+                    shellVm.SelectedIndex = ShellViewModel.AnalyzeModelItemIndex;
                     break;
                 default:
                     break;
-            }     
-            var shellVm = (ShellViewModel)App.ServiceProvider.GetRequiredService(typeof(ShellViewModel));
-
-                shellVm.SelectedItem = shellVm.MenuItems.FirstOrDefault(mi => mi.SubPageInTab == subPageInTab);
-          
+            }
         }
     }
 }

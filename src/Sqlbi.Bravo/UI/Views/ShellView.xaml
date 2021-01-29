@@ -206,6 +206,7 @@
                 ItemContainerStyle="{StaticResource MenuItemsContainer}"
                 ItemTemplateSelector="{StaticResource MenuItemTemplateSelector}"
                 SelectedItem="{Binding SelectedItem, Mode=TwoWay}"
+                SelectedIndex="{Binding SelectedIndex, Mode=TwoWay}"
                 PaneBackground="{DynamicResource MahApps.Brushes.Gray8}"
                 PaneForeground="{DynamicResource MahApps.Brushes.ThemeForeground}"
                 OptionsItemCommand="{Binding ItemSelectedCommand}"
