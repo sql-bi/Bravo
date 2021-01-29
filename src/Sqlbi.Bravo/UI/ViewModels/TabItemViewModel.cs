@@ -1,16 +1,20 @@
-﻿using Sqlbi.Bravo.UI.Framework.ViewModels;
-using System;
-using Sqlbi.Bravo.Core.Services.Interfaces;
+﻿using Dax.Metadata;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Sqlbi.Bravo.Core.Logging;
 using Sqlbi.Bravo.Core.Services;
-using System.Threading.Tasks;
-using System.Windows.Input;
-using Sqlbi.Bravo.UI.Framework.Commands;
-using Sqlbi.Bravo.UI.DataModel;
-using Sqlbi.Bravo.Core.Settings.Interfaces;
+using Sqlbi.Bravo.Core.Services.Interfaces;
 using Sqlbi.Bravo.Core.Settings;
-using Microsoft.Extensions.DependencyInjection;
+using Sqlbi.Bravo.Core.Settings.Interfaces;
+using Sqlbi.Bravo.UI.DataModel;
+using Sqlbi.Bravo.UI.Framework.Commands;
+using Sqlbi.Bravo.UI.Framework.ViewModels;
+using System;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Input;
 
 namespace Sqlbi.Bravo.UI.ViewModels
 {
@@ -50,6 +54,14 @@ namespace Sqlbi.Bravo.UI.ViewModels
             RuntimeSummary.ParentProcessMainWindowTitle = _settings.Runtime.ParentProcessMainWindowTitle;
             RuntimeSummary.ParentProcessName = _settings.Runtime.ParentProcessName;
             RuntimeSummary.ServerName = _settings.Runtime.ServerName;
+        }
+
+        internal void ShowAnalysisOfLoadedModel(Model daxModel)
+        {
+            RuntimeSummary.UsingLocalModelForAnanlysis = true;
+
+            AnalyzeModelVm.OverrideDaxModel(daxModel);
+            ShowSubPage(SubPage.AnalyzeModel);
         }
 
         private async Task TryAgain()
@@ -129,6 +141,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
             {
                 if (value)
                 {
+                    DaxFormatterVm.EnsureInitialized();
                     DoNotShowAnything();
                 }
 
@@ -143,6 +156,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
             {
                 if (value)
                 {
+                    AnalyzeModelVm.EnsureInitialized();
                     DoNotShowAnything();
                 }
 
@@ -245,16 +259,28 @@ namespace Sqlbi.Bravo.UI.ViewModels
                 subPageInTab = SubPage.SelectConnection;
             }
 
+            var shellVm = (ShellViewModel)App.ServiceProvider.GetRequiredService(typeof(ShellViewModel));
+
             switch (subPageInTab)
             {
                 case SubPage.SelectConnection:
                     ShowSelectConnection = true;
                     break;
                 case SubPage.DaxFormatter:
-                    ShowDaxFormatter = true;
+                    if (!RuntimeSummary.UsingLocalModelForAnanlysis)
+                    {
+                        ShowDaxFormatter = true;
+                        shellVm.SelectedIndex = ShellViewModel.FormatDaxItemIndex;
+                    }
+                    else
+                    {
+                        ShowAnalyzeModel = true;
+                        shellVm.SelectedIndex = ShellViewModel.AnalyzeModelItemIndex;
+                    }
                     break;
                 case SubPage.AnalyzeModel:
                     ShowAnalyzeModel = true;
+                    shellVm.SelectedIndex = ShellViewModel.AnalyzeModelItemIndex;
                     break;
                 default:
                     break;

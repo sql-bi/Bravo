@@ -1,5 +1,4 @@
 ﻿using Microsoft.AnalysisServices;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Sqlbi.Bravo.Core.Client.Http;
 using Sqlbi.Bravo.Core.Client.Http.Interfaces;
@@ -8,7 +7,6 @@ using Sqlbi.Bravo.Core.Logging;
 using Sqlbi.Bravo.Core.Services.Interfaces;
 using Sqlbi.Bravo.Core.Settings;
 using Sqlbi.Bravo.Core.Settings.Interfaces;
-using Sqlbi.Bravo.UI.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -23,16 +21,14 @@ namespace Sqlbi.Bravo.Core.Services
     {
         private readonly SemaphoreSlim _initilizeOrRefreshSemaphore = new SemaphoreSlim(1);
         private readonly IDaxFormatterHttpClient _client;
-        private readonly IGlobalSettingsProviderService _settings;
         private readonly ILogger _logger;
         private readonly Server _server;
         private DaxFormatterModelManager _manager;
         private bool _disposed;
 
-        public DaxFormatterService(IDaxFormatterHttpClient client, IGlobalSettingsProviderService settings, ILogger<DaxFormatterService> logger)
+        public DaxFormatterService(IDaxFormatterHttpClient client, ILogger<DaxFormatterService> logger)
         {
             _client = client;
-            _settings = settings;
             _logger = logger;
 
             _logger.Trace();
@@ -73,8 +69,6 @@ namespace Sqlbi.Bravo.Core.Services
         {
             var origAndFormatted = await Task.Run(async () =>
             {
-                var shellVm = (ShellViewModel)App.ServiceProvider.GetRequiredService(typeof(ShellViewModel));
-
                 var requests = _manager.CreateRequests(objectType, runtimeSummary);
 
                 var measures = new Dictionary<string, (string, string)>();

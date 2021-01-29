@@ -183,7 +183,7 @@
                                 </Button>
                             </StackPanel>
                             <ControlTemplate.Triggers>
-                                <Trigger Property="IsSelected" Value="true">
+                                <Trigger Property="IsSelected" Value="True">
                                     <Setter TargetName="PART_Content" Property="Background" Value="{DynamicResource MahApps.Brushes.Window.Background}" />
                                 </Trigger>
                             </ControlTemplate.Triggers>
@@ -206,6 +206,7 @@
                 ItemContainerStyle="{StaticResource MenuItemsContainer}"
                 ItemTemplateSelector="{StaticResource MenuItemTemplateSelector}"
                 SelectedItem="{Binding SelectedItem, Mode=TwoWay}"
+                SelectedIndex="{Binding SelectedIndex, Mode=TwoWay}"
                 PaneBackground="{DynamicResource MahApps.Brushes.Gray8}"
                 PaneForeground="{DynamicResource MahApps.Brushes.ThemeForeground}"
                 OptionsItemCommand="{Binding ItemSelectedCommand}"

@@ -2,12 +2,10 @@
 using Dax.ViewModel;
 using Microsoft.AnalysisServices;
 using Microsoft.AnalysisServices.AdomdClient;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Sqlbi.Bravo.Core.Logging;
 using Sqlbi.Bravo.Core.Services.Interfaces;
 using Sqlbi.Bravo.Core.Settings;
-using Sqlbi.Bravo.UI.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Data.OleDb;
@@ -50,9 +48,14 @@ namespace Sqlbi.Bravo.Core.Services
 
             void InitilizeOrRefresh()
             {
+                if (runtimeSummary.UsingLocalModelForAnanlysis)
+                {
+                    return;
+                }
+
                 if (_server.Connected == false)
                 {
-                    _server.Connect(runtimeSummary.ServerName);
+                    _server.Connect(runtimeSummary?.ServerName);
                 }
 
                 var db = _server.Databases[runtimeSummary.DatabaseName];
@@ -126,5 +129,11 @@ namespace Sqlbi.Bravo.Core.Services
         }
 
         public Model GetModelForExport() => _daxModel;
+
+        public void OverrideDaxModel(Model daxModel)
+        {
+            _daxModel = daxModel;
+            _vpaModel = new VpaModel(_daxModel);
+        }
     }
 }

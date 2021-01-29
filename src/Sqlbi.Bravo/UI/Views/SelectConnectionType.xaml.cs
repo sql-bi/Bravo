@@ -1,4 +1,5 @@
-﻿using Microsoft.Win32;
+﻿using Dax.Vpax.Tools;
+using Microsoft.Win32;
 using Sqlbi.Bravo.UI.DataModel;
 using Sqlbi.Bravo.UI.ViewModels;
 using System;
@@ -54,12 +55,13 @@ namespace Sqlbi.Bravo.UI.Views
 
             if (openFileDialog.ShowDialog() == true)
             {
-                // TODO REQUIREMENTS: need to load the file
-                _ = MessageBox.Show(
-                    $"Need to load the Vertipaq file: {openFileDialog.FileName}",
-                    "TODO",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Question);
+                var fileContent = VpaxTools.ImportVpax(openFileDialog.FileName);
+
+                var vm = DataContext as TabItemViewModel;
+                vm.ConnectionType = BiConnectionType.VertipaqAnalyzerFile;
+                vm.ConnectionName = System.IO.Path.GetFileNameWithoutExtension(openFileDialog.FileName);
+                vm.AnalyzeModelVm.OnPropertyChanged(nameof(AnalyzeModelViewModel.ConnectionName));
+                vm.ShowAnalysisOfLoadedModel(fileContent.DaxModel);
             }
         }
     }

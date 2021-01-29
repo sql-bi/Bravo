@@ -15,5 +15,7 @@
         public string ParentProcessMainWindowTitle { get; set; }
 
         public bool IsExecutedAsExternalTool { get; set; }
+
+        public bool UsingLocalModelForAnanlysis { get; internal set; } = false;
     }
 }
