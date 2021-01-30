@@ -38,8 +38,6 @@ namespace Sqlbi.Bravo.Core.Settings
 
         public bool IsExecutedAsExternalToolForPowerBIDesktop => IsExecutedAsExternalTool && AppConstants.PowerBIDesktopProcessName.Equals(ParentProcessName);
 
-        public string ExternalToolInstanceId => $"{ AppConstants.ApplicationName }|{ ServerName }|{ DatabaseName }";
-
         public bool HasCommandLineParseErrors => CommandLineParseErrors.Any();
 
         public IReadOnlyCollection<string> CommandLineParseErrors { get; private set; }
