@@ -281,7 +281,14 @@ namespace Sqlbi.Bravo.UI.ViewModels
         {
             _logger.Trace();
 
-            await ExecuteCommandAsync(() => InitializeCommandIsRunning, InitializeOrRefreshFormatter);
+            await ExecuteCommandAsync(
+                () => InitializeCommandIsRunning,
+                async () =>
+                {
+                    await InitializeOrRefreshFormatter();
+
+                    ViewIndex = SubViewIndex_Start;
+                });
         }
 
         private async Task AnalyzeAsync()
