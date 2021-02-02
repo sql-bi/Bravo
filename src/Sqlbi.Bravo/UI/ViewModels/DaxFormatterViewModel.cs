@@ -367,8 +367,14 @@ namespace Sqlbi.Bravo.UI.ViewModels
                     }
                 }
 
-                // TODO: add error handling for this
-                _formatter.SaveFormattedMeasures(toUpdate, ParentTab.RuntimeSummary);
+                try
+                {
+                    _formatter.SaveFormattedMeasures(toUpdate, ParentTab.RuntimeSummary);
+                }
+                catch (Exception exc)
+                {
+                    ParentTab.DisplayError($"Unable to save changes{Environment.NewLine}{exc.Message}", ApplyFormattingChangesToModelAsync);
+                }
 
                 MeasuresFormatted = toUpdate.Count;
             });
