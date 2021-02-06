@@ -1,7 +1,7 @@
-﻿using Microsoft.AnalysisServices;
+﻿using Dax.Formatter;
+using Dax.Formatter.Models;
+using Microsoft.AnalysisServices;
 using Microsoft.Extensions.Logging;
-using Sqlbi.Bravo.Core.Client.Http;
-using Sqlbi.Bravo.Core.Client.Http.Interfaces;
 using Sqlbi.Bravo.Core.Helpers;
 using Sqlbi.Bravo.Core.Logging;
 using Sqlbi.Bravo.Core.Services.Interfaces;
@@ -20,13 +20,13 @@ namespace Sqlbi.Bravo.Core.Services
     internal class DaxFormatterService : IDaxFormatterService, IDisposable
     {
         private readonly SemaphoreSlim _initilizeOrRefreshSemaphore = new SemaphoreSlim(1);
-        private readonly IDaxFormatterHttpClient _client;
+        private readonly IDaxFormatterClient _client;
         private readonly ILogger _logger;
         private readonly Server _server;
-        private DaxFormatterModelManager _manager;
+        private DaxFormatterServiceModelManager _manager;
         private bool _disposed;
 
-        public DaxFormatterService(IDaxFormatterHttpClient client, ILogger<DaxFormatterService> logger)
+        public DaxFormatterService(IDaxFormatterClient client, ILogger<DaxFormatterService> logger)
         {
             _client = client;
             _logger = logger;
@@ -61,11 +61,11 @@ namespace Sqlbi.Bravo.Core.Services
                 database.Model.Sync(new Microsoft.AnalysisServices.Tabular.SyncOptions { DiscardLocalChanges = true });
                 database.Refresh();
 
-                _manager = DaxFormatterModelManager.CreateFrom(database.Model);
+                _manager = DaxFormatterServiceModelManager.CreateFrom(database.Model);
             }
         }
 
-        public async Task<Dictionary<string, (string, string)>> GetFormattedItems(DaxFormatterTabularObjectType objectType, RuntimeSummary runtimeSummary)
+        public async Task<Dictionary<string, (string, string)>> GetFormattedItems(DaxFormatterServiceTabularObjectType objectType, RuntimeSummary runtimeSummary)
         {
             var origAndFormatted = await Task.Run(async () =>
             {
@@ -101,7 +101,7 @@ namespace Sqlbi.Bravo.Core.Services
 
         private Dictionary<string, string> ParseRequest(DaxFormatterRequest request)
         {
-            var regex = new Regex(DaxFormatterModelManager.ExpressionIdRegexPattern, RegexOptions.None);
+            var regex = new Regex(DaxFormatterServiceModelManager.ExpressionIdRegexPattern, RegexOptions.None);
             var splits = regex.Split(request.Dax).Where((i) => !string.Empty.Equals(i)).ToArray();
 
             var ids = splits.Where((s, i) => i % 2 == 0);
@@ -121,7 +121,7 @@ namespace Sqlbi.Bravo.Core.Services
         private Dictionary<string, string> ParseResponse(DaxFormatterResponse response)
         {
             // From DaxFormatterModelManager.UpdateModelFrom
-            var regex = new Regex(DaxFormatterModelManager.ExpressionIdRegexPattern, RegexOptions.None);
+            var regex = new Regex(DaxFormatterServiceModelManager.ExpressionIdRegexPattern, RegexOptions.None);
             var splits = regex.Split(response.Formatted).Where((i) => !string.Empty.Equals(i)).ToArray();
 
             var ids = splits.Where((s, i) => i % 2 == 0);
@@ -131,7 +131,7 @@ namespace Sqlbi.Bravo.Core.Services
             return items;
         }
 
-        public async Task FormatAsync(DaxFormatterTabularObjectType objectType, RuntimeSummary runtimeSummary)
+        public async Task FormatAsync(DaxFormatterServiceTabularObjectType objectType, RuntimeSummary runtimeSummary)
         {
             _logger.Trace();
 
@@ -200,7 +200,7 @@ namespace Sqlbi.Bravo.Core.Services
             }
         }
 
-        public int Count(DaxFormatterTabularObjectType objectType) => _manager.Count(objectType);
+        public int Count(DaxFormatterServiceTabularObjectType objectType) => _manager.Count(objectType);
 
         protected virtual void Dispose(bool disposing)
         {

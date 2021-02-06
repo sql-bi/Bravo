@@ -1,6 +1,5 @@
 ﻿using Humanizer;
 using Microsoft.Extensions.Logging;
-using Sqlbi.Bravo.Core.Client.Http;
 using Sqlbi.Bravo.Core.Helpers;
 using Sqlbi.Bravo.Core.Logging;
 using Sqlbi.Bravo.Core.Services;
@@ -48,7 +47,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
             InitializeCommand = new RelayCommand(execute: async () => await InitializeAsync());
             FormatAnalyzeCommand = new RelayCommand(execute: async () => await AnalyzeAsync());
-            FormatMakeChangesCommand = new RelayCommand(execute: async () => await MakeChangesAsync(), canExecute: () => !InitializeCommandIsEnabled && TabularObjectType != DaxFormatterTabularObjectType.None).ObserveProperties(this, nameof(TabularObjectType), nameof(InitializeCommandIsEnabled));
+            FormatMakeChangesCommand = new RelayCommand(execute: async () => await MakeChangesAsync(), canExecute: () => !InitializeCommandIsEnabled && TabularObjectType != DaxFormatterServiceTabularObjectType.None).ObserveProperties(this, nameof(TabularObjectType), nameof(InitializeCommandIsEnabled));
             HelpCommand = new RelayCommand(execute: async () => await ShowHelpAsync());
             RefreshCommand = new RelayCommand(execute: async () => await RefreshAsync());
             ChangeFormulasCommand = new RelayCommand(() => ChooseFormulas());
@@ -63,7 +62,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
             _timer.Start();
         }
 
-        private DaxFormatterTabularObjectType TabularObjectType { get; set; } = DaxFormatterTabularObjectType.None;
+        private DaxFormatterServiceTabularObjectType TabularObjectType { get; set; } = DaxFormatterServiceTabularObjectType.None;
 
         public TabItemViewModel ParentTab { get; set; }
 
@@ -107,8 +106,8 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public bool TabularObjectMeasuresIsChecked
         {
-            get => TabularObjectType.HasFlag(DaxFormatterTabularObjectType.Measures);
-            set => TabularObjectType = TabularObjectType.WithFlag(DaxFormatterTabularObjectType.Measures, set: value);
+            get => TabularObjectType.HasFlag(DaxFormatterServiceTabularObjectType.Measures);
+            set => TabularObjectType = TabularObjectType.WithFlag(DaxFormatterServiceTabularObjectType.Measures, set: value);
         }
 
         public string LoadingDetails { get; set; }
@@ -124,8 +123,8 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public bool TabularObjectCalculatedColumnsIsChecked
         {
-            get => TabularObjectType.HasFlag(DaxFormatterTabularObjectType.CalculatedColumns);
-            set => TabularObjectType = TabularObjectType.WithFlag(DaxFormatterTabularObjectType.CalculatedColumns, set: value);
+            get => TabularObjectType.HasFlag(DaxFormatterServiceTabularObjectType.CalculatedColumns);
+            set => TabularObjectType = TabularObjectType.WithFlag(DaxFormatterServiceTabularObjectType.CalculatedColumns, set: value);
         }
 
         public int TabularObjectCalculatedColumnsCount { get; set; }
@@ -136,24 +135,24 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public bool TabularObjectKPIsIsChecked
         {
-            get => TabularObjectType.HasFlag(DaxFormatterTabularObjectType.KPIs);
-            set => TabularObjectType = TabularObjectType.WithFlag(DaxFormatterTabularObjectType.KPIs, set: value);
+            get => TabularObjectType.HasFlag(DaxFormatterServiceTabularObjectType.KPIs);
+            set => TabularObjectType = TabularObjectType.WithFlag(DaxFormatterServiceTabularObjectType.KPIs, set: value);
         }
 
         public int TabularObjectKPIsCount { get; set; }
 
         public bool TabularObjectDetailRowsDefinitionsIsChecked
         {
-            get => TabularObjectType.HasFlag(DaxFormatterTabularObjectType.DetailRowsDefinitions);
-            set => TabularObjectType = TabularObjectType.WithFlag(DaxFormatterTabularObjectType.DetailRowsDefinitions, set: value);
+            get => TabularObjectType.HasFlag(DaxFormatterServiceTabularObjectType.DetailRowsDefinitions);
+            set => TabularObjectType = TabularObjectType.WithFlag(DaxFormatterServiceTabularObjectType.DetailRowsDefinitions, set: value);
         }
 
         public int TabularObjectDetailRowsDefinitionsCount { get; set; }
 
         public bool TabularObjectCalculationItemsIsChecked
         {
-            get => TabularObjectType.HasFlag(DaxFormatterTabularObjectType.CalculationItems);
-            set => TabularObjectType = TabularObjectType.WithFlag(DaxFormatterTabularObjectType.CalculationItems, set: value);
+            get => TabularObjectType.HasFlag(DaxFormatterServiceTabularObjectType.CalculationItems);
+            set => TabularObjectType = TabularObjectType.WithFlag(DaxFormatterServiceTabularObjectType.CalculationItems, set: value);
         }
 
         public int TabularObjectCalculationItemsCount { get; set; }
@@ -184,11 +183,11 @@ namespace Sqlbi.Bravo.UI.ViewModels
             LastSyncTime = DateTime.UtcNow;
             OnPropertyChanged(nameof(TimeSinceLastSync));
 
-            TabularObjectMeasuresCount = _formatter.Count(DaxFormatterTabularObjectType.Measures);
-            TabularObjectCalculatedColumnsCount = _formatter.Count(DaxFormatterTabularObjectType.CalculatedColumns);
-            TabularObjectKPIsCount = _formatter.Count(DaxFormatterTabularObjectType.KPIs);
-            TabularObjectDetailRowsDefinitionsCount = _formatter.Count(DaxFormatterTabularObjectType.DetailRowsDefinitions);
-            TabularObjectCalculationItemsCount = _formatter.Count(DaxFormatterTabularObjectType.CalculationItems);
+            TabularObjectMeasuresCount = _formatter.Count(DaxFormatterServiceTabularObjectType.Measures);
+            TabularObjectCalculatedColumnsCount = _formatter.Count(DaxFormatterServiceTabularObjectType.CalculatedColumns);
+            TabularObjectKPIsCount = _formatter.Count(DaxFormatterServiceTabularObjectType.KPIs);
+            TabularObjectDetailRowsDefinitionsCount = _formatter.Count(DaxFormatterServiceTabularObjectType.DetailRowsDefinitions);
+            TabularObjectCalculationItemsCount = _formatter.Count(DaxFormatterServiceTabularObjectType.CalculationItems);
 
             FormatCommandIsEnabled = true;
             InitializeCommandIsEnabled = false;
@@ -289,7 +288,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
             ProgressDetails = "Identifying formulas to format";
             ViewIndex = SubViewIndex_Progress;
 
-            TabularObjectType = TabularObjectType.WithFlag(DaxFormatterTabularObjectType.Measures, true);
+            TabularObjectType = TabularObjectType.WithFlag(DaxFormatterServiceTabularObjectType.Measures, true);
 
             //var measuresOfInterest = SelectionTreeData.Tables.SelectMany(t => t.Measures.Where(m => !string.IsNullOrWhiteSpace(m.Formula) && (m.IsSelected ?? false)));
 

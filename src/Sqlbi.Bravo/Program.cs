@@ -1,12 +1,11 @@
-﻿using Microsoft.ApplicationInsights.Extensibility;
+﻿using Dax.Formatter;
+using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Serilog;
 using Sqlbi.Bravo.Core;
-using Sqlbi.Bravo.Core.Client.Http;
-using Sqlbi.Bravo.Core.Client.Http.Interfaces;
 using Sqlbi.Bravo.Core.Services;
 using Sqlbi.Bravo.Core.Services.Interfaces;
 using Sqlbi.Bravo.Core.Settings;
@@ -107,11 +106,11 @@ namespace Sqlbi.Bravo
                 services.AddOptions();
                 services.AddOptions<RuntimeSettings>();
                 services.Configure<AppSettings>(context.Configuration.GetSection(nameof(AppSettings)));
-                services.AddHttpClient<IDaxFormatterHttpClient, DaxFormatterHttpClient>().ConfigurePrimaryHttpMessageHandler((provider) => new DaxFormatterHttpClientMessageHandler(provider));
                 services.AddSingleton<IAnalysisServicesEventWatcherService, AnalysisServicesEventWatcherService>();
                 services.AddSingleton<IApplicationInstanceService, ApplicationInstanceService>();
                 services.AddSingleton<IGlobalSettingsProviderService, GlobalSettingsProviderService>();
                 services.AddSingleton<IThemeSelectorService, ThemeSelectorService>();
+                services.AddSingleton<IDaxFormatterClient, DaxFormatterClient>();
                 services.AddSingleton<ShellViewModel>();
                 services.AddSingleton<SideMenuViewModel>();
                 services.AddSingleton<SettingsViewModel>();
