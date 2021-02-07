@@ -45,11 +45,11 @@ namespace Sqlbi.Bravo.UI.ViewModels
             ViewIndex = SubViewIndex_Loading;
             PreviewChanges = true;
 
-            InitializeCommand = new RelayCommand(execute: async () => await InitializeAsync());
-            FormatAnalyzeCommand = new RelayCommand(execute: async () => await AnalyzeAsync());
-            FormatMakeChangesCommand = new RelayCommand(execute: async () => await MakeChangesAsync(), canExecute: () => !InitializeCommandIsEnabled && TabularObjectType != DaxFormatterServiceTabularObjectType.None).ObserveProperties(this, nameof(TabularObjectType), nameof(InitializeCommandIsEnabled));
-            HelpCommand = new RelayCommand(execute: async () => await ShowHelpAsync());
-            RefreshCommand = new RelayCommand(execute: async () => await RefreshAsync());
+            InitializeCommand = new RelayCommand(async () => await InitializeAsync());
+            FormatAnalyzeCommand = new RelayCommand(async () => await AnalyzeAsync());
+            FormatMakeChangesCommand = new RelayCommand(async () => await MakeChangesAsync());
+            HelpCommand = new RelayCommand(async () => await ShowHelpAsync());
+            RefreshCommand = new RelayCommand(async () => await RefreshAsync());
             ChangeFormulasCommand = new RelayCommand(() => ChooseFormulas());
             ApplySelectedFormulaChangesCommand = new RelayCommand(() => SelectedFormulasChanged());
             OpenLogCommand = new RelayCommand(() => OpenLog());
@@ -61,8 +61,6 @@ namespace Sqlbi.Bravo.UI.ViewModels
             _timer.Tick += new EventHandler((s, e) => OnPropertyChanged(nameof(TimeSinceLastSync)));
             _timer.Start();
         }
-
-        private DaxFormatterServiceTabularObjectType TabularObjectType { get; set; } = DaxFormatterServiceTabularObjectType.None;
 
         public TabItemViewModel ParentTab { get; set; }
 
@@ -104,12 +102,6 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public MeasureInfoViewModel NeedFormattingSelected { get; set; }
 
-        public bool TabularObjectMeasuresIsChecked
-        {
-            get => TabularObjectType.HasFlag(DaxFormatterServiceTabularObjectType.Measures);
-            set => TabularObjectType = TabularObjectType.WithFlag(DaxFormatterServiceTabularObjectType.Measures, set: value);
-        }
-
         public string LoadingDetails { get; set; }
 
         public DateTime LastSyncTime { get; private set; }
@@ -119,43 +111,9 @@ namespace Sqlbi.Bravo.UI.ViewModels
             ? "not yet"
             : $"{(DateTime.UtcNow - LastSyncTime).Humanize(minUnit: Humanizer.Localisation.TimeUnit.Second).Replace("minute", "min").Replace("second", "sec")} ago";
 
-        public int TabularObjectMeasuresCount { get; set; }
-
-        public bool TabularObjectCalculatedColumnsIsChecked
-        {
-            get => TabularObjectType.HasFlag(DaxFormatterServiceTabularObjectType.CalculatedColumns);
-            set => TabularObjectType = TabularObjectType.WithFlag(DaxFormatterServiceTabularObjectType.CalculatedColumns, set: value);
-        }
-
-        public int TabularObjectCalculatedColumnsCount { get; set; }
-
         public int MeasuresFormatted { get; set; }
 
         public int AnalyzedMeasureCount { get; set; }
-
-        public bool TabularObjectKPIsIsChecked
-        {
-            get => TabularObjectType.HasFlag(DaxFormatterServiceTabularObjectType.KPIs);
-            set => TabularObjectType = TabularObjectType.WithFlag(DaxFormatterServiceTabularObjectType.KPIs, set: value);
-        }
-
-        public int TabularObjectKPIsCount { get; set; }
-
-        public bool TabularObjectDetailRowsDefinitionsIsChecked
-        {
-            get => TabularObjectType.HasFlag(DaxFormatterServiceTabularObjectType.DetailRowsDefinitions);
-            set => TabularObjectType = TabularObjectType.WithFlag(DaxFormatterServiceTabularObjectType.DetailRowsDefinitions, set: value);
-        }
-
-        public int TabularObjectDetailRowsDefinitionsCount { get; set; }
-
-        public bool TabularObjectCalculationItemsIsChecked
-        {
-            get => TabularObjectType.HasFlag(DaxFormatterServiceTabularObjectType.CalculationItems);
-            set => TabularObjectType = TabularObjectType.WithFlag(DaxFormatterServiceTabularObjectType.CalculationItems, set: value);
-        }
-
-        public int TabularObjectCalculationItemsCount { get; set; }
 
         public ObservableCollection<MeasureInfoViewModel> Measures { get; set; } = new ObservableCollection<MeasureInfoViewModel>();
 
@@ -183,12 +141,6 @@ namespace Sqlbi.Bravo.UI.ViewModels
             LastSyncTime = DateTime.UtcNow;
             OnPropertyChanged(nameof(TimeSinceLastSync));
 
-            TabularObjectMeasuresCount = _formatter.Count(DaxFormatterServiceTabularObjectType.Measures);
-            TabularObjectCalculatedColumnsCount = _formatter.Count(DaxFormatterServiceTabularObjectType.CalculatedColumns);
-            TabularObjectKPIsCount = _formatter.Count(DaxFormatterServiceTabularObjectType.KPIs);
-            TabularObjectDetailRowsDefinitionsCount = _formatter.Count(DaxFormatterServiceTabularObjectType.DetailRowsDefinitions);
-            TabularObjectCalculationItemsCount = _formatter.Count(DaxFormatterServiceTabularObjectType.CalculationItems);
-
             FormatCommandIsEnabled = true;
             InitializeCommandIsEnabled = false;
 
@@ -199,19 +151,17 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         private void LoadMeasuresForSelection()
         {
-            var measureList = _formatter.GetMeasures();
-
             var msvm = new MeasureSelectionViewModel();
 
-            foreach (var measure in measureList)
+            foreach (var measure in _formatter.Measures)
             {
                 var addedMeasure = false;
 
                 foreach (var table in msvm.Tables)
                 {
-                    if (table.Name == measure.Table.Name)
+                    if (table.Name == measure.TableName)
                     {
-                        table.Measures.Add(new TreeItem(msvm, table) { Name = measure.Name, Formula = measure.Expression });
+                        table.Measures.Add(new TreeItem(msvm, table) { Name = measure.Name, Formula = measure.Expression, TabularObject = measure });
                         addedMeasure = true;
                         break;
                     }
@@ -219,8 +169,8 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
                 if (!addedMeasure)
                 {
-                    var newTable = new TreeItem(msvm) { Name = measure.Table.Name };
-                    newTable.Measures.Add(new TreeItem(msvm, newTable) { Name = measure.Name, Formula = measure.Expression });
+                    var newTable = new TreeItem(msvm) { Name = measure.TableName };
+                    newTable.Measures.Add(new TreeItem(msvm, newTable) { Name = measure.Name, Formula = measure.Expression, TabularObject = measure });
                     msvm.Tables.Add(newTable);
                 }
             }
@@ -288,42 +238,23 @@ namespace Sqlbi.Bravo.UI.ViewModels
             ProgressDetails = "Identifying formulas to format";
             ViewIndex = SubViewIndex_Progress;
 
-            TabularObjectType = TabularObjectType.WithFlag(DaxFormatterServiceTabularObjectType.Measures, true);
-
-            //var measuresOfInterest = SelectionTreeData.Tables.SelectMany(t => t.Measures.Where(m => !string.IsNullOrWhiteSpace(m.Formula) && (m.IsSelected ?? false)));
-
-            var runtimeSummary = ParentTab.RuntimeSummary;
-
-            // TODO REQUIREMENTS: This should not get all Measures--only the ones that are in the `measuresOfInterest` (above)
-            var measures = await _formatter.GetFormattedItems(TabularObjectType, runtimeSummary);
+            var tabularObjects = SelectionTreeData.Tables.SelectMany(t => t.Measures.Where(m => !string.IsNullOrWhiteSpace(m.Formula) && (m.IsSelected ?? false))).Select((i) => i.TabularObject).ToList();
+            var formattedTabularObjects = await _formatter.FormatAsync(tabularObjects);
 
             Measures.Clear();
 
-            string GetMeasureName(string id, string unformattedExpression)
+            foreach (var formattedTabularObject in formattedTabularObjects)
             {
-                foreach (var table in SelectionTreeData.Tables)
+                if (formattedTabularObject is DaxFormatterServiceTabularMeasure measure)
                 {
-                    var measureInfo = table.Measures.FirstOrDefault(t => t.Formula?.Trim() == unformattedExpression.Trim());
-
-                    if (measureInfo != null)
+                    Measures.Add(new MeasureInfoViewModel
                     {
-                        return measureInfo.Name;
-                    }
+                        TabularObject = measure,
+                        Name = measure.Name,
+                        OriginalDax = measure.Expression,
+                        FormatterDax = measure.ExpressionFormatted,
+                    });
                 }
-
-                return id;
-            }
-
-            foreach (var m in measures)
-            {
-                Measures.Add(new MeasureInfoViewModel
-                {
-                    Identifier = m.Key,
-                    // TODO REQUIREMENTS: Get names of measures at the same time as IDs and expressions - this is a workaround
-                    Name = GetMeasureName(m.Key, m.Value.Item1),
-                    OriginalDax = m.Value.Item1,
-                    FormatterDax = m.Value.Item2,
-                });
             }
 
             OnPropertyChanged(nameof(MeasuresNeedingFormatting));
@@ -347,23 +278,12 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         private async Task ApplyFormattingChangesToModelAsync()
         {
-            await Task.Run(() =>
-            {
-                var toUpdate = new List<(string id, string expression)>();
+            var changedTabularObjects = Measures.Where((m) => !m.IsAlreadyFormatted && m.Reformat).Select((m) => m.TabularObject).ToList();
 
-                foreach (var measure in Measures)
-                {
-                    if (!measure.IsAlreadyFormatted && measure.Reformat)
-                    {
-                        toUpdate.Add((measure.Identifier, measure.FormatterDax));
-                    }
-                }
+            // TODO: add error handling for this
+            await _formatter.ApplyFormatAsync(changedTabularObjects);
 
-                // TODO: add error handling for this
-                _formatter.SaveFormattedMeasures(toUpdate, ParentTab.RuntimeSummary);
-
-                MeasuresFormatted = toUpdate.Count;
-            });
+            MeasuresFormatted = changedTabularObjects.Count;
         }
 
         private async Task MakeChangesAsync()
