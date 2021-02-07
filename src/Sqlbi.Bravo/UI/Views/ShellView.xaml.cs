@@ -57,10 +57,7 @@ namespace Sqlbi.Bravo.UI.Views
                         };
 
                         // Creating the tab (& VMs) may not trigger the loaded event when expected
-                        ViewModel.AddNewTab(BiConnectionType.ActivePowerBiWindow, ViewModel.SelectedItem.SubPageInTab, runtimeSummary);
-
-                        // Run the initialize command now to ensure it's run
-                        ViewModel.SelectedTab.DaxFormatterVm.InitializeCommand.Execute(null);
+                        ViewModel.AddNewTab(BiConnectionType.ActivePowerBiWindow, ViewModel?.SelectedItem?.SubPageInTab ?? SubPage.DaxFormatter, runtimeSummary);
                     }
                 }
                 catch (Exception e)

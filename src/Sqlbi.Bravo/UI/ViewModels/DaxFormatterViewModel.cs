@@ -230,7 +230,14 @@ namespace Sqlbi.Bravo.UI.ViewModels
         {
             _logger.Trace();
 
-            await ExecuteCommandAsync(() => InitializeCommandIsRunning, InitializeOrRefreshFormatter);
+            await ExecuteCommandAsync(
+                () => InitializeCommandIsRunning,
+                async () =>
+                {
+                    await InitializeOrRefreshFormatter();
+
+                    ViewIndex = SubViewIndex_Start;
+                });
         }
 
         private async Task AnalyzeAsync()
@@ -280,8 +287,14 @@ namespace Sqlbi.Bravo.UI.ViewModels
         {
             var changedTabularObjects = Measures.Where((m) => !m.IsAlreadyFormatted && m.Reformat).Select((m) => m.TabularObject).ToList();
 
-            // TODO: add error handling for this
-            await _formatter.ApplyFormatAsync(changedTabularObjects);
+            try
+            {
+                await _formatter.ApplyFormatAsync(changedTabularObjects);
+            }
+            catch (Exception exc)
+            {
+                ParentTab.DisplayError($"Unable to save changes{Environment.NewLine}{exc.Message}", ApplyFormattingChangesToModelAsync);
+            }
 
             MeasuresFormatted = changedTabularObjects.Count;
         }

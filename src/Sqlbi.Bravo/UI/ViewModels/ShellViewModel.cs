@@ -206,14 +206,14 @@ namespace Sqlbi.Bravo.UI.ViewModels
         {
             var newTab = (TabItemViewModel)App.ServiceProvider.GetRequiredService(typeof(TabItemViewModel));
 
-            newTab.ConnectionType = connType;
-            newTab.ShowSubPage(subPage);
-
             if (runtimeSummary != null)
             {
                 newTab.ConnectionName = runtimeSummary.ParentProcessMainWindowTitle.Replace(" - Power BI Desktop", string.Empty);
                 newTab.RuntimeSummary = runtimeSummary;
             }
+
+            newTab.ConnectionType = connType;
+            newTab.ShowSubPage(subPage);
 
             Tabs.Add(newTab);
 
