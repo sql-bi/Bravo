@@ -1,52 +1,100 @@
-﻿using Microsoft.AnalysisServices;
+﻿using Dax.Formatter;
+using Dax.Formatter.Models;
+using Microsoft.AnalysisServices;
+using Microsoft.AnalysisServices.Tabular;
 using Microsoft.Extensions.Logging;
-using Sqlbi.Bravo.Core.Client.Http;
-using Sqlbi.Bravo.Core.Client.Http.Interfaces;
 using Sqlbi.Bravo.Core.Helpers;
 using Sqlbi.Bravo.Core.Logging;
 using Sqlbi.Bravo.Core.Services.Interfaces;
 using Sqlbi.Bravo.Core.Settings;
-using Sqlbi.Bravo.Core.Settings.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Sqlbi.Bravo.Core.Services
 {
+    interface IDaxFormatterServiceTabularObject
+    {
+        Guid Id { get; }
+
+        string Expression { get; }
+
+        string ExpressionFormatted { get; set; }
+
+        List<string> FormatterErrors { get; }
+
+        string FormatterAssignment { get; }
+    }
+
+    internal abstract class DaxFormatterServiceTabularObject : IDaxFormatterServiceTabularObject
+    {
+        public DaxFormatterServiceTabularObject(string expression) => Expression = expression;
+
+        public Guid Id { get; } = Guid.NewGuid();
+
+        public string Expression { get; }
+
+        public string ExpressionFormatted { get; set; }
+
+        public List<string> FormatterErrors { get; } = new List<string>();
+
+        public string FormatterAssignment => $"[{ Id }] :=";
+
+        public string FormatterExpression => $"{ FormatterAssignment }{ Expression }";
+    }
+
+    interface IDaxFormatterServiceTabularNamedObject
+    {
+        string Name { get; }
+    }
+
+    internal class DaxFormatterServiceTabularMeasure : DaxFormatterServiceTabularObject, IDaxFormatterServiceTabularNamedObject
+    {
+        public DaxFormatterServiceTabularMeasure(string name, string tableName, string expression)
+            : base(expression)
+        {
+            Name = name;
+            TableName = tableName;
+        }
+
+        public string Name { get; }
+
+        public string TableName { get; }
+    }
+
     internal class DaxFormatterService : IDaxFormatterService, IDisposable
     {
-        private readonly SemaphoreSlim _initilizeOrRefreshSemaphore = new SemaphoreSlim(1);
-        private readonly IDaxFormatterHttpClient _client;
+        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1);
+        private readonly IDaxFormatterClient _client;
         private readonly ILogger _logger;
-        private readonly Server _server;
-        private DaxFormatterModelManager _manager;
+        private readonly Microsoft.AnalysisServices.Tabular.Server _server;
+        private Microsoft.AnalysisServices.Tabular.Database _database;
         private bool _disposed;
 
-        public DaxFormatterService(IDaxFormatterHttpClient client, ILogger<DaxFormatterService> logger)
+        public DaxFormatterService(IDaxFormatterClient client, ILogger<DaxFormatterService> logger)
         {
             _client = client;
             _logger = logger;
 
             _logger.Trace();
-            _server = new Server();
+            _server = new Microsoft.AnalysisServices.Tabular.Server();
         }
 
         public async Task InitilizeOrRefreshAsync(RuntimeSummary runtimeSummary)
         {
             _logger.Trace();
 
-            await _initilizeOrRefreshSemaphore.WaitAsync().ConfigureAwait(false);
+            await _semaphore.WaitAsync();
             try
             {
-                await Task.Run(InitilizeOrRefresh).ConfigureAwait(false);
+                await Task.Run(InitilizeOrRefresh);
             }
             finally
             {
-                _initilizeOrRefreshSemaphore.Release();
+                _semaphore.Release();
             }
 
             void InitilizeOrRefresh()
@@ -57,99 +105,78 @@ namespace Sqlbi.Bravo.Core.Services
                     _server.Connect(connectionString);
                 }
 
-                var database = _server.Databases[runtimeSummary.DatabaseName];
-                database.Model.Sync(new Microsoft.AnalysisServices.Tabular.SyncOptions { DiscardLocalChanges = true });
-                database.Refresh();
+                _database = _server.Databases[runtimeSummary.DatabaseName];
+                _database.Model.Sync(new SyncOptions { DiscardLocalChanges = true });
+                _database.Refresh();
 
-                _manager = DaxFormatterModelManager.CreateFrom(database.Model);
+                Measures = _database.Model.Tables.SelectMany((t) => t.Measures).Select((m) => new DaxFormatterServiceTabularMeasure(m.Name, m.Table.Name, m.Expression)).ToList();
+
+                //IEnumerable<CalculatedColumn> CalculatedColumns => _model.Tables.SelectMany((t) => t.Columns.Where((c) => c.Type == ColumnType.Calculated).Cast<CalculatedColumn>());
+                //IEnumerable<KPI> KPIs => _model.Tables.SelectMany((t) => t.Measures.Select((m) => m.KPI)).Where((k) => k != null);
+                //IEnumerable<DetailRowsDefinition> DefaultDetailRowsDefinitions => _model.Tables.Select((t) => t.DefaultDetailRowsDefinition).Where((d) => d != null);
+                //IEnumerable<DetailRowsDefinition> DetailRowsDefinitions => _model.Tables.SelectMany((t) => t.Measures).Select((m) => m.DetailRowsDefinition).Where((d) => d != null);
+                //IEnumerable<CalculationItem> CalculationItems => _model.Tables.Where((t) => t.CalculationGroup != null).SelectMany((t) => t.CalculationGroup.CalculationItems.Cast<CalculationItem>());
             }
         }
 
-        public async Task<Dictionary<string, (string, string)>> GetFormattedItems(DaxFormatterTabularObjectType objectType, RuntimeSummary runtimeSummary)
+        public IEnumerable<DaxFormatterServiceTabularMeasure> Measures { get; private set; }
+
+        public async Task<IEnumerable<IDaxFormatterServiceTabularObject>> FormatAsync(IList<IDaxFormatterServiceTabularObject> tabularObjects)
         {
-            var origAndFormatted = await Task.Run(async () =>
+            var request = new DaxFormatterRequest
             {
-                var requests = _manager.CreateRequests(objectType, runtimeSummary);
+                ServerName = _server.Name,
+                DatabaseName = _database.Name
+            };
 
-                var measures = new Dictionary<string, (string, string)>();
-
-                foreach (var request in requests)
+            foreach (var tabularObject in tabularObjects)
+            {
+                if (tabularObject is DaxFormatterServiceTabularMeasure measure)
                 {
-                    foreach (var item in ParseRequest(request))
+                    request.Dax.Add(measure.FormatterExpression);
+                }
+                else
+                {
+                    throw new InvalidOperationException($"Invalid { nameof(IDaxFormatterServiceTabularObject) } [{ tabularObject }]");
+                }
+            }
+
+            var response = await _client.FormatAsync(request);
+
+            for (var i = 0; i < response.Count; i++)
+            {
+                var result = response[i];
+                var tabularObject = tabularObjects[i];
+
+                tabularObject.ExpressionFormatted = result.Formatted?.Replace(tabularObject.FormatterAssignment, string.Empty)?.TrimStart('\r', '\n', ' ')?.TrimEnd('\r', '\n', ' ');
+                tabularObject.FormatterErrors.AddRange(result.Errors.Select((e) => $"({ e.Line }, { e.Column }) { e.Message }"));
+            }
+
+            return tabularObjects;
+        }
+
+        public async Task ApplyFormatAsync(IList<IDaxFormatterServiceTabularObject> tabularObjects)
+        {
+            await Task.Run(ApplyChanges);
+
+            void ApplyChanges()
+            {
+                foreach (var tabularObject in tabularObjects)
+                {
+                    if (tabularObject is DaxFormatterServiceTabularMeasure measure)
                     {
-                        measures.Add(item.Key, (item.Value, null));
+                        _database.Model.Tables[measure.TableName].Measures[measure.Name].Expression = measure.ExpressionFormatted;
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException($"Invalid { nameof(IDaxFormatterServiceTabularObject) } [{ tabularObject }]");
                     }
                 }
 
-                var responses = _client.FormatAsync(requests);
+                if (_database.Model.HasLocalChanges)
+                    _database.Update();
 
-                await foreach (var response in responses)
-                {
-                    foreach (var item in ParseResponse(response))
-                    {
-                        var (original, _) = measures[item.Key];
-
-                        measures[item.Key] = (original, item.Value);
-                    }
-                }
-
-                return measures;
-            });
-
-            return origAndFormatted;
-        }
-
-        private Dictionary<string, string> ParseRequest(DaxFormatterRequest request)
-        {
-            var regex = new Regex(DaxFormatterModelManager.ExpressionIdRegexPattern, RegexOptions.None);
-            var splits = regex.Split(request.Dax).Where((i) => !string.Empty.Equals(i)).ToArray();
-
-            var ids = splits.Where((s, i) => i % 2 == 0);
-            var expressions = splits.Where((s, i) => i % 2 == 1).Select((s) =>
-            {
-                var str = s.TrimStart('\r', '\n', ' ').TrimEnd('\r', '\n', ' ');
-
-                return str.EndsWith("*^*")
-                    ? str.Substring(0, str.LastIndexOf("*^*")).TrimEnd('\r', '\n', ' ')
-                    : str;
-            });
-            var items = ids.Zip(expressions, (k, v) => (Id: k, Expression: v)).ToDictionary((z) => z.Id, (z) => z.Expression);
-
-            return items;
-        }
-
-        private Dictionary<string, string> ParseResponse(DaxFormatterResponse response)
-        {
-            // From DaxFormatterModelManager.UpdateModelFrom
-            var regex = new Regex(DaxFormatterModelManager.ExpressionIdRegexPattern, RegexOptions.None);
-            var splits = regex.Split(response.Formatted).Where((i) => !string.Empty.Equals(i)).ToArray();
-
-            var ids = splits.Where((s, i) => i % 2 == 0);
-            var expressions = splits.Where((s, i) => i % 2 == 1).Select((s) => s.TrimStart('\r', '\n', ' ').TrimEnd('\r', '\n', ' '));
-            var items = ids.Zip(expressions, (k, v) => (Id: k, Expression: v)).ToDictionary((z) => z.Id, (z) => z.Expression);
-
-            return items;
-        }
-
-        public async Task FormatAsync(DaxFormatterTabularObjectType objectType, RuntimeSummary runtimeSummary)
-        {
-            _logger.Trace();
-
-            await Task.Run(Format).ConfigureAwait(false);
-
-            async Task Format()
-            {
-                var database = _server.Databases[runtimeSummary.DatabaseName];
-                var requests = _manager.CreateRequests(objectType, runtimeSummary);
-                var responses = _client.FormatAsync(requests);
-
-                await foreach (var response in responses)
-                    _manager.UpdateModelFrom(response);
-
-                if (database.Model.HasLocalChanges)
-                    database.Update();
-
-                var operationResult = database.Model.SaveChanges();
+                var operationResult = _database.Model.SaveChanges();
                 if (operationResult.XmlaResults is { ContainsErrors: true })
                 {
                     foreach (XmlaResult result in operationResult.XmlaResults)
@@ -170,38 +197,6 @@ namespace Sqlbi.Bravo.Core.Services
             }
         }
 
-        public void SaveFormattedMeasures(List<(string id, string expression)> measuresToUpdate, RuntimeSummary runtimeSummary)
-        {
-            var database = _server.Databases[runtimeSummary.DatabaseName];
-
-            foreach (var (id, expression) in measuresToUpdate)
-                _manager.UpdateMeasure(id, expression);
-
-            if (database.Model.HasLocalChanges)
-                database.Update();
-
-            var operationResult = database.Model.SaveChanges();
-            if (operationResult.XmlaResults is { ContainsErrors: true })
-            {
-                foreach (XmlaResult result in operationResult.XmlaResults)
-                {
-                    foreach (XmlaMessage message in result.Messages)
-                    {
-                        var json = "{ }";
-
-                        if (message is XmlaError error)
-                            json = System.Text.Json.JsonSerializer.Serialize(error);
-                        else if (message is XmlaWarning warning)
-                            json = System.Text.Json.JsonSerializer.Serialize(warning);
-
-                        _logger.Error(LogEvents.DaxFormatterFormatSaveChangesContainsErrors, message: json);
-                    }
-                }
-            }
-        }
-
-        public int Count(DaxFormatterTabularObjectType objectType) => _manager.Count(objectType);
-
         protected virtual void Dispose(bool disposing)
         {
             if (!_disposed)
@@ -212,6 +207,7 @@ namespace Sqlbi.Bravo.Core.Services
                         _server.Disconnect(endSession: true);
 
                     _server.Dispose();
+                    _semaphore.Dispose();
                 }
 
                 _disposed = true;
@@ -223,8 +219,5 @@ namespace Sqlbi.Bravo.Core.Services
             Dispose(disposing: true);
             GC.SuppressFinalize(this);
         }
-
-        public List<Microsoft.AnalysisServices.Tabular.Measure> GetMeasures()
-            => _manager.GetMeasures();
     }
 }

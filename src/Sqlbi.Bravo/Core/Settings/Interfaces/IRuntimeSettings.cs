@@ -21,8 +21,6 @@ namespace Sqlbi.Bravo.Core.Settings.Interfaces
 
         bool IsExecutedAsExternalToolForPowerBIDesktop { get; }
 
-        string ExternalToolInstanceId { get; }
-
         bool HasCommandLineParseErrors { get; }
 
         IReadOnlyCollection<string> CommandLineParseErrors { get; }

@@ -190,7 +190,6 @@ namespace Sqlbi.Bravo.UI.ViewModels
             OutputMessages.Add($"{ nameof(settings.Runtime.DatabaseName) } -> { settings.Runtime.DatabaseName }");
             OutputMessages.Add($"{ nameof(settings.Runtime.IsExecutedAsExternalTool) } -> { settings.Runtime.IsExecutedAsExternalTool }");
             OutputMessages.Add($"{ nameof(settings.Runtime.IsExecutedAsExternalToolForPowerBIDesktop) } -> { settings.Runtime.IsExecutedAsExternalToolForPowerBIDesktop }");
-            OutputMessages.Add($"{ nameof(settings.Runtime.ExternalToolInstanceId) } -> { settings.Runtime.ExternalToolInstanceId }");
             OutputMessages.Add($"{ nameof(settings.Runtime.HasCommandLineParseErrors) } -> { settings.Runtime.HasCommandLineParseErrors }");
 
             foreach (var error in settings.Runtime.CommandLineParseErrors)
