@@ -86,6 +86,8 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public bool InitializeCommandIsEnabled { get; set; } = true;
 
+        public bool TermsAccepted { get; set; }
+
         public ICommand FormatAnalyzeCommand { get; set; }
 
         public ICommand FormatMakeChangesCommand { get; set; }
