@@ -81,9 +81,7 @@ namespace Sqlbi.Bravo.Core.Services
             => (_vpaModel.Tables.Sum(t => t.ColumnsTotalSize), _vpaModel.Columns.Count());
 
         public List<VpaColumn> GetUnusedColumns() =>
-            // TODO REQUIREMENTS: change this to use .IsReferenced (or similar) once available.
-            // Currently using IsHidden as a proxy so rest of functionality can be implemented.
-            _vpaModel.Columns.Where(c => !c.IsHidden).ToList();
+            _vpaModel.Columns.Where(c => !c.IsReferenced).ToList();
 
         public IEnumerable<VpaColumn> GetAllColumns() => _vpaModel?.Columns;
 
