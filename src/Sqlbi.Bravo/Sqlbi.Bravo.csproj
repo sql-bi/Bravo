@@ -44,15 +44,17 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Dax.Metadata" Version="1.0.31" />
-    <PackageReference Include="Dax.ViewModel" Version="1.0.31" />
-    <PackageReference Include="Dax.ViewVpaExport" Version="1.0.31" />
+    <PackageReference Include="Dax.Metadata" Version="1.0.32" />
+    <PackageReference Include="Dax.Model.Extractor.NetCore" Version="1.0.32" />
+    <PackageReference Include="Dax.ViewModel" Version="1.0.32" />
+    <PackageReference Include="Dax.ViewVpaExport" Version="1.0.32" />
+    <PackageReference Include="Dax.Vpax.NetCore" Version="1.0.32" />
     <PackageReference Include="Humanizer" Version="2.8.26" />
     <PackageReference Include="MahApps.Metro" Version="2.4.3" />
     <PackageReference Include="MahApps.Metro.SimpleChildWindow" Version="2.0.0" />
     <PackageReference Include="Microsoft.AnalysisServices.NetCore.retail.amd64" Version="19.12.3-Preview" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="5.0.0-rc.2.20475.5" />
-    <PackageReference Include="Microsoft.Extensions.Http" Version="5.0.0-rc.2.20475.5" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="5.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="5.0.0" />
     <PackageReference Include="PropertyChanged.Fody" Version="3.2.10" PrivateAssets="All" />
     <PackageReference Include="Serilog" Version="2.10.1-dev-01249" />
     <PackageReference Include="Serilog.Extensions.Hosting" Version="4.0.0-dev-00051" />
@@ -63,11 +65,9 @@
     <PackageReference Include="Serilog.Sinks.File" Version="5.0.0-dev-00887" />
     <PackageReference Include="System.CommandLine" Version="2.0.0-beta1.20371.2" />
     <PackageReference Include="System.Data.OleDb" Version="5.0.0" />
-    <PackageReference Include="System.Management" Version="5.0.0-rc.2.20475.5" />
+    <PackageReference Include="System.Management" Version="5.0.0" />
     <PackageReference Include="Dax.Formatter" Version="1.0.0-preview" />
-    <PackageReference Include="Dax.Model.Extractor.NetCore" Version="1.0.32-preview" />
-    <PackageReference Include="Dax.Vpax.NetCore" Version="1.0.32-preview" />
-    <PackageReference Include="Microsoft.AnalysisServices.NetCore.retail.amd64" Version="19.16.0-Preview" />
+    <PackageReference Include="Microsoft.AnalysisServices.NetCore.retail.amd64" Version="19.16.3" />
   </ItemGroup>
 
   <ItemGroup>
