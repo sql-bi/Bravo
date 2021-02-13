@@ -1,5 +1,4 @@
 ﻿using Sqlbi.Bravo.Core.Services;
-using Sqlbi.Bravo.Core.Settings.Interfaces;
 using System;
 using System.Data.Common;
 using System.IO;
@@ -36,9 +35,6 @@ namespace Sqlbi.Bravo.Core.Helpers
 
             return AnalysisServicesEventWatcherEvent.Unknown;
         }
-
-        public static string BuildConnectionString(this IGlobalSettingsProviderService settings)
-            => BuildConnectionString(settings.Runtime.ServerName, settings.Runtime.DatabaseName);
 
         public static string BuildConnectionString(string serverName, string databaseName)
         {

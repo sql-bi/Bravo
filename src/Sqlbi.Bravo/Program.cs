@@ -106,7 +106,6 @@ namespace Sqlbi.Bravo
                 services.AddOptions();
                 services.AddOptions<RuntimeSettings>();
                 services.Configure<AppSettings>(context.Configuration.GetSection(nameof(AppSettings)));
-                services.AddSingleton<IAnalysisServicesEventWatcherService, AnalysisServicesEventWatcherService>();
                 services.AddSingleton<IApplicationInstanceService, ApplicationInstanceService>();
                 services.AddSingleton<IGlobalSettingsProviderService, GlobalSettingsProviderService>();
                 services.AddSingleton<IThemeSelectorService, ThemeSelectorService>();
@@ -116,6 +115,7 @@ namespace Sqlbi.Bravo
                 services.AddSingleton<SettingsViewModel>();
 
                 // Make these services transient as each ViewModel will need a unique one with a separate connection
+                services.AddTransient<IAnalysisServicesEventWatcherService, AnalysisServicesEventWatcherService>();
                 services.AddTransient<IDaxFormatterService, DaxFormatterService>();
                 services.AddTransient<IAnalyzeModelService, AnalyzeModelService>();
                 // Make these ViewModels transient as need a new one for each instance (within each tab)

@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Sqlbi.Bravo.Core.Helpers;
 using Sqlbi.Bravo.Core.Logging;
 using Sqlbi.Bravo.Core.Services.Interfaces;
+using Sqlbi.Bravo.Core.Settings;
 using Sqlbi.Bravo.Core.Settings.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -30,7 +31,6 @@ namespace Sqlbi.Bravo.Core.Services
         };
 
         private readonly ILogger _logger;
-        private readonly IGlobalSettingsProviderService _settings;
         private readonly IHostApplicationLifetime _lifetime;
         private readonly Server _server;
         private readonly AutoResetEvent _connectionManuallyChangedEvent = new AutoResetEvent(initialState: false);
@@ -41,10 +41,9 @@ namespace Sqlbi.Bravo.Core.Services
         public event EventHandler<AnalysisServicesEventWatcherEventArgs> OnEvent;
         public event EventHandler<AnalysisServicesEventWatcherConnectionStateArgs> OnConnectionStateChanged;
 
-        public AnalysisServicesEventWatcherService(ILogger<AnalysisServicesEventWatcherService> logger, IGlobalSettingsProviderService settings, IHostApplicationLifetime lifetime)
+        public AnalysisServicesEventWatcherService(ILogger<AnalysisServicesEventWatcherService> logger, IHostApplicationLifetime lifetime)
         {
             _logger = logger;
-            _settings = settings;
             _lifetime = lifetime;
 
             _logger.Trace();
@@ -95,7 +94,7 @@ namespace Sqlbi.Bravo.Core.Services
             TaskContinuationOptions.OnlyOnFaulted);
         }
 
-        public async Task ConnectAsync()
+        public async Task ConnectAsync(RuntimeSummary runtimeSummary)
         {
             _logger.Trace();
 
@@ -106,7 +105,7 @@ namespace Sqlbi.Bravo.Core.Services
                 if (_server.Connected)
                     throw new InvalidOperationException("Server already connected");
 
-                var connectionString = _settings.BuildConnectionString();
+                var connectionString = AnalysisServicesHelper.BuildConnectionString(runtimeSummary.ServerName, runtimeSummary.DatabaseName);
 
                 _server.Connect(connectionString);
                 _connectionManuallyChangedEvent.Set();
@@ -138,7 +137,6 @@ namespace Sqlbi.Bravo.Core.Services
                 return trace;
             }
 
-            // TODO REQUIREMENTS: Need to know which database this should be referencing.
             XmlNode CreateFilter()
             {
                 var filter = "<And xmlns=\"http://schemas.microsoft.com/analysisservices/2003/engine\">" +
@@ -149,7 +147,7 @@ namespace Sqlbi.Bravo.Core.Services
                                     "</Equal>" +
                                     "<Like>" +
                                         $"<ColumnID>{ (int)TraceColumn.DatabaseName }</ColumnID>" +
-                                        $"<Value>{ _settings.Runtime.DatabaseName }</Value>" +
+                                        $"<Value>{ runtimeSummary.DatabaseName }</Value>" +
                                     "</Like>" +
                                 "</And>" +
                                 "<NotLike>" +
