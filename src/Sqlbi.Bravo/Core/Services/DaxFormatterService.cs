@@ -130,6 +130,8 @@ namespace Sqlbi.Bravo.Core.Services
 
         public async Task<IEnumerable<IDaxFormatterServiceTabularObject>> FormatAsync(IList<IDaxFormatterServiceTabularObject> tabularObjects)
         {
+            _logger.Trace();
+
             var request = new DaxFormatterMultipleRequest
             {
                 ServerName = _server.Name,
@@ -164,6 +166,8 @@ namespace Sqlbi.Bravo.Core.Services
 
         public async Task ApplyFormatAsync(IList<IDaxFormatterServiceTabularObject> tabularObjects)
         {
+            _logger.Trace();
+
             await Task.Run(ApplyChanges);
 
             void ApplyChanges()
