@@ -9,6 +9,8 @@ namespace Sqlbi.Bravo.UI.Controls
 
         Color RectangleColor { get; }
 
+        string ToolTipText { get; }
+
         Visibility OverlayVisibility { get; }
     }
 }

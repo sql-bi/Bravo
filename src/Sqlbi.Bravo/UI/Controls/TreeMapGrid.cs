@@ -65,9 +65,14 @@ namespace Sqlbi.Bravo.UI.Controls
                     var origItem = (r.Slice.Elements.First() as Element<ITreeMapInfo>).Object;
                     var baseColor = origItem.RectangleColor;
 
-                    if (r.Width > 5 && r.Height > 5)
+                    if (r.Width > 10 && r.Height > 10)
                     {
                         border.BorderThickness = new Thickness(2);
+                        border.BorderBrush = new SolidColorBrush(baseColor);
+                    }
+                    else if (r.Width > 5 && r.Height > 5)
+                    {
+                        border.BorderThickness = new Thickness(1);
                         border.BorderBrush = new SolidColorBrush(baseColor);
                     }
                     else
@@ -76,6 +81,7 @@ namespace Sqlbi.Bravo.UI.Controls
                     }
 
                     border.Background = new SolidColorBrush(baseColor);
+                    border.ToolTip = origItem.ToolTipText;
 
                     var rect = new Rectangle
                     {

@@ -280,5 +280,30 @@ namespace Sqlbi.Bravo.UI.ViewModels
             // Sort these here so the DataGrid doesn't have to worry about loading all rows to be able to sort
             UnusedColumns = _modelService.GetUnusedColumns().OrderByDescending(c => c.PercentageDatabase).ToList();
         }
+
+        internal System.Windows.Media.Color GetTableColor(string tableName)
+        {
+            var orderedTables = AllTableColumns.OrderByDescending(t => t.TotalSize).ToList();
+
+            switch (orderedTables.FindIndex(t => t.TableName.Equals(tableName)))
+            {
+                case 0:
+                    return System.Windows.Media.Colors.LightBlue;
+                case 1:
+                    return System.Windows.Media.Colors.LightGreen;
+                case 2:
+                    return System.Windows.Media.Colors.LightPink;
+                case 3:
+                    return System.Windows.Media.Colors.LightYellow;
+                case 4:
+                    return System.Windows.Media.Colors.LightSlateGray;
+                case 5:
+                    return System.Windows.Media.Colors.LightSteelBlue;
+                case 6:
+                    return System.Windows.Media.Colors.LightCyan;
+                default:
+                    return System.Windows.Media.Colors.Red;  // Default
+            }
+        }
     }
 }
