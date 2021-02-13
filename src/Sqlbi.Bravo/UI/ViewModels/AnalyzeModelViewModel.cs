@@ -285,6 +285,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
         {
             var orderedTables = AllTableColumns.OrderByDescending(t => t.TotalSize).ToList();
 
+            // TODO REQUIREMENTS: Need to define the actual colors to use.
             switch (orderedTables.FindIndex(t => t.TableName.Equals(tableName)))
             {
                 case 0:
