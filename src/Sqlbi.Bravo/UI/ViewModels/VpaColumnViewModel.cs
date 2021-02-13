@@ -17,9 +17,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
         public VpaColumnViewModel(AnalyzeModelViewModel parent, VpaColumn vpaColumn)
             : this(parent)
         {
-            // TODO REQUIREMENTS: change this to use .IsReferenced (or similar) once available.
-            // Currently using IsHidden as a proxy so rest of functionality can be implemented.
-            IsRequired = vpaColumn.IsHidden;
+            IsRequired = vpaColumn.IsReferenced;
             ColumnName = vpaColumn.ColumnName;
             TableName = vpaColumn.Table.TableName;
             Cardinality = vpaColumn.ColumnCardinality;
