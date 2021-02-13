@@ -160,9 +160,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
         {
             if (!_initialized)
             {
-                Task.Run(() => RefreshAsync()).GetAwaiter().GetResult();
-
-                ViewIndex = SubViewIndex_Summary;
+                Task.Run(async () => await RefreshAsync());
             }
         }
 
@@ -197,7 +195,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
                 }
                 finally
                 {
-                    ViewIndex = lastIndex;
+                    ViewIndex = lastIndex > 0 ? lastIndex : SubViewIndex_Summary;
                 }
             }
             catch (Exception exc)

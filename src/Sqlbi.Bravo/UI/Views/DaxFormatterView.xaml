@@ -90,7 +90,7 @@
 
                         <Border Grid.Row="2" Grid.ColumnSpan="3" Background="LightGray" Opacity="0.1" Padding="12" Margin="0.12" />
 
-                        <CheckBox x:Name="AcceptTermsCheckbox" Cursor="Hand" Style="{StaticResource MahApps.Styles.CheckBox.Win10}" Grid.Row="2" Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="12,12,48,12">
+                        <CheckBox IsChecked="{Binding TermsAccepted, Mode=TwoWay}" Cursor="Hand" Style="{StaticResource MahApps.Styles.CheckBox.Win10}" Grid.Row="2" Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="12,12,48,12">
                             <TextBlock
                                 TextWrapping="Wrap"
                                 Foreground="{DynamicResource MahApps.Brushes.ThemeForeground}">
@@ -134,7 +134,7 @@
                             Width="100"
                             HorizontalAlignment="Right"
                             Margin="0,12,0,0"
-                            IsEnabled="{Binding ElementName=AcceptTermsCheckbox, Path=IsChecked}"
+                            IsEnabled="{Binding TermsAccepted}"
                             Command="{Binding FormatAnalyzeCommand}"
                             Style="{StaticResource StandardButton}"
                             Content="Format" />
@@ -336,7 +336,9 @@
                                             <StackPanel Orientation="Horizontal" Grid.Column="1" Grid.Row="2" Margin="0,20,0,0">
                                                 <TextBlock FontSize="12" VerticalAlignment="Center" FontWeight="Bold">TO &#x202F;&#x202F;&#x202F;&#x202F;&#x202F;&#x202F;</TextBlock>
                                                 <Button Style="{StaticResource SubtleButton}"
-                                                Click="CopyToClipboardClicked">
+                                                        Padding="12,0"
+                                                        Height="36"
+                                                        Click="CopyToClipboardClicked">
                                                     <TextBlock FontSize="12"
                                                        ToolTip="Copy to Clipboard"
                                                        FontFamily="Segoe MDL2 Assets"
@@ -345,6 +347,7 @@
                                             </StackPanel>
                                             <controls:DaxFormattedTextBlock
                                                 Grid.Column="1" Grid.Row="3"
+                                                Margin="0,-12,0,0"
                                                 UncoloredText="{Binding NeedFormattingSelected.FormatterDax}"
                                              />
                                         </StackPanel>

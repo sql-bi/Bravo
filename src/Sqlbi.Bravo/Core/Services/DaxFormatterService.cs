@@ -101,6 +101,13 @@ namespace Sqlbi.Bravo.Core.Services
             {
                 if (_server.Connected == false)
                 {
+                    // This can happen is the message used to launch a tab in an existing app instance is lost or corrupt.
+                    if (string.IsNullOrWhiteSpace(runtimeSummary.ServerName) && string.IsNullOrWhiteSpace(runtimeSummary.DatabaseName))
+                    {
+                        // Add own error message rather than the generic one from AnalysisServices ("A data source must be specified in the connection string.")
+                        throw new ConnectionException("Unable to connect to the database.");
+                    }
+
                     var connectionString = AnalysisServicesHelper.BuildConnectionString(runtimeSummary.ServerName, runtimeSummary.DatabaseName);
                     _server.Connect(connectionString);
                 }

@@ -243,6 +243,10 @@
 
                 <mah:HamburgerMenu.Content>
                 <Grid>
+                    <Rectangle Fill="{DynamicResource MahApps.Brushes.Gray8}"
+                               VerticalAlignment="Top"
+                               HorizontalAlignment="Stretch"
+                               Height="28" />
                     <TabControl
                             Grid.Row="0"
                             Background="{DynamicResource MahApps.Brushes.ThemeBackground}"
@@ -265,21 +269,18 @@
                                                     <RowDefinition x:Name="RowDefinition1" Height="*" />
                                                 </Grid.RowDefinitions>
                                                 <Border x:Name="HeaderPanel"
-                                                            Grid.Row="0"
-                                                            Background="{DynamicResource MahApps.Brushes.Gray8}"
-                                                            BorderThickness="0"
-                                                            KeyboardNavigation.DirectionalNavigation="Contained"
-                                                            KeyboardNavigation.TabIndex="2"
-                                                            KeyboardNavigation.TabNavigation="Local"
-                                                            SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}">
+                                                        Grid.Row="0"
+                                                        BorderThickness="0"
+                                                        KeyboardNavigation.DirectionalNavigation="Contained"
+                                                        KeyboardNavigation.TabIndex="2"
+                                                        KeyboardNavigation.TabNavigation="Local"
+                                                        SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}">
                                                     <TabPanel Panel.ZIndex="1"
-                                                                  IsItemsHost="true"
-                                                                  KeyboardNavigation.TabIndex="1" />
+                                                              IsItemsHost="true"
+                                                              KeyboardNavigation.TabIndex="1" />
                                                 </Border>
                                                 <Border x:Name="ContentPanel"
                                                             Grid.Row="1"
-                                                            Background="{TemplateBinding Background}"
-                                                            BorderBrush="{TemplateBinding BorderBrush}"
                                                             BorderThickness="0"
                                                             KeyboardNavigation.DirectionalNavigation="Contained"
                                                             KeyboardNavigation.TabIndex="2"
