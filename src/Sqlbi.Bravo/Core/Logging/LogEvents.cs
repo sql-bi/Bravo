@@ -6,50 +6,30 @@ namespace Sqlbi.Bravo.Core.Logging
     {
         private enum LogEventsId: int
         {
-            DaxFormatterUnableToRetrievePowerBIDesktopFileNameFromParentProcessMainWindowTitle = 9000, // TODO REQUIREMENTS: start value
+            TaskSchedulerUnobservedTaskException = 9000,
 
-            DaxFormatterHttpClientFormatResponse,
+            AppDomainUnhandledException = 9001,
 
-            DaxFormatterHttpClientFormatError,
+            DispatcherUnhandledException = 9002,
 
-            DaxFormatterHttpClientUriChanged,
+            AppOnStartup = 9003,
 
-            TaskSchedulerUnobservedTaskException,
+            AppOnExit = 9004,
 
-            AppDomainUnhandledException,
+            AppShutdownForMultipleInstance = 9005,
 
-            DispatcherUnhandledException,
+            DaxFormatterApplyFormatContainsErrors = 9006,
 
-            AppOnStartup,
+            ApplicationInstanceServiceMultipleInstanceTaskException = 9007,
 
-            AppOnExit,
+            AnalysisServicesEventWatcherServiceConnectionStateMonitorTaskException = 9008,
 
-            AppShutdownForMultipleInstance,
+            AnalysisServicesEventWatcherServiceConnectionStateMonitorTaskCompleted = 9009,
 
-            DaxFormatterModelManagerBuildRequestFromModel,
+            AnalysisServicesEventWatcherServiceConnectionStateMonitorTaskStatus = 9010,
 
-            DaxFormatterModelManagerCreateForModel,
-
-            DaxFormatterFormatSaveChangesContainsErrors,
-
-            ApplicationInstanceServiceMultipleInstanceTaskException,
-
-            AnalysisServicesEventWatcherServiceConnectionStateMonitorTaskException,
-
-            AnalysisServicesEventWatcherServiceConnectionStateMonitorTaskCompleted,
-
-            AnalysisServicesEventWatcherServiceConnectionStateMonitorTaskStatus,
-
-            AnalysisServicesEventWatcherServiceOnTraceEvent,
+            AnalysisServicesEventWatcherServiceOnTraceEvent = 9011,
         }
-
-        public static readonly EventId DaxFormatterUnableToRetrievePowerBIDesktopFileNameFromParentProcessMainWindowTitle = new EventId((int)LogEventsId.DaxFormatterUnableToRetrievePowerBIDesktopFileNameFromParentProcessMainWindowTitle, nameof(DaxFormatterUnableToRetrievePowerBIDesktopFileNameFromParentProcessMainWindowTitle));
-
-        public static readonly EventId DaxFormatterHttpClientFormatResponse = new EventId((int)LogEventsId.DaxFormatterHttpClientFormatResponse, nameof(DaxFormatterHttpClientFormatResponse));
-
-        public static readonly EventId DaxFormatterHttpClientFormatError = new EventId((int)LogEventsId.DaxFormatterHttpClientFormatError, nameof(DaxFormatterHttpClientFormatError));
-
-        public static readonly EventId DaxFormatterHttpClientUriChanged = new EventId((int)LogEventsId.DaxFormatterHttpClientUriChanged, nameof(DaxFormatterHttpClientUriChanged));
 
         public static readonly EventId TaskSchedulerUnobservedTaskException = new EventId((int)LogEventsId.TaskSchedulerUnobservedTaskException, nameof(TaskSchedulerUnobservedTaskException));
 
@@ -63,11 +43,7 @@ namespace Sqlbi.Bravo.Core.Logging
 
         public static readonly EventId AppShutdownForMultipleInstance = new EventId((int)LogEventsId.AppShutdownForMultipleInstance, nameof(AppShutdownForMultipleInstance));
 
-        public static readonly EventId DaxFormatterModelManagerBuildRequestFromModel = new EventId((int)LogEventsId.DaxFormatterModelManagerBuildRequestFromModel, nameof(DaxFormatterModelManagerBuildRequestFromModel));
-
-        public static readonly EventId DaxFormatterModelManagerCreateForModel = new EventId((int)LogEventsId.DaxFormatterModelManagerCreateForModel, nameof(DaxFormatterModelManagerCreateForModel));
-
-        public static readonly EventId DaxFormatterFormatSaveChangesContainsErrors = new EventId((int)LogEventsId.DaxFormatterFormatSaveChangesContainsErrors, nameof(DaxFormatterFormatSaveChangesContainsErrors));
+        public static readonly EventId DaxFormatterApplyFormatContainsErrors = new EventId((int)LogEventsId.DaxFormatterApplyFormatContainsErrors, nameof(DaxFormatterApplyFormatContainsErrors));
 
         public static readonly EventId ApplicationInstanceServiceMultipleInstanceTaskException = new EventId((int)LogEventsId.ApplicationInstanceServiceMultipleInstanceTaskException, nameof(ApplicationInstanceServiceMultipleInstanceTaskException));
 

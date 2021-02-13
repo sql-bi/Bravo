@@ -197,7 +197,7 @@ namespace Sqlbi.Bravo.Core.Services
                             else if (message is XmlaWarning warning)
                                 json = System.Text.Json.JsonSerializer.Serialize(warning);
 
-                            _logger.Error(LogEvents.DaxFormatterFormatSaveChangesContainsErrors, message: json);
+                            _logger.Error(LogEvents.DaxFormatterApplyFormatContainsErrors, message: json);
                         }
                     }
                 }
