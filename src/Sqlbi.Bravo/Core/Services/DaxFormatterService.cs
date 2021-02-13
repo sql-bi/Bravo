@@ -130,7 +130,7 @@ namespace Sqlbi.Bravo.Core.Services
 
         public async Task<IEnumerable<IDaxFormatterServiceTabularObject>> FormatAsync(IList<IDaxFormatterServiceTabularObject> tabularObjects)
         {
-            var request = new DaxFormatterRequest
+            var request = new DaxFormatterMultipleRequest
             {
                 ServerName = _server.Name,
                 DatabaseName = _database.Name
