@@ -58,7 +58,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
         {
             _logger.Trace();
 
-            await ExecuteCommandAsync(() => ConnectCommandIsRunning, _watcher.ConnectAsync);
+            //await ExecuteCommandAsync(() => ConnectCommandIsRunning, _watcher.ConnectAsync);
         }
 
         private async Task Disconnect()

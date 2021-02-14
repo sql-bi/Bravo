@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Sqlbi.Bravo.Core.Settings;
+using System;
 using System.Threading.Tasks;
 
 namespace Sqlbi.Bravo.Core.Services.Interfaces
@@ -9,7 +10,7 @@ namespace Sqlbi.Bravo.Core.Services.Interfaces
 
         event EventHandler<AnalysisServicesEventWatcherConnectionStateArgs> OnConnectionStateChanged;
 
-        Task ConnectAsync();
+        Task ConnectAsync(RuntimeSummary runtimeSummary);
 
         Task DisconnectAsync();
     }

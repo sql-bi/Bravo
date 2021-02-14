@@ -130,7 +130,9 @@ namespace Sqlbi.Bravo.Core.Services
 
         public async Task<IEnumerable<IDaxFormatterServiceTabularObject>> FormatAsync(IList<IDaxFormatterServiceTabularObject> tabularObjects)
         {
-            var request = new DaxFormatterRequest
+            _logger.Trace();
+
+            var request = new DaxFormatterMultipleRequest
             {
                 ServerName = _server.Name,
                 DatabaseName = _database.Name
@@ -164,6 +166,8 @@ namespace Sqlbi.Bravo.Core.Services
 
         public async Task ApplyFormatAsync(IList<IDaxFormatterServiceTabularObject> tabularObjects)
         {
+            _logger.Trace();
+
             await Task.Run(ApplyChanges);
 
             void ApplyChanges()
@@ -197,7 +201,7 @@ namespace Sqlbi.Bravo.Core.Services
                             else if (message is XmlaWarning warning)
                                 json = System.Text.Json.JsonSerializer.Serialize(warning);
 
-                            _logger.Error(LogEvents.DaxFormatterFormatSaveChangesContainsErrors, message: json);
+                            _logger.Error(LogEvents.DaxFormatterApplyFormatContainsErrors, message: json);
                         }
                     }
                 }
