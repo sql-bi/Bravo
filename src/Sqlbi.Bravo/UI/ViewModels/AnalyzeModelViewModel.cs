@@ -97,8 +97,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public string TotalDbSize => AllTables?.Sum(t => t.TableSize).Bytes().ToString("#.#") ?? "-";
 
-        // TODO REQUIREMENTS: Need to know how to get MaxRowsCount
-        public int? MaxRowsCount => null;
+        public long MaxRowsCount => AllTables?.Max(t => t.RowsCount) ?? 0;
 
         public long LargestColumnSize { get; set; }
 

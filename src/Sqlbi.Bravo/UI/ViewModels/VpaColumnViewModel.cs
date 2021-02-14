@@ -55,7 +55,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public Color RectangleColor => parent.GetTableColor(TableName);
 
-        public string ToolTipText => $"[{TableName}].[{ColumnName}]";
+        public string ToolTipText => $"'{TableName}'[{ColumnName}]";
 
         public Visibility OverlayVisibility => IsSelected ? Visibility.Collapsed : Visibility.Visible;
     }
