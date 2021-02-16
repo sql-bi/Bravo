@@ -140,7 +140,7 @@ namespace Sqlbi.Bravo.UI.Controls
             var elementsInSlice = new List<Element<T>>();
             var remainingElements = new List<Element<T>>();
             double current = 0;
-            double total = elements.Sum(x => x.Value);
+            var total = elements.Sum(x => x.Value);
 
             foreach (var element in elements)
             {

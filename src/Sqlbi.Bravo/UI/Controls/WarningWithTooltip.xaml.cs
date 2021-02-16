@@ -8,7 +8,7 @@ namespace Sqlbi.Bravo.UI.Controls
     {
         public WarningWithTooltip() => InitializeComponent();
 
-        private async void LearnMoreClicked(object sender, RoutedEventArgs e)
-            => await Views.ShellView.Instance.ShowMediaDialog(new ColumnOptimizationHelp());
+        private void LearnMoreClicked(object sender, RoutedEventArgs e)
+            => Views.ShellView.Instance.ShowMediaDialog(new ColumnOptimizationHelp());
     }
 }

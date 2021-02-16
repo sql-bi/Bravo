@@ -88,13 +88,10 @@ namespace Sqlbi.Bravo.UI.Views
             }
         }
 
-        internal async Task ShowMediaDialog(IInAppMediaOption mediaOptions)
+        internal void ShowMediaDialog(IInAppMediaOption mediaOptions)
         {
-            await this.ShowChildWindowAsync(new MediaDialog(mediaOptions)
-            {
-                ChildWindowHeight = ActualHeight - 100,
-                ChildWindowWidth = ActualWidth - 150
-            });
+            var mediaWindow = new MediaDialog(mediaOptions);
+            mediaWindow.Show();
         }
 
         internal async Task ShowSettings()
@@ -112,10 +109,10 @@ namespace Sqlbi.Bravo.UI.Views
             debugInfo.Show();
         }
 
-            private void AddTabClicked(object sender, System.Windows.RoutedEventArgs e)
+        private void AddTabClicked(object sender, System.Windows.RoutedEventArgs e)
             => ViewModel.AddNewTab();
 
-        // WHen the selected tab changes update the selected menu item accordingly
+        // When the selected tab changes update the selected menu item accordingly
         private void OnSelectedTabChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         {
             var selTab = ViewModel.SelectedTab;

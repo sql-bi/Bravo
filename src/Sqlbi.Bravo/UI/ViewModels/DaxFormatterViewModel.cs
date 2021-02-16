@@ -48,7 +48,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
             InitializeCommand = new RelayCommand(async () => await InitializeAsync());
             FormatAnalyzeCommand = new RelayCommand(async () => await AnalyzeAsync());
             FormatMakeChangesCommand = new RelayCommand(async () => await MakeChangesAsync());
-            HelpCommand = new RelayCommand(async () => await ShowHelpAsync());
+            HelpCommand = new RelayCommand(() => ShowHelp());
             RefreshCommand = new RelayCommand(async () => await RefreshAsync());
             ChangeFormulasCommand = new RelayCommand(() => ChooseFormulas());
             ApplySelectedFormulaChangesCommand = new RelayCommand(() => SelectedFormulasChanged());
@@ -223,10 +223,8 @@ namespace Sqlbi.Bravo.UI.ViewModels
             // TODO REQUIREMENTS: Open log file
         }
 
-        private async Task ShowHelpAsync()
-        {
-            await Views.ShellView.Instance.ShowMediaDialog(new HowToFormatCodeHelp());
-        }
+        private void ShowHelp()
+            => Views.ShellView.Instance.ShowMediaDialog(new HowToFormatCodeHelp());
 
         private async Task InitializeAsync()
         {

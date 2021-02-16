@@ -19,10 +19,8 @@ namespace Sqlbi.Bravo.UI.Views
             e.Handled = true;
         }
 
-        private async void HowToUseClicked(object sender, RoutedEventArgs e)
-        {
-            await ShellView.Instance.ShowMediaDialog(new HowToUseBravoHelp());
-        }
+        private void HowToUseClicked(object sender, RoutedEventArgs e)
+            => ShellView.Instance.ShowMediaDialog(new HowToUseBravoHelp());
 
         private void AttachToWindowClicked(object sender, RoutedEventArgs e)
         {

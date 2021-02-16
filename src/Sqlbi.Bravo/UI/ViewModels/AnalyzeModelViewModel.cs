@@ -37,12 +37,12 @@ namespace Sqlbi.Bravo.UI.ViewModels
             _logger.Trace();
             ViewIndex = SubViewIndex_Loading;
 
-            HelpCommand = new RelayCommand(execute: async () => await ShowHelpAsync());
+            HelpCommand = new RelayCommand(execute: () => ShowHelp());
             ExportVpaxCommand = new RelayCommand(execute: async () => await ExportVpaxAsync());
             RefreshCommand = new RelayCommand(execute: async () => await RefreshAsync());
             MoreDetailsCommand = new RelayCommand(execute: async () => await ShowMoreDetailsAsync());
             BackCommand = new RelayCommand(execute: async () => await BackAsync());
-            WarningHelpCommand = new RelayCommand(execute: async () => await ShowWarningHelpAsync());
+            WarningHelpCommand = new RelayCommand(execute: () => ShowWarningHelp());
 
             _timer = new DispatcherTimer
             {
@@ -224,16 +224,16 @@ namespace Sqlbi.Bravo.UI.ViewModels
             await Task.CompletedTask;
         }
 
-        private async Task ShowHelpAsync()
+        private void ShowHelp()
         {
             _logger.Trace();
-            await Views.ShellView.Instance.ShowMediaDialog(new HowToAnalyzeModelHelp());
+            Views.ShellView.Instance.ShowMediaDialog(new HowToAnalyzeModelHelp());
         }
 
-        private async Task ShowWarningHelpAsync()
+        private void ShowWarningHelp()
         {
             _logger.Trace();
-            await Views.ShellView.Instance.ShowMediaDialog(new ColumnOptimizationHelp());
+            Views.ShellView.Instance.ShowMediaDialog(new ColumnOptimizationHelp());
         }
 
         private async Task ShowMoreDetailsAsync()

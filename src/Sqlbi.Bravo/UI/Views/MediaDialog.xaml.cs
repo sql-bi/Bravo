@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Windows;
-using MahApps.Metro.SimpleChildWindow;
+using MahApps.Metro.Controls;
 using Sqlbi.Bravo.UI.DataModel;
 
 namespace Sqlbi.Bravo.UI.Views
 {
-    public partial class MediaDialog : ChildWindow
+    public partial class MediaDialog : MetroWindow
     {
         public MediaDialog() => InitializeComponent();
 
@@ -17,7 +17,7 @@ namespace Sqlbi.Bravo.UI.Views
             ProgressIndicator.IsActive = false;
         }
 
-        private void OkClicked(object sender, RoutedEventArgs e) => _ = Close();
+        private void OkClicked(object sender, RoutedEventArgs e) => Close();
 
         private void OnMediaOpened(object sender, RoutedEventArgs e)
         {
