@@ -112,7 +112,7 @@
                                 <Run FontWeight="Bold" Text="{Binding DatasetColumnCount, Mode=OneWay}" />
                                 <Run> columns.</Run>
                             </TextBlock>
-                            <TextBlock HorizontalAlignment="Left" Margin="0,12">
+                            <!-- <TextBlock HorizontalAlignment="Left" Margin="0,12">
                                 <Run>The following </Run>
                                 <Run FontWeight="Bold" Text="{Binding UnusedColumnCount, Mode=OneWay}" />
                                 <Run> columns are not used in the model;</Run>
@@ -122,7 +122,7 @@
                                 <Run Foreground="Green" FontWeight="Bold">save</Run>
                                 <Run FontWeight="Bold" Foreground="Green" Text="{Binding UnusedColumnsSize, Mode=OneWay}" />
                                 <Run FontWeight="Bold" Foreground="Green">of space</Run><Run>:</Run>
-                            </TextBlock>
+                            </TextBlock> -->
                         </StackPanel>
 
                         <DataGrid Grid.Column="1" Grid.Row="1" Margin="0,20,0,0"
