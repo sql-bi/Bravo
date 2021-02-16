@@ -113,6 +113,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
                 OnPropertyChanged(nameof(AllColumnCount));
                 OnPropertyChanged(nameof(MeasuresCount));
                 OnPropertyChanged(nameof(TotalDbSize));
+                OnPropertyChanged(nameof(MaxRowsCount));
             }
         }
 
