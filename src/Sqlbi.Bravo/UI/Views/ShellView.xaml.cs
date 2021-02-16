@@ -106,13 +106,10 @@ namespace Sqlbi.Bravo.UI.Views
             });
         }
 
-        internal async Task ShowDebugInfo()
+        internal void ShowDebugInfo()
         {
-            await this.ShowChildWindowAsync(new DebugInfo()
-            {
-                ChildWindowHeight = ActualHeight - 100,
-                ChildWindowWidth = ActualWidth - 150
-            });
+            var debugInfo = new DebugInfo();
+            debugInfo.Show();
         }
 
             private void AddTabClicked(object sender, System.Windows.RoutedEventArgs e)

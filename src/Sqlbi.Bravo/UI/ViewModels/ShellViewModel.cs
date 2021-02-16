@@ -231,7 +231,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
                 }
                 else if (SelectedOptionsItem.Name == "Show debug info")
                 {
-                    await ShellView.Instance.ShowDebugInfo();
+                    ShellView.Instance.ShowDebugInfo();
                 }
                 else
                 {
