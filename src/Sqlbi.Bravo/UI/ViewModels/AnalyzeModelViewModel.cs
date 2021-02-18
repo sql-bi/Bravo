@@ -198,7 +198,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
             }
         }
 
-        public IEnumerable<VpaColumnViewModel> AllColumns => AllTableColumns?.SelectMany(t => t.Columns);
+        public IEnumerable<VpaColumnViewModel> AllColumns => AllTableColumns?.SelectMany(t => t.Columns).OrderBy(c => c.ColumnName);
 
         public IEnumerable<VpaTable> AllTables => _modelService.GetAllTables();
 
