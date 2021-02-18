@@ -7,11 +7,6 @@ namespace Sqlbi.Bravo.UI.ViewModels
     {
         private bool _isSelected;
 
-        public VpaTableColumnViewModel(AnalyzeModelViewModel parent)
-            : base(parent)
-        {
-        }
-
         public VpaTableColumnViewModel(AnalyzeModelViewModel parent, VpaColumn vpaColumn, bool isTable)
             : base(parent, vpaColumn)
         {

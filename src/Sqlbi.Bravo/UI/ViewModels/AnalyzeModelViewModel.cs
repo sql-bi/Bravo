@@ -25,10 +25,12 @@ namespace Sqlbi.Bravo.UI.ViewModels
         internal const int SubViewIndex_Loading = 0;
         internal const int SubViewIndex_Summary = 1;
         internal const int SubViewIndex_Details = 2;
+        private const int NumberOfRowsInSummary = 5;
         private readonly DispatcherTimer _timer = new DispatcherTimer();
         private readonly List<VpaTableColumnViewModel> _allTablesCache = new List<VpaTableColumnViewModel>();
         private List<VpaColumn> _unusedColumns;
         private bool _initialized = false;
+        private bool unreferencedColumnsOnly;
 
         public AnalyzeModelViewModel(IAnalyzeModelService service, ILogger<DaxFormatterViewModel> logger)
         {
@@ -114,8 +116,40 @@ namespace Sqlbi.Bravo.UI.ViewModels
                 OnPropertyChanged(nameof(MeasuresCount));
                 OnPropertyChanged(nameof(TotalDbSize));
                 OnPropertyChanged(nameof(MaxRowsCount));
+                OnPropertyChanged(nameof(SummaryColumns));
             }
         }
+
+        public List<VpaColumnViewModel> SummaryColumns
+        {
+            get
+            {
+                return UnreferencedColumnsOnly
+                    ? UnusedColumns?.OrderByDescending(c => c.TotalSize)
+                                    .Take(NumberOfRowsInSummary)
+                                    .Select(c => new VpaColumnViewModel(this, c))
+                                    .ToList()
+                    : AllColumns.OrderByDescending(c => c.TotalSize)
+                                .Take(NumberOfRowsInSummary)
+                                .ToList();
+            }
+        }
+
+        public bool UnreferencedColumnsOnly
+        {
+            get => unreferencedColumnsOnly;
+            set
+            {
+                SetProperty(ref unreferencedColumnsOnly, value);
+                OnPropertyChanged(nameof(SummaryColumns));
+                OnPropertyChanged(nameof(SummaryColumnSize));
+                OnPropertyChanged(nameof(SummaryColumnWeight));
+            }
+        }
+
+        public long? SummaryColumnSize => SummaryColumns?.Sum(c => c.TotalSize);
+
+        public double? SummaryColumnWeight => SummaryColumns?.Sum(c => c.PercentageDatabase);
 
         public IEnumerable<VpaTableColumnViewModel> AllTableColumns
         {
