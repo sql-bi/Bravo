@@ -159,7 +159,9 @@ namespace Sqlbi.Bravo.UI.ViewModels
                 {
                     VpaTableColumnViewModel currentTable = null;
 
-                    var cols = _modelService.GetAllColumns();
+                    var cols = _modelService.GetAllColumns()?
+                                            .OrderBy(c => c.Table.ColumnsTotalSize)
+                                            .ThenBy(c => c.TotalSize);
 
                     if (cols != null)
                     {
