@@ -160,8 +160,8 @@ namespace Sqlbi.Bravo.UI.ViewModels
                     VpaTableColumnViewModel currentTable = null;
 
                     var cols = _modelService.GetAllColumns()?
-                                            .OrderBy(c => c.Table.ColumnsTotalSize)
-                                            .ThenBy(c => c.TotalSize);
+                                            .OrderByDescending(c => c.Table.ColumnsTotalSize)
+                                            .ThenByDescending(c => c.TotalSize);
 
                     if (cols != null)
                     {
@@ -200,7 +200,8 @@ namespace Sqlbi.Bravo.UI.ViewModels
             }
         }
 
-        public IEnumerable<VpaColumnViewModel> AllColumns => AllTableColumns?.SelectMany(t => t.Columns).OrderBy(c => c.ColumnName);
+        public IEnumerable<VpaColumnViewModel> AllColumns
+            => AllTableColumns?.SelectMany(t => t.Columns).OrderByDescending(c => c.TotalSize);
 
         public IEnumerable<VpaTable> AllTables => _modelService.GetAllTables();
 
