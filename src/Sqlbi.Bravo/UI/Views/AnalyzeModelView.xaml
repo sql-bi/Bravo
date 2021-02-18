@@ -28,6 +28,7 @@
     </UserControl.Resources>
 
     <mah:FlipView
+        x:Name="AnalyzeModelFlipView"
         BorderThickness="0"
         MouseHoverBorderEnabled="False"
         ShowIndex="False"

@@ -4,7 +4,18 @@ namespace Sqlbi.Bravo.UI.Views
 {
     public partial class AnalyzeModelView : UserControl
     {
-        public AnalyzeModelView() => InitializeComponent();
+        public AnalyzeModelView()
+        {
+            InitializeComponent();
+
+            // This control exists as a single instance that is reused in different tabs.
+            // When switching usage the DataContext is changed.
+            DataContextChanged += AnalyzeModelView_DataContextChanged;
+        }
+
+        // If the DataContext has changed we may need to update the TreeMap (as it's not bound to the DataContext)
+        private void AnalyzeModelView_DataContextChanged(object sender, System.Windows.DependencyPropertyChangedEventArgs e)
+            => TryRedrawTreeMap();
 
         private void DatagridEditingHandler(object sender, DataGridBeginningEditEventArgs e)
         {
@@ -17,12 +28,17 @@ namespace Sqlbi.Bravo.UI.Views
         // The data must have been loaded to get to the FlipViewItem that contains it
         // When refreshing, the loading item is displayed, before going back to the item containing the TreeMap
         private void FlipViewSelectionChanged(object sender, SelectionChangedEventArgs e)
+            => TryRedrawTreeMap();
+
+        internal void TryRedrawTreeMap()
         {
-            if (sender is MahApps.Metro.Controls.FlipView flipView)
+            if (AnalyzeModelFlipView.SelectedIndex == 2)
             {
-                if (flipView.SelectedIndex == 2)
+                var vm = DataContext as ViewModels.AnalyzeModelViewModel;
+
+                if (vm.AllColumnCount > 0)
                 {
-                    TreeMap.DrawTree((DataContext as ViewModels.AnalyzeModelViewModel).AllColumns);
+                    TreeMap.DrawTree(vm.AllColumns);
                 }
             }
         }
