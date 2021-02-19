@@ -16,7 +16,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
         {
             _parent = parent;
             VpaColumn = vpaColumn;
-            IsRequired = vpaColumn.IsReferenced;
+            IsUnused = !vpaColumn.IsReferenced;
             ColumnName = vpaColumn.ColumnName;
             TableName = vpaColumn.Table.TableName;
             Cardinality = vpaColumn.ColumnCardinality;
@@ -40,7 +40,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public VpaColumn VpaColumn { get; }
 
-        public bool IsRequired { get; set; }
+        public bool IsUnused { get; set; }
 
         public string ColumnName { get; set; }
 

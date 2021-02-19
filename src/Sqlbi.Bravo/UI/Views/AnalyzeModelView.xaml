@@ -139,20 +139,20 @@
                                 <DataGridTemplateColumn CanUserReorder="False" CanUserSort="False" CanUserResize="False" x:Name="summaryPadding">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <controls:WarningWithTooltip Margin="4,4,0,0" Visibility="{Binding IsRequired, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                                            <controls:WarningWithTooltip Margin="4,4,0,0" Visibility="{Binding IsUnused, Converter={StaticResource BooleanToVisibilityConverter}}" />
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
-                                <DataGridTextColumn Header="Column" x:Name="summaryColumnColumn" Binding="{Binding ColumnName}" CanUserReorder="False" SortMemberPath="ColumnName"/>
-                                <DataGridTextColumn Header="Table" x:Name="summaryTableColumn" CanUserReorder="False" Binding="{Binding TableName, Mode=OneWay}" />
-                                <DataGridTemplateColumn x:Name="summarySizeColumn" Header="Size" CanUserReorder="False" SortMemberPath="TotalSize">
+                                <DataGridTextColumn Header="Column" x:Name="summaryColumnColumn" Binding="{Binding ColumnName}" CanUserSort="False" CanUserReorder="False"/>
+                                <DataGridTextColumn Header="Table" x:Name="summaryTableColumn" CanUserSort="False" CanUserReorder="False" Binding="{Binding TableName, Mode=OneWay}" />
+                                <DataGridTemplateColumn x:Name="summarySizeColumn" Header="Size" CanUserReorder="False" Width="85">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <TextBlock Text="{Binding TotalSize, Converter={valueconverters:BytesToStringConverter}}" Margin="8,0" />
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
-                                <DataGridTemplateColumn x:Name="summaryWeightColumn" Header="Weight" SortMemberPath="PercentageDatabase" CanUserReorder="False" CanUserResize="False" SortDirection="Descending">
+                                <DataGridTemplateColumn x:Name="summaryWeightColumn" Header="Weight" CanUserReorder="False" CanUserResize="False" SortDirection="Descending">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <TextBlock Text="{Binding PercentageDatabase, Converter={valueconverters:DoubleToFormattedPercentageConverter}}" Margin="8,0" />
@@ -344,7 +344,7 @@
                                                                     <ColumnDefinition Width="{Binding ElementName=tblSizeColHdr, Path=ActualWidth}" />
                                                                     <ColumnDefinition Width="{Binding ElementName=tblDbPctColHdr, Path=ActualWidth}" />
                                                                 </Grid.ColumnDefinitions>
-                                                                <controls:WarningWithTooltip Margin="-10,9,0,0" Visibility="{Binding IsRequired, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                                                                <controls:WarningWithTooltip Margin="-10,9,0,0" Visibility="{Binding IsUnused, Converter={StaticResource BooleanToVisibilityConverter}}" />
                                                                 <CheckBox Margin="12,0,-6,0" IsChecked="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource MahApps.Styles.CheckBox.Win10}" />
                                                                 <TextBlock Margin="12,0,0,0" Text="{Binding ColumnName, Mode=OneWay}" VerticalAlignment="Center" Grid.Column="1"/>
                                                                 <TextBlock Margin="-10,0,15,0"
@@ -420,10 +420,10 @@
                                 mah:DataGridHelper.EnableCellEditAssist="True"
                                 AutoGenerateColumns="False">
                                     <DataGrid.Columns>
-                                        <DataGridTemplateColumn x:Name="ColWarningColumn" Width="20" CanUserResize="False" CanUserReorder="False" SortMemberPath="IsRequired">
+                                        <DataGridTemplateColumn x:Name="ColWarningColumn" Width="20" CanUserResize="False" CanUserReorder="False" SortMemberPath="IsUnused">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
-                                                    <controls:WarningWithTooltip Margin="4,4,0,0" Visibility="{Binding IsRequired, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                                                    <controls:WarningWithTooltip Margin="4,4,0,0" Visibility="{Binding IsUnused, Converter={StaticResource BooleanToVisibilityConverter}}" />
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>
                                         </DataGridTemplateColumn>
