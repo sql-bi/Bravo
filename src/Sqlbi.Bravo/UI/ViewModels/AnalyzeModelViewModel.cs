@@ -169,11 +169,14 @@ namespace Sqlbi.Bravo.UI.ViewModels
                         {
                             if (currentTable == null || currentTable.TableName != col.Table.TableName)
                             {
-                                currentTable = new VpaTableColumnViewModel(this, col, true)
+                                currentTable = new VpaTableColumnViewModel(this, col, isTable: true)
                                 {
                                     TotalSize = col.Table.ColumnsTotalSize,
                                     PercentageDatabase = col.Table.PercentageDatabase
                                 };
+
+                                // We're building the table structure from this row so have to be sure to include it too
+                                currentTable.Columns.Add(new VpaTableColumnViewModel(this, col, isTable: false));
 
                                 _allTablesCache.Add(currentTable);
                             }
@@ -182,7 +185,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
                                 // Table doesn't expose this so have to sum it manually.
                                 currentTable.Cardinality += col.ColumnCardinality;
 
-                                currentTable.Columns.Add(new VpaTableColumnViewModel(this, col, false));
+                                currentTable.Columns.Add(new VpaTableColumnViewModel(this, col, isTable: false));
                             }
                         }
                     }
