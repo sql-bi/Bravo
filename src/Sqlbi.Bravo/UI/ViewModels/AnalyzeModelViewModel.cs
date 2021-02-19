@@ -25,10 +25,12 @@ namespace Sqlbi.Bravo.UI.ViewModels
         internal const int SubViewIndex_Loading = 0;
         internal const int SubViewIndex_Summary = 1;
         internal const int SubViewIndex_Details = 2;
+        private const int NumberOfRowsInSummary = 5;
         private readonly DispatcherTimer _timer = new DispatcherTimer();
         private readonly List<VpaTableColumnViewModel> _allTablesCache = new List<VpaTableColumnViewModel>();
         private List<VpaColumn> _unusedColumns;
         private bool _initialized = false;
+        private bool unreferencedColumnsOnly;
 
         public AnalyzeModelViewModel(IAnalyzeModelService service, ILogger<DaxFormatterViewModel> logger)
         {
@@ -114,8 +116,49 @@ namespace Sqlbi.Bravo.UI.ViewModels
                 OnPropertyChanged(nameof(MeasuresCount));
                 OnPropertyChanged(nameof(TotalDbSize));
                 OnPropertyChanged(nameof(MaxRowsCount));
+                OnPropertyChanged(nameof(SummaryColumns));
             }
         }
+
+        public List<VpaColumnViewModel> SummaryColumns
+        {
+            get
+            {
+                return UnreferencedColumnsOnly
+                    ? UnusedColumns?.OrderByDescending(c => c.TotalSize)
+                                    .Take(NumberOfRowsInSummary)
+                                    .Select(c => new VpaColumnViewModel(this, c))
+                                    .ToList()
+                    : AllColumns.OrderByDescending(c => c.TotalSize)
+                                .Take(NumberOfRowsInSummary)
+                                .ToList();
+            }
+        }
+
+        public bool UnreferencedColumnsOnly
+        {
+            get => unreferencedColumnsOnly;
+            set
+            {
+                SetProperty(ref unreferencedColumnsOnly, value);
+                OnPropertyChanged(nameof(SummaryColumns));
+                OnPropertyChanged(nameof(SummaryColumnSize));
+                OnPropertyChanged(nameof(SummaryColumnWeight));
+                OnPropertyChanged(nameof(SummaryColumnWeightAngle));
+                OnPropertyChanged(nameof(SummaryListedColumnPercentage));
+                OnPropertyChanged(nameof(SummaryUnlistedColumnPercentage));
+            }
+        }
+
+        public long? SummaryColumnSize => SummaryColumns?.Sum(c => c.TotalSize);
+
+        public double? SummaryColumnWeight => SummaryColumns?.Sum(c => c.PercentageDatabase);
+
+        public double? SummaryColumnWeightAngle => SummaryColumnWeight * 360;
+
+        public double SummaryListedColumnPercentage => (SummaryColumnWeight ?? 0) * 100;
+
+        public double SummaryUnlistedColumnPercentage => 100 - SummaryListedColumnPercentage;
 
         public IEnumerable<VpaTableColumnViewModel> AllTableColumns
         {
@@ -125,7 +168,9 @@ namespace Sqlbi.Bravo.UI.ViewModels
                 {
                     VpaTableColumnViewModel currentTable = null;
 
-                    var cols = _modelService.GetAllColumns();
+                    var cols = _modelService.GetAllColumns()?
+                                            .OrderByDescending(c => c.Table.ColumnsTotalSize)
+                                            .ThenByDescending(c => c.TotalSize);
 
                     if (cols != null)
                     {
@@ -133,11 +178,14 @@ namespace Sqlbi.Bravo.UI.ViewModels
                         {
                             if (currentTable == null || currentTable.TableName != col.Table.TableName)
                             {
-                                currentTable = new VpaTableColumnViewModel(this, col, true)
+                                currentTable = new VpaTableColumnViewModel(this, col, isTable: true)
                                 {
                                     TotalSize = col.Table.ColumnsTotalSize,
                                     PercentageDatabase = col.Table.PercentageDatabase
                                 };
+
+                                // We're building the table structure from this row so have to be sure to include it too
+                                currentTable.Columns.Add(new VpaTableColumnViewModel(this, col, isTable: false));
 
                                 _allTablesCache.Add(currentTable);
                             }
@@ -146,7 +194,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
                                 // Table doesn't expose this so have to sum it manually.
                                 currentTable.Cardinality += col.ColumnCardinality;
 
-                                currentTable.Columns.Add(new VpaTableColumnViewModel(this, col, false));
+                                currentTable.Columns.Add(new VpaTableColumnViewModel(this, col, isTable: false));
                             }
                         }
                     }
@@ -164,7 +212,8 @@ namespace Sqlbi.Bravo.UI.ViewModels
             }
         }
 
-        public IEnumerable<VpaColumnViewModel> AllColumns => AllTableColumns?.SelectMany(t => t.Columns);
+        public IEnumerable<VpaColumnViewModel> AllColumns
+            => AllTableColumns?.SelectMany(t => t.Columns).OrderByDescending(c => c.TotalSize);
 
         public IEnumerable<VpaTable> AllTables => _modelService.GetAllTables();
 
@@ -289,19 +338,21 @@ namespace Sqlbi.Bravo.UI.ViewModels
             switch (orderedTables.FindIndex(t => t.TableName.Equals(tableName)))
             {
                 case 0:
-                    return System.Windows.Media.Colors.LightBlue;
+                    return System.Windows.Media.Colors.Orange;
                 case 1:
-                    return System.Windows.Media.Colors.LightGreen;
+                    return System.Windows.Media.Colors.Yellow;
                 case 2:
-                    return System.Windows.Media.Colors.LightPink;
+                    return System.Windows.Media.Colors.LightGreen;
                 case 3:
-                    return System.Windows.Media.Colors.LightYellow;
+                    return System.Windows.Media.Colors.Green;
                 case 4:
-                    return System.Windows.Media.Colors.LightSlateGray;
+                    return System.Windows.Media.Colors.LightBlue;
                 case 5:
-                    return System.Windows.Media.Colors.LightSteelBlue;
+                    return System.Windows.Media.Colors.Blue;
                 case 6:
-                    return System.Windows.Media.Colors.LightCyan;
+                    return System.Windows.Media.Colors.DarkBlue;
+                case 7:
+                    return System.Windows.Media.Colors.Purple;
                 default:
                     return System.Windows.Media.Colors.Red;  // Default
             }

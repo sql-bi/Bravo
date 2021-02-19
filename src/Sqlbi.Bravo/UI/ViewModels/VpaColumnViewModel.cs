@@ -8,16 +8,15 @@ namespace Sqlbi.Bravo.UI.ViewModels
 {
     internal class VpaColumnViewModel : BaseViewModel, ITreeMapInfo
     {
-        private readonly AnalyzeModelViewModel parent;
+        private readonly AnalyzeModelViewModel _parent;
         private bool _isSelected;
 
         // Coupling this VM to the parent is the simplest way to track totals based on selection
-        public VpaColumnViewModel(AnalyzeModelViewModel parent) => this.parent = parent;
-
         public VpaColumnViewModel(AnalyzeModelViewModel parent, VpaColumn vpaColumn)
-            : this(parent)
         {
-            IsRequired = vpaColumn.IsReferenced;
+            _parent = parent;
+            VpaColumn = vpaColumn;
+            IsUnused = !vpaColumn.IsReferenced;
             ColumnName = vpaColumn.ColumnName;
             TableName = vpaColumn.Table.TableName;
             Cardinality = vpaColumn.ColumnCardinality;
@@ -31,15 +30,17 @@ namespace Sqlbi.Bravo.UI.ViewModels
             set
             {
                 if (SetProperty(ref _isSelected, value)){
-                    parent.OnPropertyChanged(nameof(AnalyzeModelViewModel.SelectedColumnCount));
-                    parent.OnPropertyChanged(nameof(AnalyzeModelViewModel.SelectedColumnSize));
-                    parent.OnPropertyChanged(nameof(AnalyzeModelViewModel.SelectedColumnWeight));
+                    _parent.OnPropertyChanged(nameof(AnalyzeModelViewModel.SelectedColumnCount));
+                    _parent.OnPropertyChanged(nameof(AnalyzeModelViewModel.SelectedColumnSize));
+                    _parent.OnPropertyChanged(nameof(AnalyzeModelViewModel.SelectedColumnWeight));
                     OnPropertyChanged(nameof(OverlayVisibility));
                 }
             }
         }
 
-        public bool IsRequired { get; set; }
+        public VpaColumn VpaColumn { get; }
+
+        public bool IsUnused { get; set; }
 
         public string ColumnName { get; set; }
 
@@ -53,7 +54,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public long Size => TotalSize;
 
-        public Color RectangleColor => parent.GetTableColor(TableName);
+        public Color RectangleColor => _parent.GetTableColor(TableName);
 
         public string ToolTipText => $"'{TableName}'[{ColumnName}]";
 
