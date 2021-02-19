@@ -180,7 +180,36 @@
                             </Grid>
                         </StackPanel>
 
-                        <TextBlock Grid.Column="2" Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center">Pie chart will go here</TextBlock>
+                        <StackPanel Grid.Column="2" Grid.Row="1" Margin="40,0,20,0">
+                            <TextBlock FontSize="11" HorizontalAlignment="Left">
+                                <Run Text="Other columns" />
+                                <LineBreak />
+                                <Run Text="{Binding SummaryUnlistedColumnPercentage, Mode=OneWay, StringFormat=##.#}" />
+                                <Run Text="%" />
+                                </TextBlock>
+                                <Grid Width="100" Height="100">
+                            <Ellipse
+                                Height="100"
+                                Width="100"
+                                Fill="Gainsboro"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center" />
+                            <controls:SimplePie
+                                CentreX="50" CentreY="50" Radius="50"
+                                Angle="{Binding SummaryColumnWeightAngle}"
+                                Fill="Red"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Top"
+                                />
+                        </Grid>
+
+                            <TextBlock FontSize="11" HorizontalAlignment="Right" Padding="0,4">
+                                <Run Text="Listed columns" />
+                                <LineBreak />
+                                <Run Text="{Binding SummaryListedColumnPercentage, Mode=OneWay, StringFormat=##.#}" />
+                                <Run Text="%" />
+                            </TextBlock>
+                        </StackPanel>
 
                         <mah:ToggleSwitch
                             Grid.Row="3"

@@ -144,12 +144,21 @@ namespace Sqlbi.Bravo.UI.ViewModels
                 OnPropertyChanged(nameof(SummaryColumns));
                 OnPropertyChanged(nameof(SummaryColumnSize));
                 OnPropertyChanged(nameof(SummaryColumnWeight));
+                OnPropertyChanged(nameof(SummaryColumnWeightAngle));
+                OnPropertyChanged(nameof(SummaryListedColumnPercentage));
+                OnPropertyChanged(nameof(SummaryUnlistedColumnPercentage));
             }
         }
 
         public long? SummaryColumnSize => SummaryColumns?.Sum(c => c.TotalSize);
 
         public double? SummaryColumnWeight => SummaryColumns?.Sum(c => c.PercentageDatabase);
+
+        public double? SummaryColumnWeightAngle => SummaryColumnWeight * 360;
+
+        public double SummaryListedColumnPercentage => (SummaryColumnWeight ?? 0) * 100;
+
+        public double SummaryUnlistedColumnPercentage => 100 - SummaryListedColumnPercentage;
 
         public IEnumerable<VpaTableColumnViewModel> AllTableColumns
         {
