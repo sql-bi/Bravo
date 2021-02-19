@@ -329,19 +329,21 @@ namespace Sqlbi.Bravo.UI.ViewModels
             switch (orderedTables.FindIndex(t => t.TableName.Equals(tableName)))
             {
                 case 0:
-                    return System.Windows.Media.Colors.LightBlue;
+                    return System.Windows.Media.Colors.Orange;
                 case 1:
-                    return System.Windows.Media.Colors.LightGreen;
+                    return System.Windows.Media.Colors.Yellow;
                 case 2:
-                    return System.Windows.Media.Colors.LightPink;
+                    return System.Windows.Media.Colors.LightGreen;
                 case 3:
-                    return System.Windows.Media.Colors.LightYellow;
+                    return System.Windows.Media.Colors.Green;
                 case 4:
-                    return System.Windows.Media.Colors.LightSlateGray;
+                    return System.Windows.Media.Colors.LightBlue;
                 case 5:
-                    return System.Windows.Media.Colors.LightSteelBlue;
+                    return System.Windows.Media.Colors.Blue;
                 case 6:
-                    return System.Windows.Media.Colors.LightCyan;
+                    return System.Windows.Media.Colors.DarkBlue;
+                case 7:
+                    return System.Windows.Media.Colors.Purple;
                 default:
                     return System.Windows.Media.Colors.Red;  // Default
             }
