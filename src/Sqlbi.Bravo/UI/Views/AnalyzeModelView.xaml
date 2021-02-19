@@ -299,8 +299,10 @@
                                             <GridView>
                                                 <GridViewColumn Header="" Width="64" x:Name="padding">
                                                     <GridViewColumn.HeaderContainerStyle>
-                                                        <Style TargetType="{x:Type GridViewColumnHeader}">
-                                                            <Setter Property="IsHitTestVisible" Value="False"/>
+                                                        <Style TargetType="{x:Type GridViewColumnHeader}"
+                                                               BasedOn="{StaticResource MahApps.Styles.GridViewColumnHeader}">
+                                                            <Setter Property="IsHitTestVisible" Value="True"/>
+                                                            <Setter Property="IsEnabled" Value="True"/>
                                                         </Style>
                                                     </GridViewColumn.HeaderContainerStyle>
                                                 </GridViewColumn>
