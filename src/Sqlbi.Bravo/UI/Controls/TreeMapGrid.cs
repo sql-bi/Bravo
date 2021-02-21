@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -14,16 +15,28 @@ namespace Sqlbi.Bravo.UI.Controls
     {
         const double MinSliceRatio = 0.35;
 
+        public IEnumerable<ITreeMapInfo> Items
+        {
+            get { return (IEnumerable<ITreeMapInfo>)GetValue(ItemsProperty); }
+            set { SetValue(ItemsProperty, value); }
+        }
+
+        public static readonly DependencyProperty ItemsProperty =
+            DependencyProperty.Register("Items", typeof(IEnumerable<ITreeMapInfo>), typeof(TreeMapGrid), new PropertyMetadata(null, OnItemsChanged));
+
+        private static void OnItemsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is TreeMapGrid treeMap)
+            {
+                treeMap.DrawTree(treeMap.Items);
+            }
+        }
+
         public void DrawTree(IEnumerable<ITreeMapInfo> data)
             => DrawTree(data, Convert.ToInt32(Width), Convert.ToInt32(Height));
 
         public void DrawTree(IEnumerable<ITreeMapInfo> data, int width, int height)
         {
-            if (data == null)
-            {
-                throw new ArgumentNullException(nameof(data));
-            }
-
             if (width < 1)
             {
                 throw new ArgumentException("Width must be a positive integer.");
@@ -32,6 +45,11 @@ namespace Sqlbi.Bravo.UI.Controls
             if (height < 1)
             {
                 throw new ArgumentException("Height must be a positive integer.");
+            }
+
+            if (data == null || !data.Any())
+            {
+                return;
             }
 
             var wrappedData = data.Select(x => new Element<ITreeMapInfo> { Object = x, Value = x.Size })

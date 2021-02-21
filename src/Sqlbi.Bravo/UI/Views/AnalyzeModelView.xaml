@@ -573,7 +573,7 @@
                                 <Run>max rows</Run>
                             </TextBlock>
                         </StackPanel>
-                        <controls:TreeMapGrid x:Name="TreeMap" Grid.Row="2" Grid.ColumnSpan="2" Width="250" Height="300" />
+                        <controls:TreeMapGrid x:Name="TreeMap" Grid.Row="2" Grid.ColumnSpan="2" Width="250" Height="300" Items="{Binding AllColumns}" />
                     </Grid>
                 </Grid>
             </mah:FlipViewItem>

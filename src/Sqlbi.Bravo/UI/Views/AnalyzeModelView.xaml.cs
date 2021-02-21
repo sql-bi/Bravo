@@ -32,15 +32,15 @@ namespace Sqlbi.Bravo.UI.Views
 
         internal void TryRedrawTreeMap()
         {
-            if (AnalyzeModelFlipView.SelectedIndex == 2)
-            {
-                var vm = DataContext as ViewModels.AnalyzeModelViewModel;
+            //if (AnalyzeModelFlipView.SelectedIndex == 2)
+            //{
+            //    var vm = DataContext as ViewModels.AnalyzeModelViewModel;
 
-                if (vm.AllColumnCount > 0)
-                {
-                    TreeMap.DrawTree(vm.AllColumns);
-                }
-            }
+            //    if (vm.AllColumnCount > 0)
+            //    {
+            //        TreeMap.DrawTree(vm.AllColumns);
+            //    }
+            //}
         }
     }
 }
