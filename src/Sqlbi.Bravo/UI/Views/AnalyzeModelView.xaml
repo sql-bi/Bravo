@@ -34,7 +34,6 @@
         ShowIndex="False"
         SelectedIndex="{Binding ViewIndex}"
         IsBannerEnabled="False"
-        SelectionChanged="FlipViewSelectionChanged"
         IsNavigationEnabled="False">
         <mah:FlipView.Items>
 

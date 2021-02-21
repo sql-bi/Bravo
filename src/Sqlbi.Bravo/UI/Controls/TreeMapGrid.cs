@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -17,8 +16,8 @@ namespace Sqlbi.Bravo.UI.Controls
 
         public IEnumerable<ITreeMapInfo> Items
         {
-            get { return (IEnumerable<ITreeMapInfo>)GetValue(ItemsProperty); }
-            set { SetValue(ItemsProperty, value); }
+            get => (IEnumerable<ITreeMapInfo>)GetValue(ItemsProperty);
+            set => SetValue(ItemsProperty, value);
         }
 
         public static readonly DependencyProperty ItemsProperty =
