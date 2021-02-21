@@ -14,7 +14,11 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public TreeItem(MeasureSelectionViewModel parent) => _parent = parent;
 
-        public TreeItem(MeasureSelectionViewModel parent, TreeItem table) : this(parent) => _table = table;
+        public TreeItem(MeasureSelectionViewModel parent, TreeItem table) : this(parent)
+        {
+            _table = table;
+            IsThreeState = _table == null;
+        }
 
         public bool IsVisbile { get; set; } = true;
 
@@ -40,13 +44,16 @@ namespace Sqlbi.Bravo.UI.ViewModels
                         if (selected == 0)
                         {
                             _table.IsSelected = false;
+                            _table.IsThreeState = false;
                         }
                         else if (selected == _table.Measures.Count)
                         {
                             _table.IsSelected = true;
+                            _table.IsThreeState = false;
                         }
                         else
                         {
+                            _table.IsThreeState = true;
                             _table.IsSelected = null;
                         }
                     }
@@ -56,7 +63,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
             }
         }
 
-        public bool IsThreeState => _table == null;
+        public bool IsThreeState { get; set; } = true;
 
         public string Name { get; set; }
 
