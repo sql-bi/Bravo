@@ -1,15 +1,12 @@
 ﻿using Humanizer;
 using Microsoft.Extensions.Logging;
-using Sqlbi.Bravo.Core.Helpers;
 using Sqlbi.Bravo.Core.Logging;
 using Sqlbi.Bravo.Core.Services;
 using Sqlbi.Bravo.Core.Services.Interfaces;
 using Sqlbi.Bravo.UI.DataModel;
 using Sqlbi.Bravo.UI.Framework.Commands;
-using Sqlbi.Bravo.UI.Framework.Helpers;
 using Sqlbi.Bravo.UI.Framework.ViewModels;
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;

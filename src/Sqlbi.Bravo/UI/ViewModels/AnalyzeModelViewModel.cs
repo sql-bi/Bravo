@@ -178,14 +178,14 @@ namespace Sqlbi.Bravo.UI.ViewModels
                         {
                             if (currentTable == null || currentTable.TableName != col.Table.TableName)
                             {
-                                currentTable = new VpaTableColumnViewModel(this, col, isTable: true)
+                                currentTable = new VpaTableColumnViewModel(this, col)
                                 {
                                     TotalSize = col.Table.ColumnsTotalSize,
                                     PercentageDatabase = col.Table.PercentageDatabase
                                 };
 
                                 // We're building the table structure from this row so have to be sure to include it too
-                                currentTable.Columns.Add(new VpaTableColumnViewModel(this, col, isTable: false));
+                                currentTable.Columns.Add(new VpaTableColumnViewModel(this, col, currentTable));
 
                                 _allTablesCache.Add(currentTable);
                             }
@@ -194,7 +194,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
                                 // Table doesn't expose this so have to sum it manually.
                                 currentTable.Cardinality += col.ColumnCardinality;
 
-                                currentTable.Columns.Add(new VpaTableColumnViewModel(this, col, isTable: false));
+                                currentTable.Columns.Add(new VpaTableColumnViewModel(this, col, currentTable));
                             }
                         }
                     }
@@ -217,11 +217,11 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public IEnumerable<VpaTable> AllTables => _modelService.GetAllTables();
 
-        public int? SelectedColumnCount => AllColumns?.Count(c => c.IsSelected) ?? 0;
+        public int? SelectedColumnCount => AllColumns?.Count(c => c.IsSelected ?? false) ?? 0;
 
-        public long? SelectedColumnSize => AllColumns?.Where(c => c.IsSelected).Sum(c => c.TotalSize);
+        public long? SelectedColumnSize => AllColumns?.Where(c => c.IsSelected ?? false).Sum(c => c.TotalSize);
 
-        public double? SelectedColumnWeight => AllColumns?.Where(c => c.IsSelected).Sum(c => c.PercentageDatabase);
+        public double? SelectedColumnWeight => AllColumns?.Where(c => c.IsSelected ?? false).Sum(c => c.PercentageDatabase);
 
         public string TimeSinceLastSync
                     => LastSyncTime.Year == 1

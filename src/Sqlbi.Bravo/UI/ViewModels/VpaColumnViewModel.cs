@@ -9,7 +9,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
     internal class VpaColumnViewModel : BaseViewModel, ITreeMapInfo
     {
         private readonly AnalyzeModelViewModel _parent;
-        private bool _isSelected;
+        private bool? _isSelected = false;
 
         // Coupling this VM to the parent is the simplest way to track totals based on selection
         public VpaColumnViewModel(AnalyzeModelViewModel parent, VpaColumn vpaColumn)
@@ -24,7 +24,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
             PercentageDatabase = vpaColumn.PercentageDatabase;
         }
 
-        public virtual bool IsSelected
+        public virtual bool? IsSelected
         {
             get => _isSelected;
             set
@@ -58,6 +58,6 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public string ToolTipText => $"'{TableName}'[{ColumnName}]";
 
-        public Visibility OverlayVisibility => IsSelected ? Visibility.Collapsed : Visibility.Visible;
+        public Visibility OverlayVisibility => (IsSelected ?? false) ? Visibility.Collapsed : Visibility.Visible;
     }
 }

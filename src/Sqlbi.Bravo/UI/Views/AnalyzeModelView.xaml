@@ -344,7 +344,7 @@
                                                                 <ColumnDefinition Width="{Binding ElementName=tblSizeColHdr, Path=ActualWidth}" />
                                                                 <ColumnDefinition Width="{Binding ElementName=tblDbPctColHdr, Path=ActualWidth}" />
                                                             </Grid.ColumnDefinitions>
-                                                            <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource MahApps.Styles.CheckBox.Win10}" />
+                                                            <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsThreeState="{Binding IsThreeState}" Style="{StaticResource MahApps.Styles.CheckBox.Win10}" />
                                                             <TextBlock Text="{Binding TableName, Mode=OneWay}"
                                                                    VerticalAlignment="Center"
                                                                    Grid.Column="1"/>
