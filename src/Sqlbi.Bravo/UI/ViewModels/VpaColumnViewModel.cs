@@ -38,6 +38,8 @@ namespace Sqlbi.Bravo.UI.ViewModels
             }
         }
 
+        bool ITreeMapInfo.IsSelected { get => IsSelected ?? false; set => IsSelected = value; }
+
         public VpaColumn VpaColumn { get; }
 
         public bool IsUnused { get; set; }

@@ -115,6 +115,8 @@ namespace Sqlbi.Bravo.UI.Controls
 
                     border.Child = rect;
 
+                    border.MouseDown += (s, e) => origItem.IsSelected = !origItem.IsSelected;
+
                     Grid.SetColumn(border, Convert.ToInt32(r.X));
                     Grid.SetRow(border, Convert.ToInt32(r.Y));
                     Grid.SetRowSpan(border, Convert.ToInt32(r.Height - 1));
