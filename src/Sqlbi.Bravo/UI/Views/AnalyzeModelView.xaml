@@ -329,6 +329,7 @@
                                         </ListView.View>
                                     </ListView>
                                     <TreeView ItemsSource="{Binding AllTableColumns}"
+                                              Loaded="TablesTreeview_Loaded"
                                       Background="{DynamicResource MahApps.Brushes.ThemeBackground}"
                                       Margin="-20,0,0,0">
                                         <TreeView.ItemTemplate>
