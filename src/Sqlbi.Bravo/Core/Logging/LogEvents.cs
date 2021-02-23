@@ -29,6 +29,8 @@ namespace Sqlbi.Bravo.Core.Logging
             AnalysisServicesEventWatcherServiceConnectionStateMonitorTaskStatus = 9010,
 
             AnalysisServicesEventWatcherServiceOnTraceEvent = 9011,
+
+            MediaPlaybackFailure = 9012,
         }
 
         public static readonly EventId TaskSchedulerUnobservedTaskException = new EventId((int)LogEventsId.TaskSchedulerUnobservedTaskException, nameof(TaskSchedulerUnobservedTaskException));
@@ -54,5 +56,7 @@ namespace Sqlbi.Bravo.Core.Logging
         public static readonly EventId AnalysisServicesEventWatcherServiceConnectionStateMonitorTaskStatus = new EventId((int)LogEventsId.AnalysisServicesEventWatcherServiceConnectionStateMonitorTaskStatus, nameof(AnalysisServicesEventWatcherServiceConnectionStateMonitorTaskStatus));
 
         public static readonly EventId AnalysisServicesEventWatcherServiceOnTraceEvent = new EventId((int)LogEventsId.AnalysisServicesEventWatcherServiceOnTraceEvent, nameof(AnalysisServicesEventWatcherServiceOnTraceEvent));
+
+        public static readonly EventId MediaPlaybackFailure = new EventId((int)LogEventsId.MediaPlaybackFailure, nameof(MediaPlaybackFailure));
     }
 }

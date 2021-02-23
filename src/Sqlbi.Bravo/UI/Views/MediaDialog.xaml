@@ -32,6 +32,16 @@
             <mah:ProgressRing x:Name="ProgressIndicator" Foreground="Red" HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Row="2"
                               Height="100" Width="100" IsActive="True" />
 
+            <TextBlock x:Name="ErrorMessage" Grid.Row="2" TextWrapping="Wrap" Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="14">
+                <Run>The videos you requested is hosted on Vimeo. As you may know, there are limitations on access to video streaming in certain countries around the world, like China and Indonesia. </Run>
+                <LineBreak />
+                <LineBreak />
+                <Run>If you cannot see the video, please try to watch any video on &#x202F;</Run><Hyperlink Style="{StaticResource InlineHyperlinks}" RequestNavigate="OpenHyperlink" NavigateUri="https://vimeo.com/watch">https://vimeo.com/watch</Hyperlink><Run>. If you cannot see any video on Vimeo, then you should evaluate how to get access to Vimeo – for example, by using a VPN service.</Run>
+                <LineBreak />
+                <LineBreak />
+                <Run>However, if you are able to access those videos and yet experience issues when watching videos in this application, please describe your issue on &#x202F;</Run><Hyperlink Style="{StaticResource InlineHyperlinks}" RequestNavigate="OpenHyperlink" NavigateUri="https://github.com/sql-bi/Bravo/issues">https://github.com/sql-bi/Bravo/issues</Hyperlink>
+            </TextBlock>
+            
             <Button x:Name="CloseButton"
                 Style="{StaticResource StandardButton}"
                 Margin="0,10,0,0"
