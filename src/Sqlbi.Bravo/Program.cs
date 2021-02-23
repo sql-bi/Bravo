@@ -111,7 +111,6 @@ namespace Sqlbi.Bravo
                 services.AddSingleton<IThemeSelectorService, ThemeSelectorService>();
                 services.AddSingleton<IDaxFormatterClient, DaxFormatterClient>();
                 services.AddSingleton<ShellViewModel>();
-                services.AddSingleton<SideMenuViewModel>();
                 services.AddSingleton<SettingsViewModel>();
 
                 // Make these services transient as each ViewModel will need a unique one with a separate connection
