@@ -330,32 +330,54 @@ namespace Sqlbi.Bravo.UI.ViewModels
             UnusedColumns = _modelService.GetUnusedColumns().OrderByDescending(c => c.PercentageDatabase).ToList();
         }
 
+        private readonly Dictionary<string, System.Windows.Media.Color> _colorCache = new Dictionary<string, System.Windows.Media.Color>();
+
         internal System.Windows.Media.Color GetTableColor(string tableName)
         {
+            if (_colorCache.ContainsKey(tableName))
+            {
+                return _colorCache[tableName];
+            }
+
             var orderedTables = AllTableColumns.OrderByDescending(t => t.TotalSize).ToList();
+
+            System.Windows.Media.Color result;
 
             // TODO REQUIREMENTS: Need to define the actual colors to use.
             switch (orderedTables.FindIndex(t => t.TableName.Equals(tableName)))
             {
                 case 0:
-                    return System.Windows.Media.Colors.Orange;
+                    result = System.Windows.Media.Colors.Orange;
+                    break;
                 case 1:
-                    return System.Windows.Media.Colors.Yellow;
+                    result = System.Windows.Media.Colors.Yellow;
+                    break;
                 case 2:
-                    return System.Windows.Media.Colors.LightGreen;
+                    result = System.Windows.Media.Colors.LightGreen;
+                    break;
                 case 3:
-                    return System.Windows.Media.Colors.Green;
+                    result = System.Windows.Media.Colors.Green;
+                    break;
                 case 4:
-                    return System.Windows.Media.Colors.LightBlue;
+                    result = System.Windows.Media.Colors.LightBlue;
+                    break;
                 case 5:
-                    return System.Windows.Media.Colors.Blue;
+                    result = System.Windows.Media.Colors.Blue;
+                    break;
                 case 6:
-                    return System.Windows.Media.Colors.DarkBlue;
+                    result = System.Windows.Media.Colors.DarkBlue;
+                    break;
                 case 7:
-                    return System.Windows.Media.Colors.Purple;
+                    result = System.Windows.Media.Colors.Purple;
+                    break;
                 default:
-                    return System.Windows.Media.Colors.Red;  // Default
+                    result = System.Windows.Media.Colors.Red;  // Default
+                    break;
             }
+
+            _colorCache.Add(tableName, result);
+            
+            return result;
         }
     }
 }

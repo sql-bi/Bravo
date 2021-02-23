@@ -12,5 +12,7 @@ namespace Sqlbi.Bravo.UI.Controls
         string ToolTipText { get; }
 
         Visibility OverlayVisibility { get; }
+
+        bool IsSelected { get; set; }
     }
 }

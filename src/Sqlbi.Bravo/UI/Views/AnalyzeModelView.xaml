@@ -34,7 +34,6 @@
         ShowIndex="False"
         SelectedIndex="{Binding ViewIndex}"
         IsBannerEnabled="False"
-        SelectionChanged="FlipViewSelectionChanged"
         IsNavigationEnabled="False">
         <mah:FlipView.Items>
 
@@ -330,6 +329,7 @@
                                         </ListView.View>
                                     </ListView>
                                     <TreeView ItemsSource="{Binding AllTableColumns}"
+                                              Loaded="TablesTreeview_Loaded"
                                       Background="{DynamicResource MahApps.Brushes.ThemeBackground}"
                                       Margin="-20,0,0,0">
                                         <TreeView.ItemTemplate>
@@ -573,7 +573,7 @@
                                 <Run>max rows</Run>
                             </TextBlock>
                         </StackPanel>
-                        <controls:TreeMapGrid x:Name="TreeMap" Grid.Row="2" Grid.ColumnSpan="2" Width="250" Height="300" />
+                        <controls:TreeMapGrid x:Name="TreeMap" Grid.Row="2" Grid.ColumnSpan="2" Width="250" Height="300" Items="{Binding AllColumns}" />
                     </Grid>
                 </Grid>
             </mah:FlipViewItem>
