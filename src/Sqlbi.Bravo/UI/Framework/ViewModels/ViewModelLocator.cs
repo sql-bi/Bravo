@@ -7,8 +7,6 @@ namespace Sqlbi.Bravo.UI.Framework.ViewModels
     {
         public ShellViewModel ShellViewModel => App.ServiceProvider.GetRequiredService<ShellViewModel>();
 
-        public SideMenuViewModel SideMenuViewModel => App.ServiceProvider.GetRequiredService<SideMenuViewModel>();
-
         public DaxFormatterViewModel DaxFormatterViewModel => App.ServiceProvider.GetRequiredService<DaxFormatterViewModel>();
 
         public SettingsViewModel SettingsViewModel => App.ServiceProvider.GetRequiredService<SettingsViewModel>();
