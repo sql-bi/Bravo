@@ -60,13 +60,13 @@ namespace Sqlbi.Bravo.Core.Services
 
                 var db = _server.Databases[runtimeSummary.DatabaseName];
                 var tomModel = db.Model;
-                _daxModel = Dax.Metadata.Extractor.TomExtractor.GetDaxModel(tomModel, "SQL-BI.Bravo", "0.1");
+                _daxModel = Dax.Metadata.Extractor.TomExtractor.GetDaxModel(tomModel, AppConstants.ApplicationName, AppConstants.ApplicationProductVersion);
 
                 var connString = GetConnectionString(runtimeSummary.ServerName, runtimeSummary.DatabaseName);
 
                 using var connection = new AdomdConnection(connString);
                 // Populate statistics from DMV
-                Dax.Metadata.Extractor.DmvExtractor.PopulateFromDmv(_daxModel, connection, runtimeSummary.ServerName, runtimeSummary.DatabaseName, "TestDaxModel", "0.1");
+                Dax.Metadata.Extractor.DmvExtractor.PopulateFromDmv(_daxModel, connection, runtimeSummary.ServerName, runtimeSummary.DatabaseName, AppConstants.ApplicationName, AppConstants.ApplicationProductVersion);
                 // Populate statistics by querying the data model
                 Dax.Metadata.Extractor.StatExtractor.UpdateStatisticsModel(_daxModel, connection, 10);
 
