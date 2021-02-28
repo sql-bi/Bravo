@@ -63,18 +63,10 @@ public string Theme
     }
 }
 
-public IEnumerable<LogEventLevel> TelemetryLevels => Enum.GetValues(typeof(LogEventLevel)).Cast<LogEventLevel>();
-
 public bool TelemetryEnabled
 {
     get => _settings.Application.TelemetryEnabled;
     set => _settings.Application.TelemetryEnabled = value;
-}
-
-public LogEventLevel TelemetryLevel
-{
-    get => _settings.Application.TelemetryLevel;
-    set => _settings.Application.TelemetryLevel = value;
 }
 
 public bool ProxyUseSystem

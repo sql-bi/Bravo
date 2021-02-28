@@ -93,18 +93,16 @@
                     <Label Grid.Row="0" Grid.Column="1" FontWeight="Bold">Value</Label>
                     <Label Grid.Row="1" Grid.Column="0" FontWeight="Bold">TelemetryEnabled</Label>
                     <CheckBox Grid.Row="1" Grid.Column="1" IsChecked="{Binding TelemetryEnabled}" />
-                    <Label Grid.Row="2" Grid.Column="0" FontWeight="Bold">TelemetryLevel</Label>
-                    <ComboBox Grid.Row="2" Grid.Column="1" ItemsSource="{Binding TelemetryLevels}" SelectedItem="{Binding TelemetryLevel}" />
-                    <Label Grid.Row="3" Grid.Column="0" FontWeight="Bold">ProxyUseSystem</Label>
-                    <CheckBox Grid.Row="3" Grid.Column="1" IsChecked="{Binding ProxyUseSystem}" />
-                    <Label Grid.Row="4" Grid.Column="0" FontWeight="Bold">ProxyAddress</Label>
-                    <TextBox Grid.Row="4" Grid.Column="1" IsEnabled="{Binding ProxyIsEnabled}" Text="{Binding ProxyAddress}" />
-                    <Label Grid.Row="5" Grid.Column="0" FontWeight="Bold">ProxyUser</Label>
-                    <TextBox Grid.Row="5" Grid.Column="1" IsEnabled="{Binding ProxyIsEnabled}" Text="{Binding ProxyUser}" />
-                    <Label Grid.Row="6" Grid.Column="0" FontWeight="Bold">ProxyPassword</Label>
-                    <PasswordBox Grid.Row="6" Grid.Column="1" IsEnabled="{Binding ProxyIsEnabled}" x:Name="ProxyPassword" />
-                    <Label Grid.Row="7" Grid.Column="0" FontWeight="Bold">UIShellBringToForegroundOnParentProcessMainWindowScreen</Label>
-                    <CheckBox Grid.Row="7" Grid.Column="1" IsChecked="{Binding UIShellBringToForegroundOnParentProcessMainWindowScreen}" />
+                    <Label Grid.Row="2" Grid.Column="0" FontWeight="Bold">ProxyUseSystem</Label>
+                    <CheckBox Grid.Row="2" Grid.Column="1" IsChecked="{Binding ProxyUseSystem}" />
+                    <Label Grid.Row="3" Grid.Column="0" FontWeight="Bold">ProxyAddress</Label>
+                    <TextBox Grid.Row="3" Grid.Column="1" IsEnabled="{Binding ProxyIsEnabled}" Text="{Binding ProxyAddress}" />
+                    <Label Grid.Row="4" Grid.Column="0" FontWeight="Bold">ProxyUser</Label>
+                    <TextBox Grid.Row="4" Grid.Column="1" IsEnabled="{Binding ProxyIsEnabled}" Text="{Binding ProxyUser}" />
+                    <Label Grid.Row="5" Grid.Column="0" FontWeight="Bold">ProxyPassword</Label>
+                    <PasswordBox Grid.Row="5" Grid.Column="1" IsEnabled="{Binding ProxyIsEnabled}" x:Name="ProxyPassword" />
+                    <Label Grid.Row="6" Grid.Column="0" FontWeight="Bold">UIShellBringToForegroundOnParentProcessMainWindowScreen</Label>
+                    <CheckBox Grid.Row="6" Grid.Column="1" IsChecked="{Binding UIShellBringToForegroundOnParentProcessMainWindowScreen}" />
                 </Grid>
                     </Expander>
 

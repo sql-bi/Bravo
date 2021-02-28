@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Serilog;
+using Serilog.Events;
 using Sqlbi.Bravo.Core;
 using Sqlbi.Bravo.Core.Services;
 using Sqlbi.Bravo.Core.Services.Interfaces;
@@ -157,10 +158,8 @@ namespace Sqlbi.Bravo
                 telemetryConfiguration.DisableTelemetry = !telemetryEnabled;
 #pragma warning restore CS0618 // Type or member is obsolete
 
-                var telemetryLevel = config.GetValue($"{ nameof(AppSettings) }:{ nameof(AppSettings.TelemetryLevel) }", defaultValue: AppConstants.ApplicationSettingsDefaultTelemetryLevel);
-
                 loggerConfiguration
-                    .WriteTo.ApplicationInsights(telemetryConfiguration, TelemetryConverter.Events, telemetryLevel)
+                    .WriteTo.ApplicationInsights(telemetryConfiguration, TelemetryConverter.Events, restrictedToMinimumLevel: LogEventLevel.Information)
                     .Enrich.WithProperty("ApplicationName", AppConstants.ApplicationName)
                     .Enrich.WithProperty("Version", AppConstants.ApplicationProductVersion);
             }
