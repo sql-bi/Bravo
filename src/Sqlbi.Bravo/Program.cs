@@ -110,7 +110,7 @@ namespace Sqlbi.Bravo
                 services.AddSingleton<IApplicationInstanceService, ApplicationInstanceService>();
                 services.AddSingleton<IGlobalSettingsProviderService, GlobalSettingsProviderService>();
                 services.AddSingleton<IThemeSelectorService, ThemeSelectorService>();
-                services.AddSingleton<IDaxFormatterClient, DaxFormatterClient>();
+                services.AddSingleton<IDaxFormatterClient>(new DaxFormatterClient(AppConstants.ApplicationName, AppConstants.ApplicationProductVersion));
                 services.AddSingleton<ShellViewModel>();
                 services.AddSingleton<SettingsViewModel>();
 
