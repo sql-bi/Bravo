@@ -9,8 +9,6 @@ namespace Sqlbi.Bravo.Core.Settings
 
         public bool TelemetryEnabled { get; set; } = AppConstants.ApplicationSettingsDefaultTelemetryEnabled;
 
-        public LogEventLevel TelemetryLevel { get; set; } = AppConstants.ApplicationSettingsDefaultTelemetryLevel;
-
         public bool ProxyUseSystem
         { 
             get => _proxyUseSystem; 

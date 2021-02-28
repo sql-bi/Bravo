@@ -183,7 +183,6 @@ namespace Sqlbi.Bravo.UI.ViewModels
             OutputMessages.Add($"ParentProcess.MainWindowHandle -> { settings.Runtime.ParentProcessMainWindowHandle }");
             OutputMessages.Add("--- APPLICATION SETTINGS ---");
             OutputMessages.Add($"{ nameof(settings.Application.TelemetryEnabled) } -> { settings.Application.TelemetryEnabled }");
-            OutputMessages.Add($"{ nameof(settings.Application.TelemetryLevel) } -> { settings.Application.TelemetryLevel }");
             OutputMessages.Add($"{ nameof(settings.Application.UIShellBringToForegroundOnParentProcessMainWindowScreen) } -> { settings.Application.UIShellBringToForegroundOnParentProcessMainWindowScreen }");
             OutputMessages.Add("--- RUNTIME SETTINGS ---");
             OutputMessages.Add($"{ nameof(settings.Runtime.ServerName) } -> { settings.Runtime.ServerName }");

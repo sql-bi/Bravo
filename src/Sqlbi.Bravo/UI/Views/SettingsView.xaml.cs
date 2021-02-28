@@ -12,9 +12,10 @@ namespace Sqlbi.Bravo.UI.Views
 
         public SecureString SecurePassword => ProxyPassword.SecurePassword;
 
-        private void OkClicked(object sender, RoutedEventArgs e) {
-
+        private void OkClicked(object sender, RoutedEventArgs e)
+        {
             (DataContext as SettingsViewModel).SaveCommand.Execute(null);
-            _ = Close(); }
+            _ = Close(); 
+        }
     }
 }
