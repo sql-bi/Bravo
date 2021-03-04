@@ -43,40 +43,40 @@ namespace Sqlbi.Bravo.Core.Logging
             ConnectionTypeAttachPowerBI = 9017
         }
 
-        public static readonly EventId TaskSchedulerUnobservedTaskException = new EventId((int)LogEventsId.TaskSchedulerUnobservedTaskException, nameof(TaskSchedulerUnobservedTaskException));
+        public static readonly EventId TaskSchedulerUnobservedTaskException = new EventId((int)LogEventsId.TaskSchedulerUnobservedTaskException);
 
-        public static readonly EventId AppDomainUnhandledException = new EventId((int)LogEventsId.AppDomainUnhandledException, nameof(AppDomainUnhandledException));
+        public static readonly EventId AppDomainUnhandledException = new EventId((int)LogEventsId.AppDomainUnhandledException);
 
-        public static readonly EventId DispatcherUnhandledException = new EventId((int)LogEventsId.DispatcherUnhandledException, nameof(DispatcherUnhandledException));
+        public static readonly EventId DispatcherUnhandledException = new EventId((int)LogEventsId.DispatcherUnhandledException);
 
-        public static readonly EventId AppOnStartup = new EventId((int)LogEventsId.AppOnStartup, nameof(AppOnStartup));
+        public static readonly EventId AppOnStartup = new EventId((int)LogEventsId.AppOnStartup);
 
-        public static readonly EventId AppOnExit = new EventId((int)LogEventsId.AppOnExit, nameof(AppOnExit));
+        public static readonly EventId AppOnExit = new EventId((int)LogEventsId.AppOnExit);
 
-        public static readonly EventId AppShutdownForMultipleInstance = new EventId((int)LogEventsId.AppShutdownForMultipleInstance, nameof(AppShutdownForMultipleInstance));
+        public static readonly EventId AppShutdownForMultipleInstance = new EventId((int)LogEventsId.AppShutdownForMultipleInstance);
 
-        public static readonly EventId DaxFormatterApplyFormatContainsErrors = new EventId((int)LogEventsId.DaxFormatterApplyFormatContainsErrors, nameof(DaxFormatterApplyFormatContainsErrors));
+        public static readonly EventId DaxFormatterApplyFormatContainsErrors = new EventId((int)LogEventsId.DaxFormatterApplyFormatContainsErrors);
 
-        public static readonly EventId ApplicationInstanceServiceMultipleInstanceTaskException = new EventId((int)LogEventsId.ApplicationInstanceServiceMultipleInstanceTaskException, nameof(ApplicationInstanceServiceMultipleInstanceTaskException));
+        public static readonly EventId ApplicationInstanceServiceMultipleInstanceTaskException = new EventId((int)LogEventsId.ApplicationInstanceServiceMultipleInstanceTaskException);
 
-        public static readonly EventId AnalysisServicesEventWatcherServiceConnectionStateMonitorTaskException = new EventId((int)LogEventsId.AnalysisServicesEventWatcherServiceConnectionStateMonitorTaskException, nameof(AnalysisServicesEventWatcherServiceConnectionStateMonitorTaskException));
+        public static readonly EventId AnalysisServicesEventWatcherServiceConnectionStateMonitorTaskException = new EventId((int)LogEventsId.AnalysisServicesEventWatcherServiceConnectionStateMonitorTaskException);
 
-        public static readonly EventId AnalysisServicesEventWatcherServiceConnectionStateMonitorTaskCompleted = new EventId((int)LogEventsId.AnalysisServicesEventWatcherServiceConnectionStateMonitorTaskCompleted, nameof(AnalysisServicesEventWatcherServiceConnectionStateMonitorTaskCompleted));
+        public static readonly EventId AnalysisServicesEventWatcherServiceConnectionStateMonitorTaskCompleted = new EventId((int)LogEventsId.AnalysisServicesEventWatcherServiceConnectionStateMonitorTaskCompleted);
 
-        public static readonly EventId AnalysisServicesEventWatcherServiceConnectionStateMonitorTaskStatus = new EventId((int)LogEventsId.AnalysisServicesEventWatcherServiceConnectionStateMonitorTaskStatus, nameof(AnalysisServicesEventWatcherServiceConnectionStateMonitorTaskStatus));
+        public static readonly EventId AnalysisServicesEventWatcherServiceConnectionStateMonitorTaskStatus = new EventId((int)LogEventsId.AnalysisServicesEventWatcherServiceConnectionStateMonitorTaskStatus);
 
-        public static readonly EventId AnalysisServicesEventWatcherServiceOnTraceEvent = new EventId((int)LogEventsId.AnalysisServicesEventWatcherServiceOnTraceEvent, nameof(AnalysisServicesEventWatcherServiceOnTraceEvent));
+        public static readonly EventId AnalysisServicesEventWatcherServiceOnTraceEvent = new EventId((int)LogEventsId.AnalysisServicesEventWatcherServiceOnTraceEvent);
 
-        public static readonly EventId MediaPlaybackFailed = new EventId((int)LogEventsId.MediaPlaybackFailed, nameof(MediaPlaybackFailed));
+        public static readonly EventId MediaPlaybackFailed = new EventId((int)LogEventsId.MediaPlaybackFailed);
 
-        public static readonly EventId MediaPlaybackOpenHyperlink = new EventId((int)LogEventsId.MediaPlaybackOpenHyperlink, nameof(MediaPlaybackOpenHyperlink));
+        public static readonly EventId MediaPlaybackOpenHyperlink = new EventId((int)LogEventsId.MediaPlaybackOpenHyperlink);
 
-        public static readonly EventId NavigateHyperlink = new EventId((int)LogEventsId.NavigateHyperlink, nameof(NavigateHyperlink));
+        public static readonly EventId NavigateHyperlink = new EventId((int)LogEventsId.NavigateHyperlink);
 
-        public static readonly EventId ConnectionTypeVertipaqFile = new EventId((int)LogEventsId.ConnectionTypeVertipaqFile, nameof(ConnectionTypeVertipaqFile));
+        public static readonly EventId ConnectionTypeVertipaqFile = new EventId((int)LogEventsId.ConnectionTypeVertipaqFile);
 
-        public static readonly EventId ConnectionTypePowerBIDataset = new EventId((int)LogEventsId.ConnectionTypePowerBIDataset, nameof(ConnectionTypePowerBIDataset));
+        public static readonly EventId ConnectionTypePowerBIDataset = new EventId((int)LogEventsId.ConnectionTypePowerBIDataset);
 
-        public static readonly EventId ConnectionTypeAttachPowerBI = new EventId((int)LogEventsId.ConnectionTypeAttachPowerBI, nameof(ConnectionTypeAttachPowerBI));
+        public static readonly EventId ConnectionTypeAttachPowerBI = new EventId((int)LogEventsId.ConnectionTypeAttachPowerBI);
     }
 }
