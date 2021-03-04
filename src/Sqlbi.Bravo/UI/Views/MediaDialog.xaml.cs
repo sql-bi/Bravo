@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Windows;
+using System.Windows.Navigation;
 using MahApps.Metro.Controls;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -17,7 +18,7 @@ namespace Sqlbi.Bravo.UI.Views
 
         public MediaDialog(IInAppMediaOption mediaOption) : this()
         {
-            _logger = App.ServiceProvider.GetRequiredService<ILogger<App>>();
+            _logger = App.ServiceProvider.GetRequiredService<ILogger<MediaDialog>>();
             _logger.Trace();
 
             DialogTitle.Text = mediaOption.Title;
@@ -26,25 +27,32 @@ namespace Sqlbi.Bravo.UI.Views
             ProgressIndicator.IsActive = false;
         }
 
-        private void OkClicked(object sender, RoutedEventArgs e) => Close();
+        private void OkClicked(object sender, RoutedEventArgs e)
+        {
+            _logger.Trace();
+
+            Close();
+        }
 
         private void OnMediaOpened(object sender, RoutedEventArgs e)
         {
+            _logger.Trace();
+
             ProgressIndicator.IsActive = false;
         }
 
         private void OnMediaFailed(object sender, ExceptionRoutedEventArgs e)
         {
-            _logger.Trace();
-            _logger.Error(LogEvents.MediaPlaybackFailure, $"Unable to play: {MediaPlayer.Source}");
+            _logger.Error(LogEvents.MediaPlaybackFailed, message: MediaPlayer.Source.AbsoluteUri);
 
             ErrorMessage.Visibility = Visibility.Visible;
-
             ProgressIndicator.IsActive = false;
         }
 
-        private void OpenHyperlink(object sender, System.Windows.Navigation.RequestNavigateEventArgs e)
+        private void OpenHyperlink(object sender, RequestNavigateEventArgs e)
         {
+            _logger.Information(LogEvents.MediaPlaybackOpenHyperlink, message: MediaPlayer.Source.AbsoluteUri);
+
             Process.Start(new ProcessStartInfo(e.Uri.AbsoluteUri) { UseShellExecute = true });
             e.Handled = true;
         }

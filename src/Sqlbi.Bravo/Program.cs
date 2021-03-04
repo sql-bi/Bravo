@@ -110,7 +110,7 @@ namespace Sqlbi.Bravo
                 services.AddSingleton<IApplicationInstanceService, ApplicationInstanceService>();
                 services.AddSingleton<IGlobalSettingsProviderService, GlobalSettingsProviderService>();
                 services.AddSingleton<IThemeSelectorService, ThemeSelectorService>();
-                services.AddSingleton<IDaxFormatterClient>(new DaxFormatterClient(AppConstants.ApplicationName, AppConstants.ApplicationProductVersion));
+                services.AddSingleton<IDaxFormatterClient, DaxFormatterClient>();
                 services.AddSingleton<ShellViewModel>();
                 services.AddSingleton<SettingsViewModel>();
 
@@ -159,7 +159,7 @@ namespace Sqlbi.Bravo
 #pragma warning restore CS0618 // Type or member is obsolete
 
                 loggerConfiguration
-                    .WriteTo.ApplicationInsights(telemetryConfiguration, TelemetryConverter.Events, restrictedToMinimumLevel: LogEventLevel.Information)
+                    .WriteTo.ApplicationInsights(telemetryConfiguration, TelemetryConverter.Events, restrictedToMinimumLevel: AppConstants.ApplicationSettingsDefaultTelemetryLevel)
                     .Enrich.WithProperty("ApplicationName", AppConstants.ApplicationName)
                     .Enrich.WithProperty("Version", AppConstants.ApplicationProductVersion);
             }
