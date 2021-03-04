@@ -49,14 +49,6 @@ namespace Sqlbi.Bravo.Core
 
         public static string PowerBIDesktopExternalToolsDirectory { get; } = Path.Combine(EnvironmentSpecialFolderCommonProgramFilesX86, @"Microsoft Shared\Power BI Desktop\External Tools");
 
-        public static Uri DaxFormatterTextFormatUri { get; } = new Uri("https://www.daxformatter.com/api/daxformatter/daxtextformat");
-
-        public static TimeSpan DaxFormatterTextFormatTimeout { get; } = TimeSpan.FromSeconds(10);
-
-        public static int DaxFormatterTextFormatRequestBatchMaxTextLength { get; } = 10000;
-
-        public static string DaxFormatterTextFormatRequestBatchSeparator { get; } = "\r\n*^*\r\n";
-
         public static TimeSpan AnalysisServicesEventWatcherServiceConnectionStateWaitDelay { get; } = TimeSpan.FromSeconds(15);
 
         public static string TelemetrySettingsSectionName { get; } = "Telemetry";
