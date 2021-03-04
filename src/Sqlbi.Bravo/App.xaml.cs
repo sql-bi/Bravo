@@ -38,7 +38,6 @@ namespace Sqlbi.Bravo
 
         protected override async void OnStartup(StartupEventArgs e)
         {
-            _logger.Trace();
             _logger.Information(LogEvents.AppOnStartup);
 
             var tss = ServiceProvider.GetRequiredService<IThemeSelectorService>();
@@ -51,7 +50,6 @@ namespace Sqlbi.Bravo
 
         protected override async void OnExit(ExitEventArgs e)
         {
-            _logger.Trace();
             _logger.Information(LogEvents.AppOnExit);
 
             await _host.StopAsync();

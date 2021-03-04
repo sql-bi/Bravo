@@ -30,7 +30,17 @@ namespace Sqlbi.Bravo.Core.Logging
 
             AnalysisServicesEventWatcherServiceOnTraceEvent = 9011,
 
-            MediaPlaybackFailure = 9012,
+            MediaPlaybackFailed = 9012,
+
+            MediaPlaybackOpenHyperlink = 9013,
+
+            NavigateHyperlink = 9014,
+
+            ConnectionTypeVertipaqFile = 9015,
+
+            ConnectionTypePowerBIDataset = 9016,
+
+            ConnectionTypeAttachPowerBI = 9017
         }
 
         public static readonly EventId TaskSchedulerUnobservedTaskException = new EventId((int)LogEventsId.TaskSchedulerUnobservedTaskException, nameof(TaskSchedulerUnobservedTaskException));
@@ -57,6 +67,16 @@ namespace Sqlbi.Bravo.Core.Logging
 
         public static readonly EventId AnalysisServicesEventWatcherServiceOnTraceEvent = new EventId((int)LogEventsId.AnalysisServicesEventWatcherServiceOnTraceEvent, nameof(AnalysisServicesEventWatcherServiceOnTraceEvent));
 
-        public static readonly EventId MediaPlaybackFailure = new EventId((int)LogEventsId.MediaPlaybackFailure, nameof(MediaPlaybackFailure));
+        public static readonly EventId MediaPlaybackFailed = new EventId((int)LogEventsId.MediaPlaybackFailed, nameof(MediaPlaybackFailed));
+
+        public static readonly EventId MediaPlaybackOpenHyperlink = new EventId((int)LogEventsId.MediaPlaybackOpenHyperlink, nameof(MediaPlaybackOpenHyperlink));
+
+        public static readonly EventId NavigateHyperlink = new EventId((int)LogEventsId.NavigateHyperlink, nameof(NavigateHyperlink));
+
+        public static readonly EventId ConnectionTypeVertipaqFile = new EventId((int)LogEventsId.ConnectionTypeVertipaqFile, nameof(ConnectionTypeVertipaqFile));
+
+        public static readonly EventId ConnectionTypePowerBIDataset = new EventId((int)LogEventsId.ConnectionTypePowerBIDataset, nameof(ConnectionTypePowerBIDataset));
+
+        public static readonly EventId ConnectionTypeAttachPowerBI = new EventId((int)LogEventsId.ConnectionTypeAttachPowerBI, nameof(ConnectionTypeAttachPowerBI));
     }
 }
