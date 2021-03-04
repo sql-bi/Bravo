@@ -375,7 +375,7 @@
                                         <!-- mouseover -->
                                         <SolidColorBrush x:Key="MahApps.Brushes.Accent3" Color="#99C9C9C9" />
 
-                                        <!-- Need to override this to firce it to work with our color prefs -->
+                                        <!-- Need to override this to force it to work with our color prefs -->
                                         <SolidColorBrush x:Key="MahApps.Brushes.Selected.Foreground" Color="{DynamicResource MahApps.Colors.ThemeForeground}" />
                                     </ListView.Resources>
                                     <ListView.ItemTemplate>
