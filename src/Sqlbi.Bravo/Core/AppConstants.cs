@@ -1,4 +1,6 @@
-﻿using Serilog.Events;
+﻿using Dax.Formatter.Models;
+using Serilog.Events;
+using Sqlbi.Bravo.UI.DataModel;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -29,7 +31,11 @@ namespace Sqlbi.Bravo.Core
 
         public static bool ApplicationSettingsDefaultProxyUseSystem { get; } = true;
 
-        public static bool ApplicationSettingsDefaultUIShellBringToForegroundOnParentProcessMainWindowScreen { get; } = false;
+        public static bool ApplicationSettingsDefaultShellBringToForegroundOnParentProcessMainWindowScreen { get; } = false;
+
+        public static string ApplicationSettingsDefaultThemeName { get; } = nameof(AppTheme.Default);
+
+        public static DaxFormatterLineStyle ApplicationSettingsDefaultDaxFormatterLineStyle { get; } = DaxFormatterLineStyle.LongLine;        
 
         public static string UserSettingsFilePath { get; } = Path.Combine(ApplicationFolderLocalDataPath, "usersettings.json");
 

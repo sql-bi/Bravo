@@ -11,11 +11,6 @@
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
   </PropertyGroup>
 
-  <PropertyGroup>
-    <RestoreSources>$(RestoreSources);./nupkgs;https://api.nuget.org/v3/index.json</RestoreSources>
-    <ApplicationIcon>BravoLogo.ico</ApplicationIcon>
-  </PropertyGroup>
-
     <ItemGroup>
     <Compile Remove="UI\Theme\**" />
     <EmbeddedResource Remove="UI\Theme\**" />
@@ -66,7 +61,7 @@
     <PackageReference Include="System.CommandLine" Version="2.0.0-beta1.20371.2" />
     <PackageReference Include="System.Data.OleDb" Version="5.0.0" />
     <PackageReference Include="System.Management" Version="5.0.0" />
-    <PackageReference Include="Dax.Formatter" Version="1.0.0-preview4" />
+    <PackageReference Include="Dax.Formatter" Version="1.0.0" />
     <PackageReference Include="Microsoft.AnalysisServices.NetCore.retail.amd64" Version="19.16.3" />
   </ItemGroup>
 

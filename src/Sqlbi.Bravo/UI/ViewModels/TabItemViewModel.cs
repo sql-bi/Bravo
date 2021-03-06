@@ -20,13 +20,16 @@ namespace Sqlbi.Bravo.UI.ViewModels
 {
     internal class TabItemViewModel : BaseViewModel
     {
-        private BiConnectionType connectionType;
-
         private readonly IAnalysisServicesEventWatcherService _watcher;
         private readonly IGlobalSettingsProviderService _settings;
         private readonly ILogger _logger;
         private DaxFormatterViewModel _daxFormatterVm;
         private AnalyzeModelViewModel _analyzeModelVm;
+        private BiConnectionType _connectionType;
+        private Func<Task> _tryagainCallback;
+        private bool _showDaxFormatter;
+        private bool _showSelectConnection;
+        private bool _showAnalyzeModel;
 
         public bool IsRetrying { get; set; } = false;
 
@@ -39,7 +42,6 @@ namespace Sqlbi.Bravo.UI.ViewModels
             _watcher.OnConnectionStateChanged += OnAnalysisServicesConnectionStateChanged;
 
             ShowError = false;
-
             ConnectionType = BiConnectionType.UnSelected;
             ShowSelectConnection = true;
 
@@ -49,6 +51,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
             // Get the values for the started instance.
             // These will be overridden if messaged to be single instance and open another tab
+            RuntimeSummary = new RuntimeSummary();
             RuntimeSummary.DatabaseName = _settings.Runtime.DatabaseName;
             RuntimeSummary.IsExecutedAsExternalTool = _settings.Runtime.IsExecutedAsExternalTool;
             RuntimeSummary.ParentProcessMainWindowTitle = _settings.Runtime.ParentProcessMainWindowTitle;
@@ -72,7 +75,8 @@ namespace Sqlbi.Bravo.UI.ViewModels
             try
             {
                 IsRetrying = true;
-                await _callback?.Invoke();
+
+                await _tryagainCallback?.Invoke();
 
                 // As there was no exception assume the retry worked and stop showing the error message.
                 ShowError = false;
@@ -136,7 +140,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public bool ShowDaxFormatter
         {
-            get => showDaxFormatter;
+            get => _showDaxFormatter;
             set
             {
                 if (value)
@@ -145,13 +149,13 @@ namespace Sqlbi.Bravo.UI.ViewModels
                     DoNotShowAnything();
                 }
 
-                SetProperty(ref showDaxFormatter, value);
+                SetProperty(ref _showDaxFormatter, value);
             }
         }
 
         public bool ShowAnalyzeModel
         {
-            get => showAnalyzeModel;
+            get => _showAnalyzeModel;
             set
             {
                 if (value)
@@ -160,13 +164,13 @@ namespace Sqlbi.Bravo.UI.ViewModels
                     DoNotShowAnything();
                 }
 
-                SetProperty(ref showAnalyzeModel, value);
+                SetProperty(ref _showAnalyzeModel, value);
             }
         }
 
         public bool ShowSelectConnection
         {
-            get => showSelectConnection;
+            get => _showSelectConnection;
             set
             {
                 if (value)
@@ -174,7 +178,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
                     DoNotShowAnything();
                 }
 
-                SetProperty(ref showSelectConnection, value);
+                SetProperty(ref _showSelectConnection, value);
             }
         }
 
@@ -189,10 +193,10 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public BiConnectionType ConnectionType
         {
-            get => connectionType;
+            get => _connectionType;
             set
             {
-                if (SetProperty(ref connectionType, value))
+                if (SetProperty(ref _connectionType, value))
                 {
                     OnPropertyChanged(nameof(Header));
                 }
@@ -205,12 +209,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public bool ShowError { get; set; }
 
-        public RuntimeSummary RuntimeSummary { get; set; } = new RuntimeSummary();
-
-        private Func<Task> _callback;
-        private bool showDaxFormatter;
-        private bool showSelectConnection;
-        private bool showAnalyzeModel;
+        public RuntimeSummary RuntimeSummary { get; set; }
 
         public string ErrorDescription { get; set; }
 
@@ -238,7 +237,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
         {
             ErrorDescription = errorDescription;
             ShowError = true;
-            _callback = callback;
+            _tryagainCallback = callback;
         }
 
         [PropertyChanged.SuppressPropertyChangedWarnings]

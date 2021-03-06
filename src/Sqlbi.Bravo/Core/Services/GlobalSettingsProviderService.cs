@@ -15,9 +15,9 @@ namespace Sqlbi.Bravo.Core.Services
             Runtime = runtimeOption.Value;
         }
 
-        public IAppSettings Application { get; private set; }
+        public AppSettings Application { get; private set; }
 
-        public IRuntimeSettings Runtime { get; private set; }
+        public RuntimeSettings Runtime { get; private set; }
 
         public async Task SaveAsync()
         {

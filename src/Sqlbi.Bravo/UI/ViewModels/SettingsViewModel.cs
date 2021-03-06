@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Dax.Formatter.Models;
+using Microsoft.Extensions.Logging;
 using Sqlbi.Bravo.Core;
 using Sqlbi.Bravo.Core.Helpers;
 using Sqlbi.Bravo.Core.Logging;
@@ -7,6 +8,8 @@ using Sqlbi.Bravo.UI.Framework.Commands;
 using Sqlbi.Bravo.UI.Framework.Interfaces;
 using Sqlbi.Bravo.UI.Framework.ViewModels;
 using Sqlbi.Bravo.UI.Services.Interfaces;
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -84,10 +87,18 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public bool ProxyIsEnabled => !ProxyUseSystem;
 
-        public bool UIShellBringToForegroundOnParentProcessMainWindowScreen
+        public bool ShellBringToForegroundOnParentProcessMainWindowScreen
         {
-            get => _settings.Application.UIShellBringToForegroundOnParentProcessMainWindowScreen;
-            set => _settings.Application.UIShellBringToForegroundOnParentProcessMainWindowScreen = value;
+            get => _settings.Application.ShellBringToForegroundOnParentProcessMainWindowScreen;
+            set => _settings.Application.ShellBringToForegroundOnParentProcessMainWindowScreen = value;
+        }
+
+        public IEnumerable<string> DaxFormatterLineStyleItemsSource => Enum.GetNames(typeof(DaxFormatterLineStyle));
+
+        public string DaxFormatterLineStyle
+        {
+            get => Enum.GetName(_settings.Application.DaxFormatterLineStyle);
+            set => _settings.Application.DaxFormatterLineStyle = (DaxFormatterLineStyle)Enum.Parse(typeof(DaxFormatterLineStyle), value);
         }
 
         public ICommand SaveCommand { get; set; }

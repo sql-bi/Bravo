@@ -144,7 +144,7 @@ namespace Sqlbi.Bravo
                 window.Topmost = false;
                 window.Focus();
 
-                if (_settings.Application.UIShellBringToForegroundOnParentProcessMainWindowScreen)
+                if (_settings.Application.ShellBringToForegroundOnParentProcessMainWindowScreen)
                 {
                     var screen = Screen.FromHandle(parentProcessMainWindowHandle);
                     var screenTop = screen.WorkingArea.Top;

@@ -4,9 +4,9 @@ namespace Sqlbi.Bravo.Core.Settings.Interfaces
 {
     internal interface IGlobalSettingsProviderService
     {
-        IAppSettings Application { get; }
+        AppSettings Application { get; }
 
-        IRuntimeSettings Runtime { get; }
+        RuntimeSettings Runtime { get; }
 
         Task SaveAsync();
     }
