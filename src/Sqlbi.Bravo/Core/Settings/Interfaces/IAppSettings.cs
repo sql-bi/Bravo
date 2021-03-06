@@ -3,7 +3,7 @@ using Serilog.Events;
 
 namespace Sqlbi.Bravo.Core.Settings.Interfaces
 {
-    internal interface IAppSettings
+    internal interface IAppSettings: IDaxFormatterSettings
     {
         bool TelemetryEnabled { get; set; }
 
@@ -18,7 +18,5 @@ namespace Sqlbi.Bravo.Core.Settings.Interfaces
         bool ShellBringToForegroundOnParentProcessMainWindowScreen { get; set; }
 
         string ThemeName { get; set; }
-
-        DaxFormatterLineStyle DaxFormatterLineStyle { get; set; }
     }
 }

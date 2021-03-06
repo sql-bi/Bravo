@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Sqlbi.Bravo.Core.Logging;
 using Sqlbi.Bravo.Core.Services;
 using Sqlbi.Bravo.Core.Services.Interfaces;
+using Sqlbi.Bravo.Core.Settings.Interfaces;
 using Sqlbi.Bravo.UI.DataModel;
 using Sqlbi.Bravo.UI.Framework.Commands;
 using Sqlbi.Bravo.UI.Framework.ViewModels;
@@ -18,6 +19,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
     internal class DaxFormatterViewModel : BaseViewModel
     {
         private readonly IDaxFormatterService _formatter;
+        private readonly IGlobalSettingsProviderService _settings;
         private readonly IAnalysisServicesEventWatcherService _watcher;
         private readonly ILogger _logger;
         internal const int SubViewIndex_Loading = 0;
@@ -29,9 +31,10 @@ namespace Sqlbi.Bravo.UI.ViewModels
         private readonly DispatcherTimer _timer = new DispatcherTimer();
         private bool _initialized = false;
 
-        public DaxFormatterViewModel(IDaxFormatterService formatter, IAnalysisServicesEventWatcherService watcher, ILogger<DaxFormatterViewModel> logger)
+        public DaxFormatterViewModel(IDaxFormatterService formatter, IGlobalSettingsProviderService settings, IAnalysisServicesEventWatcherService watcher, ILogger<DaxFormatterViewModel> logger)
         {
             _formatter = formatter;
+            _settings = settings;
             _watcher = watcher;
             _logger = logger;
 
@@ -243,7 +246,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
             ViewIndex = SubViewIndex_Progress;
 
             var tabularObjects = SelectionTreeData.Tables.SelectMany(t => t.Measures.Where(m => !string.IsNullOrWhiteSpace(m.Formula) && (m.IsSelected ?? false))).Select((i) => i.TabularObject).ToList();
-            var formattedTabularObjects = await _formatter.FormatAsync(tabularObjects);
+            var formattedTabularObjects = await _formatter.FormatAsync(tabularObjects, _settings.Application);
 
             Measures.Clear();
 

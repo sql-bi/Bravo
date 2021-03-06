@@ -7,6 +7,7 @@ using Sqlbi.Bravo.Core.Helpers;
 using Sqlbi.Bravo.Core.Logging;
 using Sqlbi.Bravo.Core.Services.Interfaces;
 using Sqlbi.Bravo.Core.Settings;
+using Sqlbi.Bravo.Core.Settings.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -128,16 +129,17 @@ namespace Sqlbi.Bravo.Core.Services
 
         public IEnumerable<DaxFormatterServiceTabularMeasure> Measures { get; private set; }
 
-        public async Task<IEnumerable<IDaxFormatterServiceTabularObject>> FormatAsync(IList<IDaxFormatterServiceTabularObject> tabularObjects)
+        public async Task<IEnumerable<IDaxFormatterServiceTabularObject>> FormatAsync(IList<IDaxFormatterServiceTabularObject> tabularObjects, IDaxFormatterSettings settings)
         {
             _logger.Trace();
 
             var request = new DaxFormatterMultipleRequest
             {
                 ServerName = _server.Name,
-                DatabaseName = _database.Name
+                DatabaseName = _database.Name,
+                MaxLineLength = settings.DaxFormatterLineStyle
             };
-
+            
             foreach (var tabularObject in tabularObjects)
             {
                 if (tabularObject is DaxFormatterServiceTabularMeasure measure)
