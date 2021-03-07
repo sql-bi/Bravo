@@ -159,9 +159,10 @@ namespace Sqlbi.Bravo
 #pragma warning restore CS0618 // Type or member is obsolete
 
                 loggerConfiguration
-                    .WriteTo.ApplicationInsights(telemetryConfiguration, TelemetryConverter.Events, restrictedToMinimumLevel: AppConstants.ApplicationSettingsDefaultTelemetryLevel)
+                    .WriteTo.ApplicationInsights(telemetryConfiguration, TelemetryConverter.Events, restrictedToMinimumLevel: AppConstants.ApplicationSettingsDefaultTelemetryLevel)                    
                     .Enrich.WithProperty("ApplicationName", AppConstants.ApplicationName)
-                    .Enrich.WithProperty("Version", AppConstants.ApplicationProductVersion);
+                    .Enrich.WithProperty("Version", AppConstants.ApplicationProductVersion)
+                    .MinimumLevel.Override("Microsoft", LogEventLevel.Warning);
             }
         }
     }
