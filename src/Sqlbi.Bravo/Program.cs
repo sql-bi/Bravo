@@ -1,5 +1,7 @@
 ﻿using Dax.Formatter;
+using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.Extensibility;
+using Microsoft.ApplicationInsights.WindowsServer.TelemetryChannel;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -7,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Events;
 using Sqlbi.Bravo.Core;
+using Sqlbi.Bravo.Core.Helpers;
 using Sqlbi.Bravo.Core.Services;
 using Sqlbi.Bravo.Core.Services.Interfaces;
 using Sqlbi.Bravo.Core.Settings;
@@ -15,6 +18,7 @@ using Sqlbi.Bravo.UI.Services;
 using Sqlbi.Bravo.UI.Services.Interfaces;
 using Sqlbi.Bravo.UI.ViewModels;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime;
 
@@ -151,17 +155,26 @@ namespace Sqlbi.Bravo
                 if (telemetryEnabled == false)
                     return;
 
-#pragma warning disable CS0618 // Type or member is obsolete
-                // https://github.com/microsoft/ApplicationInsights-dotnet/issues/1152
-                var telemetryConfiguration = TelemetryConfiguration.Active;
+                var telemetryChannel = new ServerTelemetryChannel();
+                telemetryChannel.DeveloperMode = Debugger.IsAttached;
+#if DEBUG
+                telemetryChannel.DeveloperMode = true;
+#endif
+
+                var telemetryConfiguration = new TelemetryConfiguration();
                 telemetryConfiguration.InstrumentationKey = AppConstants.TelemetryInstrumentationKey;
                 telemetryConfiguration.DisableTelemetry = !telemetryEnabled;
-#pragma warning restore CS0618 // Type or member is obsolete
+                telemetryConfiguration.TelemetryChannel = telemetryChannel;
+
+                var telemetryClient = new TelemetryClient(telemetryConfiguration);
+                telemetryClient.Context.Device.OperatingSystem = Environment.OSVersion.ToString();
+                telemetryClient.Context.Component.Version = AppConstants.ApplicationProductVersion;
+                telemetryClient.Context.Session.Id = Guid.NewGuid().ToString();
+                telemetryClient.Context.User.Id = $"{ Environment.MachineName }\\{ Environment.UserName }".ToHashSHA256();
 
                 loggerConfiguration
-                    .WriteTo.ApplicationInsights(telemetryConfiguration, TelemetryConverter.Events, restrictedToMinimumLevel: AppConstants.ApplicationSettingsDefaultTelemetryLevel)                    
-                    .Enrich.WithProperty("ApplicationName", AppConstants.ApplicationName)
-                    .Enrich.WithProperty("Version", AppConstants.ApplicationProductVersion)
+                    .WriteTo.ApplicationInsights(telemetryClient, TelemetryConverter.Events, restrictedToMinimumLevel: AppConstants.ApplicationSettingsDefaultTelemetryLevel)                    
+                    //.Enrich.WithProperty("ApplicationName", AppConstants.ApplicationName)
                     .MinimumLevel.Override("Microsoft", LogEventLevel.Warning);
             }
         }

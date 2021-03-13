@@ -12,11 +12,16 @@ using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging;
 using Sqlbi.Bravo.Core.Settings;
 using System.Linq;
+using Sqlbi.Bravo.Core.Logging;
+using System.Diagnostics;
 
 namespace Sqlbi.Bravo.UI.Views
 {
     public partial class ShellView : MetroWindow
     {
+        private readonly IGlobalSettingsProviderService _settings;
+        private readonly ILogger _logger;
+
         public static ShellView Instance { get; private set; }
 
         private ShellViewModel ViewModel => DataContext as ShellViewModel;
@@ -60,11 +65,11 @@ namespace Sqlbi.Bravo.UI.Views
                         ViewModel.AddNewTab(BiConnectionType.ActivePowerBiWindow, ViewModel?.SelectedItem?.SubPageInTab ?? SubPage.DaxFormatter, runtimeSummary);
                     }
                 }
-                catch (Exception e)
+                catch (Exception ex)
                 {
-                    var logger = App.ServiceProvider.GetRequiredService<ILogger<ShellView>>();
-                    logger.LogError(e, "Unable to decode connection settings from another app instance");
+                    _logger.Error(LogEvents.ShellViewException, ex);
                 }
+
                 handled = true;
             }
 
@@ -76,15 +81,16 @@ namespace Sqlbi.Bravo.UI.Views
             InitializeComponent();
             Instance = this;
 
-            var settings = App.ServiceProvider.GetService<IGlobalSettingsProviderService>();
+            _logger = App.ServiceProvider.GetService<ILogger<ShellView>>();
+            _settings = App.ServiceProvider.GetService<IGlobalSettingsProviderService>();
 
 #if DEBUG
-            if (settings.Runtime.IsExecutedAsExternalTool)
+            if (_settings.Runtime.IsExecutedAsExternalTool)
 #else
-            if (settings.Runtime.IsExecutedAsExternalToolForPowerBIDesktop)
+            if (_settings.Runtime.IsExecutedAsExternalToolForPowerBIDesktop)
 #endif
             {
-                (DataContext as ShellViewModel).LaunchedViaPowerBIDesktop(settings.Runtime.ParentProcessMainWindowTitle);
+                (DataContext as ShellViewModel).LaunchedViaPowerBIDesktop(_settings.Runtime.ParentProcessMainWindowTitle);
             }
         }
 
@@ -109,7 +115,7 @@ namespace Sqlbi.Bravo.UI.Views
             debugInfo.Show();
         }
 
-        private void AddTabClicked(object sender, System.Windows.RoutedEventArgs e)
+        private void AddTabClicked(object sender, RoutedEventArgs e)
             => ViewModel.AddNewTab();
 
         // When the selected tab changes update the selected menu item accordingly

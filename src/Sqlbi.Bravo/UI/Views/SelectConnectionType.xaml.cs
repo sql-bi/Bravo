@@ -27,7 +27,10 @@ namespace Sqlbi.Bravo.UI.Views
 
         private void RequestNavigateHyperlink(object sender, RequestNavigateEventArgs e)
         {
-            _logger.Information(LogEvents.NavigateHyperlink, message: e.Uri.AbsoluteUri);
+            _logger.Information(LogEvents.NavigateHyperlink, "{@Details}", new object[] { new
+            {
+                e.Uri.AbsoluteUri
+            }});
 
             Process.Start(new ProcessStartInfo(e.Uri.AbsoluteUri) { UseShellExecute = true });
             e.Handled = true;

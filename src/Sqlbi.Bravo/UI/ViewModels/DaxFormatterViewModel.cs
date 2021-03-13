@@ -202,9 +202,11 @@ namespace Sqlbi.Bravo.UI.ViewModels
                         ViewIndex = SubViewIndex_Start;
                     });
             }
-            catch (Exception exc)
+            catch (Exception ex)
             {
-                ParentTab.DisplayError($"Unable to connect{Environment.NewLine}{exc.Message}", InitializeOrRefreshFormatter);
+                _logger.Error(LogEvents.DaxFormatterException, ex);
+
+                ParentTab.DisplayError($"Unable to connect{Environment.NewLine}{ex.Message}", InitializeOrRefreshFormatter);
             }
         }
 
@@ -291,9 +293,11 @@ namespace Sqlbi.Bravo.UI.ViewModels
             {
                 await _formatter.ApplyFormatAsync(changedTabularObjects);
             }
-            catch (Exception exc)
+            catch (Exception ex)
             {
-                ParentTab.DisplayError($"Unable to save changes{Environment.NewLine}{exc.Message}", ApplyFormattingChangesToModelAsync);
+                _logger.Error(LogEvents.DaxFormatterException, ex);
+
+                ParentTab.DisplayError($"Unable to save changes{Environment.NewLine}{ex.Message}", ApplyFormattingChangesToModelAsync);
             }
 
             MeasuresFormatted = changedTabularObjects.Count;

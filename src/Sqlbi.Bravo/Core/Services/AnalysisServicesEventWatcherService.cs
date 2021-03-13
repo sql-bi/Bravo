@@ -71,7 +71,7 @@ namespace Sqlbi.Bravo.Core.Services
                     WaitHandle.WaitAny(waitHandles, AppConstants.AnalysisServicesEventWatcherServiceConnectionStateWaitDelay);
                     var current = _server.GetConnectionState(pingServer: true);
 
-                    _logger.Debug(LogEvents.AnalysisServicesEventWatcherServiceConnectionStateMonitorTaskStatus, "ConnectionStateMonitorTask(current<{CurrentStatus}>|previus<{PreviusStatus}>)", args: new object[] { current, previus });
+                    _logger.Debug(LogEvents.AnalysisServicesEventWatcherServiceConnectionStateMonitorTaskStatus, "CurrentStatus({CurrentStatus})|PreviusStatus({PreviusStatus})", args: new object[] { current, previus });
 
                     if (current != previus)
                     {
@@ -82,13 +82,13 @@ namespace Sqlbi.Bravo.Core.Services
                 }
                 while (!_lifetime.ApplicationStopping.IsCancellationRequested);
 
-                _logger.Debug(LogEvents.AnalysisServicesEventWatcherServiceConnectionStateMonitorTaskCompleted, "ConnectionStateMonitorTask(Completed)");
+                _logger.Debug(LogEvents.AnalysisServicesEventWatcherServiceConnectionStateMonitorTaskCompleted);
             },
             TaskCreationOptions.LongRunning).ContinueWith((t) =>
             {
                 if (t.Exception != null)
                 {
-                    _logger.Error(LogEvents.AnalysisServicesEventWatcherServiceConnectionStateMonitorTaskException, t.Exception);
+                    _logger.Error(LogEvents.AnalysisServicesEventWatcherServiceException, t.Exception);
                 }
             },
             TaskContinuationOptions.OnlyOnFaulted);
@@ -193,7 +193,7 @@ namespace Sqlbi.Bravo.Core.Services
 
         private void OnTraceEvent(object sender, TraceEventArgs e)
         {
-            _logger.Trace("OnTraceEvent(eventClass<{EventClass}>|eventSubclass<{EventSubclass}>)", args: new object[] { e.EventClass, e.EventSubclass });
+            _logger.Debug(LogEvents.AnalysisServicesEventWatcherServiceOnTraceEvent, "EventClass({EventClass})|EventSubclass({EventSubclass})", args: new object[] { e.EventClass, e.EventSubclass });
 
             if (!WatcherSubclasses.Contains(e.EventSubclass))
                 return;
@@ -202,7 +202,7 @@ namespace Sqlbi.Bravo.Core.Services
             if (eventType == AnalysisServicesEventWatcherEvent.Unknown)
                 return;
 
-            _logger.Debug(LogEvents.AnalysisServicesEventWatcherServiceOnTraceEvent, "OnTraceEvent(eventType<{EventType}>)", args: eventType);
+            _logger.Debug(LogEvents.AnalysisServicesEventWatcherServiceOnTraceEvent, "EventType({EventType})", args: new object[] { eventType });
 
             var args = new AnalysisServicesEventWatcherEventArgs(eventType, text: string.Empty);
             OnEvent?.Invoke(this, args);

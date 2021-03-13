@@ -189,24 +189,7 @@ namespace Sqlbi.Bravo.Core.Services
                 if (_database.Model.HasLocalChanges)
                     _database.Update();
 
-                var operationResult = _database.Model.SaveChanges();
-                if (operationResult.XmlaResults is { ContainsErrors: true })
-                {
-                    foreach (XmlaResult result in operationResult.XmlaResults)
-                    {
-                        foreach (XmlaMessage message in result.Messages)
-                        {
-                            var json = "{ }";
-
-                            if (message is XmlaError error)
-                                json = System.Text.Json.JsonSerializer.Serialize(error);
-                            else if (message is XmlaWarning warning)
-                                json = System.Text.Json.JsonSerializer.Serialize(warning);
-
-                            _logger.Error(LogEvents.DaxFormatterApplyFormatContainsErrors, message: json);
-                        }
-                    }
-                }
+                _ = _database.Model.SaveChanges();
             }
         }
 

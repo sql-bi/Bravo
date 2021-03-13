@@ -18,11 +18,11 @@ namespace Sqlbi.Bravo.Core.Logging
 
             AppShutdownForMultipleInstance = 9005,
 
-            DaxFormatterApplyFormatContainsErrors = 9006,
+            DaxFormatterException = 9006,
 
-            ApplicationInstanceServiceMultipleInstanceTaskException = 9007,
+            ApplicationInstanceServiceException = 9007,
 
-            AnalysisServicesEventWatcherServiceConnectionStateMonitorTaskException = 9008,
+            AnalysisServicesEventWatcherServiceException = 9008,
 
             AnalysisServicesEventWatcherServiceConnectionStateMonitorTaskCompleted = 9009,
 
@@ -30,7 +30,7 @@ namespace Sqlbi.Bravo.Core.Logging
 
             AnalysisServicesEventWatcherServiceOnTraceEvent = 9011,
 
-            MediaPlaybackFailed = 9012,
+            MediaDialogExcetpion = 9012,
 
             MediaPlaybackOpenHyperlink = 9013,
 
@@ -40,43 +40,47 @@ namespace Sqlbi.Bravo.Core.Logging
 
             ConnectionTypePowerBIDataset = 9016,
 
-            ConnectionTypeAttachPowerBI = 9017
+            ConnectionTypeAttachPowerBI = 9017,
+
+            ShellViewException = 9018
         }
 
-        public static readonly EventId TaskSchedulerUnobservedTaskException = new EventId((int)LogEventsId.TaskSchedulerUnobservedTaskException);
+        public static readonly EventId TaskSchedulerUnobservedTaskException = new EventId((int)LogEventsId.TaskSchedulerUnobservedTaskException, nameof(LogEventsId.TaskSchedulerUnobservedTaskException));
 
-        public static readonly EventId AppDomainUnhandledException = new EventId((int)LogEventsId.AppDomainUnhandledException);
+        public static readonly EventId AppDomainUnhandledException = new EventId((int)LogEventsId.AppDomainUnhandledException, nameof(LogEventsId.AppDomainUnhandledException));
 
-        public static readonly EventId DispatcherUnhandledException = new EventId((int)LogEventsId.DispatcherUnhandledException);
+        public static readonly EventId DispatcherUnhandledException = new EventId((int)LogEventsId.DispatcherUnhandledException, nameof(LogEventsId.DispatcherUnhandledException));
 
-        public static readonly EventId AppOnStartup = new EventId((int)LogEventsId.AppOnStartup);
+        public static readonly EventId AppOnStartup = new EventId((int)LogEventsId.AppOnStartup, nameof(LogEventsId.AppOnStartup));
 
-        public static readonly EventId AppOnExit = new EventId((int)LogEventsId.AppOnExit);
+        public static readonly EventId AppOnExit = new EventId((int)LogEventsId.AppOnExit, nameof(LogEventsId.AppOnExit));
 
-        public static readonly EventId AppShutdownForMultipleInstance = new EventId((int)LogEventsId.AppShutdownForMultipleInstance);
+        public static readonly EventId AppShutdownForMultipleInstance = new EventId((int)LogEventsId.AppShutdownForMultipleInstance, nameof(LogEventsId.AppShutdownForMultipleInstance));
 
-        public static readonly EventId DaxFormatterApplyFormatContainsErrors = new EventId((int)LogEventsId.DaxFormatterApplyFormatContainsErrors);
+        public static readonly EventId DaxFormatterException = new EventId((int)LogEventsId.DaxFormatterException, nameof(LogEventsId.DaxFormatterException));
 
-        public static readonly EventId ApplicationInstanceServiceMultipleInstanceTaskException = new EventId((int)LogEventsId.ApplicationInstanceServiceMultipleInstanceTaskException);
+        public static readonly EventId ApplicationInstanceServiceException = new EventId((int)LogEventsId.ApplicationInstanceServiceException, nameof(LogEventsId.ApplicationInstanceServiceException));
 
-        public static readonly EventId AnalysisServicesEventWatcherServiceConnectionStateMonitorTaskException = new EventId((int)LogEventsId.AnalysisServicesEventWatcherServiceConnectionStateMonitorTaskException);
+        public static readonly EventId AnalysisServicesEventWatcherServiceException = new EventId((int)LogEventsId.AnalysisServicesEventWatcherServiceException, nameof(LogEventsId.AnalysisServicesEventWatcherServiceException));
 
-        public static readonly EventId AnalysisServicesEventWatcherServiceConnectionStateMonitorTaskCompleted = new EventId((int)LogEventsId.AnalysisServicesEventWatcherServiceConnectionStateMonitorTaskCompleted);
+        public static readonly EventId AnalysisServicesEventWatcherServiceConnectionStateMonitorTaskCompleted = new EventId((int)LogEventsId.AnalysisServicesEventWatcherServiceConnectionStateMonitorTaskCompleted, nameof(LogEventsId.AnalysisServicesEventWatcherServiceConnectionStateMonitorTaskCompleted));
 
-        public static readonly EventId AnalysisServicesEventWatcherServiceConnectionStateMonitorTaskStatus = new EventId((int)LogEventsId.AnalysisServicesEventWatcherServiceConnectionStateMonitorTaskStatus);
+        public static readonly EventId AnalysisServicesEventWatcherServiceConnectionStateMonitorTaskStatus = new EventId((int)LogEventsId.AnalysisServicesEventWatcherServiceConnectionStateMonitorTaskStatus, nameof(LogEventsId.AnalysisServicesEventWatcherServiceConnectionStateMonitorTaskStatus));
 
-        public static readonly EventId AnalysisServicesEventWatcherServiceOnTraceEvent = new EventId((int)LogEventsId.AnalysisServicesEventWatcherServiceOnTraceEvent);
+        public static readonly EventId AnalysisServicesEventWatcherServiceOnTraceEvent = new EventId((int)LogEventsId.AnalysisServicesEventWatcherServiceOnTraceEvent, nameof(LogEventsId.AnalysisServicesEventWatcherServiceOnTraceEvent));
 
-        public static readonly EventId MediaPlaybackFailed = new EventId((int)LogEventsId.MediaPlaybackFailed);
+        public static readonly EventId MediaDialogExcetpion = new EventId((int)LogEventsId.MediaDialogExcetpion, nameof(LogEventsId.MediaDialogExcetpion));
 
-        public static readonly EventId MediaPlaybackOpenHyperlink = new EventId((int)LogEventsId.MediaPlaybackOpenHyperlink);
+        public static readonly EventId MediaPlaybackOpenHyperlink = new EventId((int)LogEventsId.MediaPlaybackOpenHyperlink, nameof(LogEventsId.MediaPlaybackOpenHyperlink));
 
-        public static readonly EventId NavigateHyperlink = new EventId((int)LogEventsId.NavigateHyperlink);
+        public static readonly EventId NavigateHyperlink = new EventId((int)LogEventsId.NavigateHyperlink, nameof(LogEventsId.NavigateHyperlink));
 
-        public static readonly EventId ConnectionTypeVertipaqFile = new EventId((int)LogEventsId.ConnectionTypeVertipaqFile);
+        public static readonly EventId ConnectionTypeVertipaqFile = new EventId((int)LogEventsId.ConnectionTypeVertipaqFile, nameof(LogEventsId.ConnectionTypeVertipaqFile));
 
-        public static readonly EventId ConnectionTypePowerBIDataset = new EventId((int)LogEventsId.ConnectionTypePowerBIDataset);
+        public static readonly EventId ConnectionTypePowerBIDataset = new EventId((int)LogEventsId.ConnectionTypePowerBIDataset, nameof(LogEventsId.ConnectionTypePowerBIDataset));
 
-        public static readonly EventId ConnectionTypeAttachPowerBI = new EventId((int)LogEventsId.ConnectionTypeAttachPowerBI);
+        public static readonly EventId ConnectionTypeAttachPowerBI = new EventId((int)LogEventsId.ConnectionTypeAttachPowerBI, nameof(LogEventsId.ConnectionTypeAttachPowerBI));
+
+        public static readonly EventId ShellViewException = new EventId((int)LogEventsId.ShellViewException, nameof(LogEventsId.ShellViewException));
     }
 }

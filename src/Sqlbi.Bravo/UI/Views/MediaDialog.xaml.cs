@@ -43,7 +43,10 @@ namespace Sqlbi.Bravo.UI.Views
 
         private void OnMediaFailed(object sender, ExceptionRoutedEventArgs e)
         {
-            _logger.Error(LogEvents.MediaPlaybackFailed, message: MediaPlayer.Source.AbsoluteUri);
+            _logger.Error(LogEvents.MediaDialogExcetpion, e.ErrorException, "{@Details}", new object[] { new
+            {
+                MediaPlayer.Source.AbsoluteUri
+            }});
 
             ErrorMessage.Visibility = Visibility.Visible;
             ProgressIndicator.IsActive = false;
@@ -51,7 +54,10 @@ namespace Sqlbi.Bravo.UI.Views
 
         private void OpenHyperlink(object sender, RequestNavigateEventArgs e)
         {
-            _logger.Information(LogEvents.MediaPlaybackOpenHyperlink, message: MediaPlayer.Source.AbsoluteUri);
+            _logger.Information(LogEvents.MediaPlaybackOpenHyperlink, "{@Details}", new object[] { new
+            {
+                e.Uri.AbsoluteUri
+            }});
 
             Process.Start(new ProcessStartInfo(e.Uri.AbsoluteUri) { UseShellExecute = true });
             e.Handled = true;

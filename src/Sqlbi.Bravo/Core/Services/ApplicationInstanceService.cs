@@ -42,7 +42,7 @@ namespace Sqlbi.Bravo.Core.Services
             {
                 if (t.Exception != null)
                 {
-                    _logger.Error(LogEvents.ApplicationInstanceServiceMultipleInstanceTaskException, t.Exception);
+                    _logger.Error(LogEvents.ApplicationInstanceServiceException, t.Exception);
                 }
             },
             TaskContinuationOptions.OnlyOnFaulted).ConfigureAwait(false);
