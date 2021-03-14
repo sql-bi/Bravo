@@ -38,8 +38,12 @@ namespace Sqlbi.Bravo
 
         protected override async void OnStartup(StartupEventArgs e)
         {
-            _logger.Information(LogEvents.AppOnStartup);
-
+            _logger.Information(LogEvents.AppOnStartup, "{@Details}", new object[] { new
+            {
+                ExecutedAsExternalTool = _settings.Runtime.IsExecutedAsExternalTool,
+                ExecutedAsExternalToolForPowerBIDesktop = _settings.Runtime.IsExecutedAsExternalToolForPowerBIDesktop
+            }});
+            
             var tss = ServiceProvider.GetRequiredService<IThemeSelectorService>();
             tss.InitializeTheme(_settings.Application.ThemeName);
 
@@ -107,16 +111,15 @@ namespace Sqlbi.Bravo
             {
                 _logger.Information(LogEvents.AppShutdownForMultipleInstance);
 
-                var msg = new MessageHelper();
-                var hWnd = msg.GetWindowId("Sqlbi Bravo");
-
-                var ci = MessageHelper.CreateConnectionInfo(
+                var connectionInfo = MessageHelper.CreateConnectionInfo(
                     _settings.Runtime.DatabaseName,
                     _settings.Runtime.ServerName,
                     _settings.Runtime.ParentProcessName,
                     _settings.Runtime.ParentProcessMainWindowTitle);
 
-                var result = msg.SendConnectionInfoMessage(hWnd, 0, ci);
+                var helper = new MessageHelper();
+                var hWnd = helper.GetWindowId(AppConstants.ApplicationNameLabel);
+                _ = helper.SendConnectionInfoMessage(hWnd, wParam: 0, connectionInfo);
 
                 Shutdown();
             }

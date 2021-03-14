@@ -45,7 +45,6 @@ namespace Sqlbi.Bravo.UI.ViewModels
             ViewIndex = SubViewIndex_Loading;
             PreviewChanges = true;
 
-            InitializeCommand = new RelayCommand(async () => await InitializeAsync());
             FormatAnalyzeCommand = new RelayCommand(async () => await AnalyzeAsync());
             FormatMakeChangesCommand = new RelayCommand(async () => await MakeChangesAsync());
             HelpCommand = new RelayCommand(() => ShowHelp());
@@ -74,8 +73,6 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public ICommand RefreshCommand { get; set; }
 
-        public ICommand InitializeCommand { get; set; }
-
         public ICommand ChangeFormulasCommand { get; set; }
 
         public ICommand ApplySelectedFormulaChangesCommand { get; set; }
@@ -83,8 +80,6 @@ namespace Sqlbi.Bravo.UI.ViewModels
         public ICommand SelectedTableMeasureChangedCommand { get; set; }
 
         public bool InitializeCommandIsRunning { get; set; }
-
-        public bool InitializeCommandIsEnabled { get; set; } = true;
 
         public bool TermsAccepted { get; set; }
 
@@ -144,7 +139,6 @@ namespace Sqlbi.Bravo.UI.ViewModels
             OnPropertyChanged(nameof(TimeSinceLastSync));
 
             FormatCommandIsEnabled = true;
-            InitializeCommandIsEnabled = false;
 
             LoadMeasuresForSelection();
 
@@ -202,9 +196,11 @@ namespace Sqlbi.Bravo.UI.ViewModels
                         ViewIndex = SubViewIndex_Start;
                     });
             }
-            catch (Exception exc)
+            catch (Exception ex)
             {
-                ParentTab.DisplayError($"Unable to connect{Environment.NewLine}{exc.Message}", InitializeOrRefreshFormatter);
+                _logger.Error(LogEvents.DaxFormatterException, ex);
+
+                ParentTab.DisplayError($"Unable to connect{Environment.NewLine}{ex.Message}", InitializeOrRefreshFormatter);
             }
         }
 
@@ -215,6 +211,11 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         private void SelectedFormulasChanged()
         {
+            _logger.Information(LogEvents.DaxFormatterViewAction, "{@Details}", new object[] { new
+            {
+                Action = "AnalyzeFormatSelectionChanged"
+            }});
+
             ViewIndex = SubViewIndex_Start;
         }
 
@@ -226,22 +227,14 @@ namespace Sqlbi.Bravo.UI.ViewModels
         private void ShowHelp()
             => Views.ShellView.Instance.ShowMediaDialog(new HowToFormatCodeHelp());
 
-        private async Task InitializeAsync()
-        {
-            _logger.Trace();
-
-            await ExecuteCommandAsync(
-                () => InitializeCommandIsRunning,
-                async () =>
-                {
-                    await InitializeOrRefreshFormatter();
-
-                    ViewIndex = SubViewIndex_Start;
-                });
-        }
-
         private async Task AnalyzeAsync()
         {
+            _logger.Information(LogEvents.DaxFormatterViewAction, "{@Details}", new object[] { new
+            {
+                Action = "AnalyzeFormat",
+                Preview = PreviewChanges
+            }});
+
             ProgressDetails = "Identifying formulas to format";
             ViewIndex = SubViewIndex_Progress;
 
@@ -285,15 +278,22 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         private async Task ApplyFormattingChangesToModelAsync()
         {
-            var changedTabularObjects = Measures.Where((m) => !m.IsAlreadyFormatted && m.Reformat).Select((m) => m.TabularObject).ToList();
+            _logger.Information(LogEvents.DaxFormatterViewAction, "{@Details}", new object[] { new
+            {
+                Action = "ApplyFormat"
+            }});
+
+            var changedTabularObjects = Measures.Where((m) => !m.IsAlreadyFormatted && m.Reformat).Select((m) => m.TabularObject).ToList();           
 
             try
             {
                 await _formatter.ApplyFormatAsync(changedTabularObjects);
             }
-            catch (Exception exc)
+            catch (Exception ex)
             {
-                ParentTab.DisplayError($"Unable to save changes{Environment.NewLine}{exc.Message}", ApplyFormattingChangesToModelAsync);
+                _logger.Error(LogEvents.DaxFormatterException, ex);
+
+                ParentTab.DisplayError($"Unable to save changes{Environment.NewLine}{ex.Message}", ApplyFormattingChangesToModelAsync);
             }
 
             MeasuresFormatted = changedTabularObjects.Count;
