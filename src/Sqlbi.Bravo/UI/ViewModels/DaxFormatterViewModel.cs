@@ -211,6 +211,11 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         private void SelectedFormulasChanged()
         {
+            _logger.Information(LogEvents.DaxFormatterViewAction, "{@Details}", new object[] { new
+            {
+                Action = "AnalyzeFormatSelectionChanged"
+            }});
+
             ViewIndex = SubViewIndex_Start;
         }
 

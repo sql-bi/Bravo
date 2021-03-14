@@ -14,6 +14,7 @@ using Sqlbi.Bravo.Core.Settings;
 using System.Linq;
 using Sqlbi.Bravo.Core.Logging;
 using System.Diagnostics;
+using System.Windows.Controls;
 
 namespace Sqlbi.Bravo.UI.Views
 {
@@ -78,11 +79,12 @@ namespace Sqlbi.Bravo.UI.Views
 
         public ShellView()
         {
-            InitializeComponent();
-            Instance = this;
-
             _logger = App.ServiceProvider.GetService<ILogger<ShellView>>();
             _settings = App.ServiceProvider.GetService<IGlobalSettingsProviderService>();
+
+            InitializeComponent();
+
+            Instance = this;
 
 #if DEBUG
             if (_settings.Runtime.IsExecutedAsExternalTool)
@@ -102,6 +104,11 @@ namespace Sqlbi.Bravo.UI.Views
 
         internal async Task ShowSettings()
         {
+            _logger.Information(LogEvents.ShellViewAction, "{@Details}", new object[] { new
+            {
+                Action = "ShowSettings"
+            }});
+
             await this.ShowChildWindowAsync(new SettingsView()
             {
                 ChildWindowHeight = ActualHeight - 100,
@@ -119,26 +126,9 @@ namespace Sqlbi.Bravo.UI.Views
             => ViewModel.AddNewTab();
 
         // When the selected tab changes update the selected menu item accordingly
-        private void OnSelectedTabChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        private void OnSelectedTabChanged(object sender, SelectionChangedEventArgs e)
         {
             var selTab = ViewModel.SelectedTab;
-
-            void Select(string menuItemName)
-            {
-                // Update selected menu item
-                ViewModel.SelectedItem = ViewModel.MenuItems.FirstOrDefault(mi => mi.Name == menuItemName);
-
-                // Binding doesn't updated the selected indicator - but this does
-                for (var i = 0; i < ViewModel.MenuItems.Count; i++)
-                {
-                    if (ViewModel.MenuItems[i].Name == menuItemName)
-                    {
-                        hamburgerMenu.SelectedIndex = i;
-                        break;
-                    }
-                }
-            }
-
             if (selTab != null)
             {
                 if (selTab.ShowSelectConnection)
@@ -153,6 +143,28 @@ namespace Sqlbi.Bravo.UI.Views
                 else if (selTab.ShowAnalyzeModel)
                 {
                     Select("Analyze Model");
+                }
+            }
+
+            //_logger.Information(LogEvents.ShellViewAction, "{@Details}", new object[] { new
+            //{
+            //    Action = "SelectedTabChanged",
+            //    //Name = ViewModel.SelectedItem?.Name ?? "?"
+            //}});
+
+            void Select(string menuItemName)
+            {
+                // Update selected menu item
+                ViewModel.SelectedItem = ViewModel.MenuItems.FirstOrDefault(mi => mi.Name == menuItemName);
+
+                // Binding doesn't updated the selected indicator - but this does
+                for (var i = 0; i < ViewModel.MenuItems.Count; i++)
+                {
+                    if (ViewModel.MenuItems[i].Name == menuItemName)
+                    {
+                        hamburgerMenu.SelectedIndex = i;
+                        break;
+                    }
                 }
             }
         }

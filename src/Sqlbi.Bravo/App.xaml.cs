@@ -40,8 +40,8 @@ namespace Sqlbi.Bravo
         {
             _logger.Information(LogEvents.AppOnStartup, "{@Details}", new object[] { new
             {
-                _settings.Runtime.IsExecutedAsExternalTool,
-                _settings.Runtime.IsExecutedAsExternalToolForPowerBIDesktop
+                ExecutedAsExternalTool = _settings.Runtime.IsExecutedAsExternalTool,
+                ExecutedAsExternalToolForPowerBIDesktop = _settings.Runtime.IsExecutedAsExternalToolForPowerBIDesktop
             }});
             
             var tss = ServiceProvider.GetRequiredService<IThemeSelectorService>();

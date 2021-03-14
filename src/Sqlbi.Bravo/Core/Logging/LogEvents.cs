@@ -32,19 +32,21 @@ namespace Sqlbi.Bravo.Core.Logging
 
             MediaDialogExcetpion = 9012,
 
-            MediaPlaybackOpenHyperlink = 9013,
+            MediaDialogViewAction = 9013,
 
             NavigateHyperlink = 9014,
 
-            ConnectionTypeVertipaqFile = 9015,
+            StartConnectionAction = 9015,
 
-            ConnectionTypePowerBIDataset = 9016,
+            ShellViewException = 9016,
 
-            ConnectionTypeAttachPowerBI = 9017,
+            DaxFormatterViewAction = 9017,
 
-            ShellViewException = 9018,
+            AnalyzeModelViewAction = 9018,
 
-            DaxFormatterViewAction = 9019
+            AnalyzeModelException = 9019,
+
+            ShellViewAction = 9020,
         }
 
         public static readonly EventId TaskSchedulerUnobservedTaskException = new EventId((int)LogEventsId.TaskSchedulerUnobservedTaskException, nameof(LogEventsId.TaskSchedulerUnobservedTaskException));
@@ -73,18 +75,20 @@ namespace Sqlbi.Bravo.Core.Logging
 
         public static readonly EventId MediaDialogExcetpion = new EventId((int)LogEventsId.MediaDialogExcetpion, nameof(LogEventsId.MediaDialogExcetpion));
 
-        public static readonly EventId MediaPlaybackOpenHyperlink = new EventId((int)LogEventsId.MediaPlaybackOpenHyperlink, nameof(LogEventsId.MediaPlaybackOpenHyperlink));
+        public static readonly EventId MediaDialogViewAction = new EventId((int)LogEventsId.MediaDialogViewAction, nameof(LogEventsId.MediaDialogViewAction));
 
         public static readonly EventId NavigateHyperlink = new EventId((int)LogEventsId.NavigateHyperlink, nameof(LogEventsId.NavigateHyperlink));
 
-        public static readonly EventId ConnectionTypeVertipaqFile = new EventId((int)LogEventsId.ConnectionTypeVertipaqFile, nameof(LogEventsId.ConnectionTypeVertipaqFile));
-
-        public static readonly EventId ConnectionTypePowerBIDataset = new EventId((int)LogEventsId.ConnectionTypePowerBIDataset, nameof(LogEventsId.ConnectionTypePowerBIDataset));
-
-        public static readonly EventId ConnectionTypeAttachPowerBI = new EventId((int)LogEventsId.ConnectionTypeAttachPowerBI, nameof(LogEventsId.ConnectionTypeAttachPowerBI));
+        public static readonly EventId StartConnectionAction = new EventId((int)LogEventsId.StartConnectionAction, nameof(LogEventsId.StartConnectionAction));
 
         public static readonly EventId ShellViewException = new EventId((int)LogEventsId.ShellViewException, nameof(LogEventsId.ShellViewException));
 
         public static readonly EventId DaxFormatterViewAction = new EventId((int)LogEventsId.DaxFormatterViewAction, nameof(LogEventsId.DaxFormatterViewAction));
+
+        public static readonly EventId AnalyzeModelViewAction = new EventId((int)LogEventsId.AnalyzeModelViewAction, nameof(LogEventsId.AnalyzeModelViewAction));
+
+        public static readonly EventId AnalyzeModelException = new EventId((int)LogEventsId.AnalyzeModelException, nameof(LogEventsId.AnalyzeModelException));
+
+        public static readonly EventId ShellViewAction = new EventId((int)LogEventsId.ShellViewAction, nameof(LogEventsId.ShellViewAction));
     }
 }

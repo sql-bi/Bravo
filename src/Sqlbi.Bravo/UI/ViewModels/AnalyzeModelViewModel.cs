@@ -30,9 +30,9 @@ namespace Sqlbi.Bravo.UI.ViewModels
         private readonly List<VpaTableColumnViewModel> _allTablesCache = new List<VpaTableColumnViewModel>();
         private List<VpaColumn> _unusedColumns;
         private bool _initialized = false;
-        private bool unreferencedColumnsOnly;
+        private bool _unreferencedColumnsOnly;
 
-        public AnalyzeModelViewModel(IAnalyzeModelService service, ILogger<DaxFormatterViewModel> logger)
+        public AnalyzeModelViewModel(IAnalyzeModelService service, ILogger<AnalyzeModelViewModel> logger)
         {
             _modelService = service;
             _logger = logger;
@@ -137,10 +137,16 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public bool UnreferencedColumnsOnly
         {
-            get => unreferencedColumnsOnly;
+            get => _unreferencedColumnsOnly;
             set
             {
-                SetProperty(ref unreferencedColumnsOnly, value);
+                _logger.Information(LogEvents.AnalyzeModelViewAction, "{@Details}", new object[] { new
+                {
+                    Action = "UnreferencedColumnsOnly",
+                    Value = value
+                }});
+
+                SetProperty(ref _unreferencedColumnsOnly, value);
                 OnPropertyChanged(nameof(SummaryColumns));
                 OnPropertyChanged(nameof(SummaryColumnSize));
                 OnPropertyChanged(nameof(SummaryColumnWeight));
@@ -230,7 +236,10 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         private async Task RefreshAsync()
         {
-            _logger.Trace();
+            _logger.Information(LogEvents.AnalyzeModelViewAction, "{@Details}", new object[] { new
+            {
+                Action = "Refresh"
+            }});
 
             try
             {
@@ -247,9 +256,11 @@ namespace Sqlbi.Bravo.UI.ViewModels
                     ViewIndex = lastIndex > 0 ? lastIndex : SubViewIndex_Summary;
                 }
             }
-            catch (Exception exc)
+            catch (Exception ex)
             {
-                ParentTab.DisplayError($"Unable to connect{Environment.NewLine}{exc.Message}", InitializeOrRefreshModelAnalyzer);
+                _logger.Error(LogEvents.AnalyzeModelException, ex);
+
+                ParentTab.DisplayError($"Unable to connect{Environment.NewLine}{ex.Message}", InitializeOrRefreshModelAnalyzer);
             }
         }
 
@@ -267,6 +278,11 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
             if (saveFileDialog.ShowDialog() == true)
             {
+                _logger.Information(LogEvents.AnalyzeModelViewAction, "{@Details}", new object[] { new
+                {
+                    Action = "ExportVpax"
+                }});
+                
                 VpaxTools.ExportVpax(saveFileDialog.FileName, _modelService.GetModelForExport());
             }
 
@@ -275,18 +291,31 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         private void ShowHelp()
         {
-            _logger.Trace();
+            _logger.Information(LogEvents.AnalyzeModelViewAction, "{@Details}", new object[] { new
+            {
+                Action = "ShowHelp"
+            }});
+
             Views.ShellView.Instance.ShowMediaDialog(new HowToAnalyzeModelHelp());
         }
 
         private void ShowWarningHelp()
         {
-            _logger.Trace();
+            _logger.Information(LogEvents.AnalyzeModelViewAction, "{@Details}", new object[] { new
+            {
+                Action = "ShowWarningHelp"
+            }});
+
             Views.ShellView.Instance.ShowMediaDialog(new ColumnOptimizationHelp());
         }
 
         private async Task ShowMoreDetailsAsync()
         {
+            _logger.Information(LogEvents.AnalyzeModelViewAction, "{@Details}", new object[] { new
+            {
+                Action = "ShowMoreDetails"
+            }});
+
             ViewIndex = SubViewIndex_Details;
 
             await Task.CompletedTask;

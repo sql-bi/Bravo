@@ -24,7 +24,7 @@ namespace Sqlbi.Bravo.UI.Views
             DialogTitle.Text = mediaOption.Title;
             DisplayedDescription.Text = mediaOption.Description;
             MediaPlayer.Source = new Uri(mediaOption.MediaLink);
-            ProgressIndicator.IsActive = false;
+            ProgressIndicator.IsActive = true;
         }
 
         private void OkClicked(object sender, RoutedEventArgs e)
@@ -36,7 +36,11 @@ namespace Sqlbi.Bravo.UI.Views
 
         private void OnMediaOpened(object sender, RoutedEventArgs e)
         {
-            _logger.Trace();
+            _logger.Information(LogEvents.MediaDialogViewAction, "{@Details}", new object[] { new
+            {
+                Action = "MediaOpened",
+                Uri = MediaPlayer.Source.AbsoluteUri
+            }});
 
             ProgressIndicator.IsActive = false;
         }
@@ -45,7 +49,7 @@ namespace Sqlbi.Bravo.UI.Views
         {
             _logger.Error(LogEvents.MediaDialogExcetpion, e.ErrorException, "{@Details}", new object[] { new
             {
-                MediaPlayer.Source.AbsoluteUri
+                Uri = MediaPlayer.Source.AbsoluteUri
             }});
 
             ErrorMessage.Visibility = Visibility.Visible;
@@ -54,9 +58,10 @@ namespace Sqlbi.Bravo.UI.Views
 
         private void OpenHyperlink(object sender, RequestNavigateEventArgs e)
         {
-            _logger.Information(LogEvents.MediaPlaybackOpenHyperlink, "{@Details}", new object[] { new
+            _logger.Information(LogEvents.MediaDialogViewAction, "{@Details}", new object[] { new
             {
-                e.Uri.AbsoluteUri
+                Action = "RequestNavigate",
+                Uri = e.Uri.AbsoluteUri
             }});
 
             Process.Start(new ProcessStartInfo(e.Uri.AbsoluteUri) { UseShellExecute = true });

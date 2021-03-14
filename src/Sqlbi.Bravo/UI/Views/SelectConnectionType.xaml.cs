@@ -29,7 +29,7 @@ namespace Sqlbi.Bravo.UI.Views
         {
             _logger.Information(LogEvents.NavigateHyperlink, "{@Details}", new object[] { new
             {
-                e.Uri.AbsoluteUri
+                Uri = e.Uri.AbsoluteUri
             }});
 
             Process.Start(new ProcessStartInfo(e.Uri.AbsoluteUri) { UseShellExecute = true });
@@ -49,7 +49,10 @@ namespace Sqlbi.Bravo.UI.Views
                 MessageBoxButton.OK,
                 MessageBoxImage.Question);
 
-            _logger.Information(LogEvents.ConnectionTypeAttachPowerBI);
+            _logger.Information(LogEvents.StartConnectionAction, "{@Details}", new object[] { new
+            {
+                Action = "AttachPowerBIDesktop"
+            }});
         }
 
         private void ConnectToDatasetClicked(object sender, RoutedEventArgs e)
@@ -63,7 +66,10 @@ namespace Sqlbi.Bravo.UI.Views
                 MessageBoxButton.OK,
                 MessageBoxImage.Question);
 
-            _logger.Information(LogEvents.ConnectionTypePowerBIDataset);
+            _logger.Information(LogEvents.StartConnectionAction, "{@Details}", new object[] { new
+            {
+                Action = "ConnectPowerBIDataset"
+            }});
         }
 
         private void OpenVertipaqFileClicked(object sender, RoutedEventArgs e)
@@ -80,7 +86,10 @@ namespace Sqlbi.Bravo.UI.Views
 
             if (openFileDialog.ShowDialog() == true)
             {
-                _logger.Information(LogEvents.ConnectionTypeVertipaqFile);
+                _logger.Information(LogEvents.StartConnectionAction, "{@Details}", new object[] { new
+                {
+                    Action = "OpenVertipaqFile"
+                }});
 
                 var fileContent = VpaxTools.ImportVpax(openFileDialog.FileName);
 
