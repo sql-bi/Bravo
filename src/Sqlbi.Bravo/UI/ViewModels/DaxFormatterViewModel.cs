@@ -45,7 +45,6 @@ namespace Sqlbi.Bravo.UI.ViewModels
             ViewIndex = SubViewIndex_Loading;
             PreviewChanges = true;
 
-            InitializeCommand = new RelayCommand(async () => await InitializeAsync());
             FormatAnalyzeCommand = new RelayCommand(async () => await AnalyzeAsync());
             FormatMakeChangesCommand = new RelayCommand(async () => await MakeChangesAsync());
             HelpCommand = new RelayCommand(() => ShowHelp());
@@ -74,8 +73,6 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public ICommand RefreshCommand { get; set; }
 
-        public ICommand InitializeCommand { get; set; }
-
         public ICommand ChangeFormulasCommand { get; set; }
 
         public ICommand ApplySelectedFormulaChangesCommand { get; set; }
@@ -83,8 +80,6 @@ namespace Sqlbi.Bravo.UI.ViewModels
         public ICommand SelectedTableMeasureChangedCommand { get; set; }
 
         public bool InitializeCommandIsRunning { get; set; }
-
-        public bool InitializeCommandIsEnabled { get; set; } = true;
 
         public bool TermsAccepted { get; set; }
 
@@ -144,7 +139,6 @@ namespace Sqlbi.Bravo.UI.ViewModels
             OnPropertyChanged(nameof(TimeSinceLastSync));
 
             FormatCommandIsEnabled = true;
-            InitializeCommandIsEnabled = false;
 
             LoadMeasuresForSelection();
 
@@ -228,22 +222,10 @@ namespace Sqlbi.Bravo.UI.ViewModels
         private void ShowHelp()
             => Views.ShellView.Instance.ShowMediaDialog(new HowToFormatCodeHelp());
 
-        private async Task InitializeAsync()
+        private async Task AnalyzeAsync()
         {
             _logger.Trace();
 
-            await ExecuteCommandAsync(
-                () => InitializeCommandIsRunning,
-                async () =>
-                {
-                    await InitializeOrRefreshFormatter();
-
-                    ViewIndex = SubViewIndex_Start;
-                });
-        }
-
-        private async Task AnalyzeAsync()
-        {
             ProgressDetails = "Identifying formulas to format";
             ViewIndex = SubViewIndex_Progress;
 
@@ -287,6 +269,8 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         private async Task ApplyFormattingChangesToModelAsync()
         {
+            _logger.Trace();
+
             var changedTabularObjects = Measures.Where((m) => !m.IsAlreadyFormatted && m.Reformat).Select((m) => m.TabularObject).ToList();
 
             try
