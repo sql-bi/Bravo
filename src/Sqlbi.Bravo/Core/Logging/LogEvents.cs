@@ -42,7 +42,9 @@ namespace Sqlbi.Bravo.Core.Logging
 
             ConnectionTypeAttachPowerBI = 9017,
 
-            ShellViewException = 9018
+            ShellViewException = 9018,
+
+            DaxFormatterViewAction = 9019
         }
 
         public static readonly EventId TaskSchedulerUnobservedTaskException = new EventId((int)LogEventsId.TaskSchedulerUnobservedTaskException, nameof(LogEventsId.TaskSchedulerUnobservedTaskException));
@@ -82,5 +84,7 @@ namespace Sqlbi.Bravo.Core.Logging
         public static readonly EventId ConnectionTypeAttachPowerBI = new EventId((int)LogEventsId.ConnectionTypeAttachPowerBI, nameof(LogEventsId.ConnectionTypeAttachPowerBI));
 
         public static readonly EventId ShellViewException = new EventId((int)LogEventsId.ShellViewException, nameof(LogEventsId.ShellViewException));
+
+        public static readonly EventId DaxFormatterViewAction = new EventId((int)LogEventsId.DaxFormatterViewAction, nameof(LogEventsId.DaxFormatterViewAction));
     }
 }

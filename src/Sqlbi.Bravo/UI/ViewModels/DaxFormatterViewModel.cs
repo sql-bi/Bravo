@@ -224,7 +224,11 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         private async Task AnalyzeAsync()
         {
-            _logger.Trace();
+            _logger.Information(LogEvents.DaxFormatterViewAction, "{@Details}", new object[] { new
+            {
+                Action = "AnalyzeFormat",
+                Preview = PreviewChanges
+            }});
 
             ProgressDetails = "Identifying formulas to format";
             ViewIndex = SubViewIndex_Progress;
@@ -269,9 +273,12 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         private async Task ApplyFormattingChangesToModelAsync()
         {
-            _logger.Trace();
+            _logger.Information(LogEvents.DaxFormatterViewAction, "{@Details}", new object[] { new
+            {
+                Action = "ApplyFormat"
+            }});
 
-            var changedTabularObjects = Measures.Where((m) => !m.IsAlreadyFormatted && m.Reformat).Select((m) => m.TabularObject).ToList();
+            var changedTabularObjects = Measures.Where((m) => !m.IsAlreadyFormatted && m.Reformat).Select((m) => m.TabularObject).ToList();           
 
             try
             {
