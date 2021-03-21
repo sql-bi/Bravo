@@ -1,4 +1,4 @@
-﻿using Sqlbi.Bravo.Core.Management;
+﻿using Sqlbi.Bravo.Core.Helpers;
 using Sqlbi.Bravo.Core.Settings.Interfaces;
 using System;
 using System.Collections.Generic;

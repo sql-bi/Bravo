@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Management;
 
-namespace Sqlbi.Bravo.Core.Management
+namespace Sqlbi.Bravo.Core.Helpers
 {
     internal static class ManagementHelpers
     {

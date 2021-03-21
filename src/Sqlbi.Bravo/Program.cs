@@ -9,7 +9,7 @@ using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Events;
 using Sqlbi.Bravo.Core;
-using Sqlbi.Bravo.Core.Helpers;
+using Sqlbi.Bravo.Core.Security;
 using Sqlbi.Bravo.Core.Services;
 using Sqlbi.Bravo.Core.Services.Interfaces;
 using Sqlbi.Bravo.Core.Settings;

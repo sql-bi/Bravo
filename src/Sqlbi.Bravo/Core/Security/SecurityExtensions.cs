@@ -5,9 +5,9 @@ using System.Security;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace Sqlbi.Bravo.Core.Helpers
+namespace Sqlbi.Bravo.Core.Security
 {
-    internal static class SecurityHelpers
+    internal static class SecurityExtensions
     {
         public static string ToHashSHA256(this string value)
         {

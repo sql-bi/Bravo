@@ -1,10 +1,10 @@
-﻿using Sqlbi.Bravo.Core.Helpers;
+﻿using Sqlbi.Bravo.Core.Security;
 using System.Net;
 using Xunit;
 
-namespace Sqlbi.Bravo.Tests.Core.Helpers
+namespace Sqlbi.Bravo.Tests.Core.Security
 {
-    public class SecurityHelpersTests
+    public class SecurityExtensionsTests
     {
         [Theory]
         [InlineData("MyValue123456789$", "5f45bfb8ab5c9ea6fe0762974f7bbbe3602155c66d1139496fc2246c360a874b")]
