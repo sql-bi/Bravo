@@ -113,6 +113,7 @@ namespace Sqlbi.Bravo
                 services.Configure<AppSettings>(context.Configuration.GetSection(nameof(AppSettings)));
                 services.AddSingleton<IApplicationInstanceService, ApplicationInstanceService>();
                 services.AddSingleton<IGlobalSettingsProviderService, GlobalSettingsProviderService>();
+                services.AddSingleton<IPowerBIDesktopService, PowerBIDesktopService>();
                 services.AddSingleton<IThemeSelectorService, ThemeSelectorService>();
                 services.AddSingleton<IDaxFormatterClient, DaxFormatterClient>();
                 services.AddSingleton<ShellViewModel>();

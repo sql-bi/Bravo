@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 using Sqlbi.Bravo.Core.Logging;
+using Sqlbi.Bravo.Core.Services.Interfaces;
 using Sqlbi.Bravo.UI.DataModel;
 using Sqlbi.Bravo.UI.ViewModels;
 using System;
@@ -41,6 +42,13 @@ namespace Sqlbi.Bravo.UI.Views
         private void AttachToWindowClicked(object sender, RoutedEventArgs e)
         {
             _logger.Trace();
+
+            var instances = App.ServiceProvider.GetRequiredService<IPowerBIDesktopService>().GetInstances();
+
+            foreach (var instance in instances)
+            {
+                _ = MessageBox.Show($"{ instance.Name } @ { instance.LocalEndPoint }", "TODO", MessageBoxButton.OK);                
+            }
 
             // TODO REQUIREMENTS: need to know how to connect here
             _ = MessageBox.Show(

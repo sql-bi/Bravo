@@ -80,6 +80,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Client\PowerBI\ServiceDataset\" />
     <Folder Include="UI\Resources\Fonts\Lato\" />
   </ItemGroup>
   
