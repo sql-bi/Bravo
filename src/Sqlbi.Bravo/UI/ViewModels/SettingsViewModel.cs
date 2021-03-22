@@ -1,8 +1,8 @@
 ﻿using Dax.Formatter.Models;
 using Microsoft.Extensions.Logging;
 using Sqlbi.Bravo.Core;
-using Sqlbi.Bravo.Core.Helpers;
 using Sqlbi.Bravo.Core.Logging;
+using Sqlbi.Bravo.Core.Security;
 using Sqlbi.Bravo.Core.Settings.Interfaces;
 using Sqlbi.Bravo.UI.Framework.Commands;
 using Sqlbi.Bravo.UI.Framework.Interfaces;
@@ -10,8 +10,6 @@ using Sqlbi.Bravo.UI.Framework.ViewModels;
 using Sqlbi.Bravo.UI.Services.Interfaces;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows.Input;
 

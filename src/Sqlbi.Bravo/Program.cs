@@ -9,7 +9,7 @@ using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Events;
 using Sqlbi.Bravo.Core;
-using Sqlbi.Bravo.Core.Helpers;
+using Sqlbi.Bravo.Core.Security;
 using Sqlbi.Bravo.Core.Services;
 using Sqlbi.Bravo.Core.Services.Interfaces;
 using Sqlbi.Bravo.Core.Settings;
@@ -113,6 +113,7 @@ namespace Sqlbi.Bravo
                 services.Configure<AppSettings>(context.Configuration.GetSection(nameof(AppSettings)));
                 services.AddSingleton<IApplicationInstanceService, ApplicationInstanceService>();
                 services.AddSingleton<IGlobalSettingsProviderService, GlobalSettingsProviderService>();
+                services.AddSingleton<IPowerBIDesktopService, PowerBIDesktopService>();
                 services.AddSingleton<IThemeSelectorService, ThemeSelectorService>();
                 services.AddSingleton<IDaxFormatterClient, DaxFormatterClient>();
                 services.AddSingleton<ShellViewModel>();
