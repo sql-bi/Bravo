@@ -2,7 +2,7 @@
 
 namespace Sqlbi.Bravo.Client.PowerBI.Desktop
 {
-    internal class PBIDesktopInstance
+    internal class PowerBIDesktopInstance
     {
         public string Name { get; init; }
 
