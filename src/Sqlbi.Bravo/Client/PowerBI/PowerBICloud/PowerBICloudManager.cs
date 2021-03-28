@@ -8,6 +8,8 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,23 +18,23 @@ namespace Sqlbi.Bravo.Client.PowerBI.PowerBICloud
 {
     internal class PowerBICloudManager
     {
+        private const string GlobalServiceGetClusterUrl = "https://api.powerbi.com/spglobalservice/GetOrInsertClusterUrisByTenantlocation";
         private const string DiscoverEnvironmentsUrl = "https://api.powerbi.com/powerbi/globalservice/v201606/environments/discover?client=powerbi-msolap";
         private const string CloudEnvironmentGlobalCloudName = "GlobalCloud";
         private const string MicrosoftAccountOnlyQueryParameter = "msafed=0";
 
         private static readonly object _tokenCacheLock = new object();
 
-        private static IPublicClientApplication PublicClientApplication { get; set; }
-
-        private static PowerBICloudEnvironment CloudEnvironment { get; set; }
-
-        private static GlobalService GlobalService { get; set; }
+        private static IPublicClientApplication PublicClientApplication;
+        private static PowerBICloudEnvironment CloudEnvironment;
+        private static GlobalService GlobalService;
+        private static TenantCluster TenantCluster;
 
         public PowerBICloudManager()
         {
         }
 
-        private static async Task InitializeAsync()
+        private static async Task InitializeCloudSettingsAsync()
         {
             await InitializeGlobalServiceAsync();
 
@@ -88,9 +90,26 @@ namespace Sqlbi.Bravo.Client.PowerBI.PowerBICloud
             }
         }
 
+        private static async Task InitializeTenantClusterAsync(string accessToken)
+        {
+            if (TenantCluster == null)
+            {
+                using var client = new HttpClient();
+                client.DefaultRequestHeaders.Accept.Clear();
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+                
+                var content = new StringContent(string.Empty, Encoding.UTF8, "application/json");
+                using var response = await client.PutAsync(GlobalServiceGetClusterUrl, content);
+                response.EnsureSuccessStatusCode();
+
+                var json = await response.Content.ReadAsStringAsync();
+                TenantCluster = JsonSerializer.Deserialize<TenantCluster>(json, options: new JsonSerializerOptions(JsonSerializerDefaults.Web));
+            }
+        }
+
         public static async Task<AuthenticationResult> AcquireTokenAsync(IAccount account, CancellationToken cancellationToken)
         {
-            await InitializeAsync();
+            await InitializeCloudSettingsAsync();
 
             if (PublicClientApplication == null)
             {
@@ -117,7 +136,9 @@ namespace Sqlbi.Bravo.Client.PowerBI.PowerBICloud
 
             authenticationResult = await PublicClientApplication.AcquireTokenInteractive(CloudEnvironment.Scopes)
                 .WithExtraQueryParameters(MicrosoftAccountOnlyQueryParameter)
-                .ExecuteAsync(cancellationToken); 
+                .ExecuteAsync(cancellationToken);
+
+            await InitializeTenantClusterAsync(authenticationResult.AccessToken);
 
             return authenticationResult;
         }
