@@ -16,7 +16,6 @@ namespace Sqlbi.Bravo.Core.Services
         private readonly TimeSpan LoginTimeout = TimeSpan.FromMinutes(1);
 
         private readonly ILogger _logger;
-        private readonly PowerBICloudManager _manager;
         private AuthenticationResult _authenticationResult;
         private CancellationTokenSource _loginCancellationTokenSource;
 
@@ -25,7 +24,6 @@ namespace Sqlbi.Bravo.Core.Services
             _logger = logger;
 
             _logger.Trace();
-            _manager = new PowerBICloudManager();
         }
 
         public IAccount Account => _authenticationResult?.Account;
@@ -57,7 +55,7 @@ namespace Sqlbi.Bravo.Core.Services
 
         public async Task<IEnumerable<MetadataSharedDataset>> GetSharedDatasetsAsync()
         {
-            return await _manager.GetSharedDatasetsAsync();
+            return await PowerBICloudManager.GetSharedDatasetsAsync(_authenticationResult.AccessToken);
         }
     }
 }

@@ -69,6 +69,8 @@ namespace Sqlbi.Bravo.UI.Views
         {
             _logger.Trace();
 
+            #region Test
+
             var service = App.ServiceProvider.GetRequiredService<IPowerBICloudService>();
  
             var succeed = await service.LoginAsync();
@@ -80,14 +82,16 @@ namespace Sqlbi.Bravo.UI.Views
 
             _ = MessageBox.Show($"{ service.Account.Username } - { service.Account.Environment } @ TenantId { service.Account.HomeAccountId.TenantId } ", "TODO", MessageBoxButton.OK);
             
-            //await service.LogoutAsync();
+            var datasets = await service.GetSharedDatasetsAsync();
 
-            //var datasets = await service.GetSharedDatasetsAsync();
+            foreach (var dataset in datasets)
+            {
+                _ = MessageBox.Show($"{ dataset.WorkspaceName }({ dataset.WorkspaceType }) - { dataset.Model.DisplayName } ", "TODO", MessageBoxButton.OK);
+            }
 
-            //foreach (var dataset in datasets)
-            //{
-            //    _ = MessageBox.Show($"{ dataset.WorkspaceName }({ dataset.WorkspaceType }) - { dataset.Model.DisplayName } ", "TODO", MessageBoxButton.OK);
-            //}
+            await service.LogoutAsync();
+
+            #endregion
 
             // TODO REQUIREMENTS: need to know how to connect here
             _ = MessageBox.Show(

@@ -16,10 +16,11 @@ using System.Threading.Tasks;
 
 namespace Sqlbi.Bravo.Client.PowerBI.PowerBICloud
 {
-    internal class PowerBICloudManager
+    internal static class PowerBICloudManager
     {
-        private const string GlobalServiceGetClusterUrl = "https://api.powerbi.com/spglobalservice/GetOrInsertClusterUrisByTenantlocation";
         private const string DiscoverEnvironmentsUrl = "https://api.powerbi.com/powerbi/globalservice/v201606/environments/discover?client=powerbi-msolap";
+        private const string GlobalServiceGetClusterUrl = "https://api.powerbi.com/spglobalservice/GetOrInsertClusterUrisByTenantlocation";
+        private const string GetSharedDatasetsUrl = "metadata/v201901/gallery/sharedDatasets";
         private const string CloudEnvironmentGlobalCloudName = "GlobalCloud";
         private const string MicrosoftAccountOnlyQueryParameter = "msafed=0";
 
@@ -29,10 +30,6 @@ namespace Sqlbi.Bravo.Client.PowerBI.PowerBICloud
         private static PowerBICloudEnvironment CloudEnvironment;
         private static GlobalService GlobalService;
         private static TenantCluster TenantCluster;
-
-        public PowerBICloudManager()
-        {
-        }
 
         private static async Task InitializeCloudSettingsAsync()
         {
@@ -183,9 +180,23 @@ namespace Sqlbi.Bravo.Client.PowerBI.PowerBICloud
             }
         }
 
-        public async Task<IEnumerable<MetadataSharedDataset>> GetSharedDatasetsAsync()
+        public static async Task<IEnumerable<MetadataSharedDataset>> GetSharedDatasetsAsync(string accessToken)
         {
-            throw new NotImplementedException();
+            using var client = new HttpClient();
+            {
+                client.BaseAddress = new Uri(TenantCluster.FixedClusterUri);
+                client.DefaultRequestHeaders.Accept.Clear();
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+            }
+
+            var content = new StringContent(string.Empty, Encoding.UTF8, "application/json");
+            using var response = await client.GetAsync(GetSharedDatasetsUrl);
+            response.EnsureSuccessStatusCode();
+
+            var json = await response.Content.ReadAsStringAsync();
+            var datasets = JsonSerializer.Deserialize<IEnumerable<MetadataSharedDataset>>(json, options: new JsonSerializerOptions(JsonSerializerDefaults.Web));
+
+            return datasets;
         }
     }
 }
