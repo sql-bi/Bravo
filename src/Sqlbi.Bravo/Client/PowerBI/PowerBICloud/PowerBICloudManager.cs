@@ -1,7 +1,10 @@
 ﻿using Microsoft.Identity.Client;
 using Sqlbi.Bravo.Client.PowerBI.PowerBICloud.Models;
+using Sqlbi.Bravo.Core;
+using Sqlbi.Bravo.Core.Security.Cryptography;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -16,6 +19,8 @@ namespace Sqlbi.Bravo.Client.PowerBI.PowerBICloud
         private const string DiscoverEnvironmentsUrl = "https://api.powerbi.com/powerbi/globalservice/v201606/environments/discover?client=powerbi-msolap";
         private const string CloudEnvironmentGlobalCloudName = "GlobalCloud";
         private const string MicrosoftAccountOnlyQueryParameter = "msafed=0";
+
+        private static readonly object _tokenCacheLock = new object();
 
         private static IPublicClientApplication PublicClientApplication { get; set; }
 
@@ -93,6 +98,10 @@ namespace Sqlbi.Bravo.Client.PowerBI.PowerBICloud
                     .WithAuthority(CloudEnvironment.AuthorityUri)
                     .WithDefaultRedirectUri()
                     .Build();
+
+                //var tokenCache = PublicClientApplication.UserTokenCache;
+                //tokenCache.SetBeforeAccess(TokenCacheBeforeAccessCallback);
+                //tokenCache.SetAfterAccess(TokenCacheAfterAccessCallback);
             }
 
             AuthenticationResult authenticationResult;
@@ -120,6 +129,36 @@ namespace Sqlbi.Bravo.Client.PowerBI.PowerBICloud
             foreach (var account in accounts)
             {
                 await PublicClientApplication.RemoveAsync(account);
+            }
+        }
+
+        public static void TokenCacheBeforeAccessCallback(TokenCacheNotificationArgs args)
+        {
+            lock (_tokenCacheLock)
+            {
+                byte[] msalV3State = null;
+
+                if (File.Exists(AppConstants.PowerBICloudTokenCacheFile))
+                {
+                    var encryptedData = File.ReadAllBytes(AppConstants.PowerBICloudTokenCacheFile);
+                    msalV3State = DataProtection.Unprotect(encryptedData);
+                }
+
+                args.TokenCache.DeserializeMsalV3(msalV3State);
+            }
+        }
+
+        public static void TokenCacheAfterAccessCallback(TokenCacheNotificationArgs args)
+        {
+            if (args.HasStateChanged)
+            {
+                lock (_tokenCacheLock)
+                {
+                    var msalV3State = args.TokenCache.SerializeMsalV3();
+                    var encryptedData = DataProtection.Protect(msalV3State);
+
+                    File.WriteAllBytes(AppConstants.PowerBICloudTokenCacheFile, encryptedData);
+                }
             }
         }
 

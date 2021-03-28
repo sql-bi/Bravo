@@ -55,6 +55,8 @@ namespace Sqlbi.Bravo.Core
 
         public static string PowerBIDesktopExternalToolsDirectory { get; } = Path.Combine(EnvironmentSpecialFolderCommonProgramFilesX86, @"Microsoft Shared\Power BI Desktop\External Tools");
 
+        public static string PowerBICloudTokenCacheFile { get; } = Path.Combine(ApplicationFolderLocalDataPath, ".msalcache.bin");
+
         public static TimeSpan AnalysisServicesEventWatcherServiceConnectionStateWaitDelay { get; } = TimeSpan.FromSeconds(15);
 
         public static string TelemetrySettingsSectionName { get; } = "Telemetry";
