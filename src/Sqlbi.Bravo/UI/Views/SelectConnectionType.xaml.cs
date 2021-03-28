@@ -9,8 +9,10 @@ using Sqlbi.Bravo.UI.ViewModels;
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Interop;
 using System.Windows.Navigation;
 
 namespace Sqlbi.Bravo.UI.Views
@@ -63,9 +65,29 @@ namespace Sqlbi.Bravo.UI.Views
             }});
         }
 
-        private void ConnectToDatasetClicked(object sender, RoutedEventArgs e)
+        private async void ConnectToDatasetClicked(object sender, RoutedEventArgs e)
         {
             _logger.Trace();
+
+            var service = App.ServiceProvider.GetRequiredService<IPowerBICloudService>();
+ 
+            var succeed = await service.LoginAsync();
+            if (succeed == false)
+            {
+                _ = MessageBox.Show("Login failed, no response message received within expected timeframe.", "TODO", MessageBoxButton.OK);
+                return;
+            }
+
+            _ = MessageBox.Show($"{ service.Account.Username } - { service.Account.Environment } @ TenantId { service.Account.HomeAccountId.TenantId } ", "TODO", MessageBoxButton.OK);
+            
+            //await service.LogoutAsync();
+
+            //var datasets = await service.GetSharedDatasetsAsync();
+
+            //foreach (var dataset in datasets)
+            //{
+            //    _ = MessageBox.Show($"{ dataset.WorkspaceName }({ dataset.WorkspaceType }) - { dataset.Model.DisplayName } ", "TODO", MessageBoxButton.OK);
+            //}
 
             // TODO REQUIREMENTS: need to know how to connect here
             _ = MessageBox.Show(
