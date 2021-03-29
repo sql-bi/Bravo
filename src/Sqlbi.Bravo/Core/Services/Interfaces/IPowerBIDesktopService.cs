@@ -5,6 +5,6 @@ namespace Sqlbi.Bravo.Core.Services.Interfaces
 {
     internal interface IPowerBIDesktopService
     {
-        IEnumerable<PBIDesktopInstance> GetInstances();
+        IEnumerable<PowerBIDesktopInstance> GetInstances();
     }
 }

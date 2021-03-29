@@ -52,6 +52,7 @@
     <PackageReference Include="Microsoft.ApplicationInsights.WindowsServer.TelemetryChannel" Version="2.17.0" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="5.0.0" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="5.0.0" />
+    <PackageReference Include="Microsoft.Identity.Client" Version="4.28.1" />
     <PackageReference Include="PropertyChanged.Fody" Version="3.2.10" PrivateAssets="All" />
     <PackageReference Include="Serilog" Version="2.10.1-dev-01249" />
     <PackageReference Include="Serilog.Extensions.Hosting" Version="4.0.0-dev-00051" />
@@ -80,7 +81,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Client\PowerBI\ServiceDataset\" />
     <Folder Include="UI\Resources\Fonts\Lato\" />
   </ItemGroup>
   

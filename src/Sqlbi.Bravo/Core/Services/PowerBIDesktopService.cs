@@ -24,17 +24,21 @@ namespace Sqlbi.Bravo.Core.Services
             _logger.Trace();
         }
 
-        public IEnumerable<PBIDesktopInstance> GetInstances()
+        public IEnumerable<PowerBIDesktopInstance> GetInstances()
         {
-            var connections = Network.GetTcpConnections();
-
             var processes = Process.GetProcessesByName("msmdsrv")
                 .Select((p) => new
                 {
                     AnalisysServicesProcess = p,
                     ParentProcess = p.GetParent()
                 })
-                .Where((i) => i.ParentProcess.ProcessName.Equals("PBIDesktop", StringComparison.OrdinalIgnoreCase));
+                .Where((i) => i.ParentProcess.ProcessName.Equals(AppConstants.PowerBIDesktopProcessName, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            if (processes.Any() == false)
+                yield break;
+
+            var connections = Network.GetTcpConnections();
 
             foreach (var process in processes)
             {
@@ -42,7 +46,7 @@ namespace Sqlbi.Bravo.Core.Services
                 if (connection == default)
                     continue;
 
-                var instance = new PBIDesktopInstance
+                var instance = new PowerBIDesktopInstance
                 {
                     Name = process.ParentProcess.GetMainWindowTitle(),
                     LocalEndPoint = connection.LocalEndPoint
