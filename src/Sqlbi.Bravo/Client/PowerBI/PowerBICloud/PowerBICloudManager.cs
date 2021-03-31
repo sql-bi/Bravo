@@ -189,7 +189,6 @@ namespace Sqlbi.Bravo.Client.PowerBI.PowerBICloud
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
             }
 
-            var content = new StringContent(string.Empty, Encoding.UTF8, "application/json");
             using var response = await client.GetAsync(GetSharedDatasetsUrl);
             response.EnsureSuccessStatusCode();
 
