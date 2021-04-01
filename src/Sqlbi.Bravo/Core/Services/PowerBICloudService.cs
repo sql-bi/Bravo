@@ -16,7 +16,7 @@ namespace Sqlbi.Bravo.Core.Services
         private readonly ILogger _logger;
         private AuthenticationResult _authenticationResult;
 
-        public TimeSpan LoginTimeout { get; } = TimeSpan.FromMinutes(1);
+        public TimeSpan LoginTimeout { get; } = TimeSpan.FromSeconds(30);
 
         public PowerBICloudService(ILogger<PowerBIDesktopService> logger)
         {
@@ -27,7 +27,26 @@ namespace Sqlbi.Bravo.Core.Services
 
         public IAccount Account => _authenticationResult?.Account;
 
-        public async Task<bool> LoginAsync(Action callback, CancellationToken cancellationToken)
+        public async Task<bool> LoginWithCustomUIAsync()
+        {
+            _logger.Trace();
+
+            try
+            {
+                _authenticationResult = await PowerBICloudManager.AcquireTokenAsync(_authenticationResult?.Account,CancellationToken.None, useCustomLoginUI: true);
+
+                return true;
+            }
+            catch (MsalException ex)
+            {
+                _ = System.Windows.MessageBox.Show($"MsalException ==> { ex.Message }", "DEBUG", System.Windows.MessageBoxButton.OK);
+
+                return false;
+            }
+
+        }
+        
+        public async Task<bool> LoginWithSystemBrowserAsync(Action callback, CancellationToken cancellationToken)
         {
             _logger.Trace();
 

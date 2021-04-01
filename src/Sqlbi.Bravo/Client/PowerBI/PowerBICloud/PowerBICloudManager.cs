@@ -1,4 +1,5 @@
 ﻿using Microsoft.Identity.Client;
+using Microsoft.Identity.Client.Extensibility;
 using Sqlbi.Bravo.Client.PowerBI.PowerBICloud.Models;
 using Sqlbi.Bravo.Core;
 using Sqlbi.Bravo.Core.Security.Cryptography;
@@ -105,7 +106,7 @@ namespace Sqlbi.Bravo.Client.PowerBI.PowerBICloud
             }
         }
 
-        public static async Task<AuthenticationResult> AcquireTokenAsync(IAccount account, CancellationToken cancellationToken)
+        public static async Task<AuthenticationResult> AcquireTokenAsync(IAccount account, CancellationToken cancellationToken, bool useCustomLoginUI = false)
         {
             await InitializeCloudSettingsAsync();
 
@@ -134,10 +135,16 @@ namespace Sqlbi.Bravo.Client.PowerBI.PowerBICloud
 
             authenticationResult = await UI.Views.ShellView.Instance.Dispatcher.Invoke(async () =>
             {
+                var builder = PublicClientApplication.AcquireTokenInteractive(CloudEnvironment.Scopes);
                 var helper = new WindowInteropHelper(UI.Views.ShellView.Instance);
 
-                var result = await PublicClientApplication.AcquireTokenInteractive(CloudEnvironment.Scopes)
-                    .WithExtraQueryParameters(MicrosoftAccountOnlyQueryParameter)
+                if (useCustomLoginUI)
+                {
+                    var customLoginUI = new CustomLoginWebUI(UI.Views.ShellView.Instance);
+                    builder = builder.WithCustomWebUi(customLoginUI);
+                }
+
+                var result = await builder.WithExtraQueryParameters(MicrosoftAccountOnlyQueryParameter)
                     .WithParentActivityOrWindow(helper.Handle)
                     .ExecuteAsync(cancellationToken);
 

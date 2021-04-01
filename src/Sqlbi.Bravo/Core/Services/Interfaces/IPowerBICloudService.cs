@@ -13,7 +13,9 @@ namespace Sqlbi.Bravo.Core.Services.Interfaces
 
         public TimeSpan LoginTimeout { get; }
 
-        Task<bool> LoginAsync(Action callback, CancellationToken cancellationToken);
+        Task<bool> LoginWithCustomUIAsync();
+
+        Task<bool> LoginWithSystemBrowserAsync(Action callback, CancellationToken cancellationToken);
 
         Task LogoutAsync();
 

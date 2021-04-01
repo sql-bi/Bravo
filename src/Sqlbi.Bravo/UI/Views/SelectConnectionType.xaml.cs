@@ -72,11 +72,27 @@ namespace Sqlbi.Bravo.UI.Views
 
             var service = App.ServiceProvider.GetRequiredService<IPowerBICloudService>();
 
-            // Try to authenticate and wait for user input / request timeout
+            var messageBoxResult = MessageBox.Show("YES = System Browser, NO = Custom UI", "Login options", MessageBoxButton.YesNoCancel, MessageBoxImage.Question);
+            if (messageBoxResult == MessageBoxResult.No)
             {
+                //
+                // Testing custom UI
+                //
+                var loginResult = await service.LoginWithCustomUIAsync();
+                if (loginResult == false)
+                {
+                    _ = MessageBox.Show("Login failed", "TODO", MessageBoxButton.OK);
+                    return;
+                }
+            }
+            else if (messageBoxResult == MessageBoxResult.Yes)
+            {
+                //
+                // Testing system browser
+                //
                 using var loginCancellationTokenSource = new CancellationTokenSource();
                 var dialogInfo1 = new DebugDialogInfo();
-                var loginTask = service.LoginAsync(() => Dispatcher.Invoke(dialogInfo1.Close), loginCancellationTokenSource.Token);
+                var loginTask = service.LoginWithSystemBrowserAsync(() => Dispatcher.Invoke(dialogInfo1.Close), loginCancellationTokenSource.Token);
                 dialogInfo1.listboxMessages.Items.Add($"Login in progress using system browser ...");
                 dialogInfo1.listboxMessages.Items.Add($"Option 1 ->\tComplete authentication within the expected timeout ({ service.LoginTimeout.TotalSeconds } seconds)");
                 dialogInfo1.listboxMessages.Items.Add($"Option 2 ->\tClose this window to abort the login operation");
@@ -95,6 +111,10 @@ namespace Sqlbi.Bravo.UI.Views
                     _ = MessageBox.Show("Login failed or timeout expired", "TODO", MessageBoxButton.OK);
                     return;
                 }
+            }
+            else
+            {
+                return;
             }
 
             _ = MessageBox.Show($"{ service.Account.Username } - { service.Account.Environment } @ TenantId { service.Account.HomeAccountId.TenantId } ", "TODO", MessageBoxButton.OK);
