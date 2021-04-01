@@ -2,6 +2,7 @@
 using Sqlbi.Bravo.Client.PowerBI.PowerBICloud.Models;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Sqlbi.Bravo.Core.Services.Interfaces
@@ -10,7 +11,11 @@ namespace Sqlbi.Bravo.Core.Services.Interfaces
     {
         public IAccount Account { get; }
 
-        Task<bool> LoginAsync();
+        public TimeSpan LoginTimeout { get; }
+
+        Task<bool> LoginWithCustomUIAsync();
+
+        Task<bool> LoginWithSystemBrowserAsync(Action callback, CancellationToken cancellationToken);
 
         Task LogoutAsync();
 

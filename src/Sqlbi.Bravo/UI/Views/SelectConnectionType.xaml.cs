@@ -9,10 +9,9 @@ using Sqlbi.Bravo.UI.ViewModels;
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Threading.Tasks;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Interop;
 using System.Windows.Navigation;
 
 namespace Sqlbi.Bravo.UI.Views
@@ -72,21 +71,63 @@ namespace Sqlbi.Bravo.UI.Views
             #region Test
 
             var service = App.ServiceProvider.GetRequiredService<IPowerBICloudService>();
- 
-            var succeed = await service.LoginAsync();
-            if (succeed == false)
+
+            var messageBoxResult = MessageBox.Show("YES = System Browser, NO = Custom UI", "Login options", MessageBoxButton.YesNoCancel, MessageBoxImage.Question);
+            if (messageBoxResult == MessageBoxResult.No)
             {
-                _ = MessageBox.Show("Login failed, no response message received within expected timeframe.", "TODO", MessageBoxButton.OK);
+                //
+                // Testing custom UI
+                //
+                var loginResult = await service.LoginWithCustomUIAsync();
+                if (loginResult == false)
+                {
+                    _ = MessageBox.Show("Login failed", "TODO", MessageBoxButton.OK);
+                    return;
+                }
+            }
+            else if (messageBoxResult == MessageBoxResult.Yes)
+            {
+                //
+                // Testing system browser
+                //
+                using var loginCancellationTokenSource = new CancellationTokenSource();
+                var dialogInfo1 = new DebugDialogInfo();
+                var loginTask = service.LoginWithSystemBrowserAsync(() => Dispatcher.Invoke(dialogInfo1.Close), loginCancellationTokenSource.Token);
+                dialogInfo1.listboxMessages.Items.Add($"Login in progress using system browser ...");
+                dialogInfo1.listboxMessages.Items.Add($"Option 1 ->\tComplete authentication within the expected timeout ({ service.LoginTimeout.TotalSeconds } seconds)");
+                dialogInfo1.listboxMessages.Items.Add($"Option 2 ->\tClose this window to abort the login operation");
+
+                var dialogResultCancel = dialogInfo1.ShowDialog();
+                if (dialogResultCancel == true)
+                {
+                    loginCancellationTokenSource.Cancel();
+                    MessageBox.Show($"Login canceled by user", "TODO", MessageBoxButton.OK);
+                    return;
+                }
+
+                var loginResult = await loginTask;
+                if (loginResult == false)
+                {
+                    _ = MessageBox.Show("Login failed or timeout expired", "TODO", MessageBoxButton.OK);
+                    return;
+                }
+            }
+            else
+            {
                 return;
             }
 
             _ = MessageBox.Show($"{ service.Account.Username } - { service.Account.Environment } @ TenantId { service.Account.HomeAccountId.TenantId } ", "TODO", MessageBoxButton.OK);
-            
-            var datasets = await service.GetSharedDatasetsAsync();
 
-            foreach (var dataset in datasets)
+            // Display workspaces info
             {
-                _ = MessageBox.Show($"{ dataset.WorkspaceName }({ dataset.WorkspaceType }) - { dataset.Model.DisplayName } ", "TODO", MessageBoxButton.OK);
+                var dialogInfo2 = new DebugDialogInfo();
+
+                var datasets = await service.GetSharedDatasetsAsync();
+                foreach (var dataset in datasets)
+                    dialogInfo2.listboxMessages.Items.Add($"{ dataset.WorkspaceName }({ dataset.WorkspaceType }) - { dataset.Model.DisplayName }({ dataset.Model.Description })");
+
+                dialogInfo2.ShowDialog();
             }
 
             await service.LogoutAsync();

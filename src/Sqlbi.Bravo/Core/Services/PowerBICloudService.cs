@@ -13,11 +13,10 @@ namespace Sqlbi.Bravo.Core.Services
 {
     internal class PowerBICloudService : IPowerBICloudService
     {
-        private readonly TimeSpan LoginTimeout = TimeSpan.FromMinutes(1);
-
         private readonly ILogger _logger;
         private AuthenticationResult _authenticationResult;
-        private CancellationTokenSource _loginCancellationTokenSource;
+
+        public TimeSpan LoginTimeout { get; } = TimeSpan.FromSeconds(30);
 
         public PowerBICloudService(ILogger<PowerBIDesktopService> logger)
         {
@@ -28,15 +27,36 @@ namespace Sqlbi.Bravo.Core.Services
 
         public IAccount Account => _authenticationResult?.Account;
 
-        public async Task<bool> LoginAsync()
+        public async Task<bool> LoginWithCustomUIAsync()
         {
-            // TODO: synchronize access
-            _loginCancellationTokenSource = new CancellationTokenSource();
-            _loginCancellationTokenSource.CancelAfter(LoginTimeout);
-            
+            _logger.Trace();
+
             try
             {
-                _authenticationResult = await PowerBICloudManager.AcquireTokenAsync(_authenticationResult?.Account, _loginCancellationTokenSource.Token);
+                _authenticationResult = await PowerBICloudManager.AcquireTokenAsync(_authenticationResult?.Account,CancellationToken.None, useCustomLoginUI: true);
+
+                return true;
+            }
+            catch (MsalException ex)
+            {
+                _ = System.Windows.MessageBox.Show($"MsalException ==> { ex.Message }", "DEBUG", System.Windows.MessageBoxButton.OK);
+
+                return false;
+            }
+
+        }
+        
+        public async Task<bool> LoginWithSystemBrowserAsync(Action callback, CancellationToken cancellationToken)
+        {
+            _logger.Trace();
+
+            // TODO: synchronize access
+            var cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            cancellationTokenSource.CancelAfter(LoginTimeout);
+
+            try
+            {
+                _authenticationResult = await PowerBICloudManager.AcquireTokenAsync(_authenticationResult?.Account, cancellationTokenSource.Token);
 
                 return true;
             }
@@ -44,10 +64,16 @@ namespace Sqlbi.Bravo.Core.Services
             {
                 return false;
             }
+            finally
+            {
+                callback?.Invoke();
+            }
         }
 
         public async Task LogoutAsync()
         {
+            _logger.Trace();
+
             _authenticationResult = null;
 
             await PowerBICloudManager.RemoveTokenAsync();
@@ -55,6 +81,8 @@ namespace Sqlbi.Bravo.Core.Services
 
         public async Task<IEnumerable<MetadataSharedDataset>> GetSharedDatasetsAsync()
         {
+            _logger.Trace();
+
             return await PowerBICloudManager.GetSharedDatasetsAsync(_authenticationResult.AccessToken);
         }
     }

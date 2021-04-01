@@ -1,4 +1,5 @@
 ﻿using Microsoft.Identity.Client;
+using Microsoft.Identity.Client.Extensibility;
 using Sqlbi.Bravo.Client.PowerBI.PowerBICloud.Models;
 using Sqlbi.Bravo.Core;
 using Sqlbi.Bravo.Core.Security.Cryptography;
@@ -13,6 +14,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Interop;
 
 namespace Sqlbi.Bravo.Client.PowerBI.PowerBICloud
 {
@@ -104,7 +106,7 @@ namespace Sqlbi.Bravo.Client.PowerBI.PowerBICloud
             }
         }
 
-        public static async Task<AuthenticationResult> AcquireTokenAsync(IAccount account, CancellationToken cancellationToken)
+        public static async Task<AuthenticationResult> AcquireTokenAsync(IAccount account, CancellationToken cancellationToken, bool useCustomLoginUI = false)
         {
             await InitializeCloudSettingsAsync();
 
@@ -131,9 +133,23 @@ namespace Sqlbi.Bravo.Client.PowerBI.PowerBICloud
                 return authenticationResult;
             }
 
-            authenticationResult = await PublicClientApplication.AcquireTokenInteractive(CloudEnvironment.Scopes)
-                .WithExtraQueryParameters(MicrosoftAccountOnlyQueryParameter)
-                .ExecuteAsync(cancellationToken);
+            authenticationResult = await UI.Views.ShellView.Instance.Dispatcher.Invoke(async () =>
+            {
+                var builder = PublicClientApplication.AcquireTokenInteractive(CloudEnvironment.Scopes);
+                var helper = new WindowInteropHelper(UI.Views.ShellView.Instance);
+
+                if (useCustomLoginUI)
+                {
+                    var customLoginUI = new CustomLoginWebUI(UI.Views.ShellView.Instance);
+                    builder = builder.WithCustomWebUi(customLoginUI);
+                }
+
+                var result = await builder.WithExtraQueryParameters(MicrosoftAccountOnlyQueryParameter)
+                    .WithParentActivityOrWindow(helper.Handle)
+                    .ExecuteAsync(cancellationToken);
+
+                return result;
+            });
 
             await InitializeTenantClusterAsync(authenticationResult.AccessToken);
 
@@ -189,7 +205,6 @@ namespace Sqlbi.Bravo.Client.PowerBI.PowerBICloud
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
             }
 
-            var content = new StringContent(string.Empty, Encoding.UTF8, "application/json");
             using var response = await client.GetAsync(GetSharedDatasetsUrl);
             response.EnsureSuccessStatusCode();
 

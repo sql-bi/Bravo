@@ -20,6 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="Client\PowerBI\PowerBICloud\CustomLoginWindow.xaml" />
     <None Remove="UI\Controls\AnalyzeModelIcon.xaml" />
     <None Remove="UI\Controls\DatasetIcon.xaml" />
     <None Remove="UI\Controls\DaxFormattedTextBlock.xaml" />
@@ -34,6 +35,7 @@
     <None Remove="UI\Resources\Images\powerbi-desktop-connect.png" />
     <None Remove="UI\Resources\Images\vertipaq-analyzer-file.png" />
     <None Remove="UI\Views\AnalyzeModelView.xaml" />
+    <None Remove="UI\Views\DebugDialogInfo.xaml" />
     <None Remove="UI\Views\DebugInfo.xaml" />
     <None Remove="UI\Views\MediaDialog.xaml" />
     <None Remove="UI\Views\SelectConnectionType.xaml" />
@@ -52,7 +54,7 @@
     <PackageReference Include="Microsoft.ApplicationInsights.WindowsServer.TelemetryChannel" Version="2.17.0" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="5.0.0" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="5.0.0" />
-    <PackageReference Include="Microsoft.Identity.Client" Version="4.28.1" />
+    <PackageReference Include="Microsoft.Identity.Client" Version="4.29.0" />
     <PackageReference Include="PropertyChanged.Fody" Version="3.2.10" PrivateAssets="All" />
     <PackageReference Include="Serilog" Version="2.10.1-dev-01249" />
     <PackageReference Include="Serilog.Extensions.Hosting" Version="4.0.0-dev-00051" />
@@ -92,6 +94,12 @@
     <Resource Include="UI\Resources\Images\powerbi-dataset.png" />
     <Resource Include="UI\Resources\Images\powerbi-desktop-connect.png" />
     <Resource Include="UI\Resources\Images\vertipaq-analyzer-file.png" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Page Update="UI\Views\DebugDialogInfo.xaml">
+      <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+    </Page>
   </ItemGroup>
 
 </Project>
