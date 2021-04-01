@@ -13,6 +13,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Interop;
 
 namespace Sqlbi.Bravo.Client.PowerBI.PowerBICloud
 {
@@ -131,9 +132,17 @@ namespace Sqlbi.Bravo.Client.PowerBI.PowerBICloud
                 return authenticationResult;
             }
 
-            authenticationResult = await PublicClientApplication.AcquireTokenInteractive(CloudEnvironment.Scopes)
-                .WithExtraQueryParameters(MicrosoftAccountOnlyQueryParameter)
-                .ExecuteAsync(cancellationToken);
+            authenticationResult = await UI.Views.ShellView.Instance.Dispatcher.Invoke(async () =>
+            {
+                var helper = new WindowInteropHelper(UI.Views.ShellView.Instance);
+
+                var result = await PublicClientApplication.AcquireTokenInteractive(CloudEnvironment.Scopes)
+                    .WithExtraQueryParameters(MicrosoftAccountOnlyQueryParameter)
+                    .WithParentActivityOrWindow(helper.Handle)
+                    .ExecuteAsync(cancellationToken);
+
+                return result;
+            });
 
             await InitializeTenantClusterAsync(authenticationResult.AccessToken);
 
