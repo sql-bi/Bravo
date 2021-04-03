@@ -7,7 +7,6 @@ using System.Text.Json.Serialization;
 
 namespace Sqlbi.Bravo.Core.Helpers
 {
-    // Originally from https://gist.github.com/BoyCook/5075907#file-messagehelper
     internal class MessageHelper
     {
         public class ConnectionInfo
@@ -25,31 +24,18 @@ namespace Sqlbi.Bravo.Core.Helpers
             public string ParentProcessMainWindowTitle { get; set; }
         }
 
-        // Passing multiple strings isn't reliable
-        // This may not be the best solution but it works
-        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
-        private struct CONNECTIONDATASTRUCT
-        {
-            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 256)]
-            public string Data;
-        }
-
         public static void TrySendConnectionInfo(string windowName, ConnectionInfo connectionInfo)
         {
             var hWnd = NativeMethods.FindWindow(lpClassName: null, windowName);
             if (hWnd != IntPtr.Zero)
             {
-                CONNECTIONDATASTRUCT connectionData;
-                connectionData.Data = JsonSerializer.Serialize(connectionInfo);
-
-                var buffer = Marshal.AllocHGlobal(Marshal.SizeOf(connectionData));
-                Marshal.StructureToPtr(connectionData, buffer, false);
-                Marshal.FreeHGlobal(buffer);
+                var json = JsonSerializer.Serialize(connectionInfo);
+                var bytes = System.Text.Encoding.Unicode.GetBytes(json);
 
                 NativeMethods.COPYDATASTRUCT copyData;
                 copyData.dwData = (IntPtr)100;
-                copyData.lpData = buffer;
-                copyData.cbData = Marshal.SizeOf(connectionData);
+                copyData.lpData = json;
+                copyData.cbData = bytes.Length + 1;
 
                 _ = NativeMethods.SendMessage(hWnd, NativeMethods.WM_COPYDATA, wParam: 0, ref copyData);
             }
@@ -57,33 +43,23 @@ namespace Sqlbi.Bravo.Core.Helpers
 
         public static RuntimeSummary TryReceiveConnectionInfo(IntPtr ptr)
         {
-            var connectionData = new CONNECTIONDATASTRUCT();
-
             var copyData = (NativeMethods.COPYDATASTRUCT)Marshal.PtrToStructure(ptr, typeof(NativeMethods.COPYDATASTRUCT));
-            if (copyData.cbData == Marshal.SizeOf(connectionData))
+            if (copyData.cbData == 0)
+                return null;
+
+            var json = copyData.lpData;
+            var connectionInfo = JsonSerializer.Deserialize<ConnectionInfo>(json);
+
+            var runtimeSummary = new RuntimeSummary
             {
-                connectionData = (CONNECTIONDATASTRUCT)Marshal.PtrToStructure(copyData.lpData, typeof(CONNECTIONDATASTRUCT));
+                IsExecutedAsExternalTool = true,
+                ServerName = connectionInfo.ServerName,
+                DatabaseName = connectionInfo.DatabaseName,
+                ParentProcessName = connectionInfo.ParentProcessName,
+                ParentProcessMainWindowTitle = connectionInfo.ParentProcessMainWindowTitle,
+            };
 
-                var connectionInfo = JsonSerializer.Deserialize<ConnectionInfo>(connectionData.Data);
-
-                System.Diagnostics.Debug.WriteLine($"DatabaseName = '{ connectionInfo.DatabaseName }'");
-                System.Diagnostics.Debug.WriteLine($"ServerName = '{ connectionInfo.ServerName }'");
-                System.Diagnostics.Debug.WriteLine($"ParentProcessName = '{ connectionInfo.ParentProcessName }'");
-                System.Diagnostics.Debug.WriteLine($"ParentProcessMainWindowTitle = '{ connectionInfo.ParentProcessMainWindowTitle }'");
-
-                var runtimeSummary = new RuntimeSummary
-                {
-                    IsExecutedAsExternalTool = true,
-                    ServerName = connectionInfo.ServerName,
-                    DatabaseName = connectionInfo.DatabaseName,
-                    ParentProcessName = connectionInfo.ParentProcessName,
-                    ParentProcessMainWindowTitle = connectionInfo.ParentProcessMainWindowTitle,
-                };
-
-                return runtimeSummary;
-            }
-
-            return null;
+            return runtimeSummary;
         }
     }
 }

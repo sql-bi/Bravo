@@ -106,7 +106,8 @@ namespace Sqlbi.Bravo.Core.Windows
         {
             public IntPtr dwData;
             public int cbData;
-            public IntPtr lpData;
+            [MarshalAs(UnmanagedType.LPWStr)]
+            public string lpData;
         }
 
         [StructLayout(LayoutKind.Sequential)]
