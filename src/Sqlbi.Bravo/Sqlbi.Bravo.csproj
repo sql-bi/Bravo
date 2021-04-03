@@ -35,7 +35,6 @@
     <None Remove="UI\Resources\Images\powerbi-desktop-connect.png" />
     <None Remove="UI\Resources\Images\vertipaq-analyzer-file.png" />
     <None Remove="UI\Views\AnalyzeModelView.xaml" />
-    <None Remove="UI\Views\DebugDialogInfo.xaml" />
     <None Remove="UI\Views\DebugInfo.xaml" />
     <None Remove="UI\Views\MediaDialog.xaml" />
     <None Remove="UI\Views\SelectConnectionType.xaml" />
@@ -94,12 +93,6 @@
     <Resource Include="UI\Resources\Images\powerbi-dataset.png" />
     <Resource Include="UI\Resources\Images\powerbi-desktop-connect.png" />
     <Resource Include="UI\Resources\Images\vertipaq-analyzer-file.png" />
-  </ItemGroup>
-  
-  <ItemGroup>
-    <Page Update="UI\Views\DebugDialogInfo.xaml">
-      <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
-    </Page>
   </ItemGroup>
 
 </Project>
