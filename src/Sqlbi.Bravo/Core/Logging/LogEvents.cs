@@ -16,8 +16,6 @@ namespace Sqlbi.Bravo.Core.Logging
 
             AppOnExit = 9004,
 
-            AppShutdownForMultipleInstance = 9005,
-
             DaxFormatterException = 9006,
 
             ApplicationInstanceServiceException = 9007,
@@ -58,8 +56,6 @@ namespace Sqlbi.Bravo.Core.Logging
         public static readonly EventId AppOnStartup = new EventId((int)LogEventsId.AppOnStartup, nameof(LogEventsId.AppOnStartup));
 
         public static readonly EventId AppOnExit = new EventId((int)LogEventsId.AppOnExit, nameof(LogEventsId.AppOnExit));
-
-        public static readonly EventId AppShutdownForMultipleInstance = new EventId((int)LogEventsId.AppShutdownForMultipleInstance, nameof(LogEventsId.AppShutdownForMultipleInstance));
 
         public static readonly EventId DaxFormatterException = new EventId((int)LogEventsId.DaxFormatterException, nameof(LogEventsId.DaxFormatterException));
 

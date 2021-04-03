@@ -15,6 +15,8 @@ using System.Linq;
 using Sqlbi.Bravo.Core.Logging;
 using System.Diagnostics;
 using System.Windows.Controls;
+using Sqlbi.Bravo.Core.Windows;
+using Sqlbi.Bravo.Core.Helpers;
 
 namespace Sqlbi.Bravo.UI.Views
 {
@@ -30,38 +32,20 @@ namespace Sqlbi.Bravo.UI.Views
         protected override void OnSourceInitialized(EventArgs e)
         {
             base.OnSourceInitialized(e);
+
             var source = PresentationSource.FromVisual(this) as HwndSource;
-            source.AddHook(WndProc);
+            source.AddHook(WndProcHook);
         }
 
-        private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+        private IntPtr WndProcHook(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
         {
-            if (msg == MessageHelper.WM_COPYDATA)
-            {
-                var connInfo = new MessageHelper.ConnectionInfo();
+            if (msg == NativeMethods.WM_COPYDATA)
+            { 
                 try
                 {
-                    var cp = (MessageHelper.CopyDataStruct)Marshal.PtrToStructure(lParam, typeof(MessageHelper.CopyDataStruct));
-                    if (cp.cbData == Marshal.SizeOf(connInfo))
+                    var runtimeSummary = MessageHelper.TryReceiveConnectionInfo(ptr: lParam);
+                    if (runtimeSummary != null)
                     {
-                        connInfo = (MessageHelper.ConnectionInfo)Marshal.PtrToStructure(cp.lpData, typeof(MessageHelper.ConnectionInfo));
-
-                        var details = MessageHelper.ExtractDetails(connInfo);
-
-                        System.Diagnostics.Debug.WriteLine($"DatabaseName = '{details.DbName}'");
-                        System.Diagnostics.Debug.WriteLine($"ServerName = '{details.ServerName}'");
-                        System.Diagnostics.Debug.WriteLine($"ParentProcessName = '{details.ParentProcName}'");
-                        System.Diagnostics.Debug.WriteLine($"ParentWindowTitle = '{details.ParentWindowTitle}'");
-
-                        var runtimeSummary = new RuntimeSummary
-                        {
-                            DatabaseName = details.DbName,
-                            IsExecutedAsExternalTool = true,
-                            ParentProcessMainWindowTitle = details.ParentWindowTitle,
-                            ParentProcessName = details.ParentProcName,
-                            ServerName = details.ServerName,
-                        };
-
                         // Creating the tab (& VMs) may not trigger the loaded event when expected
                         ViewModel.AddNewTab(BiConnectionType.ActivePowerBiWindow, ViewModel?.SelectedItem?.SubPageInTab ?? SubPage.DaxFormatter, runtimeSummary);
                     }
@@ -85,7 +69,6 @@ namespace Sqlbi.Bravo.UI.Views
             InitializeComponent();
 
             Instance = this;
-
 #if DEBUG
             if (_settings.Runtime.IsExecutedAsExternalTool)
 #else
