@@ -109,17 +109,7 @@ namespace Sqlbi.Bravo
             }
             else
             {
-                _logger.Information(LogEvents.AppShutdownForMultipleInstance);
-
-                var connectionInfo = MessageHelper.CreateConnectionInfo(
-                    _settings.Runtime.DatabaseName,
-                    _settings.Runtime.ServerName,
-                    _settings.Runtime.ParentProcessName,
-                    _settings.Runtime.ParentProcessMainWindowTitle);
-
-                var helper = new MessageHelper();
-                var hWnd = helper.GetWindowId(AppConstants.ApplicationNameLabel);
-                _ = helper.SendConnectionInfoMessage(hWnd, wParam: 0, connectionInfo);
+                application.NotifyConnectionToPrimaryInstance();
 
                 Shutdown();
             }

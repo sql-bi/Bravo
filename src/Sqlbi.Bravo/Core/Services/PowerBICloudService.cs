@@ -4,9 +4,7 @@ using Sqlbi.Bravo.Client.PowerBI.PowerBICloud;
 using Sqlbi.Bravo.Client.PowerBI.PowerBICloud.Models;
 using Sqlbi.Bravo.Core.Logging;
 using Sqlbi.Bravo.Core.Services.Interfaces;
-using System;
 using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Sqlbi.Bravo.Core.Services
@@ -16,8 +14,6 @@ namespace Sqlbi.Bravo.Core.Services
         private readonly ILogger _logger;
         private AuthenticationResult _authenticationResult;
 
-        public TimeSpan LoginTimeout { get; } = TimeSpan.FromSeconds(30);
-
         public PowerBICloudService(ILogger<PowerBIDesktopService> logger)
         {
             _logger = logger;
@@ -25,48 +21,23 @@ namespace Sqlbi.Bravo.Core.Services
             _logger.Trace();
         }
 
+        public bool IsAuthenticated => _authenticationResult != null;
+
         public IAccount Account => _authenticationResult?.Account;
 
-        public async Task<bool> LoginWithCustomUIAsync()
+        public async Task<bool> LoginAsync()
         {
             _logger.Trace();
 
             try
             {
-                _authenticationResult = await PowerBICloudManager.AcquireTokenAsync(_authenticationResult?.Account,CancellationToken.None, useCustomLoginUI: true);
+                _authenticationResult = await PowerBICloudManager.AcquireTokenAsync(_authenticationResult?.Account);
 
                 return true;
             }
-            catch (MsalException ex)
-            {
-                _ = System.Windows.MessageBox.Show($"MsalException ==> { ex.Message }", "DEBUG", System.Windows.MessageBoxButton.OK);
-
-                return false;
-            }
-
-        }
-        
-        public async Task<bool> LoginWithSystemBrowserAsync(Action callback, CancellationToken cancellationToken)
-        {
-            _logger.Trace();
-
-            // TODO: synchronize access
-            var cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            cancellationTokenSource.CancelAfter(LoginTimeout);
-
-            try
-            {
-                _authenticationResult = await PowerBICloudManager.AcquireTokenAsync(_authenticationResult?.Account, cancellationTokenSource.Token);
-
-                return true;
-            }
-            catch (OperationCanceledException)
+            catch (MsalException) // ex.ErrorCode => Microsoft.Identity.Client.MsalError
             {
                 return false;
-            }
-            finally
-            {
-                callback?.Invoke();
             }
         }
 

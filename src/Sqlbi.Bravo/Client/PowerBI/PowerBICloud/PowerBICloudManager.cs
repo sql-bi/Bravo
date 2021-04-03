@@ -12,9 +12,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
-using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Interop;
 
 namespace Sqlbi.Bravo.Client.PowerBI.PowerBICloud
 {
@@ -106,7 +104,7 @@ namespace Sqlbi.Bravo.Client.PowerBI.PowerBICloud
             }
         }
 
-        public static async Task<AuthenticationResult> AcquireTokenAsync(IAccount account, CancellationToken cancellationToken, bool useCustomLoginUI = false)
+        public static async Task<AuthenticationResult> AcquireTokenAsync(IAccount account)
         {
             await InitializeCloudSettingsAsync();
 
@@ -128,28 +126,17 @@ namespace Sqlbi.Bravo.Client.PowerBI.PowerBICloud
             {
                 authenticationResult = await PublicClientApplication.AcquireTokenSilent(CloudEnvironment.Scopes, account)
                     .WithExtraQueryParameters(MicrosoftAccountOnlyQueryParameter)
-                    .ExecuteAsync(cancellationToken);
+                    .ExecuteAsync();
 
                 return authenticationResult;
             }
+ 
+            var customLoginUI = new CustomLoginWebUI(UI.Views.ShellView.Instance);
 
-            authenticationResult = await UI.Views.ShellView.Instance.Dispatcher.Invoke(async () =>
-            {
-                var builder = PublicClientApplication.AcquireTokenInteractive(CloudEnvironment.Scopes);
-                var helper = new WindowInteropHelper(UI.Views.ShellView.Instance);
-
-                if (useCustomLoginUI)
-                {
-                    var customLoginUI = new CustomLoginWebUI(UI.Views.ShellView.Instance);
-                    builder = builder.WithCustomWebUi(customLoginUI);
-                }
-
-                var result = await builder.WithExtraQueryParameters(MicrosoftAccountOnlyQueryParameter)
-                    .WithParentActivityOrWindow(helper.Handle)
-                    .ExecuteAsync(cancellationToken);
-
-                return result;
-            });
+            authenticationResult = await PublicClientApplication.AcquireTokenInteractive(CloudEnvironment.Scopes)
+                .WithExtraQueryParameters(MicrosoftAccountOnlyQueryParameter)
+                .WithCustomWebUi(customLoginUI)
+                .ExecuteAsync();
 
             await InitializeTenantClusterAsync(authenticationResult.AccessToken);
 

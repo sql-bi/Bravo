@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Text;
 
-namespace Sqlbi.Bravo.Core
+namespace Sqlbi.Bravo.Core.Windows
 {
     internal static class NativeMethods
     {
@@ -26,6 +26,7 @@ namespace Sqlbi.Bravo.Core
         public const int SM_CMONITORS = 80;
 
         public const uint WM_GETTEXT = 0x000D;
+        public const int WM_COPYDATA = 0x004A;
 
         public delegate bool MonitorEnumProc(IntPtr monitor, IntPtr hdc, IntPtr lprcMonitor, IntPtr lParam);
         public delegate bool EnumThreadDelegate(IntPtr hWnd, IntPtr lParam);
@@ -75,6 +76,12 @@ namespace Sqlbi.Bravo.Core
         [DllImport(ExternDll.User32, CharSet = CharSet.Auto)]        
         public static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, int wParam, StringBuilder lParam);
 
+        [DllImport(ExternDll.User32, SetLastError = true)]
+        public static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
+
+        [DllImport(ExternDll.User32, CharSet = CharSet.Auto)]
+        public static extern IntPtr SendMessage(IntPtr hWnd, int Msg, int wParam, ref COPYDATASTRUCT lParam);
+
         [StructLayout(LayoutKind.Sequential)]
         public struct RECT
         {
@@ -92,6 +99,15 @@ namespace Sqlbi.Bravo.Core
             }
 
             public static RECT FromXYWH(int x, int y, int width, int height) => new RECT(x, y, x + width, y + height);
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct COPYDATASTRUCT
+        {
+            public IntPtr dwData;
+            public int cbData;
+            [MarshalAs(UnmanagedType.LPWStr)]
+            public string lpData;
         }
 
         [StructLayout(LayoutKind.Sequential)]

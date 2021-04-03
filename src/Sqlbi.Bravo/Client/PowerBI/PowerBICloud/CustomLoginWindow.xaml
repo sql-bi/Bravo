@@ -4,11 +4,10 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Sqlbi.Bravo.Client.PowerBI.PowerBICloud"
-        mc:Ignorable="d"
-        WindowStyle="ToolWindow"
+        mc:Ignorable="d"        
         Loaded="Window_Loaded"
         Closed="Window_Closed"
-        Title="CustomLoginWindow" Height="450" Width="800">
+        Title="Sign in" Height="800" Width="600" WindowStyle="ToolWindow" WindowStartupLocation="CenterOwner" ResizeMode="NoResize">
     <Grid>
         <WebBrowser x:Name="webBrowser" Navigating="WebBrowser_Navigating" />
     </Grid>

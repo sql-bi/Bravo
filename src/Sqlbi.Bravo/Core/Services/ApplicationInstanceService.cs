@@ -1,8 +1,10 @@
 ﻿using Microsoft.Extensions.Logging;
+using Sqlbi.Bravo.Core.Helpers;
 using Sqlbi.Bravo.Core.Logging;
 using Sqlbi.Bravo.Core.Services.Interfaces;
 using Sqlbi.Bravo.Core.Settings.Interfaces;
 using System;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -27,6 +29,19 @@ namespace Sqlbi.Bravo.Core.Services
             _instanceMutex = new Mutex(initiallyOwned: true, name: $"{ nameof(Sqlbi.Bravo) }|{ nameof(Mutex) }", out _instanceOwned);
 
             GC.KeepAlive(_instanceMutex);
+        }
+
+        public void NotifyConnectionToPrimaryInstance()
+        {
+            var connectionInfo = new MessageHelper.ConnectionInfo
+            {
+                DatabaseName = _settings.Runtime.DatabaseName,
+                ServerName = _settings.Runtime.ServerName,
+                ParentProcessName = _settings.Runtime.ParentProcessName,
+                ParentProcessMainWindowTitle = _settings.Runtime.ParentProcessMainWindowTitle
+            };
+
+            MessageHelper.TrySendConnectionInfo(windowName: AppConstants.ApplicationNameLabel, connectionInfo);
         }
 
         public void RegisterCallbackForMultipleInstanceStarted(Action<IntPtr> callback)

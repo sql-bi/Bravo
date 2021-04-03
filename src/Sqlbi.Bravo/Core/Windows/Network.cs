@@ -4,7 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
-using static Sqlbi.Bravo.Core.NativeMethods;
+using static Sqlbi.Bravo.Core.Windows.NativeMethods;
 
 namespace Sqlbi.Bravo.Core.Windows
 {
