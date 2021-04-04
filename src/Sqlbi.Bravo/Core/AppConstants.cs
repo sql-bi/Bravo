@@ -63,6 +63,10 @@ namespace Sqlbi.Bravo.Core
 
         public static string TelemetryInstrumentationKey { get; } = "47a8970c-6293-408a-9cce-5b7b311574d3";
 
+        public static int AnalyzeModelUpdateStatisticsModelSampleRowCount { get; } = 10;
+
+        public static int AnalyzeModelSummaryColumnCount { get; } = 5;
+
         static AppConstants()
         {
         }
