@@ -1,4 +1,4 @@
-﻿using Sqlbi.Bravo.Core.Services;
+﻿using Sqlbi.Bravo.Client.DaxFormatter.Interfaces;
 using Sqlbi.Bravo.UI.Framework.ViewModels;
 using System;
 using System.Collections.ObjectModel;
@@ -69,7 +69,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public string Formula { get; set; }
 
-        public IDaxFormatterServiceTabularObject TabularObject { get; set; }
+        public ITabularObject TabularObject { get; set; }
 
         public ObservableCollection<TreeItem> VisibleMeasures
         {

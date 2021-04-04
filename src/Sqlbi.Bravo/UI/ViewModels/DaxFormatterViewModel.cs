@@ -1,5 +1,6 @@
 ﻿using Humanizer;
 using Microsoft.Extensions.Logging;
+using Sqlbi.Bravo.Client.DaxFormatter;
 using Sqlbi.Bravo.Core.Logging;
 using Sqlbi.Bravo.Core.Services;
 using Sqlbi.Bravo.Core.Services.Interfaces;
@@ -245,7 +246,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
             foreach (var formattedTabularObject in formattedTabularObjects)
             {
-                if (formattedTabularObject is DaxFormatterServiceTabularMeasure measure)
+                if (formattedTabularObject is TabularMeasure measure)
                 {
                     Measures.Add(new MeasureInfoViewModel
                     {
