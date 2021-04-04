@@ -103,11 +103,11 @@ namespace Sqlbi.Bravo.Core.Services
             void Connect()
             {
                 if (_server.Connected)
+                {
                     throw new InvalidOperationException("Server already connected");
+                }
 
-                var connectionString = AnalysisServicesHelper.BuildConnectionString(runtimeSummary.ServerName, runtimeSummary.DatabaseName);
-
-                _server.Connect(connectionString);
+                _server.Connect(runtimeSummary.ConnectionString);
                 _connectionManuallyChangedEvent.Set();
                 _trace = CreateTrace();
                 _trace.Start();

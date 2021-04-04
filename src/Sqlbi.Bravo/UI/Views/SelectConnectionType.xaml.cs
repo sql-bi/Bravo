@@ -127,11 +127,11 @@ namespace Sqlbi.Bravo.UI.Views
 
                 var fileContent = VpaxTools.ImportVpax(openFileDialog.FileName);
 
-                var vm = DataContext as TabItemViewModel;
-                vm.ConnectionType = BiConnectionType.VertipaqAnalyzerFile;
-                vm.ConnectionName = Path.GetFileNameWithoutExtension(openFileDialog.FileName);
-                vm.AnalyzeModelVm.OnPropertyChanged(nameof(AnalyzeModelViewModel.ConnectionName));
-                vm.ShowAnalysisOfLoadedModel(fileContent.DaxModel);
+                var viewModel = DataContext as TabItemViewModel;
+                viewModel.ConnectionType = BiConnectionType.VertipaqAnalyzerFile;
+                viewModel.ConnectionName = Path.GetFileNameWithoutExtension(openFileDialog.FileName);
+                viewModel.AnalyzeModelVm.OnPropertyChanged(nameof(AnalyzeModelViewModel.ConnectionName));
+                viewModel.ShowAnalysisOfLoadedModel(fileContent.DaxModel);
             }
         }
     }

@@ -1,4 +1,6 @@
-﻿namespace Sqlbi.Bravo.Core.Settings
+﻿using Sqlbi.Bravo.Core.Helpers;
+
+namespace Sqlbi.Bravo.Core.Settings
 {
     /// <summary>
     /// This is a selection of the information from RuntimeSettings that is held by each tab.
@@ -17,5 +19,7 @@
         public bool IsExecutedAsExternalTool { get; set; }
 
         public bool UsingLocalModelForAnanlysis { get; internal set; } = false;
+
+        public string ConnectionString => AnalysisServicesHelper.BuildConnectionString(ServerName, DatabaseName);
     }
 }

@@ -62,8 +62,7 @@ namespace Sqlbi.Bravo.Core.Services
                         throw new ConnectionException("Unable to connect to the database.");
                     }
 
-                    var connectionString = AnalysisServicesHelper.BuildConnectionString(runtimeSummary.ServerName, runtimeSummary.DatabaseName);
-                    _server.Connect(connectionString);
+                    _server.Connect(runtimeSummary.ConnectionString);
                 }
 
                 _database = _server.Databases[runtimeSummary.DatabaseName];
