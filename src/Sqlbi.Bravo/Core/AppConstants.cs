@@ -3,6 +3,7 @@ using Serilog.Events;
 using Sqlbi.Bravo.UI.DataModel;
 using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -42,6 +43,8 @@ namespace Sqlbi.Bravo.Core
         public static string ApplicationProductVersion { get; } = VersionInfo.ProductVersion;
 
         public static Version ApplicationProductVersionNumber { get; } = new Version(VersionInfo.FileVersion);
+
+        public static CultureInfo ApplicationDefaultCulture { get; } = CultureInfo.GetCultureInfo("en-US");
 
         public static string[] CommandLineArgumentServerNameAliases { get; } = new string[] { "--server", "--s" };
 

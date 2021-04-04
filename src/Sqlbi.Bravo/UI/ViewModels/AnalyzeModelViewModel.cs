@@ -5,6 +5,7 @@ using Humanizer;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 using Sqlbi.Bravo.Core;
+using Sqlbi.Bravo.Core.Helpers;
 using Sqlbi.Bravo.Core.Logging;
 using Sqlbi.Bravo.Core.Services.Interfaces;
 using Sqlbi.Bravo.UI.DataModel;
@@ -12,6 +13,7 @@ using Sqlbi.Bravo.UI.Framework.Commands;
 using Sqlbi.Bravo.UI.Framework.ViewModels;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -227,22 +229,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public double? SelectedColumnWeight => AllColumns?.Where((c) => c.IsSelected ?? false).Sum((c) => c.PercentageDatabase);
 
-        public string TimeSinceLastSync
-        {
-            get
-            {
-                if (LastSyncTime == DateTime.MinValue)
-                {
-                    return "not yet";
-                }
-
-                var elapsed = DateTime.UtcNow.Subtract(LastSyncTime);
-                var elapsedHumanized = elapsed.Humanize(minUnit: Humanizer.Localisation.TimeUnit.Second);
-                var elapsedText = $"{ elapsedHumanized.Replace("minute", "min").Replace("second", "sec") } ago";
-
-                return elapsedText;
-            }
-        }
+        public string TimeSinceLastSync => LastSyncTime.HumanizeElapsed();
 
         internal void OverrideDaxModel(Model daxModel) => _analyzer.DaxModel = daxModel;
 

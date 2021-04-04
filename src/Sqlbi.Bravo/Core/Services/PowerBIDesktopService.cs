@@ -48,7 +48,7 @@ namespace Sqlbi.Bravo.Core.Services
 
                 var instance = new PowerBIDesktopInstance
                 {
-                    Name = process.ParentProcess.GetMainWindowTitle(),
+                    Name = process.ParentProcess.GetMainWindowTitle().ToPowerBIDesktopReportName(),
                     LocalEndPoint = connection.LocalEndPoint
                 };
 

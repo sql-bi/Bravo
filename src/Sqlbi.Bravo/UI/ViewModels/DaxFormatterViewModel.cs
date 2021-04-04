@@ -2,8 +2,9 @@
 using Microsoft.Extensions.Logging;
 using Sqlbi.Bravo.Client.AnalysisServicesEventWatcher;
 using Sqlbi.Bravo.Client.DaxFormatter;
+using Sqlbi.Bravo.Core;
+using Sqlbi.Bravo.Core.Helpers;
 using Sqlbi.Bravo.Core.Logging;
-using Sqlbi.Bravo.Core.Services;
 using Sqlbi.Bravo.Core.Services.Interfaces;
 using Sqlbi.Bravo.Core.Settings.Interfaces;
 using Sqlbi.Bravo.UI.DataModel;
@@ -20,16 +21,17 @@ namespace Sqlbi.Bravo.UI.ViewModels
 {
     internal class DaxFormatterViewModel : BaseViewModel
     {
-        private readonly IDaxFormatterService _formatter;
-        private readonly IGlobalSettingsProviderService _settings;
-        private readonly IAnalysisServicesEventWatcherService _watcher;
-        private readonly ILogger _logger;
         internal const int SubViewIndex_Loading = 0;
         internal const int SubViewIndex_Start = 1;
         internal const int SubViewIndex_ChooseFormulas = 2;
         internal const int SubViewIndex_Progress = 3;
         internal const int SubViewIndex_Changes = 4;
         internal const int SubViewIndex_Finished = 5;
+
+        private readonly IDaxFormatterService _formatter;
+        private readonly IGlobalSettingsProviderService _settings;
+        private readonly IAnalysisServicesEventWatcherService _watcher;
+        private readonly ILogger _logger;
         private readonly DispatcherTimer _timer = new DispatcherTimer();
         private bool _initialized = false;
 
@@ -105,10 +107,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public DateTime LastSyncTime { get; private set; }
 
-        public string TimeSinceLastSync
-            => LastSyncTime.Year == 1
-            ? "not yet"
-            : $"{(DateTime.UtcNow - LastSyncTime).Humanize(minUnit: Humanizer.Localisation.TimeUnit.Second).Replace("minute", "min").Replace("second", "sec")} ago";
+        public string TimeSinceLastSync => LastSyncTime.HumanizeElapsed();
 
         public int MeasuresFormatted { get; set; }
 

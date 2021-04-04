@@ -23,11 +23,7 @@ namespace Sqlbi.Bravo.Core.Settings
 
             if (IsExecutedAsExternalToolForPowerBIDesktop)
             {
-                var index = ParentProcessMainWindowTitle.LastIndexOf(" - Power BI Desktop");
-                if (index >= 0)
-                {
-                    ParentProcessMainWindowTitle = ParentProcessMainWindowTitle.Substring(0, index);
-                }
+                ParentProcessMainWindowTitle = ParentProcessMainWindowTitle.ToPowerBIDesktopReportName();
             }
         }
 
