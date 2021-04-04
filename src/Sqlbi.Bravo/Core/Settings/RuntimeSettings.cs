@@ -20,6 +20,15 @@ namespace Sqlbi.Bravo.Core.Settings
             ParentProcessMainWindowHandle = parentProcess.MainWindowHandle;
 
             ParseCommandLineArgs();
+
+            if (IsExecutedAsExternalToolForPowerBIDesktop)
+            {
+                var index = ParentProcessMainWindowTitle.LastIndexOf(" - Power BI Desktop");
+                if (index >= 0)
+                {
+                    ParentProcessMainWindowTitle = ParentProcessMainWindowTitle.Substring(0, index);
+                }
+            }
         }
 
         public string ServerName { get; private set; }

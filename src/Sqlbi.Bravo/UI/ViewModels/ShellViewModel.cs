@@ -69,7 +69,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         internal void LaunchedViaPowerBIDesktop(string title)
         {
-            SelectedTab.ConnectionName = title.Replace(" - Power BI Desktop", string.Empty);
+            SelectedTab.ConnectionName = title;
             SelectedTab.ConnectionType = BiConnectionType.ActivePowerBiWindow;
             SelectedTab.ShowSubPage(SelectedItem?.SubPageInTab ?? SubPage.DaxFormatter);
 
@@ -207,7 +207,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
             if (runtimeSummary != null)
             {
-                newTab.ConnectionName = runtimeSummary.ParentProcessMainWindowTitle.Replace(" - Power BI Desktop", string.Empty);
+                newTab.ConnectionName = runtimeSummary.ParentProcessMainWindowTitle;
                 newTab.RuntimeSummary = runtimeSummary;
             }
 

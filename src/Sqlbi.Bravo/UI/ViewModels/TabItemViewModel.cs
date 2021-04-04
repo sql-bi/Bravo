@@ -10,10 +10,7 @@ using Sqlbi.Bravo.UI.DataModel;
 using Sqlbi.Bravo.UI.Framework.Commands;
 using Sqlbi.Bravo.UI.Framework.ViewModels;
 using System;
-using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
-using System.Windows;
 using System.Windows.Input;
 
 namespace Sqlbi.Bravo.UI.ViewModels
