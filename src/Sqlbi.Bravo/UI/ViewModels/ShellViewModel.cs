@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Sqlbi.Bravo.Client.AnalysisServicesEventWatcher;
 using Sqlbi.Bravo.Core;
 using Sqlbi.Bravo.Core.Logging;
 using Sqlbi.Bravo.Core.Services;
@@ -32,7 +33,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
             _logger = logger;
 
             _logger.Trace();
-            _watcher.OnEvent += OnAnalysisServicesEvent;
+            _watcher.OnWatcherEvent += OnWatcherEvent;
             _watcher.OnConnectionStateChanged += OnAnalysisServicesConnectionStateChanged;
 
             PrintDebug();
@@ -141,11 +142,11 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public ICommand ItemSelectedCommand { get; set; }
 
-        private void OnAnalysisServicesEvent(object sender, AnalysisServicesEventWatcherEventArgs e)
+        private void OnWatcherEvent(object sender, WatcherEventArgs e)
         {
             _logger.Trace();
 
-            var action = new Action<AnalysisServicesEventWatcherEventArgs>((e) =>
+            var action = new Action<WatcherEventArgs>((e) =>
             {
                 var item = $"OnAnalysisServicesEvent(event<{ e.Event }>)";
                 OutputMessages.Add(item);
@@ -155,11 +156,11 @@ namespace Sqlbi.Bravo.UI.ViewModels
         }
 
         [PropertyChanged.SuppressPropertyChangedWarnings]
-        private void OnAnalysisServicesConnectionStateChanged(object sender, AnalysisServicesEventWatcherConnectionStateArgs e)
+        private void OnAnalysisServicesConnectionStateChanged(object sender, ConnectionStateEventArgs e)
         {
             _logger.Trace();
 
-            var action = new Action<AnalysisServicesEventWatcherConnectionStateArgs>((e) =>
+            var action = new Action<ConnectionStateEventArgs>((e) =>
             {
                 var item = $"OnAnalysisServicesConnectionStateChanged(current<{ e.Current }>|previous<{ e.Previous }>)";
                 OutputMessages.Add(item);

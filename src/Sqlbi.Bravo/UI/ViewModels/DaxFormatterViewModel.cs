@@ -1,5 +1,6 @@
 ﻿using Humanizer;
 using Microsoft.Extensions.Logging;
+using Sqlbi.Bravo.Client.AnalysisServicesEventWatcher;
 using Sqlbi.Bravo.Client.DaxFormatter;
 using Sqlbi.Bravo.Core.Logging;
 using Sqlbi.Bravo.Core.Services;
@@ -40,7 +41,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
             _logger = logger;
 
             _logger.Trace();
-            _watcher.OnEvent += OnAnalysisServicesEvent;
+            _watcher.OnWatcherEvent += OnWatcherEvent;
             //_watcher.OnConnectionStateChanged += OnAnalysisServicesConnectionStateChanged;
 
             ViewIndex = SubViewIndex_Loading;
@@ -118,13 +119,13 @@ namespace Sqlbi.Bravo.UI.ViewModels
         public ObservableCollection<MeasureInfoViewModel> MeasuresNeedingFormatting
             => new ObservableCollection<MeasureInfoViewModel>(Measures.Where(m => !m.IsAlreadyFormatted).ToList());
 
-        private async void OnAnalysisServicesEvent(object sender, AnalysisServicesEventWatcherEventArgs e)
+        private async void OnWatcherEvent(object sender, WatcherEventArgs e)
         {
             _logger.Trace();
 
-            if (e.Event == AnalysisServicesEventWatcherEvent.Create ||
-                e.Event == AnalysisServicesEventWatcherEvent.Alter ||
-                e.Event == AnalysisServicesEventWatcherEvent.Delete)
+            if (e.Event == WatcherEvent.Create ||
+                e.Event == WatcherEvent.Alter ||
+                e.Event == WatcherEvent.Delete)
             {
                 await InitializeOrRefreshFormatter();
             }

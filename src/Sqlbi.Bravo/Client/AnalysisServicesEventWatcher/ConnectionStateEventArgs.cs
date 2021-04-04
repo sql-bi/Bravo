@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Data;
 
-namespace Sqlbi.Bravo.Core.Services
+namespace Sqlbi.Bravo.Client.AnalysisServicesEventWatcher
 {
-    internal class AnalysisServicesEventWatcherConnectionStateArgs : EventArgs
+    internal class ConnectionStateEventArgs : EventArgs
     {
         public readonly ConnectionState Previous;
         public readonly ConnectionState Current;
 
-        public AnalysisServicesEventWatcherConnectionStateArgs(ConnectionState previous, ConnectionState current)
+        public ConnectionStateEventArgs(ConnectionState previous, ConnectionState current)
         {
             Previous = previous;
             Current = current;

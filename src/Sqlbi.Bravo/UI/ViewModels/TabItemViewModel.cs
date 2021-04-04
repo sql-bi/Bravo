@@ -1,6 +1,7 @@
 ﻿using Dax.Metadata;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Sqlbi.Bravo.Client.AnalysisServicesEventWatcher;
 using Sqlbi.Bravo.Core.Logging;
 using Sqlbi.Bravo.Core.Services;
 using Sqlbi.Bravo.Core.Services.Interfaces;
@@ -238,7 +239,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
         }
 
         [PropertyChanged.SuppressPropertyChangedWarnings]
-        private void OnAnalysisServicesConnectionStateChanged(object sender, AnalysisServicesEventWatcherConnectionStateArgs e)
+        private void OnAnalysisServicesConnectionStateChanged(object sender, ConnectionStateEventArgs e)
         {
             _logger.Trace();
 

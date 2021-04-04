@@ -1,4 +1,4 @@
-﻿using Sqlbi.Bravo.Core.Services;
+﻿using Sqlbi.Bravo.Client.AnalysisServicesEventWatcher;
 using System;
 using System.Data.Common;
 using System.IO;
@@ -8,10 +8,10 @@ namespace Sqlbi.Bravo.Core.Helpers
 {
     internal static class AnalysisServicesHelper
     {
-        public static AnalysisServicesEventWatcherEvent GetEventType(this string xmla)
+        public static WatcherEvent GetEventType(this string xmla)
         {
             if (xmla == null)
-                return AnalysisServicesEventWatcherEvent.Unknown;
+                return WatcherEvent.Unknown;
 
             using var stringReader = new StringReader(xmla);
             using var xmlReader = XmlReader.Create(stringReader);
@@ -22,18 +22,18 @@ namespace Sqlbi.Bravo.Core.Helpers
                 {
                     var name = xmlReader.Name;
 
-                    if (nameof(AnalysisServicesEventWatcherEvent.Create).Equals(name, StringComparison.OrdinalIgnoreCase))
-                        return AnalysisServicesEventWatcherEvent.Create;
+                    if (nameof(WatcherEvent.Create).Equals(name, StringComparison.OrdinalIgnoreCase))
+                        return WatcherEvent.Create;
 
-                    if (nameof(AnalysisServicesEventWatcherEvent.Delete).Equals(name, StringComparison.OrdinalIgnoreCase))
-                        return AnalysisServicesEventWatcherEvent.Delete;
+                    if (nameof(WatcherEvent.Delete).Equals(name, StringComparison.OrdinalIgnoreCase))
+                        return WatcherEvent.Delete;
 
-                    if (nameof(AnalysisServicesEventWatcherEvent.Alter).Equals(name, StringComparison.OrdinalIgnoreCase))
-                        return AnalysisServicesEventWatcherEvent.Alter;
+                    if (nameof(WatcherEvent.Alter).Equals(name, StringComparison.OrdinalIgnoreCase))
+                        return WatcherEvent.Alter;
                 }
             }
 
-            return AnalysisServicesEventWatcherEvent.Unknown;
+            return WatcherEvent.Unknown;
         }
 
         public static string BuildConnectionString(string serverName, string databaseName)
