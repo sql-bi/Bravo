@@ -44,8 +44,8 @@ namespace Sqlbi.Bravo
                 ExecutedAsExternalToolForPowerBIDesktop = _settings.Runtime.IsExecutedAsExternalToolForPowerBIDesktop
             }});
             
-            var tss = ServiceProvider.GetRequiredService<IThemeSelectorService>();
-            tss.InitializeTheme(_settings.Application.ThemeName);
+            var themeSelector = ServiceProvider.GetRequiredService<IThemeSelectorService>();
+            themeSelector.InitializeTheme(_settings.Application.ThemeName);
 
             await _host.StartAsync();
 

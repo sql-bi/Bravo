@@ -41,8 +41,10 @@ namespace Sqlbi.Bravo
             try
             {
                 using var host = CreateHost(config);
+
                 var app = new App(host);
                 app.InitializeComponent();
+
                 return app.Run();
             }
             catch (Exception ex)

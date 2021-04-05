@@ -27,14 +27,14 @@ namespace Sqlbi.Bravo.UI.ViewModels
                 {
                     if (Columns.Any() && value != null)
                     {
-                        foreach (var col in Columns)
+                        foreach (var column in Columns)
                         {
-                            col.IsSelected = value;
+                            column.IsSelected = value;
                         }
                     }
                     else if (_table != null)
                     {
-                        var selected = _table?.Columns.Count(m => m.IsSelected ?? false) ?? 0;
+                        var selected = _table?.Columns.Count((m) => m.IsSelected ?? false) ?? 0;
 
                         if (selected == 0)
                         {

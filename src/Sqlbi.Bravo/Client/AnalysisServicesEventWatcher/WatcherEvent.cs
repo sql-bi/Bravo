@@ -3,8 +3,11 @@
     internal enum WatcherEvent
     { 
         Unknown,
+
         Create,
+
         Delete,
+
         Alter,
     }
 }

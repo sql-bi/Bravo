@@ -14,7 +14,8 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public TreeItem(MeasureSelectionViewModel parent) => _parent = parent;
 
-        public TreeItem(MeasureSelectionViewModel parent, TreeItem table) : this(parent)
+        public TreeItem(MeasureSelectionViewModel parent, TreeItem table) 
+            : this(parent)
         {
             _table = table;
             IsThreeState = _table == null;
@@ -25,21 +26,20 @@ namespace Sqlbi.Bravo.UI.ViewModels
         public bool? IsSelected
         {
             get => _isSelected;
-
             set
             {
                 if (SetProperty(ref _isSelected, value))
                 {
                     if (Measures.Any() && value != null)
                     {
-                        foreach (var m in Measures)
+                        foreach (var measure in Measures)
                         {
-                            m.IsSelected = value;
+                            measure.IsSelected = value;
                         }
                     }
                     else if (_table != null)
                     {
-                        var selected = _table?.Measures.Count(m => m.IsSelected ?? false) ?? 0;
+                        var selected = _table?.Measures.Count((m) => m.IsSelected ?? false) ?? 0;
 
                         if (selected == 0)
                         {
@@ -75,9 +75,15 @@ namespace Sqlbi.Bravo.UI.ViewModels
         {
             get
             {
-                return string.IsNullOrEmpty(_parent.SearchText)
-                    ? Measures
-                    : new ObservableCollection<TreeItem>(Measures.Where(m => m.Name.Contains(_parent.SearchText, StringComparison.CurrentCultureIgnoreCase)).ToList());
+                if (string.IsNullOrEmpty(_parent.SearchText))
+                {
+                    return Measures;
+                }
+
+                var items = Measures.Where((m) => m.Name.Contains(_parent.SearchText, StringComparison.CurrentCultureIgnoreCase)).ToList();
+                var collection = new ObservableCollection<TreeItem>(items);
+
+                return collection;
             }
         }
 

@@ -1,8 +1,6 @@
-﻿using Humanizer;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Sqlbi.Bravo.Client.AnalysisServicesEventWatcher;
 using Sqlbi.Bravo.Client.DaxFormatter;
-using Sqlbi.Bravo.Core;
 using Sqlbi.Bravo.Core.Helpers;
 using Sqlbi.Bravo.Core.Logging;
 using Sqlbi.Bravo.Core.Services.Interfaces;
@@ -115,8 +113,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public ObservableCollection<MeasureInfoViewModel> Measures { get; set; } = new ObservableCollection<MeasureInfoViewModel>();
 
-        public ObservableCollection<MeasureInfoViewModel> MeasuresNeedingFormatting
-            => new ObservableCollection<MeasureInfoViewModel>(Measures.Where(m => !m.IsAlreadyFormatted).ToList());
+        public ObservableCollection<MeasureInfoViewModel> MeasuresNeedingFormatting => new ObservableCollection<MeasureInfoViewModel>(Measures.Where((m) => !m.IsAlreadyFormatted).ToList());
 
         private async void OnWatcherEvent(object sender, WatcherEventArgs e)
         {
@@ -190,12 +187,11 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
             try
             {
-                await ExecuteCommandAsync(() => InitializeCommandIsRunning,
-                    async () =>
-                    {
-                        await InitializeOrRefreshFormatter();
-                        ViewIndex = SubViewIndex_Start;
-                    });
+                await ExecuteCommandAsync(() => InitializeCommandIsRunning, async () =>
+                {
+                    await InitializeOrRefreshFormatter();
+                    ViewIndex = SubViewIndex_Start;
+                });
             }
             catch (Exception ex)
             {
@@ -225,8 +221,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
             // TODO REQUIREMENTS: Open log file
         }
 
-        private void ShowHelp()
-            => Views.ShellView.Instance.ShowMediaDialog(new HowToFormatCodeHelp());
+        private void ShowHelp() => Views.ShellView.Instance.ShowMediaDialog(new HowToFormatCodeHelp());
 
         private async Task AnalyzeAsync()
         {
