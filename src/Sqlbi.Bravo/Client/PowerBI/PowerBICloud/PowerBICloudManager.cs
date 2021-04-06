@@ -27,9 +27,10 @@ namespace Sqlbi.Bravo.Client.PowerBI.PowerBICloud
         private static readonly object _tokenCacheLock = new object();
 
         private static IPublicClientApplication PublicClientApplication;
-        private static PowerBICloudEnvironment CloudEnvironment;
-        private static GlobalService GlobalService;
         private static TenantCluster TenantCluster;
+        private static GlobalService GlobalService;
+
+        public static PowerBICloudEnvironment CloudEnvironment { get; private set; }
 
         private static async Task InitializeCloudSettingsAsync()
         {
@@ -78,8 +79,10 @@ namespace Sqlbi.Bravo.Client.PowerBI.PowerBICloud
                         Name = PowerBICloudEnvironmentType.Public,
                         AuthorityUri = globalEnvironment.Services.Single((s) => "aad".Equals(s.Name, StringComparison.OrdinalIgnoreCase)).Endpoint,
                         RedirectUri = client.RedirectUri,
+                        ResourceUri = service.ResourceId,
                         ClientId = client.AppId,
-                        Scopes = new string[] { $"{ service.ResourceId }/.default" }
+                        Scopes = new string[] { $"{ service.ResourceId }/.default" },                        
+                        BackendEndpointUri = service.Endpoint,                     
                     };
                 }
 

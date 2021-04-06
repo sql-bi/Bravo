@@ -15,21 +15,18 @@ using System.Threading.Tasks;
 
 namespace Sqlbi.Bravo.Core.Services
 {
-    internal class AnalyzeModelService : IAnalyzeModelService, IDisposable
+    internal class AnalyzeModelService : IAnalyzeModelService
     {
         private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1);
         private readonly ILogger _logger;
-        private readonly Server _server;
         private VpaModel _vpaModel;
         private Model _daxModel;
-        private bool _disposed;
 
         public AnalyzeModelService(ILogger<AnalyzeModelService> logger)
         {
             _logger = logger;
 
             _logger.Trace();
-            _server = new Server();
         }
 
         public async Task InitilizeOrRefreshAsync(RuntimeSummary runtimeSummary)
@@ -53,14 +50,15 @@ namespace Sqlbi.Bravo.Core.Services
 
             void InitilizeOrRefresh()
             {
-                if (_server.Connected == false)
+                using (var server = new Server())
                 {
-                    _server.Connect(runtimeSummary.ConnectionString);
+                    server.Connect(runtimeSummary.ConnectionString);
+
+                    var database = server.Databases[runtimeSummary.DatabaseName];
+                    var model = database.Model;
+
+                    _daxModel = TomExtractor.GetDaxModel(database.Model, AppConstants.ApplicationName, AppConstants.ApplicationProductVersion);
                 }
-
-                var database = _server.Databases[runtimeSummary.DatabaseName];
-
-                _daxModel = TomExtractor.GetDaxModel(database.Model, AppConstants.ApplicationName, AppConstants.ApplicationProductVersion);
 
                 using (var connection = new AdomdConnection(runtimeSummary.ConnectionString))
                 {
@@ -86,28 +84,6 @@ namespace Sqlbi.Bravo.Core.Services
         {
             get => _daxModel;
             set => _vpaModel = new VpaModel(_daxModel = value);
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!_disposed)
-            {
-                if (disposing)
-                {
-                    if (_server.Connected)
-                        _server.Disconnect(endSession: true);
-
-                    _server.Dispose();
-                }
-
-                _disposed = true;
-            }
-        }
-
-        public void Dispose()
-        {
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
         }
     }
 }

@@ -58,6 +58,11 @@ namespace Sqlbi.Bravo.UI.Views
                 MessageBoxButton.OK,
                 MessageBoxImage.Question);
 
+            _logger.Information(LogEvents.StartConnectionAction, "{@Details}", new object[] { new
+            {
+                Action = "AttachPowerBIDesktop"
+            }});
+
             var service = App.ServiceProvider.GetRequiredService<IPowerBIDesktopService>();
             var instances = service.GetInstances();
 
@@ -68,11 +73,6 @@ namespace Sqlbi.Bravo.UI.Views
             {
                 return;
             }
-            
-            _logger.Information(LogEvents.StartConnectionAction, "{@Details}", new object[] { new
-            {
-                Action = "AttachPowerBIDesktop"
-            }});
 
             var shellViewModel = App.ServiceProvider.GetRequiredService<ShellViewModel>();
             var runtimeSummary = RuntimeSummary.CreateFrom(instance);
@@ -84,7 +84,17 @@ namespace Sqlbi.Bravo.UI.Views
         {
             _logger.Trace();
 
-            #region Test
+            // TODO REQUIREMENTS: need to know how to connect here
+            _ = MessageBox.Show(
+                "Testing connection to the first Power BI dataset available",
+                "TODO",
+                MessageBoxButton.OK,
+                MessageBoxImage.Question);
+
+            _logger.Information(LogEvents.StartConnectionAction, "{@Details}", new object[] { new
+            {
+                Action = "ConnectPowerBIDataset"
+            }});
 
             var service = App.ServiceProvider.GetRequiredService<IPowerBICloudService>();
             if (service.IsAuthenticated == false)
@@ -94,9 +104,9 @@ namespace Sqlbi.Bravo.UI.Views
                 {
                     return;
                 }
-            }
 
-            _ = MessageBox.Show($"{ service.Account.Username } - { service.Account.Environment } @ TenantId { service.Account.HomeAccountId.TenantId } ", "TODO", MessageBoxButton.OK);
+                _ = MessageBox.Show($"Hello { service.Account.Username } - { service.Account.Environment } @ TenantId { service.Account.HomeAccountId.TenantId } ", "TODO", MessageBoxButton.OK);
+            }
 
             var datasets = await service.GetSharedDatasetsAsync();
             var workspaceCount = datasets.Select((d) => d.WorkspaceId).Distinct().Count();
@@ -104,21 +114,26 @@ namespace Sqlbi.Bravo.UI.Views
 
             _ = MessageBox.Show($"{ workspaceCount } workspaces and { modelCount } models found", "TODO", MessageBoxButton.OK);
 
-            //await service.LogoutAsync();
-
-            #endregion
-
-            // TODO REQUIREMENTS: need to know how to connect here
-            _ = MessageBox.Show(
-                "Need to sign-in and connect to a dataset",
-                "TODO",
-                MessageBoxButton.OK,
-                MessageBoxImage.Question);
-
-            _logger.Information(LogEvents.StartConnectionAction, "{@Details}", new object[] { new
+            foreach (var dataset in datasets)
             {
-                Action = "ConnectPowerBIDataset"
-            }});
+                switch (MessageBox.Show($"Connect to workspace '{ dataset.WorkspaceName }' model '{ dataset.Model.DisplayName }' ?", "TODO", MessageBoxButton.YesNoCancel))
+                {
+                    case MessageBoxResult.No:
+                        continue;
+                    case MessageBoxResult.Yes:
+                        {
+                            var shellViewModel = App.ServiceProvider.GetRequiredService<ShellViewModel>();
+                            var runtimeSummary = RuntimeSummary.CreateFrom(dataset, service);
+
+                            shellViewModel.AddNewTab(BiConnectionType.ActivePowerBiWindow, SubPage.AnalyzeModel, runtimeSummary);
+                        }
+                        return;
+                    default:
+                        return;
+                }
+            }
+
+            //await service.LogoutAsync();
         }
 
         private void OpenVertiPaqAnalyzerFileClicked(object sender, RoutedEventArgs e)

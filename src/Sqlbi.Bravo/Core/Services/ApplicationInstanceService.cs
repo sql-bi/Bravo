@@ -84,7 +84,6 @@ namespace Sqlbi.Bravo.Core.Services
 
             var runtimeSummary = new RuntimeSummary
             {
-                IsExecutedAsExternalTool = true,
                 ServerName = message.ServerName,
                 DatabaseName = message.DatabaseName,
                 ConnectionName = message.ConnectionName,

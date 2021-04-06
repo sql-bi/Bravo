@@ -8,14 +8,18 @@ namespace Sqlbi.Bravo.Client.PowerBI
 {
     internal class PowerBICloudEnvironment
     { 
-        public PowerBICloudEnvironmentType Name { get; set; }
+        public PowerBICloudEnvironmentType Name { get; init; }
 
-        public string AuthorityUri { get; set; }
+        public string AuthorityUri { get; init; }
 
-        public string ClientId { get; set; }
+        public string ClientId { get; init; }
 
-        public string RedirectUri { get; set; }
+        public string RedirectUri { get; init; }
 
-        public string[] Scopes { get; set; }
+        public string[] Scopes { get; init; }
+
+        public string ResourceUri { get; init; }
+
+        public string BackendEndpointUri { get; init; }
     }
 }

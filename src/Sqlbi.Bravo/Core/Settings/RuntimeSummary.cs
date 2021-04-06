@@ -1,5 +1,8 @@
 ﻿using Sqlbi.Bravo.Client.PowerBI.Desktop;
+using Sqlbi.Bravo.Client.PowerBI.PowerBICloud.Models;
 using Sqlbi.Bravo.Core.Helpers;
+using Sqlbi.Bravo.Core.Services.Interfaces;
+using System;
 
 namespace Sqlbi.Bravo.Core.Settings
 {
@@ -13,10 +16,10 @@ namespace Sqlbi.Bravo.Core.Settings
         {
             var runtimeSummary = new RuntimeSummary
             {
+                ConnectionName = settings.ParentProcessMainWindowTitle,
                 ServerName = settings.ServerName,
                 DatabaseName = settings.DatabaseName,
-                ConnectionName = settings.ParentProcessMainWindowTitle,
-                IsExecutedAsExternalTool = settings.IsExecutedAsExternalTool,
+                ConnectionString = AnalysisServicesHelper.BuildConnectionString(settings.ServerName, settings.DatabaseName),
             };
 
             return runtimeSummary;
@@ -26,14 +29,31 @@ namespace Sqlbi.Bravo.Core.Settings
         {
             var runtimeSummary = new RuntimeSummary
             {
+                ConnectionName = instance.Name,
                 ServerName = instance.ServerName,
                 DatabaseName = instance.DatabaseName,
-                ConnectionName = instance.Name,
-                IsExecutedAsExternalTool = false,
+                ConnectionString = AnalysisServicesHelper.BuildConnectionString(instance.ServerName, instance.DatabaseName),
             };
 
             return runtimeSummary;
-        }        
+        }
+
+        public static RuntimeSummary CreateFrom(MetadataSharedDataset dataset, IPowerBICloudService service)
+        {
+            var backendUri = new Uri(service.CloudEnvironment.BackendEndpointUri);
+            var serverName = $"pbiazure://{ backendUri.Host }";
+            var databaseName = $"{ dataset.Model.VSName }-{ dataset.Model.DBName }";
+
+            var runtimeSummary = new RuntimeSummary
+            {
+                ConnectionName = dataset.Model.DisplayName,
+                ServerName = serverName,
+                DatabaseName = databaseName,
+                ConnectionString = AnalysisServicesHelper.BuildLiveConnectionConnectionString(serverName, databaseName, service),
+            };
+
+            return runtimeSummary;
+        }
 
         public string ServerName { get; init; }
 
@@ -41,10 +61,8 @@ namespace Sqlbi.Bravo.Core.Settings
 
         public string ConnectionName { get; init; }
 
-        public bool IsExecutedAsExternalTool { get; init; }
+        public string ConnectionString { get; init; }
 
         public bool UsingLocalModelForAnanlysis { get; internal set; } = false;
-
-        public string ConnectionString => AnalysisServicesHelper.BuildConnectionString(ServerName, DatabaseName);
     }
 }
