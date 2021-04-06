@@ -1,6 +1,9 @@
 ﻿using Humanizer;
 using Humanizer.Localisation;
 using System;
+using System.Runtime.InteropServices;
+using System.Security;
+using System.Threading;
 
 namespace Sqlbi.Bravo.Core.Helpers
 {
@@ -29,6 +32,24 @@ namespace Sqlbi.Bravo.Core.Helpers
             }
 
             return windowTitle;
+        }
+
+        public static bool IsSafeException(this Exception exception)
+        {
+            var isAccessViolationException = exception is AccessViolationException;
+            var isStackOverflowException = exception is StackOverflowException;
+            var isThreadAbortException = exception is ThreadAbortException;
+            var isOutOfMemoryException = exception is OutOfMemoryException;
+            var isSEHException = exception is SEHException;
+
+            if (!isAccessViolationException && !isStackOverflowException && !isThreadAbortException && !isOutOfMemoryException && !isSEHException)
+            {
+                var isSecurityException = typeof(SecurityException).IsAssignableFrom(exception.GetType());
+
+                return !isSecurityException;
+            }
+
+            return false;
         }
     }
 }
