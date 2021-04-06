@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Sqlbi.Bravo.Core.Helpers;
 using Sqlbi.Bravo.Core.Logging;
+using Sqlbi.Bravo.Core.Services.Interfaces;
 using Sqlbi.Bravo.Core.Settings.Interfaces;
 using Sqlbi.Bravo.Core.Windows;
 using Sqlbi.Bravo.UI.DataModel;
@@ -40,7 +41,9 @@ namespace Sqlbi.Bravo.UI.Views
             { 
                 try
                 {
-                    var runtimeSummary = MessageHelper.TryReceiveConnectionInfo(ptr: lParam);
+                    var applicationInstance = App.ServiceProvider.GetRequiredService<IApplicationInstanceService>();
+
+                    var runtimeSummary = applicationInstance.ReceiveConnectionFromSecondaryInstance(ptr: lParam);
                     if (runtimeSummary != null)
                     {
                         // Creating the tab (& VMs) may not trigger the loaded event when expected
@@ -72,7 +75,7 @@ namespace Sqlbi.Bravo.UI.Views
             if (_settings.Runtime.IsExecutedAsExternalToolForPowerBIDesktop)
 #endif
             {
-                (DataContext as ShellViewModel).LaunchedViaPowerBIDesktop(_settings.Runtime.ParentProcessMainWindowTitle);
+                ViewModel.LaunchedViaPowerBIDesktop(_settings.Runtime.ParentProcessMainWindowTitle);
             }
         }
 

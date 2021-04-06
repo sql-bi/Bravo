@@ -101,13 +101,14 @@ namespace Sqlbi.Bravo.UI.ViewModels
         {
             get
             {
-                var icon = new DaxFormatterIcon();
-                icon.SetResourceReference(DaxFormatterIcon.ForegroundBrushProperty, name: "MahApps.Brushes.ThemeForeground");
+                var analyzeModelIcon = new AnalyzeModelIcon();
+                var daxFormatterIcon = new DaxFormatterIcon();
+                daxFormatterIcon.SetResourceReference(DaxFormatterIcon.ForegroundBrushProperty, name: "MahApps.Brushes.ThemeForeground");
 
                 return new ObservableCollection<NavigationItem>()
                 {
-                    new NavigationItem { Name = "Format DAX", IconControl = icon, SubPageInTab = SubPage.DaxFormatter },
-                    new NavigationItem { Name = "Analyze Model", IconControl = new AnalyzeModelIcon(), SubPageInTab = SubPage.AnalyzeModel },
+                    new NavigationItem { Name = "Format DAX", IconControl = daxFormatterIcon, SubPageInTab = SubPage.DaxFormatter },
+                    new NavigationItem { Name = "Analyze Model", IconControl = analyzeModelIcon, SubPageInTab = SubPage.AnalyzeModel },
                     new NavigationItem { Name = "Manage dates", Glyph = "\uEC92", ShowComingSoon = true },
                     new NavigationItem { Name = "Export data", Glyph = "\uE1AD", ShowComingSoon = true },
                     new NavigationItem { Name = "Best practices", Glyph = "\uE19F", ShowComingSoon = true },
@@ -204,17 +205,17 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public int LastGoodSelectedIndex { get; set; } = -1;
 
-        public void AddNewTab(BiConnectionType connType = BiConnectionType.UnSelected, SubPage subPage = SubPage.SelectConnection, RuntimeSummary runtimeSummary = null)
+        public void AddNewTab(BiConnectionType connectionType = BiConnectionType.UnSelected, SubPage subPage = SubPage.SelectConnection, RuntimeSummary runtimeSummary = null)
         {
             var newTab = App.ServiceProvider.GetRequiredService<TabItemViewModel>();
            
             if (runtimeSummary != null)
             {
-                newTab.ConnectionName = runtimeSummary.ParentProcessMainWindowTitle;
+                newTab.ConnectionName = runtimeSummary.ConnectionName;
                 newTab.RuntimeSummary = runtimeSummary;
             }
 
-            newTab.ConnectionType = connType;
+            newTab.ConnectionType = connectionType;
             newTab.ShowSubPage(subPage);
 
             Tabs.Add(newTab);

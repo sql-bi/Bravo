@@ -26,6 +26,8 @@ namespace Sqlbi.Bravo.Core.Services
 
         public IEnumerable<PowerBIDesktopInstance> GetInstances()
         {
+            _logger.Trace();
+
             var processes = Process.GetProcessesByName("msmdsrv")
                 .Select((p) => new
                 {

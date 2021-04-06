@@ -1,10 +1,14 @@
 ﻿using Microsoft.Extensions.Logging;
-using Sqlbi.Bravo.Core.Helpers;
 using Sqlbi.Bravo.Core.Logging;
 using Sqlbi.Bravo.Core.Services.Interfaces;
+using Sqlbi.Bravo.Core.Settings;
 using Sqlbi.Bravo.Core.Settings.Interfaces;
+using Sqlbi.Bravo.Core.Windows;
 using System;
+using System.Runtime.InteropServices;
+using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -12,6 +16,21 @@ namespace Sqlbi.Bravo.Core.Services
 {
     internal class ApplicationInstanceService : IApplicationInstanceService, IDisposable
     {
+        private class ConnectionInfoMessage
+        {
+            [JsonPropertyName("d")]
+            public string DatabaseName { get; set; }
+
+            [JsonPropertyName("s")]
+            public string ServerName { get; set; }
+
+            [JsonPropertyName("p")]
+            public string ParentProcessName { get; set; }
+
+            [JsonPropertyName("t")]
+            public string ParentProcessMainWindowTitle { get; set; }
+        }
+
         private readonly IGlobalSettingsProviderService _settings;
         private readonly ILogger _logger;
         private readonly EventWaitHandle _instanceEventWait;
@@ -33,7 +52,9 @@ namespace Sqlbi.Bravo.Core.Services
 
         public void NotifyConnectionToPrimaryInstance()
         {
-            var connectionInfo = new MessageHelper.ConnectionInfo
+            _logger.Trace();
+
+            var message = new ConnectionInfoMessage
             {
                 DatabaseName = _settings.Runtime.DatabaseName,
                 ServerName = _settings.Runtime.ServerName,
@@ -41,7 +62,40 @@ namespace Sqlbi.Bravo.Core.Services
                 ParentProcessMainWindowTitle = _settings.Runtime.ParentProcessMainWindowTitle
             };
 
-            MessageHelper.TrySendConnectionInfo(windowName: AppConstants.ApplicationNameLabel, connectionInfo);
+            var hWnd = NativeMethods.FindWindow(lpClassName: null, lpWindowName: AppConstants.ApplicationNameLabel);
+            if (hWnd != IntPtr.Zero)
+            {
+                var json = JsonSerializer.Serialize(message);
+                var bytes = Encoding.Unicode.GetBytes(json);
+
+                NativeMethods.COPYDATASTRUCT copyData;
+                copyData.dwData = (IntPtr)100;
+                copyData.lpData = json;
+                copyData.cbData = bytes.Length + 1;
+
+                _ = NativeMethods.SendMessage(hWnd, NativeMethods.WM_COPYDATA, wParam: 0, ref copyData);
+            }
+        }
+
+        public RuntimeSummary ReceiveConnectionFromSecondaryInstance(IntPtr ptr)
+        {
+            var copyData = (NativeMethods.COPYDATASTRUCT)Marshal.PtrToStructure(ptr, typeof(NativeMethods.COPYDATASTRUCT));
+            if (copyData.cbData == 0)
+                return null;
+
+            var json = copyData.lpData;
+            var message = JsonSerializer.Deserialize<ConnectionInfoMessage>(json);
+
+            var runtimeSummary = new RuntimeSummary
+            {
+                IsExecutedAsExternalTool = true,
+                ServerName = message.ServerName,
+                DatabaseName = message.DatabaseName,
+                ParentProcessName = message.ParentProcessName,
+                ParentProcessMainWindowTitle = message.ParentProcessMainWindowTitle,
+            };
+
+            return runtimeSummary;
         }
 
         public void RegisterCallbackForMultipleInstanceStarted(Action<IntPtr> callback)

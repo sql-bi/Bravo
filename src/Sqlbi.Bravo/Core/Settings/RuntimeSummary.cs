@@ -8,6 +8,20 @@ namespace Sqlbi.Bravo.Core.Settings
     /// </summary>
     internal class RuntimeSummary
     {
+        public static RuntimeSummary CreateFrom(RuntimeSettings settings)
+        {
+            var runtimeSummary = new RuntimeSummary
+            {
+                ServerName = settings.ServerName,
+                DatabaseName = settings.DatabaseName,
+                ParentProcessName = settings.ParentProcessName,
+                ParentProcessMainWindowTitle = settings.ParentProcessMainWindowTitle,
+                IsExecutedAsExternalTool = settings.IsExecutedAsExternalTool,
+            };
+
+            return runtimeSummary;
+        }
+ 
         public string ServerName { get; set; }
 
         public string DatabaseName { get; set; }

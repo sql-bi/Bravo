@@ -1,5 +1,4 @@
-﻿using Dax.Formatter;
-using Microsoft.ApplicationInsights;
+﻿using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.ApplicationInsights.WindowsServer.TelemetryChannel;
 using Microsoft.Extensions.Configuration;

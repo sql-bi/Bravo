@@ -49,12 +49,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
             // Get the values for the started instance.
             // These will be overridden if messaged to be single instance and open another tab
-            RuntimeSummary = new RuntimeSummary();
-            RuntimeSummary.DatabaseName = _settings.Runtime.DatabaseName;
-            RuntimeSummary.IsExecutedAsExternalTool = _settings.Runtime.IsExecutedAsExternalTool;
-            RuntimeSummary.ParentProcessMainWindowTitle = _settings.Runtime.ParentProcessMainWindowTitle;
-            RuntimeSummary.ParentProcessName = _settings.Runtime.ParentProcessName;
-            RuntimeSummary.ServerName = _settings.Runtime.ServerName;
+            RuntimeSummary = RuntimeSummary.CreateFrom(_settings.Runtime);
         }
 
         internal void ShowAnalysisOfLoadedModel(Model daxModel)
@@ -256,7 +251,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
                 subPageInTab = SubPage.SelectConnection;
             }
 
-            var shellVm = (ShellViewModel)App.ServiceProvider.GetRequiredService(typeof(ShellViewModel));
+            var shellViewModel = App.ServiceProvider.GetRequiredService<ShellViewModel>();
 
             switch (subPageInTab)
             {
@@ -267,17 +262,17 @@ namespace Sqlbi.Bravo.UI.ViewModels
                     if (!RuntimeSummary.UsingLocalModelForAnanlysis)
                     {
                         ShowDaxFormatter = true;
-                        shellVm.SelectedIndex = ShellViewModel.FormatDaxItemIndex;
+                        shellViewModel.SelectedIndex = ShellViewModel.FormatDaxItemIndex;
                     }
                     else
                     {
                         ShowAnalyzeModel = true;
-                        shellVm.SelectedIndex = ShellViewModel.AnalyzeModelItemIndex;
+                        shellViewModel.SelectedIndex = ShellViewModel.AnalyzeModelItemIndex;
                     }
                     break;
                 case SubPage.AnalyzeModel:
                     ShowAnalyzeModel = true;
-                    shellVm.SelectedIndex = ShellViewModel.AnalyzeModelItemIndex;
+                    shellViewModel.SelectedIndex = ShellViewModel.AnalyzeModelItemIndex;
                     break;
                 default:
                     break;
