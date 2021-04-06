@@ -1,4 +1,5 @@
-﻿using Sqlbi.Bravo.Core.Helpers;
+﻿using Sqlbi.Bravo.Client.PowerBI.Desktop;
+using Sqlbi.Bravo.Core.Helpers;
 
 namespace Sqlbi.Bravo.Core.Settings
 {
@@ -14,23 +15,33 @@ namespace Sqlbi.Bravo.Core.Settings
             {
                 ServerName = settings.ServerName,
                 DatabaseName = settings.DatabaseName,
-                ParentProcessName = settings.ParentProcessName,
-                ParentProcessMainWindowTitle = settings.ParentProcessMainWindowTitle,
+                ConnectionName = settings.ParentProcessMainWindowTitle,
                 IsExecutedAsExternalTool = settings.IsExecutedAsExternalTool,
             };
 
             return runtimeSummary;
         }
- 
-        public string ServerName { get; set; }
 
-        public string DatabaseName { get; set; }
+        public static RuntimeSummary CreateFrom(PowerBIDesktopInstance instance)
+        {
+            var runtimeSummary = new RuntimeSummary
+            {
+                ServerName = instance.ServerName,
+                DatabaseName = instance.DatabaseName,
+                ConnectionName = instance.Name,
+                IsExecutedAsExternalTool = false,
+            };
 
-        public string ParentProcessName { get; set; }
+            return runtimeSummary;
+        }        
 
-        public string ParentProcessMainWindowTitle { get; set; }
+        public string ServerName { get; init; }
 
-        public bool IsExecutedAsExternalTool { get; set; }
+        public string DatabaseName { get; init; }
+
+        public string ConnectionName { get; init; }
+
+        public bool IsExecutedAsExternalTool { get; init; }
 
         public bool UsingLocalModelForAnanlysis { get; internal set; } = false;
 

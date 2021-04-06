@@ -18,17 +18,14 @@ namespace Sqlbi.Bravo.Core.Services
     {
         private class ConnectionInfoMessage
         {
+            [JsonPropertyName("n")]
+            public string ConnectionName { get; set; }
+
             [JsonPropertyName("d")]
             public string DatabaseName { get; set; }
 
             [JsonPropertyName("s")]
             public string ServerName { get; set; }
-
-            [JsonPropertyName("p")]
-            public string ParentProcessName { get; set; }
-
-            [JsonPropertyName("t")]
-            public string ParentProcessMainWindowTitle { get; set; }
         }
 
         private readonly IGlobalSettingsProviderService _settings;
@@ -56,10 +53,9 @@ namespace Sqlbi.Bravo.Core.Services
 
             var message = new ConnectionInfoMessage
             {
+                ConnectionName = _settings.Runtime.ParentProcessMainWindowTitle,
                 DatabaseName = _settings.Runtime.DatabaseName,
                 ServerName = _settings.Runtime.ServerName,
-                ParentProcessName = _settings.Runtime.ParentProcessName,
-                ParentProcessMainWindowTitle = _settings.Runtime.ParentProcessMainWindowTitle
             };
 
             var hWnd = NativeMethods.FindWindow(lpClassName: null, lpWindowName: AppConstants.ApplicationNameLabel);
@@ -91,8 +87,7 @@ namespace Sqlbi.Bravo.Core.Services
                 IsExecutedAsExternalTool = true,
                 ServerName = message.ServerName,
                 DatabaseName = message.DatabaseName,
-                ParentProcessName = message.ParentProcessName,
-                ParentProcessMainWindowTitle = message.ParentProcessMainWindowTitle,
+                ConnectionName = message.ConnectionName,
             };
 
             return runtimeSummary;
