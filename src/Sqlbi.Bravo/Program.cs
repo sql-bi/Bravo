@@ -1,5 +1,4 @@
-﻿using Dax.Formatter;
-using Microsoft.ApplicationInsights;
+﻿using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.ApplicationInsights.WindowsServer.TelemetryChannel;
 using Microsoft.Extensions.Configuration;
@@ -41,8 +40,10 @@ namespace Sqlbi.Bravo
             try
             {
                 using var host = CreateHost(config);
+
                 var app = new App(host);
                 app.InitializeComponent();
+
                 return app.Run();
             }
             catch (Exception ex)
@@ -116,9 +117,8 @@ namespace Sqlbi.Bravo
                 services.AddSingleton<IPowerBIDesktopService, PowerBIDesktopService>();
                 services.AddSingleton<IPowerBICloudService, PowerBICloudService>();
                 services.AddSingleton<IThemeSelectorService, ThemeSelectorService>();
-                services.AddSingleton<IDaxFormatterClient, DaxFormatterClient>();
-                services.AddSingleton<ShellViewModel>();
                 services.AddSingleton<SettingsViewModel>();
+                services.AddSingleton<ShellViewModel>();
 
                 // Make these services transient as each ViewModel will need a unique one with a separate connection
                 services.AddTransient<IAnalysisServicesEventWatcherService, AnalysisServicesEventWatcherService>();

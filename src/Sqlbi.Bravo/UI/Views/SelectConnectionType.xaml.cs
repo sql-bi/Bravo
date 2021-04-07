@@ -4,13 +4,13 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 using Sqlbi.Bravo.Core.Logging;
 using Sqlbi.Bravo.Core.Services.Interfaces;
+using Sqlbi.Bravo.Core.Settings;
 using Sqlbi.Bravo.UI.DataModel;
 using Sqlbi.Bravo.UI.ViewModels;
 using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Navigation;
@@ -35,26 +35,25 @@ namespace Sqlbi.Bravo.UI.Views
                 Uri = e.Uri.AbsoluteUri
             }});
 
-            Process.Start(new ProcessStartInfo(e.Uri.AbsoluteUri) { UseShellExecute = true });
+            var startInfo = new ProcessStartInfo(e.Uri.AbsoluteUri) 
+            { 
+                UseShellExecute = true 
+            };
+
+            Process.Start(startInfo);
+
             e.Handled = true;
         }
 
         private void HowToUseClicked(object sender, RoutedEventArgs e) => ShellView.Instance.ShowMediaDialog(new HowToUseBravoHelp());
 
-        private void AttachToWindowClicked(object sender, RoutedEventArgs e)
+        private void AttachToPowerBIDesktopClicked(object sender, RoutedEventArgs e)
         {
             _logger.Trace();
 
-            var instances = App.ServiceProvider.GetRequiredService<IPowerBIDesktopService>().GetInstances();
-
-            foreach (var instance in instances)
-            {
-                _ = MessageBox.Show($"{ instance.Name } @ { instance.LocalEndPoint }", "TODO", MessageBoxButton.OK);                
-            }
-
             // TODO REQUIREMENTS: need to know how to connect here
             _ = MessageBox.Show(
-                "Need to attach to an active window",
+                "Testing connection to the first Power BI Desktop instance available",
                 "TODO",
                 MessageBoxButton.OK,
                 MessageBoxImage.Question);
@@ -63,13 +62,39 @@ namespace Sqlbi.Bravo.UI.Views
             {
                 Action = "AttachPowerBIDesktop"
             }});
+
+            var service = App.ServiceProvider.GetRequiredService<IPowerBIDesktopService>();
+            var instances = service.GetInstances();
+
+            _ = MessageBox.Show($"{ instances.Count() } active Power BI Desktop instances found", "TODO", MessageBoxButton.OK);
+
+            var instance = instances.FirstOrDefault();
+            if (instance == null)
+            {
+                return;
+            }
+
+            var shellViewModel = App.ServiceProvider.GetRequiredService<ShellViewModel>();
+            var runtimeSummary = RuntimeSummary.CreateFrom(instance);
+
+            shellViewModel.AddNewTab(BiConnectionType.ActivePowerBiWindow, SubPage.AnalyzeModel, runtimeSummary);
         }
 
-        private async void ConnectToDatasetClicked(object sender, RoutedEventArgs e)
+        private async void ConnectToPowerBIDatasetClicked(object sender, RoutedEventArgs e)
         {
             _logger.Trace();
 
-            #region Test
+            // TODO REQUIREMENTS: need to know how to connect here
+            _ = MessageBox.Show(
+                "Testing connection to the first Power BI dataset available",
+                "TODO",
+                MessageBoxButton.OK,
+                MessageBoxImage.Question);
+
+            _logger.Information(LogEvents.StartConnectionAction, "{@Details}", new object[] { new
+            {
+                Action = "ConnectPowerBIDataset"
+            }});
 
             var service = App.ServiceProvider.GetRequiredService<IPowerBICloudService>();
             if (service.IsAuthenticated == false)
@@ -81,32 +106,36 @@ namespace Sqlbi.Bravo.UI.Views
                 }
             }
 
-            _ = MessageBox.Show($"{ service.Account.Username } - { service.Account.Environment } @ TenantId { service.Account.HomeAccountId.TenantId } ", "TODO", MessageBoxButton.OK);
+            _ = MessageBox.Show($"Hello { service.Account.Username } @ TenantId { service.Account.HomeAccountId.TenantId }", "TODO", MessageBoxButton.OK);
 
             var datasets = await service.GetSharedDatasetsAsync();
-            var workspaceCount = datasets.Select((d) => d.WorkspaceId).Distinct().Count();
-            var modelCount = datasets.Select((d) => d.Model.Id).Distinct().Count();
 
-            _ = MessageBox.Show($"{ workspaceCount } workspaces and { modelCount } models found", "TODO", MessageBoxButton.OK);
+            // TOFIX: add support to PersonalGroup workspaces
+            datasets = datasets.Where((d) => d.WorkspaceType != Client.PowerBI.PowerBICloud.Models.MetadataWorkspaceType.PersonalGroup);
+
+            foreach (var dataset in datasets)
+            {
+                switch (MessageBox.Show($"Connect to workspace '{ dataset.WorkspaceName }' model '{ dataset.Model.DisplayName }' ?", "TODO", MessageBoxButton.YesNoCancel))
+                {
+                    case MessageBoxResult.No:
+                        continue;
+                    case MessageBoxResult.Yes:
+                        {
+                            var shellViewModel = App.ServiceProvider.GetRequiredService<ShellViewModel>();
+                            var runtimeSummary = RuntimeSummary.CreateFrom(dataset, service);
+
+                            shellViewModel.AddNewTab(BiConnectionType.ActivePowerBiWindow, SubPage.AnalyzeModel, runtimeSummary);
+                        }
+                        return;
+                    default:
+                        return;
+                }
+            }
 
             //await service.LogoutAsync();
-
-            #endregion
-
-            // TODO REQUIREMENTS: need to know how to connect here
-            _ = MessageBox.Show(
-                "Need to sign-in and connect to a dataset",
-                "TODO",
-                MessageBoxButton.OK,
-                MessageBoxImage.Question);
-
-            _logger.Information(LogEvents.StartConnectionAction, "{@Details}", new object[] { new
-            {
-                Action = "ConnectPowerBIDataset"
-            }});
         }
 
-        private void OpenVertipaqFileClicked(object sender, RoutedEventArgs e)
+        private void OpenVertiPaqAnalyzerFileClicked(object sender, RoutedEventArgs e)
         {
             _logger.Trace();
 
@@ -114,7 +143,7 @@ namespace Sqlbi.Bravo.UI.Views
             {
                 CheckFileExists = true,
                 Multiselect = false,
-                Filter = "Vertipaq files (*.vpax)|*.vpax",
+                Filter = "VertiPaq Analyzer files (*.vpax)|*.vpax",
                 InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
             };
 
@@ -122,16 +151,16 @@ namespace Sqlbi.Bravo.UI.Views
             {
                 _logger.Information(LogEvents.StartConnectionAction, "{@Details}", new object[] { new
                 {
-                    Action = "OpenVertipaqFile"
+                    Action = "OpenVertiPaqAnalyzerFile"
                 }});
 
                 var fileContent = VpaxTools.ImportVpax(openFileDialog.FileName);
 
-                var vm = DataContext as TabItemViewModel;
-                vm.ConnectionType = BiConnectionType.VertipaqAnalyzerFile;
-                vm.ConnectionName = Path.GetFileNameWithoutExtension(openFileDialog.FileName);
-                vm.AnalyzeModelVm.OnPropertyChanged(nameof(AnalyzeModelViewModel.ConnectionName));
-                vm.ShowAnalysisOfLoadedModel(fileContent.DaxModel);
+                var viewModel = DataContext as TabItemViewModel;
+                viewModel.ConnectionType = BiConnectionType.VertipaqAnalyzerFile;
+                viewModel.ConnectionName = Path.GetFileNameWithoutExtension(openFileDialog.FileName);
+                viewModel.AnalyzeModelVm.OnPropertyChanged(nameof(AnalyzeModelViewModel.ConnectionName));
+                viewModel.ShowAnalysisOfLoadedModel(fileContent.DaxModel);
             }
         }
     }

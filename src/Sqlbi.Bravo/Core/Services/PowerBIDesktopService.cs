@@ -26,6 +26,8 @@ namespace Sqlbi.Bravo.Core.Services
 
         public IEnumerable<PowerBIDesktopInstance> GetInstances()
         {
+            _logger.Trace();
+
             var processes = Process.GetProcessesByName("msmdsrv")
                 .Select((p) => new
                 {
@@ -48,7 +50,7 @@ namespace Sqlbi.Bravo.Core.Services
 
                 var instance = new PowerBIDesktopInstance
                 {
-                    Name = process.ParentProcess.GetMainWindowTitle(),
+                    Name = process.ParentProcess.GetMainWindowTitle().ToPowerBIDesktopReportName(),
                     LocalEndPoint = connection.LocalEndPoint
                 };
 

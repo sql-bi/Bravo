@@ -1,4 +1,6 @@
-﻿using Sqlbi.Bravo.Core.Settings;
+﻿using Sqlbi.Bravo.Client.DaxFormatter;
+using Sqlbi.Bravo.Client.DaxFormatter.Interfaces;
+using Sqlbi.Bravo.Core.Settings;
 using Sqlbi.Bravo.Core.Settings.Interfaces;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -9,10 +11,10 @@ namespace Sqlbi.Bravo.Core.Services.Interfaces
     {
         Task InitilizeOrRefreshAsync(RuntimeSummary runtimeSummary);
 
-        IEnumerable<DaxFormatterServiceTabularMeasure> Measures { get; }
+        IEnumerable<TabularMeasure> Measures { get; }
 
-        Task<IEnumerable<IDaxFormatterServiceTabularObject>> FormatAsync(IList<IDaxFormatterServiceTabularObject> tabularObjects, IDaxFormatterSettings settings);
+        Task<IEnumerable<ITabularObject>> FormatAsync(IList<ITabularObject> tabularObjects, IDaxFormatterSettings settings);
 
-        Task ApplyFormatAsync(IList<IDaxFormatterServiceTabularObject> tabularObjects);
+        Task ApplyFormatAsync(IList<ITabularObject> tabularObjects);
     }
 }

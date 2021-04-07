@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.Identity.Client;
+using Sqlbi.Bravo.Client.PowerBI;
 using Sqlbi.Bravo.Client.PowerBI.PowerBICloud;
 using Sqlbi.Bravo.Client.PowerBI.PowerBICloud.Models;
 using Sqlbi.Bravo.Core.Logging;
@@ -24,6 +25,10 @@ namespace Sqlbi.Bravo.Core.Services
         public bool IsAuthenticated => _authenticationResult != null;
 
         public IAccount Account => _authenticationResult?.Account;
+
+        public string AccessToken => _authenticationResult?.AccessToken;
+
+        public PowerBICloudEnvironment CloudEnvironment => PowerBICloudManager.CloudEnvironment;
 
         public async Task<bool> LoginAsync()
         {

@@ -1,11 +1,11 @@
 ﻿using Microsoft.AnalysisServices;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Sqlbi.Bravo.Client.AnalysisServicesEventWatcher;
 using Sqlbi.Bravo.Core.Helpers;
 using Sqlbi.Bravo.Core.Logging;
 using Sqlbi.Bravo.Core.Services.Interfaces;
 using Sqlbi.Bravo.Core.Settings;
-using Sqlbi.Bravo.Core.Settings.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -38,8 +38,8 @@ namespace Sqlbi.Bravo.Core.Services
         private Trace _trace;
         private bool _disposed;
 
-        public event EventHandler<AnalysisServicesEventWatcherEventArgs> OnEvent;
-        public event EventHandler<AnalysisServicesEventWatcherConnectionStateArgs> OnConnectionStateChanged;
+        public event EventHandler<WatcherEventArgs> OnWatcherEvent;
+        public event EventHandler<ConnectionStateEventArgs> OnConnectionStateChanged;
 
         public AnalysisServicesEventWatcherService(ILogger<AnalysisServicesEventWatcherService> logger, IHostApplicationLifetime lifetime)
         {
@@ -75,7 +75,7 @@ namespace Sqlbi.Bravo.Core.Services
 
                     if (current != previus)
                     {
-                        var args = new AnalysisServicesEventWatcherConnectionStateArgs(previus, current);
+                        var args = new ConnectionStateEventArgs(previus, current);
                         OnConnectionStateChanged?.Invoke(this, args);
                         previus = current;
                     }
@@ -103,11 +103,11 @@ namespace Sqlbi.Bravo.Core.Services
             void Connect()
             {
                 if (_server.Connected)
+                {
                     throw new InvalidOperationException("Server already connected");
+                }
 
-                var connectionString = AnalysisServicesHelper.BuildConnectionString(runtimeSummary.ServerName, runtimeSummary.DatabaseName);
-
-                _server.Connect(connectionString);
+                _server.Connect(runtimeSummary.ConnectionString);
                 _connectionManuallyChangedEvent.Set();
                 _trace = CreateTrace();
                 _trace.Start();
@@ -199,13 +199,13 @@ namespace Sqlbi.Bravo.Core.Services
                 return;
 
             var eventType = e.TextData.GetEventType();
-            if (eventType == AnalysisServicesEventWatcherEvent.Unknown)
+            if (eventType == WatcherEvent.Unknown)
                 return;
 
             _logger.Debug(LogEvents.AnalysisServicesEventWatcherServiceOnTraceEvent, "EventType({EventType})", args: new object[] { eventType });
 
-            var args = new AnalysisServicesEventWatcherEventArgs(eventType, text: string.Empty);
-            OnEvent?.Invoke(this, args);
+            var args = new WatcherEventArgs(eventType, text: string.Empty);
+            OnWatcherEvent?.Invoke(this, args);
         }
 
         protected virtual void Dispose(bool disposing)

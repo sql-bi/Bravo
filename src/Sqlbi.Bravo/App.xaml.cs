@@ -2,12 +2,14 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Sqlbi.Bravo.Core;
+using Sqlbi.Bravo.Core.Helpers;
 using Sqlbi.Bravo.Core.Logging;
 using Sqlbi.Bravo.Core.Services.Interfaces;
 using Sqlbi.Bravo.Core.Settings.Interfaces;
 using Sqlbi.Bravo.Core.Windows;
 using Sqlbi.Bravo.UI.Services.Interfaces;
 using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows;
 
@@ -24,8 +26,10 @@ namespace Sqlbi.Bravo
         public App(IHost host)
         {
             _host = host;
+
             // Uncomment this to enable debugging when launched from PBIDesktop
             ////System.Diagnostics.Debugger.Launch();
+
             _settings = _host.Services.GetRequiredService<IGlobalSettingsProviderService>();
             _logger = _host.Services.GetRequiredService<ILogger<App>>();
             _logger.Trace();
@@ -43,9 +47,9 @@ namespace Sqlbi.Bravo
                 ExecutedAsExternalTool = _settings.Runtime.IsExecutedAsExternalTool,
                 ExecutedAsExternalToolForPowerBIDesktop = _settings.Runtime.IsExecutedAsExternalToolForPowerBIDesktop
             }});
-            
-            var tss = ServiceProvider.GetRequiredService<IThemeSelectorService>();
-            tss.InitializeTheme(_settings.Application.ThemeName);
+
+            var themeSelector = ServiceProvider.GetRequiredService<IThemeSelectorService>();
+            themeSelector.InitializeTheme(_settings.Application.ThemeName);
 
             await _host.StartAsync();
 
@@ -68,20 +72,25 @@ namespace Sqlbi.Bravo
             TaskScheduler.UnobservedTaskException += (s, e) =>
             {
                 var exception = e.Exception;
+
                 _logger.Error(LogEvents.TaskSchedulerUnobservedTaskException, exception);
+
                 MessageBox.Show(exception.Message, AppConstants.ApplicationNameLabel, MessageBoxButton.OK, MessageBoxImage.Error);
 
-                // TODO REQUIREMENTS?: SetObserved for UnobservedTaskException
-                //e.SetObserved();
+                if (exception.IsSafeException())
+                {
+                    e.SetObserved();
+                }
             };
 
-            //if (!Debugger.IsAttached)
+            if (Debugger.IsAttached == false)
             {
                 AppDomain.CurrentDomain.UnhandledException += (s, e) =>
                 {
                     if (e.ExceptionObject is Exception exception)
                     {
                         _logger.Error(LogEvents.AppDomainUnhandledException, exception);
+
                         MessageBox.Show(exception.Message, AppConstants.ApplicationNameLabel, MessageBoxButton.OK, MessageBoxImage.Error);
                     }
                 };
@@ -89,11 +98,15 @@ namespace Sqlbi.Bravo
                 Dispatcher.UnhandledException += (s, e) =>
                 {
                     var exception = e.Exception;
+
                     _logger.Error(LogEvents.DispatcherUnhandledException, exception);
+
                     MessageBox.Show(exception.Message, AppConstants.ApplicationNameLabel, MessageBoxButton.OK, MessageBoxImage.Error);
 
-                    // TODO REQUIREMENTS: Handled for UnhandledException
-                    //e.Handled = true;
+                    if (exception.IsSafeException())
+                    {
+                        e.Handled = true;
+                    }
                 };
             }
         }
@@ -110,7 +123,6 @@ namespace Sqlbi.Bravo
             else
             {
                 application.NotifyConnectionToPrimaryInstance();
-
                 Shutdown();
             }
         }

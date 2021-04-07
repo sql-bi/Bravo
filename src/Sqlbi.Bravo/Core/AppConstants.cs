@@ -3,6 +3,7 @@ using Serilog.Events;
 using Sqlbi.Bravo.UI.DataModel;
 using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -43,6 +44,8 @@ namespace Sqlbi.Bravo.Core
 
         public static Version ApplicationProductVersionNumber { get; } = new Version(VersionInfo.FileVersion);
 
+        public static CultureInfo ApplicationDefaultCulture { get; } = CultureInfo.GetCultureInfo("en-US");
+
         public static string[] CommandLineArgumentServerNameAliases { get; } = new string[] { "--server", "--s" };
 
         public static string[] CommandLineArgumentDatabaseNameAliases { get; } = new string[] { "--database", "--d" };
@@ -62,6 +65,10 @@ namespace Sqlbi.Bravo.Core
         public static string TelemetrySettingsSectionName { get; } = "Telemetry";
 
         public static string TelemetryInstrumentationKey { get; } = "47a8970c-6293-408a-9cce-5b7b311574d3";
+
+        public static int AnalyzeModelUpdateStatisticsModelSampleRowCount { get; } = 10;
+
+        public static int AnalyzeModelSummaryColumnCount { get; } = 5;
 
         static AppConstants()
         {

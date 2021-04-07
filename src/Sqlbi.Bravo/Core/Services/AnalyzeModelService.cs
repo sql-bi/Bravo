@@ -1,4 +1,5 @@
 ﻿using Dax.Metadata;
+using Dax.Metadata.Extractor;
 using Dax.ViewModel;
 using Microsoft.AnalysisServices;
 using Microsoft.AnalysisServices.AdomdClient;
@@ -8,130 +9,81 @@ using Sqlbi.Bravo.Core.Services.Interfaces;
 using Sqlbi.Bravo.Core.Settings;
 using System;
 using System.Collections.Generic;
-using System.Data.OleDb;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Sqlbi.Bravo.Core.Services
 {
-    internal class AnalyzeModelService : IAnalyzeModelService, IDisposable
+    internal class AnalyzeModelService : IAnalyzeModelService
     {
-        private readonly SemaphoreSlim _initilizeOrRefreshSemaphore = new SemaphoreSlim(1);
+        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1);
         private readonly ILogger _logger;
-        private readonly Server _server;
-        private Model _daxModel;
-        private bool _disposed;
         private VpaModel _vpaModel;
+        private Model _daxModel;
 
         public AnalyzeModelService(ILogger<AnalyzeModelService> logger)
         {
             _logger = logger;
 
             _logger.Trace();
-            _server = new Server();
         }
 
         public async Task InitilizeOrRefreshAsync(RuntimeSummary runtimeSummary)
         {
             _logger.Trace();
 
-            await _initilizeOrRefreshSemaphore.WaitAsync().ConfigureAwait(false);
+            if (runtimeSummary.UsingLocalModelForAnanlysis)
+            {
+                return;
+            }
+
+            await _semaphore.WaitAsync();
             try
             {
-                await Task.Run(InitilizeOrRefresh).ConfigureAwait(false);
+                await Task.Run(InitilizeOrRefresh);
             }
             finally
             {
-                _initilizeOrRefreshSemaphore.Release();
+                _semaphore.Release();
             }
 
             void InitilizeOrRefresh()
             {
-                if (runtimeSummary.UsingLocalModelForAnanlysis)
+                using (var server = new Server())
                 {
-                    return;
+                    server.Connect(runtimeSummary.ConnectionString);
+
+                    var database = server.Databases.GetByName(runtimeSummary.DatabaseName);
+                    var model = database.Model;
+
+                    _daxModel = TomExtractor.GetDaxModel(database.Model, AppConstants.ApplicationName, AppConstants.ApplicationProductVersion);
                 }
 
-                if (_server.Connected == false)
+                using (var connection = new AdomdConnection(runtimeSummary.ConnectionString))
                 {
-                    _server.Connect(runtimeSummary?.ServerName);
+                    DmvExtractor.PopulateFromDmv(_daxModel, connection, runtimeSummary.ServerName, runtimeSummary.DatabaseName, AppConstants.ApplicationName, AppConstants.ApplicationProductVersion);
+                    StatExtractor.UpdateStatisticsModel(_daxModel, connection, AppConstants.AnalyzeModelUpdateStatisticsModelSampleRowCount);
                 }
-
-                var db = _server.Databases[runtimeSummary.DatabaseName];
-                var tomModel = db.Model;
-                _daxModel = Dax.Metadata.Extractor.TomExtractor.GetDaxModel(tomModel, AppConstants.ApplicationName, AppConstants.ApplicationProductVersion);
-
-                var connString = GetConnectionString(runtimeSummary.ServerName, runtimeSummary.DatabaseName);
-
-                using var connection = new AdomdConnection(connString);
-                // Populate statistics from DMV
-                Dax.Metadata.Extractor.DmvExtractor.PopulateFromDmv(_daxModel, connection, runtimeSummary.ServerName, runtimeSummary.DatabaseName, AppConstants.ApplicationName, AppConstants.ApplicationProductVersion);
-                // Populate statistics by querying the data model
-                Dax.Metadata.Extractor.StatExtractor.UpdateStatisticsModel(_daxModel, connection, 10);
 
                 _vpaModel = new VpaModel(_daxModel);
             }
         }
 
-        public DateTime GetLastSyncTime()
-            => _vpaModel?.Model?.ExtractionDate ?? DateTime.MinValue;
+        public DateTime LastSyncTime => _vpaModel?.Model?.ExtractionDate ?? DateTime.MinValue;
 
-        public (long DatasetSize, int ColumnCount) GetDatasetSummary()
-            => (_vpaModel.Tables.Sum(t => t.ColumnsTotalSize), _vpaModel.Columns.Count());
+        public (long DatasetSize, int ColumnCount) DatasetSummary => (DatasetSize: _vpaModel.Tables.Sum((t) => t.ColumnsTotalSize), ColumnCount: _vpaModel.Columns.Count());
 
-        public List<VpaColumn> GetUnusedColumns() =>
-            _vpaModel.Columns.Where(c => !c.IsReferenced).ToList();
+        public IEnumerable<VpaColumn> UnusedColumns => _vpaModel.Columns.Where((c) => !c.IsReferenced).ToArray();
 
-        public IEnumerable<VpaColumn> GetAllColumns() => _vpaModel?.Columns;
+        public IEnumerable<VpaColumn> AllColumns => _vpaModel?.Columns;
 
-        public IEnumerable<VpaTable> GetAllTables() => _vpaModel?.Tables;
+        public IEnumerable<VpaTable> AllTables => _vpaModel?.Tables;
 
-        private static string GetConnectionString(string dataSourceOrConnectionString, string databaseName)
+        public Model DaxModel
         {
-            var csb = new OleDbConnectionStringBuilder();
-            try
-            {
-                csb.ConnectionString = dataSourceOrConnectionString;
-            }
-            catch
-            {
-                // Assume servername
-                csb.Provider = "MSOLAP";
-                csb.DataSource = dataSourceOrConnectionString;
-            }
-            csb["Initial Catalog"] = databaseName;
-            return csb.ConnectionString;
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!_disposed)
-            {
-                if (disposing)
-                {
-                    if (_server.Connected)
-                        _server.Disconnect(endSession: true);
-
-                    _server.Dispose();
-                }
-
-                _disposed = true;
-            }
-        }
-
-        public void Dispose()
-        {
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
-        }
-
-        public Model GetModelForExport() => _daxModel;
-
-        public void OverrideDaxModel(Model daxModel)
-        {
-            _daxModel = daxModel;
-            _vpaModel = new VpaModel(_daxModel);
+            get => _daxModel;
+            set => _vpaModel = new VpaModel(_daxModel = value);
         }
     }
 }

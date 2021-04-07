@@ -3,7 +3,9 @@
     public enum SubPage
     {
         SelectConnection,
+
         DaxFormatter,
+
         AnalyzeModel,
     }
 }

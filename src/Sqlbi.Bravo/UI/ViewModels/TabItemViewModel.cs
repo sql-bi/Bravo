@@ -1,6 +1,7 @@
 ﻿using Dax.Metadata;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Sqlbi.Bravo.Client.AnalysisServicesEventWatcher;
 using Sqlbi.Bravo.Core.Logging;
 using Sqlbi.Bravo.Core.Services;
 using Sqlbi.Bravo.Core.Services.Interfaces;
@@ -10,10 +11,7 @@ using Sqlbi.Bravo.UI.DataModel;
 using Sqlbi.Bravo.UI.Framework.Commands;
 using Sqlbi.Bravo.UI.Framework.ViewModels;
 using System;
-using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
-using System.Windows;
 using System.Windows.Input;
 
 namespace Sqlbi.Bravo.UI.ViewModels
@@ -51,12 +49,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
             // Get the values for the started instance.
             // These will be overridden if messaged to be single instance and open another tab
-            RuntimeSummary = new RuntimeSummary();
-            RuntimeSummary.DatabaseName = _settings.Runtime.DatabaseName;
-            RuntimeSummary.IsExecutedAsExternalTool = _settings.Runtime.IsExecutedAsExternalTool;
-            RuntimeSummary.ParentProcessMainWindowTitle = _settings.Runtime.ParentProcessMainWindowTitle;
-            RuntimeSummary.ParentProcessName = _settings.Runtime.ParentProcessName;
-            RuntimeSummary.ServerName = _settings.Runtime.ServerName;
+            RuntimeSummary = RuntimeSummary.CreateFrom(_settings.Runtime);
         }
 
         internal void ShowAnalysisOfLoadedModel(Model daxModel)
@@ -241,7 +234,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
         }
 
         [PropertyChanged.SuppressPropertyChangedWarnings]
-        private void OnAnalysisServicesConnectionStateChanged(object sender, AnalysisServicesEventWatcherConnectionStateArgs e)
+        private void OnAnalysisServicesConnectionStateChanged(object sender, ConnectionStateEventArgs e)
         {
             _logger.Trace();
 
@@ -258,7 +251,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
                 subPageInTab = SubPage.SelectConnection;
             }
 
-            var shellVm = (ShellViewModel)App.ServiceProvider.GetRequiredService(typeof(ShellViewModel));
+            var shellViewModel = App.ServiceProvider.GetRequiredService<ShellViewModel>();
 
             switch (subPageInTab)
             {
@@ -269,17 +262,17 @@ namespace Sqlbi.Bravo.UI.ViewModels
                     if (!RuntimeSummary.UsingLocalModelForAnanlysis)
                     {
                         ShowDaxFormatter = true;
-                        shellVm.SelectedIndex = ShellViewModel.FormatDaxItemIndex;
+                        shellViewModel.SelectedIndex = ShellViewModel.FormatDaxItemIndex;
                     }
                     else
                     {
                         ShowAnalyzeModel = true;
-                        shellVm.SelectedIndex = ShellViewModel.AnalyzeModelItemIndex;
+                        shellViewModel.SelectedIndex = ShellViewModel.AnalyzeModelItemIndex;
                     }
                     break;
                 case SubPage.AnalyzeModel:
                     ShowAnalyzeModel = true;
-                    shellVm.SelectedIndex = ShellViewModel.AnalyzeModelItemIndex;
+                    shellViewModel.SelectedIndex = ShellViewModel.AnalyzeModelItemIndex;
                     break;
                 default:
                     break;

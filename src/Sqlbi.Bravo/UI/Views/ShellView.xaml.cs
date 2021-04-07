@@ -1,22 +1,20 @@
 ﻿using MahApps.Metro.Controls;
 using MahApps.Metro.SimpleChildWindow;
-using Sqlbi.Bravo.Core.Settings.Interfaces;
-using System;
-using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
-using Sqlbi.Bravo.UI.ViewModels;
-using Sqlbi.Bravo.UI.DataModel;
-using System.Windows.Interop;
-using System.Windows;
-using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging;
-using Sqlbi.Bravo.Core.Settings;
-using System.Linq;
-using Sqlbi.Bravo.Core.Logging;
-using System.Diagnostics;
-using System.Windows.Controls;
-using Sqlbi.Bravo.Core.Windows;
 using Sqlbi.Bravo.Core.Helpers;
+using Sqlbi.Bravo.Core.Logging;
+using Sqlbi.Bravo.Core.Services.Interfaces;
+using Sqlbi.Bravo.Core.Settings.Interfaces;
+using Sqlbi.Bravo.Core.Windows;
+using Sqlbi.Bravo.UI.DataModel;
+using Sqlbi.Bravo.UI.ViewModels;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Interop;
 
 namespace Sqlbi.Bravo.UI.Views
 {
@@ -37,13 +35,15 @@ namespace Sqlbi.Bravo.UI.Views
             source.AddHook(WndProcHook);
         }
 
-        private IntPtr WndProcHook(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+        private IntPtr WndProcHook(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
         {
             if (msg == NativeMethods.WM_COPYDATA)
             { 
                 try
                 {
-                    var runtimeSummary = MessageHelper.TryReceiveConnectionInfo(ptr: lParam);
+                    var applicationInstance = App.ServiceProvider.GetRequiredService<IApplicationInstanceService>();
+
+                    var runtimeSummary = applicationInstance.ReceiveConnectionFromSecondaryInstance(ptr: lParam);
                     if (runtimeSummary != null)
                     {
                         // Creating the tab (& VMs) may not trigger the loaded event when expected
@@ -75,7 +75,7 @@ namespace Sqlbi.Bravo.UI.Views
             if (_settings.Runtime.IsExecutedAsExternalToolForPowerBIDesktop)
 #endif
             {
-                (DataContext as ShellViewModel).LaunchedViaPowerBIDesktop(_settings.Runtime.ParentProcessMainWindowTitle);
+                ViewModel.LaunchedViaPowerBIDesktop(_settings.Runtime.ParentProcessMainWindowTitle);
             }
         }
 
@@ -105,25 +105,24 @@ namespace Sqlbi.Bravo.UI.Views
             debugInfo.Show();
         }
 
-        private void AddTabClicked(object sender, RoutedEventArgs e)
-            => ViewModel.AddNewTab();
+        private void AddTabClicked(object sender, RoutedEventArgs e) => ViewModel.AddNewTab();
 
         // When the selected tab changes update the selected menu item accordingly
         private void OnSelectedTabChanged(object sender, SelectionChangedEventArgs e)
         {
-            var selTab = ViewModel.SelectedTab;
-            if (selTab != null)
+            var selectedTab = ViewModel.SelectedTab;
+            if (selectedTab != null)
             {
-                if (selTab.ShowSelectConnection)
+                if (selectedTab.ShowSelectConnection)
                 {
                     ViewModel.SelectedItem = null;
                     hamburgerMenu.SelectedIndex = -1;
                 }
-                else if (selTab.ShowDaxFormatter)
+                else if (selectedTab.ShowDaxFormatter)
                 {
                     Select("Format DAX");
                 }
-                else if (selTab.ShowAnalyzeModel)
+                else if (selectedTab.ShowAnalyzeModel)
                 {
                     Select("Analyze Model");
                 }
@@ -138,7 +137,7 @@ namespace Sqlbi.Bravo.UI.Views
             void Select(string menuItemName)
             {
                 // Update selected menu item
-                ViewModel.SelectedItem = ViewModel.MenuItems.FirstOrDefault(mi => mi.Name == menuItemName);
+                ViewModel.SelectedItem = ViewModel.MenuItems.FirstOrDefault((i) => i.Name == menuItemName);
 
                 // Binding doesn't updated the selected indicator - but this does
                 for (var i = 0; i < ViewModel.MenuItems.Count; i++)

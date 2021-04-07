@@ -66,7 +66,7 @@
     <PackageReference Include="System.Data.OleDb" Version="5.0.0" />
     <PackageReference Include="System.Management" Version="5.0.0" />
     <PackageReference Include="Dax.Formatter" Version="1.0.0" />
-    <PackageReference Include="Microsoft.AnalysisServices.NetCore.retail.amd64" Version="19.16.3" />
+    <PackageReference Include="Microsoft.AnalysisServices.NetCore.retail.amd64" Version="19.20.1" />
   </ItemGroup>
 
   <ItemGroup>

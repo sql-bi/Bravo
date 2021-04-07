@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Sqlbi.Bravo.Core.Logging;
 using Sqlbi.Bravo.Core.Settings;
 using Sqlbi.Bravo.Core.Settings.Interfaces;
 using System.IO;
@@ -9,8 +11,12 @@ namespace Sqlbi.Bravo.Core.Services
 {
     internal class GlobalSettingsProviderService : IGlobalSettingsProviderService
     {
-        public GlobalSettingsProviderService(IOptions<AppSettings> applicationOption, IOptions<RuntimeSettings> runtimeOption)
+        private readonly ILogger _logger;
+
+        public GlobalSettingsProviderService(IOptions<AppSettings> applicationOption, IOptions<RuntimeSettings> runtimeOption, ILogger<GlobalSettingsProviderService> logger)
         {
+            _logger = logger;
+
             Application = applicationOption.Value;
             Runtime = runtimeOption.Value;
         }
@@ -21,6 +27,8 @@ namespace Sqlbi.Bravo.Core.Services
 
         public async Task SaveAsync()
         {
+            _logger.Trace();
+
             var file = new FileInfo(AppConstants.UserSettingsFilePath);
             Directory.CreateDirectory(file.DirectoryName);
 

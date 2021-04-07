@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Sqlbi.Bravo.Client.AnalysisServicesEventWatcher;
 using Sqlbi.Bravo.Core;
 using Sqlbi.Bravo.Core.Logging;
 using Sqlbi.Bravo.Core.Services;
@@ -32,12 +33,15 @@ namespace Sqlbi.Bravo.UI.ViewModels
             _logger = logger;
 
             _logger.Trace();
-            _watcher.OnEvent += OnAnalysisServicesEvent;
+            _watcher.OnWatcherEvent += OnWatcherEvent;
             _watcher.OnConnectionStateChanged += OnAnalysisServicesConnectionStateChanged;
 
             PrintDebug();
 
-            Tabs = new ObservableCollection<TabItemViewModel>() { (TabItemViewModel)App.ServiceProvider.GetRequiredService(typeof(TabItemViewModel)) };
+            Tabs = new ObservableCollection<TabItemViewModel>
+            {
+                App.ServiceProvider.GetRequiredService<TabItemViewModel>()
+            };
             SelectedTab = Tabs[0];
 
             ItemSelectedCommand = new RelayCommand(async () => await ItemSelected());
@@ -53,7 +57,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
                     {
                         Application.Current.Dispatcher.Invoke(() =>
                         {
-                            Tabs.Add((TabItemViewModel)App.ServiceProvider.GetRequiredService(typeof(TabItemViewModel)));
+                            Tabs.Add(App.ServiceProvider.GetRequiredService<TabItemViewModel>());
                             // Ensure the new tab is selected so the contents load
                             SelectedTab = Tabs.First();
                         });
@@ -69,7 +73,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         internal void LaunchedViaPowerBIDesktop(string title)
         {
-            SelectedTab.ConnectionName = title.Replace(" - Power BI Desktop", string.Empty);
+            SelectedTab.ConnectionName = title;
             SelectedTab.ConnectionType = BiConnectionType.ActivePowerBiWindow;
             SelectedTab.ShowSubPage(SelectedItem?.SubPageInTab ?? SubPage.DaxFormatter);
 
@@ -97,15 +101,14 @@ namespace Sqlbi.Bravo.UI.ViewModels
         {
             get
             {
-                var daxIcon = new DaxFormatterIcon();
-                daxIcon.SetResourceReference(
-                    DaxFormatterIcon.ForegroundBrushProperty,
-                    "MahApps.Brushes.ThemeForeground");
+                var analyzeModelIcon = new AnalyzeModelIcon();
+                var daxFormatterIcon = new DaxFormatterIcon();
+                daxFormatterIcon.SetResourceReference(DaxFormatterIcon.ForegroundBrushProperty, name: "MahApps.Brushes.ThemeForeground");
 
                 return new ObservableCollection<NavigationItem>()
                 {
-                    new NavigationItem { Name = "Format DAX", IconControl = daxIcon, SubPageInTab = SubPage.DaxFormatter },
-                    new NavigationItem { Name = "Analyze Model", IconControl = new AnalyzeModelIcon(), SubPageInTab = SubPage.AnalyzeModel },
+                    new NavigationItem { Name = "Format DAX", IconControl = daxFormatterIcon, SubPageInTab = SubPage.DaxFormatter },
+                    new NavigationItem { Name = "Analyze Model", IconControl = analyzeModelIcon, SubPageInTab = SubPage.AnalyzeModel },
                     new NavigationItem { Name = "Manage dates", Glyph = "\uEC92", ShowComingSoon = true },
                     new NavigationItem { Name = "Export data", Glyph = "\uE1AD", ShowComingSoon = true },
                     new NavigationItem { Name = "Best practices", Glyph = "\uE19F", ShowComingSoon = true },
@@ -115,6 +118,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
         }
 
         public static int FormatDaxItemIndex => 0;
+
         public static int AnalyzeModelItemIndex => 1;
 
         public ObservableCollection<NavigationItem> OptionMenuItems { get; } = new ObservableCollection<NavigationItem>()
@@ -141,11 +145,11 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public ICommand ItemSelectedCommand { get; set; }
 
-        private void OnAnalysisServicesEvent(object sender, AnalysisServicesEventWatcherEventArgs e)
+        private void OnWatcherEvent(object sender, WatcherEventArgs e)
         {
             _logger.Trace();
 
-            var action = new Action<AnalysisServicesEventWatcherEventArgs>((e) =>
+            var action = new Action<WatcherEventArgs>((e) =>
             {
                 var item = $"OnAnalysisServicesEvent(event<{ e.Event }>)";
                 OutputMessages.Add(item);
@@ -155,11 +159,11 @@ namespace Sqlbi.Bravo.UI.ViewModels
         }
 
         [PropertyChanged.SuppressPropertyChangedWarnings]
-        private void OnAnalysisServicesConnectionStateChanged(object sender, AnalysisServicesEventWatcherConnectionStateArgs e)
+        private void OnAnalysisServicesConnectionStateChanged(object sender, ConnectionStateEventArgs e)
         {
             _logger.Trace();
 
-            var action = new Action<AnalysisServicesEventWatcherConnectionStateArgs>((e) =>
+            var action = new Action<ConnectionStateEventArgs>((e) =>
             {
                 var item = $"OnAnalysisServicesConnectionStateChanged(current<{ e.Current }>|previous<{ e.Previous }>)";
                 OutputMessages.Add(item);
@@ -201,17 +205,17 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public int LastGoodSelectedIndex { get; set; } = -1;
 
-        public void AddNewTab(BiConnectionType connType = BiConnectionType.UnSelected, SubPage subPage = SubPage.SelectConnection, RuntimeSummary runtimeSummary = null)
+        public void AddNewTab(BiConnectionType connectionType = BiConnectionType.UnSelected, SubPage subPage = SubPage.SelectConnection, RuntimeSummary runtimeSummary = null)
         {
-            var newTab = (TabItemViewModel)App.ServiceProvider.GetRequiredService(typeof(TabItemViewModel));
-
+            var newTab = App.ServiceProvider.GetRequiredService<TabItemViewModel>();
+           
             if (runtimeSummary != null)
             {
-                newTab.ConnectionName = runtimeSummary.ParentProcessMainWindowTitle.Replace(" - Power BI Desktop", string.Empty);
+                newTab.ConnectionName = runtimeSummary.ConnectionName;
                 newTab.RuntimeSummary = runtimeSummary;
             }
 
-            newTab.ConnectionType = connType;
+            newTab.ConnectionType = connectionType;
             newTab.ShowSubPage(subPage);
 
             Tabs.Add(newTab);
@@ -244,17 +248,16 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
                 // Put selection focus back where it was
                 SelectedOptionsItem = null;
-                SelectedItem = MenuItems.FirstOrDefault(mi => mi.Name == LastNavigation?.Name);
+                SelectedItem = MenuItems.FirstOrDefault((i) => i.Name == LastNavigation?.Name);
             }
             else if (SelectedItem != null)
             {
                 // LastNavigation is used to avoid navigating to where already are
                 if (!SelectedItem.ShowComingSoon && SelectedItem.Name != (LastNavigation?.Name ?? string.Empty))
                 {
-                    if (SelectedItem.SubPageInTab != SubPage.AnalyzeModel
-                     && SelectedTab.RuntimeSummary.UsingLocalModelForAnanlysis)
+                    if (SelectedItem.SubPageInTab != SubPage.AnalyzeModel && SelectedTab.RuntimeSummary.UsingLocalModelForAnanlysis)
                     {
-                        SelectedItem = MenuItems.FirstOrDefault(mi => mi.SubPageInTab == SubPage.AnalyzeModel);
+                        SelectedItem = MenuItems.FirstOrDefault((i) => i.SubPageInTab == SubPage.AnalyzeModel);
                         SelectedIndex = AnalyzeModelItemIndex;
                     }
                     else
@@ -285,7 +288,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
                 else
                 {
                     // If an item that isn't enabled is selected put the selection indicator back where it was
-                    SelectedItem = MenuItems.FirstOrDefault(mi => mi.Name == LastNavigation?.Name);
+                    SelectedItem = MenuItems.FirstOrDefault((i) => i.Name == LastNavigation?.Name);
                     SelectedIndex = LastGoodSelectedIndex;
                 }
             }

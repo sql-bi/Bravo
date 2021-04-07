@@ -1,4 +1,5 @@
-﻿using Sqlbi.Bravo.Core.Services;
+﻿using Sqlbi.Bravo.Client.AnalysisServicesEventWatcher;
+using Sqlbi.Bravo.Core.Services.Interfaces;
 using System;
 using System.Data.Common;
 using System.IO;
@@ -8,10 +9,10 @@ namespace Sqlbi.Bravo.Core.Helpers
 {
     internal static class AnalysisServicesHelper
     {
-        public static AnalysisServicesEventWatcherEvent GetEventType(this string xmla)
+        public static WatcherEvent GetEventType(this string xmla)
         {
             if (xmla == null)
-                return AnalysisServicesEventWatcherEvent.Unknown;
+                return WatcherEvent.Unknown;
 
             using var stringReader = new StringReader(xmla);
             using var xmlReader = XmlReader.Create(stringReader);
@@ -22,40 +23,18 @@ namespace Sqlbi.Bravo.Core.Helpers
                 {
                     var name = xmlReader.Name;
 
-                    if (nameof(AnalysisServicesEventWatcherEvent.Create).Equals(name, StringComparison.OrdinalIgnoreCase))
-                        return AnalysisServicesEventWatcherEvent.Create;
+                    if (nameof(WatcherEvent.Create).Equals(name, StringComparison.OrdinalIgnoreCase))
+                        return WatcherEvent.Create;
 
-                    if (nameof(AnalysisServicesEventWatcherEvent.Delete).Equals(name, StringComparison.OrdinalIgnoreCase))
-                        return AnalysisServicesEventWatcherEvent.Delete;
+                    if (nameof(WatcherEvent.Delete).Equals(name, StringComparison.OrdinalIgnoreCase))
+                        return WatcherEvent.Delete;
 
-                    if (nameof(AnalysisServicesEventWatcherEvent.Alter).Equals(name, StringComparison.OrdinalIgnoreCase))
-                        return AnalysisServicesEventWatcherEvent.Alter;
+                    if (nameof(WatcherEvent.Alter).Equals(name, StringComparison.OrdinalIgnoreCase))
+                        return WatcherEvent.Alter;
                 }
             }
 
-            return AnalysisServicesEventWatcherEvent.Unknown;
-        }
-
-        public static string BuildConnectionString(string serverName, string databaseName)
-        {
-            const string ProviderKey = "Provider";
-            const string DataSourceKey = "Data Source";
-            const string InitialCatalogKey = "Initial Catalog";
-            const string IntegratedSecurityKey = "Integrated Security";
-            const string PersistSecurityInfoKey = "Persist Security Info";
-            const string ApplicationNameKey = "Application Name";
-
-            var builder = new DbConnectionStringBuilder(useOdbcRules: false)
-            {
-                { ProviderKey, "MSOLAP" },
-                { DataSourceKey, serverName },
-                { InitialCatalogKey, databaseName },
-                { IntegratedSecurityKey, "SSPI" },
-                { PersistSecurityInfoKey, "True" },
-                { ApplicationNameKey, AppConstants.ApplicationInstanceUniqueName }
-            };
-
-            return builder.ConnectionString;
+            return WatcherEvent.Unknown;
         }
     }
 }

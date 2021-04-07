@@ -1,12 +1,15 @@
-﻿using System;
+﻿using Sqlbi.Bravo.Core.Settings;
+using System;
 
 namespace Sqlbi.Bravo.Core.Services.Interfaces
 {
     internal interface IApplicationInstanceService
     {
-        public void NotifyConnectionToPrimaryInstance();
+        void NotifyConnectionToPrimaryInstance();
 
-        public void RegisterCallbackForMultipleInstanceStarted(Action<IntPtr> callback);
+        RuntimeSummary ReceiveConnectionFromSecondaryInstance(IntPtr ptr);
+
+        void RegisterCallbackForMultipleInstanceStarted(Action<IntPtr> callback);
 
         bool IsCurrentInstanceOwned { get; }
     }

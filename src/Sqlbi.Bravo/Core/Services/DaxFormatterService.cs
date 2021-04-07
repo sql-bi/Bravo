@@ -3,6 +3,8 @@ using Dax.Formatter.Models;
 using Microsoft.AnalysisServices;
 using Microsoft.AnalysisServices.Tabular;
 using Microsoft.Extensions.Logging;
+using Sqlbi.Bravo.Client.DaxFormatter;
+using Sqlbi.Bravo.Client.DaxFormatter.Interfaces;
 using Sqlbi.Bravo.Core.Helpers;
 using Sqlbi.Bravo.Core.Logging;
 using Sqlbi.Bravo.Core.Services.Interfaces;
@@ -17,70 +19,21 @@ using System.Threading.Tasks;
 
 namespace Sqlbi.Bravo.Core.Services
 {
-    interface IDaxFormatterServiceTabularObject
-    {
-        Guid Id { get; }
-
-        string Expression { get; }
-
-        string ExpressionFormatted { get; set; }
-
-        List<string> FormatterErrors { get; }
-
-        string FormatterAssignment { get; }
-    }
-
-    internal abstract class DaxFormatterServiceTabularObject : IDaxFormatterServiceTabularObject
-    {
-        public DaxFormatterServiceTabularObject(string expression) => Expression = expression;
-
-        public Guid Id { get; } = Guid.NewGuid();
-
-        public string Expression { get; }
-
-        public string ExpressionFormatted { get; set; }
-
-        public List<string> FormatterErrors { get; } = new List<string>();
-
-        public string FormatterAssignment => $"[{ Id }] :=";
-
-        public string FormatterExpression => $"{ FormatterAssignment }{ Expression }";
-    }
-
-    interface IDaxFormatterServiceTabularNamedObject
-    {
-        string Name { get; }
-    }
-
-    internal class DaxFormatterServiceTabularMeasure : DaxFormatterServiceTabularObject, IDaxFormatterServiceTabularNamedObject
-    {
-        public DaxFormatterServiceTabularMeasure(string name, string tableName, string expression)
-            : base(expression)
-        {
-            Name = name;
-            TableName = tableName;
-        }
-
-        public string Name { get; }
-
-        public string TableName { get; }
-    }
-
     internal class DaxFormatterService : IDaxFormatterService, IDisposable
     {
         private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1);
-        private readonly IDaxFormatterClient _client;
+        private readonly IDaxFormatterClient _formatter;
         private readonly ILogger _logger;
         private readonly Microsoft.AnalysisServices.Tabular.Server _server;
         private Microsoft.AnalysisServices.Tabular.Database _database;
         private bool _disposed;
 
-        public DaxFormatterService(IDaxFormatterClient client, ILogger<DaxFormatterService> logger)
+        public DaxFormatterService(ILogger<DaxFormatterService> logger)
         {
-            _client = client;
             _logger = logger;
 
             _logger.Trace();
+            _formatter = new DaxFormatterClient();
             _server = new Microsoft.AnalysisServices.Tabular.Server();
         }
 
@@ -109,15 +62,14 @@ namespace Sqlbi.Bravo.Core.Services
                         throw new ConnectionException("Unable to connect to the database.");
                     }
 
-                    var connectionString = AnalysisServicesHelper.BuildConnectionString(runtimeSummary.ServerName, runtimeSummary.DatabaseName);
-                    _server.Connect(connectionString);
+                    _server.Connect(runtimeSummary.ConnectionString);
                 }
 
                 _database = _server.Databases[runtimeSummary.DatabaseName];
                 _database.Model.Sync(new SyncOptions { DiscardLocalChanges = true });
                 _database.Refresh();
 
-                Measures = _database.Model.Tables.SelectMany((t) => t.Measures).Select((m) => new DaxFormatterServiceTabularMeasure(m.Name, m.Table.Name, m.Expression)).ToList();
+                Measures = _database.Model.Tables.SelectMany((t) => t.Measures).Select((m) => new TabularMeasure(m.Name, m.Table.Name, m.Expression)).ToList();
 
                 //IEnumerable<CalculatedColumn> CalculatedColumns => _model.Tables.SelectMany((t) => t.Columns.Where((c) => c.Type == ColumnType.Calculated).Cast<CalculatedColumn>());
                 //IEnumerable<KPI> KPIs => _model.Tables.SelectMany((t) => t.Measures.Select((m) => m.KPI)).Where((k) => k != null);
@@ -127,9 +79,9 @@ namespace Sqlbi.Bravo.Core.Services
             }
         }
 
-        public IEnumerable<DaxFormatterServiceTabularMeasure> Measures { get; private set; }
+        public IEnumerable<TabularMeasure> Measures { get; private set; }
 
-        public async Task<IEnumerable<IDaxFormatterServiceTabularObject>> FormatAsync(IList<IDaxFormatterServiceTabularObject> tabularObjects, IDaxFormatterSettings settings)
+        public async Task<IEnumerable<ITabularObject>> FormatAsync(IList<ITabularObject> tabularObjects, IDaxFormatterSettings settings)
         {
             _logger.Trace();
 
@@ -142,17 +94,17 @@ namespace Sqlbi.Bravo.Core.Services
             
             foreach (var tabularObject in tabularObjects)
             {
-                if (tabularObject is DaxFormatterServiceTabularMeasure measure)
+                if (tabularObject is TabularMeasure measure)
                 {
                     request.Dax.Add(measure.FormatterExpression);
                 }
                 else
                 {
-                    throw new InvalidOperationException($"Invalid { nameof(IDaxFormatterServiceTabularObject) } [{ tabularObject }]");
+                    throw new InvalidOperationException($"Invalid { nameof(ITabularObject) } [{ tabularObject }]");
                 }
             }
 
-            var response = await _client.FormatAsync(request);
+            var response = await _formatter.FormatAsync(request);
 
             for (var i = 0; i < response.Count; i++)
             {
@@ -166,7 +118,7 @@ namespace Sqlbi.Bravo.Core.Services
             return tabularObjects;
         }
 
-        public async Task ApplyFormatAsync(IList<IDaxFormatterServiceTabularObject> tabularObjects)
+        public async Task ApplyFormatAsync(IList<ITabularObject> tabularObjects)
         {
             _logger.Trace();
 
@@ -176,13 +128,13 @@ namespace Sqlbi.Bravo.Core.Services
             {
                 foreach (var tabularObject in tabularObjects)
                 {
-                    if (tabularObject is DaxFormatterServiceTabularMeasure measure)
+                    switch (tabularObject)
                     {
-                        _database.Model.Tables[measure.TableName].Measures[measure.Name].Expression = measure.ExpressionFormatted;
-                    }
-                    else
-                    {
-                        throw new InvalidOperationException($"Invalid { nameof(IDaxFormatterServiceTabularObject) } [{ tabularObject }]");
+                        case TabularMeasure measure:
+                            _database.Model.Tables[measure.TableName].Measures[measure.Name].Expression = measure.ExpressionFormatted;
+                            break;
+                        default:
+                            throw new InvalidOperationException($"Invalid { nameof(ITabularObject) } [{ tabularObject }]");
                     }
                 }
 

@@ -11,18 +11,16 @@ namespace Sqlbi.Bravo.Core.Services.Interfaces
     {
         Task InitilizeOrRefreshAsync(RuntimeSummary runtimeSummary);
 
-        (long DatasetSize, int ColumnCount) GetDatasetSummary();
+        (long DatasetSize, int ColumnCount) DatasetSummary { get; }
 
-        List<VpaColumn> GetUnusedColumns();
+        IEnumerable<VpaColumn> UnusedColumns { get; }
 
-        IEnumerable<VpaColumn> GetAllColumns();
+        IEnumerable<VpaColumn> AllColumns { get; }
 
-        IEnumerable<VpaTable> GetAllTables();
+        IEnumerable<VpaTable> AllTables { get; }
 
-        DateTime GetLastSyncTime();
+        DateTime LastSyncTime { get; }
 
-        Model GetModelForExport();
-
-        void OverrideDaxModel(Model daxModel);
+        Model DaxModel { get; set; }
     }
 }
