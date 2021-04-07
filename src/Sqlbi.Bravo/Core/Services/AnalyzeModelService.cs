@@ -54,7 +54,7 @@ namespace Sqlbi.Bravo.Core.Services
                 {
                     server.Connect(runtimeSummary.ConnectionString);
 
-                    var database = server.Databases[runtimeSummary.DatabaseName];
+                    var database = server.Databases.GetByName(runtimeSummary.DatabaseName);
                     var model = database.Model;
 
                     _daxModel = TomExtractor.GetDaxModel(database.Model, AppConstants.ApplicationName, AppConstants.ApplicationProductVersion);

@@ -104,15 +104,14 @@ namespace Sqlbi.Bravo.UI.Views
                 {
                     return;
                 }
-
-                _ = MessageBox.Show($"Hello { service.Account.Username } - { service.Account.Environment } @ TenantId { service.Account.HomeAccountId.TenantId } ", "TODO", MessageBoxButton.OK);
             }
 
-            var datasets = await service.GetSharedDatasetsAsync();
-            var workspaceCount = datasets.Select((d) => d.WorkspaceId).Distinct().Count();
-            var modelCount = datasets.Select((d) => d.Model.Id).Distinct().Count();
+            _ = MessageBox.Show($"Hello { service.Account.Username } @ TenantId { service.Account.HomeAccountId.TenantId }", "TODO", MessageBoxButton.OK);
 
-            _ = MessageBox.Show($"{ workspaceCount } workspaces and { modelCount } models found", "TODO", MessageBoxButton.OK);
+            var datasets = await service.GetSharedDatasetsAsync();
+
+            // TOFIX: add support to PersonalGroup workspaces
+            datasets = datasets.Where((d) => d.WorkspaceType != Client.PowerBI.PowerBICloud.Models.MetadataWorkspaceType.PersonalGroup);
 
             foreach (var dataset in datasets)
             {

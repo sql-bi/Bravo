@@ -36,55 +36,5 @@ namespace Sqlbi.Bravo.Core.Helpers
 
             return WatcherEvent.Unknown;
         }
-
-        public static string BuildConnectionString(string serverName, string databaseName)
-        {
-            const string ProviderKey = "Provider";
-            const string DataSourceKey = "Data Source";
-            const string InitialCatalogKey = "Initial Catalog";
-            const string IntegratedSecurityKey = "Integrated Security";
-            const string PersistSecurityInfoKey = "Persist Security Info";
-            const string ApplicationNameKey = "Application Name";
-
-            var builder = new DbConnectionStringBuilder(useOdbcRules: false)
-            {
-                { ProviderKey, "MSOLAP" },
-                { DataSourceKey, serverName },
-                { InitialCatalogKey, databaseName },
-                { IntegratedSecurityKey, "SSPI" },
-                { PersistSecurityInfoKey, "True" },
-                { ApplicationNameKey, AppConstants.ApplicationInstanceUniqueName }
-            };
-
-            return builder.ConnectionString;
-        }
-
-        public static string BuildLiveConnectionConnectionString(string serverName, string databaseName, IPowerBICloudService service)
-        {
-            const string ProviderKey = "Provider";
-            const string DataSourceKey = "Data Source";
-            const string InitialCatalogKey = "Initial Catalog";
-            const string IdentityProvider = "Identity Provider";
-            const string PersistSecurityInfoKey = "Persist Security Info";
-            const string IntegratedSecurityKey = "Integrated Security";
-            const string ApplicationNameKey = "Application Name";
-            const string PasswordKey = "Password";             
-
-            var identityProvider = $"{ service.CloudEnvironment.AuthorityUri }, { service.CloudEnvironment.ResourceUri }, { service.CloudEnvironment.ClientId }";
-
-            var builder = new DbConnectionStringBuilder(useOdbcRules: false)
-            {
-                { ProviderKey, "MSOLAP" },
-                { PersistSecurityInfoKey, "True" },
-                { IntegratedSecurityKey, "ClaimsToken" },
-                { DataSourceKey, serverName },
-                { InitialCatalogKey, databaseName },
-                { PasswordKey, service.AccessToken },
-                { IdentityProvider, identityProvider },
-                { ApplicationNameKey, AppConstants.ApplicationInstanceUniqueName }
-            };
-
-            return builder.ConnectionString;
-        }
     }
 }
