@@ -110,8 +110,8 @@ namespace Sqlbi.Bravo.UI.Views
 
             var datasets = await service.GetSharedDatasetsAsync();
 
-            // TOFIX: add support to PersonalGroup workspaces
-            datasets = datasets.Where((d) => d.WorkspaceType != Client.PowerBI.PowerBICloud.Models.MetadataWorkspaceType.PersonalGroup);
+            // TOFIX: add support to PersonalGroup and non-premium workspaces 
+            //datasets = datasets.Where((d) => d.WorkspaceType != Client.PowerBI.PowerBICloud.Models.MetadataWorkspaceType.PersonalGroup);
 
             foreach (var dataset in datasets)
             {

@@ -18,7 +18,7 @@ namespace Sqlbi.Bravo.Core.Services.Interfaces
 
         Task<bool> LoginAsync();
 
-        Task LogoutAsync();
+        Task LogoutAsync(); 
 
         Task<IEnumerable<MetadataSharedDataset>> GetSharedDatasetsAsync();
     }

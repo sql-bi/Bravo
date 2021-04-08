@@ -20,6 +20,6 @@ namespace Sqlbi.Bravo.Client.PowerBI
 
         public string ResourceUri { get; init; }
 
-        public string BackendEndpointUri { get; init; }
+        public string EndpointUri { get; init; }
     }
 }

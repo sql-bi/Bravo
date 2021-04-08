@@ -20,13 +20,14 @@ namespace Sqlbi.Bravo.Client.PowerBI.PowerBICloud
     {
         private const string DiscoverEnvironmentsUrl = "https://api.powerbi.com/powerbi/globalservice/v201606/environments/discover?client=powerbi-msolap";
         private const string GlobalServiceGetClusterUrl = "https://api.powerbi.com/spglobalservice/GetOrInsertClusterUrisByTenantlocation";
+        private const string GetWorkspacesUrl = "https://api.powerbi.com/powerbi/databases/v201606/workspaces";
         private const string GetSharedDatasetsUrl = "metadata/v201901/gallery/sharedDatasets";
         private const string CloudEnvironmentGlobalCloudName = "GlobalCloud";
         private const string MicrosoftAccountOnlyQueryParameter = "msafed=0";
 
         private static readonly object _tokenCacheLock = new object();
 
-        private static IPublicClientApplication PublicClientApplication;
+        private static IPublicClientApplication IdentityClientApplication;
         private static TenantCluster TenantCluster;
         private static GlobalService GlobalService;
 
@@ -71,18 +72,19 @@ namespace Sqlbi.Bravo.Client.PowerBI.PowerBICloud
                     if (globalEnvironment == null)
                         throw new NotSupportedException($"Cloud environment not found [{ environmentName }]");
 
+                    var authority = globalEnvironment.Services.Single((s) => "aad".Equals(s.Name, StringComparison.OrdinalIgnoreCase));
                     var service = globalEnvironment.Services.Single((s) => "powerbi-backend".Equals(s.Name, StringComparison.OrdinalIgnoreCase));
                     var client = globalEnvironment.Clients.Single((c) => "powerbi-gateway".Equals(c.Name, StringComparison.OrdinalIgnoreCase));
 
                     CloudEnvironment = new PowerBICloudEnvironment
                     {
                         Name = PowerBICloudEnvironmentType.Public,
-                        AuthorityUri = globalEnvironment.Services.Single((s) => "aad".Equals(s.Name, StringComparison.OrdinalIgnoreCase)).Endpoint,
+                        AuthorityUri = authority.Endpoint,
                         RedirectUri = client.RedirectUri,
                         ResourceUri = service.ResourceId,
                         ClientId = client.AppId,
                         Scopes = new string[] { $"{ service.ResourceId }/.default" },                        
-                        BackendEndpointUri = service.Endpoint,                     
+                        EndpointUri = service.Endpoint,                     
                     };
                 }
 
@@ -111,11 +113,11 @@ namespace Sqlbi.Bravo.Client.PowerBI.PowerBICloud
         {
             await InitializeCloudSettingsAsync();
 
-            if (PublicClientApplication == null)
+            if (IdentityClientApplication == null)
             {
-                PublicClientApplication = PublicClientApplicationBuilder.Create(CloudEnvironment.ClientId)
+                IdentityClientApplication = PublicClientApplicationBuilder.Create(CloudEnvironment.ClientId)
                     .WithAuthority(CloudEnvironment.AuthorityUri)
-                    .WithDefaultRedirectUri()
+                    .WithRedirectUri(CloudEnvironment.RedirectUri)
                     .Build();
 
                 //var tokenCache = PublicClientApplication.UserTokenCache;
@@ -127,7 +129,7 @@ namespace Sqlbi.Bravo.Client.PowerBI.PowerBICloud
 
             if (account != null)
             {
-                authenticationResult = await PublicClientApplication.AcquireTokenSilent(CloudEnvironment.Scopes, account)
+                authenticationResult = await IdentityClientApplication.AcquireTokenSilent(CloudEnvironment.Scopes, account)
                     .WithExtraQueryParameters(MicrosoftAccountOnlyQueryParameter)
                     .ExecuteAsync();
 
@@ -136,7 +138,7 @@ namespace Sqlbi.Bravo.Client.PowerBI.PowerBICloud
  
             var customLoginUI = new CustomLoginWebUI(UI.Views.ShellView.Instance);
 
-            authenticationResult = await PublicClientApplication.AcquireTokenInteractive(CloudEnvironment.Scopes)
+            authenticationResult = await IdentityClientApplication.AcquireTokenInteractive(CloudEnvironment.Scopes)
                 .WithExtraQueryParameters(MicrosoftAccountOnlyQueryParameter)
                 .WithCustomWebUi(customLoginUI)
                 .ExecuteAsync();
@@ -148,11 +150,11 @@ namespace Sqlbi.Bravo.Client.PowerBI.PowerBICloud
 
         public static async Task RemoveTokenAsync()
         {
-            var accounts = await PublicClientApplication.GetAccountsAsync();
+            var accounts = await IdentityClientApplication.GetAccountsAsync();
 
             foreach (var account in accounts)
             {
-                await PublicClientApplication.RemoveAsync(account);
+                await IdentityClientApplication.RemoveAsync(account);
             }
         }
 
@@ -189,11 +191,9 @@ namespace Sqlbi.Bravo.Client.PowerBI.PowerBICloud
         public static async Task<IEnumerable<MetadataSharedDataset>> GetSharedDatasetsAsync(string accessToken)
         {
             using var client = new HttpClient();
-            {
-                client.BaseAddress = new Uri(TenantCluster.FixedClusterUri);
-                client.DefaultRequestHeaders.Accept.Clear();
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-            }
+            client.BaseAddress = new Uri(TenantCluster.FixedClusterUri);
+            client.DefaultRequestHeaders.Accept.Clear();
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
             using var response = await client.GetAsync(GetSharedDatasetsUrl);
             response.EnsureSuccessStatusCode();
@@ -203,5 +203,20 @@ namespace Sqlbi.Bravo.Client.PowerBI.PowerBICloud
 
             return datasets;
         }
+
+        public static async Task<IEnumerable<Workspace>> GetWorkspacesAsync(string accessToken)
+        {
+            using var client = new HttpClient();
+            client.DefaultRequestHeaders.Accept.Clear();
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+            using var response = await client.GetAsync(GetWorkspacesUrl);
+            response.EnsureSuccessStatusCode();
+
+            var json = await response.Content.ReadAsStringAsync();
+            var workspaces = JsonSerializer.Deserialize<IEnumerable<Workspace>>(json, options: new JsonSerializerOptions(JsonSerializerDefaults.Web));
+
+            return workspaces;
+        }        
     }
 }

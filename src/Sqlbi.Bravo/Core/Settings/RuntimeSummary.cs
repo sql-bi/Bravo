@@ -69,15 +69,14 @@ namespace Sqlbi.Bravo.Core.Settings
 
         public static RuntimeSummary CreateFrom(MetadataSharedDataset dataset, IPowerBICloudService service)
         {
-            var backendUri = new Uri(service.CloudEnvironment.BackendEndpointUri);
-            var serverName = $"pbiazure://{ backendUri.Host }"; 
+            var backendUri = new Uri(service.CloudEnvironment.EndpointUri);
 
             var runtimeSummary = new RuntimeSummary
             {
                 ConnectionName = dataset.Model.DisplayName,
-                ServerName = serverName,
+                ServerName = $"pbiazure://{ backendUri.Host }",
                 DatabaseName = dataset.Model.DisplayName,
-                ConnectionString = BuildLiveConnectionConnectionString(service, dataset),
+                ConnectionString = BuildConnectionString(service, dataset),
             };
 
             return runtimeSummary;
@@ -117,6 +116,7 @@ namespace Sqlbi.Bravo.Core.Settings
         //    const string PasswordKey = "Password";
 
         //    var identityProvider = $"{ service.CloudEnvironment.AuthorityUri }, { service.CloudEnvironment.ResourceUri }, { service.CloudEnvironment.ClientId }";
+        //    var location = $"{ service.CloudCluster.FixedClusterUri }xmla?vs={ dataset.Model.VSName }&db={ dataset.Model.DBName }" },
         //    var databaseName = $"{ dataset.Model.VSName }-{ dataset.Model.DBName }";
 
         //    var builder = new DbConnectionStringBuilder(useOdbcRules: false)
@@ -134,19 +134,19 @@ namespace Sqlbi.Bravo.Core.Settings
         //    return builder.ConnectionString;
         //}
 
-        private static string BuildLiveConnectionConnectionString(IPowerBICloudService service, MetadataSharedDataset dataset)
+        private static string BuildConnectionString(IPowerBICloudService service, MetadataSharedDataset dataset)
         {
             const string ProviderKey = "Provider";
             const string DataSourceKey = "Data Source";
             const string InitialCatalogKey = "Initial Catalog";
-            const string PersistSecurityInfoKey = "Persist Security Info";
+            //const string PersistSecurityInfoKey = "Persist Security Info";
             const string ApplicationNameKey = "Application Name";
             const string PasswordKey = "Password";
 
             var builder = new DbConnectionStringBuilder(useOdbcRules: false)
             {
                 { ProviderKey, "MSOLAP" },
-                { PersistSecurityInfoKey, "True" },
+                //{ PersistSecurityInfoKey, "True" },
                 { DataSourceKey, $"powerbi://api.powerbi.com/v1.0/myorg/{ dataset.WorkspaceName }" },
                 { InitialCatalogKey, dataset.Model.DisplayName },
                 { PasswordKey, service.AccessToken },

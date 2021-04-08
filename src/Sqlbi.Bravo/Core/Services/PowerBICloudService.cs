@@ -6,6 +6,7 @@ using Sqlbi.Bravo.Client.PowerBI.PowerBICloud.Models;
 using Sqlbi.Bravo.Core.Logging;
 using Sqlbi.Bravo.Core.Services.Interfaces;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Sqlbi.Bravo.Core.Services
@@ -59,7 +60,15 @@ namespace Sqlbi.Bravo.Core.Services
         {
             _logger.Trace();
 
-            return await PowerBICloudManager.GetSharedDatasetsAsync(_authenticationResult.AccessToken);
+            var workspaces = await PowerBICloudManager.GetWorkspacesAsync(_authenticationResult.AccessToken);
+            var datasets = await PowerBICloudManager.GetSharedDatasetsAsync(_authenticationResult.AccessToken);
+
+            var premiumWorkspaces = workspaces.Where((w) => WorkspaceCapacitySkuType.Premium.Equals(w.GetWorkspaceCapacitySkuType()));
+            var availableDatasets = datasets.Join(premiumWorkspaces, (d) => d.WorkspaceObjectId.ToUpperInvariant(), (w) => w.Id.ToUpperInvariant(), (d, w) => d)
+                .Where((d) =>!d.Model.IsExcelWorkbook && !d.Model.IsPushDataEnabled)
+                .ToArray();
+
+            return availableDatasets;
         }
     }
 }
