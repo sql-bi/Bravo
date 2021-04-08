@@ -9,7 +9,7 @@ namespace Sqlbi.Bravo.Core.Services.Interfaces
 {
     internal interface IAnalyzeModelService
     {
-        Task InitilizeOrRefreshAsync(RuntimeSummary runtimeSummary);
+        Task InitilizeOrRefreshAsync(ConnectionSettings connectionSettings);
 
         (long DatasetSize, int ColumnCount) DatasetSummary { get; }
 

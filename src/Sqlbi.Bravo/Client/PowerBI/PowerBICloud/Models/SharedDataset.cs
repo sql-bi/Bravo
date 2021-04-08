@@ -1,6 +1,6 @@
 ﻿namespace Sqlbi.Bravo.Client.PowerBI.PowerBICloud.Models
 {
-    internal class MetadataSharedDataset
+    internal class SharedDataset
     {
         public long ModelId { get; set; }
 
@@ -10,10 +10,10 @@
 
         public string WorkspaceName { get; set; }
 
-        public MetadataWorkspaceType WorkspaceType { get; set; }
+        public SharedDatasetWorkspaceType WorkspaceType { get; set; }
 
-        public MetadataPermissions Permissions { get; set; }
+        public SharedDatasetPermissions Permissions { get; set; }
 
-        public MetadataModel Model { get; set; }
+        public SharedDatasetModel Model { get; set; }
     }
 }

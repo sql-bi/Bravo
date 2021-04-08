@@ -5,7 +5,6 @@ using Microsoft.AnalysisServices.Tabular;
 using Microsoft.Extensions.Logging;
 using Sqlbi.Bravo.Client.DaxFormatter;
 using Sqlbi.Bravo.Client.DaxFormatter.Interfaces;
-using Sqlbi.Bravo.Core.Helpers;
 using Sqlbi.Bravo.Core.Logging;
 using Sqlbi.Bravo.Core.Services.Interfaces;
 using Sqlbi.Bravo.Core.Settings;
@@ -37,7 +36,7 @@ namespace Sqlbi.Bravo.Core.Services
             _server = new Microsoft.AnalysisServices.Tabular.Server();
         }
 
-        public async Task InitilizeOrRefreshAsync(RuntimeSummary runtimeSummary)
+        public async Task InitilizeOrRefreshAsync(ConnectionSettings connectionSettings)
         {
             _logger.Trace();
 
@@ -56,16 +55,16 @@ namespace Sqlbi.Bravo.Core.Services
                 if (_server.Connected == false)
                 {
                     // This can happen is the message used to launch a tab in an existing app instance is lost or corrupt.
-                    if (string.IsNullOrWhiteSpace(runtimeSummary.ServerName) && string.IsNullOrWhiteSpace(runtimeSummary.DatabaseName))
+                    if (string.IsNullOrWhiteSpace(connectionSettings.ServerName) && string.IsNullOrWhiteSpace(connectionSettings.DatabaseName))
                     {
                         // Add own error message rather than the generic one from AnalysisServices ("A data source must be specified in the connection string.")
                         throw new ConnectionException("Unable to connect to the database.");
                     }
 
-                    _server.Connect(runtimeSummary.ConnectionString);
+                    _server.Connect(connectionSettings.ConnectionString);
                 }
 
-                _database = _server.Databases[runtimeSummary.DatabaseName];
+                _database = _server.Databases.FindByName(connectionSettings.DatabaseName);
                 _database.Model.Sync(new SyncOptions { DiscardLocalChanges = true });
                 _database.Refresh();
 

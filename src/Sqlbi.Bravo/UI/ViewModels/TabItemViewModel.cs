@@ -49,12 +49,12 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
             // Get the values for the started instance.
             // These will be overridden if messaged to be single instance and open another tab
-            RuntimeSummary = RuntimeSummary.CreateFrom(_settings.Runtime);
+            ConnectionSettings = ConnectionSettings.CreateFrom(_settings.Runtime);
         }
 
         internal void ShowAnalysisOfLoadedModel(Model daxModel)
         {
-            RuntimeSummary.UsingLocalModelForAnanlysis = true;
+            ConnectionSettings.UsingLocalModelForAnanlysis = true;
 
             AnalyzeModelVm.OverrideDaxModel(daxModel);
             ShowSubPage(SubPage.AnalyzeModel);
@@ -63,7 +63,9 @@ namespace Sqlbi.Bravo.UI.ViewModels
         private async Task TryAgain()
         {
             if (IsRetrying)
+            {
                 return;
+            }
 
             try
             {
@@ -202,7 +204,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public bool ShowError { get; set; }
 
-        public RuntimeSummary RuntimeSummary { get; set; }
+        public ConnectionSettings ConnectionSettings { get; set; }
 
         public string ErrorDescription { get; set; }
 
@@ -216,7 +218,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
         {
             _logger.Trace();
 
-            await ExecuteCommandAsync(() => ConnectCommandIsRunning, () => _watcher.ConnectAsync(RuntimeSummary));
+            await ExecuteCommandAsync(() => ConnectCommandIsRunning, () => _watcher.ConnectAsync(ConnectionSettings));
         }
 
         private async Task Disconnect()
@@ -259,7 +261,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
                     ShowSelectConnection = true;
                     break;
                 case SubPage.DaxFormatter:
-                    if (!RuntimeSummary.UsingLocalModelForAnanlysis)
+                    if (!ConnectionSettings.UsingLocalModelForAnanlysis)
                     {
                         ShowDaxFormatter = true;
                         shellViewModel.SelectedIndex = ShellViewModel.FormatDaxItemIndex;

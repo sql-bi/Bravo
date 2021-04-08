@@ -12,6 +12,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Sqlbi.Bravo.Client.PowerBI.PowerBICloud
@@ -25,6 +26,7 @@ namespace Sqlbi.Bravo.Client.PowerBI.PowerBICloud
         private const string CloudEnvironmentGlobalCloudName = "GlobalCloud";
         private const string MicrosoftAccountOnlyQueryParameter = "msafed=0";
 
+        private static readonly SemaphoreSlim _tokenSemaphore = new SemaphoreSlim(1);
         private static readonly object _tokenCacheLock = new object();
 
         private static IPublicClientApplication IdentityClientApplication;
@@ -111,50 +113,66 @@ namespace Sqlbi.Bravo.Client.PowerBI.PowerBICloud
 
         public static async Task<AuthenticationResult> AcquireTokenAsync(IAccount account)
         {
-            await InitializeCloudSettingsAsync();
-
-            if (IdentityClientApplication == null)
+            await _tokenSemaphore.WaitAsync();
+            try
             {
-                IdentityClientApplication = PublicClientApplicationBuilder.Create(CloudEnvironment.ClientId)
-                    .WithAuthority(CloudEnvironment.AuthorityUri)
-                    .WithRedirectUri(CloudEnvironment.RedirectUri)
-                    .Build();
+                await InitializeCloudSettingsAsync();
 
-                //var tokenCache = PublicClientApplication.UserTokenCache;
-                //tokenCache.SetBeforeAccess(TokenCacheBeforeAccessCallback);
-                //tokenCache.SetAfterAccess(TokenCacheAfterAccessCallback);
-            }
+                if (IdentityClientApplication == null)
+                {
+                    IdentityClientApplication = PublicClientApplicationBuilder.Create(CloudEnvironment.ClientId)
+                        .WithAuthority(CloudEnvironment.AuthorityUri)
+                        .WithRedirectUri(CloudEnvironment.RedirectUri)
+                        .Build();
 
-            AuthenticationResult authenticationResult;
+                    //var tokenCache = PublicClientApplication.UserTokenCache;
+                    //tokenCache.SetBeforeAccess(TokenCacheBeforeAccessCallback);
+                    //tokenCache.SetAfterAccess(TokenCacheAfterAccessCallback);
+                }
 
-            if (account != null)
-            {
-                authenticationResult = await IdentityClientApplication.AcquireTokenSilent(CloudEnvironment.Scopes, account)
+                AuthenticationResult authenticationResult;
+
+                if (account != null)
+                {
+                    authenticationResult = await IdentityClientApplication.AcquireTokenSilent(CloudEnvironment.Scopes, account)
+                        .WithExtraQueryParameters(MicrosoftAccountOnlyQueryParameter)
+                        .ExecuteAsync();
+
+                    return authenticationResult;
+                }
+ 
+                var customLoginUI = new CustomLoginWebUI(UI.Views.ShellView.Instance);
+
+                authenticationResult = await IdentityClientApplication.AcquireTokenInteractive(CloudEnvironment.Scopes)
                     .WithExtraQueryParameters(MicrosoftAccountOnlyQueryParameter)
+                    .WithCustomWebUi(customLoginUI)
                     .ExecuteAsync();
+
+                await InitializeTenantClusterAsync(authenticationResult.AccessToken);
 
                 return authenticationResult;
             }
- 
-            var customLoginUI = new CustomLoginWebUI(UI.Views.ShellView.Instance);
-
-            authenticationResult = await IdentityClientApplication.AcquireTokenInteractive(CloudEnvironment.Scopes)
-                .WithExtraQueryParameters(MicrosoftAccountOnlyQueryParameter)
-                .WithCustomWebUi(customLoginUI)
-                .ExecuteAsync();
-
-            await InitializeTenantClusterAsync(authenticationResult.AccessToken);
-
-            return authenticationResult;
+            finally
+            {
+                _tokenSemaphore.Release();
+            }
         }
 
         public static async Task RemoveTokenAsync()
         {
-            var accounts = await IdentityClientApplication.GetAccountsAsync();
-
-            foreach (var account in accounts)
+            await _tokenSemaphore.WaitAsync();
+            try
             {
-                await IdentityClientApplication.RemoveAsync(account);
+                var accounts = await IdentityClientApplication.GetAccountsAsync();
+
+                foreach (var account in accounts)
+                {
+                    await IdentityClientApplication.RemoveAsync(account);
+                }
+            }
+            finally
+            {
+                _tokenSemaphore.Release();
             }
         }
 
@@ -188,7 +206,7 @@ namespace Sqlbi.Bravo.Client.PowerBI.PowerBICloud
             }
         }
 
-        public static async Task<IEnumerable<MetadataSharedDataset>> GetSharedDatasetsAsync(string accessToken)
+        public static async Task<IEnumerable<SharedDataset>> GetSharedDatasetsAsync(string accessToken)
         {
             using var client = new HttpClient();
             client.BaseAddress = new Uri(TenantCluster.FixedClusterUri);
@@ -199,7 +217,7 @@ namespace Sqlbi.Bravo.Client.PowerBI.PowerBICloud
             response.EnsureSuccessStatusCode();
 
             var json = await response.Content.ReadAsStringAsync();
-            var datasets = JsonSerializer.Deserialize<IEnumerable<MetadataSharedDataset>>(json, options: new JsonSerializerOptions(JsonSerializerDefaults.Web));
+            var datasets = JsonSerializer.Deserialize<IEnumerable<SharedDataset>>(json, options: new JsonSerializerOptions(JsonSerializerDefaults.Web));
 
             return datasets;
         }

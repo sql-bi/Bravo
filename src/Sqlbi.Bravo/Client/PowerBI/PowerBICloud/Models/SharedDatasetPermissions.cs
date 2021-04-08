@@ -3,7 +3,7 @@
 namespace Sqlbi.Bravo.Client.PowerBI.PowerBICloud.Models
 {
     [Flags]
-    internal enum MetadataPermissions
+    internal enum SharedDatasetPermissions
     {
         None = 0,
 

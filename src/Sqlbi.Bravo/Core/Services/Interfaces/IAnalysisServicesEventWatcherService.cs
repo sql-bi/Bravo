@@ -11,7 +11,7 @@ namespace Sqlbi.Bravo.Core.Services.Interfaces
 
         event EventHandler<ConnectionStateEventArgs> OnConnectionStateChanged;
 
-        Task ConnectAsync(RuntimeSummary runtimeSummary);
+        Task ConnectAsync(ConnectionSettings connectionSettings);
 
         Task DisconnectAsync();
     }

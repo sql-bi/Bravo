@@ -29,11 +29,11 @@ namespace Sqlbi.Bravo.Core.Services
             _logger.Trace();
         }
 
-        public async Task InitilizeOrRefreshAsync(RuntimeSummary runtimeSummary)
+        public async Task InitilizeOrRefreshAsync(ConnectionSettings connectionSettings)
         {
             _logger.Trace();
 
-            if (runtimeSummary.UsingLocalModelForAnanlysis)
+            if (connectionSettings.UsingLocalModelForAnanlysis)
             {
                 return;
             }
@@ -52,17 +52,17 @@ namespace Sqlbi.Bravo.Core.Services
             {
                 using (var server = new Server())
                 {
-                    server.Connect(runtimeSummary.ConnectionString);
+                    server.Connect(connectionSettings.ConnectionString);
 
-                    var database = server.Databases.GetByName(runtimeSummary.DatabaseName);
+                    var database = server.Databases.GetByName(connectionSettings.DatabaseName);
                     var model = database.Model;
 
                     _daxModel = TomExtractor.GetDaxModel(database.Model, AppConstants.ApplicationName, AppConstants.ApplicationProductVersion);
                 }
 
-                using (var connection = new AdomdConnection(runtimeSummary.ConnectionString))
+                using (var connection = new AdomdConnection(connectionSettings.ConnectionString))
                 {
-                    DmvExtractor.PopulateFromDmv(_daxModel, connection, runtimeSummary.ServerName, runtimeSummary.DatabaseName, AppConstants.ApplicationName, AppConstants.ApplicationProductVersion);
+                    DmvExtractor.PopulateFromDmv(_daxModel, connection, connectionSettings.ServerName, connectionSettings.DatabaseName, AppConstants.ApplicationName, AppConstants.ApplicationProductVersion);
                     StatExtractor.UpdateStatisticsModel(_daxModel, connection, AppConstants.AnalyzeModelUpdateStatisticsModelSampleRowCount);
                 }
 

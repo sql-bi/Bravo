@@ -75,9 +75,9 @@ namespace Sqlbi.Bravo.UI.Views
             }
 
             var shellViewModel = App.ServiceProvider.GetRequiredService<ShellViewModel>();
-            var runtimeSummary = RuntimeSummary.CreateFrom(instance);
+            var connectionSettings = ConnectionSettings.CreateFrom(instance);
 
-            shellViewModel.AddNewTab(BiConnectionType.ActivePowerBiWindow, SubPage.AnalyzeModel, runtimeSummary);
+            shellViewModel.AddNewTab(BiConnectionType.ActivePowerBiWindow, SubPage.AnalyzeModel, connectionSettings);
         }
 
         private async void ConnectToPowerBIDatasetClicked(object sender, RoutedEventArgs e)
@@ -122,9 +122,9 @@ namespace Sqlbi.Bravo.UI.Views
                     case MessageBoxResult.Yes:
                         {
                             var shellViewModel = App.ServiceProvider.GetRequiredService<ShellViewModel>();
-                            var runtimeSummary = RuntimeSummary.CreateFrom(dataset, service);
+                            var connectionSettings = ConnectionSettings.CreateFrom(dataset, service);
 
-                            shellViewModel.AddNewTab(BiConnectionType.ActivePowerBiWindow, SubPage.AnalyzeModel, runtimeSummary);
+                            shellViewModel.AddNewTab(BiConnectionType.ActivePowerBiWindow, SubPage.AnalyzeModel, connectionSettings);
                         }
                         return;
                     default:

@@ -21,11 +21,11 @@ namespace Sqlbi.Bravo.Core.Settings
     /// This is a selection of the information from RuntimeSettings that is held by each tab.
     /// If different tabs coudn't connect to different data sources then could access `settings.Runtime.Xxxx` directly.
     /// </summary>
-    internal class RuntimeSummary
+    internal class ConnectionSettings
     {
-        public static RuntimeSummary CreateFrom(RuntimeSettings settings)
+        public static ConnectionSettings CreateFrom(RuntimeSettings settings)
         {
-            var runtimeSummary = new RuntimeSummary
+            var connectionSettings = new ConnectionSettings
             {
                 ConnectionName = settings.ParentProcessMainWindowTitle,
                 ServerName = settings.ServerName,
@@ -33,14 +33,14 @@ namespace Sqlbi.Bravo.Core.Settings
                 ConnectionString = BuildConnectionString(settings.ServerName, settings.DatabaseName),
             };
 
-            return runtimeSummary;
+            return connectionSettings;
         }
 
-        public static RuntimeSummary CreateFrom(PowerBIDesktopInstance instance)
+        public static ConnectionSettings CreateFrom(PowerBIDesktopInstance instance)
         {
             var databaseName = GetDatabaseName();
 
-            var runtimeSummary = new RuntimeSummary
+            var connectionSettings = new ConnectionSettings
             {
                 ConnectionName = instance.Name,
                 ServerName = instance.ServerName,
@@ -48,7 +48,7 @@ namespace Sqlbi.Bravo.Core.Settings
                 ConnectionString = BuildConnectionString(instance.ServerName, databaseName),
             };
 
-            return runtimeSummary;
+            return connectionSettings;
 
             string GetDatabaseName()
             {
@@ -67,11 +67,11 @@ namespace Sqlbi.Bravo.Core.Settings
             }
         }
 
-        public static RuntimeSummary CreateFrom(MetadataSharedDataset dataset, IPowerBICloudService service)
+        public static ConnectionSettings CreateFrom(SharedDataset dataset, IPowerBICloudService service)
         {
             var backendUri = new Uri(service.CloudEnvironment.EndpointUri);
 
-            var runtimeSummary = new RuntimeSummary
+            var connectionSettings = new ConnectionSettings
             {
                 ConnectionName = dataset.Model.DisplayName,
                 ServerName = $"pbiazure://{ backendUri.Host }",
@@ -79,7 +79,7 @@ namespace Sqlbi.Bravo.Core.Settings
                 ConnectionString = BuildConnectionString(service, dataset),
             };
 
-            return runtimeSummary;
+            return connectionSettings;
         }
 
         private static string BuildConnectionString(string serverName, string databaseName)
@@ -134,7 +134,7 @@ namespace Sqlbi.Bravo.Core.Settings
         //    return builder.ConnectionString;
         //}
 
-        private static string BuildConnectionString(IPowerBICloudService service, MetadataSharedDataset dataset)
+        private static string BuildConnectionString(IPowerBICloudService service, SharedDataset dataset)
         {
             const string ProviderKey = "Provider";
             const string DataSourceKey = "Data Source";

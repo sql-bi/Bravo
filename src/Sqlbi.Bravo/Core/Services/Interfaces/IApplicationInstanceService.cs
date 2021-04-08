@@ -7,7 +7,7 @@ namespace Sqlbi.Bravo.Core.Services.Interfaces
     {
         void NotifyConnectionToPrimaryInstance();
 
-        RuntimeSummary ReceiveConnectionFromSecondaryInstance(IntPtr ptr);
+        ConnectionSettings ReceiveConnectionFromSecondaryInstance(IntPtr ptr);
 
         void RegisterCallbackForMultipleInstanceStarted(Action<IntPtr> callback);
 

@@ -56,7 +56,7 @@ namespace Sqlbi.Bravo.Core.Services
             await PowerBICloudManager.RemoveTokenAsync();
         }
 
-        public async Task<IEnumerable<MetadataSharedDataset>> GetSharedDatasetsAsync()
+        public async Task<IEnumerable<SharedDataset>> GetSharedDatasetsAsync()
         {
             _logger.Trace();
 

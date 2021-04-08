@@ -131,7 +131,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
         {
             FormatCommandIsEnabled = false;
             LoadingDetails = "Connecting to data";
-            await _formatter.InitilizeOrRefreshAsync(ParentTab.RuntimeSummary);
+            await _formatter.InitilizeOrRefreshAsync(ParentTab.ConnectionSettings);
 
             LastSyncTime = DateTime.UtcNow;
             OnPropertyChanged(nameof(TimeSinceLastSync));

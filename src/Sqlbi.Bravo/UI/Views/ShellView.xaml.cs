@@ -2,7 +2,6 @@
 using MahApps.Metro.SimpleChildWindow;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Sqlbi.Bravo.Core.Helpers;
 using Sqlbi.Bravo.Core.Logging;
 using Sqlbi.Bravo.Core.Services.Interfaces;
 using Sqlbi.Bravo.Core.Settings.Interfaces;
@@ -43,11 +42,11 @@ namespace Sqlbi.Bravo.UI.Views
                 {
                     var applicationInstance = App.ServiceProvider.GetRequiredService<IApplicationInstanceService>();
 
-                    var runtimeSummary = applicationInstance.ReceiveConnectionFromSecondaryInstance(ptr: lParam);
-                    if (runtimeSummary != null)
+                    var connectionSettings = applicationInstance.ReceiveConnectionFromSecondaryInstance(ptr: lParam);
+                    if (connectionSettings != null)
                     {
                         // Creating the tab (& VMs) may not trigger the loaded event when expected
-                        ViewModel.AddNewTab(BiConnectionType.ActivePowerBiWindow, ViewModel?.SelectedItem?.SubPageInTab ?? SubPage.DaxFormatter, runtimeSummary);
+                        ViewModel.AddNewTab(BiConnectionType.ActivePowerBiWindow, ViewModel?.SelectedItem?.SubPageInTab ?? SubPage.DaxFormatter, connectionSettings);
                     }
                 }
                 catch (Exception ex)

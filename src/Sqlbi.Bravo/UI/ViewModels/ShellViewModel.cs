@@ -105,7 +105,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
                 var daxFormatterIcon = new DaxFormatterIcon();
                 daxFormatterIcon.SetResourceReference(DaxFormatterIcon.ForegroundBrushProperty, name: "MahApps.Brushes.ThemeForeground");
 
-                return new ObservableCollection<NavigationItem>()
+                var collection = new ObservableCollection<NavigationItem>()
                 {
                     new NavigationItem { Name = "Format DAX", IconControl = daxFormatterIcon, SubPageInTab = SubPage.DaxFormatter },
                     new NavigationItem { Name = "Analyze Model", IconControl = analyzeModelIcon, SubPageInTab = SubPage.AnalyzeModel },
@@ -114,6 +114,8 @@ namespace Sqlbi.Bravo.UI.ViewModels
                     new NavigationItem { Name = "Best practices", Glyph = "\uE19F", ShowComingSoon = true },
                     new NavigationItem { Name = "Optimize model", Glyph = "\uEC4A", ShowComingSoon = true },
                 };
+
+                return collection;
             }
         }
 
@@ -205,14 +207,14 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public int LastGoodSelectedIndex { get; set; } = -1;
 
-        public void AddNewTab(BiConnectionType connectionType = BiConnectionType.UnSelected, SubPage subPage = SubPage.SelectConnection, RuntimeSummary runtimeSummary = null)
+        public void AddNewTab(BiConnectionType connectionType = BiConnectionType.UnSelected, SubPage subPage = SubPage.SelectConnection, ConnectionSettings connectionSettings = null)
         {
             var newTab = App.ServiceProvider.GetRequiredService<TabItemViewModel>();
            
-            if (runtimeSummary != null)
+            if (connectionSettings != null)
             {
-                newTab.ConnectionName = runtimeSummary.ConnectionName;
-                newTab.RuntimeSummary = runtimeSummary;
+                newTab.ConnectionName = connectionSettings.ConnectionName;
+                newTab.ConnectionSettings = connectionSettings;
             }
 
             newTab.ConnectionType = connectionType;
@@ -255,7 +257,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
                 // LastNavigation is used to avoid navigating to where already are
                 if (!SelectedItem.ShowComingSoon && SelectedItem.Name != (LastNavigation?.Name ?? string.Empty))
                 {
-                    if (SelectedItem.SubPageInTab != SubPage.AnalyzeModel && SelectedTab.RuntimeSummary.UsingLocalModelForAnanlysis)
+                    if (SelectedItem.SubPageInTab != SubPage.AnalyzeModel && SelectedTab.ConnectionSettings.UsingLocalModelForAnanlysis)
                     {
                         SelectedItem = MenuItems.FirstOrDefault((i) => i.SubPageInTab == SubPage.AnalyzeModel);
                         SelectedIndex = AnalyzeModelItemIndex;

@@ -339,7 +339,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
         {
             LoadingDetails = "Connecting to data";
 
-            await _analyzer.InitilizeOrRefreshAsync(ParentTab.RuntimeSummary);
+            await _analyzer.InitilizeOrRefreshAsync(ParentTab.ConnectionSettings);
 
             LoadingDetails = "Analyzing model";
 
