@@ -1,40 +1,87 @@
 ﻿using Microsoft.AnalysisServices;
+using Microsoft.Extensions.DependencyInjection;
 using Sqlbi.Bravo.Client.PowerBI.Desktop;
 using Sqlbi.Bravo.Client.PowerBI.PowerBICloud;
 using Sqlbi.Bravo.Core.Services.Interfaces;
 using System;
 using System.Data.Common;
+using System.Linq;
 
 namespace Sqlbi.Bravo.Core.Settings
 {
-
-    //internal enum AsInstanceType
-    //{
-    //    Other,
-    //    AsAzure,
-    //    PbiPremiumInternal,
-    //    PbiPremiumXmlaEp,
-    //    PbiDataset
-    //}
-
     /// <summary>
     /// This is a selection of the information from RuntimeSettings that is held by each tab.
     /// If different tabs coudn't connect to different data sources then could access `settings.Runtime.Xxxx` directly.
     /// </summary>
     internal class ConnectionSettings
     {
-        public static ConnectionSettings CreateFrom(RuntimeSettings settings)
-        {
-            var connectionSettings = new ConnectionSettings
-            {
-                ConnectionName = settings.ParentProcessMainWindowTitle,
-                ServerName = settings.ServerName,
-                DatabaseName = settings.DatabaseName,
-                ConnectionString = BuildConnectionString(settings.ServerName, settings.DatabaseName),
-            };
+        private const string AsAzureLinkProtocolScheme = "link://";
+        private const string AsAzureProtocolScheme = "asazure://";
+        private const string PbiDedicatedProtocolScheme = "pbidedicated://";
+        private const string PbiPremiumProtocolScheme = "powerbi://";
+        private const string PbiDatasetProtocolScheme = "pbiazure://";
 
-            return connectionSettings;
+        public static ConnectionSettings CreateFrom(string connectionName, string serverName, string databaseName)
+        {
+            var connectionType = GetConnectionType(serverName);
+            if (connectionType == ConnectionType.Unsupported)
+            { 
+                return null;
+            }
+
+            if (connectionType == ConnectionType.PowerBIDesktop)
+            {
+                var powerbiDesktopConnectionSettings = new ConnectionSettings
+                {
+                    ConnectionType = connectionType,
+                    ConnectionName = connectionName,
+                    ServerName = serverName,
+                    DatabaseName = databaseName,
+                    ConnectionString = BuildConnectionString(serverName, databaseName),
+                };
+
+                return powerbiDesktopConnectionSettings;
+            }
+
+            if (connectionType == ConnectionType.PowerBIDataset)
+            {
+                //throw new NotImplementedException();
+
+                //var powerbiCloudService = App.ServiceProvider.GetRequiredService<IPowerBICloudService>();
+                //if (powerbiCloudService.IsAuthenticated == false)
+                //{
+                //    // TODO: refactoring to support async/await
+                //    var loggedIn = powerbiCloudService.LoginAsync().GetAwaiter().GetResult();
+                //    if (loggedIn == false)
+                //    {
+                //        return null;
+                //    }
+                //}
+
+                //// TODO: refactoring to support async/await
+                //var datasets = powerbiCloudService.GetDatasetsAsync().GetAwaiter().GetResult();
+                //var dataset = datasets.SingleOrDefault((d) => d.Model.DBName.Equals(databaseName, StringComparison.InvariantCultureIgnoreCase));
+                //if (dataset == null)
+                //{ 
+                //    return null;
+                //}
+
+                //var powerbiDatasetConnectionSettings = new ConnectionSettings
+                //{
+                //    ConnectionType = connectionType,
+                //    ConnectionName = connectionName,
+                //    ServerName = serverName,
+                //    DatabaseName = databaseName,
+                //    ConnectionString = BuildConnectionString(powerbiCloudService, dataset),
+                //};
+
+                //return powerbiDatasetConnectionSettings;
+            }
+
+            return null;
         }
+
+        public static ConnectionSettings CreateFrom(RuntimeSettings settings) => CreateFrom(connectionName: settings.ParentProcessMainWindowTitle, settings.ServerName, settings.DatabaseName);
 
         public static ConnectionSettings CreateFrom(PowerBIDesktopInstance instance)
         {
@@ -42,6 +89,7 @@ namespace Sqlbi.Bravo.Core.Settings
 
             var connectionSettings = new ConnectionSettings
             {
+                ConnectionType = ConnectionType.PowerBIDesktop,
                 ConnectionName = instance.Name,
                 ServerName = instance.ServerName,
                 DatabaseName = databaseName,
@@ -70,11 +118,13 @@ namespace Sqlbi.Bravo.Core.Settings
         public static ConnectionSettings CreateFrom(PowerBICloudSharedDataset dataset, IPowerBICloudService service)
         {
             var backendUri = new Uri(service.CloudEnvironment.EndpointUri);
+            var serverUri = new UriBuilder(PbiDatasetProtocolScheme, backendUri.Host).Uri;
 
             var connectionSettings = new ConnectionSettings
             {
+                ConnectionType = ConnectionType.PowerBIDataset,
                 ConnectionName = dataset.Model.DisplayName,
-                ServerName = $"pbiazure://{ backendUri.Host }",
+                ServerName = serverUri.AbsolutePath,
                 DatabaseName = dataset.Model.DisplayName,
                 ConnectionString = BuildConnectionString(service, dataset),
             };
@@ -104,7 +154,7 @@ namespace Sqlbi.Bravo.Core.Settings
             return builder.ConnectionString;
         }
 
-        //public static string BuildLiveConnectionConnectionString(string serverName, IPowerBICloudService service, MetadataSharedDataset dataset)
+        //public static string BuildConnectionString(string serverName, IPowerBICloudService service, MetadataSharedDataset dataset)
         //{
         //    const string ProviderKey = "Provider";
         //    const string DataSourceKey = "Data Source";
@@ -155,6 +205,33 @@ namespace Sqlbi.Bravo.Core.Settings
 
             return builder.ConnectionString;
         }
+
+        private static ConnectionType GetConnectionType(string dataSource)
+        {
+            var connectionType = ConnectionType.PowerBIDesktop;
+
+            if (IsProtocolSchemeInstance(dataSource, PbiDatasetProtocolScheme))
+            {
+                connectionType = ConnectionType.PowerBIDataset;
+            }            
+            else if (IsProtocolSchemeInstance(dataSource, PbiPremiumProtocolScheme) || IsProtocolSchemeInstance(dataSource, AsAzureLinkProtocolScheme) || IsProtocolSchemeInstance(dataSource, AsAzureProtocolScheme) || IsProtocolSchemeInstance(dataSource, PbiDedicatedProtocolScheme))
+            {
+                connectionType = ConnectionType.Unsupported;
+            }
+
+            return connectionType;
+        }
+
+        private static bool IsProtocolSchemeInstance(string dataSourceUri, string protocolScheme)
+        {
+            return dataSourceUri?.StartsWith(protocolScheme, StringComparison.InvariantCultureIgnoreCase) ?? false;
+        }
+
+        private ConnectionSettings()
+        {
+        }
+
+        public ConnectionType ConnectionType { get; init; } = ConnectionType.Unsupported;
 
         public string ServerName { get; init; }
 

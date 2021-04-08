@@ -66,19 +66,14 @@ namespace Sqlbi.Bravo.Core.Services
 
             var premiumWorkspaces = workspaces.Where((w) => WorkspaceCapacitySkuType.Premium.Equals(w.GetWorkspaceCapacitySkuType()));
             var cloudWorkspaces = datasets.Where((d) => !d.Model.IsExcelWorkbook && !d.Model.IsPushDataEnabled)
-                .Join(premiumWorkspaces, (d) => d.WorkspaceObjectId.ToUpperInvariant(), (w) => w.Id.ToUpperInvariant(), (d, w) => new
+                .Join(premiumWorkspaces, (d) => d.WorkspaceObjectId.ToUpperInvariant(), (w) => w.Id.ToUpperInvariant(), (d, w) => new PowerBICloudSharedDataset
                 {
-                    Workspace = w,
-                    Dataset = d
-                })
-                .Select((a) => new PowerBICloudSharedDataset
-                {
-                    WorkspaceId = Guid.Parse(a.Workspace.Id),
-                    WorkspaceName = a.Workspace.Name,
-                    WorkspaceType = a.Workspace.GetWorkspaceType(),
-                    WorkspaceCapacitySkuType = a.Workspace.GetWorkspaceCapacitySkuType(),
-                    Permissions = a.Dataset.Permissions,
-                    Model = a.Dataset.Model
+                    WorkspaceId = Guid.Parse(w.Id),
+                    WorkspaceName = w.Name,
+                    WorkspaceType = w.GetWorkspaceType(),
+                    WorkspaceCapacitySkuType = w.GetWorkspaceCapacitySkuType(),
+                    Permissions = d.Permissions,
+                    Model = d.Model
                 })
                 .ToArray();
 

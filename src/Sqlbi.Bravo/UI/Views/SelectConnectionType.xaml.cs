@@ -144,21 +144,23 @@ namespace Sqlbi.Bravo.UI.Views
                 InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
             };
 
-            if (openFileDialog.ShowDialog() == true)
+            if (openFileDialog.ShowDialog() == false)
             {
-                _logger.Information(LogEvents.StartConnectionAction, "{@Details}", new object[] { new
-                {
-                    Action = "OpenVertiPaqAnalyzerFile"
-                }});
-
-                var fileContent = VpaxTools.ImportVpax(openFileDialog.FileName);
-
-                var viewModel = DataContext as TabItemViewModel;
-                viewModel.ConnectionType = BiConnectionType.VertipaqAnalyzerFile;
-                viewModel.ConnectionName = Path.GetFileNameWithoutExtension(openFileDialog.FileName);
-                viewModel.AnalyzeModelVm.OnPropertyChanged(nameof(AnalyzeModelViewModel.ConnectionName));
-                viewModel.ShowAnalysisOfLoadedModel(fileContent.DaxModel);
+                return;
             }
+
+            _logger.Information(LogEvents.StartConnectionAction, "{@Details}", new object[] { new
+            {
+                Action = "OpenVertiPaqAnalyzerFile"
+            }});
+
+            var fileContent = VpaxTools.ImportVpax(openFileDialog.FileName);
+
+            var viewModel = DataContext as TabItemViewModel;
+            viewModel.ConnectionType = BiConnectionType.VertipaqAnalyzerFile;
+            viewModel.ConnectionName = Path.GetFileNameWithoutExtension(openFileDialog.FileName);
+            viewModel.AnalyzeModelVm.OnPropertyChanged(nameof(AnalyzeModelViewModel.ConnectionName));
+            viewModel.ShowAnalysisOfLoadedModel(fileContent.DaxModel);
         }
     }
 }

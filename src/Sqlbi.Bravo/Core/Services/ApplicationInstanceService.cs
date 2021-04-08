@@ -81,13 +81,7 @@ namespace Sqlbi.Bravo.Core.Services
 
             var json = copyData.lpData;
             var message = JsonSerializer.Deserialize<ConnectionInfoMessage>(json);
-
-            var connectionSettings = new ConnectionSettings
-            {
-                ServerName = message.ServerName,
-                DatabaseName = message.DatabaseName,
-                ConnectionName = message.ConnectionName,
-            };
+            var connectionSettings = ConnectionSettings.CreateFrom(message.ConnectionName, message.ServerName, message.DatabaseName);
 
             return connectionSettings;
         }
