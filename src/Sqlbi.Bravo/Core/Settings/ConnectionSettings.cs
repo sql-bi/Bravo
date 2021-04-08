@@ -1,6 +1,6 @@
 ﻿using Microsoft.AnalysisServices;
 using Sqlbi.Bravo.Client.PowerBI.Desktop;
-using Sqlbi.Bravo.Client.PowerBI.PowerBICloud.Models;
+using Sqlbi.Bravo.Client.PowerBI.PowerBICloud;
 using Sqlbi.Bravo.Core.Services.Interfaces;
 using System;
 using System.Data.Common;
@@ -67,7 +67,7 @@ namespace Sqlbi.Bravo.Core.Settings
             }
         }
 
-        public static ConnectionSettings CreateFrom(SharedDataset dataset, IPowerBICloudService service)
+        public static ConnectionSettings CreateFrom(PowerBICloudSharedDataset dataset, IPowerBICloudService service)
         {
             var backendUri = new Uri(service.CloudEnvironment.EndpointUri);
 
@@ -134,7 +134,7 @@ namespace Sqlbi.Bravo.Core.Settings
         //    return builder.ConnectionString;
         //}
 
-        private static string BuildConnectionString(IPowerBICloudService service, SharedDataset dataset)
+        private static string BuildConnectionString(IPowerBICloudService service, PowerBICloudSharedDataset dataset)
         {
             const string ProviderKey = "Provider";
             const string DataSourceKey = "Data Source";

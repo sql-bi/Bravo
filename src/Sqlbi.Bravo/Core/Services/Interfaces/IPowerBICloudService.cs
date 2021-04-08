@@ -1,6 +1,6 @@
 ﻿using Microsoft.Identity.Client;
 using Sqlbi.Bravo.Client.PowerBI;
-using Sqlbi.Bravo.Client.PowerBI.PowerBICloud.Models;
+using Sqlbi.Bravo.Client.PowerBI.PowerBICloud;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -20,6 +20,6 @@ namespace Sqlbi.Bravo.Core.Services.Interfaces
 
         Task LogoutAsync(); 
 
-        Task<IEnumerable<SharedDataset>> GetSharedDatasetsAsync();
+        Task<IEnumerable<PowerBICloudSharedDataset>> GetDatasetsAsync();
     }
 }

@@ -5,6 +5,7 @@ using Sqlbi.Bravo.Client.PowerBI.PowerBICloud;
 using Sqlbi.Bravo.Client.PowerBI.PowerBICloud.Models;
 using Sqlbi.Bravo.Core.Logging;
 using Sqlbi.Bravo.Core.Services.Interfaces;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -56,7 +57,7 @@ namespace Sqlbi.Bravo.Core.Services
             await PowerBICloudManager.RemoveTokenAsync();
         }
 
-        public async Task<IEnumerable<SharedDataset>> GetSharedDatasetsAsync()
+        public async Task<IEnumerable<PowerBICloudSharedDataset>> GetDatasetsAsync()
         {
             _logger.Trace();
 
@@ -64,11 +65,24 @@ namespace Sqlbi.Bravo.Core.Services
             var datasets = await PowerBICloudManager.GetSharedDatasetsAsync(_authenticationResult.AccessToken);
 
             var premiumWorkspaces = workspaces.Where((w) => WorkspaceCapacitySkuType.Premium.Equals(w.GetWorkspaceCapacitySkuType()));
-            var availableDatasets = datasets.Join(premiumWorkspaces, (d) => d.WorkspaceObjectId.ToUpperInvariant(), (w) => w.Id.ToUpperInvariant(), (d, w) => d)
-                .Where((d) =>!d.Model.IsExcelWorkbook && !d.Model.IsPushDataEnabled)
+            var cloudWorkspaces = datasets.Where((d) => !d.Model.IsExcelWorkbook && !d.Model.IsPushDataEnabled)
+                .Join(premiumWorkspaces, (d) => d.WorkspaceObjectId.ToUpperInvariant(), (w) => w.Id.ToUpperInvariant(), (d, w) => new
+                {
+                    Workspace = w,
+                    Dataset = d
+                })
+                .Select((a) => new PowerBICloudSharedDataset
+                {
+                    WorkspaceId = Guid.Parse(a.Workspace.Id),
+                    WorkspaceName = a.Workspace.Name,
+                    WorkspaceType = a.Workspace.GetWorkspaceType(),
+                    WorkspaceCapacitySkuType = a.Workspace.GetWorkspaceCapacitySkuType(),
+                    Permissions = a.Dataset.Permissions,
+                    Model = a.Dataset.Model
+                })
                 .ToArray();
 
-            return availableDatasets;
+            return cloudWorkspaces;
         }
     }
 }

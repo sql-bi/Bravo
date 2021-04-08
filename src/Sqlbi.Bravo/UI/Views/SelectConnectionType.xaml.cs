@@ -108,10 +108,7 @@ namespace Sqlbi.Bravo.UI.Views
 
             _ = MessageBox.Show($"Hello { service.Account.Username } @ TenantId { service.Account.HomeAccountId.TenantId }", "TODO", MessageBoxButton.OK);
 
-            var datasets = await service.GetSharedDatasetsAsync();
-
-            // TOFIX: add support to PersonalGroup and non-premium workspaces 
-            //datasets = datasets.Where((d) => d.WorkspaceType != Client.PowerBI.PowerBICloud.Models.MetadataWorkspaceType.PersonalGroup);
+            var datasets = await service.GetDatasetsAsync();
 
             foreach (var dataset in datasets)
             {
