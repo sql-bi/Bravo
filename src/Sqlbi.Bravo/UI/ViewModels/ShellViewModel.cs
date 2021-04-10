@@ -252,14 +252,38 @@ namespace Sqlbi.Bravo.UI.ViewModels
             switch (connectionSettings.ConnectionType)
             {
                 case ConnectionType.PowerBIDesktop:
-                    newTab.ConnectionType = BiConnectionType.ActivePowerBiWindow;
-                    newTab.ConnectionName = connectionSettings.ConnectionName;
-                    newTab.ConnectionSettings = connectionSettings;
+                    {
+                        newTab.ConnectionType = BiConnectionType.ActivePowerBiWindow;
+                        newTab.ConnectionName = connectionSettings.ConnectionName;
+                        newTab.ConnectionSettings = connectionSettings;
+                    }
                     break;
-                //case ConnectionType.PowerBIDataset:
-                //    break;
-                //case ConnectionType.VertiPaqAnalyzer:
-                //    break;
+                case ConnectionType.PowerBIDataset:
+                    {
+                        var powerbiCloudService = App.ServiceProvider.GetRequiredService<IPowerBICloudService>();
+                        if (powerbiCloudService.IsAuthenticated == false)
+                        {
+                            var loggedIn = await powerbiCloudService.LoginAsync();
+                            if (loggedIn == false)
+                            {
+                                return;
+                            }
+                        }
+
+                        var powerbiSharedDatasets = await powerbiCloudService.GetDatasetsAsync();
+                        var powerbiSharedDataset = powerbiSharedDatasets.SingleOrDefault((d) => d.Model.DBName.Equals(databaseName, StringComparison.InvariantCultureIgnoreCase));
+                        if (powerbiSharedDataset == null)
+                        {
+                            throw new InvalidOperationException($"Power BI dataset '{ databaseName }' not found.");
+                        }
+
+                        connectionSettings = ConnectionSettings.CreateFrom(powerbiSharedDataset, powerbiCloudService);
+
+                        newTab.ConnectionType = BiConnectionType.ConnectedPowerBiDataset;
+                        newTab.ConnectionName = connectionSettings.ConnectionName;
+                        newTab.ConnectionSettings = connectionSettings;
+                    }
+                    break;
                 default:
                     throw new NotImplementedException($"Connection to '{ serverName }' is not supported.");
             }

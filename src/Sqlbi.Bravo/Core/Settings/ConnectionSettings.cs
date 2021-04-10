@@ -33,42 +33,18 @@ namespace Sqlbi.Bravo.Core.Settings
 
             switch (connectionSettings.ConnectionType)
             {
-                //case ConnectionType.Unsupported:
-                //    break;
                 case ConnectionType.PowerBIDesktop:
-                    {
-                        connectionSettings.ConnectionName = connectionName;
-                        connectionSettings.ServerName = serverName;
-                        connectionSettings.DatabaseName = databaseName;
-                        connectionSettings.ConnectionString = BuildConnectionString(serverName, databaseName);
-                    }
-                    break;
+                    connectionSettings.ConnectionName = connectionName;
+                    connectionSettings.ServerName = serverName;
+                    connectionSettings.DatabaseName = databaseName;
+                    connectionSettings.ConnectionString = BuildConnectionString(serverName, databaseName);
+                   break;
                 case ConnectionType.PowerBIDataset:
-                    {
-                        // TODO: add support to PowerBIDataset
-                        connectionSettings.ConnectionType = ConnectionType.Unsupported;
-
-                        //var powerbiCloudService = App.ServiceProvider.GetRequiredService<IPowerBICloudService>();
-                        //if (powerbiCloudService.IsAuthenticated == false)
-                        //{
-                        //    // TODO: refactoring to support async/await
-                        //    var loggedIn = powerbiCloudService.LoginAsync().GetAwaiter().GetResult();
-                        //    if (loggedIn == false)
-                        //    {
-                        //        return null;
-                        //    }
-                        //}
-
-                        //var datasets = powerbiCloudService.GetDatasetsAsync().GetAwaiter().GetResult();
-                        //var dataset = datasets.SingleOrDefault((d) => d.Model.DBName.Equals(databaseName, StringComparison.InvariantCultureIgnoreCase));
-                        //if (dataset == null)
-                        //{ 
-                        //    return null;
-                        //}
-                    }
+                    //
                     break;
-                //case ConnectionType.VertiPaqAnalyzer:
-                //    break;
+                default:
+                    Debug.Assert(connectionSettings.ConnectionType == ConnectionType.Unsupported);
+                    break;
             }
 
             return connectionSettings;
