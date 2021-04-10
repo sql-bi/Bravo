@@ -65,7 +65,7 @@ namespace Sqlbi.Bravo.Core.Services
             var datasets = await PowerBICloudManager.GetSharedDatasetsAsync(_authenticationResult.AccessToken);
 
             var premiumWorkspaces = workspaces.Where((w) => WorkspaceCapacitySkuType.Premium.Equals(w.GetWorkspaceCapacitySkuType()));
-            var cloudWorkspaces = datasets.Where((d) => !d.Model.IsExcelWorkbook && !d.Model.IsPushDataEnabled)
+            var cloudDatasets = datasets.Where((d) => !d.Model.IsExcelWorkbook && !d.Model.IsPushDataEnabled)
                 .Join(premiumWorkspaces, (d) => d.WorkspaceObjectId.ToUpperInvariant(), (w) => w.Id.ToUpperInvariant(), (d, w) => new PowerBICloudSharedDataset
                 {
                     WorkspaceId = Guid.Parse(w.Id),
@@ -77,7 +77,7 @@ namespace Sqlbi.Bravo.Core.Services
                 })
                 .ToArray();
 
-            return cloudWorkspaces;
+            return cloudDatasets;
         }
     }
 }

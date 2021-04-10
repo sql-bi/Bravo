@@ -10,6 +10,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
+using System.Threading.Tasks;
 
 namespace Sqlbi.Bravo.Core.Services
 {
@@ -24,37 +25,48 @@ namespace Sqlbi.Bravo.Core.Services
             _logger.Trace();
         }
 
-        public IEnumerable<PowerBIDesktopInstance> GetInstances()
+        public async Task<IEnumerable<PowerBIDesktopInstance>> GetInstancesAsync()
         {
             _logger.Trace();
 
-            var processes = Process.GetProcessesByName("msmdsrv")
-                .Select((p) => new
-                {
-                    AnalisysServicesProcess = p,
-                    ParentProcess = p.GetParent()
-                })
-                .Where((i) => i.ParentProcess.ProcessName.Equals(AppConstants.PowerBIDesktopProcessName, StringComparison.OrdinalIgnoreCase))
-                .ToList();
+            var instances = await Task.Run(GetInstances);
 
-            if (processes.Any() == false)
-                yield break;
+            return instances;
 
-            var connections = Network.GetTcpConnections();
-
-            foreach (var process in processes)
+            IEnumerable<PowerBIDesktopInstance> GetInstances()
             {
-                var connection = connections.SingleOrDefault((c) => process.AnalisysServicesProcess.Id.Equals(c.ProcessId) && c.State == TcpState.Listen && IPAddress.IsLoopback(c.LocalEndPoint.Address));
-                if (connection == default)
-                    continue;
+                var instances = new List<PowerBIDesktopInstance>();
 
-                var instance = new PowerBIDesktopInstance
+                var processes = Process.GetProcessesByName("msmdsrv")
+                    .Select((p) => new
+                    {
+                        AnalisysServicesProcess = p,
+                        ParentProcess = p.GetParent()
+                    })
+                    .Where((i) => i.ParentProcess.ProcessName.Equals(AppConstants.PowerBIDesktopProcessName, StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+
+                if (processes.Any() == false)
+                    return instances;
+
+                var connections = Network.GetTcpConnections();
+
+                foreach (var process in processes)
                 {
-                    Name = process.ParentProcess.GetMainWindowTitle().ToPowerBIDesktopReportName(),
-                    LocalEndPoint = connection.LocalEndPoint
-                };
+                    var connection = connections.SingleOrDefault((c) => process.AnalisysServicesProcess.Id.Equals(c.ProcessId) && c.State == TcpState.Listen && IPAddress.IsLoopback(c.LocalEndPoint.Address));
+                    if (connection == default)
+                        continue;
 
-                yield return instance;
+                    var instance = new PowerBIDesktopInstance
+                    {
+                        Name = process.ParentProcess.GetMainWindowTitle().ToPowerBIDesktopReportName(),
+                        LocalEndPoint = connection.LocalEndPoint
+                    };
+
+                    instances.Add(instance);
+                }
+
+                return instances;
             }
         }
     }

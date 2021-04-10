@@ -1,6 +1,8 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Sqlbi.Bravo.Client.AnalysisServicesEventWatcher;
+using Sqlbi.Bravo.Client.PowerBI.Desktop;
+using Sqlbi.Bravo.Client.PowerBI.PowerBICloud;
 using Sqlbi.Bravo.Core;
 using Sqlbi.Bravo.Core.Logging;
 using Sqlbi.Bravo.Core.Services;
@@ -69,24 +71,6 @@ namespace Sqlbi.Bravo.UI.ViewModels
                     tempthread.Start();
                 }
             };
-        }
-
-        internal void LaunchedViaPowerBIDesktop(string title)
-        {
-            SelectedTab.ConnectionName = title;
-            SelectedTab.ConnectionType = BiConnectionType.ActivePowerBiWindow;
-            SelectedTab.ShowSubPage(SelectedItem?.SubPageInTab ?? SubPage.DaxFormatter);
-
-            if (SelectedItem == null)
-            {
-                SelectedItem = MenuItems.First();
-            }
-#if DEBUG
-            if (string.IsNullOrWhiteSpace(SelectedTab.ConnectionName))
-            {
-                SelectedTab.ConnectionName = "DEBUG";
-            }
-#endif
         }
 
         public double WindowMinWidth => 800D;
@@ -207,23 +191,71 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public int LastGoodSelectedIndex { get; set; } = -1;
 
-        public void AddNewTab(BiConnectionType connectionType = BiConnectionType.UnSelected, SubPage subPage = SubPage.SelectConnection, ConnectionSettings connectionSettings = null)
+        public async Task AddNewTabAsync(PowerBIDesktopInstance instance)
         {
-            var newTab = App.ServiceProvider.GetRequiredService<TabItemViewModel>();
-           
-            if (connectionSettings != null)
-            {
-                newTab.ConnectionName = connectionSettings.ConnectionName;
-                newTab.ConnectionSettings = connectionSettings;
-            }
+            var connectionSettings = await Task.Run(() => ConnectionSettings.CreateFrom(instance));
 
-            newTab.ConnectionType = connectionType;
-            newTab.ShowSubPage(subPage);
+            var newTab = App.ServiceProvider.GetRequiredService<TabItemViewModel>();
+            newTab.ConnectionType = BiConnectionType.ActivePowerBiWindow;
+            newTab.ConnectionName = connectionSettings.ConnectionName;
+            newTab.ConnectionSettings = connectionSettings;
+            newTab.ShowSubPage(SubPage.DaxFormatter);
 
             Tabs.Add(newTab);
+            SelectedTab = newTab;
+        }
 
-            // Select added item so it is made visible
-            SelectedTab = Tabs.Last();
+        public async Task AddNewTabAsync(PowerBICloudSharedDataset dataset)
+        {
+            var service = App.ServiceProvider.GetRequiredService<IPowerBICloudService>();
+            var connectionSettings = await Task.Run(() => ConnectionSettings.CreateFrom(dataset, service));
+
+            var newTab = App.ServiceProvider.GetRequiredService<TabItemViewModel>();
+            newTab.ConnectionType = BiConnectionType.ConnectedPowerBiDataset;
+            newTab.ConnectionName = connectionSettings.ConnectionName;
+            newTab.ConnectionSettings = connectionSettings;
+            newTab.ShowSubPage(SubPage.AnalyzeModel);
+
+            Tabs.Add(newTab);
+            SelectedTab = newTab;
+        }
+
+        public async Task AddNewTabAsync(string connectionName, string serverName, string databaseName)
+        {            
+            var connectionSettings = await Task.Run(() => ConnectionSettings.CreateFrom(connectionName, serverName, databaseName));
+
+            var newTab = App.ServiceProvider.GetRequiredService<TabItemViewModel>();
+
+            switch (connectionSettings.ConnectionType)
+            {
+                case ConnectionType.PowerBIDesktop:
+                    newTab.ConnectionType = BiConnectionType.ActivePowerBiWindow;
+                    newTab.ConnectionName = connectionSettings.ConnectionName;
+                    newTab.ConnectionSettings = connectionSettings;
+                    break;
+                //case ConnectionType.PowerBIDataset:
+                //    break;
+                //case ConnectionType.VertiPaqAnalyzer:
+                //    break;
+                default:
+                    throw new NotImplementedException($"Connection to '{ serverName }' is not supported.");
+            }
+
+            newTab.ShowSubPage(SubPage.AnalyzeModel);
+
+            Tabs.Add(newTab);
+            SelectedTab = newTab;            
+        }
+
+        public async Task AddNewTab()
+        {
+            var newTab = App.ServiceProvider.GetRequiredService<TabItemViewModel>();
+            newTab.ShowSubPage(SubPage.SelectConnection);
+
+            Tabs.Add(newTab);
+            SelectedTab = newTab;
+
+            await Task.CompletedTask;
         }
 
         private async Task ItemSelected()
@@ -257,7 +289,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
                 // LastNavigation is used to avoid navigating to where already are
                 if (!SelectedItem.ShowComingSoon && SelectedItem.Name != (LastNavigation?.Name ?? string.Empty))
                 {
-                    if (SelectedItem.SubPageInTab != SubPage.AnalyzeModel && SelectedTab.ConnectionSettings.UsingLocalModelForAnanlysis)
+                    if (SelectedItem.SubPageInTab != SubPage.AnalyzeModel && (SelectedTab.ConnectionSettings?.UsingLocalModelForAnanlysis ?? false))
                     {
                         SelectedItem = MenuItems.FirstOrDefault((i) => i.SubPageInTab == SubPage.AnalyzeModel);
                         SelectedIndex = AnalyzeModelItemIndex;

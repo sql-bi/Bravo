@@ -47,37 +47,35 @@ namespace Sqlbi.Bravo.UI.Views
 
         private void HowToUseClicked(object sender, RoutedEventArgs e) => ShellView.Instance.ShowMediaDialog(new HowToUseBravoHelp());
 
-        private void AttachToPowerBIDesktopClicked(object sender, RoutedEventArgs e)
+        private async void AttachToPowerBIDesktopClicked(object sender, RoutedEventArgs e)
         {
-            _logger.Trace();
-
             // TODO REQUIREMENTS: need to know how to connect here
-            _ = MessageBox.Show(
-                "Testing connection to the first Power BI Desktop instance available",
-                "TODO",
-                MessageBoxButton.OK,
-                MessageBoxImage.Question);
-
-            _logger.Information(LogEvents.StartConnectionAction, "{@Details}", new object[] { new
-            {
-                Action = "AttachPowerBIDesktop"
-            }});
+            _ = MessageBox.Show("Testing connection to Power BI Desktop", "TODO", MessageBoxButton.OK, MessageBoxImage.Question);
 
             var service = App.ServiceProvider.GetRequiredService<IPowerBIDesktopService>();
-            var instances = service.GetInstances();
+            var instances = await service.GetInstancesAsync();
 
-            _ = MessageBox.Show($"{ instances.Count() } active Power BI Desktop instances found", "TODO", MessageBoxButton.OK);
-
-            var instance = instances.FirstOrDefault();
-            if (instance == null)
+            foreach (var instance in instances)
             {
-                return;
+                switch (MessageBox.Show($"Connect to instance '{ instance.Name }' @ '{ instance.LocalEndPoint }' ?", "TODO", MessageBoxButton.YesNoCancel))
+                {
+                    case MessageBoxResult.No:
+                        continue;
+                    case MessageBoxResult.Yes:
+                        {
+                            _logger.Information(LogEvents.StartConnectionAction, "{@Details}", new object[] { new
+                            {
+                                Action = "AttachPowerBIDesktop"
+                            }});
+
+                            var shellViewModel = App.ServiceProvider.GetRequiredService<ShellViewModel>();
+                            await shellViewModel.AddNewTabAsync(instance);
+                        }
+                        return;
+                    default:
+                        return;
+                }
             }
-
-            var shellViewModel = App.ServiceProvider.GetRequiredService<ShellViewModel>();
-            var connectionSettings = ConnectionSettings.CreateFrom(instance);
-
-            shellViewModel.AddNewTab(BiConnectionType.ActivePowerBiWindow, SubPage.AnalyzeModel, connectionSettings);
         }
 
         private async void ConnectToPowerBIDatasetClicked(object sender, RoutedEventArgs e)
@@ -85,16 +83,7 @@ namespace Sqlbi.Bravo.UI.Views
             _logger.Trace();
 
             // TODO REQUIREMENTS: need to know how to connect here
-            _ = MessageBox.Show(
-                "Testing connection to the first Power BI dataset available",
-                "TODO",
-                MessageBoxButton.OK,
-                MessageBoxImage.Question);
-
-            _logger.Information(LogEvents.StartConnectionAction, "{@Details}", new object[] { new
-            {
-                Action = "ConnectPowerBIDataset"
-            }});
+            _ = MessageBox.Show("Testing connection to Power BI dataset", "TODO", MessageBoxButton.OK, MessageBoxImage.Question);
 
             var service = App.ServiceProvider.GetRequiredService<IPowerBICloudService>();
             if (service.IsAuthenticated == false)
@@ -104,9 +93,9 @@ namespace Sqlbi.Bravo.UI.Views
                 {
                     return;
                 }
-            }
 
-            _ = MessageBox.Show($"Hello { service.Account.Username } @ TenantId { service.Account.HomeAccountId.TenantId }", "TODO", MessageBoxButton.OK);
+                _ = MessageBox.Show($"Hello { service.Account.Username } @ TenantId { service.Account.HomeAccountId.TenantId }", "TODO", MessageBoxButton.OK);
+            }
 
             var datasets = await service.GetDatasetsAsync();
 
@@ -118,10 +107,13 @@ namespace Sqlbi.Bravo.UI.Views
                         continue;
                     case MessageBoxResult.Yes:
                         {
-                            var shellViewModel = App.ServiceProvider.GetRequiredService<ShellViewModel>();
-                            var connectionSettings = ConnectionSettings.CreateFrom(dataset, service);
+                            _logger.Information(LogEvents.StartConnectionAction, "{@Details}", new object[] { new
+                            {
+                                Action = "ConnectPowerBIDataset"
+                            }});
 
-                            shellViewModel.AddNewTab(BiConnectionType.ActivePowerBiWindow, SubPage.AnalyzeModel, connectionSettings);
+                            var shellViewModel = App.ServiceProvider.GetRequiredService<ShellViewModel>();
+                            await shellViewModel.AddNewTabAsync(dataset);
                         }
                         return;
                     default:

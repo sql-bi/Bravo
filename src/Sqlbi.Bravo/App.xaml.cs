@@ -28,7 +28,7 @@ namespace Sqlbi.Bravo
             _host = host;
 
             // Uncomment this to enable debugging when launched from PBIDesktop
-            ////System.Diagnostics.Debugger.Launch();
+            //System.Diagnostics.Debugger.Launch();
 
             _settings = _host.Services.GetRequiredService<IGlobalSettingsProviderService>();
             _logger = _host.Services.GetRequiredService<ILogger<App>>();

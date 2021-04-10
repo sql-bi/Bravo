@@ -46,10 +46,6 @@ namespace Sqlbi.Bravo.UI.ViewModels
             ConnectCommand = new RelayCommand(async () => await Connect());
             DisconnectCommand = new RelayCommand(async () => await Disconnect());
             TryAgainCommand = new RelayCommand(async () => await TryAgain());
-
-            // Get the values for the started instance.
-            // These will be overridden if messaged to be single instance and open another tab
-            ConnectionSettings = ConnectionSettings.CreateFrom(_settings.Runtime);
         }
 
         internal void ShowAnalysisOfLoadedModel(Model daxModel)

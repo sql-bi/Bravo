@@ -2,6 +2,7 @@
 using MahApps.Metro.SimpleChildWindow;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Sqlbi.Bravo.Core;
 using Sqlbi.Bravo.Core.Logging;
 using Sqlbi.Bravo.Core.Services.Interfaces;
 using Sqlbi.Bravo.Core.Settings.Interfaces;
@@ -10,6 +11,7 @@ using Sqlbi.Bravo.UI.DataModel;
 using Sqlbi.Bravo.UI.ViewModels;
 using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -42,11 +44,21 @@ namespace Sqlbi.Bravo.UI.Views
                 {
                     var applicationInstance = App.ServiceProvider.GetRequiredService<IApplicationInstanceService>();
 
-                    var connectionSettings = applicationInstance.ReceiveConnectionFromSecondaryInstance(ptr: lParam);
-                    if (connectionSettings != null)
+                    var connection = applicationInstance.ReceiveConnectionFromSecondaryInstance(ptr: lParam);
+                    if (connection != default)
                     {
-                        // Creating the tab (& VMs) may not trigger the loaded event when expected
-                        ViewModel.AddNewTab(BiConnectionType.ActivePowerBiWindow, ViewModel?.SelectedItem?.SubPageInTab ?? SubPage.DaxFormatter, connectionSettings);
+                        Dispatcher.Invoke(async () => await ViewModel.AddNewTabAsync(connection.ConnectionName, connection.ServerName, connection.DatabaseName))
+                            .ContinueWith((t) =>
+                            {
+                                if (t.Exception != null)
+                                {
+                                    _logger.Error(LogEvents.ShellViewException, t.Exception);
+
+                                    var baseException = t.Exception.GetBaseException();
+                                    _ = MessageBox.Show(baseException.Message, AppConstants.ApplicationNameLabel, MessageBoxButton.OK, MessageBoxImage.Error);
+                                }
+                            }, 
+                            CancellationToken.None, TaskContinuationOptions.OnlyOnFaulted, TaskScheduler.FromCurrentSynchronizationContext());
                     }
                 }
                 catch (Exception ex)
@@ -62,19 +74,25 @@ namespace Sqlbi.Bravo.UI.Views
 
         public ShellView()
         {
-            _logger = App.ServiceProvider.GetService<ILogger<ShellView>>();
             _settings = App.ServiceProvider.GetService<IGlobalSettingsProviderService>();
+            _logger = App.ServiceProvider.GetService<ILogger<ShellView>>();
 
             InitializeComponent();
 
             Instance = this;
-#if DEBUG
+        }
+
+        protected override async void OnInitialized(EventArgs e)
+        {
+            base.OnInitialized(e);
+
             if (_settings.Runtime.IsExecutedAsExternalTool)
-#else
-            if (_settings.Runtime.IsExecutedAsExternalToolForPowerBIDesktop)
-#endif
             {
-                ViewModel.LaunchedViaPowerBIDesktop(_settings.Runtime.ParentProcessMainWindowTitle);
+                var connectionName = _settings.Runtime.ParentProcessMainWindowTitle;
+                var serverName = _settings.Runtime.ServerName;
+                var databaseName = _settings.Runtime.DatabaseName;
+
+                await ViewModel.AddNewTabAsync(connectionName, serverName, databaseName);
             }
         }
 
@@ -104,7 +122,7 @@ namespace Sqlbi.Bravo.UI.Views
             debugInfo.Show();
         }
 
-        private void AddTabClicked(object sender, RoutedEventArgs e) => ViewModel.AddNewTab();
+        private async void AddTabClicked(object sender, RoutedEventArgs e) => await ViewModel.AddNewTab();
 
         // When the selected tab changes update the selected menu item accordingly
         private void OnSelectedTabChanged(object sender, SelectionChangedEventArgs e)

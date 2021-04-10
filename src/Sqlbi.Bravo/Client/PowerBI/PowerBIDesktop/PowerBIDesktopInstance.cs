@@ -9,7 +9,5 @@ namespace Sqlbi.Bravo.Client.PowerBI.Desktop
         public IPEndPoint LocalEndPoint { get; init; }
 
         public string ServerName => LocalEndPoint.ToString();
-
-        public string DatabaseName { get; init; }
     }
 }
