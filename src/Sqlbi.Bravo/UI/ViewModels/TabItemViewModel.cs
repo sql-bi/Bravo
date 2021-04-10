@@ -1,9 +1,7 @@
-﻿using Dax.Metadata;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Sqlbi.Bravo.Client.AnalysisServicesEventWatcher;
 using Sqlbi.Bravo.Core.Logging;
-using Sqlbi.Bravo.Core.Services;
 using Sqlbi.Bravo.Core.Services.Interfaces;
 using Sqlbi.Bravo.Core.Settings;
 using Sqlbi.Bravo.Core.Settings.Interfaces;
@@ -36,6 +34,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
             _logger = logger;
             _watcher = watcher;
             _settings = settings;
+
             _logger.Trace();
             _watcher.OnConnectionStateChanged += OnAnalysisServicesConnectionStateChanged;
 
@@ -43,8 +42,6 @@ namespace Sqlbi.Bravo.UI.ViewModels
             ConnectionType = BiConnectionType.UnSelected;
             ShowSelectConnection = true;
 
-            ConnectCommand = new RelayCommand(async () => await Connect());
-            DisconnectCommand = new RelayCommand(async () => await Disconnect());
             TryAgainCommand = new RelayCommand(async () => await TryAgain());
         }
 
@@ -83,12 +80,11 @@ namespace Sqlbi.Bravo.UI.ViewModels
                 {
                     case BiConnectionType.ConnectedPowerBiDataset:
                         return $"{ConnectionName} - powerbi.com";
-
                     case BiConnectionType.ActivePowerBiWindow:
                     case BiConnectionType.VertipaqAnalyzerFile:
                         return ConnectionName;
-
-                    default: return " ";  // Empty string is treated as null by WinUI control and so shows FullName
+                    default: 
+                        return " ";  // Empty string is treated as null by WinUI control and so shows FullName
                 }
             }
         }
@@ -186,8 +182,6 @@ namespace Sqlbi.Bravo.UI.ViewModels
             }
         }
 
-        public ICommand ConnectCommand { get; set; }
-
         public ICommand TryAgainCommand { get; set; }
 
         public bool ShowError { get; set; }
@@ -195,26 +189,6 @@ namespace Sqlbi.Bravo.UI.ViewModels
         public ConnectionSettings ConnectionSettings { get; set; }
 
         public string ErrorDescription { get; set; }
-
-        public ICommand DisconnectCommand { get; set; }
-
-        public bool ConnectCommandIsRunning { get; set; }
-
-        public bool DisconnectCommandIsRunning { get; set; }
-
-        private async Task Connect()
-        {
-            _logger.Trace();
-
-            await ExecuteCommandAsync(() => ConnectCommandIsRunning, () => _watcher.ConnectAsync(ConnectionSettings));
-        }
-
-        private async Task Disconnect()
-        {
-            _logger.Trace();
-
-            await ExecuteCommandAsync(() => DisconnectCommandIsRunning, _watcher.DisconnectAsync);
-        }
 
         public void DisplayError(string errorDescription, Func<Task> callback)
         {
@@ -241,11 +215,6 @@ namespace Sqlbi.Bravo.UI.ViewModels
                 subPageInTab = SubPage.SelectConnection;
             }
 
-            //if (ConnectionSettings.ConnectionType == Core.Settings.ConnectionType.VertiPaqAnalyzerFile && subPageInTab != SubPage.AnalyzeModel)
-            //{
-            //    return;
-            //}
-
             var shellViewModel = App.ServiceProvider.GetRequiredService<ShellViewModel>();
 
             switch (subPageInTab)
@@ -255,13 +224,11 @@ namespace Sqlbi.Bravo.UI.ViewModels
                     break;
                 case SubPage.DaxFormatter:
                     ShowDaxFormatter = true;
-                    shellViewModel.SelectedIndex = ShellViewModel.FormatDaxItemIndex;
+                    shellViewModel.SelectedIndex = ShellViewModel.MenuItemFormatDaxIndex;
                     break;
                 case SubPage.AnalyzeModel:
                     ShowAnalyzeModel = true;
-                    shellViewModel.SelectedIndex = ShellViewModel.AnalyzeModelItemIndex;
-                    break;
-                default:
+                    shellViewModel.SelectedIndex = ShellViewModel.MenuItemAnalyzeModelIndex;
                     break;
             }
         }

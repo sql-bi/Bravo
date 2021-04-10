@@ -137,11 +137,11 @@ namespace Sqlbi.Bravo.UI.Views
                 }
                 else if (selectedTab.ShowDaxFormatter)
                 {
-                    Select("Format DAX");
+                    Select(ShellViewModel.MenuItemFormatDaxName);
                 }
                 else if (selectedTab.ShowAnalyzeModel)
                 {
-                    Select("Analyze Model");
+                    Select(ShellViewModel.MenuItemAnalyzeModelName);
                 }
             }
 

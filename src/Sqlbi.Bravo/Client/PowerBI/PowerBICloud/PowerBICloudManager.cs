@@ -26,6 +26,7 @@ namespace Sqlbi.Bravo.Client.PowerBI.PowerBICloud
         private const string CloudEnvironmentGlobalCloudName = "GlobalCloud";
         private const string MicrosoftAccountOnlyQueryParameter = "msafed=0";
 
+        private static readonly JsonSerializerOptions _jsonSerializerOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web);
         private static readonly SemaphoreSlim _tokenSemaphore = new SemaphoreSlim(1);
         private static readonly object _tokenCacheLock = new object();
 
@@ -57,7 +58,7 @@ namespace Sqlbi.Bravo.Client.PowerBI.PowerBICloud
                         response.EnsureSuccessStatusCode();
 
                         var json = await response.Content.ReadAsStringAsync();
-                        GlobalService = JsonSerializer.Deserialize<GlobalService>(json, options: new JsonSerializerOptions(JsonSerializerDefaults.Web));                        
+                        GlobalService = JsonSerializer.Deserialize<GlobalService>(json, _jsonSerializerOptions);                        
                     }
                     finally
                     {
@@ -107,7 +108,7 @@ namespace Sqlbi.Bravo.Client.PowerBI.PowerBICloud
                 response.EnsureSuccessStatusCode();
 
                 var json = await response.Content.ReadAsStringAsync();
-                TenantCluster = JsonSerializer.Deserialize<TenantCluster>(json, options: new JsonSerializerOptions(JsonSerializerDefaults.Web));
+                TenantCluster = JsonSerializer.Deserialize<TenantCluster>(json, _jsonSerializerOptions);
             }
         }
 
@@ -217,7 +218,7 @@ namespace Sqlbi.Bravo.Client.PowerBI.PowerBICloud
             response.EnsureSuccessStatusCode();
 
             var json = await response.Content.ReadAsStringAsync();
-            var datasets = JsonSerializer.Deserialize<IEnumerable<SharedDataset>>(json, options: new JsonSerializerOptions(JsonSerializerDefaults.Web));
+            var datasets = JsonSerializer.Deserialize<IEnumerable<SharedDataset>>(json, _jsonSerializerOptions);
 
             return datasets;
         }

@@ -188,6 +188,8 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
             try
             {
+                ViewIndex = SubViewIndex_Loading;
+
                 await InitializeOrRefreshFormatter();
                 
                 ViewIndex = SubViewIndex_Start;

@@ -1,6 +1,6 @@
 ﻿namespace Sqlbi.Bravo.UI.DataModel
 {
-    public enum BiConnectionType
+    internal enum BiConnectionType
     {
         UnSelected,
 

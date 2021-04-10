@@ -26,6 +26,19 @@ namespace Sqlbi.Bravo.UI.ViewModels
 {
     internal class ShellViewModel : BaseViewModel
     {
+        public readonly static string MenuItemFormatDaxName = "Format DAX";
+        public readonly static string MenuItemAnalyzeModelName = "Analyze Model";
+        public readonly static string MenuItemManageDatesName = "Manage dates";
+        public readonly static string MenuItemExportDataName = "Export data";
+        public readonly static string MenuItemBestPracticesName = "Best practices";
+        public readonly static string MenuItemOptimizeModelName = "Optimize model";
+        public readonly static string OptionMenuItemShowDebugInfoName = "Show debug info";
+        public readonly static string OptionMenuItemSignInName = "Sign in";
+        public readonly static string OptionMenuItemSettingsName = "Settings";
+
+        public readonly static int MenuItemFormatDaxIndex = 0;
+        public readonly static int MenuItemAnalyzeModelIndex = 1;
+
         private readonly IAnalysisServicesEventWatcherService _watcher;
         private readonly ILogger _logger;
 
@@ -91,39 +104,39 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
                 var collection = new ObservableCollection<NavigationItem>()
                 {
-                    new NavigationItem { Name = "Format DAX", IconControl = daxFormatterIcon, SubPageInTab = SubPage.DaxFormatter },
-                    new NavigationItem { Name = "Analyze Model", IconControl = analyzeModelIcon, SubPageInTab = SubPage.AnalyzeModel },
-                    new NavigationItem { Name = "Manage dates", Glyph = "\uEC92", ShowComingSoon = true },
-                    new NavigationItem { Name = "Export data", Glyph = "\uE1AD", ShowComingSoon = true },
-                    new NavigationItem { Name = "Best practices", Glyph = "\uE19F", ShowComingSoon = true },
-                    new NavigationItem { Name = "Optimize model", Glyph = "\uEC4A", ShowComingSoon = true },
+                    new NavigationItem { Name = MenuItemFormatDaxName, IconControl = daxFormatterIcon, SubPageInTab = SubPage.DaxFormatter },
+                    new NavigationItem { Name = MenuItemAnalyzeModelName, IconControl = analyzeModelIcon, SubPageInTab = SubPage.AnalyzeModel },
+                    new NavigationItem { Name = MenuItemManageDatesName, Glyph = "\uEC92", ShowComingSoon = true },
+                    new NavigationItem { Name = MenuItemExportDataName, Glyph = "\uE1AD", ShowComingSoon = true },
+                    new NavigationItem { Name = MenuItemBestPracticesName, Glyph = "\uE19F", ShowComingSoon = true },
+                    new NavigationItem { Name = MenuItemOptimizeModelName, Glyph = "\uEC4A", ShowComingSoon = true },
                 };
 
                 return collection;
             }
         }
 
-        public static int FormatDaxItemIndex => 0;
-
-        public static int AnalyzeModelItemIndex => 1;
+        public int LastGoodSelectedIndex { get; set; } = -1;
 
         public ObservableCollection<NavigationItem> OptionMenuItems { get; } = new ObservableCollection<NavigationItem>()
         {
 #if DEBUG
-            new NavigationItem{ Name = "Show debug info", Glyph = "\uE7B3" },
+            new NavigationItem{ Name = OptionMenuItemShowDebugInfoName, Glyph = "\uE7B3" },
 #endif
-            new NavigationItem{ Name = "Sign in", Glyph = "\uE13D" },
-            new NavigationItem{ Name = "Settings", Glyph = "\uE713" },
+            new NavigationItem{ Name = OptionMenuItemSignInName, Glyph = "\uE13D" },
+            new NavigationItem{ Name = OptionMenuItemSettingsName, Glyph = "\uE713" },
         };
 
         public NavigationItem SelectedItem { get; set; }
+
+        public NavigationItem SelectedOptionsItem { get; set; }
+
+        public NavigationItem LastNavigation { get; private set; } = null;
 
         // Bind (and track) both SelectedItem and SelectedIndex
         // because just tracking the SelectedItem is unreliable
         // and can lead to selection highlighting getting out of sync.
         public int SelectedIndex { get; set; }
-
-        public NavigationItem SelectedOptionsItem { get; set; }
 
         public ObservableCollection<TabItemViewModel> Tabs { get; set; }
 
@@ -186,10 +199,6 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
             OutputMessages.Add("--- DEBUG ---");
         }
-
-        public NavigationItem LastNavigation { get; private set; } = null;
-
-        public int LastGoodSelectedIndex { get; set; } = -1;
 
         public async Task AddNewTabAsync(PowerBIDesktopInstance instance)
         {
@@ -276,11 +285,11 @@ namespace Sqlbi.Bravo.UI.ViewModels
         {
             if (SelectedOptionsItem != null)
             {
-                if (SelectedOptionsItem.Name == "Settings")
+                if (SelectedOptionsItem.Name == OptionMenuItemSettingsName)
                 {
                     await ShellView.Instance.ShowSettings();
                 }
-                else if (SelectedOptionsItem.Name == "Show debug info")
+                else if (SelectedOptionsItem.Name == OptionMenuItemShowDebugInfoName)
                 {
                     ShellView.Instance.ShowDebugInfo();
                 }
@@ -306,7 +315,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
                     if (SelectedItem.SubPageInTab != SubPage.AnalyzeModel && (SelectedTab.ConnectionSettings?.ConnectionType == ConnectionType.VertiPaqAnalyzerFile))
                     {
                         SelectedItem = MenuItems.FirstOrDefault((i) => i.SubPageInTab == SubPage.AnalyzeModel);
-                        SelectedIndex = AnalyzeModelItemIndex;
+                        SelectedIndex = MenuItemAnalyzeModelIndex;
                     }
                     else
                     {
@@ -318,10 +327,10 @@ namespace Sqlbi.Bravo.UI.ViewModels
                                 LastGoodSelectedIndex = -1;
                                 break;
                             case SubPage.DaxFormatter:
-                                LastGoodSelectedIndex = FormatDaxItemIndex;
+                                LastGoodSelectedIndex = MenuItemFormatDaxIndex;
                                 break;
                             case SubPage.AnalyzeModel:
-                                LastGoodSelectedIndex = AnalyzeModelItemIndex;
+                                LastGoodSelectedIndex = MenuItemAnalyzeModelIndex;
                                 break;
                             default:
                                 break;
