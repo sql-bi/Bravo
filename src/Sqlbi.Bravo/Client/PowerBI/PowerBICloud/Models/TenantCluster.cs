@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Sqlbi.Bravo.Client.PowerBI.PowerBICloud.Models
+﻿namespace Sqlbi.Bravo.Client.PowerBI.PowerBICloud.Models
 {
     internal class TenantCluster
     {
@@ -16,6 +10,6 @@ namespace Sqlbi.Bravo.Client.PowerBI.PowerBICloud.Models
 
         //public string RuleDescription { get; set; }
 
-        public int TTLSeconds { get; set; }
+        //public int TTLSeconds { get; set; }
     }
 }

@@ -2,13 +2,13 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Sqlbi.Bravo.Client.AnalysisServicesEventWatcher;
-using Sqlbi.Bravo.Core.Helpers;
 using Sqlbi.Bravo.Core.Logging;
 using Sqlbi.Bravo.Core.Services.Interfaces;
 using Sqlbi.Bravo.Core.Settings;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
@@ -94,7 +94,7 @@ namespace Sqlbi.Bravo.Core.Services
             TaskContinuationOptions.OnlyOnFaulted);
         }
 
-        public async Task ConnectAsync(RuntimeSummary runtimeSummary)
+        public async Task ConnectAsync(ConnectionSettings connectionSettings)
         {
             _logger.Trace();
 
@@ -107,7 +107,7 @@ namespace Sqlbi.Bravo.Core.Services
                     throw new InvalidOperationException("Server already connected");
                 }
 
-                _server.Connect(runtimeSummary.ConnectionString);
+                _server.Connect(connectionSettings.ConnectionString);
                 _connectionManuallyChangedEvent.Set();
                 _trace = CreateTrace();
                 _trace.Start();
@@ -147,7 +147,7 @@ namespace Sqlbi.Bravo.Core.Services
                                     "</Equal>" +
                                     "<Like>" +
                                         $"<ColumnID>{ (int)TraceColumn.DatabaseName }</ColumnID>" +
-                                        $"<Value>{ runtimeSummary.DatabaseName }</Value>" +
+                                        $"<Value>{ connectionSettings.DatabaseName }</Value>" +
                                     "</Like>" +
                                 "</And>" +
                                 "<NotLike>" +
@@ -198,7 +198,7 @@ namespace Sqlbi.Bravo.Core.Services
             if (!WatcherSubclasses.Contains(e.EventSubclass))
                 return;
 
-            var eventType = e.TextData.GetEventType();
+            var eventType = GetEventType(e.TextData);
             if (eventType == WatcherEvent.Unknown)
                 return;
 
@@ -206,6 +206,34 @@ namespace Sqlbi.Bravo.Core.Services
 
             var args = new WatcherEventArgs(eventType, text: string.Empty);
             OnWatcherEvent?.Invoke(this, args);
+        }
+
+        private WatcherEvent GetEventType(string xmla)
+        {
+            if (xmla == null)
+                return WatcherEvent.Unknown;
+
+            using var stringReader = new StringReader(xmla);
+            using var xmlReader = XmlReader.Create(stringReader);
+
+            while (xmlReader.Read())
+            {
+                if (xmlReader.NodeType == XmlNodeType.Element)
+                {
+                    var name = xmlReader.Name;
+
+                    if (nameof(WatcherEvent.Create).Equals(name, StringComparison.OrdinalIgnoreCase))
+                        return WatcherEvent.Create;
+
+                    if (nameof(WatcherEvent.Delete).Equals(name, StringComparison.OrdinalIgnoreCase))
+                        return WatcherEvent.Delete;
+
+                    if (nameof(WatcherEvent.Alter).Equals(name, StringComparison.OrdinalIgnoreCase))
+                        return WatcherEvent.Alter;
+                }
+            }
+
+            return WatcherEvent.Unknown;
         }
 
         protected virtual void Dispose(bool disposing)

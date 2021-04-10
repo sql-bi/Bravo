@@ -81,8 +81,6 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public ICommand SelectedTableMeasureChangedCommand { get; set; }
 
-        public bool InitializeCommandIsRunning { get; set; }
-
         public bool TermsAccepted { get; set; }
 
         public ICommand FormatAnalyzeCommand { get; set; }
@@ -119,9 +117,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
         {
             _logger.Trace();
 
-            if (e.Event == WatcherEvent.Create ||
-                e.Event == WatcherEvent.Alter ||
-                e.Event == WatcherEvent.Delete)
+            if (e.Event == WatcherEvent.Create || e.Event == WatcherEvent.Alter || e.Event == WatcherEvent.Delete)
             {
                 await InitializeOrRefreshFormatter();
             }
@@ -129,9 +125,11 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         private async Task InitializeOrRefreshFormatter()
         {
+            _logger.Trace();
+
             FormatCommandIsEnabled = false;
             LoadingDetails = "Connecting to data";
-            await _formatter.InitilizeOrRefreshAsync(ParentTab.RuntimeSummary);
+            await _formatter.InitilizeOrRefreshAsync(ParentTab.ConnectionSettings);
 
             LastSyncTime = DateTime.UtcNow;
             OnPropertyChanged(nameof(TimeSinceLastSync));
@@ -145,6 +143,8 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         private void LoadMeasuresForSelection()
         {
+            _logger.Trace();
+
             var msvm = new MeasureSelectionViewModel();
 
             foreach (var measure in _formatter.Measures)
@@ -174,10 +174,11 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         internal void EnsureInitialized()
         {
+            _logger.Trace();
+
             if (!_initialized)
             {
-                // Hacky way to call async method because can't make this async as called from a setter
-                Task.Run(() => RefreshAsync()).GetAwaiter().GetResult();
+                Task.Run(async () => await RefreshAsync());
             }
         }
 
@@ -187,11 +188,11 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
             try
             {
-                await ExecuteCommandAsync(() => InitializeCommandIsRunning, async () =>
-                {
-                    await InitializeOrRefreshFormatter();
-                    ViewIndex = SubViewIndex_Start;
-                });
+                ViewIndex = SubViewIndex_Loading;
+
+                await InitializeOrRefreshFormatter();
+                
+                ViewIndex = SubViewIndex_Start;
             }
             catch (Exception ex)
             {
@@ -203,6 +204,8 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         private void ChooseFormulas()
         {
+            _logger.Trace();
+
             ViewIndex = SubViewIndex_ChooseFormulas;
         }
 
@@ -218,10 +221,17 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         private void OpenLog()
         {
+            _logger.Trace();
+
             // TODO REQUIREMENTS: Open log file
         }
 
-        private void ShowHelp() => Views.ShellView.Instance.ShowMediaDialog(new HowToFormatCodeHelp());
+        private void ShowHelp()
+        {
+            _logger.Trace();
+
+            Views.ShellView.Instance.ShowMediaDialog(new HowToFormatCodeHelp());
+        }
 
         private async Task AnalyzeAsync()
         {

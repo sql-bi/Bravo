@@ -1,9 +1,11 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Sqlbi.Bravo.Client.AnalysisServicesEventWatcher;
+using Sqlbi.Bravo.Client.PowerBI.Desktop;
+using Sqlbi.Bravo.Client.PowerBI.PowerBICloud;
+using Sqlbi.Bravo.Client.VertiPaqAnalyzer;
 using Sqlbi.Bravo.Core;
 using Sqlbi.Bravo.Core.Logging;
-using Sqlbi.Bravo.Core.Services;
 using Sqlbi.Bravo.Core.Services.Interfaces;
 using Sqlbi.Bravo.Core.Settings;
 using Sqlbi.Bravo.Core.Settings.Interfaces;
@@ -24,6 +26,19 @@ namespace Sqlbi.Bravo.UI.ViewModels
 {
     internal class ShellViewModel : BaseViewModel
     {
+        public readonly static string MenuItemFormatDaxName = "Format DAX";
+        public readonly static string MenuItemAnalyzeModelName = "Analyze Model";
+        public readonly static string MenuItemManageDatesName = "Manage dates";
+        public readonly static string MenuItemExportDataName = "Export data";
+        public readonly static string MenuItemBestPracticesName = "Best practices";
+        public readonly static string MenuItemOptimizeModelName = "Optimize model";
+        public readonly static string OptionMenuItemShowDebugInfoName = "Show debug info";
+        public readonly static string OptionMenuItemSignInName = "Sign in";
+        public readonly static string OptionMenuItemSettingsName = "Settings";
+
+        public readonly static int MenuItemFormatDaxIndex = 0;
+        public readonly static int MenuItemAnalyzeModelIndex = 1;
+
         private readonly IAnalysisServicesEventWatcherService _watcher;
         private readonly ILogger _logger;
 
@@ -71,24 +86,6 @@ namespace Sqlbi.Bravo.UI.ViewModels
             };
         }
 
-        internal void LaunchedViaPowerBIDesktop(string title)
-        {
-            SelectedTab.ConnectionName = title;
-            SelectedTab.ConnectionType = BiConnectionType.ActivePowerBiWindow;
-            SelectedTab.ShowSubPage(SelectedItem?.SubPageInTab ?? SubPage.DaxFormatter);
-
-            if (SelectedItem == null)
-            {
-                SelectedItem = MenuItems.First();
-            }
-#if DEBUG
-            if (string.IsNullOrWhiteSpace(SelectedTab.ConnectionName))
-            {
-                SelectedTab.ConnectionName = "DEBUG";
-            }
-#endif
-        }
-
         public double WindowMinWidth => 800D;
 
         public double WindowMinHeight => 600D;
@@ -105,39 +102,41 @@ namespace Sqlbi.Bravo.UI.ViewModels
                 var daxFormatterIcon = new DaxFormatterIcon();
                 daxFormatterIcon.SetResourceReference(DaxFormatterIcon.ForegroundBrushProperty, name: "MahApps.Brushes.ThemeForeground");
 
-                return new ObservableCollection<NavigationItem>()
+                var collection = new ObservableCollection<NavigationItem>()
                 {
-                    new NavigationItem { Name = "Format DAX", IconControl = daxFormatterIcon, SubPageInTab = SubPage.DaxFormatter },
-                    new NavigationItem { Name = "Analyze Model", IconControl = analyzeModelIcon, SubPageInTab = SubPage.AnalyzeModel },
-                    new NavigationItem { Name = "Manage dates", Glyph = "\uEC92", ShowComingSoon = true },
-                    new NavigationItem { Name = "Export data", Glyph = "\uE1AD", ShowComingSoon = true },
-                    new NavigationItem { Name = "Best practices", Glyph = "\uE19F", ShowComingSoon = true },
-                    new NavigationItem { Name = "Optimize model", Glyph = "\uEC4A", ShowComingSoon = true },
+                    new NavigationItem { Name = MenuItemFormatDaxName, IconControl = daxFormatterIcon, SubPageInTab = SubPage.DaxFormatter },
+                    new NavigationItem { Name = MenuItemAnalyzeModelName, IconControl = analyzeModelIcon, SubPageInTab = SubPage.AnalyzeModel },
+                    new NavigationItem { Name = MenuItemManageDatesName, Glyph = "\uEC92", ShowComingSoon = true },
+                    new NavigationItem { Name = MenuItemExportDataName, Glyph = "\uE1AD", ShowComingSoon = true },
+                    new NavigationItem { Name = MenuItemBestPracticesName, Glyph = "\uE19F", ShowComingSoon = true },
+                    new NavigationItem { Name = MenuItemOptimizeModelName, Glyph = "\uEC4A", ShowComingSoon = true },
                 };
+
+                return collection;
             }
         }
 
-        public static int FormatDaxItemIndex => 0;
-
-        public static int AnalyzeModelItemIndex => 1;
+        public int LastGoodSelectedIndex { get; set; } = -1;
 
         public ObservableCollection<NavigationItem> OptionMenuItems { get; } = new ObservableCollection<NavigationItem>()
         {
 #if DEBUG
-            new NavigationItem{ Name = "Show debug info", Glyph = "\uE7B3" },
+            new NavigationItem{ Name = OptionMenuItemShowDebugInfoName, Glyph = "\uE7B3" },
 #endif
-            new NavigationItem{ Name = "Sign in", Glyph = "\uE13D" },
-            new NavigationItem{ Name = "Settings", Glyph = "\uE713" },
+            new NavigationItem{ Name = OptionMenuItemSignInName, Glyph = "\uE13D" },
+            new NavigationItem{ Name = OptionMenuItemSettingsName, Glyph = "\uE713" },
         };
 
         public NavigationItem SelectedItem { get; set; }
+
+        public NavigationItem SelectedOptionsItem { get; set; }
+
+        public NavigationItem LastNavigation { get; private set; } = null;
 
         // Bind (and track) both SelectedItem and SelectedIndex
         // because just tracking the SelectedItem is unreliable
         // and can lead to selection highlighting getting out of sync.
         public int SelectedIndex { get; set; }
-
-        public NavigationItem SelectedOptionsItem { get; set; }
 
         public ObservableCollection<TabItemViewModel> Tabs { get; set; }
 
@@ -201,38 +200,120 @@ namespace Sqlbi.Bravo.UI.ViewModels
             OutputMessages.Add("--- DEBUG ---");
         }
 
-        public NavigationItem LastNavigation { get; private set; } = null;
-
-        public int LastGoodSelectedIndex { get; set; } = -1;
-
-        public void AddNewTab(BiConnectionType connectionType = BiConnectionType.UnSelected, SubPage subPage = SubPage.SelectConnection, RuntimeSummary runtimeSummary = null)
+        public async Task AddNewTabAsync(PowerBIDesktopInstance instance)
         {
-            var newTab = App.ServiceProvider.GetRequiredService<TabItemViewModel>();
-           
-            if (runtimeSummary != null)
-            {
-                newTab.ConnectionName = runtimeSummary.ConnectionName;
-                newTab.RuntimeSummary = runtimeSummary;
-            }
+            var connectionSettings = await Task.Run(() => ConnectionSettings.CreateFrom(instance));
 
-            newTab.ConnectionType = connectionType;
-            newTab.ShowSubPage(subPage);
+            var newTab = App.ServiceProvider.GetRequiredService<TabItemViewModel>();
+            newTab.ConnectionType = BiConnectionType.ActivePowerBiWindow;
+            newTab.ConnectionName = connectionSettings.ConnectionName;
+            newTab.ConnectionSettings = connectionSettings;
+            newTab.ShowSubPage(SubPage.DaxFormatter);
 
             Tabs.Add(newTab);
+            SelectedTab = newTab;
+        }
 
-            // Select added item so it is made visible
-            SelectedTab = Tabs.Last();
+        public async Task AddNewTabAsync(PowerBICloudSharedDataset dataset)
+        {
+            var service = App.ServiceProvider.GetRequiredService<IPowerBICloudService>();
+            var connectionSettings = await Task.Run(() => ConnectionSettings.CreateFrom(dataset, service));
+
+            var newTab = App.ServiceProvider.GetRequiredService<TabItemViewModel>();
+            newTab.ConnectionType = BiConnectionType.ConnectedPowerBiDataset;
+            newTab.ConnectionName = connectionSettings.ConnectionName;
+            newTab.ConnectionSettings = connectionSettings;
+            newTab.ShowSubPage(SubPage.AnalyzeModel);
+
+            Tabs.Add(newTab);
+            SelectedTab = newTab;
+        }
+
+        public async Task AddNewTabAsync(VertiPaqAnalyzerFile file)
+        {
+            var connectionSettings = await Task.Run(() => ConnectionSettings.CreateFrom(file));
+
+            var newTab = App.ServiceProvider.GetRequiredService<TabItemViewModel>();
+            newTab.ConnectionType = BiConnectionType.VertipaqAnalyzerFile;
+            newTab.ConnectionName = connectionSettings.ConnectionName;
+            newTab.ConnectionSettings = connectionSettings;
+            newTab.ShowSubPage(SubPage.AnalyzeModel);
+
+            Tabs.Add(newTab);
+            SelectedTab = newTab;
+        }
+
+        public async Task AddNewTabAsync(string connectionName, string serverName, string databaseName)
+        {            
+            var connectionSettings = await Task.Run(() => ConnectionSettings.CreateFrom(connectionName, serverName, databaseName));
+
+            var newTab = App.ServiceProvider.GetRequiredService<TabItemViewModel>();
+
+            switch (connectionSettings.ConnectionType)
+            {
+                case ConnectionType.PowerBIDesktop:
+                    {
+                        newTab.ConnectionType = BiConnectionType.ActivePowerBiWindow;
+                        newTab.ConnectionName = connectionSettings.ConnectionName;
+                        newTab.ConnectionSettings = connectionSettings;
+                    }
+                    break;
+                case ConnectionType.PowerBIDataset:
+                    {
+                        var powerbiCloudService = App.ServiceProvider.GetRequiredService<IPowerBICloudService>();
+                        if (powerbiCloudService.IsAuthenticated == false)
+                        {
+                            var loggedIn = await powerbiCloudService.LoginAsync();
+                            if (loggedIn == false)
+                            {
+                                return;
+                            }
+                        }
+
+                        var powerbiSharedDatasets = await powerbiCloudService.GetDatasetsAsync();
+                        var powerbiSharedDataset = powerbiSharedDatasets.SingleOrDefault((d) => d.Model.DBName.Equals(databaseName, StringComparison.InvariantCultureIgnoreCase));
+                        if (powerbiSharedDataset == null)
+                        {
+                            throw new InvalidOperationException($"Power BI dataset '{ databaseName }' not found.");
+                        }
+
+                        connectionSettings = ConnectionSettings.CreateFrom(powerbiSharedDataset, powerbiCloudService);
+
+                        newTab.ConnectionType = BiConnectionType.ConnectedPowerBiDataset;
+                        newTab.ConnectionName = connectionSettings.ConnectionName;
+                        newTab.ConnectionSettings = connectionSettings;
+                    }
+                    break;
+                default:
+                    throw new NotImplementedException($"Connection to '{ serverName }' is not supported.");
+            }
+
+            newTab.ShowSubPage(SubPage.AnalyzeModel);
+
+            Tabs.Add(newTab);
+            SelectedTab = newTab;            
+        }
+
+        public async Task AddNewTab()
+        {
+            var newTab = App.ServiceProvider.GetRequiredService<TabItemViewModel>();
+            newTab.ShowSubPage(SubPage.SelectConnection);
+
+            Tabs.Add(newTab);
+            SelectedTab = newTab;
+
+            await Task.CompletedTask;
         }
 
         private async Task ItemSelected()
         {
             if (SelectedOptionsItem != null)
             {
-                if (SelectedOptionsItem.Name == "Settings")
+                if (SelectedOptionsItem.Name == OptionMenuItemSettingsName)
                 {
                     await ShellView.Instance.ShowSettings();
                 }
-                else if (SelectedOptionsItem.Name == "Show debug info")
+                else if (SelectedOptionsItem.Name == OptionMenuItemShowDebugInfoName)
                 {
                     ShellView.Instance.ShowDebugInfo();
                 }
@@ -255,10 +336,10 @@ namespace Sqlbi.Bravo.UI.ViewModels
                 // LastNavigation is used to avoid navigating to where already are
                 if (!SelectedItem.ShowComingSoon && SelectedItem.Name != (LastNavigation?.Name ?? string.Empty))
                 {
-                    if (SelectedItem.SubPageInTab != SubPage.AnalyzeModel && SelectedTab.RuntimeSummary.UsingLocalModelForAnanlysis)
+                    if (SelectedItem.SubPageInTab != SubPage.AnalyzeModel && (SelectedTab.ConnectionSettings?.ConnectionType == ConnectionType.VertiPaqAnalyzerFile))
                     {
                         SelectedItem = MenuItems.FirstOrDefault((i) => i.SubPageInTab == SubPage.AnalyzeModel);
-                        SelectedIndex = AnalyzeModelItemIndex;
+                        SelectedIndex = MenuItemAnalyzeModelIndex;
                     }
                     else
                     {
@@ -270,10 +351,10 @@ namespace Sqlbi.Bravo.UI.ViewModels
                                 LastGoodSelectedIndex = -1;
                                 break;
                             case SubPage.DaxFormatter:
-                                LastGoodSelectedIndex = FormatDaxItemIndex;
+                                LastGoodSelectedIndex = MenuItemFormatDaxIndex;
                                 break;
                             case SubPage.AnalyzeModel:
-                                LastGoodSelectedIndex = AnalyzeModelItemIndex;
+                                LastGoodSelectedIndex = MenuItemAnalyzeModelIndex;
                                 break;
                             default:
                                 break;

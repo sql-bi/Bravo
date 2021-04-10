@@ -1,12 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Sqlbi.Bravo.Client.PowerBI.PowerBICloud.Models
 {
-    internal class MetadataModel
+    internal class SharedDatasetModel
     {
         private const int PBIXProviderId = 7;
 
@@ -28,7 +24,7 @@ namespace Sqlbi.Bravo.Client.PowerBI.PowerBICloud.Models
 
         public string LastRefreshTime { get; set; }
 
-        public MetadataUser CreatorUser { get; set; }
+        public SharedDatasetUser CreatorUser { get; set; }
 
         public bool InsightsSupported { get; set; }
 
@@ -56,7 +52,7 @@ namespace Sqlbi.Bravo.Client.PowerBI.PowerBICloud.Models
 
         public bool IsWritablePbixModel => IsWriteableModel && ContentProviderId == PBIXProviderId;
 
-        public bool IsWriteableModel => (Permissions & (int)MetadataPermissions.Write) == (uint)MetadataPermissions.Write;
+        public bool IsWriteableModel => (Permissions & (int)SharedDatasetPermissions.Write) == (uint)SharedDatasetPermissions.Write;
 
         public bool IsPushDataEnabled => PushDataVersion != 0;
 

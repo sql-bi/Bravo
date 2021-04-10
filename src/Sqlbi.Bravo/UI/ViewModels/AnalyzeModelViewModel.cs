@@ -66,8 +66,6 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public DateTime LastSyncTime => _analyzer.LastSyncTime;
 
-        public bool LoadOrRefreshCommandIsRunning { get; set; }
-
         public ICommand HelpCommand { get; set; }
 
         public ICommand WarningHelpCommand { get; set; }
@@ -231,10 +229,10 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public string TimeSinceLastSync => LastSyncTime.HumanizeElapsed();
 
-        internal void OverrideDaxModel(Model daxModel) => _analyzer.DaxModel = daxModel;
-
         internal void EnsureInitialized()
         {
+            _logger.Trace();
+
             if (_initialized == false)
             {
                 Task.Run(async () => await RefreshAsync());
@@ -256,7 +254,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
                 {
                     ViewIndex = SubViewIndex_Loading;
 
-                    await ExecuteCommandAsync(() => LoadOrRefreshCommandIsRunning, InitializeOrRefreshModelAnalyzer);
+                    await InitializeOrRefreshModelAnalyzer();
                 }
                 finally
                 {
@@ -277,8 +275,8 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
             var saveFileDialog = new SaveFileDialog
             {
-                FileName = $"{ParentTab.ConnectionName}.vpax",
-                Filter = "VPAX (*.vpax)|*.vpax",
+                FileName = $"{ ParentTab.ConnectionName }.vpax",
+                Filter = "VertiPaq Analyzer file (*.vpax)|*.vpax",
                 DefaultExt = ".vpax",
                 InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
             };
@@ -289,8 +287,8 @@ namespace Sqlbi.Bravo.UI.ViewModels
                 {
                     Action = "ExportVpax"
                 }});
-                
-                VpaxTools.ExportVpax(saveFileDialog.FileName, _analyzer.DaxModel);
+
+                await _analyzer.ExportVertiPaqAnalyzerModel(path: saveFileDialog.FileName);
             }
 
             await Task.CompletedTask;
@@ -330,6 +328,8 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         private async Task BackAsync()
         {
+            _logger.Trace();
+
             ViewIndex = SubViewIndex_Summary;
 
             await Task.CompletedTask;
@@ -337,9 +337,11 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         private async Task InitializeOrRefreshModelAnalyzer()
         {
+            _logger.Trace();
+
             LoadingDetails = "Connecting to data";
 
-            await _analyzer.InitilizeOrRefreshAsync(ParentTab.RuntimeSummary);
+            await _analyzer.InitilizeOrRefreshAsync(ParentTab.ConnectionSettings);
 
             LoadingDetails = "Analyzing model";
 
@@ -356,6 +358,8 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         private void UpdateSummary()
         {
+            _logger.Trace();
+
             _allTablesCache.Clear();
 
             var summary = _analyzer.DatasetSummary;
@@ -369,14 +373,17 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         internal Color GetTableColor(string tableName)
         {
+            _logger.Trace();
+
             if (_colorCache.ContainsKey(tableName))
             {
                 return _colorCache[tableName];
             }
 
-            var orderedColumns = AllTableColumns.OrderByDescending((t) => t.TotalSize).ToList();
+            var sortedColumns = AllTableColumns.OrderByDescending((t) => t.TotalSize).ToList();
+            var sizeIndex = sortedColumns.FindIndex((c) => c.TableName.Equals(tableName));
 
-            var color = (orderedColumns.FindIndex((t) => t.TableName.Equals(tableName))) switch
+            var color = sizeIndex switch
             {
                 0 => Colors.Orange,
                 1 => Colors.Yellow,

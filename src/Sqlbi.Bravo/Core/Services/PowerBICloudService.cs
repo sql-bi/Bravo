@@ -5,7 +5,9 @@ using Sqlbi.Bravo.Client.PowerBI.PowerBICloud;
 using Sqlbi.Bravo.Client.PowerBI.PowerBICloud.Models;
 using Sqlbi.Bravo.Core.Logging;
 using Sqlbi.Bravo.Core.Services.Interfaces;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Sqlbi.Bravo.Core.Services
@@ -55,11 +57,27 @@ namespace Sqlbi.Bravo.Core.Services
             await PowerBICloudManager.RemoveTokenAsync();
         }
 
-        public async Task<IEnumerable<MetadataSharedDataset>> GetSharedDatasetsAsync()
+        public async Task<IEnumerable<PowerBICloudSharedDataset>> GetDatasetsAsync()
         {
             _logger.Trace();
 
-            return await PowerBICloudManager.GetSharedDatasetsAsync(_authenticationResult.AccessToken);
+            var workspaces = await PowerBICloudManager.GetWorkspacesAsync(_authenticationResult.AccessToken);
+            var datasets = await PowerBICloudManager.GetSharedDatasetsAsync(_authenticationResult.AccessToken);
+
+            var premiumWorkspaces = workspaces.Where((w) => WorkspaceCapacitySkuType.Premium.Equals(w.GetWorkspaceCapacitySkuType()));
+            var cloudDatasets = datasets.Where((d) => !d.Model.IsExcelWorkbook && !d.Model.IsPushDataEnabled)
+                .Join(premiumWorkspaces, (d) => d.WorkspaceObjectId.ToUpperInvariant(), (w) => w.Id.ToUpperInvariant(), (d, w) => new PowerBICloudSharedDataset
+                {
+                    WorkspaceId = Guid.Parse(w.Id),
+                    WorkspaceName = w.Name,
+                    WorkspaceType = w.GetWorkspaceType(),
+                    WorkspaceCapacitySkuType = w.GetWorkspaceCapacitySkuType(),
+                    Permissions = d.Permissions,
+                    Model = d.Model
+                })
+                .ToArray();
+
+            return cloudDatasets;
         }
     }
 }

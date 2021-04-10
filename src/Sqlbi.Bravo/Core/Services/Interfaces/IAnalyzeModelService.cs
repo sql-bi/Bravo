@@ -1,5 +1,4 @@
-﻿using Dax.Metadata;
-using Dax.ViewModel;
+﻿using Dax.ViewModel;
 using Sqlbi.Bravo.Core.Settings;
 using System;
 using System.Collections.Generic;
@@ -9,7 +8,9 @@ namespace Sqlbi.Bravo.Core.Services.Interfaces
 {
     internal interface IAnalyzeModelService
     {
-        Task InitilizeOrRefreshAsync(RuntimeSummary runtimeSummary);
+        Task InitilizeOrRefreshAsync(ConnectionSettings connectionSettings);
+
+        Task ExportVertiPaqAnalyzerModel(string path);
 
         (long DatasetSize, int ColumnCount) DatasetSummary { get; }
 
@@ -20,7 +21,5 @@ namespace Sqlbi.Bravo.Core.Services.Interfaces
         IEnumerable<VpaTable> AllTables { get; }
 
         DateTime LastSyncTime { get; }
-
-        Model DaxModel { get; set; }
     }
 }

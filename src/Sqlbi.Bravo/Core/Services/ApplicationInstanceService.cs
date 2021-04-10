@@ -73,23 +73,16 @@ namespace Sqlbi.Bravo.Core.Services
             }
         }
 
-        public RuntimeSummary ReceiveConnectionFromSecondaryInstance(IntPtr ptr)
+        public (string ConnectionName, string ServerName, string DatabaseName) ReceiveConnectionFromSecondaryInstance(IntPtr ptr)
         {
             var copyData = (NativeMethods.COPYDATASTRUCT)Marshal.PtrToStructure(ptr, typeof(NativeMethods.COPYDATASTRUCT));
             if (copyData.cbData == 0)
-                return null;
+                return default;
 
             var json = copyData.lpData;
             var message = JsonSerializer.Deserialize<ConnectionInfoMessage>(json);
 
-            var runtimeSummary = new RuntimeSummary
-            {
-                ServerName = message.ServerName,
-                DatabaseName = message.DatabaseName,
-                ConnectionName = message.ConnectionName,
-            };
-
-            return runtimeSummary;
+            return (message.ConnectionName, message.ServerName, message.DatabaseName);
         }
 
         public void RegisterCallbackForMultipleInstanceStarted(Action<IntPtr> callback)

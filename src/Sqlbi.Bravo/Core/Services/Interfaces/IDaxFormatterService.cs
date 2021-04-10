@@ -9,7 +9,7 @@ namespace Sqlbi.Bravo.Core.Services.Interfaces
 {
     internal interface IDaxFormatterService
     {
-        Task InitilizeOrRefreshAsync(RuntimeSummary runtimeSummary);
+        Task InitilizeOrRefreshAsync(ConnectionSettings connectionSettings);
 
         IEnumerable<TabularMeasure> Measures { get; }
 

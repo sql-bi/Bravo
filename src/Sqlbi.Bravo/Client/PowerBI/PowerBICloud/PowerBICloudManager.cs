@@ -12,6 +12,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Sqlbi.Bravo.Client.PowerBI.PowerBICloud
@@ -20,13 +21,16 @@ namespace Sqlbi.Bravo.Client.PowerBI.PowerBICloud
     {
         private const string DiscoverEnvironmentsUrl = "https://api.powerbi.com/powerbi/globalservice/v201606/environments/discover?client=powerbi-msolap";
         private const string GlobalServiceGetClusterUrl = "https://api.powerbi.com/spglobalservice/GetOrInsertClusterUrisByTenantlocation";
+        private const string GetWorkspacesUrl = "https://api.powerbi.com/powerbi/databases/v201606/workspaces";
         private const string GetSharedDatasetsUrl = "metadata/v201901/gallery/sharedDatasets";
         private const string CloudEnvironmentGlobalCloudName = "GlobalCloud";
         private const string MicrosoftAccountOnlyQueryParameter = "msafed=0";
 
+        private static readonly JsonSerializerOptions _jsonSerializerOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web);
+        private static readonly SemaphoreSlim _tokenSemaphore = new SemaphoreSlim(1);
         private static readonly object _tokenCacheLock = new object();
 
-        private static IPublicClientApplication PublicClientApplication;
+        private static IPublicClientApplication IdentityClientApplication;
         private static TenantCluster TenantCluster;
         private static GlobalService GlobalService;
 
@@ -54,7 +58,7 @@ namespace Sqlbi.Bravo.Client.PowerBI.PowerBICloud
                         response.EnsureSuccessStatusCode();
 
                         var json = await response.Content.ReadAsStringAsync();
-                        GlobalService = JsonSerializer.Deserialize<GlobalService>(json, options: new JsonSerializerOptions(JsonSerializerDefaults.Web));                        
+                        GlobalService = JsonSerializer.Deserialize<GlobalService>(json, _jsonSerializerOptions);                        
                     }
                     finally
                     {
@@ -71,18 +75,19 @@ namespace Sqlbi.Bravo.Client.PowerBI.PowerBICloud
                     if (globalEnvironment == null)
                         throw new NotSupportedException($"Cloud environment not found [{ environmentName }]");
 
+                    var authority = globalEnvironment.Services.Single((s) => "aad".Equals(s.Name, StringComparison.OrdinalIgnoreCase));
                     var service = globalEnvironment.Services.Single((s) => "powerbi-backend".Equals(s.Name, StringComparison.OrdinalIgnoreCase));
                     var client = globalEnvironment.Clients.Single((c) => "powerbi-gateway".Equals(c.Name, StringComparison.OrdinalIgnoreCase));
 
                     CloudEnvironment = new PowerBICloudEnvironment
                     {
                         Name = PowerBICloudEnvironmentType.Public,
-                        AuthorityUri = globalEnvironment.Services.Single((s) => "aad".Equals(s.Name, StringComparison.OrdinalIgnoreCase)).Endpoint,
+                        AuthorityUri = authority.Endpoint,
                         RedirectUri = client.RedirectUri,
                         ResourceUri = service.ResourceId,
                         ClientId = client.AppId,
                         Scopes = new string[] { $"{ service.ResourceId }/.default" },                        
-                        BackendEndpointUri = service.Endpoint,                     
+                        EndpointUri = service.Endpoint,                     
                     };
                 }
 
@@ -103,56 +108,72 @@ namespace Sqlbi.Bravo.Client.PowerBI.PowerBICloud
                 response.EnsureSuccessStatusCode();
 
                 var json = await response.Content.ReadAsStringAsync();
-                TenantCluster = JsonSerializer.Deserialize<TenantCluster>(json, options: new JsonSerializerOptions(JsonSerializerDefaults.Web));
+                TenantCluster = JsonSerializer.Deserialize<TenantCluster>(json, _jsonSerializerOptions);
             }
         }
 
         public static async Task<AuthenticationResult> AcquireTokenAsync(IAccount account)
         {
-            await InitializeCloudSettingsAsync();
-
-            if (PublicClientApplication == null)
+            await _tokenSemaphore.WaitAsync();
+            try
             {
-                PublicClientApplication = PublicClientApplicationBuilder.Create(CloudEnvironment.ClientId)
-                    .WithAuthority(CloudEnvironment.AuthorityUri)
-                    .WithDefaultRedirectUri()
-                    .Build();
+                await InitializeCloudSettingsAsync();
 
-                //var tokenCache = PublicClientApplication.UserTokenCache;
-                //tokenCache.SetBeforeAccess(TokenCacheBeforeAccessCallback);
-                //tokenCache.SetAfterAccess(TokenCacheAfterAccessCallback);
-            }
+                if (IdentityClientApplication == null)
+                {
+                    IdentityClientApplication = PublicClientApplicationBuilder.Create(CloudEnvironment.ClientId)
+                        .WithAuthority(CloudEnvironment.AuthorityUri)
+                        .WithRedirectUri(CloudEnvironment.RedirectUri)
+                        .Build();
 
-            AuthenticationResult authenticationResult;
+                    //var tokenCache = PublicClientApplication.UserTokenCache;
+                    //tokenCache.SetBeforeAccess(TokenCacheBeforeAccessCallback);
+                    //tokenCache.SetAfterAccess(TokenCacheAfterAccessCallback);
+                }
 
-            if (account != null)
-            {
-                authenticationResult = await PublicClientApplication.AcquireTokenSilent(CloudEnvironment.Scopes, account)
+                AuthenticationResult authenticationResult;
+
+                if (account != null)
+                {
+                    authenticationResult = await IdentityClientApplication.AcquireTokenSilent(CloudEnvironment.Scopes, account)
+                        .WithExtraQueryParameters(MicrosoftAccountOnlyQueryParameter)
+                        .ExecuteAsync();
+
+                    return authenticationResult;
+                }
+ 
+                var customLoginUI = new CustomLoginWebUI(UI.Views.ShellView.Instance);
+
+                authenticationResult = await IdentityClientApplication.AcquireTokenInteractive(CloudEnvironment.Scopes)
                     .WithExtraQueryParameters(MicrosoftAccountOnlyQueryParameter)
+                    .WithCustomWebUi(customLoginUI)
                     .ExecuteAsync();
+
+                await InitializeTenantClusterAsync(authenticationResult.AccessToken);
 
                 return authenticationResult;
             }
- 
-            var customLoginUI = new CustomLoginWebUI(UI.Views.ShellView.Instance);
-
-            authenticationResult = await PublicClientApplication.AcquireTokenInteractive(CloudEnvironment.Scopes)
-                .WithExtraQueryParameters(MicrosoftAccountOnlyQueryParameter)
-                .WithCustomWebUi(customLoginUI)
-                .ExecuteAsync();
-
-            await InitializeTenantClusterAsync(authenticationResult.AccessToken);
-
-            return authenticationResult;
+            finally
+            {
+                _tokenSemaphore.Release();
+            }
         }
 
         public static async Task RemoveTokenAsync()
         {
-            var accounts = await PublicClientApplication.GetAccountsAsync();
-
-            foreach (var account in accounts)
+            await _tokenSemaphore.WaitAsync();
+            try
             {
-                await PublicClientApplication.RemoveAsync(account);
+                var accounts = await IdentityClientApplication.GetAccountsAsync();
+
+                foreach (var account in accounts)
+                {
+                    await IdentityClientApplication.RemoveAsync(account);
+                }
+            }
+            finally
+            {
+                _tokenSemaphore.Release();
             }
         }
 
@@ -186,22 +207,35 @@ namespace Sqlbi.Bravo.Client.PowerBI.PowerBICloud
             }
         }
 
-        public static async Task<IEnumerable<MetadataSharedDataset>> GetSharedDatasetsAsync(string accessToken)
+        public static async Task<IEnumerable<SharedDataset>> GetSharedDatasetsAsync(string accessToken)
         {
             using var client = new HttpClient();
-            {
-                client.BaseAddress = new Uri(TenantCluster.FixedClusterUri);
-                client.DefaultRequestHeaders.Accept.Clear();
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-            }
+            client.BaseAddress = new Uri(TenantCluster.FixedClusterUri);
+            client.DefaultRequestHeaders.Accept.Clear();
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
             using var response = await client.GetAsync(GetSharedDatasetsUrl);
             response.EnsureSuccessStatusCode();
 
             var json = await response.Content.ReadAsStringAsync();
-            var datasets = JsonSerializer.Deserialize<IEnumerable<MetadataSharedDataset>>(json, options: new JsonSerializerOptions(JsonSerializerDefaults.Web));
+            var datasets = JsonSerializer.Deserialize<IEnumerable<SharedDataset>>(json, _jsonSerializerOptions);
 
             return datasets;
         }
+
+        public static async Task<IEnumerable<Workspace>> GetWorkspacesAsync(string accessToken)
+        {
+            using var client = new HttpClient();
+            client.DefaultRequestHeaders.Accept.Clear();
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+            using var response = await client.GetAsync(GetWorkspacesUrl);
+            response.EnsureSuccessStatusCode();
+
+            var json = await response.Content.ReadAsStringAsync();
+            var workspaces = JsonSerializer.Deserialize<IEnumerable<Workspace>>(json, options: new JsonSerializerOptions(JsonSerializerDefaults.Web));
+
+            return workspaces;
+        }        
     }
 }

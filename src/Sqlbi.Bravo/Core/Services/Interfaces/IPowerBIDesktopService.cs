@@ -1,10 +1,11 @@
 ﻿using Sqlbi.Bravo.Client.PowerBI.Desktop;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Sqlbi.Bravo.Core.Services.Interfaces
 {
     internal interface IPowerBIDesktopService
     {
-        IEnumerable<PowerBIDesktopInstance> GetInstances();
+        Task<IEnumerable<PowerBIDesktopInstance>> GetInstancesAsync();
     }
 }

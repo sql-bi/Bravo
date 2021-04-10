@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Sqlbi.Bravo.Client.PowerBI
+﻿namespace Sqlbi.Bravo.Client.PowerBI
 {
     internal class PowerBICloudEnvironment
     { 
@@ -20,6 +14,6 @@ namespace Sqlbi.Bravo.Client.PowerBI
 
         public string ResourceUri { get; init; }
 
-        public string BackendEndpointUri { get; init; }
+        public string EndpointUri { get; init; }
     }
 }

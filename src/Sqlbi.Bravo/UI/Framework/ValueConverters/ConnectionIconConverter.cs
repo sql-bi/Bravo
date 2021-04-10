@@ -1,21 +1,26 @@
-﻿using System;
+﻿using Sqlbi.Bravo.UI.Controls;
+using Sqlbi.Bravo.UI.DataModel;
+using System;
 using System.Globalization;
-using System.Windows.Data;
+using System.Windows.Controls;
 
 namespace Sqlbi.Bravo.UI.Framework.ValueConverters
 {
-    internal class ConnectionIconConverter
-         : BaseValueConverter<ConnectionIconConverter>
+    internal class ConnectionIconConverter: BaseValueConverter<ConnectionIconConverter>
     {
         public override object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            return (value.ToString()) switch
+            var connectionType = Enum.Parse(typeof(BiConnectionType), System.Convert.ToString(value));
+            
+            UserControl control = connectionType switch
             {
-                "ConnectedPowerBiDataset" => new Controls.DatasetIcon(),
-                "ActivePowerBiWindow" => new Controls.DesktopIcon(),
-                "VertipaqAnalyzerFile" => new Controls.VertipaqFileIcon(),
+                BiConnectionType.ConnectedPowerBiDataset => new DatasetIcon(),
+                BiConnectionType.ActivePowerBiWindow => new DesktopIcon(),
+                BiConnectionType.VertipaqAnalyzerFile => new VertipaqFileIcon(),
                 _ => null,
             };
+
+            return control;
         }
 
         public override object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotImplementedException();
