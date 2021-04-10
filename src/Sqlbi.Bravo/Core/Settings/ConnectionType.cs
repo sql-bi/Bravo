@@ -8,6 +8,6 @@
 
         PowerBIDataset,
 
-        VertiPaqAnalyzer
+        VertiPaqAnalyzerFile
     }
 }

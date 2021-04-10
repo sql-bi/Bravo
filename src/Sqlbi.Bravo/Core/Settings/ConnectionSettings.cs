@@ -1,10 +1,12 @@
 ﻿using Microsoft.AnalysisServices;
 using Sqlbi.Bravo.Client.PowerBI.Desktop;
 using Sqlbi.Bravo.Client.PowerBI.PowerBICloud;
+using Sqlbi.Bravo.Client.VertiPaqAnalyzer;
 using Sqlbi.Bravo.Core.Services.Interfaces;
 using System;
 using System.Data.Common;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Net;
 
@@ -68,6 +70,22 @@ namespace Sqlbi.Bravo.Core.Settings
                 //case ConnectionType.VertiPaqAnalyzer:
                 //    break;
             }
+
+            return connectionSettings;
+        }
+
+        public static ConnectionSettings CreateFrom(VertiPaqAnalyzerFile file)
+        {
+            var connectionName = Path.GetFileNameWithoutExtension(file.Path);
+
+            var connectionSettings = new ConnectionSettings
+            {
+                ConnectionType = ConnectionType.VertiPaqAnalyzerFile,
+                ConnectionName = connectionName,
+                ServerName = null,
+                DatabaseName = null,
+                ConnectionString = file.Path,
+            };
 
             return connectionSettings;
         }
@@ -212,7 +230,5 @@ namespace Sqlbi.Bravo.Core.Settings
         public string ConnectionName { get; private set; }
 
         public string ConnectionString { get; private set; }
-
-        public bool UsingLocalModelForAnanlysis { get; internal set; } = false;
     }
 }

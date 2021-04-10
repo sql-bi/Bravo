@@ -1,6 +1,7 @@
 ﻿using Dax.Metadata;
 using Dax.Metadata.Extractor;
 using Dax.ViewModel;
+using Dax.Vpax.Tools;
 using Microsoft.AnalysisServices;
 using Microsoft.AnalysisServices.AdomdClient;
 using Microsoft.Extensions.Logging;
@@ -20,7 +21,6 @@ namespace Sqlbi.Bravo.Core.Services
         private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1);
         private readonly ILogger _logger;
         private VpaModel _vpaModel;
-        private Model _daxModel;
 
         public AnalyzeModelService(ILogger<AnalyzeModelService> logger)
         {
@@ -33,15 +33,17 @@ namespace Sqlbi.Bravo.Core.Services
         {
             _logger.Trace();
 
-            if (connectionSettings.UsingLocalModelForAnanlysis)
-            {
-                return;
-            }
-
             await _semaphore.WaitAsync();
             try
             {
-                await Task.Run(InitilizeOrRefresh);
+                if (connectionSettings.ConnectionType == Settings.ConnectionType.VertiPaqAnalyzerFile)
+                {
+                    await Task.Run(InitilizeOrRefreshFromVertiPaqAnalyzerFile);
+                }
+                else
+                {
+                    await Task.Run(InitilizeOrRefresh);
+                }
             }
             finally
             {
@@ -50,24 +52,38 @@ namespace Sqlbi.Bravo.Core.Services
 
             void InitilizeOrRefresh()
             {
+                var daxModel = default(Model);
+
                 using (var server = new Server())
                 {
                     server.Connect(connectionSettings.ConnectionString);
 
                     var database = server.Databases.GetByName(connectionSettings.DatabaseName);
-                    var model = database.Model;
-
-                    _daxModel = TomExtractor.GetDaxModel(database.Model, AppConstants.ApplicationName, AppConstants.ApplicationProductVersion);
+                    daxModel = TomExtractor.GetDaxModel(database.Model, AppConstants.ApplicationName, AppConstants.ApplicationProductVersion);
                 }
 
                 using (var connection = new AdomdConnection(connectionSettings.ConnectionString))
                 {
-                    DmvExtractor.PopulateFromDmv(_daxModel, connection, connectionSettings.ServerName, connectionSettings.DatabaseName, AppConstants.ApplicationName, AppConstants.ApplicationProductVersion);
-                    StatExtractor.UpdateStatisticsModel(_daxModel, connection, AppConstants.AnalyzeModelUpdateStatisticsModelSampleRowCount);
+                    DmvExtractor.PopulateFromDmv(daxModel, connection, connectionSettings.ServerName, connectionSettings.DatabaseName, AppConstants.ApplicationName, AppConstants.ApplicationProductVersion);
+                    StatExtractor.UpdateStatisticsModel(daxModel, connection, AppConstants.AnalyzeModelUpdateStatisticsModelSampleRowCount);
                 }
 
-                _vpaModel = new VpaModel(_daxModel);
+                _vpaModel = new VpaModel(daxModel);
             }
+
+            void InitilizeOrRefreshFromVertiPaqAnalyzerFile()
+            {
+                var vpaxContent = VpaxTools.ImportVpax(path: connectionSettings.ConnectionString);
+
+                _vpaModel = new VpaModel(vpaxContent.DaxModel); 
+            }
+        }
+
+        public async Task ExportVertiPaqAnalyzerModel(string path)
+        {
+            VpaxTools.ExportVpax(path, _vpaModel.Model);
+
+            await Task.CompletedTask;
         }
 
         public DateTime LastSyncTime => _vpaModel?.Model?.ExtractionDate ?? DateTime.MinValue;
@@ -79,11 +95,5 @@ namespace Sqlbi.Bravo.Core.Services
         public IEnumerable<VpaColumn> AllColumns => _vpaModel?.Columns;
 
         public IEnumerable<VpaTable> AllTables => _vpaModel?.Tables;
-
-        public Model DaxModel
-        {
-            get => _daxModel;
-            set => _vpaModel = new VpaModel(_daxModel = value);
-        }
     }
 }

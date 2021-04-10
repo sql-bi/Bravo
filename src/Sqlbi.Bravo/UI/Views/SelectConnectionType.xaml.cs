@@ -1,16 +1,13 @@
-﻿using Dax.Vpax.Tools;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
+using Sqlbi.Bravo.Client.VertiPaqAnalyzer;
 using Sqlbi.Bravo.Core.Logging;
 using Sqlbi.Bravo.Core.Services.Interfaces;
-using Sqlbi.Bravo.Core.Settings;
 using Sqlbi.Bravo.UI.DataModel;
 using Sqlbi.Bravo.UI.ViewModels;
 using System;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Navigation;
@@ -124,7 +121,7 @@ namespace Sqlbi.Bravo.UI.Views
             //await service.LogoutAsync();
         }
 
-        private void OpenVertiPaqAnalyzerFileClicked(object sender, RoutedEventArgs e)
+        private async void OpenVertiPaqAnalyzerFileClicked(object sender, RoutedEventArgs e)
         {
             _logger.Trace();
 
@@ -132,7 +129,7 @@ namespace Sqlbi.Bravo.UI.Views
             {
                 CheckFileExists = true,
                 Multiselect = false,
-                Filter = "VertiPaq Analyzer files (*.vpax)|*.vpax",
+                Filter = "VertiPaq Analyzer file (*.vpax)|*.vpax",
                 InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
             };
 
@@ -146,13 +143,13 @@ namespace Sqlbi.Bravo.UI.Views
                 Action = "OpenVertiPaqAnalyzerFile"
             }});
 
-            var fileContent = VpaxTools.ImportVpax(openFileDialog.FileName);
+            var vertiPaqAnalyzerFile = new VertiPaqAnalyzerFile
+            {
+                Path = openFileDialog.FileName
+            };
 
-            var viewModel = DataContext as TabItemViewModel;
-            viewModel.ConnectionType = BiConnectionType.VertipaqAnalyzerFile;
-            viewModel.ConnectionName = Path.GetFileNameWithoutExtension(openFileDialog.FileName);
-            viewModel.AnalyzeModelVm.OnPropertyChanged(nameof(AnalyzeModelViewModel.ConnectionName));
-            viewModel.ShowAnalysisOfLoadedModel(fileContent.DaxModel);
+            var shellViewModel = App.ServiceProvider.GetRequiredService<ShellViewModel>();
+            await shellViewModel.AddNewTabAsync(vertiPaqAnalyzerFile);
         }
     }
 }

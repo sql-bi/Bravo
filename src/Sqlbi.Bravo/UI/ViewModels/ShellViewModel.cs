@@ -3,9 +3,9 @@ using Microsoft.Extensions.Logging;
 using Sqlbi.Bravo.Client.AnalysisServicesEventWatcher;
 using Sqlbi.Bravo.Client.PowerBI.Desktop;
 using Sqlbi.Bravo.Client.PowerBI.PowerBICloud;
+using Sqlbi.Bravo.Client.VertiPaqAnalyzer;
 using Sqlbi.Bravo.Core;
 using Sqlbi.Bravo.Core.Logging;
-using Sqlbi.Bravo.Core.Services;
 using Sqlbi.Bravo.Core.Services.Interfaces;
 using Sqlbi.Bravo.Core.Settings;
 using Sqlbi.Bravo.Core.Settings.Interfaces;
@@ -220,6 +220,20 @@ namespace Sqlbi.Bravo.UI.ViewModels
             SelectedTab = newTab;
         }
 
+        public async Task AddNewTabAsync(VertiPaqAnalyzerFile file)
+        {
+            var connectionSettings = await Task.Run(() => ConnectionSettings.CreateFrom(file));
+
+            var newTab = App.ServiceProvider.GetRequiredService<TabItemViewModel>();
+            newTab.ConnectionType = BiConnectionType.VertipaqAnalyzerFile;
+            newTab.ConnectionName = connectionSettings.ConnectionName;
+            newTab.ConnectionSettings = connectionSettings;
+            newTab.ShowSubPage(SubPage.AnalyzeModel);
+
+            Tabs.Add(newTab);
+            SelectedTab = newTab;
+        }
+
         public async Task AddNewTabAsync(string connectionName, string serverName, string databaseName)
         {            
             var connectionSettings = await Task.Run(() => ConnectionSettings.CreateFrom(connectionName, serverName, databaseName));
@@ -289,7 +303,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
                 // LastNavigation is used to avoid navigating to where already are
                 if (!SelectedItem.ShowComingSoon && SelectedItem.Name != (LastNavigation?.Name ?? string.Empty))
                 {
-                    if (SelectedItem.SubPageInTab != SubPage.AnalyzeModel && (SelectedTab.ConnectionSettings?.UsingLocalModelForAnanlysis ?? false))
+                    if (SelectedItem.SubPageInTab != SubPage.AnalyzeModel && (SelectedTab.ConnectionSettings?.ConnectionType == ConnectionType.VertiPaqAnalyzerFile))
                     {
                         SelectedItem = MenuItems.FirstOrDefault((i) => i.SubPageInTab == SubPage.AnalyzeModel);
                         SelectedIndex = AnalyzeModelItemIndex;

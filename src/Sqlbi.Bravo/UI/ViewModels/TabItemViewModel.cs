@@ -48,14 +48,6 @@ namespace Sqlbi.Bravo.UI.ViewModels
             TryAgainCommand = new RelayCommand(async () => await TryAgain());
         }
 
-        internal void ShowAnalysisOfLoadedModel(Model daxModel)
-        {
-            ConnectionSettings.UsingLocalModelForAnanlysis = true;
-
-            AnalyzeModelVm.OverrideDaxModel(daxModel);
-            ShowSubPage(SubPage.AnalyzeModel);
-        }
-
         private async Task TryAgain()
         {
             if (IsRetrying)
@@ -249,6 +241,11 @@ namespace Sqlbi.Bravo.UI.ViewModels
                 subPageInTab = SubPage.SelectConnection;
             }
 
+            //if (ConnectionSettings.ConnectionType == Core.Settings.ConnectionType.VertiPaqAnalyzerFile && subPageInTab != SubPage.AnalyzeModel)
+            //{
+            //    return;
+            //}
+
             var shellViewModel = App.ServiceProvider.GetRequiredService<ShellViewModel>();
 
             switch (subPageInTab)
@@ -257,16 +254,8 @@ namespace Sqlbi.Bravo.UI.ViewModels
                     ShowSelectConnection = true;
                     break;
                 case SubPage.DaxFormatter:
-                    if (!ConnectionSettings.UsingLocalModelForAnanlysis)
-                    {
-                        ShowDaxFormatter = true;
-                        shellViewModel.SelectedIndex = ShellViewModel.FormatDaxItemIndex;
-                    }
-                    else
-                    {
-                        ShowAnalyzeModel = true;
-                        shellViewModel.SelectedIndex = ShellViewModel.AnalyzeModelItemIndex;
-                    }
+                    ShowDaxFormatter = true;
+                    shellViewModel.SelectedIndex = ShellViewModel.FormatDaxItemIndex;
                     break;
                 case SubPage.AnalyzeModel:
                     ShowAnalyzeModel = true;

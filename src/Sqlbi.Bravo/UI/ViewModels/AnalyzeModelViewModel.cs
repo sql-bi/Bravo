@@ -229,8 +229,6 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public string TimeSinceLastSync => LastSyncTime.HumanizeElapsed();
 
-        internal void OverrideDaxModel(Model daxModel) => _analyzer.DaxModel = daxModel;
-
         internal void EnsureInitialized()
         {
             _logger.Trace();
@@ -277,8 +275,8 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
             var saveFileDialog = new SaveFileDialog
             {
-                FileName = $"{ParentTab.ConnectionName}.vpax",
-                Filter = "VPAX (*.vpax)|*.vpax",
+                FileName = $"{ ParentTab.ConnectionName }.vpax",
+                Filter = "VertiPaq Analyzer file (*.vpax)|*.vpax",
                 DefaultExt = ".vpax",
                 InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
             };
@@ -289,8 +287,8 @@ namespace Sqlbi.Bravo.UI.ViewModels
                 {
                     Action = "ExportVpax"
                 }});
-                
-                VpaxTools.ExportVpax(saveFileDialog.FileName, _analyzer.DaxModel);
+
+                await _analyzer.ExportVertiPaqAnalyzerModel(path: saveFileDialog.FileName);
             }
 
             await Task.CompletedTask;
