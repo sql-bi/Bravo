@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Sqlbi.Bravo\Sqlbi.Bravo.csproj" />
+    <ProjectReference Include="..\..\src\Sqlbi.Bravo\Sqlbi.Bravo.csproj" />
   </ItemGroup>
 
 </Project>
