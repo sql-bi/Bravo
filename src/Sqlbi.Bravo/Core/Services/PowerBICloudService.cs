@@ -73,7 +73,8 @@ namespace Sqlbi.Bravo.Core.Services
                     WorkspaceType = w.GetWorkspaceType(),
                     WorkspaceCapacitySkuType = w.GetWorkspaceCapacitySkuType(),
                     Permissions = d.Permissions,
-                    Model = d.Model
+                    Model = d.Model,
+                    GalleryItem = d.GalleryItem
                 })
                 .ToArray();
 

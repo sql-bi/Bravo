@@ -16,5 +16,7 @@ namespace Sqlbi.Bravo.Client.PowerBI.PowerBICloud
         public SharedDatasetPermissions Permissions { get; init; }
 
         public SharedDatasetModel Model { get; init; }
+
+        public SharedDatasetGalleryItem GalleryItem { get; set; }
     }
 }

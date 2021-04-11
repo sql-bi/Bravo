@@ -15,5 +15,7 @@
         public SharedDatasetPermissions Permissions { get; set; }
 
         public SharedDatasetModel Model { get; set; }
+
+        public SharedDatasetGalleryItem GalleryItem { get; set; }
     }
 }
