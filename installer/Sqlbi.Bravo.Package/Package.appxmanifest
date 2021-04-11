@@ -8,11 +8,11 @@
 
   <Identity
     Name="f1e35ffe-43f8-48c2-b696-a519a47790dc"
-    Publisher="CN=alberto"
-    Version="1.0.9.0" />
+    Publisher="CN=Sqlbi.Bravo-SelfSigned"
+    Version="0.5.0.0" />
 
   <Properties>
-    <DisplayName>Sqlbi.Bravo.Package</DisplayName>
+    <DisplayName>Bravo for Power BI Desktop</DisplayName>
     <PublisherDisplayName>alberto</PublisherDisplayName>
     <Logo>Images\StoreLogo.png</Logo>
   </Properties>
@@ -31,8 +31,8 @@
       Executable="$targetnametoken$.exe"
       EntryPoint="$targetentrypoint$">
       <uap:VisualElements
-        DisplayName="Sqlbi.Bravo.Package"
-        Description="Sqlbi.Bravo.Package"
+        DisplayName="Bravo for Power BI Desktop"
+        Description="Bravo for Power BI Desktop - sqlbi.com"
         BackgroundColor="transparent"
         Square150x150Logo="Images\Square150x150Logo.png"
         Square44x44Logo="Images\Square44x44Logo.png">
