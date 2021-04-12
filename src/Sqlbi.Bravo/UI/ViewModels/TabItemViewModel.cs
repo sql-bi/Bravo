@@ -1,8 +1,7 @@
-﻿using Dax.Metadata;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Sqlbi.Bravo.Client.AnalysisServicesEventWatcher;
 using Sqlbi.Bravo.Core.Logging;
-using Sqlbi.Bravo.Core.Services;
 using Sqlbi.Bravo.Core.Services.Interfaces;
 using Sqlbi.Bravo.Core.Settings;
 using Sqlbi.Bravo.Core.Settings.Interfaces;
@@ -10,23 +9,23 @@ using Sqlbi.Bravo.UI.DataModel;
 using Sqlbi.Bravo.UI.Framework.Commands;
 using Sqlbi.Bravo.UI.Framework.ViewModels;
 using System;
-using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
-using System.Windows;
 using System.Windows.Input;
 
 namespace Sqlbi.Bravo.UI.ViewModels
 {
     internal class TabItemViewModel : BaseViewModel
     {
-        private BiConnectionType connectionType;
-
         private readonly IAnalysisServicesEventWatcherService _watcher;
         private readonly IGlobalSettingsProviderService _settings;
         private readonly ILogger _logger;
         private DaxFormatterViewModel _daxFormatterVm;
         private AnalyzeModelViewModel _analyzeModelVm;
+        private BiConnectionType _connectionType;
+        private Func<Task> _tryagainCallback;
+        private bool _showDaxFormatter;
+        private bool _showSelectConnection;
+        private bool _showAnalyzeModel;
 
         public bool IsRetrying { get; set; } = false;
 
@@ -35,44 +34,29 @@ namespace Sqlbi.Bravo.UI.ViewModels
             _logger = logger;
             _watcher = watcher;
             _settings = settings;
+
             _logger.Trace();
             _watcher.OnConnectionStateChanged += OnAnalysisServicesConnectionStateChanged;
 
             ShowError = false;
-
             ConnectionType = BiConnectionType.UnSelected;
             ShowSelectConnection = true;
 
-            ConnectCommand = new RelayCommand(async () => await Connect());
-            DisconnectCommand = new RelayCommand(async () => await Disconnect());
             TryAgainCommand = new RelayCommand(async () => await TryAgain());
-
-            // Get the values for the started instance.
-            // These will be overridden if messaged to be single instance and open another tab
-            RuntimeSummary.DatabaseName = _settings.Runtime.DatabaseName;
-            RuntimeSummary.IsExecutedAsExternalTool = _settings.Runtime.IsExecutedAsExternalTool;
-            RuntimeSummary.ParentProcessMainWindowTitle = _settings.Runtime.ParentProcessMainWindowTitle;
-            RuntimeSummary.ParentProcessName = _settings.Runtime.ParentProcessName;
-            RuntimeSummary.ServerName = _settings.Runtime.ServerName;
-        }
-
-        internal void ShowAnalysisOfLoadedModel(Model daxModel)
-        {
-            RuntimeSummary.UsingLocalModelForAnanlysis = true;
-
-            AnalyzeModelVm.OverrideDaxModel(daxModel);
-            ShowSubPage(SubPage.AnalyzeModel);
         }
 
         private async Task TryAgain()
         {
             if (IsRetrying)
+            {
                 return;
+            }
 
             try
             {
                 IsRetrying = true;
-                await _callback?.Invoke();
+
+                await _tryagainCallback?.Invoke();
 
                 // As there was no exception assume the retry worked and stop showing the error message.
                 ShowError = false;
@@ -96,12 +80,11 @@ namespace Sqlbi.Bravo.UI.ViewModels
                 {
                     case BiConnectionType.ConnectedPowerBiDataset:
                         return $"{ConnectionName} - powerbi.com";
-
                     case BiConnectionType.ActivePowerBiWindow:
                     case BiConnectionType.VertipaqAnalyzerFile:
                         return ConnectionName;
-
-                    default: return " ";  // Empty string is treated as null by WinUI control and so shows FullName
+                    default: 
+                        return " ";  // Empty string is treated as null by WinUI control and so shows FullName
                 }
             }
         }
@@ -136,7 +119,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public bool ShowDaxFormatter
         {
-            get => showDaxFormatter;
+            get => _showDaxFormatter;
             set
             {
                 if (value)
@@ -145,13 +128,13 @@ namespace Sqlbi.Bravo.UI.ViewModels
                     DoNotShowAnything();
                 }
 
-                SetProperty(ref showDaxFormatter, value);
+                SetProperty(ref _showDaxFormatter, value);
             }
         }
 
         public bool ShowAnalyzeModel
         {
-            get => showAnalyzeModel;
+            get => _showAnalyzeModel;
             set
             {
                 if (value)
@@ -160,13 +143,13 @@ namespace Sqlbi.Bravo.UI.ViewModels
                     DoNotShowAnything();
                 }
 
-                SetProperty(ref showAnalyzeModel, value);
+                SetProperty(ref _showAnalyzeModel, value);
             }
         }
 
         public bool ShowSelectConnection
         {
-            get => showSelectConnection;
+            get => _showSelectConnection;
             set
             {
                 if (value)
@@ -174,7 +157,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
                     DoNotShowAnything();
                 }
 
-                SetProperty(ref showSelectConnection, value);
+                SetProperty(ref _showSelectConnection, value);
             }
         }
 
@@ -189,60 +172,33 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public BiConnectionType ConnectionType
         {
-            get => connectionType;
+            get => _connectionType;
             set
             {
-                if (SetProperty(ref connectionType, value))
+                if (SetProperty(ref _connectionType, value))
                 {
                     OnPropertyChanged(nameof(Header));
                 }
             }
         }
 
-        public ICommand ConnectCommand { get; set; }
-
         public ICommand TryAgainCommand { get; set; }
 
         public bool ShowError { get; set; }
 
-        public RuntimeSummary RuntimeSummary { get; set; } = new RuntimeSummary();
-
-        private Func<Task> _callback;
-        private bool showDaxFormatter;
-        private bool showSelectConnection;
-        private bool showAnalyzeModel;
+        public ConnectionSettings ConnectionSettings { get; set; }
 
         public string ErrorDescription { get; set; }
-
-        public ICommand DisconnectCommand { get; set; }
-
-        public bool ConnectCommandIsRunning { get; set; }
-
-        public bool DisconnectCommandIsRunning { get; set; }
-
-        private async Task Connect()
-        {
-            _logger.Trace();
-
-            await ExecuteCommandAsync(() => ConnectCommandIsRunning, () => _watcher.ConnectAsync(RuntimeSummary));
-        }
-
-        private async Task Disconnect()
-        {
-            _logger.Trace();
-
-            await ExecuteCommandAsync(() => DisconnectCommandIsRunning, _watcher.DisconnectAsync);
-        }
 
         public void DisplayError(string errorDescription, Func<Task> callback)
         {
             ErrorDescription = errorDescription;
             ShowError = true;
-            _callback = callback;
+            _tryagainCallback = callback;
         }
 
         [PropertyChanged.SuppressPropertyChangedWarnings]
-        private void OnAnalysisServicesConnectionStateChanged(object sender, AnalysisServicesEventWatcherConnectionStateArgs e)
+        private void OnAnalysisServicesConnectionStateChanged(object sender, ConnectionStateEventArgs e)
         {
             _logger.Trace();
 
@@ -259,7 +215,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
                 subPageInTab = SubPage.SelectConnection;
             }
 
-            var shellVm = (ShellViewModel)App.ServiceProvider.GetRequiredService(typeof(ShellViewModel));
+            var shellViewModel = App.ServiceProvider.GetRequiredService<ShellViewModel>();
 
             switch (subPageInTab)
             {
@@ -267,22 +223,12 @@ namespace Sqlbi.Bravo.UI.ViewModels
                     ShowSelectConnection = true;
                     break;
                 case SubPage.DaxFormatter:
-                    if (!RuntimeSummary.UsingLocalModelForAnanlysis)
-                    {
-                        ShowDaxFormatter = true;
-                        shellVm.SelectedIndex = ShellViewModel.FormatDaxItemIndex;
-                    }
-                    else
-                    {
-                        ShowAnalyzeModel = true;
-                        shellVm.SelectedIndex = ShellViewModel.AnalyzeModelItemIndex;
-                    }
+                    ShowDaxFormatter = true;
+                    shellViewModel.SelectedIndex = ShellViewModel.MenuItemFormatDaxIndex;
                     break;
                 case SubPage.AnalyzeModel:
                     ShowAnalyzeModel = true;
-                    shellVm.SelectedIndex = ShellViewModel.AnalyzeModelItemIndex;
-                    break;
-                default:
+                    shellViewModel.SelectedIndex = ShellViewModel.MenuItemAnalyzeModelIndex;
                     break;
             }
         }

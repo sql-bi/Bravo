@@ -1,9 +1,8 @@
-﻿using Sqlbi.Bravo.UI.Framework.Commands;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 
-namespace Sqlbi.Bravo.UI.Framework.Helpers
+namespace Sqlbi.Bravo.UI.Framework.Commands
 {
-    internal static class CommandHelper
+    internal static class RelayCommandExtensions
     {
         public static RelayCommand ObserveProperty(this RelayCommand command, INotifyPropertyChanged source, string propertyName)
         {

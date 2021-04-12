@@ -1,8 +1,10 @@
-﻿using Humanizer;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
+using Sqlbi.Bravo.Client.AnalysisServicesEventWatcher;
+using Sqlbi.Bravo.Client.DaxFormatter;
+using Sqlbi.Bravo.Core.Helpers;
 using Sqlbi.Bravo.Core.Logging;
-using Sqlbi.Bravo.Core.Services;
 using Sqlbi.Bravo.Core.Services.Interfaces;
+using Sqlbi.Bravo.Core.Settings.Interfaces;
 using Sqlbi.Bravo.UI.DataModel;
 using Sqlbi.Bravo.UI.Framework.Commands;
 using Sqlbi.Bravo.UI.Framework.ViewModels;
@@ -17,32 +19,34 @@ namespace Sqlbi.Bravo.UI.ViewModels
 {
     internal class DaxFormatterViewModel : BaseViewModel
     {
-        private readonly IDaxFormatterService _formatter;
-        private readonly IAnalysisServicesEventWatcherService _watcher;
-        private readonly ILogger _logger;
         internal const int SubViewIndex_Loading = 0;
         internal const int SubViewIndex_Start = 1;
         internal const int SubViewIndex_ChooseFormulas = 2;
         internal const int SubViewIndex_Progress = 3;
         internal const int SubViewIndex_Changes = 4;
         internal const int SubViewIndex_Finished = 5;
+
+        private readonly IDaxFormatterService _formatter;
+        private readonly IGlobalSettingsProviderService _settings;
+        private readonly IAnalysisServicesEventWatcherService _watcher;
+        private readonly ILogger _logger;
         private readonly DispatcherTimer _timer = new DispatcherTimer();
         private bool _initialized = false;
 
-        public DaxFormatterViewModel(IDaxFormatterService formatter, IAnalysisServicesEventWatcherService watcher, ILogger<DaxFormatterViewModel> logger)
+        public DaxFormatterViewModel(IDaxFormatterService formatter, IGlobalSettingsProviderService settings, IAnalysisServicesEventWatcherService watcher, ILogger<DaxFormatterViewModel> logger)
         {
             _formatter = formatter;
+            _settings = settings;
             _watcher = watcher;
             _logger = logger;
 
             _logger.Trace();
-            _watcher.OnEvent += OnAnalysisServicesEvent;
+            _watcher.OnWatcherEvent += OnWatcherEvent;
             //_watcher.OnConnectionStateChanged += OnAnalysisServicesConnectionStateChanged;
 
             ViewIndex = SubViewIndex_Loading;
             PreviewChanges = true;
 
-            InitializeCommand = new RelayCommand(async () => await InitializeAsync());
             FormatAnalyzeCommand = new RelayCommand(async () => await AnalyzeAsync());
             FormatMakeChangesCommand = new RelayCommand(async () => await MakeChangesAsync());
             HelpCommand = new RelayCommand(() => ShowHelp());
@@ -71,17 +75,11 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public ICommand RefreshCommand { get; set; }
 
-        public ICommand InitializeCommand { get; set; }
-
         public ICommand ChangeFormulasCommand { get; set; }
 
         public ICommand ApplySelectedFormulaChangesCommand { get; set; }
 
         public ICommand SelectedTableMeasureChangedCommand { get; set; }
-
-        public bool InitializeCommandIsRunning { get; set; }
-
-        public bool InitializeCommandIsEnabled { get; set; } = true;
 
         public bool TermsAccepted { get; set; }
 
@@ -105,10 +103,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public DateTime LastSyncTime { get; private set; }
 
-        public string TimeSinceLastSync
-            => LastSyncTime.Year == 1
-            ? "not yet"
-            : $"{(DateTime.UtcNow - LastSyncTime).Humanize(minUnit: Humanizer.Localisation.TimeUnit.Second).Replace("minute", "min").Replace("second", "sec")} ago";
+        public string TimeSinceLastSync => LastSyncTime.HumanizeElapsed();
 
         public int MeasuresFormatted { get; set; }
 
@@ -116,16 +111,13 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public ObservableCollection<MeasureInfoViewModel> Measures { get; set; } = new ObservableCollection<MeasureInfoViewModel>();
 
-        public ObservableCollection<MeasureInfoViewModel> MeasuresNeedingFormatting
-            => new ObservableCollection<MeasureInfoViewModel>(Measures.Where(m => !m.IsAlreadyFormatted).ToList());
+        public ObservableCollection<MeasureInfoViewModel> MeasuresNeedingFormatting => new ObservableCollection<MeasureInfoViewModel>(Measures.Where((m) => !m.IsAlreadyFormatted).ToList());
 
-        private async void OnAnalysisServicesEvent(object sender, AnalysisServicesEventWatcherEventArgs e)
+        private async void OnWatcherEvent(object sender, WatcherEventArgs e)
         {
             _logger.Trace();
 
-            if (e.Event == AnalysisServicesEventWatcherEvent.Create ||
-                e.Event == AnalysisServicesEventWatcherEvent.Alter ||
-                e.Event == AnalysisServicesEventWatcherEvent.Delete)
+            if (e.Event == WatcherEvent.Create || e.Event == WatcherEvent.Alter || e.Event == WatcherEvent.Delete)
             {
                 await InitializeOrRefreshFormatter();
             }
@@ -133,15 +125,16 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         private async Task InitializeOrRefreshFormatter()
         {
+            _logger.Trace();
+
             FormatCommandIsEnabled = false;
             LoadingDetails = "Connecting to data";
-            await _formatter.InitilizeOrRefreshAsync(ParentTab.RuntimeSummary);
+            await _formatter.InitilizeOrRefreshAsync(ParentTab.ConnectionSettings);
 
             LastSyncTime = DateTime.UtcNow;
             OnPropertyChanged(nameof(TimeSinceLastSync));
 
             FormatCommandIsEnabled = true;
-            InitializeCommandIsEnabled = false;
 
             LoadMeasuresForSelection();
 
@@ -150,6 +143,8 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         private void LoadMeasuresForSelection()
         {
+            _logger.Trace();
+
             var msvm = new MeasureSelectionViewModel();
 
             foreach (var measure in _formatter.Measures)
@@ -179,10 +174,11 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         internal void EnsureInitialized()
         {
+            _logger.Trace();
+
             if (!_initialized)
             {
-                // Hacky way to call async method because can't make this async as called from a setter
-                Task.Run(() => RefreshAsync()).GetAwaiter().GetResult();
+                Task.Run(async () => await RefreshAsync());
             }
         }
 
@@ -192,64 +188,70 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
             try
             {
-                await ExecuteCommandAsync(() => InitializeCommandIsRunning,
-                    async () =>
-                    {
-                        await InitializeOrRefreshFormatter();
-                        ViewIndex = SubViewIndex_Start;
-                    });
+                ViewIndex = SubViewIndex_Loading;
+
+                await InitializeOrRefreshFormatter();
+                
+                ViewIndex = SubViewIndex_Start;
             }
-            catch (Exception exc)
+            catch (Exception ex)
             {
-                ParentTab.DisplayError($"Unable to connect{Environment.NewLine}{exc.Message}", InitializeOrRefreshFormatter);
+                _logger.Error(LogEvents.DaxFormatterException, ex);
+
+                ParentTab.DisplayError($"Unable to connect{Environment.NewLine}{ex.Message}", InitializeOrRefreshFormatter);
             }
         }
 
         private void ChooseFormulas()
         {
+            _logger.Trace();
+
             ViewIndex = SubViewIndex_ChooseFormulas;
         }
 
         private void SelectedFormulasChanged()
         {
+            _logger.Information(LogEvents.DaxFormatterViewAction, "{@Details}", new object[] { new
+            {
+                Action = "AnalyzeFormatSelectionChanged"
+            }});
+
             ViewIndex = SubViewIndex_Start;
         }
 
         private void OpenLog()
         {
+            _logger.Trace();
+
             // TODO REQUIREMENTS: Open log file
         }
 
         private void ShowHelp()
-            => Views.ShellView.Instance.ShowMediaDialog(new HowToFormatCodeHelp());
-
-        private async Task InitializeAsync()
         {
             _logger.Trace();
 
-            await ExecuteCommandAsync(
-                () => InitializeCommandIsRunning,
-                async () =>
-                {
-                    await InitializeOrRefreshFormatter();
-
-                    ViewIndex = SubViewIndex_Start;
-                });
+            Views.ShellView.Instance.ShowMediaDialog(new HowToFormatCodeHelp());
         }
 
         private async Task AnalyzeAsync()
         {
+            _logger.Information(LogEvents.DaxFormatterViewAction, "{@Details}", new object[] { new
+            {
+                Action = "AnalyzeFormat",
+                Preview = PreviewChanges
+            }});
+
             ProgressDetails = "Identifying formulas to format";
             ViewIndex = SubViewIndex_Progress;
 
             var tabularObjects = SelectionTreeData.Tables.SelectMany(t => t.Measures.Where(m => !string.IsNullOrWhiteSpace(m.Formula) && (m.IsSelected ?? false))).Select((i) => i.TabularObject).ToList();
-            var formattedTabularObjects = await _formatter.FormatAsync(tabularObjects);
+            var formattedTabularObjects = await _formatter.FormatAsync(tabularObjects, _settings.Application);
 
             Measures.Clear();
 
             foreach (var formattedTabularObject in formattedTabularObjects)
             {
-                if (formattedTabularObject is DaxFormatterServiceTabularMeasure measure)
+                if (formattedTabularObject is TabularMeasure measure)
                 {
                     Measures.Add(new MeasureInfoViewModel
                     {
@@ -282,15 +284,22 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         private async Task ApplyFormattingChangesToModelAsync()
         {
-            var changedTabularObjects = Measures.Where((m) => !m.IsAlreadyFormatted && m.Reformat).Select((m) => m.TabularObject).ToList();
+            _logger.Information(LogEvents.DaxFormatterViewAction, "{@Details}", new object[] { new
+            {
+                Action = "ApplyFormat"
+            }});
+
+            var changedTabularObjects = Measures.Where((m) => !m.IsAlreadyFormatted && m.Reformat).Select((m) => m.TabularObject).ToList();           
 
             try
             {
                 await _formatter.ApplyFormatAsync(changedTabularObjects);
             }
-            catch (Exception exc)
+            catch (Exception ex)
             {
-                ParentTab.DisplayError($"Unable to save changes{Environment.NewLine}{exc.Message}", ApplyFormattingChangesToModelAsync);
+                _logger.Error(LogEvents.DaxFormatterException, ex);
+
+                ParentTab.DisplayError($"Unable to save changes{Environment.NewLine}{ex.Message}", ApplyFormattingChangesToModelAsync);
             }
 
             MeasuresFormatted = changedTabularObjects.Count;

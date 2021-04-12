@@ -1,6 +1,9 @@
-﻿using Serilog.Events;
+﻿using Dax.Formatter.Models;
+using Serilog.Events;
+using Sqlbi.Bravo.UI.DataModel;
 using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -29,13 +32,19 @@ namespace Sqlbi.Bravo.Core
 
         public static bool ApplicationSettingsDefaultProxyUseSystem { get; } = true;
 
-        public static bool ApplicationSettingsDefaultUIShellBringToForegroundOnParentProcessMainWindowScreen { get; } = false;
+        public static bool ApplicationSettingsDefaultShellBringToForegroundOnParentProcessMainWindowScreen { get; } = false;
+
+        public static string ApplicationSettingsDefaultThemeName { get; } = nameof(AppTheme.Default);
+
+        public static DaxFormatterLineStyle ApplicationSettingsDefaultDaxFormatterLineStyle { get; } = DaxFormatterLineStyle.LongLine;        
 
         public static string UserSettingsFilePath { get; } = Path.Combine(ApplicationFolderLocalDataPath, "usersettings.json");
 
         public static string ApplicationProductVersion { get; } = VersionInfo.ProductVersion;
 
         public static Version ApplicationProductVersionNumber { get; } = new Version(VersionInfo.FileVersion);
+
+        public static CultureInfo ApplicationDefaultCulture { get; } = CultureInfo.GetCultureInfo("en-US");
 
         public static string[] CommandLineArgumentServerNameAliases { get; } = new string[] { "--server", "--s" };
 
@@ -49,19 +58,17 @@ namespace Sqlbi.Bravo.Core
 
         public static string PowerBIDesktopExternalToolsDirectory { get; } = Path.Combine(EnvironmentSpecialFolderCommonProgramFilesX86, @"Microsoft Shared\Power BI Desktop\External Tools");
 
-        public static Uri DaxFormatterTextFormatUri { get; } = new Uri("https://www.daxformatter.com/api/daxformatter/daxtextformat");
-
-        public static TimeSpan DaxFormatterTextFormatTimeout { get; } = TimeSpan.FromSeconds(10);
-
-        public static int DaxFormatterTextFormatRequestBatchMaxTextLength { get; } = 10000;
-
-        public static string DaxFormatterTextFormatRequestBatchSeparator { get; } = "\r\n*^*\r\n";
+        public static string PowerBICloudTokenCacheFile { get; } = Path.Combine(ApplicationFolderLocalDataPath, ".msalcache.bin");
 
         public static TimeSpan AnalysisServicesEventWatcherServiceConnectionStateWaitDelay { get; } = TimeSpan.FromSeconds(15);
 
         public static string TelemetrySettingsSectionName { get; } = "Telemetry";
 
         public static string TelemetryInstrumentationKey { get; } = "47a8970c-6293-408a-9cce-5b7b311574d3";
+
+        public static int AnalyzeModelUpdateStatisticsModelSampleRowCount { get; } = 10;
+
+        public static int AnalyzeModelSummaryColumnCount { get; } = 5;
 
         static AppConstants()
         {

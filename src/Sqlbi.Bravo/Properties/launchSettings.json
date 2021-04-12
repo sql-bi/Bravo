@@ -2,7 +2,7 @@
   "profiles": {
     "SqlbiBravo": {
       "commandName": "Project",
-      "commandLineArgs": "--server=\"localhost:60812\" --database=\"32f0add7-3e4c-4fd7-8e26-3961f25d7c5a\""
+      "commandLineArgs": "--serve=\"localhost:64415\" --databas=\"58d55e5c-557a-4eb5-b857-53c9dd473bd1\""
     }
   }
 }

@@ -1,66 +1,155 @@
-﻿using Dax.Vpax.Tools;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
+using Sqlbi.Bravo.Client.VertiPaqAnalyzer;
+using Sqlbi.Bravo.Core.Logging;
+using Sqlbi.Bravo.Core.Services.Interfaces;
 using Sqlbi.Bravo.UI.DataModel;
 using Sqlbi.Bravo.UI.ViewModels;
 using System;
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Navigation;
 
 namespace Sqlbi.Bravo.UI.Views
 {
     public partial class SelectConnectionType : UserControl
     {
-        public SelectConnectionType() => InitializeComponent();
+        private readonly ILogger _logger;
 
-        private void RequestNavigateHyperlink(object sender, System.Windows.Navigation.RequestNavigateEventArgs e)
+        public SelectConnectionType()
         {
-            Process.Start(new ProcessStartInfo(e.Uri.AbsoluteUri) { UseShellExecute = true });
+            InitializeComponent();
+            
+            _logger = App.ServiceProvider.GetRequiredService<ILogger<SelectConnectionType>>();
+        }
+
+        private void RequestNavigateHyperlink(object sender, RequestNavigateEventArgs e)
+        {
+            _logger.Information(LogEvents.NavigateHyperlink, "{@Details}", new object[] { new
+            {
+                Uri = e.Uri.AbsoluteUri
+            }});
+
+            var startInfo = new ProcessStartInfo(e.Uri.AbsoluteUri) 
+            { 
+                UseShellExecute = true 
+            };
+
+            Process.Start(startInfo);
+
             e.Handled = true;
         }
 
-        private void HowToUseClicked(object sender, RoutedEventArgs e)
-            => ShellView.Instance.ShowMediaDialog(new HowToUseBravoHelp());
+        private void HowToUseClicked(object sender, RoutedEventArgs e) => ShellView.Instance.ShowMediaDialog(new HowToUseBravoHelp());
 
-        private void AttachToWindowClicked(object sender, RoutedEventArgs e)
+        private async void AttachToPowerBIDesktopClicked(object sender, RoutedEventArgs e)
         {
             // TODO REQUIREMENTS: need to know how to connect here
-            _ = MessageBox.Show(
-                "Need to attach to an active window",
-                "TODO",
-                MessageBoxButton.OK,
-                MessageBoxImage.Question);
+            _ = MessageBox.Show("Testing connection to Power BI Desktop", "TODO", MessageBoxButton.OK, MessageBoxImage.Question);
+
+            var service = App.ServiceProvider.GetRequiredService<IPowerBIDesktopService>();
+            var instances = await service.GetInstancesAsync();
+
+            foreach (var instance in instances)
+            {
+                switch (MessageBox.Show($"Connect to instance '{ instance.Name }' @ '{ instance.LocalEndPoint }' ?", "TODO", MessageBoxButton.YesNoCancel))
+                {
+                    case MessageBoxResult.No:
+                        continue;
+                    case MessageBoxResult.Yes:
+                        {
+                            _logger.Information(LogEvents.StartConnectionAction, "{@Details}", new object[] { new
+                            {
+                                Action = "AttachPowerBIDesktop"
+                            }});
+
+                            var shellViewModel = App.ServiceProvider.GetRequiredService<ShellViewModel>();
+                            await shellViewModel.AddNewTabAsync(instance);
+                        }
+                        return;
+                    default:
+                        return;
+                }
+            }
         }
 
-        private void ConnectToDatasetClicked(object sender, RoutedEventArgs e)
+        private async void ConnectToPowerBIDatasetClicked(object sender, RoutedEventArgs e)
         {
+            _logger.Trace();
+
             // TODO REQUIREMENTS: need to know how to connect here
-            _ = MessageBox.Show(
-                "Need to sign-in and connect to a dataset",
-                "TODO",
-                MessageBoxButton.OK,
-                MessageBoxImage.Question);
+            _ = MessageBox.Show("Testing connection to Power BI dataset", "TODO", MessageBoxButton.OK, MessageBoxImage.Question);
+
+            var service = App.ServiceProvider.GetRequiredService<IPowerBICloudService>();
+            if (service.IsAuthenticated == false)
+            {
+                var loggedIn = await service.LoginAsync();
+                if (loggedIn == false)
+                {
+                    return;
+                }
+
+                _ = MessageBox.Show($"Hello { service.Account.Username } @ TenantId { service.Account.HomeAccountId.TenantId }", "TODO", MessageBoxButton.OK);
+            }
+
+            var datasets = await service.GetDatasetsAsync();
+
+            foreach (var dataset in datasets)
+            {
+                switch (MessageBox.Show($"Connect to workspace '{ dataset.WorkspaceName }' model '{ dataset.Model.DisplayName }' ?", "TODO", MessageBoxButton.YesNoCancel))
+                {
+                    case MessageBoxResult.No:
+                        continue;
+                    case MessageBoxResult.Yes:
+                        {
+                            _logger.Information(LogEvents.StartConnectionAction, "{@Details}", new object[] { new
+                            {
+                                Action = "ConnectPowerBIDataset"
+                            }});
+
+                            var shellViewModel = App.ServiceProvider.GetRequiredService<ShellViewModel>();
+                            await shellViewModel.AddNewTabAsync(dataset);
+                        }
+                        return;
+                    default:
+                        return;
+                }
+            }
+
+            //await service.LogoutAsync();
         }
 
-        private void OpenVertipaqFileClicked(object sender, RoutedEventArgs e)
+        private async void OpenVertiPaqAnalyzerFileClicked(object sender, RoutedEventArgs e)
         {
-            var openFileDialog = new OpenFileDialog {
+            _logger.Trace();
+
+            var openFileDialog = new OpenFileDialog
+            {
                 CheckFileExists = true,
                 Multiselect = false,
-                Filter = "Vertipaq files (*.vpax)|*.vpax",
+                Filter = "VertiPaq Analyzer file (*.vpax)|*.vpax",
                 InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
             };
 
-            if (openFileDialog.ShowDialog() == true)
+            if (openFileDialog.ShowDialog() == false)
             {
-                var fileContent = VpaxTools.ImportVpax(openFileDialog.FileName);
-
-                var vm = DataContext as TabItemViewModel;
-                vm.ConnectionType = BiConnectionType.VertipaqAnalyzerFile;
-                vm.ConnectionName = System.IO.Path.GetFileNameWithoutExtension(openFileDialog.FileName);
-                vm.AnalyzeModelVm.OnPropertyChanged(nameof(AnalyzeModelViewModel.ConnectionName));
-                vm.ShowAnalysisOfLoadedModel(fileContent.DaxModel);
+                return;
             }
+
+            _logger.Information(LogEvents.StartConnectionAction, "{@Details}", new object[] { new
+            {
+                Action = "OpenVertiPaqAnalyzerFile"
+            }});
+
+            var vertiPaqAnalyzerFile = new VertiPaqAnalyzerFile
+            {
+                Path = openFileDialog.FileName
+            };
+
+            var shellViewModel = App.ServiceProvider.GetRequiredService<ShellViewModel>();
+            await shellViewModel.AddNewTabAsync(vertiPaqAnalyzerFile);
         }
     }
 }

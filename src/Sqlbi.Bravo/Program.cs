@@ -1,5 +1,6 @@
-﻿using Dax.Formatter;
+﻿using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.Extensibility;
+using Microsoft.ApplicationInsights.WindowsServer.TelemetryChannel;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -7,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Events;
 using Sqlbi.Bravo.Core;
+using Sqlbi.Bravo.Core.Security;
 using Sqlbi.Bravo.Core.Services;
 using Sqlbi.Bravo.Core.Services.Interfaces;
 using Sqlbi.Bravo.Core.Settings;
@@ -15,6 +17,7 @@ using Sqlbi.Bravo.UI.Services;
 using Sqlbi.Bravo.UI.Services.Interfaces;
 using Sqlbi.Bravo.UI.ViewModels;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime;
 
@@ -37,8 +40,10 @@ namespace Sqlbi.Bravo
             try
             {
                 using var host = CreateHost(config);
+
                 var app = new App(host);
                 app.InitializeComponent();
+
                 return app.Run();
             }
             catch (Exception ex)
@@ -109,10 +114,11 @@ namespace Sqlbi.Bravo
                 services.Configure<AppSettings>(context.Configuration.GetSection(nameof(AppSettings)));
                 services.AddSingleton<IApplicationInstanceService, ApplicationInstanceService>();
                 services.AddSingleton<IGlobalSettingsProviderService, GlobalSettingsProviderService>();
+                services.AddSingleton<IPowerBIDesktopService, PowerBIDesktopService>();
+                services.AddSingleton<IPowerBICloudService, PowerBICloudService>();
                 services.AddSingleton<IThemeSelectorService, ThemeSelectorService>();
-                services.AddSingleton<IDaxFormatterClient>(new DaxFormatterClient(AppConstants.ApplicationName, AppConstants.ApplicationProductVersion));
-                services.AddSingleton<ShellViewModel>();
                 services.AddSingleton<SettingsViewModel>();
+                services.AddSingleton<ShellViewModel>();
 
                 // Make these services transient as each ViewModel will need a unique one with a separate connection
                 services.AddTransient<IAnalysisServicesEventWatcherService, AnalysisServicesEventWatcherService>();
@@ -151,17 +157,27 @@ namespace Sqlbi.Bravo
                 if (telemetryEnabled == false)
                     return;
 
-#pragma warning disable CS0618 // Type or member is obsolete
-                // https://github.com/microsoft/ApplicationInsights-dotnet/issues/1152
-                var telemetryConfiguration = TelemetryConfiguration.Active;
+                var telemetryChannel = new ServerTelemetryChannel();
+                telemetryChannel.DeveloperMode = Debugger.IsAttached;
+#if DEBUG
+                telemetryChannel.DeveloperMode = true;
+#endif
+
+                var telemetryConfiguration = new TelemetryConfiguration();
                 telemetryConfiguration.InstrumentationKey = AppConstants.TelemetryInstrumentationKey;
                 telemetryConfiguration.DisableTelemetry = !telemetryEnabled;
-#pragma warning restore CS0618 // Type or member is obsolete
+                telemetryConfiguration.TelemetryChannel = telemetryChannel;
+
+                var telemetryClient = new TelemetryClient(telemetryConfiguration);
+                telemetryClient.Context.Device.OperatingSystem = Environment.OSVersion.ToString();
+                telemetryClient.Context.Component.Version = AppConstants.ApplicationProductVersion;
+                telemetryClient.Context.Session.Id = Guid.NewGuid().ToString();
+                telemetryClient.Context.User.Id = $"{ Environment.MachineName }\\{ Environment.UserName }".ToHashSHA256();
 
                 loggerConfiguration
-                    .WriteTo.ApplicationInsights(telemetryConfiguration, TelemetryConverter.Events, restrictedToMinimumLevel: LogEventLevel.Information)
-                    .Enrich.WithProperty("ApplicationName", AppConstants.ApplicationName)
-                    .Enrich.WithProperty("Version", AppConstants.ApplicationProductVersion);
+                    .WriteTo.ApplicationInsights(telemetryClient, TelemetryConverter.Events, restrictedToMinimumLevel: AppConstants.ApplicationSettingsDefaultTelemetryLevel)                    
+                    //.Enrich.WithProperty("ApplicationName", AppConstants.ApplicationName)
+                    .MinimumLevel.Override("Microsoft", LogEventLevel.Warning);
             }
         }
     }

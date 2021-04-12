@@ -1,4 +1,4 @@
-﻿using Serilog.Events;
+﻿using Dax.Formatter.Models;
 using Sqlbi.Bravo.Core.Settings.Interfaces;
 
 namespace Sqlbi.Bravo.Core.Settings
@@ -29,8 +29,10 @@ namespace Sqlbi.Bravo.Core.Settings
 
         public string ProxyPassword { get; set; }
 
-        public bool UIShellBringToForegroundOnParentProcessMainWindowScreen { get; set; } = AppConstants.ApplicationSettingsDefaultUIShellBringToForegroundOnParentProcessMainWindowScreen;
+        public bool ShellBringToForegroundOnParentProcessMainWindowScreen { get; set; } = AppConstants.ApplicationSettingsDefaultShellBringToForegroundOnParentProcessMainWindowScreen;
 
-        public string ThemeName { get; set; } = "Default";
+        public string ThemeName { get; set; } = AppConstants.ApplicationSettingsDefaultThemeName;
+
+        public DaxFormatterLineStyle DaxFormatterLineStyle { get; set; } = AppConstants.ApplicationSettingsDefaultDaxFormatterLineStyle;
     }
 }

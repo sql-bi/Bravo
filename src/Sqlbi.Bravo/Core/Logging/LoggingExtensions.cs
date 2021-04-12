@@ -11,40 +11,39 @@ namespace Sqlbi.Bravo.Core.Logging
     {
         public static LoggerConfiguration WithManagedThread(this LoggerEnrichmentConfiguration configuration) => configuration.With<ManagedThreadEnricher>();
 
-        public static void Trace(this Microsoft.Extensions.Logging.ILogger logger, string message = null, [CallerMemberName] string callerMemberName = null, params object[] args)
+        public static void Trace(this Microsoft.Extensions.Logging.ILogger logger, string message = null, object[] args = null, [CallerMemberName] string callerMemberName = null)
         {
             using var property = LogContext.PushProperty("CallerMemberName", callerMemberName);
             logger.LogTrace(message, args);
         }
 
-        public static void Warning(this Microsoft.Extensions.Logging.ILogger logger, EventId eventId, string message = null, [CallerMemberName] string callerMemberName = null, params object[] args)
+        public static void Debug(this Microsoft.Extensions.Logging.ILogger logger, EventId eventId, string message = null, object[] args = null, [CallerMemberName] string callerMemberName = null)
         {
             using var property = LogContext.PushProperty("CallerMemberName", callerMemberName);
-            logger.LogWarning(eventId, message, args);
-        }
-
-        public static void Debug(this Microsoft.Extensions.Logging.ILogger logger, EventId eventId, string message = null, [CallerMemberName] string callerMemberName = null, params object[] args)
-        {
-            using var property = LogContext.PushProperty("CallerMemberName", callerMemberName);
+            message = FormatMessage(eventId, message);
             logger.LogDebug(eventId, message, args);
         }
 
-        public static void Error(this Microsoft.Extensions.Logging.ILogger logger, EventId eventId, Exception exception, string message = null, [CallerMemberName] string callerMemberName = null, params object[] args)
+        public static void Information(this Microsoft.Extensions.Logging.ILogger logger, EventId eventId, string message = null, object[] args = null, [CallerMemberName] string callerMemberName = null)
         {
             using var property = LogContext.PushProperty("CallerMemberName", callerMemberName);
+            message = FormatMessage(eventId, message);
+            logger.LogInformation(eventId, message, args);
+        }
+
+        public static void Error(this Microsoft.Extensions.Logging.ILogger logger, EventId eventId, Exception exception, string message = null, object[] args = null, [CallerMemberName] string callerMemberName = null)
+        {
+            using var property = LogContext.PushProperty("CallerMemberName", callerMemberName);
+            message = FormatMessage(eventId, message);
             logger.LogError(eventId, exception, message, args);
         }
 
-        public static void Error(this Microsoft.Extensions.Logging.ILogger logger, EventId eventId, string message = null, [CallerMemberName] string callerMemberName = null, params object[] args)
+        private static string FormatMessage(EventId eventId, string message)
         {
-            using var property = LogContext.PushProperty("CallerMemberName", callerMemberName);
-            logger.LogError(eventId, message, args);
-        }
+            if (string.IsNullOrWhiteSpace(message))
+                return eventId.Name;
 
-        public static void Information(this Microsoft.Extensions.Logging.ILogger logger, EventId eventId, string message = null, [CallerMemberName] string callerMemberName = null, params object[] args)
-        {
-            using var property = LogContext.PushProperty("CallerMemberName", callerMemberName);
-            logger.LogInformation(eventId, message, args);
+            return $"{ eventId.Name } - { message }";
         }
     }
 }

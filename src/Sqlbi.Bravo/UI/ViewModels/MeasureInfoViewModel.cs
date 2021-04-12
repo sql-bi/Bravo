@@ -1,4 +1,4 @@
-﻿using Sqlbi.Bravo.Core.Services;
+﻿using Sqlbi.Bravo.Client.DaxFormatter.Interfaces;
 using Sqlbi.Bravo.UI.Framework.ViewModels;
 
 namespace Sqlbi.Bravo.UI.ViewModels
@@ -13,7 +13,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public bool Reformat { get; set; } = true;
 
-        public IDaxFormatterServiceTabularObject TabularObject { get; set; }
+        public ITabularObject TabularObject { get; set; }
 
         public bool IsAlreadyFormatted => OriginalDax.Trim() == FormatterDax.Trim();
     }

@@ -1,4 +1,4 @@
-﻿using Sqlbi.Bravo.Core.Management;
+﻿using Sqlbi.Bravo.Core.Helpers;
 using Sqlbi.Bravo.Core.Settings.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -16,10 +16,15 @@ namespace Sqlbi.Bravo.Core.Settings
             var parentProcess = System.Diagnostics.Process.GetCurrentProcess().GetParent();
             ParentProcessId = parentProcess.Id;
             ParentProcessName = parentProcess.ProcessName;
-            ParentProcessMainWindowTitle = parentProcess.MainWindowTitle;
+            ParentProcessMainWindowTitle = parentProcess.GetMainWindowTitle();
             ParentProcessMainWindowHandle = parentProcess.MainWindowHandle;
 
             ParseCommandLineArgs();
+
+            if (IsExecutedAsExternalToolForPowerBIDesktop)
+            {
+                ParentProcessMainWindowTitle = ParentProcessMainWindowTitle.ToPowerBIDesktopReportName();
+            }
         }
 
         public string ServerName { get; private set; }

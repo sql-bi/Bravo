@@ -1,14 +1,14 @@
 ﻿using Microsoft.AnalysisServices;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Sqlbi.Bravo.Core.Helpers;
+using Sqlbi.Bravo.Client.AnalysisServicesEventWatcher;
 using Sqlbi.Bravo.Core.Logging;
 using Sqlbi.Bravo.Core.Services.Interfaces;
 using Sqlbi.Bravo.Core.Settings;
-using Sqlbi.Bravo.Core.Settings.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
@@ -38,8 +38,8 @@ namespace Sqlbi.Bravo.Core.Services
         private Trace _trace;
         private bool _disposed;
 
-        public event EventHandler<AnalysisServicesEventWatcherEventArgs> OnEvent;
-        public event EventHandler<AnalysisServicesEventWatcherConnectionStateArgs> OnConnectionStateChanged;
+        public event EventHandler<WatcherEventArgs> OnWatcherEvent;
+        public event EventHandler<ConnectionStateEventArgs> OnConnectionStateChanged;
 
         public AnalysisServicesEventWatcherService(ILogger<AnalysisServicesEventWatcherService> logger, IHostApplicationLifetime lifetime)
         {
@@ -71,30 +71,30 @@ namespace Sqlbi.Bravo.Core.Services
                     WaitHandle.WaitAny(waitHandles, AppConstants.AnalysisServicesEventWatcherServiceConnectionStateWaitDelay);
                     var current = _server.GetConnectionState(pingServer: true);
 
-                    _logger.Debug(LogEvents.AnalysisServicesEventWatcherServiceConnectionStateMonitorTaskStatus, "ConnectionStateMonitorTask(current<{CurrentStatus}>|previus<{PreviusStatus}>)", args: new object[] { current, previus });
+                    _logger.Debug(LogEvents.AnalysisServicesEventWatcherServiceConnectionStateMonitorTaskStatus, "CurrentStatus({CurrentStatus})|PreviusStatus({PreviusStatus})", args: new object[] { current, previus });
 
                     if (current != previus)
                     {
-                        var args = new AnalysisServicesEventWatcherConnectionStateArgs(previus, current);
+                        var args = new ConnectionStateEventArgs(previus, current);
                         OnConnectionStateChanged?.Invoke(this, args);
                         previus = current;
                     }
                 }
                 while (!_lifetime.ApplicationStopping.IsCancellationRequested);
 
-                _logger.Debug(LogEvents.AnalysisServicesEventWatcherServiceConnectionStateMonitorTaskCompleted, "ConnectionStateMonitorTask(Completed)");
+                _logger.Debug(LogEvents.AnalysisServicesEventWatcherServiceConnectionStateMonitorTaskCompleted);
             },
             TaskCreationOptions.LongRunning).ContinueWith((t) =>
             {
                 if (t.Exception != null)
                 {
-                    _logger.Error(LogEvents.AnalysisServicesEventWatcherServiceConnectionStateMonitorTaskException, t.Exception);
+                    _logger.Error(LogEvents.AnalysisServicesEventWatcherServiceException, t.Exception);
                 }
             },
             TaskContinuationOptions.OnlyOnFaulted);
         }
 
-        public async Task ConnectAsync(RuntimeSummary runtimeSummary)
+        public async Task ConnectAsync(ConnectionSettings connectionSettings)
         {
             _logger.Trace();
 
@@ -103,11 +103,11 @@ namespace Sqlbi.Bravo.Core.Services
             void Connect()
             {
                 if (_server.Connected)
+                {
                     throw new InvalidOperationException("Server already connected");
+                }
 
-                var connectionString = AnalysisServicesHelper.BuildConnectionString(runtimeSummary.ServerName, runtimeSummary.DatabaseName);
-
-                _server.Connect(connectionString);
+                _server.Connect(connectionSettings.ConnectionString);
                 _connectionManuallyChangedEvent.Set();
                 _trace = CreateTrace();
                 _trace.Start();
@@ -147,7 +147,7 @@ namespace Sqlbi.Bravo.Core.Services
                                     "</Equal>" +
                                     "<Like>" +
                                         $"<ColumnID>{ (int)TraceColumn.DatabaseName }</ColumnID>" +
-                                        $"<Value>{ runtimeSummary.DatabaseName }</Value>" +
+                                        $"<Value>{ connectionSettings.DatabaseName }</Value>" +
                                     "</Like>" +
                                 "</And>" +
                                 "<NotLike>" +
@@ -193,19 +193,47 @@ namespace Sqlbi.Bravo.Core.Services
 
         private void OnTraceEvent(object sender, TraceEventArgs e)
         {
-            _logger.Trace("OnTraceEvent(eventClass<{EventClass}>|eventSubclass<{EventSubclass}>)", args: new object[] { e.EventClass, e.EventSubclass });
+            _logger.Debug(LogEvents.AnalysisServicesEventWatcherServiceOnTraceEvent, "EventClass({EventClass})|EventSubclass({EventSubclass})", args: new object[] { e.EventClass, e.EventSubclass });
 
             if (!WatcherSubclasses.Contains(e.EventSubclass))
                 return;
 
-            var eventType = e.TextData.GetEventType();
-            if (eventType == AnalysisServicesEventWatcherEvent.Unknown)
+            var eventType = GetEventType(e.TextData);
+            if (eventType == WatcherEvent.Unknown)
                 return;
 
-            _logger.Debug(LogEvents.AnalysisServicesEventWatcherServiceOnTraceEvent, "OnTraceEvent(eventType<{EventType}>)", args: eventType);
+            _logger.Debug(LogEvents.AnalysisServicesEventWatcherServiceOnTraceEvent, "EventType({EventType})", args: new object[] { eventType });
 
-            var args = new AnalysisServicesEventWatcherEventArgs(eventType, text: string.Empty);
-            OnEvent?.Invoke(this, args);
+            var args = new WatcherEventArgs(eventType, text: string.Empty);
+            OnWatcherEvent?.Invoke(this, args);
+        }
+
+        private WatcherEvent GetEventType(string xmla)
+        {
+            if (xmla == null)
+                return WatcherEvent.Unknown;
+
+            using var stringReader = new StringReader(xmla);
+            using var xmlReader = XmlReader.Create(stringReader);
+
+            while (xmlReader.Read())
+            {
+                if (xmlReader.NodeType == XmlNodeType.Element)
+                {
+                    var name = xmlReader.Name;
+
+                    if (nameof(WatcherEvent.Create).Equals(name, StringComparison.OrdinalIgnoreCase))
+                        return WatcherEvent.Create;
+
+                    if (nameof(WatcherEvent.Delete).Equals(name, StringComparison.OrdinalIgnoreCase))
+                        return WatcherEvent.Delete;
+
+                    if (nameof(WatcherEvent.Alter).Equals(name, StringComparison.OrdinalIgnoreCase))
+                        return WatcherEvent.Alter;
+                }
+            }
+
+            return WatcherEvent.Unknown;
         }
 
         protected virtual void Dispose(bool disposing)

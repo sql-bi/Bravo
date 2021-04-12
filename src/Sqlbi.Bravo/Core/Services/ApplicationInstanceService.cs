@@ -1,8 +1,14 @@
 ﻿using Microsoft.Extensions.Logging;
 using Sqlbi.Bravo.Core.Logging;
 using Sqlbi.Bravo.Core.Services.Interfaces;
+using Sqlbi.Bravo.Core.Settings;
 using Sqlbi.Bravo.Core.Settings.Interfaces;
+using Sqlbi.Bravo.Core.Windows;
 using System;
+using System.Runtime.InteropServices;
+using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -10,6 +16,18 @@ namespace Sqlbi.Bravo.Core.Services
 {
     internal class ApplicationInstanceService : IApplicationInstanceService, IDisposable
     {
+        private class ConnectionInfoMessage
+        {
+            [JsonPropertyName("n")]
+            public string ConnectionName { get; set; }
+
+            [JsonPropertyName("d")]
+            public string DatabaseName { get; set; }
+
+            [JsonPropertyName("s")]
+            public string ServerName { get; set; }
+        }
+
         private readonly IGlobalSettingsProviderService _settings;
         private readonly ILogger _logger;
         private readonly EventWaitHandle _instanceEventWait;
@@ -29,6 +47,44 @@ namespace Sqlbi.Bravo.Core.Services
             GC.KeepAlive(_instanceMutex);
         }
 
+        public void NotifyConnectionToPrimaryInstance()
+        {
+            _logger.Trace();
+
+            var message = new ConnectionInfoMessage
+            {
+                ConnectionName = _settings.Runtime.ParentProcessMainWindowTitle,
+                DatabaseName = _settings.Runtime.DatabaseName,
+                ServerName = _settings.Runtime.ServerName,
+            };
+
+            var hWnd = NativeMethods.FindWindow(lpClassName: null, lpWindowName: AppConstants.ApplicationNameLabel);
+            if (hWnd != IntPtr.Zero)
+            {
+                var json = JsonSerializer.Serialize(message);
+                var bytes = Encoding.Unicode.GetBytes(json);
+
+                NativeMethods.COPYDATASTRUCT copyData;
+                copyData.dwData = (IntPtr)100;
+                copyData.lpData = json;
+                copyData.cbData = bytes.Length + 1;
+
+                _ = NativeMethods.SendMessage(hWnd, NativeMethods.WM_COPYDATA, wParam: 0, ref copyData);
+            }
+        }
+
+        public (string ConnectionName, string ServerName, string DatabaseName) ReceiveConnectionFromSecondaryInstance(IntPtr ptr)
+        {
+            var copyData = (NativeMethods.COPYDATASTRUCT)Marshal.PtrToStructure(ptr, typeof(NativeMethods.COPYDATASTRUCT));
+            if (copyData.cbData == 0)
+                return default;
+
+            var json = copyData.lpData;
+            var message = JsonSerializer.Deserialize<ConnectionInfoMessage>(json);
+
+            return (message.ConnectionName, message.ServerName, message.DatabaseName);
+        }
+
         public void RegisterCallbackForMultipleInstanceStarted(Action<IntPtr> callback)
         {
             _logger.Trace();
@@ -42,7 +98,7 @@ namespace Sqlbi.Bravo.Core.Services
             {
                 if (t.Exception != null)
                 {
-                    _logger.Error(LogEvents.ApplicationInstanceServiceMultipleInstanceTaskException, t.Exception);
+                    _logger.Error(LogEvents.ApplicationInstanceServiceException, t.Exception);
                 }
             },
             TaskContinuationOptions.OnlyOnFaulted).ConfigureAwait(false);

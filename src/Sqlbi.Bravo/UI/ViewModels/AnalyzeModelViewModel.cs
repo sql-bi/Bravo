@@ -4,6 +4,8 @@ using Dax.Vpax.Tools;
 using Humanizer;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
+using Sqlbi.Bravo.Core;
+using Sqlbi.Bravo.Core.Helpers;
 using Sqlbi.Bravo.Core.Logging;
 using Sqlbi.Bravo.Core.Services.Interfaces;
 using Sqlbi.Bravo.UI.DataModel;
@@ -11,31 +13,35 @@ using Sqlbi.Bravo.UI.Framework.Commands;
 using Sqlbi.Bravo.UI.Framework.ViewModels;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Threading;
 
 namespace Sqlbi.Bravo.UI.ViewModels
 {
     internal class AnalyzeModelViewModel : BaseViewModel
     {
-        private readonly IAnalyzeModelService _modelService;
-        private readonly ILogger _logger;
         internal const int SubViewIndex_Loading = 0;
         internal const int SubViewIndex_Summary = 1;
         internal const int SubViewIndex_Details = 2;
-        private const int NumberOfRowsInSummary = 5;
-        private readonly DispatcherTimer _timer = new DispatcherTimer();
-        private readonly List<VpaTableColumnViewModel> _allTablesCache = new List<VpaTableColumnViewModel>();
-        private List<VpaColumn> _unusedColumns;
-        private bool _initialized = false;
-        private bool unreferencedColumnsOnly;
 
-        public AnalyzeModelViewModel(IAnalyzeModelService service, ILogger<DaxFormatterViewModel> logger)
+        private readonly List<VpaTableColumnViewModel> _allTablesCache = new List<VpaTableColumnViewModel>();
+        private readonly Dictionary<string, Color> _colorCache = new Dictionary<string, Color>();
+        private readonly DispatcherTimer _timer = new DispatcherTimer();
+        private readonly IAnalyzeModelService _analyzer;
+        private readonly ILogger _logger;
+        private List<VpaColumn> _unusedColumns;
+        private bool _unreferencedColumnsOnly;
+        private bool _initialized;
+
+        public AnalyzeModelViewModel(IAnalyzeModelService analyzer, ILogger<AnalyzeModelViewModel> logger)
         {
-            _modelService = service;
+            _analyzer = analyzer;
             _logger = logger;
+
             _logger.Trace();
             ViewIndex = SubViewIndex_Loading;
 
@@ -58,14 +64,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public string ConnectionName => ParentTab.ConnectionName;
 
-        public DateTime LastSyncTime => _modelService.GetLastSyncTime();
-
-        public bool LoadOrRefreshCommandIsRunning { get; set; }
-
-        internal void OverrideDaxModel(Model daxModel)
-        {
-            _modelService.OverrideDaxModel(daxModel);
-        }
+        public DateTime LastSyncTime => _analyzer.LastSyncTime;
 
         public ICommand HelpCommand { get; set; }
 
@@ -89,17 +88,17 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public int UnusedColumnCount => UnusedColumns?.Count ?? 0;
 
-        public string UnusedColumnsSize => UnusedColumns?.Sum(c => c.TotalSize).Bytes().ToString("#.#") ?? "-";
+        public string UnusedColumnsSize => UnusedColumns?.Sum((c) => c.TotalSize).Bytes().ToString("#.#") ?? "-";
 
         public int TableCount => AllTables?.Count() ?? 0;
 
         public int AllColumnCount => AllColumns?.Count() ?? 0;
 
-        public int MeasuresCount => AllTables?.Sum(t => t.Measures.Count()) ?? 0;
+        public int MeasuresCount => AllTables?.Sum((t) => t.Measures.Count()) ?? 0;
 
-        public string TotalDbSize => AllTables?.Sum(t => t.TableSize).Bytes().ToString("#.#") ?? "-";
+        public string TotalDbSize => AllTables?.Sum((t) => t.TableSize).Bytes().ToString("#.#") ?? "-";
 
-        public long MaxRowsCount => AllTables?.Max(t => t.RowsCount) ?? 0;
+        public long MaxRowsCount => AllTables?.Max((t) => t.RowsCount) ?? 0;
 
         public long LargestColumnSize { get; set; }
 
@@ -124,23 +123,38 @@ namespace Sqlbi.Bravo.UI.ViewModels
         {
             get
             {
-                return UnreferencedColumnsOnly
-                    ? UnusedColumns?.OrderByDescending(c => c.TotalSize)
-                                    .Take(NumberOfRowsInSummary)
-                                    .Select(c => new VpaColumnViewModel(this, c))
-                                    .ToList()
-                    : AllColumns.OrderByDescending(c => c.TotalSize)
-                                .Take(NumberOfRowsInSummary)
-                                .ToList();
+                List<VpaColumnViewModel> columns;
+
+                if (UnreferencedColumnsOnly)
+                {
+                    columns = UnusedColumns?.OrderByDescending((c) => c.TotalSize)
+                        .Take(AppConstants.AnalyzeModelSummaryColumnCount)
+                        .Select((c) => new VpaColumnViewModel(this, c))
+                        .ToList();
+                }
+                else
+                {
+                    columns = AllColumns.OrderByDescending((c) => c.TotalSize)
+                        .Take(AppConstants.AnalyzeModelSummaryColumnCount)
+                        .ToList();
+                }
+
+                return columns;
             }
         }
 
         public bool UnreferencedColumnsOnly
         {
-            get => unreferencedColumnsOnly;
+            get => _unreferencedColumnsOnly;
             set
             {
-                SetProperty(ref unreferencedColumnsOnly, value);
+                _logger.Information(LogEvents.AnalyzeModelViewAction, "{@Details}", new object[] { new
+                {
+                    Action = "UnreferencedColumnsOnly",
+                    Value = value
+                }});
+
+                SetProperty(ref _unreferencedColumnsOnly, value);
                 OnPropertyChanged(nameof(SummaryColumns));
                 OnPropertyChanged(nameof(SummaryColumnSize));
                 OnPropertyChanged(nameof(SummaryColumnWeight));
@@ -150,9 +164,9 @@ namespace Sqlbi.Bravo.UI.ViewModels
             }
         }
 
-        public long? SummaryColumnSize => SummaryColumns?.Sum(c => c.TotalSize);
+        public long? SummaryColumnSize => SummaryColumns?.Sum((c) => c.TotalSize);
 
-        public double? SummaryColumnWeight => SummaryColumns?.Sum(c => c.PercentageDatabase);
+        public double? SummaryColumnWeight => SummaryColumns?.Sum((c) => c.PercentageDatabase);
 
         public double? SummaryColumnWeightAngle => SummaryColumnWeight * 360;
 
@@ -164,37 +178,36 @@ namespace Sqlbi.Bravo.UI.ViewModels
         {
             get
             {
-                if (!_allTablesCache.Any())
+                if (_allTablesCache.Any() == false)
                 {
                     VpaTableColumnViewModel currentTable = null;
 
-                    var cols = _modelService.GetAllColumns()?
-                                            .OrderByDescending(c => c.Table.ColumnsTotalSize)
-                                            .ThenByDescending(c => c.TotalSize);
+                    var columns = _analyzer.AllColumns?
+                        .OrderByDescending((c) => c.Table.ColumnsTotalSize)
+                        .ThenByDescending((c) => c.TotalSize);
 
-                    if (cols != null)
+                    if (columns != null)
                     {
-                        foreach (var col in cols)
+                        foreach (var column in columns)
                         {
-                            if (currentTable == null || currentTable.TableName != col.Table.TableName)
+                            if (currentTable == null || currentTable.TableName != column.Table.TableName)
                             {
-                                currentTable = new VpaTableColumnViewModel(this, col)
+                                currentTable = new VpaTableColumnViewModel(this, column)
                                 {
-                                    TotalSize = col.Table.ColumnsTotalSize,
-                                    PercentageDatabase = col.Table.PercentageDatabase
+                                    TotalSize = column.Table.ColumnsTotalSize,
+                                    PercentageDatabase = column.Table.PercentageDatabase
                                 };
 
                                 // We're building the table structure from this row so have to be sure to include it too
-                                currentTable.Columns.Add(new VpaTableColumnViewModel(this, col, currentTable));
+                                currentTable.Columns.Add(new VpaTableColumnViewModel(this, column, currentTable));
 
                                 _allTablesCache.Add(currentTable);
                             }
                             else
                             {
                                 // Table doesn't expose this so have to sum it manually.
-                                currentTable.Cardinality += col.ColumnCardinality;
-
-                                currentTable.Columns.Add(new VpaTableColumnViewModel(this, col, currentTable));
+                                currentTable.Cardinality += column.ColumnCardinality;
+                                currentTable.Columns.Add(new VpaTableColumnViewModel(this, column, currentTable));
                             }
                         }
                     }
@@ -204,33 +217,34 @@ namespace Sqlbi.Bravo.UI.ViewModels
             }
         }
 
+        public IEnumerable<VpaColumnViewModel> AllColumns => AllTableColumns?.SelectMany((t) => t.Columns).OrderByDescending((c) => c.TotalSize);
+
+        public IEnumerable<VpaTable> AllTables => _analyzer.AllTables;
+
+        public int? SelectedColumnCount => AllColumns?.Count((c) => c.IsSelected ?? false) ?? 0;
+
+        public long? SelectedColumnSize => AllColumns?.Where((c) => c.IsSelected ?? false).Sum((c) => c.TotalSize);
+
+        public double? SelectedColumnWeight => AllColumns?.Where((c) => c.IsSelected ?? false).Sum((c) => c.PercentageDatabase);
+
+        public string TimeSinceLastSync => LastSyncTime.HumanizeElapsed();
+
         internal void EnsureInitialized()
         {
-            if (!_initialized)
+            _logger.Trace();
+
+            if (_initialized == false)
             {
                 Task.Run(async () => await RefreshAsync());
             }
         }
 
-        public IEnumerable<VpaColumnViewModel> AllColumns
-            => AllTableColumns?.SelectMany(t => t.Columns).OrderByDescending(c => c.TotalSize);
-
-        public IEnumerable<VpaTable> AllTables => _modelService.GetAllTables();
-
-        public int? SelectedColumnCount => AllColumns?.Count(c => c.IsSelected ?? false) ?? 0;
-
-        public long? SelectedColumnSize => AllColumns?.Where(c => c.IsSelected ?? false).Sum(c => c.TotalSize);
-
-        public double? SelectedColumnWeight => AllColumns?.Where(c => c.IsSelected ?? false).Sum(c => c.PercentageDatabase);
-
-        public string TimeSinceLastSync
-                    => LastSyncTime.Year == 1
-                    ? "not yet"
-                    : $"{(DateTime.UtcNow - LastSyncTime).Humanize(minUnit: Humanizer.Localisation.TimeUnit.Second).Replace("minute", "min").Replace("second", "sec")} ago";
-
         private async Task RefreshAsync()
         {
-            _logger.Trace();
+            _logger.Information(LogEvents.AnalyzeModelViewAction, "{@Details}", new object[] { new
+            {
+                Action = "Refresh"
+            }});
 
             try
             {
@@ -240,16 +254,18 @@ namespace Sqlbi.Bravo.UI.ViewModels
                 {
                     ViewIndex = SubViewIndex_Loading;
 
-                    await ExecuteCommandAsync(() => LoadOrRefreshCommandIsRunning, InitializeOrRefreshModelAnalyzer);
+                    await InitializeOrRefreshModelAnalyzer();
                 }
                 finally
                 {
                     ViewIndex = lastIndex > 0 ? lastIndex : SubViewIndex_Summary;
                 }
             }
-            catch (Exception exc)
+            catch (Exception ex)
             {
-                ParentTab.DisplayError($"Unable to connect{Environment.NewLine}{exc.Message}", InitializeOrRefreshModelAnalyzer);
+                _logger.Error(LogEvents.AnalyzeModelException, ex);
+
+                ParentTab.DisplayError($"Unable to connect{ Environment.NewLine }{ ex.Message }", InitializeOrRefreshModelAnalyzer);
             }
         }
 
@@ -259,15 +275,20 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
             var saveFileDialog = new SaveFileDialog
             {
-                FileName = $"{ParentTab.ConnectionName}.vpax",
-                Filter = "VPAX (*.vpax)|*.vpax",
+                FileName = $"{ ParentTab.ConnectionName }.vpax",
+                Filter = "VertiPaq Analyzer file (*.vpax)|*.vpax",
                 DefaultExt = ".vpax",
                 InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
             };
 
             if (saveFileDialog.ShowDialog() == true)
             {
-                VpaxTools.ExportVpax(saveFileDialog.FileName, _modelService.GetModelForExport());
+                _logger.Information(LogEvents.AnalyzeModelViewAction, "{@Details}", new object[] { new
+                {
+                    Action = "ExportVpax"
+                }});
+
+                await _analyzer.ExportVertiPaqAnalyzerModel(path: saveFileDialog.FileName);
             }
 
             await Task.CompletedTask;
@@ -275,18 +296,31 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         private void ShowHelp()
         {
-            _logger.Trace();
+            _logger.Information(LogEvents.AnalyzeModelViewAction, "{@Details}", new object[] { new
+            {
+                Action = "ShowHelp"
+            }});
+
             Views.ShellView.Instance.ShowMediaDialog(new HowToAnalyzeModelHelp());
         }
 
         private void ShowWarningHelp()
         {
-            _logger.Trace();
+            _logger.Information(LogEvents.AnalyzeModelViewAction, "{@Details}", new object[] { new
+            {
+                Action = "ShowWarningHelp"
+            }});
+
             Views.ShellView.Instance.ShowMediaDialog(new ColumnOptimizationHelp());
         }
 
         private async Task ShowMoreDetailsAsync()
         {
+            _logger.Information(LogEvents.AnalyzeModelViewAction, "{@Details}", new object[] { new
+            {
+                Action = "ShowMoreDetails"
+            }});
+
             ViewIndex = SubViewIndex_Details;
 
             await Task.CompletedTask;
@@ -294,6 +328,8 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         private async Task BackAsync()
         {
+            _logger.Trace();
+
             ViewIndex = SubViewIndex_Summary;
 
             await Task.CompletedTask;
@@ -301,9 +337,11 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         private async Task InitializeOrRefreshModelAnalyzer()
         {
+            _logger.Trace();
+
             LoadingDetails = "Connecting to data";
 
-            await _modelService.InitilizeOrRefreshAsync(ParentTab.RuntimeSummary);
+            await _analyzer.InitilizeOrRefreshAsync(ParentTab.ConnectionSettings);
 
             LoadingDetails = "Analyzing model";
 
@@ -320,64 +358,47 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         private void UpdateSummary()
         {
+            _logger.Trace();
+
             _allTablesCache.Clear();
-            var summary = _modelService.GetDatasetSummary();
+
+            var summary = _analyzer.DatasetSummary;
             DatasetSize = summary.DatasetSize.Bytes().ToString("#.#");
             DatasetColumnCount = summary.ColumnCount;
-            LargestColumnSize = AllColumns?.Any() ?? false ? AllColumns?.Max(c => c.TotalSize) ?? 0 : 0;
+            LargestColumnSize = AllColumns?.Any() ?? false ? AllColumns?.Max((c) => c.TotalSize) ?? 0 : 0;
 
             // Sort these here so the DataGrid doesn't have to worry about loading all rows to be able to sort
-            UnusedColumns = _modelService.GetUnusedColumns().OrderByDescending(c => c.PercentageDatabase).ToList();
+            UnusedColumns = _analyzer.UnusedColumns.OrderByDescending((c) => c.PercentageDatabase).ToList();
         }
 
-        private readonly Dictionary<string, System.Windows.Media.Color> _colorCache = new Dictionary<string, System.Windows.Media.Color>();
-
-        internal System.Windows.Media.Color GetTableColor(string tableName)
+        internal Color GetTableColor(string tableName)
         {
+            _logger.Trace();
+
             if (_colorCache.ContainsKey(tableName))
             {
                 return _colorCache[tableName];
             }
 
-            var orderedTables = AllTableColumns.OrderByDescending(t => t.TotalSize).ToList();
+            var sortedColumns = AllTableColumns.OrderByDescending((t) => t.TotalSize).ToList();
+            var sizeIndex = sortedColumns.FindIndex((c) => c.TableName.Equals(tableName));
 
-            System.Windows.Media.Color result;
-
-            // TODO REQUIREMENTS: Need to define the actual colors to use.
-            switch (orderedTables.FindIndex(t => t.TableName.Equals(tableName)))
+            var color = sizeIndex switch
             {
-                case 0:
-                    result = System.Windows.Media.Colors.Orange;
-                    break;
-                case 1:
-                    result = System.Windows.Media.Colors.Yellow;
-                    break;
-                case 2:
-                    result = System.Windows.Media.Colors.LightGreen;
-                    break;
-                case 3:
-                    result = System.Windows.Media.Colors.Green;
-                    break;
-                case 4:
-                    result = System.Windows.Media.Colors.LightBlue;
-                    break;
-                case 5:
-                    result = System.Windows.Media.Colors.Blue;
-                    break;
-                case 6:
-                    result = System.Windows.Media.Colors.DarkBlue;
-                    break;
-                case 7:
-                    result = System.Windows.Media.Colors.Purple;
-                    break;
-                default:
-                    result = System.Windows.Media.Colors.Red;  // Default
-                    break;
-            }
+                0 => Colors.Orange,
+                1 => Colors.Yellow,
+                2 => Colors.LightGreen,
+                3 => Colors.Green,
+                4 => Colors.LightBlue,
+                5 => Colors.Blue,
+                6 => Colors.DarkBlue,
+                7 => Colors.Purple,
+                _ => Colors.Red, // Default
+            };
 
-            _colorCache.Add(tableName, result);
+            _colorCache.Add(tableName, color);
             
-            return result;
+            return color;
         }
     }
 }

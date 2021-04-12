@@ -16,7 +16,7 @@
         Width="850"
         MinWidth="{Binding WindowMinWidth}"
         MinHeight="{Binding WindowMinHeight}"
-        WindowStartupLocation="Manual"
+        WindowStartupLocation="CenterScreen"
         x:Name="window"
         DataContext="{Binding Source={StaticResource ViewModelLocator}, Path=ShellViewModel}">
 

@@ -1,22 +1,29 @@
 ﻿using MahApps.Metro.Controls;
 using MahApps.Metro.SimpleChildWindow;
-using Sqlbi.Bravo.Core.Settings.Interfaces;
-using System;
-using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
-using Sqlbi.Bravo.UI.ViewModels;
-using Sqlbi.Bravo.UI.DataModel;
-using System.Windows.Interop;
-using System.Windows;
-using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging;
-using Sqlbi.Bravo.Core.Settings;
+using Sqlbi.Bravo.Core;
+using Sqlbi.Bravo.Core.Logging;
+using Sqlbi.Bravo.Core.Services.Interfaces;
+using Sqlbi.Bravo.Core.Settings.Interfaces;
+using Sqlbi.Bravo.Core.Windows;
+using Sqlbi.Bravo.UI.DataModel;
+using Sqlbi.Bravo.UI.ViewModels;
+using System;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Interop;
 
 namespace Sqlbi.Bravo.UI.Views
 {
     public partial class ShellView : MetroWindow
     {
+        private readonly IGlobalSettingsProviderService _settings;
+        private readonly ILogger _logger;
+
         public static ShellView Instance { get; private set; }
 
         private ShellViewModel ViewModel => DataContext as ShellViewModel;
@@ -24,47 +31,41 @@ namespace Sqlbi.Bravo.UI.Views
         protected override void OnSourceInitialized(EventArgs e)
         {
             base.OnSourceInitialized(e);
+
             var source = PresentationSource.FromVisual(this) as HwndSource;
-            source.AddHook(WndProc);
+            source.AddHook(WndProcHook);
         }
 
-        private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+        private IntPtr WndProcHook(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
         {
-            if (msg == MessageHelper.WM_COPYDATA)
-            {
-                var connInfo = new MessageHelper.ConnectionInfo();
+            if (msg == NativeMethods.WM_COPYDATA)
+            { 
                 try
                 {
-                    var cp = (MessageHelper.CopyDataStruct)Marshal.PtrToStructure(lParam, typeof(MessageHelper.CopyDataStruct));
-                    if (cp.cbData == Marshal.SizeOf(connInfo))
+                    var applicationInstance = App.ServiceProvider.GetRequiredService<IApplicationInstanceService>();
+
+                    var connection = applicationInstance.ReceiveConnectionFromSecondaryInstance(ptr: lParam);
+                    if (connection != default)
                     {
-                        connInfo = (MessageHelper.ConnectionInfo)Marshal.PtrToStructure(cp.lpData, typeof(MessageHelper.ConnectionInfo));
+                        Dispatcher.Invoke(async () => await ViewModel.AddNewTabAsync(connection.ConnectionName, connection.ServerName, connection.DatabaseName))
+                            .ContinueWith((t) =>
+                            {
+                                if (t.Exception != null)
+                                {
+                                    _logger.Error(LogEvents.ShellViewException, t.Exception);
 
-                        var details = MessageHelper.ExtractDetails(connInfo);
-
-                        System.Diagnostics.Debug.WriteLine($"DatabaseName = '{details.DbName}'");
-                        System.Diagnostics.Debug.WriteLine($"ServerName = '{details.ServerName}'");
-                        System.Diagnostics.Debug.WriteLine($"ParentProcessName = '{details.ParentProcName}'");
-                        System.Diagnostics.Debug.WriteLine($"ParentWindowTitle = '{details.ParentWindowTitle}'");
-
-                        var runtimeSummary = new RuntimeSummary
-                        {
-                            DatabaseName = details.DbName,
-                            IsExecutedAsExternalTool = true,
-                            ParentProcessMainWindowTitle = details.ParentWindowTitle,
-                            ParentProcessName = details.ParentProcName,
-                            ServerName = details.ServerName,
-                        };
-
-                        // Creating the tab (& VMs) may not trigger the loaded event when expected
-                        ViewModel.AddNewTab(BiConnectionType.ActivePowerBiWindow, ViewModel?.SelectedItem?.SubPageInTab ?? SubPage.DaxFormatter, runtimeSummary);
+                                    var baseException = t.Exception.GetBaseException();
+                                    _ = MessageBox.Show(baseException.Message, AppConstants.ApplicationNameLabel, MessageBoxButton.OK, MessageBoxImage.Error);
+                                }
+                            }, 
+                            CancellationToken.None, TaskContinuationOptions.OnlyOnFaulted, TaskScheduler.FromCurrentSynchronizationContext());
                     }
                 }
-                catch (Exception e)
+                catch (Exception ex)
                 {
-                    var logger = App.ServiceProvider.GetRequiredService<ILogger<ShellView>>();
-                    logger.LogError(e, "Unable to decode connection settings from another app instance");
+                    _logger.Error(LogEvents.ShellViewException, ex);
                 }
+
                 handled = true;
             }
 
@@ -73,18 +74,25 @@ namespace Sqlbi.Bravo.UI.Views
 
         public ShellView()
         {
+            _settings = App.ServiceProvider.GetService<IGlobalSettingsProviderService>();
+            _logger = App.ServiceProvider.GetService<ILogger<ShellView>>();
+
             InitializeComponent();
+
             Instance = this;
+        }
 
-            var settings = App.ServiceProvider.GetService<IGlobalSettingsProviderService>();
+        protected override async void OnInitialized(EventArgs e)
+        {
+            base.OnInitialized(e);
 
-#if DEBUG
-            if (settings.Runtime.IsExecutedAsExternalTool)
-#else
-            if (settings.Runtime.IsExecutedAsExternalToolForPowerBIDesktop)
-#endif
+            if (_settings.Runtime.IsExecutedAsExternalTool)
             {
-                (DataContext as ShellViewModel).LaunchedViaPowerBIDesktop(settings.Runtime.ParentProcessMainWindowTitle);
+                var connectionName = _settings.Runtime.ParentProcessMainWindowTitle;
+                var serverName = _settings.Runtime.ServerName;
+                var databaseName = _settings.Runtime.DatabaseName;
+
+                await ViewModel.AddNewTabAsync(connectionName, serverName, databaseName);
             }
         }
 
@@ -96,6 +104,11 @@ namespace Sqlbi.Bravo.UI.Views
 
         internal async Task ShowSettings()
         {
+            _logger.Information(LogEvents.ShellViewAction, "{@Details}", new object[] { new
+            {
+                Action = "ShowSettings"
+            }});
+
             await this.ShowChildWindowAsync(new SettingsView()
             {
                 ChildWindowHeight = ActualHeight - 100,
@@ -109,18 +122,39 @@ namespace Sqlbi.Bravo.UI.Views
             debugInfo.Show();
         }
 
-        private void AddTabClicked(object sender, System.Windows.RoutedEventArgs e)
-            => ViewModel.AddNewTab();
+        private async void AddTabClicked(object sender, RoutedEventArgs e) => await ViewModel.AddNewTab();
 
         // When the selected tab changes update the selected menu item accordingly
-        private void OnSelectedTabChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        private void OnSelectedTabChanged(object sender, SelectionChangedEventArgs e)
         {
-            var selTab = ViewModel.SelectedTab;
+            var selectedTab = ViewModel.SelectedTab;
+            if (selectedTab != null)
+            {
+                if (selectedTab.ShowSelectConnection)
+                {
+                    ViewModel.SelectedItem = null;
+                    hamburgerMenu.SelectedIndex = -1;
+                }
+                else if (selectedTab.ShowDaxFormatter)
+                {
+                    Select(ShellViewModel.MenuItemFormatDaxName);
+                }
+                else if (selectedTab.ShowAnalyzeModel)
+                {
+                    Select(ShellViewModel.MenuItemAnalyzeModelName);
+                }
+            }
+
+            //_logger.Information(LogEvents.ShellViewAction, "{@Details}", new object[] { new
+            //{
+            //    Action = "SelectedTabChanged",
+            //    //Name = ViewModel.SelectedItem?.Name ?? "?"
+            //}});
 
             void Select(string menuItemName)
             {
                 // Update selected menu item
-                ViewModel.SelectedItem = ViewModel.MenuItems.FirstOrDefault(mi => mi.Name == menuItemName);
+                ViewModel.SelectedItem = ViewModel.MenuItems.FirstOrDefault((i) => i.Name == menuItemName);
 
                 // Binding doesn't updated the selected indicator - but this does
                 for (var i = 0; i < ViewModel.MenuItems.Count; i++)
@@ -130,23 +164,6 @@ namespace Sqlbi.Bravo.UI.Views
                         hamburgerMenu.SelectedIndex = i;
                         break;
                     }
-                }
-            }
-
-            if (selTab != null)
-            {
-                if (selTab.ShowSelectConnection)
-                {
-                    ViewModel.SelectedItem = null;
-                    hamburgerMenu.SelectedIndex = -1;
-                }
-                else if (selTab.ShowDaxFormatter)
-                {
-                    Select("Format DAX");
-                }
-                else if (selTab.ShowAnalyzeModel)
-                {
-                    Select("Analyze Model");
                 }
             }
         }
