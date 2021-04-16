@@ -2,25 +2,28 @@
     x:Class="Sqlbi.Bravo.UI.Views.ConnectDialog"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:Sqlbi.Bravo.UI.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:Sqlbi.Bravo.UI.Views"
     xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:controls="clr-namespace:Sqlbi.Bravo.UI.Controls"
-    WindowStartupLocation="CenterOwner"
-    MinHeight="350"
-    MinWidth="500"
-    ShowMinButton="False"
-    ShowMaxRestoreButton="False"
     Width="500"
     Height="400"
+    MinWidth="500"
+    MinHeight="350"
+    GlowBrush="Black"
+    ShowMaxRestoreButton="False"
+    ShowMinButton="False"
+    WindowStartupLocation="CenterOwner"
     mc:Ignorable="d">
     <mah:MetroWindow.Resources>
 
-        <Style x:Key="ListItemTextBlockStyle" TargetType="TextBlock" 
-       BasedOn="{StaticResource BaseTextBlockStyle}">
-            <Setter Property="FontWeight" Value="Normal"/>
-            <Setter Property="FontSize" Value="14"/>
+        <Style
+            x:Key="ListItemTextBlockStyle"
+            BasedOn="{StaticResource BaseTextBlockStyle}"
+            TargetType="TextBlock">
+            <Setter Property="FontWeight" Value="Normal" />
+            <Setter Property="FontSize" Value="14" />
         </Style>
     </mah:MetroWindow.Resources>
     <Grid>
@@ -43,7 +46,10 @@
                     </DataTemplate>
                 </TabControl.Resources>
 
-                <TabItem x:Name="DesktopTab" Header="Active reports on Power BI Desktop" HeaderTemplate="{StaticResource TabItemHeaderTemplate}">
+                <TabItem
+                    x:Name="DesktopTab"
+                    Header="Active reports on Power BI Desktop"
+                    HeaderTemplate="{StaticResource TabItemHeaderTemplate}">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="*" />
@@ -53,17 +59,30 @@
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <ListView x:Name="ActiveDesktopList" Grid.ColumnSpan="2" BorderThickness="2" BorderBrush="LightGray" ItemsSource="{Binding ActiveDesktops}">
+                        <ListView
+                            x:Name="ActiveDesktopList"
+                            Grid.ColumnSpan="2"
+                            BorderBrush="LightGray"
+                            BorderThickness="2"
+                            ItemsSource="{Binding ActiveDesktops}">
                             <ListView.ItemTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal">
                                         <controls:DesktopIcon Height="20" Margin="2,0,8,0" />
-                                        <TextBlock Text="{Binding }" Style="{StaticResource ListItemTextBlockStyle}" />
+                                        <TextBlock Style="{StaticResource ListItemTextBlockStyle}" Text="{Binding}" />
                                     </StackPanel>
                                 </DataTemplate>
                             </ListView.ItemTemplate>
                         </ListView>
-                        <TextBlock x:Name="EmptyDesktopListMessage" Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Center" Grid.ColumnSpan="2" Style="{StaticResource ListItemTextBlockStyle}">No active desktop instances found</TextBlock>
+                        <TextBlock
+                            x:Name="EmptyDesktopListMessage"
+                            Grid.ColumnSpan="2"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Style="{StaticResource ListItemTextBlockStyle}"
+                            Visibility="Collapsed">
+                            No active desktop instances found
+                        </TextBlock>
 
                         <TextBlock
                             Grid.Row="1"
@@ -88,7 +107,7 @@
                 <TabItem
                     x:Name="DatasetsTab"
                     Header="Datasets on powerbi.com"
-                    HeaderTemplate="{StaticResource TabItemHeaderTemplate}" >
+                    HeaderTemplate="{StaticResource TabItemHeaderTemplate}">
                     <Grid>
                         <Button
                             x:Name="ConnectButton"
