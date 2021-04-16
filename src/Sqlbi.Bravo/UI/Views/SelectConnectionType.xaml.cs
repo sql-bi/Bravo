@@ -7,7 +7,9 @@ using Sqlbi.Bravo.Core.Services.Interfaces;
 using Sqlbi.Bravo.UI.DataModel;
 using Sqlbi.Bravo.UI.ViewModels;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Navigation;
@@ -21,7 +23,7 @@ namespace Sqlbi.Bravo.UI.Views
         public SelectConnectionType()
         {
             InitializeComponent();
-            
+
             _logger = App.ServiceProvider.GetRequiredService<ILogger<SelectConnectionType>>();
         }
 
@@ -32,9 +34,9 @@ namespace Sqlbi.Bravo.UI.Views
                 Uri = e.Uri.AbsoluteUri
             }});
 
-            var startInfo = new ProcessStartInfo(e.Uri.AbsoluteUri) 
-            { 
-                UseShellExecute = true 
+            var startInfo = new ProcessStartInfo(e.Uri.AbsoluteUri)
+            {
+                UseShellExecute = true
             };
 
             Process.Start(startInfo);
@@ -46,32 +48,37 @@ namespace Sqlbi.Bravo.UI.Views
 
         private async void AttachToPowerBIDesktopClicked(object sender, RoutedEventArgs e)
         {
-            // TODO REQUIREMENTS: need to know how to connect here
-            _ = MessageBox.Show("Testing connection to Power BI Desktop", "TODO", MessageBoxButton.OK, MessageBoxImage.Question);
-
             var service = App.ServiceProvider.GetRequiredService<IPowerBIDesktopService>();
-            var instances = await service.GetInstancesAsync();
+            var instances = (await service.GetInstancesAsync()).ToArray();
+
+            var options = new List<string>();
+
+            bool NameIsUnique(string name) => instances.Count(i => i.Name == name) == 1;
 
             foreach (var instance in instances)
             {
-                switch (MessageBox.Show($"Connect to instance '{ instance.Name }' @ '{ instance.LocalEndPoint }' ?", "TODO", MessageBoxButton.YesNoCancel))
+                if (NameIsUnique(instance.Name))
                 {
-                    case MessageBoxResult.No:
-                        continue;
-                    case MessageBoxResult.Yes:
-                        {
-                            _logger.Information(LogEvents.StartConnectionAction, "{@Details}", new object[] { new
-                            {
-                                Action = "AttachPowerBIDesktop"
-                            }});
-
-                            var shellViewModel = App.ServiceProvider.GetRequiredService<ShellViewModel>();
-                            await shellViewModel.AddNewTabAsync(instance);
-                        }
-                        return;
-                    default:
-                        return;
+                    options.Add(instance.Name);
                 }
+                else
+                {
+                    options.Add($"{instance.Name} {instance.LocalEndPoint.ToString().Replace("127.0.0.1", string.Empty)}");
+                }
+            }
+
+            var dlg = new ConnectDialog { Owner = Application.Current.MainWindow };
+            dlg.ShowDesktopOptions(options);
+
+            if (dlg.ShowDialog() == true && dlg.ResultIndex >= 0)
+            {
+                _logger.Information(LogEvents.StartConnectionAction, "{@Details}", new object[] { new
+                                {
+                                    Action = "AttachPowerBIDesktop"
+                                }});
+
+                var shellViewModel = App.ServiceProvider.GetRequiredService<ShellViewModel>();
+                await shellViewModel.AddNewTabAsync(instances[dlg.ResultIndex]);
             }
         }
 
@@ -94,6 +101,7 @@ namespace Sqlbi.Bravo.UI.Views
                 _ = MessageBox.Show($"Hello { service.Account.Username } @ TenantId { service.Account.HomeAccountId.TenantId }", "TODO", MessageBoxButton.OK);
             }
 
+            // TODO: This needs to handle a 401 (unauthorized) and probably other errors too.
             var datasets = await service.GetDatasetsAsync();
 
             foreach (var dataset in datasets)

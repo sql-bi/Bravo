@@ -35,6 +35,7 @@
     <None Remove="UI\Resources\Images\powerbi-desktop-connect.png" />
     <None Remove="UI\Resources\Images\vertipaq-analyzer-file.png" />
     <None Remove="UI\Views\AnalyzeModelView.xaml" />
+    <None Remove="UI\Views\ConnectDialog.xaml" />
     <None Remove="UI\Views\DebugInfo.xaml" />
     <None Remove="UI\Views\MediaDialog.xaml" />
     <None Remove="UI\Views\SelectConnectionType.xaml" />
