@@ -86,9 +86,6 @@ namespace Sqlbi.Bravo.UI.Views
         {
             _logger.Trace();
 
-            // TODO REQUIREMENTS: need to know how to connect here
-            _ = MessageBox.Show("Testing connection to Power BI dataset", "TODO", MessageBoxButton.OK, MessageBoxImage.Question);
-
             var service = App.ServiceProvider.GetRequiredService<IPowerBICloudService>();
             if (service.IsAuthenticated == false)
             {
@@ -97,33 +94,46 @@ namespace Sqlbi.Bravo.UI.Views
                 {
                     return;
                 }
-
-                _ = MessageBox.Show($"Hello { service.Account.Username } @ TenantId { service.Account.HomeAccountId.TenantId }", "TODO", MessageBoxButton.OK);
             }
 
-            // TODO: This needs to handle a 401 (unauthorized) and probably other errors too.
-            var datasets = await service.GetDatasetsAsync();
+            Client.PowerBI.PowerBICloud.PowerBICloudSharedDataset[] datasets;
+
+            try
+            {
+                datasets = (await service.GetDatasetsAsync()).ToArray();
+            }
+            catch (Exception exc)
+            {
+                _logger.Error(LogEvents.StartConnectionAction, exc);
+                return;
+            }
+
+            var options = new List<OnlineDatasetSummary>();
 
             foreach (var dataset in datasets)
             {
-                switch (MessageBox.Show($"Connect to workspace '{ dataset.WorkspaceName }' model '{ dataset.Model.DisplayName }' ?", "TODO", MessageBoxButton.YesNoCancel))
+                options.Add(new OnlineDatasetSummary
                 {
-                    case MessageBoxResult.No:
-                        continue;
-                    case MessageBoxResult.Yes:
-                        {
-                            _logger.Information(LogEvents.StartConnectionAction, "{@Details}", new object[] { new
-                            {
-                                Action = "ConnectPowerBIDataset"
-                            }});
+                    DisplayName = dataset.Model.DisplayName,
+                    Endorsement = dataset.GalleryItem.Status,
+                    Owner = $"{dataset.Model.CreatorUser.GivenName} {dataset.Model.CreatorUser.FamilyName}",
+                    Refreshed = dataset.Model.LastRefreshTime,
+                    Workspace = dataset.WorkspaceName,
+                });
+            }
 
-                            var shellViewModel = App.ServiceProvider.GetRequiredService<ShellViewModel>();
-                            await shellViewModel.AddNewTabAsync(dataset);
-                        }
-                        return;
-                    default:
-                        return;
-                }
+            var dlg = new ConnectDialog { Owner = Application.Current.MainWindow };
+            dlg.ShowOnlineDatasetOptions(options);
+
+            if (dlg.ShowDialog() == true && dlg.ResultIndex >= 0)
+            {
+                _logger.Information(LogEvents.StartConnectionAction, "{@Details}", new object[] { new
+                                {
+                                    Action = "ConnectPowerBIDataset"
+                                }});
+
+                var shellViewModel = App.ServiceProvider.GetRequiredService<ShellViewModel>();
+                await shellViewModel.AddNewTabAsync(datasets[dlg.ResultIndex]);
             }
 
             //await service.LogoutAsync();
