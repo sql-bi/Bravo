@@ -115,7 +115,7 @@ namespace Sqlbi.Bravo.UI.Views
                 options.Add(new OnlineDatasetSummary
                 {
                     DisplayName = dataset.Model.DisplayName,
-                    Endorsement = dataset.GalleryItem.Status,
+                    Endorsement = dataset?.GalleryItem?.Status ?? 0,
                     Owner = $"{dataset.Model.CreatorUser.GivenName} {dataset.Model.CreatorUser.FamilyName}",
                     Refreshed = dataset.Model.LastRefreshTime,
                     Workspace = dataset.WorkspaceName,
