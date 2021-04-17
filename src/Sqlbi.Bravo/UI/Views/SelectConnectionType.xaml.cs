@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 using Sqlbi.Bravo.Client.VertiPaqAnalyzer;
+using Sqlbi.Bravo.Core.Helpers;
 using Sqlbi.Bravo.Core.Logging;
 using Sqlbi.Bravo.Core.Services.Interfaces;
 using Sqlbi.Bravo.UI.DataModel;
@@ -10,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Navigation;
@@ -110,6 +112,22 @@ namespace Sqlbi.Bravo.UI.Views
 
             var options = new List<OnlineDatasetSummary>();
 
+            static string GetFormattedDate(string lastRefreshTime)
+            {
+                var regex = new Regex("^\\/Date\\(([0-9]+)\\)\\/$");
+
+                var match = regex.Match(lastRefreshTime);
+                if (match.Success)
+                {
+                    var seconds = long.Parse(match.Groups[1].Value);
+                    var updateTime = DateTimeOffset.FromUnixTimeMilliseconds(seconds);
+
+                    return CommonHelper.HumanizeElapsed(updateTime.DateTime);
+                }
+
+                return string.Empty;
+            }
+
             foreach (var dataset in datasets)
             {
                 options.Add(new OnlineDatasetSummary
@@ -117,7 +135,7 @@ namespace Sqlbi.Bravo.UI.Views
                     DisplayName = dataset.Model.DisplayName,
                     Endorsement = dataset?.GalleryItem?.Status ?? 0,
                     Owner = $"{dataset.Model.CreatorUser.GivenName} {dataset.Model.CreatorUser.FamilyName}",
-                    Refreshed = dataset.Model.LastRefreshTime,
+                    Refreshed = GetFormattedDate(dataset.Model.LastRefreshTime),
                     Workspace = dataset.WorkspaceName,
                 });
             }
