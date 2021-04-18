@@ -14,6 +14,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Navigation;
 
 namespace Sqlbi.Bravo.UI.Views
@@ -98,6 +99,8 @@ namespace Sqlbi.Bravo.UI.Views
                 }
             }
 
+            Mouse.OverrideCursor = Cursors.Wait;
+
             Client.PowerBI.PowerBICloud.PowerBICloudSharedDataset[] datasets;
 
             try
@@ -108,6 +111,10 @@ namespace Sqlbi.Bravo.UI.Views
             {
                 _logger.Error(LogEvents.StartConnectionAction, exc);
                 return;
+            }
+            finally
+            {
+                Mouse.OverrideCursor = null;
             }
 
             var options = new List<OnlineDatasetSummary>();
