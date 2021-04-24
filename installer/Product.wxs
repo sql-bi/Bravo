@@ -3,9 +3,9 @@
 
   <?define ProductId = "{3C04D3FA-37F8-4CF2-BF75-BBE6B8CD771B}" ?>
   <?define ProductManufacturer = "SQLBI Corporation" ?>
-  <?define ProductVersion = "0.0.1" ?>
+  <?define ProductVersion=!(bind.FileVersion.app.exe)?>
   <?define AppUrlInfoAbout = "https://github.com/sql-bi/bravo" ?>
-  <?define AppInstallFolder = "Sqlbi Bravo" ?>
+  <?define AppInstallFolder = "SQLBI Bravo" ?>
   <?define AppExecutableName = "Bravo.exe" ?>
 
   <Product Id="$(var.ProductId)" Name="!(loc.ProductName) ($(sys.BUILDARCH))" Language="!(loc.ProductLanguage)" Version="$(var.ProductVersion)" Manufacturer="$(var.ProductManufacturer)" UpgradeCode="{888BDB48-B16A-4D9A-8FE6-0206897B1162}">
@@ -16,9 +16,7 @@
     <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
     
     <Feature Id="Complete" Title="!(loc.ProductName)" Level="1">
-<!--
       <ComponentRef Id="app.exe" />
--->
       <ComponentRef Id="pbitool.json" />
       <ComponentRef Id="AppProgramMenuShortcut" />
       <ComponentRef Id="AppDesktopShortcut" />
@@ -98,14 +96,14 @@
         <RegistryValue Root="HKCU" Key="Software\[Manufacturer]\!(loc.ProductName)" Name="installed" Value="1" Type="integer" KeyPath="yes" />
       </Component>
     </DirectoryRef>
-<!--
+
     <DirectoryRef Id="INSTALLFOLDER">
       <Component Id="app.exe" Guid="{E880F50A-6C3B-4EB6-B639-752803CEF497}">
         <File Id="app.exe" Name="$(var.AppExecutableName)" Source="$(var.PublishFolder)\$(var.AppExecutableName)" KeyPath="yes" Checksum="yes"/>
         <RemoveFile Id="REMOVEALL" Directory="INSTALLFOLDER" Name="*.*" On="both" />
       </Component>
     </DirectoryRef>
--->
+
     <DirectoryRef Id="POWERBIEXTERNALTOOLSFOLDER">
       <Component Id="pbitool.json" Guid="{CAD114D2-06DE-4AF6-BE0B-8C28EBD70E91}">
         <RemoveFile Id="REMOVEPOWERBIEXTERNALTOOL" Name="bravo.pbitool.json" On="uninstall" />
