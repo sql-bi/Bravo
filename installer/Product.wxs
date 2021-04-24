@@ -10,8 +10,8 @@
   <Product Id="*" Name="!(loc.ProductName) ($(sys.BUILDARCH))" Language="!(loc.ProductLanguage)" Version="$(var.ProductVersion)" Manufacturer="$(var.ProductManufacturer)" UpgradeCode="{888BDB48-B16A-4D9A-8FE6-0206897B1162}">
 
     <Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" Manufacturer="$(var.ProductManufacturer)" Description="!(loc.PackageDescription)" Comments="!(loc.PackageComments)"  />
-    <Binary Id="CustomActionBinary" SourceFile="$(var.ExtensionFolder)\Sqlbi.Bravo.Installer.CA.dll" />
-    <MajorUpgrade AllowSameVersionUpgrades="yes" AllowDowngrades="no" DowngradeErrorMessage="!(loc.MajorUpgradeDowngradeErrorMessage)" />
+    <Binary Id="CustomActionBinary" SourceFile="extensions\actions\Sqlbi.Bravo.Installer.CA.dll" />
+    <MajorUpgrade AllowSameVersionUpgrades="yes" AllowDowngrades="no" DowngradeErrorMessage="!(loc.MajorUpgradeDowngradeErrorMessage)" Schedule="afterInstallValidate" />
     <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
     
     <Feature Id="Complete" Title="!(loc.ProductName)" Level="1">
@@ -26,7 +26,9 @@
 
     <UI>
       <UIRef Id="WixUI_InstallDir" />
+<!--
       <Publish Dialog="ExitDialog" Control="Finish" Event="DoAction" Value="LaunchApplication">WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 and NOT Installed</Publish>
+-->
     </UI>
     <WixVariable Id="WixUIDialogBmp" Value="assets\background.bmp" />
     <WixVariable Id="WixUIBannerBmp" Value="assets\banner.bmp" />
@@ -35,15 +37,18 @@
     <Property Id="ARPPRODUCTICON">app.ico</Property>
     <Property Id="ARPURLINFOABOUT">$(var.AppUrlInfoAbout)</Property>
     <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+<!--
     <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOX" Value="1"/>
     <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="!(loc.ExitDialogCheckboxRunApplication)" />
     <Property Id="WixShellExecTarget" Value="[#app.exe]" />
-    
     <CustomAction Id="LaunchApplication" BinaryKey="WixCA" DllEntry="WixShellExec" Impersonate="yes" />
+-->
+    <CustomAction Id="SetCustomActionPropertyValues" Property="RegisterExternalTool" Value="INSTALLEDEXECUTABLEPATH=[INSTALLFOLDER]$(var.AppExecutableName)" />
     <CustomAction Id="RegisterExternalTool" BinaryKey="CustomActionBinary" DllEntry="PowerBIDesktopRegisterExternalTool" Execute="deferred" Impersonate="no" />
     
     <InstallExecuteSequence>
-      <Custom Action="RegisterExternalTool" After="InstallFiles">NOT Installed AND NOT REMOVE</Custom>
+      <Custom Action="SetCustomActionPropertyValues" After="InstallFiles" />
+      <Custom Action="RegisterExternalTool" After="SetCustomActionPropertyValues">NOT Installed AND NOT REMOVE</Custom>
     </InstallExecuteSequence>
     
   </Product>
@@ -94,13 +99,14 @@
 
     <DirectoryRef Id="INSTALLFOLDER">
       <Component Id="app.exe" Guid="{E880F50A-6C3B-4EB6-B639-752803CEF497}">
-        <File Id="app.exe" Name="$(var.AppExecutableName)" Source="$(var.PublishFolder)\$(var.AppExecutableName)" KeyPath="yes" Checksum="yes"/>
+        <File Id="app.exe" Name="$(var.AppExecutableName)" Source="$(var.PublishFolder)\$(var.AppExecutableName)" KeyPath="yes" Checksum="yes" />
         <RemoveFile Id="REMOVEALL" Directory="INSTALLFOLDER" Name="*.*" On="both" />
       </Component>
     </DirectoryRef>
 
     <DirectoryRef Id="POWERBIEXTERNALTOOLSFOLDER">
-      <Component Id="pbitool.json" Guid="{CAD114D2-06DE-4AF6-BE0B-8C28EBD70E91}">
+      <Component Id="pbitool.json" Guid="{CC0B5ECA-844C-4EE2-94A0-0CF9ADD4A0F3}">
+        <File Id="pbitool.json" Name="bravo.pbitool.json" Source="assets\bravo.pbitool.json" KeyPath="yes" />
         <RemoveFile Id="REMOVEPOWERBIEXTERNALTOOL" Name="bravo.pbitool.json" On="uninstall" />
       </Component>
     </DirectoryRef>
