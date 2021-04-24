@@ -11,9 +11,10 @@
   <Product Id="$(var.ProductId)" Name="!(loc.ProductName) ($(sys.BUILDARCH))" Language="!(loc.ProductLanguage)" Version="$(var.ProductVersion)" Manufacturer="$(var.ProductManufacturer)" UpgradeCode="{888BDB48-B16A-4D9A-8FE6-0206897B1162}">
 
     <Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" Manufacturer="$(var.ProductManufacturer)" Description="!(loc.PackageDescription)" Comments="!(loc.PackageComments)" />
+    <Binary Id="CustomActionBinary" SourceFile="$(var.ExtensionFolder)\Sqlbi.Bravo.Installer.CA.dll" />
     <MajorUpgrade AllowDowngrades="no" DowngradeErrorMessage="!(loc.MajorUpgradeDowngradeErrorMessage)" />
     <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
-
+    
     <Feature Id="Complete" Title="!(loc.ProductName)" Level="1">
 <!--
       <ComponentRef Id="app.exe" />
@@ -46,6 +47,12 @@
     
     <CustomAction Id="LaunchApplication" BinaryKey="WixCA" DllEntry="WixShellExec" Impersonate="yes" />
 -->
+    <CustomAction Id="RegisterPBIExternalTool" BinaryKey="CustomActionBinary" DllEntry="PowerBIDesktopRegisterExternalTool" Execute="deferred" Impersonate="no" />
+    
+    <InstallExecuteSequence>
+      <Custom Action="RegisterPBIExternalTool" After="InstallFiles">NOT Installed AND NOT REMOVE</Custom>
+    </InstallExecuteSequence>
+    
   </Product>
 
   <Fragment>
