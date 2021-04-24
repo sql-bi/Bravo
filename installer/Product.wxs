@@ -1,18 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
 
-  <?define ProductId = "{3C04D3FA-37F8-4CF2-BF75-BBE6B8CD771B}" ?>
+  <?define ProductVersion=!(bind.FileVersion.app.exe) ?>
   <?define ProductManufacturer = "SQLBI Corporation" ?>
-  <?define ProductVersion=!(bind.FileVersion.app.exe)?>
   <?define AppUrlInfoAbout = "https://github.com/sql-bi/bravo" ?>
   <?define AppInstallFolder = "SQLBI Bravo" ?>
   <?define AppExecutableName = "Bravo.exe" ?>
 
-  <Product Id="$(var.ProductId)" Name="!(loc.ProductName) ($(sys.BUILDARCH))" Language="!(loc.ProductLanguage)" Version="$(var.ProductVersion)" Manufacturer="$(var.ProductManufacturer)" UpgradeCode="{888BDB48-B16A-4D9A-8FE6-0206897B1162}">
+  <Product Id="*" Name="!(loc.ProductName) ($(sys.BUILDARCH))" Language="!(loc.ProductLanguage)" Version="$(var.ProductVersion)" Manufacturer="$(var.ProductManufacturer)" UpgradeCode="{888BDB48-B16A-4D9A-8FE6-0206897B1162}">
 
-    <Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" Manufacturer="$(var.ProductManufacturer)" Description="!(loc.PackageDescription)" Comments="!(loc.PackageComments)" />
+    <Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" Manufacturer="$(var.ProductManufacturer)" Description="!(loc.PackageDescription)" Comments="!(loc.PackageComments)"  />
     <Binary Id="CustomActionBinary" SourceFile="$(var.ExtensionFolder)\Sqlbi.Bravo.Installer.CA.dll" />
-    <MajorUpgrade AllowDowngrades="no" DowngradeErrorMessage="!(loc.MajorUpgradeDowngradeErrorMessage)" />
+    <MajorUpgrade AllowSameVersionUpgrades="yes" AllowDowngrades="no" DowngradeErrorMessage="!(loc.MajorUpgradeDowngradeErrorMessage)" />
     <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
     
     <Feature Id="Complete" Title="!(loc.ProductName)" Level="1">
@@ -27,9 +26,7 @@
 
     <UI>
       <UIRef Id="WixUI_InstallDir" />
-<!--
       <Publish Dialog="ExitDialog" Control="Finish" Event="DoAction" Value="LaunchApplication">WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 and NOT Installed</Publish>
--->
     </UI>
     <WixVariable Id="WixUIDialogBmp" Value="assets\background.bmp" />
     <WixVariable Id="WixUIBannerBmp" Value="assets\banner.bmp" />
@@ -38,17 +35,15 @@
     <Property Id="ARPPRODUCTICON">app.ico</Property>
     <Property Id="ARPURLINFOABOUT">$(var.AppUrlInfoAbout)</Property>
     <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
-<!--
     <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOX" Value="1"/>
     <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="!(loc.ExitDialogCheckboxRunApplication)" />
     <Property Id="WixShellExecTarget" Value="[#app.exe]" />
     
     <CustomAction Id="LaunchApplication" BinaryKey="WixCA" DllEntry="WixShellExec" Impersonate="yes" />
--->
-    <CustomAction Id="RegisterPBIExternalTool" BinaryKey="CustomActionBinary" DllEntry="PowerBIDesktopRegisterExternalTool" Execute="deferred" Impersonate="no" />
+    <CustomAction Id="RegisterExternalTool" BinaryKey="CustomActionBinary" DllEntry="PowerBIDesktopRegisterExternalTool" Execute="deferred" Impersonate="no" />
     
     <InstallExecuteSequence>
-      <Custom Action="RegisterPBIExternalTool" After="InstallFiles">NOT Installed AND NOT REMOVE</Custom>
+      <Custom Action="RegisterExternalTool" After="InstallFiles">NOT Installed AND NOT REMOVE</Custom>
     </InstallExecuteSequence>
     
   </Product>
