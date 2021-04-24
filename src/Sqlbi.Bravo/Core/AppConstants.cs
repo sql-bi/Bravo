@@ -1,11 +1,9 @@
 ﻿using Dax.Formatter.Models;
-using Serilog.Events;
 using Sqlbi.Bravo.UI.DataModel;
 using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
-using System.Reflection;
 using System.Runtime.InteropServices;
 
 namespace Sqlbi.Bravo.Core
@@ -16,7 +14,7 @@ namespace Sqlbi.Bravo.Core
 
         private static readonly string EnvironmentSpecialFolderCommonProgramFilesX86 = Environment.GetFolderPath(Environment.SpecialFolder.CommonProgramFilesX86);
 
-        private static readonly FileVersionInfo VersionInfo = FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location);
+        private static readonly FileVersionInfo VersionInfo = FileVersionInfo.GetVersionInfo(Process.GetCurrentProcess().MainModule.FileName);
 
         public static string ApplicationName { get; } = "SqlbiBravo";
 
@@ -28,17 +26,17 @@ namespace Sqlbi.Bravo.Core
 
         public static bool ApplicationSettingsDefaultTelemetryEnabled { get; } = false;
 
-        public static LogEventLevel ApplicationSettingsDefaultTelemetryLevel { get; } = LogEventLevel.Information;
-
         public static bool ApplicationSettingsDefaultProxyUseSystem { get; } = true;
 
         public static bool ApplicationSettingsDefaultShellBringToForegroundOnParentProcessMainWindowScreen { get; } = false;
 
         public static string ApplicationSettingsDefaultThemeName { get; } = nameof(AppTheme.Default);
 
-        public static DaxFormatterLineStyle ApplicationSettingsDefaultDaxFormatterLineStyle { get; } = DaxFormatterLineStyle.LongLine;        
+        public static DaxFormatterLineStyle ApplicationSettingsDefaultDaxFormatterLineStyle { get; } = DaxFormatterLineStyle.LongLine;
 
         public static string UserSettingsFilePath { get; } = Path.Combine(ApplicationFolderLocalDataPath, "usersettings.json");
+
+        public static string LogFilePath { get; } = Path.Combine(ApplicationFolderLocalDataPath, $"{ ApplicationName }-.log");
 
         public static string ApplicationProductVersion { get; } = VersionInfo.ProductVersion;
 

@@ -59,8 +59,6 @@
     <PackageReference Include="PropertyChanged.Fody" Version="3.2.10" PrivateAssets="All" />
     <PackageReference Include="Serilog" Version="2.10.1-dev-01249" />
     <PackageReference Include="Serilog.Extensions.Hosting" Version="4.0.0-dev-00051" />
-    <PackageReference Include="Serilog.Filters.Expressions" Version="2.1.1-dev-00054" />
-    <PackageReference Include="Serilog.Settings.Configuration" Version="3.2.0-dev-00244" />
     <PackageReference Include="Serilog.Sinks.ApplicationInsights" Version="3.1.0" />
     <PackageReference Include="Serilog.Sinks.Debug" Version="1.0.2-dev-00020" />
     <PackageReference Include="Serilog.Sinks.File" Version="5.0.0-dev-00887" />
@@ -69,18 +67,6 @@
     <PackageReference Include="System.Management" Version="5.0.0" />
     <PackageReference Include="Dax.Formatter" Version="1.0.0" />
     <PackageReference Include="Microsoft.AnalysisServices.NetCore.retail.amd64" Version="19.20.1" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="appsettings.development.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="appsettings.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="hostsettings.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
 
   <ItemGroup>
