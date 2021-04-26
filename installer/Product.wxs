@@ -6,15 +6,25 @@
   <?define AppUrlInfoAbout = "https://github.com/sql-bi/bravo" ?>
   <?define AppInstallFolder = "SQLBI Bravo" ?>
   <?define AppExecutableName = "Bravo.exe" ?>
-
-  <Product Id="*" Name="!(loc.ProductName) ($(sys.BUILDARCH))" Language="!(loc.ProductLanguage)" Version="$(var.ProductVersion)" Manufacturer="$(var.ProductManufacturer)" UpgradeCode="{888BDB48-B16A-4D9A-8FE6-0206897B1162}">
+  
+  <?if $(sys.BUILDARCH) = x64 ?>
+    <?define PlatformProgramFilesFolder = "ProgramFiles64Folder" ?>
+    <?define ProductName = "!(loc.ProductName)" ?>
+    <?define Win64 = "yes" ?>
+  <?else ?>
+    <?define PlatformProgramFilesFolder = "ProgramFilesFolder" ?>
+    <?define ProductName = "!(loc.ProductName) (32 bit)" ?>
+    <?define Win64 = "no" ?>
+  <?endif ?>
+  
+  <Product Id="*" Name="$(var.ProductName)" Language="!(loc.ProductLanguage)" Version="$(var.ProductVersion)" Manufacturer="$(var.ProductManufacturer)" UpgradeCode="{888BDB48-B16A-4D9A-8FE6-0206897B1162}">
 
     <Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" Manufacturer="$(var.ProductManufacturer)" Description="!(loc.PackageDescription)" Comments="!(loc.PackageComments)"  />
     <Binary Id="CustomActionBinary" SourceFile="extensions\actions\Sqlbi.Bravo.Installer.CA.dll" />
     <MajorUpgrade AllowSameVersionUpgrades="yes" AllowDowngrades="no" DowngradeErrorMessage="!(loc.MajorUpgradeDowngradeErrorMessage)" Schedule="afterInstallValidate" />
     <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
     
-    <Feature Id="Complete" Title="!(loc.ProductName)" Level="1">
+    <Feature Id="Complete" Title="$(var.ProductName)" Level="1">
       <ComponentRef Id="app.exe" />
       <ComponentRef Id="pbitool.json" />
       <ComponentRef Id="AppProgramMenuShortcut" />
@@ -56,6 +66,10 @@
   <Fragment>
     
     <Directory Id="TARGETDIR" Name="SourceDir">
+
+      <Directory Id="$(var.PlatformProgramFilesFolder)">
+        <Directory Id="INSTALLFOLDER" Name="$(var.AppInstallFolder)" />
+      </Directory>
       
       <Directory Id="DesktopFolder" Name="Desktop" />
       <Directory Id="ProgramMenuFolder" Name="ProgramMenu" />
@@ -67,16 +81,6 @@
         </Directory>
       </Directory>
       
-      <?if $(sys.BUILDARCH)="x64" ?>
-      <Directory Id="ProgramFiles64Folder">
-        <Directory Id="INSTALLFOLDER" Name="$(var.AppInstallFolder)" />
-      </Directory>
-      <?else?>
-      <Directory Id="ProgramFilesFolder">
-        <Directory Id="INSTALLFOLDER" Name="$(var.AppInstallFolder)" />
-      </Directory>
-      <?endif?>
-      
     </Directory>
     
   </Fragment>
@@ -84,16 +88,16 @@
   <Fragment>
 
     <DirectoryRef Id="DesktopFolder">
-      <Component Id="AppDesktopShortcut" Guid="{8C035041-08C9-44CB-B254-D66DA096C53D}">
-        <Shortcut Id="AppDesktopShortcut" Directory="DesktopFolder" Name="!(loc.ProductName)" Target="[INSTALLFOLDER]$(var.AppExecutableName)" />
-        <RegistryValue Root="HKCU" Key="Software\[Manufacturer]\!(loc.ProductName)" Name="installed" Value="1" Type="integer" KeyPath="yes" />
+      <Component Id="AppDesktopShortcut" Guid="{8C035041-08C9-44CB-B254-D66DA096C53D}" Win64="$(var.Win64)">
+        <Shortcut Id="AppDesktopShortcut" Directory="DesktopFolder" Name="$(var.ProductName)" Target="[INSTALLFOLDER]$(var.AppExecutableName)" />
+        <RegistryValue Root="HKCU" Key="Software\[Manufacturer]\$(var.ProductName)" Name="installed" Value="1" Type="integer" KeyPath="yes" />
       </Component>
     </DirectoryRef>
     
     <DirectoryRef Id="ProgramMenuFolder">
-      <Component Id="AppProgramMenuShortcut" Guid="{B6EB02B3-E16E-4661-89E4-A46C50815577}">
-        <Shortcut Id="AppProgramMenuShortcut" Directory="ProgramMenuFolder" Name="!(loc.ProductName)" Target="[INSTALLFOLDER]$(var.AppExecutableName)" />
-        <RegistryValue Root="HKCU" Key="Software\[Manufacturer]\!(loc.ProductName)" Name="installed" Value="1" Type="integer" KeyPath="yes" />
+      <Component Id="AppProgramMenuShortcut" Guid="{B6EB02B3-E16E-4661-89E4-A46C50815577}" Win64="$(var.Win64)">
+        <Shortcut Id="AppProgramMenuShortcut" Directory="ProgramMenuFolder" Name="$(var.ProductName)" Target="[INSTALLFOLDER]$(var.AppExecutableName)" />
+        <RegistryValue Root="HKCU" Key="Software\[Manufacturer]\$(var.ProductName)" Name="installed" Value="1" Type="integer" KeyPath="yes" />
       </Component>
     </DirectoryRef>
 
@@ -105,7 +109,7 @@
     </DirectoryRef>
 
     <DirectoryRef Id="POWERBIEXTERNALTOOLSFOLDER">
-      <Component Id="pbitool.json" Guid="{CC0B5ECA-844C-4EE2-94A0-0CF9ADD4A0F3}">
+      <Component Id="pbitool.json" Guid="{CC0B5ECA-844C-4EE2-94A0-0CF9ADD4A0F3}" Win64="$(var.Win64)">
         <File Id="pbitool.json" Name="bravo.pbitool.json" Source="assets\bravo.pbitool.json" KeyPath="yes" />
         <RemoveFile Id="REMOVEPOWERBIEXTERNALTOOL" Name="bravo.pbitool.json" On="uninstall" />
       </Component>
