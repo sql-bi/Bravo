@@ -34,12 +34,8 @@
 
     <Icon Id="app.ico" SourceFile="$(var.PublishFolder)\$(var.AppExecutableName)" />
 
-    <UI>
-      <UIRef Id="WixUI_InstallDir" />
-<!--
-      <Publish Dialog="ExitDialog" Control="Finish" Event="DoAction" Value="LaunchApplication">WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 and NOT Installed</Publish>
--->
-    </UI>
+    <UIRef Id="WixUI_InstallDir" />
+    
     <WixVariable Id="WixUIDialogBmp" Value="assets\background.bmp" />
     <WixVariable Id="WixUIBannerBmp" Value="assets\banner.bmp" />
     <WixVariable Id="WixUILicenseRtf" Value="assets\license.rtf" />
@@ -47,12 +43,7 @@
     <Property Id="ARPPRODUCTICON">app.ico</Property>
     <Property Id="ARPURLINFOABOUT">$(var.AppUrlInfoAbout)</Property>
     <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
-<!--
-    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOX" Value="1"/>
-    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="!(loc.ExitDialogCheckboxRunApplication)" />
-    <Property Id="WixShellExecTarget" Value="[#app.exe]" />
-    <CustomAction Id="LaunchApplication" BinaryKey="WixCA" DllEntry="WixShellExec" Impersonate="yes" />
--->
+    
     <CustomAction Id="SetCustomActionPropertyValues" Property="RegisterExternalTool" Value="INSTALLEDEXECUTABLEPATH=[INSTALLFOLDER]$(var.AppExecutableName)" />
     <CustomAction Id="RegisterExternalTool" BinaryKey="CustomActionBinary" DllEntry="PowerBIDesktopRegisterExternalTool" Execute="deferred" Impersonate="no" />
     

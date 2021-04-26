@@ -7,6 +7,5 @@
   <String Id="PackageComments">This installer contains the logic and data required to install Bravo for PowerBI Desktop</String>
   <String Id="MajorUpgradeDowngradeErrorMessage">"A newer version of Bravo is already installed"</String>  
   <String Id="ShortcutDescription">TODO app shortcut description</String>
-  <String Id="ExitDialogCheckboxRunApplication">Start Bravo when setup is complete</String>
 
 </WixLocalization>
