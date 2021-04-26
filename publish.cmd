@@ -3,12 +3,14 @@ SETLOCAL
 
 SET arch=x64
 SET runtime=win-%arch%
+SET framework=net5.0-windows
 SET configuration=Release
 SET verbosity=Minimal
-SET publishfolder=%~dp0src\Sqlbi.Bravo\bin\%configuration%\net5.0-windows\%runtime%\publish
+SET publishfolder=%~dp0src\Sqlbi.Bravo\bin\%configuration%\%framework%\%runtime%\publish
 
-CD /D "%~dp0"
-dotnet publish .\src\Sqlbi.Bravo\Sqlbi.Bravo.csproj --configuration %configuration% --runtime %runtime% --self-contained true -p:PublishSingleFile=true -p:PublishReadyToRun=true --verbosity %verbosity% --force --nologo
+CD /d "%~dp0"
+IF EXIST %publishfolder% RMDIR /s /q %publishfolder%
+dotnet publish .\src\Sqlbi.Bravo\Sqlbi.Bravo.csproj --configuration %configuration% --runtime %runtime% --output %publishfolder% --self-contained true --verbosity %verbosity% --force --nologo
 
 REM Ignore errors
 REM    error LGHT0204 : ICE80: This 64BitComponent pbitool.json uses 32BitDirectory POWERBIEXTERNALTOOLSFOLDER
@@ -16,7 +18,7 @@ REM    warning LGHT1076 : ICE61: This product should remove only older versions 
 REM Enable windows installer logging
 REM    msiexec /i "C:\temp\installer.msi" /L*V "C:\temp\file.log"
 
-CD /D "%~dp0installer"
+CD /d "%~dp0installer"
 IF EXIST *.msi    DEL *.msi
 IF EXIST *.wixobj DEL *.wixobj
 IF EXIST *.wixpdb DEL *.wixpdb

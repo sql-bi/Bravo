@@ -10,8 +10,8 @@
 
   <xsl:output method="xml" indent="yes" />
 
-  <xsl:key name="exe-search" match="wix:Component[contains(wix:File/@Source, '.exe')]" use="@Id" />
-  <xsl:template match="wix:Component[key('exe-search', @Id)]" />
-  <xsl:template match="wix:ComponentRef[key('exe-search', @Id)]" />
+  <xsl:key name="mainexe-search" match="wix:Component[contains(wix:File/@Source, 'Bravo.exe')]" use="@Id" />
+  <xsl:template match="wix:Component[key('mainexe-search', @Id)]" />
+  <xsl:template match="wix:ComponentRef[key('mainexe-search', @Id)]" />
 
 </xsl:stylesheet>
