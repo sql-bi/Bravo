@@ -14,6 +14,8 @@ namespace Sqlbi.Bravo.Installer
             try
             {
                 var installedExecutablePath = session.CustomActionData["INSTALLEDEXECUTABLEPATH"];
+                installedExecutablePath = installedExecutablePath.Replace("\\", "\\\\");
+
                 session.Log($"BRAVODEBUG [{ nameof(PowerBIDesktopRegisterExternalTool) }] CustomActionData<INSTALLEDEXECUTABLEPATH> '{ installedExecutablePath }'");
 
                 var path1 = Environment.GetFolderPath(Environment.SpecialFolder.CommonProgramFilesX86);
