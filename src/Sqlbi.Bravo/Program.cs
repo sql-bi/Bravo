@@ -6,8 +6,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Serilog;
+using Serilog.Core;
 using Serilog.Events;
 using Sqlbi.Bravo.Core;
+using Sqlbi.Bravo.Core.Logging;
 using Sqlbi.Bravo.Core.Security;
 using Sqlbi.Bravo.Core.Services;
 using Sqlbi.Bravo.Core.Services.Interfaces;
@@ -20,6 +22,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime;
+using System.Windows.Input;
 
 namespace Sqlbi.Bravo
 {
@@ -36,7 +39,7 @@ namespace Sqlbi.Bravo
 
             var config = CreateConfiguration();
             Log.Logger = CreateLogger(config);
-
+          
             try
             {
                 using var host = CreateHost(config);
@@ -55,7 +58,7 @@ namespace Sqlbi.Bravo
             {
                 Log.CloseAndFlush();
             }
-        }         
+        }
 
         private static void TryOptimizeJIT()
         {
@@ -77,20 +80,9 @@ namespace Sqlbi.Bravo
             var builder = new ConfigurationBuilder();
 
             builder.Sources.Clear();
-            builder.SetBasePath(Environment.CurrentDirectory); 
-            builder.AddJsonFile("hostsettings.json", optional: true);
-            builder.AddJsonFile("appsettings.json", optional: true);
             builder.AddJsonFile(AppConstants.UserSettingsFilePath, optional: true);
 
             var config = builder.Build();
-            
-            var environment = config.GetValue<string>(nameof(Environment));
-            if (environment != null)
-            {
-                builder.AddJsonFile($"appsettings.{ environment }.json", optional: true);
-                config = builder.Build();
-            }
-
             return config;
         }
 
@@ -143,13 +135,33 @@ namespace Sqlbi.Bravo
             // Sqlbi.Bravo.exe 1> c:\temp\self.log 2>&1
             Serilog.Debugging.SelfLog.Enable(Console.Error);
 
-            var loggerConfiguration = new LoggerConfiguration()
-                .ReadFrom.Configuration(config);
+            var loggingLevelSwitch = new LoggingLevelSwitch(initialMinimumLevel: LogEventLevel.Information);
+            var loggerConfiguration = new LoggerConfiguration();
+            loggerConfiguration.MinimumLevel.ControlledBy(loggingLevelSwitch);
 
+            ConfigureLogging();
             ConfigureTelemetry();
 
             var logger = loggerConfiguration.CreateLogger();
             return logger;
+
+            void ConfigureLogging()
+            {
+                var enabled = Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift) || Debugger.IsAttached;
+                if (enabled == false)
+                    return;
+
+                var outputTemplate = "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} {Level}] {SourceContext}.{CallerMemberName}({EventId}|{ManagedThread}) - {Message:lj}{NewLine}{Exception}";
+
+                loggingLevelSwitch.MinimumLevel = LogEventLevel.Verbose;
+                loggerConfiguration.Enrich.WithManagedThread().Enrich.FromLogContext();
+                loggerConfiguration.WriteTo.File(path: AppConstants.LogFilePath, restrictedToMinimumLevel: LogEventLevel.Verbose, outputTemplate, rollingInterval: RollingInterval.Day);
+
+                if (Debugger.IsAttached)
+                {
+                    loggerConfiguration.WriteTo.Debug(restrictedToMinimumLevel: LogEventLevel.Verbose, outputTemplate);
+                }
+            }
 
             void ConfigureTelemetry()
             {
@@ -175,7 +187,7 @@ namespace Sqlbi.Bravo
                 telemetryClient.Context.User.Id = $"{ Environment.MachineName }\\{ Environment.UserName }".ToHashSHA256();
 
                 loggerConfiguration
-                    .WriteTo.ApplicationInsights(telemetryClient, TelemetryConverter.Events, restrictedToMinimumLevel: AppConstants.ApplicationSettingsDefaultTelemetryLevel)                    
+                    .WriteTo.ApplicationInsights(telemetryClient, TelemetryConverter.Events, restrictedToMinimumLevel: LogEventLevel.Information)
                     //.Enrich.WithProperty("ApplicationName", AppConstants.ApplicationName)
                     .MinimumLevel.Override("Microsoft", LogEventLevel.Warning);
             }
