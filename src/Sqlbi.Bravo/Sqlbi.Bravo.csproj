@@ -22,12 +22,14 @@
   <ItemGroup>
     <None Remove="Client\PowerBI\PowerBICloud\CustomLoginWindow.xaml" />
     <None Remove="UI\Controls\AnalyzeModelIcon.xaml" />
+    <None Remove="UI\Controls\CertifiedIcon.xaml" />
     <None Remove="UI\Controls\DatasetIcon.xaml" />
     <None Remove="UI\Controls\DaxFormattedTextBlock.xaml" />
     <None Remove="UI\Controls\DaxFormatterIcon.xaml" />
     <None Remove="UI\Controls\DesktopIcon.xaml" />
     <None Remove="UI\Controls\HelpIcon.xaml" />
     <None Remove="UI\Controls\LogoText.xaml" />
+    <None Remove="UI\Controls\PromotedIcon.xaml" />
     <None Remove="UI\Controls\VertipaqFileIcon.xaml" />
     <None Remove="UI\Controls\WarningWithTooltip.xaml" />
     <None Remove="UI\Resources\Images\logo.png" />
@@ -35,6 +37,7 @@
     <None Remove="UI\Resources\Images\powerbi-desktop-connect.png" />
     <None Remove="UI\Resources\Images\vertipaq-analyzer-file.png" />
     <None Remove="UI\Views\AnalyzeModelView.xaml" />
+    <None Remove="UI\Views\ConnectDialog.xaml" />
     <None Remove="UI\Views\DebugInfo.xaml" />
     <None Remove="UI\Views\MediaDialog.xaml" />
     <None Remove="UI\Views\SelectConnectionType.xaml" />

@@ -2,14 +2,19 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 using Sqlbi.Bravo.Client.VertiPaqAnalyzer;
+using Sqlbi.Bravo.Core.Helpers;
 using Sqlbi.Bravo.Core.Logging;
 using Sqlbi.Bravo.Core.Services.Interfaces;
 using Sqlbi.Bravo.UI.DataModel;
 using Sqlbi.Bravo.UI.ViewModels;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Navigation;
 
 namespace Sqlbi.Bravo.UI.Views
@@ -21,7 +26,7 @@ namespace Sqlbi.Bravo.UI.Views
         public SelectConnectionType()
         {
             InitializeComponent();
-            
+
             _logger = App.ServiceProvider.GetRequiredService<ILogger<SelectConnectionType>>();
         }
 
@@ -32,9 +37,9 @@ namespace Sqlbi.Bravo.UI.Views
                 Uri = e.Uri.AbsoluteUri
             }});
 
-            var startInfo = new ProcessStartInfo(e.Uri.AbsoluteUri) 
-            { 
-                UseShellExecute = true 
+            var startInfo = new ProcessStartInfo(e.Uri.AbsoluteUri)
+            {
+                UseShellExecute = true
             };
 
             Process.Start(startInfo);
@@ -46,41 +51,43 @@ namespace Sqlbi.Bravo.UI.Views
 
         private async void AttachToPowerBIDesktopClicked(object sender, RoutedEventArgs e)
         {
-            // TODO REQUIREMENTS: need to know how to connect here
-            _ = MessageBox.Show("Testing connection to Power BI Desktop", "TODO", MessageBoxButton.OK, MessageBoxImage.Question);
-
             var service = App.ServiceProvider.GetRequiredService<IPowerBIDesktopService>();
-            var instances = await service.GetInstancesAsync();
+            var instances = (await service.GetInstancesAsync()).ToArray();
+
+            var options = new List<string>();
+
+            bool NameIsUnique(string name) => instances.Count(i => i.Name == name) == 1;
 
             foreach (var instance in instances)
             {
-                switch (MessageBox.Show($"Connect to instance '{ instance.Name }' @ '{ instance.LocalEndPoint }' ?", "TODO", MessageBoxButton.YesNoCancel))
+                if (NameIsUnique(instance.Name))
                 {
-                    case MessageBoxResult.No:
-                        continue;
-                    case MessageBoxResult.Yes:
-                        {
-                            _logger.Information(LogEvents.StartConnectionAction, "{@Details}", new object[] { new
-                            {
-                                Action = "AttachPowerBIDesktop"
-                            }});
-
-                            var shellViewModel = App.ServiceProvider.GetRequiredService<ShellViewModel>();
-                            await shellViewModel.AddNewTabAsync(instance);
-                        }
-                        return;
-                    default:
-                        return;
+                    options.Add(instance.Name);
                 }
+                else
+                {
+                    options.Add($"{instance.Name} {instance.LocalEndPoint.ToString().Replace("127.0.0.1", string.Empty)}");
+                }
+            }
+
+            var dlg = new ConnectDialog { Owner = Application.Current.MainWindow };
+            dlg.ShowDesktopOptions(options);
+
+            if (dlg.ShowDialog() == true && dlg.ResultIndex >= 0)
+            {
+                _logger.Information(LogEvents.StartConnectionAction, "{@Details}", new object[] { new
+                                {
+                                    Action = "AttachPowerBIDesktop"
+                                }});
+
+                var shellViewModel = App.ServiceProvider.GetRequiredService<ShellViewModel>();
+                await shellViewModel.AddNewTabAsync(instances[dlg.ResultIndex]);
             }
         }
 
         private async void ConnectToPowerBIDatasetClicked(object sender, RoutedEventArgs e)
         {
             _logger.Trace();
-
-            // TODO REQUIREMENTS: need to know how to connect here
-            _ = MessageBox.Show("Testing connection to Power BI dataset", "TODO", MessageBoxButton.OK, MessageBoxImage.Question);
 
             var service = App.ServiceProvider.GetRequiredService<IPowerBICloudService>();
             if (service.IsAuthenticated == false)
@@ -90,32 +97,68 @@ namespace Sqlbi.Bravo.UI.Views
                 {
                     return;
                 }
-
-                _ = MessageBox.Show($"Hello { service.Account.Username } @ TenantId { service.Account.HomeAccountId.TenantId }", "TODO", MessageBoxButton.OK);
             }
 
-            var datasets = await service.GetDatasetsAsync();
+            Mouse.OverrideCursor = Cursors.Wait;
+
+            Client.PowerBI.PowerBICloud.PowerBICloudSharedDataset[] datasets;
+
+            try
+            {
+                datasets = (await service.GetDatasetsAsync()).ToArray();
+            }
+            catch (Exception exc)
+            {
+                _logger.Error(LogEvents.StartConnectionAction, exc);
+                return;
+            }
+            finally
+            {
+                Mouse.OverrideCursor = null;
+            }
+
+            var options = new List<OnlineDatasetSummary>();
+
+            static string GetFormattedDate(string lastRefreshTime)
+            {
+                var regex = new Regex("^\\/Date\\(([0-9]+)\\)\\/$");
+
+                var match = regex.Match(lastRefreshTime);
+                if (match.Success)
+                {
+                    var seconds = long.Parse(match.Groups[1].Value);
+                    var updateTime = DateTimeOffset.FromUnixTimeMilliseconds(seconds);
+
+                    return CommonHelper.HumanizeElapsed(updateTime.DateTime);
+                }
+
+                return string.Empty;
+            }
 
             foreach (var dataset in datasets)
             {
-                switch (MessageBox.Show($"Connect to workspace '{ dataset.WorkspaceName }' model '{ dataset.Model.DisplayName }' ?", "TODO", MessageBoxButton.YesNoCancel))
+                options.Add(new OnlineDatasetSummary
                 {
-                    case MessageBoxResult.No:
-                        continue;
-                    case MessageBoxResult.Yes:
-                        {
-                            _logger.Information(LogEvents.StartConnectionAction, "{@Details}", new object[] { new
-                            {
-                                Action = "ConnectPowerBIDataset"
-                            }});
+                    DisplayName = dataset.Model.DisplayName,
+                    Endorsement = dataset?.GalleryItem?.Status ?? 0,
+                    Owner = $"{dataset.Model.CreatorUser.GivenName} {dataset.Model.CreatorUser.FamilyName}",
+                    Refreshed = GetFormattedDate(dataset.Model.LastRefreshTime),
+                    Workspace = dataset.WorkspaceName,
+                });
+            }
 
-                            var shellViewModel = App.ServiceProvider.GetRequiredService<ShellViewModel>();
-                            await shellViewModel.AddNewTabAsync(dataset);
-                        }
-                        return;
-                    default:
-                        return;
-                }
+            var dlg = new ConnectDialog { Owner = Application.Current.MainWindow };
+            dlg.ShowOnlineDatasetOptions(options);
+
+            if (dlg.ShowDialog() == true && dlg.ResultIndex >= 0)
+            {
+                _logger.Information(LogEvents.StartConnectionAction, "{@Details}", new object[] { new
+                                {
+                                    Action = "ConnectPowerBIDataset"
+                                }});
+
+                var shellViewModel = App.ServiceProvider.GetRequiredService<ShellViewModel>();
+                await shellViewModel.AddNewTabAsync(datasets[dlg.ResultIndex]);
             }
 
             //await service.LogoutAsync();

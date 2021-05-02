@@ -25,9 +25,15 @@ namespace Sqlbi.Bravo.UI.Views
                 MessageBoxImage.Question);
         }
 
-        private void TreeviewSelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e) =>
-            // Quick hack for not being able to bind the selected item in WPF
-            (DataContext as ViewModels.DaxFormatterViewModel).SelectionTreeData.SelectedTreeViewItem = (ViewModels.TreeItem)e.NewValue;
+        private void TreeviewSelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        {
+            // DataContext may not be set here if itemChange event happens when closing a tab
+            if (DataContext is not null)
+            {
+                // Quick hack for not being able to bind the selected item in WPF
+                (DataContext as ViewModels.DaxFormatterViewModel).SelectionTreeData.SelectedTreeViewItem = (ViewModels.TreeItem)e?.NewValue;
+            }
+        }
 
         private void CopyToClipboardClicked(object sender, RoutedEventArgs e) =>
             // Doing this in code-behind for simplicity and preserving UI separation
