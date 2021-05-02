@@ -117,18 +117,39 @@
                     HeaderTemplate="{StaticResource TabItemHeaderTemplate}">
                     <Grid Margin="0,10,0,0">
                         <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
 
+                        <TextBox
+                            Margin="0,8"
+                            Text="{Binding SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             mah:TextBoxHelper.ClearTextButton="True"
+                             mah:TextBoxHelper.UseFloatingWatermark="True"
+                             mah:TextBoxHelper.Watermark="Search"
+                            >
+                            <TextBox.Style>
+                                <Style BasedOn="{StaticResource MahApps.Styles.TextBox.Search}" TargetType="{x:Type TextBox}">
+                                    <Style.Triggers>
+                                        <Trigger Property="mah:TextBoxHelper.HasText" Value="True">
+                                            <Setter Property="mah:TextBoxHelper.ButtonContent" Value="r" />
+                                            <Setter Property="mah:TextBoxHelper.ButtonContentTemplate" Value="{x:Null}" />
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBox.Style>
+                        </TextBox>
+
                         <DataGrid
                             x:Name="OnlineDatasetsGrid"
+                            Grid.Row="1"
                             AutoGenerateColumns="False"
                             BeginningEdit="DatagridEditingHandler"
                             CanUserAddRows="False"
                             ColumnHeaderStyle="{StaticResource StandardColumnHeader}"
                             EnableRowVirtualization="False"
-                            ItemsSource="{Binding OnlineDatasets}"
+                            ItemsSource="{Binding VisibleOnlineDatasets}"
                             SelectionMode="Single">
                             <DataGrid.Columns>
                                 <DataGridTextColumn
@@ -192,6 +213,7 @@
 
                         <TextBlock
                             x:Name="EmptyOnlineDatasetsListMessage"
+                            Grid.Row="1"
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center"
                             Style="{StaticResource ListItemTextBlockStyle}"
@@ -201,7 +223,7 @@
 
                         <Button
                             x:Name="ConnectButton"
-                            Grid.Row="1"
+                            Grid.Row="2"
                             Width="100"
                             Margin="0,10,0,0"
                             HorizontalAlignment="Right"

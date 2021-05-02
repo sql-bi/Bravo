@@ -1,14 +1,19 @@
 ﻿using MahApps.Metro.Controls;
 using Sqlbi.Bravo.UI.ViewModels;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 
 namespace Sqlbi.Bravo.UI.Views
 {
-    public partial class ConnectDialog : MetroWindow
+    public partial class ConnectDialog : MetroWindow, INotifyPropertyChanged
     {
+        private string searchText;
+
         public ConnectDialog()
         {
             InitializeComponent();
@@ -19,7 +24,39 @@ namespace Sqlbi.Bravo.UI.Views
 
         public ObservableCollection<OnlineDatasetSummary> OnlineDatasets { get; set; } = new ObservableCollection<OnlineDatasetSummary>();
 
+        public string SearchText
+        {
+            get => searchText;
+            set
+            {
+                searchText = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SearchText)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(VisibleOnlineDatasets)));
+            }
+        }
+
+        public ObservableCollection<OnlineDatasetSummary> VisibleOnlineDatasets
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(SearchText))
+                {
+                    return OnlineDatasets;
+                }
+
+                var items = OnlineDatasets.Where(
+                    d => d.DisplayName.Contains(SearchText, StringComparison.CurrentCultureIgnoreCase)
+                      || d.Owner.Contains(SearchText, StringComparison.CurrentCultureIgnoreCase)
+                      || d.Workspace.Contains(SearchText, StringComparison.CurrentCultureIgnoreCase)).ToList();
+                var collection = new ObservableCollection<OnlineDatasetSummary>(items);
+
+                return collection;
+            }
+        }
+
         public int ResultIndex { get; private set; } = -1;
+
+        public event PropertyChangedEventHandler PropertyChanged;
 
         public void ShowDesktopOptions(List<string> options)
         {
