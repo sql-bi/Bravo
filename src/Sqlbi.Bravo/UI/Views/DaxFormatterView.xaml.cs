@@ -9,6 +9,7 @@ namespace Sqlbi.Bravo.UI.Views
 
         private void DoneClicked(object sender, RoutedEventArgs e)
         {
+            // TODO REQUIREMENTS: need to know what to do when clicking "Done" after formatting measures
             _ = MessageBox.Show(
                 "Need to know what to do here",
                 "TODO",
