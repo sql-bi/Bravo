@@ -134,7 +134,7 @@
                             Width="100"
                             HorizontalAlignment="Right"
                             Margin="0,12,0,0"
-                            IsEnabled="{Binding TermsAccepted}"
+                            IsEnabled="{Binding CanFormat}"
                             Command="{Binding FormatAnalyzeCommand}"
                             Style="{StaticResource StandardButton}"
                             Content="Format" />

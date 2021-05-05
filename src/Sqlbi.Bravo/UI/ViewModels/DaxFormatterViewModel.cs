@@ -83,6 +83,8 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public bool TermsAccepted { get; set; }
 
+        public bool CanFormat => TermsAccepted && SelectionTreeData.SelectedTreeItemCount > 0;
+
         public ICommand FormatAnalyzeCommand { get; set; }
 
         public ICommand FormatMakeChangesCommand { get; set; }
@@ -215,6 +217,8 @@ namespace Sqlbi.Bravo.UI.ViewModels
             {
                 Action = "AnalyzeFormatSelectionChanged"
             }});
+
+            OnPropertyChanged(nameof(CanFormat));
 
             ViewIndex = SubViewIndex_Start;
         }
