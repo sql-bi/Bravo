@@ -54,6 +54,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
             ChangeFormulasCommand = new RelayCommand(() => ChooseFormulas());
             ApplySelectedFormulaChangesCommand = new RelayCommand(() => SelectedFormulasChanged());
             OpenLogCommand = new RelayCommand(() => OpenLog());
+            CancelFormattingCommand = new RelayCommand(() => CancelFormatting());
 
             _timer = new DispatcherTimer
             {
@@ -79,7 +80,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public ICommand ApplySelectedFormulaChangesCommand { get; set; }
 
-        public ICommand SelectedTableMeasureChangedCommand { get; set; }
+        public ICommand CancelFormattingCommand { get; set; }
 
         public bool TermsAccepted { get; set; }
 
@@ -114,6 +115,8 @@ namespace Sqlbi.Bravo.UI.ViewModels
         public ObservableCollection<MeasureInfoViewModel> Measures { get; set; } = new ObservableCollection<MeasureInfoViewModel>();
 
         public ObservableCollection<MeasureInfoViewModel> MeasuresNeedingFormatting => new ObservableCollection<MeasureInfoViewModel>(Measures.Where((m) => !m.IsAlreadyFormatted).ToList());
+
+        public bool NoMeasuresNeedingFormatting => MeasuresNeedingFormatting.Count == 0;
 
         private async void OnWatcherEvent(object sender, WatcherEventArgs e)
         {
@@ -230,6 +233,11 @@ namespace Sqlbi.Bravo.UI.ViewModels
             // TODO REQUIREMENTS: Open log file
         }
 
+        private void CancelFormatting()
+        {
+            ViewIndex = SubViewIndex_Start;
+        }
+
         private void ShowHelp()
         {
             _logger.Trace();
@@ -273,7 +281,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
             if (PreviewChanges)
             {
-                NeedFormattingSelected =
+                NeedFormattingSelected = MeasuresNeedingFormatting.FirstOrDefault();
                 AllFormulasSelected = Measures.First();
                 ViewIndex = SubViewIndex_Changes;
             }

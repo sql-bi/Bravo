@@ -7,15 +7,6 @@ namespace Sqlbi.Bravo.UI.Views
     {
         public DaxFormatterView() => InitializeComponent();
 
-        private void CancelClicked(object sender, RoutedEventArgs e)
-        {
-            _ = MessageBox.Show(
-                "Need to know what to do here",
-                "TODO",
-                MessageBoxButton.OK,
-                MessageBoxImage.Question);
-        }
-
         private void DoneClicked(object sender, RoutedEventArgs e)
         {
             _ = MessageBox.Show(
