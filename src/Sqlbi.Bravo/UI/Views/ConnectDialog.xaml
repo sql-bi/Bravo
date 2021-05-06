@@ -47,11 +47,6 @@
                 mah:HeaderedControlHelper.HeaderFontSize="16"
                 mah:TabControlHelper.Underlined="SelectedTabItem"
                 Style="{DynamicResource MahApps.Styles.TabControl.Animated}">
-                <TabControl.Resources>
-                    <DataTemplate x:Key="TabItemHeaderTemplate">
-                        <TextBlock Foreground="{DynamicResource MahApps.Brushes.Text}" Text="{Binding}" />
-                    </DataTemplate>
-                </TabControl.Resources>
 
                 <TabItem
                     x:Name="DesktopTab"
@@ -125,21 +120,11 @@
                         <TextBox
                             Margin="0,8"
                             Text="{Binding SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                             mah:TextBoxHelper.ClearTextButton="True"
-                             mah:TextBoxHelper.UseFloatingWatermark="True"
-                             mah:TextBoxHelper.Watermark="Search"
-                            >
-                            <TextBox.Style>
-                                <Style BasedOn="{StaticResource MahApps.Styles.TextBox.Search}" TargetType="{x:Type TextBox}">
-                                    <Style.Triggers>
-                                        <Trigger Property="mah:TextBoxHelper.HasText" Value="True">
-                                            <Setter Property="mah:TextBoxHelper.ButtonContent" Value="r" />
-                                            <Setter Property="mah:TextBoxHelper.ButtonContentTemplate" Value="{x:Null}" />
-                                        </Trigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </TextBox.Style>
-                        </TextBox>
+                            mah:TextBoxHelper.ClearTextButton="True"
+                            mah:TextBoxHelper.UseFloatingWatermark="True"
+                            mah:TextBoxHelper.Watermark="Search"
+                            Style="{StaticResource SearchTextBox}"
+                            />
 
                         <DataGrid
                             x:Name="OnlineDatasetsGrid"

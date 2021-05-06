@@ -1,5 +1,6 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls">
 
     <!--
         UWP/WinUI resources
@@ -84,5 +85,18 @@
             </DataTrigger>
         </Style.Triggers>
     </Style>
+
+    <Style x:Key="SearchTextBox" BasedOn="{StaticResource MahApps.Styles.TextBox.Search}" TargetType="{x:Type TextBox}">
+        <Style.Triggers>
+            <Trigger Property="mah:TextBoxHelper.HasText" Value="True">
+                <Setter Property="mah:TextBoxHelper.ButtonContent" Value="r" />
+                <Setter Property="mah:TextBoxHelper.ButtonContentTemplate" Value="{x:Null}" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <DataTemplate x:Key="TabItemHeaderTemplate">
+        <TextBlock Foreground="{DynamicResource MahApps.Brushes.Text}" Text="{Binding}" />
+    </DataTemplate>
 
 </ResourceDictionary>

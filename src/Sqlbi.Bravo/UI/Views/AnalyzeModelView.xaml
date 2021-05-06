@@ -277,13 +277,6 @@
                                 Margin="20,0"
                                 mah:HeaderedControlHelper.HeaderFontSize="16"
                                 mah:TabControlHelper.Underlined="SelectedTabItem" >
-                        <TabControl.Resources>
-                            <DataTemplate x:Key="TabItemHeaderTemplate">
-                                <TextBlock
-                                        Foreground="{DynamicResource MahApps.Brushes.Text}"
-                                        Text="{Binding}" />
-                            </DataTemplate>
-                        </TabControl.Resources>
 
                         <TabItem Header="Tables"
                                  HeaderTemplate="{StaticResource TabItemHeaderTemplate}">

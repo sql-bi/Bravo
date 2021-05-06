@@ -4,7 +4,6 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
-      xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
       xmlns:viewmodels="clr-namespace:Sqlbi.Bravo.UI.ViewModels"
       xmlns:controls="clr-namespace:Sqlbi.Bravo.UI.Controls"
       mc:Ignorable="d"
@@ -164,21 +163,12 @@
                             Grid.Row="0"
                             Margin="0,8,12,8"
                             Text="{Binding SelectionTreeData.SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                             mah:TextBoxHelper.ClearTextButton="True"
-                             mah:TextBoxHelper.UseFloatingWatermark="True"
-                             mah:TextBoxHelper.Watermark="Search"
-                            >
-                            <TextBox.Style>
-                                <Style BasedOn="{StaticResource MahApps.Styles.TextBox.Search}" TargetType="{x:Type TextBox}">
-                                    <Style.Triggers>
-                                        <Trigger Property="mah:TextBoxHelper.HasText" Value="True">
-                                            <Setter Property="mah:TextBoxHelper.ButtonContent" Value="r" />
-                                            <Setter Property="mah:TextBoxHelper.ButtonContentTemplate" Value="{x:Null}" />
-                                        </Trigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </TextBox.Style>
-                        </TextBox>
+                            mah:TextBoxHelper.ClearTextButton="True"
+                            mah:TextBoxHelper.UseFloatingWatermark="True"
+                            mah:TextBoxHelper.Watermark="Search"
+                            Style="{StaticResource SearchTextBox}"
+                            />
+
                         <TreeView
                             Grid.Row="1"
                             ItemsSource="{Binding SelectionTreeData.Tables}"
@@ -274,13 +264,6 @@
                                 Grid.Row="1"
                                 mah:HeaderedControlHelper.HeaderFontSize="16"
                                     mah:TabControlHelper.Underlined="SelectedTabItem" >
-                        <TabControl.Resources>
-                            <DataTemplate x:Key="TabItemHeaderTemplate">
-                                <TextBlock
-                                        Foreground="{DynamicResource MahApps.Brushes.Text}"
-                                        Text="{Binding}" />
-                            </DataTemplate>
-                        </TabControl.Resources>
                         <mah:MetroTabItem Header="Need formatting"
                                      HeaderTemplate="{StaticResource TabItemHeaderTemplate}">
                             <Grid >
@@ -320,7 +303,7 @@
                                         </DataTemplate>
                                     </ListView.ItemTemplate>
                                 </ListView>
-                                <TextBlock Visibility="{Binding NoMeasuresNeedingFormatting}"
+                                <TextBlock Visibility="{Binding NoMeasuresNeedingFormatting, Converter={StaticResource BooleanToVisibilityConverter}}"
                                            HorizontalAlignment="Center"
                                            VerticalAlignment="Center"
                                            Text="None" />
