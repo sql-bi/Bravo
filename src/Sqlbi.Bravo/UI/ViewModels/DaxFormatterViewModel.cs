@@ -276,6 +276,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
             }
 
             OnPropertyChanged(nameof(MeasuresNeedingFormatting));
+            OnPropertyChanged(nameof(NoMeasuresNeedingFormatting));
 
             AnalyzedMeasureCount = Measures.Count;
 
