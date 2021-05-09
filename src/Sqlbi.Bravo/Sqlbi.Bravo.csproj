@@ -46,11 +46,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Dax.Metadata" Version="1.0.33" />
-    <PackageReference Include="Dax.Model.Extractor.NetCore" Version="1.0.33" />
-    <PackageReference Include="Dax.ViewModel" Version="1.0.33" />
-    <PackageReference Include="Dax.ViewVpaExport" Version="1.0.33" />
-    <PackageReference Include="Dax.Vpax.NetCore" Version="1.0.33" />
+    <PackageReference Include="Dax.Metadata" Version="1.1.0-beta3" />
+    <PackageReference Include="Dax.Model.Extractor.NetCore" Version="1.1.0-beta3" />
+    <PackageReference Include="Dax.ViewModel" Version="1.1.0-beta3" />
+    <PackageReference Include="Dax.ViewVpaExport" Version="1.1.0-beta3" />
+    <PackageReference Include="Dax.Vpax.NetCore" Version="1.1.0-beta3" />
     <PackageReference Include="Humanizer" Version="2.8.26" />
     <PackageReference Include="MahApps.Metro" Version="2.4.3" />
     <PackageReference Include="MahApps.Metro.SimpleChildWindow" Version="2.0.0" />
