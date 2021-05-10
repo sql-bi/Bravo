@@ -123,7 +123,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
 #if DEBUG
             new NavigationItem{ Name = OptionMenuItemShowDebugInfoName, Glyph = "\uE7B3" },
 #endif
-            new NavigationItem{ Name = OptionMenuItemSignInName, Glyph = "\uE13D" },
+            new NavigationItem{ Name = OptionMenuItemSignInName, Glyph = "\uE13D", IsSignInItem = true },
             new NavigationItem{ Name = OptionMenuItemSettingsName, Glyph = "\uE713" },
         };
 
@@ -244,7 +244,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
         }
 
         public async Task AddNewTabAsync(string connectionName, string serverName, string databaseName)
-        {            
+        {
             var connectionSettings = await Task.Run(() => ConnectionSettings.CreateFrom(connectionName, serverName, databaseName));
 
             var newTab = App.ServiceProvider.GetRequiredService<TabItemViewModel>();
@@ -291,7 +291,7 @@ namespace Sqlbi.Bravo.UI.ViewModels
             newTab.ShowSubPage(SubPage.AnalyzeModel);
 
             Tabs.Add(newTab);
-            SelectedTab = newTab;            
+            SelectedTab = newTab;
         }
 
         public async Task AddNewTab()
@@ -319,12 +319,20 @@ namespace Sqlbi.Bravo.UI.ViewModels
                 }
                 else
                 {
-                    // TODO REQUIREMENTS: need to know how to sign in
-                    _ = MessageBox.Show(
-                        "Need to sign-in (this is placeholder UI)",
-                        "TODO",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Question);
+                    var service = App.ServiceProvider.GetRequiredService<IPowerBICloudService>();
+                    if (service.IsAuthenticated)
+                    {
+                        await service.LogoutAsync();
+                        var item = OptionMenuItems.FirstOrDefault(i => i.IsSignInItem);
+                        item.Name = OptionMenuItemSignInName;
+                    }
+                    else
+                    {
+                        var loggedIn = await service.LoginAsync();
+                        var item = OptionMenuItems.FirstOrDefault(i => i.IsSignInItem);
+
+                        item.Name = loggedIn ? service.Account.Username : OptionMenuItemSignInName;
+                    }
                 }
 
                 // Put selection focus back where it was

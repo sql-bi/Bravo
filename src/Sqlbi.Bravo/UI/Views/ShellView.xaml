@@ -43,7 +43,9 @@
                         VerticalAlignment="Center"
                         FontSize="16"
                         Opacity="{Binding IsEnabled, Converter={app_ui_framework_valueconverters:EnabledOpacityConverter}}"
-                        Text="{Binding Name}" />
+                        Text="{Binding Name}"
+                        TextTrimming="CharacterEllipsis"
+                        Margin="0,0,4,0" />
                     <Border Background="Red"
                         Grid.Column="1" CornerRadius="3" Margin="10,0,12,0" Padding="4,0,4,1" Visibility="{Binding ShowComingSoon, Converter={StaticResource BooleanToVisibilityConverter}}"
                             HorizontalAlignment="Right"

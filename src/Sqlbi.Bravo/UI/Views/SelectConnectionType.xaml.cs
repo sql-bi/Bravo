@@ -97,6 +97,11 @@ namespace Sqlbi.Bravo.UI.Views
                 {
                     return;
                 }
+                else
+                {
+                    var item = (ShellView.Instance.DataContext as ShellViewModel).OptionMenuItems.FirstOrDefault(i => i.IsSignInItem);
+                    item.Name = service.Account.Username;
+                }
             }
 
             Mouse.OverrideCursor = Cursors.Wait;

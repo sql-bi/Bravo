@@ -1,8 +1,8 @@
-﻿using System;
+﻿using Sqlbi.Bravo.UI.Framework.ViewModels;
 
 namespace Sqlbi.Bravo.UI.ViewModels
 {
-    public class NavigationItem
+    internal class NavigationItem : BaseViewModel
     {
         public string Name { get; set; }
 
@@ -13,6 +13,8 @@ namespace Sqlbi.Bravo.UI.ViewModels
         public SubPage SubPageInTab { get; set; }
 
         public bool ShowComingSoon { get; set; }
+
+        public bool IsSignInItem { get; set; }
 
         public bool IsEnabled => !ShowComingSoon;
     }
