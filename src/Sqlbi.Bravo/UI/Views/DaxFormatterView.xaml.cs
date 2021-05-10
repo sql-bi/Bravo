@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using MahApps.Metro.Controls.Dialogs;
+using System.Windows;
 using System.Windows.Controls;
 
 namespace Sqlbi.Bravo.UI.Views
@@ -7,14 +8,23 @@ namespace Sqlbi.Bravo.UI.Views
     {
         public DaxFormatterView() => InitializeComponent();
 
-        private void DoneClicked(object sender, RoutedEventArgs e)
+        private async void DoneClicked(object sender, RoutedEventArgs e)
         {
-            // TODO REQUIREMENTS: need to know what to do when clicking "Done" after formatting measures
-            _ = MessageBox.Show(
-                "Need to know what to do here",
-                "TODO",
-                MessageBoxButton.OK,
-                MessageBoxImage.Question);
+            var dlgSettings = new MetroDialogSettings {
+                AffirmativeButtonText = "Refresh",
+                NegativeButtonText = "Cancel"
+                };
+
+            var dlgResult = await ShellView.Instance.ShowMessageAsync(
+                "Formatting complete",
+                "Press Refresh to get any updated DAX formulas to be formatted.",
+                MessageDialogStyle.AffirmativeAndNegative,
+                dlgSettings);
+
+            if (dlgResult == MessageDialogResult.Affirmative)
+            {
+                (DataContext as ViewModels.DaxFormatterViewModel).RefreshCommand.Execute(null);
+            }
         }
 
         private void TreeviewSelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
