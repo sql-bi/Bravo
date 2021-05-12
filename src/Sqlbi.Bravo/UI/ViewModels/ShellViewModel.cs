@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using MahApps.Metro.Controls.Dialogs;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Sqlbi.Bravo.Client.AnalysisServicesEventWatcher;
 using Sqlbi.Bravo.Client.PowerBI.Desktop;
@@ -322,9 +323,24 @@ namespace Sqlbi.Bravo.UI.ViewModels
                     var service = App.ServiceProvider.GetRequiredService<IPowerBICloudService>();
                     if (service.IsAuthenticated)
                     {
-                        await service.LogoutAsync();
-                        var item = OptionMenuItems.FirstOrDefault(i => i.IsSignInItem);
-                        item.Name = OptionMenuItemSignInName;
+                        var dlgSettings = new MetroDialogSettings
+                        {
+                            AffirmativeButtonText = "Sign out",
+                            NegativeButtonText = "Stay signed in"
+                        };
+
+                        var dlgResult = await ShellView.Instance.ShowMessageAsync(
+                            "Sign out?",
+                            $"You are signed in as {service.Account.Username}.",
+                            MessageDialogStyle.AffirmativeAndNegative,
+                            dlgSettings);
+
+                        if (dlgResult == MessageDialogResult.Affirmative)
+                        {
+                            await service.LogoutAsync();
+                            var item = OptionMenuItems.FirstOrDefault(i => i.IsSignInItem);
+                            item.Name = OptionMenuItemSignInName;
+                        }
                     }
                     else
                     {
