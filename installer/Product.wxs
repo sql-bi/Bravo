@@ -45,13 +45,27 @@
     <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
     <Property Id="CREATEDESKTOPSHORTCUT" Value="1" />
     <Property Id="CREATEPROGRAMMENUSHORTCUT" Value="1" />
+    <Property Id="INSTALLERTELEMETRYENABLED" Value="1" />
+    <Property Id="INSTALLERPRODUCTVERSION">$(var.ProductVersion)</Property>
     
-    <CustomAction Id="SetCustomActionPropertyValues" Property="RegisterExternalTool" Value="INSTALLEDEXECUTABLEPATH=[INSTALLFOLDER]$(var.AppExecutableName)" />
+    <CustomAction Id="SetPropertyValuesRegisterExternalTool" Property="RegisterExternalTool" Value="INSTALLEDEXECUTABLEPATH=[INSTALLFOLDER]$(var.AppExecutableName)" />
     <CustomAction Id="RegisterExternalTool" BinaryKey="CustomActionBinary" DllEntry="PowerBIDesktopRegisterExternalTool" Execute="deferred" Impersonate="no" />
+
+    <CustomAction Id="SetPropertyValuesAfterInstall" Property="AfterInstall" Value="INSTALLERTELEMETRYENABLED=[INSTALLERTELEMETRYENABLED];INSTALLERPRODUCTVERSION=[INSTALLERPRODUCTVERSION]" />
+    <CustomAction Id="AfterInstall" BinaryKey="CustomActionBinary" DllEntry="AfterInstall" Execute="deferred" Impersonate="no" />
     
+    <CustomAction Id="SetPropertyValuesAfterUninstall" Property="AfterUninstall" Value="INSTALLERTELEMETRYENABLED=[INSTALLERTELEMETRYENABLED];INSTALLERPRODUCTVERSION=[INSTALLERPRODUCTVERSION]" />
+    <CustomAction Id="AfterUninstall" BinaryKey="CustomActionBinary" DllEntry="AfterUninstall" Execute="deferred" Impersonate="no" />
+
     <InstallExecuteSequence>
-      <Custom Action="SetCustomActionPropertyValues" After="InstallFiles" />
-      <Custom Action="RegisterExternalTool" After="SetCustomActionPropertyValues">NOT Installed AND NOT REMOVE</Custom>
+      <Custom Action="SetPropertyValuesRegisterExternalTool" After="InstallFiles" />
+      <Custom Action="RegisterExternalTool" After="SetPropertyValuesRegisterExternalTool">NOT Installed AND NOT REMOVE</Custom>
+      
+      <Custom Action="SetPropertyValuesAfterInstall" After="RegisterExternalTool" />
+      <Custom Action="AfterInstall" After="SetPropertyValuesAfterInstall">NOT Installed AND NOT REMOVE</Custom>
+      
+      <Custom Action="SetPropertyValuesAfterUninstall" Before="RemoveFiles" />
+      <Custom Action="AfterUninstall" After="SetPropertyValuesAfterUninstall">(NOT UPGRADINGPRODUCTCODE) AND (REMOVE="ALL")</Custom>
     </InstallExecuteSequence>
     
   </Product>
