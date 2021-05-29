@@ -1,4 +1,5 @@
 ﻿using Dax.Formatter.Models;
+using Microsoft.Win32;
 using Sqlbi.Bravo.UI.DataModel;
 using System;
 using System.Diagnostics;
@@ -24,7 +25,9 @@ namespace Sqlbi.Bravo.Core
 
         public static string ApplicationFolderLocalDataPath { get; } = Path.Combine(EnvironmentSpecialFolderLocalApplicationData, ApplicationName);
 
-        public static bool ApplicationSettingsDefaultTelemetryEnabled { get; } = false;
+        public static string ApplicationRegistrySubKey { get; } = @"SOFTWARE\SQLBI Corporation\Bravo for PowerBI Desktop";
+
+        public static bool ApplicationSettingsDefaultTelemetryEnabled { get; } = true;
 
         public static bool ApplicationSettingsDefaultProxyUseSystem { get; } = true;
 
@@ -70,6 +73,16 @@ namespace Sqlbi.Bravo.Core
 
         static AppConstants()
         {
+            using var registryKey = Registry.LocalMachine.OpenSubKey(ApplicationRegistrySubKey);
+            
+            var value = Convert.ToString(registryKey.GetValue("defaultTelemetryEnabled")).Trim();
+
+            if (bool.TryParse(value, out var boolValue))
+                ApplicationSettingsDefaultTelemetryEnabled = boolValue;
+            else if (int.TryParse(value, out var intValue))
+                ApplicationSettingsDefaultTelemetryEnabled = Convert.ToBoolean(intValue);
+            else
+                ApplicationSettingsDefaultTelemetryEnabled = true; // In case of missing argument enable telemetry to further investigate
         }
     }
 }

@@ -45,11 +45,11 @@
     <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
     <Property Id="CREATEDESKTOPSHORTCUT" Value="1" />
     <Property Id="CREATEPROGRAMMENUSHORTCUT" Value="1" />
-    <Property Id="APPLICATIONTELEMETRYENABLED" Value="1" />
+    <Property Id="DEFAULTTELEMETRYENABLED" Value="1" />
     <Property Id="INSTALLERTELEMETRYENABLED" Value="1" />
     <Property Id="INSTALLERPRODUCTVERSION">$(var.ProductVersion)</Property>
     
-    <CustomAction Id="SetPropertyValuesRegisterExternalTool" Property="RegisterExternalTool" Value="INSTALLEDEXECUTABLEPATH=[INSTALLFOLDER]$(var.AppExecutableName)" />
+    <CustomAction Id="SetPropertyValuesRegisterExternalTool" Property="RegisterExternalTool" Value="INSTALLERTELEMETRYENABLED=[INSTALLERTELEMETRYENABLED];INSTALLEDEXECUTABLEPATH=[INSTALLFOLDER]$(var.AppExecutableName)" />
     <CustomAction Id="RegisterExternalTool" BinaryKey="CustomActionBinary" DllEntry="PowerBIDesktopRegisterExternalTool" Execute="deferred" Impersonate="no" />
 
     <CustomAction Id="SetPropertyValuesAfterInstall" Property="AfterInstall" Value="INSTALLERTELEMETRYENABLED=[INSTALLERTELEMETRYENABLED];INSTALLERPRODUCTVERSION=[INSTALLERPRODUCTVERSION]" />
@@ -60,13 +60,13 @@
 
     <InstallExecuteSequence>
       <Custom Action="SetPropertyValuesRegisterExternalTool" After="InstallFiles" />
-      <Custom Action="RegisterExternalTool" After="SetPropertyValuesRegisterExternalTool">NOT Installed AND NOT REMOVE</Custom>
+      <Custom Action="RegisterExternalTool" After="SetPropertyValuesRegisterExternalTool"><![CDATA[NOT Installed AND NOT REMOVE]]></Custom>
       
       <Custom Action="SetPropertyValuesAfterInstall" After="RegisterExternalTool" />
-      <Custom Action="AfterInstall" After="SetPropertyValuesAfterInstall">NOT Installed AND NOT REMOVE</Custom>
+      <Custom Action="AfterInstall" After="SetPropertyValuesAfterInstall"><![CDATA[NOT Installed AND NOT REMOVE]]></Custom>
       
-      <Custom Action="SetPropertyValuesAfterUninstall" Before="RemoveFiles" />
-      <Custom Action="AfterUninstall" After="SetPropertyValuesAfterUninstall">(NOT UPGRADINGPRODUCTCODE) AND (REMOVE="ALL")</Custom>
+      <Custom Action="SetPropertyValuesAfterUninstall" After="RemoveFiles" />
+      <Custom Action="AfterUninstall" After="SetPropertyValuesAfterUninstall"><![CDATA[(NOT UPGRADINGPRODUCTCODE) AND (REMOVE="ALL")]]></Custom>
     </InstallExecuteSequence>
     
   </Product>
@@ -111,7 +111,7 @@
       <Component Id="app.exe" Guid="{E880F50A-6C3B-4EB6-B639-752803CEF497}" Win64="$(var.Win64)">
         <File Id="app.exe" Name="$(var.AppExecutableName)" Source="$(var.PublishFolder)\$(var.AppExecutableName)" Checksum="yes" KeyPath="yes" />
         <RemoveFile Id="REMOVEALL" Directory="INSTALLFOLDER" Name="*.*" On="both" />
-        <RegistryValue Root="HKLM" Key="Software\[Manufacturer]\$(var.ProductName)" Name="applicationTelemetryEnabled" Value="[APPLICATIONTELEMETRYENABLED]" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\[Manufacturer]\$(var.ProductName)" Name="defaultTelemetryEnabled" Value="[DEFAULTTELEMETRYENABLED]" Type="string" />
       </Component>
     </DirectoryRef>
 
@@ -309,7 +309,7 @@
           <Condition Action="show">NOT Installed</Condition>
         </Control>
 
-        <Control Id="Custom_TelemetryInstallTitle" Type="Text" X="25" Y="130" Width="320" Height="50" Text="!(loc.TelemetryInstallTitleText)" TabSkip="yes" Hidden="yes">
+        <Control Id="Custom_TelemetryInstallTitle" Type="Text" X="25" Y="125" Width="320" Height="50" Text="!(loc.TelemetryInstallTitleText)" TabSkip="yes" Hidden="yes">
           <Condition Action="show">NOT Installed</Condition>
         </Control>
         <Control Id="Custom_TelemetryInstallDescription" Type="Text" X="25" Y="140" Width="320" Height="40" Text="!(loc.TelemetryInstallDescriptionText)" TabSkip="yes" Hidden="yes">
@@ -318,7 +318,7 @@
         <Control Id="Custom_InstallerTelemetryCheckBox" Type="CheckBox" X="25" Y="180" Width="320" Height="18" Property="INSTALLERTELEMETRYENABLED" Text="!(loc.InstallerTelemetryCheckBoxText)" CheckBoxValue="1" TabSkip="no" Hidden="yes">
           <Condition Action="show">NOT Installed</Condition>
         </Control>
-        <Control Id="Custom_ApplicationtTelemetryCheckBox" Type="CheckBox" X="25" Y="200" Width="320" Height="18" Property="APPLICATIONTELEMETRYENABLED" Text="!(loc.ApplicationTelemetryCheckBoxText)" CheckBoxValue="1" TabSkip="no" Hidden="yes">
+        <Control Id="Custom_DefaultTelemetryCheckBox" Type="CheckBox" X="25" Y="200" Width="320" Height="18" Property="DEFAULTTELEMETRYENABLED" Text="!(loc.DefaultTelemetryCheckBoxText)" CheckBoxValue="1" TabSkip="no" Hidden="yes">
           <Condition Action="show">NOT Installed</Condition>
         </Control>
         

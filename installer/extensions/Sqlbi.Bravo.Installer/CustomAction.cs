@@ -40,6 +40,13 @@ namespace Sqlbi.Bravo.Installer
             catch (Exception ex)
             {
                 session.Log($"BRAVOLOG ERROR ({ nameof(PowerBIDesktopRegisterExternalTool) }) - { ex }");
+
+                var telemetryClient = GetTelemetryClient(session);
+                if (telemetryClient.IsEnabled())
+                {
+                    telemetryClient.TrackException(ex);
+                    telemetryClient.Flush();
+                }
             }
 
             session.Log($"BRAVOLOG END ({ nameof(PowerBIDesktopRegisterExternalTool) })");

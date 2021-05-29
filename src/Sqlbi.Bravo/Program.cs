@@ -174,7 +174,6 @@ namespace Sqlbi.Bravo
 #if DEBUG
                 telemetryChannel.DeveloperMode = true;
 #endif
-
                 var telemetryConfiguration = new TelemetryConfiguration();
                 telemetryConfiguration.InstrumentationKey = AppConstants.TelemetryInstrumentationKey;
                 telemetryConfiguration.DisableTelemetry = !telemetryEnabled;
