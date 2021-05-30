@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using AutoUpdaterDotNET;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Sqlbi.Bravo.Core;
@@ -52,6 +53,8 @@ namespace Sqlbi.Bravo
             themeSelector.InitializeTheme(_settings.Application.ThemeName);
 
             await _host.StartAsync();
+
+            CheckForUpdates();
 
             base.OnStartup(e);
         }
@@ -160,6 +163,23 @@ namespace Sqlbi.Bravo
                     window.Left = screenLeft + (screenWidth / 2) - (window.Width / 2);
                 }
             };
+
+            Dispatcher.BeginInvoke(action);
+        }
+
+        private void CheckForUpdates()
+        {
+            AutoUpdater.HttpUserAgent = "AutoUpdater";
+            AutoUpdater.Synchronous = false;
+            AutoUpdater.ShowSkipButton = true;
+            AutoUpdater.ShowRemindLaterButton = true;
+            AutoUpdater.LetUserSelectRemindLater = true;
+            AutoUpdater.RunUpdateAsAdmin = true;
+            AutoUpdater.OpenDownloadPage = true;
+            AutoUpdater.ReportErrors = true;
+            AutoUpdater.InstalledVersion = AppConstants.ApplicationProductVersionNumber;
+
+            Action action = () => AutoUpdater.Start($"{ AppConstants.ApplicationAutoUpdaterXmlUrl }?random={ DateTimeOffset.Now.ToUnixTimeSeconds() }");
 
             Dispatcher.BeginInvoke(action);
         }

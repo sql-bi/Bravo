@@ -27,6 +27,9 @@ namespace Sqlbi.Bravo.Core
 
         public static string ApplicationRegistrySubKey { get; } = @"SOFTWARE\SQLBI Corporation\Bravo for PowerBI Desktop";
 
+        //public static string ApplicationAutoUpdaterXmlUrl { get; } = "https://cdn.sqlbi.com/updates/BravoAutoUpdater.xml";
+        public static string ApplicationAutoUpdaterXmlUrl { get; } = "https://raw.githubusercontent.com/albertospelta/lab-autoupdater/main/autoupdater.xml";
+
         public static bool ApplicationSettingsDefaultTelemetryEnabled { get; } = true;
 
         public static bool ApplicationSettingsDefaultProxyUseSystem { get; } = true;
