@@ -74,15 +74,21 @@ namespace Sqlbi.Bravo.Core
         static AppConstants()
         {
             using var registryKey = Registry.LocalMachine.OpenSubKey(ApplicationRegistrySubKey);
-            
-            var value = Convert.ToString(registryKey.GetValue("defaultTelemetryEnabled")).Trim();
 
-            if (bool.TryParse(value, out var boolValue))
-                ApplicationSettingsDefaultTelemetryEnabled = boolValue;
-            else if (int.TryParse(value, out var intValue))
-                ApplicationSettingsDefaultTelemetryEnabled = Convert.ToBoolean(intValue);
-            else
-                ApplicationSettingsDefaultTelemetryEnabled = true; // In case of missing argument enable telemetry to further investigate
+            if (registryKey != null)
+            {
+                var value = Convert.ToString(registryKey.GetValue("defaultTelemetryEnabled", true.ToString())).Trim();
+
+                if (value == string.Empty)
+                    ApplicationSettingsDefaultTelemetryEnabled = false;
+                else if (bool.TryParse(value, out var boolValue))
+                    ApplicationSettingsDefaultTelemetryEnabled = boolValue;
+                else if (int.TryParse(value, out var intValue))
+                    ApplicationSettingsDefaultTelemetryEnabled = Convert.ToBoolean(intValue);
+            }
+
+            // In case of missing argument enable telemetry to further investigate
+            ApplicationSettingsDefaultTelemetryEnabled = true; 
         }
     }
 }

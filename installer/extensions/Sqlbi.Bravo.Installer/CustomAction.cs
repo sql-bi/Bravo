@@ -2,6 +2,7 @@ using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.Deployment.WindowsInstaller;
+using Microsoft.Win32;
 using System;
 using System.IO;
 using System.Security.Cryptography;
@@ -42,11 +43,8 @@ namespace Sqlbi.Bravo.Installer
                 session.Log($"BRAVOLOG ERROR ({ nameof(PowerBIDesktopRegisterExternalTool) }) - { ex }");
 
                 var telemetryClient = GetTelemetryClient(session);
-                if (telemetryClient.IsEnabled())
-                {
-                    telemetryClient.TrackException(ex);
-                    telemetryClient.Flush();
-                }
+                telemetryClient.TrackException(ex);
+                telemetryClient.Flush();
             }
 
             session.Log($"BRAVOLOG END ({ nameof(PowerBIDesktopRegisterExternalTool) })");
@@ -62,11 +60,11 @@ namespace Sqlbi.Bravo.Installer
                 foreach (var pairs in session.CustomActionData)
                     session.Log($"BRAVOLOG LOG ({ nameof(AfterInstall) }) - CustomActionData({ pairs.Key }, { pairs.Value })");
 
-                var telemetryClient = GetTelemetryClient(session);
-                if (telemetryClient.IsEnabled())
+                if (IsTelemetryEnabled(session))
                 {
                     session.Log($"BRAVOLOG LOG ({ nameof(AfterInstall) }) - TrackEvent");
                     var telemetryEvent = new EventTelemetry(name: "Install");
+                    var telemetryClient = GetTelemetryClient(session);
                     telemetryClient.TrackEvent(telemetryEvent);
                     telemetryClient.Flush();
                 }
@@ -89,10 +87,10 @@ namespace Sqlbi.Bravo.Installer
                 foreach (var pairs in session.CustomActionData)
                     session.Log($"BRAVOLOG LOG ({ nameof(AfterUninstall) }) - CustomActionData({ pairs.Key }, { pairs.Value })");
 
-                var telemetryClient = GetTelemetryClient(session);
-                if (telemetryClient.IsEnabled())
-                {
+                if (IsTelemetryEnabled(session))
+                { 
                     session.Log($"BRAVOLOG LOG ({ nameof(AfterUninstall) }) - TrackEvent");
+                    var telemetryClient = GetTelemetryClient(session);
                     var telemetryEvent = new EventTelemetry(name: "Uninstall");
                     telemetryClient.TrackEvent(telemetryEvent);
                     telemetryClient.Flush();
@@ -109,12 +107,11 @@ namespace Sqlbi.Bravo.Installer
 
         private static TelemetryClient GetTelemetryClient(Session session)
         {
-            var telemetryEnabled = IsTelemetryEnabled(session);
             var productVersion = GetProductVersion(session);
 
             var telemetryConfiguration = TelemetryConfiguration.CreateDefault();
             telemetryConfiguration.InstrumentationKey = "47a8970c-6293-408a-9cce-5b7b311574d3";
-            telemetryConfiguration.DisableTelemetry = (telemetryEnabled == false);
+            telemetryConfiguration.DisableTelemetry = false;
             
             var telemetryClient = new TelemetryClient(telemetryConfiguration);
             telemetryClient.Context.Device.OperatingSystem = Environment.OSVersion.ToString();
@@ -127,19 +124,18 @@ namespace Sqlbi.Bravo.Installer
 
         private static bool IsTelemetryEnabled(Session session)
         {
-            try
+            if (session.CustomActionData.TryGetValue(CustomActionDataInstallerTelemetryEnabled, out var value))
             {
-                var text = session.CustomActionData[CustomActionDataInstallerTelemetryEnabled];
-                var value = int.Parse(text);
-                var enabled = Convert.ToBoolean(value);
+                if (value == string.Empty)
+                    return false;
+                else if (bool.TryParse(value, out var boolValue))
+                    return boolValue;
+                else if (int.TryParse(value, out var intValue))
+                    return Convert.ToBoolean(intValue);
+            }
 
-                return enabled;
-            }
-            catch
-            {
-                // In case of missing argument or errors enable telemetry to further investigate
-                return true;
-            }
+            // In case of missing argument enable telemetry to further investigate
+            return true;
         }
 
         private static string GetProductVersion(Session session)

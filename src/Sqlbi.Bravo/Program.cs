@@ -22,6 +22,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime;
+using System.Threading.Tasks;
 using System.Windows.Input;
 
 namespace Sqlbi.Bravo
@@ -57,6 +58,8 @@ namespace Sqlbi.Bravo
             finally
             {
                 Log.CloseAndFlush();
+                // Flush is not blocking so wait a bit
+                Task.Delay(2000).Wait();
             }
         }
 

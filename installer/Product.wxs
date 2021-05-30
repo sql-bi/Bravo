@@ -43,28 +43,27 @@
     <Property Id="ARPPRODUCTICON">app.ico</Property>
     <Property Id="ARPURLINFOABOUT">$(var.AppUrlInfoAbout)</Property>
     <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
-    <Property Id="CREATEDESKTOPSHORTCUT" Value="1" />
-    <Property Id="CREATEPROGRAMMENUSHORTCUT" Value="1" />
-    <Property Id="DEFAULTTELEMETRYENABLED" Value="1" />
-    <Property Id="INSTALLERTELEMETRYENABLED" Value="1" />
+    <Property Id="CREATEDESKTOPSHORTCUT" Value="1" Secure="yes" />
+    <Property Id="CREATEPROGRAMMENUSHORTCUT" Value="1" Secure="yes" />
+    <Property Id="DEFAULTTELEMETRYENABLED" Value="1" Secure="yes" />
     <Property Id="INSTALLERPRODUCTVERSION">$(var.ProductVersion)</Property>
+    <Property Id="INSTALLERTELEMETRYENABLED" Value="1" Secure="yes" />
+    <Property Id="INSTALLERTELEMETRYENABLEDUNINSTALL" Secure="yes">
+      <RegistrySearch Id="installerTelemetryEnabled" Root="HKLM" Key="Software\[Manufacturer]\$(var.ProductName)" Name="installerTelemetryEnabled" Type="raw" />
+    </Property>
     
     <CustomAction Id="SetPropertyValuesRegisterExternalTool" Property="RegisterExternalTool" Value="INSTALLERTELEMETRYENABLED=[INSTALLERTELEMETRYENABLED];INSTALLEDEXECUTABLEPATH=[INSTALLFOLDER]$(var.AppExecutableName)" />
     <CustomAction Id="RegisterExternalTool" BinaryKey="CustomActionBinary" DllEntry="PowerBIDesktopRegisterExternalTool" Execute="deferred" Impersonate="no" />
-
     <CustomAction Id="SetPropertyValuesAfterInstall" Property="AfterInstall" Value="INSTALLERTELEMETRYENABLED=[INSTALLERTELEMETRYENABLED];INSTALLERPRODUCTVERSION=[INSTALLERPRODUCTVERSION]" />
     <CustomAction Id="AfterInstall" BinaryKey="CustomActionBinary" DllEntry="AfterInstall" Execute="deferred" Impersonate="no" />
-    
-    <CustomAction Id="SetPropertyValuesAfterUninstall" Property="AfterUninstall" Value="INSTALLERTELEMETRYENABLED=[INSTALLERTELEMETRYENABLED];INSTALLERPRODUCTVERSION=[INSTALLERPRODUCTVERSION]" />
+    <CustomAction Id="SetPropertyValuesAfterUninstall" Property="AfterUninstall" Value="INSTALLERTELEMETRYENABLED=[INSTALLERTELEMETRYENABLEDUNINSTALL];INSTALLERPRODUCTVERSION=[INSTALLERPRODUCTVERSION]" />
     <CustomAction Id="AfterUninstall" BinaryKey="CustomActionBinary" DllEntry="AfterUninstall" Execute="deferred" Impersonate="no" />
 
     <InstallExecuteSequence>
       <Custom Action="SetPropertyValuesRegisterExternalTool" After="InstallFiles" />
       <Custom Action="RegisterExternalTool" After="SetPropertyValuesRegisterExternalTool"><![CDATA[NOT Installed AND NOT REMOVE]]></Custom>
-      
       <Custom Action="SetPropertyValuesAfterInstall" After="RegisterExternalTool" />
       <Custom Action="AfterInstall" After="SetPropertyValuesAfterInstall"><![CDATA[NOT Installed AND NOT REMOVE]]></Custom>
-      
       <Custom Action="SetPropertyValuesAfterUninstall" After="RemoveFiles" />
       <Custom Action="AfterUninstall" After="SetPropertyValuesAfterUninstall"><![CDATA[(NOT UPGRADINGPRODUCTCODE) AND (REMOVE="ALL")]]></Custom>
     </InstallExecuteSequence>
@@ -112,6 +111,7 @@
         <File Id="app.exe" Name="$(var.AppExecutableName)" Source="$(var.PublishFolder)\$(var.AppExecutableName)" Checksum="yes" KeyPath="yes" />
         <RemoveFile Id="REMOVEALL" Directory="INSTALLFOLDER" Name="*.*" On="both" />
         <RegistryValue Root="HKLM" Key="Software\[Manufacturer]\$(var.ProductName)" Name="defaultTelemetryEnabled" Value="[DEFAULTTELEMETRYENABLED]" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\[Manufacturer]\$(var.ProductName)" Name="installerTelemetryEnabled" Value="[INSTALLERTELEMETRYENABLED]" Type="string" />
       </Component>
     </DirectoryRef>
 
