@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using AutoUpdaterDotNET;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Sqlbi.Bravo.Core;
@@ -119,6 +120,7 @@ namespace Sqlbi.Bravo
             if (application.IsCurrentInstanceOwned)
             {
                 application.RegisterCallbackForMultipleInstanceStarted(BringToForeground);
+                CheckForUpdates();
             }
             else
             {
@@ -159,6 +161,28 @@ namespace Sqlbi.Bravo
                     window.Top = screenTop + (screenHeight / 2) - (window.Height / 2);
                     window.Left = screenLeft + (screenWidth / 2) - (window.Width / 2);
                 }
+            };
+
+            Dispatcher.BeginInvoke(action);
+        }
+
+        private void CheckForUpdates()
+        {
+            _logger.Trace();
+
+            Action action = () =>
+            {
+                AutoUpdater.HttpUserAgent = "AutoUpdater";
+                AutoUpdater.Synchronous = false;
+                AutoUpdater.ReportErrors = false;
+                AutoUpdater.RunUpdateAsAdmin = true;
+                AutoUpdater.InstalledVersion = AppConstants.ApplicationProductVersionNumber;
+                
+                AutoUpdater.ShowSkipButton = true;
+                AutoUpdater.ShowRemindLaterButton = true;
+                AutoUpdater.LetUserSelectRemindLater = true;
+
+                AutoUpdater.Start($"{ AppConstants.ApplicationAutoUpdaterXmlUrl }?random={ DateTimeOffset.Now.ToUnixTimeSeconds() }");
             };
 
             Dispatcher.BeginInvoke(action);
