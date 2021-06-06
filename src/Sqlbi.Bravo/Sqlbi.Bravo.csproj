@@ -74,7 +74,7 @@
     <PackageReference Include="System.Management" Version="5.0.0" />
     <PackageReference Include="Dax.Formatter" Version="1.0.0" />
     <PackageReference Include="Microsoft.AnalysisServices.NetCore.retail.amd64" Version="19.20.1" />
-    <PackageReference Include="Autoupdater.NET.Official" Version="1.6.5" />
+    <PackageReference Include="Autoupdater.NET.Official-net50-custom" Version="1.6.5" />
   </ItemGroup>
 
   <ItemGroup>

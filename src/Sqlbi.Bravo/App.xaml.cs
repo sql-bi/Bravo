@@ -54,8 +54,6 @@ namespace Sqlbi.Bravo
 
             await _host.StartAsync();
 
-            CheckForUpdates();
-
             base.OnStartup(e);
         }
 
@@ -122,6 +120,7 @@ namespace Sqlbi.Bravo
             if (application.IsCurrentInstanceOwned)
             {
                 application.RegisterCallbackForMultipleInstanceStarted(BringToForeground);
+                CheckForUpdates();
             }
             else
             {
@@ -169,17 +168,22 @@ namespace Sqlbi.Bravo
 
         private void CheckForUpdates()
         {
-            AutoUpdater.HttpUserAgent = "AutoUpdater";
-            AutoUpdater.Synchronous = false;
-            AutoUpdater.ShowSkipButton = true;
-            AutoUpdater.ShowRemindLaterButton = true;
-            AutoUpdater.LetUserSelectRemindLater = true;
-            AutoUpdater.RunUpdateAsAdmin = true;
-            AutoUpdater.OpenDownloadPage = true;
-            AutoUpdater.ReportErrors = true;
-            AutoUpdater.InstalledVersion = AppConstants.ApplicationProductVersionNumber;
+            _logger.Trace();
 
-            Action action = () => AutoUpdater.Start($"{ AppConstants.ApplicationAutoUpdaterXmlUrl }?random={ DateTimeOffset.Now.ToUnixTimeSeconds() }");
+            Action action = () =>
+            {
+                AutoUpdater.HttpUserAgent = "AutoUpdater";
+                AutoUpdater.Synchronous = false;
+                AutoUpdater.ReportErrors = false;
+                AutoUpdater.RunUpdateAsAdmin = true;
+                AutoUpdater.InstalledVersion = AppConstants.ApplicationProductVersionNumber;
+                
+                AutoUpdater.ShowSkipButton = true;
+                AutoUpdater.ShowRemindLaterButton = true;
+                AutoUpdater.LetUserSelectRemindLater = true;
+
+                AutoUpdater.Start($"{ AppConstants.ApplicationAutoUpdaterXmlUrl }?random={ DateTimeOffset.Now.ToUnixTimeSeconds() }");
+            };
 
             Dispatcher.BeginInvoke(action);
         }
