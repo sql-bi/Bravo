@@ -13,6 +13,7 @@ using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Threading;
 
 namespace Sqlbi.Bravo
 {
@@ -75,7 +76,6 @@ namespace Sqlbi.Bravo
                 var exception = e.Exception;
 
                 _logger.Error(LogEvents.TaskSchedulerUnobservedTaskException, exception);
-
                 MessageBox.Show(exception.Message, AppConstants.ApplicationNameLabel, MessageBoxButton.OK, MessageBoxImage.Error);
 
                 if (exception.IsSafeException())
@@ -91,8 +91,18 @@ namespace Sqlbi.Bravo
                     if (e.ExceptionObject is Exception exception)
                     {
                         _logger.Error(LogEvents.AppDomainUnhandledException, exception);
-
                         MessageBox.Show(exception.Message, AppConstants.ApplicationNameLabel, MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                };
+
+                Current.DispatcherUnhandledException += (s, e) =>
+                {
+                    _logger.Error(LogEvents.AppDomainUnhandledException, e.Exception);
+                    MessageBox.Show(e.Exception.Message, AppConstants.ApplicationNameLabel, MessageBoxButton.OK, MessageBoxImage.Error);
+
+                    if (e.Exception.IsSafeException())
+                    {
+                        e.Handled = true;
                     }
                 };
 
@@ -101,7 +111,6 @@ namespace Sqlbi.Bravo
                     var exception = e.Exception;
 
                     _logger.Error(LogEvents.DispatcherUnhandledException, exception);
-
                     MessageBox.Show(exception.Message, AppConstants.ApplicationNameLabel, MessageBoxButton.OK, MessageBoxImage.Error);
 
                     if (exception.IsSafeException())
