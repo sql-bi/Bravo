@@ -116,7 +116,6 @@ namespace Sqlbi.Bravo
                 services.AddSingleton<ShellViewModel>();
 
                 // Make these services transient as each ViewModel will need a unique one with a separate connection
-                services.AddTransient<IAnalysisServicesEventWatcherService, AnalysisServicesEventWatcherService>();
                 services.AddTransient<IDaxFormatterService, DaxFormatterService>();
                 services.AddTransient<IAnalyzeModelService, AnalyzeModelService>();
                 // Make these ViewModels transient as need a new one for each instance (within each tab)
