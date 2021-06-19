@@ -1,8 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Sqlbi.Bravo.Client.AnalysisServicesEventWatcher;
 using Sqlbi.Bravo.Core.Logging;
-using Sqlbi.Bravo.Core.Services.Interfaces;
 using Sqlbi.Bravo.Core.Settings;
 using Sqlbi.Bravo.Core.Settings.Interfaces;
 using Sqlbi.Bravo.UI.DataModel;
@@ -16,7 +14,6 @@ namespace Sqlbi.Bravo.UI.ViewModels
 {
     internal class TabItemViewModel : BaseViewModel
     {
-        private readonly IAnalysisServicesEventWatcherService _watcher;
         private readonly IGlobalSettingsProviderService _settings;
         private readonly ILogger _logger;
         private DaxFormatterViewModel _daxFormatterVm;
@@ -29,14 +26,12 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public bool IsRetrying { get; set; } = false;
 
-        public TabItemViewModel(IAnalysisServicesEventWatcherService watcher, ILogger<TabItemViewModel> logger, IGlobalSettingsProviderService settings)
+        public TabItemViewModel(ILogger<TabItemViewModel> logger, IGlobalSettingsProviderService settings)
         {
             _logger = logger;
-            _watcher = watcher;
             _settings = settings;
 
             _logger.Trace();
-            _watcher.OnConnectionStateChanged += OnAnalysisServicesConnectionStateChanged;
 
             ShowError = false;
             ConnectionType = BiConnectionType.UnSelected;
@@ -195,15 +190,6 @@ namespace Sqlbi.Bravo.UI.ViewModels
             ErrorDescription = errorDescription;
             ShowError = true;
             _tryagainCallback = callback;
-        }
-
-        [PropertyChanged.SuppressPropertyChangedWarnings]
-        private void OnAnalysisServicesConnectionStateChanged(object sender, ConnectionStateEventArgs e)
-        {
-            _logger.Trace();
-
-            //ConnectCommandIsEnabled = e.Current == ConnectionState.Closed;
-            //DisplayViewDaxFormatterCommandIsEnabled = e.Current == ConnectionState.Open;
         }
 
         public override string ToString() => Header;

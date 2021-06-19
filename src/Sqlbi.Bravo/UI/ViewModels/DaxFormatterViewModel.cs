@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.Logging;
-using Sqlbi.Bravo.Client.AnalysisServicesEventWatcher;
 using Sqlbi.Bravo.Client.DaxFormatter;
 using Sqlbi.Bravo.Core.Helpers;
 using Sqlbi.Bravo.Core.Logging;
@@ -28,21 +27,17 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         private readonly IDaxFormatterService _formatter;
         private readonly IGlobalSettingsProviderService _settings;
-        private readonly IAnalysisServicesEventWatcherService _watcher;
         private readonly ILogger _logger;
-        private readonly DispatcherTimer _timer = new DispatcherTimer();
+        private readonly DispatcherTimer _timer = new();
         private bool _initialized = false;
 
-        public DaxFormatterViewModel(IDaxFormatterService formatter, IGlobalSettingsProviderService settings, IAnalysisServicesEventWatcherService watcher, ILogger<DaxFormatterViewModel> logger)
+        public DaxFormatterViewModel(IDaxFormatterService formatter, IGlobalSettingsProviderService settings, ILogger<DaxFormatterViewModel> logger)
         {
             _formatter = formatter;
             _settings = settings;
-            _watcher = watcher;
             _logger = logger;
 
             _logger.Trace();
-            _watcher.OnWatcherEvent += OnWatcherEvent;
-            //_watcher.OnConnectionStateChanged += OnAnalysisServicesConnectionStateChanged;
 
             ViewIndex = SubViewIndex_Loading;
             PreviewChanges = true;
@@ -112,21 +107,11 @@ namespace Sqlbi.Bravo.UI.ViewModels
 
         public int AnalyzedMeasureCount { get; set; }
 
-        public ObservableCollection<MeasureInfoViewModel> Measures { get; set; } = new ObservableCollection<MeasureInfoViewModel>();
+        public ObservableCollection<MeasureInfoViewModel> Measures { get; set; } = new();
 
-        public ObservableCollection<MeasureInfoViewModel> MeasuresNeedingFormatting => new ObservableCollection<MeasureInfoViewModel>(Measures.Where((m) => !m.IsAlreadyFormatted).ToList());
+        public ObservableCollection<MeasureInfoViewModel> MeasuresNeedingFormatting => new(Measures.Where((m) => !m.IsAlreadyFormatted).ToList());
 
         public bool NoMeasuresNeedingFormatting => MeasuresNeedingFormatting.Count == 0;
-
-        private async void OnWatcherEvent(object sender, WatcherEventArgs e)
-        {
-            _logger.Trace();
-
-            if (e.Event == WatcherEvent.Create || e.Event == WatcherEvent.Alter || e.Event == WatcherEvent.Delete)
-            {
-                await InitializeOrRefreshFormatter();
-            }
-        }
 
         private async Task InitializeOrRefreshFormatter()
         {
@@ -140,7 +125,6 @@ namespace Sqlbi.Bravo.UI.ViewModels
             OnPropertyChanged(nameof(TimeSinceLastSync));
 
             FormatCommandIsEnabled = true;
-
             LoadMeasuresForSelection();
 
             _initialized = true;
