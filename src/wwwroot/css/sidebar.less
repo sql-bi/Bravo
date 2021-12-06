@@ -1,0 +1,139 @@
+// main: main.min.less
+#sidebar {
+    height: 100%;
+    width: 220px;
+    .flex(0 0 auto);
+    padding: 0 5px;
+    transition: width .2s ease-in-out;
+    font-size: 14px;
+    background: @window-back-color;
+    .flexbox(stretch, flex-start, column);
+
+    .dark & {
+        background: @window-back-color-dark;
+    }
+
+    &.collapsed {
+        width: 55px;
+
+        .hide-if-collapsed {
+            opacity: 0;
+
+        }
+    }
+    .hide-if-collapsed {
+        transition: opacity .2s ease-in-out;
+    }
+
+    header {
+        .flexbox(flex-start, space-between);
+        padding:10px 10px;
+
+        .logo {
+            width:47px;
+            height: auto;
+        }
+        .ctrl {
+            &:before {
+                font-size: 25px;
+            }
+        }
+        .spacer {
+            width: 20px
+        }
+        #ctrl-burger {
+            .flex(0 0 auto);
+        }
+    }
+    .side-menu {
+        margin: 20px 0 0 0;
+
+        .item {
+            .flexbox(center);
+            transition: background 0.2s ease-out;
+            font-size: 15px;
+            color: @control-color;
+            margin: 8px 2px;
+            cursor: pointer;
+    
+            padding: 6px 6px 6px 0;
+            line-height: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            .unselectable;
+            .border-radius;
+    
+            &:active {
+                opacity: .7;
+            }
+            &:hover:not(.disabled) {
+                background-color: darken(@window-back-color, 5%);
+            }
+            &:not(.disabled).selected {
+                background-color: @back-color;
+            }
+            &.disabled {
+                opacity: .4 !important;
+            }
+       
+            .dark & { 
+                color: @control-color-dark; 
+                &:visited {
+                    color: @control-color-dark; 
+                }
+                &:hover:not(.disabled) {
+                    color: lighten(@control-color-dark, 10%);
+                    background-color: lighten(@control-back-color-dark, 5%);
+                }
+    
+                &:not(.disabled).selected { 
+                    color: lighten(@control-color-dark, 10%);
+                    background-color: @back-color-dark;
+                }
+            }
+    
+            .icon {
+                margin: 0 8px 0 0;
+                &:before {
+                    font-size: 26px;
+                }
+            }
+            .selector {
+                .flex(0 0 auto);
+                background: transparent;
+                .border-radius;
+                width: 4px;
+                height: 25px;
+                margin-right: 10px;
+                transition: background .2s ease-in-out;
+            }
+    
+            &.selected .selector {
+                background: @accent-back-color;
+                .dark & {
+                    background-color: @accent-back-color-dark;
+                }
+            }
+        }
+    }
+
+    footer {
+        margin-top: auto;
+
+        .flexbox(flex-start, space-between);
+        padding:10px;
+
+   
+        .ctrl, .toggle {
+            &:before {
+                font-size: 25px;
+            }
+        }
+        /*#ctrl-login {
+            margin-left: auto;
+        }*/
+        #ctrl-options {
+            .flex(0 0 auto);
+        }
+    }
+}
