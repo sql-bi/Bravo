@@ -55,7 +55,7 @@ namespace Sqlbi.Bravo.Controllers
                         select new
                         {
                             columnName = c.ColumnName,
-                            table = c.Table.TableName,
+                            tableName = c.Table.TableName,
                             columnCardinality = c.ColumnCardinality,
                             size = c.TotalSize,
                             weight = (double)c.TotalSize / databaseSize,

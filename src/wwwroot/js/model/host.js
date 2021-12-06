@@ -54,6 +54,12 @@ class Host extends Dispatchable {
         return await Utils.Request.upload(`${this.hostUrl}${action}`, file);
     }
 
+    async listReports() {
+        const action = "ListReports";
+        if (debug) return this.debugCall(action);
+     
+        return await Utils.Request.get(`${this.hostUrl}${action}`);
+    }
 
 
 }

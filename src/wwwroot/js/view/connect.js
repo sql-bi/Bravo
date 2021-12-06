@@ -84,7 +84,7 @@ class Connect extends Dialog {
 
     getLocalPBIReports() {
 
-        host.listPBIDesktopReports()
+        host.listReports()
         .then(reports => {
 
             let listHTML = "<ul>";
