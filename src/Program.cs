@@ -61,31 +61,22 @@ namespace Sqlbi.Bravo
                 .SetTitle(windowTitle)
                 .SetIconFile("wwwroot/bravo.ico")
                 .SetGrantBrowserPermissions(true)
-                // Resize to a percentage of the main monitor work area
-
                 .SetUseOsDefaultSize(true)
+                //.SetContextMenuEnabled(false)
 
-                //.SetChromeless(true)
-                //.SetSize(new Size(600, 400))
-                // Center window in the middle of the screen
-
-                //.Center()
-                // Users can resize windows by default.
-                // Let's make this one fixed instead.
-                //.SetResizable(true)
-                /*
-                                .RegisterCustomSchemeHandler("app", (object sender, string scheme, string url, out string contentType) =>
-                                {
-                                    contentType = "text/javascript";
-                                    return new MemoryStream(Encoding.UTF8.GetBytes(@"
-                                        (() =>{
-                                            window.setTimeout(() => {
-                                                alert(`🎉 Dynamically inserted JavaScript.`);
-                                            }, 1000);
-                                        })();
-                                    "));
-                                })
-                */
+/*
+                .RegisterCustomSchemeHandler("app", (object sender, string scheme, string url, out string contentType) =>
+                {
+                    contentType = "text/javascript";
+                    return new MemoryStream(Encoding.UTF8.GetBytes(@"
+                        (() =>{
+                            window.setTimeout(() => {
+                                alert(`🎉 Dynamically inserted JavaScript.`);
+                            }, 1000);
+                        })();
+                    "));
+                })
+*/
                 .RegisterWindowCreatingHandler((object sender, EventArgs args) =>
                 {
                     var window = (PhotinoWindow)sender;
