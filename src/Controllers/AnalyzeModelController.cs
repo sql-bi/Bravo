@@ -28,7 +28,7 @@ namespace Sqlbi.Bravo.Controllers
         {
             var databaseModel = _analyzeModelService.GetDatabaseModelFromVpax(stream: Request.Body);
             
-            return new OkObjectResult(databaseModel);
+            return Ok(databaseModel);
         }
     }
 }

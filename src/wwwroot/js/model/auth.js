@@ -8,7 +8,7 @@
 class Auth extends Dispatchable {
 
     appClientId = "4257bc9e-ed10-490f-a73e-5c9ba120bf8f";
-    appRedirectUri = "http://localhost:5000/auth.html";
+    appRedirectUri = "http://localhost:5000/auth/redirect";
 
     envStorageName = "PowerBIEnv";
 

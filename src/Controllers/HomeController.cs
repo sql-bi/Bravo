@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc;
 using System.IO;
 
 namespace Sqlbi.Bravo.Controllers
@@ -8,21 +9,12 @@ namespace Sqlbi.Bravo.Controllers
     public class HomeController : ControllerBase
     {
         /*
+         * See => ** AnalyzeModelController.GetDatabaseModelFromVpax() **
          * Returns a model view from a VPAX file stream.
          * Parameters: file stream
          */
         //[HttpPost]
         //public IActionResult GetModelFromVpax()
-        //{
-        //    // Make it sync - required by ImportVpax
-        //    var bodyFeature = HttpContext.Features.Get<IHttpBodyControlFeature>();
-        //    if (bodyFeature != null)
-        //        bodyFeature.AllowSynchronousIO = true;
-
-        //    var databaseModel = _analyzeModelService.GetDatabaseModelFromVpax(stream: Request.Body);
-
-        //    return new OkObjectResult(databaseModel);
-        //}
 
         /*
          * Returns a model view (as GetModelFromVpax) from a local Power BI report 
@@ -147,15 +139,13 @@ namespace Sqlbi.Bravo.Controllers
         }
 
         /*
+         * See => ** AuthenticationController.Redirect() **
          * Respond to the MSAL authentication
          * http://localhost:5000/home/auth
          * We intercept the code and use the MSAL library here or we can load auth.html 
-         */ 
-        [HttpGet]
-        public string Auth()
-        {
-            return "";
-        }
+         */
+        //[HttpGet]
+        //public string Auth()
 
         /*
          * Sign in by receiving an auth token from the UI.
