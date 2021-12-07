@@ -57,13 +57,14 @@ namespace Sqlbi.Bravo.Controllers
         }
 
         /*
+         * See => ** AnalyzeModelController.GetPBIDesktopInstances() **
          * Returns a list of ids of windows containing local Power BI reports
          */
-        [HttpGet]
-        public string ListReports()
-        {
-            return null;
-        }
+        //[HttpGet]
+        //public string ListReports()
+        //{
+        //    return null;
+        //}
 
         /*
          * Returns a list of remote Power BI datasets URLs

@@ -14,7 +14,7 @@ namespace Sqlbi.Bravo
         [STAThread]
         public static void Main(string[] args)
         {
-            Win32.SetProcessDPIAware();
+            NativeMethods.SetProcessDPIAware();
   
             // Connect API
             _ = CreateHostBuilder(args).Build().RunAsync();
@@ -38,6 +38,7 @@ namespace Sqlbi.Bravo
                 {
                     // Allow sync IO - required by ImportVpax
                     options.AllowSynchronousIO = true;
+                    // TODO: randomise the HTTP listening port
                     options.ListenLocalhost(port: 5000, (listenOptions) =>
                     {
                         listenOptions.UseConnectionLogging();
@@ -63,7 +64,6 @@ namespace Sqlbi.Bravo
                 .SetGrantBrowserPermissions(true)
                 .SetUseOsDefaultSize(true)
                 //.SetContextMenuEnabled(false)
-
 /*
                 .RegisterCustomSchemeHandler("app", (object sender, string scheme, string url, out string contentType) =>
                 {

@@ -3,18 +3,6 @@ using System.Runtime.InteropServices;
 
 namespace Sqlbi.Bravo.Infrastructure.Windows
 {
-    internal static class Win32
-    {
-        [DllImport("user32.dll", SetLastError = true)]
-        public static extern bool SetProcessDPIAware();
-
-        [DllImport("user32.dll")]
-        internal static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
-
-        public const int SW_HIDE = 0;
-        public const int SW_SHOW = 5;
-    }
-
     internal static class Win32Dialogs
     {
         [DllImport("Comdlg32.dll", CharSet = CharSet.Auto)]

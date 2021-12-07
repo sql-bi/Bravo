@@ -31,6 +31,7 @@ namespace Sqlbi.Bravo
             });
 
             services.AddSingleton<IAnalyzeModelService, AnalyzeModelService>();
+            services.AddSingleton<IPBIDesktopService, PBIDesktopService>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment environment)
