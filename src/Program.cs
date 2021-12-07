@@ -1,36 +1,60 @@
 ﻿using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using PhotinoNET;
+using Sqlbi.Bravo.Infrastructure.Windows;
 using System;
 using System.Diagnostics;
-using System.Drawing;
-using System.IO;
-using System.Text;
-using System.Runtime.InteropServices;
 
 namespace Sqlbi.Bravo
 {
-
-    static class NativeMethods {[DllImport("user32.dll", SetLastError = true)] public static extern bool SetProcessDPIAware(); }
-
-
-    class Program
+    public class Program
     {
-
-
+        internal static PhotinoWindow? HostWindow;
 
         [STAThread]
-        static void Main(string[] args)
+        public static void Main(string[] args)
         {
-
-            NativeMethods.SetProcessDPIAware();
+            Win32.SetProcessDPIAware();
   
-
             // Connect API
-            CreateHostBuilder(args).Build().RunAsync();
+            _ = CreateHostBuilder(args).Build().RunAsync();
 
+            // Starts the application event loop
+            CreateHostWindow().WaitForClose();
+        }
+
+        internal static IHostBuilder CreateHostBuilder(string[] args)
+        {
+            var hostBuilder = Host.CreateDefaultBuilder(args).ConfigureWebHostDefaults((webBuilder) =>
+            {
+                Trace.WriteLine("CreateHostBuilder");
+
+                //webBuilder.ConfigureLogging(builder =>
+                //{
+                //    builder.
+                //});
+
+                webBuilder.ConfigureKestrel(options =>
+                {
+                    // Allow sync IO - required by ImportVpax
+                    options.AllowSynchronousIO = true;
+                    options.ListenLocalhost(port: 5000, (listenOptions) =>
+                    {
+                        listenOptions.UseConnectionLogging();
+                        //listenOptions.UseHttps();
+                    });
+                });
+
+                webBuilder.UseStartup<Startup>();
+            });
+
+            return hostBuilder;
+        }
+
+        internal static PhotinoWindow CreateHostWindow()
+        {
             // Window title declared here for visibility
-            string windowTitle = "Bravo for Power BI";
+            var windowTitle = "Bravo for Power BI";
 
             // Creating a new PhotinoWindow instance with the fluent API
             var window = new PhotinoWindow()
@@ -38,30 +62,30 @@ namespace Sqlbi.Bravo
                 .SetIconFile("wwwroot/bravo.ico")
                 .SetGrantBrowserPermissions(true)
                 // Resize to a percentage of the main monitor work area
-                
+
                 .SetUseOsDefaultSize(true)
 
                 //.SetChromeless(true)
                 //.SetSize(new Size(600, 400))
                 // Center window in the middle of the screen
-                
+
                 //.Center()
                 // Users can resize windows by default.
                 // Let's make this one fixed instead.
                 //.SetResizable(true)
-/*
-                .RegisterCustomSchemeHandler("app", (object sender, string scheme, string url, out string contentType) =>
-                {
-                    contentType = "text/javascript";
-                    return new MemoryStream(Encoding.UTF8.GetBytes(@"
-                        (() =>{
-                            window.setTimeout(() => {
-                                alert(`🎉 Dynamically inserted JavaScript.`);
-                            }, 1000);
-                        })();
-                    "));
-                })
-*/
+                /*
+                                .RegisterCustomSchemeHandler("app", (object sender, string scheme, string url, out string contentType) =>
+                                {
+                                    contentType = "text/javascript";
+                                    return new MemoryStream(Encoding.UTF8.GetBytes(@"
+                                        (() =>{
+                                            window.setTimeout(() => {
+                                                alert(`🎉 Dynamically inserted JavaScript.`);
+                                            }, 1000);
+                                        })();
+                                    "));
+                                })
+                */
                 .RegisterWindowCreatingHandler((object sender, EventArgs args) =>
                 {
                     var window = (PhotinoWindow)sender;
@@ -97,29 +121,9 @@ namespace Sqlbi.Bravo
                 .Load("wwwroot/index.html"); // Can be used with relative path strings or "new URI()" instance to load a website.
 
             // Pass the main window to HostWindow controller (not compatible with multi-window)
-            Controllers.HomeController.HostWindow = window;
+            HostWindow = window;
 
-            window.WaitForClose(); // Starts the application event loop
+            return window;
         }
-
-        public static IHostBuilder CreateHostBuilder(string[] args) =>
-    Host.CreateDefaultBuilder(args)
-    .ConfigureWebHostDefaults(webBuilder =>
-    {
-        Trace.WriteLine("CreateHostBuilder");
-        //webBuilder.ConfigureLogging(builder =>
-        //{
-        //    builder.
-        //});
-
-        //webBuilder.ConfigureKestrel(options =>
-        //{
-        //    options.
-        //});
-
-        webBuilder.UseStartup<Startup>();
-   
-    });
-
     }
 }

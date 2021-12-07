@@ -1,20 +1,42 @@
-﻿using System;
-using System.Drawing;
+﻿using System.Drawing;
 using System.Runtime.InteropServices;
 
-
-namespace Sqlbi.Bravo.WindowsDialogs
+namespace Sqlbi.Bravo.Infrastructure.Windows
 {
+    public enum DialogResult
+    {
+        None = 0,
+        OK = 1,
+        Cancel = 2,
+        Abort = 3,
+        Retry = 4,
+        Ignore = 5,
+        Yes = 6,
+        No = 7,
+    }
+
     public class OpenFileDialog
     {
-        ///<summary>Which file extension, allowed by the Filter is the default</summary>
+        ///<summary>
+        ///Which file extension, allowed by the Filter is the default
+        ///</summary>
         public string DefaultExtension { get; set; } = null;
-        ///<summary>Is filled with the full path to the selected file, if on is selected. Can be pre-filled with a default.</summary>
+        
+        ///<summary>
+        ///Is filled with the full path to the selected file, if on is selected. Can be pre-filled with a default.
+        ///</summary>
         public string File { get; set; } = null;
-        ///<summary>Null separated list of descriptions and file extensions. E.g. "Log files\0*.log\0Batch files\0*.bat\0"</summary>
+        
+        ///<summary
+        ///>Null separated list of descriptions and file extensions. E.g. "Log files\0*.log\0Batch files\0*.bat\0"
+        ///</summary>
         public string Filter { get; set; } = null;
+
         public string InitialDirectory { get; set; } = null;
-        ///<summary>Title for the dialog box</summary>
+
+        ///<summary>
+        ///Title for the dialog box
+        ///</summary>
         public string Title { get; set; } = null;
 
         public DialogResult ShowDialog()
@@ -60,17 +82,31 @@ namespace Sqlbi.Bravo.WindowsDialogs
         }
     }
 
-    //<summary>.NET wrapper around the Win32 open file dialog</summary>
+    //<summary>
+    //.NET wrapper around the Win32 open file dialog
+    //</summary>
     public class SaveFileDialog
     {
-        ///<summary>Which file extension, allowed by the Filter is the default</summary>
+        ///<summary>
+        ///Which file extension, allowed by the Filter is the default
+        ///</summary>
         public string DefaultExtension { get; set; } = null;
-        ///<summary>Is filled with the full path to the selected file, if on is selected. Can be pre-filled with a default.</summary>
+
+        ///<summary>
+        ///Is filled with the full path to the selected file, if on is selected. Can be pre-filled with a default.
+        ///</summary>
         public string File { get; set; } = null;
-        ///<summary>Null separated list of descriptions and file extensions. E.g. "Log files\0*.log\0Batch files\0*.bat\0"</summary>
+
+        ///<summary>
+        ///Null separated list of descriptions and file extensions. E.g. "Log files\0*.log\0Batch files\0*.bat\0"
+        ///</summary>
         public string Filter { get; set; } = null;
+
         public string InitialDirectory { get; set; } = null;
-        ///<summary>Title for the dialog box</summary>
+
+        ///<summary>
+        ///Title for the dialog box
+        ///</summary>
         public string Title { get; set; } = null;
 
         public DialogResult ShowDialog()
@@ -83,10 +119,10 @@ namespace Sqlbi.Bravo.WindowsDialogs
             else
                 ofn.filter = Filter;
 
-            ofn.file = new String(new char[256]);
+            ofn.file = new string(new char[256]);
             ofn.maxFile = ofn.file.Length;
 
-            ofn.fileTitle = new String(new char[64]);
+            ofn.fileTitle = new string(new char[64]);
             ofn.maxFileTitle = ofn.fileTitle.Length;
 
             if (string.IsNullOrWhiteSpace(InitialDirectory))
@@ -116,9 +152,19 @@ namespace Sqlbi.Bravo.WindowsDialogs
         }
     }
 
-    //<summary>.NET wrapper around the Win32 open file dialog</summary>
+    //<summary>
+    //.NET wrapper around the Win32 open file dialog
+    //</summary>
     public class ColorPickerDialog
     {
+        private readonly int[] _customColors = new int[16]
+        {
+            0x00FFFFFF, 0x00C0C0C0, 0x00808080, 0x00000000,
+            0x00FF0000, 0x00800000, 0x00FFFF00, 0x00808000,
+            0x0000FF00, 0x00008000, 0x0000FFFF, 0x00008080,
+            0x000000FF, 0x00000080, 0x00FF00FF, 0x00800080,
+        };
+
         public Color Color { get; set; }
 
         public DialogResult ShowDialog()
@@ -126,13 +172,13 @@ namespace Sqlbi.Bravo.WindowsDialogs
             var cc = new ChooseColor();
             cc.structSize = Marshal.SizeOf(cc);
 
-            //Does not seem to work unless custom colors are initialized.
+            // Does not seem to work unless custom colors are initialized.
             var lpCustColors = Marshal.AllocCoTaskMem(16 * sizeof(int));
             cc.custColors = lpCustColors;
             cc.flags = ChooseColorFlags.RgbInit;
             try
             {
-                Marshal.Copy(customColors, 0, lpCustColors, 16);
+                Marshal.Copy(_customColors, 0, lpCustColors, 16);
 
                 if (Win32Dialogs.ChooseColor(cc))
                 {
@@ -149,25 +195,5 @@ namespace Sqlbi.Bravo.WindowsDialogs
                 Marshal.FreeCoTaskMem(lpCustColors);
             }
         }
-
-
-        private readonly int[] customColors = new int[16] {
-            0x00FFFFFF, 0x00C0C0C0, 0x00808080, 0x00000000,
-            0x00FF0000, 0x00800000, 0x00FFFF00, 0x00808000,
-            0x0000FF00, 0x00008000, 0x0000FFFF, 0x00008080,
-            0x000000FF, 0x00000080, 0x00FF00FF, 0x00800080,
-        };
-    }
-
-    public enum DialogResult
-    {
-        None = 0,
-        OK = 1,
-        Cancel = 2,
-        Abort = 3,
-        Retry = 4,
-        Ignore = 5,
-        Yes = 6,
-        No = 7,
     }
 }

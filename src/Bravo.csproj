@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <OutputType>WinExe</OutputType> 
+    <OutputType>Exe</OutputType> 
     <TargetFramework>net5.0</TargetFramework>
     <Platforms>AnyCPU;x64</Platforms>
     <ApplicationIcon>bravo.ico</ApplicationIcon>
@@ -12,6 +12,8 @@
     <Copyright>SQLBI Corp.</Copyright>
     <PackageIcon>icon-228.png</PackageIcon>
     <PackageIconUrl />
+    <RootNamespace>Sqlbi.$(MSBuildProjectName.Replace(" ", "_"))</RootNamespace>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>

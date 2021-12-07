@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace Sqlbi.Bravo
+namespace Sqlbi.Bravo.Infrastructure.Windows
 {
     internal static class Win32
     {
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern bool SetProcessDPIAware();
 
         [DllImport("user32.dll")]
         internal static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
@@ -26,12 +28,12 @@ namespace Sqlbi.Bravo
 
         [DllImport("user32.dll", CharSet = CharSet.Unicode)]
         public static extern int MessageBox(IntPtr hWnd, string text, string caption, uint type);
+
         //static void Main()
         //{
         //    MessageBox(new IntPtr(0), "Hello World!", "Hello Dialog", 0);
         //}
     }
-
 
     //DATA STRUCTURES
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]

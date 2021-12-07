@@ -4,52 +4,53 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.OpenApi.Models;
+using Sqlbi.Bravo.Services;
 using System;
 
 namespace Sqlbi.Bravo
 {
-    public class Startup
+    internal class Startup
     {
+        public IConfiguration Configuration { get; }
+
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
         }
 
-        public IConfiguration Configuration { get; }
-
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
-
-
-            services.AddCors(options =>
+            services.AddSwaggerGen();
+            services.AddCors((corsOptions) =>
             {
-                options.AddPolicy("AllowLocalWebAPI", builder =>
+                corsOptions.AddPolicy("AllowLocalWebAPI", (policyBuilder) =>
                 {
-                    builder.AllowAnyOrigin() //.WithOrigins("null")   //for security, default to only accepting calls from the local machine
+                    policyBuilder.AllowAnyOrigin() //.WithOrigins("null") //for security, default to only accepting calls from the local machine
                         .AllowAnyMethod()
                         .AllowAnyHeader();
                 });
             });
+
+            services.AddSingleton<IAnalyzeModelService, AnalyzeModelService>();
         }
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment environment)
         {
             app.UseCors("AllowLocalWebAPI");
 
-            if (env.IsDevelopment())
+            if (environment.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
+                app.UseSwagger();
+                app.UseSwaggerUI();
             }
 
-           
             app.UseRouting();
-
-            app.UseEndpoints(endpoints =>
+            app.UseEndpoints((endpoints) =>
             {
                 endpoints.MapControllers();
-                endpoints.MapGet("/", async context =>
+                endpoints.MapGet("/", async (context) =>
                 {
                     await context.Response.WriteAsync($"Sqlbi.Bravo API on {Environment.MachineName}");
                 });
