@@ -4,8 +4,11 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.OpenApi.Models;
+using Microsoft.Extensions.FileProviders;
 using System;
+using System.IO;
+using Microsoft.OpenApi.Models;
+
 
 namespace Sqlbi.Bravo
 {
@@ -45,14 +48,12 @@ namespace Sqlbi.Bravo
 
            
             app.UseRouting();
+            app.UseStaticFiles();
 
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
-                endpoints.MapGet("/", async context =>
-                {
-                    await context.Response.WriteAsync($"Sqlbi.Bravo API on {Environment.MachineName}");
-                });
+                
             });
         }
     }

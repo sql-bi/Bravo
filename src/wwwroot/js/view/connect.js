@@ -133,7 +133,7 @@ class Connect extends Dialog {
         `;
         this.body.insertAdjacentHTML("beforeend", html);
 
-        if (!account.signedIn) {
+        if (!auth.account) {
             _("#body-connect-pbi .list", this.body).innerHTML = `
                 <div class="notice">
                     <div>
@@ -142,6 +142,11 @@ class Connect extends Dialog {
                     </div>
                 </div>
             `;
+
+            _(".signin", this.body).addEventListener("click", e => {
+                e.preventDefault();
+                auth.signIn();
+            });
         } else {
             getRemotePBIDatasets();
         }

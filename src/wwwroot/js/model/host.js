@@ -61,6 +61,13 @@ class Host extends Dispatchable {
         return await Utils.Request.get(`${this.hostUrl}${action}`);
     }
 
+    async getOptions() {
+        return true;
+    }
+
+    async updateOptions(data) {
+        return true;
+    }
 
 }
 let host = new Host();

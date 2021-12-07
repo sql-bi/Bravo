@@ -37,18 +37,9 @@ namespace Sqlbi.Bravo
                 .SetTitle(windowTitle)
                 .SetIconFile("wwwroot/bravo.ico")
                 .SetGrantBrowserPermissions(true)
-                // Resize to a percentage of the main monitor work area
-                
                 .SetUseOsDefaultSize(true)
+                //.SetContextMenuEnabled(false)
 
-                //.SetChromeless(true)
-                //.SetSize(new Size(600, 400))
-                // Center window in the middle of the screen
-                
-                //.Center()
-                // Users can resize windows by default.
-                // Let's make this one fixed instead.
-                //.SetResizable(true)
 /*
                 .RegisterCustomSchemeHandler("app", (object sender, string scheme, string url, out string contentType) =>
                 {

@@ -15,6 +15,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="wwwroot\debug.js" />
+    <Content Remove="wwwroot\index-debug.html" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Dax.ViewModel" Version="1.0.36" />
     <PackageReference Include="Dax.Vpax.NetCore" Version="1.0.36" />
     <PackageReference Include="Photino.NET" Version="2.1.10" />

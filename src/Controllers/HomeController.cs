@@ -209,6 +209,17 @@ namespace Sqlbi.Bravo.Controllers
         }
 
         /*
+         * Respond to the MSAL authentication
+         * http://localhost:5000/home/auth
+         * We intercept the code and use the MSAL library here or we can load auth.html 
+         */ 
+        [HttpGet]
+        public string Auth()
+        {
+            return "";
+        }
+
+        /*
          * Sign in by receiving an auth token from the UI.
          */
         [HttpGet]

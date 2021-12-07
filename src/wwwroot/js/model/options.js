@@ -7,12 +7,13 @@
 
 class Options extends Dispatchable {
 
-    storageName;
+    storageName = "Bravo";
+    mode;
     data;
 
-    constructor(storageName, defaultData) {
+    constructor(mode, defaultData) {
         super();
-        this.storageName = storageName;
+        this.mode = mode; //host or browser
         this.load(defaultData);
         this.listen();
     }
@@ -35,28 +36,46 @@ class Options extends Dispatchable {
 
     // Load data
     load(defaultData) {
-        try {
-            const rawData = localStorage.getItem(this.storageName);
-            const json = JSON.parse(rawData);
-            this.data = (json ? Utils.Obj.merge(defaultData, json) : defaultData);
-        } catch(e){
-            this.data = defaultData;
-            console.error("Unable to load valid data from storage.");
+        if (this.mode == "host") {
+            host.getOptions()
+                .then(data => {
+                    this.data = (data ? Utils.Obj.merge(defaultData, data) : defaultData);
+                })
+                .catch(error => {
+                    this.data = defaultData;
+                    if (debug)
+                        console.error(error);
+                });
+        } else {
+            try {
+                const rawData = localStorage.getItem(this.storageName);
+                const data = JSON.parse(rawData);
+                this.data = (data ? Utils.Obj.merge(defaultData, data) : defaultData);
+            } catch(e){
+                this.data = defaultData;
+                if (debug)
+                    console.error(e);
+            }
         }
     }
 
     // Save data
     save(retry = false) {
-        try {
-            localStorage.setItem(this.storageName, JSON.stringify(this.data));
-        } catch(e){
-            if (!retry) {
-                //Storage quota exceeded 
-                if (e.code == 22) {
-                    this.trigger("quotaExceeded");
+        if (this.mode == "host") {
+            host.updateOptions(JSON.stringify(this.data));
 
-                    //Retry saving
-                    this.save(this.data, true);
+        } else {
+            try {
+                localStorage.setItem(this.storageName, JSON.stringify(this.data));
+            } catch(e){
+                if (!retry) {
+                    //Storage quota exceeded 
+                    if (e.code == 22) {
+                        this.trigger("quotaExceeded");
+
+                        //Retry saving
+                        this.save(this.data, true);
+                    }
                 }
             }
         }
@@ -80,15 +99,19 @@ class Options extends Dispatchable {
     }
 }
 
-let options = new Options("Bravo", {
+let options = new Options("browser", {
     // Default options
     theme: "auto",
     formatter: {
-        zoom: 1
+        zoom: 1,
+        spacing: 0,
+        lines: "long",
+        separators: ""
     },
     model: {
         showAllColumns: false,
         groupByTable: false,
         showUnrefOnly: false
-    }
+    },
+    telemetry: true
 });
