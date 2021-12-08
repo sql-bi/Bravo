@@ -4,7 +4,7 @@ using System.IO;
 
 namespace Sqlbi.Bravo.Controllers
 {
-    [Route("[controller]/[action]")]
+    [Route("api/[action]")]
     [ApiController]
     public class HomeController : ControllerBase
     {
@@ -17,14 +17,15 @@ namespace Sqlbi.Bravo.Controllers
         //public IActionResult GetModelFromVpax()
 
         /*
+         * See => ** AnalyzeModelController.GetDatabaseModelFromPBIDesktop() **
          * Returns a model view (as GetModelFromVpax) from a local Power BI report 
          * Parameters: local window id?
          */
-        [HttpGet]
-        public string GetModelFromReport()
-        {
-            return null;
-        }
+        //[HttpGet]
+        //public string GetModelFromReport()
+        //{
+        //    return null;
+        //}
 
         /*
          * Returns a model view (as GetModelFromVpax) from a remote Power BI dataset 

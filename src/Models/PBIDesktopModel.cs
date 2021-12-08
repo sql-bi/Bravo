@@ -1,4 +1,6 @@
-﻿using System.Net;
+﻿using Sqlbi.Bravo.Infrastructure.Helpers;
+using System.Diagnostics;
+using System.Net;
 using System.Text.Json.Serialization;
 
 namespace Bravo.Models
@@ -6,18 +8,39 @@ namespace Bravo.Models
     public class PBIDesktopModel
     {
         /// <summary>
-        /// PowerBI desktop process identifier (system PID)
+        /// PBIDesktop process identifier (system PID)
         /// </summary>
-        [JsonPropertyName("instanceId")]
-        public int InstanceId { get; set; }
+        [JsonPropertyName("id")]
+        public int ProcessId { get; set; }
 
         /// <summary>
-        /// PowerBI desktop MS-SSAS instance endpoint
+        /// PBIDesktop report name (from main window title)
         /// </summary>
-        [JsonPropertyName("instanceEndpoint")]
-        public string? InstanceEndPoint { get; set; }
-
         [JsonPropertyName("reportName")]
         public string? ReportName { get; set; }
+
+        /// <summary>
+        /// PBIDesktop local SSAS instance name (server name / endpoint)
+        /// </summary>
+        [JsonIgnore]
+        public string? ServerName { get; set; }
+
+        /// <summary>
+        /// PBIDesktop local SSAS instance database name
+        /// </summary>
+        [JsonIgnore]
+        public string? DatabaseName { get; set; }
+    }
+
+    internal static class PBIDesktopModelExtensions
+    {
+        //public static string GetConnectionString(this PBIDesktopModel pbidesktop)
+        //{
+        //    Debug.Assert(IPEndPoint.TryParse(pbidesktop.ServerName!, out var endpoint));
+        //    Debug.Assert(IPAddress.IsLoopback(endpoint.Address));
+
+        //    var connectionString = ConnectionStringHelper.BuildFrom(pbidesktop.ServerName, pbidesktop.DatabaseName);
+        //    return connectionString;
+        //}
     }
 }

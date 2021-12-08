@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using PhotinoNET;
+using Sqlbi.Bravo.Infrastructure;
 using Sqlbi.Bravo.Infrastructure.Windows;
 using System;
 using System.Diagnostics;
@@ -15,7 +16,7 @@ namespace Sqlbi.Bravo
         public static void Main(string[] args)
         {
             NativeMethods.SetProcessDPIAware();
-  
+
             // Connect API
             _ = CreateHostBuilder(args).Build().RunAsync();
 
@@ -54,12 +55,9 @@ namespace Sqlbi.Bravo
 
         internal static PhotinoWindow CreateHostWindow()
         {
-            // Window title declared here for visibility
-            var windowTitle = "Bravo for Power BI";
-
             // Creating a new PhotinoWindow instance with the fluent API
             var window = new PhotinoWindow()
-                .SetTitle(windowTitle)
+                .SetTitle(AppConstants.ApplicationHostWindowTitle)
                 .SetIconFile("wwwroot/bravo.ico")
                 .SetGrantBrowserPermissions(true)
                 .SetUseOsDefaultSize(true)

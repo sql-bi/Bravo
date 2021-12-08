@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
+#nullable disable
+
 namespace Sqlbi.Bravo.Infrastructure.Windows
 {
     internal static class Win32Dialogs

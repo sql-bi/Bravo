@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Sqlbi.Bravo.Infrastructure.Extensions;
 using Sqlbi.Bravo.Services;
 
 namespace Sqlbi.Bravo
@@ -19,7 +20,6 @@ namespace Sqlbi.Bravo
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
-            services.AddSwaggerGen();
             services.AddCors((corsOptions) =>
             {
                 corsOptions.AddPolicy("AllowLocalWebAPI", (policyBuilder) =>
@@ -29,7 +29,9 @@ namespace Sqlbi.Bravo
                         .AllowAnyHeader();
                 });
             });
-
+#if DEBUG
+            services.AddSwaggerGenCustomized();
+#endif
             services.AddSingleton<IAnalyzeModelService, AnalyzeModelService>();
             services.AddSingleton<IPBIDesktopService, PBIDesktopService>();
         }
@@ -41,8 +43,10 @@ namespace Sqlbi.Bravo
             if (environment.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
+#if DEBUG
                 app.UseSwagger();
                 app.UseSwaggerUI();
+#endif
             }
 
             app.UseRouting();

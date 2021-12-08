@@ -1,6 +1,8 @@
 ﻿using System.Drawing;
 using System.Runtime.InteropServices;
 
+#nullable disable
+
 namespace Sqlbi.Bravo.Infrastructure.Windows
 {
     public enum DialogResult

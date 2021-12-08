@@ -9,10 +9,10 @@ namespace Sqlbi.Bravo.Infrastructure.Windows
 {
     internal static class Win32Network
     {
-        public static IEnumerable<(IPEndPoint EndPoint, TcpState State, int ProcessId)> GetTcpConnections()
+        public static IEnumerable<(IPEndPoint EndPoint, TcpState State, int ProcessId)> GetTcpConnections(Func<(IPEndPoint EndPoint, TcpState State, int ProcessId), bool> predicate)
         {
             var rows = GetTcpRows();
-            var connections = rows.Select((r) => (r.LocalEndPoint, r.TcpState, r.ProcessId)).ToArray();
+            var connections = rows.Select((r) => (r.LocalEndPoint, r.TcpState, r.ProcessId)).Where(predicate).ToArray();
 
             return connections;
         }

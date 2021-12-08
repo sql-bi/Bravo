@@ -18,15 +18,16 @@ namespace Sqlbi.Bravo.Controllers
 
         /// <summary>
         /// The destination URI where authentication responses (tokens) are returned after successfully authenticating or signing out users.
-        /// Reply URI http://localhost/auth/redirect
-        /// See docs for "localhost" redirect URI special considerations
-        /// <see cref="https://docs.microsoft.com/en-us/azure/active-directory/develop/reply-url#localhost-exceptions"/>
-        /// <see cref="https://docs.microsoft.com/en-us/azure/active-directory/develop/reply-url#prefer-127001-over-localhost"/>
         /// </summary>
+        /// <remarks>The reply URI is http://localhost/auth/redirect </remarks>
         [HttpGet]
         [ActionName("redirect")]
         public ContentResult Redirect()
         {
+            // See docs for "localhost" redirect URI special considerations
+            // - https://docs.microsoft.com/en-us/azure/active-directory/develop/reply-url#localhost-exceptions
+            // - https://docs.microsoft.com/en-us/azure/active-directory/develop/reply-url#prefer-127001-over-localhost
+
             var path = Path.Combine(_environment.WebRootPath, "auth-redirect.html");
             var content = System.IO.File.ReadAllText(path);
 

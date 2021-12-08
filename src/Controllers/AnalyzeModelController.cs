@@ -7,7 +7,7 @@ using System.Net.Mime;
 
 namespace Sqlbi.Bravo.Controllers
 {
-    [Route("api/AnalyzeModel/[action]")]
+    [Route("api/[action]")]
     [ApiController]
     public class AnalyzeModelController : ControllerBase
     {
@@ -35,7 +35,28 @@ namespace Sqlbi.Bravo.Controllers
         }
 
         /// <summary>
-        /// Returns a list of active PowerBI desktop instances containing local Power BI reports
+        /// Returns a database model from a PBIDesktop instance.
+        /// </summary>
+        /// <response code="404">The PBIDesktop instance requested is no longer running.</response>
+        [HttpPost]
+        [ActionName("GetModelFromReport")]
+        [Produces(MediaTypeNames.Application.Json)]
+        [ProducesResponseType(typeof(DatabaseModel), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public IActionResult GetDatabaseModelFromPBIDesktop(PBIDesktopModel model)
+        {
+            var pbidesktop = _pbidesktopService.GetInstanceDetails(instance: model);
+            if (pbidesktop is null)
+                return NotFound();
+
+            // TODO: set default values for TomExtractor readStatisticsFromData/sampleRows properties
+            var databaseModel = _analyzeModelService.GetDatabaseModelFromSSAS(pbidesktop, readStatisticsFromData: default, sampleRows: default);
+
+            return Ok(databaseModel);
+        }
+
+        /// <summary>
+        /// Returns a list of all active PBIDesktop instances.
         /// </summary>
         [HttpGet]
         [ActionName("ListReports")]

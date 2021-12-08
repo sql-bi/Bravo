@@ -1,6 +1,8 @@
 ﻿using Bravo.Models;
+using Dax.Metadata.Extractor;
 using Dax.ViewModel;
 using Dax.Vpax.Tools;
+using Sqlbi.Bravo.Infrastructure;
 using System.IO;
 using System.Linq;
 
@@ -11,7 +13,30 @@ namespace Sqlbi.Bravo.Services
         public DatabaseModel GetDatabaseModelFromVpax(Stream stream)
         {
             var vpaxContent = VpaxTools.ImportVpax(stream);
-            var vpaModel = new VpaModel(vpaxContent.DaxModel);
+            var databaseModel = GetDatabaseModelFromVpaxMetadataModel(vpaxContent.DaxModel);
+
+            return databaseModel;
+        }
+
+        public DatabaseModel GetDatabaseModelFromSSAS(PBIDesktopModel pbidesktop, bool readStatisticsFromData = true, int sampleRows = 0)
+        {
+            var daxModel = TomExtractor.GetDaxModel(
+                pbidesktop.ServerName,
+                pbidesktop.DatabaseName,
+                AppConstants.ApplicationName,
+                AppConstants.ApplicationFileVersion,
+                readStatisticsFromData,
+                sampleRows
+                );
+
+            var databaseModel = GetDatabaseModelFromVpaxMetadataModel(daxModel);
+
+            return databaseModel;
+        }
+
+        private DatabaseModel GetDatabaseModelFromVpaxMetadataModel(Dax.Metadata.Model daxModel)
+        {
+            var vpaModel = new VpaModel(daxModel);
 
             var databaseSize = vpaModel.Columns.Sum((c) => c.TotalSize);
             var databaseModel = new DatabaseModel
@@ -37,7 +62,7 @@ namespace Sqlbi.Bravo.Services
                         return column;
                     })
                 },
-                Measures = vpaxContent.DaxModel.Tables.SelectMany((t) => t.Measures).Select((m) =>
+                Measures = daxModel.Tables.SelectMany((t) => t.Measures).Select((m) =>
                 {
                     var measure = new DatabaseModelMeasure
                     {
@@ -50,6 +75,7 @@ namespace Sqlbi.Bravo.Services
             };
 
             return databaseModel;
+
         }
     }
 }

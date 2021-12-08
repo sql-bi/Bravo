@@ -30,16 +30,16 @@ namespace Bravo.Models
         public int ColumnsUnreferencedCount { get; set; }
 
         [JsonPropertyName("columns")]
-        public IEnumerable<DatabaseModelColumn> Columns { get; set; }
+        public IEnumerable<DatabaseModelColumn>? Columns { get; set; }
     }
 
     public class DatabaseModelColumn
     {
         [JsonPropertyName("columnName")]
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
         [JsonPropertyName("tableName")]
-        public string TableName { get; set; }
+        public string? TableName { get; set; }
 
         [JsonPropertyName("columnCardinality")]
         public long Cardinality { get; set; }

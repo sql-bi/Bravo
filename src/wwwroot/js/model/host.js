@@ -8,7 +8,7 @@
 class Host extends Dispatchable {
 
     // Host URL
-    hostUrl = "http://localhost:5000/";
+    hostUrl = "http://localhost:5000/api/";
 
     constructor() {
         super();
@@ -48,14 +48,14 @@ class Host extends Dispatchable {
     }
 
     async getModelFromVpax(file) {
-        const action = "api/AnalyzeModel/GetModelFromVpax";
+        const action = "GetModelFromVpax";
         if (debug) return this.debugCall(action);
      
         return await Utils.Request.upload(`${this.hostUrl}${action}`, file);
     }
 
     async listReports() {
-        const action = "home/ListReports";
+        const action = "ListReports";
         if (debug) return this.debugCall(action);
      
         return await Utils.Request.get(`${this.hostUrl}${action}`);

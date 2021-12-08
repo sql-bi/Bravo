@@ -1,5 +1,6 @@
 ﻿using Sqlbi.Bravo.Infrastructure.Windows;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Management;
@@ -19,6 +20,23 @@ namespace Sqlbi.Bravo.Infrastructure.Extensions
 
             var parentProcessId = (int)(uint)item["ParentProcessId"];
             return Process.GetProcessById(parentProcessId);
+        }
+
+        public static IEnumerable<int> GetChildProcessIds(this Process process, string? name = null)
+        {
+            var queryString = $"SELECT ProcessId FROM Win32_Process WHERE ParentProcessId = { process.Id }";
+
+            if (name is not null)
+                queryString += $" AND Name = '{ name }'";
+
+            using var query = new ManagementObjectSearcher(queryString);
+            using var collection = query.Get();
+
+            foreach (var item in collection)
+            {
+                if (item is not null)
+                    yield return (int)(uint)item["ProcessId"];
+            }
         }
 
         public static string GetMainWindowTitle(this Process process)
