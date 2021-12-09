@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using System.IO;
 
 namespace Sqlbi.Bravo.Controllers
@@ -9,7 +8,6 @@ namespace Sqlbi.Bravo.Controllers
     public class HomeController : ControllerBase
     {
         /*
-         * See => ** AnalyzeModelController.GetDatabaseModelFromVpax() **
          * Returns a model view from a VPAX file stream.
          * Parameters: file stream
          */
@@ -17,7 +15,6 @@ namespace Sqlbi.Bravo.Controllers
         //public IActionResult GetModelFromVpax()
 
         /*
-         * See => ** AnalyzeModelController.GetDatabaseModelFromPBIDesktop() **
          * Returns a model view (as GetModelFromVpax) from a local Power BI report 
          * Parameters: local window id?
          */
@@ -41,11 +38,11 @@ namespace Sqlbi.Bravo.Controllers
          * Returns a VPAX file stream from a local Power BI report
          * Parameters: local window id?
          */
-        [HttpGet]
-        public Stream ExportVpaxFromReport()
-        {
-            return null;
-        }
+        //[HttpGet]
+        //public Stream ExportVpaxFromReport()
+        //{
+        //    return null;
+        //}
 
         /*
          * Returns a VPAX file stream from a remote Power BI dataset
@@ -58,7 +55,6 @@ namespace Sqlbi.Bravo.Controllers
         }
 
         /*
-         * See => ** AnalyzeModelController.GetPBIDesktopInstances() **
          * Returns a list of ids of windows containing local Power BI reports
          */
         //[HttpGet]

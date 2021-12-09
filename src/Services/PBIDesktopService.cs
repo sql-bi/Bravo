@@ -1,4 +1,6 @@
 ﻿using Bravo.Models;
+using Dax.Metadata.Extractor;
+using Dax.Vpax.Tools;
 using Sqlbi.Bravo.Infrastructure;
 using Sqlbi.Bravo.Infrastructure.Extensions;
 using Sqlbi.Bravo.Infrastructure.Helpers;
@@ -6,6 +8,7 @@ using Sqlbi.Bravo.Infrastructure.Windows;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
@@ -30,6 +33,30 @@ namespace Sqlbi.Bravo.Services
                     ProcessId = pbidesktopProcess.Id,
                     ReportName = pbidesktopWindowTitle.ToPBIDesktopReportName(),
                 };
+            }
+        }
+
+        public Stream ExportVpax(PBIDesktopModel pbidesktop, bool includeTomModel = true)
+        {
+            pbidesktop = GetInstanceDetails(pbidesktop)!;
+
+            var daxModel = TomExtractor.GetDaxModel(pbidesktop.ServerName, pbidesktop.DatabaseName, AppConstants.ApplicationName, AppConstants.ApplicationFileVersion);
+            var tomModel = includeTomModel ? TomExtractor.GetDatabase(pbidesktop.ServerName, pbidesktop.DatabaseName) : null;
+            var vpaModel = new Dax.ViewVpaExport.Model(daxModel);
+
+            var vpaxPath = Path.GetTempFileName();
+            try
+            {
+                VpaxTools.ExportVpax(vpaxPath, daxModel, vpaModel, tomModel);
+
+                var buffer = File.ReadAllBytes(vpaxPath);
+                var vpaxStream = new MemoryStream(buffer, writable: false);
+
+                return vpaxStream;
+            }
+            finally
+            {
+                File.Delete(vpaxPath);
             }
         }
 

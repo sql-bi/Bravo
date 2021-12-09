@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Sqlbi.Bravo.Services;
 using System.Collections.Generic;
+using System.IO;
 using System.Net.Mime;
 
 namespace Sqlbi.Bravo.Controllers
@@ -23,10 +24,11 @@ namespace Sqlbi.Bravo.Controllers
         /// <summary>
         /// Returns a database model from the VPAX file stream.
         /// </summary>
+        /// <response code="200">Success.</response>
         [HttpPost]
         [ActionName("GetModelFromVpax")]
         [Produces(MediaTypeNames.Application.Json)]
-        [ProducesResponseType(typeof(DatabaseModel), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(DatabaseModel))]
         public IActionResult GetDatabaseModelFromVpax()
         {
             var databaseModel = _analyzeModelService.GetDatabaseModelFromVpax(stream: Request.Body);
@@ -37,15 +39,15 @@ namespace Sqlbi.Bravo.Controllers
         /// <summary>
         /// Returns a database model from a PBIDesktop instance.
         /// </summary>
-        /// <response code="404">The PBIDesktop instance requested is no longer running.</response>
+        /// <response code="200">Success.</response>
+        /// <response code="404">The requested PBIDesktop instance is no longer running.</response>
         [HttpPost]
         [ActionName("GetModelFromReport")]
         [Produces(MediaTypeNames.Application.Json)]
-        [ProducesResponseType(typeof(DatabaseModel), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(DatabaseModel))]
         public IActionResult GetDatabaseModelFromPBIDesktop(PBIDesktopModel model)
         {
-            var pbidesktop = _pbidesktopService.GetInstanceDetails(instance: model);
+            var pbidesktop = _pbidesktopService.GetInstanceDetails(pbidesktop: model);
             if (pbidesktop is null)
                 return NotFound();
 
@@ -58,15 +60,32 @@ namespace Sqlbi.Bravo.Controllers
         /// <summary>
         /// Returns a list of all active PBIDesktop instances.
         /// </summary>
+        /// <response code="200">Success.</response>
         [HttpGet]
         [ActionName("ListReports")]
         [Produces(MediaTypeNames.Application.Json)]
-        [ProducesResponseType(typeof(IEnumerable<PBIDesktopModel>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<PBIDesktopModel>))]
         public IActionResult GetPBIDesktopInstances()
         {
             var pbidesktopModel = _pbidesktopService.GetActiveInstances();
 
             return Ok(pbidesktopModel);
+        }
+
+        /// <summary>
+        /// Returns a VPAX file stream from a PBIDesktop instance.
+        /// </summary>
+        /// <response code="200">Success.</response>
+        /// <response code="404">The requested PBIDesktop instance is no longer running.</response>
+        [HttpPost]
+        [ActionName("ExportVpaxFromReport")]
+        [Produces(MediaTypeNames.Application.Octet)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(byte[]))]
+        public IActionResult GetVpaxFromPBIDesktop(PBIDesktopModel model)
+        {
+            var vpaxStream = _pbidesktopService.ExportVpax(model);
+
+            return Ok(vpaxStream);
         }
     }
 }
