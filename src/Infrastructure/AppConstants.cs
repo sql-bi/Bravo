@@ -1,27 +1,28 @@
 ﻿using System;
 using System.Configuration;
 using System.Diagnostics;
+using System.IO;
 
 namespace Sqlbi.Bravo.Infrastructure
 {
     internal static class AppConstants
     {
-        public static string ApplicationName { get; } = "Sqlbi Bravo";
+        private static readonly string EnvironmentSpecialFolderLocalApplicationData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        private static readonly FileVersionInfo VersionInfo = FileVersionInfo.GetVersionInfo(Process.GetCurrentProcess().MainModule!.FileName!);
 
-        public static string ApplicationFileVersion { get; }
-
-        public static string ApplicationHostWindowTitle { get; } = "Bravo for Power BI";
-
-        public static string ApplicationInstanceUniqueName { get; } = $"SqlbiBravo-{Guid.NewGuid():D}";
-
-        public static string PBIDesktopProcessName { get; } = "PBIDesktop";
+        public static readonly string ApplicationName = "SqlbiBravo";
+        public static readonly string ApplicationHostWindowTitle = "Bravo for Power BI";
+        public static readonly string ApplicationInstanceUniqueName = $"{ApplicationName}-{Guid.NewGuid():D}";
+        public static readonly string ApplicationFolderLocalDataPath = Path.Combine(EnvironmentSpecialFolderLocalApplicationData, ApplicationName);
+        public static readonly string PBIDesktopProcessName = "PBIDesktop";
+        public static readonly string DefaultTokenCacheFilePath = Path.Combine(ApplicationFolderLocalDataPath!, ".msalcache.bin");
 
         static AppConstants()
         {
-            var fileVersionInfo = FileVersionInfo.GetVersionInfo(Process.GetCurrentProcess().MainModule!.FileName!);
-
-            ApplicationFileVersion = fileVersionInfo.FileVersion ?? throw new ConfigurationErrorsException(nameof(fileVersionInfo.FileVersion));
-            //ApplicationHostWindowTitle = fileVersionInfo.ProductName ?? throw new ConfigurationErrorsException(nameof(fileVersionInfo.ProductName));
+            ApplicationFileVersion = VersionInfo.FileVersion ?? throw new ConfigurationErrorsException(nameof(VersionInfo.FileVersion));
+            //ApplicationHostWindowTitle = VersionInfo.ProductName ?? throw new ConfigurationErrorsException(nameof(VersionInfo.ProductName));
         }
+
+        public static string ApplicationFileVersion { get; }
     }
 }

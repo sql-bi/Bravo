@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Sqlbi.Bravo.Services;
 using System.IO;
 using System.Net.Mime;
+using System.Threading.Tasks;
 
 namespace Sqlbi.Bravo.Controllers
 {
@@ -11,10 +13,12 @@ namespace Sqlbi.Bravo.Controllers
     public class AuthenticationController : ControllerBase
     {
         private readonly IWebHostEnvironment _environment;
+        private readonly IAuthenticationService _authenticationService;
 
-        public AuthenticationController(IWebHostEnvironment environment)
+        public AuthenticationController(IWebHostEnvironment environment, IAuthenticationService authenticationService)
         {
             _environment = environment;
+            _authenticationService = authenticationService;
         }
 
         /// <summary>
@@ -26,7 +30,7 @@ namespace Sqlbi.Bravo.Controllers
         [ActionName("redirect")]
         [Produces(MediaTypeNames.Text.Html)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
-        public ContentResult Redirect()
+        public IActionResult Redirect()
         {
             // See docs for "localhost" redirect URI special considerations
             // - https://docs.microsoft.com/en-us/azure/active-directory/develop/reply-url#localhost-exceptions
@@ -36,6 +40,15 @@ namespace Sqlbi.Bravo.Controllers
             var content = System.IO.File.ReadAllText(path);
 
             return Content(content, MediaTypeNames.Text.Html);
+        }
+
+        [HttpGet]
+        [ActionName("signIn")]
+        public async Task<IActionResult> SignIn()
+        {
+            var result = await _authenticationService.AcquireTokenAsync(null).ConfigureAwait(false);
+            
+            return Ok(result);
         }
     }
 }
