@@ -1,10 +1,13 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using Dax.Formatter;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Sqlbi.Bravo.Infrastructure.Extensions;
 using Sqlbi.Bravo.Services;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Sqlbi.Bravo
 {
@@ -19,7 +22,10 @@ namespace Sqlbi.Bravo
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllers();
+            services.AddControllers().AddJsonOptions((jsonOptions) =>
+            {
+                jsonOptions.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+            });
             services.AddCors((corsOptions) =>
             {
                 corsOptions.AddPolicy("AllowLocalWebAPI", (policyBuilder) =>
@@ -34,6 +40,7 @@ namespace Sqlbi.Bravo
 #endif
             services.AddSingleton<IAnalyzeModelService, AnalyzeModelService>();
             services.AddSingleton<IPBIDesktopService, PBIDesktopService>();
+            services.AddSingleton<IDaxFormatterClient, DaxFormatterClient>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment environment)

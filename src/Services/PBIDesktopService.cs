@@ -1,10 +1,10 @@
-﻿using Bravo.Models;
-using Dax.Metadata.Extractor;
+﻿using Dax.Metadata.Extractor;
 using Dax.Vpax.Tools;
 using Sqlbi.Bravo.Infrastructure;
 using Sqlbi.Bravo.Infrastructure.Extensions;
 using Sqlbi.Bravo.Infrastructure.Helpers;
 using Sqlbi.Bravo.Infrastructure.Windows;
+using Sqlbi.Bravo.Models;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -18,7 +18,7 @@ namespace Sqlbi.Bravo.Services
 {
     internal class PBIDesktopService : IPBIDesktopService
     {
-        public IEnumerable<PBIDesktopModel> GetActiveInstances()
+        public IEnumerable<PBIDesktopReport> GetReports()
         {
             foreach (var pbidesktopProcess in Process.GetProcessesByName(AppConstants.PBIDesktopProcessName))
             {
@@ -28,7 +28,7 @@ namespace Sqlbi.Bravo.Services
                 if (string.IsNullOrEmpty(pbidesktopWindowTitle))
                     continue;
 
-                yield return new PBIDesktopModel
+                yield return new PBIDesktopReport
                 {
                     ProcessId = pbidesktopProcess.Id,
                     ReportName = pbidesktopWindowTitle.ToPBIDesktopReportName(),
@@ -36,13 +36,18 @@ namespace Sqlbi.Bravo.Services
             }
         }
 
-        public Stream ExportVpax(PBIDesktopModel pbidesktop, bool includeTomModel = true)
+        public Stream? ExportVpax(PBIDesktopReport report, bool includeTomModel = true, bool includeVpaModel = true, bool readStatisticsFromData = true, int sampleRows = 0)
         {
-            pbidesktop = GetInstanceDetails(pbidesktop)!;
+            // TODO: set default for readStatisticsFromData and sampleRows arguments
 
-            var daxModel = TomExtractor.GetDaxModel(pbidesktop.ServerName, pbidesktop.DatabaseName, AppConstants.ApplicationName, AppConstants.ApplicationFileVersion);
-            var tomModel = includeTomModel ? TomExtractor.GetDatabase(pbidesktop.ServerName, pbidesktop.DatabaseName) : null;
-            var vpaModel = new Dax.ViewVpaExport.Model(daxModel);
+            // PBIDesktop instance is no longer available if parameters cannot be obtained
+            var parameters = GetConnectionParameters(report);
+            if (parameters == default)
+                return null;
+
+            var daxModel = TomExtractor.GetDaxModel(parameters.ServerName, parameters.DatabaseName, AppConstants.ApplicationName, AppConstants.ApplicationFileVersion, readStatisticsFromData, sampleRows);
+            var tomModel = includeTomModel ? TomExtractor.GetDatabase(parameters.ServerName, parameters.DatabaseName) : null;
+            var vpaModel = includeVpaModel ? new Dax.ViewVpaExport.Model(daxModel) : null;
 
             var vpaxPath = Path.GetTempFileName();
             try
@@ -60,42 +65,46 @@ namespace Sqlbi.Bravo.Services
             }
         }
 
-        public PBIDesktopModel? GetInstanceDetails(PBIDesktopModel model)
+        private (string ServerName, string DatabaseName) GetConnectionParameters(PBIDesktopReport report)
         {
             // Exit if the process specified by the processId parameter is not running
-            var pbidesktopProcess = TryGetProcessById(model.ProcessId);
+            var pbidesktopProcess = GetProcessById(report.ProcessId);
             if (pbidesktopProcess is null)
-                return null;
+                return default;
 
             // Exit if the PID has been reused and PBIDesktop process is no longer running
             if (!pbidesktopProcess.ProcessName.Equals(AppConstants.PBIDesktopProcessName, StringComparison.OrdinalIgnoreCase))
-                return null;
+                return default;
 
             var ssasProcessIds = pbidesktopProcess.GetChildProcessIds(name: "msmdsrv.exe").ToArray();
             if (ssasProcessIds.Length == 0)
-                return null;
+                return default;
 
             if (ssasProcessIds.Length > 1)
                 throw new InvalidOperationException($"Unexpected number of PBIDesktop SSAS processes [{ ssasProcessIds.Length }]");
 
             var ssasProcessId = ssasProcessIds.SingleOrDefault();
             if (ssasProcessId == default)
-                return null;
+                return default;
 
             var ssasConnection = Win32Network.GetTcpConnections((c) => c.ProcessId == ssasProcessId && c.State == TcpState.Listen && IPAddress.IsLoopback(c.EndPoint.Address)).SingleOrDefault();
             if (ssasConnection == default)
-                return null;
+                return default;
 
-            model.ServerName = ssasConnection.EndPoint.ToString();
-            model.DatabaseName = GetDatabaseName(model.ServerName);
+            var serverName = ssasConnection.EndPoint.ToString();
+            var databaseName = GetDatabaseName(serverName);
 
-            return model;
+            return (serverName, databaseName);
 
-            static Process? TryGetProcessById(int processId)
+            static Process? GetProcessById(int processId)
             {
                 try
                 {
-                    return Process.GetProcessById(processId);
+                    var process = Process.GetProcessById(processId);
+                    if (process?.HasExited == true)
+                        return null;
+
+                    return process;
                 }
                 catch (ArgumentException)
                 {

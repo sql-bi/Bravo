@@ -1,8 +1,6 @@
-﻿using Bravo.Models;
-using Dax.Metadata.Extractor;
-using Dax.ViewModel;
+﻿using Dax.ViewModel;
 using Dax.Vpax.Tools;
-using Sqlbi.Bravo.Infrastructure;
+using Sqlbi.Bravo.Models;
 using System.IO;
 using System.Linq;
 
@@ -10,38 +8,15 @@ namespace Sqlbi.Bravo.Services
 {
     internal class AnalyzeModelService : IAnalyzeModelService
     {
-        public DatabaseModel GetDatabaseModelFromVpax(Stream stream)
+        public TabularDatabase GetDatabaseFromVpax(Stream vpax)
         {
-            var vpaxContent = VpaxTools.ImportVpax(stream);
-            var databaseModel = GetDatabaseModelFromVpaxMetadataModel(vpaxContent.DaxModel);
-
-            return databaseModel;
-        }
-
-        public DatabaseModel GetDatabaseModelFromSSAS(PBIDesktopModel pbidesktop, bool readStatisticsFromData = true, int sampleRows = 0)
-        {
-            var daxModel = TomExtractor.GetDaxModel(
-                pbidesktop.ServerName,
-                pbidesktop.DatabaseName,
-                AppConstants.ApplicationName,
-                AppConstants.ApplicationFileVersion,
-                readStatisticsFromData,
-                sampleRows
-                );
-
-            var databaseModel = GetDatabaseModelFromVpaxMetadataModel(daxModel);
-
-            return databaseModel;
-        }
-
-        private DatabaseModel GetDatabaseModelFromVpaxMetadataModel(Dax.Metadata.Model daxModel)
-        {
-            var vpaModel = new VpaModel(daxModel);
+            var vpaxContent = VpaxTools.ImportVpax(stream: vpax);
+            var vpaModel = new VpaModel(vpaxContent.DaxModel);
 
             var databaseSize = vpaModel.Columns.Sum((c) => c.TotalSize);
-            var databaseModel = new DatabaseModel
+            var databaseModel = new TabularDatabase
             {
-                Info = new DatabaseModelInfo
+                Info = new TabularDatabaseInfo
                 {
                     TablesCount = vpaModel.Tables.Count(),
                     ColumnsCount = vpaModel.Columns.Count(),
@@ -50,7 +25,7 @@ namespace Sqlbi.Bravo.Services
                     ColumnsUnreferencedCount = vpaModel.Columns.Count((t) => t.IsReferenced == false),
                     Columns = vpaModel.Columns.Select((c) =>
                     {
-                        var column = new DatabaseModelColumn
+                        var column = new TabularColumn
                         {
                             Name = c.ColumnName,
                             TableName = c.Table.TableName,
@@ -62,9 +37,9 @@ namespace Sqlbi.Bravo.Services
                         return column;
                     })
                 },
-                Measures = daxModel.Tables.SelectMany((t) => t.Measures).Select((m) =>
+                Measures = vpaxContent.DaxModel.Tables.SelectMany((t) => t.Measures).Select((m) =>
                 {
-                    var measure = new DatabaseModelMeasure
+                    var measure = new TabularMeasure
                     {
                         Name = m.MeasureName.Name,
                         TableName = m.Table.TableName.Name,
@@ -75,7 +50,6 @@ namespace Sqlbi.Bravo.Services
             };
 
             return databaseModel;
-
         }
     }
 }

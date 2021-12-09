@@ -5,6 +5,7 @@ namespace Sqlbi.Bravo.Controllers
 {
     [Route("api/[action]")]
     [ApiController]
+    [NonController]
     public class HomeController : ControllerBase
     {
         /*
@@ -96,11 +97,11 @@ namespace Sqlbi.Bravo.Controllers
          * Format passed DAX measures
          * Parameters: a list of measures, a list of options
          */
-        [HttpGet]
-        public string FormatDax()
-        {
-            return null;
-        }
+        //[HttpGet]
+        //public string FormatDax()
+        //{
+        //    return null;
+        //}
 
 
         /*

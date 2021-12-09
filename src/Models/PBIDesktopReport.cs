@@ -1,8 +1,8 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace Bravo.Models
+namespace Sqlbi.Bravo.Models
 {
-    public class PBIDesktopModel
+    public class PBIDesktopReport
     {
         /// <summary>
         /// PBIDesktop process identifier (system PID)
@@ -15,18 +15,6 @@ namespace Bravo.Models
         /// </summary>
         [JsonPropertyName("reportName")]
         public string? ReportName { get; set; }
-
-        /// <summary>
-        /// PBIDesktop local SSAS instance name (server name / endpoint)
-        /// </summary>
-        [JsonIgnore]
-        public string? ServerName { get; set; }
-
-        /// <summary>
-        /// PBIDesktop local SSAS instance database name
-        /// </summary>
-        [JsonIgnore]
-        public string? DatabaseName { get; set; }
     }
 
     internal static class PBIDesktopModelExtensions

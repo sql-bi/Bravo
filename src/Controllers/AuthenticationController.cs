@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.IO;
 using System.Net.Mime;
@@ -17,11 +18,14 @@ namespace Sqlbi.Bravo.Controllers
         }
 
         /// <summary>
-        /// The destination URI where authentication responses (tokens) are returned after successfully authenticating or signing out users.
+        /// The destination URI where authentication responses (tokens) are returned after successfully authenticating or signing out users
         /// </summary>
         /// <remarks>The reply URI is http://localhost/auth/redirect </remarks>
+        /// <response code="200">Success</response>
         [HttpGet]
         [ActionName("redirect")]
+        [Produces(MediaTypeNames.Text.Html)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
         public ContentResult Redirect()
         {
             // See docs for "localhost" redirect URI special considerations
