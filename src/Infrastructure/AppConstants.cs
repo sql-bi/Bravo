@@ -15,6 +15,7 @@ namespace Sqlbi.Bravo.Infrastructure
         public static readonly string ApplicationInstanceUniqueName = $"{ApplicationName}-{Guid.NewGuid():D}";
         public static readonly string ApplicationFolderLocalDataPath = Path.Combine(EnvironmentSpecialFolderLocalApplicationData, ApplicationName);
         public static readonly string PBIDesktopProcessName = "PBIDesktop";
+        public static readonly string PBIDesktopMainWindowTitleSuffix = " - Power BI Desktop";
         public static readonly string DefaultTokenCacheFilePath = Path.Combine(ApplicationFolderLocalDataPath!, ".msalcache.bin");
 
         static AppConstants()

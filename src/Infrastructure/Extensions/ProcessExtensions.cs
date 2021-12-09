@@ -39,12 +39,12 @@ namespace Sqlbi.Bravo.Infrastructure.Extensions
             }
         }
 
-        public static string GetMainWindowTitle(this Process process)
+        public static string GetMainWindowTitle(this Process process, Func<string, bool> predicate)
         {
             if (process.MainWindowTitle.Length > 0)
                 return process.MainWindowTitle;
-
-            var builder = new StringBuilder(1000);
+            
+            var builder = new StringBuilder(capacity: 1000);
 
             foreach (ProcessThread thread in process.Threads)
             {
@@ -55,7 +55,14 @@ namespace Sqlbi.Bravo.Infrastructure.Extensions
                         NativeMethods.SendMessage(hWnd, NativeMethods.WM_GETTEXT, builder.Capacity, builder);
 
                         if (builder.Length > 0)
-                            return false;
+                        {
+                            var windowTitle = builder.ToString();
+
+                            if (predicate(windowTitle))
+                                return false;
+
+                            builder.Clear();
+                        }
                     }
 
                     return true;

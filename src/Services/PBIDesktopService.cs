@@ -22,7 +22,7 @@ namespace Sqlbi.Bravo.Services
         {
             foreach (var pbidesktopProcess in Process.GetProcessesByName(AppConstants.PBIDesktopProcessName))
             {
-                var pbidesktopWindowTitle = pbidesktopProcess.GetMainWindowTitle();
+                var pbidesktopWindowTitle = pbidesktopProcess.GetMainWindowTitle((windowTitle) => windowTitle.IsPBIMainWindowTitle());
 
                 // PBIDesktop is opening or the SSAS instance/model is not yet ready
                 if (string.IsNullOrEmpty(pbidesktopWindowTitle))
