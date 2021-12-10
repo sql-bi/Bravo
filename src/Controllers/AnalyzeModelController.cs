@@ -19,9 +19,9 @@ namespace Sqlbi.Bravo.Controllers
         private readonly IAnalyzeModelService _analyzeModelService;
         private readonly IPBIDesktopService _pbidesktopService;
         private readonly IPBICloudService _pbicloudService;
-        private readonly IAuthenticationService _authenticationService;
+        private readonly IPBICloudAuthenticationService _authenticationService;
 
-        public AnalyzeModelController(IAnalyzeModelService analyzeModelService, IPBIDesktopService pbidesktopService, IPBICloudService pbicloudService, IAuthenticationService authenticationService)
+        public AnalyzeModelController(IAnalyzeModelService analyzeModelService, IPBIDesktopService pbidesktopService, IPBICloudService pbicloudService, IPBICloudAuthenticationService authenticationService)
         {
             _analyzeModelService = analyzeModelService;
             _pbidesktopService = pbidesktopService;

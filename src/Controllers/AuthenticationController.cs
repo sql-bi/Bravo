@@ -13,41 +13,18 @@ namespace Sqlbi.Bravo.Controllers
     [ApiController]
     public class AuthenticationController : ControllerBase
     {
-        private readonly IWebHostEnvironment _environment;
-        private readonly IAuthenticationService _authenticationService;
+        private readonly IPBICloudAuthenticationService _pbicloudAuthenticationService;
 
-        public AuthenticationController(IWebHostEnvironment environment, IAuthenticationService authenticationService)
+        public AuthenticationController(IPBICloudAuthenticationService pbicloudAuthenticationService)
         {
-            _environment = environment;
-            _authenticationService = authenticationService;
-        }
-
-        /// <summary>
-        /// The destination URI where authentication responses (tokens) are returned after successfully authenticating or signing out users
-        /// </summary>
-        /// <remarks>The reply URI is http://localhost/auth/redirect </remarks>
-        /// <response code="200">Success</response>
-        [HttpGet]
-        [ActionName("redirect")]
-        [Produces(MediaTypeNames.Text.Html)]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
-        public IActionResult Redirect()
-        {
-            // See docs for "localhost" redirect URI special considerations
-            // - https://docs.microsoft.com/en-us/azure/active-directory/develop/reply-url#localhost-exceptions
-            // - https://docs.microsoft.com/en-us/azure/active-directory/develop/reply-url#prefer-127001-over-localhost
-
-            var path = Path.Combine(_environment.WebRootPath, "auth-redirect.html");
-            var content = System.IO.File.ReadAllText(path);
-
-            return Content(content, MediaTypeNames.Text.Html);
+            _pbicloudAuthenticationService = pbicloudAuthenticationService;
         }
 
         [HttpGet]
-        [ActionName("signIn")]
+        [ActionName("powerbi/signIn")]
         public async Task<IActionResult> SignIn()
         {
-            var authenticationResult = await _authenticationService.AcquireTokenAsync(null).ConfigureAwait(false);
+            var authenticationResult = await _pbicloudAuthenticationService.AcquireTokenAsync(null).ConfigureAwait(false);
             var principal = authenticationResult.ClaimsPrincipal;
 
             var properties = new List<string>();

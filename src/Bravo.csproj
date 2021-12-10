@@ -40,11 +40,5 @@
       <PackagePath></PackagePath>
     </None>
   </ItemGroup>
-
-  <ItemGroup>
-    <None Update="Infrastructure\Authentication\CustomLoginWindow.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </None>
-  </ItemGroup>
 	
 </Project>
