@@ -8,7 +8,7 @@ namespace Sqlbi.Bravo.Infrastructure.Authentication
         public CustomWebViewOptions(string webrootPath)
         {
             var succeessHtml = File.ReadAllText(Path.Combine(webrootPath, "auth-success.html"));
-            var errorHtml = Path.Combine(webrootPath, "auth-error.html");
+            var errorHtml = File.ReadAllText(Path.Combine(webrootPath, "auth-error.html"));
 
             HtmlMessageSuccess = succeessHtml;
             HtmlMessageError = errorHtml;

@@ -6,7 +6,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Sqlbi.Bravo.Infrastructure.Extensions;
 using Sqlbi.Bravo.Services;
-using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace Sqlbi.Bravo

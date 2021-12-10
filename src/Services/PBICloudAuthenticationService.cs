@@ -42,7 +42,7 @@ namespace Sqlbi.Bravo.Services
                 .WithDefaultRedirectUri()
                 .Build();
 
-            //TokenCacheHelper.EnableSerialization(_application.UserTokenCache);
+            TokenCacheHelper.EnableSerialization(_application.UserTokenCache);
         }
 
         private readonly IWebHostEnvironment _environment;
@@ -54,7 +54,7 @@ namespace Sqlbi.Bravo.Services
             _customWebViewOptions = new CustomWebViewOptions(_environment.WebRootPath);
         }
 
-        public async Task<AuthenticationResult> AcquireTokenAsync(string identifier)
+        public async Task<AuthenticationResult> AcquireTokenAsync(string? identifier = default)
         {
             // Use account used to signed-in in Windows (WAM). WAM will always get an account in the cache.
             // So if we want to have a chance to select the accounts interactively, we need to force the non-account
@@ -100,13 +100,8 @@ namespace Sqlbi.Bravo.Services
                     var authenticationResult = await builder.ExecuteAsync().ConfigureAwait(false);
                     return authenticationResult;
                 }
-                catch (MsalException mex) 
+                catch (MsalException) // ex.ErrorCode => Microsoft.Identity.Client.MsalError
                 {
-                    if (mex.ErrorCode == MsalError.AccessDenied) // ex.ErrorCode => Microsoft.Identity.Client.MsalError
-                    {
-                        // The user canceled sign in, take no action.
-                    }
-
                     throw;
                 }
             }

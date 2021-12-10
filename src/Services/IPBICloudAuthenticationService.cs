@@ -5,7 +5,7 @@ namespace Sqlbi.Bravo.Services
 {
     public interface IPBICloudAuthenticationService
     {
-        Task<AuthenticationResult> AcquireTokenAsync(string identifier);
+        Task<AuthenticationResult> AcquireTokenAsync(string? identifier = default);
 
         Task ClearTokenCache();
     }

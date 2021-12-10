@@ -149,11 +149,11 @@ namespace Sqlbi.Bravo.Controllers
         /*
          * Sign in by receiving an auth token from the UI.
          */
-        [HttpGet]
-        public string SignIn()
-        {
-            return null;
-        }
+        //[HttpGet]
+        //public string SignIn()
+        //{
+        //    return null;
+        //}
 
         /*
          * Returns the user info such as the name, email and picture (if any)
