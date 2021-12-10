@@ -1,0 +1,14 @@
+﻿<Window x:Class="Sqlbi.Bravo.Infrastructure.Authentication.LoginWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Sqlbi.Bravo.Infrastructure.Authentication"
+        mc:Ignorable="d"
+        Loaded="Window_Loaded"
+        Closed="Window_Closed"
+        Title="Sign in" Height="800" Width="600" WindowStyle="ToolWindow" WindowStartupLocation="CenterOwner" ResizeMode="NoResize">
+    <Grid>
+        <WebBrowser x:Name="webBrowser" Navigating="WebBrowser_Navigating" />
+    </Grid>
+</Window>

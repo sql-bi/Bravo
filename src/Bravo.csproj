@@ -3,9 +3,8 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType> 
     <TargetFramework>net5.0-windows</TargetFramework>
-    <Platforms>AnyCPU;x64</Platforms>
+    <Platforms>AnyCPU</Platforms>
     <ApplicationIcon>bravo.ico</ApplicationIcon>
-    <StartupObject />
     <Company>SQLBI</Company>
     <Authors>SQLBI</Authors>
     <Product>Bravo for Power BI</Product>
@@ -39,6 +38,12 @@
     <None Include="wwwroot\favicons\icon-228.png">
       <Pack>True</Pack>
       <PackagePath></PackagePath>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Infrastructure\Authentication\CustomLoginWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
     </None>
   </ItemGroup>
 	

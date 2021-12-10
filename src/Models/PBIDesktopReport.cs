@@ -17,8 +17,8 @@ namespace Sqlbi.Bravo.Models
         public string? ReportName { get; set; }
     }
 
-    internal static class PBIDesktopModelExtensions
-    {
+    //internal static class PBIDesktopModelExtensions
+    //{
         //public static string GetConnectionString(this PBIDesktopModel pbidesktop)
         //{
         //    Debug.Assert(IPEndPoint.TryParse(pbidesktop.ServerName!, out var endpoint));
@@ -27,5 +27,5 @@ namespace Sqlbi.Bravo.Models
         //    var connectionString = ConnectionStringHelper.BuildFrom(pbidesktop.ServerName, pbidesktop.DatabaseName);
         //    return connectionString;
         //}
-    }
+    //}
 }

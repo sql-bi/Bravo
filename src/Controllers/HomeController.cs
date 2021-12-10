@@ -67,11 +67,11 @@ namespace Sqlbi.Bravo.Controllers
         /*
          * Returns a list of remote Power BI datasets URLs
          */
-        [HttpGet]
-        public string ListDatasets()
-        {
-            return null;
-        }
+        //[HttpGet]
+        //public string ListDatasets()
+        //{
+        //    return null;
+        //}
 
         /*
          * Update a local Power BI report (for example by passing formatted measures)

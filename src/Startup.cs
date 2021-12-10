@@ -25,6 +25,7 @@ namespace Sqlbi.Bravo
             services.AddControllers().AddJsonOptions((jsonOptions) =>
             {
                 jsonOptions.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+                //jsonOptions.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
             });
             services.AddCors((corsOptions) =>
             {
@@ -38,6 +39,7 @@ namespace Sqlbi.Bravo
 #if DEBUG
             services.AddSwaggerGenCustomized();
 #endif
+            services.AddSingleton<IPBICloudService, PBICloudService>();
             services.AddSingleton<IPBIDesktopService, PBIDesktopService>();
             services.AddSingleton<IAnalyzeModelService, AnalyzeModelService>();
             services.AddSingleton<IAuthenticationService, AuthenticationService>();
