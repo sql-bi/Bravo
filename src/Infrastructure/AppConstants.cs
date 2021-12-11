@@ -17,6 +17,7 @@ namespace Sqlbi.Bravo.Infrastructure
         public static readonly string PBIDesktopProcessName = "PBIDesktop";
         public static readonly string PBIDesktopMainWindowTitleSuffix = " - Power BI Desktop";
         public static readonly string DefaultTokenCacheFilePath = Path.Combine(ApplicationFolderLocalDataPath!, ".msalcache.bin");
+        public static readonly TimeSpan MSALSignInTimeout = TimeSpan.FromMinutes(5);
 
         static AppConstants()
         {

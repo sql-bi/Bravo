@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Sqlbi.Bravo.Infrastructure.Extensions;
 using Sqlbi.Bravo.Infrastructure.Models.PBICloud;
 using Sqlbi.Bravo.Models;
 using Sqlbi.Bravo.Services;
@@ -32,7 +31,7 @@ namespace Sqlbi.Bravo.Controllers
         /// <summary>
         /// Returns a database model from the VPAX file stream
         /// </summary>
-        /// <response code="200">Success</response>
+        /// <response code="200">Status200OK - Success</response>
         [HttpPost]
         [ActionName("GetModelFromVpax")]
         [Consumes(MediaTypeNames.Application.Octet)]
@@ -47,8 +46,8 @@ namespace Sqlbi.Bravo.Controllers
         /// <summary>
         /// Returns a database model from a PBIDesktop instance
         /// </summary>
-        /// <response code="200">Success</response>
-        /// <response code="404">The requested PBIDesktop instance is no longer running</response>
+        /// <response code="200">Status200OK - Success</response>
+        /// <response code="404">Status404NotFound - The requested PBIDesktop instance is no longer running</response>
         [HttpPost]
         [ActionName("GetModelFromReport")]
         [Consumes(MediaTypeNames.Application.Json)]
@@ -67,17 +66,20 @@ namespace Sqlbi.Bravo.Controllers
         /// <summary>
         /// Returns a list of all PBICloud datasets
         /// </summary>
-        /// <response code="200">Success</response>
+        /// <response code="200">Status200OK - Success</response>
+        /// <response code="401">Status401Unauthorized - Sign-in required</response>
         [HttpGet]
         [ActionName("ListDatasets")]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<PBICloudDataset>))]
         public async Task<IActionResult> GetPBICloudDatasets()
         {
-            var auth = await _authenticationService.AcquireTokenAsync().ConfigureAwait(false);
+            var accessToken = _authenticationService.CurrentAuthentication?.AccessToken;
+            if (accessToken is null)
+                return Unauthorized();
 
-            var onlineWorkspaces = await _pbicloudService.GetWorkspacesAsync(auth.AccessToken).ConfigureAwait(false);
-            var onlineDatasets = await _pbicloudService.GetSharedDatasetsAsync(auth.AccessToken).ConfigureAwait(false);
+            var onlineWorkspaces = await _pbicloudService.GetWorkspacesAsync(accessToken).ConfigureAwait(false);
+            var onlineDatasets = await _pbicloudService.GetSharedDatasetsAsync(accessToken).ConfigureAwait(false);
 
             var selectedWorkspaces = onlineWorkspaces.Where((w) => w.CapacitySkuType == WorkspaceCapacitySkuType.Premium);
             var selectedDatasets = onlineDatasets.Where((d) => !d.Model.IsExcelWorkbook /* && !d.Model.IsPushDataEnabled */); // TOFIX: exclude datasets where IsPushDataEnabled
@@ -101,7 +103,7 @@ namespace Sqlbi.Bravo.Controllers
         /// <summary>
         /// Returns a list of all open PBIDesktop reports
         /// </summary>
-        /// <response code="200">Success</response>
+        /// <response code="200">Status200OK - Success</response>
         [HttpGet]
         [ActionName("ListReports")]
         [Produces(MediaTypeNames.Application.Json)]
@@ -115,8 +117,8 @@ namespace Sqlbi.Bravo.Controllers
         /// <summary>
         /// Returns a VPAX file stream from an active PBIDesktop report
         /// </summary>
-        /// <response code="200">Success</response>
-        /// <response code="404">The requested PBIDesktop instance is no longer running</response>
+        /// <response code="200">Status200OK - Success</response>
+        /// <response code="404">Status404NotFound - The requested PBIDesktop instance is no longer running</response>
         [HttpPost]
         [ActionName("ExportVpaxFromReport")]
         [Consumes(MediaTypeNames.Application.Json)]

@@ -1,12 +1,15 @@
 ﻿using Microsoft.Identity.Client;
+using System;
 using System.Threading.Tasks;
 
 namespace Sqlbi.Bravo.Services
 {
     public interface IPBICloudAuthenticationService
     {
-        Task<AuthenticationResult> AcquireTokenAsync(string? identifier = default);
+        AuthenticationResult? CurrentAuthentication { get; }
 
-        Task ClearTokenCache();
+        Task AcquireTokenAsync(TimeSpan cancelAfter, string? identifier = default);
+
+        Task ClearTokenCacheAsync();
     }
 }

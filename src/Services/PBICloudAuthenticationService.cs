@@ -2,7 +2,9 @@
 using Microsoft.Identity.Client;
 using Sqlbi.Bravo.Infrastructure.Authentication;
 using Sqlbi.Bravo.Infrastructure.Helpers;
+using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Sqlbi.Bravo.Services
@@ -33,12 +35,12 @@ namespace Sqlbi.Bravo.Services
         };
 
         private static readonly IPublicClientApplication _application;
+        private static readonly SemaphoreSlim _tokenSemaphore = new(1);
 
         static PBICloudAuthenticationService()
         {
             _application = PublicClientApplicationBuilder.Create(_options.ClientId)
                 .WithAuthority($"{ _options.Instance }{ _options.TenantId }")
-                //.WithRedirectUri(_options.RedirectUri)
                 .WithDefaultRedirectUri()
                 .Build();
 
@@ -47,6 +49,7 @@ namespace Sqlbi.Bravo.Services
 
         private readonly IWebHostEnvironment _environment;
         private readonly CustomWebViewOptions _customWebViewOptions;
+        private AuthenticationResult? _authenticationResult;
 
         public PBICloudAuthenticationService(IWebHostEnvironment environment)
         {
@@ -54,7 +57,48 @@ namespace Sqlbi.Bravo.Services
             _customWebViewOptions = new CustomWebViewOptions(_environment.WebRootPath);
         }
 
-        public async Task<AuthenticationResult> AcquireTokenAsync(string? identifier = null)
+        public AuthenticationResult? CurrentAuthentication => _authenticationResult;
+
+        /// <summary>
+        /// Removes all account information from MSAL's token cache, removes app-only (not OS-wide) and does not affect the browser cookies
+        /// </summary>
+        public async Task ClearTokenCacheAsync()
+        {
+            await _tokenSemaphore.WaitAsync();
+            try
+            {
+                var accounts = (await _application.GetAccountsAsync().ConfigureAwait(false)).ToArray();
+
+                foreach (var account in accounts)
+                    await _application.RemoveAsync(account).ConfigureAwait(false);
+
+                _authenticationResult = null;
+            }
+            finally
+            {
+                _tokenSemaphore.Release();
+            }
+        }
+
+        public async Task AcquireTokenAsync(TimeSpan cancelAfter, string? identifier = null)
+        {
+            await _tokenSemaphore.WaitAsync();
+            try
+            {
+                using var cancellationTokenSource = new CancellationTokenSource(cancelAfter);
+
+                _authenticationResult = await InternalAcquireTokenAsync(cancellationTokenSource.Token, identifier).ConfigureAwait(false);
+            }
+            finally
+            {
+                _tokenSemaphore.Release();
+            }
+        }
+
+        /// <summary>
+        /// https://docs.microsoft.com/en-us/azure/active-directory/develop/scenario-desktop-acquire-token?tabs=dotnet
+        /// </summary>
+        private async Task<AuthenticationResult> InternalAcquireTokenAsync(CancellationToken cancellationToken, string? identifier = null)
         {
             // Use account used to signed-in in Windows (WAM). WAM will always get an account in the cache.
             // So if we want to have a chance to select the accounts interactively, we need to force the non-account
@@ -68,7 +112,7 @@ namespace Sqlbi.Bravo.Services
             try
             {
                 // Try to acquire an access token from the cache, if UI interaction is required, MsalUiRequiredException will be thrown.
-                var authenticationResult = await _application.AcquireTokenSilent(_scopes, account).ExecuteAsync().ConfigureAwait(false);
+                var authenticationResult = await _application.AcquireTokenSilent(_scopes, account).ExecuteAsync(cancellationToken).ConfigureAwait(false);
                 return authenticationResult;
             }
             catch (MsalUiRequiredException /* murex */)
@@ -80,7 +124,7 @@ namespace Sqlbi.Bravo.Services
                         //.WithClaims(murex.Claims)
                         //.WithParentActivityOrWindow( /* new WindowInteropHelper(Program.HostWindow).Handle */ Program.HostWindow!.WindowHandle) // optional, used to center the browser on the window
                         //.WithPrompt(Prompt.SelectAccount) // Force a sign-in (Prompt.SelectAccount), as the MSAL web browser might contain cookies for the current user and we don't necessarily want to re-sign-in the same user 
-                        //.WithExtraQueryParameters(MicrosoftAccountOnlyQueryParameter)
+                        .WithExtraQueryParameters(MicrosoftAccountOnlyQueryParameter)
                         .WithSystemWebViewOptions(_customWebViewOptions);
 
                     //if (!_application.IsEmbeddedWebViewAvailable())
@@ -94,25 +138,13 @@ namespace Sqlbi.Bravo.Services
                     //builder = builder.WithSystemWebViewOptions(GetCustomWebViewOptions()); // Using the custom html
                     //builder = builder.WithCustomWebUi(customWebUi: new LoginWebUI(Program.HostWindow.WindowHandle)); //Using our custom web ui
 
-                    var authenticationResult = await builder.ExecuteAsync().ConfigureAwait(false);
+                    var authenticationResult = await builder.ExecuteAsync(cancellationToken).ConfigureAwait(false);
                     return authenticationResult;
                 }
                 catch (MsalException) // ex.ErrorCode => Microsoft.Identity.Client.MsalError
                 {
                     throw;
                 }
-            }
-        }
-
-        public async Task ClearTokenCache()
-        {
-            var accounts = (await _application.GetAccountsAsync().ConfigureAwait(false)).ToArray();
-
-            // Clears the library cache, does not affect the browser cookies
-            while (accounts.Length > 0)
-            {
-                await _application.RemoveAsync(accounts[0]).ConfigureAwait(false);
-                accounts = (await _application.GetAccountsAsync()).ToArray();
             }
         }
     }

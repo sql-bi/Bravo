@@ -26,8 +26,8 @@ namespace Sqlbi.Bravo.Controllers
         /// <summary>
         /// Format the provided DAX measures by using daxformatter.com service
         /// </summary>
-        /// <response code="200">Success</response>
-        /// <response code="404">Bad Request</response>
+        /// <response code="200">Status200OK - Success</response>
+        /// <response code="404">Status404BadRequest - Required parameters are missing</response>
         [HttpPost]
         [ActionName("FormatDax")]
         [Consumes(MediaTypeNames.Application.Json)]
