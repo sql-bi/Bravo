@@ -52,12 +52,11 @@ namespace Sqlbi.Bravo
             if (environment.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
-#if DEBUG
-                app.UseSwagger();
-                app.UseSwaggerUI();
-#endif
             }
-
+#if DEBUG
+            app.UseSwagger();
+            app.UseSwaggerUI();
+#endif
             app.UseRouting();
             app.UseEndpoints((endpoints) =>
             {

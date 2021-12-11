@@ -4,12 +4,12 @@ namespace Sqlbi.Bravo.Infrastructure.Models.PBICloud
 {
     public enum SharedDatasetWorkspaceType
     {
-        Personal,
+        Personal = 0,
 
-        Workspace,
+        Workspace = 1,
 
-        Group,
+        Group = 2,
 
-        PersonalGroup
+        PersonalGroup = 3
     }
 }

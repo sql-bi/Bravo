@@ -54,7 +54,7 @@ namespace Sqlbi.Bravo.Services
             _customWebViewOptions = new CustomWebViewOptions(_environment.WebRootPath);
         }
 
-        public async Task<AuthenticationResult> AcquireTokenAsync(string? identifier = default)
+        public async Task<AuthenticationResult> AcquireTokenAsync(string? identifier = null)
         {
             // Use account used to signed-in in Windows (WAM). WAM will always get an account in the cache.
             // So if we want to have a chance to select the accounts interactively, we need to force the non-account
@@ -75,15 +75,12 @@ namespace Sqlbi.Bravo.Services
             {
                 try
                 {
-                    // Force a sign-in (Prompt.SelectAccount), as the MSAL web browser might contain cookies
-                    // for the current user and we don't necessarily want to re-sign-in the same user
                     var builder = _application.AcquireTokenInteractive(_scopes)
                         //.WithAccount(account)
                         //.WithClaims(murex.Claims)
-                        //.WithParentActivityOrWindow(new WindowInteropHelper(Program.HostWindow).Handle) // optional, used to center the browser on the window
-                        //.WithParentActivityOrWindow(Program.HostWindow!.WindowHandle) // optional, used to center the browser on the window
-                        //.WithPrompt(Prompt.SelectAccount);
-                        .WithExtraQueryParameters(MicrosoftAccountOnlyQueryParameter)
+                        //.WithParentActivityOrWindow( /* new WindowInteropHelper(Program.HostWindow).Handle */ Program.HostWindow!.WindowHandle) // optional, used to center the browser on the window
+                        //.WithPrompt(Prompt.SelectAccount) // Force a sign-in (Prompt.SelectAccount), as the MSAL web browser might contain cookies for the current user and we don't necessarily want to re-sign-in the same user 
+                        //.WithExtraQueryParameters(MicrosoftAccountOnlyQueryParameter)
                         .WithSystemWebViewOptions(_customWebViewOptions);
 
                     //if (!_application.IsEmbeddedWebViewAvailable())

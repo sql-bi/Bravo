@@ -1,5 +1,7 @@
 ﻿#nullable disable
 
+using System;
+
 namespace Sqlbi.Bravo.Infrastructure.Models.PBICloud
 {
     public class SharedDataset
@@ -7,8 +9,6 @@ namespace Sqlbi.Bravo.Infrastructure.Models.PBICloud
         public long ModelId { get; set; }
 
         public long WorkspaceId { get; set; }
-
-        public string WorkspaceObjectId { get; set; }
 
         public string WorkspaceName { get; set; }
 
@@ -19,5 +19,11 @@ namespace Sqlbi.Bravo.Infrastructure.Models.PBICloud
         public SharedDatasetModel Model { get; set; }
 
         public SharedDatasetGalleryItem? GalleryItem { get; set; }
+
+        public string WorkspaceObjectId { get; set; }
+
+        public string? SharedFromEnterpriseCapacitySku { get; set; }
+
+        public DateTime LastVisitedTimeUTC { get; set; }
     }
 }

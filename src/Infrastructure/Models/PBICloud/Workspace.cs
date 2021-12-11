@@ -17,9 +17,8 @@ namespace Sqlbi.Bravo.Infrastructure.Models.PBICloud
 
         public string CapacityUri { get; set; }
 
-        public WorkspaceType GetWorkspaceType() => (WorkspaceType)Enum.Parse(typeof(WorkspaceType), Type!);
+        public WorkspaceType WorkspaceType => (WorkspaceType)Enum.Parse(typeof(WorkspaceType), Type);
 
-        [JsonIgnore]
         public WorkspaceCapacitySkuType CapacitySkuType => (WorkspaceCapacitySkuType)Enum.Parse(typeof(WorkspaceCapacitySkuType), CapacitySku);
     }
 }

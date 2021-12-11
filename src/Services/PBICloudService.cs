@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace Sqlbi.Bravo.Services
@@ -13,7 +14,10 @@ namespace Sqlbi.Bravo.Services
         private const string WorkspacesUri = "https://api.powerbi.com/powerbi/databases/v201606/workspaces";
         private const string SharedDatasetsUri = "metadata/v201901/gallery/sharedDatasets";
 
-        private readonly JsonSerializerOptions _serializerOptions = new(JsonSerializerDefaults.Web);
+        private readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web)
+        {
+            PropertyNameCaseInsensitive = false, // required by SharedDatasetModel LastRefreshTime/lastRefreshTime properties
+        };
 
         public async Task<IEnumerable<Workspace>> GetWorkspacesAsync(string accessToken)
         {
@@ -25,7 +29,7 @@ namespace Sqlbi.Bravo.Services
             response.EnsureSuccessStatusCode();
 
             var content = await response.Content.ReadAsStringAsync();
-            var workspaces = JsonSerializer.Deserialize<IEnumerable<Workspace>>(content, _serializerOptions);
+            var workspaces = JsonSerializer.Deserialize<IEnumerable<Workspace>>(content, _jsonOptions);
 
             return workspaces ?? Array.Empty<Workspace>();
         }
@@ -40,8 +44,8 @@ namespace Sqlbi.Bravo.Services
             using var response = await client.GetAsync(SharedDatasetsUri);
             response.EnsureSuccessStatusCode();
 
-            var json = await response.Content.ReadAsStringAsync();
-            var datasets = JsonSerializer.Deserialize<IEnumerable<SharedDataset>>(json, _serializerOptions);
+            var content = await response.Content.ReadAsStringAsync();
+            var datasets = JsonSerializer.Deserialize<IEnumerable<SharedDataset>>(content, _jsonOptions);
 
             return datasets ?? Array.Empty<SharedDataset>();
         }

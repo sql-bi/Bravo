@@ -26,7 +26,7 @@ namespace Sqlbi.Bravo.Models
         public string Owner { get; set; }
 
         [JsonPropertyName("refreshed")]
-        public DateTimeOffset? Refreshed { get; set; }
+        public DateTime? Refreshed { get; set; }
 
         [JsonPropertyName("endorsement")]
         public PBICloudDatasetEndorsement Endorsement { get; set; }

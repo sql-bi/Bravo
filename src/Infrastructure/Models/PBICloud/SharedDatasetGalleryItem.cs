@@ -12,17 +12,17 @@ namespace Sqlbi.Bravo.Infrastructure.Models.PBICloud
 
         public int Status { get; set; }
 
-        public string IconUrl { get; set; }
+        public string? IconUrl { get; set; }
 
-        public int Stage { get; set; }
+        public int? Stage { get; set; }
 
         // Not sure about the data type, it's always null in the sample analyzed
-        // public string Disabled { get; set; }
+        //public string Disabled { get; set; }
 
-        public DateTime CertificationTime { get; set; }
+        public DateTime? CertificationTime { get; set; }
 
-        public long CertificationUserId { get; set; }
+        public long? CertifyingUserId { get; set; }
 
-        public SharedDatasetUser CertifyingUser { get; set; }
+        public SharedDatasetUser? CertifyingUser { get; set; }
     }
 }
