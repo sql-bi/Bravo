@@ -16,7 +16,14 @@ using TOM = Microsoft.AnalysisServices.Tabular;
 
 namespace Sqlbi.Bravo.Services
 {
-    internal class PBIDesktopService : IPBIDesktopService
+    public interface IPBIDesktopService
+    {
+        IEnumerable<PBIDesktopReport> GetReports();
+
+        Stream? ExportVpax(PBIDesktopReport report, bool includeTomModel = true, bool includeVpaModel = true, bool readStatisticsFromData = true, int sampleRows = 0);
+    }
+
+    internal class PBIDesktopService : IPBIDesktopService, IVpaxExtractor
     {
         public IEnumerable<PBIDesktopReport> GetReports()
         {

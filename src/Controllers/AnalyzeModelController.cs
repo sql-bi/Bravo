@@ -64,6 +64,31 @@ namespace Sqlbi.Bravo.Controllers
         }
 
         /// <summary>
+        /// Returns a database model from a PBICloud dataset
+        /// </summary>
+        /// <response code="200">Status200OK - Success</response>
+        /// <response code="401">Status401Unauthorized - Sign-in required</response>
+        /// <response code="404">Status404NotFound - The requested PBICloud dataset is no longer available</response>
+        [HttpPost]
+        [ActionName("GetModelFromDataset")]
+        [Consumes(MediaTypeNames.Application.Json)]
+        [Produces(MediaTypeNames.Application.Json)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(TabularDatabase))]
+        public IActionResult GetDatabaseFromPBICloudDataset(PBICloudDataset dataset)
+        {
+            var accessToken = ""; // _authenticationService.CurrentAuthentication?.AccessToken;
+            if (accessToken is null)
+                return Unauthorized();
+
+            var vpax = _pbicloudService.ExportVpax(dataset, accessToken, includeTomModel: false, includeVpaModel: false);
+            if (vpax is null)
+                return NotFound();
+
+            var database = _analyzeModelService.GetDatabaseFromVpax(vpax);
+            return Ok(database);
+        }
+
+        /// <summary>
         /// Returns a list of all PBICloud datasets
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
@@ -82,7 +107,8 @@ namespace Sqlbi.Bravo.Controllers
             var onlineDatasets = await _pbicloudService.GetSharedDatasetsAsync(accessToken).ConfigureAwait(false);
 
             var selectedWorkspaces = onlineWorkspaces.Where((w) => w.CapacitySkuType == WorkspaceCapacitySkuType.Premium);
-            var selectedDatasets = onlineDatasets.Where((d) => !d.Model.IsExcelWorkbook /* && !d.Model.IsPushDataEnabled */); // TOFIX: exclude datasets where IsPushDataEnabled
+            // TOFIX: exclude unsupported datasets https://docs.microsoft.com/en-us/power-bi/admin/service-premium-connect-tools#unsupported-datasets
+            var selectedDatasets = onlineDatasets.Where((d) => !d.Model.IsExcelWorkbook /* && !d.Model.IsPushDataEnabled */);
 
             var datasets = selectedDatasets.Join(selectedWorkspaces, (d) => d.WorkspaceObjectId, (w) => w.Id, resultSelector: (d, w) => new PBICloudDataset
             {

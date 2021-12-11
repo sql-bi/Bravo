@@ -25,7 +25,7 @@ namespace Sqlbi.Bravo.Controllers
         /// Attempts to authenticate and acquire an access token for the account to access the PowerBI cloud services
         /// </summary>
         /// <response code="200">Status200OK</response>
-        /// <response code="403">Status403Forbidden - sign-in was cancelled by the system because the configured timeout period elapsed before the user completed the sign-in operation</response>
+        /// <response code="403">Status403Forbidden - sign-in cancelled by the system because the configured timeout period elapsed before the user completed the sign-in operation</response>
         /// <response code="424">Status424FailedDependency - sign-in failed, for details see the ErrorCode and the class Microsoft.Identity.Client.MsalError</response>
         [HttpGet]
         [ActionName("powerbi/SignIn")]

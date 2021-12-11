@@ -9,6 +9,15 @@ using System.Threading.Tasks;
 
 namespace Sqlbi.Bravo.Services
 {
+    public interface IPBICloudAuthenticationService
+    {
+        AuthenticationResult? CurrentAuthentication { get; }
+
+        Task AcquireTokenAsync(TimeSpan cancelAfter, string? identifier = default);
+
+        Task ClearTokenCacheAsync();
+    }
+
     internal class PBICloudAuthenticationService : IPBICloudAuthenticationService
     {
         private const string MicrosoftAccountOnlyQueryParameter = "msafed=0";

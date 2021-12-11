@@ -6,6 +6,11 @@ using System.Linq;
 
 namespace Sqlbi.Bravo.Services
 {
+    public interface IAnalyzeModelService
+    {
+        TabularDatabase GetDatabaseFromVpax(Stream vpax);
+    }
+
     internal class AnalyzeModelService : IAnalyzeModelService
     {
         public TabularDatabase GetDatabaseFromVpax(Stream vpax)
