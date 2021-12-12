@@ -55,7 +55,7 @@ namespace Sqlbi.Bravo.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(TabularDatabase))]
         public IActionResult GetDatabaseFromPBIDesktopReport(PBIDesktopReport report)
         {
-            var vpax = _pbidesktopService.ExportVpax(report, includeTomModel: false, includeVpaModel: false);
+            var vpax = _pbidesktopService.ExportVpax(report, includeTomModel: false, includeVpaModel: false, readStatisticsFromData: false, sampleRows: 0);
             if (vpax is null)
                 return NotFound();
 
@@ -79,7 +79,7 @@ namespace Sqlbi.Bravo.Controllers
             if (_pbicloudService.IsAuthenticated == false)
                 return Unauthorized();
 
-            var vpax = _pbicloudService.ExportVpax(dataset,  includeTomModel: false, includeVpaModel: false);
+            var vpax = _pbicloudService.ExportVpax(dataset, includeTomModel: false, includeVpaModel: false, readStatisticsFromData: false, sampleRows: 0);
             if (vpax is null)
                 return NotFound();
 
@@ -146,14 +146,39 @@ namespace Sqlbi.Bravo.Controllers
         [HttpPost]
         [ActionName("ExportVpaxFromReport")]
         [Consumes(MediaTypeNames.Application.Json)]
-        [Produces(MediaTypeNames.Application.Json, MediaTypeNames.Application.Octet)]
+        [Produces(MediaTypeNames.Application.Octet)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(byte[]))]
         public IActionResult GetVpaxFromPBIDesktopReport(PBIDesktopReport report)
         {
+            // TODO: ExportVpax set includeTomModel, includeVpaModel, readStatisticsFromData, sampleRows
             var vpax = _pbidesktopService.ExportVpax(report);
             if (vpax is null)
                 return NotFound();
             
+            return Ok(vpax);
+        }
+
+        /// <summary>
+        /// Returns a VPAX file stream from a PBICloud dataset
+        /// </summary>
+        /// <response code="200">Status200OK - Success</response>
+        /// <response code="401">Status401Unauthorized - Sign-in required</response>
+        [HttpPost]
+        [ActionName("ExportVpaxFromDataset")]
+        [Consumes(MediaTypeNames.Application.Json)]
+        [Produces(MediaTypeNames.Application.Octet)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(byte[]))]
+        public IActionResult GetVpaxFromPBICloudDataset(PBICloudDataset dataset)
+        {
+            if (_pbicloudService.IsAuthenticated == false)
+                return Unauthorized();
+
+            // TODO: ExportVpax set includeTomModel, includeVpaModel, readStatisticsFromData, sampleRows
+            var vpax = _pbicloudService.ExportVpax(dataset);
+
+            //if (vpax is null)
+            //    return NotFound();
+
             return Ok(vpax);
         }
     }

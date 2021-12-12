@@ -49,11 +49,11 @@ namespace Sqlbi.Bravo.Controllers
          * Returns a VPAX file stream from a remote Power BI dataset
          * Parameters: remote dataset URL?
          */
-        [HttpGet]
-        public Stream ExportVpaxFromDataset()
-        {
-            return null;
-        }
+        //[HttpGet]
+        //public Stream ExportVpaxFromDataset()
+        //{
+        //    return null;
+        //}
 
         /*
          * Returns a list of ids of windows containing local Power BI reports

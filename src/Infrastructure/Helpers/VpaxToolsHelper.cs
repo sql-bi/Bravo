@@ -9,7 +9,7 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
         public static Stream? ExportVpax(string serverName, string databaseName, bool includeTomModel = true, bool includeVpaModel = true, bool readStatisticsFromData = true, int sampleRows = 0)
         {
             var daxModel = TomExtractor.GetDaxModel(serverName, databaseName, AppConstants.ApplicationName, AppConstants.ApplicationFileVersion, readStatisticsFromData, sampleRows);
-            var tomModel = includeTomModel ? TomExtractor.GetDatabase(serverName, serverName) : null;
+            var tomModel = includeTomModel ? TomExtractor.GetDatabase(serverName, databaseName) : null;
             var vpaModel = includeVpaModel ? new Dax.ViewVpaExport.Model(daxModel) : null;
 
             var vpaxPath = Path.GetTempFileName();
