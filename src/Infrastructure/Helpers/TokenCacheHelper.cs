@@ -1,15 +1,13 @@
-﻿using System;
-using System.IO;
-using System.Security.Cryptography;
-using Microsoft.Identity.Client;
+﻿using Microsoft.Identity.Client;
 using Sqlbi.Bravo.Infrastructure.Security;
+using System.IO;
 
 namespace Sqlbi.Bravo.Infrastructure.Helpers
 {
     internal static class TokenCacheHelper
     {
-        private static readonly object _tokenCacheFileLock = new object();
-        private static string _tokenCacheFilePath;
+        private static readonly object _tokenCacheFileLock = new();
+        private static readonly string _tokenCacheFilePath;
 
         static TokenCacheHelper()
         {
@@ -47,8 +45,7 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
 
         private static void AfterAccessNotification(TokenCacheNotificationArgs args)
         {
-            // if the access operation resulted in a cache update
-            if (args.HasStateChanged)
+            if (args.HasStateChanged) // if the access operation resulted in a cache update
             {
                 lock (_tokenCacheFileLock)
                 {

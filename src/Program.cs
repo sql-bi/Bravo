@@ -22,7 +22,7 @@ namespace Sqlbi.Bravo
             CreateHostWindow().WaitForClose();
         }
 
-        internal static IHostBuilder CreateHostBuilder(string[] args)
+        private static IHostBuilder CreateHostBuilder(string[] args)
         {
             var hostBuilder = Host.CreateDefaultBuilder(args).ConfigureWebHostDefaults((webBuilder) =>
             {
@@ -53,7 +53,7 @@ namespace Sqlbi.Bravo
             return hostBuilder;
         }
 
-        internal static PhotinoWindow CreateHostWindow()
+        private static PhotinoWindow CreateHostWindow()
         {
 #if DEBUG
             var contextMenuEnabled = true;
@@ -78,7 +78,7 @@ namespace Sqlbi.Bravo
             return window;
         }
 
-        public static System.IO.Stream AppCustomScheme(object sender, string scheme, string url, out string contentType)
+        private static System.IO.Stream AppCustomScheme(object sender, string scheme, string url, out string contentType)
         {
             contentType = "text/javascript";
 
@@ -107,13 +107,13 @@ namespace Sqlbi.Bravo
             }
         }
 
-        internal static bool WindowClosing(object sender, EventArgs args)
+        private static bool WindowClosing(object sender, EventArgs args)
         {
             Console.WriteLine($"Closing PhotinoWindow instance.");
             return false; // Could return true to stop windows close
         }
 
-        internal static void WebMessageReceived(object? sender, string message)
+        private static void WebMessageReceived(object? sender, string message)
         {
             if (sender is PhotinoWindow window)
             {
