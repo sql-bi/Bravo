@@ -4,6 +4,9 @@
 
 namespace Sqlbi.Bravo.Infrastructure.Models.PBICloud
 {
+    /// <summary>
+    /// v201901 - metadata/v201901/gallery/sharedDatasets
+    /// </summary>
     public class SharedDatasetGalleryItem
     {
         public long Id { get; set; }

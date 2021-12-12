@@ -76,11 +76,10 @@ namespace Sqlbi.Bravo.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(TabularDatabase))]
         public IActionResult GetDatabaseFromPBICloudDataset(PBICloudDataset dataset)
         {
-            var accessToken = ""; // _authenticationService.CurrentAuthentication?.AccessToken;
-            if (accessToken is null)
+            if (_pbicloudService.IsAuthenticated == false)
                 return Unauthorized();
 
-            var vpax = _pbicloudService.ExportVpax(dataset, accessToken, includeTomModel: false, includeVpaModel: false);
+            var vpax = _pbicloudService.ExportVpax(dataset,  includeTomModel: false, includeVpaModel: false);
             if (vpax is null)
                 return NotFound();
 
@@ -99,12 +98,11 @@ namespace Sqlbi.Bravo.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<PBICloudDataset>))]
         public async Task<IActionResult> GetPBICloudDatasets()
         {
-            var accessToken = _authenticationService.CurrentAuthentication?.AccessToken;
-            if (accessToken is null)
+            if (_pbicloudService.IsAuthenticated == false)
                 return Unauthorized();
 
-            var onlineWorkspaces = await _pbicloudService.GetWorkspacesAsync(accessToken).ConfigureAwait(false);
-            var onlineDatasets = await _pbicloudService.GetSharedDatasetsAsync(accessToken).ConfigureAwait(false);
+            var onlineWorkspaces = await _pbicloudService.GetWorkspacesAsync();
+            var onlineDatasets = await _pbicloudService.GetSharedDatasetsAsync();
 
             var selectedWorkspaces = onlineWorkspaces.Where((w) => w.CapacitySkuType == WorkspaceCapacitySkuType.Premium);
             // TOFIX: exclude unsupported datasets https://docs.microsoft.com/en-us/power-bi/admin/service-premium-connect-tools#unsupported-datasets

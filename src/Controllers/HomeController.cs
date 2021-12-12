@@ -29,11 +29,11 @@ namespace Sqlbi.Bravo.Controllers
          * Returns a model view (as GetModelFromVpax) from a remote Power BI dataset 
          * Parameters: remote dataset URL?
          */
-        [HttpGet]
-        public string GetModelFromDataset()
-        {
-            return null;
-        }
+        //[HttpGet]
+        //public string GetModelFromDataset()
+        //{
+        //    return null;
+        //}
 
         /*
          * Returns a VPAX file stream from a local Power BI report

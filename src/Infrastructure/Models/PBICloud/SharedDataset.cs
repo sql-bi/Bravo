@@ -4,6 +4,9 @@ using System;
 
 namespace Sqlbi.Bravo.Infrastructure.Models.PBICloud
 {
+    /// <summary>
+    /// v201901 - metadata/v201901/gallery/sharedDatasets
+    /// </summary>
     public class SharedDataset
     {
         public long ModelId { get; set; }

@@ -23,7 +23,7 @@ namespace Sqlbi.Bravo.Services
         Stream? ExportVpax(PBIDesktopReport report, bool includeTomModel = true, bool includeVpaModel = true, bool readStatisticsFromData = true, int sampleRows = 0);
     }
 
-    internal class PBIDesktopService : IPBIDesktopService, IVpaxExtractor
+    internal class PBIDesktopService : IPBIDesktopService
     {
         public IEnumerable<PBIDesktopReport> GetReports()
         {
@@ -45,31 +45,13 @@ namespace Sqlbi.Bravo.Services
 
         public Stream? ExportVpax(PBIDesktopReport report, bool includeTomModel = true, bool includeVpaModel = true, bool readStatisticsFromData = true, int sampleRows = 0)
         {
-            // TODO: set default for readStatisticsFromData and sampleRows arguments
-
             // PBIDesktop instance is no longer available if parameters cannot be obtained
             var parameters = GetConnectionParameters(report);
             if (parameters == default)
                 return null;
 
-            var daxModel = TomExtractor.GetDaxModel(parameters.ServerName, parameters.DatabaseName, AppConstants.ApplicationName, AppConstants.ApplicationFileVersion, readStatisticsFromData, sampleRows);
-            var tomModel = includeTomModel ? TomExtractor.GetDatabase(parameters.ServerName, parameters.DatabaseName) : null;
-            var vpaModel = includeVpaModel ? new Dax.ViewVpaExport.Model(daxModel) : null;
-
-            var vpaxPath = Path.GetTempFileName();
-            try
-            {
-                VpaxTools.ExportVpax(vpaxPath, daxModel, vpaModel, tomModel);
-
-                var buffer = File.ReadAllBytes(vpaxPath);
-                var vpaxStream = new MemoryStream(buffer, writable: false);
-
-                return vpaxStream;
-            }
-            finally
-            {
-                File.Delete(vpaxPath);
-            }
+            var stream = VpaxToolsHelper.ExportVpax(parameters.ServerName, parameters.DatabaseName, includeTomModel, includeVpaModel, readStatisticsFromData, sampleRows);
+            return stream;
         }
 
         private (string ServerName, string DatabaseName) GetConnectionParameters(PBIDesktopReport report)
@@ -122,7 +104,7 @@ namespace Sqlbi.Bravo.Services
 
             static string GetDatabaseName(string serverName)
             {
-                var connectionString = ConnectionStringHelper.BuildFrom(serverName);
+                var connectionString = ConnectionStringHelper.BuildForPBIDesktop(serverName, databaseName: null);
 
                 using var server = new TOM.Server();
                 server.Connect(connectionString);

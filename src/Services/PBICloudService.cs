@@ -1,6 +1,6 @@
-﻿using Dax.Metadata.Extractor;
-using Dax.Vpax.Tools;
+﻿using Microsoft.Identity.Client;
 using Sqlbi.Bravo.Infrastructure;
+using Sqlbi.Bravo.Infrastructure.Helpers;
 using Sqlbi.Bravo.Infrastructure.Models.PBICloud;
 using Sqlbi.Bravo.Models;
 using System;
@@ -15,97 +15,133 @@ namespace Sqlbi.Bravo.Services
 {
     public interface IPBICloudService
     {
-        Task<IEnumerable<Workspace>> GetWorkspacesAsync(string accessToken);
+        bool IsAuthenticated { get; }
 
-        Task<IEnumerable<SharedDataset>> GetSharedDatasetsAsync(string accessToken);
+        Task<BravoAccount> SignInAsync();
+        
+        Task SignOutAsync();
 
-        Stream? ExportVpax(PBICloudDataset dataset, string accessToken, bool includeTomModel = true, bool includeVpaModel = true, bool readStatisticsFromData = true, int sampleRows = 0);
-    }
+        Task<IEnumerable<Workspace>> GetWorkspacesAsync();
 
-    internal class PBICloudService : IPBICloudService, IVpaxExtractor
+        Task<IEnumerable<SharedDataset>> GetSharedDatasetsAsync();
+
+        Stream? ExportVpax(PBICloudDataset dataset, bool includeTomModel = true, bool includeVpaModel = true, bool readStatisticsFromData = true, int sampleRows = 0);
+     }
+
+    internal class PBICloudService : IPBICloudService
     {
-        private const string WorkspacesUri = "https://api.powerbi.com/powerbi/databases/v201606/workspaces";
-        private const string SharedDatasetsUri = "metadata/v201901/gallery/sharedDatasets";
+        private const string GetWorkspacesRequestUri = "https://api.powerbi.com/powerbi/databases/v201606/workspaces";
+        private const string GetGallerySharedDatasetsRequestUri = "metadata/v201901/gallery/sharedDatasets";
 
+        private readonly IPBICloudAuthenticationService _authenticationService;
         private readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web)
         {
             PropertyNameCaseInsensitive = false, // required by SharedDatasetModel LastRefreshTime/lastRefreshTime properties
         };
 
-        public async Task<IEnumerable<Workspace>> GetWorkspacesAsync(string accessToken)
+        public PBICloudService(IPBICloudAuthenticationService authenticationService)
         {
+            _authenticationService = authenticationService;
+        }
+
+        private AuthenticationResult? CurrentAuthentication => _authenticationService.CurrentAuthentication;
+
+        public bool IsAuthenticated => _authenticationService.CurrentAuthentication?.ClaimsPrincipal?.Identity is not null;
+
+        public async Task<BravoAccount> SignInAsync()
+        {
+            try
+            {
+                await _authenticationService.AcquireTokenAsync(cancelAfter: AppConstants.MSALSignInTimeout).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                throw new BravoSignInTimeoutException();
+            }
+            catch (MsalException mex)
+            {
+                throw new BravoSignInMsalException(mex);
+            }
+
+            var account = new BravoAccount
+            {
+                Identifier = CurrentAuthentication!.Account.HomeAccountId.Identifier,
+                UserPrincipalName = CurrentAuthentication!.Account.Username,
+                Username = CurrentAuthentication!.ClaimsPrincipal.FindFirst((c) => c.Type == "name")?.Value,
+            };
+
+            return account;
+        }
+
+        public async Task SignOutAsync()
+        {
+            await _authenticationService.ClearTokenCacheAsync().ConfigureAwait(false);
+        }
+
+        public async Task<IEnumerable<Workspace>> GetWorkspacesAsync()
+        {
+            if (!IsAuthenticated)
+                return Array.Empty<Workspace>();
+
             using var client = new HttpClient();
             client.DefaultRequestHeaders.Accept.Clear();
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", CurrentAuthentication!.AccessToken);
 
-            using var response = await client.GetAsync(WorkspacesUri);
-            response.EnsureSuccessStatusCode();
+            using var response = await client.GetAsync(GetWorkspacesRequestUri).ConfigureAwait(false);
 
-            var content = await response.Content.ReadAsStringAsync();
+            var content = await response.EnsureSuccessStatusCode().Content.ReadAsStringAsync().ConfigureAwait(false);
             var workspaces = JsonSerializer.Deserialize<IEnumerable<Workspace>>(content, _jsonOptions);
 
             return workspaces ?? Array.Empty<Workspace>();
         }
 
-        public async Task<IEnumerable<SharedDataset>> GetSharedDatasetsAsync(string accessToken)
+        public async Task<IEnumerable<SharedDataset>> GetSharedDatasetsAsync()
         {
+            if (!IsAuthenticated)
+                return Array.Empty<SharedDataset>();
+
             using var client = new HttpClient();
             client.BaseAddress = new Uri("https://wabi-north-europe-redirect.analysis.windows.net/" /* TenantCluster.FixedClusterUri */ ); //TODO: read tenant cluster config
             client.DefaultRequestHeaders.Accept.Clear();
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", CurrentAuthentication!.AccessToken);
 
-            using var response = await client.GetAsync(SharedDatasetsUri);
-            response.EnsureSuccessStatusCode();
+            using var response = await client.GetAsync(GetGallerySharedDatasetsRequestUri).ConfigureAwait(false);
 
-            var content = await response.Content.ReadAsStringAsync();
+            var content = await response.EnsureSuccessStatusCode().Content.ReadAsStringAsync().ConfigureAwait(false);
             var datasets = JsonSerializer.Deserialize<IEnumerable<SharedDataset>>(content, _jsonOptions);
 
             return datasets ?? Array.Empty<SharedDataset>();
         }
 
-        public Stream? ExportVpax(PBICloudDataset dataset, string accessToken, bool includeTomModel = true, bool includeVpaModel = true, bool readStatisticsFromData = true, int sampleRows = 0)
+        public Stream? ExportVpax(PBICloudDataset dataset, bool includeTomModel = true, bool includeVpaModel = true, bool readStatisticsFromData = true, int sampleRows = 0)
         {
-            // TODO: set default for readStatisticsFromData and sampleRows arguments
-
-            // PBIDesktop instance is no longer available if parameters cannot be obtained
-            var parameters = GetConnectionParameters(dataset, accessToken);
-            if (parameters == default)
+            if (!IsAuthenticated)
                 return null;
 
-            var daxModel = TomExtractor.GetDaxModel(parameters.ServerName, parameters.DatabaseName, AppConstants.ApplicationName, AppConstants.ApplicationFileVersion, readStatisticsFromData, sampleRows);
-            var tomModel = includeTomModel ? TomExtractor.GetDatabase(parameters.ServerName, parameters.DatabaseName) : null;
-            var vpaModel = includeVpaModel ? new Dax.ViewVpaExport.Model(daxModel) : null;
+            var (serverName, databaseName) = GetConnectionParameters(dataset, CurrentAuthentication!.AccessToken);
+            var stream = VpaxToolsHelper.ExportVpax(serverName, databaseName, includeTomModel, includeVpaModel, readStatisticsFromData, sampleRows);
 
-            var vpaxPath = Path.GetTempFileName();
-            try
-            {
-                VpaxTools.ExportVpax(vpaxPath, daxModel, vpaModel, tomModel);
-
-                var buffer = File.ReadAllBytes(vpaxPath);
-                var vpaxStream = new MemoryStream(buffer, writable: false);
-
-                return vpaxStream;
-            }
-            finally
-            {
-                File.Delete(vpaxPath);
-            }
+            return stream;
         }
 
-        private (string ServerName, string DatabaseName) GetConnectionParameters(PBICloudDataset dataset, string accessToken)
+        private (string serverName, string databaseName) GetConnectionParameters(PBICloudDataset dataset, string accessToken)
         {
             // Dataset connectivity with the XMLA endpoint
             // https://docs.microsoft.com/en-us/power-bi/admin/service-premium-connect-tools
 
             // Duplicate workspace names
             // https://docs.microsoft.com/en-us/power-bi/admin/service-premium-connect-tools#duplicate-workspace-names
-            
-            // powerbi://api.powerbi.com/v1.0/[tenant name]/[workspace name]
-            //var serverName = $"DataSource=powerbi://api.powerbi.com/v1.0/myorg/;Initial Catalog={ dataset.DisplayName };Password={ accessToken }";
-            var serverName = $"powerbi://api.powerbi.com/v1.0/myorg/{ dataset.WorkspaceName }";
-            var databaseName = $"{ dataset.DisplayName }";
 
-            return (serverName, databaseName);
+            // Connection properties
+            // https://docs.microsoft.com/en-us/analysis-services/instances/connection-string-properties-analysis-services?view=asallproducts-allversions
+
+            var tenantName = "myorg"; // TODO: add support for B2B users tenant name
+            var serverName = $"powerbi://api.powerbi.com/v1.0/{ tenantName }/{ dataset.WorkspaceName }";
+            var databaseName = dataset.DisplayName;
+
+            var connectionString = ConnectionStringHelper.BuildForPBICloudDataset(serverName, databaseName, accessToken);
+
+            return (serverName: connectionString, databaseName);
         }
     }
 }

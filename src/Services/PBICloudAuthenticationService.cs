@@ -3,6 +3,7 @@ using Microsoft.Identity.Client;
 using Sqlbi.Bravo.Infrastructure.Authentication;
 using Sqlbi.Bravo.Infrastructure.Helpers;
 using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -57,16 +58,15 @@ namespace Sqlbi.Bravo.Services
         }
 
         private readonly IWebHostEnvironment _environment;
-        private readonly CustomWebViewOptions _customWebViewOptions;
-        private AuthenticationResult? _authenticationResult;
+        private readonly CustomWebViewOptions _customSystemWebViewOptions;
 
         public PBICloudAuthenticationService(IWebHostEnvironment environment)
         {
             _environment = environment;
-            _customWebViewOptions = new CustomWebViewOptions(_environment.WebRootPath);
+            _customSystemWebViewOptions = new CustomWebViewOptions(_environment.WebRootPath);
         }
 
-        public AuthenticationResult? CurrentAuthentication => _authenticationResult;
+        public AuthenticationResult? CurrentAuthentication { get; private set; }
 
         /// <summary>
         /// Removes all account information from MSAL's token cache, removes app-only (not OS-wide) and does not affect the browser cookies
@@ -81,7 +81,7 @@ namespace Sqlbi.Bravo.Services
                 foreach (var account in accounts)
                     await _application.RemoveAsync(account).ConfigureAwait(false);
 
-                _authenticationResult = null;
+                CurrentAuthentication = null;
             }
             finally
             {
@@ -96,7 +96,14 @@ namespace Sqlbi.Bravo.Services
             {
                 using var cancellationTokenSource = new CancellationTokenSource(cancelAfter);
 
-                _authenticationResult = await InternalAcquireTokenAsync(cancellationTokenSource.Token, identifier).ConfigureAwait(false);
+                var authenticationResult = await InternalAcquireTokenAsync(cancellationTokenSource.Token, identifier).ConfigureAwait(false);
+                CurrentAuthentication = authenticationResult;
+
+                //var impersonateTask = System.Security.Principal.WindowsIdentity.RunImpersonatedAsync(Microsoft.Win32.SafeHandles.SafeAccessTokenHandle.InvalidHandle, async () =>
+                //{
+                //    _authenticationResult = await InternalAcquireTokenAsync(cancellationTokenSource.Token, identifier);
+                //});
+                //await impersonateTask.ConfigureAwait(false);
             }
             finally
             {
@@ -111,11 +118,9 @@ namespace Sqlbi.Bravo.Services
         {
             // Use account used to signed-in in Windows (WAM). WAM will always get an account in the cache.
             // So if we want to have a chance to select the accounts interactively, we need to force the non-account
-            //account = PublicClientApplication.OperatingSystemAccount;
+            //identifier = PublicClientApplication.OperatingSystemAccount;
 
-            // Use one of the Accounts known by Windows (WAM). We force WAM to display the dialog with the accounts
-            //account = null;
-
+            // Use one of the Accounts known by Windows (WAM), if a null account identifier is provided then force WAM to display the dialog with the accounts
             var account = await _application.GetAccountAsync(identifier).ConfigureAwait(false);
             
             try
@@ -129,23 +134,29 @@ namespace Sqlbi.Bravo.Services
                 try
                 {
                     var builder = _application.AcquireTokenInteractive(_scopes)
-                        //.WithAccount(account)
-                        //.WithClaims(murex.Claims)
-                        //.WithParentActivityOrWindow( /* new WindowInteropHelper(Program.HostWindow).Handle */ Program.HostWindow!.WindowHandle) // optional, used to center the browser on the window
-                        //.WithPrompt(Prompt.SelectAccount) // Force a sign-in (Prompt.SelectAccount), as the MSAL web browser might contain cookies for the current user and we don't necessarily want to re-sign-in the same user 
-                        .WithExtraQueryParameters(MicrosoftAccountOnlyQueryParameter)
-                        .WithSystemWebViewOptions(_customWebViewOptions);
+                        .WithExtraQueryParameters(MicrosoftAccountOnlyQueryParameter);
 
-                    //if (!_application.IsEmbeddedWebViewAvailable())
-                    //{
-                    // You app should install the embedded browser WebView2 https://aka.ms/msal-net-webview2
-                    // but if for some reason this is not possible, you can fall back to the system browser 
-                    // in this case, the redirect uri needs to be set to "http://localhost"
-                    //builder = builder.WithUseEmbeddedWebView(useEmbeddedWebView: false);
-                    //}
+                    //.WithAccount(account)
+                    //.WithClaims(murex.Claims)
+                    //.WithPrompt(Prompt.SelectAccount) // Force a sign-in (Prompt.SelectAccount), as the MSAL web browser might contain cookies for the current user and we don't necessarily want to re-sign-in the same user 
 
-                    //builder = builder.WithSystemWebViewOptions(GetCustomWebViewOptions()); // Using the custom html
-                    //builder = builder.WithCustomWebUi(customWebUi: new LoginWebUI(Program.HostWindow.WindowHandle)); //Using our custom web ui
+                    if (_application.IsEmbeddedWebViewAvailable())
+                    {
+                        Debug.Assert(Thread.CurrentThread.GetApartmentState() == ApartmentState.MTA);
+                        Debug.Assert(System.Windows.Forms.Application.MessageLoop == false);
+
+                        var parentWindowHandle = Process.GetCurrentProcess().MainWindowHandle;
+
+                        // Requires VS project OutputType=WinExe and TargetFramework=net5-windows10.0.17763.0
+                        builder = builder.WithUseEmbeddedWebView(useEmbeddedWebView: true)
+                            .WithParentActivityOrWindow(parentWindowHandle); // used to center embedded wiew on the parent window
+                    }
+                    else
+                    {
+                        // If for some reason the EmbeddedWebView is not available than fall back to the SystemWebView
+                        builder = builder.WithUseEmbeddedWebView(useEmbeddedWebView: false)
+                            .WithSystemWebViewOptions(_customSystemWebViewOptions); // TODO: configure html files
+                    }
 
                     var authenticationResult = await builder.ExecuteAsync(cancellationToken).ConfigureAwait(false);
                     return authenticationResult;

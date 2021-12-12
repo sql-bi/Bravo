@@ -1,10 +1,8 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Identity.Client;
 using Sqlbi.Bravo.Infrastructure;
 using Sqlbi.Bravo.Models;
 using Sqlbi.Bravo.Services;
-using System;
 using System.Net.Mime;
 using System.Threading.Tasks;
 
@@ -14,11 +12,11 @@ namespace Sqlbi.Bravo.Controllers
     [ApiController]
     public class AuthenticationController : ControllerBase
     {
-        private readonly IPBICloudAuthenticationService _pbicloudAuthenticationService;
+        private readonly IPBICloudService _pbicloudService;
 
-        public AuthenticationController(IPBICloudAuthenticationService pbicloudAuthenticationService)
+        public AuthenticationController(IPBICloudService pbicloudService)
         {
-            _pbicloudAuthenticationService = pbicloudAuthenticationService;
+            _pbicloudService = pbicloudService;
         }
 
         /// <summary>
@@ -31,52 +29,29 @@ namespace Sqlbi.Bravo.Controllers
         [ActionName("powerbi/SignIn")]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(BravoAccount))]
-        [ProducesResponseType(StatusCodes.Status403Forbidden, Type = typeof(BravoErrorReponse))]
-        [ProducesResponseType(StatusCodes.Status424FailedDependency, Type = typeof(BravoErrorReponse))]
+        [ProducesResponseType(StatusCodes.Status403Forbidden, Type = typeof(BravoSignInError))]
+        [ProducesResponseType(StatusCodes.Status424FailedDependency, Type = typeof(BravoSignInError))]
         public async Task<IActionResult> PowerBISignIn()
         {
             try
             {
-                await _pbicloudAuthenticationService.AcquireTokenAsync(cancelAfter: AppConstants.MSALSignInTimeout).ConfigureAwait(false);
+                var account = await _pbicloudService.SignInAsync();
+                return Ok(account);
             }
-            catch (OperationCanceledException)
+            catch (BravoSignInTimeoutException)
             {
-                return StatusCode(StatusCodes.Status403Forbidden, new BravoErrorReponse
+                return StatusCode(StatusCodes.Status403Forbidden, new BravoSignInError
                 {
                     IsTimeoutElapsed = true
                 });
             }
-            catch (MsalException ex) // ex.ErrorCode => Microsoft.Identity.Client.MsalError
+            catch (BravoSignInMsalException mex)
             {
-                return StatusCode(StatusCodes.Status424FailedDependency, new BravoErrorReponse
+                return StatusCode(StatusCodes.Status424FailedDependency, new BravoSignInError
                 {
-                    ErrorCode = ex.ErrorCode,
+                    ErrorCode = mex.MsalErrorCode,
                 });
             }
-
-            var account = new BravoAccount
-            {
-                Identifier = _pbicloudAuthenticationService.CurrentAuthentication!.Account.HomeAccountId.Identifier,
-                UserPrincipalName = _pbicloudAuthenticationService.CurrentAuthentication!.Account.Username,
-                Username = _pbicloudAuthenticationService.CurrentAuthentication!.ClaimsPrincipal.FindFirst((c) => c.Type == "name")?.Value,
-            };
-
-            return Ok(account);
-            /*
-                        var principal = authenticationResult.ClaimsPrincipal;
-                        var properties = new List<string>();
-
-                        if (principal.Identity is not null)
-                        {
-                            properties.Add($"Identity.Name={principal.Identity.Name ?? string.Empty}");
-                            properties.Add($"Identity.AuthenticationType={principal.Identity.AuthenticationType ?? string.Empty}");
-                        }
-
-                        foreach (var claim in principal.Claims)
-                            properties.Add($"{claim.Type}={claim.Value}");
-
-                        return Ok(properties);
-            */
         }
 
         /// <summary>
@@ -88,8 +63,7 @@ namespace Sqlbi.Bravo.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> PowerBISignOut()
         {
-            await _pbicloudAuthenticationService.ClearTokenCacheAsync().ConfigureAwait(false);
-
+            await _pbicloudService.SignOutAsync();
             return Ok();
         }
     }

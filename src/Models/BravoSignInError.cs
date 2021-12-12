@@ -2,7 +2,7 @@
 
 namespace Sqlbi.Bravo.Models
 {
-    public class BravoErrorReponse
+    public class BravoSignInError
     {
         [JsonPropertyName("errorCode")]
         public string? ErrorCode { get; set; }
