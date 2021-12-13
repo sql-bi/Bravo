@@ -17,7 +17,9 @@ namespace Sqlbi.Bravo.Services
     {
         bool IsAuthenticated { get; }
 
-        Task<BravoAccount> SignInAsync();
+        BravoAccount? CurrentAccount { get; }
+
+        Task SignInAsync();
         
         Task SignOutAsync();
 
@@ -46,9 +48,11 @@ namespace Sqlbi.Bravo.Services
 
         private AuthenticationResult? CurrentAuthentication => _authenticationService.CurrentAuthentication;
 
-        public bool IsAuthenticated => _authenticationService.CurrentAuthentication?.ClaimsPrincipal?.Identity is not null;
+        public BravoAccount? CurrentAccount { get; private set; }
 
-        public async Task<BravoAccount> SignInAsync()
+        public bool IsAuthenticated => CurrentAccount is not null && _authenticationService.CurrentAuthentication?.ClaimsPrincipal?.Identity is not null;
+
+        public async Task SignInAsync()
         {
             try
             {
@@ -63,18 +67,18 @@ namespace Sqlbi.Bravo.Services
                 throw new BravoSignInMsalException(mex);
             }
 
-            var account = new BravoAccount
+            CurrentAccount = new BravoAccount
             {
                 Identifier = CurrentAuthentication!.Account.HomeAccountId.Identifier,
                 UserPrincipalName = CurrentAuthentication!.Account.Username,
                 Username = CurrentAuthentication!.ClaimsPrincipal.FindFirst((c) => c.Type == "name")?.Value,
             };
-
-            return account;
         }
 
         public async Task SignOutAsync()
         {
+            CurrentAccount = null;
+
             await _authenticationService.ClearTokenCacheAsync().ConfigureAwait(false);
         }
 

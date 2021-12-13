@@ -76,12 +76,12 @@ namespace Sqlbi.Bravo.Services
             await _tokenSemaphore.WaitAsync();
             try
             {
+                CurrentAuthentication = null;
+
                 var accounts = (await _application.GetAccountsAsync().ConfigureAwait(false)).ToArray();
 
                 foreach (var account in accounts)
                     await _application.RemoveAsync(account).ConfigureAwait(false);
-
-                CurrentAuthentication = null;
             }
             finally
             {

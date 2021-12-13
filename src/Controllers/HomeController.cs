@@ -158,10 +158,10 @@ namespace Sqlbi.Bravo.Controllers
         /*
          * Returns the user info such as the name, email and picture (if any)
          */ 
-        [HttpGet]
-        public string GetUser()
-        {
-            return null;
-        }
+        //[HttpGet]
+        //public string GetUser()
+        //{
+        //    return null;
+        //}
     }
 }

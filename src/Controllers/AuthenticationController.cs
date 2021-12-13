@@ -35,8 +35,7 @@ namespace Sqlbi.Bravo.Controllers
         {
             try
             {
-                var account = await _pbicloudService.SignInAsync();
-                return Ok(account);
+                await _pbicloudService.SignInAsync();
             }
             catch (BravoSignInTimeoutException)
             {
@@ -52,6 +51,9 @@ namespace Sqlbi.Bravo.Controllers
                     ErrorCode = mex.MsalErrorCode,
                 });
             }
+
+            var account = _pbicloudService.CurrentAccount;
+            return Ok(account);
         }
 
         /// <summary>
@@ -65,6 +67,23 @@ namespace Sqlbi.Bravo.Controllers
         {
             await _pbicloudService.SignOutAsync();
             return Ok();
+        }
+
+        /// <summary>
+        /// Returns information about the currently logged in user
+        /// </summary>
+        /// <response code="200">Status200OK</response>
+        /// <response code="401">Status401Unauthorized - Sign-in required</response>
+        [HttpGet]
+        [ActionName("GetUser")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(BravoAccount))]
+        public IActionResult GetAccount()
+        {
+            if (_pbicloudService.IsAuthenticated == false)
+                return Unauthorized();
+
+            var account = _pbicloudService.CurrentAccount;
+            return Ok(account);
         }
     }
 }
