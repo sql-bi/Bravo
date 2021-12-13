@@ -38,10 +38,9 @@ namespace Sqlbi.Bravo
 #if DEBUG
             services.AddSwaggerGenCustomized();
 #endif
-            services.AddSingleton<IAnalyzeModelService, AnalyzeModelService>();
-            services.AddSingleton<IPBICloudService, PBICloudService>();
-            services.AddSingleton<IPBIDesktopService, PBIDesktopService>();
             services.AddSingleton<IPBICloudAuthenticationService, PBICloudAuthenticationService>();
+            services.AddSingleton<IPBIDesktopService, PBIDesktopService>();
+            services.AddSingleton<IPBICloudService, PBICloudService>();
             services.AddSingleton<IDaxFormatterClient, DaxFormatterClient>();
         }
 

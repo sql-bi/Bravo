@@ -1,14 +1,17 @@
 ﻿using Dax.Formatter.Models;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
 namespace Sqlbi.Bravo.Models
 {
     public class FormatDaxRequest
     {
+        [Required]
         [JsonPropertyName("options")]
         public FormatDaxOptions? Options { get; set; }
 
+        [Required]
         [JsonPropertyName("measures")]
         public IEnumerable<TabularMeasure>? Measures { get; set; }
     }

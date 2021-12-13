@@ -37,4 +37,22 @@ namespace Sqlbi.Bravo.Infrastructure
     public class BravoSignInTimeoutException : BravoException
     {
     }
+
+    [Serializable]
+    public class BravoPBIDesktopReportNotFoundException : BravoException
+    {
+        public BravoPBIDesktopReportNotFoundException(string message)
+            : base(message)
+        {
+        }
+    }
+
+    [Serializable]
+    public class BravoPBICloudDatasetNotFoundException : BravoException
+    {
+        public BravoPBICloudDatasetNotFoundException(string message)
+            : base(message)
+        {
+        }
+    }
 }

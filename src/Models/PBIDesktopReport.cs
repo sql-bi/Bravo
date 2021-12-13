@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace Sqlbi.Bravo.Models
 {
@@ -7,8 +8,9 @@ namespace Sqlbi.Bravo.Models
         /// <summary>
         /// PBIDesktop process identifier (system PID)
         /// </summary>
+        [Required]
         [JsonPropertyName("id")]
-        public int ProcessId { get; set; }
+        public int? ProcessId { get; set; }
 
         /// <summary>
         /// PBIDesktop report name (from main window title)

@@ -1,4 +1,5 @@
 ﻿using System.Data.OleDb;
+using System.Net;
 
 namespace Sqlbi.Bravo.Infrastructure.Helpers
 {
@@ -12,6 +13,8 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
         private const string PersistSecurityInfoKey = "Persist Security Info";
         //private const string UseEncryptionForDataKey = "Use Encryption for Data";
         private const string ApplicationNameKey = "Application Name";
+
+        public static string BuildForPBIDesktop(IPEndPoint endpoint) => BuildForPBIDesktop(serverName: endpoint.ToString(), databaseName: null);
 
         public static string BuildForPBIDesktop(string serverName, string? databaseName)
         {

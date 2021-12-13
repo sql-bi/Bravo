@@ -1,14 +1,24 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
 namespace Sqlbi.Bravo.Models
 {
-    public class FormatDaxResponse : List<FormatterResult>
+    public class FormatDaxResponse : List<FormattedMeasure>
     {
     }
 
-    public class FormatterResult
+    public class FormattedMeasure
     {
+        [JsonPropertyName("etag")]
+        public long? ETag { get; set; }
+
+        [JsonPropertyName("name")]
+        public string? Name { get; set; }
+
+        [JsonPropertyName("tableName")]
+        public string? TableName { get; set; }
+
         [JsonPropertyName("measure")]
         public string? Expression { get; set; }
 

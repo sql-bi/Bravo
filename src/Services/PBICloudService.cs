@@ -27,7 +27,7 @@ namespace Sqlbi.Bravo.Services
 
         Task<IEnumerable<SharedDataset>> GetSharedDatasetsAsync();
 
-        Stream? ExportVpax(PBICloudDataset dataset, bool includeTomModel = true, bool includeVpaModel = true, bool readStatisticsFromData = true, int sampleRows = 0);
+        Stream ExportVpax(PBICloudDataset dataset, bool includeTomModel = true, bool includeVpaModel = true, bool readStatisticsFromData = true, int sampleRows = 0);
      }
 
     internal class PBICloudService : IPBICloudService
@@ -84,12 +84,9 @@ namespace Sqlbi.Bravo.Services
 
         public async Task<IEnumerable<Workspace>> GetWorkspacesAsync()
         {
-            if (!IsAuthenticated)
-                return Array.Empty<Workspace>();
-
             using var client = new HttpClient();
             client.DefaultRequestHeaders.Accept.Clear();
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", CurrentAuthentication!.AccessToken);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", CurrentAuthentication?.AccessToken);
 
             using var response = await client.GetAsync(GetWorkspacesRequestUri).ConfigureAwait(false);
 
@@ -101,13 +98,10 @@ namespace Sqlbi.Bravo.Services
 
         public async Task<IEnumerable<SharedDataset>> GetSharedDatasetsAsync()
         {
-            if (!IsAuthenticated)
-                return Array.Empty<SharedDataset>();
-
             using var client = new HttpClient();
             client.BaseAddress = new Uri("https://wabi-north-europe-redirect.analysis.windows.net/" /* TenantCluster.FixedClusterUri */ ); //TODO: read tenant cluster config
             client.DefaultRequestHeaders.Accept.Clear();
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", CurrentAuthentication!.AccessToken);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", CurrentAuthentication?.AccessToken);
 
             using var response = await client.GetAsync(GetGallerySharedDatasetsRequestUri).ConfigureAwait(false);
 
@@ -117,18 +111,23 @@ namespace Sqlbi.Bravo.Services
             return datasets ?? Array.Empty<SharedDataset>();
         }
 
-        public Stream? ExportVpax(PBICloudDataset dataset, bool includeTomModel = true, bool includeVpaModel = true, bool readStatisticsFromData = true, int sampleRows = 0)
+        public Stream ExportVpax(PBICloudDataset dataset, bool includeTomModel, bool includeVpaModel, bool readStatisticsFromData, int sampleRows)
         {
-            if (!IsAuthenticated)
-                return null;
+            var (connectionString, databaseName) = GetConnectionParameters(dataset, CurrentAuthentication!.AccessToken);
 
-            var (serverName, databaseName) = GetConnectionParameters(dataset, CurrentAuthentication!.AccessToken);
-            var stream = VpaxToolsHelper.ExportVpax(serverName, databaseName, includeTomModel, includeVpaModel, readStatisticsFromData, sampleRows);
-
-            return stream;
+            try
+            {
+                var stream = VpaxToolsHelper.ExportVpax(connectionString, databaseName, includeTomModel, includeVpaModel, readStatisticsFromData, sampleRows);
+                return stream;
+            }
+            catch (ArgumentException ex) when (ex.Message == $"The database '{ databaseName }' could not be found. Either it does not exist or you do not have admin rights to it.")
+            {
+                // TODO: do not use message string to identify the error
+                throw new BravoPBICloudDatasetNotFoundException("PBICloud dataset - not found");
+            }
         }
 
-        private (string serverName, string databaseName) GetConnectionParameters(PBICloudDataset dataset, string accessToken)
+        private (string connectionString, string databaseName) GetConnectionParameters(PBICloudDataset dataset, string accessToken)
         {
             // Dataset connectivity with the XMLA endpoint
             // https://docs.microsoft.com/en-us/power-bi/admin/service-premium-connect-tools
@@ -145,7 +144,7 @@ namespace Sqlbi.Bravo.Services
 
             var connectionString = ConnectionStringHelper.BuildForPBICloudDataset(serverName, databaseName, accessToken);
 
-            return (serverName: connectionString, databaseName);
+            return (connectionString, databaseName);
         }
     }
 }

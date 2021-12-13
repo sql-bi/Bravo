@@ -1,5 +1,4 @@
-﻿using Dax.Metadata.Extractor;
-using Dax.Vpax.Tools;
+﻿using Microsoft.AnalysisServices;
 using Sqlbi.Bravo.Infrastructure;
 using Sqlbi.Bravo.Infrastructure.Extensions;
 using Sqlbi.Bravo.Infrastructure.Helpers;
@@ -20,7 +19,9 @@ namespace Sqlbi.Bravo.Services
     {
         IEnumerable<PBIDesktopReport> GetReports();
 
-        Stream? ExportVpax(PBIDesktopReport report, bool includeTomModel = true, bool includeVpaModel = true, bool readStatisticsFromData = true, int sampleRows = 0);
+        Stream ExportVpax(PBIDesktopReport report, bool includeTomModel, bool includeVpaModel, bool readStatisticsFromData, int sampleRows);
+
+        void Update(PBIDesktopReport report, IEnumerable<FormattedMeasure> measures);
     }
 
     internal class PBIDesktopService : IPBIDesktopService
@@ -43,75 +44,128 @@ namespace Sqlbi.Bravo.Services
             }
         }
 
-        public Stream? ExportVpax(PBIDesktopReport report, bool includeTomModel = true, bool includeVpaModel = true, bool readStatisticsFromData = true, int sampleRows = 0)
+        public Stream ExportVpax(PBIDesktopReport report, bool includeTomModel, bool includeVpaModel, bool readStatisticsFromData, int sampleRows)
         {
-            // PBIDesktop instance is no longer available if parameters cannot be obtained
-            var parameters = GetConnectionParameters(report);
-            if (parameters == default)
-                return null;
+            var (connectionString, databaseName) = GetConnectionParameters(report);
 
-            var stream = VpaxToolsHelper.ExportVpax(parameters.ServerName, parameters.DatabaseName, includeTomModel, includeVpaModel, readStatisticsFromData, sampleRows);
+            var stream = VpaxToolsHelper.ExportVpax(connectionString, databaseName, includeTomModel, includeVpaModel, readStatisticsFromData, sampleRows);
+
             return stream;
         }
 
-        private (string ServerName, string DatabaseName) GetConnectionParameters(PBIDesktopReport report)
+        public void Update(PBIDesktopReport report, IEnumerable<FormattedMeasure> measures)
+        {
+            var (connectionString, databaseName) = GetConnectionParameters(report);
+
+            var server = new TOM.Server();
+            server.Connect(connectionString);
+
+            var database = GetDatabase();
+            var databaseETag = database.Version;
+
+            foreach (var formattedMeasure in measures)
+            {
+                if (formattedMeasure.ETag != databaseETag)
+                    throw new BravoException("PBIDesktop update failed - database has changed");
+
+                if (formattedMeasure.Errors?.Any() ?? false)
+                    continue;
+
+                var unformattedMeasure = database.Model.Tables[formattedMeasure.TableName].Measures[formattedMeasure.Name];
+
+                if (unformattedMeasure.Expression != formattedMeasure.Expression)
+                    unformattedMeasure.Expression = formattedMeasure.Expression;
+            }
+
+            if (database.Model.HasLocalChanges)
+                database.Update();
+
+            var operationResult = database.Model.SaveChanges();
+            if (operationResult.XmlaResults.ContainsErrors)
+            {
+                var message = operationResult.XmlaResults.ToDescriptionString();
+                throw new BravoException($"PBIDesktop save changes failed - { message }");
+            }
+
+            TOM.Database GetDatabase()
+            {
+                try
+                {
+                    return server.Databases.GetByName(databaseName);
+                }
+                catch (AmoException ex)
+                {
+                    throw new BravoPBIDesktopReportNotFoundException(ex.Message);
+                }
+            }
+        }
+
+        private (string connectionString, string databaseName) GetConnectionParameters(PBIDesktopReport report)
         {
             // Exit if the process specified by the processId parameter is not running
             var pbidesktopProcess = GetProcessById(report.ProcessId);
             if (pbidesktopProcess is null)
-                return default;
+                throw new BravoPBIDesktopReportNotFoundException($"PBIDesktop process - no longer running [{ report.ProcessId }]");
 
             // Exit if the PID has been reused and PBIDesktop process is no longer running
             if (!pbidesktopProcess.ProcessName.Equals(AppConstants.PBIDesktopProcessName, StringComparison.OrdinalIgnoreCase))
-                return default;
+                throw new BravoPBIDesktopReportNotFoundException($"PBIDesktop process - terminated [{ report.ProcessId }]");
 
             var ssasProcessIds = pbidesktopProcess.GetChildProcessIds(name: "msmdsrv.exe").ToArray();
             if (ssasProcessIds.Length == 0)
-                return default;
+                throw new BravoPBIDesktopReportNotFoundException($"PBIDesktop SSAS process - not found [{ report.ProcessId }]");
 
             if (ssasProcessIds.Length > 1)
-                throw new InvalidOperationException($"Unexpected number of PBIDesktop SSAS processes [{ ssasProcessIds.Length }]");
+                throw new BravoPBIDesktopReportNotFoundException($"PBIDesktop SSAS process - unexpected count [{ ssasProcessIds.Length }]");
 
-            var ssasProcessId = ssasProcessIds.SingleOrDefault();
-            if (ssasProcessId == default)
-                return default;
+            var ssasProcessId = ssasProcessIds.Single();
 
             var ssasConnection = Win32Network.GetTcpConnections((c) => c.ProcessId == ssasProcessId && c.State == TcpState.Listen && IPAddress.IsLoopback(c.EndPoint.Address)).SingleOrDefault();
             if (ssasConnection == default)
-                return default;
+                throw new BravoPBIDesktopReportNotFoundException($"PBIDesktop SSAS connection - not found");
 
-            var serverName = ssasConnection.EndPoint.ToString();
-            var databaseName = GetDatabaseName(serverName);
+            var connectionString = ConnectionStringHelper.BuildForPBIDesktop(ssasConnection.EndPoint);
+            var databaseName = GetDatabaseName(connectionString);
 
-            return (serverName, databaseName);
+            return (connectionString, databaseName);
 
-            static Process? GetProcessById(int processId)
+            static Process? GetProcessById(int? processId)
             {
+                Process? process;
                 try
                 {
-                    var process = Process.GetProcessById(processId);
-                    if (process?.HasExited == true)
-                        return null;
-
-                    return process;
+                    process = Process.GetProcessById(processId!.Value);
                 }
                 catch (ArgumentException)
                 {
                     // The process specified by the processId parameter is not running.
                     return null;
                 }
+
+                if (process.HasExited)
+                    return null;
+
+                try
+                {
+                    var processName = process.ProcessName;
+                }
+                catch (InvalidOperationException) 
+                {
+                    // Process has exited, so the requested information is not available
+                    return null;
+                }
+
+                return process;
             }
 
-            static string GetDatabaseName(string serverName)
+            static string GetDatabaseName(string connectionString)
             {
-                var connectionString = ConnectionStringHelper.BuildForPBIDesktop(serverName, databaseName: null);
-
                 using var server = new TOM.Server();
                 server.Connect(connectionString);
 
                 var databaseCount = server.Databases.Count;
                 if (databaseCount != 1)
-                    throw new InvalidOperationException($"Unexpected number of databases [{ databaseCount }] in the PBIDesktop SSAS instance [{ serverName }]");
+                    throw new BravoPBIDesktopReportNotFoundException($"PBIDesktop SSAS database - unexpected count [{ databaseCount }]");
 
                 var databaseName = server.Databases[0].Name;
                 return databaseName;

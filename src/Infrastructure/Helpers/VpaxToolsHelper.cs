@@ -1,32 +1,74 @@
 ﻿using Dax.Metadata.Extractor;
+using Dax.ViewModel;
 using Dax.Vpax.Tools;
+using Sqlbi.Bravo.Models;
 using System.IO;
+using System.Linq;
 
 namespace Sqlbi.Bravo.Infrastructure.Helpers
 {
     internal static class VpaxToolsHelper
     {
-        public static Stream? ExportVpax(string serverName, string databaseName, bool includeTomModel = true, bool includeVpaModel = true, bool readStatisticsFromData = true, int sampleRows = 0)
+        public static Stream ExportVpax(string connectionString, string databaseName, bool includeTomModel, bool includeVpaModel, bool readStatisticsFromData, int sampleRows)
         {
+            var serverName = connectionString;
+
             var daxModel = TomExtractor.GetDaxModel(serverName, databaseName, AppConstants.ApplicationName, AppConstants.ApplicationFileVersion, readStatisticsFromData, sampleRows);
             var tomModel = includeTomModel ? TomExtractor.GetDatabase(serverName, databaseName) : null;
             var vpaModel = includeVpaModel ? new Dax.ViewVpaExport.Model(daxModel) : null;
+            var stream = new MemoryStream();
 
-            var vpaxPath = Path.GetTempFileName();
-            try
+            VpaxTools.ExportVpax(stream, daxModel, vpaModel, tomModel);
+
+            return stream;
+        }
+
+        public static TabularDatabase GetDatabaseFromVpax(Stream vpax)
+        {
+            var vpaxContent = VpaxTools.ImportVpax(stream: vpax);
+            var vpaModel = new VpaModel(vpaxContent.DaxModel);
+
+            var databaseVersion = vpaModel.Model.Version;
+            var databaseSize = vpaModel.Columns.Sum((c) => c.TotalSize);
+
+            var databaseModel = new TabularDatabase
             {
-                // TODO: VpaxTools - add export directly to a Stream to avoid using the local file ?
-                VpaxTools.ExportVpax(vpaxPath, daxModel, vpaModel, tomModel);
+                Info = new TabularDatabaseInfo
+                {
+                    ETag = databaseVersion,
+                    TablesCount = vpaModel.Tables.Count(),
+                    ColumnsCount = vpaModel.Columns.Count(),
+                    TablesMaxRowsCount = vpaModel.Tables.Max((t) => t.RowsCount),
+                    DatabaseSize = databaseSize,
+                    ColumnsUnreferencedCount = vpaModel.Columns.Count((t) => t.IsReferenced == false),
+                    Columns = vpaModel.Columns.Select((c) =>
+                    {
+                        var column = new TabularColumn
+                        {
+                            Name = c.ColumnName,
+                            TableName = c.Table.TableName,
+                            Cardinality = c.ColumnCardinality,
+                            Size = c.TotalSize,
+                            Weight = (double)c.TotalSize / databaseSize,
+                            IsReferenced = c.IsReferenced,
+                        };
+                        return column;
+                    })
+                },
+                Measures = vpaxContent.DaxModel.Tables.SelectMany((t) => t.Measures).Select((m) =>
+                {
+                    var measure = new TabularMeasure
+                    {
+                        ETag = databaseVersion,
+                        Name = m.MeasureName.Name,
+                        TableName = m.Table.TableName.Name,
+                        Expression = m.MeasureExpression.Expression
+                    };
+                    return measure;
+                })
+            };
 
-                var buffer = File.ReadAllBytes(vpaxPath);
-                var vpaxStream = new MemoryStream(buffer, writable: false);
-
-                return vpaxStream;
-            }
-            finally
-            {
-                File.Delete(vpaxPath);
-            }
+            return databaseModel;
         }
     }
 }

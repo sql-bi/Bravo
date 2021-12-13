@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Sqlbi.Bravo.Infrastructure;
 using Sqlbi.Bravo.Infrastructure.Extensions;
 using Sqlbi.Bravo.Models;
+using Sqlbi.Bravo.Services;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Mime;
@@ -17,36 +18,40 @@ namespace Sqlbi.Bravo.Controllers
     public class FormatDaxController : ControllerBase
     {
         private readonly IDaxFormatterClient _daxformatterClient;
+        private readonly IPBIDesktopService _pbidesktopService;
+        private readonly IPBICloudService _pbicloudService;
 
-        public FormatDaxController(IDaxFormatterClient daxformatterClient)
+        public FormatDaxController(IDaxFormatterClient daxformatterClient, IPBIDesktopService pbidesktopService, IPBICloudService pbicloudService)
         {
             _daxformatterClient = daxformatterClient;
+            _pbidesktopService = pbidesktopService;
+            _pbicloudService = pbicloudService;
         }
 
         /// <summary>
         /// Format the provided DAX measures by using daxformatter.com service
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
-        /// <response code="404">Status404BadRequest - Required parameters are missing</response>
         [HttpPost]
         [ActionName("FormatDax")]
         [Consumes(MediaTypeNames.Application.Json)]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(FormatDaxResponse))]
-        public async Task<IActionResult> FormatDax(FormatDaxRequest request)
+        public async Task<IActionResult> FormatAsync(FormatDaxRequest request)
         {
-            if (request.Options is null || request.Measures is null)
-                return BadRequest();
-
-            var daxformatterResponse = await CallDaxFormatter(request.Measures, request.Options).ConfigureAwait(false);
+            var daxformatterResponse = await CallDaxFormatter(request.Measures!, request.Options!);
 
             var response = new FormatDaxResponse();
 
             foreach (var (daxformatterMeasure, index) in daxformatterResponse.WithIndex())
             {
-                var formatterResult = new FormatterResult
+                var requestedMeasure = request.Measures.ElementAt(index);
+                var formattedMeasure = new FormattedMeasure
                 {
-                    Expression = daxformatterMeasure.Formatted?.Remove(0, $"[{ request.Measures.ElementAt(index).Name }] :=".Length)?.TrimStart('\r', '\n', ' ')?.TrimEnd('\r', '\n', ' '),
+                    ETag = requestedMeasure.ETag,
+                    Name = requestedMeasure.Name,
+                    TableName = requestedMeasure.TableName,
+                    Expression = daxformatterMeasure.Formatted?.Remove(0, $"[{ requestedMeasure.Name }] :=".Length)?.TrimStart('\r', '\n', ' ')?.TrimEnd('\r', '\n', ' '),
                     Errors = daxformatterMeasure.Errors?.Select((e) => new FormatterError
                     {
                         Line = e.Line,
@@ -55,13 +60,36 @@ namespace Sqlbi.Bravo.Controllers
                     })
                 };
 
-                response.Add(formatterResult);
+                response.Add(formattedMeasure);
             }
 
             return Ok(response);
         }
 
-        private Task<IReadOnlyList<DaxFormatterResponse>> CallDaxFormatter(IEnumerable<TabularMeasure> measures, FormatDaxOptions options)
+        /// <summary>
+        /// Update a local Power BI report updating the formatted measures
+        /// Parameters: local window id?, a list of pair of properties/values to change?
+        /// </summary>
+        /// <response code="200">Status200OK - Success</response>
+        /// <response code="404">Status404NotFound - PBIDesktop report not found</response>
+        [HttpPost]
+        [ActionName("UpdateReport")]
+        [Consumes(MediaTypeNames.Application.Json)]
+        public IActionResult ApplyFormatAsync(ApplyFormatRequest request)
+        {
+            try
+            {
+                _pbidesktopService.Update(request.Report!, request.Measures!);
+            }
+            catch (BravoPBIDesktopReportNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+
+            return Ok();
+        }
+
+        private async Task<IReadOnlyList<DaxFormatterResponse>> CallDaxFormatter(IEnumerable<TabularMeasure> measures, FormatDaxOptions options)
         {
             var request = new DaxFormatterMultipleRequest
             {
@@ -77,11 +105,10 @@ namespace Sqlbi.Bravo.Controllers
             request.DecimalSeparator = options.DecimalSeparator.GetValueOrDefault(request.DecimalSeparator);
 
             foreach (var measure in measures)
-            {
                 request.Dax.Add($"[{ measure.Name }] := { measure.Expression }");
-            }
 
-            return _daxformatterClient.FormatAsync(request);
+            var response = await _daxformatterClient.FormatAsync(request).ConfigureAwait(false);
+            return response;
         }
     }
 }

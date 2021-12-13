@@ -17,6 +17,10 @@
     <NoWarn>$(NoWarn);1591</NoWarn>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <RestoreSources>$(RestoreSources);./nupkgs;https://api.nuget.org/v3/index.json</RestoreSources>
+  </PropertyGroup>
+  
   <ItemGroup>
     <Content Remove="wwwroot\debug.js" />
     <Content Remove="wwwroot\index-debug.html" />
@@ -24,8 +28,10 @@
 
   <ItemGroup>
     <PackageReference Include="Dax.Formatter" Version="1.0.0" />
-    <PackageReference Include="Dax.ViewModel" Version="1.0.36" />
-    <PackageReference Include="Dax.Vpax.NetCore" Version="1.0.36" />
+    <PackageReference Include="Dax.Metadata" Version="1.1.0-beta5" />
+    <PackageReference Include="Dax.Model.Extractor.NetCore" Version="1.1.0-beta5" />
+    <PackageReference Include="Dax.ViewModel" Version="1.1.0-beta5" />
+    <PackageReference Include="Dax.Vpax.NetCore" Version="1.1.0-beta5" />
     <PackageReference Include="Microsoft.Identity.Client" Version="4.39.0" />
     <PackageReference Include="Photino.NET" Version="2.1.10" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.2.3" />

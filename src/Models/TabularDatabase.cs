@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
 namespace Sqlbi.Bravo.Models
@@ -14,6 +15,9 @@ namespace Sqlbi.Bravo.Models
 
     public class TabularDatabaseInfo
     {
+        [JsonPropertyName("etag")]
+        public long? ETag { get; set; }
+
         [JsonPropertyName("tablesCount")]
         public int TablesCount { get; set; }
 
