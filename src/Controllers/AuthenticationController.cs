@@ -76,6 +76,7 @@ namespace Sqlbi.Bravo.Controllers
         /// <response code="401">Status401Unauthorized - Sign-in required</response>
         [HttpGet]
         [ActionName("GetUser")]
+        [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(BravoAccount))]
         public IActionResult GetAccount()
         {

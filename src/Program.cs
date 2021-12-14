@@ -1,33 +1,95 @@
 ﻿using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.EventLog;
 using PhotinoNET;
 using Sqlbi.Bravo.Infrastructure;
 using Sqlbi.Bravo.Infrastructure.Windows;
 using System;
-using System.Diagnostics;
+using System.IO;
+using System.Reflection;
+using System.Runtime.InteropServices;
 
 namespace Sqlbi.Bravo
 {
     public class Program
     {
         [STAThread]
-        public static void Main(string[] args)
+        public static void Main()
         {
             NativeMethods.SetProcessDPIAware();
 
             // Connect API
-            _ = CreateHostBuilder(args).Build().RunAsync();
+            _ = CreateHostBuilder().Build().RunAsync();
 
             // Starts the application event loop
             CreateHostWindow().WaitForClose();
         }
 
-        private static IHostBuilder CreateHostBuilder(string[] args)
+        private static IHostBuilder CreateHostBuilder(string[]? args = null)
         {
-            var hostBuilder = Host.CreateDefaultBuilder(args).ConfigureWebHostDefaults((webBuilder) =>
-            {
-                Trace.WriteLine("CreateHostBuilder");
+            var hostBuilder = new HostBuilder();
 
+            hostBuilder.UseContentRoot(Directory.GetCurrentDirectory());
+
+            hostBuilder.ConfigureHostConfiguration((config) =>
+            {
+                config.AddEnvironmentVariables("DOTNET_");
+                if (args != null)
+                    config.AddCommandLine(args);
+            });
+
+            hostBuilder.ConfigureAppConfiguration((HostBuilderContext hostingContext, IConfigurationBuilder config) =>
+            {
+                var hostingEnvironment = hostingContext.HostingEnvironment;
+                var reloadConfigOnChange = hostingContext.Configuration.GetValue("hostBuilder:reloadConfigOnChange", defaultValue: true);
+
+                config.AddJsonFile($"appsettings.json", optional: true, reloadConfigOnChange);
+                config.AddJsonFile($"appsettings.{ hostingEnvironment.EnvironmentName }.json", optional: true, reloadConfigOnChange);
+
+                if (hostingEnvironment.IsDevelopment() && !string.IsNullOrEmpty(hostingEnvironment.ApplicationName))
+                {
+                    var assembly = Assembly.Load(new AssemblyName(hostingEnvironment.ApplicationName));
+                    if (assembly != null)
+                        config.AddUserSecrets(assembly, optional: true);
+                }
+
+                config.AddEnvironmentVariables();
+
+                if (args != null)
+                    config.AddCommandLine(args);
+            });
+
+            hostBuilder.ConfigureLogging((HostBuilderContext hostingContext, ILoggingBuilder logging) =>
+            {
+                var isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+                if (isWindows)
+                    logging.AddFilter<EventLogLoggerProvider>((LogLevel level) => level >= LogLevel.Warning);
+
+                logging.AddConfiguration(hostingContext.Configuration.GetSection("Logging"));
+                logging.AddConsole();
+                logging.AddDebug();
+                logging.AddEventSourceLogger();
+
+                if (isWindows)
+                    logging.AddEventLog();
+
+                logging.Configure((LoggerFactoryOptions options) =>
+                {
+                    options.ActivityTrackingOptions = ActivityTrackingOptions.SpanId | ActivityTrackingOptions.TraceId | ActivityTrackingOptions.ParentId;
+                });
+            });
+
+            hostBuilder.UseDefaultServiceProvider(delegate (HostBuilderContext context, ServiceProviderOptions options)
+            {
+                var validateOnBuild = (options.ValidateScopes = context.HostingEnvironment.IsDevelopment());
+                options.ValidateOnBuild = validateOnBuild;
+            });
+
+            hostBuilder.ConfigureWebHostDefaults((webBuilder) =>
+            {
                 //webBuilder.ConfigureLogging(builder =>
                 //{
                 //    builder.

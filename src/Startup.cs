@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Sqlbi.Bravo.Infrastructure.Extensions;
 using Sqlbi.Bravo.Services;
+using Sqlbi.Infrastructure;
 using System.Text.Json.Serialization;
 
 namespace Sqlbi.Bravo
@@ -24,7 +25,7 @@ namespace Sqlbi.Bravo
             services.AddControllers().AddJsonOptions((jsonOptions) =>
             {
                 jsonOptions.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-                //jsonOptions.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+                jsonOptions.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
             });
             services.AddCors((corsOptions) =>
             {
@@ -38,6 +39,8 @@ namespace Sqlbi.Bravo
 #if DEBUG
             services.AddSwaggerGenCustomized();
 #endif
+            //services.AddOptions<BravoOptions>().Bind(Configuration.GetSection(nameof(BravoOptions))).ValidateDataAnnotations();
+            services.AddWritableOptions<AppOptions>(Configuration.GetSection(nameof(AppOptions)), file: "appsettings.json"); //.ValidateDataAnnotations();
             services.AddSingleton<IPBICloudAuthenticationService, PBICloudAuthenticationService>();
             services.AddSingleton<IPBIDesktopService, PBIDesktopService>();
             services.AddSingleton<IPBICloudService, PBICloudService>();

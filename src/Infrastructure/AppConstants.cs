@@ -14,9 +14,11 @@ namespace Sqlbi.Bravo.Infrastructure
         public static readonly string ApplicationHostWindowTitle = "Bravo for Power BI";
         public static readonly string ApplicationInstanceUniqueName = $"{ApplicationName}-{Guid.NewGuid():D}";
         public static readonly string ApplicationFolderLocalDataPath = Path.Combine(EnvironmentSpecialFolderLocalApplicationData, ApplicationName);
+        public static readonly bool TelemetryEnabledDefault = true;
+        public static readonly string TelemetryInstrumentationKey = "47a8970c-6293-408a-9cce-5b7b311574d3";
         public static readonly string PBIDesktopProcessName = "PBIDesktop";
         public static readonly string PBIDesktopMainWindowTitleSuffix = " - Power BI Desktop";
-        public static readonly string DefaultTokenCacheFilePath = Path.Combine(ApplicationFolderLocalDataPath!, ".msalcache.bin");
+        public static readonly string DefaultMsalTokenCacheFilePath = Path.Combine(ApplicationFolderLocalDataPath!, ".msalcache.bin");
         public static readonly TimeSpan MSALSignInTimeout = TimeSpan.FromMinutes(5);
 
         static AppConstants()

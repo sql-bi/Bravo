@@ -11,7 +11,7 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
 
         static TokenCacheHelper()
         {
-            _tokenCacheFilePath = AppConstants.DefaultTokenCacheFilePath;
+            _tokenCacheFilePath = AppConstants.DefaultMsalTokenCacheFilePath;
 
             //try
             //{

@@ -122,20 +122,20 @@ namespace Sqlbi.Bravo.Controllers
         /*
          * Get the options.
          */
-        [HttpGet]
-        public string GetOptions()
-        {
-            return null;
-        }
+        //[HttpGet]
+        //public string GetOptions()
+        //{
+        //    return null;
+        //}
             
         /*
          * Update the options.
          */
-        [HttpGet]
-        public string UpdateOptions()
-        {
-            return null;
-        }
+        //[HttpGet]
+        //public string UpdateOptions()
+        //{
+        //    return null;
+        //}
 
         /*
          * See => ** AuthenticationController.Redirect() **
