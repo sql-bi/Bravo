@@ -6,7 +6,7 @@ namespace Sqlbi.Bravo.Models
     public class TabularMeasure
     {
         [JsonPropertyName("etag")]
-        public long? ETag { get; set; }
+        public string? ETag { get; set; }
 
         [JsonPropertyName("name")]
         public string? Name { get; set; }

@@ -45,7 +45,7 @@ namespace Sqlbi.Bravo.Controllers
 
             foreach (var (daxformatterMeasure, index) in daxformatterResponse.WithIndex())
             {
-                var requestedMeasure = request.Measures.ElementAt(index);
+                var requestedMeasure = request.Measures!.ElementAt(index);
                 var formattedMeasure = new FormattedMeasure
                 {
                     ETag = requestedMeasure.ETag,

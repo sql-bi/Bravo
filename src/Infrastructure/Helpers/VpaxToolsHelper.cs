@@ -1,7 +1,9 @@
 ﻿using Dax.Metadata.Extractor;
 using Dax.ViewModel;
 using Dax.Vpax.Tools;
+using Sqlbi.Bravo.Infrastructure.Security;
 using Sqlbi.Bravo.Models;
+using System;
 using System.IO;
 using System.Linq;
 
@@ -28,14 +30,14 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
             var vpaxContent = VpaxTools.ImportVpax(stream: vpax);
             var vpaModel = new VpaModel(vpaxContent.DaxModel);
 
-            var databaseVersion = vpaModel.Model.Version;
+            var databaseETag = Cryptography.MD5Hash(vpaModel.Model.Version, vpaModel.Model.LastUpdate);
             var databaseSize = vpaModel.Columns.Sum((c) => c.TotalSize);
 
             var databaseModel = new TabularDatabase
             {
                 Info = new TabularDatabaseInfo
                 {
-                    ETag = databaseVersion,
+                    ETag = databaseETag,
                     TablesCount = vpaModel.Tables.Count(),
                     ColumnsCount = vpaModel.Columns.Count(),
                     TablesMaxRowsCount = vpaModel.Tables.Max((t) => t.RowsCount),
@@ -59,7 +61,7 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
                 {
                     var measure = new TabularMeasure
                     {
-                        ETag = databaseVersion,
+                        ETag = databaseETag,
                         Name = m.MeasureName.Name,
                         TableName = m.Table.TableName.Name,
                         Expression = m.MeasureExpression.Expression

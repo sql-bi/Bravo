@@ -2,6 +2,7 @@
 using Sqlbi.Bravo.Infrastructure;
 using Sqlbi.Bravo.Infrastructure.Extensions;
 using Sqlbi.Bravo.Infrastructure.Helpers;
+using Sqlbi.Bravo.Infrastructure.Security;
 using Sqlbi.Bravo.Infrastructure.Windows;
 using Sqlbi.Bravo.Models;
 using System;
@@ -61,7 +62,7 @@ namespace Sqlbi.Bravo.Services
             server.Connect(connectionString);
 
             var database = GetDatabase();
-            var databaseETag = database.Version;
+            var databaseETag = Cryptography.MD5Hash(database.Version, database.LastUpdate);
 
             foreach (var formattedMeasure in measures)
             {

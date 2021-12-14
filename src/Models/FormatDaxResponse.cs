@@ -11,7 +11,7 @@ namespace Sqlbi.Bravo.Models
     public class FormattedMeasure
     {
         [JsonPropertyName("etag")]
-        public long? ETag { get; set; }
+        public string? ETag { get; set; }
 
         [JsonPropertyName("name")]
         public string? Name { get; set; }
