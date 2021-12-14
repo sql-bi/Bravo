@@ -4,11 +4,11 @@ using System.Text.Json.Serialization;
 
 namespace Sqlbi.Bravo.Models
 {
-    public class ApplyFormatRequest
+    public class UpdatePBICloudDatasetRequest
     {
         [Required]
-        [JsonPropertyName("report")]
-        public PBIDesktopReport? Report { get; set; }
+        [JsonPropertyName("dataset")]
+        public PBICloudDataset? Dataset { get; set; }
 
         [Required]
         [JsonPropertyName("measures")]

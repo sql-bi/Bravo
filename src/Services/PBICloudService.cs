@@ -1,15 +1,19 @@
 ﻿using Microsoft.Identity.Client;
 using Sqlbi.Bravo.Infrastructure;
+using Sqlbi.Bravo.Infrastructure.Extensions;
 using Sqlbi.Bravo.Infrastructure.Helpers;
 using Sqlbi.Bravo.Infrastructure.Models.PBICloud;
+using Sqlbi.Bravo.Infrastructure.Security;
 using Sqlbi.Bravo.Models;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Threading.Tasks;
+using TOM = Microsoft.AnalysisServices.Tabular;
 
 namespace Sqlbi.Bravo.Services
 {
@@ -28,6 +32,8 @@ namespace Sqlbi.Bravo.Services
         Task<IEnumerable<SharedDataset>> GetSharedDatasetsAsync();
 
         Stream ExportVpax(PBICloudDataset dataset, bool includeTomModel = true, bool includeVpaModel = true, bool readStatisticsFromData = true, int sampleRows = 0);
+
+        void Update(PBICloudDataset dataset, IEnumerable<FormattedMeasure> measures);
      }
 
     internal class PBICloudService : IPBICloudService
@@ -60,11 +66,11 @@ namespace Sqlbi.Bravo.Services
             }
             catch (OperationCanceledException)
             {
-                throw new BravoSignInTimeoutException();
+                throw new SignInTimeoutException();
             }
             catch (MsalException mex)
             {
-                throw new BravoSignInMsalException(mex);
+                throw new SignInMsalException(mex);
             }
 
             CurrentAccount = new BravoAccount
@@ -113,7 +119,7 @@ namespace Sqlbi.Bravo.Services
 
         public Stream ExportVpax(PBICloudDataset dataset, bool includeTomModel, bool includeVpaModel, bool readStatisticsFromData, int sampleRows)
         {
-            var (connectionString, databaseName) = GetConnectionParameters(dataset, CurrentAuthentication!.AccessToken);
+            var (connectionString, databaseName) = GetConnectionParameters(dataset);
 
             try
             {
@@ -123,11 +129,18 @@ namespace Sqlbi.Bravo.Services
             catch (ArgumentException ex) when (ex.Message == $"The database '{ databaseName }' could not be found. Either it does not exist or you do not have admin rights to it.")
             {
                 // TODO: do not use message string to identify the error
-                throw new BravoPBICloudDatasetNotFoundException("PBICloud dataset - not found");
+                throw new TOMDatabaseNotFoundException("PBICloud dataset not found");
             }
         }
 
-        private (string connectionString, string databaseName) GetConnectionParameters(PBICloudDataset dataset, string accessToken)
+        public void Update(PBICloudDataset dataset, IEnumerable<FormattedMeasure> measures)
+        {
+            var (connectionString, databaseName) = GetConnectionParameters(dataset);
+            
+            TabularModelHelper.Update(connectionString, databaseName, measures);
+        }
+
+        private (string connectionString, string databaseName) GetConnectionParameters(PBICloudDataset dataset)
         {
             // Dataset connectivity with the XMLA endpoint
             // https://docs.microsoft.com/en-us/power-bi/admin/service-premium-connect-tools
@@ -142,7 +155,7 @@ namespace Sqlbi.Bravo.Services
             var serverName = $"powerbi://api.powerbi.com/v1.0/{ tenantName }/{ dataset.WorkspaceName }";
             var databaseName = dataset.DisplayName;
 
-            var connectionString = ConnectionStringHelper.BuildForPBICloudDataset(serverName, databaseName, accessToken);
+            var connectionString = ConnectionStringHelper.BuildForPBICloudDataset(serverName, databaseName, CurrentAuthentication!.AccessToken);
 
             return (connectionString, databaseName);
         }

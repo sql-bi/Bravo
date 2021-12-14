@@ -67,23 +67,64 @@ namespace Sqlbi.Bravo.Controllers
         }
 
         /// <summary>
-        /// Update a local Power BI report updating the formatted measures
-        /// Parameters: local window id?, a list of pair of properties/values to change?
+        /// Update a PBIDesktop report by applying changes to formatted measures
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
         /// <response code="404">Status404NotFound - PBIDesktop report not found</response>
+        /// <response code="409">Status409Conflict - Update failed due to a conflict with the current state of the PBIDesktop report</response>
+        /// <response code="424">Status424FailedDependency - Update failed due to PBIDesktop SSAS server error</response>
         [HttpPost]
         [ActionName("UpdateReport")]
         [Consumes(MediaTypeNames.Application.Json)]
-        public IActionResult ApplyFormatAsync(ApplyFormatRequest request)
+        public IActionResult UpdatePBIDesktopReportAsync(UpdatePBIDesktopReportRequest request)
         {
             try
             {
                 _pbidesktopService.Update(request.Report!, request.Measures!);
             }
-            catch (BravoPBIDesktopReportNotFoundException ex)
+            catch (TOMDatabaseNotFoundException fex)
+            {
+                return NotFound(fex.Message);
+            }
+            catch (TOMDatabaseOutOfSyncException sex)
+            {
+                return StatusCode(StatusCodes.Status409Conflict, sex.Message);
+            }
+            catch (TOMDatabaseUpdateException uex)
+            {
+                return StatusCode(StatusCodes.Status424FailedDependency, uex.Message);
+            }
+
+            return Ok();
+        }
+
+        /// <summary>
+        /// Update a PBICloud dataset by applying changes to formatted measures 
+        /// </summary>
+        /// <response code="200">Status200OK - Success</response>
+        /// <response code="404">Status404NotFound - PBICloud dataset not found</response>
+        /// <response code="409">Status409Conflict - Update failed due to a conflict with the current state of the PBICloud dataset</response>
+        /// <response code="424">Status424FailedDependency - Update failed due to PBICloud SSAS server error</response>
+        [HttpPost]
+        [ActionName("UpdateDataset")]
+        [Consumes(MediaTypeNames.Application.Json)]
+        public IActionResult UpdatePBICloudDatasetAsync(UpdatePBICloudDatasetRequest request)
+        {
+            try
+            {
+                _pbicloudService.Update(request.Dataset!, request.Measures!);
+            }
+            catch (TOMDatabaseNotFoundException ex)
             {
                 return NotFound(ex.Message);
+            }
+            catch (TOMDatabaseOutOfSyncException sex)
+            {
+                return StatusCode(StatusCodes.Status409Conflict, sex.Message);
+            }
+            catch (TOMDatabaseUpdateException uex)
+            {
+                return StatusCode(StatusCodes.Status424FailedDependency, uex.Message);
             }
 
             return Ok();

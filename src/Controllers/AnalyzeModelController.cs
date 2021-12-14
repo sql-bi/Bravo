@@ -59,7 +59,7 @@ namespace Sqlbi.Bravo.Controllers
             {
                 vpax = _pbidesktopService.ExportVpax(report, includeTomModel: false, includeVpaModel: false, readStatisticsFromData: false, sampleRows: 0);
             }
-            catch (BravoPBIDesktopReportNotFoundException ex)
+            catch (TOMDatabaseNotFoundException ex)
             {
                 return NotFound(ex.Message);
             }
@@ -89,7 +89,7 @@ namespace Sqlbi.Bravo.Controllers
             {
                 vpax = _pbicloudService.ExportVpax(dataset, includeTomModel: false, includeVpaModel: false, readStatisticsFromData: false, sampleRows: 0);
             }
-            catch (BravoPBICloudDatasetNotFoundException ex)
+            catch (TOMDatabaseNotFoundException ex)
             {
                 return NotFound(ex.Message);
             }
@@ -166,7 +166,7 @@ namespace Sqlbi.Bravo.Controllers
             {
                 vpax = _pbidesktopService.ExportVpax(report, includeTomModel: false, includeVpaModel: false, readStatisticsFromData: false, sampleRows: 0);
             }
-            catch (BravoPBIDesktopReportNotFoundException ex)
+            catch (TOMDatabaseNotFoundException ex)
             {
                 return NotFound(ex.Message);
             }
@@ -195,7 +195,7 @@ namespace Sqlbi.Bravo.Controllers
             {
                 vpax = _pbicloudService.ExportVpax(dataset, includeTomModel: false, includeVpaModel: false, readStatisticsFromData: false, sampleRows: 0);
             }
-            catch (BravoPBICloudDatasetNotFoundException ex)
+            catch (TOMDatabaseNotFoundException ex)
             {
                 return NotFound(ex.Message);
             }

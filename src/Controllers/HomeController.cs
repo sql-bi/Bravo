@@ -77,21 +77,21 @@ namespace Sqlbi.Bravo.Controllers
          * Update a local Power BI report (for example by passing formatted measures)
          * Parameters: local window id?, a list of pair of properties/values to change?
          */
-        [HttpPost]
-        public string UpdateReport()
-        {
-            return null;
-        }
+        //[HttpPost]
+        //public string UpdateReport()
+        //{
+        //    return null;
+        //}
 
         /*
          * Update a remote Power BI dataset (for example by passing formatted measures)
          * Parameters: remote dataset URL?, a list of pair of properties/values to change?
          */
-        [HttpPost]
-        public string UpdateDataset()
-        {
-            return null;
-        }
+        //[HttpPost]
+        //public string UpdateDataset()
+        //{
+        //    return null;
+        //}
 
         /*
          * Format passed DAX measures

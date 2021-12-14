@@ -37,14 +37,14 @@ namespace Sqlbi.Bravo.Controllers
             {
                 await _pbicloudService.SignInAsync();
             }
-            catch (BravoSignInTimeoutException)
+            catch (SignInTimeoutException)
             {
                 return StatusCode(StatusCodes.Status403Forbidden, new BravoSignInError
                 {
                     IsTimeoutElapsed = true
                 });
             }
-            catch (BravoSignInMsalException mex)
+            catch (SignInMsalException mex)
             {
                 return StatusCode(StatusCodes.Status424FailedDependency, new BravoSignInError
                 {

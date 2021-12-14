@@ -22,11 +22,11 @@ namespace Sqlbi.Bravo.Infrastructure
     }
 
     [Serializable]
-    public class BravoSignInMsalException: BravoException
+    public class SignInMsalException: BravoException
     {
         public string MsalErrorCode { get; init; }
 
-        public BravoSignInMsalException(MsalException inner)
+        public SignInMsalException(MsalException inner)
             : base(inner.Message, inner)
         {
             MsalErrorCode = inner.ErrorCode;
@@ -34,23 +34,32 @@ namespace Sqlbi.Bravo.Infrastructure
     }
 
     [Serializable]
-    public class BravoSignInTimeoutException : BravoException
+    public class SignInTimeoutException : BravoException
     {
     }
 
     [Serializable]
-    public class BravoPBIDesktopReportNotFoundException : BravoException
+    public class TOMDatabaseNotFoundException : BravoException
     {
-        public BravoPBIDesktopReportNotFoundException(string message)
+        public TOMDatabaseNotFoundException(string message)
             : base(message)
         {
         }
     }
 
     [Serializable]
-    public class BravoPBICloudDatasetNotFoundException : BravoException
+    public class TOMDatabaseOutOfSyncException : BravoException
     {
-        public BravoPBICloudDatasetNotFoundException(string message)
+        public TOMDatabaseOutOfSyncException(string message)
+            : base(message)
+        {
+        }
+    }
+
+    [Serializable]
+    public class TOMDatabaseUpdateException : BravoException
+    {
+        public TOMDatabaseUpdateException(string message)
             : base(message)
         {
         }

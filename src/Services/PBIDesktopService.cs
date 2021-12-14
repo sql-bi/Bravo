@@ -58,47 +58,7 @@ namespace Sqlbi.Bravo.Services
         {
             var (connectionString, databaseName) = GetConnectionParameters(report);
 
-            var server = new TOM.Server();
-            server.Connect(connectionString);
-
-            var database = GetDatabase();
-            var databaseETag = Cryptography.MD5Hash(database.Version, database.LastUpdate);
-
-            foreach (var formattedMeasure in measures)
-            {
-                if (formattedMeasure.ETag != databaseETag)
-                    throw new BravoException("PBIDesktop update failed - database has changed");
-
-                if (formattedMeasure.Errors?.Any() ?? false)
-                    continue;
-
-                var unformattedMeasure = database.Model.Tables[formattedMeasure.TableName].Measures[formattedMeasure.Name];
-
-                if (unformattedMeasure.Expression != formattedMeasure.Expression)
-                    unformattedMeasure.Expression = formattedMeasure.Expression;
-            }
-
-            if (database.Model.HasLocalChanges)
-                database.Update();
-
-            var operationResult = database.Model.SaveChanges();
-            if (operationResult.XmlaResults.ContainsErrors)
-            {
-                var message = operationResult.XmlaResults.ToDescriptionString();
-                throw new BravoException($"PBIDesktop save changes failed - { message }");
-            }
-
-            TOM.Database GetDatabase()
-            {
-                try
-                {
-                    return server.Databases.GetByName(databaseName);
-                }
-                catch (AmoException ex)
-                {
-                    throw new BravoPBIDesktopReportNotFoundException(ex.Message);
-                }
-            }
+            TabularModelHelper.Update(connectionString, databaseName, measures);
         }
 
         private (string connectionString, string databaseName) GetConnectionParameters(PBIDesktopReport report)
@@ -106,24 +66,24 @@ namespace Sqlbi.Bravo.Services
             // Exit if the process specified by the processId parameter is not running
             var pbidesktopProcess = GetProcessById(report.ProcessId);
             if (pbidesktopProcess is null)
-                throw new BravoPBIDesktopReportNotFoundException($"PBIDesktop process - no longer running [{ report.ProcessId }]");
+                throw new TOMDatabaseNotFoundException($"PBIDesktop process is no longer running [{ report.ProcessId }]");
 
             // Exit if the PID has been reused and PBIDesktop process is no longer running
             if (!pbidesktopProcess.ProcessName.Equals(AppConstants.PBIDesktopProcessName, StringComparison.OrdinalIgnoreCase))
-                throw new BravoPBIDesktopReportNotFoundException($"PBIDesktop process - terminated [{ report.ProcessId }]");
+                throw new TOMDatabaseNotFoundException($"PBIDesktop process is no longer running [{ report.ProcessId }]");
 
             var ssasProcessIds = pbidesktopProcess.GetChildProcessIds(name: "msmdsrv.exe").ToArray();
             if (ssasProcessIds.Length == 0)
-                throw new BravoPBIDesktopReportNotFoundException($"PBIDesktop SSAS process - not found [{ report.ProcessId }]");
+                throw new TOMDatabaseNotFoundException($"PBIDesktop SSAS process not found [{ report.ProcessId }]");
 
             if (ssasProcessIds.Length > 1)
-                throw new BravoPBIDesktopReportNotFoundException($"PBIDesktop SSAS process - unexpected count [{ ssasProcessIds.Length }]");
+                throw new TOMDatabaseNotFoundException($"PBIDesktop unexpected number of SSAS processes found [{ ssasProcessIds.Length }]");
 
             var ssasProcessId = ssasProcessIds.Single();
 
             var ssasConnection = Win32Network.GetTcpConnections((c) => c.ProcessId == ssasProcessId && c.State == TcpState.Listen && IPAddress.IsLoopback(c.EndPoint.Address)).SingleOrDefault();
             if (ssasConnection == default)
-                throw new BravoPBIDesktopReportNotFoundException($"PBIDesktop SSAS connection - not found");
+                throw new TOMDatabaseNotFoundException($"PBIDesktop SSAS connection not found");
 
             var connectionString = ConnectionStringHelper.BuildForPBIDesktop(ssasConnection.EndPoint);
             var databaseName = GetDatabaseName(connectionString);
@@ -166,7 +126,7 @@ namespace Sqlbi.Bravo.Services
 
                 var databaseCount = server.Databases.Count;
                 if (databaseCount != 1)
-                    throw new BravoPBIDesktopReportNotFoundException($"PBIDesktop SSAS database - unexpected count [{ databaseCount }]");
+                    throw new TOMDatabaseNotFoundException($"PBIDesktop unexpected number of SSAS databases found [{ databaseCount }]");
 
                 var databaseName = server.Databases[0].Name;
                 return databaseName;
