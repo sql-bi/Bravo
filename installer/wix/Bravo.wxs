@@ -4,7 +4,8 @@
   <?define ProductVersion=!(bind.FileVersion.app.exe) ?>
   <?define ProductManufacturer = "SQLBI Corporation" ?>
   <?define AppUrlInfoAbout = "https://github.com/sql-bi/bravo" ?>
-  <?define AppInstallFolder = "SQLBI Bravo" ?>
+  <?define AppInstallFolder = "SQLBI" ?>
+  <?define AppInstallSubfolder = "Bravo" ?>
   <?define AppExecutableName = "Bravo.exe" ?>
   
   <?if $(sys.BUILDARCH) = x64 ?>
@@ -73,7 +74,9 @@
   <Fragment>
     <Directory Id="TARGETDIR" Name="SourceDir">
       <Directory Id="$(var.PlatformProgramFilesFolder)">
-        <Directory Id="INSTALLFOLDER" Name="$(var.AppInstallFolder)" />
+        <Directory Id="AppManufacturer" Name="$(var.AppInstallFolder)">
+          <Directory Id="INSTALLFOLDER" Name="$(var.AppInstallSubfolder)" />
+        </Directory>
       </Directory>
       
       <Directory Id="DesktopFolder" Name="Desktop" />
