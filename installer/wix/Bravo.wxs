@@ -36,6 +36,7 @@
     <Icon Id="app.ico" SourceFile="$(var.PublishFolder)\$(var.AppExecutableName)" />
 
     <UIRef Id="Custom_WixUI_InstallDir" />
+    <UIRef Id="WixUI_ErrorProgressText" />
     
     <WixVariable Id="WixUIDialogBmp" Value="assets\background.bmp" />
     <WixVariable Id="WixUIBannerBmp" Value="assets\banner.bmp" />
@@ -210,7 +211,7 @@
   </Fragment>
 
   <Fragment>
-    <UI>      
+    <UI>
       <!-- https://github.com/wixtoolset/wix3/blob/develop/src/ext/UIExtension/wixlib/VerifyReadyDlg.wxs -->
       
       <Dialog Id="Custom_VerifyReadyDlg" Width="370" Height="270" Title="!(loc.VerifyReadyDlg_Title)" TrackDiskSpace="yes">
