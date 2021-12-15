@@ -9,8 +9,8 @@ using Sqlbi.Bravo.Infrastructure.Extensions;
 using Sqlbi.Bravo.Services;
 using Sqlbi.Infrastructure;
 using System;
-using System.Linq;
 using System.Text.Json.Serialization;
+using static Sqlbi.Bravo.Infrastructure.Configuration.StartupConfiguration;
 
 namespace Sqlbi.Bravo
 {
@@ -44,8 +44,10 @@ namespace Sqlbi.Bravo
 #if DEBUG
             services.AddSwaggerGenCustomized();
 #endif
-            //services.AddOptions<BravoOptions>().Bind(Configuration.GetSection(nameof(BravoOptions))).ValidateDataAnnotations();
-            services.AddWritableOptions<AppOptions>(Configuration.GetSection(nameof(AppOptions)), file: "appsettings.json"); //.ValidateDataAnnotations();
+            // Options
+            services.AddWritableOptions<AppOptions>(section: Configuration.GetSection(nameof(AppOptions)), file: "appsettings.json"); //.ValidateDataAnnotations();
+            services.AddOptions<AppStartupOptions>().Configure(FromCommandLineArguments); //.ValidateDataAnnotations();
+            // Services
             services.AddSingleton<IPBICloudAuthenticationService, PBICloudAuthenticationService>();
             services.AddSingleton<IPBIDesktopService, PBIDesktopService>();
             services.AddSingleton<IPBICloudService, PBICloudService>();

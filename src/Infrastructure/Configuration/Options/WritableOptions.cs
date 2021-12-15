@@ -3,7 +3,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using System;
 using System.IO;
-using System.Text.Json;
 
 namespace Sqlbi.Bravo.Infrastructure.Configuration.Options
 {

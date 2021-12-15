@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using Sqlbi.Bravo.Infrastructure.Configuration.Options;
 using Sqlbi.Bravo.Models;
 using Sqlbi.Infrastructure;
@@ -12,7 +13,6 @@ namespace Sqlbi.Bravo.Controllers
     [ApiController]
     public class ApplicationController : ControllerBase
     {
-        //private readonly BravoOptions _settings;
         private readonly IWritableOptions<AppOptions> _options;
 
         public ApplicationController(IWritableOptions<AppOptions> options)

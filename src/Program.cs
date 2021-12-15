@@ -23,11 +23,17 @@ namespace Sqlbi.Bravo
         [STAThread]
         public static void Main()
         {
-            StartupConfiguration.SetupEnvironment();
-
-            CreateWebHost().RunAsync();
-
-            CreateMainWindow().WaitForClose();
+            try
+            {
+                StartupConfiguration.Configure();
+                CreateWebHost().RunAsync();
+                CreateMainWindow().WaitForClose();
+            }
+            catch (Exception)
+            {
+                // TODO: add logging
+                throw;
+            }
         }
 
         private static IHost CreateWebHost(string[]? args = null)

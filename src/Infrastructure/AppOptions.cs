@@ -1,10 +1,12 @@
 ﻿using Sqlbi.Bravo.Infrastructure;
+using System.Collections.ObjectModel;
+using System.Text.Json.Serialization;
 
 namespace Sqlbi.Infrastructure
 {
     public class AppOptions
     {
-        [System.Text.Json.Serialization.JsonPropertyName("telemetryEnabled")]
+        [JsonPropertyName("telemetryEnabled")]
         //[Newtonsoft.Json.JsonProperty("telemetryEnabled")]
         public bool TelemetryEnabled { get; set; } = AppConstants.TelemetryEnabledDefault;
 
@@ -17,8 +19,23 @@ namespace Sqlbi.Infrastructure
 
         // TODO: 'string CustomOptions' is a workaround, we should instead use 'JsonElement? CustomData'
 
-        [System.Text.Json.Serialization.JsonPropertyName("customOptions")]
+        [JsonPropertyName("customOptions")]
         //[Newtonsoft.Json.JsonProperty("options")]
         public string? CustomOptions { get; set; }
+    }
+
+    public class AppStartupOptions
+    {
+        [JsonPropertyName("executedAsExternalTool")]
+        public bool IsExecutedAsExternalTool { get; set; }
+
+        [JsonIgnore]
+        public ReadOnlyCollection<string>? CommandLineErrors { get; set; }
+
+        [JsonPropertyName("serverName")]
+        public string? ArgumentServerName { get; set; }
+
+        [JsonPropertyName("databaseName")]
+        public string? ArgumentDatabaseName { get; set; }
     }
 }
