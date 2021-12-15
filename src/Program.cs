@@ -8,21 +8,25 @@ using PhotinoNET;
 using Sqlbi.Bravo.Infrastructure;
 using Sqlbi.Bravo.Infrastructure.Windows;
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
-using System.Reflection;
+using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace Sqlbi.Bravo
 {
     public class Program
     {
+        internal static ICollection<string>? HostAddresses;
+
         [STAThread]
         public static void Main()
         {
             NativeMethods.SetProcessDPIAware();
 
             // Connect API
-            _ = CreateHostBuilder().Build().RunAsync();
+            CreateHostBuilder().Build().RunAsync();
 
             // Starts the application event loop
             CreateHostWindow().WaitForClose();
@@ -34,12 +38,12 @@ namespace Sqlbi.Bravo
 
             hostBuilder.UseContentRoot(Directory.GetCurrentDirectory());
 
-            hostBuilder.ConfigureHostConfiguration((config) =>
-            {
-                config.AddEnvironmentVariables("DOTNET_");
-                if (args != null)
-                    config.AddCommandLine(args);
-            });
+            //hostBuilder.ConfigureHostConfiguration((config) =>
+            //{
+            //    config.AddEnvironmentVariables("DOTNET_");
+            //    if (args != null)
+            //        config.AddCommandLine(args);
+            //});
 
             hostBuilder.ConfigureAppConfiguration((HostBuilderContext hostingContext, IConfigurationBuilder config) =>
             {
@@ -49,17 +53,17 @@ namespace Sqlbi.Bravo
                 config.AddJsonFile($"appsettings.json", optional: true, reloadConfigOnChange);
                 config.AddJsonFile($"appsettings.{ hostingEnvironment.EnvironmentName }.json", optional: true, reloadConfigOnChange);
 
-                if (hostingEnvironment.IsDevelopment() && !string.IsNullOrEmpty(hostingEnvironment.ApplicationName))
-                {
-                    var assembly = Assembly.Load(new AssemblyName(hostingEnvironment.ApplicationName));
-                    if (assembly != null)
-                        config.AddUserSecrets(assembly, optional: true);
-                }
+                //if (hostingEnvironment.IsDevelopment() && !string.IsNullOrEmpty(hostingEnvironment.ApplicationName))
+                //{
+                //    var assembly = Assembly.Load(new AssemblyName(hostingEnvironment.ApplicationName));
+                //    if (assembly != null)
+                //        config.AddUserSecrets(assembly, optional: true);
+                //}
 
-                config.AddEnvironmentVariables();
+                //config.AddEnvironmentVariables();
 
-                if (args != null)
-                    config.AddCommandLine(args);
+                //if (args != null)
+                //    config.AddCommandLine(args);
             });
 
             hostBuilder.ConfigureLogging((HostBuilderContext hostingContext, ILoggingBuilder logging) =>
@@ -82,7 +86,7 @@ namespace Sqlbi.Bravo
                 });
             });
 
-            hostBuilder.UseDefaultServiceProvider(delegate (HostBuilderContext context, ServiceProviderOptions options)
+            hostBuilder.UseDefaultServiceProvider((HostBuilderContext context, ServiceProviderOptions options) =>
             {
                 var validateOnBuild = (options.ValidateScopes = context.HostingEnvironment.IsDevelopment());
                 options.ValidateOnBuild = validateOnBuild;
@@ -95,17 +99,18 @@ namespace Sqlbi.Bravo
                 //    builder.
                 //});
 
-                webBuilder.ConfigureKestrel(options =>
+                webBuilder.ConfigureKestrel((options) =>
                 {
                     // Allow sync IO - required by ImportVpax
                     options.AllowSynchronousIO = true;
-                    // TODO: randomise the HTTP listening port
+                    // TODO: randomise the listening port 
                     options.ListenLocalhost(port: 5000, (listenOptions) =>
+                    //options.Listen(System.Net.IPAddress.Loopback, port: 0, (listenOptions) =>
                     {
 #if DEBUG
                         listenOptions.UseConnectionLogging();
 #endif
-                        //listenOptions.UseHttps();
+                        //listenOptions.UseHttps(); // TODO: do we need https ?
                     });
                 });
 
@@ -120,7 +125,7 @@ namespace Sqlbi.Bravo
 #if DEBUG
             var contextMenuEnabled = true;
 #else
-            var contextMenuEnabled = false
+            var contextMenuEnabled = false;
 #endif
             // Creating a new PhotinoWindow instance with the fluent API
             var window = new PhotinoWindow()
@@ -129,63 +134,51 @@ namespace Sqlbi.Bravo
                 .SetContextMenuEnabled(contextMenuEnabled)
                 .SetGrantBrowserPermissions(true)
                 .SetUseOsDefaultSize(true)
+                .RegisterWebMessageReceivedHandler(WebMessageReceived)
                 .Load("wwwroot/index.html"); // Can be used with relative path strings or "new URI()" instance to load a website.
 
-                //.RegisterCustomSchemeHandler("app", AppCustomScheme)
-                //.RegisterWindowCreatingHandler(WindowCreating)
-                //.RegisterWindowCreatedHandler(WindowCreated)
-                //.RegisterWindowClosingHandler(WindowClosing)
-                //.RegisterWebMessageReceivedHandler(WebMessageReceived)
+            window.RegisterWebMessageReceivedHandler(WebMessageReceived);
+            window.RegisterWindowCreatingHandler(WindowCreating);
+            window.RegisterWindowCreatedHandler(WindowCreated);
+            window.RegisterWindowClosingHandler(WindowClosing);
 
             return window;
         }
 
-        private static System.IO.Stream AppCustomScheme(object sender, string scheme, string url, out string contentType)
-        {
-            contentType = "text/javascript";
-
-            var script = System.Text.Encoding.UTF8.GetBytes(@"
-                (() =>{
-                    window.setTimeout(() => {
-                        alert(`🎉 Dynamically inserted JavaScript.`);
-                    }, 1000);
-                })();
-            ");
-
-            return new System.IO.MemoryStream(script);
-        }
-
         private static void WindowCreating(object? sender, EventArgs e)
         {
-            //var window = (PhotinoWindow)sender;
-            Console.WriteLine($"Creating new PhotinoWindow instance.");
+            var window = (PhotinoWindow)sender!;
+            Trace.WriteLine($"::Bravo:INF:WindowCreatingHandler:{ window.Title }");
         }
 
         private static void WindowCreated(object? sender, EventArgs e)
         {
-            if (sender is PhotinoWindow window)
-            {
-                Console.WriteLine($"Created new PhotinoWindow instance with title { window.Title }.");
-            }
+            var window = (PhotinoWindow)sender!;
+            Trace.WriteLine($"::Bravo:INF:WindowCreatedHandler:{ window.Title }");
+            Trace.WriteLine($"::Bravo:INF:HostAddresses:{ string.Join(", ", HostAddresses ?? Array.Empty<string>()) }");
         }
 
         private static bool WindowClosing(object sender, EventArgs args)
         {
-            Console.WriteLine($"Closing PhotinoWindow instance.");
+            Trace.WriteLine($"::Bravo:INF:WindowClosingHandler");
             return false; // Could return true to stop windows close
         }
 
         private static void WebMessageReceived(object? sender, string message)
         {
-            if (sender is PhotinoWindow window)
-            {
-                // The message argument is coming in from sendMessage.
-                // "window.external.sendMessage(message: string)"
-                var response = $"Received message: \"{message}\"";
+            var window = (PhotinoWindow)sender!;
 
-                // Send a message back the to JavaScript event handler.
-                // "window.external.receiveMessage(callback: Function)"
-                window.SendWebMessage(response);
+            if (message == "host-address")
+            {
+                Trace.WriteLine($"::Bravo:INF:WebMessageReceived:{ message }");
+
+                var address = HostAddresses?.Single();
+
+                window.SendWebMessage(address);
+            }
+            else
+            {
+                // ??
             }
         }
     }

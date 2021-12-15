@@ -1,18 +1,24 @@
 ﻿using Dax.Formatter;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Sqlbi.Bravo.Infrastructure.Extensions;
 using Sqlbi.Bravo.Services;
 using Sqlbi.Infrastructure;
+using System;
+using System.Linq;
 using System.Text.Json.Serialization;
 
 namespace Sqlbi.Bravo
 {
     internal class Startup
     {
+        private const string CorsLocalhostOnlyPolicy = "AllowLocalWebAPI";
+        private const string CorsLocalhostOrigin = "null";
+
         public IConfiguration Configuration { get; }
 
         public Startup(IConfiguration configuration)
@@ -29,11 +35,10 @@ namespace Sqlbi.Bravo
             });
             services.AddCors((corsOptions) =>
             {
-                corsOptions.AddPolicy("AllowLocalWebAPI", (policyBuilder) =>
+                corsOptions.AddPolicy(CorsLocalhostOnlyPolicy, (policyBuilder) =>
                 {
-                    policyBuilder.AllowAnyOrigin() //.WithOrigins("null") //for security, default to only accepting calls from the local machine
-                        .AllowAnyMethod()
-                        .AllowAnyHeader();
+                    // for security, default to only accepting calls from the local machine
+                    policyBuilder.AllowAnyMethod().AllowAnyHeader().WithOrigins(CorsLocalhostOrigin);
                 });
             });
 #if DEBUG
@@ -49,7 +54,10 @@ namespace Sqlbi.Bravo
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment environment)
         {
-            app.UseCors("AllowLocalWebAPI");
+            // TODO: see 'force IPV6 and randomise the listening port'
+            var addressesFeature = app.ServerFeatures.Get<IServerAddressesFeature>() ?? throw new Exception($"ServerFeature not found { nameof(IServerAddressesFeature) }");
+            System.Diagnostics.Trace.WriteLine("::Bravo:INF:KestrelListeningAddresses:" + string.Join(", ", addressesFeature.Addresses ?? Array.Empty<string>()));
+            Program.HostAddresses = addressesFeature.Addresses;
 
             if (environment.IsDevelopment())
             {
@@ -60,6 +68,12 @@ namespace Sqlbi.Bravo
             app.UseSwaggerUI();
 #endif
             app.UseRouting();
+            app.UseCors(CorsLocalhostOnlyPolicy); // The call to UseCors must be placed after UseRouting, but before UseAuthorization and UseEndpoints
+
+            // TODO: do we need https authz/authn ? 
+            //app.UseAuthentication();
+            //app.UseAuthorization(); e.g. FilterAttribute, IActionFilter .OnActionExecuting => if (filterContext.HttpContext.Request.IsLocal == false) filterContext.Result = new HttpForbiddenResult(); 
+
             app.UseEndpoints((endpoints) =>
             {
                 endpoints.MapControllers();
