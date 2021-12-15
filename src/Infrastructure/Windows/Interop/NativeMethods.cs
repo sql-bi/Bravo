@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Text;
 
-namespace Sqlbi.Bravo.Infrastructure.Windows
+namespace Sqlbi.Bravo.Infrastructure.Windows.Interop
 {
     internal static class NativeMethods
     {
@@ -31,6 +31,7 @@ namespace Sqlbi.Bravo.Infrastructure.Windows
         public const int WM_COPYDATA = 0x004A;
 
         public delegate bool MonitorEnumProc(IntPtr monitor, IntPtr hdc, IntPtr lprcMonitor, IntPtr lParam);
+
         public delegate bool EnumThreadDelegate(IntPtr hWnd, IntPtr lParam);
 
         public static readonly HandleRef NullHandleRef = new HandleRef(null, IntPtr.Zero);
@@ -81,10 +82,10 @@ namespace Sqlbi.Bravo.Infrastructure.Windows
         [return: MarshalAs(UnmanagedType.Bool)]
         public static extern bool EnumThreadWindows(int dwThreadId, EnumThreadDelegate lpfn, IntPtr lParam);
 
-        [DllImport(ExternDll.User32, CharSet = CharSet.Auto)]
+        [DllImport(ExternDll.User32, CharSet = CharSet.Unicode)]
         public static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, int wParam, StringBuilder lParam);
 
-        [DllImport(ExternDll.User32, SetLastError = true)]
+        [DllImport(ExternDll.User32, SetLastError = true, CharSet = CharSet.Unicode)]
         public static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
 
         [DllImport(ExternDll.User32, CharSet = CharSet.Auto)]
@@ -106,7 +107,10 @@ namespace Sqlbi.Bravo.Infrastructure.Windows
                 Bottom = bottom;
             }
 
-            public static RECT FromXYWH(int x, int y, int width, int height) => new RECT(x, y, x + width, y + height);
+            public static RECT FromXYWH(int x, int y, int width, int height)
+            {
+                return new RECT(x, y, x + width, y + height);
+            }
         }
 
         [StructLayout(LayoutKind.Sequential)]
@@ -176,9 +180,9 @@ namespace Sqlbi.Bravo.Infrastructure.Windows
             public byte[] remotePort;
             public uint owningPid;
 
-            public IPEndPoint LocalEndPoint => new IPEndPoint(localAddress, port: BitConverter.ToUInt16(new byte[2] { localPort[1], localPort[0] }, 0));
+            public IPEndPoint LocalEndPoint => new(localAddress, port: BitConverter.ToUInt16(new byte[2] { localPort[1], localPort[0] }, 0));
 
-            public IPEndPoint RemoteEndPoint => new IPEndPoint(remoteAddress, port: BitConverter.ToUInt16(new byte[2] { remotePort[1], remotePort[0] }, 0));
+            public IPEndPoint RemoteEndPoint => new(remoteAddress, port: BitConverter.ToUInt16(new byte[2] { remotePort[1], remotePort[0] }, 0));
 
             public TcpState TcpState => (state > 0 && state < 13) ? (TcpState)state : TcpState.Unknown;
 

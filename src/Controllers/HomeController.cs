@@ -109,7 +109,7 @@ namespace Sqlbi.Bravo.Controllers
          * Parameters: a string that could be "light" or "dark"
          */
         [HttpGet]
-        public string ChangeTheme()
+        public string? ChangeTheme()
         {
             return null;
         }

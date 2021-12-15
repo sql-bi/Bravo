@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 #nullable disable
 
-namespace Sqlbi.Bravo.Infrastructure.Windows
+namespace Bravo.Infrastructure.Windows.Interop
 {
     internal static class Win32Dialogs
     {
@@ -25,7 +25,6 @@ namespace Sqlbi.Bravo.Infrastructure.Windows
         //}
     }
 
-    //DATA STRUCTURES
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
     public class OpenFileName
     {
@@ -68,6 +67,7 @@ namespace Sqlbi.Bravo.Infrastructure.Windows
         public IntPtr templateName = IntPtr.Zero;   //LPCSTR        lpTemlateName
         //public IntPtr editInfo = IntPtr.Zero;     //LPEDITMENU    lpEditInfo
     }
+
     delegate IntPtr CCHookProc(IntPtr hWnd, ushort msg, int wParam, int lParam);
 
     public static class ChooseColorFlags

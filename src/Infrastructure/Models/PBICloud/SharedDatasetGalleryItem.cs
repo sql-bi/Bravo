@@ -14,9 +14,9 @@ namespace Sqlbi.Bravo.Infrastructure.Models.PBICloud
         public string Description { get; set; }
 
         public int Status { get; set; }
-
+#nullable enable
         public string? IconUrl { get; set; }
-
+#nullable disable
         public int? Stage { get; set; }
 
         // Not sure about the data type, it's always null in the sample analyzed
@@ -25,7 +25,8 @@ namespace Sqlbi.Bravo.Infrastructure.Models.PBICloud
         public DateTime? CertificationTime { get; set; }
 
         public long? CertifyingUserId { get; set; }
-
+#nullable enable
         public SharedDatasetUser? CertifyingUser { get; set; }
+#nullable disable
     }
 }

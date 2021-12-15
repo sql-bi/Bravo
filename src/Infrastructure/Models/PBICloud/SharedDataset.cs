@@ -20,13 +20,13 @@ namespace Sqlbi.Bravo.Infrastructure.Models.PBICloud
         public SharedDatasetPermissions Permissions { get; set; }
 
         public SharedDatasetModel Model { get; set; }
-
+#nullable enable
         public SharedDatasetGalleryItem? GalleryItem { get; set; }
-
+#nullable disable
         public string WorkspaceObjectId { get; set; }
-
+#nullable enable
         public string? SharedFromEnterpriseCapacitySku { get; set; }
-
+#nullable disable
         public DateTime LastVisitedTimeUTC { get; set; }
     }
 }

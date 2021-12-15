@@ -1,4 +1,4 @@
-﻿using Sqlbi.Bravo.Infrastructure.Windows;
+﻿using Sqlbi.Bravo.Infrastructure.Windows.Interop;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;

@@ -1,11 +1,12 @@
-﻿using System;
+﻿using Sqlbi.Bravo.Infrastructure.Windows.Interop;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
 
-namespace Sqlbi.Bravo.Infrastructure.Windows
+namespace Bravo.Infrastructure.Windows.Interop
 {
     internal static class Win32Network
     {
@@ -29,18 +30,26 @@ namespace Sqlbi.Bravo.Infrastructure.Windows
             {
                 if (NativeMethods.GetExtendedTcpTable(pTcpTable, ref dwOutBufLen, sort: false, AF_INET, NativeMethods.TCP_TABLE_CLASS.TCP_TABLE_OWNER_PID_ALL) == 0)
                 {
-                    var table = (NativeMethods.MIB_TCPTABLE_OWNER_PID)Marshal.PtrToStructure(pTcpTable, typeof(NativeMethods.MIB_TCPTABLE_OWNER_PID));
-                    var rows = new NativeMethods.MIB_TCPROW_OWNER_PID[table.dwNumEntries];
-                    var ptr = (IntPtr)((long)pTcpTable + Marshal.SizeOf(table.dwNumEntries));
-
-                    for (var i = 0; i < table.dwNumEntries; i++)
+                    var tableObject = Marshal.PtrToStructure(pTcpTable, typeof(NativeMethods.MIB_TCPTABLE_OWNER_PID));
+                    if (tableObject != null)
                     {
-                        var row = (NativeMethods.MIB_TCPROW_OWNER_PID)Marshal.PtrToStructure(ptr, typeof(NativeMethods.MIB_TCPROW_OWNER_PID));
-                        rows[i] = row;
-                        ptr = (IntPtr)((long)ptr + Marshal.SizeOf(row));
-                    }
+                        var table = (NativeMethods.MIB_TCPTABLE_OWNER_PID)tableObject;
+                        var rows = new NativeMethods.MIB_TCPROW_OWNER_PID[table.dwNumEntries];
+                        var ptr = (IntPtr)((long)pTcpTable + Marshal.SizeOf(table.dwNumEntries));
 
-                    return rows;
+                        for (var i = 0; i < table.dwNumEntries; i++)
+                        {
+                            var rowObject = Marshal.PtrToStructure(ptr, typeof(NativeMethods.MIB_TCPROW_OWNER_PID));
+                            if (rowObject != null)
+                            {
+                                var row = (NativeMethods.MIB_TCPROW_OWNER_PID)rowObject;
+                                ptr = (IntPtr)((long)ptr + Marshal.SizeOf(row));
+                                rows[i] = row;
+                            }
+                        }
+
+                        return rows;
+                    }
                 }
             }
             finally

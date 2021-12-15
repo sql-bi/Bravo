@@ -1,9 +1,10 @@
-﻿using System.Drawing;
+﻿using Bravo.Infrastructure.Windows.Interop;
+using System.Drawing;
 using System.Runtime.InteropServices;
 
 #nullable disable
 
-namespace Sqlbi.Bravo.Infrastructure.Windows
+namespace Bravo.Infrastructure.Windows
 {
     public enum DialogResult
     {
@@ -17,6 +18,9 @@ namespace Sqlbi.Bravo.Infrastructure.Windows
         No = 7,
     }
 
+    //<summary>
+    //.NET wrapper around the Win32 open file dialog
+    //</summary>
     public class OpenFileDialog
     {
         ///<summary>
@@ -85,7 +89,7 @@ namespace Sqlbi.Bravo.Infrastructure.Windows
     }
 
     //<summary>
-    //.NET wrapper around the Win32 open file dialog
+    //.NET wrapper around the Win32 save file dialog
     //</summary>
     public class SaveFileDialog
     {
@@ -155,7 +159,7 @@ namespace Sqlbi.Bravo.Infrastructure.Windows
     }
 
     //<summary>
-    //.NET wrapper around the Win32 open file dialog
+    //.NET wrapper around the Win32 color picker dialog
     //</summary>
     public class ColorPickerDialog
     {

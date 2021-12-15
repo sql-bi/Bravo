@@ -17,9 +17,9 @@ namespace Sqlbi.Bravo.Infrastructure.Models.PBICloud
         public long Id { get; set; }
 
         public string DisplayName { get; set; }
-
+#nullable enable
         public string? Description { get; set; }
-
+#nullable disable
         public SharedDatasetPermissions Permissions { get; set; }
 
         public string DBName { get; set; }
@@ -44,9 +44,9 @@ namespace Sqlbi.Bravo.Infrastructure.Models.PBICloud
         public string ResourceName { get; set; }
 
         public DateTime NextRefreshTime { get; set; }
-
+#nullable enable
         public string? OnPremModelConnectionString { get; set; }
-
+#nullable disable
         public int? PushDataVersion { get; set; }
 
         public int? RealTimeMode { get; set; }

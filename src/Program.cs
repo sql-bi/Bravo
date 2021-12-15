@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.EventLog;
 using PhotinoNET;
 using Sqlbi.Bravo.Infrastructure;
-using Sqlbi.Bravo.Infrastructure.Windows;
+using Sqlbi.Bravo.Infrastructure.Windows.Interop;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
