@@ -127,7 +127,6 @@ namespace Sqlbi.Bravo
 #else
             var contextMenuEnabled = false;
 #endif
-            // Creating a new PhotinoWindow instance with the fluent API
             var window = new PhotinoWindow()
                 .SetTitle(AppConstants.ApplicationHostWindowTitle)
                 .SetIconFile("wwwroot/bravo.ico")
@@ -135,7 +134,7 @@ namespace Sqlbi.Bravo
                 .SetGrantBrowserPermissions(true)
                 .SetUseOsDefaultSize(true)
                 .RegisterWebMessageReceivedHandler(WebMessageReceived)
-                .Load("wwwroot/index.html"); // Can be used with relative path strings or "new URI()" instance to load a website.
+                .Load("wwwroot/index.html");
 
             window.RegisterWebMessageReceivedHandler(WebMessageReceived);
             window.RegisterWindowCreatingHandler(WindowCreating);

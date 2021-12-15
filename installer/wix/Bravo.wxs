@@ -96,7 +96,7 @@
     <DirectoryRef Id="DesktopFolder">
       <Component Id="DesktopShortcut" Guid="{8C035041-08C9-44CB-B254-D66DA096C53D}" Win64="$(var.Win64)">
         <Condition><![CDATA[CREATEDESKTOPSHORTCUT = 1]]></Condition>
-        <Shortcut Id="DesktopShortcut" Directory="DesktopFolder" Name="$(var.ProductName)" Target="[INSTALLFOLDER]$(var.AppExecutableName)" />
+        <Shortcut Id="DesktopShortcut" Directory="DesktopFolder" Name="$(var.ProductName)" WorkingDirectory="INSTALLFOLDER" Target="[INSTALLFOLDER]$(var.AppExecutableName)" />
         <RegistryValue Root="HKCU" Key="Software\[Manufacturer]\$(var.ProductName)" Name="installedDesktopShortcut" Value="1" Type="integer" KeyPath="yes" />
       </Component>
     </DirectoryRef>
@@ -104,7 +104,7 @@
     <DirectoryRef Id="ProgramMenuFolder">
       <Component Id="ProgramMenuShortcut" Guid="{B6EB02B3-E16E-4661-89E4-A46C50815577}" Win64="$(var.Win64)">
         <Condition><![CDATA[CREATEPROGRAMMENUSHORTCUT = 1]]></Condition>
-        <Shortcut Id="ProgramMenuShortcut" Directory="ProgramMenuFolder" Name="$(var.ProductName)" Target="[INSTALLFOLDER]$(var.AppExecutableName)" />
+        <Shortcut Id="ProgramMenuShortcut" Directory="ProgramMenuFolder" Name="$(var.ProductName)" WorkingDirectory="INSTALLFOLDER" Target="[INSTALLFOLDER]$(var.AppExecutableName)" />
         <RegistryValue Root="HKCU" Key="Software\[Manufacturer]\$(var.ProductName)" Name="installedProgramMenuShortcut" Value="1" Type="integer" KeyPath="yes" />
       </Component>
     </DirectoryRef>
