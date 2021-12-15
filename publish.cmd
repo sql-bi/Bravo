@@ -6,7 +6,7 @@ SET runtime=win-%arch%
 SET framework=net5-windows10.0.17763.0
 SET configuration=Release
 SET verbosity=Minimal
-SET publishfolder=%~dp0src\Bravo\bin\%configuration%\%framework%\%runtime%\publish
+SET publishfolder=%~dp0src\bin\%configuration%\%framework%\%runtime%\publish
 
 CD /d "%~dp0"
 IF EXIST %publishfolder% RMDIR /s /q %publishfolder%

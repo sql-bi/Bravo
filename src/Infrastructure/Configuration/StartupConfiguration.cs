@@ -58,7 +58,7 @@ namespace Sqlbi.Bravo.Infrastructure.Configuration
         {
 #if !DEBUG
             var path = AppContext.BaseDirectory;
-            Directory.SetCurrentDirectory(path);
+            System.IO.Directory.SetCurrentDirectory(path);
 #endif
         }
 
