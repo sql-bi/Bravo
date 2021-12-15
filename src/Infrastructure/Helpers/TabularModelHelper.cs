@@ -1,6 +1,7 @@
 ﻿using Sqlbi.Bravo.Infrastructure.Extensions;
 using Sqlbi.Bravo.Infrastructure.Security;
 using Sqlbi.Bravo.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using SSAS = Microsoft.AnalysisServices;
@@ -10,13 +11,28 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
 {
     internal static class TabularModelHelper
     {
+        /// <summary>
+        /// Compute a string identifier for a specific version of a tabular model by using Version and LastUpdate properties
+        /// </summary>
+        public static string? GetDatabaseETag(long version, DateTime lastUpdate)
+        {
+            var buffers = new byte[][]
+            {
+                BitConverter.GetBytes(version),
+                BitConverter.GetBytes(lastUpdate.Ticks)
+            };
+
+            var hash = Cryptography.MD5Hash(buffers);
+            return hash;
+        }
+
         public static void Update(string connectionString, string databaseName, IEnumerable<FormattedMeasure> measures)
         {
             using var server = new TOM.Server();
             server.Connect(connectionString);
 
             var database = GetDatabase();
-            var databaseETag = Cryptography.MD5Hash(database.Version, database.LastUpdate);
+            var databaseETag = GetDatabaseETag(database.Version, database.LastUpdate);
 
             foreach (var formattedMeasure in measures)
             {

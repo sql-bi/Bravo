@@ -30,7 +30,7 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
             var vpaxContent = VpaxTools.ImportVpax(stream: vpax);
             var vpaModel = new VpaModel(vpaxContent.DaxModel);
 
-            var databaseETag = Cryptography.MD5Hash(vpaModel.Model.Version, vpaModel.Model.LastUpdate);
+            var databaseETag = TabularModelHelper.GetDatabaseETag(vpaModel.Model.Version, vpaModel.Model.LastUpdate);
             var databaseSize = vpaModel.Columns.Sum((c) => c.TotalSize);
 
             var databaseModel = new TabularDatabase
