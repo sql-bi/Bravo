@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.EventLog;
 using PhotinoNET;
 using Sqlbi.Bravo.Infrastructure;
-using Sqlbi.Bravo.Infrastructure.Windows.Interop;
+using Sqlbi.Bravo.Infrastructure.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -23,16 +23,14 @@ namespace Sqlbi.Bravo
         [STAThread]
         public static void Main()
         {
-            NativeMethods.SetProcessDPIAware();
+            StartupConfiguration.SetupEnvironment();
 
-            // Connect API
-            CreateHostBuilder().Build().RunAsync();
+            CreateWebHost().RunAsync();
 
-            // Starts the application event loop
-            CreateHostWindow().WaitForClose();
+            CreateMainWindow().WaitForClose();
         }
 
-        private static IHostBuilder CreateHostBuilder(string[]? args = null)
+        private static IHost CreateWebHost(string[]? args = null)
         {
             var hostBuilder = new HostBuilder();
 
@@ -117,10 +115,10 @@ namespace Sqlbi.Bravo
                 webBuilder.UseStartup<Startup>();
             });
 
-            return hostBuilder;
+            return hostBuilder.Build();
         }
 
-        private static PhotinoWindow CreateHostWindow()
+        private static PhotinoWindow CreateMainWindow()
         {
 #if DEBUG
             var contextMenuEnabled = true;

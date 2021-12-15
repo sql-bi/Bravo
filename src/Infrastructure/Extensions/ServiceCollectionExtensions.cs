@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using Sqlbi.Bravo.Infrastructure.Options;
+using Sqlbi.Bravo.Infrastructure.Configuration.Options;
 using System;
 using System.IO;
 using System.Reflection;

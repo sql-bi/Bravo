@@ -5,7 +5,7 @@ using System;
 using System.IO;
 using System.Text.Json;
 
-namespace Sqlbi.Bravo.Infrastructure.Options
+namespace Sqlbi.Bravo.Infrastructure.Configuration.Options
 {
     internal class WritableOptions<T> : IWritableOptions<T> where T : class, new()
     {
