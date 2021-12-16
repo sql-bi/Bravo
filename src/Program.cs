@@ -19,7 +19,6 @@ namespace Sqlbi.Bravo
     public class Program
     {
         internal static ICollection<string>? HostAddresses;
-        //internal static AppInstance Instance;
 
         [STAThread]
         public static void Main()
@@ -28,15 +27,17 @@ namespace Sqlbi.Bravo
             {
                 using var instance = new AppInstance();
 
-                if (!instance.IsOwned)
+                if (instance.IsOwned)
                 {
-                    instance.NotifyToOwner();
-                    return;
-                }
+                    StartupConfiguration.Configure();
+                    CreateHost().RunAsync();
 
-                StartupConfiguration.Configure();
-                CreateHost().RunAsync();
-                CreateWindow().WaitForClose();
+                    var window = CreateWindow();
+
+                    window.WindowCreated += (sender, e) => instance.TryHook(sender);
+
+                    window.WaitForClose();
+                }
             }
             catch (Exception)
             {
@@ -169,6 +170,8 @@ namespace Sqlbi.Bravo
             var window = (PhotinoWindow)sender!;
             Trace.WriteLine($"::Bravo:INF:WindowCreatedHandler:{ window.Title }");
             Trace.WriteLine($"::Bravo:INF:HostAddresses:{ string.Join(", ", HostAddresses ?? Array.Empty<string>()) }");
+            
+            window.SendNotification("::Bravo:INF:WindowCreatedHandler", window.Title);
         }
 
         private static bool WindowClosing(object sender, EventArgs args)

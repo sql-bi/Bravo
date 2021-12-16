@@ -14,10 +14,13 @@ namespace Sqlbi.Bravo.Infrastructure.Windows.Interop
             public const string User32 = "user32.dll";
             public const string Gdi32 = "gdi32.dll";
             public const string Iphlpapi = "iphlpapi.dll";
+            public const string Kerner32 = "kernel32.dll";
+            public const string Comctl32 = "comctl32.dll";
         }
 
         public const int SW_HIDE = 0;
         public const int SW_SHOW = 5;
+        public const int SW_RESTORE = 9;
         public const int SM_CXSCREEN = 0;
         public const int SM_CYSCREEN = 1;
         public const int SPI_GETWORKAREA = 48;
@@ -27,8 +30,10 @@ namespace Sqlbi.Bravo.Infrastructure.Windows.Interop
         public const int SM_CYXVIRTUALSCREEN = 79;
         public const int SM_CMONITORS = 80;
 
-        public const uint WM_GETTEXT = 0x000D;
+        public const int WM_GETTEXT = 0x000D;
         public const int WM_COPYDATA = 0x004A;
+
+        public delegate IntPtr SUBCLASSPROC(IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam, IntPtr id, IntPtr data);
 
         public delegate bool MonitorEnumProc(IntPtr monitor, IntPtr hdc, IntPtr lprcMonitor, IntPtr lParam);
 
@@ -41,6 +46,10 @@ namespace Sqlbi.Bravo.Infrastructure.Windows.Interop
 
         [DllImport(ExternDll.User32)]
         public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+        [DllImport(ExternDll.User32)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool SetForegroundWindow(IntPtr hWnd);
 
         [DllImport(ExternDll.User32, CharSet = CharSet.Auto)]
         [ResourceExposure(ResourceScope.None)]
@@ -83,13 +92,40 @@ namespace Sqlbi.Bravo.Infrastructure.Windows.Interop
         public static extern bool EnumThreadWindows(int dwThreadId, EnumThreadDelegate lpfn, IntPtr lParam);
 
         [DllImport(ExternDll.User32, CharSet = CharSet.Unicode)]
-        public static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, int wParam, StringBuilder lParam);
+        public static extern IntPtr SendMessage(IntPtr hWnd, uint uMsg, int wParam, StringBuilder lParam);
 
         [DllImport(ExternDll.User32, SetLastError = true, CharSet = CharSet.Unicode)]
         public static extern IntPtr FindWindow(string? lpClassName, string lpWindowName);
 
         [DllImport(ExternDll.User32, CharSet = CharSet.Auto)]
-        public static extern IntPtr SendMessage(IntPtr hWnd, int Msg, int wParam, ref COPYDATASTRUCT lParam);
+        public static extern IntPtr SendMessage(IntPtr hWnd, uint uMsg, int wParam, ref COPYDATASTRUCT lParam);
+
+        [DllImport(ExternDll.User32, CharSet = CharSet.Auto, SetLastError = true)]
+        public static extern IntPtr SendMessage(IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam);
+
+        [DllImport(ExternDll.User32, CharSet = CharSet.Unicode, SetLastError = true)]
+        public static extern uint RegisterWindowMessage(string lpString);
+
+        [DllImport(ExternDll.Kerner32, SetLastError = true)]
+        public static extern int GetCurrentProcessId();
+
+        [DllImport(ExternDll.Kerner32, SetLastError = true)]
+        public static extern int GetCurrentThreadId();
+
+        [DllImport(ExternDll.User32, CharSet = CharSet.Auto, SetLastError = true)]
+        public static extern int GetWindowThreadProcessId(IntPtr hWnd, out int processId);
+
+        [DllImport(ExternDll.Comctl32, CharSet = CharSet.Auto, SetLastError = true)]
+        public static extern bool GetWindowSubclass(IntPtr hWnd, SUBCLASSPROC pfnSubclass, IntPtr uIdSubclass, ref IntPtr pdwRefData);
+
+        [DllImport(ExternDll.Comctl32, CharSet = CharSet.Auto, SetLastError = true)]
+        public static extern bool SetWindowSubclass(IntPtr hWnd, SUBCLASSPROC callback, IntPtr id, IntPtr data);
+
+        [DllImport(ExternDll.Comctl32, CharSet = CharSet.Auto, SetLastError = true)]
+        public static extern bool RemoveWindowSubclass(IntPtr hWnd, SUBCLASSPROC callback, IntPtr id);
+
+        [DllImport(ExternDll.Comctl32, CharSet = CharSet.Auto, SetLastError = true)]
+        public static extern IntPtr DefSubclassProc(IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam);
 
         [StructLayout(LayoutKind.Sequential)]
         public struct RECT
