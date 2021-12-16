@@ -20,6 +20,7 @@ namespace Sqlbi.Bravo.Infrastructure
         public static readonly string PBIDesktopMainWindowTitleSuffix = " - Power BI Desktop";
         public static readonly string DefaultMsalTokenCacheFilePath = Path.Combine(ApplicationFolderLocalDataPath!, ".msalcache.bin");
         public static readonly TimeSpan MSALSignInTimeout = TimeSpan.FromMinutes(5);
+        public static readonly Uri PBICloudApiUri = new("https://api.powerbi.com");
 
         static AppConstants()
         {

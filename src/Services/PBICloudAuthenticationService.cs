@@ -185,7 +185,7 @@ namespace Sqlbi.Bravo.Services
         {
             _httpClient = new HttpClient();
             _httpClient.DefaultRequestHeaders.Accept.Clear();
-            _httpClient.BaseAddress = new Uri("https://api.powerbi.com/");
+            _httpClient.BaseAddress = AppConstants.PBICloudApiUri;
         }
 
         public PBICloudSettings()
@@ -201,9 +201,8 @@ namespace Sqlbi.Bravo.Services
             {
                 ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
 
-                var request = new HttpRequestMessage(HttpMethod.Post, GlobalServiceEnvironmentsDiscoverUrl);
-                var response = _httpClient.Send(request, HttpCompletionOption.ResponseContentRead);
-
+                using var request = new HttpRequestMessage(HttpMethod.Post, GlobalServiceEnvironmentsDiscoverUrl);
+                using var response = _httpClient.Send(request, HttpCompletionOption.ResponseContentRead);
                 response.EnsureSuccessStatusCode();
 
                 var json = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
@@ -253,13 +252,12 @@ namespace Sqlbi.Bravo.Services
             {
                 _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", current?.AccessToken);
 
-                var request = new HttpRequestMessage(HttpMethod.Put, GlobalServiceGetOrInsertClusterUrisByTenantlocationUrl)
+                using var request = new HttpRequestMessage(HttpMethod.Put, GlobalServiceGetOrInsertClusterUrisByTenantlocationUrl)
                 {
                     Content = new StringContent(string.Empty, Encoding.UTF8, MediaTypeNames.Application.Json)
                 };
 
-                var response = _httpClient.Send(request, HttpCompletionOption.ResponseContentRead);
-                
+                using var response = _httpClient.Send(request, HttpCompletionOption.ResponseContentRead);                
                 response.EnsureSuccessStatusCode();
 
                 var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);

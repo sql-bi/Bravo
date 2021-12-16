@@ -38,12 +38,21 @@ namespace Sqlbi.Bravo
                 corsOptions.AddPolicy(CorsLocalhostOnlyPolicy, (policyBuilder) =>
                 {
                     // for security, default to only accepting calls from the local machine
-                    policyBuilder.AllowAnyMethod().AllowAnyHeader().WithOrigins(CorsLocalhostOrigin);
+                    policyBuilder.AllowAnyMethod().AllowAnyHeader()
+                        //.AllowAnyOrigin();
+
+                        // TOFIX: CORS error
+                        // Microsoft.AspNetCore.Hosting.Diagnostics: Information: Request starting HTTP/1.1 POST http://localhost:5000/api/GetModelFromDataset application/json 237
+                        // Microsoft.AspNetCore.Cors.Infrastructure.CorsService: Information: CORS policy execution failed
+                        // Microsoft.AspNetCore.Cors.Infrastructure.CorsService: Information: Request origin http://localhost:5000 does not have permission to access the resource.
+                        .WithOrigins(CorsLocalhostOrigin); 
                 });
             });
 #if DEBUG
             services.AddSwaggerGenCustomized();
 #endif
+            services.AddHttpClient();
+
             // Options
             services.AddWritableOptions<AppOptions>(section: Configuration.GetSection(nameof(AppOptions)), file: "appsettings.json"); //.ValidateDataAnnotations();
             services.AddOptions<AppStartupOptions>().Configure(FromCommandLineArguments); //.ValidateDataAnnotations();

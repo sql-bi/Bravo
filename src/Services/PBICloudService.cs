@@ -34,18 +34,20 @@ namespace Sqlbi.Bravo.Services
 
     internal class PBICloudService : IPBICloudService
     {
-        private const string GetWorkspacesRequestUri = "https://api.powerbi.com/powerbi/databases/v201606/workspaces";
+        private static readonly Uri GetWorkspacesRequestUri = new(AppConstants.PBICloudApiUri, relativeUri: "powerbi/databases/v201606/workspaces");
         private const string GetGallerySharedDatasetsRequestUri = "metadata/v201901/gallery/sharedDatasets";
 
+        private readonly HttpClient _httpClient;
         private readonly IPBICloudAuthenticationService _authenticationService;
         private readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web)
         {
             PropertyNameCaseInsensitive = false, // required by SharedDatasetModel LastRefreshTime/lastRefreshTime properties
         };
 
-        public PBICloudService(IPBICloudAuthenticationService authenticationService)
+        public PBICloudService(IPBICloudAuthenticationService authenticationService, HttpClient httpClient)
         {
             _authenticationService = authenticationService;
+            _httpClient = httpClient;
         }
 
         private AuthenticationResult? CurrentAuthentication => _authenticationService.Authentication;
@@ -86,13 +88,13 @@ namespace Sqlbi.Bravo.Services
 
         public async Task<IEnumerable<Workspace>> GetWorkspacesAsync()
         {
-            using var client = new HttpClient();
-            client.DefaultRequestHeaders.Accept.Clear();
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", CurrentAuthentication?.AccessToken);
+            _httpClient.DefaultRequestHeaders.Accept.Clear();
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", CurrentAuthentication?.AccessToken);
 
-            using var response = await client.GetAsync(GetWorkspacesRequestUri).ConfigureAwait(false);
+            using var response = await _httpClient.GetAsync(GetWorkspacesRequestUri).ConfigureAwait(false);
+            response.EnsureSuccessStatusCode();
 
-            var content = await response.EnsureSuccessStatusCode().Content.ReadAsStringAsync().ConfigureAwait(false);
+            var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
             var workspaces = JsonSerializer.Deserialize<IEnumerable<Workspace>>(content, _jsonOptions);
 
             return workspaces ?? Array.Empty<Workspace>();
@@ -100,16 +102,17 @@ namespace Sqlbi.Bravo.Services
 
         public async Task<IEnumerable<SharedDataset>> GetSharedDatasetsAsync()
         {
+            _httpClient.DefaultRequestHeaders.Accept.Clear();
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", CurrentAuthentication?.AccessToken);
+
             var clusterUri = _authenticationService.CloudSettings.TenantCluster?.FixedClusterUri ?? throw new BravoException("PBICloud shared datasets null tenant cluster");
+            var baseUri = new Uri(clusterUri);
+            var requestUri = new Uri(baseUri, relativeUri: GetGallerySharedDatasetsRequestUri);
 
-            using var client = new HttpClient();
-            client.BaseAddress = new Uri(clusterUri);
-            client.DefaultRequestHeaders.Accept.Clear();
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", CurrentAuthentication?.AccessToken);
+            using var response = await _httpClient.GetAsync(requestUri).ConfigureAwait(false);
+            response.EnsureSuccessStatusCode();
 
-            using var response = await client.GetAsync(GetGallerySharedDatasetsRequestUri).ConfigureAwait(false);
-
-            var content = await response.EnsureSuccessStatusCode().Content.ReadAsStringAsync().ConfigureAwait(false);
+            var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
             var datasets = JsonSerializer.Deserialize<IEnumerable<SharedDataset>>(content, _jsonOptions);
 
             return datasets ?? Array.Empty<SharedDataset>();
