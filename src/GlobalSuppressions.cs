@@ -11,3 +11,4 @@ using System.Diagnostics.CodeAnalysis;
 [assembly: SuppressMessage("Style", "IDE0090:Use 'new(...)'", Justification = "<Pending>", Scope = "member", Target = "~F:Sqlbi.Bravo.Infrastructure.Windows.Interop.NativeMethods.NullHandleRef")]
 [assembly: SuppressMessage("Style", "IDE0090:Use 'new(...)'", Justification = "<Pending>", Scope = "member", Target = "~F:Sqlbi.Bravo.Infrastructure.Windows.Interop.NativeMethods.MONITORINFOEX.rcWork")]
 [assembly: SuppressMessage("Style", "IDE0090:Use 'new(...)'", Justification = "<Pending>", Scope = "member", Target = "~F:Sqlbi.Bravo.Infrastructure.Windows.Interop.NativeMethods.MONITORINFOEX.rcMonitor")]
+[assembly: SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "<Pending>", Scope = "member", Target = "~M:Sqlbi.Bravo.Services.PBICloudSettings.InitializeGlobalService~Sqlbi.Bravo.Infrastructure.Models.PBICloud.GlobalService")]

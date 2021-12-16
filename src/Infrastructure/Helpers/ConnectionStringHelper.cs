@@ -31,7 +31,7 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
             return builder.ConnectionString;
         }
 
-        public static string BuildForPBICloudDataset(string serverName, string databaseName, string accessToken)
+        public static string BuildForPBICloudDataset(string serverName, string databaseName, string? accessToken)
         {
             var builder = new OleDbConnectionStringBuilder()
             {
@@ -39,7 +39,7 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
                 { DataSourceKey, serverName },
                 { InitialCatalogKey, databaseName },
                 { IntegratedSecurityKey, "ClaimsToken" },
-                { PasswordKey, accessToken }, // The Analysis Services client libraries automatically add the auth-scheme value "Bearer" to the access token
+                { PasswordKey, accessToken! }, // The Analysis Services client libraries automatically add the auth-scheme value "Bearer" to the access token
                 { ApplicationNameKey, AppConstants.ApplicationInstanceUniqueName }
 
                 //{ PersistSecurityInfoKey, "False" },

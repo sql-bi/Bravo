@@ -1,19 +1,15 @@
 ﻿using Microsoft.Identity.Client;
 using Sqlbi.Bravo.Infrastructure;
-using Sqlbi.Bravo.Infrastructure.Extensions;
 using Sqlbi.Bravo.Infrastructure.Helpers;
 using Sqlbi.Bravo.Infrastructure.Models.PBICloud;
-using Sqlbi.Bravo.Infrastructure.Security;
 using Sqlbi.Bravo.Models;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Threading.Tasks;
-using TOM = Microsoft.AnalysisServices.Tabular;
 
 namespace Sqlbi.Bravo.Services
 {
@@ -52,11 +48,11 @@ namespace Sqlbi.Bravo.Services
             _authenticationService = authenticationService;
         }
 
-        private AuthenticationResult? CurrentAuthentication => _authenticationService.CurrentAuthentication;
+        private AuthenticationResult? CurrentAuthentication => _authenticationService.Authentication;
 
         public BravoAccount? CurrentAccount { get; private set; }
 
-        public bool IsAuthenticated => CurrentAccount is not null && _authenticationService.CurrentAuthentication?.ClaimsPrincipal?.Identity is not null;
+        public bool IsAuthenticated => CurrentAccount is not null && _authenticationService.Authentication?.ClaimsPrincipal?.Identity is not null;
 
         public async Task SignInAsync()
         {
@@ -104,8 +100,10 @@ namespace Sqlbi.Bravo.Services
 
         public async Task<IEnumerable<SharedDataset>> GetSharedDatasetsAsync()
         {
+            var clusterUri = _authenticationService.CloudSettings.TenantCluster?.FixedClusterUri ?? throw new BravoException("PBICloud shared datasets null tenant cluster");
+
             using var client = new HttpClient();
-            client.BaseAddress = new Uri("https://wabi-north-europe-redirect.analysis.windows.net/" /* TenantCluster.FixedClusterUri */ ); //TODO: read tenant cluster config
+            client.BaseAddress = new Uri(clusterUri);
             client.DefaultRequestHeaders.Accept.Clear();
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", CurrentAuthentication?.AccessToken);
 
@@ -155,7 +153,7 @@ namespace Sqlbi.Bravo.Services
             var serverName = $"powerbi://api.powerbi.com/v1.0/{ tenantName }/{ dataset.WorkspaceName }";
             var databaseName = dataset.DisplayName;
 
-            var connectionString = ConnectionStringHelper.BuildForPBICloudDataset(serverName, databaseName, CurrentAuthentication!.AccessToken);
+            var connectionString = ConnectionStringHelper.BuildForPBICloudDataset(serverName, databaseName, CurrentAuthentication?.AccessToken);
 
             return (connectionString, databaseName);
         }
