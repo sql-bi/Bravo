@@ -1,4 +1,5 @@
-﻿using Sqlbi.Bravo.Infrastructure.Extensions;
+﻿using Sqlbi.Bravo.Infrastructure;
+using Sqlbi.Bravo.Infrastructure.Extensions;
 using System;
 using System.Collections.ObjectModel;
 using System.CommandLine;
@@ -14,14 +15,36 @@ namespace Sqlbi.Infrastructure.Configuration.Settings
         [JsonPropertyName("executedAsExternalTool")]
         public bool IsExecutedAsExternalTool { get; set; }
 
-        [JsonIgnore]
-        public ReadOnlyCollection<string>? CommandLineErrors { get; set; }
-
         [JsonPropertyName("serverName")]
         public string? ArgumentServerName { get; set; }
 
         [JsonPropertyName("databaseName")]
         public string? ArgumentDatabaseName { get; set; }
+
+        [JsonIgnore]
+        public bool IsExecutedAsPBIDesktopExternalTool => IsExecutedAsExternalTool && AppConstants.PBIDesktopProcessName.Equals(ParentProcessName);
+
+        [JsonIgnore]
+        public string? ParentProcessName { get; set; }
+
+        [JsonIgnore]
+        public IntPtr ParentProcessMainWindowHandle { get; set; }
+
+        [JsonIgnore]
+        public string? ParentProcessMainWindowTitle { get; set; }
+
+        [JsonIgnore]
+        public ReadOnlyCollection<string>? CommandLineErrors { get; set; }
+
+        public static StartupSettings Get()
+        {
+            var settings = new StartupSettings();
+            {
+                settings.FromCommandLineArguments();
+            }
+
+            return settings;
+        }
     }
 
     internal static class StartupSettingsExtensions
@@ -59,6 +82,10 @@ namespace Sqlbi.Infrastructure.Configuration.Settings
                 settings.ArgumentServerName = result.ValueForOption(serverOption);
                 settings.ArgumentDatabaseName = result.ValueForOption(databaseOption);
             }
+
+            settings.ParentProcessName = parentProcess.ProcessName;
+            settings.ParentProcessMainWindowHandle = parentProcess.MainWindowHandle;
+            settings.ParentProcessMainWindowTitle = parentProcess.GetMainWindowTitle(settings.IsExecutedAsPBIDesktopExternalTool ? (windowTitle) => windowTitle.IsPBIMainWindowTitle() : default);
         }
     }
 }

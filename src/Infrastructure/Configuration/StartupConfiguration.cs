@@ -15,7 +15,7 @@ namespace Sqlbi.Bravo.Infrastructure.Configuration
         private static void ConfiguretCurrentDirectory()
         {
 #if !DEBUG
-            var path = AppContext.BaseDirectory;
+            var path = System.AppContext.BaseDirectory;
             System.IO.Directory.SetCurrentDirectory(path);
 #endif
         }

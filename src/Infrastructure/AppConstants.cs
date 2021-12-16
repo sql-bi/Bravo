@@ -11,7 +11,7 @@ namespace Sqlbi.Bravo.Infrastructure
         private static readonly FileVersionInfo VersionInfo = FileVersionInfo.GetVersionInfo(Process.GetCurrentProcess().MainModule!.FileName!);
 
         public static readonly string ApplicationName = "SqlbiBravo";
-        public static readonly string ApplicationHostWindowTitle = "Bravo for Power BI";
+        public static readonly string ApplicationMainWindowTitle = "Bravo for Power BI";
         public static readonly string ApplicationInstanceUniqueName = $"{ApplicationName}-{Guid.NewGuid():D}";
         public static readonly string ApplicationFolderLocalDataPath = Path.Combine(EnvironmentSpecialFolderLocalApplicationData, ApplicationName);
         public static readonly bool TelemetryEnabledDefault = true;

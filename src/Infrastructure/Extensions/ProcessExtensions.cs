@@ -39,7 +39,7 @@ namespace Sqlbi.Bravo.Infrastructure.Extensions
             }
         }
 
-        public static string GetMainWindowTitle(this Process process, Func<string, bool> predicate)
+        public static string GetMainWindowTitle(this Process process, Func<string, bool>? predicate = default)
         {
             if (process.MainWindowTitle.Length > 0)
                 return process.MainWindowTitle;
@@ -58,7 +58,7 @@ namespace Sqlbi.Bravo.Infrastructure.Extensions
                         {
                             var windowTitle = builder.ToString();
 
-                            if (predicate(windowTitle))
+                            if (predicate?.Invoke(windowTitle) == true)
                                 return false;
 
                             builder.Clear();

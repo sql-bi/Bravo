@@ -86,7 +86,7 @@ namespace Sqlbi.Bravo.Infrastructure.Windows.Interop
         public static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, int wParam, StringBuilder lParam);
 
         [DllImport(ExternDll.User32, SetLastError = true, CharSet = CharSet.Unicode)]
-        public static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
+        public static extern IntPtr FindWindow(string? lpClassName, string lpWindowName);
 
         [DllImport(ExternDll.User32, CharSet = CharSet.Auto)]
         public static extern IntPtr SendMessage(IntPtr hWnd, int Msg, int wParam, ref COPYDATASTRUCT lParam);

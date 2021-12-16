@@ -19,15 +19,24 @@ namespace Sqlbi.Bravo
     public class Program
     {
         internal static ICollection<string>? HostAddresses;
+        //internal static AppInstance Instance;
 
         [STAThread]
         public static void Main()
         {
             try
             {
+                using var instance = new AppInstance();
+
+                if (!instance.IsOwned)
+                {
+                    instance.NotifyToOwner();
+                    return;
+                }
+
                 StartupConfiguration.Configure();
                 CreateHost().RunAsync();
-                CreateMainWindow().WaitForClose();
+                CreateWindow().WaitForClose();
             }
             catch (Exception)
             {
@@ -36,18 +45,19 @@ namespace Sqlbi.Bravo
             }
         }
 
-        private static IHost CreateHost(string[]? args = null)
+        private static IHost CreateHost()
         {
             var hostBuilder = new HostBuilder();
 
             hostBuilder.UseContentRoot(Directory.GetCurrentDirectory());
 
-            //hostBuilder.ConfigureHostConfiguration((config) =>
-            //{
-            //    config.AddEnvironmentVariables("DOTNET_");
-            //    if (args != null)
-            //        config.AddCommandLine(args);
-            //});
+            hostBuilder.ConfigureHostConfiguration((builder) =>
+            {
+                builder.SetBasePath(Directory.GetCurrentDirectory());
+                //builder.AddJsonFile("hostsettings.json", optional: true);
+                //builder.AddEnvironmentVariables(prefix: "CUSTOMPREFIX_");
+                //builder.AddCommandLine(args);
+            });
 
             hostBuilder.ConfigureAppConfiguration((HostBuilderContext hostingContext, IConfigurationBuilder config) =>
             {
@@ -124,7 +134,7 @@ namespace Sqlbi.Bravo
             return hostBuilder.Build();
         }
 
-        private static PhotinoWindow CreateMainWindow()
+        private static PhotinoWindow CreateWindow()
         {
 #if DEBUG
             var contextMenuEnabled = true;
@@ -132,15 +142,15 @@ namespace Sqlbi.Bravo
             var contextMenuEnabled = false;
 #endif
             var window = new PhotinoWindow()
-                .SetTitle(AppConstants.ApplicationHostWindowTitle)
+                .SetTitle(AppConstants.ApplicationMainWindowTitle)
                 .SetIconFile("wwwroot/bravo.ico")
                 .SetContextMenuEnabled(contextMenuEnabled)
                 .SetGrantBrowserPermissions(true)
                 .SetUseOsDefaultSize(true)
-                .RegisterWebMessageReceivedHandler(WebMessageReceived)
+                .RegisterWebMessageReceivedHandler(WindowWebMessageReceived)
                 .Load("wwwroot/index.html");
 
-            window.RegisterWebMessageReceivedHandler(WebMessageReceived);
+            window.RegisterWebMessageReceivedHandler(WindowWebMessageReceived);
             window.RegisterWindowCreatingHandler(WindowCreating);
             window.RegisterWindowCreatedHandler(WindowCreated);
             window.RegisterWindowClosingHandler(WindowClosing);
@@ -167,7 +177,7 @@ namespace Sqlbi.Bravo
             return false; // Could return true to stop windows close
         }
 
-        private static void WebMessageReceived(object? sender, string message)
+        private static void WindowWebMessageReceived(object? sender, string message)
         {
             var window = (PhotinoWindow)sender!;
 
