@@ -7,10 +7,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Sqlbi.Bravo.Infrastructure.Extensions;
 using Sqlbi.Bravo.Services;
-using Sqlbi.Infrastructure;
+using Sqlbi.Infrastructure.Configuration.Settings;
 using System;
 using System.Text.Json.Serialization;
-using static Sqlbi.Bravo.Infrastructure.Configuration.StartupConfiguration;
 
 namespace Sqlbi.Bravo
 {
@@ -52,10 +51,9 @@ namespace Sqlbi.Bravo
             services.AddSwaggerGenCustomized();
 #endif
             services.AddHttpClient();
-
             // Options
-            services.AddWritableOptions<AppOptions>(section: Configuration.GetSection(nameof(AppOptions)), file: "appsettings.json"); //.ValidateDataAnnotations();
-            services.AddOptions<AppStartupOptions>().Configure(FromCommandLineArguments); //.ValidateDataAnnotations();
+            services.AddWritableOptions<UserSettings>(section: Configuration.GetSection(nameof(UserSettings)), file: "appsettings.json"); //.ValidateDataAnnotations();
+            services.AddOptions<StartupSettings>().Configure((settings) => settings.FromCommandLineArguments()).ValidateDataAnnotations();
             // Services
             services.AddSingleton<IPBICloudAuthenticationService, PBICloudAuthenticationService>();
             services.AddSingleton<IPBIDesktopService, PBIDesktopService>();

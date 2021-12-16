@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
-using Sqlbi.Infrastructure;
+using Sqlbi.Infrastructure.Configuration.Settings;
 using System.Net.Mime;
 
 namespace Sqlbi.Bravo.Controllers
@@ -10,24 +10,24 @@ namespace Sqlbi.Bravo.Controllers
     [ApiController]
     public class DebugController : ControllerBase
     {
-        private readonly AppStartupOptions _startupOptions;
+        private readonly StartupSettings _startupSettings;
 
-        public DebugController(IOptions<AppStartupOptions> startupOptions)
+        public DebugController(IOptions<StartupSettings> startupOptions)
         {
-            _startupOptions = startupOptions.Value;
+            _startupSettings = startupOptions.Value;
         }
 
         /// <summary>
-        /// Get the application startup options
+        /// Get the application startup settings
         /// </summary>
         /// <response code="200">Status200OK</response>
         [HttpGet]
-        [ActionName("GetStartupOptions")]
+        [ActionName("GetStartupSettings")]
         [Produces(MediaTypeNames.Application.Json)]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(AppStartupOptions))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(StartupSettings))]
         public IActionResult GetStartupOptions()
         {
-            return Ok(_startupOptions);
+            return Ok(_startupSettings);
         }
     }
 }

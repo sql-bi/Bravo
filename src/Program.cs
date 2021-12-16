@@ -26,7 +26,7 @@ namespace Sqlbi.Bravo
             try
             {
                 StartupConfiguration.Configure();
-                CreateWebHost().RunAsync();
+                CreateHost().RunAsync();
                 CreateMainWindow().WaitForClose();
             }
             catch (Exception)
@@ -36,7 +36,7 @@ namespace Sqlbi.Bravo
             }
         }
 
-        private static IHost CreateWebHost(string[]? args = null)
+        private static IHost CreateHost(string[]? args = null)
         {
             var hostBuilder = new HostBuilder();
 

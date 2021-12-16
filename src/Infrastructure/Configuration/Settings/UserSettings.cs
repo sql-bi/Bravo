@@ -1,10 +1,9 @@
 ﻿using Sqlbi.Bravo.Infrastructure;
-using System.Collections.ObjectModel;
 using System.Text.Json.Serialization;
 
-namespace Sqlbi.Infrastructure
+namespace Sqlbi.Infrastructure.Configuration.Settings
 {
-    public class AppOptions
+    public class UserSettings
     {
         [JsonPropertyName("telemetryEnabled")]
         //[Newtonsoft.Json.JsonProperty("telemetryEnabled")]
@@ -22,20 +21,5 @@ namespace Sqlbi.Infrastructure
         [JsonPropertyName("customOptions")]
         //[Newtonsoft.Json.JsonProperty("options")]
         public string? CustomOptions { get; set; }
-    }
-
-    public class AppStartupOptions
-    {
-        [JsonPropertyName("executedAsExternalTool")]
-        public bool IsExecutedAsExternalTool { get; set; }
-
-        [JsonIgnore]
-        public ReadOnlyCollection<string>? CommandLineErrors { get; set; }
-
-        [JsonPropertyName("serverName")]
-        public string? ArgumentServerName { get; set; }
-
-        [JsonPropertyName("databaseName")]
-        public string? ArgumentDatabaseName { get; set; }
     }
 }

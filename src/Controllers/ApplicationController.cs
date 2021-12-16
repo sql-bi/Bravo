@@ -4,6 +4,7 @@ using Microsoft.Extensions.Options;
 using Sqlbi.Bravo.Infrastructure.Configuration.Options;
 using Sqlbi.Bravo.Models;
 using Sqlbi.Infrastructure;
+using Sqlbi.Infrastructure.Configuration.Settings;
 using System.Net.Mime;
 using System.Text.Json;
 
@@ -13,11 +14,11 @@ namespace Sqlbi.Bravo.Controllers
     [ApiController]
     public class ApplicationController : ControllerBase
     {
-        private readonly IWritableOptions<AppOptions> _options;
+        private readonly IWritableOptions<UserSettings> _userOptions;
 
-        public ApplicationController(IWritableOptions<AppOptions> options)
+        public ApplicationController(IWritableOptions<UserSettings> userOptions)
         {
-            _options = options;
+            _userOptions = userOptions;
             try
             {
                 //_settings = options.Value;
@@ -44,13 +45,13 @@ namespace Sqlbi.Bravo.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(BravoOptions))]
         public IActionResult GetOptions()
         {
-            JsonElement? customOptionsAsJsonElement = _options.Value.CustomOptions is not null
-                ? JsonSerializer.Deserialize<JsonElement>(_options.Value.CustomOptions)
+            JsonElement? customOptionsAsJsonElement = _userOptions.Value.CustomOptions is not null
+                ? JsonSerializer.Deserialize<JsonElement>(_userOptions.Value.CustomOptions)
                 : null;
 
             var options = new BravoOptions
             {
-                TelemetryEnabled = _options.Value.TelemetryEnabled,
+                TelemetryEnabled = _userOptions.Value.TelemetryEnabled,
                 CustomOptions = customOptionsAsJsonElement
             };
 
@@ -68,7 +69,7 @@ namespace Sqlbi.Bravo.Controllers
         {
             var customOptionsAsString = JsonSerializer.Serialize(options.CustomOptions);
 
-            _options.Update((o) =>
+            _userOptions.Update((o) =>
             {
                 o.TelemetryEnabled = options.TelemetryEnabled;
                 o.CustomOptions = customOptionsAsString;
