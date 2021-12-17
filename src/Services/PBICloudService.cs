@@ -141,7 +141,10 @@ namespace Sqlbi.Bravo.Services
             TabularModelHelper.Update(connectionString, databaseName, measures);
         }
 
-        private (string connectionString, string databaseName) GetConnectionParameters(PBICloudDataset dataset)
+        /// <summary>
+        /// Build the PBICloudDataset connection string and database name
+        /// </summary>
+        private (string ConnectionString, string DatabaseName) GetConnectionParameters(PBICloudDataset dataset)
         {
             // Dataset connectivity with the XMLA endpoint
             // https://docs.microsoft.com/en-us/power-bi/admin/service-premium-connect-tools
@@ -155,7 +158,6 @@ namespace Sqlbi.Bravo.Services
             var tenantName = "myorg"; // TODO: add support for B2B users tenant name
             var serverName = $"powerbi://api.powerbi.com/v1.0/{ tenantName }/{ dataset.WorkspaceName }";
             var databaseName = dataset.DisplayName;
-
             var connectionString = ConnectionStringHelper.BuildForPBICloudDataset(serverName, databaseName, CurrentAuthentication?.AccessToken);
 
             return (connectionString, databaseName);

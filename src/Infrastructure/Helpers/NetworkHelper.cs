@@ -6,10 +6,26 @@ using System.Net;
 using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
 
-namespace Bravo.Infrastructure.Windows.Interop
+namespace Bravo.Infrastructure.Helpers
 {
-    internal static class Win32Network
+    internal static class NetworkHelper
     {
+        public static IPAddress GetLoopbackAddress()
+        {
+            var networkInterfaces = NetworkInterface.GetAllNetworkInterfaces();
+
+            var loopbackInterface = networkInterfaces.SingleOrDefault((i) => i.NetworkInterfaceType == NetworkInterfaceType.Loopback);
+
+            if (loopbackInterface?.OperationalStatus == OperationalStatus.Up)
+            {
+                if (loopbackInterface.Supports(NetworkInterfaceComponent.IPv6))
+                    return IPAddress.IPv6Loopback;
+            }
+
+            // Fallback to IPv4
+            return IPAddress.Loopback;
+        }
+
         public static IEnumerable<(IPEndPoint EndPoint, TcpState State, int ProcessId)> GetTcpConnections(Func<(IPEndPoint EndPoint, TcpState State, int ProcessId), bool> predicate)
         {
             var rows = GetTcpRows();

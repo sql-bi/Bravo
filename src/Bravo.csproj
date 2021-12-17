@@ -20,6 +20,10 @@
   <PropertyGroup>
     <RestoreSources>$(RestoreSources);./nupkgs;https://api.nuget.org/v3/index.json</RestoreSources>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Bravo.Window.cs" />
+  </ItemGroup>
   
   <ItemGroup>
     <Content Remove="wwwroot\debug.js" />
@@ -42,6 +46,7 @@
     <None Update="wwwroot\**">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Include="App.Window.cs" />
     <None Include="wwwroot\favicons\icon-228.png">
       <Pack>True</Pack>
       <PackagePath></PackagePath>

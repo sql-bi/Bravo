@@ -14,7 +14,7 @@ namespace Sqlbi.Bravo.Infrastructure.Extensions
             return windowTitle;
         }
 
-        public static bool IsPBIMainWindowTitle(this string windowTitle)
+        public static bool IsPBIDesktopMainWindowTitle(this string windowTitle)
         {
             return windowTitle.EndsWith(AppConstants.PBIDesktopMainWindowTitleSuffix);
         }

@@ -4,13 +4,22 @@ namespace Sqlbi.Bravo.Infrastructure.Messages
 {
     internal class AppInstanceStartedMessage
     {
-        [JsonPropertyName("n")]
-        public string? ConnectionName { get; set; }
+        [JsonPropertyName("externalTool")]
+        public bool IsExternalTool => AppConstants.PBIDesktopProcessName.Equals(ParentProcessName);
 
-        [JsonPropertyName("d")]
-        public string? DatabaseName { get; set; }
+        [JsonPropertyName("parentProcessId")]
+        public int? ParentProcessId { get; set; }
 
-        [JsonPropertyName("s")]
-        public string? ServerName { get; set; }
+        [JsonPropertyName("parentProcessName")]
+        public string? ParentProcessName { get; set; }
+
+        [JsonPropertyName("parentProcessMainWindowTitle")]
+        public string? ParentProcessMainWindowTitle { get; set; }
+
+        [JsonPropertyName("serverName")]
+        public string? ArgumentServerName { get; set; }
+
+        [JsonPropertyName("databaseName")]
+        public string? ArgumentDatabaseName { get; set; }
     }
 }

@@ -12,8 +12,8 @@ namespace Sqlbi.Infrastructure.Configuration.Settings
 {
     public class StartupSettings
     {
-        [JsonPropertyName("executedAsExternalTool")]
-        public bool IsExecutedAsExternalTool { get; set; }
+        [JsonPropertyName("externalTool")]
+        public bool IsExternalTool { get; set; }
 
         [JsonPropertyName("serverName")]
         public string? ArgumentServerName { get; set; }
@@ -22,13 +22,16 @@ namespace Sqlbi.Infrastructure.Configuration.Settings
         public string? ArgumentDatabaseName { get; set; }
 
         [JsonIgnore]
-        public bool IsExecutedAsPBIDesktopExternalTool => IsExecutedAsExternalTool && AppConstants.PBIDesktopProcessName.Equals(ParentProcessName);
+        public bool IsPBIDesktopExternalTool => IsExternalTool && AppConstants.PBIDesktopProcessName.Equals(ParentProcessName);
+
+        [JsonIgnore]
+        public int? ParentProcessId { get; set; }
 
         [JsonIgnore]
         public string? ParentProcessName { get; set; }
 
-        [JsonIgnore]
-        public IntPtr ParentProcessMainWindowHandle { get; set; }
+        //[JsonIgnore]
+        //public IntPtr ParentProcessMainWindowHandle { get; set; }
 
         [JsonIgnore]
         public string? ParentProcessMainWindowTitle { get; set; }
@@ -74,7 +77,7 @@ namespace Sqlbi.Infrastructure.Configuration.Settings
             var args = Environment.GetCommandLineArgs();
             var result = command.Parse(args);
 
-            settings.IsExecutedAsExternalTool = result.HasOption(serverOption) || result.HasOption(databaseOption);
+            settings.IsExternalTool = result.HasOption(serverOption) || result.HasOption(databaseOption);
             settings.CommandLineErrors = result.Errors.Select((e) => e.Message).ToList().AsReadOnly();
 
             if (settings.CommandLineErrors.Count == 0)
@@ -83,9 +86,10 @@ namespace Sqlbi.Infrastructure.Configuration.Settings
                 settings.ArgumentDatabaseName = result.ValueForOption(databaseOption);
             }
 
+            settings.ParentProcessId = parentProcess.Id;
             settings.ParentProcessName = parentProcess.ProcessName;
-            settings.ParentProcessMainWindowHandle = parentProcess.MainWindowHandle;
-            settings.ParentProcessMainWindowTitle = parentProcess.GetMainWindowTitle(settings.IsExecutedAsPBIDesktopExternalTool ? (windowTitle) => windowTitle.IsPBIMainWindowTitle() : default);
+            //settings.ParentProcessMainWindowHandle = parentProcess.MainWindowHandle;
+            settings.ParentProcessMainWindowTitle = parentProcess.GetMainWindowTitle(settings.IsPBIDesktopExternalTool ? (windowTitle) => windowTitle.IsPBIDesktopMainWindowTitle() : default).ToPBIDesktopReportName();
         }
     }
 }

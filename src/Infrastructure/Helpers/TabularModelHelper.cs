@@ -26,6 +26,9 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
             return hash;
         }
 
+        /// <exception cref="TOMDatabaseOutOfSyncException" />
+        /// <exception cref="TOMDatabaseNotFoundException" />
+        /// <exception cref="TOMDatabaseUpdateException" />
         public static void Update(string connectionString, string databaseName, IEnumerable<FormattedMeasure> measures)
         {
             using var server = new TOM.Server();

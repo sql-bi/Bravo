@@ -25,11 +25,12 @@ namespace Sqlbi.Bravo.Services
 
     internal class PBIDesktopService : IPBIDesktopService
     {
+
         public IEnumerable<PBIDesktopReport> GetReports()
         {
             foreach (var pbidesktopProcess in Process.GetProcessesByName(AppConstants.PBIDesktopProcessName))
             {
-                var pbidesktopWindowTitle = pbidesktopProcess.GetMainWindowTitle((windowTitle) => windowTitle.IsPBIMainWindowTitle());
+                var pbidesktopWindowTitle = pbidesktopProcess.GetMainWindowTitle((windowTitle) => windowTitle.IsPBIDesktopMainWindowTitle());
 
                 // PBIDesktop is opening or the SSAS instance/model is not yet ready
                 if (string.IsNullOrEmpty(pbidesktopWindowTitle))
@@ -59,76 +60,15 @@ namespace Sqlbi.Bravo.Services
             TabularModelHelper.Update(connectionString, databaseName, measures);
         }
 
-        private (string connectionString, string databaseName) GetConnectionParameters(PBIDesktopReport report)
+        /// <summary>
+        /// Search for the PBIDesktop process and its SSAS instance by retrieving the connection string and database name
+        /// </summary>
+        /// <exception cref="TOMDatabaseNotFoundException"></exception>
+        private (string ConnectionString, string DatabaseName) GetConnectionParameters(PBIDesktopReport report)
         {
-            // Exit if the process specified by the processId parameter is not running
-            var pbidesktopProcess = GetProcessById(report.ProcessId);
-            if (pbidesktopProcess is null)
-                throw new TOMDatabaseNotFoundException($"PBIDesktop process is no longer running [{ report.ProcessId }]");
-
-            // Exit if the PID has been reused and PBIDesktop process is no longer running
-            if (!pbidesktopProcess.ProcessName.Equals(AppConstants.PBIDesktopProcessName, StringComparison.OrdinalIgnoreCase))
-                throw new TOMDatabaseNotFoundException($"PBIDesktop process is no longer running [{ report.ProcessId }]");
-
-            var ssasProcessIds = pbidesktopProcess.GetChildProcessIds(name: "msmdsrv.exe").ToArray();
-            if (ssasProcessIds.Length == 0)
-                throw new TOMDatabaseNotFoundException($"PBIDesktop SSAS process not found [{ report.ProcessId }]");
-
-            if (ssasProcessIds.Length > 1)
-                throw new TOMDatabaseNotFoundException($"PBIDesktop unexpected number of SSAS processes found [{ ssasProcessIds.Length }]");
-
-            var ssasProcessId = ssasProcessIds.Single();
-
-            var ssasConnection = Win32Network.GetTcpConnections((c) => c.ProcessId == ssasProcessId && c.State == TcpState.Listen && IPAddress.IsLoopback(c.EndPoint.Address)).SingleOrDefault();
-            if (ssasConnection == default)
-                throw new TOMDatabaseNotFoundException($"PBIDesktop SSAS connection not found");
-
-            var connectionString = ConnectionStringHelper.BuildForPBIDesktop(ssasConnection.EndPoint);
-            var databaseName = GetDatabaseName(connectionString);
+            var (connectionString, databaseName) = report.GetConnectionParameters();
 
             return (connectionString, databaseName);
-
-            static Process? GetProcessById(int? processId)
-            {
-                Process? process;
-                try
-                {
-                    process = Process.GetProcessById(processId!.Value);
-                }
-                catch (ArgumentException)
-                {
-                    // The process specified by the processId parameter is not running.
-                    return null;
-                }
-
-                if (process.HasExited)
-                    return null;
-
-                try
-                {
-                    var processName = process.ProcessName;
-                }
-                catch (InvalidOperationException) 
-                {
-                    // Process has exited, so the requested information is not available
-                    return null;
-                }
-
-                return process;
-            }
-
-            static string GetDatabaseName(string connectionString)
-            {
-                using var server = new TOM.Server();
-                server.Connect(connectionString);
-
-                var databaseCount = server.Databases.Count;
-                if (databaseCount != 1)
-                    throw new TOMDatabaseNotFoundException($"PBIDesktop unexpected number of SSAS databases found [{ databaseCount }]");
-
-                var databaseName = server.Databases[0].Name;
-                return databaseName;
-            }
         }
     }
 }

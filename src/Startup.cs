@@ -9,6 +9,7 @@ using Sqlbi.Bravo.Infrastructure.Extensions;
 using Sqlbi.Bravo.Services;
 using Sqlbi.Infrastructure.Configuration.Settings;
 using System;
+using System.Linq;
 using System.Text.Json.Serialization;
 
 namespace Sqlbi.Bravo
@@ -63,11 +64,6 @@ namespace Sqlbi.Bravo
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment environment)
         {
-            // TODO: see 'force IPV6 and randomise the listening port'
-            var addressesFeature = app.ServerFeatures.Get<IServerAddressesFeature>() ?? throw new Exception($"ServerFeature not found { nameof(IServerAddressesFeature) }");
-            System.Diagnostics.Trace.WriteLine("::Bravo:INF:KestrelListeningAddresses:" + string.Join(", ", addressesFeature.Addresses ?? Array.Empty<string>()));
-            Program.HostAddresses = addressesFeature.Addresses;
-
             if (environment.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
