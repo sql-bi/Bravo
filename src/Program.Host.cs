@@ -15,9 +15,9 @@ using System.Runtime.InteropServices;
 
 namespace Sqlbi.Bravo
 {
-    internal partial class App
+    internal partial class Program
     {
-        private IHost CreateHost()
+        private static IHost CreateHost()
         {
             var hostBuilder = new HostBuilder();
 
@@ -109,7 +109,12 @@ namespace Sqlbi.Bravo
             return host;
         }
 
-        private Uri GetHostUri(IHost host)
+        /// <summary>
+        /// Get the listening address and port used by the server
+        /// </summary>
+        /// <remarks>The port binding happens only when IWebHost.Run() is called and it is not accessible on Startup.Configure() because port has not been yet assigned on this stage.</remarks>
+        /// <exception cref="BravoException" />
+        private static Uri GetUri(IHost host)
         {
             var server = host.Services.GetRequiredService<IServer>();
             var feature = server.Features.Get<IServerAddressesFeature>() ?? throw new BravoException($"ServerFeature not found { nameof(IServerAddressesFeature) }");

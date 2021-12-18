@@ -46,7 +46,7 @@
     <None Update="wwwroot\**">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="App.Window.cs" />
+    <None Include="Program.Window.cs" />
     <None Include="wwwroot\favicons\icon-228.png">
       <Pack>True</Pack>
       <PackagePath></PackagePath>

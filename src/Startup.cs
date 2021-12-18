@@ -1,15 +1,12 @@
 ﻿using Dax.Formatter;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Sqlbi.Bravo.Infrastructure.Extensions;
 using Sqlbi.Bravo.Services;
 using Sqlbi.Infrastructure.Configuration.Settings;
-using System;
-using System.Linq;
 using System.Text.Json.Serialization;
 
 namespace Sqlbi.Bravo
@@ -60,6 +57,8 @@ namespace Sqlbi.Bravo
             services.AddSingleton<IPBIDesktopService, PBIDesktopService>();
             services.AddSingleton<IPBICloudService, PBICloudService>();
             services.AddSingleton<IDaxFormatterClient, DaxFormatterClient>();
+
+//            services.AddHostedService<ApplicationInstanceHostedService>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment environment)

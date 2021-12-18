@@ -5,9 +5,9 @@ using System.Diagnostics;
 
 namespace Sqlbi.Bravo
 {
-    internal partial class App
+    internal partial class Program
     {
-        private PhotinoWindow CreateWindow()
+        private static PhotinoWindow CreateWindow()
         {
 #if DEBUG
             var contextMenuEnabled = true;
@@ -45,7 +45,7 @@ namespace Sqlbi.Bravo
         private static void WindowCreated(object? sender, EventArgs e)
         {
             var window = (PhotinoWindow)sender!;
-            Trace.WriteLine($"::Bravo:INF:WindowCreatedHandler:{ window.Title } ( { HostUri } )");
+            Trace.WriteLine($"::Bravo:INF:WindowCreatedHandler:{ window.Title } ( { _hostUri } )");
 
             //window.SendNotification("::Bravo:INF:WindowCreatedHandler", window.Title);
         }
@@ -64,8 +64,8 @@ namespace Sqlbi.Bravo
 
             if (message == "host-address")
             {
-                var address = HostUri?.ToString();
-                window.SendWebMessage($"{ HostUri }");
+                var address = _hostUri?.ToString();
+                window.SendWebMessage($"{ _hostUri }");
             }
             else
             {

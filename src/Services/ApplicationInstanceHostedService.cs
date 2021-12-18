@@ -1,5 +1,5 @@
 ﻿using Microsoft.Extensions.Hosting;
-using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -20,18 +20,22 @@ namespace Sqlbi.Bravo.Services
 
         private void OnStarted()
         {
+            Trace.WriteLine($"::Bravo:INF:ApplicationInstanceHostedService:OnStarted");
         }
 
         private void OnStopping()
         {
+            Trace.WriteLine($"::Bravo:INF:ApplicationInstanceHostedService:OnStopping");
         }
 
         private void OnStopped()
         {
+            Trace.WriteLine($"::Bravo:INF:ApplicationInstanceHostedService:OnStopped");
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
+            Trace.WriteLine($"::Bravo:INF:ApplicationInstanceHostedService:StartAsync");
             return Task.CompletedTask;
         }
 
@@ -40,6 +44,7 @@ namespace Sqlbi.Bravo.Services
             // Hosting shutdown process
             // https://docs.microsoft.com/en-us/dotnet/core/extensions/generic-host#hosting-shutdown-process
 
+            Trace.WriteLine($"::Bravo:INF:ApplicationInstanceHostedService:StopAsync");
             return Task.CompletedTask;
         }
     }
