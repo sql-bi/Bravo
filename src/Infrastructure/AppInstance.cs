@@ -1,4 +1,5 @@
-﻿using Sqlbi.Bravo.Infrastructure.Messages;
+﻿using Bravo.Infrastructure.Windows.Interop;
+using Sqlbi.Bravo.Infrastructure.Messages;
 using Sqlbi.Bravo.Infrastructure.Windows.Interop;
 using Sqlbi.Infrastructure.Configuration.Settings;
 using System;
@@ -34,6 +35,12 @@ namespace Sqlbi.Bravo.Infrastructure
 
                 return _instanceOwned;
             }
+        }
+
+        public void OnMainWindowCreating(object? sender, EventArgs e)
+        {
+            // Set the preferred theme based on the latest settings saved by the user
+            Win32UxTheme.SetStartupTheme(useDark: false);
         }
 
         /// <summary>

@@ -91,14 +91,14 @@ namespace Sqlbi.Bravo.Infrastructure.Windows.Interop
         [return: MarshalAs(UnmanagedType.Bool)]
         public static extern bool EnumThreadWindows(int dwThreadId, EnumThreadDelegate lpfn, IntPtr lParam);
 
-        [DllImport(ExternDll.User32, CharSet = CharSet.Unicode)]
-        public static extern IntPtr SendMessage(IntPtr hWnd, uint uMsg, int wParam, StringBuilder lParam);
-
         [DllImport(ExternDll.User32, SetLastError = true, CharSet = CharSet.Unicode)]
         public static extern IntPtr FindWindow(string? lpClassName, string lpWindowName);
 
         [DllImport(ExternDll.User32, CharSet = CharSet.Auto)]
         public static extern IntPtr SendMessage(IntPtr hWnd, uint uMsg, int wParam, ref COPYDATASTRUCT lParam);
+
+        [DllImport(ExternDll.User32, CharSet = CharSet.Unicode)]
+        public static extern IntPtr SendMessage(IntPtr hWnd, uint uMsg, int wParam, StringBuilder lParam);
 
         [DllImport(ExternDll.User32, CharSet = CharSet.Auto, SetLastError = true)]
         public static extern IntPtr SendMessage(IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam);
