@@ -9,9 +9,9 @@ using System.Reflection;
 
 namespace Sqlbi.Bravo.Infrastructure.Extensions
 {
-    public static class ServiceCollectionExtensions
+    internal static class ServiceCollectionExtensions
     {
-        public static IServiceCollection AddSwaggerGenCustomized(this IServiceCollection services)
+        public static IServiceCollection AddSwaggerGenCustom(this IServiceCollection services)
         {
             services.AddSwaggerGen((options) =>
             {

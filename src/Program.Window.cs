@@ -32,7 +32,6 @@ namespace Sqlbi.Bravo
 #else
             window.SetLogVerbosity(1);
 #endif
-            window.WindowCreated += (sender, e) => _singleton.TryHookWndProc(sender);
             return window;
         }
 

@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.31729.503
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.32014.148
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Bravo", "src\Bravo.csproj", "{3D49664E-E100-4EFF-A709-A59D03F4663E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bravo.Tests", "test\Bravo.Tests\Bravo.Tests.csproj", "{6EECEE30-9DD6-4CF4-8E0E-7773C2DED2CF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,14 @@ Global
 		{3D49664E-E100-4EFF-A709-A59D03F4663E}.Release|Any CPU.Build.0 = Release|Any CPU
 		{3D49664E-E100-4EFF-A709-A59D03F4663E}.Release|x64.ActiveCfg = Release|x64
 		{3D49664E-E100-4EFF-A709-A59D03F4663E}.Release|x64.Build.0 = Release|x64
+		{6EECEE30-9DD6-4CF4-8E0E-7773C2DED2CF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6EECEE30-9DD6-4CF4-8E0E-7773C2DED2CF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6EECEE30-9DD6-4CF4-8E0E-7773C2DED2CF}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{6EECEE30-9DD6-4CF4-8E0E-7773C2DED2CF}.Debug|x64.Build.0 = Debug|Any CPU
+		{6EECEE30-9DD6-4CF4-8E0E-7773C2DED2CF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6EECEE30-9DD6-4CF4-8E0E-7773C2DED2CF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6EECEE30-9DD6-4CF4-8E0E-7773C2DED2CF}.Release|x64.ActiveCfg = Release|Any CPU
+		{6EECEE30-9DD6-4CF4-8E0E-7773C2DED2CF}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

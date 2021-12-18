@@ -1,5 +1,4 @@
-﻿using Bravo.Infrastructure.Helpers;
-using Microsoft.AspNetCore.Hosting;
+﻿using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.Extensions.Configuration;
@@ -11,7 +10,6 @@ using Sqlbi.Bravo.Infrastructure;
 using System;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 
 namespace Sqlbi.Bravo
 {
@@ -54,17 +52,12 @@ namespace Sqlbi.Bravo
 
             hostBuilder.ConfigureLogging((HostBuilderContext hostingContext, ILoggingBuilder logging) =>
             {
-                var isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-                if (isWindows)
-                    logging.AddFilter<EventLogLoggerProvider>((LogLevel level) => level >= LogLevel.Warning);
-
+                logging.AddFilter<EventLogLoggerProvider>((LogLevel level) => level >= LogLevel.Warning);
                 logging.AddConfiguration(hostingContext.Configuration.GetSection("Logging"));
                 logging.AddConsole();
                 logging.AddDebug();
                 logging.AddEventSourceLogger();
-
-                if (isWindows)
-                    logging.AddEventLog();
+                logging.AddEventLog();
 
                 logging.Configure((LoggerFactoryOptions options) =>
                 {
@@ -74,8 +67,7 @@ namespace Sqlbi.Bravo
 
             hostBuilder.UseDefaultServiceProvider((HostBuilderContext context, ServiceProviderOptions options) =>
             {
-                var validateOnBuild = (options.ValidateScopes = context.HostingEnvironment.IsDevelopment());
-                options.ValidateOnBuild = validateOnBuild;
+                options.ValidateOnBuild = (options.ValidateScopes = context.HostingEnvironment.IsDevelopment());
             });
 
             hostBuilder.ConfigureWebHostDefaults((webBuilder) =>

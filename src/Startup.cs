@@ -46,7 +46,7 @@ namespace Sqlbi.Bravo
                 });
             });
 #if DEBUG
-            services.AddSwaggerGenCustomized();
+            services.AddSwaggerGenCustom();
 #endif
             services.AddHttpClient();
             // Options
@@ -57,8 +57,7 @@ namespace Sqlbi.Bravo
             services.AddSingleton<IPBIDesktopService, PBIDesktopService>();
             services.AddSingleton<IPBICloudService, PBICloudService>();
             services.AddSingleton<IDaxFormatterClient, DaxFormatterClient>();
-
-//            services.AddHostedService<ApplicationInstanceHostedService>();
+            // services.AddHostedService<ApplicationInstanceHostedService>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment environment)

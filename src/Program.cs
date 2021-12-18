@@ -1,19 +1,20 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using Microsoft.ApplicationInsights;
+using Microsoft.Extensions.Hosting;
 using Sqlbi.Bravo.Infrastructure;
 using Sqlbi.Bravo.Infrastructure.Configuration;
+using Sqlbi.Bravo.Infrastructure.Helpers;
 using System;
-using System.Threading.Tasks;
+using System.Threading;
 
 namespace Sqlbi.Bravo
 {
-/*
- * Toast notification 
- * https://github.com/CommunityToolkit/WindowsCommunityToolkit
- * https://docs.microsoft.com/en-us/windows/apps/design/shell/tiles-and-notifications/send-local-toast?tabs=desktop
- */
+    /*
+     * Toast notification 
+     * https://github.com/CommunityToolkit/WindowsCommunityToolkit
+     * https://docs.microsoft.com/en-us/windows/apps/design/shell/tiles-and-notifications/send-local-toast?tabs=desktop
+     */
     internal partial class Program
     {
-        private static readonly AppInstance _singleton = new();
         private static Uri? _hostUri;
 
         [STAThread]
@@ -23,25 +24,33 @@ namespace Sqlbi.Bravo
             {
                 StartupConfiguration.Configure();
 
-                if (_singleton.IsOwned == false)
+                var instance = new AppInstance();
+                if (instance.IsOwned == false)
                 {
                     // Another instance of the application is already running, notify the owner and exit gracefully
-                    _singleton.NotifyOwner();
+                    instance.NotifyOwner();
                     return;
                 }
-                
-                using var host = CreateHost();
 
+                using var host = CreateHost();
                 host.Start();
                 {
                     _hostUri = GetUri(host);
-                    CreateWindow().WaitForClose(); // Starts the native main window that runs the message loop
+
+                    var window = CreateWindow();
+                    window.WindowCreated += instance.OnMainWindowCreated;
+                    window.WaitForClose(); // Starts the native main window that runs the message loop
                 }
-                host.StopAsync().GetAwaiter().GetResult();
+                host.StopAsync().Wait();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // TODO: add logging
+                var telemetry = TelemetryHelper.CreateTelemetryClient();
+                {
+                    telemetry.TrackException(ex);
+                    telemetry.Flush();
+                    Thread.Sleep(3000);
+                }
                 throw;
             }
         }

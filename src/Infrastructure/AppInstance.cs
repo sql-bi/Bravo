@@ -14,7 +14,7 @@ namespace Sqlbi.Bravo.Infrastructure
         private readonly Mutex _instanceMutex;
         private readonly bool _instanceOwned;
 
-        private AppWindowSubclass? _photinoWindowSubclass;
+        private AppWindowSubclass? _windowSubclass;
         private bool _disposed;
 
         public AppInstance()
@@ -36,14 +36,20 @@ namespace Sqlbi.Bravo.Infrastructure
             }
         }
 
-        public void TryHookWndProc(object? sender)
+        /// <summary>
+        /// Try to install a WndProc subclass callback to hook messages sent to the <see cref="PhotinoNET.PhotinoWindow"/>
+        /// </summary>
+        public void OnMainWindowCreated(object? sender, EventArgs e)
         {
             if (sender is PhotinoNET.PhotinoWindow window)
             {
-                _photinoWindowSubclass = new AppWindowSubclass(window);
+                _windowSubclass = new AppWindowSubclass(window);
             }
         }
 
+        /// <summary>
+        /// Sends a WM_COPYDATA message to the primary instance owner notifying it of startup arguments for the current instance
+        /// </summary>
         public void NotifyOwner()
         {
             var startupSettings = StartupSettings.Get();
@@ -85,6 +91,7 @@ namespace Sqlbi.Bravo.Infrastructure
 
                     _instanceMutex.Dispose();
                     _instanceEventWait.Dispose();
+                    _windowSubclass?.Dispose();
                 }
 
                 _disposed = true;
