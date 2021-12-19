@@ -1,11 +1,9 @@
-﻿using Bravo.Infrastructure.Windows.Interop;
-using Microsoft.ApplicationInsights;
+﻿using Microsoft.ApplicationInsights;
 using Microsoft.Extensions.Hosting;
 using Sqlbi.Bravo.Infrastructure;
 using Sqlbi.Bravo.Infrastructure.Configuration;
 using Sqlbi.Bravo.Infrastructure.Helpers;
 using System;
-using System.Runtime.InteropServices;
 using System.Threading;
 
 namespace Sqlbi.Bravo
@@ -17,8 +15,6 @@ namespace Sqlbi.Bravo
      */
     internal partial class Program
     {
-        private static Uri? _hostUri;
-
         [STAThread]
         public static void Main()
         {
@@ -37,12 +33,8 @@ namespace Sqlbi.Bravo
                 using var host = CreateHost();
                 host.Start();
                 {
-                    _hostUri = GetUri(host);
-
-                    var window = CreateWindow();
-                    window.WindowCreating += instance.OnMainWindowCreating;
-                    window.WindowCreated += instance.OnMainWindowCreated;
-                    window.WaitForClose(); // Starts the native main window that runs the message loop
+                    using var window = new AppWindow(host);
+                    window.WaitForClose();
                 }
                 host.StopAsync().Wait();
             }

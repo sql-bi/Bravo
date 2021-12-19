@@ -1,5 +1,4 @@
-﻿using Bravo.Infrastructure.Windows.Interop;
-using Sqlbi.Bravo.Infrastructure.Messages;
+﻿using Sqlbi.Bravo.Infrastructure.Messages;
 using Sqlbi.Bravo.Infrastructure.Windows.Interop;
 using Sqlbi.Infrastructure.Configuration.Settings;
 using System;
@@ -15,7 +14,6 @@ namespace Sqlbi.Bravo.Infrastructure
         private readonly Mutex _instanceMutex;
         private readonly bool _instanceOwned;
 
-        private AppWindowSubclass? _windowSubclass;
         private bool _disposed;
 
         public AppInstance()
@@ -34,23 +32,6 @@ namespace Sqlbi.Bravo.Infrastructure
                     //_instanceEventWait.Set();
 
                 return _instanceOwned;
-            }
-        }
-
-        public void OnMainWindowCreating(object? sender, EventArgs e)
-        {
-            // Set the preferred theme based on the latest settings saved by the user
-            Win32UxTheme.SetStartupTheme(useDark: false);
-        }
-
-        /// <summary>
-        /// Try to install a WndProc subclass callback to hook messages sent to the <see cref="PhotinoNET.PhotinoWindow"/>
-        /// </summary>
-        public void OnMainWindowCreated(object? sender, EventArgs e)
-        {
-            if (sender is PhotinoNET.PhotinoWindow window)
-            {
-                _windowSubclass = new AppWindowSubclass(window);
             }
         }
 
@@ -98,16 +79,10 @@ namespace Sqlbi.Bravo.Infrastructure
 
                     _instanceMutex.Dispose();
                     _instanceEventWait.Dispose();
-                    _windowSubclass?.Dispose();
                 }
 
                 _disposed = true;
             }
-        }
-
-        ~AppInstance()
-        {
-            Dispose(disposing: false);
         }
 
         public void Dispose()

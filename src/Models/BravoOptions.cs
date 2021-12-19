@@ -1,4 +1,5 @@
 ﻿using Sqlbi.Bravo.Infrastructure;
+using Sqlbi.Infrastructure.Configuration.Settings;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -9,8 +10,8 @@ namespace Sqlbi.Bravo.Models
         [JsonPropertyName("telemetryEnabled")]
         public bool TelemetryEnabled { get; set; } = AppConstants.TelemetryEnabledDefault;
 
-        [JsonPropertyName("telemetryKey")]
-        public string TelemetryKey { get; } = AppConstants.TelemetryInstrumentationKey;
+        [JsonPropertyName("theme")]
+        public ThemeType Theme { get; set; } = ThemeType.Auto;
 
         [JsonPropertyName("customOptions")]
         public JsonElement? CustomOptions { get; set; }

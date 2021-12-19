@@ -34,7 +34,8 @@ namespace Sqlbi.Bravo
                 //var hostingEnvironment = hostingContext.HostingEnvironment;
                 //var reloadConfigOnChange = hostingContext.Configuration.GetValue("hostBuilder:reloadConfigOnChange", defaultValue: true);
 
-                //config.AddJsonFile($"appsettings.json", optional: true, reloadConfigOnChange);
+                // TODO: rename and move to user-settings file/folder
+                config.AddJsonFile($"appsettings.json", optional: true, reloadOnChange: true);
                 //config.AddJsonFile($"appsettings.{ hostingEnvironment.EnvironmentName }.json", optional: true, reloadConfigOnChange);
 
                 //if (hostingEnvironment.IsDevelopment() && !string.IsNullOrEmpty(hostingEnvironment.ApplicationName))
@@ -99,21 +100,6 @@ namespace Sqlbi.Bravo
 
             var host = hostBuilder.Build();
             return host;
-        }
-
-        /// <summary>
-        /// Get the listening address and port used by the server
-        /// </summary>
-        /// <remarks>The port binding happens only when IWebHost.Run() is called and it is not accessible on Startup.Configure() because port has not been yet assigned on this stage.</remarks>
-        /// <exception cref="BravoException" />
-        private static Uri GetUri(IHost host)
-        {
-            var server = host.Services.GetRequiredService<IServer>();
-            var feature = server.Features.Get<IServerAddressesFeature>() ?? throw new BravoException($"ServerFeature not found { nameof(IServerAddressesFeature) }");
-            var address = feature.Addresses.Single(); // here a single address is expected so let the exception be raised in case of multiple addresses
-
-            var uri = new Uri(address, UriKind.Absolute);
-            return uri;
         }
     }
 }

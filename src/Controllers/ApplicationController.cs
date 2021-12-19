@@ -1,9 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
 using Sqlbi.Bravo.Infrastructure.Configuration.Options;
 using Sqlbi.Bravo.Models;
-using Sqlbi.Infrastructure;
 using Sqlbi.Infrastructure.Configuration.Settings;
 using System.Net.Mime;
 using System.Text.Json;
@@ -45,13 +43,16 @@ namespace Sqlbi.Bravo.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(BravoOptions))]
         public IActionResult GetOptions()
         {
-            JsonElement? customOptionsAsJsonElement = _userOptions.Value.CustomOptions is not null
-                ? JsonSerializer.Deserialize<JsonElement>(_userOptions.Value.CustomOptions)
+            var userSettings = _userOptions.Value;
+
+            JsonElement? customOptionsAsJsonElement = userSettings.CustomOptions is not null
+                ? JsonSerializer.Deserialize<JsonElement>(userSettings.CustomOptions)
                 : null;
 
             var options = new BravoOptions
             {
-                TelemetryEnabled = _userOptions.Value.TelemetryEnabled,
+                TelemetryEnabled = userSettings.TelemetryEnabled,
+                Theme = userSettings.Theme,
                 CustomOptions = customOptionsAsJsonElement
             };
 
@@ -72,6 +73,7 @@ namespace Sqlbi.Bravo.Controllers
             _userOptions.Update((o) =>
             {
                 o.TelemetryEnabled = options.TelemetryEnabled;
+                o.Theme = options.Theme;
                 o.CustomOptions = customOptionsAsString;
             });
 

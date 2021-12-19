@@ -6,8 +6,11 @@ namespace Sqlbi.Infrastructure.Configuration.Settings
     public class UserSettings
     {
         [JsonPropertyName("telemetryEnabled")]
-        //[Newtonsoft.Json.JsonProperty("telemetryEnabled")]
         public bool TelemetryEnabled { get; set; } = AppConstants.TelemetryEnabledDefault;
+
+        [JsonPropertyName("theme")]
+        [Newtonsoft.Json.JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))] // Newtonsoft.Json attribute required by WritableOptions<T>, see Update() metod
+        public ThemeType Theme { get; set; } = ThemeType.Auto;
 
         //[JsonExtensionData]
         //[JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
@@ -19,7 +22,13 @@ namespace Sqlbi.Infrastructure.Configuration.Settings
         // TODO: 'string CustomOptions' is a workaround, we should instead use 'JsonElement? CustomData'
 
         [JsonPropertyName("customOptions")]
-        //[Newtonsoft.Json.JsonProperty("options")]
         public string? CustomOptions { get; set; }
+    }
+
+    public enum ThemeType
+    {
+        Auto,
+        Light,
+        Dark
     }
 }
