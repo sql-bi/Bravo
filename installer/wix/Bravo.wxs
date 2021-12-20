@@ -21,7 +21,7 @@
   <Product Id="*" Name="$(var.ProductName)" Language="!(loc.ProductLanguage)" Version="$(var.ProductVersion)" Manufacturer="$(var.ProductManufacturer)" UpgradeCode="{888BDB48-B16A-4D9A-8FE6-0206897B1162}">
 
     <Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" Manufacturer="$(var.ProductManufacturer)" Description="!(loc.PackageDescription)" Comments="!(loc.PackageComments)"  />
-    <Binary Id="CustomActionBinary" SourceFile="extensions\actions\Sqlbi.Bravo.Installer.CA.dll" />
+    <Binary Id="CustomActionBinary" SourceFile="extensions\actions\Bravo.Installer.Wix.CA.dll" />
     <MajorUpgrade AllowSameVersionUpgrades="yes" AllowDowngrades="no" DowngradeErrorMessage="!(loc.MajorUpgradeDowngradeErrorMessage)" Schedule="afterInstallValidate" />
     <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
     
@@ -55,7 +55,7 @@
     </Property>
     
     <CustomAction Id="SetPropertyValuesRegisterExternalTool" Property="RegisterExternalTool" Value="INSTALLERTELEMETRYENABLED=[INSTALLERTELEMETRYENABLED];INSTALLEDEXECUTABLEPATH=[INSTALLFOLDER]$(var.AppExecutableName)" />
-    <CustomAction Id="RegisterExternalTool" BinaryKey="CustomActionBinary" DllEntry="PowerBIDesktopRegisterExternalTool" Execute="deferred" Impersonate="no" />
+    <CustomAction Id="RegisterExternalTool" BinaryKey="CustomActionBinary" DllEntry="PBIDesktopRegisterExternalTool" Execute="deferred" Impersonate="no" />
     <CustomAction Id="SetPropertyValuesAfterInstall" Property="AfterInstall" Value="INSTALLERTELEMETRYENABLED=[INSTALLERTELEMETRYENABLED];INSTALLERPRODUCTVERSION=[INSTALLERPRODUCTVERSION]" />
     <CustomAction Id="AfterInstall" BinaryKey="CustomActionBinary" DllEntry="AfterInstall" Execute="deferred" Impersonate="no" />
     <CustomAction Id="SetPropertyValuesAfterUninstall" Property="AfterUninstall" Value="INSTALLERTELEMETRYENABLED=[INSTALLERTELEMETRYENABLEDUNINSTALL];INSTALLERPRODUCTVERSION=[INSTALLERPRODUCTVERSION]" />
