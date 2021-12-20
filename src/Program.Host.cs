@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.EventLog;
+using System;
 using System.IO;
 
 namespace Sqlbi.Bravo
@@ -14,11 +15,11 @@ namespace Sqlbi.Bravo
         {
             var hostBuilder = new HostBuilder();
 
-            hostBuilder.UseContentRoot(Directory.GetCurrentDirectory());
+            hostBuilder.UseContentRoot(AppContext.BaseDirectory);
 
             hostBuilder.ConfigureHostConfiguration((builder) =>
             {
-                builder.SetBasePath(Directory.GetCurrentDirectory());
+                builder.SetBasePath(AppContext.BaseDirectory);
                 //builder.AddJsonFile("hostsettings.json", optional: true);
                 //builder.AddEnvironmentVariables(prefix: "CUSTOMPREFIX_");
                 //builder.AddCommandLine(args);

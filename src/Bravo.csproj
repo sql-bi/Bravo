@@ -41,12 +41,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="wwwroot\**">
+    <None Include="wwwroot\**">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\favicons\icon-228.png">
-      <Pack>True</Pack>
-      <PackagePath></PackagePath>
     </None>
   </ItemGroup>
 	
