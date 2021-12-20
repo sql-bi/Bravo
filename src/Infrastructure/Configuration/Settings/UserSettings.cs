@@ -27,8 +27,13 @@ namespace Sqlbi.Infrastructure.Configuration.Settings
 
     public enum ThemeType
     {
+        [JsonPropertyName("auto")]
         Auto,
+
+        [JsonPropertyName("light")]
         Light,
+
+        [JsonPropertyName("dark")]
         Dark
     }
 }

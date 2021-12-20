@@ -65,10 +65,10 @@ namespace Sqlbi.Bravo.Infrastructure
                     {
                         case ThemeType.Light:
                         case ThemeType.Dark:
-                            Win32UxTheme.SetStartupTheme(useDark: settings.Theme == ThemeType.Dark);
+                            Win32UxTheme.SetStartupMode(useDark: settings.Theme == ThemeType.Dark);
                             break;
                         case ThemeType.Auto:
-                            // Use the OS default
+                            // Let Photino.Native use the OS default
                             break;
                     }
                 }
@@ -125,23 +125,16 @@ namespace Sqlbi.Bravo.Infrastructure
                             }
                         }
                         break;
-                    case "get-theme":
+                    case "get-startup-theme":
                         {
                             var settings = GetUserSettings();
                             if (settings is not null)
                             {
+                                if (settings.Theme == ThemeType.Auto)
+                                    settings.Theme = Win32UxTheme.IsDarkModeEnabled() ? ThemeType.Dark : ThemeType.Light;
+
                                 window.SendWebMessage($"{ settings.Theme }");
                             }
-                        }
-                        break;
-                    case "set-theme-light":
-                        {
-                            Win32UxTheme.ChangeTheme(window.WindowHandle, useDark: false);
-                        }
-                        break;
-                    case "set-theme-dark":
-                        {
-                            Win32UxTheme.ChangeTheme(window.WindowHandle, useDark: true);
                         }
                         break;
                     default:

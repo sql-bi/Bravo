@@ -1,6 +1,7 @@
 ﻿using Sqlbi.Bravo.Infrastructure.Windows.Interop;
 using System;
 using System.Runtime.InteropServices;
+using System.Windows.Forms;
 
 #nullable disable
 
@@ -26,24 +27,41 @@ namespace Bravo.Infrastructure.Windows.Interop
             Max
         };
 
-        //[DllImport("uxtheme.dll", EntryPoint = "#132")]
-        //private static extern bool ShouldAppsUseDarkMode(bool allow);
+        /*
+         * OS version 1809 ( OS build 17763 )
+         */
+
+        [DllImport("uxtheme.dll", EntryPoint = "#132")]
+        private static extern bool ShouldAppsUseDarkMode();
 
         //[DllImport("uxtheme.dll", EntryPoint = "#133")]
         //private static extern bool AllowDarkModeForWindow(IntPtr hWnd, bool allow);
 
         [DllImport("uxtheme.dll", EntryPoint = "#135")]
-        private static extern bool AllowDarkModeForApp(bool allow); // ordinal 135, in 1809 ( OS build 17763 )
+        private static extern bool AllowDarkModeForApp(bool allow); // ordinal *** 135 ***, in 1809 ( OS build 17763 )
+
+        //[DllImport("uxtheme.dll", EntryPoint = "#137")]
+        //private static extern bool IsDarkModeAllowedForWindow(IntPtr hWnd);
+
+        /*
+         * OS version 1903 ( OS build 18362 )
+         */
 
         [DllImport("uxtheme.dll", EntryPoint = "#135")]
         [return: MarshalAs(UnmanagedType.U4)]
-        private static extern PreferredAppMode SetPreferredAppMode(PreferredAppMode mode); // ordinal 135, in 1903 ( OS build 18362 )
+        private static extern PreferredAppMode SetPreferredAppMode(PreferredAppMode mode); // ordinal *** 135 *** , in 1903 ( OS build 18362 )
 
-        private static bool IsSupported()
+        [DllImport("uxtheme.dll", EntryPoint = "#139")]
+        private static extern bool IsDarkModeAllowedForApp(IntPtr hWnd);
+
+        /* */
+
+        private static bool IsThemingSupported()
         {
+            // Windows 10 release information https://docs.microsoft.com/en-us/windows/release-health/release-information
+
             var version = Environment.OSVersion.Version;
 
-            // Windows 10 release information https://docs.microsoft.com/en-us/windows/release-health/release-information
             if (version.Major == 10 && version.Build >= 17763 /* Version 1809 */)
                 return true;
 
@@ -69,22 +87,32 @@ namespace Bravo.Infrastructure.Windows.Interop
             }
         }
 
-        public static void SetStartupTheme(bool useDark)
+        public static void SetStartupMode(bool useDark)
         {
-            if (IsSupported())
+            if (IsThemingSupported())
             {
                 // No need to send any messges here (i.e. WM_THEMECHANGED)
                 SetDarkMode(enabled: useDark);
             }
         }
 
-        public static void ChangeTheme(IntPtr hWnd, bool useDark)
+        public static void ChangeMode(IntPtr hWnd, bool useDark)
         {
-            if (IsSupported())
+            if (IsThemingSupported())
             {
                 SetDarkMode(enabled: useDark);
                 NativeMethods.SendMessage(hWnd, WM_THEMECHANGED, IntPtr.Zero, IntPtr.Zero);
             }
+        }
+
+        public static bool IsDarkModeEnabled()
+        {
+            if (IsThemingSupported() && !SystemInformation.HighContrast)
+            {
+                return ShouldAppsUseDarkMode();
+            }
+
+            return false;
         }
     }
 }

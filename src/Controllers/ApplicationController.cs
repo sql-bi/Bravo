@@ -1,8 +1,10 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Bravo.Infrastructure.Windows.Interop;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Sqlbi.Bravo.Infrastructure.Configuration.Options;
 using Sqlbi.Bravo.Models;
 using Sqlbi.Infrastructure.Configuration.Settings;
+using System.Diagnostics;
 using System.Net.Mime;
 using System.Text.Json;
 
@@ -76,6 +78,31 @@ namespace Sqlbi.Bravo.Controllers
                 o.Theme = options.Theme;
                 o.CustomOptions = customOptionsAsString;
             });
+
+            return Ok();
+        }
+
+        /// <summary>
+        /// Change the current window theme
+        /// </summary>
+        /// <response code="200">Status200OK</response>
+        [HttpPost]
+        [ActionName("ChangeTheme")]
+        [Consumes(MediaTypeNames.Application.Json)]
+        public IActionResult ChangeTheme(ThemeType theme)
+        {
+            var windowHandle = Process.GetCurrentProcess().MainWindowHandle;
+
+            switch (theme)
+            {
+                case ThemeType.Light:
+                case ThemeType.Dark:
+                    Win32UxTheme.ChangeMode(windowHandle, useDark: theme == ThemeType.Dark);
+                    break;
+                case ThemeType.Auto:
+                    Win32UxTheme.ChangeMode(windowHandle, useDark: Win32UxTheme.IsDarkModeEnabled());
+                    break;
+            }
 
             return Ok();
         }

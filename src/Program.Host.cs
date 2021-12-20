@@ -1,15 +1,10 @@
 ﻿using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Hosting.Server;
-using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.EventLog;
-using Sqlbi.Bravo.Infrastructure;
-using System;
 using System.IO;
-using System.Linq;
 
 namespace Sqlbi.Bravo
 {
@@ -55,8 +50,10 @@ namespace Sqlbi.Bravo
             {
                 logging.AddFilter<EventLogLoggerProvider>((LogLevel level) => level >= LogLevel.Warning);
                 logging.AddConfiguration(hostingContext.Configuration.GetSection("Logging"));
+#if DEBUG
                 logging.AddConsole();
                 logging.AddDebug();
+#endif
                 logging.AddEventSourceLogger();
                 logging.AddEventLog();
 
