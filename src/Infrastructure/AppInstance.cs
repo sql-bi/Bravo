@@ -10,7 +10,6 @@ namespace Sqlbi.Bravo.Infrastructure
 {
     internal class AppInstance : IDisposable
     {
-        private readonly EventWaitHandle _instanceEventWait;
         private readonly Mutex _instanceMutex;
         private readonly bool _instanceOwned;
 
@@ -18,22 +17,12 @@ namespace Sqlbi.Bravo.Infrastructure
 
         public AppInstance()
         {
-            _instanceEventWait = new EventWaitHandle(initialState: false, mode: EventResetMode.AutoReset, name: $"Bravo|EventWait");
             _instanceMutex = new Mutex(initiallyOwned: true, name: $"Bravo|Mutex", out _instanceOwned);
 
             GC.KeepAlive(_instanceMutex);
         }
 
-        public bool IsOwned
-        {
-            get
-            {
-                //if (!_instanceOwned)
-                    //_instanceEventWait.Set();
-
-                return _instanceOwned;
-            }
-        }
+        public bool IsOwned => _instanceOwned;
 
         /// <summary>
         /// Sends a WM_COPYDATA message to the primary instance owner notifying it of startup arguments for the current instance
@@ -78,7 +67,6 @@ namespace Sqlbi.Bravo.Infrastructure
                         _instanceMutex.ReleaseMutex();
 
                     _instanceMutex.Dispose();
-                    _instanceEventWait.Dispose();
                 }
 
                 _disposed = true;
