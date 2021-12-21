@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.32002.261
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bravo.Installer.Wix", "wix\extensions\Bravo.Installer.Wix\Bravo.Installer.Wix.csproj", "{1862B616-A7DE-4CD9-9779-374E96193B78}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bravo.Installer.Wix", "Bravo.Installer.Wix\Bravo.Installer.Wix.csproj", "{1862B616-A7DE-4CD9-9779-374E96193B78}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
