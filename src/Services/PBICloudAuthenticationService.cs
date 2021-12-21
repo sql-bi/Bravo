@@ -144,7 +144,11 @@ namespace Sqlbi.Bravo.Services
 
                         var parentWindowHandle = Process.GetCurrentProcess().MainWindowHandle;
 
+                        // *** EmbeddedWebView requiremens ***
                         // Requires VS project OutputType=WinExe and TargetFramework=net5-windows10.0.17763.0
+                        // Using 'TargetFramework=net5-windows10.0.17763.0' the framework 'Microsoft.Windows.SDK.NET' is also included as project dependency.
+                        // The framework 'Microsoft.Windows.SDK.NET' includes all the WPF(PresentationFramework.dll) and WinForm(System.Windows.Forms.dll) assemblies to the project.
+
                         builder = builder.WithUseEmbeddedWebView(useEmbeddedWebView: true)
                             .WithParentActivityOrWindow(parentWindowHandle); // used to center embedded wiew on the parent window
                     }
