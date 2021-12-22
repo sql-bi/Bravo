@@ -11,7 +11,8 @@ namespace Sqlbi.Bravo.Infrastructure
         private static readonly FileVersionInfo VersionInfo = FileVersionInfo.GetVersionInfo(Process.GetCurrentProcess().MainModule!.FileName!);
 
         public static readonly bool IsDebug = VersionInfo.IsDebug;
-        public static readonly string ApplicationName = "SqlbiBravo";
+        public static readonly string ApplicationName = "Bravo";
+        public static readonly string ApplicationStoreAliasName = "BravoStore";
         public static readonly string ApplicationMainWindowTitle = "Bravo for Power BI";
         public static readonly string ApplicationInstanceUniqueName = $"{ApplicationName}-{Guid.NewGuid():D}";
         public static readonly string ApplicationFolderLocalDataPath = Path.Combine(EnvironmentSpecialFolderLocalApplicationData, ApplicationName);

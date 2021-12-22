@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Hosting;
+﻿using Bravo.Infrastructure.Helpers;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -82,9 +83,9 @@ namespace Sqlbi.Bravo
                     options.AllowSynchronousIO = true;
                     
                     // TODO: randomise the listening port 
-                    //var listenAddress = NetworkHelper.GetLoopbackAddress();
-                    //options.Listen(listenAddress, port: 0, (listenOptions) =>
-                    options.ListenLocalhost(port: 5000, (listenOptions) =>
+                    var listenAddress = NetworkHelper.GetLoopbackAddress();
+                    options.Listen(listenAddress, port: 0, (listenOptions) =>
+                    //options.ListenLocalhost(port: 5000, (listenOptions) =>
                     {
 #if DEBUG
                         listenOptions.UseConnectionLogging();

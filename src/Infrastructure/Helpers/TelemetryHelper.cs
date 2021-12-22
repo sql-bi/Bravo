@@ -4,6 +4,7 @@ using Microsoft.ApplicationInsights.WindowsServer.TelemetryChannel;
 using Sqlbi.Bravo.Infrastructure.Security;
 using System;
 using System.Diagnostics;
+using System.Threading;
 
 namespace Sqlbi.Bravo.Infrastructure.Helpers
 {
@@ -30,6 +31,17 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
             telemetryClient.Context.User.Id = $"{ Environment.MachineName }\\{ Environment.UserName }".ToSHA256Hash();
 
             return telemetryClient;
+        }
+
+        public static void TrackException(Exception exception)
+        {
+            var telemetry = CreateTelemetryClient();
+            telemetry.TrackException(exception);
+            telemetry.Flush();
+
+            // Flush is not blocking when not using InMemoryChannel so wait a bit.
+            // There is an active issue regarding the need for Sleep/Delay which is tracked here: https://github.com/microsoft/ApplicationInsights-dotnet/issues/407
+            Thread.Sleep(1000);
         }
     }
 }

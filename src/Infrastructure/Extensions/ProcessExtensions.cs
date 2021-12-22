@@ -10,7 +10,19 @@ namespace Sqlbi.Bravo.Infrastructure.Extensions
 {
     public static class ProcessExtensions
     {
-        public static Process GetParent(this Process process)
+        public static Process? SafeGetProcessById(int processId)
+        {
+            try
+            {
+                return Process.GetProcessById(processId);
+            }
+            catch (Exception ex) when (ex is ArgumentException || ex is InvalidOperationException)
+            {
+                return null;
+            }
+        }
+
+        public static Process? GetParent(this Process process)
         {
             var queryString = $"SELECT ParentProcessId FROM Win32_Process WHERE ProcessId = { process.Id }";
 
@@ -19,7 +31,9 @@ namespace Sqlbi.Bravo.Infrastructure.Extensions
             using var item = collection.OfType<ManagementObject>().Single();
 
             var parentProcessId = (int)(uint)item["ParentProcessId"];
-            return Process.GetProcessById(parentProcessId);
+            var parentProcess = SafeGetProcessById(parentProcessId);
+
+            return parentProcess;
         }
 
         public static IEnumerable<int> GetChildProcessIds(this Process process, string? name = null)

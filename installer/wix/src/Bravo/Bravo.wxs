@@ -2,11 +2,13 @@
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
 
   <?define ProductVersion=!(bind.FileVersion.app.exe) ?>
-  <?define ProductManufacturer = "SQLBI Corporation" ?>
+  <?define ProductManufacturer = "SQLBI" ?>
   <?define AppUrlInfoAbout = "https://github.com/sql-bi/bravo" ?>
   <?define AppInstallFolder = "SQLBI" ?>
   <?define AppInstallSubfolder = "Bravo" ?>
   <?define AppExecutableName = "Bravo.exe" ?>
+  <?define AppName = "Bravo" ?>
+  <?define PbitoolName = "bravo.pbitool.json" ?>
   
   <?if $(sys.BUILDARCH) = x64 ?>
     <?define PlatformProgramFilesFolder = "ProgramFiles64Folder" ?>
@@ -21,7 +23,7 @@
   <Product Id="*" Name="$(var.ProductName)" Language="!(loc.ProductLanguage)" Version="$(var.ProductVersion)" Manufacturer="$(var.ProductManufacturer)" UpgradeCode="{888BDB48-B16A-4D9A-8FE6-0206897B1162}">
 
     <Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" Manufacturer="$(var.ProductManufacturer)" Description="!(loc.PackageDescription)" Comments="!(loc.PackageComments)"  />
-    <Binary Id="CustomActionBinary" SourceFile="extensions\actions\Bravo.Installer.Wix.CA.dll" />
+    <Binary Id="CustomActionBinary" SourceFile="..\assets\Bravo.Installer.Wix.CA.dll" />
     <MajorUpgrade AllowSameVersionUpgrades="yes" AllowDowngrades="no" DowngradeErrorMessage="!(loc.MajorUpgradeDowngradeErrorMessage)" Schedule="afterInstallValidate" />
     <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
     
@@ -38,27 +40,28 @@
     <UIRef Id="Custom_WixUI_InstallDir" />
     <UIRef Id="WixUI_ErrorProgressText" />
     
-    <WixVariable Id="WixUIDialogBmp" Value="assets\background.bmp" />
-    <WixVariable Id="WixUIBannerBmp" Value="assets\banner.bmp" />
-    <WixVariable Id="WixUILicenseRtf" Value="assets\license.rtf" />
+    <WixVariable Id="WixUIDialogBmp" Value="..\assets\background.bmp" />
+    <WixVariable Id="WixUIBannerBmp" Value="..\assets\banner.bmp" />
+    <WixVariable Id="WixUILicenseRtf" Value="..\assets\license.rtf" />
      
     <Property Id="ARPPRODUCTICON">app.ico</Property>
     <Property Id="ARPURLINFOABOUT">$(var.AppUrlInfoAbout)</Property>
     <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
     <Property Id="CREATEDESKTOPSHORTCUT" Value="1" Secure="yes" />
     <Property Id="CREATEPROGRAMMENUSHORTCUT" Value="1" Secure="yes" />
-    <Property Id="DEFAULTTELEMETRYENABLED" Value="1" Secure="yes" />
-    <Property Id="INSTALLERPRODUCTVERSION">$(var.ProductVersion)</Property>
+    <Property Id="APPLICATIONTELEMETRYENABLED" Value="1" Secure="yes" />
     <Property Id="INSTALLERTELEMETRYENABLED" Value="1" Secure="yes" />
     <Property Id="INSTALLERTELEMETRYENABLEDUNINSTALL" Secure="yes">
-      <RegistrySearch Id="installerTelemetryEnabled" Root="HKLM" Key="Software\[Manufacturer]\$(var.ProductName)" Name="installerTelemetryEnabled" Type="raw" />
+      <RegistrySearch Id="installerTelemetryEnabled" Root="HKLM" Key="Software\[Manufacturer]\$(var.AppName)" Name="installerTelemetryEnabled" Type="raw" />
     </Property>
     
-    <CustomAction Id="SetPropertyValuesRegisterExternalTool" Property="RegisterExternalTool" Value="INSTALLERTELEMETRYENABLED=[INSTALLERTELEMETRYENABLED];INSTALLEDEXECUTABLEPATH=[INSTALLFOLDER]$(var.AppExecutableName)" />
-    <CustomAction Id="RegisterExternalTool" BinaryKey="CustomActionBinary" DllEntry="PBIDesktopRegisterExternalTool" Execute="deferred" Impersonate="no" />
-    <CustomAction Id="SetPropertyValuesAfterInstall" Property="AfterInstall" Value="INSTALLERTELEMETRYENABLED=[INSTALLERTELEMETRYENABLED];INSTALLERPRODUCTVERSION=[INSTALLERPRODUCTVERSION]" />
+    <CustomAction Id="SetPropertyValuesRegisterExternalTool" Property="RegisterExternalTool" Value="CUSTOMDATAPRODUCTNAME=$(var.AppName);CUSTOMDATAPRODUCTVERSION=>$(var.ProductVersion);INSTALLERTELEMETRYENABLED=[INSTALLERTELEMETRYENABLED];CUSTOMDATAPRODUCTEXECUTABLEPATH=[INSTALLFOLDER]$(var.AppExecutableName);CUSTOMDATAPBITOOLPATH=[POWERBIEXTERNALTOOLSFOLDER]$(var.PbitoolName)" />
+    <CustomAction Id="RegisterExternalTool" BinaryKey="CustomActionBinary" DllEntry="RegisterExternalTool" Execute="deferred" Impersonate="no" />
+    <CustomAction Id="SetPropertyValuesAfterInstall" Property="AfterInstall" Value="CUSTOMDATAPRODUCTNAME=$(var.AppName);CUSTOMDATAPRODUCTVERSION=>$(var.ProductVersion);CUSTOMDATAINSTALLERTELEMETRYENABLED=[INSTALLERTELEMETRYENABLED]" />
     <CustomAction Id="AfterInstall" BinaryKey="CustomActionBinary" DllEntry="AfterInstall" Execute="deferred" Impersonate="no" />
-    <CustomAction Id="SetPropertyValuesAfterUninstall" Property="AfterUninstall" Value="INSTALLERTELEMETRYENABLED=[INSTALLERTELEMETRYENABLEDUNINSTALL];INSTALLERPRODUCTVERSION=[INSTALLERPRODUCTVERSION]" />
+    <CustomAction Id="SetPropertyValuesUnregisterExternalTool" Property="UnregisterExternalTool" Value="CUSTOMDATAPRODUCTNAME=$(var.AppName);CUSTOMDATAPRODUCTVERSION=>$(var.ProductVersion);INSTALLERTELEMETRYENABLED=[INSTALLERTELEMETRYENABLED];CUSTOMDATAPRODUCTEXECUTABLEPATH=[INSTALLFOLDER]$(var.AppExecutableName);CUSTOMDATAPBITOOLPATH=[POWERBIEXTERNALTOOLSFOLDER]$(var.PbitoolName)" />
+    <CustomAction Id="UnregisterExternalTool" BinaryKey="CustomActionBinary" DllEntry="UnregisterExternalTool" Execute="deferred" Impersonate="no" />
+    <CustomAction Id="SetPropertyValuesAfterUninstall" Property="AfterUninstall" Value="CUSTOMDATAPRODUCTNAME=$(var.AppName);CUSTOMDATAPRODUCTVERSION=>$(var.ProductVersion);CUSTOMDATAINSTALLERTELEMETRYENABLED=[INSTALLERTELEMETRYENABLEDUNINSTALL]" />
     <CustomAction Id="AfterUninstall" BinaryKey="CustomActionBinary" DllEntry="AfterUninstall" Execute="deferred" Impersonate="no" />
 
     <InstallExecuteSequence>
@@ -66,7 +69,9 @@
       <Custom Action="RegisterExternalTool" After="SetPropertyValuesRegisterExternalTool"><![CDATA[NOT Installed AND NOT REMOVE]]></Custom>
       <Custom Action="SetPropertyValuesAfterInstall" After="RegisterExternalTool" />
       <Custom Action="AfterInstall" After="SetPropertyValuesAfterInstall"><![CDATA[NOT Installed AND NOT REMOVE]]></Custom>
-      <Custom Action="SetPropertyValuesAfterUninstall" After="RemoveFiles" />
+      <Custom Action="SetPropertyValuesUnregisterExternalTool" After="RemoveFiles" />
+      <Custom Action="UnregisterExternalTool" After="SetPropertyValuesUnregisterExternalTool"><![CDATA[(NOT UPGRADINGPRODUCTCODE) AND (REMOVE="ALL")]]></Custom>
+      <Custom Action="SetPropertyValuesAfterUninstall" After="UnregisterExternalTool" />
       <Custom Action="AfterUninstall" After="SetPropertyValuesAfterUninstall"><![CDATA[(NOT UPGRADINGPRODUCTCODE) AND (REMOVE="ALL")]]></Custom>
     </InstallExecuteSequence>
     
@@ -98,7 +103,7 @@
       <Component Id="DesktopShortcut" Guid="{8C035041-08C9-44CB-B254-D66DA096C53D}" Win64="$(var.Win64)">
         <Condition><![CDATA[CREATEDESKTOPSHORTCUT = 1]]></Condition>
         <Shortcut Id="DesktopShortcut" Directory="DesktopFolder" Name="$(var.ProductName)" WorkingDirectory="INSTALLFOLDER" Target="[INSTALLFOLDER]$(var.AppExecutableName)" />
-        <RegistryValue Root="HKCU" Key="Software\[Manufacturer]\$(var.ProductName)" Name="installedDesktopShortcut" Value="1" Type="integer" KeyPath="yes" />
+        <RegistryValue Root="HKCU" Key="Software\[Manufacturer]\$(var.AppName)" Name="installedDesktopShortcut" Value="1" Type="integer" KeyPath="yes" />
       </Component>
     </DirectoryRef>
     
@@ -106,7 +111,7 @@
       <Component Id="ProgramMenuShortcut" Guid="{B6EB02B3-E16E-4661-89E4-A46C50815577}" Win64="$(var.Win64)">
         <Condition><![CDATA[CREATEPROGRAMMENUSHORTCUT = 1]]></Condition>
         <Shortcut Id="ProgramMenuShortcut" Directory="ProgramMenuFolder" Name="$(var.ProductName)" WorkingDirectory="INSTALLFOLDER" Target="[INSTALLFOLDER]$(var.AppExecutableName)" />
-        <RegistryValue Root="HKCU" Key="Software\[Manufacturer]\$(var.ProductName)" Name="installedProgramMenuShortcut" Value="1" Type="integer" KeyPath="yes" />
+        <RegistryValue Root="HKCU" Key="Software\[Manufacturer]\$(var.AppName)" Name="installedProgramMenuShortcut" Value="1" Type="integer" KeyPath="yes" />
       </Component>
     </DirectoryRef>
 
@@ -114,15 +119,16 @@
       <Component Id="app.exe" Guid="{E880F50A-6C3B-4EB6-B639-752803CEF497}" Win64="$(var.Win64)">
         <File Id="app.exe" Name="$(var.AppExecutableName)" Source="$(var.PublishFolder)\$(var.AppExecutableName)" Checksum="yes" KeyPath="yes" />
         <RemoveFile Id="REMOVEALL" Directory="INSTALLFOLDER" Name="*.*" On="both" />
-        <RegistryValue Root="HKLM" Key="Software\[Manufacturer]\$(var.ProductName)" Name="defaultTelemetryEnabled" Value="[DEFAULTTELEMETRYENABLED]" Type="string" />
-        <RegistryValue Root="HKLM" Key="Software\[Manufacturer]\$(var.ProductName)" Name="installerTelemetryEnabled" Value="[INSTALLERTELEMETRYENABLED]" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\[Manufacturer]\$(var.AppName)" Name="installFolder" Value="[INSTALLFOLDER]" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\[Manufacturer]\$(var.AppName)" Name="installerTelemetryEnabled" Value="[INSTALLERTELEMETRYENABLED]" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\[Manufacturer]\$(var.AppName)" Name="applicationTelemetryEnabled" Value="[APPLICATIONTELEMETRYENABLED]" Type="string" />
       </Component>
     </DirectoryRef>
 
     <DirectoryRef Id="POWERBIEXTERNALTOOLSFOLDER">
       <Component Id="pbitool.json" Guid="{CC0B5ECA-844C-4EE2-94A0-0CF9ADD4A0F3}" Win64="$(var.Win64)">
-        <File Id="pbitool.json" Name="bravo.pbitool.json" Source="assets\bravo.pbitool.json" KeyPath="yes" />
-        <RemoveFile Id="REMOVEPOWERBIEXTERNALTOOL" Name="bravo.pbitool.json" On="uninstall" />
+        <File Id="pbitool.json" Name="$(var.PbitoolName)" Source="..\assets\$(var.PbitoolName)" KeyPath="yes" />
+        <RemoveFile Id="REMOVEPOWERBIEXTERNALTOOL" Name="$(var.PbitoolName)" On="uninstall" />
       </Component>
     </DirectoryRef>
   </Fragment>
@@ -322,7 +328,7 @@
         <Control Id="Custom_InstallerTelemetryCheckBox" Type="CheckBox" X="25" Y="180" Width="320" Height="18" Property="INSTALLERTELEMETRYENABLED" Text="!(loc.InstallerTelemetryCheckBoxText)" CheckBoxValue="1" TabSkip="no" Hidden="yes">
           <Condition Action="show">NOT Installed</Condition>
         </Control>
-        <Control Id="Custom_DefaultTelemetryCheckBox" Type="CheckBox" X="25" Y="200" Width="320" Height="18" Property="DEFAULTTELEMETRYENABLED" Text="!(loc.DefaultTelemetryCheckBoxText)" CheckBoxValue="1" TabSkip="no" Hidden="yes">
+        <Control Id="Custom_DefaultTelemetryCheckBox" Type="CheckBox" X="25" Y="200" Width="320" Height="18" Property="APPLICATIONTELEMETRYENABLED" Text="!(loc.ApplicationTelemetryCheckBoxText)" CheckBoxValue="1" TabSkip="no" Hidden="yes">
           <Condition Action="show">NOT Installed</Condition>
         </Control>
         
