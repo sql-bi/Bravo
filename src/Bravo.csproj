@@ -1,0 +1,49 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType> 
+    <TargetFramework>net5-windows10.0.17763.0</TargetFramework>
+    <Platforms>AnyCPU</Platforms>
+    <ApplicationIcon>bravo.ico</ApplicationIcon>
+    <Company>SQLBI</Company>
+    <Authors>SQLBI</Authors>
+    <Product>Bravo for Power BI</Product>
+    <Copyright>SQLBI Corp.</Copyright>
+    <PackageIcon>icon-228.png</PackageIcon>
+    <PackageIconUrl />
+    <RootNamespace>Sqlbi.$(MSBuildProjectName.Replace(" ", "_"))</RootNamespace>
+    <Nullable>enable</Nullable>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);1591</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>$(AssemblyName).Tests</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Remove="wwwroot\debug.js" />
+    <Content Remove="wwwroot\index-debug.html" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Dax.Formatter" Version="1.0.0" />
+    <PackageReference Include="Dax.ViewModel" Version="1.2.0" />
+    <PackageReference Include="Dax.Vpax.NetCore" Version="1.2.0" />
+    <PackageReference Include="Microsoft.ApplicationInsights" Version="2.20.0" />
+    <PackageReference Include="Microsoft.ApplicationInsights.WindowsServer.TelemetryChannel" Version="2.20.0" />
+    <PackageReference Include="Microsoft.Identity.Client" Version="4.39.0" />
+    <PackageReference Include="Photino.NET" Version="2.1.10" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.2.3" />
+    <PackageReference Include="System.CommandLine" Version="2.0.0-beta1.21308.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="wwwroot\**">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+	
+</Project>

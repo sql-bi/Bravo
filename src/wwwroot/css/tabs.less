@@ -1,0 +1,281 @@
+// main: main.min.less
+#tabs {
+    height: 100%;
+    .flex(1 1 auto);
+
+    font-size: 14px;
+    background: @back-color;
+
+    .dark & {
+        background: @back-color-dark;
+    }
+
+    .content {
+        height: calc(100% - 46px);
+    }
+    
+}
+
+.chrome-tabs {
+  .flex(0 0 auto);
+    box-sizing: border-box;
+    position: relative;
+    font-size: 13px;
+    line-height: 1.4;
+    height: 46px;
+    padding: 8px 3px 4px 3px;
+    overflow: hidden;
+    background: @window-back-color;
+
+    .dark & {
+        background: @window-back-color-dark;
+    }
+  }
+
+  .chrome-tabs-add {
+    width: 16px;
+    float: left;.flexbox(center);
+  }
+
+ 
+  .chrome-tabs .chrome-tabs-content {
+    position: relative;
+    width: calc(100% - 30px);
+    height: 100%;
+    margin-left: 30px;
+
+
+  }
+
+  &.empty {
+    .chrome-tabs-add {
+      width: auto;
+      
+    }
+
+    .chrome-tabs-content {
+      display: none;
+    }
+  }
+  .chrome-tabs .chrome-tab {
+    position: absolute;
+    left: 0;
+    height: 36px;
+    width: 240px;
+    border: 0;
+    margin: 0;
+    z-index: 1;
+    pointer-events: none;
+  }
+  .chrome-tabs .chrome-tab,
+  .chrome-tabs .chrome-tab * {
+    user-select: none;
+    cursor: default;
+  }
+  .chrome-tabs .chrome-tab .chrome-tab-dividers {
+    position: absolute;
+    top: 7px;
+    bottom: 7px;
+    left: 9px;
+    right: 9px;
+  }
+  .chrome-tabs .chrome-tab .chrome-tab-dividers,
+  .chrome-tabs .chrome-tab .chrome-tab-dividers::before,
+  .chrome-tabs .chrome-tab .chrome-tab-dividers::after {
+    pointer-events: none;
+  }
+  .chrome-tabs .chrome-tab .chrome-tab-dividers::before,
+  .chrome-tabs .chrome-tab .chrome-tab-dividers::after {
+    content: "";
+    display: block;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: @tabs-divider-color;
+    opacity: 1;
+    transition: opacity 0.2s ease;
+
+    .dark & { background: @tabs-divider-color-dark;}
+  }
+  .chrome-tabs .chrome-tab .chrome-tab-dividers::before {
+    left: 0;
+  }
+  .chrome-tabs .chrome-tab .chrome-tab-dividers::after {
+    right: 0;
+  }
+  .chrome-tabs .chrome-tab:first-child .chrome-tab-dividers::before,
+  .chrome-tabs .chrome-tab:last-child .chrome-tab-dividers::after {
+    opacity: 0;
+  }
+  .chrome-tabs .chrome-tab .chrome-tab-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .chrome-tabs .chrome-tab .chrome-tab-background > svg {
+    width: 100%;
+    height: 100%;
+  }
+  .chrome-tabs .chrome-tab .chrome-tab-background > svg .chrome-tab-geometry {
+    fill: darken(@window-back-color, 5%);
+    .dark & { fill: lighten(@window-back-color-dark, 10%);   }
+  }
+  .chrome-tabs .chrome-tab[active] {
+    z-index: 5;
+  }
+  .chrome-tabs .chrome-tab[active] .chrome-tab-background > svg .chrome-tab-geometry {
+    fill: @back-color;
+    .dark & { fill: @back-color-dark   }
+  }
+  .chrome-tabs .chrome-tab:not([active]) .chrome-tab-background {
+    transition: opacity 0.2s ease;
+    opacity: 0;
+  }
+  @media (hover: hover) {
+    .chrome-tabs .chrome-tab:not([active]):hover {
+      z-index: 2;
+    }
+    .chrome-tabs .chrome-tab:not([active]):hover .chrome-tab-background {
+      opacity: 1;
+    }
+  }
+  .chrome-tabs .chrome-tab.chrome-tab-was-just-added {
+    top: 10px;
+    animation: chrome-tab-was-just-added 120ms forwards ease-in-out;
+  }
+  .chrome-tabs .chrome-tab .chrome-tab-content {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    top: 0;
+    bottom: 0;
+    left: 9px;
+    right: 9px;
+    padding: 9px 8px;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    overflow: hidden;
+    pointer-events: all;
+  }
+  .chrome-tabs .chrome-tab[is-mini] .chrome-tab-content {
+    padding-left: 2px;
+    padding-right: 2px;
+  }
+  .chrome-tabs .chrome-tab .chrome-tab-favicon {
+    position: relative;
+    flex-shrink: 0;
+    flex-grow: 0;
+    //height: 16px;
+    //width: 16px;
+   //background-size: 16px;
+    //margin-left: 4px;
+    .icon;
+
+    &:before {
+      margin: 0;
+      font-size: 16px;
+    }
+  }
+  .chrome-tabs .chrome-tab[is-small] .chrome-tab-favicon {
+    margin-left: 0;
+  }
+  .chrome-tabs .chrome-tab[is-mini]:not([active]) .chrome-tab-favicon {
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .chrome-tabs .chrome-tab[is-mini][active] .chrome-tab-favicon {
+    display: none;
+  }
+  .chrome-tabs .chrome-tab .chrome-tab-title {
+    flex: 1;
+    vertical-align: top;
+    overflow: hidden;
+    white-space: nowrap;
+    margin-left: 4px;
+  }
+  .chrome-tabs .chrome-tab[is-small] .chrome-tab-title {
+    margin-left: 0;
+  }
+  .chrome-tabs .chrome-tab .chrome-tab-favicon + .chrome-tab-title,
+  .chrome-tabs .chrome-tab[is-small] .chrome-tab-favicon + .chrome-tab-title {
+    margin-left: 5px;
+  }
+  .chrome-tabs .chrome-tab[is-smaller] .chrome-tab-favicon + .chrome-tab-title,
+  .chrome-tabs .chrome-tab[is-mini] .chrome-tab-title {
+    display: none;
+  }
+  .chrome-tabs .chrome-tab .chrome-tab-drag-handle {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+  }
+  .chrome-tabs .chrome-tab .chrome-tab-close {
+    flex-grow: 0;
+    flex-shrink: 0;
+    position: relative;
+
+    /*border-radius: 50%;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'><path stroke='rgba(0, 0, 0, .65)' stroke-linecap='square' stroke-width='1.5' d='M0 0 L8 8 M8 0 L0 8'></path></svg>");
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-size: 8px 8px;*/
+    
+    .ctrl;
+    margin:0;
+    .icon-close;
+    font-size: 12px;
+
+    &:before {
+        font-size: 13px;
+        margin:0;
+    }
+  }
+
+
+  @media (hover: hover) {
+    .chrome-tabs .chrome-tab:not([active]) .chrome-tab-close:not(:hover):not(:active) {
+      opacity: 0.8;
+    }
+  }
+  .chrome-tabs .chrome-tab[is-smaller] .chrome-tab-close {
+    margin-left: auto;
+  }
+  .chrome-tabs .chrome-tab[is-mini]:not([active]) .chrome-tab-close {
+    display: none;
+  }
+  .chrome-tabs .chrome-tab[is-mini][active] .chrome-tab-close {
+    margin-left: auto;
+    margin-right: auto;
+  }
+  @keyframes chrome-tab-was-just-added {
+    to {
+      top: 0;
+    }
+  }
+  .chrome-tabs.chrome-tabs-is-sorting .chrome-tab:not(.chrome-tab-is-dragging),
+  .chrome-tabs:not(.chrome-tabs-is-sorting) .chrome-tab.chrome-tab-was-just-dragged {
+    transition: transform 120ms ease-in-out;
+  }
+  .chrome-tabs .chrome-tabs-bottom-bar {
+    position: absolute;
+    bottom: 0;
+    height: 4px;
+    left: 0;
+    width: 100%;
+    background: @back-color;
+    z-index: 10;
+
+    .dark & {
+        background: @back-color-dark;
+    }
+  }
+  

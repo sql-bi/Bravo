@@ -1,0 +1,196 @@
+// main: main.min.less
+
+.dialog {
+    position:absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    z-index: 99999;
+    overflow: hidden;
+    .flexbox(center, center);
+    transform:scale(1);
+
+    .dialog-back {
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+        background: @back-color;
+        opacity: 0.4;
+        z-index: -1;
+        animation: fadeIn .5s cubic-bezier(0.165, 0.840, 0.440, 1.000) forwards;
+    }
+    .dialog-front {
+        background: @window-back-color;
+        padding: 10px;
+        .shadow(0, 0, 8px, 0, rgba(0,0,0,0.2));
+        .border-radius(8px);
+        min-width: 350px;
+        max-width: 600px;
+        opacity:0;
+        animation: scaleUp .3s cubic-bezier(0.165, 0.840, 0.440, 1.000) forwards;
+
+        header {
+            .flexbox(flex-start, space-between);
+            padding-left: 30px;
+
+            h1 { 
+                margin:30px 0 0 0;
+                font-size: 30px;
+                font-weight: 600;
+            }
+        }
+        .content {
+            padding: 30px;
+        }
+
+        footer {
+            .flexbox(center, flex-end);
+            padding: 0 20px 20px 30px;
+
+            .button {
+                margin:0 5px
+            }
+        }
+    }
+
+    .dark & {
+
+        .dialog-back {
+            background-color: @back-color-dark;
+        }
+        .dialog-front {
+            background-color: @window-back-color-dark;
+            .shadow(0, 0, 8px, 0, rgba(0,0,0,0.6));
+        }
+    }
+
+    &.out {
+        animation: quickScaleDown 0s .5s linear forwards;
+        .dialog-back {
+            animation: fadeOut .5s cubic-bezier(0.165, 0.840, 0.440, 1.000) forwards;
+        }
+        .dialog-front {
+            animation: scaleDown .5s cubic-bezier(0.165, 0.840, 0.440, 1.000) forwards;
+        }
+    }
+
+    .list {
+        margin-top: 20px;
+        height: 200px;
+        position: relative;
+
+        .notice {
+          width: 100%;
+          height: 100%;
+          text-align: center;
+          .flexbox(center, center);
+
+          .button {
+       
+            margin: 10px;
+          }
+
+        }
+    }
+}
+
+#dialog-connect {
+    .dialog-front {
+        width: 600px;
+    }
+    .drop-area {
+      .flexbox(center, center, column);
+
+      border: 2px dashed @border-color;
+
+      &.highlight {
+        border-color: darken(@border-color, 20%);
+        background-color: darken(@window-back-color-alt, 10%);
+      }
+
+      .dark & {
+        border-color: @border-color-dark;
+        &.highlight {
+          border-color: lighten(@border-color-dark, 20%);
+          background-color: lighten(@window-back-color-alt-dark, 10%);
+        }
+      }
+
+      p {
+        color: @notice-color;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+
+
+    }
+    .browse {
+        margin:10px;
+    }
+}
+#dialog-data-usage {
+  img {
+    float: right;
+    width: 140px;
+    height: auto;
+    margin: 10px 0 10px 50px;
+  }
+} 
+  
+@keyframes fadeIn {
+    0% {
+      background:rgba(0,0,0,.0);
+    }
+    100% {
+      background:rgba(0,0,0,.7);
+    }
+  }
+  
+  @keyframes fadeOut {
+    0% {
+      background:rgba(0,0,0,.7);
+    }
+    100% {
+      background:rgba(0,0,0,.0);
+    }
+  }
+  
+  @keyframes scaleUp {
+    0% {
+      transform:scale(.8) translateY(1000px);
+      opacity:0;
+    }
+    100% {
+      transform:scale(1) translateY(0px);
+      opacity:1;
+    }
+  }
+  
+  @keyframes scaleDown {
+    0% {
+      transform:scale(1) translateY(0px);
+      opacity:1;
+    }
+    100% {
+      transform:scale(.8) translateY(1000px);
+      opacity:0;
+    }
+  }
+
+  @keyframes quickScaleDown {
+    0% {
+      transform:scale(1);
+    }
+    99.9% {
+      transform:scale(1);
+    }
+    100% {
+      transform:scale(0);
+    }
+  }
+
+  
+  

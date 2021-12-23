@@ -1,0 +1,29 @@
+// main: main.min.less
+
+// Example: 
+//  .screen(@tablet, { width: 40px; });
+//  .hide-if(880px);
+
+.screen(@max-width, @rules) { 
+    @media only screen and (max-width: @max-width){ 
+        & { @rules(); } 
+    } 
+}
+.hide-if(@max-width) {
+    @media only screen and (max-width: @max-width){ 
+        & { display: none !important; } 
+    }
+}
+.show-if(@max-width) {
+    @media only screen and (max-width: @max-width){ 
+        & { display: inherit !important; } 
+    }
+}
+
+// Predefined sizes
+@min-width:                 375px; 
+@max-width:                 1140px;
+
+@desktop:                   1440px;
+@hd:                        1920px;
+@4k:                        2560px;
