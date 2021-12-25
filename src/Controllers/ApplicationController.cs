@@ -86,7 +86,7 @@ namespace Sqlbi.Bravo.Controllers
         /// Change the current window theme
         /// </summary>
         /// <response code="200">Status200OK</response>
-        [HttpPost]
+        [HttpGet]
         [ActionName("ChangeTheme")]
         [Consumes(MediaTypeNames.Application.Json)]
         public IActionResult ChangeTheme(ThemeType theme)
