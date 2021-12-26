@@ -31,17 +31,21 @@ namespace Sqlbi.Bravo
                         using var window = new AppWindow(host);
                         window.WaitForClose();
                     }
-                    host.StopAsync().Wait();
+                    host.StopAsync().GetAwaiter().GetResult();
                 }
                 else
                 {
                     instance.NotifyOwner();
                 }
             }
+            catch (AggregateException ex)
+            {
+                TelemetryHelper.TrackException(ex.GetBaseException());
+                throw;
+            }
             catch (Exception ex)
             {
                 TelemetryHelper.TrackException(ex);
-
                 throw;
             }
         }

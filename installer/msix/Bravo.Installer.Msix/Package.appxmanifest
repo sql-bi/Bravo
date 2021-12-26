@@ -18,6 +18,7 @@
   <Properties>
     <DisplayName>Bravo for Power BI</DisplayName>
     <PublisherDisplayName>SQLBI Corporation</PublisherDisplayName>
+    <Description>Your companion toolkit to the Power BI world</Description>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
 
@@ -40,7 +41,7 @@
       EntryPoint="$targetentrypoint$">
       <uap:VisualElements
         DisplayName="Bravo for Power BI"
-        Description="Bravo for Power BI"
+        Description="Your companion toolkit to the Power BI world"
         BackgroundColor="transparent"
         Square150x150Logo="Assets\Square150x150Logo.png"
         Square44x44Logo="Assets\Square44x44Logo.png">

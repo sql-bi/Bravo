@@ -1,4 +1,5 @@
 ﻿using Sqlbi.Bravo.Infrastructure.Windows.Interop;
+using System.IO;
 using System.Net;
 
 namespace Sqlbi.Bravo.Infrastructure.Configuration
@@ -8,16 +9,17 @@ namespace Sqlbi.Bravo.Infrastructure.Configuration
         public static void Configure()
         {
             ConfigureSecurityProtocols();
-            ConfigureCurrentDirectory();
+            ConfigureDirectories();
             ConfigureProcessDPIAware();
         }
 
-        private static void ConfigureCurrentDirectory()
+        private static void ConfigureDirectories()
         {
 #if !DEBUG_WWWROOT
             var path = System.AppContext.BaseDirectory;
-            System.IO.Directory.SetCurrentDirectory(path);
+            Directory.SetCurrentDirectory(path);
 #endif
+            Directory.CreateDirectory(AppConstants.ApplicationFolderLocalDataPath);
         }
 
         private static void ConfigureSecurityProtocols()
