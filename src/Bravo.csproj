@@ -15,16 +15,21 @@
     <Nullable>enable</Nullable>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);1591</NoWarn>
+    <!--
+    We are not using VS as build tool to build JS content but VS still reporting Intellisense warning messages despite the use of TypeScriptCompileBlocked.
+    See open issues on developercommunity.visualstudio.com
+    - Make IntelliSense respect TypescriptCompileBlocked setting to suppress Typescript IntelliSense errors 
+    https://developercommunity.visualstudio.com/t/Make-IntelliSense-respect-TypescriptComp/1580469
+    - Permanent warning "Please install the 'Microsoft.TypeScript.MSBuild' NuGet package to enable TypeScript compilation in your project
+    https://developercommunity.visualstudio.com/t/permanent-warning-please-install-the-microsofttype/1555740
+    -->
+    <TypeScriptCompileBlocked>true</TypeScriptCompileBlocked>
   </PropertyGroup>
 
   <ItemGroup>
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
       <_Parameter1>$(AssemblyName).Tests</_Parameter1>
     </AssemblyAttribute>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Remove="wwwroot\node_modules\**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -43,19 +48,8 @@
     <None Include="wwwroot\**">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Remove="wwwroot\src\**;wwwroot\*.js;wwwroot\*.json" />
+    <Content Remove="wwwroot\src\**;wwwroot\*.js;wwwroot\*.json" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Content Remove="wwwroot\.DS_Store" />
-    <Content Remove="wwwroot\package-lock.json" />
-    <Content Remove="wwwroot\package.json" />
-    <Content Remove="wwwroot\tsconfig.json" />
-    <Content Remove="wwwroot\webpack.config.js" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Remove=".DS_Store" />
-    <None Remove="wwwroot\.DS_Store" />
-  </ItemGroup>
-	
+  
 </Project>
