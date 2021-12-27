@@ -7,6 +7,7 @@ using Sqlbi.Infrastructure.Configuration.Settings;
 using System;
 using System.Diagnostics;
 using System.Linq;
+using System.Text.Json;
 
 namespace Sqlbi.Bravo.Infrastructure
 {
@@ -116,25 +117,18 @@ namespace Sqlbi.Bravo.Infrastructure
             {
                 switch (message)
                 {
-                    case "get-host-address":
+                    case "getStartupConfig":
                         {
-                            var addresses = _host.GetListeningAddresses(); // single address expected here
-                            if (addresses.Length == 1)
+                            var responseMessage = JsonSerializer.Serialize(new
                             {
-                                window.SendWebMessage($"{ addresses[0] }");
-                            }
-                        }
-                        break;
-                    case "get-startup-theme":
-                        {
-                            var settings = GetUserSettings();
-                            if (settings is not null)
-                            {
-                                if (settings.Theme == ThemeType.Auto)
-                                    settings.Theme = Win32UxTheme.IsDarkModeEnabled() ? ThemeType.Dark : ThemeType.Light;
+                                getStartupConfig = new
+                                {
+                                    address = GetStartupAddress().ToString(),
+                                    theme = GetStartupTheme().ToString()
+                                }
+                            });
 
-                                window.SendWebMessage($"{ settings.Theme }");
-                            }
+                            window.SendWebMessage(responseMessage);
                         }
                         break;
                     default:
@@ -143,6 +137,22 @@ namespace Sqlbi.Bravo.Infrastructure
                         }
                         break;
                 }
+            }
+
+            Uri GetStartupAddress()
+            {
+                var address = _host.GetListeningAddresses().Single(); // single address expected here
+                return address;
+            }
+
+            ThemeType GetStartupTheme()
+            {
+                var theme = GetUserSettings()?.Theme ?? ThemeType.Auto;
+
+                if (theme == ThemeType.Auto)
+                    theme = Win32UxTheme.IsDarkModeEnabled() ? ThemeType.Dark : ThemeType.Light;
+
+                return theme;
             }
         }
 
