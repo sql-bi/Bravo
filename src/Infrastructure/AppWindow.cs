@@ -6,7 +6,9 @@ using Sqlbi.Bravo.Infrastructure.Extensions;
 using Sqlbi.Infrastructure.Configuration.Settings;
 using System;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.Json;
 
 namespace Sqlbi.Bravo.Infrastructure
@@ -38,6 +40,7 @@ namespace Sqlbi.Bravo.Infrastructure
                 .SetContextMenuEnabled(contextMenuEnabled)
                 .SetGrantBrowserPermissions(true)
                 .SetUseOsDefaultSize(true)
+                .RegisterCustomSchemeHandler("app", CustomSchemeHandler)
                 .Load("wwwroot/index.html");
 
             window.WindowCreating += OnWindowCreating;
@@ -50,6 +53,39 @@ namespace Sqlbi.Bravo.Infrastructure
             window.SetLogVerbosity(1);
 #endif
             return window;
+        }
+
+        private Stream CustomSchemeHandler(object sender, string scheme, string url, out string contentType)
+        {
+            contentType = "text/javascript";
+
+            var startupConfig = JsonSerializer.Serialize(new
+            {
+                address = GetStartupAddress().ToString(),
+                theme = GetStartupTheme().ToString()
+            });
+            var script = $@"
+(() => {{
+    var startupConfig = { startupConfig }
+}})();";
+            var stream = new MemoryStream(Encoding.UTF8.GetBytes(script));
+            return stream;
+
+            Uri GetStartupAddress()
+            {
+                var address = _host.GetListeningAddresses().Single(); // single address expected here
+                return address;
+            }
+
+            ThemeType GetStartupTheme()
+            {
+                var theme = GetUserSettings()?.Theme ?? ThemeType.Auto;
+
+                if (theme == ThemeType.Auto)
+                    theme = Win32UxTheme.IsDarkModeEnabled() ? ThemeType.Dark : ThemeType.Light;
+
+                return theme;
+            }
         }
 
         private void OnWindowCreating(object? sender, EventArgs e)
