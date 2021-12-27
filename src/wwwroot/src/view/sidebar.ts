@@ -4,8 +4,8 @@
  * https://www.sqlbi.com
 */
 
-import { options } from '../controllers/options';
-import { theme } from '../controllers/theme';
+import { auth, optionsController, themeController } from "../main";
+import { ThemeType } from '../controllers/theme';
 import { __, _, Dic } from '../helpers/utils';
 import { strings } from '../model/strings';
 import { View } from './view';
@@ -44,9 +44,9 @@ export class Sidebar extends View {
             <footer>
                 <div id="ctrl-options" class="ctrl icon-options solo" title="${strings.settingsCtrlTitle}"></div>
 
-                <div id="ctrl-theme" class="ctrl icon-theme-${options.data.theme} solo hide-if-collapsed" title="${strings.themeCtrlTitle}" data-theme="${options.data.theme}"></div> 
+                <div id="ctrl-theme" class="ctrl icon-theme-${optionsController.options.theme.toLowerCase()} solo hide-if-collapsed" title="${strings.themeCtrlTitle}" data-theme="${optionsController.options.theme}"></div> 
                 
-                <div id="ctrl-help" class="ctrl icon-help solo hide-if-collapsed" title="${strings.helpCtrlTitle}"></div>
+                <div id="ctrl-user" class="ctrl hide-if-collapsed" title="${strings.signInCtrlTitle}"><img src="${ auth.account ? auth.account.picture : "images/user.svg" }"></div>
 
             </footer>
         `;
@@ -85,22 +85,39 @@ export class Sidebar extends View {
             e.preventDefault();
             let el = (<HTMLElement>e.currentTarget);
 
-            let _theme = el.dataset.theme;
-            if (_theme == "light") {
-                _theme = "dark";
-            } else if (_theme == "dark") {
-                _theme = "auto";
+            let newTheme = <ThemeType>el.dataset.theme;
+            if (newTheme == ThemeType.Light) {
+                newTheme = ThemeType.Dark;
+            } else if (newTheme == ThemeType.Dark) {
+                newTheme = ThemeType.Auto;
             } else {
-                _theme = "light";
+                newTheme = ThemeType.Light;
             }
-            el.dataset.theme = _theme;
-            el.classList.remove("icon-theme-auto", "icon-theme-light", "icon-theme-dark");
-            el.classList.add(`icon-theme-${_theme}`);
 
-            theme.change(_theme);
+            themeController.change(newTheme);
+        });
+
+        themeController.on("change", (theme: ThemeType) => {
+
+            let el = _("#ctrl-theme");
+
+            el.dataset.theme = theme;
+
+            Object.values(ThemeType).forEach((value) => {
+                if (isNaN(Number(value))) {
+                    if (value == theme)
+                        el.classList.add(`icon-theme-${value.toLowerCase()}`);
+                    else
+                        el.classList.remove(`icon-theme-${value.toLowerCase()}`);    
+                }
+            });
+        });
+
+        _("#ctrl-user").addEventListener("click", e => {
+            e.preventDefault();
         });
     }
-
+ 
     select(id: string) {
         if (this.currentItem == id) return;
 

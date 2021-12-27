@@ -24,6 +24,8 @@ export const strings = {
     settingsCtrlTitle: "Settings",
     helpCtrlTitle: "Help",
     themeCtrlTitle: "Change Theme",
+    signInCtrlTitle: "Sign In",
+    signedInCtrlTitle: (upn: string) => `Signed as ${upn}`,
     filterUnrefCtrlTitle: "Show Unreferenced Columns only",
     groupByTableCtrlTitle: "Group by Table",
     expandAllCtrlTitle: "Expand all",

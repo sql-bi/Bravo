@@ -14,6 +14,10 @@ export interface SceneType {
     name: string
     scene: (id: string, container: HTMLElement, doc: Doc) => Scene
 }
+export interface SceneGroup {
+    doc: Doc
+    elements: Dic<Scene>
+}
 
 export class Scene extends View {
     doc: Doc;
@@ -34,6 +38,8 @@ export class Scene extends View {
                 <h1 class="icon">${this.title}</h1>
                 <div class="toolbar">
                     <div class="ctrl-refresh ctrl icon-refresh" title="${strings.refreshCtrlTitle}" ${this.doc.type == "vpax" ? "disabled" : ""}></div>
+
+                    <div class="ctrl icon-help" title="${strings.helpCtrlTitle}"></div>
                 </div>
             </header>
             <div class="scene-content">

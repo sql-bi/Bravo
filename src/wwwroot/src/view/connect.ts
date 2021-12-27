@@ -4,7 +4,7 @@
  * https://www.sqlbi.com
 */
 
-import { host } from '../controllers/host';
+import { auth, host } from '../main';
 import { Dic, _, __ } from '../helpers/utils';
 import { Doc } from '../model/doc';
 import { strings } from '../model/strings';
@@ -151,6 +151,7 @@ export class Connect extends Dialog {
 
             _(".signin", this.body).addEventListener("click", e => {
                 e.preventDefault();
+                console.log("HelloAccount", auth.account);
                 auth.signIn();
             });
         } else {

@@ -5,26 +5,37 @@
 */
 
 import { Dispatchable } from '../helpers/dispatchable';
-import { host } from './host';
-import { options } from './options';
+import { host, optionsController } from '../main';
 
-export class Theme extends Dispatchable {
-    device = "light";
-    current = "light";
+export enum ThemeType {
+    Auto = "Auto",
+    Dark = "Dark",
+    Light = "Light",
+}
+export class ThemeController extends Dispatchable {
+    
+    theme;
+    deviceTheme;
     
     constructor() {
         super();
         
+        this.theme = ThemeType.Auto;
+
         if (window.matchMedia) {
-            let mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-            this.device = (mediaQuery.matches ? "dark" : "light");
+            const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+
+            this.deviceTheme = (mediaQuery.matches ? ThemeType.Dark : ThemeType.Light);
+
             mediaQuery.addEventListener("change", e => {
-                this.device = (e.matches ? "dark" : "light");
+                this.deviceTheme = (e.matches ? ThemeType.Dark : ThemeType.Light);
                 this.apply();
             });
+        } else {
+            this.deviceTheme = ThemeType.Light;
         }
 
-        options.on("change", (changedOptions: any) => {
+        optionsController.on("change", (changedOptions: any) => {
             if ("theme" in changedOptions)
                 this.apply(changedOptions.theme);
         });
@@ -32,25 +43,26 @@ export class Theme extends Dispatchable {
         this.apply();
     }
 
-    change(theme: string) {
-        options.update("theme", theme);
+    change(theme: ThemeType) {
+        optionsController.update("theme", theme);
         this.apply(theme);
     }
 
-    apply(theme?: string) {
+    apply(theme?: ThemeType) {
+        console.log("Applying theme", theme);
         if (!theme) 
-            theme = options.data.theme;
+            theme = optionsController.options.theme;
+console.log("Ok", theme);
+        if (theme == ThemeType.Auto)
+            theme = this.deviceTheme;
 
-        if (theme == "auto")
-            theme = this.device;
-
-        this.current = theme;
+        this.theme = theme;
         this.trigger("change", theme);
         host.changeTheme(theme);
 
         if (document.body.classList.contains("no-theme")) return;
 
-        if (theme == "dark") {
+        if (theme == ThemeType.Dark) {
             document.body.classList.add("dark");
         } else {
             document.body.classList.remove("dark");
@@ -58,10 +70,9 @@ export class Theme extends Dispatchable {
     }
 
     get isDark() {
-        return this.current == "dark";
+        return this.theme == ThemeType.Dark;
     }
     get isLight() {
-        return this.current == "light";
+        return this.theme == ThemeType.Light;
     }
 }
-export let theme = new Theme();

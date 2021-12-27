@@ -222,10 +222,11 @@ a, .link {
 
     &:active {
         opacity: .7;
+        transform: translateY(1px);
     }
     &:hover:not([disabled]), &:not([disabled]).active {
         color: darken(@control-color, 10%);
-        background-color: darken(@control-back-color, 10%);
+        background-color: darken(@control-back-color, 10%) !important;
     }
     &[disabled] {
 
@@ -247,7 +248,7 @@ a, .link {
         }
         &:hover:not([disabled]), &:not([disabled]).active {
             color: lighten(@control-color-dark, 10%);
-            background-color: lighten(@control-back-color-dark, 10%);
+            background-color: lighten(@control-back-color-dark, 10%) !important;
         }
     }
     span {

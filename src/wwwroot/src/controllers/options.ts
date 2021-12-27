@@ -7,72 +7,94 @@
 import { debug } from '../debug/debug';
 import { Dispatchable } from '../helpers/dispatchable';
 import { Utils } from '../helpers/utils';
-import { host } from './host';
+import { host } from '../main';
+import { ThemeType } from './theme';
 
-export interface OptionsData {
-    theme?: string
-    formatter?: {
-        zoom: number,
-        spacing: number,
-        lines: "long" | "short",
-        separators: string
-    }
-    model?: {
-        showAllColumns: boolean,
-        groupByTable: boolean,
-        showUnrefOnly: boolean
-    },
-    telemetry?: boolean
+export interface Options {
+    theme: ThemeType
+    telemetryEnabled: boolean
+    customOptions?: ClientOptions
+} 
+
+export interface ClientOptions {
+    editorZoom: number
+    daxFormatter: FormatDaxOptions
 }
 
-export class Options extends Dispatchable {
+export enum DaxFormatterLineStyle {
+    LongLine = "LongLine",
+    ShortLine = "ShortLine"
+}
+
+export enum DaxFormatterSpacingStyle {
+    BestPractice = "BestPractice", 
+    NoSpaceAfterFunction = "NoSpaceAfterFunction"
+}
+export interface FormatDaxOptions {
+    lineStyle: DaxFormatterLineStyle
+    spacingStyle: DaxFormatterSpacingStyle
+    listSeparator?: string
+    decimalSeparator?: string
+}
+
+type optionsMode = "host" | "browser"
+export class OptionsController extends Dispatchable {
 
     storageName = "Bravo";
-    mode: string;
-    data: OptionsData;
+    mode: optionsMode;
+    options: Options;
 
-    constructor(mode: "host" | "browser", defaultData: OptionsData) {
+    constructor(mode: optionsMode, defaultOptions: Options) {
         super();
         this.mode = mode;
-        this.load(defaultData);
+        this.options = defaultOptions;
+        this.load(defaultOptions);
         this.listen();
     }
 
     // Listen for events
     listen() {
-        window.addEventListener("storage", e => {
+        if (this.mode == "browser") {
+            window.addEventListener("storage", e => {
 
-            if (e.isTrusted && e.key == this.storageName) {
-                const oldData = JSON.parse(e.oldValue);
-                if (!oldData) return;
-    
-                const newData = JSON.parse(e.newValue);
-                if (newData) {
-                    this.trigger("change", Utils.Obj.diff(oldData, newData));
+                if (e.isTrusted && e.key == this.storageName) {
+                    const oldData = JSON.parse(e.oldValue);
+                    if (!oldData) return;
+        
+                    const newData = JSON.parse(e.newValue);
+                    if (newData) {
+                        this.trigger("change", Utils.Obj.diff(oldData, newData));
+                    }
                 }
-            }
-        });
+            });
+        }
     }
 
     // Load data
-    load(defaultData: OptionsData) {
+    load(defaultOptions: Options) {
         if (this.mode == "host") {
             host.getOptions()
-                .then(data => {
-                    this.data = (data ? Utils.Obj.merge(defaultData, data) : defaultData);
+                .then(options => {
+                    if (options) {
+                        if (options.customOptions && typeof options.customOptions === "string")
+                            options.customOptions = JSON.parse(options.customOptions);
+
+                        this.options = Utils.Obj.merge(defaultOptions, options);
+
+                        this.trigger("change", Utils.Obj.diff(defaultOptions, this.options));
+                    }
                 })
                 .catch(error => {
-                    this.data = defaultData;
                     if (debug)
                         console.error(error);
                 });
         } else {
             try {
                 const rawData = localStorage.getItem(this.storageName);
-                const data = <OptionsData>JSON.parse(rawData);
-                this.data = (data ? Utils.Obj.merge(defaultData, data) : defaultData);
+                const data = <Options>JSON.parse(rawData);
+                if (data)
+                    this.options = Utils.Obj.merge(defaultOptions, data);
             } catch(e){
-                this.data = defaultData;
                 if (debug)
                     console.error(e);
             }
@@ -82,11 +104,11 @@ export class Options extends Dispatchable {
     // Save data
     save(retry = false) {
         if (this.mode == "host") {
-            host.updateOptions(JSON.stringify(this.data));
+            host.updateOptions(this.options);
 
         } else {
             try {
-                localStorage.setItem(this.storageName, JSON.stringify(this.data));
+                localStorage.setItem(this.storageName, JSON.stringify(this.options));
             } catch(e){
                 if (!retry) {
                     //Storage quota exceeded 
@@ -105,7 +127,7 @@ export class Options extends Dispatchable {
     update(option: string, value: any) {
 
         let path = option.split(".");
-        let obj = this.data;
+        let obj = this.options;
         path.forEach((prop: string, i: number) => {
             if (i == path.length - 1) {
                 (<any>obj)[prop] = value;
@@ -118,20 +140,3 @@ export class Options extends Dispatchable {
         this.save();
     }
 }
-
-export let options = new Options("browser", {
-    // Default options
-    theme: "auto",
-    formatter: {
-        zoom: 1,
-        spacing: 0,
-        lines: "long",
-        separators: ""
-    },
-    model: {
-        showAllColumns: false,
-        groupByTable: false,
-        showUnrefOnly: false
-    },
-    telemetry: true
-});

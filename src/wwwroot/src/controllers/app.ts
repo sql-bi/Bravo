@@ -4,28 +4,23 @@
  * https://www.sqlbi.com
 */
 
-import { Dic, Action, Utils, _, __ } from "./helpers/utils";
-import { strings } from "./model/strings";
-import { host } from './controllers/host';
+import { Dic, Action, _, __ } from "../helpers/utils";
+import { strings } from "../model/strings";
+import { host } from "../main";
 
-import { AnalyzeModelScene } from "./scenes/scene-analyze-model";
-import { DaxFormatterScene } from "./scenes/scene-dax-formatter";
-import { ManageDatesScene } from "./scenes/scene-manage-dates";
-import { Sidebar } from './view/sidebar';
-import { Tabs, AddedTabInfo, RemovedTabInfo } from './view/tabs';
-import { BestPracticesScene } from './scenes/scene-best-practices';
-import { ExportDataScene } from './scenes/scene-export-data';
-import { WelcomeScene } from './scenes/scene-welcome';
-import { Doc } from './model/doc';
-import { Scene, SceneType } from './view/scene';
-import { Confirm } from './view/confirm';
+import { AnalyzeModelScene } from "../scenes/scene-analyze-model";
+import { DaxFormatterScene } from "../scenes/scene-dax-formatter";
+import { ManageDatesScene } from "../scenes/scene-manage-dates";
+import { Sidebar } from '../view/sidebar';
+import { Tabs, AddedTabInfo, RemovedTabInfo } from '../view/tabs';
+import { BestPracticesScene } from '../scenes/scene-best-practices';
+import { ExportDataScene } from '../scenes/scene-export-data';
+import { WelcomeScene } from '../scenes/scene-welcome';
+import { Doc } from '../model/doc';
+import { SceneType, SceneGroup } from '../view/scene';
+import { Confirm } from '../view/confirm';
 
-interface AppSceneGroup {
-    doc: Doc
-    elements: Dic<Scene>
-}
-
-class App {
+export class App {
 
     scenesType: Dic<SceneType> = {
         
@@ -50,7 +45,7 @@ class App {
             scene: (id: string, container: HTMLElement, doc: Doc) => new BestPracticesScene(id, container, doc)
         },
     };
-    scenes: Dic<AppSceneGroup> = {};
+    scenes: Dic<SceneGroup> = {};
     element: HTMLElement;
     sidebar: Sidebar;
     tabs: Tabs;
@@ -163,4 +158,3 @@ class App {
         }
     }
 }
-new App();

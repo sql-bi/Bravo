@@ -3,15 +3,16 @@
  * Copyright (c) SQLBI corp. - All rights reserved.
  * https://www.sqlbi.com
 */
+import { optionsController } from "../main";
+
 import * as CodeMirror from 'codemirror';
 import 'codemirror/addon/mode/simple';
 
 import { Tabulator, ColumnCalcsModule, DataTreeModule, FilterModule, FormatModule, InteractionModule, ResizeColumnsModule, ResizeTableModule, SelectRowModule, SortModule  } from 'tabulator-tables';
 Tabulator.registerModule([ColumnCalcsModule, DataTreeModule, FilterModule, FormatModule, InteractionModule, ResizeColumnsModule, ResizeTableModule, SelectRowModule, SortModule]);
 
-import { options } from '../controllers/options';
 import { Dic, Utils, _, __ } from '../helpers/utils';
-import { daxFns } from '../model/dax';
+import { daxFunctions } from '../model/dax';
 import { Doc } from '../model/doc';
 import { strings } from '../model/strings';
 import { Alert } from '../view/alert';
@@ -41,7 +42,7 @@ export class DaxFormatterScene extends Scene {
 
         let html = `
             <div class="summary">
-                <p>${strings.daxFormatterSummary(this.doc.model.measures.length)}</p>
+                <p>${strings.daxFormatterSummary(this.doc.measures.length)}</p>
             </div>
             
 
@@ -108,7 +109,7 @@ export class DaxFormatterScene extends Scene {
 
         this.updatePreview();
         this.updateTable();
-        this.updateZoom(options.data.formatter.zoom);
+        this.updateZoom(optionsController.options.customOptions.editorZoom);
         this.listen();
     }
 
@@ -123,7 +124,7 @@ export class DaxFormatterScene extends Scene {
             this.table = null;
 
         }
-        let data = this.doc.model.measures;
+        let data = this.doc.measures;
 
         if (!this.table) {
 
@@ -193,7 +194,7 @@ export class DaxFormatterScene extends Scene {
 
     initCodeMirror() {
 
-        const daxFnsPattern = daxFns.map(fn => fn.name.replace(/\./gm, "\\.")).join("|");
+        const daxFunctionsPattern = daxFunctions.map(fn => fn.name.replace(/\./gm, "\\.")).join("|");
 
         CodeMirror.defineSimpleMode("dax", {
             start: [
@@ -202,7 +203,7 @@ export class DaxFormatterScene extends Scene {
                 { regex: /"(?:[^\\]|\\.)*?(?:"|$)/, token: "string" },
                 { regex: /'(?:[^']|'')*'(?!')(?:\[[ \w\xA0-\uFFFF]+\])?|\w+\[[ \w\xA0-\uFFFF]+\]/gm, token: "column" },
                 { regex: /\[[ \w\xA0-\uFFFF]+\]/gm,  token: "measure" },
-                { regex: new RegExp("\\b(?:" + daxFnsPattern + ")\\b", "gmi"), token: "function" },
+                { regex: new RegExp("\\b(?:" + daxFunctionsPattern + ")\\b", "gmi"), token: "function" },
                 { regex: /:=|[-+*\/=^]|\b(?:IN|NOT)\b/i, token: "operator" },
                 { regex: /0x[a-f\d]+|[-+]?(?:\.\d+|\d+\.?\d*)(?:e[-+]?\d+)?/i, token: "number" },
                 { regex: /[\[\](){}`,]/gm, token: "parenthesis" },
@@ -222,7 +223,7 @@ export class DaxFormatterScene extends Scene {
     updateZoom(zoom: number) {
 
         if (!zoom) zoom = 1;
-        options.update("formatter.zoom", zoom);
+        optionsController.update("formatter.zoom", zoom);
 
         let defaultValues = [
             0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2 //, 2.5, 5, 0.1
@@ -307,7 +308,7 @@ export class DaxFormatterScene extends Scene {
     update() {
         this.updateTable(false);
 
-        _(".summary p", this.element).innerHTML = strings.daxFormatterSummary(this.doc.model.measures.length);
+        _(".summary p", this.element).innerHTML = strings.daxFormatterSummary(this.doc.measures.length);
     }
 
     generatePreview() {

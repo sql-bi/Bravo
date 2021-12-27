@@ -4,8 +4,11 @@ const path = require("path");
 module.exports = (env, argv) => {
   const debug = env.debug;
 
+  if (debug) 
+    console.log("---", "App started in debug mode", "---");
+
   return {
-    entry: "./src/app.ts",
+    entry: "./src/main.ts",
     mode: "development", // Use --mode to change it via CLI
     module: {
       rules: [

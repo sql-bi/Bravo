@@ -75,19 +75,20 @@ export module Utils {
         }
 
         // Convenience func for GET ajax
-        export async function get(url: string, data = {}) {
-            return await Utils.Request.ajax(url, data, { method: "GET" });
+        export async function get(url: string, data = {}, signal?: AbortSignal) {
+            return await Utils.Request.ajax(url, data, { method: "GET", signal: signal });
         }
 
         // Convenience func for POST ajax
-        export async function post(url: string, data = {}) {
-           return await Utils.Request.ajax(url, data, { method: "POST" });
+        export async function post(url: string, data = {}, signal?: AbortSignal) {
+           return await Utils.Request.ajax(url, data, { method: "POST", signal: signal });
         }
 
-        export async function upload(url: string, file: File) {
+        export async function upload(url: string, file: File, signal?: AbortSignal) {
             return await Utils.Request.ajax(url, {}, { 
                 method: "POST",  
                 body: file, 
+                signal: signal,
                 headers: { }, //Set emtpy - this way the browser will automatically add the Content type header including the Form Boundary
             });
           }
@@ -441,21 +442,23 @@ export module Utils {
         }
 
         // Merge two objects
-        export function merge(source: any, target: any) {
-            let result = {};
+        export function merge<T>(source: T, target: T): T {
+            let result = <T>{};
             for (let prop in source) {
                 if (prop in target) {
                     if (Utils.Obj.isObject(source[prop]) && Utils.Obj.isObject(target[prop])) {
-                        (<any>result)[prop] = Utils.Obj.merge(source[prop], target[prop]);
+                        result[prop] = Utils.Obj.merge(source[prop], target[prop]);
                     } else {
-                        (<any>result)[prop] = target[prop];
+                        result[prop] = target[prop];
                     }
+                } else {
+                    result[prop] = source[prop];
                 }
             }
             
             for (let prop in target) {
                 if (!(prop in source)) {
-                    (<any>result)[prop] = target[prop];
+                    result[prop] = target[prop];
                 }
             }
             
@@ -463,26 +466,26 @@ export module Utils {
         }
 
         // Find diff properties
-        export function diff(source: any, target: any) {
-            let result = {};
+        export function diff<T>(source: T, target: T): T {
+            let result = <T>{};
             for (let prop in target) {
                 if (Utils.Obj.isFunction(target[prop])) {
                     continue;
                 } else if (!(prop in source)) {
-                    (<any>result)[prop] = target[prop]; //New branch
+                    result[prop] = target[prop]; //New branch
                 } else {
                     if (Utils.Obj.isObject(target[prop]) || Utils.Obj.isArray(target[prop])) {
                         let _result = Utils.Obj.diff(source[prop], target[prop]);
                         if (!Utils.Obj.isEmpty(_result)) {
-                            (<any>result)[prop] = _result;
+                            result[prop] = _result;
                         }
                     } else if (Utils.Obj.isDate(target[prop])) {
-                        if (target[prop].getTime() !== source[prop].getTime()) {
-                            (<any>result)[prop] = target[prop];
+                        if ((<any>target[prop]).getTime() !== (<any>source[prop]).getTime()) {
+                            result[prop] = target[prop];
                         }
                     } else {
                         if (source[prop] !== target[prop]) {
-                            (<any>result)[prop] = target[prop];
+                            result[prop] = target[prop];
                         }
                     }
                 }

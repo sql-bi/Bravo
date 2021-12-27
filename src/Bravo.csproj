@@ -24,7 +24,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Remove="wwwroot\src\**" />
     <Content Remove="wwwroot\node_modules\**" />
   </ItemGroup>
 
@@ -44,6 +43,19 @@
     <None Include="wwwroot\**">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Remove="wwwroot\.DS_Store" />
+    <Content Remove="wwwroot\package-lock.json" />
+    <Content Remove="wwwroot\package.json" />
+    <Content Remove="wwwroot\tsconfig.json" />
+    <Content Remove="wwwroot\webpack.config.js" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove=".DS_Store" />
+    <None Remove="wwwroot\.DS_Store" />
   </ItemGroup>
 	
 </Project>

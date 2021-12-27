@@ -3,21 +3,22 @@
  * Copyright (c) SQLBI corp. - All rights reserved.
  * https://www.sqlbi.com
 */
-import { theme } from '../controllers/theme';
+import { themeController } from "../main";
 import { Dic, Utils, _, __ } from '../helpers/utils';
 import { Doc } from '../model/doc';
 import { strings } from '../model/strings';
 import { Scene } from '../view/scene';
-import { VpaxModelColumn } from '../model/model';
+import { TabularColumn } from '../model/tabular';
 
 import { Tabulator, ColumnCalcsModule, DataTreeModule, FilterModule, FormatModule, InteractionModule, ResizeColumnsModule, ResizeTableModule, SelectRowModule, SortModule  } from 'tabulator-tables';
 Tabulator.registerModule([ColumnCalcsModule, DataTreeModule, FilterModule, FormatModule, InteractionModule, ResizeColumnsModule, ResizeTableModule, SelectRowModule, SortModule]);
 
 import Chart from "chart.js/auto";
 import {TreemapController, TreemapElement, TreemapScriptableContext} from 'chartjs-chart-treemap';
+import { ThemeType } from '../controllers/theme';
 Chart.register(TreemapController, TreemapElement);
 
-interface TabulatorVpaxModelColumn extends VpaxModelColumn {
+interface TabulatorVpaxModelColumn extends TabularColumn {
     name: string
     _containsUnreferenced?: boolean
     _aggregated?: boolean
@@ -435,12 +436,12 @@ export class AnalyzeModelScene extends Scene {
     chartColors(context: TreemapScriptableContext, type: string) {
 
         const colors: any = {
-            light: {
+            [ThemeType.Light] : {
                 color: "#D7DCE0",
                 colorHighlight: "#FFF4A2",
                 colorHover: "#F42727",
             },
-            dark: {
+            [ThemeType.Dark]: {
                 color: "#222",
                 colorHighlight: "#645500",
                 colorHover: "#F42727",
@@ -451,9 +452,9 @@ export class AnalyzeModelScene extends Scene {
         if (item) {
 
             let colorKey = `color${type.search("hover") >= 0 ? "Hover" : (item.isReferenced === false ? "Highlight" : "")}`;
-            let color = colors[theme.current][colorKey];
+            let color = colors[themeController.theme][colorKey];
 
-            let shade = (!item.columnName ? -0.2 : 0) + (type.search(/back/i) >= 0 ? 0 : -0.9) * (theme.isDark ? -1 : 1);
+            let shade = (!item.columnName ? -0.2 : 0) + (type.search(/back/i) >= 0 ? 0 : -0.9) * (themeController.isDark ? -1 : 1);
 
             return Utils.Color.shade(color, shade);
 
@@ -520,7 +521,7 @@ export class AnalyzeModelScene extends Scene {
                             lineHeight: 1
                         },
                         display: true,
-                        color: ()=>(theme.isDark ? "#fff" : "#000"),
+                        color: ()=>(themeController.isDark ? "#fff" : "#000"),
                         formatter(context: TreemapScriptableContext) {
 
                             if (context.raw) {
@@ -532,7 +533,7 @@ export class AnalyzeModelScene extends Scene {
                     },
                     captions: {
                         display: true,
-                        color: ()=>(theme.isDark ? "#fff" : "#000"),
+                        color: ()=>(themeController.isDark ? "#fff" : "#000"),
                     }
                 }]
             },
@@ -659,7 +660,7 @@ export class AnalyzeModelScene extends Scene {
             this.updateTable();
         });
 
-        theme.on("change", () => {
+        themeController.on("change", () => {
             if (this.chart) {
                 this.chart.update("none");
             }
