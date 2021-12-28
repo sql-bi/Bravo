@@ -29,7 +29,7 @@ namespace Sqlbi.Bravo.Infrastructure
 
         private PhotinoWindow CreateWindow()
         {
-#if DEBUG
+#if DEBUG || DEBUG_WWWROOT
             var contextMenuEnabled = true;
 #else
             var contextMenuEnabled = false;
@@ -47,7 +47,7 @@ namespace Sqlbi.Bravo.Infrastructure
             window.WindowCreated += OnWindowCreated;
             window.WindowClosing += OnWindowClosing;
             window.WebMessageReceived += OnWindowWebMessageReceived;
-#if DEBUG
+#if DEBUG || DEBUG_WWWROOT
             window.SetLogVerbosity(3); // 0 = Critical Only, 1 = Critical and Warning, 2 = Verbose, >2 = All Details. Default is 2.
 #else
             window.SetLogVerbosity(1);

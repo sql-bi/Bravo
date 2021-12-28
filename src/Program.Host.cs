@@ -15,11 +15,11 @@ namespace Sqlbi.Bravo
         {
             var hostBuilder = new HostBuilder();
 
-            hostBuilder.UseContentRoot(AppContext.BaseDirectory);
+            hostBuilder.UseContentRoot(Environment.CurrentDirectory);
 
             hostBuilder.ConfigureHostConfiguration((builder) =>
             {
-                builder.SetBasePath(AppContext.BaseDirectory);
+                builder.SetBasePath(Environment.CurrentDirectory);
                 //builder.AddJsonFile("hostsettings.json", optional: true);
                 //builder.AddEnvironmentVariables(prefix: "CUSTOMPREFIX_");
                 //builder.AddCommandLine(args);
@@ -51,7 +51,7 @@ namespace Sqlbi.Bravo
             {
                 logging.AddFilter<EventLogLoggerProvider>((LogLevel level) => level >= LogLevel.Warning);
                 logging.AddConfiguration(hostingContext.Configuration.GetSection("Logging"));
-#if DEBUG
+#if DEBUG || DEBUG_WWWROOT
                 logging.AddConsole();
                 logging.AddDebug();
 #endif

@@ -45,7 +45,7 @@ namespace Sqlbi.Bravo
                         .WithOrigins(CorsLocalhostOrigin); 
                 });
             });
-#if DEBUG
+#if DEBUG || DEBUG_WWWROOT
             services.AddSwaggerGenCustom();
 #endif
             services.AddHttpClient();
@@ -66,7 +66,7 @@ namespace Sqlbi.Bravo
             {
                 app.UseDeveloperExceptionPage();
             }
-#if DEBUG
+#if DEBUG || DEBUG_WWWROOT
             app.UseSwagger();
             app.UseSwaggerUI();
 #endif

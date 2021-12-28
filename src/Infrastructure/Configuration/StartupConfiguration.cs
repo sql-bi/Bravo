@@ -8,14 +8,16 @@ namespace Sqlbi.Bravo.Infrastructure.Configuration
         public static void Configure()
         {
             ConfigureSecurityProtocols();
-            ConfiguretCurrentDirectory();
+            ConfigureCurrentDirectory();
             ConfigureProcessDPIAware();
         }
 
-        private static void ConfiguretCurrentDirectory()
+        private static void ConfigureCurrentDirectory()
         {
+#if !DEBUG_WWWROOT
             var path = System.AppContext.BaseDirectory;
             System.IO.Directory.SetCurrentDirectory(path);
+#endif
         }
 
         private static void ConfigureSecurityProtocols()
