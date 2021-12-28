@@ -24,7 +24,7 @@ namespace Sqlbi.Bravo.Services
 
         PBICloudSettings CloudSettings { get; }
 
-        Task AcquireTokenAsync(TimeSpan cancelAfter, string? identifier = default);
+        Task AcquireTokenAsync(TimeSpan cancelAfter, bool silentOnly, string? identifier = null);
 
         Task ClearTokenCacheAsync();
     }
@@ -83,14 +83,14 @@ namespace Sqlbi.Bravo.Services
             }
         }
 
-        public async Task AcquireTokenAsync(TimeSpan cancelAfter, string? identifier = null)
+        public async Task AcquireTokenAsync(TimeSpan cancelAfter, bool silentOnly, string? identifier = null)
         {
             await _tokenSemaphore.WaitAsync();
             try
             {
                 using var cancellationTokenSource = new CancellationTokenSource(cancelAfter);
 
-                var authentication = await InternalAcquireTokenAsync(cancellationTokenSource.Token, identifier).ConfigureAwait(false);
+                var authentication = await InternalAcquireTokenAsync(silentOnly, identifier, cancellationTokenSource.Token).ConfigureAwait(false);
                 {
                     await _pbisettings.RefreshTenantClusterAsync(current: authentication, previous: Authentication);
                 }
@@ -111,7 +111,7 @@ namespace Sqlbi.Bravo.Services
         /// <summary>
         /// https://docs.microsoft.com/en-us/azure/active-directory/develop/scenario-desktop-acquire-token?tabs=dotnet
         /// </summary>
-        private async Task<AuthenticationResult> InternalAcquireTokenAsync(CancellationToken cancellationToken, string? identifier = null)
+        private async Task<AuthenticationResult> InternalAcquireTokenAsync(bool silentOnly, string? identifier, CancellationToken cancellationToken)
         {
             // Use account used to signed-in in Windows (WAM). WAM will always get an account in the cache.
             // So if we want to have a chance to select the accounts interactively, we need to force the non-account
@@ -128,6 +128,7 @@ namespace Sqlbi.Bravo.Services
             }
             catch (MsalUiRequiredException /* murex */)
             {
+                if (silentOnly) throw;
                 try
                 {
                     var builder = _application.AcquireTokenInteractive(_pbisettings.CloudEnvironment.Scopes)

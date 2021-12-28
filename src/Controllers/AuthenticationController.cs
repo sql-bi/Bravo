@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Sqlbi.Bravo.Infrastructure;
 using Sqlbi.Bravo.Models;
 using Sqlbi.Bravo.Services;
+using System.Diagnostics;
 using System.Net.Mime;
 using System.Threading.Tasks;
 
@@ -78,10 +79,20 @@ namespace Sqlbi.Bravo.Controllers
         [ActionName("GetUser")]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(BravoAccount))]
-        public IActionResult GetAccount()
+        public async Task<IActionResult> GetAccount()
         {
             if (_pbicloudService.IsAuthenticated == false)
-                return Unauthorized();
+            {
+                try
+                {
+                    await _pbicloudService.SignInAsync(silentOnly: true);
+                }
+                catch (SignInMsalException mex) when (mex.MsalErrorCode == Microsoft.Identity.Client.MsalError.UserNullError)
+                {
+                    Debug.Assert(_pbicloudService.IsAuthenticated == false);
+                    return Unauthorized();
+                }
+            }
 
             var account = _pbicloudService.CurrentAccount;
             return Ok(account);

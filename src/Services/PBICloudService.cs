@@ -19,7 +19,7 @@ namespace Sqlbi.Bravo.Services
 
         BravoAccount? CurrentAccount { get; }
 
-        Task SignInAsync();
+        Task SignInAsync(bool silentOnly = false);
         
         Task SignOutAsync();
 
@@ -56,11 +56,11 @@ namespace Sqlbi.Bravo.Services
 
         public bool IsAuthenticated => CurrentAccount is not null && _authenticationService.Authentication?.ClaimsPrincipal?.Identity is not null;
 
-        public async Task SignInAsync()
+        public async Task SignInAsync(bool silentOnly = false)
         {
             try
             {
-                await _authenticationService.AcquireTokenAsync(cancelAfter: AppConstants.MSALSignInTimeout).ConfigureAwait(false);
+                await _authenticationService.AcquireTokenAsync(cancelAfter: AppConstants.MSALSignInTimeout, silentOnly).ConfigureAwait(false);
             }
             catch (OperationCanceledException)
             {
