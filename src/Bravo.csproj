@@ -24,6 +24,7 @@
     https://developercommunity.visualstudio.com/t/permanent-warning-please-install-the-microsofttype/1555740
     -->
     <TypeScriptCompileBlocked>true</TypeScriptCompileBlocked>
+    <Configurations>Debug;Release;Debug (wwwroot)</Configurations>
   </PropertyGroup>
 
   <ItemGroup>
@@ -44,7 +45,7 @@
     <PackageReference Include="System.CommandLine" Version="2.0.0-beta1.21308.1" />
   </ItemGroup>
 
-  <ItemGroup>
+  <ItemGroup Condition=" '$(Configuration)' != 'Debug (wwwroot)' ">
     <None Include="wwwroot\**">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
