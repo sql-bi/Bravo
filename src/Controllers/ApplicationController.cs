@@ -97,10 +97,10 @@ namespace Sqlbi.Bravo.Controllers
             {
                 case ThemeType.Light:
                 case ThemeType.Dark:
-                    Win32UxTheme.ChangeMode(windowHandle, useDark: theme == ThemeType.Dark);
+                    Win32UxTheme.ChangeTheme(windowHandle, useDark: theme == ThemeType.Dark);
                     break;
                 case ThemeType.Auto:
-                    Win32UxTheme.ChangeMode(windowHandle, useDark: Win32UxTheme.IsDarkModeEnabled());
+                    Win32UxTheme.ChangeTheme(windowHandle, useDark: Win32UxTheme.IsSystemUsingDarkMode());
                     break;
             }
 

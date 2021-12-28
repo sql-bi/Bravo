@@ -11,6 +11,7 @@ namespace Bravo.Infrastructure.Windows.Interop
     ///***************************************************************************
     /// <remarks>
     ///     This class uses undocumented APIs introduced in Windows 10 build 1809
+    ///     APIs are not documented and exported by ordinal only.
     /// </remarks>
     ///***************************************************************************
     ///***************************************************************************
@@ -20,16 +21,19 @@ namespace Bravo.Infrastructure.Windows.Interop
 
         private enum PreferredAppMode
         {
-            Default,
-            AllowDark,
-            ForceDark,
-            ForceLight,
-            Max
+            Default = 0,
+            AllowDark = 1,
+            ForceDark = 2,
+            ForceLight = 3,
+            Max = 4
         };
 
         /*
          * OS version 1809 ( OS build 17763 )
          */
+
+        //[DllImport("uxtheme.dll", EntryPoint = "#104")]
+        //private static extern void RefreshImmersiveColorPolicyState();
 
         [DllImport("uxtheme.dll", EntryPoint = "#132")]
         private static extern bool ShouldAppsUseDarkMode();
@@ -38,7 +42,7 @@ namespace Bravo.Infrastructure.Windows.Interop
         //private static extern bool AllowDarkModeForWindow(IntPtr hWnd, bool allow);
 
         [DllImport("uxtheme.dll", EntryPoint = "#135")]
-        private static extern bool AllowDarkModeForApp(bool allow); // ordinal *** 135 ***, in 1809 ( OS build 17763 )
+        private static extern bool AllowDarkModeForApp(bool allow); // !!! 135 !!! same ordinal in 1903 and 1809 
 
         //[DllImport("uxtheme.dll", EntryPoint = "#137")]
         //private static extern bool IsDarkModeAllowedForWindow(IntPtr hWnd);
@@ -49,14 +53,19 @@ namespace Bravo.Infrastructure.Windows.Interop
 
         [DllImport("uxtheme.dll", EntryPoint = "#135")]
         [return: MarshalAs(UnmanagedType.U4)]
-        private static extern PreferredAppMode SetPreferredAppMode(PreferredAppMode mode); // ordinal *** 135 *** , in 1903 ( OS build 18362 )
+        private static extern PreferredAppMode SetPreferredAppMode(PreferredAppMode mode); // !!! 135 !!! same ordinal in 1903 and 1809 
 
-        [DllImport("uxtheme.dll", EntryPoint = "#139")]
-        private static extern bool IsDarkModeAllowedForApp(IntPtr hWnd);
+        [DllImport("uxtheme.dll", EntryPoint = "#138")]
+        private static extern bool ShouldSystemUseDarkMode();
+
+        //[DllImport("uxtheme.dll", EntryPoint = "#139")]
+        //private static extern bool IsDarkModeAllowedForApp(IntPtr hWnd);
 
         /* */
 
-        private static bool IsThemingSupported()
+        private static readonly bool IsWindows10OSVersion1809OrLower = Environment.OSVersion.Version.Major == 10 && Environment.OSVersion.Version.Build < 18362;
+
+        private static bool IsDarkModeSupported()
         {
             // Windows 10 release information https://docs.microsoft.com/en-us/windows/release-health/release-information
 
@@ -71,45 +80,50 @@ namespace Bravo.Infrastructure.Windows.Interop
             return false;
         }
 
-        private static void SetDarkMode(bool enabled)
+        private static void SetAppTheme(bool useDark)
         {
-            var version = Environment.OSVersion.Version;
-
-            if (version.Major == 10 && version.Build < 18362 /* Version 1903 */)
+            if (IsWindows10OSVersion1809OrLower)
             {
-                // Ordinal entry point ***135*** in 1809 (OS build 17763)
-                AllowDarkModeForApp(enabled);
+                // Ordinal entry point *** 135 *** in 1809 (OS build 17763)
+                _ = AllowDarkModeForApp(allow: useDark);
             }
             else
             {
-                // Ordinal entry point ***135*** in 1903 (OS build 18362)
-                SetPreferredAppMode(enabled ? PreferredAppMode.ForceDark : PreferredAppMode.ForceLight);
+                // Ordinal entry point *** 135 *** in 1903 (OS build 18362)
+                _ = SetPreferredAppMode(useDark ? PreferredAppMode.ForceDark : PreferredAppMode.ForceLight);
             }
         }
 
-        public static void SetStartupMode(bool useDark)
+        public static void SetStartupTheme(bool useDark)
         {
-            if (IsThemingSupported())
+            if (IsDarkModeSupported())
             {
                 // No need to send any messges here (i.e. WM_THEMECHANGED)
-                SetDarkMode(enabled: useDark);
+                SetAppTheme(useDark);
             }
         }
 
-        public static void ChangeMode(IntPtr hWnd, bool useDark)
+        public static void ChangeTheme(IntPtr hWnd, bool useDark)
         {
-            if (IsThemingSupported())
+            if (IsDarkModeSupported())
             {
-                SetDarkMode(enabled: useDark);
+                SetAppTheme(useDark);
                 NativeMethods.SendMessage(hWnd, WM_THEMECHANGED, IntPtr.Zero, IntPtr.Zero);
             }
         }
 
-        public static bool IsDarkModeEnabled()
+        public static bool IsSystemUsingDarkMode()
         {
-            if (IsThemingSupported() && !SystemInformation.HighContrast)
+            if (IsDarkModeSupported() && !SystemInformation.HighContrast)
             {
-                return ShouldAppsUseDarkMode();
+                if (IsWindows10OSVersion1809OrLower)
+                {
+                    return ShouldAppsUseDarkMode();
+                }
+                else
+                {
+                    return ShouldSystemUseDarkMode();
+                }
             }
 
             return false;

@@ -79,7 +79,7 @@ namespace Sqlbi.Bravo.Infrastructure
                 var theme = GetUserSettings()?.Theme ?? ThemeType.Auto;
 
                 if (theme == ThemeType.Auto)
-                    theme = Win32UxTheme.IsDarkModeEnabled() ? ThemeType.Dark : ThemeType.Light;
+                    theme = Win32UxTheme.IsSystemUsingDarkMode() ? ThemeType.Dark : ThemeType.Light;
 
                 return theme;
             }
@@ -92,19 +92,10 @@ namespace Sqlbi.Bravo.Infrastructure
                 Trace.WriteLine($"::Bravo:INF:OnWindowCreating:{ window.Title }");
 
                 var settings = GetUserSettings();
-                if (settings is not null)
+                if (settings is not null && settings.Theme != ThemeType.Auto) 
                 {
-                    // Set the preferred theme based on the latest settings saved by the user
-                    switch (settings.Theme)
-                    {
-                        case ThemeType.Light:
-                        case ThemeType.Dark:
-                            Win32UxTheme.SetStartupMode(useDark: settings.Theme == ThemeType.Dark);
-                            break;
-                        case ThemeType.Auto:
-                            // Let Photino.Native use the OS default
-                            break;
-                    }
+                    // Set the startup theme based on the latest settings saved by the user
+                    Win32UxTheme.SetStartupTheme(useDark: settings.Theme == ThemeType.Dark);
                 }
             }
         }
