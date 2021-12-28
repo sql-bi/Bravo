@@ -1,0 +1,44 @@
+/*!
+ * Bravo for Power BI
+ * Copyright (c) SQLBI corp. - All rights reserved.
+ * https://www.sqlbi.com
+*/
+
+/*!
+ * Chart.js v3.6.2
+ * https://www.chartjs.org
+ * (c) 2021 Chart.js Contributors
+ * Released under the MIT License
+ */
+
+/*!
+ * Draggabilly v2.4.1
+ * Make that shiz draggable
+ * https://draggabilly.desandro.com
+ * MIT license
+ */
+
+/*!
+ * Unidragger v2.4.0
+ * Draggable base class
+ * MIT license
+ */
+
+/*!
+ * Unipointer v2.4.0
+ * base class for doing one thing with pointer event
+ * MIT license
+ */
+
+/*!
+ * chartjs-chart-treemap v2.0.1
+ * https://chartjs-chart-treemap.pages.dev/
+ * (c) 2021 Jukka Kurkela
+ * Released under the MIT license
+ */
+
+/*!
+ * getSize v2.0.3
+ * measure size of elements
+ * MIT license
+ */

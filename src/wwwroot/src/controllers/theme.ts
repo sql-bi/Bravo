@@ -17,10 +17,10 @@ export class ThemeController extends Dispatchable {
     theme;
     deviceTheme;
     
-    constructor() {
+    constructor(startupTheme = ThemeType.Auto) {
         super();
         
-        this.theme = ThemeType.Auto;
+        this.theme = startupTheme;
 
         if (window.matchMedia) {
             const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
@@ -40,29 +40,28 @@ export class ThemeController extends Dispatchable {
                 this.apply(changedOptions.theme);
         });
 
-        this.apply();
+        this.apply(this.theme);
     }
 
     change(theme: ThemeType) {
         optionsController.update("theme", theme);
+        host.changeTheme(theme);
         this.apply(theme);
     }
 
     apply(theme?: ThemeType) {
-        console.log("Applying theme", theme);
-        if (!theme) 
-            theme = optionsController.options.theme;
-console.log("Ok", theme);
-        if (theme == ThemeType.Auto)
-            theme = this.deviceTheme;
 
-        this.theme = theme;
+        if (!theme) {
+            theme = this.theme;
+        } else {
+            this.theme = theme;
+        }
+        
         this.trigger("change", theme);
-        host.changeTheme(theme);
 
         if (document.body.classList.contains("no-theme")) return;
 
-        if (theme == ThemeType.Dark) {
+        if (theme == ThemeType.Dark || (theme == ThemeType.Auto && this.deviceTheme == ThemeType.Dark)) {
             document.body.classList.add("dark");
         } else {
             document.body.classList.remove("dark");

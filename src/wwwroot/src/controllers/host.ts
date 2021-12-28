@@ -4,10 +4,10 @@
  * https://www.sqlbi.com
 */
 
-import { debug } from '../debug/debug';
+import { debug } from '../debug';
 import { Dispatchable } from '../helpers/dispatchable';
 import { Dic, Utils } from '../helpers/utils';
-import { TabularDatabase, TabularDatabaseInfo, TabularMeasure } from '../model/tabular';
+import { TabularDatabase, TabularMeasure } from '../model/tabular';
 import { Account } from './auth';
 import { FormatDaxOptions, Options } from './options';
 import { ThemeType } from './theme';
@@ -72,21 +72,25 @@ export interface UpdatePBICloudDatasetRequest{
 export class Host extends Dispatchable {
 
     static DEFAULT_TIMEOUT = 30 * 1000;
-    static URL = "http://localhost:5000/";
 
+    address: string;
     requests: Dic<ApiRequest>;
 
-    constructor() {
+    constructor(address: string) {
         super();
         this.listen();
         this.requests = {};
+        this.address = address;
     }   
 
     // Listen for events
     listen() {
         try {
             window.external.receiveMessage(message => {
-                this.trigger("message", message);
+                const json = JSON.parse(message);
+                if (!json) return;
+
+                //TODO add any webmessage handler here
             });
         } catch (e) {
             //console.error(e);
@@ -103,20 +107,8 @@ export class Host extends Dispatchable {
     }
 
     // Functions
-    async debugCall(action: string) {
-        if (debug && action in debug.host) {
-            return new Promise((resolve, reject) => {
-                setTimeout(() => {
-                    resolve(debug.host[action]);
-                }, 1000);
-            });
-        } else {
-            console.warn(`Action ${action} not supported in debug mode.`)
-        }
-    }
-
     async apiCall(action: string, data = {}, options: RequestInit = {}, timeout = Host.DEFAULT_TIMEOUT) {
-        if (debug) return await this.debugCall(action);
+        if (debug) return await debug.apiCall(action);
 
         let requestId = Utils.Text.uuid();
         let abortController = new AbortController();
@@ -136,7 +128,7 @@ export class Host extends Dispatchable {
             }, timeout);
         }
 
-        return await Utils.Request.ajax(`${Host.URL}${action}`, data, options);
+        return await Utils.Request.ajax(`${this.address}${action}`, data, options);
     }
 
     apiAbortById(requestId: string) {

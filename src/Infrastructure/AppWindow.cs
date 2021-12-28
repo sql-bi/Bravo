@@ -64,10 +64,7 @@ namespace Sqlbi.Bravo.Infrastructure
                 address = GetStartupAddress().ToString(),
                 theme = GetStartupTheme().ToString()
             });
-            var script = $@"
-(() => {{
-    var startupConfig = { startupConfig }
-}})();";
+            var script = $@"var CONFIG = { startupConfig };";
             var stream = new MemoryStream(Encoding.UTF8.GetBytes(script));
             return stream;
 

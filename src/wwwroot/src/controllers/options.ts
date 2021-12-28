@@ -4,7 +4,7 @@
  * https://www.sqlbi.com
 */
 
-import { debug } from '../debug/debug';
+import { debug } from '../debug';
 import { Dispatchable } from '../helpers/dispatchable';
 import { Utils } from '../helpers/utils';
 import { host } from '../main';
@@ -42,13 +42,26 @@ export class OptionsController extends Dispatchable {
 
     storageName = "Bravo";
     mode: optionsMode;
+
     options: Options;
 
-    constructor(mode: optionsMode, defaultOptions: Options) {
+    defaultOptions: Options = {
+        theme: ThemeType.Auto,
+        telemetryEnabled: true,
+        customOptions: {
+            editorZoom: 1,
+            daxFormatter: {
+                spacingStyle: DaxFormatterSpacingStyle.BestPractice,
+                lineStyle: DaxFormatterLineStyle.LongLine
+            }
+        }
+    };
+
+    constructor(mode: optionsMode = "host") {
         super();
         this.mode = mode;
-        this.options = defaultOptions;
-        this.load(defaultOptions);
+        this.options = this.defaultOptions;
+        this.load();
         this.listen();
     }
 
@@ -71,7 +84,7 @@ export class OptionsController extends Dispatchable {
     }
 
     // Load data
-    load(defaultOptions: Options) {
+    load() {
         if (this.mode == "host") {
             host.getOptions()
                 .then(options => {
@@ -79,9 +92,9 @@ export class OptionsController extends Dispatchable {
                         if (options.customOptions && typeof options.customOptions === "string")
                             options.customOptions = JSON.parse(options.customOptions);
 
-                        this.options = Utils.Obj.merge(defaultOptions, options);
+                        this.options = Utils.Obj.merge(this.defaultOptions, options);
 
-                        this.trigger("change", Utils.Obj.diff(defaultOptions, this.options));
+                        this.trigger("change", Utils.Obj.diff(this.defaultOptions, this.options));
                     }
                 })
                 .catch(error => {
@@ -93,7 +106,7 @@ export class OptionsController extends Dispatchable {
                 const rawData = localStorage.getItem(this.storageName);
                 const data = <Options>JSON.parse(rawData);
                 if (data)
-                    this.options = Utils.Obj.merge(defaultOptions, data);
+                    this.options = Utils.Obj.merge(this.defaultOptions, data);
             } catch(e){
                 if (debug)
                     console.error(e);

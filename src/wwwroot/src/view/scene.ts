@@ -4,7 +4,7 @@
  * https://www.sqlbi.com
 */
 
-import { debug } from '../debug/debug';
+import { debug } from '../debug';
 import { Dic, _ } from '../helpers/utils';
 import { Doc } from '../model/doc';
 import { strings } from '../model/strings';

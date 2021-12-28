@@ -4,7 +4,7 @@
  * https://www.sqlbi.com
 */
 
-import { auth, optionsController, themeController } from "../main";
+import { auth, host, optionsController, themeController } from "../main";
 import { ThemeType } from '../controllers/theme';
 import { __, _, Dic } from '../helpers/utils';
 import { strings } from '../model/strings';
