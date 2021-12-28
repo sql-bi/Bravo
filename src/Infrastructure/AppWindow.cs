@@ -45,8 +45,7 @@ namespace Sqlbi.Bravo.Infrastructure
 
             window.WindowCreating += OnWindowCreating;
             window.WindowCreated += OnWindowCreated;
-            window.WindowClosing += OnWindowClosing;
-            window.WebMessageReceived += OnWindowWebMessageReceived;
+
 #if DEBUG || DEBUG_WWWROOT
             window.SetLogVerbosity(3); // 0 = Critical Only, 1 = Critical and Warning, 2 = Verbose, >2 = All Details. Default is 2.
 #else
@@ -59,13 +58,14 @@ namespace Sqlbi.Bravo.Infrastructure
         {
             contentType = "text/javascript";
 
-            var startupConfig = JsonSerializer.Serialize(new
+            var config = JsonSerializer.Serialize(new
             {
                 address = GetStartupAddress().ToString(),
                 theme = GetStartupTheme().ToString()
             });
-            var script = $@"var CONFIG = { startupConfig };";
+            var script = $@"var CONFIG = { config };";
             var stream = new MemoryStream(Encoding.UTF8.GetBytes(script));
+
             return stream;
 
             Uri GetStartupAddress()
@@ -114,78 +114,9 @@ namespace Sqlbi.Bravo.Infrastructure
             if (sender is PhotinoWindow window)
             {
                 Trace.WriteLine($"::Bravo:INF:OnWindowCreated:{ window.Title } ( { string.Join(", ", _host.GetListeningAddresses().Select((a) => a.ToString())) } )");
-                //window.SendNotification("::Bravo:INF:WindowCreatedHandler", window.Title);
 
                 // Try to install a WndProc subclass callback to hook messages sent to the app main window
                 _windowSubclass = new AppWindowSubclass(window);
-
-                // Testing dark theme
-                //var task = System.Threading.Tasks.Task.Factory.StartNew(() =>
-                //{
-                //    bool dark = true;
-                //    while (true)
-                //    {
-                //        System.Threading.Tasks.Task.Delay(3000).Wait();
-                //        Win32UxTheme.ChangeTheme(window.WindowHandle, useDark: (dark = !dark));
-                //    }
-                //});
-            }
-        }
-
-        private bool OnWindowClosing(object sender, EventArgs args)
-        {
-            if (sender is PhotinoWindow window)
-            {
-                Trace.WriteLine($"::Bravo:INF:OnWindowClosing:{ window.Title }");
-            }
-
-            return false; // Could return true to stop windows close
-        }
-
-        private void OnWindowWebMessageReceived(object? sender, string message)
-        {
-            Trace.WriteLine($"::Bravo:INF:OnWindowWebMessageReceived:{ message }");
-
-            if (sender is PhotinoWindow window)
-            {
-                switch (message)
-                {
-                    case "getStartupConfig":
-                        {
-                            var responseMessage = JsonSerializer.Serialize(new
-                            {
-                                getStartupConfig = new
-                                {
-                                    address = GetStartupAddress().ToString(),
-                                    theme = GetStartupTheme().ToString()
-                                }
-                            });
-
-                            window.SendWebMessage(responseMessage);
-                        }
-                        break;
-                    default:
-                        {
-                            // TODO: log
-                        }
-                        break;
-                }
-            }
-
-            Uri GetStartupAddress()
-            {
-                var address = _host.GetListeningAddresses().Single(); // single address expected here
-                return address;
-            }
-
-            ThemeType GetStartupTheme()
-            {
-                var theme = GetUserSettings()?.Theme ?? ThemeType.Auto;
-
-                if (theme == ThemeType.Auto)
-                    theme = Win32UxTheme.IsDarkModeEnabled() ? ThemeType.Dark : ThemeType.Light;
-
-                return theme;
             }
         }
 
