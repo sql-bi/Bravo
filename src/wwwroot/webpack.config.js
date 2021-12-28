@@ -1,5 +1,7 @@
 const webpack = require("webpack");
 const path = require("path");
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const CssMinimizerPlugin = require("css-minimizer-webpack-plugin");
 
 module.exports = (env, argv) => {
   const debug = env.debug;
@@ -8,7 +10,10 @@ module.exports = (env, argv) => {
     console.log("---", "App started in debug mode", "---");
 
   return {
-    entry: "./src/main.ts",
+    entry: [
+      "./src/main.ts",
+      "./src/css/main.less"
+    ],
     mode: "development", // Use --mode to change it via CLI
     module: {
       rules: [
@@ -17,6 +22,23 @@ module.exports = (env, argv) => {
           use: 'ts-loader',
           exclude: /node_modules/,
         },
+        {
+          test: /\.less$/i,
+          use: [
+            MiniCssExtractPlugin.loader,
+            {
+              loader: 'css-loader',
+              options: {
+                  url: false,
+              },
+            },
+            {
+              loader: "less-loader",
+              options: {
+              }
+            }
+          ],
+        }
       ],
     },
     resolve: {
@@ -33,7 +55,17 @@ module.exports = (env, argv) => {
     plugins:[
       new webpack.DefinePlugin({
         'process.env.DEBUG': JSON.stringify(debug),
-      })
-    ], 
+      }),
+      new MiniCssExtractPlugin({
+        filename: "../css/[name].css"
+      }),
+    ],
+    optimization: {
+      minimizer: [
+        '...',
+        new CssMinimizerPlugin(),
+      ],
+      minimize: true,
+    } 
   }
 };
