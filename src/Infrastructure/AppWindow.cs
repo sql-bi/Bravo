@@ -31,13 +31,16 @@ namespace Sqlbi.Bravo.Infrastructure
         {
 #if DEBUG || DEBUG_WWWROOT
             var contextMenuEnabled = true;
+            var logVerbosity = 3;
 #else
             var contextMenuEnabled = false;
+            var logVerbosity = 1;
 #endif
             var window = new PhotinoWindow()
                 .SetTitle(AppConstants.ApplicationMainWindowTitle)
                 .SetIconFile("wwwroot/bravo.ico")
                 .SetContextMenuEnabled(contextMenuEnabled)
+                .SetLogVerbosity(logVerbosity) // 0 = Critical Only, 1 = Critical and Warning, 2 = Verbose, >2 = All Details. Default is 2.
                 .SetGrantBrowserPermissions(true)
                 .SetUseOsDefaultSize(true)
                 .RegisterCustomSchemeHandler("app", CustomSchemeHandler)
@@ -46,11 +49,6 @@ namespace Sqlbi.Bravo.Infrastructure
             window.WindowCreating += OnWindowCreating;
             window.WindowCreated += OnWindowCreated;
 
-#if DEBUG || DEBUG_WWWROOT
-            window.SetLogVerbosity(3); // 0 = Critical Only, 1 = Critical and Warning, 2 = Verbose, >2 = All Details. Default is 2.
-#else
-            window.SetLogVerbosity(1);
-#endif
             return window;
         }
 

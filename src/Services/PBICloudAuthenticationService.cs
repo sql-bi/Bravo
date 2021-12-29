@@ -2,6 +2,7 @@
 using Microsoft.Identity.Client;
 using Sqlbi.Bravo.Infrastructure;
 using Sqlbi.Bravo.Infrastructure.Authentication;
+using Sqlbi.Bravo.Infrastructure.Extensions;
 using Sqlbi.Bravo.Infrastructure.Helpers;
 using Sqlbi.Bravo.Infrastructure.Models.PBICloud;
 using System;
@@ -187,7 +188,7 @@ namespace Sqlbi.Bravo.Services
         private static readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web);
         private static readonly HttpClient _httpClient;
 
-        public string LocalDataClassicCachePath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Microsoft\\Power BI Desktop");
+        public string LocalDataClassicAppCachePath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Microsoft\\Power BI Desktop");
 
         public string LocalDataStoreAppCachePath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Microsoft\\Power BI Desktop Store App");
 
@@ -294,17 +295,25 @@ namespace Sqlbi.Bravo.Services
         {
             const string UserCacheFile = "User.zip";
 
-            var userClassicCacheFile = new FileInfo(fileName: Path.Combine(LocalDataClassicCachePath, UserCacheFile));
-            if (userClassicCacheFile.Exists)
+            var classicAppCacheFile = new FileInfo(fileName: Path.Combine(LocalDataClassicAppCachePath, UserCacheFile));
+            var storeAppCacheFile = new FileInfo(fileName: Path.Combine(LocalDataStoreAppCachePath, UserCacheFile));
+
+            if (classicAppCacheFile.Exists && storeAppCacheFile.Exists)
             {
-                if ((LocalClientSites = GetLocalClientSites(userClassicCacheFile.FullName)) is not null)
+                var lastWritedCacheFile = classicAppCacheFile.LastWriteTime >= storeAppCacheFile.LastWriteTime ? classicAppCacheFile : storeAppCacheFile;
+                if ((LocalClientSites = GetLocalClientSites(lastWritedCacheFile.FullName)) is not null)
                     return LocalClientSites;
             }
 
-            var userStoreAppCacheFile = new FileInfo(fileName: Path.Combine(LocalDataStoreAppCachePath, UserCacheFile));
-            if (userStoreAppCacheFile.Exists)
+            if (classicAppCacheFile.Exists)
             {
-                if ((LocalClientSites = GetLocalClientSites(userStoreAppCacheFile.FullName)) is not null)
+                if ((LocalClientSites = GetLocalClientSites(classicAppCacheFile.FullName)) is not null)
+                    return LocalClientSites;
+            }
+
+            if (storeAppCacheFile.Exists)
+            {
+                if ((LocalClientSites = GetLocalClientSites(storeAppCacheFile.FullName)) is not null)
                     return LocalClientSites;
             }
 
@@ -328,14 +337,15 @@ namespace Sqlbi.Bravo.Services
                         {
                             Url = e.Attribute("Url")?.Value,
                             Version = e.Attribute("Version")?.Value,
-                            UserPrincipalName = e.Element("User")?.Value,
-                            DisplayName = e.Element("DisplayName")?.Value,
-                            Avatar = e.Element("Avatar")?.Value,
+                            UserPrincipalName = e.Element("User")?.Value.NullIfEmpty(),
+                            DisplayName = e.Element("DisplayName")?.Value.NullIfEmpty(),
+                            Avatar = e.Element("Avatar")?.Value.NullIfEmpty(),
                         })
                         .Where((s) => Version.TryParse(s.Version, out var version) && version >= LatestSupportedVersion);
 
                         var clientSites = new LocalClientSites(sites);
-                        return clientSites;
+                        if (clientSites.Count > 0)
+                            return clientSites;
                     }
                 }
 

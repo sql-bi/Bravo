@@ -36,5 +36,10 @@ namespace Sqlbi.Bravo.Infrastructure.Extensions
 
             return null;
         }
+
+        public static string? NullIfEmpty(this string? value)
+        {
+            return string.IsNullOrEmpty(value) ? null : value;
+        }
     }
 }
