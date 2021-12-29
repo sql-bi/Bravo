@@ -2,10 +2,13 @@
 using Microsoft.Identity.Client;
 using Sqlbi.Bravo.Infrastructure;
 using Sqlbi.Bravo.Infrastructure.Authentication;
+using Sqlbi.Bravo.Infrastructure.Extensions;
 using Sqlbi.Bravo.Infrastructure.Helpers;
 using Sqlbi.Bravo.Infrastructure.Models.PBICloud;
 using System;
 using System.Diagnostics;
+using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -15,6 +18,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace Sqlbi.Bravo.Services
 {
@@ -23,6 +27,8 @@ namespace Sqlbi.Bravo.Services
         AuthenticationResult? Authentication { get; }
 
         PBICloudSettings CloudSettings { get; }
+
+        LocalClientSite? CachedUserInfo { get; }
 
         Task AcquireTokenAsync(TimeSpan cancelAfter, bool silentOnly, string? identifier = null);
 
@@ -44,8 +50,8 @@ namespace Sqlbi.Bravo.Services
         {
             _pbisettings = new PBICloudSettings();
 
-            _application = PublicClientApplicationBuilder.Create(_pbisettings.CloudEnvironment.ClientId)
-                .WithAuthority(_pbisettings.CloudEnvironment.AuthorityUri)
+            _application = PublicClientApplicationBuilder.Create(_pbisettings.GlobalCloudEnvironment.ClientId)
+                .WithAuthority(_pbisettings.GlobalCloudEnvironment.Authority)
                 .WithDefaultRedirectUri()
                 .Build();
 
@@ -61,6 +67,8 @@ namespace Sqlbi.Bravo.Services
         public AuthenticationResult? Authentication { get; private set; }
 
         public PBICloudSettings CloudSettings => _pbisettings;
+
+        public LocalClientSite? CachedUserInfo => CloudSettings.LocalClientSites?.Find(url: CloudSettings.GlobalCloudEnvironment.Endpoint, upn: Authentication?.Account.Username);
 
         /// <summary>
         /// Removes all account information from MSAL's token cache, removes app-only (not OS-wide) and does not affect the browser cookies
@@ -92,7 +100,7 @@ namespace Sqlbi.Bravo.Services
 
                 var authentication = await InternalAcquireTokenAsync(silentOnly, identifier, cancellationTokenSource.Token).ConfigureAwait(false);
                 {
-                    await _pbisettings.RefreshTenantClusterAsync(current: authentication, previous: Authentication);
+                    await _pbisettings.Refresh(current: authentication, previous: Authentication).ConfigureAwait(false);
                 }
                 Authentication = authentication;
 
@@ -123,7 +131,7 @@ namespace Sqlbi.Bravo.Services
             try
             {
                 // Try to acquire an access token from the cache, if UI interaction is required, MsalUiRequiredException will be thrown.
-                var authenticationResult = await _application.AcquireTokenSilent(_pbisettings.CloudEnvironment.Scopes, account).ExecuteAsync(cancellationToken).ConfigureAwait(false);
+                var authenticationResult = await _application.AcquireTokenSilent(_pbisettings.GlobalCloudEnvironment.Scopes, account).ExecuteAsync(cancellationToken).ConfigureAwait(false);
                 return authenticationResult;
             }
             catch (MsalUiRequiredException /* murex */)
@@ -131,7 +139,7 @@ namespace Sqlbi.Bravo.Services
                 if (silentOnly) throw;
                 try
                 {
-                    var builder = _application.AcquireTokenInteractive(_pbisettings.CloudEnvironment.Scopes)
+                    var builder = _application.AcquireTokenInteractive(_pbisettings.GlobalCloudEnvironment.Scopes)
                         .WithExtraQueryParameters(MicrosoftAccountOnlyQueryParameter);
 
                     //.WithAccount(account)
@@ -180,11 +188,17 @@ namespace Sqlbi.Bravo.Services
         private static readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web);
         private static readonly HttpClient _httpClient;
 
+        public string LocalDataClassicAppCachePath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Microsoft\\Power BI Desktop");
+
+        public string LocalDataStoreAppCachePath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Microsoft\\Power BI Desktop Store App");
+
         public GlobalService GlobalService { get; init; }
 
-        public CloudEnvironment CloudEnvironment { get; init; }
+        public CloudEnvironment GlobalCloudEnvironment { get; init; }
 
         public TenantCluster? TenantCluster { get; private set; }
+
+        public LocalClientSites? LocalClientSites { get; private set; }
 
         static PBICloudSettings()
         {
@@ -196,7 +210,17 @@ namespace Sqlbi.Bravo.Services
         public PBICloudSettings()
         {
             GlobalService = InitializeGlobalService();
-            CloudEnvironment = InitializeCloudEnvironment();
+            GlobalCloudEnvironment = InitializeGlobalCloudEnvironment();
+        }
+
+        public async Task Refresh(AuthenticationResult current, AuthenticationResult? previous)
+        {
+            // refresh only if the login account has changed
+            if (current.Account.HomeAccountId.Equals(previous?.Account.HomeAccountId) == false)
+            {
+                await RefreshTenantClusterAsync(current.AccessToken).ConfigureAwait(false);
+                await RefreshLocalClientSitesAsync().ConfigureAwait(false);
+            }
         }
 
         private GlobalService InitializeGlobalService()
@@ -221,7 +245,7 @@ namespace Sqlbi.Bravo.Services
             }
         }
 
-        private CloudEnvironment InitializeCloudEnvironment()
+        private CloudEnvironment InitializeGlobalCloudEnvironment()
         {
             var environmentName = CloudEnvironmentGlobalCloudName;
 
@@ -229,47 +253,104 @@ namespace Sqlbi.Bravo.Services
                 ?? throw new BravoException($"PBICloud environment not found [{ environmentName }]");
             
             var authority = globalEnvironment.Services.Single((s) => "aad".Equals(s.Name, StringComparison.OrdinalIgnoreCase));
-            var service = globalEnvironment.Services.Single((s) => "powerbi-backend".Equals(s.Name, StringComparison.OrdinalIgnoreCase));
-            var client = globalEnvironment.Clients.Single((c) => "powerbi-gateway".Equals(c.Name, StringComparison.OrdinalIgnoreCase));
+            var frontend = globalEnvironment.Services.Single((s) => "powerbi-frontend".Equals(s.Name, StringComparison.OrdinalIgnoreCase));
+            var backend = globalEnvironment.Services.Single((s) => "powerbi-backend".Equals(s.Name, StringComparison.OrdinalIgnoreCase));
+            var gateway = globalEnvironment.Clients.Single((c) => "powerbi-gateway".Equals(c.Name, StringComparison.OrdinalIgnoreCase));
 
             var cloudEnvironment = new CloudEnvironment
             {
                 Name = CloudEnvironmentType.Public,
-                AuthorityUri = authority.Endpoint,
-                RedirectUri = client.RedirectUri,
-                ResourceUri = service.ResourceId,
-                ClientId = client.AppId,
-                Scopes = new string[] { $"{ service.ResourceId }/.default" },
-                EndpointUri = service.Endpoint,
+                Authority = new Uri(authority.Endpoint, UriKind.Absolute),
+                ClientId = gateway.AppId,
+                Scopes = new string[] { $"{ backend.ResourceId }/.default" },
+                Endpoint = new Uri(frontend.Endpoint, UriKind.Absolute),
+                //RedirectUri = gateway.RedirectUri,
+                //ResourceUri = backend.ResourceId,
             };
 
             return cloudEnvironment;
         }
 
         /// <remarks>Do not refresh the tenant cluster every time the token changes, it should only be updated when the login account changes</remarks>
-        public async Task<TenantCluster> RefreshTenantClusterAsync(AuthenticationResult? current, AuthenticationResult? previous)
+        private async Task<TenantCluster> RefreshTenantClusterAsync(string accessToken)
         {
-            var previousAccount = previous?.Account.HomeAccountId.Identifier;
-            var currentAccount = current?.Account.HomeAccountId.Identifier;
-            var accountChanged = previousAccount != currentAccount;
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
-            if (TenantCluster is null || accountChanged)
+            using var request = new HttpRequestMessage(HttpMethod.Put, GlobalServiceGetOrInsertClusterUrisByTenantlocationUrl)
             {
-                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", current?.AccessToken);
+                Content = new StringContent(string.Empty, Encoding.UTF8, MediaTypeNames.Application.Json)
+            };
 
-                using var request = new HttpRequestMessage(HttpMethod.Put, GlobalServiceGetOrInsertClusterUrisByTenantlocationUrl)
-                {
-                    Content = new StringContent(string.Empty, Encoding.UTF8, MediaTypeNames.Application.Json)
-                };
+            using var response = _httpClient.Send(request, HttpCompletionOption.ResponseContentRead);
+            response.EnsureSuccessStatusCode();
 
-                using var response = _httpClient.Send(request, HttpCompletionOption.ResponseContentRead);                
-                response.EnsureSuccessStatusCode();
-
-                var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-                TenantCluster = JsonSerializer.Deserialize<TenantCluster>(json, _jsonOptions) ?? throw new BravoException("PBICloud tenant cluster initialization failed");
-            }
+            var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+            TenantCluster = JsonSerializer.Deserialize<TenantCluster>(json, _jsonOptions) ?? throw new BravoException("PBICloud tenant cluster initialization failed");
 
             return TenantCluster;
+        }
+
+        /// <remarks>Do not refresh the client sites cache every time the token changes, it should only be updated when the login account changes</remarks>
+        private async Task<LocalClientSites?> RefreshLocalClientSitesAsync()
+        {
+            const string UserCacheFile = "User.zip";
+
+            var classicAppCacheFile = new FileInfo(fileName: Path.Combine(LocalDataClassicAppCachePath, UserCacheFile));
+            var storeAppCacheFile = new FileInfo(fileName: Path.Combine(LocalDataStoreAppCachePath, UserCacheFile));
+
+            if (classicAppCacheFile.Exists && storeAppCacheFile.Exists)
+            {
+                var lastWritedCacheFile = classicAppCacheFile.LastWriteTime >= storeAppCacheFile.LastWriteTime ? classicAppCacheFile : storeAppCacheFile;
+                if ((LocalClientSites = GetLocalClientSites(lastWritedCacheFile.FullName)) is not null)
+                    return LocalClientSites;
+            }
+
+            if (classicAppCacheFile.Exists)
+            {
+                if ((LocalClientSites = GetLocalClientSites(classicAppCacheFile.FullName)) is not null)
+                    return LocalClientSites;
+            }
+
+            if (storeAppCacheFile.Exists)
+            {
+                if ((LocalClientSites = GetLocalClientSites(storeAppCacheFile.FullName)) is not null)
+                    return LocalClientSites;
+            }
+
+            return await Task.FromResult(LocalClientSites = null);
+
+            static LocalClientSites? GetLocalClientSites(string archiveFile)
+            {
+                Version LatestSupportedVersion = new("2.9.0.0");
+
+                using var archive = ZipFile.OpenRead(archiveFile);
+                var entry = archive.GetEntry("ClientAccess/ClientAccess.xml");
+                if (entry is not null)
+                {
+                    using var reader = new StreamReader(entry.Open());
+                    var document = XDocument.Load(reader);
+
+                    var elements = document.Root?.Descendants("Sites").Descendants("Site");
+                    if (elements is not null)
+                    {
+                        var sites = elements.Select((e) => new LocalClientSite
+                        {
+                            Url = e.Attribute("Url")?.Value,
+                            Version = e.Attribute("Version")?.Value,
+                            UserPrincipalName = e.Element("User")?.Value.NullIfEmpty(),
+                            DisplayName = e.Element("DisplayName")?.Value.NullIfEmpty(),
+                            Avatar = e.Element("Avatar")?.Value.NullIfEmpty(),
+                        })
+                        .Where((s) => Version.TryParse(s.Version, out var version) && version >= LatestSupportedVersion);
+
+                        var clientSites = new LocalClientSites(sites);
+                        if (clientSites.Count > 0)
+                            return clientSites;
+                    }
+                }
+
+                return null;
+            }
         }
     }
 }
