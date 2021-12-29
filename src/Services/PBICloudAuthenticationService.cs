@@ -26,7 +26,7 @@ namespace Sqlbi.Bravo.Services
     {
         AuthenticationResult? Authentication { get; }
 
-        PBICloudSettings CloudSettings { get; }
+        Uri TenantCluster { get; }
 
         LocalClientSite? CachedUserInfo { get; }
 
@@ -66,9 +66,9 @@ namespace Sqlbi.Bravo.Services
 
         public AuthenticationResult? Authentication { get; private set; }
 
-        public PBICloudSettings CloudSettings => _pbisettings;
+        public Uri TenantCluster => new (_pbisettings.TenantCluster?.FixedClusterUri ?? throw new BravoUnexpectedException("TenantCluster is null"));
 
-        public LocalClientSite? CachedUserInfo => CloudSettings.LocalClientSites?.Find(url: CloudSettings.GlobalCloudEnvironment.Endpoint, upn: Authentication?.Account.Username);
+        public LocalClientSite? CachedUserInfo => _pbisettings.LocalClientSites?.Find(url: _pbisettings.GlobalCloudEnvironment.Endpoint, upn: Authentication?.Account.Username);
 
         /// <summary>
         /// Removes all account information from MSAL's token cache, removes app-only (not OS-wide) and does not affect the browser cookies
@@ -98,11 +98,14 @@ namespace Sqlbi.Bravo.Services
             {
                 using var cancellationTokenSource = new CancellationTokenSource(cancelAfter);
 
-                var authentication = await InternalAcquireTokenAsync(silentOnly, identifier, cancellationTokenSource.Token).ConfigureAwait(false);
+                var previousAuthentication = Authentication;
+                Authentication = null;
+
+                var currentAuthentication = await InternalAcquireTokenAsync(silentOnly, identifier, cancellationTokenSource.Token).ConfigureAwait(false);
                 {
-                    await _pbisettings.Refresh(current: authentication, previous: Authentication).ConfigureAwait(false);
+                    await _pbisettings.Refresh(currentAuthentication, previousAuthentication).ConfigureAwait(false);
                 }
-                Authentication = authentication;
+                Authentication = currentAuthentication;
 
                 //var impersonateTask = System.Security.Principal.WindowsIdentity.RunImpersonatedAsync(Microsoft.Win32.SafeHandles.SafeAccessTokenHandle.InvalidHandle, async () =>
                 //{
@@ -179,7 +182,7 @@ namespace Sqlbi.Bravo.Services
         }
     }
 
-    public class PBICloudSettings
+    internal class PBICloudSettings
     {
         private const string GlobalServiceEnvironmentsDiscoverUrl = "powerbi/globalservice/v201606/environments/discover?client=powerbi-msolap";
         private const string GlobalServiceGetOrInsertClusterUrisByTenantlocationUrl = "spglobalservice/GetOrInsertClusterUrisByTenantlocation";
@@ -188,9 +191,9 @@ namespace Sqlbi.Bravo.Services
         private static readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web);
         private static readonly HttpClient _httpClient;
 
-        public string LocalDataClassicAppCachePath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Microsoft\\Power BI Desktop");
+        private static string LocalDataClassicAppCachePath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Microsoft\\Power BI Desktop");
 
-        public string LocalDataStoreAppCachePath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Microsoft\\Power BI Desktop Store App");
+        private static string LocalDataStoreAppCachePath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Microsoft\\Power BI Desktop Store App");
 
         public GlobalService GlobalService { get; init; }
 
@@ -215,11 +218,11 @@ namespace Sqlbi.Bravo.Services
 
         public async Task Refresh(AuthenticationResult current, AuthenticationResult? previous)
         {
-            // refresh only if the login account has changed
+            // refresh required only if the login account has changed
             if (current.Account.HomeAccountId.Equals(previous?.Account.HomeAccountId) == false)
             {
                 await RefreshTenantClusterAsync(current.AccessToken).ConfigureAwait(false);
-                await RefreshLocalClientSitesAsync().ConfigureAwait(false);
+                //await RefreshLocalClientSitesAsync().ConfigureAwait(false);
             }
         }
 
@@ -271,8 +274,7 @@ namespace Sqlbi.Bravo.Services
             return cloudEnvironment;
         }
 
-        /// <remarks>Do not refresh the tenant cluster every time the token changes, it should only be updated when the login account changes</remarks>
-        private async Task<TenantCluster> RefreshTenantClusterAsync(string accessToken)
+        private async Task RefreshTenantClusterAsync(string accessToken)
         {
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
@@ -285,13 +287,10 @@ namespace Sqlbi.Bravo.Services
             response.EnsureSuccessStatusCode();
 
             var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-            TenantCluster = JsonSerializer.Deserialize<TenantCluster>(json, _jsonOptions) ?? throw new BravoException("PBICloud tenant cluster initialization failed");
-
-            return TenantCluster;
+            TenantCluster = JsonSerializer.Deserialize<TenantCluster>(json, _jsonOptions) ?? throw new BravoUnexpectedException("TenantCluster deserialization returned null");
         }
 
-        /// <remarks>Do not refresh the client sites cache every time the token changes, it should only be updated when the login account changes</remarks>
-        private async Task<LocalClientSites?> RefreshLocalClientSitesAsync()
+        private async Task RefreshLocalClientSitesAsync()
         {
             const string UserCacheFile = "User.zip";
 
@@ -302,22 +301,23 @@ namespace Sqlbi.Bravo.Services
             {
                 var lastWritedCacheFile = classicAppCacheFile.LastWriteTime >= storeAppCacheFile.LastWriteTime ? classicAppCacheFile : storeAppCacheFile;
                 if ((LocalClientSites = GetLocalClientSites(lastWritedCacheFile.FullName)) is not null)
-                    return LocalClientSites;
+                    return;
             }
 
             if (classicAppCacheFile.Exists)
             {
                 if ((LocalClientSites = GetLocalClientSites(classicAppCacheFile.FullName)) is not null)
-                    return LocalClientSites;
+                    return;
             }
 
             if (storeAppCacheFile.Exists)
             {
                 if ((LocalClientSites = GetLocalClientSites(storeAppCacheFile.FullName)) is not null)
-                    return LocalClientSites;
+                    return;
             }
 
-            return await Task.FromResult(LocalClientSites = null);
+            LocalClientSites = null;
+            await Task.CompletedTask;
 
             static LocalClientSites? GetLocalClientSites(string archiveFile)
             {

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Text.RegularExpressions;
 
 namespace Sqlbi.Bravo.Infrastructure.Extensions
@@ -40,6 +41,11 @@ namespace Sqlbi.Bravo.Infrastructure.Extensions
         public static string? NullIfEmpty(this string? value)
         {
             return string.IsNullOrEmpty(value) ? null : value;
+        }
+
+        public static string FormatInvariant(this string format, object? arg0)
+        {
+            return string.Format(CultureInfo.InvariantCulture, format, arg0);
         }
     }
 }

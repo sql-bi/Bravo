@@ -22,6 +22,15 @@ namespace Sqlbi.Bravo.Infrastructure
     }
 
     [Serializable]
+    public class BravoUnexpectedException : BravoException
+    {
+        public BravoUnexpectedException(string message)
+            : base(message)
+        {
+        }
+    }
+
+    [Serializable]
     public class SignInMsalException: BravoException
     {
         public string MsalErrorCode { get; init; }

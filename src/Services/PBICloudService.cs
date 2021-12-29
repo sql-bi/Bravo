@@ -1,11 +1,16 @@
 ﻿using Microsoft.Identity.Client;
 using Sqlbi.Bravo.Infrastructure;
+using Sqlbi.Bravo.Infrastructure.Extensions;
 using Sqlbi.Bravo.Infrastructure.Helpers;
 using Sqlbi.Bravo.Infrastructure.Models.PBICloud;
 using Sqlbi.Bravo.Models;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text.Json;
@@ -34,8 +39,9 @@ namespace Sqlbi.Bravo.Services
 
     internal class PBICloudService : IPBICloudService
     {
-        private static readonly Uri GetWorkspacesRequestUri = new(AppConstants.PBICloudApiUri, relativeUri: "powerbi/databases/v201606/workspaces");
+        private const string GetWorkspacesRequestUri = "powerbi/databases/v201606/workspaces";
         private const string GetGallerySharedDatasetsRequestUri = "metadata/v201901/gallery/sharedDatasets";
+        private const string GetResourceUserPhotoRequestUri = "powerbi/version/201606/resource/userPhoto/?userId={0}";
 
         private readonly HttpClient _httpClient;
         private readonly IPBICloudAuthenticationService _authenticationService;
@@ -58,6 +64,10 @@ namespace Sqlbi.Bravo.Services
 
         public async Task SignInAsync(bool silentOnly = false)
         {
+            var previousAccountIdentifier = CurrentAccount?.Identifier;
+            var previousAccountAvatar = CurrentAccount?.Avatar;
+
+            CurrentAccount = null;
             try
             {
                 await _authenticationService.AcquireTokenAsync(cancelAfter: AppConstants.MSALSignInTimeout, silentOnly).ConfigureAwait(false);
@@ -70,21 +80,53 @@ namespace Sqlbi.Bravo.Services
             {
                 throw new SignInMsalException(mex);
             }
-
+            
+            var currentAuthentication = CurrentAuthentication ?? throw new BravoUnexpectedException("CurrentAuthentication is null");
+            var currentAccountChanged = currentAuthentication.Account.HomeAccountId.Identifier.Equals(previousAccountIdentifier) == false;
+            
             CurrentAccount = new BravoAccount
             {
-                Identifier = CurrentAuthentication!.Account.HomeAccountId.Identifier,
-                UserPrincipalName = CurrentAuthentication!.Account.Username,
-                Username = CurrentAuthentication!.ClaimsPrincipal.FindFirst((c) => c.Type == "name")?.Value,
-                Avatar = _authenticationService.CachedUserInfo?.Avatar
+                Identifier = currentAuthentication.Account.HomeAccountId.Identifier,
+                UserPrincipalName = currentAuthentication.Account.Username,
+                Username = currentAuthentication.ClaimsPrincipal.FindFirst((c) => c.Type == "name")?.Value,
+                Avatar = currentAccountChanged ? await GetAccountAvatarAsync().ConfigureAwait(false) : previousAccountAvatar
             };
         }
 
         public async Task SignOutAsync()
         {
             CurrentAccount = null;
-
             await _authenticationService.ClearTokenCacheAsync().ConfigureAwait(false);
+        }
+
+        private async Task<string?> GetAccountAvatarAsync()
+        {
+            _httpClient.DefaultRequestHeaders.Accept.Clear();
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", CurrentAuthentication?.AccessToken);
+
+            var requestUri = new Uri(AppConstants.PBICloudApiUri, relativeUri: GetResourceUserPhotoRequestUri.FormatInvariant(CurrentAuthentication?.Account.Username));
+            using var response = await _httpClient.GetAsync(requestUri).ConfigureAwait(false);
+
+            if (response.IsSuccessStatusCode)
+            {
+                using var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
+                using var bitmap = new Bitmap(stream);
+                using var memoryStream = new MemoryStream();
+                bitmap.Save(memoryStream, bitmap.RawFormat);
+
+                var imageBase64String = Convert.ToBase64String(memoryStream.ToArray());
+                var imageMimeType = GetMimeType(bitmap);
+
+                var encodedImage = string.Format(CultureInfo.InvariantCulture, "data:{0};base64,{1}", imageMimeType, imageBase64String);
+                return encodedImage;
+            }
+
+            //var cachedImage = _authenticationService.CachedUserInfo?.Avatar;
+            //return cachedImage;
+
+            return null;
+
+            static string? GetMimeType(Bitmap bitmap) => ImageCodecInfo.GetImageDecoders().FirstOrDefault((c) => c.FormatID == bitmap.RawFormat.Guid)?.MimeType;
         }
 
         public async Task<IEnumerable<Workspace>> GetWorkspacesAsync()
@@ -92,7 +134,8 @@ namespace Sqlbi.Bravo.Services
             _httpClient.DefaultRequestHeaders.Accept.Clear();
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", CurrentAuthentication?.AccessToken);
 
-            using var response = await _httpClient.GetAsync(GetWorkspacesRequestUri).ConfigureAwait(false);
+            var requestUri = new Uri(AppConstants.PBICloudApiUri, relativeUri: GetWorkspacesRequestUri);
+            using var response = await _httpClient.GetAsync(requestUri).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
 
             var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
@@ -106,10 +149,7 @@ namespace Sqlbi.Bravo.Services
             _httpClient.DefaultRequestHeaders.Accept.Clear();
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", CurrentAuthentication?.AccessToken);
 
-            var clusterUri = _authenticationService.CloudSettings.TenantCluster?.FixedClusterUri ?? throw new BravoException("PBICloud shared datasets null tenant cluster");
-            var baseUri = new Uri(clusterUri);
-            var requestUri = new Uri(baseUri, relativeUri: GetGallerySharedDatasetsRequestUri);
-
+            var requestUri = new Uri(_authenticationService.TenantCluster, relativeUri: GetGallerySharedDatasetsRequestUri);
             using var response = await _httpClient.GetAsync(requestUri).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
 
