@@ -5,19 +5,15 @@
 */
 import { themeController } from "../main";
 import { Dic, Utils, _, __ } from '../helpers/utils';
-import { Doc } from '../model/doc';
+import { Doc, DocType } from '../model/doc';
 import { strings } from '../model/strings';
 import { Scene } from '../view/scene';
 import { TabularColumn } from '../model/tabular';
-
-import { Tabulator, ColumnCalcsModule, DataTreeModule, FilterModule, FormatModule, InteractionModule, ResizeColumnsModule, ResizeTableModule, SelectRowModule, SortModule  } from 'tabulator-tables';
-Tabulator.registerModule([ColumnCalcsModule, DataTreeModule, FilterModule, FormatModule, InteractionModule, ResizeColumnsModule, ResizeTableModule, SelectRowModule, SortModule]);
-
-import Chart from "chart.js/auto";
-import {TreemapController, TreemapElement, TreemapScriptableContext} from 'chartjs-chart-treemap';
 import { ThemeType } from '../controllers/theme';
+import { Tabulator } from 'tabulator-tables';
+import Chart from "chart.js/auto";
+import { TreemapController, TreemapElement, TreemapScriptableContext } from 'chartjs-chart-treemap';
 Chart.register(TreemapController, TreemapElement);
-
 interface TabulatorVpaxModelColumn extends TabularColumn {
     name: string
     _containsUnreferenced?: boolean
@@ -76,7 +72,7 @@ export class AnalyzeModelScene extends Scene {
 
                         <div class="collapse-all show-if-group ctrl icon-collapse-all" title="${strings.collapseAllCtrlTitle}"></div>
 
-                        <div class="save-vpax ctrl icon-save" title="${strings.saveVpaxCtrlTile}" ${this.doc.type == "vpax" ? "disabled" : ""}></div>
+                        <div class="save-vpax ctrl icon-save" title="${strings.saveVpaxCtrlTile}" ${this.doc.type == DocType.vpax ? "disabled" : ""}></div>
                     
 
                     </div>
@@ -347,8 +343,8 @@ export class AnalyzeModelScene extends Scene {
                 } catch(err) {}
             });
             this.table.on("rowClick", (e, row) => {
-                let toggle = _(".tree-toggle", <HTMLElement>e.target);
-                if (!toggle.empty) {
+                let el = _(".tree-toggle", <HTMLElement>e.target);
+                if (!el.empty) {
                     row.treeToggle();
                 }
             });
@@ -452,7 +448,7 @@ export class AnalyzeModelScene extends Scene {
         if (item) {
 
             let colorKey = `color${type.search("hover") >= 0 ? "Hover" : (item.isReferenced === false ? "Highlight" : "")}`;
-            let color = colors[themeController.theme][colorKey];
+            let color = colors[themeController.appliedTheme][colorKey];
 
             let shade = (!item.columnName ? -0.2 : 0) + (type.search(/back/i) >= 0 ? 0 : -0.9) * (themeController.isDark ? -1 : 1);
 

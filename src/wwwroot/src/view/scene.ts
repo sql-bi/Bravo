@@ -3,10 +3,8 @@
  * Copyright (c) SQLBI corp. - All rights reserved.
  * https://www.sqlbi.com
 */
-
-import { debug } from '../debug';
 import { Dic, _ } from '../helpers/utils';
-import { Doc } from '../model/doc';
+import { Doc, DocType } from '../model/doc';
 import { strings } from '../model/strings';
 import { View } from './view';
 
@@ -37,7 +35,7 @@ export class Scene extends View {
             <header>
                 <h1 class="icon">${this.title}</h1>
                 <div class="toolbar">
-                    <div class="ctrl-refresh ctrl icon-refresh" title="${strings.refreshCtrlTitle}" ${this.doc.type == "vpax" ? "disabled" : ""}></div>
+                    <div class="ctrl-refresh ctrl icon-refresh" title="${strings.refreshCtrlTitle}" ${this.doc.type == DocType.vpax ? "disabled" : ""}></div>
 
                     <div class="ctrl icon-help" title="${strings.helpCtrlTitle}"></div>
                 </div>
@@ -51,7 +49,7 @@ export class Scene extends View {
 
         _(".ctrl-refresh", this.element).addEventListener("click", e => {
             e.preventDefault();
-            console
+
             if ((<HTMLElement>e.currentTarget).hasAttribute("disabled")) return;
             this.refresh();
         });
@@ -72,8 +70,7 @@ export class Scene extends View {
 
         this.element.insertAdjacentHTML("beforeend", html); 
 
-        if (debug)
-            console.error(error);
+        console.error(error);
     }
 
     load() {

@@ -30,7 +30,9 @@ class Debug {
                 });
 
             default:
-                console.warn(`Action ${action} not supported in debug mode.`)
+                console.warn(`Action ${action} not supported in debug mode.`);
+                return Promise.resolve(null);
+                //throw new Error(`Action ${action} not supported in debug mode.`);
         }
     }
 

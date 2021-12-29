@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "build": "webpack --mode production",
-    "watch": "webpack --watch --mode development",
-    "watch (html debug)": "webpack --watch --mode development --env debug"
+    "watch (dev)": "webpack --watch --mode development",
+    "watch (debug)": "webpack --watch --mode development --env debug"
   },
   "keywords": [],
   "author": "SQLBI",

@@ -39,47 +39,59 @@
             width:180px;
         }
 
-        .menu-container {
-            margin-top: 30px;
-        }
         .preview {
             width: 100%;
             height: 100%;
-            .flexbox(flex-start, stretch, column);
         }
-        .editor {
-            position: relative;
-            height: calc(100% - 120px);
-            margin-top: 20px;
-            width: calc(100% - 2px);
-            font-size: 16px;
-            padding: 5px 0;
+
+        #preview-menu {
+            width: 100%;
+            height: 100%;
             .flexbox(flex-start, stretch, column);
-            overflow: hidden;
-
-            .border-radius;
-            border: 1px solid @border-color;
-            background: @input-back-color;
-
-            .dark & {
-                border-color: @border-color-dark;
-                background-color: @input-back-color-dark;
+        
+            .menu {
+                margin-top: 30px;
             }
 
-            .zoom {
-                font-size: 14px;
-                margin: auto 5px 0 auto;
-     
-            }
-            .measure-name {
-                margin: 5px 0 10px 10px;
-            }
-            .cm {
+            .menu-body {
+                position: relative;
+                height: calc(100% - 120px);
+                margin-top: 20px;
+                width: calc(100% - 2px);
+                font-size: 16px;
+                padding: 5px 0;
+                .flexbox(flex-start, stretch, column);
+                overflow: hidden;
+
+                .border-radius;
+                border: 1px solid @border-color;
+                background: @input-back-color;
+
+                .dark & {
+                    border-color: @border-color-dark;
+                    background-color: @input-back-color-dark;
+                }
+
+                .zoom {
+                    font-size: 14px;
+                    margin: auto 5px 0 auto;
+        
+                }
+                .measure-name {
+                    margin: 5px 0 10px 10px;
+                }
+                .item-body {
+                    height: 100%;
+                    width: 100%;
+                    position: relative;
+                }
+                .cm {
+                    
+                    overflow: auto;
+                    height: calc(100% - 25px);
+                }
                 
-                overflow: auto;
-                height: calc(100% - 25px);
             }
-            
         }
 
         .gen-preview-overlay {

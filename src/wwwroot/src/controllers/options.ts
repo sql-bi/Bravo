@@ -59,7 +59,7 @@ export class OptionsController extends Dispatchable {
 
     constructor(mode: optionsMode = "host") {
         super();
-        this.mode = mode;
+        this.mode = (debug ? "browser" : mode);
         this.options = this.defaultOptions;
         this.load();
         this.listen();
@@ -89,6 +89,7 @@ export class OptionsController extends Dispatchable {
             host.getOptions()
                 .then(options => {
                     if (options) {
+
                         if (options.customOptions && typeof options.customOptions === "string")
                             options.customOptions = JSON.parse(options.customOptions);
 
@@ -98,8 +99,7 @@ export class OptionsController extends Dispatchable {
                     }
                 })
                 .catch(error => {
-                    if (debug)
-                        console.error(error);
+                    console.error(error);
                 });
         } else {
             try {
@@ -108,8 +108,7 @@ export class OptionsController extends Dispatchable {
                 if (data)
                     this.options = Utils.Obj.merge(this.defaultOptions, data);
             } catch(e){
-                if (debug)
-                    console.error(e);
+                console.error(e);
             }
         }
     }

@@ -135,7 +135,7 @@ export class ChromeTabs extends Dispatchable {
 
         let additionalSpace = _('.chrome-tab-favicon', tabEl).clientWidth + _('.chrome-tab-close', tabEl).clientWidth + 20;
 
-        const tabContentWidth = Utils.Text.measureWidth(_('.chrome-tab-title', tabEl).textContent, { fontSize: 13, fontFamily: "Segoe UI Variable,Segoe UI,-apple-system,Helvetica Neue,sans-serif"});
+        const tabContentWidth = Utils.DOM.measureWidth(_('.chrome-tab-title', tabEl).textContent, { fontSize: 13, fontFamily: "Segoe UI Variable,Segoe UI,-apple-system,Helvetica Neue,sans-serif"});
 
         const targetWidth = tabContentWidth + additionalSpace + (2 * TAB_CONTENT_MARGIN);
   

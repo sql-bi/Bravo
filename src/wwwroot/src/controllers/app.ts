@@ -66,11 +66,6 @@ export class App {
     // Event listeners
     listen() {
 
-        host.on("message", (message: string) => {
-            //TODO
-            console.log("Message received", message);
-        });
-
         this.tabs.on("add", (data: AddedTabInfo)  => {
             this.addSceneGroup(data.id, data.doc);
         });

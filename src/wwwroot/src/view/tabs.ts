@@ -5,7 +5,7 @@
 */
 
 import { Action, Dic, Utils, _, __ } from '../helpers/utils';
-import { Doc } from '../model/doc';
+import { Doc, DocType } from '../model/doc';
 import { strings } from '../model/strings';
 import { ChromeTabs } from "./chrome-tabs";
 import { Connect } from './connect';
@@ -87,7 +87,7 @@ export class Tabs extends View {
 
         this.tabIncremental++;
 
-        let id = Utils.Text.uuid();
+        let id = Utils.DOM.uniqueId();
         let name = (doc ? doc.name : `${strings.defaultTabName}-${this.tabIncremental}`);
         this.tabs[id] = name;
 
@@ -97,7 +97,7 @@ export class Tabs extends View {
         this.chromeTabs.addTab({
             title: name,
             id: id,
-            favicon: `icon-${doc.type}`
+            favicon: `icon-${DocType[doc.type]}`
         });
     }
 

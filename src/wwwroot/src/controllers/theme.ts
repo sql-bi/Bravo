@@ -12,15 +12,35 @@ export enum ThemeType {
     Dark = "Dark",
     Light = "Light",
 }
+
+export interface ThemeChangeArg {
+    theme: ThemeType,
+    appliedTheme: ThemeType.Dark | ThemeType.Light
+}
 export class ThemeController extends Dispatchable {
     
     theme;
     deviceTheme;
     
-    constructor(startupTheme = ThemeType.Auto) {
+    get appliedTheme() {
+        if (this.theme == ThemeType.Auto) {
+            return this.deviceTheme;
+        } else {
+            return this.theme;
+        }
+    }
+
+    get isDark() {
+        return this.appliedTheme == ThemeType.Dark;
+    }
+    get isLight() {
+        return this.appliedTheme == ThemeType.Light;
+    }
+    
+    constructor(initialTheme = ThemeType.Auto) {
         super();
         
-        this.theme = startupTheme;
+        this.theme = initialTheme;
 
         if (window.matchMedia) {
             const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
@@ -51,27 +71,17 @@ export class ThemeController extends Dispatchable {
 
     apply(theme?: ThemeType) {
 
-        if (!theme) {
-            theme = this.theme;
-        } else {
+        if (theme)
             this.theme = theme;
-        }
-        
-        this.trigger("change", theme);
+
+        this.trigger("change", <ThemeChangeArg>{ theme: this.theme, appliedTheme: this.appliedTheme });
 
         if (document.body.classList.contains("no-theme")) return;
 
-        if (theme == ThemeType.Dark || (theme == ThemeType.Auto && this.deviceTheme == ThemeType.Dark)) {
+        if (this.appliedTheme == ThemeType.Dark) {
             document.body.classList.add("dark");
         } else {
             document.body.classList.remove("dark");
         }
-    }
-
-    get isDark() {
-        return this.theme == ThemeType.Dark;
-    }
-    get isLight() {
-        return this.theme == ThemeType.Light;
     }
 }

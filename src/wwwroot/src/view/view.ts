@@ -17,10 +17,7 @@ export class View extends Dispatchable {
         super();
 
         if (!id) {
-            id = Utils.Text.uuid();
-        }
-        if (!isNaN(Number(id.substring(0, 1)))) {
-            id = `_${id}`;
+            id = Utils.DOM.uniqueId();
         }
         this.id = id;
 
@@ -33,11 +30,11 @@ export class View extends Dispatchable {
     }
 
     show() {
-        this.element.removeAttribute('hidden');
+        this.element.toggle(true);
     }
 
     hide() {
-        this.element.setAttribute('hidden', '');
+        this.element.toggle(false);
     }
 
 }

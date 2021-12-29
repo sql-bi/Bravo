@@ -20,7 +20,7 @@ export module Utils {
         }
 
         // Send ajax call
-        export async function ajax(url: string, data = {}, options: RequestInit = {}) {
+        export function ajax(url: string, data = {}, options: RequestInit = {}) {
 
             let defaultOptions: RequestInit = {
                 method: "GET", // *GET, POST, PUT, DELETE, etc.
@@ -56,36 +56,37 @@ export module Utils {
                     } catch(e) {}
                 }
             }
-            try {
 
-                const response = await fetch(url, mergedOptions);
-                if (response.ok) {
-                    const text = await response.text();
-                    try {
-                        const json = JSON.parse(text);
-                        return json;
-                    } catch(err) {
-                       return text;
-                    }
-                }
-            } catch(e) {
-                throw e;
+            const ajaxHandleResponseStatus = (response: Response) => {
+                return (response.status >= 200 && response.status < 300) ? 
+                    Promise.resolve(response) :
+                    Promise.reject(new Error(response.statusText));
+            };
+            
+            const ajaxHandleContentType = (response: Response) => {
+                const contentType = response.headers.get('content-type');
+                return contentType && contentType.startsWith('application/json;') ?
+                    response.json() :
+                    response.text();
             }
-            throw new Error();
+
+            return fetch(url, mergedOptions)
+    	        .then(response => ajaxHandleResponseStatus(response))
+                .then(response => ajaxHandleContentType(response));
         }
 
         // Convenience func for GET ajax
-        export async function get(url: string, data = {}, signal?: AbortSignal) {
-            return await Utils.Request.ajax(url, data, { method: "GET", signal: signal });
+        export function get(url: string, data = {}, signal?: AbortSignal) {
+            return Utils.Request.ajax(url, data, { method: "GET", signal: signal });
         }
 
         // Convenience func for POST ajax
-        export async function post(url: string, data = {}, signal?: AbortSignal) {
-           return await Utils.Request.ajax(url, data, { method: "POST", signal: signal });
+        export function post(url: string, data = {}, signal?: AbortSignal) {
+           return Utils.Request.ajax(url, data, { method: "POST", signal: signal });
         }
 
-        export async function upload(url: string, file: File, signal?: AbortSignal) {
-            return await Utils.Request.ajax(url, {}, { 
+        export function upload(url: string, file: File, signal?: AbortSignal) {
+            return Utils.Request.ajax(url, {}, { 
                 method: "POST",  
                 body: file, 
                 signal: signal,
@@ -96,14 +97,7 @@ export module Utils {
 
     export module Text {
 
-        export interface FontInfo {
-            fontFamily: string;
-            fontSize: number;
-            fontWeight?: string;
-            fontStyle?: string;
-            fontVariant?: string;
-            whiteSpace?: string;
-        }
+        
 
         export function ucfirst(text: string): string {
             return text.substring(0, 1).toUpperCase() + text.substring(1).toLocaleLowerCase();
@@ -122,17 +116,38 @@ export module Utils {
         
             return (pad4(buf[0]) + pad4(buf[1]) + "-" + pad4(buf[2]) + "-" + pad4(buf[3]) + "-" + pad4(buf[4]) + "-" + pad4(buf[5]) + pad4(buf[6]) + pad4(buf[7]));
         }
-        
+
+    }
+
+    export module DOM {
+        export interface FontInfo {
+            fontFamily: string;
+            fontSize: number;
+            fontWeight?: string;
+            fontStyle?: string;
+            fontVariant?: string;
+            whiteSpace?: string;
+        }
+
         export var measureCanvas: HTMLCanvasElement;
         export function measureWidth(text: string, font: FontInfo): number {
 
-            if (!Utils.Text.measureCanvas)
-                Utils.Text.measureCanvas = document.createElement('canvas');
+            if (!Utils.DOM.measureCanvas)
+                Utils.DOM.measureCanvas = document.createElement('canvas');
             
-            let context = Utils.Text.measureCanvas.getContext("2d");
+            let context = Utils.DOM.measureCanvas.getContext("2d");
             context.font = `${font.fontStyle || ""} ${font.fontVariant || ""} ${font.fontWeight || ""} ${font.fontSize} ${font.fontFamily}`;
             let size = context.measureText(text);
             return Math.ceil(size.width * 1.2);
+        }
+
+        export function uniqueId() {
+
+            let id = Utils.Text.uuid();
+            if (!isNaN(Number(id.substring(0, 1)))) {
+                id = `_${id}`;
+            }
+            return id;
         }
     }
 

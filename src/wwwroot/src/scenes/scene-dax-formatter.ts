@@ -8,25 +8,25 @@ import { optionsController } from "../main";
 import * as CodeMirror from 'codemirror';
 import 'codemirror/addon/mode/simple';
 
-import { Tabulator, ColumnCalcsModule, DataTreeModule, FilterModule, FormatModule, InteractionModule, ResizeColumnsModule, ResizeTableModule, SelectRowModule, SortModule  } from 'tabulator-tables';
-Tabulator.registerModule([ColumnCalcsModule, DataTreeModule, FilterModule, FormatModule, InteractionModule, ResizeColumnsModule, ResizeTableModule, SelectRowModule, SortModule]);
+import { Tabulator  } from 'tabulator-tables';
 
 import { Dic, Utils, _, __ } from '../helpers/utils';
 import { daxFunctions } from '../model/dax';
 import { Doc } from '../model/doc';
 import { strings } from '../model/strings';
 import { Alert } from '../view/alert';
-import { Menu } from '../view/menu';
+import { Menu, MenuItem } from '../view/menu';
 import { Scene } from '../view/scene';
+import { TabularMeasure } from '../model/tabular';
 
 export class DaxFormatterScene extends Scene {
     
     table: Tabulator;
-    cms: Dic<CodeMirror.Editor> = {};
     menu: Menu;
     searchBox: HTMLInputElement;
     formatButton: HTMLElement;
     zoomSelect: HTMLSelectElement;
+    activeMeasure: TabularMeasure;
 
     constructor(id: string, container: HTMLElement, doc: Doc) {
         super(id, container, strings.daxFormatterTitle, doc);
@@ -37,6 +37,52 @@ export class DaxFormatterScene extends Scene {
         this.initCodeMirror();
     }
 
+    initCodeMirror() {
+
+        const daxFunctionsPattern = daxFunctions.map(fn => fn.name.replace(/\./gm, "\\.")).join("|");
+
+        CodeMirror.defineSimpleMode("dax", {
+            start: [
+                { regex: /(?:--|\/\/).*/, token: "comment" },
+                { regex: /\/\*/, token: "comment", next: "comment" },
+                { regex: /"(?:[^\\]|\\.)*?(?:"|$)/, token: "string" },
+                { regex: /'(?:[^']|'')*'(?!')(?:\[[ \w\xA0-\uFFFF]+\])?|\w+\[[ \w\xA0-\uFFFF]+\]/gm, token: "column" },
+                { regex: /\[[ \w\xA0-\uFFFF]+\]/gm,  token: "measure" },
+                { regex: new RegExp("\\b(?:" + daxFunctionsPattern + ")\\b", "gmi"), token: "function" },
+                { regex: /:=|[-+*\/=^]|\b(?:IN|NOT)\b/i, token: "operator" },
+                { regex: /0x[a-f\d]+|[-+]?(?:\.\d+|\d+\.?\d*)(?:e[-+]?\d+)?/i, token: "number" },
+                { regex: /[\[\](){}`,]/gm, token: "parenthesis" },
+            ],
+            comment: [
+                { regex: /.*?\*\//, token: "comment", next: "start" },
+                { regex: /.*/, token: "comment" }
+            ],
+            meta: {
+                dontIndentStates: ["comment"],
+                lineComment: "//"
+            }
+        });
+    }
+
+    updateCodeMirror(element: HTMLElement, value: string) {
+        if (!value) return; // IMPORTANT: since the value is null only if nothing is selected, and since when nothing is selected the preview pane is hidden, Code Mirror won't apply the syntax highlight correctly.
+
+        let cm = (<CodeMirrorElement>_(".CodeMirror", element)).CodeMirror;
+        if (cm) {
+            cm.getDoc().setValue(value);
+            //cm.refresh();
+        } else {
+            CodeMirror(element, {
+                value: value,
+                mode: "dax",
+                lineNumbers: true,
+                lineWrapping: true,
+                indentUnit: 4,
+                readOnly: "nocursor"
+            });
+        }
+    }
+
     render() {
         super.render();
 
@@ -44,40 +90,18 @@ export class DaxFormatterScene extends Scene {
             <div class="summary">
                 <p>${strings.daxFormatterSummary(this.doc.measures.length)}</p>
             </div>
-            
 
             <div class="cols">
                 <div class="col coll">
-                <div class="toolbar">
-                    <div class="search">
-                        <input type="search" placeholder="${strings.searchPlaceholder}">
-                    </div>
-                </div>
-                    <div class="table"></div>
-
-                    
-                </div>
-                <div class="col colr">
-                    <div class="preview">
-                        <div class="menu-container"></div>
-                        <div class="editor">
-                            <div class="cm cm-original"></div>
-                            <div class="cm cm-formatted" hidden>
-                                <div class="gen-preview-overlay" hidden>
-                                    <div class="gen-preview-action">
-                                        <p>${strings.daxFormatterPreviewDesc}</p>
-                                        <div class="gen-preview button button-alt">${strings.daxFormatterPreviewButton}</div>
-                                    </div>
-                                    <div class="gen-preview-loader" hidden>
-                                        <div class="loader"></div>
-                                    </div>
-                                </div>
-                            </div>
-                            <select class="zoom">
-                                <option value="1" selected>100%</option>
-                            </select>
+                    <div class="toolbar">
+                        <div class="search">
+                            <input type="search" placeholder="${strings.searchPlaceholder}">
                         </div>
                     </div>
+                    <div class="table"></div>
+                </div>
+                <div class="col colr">
+                    <div class="preview" hidden></div>
                 </div>
             </div>
 
@@ -94,23 +118,79 @@ export class DaxFormatterScene extends Scene {
         `;
         this.body.insertAdjacentHTML("beforeend", html);
 
-        this.menu = new Menu("preview-menu", _(".menu-container", this.body), {
+        this.menu = new Menu("preview-menu", _(".preview", this.body), <Dic<MenuItem>>{
             "original": {
-                name: strings.daxFormatterOriginalCode
+                name: strings.daxFormatterOriginalCode,
+                onRender: element => this.renderOriginalMenu(element),
+                onChange: element => this.switchToOriginalMenu(element)
             },
             "formatted": {
                 name: strings.daxFormatterFormattedCode,
+                onRender: element => this.renderFormattedMenu(element),
+                onChange: element => this.switchToFormattedMenu(element)
             }
-        }, "original");
+        }, "original", false);
+
+        this.menu.body.insertAdjacentHTML("beforeend", `
+            <select class="zoom">
+                <option value="1" selected>100%</option>
+            </select>
+        `);
+        this.zoomSelect = <HTMLSelectElement>_(".zoom", this.menu.body);
 
         this.searchBox = <HTMLInputElement>_(".search input", this.body);
         this.formatButton = _(".do-format", this.body);
-        this.zoomSelect = <HTMLSelectElement>_(".zoom", this.body);
 
-        this.updatePreview();
         this.updateTable();
         this.updateZoom(optionsController.options.customOptions.editorZoom);
         this.listen();
+    }
+
+    renderOriginalMenu(element: HTMLElement) {
+        let html = `
+            <div class="cm cm-original"></div>
+        `;
+        element.insertAdjacentHTML("beforeend", html);
+    }
+
+    switchToOriginalMenu(element: HTMLElement) {
+
+        let editorEl = _('.cm-original', element);
+        this.updateCodeMirror(editorEl, this.activeMeasure ? this.activeMeasure.measure : null);  
+    }
+
+    renderFormattedMenu(element: HTMLElement) {
+        let html = `
+            <div class="cm cm-formatted">
+                <div class="gen-preview-overlay" hidden>
+                    <div class="gen-preview-action">
+                        <p>${strings.daxFormatterPreviewDesc}</p>
+                        <div class="gen-preview button button-alt">${strings.daxFormatterPreviewButton}</div>
+                    </div>
+                    <div class="gen-preview-loader" hidden>
+                        <div class="loader"></div>
+                    </div>
+                </div>
+            </div>
+        `;
+        element.insertAdjacentHTML("beforeend", html);
+    }
+
+    switchToFormattedMenu(element: HTMLElement) {
+
+        let editorEl = _('.cm-formatted', element);
+        if (this.activeMeasure) {
+            let key = `${this.activeMeasure.tableName}[${this.activeMeasure.name}]`;
+            if (key in this.doc.formattedMeasures) {
+                _(".gen-preview-overlay", this.element).toggle(false);
+                this.updateCodeMirror(editorEl, this.doc.formattedMeasures[key]);
+            } else {
+                _(".gen-preview-overlay", this.element).toggle(true);
+                this.updateCodeMirror(editorEl, null); 
+            }
+        } else {
+            this.updateCodeMirror(editorEl, null);  
+        }
     }
 
     updateTable(redraw = true) {
@@ -120,6 +200,7 @@ export class DaxFormatterScene extends Scene {
                 this.table.off("rowClick");
                 this.table.off("rowSelectionChanged");
                 //this.table.destroy();
+                this.activeMeasure = null;
             }
             this.table = null;
 
@@ -177,48 +258,22 @@ export class DaxFormatterScene extends Scene {
             });
             this.table.on("rowClick", (e, row) => {
 
-                let d = row.getData();
+                this.activeMeasure = row.getData();
 
                 __(".row-active", this.table.element).forEach((el: HTMLElement) => {
                     el.classList.remove("row-active");
                 });
 
                 row.getElement().classList.add("row-active");
-                this.updatePreview(d);
+
+                _(".preview", this.element).toggle(true);
+                this.menu.reselect();
             });
 
         } else {
             this.table.setData(data);
         }
     }
-
-    initCodeMirror() {
-
-        const daxFunctionsPattern = daxFunctions.map(fn => fn.name.replace(/\./gm, "\\.")).join("|");
-
-        CodeMirror.defineSimpleMode("dax", {
-            start: [
-                { regex: /(?:--|\/\/).*/, token: "comment" },
-                { regex: /\/\*/, token: "comment", next: "comment" },
-                { regex: /"(?:[^\\]|\\.)*?(?:"|$)/, token: "string" },
-                { regex: /'(?:[^']|'')*'(?!')(?:\[[ \w\xA0-\uFFFF]+\])?|\w+\[[ \w\xA0-\uFFFF]+\]/gm, token: "column" },
-                { regex: /\[[ \w\xA0-\uFFFF]+\]/gm,  token: "measure" },
-                { regex: new RegExp("\\b(?:" + daxFunctionsPattern + ")\\b", "gmi"), token: "function" },
-                { regex: /:=|[-+*\/=^]|\b(?:IN|NOT)\b/i, token: "operator" },
-                { regex: /0x[a-f\d]+|[-+]?(?:\.\d+|\d+\.?\d*)(?:e[-+]?\d+)?/i, token: "number" },
-                { regex: /[\[\](){}`,]/gm, token: "parenthesis" },
-            ],
-            comment: [
-                { regex: /.*?\*\//, token: "comment", next: "start" },
-                { regex: /.*/, token: "comment" }
-            ],
-            meta: {
-                dontIndentStates: ["comment"],
-                lineComment: "//"
-            }
-        });
-    }
-
 
     updateZoom(zoom: number) {
 
@@ -249,60 +304,9 @@ export class DaxFormatterScene extends Scene {
         }
         __(".cm", this.body).forEach((el: HTMLElement) => {
             el.style.fontSize = `${zoom}em`;
+            let cm = (<CodeMirrorElement>_(".CodeMirror", el)).CodeMirror;
+            if (cm) cm.refresh();
         });
-        Object.keys(this.cms).forEach(k => {
-            if (this.cms[k]) this.cms[k].refresh();
-        });
-    }
-
-    updateEditor(id: string, value: string) {
-
-        let container = _(`.col-editor-${id}`, this.element);
-
-        if (Utils.Obj.isSet(value)) {
-            container.toggle(true);
-
-            if (!this.cms[id]) {
-                this.cms[id] = CodeMirror(_(`.cm-${id}`, this.element), {
-                    mode: "dax",
-                    value: value,
-                    lineNumbers: true,
-                    lineWrapping: true,
-                    indentUnit: 4,
-                    readOnly: "nocursor"
-                });
-            } else {
-                this.cms[id].getDoc().setValue(value);
-            }
-        } else {
-            container.toggle(false);
-        }
-    }
-
-    updatePreview(data?: any) {
-
-        if (data) {
-
-            _(".preview", this.element).toggle(true);
-
-            let rawMeasure = data.measure;  
-            this.updateEditor("original", rawMeasure);  
-
-            let key = `${data.tableName}[${data.name}]`;
-            if (key in this.doc.formattedMeasures) {
-
-                _(".gen-preview-overlay", this.element).toggle(false);
-                this.updateEditor("formatted", this.doc.formattedMeasures[key]);
-            } else {
-                _(".gen-preview-overlay", this.element).toggle(true);
-            }
-        } else {
-            this.updateEditor("original", null);  
-            this.updateEditor("formatted", null); 
-            _(".preview", this.element).toggle(false); 
-        }
-
-        
     }
 
     update() {
@@ -315,7 +319,6 @@ export class DaxFormatterScene extends Scene {
 
         _(".gen-preview-action", this.body).toggle(false);
         _(".gen-preview-loader", this.body).toggle(true);
-
 
     }
 
@@ -331,7 +334,7 @@ export class DaxFormatterScene extends Scene {
         });
 
         this.zoomSelect.addEventListener("change", e => {
-            this.updateZoom(parseInt((<HTMLSelectElement>e.currentTarget).value));
+            this.updateZoom(parseFloat((<HTMLSelectElement>e.currentTarget).value));
         });
 
         __(".show-data-usage", this.element).forEach(a => {
@@ -350,20 +353,6 @@ export class DaxFormatterScene extends Scene {
         _(".gen-preview", this.element).addEventListener("click", e => {
             e.preventDefault();
             this.generatePreview();
-        });
-
-        this.menu.on("change", (id: string) => {
-
-            __(".cm", this.body).forEach((div: HTMLElement) => {
-                if (div.classList.contains(`cm-${id}`)) {
-                    div.removeAttribute("hidden"); 
-                } else {
-                    div.setAttribute("hidden", "");
-                }
-
-            });
-
-           
         });
     }
     

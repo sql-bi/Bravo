@@ -22,7 +22,8 @@ declare global {
 
 interface ApiRequest {
     action: string
-    controller: AbortController
+    controller: AbortController,
+    timeout?: number
 }
 
 export interface FormatDaxRequest {
@@ -93,7 +94,7 @@ export class Host extends Dispatchable {
                 //TODO add any webmessage handler here
             });
         } catch (e) {
-            //console.error(e);
+            // Ignore error
         }
     }
 
@@ -102,13 +103,14 @@ export class Host extends Dispatchable {
         try {
             window.external.sendMessage(message);
         } catch (e) {
-            //console.error(e);
+            // Ignore error
         }
     }
 
     // Functions
-    async apiCall(action: string, data = {}, options: RequestInit = {}, timeout = Host.DEFAULT_TIMEOUT) {
-        if (debug) return await debug.apiCall(action);
+    apiCall(action: string, data = {}, options: RequestInit = {}, timeout = Host.DEFAULT_TIMEOUT) {
+        if (debug) return debug.apiCall(action);
+        console.log(`Call ${action}`, data);
 
         let requestId = Utils.Text.uuid();
         let abortController = new AbortController();
@@ -123,12 +125,23 @@ export class Host extends Dispatchable {
         options["signal"] = abortController.signal;
 
         if (timeout) {
-            setTimeout(()=> {
+            this.requests[requestId].timeout = window.setTimeout(()=> {
                 this.apiAbortById(requestId);
             }, timeout);
         }
 
-        return await Utils.Request.ajax(`${this.address}${action}`, data, options);
+        return Utils.Request.ajax(`${this.address}${action}`, data, options).finally(()=>{
+            this.apiCallCompleted(requestId);
+        });
+    }
+
+    apiCallCompleted(requestId: string) {
+        if (requestId in this.requests) {
+            if ("timeout" in this.requests[requestId])
+                window.clearTimeout(this.requests[requestId].timeout);
+                
+            delete this.requests[requestId];
+        }
     }
 
     apiAbortById(requestId: string) {
@@ -151,75 +164,75 @@ export class Host extends Dispatchable {
     /**** APIs ****/
 
     /* Authentication */
-    async signIn(): Promise<Account> {
-        return await this.apiCall("auth/powerbi/SignIn");
+    signIn() {
+        return <Promise<Account>>this.apiCall("auth/powerbi/SignIn");
     }
 
-    async signOut() {
-        return await this.apiCall("auth/powerbi/SignOut");
+    signOut() {
+        return this.apiCall("auth/powerbi/SignOut");
     }
 
-    async getUser(): Promise<Account> {
-        return await this.apiCall("auth/GetUser");
+    getUser() {
+        return <Promise<Account>>this.apiCall("auth/GetUser");
     }
 
 
     /* Analyze Model */
 
-    async getModelFromVpax(file: File): Promise<TabularDatabase> {
-        return await this.apiCall("api/GetModelFromVpax", file, { method: "POST", headers: { /* IMPORTANT */ } }); 
+    getModelFromVpax(file: File) {
+        return <Promise<TabularDatabase>>this.apiCall("api/GetModelFromVpax", file, { method: "POST", headers: { /* IMPORTANT */ } }); 
     }
 
-    async getModelFromReport(report: PBIDesktopReport): Promise<TabularDatabase> {
-        return await this.apiCall("api/GetModelFromReport", report, { method: "POST" });
+    getModelFromReport(report: PBIDesktopReport)  {
+        return <Promise<TabularDatabase>>this.apiCall("api/GetModelFromReport", report, { method: "POST" });
     }
 
-    async getModelFromDataset(dataset: PBICloudDataset): Promise<TabularDatabase> {
-        return await this.apiCall("api/GetModelFromDataset", dataset, { method: "POST" });
+    getModelFromDataset(dataset: PBICloudDataset) {
+        return <Promise<TabularDatabase>>this.apiCall("api/GetModelFromDataset", dataset, { method: "POST" });
     }
 
-    async listReports(): Promise<PBIDesktopReport[]> {
-        return await this.apiCall("api/ListReports");
+    listReports() {
+        return <Promise<PBIDesktopReport[]>>this.apiCall("api/ListReports");
     }
 
-    async listDatasets(): Promise<PBICloudDataset[]> {
-        return await this.apiCall("api/ListDatasets");
+    listDatasets() {
+        return <Promise<PBICloudDataset[]>>this.apiCall("api/ListDatasets");
     }
 
-    async exportVpaxFromReport(report: PBIDesktopReport): Promise<File> {
-        return await this.apiCall("api/ExportVpaxFromReport", report, { method: "POST" });
+    exportVpaxFromReport(report: PBIDesktopReport) {
+        return <Promise<File>>this.apiCall("api/ExportVpaxFromReport", report, { method: "POST" });
     }
 
-    async exportVpaxFromDataset(dataset: PBICloudDataset): Promise<File> {
-        return await this.apiCall("api/ExportVpaxFromDataset", dataset, { method: "POST" });
+    exportVpaxFromDataset(dataset: PBICloudDataset) {
+        return <Promise<File>>this.apiCall("api/ExportVpaxFromDataset", dataset, { method: "POST" });
     }
 
     /* Format DAX */
 
-    async formatDax(request: FormatDaxRequest): Promise<FormattedMeasure[]> {
-        return await this.apiCall("api/FormatDax", request, { method: "POST" });
+    formatDax(request: FormatDaxRequest) {
+        return <Promise<FormattedMeasure[]>>this.apiCall("api/FormatDax", request, { method: "POST" });
     }
     
-    async updateReport(request: UpdatePBIDesktopReportRequest) {
-        return await this.apiCall("api/UpdateReport", request, { method: "POST" });
+    updateReport(request: UpdatePBIDesktopReportRequest) {
+        return this.apiCall("api/UpdateReport", request, { method: "POST" });
     }
 
-    async updateDataset(request: UpdatePBICloudDatasetRequest) {
-        return await this.apiCall("api/UpdateDataset", request, { method: "POST" });
+    updateDataset(request: UpdatePBICloudDatasetRequest) {
+        return this.apiCall("api/UpdateDataset", request, { method: "POST" });
     }
 
 
     /* Application */
 
-    async changeTheme(theme: ThemeType) {
-        return await this.apiCall("api/ChangeTheme", { theme: theme });
+    changeTheme(theme: ThemeType) {
+        return this.apiCall("api/ChangeTheme", { theme: theme });
     }
 
-    async getOptions(): Promise<Options> {
-        return await this.apiCall("api/GetOptions");
+    getOptions() {
+        return <Promise<Options>>this.apiCall("api/GetOptions");
     }
 
-    async updateOptions(options: Options) {
-        return await this.apiCall("api/UpdateOptions", options, { method: "POST" });
+    updateOptions(options: Options) {
+        return this.apiCall("api/UpdateOptions", options, { method: "POST" });
     }
 }

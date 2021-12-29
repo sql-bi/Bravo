@@ -5,16 +5,14 @@ const CssMinimizerPlugin = require("css-minimizer-webpack-plugin");
 
 module.exports = (env, argv) => {
   const debug = env.debug;
-
-  if (debug) 
-    console.log("---", "App started in debug mode", "---");
+  const mode = argv.mode || "development";
 
   return {
     entry: [
       "./src/main.ts",
       "./src/css/main.less"
     ],
-    mode: "development", // Use --mode to change it via CLI
+    mode: mode,
     module: {
       rules: [
         {
@@ -55,6 +53,7 @@ module.exports = (env, argv) => {
     plugins:[
       new webpack.DefinePlugin({
         'process.env.DEBUG': JSON.stringify(debug),
+        'process.env.MODE': JSON.stringify(mode)
       }),
       new MiniCssExtractPlugin({
         filename: "../css/[name].css"
@@ -66,6 +65,6 @@ module.exports = (env, argv) => {
         new CssMinimizerPlugin(),
       ],
       minimize: true,
-    } 
+    }
   }
 };

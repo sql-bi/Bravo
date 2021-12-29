@@ -5,10 +5,11 @@
 */
 
 import { auth, host, optionsController, themeController } from "../main";
-import { ThemeType } from '../controllers/theme';
+import { ThemeChangeArg, ThemeType } from '../controllers/theme';
 import { __, _, Dic } from '../helpers/utils';
 import { strings } from '../model/strings';
 import { View } from './view';
+import { Account } from '../controllers/auth';
 
 export interface SidebarItem {
     name: string
@@ -16,6 +17,8 @@ export interface SidebarItem {
 }
 
 export class Sidebar extends View {
+
+    static DEFAULT_USER_PICTURE = "images/user.svg";
 
     items: Dic<SidebarItem> = {};
     currentItem: string;
@@ -46,7 +49,7 @@ export class Sidebar extends View {
 
                 <div id="ctrl-theme" class="ctrl icon-theme-${optionsController.options.theme.toLowerCase()} solo hide-if-collapsed" title="${strings.themeCtrlTitle}" data-theme="${optionsController.options.theme}"></div> 
                 
-                <div id="ctrl-user" class="ctrl hide-if-collapsed" title="${strings.signInCtrlTitle}"><img src="${ auth.account ? auth.account.picture : "images/user.svg" }"></div>
+                <img id="ctrl-user" class="ctrl hide-if-collapsed" title="${strings.signInCtrlTitle}" src="${ Sidebar.DEFAULT_USER_PICTURE }">
 
             </footer>
         `;
@@ -76,12 +79,12 @@ export class Sidebar extends View {
             });
         });
 
-        _("#ctrl-burger").addEventListener("click", e => {
+        _("#ctrl-burger", this.element).addEventListener("click", e => {
             e.preventDefault();
             this.toggle();
         });
 
-        _("#ctrl-theme").addEventListener("click", e => {
+        _("#ctrl-theme", this.element).addEventListener("click", e => {
             e.preventDefault();
             let el = (<HTMLElement>e.currentTarget);
 
@@ -97,15 +100,15 @@ export class Sidebar extends View {
             themeController.change(newTheme);
         });
 
-        themeController.on("change", (theme: ThemeType) => {
+        themeController.on("change", (arg: ThemeChangeArg) => {
 
             let el = _("#ctrl-theme");
 
-            el.dataset.theme = theme;
+            el.dataset.theme = arg.theme;
 
             Object.values(ThemeType).forEach((value) => {
                 if (isNaN(Number(value))) {
-                    if (value == theme)
+                    if (value == arg.theme)
                         el.classList.add(`icon-theme-${value.toLowerCase()}`);
                     else
                         el.classList.remove(`icon-theme-${value.toLowerCase()}`);    
@@ -113,9 +116,36 @@ export class Sidebar extends View {
             });
         });
 
-        _("#ctrl-user").addEventListener("click", e => {
+        _("#ctrl-user", this.element).addEventListener("click", e => {
             e.preventDefault();
+            if (auth.signedIn) {
+                //TODO Show context menu with signout
+                auth.signOut();
+
+                //console.log(`Already signed in as ${auth.account.upn}`);
+            } else {
+                auth.signIn();
+            }
         });
+
+        auth.on("signedIn", (account: Account) => {
+            this.changeProfilePicture(strings.signedInCtrlTitle(account.upn), account.avatar);
+        });
+
+        auth.on("signedOut", () => {
+            this.changeProfilePicture(strings.signInCtrlTitle);
+        });
+    }
+
+    changeProfilePicture(title: string, picture?: string) {
+        const el = _("#ctrl-user", this.element);
+        el.setAttribute("title", title);
+        el.setAttribute("src", picture ? picture : Sidebar.DEFAULT_USER_PICTURE);
+        if (picture)
+            el.classList.add("photo");
+        else
+            el.classList.remove("photo")
+            
     }
  
     select(id: string) {

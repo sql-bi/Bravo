@@ -8,16 +8,17 @@ import { host } from "../main";
 import { Dic } from '../helpers/utils';
 import { TabularDatabase, TabularDatabaseInfo, TabularMeasure } from './tabular';
 import { deepEqual } from 'fast-equals';
+import { PBICloudDataset, PBIDesktopReport } from '../controllers/host';
 
-export interface DocSourceData {
-    file?: File
-    reportId?: string
+export enum DocType {
+    vpax,
+    pbix,
+    dataset,
 }
-
 export class Doc {
     name: string;
-    type: string;
-    sourceData: DocSourceData;
+    type: DocType;
+    sourceData: File | PBICloudDataset | PBIDesktopReport;
     model: TabularDatabaseInfo;
     measures: TabularMeasure[];
     formattedMeasures: Dic<string>;
@@ -26,7 +27,7 @@ export class Doc {
     isDirty = false;
     loaded = false;
 
-    constructor(name: string, type: string, sourceData: DocSourceData) {
+    constructor(name: string, type: DocType, sourceData: File | PBICloudDataset | PBIDesktopReport) {
         this.name = name;
         this.type = type;
         this.sourceData = sourceData;
@@ -35,9 +36,9 @@ export class Doc {
     refresh(): Promise<void> {
         return new Promise((resolve, reject) => {
 
-            if (this.type == "vpax") {
-                if (this.sourceData && this.sourceData.file) {
-                    host.getModelFromVpax(this.sourceData.file)
+            if (this.type == DocType.vpax) {
+                if (this.sourceData) {
+                    host.getModelFromVpax(<File>this.sourceData)
                         .then((response: TabularDatabase)  => {
                             if (response && response.model) {
 
@@ -58,10 +59,9 @@ export class Doc {
                             reject(error);
                         });
                 }
-
-            } else if (this.type == "pbi-desktop") {
+            } else if (this.type == DocType.dataset) {
                 //TODO
-            } else if (this.type == "pbi-service") {
+            } else if (this.type == DocType.pbix) {
                 //TODO
             } else {
                 reject();

@@ -11,7 +11,7 @@ export interface Account {
     id?: string
     upn?: string //UserPrincipalName
     username?: string
-    picture?: string
+    avatar?: string
 }
 
 interface SignInError {
@@ -23,27 +23,44 @@ export class Auth extends Dispatchable {
 
     account: Account;
 
+    get signedIn(): boolean {
+        return (!!this.account);
+    }
+
     constructor() {
         super();
 
         host.getUser().then(account => {
             this.account = account;
-        })
+            this.trigger("signedIn", this.account);
+        }).catch(e => {
+            
+        });
     }
 
      signIn(): Promise<boolean> {
+        this.account = null;
+
         return host.signIn()
             .then(account => {
-                this.account = account;
-                return true;
+                if (account) {
+                    this.account = account;
+                    this.trigger("signedIn", this.account);
+                    return true;
+                } else {
+                    return false;
+                }
             })
             .catch((error: SignInError) => {
-
+                console.error(error);
                 return false;
             });
     }
 
     signOut() {
-        host.signOut();
+        host.signOut().then(()=> {
+            this.account = null;
+            this.trigger("signedOut");
+        });
     }
 }

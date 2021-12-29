@@ -130,17 +130,20 @@
             }
         }
         #ctrl-user {
-            width: 16px;
-            height: 16px;
-            background-color: @back-color;
-            .border-radius(100%);
+            width: 20px;
+            height: 20px;
+            
+            //background-color: @back-color;
 
-            .flexbox(center);
-            img {
-                width: 100%;
-                height: 100%;
+            &.photo {
+               .border-radius(100%);
+               padding: 0; 
+               border: 1px solid @back-color;
+
+               .dark & {
+                   border-color: @back-color-dark
+               }
             }
-
         }
         #ctrl-options {
             .flex(0 0 auto);
