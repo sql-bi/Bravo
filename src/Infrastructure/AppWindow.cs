@@ -31,15 +31,18 @@ namespace Sqlbi.Bravo.Infrastructure
         {
 #if DEBUG || DEBUG_WWWROOT
             var contextMenuEnabled = true;
+            var devToolsEnabled = true;
             var logVerbosity = 3;
 #else
             var contextMenuEnabled = false;
+            var devToolsEnabled = false;
             var logVerbosity = 1;
 #endif
             var window = new PhotinoWindow()
                 .SetTitle(AppConstants.ApplicationMainWindowTitle)
                 .SetIconFile("wwwroot/bravo.ico")
                 .SetContextMenuEnabled(contextMenuEnabled)
+                .SetDevToolsEnabled(devToolsEnabled)
                 .SetLogVerbosity(logVerbosity) // 0 = Critical Only, 1 = Critical and Warning, 2 = Verbose, >2 = All Details. Default is 2.
                 .SetGrantBrowserPermissions(true)
                 .SetUseOsDefaultSize(true)
