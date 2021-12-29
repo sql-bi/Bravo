@@ -1,5 +1,6 @@
 ﻿#nullable disable
 
+using System;
 using System.Diagnostics;
 
 namespace Sqlbi.Bravo.Infrastructure.Models.PBICloud
@@ -10,16 +11,16 @@ namespace Sqlbi.Bravo.Infrastructure.Models.PBICloud
     { 
         public CloudEnvironmentType Name { get; init; }
 
-        public string AuthorityUri { get; init; }
+        public Uri Authority { get; init; }
 
         public string ClientId { get; init; }
 
-        public string RedirectUri { get; init; }
-
         public string[] Scopes { get; init; }
 
-        public string ResourceUri { get; init; }
+        public Uri Endpoint { get; init; }
 
-        public string EndpointUri { get; init; }
+        //public string RedirectUri { get; init; }
+
+        //public string ResourceUri { get; init; }
     }
 }

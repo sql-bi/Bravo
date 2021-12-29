@@ -76,6 +76,7 @@ namespace Sqlbi.Bravo.Services
                 Identifier = CurrentAuthentication!.Account.HomeAccountId.Identifier,
                 UserPrincipalName = CurrentAuthentication!.Account.Username,
                 Username = CurrentAuthentication!.ClaimsPrincipal.FindFirst((c) => c.Type == "name")?.Value,
+                Avatar = _authenticationService.CachedUserInfo?.Avatar
             };
         }
 
