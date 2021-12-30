@@ -1,4 +1,5 @@
-﻿using Sqlbi.Bravo.Infrastructure.Messages;
+﻿using Sqlbi.Bravo.Infrastructure.Helpers;
+using Sqlbi.Bravo.Infrastructure.Messages;
 using Sqlbi.Bravo.Infrastructure.Windows.Interop;
 using Sqlbi.Infrastructure.Configuration.Settings;
 using System;
@@ -17,15 +18,21 @@ namespace Sqlbi.Bravo.Infrastructure
 
         public AppInstance()
         {
-            _instanceMutex = new Mutex(initiallyOwned: true, name: $"Bravo|Mutex", out _instanceOwned);
+            var prefix = DesktopBridgeHelpers.IsPackagedAppInstance ? AppConstants.ApplicationStoreAliasName : AppConstants.ApplicationName;
+
+            _instanceMutex = new Mutex(initiallyOwned: true, name: $"{ prefix }|4f9wB", out _instanceOwned);
 
             GC.KeepAlive(_instanceMutex);
         }
 
+        /// <summary>
+        ///  Determines if the current instance is the only running instance of the application or if another instance is already running
+        /// </summary>
+        /// <returns>true if the current instance is the only running instance of the application; otherwise, false</returns>
         public bool IsOwned => _instanceOwned;
 
         /// <summary>
-        /// Sends a WM_COPYDATA message to the primary instance owner notifying it of startup arguments for the current instance
+        /// Sends a message to the primary instance owner notifying it of startup arguments for the current instance
         /// </summary>
         public void NotifyOwner()
         {

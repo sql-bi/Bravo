@@ -4,7 +4,6 @@ using Sqlbi.Bravo.Infrastructure;
 using Sqlbi.Bravo.Infrastructure.Configuration;
 using Sqlbi.Bravo.Infrastructure.Helpers;
 using System;
-using System.Threading;
 
 namespace Sqlbi.Bravo
 {
@@ -22,30 +21,31 @@ namespace Sqlbi.Bravo
             {
                 StartupConfiguration.Configure();
 
-                var instance = new AppInstance();
-                if (instance.IsOwned == false)
-                {
-                    // Another instance of the application is already running, notify the owner and exit gracefully
-                    instance.NotifyOwner();
-                    return;
-                }
+                using var instance = new AppInstance();
 
-                using var host = CreateHost();
-                host.Start();
+                if (instance.IsOwned)
                 {
-                    using var window = new AppWindow(host);
-                    window.WaitForClose();
+                    using var host = CreateHost();
+                    host.Start();
+                    {
+                        using var window = new AppWindow(host);
+                        window.WaitForClose();
+                    }
+                    host.StopAsync().GetAwaiter().GetResult();
                 }
-                host.StopAsync().Wait();
+                else
+                {
+                    instance.NotifyOwner();
+                }
+            }
+            catch (AggregateException ex)
+            {
+                TelemetryHelper.TrackException(ex.GetBaseException());
+                throw;
             }
             catch (Exception ex)
             {
-                var telemetry = TelemetryHelper.CreateTelemetryClient();
-                {
-                    telemetry.TrackException(ex);
-                    telemetry.Flush();
-                    Thread.Sleep(3000);
-                }
+                TelemetryHelper.TrackException(ex);
                 throw;
             }
         }

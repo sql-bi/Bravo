@@ -6,7 +6,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Sqlbi.Bravo.Infrastructure.Configuration.Options;
+using Sqlbi.Bravo.Infrastructure.Helpers;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -19,6 +21,10 @@ namespace Sqlbi.Bravo.Infrastructure.Extensions
         {
             services.AddSwaggerGen((options) =>
             {
+                // TODO: IncludeXmlComments fails due to a wrong xml file path while debugging the MSIX package
+                if (Debugger.IsAttached && DesktopBridgeHelpers.IsPackagedAppInstance)
+                    return;
+
                 var xmlFile = $"{ Assembly.GetExecutingAssembly().GetName().Name }.xml";
                 var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
                 options.IncludeXmlComments(xmlPath, includeControllerXmlComments: true);

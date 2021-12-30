@@ -1,5 +1,6 @@
 ﻿using Sqlbi.Bravo.Infrastructure;
 using Sqlbi.Bravo.Infrastructure.Extensions;
+using Sqlbi.Bravo.Infrastructure.Helpers;
 using System;
 using System.Collections.ObjectModel;
 using System.CommandLine;
@@ -22,7 +23,7 @@ namespace Sqlbi.Infrastructure.Configuration.Settings
         public string? ArgumentDatabaseName { get; set; }
 
         [JsonIgnore]
-        public bool IsPBIDesktopExternalTool => IsExternalTool && AppConstants.PBIDesktopProcessName.Equals(ParentProcessName);
+        public bool IsPBIDesktopExternalTool => IsExternalTool && AppConstants.PBIDesktopProcessName.Equals(ParentProcessName, StringComparison.OrdinalIgnoreCase);
 
         [JsonIgnore]
         public int? ParentProcessId { get; set; }
@@ -54,8 +55,6 @@ namespace Sqlbi.Infrastructure.Configuration.Settings
     {
         public static void FromCommandLineArguments(this StartupSettings settings)
         {
-            var parentProcess = Process.GetCurrentProcess().GetParent();
-
             var serverOption = new Option<string>(new[] { "--server", "--s" })
             {
                 Description = "Server name",
@@ -68,10 +67,17 @@ namespace Sqlbi.Infrastructure.Configuration.Settings
                 IsRequired = true
             };
 
+            var parentProcessIdOption = new Option<string>(new[] { "--ppid" })
+            {
+                Description = "Parent process ID",
+                IsRequired = false
+            };
+
             var command = new RootCommand
             {
                 serverOption,
-                databaseOption
+                databaseOption,
+                parentProcessIdOption
             };
 
             var args = Environment.GetCommandLineArgs();
@@ -86,10 +92,26 @@ namespace Sqlbi.Infrastructure.Configuration.Settings
                 settings.ArgumentDatabaseName = result.ValueForOption(databaseOption);
             }
 
-            settings.ParentProcessId = parentProcess.Id;
-            settings.ParentProcessName = parentProcess.ProcessName;
-            //settings.ParentProcessMainWindowHandle = parentProcess.MainWindowHandle;
-            settings.ParentProcessMainWindowTitle = parentProcess.GetMainWindowTitle(settings.IsPBIDesktopExternalTool ? (windowTitle) => windowTitle.IsPBIDesktopMainWindowTitle() : default).ToPBIDesktopReportName();
+            Process? parentProcess = null;
+            {
+                if (DesktopBridgeHelpers.IsPackagedAppInstance && result.HasOption(parentProcessIdOption))
+                {
+                    var parentProcessId = result.ValueForOption<int>(parentProcessIdOption);
+                    parentProcess = ProcessExtensions.SafeGetProcessById(parentProcessId);
+                }
+                else
+                {
+                    parentProcess = Process.GetCurrentProcess().GetParent();
+                }
+
+                if (parentProcess is not null)
+                {
+                    settings.ParentProcessId = parentProcess.Id;
+                    settings.ParentProcessName = parentProcess.ProcessName;
+                    //settings.ParentProcessMainWindowHandle = parentProcess.MainWindowHandle;
+                    settings.ParentProcessMainWindowTitle = parentProcess.GetMainWindowTitle(settings.IsPBIDesktopExternalTool ? (windowTitle) => windowTitle.IsPBIDesktopMainWindowTitle() : default).ToPBIDesktopReportName();
+                }
+            }
         }
     }
 }

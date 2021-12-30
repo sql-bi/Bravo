@@ -1,0 +1,70 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<Package
+  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:uap3="http://schemas.microsoft.com/appx/manifest/uap/windows10/3"
+  xmlns:uap8="http://schemas.microsoft.com/appx/manifest/uap/windows10/8"
+  xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+  IgnorableNamespaces="uap uap3 uap8 rescap" >
+
+  <Identity 
+    Name="SQLBI.Bravo"
+    ProcessorArchitecture="x64"
+    Publisher="CN=bravo-develop"
+    Version="1.0.60.0"
+    />
+
+  <Properties>
+    <DisplayName>Bravo for Power BI</DisplayName>
+    <PublisherDisplayName>SQLBI Corporation</PublisherDisplayName>
+    <Description>Your companion toolkit to the Power BI world</Description>
+    <Logo>Assets\StoreLogo.png</Logo>
+  </Properties>
+
+  <Resources>
+    <Resource Language="en-us"/>
+  </Resources>
+
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.14393.0" MaxVersionTested="10.0.16299.15" />
+  </Dependencies>
+
+  <Capabilities>
+    <rescap:Capability Name="runFullTrust" />
+    <Capability Name="internetClient" />
+  </Capabilities>
+
+  <Applications>
+    <Application Id="App"
+      Executable="$targetnametoken$.exe"
+      EntryPoint="$targetentrypoint$">
+      <uap:VisualElements
+        DisplayName="Bravo for Power BI"
+        Description="Your companion toolkit to the Power BI world"
+        BackgroundColor="transparent"
+        Square150x150Logo="Assets\Square150x150Logo.png"
+        Square44x44Logo="Assets\Square44x44Logo.png">
+        <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" />
+        <uap:SplashScreen Image="Assets\SplashScreen.png" />
+      </uap:VisualElements>
+      <Extensions>
+        <uap3:Extension Category="windows.fileTypeAssociation">
+          <uap3:FileTypeAssociation Name="vpax" Parameters="&quot;%1&quot;">
+            <uap:SupportedFileTypes>
+              <uap:FileType>.vpax</uap:FileType>
+            </uap:SupportedFileTypes>
+            <uap:DisplayName>SQLBI.Bravo</uap:DisplayName>
+            <uap:Logo>Assets\icon-256x256.png</uap:Logo>
+            <uap:EditFlags OpenIsSafe="true" />
+          </uap3:FileTypeAssociation>
+        </uap3:Extension>
+        <uap3:Extension Category="windows.appExecutionAlias" EntryPoint="Windows.FullTrustApplication">
+          <uap3:AppExecutionAlias>
+            <uap8:ExecutionAlias Alias="BravoStore.exe"/>
+          </uap3:AppExecutionAlias>
+        </uap3:Extension>
+      </Extensions>
+    </Application>
+  </Applications>
+</Package>
