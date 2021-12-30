@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net5-windows10.0.17763.0</TargetFramework>
+    <Platforms>x64</Platforms>
     <IsPackable>false</IsPackable>
     <Configurations>Debug;Release;Debug_wwwroot</Configurations>
   </PropertyGroup>

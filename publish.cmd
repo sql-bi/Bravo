@@ -30,7 +30,7 @@ SET framework=net5-windows10.0.17763.0
 SET publishfolder=%~dp0src\bin\%configuration%\%framework%\%runtime%\publish
 CD /d "%~dp0src"
 IF EXIST %publishfolder% RMDIR /s /q %publishfolder%
-dotnet publish Bravo.csproj --configuration %configuration% --runtime %runtime% --output %publishfolder% --self-contained true --verbosity %verbosity% --force --nologo || GOTO :error
+dotnet publish Bravo.csproj --configuration %configuration% --output %publishfolder% --self-contained true --verbosity %verbosity% --force --nologo || GOTO :error
 
 REM  ***
 ECHO *** BRAVO INSTALLER ***

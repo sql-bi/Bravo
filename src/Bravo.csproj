@@ -3,7 +3,8 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType> 
     <TargetFramework>net5-windows10.0.17763.0</TargetFramework>
-    <Platforms>AnyCPU</Platforms>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <Platforms>x64</Platforms>
     <ApplicationIcon>bravo.ico</ApplicationIcon>
     <Company>SQLBI</Company>
     <Authors>SQLBI</Authors>
