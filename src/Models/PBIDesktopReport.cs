@@ -1,5 +1,4 @@
-﻿using Bravo.Infrastructure.Helpers;
-using Sqlbi.Bravo.Infrastructure;
+﻿using Sqlbi.Bravo.Infrastructure;
 using Sqlbi.Bravo.Infrastructure.Extensions;
 using Sqlbi.Bravo.Infrastructure.Helpers;
 using System;

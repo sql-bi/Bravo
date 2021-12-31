@@ -1,6 +1,7 @@
 ﻿using Sqlbi.Bravo.Infrastructure.Windows.Interop;
 using System.IO;
 using System.Net;
+using System.Runtime;
 
 namespace Sqlbi.Bravo.Infrastructure.Configuration
 {
@@ -8,16 +9,16 @@ namespace Sqlbi.Bravo.Infrastructure.Configuration
     {
         public static void Configure()
         {
-            ConfigureSecurityProtocols();
             ConfigureDirectories();
-            ConfigureProcessDPIAware();
+            ConfigureMulticoreJit();
+            ConfigureSecurityProtocols();
+            ConfigureProcessDpiAware();
         }
 
         private static void ConfigureDirectories()
         {
 #if !DEBUG_WWWROOT
-            var path = System.AppContext.BaseDirectory;
-            Directory.SetCurrentDirectory(path);
+            Directory.SetCurrentDirectory(System.AppContext.BaseDirectory);
 #endif
             Directory.CreateDirectory(AppConstants.ApplicationFolderLocalDataPath);
         }
@@ -33,9 +34,15 @@ namespace Sqlbi.Bravo.Infrastructure.Configuration
             ServicePointManager.SecurityProtocol = excludeSsl | includeTls;
         }
 
-        private static void ConfigureProcessDPIAware()
+        private static void ConfigureProcessDpiAware()
         {
             NativeMethods.SetProcessDPIAware();
+        }
+
+        private static void ConfigureMulticoreJit()
+        {
+            ProfileOptimization.SetProfileRoot(AppConstants.ApplicationFolderLocalDataPath);
+            ProfileOptimization.StartProfile(".jitprofile");
         }
     }
 }

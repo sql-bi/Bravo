@@ -5,13 +5,11 @@
     <TargetFramework>net5-windows10.0.17763.0</TargetFramework>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <Platforms>x64</Platforms>
-    <ApplicationIcon>bravo.ico</ApplicationIcon>
+    <ApplicationIcon>wwwroot\bravo.ico</ApplicationIcon>
     <Company>SQLBI</Company>
     <Authors>SQLBI</Authors>
     <Product>Bravo for Power BI</Product>
     <Copyright>SQLBI Corp.</Copyright>
-    <PackageIcon>icon-228.png</PackageIcon>
-    <PackageIconUrl />
     <RootNamespace>Sqlbi.$(MSBuildProjectName.Replace(" ", "_"))</RootNamespace>
     <Nullable>enable</Nullable>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
@@ -26,6 +24,7 @@
     -->
     <TypeScriptCompileBlocked>true</TypeScriptCompileBlocked>
     <Configurations>Debug;Release;Debug_wwwroot</Configurations>
+    <AnalysisLevel>latest</AnalysisLevel>
   </PropertyGroup>
 
   <ItemGroup>
@@ -35,12 +34,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Autoupdater.NET.Official" Version="1.7.0" />
     <PackageReference Include="Dax.Formatter" Version="1.0.0" />
     <PackageReference Include="Dax.ViewModel" Version="1.2.0" />
     <PackageReference Include="Dax.Vpax.NetCore" Version="1.2.0" />
     <PackageReference Include="Microsoft.ApplicationInsights" Version="2.20.0" />
     <PackageReference Include="Microsoft.ApplicationInsights.WindowsServer.TelemetryChannel" Version="2.20.0" />
     <PackageReference Include="Microsoft.Identity.Client" Version="4.39.0" />
+    <PackageReference Include="Microsoft.Toolkit.Uwp.Notifications" Version="7.1.2" />
     <PackageReference Include="Photino.NET" Version="2.1.10" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.2.3" />
     <PackageReference Include="System.CommandLine" Version="2.0.0-beta1.21308.1" />

@@ -23,6 +23,11 @@ namespace Sqlbi.Bravo.Infrastructure
             _instanceMutex = new Mutex(initiallyOwned: true, name: $"{ prefix }|4f9wB", out _instanceOwned);
 
             GC.KeepAlive(_instanceMutex);
+
+            if (_instanceOwned)
+            {
+                NotificationHelper.RegisterNotificationHandler();
+            }
         }
 
         /// <summary>

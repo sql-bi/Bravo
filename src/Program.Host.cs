@@ -1,12 +1,11 @@
-﻿using Bravo.Infrastructure.Helpers;
-using Microsoft.AspNetCore.Hosting;
+﻿using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.EventLog;
 using System;
-using System.IO;
+using System.Net;
 
 namespace Sqlbi.Bravo
 {
@@ -77,23 +76,24 @@ namespace Sqlbi.Bravo
                 //    builder.
                 //});
 
-                webBuilder.ConfigureKestrel((options) =>
+                webBuilder.ConfigureKestrel((serverOptions) =>
                 {
+#if DEBUG || DEBUG_WWWROOT
+                    var listenEndpoint = new IPEndPoint(IPAddress.Loopback, port: 5000);
+#else
+                    var listenEndpoint = new IPEndPoint(Infrastructure.Helpers.NetworkHelper.GetLoopbackAddress(), port: 0);
+#endif
                     // Allow sync IO - required by ImportVpax
-                    options.AllowSynchronousIO = true;
-                    
-                    // TODO: randomise the listening port 
-                    var listenAddress = NetworkHelper.GetLoopbackAddress();
-                    options.Listen(listenAddress, port: 0, (listenOptions) =>
-                    //options.ListenLocalhost(port: 5000, (listenOptions) =>
+                    serverOptions.AllowSynchronousIO = true;
+                    serverOptions.Listen(listenEndpoint, (listenOptions) =>
                     {
-#if DEBUG
+#if DEBUG || DEBUG_WWWROOT
                         listenOptions.UseConnectionLogging();
 #endif
                         //listenOptions.UseHttps(); // TODO: do we need https ?
-                    }); 
+                    });
                 });
-
+                
                 webBuilder.UseStartup<Startup>();
             });
 
