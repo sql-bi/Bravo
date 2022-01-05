@@ -4,9 +4,34 @@
  * https://www.sqlbi.com
 */
 
+import * as sanitizeHtml from 'sanitize-html';
+
 // Utils
 export module Utils {
 
+    export module Platform {
+        export const isMac = (navigator.userAgent.toLowerCase().indexOf('mac') > -1);
+
+        export function saveAs(blob: Blob, fileName: string) {
+            const url = window.URL.createObjectURL(blob);
+        
+            let anchorElem = <HTMLAnchorElement>(document.createElement("a"));
+            anchorElem.style.display = "none";
+            anchorElem.href = url;
+            anchorElem.download = fileName;
+        
+            document.body.appendChild(anchorElem);
+            anchorElem.click();
+        
+            document.body.removeChild(anchorElem);
+        
+            // On Edge, revokeObjectURL should be called only after
+            // a.click() has completed, atleast on EdgeHTML 15.15048
+            setTimeout(function() {
+                window.URL.revokeObjectURL(url);
+            }, 1000);
+        }
+    }
     export module Request {
 
         // Load local scripts
@@ -92,15 +117,25 @@ export module Utils {
                 signal: signal,
                 headers: { }, //Set emtpy - this way the browser will automatically add the Content type header including the Form Boundary
             });
-          }
+        }
+
+        export function isAbort(error: Error) {
+            return (error.name == "AbortError");
+        }
     }
 
     export module Text {
 
-        
+        export function slugify(text: string): string {
+            return text.toLowerCase().replace(/\s|_/g, '-').replace(/'|"/g, '').replace(/\[|\]/g, '-');
+        }
 
         export function ucfirst(text: string): string {
             return text.substring(0, 1).toUpperCase() + text.substring(1).toLocaleLowerCase();
+        }
+
+        export function camelCase(text: string): string {
+            return text.toLowerCase().replace(/[^a-zA-Z0-9]+(.)/g, (m, chr) => chr.toUpperCase());
         }
 
         export function uuid(): string {
@@ -436,7 +471,7 @@ export module Utils {
 
         // Check if the object has been set
         export function isSet(object: any): boolean { 
-            return (typeof object !== 'undefined' && object !== null); 
+            return (typeof object !== "undefined" && object !== null); 
         }
 
         // Check object type
@@ -512,11 +547,6 @@ export module Utils {
 
 export interface Dic<T> {
     [key: string]: T
-}
-
-export interface Action {
-    action: string
-    data: any
 }
 
 // DOM helpers

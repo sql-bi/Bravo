@@ -3,28 +3,23 @@
  * Copyright (c) SQLBI corp. - All rights reserved.
  * https://www.sqlbi.com
 */
-
 import { Doc } from '../model/doc';
 import { strings } from '../model/strings';
-import { Scene } from '../view/scene';
+import { MainScene } from './scene-main';
 
-export class ManageDatesScene extends Scene {
-
+export class BestPracticesScene extends MainScene {
+    
     constructor(id: string, container: HTMLElement, doc: Doc) {
-        super(id, container, strings.manageDatesTitle, doc);
-        this.element.classList.add("manage-dates");
-
-        this.load();
+        super(id, container, doc); //, strings.bestPracticesTitle
+        this.element.classList.add("best-practices");
     }
 
     render() {
         super.render();
         
         let html = `
-            
+
         `;
         this.body.insertAdjacentHTML("beforeend", html);
     }
-
-    
 }

@@ -188,29 +188,53 @@
         }
     }
 }
+.loader-container {
+    
+    width: 100%;
+    height: 100%;
+    .flexbox(center, center, column);
+
+    p {
+        margin:0 0 15px 0;
+        font-size: 16px;
+        color: @notice-color;
+
+        .dark & {
+            color: @notice-color-dark;
+        }
+    }
+}
 .loader {
     width: 48px;
     height: 48px;
     border-radius: 50%;
-    position: relative;
+
     transform:rotate(45deg);
     background: @window-back-color;
 
     .dark & {
         background-color: @window-back-color-dark;
     }
-  }
-  .loader::before {
-    content: "";
-    box-sizing: border-box;
-    position: absolute;
-    inset: 0px;
-    border-radius: 50%;
-    border:24px solid @accent-back-color;
-    animation: prixClipFix 5s infinite linear;
 
-    .dark & { border-color: @accent-back-color-dark;}
-  }
+    &.solo {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        margin: -24px 0 0 -24px;
+    }
+  
+    &:before {
+        content: "";
+        box-sizing: border-box;
+        position: absolute;
+        inset: 0px;
+        border-radius: 50%;
+        border:24px solid @accent-back-color;
+        animation: prixClipFix 5s infinite linear;
+
+        .dark & { border-color: @accent-back-color-dark;}
+    }
+}
 
   @keyframes prixClipFix {
       0%   {clip-path:polygon(50% 50%,0 0,0 0,0 0,0 0,0 0)}

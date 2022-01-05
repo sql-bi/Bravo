@@ -13,7 +13,7 @@ export class ErrorAlert extends Dialog {
     constructor() {
         super("error", document.body, strings.errorGeneric, [
             { name: strings.dialogOK, action: "cancel", className: "button-alt" },
-        ]);
+        ], "icon-alert");
     }
 
     show(message?: string) {

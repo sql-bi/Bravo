@@ -18,6 +18,7 @@ export interface Options {
 
 export interface ClientOptions {
     editorZoom: number
+    previewFormatting: boolean
     daxFormatter: FormatDaxOptions
 }
 
@@ -50,6 +51,7 @@ export class OptionsController extends Dispatchable {
         telemetryEnabled: true,
         customOptions: {
             editorZoom: 1,
+            previewFormatting: false,
             daxFormatter: {
                 spacingStyle: DaxFormatterSpacingStyle.BestPractice,
                 lineStyle: DaxFormatterLineStyle.LongLine

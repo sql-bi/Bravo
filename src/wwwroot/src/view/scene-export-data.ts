@@ -3,17 +3,16 @@
  * Copyright (c) SQLBI corp. - All rights reserved.
  * https://www.sqlbi.com
 */
+
 import { Doc } from '../model/doc';
 import { strings } from '../model/strings';
-import { Scene } from '../view/scene';
+import { MainScene } from './scene-main';
 
-export class BestPracticesScene extends Scene {
-    
+export class ExportDataScene extends MainScene {
+
     constructor(id: string, container: HTMLElement, doc: Doc) {
-        super(id, container, strings.bestPracticesTitle, doc);
-        this.element.classList.add("best-practices");
-
-        this.load();
+        super(id, container, doc); //, strings.exportDataTitle
+        this.element.classList.add("export-data");
     }
 
     render() {

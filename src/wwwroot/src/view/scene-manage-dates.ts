@@ -6,23 +6,23 @@
 
 import { Doc } from '../model/doc';
 import { strings } from '../model/strings';
-import { Scene } from '../view/scene';
+import { MainScene } from './scene-main';
 
-export class ExportDataScene extends Scene {
+export class ManageDatesScene extends MainScene {
 
     constructor(id: string, container: HTMLElement, doc: Doc) {
-        super(id, container, strings.exportDataTitle, doc);
-        this.element.classList.add("export-data");
-
-        this.load();
+        super(id, container, doc); //, strings.manageDatesTitle
+        this.element.classList.add("manage-dates");
     }
 
     render() {
         super.render();
         
         let html = `
-
+            
         `;
         this.body.insertAdjacentHTML("beforeend", html);
     }
+
+    
 }

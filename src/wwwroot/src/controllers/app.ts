@@ -4,79 +4,60 @@
  * https://www.sqlbi.com
 */
 
-import { Dic, Action, _, __ } from "../helpers/utils";
+import { Dic, _, __, Utils } from "../helpers/utils";
 import { strings } from "../model/strings";
-import { host } from "../main";
 
-import { AnalyzeModelScene } from "../scenes/scene-analyze-model";
-import { DaxFormatterScene } from "../scenes/scene-dax-formatter";
-import { ManageDatesScene } from "../scenes/scene-manage-dates";
 import { Sidebar } from '../view/sidebar';
 import { Tabs, AddedTabInfo, RemovedTabInfo } from '../view/tabs';
-import { BestPracticesScene } from '../scenes/scene-best-practices';
-import { ExportDataScene } from '../scenes/scene-export-data';
-import { WelcomeScene } from '../scenes/scene-welcome';
+import { WelcomeScene } from '../view/scene-welcome';
 import { Doc } from '../model/doc';
-import { SceneType, SceneGroup } from '../view/scene';
 import { Confirm } from '../view/confirm';
+import { Connect } from '../view/connect';
+import { DialogResponse } from '../view/dialog';
+import { Sheet } from './sheet';
+import { PageType } from './page';
 
 export class App {
 
-    scenesType: Dic<SceneType> = {
-        
-        "analyze-model": {  
-            name: strings.analyzeModelName,
-            scene: (id: string, container: HTMLElement, doc: Doc) => new AnalyzeModelScene(id, container, doc)
-        },
-        "dax-formatter": {  
-            name: strings.daxFormatterName,
-            scene: (id: string, container: HTMLElement, doc: Doc) => new DaxFormatterScene(id, container, doc)
-        },
-        "manage-dates": {  
-            name: strings.manageDatesName,
-            scene: (id: string, container: HTMLElement, doc: Doc) => new ManageDatesScene(id, container, doc)
-        },
-        "export-data": {  
-            name: strings.exportDataName,
-            scene: (id: string, container: HTMLElement, doc: Doc) => new ExportDataScene(id, container, doc)
-        },
-        "best-practices": {  
-            name: strings.bestPracticesName,
-            scene: (id: string, container: HTMLElement, doc: Doc) => new BestPracticesScene(id, container, doc)
-        },
-    };
-    scenes: Dic<SceneGroup> = {};
+    sheets: Dic<Sheet> = {};
+    welcomeScene: WelcomeScene;
+    docs: Dic<Doc> = {};
     element: HTMLElement;
     sidebar: Sidebar;
     tabs: Tabs;
+    defaultConnectSelectedMenu: string;
 
     constructor() {
 
         this.element = _(".root");
-        this.sidebar = new Sidebar("sidebar", this.element, this.scenesType);
+
+        let sidebarItems: Dic<string> = {};
+        for(let type in PageType) {
+            sidebarItems[type] = strings[type];
+        }
+        this.sidebar = new Sidebar("sidebar", this.element, sidebarItems);
+
         this.tabs = new Tabs("tabs", this.element);
 
         this.listen();
 
-        //Welcome
-        this.addSceneGroup("welcome");
-        this.showScene("welcome");
+        this.showWelcome();
     }
 
     // Event listeners
     listen() {
 
-        this.tabs.on("add", (data: AddedTabInfo)  => {
-            this.addSceneGroup(data.id, data.doc);
+        this.tabs.on("open", () => {
+            this.connect(this.defaultConnectSelectedMenu);
         });
 
         this.tabs.on("close", (data: RemovedTabInfo) => {
-            if (data.id in this.scenes) {
-                if (this.scenes[data.id].doc.isDirty) {
+            if (data.id in this.sheets) {
+                if (this.sheets[data.id].doc.isDirty) {
 
                     let dialog = new Confirm();
-                    dialog.show(strings.confirmTabCloseMessage).then((r: Action) => {
-                        if (r.action == "ok")
+                    dialog.show(strings.confirmTabCloseMessage).then((response: DialogResponse) => {
+                        if (response.action == "ok")
                             this.tabs.closeTab(data.element);
                     });
 
@@ -87,69 +68,83 @@ export class App {
         });
 
         this.tabs.on("remove", (id: string) => {
-            this.removeSceneGroup(id);
+            this.removeSheet(id);
         });
 
         this.tabs.on("noTabs", () => {
-            this.showScene("welcome");
+            this.showWelcome();
         });
 
         this.tabs.on("change", (id: string) => {
-            this.showScene(id, this.sidebar.currentItem);
+            this.showSheet(id, <PageType>this.sidebar.currentItem);
         });
 
         this.sidebar.on("change", (id: string) => {
             if (this.tabs.currentTab) 
-                this.showScene(this.tabs.currentTab, id);
+                this.showSheet(this.tabs.currentTab, <PageType>id);
         });
     }
 
-    addSceneGroup(id: string, doc: Doc = null) {
+    addSheet(id: string, doc: Doc) {
 
-        this.scenes[id] = {
-            doc: doc,
-            elements: {}
-        };
+        let container = this.tabs.body;
+        if (this.welcomeScene)
+            this.welcomeScene.hide();
+
+        let sheet = new Sheet(id, container, doc);
+        this.sheets[id] = sheet;
+
+        this.docs[doc.id] = doc;
     }
 
-    removeSceneGroup(id: string) {
+    removeSheet(id: string) {
 
-        if (id in this.scenes) {
-            for (let type in this.scenes[id].elements)
-                this.scenes[id].elements[type].element.remove();
+        if (id in this.sheets) {
+            delete this.docs[this.sheets[id].doc.id];
 
-            delete this.scenes[id];
+            this.sheets[id].destroy();
+            delete this.sheets[id];
         }
     }
 
-    showScene(id: string, type = "default") {
+    showSheet(id: string, page: PageType) {
 
-        //Check all scenes
-        let found = false;
-        for (let _id in this.scenes) {
-            for (let _type in this.scenes[_id].elements) {
-                if (_id == id && _type == type) {
-                    found = true;
-                    this.scenes[_id].elements[_type].show();
-                } else {
-                    this.scenes[_id].elements[_type].hide();
+        //Hide all other sheets
+        for (let _id in this.sheets) {
+            if (_id != id)
+                this.sheets[_id].hide();
+        }
+
+        let sheet = this.sheets[id];
+        sheet.show();
+        sheet.showPage(page);
+    }
+
+    showWelcome() {
+        if (!this.welcomeScene) {
+            this.welcomeScene = new WelcomeScene("welcome", this.tabs.body);
+            this.welcomeScene.on("quickAction", (selectedMenu: string) => { 
+                this.connect(selectedMenu);
+            });
+        }
+        this.welcomeScene.show();
+    }
+
+    connect(selectedMenu: string) {
+
+        let dialog = new Connect(Object.keys(this.docs));
+        dialog.show(selectedMenu)
+            .then((response: DialogResponse) => {
+                if (response.action == "ok" && response.okData && !Utils.Obj.isEmpty(response.okData)) {
+
+                    let id = Utils.DOM.uniqueId();
+                    let doc: Doc = response.okData;
+                    this.addSheet(id, doc);
+                    
+                    this.tabs.addTab(id, doc);
                 }
-            }
-        }
-
-        if (!found) {
-
-            let scene;
-            let sceneId = `${id}_${type}`;
-            let container = this.tabs.body;
-
-            if (type in this.scenesType) {
-                scene = this.scenesType[type].scene(sceneId, container, this.scenes[id].doc);
-            } else {
-                scene = new WelcomeScene("welcome", container);
-                scene.on("quickAction", (r: Action) => { this.tabs.maybeAddTab(r); });
-            }
-            this.scenes[id].elements[type] = scene;
-        }
+                if (!Utils.Obj.isEmpty(response.anyData))
+                    this.defaultConnectSelectedMenu = response.anyData;
+            });
     }
 }

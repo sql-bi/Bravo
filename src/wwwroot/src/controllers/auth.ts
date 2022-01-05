@@ -33,7 +33,7 @@ export class Auth extends Dispatchable {
         host.getUser().then(account => {
             this.account = account;
             this.trigger("signedIn", this.account);
-        }).catch(e => {
+        }).catch(error => {
             
         });
     }

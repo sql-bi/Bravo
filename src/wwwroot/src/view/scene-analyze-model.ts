@@ -3,16 +3,21 @@
  * Copyright (c) SQLBI corp. - All rights reserved.
  * https://www.sqlbi.com
 */
-import { themeController } from "../main";
+import { host, themeController } from "../main";
 import { Dic, Utils, _, __ } from '../helpers/utils';
 import { Doc, DocType } from '../model/doc';
 import { strings } from '../model/strings';
-import { Scene } from '../view/scene';
 import { TabularColumn } from '../model/tabular';
 import { ThemeType } from '../controllers/theme';
 import { Tabulator } from 'tabulator-tables';
 import Chart from "chart.js/auto";
 import { TreemapController, TreemapElement, TreemapScriptableContext } from 'chartjs-chart-treemap';
+import * as sanitizeHtml from 'sanitize-html';
+import { ContextMenu } from '../helpers/contextmenu';
+import { MainScene } from './scene-main';
+import { LoaderScene } from './scene-loader';
+import { ErrorScene } from './scene-error';
+
 Chart.register(TreemapController, TreemapElement);
 interface TabulatorVpaxModelColumn extends TabularColumn {
     name: string
@@ -21,7 +26,7 @@ interface TabulatorVpaxModelColumn extends TabularColumn {
     _children?: TabulatorVpaxModelColumn[]
 }
 
-export class AnalyzeModelScene extends Scene {
+export class AnalyzeModelScene extends MainScene {
 
     table: Tabulator;
     chart: Chart;
@@ -38,10 +43,9 @@ export class AnalyzeModelScene extends Scene {
     showUnrefOnly = false; //options.data.model.showUnrefOnly;
 
     constructor(id: string, container: HTMLElement, doc: Doc) {
-        super(id, container, doc.name, doc);
+        super(id, container, doc);
 
         this.element.classList.add("analyze-model");
-        this.load();
     }
 
     render() {
@@ -72,7 +76,7 @@ export class AnalyzeModelScene extends Scene {
 
                         <div class="collapse-all show-if-group ctrl icon-collapse-all" title="${strings.collapseAllCtrlTitle}"></div>
 
-                        <div class="save-vpax ctrl icon-save" title="${strings.saveVpaxCtrlTile}" ${this.doc.type == DocType.vpax ? "disabled" : ""}></div>
+                        <div class="save-vpax ctrl icon-save" title="${strings.saveVpaxCtrlTile}" ${!this.doc.canExport ? "disabled" : ""}></div>
                     
 
                     </div>
@@ -402,7 +406,7 @@ export class AnalyzeModelScene extends Scene {
                 this.table.addFilter(data => this.unreferencedFilter(data));
                 
             if (this.searchBox.value)
-                this.table.addFilter("columnName", "like", this.searchBox.value);
+                this.table.addFilter("columnName", "like", sanitizeHtml(this.searchBox.value, { allowedTags: [], allowedAttributes: {}}));
         }
     }
 
@@ -615,12 +619,45 @@ export class AnalyzeModelScene extends Scene {
                 this.applyFilters();
             });
         });
+        this.searchBox.addEventListener('contextmenu', e => {
+            e.preventDefault();
+            let el = <HTMLInputElement>e.currentTarget;
+            let selection = el.value.substring(el.selectionStart, el.selectionEnd);
+            ContextMenu.editorContextMenu(e, selection, el.value, el);
+        });
 
         _(".save-vpax", this.element).addEventListener("click", e => {
             e.preventDefault();
             let el = <HTMLElement>e.currentTarget;
             if (el.hasAttribute("disabled")) return;
-            //TODO
+
+            el.toggleAttr("disabled", true);
+            if (this.doc.canExport) {
+
+                let sourceType = (this.doc.type == DocType.dataset ? "Dataset" : "Report");
+                let exportingScene = new LoaderScene(Utils.DOM.uniqueId(), this.element.parentElement, strings.savingVpax, ()=>{
+                    host.abortExportVpax(sourceType);
+                });
+                this.trigger("push", exportingScene);
+
+                host.exportVpax(<any>this.doc.sourceData, sourceType)
+                    .then(data => {
+
+                        const blob = new Blob([data], { type: "octet/stream",  });
+                        Utils.Platform.saveAs(blob, `${Utils.Text.slugify(this.doc.name)}.vpx`);
+
+                        this.trigger("pop");
+                    })
+                    .catch(error => {
+                        if (Utils.Request.isAbort(error)) return;
+
+                        let errorScene = new ErrorScene(Utils.DOM.uniqueId(), this.element.parentElement, error, true);
+                        this.trigger("splice", errorScene);
+                    })
+                    .finally(() => {
+                        el.toggleAttr("disabled", false);
+                    });
+            }
         });
 
         _(".filter-unreferenced", this.element).addEventListener("click", e => {
@@ -661,7 +698,6 @@ export class AnalyzeModelScene extends Scene {
                 this.chart.update("none");
             }
         });
-        
     }
 
 }

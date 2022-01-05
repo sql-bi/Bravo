@@ -33,3 +33,7 @@ export interface TabularMeasure {
     tableName?:	string
     measure?:	string
 }
+
+export function daxMeasureName(measure: TabularMeasure): string {
+    return `${measure.tableName}[${measure.name}]`;
+}

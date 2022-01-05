@@ -537,7 +537,7 @@
   min-height: 22px;
   background-color: @table-cell-back-color;
   
-  border-bottom: 1px solid @border-color;
+  border-top: 1px solid @border-color;
   .dark & { 
     background-color: @table-cell-back-color-dark; 
     border-color: @border-color-dark;
@@ -545,6 +545,10 @@
 
   &.tabulator-calcs-bottom {
     border:none
+  }
+
+  &:first-child {
+    border-top: none;
   }
 }
 
@@ -566,8 +570,14 @@
 }*/
 
 .tabulator-row.row-active, .tabulator-row.row-active:hover {
+  .border-radius();
+  border-color: transparent !important;
   background-color: @table-cell-active-back-color !important;
   .dark & {background-color: @table-cell-active-back-color-dark !important;}
+
+  & + .tabulator-row {
+    border-color: transparent !important;
+  }
 }
 
 
@@ -649,6 +659,12 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+
+  [class^="icon-"], [class*=" icon-"] {
+    &:before {
+      font-size: 20px;
+    }
+  }
 }
 
 .tabulator-row .tabulator-cell.tabulator-editing {

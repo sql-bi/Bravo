@@ -4,7 +4,7 @@
  * https://www.sqlbi.com
 */
 
-import { Action, _, __ } from '../helpers/utils';
+import { _, __ } from '../helpers/utils';
 import { View } from './view';
 
 export interface DialogButton {
@@ -12,13 +12,20 @@ export interface DialogButton {
     action: string
     className?: string
 }
+export interface DialogResponse {
+    action: string
+    okData: any     // This data is returned if the action is ok oinly
+    anyData?: any   // This data is returned in any case
+}
+
 
 export class Dialog extends View {
 
     body;
     data = {};
+    additionalData = {};
 
-    constructor(id: string, container: HTMLElement, title: string, buttons: DialogButton[]) {
+    constructor(id: string, container: HTMLElement, title: string, buttons: DialogButton[], iconClass = "") {
         super(`dialog-${id}`, container);
 
         this.element.classList.add("dialog");
@@ -28,7 +35,7 @@ export class Dialog extends View {
             <div class="dialog-front">
                 ${title ? `
                     <header>
-                        <h1>${title}</h1>
+                        <h1${iconClass ? ` class="${iconClass}"` : ""}>${title}</h1>
                         <div class="ctrl-close ctrl icon-close solo"></div>
                     </header>
                 ` : "" }
@@ -66,15 +73,15 @@ export class Dialog extends View {
             });
 
             this.on("action-ok", () => {
-                resolve(<Action>{ action: "ok", data: this.data });
                 this.hide();
                 this.destroy();
+                resolve(<DialogResponse>{ action: "ok", okData: this.data, anyData: this.additionalData  });
             });
 
             this.on("action-cancel", () => {
-                resolve(<Action>{ action: "cancel", data: {} });
                 this.hide();
                 this.destroy();
+                resolve(<DialogResponse>{ action: "cancel", okData: {}, anyData: this.additionalData });
             });
 
             // Catch ESC key

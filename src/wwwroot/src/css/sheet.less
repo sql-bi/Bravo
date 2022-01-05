@@ -1,10 +1,40 @@
 // main: main.less
+.sheet {
+    height: 100%;
+}
+
+.page {
+    height: 100%;
+    position: relative;
+}
+
 .scene {
     
     overflow: auto;
     padding: 30px 50px;
     height: calc(100% - 60px);
-    position: relative;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: calc(100% - 100px);
+    background: @back-color;
+
+    .dark & {
+        background: @back-color-dark;
+    }
+
+    &.entering, &.exiting {
+        animation-duration: .3s;
+        animation-name: appearing;
+        animation-timing-function: ease-in-out;
+    }
+
+    &.exiting {
+        animation-duration: .3s;
+        animation-name: sliding; //appearing
+        animation-direction: reverse;
+        animation-timing-function: ease-out;
+    }
 
     header {
 
@@ -39,6 +69,17 @@
         }
     }
 
+    .go-back {
+        position: absolute;
+        left: 20px;
+        top: 20px;
+        margin: 0;
+        display: inline-block;
+        &:before {
+            margin: 0;
+            font-size: 20px;
+        }
+    }
     .scene-content {
         height: calc(100% - 70px);
 
@@ -50,8 +91,8 @@
         }
     }
 
-    &.refreshing {
-        .ctrl-refresh {
+    .syncing & {
+        .ctrl-sync {
             animation: rotate 2s infinite linear;
             color: @disabled-color !important;
             &:hover {
@@ -68,13 +109,6 @@
         }
     }
 
-    .loader {
-        position: absolute;
-        left: 50%;
-        top: 50%;
-        margin: -24px 0 0 -24px;
-    }
-
     .error {
         .flexbox(center, center, column);
         height: 100%;
@@ -82,9 +116,16 @@
         font-size: 16px;
 
         .icon-bravo-error {
-            margin: 20px 0;
+            margin: 0 0 20px 0;
             &:before {
                 font-size: 160px;
+                line-height: 1;
+                margin: 0;
+            }
+        }
+        .icon-alert {
+            &:before {
+                font-size: 100px;
                 line-height: 1;
                 margin: 0;
             }
@@ -96,10 +137,25 @@
                 content: "" !important; 
             }
         }
-
-        p {
-            color: @error-color;
-            .dark & { color: @error-color-dark }
-        }
     }
 }
+
+@keyframes appearing {
+    0% {
+        opacity:0;
+    }
+    100% {
+        opacity: 1;
+    }
+  }
+
+  @keyframes sliding {
+    0% {
+        transform: translateX(100%);
+        opacity: 0.4;
+    }
+    100% {
+        transform: translateX(0);
+        opacity: 1;
+    }
+  }

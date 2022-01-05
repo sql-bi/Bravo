@@ -3,7 +3,7 @@
  * Copyright (c) SQLBI corp. - All rights reserved.
  * https://www.sqlbi.com
 */
-import { optionsController } from "../main";
+import { host, optionsController } from "../main";
 
 import * as CodeMirror from 'codemirror';
 import 'codemirror/addon/mode/simple';
@@ -14,12 +14,15 @@ import { Dic, Utils, _, __ } from '../helpers/utils';
 import { daxFunctions } from '../model/dax';
 import { Doc } from '../model/doc';
 import { strings } from '../model/strings';
-import { Alert } from '../view/alert';
-import { Menu, MenuItem } from '../view/menu';
-import { Scene } from '../view/scene';
-import { TabularMeasure } from '../model/tabular';
+import { Alert } from './alert';
+import { Menu, MenuItem } from './menu';
+import { TabularMeasure, daxMeasureName } from '../model/tabular';
+import { ContextMenu } from '../helpers/contextmenu';
+import { Loader } from '../helpers/loader';
+import * as sanitizeHtml from 'sanitize-html';
+import { MainScene } from './scene-main';
 
-export class DaxFormatterScene extends Scene {
+export class DaxFormatterScene extends MainScene {
     
     table: Tabulator;
     menu: Menu;
@@ -27,13 +30,13 @@ export class DaxFormatterScene extends Scene {
     formatButton: HTMLElement;
     zoomSelect: HTMLSelectElement;
     activeMeasure: TabularMeasure;
+    previewing: Dic<boolean> = {};
 
     constructor(id: string, container: HTMLElement, doc: Doc) {
-        super(id, container, strings.daxFormatterTitle, doc);
+        super(id, container, doc); //, strings.daxFormatterTitle
 
         this.element.classList.add("dax-formatter");
 
-        this.load();
         this.initCodeMirror();
     }
 
@@ -72,15 +75,19 @@ export class DaxFormatterScene extends Scene {
             cm.getDoc().setValue(value);
             //cm.refresh();
         } else {
-            CodeMirror(element, {
+            cm = CodeMirror(element, {
                 value: value,
                 mode: "dax",
                 lineNumbers: true,
                 lineWrapping: true,
                 indentUnit: 4,
                 readOnly: "nocursor"
+            }); 
+            cm.on("contextmenu", (instance, e) => {
+                ContextMenu.editorContextMenu(e, cm.getSelection(), cm.getValue());
             });
         }
+       
     }
 
     render() {
@@ -161,35 +168,96 @@ export class DaxFormatterScene extends Scene {
 
     renderFormattedMenu(element: HTMLElement) {
         let html = `
-            <div class="cm cm-formatted">
-                <div class="gen-preview-overlay" hidden>
-                    <div class="gen-preview-action">
-                        <p>${strings.daxFormatterPreviewDesc}</p>
-                        <div class="gen-preview button button-alt">${strings.daxFormatterPreviewButton}</div>
-                    </div>
-                    <div class="gen-preview-loader" hidden>
-                        <div class="loader"></div>
-                    </div>
-                </div>
-            </div>
+            <div class="cm cm-formatted"></div>
         `;
         element.insertAdjacentHTML("beforeend", html);
     }
 
     switchToFormattedMenu(element: HTMLElement) {
 
-        let editorEl = _('.cm-formatted', element);
+        let editorElement = _('.cm-formatted', element);
+        editorElement.innerHTML = "";
         if (this.activeMeasure) {
-            let key = `${this.activeMeasure.tableName}[${this.activeMeasure.name}]`;
+            let key = daxMeasureName(this.activeMeasure);
             if (key in this.doc.formattedMeasures) {
-                _(".gen-preview-overlay", this.element).toggle(false);
-                this.updateCodeMirror(editorEl, this.doc.formattedMeasures[key]);
+                this.updateCodeMirror(editorElement, this.doc.formattedMeasures[key]);
+            } else if (this.previewing[key] === true || this.previewing["*"]) {
+                this.renderPreviewLoading(editorElement);
             } else {
-                _(".gen-preview-overlay", this.element).toggle(true);
-                this.updateCodeMirror(editorEl, null); 
+                this.renderPreviewOverlay(editorElement);
             }
         } else {
-            this.updateCodeMirror(editorEl, null);  
+            this.updateCodeMirror(editorElement, null);  
+        }
+    }
+
+    renderPreviewOverlay(element: HTMLElement) {
+        let html = `
+            <div class="gen-preview-overlay">
+                <div class="gen-preview-action">
+                    ${strings.daxFormatterPreviewDesc}
+
+                    <div class="gen-preview-ctrl">
+                        <label class="switch"><input type="checkbox" ${optionsController.options.customOptions.previewFormatting ? " checked " : ""}id="formatted-preview-all"><span class="slider"></span></label> <label for="formatted-preview-all">${strings.daxFormatterPreviewAllOption}</label>
+                        
+                        <span class="gen-preview button button-alt">${optionsController.options.customOptions.previewFormatting ? strings.daxFormatterPreviewAllButton : strings.daxFormatterPreviewButton}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+        element.innerHTML = html;
+
+        _(".gen-preview-ctrl input[type=checkbox]", element).addEventListener("change", e => {
+            const on = (<HTMLInputElement>e.currentTarget).checked;
+            optionsController.options.customOptions.previewFormatting = on;
+            optionsController.save();
+
+            _(".gen-preview", element).innerText = (on ? strings.daxFormatterPreviewAllButton : strings.daxFormatterPreviewButton);
+        });
+
+        _(".gen-preview", element).addEventListener("click", e => {
+            e.preventDefault();
+            this.generatePreview(element);
+        });
+    }
+
+    renderPreviewLoading(element: HTMLElement) {
+        new Loader(element, false);
+    }
+
+    generatePreview(element: HTMLElement) {
+        if (this.activeMeasure) {
+            this.renderPreviewLoading(element);
+
+            if (optionsController.options.customOptions.previewFormatting) {
+                this.previewing["*"] = true;
+            } else {
+                this.previewing[daxMeasureName(this.activeMeasure)] = true;
+            }
+
+            host.formatDax({
+                options: optionsController.options.customOptions.daxFormatter,
+                measures: optionsController.options.customOptions.previewFormatting ? this.doc.measures : [this.activeMeasure]
+            })
+                .then(measures => {
+                    
+                    measures.forEach(measure => {
+                        let measureKey = daxMeasureName(measure);
+                        this.doc.formattedMeasures[measureKey] = measure.measure;
+                        this.previewing[measureKey] = false;
+
+                        if (measureKey == daxMeasureName(this.activeMeasure))
+                            this.updateCodeMirror(element, measure.measure);
+                    });
+                })
+                .catch(error => {
+                    //TODO catch DAX Format error
+
+                    this.previewing = {};
+                })
+                .finally(() => {
+                    _(".loader", element).remove(); //Remove any loader
+                });
         }
     }
 
@@ -315,15 +383,39 @@ export class DaxFormatterScene extends Scene {
         _(".summary p", this.element).innerHTML = strings.daxFormatterSummary(this.doc.measures.length);
     }
 
-    generatePreview() {
-
-        _(".gen-preview-action", this.body).toggle(false);
-        _(".gen-preview-loader", this.body).toggle(true);
-
-    }
 
     format() {
 
+        let measures: TabularMeasure[] = this.table.getSelectedData();
+        if (!measures.length) return;
+
+        //TODO
+        this.formatButton.toggleAttr("disabled", true);
+
+       //TODO
+       /* let loadingScene = new LoaderScene(Utils.DOM.uniqueId(), this.element.parentElement, strings.savingVpax, ()=>{
+            host.abortExportVpax(sourceType);
+        });*/
+
+        host.formatDax({
+            options: optionsController.options.customOptions.daxFormatter,
+            measures: measures
+        })
+            .then(measures => {
+                
+                measures.forEach(measure => {
+                    this.doc.formattedMeasures[daxMeasureName(measure)] = measure.measure;
+                });
+
+                //TODO update report
+            })
+            .catch(error => {
+                //TODO catch DAX Format error
+
+            })
+            .finally(() => {
+               
+            });
     }
 
     listen() {
@@ -332,9 +424,24 @@ export class DaxFormatterScene extends Scene {
               this.applyFilters();
             });
         });
+        this.searchBox.addEventListener('contextmenu', e => {
+            e.preventDefault();
+
+            let el = <HTMLInputElement>e.currentTarget;
+            let selection = el.value.substring(el.selectionStart, el.selectionEnd);
+            ContextMenu.editorContextMenu(e, selection, el.value, el);
+        });
 
         this.zoomSelect.addEventListener("change", e => {
             this.updateZoom(parseFloat((<HTMLSelectElement>e.currentTarget).value));
+        });
+
+        this.formatButton.addEventListener("click", e => {
+            e.preventDefault();
+            let el = <HTMLElement>e.currentTarget;
+            if (el.hasAttribute("disabled")) return;
+
+            this.format();
         });
 
         __(".show-data-usage", this.element).forEach(a => {
@@ -349,17 +456,12 @@ export class DaxFormatterScene extends Scene {
                 dialog.show(html);
             });
         });
-
-        _(".gen-preview", this.element).addEventListener("click", e => {
-            e.preventDefault();
-            this.generatePreview();
-        });
     }
     
     applyFilters() {
         if (this.table) {
             if (this.searchBox.value)
-                this.table.setFilter("name", "like", this.searchBox.value);
+                this.table.setFilter("name", "like", sanitizeHtml(this.searchBox.value, { allowedTags: [], allowedAttributes: {}}));
             else 
                 this.table.clearFilter();
         }

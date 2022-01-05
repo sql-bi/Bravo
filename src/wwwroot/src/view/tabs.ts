@@ -4,7 +4,7 @@
  * https://www.sqlbi.com
 */
 
-import { Action, Dic, Utils, _, __ } from '../helpers/utils';
+import { Dic, Utils, _, __ } from '../helpers/utils';
 import { Doc, DocType } from '../model/doc';
 import { strings } from '../model/strings';
 import { ChromeTabs } from "./chrome-tabs";
@@ -56,8 +56,7 @@ export class Tabs extends View {
 
         _(".chrome-tabs-add", this.element).addEventListener("click", e => {
             e.preventDefault();
-            let dialog = new Connect();
-            dialog.show("attach-pbi").then((r: Action) => this.maybeAddTab(r));
+            this.trigger("open");
         });
         this.chromeTabs.on("activeTabChange", (tabEl: HTMLElement) => {
             if (tabEl) {
@@ -77,17 +76,10 @@ export class Tabs extends View {
         });
     }
 
-    maybeAddTab(response: Action) {
-        if (response.action == "ok" && response.data && !Utils.Obj.isEmpty(response.data)) {
-            this.addTab(response.data);
-        }
-    }
-
-    addTab(doc: Doc) {
+    addTab(id: string, doc: Doc) {
 
         this.tabIncremental++;
 
-        let id = Utils.DOM.uniqueId();
         let name = (doc ? doc.name : `${strings.defaultTabName}-${this.tabIncremental}`);
         this.tabs[id] = name;
 

@@ -72,7 +72,7 @@ export interface UpdatePBICloudDatasetRequest{
 }
 export class Host extends Dispatchable {
 
-    static DEFAULT_TIMEOUT = 30 * 1000;
+    static DEFAULT_TIMEOUT = 60 * 1000;
 
     address: string;
     requests: Dic<ApiRequest>;
@@ -157,6 +157,7 @@ export class Host extends Dispatchable {
         for (let requestId in this.requests) {
             if (this.requests[requestId].action == action) {
                 this.apiAbortById(requestId);
+                console.log(`${action} aborted`);
             }
         }
     }
@@ -199,12 +200,11 @@ export class Host extends Dispatchable {
         return <Promise<PBICloudDataset[]>>this.apiCall("api/ListDatasets");
     }
 
-    exportVpaxFromReport(report: PBIDesktopReport) {
-        return <Promise<File>>this.apiCall("api/ExportVpaxFromReport", report, { method: "POST" });
+    exportVpax(datasource: PBIDesktopReport | PBICloudDataset, type: string) {
+        return <Promise<string>>this.apiCall(`api/ExportVpaxFrom${type}`, datasource, { method: "POST" });
     }
-
-    exportVpaxFromDataset(dataset: PBICloudDataset) {
-        return <Promise<File>>this.apiCall("api/ExportVpaxFromDataset", dataset, { method: "POST" });
+    abortExportVpax(type: string) {
+        this.apiAbortByAction(`api/ExportVpaxFrom${type}`);
     }
 
     /* Format DAX */

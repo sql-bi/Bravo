@@ -12,20 +12,26 @@ import { Dialog } from './dialog';
 import { Menu, MenuItem } from './menu';
 import { PBICloudDataset, PBICloudDatasetEndorsementstring, PBIDesktopReport } from '../controllers/host';
 import { Tabulator } from 'tabulator-tables';
+import { Loader } from '../helpers/loader';
+import { ErrorAlert } from './erroralert';
 
 export class Connect extends Dialog {
 
     datasetsTable: Tabulator;
+    reportsTable: Tabulator;
     menu: Menu;
     okButton: HTMLElement;
     localReportsTimeout: number;
+    alreadyOpenDocIds: string[];
 
-    constructor() {
+    constructor(alreadyOpenDocIds: string[]) {
 
         super("connect", document.body, strings.connectDialogTitle, [
             { name: strings.dialogOpen, action: "ok" },
             { name: strings.dialogCancel, action: "cancel", className: "button-alt" } 
         ]);
+
+        this.alreadyOpenDocIds = alreadyOpenDocIds;
 
         this.menu = new Menu("connect-menu", this.body, <Dic<MenuItem>>{
             "attach-pbi": {
@@ -46,17 +52,25 @@ export class Connect extends Dialog {
         });
 
         this.okButton = _(".button[data-action=ok]", this.element);
+
+        this.listen();
     }
 
+    listen() {
+        this.menu.on("change", (item: string) => this.additionalData = item);
+    }
+
+
     show(selectedId?: string) {
+        if (!selectedId)
+            selectedId = Object.keys(this.menu.items)[0];
         this.menu.select(selectedId);
         return super.show();
     }
 
     renderAttachPBIMenu(element: HTMLElement) {
         let html = `
-            <div class="list">
-            </div>
+            <div class="list"></div>
         `;
         element.insertAdjacentHTML("beforeend", html);
 
@@ -66,49 +80,88 @@ export class Connect extends Dialog {
 
     switchToAttachPBIMenu(element: HTMLElement) {
         this.okButton.toggle(true);
-        this.okButton.toggleAttr("disabled", true);
+        this.okButton.toggleAttr("disabled", !this.data || (<Doc>this.data).type != DocType.pbix);
     }
 
     getLocalReports(element: HTMLElement) {
 
         host.listReports()
-        .then(reports => {
-
-            let listHTML = "<ul>";
-
-            //TODO
-            /*reports.forEach(report => {
-                listHTML += `
-                    <li data-name="" data-id=""></li>
+            .then((reports: PBIDesktopReport[]) => {
+                let tableId = "connect-pbi-reports";
+                let tableElement = _(`#${tableId}`, element);
+                if (tableElement.empty)
+                    _(".list", element).innerHTML = `<div id="${ tableId }"></div>`;
+                    
+                if (reports.length)
+                    this.renderLocalReportsTable(tableId, reports);
+                else
+                    throw new Error("404");
+            })
+            .catch(error => {
+                _(".list", element).innerHTML = `
+                    <div class="notice">
+                        <div>
+                            <p>${strings.errorReportsListing}</p>
+                        </div>
+                    </div>
                 `;
-            });*/
+                this.okButton.toggleAttr("disabled", true);
+            });
+    }
 
-            listHTML += "</ul>";
+    renderLocalReportsTable(id: string, reports: PBIDesktopReport[]) {
 
-            _(".list", element).innerHTML = listHTML;
-
-            /*__("li", element).forEach(li => {
-                li.addEventListener("click", e => {
-                    e.preventDefault();
-
-                    let el = <HTMLElement>e.currentTarget;
-                    __("li", element).forEach((_el: HTMLElement) => {
-                        _el.classList.remove("active");
-                    });
-                    el.classList.add("active");
-
-                    this.data = new Doc(el.dataset.name, DocType.pbix, {
-                        reportId: el.dataset.id
-                    });
-                    this.okButton.removeAttribute("disabled");
-                });
-            });*/
-        })
-        .catch(e => {
-            _(".list", element).innerHTML = `
-                <div class="notice">${strings.connectNoReports}</div>
-            `;
+        let unopenedReports = reports.filter(report => {
+            return (this.alreadyOpenDocIds.indexOf(Doc.getId(DocType.pbix, report)) == -1);
         });
+
+        if (this.reportsTable) {
+            this.reportsTable.updateOrAddData(unopenedReports);
+            
+        } else {
+            this.reportsTable = new Tabulator(`#${id}`, {
+                renderVertical: "basic",
+                height: "100%",
+                headerVisible: false,
+                layout: "fitColumns",
+                initialSort:[
+                    {column: "reportName", dir: "asc"}, 
+                ],
+                columns: [
+                    { 
+                        field: "reportName", 
+                        title: "Name",
+                        formatter: (cell) => {
+                            let report = <PBIDesktopReport>cell.getData();
+                            return `<span class="icon-pbix">${report.reportName}</span>`;
+                        }
+                    }
+                ],
+                data: unopenedReports
+            });
+
+            this.reportsTable.on("rowClick", (e, row) => {
+                
+                let rowElement = row.getElement();
+                /*if (rowElement.classList.contains("row-active")) {
+                    rowElement.classList.remove("row-active");
+                    this.okButton.toggleAttr("disabled", true);
+                } else {*/
+
+                    let report = <PBIDesktopReport>row.getData();
+                    this.data = new Doc(report.reportName, DocType.pbix, report);
+
+                    __(".row-active", this.reportsTable.element).forEach((el: HTMLElement) => {
+                        el.classList.remove("row-active");
+                    });
+                    rowElement.classList.add("row-active");
+                    this.okButton.toggleAttr("disabled", false);
+                //}
+            });
+            this.reportsTable.on("rowDblClick", (e, row) => {
+                this.trigger("action-ok");
+            });
+        }
     }
 
     renderConnectPBIMenu(element: HTMLElement) {
@@ -118,9 +171,9 @@ export class Connect extends Dialog {
         `;
         element.insertAdjacentHTML("beforeend", html);
 
-        if (!auth.account) {
+        if (!auth.signedIn) {
             _(".list", element).innerHTML = `
-                <div class="notice">
+                <div class="quick-signin notice">
                     <div>
                         <p>${strings.errorNotConnected}</p>
                         <div class="signin button">${strings.signIn}</div>
@@ -130,11 +183,17 @@ export class Connect extends Dialog {
 
             _(".signin", this.body).addEventListener("click", e => {
                 e.preventDefault();
+                let button = <HTMLHtmlElement>e.currentTarget;
+                button.toggleAttr("disabled", true);
                 auth.signIn()
-                    .then(() => { 
-                        this.getRemoteDatasets(element) }
-                    )
-                    .catch(err => {})
+                    .then(signedIn => { 
+                        if (signedIn)
+                            this.getRemoteDatasets(element);
+                    })
+                    .catch(error => {})
+                    .finally(()=>{
+                        button.toggleAttr("disabled", false);
+                    });
             });
         } else {
             this.getRemoteDatasets(element);
@@ -148,91 +207,112 @@ export class Connect extends Dialog {
 
     renderRemoteDatasetsTable(id: string, datasets: PBICloudDataset[]) {
 
-        const tableConfig: Tabulator.Options = {
-            renderVertical: "basic",
-            maxHeight: "100%",
-            layout: "fitColumns",
-            initialSort:[
-                {column: "name", dir: "asc"}, 
-            ],
-            columns: [
-                { 
-                    field: "name", 
-                    title: strings.connectDatasetsTableNameCol,
-                    width: 200
-                },
-                { 
-                    field: "endorsement", 
-                    title: strings.connectDatasetsTableEndorsementCol, 
-                    formatter: (cell) => {
-                        let dataset = <PBICloudDataset>cell.getData();
-                        return (dataset.endorsement == PBICloudDatasetEndorsementstring.None ? '' : `<span class="endorsement-badge icon-${dataset.endorsement.toLowerCase()}">${dataset.endorsement}</span>`);
-                    },
-                    sorter: (a, b, aRow, bRow, column, dir, sorterParams) => {
-                        let datasetA = <PBICloudDataset>aRow.getData();
-                        let datasetB = <PBICloudDataset>bRow.getData();
-                        let colA = (datasetA.endorsement == PBICloudDatasetEndorsementstring.None ? "": datasetA.endorsement);
-                        let colB = (datasetB.endorsement == PBICloudDatasetEndorsementstring.None ? "": datasetB.endorsement);
-                        return (colA > colB ? 1 : -1);
-                    }
-                },
-                { 
-                    field: "owner", 
-                    title: strings.connectDatasetsTableOwnerCol
-                },
-                { 
-                    field: "workspaceName", 
-                    title: strings.connectDatasetsTableWorkspaceCol
-                },
-            ],
-            data: datasets
-        };
+        let unopenedDatasets = datasets.filter(dataset => {
+            return (this.alreadyOpenDocIds.indexOf(Doc.getId(DocType.dataset, dataset)) == -1);
+        });
 
         if (this.datasetsTable) {
-            this.datasetsTable.off("rowClick");
-            this.datasetsTable.off("rowSelectionChanged");
-            //this.datasetsTable.destroy();
-        }
-        this.datasetsTable = new Tabulator(`#${id}`, tableConfig);
-        this.datasetsTable.on("rowClick", (e, row) => {
+            this.datasetsTable.setData(unopenedDatasets);
+        } else {
 
-            let dataset = <PBICloudDataset>row.getData();
-            this.data = new Doc(dataset.name, DocType.dataset, dataset);
-
-            __(".row-active", this.datasetsTable.element).forEach((el: HTMLElement) => {
-                el.classList.remove("row-active");
+            this.datasetsTable = new Tabulator(`#${id}`, {
+                renderVertical: "basic",
+                maxHeight: "100%",
+                layout: "fitColumns",
+                initialSort:[
+                    {column: "name", dir: "asc"}, 
+                ],
+                columns: [
+                    { 
+                        field: "name", 
+                        title: strings.connectDatasetsTableNameCol,
+                        width: 200,
+                        formatter: (cell) => {
+                            let dataset = <PBICloudDataset>cell.getData();
+                            return `<span class="icon-dataset">${dataset.name}</span>`;
+                        }
+                    },
+                    { 
+                        field: "endorsement", 
+                        title: strings.connectDatasetsTableEndorsementCol, 
+                        formatter: (cell) => {
+                            let dataset = <PBICloudDataset>cell.getData();
+                            return (dataset.endorsement == PBICloudDatasetEndorsementstring.None ? '' : `<span class="endorsement-badge icon-${dataset.endorsement.toLowerCase()}">${dataset.endorsement}</span>`);
+                        },
+                        sorter: (a, b, aRow, bRow, column, dir, sorterParams) => {
+                            let datasetA = <PBICloudDataset>aRow.getData();
+                            let datasetB = <PBICloudDataset>bRow.getData();
+                            let colA = (datasetA.endorsement == PBICloudDatasetEndorsementstring.None ? "": datasetA.endorsement);
+                            let colB = (datasetB.endorsement == PBICloudDatasetEndorsementstring.None ? "": datasetB.endorsement);
+                            return (colA > colB ? 1 : -1);
+                        }
+                    },
+                    { 
+                        field: "owner", 
+                        title: strings.connectDatasetsTableOwnerCol
+                    },
+                    { 
+                        field: "workspaceName", 
+                        title: strings.connectDatasetsTableWorkspaceCol
+                    },
+                ],
+                data: unopenedDatasets
             });
 
-            row.getElement().classList.add("row-active");
-            this.okButton.toggleAttr("disabled", false);
-        });
+            this.datasetsTable.on("rowClick", (e, row) => {
 
+                let rowElement = row.getElement();
+                /*if (rowElement.classList.contains("row-active")) {
+                    rowElement.classList.remove("row-active");
+                    this.okButton.toggleAttr("disabled", true);
+                } else {*/
+
+                    let dataset = <PBICloudDataset>row.getData();
+                    this.data = new Doc(dataset.name, DocType.dataset, dataset);
+
+                    __(".row-active", this.datasetsTable.element).forEach((el: HTMLElement) => {
+                        el.classList.remove("row-active");
+                    });
+
+                    rowElement.classList.add("row-active");
+                    this.okButton.toggleAttr("disabled", false);
+                //}
+            });
+            this.datasetsTable.on("rowDblClick", (e, row) => {
+                this.trigger("action-ok");
+            });
+        }
     }
 
-    getRemoteDatasets(element: HTMLElement) {
-        _(".list", element).innerHTML = `<div class="loader"></div>`;
+    getRemoteDatasets(element: HTMLElement) { 
 
-        host.listDatasets().then((datasets: PBICloudDataset[]) => {
-            let tableId = Utils.DOM.uniqueId();
-            _(".list", element).innerHTML = `<div id="${ tableId }"></div>`;
-            this.renderRemoteDatasetsTable(tableId, datasets);
-        })
-        .catch(err => {
-            _(".list", element).innerHTML = `
-                <div class="notice">
-                    <div>
-                        <p>${strings.errorDatasetListing}</p>
-                        <div class="retry-connect-pbi button button-alt">Retry</div>
-                    </div>
-                </div>
+        let loader = new Loader(_(".list", element), false);
+
+        host.listDatasets()
+            .then((datasets: PBICloudDataset[]) => {
+                let tableId = Utils.DOM.uniqueId();
+                _(".list", element).innerHTML = `<div id="${ tableId }"></div>`;
+                this.renderRemoteDatasetsTable(tableId, datasets);
+            })
+            .catch(error => {
                 
-            `;
+                _(".list", element).innerHTML = `
+                    <div class="notice">
+                        <div>
+                            <p>${strings.errorDatasetsListing}</p>
+                            <div class="retry-get-datasets button button-alt">${strings.errorRetry}</div>
+                        </div>
+                    </div>
+                `;
 
-            _(".retry-connect-pbi", element).addEventListener("click", e => {
-                e.preventDefault();
-                this.getRemoteDatasets(element);
-            }); 
-        });
+                _(".retry-get-datasets", element).addEventListener("click", e => {
+                    e.preventDefault();
+                    this.getRemoteDatasets(element);
+                }); 
+            })
+            .finally(() => {
+                loader.remove();
+            });
     }
 
     renderOpenVPXMenu(element: HTMLElement) {
@@ -255,12 +335,22 @@ export class Connect extends Dialog {
 
         _(".file-browser", element).addEventListener("change", e => {
             
-            if ((<any>e.target).files) {
-                let files: File[] = (<any>e.target).files;
+            let fileElement = (<any>e.target);
+            if (fileElement.files) {
+                let files: File[] = fileElement.files;
                 if (files.length) {
                     let file = files[0];
-                    this.data = new Doc(file.name, DocType.vpax, file);
-                    this.trigger("action-ok");
+
+                    if (this.alreadyOpenDocIds.indexOf(Doc.getId(DocType.vpax, file)) > -1) {
+                        let alert = new ErrorAlert();
+                        alert.show(strings.errorVPAXAlreadyOpened(file.name));
+                        fileElement.value = null;
+                        
+                    } else {
+
+                        this.data = new Doc(file.name, DocType.vpax, file);
+                        this.trigger("action-ok");
+                    }
                 }
             }
         });

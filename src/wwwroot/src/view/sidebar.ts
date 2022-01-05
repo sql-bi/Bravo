@@ -10,21 +10,16 @@ import { __, _, Dic } from '../helpers/utils';
 import { strings } from '../model/strings';
 import { View } from './view';
 import { Account } from '../controllers/auth';
-
-export interface SidebarItem {
-    name: string
-
-}
-
+import { ContextMenu, ContextMenuItemType } from '../helpers/contextmenu';
 export class Sidebar extends View {
 
     static DEFAULT_USER_PICTURE = "images/user.svg";
 
-    items: Dic<SidebarItem> = {};
+    items: Dic<string> = {};
     currentItem: string;
     collapsed = false;
 
-    constructor(id: string, container: HTMLElement, items: Dic<SidebarItem>) {
+    constructor(id: string, container: HTMLElement, items: Dic<string>) {
         super(id, container);
 
         this.items = items;
@@ -40,7 +35,7 @@ export class Sidebar extends View {
                     <div id="item-${id}" class="item">
                         <span class="selector"></span>
                         <span class="icon icon-${id}"></span>
-                        <span class="name hide-if-collapsed">${this.items[id].name}</span>
+                        <span class="name hide-if-collapsed">${this.items[id]}</span>
                     </div>
                 `).join("")}
             </div>
@@ -119,17 +114,23 @@ export class Sidebar extends View {
         _("#ctrl-user", this.element).addEventListener("click", e => {
             e.preventDefault();
             if (auth.signedIn) {
-                //TODO Show context menu with signout
-                auth.signOut();
 
-                //console.log(`Already signed in as ${auth.account.upn}`);
+                new ContextMenu({
+                    width: "auto",
+                    items: [
+                        { label: strings.signedInCtrlTitle(auth.account.username), cssIcon: "icon-user", type: ContextMenuItemType.label},
+                        { label: "-", type: ContextMenuItemType.separator },
+                        { label: strings.signOut, onClick: () => { auth.signOut(); } },
+                    ]
+                }, e);
+
             } else {
                 auth.signIn();
             }
         });
 
         auth.on("signedIn", (account: Account) => {
-            this.changeProfilePicture(strings.signedInCtrlTitle(account.upn), account.avatar);
+            this.changeProfilePicture(strings.signedInCtrlTitle(account.username), account.avatar);
         });
 
         auth.on("signedOut", () => {

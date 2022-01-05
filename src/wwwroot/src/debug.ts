@@ -11,6 +11,8 @@ import { TabularDatabase } from './model/tabular';
 
 class Debug { 
 
+    static LOADING_TIME = 1000;
+
     constructor() {
         globalThis.CONFIG = {
             address: "http://127.0.0.1",
@@ -26,7 +28,7 @@ class Debug {
                 return new Promise((resolve, reject) => {
                     setTimeout(() => {
                         resolve(this.sampleTabularDatabase);
-                    }, 1000);
+                    }, Debug.LOADING_TIME);
                 });
 
             default:

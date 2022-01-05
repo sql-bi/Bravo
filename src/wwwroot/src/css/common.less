@@ -237,6 +237,8 @@ a, .link {
 
         cursor: default !important;
         color: @disabled-color !important;
+
+        .dark & { color: @disabled-color-dark }
     }
     &:before, &:after {
         font-size: 16px;
@@ -543,11 +545,11 @@ label[for] {
 }
 
 .endorsement-badge {
+    background: fade(@back-color, 70%);
     border: 1px solid transparent;
     padding: 2px 8px;
-    font-weight: bold;
     font-size: 0.8em;
-    .flexbox(center, center, row, inline);
+    .flexbox(center, center, row, inline-flex);
 
     .border-radius(20px);
     &.icon-promoted {
@@ -559,9 +561,13 @@ label[for] {
         border-color: @certified-color;
     }
     &:before {
-        font-size: 15px;
+        font-size: 15px !important;
         font-weight: normal;
         margin-right:2px;
+    }
+
+    .dark & {
+        background: fade(@back-color-dark, 70%);
     }
 }
 

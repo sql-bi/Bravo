@@ -4,34 +4,33 @@
  * https://www.sqlbi.com
 */
 
+import * as sanitizeHtml from 'sanitize-html';
+
 // All the strings used in the app
-export const strings = {
+export const strings: any = {
     appUrl: "https://bravo.bi",
     appGithubUrl: "https://github.com/sql-bi/bravo",
     daxFormatterUrl: "https://www.daxformatter.com",
     appName: "Bravo for Power BI",
     menuCtrlTitle: "Collapse/Expand menu",
     addCtrlTitle: "Open",
-    daxFormatterName: "Format DAX",
-    daxFormatterTitle: "Format DAX",
-    analyzeModelName: "Analyze Model",
-    manageDatesName: "Manage Dates",
-    manageDatesTitle: "Manage Dates",
-    exportDataName: "Export Data",
-    exportDataTitle: "Export Data",
-    bestPracticesName: "Best Practices",
-    bestPracticesTitle: "Best Practices",
+    DaxFormatter: "Format DAX",
+    AnalyzeModel: "Analyze Model",
+    ManageDates: "Manage Dates",
+    ExportData: "Export Data",
+    BestPractices: "Best Practices",
     settingsCtrlTitle: "Settings",
     helpCtrlTitle: "Help",
     themeCtrlTitle: "Change Theme",
     signInCtrlTitle: "Sign In",
-    signedInCtrlTitle: (upn: string) => `Signed in as ${upn}`,
+    signedInCtrlTitle: (name: string) => `Signed in as ${sanitizeHtml(name)}`,
     filterUnrefCtrlTitle: "Show Unreferenced Columns only",
     groupByTableCtrlTitle: "Group by Table",
     expandAllCtrlTitle: "Expand all",
     collapseAllCtrlTitle: "Collapse all",
     saveVpaxCtrlTile: "Save as VPAX",
-    refreshCtrlTitle: "Refresh",
+    syncCtrlTitle: "Synchronize",
+    goBackCtrlTitle: "Cancel and go back",
 
     defaultTabName: "Untitled",
     welcomeTitle: "Welcome to Bravo for Power BI",
@@ -71,7 +70,7 @@ export const strings = {
     analyzeModelTableColRows: "Rows",
     otherColumnsRowName: "Smaller columns...",
     aggregatedTableName: "Multiple tables",
-
+    savingVpax: "Generating VPAX...",
     columnWarningExplanation: `Unreferenced columns can generally be removed from the model to optimize performance. Before removing them, make sure you are not using these columns in any reports, which Bravo cannot determine.`,
     columnWarningTooltip: "This column is not referenced in your model.",
     daxFormatterSummary: (count: number) => `Your report contains <strong>${count} measures</strong> that can be formatted.`,
@@ -80,11 +79,12 @@ export const strings = {
     daxFormatterTableSelected: (count: number) => `${count} Selected`,
     daxFormatterOriginalCode: "Current",
     daxFormatterFormattedCode: "Formatted (Preview)",
-    daxFormatterFormat: "Format",
+    daxFormatterFormat: "Format Selected",
     daxFormatterAgreement: `To format DAX, Bravo sends your measures to the DAX Formatter service.`,
-    daxFormatterPreviewDesc: "To generate a preview, Bravo needs to send this measure to DAX Formatter.",
-    daxFormatterPreviewAllOption: "Generate ",
-    daxFormatterPreviewButton: "Generate Preview",
+    daxFormatterPreviewDesc: "To generate a preview, Bravo needs to send this measure to the DAX Formatter service.",
+    daxFormatterPreviewAllOption: "Preview all measures",
+    daxFormatterPreviewButton: "Preview",
+    daxFormatterPreviewAllButton: "Preview All",
     dataUsageLink: "How your data is used?", 
     dataUsageTitle: "How your data is used?",
     dataUsageMessage: `
@@ -95,12 +95,19 @@ export const strings = {
         <p><a href="https://www.daxformatter.com" target="_blank">www.daxformatter.com</a></p>
         `,
     signIn: "Sign In",
+    signOut: "Sign Out",
     searchPlaceholder: "Search",
     searchColumnPlaceholder: "Search Column",
     previewPlaceholder: "Select a measure to see the preview...",
     errorTitle: "Whoops...",
     errorGeneric: "Error",
     errorUnspecified: "Unspecified error.",
+    errorRequestTimeout: "Request timeout.",
     errorNotConnected: "You're not connected to Power BI - please sign in to proceed.",
-    errorDatasetListing: "Unable to retrieve the list of datasets of Power BI Service.",
+    errorDatasetsListing: "Unable to retrieve the list of datasets of Power BI Service.",
+    errorReportsListing: "Unable to attach to Power BI Desktop.<br>Try to reset the application.",
+    errorVPAXAlreadyOpened: (fileName: string) => `There is already an open VPX file called <strong>${
+        sanitizeHtml(fileName, { allowedTags: [], allowedAttributes: {}})
+    }</strong>.<br>Please close it before trying again.`,
+    errorRetry: "Retry"
 };

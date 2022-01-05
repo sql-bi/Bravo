@@ -6,7 +6,6 @@
 
 import { _ } from '../helpers/utils';
 import { strings } from '../model/strings';
-import { Connect } from '../view/connect';
 import { Scene } from '../view/scene';
 
 export class WelcomeScene extends Scene {
@@ -18,30 +17,31 @@ export class WelcomeScene extends Scene {
     }
 
     render() {
-
+        super.render();
+        
         let helpVideos = [
             {
                 name: strings.helpConnectVideo,
                 videoId: ""
             },
             {
-                name: strings.analyzeModelName,
+                name: strings.AnalyzeModel,
                 videoId: ""
             },
             {
-                name: strings.daxFormatterName,
+                name: strings.DaxFormatter,
                 videoId: ""
             },
             {
-                name: strings.manageDatesName,
+                name: strings.ManageDates,
                 videoId: ""
             },
             {
-                name: strings.exportDataName,
+                name: strings.ExportData,
                 videoId: ""
             },
             {
-                name: strings.bestPracticesName,
+                name: strings.BestPractices,
                 videoId: ""
             }
         ];
@@ -100,20 +100,17 @@ export class WelcomeScene extends Scene {
     listen() {
         _(".quick-attach-pbi", this.element).addEventListener("click", e => {
             e.preventDefault();
-            let dialog = new Connect();
-            dialog.show("attach-pbi").then(r => this.trigger("quickAction", r));
+            this.trigger("quickAction", "attach-pbi");
         });
 
         _(".quick-connect-pbi", this.element).addEventListener("click", e => {
             e.preventDefault();
-            let dialog = new Connect();
-            dialog.show("connect-pbi").then(r => this.trigger("quickAction", r));
+            this.trigger("quickAction", "connect-pbi");
         });
 
         _(".quick-open-vpx", this.element).addEventListener("click", e => {
             e.preventDefault();
-            let dialog = new Connect();
-            dialog.show("open-vpx").then(r => this.trigger("quickAction", r));
+            this.trigger("quickAction", "open-vpx");
         });
     } 
 }
