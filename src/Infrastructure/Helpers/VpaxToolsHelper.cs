@@ -1,7 +1,6 @@
 ﻿using Dax.Metadata.Extractor;
 using Dax.ViewModel;
 using Dax.Vpax.Tools;
-using Sqlbi.Bravo.Infrastructure.Security;
 using Sqlbi.Bravo.Models;
 using System;
 using System.IO;
@@ -14,15 +13,21 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
         public static Stream ExportVpax(string connectionString, string databaseName, bool includeTomModel, bool includeVpaModel, bool readStatisticsFromData, int sampleRows)
         {
             var serverName = connectionString;
+            try
+            {
+                var daxModel = TomExtractor.GetDaxModel(serverName, databaseName, AppConstants.ApplicationName, AppConstants.ApplicationFileVersion, readStatisticsFromData, sampleRows);
+                var tomModel = includeTomModel ? TomExtractor.GetDatabase(serverName, databaseName) : null;
+                var vpaModel = includeVpaModel ? new Dax.ViewVpaExport.Model(daxModel) : null;
+                var stream = new MemoryStream();
 
-            var daxModel = TomExtractor.GetDaxModel(serverName, databaseName, AppConstants.ApplicationName, AppConstants.ApplicationFileVersion, readStatisticsFromData, sampleRows);
-            var tomModel = includeTomModel ? TomExtractor.GetDatabase(serverName, databaseName) : null;
-            var vpaModel = includeVpaModel ? new Dax.ViewVpaExport.Model(daxModel) : null;
-            var stream = new MemoryStream();
+                VpaxTools.ExportVpax(stream, daxModel, vpaModel, tomModel);
 
-            VpaxTools.ExportVpax(stream, daxModel, vpaModel, tomModel);
-
-            return stream;
+                return stream;
+            }
+            catch (ArgumentException ex) when (ex.Message == $"The database '{ databaseName }' could not be found. Either it does not exist or you do not have admin rights to it.") // TODO: avoid using the exception message here to filter the error
+            {
+                throw new TOMDatabaseNotFoundException(ex.Message);
+            }
         }
 
         public static TabularDatabase GetDatabaseFromVpax(Stream vpax)

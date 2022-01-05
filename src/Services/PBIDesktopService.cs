@@ -1,16 +1,10 @@
-﻿using Bravo.Infrastructure.Windows.Interop;
-using Sqlbi.Bravo.Infrastructure;
+﻿using Sqlbi.Bravo.Infrastructure;
 using Sqlbi.Bravo.Infrastructure.Extensions;
 using Sqlbi.Bravo.Infrastructure.Helpers;
 using Sqlbi.Bravo.Models;
-using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Net;
-using System.Net.NetworkInformation;
-using TOM = Microsoft.AnalysisServices.Tabular;
 
 namespace Sqlbi.Bravo.Services
 {

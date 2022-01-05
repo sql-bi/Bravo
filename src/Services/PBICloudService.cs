@@ -162,17 +162,9 @@ namespace Sqlbi.Bravo.Services
         public Stream ExportVpax(PBICloudDataset dataset, bool includeTomModel, bool includeVpaModel, bool readStatisticsFromData, int sampleRows)
         {
             var (connectionString, databaseName) = GetConnectionParameters(dataset);
+            var stream = VpaxToolsHelper.ExportVpax(connectionString, databaseName, includeTomModel, includeVpaModel, readStatisticsFromData, sampleRows);
 
-            try
-            {
-                var stream = VpaxToolsHelper.ExportVpax(connectionString, databaseName, includeTomModel, includeVpaModel, readStatisticsFromData, sampleRows);
-                return stream;
-            }
-            catch (ArgumentException ex) when (ex.Message == $"The database '{ databaseName }' could not be found. Either it does not exist or you do not have admin rights to it.")
-            {
-                // TODO: do not use message string to identify the error
-                throw new TOMDatabaseNotFoundException("PBICloud dataset not found");
-            }
+            return stream;
         }
 
         public void Update(PBICloudDataset dataset, IEnumerable<FormattedMeasure> measures)
