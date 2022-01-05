@@ -45,7 +45,7 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
                     ETag = databaseETag,
                     TablesCount = vpaModel.Tables.Count(),
                     ColumnsCount = vpaModel.Columns.Count(),
-                    TablesMaxRowsCount = vpaModel.Tables.Max((t) => t.RowsCount),
+                    TablesMaxRowsCount = vpaModel.Tables.Any() ? vpaModel.Tables.Max((t) => t.RowsCount) : 0,
                     DatabaseSize = databaseSize,
                     ColumnsUnreferencedCount = vpaModel.Columns.Count((t) => t.IsReferenced == false),
                     Columns = vpaModel.Columns.Select((c) =>
