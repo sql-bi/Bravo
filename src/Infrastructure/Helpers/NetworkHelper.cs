@@ -6,7 +6,7 @@ using System.Net;
 using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
 
-namespace Bravo.Infrastructure.Helpers
+namespace Sqlbi.Bravo.Infrastructure.Helpers
 {
     internal static class NetworkHelper
     {

@@ -35,6 +35,9 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
 
         public static void TrackException(Exception exception)
         {
+            if (exception is AggregateException aex)
+                exception = aex.GetBaseException();
+
             var telemetry = CreateTelemetryClient();
             telemetry.TrackException(exception);
             telemetry.Flush();

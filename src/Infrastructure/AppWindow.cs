@@ -1,8 +1,10 @@
-﻿using Bravo.Infrastructure.Windows.Interop;
+﻿using AutoUpdaterDotNET;
+using Bravo.Infrastructure.Windows.Interop;
 using Microsoft.Extensions.Hosting;
 using PhotinoNET;
 using Sqlbi.Bravo.Infrastructure.Configuration.Options;
 using Sqlbi.Bravo.Infrastructure.Extensions;
+using Sqlbi.Bravo.Infrastructure.Helpers;
 using Sqlbi.Infrastructure.Configuration.Settings;
 using System;
 using System.Diagnostics;
@@ -36,18 +38,20 @@ namespace Sqlbi.Bravo.Infrastructure
 #else
             var contextMenuEnabled = false;
             var devToolsEnabled = false;
-            var logVerbosity = 1;
+            var logVerbosity = 0;
 #endif
             var window = new PhotinoWindow()
-                .SetTitle(AppConstants.ApplicationMainWindowTitle)
                 .SetIconFile("wwwroot/bravo.ico")
+                .SetTitle(AppConstants.ApplicationMainWindowTitle)
+                .SetTemporaryFilesPath(AppConstants.ApplicationFolderTempDataPath)
                 .SetContextMenuEnabled(contextMenuEnabled)
                 .SetDevToolsEnabled(devToolsEnabled)
                 .SetLogVerbosity(logVerbosity) // 0 = Critical Only, 1 = Critical and Warning, 2 = Verbose, >2 = All Details. Default is 2.
                 .SetGrantBrowserPermissions(true)
                 .SetUseOsDefaultSize(true)
                 .RegisterCustomSchemeHandler("app", CustomSchemeHandler)
-                .Load("wwwroot/index.html");
+                .Load("wwwroot/index.html")
+                .Center();
 
             window.WindowCreating += OnWindowCreating;
             window.WindowCreated += OnWindowCreated;
@@ -109,6 +113,9 @@ namespace Sqlbi.Bravo.Infrastructure
 
                 // Try to install a WndProc subclass callback to hook messages sent to the app main window
                 _windowSubclass = new AppWindowSubclass(window);
+
+                // Async/non-blocking check for updates
+                CheckForUpdate();
             }
         }
 
@@ -119,6 +126,46 @@ namespace Sqlbi.Bravo.Infrastructure
                 return settings;
 
             return null;
+        }
+
+        private static void CheckForUpdate()
+        {
+            if (DesktopBridgeHelpers.IsPackagedAppInstance)
+                return;
+
+            AutoUpdater.AppCastURL = $"https://cdn.sqlbi.com/updates/BravoAutoUpdater.xml?nocache={ DateTimeOffset.Now.ToUnixTimeSeconds() }";
+            AutoUpdater.HttpUserAgent = "AutoUpdater";
+            AutoUpdater.Synchronous = false;
+            AutoUpdater.ShowSkipButton = false;
+            AutoUpdater.ShowRemindLaterButton = false;
+            AutoUpdater.OpenDownloadPage = true;
+            //AutoUpdater.ReportErrors = false;
+            //AutoUpdater.RunUpdateAsAdmin = true;
+            AutoUpdater.PersistenceProvider = new JsonFilePersistenceProvider(jsonPath: Path.Combine(AppConstants.ApplicationFolderLocalDataPath, "autoupdater.json"));
+            AutoUpdater.CheckForUpdateEvent += (updateInfo) =>
+            {
+                if (updateInfo.Error is not null)
+                {
+                    TelemetryHelper.TrackException(updateInfo.Error);
+                    return;
+                }
+                
+                if (updateInfo.IsUpdateAvailable)
+                {
+                    // TODO: complete check for update
+
+                    //var threadStart = new ThreadStart(() => AutoUpdater.ShowUpdateForm(update));
+                    //var thread = new Thread(threadStart);
+                    //thread.CurrentUICulture = thread.CurrentUICulture = CultureInfo.CurrentCulture;
+                    //thread.SetApartmentState(ApartmentState.STA);
+                    //thread.Start();
+                    //thread.Join();
+
+                    //NotificationHelper.NotifyUpdateAvailable(updateInfo);
+                }
+            };
+            AutoUpdater.InstalledVersion = new Version(0, 4, 0, 0 /*AppConstants.ApplicationFileVersion*/); // TODO: AutoUpdater version
+            AutoUpdater.Start();
         }
 
         /// <summary>

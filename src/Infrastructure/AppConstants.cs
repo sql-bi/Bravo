@@ -16,6 +16,7 @@ namespace Sqlbi.Bravo.Infrastructure
         public static readonly string ApplicationMainWindowTitle = "Bravo for Power BI";
         public static readonly string ApplicationInstanceUniqueName = $"{ApplicationName}-{Guid.NewGuid():D}";
         public static readonly string ApplicationFolderLocalDataPath = Path.Combine(EnvironmentSpecialFolderLocalApplicationData, ApplicationName);
+        public static readonly string ApplicationFolderTempDataPath = Path.Combine(ApplicationFolderLocalDataPath, ".temp");
         public static readonly bool TelemetryEnabledDefault = true;
         public static readonly string TelemetryInstrumentationKey = "47a8970c-6293-408a-9cce-5b7b311574d3";
         public static readonly string PBIDesktopProcessName = "PBIDesktop";

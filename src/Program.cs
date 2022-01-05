@@ -22,7 +22,6 @@ namespace Sqlbi.Bravo
                 StartupConfiguration.Configure();
 
                 using var instance = new AppInstance();
-
                 if (instance.IsOwned)
                 {
                     using var host = CreateHost();
@@ -37,11 +36,6 @@ namespace Sqlbi.Bravo
                 {
                     instance.NotifyOwner();
                 }
-            }
-            catch (AggregateException ex)
-            {
-                TelemetryHelper.TrackException(ex.GetBaseException());
-                throw;
             }
             catch (Exception ex)
             {
