@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Sqlbi.Bravo.Infrastructure;
 using Sqlbi.Bravo.Infrastructure.Helpers;
 using Sqlbi.Bravo.Infrastructure.Models.PBICloud;
+using Sqlbi.Bravo.Infrastructure.Windows;
 using Sqlbi.Bravo.Models;
 using Sqlbi.Bravo.Services;
 using System;
@@ -161,17 +162,44 @@ namespace Sqlbi.Bravo.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(byte[]))]
         public IActionResult GetVpaxFromPBIDesktopReport(PBIDesktopReport report)
         {
-            Stream vpax;
+            Stream stream;
             try
             {
-                vpax = _pbidesktopService.ExportVpax(report, includeTomModel: false, includeVpaModel: false, readStatisticsFromData: false, sampleRows: 0);
+                stream = _pbidesktopService.ExportVpax(report, includeTomModel: false, includeVpaModel: false, readStatisticsFromData: false, sampleRows: 0);
             }
             catch (TOMDatabaseNotFoundException ex)
             {
                 return NotFound(ex.Message);
             }
-            
-            return Ok(vpax);
+
+            //var threadStart = new System.Threading.ThreadStart(() =>
+            //{
+            //    var dlg = new System.Windows.Forms.SaveFileDialog()
+            //    {
+            //        DefaultExt = ".vpax",
+            //        Filter = "txt files (*.txt)|*.txt|All files (*.*)|*.*",
+            //        InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.SendTo),
+            //        Title = "Tiiiiiitle ?? :-)"
+            //    };
+            //    var wrapper = Win32WindowWrapper.CreateFrom(System.Diagnostics.Process.GetCurrentProcess().MainWindowHandle);
+            //    var result = dlg.ShowDialog(wrapper);
+            //});
+            //var thread = new System.Threading.Thread(threadStart);
+            //thread.CurrentUICulture = thread.CurrentUICulture = System.Globalization.CultureInfo.CurrentCulture;
+            //thread.SetApartmentState(System.Threading.ApartmentState.STA);
+            //thread.Start();
+            //thread.Join();
+
+            var dlg = new Bravo.Infrastructure.Windows.SaveFileDialog
+            {
+                DefaultExt = ".vpaxx",
+                Filter = "txt files (*.txt)|*.txt|All files (*.*)|*.*",
+                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.SendTo),
+                Title = "Tiiiiiitle ?? :-)"
+            };
+            var result = dlg.ShowDialog(System.Diagnostics.Process.GetCurrentProcess().MainWindowHandle);
+
+            return Ok(stream);
         }
 
         /// <summary>
@@ -190,17 +218,17 @@ namespace Sqlbi.Bravo.Controllers
             if (_pbicloudService.IsAuthenticated == false)
                 return Unauthorized();
 
-            Stream vpax;
+            Stream stream;
             try
             {
-                vpax = _pbicloudService.ExportVpax(dataset, includeTomModel: false, includeVpaModel: false, readStatisticsFromData: false, sampleRows: 0);
+                stream = _pbicloudService.ExportVpax(dataset, includeTomModel: false, includeVpaModel: false, readStatisticsFromData: false, sampleRows: 0);
             }
             catch (TOMDatabaseNotFoundException ex)
             {
                 return NotFound(ex.Message);
             }
 
-            return Ok(vpax);
+            return Ok(stream);
         }
     }
 }

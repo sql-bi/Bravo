@@ -58,12 +58,12 @@ namespace Sqlbi.Bravo.Infrastructure
                 var json = JsonSerializer.Serialize(message);
                 var bytes = Encoding.Unicode.GetBytes(json);
 
-                NativeMethods.COPYDATASTRUCT copyData;
+                User32.COPYDATASTRUCT copyData;
                 copyData.dwData = (IntPtr)100;
                 copyData.lpData = json;
                 copyData.cbData = bytes.Length + 1;
 
-                _ = NativeMethods.SendMessage(hWnd, NativeMethods.WM_COPYDATA, wParam: 0, ref copyData);
+                _ = User32.SendMessage(hWnd, WindowMessage.WM_COPYDATA, wParam: 0, ref copyData);
             }
         }
 

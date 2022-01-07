@@ -66,7 +66,7 @@ namespace Sqlbi.Bravo.Infrastructure.Extensions
                 {
                     if (NativeMethods.IsWindowVisible(hWnd))
                     {
-                        NativeMethods.SendMessage(hWnd, NativeMethods.WM_GETTEXT, builder.Capacity, builder);
+                        User32.SendMessage(hWnd, WindowMessage.WM_GETTEXT, builder.Capacity, builder);
 
                         if (builder.Length > 0)
                         {
