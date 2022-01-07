@@ -4,6 +4,7 @@ using Sqlbi.Bravo.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using SSAS = Microsoft.AnalysisServices;
 using TOM = Microsoft.AnalysisServices.Tabular;
 
@@ -12,12 +13,13 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
     internal static class TabularModelHelper
     {
         /// <summary>
-        /// Compute a string identifier for a specific version of a tabular model by using Version and LastUpdate properties
+        /// Compute a string identifier for a specific version of a tabular model by using Name, Version and LastUpdate properties
         /// </summary>
-        public static string? GetDatabaseETag(long version, DateTime lastUpdate)
+        public static string? GetDatabaseETag(string name, long version, DateTime lastUpdate)
         {
             var buffers = new byte[][]
             {
+                Encoding.UTF8.GetBytes(name),
                 BitConverter.GetBytes(version),
                 BitConverter.GetBytes(lastUpdate.Ticks)
             };
@@ -35,7 +37,7 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
             server.Connect(connectionString);
 
             var database = GetDatabase();
-            var databaseETag = GetDatabaseETag(database.Version, database.LastUpdate);
+            var databaseETag = GetDatabaseETag(database.Model.Name, database.Version, database.LastUpdate);
 
             foreach (var formattedMeasure in measures)
             {

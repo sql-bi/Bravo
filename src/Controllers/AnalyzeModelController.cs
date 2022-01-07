@@ -38,7 +38,7 @@ namespace Sqlbi.Bravo.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(TabularDatabase))]
         public IActionResult GetDatabaseFromVpax()
         {
-            var database = VpaxToolsHelper.GetDatabaseFromVpax(vpax: Request.Body);
+            var database = VpaxToolsHelper.GetDatabaseFromVpax(stream: Request.Body);
             return Ok(database);
         }
 
@@ -54,17 +54,17 @@ namespace Sqlbi.Bravo.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(TabularDatabase))]
         public IActionResult GetDatabaseFromPBIDesktopReport(PBIDesktopReport report)
         {
-            Stream vpax;
+            Stream stream;
             try
             {
-                vpax = _pbidesktopService.ExportVpax(report, includeTomModel: false, includeVpaModel: false, readStatisticsFromData: false, sampleRows: 0);
+                stream = _pbidesktopService.ExportVpax(report, includeTomModel: false, includeVpaModel: false, readStatisticsFromData: false, sampleRows: 0);
             }
             catch (TOMDatabaseNotFoundException ex)
             {
                 return NotFound(ex.Message);
             }
 
-            var database = VpaxToolsHelper.GetDatabaseFromVpax(vpax);
+            var database = VpaxToolsHelper.GetDatabaseFromVpax(stream);
             return Ok(database);
         }
 
@@ -84,17 +84,17 @@ namespace Sqlbi.Bravo.Controllers
             if (_pbicloudService.IsAuthenticated == false)
                 return Unauthorized();
 
-            Stream vpax;
+            Stream stream;
             try
             {
-                vpax = _pbicloudService.ExportVpax(dataset, includeTomModel: false, includeVpaModel: false, readStatisticsFromData: false, sampleRows: 0);
+                stream = _pbicloudService.ExportVpax(dataset, includeTomModel: false, includeVpaModel: false, readStatisticsFromData: false, sampleRows: 0);
             }
             catch (TOMDatabaseNotFoundException ex)
             {
                 return NotFound(ex.Message);
             }
 
-            var database = VpaxToolsHelper.GetDatabaseFromVpax(vpax);
+            var database = VpaxToolsHelper.GetDatabaseFromVpax(stream);
             return Ok(database);
         }
 
