@@ -40,6 +40,7 @@ namespace Sqlbi.Bravo.Controllers
         [Consumes(MediaTypeNames.Application.Octet)]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(TabularDatabase))]
+        [ProducesDefaultResponseType]
         public IActionResult GetDatabaseFromVpax()
         {
             var database = VpaxToolsHelper.GetDatabaseFromVpax(stream: Request.Body);
@@ -56,6 +57,8 @@ namespace Sqlbi.Bravo.Controllers
         [Consumes(MediaTypeNames.Application.Json)]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(TabularDatabase))]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
+        [ProducesDefaultResponseType]
         public IActionResult GetDatabaseFromPBIDesktopReport(PBIDesktopReport report)
         {
             Stream stream;
@@ -83,6 +86,9 @@ namespace Sqlbi.Bravo.Controllers
         [Consumes(MediaTypeNames.Application.Json)]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(TabularDatabase))]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
+        [ProducesDefaultResponseType]
         public IActionResult GetDatabaseFromPBICloudDataset(PBICloudDataset dataset)
         {
             if (_pbicloudService.IsAuthenticated == false)
@@ -111,6 +117,8 @@ namespace Sqlbi.Bravo.Controllers
         [ActionName("ListDatasets")]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<PBICloudDataset>))]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesDefaultResponseType]
         public async Task<IActionResult> GetPBICloudDatasets()
         {
             if (_pbicloudService.IsAuthenticated == false)
@@ -163,6 +171,8 @@ namespace Sqlbi.Bravo.Controllers
         [Consumes(MediaTypeNames.Application.Json)]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(FileActionResult))]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
+        [ProducesDefaultResponseType]
         public IActionResult ExportVpaxFromPBIDesktopReport(PBIDesktopReport report)
         {
             Stream stream;
@@ -191,6 +201,9 @@ namespace Sqlbi.Bravo.Controllers
         [Consumes(MediaTypeNames.Application.Json)]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(FileActionResult))]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
+        [ProducesDefaultResponseType]
         public IActionResult ExportVpaxFromPBICloudDataset(PBICloudDataset dataset)
         {
             if (_pbicloudService.IsAuthenticated == false)

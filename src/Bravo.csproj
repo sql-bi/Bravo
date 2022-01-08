@@ -25,6 +25,7 @@
     <TypeScriptCompileBlocked>true</TypeScriptCompileBlocked>
     <Configurations>Debug;Release;Debug_wwwroot</Configurations>
     <AnalysisLevel>latest</AnalysisLevel>
+    <IncludeOpenAPIAnalyzers>true</IncludeOpenAPIAnalyzers>
   </PropertyGroup>
 
   <ItemGroup>

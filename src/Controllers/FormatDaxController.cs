@@ -37,6 +37,7 @@ namespace Sqlbi.Bravo.Controllers
         [Consumes(MediaTypeNames.Application.Json)]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(FormatDaxResponse))]
+        [ProducesDefaultResponseType]
         public async Task<IActionResult> FormatAsync(FormatDaxRequest request)
         {
             var daxformatterResponse = await CallDaxFormatter(request.Measures!, request.Options!);
@@ -76,6 +77,12 @@ namespace Sqlbi.Bravo.Controllers
         [HttpPost]
         [ActionName("UpdateReport")]
         [Consumes(MediaTypeNames.Application.Json)]
+        [Produces(MediaTypeNames.Application.Json)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
+        [ProducesResponseType(StatusCodes.Status409Conflict, Type = typeof(string))]
+        [ProducesResponseType(StatusCodes.Status424FailedDependency, Type = typeof(string))]
+        [ProducesDefaultResponseType]
         public IActionResult UpdatePBIDesktopReportAsync(UpdatePBIDesktopReportRequest request)
         {
             try
@@ -108,6 +115,12 @@ namespace Sqlbi.Bravo.Controllers
         [HttpPost]
         [ActionName("UpdateDataset")]
         [Consumes(MediaTypeNames.Application.Json)]
+        [Produces(MediaTypeNames.Application.Json)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
+        [ProducesResponseType(StatusCodes.Status409Conflict, Type = typeof(string))]
+        [ProducesResponseType(StatusCodes.Status424FailedDependency, Type = typeof(string))]
+        [ProducesDefaultResponseType]
         public IActionResult UpdatePBICloudDatasetAsync(UpdatePBICloudDatasetRequest request)
         {
             try

@@ -38,11 +38,12 @@ namespace Sqlbi.Bravo.Controllers
         /// <summary>
         /// Get the application options
         /// </summary>
-        /// <response code="200">Status200OK</response>
+        /// <response code="200">Status200OK - Success</response>
         [HttpGet]
         [ActionName("GetOptions")]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(BravoOptions))]
+        [ProducesDefaultResponseType]
         public IActionResult GetOptions()
         {
             var userSettings = _userOptions.Value;
@@ -64,10 +65,13 @@ namespace Sqlbi.Bravo.Controllers
         /// <summary>
         /// Update the application options
         /// </summary>
-        /// <response code="200">Status200OK</response>
+        /// <response code="200">Status200OK - Success</response>
         [HttpPost]
         [ActionName("UpdateOptions")]
         [Consumes(MediaTypeNames.Application.Json)]
+        [Produces(MediaTypeNames.Application.Json)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesDefaultResponseType]
         public IActionResult UpdateOptions(BravoOptions options)
         {
             var customOptionsAsString = JsonSerializer.Serialize(options.CustomOptions);
@@ -85,10 +89,13 @@ namespace Sqlbi.Bravo.Controllers
         /// <summary>
         /// Change the current window theme
         /// </summary>
-        /// <response code="200">Status200OK</response>
+        /// <response code="200">Status200OK - Success</response>
         [HttpGet]
         [ActionName("ChangeTheme")]
         [Consumes(MediaTypeNames.Application.Json)]
+        [Produces(MediaTypeNames.Application.Json)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesDefaultResponseType]
         public IActionResult ChangeTheme(ThemeType theme)
         {
             var windowHandle = Process.GetCurrentProcess().MainWindowHandle;
