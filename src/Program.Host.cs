@@ -76,7 +76,10 @@ namespace Sqlbi.Bravo
                 //    builder.
                 //});
 
-                webBuilder.ConfigureKestrel((serverOptions) =>
+                // Empty and ignore default URLs configured on the IWebHostBuilder - this remove the warning 'Microsoft.AspNetCore.Server.Kestrel: Warning: Overriding address(es) 'https://localhost:5001/, http://localhost:5000/'. Binding to endpoints defined in UseKestrel() instead.'
+                webBuilder.UseUrls();
+
+                webBuilder.UseKestrel((serverOptions) =>
                 {
 #if DEBUG || DEBUG_WWWROOT
                     var listenEndpoint = new IPEndPoint(IPAddress.Loopback, port: 5000);
@@ -93,7 +96,7 @@ namespace Sqlbi.Bravo
                         //listenOptions.UseHttps(); // TODO: do we need https ?
                     });
                 });
-                
+
                 webBuilder.UseStartup<Startup>();
             });
 
