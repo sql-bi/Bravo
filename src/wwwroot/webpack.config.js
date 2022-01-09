@@ -36,9 +36,15 @@ module.exports = (env, argv) => {
               }
             }
           ],
-        }
+        },
+        {
+          test: /\.js$/,
+          enforce: 'pre',
+          use: ['source-map-loader'],
+        },
       ],
     },
+    ignoreWarnings: [/Failed to parse source map/],
     resolve: {
       extensions: ['.tsx', '.ts', '.js'],
     },

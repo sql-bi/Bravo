@@ -7,7 +7,6 @@
  * MIT License
 */
 
-import { strings } from '../model/strings';
 import { Utils } from './utils';
 
 export interface ContextMenuOptions {

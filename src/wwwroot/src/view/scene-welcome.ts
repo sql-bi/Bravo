@@ -5,6 +5,7 @@
 */
 
 import { _ } from '../helpers/utils';
+import { i18n } from '../model/i18n'; 
 import { strings } from '../model/strings';
 import { Scene } from '../view/scene';
 
@@ -21,27 +22,27 @@ export class WelcomeScene extends Scene {
         
         let helpVideos = [
             {
-                name: strings.helpConnectVideo,
+                name: i18n(strings.helpConnectVideo),
                 videoId: ""
             },
             {
-                name: strings.AnalyzeModel,
+                name: i18n(strings.AnalyzeModel),
                 videoId: ""
             },
             {
-                name: strings.DaxFormatter,
+                name: i18n(strings.DaxFormatter),
                 videoId: ""
             },
             {
-                name: strings.ManageDates,
+                name: i18n(strings.ManageDates),
                 videoId: ""
             },
             {
-                name: strings.ExportData,
+                name: i18n(strings.ExportData),
                 videoId: ""
             },
             {
-                name: strings.BestPractices,
+                name: i18n(strings.BestPractices),
                 videoId: ""
             }
         ];
@@ -50,22 +51,22 @@ export class WelcomeScene extends Scene {
             <div class="cols">
                 <div class="col coll">
                     <header>
-                        <h1>${strings.welcomeTitle}</h1>
+                        <h1>${i18n(strings.welcomeTitle)}</h1>
                     </header> 
-                    <p>${strings.welcomeText}</p>
+                    <p>${i18n(strings.welcomeText)}</p>
     
                     <div class="quick-actions">
                         <div class="ctrl quick-attach-pbi">
                             <img src="images/attach-pbi.svg">
-                            <span class="name">${strings.quickActionAttachPBITitle}</span>
+                            <span class="name">${i18n(strings.quickActionAttachPBITitle)}</span>
                         </div>
                         <div class="ctrl quick-connect-pbi">
                             <img src="images/connect-pbi.svg">
-                            <span class="name">${strings.quickActionConnectPBITitle}</span>
+                            <span class="name">${i18n(strings.quickActionConnectPBITitle)}</span>
                         </div>
                         <div class="ctrl quick-open-vpx">
                             <img src="images/vertipaq.svg">
-                            <span class="name">${strings.quickActionOpenVPXTitle}</span>
+                            <span class="name">${i18n(strings.quickActionOpenVPXTitle)}</span>
                         </div>
                     </div>
                 </div>
@@ -73,10 +74,10 @@ export class WelcomeScene extends Scene {
                     <div class="sep"></div>
                     <div class="help-content">
                         <header>
-                            <h2>${strings.welcomeHelpTitle}</h2>
+                            <h2>${i18n(strings.welcomeHelpTitle)}</h2>
                         </header>
                         
-                        <p>${strings.welcomeHelpText}</p>
+                        <p>${i18n(strings.welcomeHelpText)}</p>
 
                         <div class="videos">
                             <ul>
@@ -86,7 +87,7 @@ export class WelcomeScene extends Scene {
                             </ul>
                         </div>
 
-                        <p class="note">${strings.openSourcePayoff}</p>
+                        <p class="note">${i18n(strings.openSourcePayoff)} <a href="https://github.com/sql-bi/bravo" target="_blank" class="ext-link">github.com/sql-bi/bravo</a></p>
                     </div>
                 </div>
             </div>

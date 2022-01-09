@@ -4,13 +4,13 @@
  * https://www.sqlbi.com
 */
 
-import { Dic, Utils } from '../helpers/utils';
+import { Dic, Utils, __ } from '../helpers/utils';
 import { Doc } from '../model/doc';
-import { strings } from '../model/strings';
 import { Scene } from '../view/scene';
 import { ErrorScene } from '../view/scene-error';
 import { LoaderScene } from '../view/scene-loader';
 import { View } from '../view/view';
+import { HostError } from './host';
 import { Page, PageType } from './page';
 
 export class Sheet extends View { 
@@ -88,6 +88,10 @@ export class Sheet extends View {
 
         this.trigger(`${action}Started`);
         this.element.classList.add(action);
+        __(`.disable-on-${action}`, this.element).forEach((div: HTMLElement) => {
+            div.dataset[`disabledBefore${action}`] = String(div.hasAttribute("disabled"));
+            div.toggleAttr("disabled", true);
+        });
         
         this.doc.sync()
             .then(() => {
@@ -102,25 +106,19 @@ export class Sheet extends View {
             
                 this.trigger(`${action}Completed`);
             })
-            .catch(error => {
+            .catch((error: HostError) => {
 
-                const errorSceneId = `${this.id}_${action}-error`;
+                const errorSceneId = `${this.id}_${error.name}-error`;
                 if (initial) {
 
                     this.showBlockingScene(
-                        new ErrorScene(errorSceneId, this.element, 
-                            Utils.Request.isAbort(error) ? 
-                                new Error(strings.errorRequestTimeout) : 
-                                error
-                            , null, Utils.Request.isAbort(error) ? ()=> {
-                                this.sync(true);
-                            } : 
-                            null
+                        new ErrorScene(errorSceneId, this.element, error, null, 
+                            error.fatal ? null : ()=> { this.sync(true); }
                         )
                     );
 
                 } else {
-                    if (!Utils.Request.isAbort(error)) 
+                    if (error.fatal) 
                         this.showBlockingScene(new ErrorScene(errorSceneId, this.element, error));
                 }
             })
@@ -128,6 +126,10 @@ export class Sheet extends View {
                 this.syncing = false;
                 this.loading = false;
                 this.element.classList.remove(action);
+                __(`.disable-on-${action}`, this.element).forEach((div: HTMLElement) => {
+                    let disabledBeforeAction = div.dataset[`disabledBefore${action}`];
+                    div.toggleAttr("disabled", disabledBeforeAction == "true");
+                });
             });
     }
 

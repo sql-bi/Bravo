@@ -6,6 +6,7 @@
 
 import { Utils } from '../helpers/utils';
 import { Doc } from '../model/doc';
+import { i18n } from '../model/i18n'; 
 import { strings } from '../model/strings';
 import { Scene } from '../view/scene';
 import { AnalyzeModelScene } from '../view/scene-analyze-model';
@@ -29,7 +30,7 @@ export class Page extends View {
     scenes: Scene[] = [];
 
     get name(): string {
-        return strings[this.type];
+        return i18n(strings[this.type]);
     }
 
     get lastScene() {
@@ -50,14 +51,19 @@ export class Page extends View {
             [PageType.ExportData]: ExportDataScene,
             [PageType.BestPractices]: BestPracticesScene,
         }
-        if (type in classes)    
-            this.scenes = [new classes[type](Utils.DOM.uniqueId(), this.element, doc)];
+        if (type in classes) {
+            let initialScene = new classes[type](Utils.DOM.uniqueId(), this.element, doc);
+            initialScene.element.style.zIndex = "1";
+            this.scenes = [initialScene];
+        }
 
         this.listen();
     }
 
     pushScene(scene: Scene) {
+        let zIndex = Number(this.lastScene.element.style.zIndex) + 1;
         this.scenes.push(scene);
+        scene.element.style.zIndex = String(zIndex);
         this.listen(scene);
         this.showScene(scene);
     }

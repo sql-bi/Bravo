@@ -4,13 +4,12 @@
  * https://www.sqlbi.com
 */
 import { Doc } from '../model/doc';
-import { strings } from '../model/strings';
 import { MainScene } from './scene-main';
 
 export class BestPracticesScene extends MainScene {
     
     constructor(id: string, container: HTMLElement, doc: Doc) {
-        super(id, container, doc); //, strings.bestPracticesTitle
+        super(id, container, doc);
         this.element.classList.add("best-practices");
     }
 

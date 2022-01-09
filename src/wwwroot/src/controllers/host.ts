@@ -7,6 +7,9 @@
 import { debug } from '../debug';
 import { Dispatchable } from '../helpers/dispatchable';
 import { Dic, Utils } from '../helpers/utils';
+import { DocType } from '../model/doc';
+import { i18n } from '../model/i18n';
+import { errors, strings } from '../model/strings';
 import { TabularDatabase, TabularMeasure } from '../model/tabular';
 import { Account } from './auth';
 import { FormatDaxOptions, Options } from './options';
@@ -22,10 +25,33 @@ declare global {
 
 interface ApiRequest {
     action: string
-    controller: AbortController,
+    controller: AbortController
     timeout?: number
+    aborted?: Utils.RequestAbortReason
 }
 
+export class HostError extends Error {
+    code: number;
+    activityId: string;
+    readonly requestAborted: boolean;
+    readonly requestTimedout: boolean;
+    readonly fatal: boolean;
+
+    constructor(name: string, message?: string, code?: number, activityId?: string) {
+        if (!message) message = i18n(strings.errorUnspecified);
+        if (message.slice(-1) != ".") message += ".";
+        super(message);
+
+        this.name = name;
+
+        this.code = code;
+        this.requestAborted = (this.code == Utils.ResponseErrorCode.Aborted);
+        this.requestTimedout = (this.code == Utils.ResponseErrorCode.Timeout);
+        this.fatal = (!this.requestTimedout && !this.requestAborted);
+        
+        this.activityId = activityId;
+    }
+}
 export interface FormatDaxRequest {
     options: FormatDaxOptions
     measures: TabularMeasure[]
@@ -126,13 +152,37 @@ export class Host extends Dispatchable {
 
         if (timeout) {
             this.requests[requestId].timeout = window.setTimeout(()=> {
-                this.apiAbortById(requestId);
+                this.apiAbortById(requestId, "timeout");
             }, timeout);
         }
 
-        return Utils.Request.ajax(`${this.address}${action}`, data, options).finally(()=>{
-            this.apiCallCompleted(requestId);
-        });
+        return Utils.Request.ajax(`${this.address}${action}`, data, options)
+            .catch((error: Response | Error) => {
+
+                let errorCode = Utils.ResponseErrorCode.InternalError;
+                if (error instanceof Error) {
+                    if (Utils.Request.isAbort(error)) {
+                        errorCode = Utils.ResponseErrorCode.Aborted;
+                        if (requestId in this.requests && this.requests[requestId].aborted == "timeout")
+                            errorCode = Utils.ResponseErrorCode.Timeout;
+                    }
+                } else {
+                    errorCode = error.status;
+                }
+
+                let responseMessage  = (error instanceof Error ? error.message : error.statusText);
+                let errorMessage = (errorCode in errors ? i18n(errors[errorCode]) : responseMessage);
+
+                let actionPath = action.split("/");
+                let errorName = actionPath[actionPath.length - 1];
+
+                let activityId = ""; //TODO use responseMessage
+
+                throw new HostError(errorName, errorMessage, errorCode, activityId);
+            })
+            .finally(()=>{
+                this.apiCallCompleted(requestId);
+            });
     }
 
     apiCallCompleted(requestId: string) {
@@ -144,20 +194,20 @@ export class Host extends Dispatchable {
         }
     }
 
-    apiAbortById(requestId: string) {
+    apiAbortById(requestId: string, reason: Utils.RequestAbortReason = "user") {
         if (requestId in this.requests) {
             try {
+                this.requests[requestId].aborted = reason;
                 this.requests[requestId].controller.abort();
             } catch (e){}
-            delete this.requests[requestId];
         }
     }
 
-    apiAbortByAction(action: string) {
+    apiAbortByAction(action: string, reason: Utils.RequestAbortReason = "user") {
         for (let requestId in this.requests) {
             if (this.requests[requestId].action == action) {
-                this.apiAbortById(requestId);
-                console.log(`${action} aborted`);
+                this.apiAbortById(requestId, reason);
+                console.log(`${action} aborted with reason ${reason}`);
             }
         }
     }
@@ -165,8 +215,8 @@ export class Host extends Dispatchable {
     /**** APIs ****/
 
     /* Authentication */
-    signIn() {
-        return <Promise<Account>>this.apiCall("auth/powerbi/SignIn");
+    signIn(emailAddress?: string) {
+        return <Promise<Account>>this.apiCall("auth/powerbi/SignIn", emailAddress);
     }
 
     signOut() {
@@ -200,11 +250,11 @@ export class Host extends Dispatchable {
         return <Promise<PBICloudDataset[]>>this.apiCall("api/ListDatasets");
     }
 
-    exportVpax(datasource: PBIDesktopReport | PBICloudDataset, type: string) {
-        return <Promise<string>>this.apiCall(`api/ExportVpaxFrom${type}`, datasource, { method: "POST" });
+    exportVpax(datasource: PBIDesktopReport | PBICloudDataset, type: DocType) {
+        return <Promise<string>>this.apiCall(`api/ExportVpaxFrom${type == DocType.dataset ? "Dataset" : "Report"}`, datasource, { method: "POST" });
     }
-    abortExportVpax(type: string) {
-        this.apiAbortByAction(`api/ExportVpaxFrom${type}`);
+    abortExportVpax(type: DocType) {
+        this.apiAbortByAction(`api/ExportVpaxFrom${type == DocType.dataset ? "Dataset" : "Report"}`);
     }
 
     /* Format DAX */
@@ -212,13 +262,12 @@ export class Host extends Dispatchable {
     formatDax(request: FormatDaxRequest) {
         return <Promise<FormattedMeasure[]>>this.apiCall("api/FormatDax", request, { method: "POST" });
     }
-    
-    updateReport(request: UpdatePBIDesktopReportRequest) {
-        return this.apiCall("api/UpdateReport", request, { method: "POST" });
+    abortFormatDax() {
+        this.apiAbortByAction(`api/FormatDax}`);
     }
 
-    updateDataset(request: UpdatePBICloudDatasetRequest) {
-        return this.apiCall("api/UpdateDataset", request, { method: "POST" });
+    updateModel(request: UpdatePBIDesktopReportRequest | UpdatePBICloudDatasetRequest, type: DocType) {
+        return this.apiCall(`api/Update${type == DocType.dataset ? "Dataset" : "Report"}`, request, { method: "POST" });
     }
 
 

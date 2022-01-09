@@ -14,11 +14,6 @@ export interface Account {
     avatar?: string
 }
 
-interface SignInError {
-    errorCode?: string
-    isTimeout?:	boolean
-}
-
 export class Auth extends Dispatchable {
 
     account: Account;
@@ -38,10 +33,10 @@ export class Auth extends Dispatchable {
         });
     }
 
-     signIn(): Promise<boolean> {
+     signIn(emailAddress?: string): Promise<boolean> {
         this.account = null;
 
-        return host.signIn()
+        return host.signIn(emailAddress)
             .then(account => {
                 if (account) {
                     this.account = account;
@@ -51,8 +46,7 @@ export class Auth extends Dispatchable {
                     return false;
                 }
             })
-            .catch((error: SignInError) => {
-                console.error(error);
+            .catch(error => {
                 return false;
             });
     }

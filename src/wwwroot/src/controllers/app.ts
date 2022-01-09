@@ -5,15 +5,14 @@
 */
 
 import { Dic, _, __, Utils } from "../helpers/utils";
-import { strings } from "../model/strings";
-
+import { i18n } from '../model/i18n'; 
+import { strings } from '../model/strings';
 import { Sidebar } from '../view/sidebar';
 import { Tabs, AddedTabInfo, RemovedTabInfo } from '../view/tabs';
 import { WelcomeScene } from '../view/scene-welcome';
 import { Doc } from '../model/doc';
 import { Confirm } from '../view/confirm';
-import { Connect } from '../view/connect';
-import { DialogResponse } from '../view/dialog';
+import { Connect, ConnectResponse } from '../view/connect';
 import { Sheet } from './sheet';
 import { PageType } from './page';
 
@@ -21,7 +20,6 @@ export class App {
 
     sheets: Dic<Sheet> = {};
     welcomeScene: WelcomeScene;
-    docs: Dic<Doc> = {};
     element: HTMLElement;
     sidebar: Sidebar;
     tabs: Tabs;
@@ -33,7 +31,7 @@ export class App {
 
         let sidebarItems: Dic<string> = {};
         for(let type in PageType) {
-            sidebarItems[type] = strings[type];
+            sidebarItems[type] = i18n((<any>strings)[type]);
         }
         this.sidebar = new Sidebar("sidebar", this.element, sidebarItems);
 
@@ -56,7 +54,7 @@ export class App {
                 if (this.sheets[data.id].doc.isDirty) {
 
                     let dialog = new Confirm();
-                    dialog.show(strings.confirmTabCloseMessage).then((response: DialogResponse) => {
+                    dialog.show(i18n(strings.confirmTabCloseMessage)).then((response: ConnectResponse) => {
                         if (response.action == "ok")
                             this.tabs.closeTab(data.element);
                     });
@@ -93,15 +91,11 @@ export class App {
 
         let sheet = new Sheet(id, container, doc);
         this.sheets[id] = sheet;
-
-        this.docs[doc.id] = doc;
     }
 
     removeSheet(id: string) {
 
         if (id in this.sheets) {
-            delete this.docs[this.sheets[id].doc.id];
-
             this.sheets[id].destroy();
             delete this.sheets[id];
         }
@@ -132,19 +126,40 @@ export class App {
 
     connect(selectedMenu: string) {
 
-        let dialog = new Connect(Object.keys(this.docs));
-        dialog.show(selectedMenu)
-            .then((response: DialogResponse) => {
-                if (response.action == "ok" && response.okData && !Utils.Obj.isEmpty(response.okData)) {
+        let openedDocs = [];
+        for (let id in this.sheets)
+            openedDocs.push(this.sheets[id].doc.id);
 
-                    let id = Utils.DOM.uniqueId();
-                    let doc: Doc = response.okData;
-                    this.addSheet(id, doc);
+        let dialog = new Connect(openedDocs);
+        dialog.show(selectedMenu)
+            .then((response: ConnectResponse) => {
+                if (response.data) {
+                    switch (response.action) {
+                        case "ok":
+                            if (response.data.doc) {
+
+                                let id = Utils.DOM.uniqueId();
+                                this.addSheet(id, response.data.doc);
+                                this.tabs.addTab(id, response.data.doc);
+                            }
+                            break;
+
+                        case "cancel":
+                            if (response.data.switchToDoc) {
+                                for (let id in this.sheets) {
+                                    if (this.sheets[id].doc.id == response.data.switchToDoc) {
+                                        this.tabs.changeTab(id);
+                                        break;
+                                    }
+                                }
+                            }
+
+                            break;
+                    }
                     
-                    this.tabs.addTab(id, doc);
+                    if (response.data.lastOpenedMenu)
+                        this.defaultConnectSelectedMenu = response.data.lastOpenedMenu;
                 }
-                if (!Utils.Obj.isEmpty(response.anyData))
-                    this.defaultConnectSelectedMenu = response.anyData;
             });
     }
 }

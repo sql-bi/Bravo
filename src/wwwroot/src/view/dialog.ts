@@ -11,11 +11,11 @@ export interface DialogButton {
     name: string
     action: string
     className?: string
+    disabled?: boolean
 }
 export interface DialogResponse {
     action: string
-    okData: any     // This data is returned if the action is ok oinly
-    anyData?: any   // This data is returned in any case
+    data: any
 }
 
 
@@ -23,7 +23,6 @@ export class Dialog extends View {
 
     body;
     data = {};
-    additionalData = {};
 
     constructor(id: string, container: HTMLElement, title: string, buttons: DialogButton[], iconClass = "") {
         super(`dialog-${id}`, container);
@@ -42,7 +41,7 @@ export class Dialog extends View {
                 <div class="content"></div>
                 <footer>
                     ${buttons.map((button: DialogButton) => `
-                        <div class="button ${button.className ? button.className : ""}" data-action="${button.action}">
+                        <div class="button ${button.className ? button.className : ""}" data-action="${button.action}" ${button.disabled ? "disabled" : ""}>
                             ${button.name}
                         </div>
                     `).join("")}
@@ -52,45 +51,35 @@ export class Dialog extends View {
         
         this.element.insertAdjacentHTML("beforeend", html);
         this.body = _(".content", this.element);
+
+        __("footer .button", this.element).forEach((button: HTMLElement) => {
+
+            button.addEventListener("click", e => {
+                e.preventDefault();
+                if ((<HTMLElement>e.currentTarget).hasAttribute("disabled")) return;
+
+                this.trigger("action", button.dataset.action);
+            });
+        });
+        
+        _(".ctrl-close", this.element).addEventListener("click", e => {
+            e.preventDefault();
+            this.trigger("action", "cancel");
+        });
+        
+        // Catch ESC key
+        /*document.addEventListener("keydown", e => {
+            if (e.which === 27 && this.isOpen) {
+                this.trigger("action", "cancel");
+            }
+        });*/
     }
 
     show() {
-
         return new Promise((resolve, reject) => {
-
-            __("footer .button", this.element).forEach((button: HTMLElement) => {
-
-                button.addEventListener("click", e => {
-                    e.preventDefault();
-                    if ((<HTMLElement>e.currentTarget).hasAttribute("disabled")) return;
-                    this.trigger(`action-${button.dataset.action}`);
-                });
+            this.on("action", (action: string) => {
+                this.onAction(action, resolve, reject);
             });
-
-            _(".ctrl-close", this.element).addEventListener("click", e => {
-                e.preventDefault();
-                this.trigger("action-cancel");
-            });
-
-            this.on("action-ok", () => {
-                this.hide();
-                this.destroy();
-                resolve(<DialogResponse>{ action: "ok", okData: this.data, anyData: this.additionalData  });
-            });
-
-            this.on("action-cancel", () => {
-                this.hide();
-                this.destroy();
-                resolve(<DialogResponse>{ action: "cancel", okData: {}, anyData: this.additionalData });
-            });
-
-            // Catch ESC key
-            /*document.addEventListener("keydown", e => {
-                if (e.which === 27 && this.isOpen) {
-                    this.trigger("action-cancel");
-                }
-            });*/
-
         });
     }
 
@@ -99,9 +88,16 @@ export class Dialog extends View {
     }
 
     destroy() {
+        this.hide();
+
         setTimeout(() => {
             this.element.parentElement.removeChild(this.element);
             //delete this;
         }, 300);
+    }
+
+    onAction(action: string, resolve: any, reject: any) {
+        this.destroy();
+        resolve(<DialogResponse>{ action: action, data: this.data  });
     }
 }

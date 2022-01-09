@@ -7,7 +7,8 @@ import { App } from './controllers/app';
 import { Auth } from './controllers/auth';
 import { Host } from './controllers/host';
 import { OptionsController } from './controllers/options';
-import { ThemeController, ThemeType } from './controllers/theme';
+import { ThemeController } from './controllers/theme';
+import { Telemetry } from './controllers/telemetry';
 
 // Load Tabulator modules
 import { Tabulator, ColumnCalcsModule, DataTreeModule, FilterModule, FormatModule, InteractionModule, ResizeColumnsModule, ResizeTableModule, SelectRowModule, SortModule  } from 'tabulator-tables';
@@ -32,8 +33,9 @@ console.log(`--- Bravo for Power BI started in ${ debug ? "debug" : process.env.
 // Init the app
 let host = new Host(CONFIG.address);
 let optionsController = new OptionsController();
-let themeController =  new ThemeController(CONFIG.theme);
+let themeController = new ThemeController(CONFIG.theme);
 let auth = new Auth();
+let telemetry = new Telemetry();
 let app = new App();
 
-export { host, optionsController, themeController, auth };
+export { host, optionsController, themeController, auth, telemetry };

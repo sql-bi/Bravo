@@ -123,7 +123,7 @@
         .flexbox(center, space-between);
         padding:10px;
 
-   
+
         .ctrl, .toggle {
             &:before {
                 font-size: 25px;
@@ -136,13 +136,15 @@
             background-color: @back-color;
 
             &.photo {
-              
-               padding: 0; 
-               border: 1px solid @back-color;
+                
+                width: 24px;
+                height: 24px;
+                padding: 0; 
+                border: 1px solid @back-color;
 
-               .dark & {
+                .dark & {
                    border-color: @back-color-dark
-               }
+                }
             }
         }
         #ctrl-options {

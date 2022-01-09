@@ -4,13 +4,15 @@
  * https://www.sqlbi.com
 */
 
-import { auth, host, optionsController, themeController } from "../main";
+import { auth, optionsController, themeController } from "../main";
 import { ThemeChangeArg, ThemeType } from '../controllers/theme';
 import { __, _, Dic } from '../helpers/utils';
+import { i18n } from '../model/i18n'; 
 import { strings } from '../model/strings';
 import { View } from './view';
 import { Account } from '../controllers/auth';
 import { ContextMenu, ContextMenuItemType } from '../helpers/contextmenu';
+import { PowerBiSignin } from './powerbi-signin';
 export class Sidebar extends View {
 
     static DEFAULT_USER_PICTURE = "images/user.svg";
@@ -26,8 +28,8 @@ export class Sidebar extends View {
 
         let html = `
             <header>
-                <div id="ctrl-burger" class="ctrl icon-menu solo" title="${strings.menuCtrlTitle}"></div>
-                <div class="logo hide-if-collapsed"><img src="images/bravo-shadows.svg" alt="${strings.appName}"></div>
+                <div id="ctrl-burger" class="ctrl icon-menu solo" title="${i18n(strings.menuCtrlTitle)}"></div>
+                <div class="logo hide-if-collapsed"><img src="images/bravo-shadows.svg" alt="${i18n(strings.appName)}"></div>
                 <div class="spacer"></div>
             </header>
             <div class="side-menu">
@@ -40,11 +42,11 @@ export class Sidebar extends View {
                 `).join("")}
             </div>
             <footer>
-                <div id="ctrl-options" class="ctrl icon-options solo" title="${strings.settingsCtrlTitle}"></div>
+                <div id="ctrl-options" class="ctrl icon-options solo" title="${i18n(strings.settingsCtrlTitle)}"></div>
 
-                <div id="ctrl-theme" class="ctrl icon-theme-${optionsController.options.theme.toLowerCase()} solo hide-if-collapsed" title="${strings.themeCtrlTitle}" data-theme="${optionsController.options.theme}"></div> 
+                <div id="ctrl-theme" class="ctrl icon-theme-${optionsController.options.theme.toLowerCase()} solo hide-if-collapsed" title="${i18n(strings.themeCtrlTitle)}" data-theme="${optionsController.options.theme}"></div> 
                 
-                <img id="ctrl-user" class="ctrl hide-if-collapsed" title="${strings.signInCtrlTitle}" src="${ Sidebar.DEFAULT_USER_PICTURE }">
+                <img id="ctrl-user" class="ctrl hide-if-collapsed" title="${i18n(strings.signInCtrlTitle)}" src="${ Sidebar.DEFAULT_USER_PICTURE }">
 
             </footer>
         `;
@@ -118,23 +120,24 @@ export class Sidebar extends View {
                 new ContextMenu({
                     width: "auto",
                     items: [
-                        { label: strings.signedInCtrlTitle(auth.account.username), cssIcon: "icon-user", type: ContextMenuItemType.label},
+                        { label: i18n(strings.signedInCtrlTitle, auth.account.username), cssIcon: "icon-user", type: ContextMenuItemType.label},
                         { label: "-", type: ContextMenuItemType.separator },
-                        { label: strings.signOut, onClick: () => { auth.signOut(); } },
+                        { label: i18n(strings.signOut), onClick: () => { auth.signOut(); } },
                     ]
                 }, e);
 
             } else {
-                auth.signIn();
+                let signinDialog = new PowerBiSignin();
+                signinDialog.show();
             }
         });
 
         auth.on("signedIn", (account: Account) => {
-            this.changeProfilePicture(strings.signedInCtrlTitle(account.username), account.avatar);
+            this.changeProfilePicture(i18n(strings.signedInCtrlTitle, account.username), account.avatar);
         });
 
         auth.on("signedOut", () => {
-            this.changeProfilePicture(strings.signInCtrlTitle);
+            this.changeProfilePicture(i18n(strings.signInCtrlTitle));
         });
     }
 

@@ -109,8 +109,8 @@ export class OptionsController extends Dispatchable {
                 const data = <Options>JSON.parse(rawData);
                 if (data)
                     this.options = Utils.Obj.merge(this.defaultOptions, data);
-            } catch(e){
-                console.error(e);
+            } catch(error){
+                console.error(error);
             }
         }
     }

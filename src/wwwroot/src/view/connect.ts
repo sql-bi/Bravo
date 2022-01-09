@@ -7,6 +7,7 @@
 import { auth, host } from '../main';
 import { Dic, Utils, _, __ } from '../helpers/utils';
 import { Doc, DocType } from '../model/doc';
+import { i18n } from '../model/i18n'; 
 import { strings } from '../model/strings';
 import { Dialog } from './dialog';
 import { Menu, MenuItem } from './menu';
@@ -14,6 +15,17 @@ import { PBICloudDataset, PBICloudDatasetEndorsementstring, PBIDesktopReport } f
 import { Tabulator } from 'tabulator-tables';
 import { Loader } from '../helpers/loader';
 import { ErrorAlert } from './erroralert';
+
+export interface ConnectResponse {
+    action: string
+    data: ConnectResponseData
+}
+
+export interface ConnectResponseData {
+    doc: Doc
+    lastOpenedMenu: string
+    switchToDoc: string
+}
 
 export class Connect extends Dialog {
 
@@ -23,29 +35,30 @@ export class Connect extends Dialog {
     okButton: HTMLElement;
     localReportsTimeout: number;
     alreadyOpenDocIds: string[];
+    data: ConnectResponseData;
 
     constructor(alreadyOpenDocIds: string[]) {
 
-        super("connect", document.body, strings.connectDialogTitle, [
-            { name: strings.dialogOpen, action: "ok" },
-            { name: strings.dialogCancel, action: "cancel", className: "button-alt" } 
+        super("connect", document.body, i18n(strings.connectDialogTitle), [
+            { name: i18n(strings.dialogOpen), action: "ok" },
+            { name: i18n(strings.dialogCancel), action: "cancel", className: "button-alt" } 
         ]);
 
         this.alreadyOpenDocIds = alreadyOpenDocIds;
 
         this.menu = new Menu("connect-menu", this.body, <Dic<MenuItem>>{
             "attach-pbi": {
-                name: strings.connectDialogConnectPBIMenu,  
+                name: i18n(strings.connectDialogConnectPBIMenu),  
                 onRender: element => this.renderAttachPBIMenu(element),
                 onChange: element => this.switchToAttachPBIMenu(element)
             },
             "connect-pbi": {
-                name: strings.connectDialogAttachPBIMenu, 
+                name: i18n(strings.connectDialogAttachPBIMenu), 
                 onRender: element => this.renderConnectPBIMenu(element),
                 onChange: element => this.switchToConnectPBIMenu(element)
             },
             "open-vpx": {    
-                name: strings.connectDialogOpenVPXMenu,    
+                name: i18n(strings.connectDialogOpenVPXMenu),    
                 onRender: element => this.renderOpenVPXMenu(element),
                 onChange: element => this.switchToOpenVPXMenu(element)
             }
@@ -53,18 +66,25 @@ export class Connect extends Dialog {
 
         this.okButton = _(".button[data-action=ok]", this.element);
 
+        this.data = {
+            doc: null,
+            lastOpenedMenu: this.menu.currentItem,
+            switchToDoc: null
+        };
+
         this.listen();
     }
 
     listen() {
-        this.menu.on("change", (item: string) => this.additionalData = item);
-    }
 
+        this.menu.on("change", (item: string) => this.data.lastOpenedMenu = item);
+    }
 
     show(selectedId?: string) {
         if (!selectedId)
             selectedId = Object.keys(this.menu.items)[0];
         this.menu.select(selectedId);
+
         return super.show();
     }
 
@@ -80,7 +100,7 @@ export class Connect extends Dialog {
 
     switchToAttachPBIMenu(element: HTMLElement) {
         this.okButton.toggle(true);
-        this.okButton.toggleAttr("disabled", !this.data || (<Doc>this.data).type != DocType.pbix);
+        this.okButton.toggleAttr("disabled", !this.data || !this.data.doc || this.data.doc.type != DocType.pbix);
     }
 
     getLocalReports(element: HTMLElement) {
@@ -93,27 +113,50 @@ export class Connect extends Dialog {
                     _(".list", element).innerHTML = `<div id="${ tableId }"></div>`;
                     
                 if (reports.length)
-                    this.renderLocalReportsTable(tableId, reports);
-                else
-                    throw new Error("404");
+                    this.renderLocalReportsTable(element, tableId, reports);
+                else 
+                    throw new Error();
             })
             .catch(error => {
-                _(".list", element).innerHTML = `
-                    <div class="notice">
-                        <div>
-                            <p>${strings.errorReportsListing}</p>
-                        </div>
-                    </div>
-                `;
-                this.okButton.toggleAttr("disabled", true);
+                this.renderConnectError(element, strings.errorReportsListing);
             });
     }
 
-    renderLocalReportsTable(id: string, reports: PBIDesktopReport[]) {
+    renderConnectError(element: HTMLElement, message: strings, retry?: () => void) {
+
+        const retryId = Utils.DOM.uniqueId();
+
+        _(".list", element).innerHTML = `
+            <div class="notice">
+                <div>
+                    <p>${i18n(message)}</p>
+                    ${ retry ? `
+                        <div id="${retryId}" class="button button-alt">${i18n(strings.errorRetry)}</div>
+                    ` : ""}
+                </div>
+            </div>
+        `;
+
+        if (retry) {
+            _(`#${retryId}`, element).addEventListener("click", e => {
+                e.preventDefault();
+                retry();
+            }); 
+        }
+
+        this.okButton.toggleAttr("disabled", true);
+    }
+
+    renderLocalReportsTable(element: HTMLElement, id: string, reports: PBIDesktopReport[]) {
 
         let unopenedReports = reports.filter(report => {
             return (this.alreadyOpenDocIds.indexOf(Doc.getId(DocType.pbix, report)) == -1);
         });
+
+        if (!unopenedReports.length) {
+            this.renderConnectError(element, strings.errorReportsEmptyListing);
+            return;
+        }
 
         if (this.reportsTable) {
             this.reportsTable.updateOrAddData(unopenedReports);
@@ -149,7 +192,7 @@ export class Connect extends Dialog {
                 } else {*/
 
                     let report = <PBIDesktopReport>row.getData();
-                    this.data = new Doc(report.reportName, DocType.pbix, report);
+                    this.data.doc = new Doc(report.reportName, DocType.pbix, report);
 
                     __(".row-active", this.reportsTable.element).forEach((el: HTMLElement) => {
                         el.classList.remove("row-active");
@@ -159,7 +202,7 @@ export class Connect extends Dialog {
                 //}
             });
             this.reportsTable.on("rowDblClick", (e, row) => {
-                this.trigger("action-ok");
+                this.trigger("action", "ok");
             });
         }
     }
@@ -175,8 +218,8 @@ export class Connect extends Dialog {
             _(".list", element).innerHTML = `
                 <div class="quick-signin notice">
                     <div>
-                        <p>${strings.errorNotConnected}</p>
-                        <div class="signin button">${strings.signIn}</div>
+                        <p>${i18n(strings.errorNotConnected)}</p>
+                        <div class="signin button">${i18n(strings.signIn)}</div>
                     </div>
                 </div>
             `;
@@ -202,14 +245,19 @@ export class Connect extends Dialog {
 
     switchToConnectPBIMenu(element: HTMLElement) {
         this.okButton.toggle(true);
-        this.okButton.toggleAttr("disabled", !this.data || (<Doc>this.data).type != DocType.dataset);
+        this.okButton.toggleAttr("disabled", !this.data || !this.data.doc || this.data.doc.type != DocType.dataset);
     }
 
-    renderRemoteDatasetsTable(id: string, datasets: PBICloudDataset[]) {
+    renderRemoteDatasetsTable(element: HTMLElement, id: string, datasets: PBICloudDataset[]) {
 
         let unopenedDatasets = datasets.filter(dataset => {
             return (this.alreadyOpenDocIds.indexOf(Doc.getId(DocType.dataset, dataset)) == -1);
         });
+
+        if (!unopenedDatasets.length) {
+            this.renderConnectError(element, strings.errorDatasetsEmptyListing);
+            return;
+        }
 
         if (this.datasetsTable) {
             this.datasetsTable.setData(unopenedDatasets);
@@ -225,7 +273,7 @@ export class Connect extends Dialog {
                 columns: [
                     { 
                         field: "name", 
-                        title: strings.connectDatasetsTableNameCol,
+                        title: i18n(strings.connectDatasetsTableNameCol),
                         width: 200,
                         formatter: (cell) => {
                             let dataset = <PBICloudDataset>cell.getData();
@@ -234,7 +282,7 @@ export class Connect extends Dialog {
                     },
                     { 
                         field: "endorsement", 
-                        title: strings.connectDatasetsTableEndorsementCol, 
+                        title: i18n(strings.connectDatasetsTableEndorsementCol), 
                         formatter: (cell) => {
                             let dataset = <PBICloudDataset>cell.getData();
                             return (dataset.endorsement == PBICloudDatasetEndorsementstring.None ? '' : `<span class="endorsement-badge icon-${dataset.endorsement.toLowerCase()}">${dataset.endorsement}</span>`);
@@ -249,11 +297,11 @@ export class Connect extends Dialog {
                     },
                     { 
                         field: "owner", 
-                        title: strings.connectDatasetsTableOwnerCol
+                        title: i18n(strings.connectDatasetsTableOwnerCol)
                     },
                     { 
                         field: "workspaceName", 
-                        title: strings.connectDatasetsTableWorkspaceCol
+                        title: i18n(strings.connectDatasetsTableWorkspaceCol)
                     },
                 ],
                 data: unopenedDatasets
@@ -268,7 +316,7 @@ export class Connect extends Dialog {
                 } else {*/
 
                     let dataset = <PBICloudDataset>row.getData();
-                    this.data = new Doc(dataset.name, DocType.dataset, dataset);
+                    this.data.doc = new Doc(dataset.name, DocType.dataset, dataset);
 
                     __(".row-active", this.datasetsTable.element).forEach((el: HTMLElement) => {
                         el.classList.remove("row-active");
@@ -279,7 +327,7 @@ export class Connect extends Dialog {
                 //}
             });
             this.datasetsTable.on("rowDblClick", (e, row) => {
-                this.trigger("action-ok");
+                this.trigger("action", "ok");
             });
         }
     }
@@ -292,21 +340,15 @@ export class Connect extends Dialog {
             .then((datasets: PBICloudDataset[]) => {
                 let tableId = Utils.DOM.uniqueId();
                 _(".list", element).innerHTML = `<div id="${ tableId }"></div>`;
-                this.renderRemoteDatasetsTable(tableId, datasets);
+
+                if (datasets.length) 
+                    this.renderRemoteDatasetsTable(element, tableId, datasets);
+                else
+                    this.renderConnectError(element, strings.errorDatasetsListing);
             })
             .catch(error => {
-                
-                _(".list", element).innerHTML = `
-                    <div class="notice">
-                        <div>
-                            <p>${strings.errorDatasetsListing}</p>
-                            <div class="retry-get-datasets button button-alt">${strings.errorRetry}</div>
-                        </div>
-                    </div>
-                `;
 
-                _(".retry-get-datasets", element).addEventListener("click", e => {
-                    e.preventDefault();
+                this.renderConnectError(element, strings.errorDatasetsListing, ()=>{
                     this.getRemoteDatasets(element);
                 }); 
             })
@@ -319,10 +361,10 @@ export class Connect extends Dialog {
 
         let html = `
             <div class="drop-area list">
-                <p>${strings.connectDragFile}</p>
+                <p>${i18n(strings.connectDragFile)}</p>
             
                 <div class="browse button">
-                    ${strings.connectBrowse}
+                    ${i18n(strings.connectBrowse)}
                 </div>
             </div>
             <input type="file" class="file-browser" accept=".vpax">
@@ -340,16 +382,16 @@ export class Connect extends Dialog {
                 let files: File[] = fileElement.files;
                 if (files.length) {
                     let file = files[0];
+                    let fileHash = Doc.getId(DocType.vpax, file);
 
-                    if (this.alreadyOpenDocIds.indexOf(Doc.getId(DocType.vpax, file)) > -1) {
-                        let alert = new ErrorAlert();
-                        alert.show(strings.errorVPAXAlreadyOpened(file.name));
-                        fileElement.value = null;
+                    if (this.alreadyOpenDocIds.indexOf(fileHash) > -1) {
+                        this.data.switchToDoc = fileHash;
+                        this.trigger("action", "cancel");
                         
                     } else {
 
-                        this.data = new Doc(file.name, DocType.vpax, file);
-                        this.trigger("action-ok");
+                        this.data.doc = new Doc(file.name, DocType.vpax, file);
+                        this.trigger("action", "ok");
                     }
                 }
             }
@@ -361,8 +403,8 @@ export class Connect extends Dialog {
             if (e.dataTransfer.files.length) {
                 let file = e.dataTransfer.files[0];
                 if (file.name.slice(-5) == ".vpax") {
-                    this.data = new Doc(file.name, DocType.vpax, file);
-                    this.trigger("action-ok");
+                    this.data.doc = new Doc(file.name, DocType.vpax, file);
+                    this.trigger("action", "ok");
                 }
             }
         }, false);

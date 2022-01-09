@@ -19,6 +19,7 @@
     "less": "^4.1.2",
     "less-loader": "^10.2.0",
     "mini-css-extract-plugin": "^2.4.5",
+    "source-map-loader": "^3.0.1",
     "style-loader": "^3.3.1",
     "ts-loader": "^9.2.6",
     "typescript": "^4.5.4",
@@ -26,6 +27,7 @@
     "webpack-cli": "^4.9.1"
   },
   "dependencies": {
+    "@microsoft/applicationinsights-web": "^2.7.2",
     "chart.js": "^3.6.2",
     "chartjs-chart-treemap": "^2.0.1",
     "codemirror": "^5.65.0",

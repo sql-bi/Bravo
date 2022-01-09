@@ -4,7 +4,8 @@
  * https://www.sqlbi.com
 */
 import { _ } from '../helpers/utils';
-import { Doc, DocType } from '../model/doc';
+import { Doc } from '../model/doc';
+import { i18n } from '../model/i18n'; 
 import { strings } from '../model/strings';
 import { Scene } from './scene';
 
@@ -28,9 +29,13 @@ export class MainScene extends Scene {
             <header>
                 <h1 class="icon" title="${this.title}">${this.title}</h1>
                 <div class="toolbar">
-                    <div class="ctrl-sync ctrl icon-refresh" title="${strings.syncCtrlTitle}" ${!this.doc.canSync ? "disabled" : ""}></div>
-
-                    <div class="ctrl icon-help" title="${strings.helpCtrlTitle}"></div>
+                ${this.doc.readonly ? `
+                    <div class="readonly">${i18n(strings.docReadOnly)}</div>
+                ` : "" }
+                ${this.doc.canSync ? `
+                    <div class="ctrl-sync ctrl icon-sync" title="${i18n(strings.syncCtrlTitle)}"></div>
+                ` : ""}
+                    <div class="ctrl icon-help" title="${i18n(strings.helpCtrlTitle)}"></div>
                 </div>
             </header>
             <div class="scene-content">

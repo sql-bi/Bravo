@@ -9,7 +9,8 @@ import { Dic, Utils } from '../helpers/utils';
 import { TabularDatabase, TabularDatabaseInfo, TabularMeasure } from './tabular';
 import { deepEqual } from 'fast-equals';
 import { PBICloudDataset, PBIDesktopReport } from '../controllers/host';
-import { strings } from "../model/strings";
+import { i18n } from '../model/i18n'; 
+import { strings } from '../model/strings';
 import * as sanitizeHtml from 'sanitize-html';
 
 export enum DocType {
@@ -28,6 +29,7 @@ export class Doc {
     lastSync: number;
     canSync: boolean;
     canExport: boolean;
+    readonly: boolean;
 
     isDirty = false;
     loaded = false;
@@ -40,12 +42,15 @@ export class Doc {
 
         this.canSync = (type != DocType.vpax);
         this.canExport = (type != DocType.vpax);
+        this.readonly = (type == DocType.vpax);
     }
 
     static getId(type: DocType, sourceData: File | PBICloudDataset | PBIDesktopReport): string {
         if (sourceData) {
             switch (type) {
                 case DocType.vpax:
+
+                    //TODO Return the hash
                     let file = (<File>sourceData);
                     let fileName = sanitizeHtml(file.name, { allowedTags: [], allowedAttributes: {}});
                     return `${type}_${Utils.Text.slugify(fileName)}`;
@@ -98,6 +103,6 @@ export class Doc {
             }
         }
 
-        return new Promise((resolve, reject) => { reject(new Error(strings.errorUnspecified)); });
+        return new Promise((resolve, reject) => { reject(new Error(i18n(strings.errorUnspecified))); });
     }
 }

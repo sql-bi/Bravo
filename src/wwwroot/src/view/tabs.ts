@@ -6,9 +6,9 @@
 
 import { Dic, Utils, _, __ } from '../helpers/utils';
 import { Doc, DocType } from '../model/doc';
+import { i18n } from '../model/i18n'; 
 import { strings } from '../model/strings';
 import { ChromeTabs } from "./chrome-tabs";
-import { Connect } from './connect';
 import { View } from './view';
 
 export interface AddedTabInfo {
@@ -35,7 +35,7 @@ export class Tabs extends View {
         // Chrome tabs
         let html = `
             <div class="chrome-tabs empty">
-                <div class="chrome-tabs-add ctrl icon-add">${strings.addCtrlTitle}</div>
+                <div class="chrome-tabs-add ctrl icon-add">${i18n(strings.addCtrlTitle)}</div>
                 <div class="chrome-tabs-content"></div>
                 <div class="chrome-tabs-bottom-bar"></div>
             </div>
@@ -80,7 +80,7 @@ export class Tabs extends View {
 
         this.tabIncremental++;
 
-        let name = (doc ? doc.name : `${strings.defaultTabName}-${this.tabIncremental}`);
+        let name = (doc ? doc.name : `${i18n(strings.defaultTabName)}-${this.tabIncremental}`);
         this.tabs[id] = name;
 
         this.trigger("add", <AddedTabInfo>{ id: id, doc: doc });
@@ -108,6 +108,12 @@ export class Tabs extends View {
             this.chromeTabsElement.classList.add("empty");
             this.trigger("noTabs");
         }
+    }
+
+    changeTab(id: string) {
+        let tabEl = _(`[data-tab-id=${id}]`, this.chromeTabsElement);
+        if (tabEl)
+            this.chromeTabs.setCurrentTab(tabEl);
     }
 
     select(id: string) {

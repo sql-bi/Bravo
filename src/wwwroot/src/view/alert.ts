@@ -4,6 +4,7 @@
  * https://www.sqlbi.com
 */
 
+import { i18n } from '../model/i18n'; 
 import { strings } from '../model/strings';
 import { Dialog } from './dialog';
 
@@ -12,7 +13,7 @@ export class Alert extends Dialog {
 
     constructor(id: string, title: string) {
         super(id, document.body, title, [
-            { name: strings.dialogOK, action: "cancel", className: "button-alt" },
+            { name: i18n(strings.dialogOK), action: "cancel", className: "button-alt" },
         ]);
     }
 

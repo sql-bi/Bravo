@@ -4,16 +4,18 @@
  * https://www.sqlbi.com
 */
 
+import { HostError } from '../controllers/host';
 import { _ } from '../helpers/utils';
+import { i18n } from '../model/i18n'; 
 import { strings } from '../model/strings';
 import { BackableScene } from './scene-back';
 
 export class ErrorScene extends BackableScene {
 
     onRetry: ()=>void;
-    error: Error;
+    error: HostError;
 
-    constructor(id: string, container: HTMLElement, error: Error, onBack?: (()=>void) | boolean, onRetry?: ()=>void) {
+    constructor(id: string, container: HTMLElement, error: HostError, onBack?: (()=>void) | boolean, onRetry?: ()=>void) {
         super(id, container, "", onBack);
         
         this.element.classList.add("error-scene");
@@ -25,16 +27,20 @@ export class ErrorScene extends BackableScene {
     render() {
         super.render();
         
-        let message = (this.error && this.error.message ? `${strings.errorGeneric} : ${this.error.message}` : strings.errorUnspecified);
-        if (message.slice(-1) != ".") message += ".";
-
         let html = `
             <div class="error">
                 <div class="icon icon-alert"></div>
-                <h1>${strings.errorTitle}</h1>
-                <p>${message}</p>
+
+                <h1>${i18n(strings.errorTitle)}${this.error.code ? ` (${this.error.code})` : "" }</h1>
+
+                <p>${this.error.message}</p>
+
+                ${this.error.activityId ? `
+                    <p><strong>ActivityId:</strong> ${this.error.activityId}</p>
+                ` : ""}
+
                 ${ this.onRetry ? `
-                    <p><div class="retry-call button button-alt">${strings.errorRetry}</div></p>
+                    <p><div class="retry-call button button-alt">${i18n(strings.errorRetry)}</div></p>
                 ` : "" }
             </div>
         `;

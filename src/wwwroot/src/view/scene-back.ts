@@ -4,6 +4,7 @@
  * https://www.sqlbi.com
 */
 import { _ } from '../helpers/utils';
+import { i18n } from '../model/i18n'; 
 import { strings } from '../model/strings';
 import { Scene } from './scene';
 
@@ -22,7 +23,7 @@ export class BackableScene extends Scene {
 
         if (this.onBack) {
             let html = `
-                <div class="go-back ctrl icon-previous" title="${strings.goBackCtrlTitle}"></div>
+                <div class="go-back ctrl icon-previous" title="${i18n(strings.goBackCtrlTitle)}"></div>
             `;
 
             this.element.insertAdjacentHTML("beforeend", html); 
@@ -31,7 +32,8 @@ export class BackableScene extends Scene {
                 e.preventDefault();
                 if (typeof this.onBack === "function")
                     this.onBack();
-                this.trigger("pop");
+                    
+                this.pop();
             });
         }
     }

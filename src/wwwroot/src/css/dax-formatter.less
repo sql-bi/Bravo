@@ -72,10 +72,21 @@
                     background-color: @input-back-color-dark;
                 }
 
-                .zoom {
-                    font-size: 14px;
-                    margin: auto 5px 0 auto;
-        
+                .toolbar {
+                    margin: auto 0 0 0;
+                    width: calc(100% - 10px);
+                    padding: 0 5px;
+                    .flexbox(center, space-between);
+                
+                    .refresh-preview {
+                        &:before {
+                            font-size: 18px;
+                        }
+                    }
+                    .zoom {
+                        font-size: 14px;
+                        margin-left: auto;
+                    }
                 }
                 .measure-name {
                     margin: 5px 0 10px 10px;
@@ -107,9 +118,10 @@
 
             .gen-preview-action {
                 max-width: 380px;
-                background: @window-back-color-alt;
-                //border:1px solid @border-color;
+                //background: @window-back-color;
+                border:1px solid @border-color;
                 padding: 20px 30px;
+                text-align: center;
 
                 .border-radius(8px);
                 font-size: 14px;
@@ -118,21 +130,15 @@
                 .dark & { 
                     color: @text-color-dark; 
                     border-color: @border-color-dark;
-                    background: @window-back-color-alt-dark;
+                    //background: @window-back-color-dark;
                 }
 
                 .gen-preview-ctrl {
-                    margin-top: 10px;
-                    .flexbox(center, space-between);
+                    margin-top: 15px;
+                    .flexbox(center, center);
 
-                    .switch {
-                        margin-left: auto;
-                    }
-                    label {
-                        font-size: 13px;
-                    }
-                    .gen-preview {
-                        margin-left: 15px;
+                    .button {
+                        margin: 0  8px;
                     }
                 }
             }

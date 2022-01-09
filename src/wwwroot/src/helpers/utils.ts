@@ -9,29 +9,16 @@ import * as sanitizeHtml from 'sanitize-html';
 // Utils
 export module Utils {
 
-    export module Platform {
-        export const isMac = (navigator.userAgent.toLowerCase().indexOf('mac') > -1);
+    export type RequestAbortReason = "user" | "timeout";
 
-        export function saveAs(blob: Blob, fileName: string) {
-            const url = window.URL.createObjectURL(blob);
-        
-            let anchorElem = <HTMLAnchorElement>(document.createElement("a"));
-            anchorElem.style.display = "none";
-            anchorElem.href = url;
-            anchorElem.download = fileName;
-        
-            document.body.appendChild(anchorElem);
-            anchorElem.click();
-        
-            document.body.removeChild(anchorElem);
-        
-            // On Edge, revokeObjectURL should be called only after
-            // a.click() has completed, atleast on EdgeHTML 15.15048
-            setTimeout(function() {
-                window.URL.revokeObjectURL(url);
-            }, 1000);
-        }
+    export enum ResponseErrorCode {
+        NotFound = 404,
+        NotAuthorized = 401,
+        Timeout = 408,
+        Aborted = 418, // Actual meaning is "I'm a teapot" (April Fool joke)
+        InternalError = 500
     }
+
     export module Request {
 
         // Load local scripts
@@ -85,7 +72,7 @@ export module Utils {
             const ajaxHandleResponseStatus = (response: Response) => {
                 return (response.status >= 200 && response.status < 300) ? 
                     Promise.resolve(response) :
-                    Promise.reject(new Error(response.statusText));
+                    Promise.reject(response);
             };
             
             const ajaxHandleContentType = (response: Response) => {
@@ -543,6 +530,31 @@ export module Utils {
             return result;
         }
     }
+
+    export module Platform {
+        export const isMac = (navigator.userAgent.toLowerCase().indexOf('mac') > -1);
+
+        export function saveAs(blob: Blob, fileName: string) {
+            const url = window.URL.createObjectURL(blob);
+        
+            let anchorElem = <HTMLAnchorElement>(document.createElement("a"));
+            anchorElem.style.display = "none";
+            anchorElem.href = url;
+            anchorElem.download = fileName;
+        
+            document.body.appendChild(anchorElem);
+            anchorElem.click();
+        
+            document.body.removeChild(anchorElem);
+        
+            // On Edge, revokeObjectURL should be called only after
+            // a.click() has completed, atleast on EdgeHTML 15.15048
+            setTimeout(function() {
+                window.URL.revokeObjectURL(url);
+            }, 1000);
+        }
+    }
+    
 }
 
 export interface Dic<T> {

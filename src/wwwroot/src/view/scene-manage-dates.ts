@@ -5,13 +5,12 @@
 */
 
 import { Doc } from '../model/doc';
-import { strings } from '../model/strings';
 import { MainScene } from './scene-main';
 
 export class ManageDatesScene extends MainScene {
 
     constructor(id: string, container: HTMLElement, doc: Doc) {
-        super(id, container, doc); //, strings.manageDatesTitle
+        super(id, container, doc); 
         this.element.classList.add("manage-dates");
     }
 

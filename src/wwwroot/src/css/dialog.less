@@ -151,10 +151,6 @@
 
       }
     }
-    
-    #body-connect-pbi {
-
-    }
 
     
 }
@@ -166,6 +162,30 @@
     margin: 10px 0 10px 50px;
   }
 } 
+#dialog-power-bi-signin {
+
+  .dialog-front {
+    width: 400px;
+
+    input[type=email] {
+      padding: 8px 6px;
+      width: calc(100% - 12px);
+      border: 1px solid @input-border-color;
+      background-color: @input-back-color;
+
+      .dark & { 
+          border: @input-border-color-dark;
+          background-color: @input-back-color-dark;
+      }
+
+      &:invalid {
+        border-color: @error-color;
+      }
+      
+    }
+  }
+}
+
   
 @keyframes fadeIn {
     0% {

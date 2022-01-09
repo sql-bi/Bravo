@@ -5,7 +5,8 @@
 */
 import { host, themeController } from "../main";
 import { Dic, Utils, _, __ } from '../helpers/utils';
-import { Doc, DocType } from '../model/doc';
+import { Doc } from '../model/doc';
+import { i18n } from '../model/i18n'; 
 import { strings } from '../model/strings';
 import { TabularColumn } from '../model/tabular';
 import { ThemeType } from '../controllers/theme';
@@ -17,6 +18,7 @@ import { ContextMenu } from '../helpers/contextmenu';
 import { MainScene } from './scene-main';
 import { LoaderScene } from './scene-loader';
 import { ErrorScene } from './scene-error';
+import { HostError } from '../controllers/host';
 
 Chart.register(TreemapController, TreemapElement);
 interface TabulatorVpaxModelColumn extends TabularColumn {
@@ -54,7 +56,7 @@ export class AnalyzeModelScene extends MainScene {
         let html = `
             <div class="summary">
                 
-                <p>${strings.analyzeModelSummary(Utils.Format.bytes(this.doc.model.size, 2), this.doc.model.columnsCount, this.doc.model.unreferencedCount)}</p>
+                <p>${i18n(this.doc.model.unreferencedCount == 1 ? strings.analyzeModelSummarySingular : strings.analyzeModelSummaryPlural, Utils.Format.bytes(this.doc.model.size, 2), this.doc.model.columnsCount, this.doc.model.unreferencedCount)}</p>
             </div>
             <div class="fcols">
                 <div class="col coll">
@@ -62,22 +64,23 @@ export class AnalyzeModelScene extends MainScene {
                     <div class="toolbar">
             
                         <div class="search">
-                            <input type="search" placeholder="${strings.searchColumnPlaceholder}">
+                            <input type="search" placeholder="${i18n(strings.searchColumnPlaceholder)}">
                         </div>
 
                        
-                        <div class="filter-unreferenced toggle icon-filter-alerts" title="${strings.filterUnrefCtrlTitle}"></div>
+                        <div class="filter-unreferenced toggle icon-filter-alerts" title="${i18n(strings.filterUnrefCtrlTitle)}"></div>
 
-                        <div class="group-by-table toggle icon-group" title="${strings.groupByTableCtrlTitle}"></div>
+                        <div class="group-by-table toggle icon-group" title="${i18n(strings.groupByTableCtrlTitle)}"></div>
 
                         <hr class="show-if-group">
 
-                        <div class="expand-all show-if-group ctrl icon-expand-all" title="${strings.expandAllCtrlTitle}"></div>
+                        <div class="expand-all show-if-group ctrl icon-expand-all" title="${i18n(strings.expandAllCtrlTitle)}"></div>
 
-                        <div class="collapse-all show-if-group ctrl icon-collapse-all" title="${strings.collapseAllCtrlTitle}"></div>
+                        <div class="collapse-all show-if-group ctrl icon-collapse-all" title="${i18n(strings.collapseAllCtrlTitle)}"></div>
 
-                        <div class="save-vpax ctrl icon-save" title="${strings.saveVpaxCtrlTile}" ${!this.doc.canExport ? "disabled" : ""}></div>
-                    
+                        ${this.doc.canExport ? `
+                            <div class="save-vpax ctrl icon-save disable-on-syncing" title="${i18n(strings.saveVpaxCtrlTile)}"></div>
+                        ` : ""}
 
                     </div>
 
@@ -85,7 +88,7 @@ export class AnalyzeModelScene extends MainScene {
 
                     <div class="warning-explanation">
                         <div class="icon icon-alert"></div>
-                        <p>${strings.columnWarningExplanation}</p>
+                        <p>${i18n(strings.columnWarningExplanation)}</p>
                     </div>
 
                 </div>
@@ -132,9 +135,9 @@ export class AnalyzeModelScene extends MainScene {
             }
         });
         aggregatedData.push({
-            name: strings.aggregatedTableName,
-            tableName: strings.aggregatedTableName,
-            columnName: strings.otherColumnsRowName,
+            name: i18n(strings.aggregatedTableName),
+            tableName: i18n(strings.aggregatedTableName),
+            columnName: i18n(strings.otherColumnsRowName),
             size: otherColumns.size,
             weight: otherColumns.weight,
             columnCardinality: otherColumns.cardinality,
@@ -221,7 +224,7 @@ export class AnalyzeModelScene extends MainScene {
                     cssClass: "column-icon",
                     formatter: (cell) => {
                         let cellData = <TabulatorVpaxModelColumn>cell.getData();
-                        return (cellData.isReferenced === false ? `<div class="icon icon-alert" title="${strings.columnWarningTooltip}"></div>` : "");
+                        return (cellData.isReferenced === false ? `<div class="icon icon-alert" title="${i18n(strings.columnWarningTooltip)}"></div>` : "");
                     }, 
                     sorter: (a, b, aRow, bRow, column, dir, sorterParams) => {
                         let cellData = <TabulatorVpaxModelColumn>aRow.getData();
@@ -237,28 +240,28 @@ export class AnalyzeModelScene extends MainScene {
                 },*/
                 cardinality: { 
                     field: "columnCardinality", 
-                    title: strings.analyzeModelTableColCardinality,  
+                    title: i18n(strings.analyzeModelTableColCardinality),  
                     width: 120,
                     hozAlign:"right",
                     bottomCalc: "sum",
                     sorter: "number", 
-                    headerTooltip: strings.analyzeModelTableColCardinalityTooltip,
+                    headerTooltip: i18n(strings.analyzeModelTableColCardinalityTooltip),
                     formatter: (cell)=>Utils.Format.compress(cell.getValue()), 
                     bottomCalcFormatter: (cell)=>Utils.Format.compress(cell.getValue()),
                 },
                 entityName: { 
                     field: "columnName", 
-                    title: strings.analyzeModelTableColEntity, 
+                    title: i18n(strings.analyzeModelTableColEntity), 
                     cssClass: "column-name",
                 },
                 columnName: { 
                     field: "columnName", 
-                    title: strings.analyzeModelTableColColumn, 
+                    title: i18n(strings.analyzeModelTableColColumn), 
                     cssClass: "column-name",
                 },
                 tableName: { 
                     field: "tableName", 
-                    title: strings.analyzeModelTableColTable,  
+                    title: i18n(strings.analyzeModelTableColTable),  
                     formatter: (cell) => {
                         let cellData = <TabulatorVpaxModelColumn>cell.getData();
                         return (cellData._aggregated ? "" : cell.getValue())
@@ -266,7 +269,7 @@ export class AnalyzeModelScene extends MainScene {
                 },
                 size: { 
                     field: "size", 
-                    title: strings.analyzeModelTableColSize, 
+                    title: i18n(strings.analyzeModelTableColSize), 
                     hozAlign:"right",
                     width: 100,
                     bottomCalc: "sum",
@@ -281,7 +284,7 @@ export class AnalyzeModelScene extends MainScene {
                 },
                 weight: { 
                     field: "weight", 
-                    title: strings.analyzeModelTableColWeight, 
+                    title: i18n(strings.analyzeModelTableColWeight), 
                     hozAlign: "right", 
                     width: 80,
                     bottomCalc: "sum",
@@ -565,9 +568,9 @@ export class AnalyzeModelScene extends MainScene {
                                 if (item) {
                                     let lines = [];
                                     if (item.columnName) {
-                                        lines.push(`${strings.analyzeModelTableColTable}: ${item.tableName}`);
+                                        lines.push(`${i18n(strings.analyzeModelTableColTable)}: ${item.tableName}`);
                                     }
-                                    lines.push(`${strings.analyzeModelTableColSize}: ${Utils.Format.bytes(item.size)}`);
+                                    lines.push(`${i18n(strings.analyzeModelTableColSize)}: ${Utils.Format.bytes(item.size)}`);
                                     return lines;
                                 }
                             },
@@ -607,7 +610,7 @@ export class AnalyzeModelScene extends MainScene {
         this.updateTable(false);
         this.updateChart();
 
-        _(".summary p", this.element).innerHTML = strings.analyzeModelSummary(Utils.Format.bytes(this.doc.model.size, 2), this.doc.model.columnsCount, this.doc.model.unreferencedCount);
+        _(".summary p", this.element).innerHTML = i18n(this.doc.model.unreferencedCount == 1 ? strings.analyzeModelSummarySingular : strings.analyzeModelSummaryPlural, Utils.Format.bytes(this.doc.model.size, 2), this.doc.model.columnsCount, this.doc.model.unreferencedCount);
     }
 
     listen() {
@@ -632,27 +635,26 @@ export class AnalyzeModelScene extends MainScene {
             if (el.hasAttribute("disabled")) return;
 
             el.toggleAttr("disabled", true);
-            if (this.doc.canExport) {
+            if (!this.doc.readonly) {
 
-                let sourceType = (this.doc.type == DocType.dataset ? "Dataset" : "Report");
-                let exportingScene = new LoaderScene(Utils.DOM.uniqueId(), this.element.parentElement, strings.savingVpax, ()=>{
-                    host.abortExportVpax(sourceType);
+                let exportingScene = new LoaderScene(Utils.DOM.uniqueId(), this.element.parentElement, i18n(strings.savingVpax), ()=>{
+                    host.abortExportVpax(this.doc.type);
                 });
-                this.trigger("push", exportingScene);
+                this.push(exportingScene);
 
-                host.exportVpax(<any>this.doc.sourceData, sourceType)
+                host.exportVpax(<any>this.doc.sourceData, this.doc.type)
                     .then(data => {
 
                         const blob = new Blob([data], { type: "octet/stream",  });
                         Utils.Platform.saveAs(blob, `${Utils.Text.slugify(this.doc.name)}.vpx`);
 
-                        this.trigger("pop");
+                        this.pop();
                     })
-                    .catch(error => {
-                        if (Utils.Request.isAbort(error)) return;
+                    .catch((error: HostError) => {
+                        if (error.requestAborted) return;
 
                         let errorScene = new ErrorScene(Utils.DOM.uniqueId(), this.element.parentElement, error, true);
-                        this.trigger("splice", errorScene);
+                        this.splice(errorScene);
                     })
                     .finally(() => {
                         el.toggleAttr("disabled", false);

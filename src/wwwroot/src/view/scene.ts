@@ -27,6 +27,18 @@ export class Scene extends View {
 
     }
 
+    push(scene: Scene) {
+        this.trigger("push", scene);
+    }
+
+    pop() {
+        this.trigger("pop");
+    }
+
+    splice(scene: Scene) {
+        this.trigger("splice", scene);
+    }
+
     destroy() {
         this.element.remove();
     }

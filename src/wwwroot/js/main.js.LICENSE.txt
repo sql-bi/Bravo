@@ -19,6 +19,11 @@
  */
 
 /*!
+ * Microsoft Dynamic Proto Utility, 1.1.4
+ * Copyright (c) Microsoft and contributors. All rights reserved.
+ */
+
+/*!
  * Unidragger v2.4.0
  * Draggable base class
  * MIT license
