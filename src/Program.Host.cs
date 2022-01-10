@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.ApplicationInsights;
 using Microsoft.Extensions.Logging.EventLog;
 using System;
 using System.Net;
@@ -48,17 +49,18 @@ namespace Sqlbi.Bravo
                 //    config.AddCommandLine(args);
             });
 
-            hostBuilder.ConfigureLogging((HostBuilderContext hostingContext, ILoggingBuilder logging) =>
+            hostBuilder.ConfigureLogging((HostBuilderContext context, ILoggingBuilder logging) =>
             {
+                logging.AddFilter<ApplicationInsightsLoggerProvider>((LogLevel level) => level >= LogLevel.Warning);
                 logging.AddFilter<EventLogLoggerProvider>((LogLevel level) => level >= LogLevel.Warning);
-                logging.AddConfiguration(hostingContext.Configuration.GetSection("Logging"));
+                //logging.AddConfiguration(context.Configuration.GetSection("Logging"));
+                logging.AddApplicationInsights();
+                logging.AddEventSourceLogger();
+                logging.AddEventLog();
 #if DEBUG
                 logging.AddConsole();
                 logging.AddDebug();
 #endif
-                logging.AddEventSourceLogger();
-                logging.AddEventLog();
-
                 logging.Configure((LoggerFactoryOptions options) =>
                 {
                     options.ActivityTrackingOptions = ActivityTrackingOptions.SpanId | ActivityTrackingOptions.TraceId | ActivityTrackingOptions.ParentId;

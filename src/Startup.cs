@@ -1,10 +1,12 @@
 ﻿using Dax.Formatter;
 using Hellang.Middleware.ProblemDetails;
+using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Sqlbi.Bravo.Infrastructure.Extensions;
+using Sqlbi.Bravo.Infrastructure.Helpers;
 using Sqlbi.Bravo.Services;
 using Sqlbi.Infrastructure.Configuration.Settings;
 using System.Text.Json.Serialization;
@@ -57,6 +59,7 @@ namespace Sqlbi.Bravo
             services.AddHttpClient();
             services.AddWritableOptions<UserSettings>(section: Configuration.GetSection(nameof(UserSettings)), file: "appsettings.json"); //.ValidateDataAnnotations();
             services.AddOptions<StartupSettings>().Configure((settings) => settings.FromCommandLineArguments()).ValidateDataAnnotations();
+            services.AddOptions<TelemetryConfiguration>().Configure((configuration) => TelemetryHelper.Configure(configuration));
             services.AddSingleton<IPBICloudAuthenticationService, PBICloudAuthenticationService>();
             services.AddSingleton<IPBIDesktopService, PBIDesktopService>();
             services.AddSingleton<IPBICloudService, PBICloudService>();
@@ -69,7 +72,6 @@ namespace Sqlbi.Bravo
 #if DEBUG
             application.UseSwagger();
             application.UseSwaggerUI();
-            //application.UseDeveloperExceptionPage();
 #endif
             application.UseProblemDetails();
             application.UseRouting();

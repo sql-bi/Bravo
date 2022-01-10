@@ -28,15 +28,15 @@ namespace Sqlbi.Bravo.Controllers
         [ProducesDefaultResponseType]
         public IActionResult GetStartupOptions()
         {
-            return Problem(
-                statusCode: StatusCodes.Status404NotFound,
-                //detail: "custom detail"
-                instance: HttpContext.Request.Path
-                );
+            //return Problem(
+            //    statusCode: StatusCodes.Status404NotFound,
+            //    //detail: "custom detail"
+            //    instance: HttpContext.Request.Path
+            //    );
             
-            //throw new System.Exception("UGO");
-            return BadRequest("Property is null");
-            return NotFound();
+            //throw new System.Exception("TEST-18");
+            //return BadRequest("Property is null");
+            //return NotFound();
             return Ok(_startupSettings);
         }
     }

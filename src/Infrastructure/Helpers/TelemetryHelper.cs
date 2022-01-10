@@ -1,50 +1,62 @@
 ﻿using Microsoft.ApplicationInsights;
+using Microsoft.ApplicationInsights.Channel;
 using Microsoft.ApplicationInsights.Extensibility;
-using Microsoft.ApplicationInsights.WindowsServer.TelemetryChannel;
 using Sqlbi.Bravo.Infrastructure.Security;
 using System;
 using System.Diagnostics;
-using System.Threading;
 
 namespace Sqlbi.Bravo.Infrastructure.Helpers
 {
     internal static class TelemetryHelper
     {
-        public static TelemetryClient CreateTelemetryClient()
+        private static readonly Lazy<TelemetryConfiguration> _telemetryConfiguration = new(Configure(new TelemetryConfiguration()));
+
+        public static TelemetryConfiguration Configure(TelemetryConfiguration configuration)
         {
-            var telemetryChannel = new ServerTelemetryChannel
-            {
-                DeveloperMode = Debugger.IsAttached || AppConstants.IsDebug
-            };
-
-            var telemetryConfiguration = new TelemetryConfiguration
-            {
-                InstrumentationKey = AppConstants.TelemetryInstrumentationKey,
-                DisableTelemetry = false, // TOFIX: telemetry enabled/disabled
-                TelemetryChannel = telemetryChannel
-            };
-
-            var telemetryClient = new TelemetryClient(telemetryConfiguration);
-            telemetryClient.Context.Device.OperatingSystem = Environment.OSVersion.ToString();
-            telemetryClient.Context.Component.Version = AppConstants.ApplicationFileVersion;
-            telemetryClient.Context.Session.Id = Guid.NewGuid().ToString();
-            telemetryClient.Context.User.Id = $"{ Environment.MachineName }\\{ Environment.UserName }".ToSHA256Hash();
-
-            return telemetryClient;
+            configuration.TelemetryInitializers.Add(new OperationCorrelationTelemetryInitializer());
+            configuration.TelemetryInitializers.Add(new ContextTelemetryInitializer());
+            configuration.TelemetryChannel.DeveloperMode = Debugger.IsAttached || AppConstants.IsDebug;
+            configuration.InstrumentationKey = AppConstants.TelemetryInstrumentationKey;
+            configuration.DisableTelemetry = false;
+            
+            return configuration;
         }
+
+        public static TelemetryConfiguration TelemetryConfigurationInstance => _telemetryConfiguration.Value;
 
         public static void TrackException(Exception exception)
         {
             if (exception is AggregateException aex)
                 exception = aex.GetBaseException();
 
-            var telemetry = CreateTelemetryClient();
-            telemetry.TrackException(exception);
-            telemetry.Flush();
+            var telemetryClient = new TelemetryClient(TelemetryConfigurationInstance);
+            telemetryClient.TrackException(exception);
+            telemetryClient.Flush(); // Flush is blocking when using InMemoryChannel, no need for Sleep/Delay
+        }
+    }
 
-            // Flush is not blocking when not using InMemoryChannel so wait a bit.
-            // There is an active issue regarding the need for Sleep/Delay which is tracked here: https://github.com/microsoft/ApplicationInsights-dotnet/issues/407
-            Thread.Sleep(1000);
+    internal class ContextTelemetryInitializer : ITelemetryInitializer
+    {
+        private static readonly string DeviceOperatingSystem = Environment.OSVersion.ToString();
+        private static readonly string ComponentVersion = AppConstants.ApplicationFileVersion;
+        private static readonly string SessionId = Guid.NewGuid().ToString();
+        private static readonly string? UserId = $"{ Environment.MachineName }\\{ Environment.UserName }".ToSHA256Hash();
+
+        public void Initialize(ITelemetry telemetry)
+        {
+            //if (telemetry is Microsoft.ApplicationInsights.DataContracts.ExceptionTelemetry exceptionTelemetry)
+            //{
+            //    if (exceptionTelemetry.Properties.ContainsKey("customProperty") == false)
+            //        exceptionTelemetry.Properties.Add("customProperty", "value");
+            //}
+
+            var context = telemetry.Context;
+            {
+                context.Device.OperatingSystem = DeviceOperatingSystem;
+                context.Component.Version = ComponentVersion;
+                context.Session.Id = SessionId;
+                context.User.Id = UserId;
+            }
         }
     }
 }

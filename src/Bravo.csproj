@@ -40,8 +40,7 @@
     <PackageReference Include="Dax.ViewModel" Version="1.2.0" />
     <PackageReference Include="Dax.Vpax.NetCore" Version="1.2.0" />
     <PackageReference Include="Hellang.Middleware.ProblemDetails" Version="6.3.0" />
-    <PackageReference Include="Microsoft.ApplicationInsights" Version="2.20.0" />
-    <PackageReference Include="Microsoft.ApplicationInsights.WindowsServer.TelemetryChannel" Version="2.20.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.ApplicationInsights" Version="2.20.0" />
     <PackageReference Include="Microsoft.Identity.Client" Version="4.39.0" />
     <PackageReference Include="Microsoft.Toolkit.Uwp.Notifications" Version="7.1.2" />
     <PackageReference Include="Photino.NET" Version="2.1.10" />

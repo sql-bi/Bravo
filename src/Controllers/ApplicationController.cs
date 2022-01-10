@@ -1,6 +1,8 @@
 ﻿using Bravo.Infrastructure.Windows.Interop;
+using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using Sqlbi.Bravo.Infrastructure.Configuration.Options;
 using Sqlbi.Bravo.Models;
 using Sqlbi.Infrastructure.Configuration.Settings;
@@ -15,10 +17,13 @@ namespace Sqlbi.Bravo.Controllers
     public class ApplicationController : ControllerBase
     {
         private readonly IWritableOptions<UserSettings> _userOptions;
+        private readonly TelemetryConfiguration _telemetryConfiguration;
 
-        public ApplicationController(IWritableOptions<UserSettings> userOptions)
+        public ApplicationController(IWritableOptions<UserSettings> userOptions, IOptions<TelemetryConfiguration> telemetryOptions)
         {
             _userOptions = userOptions;
+            _telemetryConfiguration = telemetryOptions.Value;
+            
             try
             {
                 //_settings = options.Value;
@@ -82,6 +87,8 @@ namespace Sqlbi.Bravo.Controllers
                 o.Theme = options.Theme;
                 o.CustomOptions = customOptionsAsString;
             });
+
+            _telemetryConfiguration.DisableTelemetry = !options.TelemetryEnabled;
 
             return Ok();
         }
