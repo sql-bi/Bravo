@@ -45,14 +45,12 @@ namespace Sqlbi.Bravo
                         .WithOrigins(CorsLocalhostOrigin); 
                 });
             });
-#if DEBUG || DEBUG_WWWROOT
+#if DEBUG
             services.AddSwaggerGenCustom();
 #endif
             services.AddHttpClient();
-            // Options
             services.AddWritableOptions<UserSettings>(section: Configuration.GetSection(nameof(UserSettings)), file: "appsettings.json"); //.ValidateDataAnnotations();
             services.AddOptions<StartupSettings>().Configure((settings) => settings.FromCommandLineArguments()).ValidateDataAnnotations();
-            // Services
             services.AddSingleton<IPBICloudAuthenticationService, PBICloudAuthenticationService>();
             services.AddSingleton<IPBIDesktopService, PBIDesktopService>();
             services.AddSingleton<IPBICloudService, PBICloudService>();
@@ -66,13 +64,13 @@ namespace Sqlbi.Bravo
             {
                 app.UseDeveloperExceptionPage();
             }
-#if DEBUG || DEBUG_WWWROOT
+#if DEBUG
             app.UseSwagger();
             app.UseSwaggerUI();
 #endif
             app.UseRouting();
             app.UseCors(CorsLocalhostOnlyPolicy); // The call to UseCors must be placed after UseRouting, but before UseAuthorization and UseEndpoints
-
+            
             // TODO: do we need https authz/authn ? 
             //app.UseAuthentication();
             //app.UseAuthorization(); e.g. FilterAttribute, IActionFilter .OnActionExecuting => if (filterContext.HttpContext.Request.IsLocal == false) filterContext.Result = new HttpForbiddenResult(); 

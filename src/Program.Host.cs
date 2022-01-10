@@ -51,7 +51,7 @@ namespace Sqlbi.Bravo
             {
                 logging.AddFilter<EventLogLoggerProvider>((LogLevel level) => level >= LogLevel.Warning);
                 logging.AddConfiguration(hostingContext.Configuration.GetSection("Logging"));
-#if DEBUG || DEBUG_WWWROOT
+#if DEBUG
                 logging.AddConsole();
                 logging.AddDebug();
 #endif
@@ -81,7 +81,7 @@ namespace Sqlbi.Bravo
 
                 webBuilder.UseKestrel((serverOptions) =>
                 {
-#if DEBUG || DEBUG_WWWROOT
+#if DEBUG
                     var listenEndpoint = new IPEndPoint(IPAddress.Loopback, port: 5000);
 #else
                     var listenEndpoint = new IPEndPoint(Infrastructure.Helpers.NetworkHelper.GetLoopbackAddress(), port: 0);
@@ -90,7 +90,7 @@ namespace Sqlbi.Bravo
                     serverOptions.AllowSynchronousIO = true;
                     serverOptions.Listen(listenEndpoint, (listenOptions) =>
                     {
-#if DEBUG || DEBUG_WWWROOT
+#if DEBUG
                         listenOptions.UseConnectionLogging();
 #endif
                         //listenOptions.UseHttps(); // TODO: do we need https ?

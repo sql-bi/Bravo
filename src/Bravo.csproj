@@ -55,5 +55,9 @@
     <None Remove="wwwroot\src\**;wwwroot\*.js;wwwroot\*.json" />
     <Content Remove="wwwroot\src\**;wwwroot\*.js;wwwroot\*.json" />
   </ItemGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug_wwwroot'">
+    <DefineConstants>$(DefineConstants);DEBUG</DefineConstants>
+  </PropertyGroup>
   
 </Project>

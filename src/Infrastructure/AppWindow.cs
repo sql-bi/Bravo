@@ -31,7 +31,7 @@ namespace Sqlbi.Bravo.Infrastructure
 
         private PhotinoWindow CreateWindow()
         {
-#if DEBUG || DEBUG_WWWROOT
+#if DEBUG
             var contextMenuEnabled = true;
             var devToolsEnabled = true;
             var logVerbosity = 3;
