@@ -5,6 +5,7 @@
 */
 
 import { Dic, Utils, __ } from '../helpers/utils';
+import { auth } from '../main';
 import { Doc } from '../model/doc';
 import { Scene } from '../view/scene';
 import { ErrorScene } from '../view/scene-error';
@@ -75,7 +76,7 @@ export class Sheet extends View {
             this.pages[type].update();
     }
 
-    sync(initial: boolean) {
+    sync(initial: boolean, signInIfRequired = true) {
         if (this.syncing || this.loading) return;
 
         this.loading = initial;
@@ -86,7 +87,6 @@ export class Sheet extends View {
             this.showBlockingScene(new LoaderScene(`${this.id}_loader`, this.element)); 
         }
 
-        this.trigger(`${action}Started`);
         this.element.classList.add(action);
         __(`.disable-on-${action}`, this.element).forEach((div: HTMLElement) => {
             div.dataset[`disabledBefore${action}`] = String(div.hasAttribute("disabled"));
@@ -103,8 +103,6 @@ export class Sheet extends View {
                 } else {
                     this.update();
                 }
-            
-                this.trigger(`${action}Completed`);
             })
             .catch((error: HostError) => {
 
@@ -118,8 +116,10 @@ export class Sheet extends View {
                     );
 
                 } else {
-                    if (error.fatal) 
+                    console.log("Sync error", error);
+                    if (error.fatal) {
                         this.showBlockingScene(new ErrorScene(errorSceneId, this.element, error));
+                    }
                 }
             })
             .finally(() => {
@@ -136,6 +136,7 @@ export class Sheet extends View {
     showBlockingScene(scene: Scene) {
         this.removeBlockingScene();
         this.blockingScene = scene;
+        scene.element.style.zIndex = "999";
         scene.show();
     }
 

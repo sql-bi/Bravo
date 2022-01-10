@@ -5,7 +5,9 @@
 */
 
 import { Dispatchable } from '../helpers/dispatchable';
+import { Utils } from '../helpers/utils';
 import { host } from '../main';
+import { HostError } from './host';
 
 export interface Account {
     id?: string
@@ -33,7 +35,7 @@ export class Auth extends Dispatchable {
         });
     }
 
-     signIn(emailAddress?: string): Promise<boolean> {
+     signIn(emailAddress?: string) {
         this.account = null;
 
         return host.signIn(emailAddress)
@@ -41,13 +43,13 @@ export class Auth extends Dispatchable {
                 if (account) {
                     this.account = account;
                     this.trigger("signedIn", this.account);
-                    return true;
+
                 } else {
-                    return false;
+                    throw new Error(String(Utils.ResponseErrorCode.Aborted));
                 }
             })
             .catch(error => {
-                return false;
+                throw HostError.Init(error);
             });
     }
 

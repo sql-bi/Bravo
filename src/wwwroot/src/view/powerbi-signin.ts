@@ -46,6 +46,8 @@ export class PowerBiSignin extends Dialog {
         });
 
         this.signInButton.addEventListener("click", e => {
+            if (this.signInButton.hasAttribute("disabled")) return;
+
             this.element.classList.add("wait");
             setTimeout(() => {
                 this.signInButton.toggleAttr("disabled", true);
@@ -56,13 +58,8 @@ export class PowerBiSignin extends Dialog {
     onAction(action: string, resolve: any, reject: any) {
         if (action == "signin") {
             auth.signIn(<string>this.data)
-                .then(signedIn => { 
-                    if (signedIn) {
-                        super.onAction("cancel", resolve, reject);
-                    } else {
-                        this.signInButton.toggleAttr("disabled", false);
-                        this.element.classList.remove("wait");
-                    }
+                .then(() => { 
+                    super.onAction("cancel", resolve, reject);
                 })
                 .catch(error => {
                     this.signInButton.toggleAttr("disabled", false);

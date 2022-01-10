@@ -646,7 +646,7 @@ export class AnalyzeModelScene extends MainScene {
                     .then(data => {
 
                         const blob = new Blob([data], { type: "octet/stream",  });
-                        Utils.Platform.saveAs(blob, `${Utils.Text.slugify(this.doc.name)}.vpx`);
+                        Utils.Platform.saveAs(blob, `${Utils.Text.slugify(this.doc.name)}.vpax`);
 
                         this.pop();
                     })

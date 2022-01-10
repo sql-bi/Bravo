@@ -24,7 +24,7 @@ import * as sanitizeHtml from 'sanitize-html';
 import { MainScene } from './scene-main';
 import { LoaderScene } from './scene-loader';
 import { ErrorScene } from './scene-error';
-import { UpdatePBICloudDatasetRequest, UpdatePBIDesktopReportRequest, HostError } from '../controllers/host';
+import { UpdatePBICloudDatasetRequest, UpdatePBIDesktopReportRequest, HostError, PBICloudDataset } from '../controllers/host';
 import { SuccessScene } from './scene-success';
 
 export class DaxFormatterScene extends MainScene {
@@ -440,7 +440,7 @@ export class DaxFormatterScene extends MainScene {
         this.formatButton.toggleAttr("disabled", true);
 
         let formattingScene = new LoaderScene(Utils.DOM.uniqueId(), this.element.parentElement, i18n(strings.formattingMeasures), ()=>{
-            host.abortFormatDax();
+            host.abortFormatDax(this.doc.type);
         });
         this.push(formattingScene);
 
@@ -475,6 +475,13 @@ export class DaxFormatterScene extends MainScene {
                 }
                 host.updateModel(updateRequest, this.doc.type)
                     .then(() => {
+
+                        /*if (this.doc.type == DocType.dataset) {
+                            (<PBICloudDataset>this.doc.sourceData).
+                        } else if (this.doc.type == DocType.pbix) {
+                            this.doc.sourceData
+                        }*/
+
                         let successScene = new SuccessScene(Utils.DOM.uniqueId(), this.element.parentElement, i18n(measures.length == 1 ? strings.daxFormatterSuccessSceneMessageSingular : strings.daxFormatterSuccessSceneMessagePlural, measures.length), true);
                         this.splice(successScene);
                     })

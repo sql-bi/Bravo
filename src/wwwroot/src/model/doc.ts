@@ -8,7 +8,7 @@ import { host } from "../main";
 import { Dic, Utils } from '../helpers/utils';
 import { TabularDatabase, TabularDatabaseInfo, TabularMeasure } from './tabular';
 import { deepEqual } from 'fast-equals';
-import { PBICloudDataset, PBIDesktopReport } from '../controllers/host';
+import { HostError, PBICloudDataset, PBIDesktopReport } from '../controllers/host';
 import { i18n } from '../model/i18n'; 
 import { strings } from '../model/strings';
 import * as sanitizeHtml from 'sanitize-html';
@@ -103,6 +103,6 @@ export class Doc {
             }
         }
 
-        return new Promise((resolve, reject) => { reject(new Error(i18n(strings.errorUnspecified))); });
+        return new Promise((resolve, reject) => { reject(HostError.Init(new Error())); });
     }
 }

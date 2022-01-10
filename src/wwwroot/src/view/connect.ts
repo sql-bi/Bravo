@@ -229,9 +229,8 @@ export class Connect extends Dialog {
                 let button = <HTMLHtmlElement>e.currentTarget;
                 button.toggleAttr("disabled", true);
                 auth.signIn()
-                    .then(signedIn => { 
-                        if (signedIn)
-                            this.getRemoteDatasets(element);
+                    .then(() => { 
+                        this.getRemoteDatasets(element);
                     })
                     .catch(error => {})
                     .finally(()=>{
@@ -341,10 +340,13 @@ export class Connect extends Dialog {
                 let tableId = Utils.DOM.uniqueId();
                 _(".list", element).innerHTML = `<div id="${ tableId }"></div>`;
 
-                if (datasets.length) 
+                if (datasets.length) {
+                    //TODO add search
+                    
                     this.renderRemoteDatasetsTable(element, tableId, datasets);
-                else
+                } else {
                     this.renderConnectError(element, strings.errorDatasetsListing);
+                }
             })
             .catch(error => {
 
