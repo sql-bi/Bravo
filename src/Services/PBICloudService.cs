@@ -74,11 +74,11 @@ namespace Sqlbi.Bravo.Services
             }
             catch (OperationCanceledException)
             {
-                throw new SignInTimeoutException();
+                throw new SignInException(BravoProblem.SignInMsalTimeoutExpired);
             }
             catch (MsalException mex)
             {
-                throw new SignInMsalException(mex);
+                throw new SignInException(BravoProblem.SignInMsalExceptionOccurred, mex.ErrorCode, mex);
             }
             
             var currentAuthentication = CurrentAuthentication ?? throw new BravoUnexpectedException("CurrentAuthentication is null");

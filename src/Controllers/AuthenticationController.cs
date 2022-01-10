@@ -39,23 +39,19 @@ namespace Sqlbi.Bravo.Controllers
             {
                 await _pbicloudService.SignInAsync();
             }
-            catch (SignInTimeoutException)
+            catch (SignInException ex)
             {
-                return StatusCode(StatusCodes.Status403Forbidden, new BravoSignInError
+                switch (ex.Problem)
                 {
-                    IsTimeoutElapsed = true
-                });
-            }
-            catch (SignInMsalException mex)
-            {
-                return StatusCode(StatusCodes.Status424FailedDependency, new BravoSignInError
-                {
-                    ErrorCode = mex.MsalErrorCode,
-                });
+                    case BravoProblem.SignInMsalTimeoutExpired: 
+                        return Problem(ex.ProblemDetail, ex.ProblemInstance, StatusCodes.Status403Forbidden);
+                    case BravoProblem.SignInMsalExceptionOccurred:
+                        return Problem(ex.ProblemDetail, ex.ProblemInstance, StatusCodes.Status424FailedDependency);
+                }
+                throw;
             }
 
             var account = _pbicloudService.CurrentAccount;
-
             return Ok(account);
         }
 
@@ -70,7 +66,6 @@ namespace Sqlbi.Bravo.Controllers
         public async Task<IActionResult> PowerBISignOut()
         {
             await _pbicloudService.SignOutAsync();
-
             return Ok();
         }
 
@@ -93,7 +88,7 @@ namespace Sqlbi.Bravo.Controllers
                 {
                     await _pbicloudService.SignInAsync(silentOnly: true);
                 }
-                catch (SignInMsalException mex) when (mex.MsalErrorCode == Microsoft.Identity.Client.MsalError.UserNullError)
+                catch (SignInException ex) when (ex.Problem == BravoProblem.SignInMsalExceptionOccurred && ex.ProblemDetail == Microsoft.Identity.Client.MsalError.UserNullError)
                 {
                     Debug.Assert(_pbicloudService.IsAuthenticated == false);
                     return Unauthorized();
@@ -101,7 +96,6 @@ namespace Sqlbi.Bravo.Controllers
             }
 
             var account = _pbicloudService.CurrentAccount;
-
             return Ok(account);
         }
     }

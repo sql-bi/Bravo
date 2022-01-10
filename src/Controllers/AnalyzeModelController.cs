@@ -57,7 +57,7 @@ namespace Sqlbi.Bravo.Controllers
         [Consumes(MediaTypeNames.Application.Json)]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(TabularDatabase))]
-        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesDefaultResponseType]
         public IActionResult GetDatabaseFromPBIDesktopReport(PBIDesktopReport report)
         {
@@ -68,7 +68,7 @@ namespace Sqlbi.Bravo.Controllers
             }
             catch (TOMDatabaseNotFoundException ex)
             {
-                return NotFound(ex.Message);
+                return Problem(ex.ProblemDetail, ex.ProblemInstance, StatusCodes.Status404NotFound);
             }
 
             var database = VpaxToolsHelper.GetDatabaseFromVpax(stream);
@@ -87,7 +87,7 @@ namespace Sqlbi.Bravo.Controllers
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(TabularDatabase))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesDefaultResponseType]
         public IActionResult GetDatabaseFromPBICloudDataset(PBICloudDataset dataset)
         {
@@ -101,7 +101,7 @@ namespace Sqlbi.Bravo.Controllers
             }
             catch (TOMDatabaseNotFoundException ex)
             {
-                return NotFound(ex.Message);
+                return Problem(ex.ProblemDetail, ex.ProblemInstance, StatusCodes.Status404NotFound);
             }
 
             var database = VpaxToolsHelper.GetDatabaseFromVpax(stream);
@@ -171,7 +171,7 @@ namespace Sqlbi.Bravo.Controllers
         [Consumes(MediaTypeNames.Application.Json)]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(FileActionResult))]
-        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesDefaultResponseType]
         public IActionResult ExportVpaxFromPBIDesktopReport(PBIDesktopReport report)
         {
@@ -182,11 +182,10 @@ namespace Sqlbi.Bravo.Controllers
             }
             catch (TOMDatabaseNotFoundException ex)
             {
-                return NotFound(ex.Message);
+                return Problem(ex.ProblemDetail, ex.ProblemInstance, StatusCodes.Status404NotFound);
             }
 
             var exportResult = ExportVpaxFile(fileName: report.ReportName, stream);
-
             return Ok(exportResult);
         }
 
@@ -202,7 +201,7 @@ namespace Sqlbi.Bravo.Controllers
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(FileActionResult))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesDefaultResponseType]
         public IActionResult ExportVpaxFromPBICloudDataset(PBICloudDataset dataset)
         {
@@ -216,11 +215,10 @@ namespace Sqlbi.Bravo.Controllers
             }
             catch (TOMDatabaseNotFoundException ex)
             {
-                return NotFound(ex.Message);
+                return Problem(ex.ProblemDetail, ex.ProblemInstance, StatusCodes.Status404NotFound);
             }
 
             var exportResult = ExportVpaxFile(fileName: dataset.DisplayName, stream);
-
             return Ok(exportResult);
         }
 

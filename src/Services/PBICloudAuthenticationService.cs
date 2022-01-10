@@ -238,7 +238,7 @@ namespace Sqlbi.Bravo.Services
                 response.EnsureSuccessStatusCode();
 
                 var json = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
-                var globalService = JsonSerializer.Deserialize<GlobalService>(json, _jsonOptions) ?? throw new BravoException("PBICloud global service initialization failed");
+                var globalService = JsonSerializer.Deserialize<GlobalService>(json, _jsonOptions) ?? throw new BravoUnexpectedException("PBICloud global service initialization failed");
 
                 return globalService;
             }
@@ -251,10 +251,7 @@ namespace Sqlbi.Bravo.Services
         private CloudEnvironment InitializeGlobalCloudEnvironment()
         {
             var environmentName = CloudEnvironmentGlobalCloudName;
-
-            var globalEnvironment = GlobalService.Environments.SingleOrDefault((c) => environmentName.Equals(c.CloudName, StringComparison.OrdinalIgnoreCase)) 
-                ?? throw new BravoException($"PBICloud environment not found [{ environmentName }]");
-            
+            var globalEnvironment = GlobalService.Environments.SingleOrDefault((c) => environmentName.Equals(c.CloudName, StringComparison.OrdinalIgnoreCase)) ?? throw new BravoUnexpectedException($"PBICloud environment not found [{ environmentName }]");
             var authority = globalEnvironment.Services.Single((s) => "aad".Equals(s.Name, StringComparison.OrdinalIgnoreCase));
             var frontend = globalEnvironment.Services.Single((s) => "powerbi-frontend".Equals(s.Name, StringComparison.OrdinalIgnoreCase));
             var backend = globalEnvironment.Services.Single((s) => "powerbi-backend".Equals(s.Name, StringComparison.OrdinalIgnoreCase));

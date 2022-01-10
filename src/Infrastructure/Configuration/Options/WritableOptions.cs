@@ -38,7 +38,7 @@ namespace Sqlbi.Bravo.Infrastructure.Configuration.Options
             if (fileInfo.Exists)
             {
                 var fileContent = File.ReadAllText(filePath);
-                var fileJObject = Newtonsoft.Json.JsonConvert.DeserializeObject<Newtonsoft.Json.Linq.JObject>(fileContent) ?? throw new BravoException($"Unexpected error");
+                var fileJObject = Newtonsoft.Json.JsonConvert.DeserializeObject<Newtonsoft.Json.Linq.JObject>(fileContent) ?? throw new BravoUnexpectedException($"Deserialized object is null");
 
                 var sectionObject = fileJObject.TryGetValue(_section, out var section)
                     ? Newtonsoft.Json.JsonConvert.DeserializeObject<T>(section.ToString())

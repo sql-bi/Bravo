@@ -15,6 +15,7 @@ namespace Sqlbi.Bravo
         {
             var hostBuilder = new HostBuilder();
 
+            hostBuilder.UseEnvironment(Environments.Production);
             hostBuilder.UseContentRoot(Environment.CurrentDirectory);
 
             hostBuilder.ConfigureHostConfiguration((builder) =>

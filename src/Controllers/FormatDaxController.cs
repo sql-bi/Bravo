@@ -41,7 +41,6 @@ namespace Sqlbi.Bravo.Controllers
         public async Task<IActionResult> FormatAsync(FormatDaxRequest request)
         {
             var daxformatterResponse = await CallDaxFormatter(request.Measures!, request.Options!);
-
             var response = new FormatDaxResponse();
 
             foreach (var (daxformatterMeasure, index) in daxformatterResponse.WithIndex())
@@ -79,9 +78,9 @@ namespace Sqlbi.Bravo.Controllers
         [Consumes(MediaTypeNames.Application.Json)]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
-        [ProducesResponseType(StatusCodes.Status409Conflict, Type = typeof(string))]
-        [ProducesResponseType(StatusCodes.Status424FailedDependency, Type = typeof(string))]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status409Conflict)]
+        [ProducesResponseType(StatusCodes.Status424FailedDependency)]
         [ProducesDefaultResponseType]
         public IActionResult UpdatePBIDesktopReportAsync(UpdatePBIDesktopReportRequest request)
         {
@@ -91,15 +90,15 @@ namespace Sqlbi.Bravo.Controllers
             }
             catch (TOMDatabaseNotFoundException fex)
             {
-                return NotFound(fex.Message);
+                return Problem(fex.ProblemDetail, fex.ProblemInstance, StatusCodes.Status404NotFound);
             }
-            catch (TOMDatabaseOutOfSyncException sex)
+            catch (TOMDatabaseConflictException sex)
             {
-                return StatusCode(StatusCodes.Status409Conflict, sex.Message);
+                return Problem(sex.ProblemDetail, sex.ProblemInstance, StatusCodes.Status409Conflict);
             }
             catch (TOMDatabaseUpdateException uex)
             {
-                return StatusCode(StatusCodes.Status424FailedDependency, uex.Message);
+                return Problem(uex.ProblemDetail, uex.ProblemInstance, StatusCodes.Status424FailedDependency);
             }
 
             return Ok();
@@ -117,9 +116,9 @@ namespace Sqlbi.Bravo.Controllers
         [Consumes(MediaTypeNames.Application.Json)]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
-        [ProducesResponseType(StatusCodes.Status409Conflict, Type = typeof(string))]
-        [ProducesResponseType(StatusCodes.Status424FailedDependency, Type = typeof(string))]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status409Conflict)]
+        [ProducesResponseType(StatusCodes.Status424FailedDependency)]
         [ProducesDefaultResponseType]
         public IActionResult UpdatePBICloudDatasetAsync(UpdatePBICloudDatasetRequest request)
         {
@@ -127,17 +126,17 @@ namespace Sqlbi.Bravo.Controllers
             {
                 _pbicloudService.Update(request.Dataset!, request.Measures!);
             }
-            catch (TOMDatabaseNotFoundException ex)
+            catch (TOMDatabaseNotFoundException fex)
             {
-                return NotFound(ex.Message);
+                return Problem(fex.ProblemDetail, fex.ProblemInstance, StatusCodes.Status404NotFound);
             }
-            catch (TOMDatabaseOutOfSyncException sex)
+            catch (TOMDatabaseConflictException sex)
             {
-                return StatusCode(StatusCodes.Status409Conflict, sex.Message);
+                return Problem(sex.ProblemDetail, sex.ProblemInstance, StatusCodes.Status409Conflict);
             }
             catch (TOMDatabaseUpdateException uex)
             {
-                return StatusCode(StatusCodes.Status424FailedDependency, uex.Message);
+                return Problem(uex.ProblemDetail, uex.ProblemInstance, StatusCodes.Status424FailedDependency);
             }
 
             return Ok();

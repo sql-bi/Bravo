@@ -1,9 +1,9 @@
 ﻿using Dax.Formatter;
+using Hellang.Middleware.ProblemDetails;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Sqlbi.Bravo.Infrastructure.Extensions;
 using Sqlbi.Bravo.Services;
 using Sqlbi.Infrastructure.Configuration.Settings;
@@ -45,6 +45,12 @@ namespace Sqlbi.Bravo
                         .WithOrigins(CorsLocalhostOrigin); 
                 });
             });
+            services.AddProblemDetails((options) =>
+            {
+#if DEBUG
+                options.IncludeExceptionDetails = (context, exception) => true;
+#endif
+            });
 #if DEBUG
             services.AddSwaggerGenCustom();
 #endif
@@ -58,24 +64,22 @@ namespace Sqlbi.Bravo
             // services.AddHostedService<ApplicationInstanceHostedService>();
         }
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment environment)
+        public void Configure(IApplicationBuilder application, IWebHostEnvironment environment)
         {
-            if (environment.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
-            }
 #if DEBUG
-            app.UseSwagger();
-            app.UseSwaggerUI();
+            application.UseSwagger();
+            application.UseSwaggerUI();
+            //application.UseDeveloperExceptionPage();
 #endif
-            app.UseRouting();
-            app.UseCors(CorsLocalhostOnlyPolicy); // The call to UseCors must be placed after UseRouting, but before UseAuthorization and UseEndpoints
+            application.UseProblemDetails();
+            application.UseRouting();
+            application.UseCors(CorsLocalhostOnlyPolicy); // The call to UseCors must be placed after UseRouting, but before UseAuthorization and UseEndpoints
             
             // TODO: do we need https authz/authn ? 
             //app.UseAuthentication();
             //app.UseAuthorization(); e.g. FilterAttribute, IActionFilter .OnActionExecuting => if (filterContext.HttpContext.Request.IsLocal == false) filterContext.Result = new HttpForbiddenResult(); 
 
-            app.UseEndpoints((endpoints) =>
+            application.UseEndpoints((endpoints) =>
             {
                 endpoints.MapControllers();
                 //endpoints.MapGet("/", async context =>
