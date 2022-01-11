@@ -51,14 +51,21 @@ namespace Sqlbi.Bravo.Controllers
                     ETag = requestedMeasure.ETag,
                     Name = requestedMeasure.Name,
                     TableName = requestedMeasure.TableName,
-                    Expression = daxformatterMeasure.Formatted?.Remove(0, $"[{ requestedMeasure.Name }] :=".Length)?.TrimStart('\r', '\n', ' ')?.TrimEnd('\r', '\n', ' '),
-                    Errors = daxformatterMeasure.Errors?.Select((e) => new FormatterError
+                };
+                
+                if (daxformatterMeasure.Errors.Count == 0)
+                {
+                    formattedMeasure.Expression = daxformatterMeasure.Formatted?.Remove(0, $"[{ requestedMeasure.Name }] :=".Length)?.TrimStart('\r', '\n', ' ')?.TrimEnd('\r', '\n', ' ');
+                }
+                else
+                {
+                    formattedMeasure.Errors = daxformatterMeasure.Errors?.Select((e) => new FormatterError
                     {
                         Line = e.Line,
                         Column = e.Column,
                         Message = e.Message
-                    })
-                };
+                    });
+                }
 
                 response.Add(formattedMeasure);
             }
