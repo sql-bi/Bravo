@@ -119,7 +119,7 @@ namespace Sqlbi.Bravo.Infrastructure.Windows
                     // Here we are on the wrong thread so we send the dispose message to the WndProc to remove for us itself on the correct thread (it is dangerous, we risk a deadlock)
 
                     var lParam = disposing ? new IntPtr(1) : IntPtr.Zero;
-                    NativeMethods.SendMessage(hWnd, _disposeMsg, _wndProcPtr, lParam);
+                    User32.SendMessage(hWnd, _disposeMsg, _wndProcPtr, lParam);
                 }
             }
         }

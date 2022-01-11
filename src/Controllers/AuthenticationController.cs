@@ -23,34 +23,23 @@ namespace Sqlbi.Bravo.Controllers
         /// <summary>
         /// Attempts to authenticate and acquire an access token for the account to access the PowerBI cloud services
         /// </summary>
-        /// <response code="200">Status200OK</response>
-        /// <response code="403">Status403Forbidden - sign-in cancelled by the system because the configured timeout period elapsed before the user completed the sign-in operation</response>
-        /// <response code="424">Status424FailedDependency - sign-in failed, for details see the ErrorCode and the class Microsoft.Identity.Client.MsalError</response>
+        /// <response code="200">Status200OK - Success</response>
+        /// <response code="400">Status400BadRequest - See the "instance" and "detail" properties to identify the specific occurrence of the problem</response>
         [HttpGet]
         [ActionName("powerbi/SignIn")]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(BravoAccount))]
-        [ProducesResponseType(StatusCodes.Status403Forbidden, Type = typeof(BravoSignInError))]
-        [ProducesResponseType(StatusCodes.Status424FailedDependency, Type = typeof(BravoSignInError))]
-        public async Task<IActionResult> PowerBISignIn()
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesDefaultResponseType]
+        public async Task<IActionResult> PowerBISignIn(string? upn)
         {
             try
             {
-                await _pbicloudService.SignInAsync();
+                await _pbicloudService.SignInAsync(identifier: upn);
             }
-            catch (SignInTimeoutException)
+            catch (SignInException ex)
             {
-                return StatusCode(StatusCodes.Status403Forbidden, new BravoSignInError
-                {
-                    IsTimeoutElapsed = true
-                });
-            }
-            catch (SignInMsalException mex)
-            {
-                return StatusCode(StatusCodes.Status424FailedDependency, new BravoSignInError
-                {
-                    ErrorCode = mex.MsalErrorCode,
-                });
+                return Problem(ex.ProblemDetail, ex.ProblemInstance, StatusCodes.Status400BadRequest);
             }
 
             var account = _pbicloudService.CurrentAccount;
@@ -60,10 +49,11 @@ namespace Sqlbi.Bravo.Controllers
         /// <summary>
         /// Clear the token cache for all the accounts
         /// </summary>
-        /// <response code="200">Status200OK</response>
+        /// <response code="200">Status200OK - Success</response>
         [HttpGet]
         [ActionName("powerbi/SignOut")]
         [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesDefaultResponseType]
         public async Task<IActionResult> PowerBISignOut()
         {
             await _pbicloudService.SignOutAsync();
@@ -73,12 +63,14 @@ namespace Sqlbi.Bravo.Controllers
         /// <summary>
         /// Returns information about the currently logged in user
         /// </summary>
-        /// <response code="200">Status200OK</response>
+        /// <response code="200">Status200OK - Success</response>
         /// <response code="401">Status401Unauthorized - Sign-in required</response>
         [HttpGet]
         [ActionName("GetUser")]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(BravoAccount))]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesDefaultResponseType]
         public async Task<IActionResult> GetAccount()
         {
             if (_pbicloudService.IsAuthenticated == false)
@@ -87,7 +79,7 @@ namespace Sqlbi.Bravo.Controllers
                 {
                     await _pbicloudService.SignInAsync(silentOnly: true);
                 }
-                catch (SignInMsalException mex) when (mex.MsalErrorCode == Microsoft.Identity.Client.MsalError.UserNullError)
+                catch (SignInException ex) when (ex.Problem == BravoProblem.SignInMsalExceptionOccurred && ex.ProblemDetail == Microsoft.Identity.Client.MsalError.UserNullError)
                 {
                     Debug.Assert(_pbicloudService.IsAuthenticated == false);
                     return Unauthorized();

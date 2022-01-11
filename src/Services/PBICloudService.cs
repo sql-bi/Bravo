@@ -24,7 +24,7 @@ namespace Sqlbi.Bravo.Services
 
         BravoAccount? CurrentAccount { get; }
 
-        Task SignInAsync(bool silentOnly = false);
+        Task SignInAsync(bool silentOnly = false, string? identifier = null);
         
         Task SignOutAsync();
 
@@ -62,7 +62,7 @@ namespace Sqlbi.Bravo.Services
 
         public bool IsAuthenticated => CurrentAccount is not null && _authenticationService.Authentication?.ClaimsPrincipal?.Identity is not null;
 
-        public async Task SignInAsync(bool silentOnly = false)
+        public async Task SignInAsync(bool silentOnly = false, string? identifier = null)
         {
             var previousAccountIdentifier = CurrentAccount?.Identifier;
             var previousAccountAvatar = CurrentAccount?.Avatar;
@@ -70,15 +70,15 @@ namespace Sqlbi.Bravo.Services
             CurrentAccount = null;
             try
             {
-                await _authenticationService.AcquireTokenAsync(cancelAfter: AppConstants.MSALSignInTimeout, silentOnly).ConfigureAwait(false);
+                await _authenticationService.AcquireTokenAsync(cancelAfter: AppConstants.MSALSignInTimeout, silentOnly, identifier).ConfigureAwait(false);
             }
             catch (OperationCanceledException)
             {
-                throw new SignInTimeoutException();
+                throw new SignInException(BravoProblem.SignInMsalTimeoutExpired);
             }
             catch (MsalException mex)
             {
-                throw new SignInMsalException(mex);
+                throw new SignInException(BravoProblem.SignInMsalExceptionOccurred, mex.ErrorCode, mex);
             }
             
             var currentAuthentication = CurrentAuthentication ?? throw new BravoUnexpectedException("CurrentAuthentication is null");
@@ -162,17 +162,9 @@ namespace Sqlbi.Bravo.Services
         public Stream ExportVpax(PBICloudDataset dataset, bool includeTomModel, bool includeVpaModel, bool readStatisticsFromData, int sampleRows)
         {
             var (connectionString, databaseName) = GetConnectionParameters(dataset);
+            var stream = VpaxToolsHelper.ExportVpax(connectionString, databaseName, includeTomModel, includeVpaModel, readStatisticsFromData, sampleRows);
 
-            try
-            {
-                var stream = VpaxToolsHelper.ExportVpax(connectionString, databaseName, includeTomModel, includeVpaModel, readStatisticsFromData, sampleRows);
-                return stream;
-            }
-            catch (ArgumentException ex) when (ex.Message == $"The database '{ databaseName }' could not be found. Either it does not exist or you do not have admin rights to it.")
-            {
-                // TODO: do not use message string to identify the error
-                throw new TOMDatabaseNotFoundException("PBICloud dataset not found");
-            }
+            return stream;
         }
 
         public void Update(PBICloudDataset dataset, IEnumerable<FormattedMeasure> measures)

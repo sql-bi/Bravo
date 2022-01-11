@@ -1,16 +1,10 @@
-﻿using Bravo.Infrastructure.Windows.Interop;
-using Sqlbi.Bravo.Infrastructure;
+﻿using Sqlbi.Bravo.Infrastructure;
 using Sqlbi.Bravo.Infrastructure.Extensions;
 using Sqlbi.Bravo.Infrastructure.Helpers;
 using Sqlbi.Bravo.Models;
-using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Net;
-using System.Net.NetworkInformation;
-using TOM = Microsoft.AnalysisServices.Tabular;
 
 namespace Sqlbi.Bravo.Services
 {
@@ -25,7 +19,6 @@ namespace Sqlbi.Bravo.Services
 
     internal class PBIDesktopService : IPBIDesktopService
     {
-
         public IEnumerable<PBIDesktopReport> GetReports()
         {
             foreach (var pbidesktopProcess in Process.GetProcessesByName(AppConstants.PBIDesktopProcessName))
@@ -63,7 +56,6 @@ namespace Sqlbi.Bravo.Services
         /// <summary>
         /// Search for the PBIDesktop process and its SSAS instance by retrieving the connection string and database name
         /// </summary>
-        /// <exception cref="TOMDatabaseNotFoundException"></exception>
         private (string ConnectionString, string DatabaseName) GetConnectionParameters(PBIDesktopReport report)
         {
             var (connectionString, databaseName) = report.GetConnectionParameters();

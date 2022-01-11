@@ -37,10 +37,10 @@ namespace Sqlbi.Bravo.Controllers
         [Consumes(MediaTypeNames.Application.Json)]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(FormatDaxResponse))]
+        [ProducesDefaultResponseType]
         public async Task<IActionResult> FormatAsync(FormatDaxRequest request)
         {
-            var daxformatterResponse = await CallDaxFormatter(request.Measures!, request.Options!);
-
+            var daxformatterResponse = await CallDaxFormatterAsync(request.Measures!, request.Options!).ConfigureAwait(false);
             var response = new FormatDaxResponse();
 
             foreach (var (daxformatterMeasure, index) in daxformatterResponse.WithIndex())
@@ -51,48 +51,71 @@ namespace Sqlbi.Bravo.Controllers
                     ETag = requestedMeasure.ETag,
                     Name = requestedMeasure.Name,
                     TableName = requestedMeasure.TableName,
-                    Expression = daxformatterMeasure.Formatted?.Remove(0, $"[{ requestedMeasure.Name }] :=".Length)?.TrimStart('\r', '\n', ' ')?.TrimEnd('\r', '\n', ' '),
-                    Errors = daxformatterMeasure.Errors?.Select((e) => new FormatterError
+                };
+                
+                if (daxformatterMeasure.Errors.Count == 0)
+                {
+                    formattedMeasure.Expression = daxformatterMeasure.Formatted?.Remove(0, $"[{ requestedMeasure.Name }] :=".Length)?.TrimStart('\r', '\n', ' ')?.TrimEnd('\r', '\n', ' ');
+                }
+                else
+                {
+                    formattedMeasure.Errors = daxformatterMeasure.Errors?.Select((e) => new FormatterError
                     {
                         Line = e.Line,
                         Column = e.Column,
                         Message = e.Message
-                    })
-                };
+                    });
+                }
 
                 response.Add(formattedMeasure);
             }
 
             return Ok(response);
+
+            async Task<IReadOnlyList<DaxFormatterResponse>> CallDaxFormatterAsync(IEnumerable<TabularMeasure> measures, FormatDaxOptions options)
+            {
+                var request = new DaxFormatterMultipleRequest
+                {
+                    CallerApp = AppConstants.ApplicationName,
+                    CallerVersion = AppConstants.ApplicationFileVersion,
+                    MaxLineLength = options.LineStyle,
+                    SkipSpaceAfterFunctionName = options.SpacingStyle,
+                };
+
+                // TODO : set DaxFormatterRequest.ListSeparator nullable
+                request.ListSeparator = options.ListSeparator.GetValueOrDefault(request.ListSeparator);
+                // TODO : set DaxFormatterRequest.DecimalSeparator nullable
+                request.DecimalSeparator = options.DecimalSeparator.GetValueOrDefault(request.DecimalSeparator);
+
+                foreach (var measure in measures)
+                    request.Dax.Add($"[{ measure.Name }] := { measure.Expression }");
+
+                var response = await _daxformatterClient.FormatAsync(request).ConfigureAwait(false);
+                return response;
+            }
         }
 
         /// <summary>
         /// Update a PBIDesktop report by applying changes to formatted measures
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
-        /// <response code="404">Status404NotFound - PBIDesktop report not found</response>
-        /// <response code="409">Status409Conflict - Update failed due to a conflict with the current state of the PBIDesktop report</response>
-        /// <response code="424">Status424FailedDependency - Update failed due to PBIDesktop SSAS server error</response>
+        /// <response code="400">Status400BadRequest - See the "instance" and "detail" properties to identify the specific occurrence of the problem</response>
         [HttpPost]
         [ActionName("UpdateReport")]
         [Consumes(MediaTypeNames.Application.Json)]
+        [Produces(MediaTypeNames.Application.Json)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesDefaultResponseType]
         public IActionResult UpdatePBIDesktopReportAsync(UpdatePBIDesktopReportRequest request)
         {
             try
             {
                 _pbidesktopService.Update(request.Report!, request.Measures!);
             }
-            catch (TOMDatabaseNotFoundException fex)
+            catch (TOMDatabaseException ex)
             {
-                return NotFound(fex.Message);
-            }
-            catch (TOMDatabaseOutOfSyncException sex)
-            {
-                return StatusCode(StatusCodes.Status409Conflict, sex.Message);
-            }
-            catch (TOMDatabaseUpdateException uex)
-            {
-                return StatusCode(StatusCodes.Status424FailedDependency, uex.Message);
+                return Problem(ex.ProblemDetail, ex.ProblemInstance, StatusCodes.Status400BadRequest);
             }
 
             return Ok();
@@ -102,54 +125,31 @@ namespace Sqlbi.Bravo.Controllers
         /// Update a PBICloud dataset by applying changes to formatted measures 
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
-        /// <response code="404">Status404NotFound - PBICloud dataset not found</response>
-        /// <response code="409">Status409Conflict - Update failed due to a conflict with the current state of the PBICloud dataset</response>
-        /// <response code="424">Status424FailedDependency - Update failed due to PBICloud SSAS server error</response>
+        /// <response code="400">Status400BadRequest - See the "instance" and "detail" properties to identify the specific occurrence of the problem</response>
+        /// <response code="401">Status401Unauthorized - Sign-in required</response>
         [HttpPost]
         [ActionName("UpdateDataset")]
         [Consumes(MediaTypeNames.Application.Json)]
+        [Produces(MediaTypeNames.Application.Json)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesDefaultResponseType]
         public IActionResult UpdatePBICloudDatasetAsync(UpdatePBICloudDatasetRequest request)
         {
+            if (_pbicloudService.IsAuthenticated == false)
+                return Unauthorized();
+
             try
             {
                 _pbicloudService.Update(request.Dataset!, request.Measures!);
             }
-            catch (TOMDatabaseNotFoundException ex)
+            catch (TOMDatabaseException ex)
             {
-                return NotFound(ex.Message);
-            }
-            catch (TOMDatabaseOutOfSyncException sex)
-            {
-                return StatusCode(StatusCodes.Status409Conflict, sex.Message);
-            }
-            catch (TOMDatabaseUpdateException uex)
-            {
-                return StatusCode(StatusCodes.Status424FailedDependency, uex.Message);
+                return Problem(ex.ProblemDetail, ex.ProblemInstance, StatusCodes.Status400BadRequest);
             }
 
             return Ok();
-        }
-
-        private async Task<IReadOnlyList<DaxFormatterResponse>> CallDaxFormatter(IEnumerable<TabularMeasure> measures, FormatDaxOptions options)
-        {
-            var request = new DaxFormatterMultipleRequest
-            {
-                CallerApp = AppConstants.ApplicationName,
-                CallerVersion = AppConstants.ApplicationFileVersion,
-                MaxLineLength = options.LineStyle,
-                SkipSpaceAfterFunctionName = options.SpacingStyle,
-            };
-
-            // TODO : set DaxFormatterRequest.ListSeparator nullable
-            request.ListSeparator = options.ListSeparator.GetValueOrDefault(request.ListSeparator);
-            // TODO : set DaxFormatterRequest.DecimalSeparator nullable
-            request.DecimalSeparator = options.DecimalSeparator.GetValueOrDefault(request.DecimalSeparator);
-
-            foreach (var measure in measures)
-                request.Dax.Add($"[{ measure.Name }] := { measure.Expression }");
-
-            var response = await _daxformatterClient.FormatAsync(request).ConfigureAwait(false);
-            return response;
         }
     }
 }

@@ -1,0 +1,19 @@
+﻿using System.Text.Json.Serialization;
+
+namespace Sqlbi.Bravo.Models
+{
+    public class FileActionResult
+    {
+        /// <summary>
+        /// True if the user cancel closes the dialog box with action 'Cancel'
+        /// </summary>
+        [JsonPropertyName("canceled")]
+        public bool? Canceled { get; set; }
+
+        /// <summary>
+        /// Full path of the selected file
+        /// </summary>
+        [JsonPropertyName("fileName")]
+        public string? FileName { get; set; }
+    }
+}

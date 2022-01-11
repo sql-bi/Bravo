@@ -22,7 +22,7 @@ namespace Sqlbi.Bravo.Infrastructure
         {
             switch (uMsg)
             {
-                case NativeMethods.WM_COPYDATA:
+                case (uint)WindowMessage.WM_COPYDATA:
                     {
                         // Restore original size and position only if the window is minimized, otherwise keep current position
                         if (_window.Minimized) NativeMethods.ShowWindow(hWnd, NativeMethods.SW_RESTORE);
@@ -49,11 +49,11 @@ namespace Sqlbi.Bravo.Infrastructure
 
         private void HandleMsgWmCopyData(IntPtr copydataPtr)
         {
-            var copyDataObject = Marshal.PtrToStructure(copydataPtr, typeof(NativeMethods.COPYDATASTRUCT));
+            var copyDataObject = Marshal.PtrToStructure(copydataPtr, typeof(User32.COPYDATASTRUCT));
             if (copyDataObject == null)
                 return;
 
-            var copyData = (NativeMethods.COPYDATASTRUCT)copyDataObject;
+            var copyData = (User32.COPYDATASTRUCT)copyDataObject;
             if (copyData.cbData == 0)
                 return;
 

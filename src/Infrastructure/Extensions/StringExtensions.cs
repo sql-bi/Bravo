@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Globalization;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace Sqlbi.Bravo.Infrastructure.Extensions
@@ -40,12 +41,24 @@ namespace Sqlbi.Bravo.Infrastructure.Extensions
 
         public static string? NullIfEmpty(this string? value)
         {
-            return string.IsNullOrEmpty(value) ? null : value;
+            return string.IsNullOrWhiteSpace(value) ? null : value;
         }
 
         public static string FormatInvariant(this string format, object? arg0)
         {
             return string.Format(CultureInfo.InvariantCulture, format, arg0);
+        }
+
+        public static string ToFileDialogFilterString(this string filter)
+        {
+            if (string.IsNullOrWhiteSpace(filter))
+                filter = " |*.*";
+
+            var stringBuilder = new StringBuilder(filter);
+            stringBuilder.Replace('|', '\0');
+            stringBuilder.Append('\0');
+            stringBuilder.Append('\0');
+            return stringBuilder.ToString();
         }
     }
 }

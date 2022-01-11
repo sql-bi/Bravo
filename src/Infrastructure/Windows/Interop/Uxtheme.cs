@@ -15,10 +15,8 @@ namespace Bravo.Infrastructure.Windows.Interop
     /// </remarks>
     ///***************************************************************************
     ///***************************************************************************
-    internal static class Win32UxTheme
+    internal static class Uxtheme
     {
-        private const int WM_THEMECHANGED = 0x031A;
-
         private enum PreferredAppMode
         {
             Default = 0,
@@ -32,33 +30,33 @@ namespace Bravo.Infrastructure.Windows.Interop
          * OS version 1809 ( OS build 17763 )
          */
 
-        //[DllImport("uxtheme.dll", EntryPoint = "#104")]
+        //[DllImport(ExternDll.Uxtheme, EntryPoint = "#104")]
         //private static extern void RefreshImmersiveColorPolicyState();
 
-        [DllImport("uxtheme.dll", EntryPoint = "#132")]
+        [DllImport(ExternDll.Uxtheme, EntryPoint = "#132")]
         private static extern bool ShouldAppsUseDarkMode();
 
-        //[DllImport("uxtheme.dll", EntryPoint = "#133")]
+        //[DllImport(ExternDll.Uxtheme, EntryPoint = "#133")]
         //private static extern bool AllowDarkModeForWindow(IntPtr hWnd, bool allow);
 
-        [DllImport("uxtheme.dll", EntryPoint = "#135")]
+        [DllImport(ExternDll.Uxtheme, EntryPoint = "#135")]
         private static extern bool AllowDarkModeForApp(bool allow); // !!! 135 !!! same ordinal in 1903 and 1809 
 
-        //[DllImport("uxtheme.dll", EntryPoint = "#137")]
+        //[DllImport(ExternDll.Uxtheme, EntryPoint = "#137")]
         //private static extern bool IsDarkModeAllowedForWindow(IntPtr hWnd);
 
         /*
          * OS version 1903 ( OS build 18362 )
          */
 
-        [DllImport("uxtheme.dll", EntryPoint = "#135")]
+        [DllImport(ExternDll.Uxtheme, EntryPoint = "#135")]
         [return: MarshalAs(UnmanagedType.U4)]
         private static extern PreferredAppMode SetPreferredAppMode(PreferredAppMode mode); // !!! 135 !!! same ordinal in 1903 and 1809 
 
-        [DllImport("uxtheme.dll", EntryPoint = "#138")]
+        [DllImport(ExternDll.Uxtheme, EntryPoint = "#138")]
         private static extern bool ShouldSystemUseDarkMode();
 
-        //[DllImport("uxtheme.dll", EntryPoint = "#139")]
+        //[DllImport(ExternDll.Uxtheme, EntryPoint = "#139")]
         //private static extern bool IsDarkModeAllowedForApp(IntPtr hWnd);
 
         /* */
@@ -108,7 +106,7 @@ namespace Bravo.Infrastructure.Windows.Interop
             if (IsDarkModeSupported())
             {
                 SetAppTheme(useDark);
-                NativeMethods.SendMessage(hWnd, WM_THEMECHANGED, IntPtr.Zero, IntPtr.Zero);
+                User32.SendMessage(hWnd, WindowMessage.WM_THEMECHANGED, IntPtr.Zero, IntPtr.Zero);
             }
         }
 

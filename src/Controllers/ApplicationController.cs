@@ -1,6 +1,8 @@
 ﻿using Bravo.Infrastructure.Windows.Interop;
+using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using Sqlbi.Bravo.Infrastructure.Configuration.Options;
 using Sqlbi.Bravo.Models;
 using Sqlbi.Infrastructure.Configuration.Settings;
@@ -15,10 +17,13 @@ namespace Sqlbi.Bravo.Controllers
     public class ApplicationController : ControllerBase
     {
         private readonly IWritableOptions<UserSettings> _userOptions;
+        private readonly TelemetryConfiguration _telemetryConfiguration;
 
-        public ApplicationController(IWritableOptions<UserSettings> userOptions)
+        public ApplicationController(IWritableOptions<UserSettings> userOptions, IOptions<TelemetryConfiguration> telemetryOptions)
         {
             _userOptions = userOptions;
+            _telemetryConfiguration = telemetryOptions.Value;
+            
             try
             {
                 //_settings = options.Value;
@@ -38,11 +43,12 @@ namespace Sqlbi.Bravo.Controllers
         /// <summary>
         /// Get the application options
         /// </summary>
-        /// <response code="200">Status200OK</response>
+        /// <response code="200">Status200OK - Success</response>
         [HttpGet]
         [ActionName("GetOptions")]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(BravoOptions))]
+        [ProducesDefaultResponseType]
         public IActionResult GetOptions()
         {
             var userSettings = _userOptions.Value;
@@ -64,10 +70,13 @@ namespace Sqlbi.Bravo.Controllers
         /// <summary>
         /// Update the application options
         /// </summary>
-        /// <response code="200">Status200OK</response>
+        /// <response code="200">Status200OK - Success</response>
         [HttpPost]
         [ActionName("UpdateOptions")]
         [Consumes(MediaTypeNames.Application.Json)]
+        [Produces(MediaTypeNames.Application.Json)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesDefaultResponseType]
         public IActionResult UpdateOptions(BravoOptions options)
         {
             var customOptionsAsString = JsonSerializer.Serialize(options.CustomOptions);
@@ -79,16 +88,21 @@ namespace Sqlbi.Bravo.Controllers
                 o.CustomOptions = customOptionsAsString;
             });
 
+            _telemetryConfiguration.DisableTelemetry = !options.TelemetryEnabled;
+
             return Ok();
         }
 
         /// <summary>
         /// Change the current window theme
         /// </summary>
-        /// <response code="200">Status200OK</response>
+        /// <response code="200">Status200OK - Success</response>
         [HttpGet]
         [ActionName("ChangeTheme")]
         [Consumes(MediaTypeNames.Application.Json)]
+        [Produces(MediaTypeNames.Application.Json)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesDefaultResponseType]
         public IActionResult ChangeTheme(ThemeType theme)
         {
             var windowHandle = Process.GetCurrentProcess().MainWindowHandle;
@@ -97,10 +111,10 @@ namespace Sqlbi.Bravo.Controllers
             {
                 case ThemeType.Light:
                 case ThemeType.Dark:
-                    Win32UxTheme.ChangeTheme(windowHandle, useDark: theme == ThemeType.Dark);
+                    Uxtheme.ChangeTheme(windowHandle, useDark: theme == ThemeType.Dark);
                     break;
                 case ThemeType.Auto:
-                    Win32UxTheme.ChangeTheme(windowHandle, useDark: Win32UxTheme.IsSystemUsingDarkMode());
+                    Uxtheme.ChangeTheme(windowHandle, useDark: Uxtheme.IsSystemUsingDarkMode());
                     break;
             }
 

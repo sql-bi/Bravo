@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.ApplicationInsights;
 using Microsoft.Extensions.Logging.EventLog;
 using System;
 using System.Net;
@@ -15,6 +16,7 @@ namespace Sqlbi.Bravo
         {
             var hostBuilder = new HostBuilder();
 
+            hostBuilder.UseEnvironment(Environments.Production);
             hostBuilder.UseContentRoot(Environment.CurrentDirectory);
 
             hostBuilder.ConfigureHostConfiguration((builder) =>
@@ -47,17 +49,18 @@ namespace Sqlbi.Bravo
                 //    config.AddCommandLine(args);
             });
 
-            hostBuilder.ConfigureLogging((HostBuilderContext hostingContext, ILoggingBuilder logging) =>
+            hostBuilder.ConfigureLogging((HostBuilderContext context, ILoggingBuilder logging) =>
             {
+                logging.AddFilter<ApplicationInsightsLoggerProvider>((LogLevel level) => level >= LogLevel.Warning);
                 logging.AddFilter<EventLogLoggerProvider>((LogLevel level) => level >= LogLevel.Warning);
-                logging.AddConfiguration(hostingContext.Configuration.GetSection("Logging"));
-#if DEBUG || DEBUG_WWWROOT
+                //logging.AddConfiguration(context.Configuration.GetSection("Logging"));
+                logging.AddApplicationInsights();
+                logging.AddEventSourceLogger();
+                logging.AddEventLog();
+#if DEBUG
                 logging.AddConsole();
                 logging.AddDebug();
 #endif
-                logging.AddEventSourceLogger();
-                logging.AddEventLog();
-
                 logging.Configure((LoggerFactoryOptions options) =>
                 {
                     options.ActivityTrackingOptions = ActivityTrackingOptions.SpanId | ActivityTrackingOptions.TraceId | ActivityTrackingOptions.ParentId;
@@ -76,9 +79,12 @@ namespace Sqlbi.Bravo
                 //    builder.
                 //});
 
-                webBuilder.ConfigureKestrel((serverOptions) =>
+                // Empty and ignore default URLs configured on the IWebHostBuilder - this remove the warning 'Microsoft.AspNetCore.Server.Kestrel: Warning: Overriding address(es) 'https://localhost:5001/, http://localhost:5000/'. Binding to endpoints defined in UseKestrel() instead.'
+                webBuilder.UseUrls();
+
+                webBuilder.UseKestrel((serverOptions) =>
                 {
-#if DEBUG || DEBUG_WWWROOT
+#if DEBUG
                     var listenEndpoint = new IPEndPoint(IPAddress.Loopback, port: 5000);
 #else
                     var listenEndpoint = new IPEndPoint(Infrastructure.Helpers.NetworkHelper.GetLoopbackAddress(), port: 0);
@@ -87,13 +93,13 @@ namespace Sqlbi.Bravo
                     serverOptions.AllowSynchronousIO = true;
                     serverOptions.Listen(listenEndpoint, (listenOptions) =>
                     {
-#if DEBUG || DEBUG_WWWROOT
+#if DEBUG
                         listenOptions.UseConnectionLogging();
 #endif
                         //listenOptions.UseHttps(); // TODO: do we need https ?
                     });
                 });
-                
+
                 webBuilder.UseStartup<Startup>();
             });
 
