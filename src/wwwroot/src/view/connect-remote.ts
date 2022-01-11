@@ -83,7 +83,7 @@ export class ConnectRemote extends ConnectMenuItem {
                     { 
                         field: "name", 
                         title: i18n(strings.connectDatasetsTableNameCol),
-                        width: 200,
+                        
                         formatter: (cell) => {
                             let dataset = <PBICloudDataset>cell.getData();
                             return `<span class="icon-dataset">${dataset.name}</span>`;
@@ -91,6 +91,7 @@ export class ConnectRemote extends ConnectMenuItem {
                     },
                     { 
                         field: "endorsement", 
+                        width: 100,
                         title: i18n(strings.connectDatasetsTableEndorsementCol), 
                         formatter: (cell) => {
                             let dataset = <PBICloudDataset>cell.getData();
@@ -106,10 +107,13 @@ export class ConnectRemote extends ConnectMenuItem {
                     },
                     { 
                         field: "owner", 
-                        title: i18n(strings.connectDatasetsTableOwnerCol)
+                        width: 90,
+                        title: i18n(strings.connectDatasetsTableOwnerCol),
+                        cssClass: "column-owner",
                     },
                     { 
                         field: "workspaceName", 
+                        width: 90,
                         title: i18n(strings.connectDatasetsTableWorkspaceCol)
                     },
                 ],

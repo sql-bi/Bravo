@@ -4,17 +4,20 @@
  * https://www.sqlbi.com
 */
 
+import { _ } from '../helpers/utils';
 import { i18n } from '../model/i18n'; 
 import { strings } from '../model/strings';
-import { BackableScene } from './scene-back';
+import { Scene } from './scene';
 
-export class SuccessScene extends BackableScene {
+export class SuccessScene extends Scene {
     
+    onDismiss: ()=>void;
     message: string;
 
-    constructor(id: string, container: HTMLElement, message: string, onBack?: (()=>void) | boolean) {
-        super(id, container, "", onBack);
+    constructor(id: string, container: HTMLElement, message: string, onDismiss: ()=>void) {
+        super(id, container, "");
         this.message = message;
+        this.onDismiss = onDismiss;
         this.render();
     }
 
@@ -23,12 +26,21 @@ export class SuccessScene extends BackableScene {
         
         let html = `
             <div class="success">
-                <h1>${i18n(strings.successTitle)}</h1>
 
-                <p>${this.message}</p>
+                <div class="success-message">
+                    <div class="icon-completed"></div>
+                    <p>${this.message}</p>
+                </div>
+
+                <div class="dismiss button">${i18n(strings.doneCtrlTitle)}</div>
             </div>
         `;
 
         this.element.insertAdjacentHTML("beforeend", html); 
+
+        _(".dismiss", this.element).addEventListener("click", e => {
+            e.preventDefault();
+            this.onDismiss();
+        });
     }
 }

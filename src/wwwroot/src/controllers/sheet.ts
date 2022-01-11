@@ -90,7 +90,7 @@ export class Sheet extends View {
 
         this.element.classList.add(action);
         __(`.disable-on-${action}`, this.element).forEach((div: HTMLElement) => {
-            div.dataset[`disabledBefore${action}`] = String(div.hasAttribute("disabled"));
+            div.dataset[`disabledBefore${Utils.Text.ucfirst(action)}`] = String(div.hasAttribute("disabled"));
             div.toggleAttr("disabled", true);
         });
         
@@ -128,7 +128,7 @@ export class Sheet extends View {
                 this.loading = false;
                 this.element.classList.remove(action);
                 __(`.disable-on-${action}`, this.element).forEach((div: HTMLElement) => {
-                    let disabledBeforeAction = div.dataset[`disabledBefore${action}`];
+                    let disabledBeforeAction = div.dataset[`disabledBefore${Utils.Text.ucfirst(action)}`];
                     div.toggleAttr("disabled", disabledBeforeAction == "true");
                 });
             });

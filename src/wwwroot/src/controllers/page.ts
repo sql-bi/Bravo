@@ -65,12 +65,15 @@ export class Page extends View {
         this.scenes.push(scene);
         scene.element.style.zIndex = String(zIndex);
         this.listen(scene);
-        this.showScene(scene);
+        this.showScene(scene, true);
     }
 
     spliceScene(scene: Scene) {
-        this.removeScene(this.lastScene);
+        let sceneToRemove = this.lastScene;
         this.pushScene(scene);
+        window.setTimeout(()=>{
+            this.removeScene(sceneToRemove);
+        }, 350);
     }
 
     popScene(scene: Scene) {
@@ -80,12 +83,11 @@ export class Page extends View {
 
     show() {
         super.show();
-        this.showScene(this.lastScene);
+        this.showScene(this.lastScene, false);
     }
 
-    showScene(scene: Scene) {
-        let animated = (this.scenes.length > 1);
-        if (animated) {
+    showScene(scene: Scene, animated: boolean) {
+        if (animated && this.scenes.length > 1) {
             scene.element.classList.add("entering");
             scene.element.addEventListener("animationend", e => {
                 scene.element.classList.remove("entering");

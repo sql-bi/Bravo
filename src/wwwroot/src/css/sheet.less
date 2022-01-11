@@ -149,6 +149,33 @@
             }
         }
     }
+
+    .success {
+        height: 100%;
+
+        .success-message {
+
+            height: calc(100% - 35px);
+            .flexbox(center, center, column);
+            font-size: 25px;
+            line-height: 1.5;
+            margin: 0 auto;
+            max-width: 500px;
+            text-align: center;
+
+            .icon-completed {
+                &:before {
+                    font-size: 130px;
+                    display: block;
+                    margin: 0;
+                    color: @good-color;
+                }
+            }
+        }
+        .dismiss {
+            float: right;
+        }
+    }
 }
 
 @keyframes appearing {

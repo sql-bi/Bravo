@@ -4,7 +4,7 @@
  * https://www.sqlbi.com
 */
 
-import { auth, optionsController, themeController } from "../main";
+import { auth, host, optionsController, themeController } from "../main";
 import { ThemeChangeArg, ThemeType } from '../controllers/theme';
 import { __, _, Dic } from '../helpers/utils';
 import { i18n } from '../model/i18n'; 
@@ -125,7 +125,7 @@ export class Sidebar extends View {
                         { label: i18n(strings.signOut), onClick: () => { auth.signOut(); } },
                     ]
                 }, e);
-
+                
             } else {
                 let signinDialog = new PowerBiSignin();
                 signinDialog.show();

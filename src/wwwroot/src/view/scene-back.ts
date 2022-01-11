@@ -9,8 +9,7 @@ import { strings } from '../model/strings';
 import { Scene } from './scene';
 
 export class BackableScene extends Scene {
-    rendered: boolean;
-    title: string;
+
     onBack: (()=>void) | boolean;
 
     constructor(id: string, container: HTMLElement, title?: string, onBack?: (()=>void) | boolean) {

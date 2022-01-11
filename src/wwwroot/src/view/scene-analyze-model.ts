@@ -500,7 +500,7 @@ export class AnalyzeModelScene extends MainScene {
                     hoverBackgroundColor: (context: TreemapScriptableContext) => {
                        
                         // Highlight table
-                        if (this.table) {
+                        /*if (this.table) {
                             this.restoreTableRowsActiveStatus();
 
                             let item = this.chartItem(context);
@@ -513,7 +513,7 @@ export class AnalyzeModelScene extends MainScene {
                                     rowElement.classList.add("active");
                                 }
                             }
-                        }
+                        }*/
 
                         return this.chartColors(context, "hoverBackColor");
                     },
@@ -579,7 +579,7 @@ export class AnalyzeModelScene extends MainScene {
                     } 
                 }
             },
-            plugins: [{
+            /*plugins: [{
               id: 'outCatcher',
               beforeEvent: (chart, args, pluginOptions) => {
                 const event = args.event;
@@ -587,15 +587,15 @@ export class AnalyzeModelScene extends MainScene {
                     this.restoreTableRowsActiveStatus();
                 }
               }
-            }]
+            }]*/
         });
     }
 
-    restoreTableRowsActiveStatus() {
+    /*restoreTableRowsActiveStatus() {
         __(".tabulator-row", this.element).forEach((div: HTMLElement) => {
             div.classList.remove("active");
         });
-    }
+    }*/
 
     updateToolbar() {
         __(".show-if-group", this.element).forEach((div: HTMLElement) => {

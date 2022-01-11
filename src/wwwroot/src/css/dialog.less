@@ -116,6 +116,7 @@
 }
 
 #dialog-connect {
+
     .dialog-front {
         width: 600px;
     }
@@ -136,18 +137,20 @@
     #body-open-vpx {
       .drop-area {
         .flexbox(center, center, column);
-
-        border: 2px dashed @border-color;
+        text-align: center;
+        border-color: transparent;
+        outline: 2px dashed @border-color;
 
         &.highlight {
-          border-color: darken(@border-color, 20%);
+          
+          outline-color: darken(@border-color, 20%);
           background-color: darken(@window-back-color-alt, 10%);
         }
 
         .dark & {
-          border-color: @border-color-dark;
+          outline-color: @border-color-dark;
           &.highlight {
-            border-color: lighten(@border-color-dark, 20%);
+            outline-color: lighten(@border-color-dark, 20%);
             background-color: lighten(@window-back-color-alt-dark, 10%);
           }
         }

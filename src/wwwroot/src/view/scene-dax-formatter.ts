@@ -387,6 +387,10 @@ export class DaxFormatterScene extends MainScene {
 
         } else {
             this.table.setData(data);
+
+            //Force disabling button from parent
+            this.formatButton.dataset.disabledBeforeSyncing = "true";
+            this.formatButton.toggleAttr("disabled", true);
         }
     }
 
@@ -476,20 +480,24 @@ export class DaxFormatterScene extends MainScene {
                 host.updateModel(updateRequest, this.doc.type)
                     .then(() => {
 
+                        //TODO Update datasource?
                         /*if (this.doc.type == DocType.dataset) {
                             (<PBICloudDataset>this.doc.sourceData).
                         } else if (this.doc.type == DocType.pbix) {
                             this.doc.sourceData
                         }*/
 
-                        let successScene = new SuccessScene(Utils.DOM.uniqueId(), this.element.parentElement, i18n(measures.length == 1 ? strings.daxFormatterSuccessSceneMessageSingular : strings.daxFormatterSuccessSceneMessagePlural, measures.length), true);
+                        let successScene = new SuccessScene(Utils.DOM.uniqueId(), this.element.parentElement, i18n(measures.length == 1 ? strings.daxFormatterSuccessSceneMessageSingular : strings.daxFormatterSuccessSceneMessagePlural, measures.length), ()=>{
+                            this.pop();
+                        });
                         this.splice(successScene);
                     })
                     .catch(error => errorResponse(error));
             })
             .catch(error => errorResponse(error))
             .finally(() => {
-                this.formatButton.toggleAttr("disabled", false);
+                this.formatButton.toggleAttr("disabled", true);
+                this.table.deselectRow();
             });
     }
 
