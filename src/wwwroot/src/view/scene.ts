@@ -38,8 +38,4 @@ export class Scene extends View {
     splice(scene: Scene) {
         this.trigger("splice", scene);
     }
-
-    destroy() {
-        this.element.remove();
-    }
 }

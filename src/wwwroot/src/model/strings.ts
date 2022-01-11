@@ -98,6 +98,7 @@ export enum strings {
     saveVpaxCtrlTile = "Save as VPAX",
     savingVpax = "Generating VPAX...",
     searchColumnPlaceholder = "Search Column",
+    searchDatasetPlaceholder = "Search Dataset",
     searchPlaceholder = "Search",
     settingsCtrlTitle = "Settings",
     signedInCtrlTitle = "Signed in as $0",

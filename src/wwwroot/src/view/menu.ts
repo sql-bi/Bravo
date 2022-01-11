@@ -11,6 +11,7 @@ export interface MenuItem {
     name: string
     onRender?: (element: HTMLElement) => void,
     onChange?: (element: HTMLElement) => void,
+    onDestroy?: () => void,
     hidden?: boolean
 }
 
@@ -114,4 +115,12 @@ export class Menu extends View {
         this.trigger("change", this.currentItem);
     }
 
+    destroy() {
+        for (let id in this.items) {
+            if (this.items[id].onDestroy)
+                this.items[id].onDestroy();
+        }
+        this.items = null;
+        super.destroy();
+    }
 }

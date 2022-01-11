@@ -1,7 +1,6 @@
 # TODO
 
 @daniele
-- Add search in Connect dialog
 - Format DAX:
     - Fix last step layout
     - Catch measure errors
@@ -15,7 +14,7 @@
 - Automatic token refresh on API call?
 - Fix login window size
 - Optional pass the email address to Power BI auth
-- Sometimes "ListDatasets" returns error 500 cors (when token expired, I guess)
+- Sometimes "ListDatasets" returns error 500 cors (when token expired, I guess because if I sign in them it works - we need 401)
 - Error when opening datasets which you are not authorized to open
 - Error if "Untitled" report is empty
 - Disable browser key shortcuts for refreshing (CTRL+F5/CTRL+R,CMD+R), printing, etc...

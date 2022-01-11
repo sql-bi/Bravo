@@ -92,8 +92,8 @@ export class Dialog extends View {
 
         setTimeout(() => {
             this.element.parentElement.removeChild(this.element);
-            //delete this;
-        }, 300);
+            super.destroy();
+        }, 300);   
     }
 
     onAction(action: string, resolve: any, reject: any) {

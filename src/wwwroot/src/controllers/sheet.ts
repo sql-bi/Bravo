@@ -39,9 +39,10 @@ export class Sheet extends View {
     }
 
     destroy() {
-        this.element.remove();
         this.pages = null;
         this.doc = null;
+        
+        super.destroy();
     }
 
     listen() {

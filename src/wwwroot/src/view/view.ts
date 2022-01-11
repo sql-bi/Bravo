@@ -12,6 +12,7 @@ export class View extends Dispatchable {
     id: string;
     element: HTMLElement;
     body: HTMLElement;
+    destroyed: boolean = false;
 
     constructor(id: string, container: HTMLElement) {
         super();
@@ -37,4 +38,9 @@ export class View extends Dispatchable {
         this.element.toggle(false);
     }
 
+    destroy() {
+        super.destroy();
+        this.element.remove();
+        this.destroyed = true;
+    }
 }
