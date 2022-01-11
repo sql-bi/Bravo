@@ -70,17 +70,13 @@ namespace Sqlbi.Bravo.Controllers
         /// Update a PBIDesktop report by applying changes to formatted measures
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
-        /// <response code="404">Status404NotFound - PBIDesktop report not found</response>
-        /// <response code="409">Status409Conflict - Update failed due to a conflict with the current state of the PBIDesktop report</response>
-        /// <response code="424">Status424FailedDependency - Update failed due to PBIDesktop SSAS server error</response>
+        /// <response code="400">Status400BadRequest - See the "instance" and "detail" properties to identify the specific occurrence of the problem</response>
         [HttpPost]
         [ActionName("UpdateReport")]
         [Consumes(MediaTypeNames.Application.Json)]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status409Conflict)]
-        [ProducesResponseType(StatusCodes.Status424FailedDependency)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesDefaultResponseType]
         public IActionResult UpdatePBIDesktopReportAsync(UpdatePBIDesktopReportRequest request)
         {
@@ -88,17 +84,9 @@ namespace Sqlbi.Bravo.Controllers
             {
                 _pbidesktopService.Update(request.Report!, request.Measures!);
             }
-            catch (TOMDatabaseNotFoundException fex)
+            catch (TOMDatabaseException ex)
             {
-                return Problem(fex.ProblemDetail, fex.ProblemInstance, StatusCodes.Status404NotFound);
-            }
-            catch (TOMDatabaseConflictException sex)
-            {
-                return Problem(sex.ProblemDetail, sex.ProblemInstance, StatusCodes.Status409Conflict);
-            }
-            catch (TOMDatabaseUpdateException uex)
-            {
-                return Problem(uex.ProblemDetail, uex.ProblemInstance, StatusCodes.Status424FailedDependency);
+                return Problem(ex.ProblemDetail, ex.ProblemInstance, StatusCodes.Status400BadRequest);
             }
 
             return Ok();
@@ -108,17 +96,13 @@ namespace Sqlbi.Bravo.Controllers
         /// Update a PBICloud dataset by applying changes to formatted measures 
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
-        /// <response code="404">Status404NotFound - PBICloud dataset not found</response>
-        /// <response code="409">Status409Conflict - Update failed due to a conflict with the current state of the PBICloud dataset</response>
-        /// <response code="424">Status424FailedDependency - Update failed due to PBICloud SSAS server error</response>
+        /// <response code="400">Status400BadRequest - See the "instance" and "detail" properties to identify the specific occurrence of the problem</response>
         [HttpPost]
         [ActionName("UpdateDataset")]
         [Consumes(MediaTypeNames.Application.Json)]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status409Conflict)]
-        [ProducesResponseType(StatusCodes.Status424FailedDependency)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesDefaultResponseType]
         public IActionResult UpdatePBICloudDatasetAsync(UpdatePBICloudDatasetRequest request)
         {
@@ -126,17 +110,9 @@ namespace Sqlbi.Bravo.Controllers
             {
                 _pbicloudService.Update(request.Dataset!, request.Measures!);
             }
-            catch (TOMDatabaseNotFoundException fex)
+            catch (TOMDatabaseException ex)
             {
-                return Problem(fex.ProblemDetail, fex.ProblemInstance, StatusCodes.Status404NotFound);
-            }
-            catch (TOMDatabaseConflictException sex)
-            {
-                return Problem(sex.ProblemDetail, sex.ProblemInstance, StatusCodes.Status409Conflict);
-            }
-            catch (TOMDatabaseUpdateException uex)
-            {
-                return Problem(uex.ProblemDetail, uex.ProblemInstance, StatusCodes.Status424FailedDependency);
+                return Problem(ex.ProblemDetail, ex.ProblemInstance, StatusCodes.Status400BadRequest);
             }
 
             return Ok();

@@ -19,7 +19,6 @@ namespace Sqlbi.Bravo.Services
 
     internal class PBIDesktopService : IPBIDesktopService
     {
-
         public IEnumerable<PBIDesktopReport> GetReports()
         {
             foreach (var pbidesktopProcess in Process.GetProcessesByName(AppConstants.PBIDesktopProcessName))
@@ -57,7 +56,6 @@ namespace Sqlbi.Bravo.Services
         /// <summary>
         /// Search for the PBIDesktop process and its SSAS instance by retrieving the connection string and database name
         /// </summary>
-        /// <exception cref="TOMDatabaseNotFoundException"></exception>
         private (string ConnectionString, string DatabaseName) GetConnectionParameters(PBIDesktopReport report)
         {
             var (connectionString, databaseName) = report.GetConnectionParameters();

@@ -1,5 +1,4 @@
-﻿using Microsoft.Identity.Client;
-using Sqlbi.Bravo.Infrastructure.Extensions;
+﻿using Sqlbi.Bravo.Infrastructure.Extensions;
 using System;
 
 namespace Sqlbi.Bravo.Infrastructure
@@ -56,33 +55,15 @@ namespace Sqlbi.Bravo.Infrastructure
     }
 
     [Serializable]
-    public class TOMDatabaseNotFoundException : BravoException
+    public class TOMDatabaseException : BravoException
     {
-        public TOMDatabaseNotFoundException(BravoProblem problem)
+        public TOMDatabaseException(BravoProblem problem)
             : base(problem)
         {
         }
 
-        public TOMDatabaseNotFoundException(BravoProblem problem, string message)
+        public TOMDatabaseException(BravoProblem problem, string message)
             : base(problem, message)
-        {
-        }
-    }
-
-    [Serializable]
-    public class TOMDatabaseConflictException : BravoException
-    {
-        public TOMDatabaseConflictException(BravoProblem problem)
-            : base(problem)
-        {
-        }
-    }
-
-    [Serializable]
-    public class TOMDatabaseUpdateException : BravoException
-    {
-        public TOMDatabaseUpdateException(BravoProblem problem, string message)
-            : base(problem: BravoProblem.TOMDatabaseUpdateFailed, message)
         {
         }
     }
@@ -92,14 +73,19 @@ namespace Sqlbi.Bravo.Infrastructure
         None = 0,
 
         /// <summary>
+        /// TOM database does not exists in the collection or the user does not have admin rights for it.
+        /// </summary> 
+        TOMDatabaseDatabaseNotFound = 101,
+
+        /// <summary>
         /// TOM database update failed while saving local changes made on the model tree to the version of the model residing in the database server.
         /// </summary> 
-        TOMDatabaseUpdateFailed = 100,
+        TOMDatabaseUpdateFailed = 102,
 
         /// <summary>
         /// TOM measure update request conflict with current state of the target resource
         /// </summary> 
-        TOMDatabaseUpdateConflictMeasure = 101,
+        TOMDatabaseUpdateConflictMeasure = 103,
 
         /// <summary>
         /// PBIDesktop process is no longer running or the identifier might be expired.
@@ -117,23 +103,18 @@ namespace Sqlbi.Bravo.Infrastructure
         PBIDesktopSSASConnectionNotFound = 301,
 
         /// <summary>
-        /// PBIDesktop SSAS database does not exists in the collection or the user does not have admin rights for it.
-        /// </summary> 
-        PBIDesktopSSASDatabaseNotExists = 400,
-
-        /// <summary>
         /// PBIDesktop SSAS instance database not found.
         /// </summary> 
-        PBIDesktopSSASDatabaseUnexpectedCount = 401,
+        PBIDesktopSSASDatabaseUnexpectedCount = 302,
 
         /// <summary>
         /// 
         /// </summary> 
-        SignInMsalExceptionOccurred = 500,
+        SignInMsalExceptionOccurred = 400,
 
         /// <summary>
         /// Sign-in request was canceled because the configured timeout period elapsed prior to completion of the operation
         /// </summary> 
-        SignInMsalTimeoutExpired = 501,
+        SignInMsalTimeoutExpired = 401,
     }
 }

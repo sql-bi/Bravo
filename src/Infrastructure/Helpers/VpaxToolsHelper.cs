@@ -26,7 +26,7 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
             }
             catch (ArgumentException ex) when (ex.Message == $"The database '{ databaseName }' could not be found. Either it does not exist or you do not have admin rights to it.") // TODO: avoid using the exception message here to filter the error
             {
-                throw new TOMDatabaseNotFoundException(BravoProblem.PBIDesktopSSASDatabaseNotExists);
+                throw new TOMDatabaseException(BravoProblem.TOMDatabaseDatabaseNotFound);
             }
         }
 

@@ -24,14 +24,12 @@ namespace Sqlbi.Bravo.Controllers
         /// Attempts to authenticate and acquire an access token for the account to access the PowerBI cloud services
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
-        /// <response code="403">Status403Forbidden - sign-in cancelled by the system because the configured timeout period elapsed before the user completed the sign-in operation</response>
-        /// <response code="424">Status424FailedDependency - sign-in failed, for details see the ErrorCode and the class Microsoft.Identity.Client.MsalError</response>
+        /// <response code="400">Status400BadRequest - See the "instance" and "detail" properties to identify the specific occurrence of the problem</response>
         [HttpGet]
         [ActionName("powerbi/SignIn")]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(BravoAccount))]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(StatusCodes.Status424FailedDependency)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesDefaultResponseType]
         public async Task<IActionResult> PowerBISignIn(string? upn)
         {
@@ -41,14 +39,7 @@ namespace Sqlbi.Bravo.Controllers
             }
             catch (SignInException ex)
             {
-                switch (ex.Problem)
-                {
-                    case BravoProblem.SignInMsalTimeoutExpired: 
-                        return Problem(ex.ProblemDetail, ex.ProblemInstance, StatusCodes.Status403Forbidden);
-                    case BravoProblem.SignInMsalExceptionOccurred:
-                        return Problem(ex.ProblemDetail, ex.ProblemInstance, StatusCodes.Status424FailedDependency);
-                }
-                throw;
+                return Problem(ex.ProblemDetail, ex.ProblemInstance, StatusCodes.Status400BadRequest);
             }
 
             var account = _pbicloudService.CurrentAccount;

@@ -51,13 +51,13 @@ namespace Sqlbi.Bravo.Controllers
         /// Returns a database model from a PBIDesktop instance
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
-        /// <response code="404">Status404NotFound - PBIDesktop report not found</response>
+        /// <response code="400">Status400BadRequest - See the "instance" and "detail" properties to identify the specific occurrence of the problem</response>
         [HttpPost]
         [ActionName("GetModelFromReport")]
         [Consumes(MediaTypeNames.Application.Json)]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(TabularDatabase))]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesDefaultResponseType]
         public IActionResult GetDatabaseFromPBIDesktopReport(PBIDesktopReport report)
         {
@@ -66,9 +66,9 @@ namespace Sqlbi.Bravo.Controllers
             {
                 stream = _pbidesktopService.ExportVpax(report, includeTomModel: false, includeVpaModel: false, readStatisticsFromData: false, sampleRows: 0);
             }
-            catch (TOMDatabaseNotFoundException ex)
+            catch (TOMDatabaseException ex)
             {
-                return Problem(ex.ProblemDetail, ex.ProblemInstance, StatusCodes.Status404NotFound);
+                return Problem(ex.ProblemDetail, ex.ProblemInstance, StatusCodes.Status400BadRequest);
             }
 
             var database = VpaxToolsHelper.GetDatabaseFromVpax(stream);
@@ -79,15 +79,15 @@ namespace Sqlbi.Bravo.Controllers
         /// Returns a database model from a PBICloud dataset
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
+        /// <response code="400">Status400BadRequest - See the "instance" and "detail" properties to identify the specific occurrence of the problem</response>
         /// <response code="401">Status401Unauthorized - Sign-in required</response>
-        /// <response code="404">Status404NotFound - PBICloud dataset not found</response>
         [HttpPost]
         [ActionName("GetModelFromDataset")]
         [Consumes(MediaTypeNames.Application.Json)]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(TabularDatabase))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesDefaultResponseType]
         public IActionResult GetDatabaseFromPBICloudDataset(PBICloudDataset dataset)
         {
@@ -99,9 +99,9 @@ namespace Sqlbi.Bravo.Controllers
             {
                 stream = _pbicloudService.ExportVpax(dataset, includeTomModel: false, includeVpaModel: false, readStatisticsFromData: false, sampleRows: 0);
             }
-            catch (TOMDatabaseNotFoundException ex)
+            catch (TOMDatabaseException ex)
             {
-                return Problem(ex.ProblemDetail, ex.ProblemInstance, StatusCodes.Status404NotFound);
+                return Problem(ex.ProblemDetail, ex.ProblemInstance, StatusCodes.Status400BadRequest);
             }
 
             var database = VpaxToolsHelper.GetDatabaseFromVpax(stream);
@@ -155,6 +155,7 @@ namespace Sqlbi.Bravo.Controllers
         [ActionName("ListReports")]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<PBIDesktopReport>))]
+        [ProducesDefaultResponseType]
         public IActionResult GetPBIDesktopReports()
         {
             var reports = _pbidesktopService.GetReports();
@@ -165,13 +166,13 @@ namespace Sqlbi.Bravo.Controllers
         /// Returns a VPAX file stream from an active PBIDesktop report
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
-        /// <response code="404">Status404NotFound - PBIDesktop report not found</response>
+        /// <response code="400">Status400BadRequest - See the "instance" and "detail" properties to identify the specific occurrence of the problem</response>
         [HttpPost]
         [ActionName("ExportVpaxFromReport")]
         [Consumes(MediaTypeNames.Application.Json)]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(FileActionResult))]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesDefaultResponseType]
         public IActionResult ExportVpaxFromPBIDesktopReport(PBIDesktopReport report)
         {
@@ -180,9 +181,9 @@ namespace Sqlbi.Bravo.Controllers
             {
                 stream = _pbidesktopService.ExportVpax(report, includeTomModel: false, includeVpaModel: false, readStatisticsFromData: false, sampleRows: 0);
             }
-            catch (TOMDatabaseNotFoundException ex)
+            catch (TOMDatabaseException ex)
             {
-                return Problem(ex.ProblemDetail, ex.ProblemInstance, StatusCodes.Status404NotFound);
+                return Problem(ex.ProblemDetail, ex.ProblemInstance, StatusCodes.Status400BadRequest);
             }
 
             var exportResult = ExportVpaxFile(fileName: report.ReportName, stream);
@@ -193,15 +194,15 @@ namespace Sqlbi.Bravo.Controllers
         /// Returns a VPAX file stream from a PBICloud dataset
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
+        /// <response code="400">Status400BadRequest - See the "instance" and "detail" properties to identify the specific occurrence of the problem</response>
         /// <response code="401">Status401Unauthorized - Sign-in required</response>
-        /// <response code="404">Status404NotFound - PBICloud dataset not found</response>
         [HttpPost]
         [ActionName("ExportVpaxFromDataset")]
         [Consumes(MediaTypeNames.Application.Json)]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(FileActionResult))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesDefaultResponseType]
         public IActionResult ExportVpaxFromPBICloudDataset(PBICloudDataset dataset)
         {
@@ -213,9 +214,9 @@ namespace Sqlbi.Bravo.Controllers
             {
                 stream = _pbicloudService.ExportVpax(dataset, includeTomModel: false, includeVpaModel: false, readStatisticsFromData: false, sampleRows: 0);
             }
-            catch (TOMDatabaseNotFoundException ex)
+            catch (TOMDatabaseException ex)
             {
-                return Problem(ex.ProblemDetail, ex.ProblemInstance, StatusCodes.Status404NotFound);
+                return Problem(ex.ProblemDetail, ex.ProblemInstance, StatusCodes.Status400BadRequest);
             }
 
             var exportResult = ExportVpaxFile(fileName: dataset.DisplayName, stream);

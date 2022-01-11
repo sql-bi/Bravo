@@ -28,9 +28,6 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
             return hash;
         }
 
-        /// <exception cref="TOMDatabaseConflictException" />
-        /// <exception cref="TOMDatabaseNotFoundException" />
-        /// <exception cref="TOMDatabaseUpdateException" />
         public static void Update(string connectionString, string databaseName, IEnumerable<FormattedMeasure> measures)
         {
             using var server = new TOM.Server();
@@ -42,7 +39,7 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
             foreach (var formattedMeasure in measures)
             {
                 if (formattedMeasure.ETag != databaseETag)
-                    throw new TOMDatabaseConflictException(BravoProblem.TOMDatabaseUpdateConflictMeasure);
+                    throw new TOMDatabaseException(BravoProblem.TOMDatabaseUpdateConflictMeasure);
 
                 if (formattedMeasure.Errors?.Any() ?? false)
                     continue;
@@ -60,7 +57,7 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
             if (operationResult.XmlaResults.ContainsErrors)
             {
                 var message = operationResult.XmlaResults.ToDescriptionString();
-                throw new TOMDatabaseUpdateException(BravoProblem.TOMDatabaseUpdateFailed, message);
+                throw new TOMDatabaseException(BravoProblem.TOMDatabaseUpdateFailed, message);
             }
 
             TOM.Database GetDatabase()
@@ -71,7 +68,7 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
                 }
                 catch (SSAS.AmoException ex)
                 {
-                    throw new TOMDatabaseNotFoundException(BravoProblem.PBIDesktopSSASDatabaseNotExists, message: ex.Message);
+                    throw new TOMDatabaseException(BravoProblem.TOMDatabaseDatabaseNotFound, message: ex.Message);
                 }
             }
         }

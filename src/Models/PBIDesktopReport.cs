@@ -33,27 +33,26 @@ namespace Sqlbi.Bravo.Models
         /// <summary>
         /// Search for the PBIDesktop process and its SSAS instance and retrieve connection parameters
         /// </summary>
-        /// <exception cref="TOMDatabaseNotFoundException"></exception>
         public static (string connectionString, string databaseName) GetConnectionParameters(this PBIDesktopReport report)
         {
             // Exit if the process specified by the processId parameter is not running
             var pbidesktopProcess = GetProcessById(report.ProcessId);
             if (pbidesktopProcess is null)
-                throw new TOMDatabaseNotFoundException(BravoProblem.PBIDesktopProcessNotFound);
+                throw new TOMDatabaseException(BravoProblem.PBIDesktopProcessNotFound);
 
             // Exit if the PID has been reused and PBIDesktop process is no longer running
             if (!pbidesktopProcess.ProcessName.Equals(AppConstants.PBIDesktopProcessName, StringComparison.OrdinalIgnoreCase))
-                throw new TOMDatabaseNotFoundException(BravoProblem.PBIDesktopProcessNotFound);
+                throw new TOMDatabaseException(BravoProblem.PBIDesktopProcessNotFound);
 
             var ssasProcessIds = pbidesktopProcess.GetChildProcessIds(name: "msmdsrv.exe").ToArray();
             if (ssasProcessIds.Length != 1)
-                throw new TOMDatabaseNotFoundException(BravoProblem.PBIDesktopSSASProcessNotFound);
+                throw new TOMDatabaseException(BravoProblem.PBIDesktopSSASProcessNotFound);
 
             var ssasProcessId = ssasProcessIds.Single();
 
             var ssasConnection = NetworkHelper.GetTcpConnections((c) => c.ProcessId == ssasProcessId && c.State == TcpState.Listen && IPAddress.IsLoopback(c.EndPoint.Address)).SingleOrDefault();
             if (ssasConnection == default)
-                throw new TOMDatabaseNotFoundException(BravoProblem.PBIDesktopSSASConnectionNotFound);
+                throw new TOMDatabaseException(BravoProblem.PBIDesktopSSASConnectionNotFound);
 
             var connectionString = ConnectionStringHelper.BuildForPBIDesktop(ssasConnection.EndPoint);
             var databaseName = GetDatabaseName(connectionString);
@@ -96,7 +95,7 @@ namespace Sqlbi.Bravo.Models
 
                 var databaseCount = server.Databases.Count;
                 if (databaseCount != 1)
-                    throw new TOMDatabaseNotFoundException(BravoProblem.PBIDesktopSSASDatabaseUnexpectedCount);
+                    throw new TOMDatabaseException(BravoProblem.PBIDesktopSSASDatabaseUnexpectedCount);
 
                 var databaseName = server.Databases[0].Name;
                 return databaseName;
