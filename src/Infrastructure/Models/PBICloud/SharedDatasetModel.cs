@@ -67,8 +67,8 @@ namespace Sqlbi.Bravo.Infrastructure.Models.PBICloud
 
         public bool IsWriteableModel => Permissions.HasFlag(SharedDatasetPermissions.Write);
 
-        public bool IsPushDataEnabled => PushDataVersion != 0;
+        public bool IsPushDataEnabled => PushDataVersion.HasValue && PushDataVersion != 0;
 
-        public bool IsPushStreaming => PushDataVersion != 0 && RealTimeMode != 0;
+        public bool IsPushStreaming => IsPushDataEnabled && (RealTimeMode.HasValue && RealTimeMode != 0);
     }
 }

@@ -128,8 +128,8 @@ namespace Sqlbi.Bravo.Controllers
             var onlineDatasets = await _pbicloudService.GetSharedDatasetsAsync();
 
             var selectedWorkspaces = onlineWorkspaces.Where((w) => w.CapacitySkuType == WorkspaceCapacitySkuType.Premium);
-            // TOFIX: exclude unsupported datasets https://docs.microsoft.com/en-us/power-bi/admin/service-premium-connect-tools#unsupported-datasets
-            var selectedDatasets = onlineDatasets.Where((d) => !d.Model.IsExcelWorkbook /* && !d.Model.IsPushDataEnabled */);
+            // unsupported datasets (not accessible by the XMLA endpoint) https://docs.microsoft.com/en-us/power-bi/admin/service-premium-connect-tools#unsupported-datasets
+            var selectedDatasets = onlineDatasets.Where((d) => !d.Model.IsExcelWorkbook && !d.Model.IsPushDataEnabled);
 
             var datasets = selectedDatasets.Join(selectedWorkspaces, (d) => d.WorkspaceObjectId, (w) => w.Id, resultSelector: (d, w) => new PBICloudDataset
             {
