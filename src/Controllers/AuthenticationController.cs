@@ -33,11 +33,11 @@ namespace Sqlbi.Bravo.Controllers
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status424FailedDependency)]
         [ProducesDefaultResponseType]
-        public async Task<IActionResult> PowerBISignIn()
+        public async Task<IActionResult> PowerBISignIn(string? upn)
         {
             try
             {
-                await _pbicloudService.SignInAsync();
+                await _pbicloudService.SignInAsync(identifier: upn);
             }
             catch (SignInException ex)
             {

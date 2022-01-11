@@ -145,9 +145,13 @@ namespace Sqlbi.Bravo.Services
                     var builder = _application.AcquireTokenInteractive(_pbisettings.GlobalCloudEnvironment.Scopes)
                         .WithExtraQueryParameters(MicrosoftAccountOnlyQueryParameter);
 
-                    //.WithAccount(account)
                     //.WithClaims(murex.Claims)
                     //.WithPrompt(Prompt.SelectAccount) // Force a sign-in (Prompt.SelectAccount), as the MSAL web browser might contain cookies for the current user and we don't necessarily want to re-sign-in the same user 
+
+                    if (account is not null)
+                        builder.WithAccount(account);
+                    else if (identifier is not null)
+                        builder.WithLoginHint(identifier);
 
                     if (_application.IsEmbeddedWebViewAvailable())
                     {
@@ -168,7 +172,7 @@ namespace Sqlbi.Bravo.Services
                     {
                         // If for some reason the EmbeddedWebView is not available than fall back to the SystemWebView
                         builder = builder.WithUseEmbeddedWebView(useEmbeddedWebView: false)
-                            .WithSystemWebViewOptions(_customSystemWebViewOptions); // TODO: configure html files
+                            .WithSystemWebViewOptions(_customSystemWebViewOptions);
                     }
 
                     var authenticationResult = await builder.ExecuteAsync(cancellationToken).ConfigureAwait(false);
