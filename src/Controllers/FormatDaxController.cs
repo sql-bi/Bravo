@@ -97,15 +97,20 @@ namespace Sqlbi.Bravo.Controllers
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
         /// <response code="400">Status400BadRequest - See the "instance" and "detail" properties to identify the specific occurrence of the problem</response>
+        /// <response code="401">Status401Unauthorized - Sign-in required</response>
         [HttpPost]
         [ActionName("UpdateDataset")]
         [Consumes(MediaTypeNames.Application.Json)]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesDefaultResponseType]
         public IActionResult UpdatePBICloudDatasetAsync(UpdatePBICloudDatasetRequest request)
         {
+            if (_pbicloudService.IsAuthenticated == false)
+                return Unauthorized();
+
             try
             {
                 _pbicloudService.Update(request.Dataset!, request.Measures!);
