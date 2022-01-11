@@ -37,10 +37,10 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
 
     internal class ContextTelemetryInitializer : ITelemetryInitializer
     {
-        private static readonly string DeviceOperatingSystem = Environment.OSVersion.ToString();
-        private static readonly string ComponentVersion = AppConstants.ApplicationFileVersion;
-        private static readonly string SessionId = Guid.NewGuid().ToString();
-        private static readonly string? UserId = $"{ Environment.MachineName }\\{ Environment.UserName }".ToSHA256Hash();
+        public static readonly string DeviceOperatingSystem = Environment.OSVersion.ToString();
+        public static readonly string ComponentVersion = AppConstants.ApplicationFileVersion;
+        public static readonly string SessionId = Guid.NewGuid().ToString();
+        public static readonly string? UserId = $"{ Environment.MachineName }\\{ Environment.UserName }".ToSHA256Hash();
 
         public void Initialize(ITelemetry telemetry)
         {

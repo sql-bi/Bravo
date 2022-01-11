@@ -66,7 +66,16 @@ namespace Sqlbi.Bravo.Infrastructure
             var config = JsonSerializer.Serialize(new
             {
                 address = GetStartupAddress().ToString(),
-                theme = GetStartupTheme().ToString()
+                theme = GetStartupTheme().ToString(),
+                version = AppConstants.ApplicationFileVersion,
+                telemetry = new
+                {
+                    instrumentationKey = AppConstants.TelemetryInstrumentationKey,
+                    contextDeviceOperatingSystem = ContextTelemetryInitializer.DeviceOperatingSystem,
+                    contextComponentVersion = ContextTelemetryInitializer.ComponentVersion,
+                    contextSessionId = ContextTelemetryInitializer.SessionId,
+                    contextUserId = ContextTelemetryInitializer.UserId,
+                }
             });
             var script = $@"var CONFIG = { config };";
             var stream = new MemoryStream(Encoding.UTF8.GetBytes(script));
