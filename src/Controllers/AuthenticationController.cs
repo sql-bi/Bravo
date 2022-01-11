@@ -30,8 +30,8 @@ namespace Sqlbi.Bravo.Controllers
         [ActionName("powerbi/SignIn")]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(BravoAccount))]
-        [ProducesResponseType(StatusCodes.Status403Forbidden, Type = typeof(BravoSignInError))]
-        [ProducesResponseType(StatusCodes.Status424FailedDependency, Type = typeof(BravoSignInError))]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status424FailedDependency)]
         [ProducesDefaultResponseType]
         public async Task<IActionResult> PowerBISignIn()
         {
