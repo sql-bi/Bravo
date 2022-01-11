@@ -34,7 +34,7 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
             server.Connect(connectionString);
 
             var database = GetDatabase();
-            var databaseETag = GetDatabaseETag(database.Model.Name, database.Version, database.LastUpdate);
+            var databaseETag = GetDatabaseETag(database.Name, database.Version, database.LastUpdate);
 
             foreach (var formattedMeasure in measures)
             {
@@ -54,7 +54,7 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
                 database.Update();
 
             var operationResult = database.Model.SaveChanges();
-            if (operationResult.XmlaResults.ContainsErrors)
+            if (operationResult.XmlaResults?.ContainsErrors == true)
             {
                 var message = operationResult.XmlaResults.ToDescriptionString();
                 throw new TOMDatabaseException(BravoProblem.TOMDatabaseUpdateFailed, message);

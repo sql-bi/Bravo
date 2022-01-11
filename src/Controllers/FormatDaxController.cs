@@ -40,7 +40,7 @@ namespace Sqlbi.Bravo.Controllers
         [ProducesDefaultResponseType]
         public async Task<IActionResult> FormatAsync(FormatDaxRequest request)
         {
-            var daxformatterResponse = await CallDaxFormatter(request.Measures!, request.Options!);
+            var daxformatterResponse = await CallDaxFormatterAsync(request.Measures!, request.Options!).ConfigureAwait(false);
             var response = new FormatDaxResponse();
 
             foreach (var (daxformatterMeasure, index) in daxformatterResponse.WithIndex())
@@ -64,6 +64,28 @@ namespace Sqlbi.Bravo.Controllers
             }
 
             return Ok(response);
+
+            async Task<IReadOnlyList<DaxFormatterResponse>> CallDaxFormatterAsync(IEnumerable<TabularMeasure> measures, FormatDaxOptions options)
+            {
+                var request = new DaxFormatterMultipleRequest
+                {
+                    CallerApp = AppConstants.ApplicationName,
+                    CallerVersion = AppConstants.ApplicationFileVersion,
+                    MaxLineLength = options.LineStyle,
+                    SkipSpaceAfterFunctionName = options.SpacingStyle,
+                };
+
+                // TODO : set DaxFormatterRequest.ListSeparator nullable
+                request.ListSeparator = options.ListSeparator.GetValueOrDefault(request.ListSeparator);
+                // TODO : set DaxFormatterRequest.DecimalSeparator nullable
+                request.DecimalSeparator = options.DecimalSeparator.GetValueOrDefault(request.DecimalSeparator);
+
+                foreach (var measure in measures)
+                    request.Dax.Add($"[{ measure.Name }] := { measure.Expression }");
+
+                var response = await _daxformatterClient.FormatAsync(request).ConfigureAwait(false);
+                return response;
+            }
         }
 
         /// <summary>
@@ -121,28 +143,6 @@ namespace Sqlbi.Bravo.Controllers
             }
 
             return Ok();
-        }
-
-        private async Task<IReadOnlyList<DaxFormatterResponse>> CallDaxFormatter(IEnumerable<TabularMeasure> measures, FormatDaxOptions options)
-        {
-            var request = new DaxFormatterMultipleRequest
-            {
-                CallerApp = AppConstants.ApplicationName,
-                CallerVersion = AppConstants.ApplicationFileVersion,
-                MaxLineLength = options.LineStyle,
-                SkipSpaceAfterFunctionName = options.SpacingStyle,
-            };
-
-            // TODO : set DaxFormatterRequest.ListSeparator nullable
-            request.ListSeparator = options.ListSeparator.GetValueOrDefault(request.ListSeparator);
-            // TODO : set DaxFormatterRequest.DecimalSeparator nullable
-            request.DecimalSeparator = options.DecimalSeparator.GetValueOrDefault(request.DecimalSeparator);
-
-            foreach (var measure in measures)
-                request.Dax.Add($"[{ measure.Name }] := { measure.Expression }");
-
-            var response = await _daxformatterClient.FormatAsync(request).ConfigureAwait(false);
-            return response;
         }
     }
 }
