@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using Sqlbi.Bravo.Infrastructure;
 using Sqlbi.Bravo.Models;
 using Sqlbi.Bravo.Services;
-using System.Diagnostics;
 using System.Net.Mime;
 using System.Threading.Tasks;
 
@@ -35,7 +34,7 @@ namespace Sqlbi.Bravo.Controllers
         {
             try
             {
-                await _pbicloudService.SignInAsync(identifier: upn);
+                await _pbicloudService.SignInAsync(userPrincipalName: upn);
             }
             catch (SignInException ex)
             {
@@ -73,18 +72,8 @@ namespace Sqlbi.Bravo.Controllers
         [ProducesDefaultResponseType]
         public async Task<IActionResult> GetAccount()
         {
-            if (_pbicloudService.IsAuthenticated == false)
-            {
-                try
-                {
-                    await _pbicloudService.SignInAsync(silentOnly: true);
-                }
-                catch (SignInException ex) when (ex.Problem == BravoProblem.SignInMsalExceptionOccurred && ex.ProblemDetail == Microsoft.Identity.Client.MsalError.UserNullError)
-                {
-                    Debug.Assert(_pbicloudService.IsAuthenticated == false);
-                    return Unauthorized();
-                }
-            }
+            if (await _pbicloudService.IsSignInRequiredAsync())
+                return Unauthorized();
 
             var account = _pbicloudService.CurrentAccount;
             return Ok(account);

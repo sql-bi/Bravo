@@ -135,9 +135,9 @@ namespace Sqlbi.Bravo.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesDefaultResponseType]
-        public IActionResult UpdatePBICloudDatasetAsync(UpdatePBICloudDatasetRequest request)
+        public async Task<IActionResult> UpdatePBICloudDatasetAsync(UpdatePBICloudDatasetRequest request)
         {
-            if (_pbicloudService.IsAuthenticated == false)
+            if (await _pbicloudService.IsSignInRequiredAsync())
                 return Unauthorized();
 
             try

@@ -30,7 +30,9 @@ namespace Sqlbi.Bravo.Services
 
         LocalClientSite? CachedUserInfo { get; }
 
-        Task AcquireTokenAsync(TimeSpan cancelAfter, bool silentOnly, string? identifier = null);
+        Task AcquireTokenAsync(bool silent = false, string? loginHint = null, TimeSpan? timeout = null);
+
+        Task<bool> RefreshTokenAsync();
 
         Task ClearTokenCacheAsync();
     }
@@ -91,25 +93,53 @@ namespace Sqlbi.Bravo.Services
             }
         }
 
-        public async Task AcquireTokenAsync(TimeSpan cancelAfter, bool silentOnly, string? identifier = null)
+        public async Task<bool> RefreshTokenAsync()
+        {
+            var cachedAccount = await _application.GetAccountAsync(Authentication?.Account.HomeAccountId.Identifier).ConfigureAwait(false);
+            if (cachedAccount is null)
+            {
+                return false; // Fail-fast here because no cached token is available
+            }
+
+            try
+            {
+                await AcquireTokenAsync(silent: true).ConfigureAwait(false);
+            }
+            catch (MsalUiRequiredException)
+            {
+                return false;
+            }
+
+            var accountChanged = !cachedAccount.HomeAccountId.Equals(Authentication?.Account.HomeAccountId);
+            if (accountChanged)
+            {
+                throw new BravoUnexpectedException("Account changed after token refresh");
+            }
+
+            return true;
+        }
+
+        public async Task AcquireTokenAsync(bool silent = false, string? loginHint = null, TimeSpan? timeout = null)
         {
             await _tokenSemaphore.WaitAsync();
             try
             {
-                using var cancellationTokenSource = new CancellationTokenSource(cancelAfter);
+                using var cancellationTokenSource = new CancellationTokenSource();
+                if (timeout.HasValue) cancellationTokenSource.CancelAfter(timeout.Value);
 
+                var identifier = Authentication?.Account.HomeAccountId.Identifier;
                 var previousAuthentication = Authentication;
-                Authentication = null;
+                var currentAuthentication = Authentication = await AcquireTokenImplAsync(silent, identifier, loginHint, cancellationTokenSource.Token).ConfigureAwait(false);
 
-                var currentAuthentication = await InternalAcquireTokenAsync(silentOnly, identifier, cancellationTokenSource.Token).ConfigureAwait(false);
-                {
-                    await _pbisettings.Refresh(currentAuthentication, previousAuthentication).ConfigureAwait(false);
+                var accountChanged = !currentAuthentication.Account.HomeAccountId.Equals(previousAuthentication?.Account.HomeAccountId);
+                if (accountChanged)
+                { 
+                    await _pbisettings.Refresh(currentAuthentication.AccessToken).ConfigureAwait(false);
                 }
-                Authentication = currentAuthentication;
 
                 //var impersonateTask = System.Security.Principal.WindowsIdentity.RunImpersonatedAsync(Microsoft.Win32.SafeHandles.SafeAccessTokenHandle.InvalidHandle, async () =>
                 //{
-                //    _authenticationResult = await InternalAcquireTokenAsync(cancellationTokenSource.Token, identifier);
+                //    _authenticationResult = await AcquireTokenImplAsync(...);
                 //});
                 //await impersonateTask.ConfigureAwait(false);
             }
@@ -122,10 +152,11 @@ namespace Sqlbi.Bravo.Services
         /// <summary>
         /// https://docs.microsoft.com/en-us/azure/active-directory/develop/scenario-desktop-acquire-token?tabs=dotnet
         /// </summary>
-        private async Task<AuthenticationResult> InternalAcquireTokenAsync(bool silentOnly, string? identifier, CancellationToken cancellationToken)
+        private async Task<AuthenticationResult> AcquireTokenImplAsync(bool silent, string? identifier, string? loginHint, CancellationToken cancellationToken)
         {
-            // Use account used to signed-in in Windows (WAM). WAM will always get an account in the cache.
-            // So if we want to have a chance to select the accounts interactively, we need to force the non-account
+            Authentication = null;
+
+            // Use account used to signed-in in Windows (WAM). WAM will always get an account in the cache so, if we want to have a chance to select the accounts interactively, we need to force the non-account.
             //identifier = PublicClientApplication.OperatingSystemAccount;
 
             // Use one of the Accounts known by Windows (WAM), if a null account identifier is provided then force WAM to display the dialog with the accounts
@@ -137,9 +168,10 @@ namespace Sqlbi.Bravo.Services
                 var authenticationResult = await _application.AcquireTokenSilent(_pbisettings.GlobalCloudEnvironment.Scopes, account).ExecuteAsync(cancellationToken).ConfigureAwait(false);
                 return authenticationResult;
             }
-            catch (MsalUiRequiredException /* murex */)
+            catch (MsalUiRequiredException)
             {
-                if (silentOnly) throw;
+                // Re-throw exception if silent-only token acquisition was requested
+                if (silent) throw;
                 try
                 {
                     var builder = _application.AcquireTokenInteractive(_pbisettings.GlobalCloudEnvironment.Scopes)
@@ -150,8 +182,8 @@ namespace Sqlbi.Bravo.Services
 
                     if (account is not null)
                         builder.WithAccount(account);
-                    else if (identifier is not null)
-                        builder.WithLoginHint(identifier);
+                    else if (loginHint is not null)
+                        builder.WithLoginHint(loginHint);
 
                     if (_application.IsEmbeddedWebViewAvailable())
                     {
@@ -160,7 +192,7 @@ namespace Sqlbi.Bravo.Services
 
                         var parentWindowHandle = Process.GetCurrentProcess().MainWindowHandle;
 
-                        // *** EmbeddedWebView requiremens ***
+                        // *** EmbeddedWebView requirements ***
                         // Requires VS project OutputType=WinExe and TargetFramework=net5-windows10.0.17763.0
                         // Using 'TargetFramework=net5-windows10.0.17763.0' the framework 'Microsoft.Windows.SDK.NET' is also included as project dependency.
                         // The framework 'Microsoft.Windows.SDK.NET' includes all the WPF(PresentationFramework.dll) and WinForm(System.Windows.Forms.dll) assemblies to the project.
@@ -220,14 +252,11 @@ namespace Sqlbi.Bravo.Services
             GlobalCloudEnvironment = InitializeGlobalCloudEnvironment();
         }
 
-        public async Task Refresh(AuthenticationResult current, AuthenticationResult? previous)
+        /// <remarks>Refresh is required only if the login account has changed</remarks>
+        public async Task Refresh(string accessToken)
         {
-            // refresh required only if the login account has changed
-            if (current.Account.HomeAccountId.Equals(previous?.Account.HomeAccountId) == false)
-            {
-                await RefreshTenantClusterAsync(current.AccessToken).ConfigureAwait(false);
-                //await RefreshLocalClientSitesAsync().ConfigureAwait(false);
-            }
+            await RefreshTenantClusterAsync(accessToken).ConfigureAwait(false);
+            //await RefreshLocalClientSitesAsync().ConfigureAwait(false);
         }
 
         private GlobalService InitializeGlobalService()

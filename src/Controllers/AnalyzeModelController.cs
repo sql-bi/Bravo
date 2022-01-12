@@ -96,9 +96,9 @@ namespace Sqlbi.Bravo.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesDefaultResponseType]
-        public IActionResult GetDatabaseFromPBICloudDataset(PBICloudDataset dataset)
+        public async Task<IActionResult> GetDatabaseFromPBICloudDataset(PBICloudDataset dataset)
         {
-            if (_pbicloudService.IsAuthenticated == false)
+            if (await _pbicloudService.IsSignInRequiredAsync())
                 return Unauthorized();
 
             try
@@ -127,7 +127,7 @@ namespace Sqlbi.Bravo.Controllers
         [ProducesDefaultResponseType]
         public async Task<IActionResult> GetPBICloudDatasets()
         {
-            if (_pbicloudService.IsAuthenticated == false)
+            if (await _pbicloudService.IsSignInRequiredAsync())
                 return Unauthorized();
 
             var onlineWorkspaces = await _pbicloudService.GetWorkspacesAsync();
@@ -210,9 +210,9 @@ namespace Sqlbi.Bravo.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesDefaultResponseType]
-        public IActionResult ExportVpaxFromPBICloudDataset(PBICloudDataset dataset)
+        public async Task<IActionResult> ExportVpaxFromPBICloudDataset(PBICloudDataset dataset)
         {
-            if (_pbicloudService.IsAuthenticated == false)
+            if (await _pbicloudService.IsSignInRequiredAsync())
                 return Unauthorized();
 
             Stream stream;

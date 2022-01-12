@@ -6,6 +6,7 @@ using Sqlbi.Bravo.Infrastructure.Models.PBICloud;
 using Sqlbi.Bravo.Models;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Globalization;
@@ -20,11 +21,11 @@ namespace Sqlbi.Bravo.Services
 {
     public interface IPBICloudService
     {
-        bool IsAuthenticated { get; }
-
         BravoAccount? CurrentAccount { get; }
 
-        Task SignInAsync(bool silentOnly = false, string? identifier = null);
+        Task<bool> IsSignInRequiredAsync();
+
+        Task SignInAsync(string? userPrincipalName = null);
         
         Task SignOutAsync();
 
@@ -60,17 +61,32 @@ namespace Sqlbi.Bravo.Services
 
         public BravoAccount? CurrentAccount { get; private set; }
 
-        public bool IsAuthenticated => CurrentAccount is not null && _authenticationService.Authentication?.ClaimsPrincipal?.Identity is not null;
-
-        public async Task SignInAsync(bool silentOnly = false, string? identifier = null)
+        public async Task<bool> IsSignInRequiredAsync()
         {
-            var previousAccountIdentifier = CurrentAccount?.Identifier;
-            var previousAccountAvatar = CurrentAccount?.Avatar;
+            var refreshSucceeded = await _authenticationService.RefreshTokenAsync().ConfigureAwait(false);
+            if (refreshSucceeded)
+            {
+                await RefreshCurrentAccountAsync().ConfigureAwait(false);
+                // No SignIn required - cached token is valid
+                return false;
+            }
+            else
+            {
+                // SignIn required - an interaction is required with the end user of the application, for instance:
+                // - no refresh token was in the cache
+                // - the user needs to consent or re-sign-in (for instance if the password expired)
+                // - the user needs to perform two factor auth
+                return true;
+            }
+        }
 
+        public async Task SignInAsync(string? loginHint = null)
+        {
             CurrentAccount = null;
+
             try
             {
-                await _authenticationService.AcquireTokenAsync(cancelAfter: AppConstants.MSALSignInTimeout, silentOnly, identifier).ConfigureAwait(false);
+                await _authenticationService.AcquireTokenAsync(silent: false, loginHint, timeout: AppConstants.MSALSignInTimeout).ConfigureAwait(false);
             }
             catch (OperationCanceledException)
             {
@@ -80,59 +96,26 @@ namespace Sqlbi.Bravo.Services
             {
                 throw new SignInException(BravoProblem.SignInMsalExceptionOccurred, mex.ErrorCode, mex);
             }
-            
-            var currentAuthentication = CurrentAuthentication ?? throw new BravoUnexpectedException("CurrentAuthentication is null");
-            var currentAccountChanged = currentAuthentication.Account.HomeAccountId.Identifier.Equals(previousAccountIdentifier) == false;
-            
-            CurrentAccount = new BravoAccount
-            {
-                Identifier = currentAuthentication.Account.HomeAccountId.Identifier,
-                UserPrincipalName = currentAuthentication.Account.Username,
-                Username = currentAuthentication.ClaimsPrincipal.FindFirst((c) => c.Type == "name")?.Value,
-                Avatar = currentAccountChanged ? await GetAccountAvatarAsync().ConfigureAwait(false) : previousAccountAvatar
-            };
+
+           await RefreshCurrentAccountAsync().ConfigureAwait(false);
         }
 
         public async Task SignOutAsync()
         {
             CurrentAccount = null;
+
             await _authenticationService.ClearTokenCacheAsync().ConfigureAwait(false);
-        }
 
-        private async Task<string?> GetAccountAvatarAsync()
-        {
-            _httpClient.DefaultRequestHeaders.Accept.Clear();
-            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", CurrentAuthentication?.AccessToken);
-
-            var requestUri = new Uri(AppConstants.PBICloudApiUri, relativeUri: GetResourceUserPhotoRequestUri.FormatInvariant(CurrentAuthentication?.Account.Username));
-            using var response = await _httpClient.GetAsync(requestUri).ConfigureAwait(false);
-
-            if (response.IsSuccessStatusCode)
+            if (CurrentAuthentication is not null)
             {
-                using var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
-                using var bitmap = new Bitmap(stream);
-                using var memoryStream = new MemoryStream();
-                bitmap.Save(memoryStream, bitmap.RawFormat);
-
-                var imageBase64String = Convert.ToBase64String(memoryStream.ToArray());
-                var imageMimeType = GetMimeType(bitmap);
-
-                var encodedImage = string.Format(CultureInfo.InvariantCulture, "data:{0};base64,{1}", imageMimeType, imageBase64String);
-                return encodedImage;
+                throw new BravoUnexpectedException("CurrentAuthentication is not null");
             }
-
-            //var cachedImage = _authenticationService.CachedUserInfo?.Avatar;
-            //return cachedImage;
-
-            return null;
-
-            static string? GetMimeType(Bitmap bitmap) => ImageCodecInfo.GetImageDecoders().FirstOrDefault((c) => c.FormatID == bitmap.RawFormat.Guid)?.MimeType;
         }
 
         public async Task<IEnumerable<Workspace>> GetWorkspacesAsync()
         {
             _httpClient.DefaultRequestHeaders.Accept.Clear();
-            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", CurrentAuthentication?.AccessToken);
+            _httpClient.DefaultRequestHeaders.Authorization = AuthenticationHeaderValue.Parse(CurrentAuthentication?.CreateAuthorizationHeader());
 
             var requestUri = new Uri(AppConstants.PBICloudApiUri, relativeUri: GetWorkspacesRequestUri);
             using var response = await _httpClient.GetAsync(requestUri).ConfigureAwait(false);
@@ -147,7 +130,7 @@ namespace Sqlbi.Bravo.Services
         public async Task<IEnumerable<SharedDataset>> GetSharedDatasetsAsync()
         {
             _httpClient.DefaultRequestHeaders.Accept.Clear();
-            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", CurrentAuthentication?.AccessToken);
+            _httpClient.DefaultRequestHeaders.Authorization = AuthenticationHeaderValue.Parse(CurrentAuthentication?.CreateAuthorizationHeader());
 
             var requestUri = new Uri(_authenticationService.TenantCluster, relativeUri: GetGallerySharedDatasetsRequestUri);
             using var response = await _httpClient.GetAsync(requestUri).ConfigureAwait(false);
@@ -194,6 +177,52 @@ namespace Sqlbi.Bravo.Services
             var connectionString = ConnectionStringHelper.BuildForPBICloudDataset(serverName, databaseName, CurrentAuthentication?.AccessToken);
 
             return (connectionString, databaseName);
+        }
+
+        private async Task<string?> GetAccountAvatarAsync(string username)
+        {
+            _httpClient.DefaultRequestHeaders.Accept.Clear();
+            _httpClient.DefaultRequestHeaders.Authorization = AuthenticationHeaderValue.Parse(CurrentAuthentication?.CreateAuthorizationHeader());
+
+            var requestUri = new Uri(AppConstants.PBICloudApiUri, relativeUri: GetResourceUserPhotoRequestUri.FormatInvariant(username));
+            using var response = await _httpClient.GetAsync(requestUri).ConfigureAwait(false);
+
+            if (response.IsSuccessStatusCode)
+            {
+                using var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
+                using var bitmap = new Bitmap(stream);
+                using var memoryStream = new MemoryStream();
+                bitmap.Save(memoryStream, bitmap.RawFormat);
+
+                var imageBase64String = Convert.ToBase64String(memoryStream.ToArray());
+                var imageMimeType = GetMimeType(bitmap);
+
+                var encodedImage = string.Format(CultureInfo.InvariantCulture, "data:{0};base64,{1}", imageMimeType, imageBase64String);
+                return encodedImage;
+            }
+
+            //var cachedImage = _authenticationService.CachedUserInfo?.Avatar;
+            //return cachedImage;
+
+            return null;
+
+            static string? GetMimeType(Bitmap bitmap) => ImageCodecInfo.GetImageDecoders().FirstOrDefault((c) => c.FormatID == bitmap.RawFormat.Guid)?.MimeType;
+        }
+
+        private async Task RefreshCurrentAccountAsync()
+        {
+            var currentAuthentication = CurrentAuthentication ?? throw new BravoUnexpectedException("CurrentAuthentication is null");
+            var currentAccountChanged = currentAuthentication.Account.HomeAccountId.Identifier.Equals(CurrentAccount?.Identifier) == false;
+            if (currentAccountChanged)
+            {
+                CurrentAccount = new BravoAccount
+                {
+                    Identifier = currentAuthentication.Account.HomeAccountId.Identifier,
+                    UserPrincipalName = currentAuthentication.Account.Username,
+                    Username = currentAuthentication.ClaimsPrincipal.FindFirst((c) => c.Type == "name")?.Value,
+                    Avatar = await GetAccountAvatarAsync(currentAuthentication.Account.Username).ConfigureAwait(false),
+                };
+            }
         }
     }
 }
