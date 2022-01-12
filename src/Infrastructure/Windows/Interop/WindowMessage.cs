@@ -224,7 +224,7 @@
         //WM_QUERYNEWPALETTE = 783,
         //WM_PALETTEISCHANGING = 784,
         //WM_PALETTECHANGED = 785,
-        //WM_HOTKEY = 786,
+        WM_HOTKEY = 786,
         //WM_PRINT = 791,
         //WM_PRINTCLIENT = 792,
         //WM_APPCOMMAND = 793,

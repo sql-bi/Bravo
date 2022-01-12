@@ -24,14 +24,9 @@ namespace Sqlbi.Bravo.Infrastructure
             {
                 case (uint)WindowMessage.WM_COPYDATA:
                     {
-                        // Restore original size and position only if the window is minimized, otherwise keep current position
-                        if (_window.Minimized) NativeMethods.ShowWindow(hWnd, NativeMethods.SW_RESTORE);
-                        // Regardless of current status, bring to front and activate the window
-                        NativeMethods.SetForegroundWindow(hWnd);
-
                         try
                         {
-                            HandleMsgWmCopyData(copydataPtr: lParam);
+                            HandleMsgWmCopyData(hWnd, copydataPtr: lParam);
                         }
                         catch
                         {
@@ -47,8 +42,13 @@ namespace Sqlbi.Bravo.Infrastructure
             return base.WndProcHooked(hWnd, uMsg, wParam, lParam, id, data);
         }
 
-        private void HandleMsgWmCopyData(IntPtr copydataPtr)
+        private void HandleMsgWmCopyData(IntPtr hWnd, IntPtr copydataPtr)
         {
+            // Restore original size and position only if the window is minimized, otherwise keep current position
+            if (_window.Minimized) NativeMethods.ShowWindow(hWnd, NativeMethods.SW_RESTORE);
+            // Regardless of current status, bring to front and activate the window
+            NativeMethods.SetForegroundWindow(hWnd);
+
             var copyDataObject = Marshal.PtrToStructure(copydataPtr, typeof(User32.COPYDATASTRUCT));
             if (copyDataObject == null)
                 return;
