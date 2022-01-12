@@ -43,8 +43,16 @@ namespace Sqlbi.Bravo.Controllers
         [ProducesDefaultResponseType]
         public IActionResult GetDatabaseFromVpax()
         {
-            var database = VpaxToolsHelper.GetDatabaseFromVpax(stream: Request.Body);
-            return Ok(database);
+            try
+            {
+                var database = VpaxToolsHelper.GetDatabaseFromVpax(stream: Request.Body);
+
+                return Ok(database);
+            }
+            catch(BravoException ex)
+            {
+                return Problem(ex.ProblemDetail, ex.ProblemInstance, StatusCodes.Status400BadRequest);
+            }
         }
 
         /// <summary>
@@ -61,18 +69,17 @@ namespace Sqlbi.Bravo.Controllers
         [ProducesDefaultResponseType]
         public IActionResult GetDatabaseFromPBIDesktopReport(PBIDesktopReport report)
         {
-            Stream stream;
             try
             {
-                stream = _pbidesktopService.ExportVpax(report, includeTomModel: false, includeVpaModel: false, readStatisticsFromData: false, sampleRows: 0);
+                var stream = _pbidesktopService.ExportVpax(report, includeTomModel: false, includeVpaModel: false, readStatisticsFromData: false, sampleRows: 0);
+                var database = VpaxToolsHelper.GetDatabaseFromVpax(stream);
+
+                return Ok(database);
             }
-            catch (TOMDatabaseException ex)
+            catch (BravoException ex)
             {
                 return Problem(ex.ProblemDetail, ex.ProblemInstance, StatusCodes.Status400BadRequest);
             }
-
-            var database = VpaxToolsHelper.GetDatabaseFromVpax(stream);
-            return Ok(database);
         }
 
         /// <summary>
@@ -89,23 +96,22 @@ namespace Sqlbi.Bravo.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesDefaultResponseType]
-        public IActionResult GetDatabaseFromPBICloudDataset(PBICloudDataset dataset)
+        public async Task<IActionResult> GetDatabaseFromPBICloudDataset(PBICloudDataset dataset)
         {
-            if (_pbicloudService.IsAuthenticated == false)
+            if (await _pbicloudService.IsSignInRequiredAsync())
                 return Unauthorized();
 
-            Stream stream;
             try
             {
-                stream = _pbicloudService.ExportVpax(dataset, includeTomModel: false, includeVpaModel: false, readStatisticsFromData: false, sampleRows: 0);
+                var stream = _pbicloudService.ExportVpax(dataset, includeTomModel: false, includeVpaModel: false, readStatisticsFromData: false, sampleRows: 0);
+                var database = VpaxToolsHelper.GetDatabaseFromVpax(stream);
+
+                return Ok(database);
             }
-            catch (TOMDatabaseException ex)
+            catch (BravoException ex)
             {
                 return Problem(ex.ProblemDetail, ex.ProblemInstance, StatusCodes.Status400BadRequest);
             }
-
-            var database = VpaxToolsHelper.GetDatabaseFromVpax(stream);
-            return Ok(database);
         }
 
         /// <summary>
@@ -121,7 +127,7 @@ namespace Sqlbi.Bravo.Controllers
         [ProducesDefaultResponseType]
         public async Task<IActionResult> GetPBICloudDatasets()
         {
-            if (_pbicloudService.IsAuthenticated == false)
+            if (await _pbicloudService.IsSignInRequiredAsync())
                 return Unauthorized();
 
             var onlineWorkspaces = await _pbicloudService.GetWorkspacesAsync();
@@ -204,9 +210,9 @@ namespace Sqlbi.Bravo.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesDefaultResponseType]
-        public IActionResult ExportVpaxFromPBICloudDataset(PBICloudDataset dataset)
+        public async Task<IActionResult> ExportVpaxFromPBICloudDataset(PBICloudDataset dataset)
         {
-            if (_pbicloudService.IsAuthenticated == false)
+            if (await _pbicloudService.IsSignInRequiredAsync())
                 return Unauthorized();
 
             Stream stream;

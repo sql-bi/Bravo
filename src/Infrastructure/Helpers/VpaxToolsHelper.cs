@@ -32,9 +32,17 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
 
         public static TabularDatabase GetDatabaseFromVpax(Stream stream)
         {
-            var vpaxContent = VpaxTools.ImportVpax(stream);
-            var vpaModel = new VpaModel(vpaxContent.DaxModel);
+            var vpaxContent = default(VpaxTools.VpaxContent);
+            try
+            {
+                vpaxContent = VpaxTools.ImportVpax(stream);
+            }
+            catch (FileFormatException)
+            {
+                throw new BravoException(BravoProblem.VpaxFileContainsCorruptedData);
+            }
 
+            var vpaModel = new VpaModel(vpaxContent.DaxModel);
             var databaseETag = TabularModelHelper.GetDatabaseETag(vpaModel.Model.ModelName.Name, vpaModel.Model.Version, vpaModel.Model.LastUpdate);
             var databaseSize = vpaModel.Columns.Sum((c) => c.TotalSize);
 
