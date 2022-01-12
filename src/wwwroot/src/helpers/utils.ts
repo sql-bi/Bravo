@@ -4,16 +4,15 @@
  * https://www.sqlbi.com
 */
 
-import * as sanitizeHtml from 'sanitize-html';
-
 // Utils
 export module Utils {
 
     export type RequestAbortReason = "user" | "timeout";
 
-    export enum ResponseErrorCode {
-        NotFound = 404,
+    export enum ResponseStatusCode {
+        BadRequest = 400,
         NotAuthorized = 401,
+        NotFound = 404,
         Timeout = 408,
         Aborted = 418, // Actual meaning is "I'm a teapot" (April Fool joke)
         InternalError = 500

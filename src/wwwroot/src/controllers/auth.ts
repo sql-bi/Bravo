@@ -6,8 +6,8 @@
 
 import { Dispatchable } from '../helpers/dispatchable';
 import { Utils } from '../helpers/utils';
-import { host } from '../main';
-import { HostError } from './host';
+import { host, optionsController } from '../main';
+import { AppError } from '../model/exceptions';
 
 export interface Account {
     id?: string
@@ -42,14 +42,17 @@ export class Auth extends Dispatchable {
             .then(account => {
                 if (account) {
                     this.account = account;
+                    optionsController.update("customOptions.loggedInOnce", true);
+
                     this.trigger("signedIn", this.account);
 
                 } else {
-                    throw new Error(String(Utils.ResponseErrorCode.Aborted));
+
+                    throw AppError.InitFromResponseError(Utils.ResponseStatusCode.Aborted);
                 }
             })
             .catch(error => {
-                throw HostError.Init(error);
+                throw AppError.InitFromResponseError(Utils.ResponseStatusCode.NotAuthorized);
             });
     }
 

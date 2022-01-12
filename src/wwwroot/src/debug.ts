@@ -16,7 +16,8 @@ class Debug {
     constructor() {
         globalThis.CONFIG = {
             address: "http://127.0.0.1",
-            theme: ThemeType.Auto
+            theme: ThemeType.Auto,
+            version: "debug"
         }
     }
 

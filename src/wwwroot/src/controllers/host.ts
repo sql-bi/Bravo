@@ -9,13 +9,11 @@ import { Dispatchable } from '../helpers/dispatchable';
 import { Dic, Utils } from '../helpers/utils';
 import { auth } from '../main';
 import { DocType } from '../model/doc';
-import { i18n } from '../model/i18n';
-import { errors, strings } from '../model/strings';
+import { AppError, AppErrorType } from '../model/exceptions';
 import { TabularDatabase, TabularMeasure } from '../model/tabular';
 import { Account } from './auth';
 import { FormatDaxOptions, Options } from './options';
 import { ThemeType } from './theme';
-const HTTP = Utils.ResponseErrorCode;
 
 declare global {
     
@@ -32,59 +30,15 @@ interface ApiRequest {
     aborted?: Utils.RequestAbortReason
 }
 
-export class HostError extends Error {
-    code: number;
-    activityId: string;
-    readonly requestAborted: boolean;
-    readonly requestTimedout: boolean;
-    readonly signinRequired: boolean;
-    readonly fatal: boolean;
-
-    constructor(name: string, message?: string, code?: number, activityId?: string) {
-        if (!message) {
-            message = i18n(strings.errorUnspecified);
-        } else if (Number(message) in Object.keys(errors)) {
-            message = i18n(errors[Number(message)]);
-        }
-        if (message.slice(-1) != ".") message += ".";
-        super(message);
-
-        this.name = name;
-
-        this.code = code;
-        this.requestAborted = (this.code == HTTP.Aborted);
-        this.requestTimedout = (this.code == HTTP.Timeout);
-        this.signinRequired = (this.code == HTTP.NotAuthorized);
-        this.fatal = (!this.requestTimedout && !this.requestAborted);
-        
-        this.activityId = activityId;
-    }
-
-    static Init(error: Response | Error, code?: number): HostError {
-        
-        let errorName;
-        let errorCode;
-        if (error instanceof Error) {
-            if (Utils.Request.isAbort(error)) {
-                errorCode = HTTP.Aborted;
-            } else {
-                errorCode = HTTP.InternalError;
-            }
-            errorName = error.name;
-        } else {
-            errorCode = error.status;
-            errorName = "CallError";
-        }
-        if (code) errorCode = code;
-
-        let responseMessage = (error instanceof Error ? error.message : error.statusText);
-        let errorMessage = (errorCode in errors ? i18n(errors[errorCode]) : responseMessage);
-
-        let activityId = ""; //TODO use responseMessage
-
-        return new HostError(errorName, errorMessage, errorCode, activityId);
-    }   
+export interface ProblemDetails {
+    type?: string
+    title?:	string
+    status?: number
+    detail?: string
+    instance?: string
+    traceId?: string
 }
+
 export interface FormatDaxRequest {
     options: FormatDaxOptions
     measures: TabularMeasure[]
@@ -190,31 +144,46 @@ export class Host extends Dispatchable {
         }
 
         return Utils.Request.ajax(`${this.address}${action}`, data, options)
-            .catch((error: Response | Error) => {
+            .catch(async (response: Response | Error) => {
 
-                let code = null;
-                if (error instanceof Error) {
-                    if (Utils.Request.isAbort(error)) {
+                let problem;
+
+                //Catch unhandled errors, like an aborted request
+                if (response instanceof Error) {
+
+                    let status = Utils.ResponseStatusCode.InternalError;
+                    if (Utils.Request.isAbort(response)) {
                         if (requestId in this.requests && this.requests[requestId].aborted == "timeout")
-                            code = HTTP.Timeout;
+                            status = Utils.ResponseStatusCode.Timeout;
+                        else 
+                            status = Utils.ResponseStatusCode.Aborted;
                     }
+
+                    problem = {
+                        status: status,
+                        title: response.message
+                    }
+                } else {
+                    problem = await response.json(); 
                 }
 
-                let hostError = HostError.Init(error, code);
+                let error = AppError.InitFromProblem(problem);
 
-                if (hostError.signinRequired && signinIfRequired) {
-                    this.apiCallCompleted(requestId); //Remove the call timeout because it will be re-initialized
+                if (error.type == AppErrorType.Auth && signinIfRequired) {
+
+                    //Remove the timeout because the call will be re-executed
+                    this.apiCallCompleted(requestId); 
 
                     return auth.signIn()
                         .then(()=>{
                             return this.apiCall(action, data, options, false, timeout);
                         })
                         .catch(error => {
-                            throw hostError;
+                            throw error;
                         });
 
                 } else {
-                    throw hostError;
+                    throw error;
                 }
             })
             .finally(()=>{
@@ -253,7 +222,7 @@ export class Host extends Dispatchable {
 
     /* Authentication */
     signIn(emailAddress?: string) {
-        return <Promise<Account>>this.apiCall("auth/powerbi/SignIn", emailAddress);
+        return <Promise<Account>>this.apiCall("auth/powerbi/SignIn", emailAddress ? { upn: emailAddress } : {});
     }
 
     signOut() {

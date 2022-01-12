@@ -8,10 +8,10 @@ import { host } from "../main";
 import { Dic, Utils } from '../helpers/utils';
 import { TabularDatabase, TabularDatabaseInfo, TabularMeasure } from './tabular';
 import { deepEqual } from 'fast-equals';
-import { HostError, PBICloudDataset, PBIDesktopReport } from '../controllers/host';
-import { i18n } from '../model/i18n'; 
-import { strings } from '../model/strings';
+import { PBICloudDataset, PBIDesktopReport } from '../controllers/host';
+import { AppError } from '../model/exceptions';
 import * as sanitizeHtml from 'sanitize-html';
+import { Md5 } from 'ts-md5/dist/md5';
 
 export enum DocType {
     vpax,
@@ -50,10 +50,9 @@ export class Doc {
             switch (type) {
                 case DocType.vpax:
 
-                    //TODO Return the hash
                     let file = (<File>sourceData);
-                    let fileName = sanitizeHtml(file.name, { allowedTags: [], allowedAttributes: {}});
-                    return `${type}_${Utils.Text.slugify(fileName)}`;
+                    let hash = Md5.hashStr(file.name + file.lastModified + file.size);
+                    return `${type}_${hash}`;
 
                 case DocType.dataset:
                     let dataset = (<PBICloudDataset>sourceData);
@@ -103,6 +102,8 @@ export class Doc {
             }
         }
 
-        return new Promise((resolve, reject) => { reject(HostError.Init(new Error())); });
+        return new Promise((resolve, reject) => { 
+            reject(AppError.InitFromResponseError(Utils.ResponseStatusCode.InternalError)); 
+        });
     }
 }

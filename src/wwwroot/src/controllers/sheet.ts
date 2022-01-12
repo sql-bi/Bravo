@@ -5,13 +5,12 @@
 */
 
 import { Dic, Utils, __ } from '../helpers/utils';
-import { auth } from '../main';
 import { Doc } from '../model/doc';
 import { Scene } from '../view/scene';
 import { ErrorScene } from '../view/scene-error';
 import { LoaderScene } from '../view/scene-loader';
 import { View } from '../view/view';
-import { HostError } from './host';
+import { AppError, AppErrorType } from '../model/exceptions';
 import { Page, PageType } from './page';
 
 export class Sheet extends View { 
@@ -105,20 +104,19 @@ export class Sheet extends View {
                     this.update();
                 }
             })
-            .catch((error: HostError) => {
+            .catch((error: AppError) => {
 
-                const errorSceneId = `${this.id}_${error.name}-error`;
+                const errorSceneId = `${this.id}_error-${error.type}`;
                 if (initial) {
 
                     this.showBlockingScene(
                         new ErrorScene(errorSceneId, this.element, error, null, 
-                            error.fatal ? null : ()=> { this.sync(true); }
+                            error.type == AppErrorType.Abort ? ()=> { this.sync(true); } : null
                         )
                     );
 
                 } else {
-                    console.log("Sync error", error);
-                    if (error.fatal) {
+                    if (error.type != AppErrorType.Abort) {
                         this.showBlockingScene(new ErrorScene(errorSceneId, this.element, error));
                     }
                 }

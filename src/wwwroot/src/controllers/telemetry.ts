@@ -9,7 +9,6 @@ import { optionsController } from '../main';
 import { debug } from '../debug';
 
 export class Telemetry {
-   static INSTRUMENT_KEY = "47a8970c-6293-408a-9cce-5b7b311574d3";
 
    appInsights: ApplicationInsights;
 
@@ -17,7 +16,7 @@ export class Telemetry {
 
       // Configuration options at https://docs.microsoft.com/en-us/azure/azure-monitor/app/javascript
       this.appInsights = new ApplicationInsights({ config: {
-         instrumentationKey: Telemetry.INSTRUMENT_KEY,
+         instrumentationKey: CONFIG.telemetry.instrumentationKey,
          disableCookiesUsage: true,
          disableExceptionTracking: true,
          disablePageUnloadEvents: ["beforeunload", "unload", "visibilitychange", "pagehide"],

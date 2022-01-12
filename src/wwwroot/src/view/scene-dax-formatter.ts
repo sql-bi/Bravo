@@ -3,7 +3,7 @@
  * Copyright (c) SQLBI corp. - All rights reserved.
  * https://www.sqlbi.com
 */
-import { host, optionsController } from "../main";
+import { host, optionsController, telemetry } from "../main";
 
 import * as CodeMirror from 'codemirror';
 import 'codemirror/addon/mode/simple';
@@ -24,8 +24,9 @@ import * as sanitizeHtml from 'sanitize-html';
 import { MainScene } from './scene-main';
 import { LoaderScene } from './scene-loader';
 import { ErrorScene } from './scene-error';
-import { UpdatePBICloudDatasetRequest, UpdatePBIDesktopReportRequest, HostError, PBICloudDataset } from '../controllers/host';
+import { UpdatePBICloudDatasetRequest, UpdatePBIDesktopReportRequest } from '../controllers/host';
 import { SuccessScene } from './scene-success';
+import { AppError } from '../model/exceptions';
 
 export class DaxFormatterScene extends MainScene {
     
@@ -123,7 +124,7 @@ export class DaxFormatterScene extends MainScene {
                     <div class="privacy-explanation">
                         <div class="icon icon-privacy"></div>
                         <p>${i18n(strings.daxFormatterAgreement)} <br>
-                        <a href="#" class="show-data-usage">${i18n(strings.dataUsageLink)}</a>
+                        <span class="show-data-usage link">${i18n(strings.dataUsageLink)}</span>
                         </p>
                     </div>
                     <div class="do-format button disable-on-syncing" disabled>${i18n(strings.daxFormatterFormat)}</div>
@@ -148,7 +149,7 @@ export class DaxFormatterScene extends MainScene {
         this.menu.body.insertAdjacentHTML("beforeend", `
             <div class="toolbar">
 
-                <div class="refresh-preview ctrl icon-refresh" title="${i18n(strings.refreshPreviewCtrlTitle)}" hidden></div>
+                <div class="refresh-preview ctrl icon-refresh disable-on-syncing" title="${i18n(strings.refreshPreviewCtrlTitle)}" hidden></div>
 
                 <select class="zoom">
                     <option value="1" selected>100%</option>
@@ -215,7 +216,7 @@ export class DaxFormatterScene extends MainScene {
                 <div class="gen-preview-action">
                     ${i18n(strings.daxFormatterPreviewDesc)}
                     ${ this.doc.readonly ? `
-                        <a href="#" class="show-data-usage">${i18n(strings.dataUsageLink)}</a>
+                        <div class="show-data-usage link">${i18n(strings.dataUsageLink)}</div>
                     ` : ""}
 
                     <div class="gen-preview-ctrl">
@@ -283,8 +284,6 @@ export class DaxFormatterScene extends MainScene {
                         if (measureKey == daxMeasureName(this.activeMeasure)) {
                             this.updateCodeMirror(element, measure.measure);
                             this.togglePreviewRefresh(true);
-                        } else {
-                            this.togglePreviewRefresh(false);
                         }
                     });
                 })
@@ -397,7 +396,7 @@ export class DaxFormatterScene extends MainScene {
     updateZoom(zoom: number) {
 
         if (!zoom) zoom = 1;
-        optionsController.update("formatter.zoom", zoom);
+        optionsController.update("customOptions.editorZoom", zoom);
 
         let defaultValues = [
             0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2 //, 2.5, 5, 0.1
@@ -448,7 +447,7 @@ export class DaxFormatterScene extends MainScene {
         });
         this.push(formattingScene);
 
-        let errorResponse = (error: HostError) => {
+        let errorResponse = (error: AppError) => {
             if (error.requestAborted) return;
 
             let errorScene = new ErrorScene(Utils.DOM.uniqueId(), this.element.parentElement, error, true);
@@ -480,12 +479,11 @@ export class DaxFormatterScene extends MainScene {
                 host.updateModel(updateRequest, this.doc.type)
                     .then(() => {
 
-                        //TODO Update datasource?
-                        /*if (this.doc.type == DocType.dataset) {
-                            (<PBICloudDataset>this.doc.sourceData).
-                        } else if (this.doc.type == DocType.pbix) {
-                            this.doc.sourceData
-                        }*/
+                       /*
+                       //TODO
+                       this.doc.measures = measures;
+                       this.updateTable(false);
+                        */
 
                         let successScene = new SuccessScene(Utils.DOM.uniqueId(), this.element.parentElement, i18n(measures.length == 1 ? strings.daxFormatterSuccessSceneMessageSingular : strings.daxFormatterSuccessSceneMessagePlural, measures.length), ()=>{
                             this.pop();
@@ -548,6 +546,8 @@ export class DaxFormatterScene extends MainScene {
             <p><a href="https://www.daxformatter.com" target="_blank">www.daxformatter.com</a></p>
         `;
         dialog.show(html);
+
+        telemetry.track("Dax Formatter Privacy Dialog");
     }
     
     applyFilters() {

@@ -3,7 +3,7 @@
  * Copyright (c) SQLBI corp. - All rights reserved.
  * https://www.sqlbi.com
 */
-import { host, themeController } from "../main";
+import { themeController } from "../main";
 import { Dic, Utils, _, __ } from '../helpers/utils';
 import { Doc } from '../model/doc';
 import { i18n } from '../model/i18n'; 
@@ -16,9 +16,6 @@ import { TreemapController, TreemapElement, TreemapScriptableContext } from 'cha
 import * as sanitizeHtml from 'sanitize-html';
 import { ContextMenu } from '../helpers/contextmenu';
 import { MainScene } from './scene-main';
-import { LoaderScene } from './scene-loader';
-import { ErrorScene } from './scene-error';
-import { HostError } from '../controllers/host';
 
 Chart.register(TreemapController, TreemapElement);
 interface TabulatorVpaxModelColumn extends TabularColumn {
@@ -77,10 +74,6 @@ export class AnalyzeModelScene extends MainScene {
                         <div class="expand-all show-if-group ctrl icon-expand-all" title="${i18n(strings.expandAllCtrlTitle)}"></div>
 
                         <div class="collapse-all show-if-group ctrl icon-collapse-all" title="${i18n(strings.collapseAllCtrlTitle)}"></div>
-
-                        ${this.doc.canExport ? `
-                            <div class="save-vpax ctrl icon-save disable-on-syncing" title="${i18n(strings.saveVpaxCtrlTile)}"></div>
-                        ` : ""}
 
                     </div>
 
@@ -627,39 +620,6 @@ export class AnalyzeModelScene extends MainScene {
             let el = <HTMLInputElement>e.currentTarget;
             let selection = el.value.substring(el.selectionStart, el.selectionEnd);
             ContextMenu.editorContextMenu(e, selection, el.value, el);
-        });
-
-        _(".save-vpax", this.element).addEventListener("click", e => {
-            e.preventDefault();
-            let el = <HTMLElement>e.currentTarget;
-            if (el.hasAttribute("disabled")) return;
-
-            el.toggleAttr("disabled", true);
-            if (!this.doc.readonly) {
-
-                let exportingScene = new LoaderScene(Utils.DOM.uniqueId(), this.element.parentElement, i18n(strings.savingVpax), ()=>{
-                    host.abortExportVpax(this.doc.type);
-                });
-                this.push(exportingScene);
-
-                host.exportVpax(<any>this.doc.sourceData, this.doc.type)
-                    .then(data => {
-
-                        const blob = new Blob([data], { type: "octet/stream",  });
-                        Utils.Platform.saveAs(blob, `${Utils.Text.slugify(this.doc.name)}.vpax`);
-
-                        this.pop();
-                    })
-                    .catch((error: HostError) => {
-                        if (error.requestAborted) return;
-
-                        let errorScene = new ErrorScene(Utils.DOM.uniqueId(), this.element.parentElement, error, true);
-                        this.splice(errorScene);
-                    })
-                    .finally(() => {
-                        el.toggleAttr("disabled", false);
-                    });
-            }
         });
 
         _(".filter-unreferenced", this.element).addEventListener("click", e => {

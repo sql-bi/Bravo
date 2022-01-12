@@ -19,6 +19,7 @@ export interface Options {
 export interface ClientOptions {
     editorZoom: number
     previewFormatting: boolean
+    loggedInOnce: boolean
     daxFormatter: FormatDaxOptions
 }
 
@@ -52,6 +53,7 @@ export class OptionsController extends Dispatchable {
         customOptions: {
             editorZoom: 1,
             previewFormatting: false,
+            loggedInOnce: false,
             daxFormatter: {
                 spacingStyle: DaxFormatterSpacingStyle.BestPractice,
                 lineStyle: DaxFormatterLineStyle.LongLine

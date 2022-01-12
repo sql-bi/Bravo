@@ -127,8 +127,12 @@ export class Sidebar extends View {
                 }, e);
                 
             } else {
-                let signinDialog = new PowerBiSignin();
-                signinDialog.show();
+                if (!optionsController.options.customOptions.loggedInOnce) {
+                    let signinDialog = new PowerBiSignin();
+                    signinDialog.show();
+                } else {
+                    auth.signIn();
+                }
             }
         });
 
