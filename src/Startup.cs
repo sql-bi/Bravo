@@ -58,7 +58,7 @@ namespace Sqlbi.Bravo
 #endif
             services.AddHttpClient();
             services.AddWritableOptions<UserSettings>(section: Configuration.GetSection(nameof(UserSettings)), file: "appsettings.json"); //.ValidateDataAnnotations();
-            services.AddOptions<StartupSettings>().Configure((settings) => settings.FromCommandLineArguments()).ValidateDataAnnotations();
+            services.AddOptions<StartupSettings>().Configure((settings) => settings.FromCommandLineArguments()); //.ValidateDataAnnotations();
             services.AddOptions<TelemetryConfiguration>().Configure((configuration) => TelemetryHelper.Configure(configuration));
             services.AddSingleton<IPBICloudAuthenticationService, PBICloudAuthenticationService>();
             services.AddSingleton<IPBIDesktopService, PBIDesktopService>();

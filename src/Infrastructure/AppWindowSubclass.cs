@@ -12,7 +12,12 @@ namespace Sqlbi.Bravo.Infrastructure
         private readonly PhotinoNET.PhotinoWindow _window;
         private readonly IntPtr MSG_HANDLED = new(1);
 
-        public AppWindowSubclass(PhotinoNET.PhotinoWindow window)
+        /// <summary>
+        /// Try to install a WndProc subclass callback to hook messages sent to the selected <see cref="PhotinoNET.PhotinoWindow"/> window
+        /// </summary>
+        public static AppWindowSubclass Hook(PhotinoNET.PhotinoWindow window) => new(window);
+
+        private AppWindowSubclass(PhotinoNET.PhotinoWindow window)
             : base(hWnd: window.WindowHandle)
         {
             _window = window;
@@ -57,7 +62,7 @@ namespace Sqlbi.Bravo.Infrastructure
             if (copyData.cbData == 0)
                 return;
 
-            var message = JsonSerializer.Deserialize<AppInstanceStartedMessage>(json: copyData.lpData);
+            var message = JsonSerializer.Deserialize<AppInstanceStartupMessage>(json: copyData.lpData);
             if (message?.IsExternalTool == true)
             {
                 // TODO: here we are ignoring non-externaltool invocations

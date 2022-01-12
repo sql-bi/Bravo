@@ -42,8 +42,7 @@ namespace Sqlbi.Bravo.Infrastructure
         public void NotifyOwner()
         {
             var startupSettings = StartupSettings.Get();
-
-            var message = new AppInstanceStartedMessage
+            var message = new AppInstanceStartupMessage
             {
                 ParentProcessId = startupSettings.ParentProcessId,
                 ParentProcessName = startupSettings.ParentProcessName,
