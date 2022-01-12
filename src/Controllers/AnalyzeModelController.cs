@@ -43,8 +43,16 @@ namespace Sqlbi.Bravo.Controllers
         [ProducesDefaultResponseType]
         public IActionResult GetDatabaseFromVpax()
         {
-            var database = VpaxToolsHelper.GetDatabaseFromVpax(stream: Request.Body);
-            return Ok(database);
+            try
+            {
+                var database = VpaxToolsHelper.GetDatabaseFromVpax(stream: Request.Body);
+
+                return Ok(database);
+            }
+            catch(BravoException ex)
+            {
+                return Problem(ex.ProblemDetail, ex.ProblemInstance, StatusCodes.Status400BadRequest);
+            }
         }
 
         /// <summary>
@@ -61,18 +69,17 @@ namespace Sqlbi.Bravo.Controllers
         [ProducesDefaultResponseType]
         public IActionResult GetDatabaseFromPBIDesktopReport(PBIDesktopReport report)
         {
-            Stream stream;
             try
             {
-                stream = _pbidesktopService.ExportVpax(report, includeTomModel: false, includeVpaModel: false, readStatisticsFromData: false, sampleRows: 0);
+                var stream = _pbidesktopService.ExportVpax(report, includeTomModel: false, includeVpaModel: false, readStatisticsFromData: false, sampleRows: 0);
+                var database = VpaxToolsHelper.GetDatabaseFromVpax(stream);
+
+                return Ok(database);
             }
-            catch (TOMDatabaseException ex)
+            catch (BravoException ex)
             {
                 return Problem(ex.ProblemDetail, ex.ProblemInstance, StatusCodes.Status400BadRequest);
             }
-
-            var database = VpaxToolsHelper.GetDatabaseFromVpax(stream);
-            return Ok(database);
         }
 
         /// <summary>
@@ -94,18 +101,17 @@ namespace Sqlbi.Bravo.Controllers
             if (_pbicloudService.IsAuthenticated == false)
                 return Unauthorized();
 
-            Stream stream;
             try
             {
-                stream = _pbicloudService.ExportVpax(dataset, includeTomModel: false, includeVpaModel: false, readStatisticsFromData: false, sampleRows: 0);
+                var stream = _pbicloudService.ExportVpax(dataset, includeTomModel: false, includeVpaModel: false, readStatisticsFromData: false, sampleRows: 0);
+                var database = VpaxToolsHelper.GetDatabaseFromVpax(stream);
+
+                return Ok(database);
             }
-            catch (TOMDatabaseException ex)
+            catch (BravoException ex)
             {
                 return Problem(ex.ProblemDetail, ex.ProblemInstance, StatusCodes.Status400BadRequest);
             }
-
-            var database = VpaxToolsHelper.GetDatabaseFromVpax(stream);
-            return Ok(database);
         }
 
         /// <summary>

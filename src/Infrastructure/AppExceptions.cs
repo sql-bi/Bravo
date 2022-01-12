@@ -116,5 +116,10 @@ namespace Sqlbi.Bravo.Infrastructure
         /// Sign-in request was canceled because the configured timeout period elapsed prior to completion of the operation
         /// </summary> 
         SignInMsalTimeoutExpired = 401,
+
+        /// <summary>
+        /// VPAX file format is not valid or file contains corrupted data
+        /// </summary> 
+        VpaxFileContainsCorruptedData = 500,
     }
 }
