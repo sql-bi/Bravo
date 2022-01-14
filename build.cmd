@@ -1,4 +1,4 @@
 @echo off
 
-dotnet build Sqlbi.Bravo.sln
-dotnet test .\src\Sqlbi.Bravo.Tests\Sqlbi.Bravo.Tests.csproj
+dotnet build Bravo.sln
+dotnet test .\test\Bravo.Tests\Bravo.Tests.csproj

@@ -1,0 +1,199 @@
+// main: main.less
+.sheet {
+    height: 100%;
+}
+
+.page {
+    height: 100%;
+    position: relative;
+}
+
+.scene {
+    
+    overflow: auto;
+    padding: 30px 50px;
+    height: calc(100% - 60px);
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: calc(100% - 100px);
+    background: @back-color;
+
+    .dark & {
+        background: @back-color-dark;
+    }
+
+    &.entering, &.exiting {
+        animation-duration: .3s;
+        animation-name: appearing;
+        animation-timing-function: ease-in-out;
+    }
+
+    &.exiting {
+        animation-duration: .3s;
+        animation-name: sliding; //appearing
+        animation-direction: reverse;
+        animation-timing-function: ease-out;
+    }
+
+    header {
+
+        .flex(1 1 100%);
+        .flexbox(flex-start);
+
+        h1 {
+            margin:0;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
+            max-width: calc(100% - 70px);
+            &:before {
+                margin-right: 15px;
+                font-size: 1.3em
+            }
+        }
+        .toolbar {
+            .flex(0 0 auto);
+            margin-top: 10px;
+            margin-left: auto;
+
+            .ctrl {
+                margin: 0 0 0 10px;
+                &:before {
+                    font-size: 20px;
+                    margin: 0
+                }
+
+            }
+
+            .readonly {
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                color: @disabled-color;
+                font-weight: 500;
+                font-size: 12px;
+
+                .dark & {
+                    color: @disabled-color-dark;
+                }
+            }
+        }
+    }
+
+    .go-back {
+        position: absolute;
+        left: 20px;
+        top: 20px;
+        margin: 0;
+        display: inline-block;
+        &:before {
+            margin: 0;
+            font-size: 20px;
+        }
+    }
+    .scene-content {
+        height: calc(100% - 70px);
+
+        .summary {
+            .flexbox(center);
+            margin: 10px 0 30px 0;
+            font-size: 20px;
+            line-height: 1.3;
+        }
+    }
+
+    .syncing & {
+        .ctrl-sync {
+            animation: rotate 2s infinite linear;
+            color: @disabled-color !important;
+            &:hover {
+                background: none !important;
+            }
+            &:active {
+                transform: none;
+                opacity: 1 !important;
+            }
+            .dark & {
+                color: @disabled-color-dark !important;
+            }
+    
+        }
+    }
+
+    .error {
+        .flexbox(center, center, column);
+        height: 100%;
+        text-align: center;
+        font-size: 16px;
+
+        .icon-bravo-error {
+            margin: 0 0 20px 0;
+            &:before {
+                font-size: 160px;
+                line-height: 1;
+                margin: 0;
+            }
+        }
+        .icon-alert {
+            &:before {
+                font-size: 100px;
+                line-height: 1;
+                margin: 0;
+            }
+        }
+
+        h1 {
+            margin:0 0 20px 0;
+            &:before {
+                content: "" !important; 
+            }
+        }
+    }
+
+    .success {
+        height: 100%;
+
+        .success-message {
+
+            height: calc(100% - 35px);
+            .flexbox(center, center, column);
+            font-size: 25px;
+            line-height: 1.5;
+            margin: 0 auto;
+            max-width: 500px;
+            text-align: center;
+
+            .icon-completed {
+                &:before {
+                    font-size: 130px;
+                    display: block;
+                    margin: 0;
+                    color: @good-color;
+                }
+            }
+        }
+        .dismiss {
+            float: right;
+        }
+    }
+}
+
+@keyframes appearing {
+    0% {
+        opacity:0;
+    }
+    100% {
+        opacity: 1;
+    }
+  }
+
+  @keyframes sliding {
+    0% {
+        transform: translateX(100%);
+        opacity: 0.4;
+    }
+    100% {
+        transform: translateX(0);
+        opacity: 1;
+    }
+  }

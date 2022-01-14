@@ -1,0 +1,188 @@
+// main: main.less
+.contextualMenu{
+    font-size: 14px;
+    position: absolute;
+    z-index: 9999999999999;
+    padding: 8px 0;
+    .shadow(0, 2px, 8px, 0, rgba(0,0,0,0.4));
+    .border-radius(4px);
+    margin:0;
+    list-style: none;
+    background: @context-menu-back-color;
+    color: @context-menu-color;
+
+    .dark & {
+        background-color: @context-menu-back-color-dark;
+        color: @context-menu-color-dark;
+    }
+}
+
+/* Menu seperator item */
+.contextualMenuSeparator{
+    display: block;
+    position: relative;
+    padding: 5px 5px;
+}
+    .contextualMenuSeparator span{
+        display: block;
+        width:100%;
+        height:1px;
+        background: @border-color;
+
+        .dark & { background-color: @border-color-dark;}
+    }
+
+/* Default menu item */
+.contextualMenuItemOuter {
+    position: relative;
+}
+.contextualMenuItem {
+    .flexbox(center);
+    padding: 4px 8px;
+    cursor: default;
+    margin: 0 4px;
+    .border-radius();
+
+    &:not(.static):hover{
+        background: @control-back-color;
+
+        .dark & {
+            background: @control-back-color-dark;
+        }
+    }
+    &.static {
+        color: lighten(@context-menu-color, 10%);
+
+        .dark & { 
+            color: darken(@context-menu-color-dark, 10%);
+        }
+    }
+    .contextualMenuItemIcon{
+        .flexbox(center);
+        img {
+            width:16px;
+            height: 16px;
+        }
+        &:before {
+            font-size: 20px;
+            margin: 0;
+        }
+    }
+    .contextualMenuItemTitle{
+        text-align: left;
+        padding: 0px 0px 0px 7px;
+    }
+    .contextualMenuItemTip{
+        margin-left: auto;
+        padding: 0px 15px 0 50px;
+        text-align: right;
+        font-size: 12px;
+    }
+    .contextualMenuItemOverflow{
+        float: right;
+        width:16px;
+        height: 16px;
+        padding: 1px 0px 0px 7px;
+    
+
+        .contextualMenuItemOverflowLine{
+            display: block;
+            height: 1px;
+            margin: 3px 2px;
+        }
+        &.hidden{
+            display: none;
+        }
+    }    
+    &.disabled {
+        opacity: 0.4;
+        &:hover{
+            background: none;
+        }
+    }
+}
+
+/* Submenu item */ 
+.contextualSubMenu{
+    padding: 0;
+    margin: 0;
+    .border-radius(4px);
+    width: 100%;
+    height: auto;
+    max-height: 1000px;
+    transition: max-height 0.5s;
+    overflow: hidden;
+
+    background: @context-menu-back-color;
+    color: @context-menu-color;
+
+    .dark & {
+        background-color: @context-menu-back-color-dark;
+        color: @context-menu-color-dark;
+    }
+
+    .contextualMenuItem:hover{
+        background: darken(@context-menu-back-color, 10%);
+
+        .dark & {
+            background: lighten(@context-menu-back-color-dark, 10%);
+        }
+    }
+}
+.contextualMenuHidden{
+    max-height: 0;
+}
+
+/* Multi item button */
+.contextualMultiItem{
+    display: flex;
+    position: relative;
+}
+    .contextualMultiItem .contextualMenuItemOuter{
+        flex: auto;
+        display: inline-block;
+    }
+
+/* Hover menu */
+.contextualHoverMenuOuter{
+    position: relative;
+}
+.contextualHoverMenuItem{
+    display: block;
+    padding: 5px 8px;
+    cursor: default;
+}
+.contextualHoverMenuItem.disabled{
+    opacity: 0.4;
+}
+.contextualHoverMenuItem.disabled:hover{
+    background: none;
+}
+.contextualHoverMenuItem:hover{
+    background: var(--contextualHover);
+}
+
+.contextualHoverMenuOuter > .contextualHoverMenu{
+    display: none;
+}
+.contextualHoverMenuOuter:hover > .contextualHoverMenu{
+    display: block;
+    position: absolute;
+    left: 100%;
+    top: 0;
+    
+    .shadow(0, 2px, 5px, 0, rgba(0,0,0,0.4));
+    .border-radius(4px);
+    padding: 8px 0;
+    width: 100%;
+    z-index: 1000;
+    list-style: none;
+
+    background: @context-menu-back-color;
+    color: @context-menu-color;
+
+    .dark & {
+        background-color: @context-menu-back-color-dark;
+        color: @context-menu-color-dark;
+    }
+}

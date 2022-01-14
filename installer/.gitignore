@@ -1,4 +1,6 @@
-*.wixobj
-*.wixpdb
-*.msi
-Components.wxs
+﻿!wix/bin
+!wix/bin/*
+wix/**/*.wixobj
+wix/**/*.wixpdb
+wix/**/*.msi
+wix/**/Components.wxs
