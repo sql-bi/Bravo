@@ -1,256 +1,267 @@
 // main: main.less
 
 .dialog {
-    position:absolute;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    right: 0;
-    z-index: 99999;
-    overflow: hidden;
-    .flexbox(center, center);
-    transform:scale(1);
+		position:absolute;
+		top: 0;
+		left: 0;
+		bottom: 0;
+		right: 0;
+		z-index: 99999;
+		overflow: hidden;
+		.flexbox(center, center);
+		transform:scale(1);
 
-    .dialog-back {
-        position: absolute;
-        top: 0;
-        left: 0;
-        bottom: 0;
-        right: 0;
-        background: @back-color;
-        opacity: 0.4;
-        z-index: -1;
-        animation: fadeIn .5s cubic-bezier(0.165, 0.840, 0.440, 1.000) forwards;
-    }
-    .dialog-front {
-        background: @window-back-color;
-        padding: 10px;
-        .shadow(0, 0, 8px, 0, rgba(0,0,0,0.2));
-        .border-radius(8px);
-        min-width: 350px;
-        max-width: 600px;
-        opacity:0;
-        animation: scaleUp .3s cubic-bezier(0.165, 0.840, 0.440, 1.000) forwards;
+		.dialog-back {
+				position: absolute;
+				top: 0;
+				left: 0;
+				bottom: 0;
+				right: 0;
+				background: @back-color;
+				opacity: 0.4;
+				z-index: -1;
+				animation: fadeIn .5s cubic-bezier(0.165, 0.840, 0.440, 1.000) forwards;
+		}
+		.dialog-front {
+				background: @window-back-color;
+				padding: 10px;
+				.shadow(0, 0, 8px, 0, rgba(0,0,0,0.2));
+				.border-radius(8px);
+				min-width: 350px;
+				max-width: 600px;
+				opacity:0;
+				animation: scaleUp .3s cubic-bezier(0.165, 0.840, 0.440, 1.000) forwards;
 
-        header {
-            .flexbox(flex-start, space-between);
-            padding-left: 30px;
+				header {
+						.flexbox(flex-start, space-between);
+						padding-left: 30px;
 
-            h1 { 
-                margin:30px 0 0 0;
-                font-size: 30px;
-                //font-weight: 600;
+						h1 { 
+								margin:30px 0 0 0;
+								font-size: 30px;
+								//font-weight: 600;
 
-                &:before {
-                  margin-right: 5px;
-                  font-size: 1.3em;
-                  //font-weight: normal;
+								&:before {
+									margin-right: 5px;
+									font-size: 1.3em;
+									//font-weight: normal;
 
-              }
-            }
-        }
-        .content {
-            padding: 30px;
-        }
+							}
+						}
+				}
+				.content {
+						padding: 30px;
+				}
 
-        footer {
-            .flexbox(center, flex-end);
-            padding: 0 20px 20px 30px;
+				footer {
+						.flexbox(center, flex-end);
+						padding: 0 20px 20px 30px;
 
-            .button {
-                margin:0 5px
-            }
-        }
-    }
+						.button {
+								margin:0 5px
+						}
+				}
+		}
 
-    .dark & {
+		.dark & {
 
-        .dialog-back {
-            background-color: @back-color-dark;
-        }
-        .dialog-front {
-            background-color: @window-back-color-dark;
-            .shadow(0, 0, 8px, 0, rgba(0,0,0,0.6));
-        }
-    }
+				.dialog-back {
+						background-color: @back-color-dark;
+				}
+				.dialog-front {
+						background-color: @window-back-color-dark;
+						.shadow(0, 0, 8px, 0, rgba(0,0,0,0.6));
+				}
+		}
 
-    &.out {
-        animation: quickScaleDown 0s .5s linear forwards;
-        .dialog-back {
-            animation: fadeOut .5s cubic-bezier(0.165, 0.840, 0.440, 1.000) forwards;
-        }
-        .dialog-front {
-            animation: scaleDown .5s cubic-bezier(0.165, 0.840, 0.440, 1.000) forwards;
-        }
-    }
+		&.out {
+				animation: quickScaleDown 0s .5s linear forwards;
+				.dialog-back {
+						animation: fadeOut .5s cubic-bezier(0.165, 0.840, 0.440, 1.000) forwards;
+				}
+				.dialog-front {
+						animation: scaleDown .5s cubic-bezier(0.165, 0.840, 0.440, 1.000) forwards;
+				}
+		}
 
-    .list {
-        margin-top: 20px;
-        height: 250px;
-        position: relative;
-        overflow: auto;
+		.list {
+				margin-top: 20px;
+				height: 250px;
+				position: relative;
+				overflow: auto;
 
-        .notice {
-          width: 100%;
-          height: 100%;
-          text-align: center;
-          .flexbox(center, center);
+				.notice {
+					width: 100%;
+					height: 100%;
+					text-align: center;
+					.flexbox(center, center);
 
-          .button {
-       
-            margin: 10px;
-          }
+					.button {
+			 
+						margin: 10px;
+					}
 
-        }
-        
+				}
+				
 
-        table, td, th {
-          background: none !important;
-        }
+				table, td, th {
+					background: none !important;
+				}
 
-        .tabulator .tabulator-header {
-          background: none !important;
-        }
+				.tabulator .tabulator-header {
+					background: none !important;
+				}
 
-    }
+		}
 }
 
 #dialog-connect {
 
-    .dialog-front {
-        width: 600px;
-    }
-    .browse {
-        margin:10px;
-    }
+	.dialog-front {
+		width: 700px;
+		max-width: 700px;
+	}
+	.browse {
+		margin:10px;
+	}
 
-    #body-connect-pbi {
-      .search {
-        margin-bottom: 10px;
-        width: 190px;
-      }
-      .tabulator {
-        height: calc(100% - 45px);
-      }
-    }
+	#body-connect-pbi {
+		.toolbar {
+			.flexbox(center);
+			margin-bottom: 10px;
 
-    #body-open-vpx {
-      .drop-area {
-        .flexbox(center, center, column);
-        text-align: center;
-        border-color: transparent;
-        outline: 2px dashed @border-color;
+			.search {
+				width: 270px;
+			}
 
-        &.highlight {
-          
-          outline-color: darken(@border-color, 20%);
-          background-color: darken(@window-back-color-alt, 10%);
-        }
+			.refresh {
+				margin-left: auto;
 
-        .dark & {
-          outline-color: @border-color-dark;
-          &.highlight {
-            outline-color: lighten(@border-color-dark, 20%);
-            background-color: lighten(@window-back-color-alt-dark, 10%);
-          }
-        }
+				&:before {
+					font-size: 22px;
+				}
+			}
+		}
+		.tabulator {
+			height: calc(100% - 45px);
+		}
+	}
 
-        p {
-          color: @notice-color;
-          font-size: 14px;
-          line-height: 1.5;
-        }
+	#body-open-vpax {
+		.drop-area {
+			.flexbox(center, center, column);
+			text-align: center;
+			border-color: transparent;
+			outline: 2px dashed @border-color;
 
+			&.highlight {
+				
+				outline-color: darken(@border-color, 20%);
+				background-color: darken(@window-back-color-alt, 10%);
+			}
 
-      }
-    }
+			.dark & {
+				outline-color: @border-color-dark;
+				&.highlight {
+					outline-color: lighten(@border-color-dark, 20%);
+					background-color: lighten(@window-back-color-alt-dark, 10%);
+				}
+			}
 
-    
+			p {
+				color: @notice-color;
+				font-size: 14px;
+				line-height: 1.5;
+			}
+
+		}
+	}
+
 }
 #dialog-data-usage {
-  img {
-    float: right;
-    width: 140px;
-    height: auto;
-    margin: 10px 0 10px 50px;
-  }
+	img {
+		float: right;
+		width: 140px;
+		height: auto;
+		margin: 10px 0 10px 50px;
+	}
 } 
 #dialog-power-bi-signin {
 
-  .dialog-front {
-    width: 400px;
+	.dialog-front {
+		width: 400px;
 
-    input[type=email] {
-      padding: 8px 6px;
-      width: calc(100% - 12px);
-      border: 1px solid @input-border-color;
-      background-color: @input-back-color;
+		input[type=email] {
+			padding: 8px 6px;
+			width: calc(100% - 12px);
+			border: 1px solid @input-border-color;
+			background-color: @input-back-color;
 
-      .dark & { 
-          border: @input-border-color-dark;
-          background-color: darken(@input-back-color-dark, 10%);
-      }
+			.dark & { 
+					border: @input-border-color-dark;
+					background-color: darken(@input-back-color-dark, 10%);
+			}
 
-      &:invalid {
-        border-color: @error-color;
-      }
-      
-    }
-  }
+			&:invalid {
+				border-color: @error-color;
+			}
+			
+		}
+	}
 }
 
-  
+	
 @keyframes fadeIn {
-    0% {
-      background:rgba(0,0,0,.0);
-    }
-    100% {
-      background:rgba(0,0,0,.7);
-    }
-  }
-  
-  @keyframes fadeOut {
-    0% {
-      background:rgba(0,0,0,.7);
-    }
-    100% {
-      background:rgba(0,0,0,.0);
-    }
-  }
-  
-  @keyframes scaleUp {
-    0% {
-      transform:scale(.8) translateY(1000px);
-      opacity:0;
-    }
-    100% {
-      transform:scale(1) translateY(0px);
-      opacity:1;
-    }
-  }
-  
-  @keyframes scaleDown {
-    0% {
-      transform:scale(1) translateY(0px);
-      opacity:1;
-    }
-    100% {
-      transform:scale(.8) translateY(1000px);
-      opacity:0;
-    }
-  }
+		0% {
+			background:rgba(0,0,0,.0);
+		}
+		100% {
+			background:rgba(0,0,0,.7);
+		}
+	}
+	
+	@keyframes fadeOut {
+		0% {
+			background:rgba(0,0,0,.7);
+		}
+		100% {
+			background:rgba(0,0,0,.0);
+		}
+	}
+	
+	@keyframes scaleUp {
+		0% {
+			transform:scale(.8) translateY(1000px);
+			opacity:0;
+		}
+		100% {
+			transform:scale(1) translateY(0px);
+			opacity:1;
+		}
+	}
+	
+	@keyframes scaleDown {
+		0% {
+			transform:scale(1) translateY(0px);
+			opacity:1;
+		}
+		100% {
+			transform:scale(.8) translateY(1000px);
+			opacity:0;
+		}
+	}
 
-  @keyframes quickScaleDown {
-    0% {
-      transform:scale(1);
-    }
-    99.9% {
-      transform:scale(1);
-    }
-    100% {
-      transform:scale(0);
-    }
-  }
+	@keyframes quickScaleDown {
+		0% {
+			transform:scale(1);
+		}
+		99.9% {
+			transform:scale(1);
+		}
+		100% {
+			transform:scale(0);
+		}
+	}
 
-  
-  
+	
+	

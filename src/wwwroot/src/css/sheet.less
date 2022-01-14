@@ -65,18 +65,6 @@
                 }
 
             }
-
-            .readonly {
-                text-transform: uppercase;
-                letter-spacing: 1px;
-                color: @disabled-color;
-                font-weight: 500;
-                font-size: 12px;
-
-                .dark & {
-                    color: @disabled-color-dark;
-                }
-            }
         }
     }
 
@@ -139,6 +127,18 @@
                 font-size: 100px;
                 line-height: 1;
                 margin: 0;
+            }
+        }
+        .error-trace {
+
+            .flexbox(center);
+
+            .copy-error {
+                margin:0 0 0 15px;
+                &:before {
+                    margin:0;
+                    font-size: 24px;
+                }
             }
         }
 

@@ -9,6 +9,7 @@ import { _ } from '../helpers/utils';
 import { i18n } from '../model/i18n'; 
 import { strings } from '../model/strings';
 import { BackableScene } from './scene-back';
+import { optionsController } from '../main';
 
 export class ErrorScene extends BackableScene {
 
@@ -26,6 +27,9 @@ export class ErrorScene extends BackableScene {
     
     render() {
         super.render();
+
+        let hasTraceId = this.error.hasTraceId;
+        if (optionsController.options.telemetryEnabled && !this.error.traceId) hasTraceId = false;
         
         let html = `
             <div class="error">
@@ -35,10 +39,12 @@ export class ErrorScene extends BackableScene {
 
                 <p>${this.error.message}</p>
 
-                ${this.error.traceId ? `
-                    <p><strong>${strings.traceId}:</strong> ${this.error.traceId}</p>
-                ` : ""}
+                <div class="error-trace">
+                    ${hasTraceId ? `<div><strong>${strings.traceId}:</strong> ${this.error.traceId ? this.error.traceId : i18n(strings.traceIdEnableMessage)}</div>` : ""}
 
+                    <div class="copy-error ctrl icon-copy" title="${strings.copyErrorCtrlTitle}"></div>
+                </div>
+            
                 ${ this.onRetry ? `
                     <p><div class="retry-call button button-alt">${i18n(strings.errorRetry)}</div></p>
                 ` : "" }
@@ -46,6 +52,11 @@ export class ErrorScene extends BackableScene {
         `;
 
         this.element.insertAdjacentHTML("beforeend", html); 
+
+        _(".copy-error", this.element).addEventListener("click", e =>{
+            e.preventDefault();
+            navigator.clipboard.writeText(this.error.getString());
+        });
 
         if (this.onRetry){
             _(".retry-call", this.element).addEventListener("click", e => {

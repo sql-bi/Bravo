@@ -110,6 +110,14 @@ export class Tabs extends View {
         }
     }
 
+    updateTab(id: string, title: string) {
+        let tabEl = _(`[data-tab-id=${id}]`, this.chromeTabsElement);
+        if (tabEl) {
+            this.chromeTabs.updateTab(tabEl, { title: title });
+            this.chromeTabs.layoutTabs();
+        }
+    }
+
     changeTab(id: string) {
         let tabEl = _(`[data-tab-id=${id}]`, this.chromeTabsElement);
         if (tabEl)

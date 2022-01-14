@@ -77,15 +77,20 @@
                     width: calc(100% - 10px);
                     padding: 0 5px;
                     .flexbox(center, space-between);
-                
-                    .refresh-preview {
-                        &:before {
-                            font-size: 18px;
-                        }
-                    }
+
                     .zoom {
                         font-size: 14px;
                         margin-left: auto;
+                    }
+
+                    .preview-toolbar {
+                        .flexbox(center);
+
+                        .ctrl {
+                            &:before {
+                                font-size: 22px;
+                            }
+                        }
                     }
                 }
                 .measure-name {
@@ -134,11 +139,11 @@
                 }
 
                 .gen-preview-ctrl {
-                    margin-top: 20px;
+                    margin: 20px 0;
                     .flexbox(center, center);
 
                     .button {
-                        margin: 0 10px;
+                        margin: 0 5px;
                     }
                 }
             }

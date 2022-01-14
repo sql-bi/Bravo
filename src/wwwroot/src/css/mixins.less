@@ -188,6 +188,33 @@
         }
     }
 }
+.badge {
+    display: table;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1;
+    text-transform: uppercase;
+    background-color: @badge-back-color;
+    color: @badge-color;
+    padding: 4px 8px;
+    .border-radius(4px);
+    border: 1px solid darken(@badge-back-color, 10%);
+    cursor: default;
+
+    &.readonly {
+        background-color: @readonly-badge-back-color;
+        color: @readonly-badge-color;
+        border-color: darken(@readonly-badge-back-color, 10%);
+    }
+    &.orphan {
+        background-color: @orphan-badge-back-color;
+        color: @orphan-badge-color;
+        border-color: darken(@orphan-badge-back-color, 10%);
+    }
+
+
+}
+
 .wait {
     cursor: wait !important;
   }

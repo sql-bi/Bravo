@@ -83,7 +83,7 @@ export class ConnectRemote extends ConnectMenuItem {
                     { 
                         field: "name", 
                         title: i18n(strings.connectDatasetsTableNameCol),
-                        
+                        width: 280,
                         formatter: (cell) => {
                             let dataset = <PBICloudDataset>cell.getData();
                             return `<span class="icon-dataset">${dataset.name}</span>`;
@@ -91,29 +91,29 @@ export class ConnectRemote extends ConnectMenuItem {
                     },
                     { 
                         field: "endorsement", 
-                        width: 100,
+                        width: 125,
                         title: i18n(strings.connectDatasetsTableEndorsementCol), 
                         formatter: (cell) => {
                             let dataset = <PBICloudDataset>cell.getData();
-                            return (dataset.endorsement == PBICloudDatasetEndorsementstring.None ? '' : `<span class="endorsement-badge icon-${dataset.endorsement.toLowerCase()}">${dataset.endorsement}</span>`);
+                            return (!dataset.endorsement || dataset.endorsement == PBICloudDatasetEndorsementstring.None ? '' : `<span class="endorsement-badge icon-${dataset.endorsement.toLowerCase()}">${dataset.endorsement}</span>`);
                         },
                         sorter: (a, b, aRow, bRow, column, dir, sorterParams) => {
                             let datasetA = <PBICloudDataset>aRow.getData();
                             let datasetB = <PBICloudDataset>bRow.getData();
-                            let colA = (datasetA.endorsement == PBICloudDatasetEndorsementstring.None ? "": datasetA.endorsement);
-                            let colB = (datasetB.endorsement == PBICloudDatasetEndorsementstring.None ? "": datasetB.endorsement);
+                            let colA = (!datasetA.endorsement || datasetA.endorsement == PBICloudDatasetEndorsementstring.None ? "": datasetA.endorsement);
+                            let colB = (!datasetB.endorsement || datasetB.endorsement == PBICloudDatasetEndorsementstring.None ? "": datasetB.endorsement);
                             return (colA > colB ? 1 : -1);
                         }
                     },
                     { 
                         field: "owner", 
-                        width: 90,
+                        width: 100,
                         title: i18n(strings.connectDatasetsTableOwnerCol),
                         cssClass: "column-owner",
                     },
                     { 
                         field: "workspaceName", 
-                        width: 90,
+                        width: 100,
                         title: i18n(strings.connectDatasetsTableWorkspaceCol)
                     },
                 ],
@@ -164,8 +164,11 @@ export class ConnectRemote extends ConnectMenuItem {
 
                 let html = `
                     ${datasets.length ? `
-                        <div class="search">
-                            <input type="search" placeholder="${i18n(strings.searchDatasetPlaceholder)}">
+                        <div class="toolbar">
+                            <div class="search">
+                                <input type="search" placeholder="${i18n(strings.searchDatasetPlaceholder)}">
+                            </div>
+                            <div class="refresh ctrl icon-refresh" title="${i18n(strings.refreshCtrlTitle)}"></div> 
                         </div>
                     ` : ""}
                     <div id="${ tableId }"></div>
@@ -187,6 +190,12 @@ export class ConnectRemote extends ConnectMenuItem {
                     ContextMenu.editorContextMenu(e, selection, el.value, el);
                 });
 
+                _(".refresh", this.element).addEventListener("click", e => {
+                    e.preventDefault();
+                    this.tableDestroy();
+                    this.getRemoteDatasets();
+                });
+
                 if (datasets.length) {
                     this.renderTable(tableId, datasets);
                 } else {
@@ -196,9 +205,7 @@ export class ConnectRemote extends ConnectMenuItem {
             .catch(error => {
 
                 this.renderError(strings.errorDatasetsListing, ()=>{
-                    //auth.signIn().then(()=>{
-                        this.getRemoteDatasets();
-                    //});
+                    this.getRemoteDatasets();
                 }); 
             })
             .finally(() => {
@@ -206,11 +213,15 @@ export class ConnectRemote extends ConnectMenuItem {
             });
     }
 
-    destroy() {
+    tableDestroy() {
         if (this.table) {
             this.table.destroy();
             this.table = null;
         }
+    }
+
+    destroy() {
+        this.tableDestroy();
         super.destroy();
     }
 

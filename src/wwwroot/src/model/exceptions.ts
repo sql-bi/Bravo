@@ -14,12 +14,14 @@ export enum AppProblem {
     TOMDatabaseDatabaseNotFound = 101,
     TOMDatabaseUpdateFailed = 102,
     TOMDatabaseUpdateConflictMeasure = 103,
+    TOMDatabaseUpdateErrorMeasure = 104,
     PBIDesktopProcessNotFound = 200,
     PBIDesktopSSASProcessNotFound = 300,
     PBIDesktopSSASConnectionNotFound = 301,
     PBIDesktopSSASDatabaseUnexpectedCount = 302,
     SignInMsalExceptionOccurred = 400,
     SignInMsalTimeoutExpired = 401,
+    VpaxFileContainsCorruptedData = 500,
 }
 
 export enum AppErrorType {
@@ -30,28 +32,34 @@ export enum AppErrorType {
     Generic
 }
 
-export class AppError extends Error {
+export class AppError {
 
     type: AppErrorType;
     code: number;
+    message: string;
     traceId: string;
     readonly requestAborted: boolean;
     readonly requestTimedout: boolean;
+    readonly hasTraceId: boolean;
 
     constructor(type: AppErrorType, message?: string, code?: number, traceId?: string) {
         if (!message)
             message = i18n(strings.errorUnspecified);
         
         if (message.slice(-1) != ".") message += ".";
-        super(message);
+        this.message = message;
 
         this.type = type;
-
         this.code = code;
         this.requestAborted = (type == AppErrorType.Abort && code == Utils.ResponseStatusCode.Aborted);
         this.requestTimedout = (type == AppErrorType.Abort && code == Utils.ResponseStatusCode.Timeout);
 
         this.traceId = traceId;
+        this.hasTraceId = (!!this.traceId || this.type == AppErrorType.Managed || this.type == AppErrorType.Response);
+    }
+
+    getString() {
+        return `${ i18n(strings.error) }${ this.code ? ` ${this.type != AppErrorType.Managed ? "HTTP/" : "" }${ this.code }` : "" }: ${ this.message }${ this.traceId ? `\n${strings.traceId}: ${this.traceId}` : ""}`;
     }
 
     static InitFromProblem(problem: ProblemDetails) {
