@@ -59,6 +59,7 @@ namespace Sqlbi.Bravo.Controllers
                 }
                 else
                 {
+                    formattedMeasure.Expression = requestedMeasure.Expression; // in case of errors returns the original expression, as requested by Daniele
                     formattedMeasure.Errors = daxformatterMeasure.Errors?.Select((e) => new FormatterError
                     {
                         Line = e.Line,

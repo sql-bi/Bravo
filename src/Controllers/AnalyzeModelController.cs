@@ -134,7 +134,11 @@ namespace Sqlbi.Bravo.Controllers
             var onlineDatasets = await _pbicloudService.GetSharedDatasetsAsync();
 
             var selectedWorkspaces = onlineWorkspaces.Where((w) => w.CapacitySkuType == WorkspaceCapacitySkuType.Premium);
-            // unsupported datasets (not accessible by the XMLA endpoint) https://docs.microsoft.com/en-us/power-bi/admin/service-premium-connect-tools#unsupported-datasets
+            // Exclude datasets not accessible by the XMLA endpoint (unsupported-datasets) https://docs.microsoft.com/en-us/power-bi/admin/service-premium-connect-tools#unsupported-datasets
+            // - (TODO) Datasets based on a live connection to an Azure Analysis Services or SQL Server Analysis Services model.
+            // - (TODO) Datasets based on a live connection to a Power BI dataset in another workspace.
+            // - Datasets with Push data by using the REST API.
+            // - Excel workbook datasets.
             var selectedDatasets = onlineDatasets.Where((d) => !d.Model.IsExcelWorkbook && !d.Model.IsPushDataEnabled);
 
             var datasets = selectedDatasets.Join(selectedWorkspaces, (d) => d.WorkspaceObjectId, (w) => w.Id, resultSelector: (d, w) => new PBICloudDataset
@@ -148,9 +152,9 @@ namespace Sqlbi.Bravo.Controllers
                 Refreshed = d.Model.LastRefreshTime,
                 Endorsement = (PBICloudDatasetEndorsement)(d.GalleryItem?.Stage ?? (int)PBICloudDatasetEndorsement.None)
             },
-            StringComparer.InvariantCultureIgnoreCase);
+            StringComparer.InvariantCultureIgnoreCase).ToArray();
 
-            return Ok(datasets);
+            return Ok(selectedDatasets);
         }
 
         /// <summary>
@@ -252,7 +256,7 @@ namespace Sqlbi.Bravo.Controllers
 
             var threadStart = new ThreadStart(() => dialogResult = dialog.ShowDialog(dialogOwner));
             var thread = new Thread(threadStart);
-            thread.CurrentUICulture = thread.CurrentCulture = CultureInfo.CurrentCulture;
+            thread.CurrentCulture = thread.CurrentUICulture = CultureInfo.CurrentCulture;
             thread.SetApartmentState(ApartmentState.STA);
             thread.Start();
             thread.Join();

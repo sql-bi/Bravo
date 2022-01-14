@@ -2,6 +2,7 @@
 using Sqlbi.Bravo.Infrastructure.Windows;
 using Sqlbi.Bravo.Infrastructure.Windows.Interop;
 using System;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 
@@ -12,7 +13,12 @@ namespace Sqlbi.Bravo.Infrastructure
         private readonly PhotinoNET.PhotinoWindow _window;
         private readonly IntPtr MSG_HANDLED = new(1);
 
-        public AppWindowSubclass(PhotinoNET.PhotinoWindow window)
+        /// <summary>
+        /// Try to install a WndProc subclass callback to hook messages sent to the selected <see cref="PhotinoNET.PhotinoWindow"/> window
+        /// </summary>
+        public static AppWindowSubclass Hook(PhotinoNET.PhotinoWindow window) => new(window);
+
+        private AppWindowSubclass(PhotinoNET.PhotinoWindow window)
             : base(hWnd: window.WindowHandle)
         {
             _window = window;
@@ -57,15 +63,22 @@ namespace Sqlbi.Bravo.Infrastructure
             if (copyData.cbData == 0)
                 return;
 
-            var message = JsonSerializer.Deserialize<AppInstanceStartedMessage>(json: copyData.lpData);
-            if (message?.IsExternalTool == true)
+            var startupMessage = JsonSerializer.Deserialize<AppInstanceStartupMessage>(json: copyData.lpData);
+            if (startupMessage?.IsExternalTool == true)
             {
                 // TODO: here we are ignoring non-externaltool invocations
-                // TODO: (WIP)
-                var messageString = JsonSerializer.Serialize(message, new JsonSerializerOptions { WriteIndented = true });
-                System.Diagnostics.Trace.WriteLine($"::Bravo:INF:WndProcHook[WM_COPYDATA]:{ messageString }");
+#if DEBUG
+                // TODO: remove diagnostic messages
+                var messageString = JsonSerializer.Serialize(startupMessage, new JsonSerializerOptions { WriteIndented = true });
+                Trace.WriteLine($"::Bravo:INF:WndProcHook[WM_COPYDATA]:{ messageString }");
                 _window.OpenAlertWindow("::Bravo:INF:WndProcHook[WM_COPYDATA]", messageString);
-                _window.SendWebMessage(messageString);
+#endif
+                var webMessage = startupMessage.ToWebMessage();
+                if (webMessage is not null)
+                {
+                    var webMessageString = JsonSerializer.Serialize(webMessage, new(JsonSerializerDefaults.Web));
+                    _window.SendWebMessage(webMessageString);
+                }
             }
         }
     }

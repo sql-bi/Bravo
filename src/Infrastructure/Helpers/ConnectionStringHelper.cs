@@ -5,6 +5,12 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
 {
     internal static class ConnectionStringHelper
     {
+        //public const string ASAzureLinkProtocolScheme = "link://";
+        //public const string ASAzureProtocolScheme = "asazure://";
+        //public const string PBIDedicatedProtocolScheme = "pbidedicated://";
+        //public const string PBIPremiumProtocolScheme = "powerbi://";
+        public const string PBIDatasetProtocolScheme = "pbiazure";
+
         private const string PasswordKey = "Password";
         private const string ProviderKey = "Provider";
         private const string DataSourceKey = "Data Source";

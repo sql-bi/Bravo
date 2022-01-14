@@ -1,10 +1,12 @@
 ﻿using AutoUpdaterDotNET;
 using Bravo.Infrastructure.Windows.Interop;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 using PhotinoNET;
 using Sqlbi.Bravo.Infrastructure.Configuration.Options;
 using Sqlbi.Bravo.Infrastructure.Extensions;
 using Sqlbi.Bravo.Infrastructure.Helpers;
+using Sqlbi.Bravo.Infrastructure.Messages;
 using Sqlbi.Bravo.Infrastructure.Windows.Interop;
 using Sqlbi.Infrastructure.Configuration.Settings;
 using System;
@@ -20,6 +22,8 @@ namespace Sqlbi.Bravo.Infrastructure
     {
         private readonly IHost _host;
         private readonly PhotinoWindow _window;
+        private readonly UserSettings _userSettings;
+        private readonly StartupSettings _startupSettings;
 
         private AppWindowSubclass? _windowSubclass;
         private bool _disposed;
@@ -28,6 +32,8 @@ namespace Sqlbi.Bravo.Infrastructure
         {
             _host = host;
             _window = CreateWindow();
+            _userSettings = (_host.Services.GetService(typeof(IWritableOptions<UserSettings>)) as IWritableOptions<UserSettings> ?? throw new BravoUnexpectedException("UserSettings is null")).Value;
+            _startupSettings = (_host.Services.GetService(typeof(IOptions<StartupSettings>)) as IOptions<StartupSettings> ?? throw new BravoUnexpectedException("StartupSettings is null")).Value;
         }
 
         private PhotinoWindow CreateWindow()
@@ -92,7 +98,7 @@ namespace Sqlbi.Bravo.Infrastructure
 
             ThemeType GetStartupTheme()
             {
-                var theme = GetUserSettings()?.Theme ?? ThemeType.Auto;
+                var theme = _userSettings.Theme;
 
                 if (theme == ThemeType.Auto)
                     theme = Uxtheme.IsSystemUsingDarkMode() ? ThemeType.Dark : ThemeType.Light;
@@ -103,32 +109,29 @@ namespace Sqlbi.Bravo.Infrastructure
 
         private void OnWindowCreating(object? sender, EventArgs e)
         {
-            if (sender is PhotinoWindow window)
-            {
-                Trace.WriteLine($"::Bravo:INF:OnWindowCreating:{ window.Title }");
+            Trace.WriteLine($"::Bravo:INF:OnWindowCreating:{ _window.Title }");
 
-                var settings = GetUserSettings();
-                if (settings is not null && settings.Theme != ThemeType.Auto) 
-                {
-                    // Set the startup theme based on the latest settings saved by the user
-                    Uxtheme.SetStartupTheme(useDark: settings.Theme == ThemeType.Dark);
-                }
+            if (_userSettings.Theme != ThemeType.Auto) 
+            {
+                // Set the startup theme based on the latest settings saved by the user
+                Uxtheme.SetStartupTheme(useDark: _userSettings.Theme == ThemeType.Dark);
             }
         }
 
         private void OnWindowCreated(object? sender, EventArgs e)
         {
-            if (sender is PhotinoWindow window)
-            {
-                Trace.WriteLine($"::Bravo:INF:OnWindowCreated:{ window.Title } ( { string.Join(", ", _host.GetListeningAddresses().Select((a) => a.ToString())) } )");
+            Trace.WriteLine($"::Bravo:INF:OnWindowCreated:{ _window.Title } ( { string.Join(", ", _host.GetListeningAddresses().Select((a) => a.ToString())) } )");
 #if !DEBUG
-                HandleHotKeys(register: true);
-#endif
-                // Try to install a WndProc subclass callback to hook messages sent to the app main window
-                _windowSubclass = new AppWindowSubclass(window);
-
-                CheckForUpdate();
+            HandleHotKeys(register: true);
+#endif   
+            _windowSubclass = AppWindowSubclass.Hook(_window);
+         
+            if (_startupSettings.IsExternalTool)
+            {
+                //_window.SendWebMessage(message);
             }
+
+            CheckForUpdate();
         }
 
         private bool OnWindowClosing(object sender, EventArgs e)
@@ -137,15 +140,6 @@ namespace Sqlbi.Bravo.Infrastructure
             HandleHotKeys(register: false);
 #endif
             return false; // Returning true stops window from closing
-        }
-
-        private UserSettings? GetUserSettings()
-        {
-            var settingsObject = _host.Services.GetService(typeof(IWritableOptions<UserSettings>)) as IWritableOptions<UserSettings>;
-            if (settingsObject?.Value is UserSettings settings)
-                return settings;
-
-            return null;
         }
 
         /// <summary>
@@ -200,7 +194,7 @@ namespace Sqlbi.Bravo.Infrastructure
         /// <summary>
         /// Async/non-blocking check for updates
         /// </summary>
-        private static void CheckForUpdate()
+        private void CheckForUpdate()
         {
             if (DesktopBridgeHelpers.IsPackagedAppInstance)
                 return;
@@ -224,12 +218,22 @@ namespace Sqlbi.Bravo.Infrastructure
                 
                 if (updateInfo.IsUpdateAvailable)
                 {
+                    var updateMessage = new ApplicationUpdateAvailableWebMessage
+                    {
+                        DownloadUrl = updateInfo.DownloadURL,
+                        ChangelogUrl = updateInfo.ChangelogURL,
+                        CurrentVersion = updateInfo.CurrentVersion,
+                        InstalledVersion = updateInfo.InstalledVersion.ToString(),
+                    };
+                    var updateMessageString = JsonSerializer.Serialize(updateMessage, new(JsonSerializerDefaults.Web));
+                    _window.SendWebMessage(updateMessageString);
+
                     // TODO: complete check for update
 
-                    //var threadStart = new ThreadStart(() => AutoUpdater.ShowUpdateForm(update));
-                    //var thread = new Thread(threadStart);
-                    //thread.CurrentUICulture = thread.CurrentUICulture = CultureInfo.CurrentCulture;
-                    //thread.SetApartmentState(ApartmentState.STA);
+                    //var threadStart = new System.Threading.ThreadStart(() => AutoUpdater.ShowUpdateForm(updateInfo));
+                    //var thread = new System.Threading.Thread(threadStart);
+                    //thread.CurrentCulture = thread.CurrentUICulture = System.Globalization.CultureInfo.CurrentCulture;
+                    //thread.SetApartmentState(System.Threading.ApartmentState.STA);
                     //thread.Start();
                     //thread.Join();
 
@@ -248,7 +252,7 @@ namespace Sqlbi.Bravo.Infrastructure
             _window.WaitForClose();
         }
 
-#region IDisposable
+        #region IDisposable
 
         protected virtual void Dispose(bool disposing)
         {
@@ -269,6 +273,6 @@ namespace Sqlbi.Bravo.Infrastructure
             GC.SuppressFinalize(this);
         }
 
-#endregion
+        #endregion
     }
 }
