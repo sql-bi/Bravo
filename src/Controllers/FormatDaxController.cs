@@ -104,21 +104,24 @@ namespace Sqlbi.Bravo.Controllers
         [ActionName("UpdateReport")]
         [Consumes(MediaTypeNames.Application.Json)]
         [Produces(MediaTypeNames.Application.Json)]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(DatabaseUpdateResult))]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesDefaultResponseType]
         public IActionResult UpdatePBIDesktopReportAsync(UpdatePBIDesktopReportRequest request)
         {
             try
             {
-                _pbidesktopService.Update(request.Report!, request.Measures!);
+                var databaseETag = _pbidesktopService.Update(request.Report!, request.Measures!);
+
+                return Ok(new DatabaseUpdateResult
+                {
+                    DatabaseETag = databaseETag
+                });
             }
             catch (TOMDatabaseException ex)
             {
                 return Problem(ex.ProblemDetail, ex.ProblemInstance, StatusCodes.Status400BadRequest);
             }
-
-            return Ok();
         }
 
         /// <summary>
@@ -131,7 +134,7 @@ namespace Sqlbi.Bravo.Controllers
         [ActionName("UpdateDataset")]
         [Consumes(MediaTypeNames.Application.Json)]
         [Produces(MediaTypeNames.Application.Json)]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(DatabaseUpdateResult))]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesDefaultResponseType]
@@ -142,14 +145,17 @@ namespace Sqlbi.Bravo.Controllers
 
             try
             {
-                _pbicloudService.Update(request.Dataset!, request.Measures!);
+                var databaseETag = _pbicloudService.Update(request.Dataset!, request.Measures!);
+
+                return Ok(new DatabaseUpdateResult
+                {
+                    DatabaseETag = databaseETag
+                });
             }
             catch (TOMDatabaseException ex)
             {
                 return Problem(ex.ProblemDetail, ex.ProblemInstance, StatusCodes.Status400BadRequest);
             }
-
-            return Ok();
         }
     }
 }

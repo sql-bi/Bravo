@@ -15,7 +15,7 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
         /// <summary>
         /// Compute a string identifier for a specific version of a tabular model by using Name, Version and LastUpdate properties
         /// </summary>
-        public static string? GetDatabaseETag(string name, long version, DateTime lastUpdate)
+        public static string GetDatabaseETag(string name, long version, DateTime lastUpdate)
         {
             var buffers = new byte[][]
             {
@@ -28,7 +28,7 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
             return hash;
         }
 
-        public static void Update(string connectionString, string databaseName, IEnumerable<FormattedMeasure> measures)
+        public static string Update(string connectionString, string databaseName, IEnumerable<FormattedMeasure> measures)
         {
             using var server = new TOM.Server();
             server.Connect(connectionString);
@@ -42,7 +42,7 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
                     throw new TOMDatabaseException(BravoProblem.TOMDatabaseUpdateConflictMeasure);
 
                 if (formattedMeasure.Errors?.Any() ?? false)
-                    continue;
+                    throw new TOMDatabaseException(BravoProblem.TOMDatabaseUpdateErrorMeasure);
 
                 var unformattedMeasure = database.Model.Tables[formattedMeasure.TableName].Measures[formattedMeasure.Name];
 
@@ -51,14 +51,21 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
             }
 
             if (database.Model.HasLocalChanges)
+            {
                 database.Update();
 
-            var operationResult = database.Model.SaveChanges();
-            if (operationResult.XmlaResults?.ContainsErrors == true)
-            {
-                var message = operationResult.XmlaResults.ToDescriptionString();
-                throw new TOMDatabaseException(BravoProblem.TOMDatabaseUpdateFailed, message);
+                var saveResult = database.Model.SaveChanges();
+                if (saveResult.XmlaResults?.ContainsErrors == true)
+                {
+                    var message = saveResult.XmlaResults.ToDescriptionString();
+                    throw new TOMDatabaseException(BravoProblem.TOMDatabaseUpdateFailed, message);
+                }
+
+                database.Refresh();
+                databaseETag = GetDatabaseETag(database.Name, database.Version, database.LastUpdate);
             }
+
+            return databaseETag;
 
             TOM.Database GetDatabase()
             {
