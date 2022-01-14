@@ -2,6 +2,7 @@
 using Sqlbi.Bravo.Infrastructure.Windows;
 using Sqlbi.Bravo.Infrastructure.Windows.Interop;
 using System;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 
@@ -62,15 +63,22 @@ namespace Sqlbi.Bravo.Infrastructure
             if (copyData.cbData == 0)
                 return;
 
-            var message = JsonSerializer.Deserialize<AppInstanceStartupMessage>(json: copyData.lpData);
-            if (message?.IsExternalTool == true)
+            var startupMessage = JsonSerializer.Deserialize<AppInstanceStartupMessage>(json: copyData.lpData);
+            if (startupMessage?.IsExternalTool == true)
             {
                 // TODO: here we are ignoring non-externaltool invocations
-                // TODO: (WIP)
-                var messageString = JsonSerializer.Serialize(message, new JsonSerializerOptions { WriteIndented = true });
-                System.Diagnostics.Trace.WriteLine($"::Bravo:INF:WndProcHook[WM_COPYDATA]:{ messageString }");
+#if DEBUG
+                // TODO: remove diagnostic messages
+                var messageString = JsonSerializer.Serialize(startupMessage, new JsonSerializerOptions { WriteIndented = true });
+                Trace.WriteLine($"::Bravo:INF:WndProcHook[WM_COPYDATA]:{ messageString }");
                 _window.OpenAlertWindow("::Bravo:INF:WndProcHook[WM_COPYDATA]", messageString);
-                _window.SendWebMessage(messageString);
+#endif
+                var webMessage = startupMessage.ToWebMessage();
+                if (webMessage is not null)
+                {
+                    var webMessageString = JsonSerializer.Serialize(webMessage, new(JsonSerializerDefaults.Web));
+                    _window.SendWebMessage(webMessageString);
+                }
             }
         }
     }

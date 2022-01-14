@@ -6,6 +6,7 @@ using PhotinoNET;
 using Sqlbi.Bravo.Infrastructure.Configuration.Options;
 using Sqlbi.Bravo.Infrastructure.Extensions;
 using Sqlbi.Bravo.Infrastructure.Helpers;
+using Sqlbi.Bravo.Infrastructure.Messages;
 using Sqlbi.Bravo.Infrastructure.Windows.Interop;
 using Sqlbi.Infrastructure.Configuration.Settings;
 using System;
@@ -193,7 +194,7 @@ namespace Sqlbi.Bravo.Infrastructure
         /// <summary>
         /// Async/non-blocking check for updates
         /// </summary>
-        private static void CheckForUpdate()
+        private void CheckForUpdate()
         {
             if (DesktopBridgeHelpers.IsPackagedAppInstance)
                 return;
@@ -217,6 +218,16 @@ namespace Sqlbi.Bravo.Infrastructure
                 
                 if (updateInfo.IsUpdateAvailable)
                 {
+                    var updateMessage = new ApplicationUpdateAvailableWebMessage
+                    {
+                        DownloadUrl = updateInfo.DownloadURL,
+                        ChangelogUrl = updateInfo.ChangelogURL,
+                        CurrentVersion = updateInfo.CurrentVersion,
+                        InstalledVersion = updateInfo.InstalledVersion.ToString(),
+                    };
+                    var updateMessageString = JsonSerializer.Serialize(updateMessage, new(JsonSerializerDefaults.Web));
+                    _window.SendWebMessage(updateMessageString);
+
                     // TODO: complete check for update
 
                     //var threadStart = new System.Threading.ThreadStart(() => AutoUpdater.ShowUpdateForm(updateInfo));
