@@ -154,7 +154,7 @@ namespace Sqlbi.Bravo.Controllers
             },
             StringComparer.InvariantCultureIgnoreCase).ToArray();
 
-            return Ok(selectedDatasets);
+            return Ok(datasets);
         }
 
         /// <summary>
