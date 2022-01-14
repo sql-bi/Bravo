@@ -88,6 +88,11 @@ namespace Sqlbi.Bravo.Infrastructure
         TOMDatabaseUpdateConflictMeasure = 103,
 
         /// <summary>
+        /// TOM measure update request failed because the measure contains DaxFormatter errors
+        /// </summary> 
+        TOMDatabaseUpdateErrorMeasure = 104,
+
+        /// <summary>
         /// PBIDesktop process is no longer running or the identifier might be expired.
         /// </summary> 
         PBIDesktopProcessNotFound = 200,

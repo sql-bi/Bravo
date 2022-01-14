@@ -229,7 +229,7 @@ namespace Sqlbi.Bravo.Controllers
             return Ok(exportResult);
         }
 
-        private static FileActionResult ExportVpaxFile(string? fileName, Stream stream)
+        private FileActionResult ExportVpaxFile(string? fileName, Stream stream)
         {
             var dialogOwner = Win32WindowWrapper.CreateFrom(Process.GetCurrentProcess().MainWindowHandle);
             var dialogResult = System.Windows.Forms.DialogResult.None;
@@ -241,6 +241,14 @@ namespace Sqlbi.Bravo.Controllers
                 DefaultExt = "vpax",
                 FileName = fileName
             };
+
+            if (HttpContext.RequestAborted.IsCancellationRequested)
+            {
+                return new FileActionResult
+                { 
+                    Canceled = true
+                };
+            }
 
             var threadStart = new ThreadStart(() => dialogResult = dialog.ShowDialog(dialogOwner));
             var thread = new Thread(threadStart);
@@ -262,12 +270,12 @@ namespace Sqlbi.Bravo.Controllers
             var actionResult = new FileActionResult
             {
                 Canceled = dialogResult == System.Windows.Forms.DialogResult.Cancel,
-                FileName = dialog.FileName
+                Path = dialog.FileName
             };
 
             if (actionResult.Canceled == false)
             {
-                using var fileStream = System.IO.File.Create(actionResult.FileName!);
+                using var fileStream = System.IO.File.Create(actionResult.Path!);
                 stream.Seek(0, SeekOrigin.Begin);
                 stream.CopyTo(fileStream);
             }

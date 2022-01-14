@@ -14,7 +14,7 @@ namespace Sqlbi.Bravo.Services
 
         Stream ExportVpax(PBIDesktopReport report, bool includeTomModel, bool includeVpaModel, bool readStatisticsFromData, int sampleRows);
 
-        void Update(PBIDesktopReport report, IEnumerable<FormattedMeasure> measures);
+        string Update(PBIDesktopReport report, IEnumerable<FormattedMeasure> measures);
     }
 
     internal class PBIDesktopService : IPBIDesktopService
@@ -40,17 +40,17 @@ namespace Sqlbi.Bravo.Services
         public Stream ExportVpax(PBIDesktopReport report, bool includeTomModel, bool includeVpaModel, bool readStatisticsFromData, int sampleRows)
         {
             var (connectionString, databaseName) = GetConnectionParameters(report);
-
             var stream = VpaxToolsHelper.ExportVpax(connectionString, databaseName, includeTomModel, includeVpaModel, readStatisticsFromData, sampleRows);
 
             return stream;
         }
 
-        public void Update(PBIDesktopReport report, IEnumerable<FormattedMeasure> measures)
+        public string Update(PBIDesktopReport report, IEnumerable<FormattedMeasure> measures)
         {
             var (connectionString, databaseName) = GetConnectionParameters(report);
+            var databaseETag = TabularModelHelper.Update(connectionString, databaseName, measures);
 
-            TabularModelHelper.Update(connectionString, databaseName, measures);
+            return databaseETag;
         }
 
         /// <summary>

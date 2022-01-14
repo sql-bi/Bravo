@@ -35,7 +35,7 @@ namespace Sqlbi.Bravo.Services
 
         Stream ExportVpax(PBICloudDataset dataset, bool includeTomModel = true, bool includeVpaModel = true, bool readStatisticsFromData = true, int sampleRows = 0);
 
-        void Update(PBICloudDataset dataset, IEnumerable<FormattedMeasure> measures);
+        string Update(PBICloudDataset dataset, IEnumerable<FormattedMeasure> measures);
      }
 
     internal class PBICloudService : IPBICloudService
@@ -150,11 +150,12 @@ namespace Sqlbi.Bravo.Services
             return stream;
         }
 
-        public void Update(PBICloudDataset dataset, IEnumerable<FormattedMeasure> measures)
+        public string Update(PBICloudDataset dataset, IEnumerable<FormattedMeasure> measures)
         {
             var (connectionString, databaseName) = GetConnectionParameters(dataset);
-            
-            TabularModelHelper.Update(connectionString, databaseName, measures);
+            var databaseETag = TabularModelHelper.Update(connectionString, databaseName, measures);
+
+            return databaseETag;
         }
 
         /// <summary>
