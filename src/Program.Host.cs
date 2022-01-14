@@ -69,7 +69,9 @@ namespace Sqlbi.Bravo
 
             hostBuilder.UseDefaultServiceProvider((HostBuilderContext context, ServiceProviderOptions options) =>
             {
-                options.ValidateOnBuild = (options.ValidateScopes = context.HostingEnvironment.IsDevelopment());
+#if DEBUG
+                options.ValidateOnBuild = options.ValidateScopes = true;
+#endif
             });
 
             hostBuilder.ConfigureWebHostDefaults((webBuilder) =>

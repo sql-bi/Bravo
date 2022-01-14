@@ -13,7 +13,7 @@ namespace Sqlbi.Bravo.Models
         /// <summary>
         /// Full path of the selected file
         /// </summary>
-        [JsonPropertyName("fileName")]
-        public string? FileName { get; set; }
+        [JsonPropertyName("path")]
+        public string? Path { get; set; }
     }
 }
