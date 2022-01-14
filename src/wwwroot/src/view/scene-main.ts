@@ -4,9 +4,9 @@
  * https://www.sqlbi.com
 */
 import { AppError } from '../model/exceptions';
-import { Utils, _ } from '../helpers/utils';
+import { Utils, _, __ } from '../helpers/utils';
 import { host } from '../main';
-import { Doc } from '../model/doc';
+import { Doc, DocType } from '../model/doc';
 import { i18n } from '../model/i18n'; 
 import { strings } from '../model/strings';
 import { Scene } from './scene';
@@ -33,15 +33,14 @@ export class MainScene extends Scene {
             <header>
                 <h1 class="icon" title="${this.title}">${this.title}</h1>
                 <div class="toolbar">
-                    ${this.doc.canExport ? `
-                        <div class="save-vpax ctrl icon-save disable-on-syncing" title="${i18n(strings.saveVpaxCtrlTile)}"></div>
-                    ` : ""}
-                    ${this.doc.readonly ? `
-                        <div class="readonly">${i18n(strings.docReadOnly)}</div>
-                    ` : ""}
-                    ${this.doc.canSync ? `
-                        <div class="ctrl-sync ctrl icon-sync" title="${i18n(strings.syncCtrlTitle)}"></div>
-                    ` : ""}
+                    
+                    <div class="readonly badge show-if-readonly" ${this.doc.readonly ? "" : "hidden"} title="${i18n(strings.docReadOnlyTooltip)}">${i18n(strings.docReadOnly)}</div>
+                    
+                    <div class="orphan badge show-if-orphan" ${this.doc.orphan ? "" : "hidden"} title="${i18n(this.doc.type == DocType.pbix ? strings.sheetOrphanPBIXTooltip : strings.sheetOrphanTooltip)}">${i18n(strings.sheetOrphan)}</div>
+
+                    
+                    <div class="ctrl-sync ctrl icon-sync show-if-editable" ${this.doc.editable ? "" : "hidden"} title="${i18n(strings.syncCtrlTitle)}"></div>
+        
                     <div class="ctrl icon-help" title="${i18n(strings.helpCtrlTitle)}"></div>
                 </div>
             </header>
@@ -59,34 +58,31 @@ export class MainScene extends Scene {
             this.trigger("sync");
         });
 
-        _(".save-vpax", this.element).addEventListener("click", e => {
-            e.preventDefault();
-            let el = <HTMLElement>e.currentTarget;
-            if (el.hasAttribute("disabled")) return;
+        
+    }
 
-            el.toggleAttr("disabled", true);
-            if (!this.doc.readonly) {
+    update() {
+        super.update();
 
-                let exportingScene = new LoaderScene(Utils.DOM.uniqueId(), this.element.parentElement, i18n(strings.savingVpax), ()=>{
-                    host.abortExportVpax(this.doc.type);
-                });
-                this.push(exportingScene);
-
-                host.exportVpax(<any>this.doc.sourceData, this.doc.type)
-                    .then(data => {
-                        this.pop();
-                    })
-                    .catch((error: AppError) => {
-                        if (error.requestAborted) return;
-
-                        let errorScene = new ErrorScene(Utils.DOM.uniqueId(), this.element.parentElement, error, true);
-                        this.splice(errorScene);
-                    })
-                    .finally(() => {
-                        el.toggleAttr("disabled", false);
-                    });
-            }
+        ["orphan", "readonly", "editable"].forEach(prop => {
+            const value: boolean = (<any>this.doc)[prop];
+            __(`.show-if-${prop}`, this.element).forEach((div: HTMLElement) => {
+                div.toggle(value);
+            });
+            __(`.hide-if-${prop}`, this.element).forEach((div: HTMLElement) => {
+                div.toggle(!value);
+            });
+            __(`.disable-if-${prop}`, this.element).forEach((div: HTMLElement) => {
+                div.toggleAttr("disabled", value);
+            });
+            __(`.enable-if-${prop}`, this.element).forEach((div: HTMLElement) => {
+                div.toggleAttr("disabled", !value);
+            });
         });
+
+        let h1 = _("h1", this.element);
+        h1.setAttribute("title", this.title);
+        h1.innerText = this.title;
     }
 
     destroy() {

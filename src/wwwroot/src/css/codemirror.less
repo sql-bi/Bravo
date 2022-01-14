@@ -436,3 +436,20 @@
   }
   
   .CodeMirror pre.CodeMirror-placeholder { color: @placeholder-color; }
+
+  .CodeMirror-error-marker {
+    width: 0; 
+    height: 0; 
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-bottom: 8px solid #E00200;
+  }
+
+  .CodeMirror-error-line {
+    color: #E00200;
+    background: #FFEFF0;
+    border: 1px solid #FFD5D6;
+    padding: 0 5px;
+    margin-top: 7px;
+    cursor: default;
+  }

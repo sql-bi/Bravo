@@ -13,6 +13,7 @@ import { AppError, AppErrorType } from '../model/exceptions';
 import { TabularDatabase, TabularMeasure } from '../model/tabular';
 import { Account } from './auth';
 import { FormatDaxOptions, Options } from './options';
+import { PBIDesktopReport } from './pbi-desktop';
 import { ThemeType } from './theme';
 
 declare global {
@@ -53,10 +54,6 @@ export interface FormatDaxError {
 export interface FormattedMeasure extends TabularMeasure {
     errors?: FormatDaxError[]
 }
-export interface PBIDesktopReport {
-    id: number
-    reportName?: string
-}
 
 export enum PBICloudDatasetEndorsementstring {
     None = "None",
@@ -82,6 +79,15 @@ export interface UpdatePBIDesktopReportRequest{
 export interface UpdatePBICloudDatasetRequest{
     dataset: PBICloudDataset
     measures: FormattedMeasure[]
+}
+
+export interface DatabaseUpdateResult {
+    etag?: string
+}
+
+export interface FileActionResult {
+    path?: string
+    canceled?: boolean
 }
 export class Host extends Dispatchable {
 
@@ -257,7 +263,7 @@ export class Host extends Dispatchable {
     }
 
     exportVpax(datasource: PBIDesktopReport | PBICloudDataset, type: DocType) {
-        return <Promise<string>>this.apiCall(`api/ExportVpaxFrom${type == DocType.dataset ? "Dataset" : "Report"}`, datasource, { method: "POST" });
+        return <Promise<FileActionResult>>this.apiCall(`api/ExportVpaxFrom${type == DocType.dataset ? "Dataset" : "Report"}`, datasource, { method: "POST" });
     }
     abortExportVpax(type: DocType) {
         this.apiAbortByAction(`api/ExportVpaxFrom${type == DocType.dataset ? "Dataset" : "Report"}`);
@@ -273,7 +279,7 @@ export class Host extends Dispatchable {
     }
 
     updateModel(request: UpdatePBIDesktopReportRequest | UpdatePBICloudDatasetRequest, type: DocType) {
-        return this.apiCall(`api/Update${type == DocType.dataset ? "Dataset" : "Report"}`, request, { method: "POST" });
+        return <Promise<DatabaseUpdateResult>>this.apiCall(`api/Update${type == DocType.dataset ? "Dataset" : "Report"}`, request, { method: "POST" });
     }
 
 

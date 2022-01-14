@@ -21,7 +21,7 @@ export enum PageType {
     DaxFormatter = "DaxFormatter",
     ManageDates = "ManageDates",
     ExportData = "ExportData",
-    BestPractices = "BestPractices"
+    //BestPractices = "BestPractices"
 }
 
 export class Page extends View {
@@ -49,7 +49,7 @@ export class Page extends View {
             [PageType.DaxFormatter]: DaxFormatterScene,
             [PageType.ManageDates]: ManageDatesScene,
             [PageType.ExportData]: ExportDataScene,
-            [PageType.BestPractices]: BestPracticesScene,
+            //[PageType.BestPractices]: BestPracticesScene,
         }
         if (type in classes) {
             let initialScene = new classes[type](Utils.DOM.uniqueId(), this.element, doc);
@@ -123,6 +123,7 @@ export class Page extends View {
 
     update() {
         this.scenes.forEach(scene => {
+            scene.title = this.doc.name;
             if (scene.rendered)
                 scene.update();
         });

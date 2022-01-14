@@ -1,4 +1,5 @@
 import * as CodeMirror from 'codemirror';
+import { TelemetryConfig } from '../controllers/telemetry';
 import { ThemeType } from '../controllers/theme';
 
 declare global {
@@ -6,13 +7,7 @@ declare global {
         address: string
         theme: ThemeType
         version: string,
-        telemetry?: {
-            instrumentationKey: string,
-            contextDeviceOperatingSystem: string,
-            contextComponentVersion: string,
-            contextSessionId: string,
-            contextUserId: string
-        }
+        telemetry?: TelemetryConfig
     };
 
     interface CodeMirrorElement extends HTMLElement {

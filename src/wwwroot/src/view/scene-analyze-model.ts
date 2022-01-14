@@ -3,9 +3,9 @@
  * Copyright (c) SQLBI corp. - All rights reserved.
  * https://www.sqlbi.com
 */
-import { themeController } from "../main";
+import { host, themeController } from "../main";
 import { Dic, Utils, _, __ } from '../helpers/utils';
-import { Doc } from '../model/doc';
+import { Doc, DocType } from '../model/doc';
 import { i18n } from '../model/i18n'; 
 import { strings } from '../model/strings';
 import { TabularColumn } from '../model/tabular';
@@ -16,6 +16,9 @@ import { TreemapController, TreemapElement, TreemapScriptableContext } from 'cha
 import * as sanitizeHtml from 'sanitize-html';
 import { ContextMenu } from '../helpers/contextmenu';
 import { MainScene } from './scene-main';
+import { LoaderScene } from './scene-loader';
+import { AppError } from '../model/exceptions';
+import { ErrorScene } from './scene-error';
 
 Chart.register(TreemapController, TreemapElement);
 interface TabulatorVpaxModelColumn extends TabularColumn {
@@ -75,6 +78,9 @@ export class AnalyzeModelScene extends MainScene {
 
                         <div class="collapse-all show-if-group ctrl icon-collapse-all" title="${i18n(strings.collapseAllCtrlTitle)}"></div>
 
+                        
+                        <div class="save-vpax ctrl icon-save disable-on-syncing enable-if-editable" ${this.doc.editable ? "" : "disabled"} ${this.doc.type == DocType.vpax ? "hidden" : ""} title="${i18n(strings.saveVpaxCtrlTile)}"></div>
+
                     </div>
 
                     <div class="table"></div>
@@ -127,16 +133,17 @@ export class AnalyzeModelScene extends MainScene {
                 if (column.isReferenced === false) otherColumns._containsUnreferenced = true;
             }
         });
-        aggregatedData.push({
-            name: i18n(strings.aggregatedTableName),
-            tableName: i18n(strings.aggregatedTableName),
-            columnName: i18n(strings.otherColumnsRowName),
-            size: otherColumns.size,
-            weight: otherColumns.weight,
-            columnCardinality: otherColumns.cardinality,
-            _containsUnreferenced: otherColumns._containsUnreferenced,
-            _aggregated: true
-        });
+        if (otherColumns.count)
+            aggregatedData.push({
+                name: i18n(strings.aggregatedTableName),
+                tableName: i18n(strings.aggregatedTableName),
+                columnName: i18n(strings.otherColumnsRowName),
+                size: otherColumns.size,
+                weight: otherColumns.weight,
+                columnCardinality: otherColumns.cardinality,
+                _containsUnreferenced: otherColumns._containsUnreferenced,
+                _aggregated: true
+            });
 
         return aggregatedData;
     }
@@ -192,13 +199,9 @@ export class AnalyzeModelScene extends MainScene {
 
         if (redraw) {
             if (this.table) {
-                this.table.off("cellClick");
-                this.table.off("rowClick");
-                this.table.off("rowMouseOver");
-                this.table.off("rowMouseOut");
-                //this.table.destroy();
+                this.table.destroy();
+                this.table = null;
             }
-            this.table = null;
         }
         let data = (this.groupByTable ? 
             (this.showAllColumns ? this.nestedData : this.nestedAggregatedData) :
@@ -599,11 +602,14 @@ export class AnalyzeModelScene extends MainScene {
     }
 
     update() {
+        super.update();
+
         this.updateData();
         this.updateTable(false);
         this.updateChart();
 
         _(".summary p", this.element).innerHTML = i18n(this.doc.model.unreferencedCount == 1 ? strings.analyzeModelSummarySingular : strings.analyzeModelSummaryPlural, Utils.Format.bytes(this.doc.model.size, 2), this.doc.model.columnsCount, this.doc.model.unreferencedCount);
+
     }
 
     listen() {
@@ -653,6 +659,35 @@ export class AnalyzeModelScene extends MainScene {
         _(".collapse-all", this.element).addEventListener("click", e => {
             e.preventDefault();
             this.updateTable();
+        });
+
+        _(".save-vpax", this.element).addEventListener("click", e => {
+            e.preventDefault();
+            let el = <HTMLElement>e.currentTarget;
+            if (el.hasAttribute("disabled")) return;
+
+            el.toggleAttr("disabled", true);
+            if (this.doc.editable) {
+
+                let exportingScene = new LoaderScene(Utils.DOM.uniqueId(), this.element.parentElement, i18n(strings.savingVpax), ()=>{
+                    host.abortExportVpax(this.doc.type);
+                });
+                this.push(exportingScene);
+
+                host.exportVpax(<any>this.doc.sourceData, this.doc.type)
+                    .then(data => {
+                        this.pop();
+                    })
+                    .catch((error: AppError) => {
+                        if (error.requestAborted) return;
+
+                        let errorScene = new ErrorScene(Utils.DOM.uniqueId(), this.element.parentElement, error, true);
+                        this.splice(errorScene);
+                    })
+                    .finally(() => {
+                        el.toggleAttr("disabled", false);
+                    });
+            }
         });
 
         themeController.on("change", () => {

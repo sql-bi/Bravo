@@ -57,14 +57,19 @@ const tabTemplate = `
   </div>
 `
 
-const defaultTabProperties = {
+const defaultTabProperties: ChromeTabsProperties = {
   title: "New tab",
   id: "",
-  favicon: false
 }
 
 let instanceId = 0
   
+export interface ChromeTabsProperties {
+  title?: string
+  id?: string
+  favicon?: string
+}
+
 export interface ChromeTabsReorderInfo {
   element: HTMLElement
   originalIndex: number
@@ -206,7 +211,7 @@ export class ChromeTabs extends Dispatchable {
       return <HTMLElement>div.firstElementChild
     }
 
-    addTab(tabProperties: any, { animate = true, background = false } = {}) {
+    addTab(tabProperties: ChromeTabsProperties, { animate = true, background = false } = {}) {
       const tabEl = this.createNewTabEl()
 
       if (animate) {
@@ -236,8 +241,7 @@ export class ChromeTabs extends Dispatchable {
           if (e.which == 2) { // Middle click
             this.trigger("tabClose", tabEl)  
             //this.removeTab(tabEl)
-          } else if (e.which == 3) { // Right click
-              //TODO Show menu
+          //} else if (e.which == 3) { // Right click
           }
       });
     }
@@ -273,17 +277,15 @@ export class ChromeTabs extends Dispatchable {
       this.setupDraggabilly()
     }
 
-    updateTab(tabEl: HTMLElement, tabProperties: any) {
+    updateTab(tabEl: HTMLElement, tabProperties: ChromeTabsProperties) {
       _('.chrome-tab-title', tabEl).textContent = tabProperties.title
 
-      const faviconEl = _('.chrome-tab-favicon', tabEl)
       if (tabProperties.favicon) {
-        //faviconEl.style.backgroundImage = `url('${ tabProperties.favicon }')`
-        faviconEl.classList.add(tabProperties.favicon);
-        faviconEl.removeAttribute('hidden')
-      } else {
-        faviconEl.setAttribute('hidden', '')
-        //faviconEl.removeAttribute('style')
+          const faviconEl = _('.chrome-tab-favicon', tabEl)
+        
+          //faviconEl.style.backgroundImage = `url('${ tabProperties.favicon }')`
+          faviconEl.classList.add(tabProperties.favicon);
+          faviconEl.removeAttribute('hidden')
       }
 
       if (tabProperties.id) {

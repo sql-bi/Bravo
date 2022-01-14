@@ -9,6 +9,7 @@ import { Host } from './controllers/host';
 import { OptionsController } from './controllers/options';
 import { ThemeController } from './controllers/theme';
 import { Telemetry } from './controllers/telemetry';
+import { PBIDesktop } from './controllers/pbi-desktop';
 
 // Load Tabulator modules
 import { Tabulator, ColumnCalcsModule, DataTreeModule, FilterModule, FormatModule, InteractionModule, ResizeColumnsModule, ResizeTableModule, SelectRowModule, SortModule  } from 'tabulator-tables';
@@ -35,7 +36,8 @@ let host = new Host(CONFIG.address);
 let optionsController = new OptionsController();
 let themeController = new ThemeController(CONFIG.theme);
 let auth = new Auth();
-let telemetry = new Telemetry();
+let telemetry = new Telemetry(CONFIG.telemetry);
+let pbiDesktop = new PBIDesktop();
 let app = new App();
 
-export { host, optionsController, themeController, auth, telemetry };
+export { host, optionsController, themeController, auth, telemetry, pbiDesktop };

@@ -71,7 +71,7 @@ export class Connect extends Dialog {
                     this.okButton.toggleAttr("disabled", !this.data || !this.data.doc || this.data.doc.type != DocType.dataset);
                 }
             },
-            "open-vpx": {    
+            "open-vpax": {    
                 name: i18n(strings.connectDialogOpenVPXMenu),    
                 onRender: element => { connectFile.render(element) },
                 onDestroy: ()=> { connectFile.destroy() },

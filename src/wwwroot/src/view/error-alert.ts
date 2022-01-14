@@ -4,6 +4,7 @@
  * https://www.sqlbi.com
 */
 
+import { AppError } from '../model/exceptions';
 import { i18n } from '../model/i18n'; 
 import { strings } from '../model/strings';
 import { Dialog } from './dialog';
@@ -17,9 +18,9 @@ export class ErrorAlert extends Dialog {
         ], "icon-alert");
     }
 
-    show(message?: string) {
+    show(error?: AppError) {
         let html = `
-            ${message}
+            ${error.toString().replace(/\n/gm, "<br>")}
         `;
         this.body.insertAdjacentHTML("beforeend", html);
 

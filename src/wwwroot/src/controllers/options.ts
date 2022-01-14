@@ -32,6 +32,12 @@ export enum DaxFormatterSpacingStyle {
     BestPractice = "BestPractice", 
     NoSpaceAfterFunction = "NoSpaceAfterFunction"
 }
+
+export interface DaxFormatterRegion {
+    listSeparator: string
+    decimalSeparator: string
+}
+
 export interface FormatDaxOptions {
     lineStyle: DaxFormatterLineStyle
     spacingStyle: DaxFormatterSpacingStyle
@@ -56,7 +62,9 @@ export class OptionsController extends Dispatchable {
             loggedInOnce: false,
             daxFormatter: {
                 spacingStyle: DaxFormatterSpacingStyle.BestPractice,
-                lineStyle: DaxFormatterLineStyle.LongLine
+                lineStyle: DaxFormatterLineStyle.LongLine,
+                decimalSeparator: ".",
+                listSeparator: ",",
             }
         }
     };

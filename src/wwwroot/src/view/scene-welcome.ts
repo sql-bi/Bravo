@@ -64,7 +64,7 @@ export class WelcomeScene extends Scene {
                             <img src="images/connect-pbi.svg">
                             <span class="name">${i18n(strings.quickActionConnectPBITitle)}</span>
                         </div>
-                        <div class="ctrl quick-open-vpx">
+                        <div class="ctrl quick-open-vpax">
                             <img src="images/vertipaq.svg">
                             <span class="name">${i18n(strings.quickActionOpenVPXTitle)}</span>
                         </div>
@@ -87,7 +87,7 @@ export class WelcomeScene extends Scene {
                             </ul>
                         </div>
 
-                        <p class="note">${i18n(strings.openSourcePayoff)} <a href="https://github.com/sql-bi/bravo" target="_blank" class="ext-link">github.com/sql-bi/bravo</a></p>
+                        <p class="note">${i18n(strings.openSourcePayoff)} <a href="https://github.com/sql-bi/bravo" target="_blank">github.com/sql-bi/bravo</a></p>
                     </div>
                 </div>
             </div>
@@ -109,9 +109,9 @@ export class WelcomeScene extends Scene {
             this.trigger("quickAction", "connect-pbi");
         });
 
-        _(".quick-open-vpx", this.element).addEventListener("click", e => {
+        _(".quick-open-vpax", this.element).addEventListener("click", e => {
             e.preventDefault();
-            this.trigger("quickAction", "open-vpx");
+            this.trigger("quickAction", "open-vpax");
         });
     } 
 }

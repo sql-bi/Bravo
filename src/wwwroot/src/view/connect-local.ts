@@ -4,19 +4,17 @@
  * https://www.sqlbi.com
 */
 
-import { host } from '../main';
+import { pbiDesktop } from '../main';
 import { _, __ } from '../helpers/utils';
 import { Doc, DocType } from '../model/doc';
 import { strings } from '../model/strings';
-import { PBIDesktopReport } from '../controllers/host';
+import { PBIDesktopReport } from '../controllers/pbi-desktop';
 import { Tabulator } from 'tabulator-tables';
 import { ConnectMenuItem } from './connect-item';
 
 export class ConnectLocal extends ConnectMenuItem {
 
-    static LocalReportCheckTimer = 5000;
     table: Tabulator;
-    getLocalReportsTimeout: number;
 
     render(element: HTMLElement) {
         super.render(element);
@@ -26,20 +24,35 @@ export class ConnectLocal extends ConnectMenuItem {
         `;
         this.element.insertAdjacentHTML("beforeend", html);
 
-        this.getLocalReports();
-        this.getLocalReportsTimeout = window.setInterval(() => {
-            this.getLocalReports();
-        }, ConnectLocal.LocalReportCheckTimer);
+        pbiDesktop.on("change", () => {
+            if (pbiDesktop.reports.length) {
+                this.renderTable();
+            } else {
+                this.renderError(strings.errorReportsListing);
+                this.destroyTable();
+            }
+        }, this.dialog.id);
+        pbiDesktop.check();
     }
 
-    renderTable(id: string, reports: PBIDesktopReport[]) {
+    renderTable() {
+        let tableId = "connect-pbi-reports";
+        let tableElement = _(`#${tableId}`, this.element);
+        if (tableElement.empty)
+            _(".list", this.element).innerHTML = `<div id="${ tableId }"></div>`;
 
-        let unopenedReports = reports.filter(report => {
+        this.updateTable(tableId);
+    }
+
+    updateTable(id: string) {
+
+        let unopenedReports = pbiDesktop.reports.filter(report => {
             return (this.dialog.openDocIds.indexOf(Doc.getId(DocType.pbix, report)) == -1);
         });
 
         if (!unopenedReports.length) {
             this.renderError(strings.errorReportsEmptyListing);
+            this.destroyTable();
             return;
         }
 
@@ -91,32 +104,17 @@ export class ConnectLocal extends ConnectMenuItem {
             });
         }
     }
-    
-    getLocalReports() {
 
-        host.listReports()
-            .then((reports: PBIDesktopReport[]) => {
-                let tableId = "connect-pbi-reports";
-                let tableElement = _(`#${tableId}`, this.element);
-                if (tableElement.empty)
-                    _(".list", this.element).innerHTML = `<div id="${ tableId }"></div>`;
-                    
-                if (reports.length)
-                    this.renderTable(tableId, reports);
-                else 
-                    throw new Error();
-            })
-            .catch(error => {
-                this.renderError(strings.errorReportsListing);
-            });
-    }
-
-    destroy() {
-        window.clearInterval(this.getLocalReportsTimeout);
+    destroyTable() {
         if (this.table) {
             this.table.destroy();
             this.table = null;
         }
+    }
+
+    destroy() {
+        pbiDesktop.off("change", this.dialog.id);
+        this.destroyTable();
         super.destroy();
     }
 }

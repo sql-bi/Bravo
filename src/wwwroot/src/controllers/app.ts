@@ -10,7 +10,7 @@ import { strings } from '../model/strings';
 import { Sidebar } from '../view/sidebar';
 import { Tabs, AddedTabInfo, RemovedTabInfo } from '../view/tabs';
 import { WelcomeScene } from '../view/scene-welcome';
-import { Doc } from '../model/doc';
+import { Doc, DocType } from '../model/doc';
 import { Confirm } from '../view/confirm';
 import { Connect, ConnectResponse } from '../view/connect';
 import { Sheet } from './sheet';
@@ -44,6 +44,17 @@ export class App {
 
     // Event listeners
     listen() {
+
+        // Catch dropping external files
+        window.addEventListener('dragover', e => { 
+            e.preventDefault();
+        });
+        window.addEventListener('drop', e => { 
+            e.preventDefault(); 
+            if (e.dataTransfer.files.length) {
+                this.dragFile(e.dataTransfer.files[0]);
+            }
+        });
 
         this.tabs.on("open", () => {
             this.connect(this.defaultConnectSelectedMenu);
@@ -91,6 +102,10 @@ export class App {
 
         let sheet = new Sheet(id, container, doc);
         this.sheets[id] = sheet;
+
+        sheet.on("sync", ()=>{
+            this.tabs.updateTab(id, doc.name);
+        });
     }
 
     removeSheet(id: string) {
@@ -112,6 +127,17 @@ export class App {
         let sheet = this.sheets[id];
         sheet.show();
         sheet.showPage(page);
+    }
+
+
+    switchToDoc(docId: string) {
+        for (let id in this.sheets) {
+            if (this.sheets[id].doc.id == docId) {
+                this.tabs.changeTab(id);
+                return true;
+            }
+        }
+        return false;
     }
 
     showWelcome() {
@@ -146,12 +172,7 @@ export class App {
 
                         case "cancel":
                             if (response.data.switchToDoc) {
-                                for (let id in this.sheets) {
-                                    if (this.sheets[id].doc.id == response.data.switchToDoc) {
-                                        this.tabs.changeTab(id);
-                                        break;
-                                    }
-                                }
+                                this.switchToDoc(response.data.switchToDoc);
                             }
 
                             break;
@@ -161,5 +182,19 @@ export class App {
                         this.defaultConnectSelectedMenu = response.data.lastOpenedMenu;
                 }
             });
+    }
+
+
+    dragFile(file: File) {
+        if (file.name.slice(-5) == ".vpax") {
+            let fileHash = Doc.getId(DocType.vpax, file);
+            if (!this.switchToDoc(fileHash)) {
+
+                let doc = new Doc(file.name, DocType.vpax, file);
+                let id = Utils.DOM.uniqueId();
+                this.addSheet(id, doc);
+                this.tabs.addTab(id, doc);
+            }
+        }
     }
 }
