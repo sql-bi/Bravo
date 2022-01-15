@@ -4,10 +4,9 @@
  * https://www.sqlbi.com
 */
 
-import { debug } from '../debug';
 import { Dispatchable } from '../helpers/dispatchable';
 import { Dic, Utils } from '../helpers/utils';
-import { auth } from '../main';
+import { auth, debug } from '../main';
 import { DocType } from '../model/doc';
 import { AppError, AppErrorType } from '../model/exceptions';
 import { TabularDatabase, TabularMeasure } from '../model/tabular';
@@ -138,8 +137,9 @@ export class Host extends Dispatchable {
 
     // Functions
     apiCall(action: string, data = {}, options: RequestInit = {}, signinIfRequired = true, timeout = Host.DEFAULT_TIMEOUT): Promise<any> {
-        if (debug) return debug.apiCall(action);
-        console.log(`Call ${action}`, data);
+
+        let debugResponse = debug.catchApiCall(action, data);
+        if (debugResponse !== null) return debugResponse;
 
         let requestId = Utils.Text.uuid();
         let abortController = new AbortController();

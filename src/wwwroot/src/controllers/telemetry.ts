@@ -5,8 +5,7 @@
 */
 
 import { ApplicationInsights, ICustomProperties } from '@microsoft/applicationinsights-web'
-import { optionsController } from '../main';
-import { debug } from '../debug';
+import { optionsController, debug } from '../main';
 
 export interface TelemetryConfig {
    instrumentationKey: string,
@@ -31,7 +30,7 @@ export class Telemetry {
          disablePageShowEvents: ["pageshow", "visibilitychange"],
          disableAjaxTracking: true,
          autoTrackPageVisitTime: false,
-         enableDebug: (!!debug),
+         enableDebug: debug.enabled,
          enableAutoRouteTracking: false,
          disableTelemetry: !optionsController.options.telemetryEnabled
       } });

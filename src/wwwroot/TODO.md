@@ -2,15 +2,12 @@
 
 **@daniele**
 - Format DAX
-    - Automatic preview
     - Catch measure errors during formatting
     - Show changed/error measures indicators
-    - Allow "Current/Formatted(Preview)" to be arranged side by side
 - Options/About window
 - Telemetry 
     - Track idle time
     - Track UI events
-
 - Update notifications
 - Manage dates UI
 - Export Data UI

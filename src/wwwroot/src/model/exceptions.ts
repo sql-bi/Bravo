@@ -58,7 +58,7 @@ export class AppError {
         this.hasTraceId = (!!this.traceId || this.type == AppErrorType.Managed || this.type == AppErrorType.Response);
     }
 
-    getString() {
+    toString() {
         return `${ i18n(strings.error) }${ this.code ? ` ${this.type != AppErrorType.Managed ? "HTTP/" : "" }${ this.code }` : "" }: ${ this.message }${ this.traceId ? `\n${strings.traceId}: ${this.traceId}` : ""}`;
     }
 

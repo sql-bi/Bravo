@@ -4,7 +4,6 @@
  * https://www.sqlbi.com
 */
 
-import { debug } from '../debug';
 import { Dispatchable } from '../helpers/dispatchable';
 import { Utils } from '../helpers/utils';
 import { host } from '../main';
@@ -71,7 +70,7 @@ export class OptionsController extends Dispatchable {
 
     constructor(mode: optionsMode = "host") {
         super();
-        this.mode = (debug ? "browser" : mode);
+        this.mode = mode;
         this.options = this.defaultOptions;
         this.load();
         this.listen();

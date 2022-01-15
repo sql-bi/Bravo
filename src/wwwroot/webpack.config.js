@@ -4,7 +4,6 @@ const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const CssMinimizerPlugin = require("css-minimizer-webpack-plugin");
 
 module.exports = (env, argv) => {
-  const debug = env.debug;
   const mode = argv.mode || "development";
 
   return {
@@ -58,7 +57,6 @@ module.exports = (env, argv) => {
     },
     plugins:[
       new webpack.DefinePlugin({
-        'process.env.DEBUG': JSON.stringify(debug),
         'process.env.MODE': JSON.stringify(mode)
       }),
       new MiniCssExtractPlugin({

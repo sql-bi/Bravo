@@ -28,6 +28,8 @@ export class App {
 
     constructor() {
 
+        console.log(`--- Welcome to Bravo for Power BI ---`);
+
         this.element = _(".root");
 
         let sidebarItems: Dic<string> = {};
@@ -63,7 +65,7 @@ export class App {
                 e.preventDefault();
                 const url = element.dataset.href;
                 host.navigateTo(url);
-                
+
                 telemetry.track("Link", { url: url});
             }
         });

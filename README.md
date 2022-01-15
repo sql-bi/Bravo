@@ -16,8 +16,6 @@ To set up the environment and recompile the source you need to:
     `npm install`
 
  - Compile the source files using one of the NPM scripts in ***package.json***:
-    - `webpack --mode production` builds the final package (compressed .js output)
+    - `webpack --mode production` builds the final package (compressed .js/.css output)
 
-    - `webpack --watch --mode development` builds the package in development mode (larger and debuggable .js output) and watch for changes to .ts files
-    
-    - `webpack --watch --mode development --env debug` like before, but adding a flag that allows running the project in the browser by creating a fake host with predefined models.
+    - `webpack --watch --mode development` builds the package in development mode (larger and debuggable .js output) and watch for changes to .ts and .less files

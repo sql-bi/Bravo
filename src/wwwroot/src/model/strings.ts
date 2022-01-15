@@ -44,7 +44,7 @@ export enum strings {
     daxFormatterFormat = "Format Selected",
     daxFormatterFormattedCode = "Formatted (Preview)",
     daxFormatterOriginalCode = "Current",
-    daxFormatterPreviewAllButton = "Preview All",
+    daxFormatterPreviewAllButton = "Preview All Measures",
     daxFormatterPreviewButton = "Preview",
     daxFormatterAutoPreviewOption = "Automatic preview generation",
     daxFormatterPreviewDesc = "To generate a preview, Bravo needs to send this measure to the DAX Formatter service.",

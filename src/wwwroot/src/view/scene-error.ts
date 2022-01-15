@@ -55,7 +55,7 @@ export class ErrorScene extends BackableScene {
 
         _(".copy-error", this.element).addEventListener("click", e =>{
             e.preventDefault();
-            navigator.clipboard.writeText(this.error.getString());
+            navigator.clipboard.writeText(this.error.toString());
         });
 
         if (this.onRetry){
