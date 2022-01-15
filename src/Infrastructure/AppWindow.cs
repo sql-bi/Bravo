@@ -197,7 +197,7 @@ namespace Sqlbi.Bravo.Infrastructure
         /// </summary>
         private void CheckForUpdate()
         {
-            if (DesktopBridgeHelpers.IsPackagedAppInstance)
+            if (DesktopBridgeHelper.IsPackagedAppInstance)
                 return;
 
             AutoUpdater.AppCastURL = $"https://cdn.sqlbi.com/updates/BravoAutoUpdater.xml?nocache={ DateTimeOffset.Now.ToUnixTimeSeconds() }";

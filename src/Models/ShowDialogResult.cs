@@ -2,7 +2,7 @@
 
 namespace Sqlbi.Bravo.Models
 {
-    public class FileActionResult
+    public class ShowDialogResult
     {
         /// <summary>
         /// True if the user cancel closes the dialog box with action 'Cancel'

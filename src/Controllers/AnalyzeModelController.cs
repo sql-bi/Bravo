@@ -156,10 +156,10 @@ namespace Sqlbi.Bravo.Controllers
         [ActionName("ExportVpaxFromReport")]
         [Consumes(MediaTypeNames.Application.Json)]
         [Produces(MediaTypeNames.Application.Json)]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(FileActionResult))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ShowDialogResult))]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesDefaultResponseType]
-        public IActionResult ExportVpaxFromPBIDesktopReport(PBIDesktopReport report)
+        public IActionResult ExportVpaxFromPBIDesktopReport(PBIDesktopReport report, CancellationToken cancellationToken)
         {
             Stream stream;
             try
@@ -171,8 +171,15 @@ namespace Sqlbi.Bravo.Controllers
                 return Problem(ex.ProblemDetail, ex.ProblemInstance, StatusCodes.Status400BadRequest);
             }
 
-            var exportResult = ExportVpaxFile(fileName: report.ReportName, stream);
-            return Ok(exportResult);
+            var dialogResult = WindowDialogHelper.SaveFileDialog(fileName: report.ReportName, defaultExt: "VPAX", cancellationToken);
+            if (dialogResult.Canceled == false)
+            {
+                using var fileStream = System.IO.File.Create(dialogResult.Path!);
+                stream.Seek(0, SeekOrigin.Begin);
+                stream.CopyTo(fileStream);
+            }
+
+            return Ok(dialogResult);
         }
 
         /// <summary>
@@ -185,11 +192,11 @@ namespace Sqlbi.Bravo.Controllers
         [ActionName("ExportVpaxFromDataset")]
         [Consumes(MediaTypeNames.Application.Json)]
         [Produces(MediaTypeNames.Application.Json)]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(FileActionResult))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ShowDialogResult))]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesDefaultResponseType]
-        public async Task<IActionResult> ExportVpaxFromPBICloudDataset(PBICloudDataset dataset)
+        public async Task<IActionResult> ExportVpaxFromPBICloudDataset(PBICloudDataset dataset, CancellationToken cancellationToken)
         {
             if (await _pbicloudService.IsSignInRequiredAsync())
                 return Unauthorized();
@@ -204,62 +211,15 @@ namespace Sqlbi.Bravo.Controllers
                 return Problem(ex.ProblemDetail, ex.ProblemInstance, StatusCodes.Status400BadRequest);
             }
 
-            var exportResult = ExportVpaxFile(fileName: dataset.DisplayName, stream);
-            return Ok(exportResult);
-        }
-
-        private FileActionResult ExportVpaxFile(string? fileName, Stream stream)
-        {
-            var dialogOwner = Win32WindowWrapper.CreateFrom(Process.GetCurrentProcess().MainWindowHandle);
-            var dialogResult = System.Windows.Forms.DialogResult.None;
-            var dialog = new System.Windows.Forms.SaveFileDialog()
+            var dialogResult = WindowDialogHelper.SaveFileDialog(fileName: dataset.DisplayName, defaultExt: "VPAX", cancellationToken);
+            if (dialogResult.Canceled == false)
             {
-                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-                Filter = "Vpax files (*.vpax)|*.vpax|All files (*.*)|*.*",
-                Title = "Export file",
-                DefaultExt = "vpax",
-                FileName = fileName
-            };
-
-            if (HttpContext.RequestAborted.IsCancellationRequested)
-            {
-                return new FileActionResult
-                { 
-                    Canceled = true
-                };
-            }
-
-            var threadStart = new ThreadStart(() => dialogResult = dialog.ShowDialog(dialogOwner));
-            var thread = new Thread(threadStart);
-            thread.CurrentCulture = thread.CurrentUICulture = CultureInfo.CurrentCulture;
-            thread.SetApartmentState(ApartmentState.STA);
-            thread.Start();
-            thread.Join();
-
-            //var dialog2 = new Bravo.Infrastructure.Windows.SaveFileDialog
-            //{
-            //    InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-            //    Filter = "Vpax files (*.vpax)|*.vpax|All files (*.*)|*.*",
-            //    Title = "Export file",
-            //    DefaultExt = "vpax",
-            //    //FileName = fileName
-            //};
-            //var result = dialog2.ShowDialog(hWnd: Process.GetCurrentProcess().MainWindowHandle);
-
-            var actionResult = new FileActionResult
-            {
-                Canceled = dialogResult == System.Windows.Forms.DialogResult.Cancel,
-                Path = dialog.FileName
-            };
-
-            if (actionResult.Canceled == false)
-            {
-                using var fileStream = System.IO.File.Create(actionResult.Path!);
+                using var fileStream = System.IO.File.Create(dialogResult.Path!);
                 stream.Seek(0, SeekOrigin.Begin);
                 stream.CopyTo(fileStream);
             }
 
-            return actionResult;
+            return Ok(dialogResult);
         }
     }
 }

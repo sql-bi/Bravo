@@ -6,7 +6,7 @@ using System.Text;
 
 namespace Sqlbi.Bravo.Infrastructure.Helpers
 {
-    internal static class DesktopBridgeHelpers
+    internal static class DesktopBridgeHelper
     {
         [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
         private static extern int GetCurrentPackageFullName(ref int packageFullNameLength, StringBuilder packageFullName);
@@ -21,7 +21,7 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
         /// </summary>
         public static readonly bool IsPackagedAppInstance;
 
-        static DesktopBridgeHelpers()
+        static DesktopBridgeHelper()
         {
             IsPackagedAppInstance = IsRunningAsMsixPackage();
         }

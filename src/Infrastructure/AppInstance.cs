@@ -18,7 +18,7 @@ namespace Sqlbi.Bravo.Infrastructure
 
         public AppInstance()
         {
-            var prefix = DesktopBridgeHelpers.IsPackagedAppInstance ? AppConstants.ApplicationStoreAliasName : AppConstants.ApplicationName;
+            var prefix = DesktopBridgeHelper.IsPackagedAppInstance ? AppConstants.ApplicationStoreAliasName : AppConstants.ApplicationName;
 
             _instanceMutex = new Mutex(initiallyOwned: true, name: $"{ prefix }|4f9wB", out _instanceOwned);
 
