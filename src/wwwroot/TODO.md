@@ -1,19 +1,11 @@
 # TODO
 
 **@daniele**
-X Manage Dragging
-X Detect local report close
-    - Update readonly status
-X Sync
-    - update name from listreports
 - Format DAX
-    X Deselect on format
-    X Fix: don't replace all formatted measures with the one returned
-    - Catch measure errors
-        X In preview
-        - In format
+    - Automatic preview
+    - Catch measure errors during formatting
+    - Show changed/error measures indicators
     - Allow "Current/Formatted(Preview)" to be arranged side by side
-    X Open with DAX Formatter link 
 - Options/About window
 - Telemetry 
     - Track idle time
@@ -26,8 +18,6 @@ X Sync
 **@alberto**
 - Fix login window size?
 - Fix Icon DPI?
-- Implement External Tools web message
 - Returns a specific error if disconnected from Internet
+- External Tools web message
 - Updates web message
-
-- Api for opening links?

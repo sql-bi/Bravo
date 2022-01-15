@@ -89,6 +89,16 @@ export interface FileActionResult {
     path?: string
     canceled?: boolean
 }
+
+export enum WebMessageType {
+    None = 0,
+    ApplicationUpdateAvailable = 1,
+    NetworkStatusChanged = 2,
+    PBIDesktopReportOpen = 3,
+    PBICloudDatasetOpen = 4,
+    VpaxFileOpen = 5,
+}
+
 export class Host extends Dispatchable {
 
     static DEFAULT_TIMEOUT = 60 * 1000;
@@ -282,7 +292,6 @@ export class Host extends Dispatchable {
         return <Promise<DatabaseUpdateResult>>this.apiCall(`api/Update${type == DocType.dataset ? "Dataset" : "Report"}`, request, { method: "POST" });
     }
 
-
     /* Application */
 
     changeTheme(theme: ThemeType) {
@@ -295,5 +304,9 @@ export class Host extends Dispatchable {
 
     updateOptions(options: Options) {
         return this.apiCall("api/UpdateOptions", options, { method: "POST" });
+    }
+
+    navigateTo(url: string) {
+        return this.apiCall("api/NavigateTo", { address: url });
     }
 }

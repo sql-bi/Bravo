@@ -15,6 +15,7 @@ import { Confirm } from '../view/confirm';
 import { Connect, ConnectResponse } from '../view/connect';
 import { Sheet } from './sheet';
 import { PageType } from './page';
+import { host, telemetry } from '../main';
 
 export class App {
 
@@ -53,6 +54,17 @@ export class App {
             e.preventDefault(); 
             if (e.dataTransfer.files.length) {
                 this.dragFile(e.dataTransfer.files[0]);
+            }
+        });
+
+        // Catch pseudo links
+        document.addLiveEventListener("click", ".link", (e, element) => {
+            if ("href" in element.dataset) {
+                e.preventDefault();
+                const url = element.dataset.href;
+                host.navigateTo(url);
+                
+                telemetry.track("Link", { url: url});
             }
         });
 

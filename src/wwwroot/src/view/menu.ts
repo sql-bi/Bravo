@@ -57,6 +57,10 @@ export class Menu extends View {
         this.listen();
     }
 
+    getItemElement(id: string): HTMLElement {
+        return _(`#body-${id}`, this.body);
+    }
+
     listen() {
         __(`.menu .item`, this.element).forEach(div => {
 
@@ -69,13 +73,13 @@ export class Menu extends View {
     }
 
     render(id: string): HTMLElement {
-        let itemBody = _(`#body-${id}`, this.body);
+        let itemBody = this.getItemElement(id);
         if (itemBody.empty) {
 
             let html = `<div id="body-${id}" class="item-body"></div>`;
             this.body.insertAdjacentHTML("beforeend", html);
 
-            itemBody = _(`#body-${id}`, this.body);
+            itemBody = this.getItemElement(id);
 
             if (this.items[id].onRender)
                 this.items[id].onRender(itemBody);

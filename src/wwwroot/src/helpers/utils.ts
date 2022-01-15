@@ -567,8 +567,9 @@ declare global {
         toggleAttr(name: string, toggle?: boolean, value?: string): void
         toggle(toggle: boolean): void
     }
-    interface ParentNode {
+    interface Node {
         empty: boolean
+        addLiveEventListener(event: string, selector: string, callback: (e: Event, element: HTMLElement) => void): void
     }
 }
 HTMLElement.prototype.toggleClass = function(name: string, toggle?: boolean) {
@@ -608,6 +609,19 @@ export function _(selector: string, container: ParentNode = document): HTMLEleme
 }
 export function __(selector: string, container: ParentNode = document): NodeList {
     return container.querySelectorAll(selector);
+}
+
+// Live event listeners
+Node.prototype.addLiveEventListener = function(event: string, selector: string, callback: (e: Event, element: HTMLElement) => void) {
+
+    (<Node>this).addEventListener(event, e => {
+        let element = (<HTMLElement>e.target);
+        if (element && element.matches(selector)) {
+            if (callback) {
+         	    callback(e, element);
+            }
+        }
+    });
 }
 
 // On ready
