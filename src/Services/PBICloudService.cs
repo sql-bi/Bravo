@@ -51,6 +51,21 @@ namespace Sqlbi.Bravo.Services
             PropertyNameCaseInsensitive = false, // required by SharedDatasetModel LastRefreshTime/lastRefreshTime properties
         };
 
+        public static readonly Uri PBIApiUri = new("https://api.powerbi.com");
+        public static readonly Uri PBIPremiumServerUri = new($"{ PBIPremiumProtocolScheme }://api.powerbi.com");
+
+        /// <summary>
+        /// All Power BI workspaces published to the Power BI service
+        /// </summary>
+        public const string PBIDatasetProtocolScheme = "pbiazure";
+        /// <summary>
+        /// All Power BI workspaces published to the Power BI service and assigned to Premium Capacity (i.e. workspaces assigned to a Px, Ax or EMx SKU), or Premium-Per-User (PPU)
+        /// </summary>
+        public const string PBIPremiumProtocolScheme = "powerbi";
+        //public const string PBIDedicatedProtocolScheme = "pbidedicated";
+        //public const string ASAzureLinkProtocolScheme = "link";
+        //public const string ASAzureProtocolScheme = "asazure";
+
         public PBICloudService(IPBICloudAuthenticationService authenticationService, HttpClient httpClient)
         {
             _authenticationService = authenticationService;
@@ -117,7 +132,7 @@ namespace Sqlbi.Bravo.Services
             _httpClient.DefaultRequestHeaders.Accept.Clear();
             _httpClient.DefaultRequestHeaders.Authorization = AuthenticationHeaderValue.Parse(CurrentAuthentication?.CreateAuthorizationHeader());
 
-            var requestUri = new Uri(AppConstants.PBICloudApiUri, relativeUri: GetWorkspacesRequestUri);
+            var requestUri = new Uri(PBIApiUri, relativeUri: GetWorkspacesRequestUri);
             using var response = await _httpClient.GetAsync(requestUri).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
 
@@ -165,15 +180,24 @@ namespace Sqlbi.Bravo.Services
         {
             // Dataset connectivity with the XMLA endpoint
             // https://docs.microsoft.com/en-us/power-bi/admin/service-premium-connect-tools
-
-            // Duplicate workspace names
-            // https://docs.microsoft.com/en-us/power-bi/admin/service-premium-connect-tools#duplicate-workspace-names
-
-            // Connection properties
+            // Connection string properties
             // https://docs.microsoft.com/en-us/analysis-services/instances/connection-string-properties-analysis-services?view=asallproducts-allversions
 
-            var tenantName = "myorg"; // TODO: add support for B2B users tenant name
-            var serverName = $"powerbi://api.powerbi.com/v1.0/{ tenantName }/{ dataset.WorkspaceName }";
+            // TODO: Handle possible duplicated workspace name - when connecting to a workspace with the same name as another workspace, append the workspace guid to the workspace name
+            // https://docs.microsoft.com/en-us/power-bi/admin/service-premium-connect-tools#duplicate-workspace-names
+            //var workspaceUniqueName = $"{ dataset.WorkspaceName } - { dataset.WorkspaceId }";
+
+            // TODO: Handle possible duplicated dataset name - when connecting to a dataset with the same name as another dataset in the same workspace, append the dataset guid to the dataset name
+            // https://docs.microsoft.com/en-us/power-bi/admin/service-premium-connect-tools#duplicate-dataset-name
+            //var datasetUniqueName = $"{ dataset.DisplayName } - { dataset.DatabaseName }";
+
+            // TODO: add support for B2B users
+            // - Users with UPNs in the same tenant (not B2B) can replace the tenant name with 'myorg'
+            // - B2B users must specify their organization UPN in tenant name
+            // var homeTenant = CurrentAuthentication?.Account.GetTenantProfiles().SingleOrDefault((t) => t.IsHomeTenant);
+            var tenantName = "myorg";
+
+            var serverName = $"{ dataset.ServerName }/v1.0/{ tenantName }/{ dataset.WorkspaceName }";
             var databaseName = dataset.DisplayName;
             var connectionString = ConnectionStringHelper.BuildForPBICloudDataset(serverName, databaseName, CurrentAuthentication?.AccessToken);
 
@@ -185,7 +209,7 @@ namespace Sqlbi.Bravo.Services
             _httpClient.DefaultRequestHeaders.Accept.Clear();
             _httpClient.DefaultRequestHeaders.Authorization = AuthenticationHeaderValue.Parse(CurrentAuthentication?.CreateAuthorizationHeader());
 
-            var requestUri = new Uri(AppConstants.PBICloudApiUri, relativeUri: GetResourceUserPhotoRequestUri.FormatInvariant(username));
+            var requestUri = new Uri(PBIApiUri, relativeUri: GetResourceUserPhotoRequestUri.FormatInvariant(username));
             using var response = await _httpClient.GetAsync(requestUri).ConfigureAwait(false);
 
             if (response.IsSuccessStatusCode)

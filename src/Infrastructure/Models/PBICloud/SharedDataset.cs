@@ -20,13 +20,17 @@ namespace Sqlbi.Bravo.Infrastructure.Models.PBICloud
         public SharedDatasetPermissions Permissions { get; set; }
 
         public SharedDatasetModel Model { get; set; }
-#nullable enable
+
+#pragma warning disable CS8632 // The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
         public SharedDatasetGalleryItem? GalleryItem { get; set; }
-#nullable disable
+#pragma warning restore CS8632 // The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
+
         public string WorkspaceObjectId { get; set; }
-#nullable enable
+
+#pragma warning disable CS8632 // The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
         public string? SharedFromEnterpriseCapacitySku { get; set; }
-#nullable disable
+#pragma warning restore CS8632 // The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
+
         public DateTime LastVisitedTimeUTC { get; set; }
     }
 }

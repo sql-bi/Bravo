@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace Sqlbi.Bravo.Infrastructure.Messages
@@ -8,13 +9,13 @@ namespace Sqlbi.Bravo.Infrastructure.Messages
         /// <summary>
         /// Web message type identifier
         /// </summary>
-        [Required]
-        [JsonPropertyName("type")]
         WebMessageType MessageType { get; }
     }
 
     internal class ApplicationUpdateAvailableWebMessage : IWebMessage
     {
+        [Required]
+        [JsonPropertyName("type")]
         public WebMessageType MessageType => WebMessageType.ApplicationUpdateAvailable;
 
         [JsonPropertyName("currentVersion")]
@@ -28,10 +29,15 @@ namespace Sqlbi.Bravo.Infrastructure.Messages
 
         [JsonPropertyName("changelogUrl")]
         public string? ChangelogUrl { get; set; }
+
+        [JsonIgnore]
+        public string? AsString => JsonSerializer.Serialize(this, AppConstants.DefaultJsonOptions);
     }
 
     internal class NetworkStatusChangedWebMessage : IWebMessage
     {
+        [Required]
+        [JsonPropertyName("type")]
         public WebMessageType MessageType => WebMessageType.NetworkStatusChanged;
 
         [JsonPropertyName("internetAccess")]
@@ -40,6 +46,8 @@ namespace Sqlbi.Bravo.Infrastructure.Messages
 
     internal class PBIDesktopReportOpenWebMessage : IWebMessage
     {
+        [Required]
+        [JsonPropertyName("type")]
         public WebMessageType MessageType => WebMessageType.PBIDesktopReportOpen;
 
         /// <summary>
@@ -69,6 +77,8 @@ namespace Sqlbi.Bravo.Infrastructure.Messages
 
     internal class PBICloudDatasetOpenWebMessage : IWebMessage
     {
+        [Required]
+        [JsonPropertyName("type")]
         public WebMessageType MessageType => WebMessageType.PBICloudDatasetOpen;
 
         /// <summary>
@@ -86,6 +96,8 @@ namespace Sqlbi.Bravo.Infrastructure.Messages
 
     internal class VpaxFileOpenWebMessage : IWebMessage
     {
+        [Required]
+        [JsonPropertyName("type")]
         public WebMessageType MessageType => WebMessageType.VpaxFileOpen;
 
         /// <summary>

@@ -2,6 +2,8 @@
 using System.Configuration;
 using System.Diagnostics;
 using System.IO;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Sqlbi.Bravo.Infrastructure
 {
@@ -23,14 +25,17 @@ namespace Sqlbi.Bravo.Infrastructure
         public static readonly string PBIDesktopMainWindowTitleSuffix = " - Power BI Desktop";
         public static readonly string DefaultMsalTokenCacheFilePath = Path.Combine(ApplicationFolderLocalDataPath!, ".msalcache");
         public static readonly TimeSpan MSALSignInTimeout = TimeSpan.FromMinutes(5);
-        public static readonly Uri PBICloudApiUri = new("https://api.powerbi.com");
 
         static AppConstants()
         {
             ApplicationFileVersion = VersionInfo.FileVersion ?? throw new ConfigurationErrorsException(nameof(VersionInfo.FileVersion));
             //ApplicationHostWindowTitle = VersionInfo.ProductName ?? throw new ConfigurationErrorsException(nameof(VersionInfo.ProductName));
+            DefaultJsonOptions = new(JsonSerializerDefaults.Web);
+            DefaultJsonOptions.Converters.Add(new JsonStringEnumMemberConverter()); // https://github.com/dotnet/runtime/issues/31081#issuecomment-578459083
         }
 
         public static string ApplicationFileVersion { get; }
+
+        public static JsonSerializerOptions DefaultJsonOptions { get; }
     }
 }
