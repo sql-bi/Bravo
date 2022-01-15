@@ -71,7 +71,7 @@ namespace Sqlbi.Bravo.Infrastructure
                 // TODO: remove diagnostic messages
                 var messageString = JsonSerializer.Serialize(startupMessage, new JsonSerializerOptions { WriteIndented = true });
                 Trace.WriteLine($"::Bravo:INF:WndProcHook[WM_COPYDATA]:{ messageString }");
-                _window.OpenAlertWindow("::Bravo:INF:WndProcHook[WM_COPYDATA]", messageString);
+                //_window.OpenAlertWindow("::Bravo:INF:WndProcHook[WM_COPYDATA]", messageString);
 #endif
                 var webMessageString = startupMessage.ToWebMessageString();
                 if (webMessageString is not null)

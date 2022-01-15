@@ -34,8 +34,8 @@ namespace Sqlbi.Bravo.Infrastructure.Messages
         {
             if (startupMessage.ArgumentServerName is null)
                 return null;
-            
-            IWebMessage? webMessage = null; 
+
+            string? webMessageString = null;
 
             if (startupMessage.ArgumentServerName.StartsWith("localhost:", StringComparison.OrdinalIgnoreCase))
             {
@@ -45,26 +45,28 @@ namespace Sqlbi.Bravo.Infrastructure.Messages
 
                 if (IPEndPoint.TryParse(serverEndPointString, out _))
                 {
-                    webMessage = new PBIDesktopReportOpenWebMessage
+                    var webMessage = new PBIDesktopReportOpenWebMessage
                     {
                         ProcessId = startupMessage.ParentProcessId,
                         ReportName = startupMessage.ParentProcessMainWindowTitle,
                         ServerName = startupMessage.ArgumentServerName,
                         DatabaseName = startupMessage.ArgumentDatabaseName
                     };
+                    webMessageString = JsonSerializer.Serialize(webMessage, AppConstants.DefaultJsonOptions);
                 }
             }
             else if (IPEndPoint.TryParse(startupMessage.ArgumentServerName, out _) /* && IPAddress.IsLoopback(serverEndPoint.Address) */)
             {
                 // <ip-address>[:port]
 
-                webMessage = new PBIDesktopReportOpenWebMessage
+                var webMessage = new PBIDesktopReportOpenWebMessage
                 {
                     ProcessId = startupMessage.ParentProcessId,
                     ReportName = startupMessage.ParentProcessMainWindowTitle,
                     ServerName = startupMessage.ArgumentServerName,
                     DatabaseName = startupMessage.ArgumentDatabaseName
                 };
+                webMessageString = JsonSerializer.Serialize(webMessage, AppConstants.DefaultJsonOptions);
             }
             else if (Uri.TryCreate(startupMessage.ArgumentServerName, UriKind.Absolute, out var serverUri))
             {
@@ -76,21 +78,16 @@ namespace Sqlbi.Bravo.Infrastructure.Messages
 
                 if (isPremiumDataset || isGenericDataset)
                 {
-                    webMessage = new PBICloudDatasetOpenWebMessage
+                    var webMessage = new PBICloudDatasetOpenWebMessage
                     {
                         ServerName = startupMessage.ArgumentServerName,
                         DatabaseName = startupMessage.ArgumentDatabaseName
                     };
+                    webMessageString = JsonSerializer.Serialize(webMessage, AppConstants.DefaultJsonOptions);
                 }
             }
 
-            if (webMessage is not null)
-            {
-                var webMessageString = JsonSerializer.Serialize(webMessage, AppConstants.DefaultJsonOptions);
-                return webMessageString;
-            }
-
-            return null;
+            return webMessageString;
         }
     }
 }
