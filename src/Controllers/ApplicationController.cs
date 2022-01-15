@@ -146,5 +146,29 @@ namespace Sqlbi.Bravo.Controllers
 
             return Ok();
         }
+
+        /// <summary>
+        /// Opens the provided URL using the system's default browser
+        /// </summary>
+        /// <response code="200">Status200OK - Success</response>
+        [HttpGet]
+        [ActionName("DialogFolderBrowser")]
+        [Consumes(MediaTypeNames.Application.Json)]
+        [Produces(MediaTypeNames.Application.Json)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesDefaultResponseType]
+        public IActionResult DialogFolderBrowser(Uri address)
+        {
+            if (address.IsAbsoluteUri && (Uri.UriSchemeHttps.Equals(address.Scheme) || Uri.UriSchemeHttp.Equals(address.Scheme)))
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    UseShellExecute = true,
+                    FileName = address.OriginalString
+                });
+            }
+
+            return Ok();
+        }
     }
 }

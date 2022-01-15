@@ -156,27 +156,30 @@ namespace Sqlbi.Bravo.Controllers
         [ActionName("ExportVpaxFromReport")]
         [Consumes(MediaTypeNames.Application.Json)]
         [Produces(MediaTypeNames.Application.Json)]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ShowDialogResult))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ExportResult))]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesDefaultResponseType]
         public IActionResult ExportVpaxFromPBIDesktopReport(PBIDesktopReport report, CancellationToken cancellationToken)
         {
-            Stream stream;
-            try
-            {
-                stream = _pbidesktopService.ExportVpax(report, includeTomModel: false, includeVpaModel: false, readStatisticsFromData: false, sampleRows: 0);
-            }
-            catch (TOMDatabaseException ex)
-            {
-                return Problem(ex.ProblemDetail, ex.ProblemInstance, StatusCodes.Status400BadRequest);
-            }
-
             var dialogResult = WindowDialogHelper.SaveFileDialog(fileName: report.ReportName, defaultExt: "VPAX", cancellationToken);
             if (dialogResult.Canceled == false)
             {
-                using var fileStream = System.IO.File.Create(dialogResult.Path!);
-                stream.Seek(0, SeekOrigin.Begin);
-                stream.CopyTo(fileStream);
+                Stream stream;
+                try
+                {
+                    stream = _pbidesktopService.ExportVpax(report, includeTomModel: false, includeVpaModel: false, readStatisticsFromData: false, sampleRows: 0);
+                }
+                catch (TOMDatabaseException ex)
+                {
+                    return Problem(ex.ProblemDetail, ex.ProblemInstance, StatusCodes.Status400BadRequest);
+                }
+
+                if (cancellationToken.IsCancellationRequested == false)
+                {
+                    using var fileStream = System.IO.File.Create(dialogResult.Path!);
+                    stream.Seek(0, SeekOrigin.Begin);
+                    stream.CopyTo(fileStream);
+                }
             }
 
             return Ok(dialogResult);
@@ -192,7 +195,7 @@ namespace Sqlbi.Bravo.Controllers
         [ActionName("ExportVpaxFromDataset")]
         [Consumes(MediaTypeNames.Application.Json)]
         [Produces(MediaTypeNames.Application.Json)]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ShowDialogResult))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ExportResult))]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesDefaultResponseType]
@@ -201,22 +204,25 @@ namespace Sqlbi.Bravo.Controllers
             if (await _pbicloudService.IsSignInRequiredAsync())
                 return Unauthorized();
 
-            Stream stream;
-            try
-            {
-                stream = _pbicloudService.ExportVpax(dataset, includeTomModel: false, includeVpaModel: false, readStatisticsFromData: false, sampleRows: 0);
-            }
-            catch (TOMDatabaseException ex)
-            {
-                return Problem(ex.ProblemDetail, ex.ProblemInstance, StatusCodes.Status400BadRequest);
-            }
-
             var dialogResult = WindowDialogHelper.SaveFileDialog(fileName: dataset.DisplayName, defaultExt: "VPAX", cancellationToken);
             if (dialogResult.Canceled == false)
             {
-                using var fileStream = System.IO.File.Create(dialogResult.Path!);
-                stream.Seek(0, SeekOrigin.Begin);
-                stream.CopyTo(fileStream);
+                Stream stream;
+                try
+                {
+                    stream = _pbicloudService.ExportVpax(dataset, includeTomModel: false, includeVpaModel: false, readStatisticsFromData: false, sampleRows: 0);
+                }
+                catch (TOMDatabaseException ex)
+                {
+                    return Problem(ex.ProblemDetail, ex.ProblemInstance, StatusCodes.Status400BadRequest);
+                }
+
+                if (cancellationToken.IsCancellationRequested == false)
+                {
+                    using var fileStream = System.IO.File.Create(dialogResult.Path!);
+                    stream.Seek(0, SeekOrigin.Begin);
+                    stream.CopyTo(fileStream);
+                }
             }
 
             return Ok(dialogResult);

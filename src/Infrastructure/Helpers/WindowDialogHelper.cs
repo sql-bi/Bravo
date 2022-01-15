@@ -1,4 +1,5 @@
-﻿using Sqlbi.Bravo.Infrastructure.Windows;
+﻿using Sqlbi.Bravo.Infrastructure.Extensions;
+using Sqlbi.Bravo.Infrastructure.Windows;
 using Sqlbi.Bravo.Models;
 using System;
 using System.Diagnostics;
@@ -19,13 +20,13 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
             thread.Join();
         }
 
-        public static ShowDialogResult SaveFileDialog(string? fileName, string defaultExt, CancellationToken cancellationToken)
+        public static ExportResult SaveFileDialog(string? fileName, string defaultExt, CancellationToken cancellationToken)
         {
-            var defaultExtLowercase = defaultExt.ToLower();
-
             var dialogOwner = Win32WindowWrapper.CreateFrom(Process.GetCurrentProcess().MainWindowHandle);
             var dialogResult = System.Windows.Forms.DialogResult.None;
-            var dialog = new System.Windows.Forms.SaveFileDialog()
+            var defaultExtLowercase = defaultExt.ToLower();
+
+            using var dialog = new System.Windows.Forms.SaveFileDialog()
             {
                 InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
                 Filter = $"{ defaultExt } files (*.{ defaultExtLowercase })|*.{ defaultExtLowercase }|All files (*.*)|*.*",
@@ -34,30 +35,47 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
                 FileName = fileName
             };
 
-            if (cancellationToken.IsCancellationRequested)
+            if (!cancellationToken.IsCancellationRequested)
             {
-                return new ShowDialogResult
-                {
-                    Canceled = true
-                };
+                RunDialog(() => dialogResult = dialog.ShowDialog(dialogOwner));
+
+                //var dialog2 = new Bravo.Infrastructure.Windows.SaveFileDialog
+                //{
+                //    InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+                //    Filter = "Vpax files (*.vpax)|*.vpax|All files (*.*)|*.*",
+                //    Title = "Export file",
+                //    DefaultExt = "vpax",
+                //    //FileName = fileName
+                //};
+                //var result = dialog2.ShowDialog(hWnd: Process.GetCurrentProcess().MainWindowHandle);
             }
 
-            RunDialog(() => dialogResult = dialog.ShowDialog(dialogOwner));
-
-            //var dialog2 = new Bravo.Infrastructure.Windows.SaveFileDialog
-            //{
-            //    InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-            //    Filter = "Vpax files (*.vpax)|*.vpax|All files (*.*)|*.*",
-            //    Title = "Export file",
-            //    DefaultExt = "vpax",
-            //    //FileName = fileName
-            //};
-            //var result = dialog2.ShowDialog(hWnd: Process.GetCurrentProcess().MainWindowHandle);
-
-            return new ShowDialogResult
+            return new ExportResult
             {
                 Canceled = dialogResult == System.Windows.Forms.DialogResult.Cancel,
-                Path = dialog.FileName
+                Path = dialog.FileName.NullIfEmpty()
+            };
+        }
+
+        public static ExportResult BrowseFolderDialog(CancellationToken cancellationToken)
+        {
+            var dialogOwner = Win32WindowWrapper.CreateFrom(Process.GetCurrentProcess().MainWindowHandle);
+            var dialogResult = System.Windows.Forms.DialogResult.None;
+            var dialog = new System.Windows.Forms.FolderBrowserDialog()
+            {
+                RootFolder = Environment.SpecialFolder.MyDocuments,
+                ShowNewFolderButton = true,
+            };
+            
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                RunDialog(() => dialogResult = dialog.ShowDialog(dialogOwner));
+            }
+
+            return new ExportResult
+            {
+                Canceled = dialogResult == System.Windows.Forms.DialogResult.Cancel,
+                Path = dialog.SelectedPath.NullIfEmpty()
             };
         }
     }

@@ -2,16 +2,16 @@
 
 namespace Sqlbi.Bravo.Models
 {
-    public class ShowDialogResult
+    public class ExportResult
     {
         /// <summary>
-        /// True if the user cancel closes the dialog box with action 'Cancel'
+        /// True if the user cancel the action, otherwise false
         /// </summary>
         [JsonPropertyName("canceled")]
         public bool? Canceled { get; set; }
 
         /// <summary>
-        /// Full path of the selected file
+        /// Full path of the selected file/folder
         /// </summary>
         [JsonPropertyName("path")]
         public string? Path { get; set; }
