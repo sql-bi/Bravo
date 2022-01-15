@@ -29,7 +29,7 @@ namespace Sqlbi.Bravo
         {
             services.AddControllers().AddJsonOptions((jsonOptions) =>
             {
-                jsonOptions.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+                jsonOptions.JsonSerializerOptions.Converters.Add(new JsonStringEnumMemberConverter()); // Macross.Json.Extensions https://github.com/dotnet/runtime/issues/31081#issuecomment-578459083
                 jsonOptions.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
             });
             services.AddCors((corsOptions) =>

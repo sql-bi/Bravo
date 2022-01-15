@@ -34,10 +34,13 @@ namespace Sqlbi.Bravo.Models
 
     public enum PBICloudDatasetEndorsement
     {
+        [JsonPropertyName("None")]
         None = 0,
 
+        [JsonPropertyName("Promoted")]
         Promoted = 1,
 
+        [JsonPropertyName("Certified")]
         Certified = 2,
     }
 }

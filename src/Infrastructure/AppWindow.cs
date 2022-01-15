@@ -84,7 +84,8 @@ namespace Sqlbi.Bravo.Infrastructure
                     contextSessionId = ContextTelemetryInitializer.SessionId,
                     contextUserId = ContextTelemetryInitializer.UserId,
                 }
-            });
+            }, AppConstants.DefaultJsonOptions);
+
             var script = $@"var CONFIG = { config };";
             var stream = new MemoryStream(Encoding.UTF8.GetBytes(script));
 
@@ -225,8 +226,7 @@ namespace Sqlbi.Bravo.Infrastructure
                         CurrentVersion = updateInfo.CurrentVersion,
                         InstalledVersion = updateInfo.InstalledVersion.ToString(),
                     };
-                    var updateMessageString = JsonSerializer.Serialize(updateMessage, new(JsonSerializerDefaults.Web));
-                    _window.SendWebMessage(updateMessageString);
+                    _window.SendWebMessage(updateMessage.AsString);
 
                     // TODO: complete check for update
 

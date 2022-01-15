@@ -3,6 +3,7 @@ using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
+using Sqlbi.Bravo.Infrastructure;
 using Sqlbi.Bravo.Infrastructure.Configuration.Options;
 using Sqlbi.Bravo.Models;
 using Sqlbi.Infrastructure.Configuration.Settings;
@@ -80,7 +81,7 @@ namespace Sqlbi.Bravo.Controllers
         [ProducesDefaultResponseType]
         public IActionResult UpdateOptions(BravoOptions options)
         {
-            var customOptionsAsString = JsonSerializer.Serialize(options.CustomOptions);
+            var customOptionsAsString = JsonSerializer.Serialize(options.CustomOptions, AppConstants.DefaultJsonOptions);
 
             _userOptions.Update((o) =>
             {

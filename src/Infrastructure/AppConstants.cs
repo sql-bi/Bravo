@@ -2,6 +2,8 @@
 using System.Configuration;
 using System.Diagnostics;
 using System.IO;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Sqlbi.Bravo.Infrastructure
 {
@@ -29,8 +31,12 @@ namespace Sqlbi.Bravo.Infrastructure
         {
             ApplicationFileVersion = VersionInfo.FileVersion ?? throw new ConfigurationErrorsException(nameof(VersionInfo.FileVersion));
             //ApplicationHostWindowTitle = VersionInfo.ProductName ?? throw new ConfigurationErrorsException(nameof(VersionInfo.ProductName));
+            DefaultJsonOptions = new(JsonSerializerDefaults.Web);
+            DefaultJsonOptions.Converters.Add(new JsonStringEnumMemberConverter()); // https://github.com/dotnet/runtime/issues/31081#issuecomment-578459083
         }
 
         public static string ApplicationFileVersion { get; }
+
+        public static JsonSerializerOptions DefaultJsonOptions { get; }
     }
 }
