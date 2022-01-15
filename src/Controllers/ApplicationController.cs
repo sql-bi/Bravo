@@ -6,6 +6,7 @@ using Microsoft.Extensions.Options;
 using Sqlbi.Bravo.Infrastructure.Configuration.Options;
 using Sqlbi.Bravo.Models;
 using Sqlbi.Infrastructure.Configuration.Settings;
+using System;
 using System.Diagnostics;
 using System.Net.Mime;
 using System.Text.Json;
@@ -116,6 +117,30 @@ namespace Sqlbi.Bravo.Controllers
                 case ThemeType.Auto:
                     Uxtheme.ChangeTheme(windowHandle, useDark: Uxtheme.IsSystemUsingDarkMode());
                     break;
+            }
+
+            return Ok();
+        }
+
+        /// <summary>
+        /// Opens the provided URL using the system's default browser
+        /// </summary>
+        /// <response code="200">Status200OK - Success</response>
+        [HttpGet]
+        [ActionName("NavigateTo")]
+        [Consumes(MediaTypeNames.Application.Json)]
+        [Produces(MediaTypeNames.Application.Json)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesDefaultResponseType]
+        public IActionResult BrowserNavigateTo(Uri address)
+        {
+            if (address.IsAbsoluteUri && (Uri.UriSchemeHttps.Equals(address.Scheme) || Uri.UriSchemeHttp.Equals(address.Scheme)))
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    UseShellExecute = true,
+                    FileName = address.OriginalString
+                });
             }
 
             return Ok();
