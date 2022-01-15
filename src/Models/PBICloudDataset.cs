@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Sqlbi.Bravo.Infrastructure;
+using System;
 using System.Text.Json.Serialization;
 
 #nullable disable
@@ -8,13 +9,19 @@ namespace Sqlbi.Bravo.Models
     public class PBICloudDataset
     {
         [JsonPropertyName("workspaceId")]
-        public long WorkspaceId { get; set; }
+        public string WorkspaceId { get; set; }
 
         [JsonPropertyName("workspaceName")]
         public string WorkspaceName { get; set; }
 
         [JsonPropertyName("id")]
         public long Id { get; set; }
+
+        [JsonPropertyName("serverName")]
+        public string ServerName { get; set; }
+
+        [JsonPropertyName("databaseName")]
+        public string DatabaseName { get; set; }
 
         [JsonPropertyName("name")]
         public string DisplayName { get; set; }

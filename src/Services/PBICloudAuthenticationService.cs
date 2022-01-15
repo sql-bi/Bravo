@@ -243,7 +243,7 @@ namespace Sqlbi.Bravo.Services
         {
             _httpClient = new HttpClient();
             _httpClient.DefaultRequestHeaders.Accept.Clear();
-            _httpClient.BaseAddress = AppConstants.PBICloudApiUri;
+            _httpClient.BaseAddress = PBICloudService.PBIApiUri;
         }
 
         public PBICloudSettings()

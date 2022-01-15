@@ -134,18 +134,15 @@ namespace Sqlbi.Bravo.Controllers
             var onlineDatasets = await _pbicloudService.GetSharedDatasetsAsync();
 
             var selectedWorkspaces = onlineWorkspaces.Where((w) => w.CapacitySkuType == WorkspaceCapacitySkuType.Premium);
-            // Exclude datasets not accessible by the XMLA endpoint (unsupported-datasets) https://docs.microsoft.com/en-us/power-bi/admin/service-premium-connect-tools#unsupported-datasets
-            // - (TODO) Datasets based on a live connection to an Azure Analysis Services or SQL Server Analysis Services model.
-            // - (TODO) Datasets based on a live connection to a Power BI dataset in another workspace.
-            // - Datasets with Push data by using the REST API.
-            // - Excel workbook datasets.
-            var selectedDatasets = onlineDatasets.Where((d) => !d.Model.IsExcelWorkbook && !d.Model.IsPushDataEnabled);
+            var selectedDatasets = onlineDatasets.Where(IsAccessibleByXmlaEndpoint);
 
-            var datasets = selectedDatasets.Join(selectedWorkspaces, (d) => d.WorkspaceObjectId, (w) => w.Id, resultSelector: (d, w) => new PBICloudDataset
+            var datasets = selectedDatasets.Join(selectedWorkspaces, (d) => d.WorkspaceObjectId, (w) => w.Id, (d, w) => new PBICloudDataset
             {
-                WorkspaceId = d.WorkspaceId,
-                WorkspaceName = d.WorkspaceName,
+                WorkspaceId = w.Id,
+                WorkspaceName = w.Name,
                 Id = d.Model.Id,
+                ServerName = PBICloudService.PBIPremiumServerUri.OriginalString,
+                DatabaseName = d.Model.DBName,
                 DisplayName = d.Model.DisplayName,
                 Description = d.Model.Description,
                 Owner = $"{ d.Model.CreatorUser.GivenName } { d.Model.CreatorUser.FamilyName }",
@@ -155,6 +152,30 @@ namespace Sqlbi.Bravo.Controllers
             StringComparer.InvariantCultureIgnoreCase).ToArray();
 
             return Ok(datasets);
+
+            static bool IsAccessibleByXmlaEndpoint(SharedDataset dataset)
+            {
+                // Exclude unsupported datasets - a.k.a. datasets not accessible by the XMLA endpoint
+                // see https://docs.microsoft.com/en-us/power-bi/admin/service-premium-connect-tools#unsupported-datasets
+
+                // TODO: Exclude datasets based on a live connection to an Azure Analysis Services or SQL Server Analysis Services model
+                //if (dataset.Model.DirectQueryMode)
+                //    return false;
+
+                // TODO: Exclude datasets based on a live connection to a Power BI dataset in another workspace
+                //if ( ?? )
+                //    return false;
+
+                // Exclude datasets with Push data by using the REST API
+                if (dataset.Model.IsPushDataEnabled)
+                    return false;
+
+                // Exclude excel workbook datasets
+                if (dataset.Model.IsExcelWorkbook)
+                    return false;
+
+                return true;
+            }
         }
 
         /// <summary>
