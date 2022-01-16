@@ -15,4 +15,8 @@
 **@alberto**
 - Fix login window size?
 - Fix Icon DPI?
-- Returns a specific error if disconnected from Internet
+- Returns a specific error if disconnected from the Internet
+
+- Error 302 after opening a desktop report connected to a remote dataset:
+    >Power BI Desktop instance database not found.
+    >Trace Id: 00-f44eafcf77b18149af48edd1d681af2f-812e477802b5d94b-00
