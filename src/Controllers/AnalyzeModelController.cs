@@ -128,8 +128,8 @@ namespace Sqlbi.Bravo.Controllers
             if (await _pbicloudService.IsSignInRequiredAsync())
                 return Unauthorized();
 
-            var reports = _pbicloudService.GetDatasetsAsync();
-            return Ok(reports);
+            var datasets = await _pbicloudService.GetDatasetsAsync();
+            return Ok(datasets);
         }
 
         /// <summary>
