@@ -4,11 +4,12 @@
  * https://www.sqlbi.com
 */
 
+import { ContextMenu } from '../helpers/contextmenu';
 import { Dic, Utils, _, __ } from '../helpers/utils';
 import { Doc, DocType } from '../model/doc';
 import { i18n } from '../model/i18n'; 
 import { strings } from '../model/strings';
-import { ChromeTabs } from "./chrome-tabs";
+import { ChromeTabs, ChromeTabsMenuEvent } from "./chrome-tabs";
 import { View } from './view';
 
 export interface AddedTabInfo {
@@ -72,6 +73,31 @@ export class Tabs extends View {
         this.chromeTabs.on("tabClose", (tabEl: HTMLElement) => {
             if (tabEl) {
                 this.trigger("close", <RemovedTabInfo>{ id: tabEl.dataset.tabId, element: tabEl});
+            }
+        });
+        this.chromeTabs.on("tabMenu", (e: ChromeTabsMenuEvent) => {
+            if (e.element) {
+                new ContextMenu({
+                    width: "auto",
+                    items: [
+                        { label: i18n(strings.closeTab), onClick: () => {
+                            window.setTimeout(()=>{
+                                this.trigger("close", <RemovedTabInfo>{ id: e.element.dataset.tabId, element: e.element});
+                            }, 200);
+                        }},
+                        { label: i18n(strings.closeOtherTabs), enabled: (this.chromeTabs.tabEls.length > 1), onClick: () => {  
+                            
+                            let tabsToRemove: HTMLElement[] = [];
+                            this.chromeTabs.tabEls.forEach(tabEl => {
+                                if (e.element.dataset.tabId != tabEl.dataset.tabId)
+                                    tabsToRemove.push(tabEl);
+                            });
+                            tabsToRemove.forEach(tabEl => {
+                                this.trigger("close", <RemovedTabInfo>{ id: tabEl.dataset.tabId, element: tabEl});
+                            });
+                        }},
+                    ]
+                }, e.event);
             }
         });
     }

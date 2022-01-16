@@ -19,6 +19,8 @@ export enum strings {
     analyzeModelTableColWeight = "Weight",
     appName = "Bravo for Power BI",
     BestPractices = "Best Practices",
+    closeTab = "Close",
+    closeOtherTabs = "Close others",
     collapseAllCtrlTitle = "Collapse all",
     columnWarningExplanation = `Unreferenced columns can generally be removed from the model to optimize performance. Before removing them, make sure you are not using these columns in any reports, which Bravo cannot determine.`,
     columnWarningTooltip = "This column is not referenced in your model.",

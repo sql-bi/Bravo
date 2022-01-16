@@ -76,6 +76,10 @@ export interface ChromeTabsReorderInfo {
   destIndex: number
 }
 
+export interface ChromeTabsMenuEvent {
+  element: HTMLElement
+  event: MouseEvent
+}
 export class ChromeTabs extends Dispatchable {
 
     el: HTMLElement;
@@ -122,7 +126,7 @@ export class ChromeTabs extends Dispatchable {
       this.tabEls.forEach((tabEl: HTMLElement) => this.setTabCloseEventListener(tabEl))
     }
 
-    get tabEls() {
+    get tabEls(): HTMLElement[] {
       return Array.prototype.slice.call(__('.chrome-tab', this.el))
     }
 
@@ -239,11 +243,13 @@ export class ChromeTabs extends Dispatchable {
           e.preventDefault();
           e.stopPropagation();
           if (e.which == 2) { // Middle click
-            this.trigger("tabClose", tabEl)  
+            this.trigger("tabClose", tabEl);
             //this.removeTab(tabEl)
-          //} else if (e.which == 3) { // Right click
+          } else if (e.which == 3) { // Right click
+            this.trigger("tabMenu", <ChromeTabsMenuEvent>{ element: tabEl, event: e });
           }
       });
+      
     }
 
     get activeTabEl() {

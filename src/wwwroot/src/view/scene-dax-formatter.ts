@@ -3,7 +3,7 @@
  * Copyright (c) SQLBI corp. - All rights reserved.
  * https://www.sqlbi.com
 */
-import { host, optionsController, telemetry } from "../main";
+import { host, optionsController, telemetry, themeController } from "../main";
 
 import * as CodeMirror from 'codemirror';
 import 'codemirror/addon/mode/simple';
@@ -646,7 +646,7 @@ export class DaxFormatterScene extends MainScene {
             const formatLine = (formatOptions.lineStyle == DaxFormatterLineStyle.LongLine ? "long" : "short");
             const formatSpacing = (formatOptions.spacingStyle == DaxFormatterSpacingStyle.BestPractice ? "" : "true");
 
-            let queryString = `fx=${encodeURIComponent(fx)}&r=${formatRegion}&s=${formatSpacing}&l=${formatLine}`;
+            let queryString = `fx=${encodeURIComponent(fx)}&r=${formatRegion}&s=${formatSpacing}&l=${formatLine}${themeController.isDark ? "&dark=1" : ""}`;
 
             host.navigateTo(`https://www.daxformatter.com/?${queryString}`);
         });

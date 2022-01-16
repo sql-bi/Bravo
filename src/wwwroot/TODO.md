@@ -3,6 +3,7 @@
 **@daniele**
 - Format DAX
     - Show changed/error measures indicators
+    - Current/Formatted side by side
 - Options/About window
 - Telemetry 
     - Track idle time
@@ -10,8 +11,6 @@
 - Update notifications
 - Manage dates UI
 - Export Data UI
-- Intercept (dataset/vpax) web messages
-- Add tabs context menu (Close/Close others)
 
 **@alberto**
 - Fix login window size?

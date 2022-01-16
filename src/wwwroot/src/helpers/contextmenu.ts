@@ -69,12 +69,20 @@ export class ContextMenu{
             ContextMenu.positionMenu(this.position, event, this.menuControl);        
         }
 
-        document.onclick = function(e){
-            if(!(<HTMLElement>e.target).classList.contains('contextualJs')){
-                ContextMenu.closeMenu();
-            }
-        }    
+        document.addEventListener("click", e => {
+            this.catch(e);
+        });   
+        document.addEventListener("auxclick", e => {
+            this.catch(e);
+        }); 
     }
+
+    catch(e: MouseEvent) {
+        if(!(<HTMLElement>e.target).classList.contains('contextualJs')){
+            ContextMenu.closeMenu();
+        }
+    }
+
     /**
      * Adds item to this contextual menu instance
      * @param {ContextMenuItem} item item to add to the contextual menu
