@@ -29,12 +29,20 @@ export class BackableScene extends Scene {
 
             _(".go-back", this.element).addEventListener("click", e => {
                 e.preventDefault();
-                if (typeof this.onBack === "function")
-                    this.onBack();
-                    
-                this.pop();
+                this.back();
+            });
+            this.element.addLiveEventListener("click", ".link-back", (e, element) => {
+                e.preventDefault();
+                this.back();
             });
         }
+    }
+
+    back() {
+        if (typeof this.onBack === "function")
+            this.onBack();
+            
+        this.pop();
     }
 
 }

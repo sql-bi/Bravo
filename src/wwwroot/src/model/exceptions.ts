@@ -40,7 +40,6 @@ export class AppError {
     traceId: string;
     readonly requestAborted: boolean;
     readonly requestTimedout: boolean;
-    readonly hasTraceId: boolean;
 
     constructor(type: AppErrorType, message?: string, code?: number, traceId?: string) {
         if (!message)
@@ -55,14 +54,13 @@ export class AppError {
         this.requestTimedout = (type == AppErrorType.Abort && code == Utils.ResponseStatusCode.Timeout);
 
         this.traceId = traceId;
-        this.hasTraceId = (!!this.traceId || this.type == AppErrorType.Managed || this.type == AppErrorType.Response);
     }
 
     toString() {
         return `${ i18n(strings.error) }${ this.code ? ` ${this.type != AppErrorType.Managed ? "HTTP/" : "" }${ this.code }` : "" }: ${ this.message }${ this.traceId ? `\n${strings.traceId}: ${this.traceId}` : ""}`;
     }
 
-    static InitFromProblem(problem: ProblemDetails) {
+    static InitFromProblem(problem: ProblemDetails, message?: string) {
 
         let errorType;
         let errorCode;
@@ -97,15 +95,17 @@ export class AppError {
             }
         }
 
+        if (message) errorMessage = message;
+
         return new AppError(errorType, errorMessage, errorCode, traceId);
     }
 
-    static InitFromResponseError(code: number, message?: string) {
+    static InitFromInternalError(code: number, message?: string) {
+        return AppError.InitFromProblem({ status: Utils.ResponseStatusCode.BadRequest, instance: String(code) }, message);
+    }
 
-        return AppError.InitFromProblem({
-            status: code,
-            title: message
-        });
+    static InitFromResponseError(code: number, message?: string) {
+        return AppError.InitFromProblem({ status: code }, message);
     }
 
     static initFromError(error: Error) {

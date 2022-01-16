@@ -78,6 +78,7 @@ export enum strings {
     errorRetry = "Retry",
     errorTitle = "Whoops...",
     errorUnspecified = "Unspecified error.",
+    errorTryingToUpdateMeasuresWithErrors = `The requested update failed because the following measures contain errors:<br><strong>$0</strong><br><br><span class="link link-back">Go to preview screen</span> to see more details.`,
 
     errorNone = "Unspecified error.",
     errorTOMDatabaseDatabaseNotFound = "The database does not exist in the collection or the user does not have administrator rights to access it.",
@@ -130,7 +131,6 @@ export enum strings {
     syncCtrlTitle = "Synchronize",
     themeCtrlTitle = "Change Theme",
     traceId = "Trace Id",
-    traceIdEnableMessage = "<em>Enable the telemetry to see it.</em>",
     welcomeHelpText = "Watch the videos below to learn how to use Bravo:",
     welcomeHelpTitle = "How to use Bravo?",
     welcomeText = "Bravo is a powerful toolkit for your Power BI datasets that you can use to quick manage models, create date tables, export data, and more. Start by opening a dataset:",

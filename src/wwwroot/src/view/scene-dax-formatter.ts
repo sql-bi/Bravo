@@ -26,7 +26,7 @@ import { LoaderScene } from './scene-loader';
 import { ErrorScene } from './scene-error';
 import { FormattedMeasure, UpdatePBICloudDatasetRequest, UpdatePBIDesktopReportRequest } from '../controllers/host';
 import { SuccessScene } from './scene-success';
-import { AppError } from '../model/exceptions';
+import { AppError, AppProblem } from '../model/exceptions';
 import { DaxFormatterLineStyle, DaxFormatterSpacingStyle } from '../controllers/options';
 
 export class DaxFormatterScene extends MainScene {
@@ -353,6 +353,19 @@ export class DaxFormatterScene extends MainScene {
         this.toggleEditorToolbar(false);
     }
 
+    deselectMeasure() {
+        if (this.table) {
+            this.table.deselectRow();
+            __(".row-active", this.table.element).forEach((el: HTMLElement) => {
+                el.classList.remove("row-active");
+            });
+        }
+
+        this.activeMeasure = null;
+        _(".preview", this.element).toggle(false);
+        this.formatButton.toggleAttr("disabled", true);
+    }
+
     updateTable(redraw = true) {
 
         if (redraw) {
@@ -360,8 +373,7 @@ export class DaxFormatterScene extends MainScene {
                 this.table.destroy();
                 this.table = null;
             }
-            this.activeMeasure = null;
-            _(".preview", this.element).toggle(false);
+            this.deselectMeasure();
         }
         let data = this.doc.measures;
 
@@ -515,12 +527,19 @@ export class DaxFormatterScene extends MainScene {
             .then(formattedMeasures => {
 
                 // Update model's formatted measures
+                let measuresWithErrors: string[] = [];
                 formattedMeasures.forEach(measure => {
                     const measureName = daxMeasureName(measure);
                     this.doc.formattedMeasures[measureName] = measure;
+                    if (measure.errors && measure.errors.length) {
+                        measuresWithErrors.push(measureName);
+                    }
                 });
 
-                //TODO Check formatter errors
+                if (measuresWithErrors.length) {
+
+                    throw AppError.InitFromInternalError(AppProblem.TOMDatabaseUpdateErrorMeasure, i18n(strings.errorTryingToUpdateMeasuresWithErrors, measuresWithErrors.join(", ")));
+                }
 
                 let updateRequest;
                 if (this.doc.type == DocType.dataset) {
@@ -543,15 +562,22 @@ export class DaxFormatterScene extends MainScene {
                         // Update model's measures (formula and etag)
                         // Strip errors from formatted measures
                         if (response.etag) {
-                            formattedMeasures.forEach(measure => {
-                                const measureName = daxMeasureName(measure);
+
+                            // Update measures with formatted version
+                            formattedMeasures.forEach(formattedMeasure => {
+                                const measureName = daxMeasureName(formattedMeasure);
                                 for (let i = 0; i < this.doc.measures.length; i++) {
                                     if (measureName == daxMeasureName(this.doc.measures[i])) {
-                                        this.doc.measures[i].measure = measure.measure;
-                                        this.doc.measures[i].etag = response.etag;
+                                        this.doc.measures[i].measure = formattedMeasure.measure;
+                                        break;
                                     }
                                 }
                             });
+
+                            // Update all measures etags
+                            for (let i = 0; i < this.doc.measures.length; i++) {
+                                this.doc.measures[i].etag = response.etag;
+                            }
                         }
                         this.updateTable(true);
 
@@ -564,8 +590,7 @@ export class DaxFormatterScene extends MainScene {
             })
             .catch(error => errorResponse(error))
             .finally(() => {
-                this.formatButton.toggleAttr("disabled", true);
-                this.table.deselectRow();
+                this.deselectMeasure();
             });
     }
 

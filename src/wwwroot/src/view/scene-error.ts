@@ -27,9 +27,6 @@ export class ErrorScene extends BackableScene {
     
     render() {
         super.render();
-
-        let hasTraceId = this.error.hasTraceId;
-        if (optionsController.options.telemetryEnabled && !this.error.traceId) hasTraceId = false;
         
         let html = `
             <div class="error">
@@ -40,7 +37,7 @@ export class ErrorScene extends BackableScene {
                 <p>${this.error.message}</p>
 
                 <div class="error-trace">
-                    ${hasTraceId ? `<div><strong>${strings.traceId}:</strong> ${this.error.traceId ? this.error.traceId : i18n(strings.traceIdEnableMessage)}</div>` : ""}
+                    ${this.error.traceId ? `<div><strong>${strings.traceId}:</strong> ${this.error.traceId}</div>` : ""}
 
                     <div class="copy-error ctrl icon-copy" title="${strings.copyErrorCtrlTitle}"></div>
                 </div>
