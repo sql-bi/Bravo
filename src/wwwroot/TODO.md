@@ -11,6 +11,7 @@
 - Manage dates UI
 - Export Data UI
 - Intercept (dataset/vpax) web messages
+- Add tabs context menu (Close/Close others)
 
 **@alberto**
 - Fix login window size?

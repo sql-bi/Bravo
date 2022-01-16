@@ -4,6 +4,9 @@
  * https://www.sqlbi.com
 */
 
+import { PBICloudDataset } from '../controllers/host';
+import { PBIDesktopReport } from '../controllers/pbi-desktop';
+
 export enum WebMessageType {
     None = "None",
     ApplicationUpdate = "ApplicationUpdate",
@@ -29,17 +32,15 @@ export interface NetworkStatusChangedWebMessage extends WebMessage {
 }
 
 export interface PBIDesktopReportOpenWebMessage extends WebMessage {
-    id?: number
-    reportName?: string
-    serverName?: string
-    databaseName?: string
+    report?: PBIDesktopReport
 }
 
 export interface PBICloudDatasetOpenWebMessage extends WebMessage {
-    serverName?: string
-    databaseName?: string
+    dataset?: PBICloudDataset
 }
 
 export interface VpaxFileOpenWebMessage extends WebMessage {
-    path?: string
+    blob?: string[]
+    name?: string
+    lastModified?: number
 }

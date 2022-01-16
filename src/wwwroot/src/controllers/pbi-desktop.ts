@@ -11,6 +11,8 @@ import { host } from '../main';
 export interface PBIDesktopReport {
     id: number
     reportName?: string
+    serverName?: string
+    databaseName?: string
 }
 
 export class PBIDesktop extends Dispatchable {

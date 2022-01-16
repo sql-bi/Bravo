@@ -76,15 +76,15 @@ export class App {
         // Catch host messages
 
         host.on(WebMessageType.ReportOpen, (data: PBIDesktopReportOpenWebMessage) => {
-            this.openReport(<PBIDesktopReport>data);
+            this.openReport(data.report);
         });
 
         host.on(WebMessageType.DatasetOpen, (data: PBICloudDatasetOpenWebMessage) => {
-            //this.openDataset(<PBICloudDataset>data);
+            this.openDataset(data.dataset);
         });
 
         host.on(WebMessageType.VpaxOpen, (data: VpaxFileOpenWebMessage) => {
-            //this.openFile(new File(data.blob, data.name, { lastModified: data.lastModified }));
+            this.openFile(new File(data.blob, data.name, { lastModified: data.lastModified }));
         });
 
         // UI events

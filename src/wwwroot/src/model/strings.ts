@@ -120,6 +120,7 @@ export enum strings {
     searchDatasetPlaceholder = "Search Dataset",
     searchPlaceholder = "Search",
     settingsCtrlTitle = "Settings",
+    settingsPlusUpdateCtrlTitle = "Settings - Update available",
     sheetOrphan = "Not available",
     sheetOrphanPBIXTooltip = "The related report in Power BI Desktop has been closed. Any writing operation is disallowed.",
     sheetOrphanTooltip = "This model is not available anymore. Any writing operation is disallowed.",

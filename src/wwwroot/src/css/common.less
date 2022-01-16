@@ -256,6 +256,37 @@ a, .link {
     span {
         margin: 0 5px 0 0;
     }
+
+    .notification {
+        pointer-events: none;
+        font-family: @text-font;
+        position: absolute;
+        text-align: center;
+        line-height: 16px;
+        padding: 0 4px;
+        .border-radius(20px);
+        height: 16px;
+        font-size: 9px;
+        font-weight: 600;
+        min-width: 8px;
+        margin-left: 14px;
+        margin-top: -12px;
+
+        background-color: @accent-back-color;
+        color: @accent-color;
+
+        opacity: 0;
+        transition: opacity .3s;
+
+        .dark & {
+            background-color: @accent-back-color-dark;
+            color: @accent-color-dark;
+        }
+
+        &.visible {
+            opacity: 1;
+        }
+    }
 }
 
 .menu {
