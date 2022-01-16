@@ -1,5 +1,4 @@
-﻿using Sqlbi.Bravo.Infrastructure;
-using System;
+﻿using System;
 using System.Text.Json.Serialization;
 
 #nullable disable

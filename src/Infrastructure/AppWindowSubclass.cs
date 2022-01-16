@@ -1,4 +1,5 @@
-﻿using Sqlbi.Bravo.Infrastructure.Messages;
+﻿using Microsoft.Extensions.Hosting;
+using Sqlbi.Bravo.Infrastructure.Messages;
 using Sqlbi.Bravo.Infrastructure.Windows;
 using Sqlbi.Bravo.Infrastructure.Windows.Interop;
 using System;
@@ -12,16 +13,18 @@ namespace Sqlbi.Bravo.Infrastructure
     {
         private readonly PhotinoNET.PhotinoWindow _window;
         private readonly IntPtr MSG_HANDLED = new(1);
+        private readonly IHost _host;
 
         /// <summary>
         /// Try to install a WndProc subclass callback to hook messages sent to the selected <see cref="PhotinoNET.PhotinoWindow"/> window
         /// </summary>
-        public static AppWindowSubclass Hook(PhotinoNET.PhotinoWindow window) => new(window);
+        public static AppWindowSubclass HookWindow(PhotinoNET.PhotinoWindow window, IHost host) => new(window, host);
 
-        private AppWindowSubclass(PhotinoNET.PhotinoWindow window)
+        private AppWindowSubclass(PhotinoNET.PhotinoWindow window, IHost host)
             : base(hWnd: window.WindowHandle)
         {
             _window = window;
+            _host = host;
         }
 
         protected override IntPtr WndProcHooked(IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam, IntPtr id, IntPtr data)
@@ -73,7 +76,7 @@ namespace Sqlbi.Bravo.Infrastructure
                 Trace.WriteLine($"::Bravo:INF:WndProcHook[WM_COPYDATA]:{ messageString }");
                 //_window.OpenAlertWindow("::Bravo:INF:WndProcHook[WM_COPYDATA]", messageString);
 #endif
-                var webMessageString = startupMessage.ToWebMessageString();
+                var webMessageString = startupMessage.ToWebMessageString(_host);
                 if (webMessageString is not null)
                 {
                     _window.SendWebMessage(webMessageString);

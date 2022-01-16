@@ -26,6 +26,18 @@ namespace Sqlbi.Bravo.Models
         /// </summary>
         [JsonPropertyName("reportName")]
         public string? ReportName { get; set; }
+
+        /// <summary>
+        /// Server name of the local instance of Analysis Services Tabular
+        /// </summary>
+        [JsonPropertyName("serverName")]
+        public string? ServerName { get; set; }
+
+        /// <summary>
+        /// Database name of the model hosted in the local instance of Analysis Services Tabular
+        /// </summary>
+        [JsonPropertyName("databaseName")]
+        public string? DatabaseName { get; set; }
     }
 
     internal static class PBIDesktopReportExtensions

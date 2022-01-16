@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Sqlbi.Bravo.Infrastructure;
 using Sqlbi.Bravo.Infrastructure.Helpers;
-using Sqlbi.Bravo.Infrastructure.Models.PBICloud;
 using Sqlbi.Bravo.Infrastructure.Windows;
 using Sqlbi.Bravo.Models;
 using Sqlbi.Bravo.Services;
@@ -11,7 +10,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.Net.Mime;
 using System.Threading;
 using System.Threading.Tasks;
@@ -130,52 +128,8 @@ namespace Sqlbi.Bravo.Controllers
             if (await _pbicloudService.IsSignInRequiredAsync())
                 return Unauthorized();
 
-            var onlineWorkspaces = await _pbicloudService.GetWorkspacesAsync();
-            var onlineDatasets = await _pbicloudService.GetSharedDatasetsAsync();
-
-            var selectedWorkspaces = onlineWorkspaces.Where((w) => w.CapacitySkuType == WorkspaceCapacitySkuType.Premium);
-            var selectedDatasets = onlineDatasets.Where(IsAccessibleByXmlaEndpoint);
-
-            var datasets = selectedDatasets.Join(selectedWorkspaces, (d) => d.WorkspaceObjectId, (w) => w.Id, (d, w) => new PBICloudDataset
-            {
-                WorkspaceId = w.Id,
-                WorkspaceName = w.Name,
-                Id = d.Model.Id,
-                ServerName = PBICloudService.PBIPremiumServerUri.OriginalString,
-                DatabaseName = d.Model.DBName,
-                DisplayName = d.Model.DisplayName,
-                Description = d.Model.Description,
-                Owner = $"{ d.Model.CreatorUser.GivenName } { d.Model.CreatorUser.FamilyName }",
-                Refreshed = d.Model.LastRefreshTime,
-                Endorsement = (PBICloudDatasetEndorsement)(d.GalleryItem?.Stage ?? (int)PBICloudDatasetEndorsement.None)
-            },
-            StringComparer.InvariantCultureIgnoreCase).ToArray();
-
-            return Ok(datasets);
-
-            static bool IsAccessibleByXmlaEndpoint(SharedDataset dataset)
-            {
-                // Exclude unsupported datasets - a.k.a. datasets not accessible by the XMLA endpoint
-                // see https://docs.microsoft.com/en-us/power-bi/admin/service-premium-connect-tools#unsupported-datasets
-
-                // TODO: Exclude datasets based on a live connection to an Azure Analysis Services or SQL Server Analysis Services model
-                //if (dataset.Model.DirectQueryMode)
-                //    return false;
-
-                // TODO: Exclude datasets based on a live connection to a Power BI dataset in another workspace
-                //if ( ?? )
-                //    return false;
-
-                // Exclude datasets with Push data by using the REST API
-                if (dataset.Model.IsPushDataEnabled)
-                    return false;
-
-                // Exclude excel workbook datasets
-                if (dataset.Model.IsExcelWorkbook)
-                    return false;
-
-                return true;
-            }
+            var reports = _pbicloudService.GetDatasetsAsync();
+            return Ok(reports);
         }
 
         /// <summary>

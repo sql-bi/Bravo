@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Sqlbi.Bravo.Models;
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -7,7 +8,7 @@ namespace Sqlbi.Bravo.Infrastructure.Messages
     internal interface IWebMessage
     {
         /// <summary>
-        /// Web message type identifier
+        /// Message type identifier
         /// </summary>
         WebMessageType MessageType { get; }
     }
@@ -50,29 +51,23 @@ namespace Sqlbi.Bravo.Infrastructure.Messages
         [JsonPropertyName("type")]
         public WebMessageType MessageType => WebMessageType.PBIDesktopReportOpen;
 
-        /// <summary>
-        /// PBIDesktop process identifier (system PID)
-        /// </summary>
-        [JsonPropertyName("id")]
-        public int? ProcessId { get; set; }
+        [JsonPropertyName("report")]
+        public PBIDesktopReport? Report { get; set; }
 
-        /// <summary>
-        /// PBIDesktop report name (from main window title)
-        /// </summary>
-        [JsonPropertyName("reportName")]
-        public string? ReportName { get; set; }
-
-        /// <summary>
-        /// Server name of the local instance of Analysis Services Tabular
-        /// </summary>
-        [JsonPropertyName("serverName")]
-        public string? ServerName { get; set; }
-
-        /// <summary>
-        /// Database name of the model hosted in the local instance of Analysis Services Tabular
-        /// </summary>
-        [JsonPropertyName("databaseName")]
-        public string? DatabaseName { get; set; }
+        public static PBIDesktopReportOpenWebMessage CreateFrom(AppInstanceStartupMessage message)
+        {
+            var webMessage = new PBIDesktopReportOpenWebMessage
+            {
+                Report = new PBIDesktopReport 
+                {
+                    ProcessId = message.ParentProcessId,
+                    ReportName = message.ParentProcessMainWindowTitle,
+                    ServerName = message.ArgumentServerName,
+                    DatabaseName = message.ArgumentDatabaseName
+                },
+            };
+            return webMessage;
+        }
     }
 
     internal class PBICloudDatasetOpenWebMessage : IWebMessage
@@ -81,17 +76,17 @@ namespace Sqlbi.Bravo.Infrastructure.Messages
         [JsonPropertyName("type")]
         public WebMessageType MessageType => WebMessageType.PBICloudDatasetOpen;
 
-        /// <summary>
-        /// PBICloud dataset server name - i.e. "pbiazure://api.powerbi.com/"
-        /// </summary>
-        [JsonPropertyName("serverName")]
-        public string? ServerName { get; set; }
+        [JsonPropertyName("dataset")]
+        public PBICloudDataset? Dataset { get; set; }
 
-        /// <summary>
-        /// PBICloud dataset database name
-        /// </summary>
-        [JsonPropertyName("databaseName")]
-        public string? DatabaseName { get; set; }
+        public static PBICloudDatasetOpenWebMessage CreateFrom(PBICloudDataset dataset)
+        {
+            var webMessage = new PBICloudDatasetOpenWebMessage
+            {
+                Dataset = dataset,
+            };
+            return webMessage;
+        }
     }
 
     internal class VpaxFileOpenWebMessage : IWebMessage
@@ -100,10 +95,13 @@ namespace Sqlbi.Bravo.Infrastructure.Messages
         [JsonPropertyName("type")]
         public WebMessageType MessageType => WebMessageType.VpaxFileOpen;
 
-        /// <summary>
-        /// The full path of the file to open
-        /// </summary>
-        [JsonPropertyName("path")]
-        public string? Path { get; set; }
+        [JsonPropertyName("name")]
+        public string? Name { get; set; }
+
+        [JsonPropertyName("blob")]
+        public byte[]? Content { get; set; }
+
+        [JsonPropertyName("lastModified")]
+        public long? LastModified { get; set; }
     }
 }

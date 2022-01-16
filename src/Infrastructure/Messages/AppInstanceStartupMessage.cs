@@ -1,6 +1,8 @@
-﻿using Sqlbi.Bravo.Infrastructure.Helpers;
+﻿using Microsoft.Extensions.Hosting;
+using Sqlbi.Bravo.Infrastructure.Helpers;
 using Sqlbi.Bravo.Services;
 using System;
+using System.Linq;
 using System.Net;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -30,64 +32,57 @@ namespace Sqlbi.Bravo.Infrastructure.Messages
 
     internal static class AppInstanceStartupMessageExtensions
     {
-        public static string? ToWebMessageString(this AppInstanceStartupMessage startupMessage)
+        public static string? ToWebMessageString(this AppInstanceStartupMessage startupMessage, IHost host)
         {
             if (startupMessage.ArgumentServerName is null)
                 return null;
 
-            string? webMessageString = null;
-
             if (startupMessage.ArgumentServerName.StartsWith("localhost:", StringComparison.OrdinalIgnoreCase))
             {
                 var serverEndPointString = $"{ IPAddress.Loopback }:{ startupMessage.ArgumentServerName.Remove(0, "localhost:".Length) }";
-
-                // localhost:[port]
-
                 if (IPEndPoint.TryParse(serverEndPointString, out _))
                 {
-                    var webMessage = new PBIDesktopReportOpenWebMessage
-                    {
-                        ProcessId = startupMessage.ParentProcessId,
-                        ReportName = startupMessage.ParentProcessMainWindowTitle,
-                        ServerName = startupMessage.ArgumentServerName,
-                        DatabaseName = startupMessage.ArgumentDatabaseName
-                    };
-                    webMessageString = JsonSerializer.Serialize(webMessage, AppConstants.DefaultJsonOptions);
+                    // localhost:[port]
+
+                    var webMessage = PBIDesktopReportOpenWebMessage.CreateFrom(startupMessage);
+                    var webMessageString = JsonSerializer.Serialize(webMessage, AppConstants.DefaultJsonOptions);
+
+                    return webMessageString;
                 }
             }
             else if (IPEndPoint.TryParse(startupMessage.ArgumentServerName, out _) /* && IPAddress.IsLoopback(serverEndPoint.Address) */)
             {
                 // <ip-address>[:port]
 
-                var webMessage = new PBIDesktopReportOpenWebMessage
-                {
-                    ProcessId = startupMessage.ParentProcessId,
-                    ReportName = startupMessage.ParentProcessMainWindowTitle,
-                    ServerName = startupMessage.ArgumentServerName,
-                    DatabaseName = startupMessage.ArgumentDatabaseName
-                };
-                webMessageString = JsonSerializer.Serialize(webMessage, AppConstants.DefaultJsonOptions);
+                var webMessage = PBIDesktopReportOpenWebMessage.CreateFrom(startupMessage);
+                var webMessageString = JsonSerializer.Serialize(webMessage, AppConstants.DefaultJsonOptions);
+
+                return webMessageString;
             }
             else if (Uri.TryCreate(startupMessage.ArgumentServerName, UriKind.Absolute, out var serverUri))
             {
-                // pbiazure://<host> or powerbi://<host>
-                // Power BI cloud service URI
-
                 var isGenericDataset = serverUri.Scheme.Equals(PBICloudService.PBIDatasetProtocolScheme, StringComparison.OrdinalIgnoreCase);
                 var isPremiumDataset = serverUri.Scheme.Equals(PBICloudService.PBIPremiumProtocolScheme, StringComparison.OrdinalIgnoreCase);
 
                 if (isPremiumDataset || isGenericDataset)
                 {
-                    var webMessage = new PBICloudDatasetOpenWebMessage
+                    // pbiazure://<host> or powerbi://<host>
+
+                    var pbicloudService = host.Services.GetService(typeof(IPBICloudService)) as IPBICloudService ?? throw new BravoUnexpectedException("IPBICloudService is null");
+                    var onlineDatasets = pbicloudService.GetDatasetsAsync().GetAwaiter().GetResult();
+
+                    var dataset = onlineDatasets.SingleOrDefault((d) => d.DatabaseName.Equals(startupMessage.ArgumentDatabaseName, StringComparison.OrdinalIgnoreCase));
+                    if (dataset is not null)
                     {
-                        ServerName = startupMessage.ArgumentServerName,
-                        DatabaseName = startupMessage.ArgumentDatabaseName
-                    };
-                    webMessageString = JsonSerializer.Serialize(webMessage, AppConstants.DefaultJsonOptions);
+                        var webMessage = PBICloudDatasetOpenWebMessage.CreateFrom(dataset);
+                        var webMessageString = JsonSerializer.Serialize(webMessage, AppConstants.DefaultJsonOptions);
+
+                        return webMessageString;
+                    }
                 }
             }
 
-            return webMessageString;
+            return null;
         }
     }
 }

@@ -6,7 +6,6 @@ using Sqlbi.Bravo.Infrastructure.Models.PBICloud;
 using Sqlbi.Bravo.Models;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Globalization;
@@ -29,9 +28,7 @@ namespace Sqlbi.Bravo.Services
         
         Task SignOutAsync();
 
-        Task<IEnumerable<Workspace>> GetWorkspacesAsync();
-
-        Task<IEnumerable<SharedDataset>> GetSharedDatasetsAsync();
+        Task<IEnumerable<PBICloudDataset>> GetDatasetsAsync();
 
         Stream ExportVpax(PBICloudDataset dataset, bool includeTomModel = true, bool includeVpaModel = true, bool readStatisticsFromData = true, int sampleRows = 0);
 
@@ -127,34 +124,54 @@ namespace Sqlbi.Bravo.Services
             }
         }
 
-        public async Task<IEnumerable<Workspace>> GetWorkspacesAsync()
+        public async Task<IEnumerable<PBICloudDataset>> GetDatasetsAsync()
         {
-            _httpClient.DefaultRequestHeaders.Accept.Clear();
-            _httpClient.DefaultRequestHeaders.Authorization = AuthenticationHeaderValue.Parse(CurrentAuthentication?.CreateAuthorizationHeader());
+            var onlineWorkspaces = await GetWorkspacesAsync();
+            var onlineDatasets = await GetSharedDatasetsAsync();
 
-            var requestUri = new Uri(PBIApiUri, relativeUri: GetWorkspacesRequestUri);
-            using var response = await _httpClient.GetAsync(requestUri).ConfigureAwait(false);
-            response.EnsureSuccessStatusCode();
+            var selectedWorkspaces = onlineWorkspaces.Where((w) => w.CapacitySkuType == WorkspaceCapacitySkuType.Premium);
+            var selectedDatasets = onlineDatasets.Where(IsAccessibleByXmlaEndpoint);
 
-            var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-            var workspaces = JsonSerializer.Deserialize<IEnumerable<Workspace>>(content, _jsonOptions);
+            var datasets = selectedDatasets.Join(selectedWorkspaces, (d) => d.WorkspaceObjectId, (w) => w.Id, (d, w) => new PBICloudDataset
+            {
+                WorkspaceId = w.Id,
+                WorkspaceName = w.Name,
+                Id = d.Model.Id,
+                ServerName = PBIPremiumServerUri.OriginalString,
+                DatabaseName = d.Model.DBName,
+                DisplayName = d.Model.DisplayName,
+                Description = d.Model.Description,
+                Owner = $"{ d.Model.CreatorUser.GivenName } { d.Model.CreatorUser.FamilyName }",
+                Refreshed = d.Model.LastRefreshTime,
+                Endorsement = (PBICloudDatasetEndorsement)(d.GalleryItem?.Stage ?? (int)PBICloudDatasetEndorsement.None)
+            },
+            StringComparer.InvariantCultureIgnoreCase);
 
-            return workspaces ?? Array.Empty<Workspace>();
-        }
+            return datasets.ToArray();
 
-        public async Task<IEnumerable<SharedDataset>> GetSharedDatasetsAsync()
-        {
-            _httpClient.DefaultRequestHeaders.Accept.Clear();
-            _httpClient.DefaultRequestHeaders.Authorization = AuthenticationHeaderValue.Parse(CurrentAuthentication?.CreateAuthorizationHeader());
+            static bool IsAccessibleByXmlaEndpoint(SharedDataset dataset)
+            {
+                // Exclude unsupported datasets - a.k.a. datasets not accessible by the XMLA endpoint
+                // see https://docs.microsoft.com/en-us/power-bi/admin/service-premium-connect-tools#unsupported-datasets
 
-            var requestUri = new Uri(_authenticationService.TenantCluster, relativeUri: GetGallerySharedDatasetsRequestUri);
-            using var response = await _httpClient.GetAsync(requestUri).ConfigureAwait(false);
-            response.EnsureSuccessStatusCode();
+                // TODO: Exclude datasets based on a live connection to an Azure Analysis Services or SQL Server Analysis Services model
+                //if (dataset.Model.DirectQueryMode)
+                //    return false;
 
-            var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-            var datasets = JsonSerializer.Deserialize<IEnumerable<SharedDataset>>(content, _jsonOptions);
+                // TODO: Exclude datasets based on a live connection to a Power BI dataset in another workspace
+                //if ( ?? )
+                //    return false;
 
-            return datasets ?? Array.Empty<SharedDataset>();
+                // Exclude datasets with Push data by using the REST API
+                if (dataset.Model.IsPushDataEnabled)
+                    return false;
+
+                // Exclude excel workbook datasets
+                if (dataset.Model.IsExcelWorkbook)
+                    return false;
+
+                return true;
+            }
         }
 
         public Stream ExportVpax(PBICloudDataset dataset, bool includeTomModel, bool includeVpaModel, bool readStatisticsFromData, int sampleRows)
@@ -248,6 +265,36 @@ namespace Sqlbi.Bravo.Services
                     Avatar = await GetAccountAvatarAsync(currentAuthentication.Account.Username).ConfigureAwait(false),
                 };
             }
+        }
+
+        private async Task<IEnumerable<Workspace>> GetWorkspacesAsync()
+        {
+            _httpClient.DefaultRequestHeaders.Accept.Clear();
+            _httpClient.DefaultRequestHeaders.Authorization = AuthenticationHeaderValue.Parse(CurrentAuthentication?.CreateAuthorizationHeader());
+
+            var requestUri = new Uri(PBIApiUri, relativeUri: GetWorkspacesRequestUri);
+            using var response = await _httpClient.GetAsync(requestUri).ConfigureAwait(false);
+            response.EnsureSuccessStatusCode();
+
+            var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+            var workspaces = JsonSerializer.Deserialize<IEnumerable<Workspace>>(content, _jsonOptions);
+
+            return workspaces ?? Array.Empty<Workspace>();
+        }
+
+        private async Task<IEnumerable<SharedDataset>> GetSharedDatasetsAsync()
+        {
+            _httpClient.DefaultRequestHeaders.Accept.Clear();
+            _httpClient.DefaultRequestHeaders.Authorization = AuthenticationHeaderValue.Parse(CurrentAuthentication?.CreateAuthorizationHeader());
+
+            var requestUri = new Uri(_authenticationService.TenantCluster, relativeUri: GetGallerySharedDatasetsRequestUri);
+            using var response = await _httpClient.GetAsync(requestUri).ConfigureAwait(false);
+            response.EnsureSuccessStatusCode();
+
+            var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+            var datasets = JsonSerializer.Deserialize<IEnumerable<SharedDataset>>(content, _jsonOptions);
+
+            return datasets ?? Array.Empty<SharedDataset>();
         }
     }
 }
