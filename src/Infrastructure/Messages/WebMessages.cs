@@ -1,4 +1,5 @@
 ﻿using Sqlbi.Bravo.Models;
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -11,6 +12,56 @@ namespace Sqlbi.Bravo.Infrastructure.Messages
         /// Message type identifier
         /// </summary>
         WebMessageType MessageType { get; }
+    }
+
+    internal class UnknownWebMessage : IWebMessage
+    {
+        [Required]
+        [JsonPropertyName("type")]
+        public WebMessageType MessageType => WebMessageType.Unknown;
+
+        [JsonPropertyName("message")]
+        public JsonElement? Message { get; set; }
+
+        [JsonPropertyName("exception")]
+        public JsonElement? Exception { get; set; }
+
+        [JsonIgnore]
+        public string AsString => JsonSerializer.Serialize(this, AppConstants.DefaultJsonOptions);
+
+        public static UnknownWebMessage CreateFrom(JsonElement message)
+        {
+            var webMessage = new UnknownWebMessage
+            {
+                Message = message,
+                Exception = null,
+            };
+
+            return webMessage;
+        }
+
+        public static UnknownWebMessage CreateFrom(Exception exception)
+        {
+            if (exception is AggregateException aggregateException)
+                exception = aggregateException.GetBaseException();
+
+            var exceptionObject = new
+            {
+                Message = exception.Message,
+                Details = exception.ToString(),
+            };
+
+            var exceptionObjectString = JsonSerializer.Serialize(exceptionObject, AppConstants.DefaultJsonOptions);
+            var exceptionObjectJson = JsonSerializer.Deserialize<JsonElement>(exceptionObjectString);
+
+            var webMessage = new UnknownWebMessage
+            {
+                Message = null,
+                Exception = exceptionObjectJson,
+            };
+
+            return webMessage;
+        }
     }
 
     internal class ApplicationUpdateAvailableWebMessage : IWebMessage
@@ -32,17 +83,7 @@ namespace Sqlbi.Bravo.Infrastructure.Messages
         public string? ChangelogUrl { get; set; }
 
         [JsonIgnore]
-        public string? AsString => JsonSerializer.Serialize(this, AppConstants.DefaultJsonOptions);
-    }
-
-    internal class NetworkStatusChangedWebMessage : IWebMessage
-    {
-        [Required]
-        [JsonPropertyName("type")]
-        public WebMessageType MessageType => WebMessageType.NetworkStatusChanged;
-
-        [JsonPropertyName("internetAccess")]
-        public bool InternetAccess { get; set; }
+        public string AsString => JsonSerializer.Serialize(this, AppConstants.DefaultJsonOptions);
     }
 
     internal class PBIDesktopReportOpenWebMessage : IWebMessage
@@ -54,18 +95,16 @@ namespace Sqlbi.Bravo.Infrastructure.Messages
         [JsonPropertyName("report")]
         public PBIDesktopReport? Report { get; set; }
 
-        public static PBIDesktopReportOpenWebMessage CreateFrom(AppInstanceStartupMessage message)
+        [JsonIgnore]
+        public string AsString => JsonSerializer.Serialize(this, AppConstants.DefaultJsonOptions);
+
+        public static PBIDesktopReportOpenWebMessage CreateFrom(PBIDesktopReport report)
         {
             var webMessage = new PBIDesktopReportOpenWebMessage
             {
-                Report = new PBIDesktopReport 
-                {
-                    ProcessId = message.ParentProcessId,
-                    ReportName = message.ParentProcessMainWindowTitle,
-                    ServerName = message.ArgumentServerName,
-                    DatabaseName = message.ArgumentDatabaseName
-                },
+                Report = report,
             };
+
             return webMessage;
         }
     }
@@ -79,14 +118,8 @@ namespace Sqlbi.Bravo.Infrastructure.Messages
         [JsonPropertyName("dataset")]
         public PBICloudDataset? Dataset { get; set; }
 
-        public static PBICloudDatasetOpenWebMessage CreateFrom(PBICloudDataset dataset)
-        {
-            var webMessage = new PBICloudDatasetOpenWebMessage
-            {
-                Dataset = dataset,
-            };
-            return webMessage;
-        }
+        [JsonIgnore]
+        public string AsString => JsonSerializer.Serialize(this, AppConstants.DefaultJsonOptions);
     }
 
     internal class VpaxFileOpenWebMessage : IWebMessage
@@ -103,5 +136,8 @@ namespace Sqlbi.Bravo.Infrastructure.Messages
 
         [JsonPropertyName("lastModified")]
         public long? LastModified { get; set; }
+
+        [JsonIgnore]
+        public string AsString => JsonSerializer.Serialize(this, AppConstants.DefaultJsonOptions);
     }
 }

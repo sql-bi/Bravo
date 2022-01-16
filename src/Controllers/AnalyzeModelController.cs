@@ -2,13 +2,10 @@
 using Microsoft.AspNetCore.Mvc;
 using Sqlbi.Bravo.Infrastructure;
 using Sqlbi.Bravo.Infrastructure.Helpers;
-using Sqlbi.Bravo.Infrastructure.Windows;
 using Sqlbi.Bravo.Models;
 using Sqlbi.Bravo.Services;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Net.Mime;
 using System.Threading;
@@ -141,9 +138,9 @@ namespace Sqlbi.Bravo.Controllers
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<PBIDesktopReport>))]
         [ProducesDefaultResponseType]
-        public IActionResult GetPBIDesktopReports()
+        public IActionResult GetPBIDesktopReports(CancellationToken cancellationToken)
         {
-            var reports = _pbidesktopService.GetReports();
+            var reports = _pbidesktopService.GetReports(cancellationToken);
             return Ok(reports);
         }
 

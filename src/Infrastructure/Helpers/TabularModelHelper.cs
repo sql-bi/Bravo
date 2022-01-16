@@ -80,5 +80,18 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
                 }
             }
         }
+
+        //public static bool ExecuteCommand(string connectionString, string database, string commandText)
+        //{
+        //    var connection = new SSAS.AdomdClient.AdomdConnection(connectionString);
+        //    connection.Open();
+        //    connection.ChangeDatabase(database);
+
+        //    var command = connection.CreateCommand();
+        //    command.CommandType = System.Data.CommandType.Text;
+        //    command.CommandText = commandText;
+
+        //    return command.ExecuteReader(CommandBehavior.SingleResult | CommandBehavior.CloseConnection);
+        //}
     }
 }

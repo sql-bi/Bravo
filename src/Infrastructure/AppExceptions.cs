@@ -118,10 +118,16 @@ namespace Sqlbi.Bravo.Infrastructure
         PBIDesktopSSASConnectionNotFound = 301,
 
         /// <summary>
-        /// PBIDesktop SSAS instance database not found.
+        /// PBIDesktop SSAS instance contains an unexpected number of databases.
         /// </summary> 
         [JsonPropertyName("PBIDesktopSSASDatabaseUnexpectedCount")]
         PBIDesktopSSASDatabaseUnexpectedCount = 302,
+
+        /// <summary>
+        /// PBIDesktop SSAS instance does not contain any databases.
+        /// </summary> 
+        [JsonPropertyName("PBIDesktopSSASDatabaseCollectionEmpty")]
+        PBIDesktopSSASDatabaseCollectionEmpty = 303,
 
         /// <summary>
         /// An error occurs during token acquisition.

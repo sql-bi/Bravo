@@ -45,16 +45,15 @@ namespace Sqlbi.Bravo.Services
 
         public void ExportDelimitedTextFile(PBIDesktopReport report, ExportDelimitedTextSettings settings, CancellationToken cancellationToken)
         {
-            var (connectionString, databaseName) = report.GetConnectionParameters();
             try
             {
-                ExportDelimitedTextFileImpl(settings, connectionString, databaseName, cancellationToken);
+                ExportDelimitedTextFileImpl(settings, report.ServerName, report.DatabaseName, cancellationToken);
             }
-            catch (OperationCanceledException)
+            catch
             {
-                // ignore
+                // TODO: catch exceptions
+                throw;
             }
-            // TODO: catch other exceptions
         }
 
         public void ExportDelimitedTextFile(PBICloudDataset dataset, ExportDelimitedTextSettings settings, CancellationToken cancellationToken)
@@ -64,25 +63,24 @@ namespace Sqlbi.Bravo.Services
             {
                 ExportDelimitedTextFileImpl(settings, connectionString, databaseName, cancellationToken);
             }
-            catch (OperationCanceledException)
+            catch
             {
-                // ignore
+                // TODO: catch exceptions
+                throw;
             }
-            // TODO: catch other exceptions
         }
 
         public void ExportExcelFile(PBIDesktopReport report, ExportExcelSettings settings, CancellationToken cancellationToken)
         {
-            var (connectionString, databaseName) = report.GetConnectionParameters();
             try
             {
-                ExportExcelFileImpl(settings, connectionString, databaseName, cancellationToken);
+                ExportExcelFileImpl(settings, report.ServerName, report.DatabaseName, cancellationToken);
             }
-            catch (OperationCanceledException)
+            catch
             {
-                // ignore
+                // TODO: catch exceptions
+                throw;
             }
-            // TODO: catch other exceptions
         }
 
         public void ExportExcelFile(PBICloudDataset dataset, ExportExcelSettings settings, CancellationToken cancellationToken)
@@ -92,15 +90,18 @@ namespace Sqlbi.Bravo.Services
             {
                 ExportExcelFileImpl(settings, connectionString, databaseName, cancellationToken);
             }
-            catch (OperationCanceledException)
+            catch
             {
-                // ignore
+                // TODO: catch exceptions
+                throw;
             }
-            // TODO: catch other exceptions
         }
 
-        private static void ExportDelimitedTextFileImpl(ExportDelimitedTextSettings settings, string connectionString, string databaseName, CancellationToken cancellationToken)
+        private static void ExportDelimitedTextFileImpl(ExportDelimitedTextSettings settings, string? connectionString, string? databaseName, CancellationToken cancellationToken)
         {
+            _ = connectionString ?? throw new ArgumentNullException(nameof(connectionString));
+            _ = databaseName ?? throw new ArgumentNullException(nameof(databaseName));
+
             Directory.CreateDirectory(settings.ExportPath);
 
             var config = new CsvConfiguration(CultureInfo.CurrentCulture);
@@ -173,8 +174,11 @@ namespace Sqlbi.Bravo.Services
             }
         }
 
-        private static void ExportExcelFileImpl(ExportExcelSettings settings, string connectionString, string databaseName, CancellationToken cancellationToken)
+        private static void ExportExcelFileImpl(ExportExcelSettings settings, string? connectionString, string? databaseName, CancellationToken cancellationToken)
         {
+            _ = connectionString ?? throw new ArgumentNullException(nameof(connectionString));
+            _ = databaseName ?? throw new ArgumentNullException(nameof(databaseName));
+
             var xlsxFile = new FileInfo(settings.ExportPath);
             Directory.CreateDirectory(path: xlsxFile.Directory?.FullName!);
 
