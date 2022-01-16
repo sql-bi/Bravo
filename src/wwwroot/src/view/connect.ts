@@ -21,7 +21,6 @@ export interface ConnectResponse {
 export interface ConnectResponseData {
     doc: Doc
     lastOpenedMenu: string
-    switchToDoc: string
 }
 
 export class Connect extends Dialog {
@@ -44,8 +43,7 @@ export class Connect extends Dialog {
 
         this.data = {
             doc: null,
-            lastOpenedMenu: null,
-            switchToDoc: null
+            lastOpenedMenu: null
         };
         
         let connectLocal = new ConnectLocal(this);

@@ -67,17 +67,8 @@ export class ConnectFile extends ConnectMenuItem {
 
     openFile(file: File) {
         if (file && file.name.slice(-5) == ".vpax") {
-            let fileHash = Doc.getId(DocType.vpax, file);
-
-            if (this.dialog.openDocIds.indexOf(fileHash) > -1) {
-                this.dialog.data.switchToDoc = fileHash;
-                this.dialog.trigger("action", "cancel");
-                
-            } else {
-
-                this.dialog.data.doc = new Doc(file.name, DocType.vpax, file);
-                this.dialog.trigger("action", "ok");
-            }
+            this.dialog.data.doc = new Doc(file.name, DocType.vpax, file);
+            this.dialog.trigger("action", "ok");
         }
     }
 }

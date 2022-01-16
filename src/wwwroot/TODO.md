@@ -2,7 +2,6 @@
 
 **@daniele**
 - Format DAX
-    - Catch measure errors during formatting
     - Show changed/error measures indicators
 - Options/About window
 - Telemetry 
@@ -11,10 +10,9 @@
 - Update notifications
 - Manage dates UI
 - Export Data UI
+- Intercept (dataset/vpax) web messages
 
 **@alberto**
 - Fix login window size?
 - Fix Icon DPI?
 - Returns a specific error if disconnected from Internet
-- External Tools web message
-- Updates web message

@@ -9,6 +9,7 @@ import { Dic, Utils } from '../helpers/utils';
 import { auth, debug } from '../main';
 import { DocType } from '../model/doc';
 import { AppError, AppErrorType } from '../model/exceptions';
+import { WebMessage } from '../model/message';
 import { TabularDatabase, TabularMeasure } from '../model/tabular';
 import { Account } from './auth';
 import { FormatDaxOptions, Options } from './options';
@@ -60,10 +61,12 @@ export enum PBICloudDatasetEndorsementstring {
     Certified = "Certified"
 }
 export interface PBICloudDataset {
-    workspaceId: number
+    workspaceId?: string
     workspaceName?:	string
     id: number
     name?: string
+    serverName?: string
+    databaseName?: string
     description?: string
     owner?:	string
     refreshed?: string
@@ -89,15 +92,6 @@ export interface FileActionResult {
     canceled?: boolean
 }
 
-export enum WebMessageType {
-    None = 0,
-    ApplicationUpdateAvailable = 1,
-    NetworkStatusChanged = 2,
-    PBIDesktopReportOpen = 3,
-    PBICloudDatasetOpen = 4,
-    VpaxFileOpen = 5,
-}
-
 export class Host extends Dispatchable {
 
     static DEFAULT_TIMEOUT = 60 * 1000;
@@ -116,10 +110,11 @@ export class Host extends Dispatchable {
     listen() {
         try {
             window.external.receiveMessage(message => {
-                const json = JSON.parse(message);
-                if (!json) return;
 
-                //TODO add any webmessage handler here
+                const webMessage = <WebMessage>JSON.parse(message);
+                if (!webMessage || !("type" in webMessage)) return;
+                console.log("Received", webMessage);
+                this.trigger(webMessage.type, webMessage);
             });
         } catch (e) {
             // Ignore error
@@ -309,4 +304,7 @@ export class Host extends Dispatchable {
     navigateTo(url: string) {
         return this.apiCall("api/NavigateTo", { address: url });
     }
+
+    /**** Web Messages ****/
+
 }

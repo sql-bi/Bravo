@@ -16,6 +16,9 @@ import { Connect, ConnectResponse } from '../view/connect';
 import { Sheet } from './sheet';
 import { PageType } from './page';
 import { host, telemetry } from '../main';
+import { PBICloudDatasetOpenWebMessage, PBIDesktopReportOpenWebMessage, VpaxFileOpenWebMessage, WebMessageType } from '../model/message';
+import { PBIDesktopReport } from './pbi-desktop';
+import { PBICloudDataset } from './host';
 
 export class App {
 
@@ -55,7 +58,7 @@ export class App {
         window.addEventListener('drop', e => { 
             e.preventDefault(); 
             if (e.dataTransfer.files.length) {
-                this.dragFile(e.dataTransfer.files[0]);
+                this.openFile(e.dataTransfer.files[0]);
             }
         });
 
@@ -69,6 +72,22 @@ export class App {
                 telemetry.track("Link", { url: url});
             }
         });
+
+        // Catch host messages
+
+        host.on(WebMessageType.ReportOpen, (data: PBIDesktopReportOpenWebMessage) => {
+            this.openReport(<PBIDesktopReport>data);
+        });
+
+        host.on(WebMessageType.DatasetOpen, (data: PBICloudDatasetOpenWebMessage) => {
+            //this.openDataset(<PBICloudDataset>data);
+        });
+
+        host.on(WebMessageType.VpaxOpen, (data: VpaxFileOpenWebMessage) => {
+            //this.openFile(new File(data.blob, data.name, { lastModified: data.lastModified }));
+        });
+
+        // UI events
 
         this.tabs.on("open", () => {
             this.connect(this.defaultConnectSelectedMenu);
@@ -143,7 +162,6 @@ export class App {
         sheet.showPage(page);
     }
 
-
     switchToDoc(docId: string) {
         for (let id in this.sheets) {
             if (this.sheets[id].doc.id == docId) {
@@ -174,22 +192,10 @@ export class App {
         dialog.show(selectedMenu)
             .then((response: ConnectResponse) => {
                 if (response.data) {
-                    switch (response.action) {
-                        case "ok":
-                            if (response.data.doc) {
-
-                                let id = Utils.DOM.uniqueId();
-                                this.addSheet(id, response.data.doc);
-                                this.tabs.addTab(id, response.data.doc);
-                            }
-                            break;
-
-                        case "cancel":
-                            if (response.data.switchToDoc) {
-                                this.switchToDoc(response.data.switchToDoc);
-                            }
-
-                            break;
+                    if (response.action == "ok") {
+                        if (response.data.doc) {
+                            this.openDoc(response.data.doc);
+                        }
                     }
                     
                     if (response.data.lastOpenedMenu)
@@ -198,17 +204,25 @@ export class App {
             });
     }
 
-
-    dragFile(file: File) {
+    openFile(file: File) {
         if (file.name.slice(-5) == ".vpax") {
-            let fileHash = Doc.getId(DocType.vpax, file);
-            if (!this.switchToDoc(fileHash)) {
+            this.openDoc(new Doc(file.name, DocType.vpax, file));
+        }
+    }
 
-                let doc = new Doc(file.name, DocType.vpax, file);
-                let id = Utils.DOM.uniqueId();
-                this.addSheet(id, doc);
-                this.tabs.addTab(id, doc);
-            }
+    openReport(report: PBIDesktopReport) {
+        this.openDoc(new Doc(report.reportName, DocType.pbix, report));
+    }
+
+    openDataset(dataset: PBICloudDataset) {
+        this.openDoc(new Doc(dataset.name, DocType.dataset, dataset));
+    }
+
+    openDoc(doc: Doc) {
+        if (!this.switchToDoc(doc.id)) {
+            let id = Utils.DOM.uniqueId();
+            this.addSheet(id, doc);
+            this.tabs.addTab(id, doc);
         }
     }
 }
