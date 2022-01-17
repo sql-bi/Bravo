@@ -59,9 +59,7 @@ export class ConnectRemote extends ConnectMenuItem {
 
     renderTable(id: string, datasets: PBICloudDataset[]) {
 
-        let unopenedDatasets = datasets.filter(dataset => {
-            return (this.dialog.openDocIds.indexOf(Doc.getId(DocType.dataset, dataset)) == -1);
-        });
+        let unopenedDatasets = datasets.filter(dataset => (this.dialog.openDocIds.indexOf(Doc.getId(DocType.dataset, dataset)) == -1));
 
         if (!unopenedDatasets.length) {
             this.renderError(strings.errorDatasetsEmptyListing);

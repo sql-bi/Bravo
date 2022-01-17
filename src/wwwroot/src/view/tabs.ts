@@ -71,9 +71,7 @@ export class Tabs extends View {
             }
         });
         this.chromeTabs.on("tabClose", (tabEl: HTMLElement) => {
-            if (tabEl) {
-                this.trigger("close", <RemovedTabInfo>{ id: tabEl.dataset.tabId, element: tabEl});
-            }
+            this.notifyClosingTab(tabEl);
         });
         this.chromeTabs.on("tabMenu", (e: ChromeTabsMenuEvent) => {
             if (e.element) {
@@ -82,18 +80,14 @@ export class Tabs extends View {
                     items: [
                         { label: i18n(strings.closeTab), onClick: () => {
                             window.setTimeout(()=>{
-                                this.trigger("close", <RemovedTabInfo>{ id: e.element.dataset.tabId, element: e.element});
+                                this.notifyClosingTab(e.element);
                             }, 200);
                         }},
                         { label: i18n(strings.closeOtherTabs), enabled: (this.chromeTabs.tabEls.length > 1), onClick: () => {  
-                            
-                            let tabsToRemove: HTMLElement[] = [];
-                            this.chromeTabs.tabEls.forEach(tabEl => {
-                                if (e.element.dataset.tabId != tabEl.dataset.tabId)
-                                    tabsToRemove.push(tabEl);
-                            });
+
+                            let tabsToRemove = this.chromeTabs.tabEls.filter(el => (e.element.dataset.tabId != el.dataset.tabId));
                             tabsToRemove.forEach(tabEl => {
-                                this.trigger("close", <RemovedTabInfo>{ id: tabEl.dataset.tabId, element: tabEl});
+                                this.notifyClosingTab(tabEl);
                             });
                         }},
                     ]
@@ -117,6 +111,12 @@ export class Tabs extends View {
             id: id,
             favicon: `icon-${DocType[doc.type]}`
         });
+    }
+
+    // Notify the tab is closing to the parent controller who will call the closeTab method
+    notifyClosingTab(tabEl: HTMLElement) {
+        if (tabEl)
+            this.trigger("close", <RemovedTabInfo>{ id: tabEl.dataset.tabId, element: tabEl});
     }
 
     closeTab(tabEl: HTMLElement) {

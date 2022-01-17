@@ -46,9 +46,7 @@ export class ConnectLocal extends ConnectMenuItem {
 
     updateTable(id: string) {
 
-        let unopenedReports = pbiDesktop.reports.filter(report => {
-            return (this.dialog.openDocIds.indexOf(Doc.getId(DocType.pbix, report)) == -1);
-        });
+        let unopenedReports = pbiDesktop.reports.filter(report => (this.dialog.openDocIds.indexOf(Doc.getId(DocType.pbix, report)) == -1));
 
         if (!unopenedReports.length) {
             this.renderError(strings.errorReportsEmptyListing);
