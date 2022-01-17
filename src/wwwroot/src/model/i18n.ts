@@ -7,57 +7,37 @@
 import * as sanitizeHtml from 'sanitize-html';
 import { strings } from './strings';
 
-/** 
- * Translations 
- * Add new localizations
- * 
- * --- this file ---
- * import it from "./i18n/it";
- * const translations = { ...it };
- * 
- * --- i18n/it.ts ---
- * const translations = {
- *      it: {
- *          appName: "Bravo per Power BI"
- *      }
- * }
- * export default translations;
- * 
- */
+import en from "./i18n/en";
 import it from "./i18n/it";
-const translations = { ...it };
+const translations = { en: en, it: it };
 
-/** Default strings (en) **/
+export interface I18nOptions {
+    locale: string;
+}
+export class I18n {
+    options: I18nOptions;
 
+    constructor(options: I18nOptions) {
+        this.options = options;
+    }
 
-/** 
- * Usage
- * var str = i18n(strings.appName);
- */
-export function i18n(enString: strings, ...args: any): string {
+    localize(text: strings, ...args: any): string {
+        let langCode = this.options.locale.split(/-|_/)[0].toLowerCase();
+        if (!(langCode in translations) || !(text in (<any>translations)[langCode])) 
+            langCode = "en";
 
-    const locale = navigator.language;
+        let message = (<any>translations)[langCode][text];
 
-    let langCode = locale.split(/-|_/)[0].toLowerCase();
-    let message = <string>enString;
+        if (args && message) {
+            for (let i = 0; i < args.length; i++) {
 
-    if (langCode != "en" && langCode in translations) {
-        const translatedMessages = (<any>translations)[langCode];
-        for (let key in strings) {
-            if ((<any>strings)[key] == enString) {
-                if (key in translatedMessages) {
-                    message = translatedMessages[key];
-                }
-                break;
+                message = message.replace("$" + i, sanitizeHtml(args[i], { allowedTags: [], allowedAttributes: {}}));
             }
         }
+    
+        return message;
     }
-
-    if (args) {
-        for (let i = 0; i < args.length; i++) {
-            message = message.replace("$" + i, sanitizeHtml(args[i], { allowedTags: [], allowedAttributes: {}}));
-        }
-    }
-
-    return message;
 }
+export const i18nHelper = new I18n({ locale: navigator.language });
+
+export const i18n = (text: strings, ...args: any) => i18nHelper.localize(text, ...args);

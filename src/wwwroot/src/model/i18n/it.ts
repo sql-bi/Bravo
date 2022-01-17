@@ -3,11 +3,10 @@
  * Copyright (c) SQLBI corp. - All rights reserved.
  * https://www.sqlbi.com
 */
+import { strings as it } from '../strings';
 
 /** Locale it **/
 const translations = {
-    it: {
-        appName: "Bravo per Power BI",
-    }
+    [it.addCtrlTitle]: "Apri",
 }
 export default translations;
