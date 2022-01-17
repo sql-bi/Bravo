@@ -31,8 +31,6 @@ export class App {
 
     constructor() {
 
-        console.log(`--- Welcome to Bravo for Power BI ---`);
-
         this.element = _(".root");
 
         let sidebarItems: Dic<string> = {};

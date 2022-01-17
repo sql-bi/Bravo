@@ -65,8 +65,7 @@
     @table-cell-color-dark: @text-color-dark;
 @table-sorter-color: #ccc;
     @table-sorter-color-dark: #555;
-@table-cell-highlight-back-color: #fffad6;
-    @table-cell-highlight-back-color-dark: #645500;
+
 @table-cell-active-back-color: #C8E1FF;
     @table-cell-active-back-color-dark: #1881ff;
 @table-cell-size-indicator: @accent-back-color;
@@ -97,22 +96,27 @@
 @notice-color: #969696;
     @notice-color-dark: #a3a3a3;
 
-@error-color: #D93124;
+@error-color: #eb1414;
     @error-color-dark: @error-color;
-@warning-color: #000;
+@error-back-color: #fdd7d7;
+    @error-back-color-dark: @error-back-color;
+@warning-color: #6c5f01;
     @warning-color-dark: #ffd900;
+@warning-back-color: #fffad6;
+    @warning-back-color-dark: #645500;
 
 @promoted-color: #4668C5;
 @certified-color: #24891C;
 @good-color: #24891C;
+@modified-color: #ffd900;
 
 //Badges
 @badge-color: #333;
 @badge-back-color: #f2f1f3;
 @readonly-badge-color: @badge-color;
 @readonly-badge-back-color: @badge-back-color;
-@orphan-badge-color: #eb1414;
-@orphan-badge-back-color: #fdd7d7;
+@orphan-badge-color: @error-color;
+@orphan-badge-back-color: @error-back-color;
 
 //DAX Syntax colors
 @comment-color: #39A03B;

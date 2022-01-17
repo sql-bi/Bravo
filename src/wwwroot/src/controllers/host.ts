@@ -10,7 +10,7 @@ import { auth, debug } from '../main';
 import { DocType } from '../model/doc';
 import { AppError, AppErrorType } from '../model/exceptions';
 import { WebMessage } from '../model/message';
-import { TabularDatabase, TabularMeasure } from '../model/tabular';
+import { FormattedMeasure, TabularDatabase, TabularMeasure } from '../model/tabular';
 import { Account } from './auth';
 import { FormatDaxOptions, Options } from './options';
 import { PBIDesktopReport } from './pbi-desktop';
@@ -43,16 +43,6 @@ export interface ProblemDetails {
 export interface FormatDaxRequest {
     options: FormatDaxOptions
     measures: TabularMeasure[]
-}
-
-export interface FormatDaxError {
-    line: number
-    column: number
-    message?: string
-}
-
-export interface FormattedMeasure extends TabularMeasure {
-    errors?: FormatDaxError[]
 }
 
 export enum PBICloudDatasetEndorsementstring {

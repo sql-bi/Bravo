@@ -26,4 +26,6 @@ let telemetry = new Telemetry(CONFIG.telemetry);
 let pbiDesktop = new PBIDesktop();
 let app = new App();
 
+console.log("Bravo for Power BI", CONFIG);
+
 export { debug, host, optionsController, themeController, auth, telemetry, pbiDesktop };

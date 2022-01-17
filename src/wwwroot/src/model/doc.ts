@@ -6,9 +6,9 @@
 
 import { host, pbiDesktop } from "../main";
 import { Dic, Utils } from '../helpers/utils';
-import { TabularDatabase, TabularDatabaseInfo, TabularMeasure } from './tabular';
+import { daxMeasureName, FormattedMeasure, TabularDatabase, TabularDatabaseInfo, TabularMeasure } from './tabular';
 import { deepEqual } from 'fast-equals';
-import { FormattedMeasure, PBICloudDataset } from '../controllers/host';
+import { PBICloudDataset } from '../controllers/host';
 import { PBIDesktopReport } from '../controllers/pbi-desktop';
 import { AppError } from '../model/exceptions';
 import * as sanitizeHtml from 'sanitize-html';
@@ -18,6 +18,12 @@ export enum DocType {
     vpax,
     pbix,
     dataset,
+}
+export enum MeasureStatus {
+    Partial,
+    Formatted,
+    NotFormatted,
+    WithErrors
 }
 export class Doc {
     id: string;
@@ -120,5 +126,22 @@ export class Doc {
         return new Promise((resolve, reject) => { 
             reject(AppError.InitFromResponseError(Utils.ResponseStatusCode.InternalError)); 
         });
+    }
+
+    analizeMeasure(measure: TabularMeasure): MeasureStatus  {
+
+        let key = daxMeasureName(measure);
+
+        if (key in this.formattedMeasures) {
+            let formattedMeasure = this.formattedMeasures[key];
+            if (formattedMeasure.errors && formattedMeasure.errors.length) {
+                return MeasureStatus.WithErrors;
+            } else if (formattedMeasure.measure.trim() != measure.measure.trim()) {
+                return MeasureStatus.NotFormatted;
+            } else {
+                return MeasureStatus.Formatted;
+            }
+        }
+        return MeasureStatus.Partial;
     }
 }

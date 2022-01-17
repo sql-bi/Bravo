@@ -116,8 +116,11 @@
       content: "\e906";
     }
   }
-  .icon-completed:before {
-    content: "\e907";
+  .icon-completed,
+  .icon-valid {
+    &:before {
+      content: "\e907";
+    }
   }
   .icon-copy{
     &:before {
@@ -305,5 +308,15 @@
   .icon-privacy {
     &:before {
       content: "\e935";
+    }
+  }
+  .icon-circle {
+    &:before {
+      content: "\e939";
+    }
+  }
+  .icon-equal {
+    &:before {
+      content: "\e938";
     }
   }

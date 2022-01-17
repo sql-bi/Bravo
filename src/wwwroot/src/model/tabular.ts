@@ -34,6 +34,16 @@ export interface TabularMeasure {
     measure?:	string
 }
 
+export interface FormatDaxError {
+    line: number
+    column: number
+    message?: string
+}
+
+export interface FormattedMeasure extends TabularMeasure {
+    errors?: FormatDaxError[]
+}
+
 export function daxMeasureName(measure: TabularMeasure): string {
     return `${measure.tableName}[${measure.name}]`;
 }

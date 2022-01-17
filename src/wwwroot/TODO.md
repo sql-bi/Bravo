@@ -2,7 +2,8 @@
 
 **@daniele**
 - Format DAX
-    - Show changed/error measures indicators
+    - Fix sorting by status
+    - Fix dark/error highlight row
     - Current/Formatted side by side
 - Options/About window
 - Telemetry 

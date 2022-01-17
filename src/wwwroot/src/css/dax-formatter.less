@@ -31,7 +31,25 @@
         }
 
         .table {
-            width:100%
+            width:100%;
+
+            .column-icon {
+                .loader {
+                    width: 16px;
+                    height: 16px;
+                    margin: 8px 0 0 4px;
+
+                    &:before {
+                        border-width: 8px;
+                    }
+                }
+                .icon-valid {
+                    opacity: 0.1;
+                }
+                .icon-circle {
+                    color: @modified-color;
+                }
+            }
         }
 
         .search {

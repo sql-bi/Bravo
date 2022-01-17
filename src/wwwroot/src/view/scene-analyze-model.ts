@@ -87,7 +87,7 @@ export class AnalyzeModelScene extends MainScene {
 
                     <div class="warning-explanation">
                         <div class="icon icon-alert"></div>
-                        <p>${i18n(strings.columnWarningExplanation)}</p>
+                        <p>${i18n(strings.columnUnreferencedExplanation)}</p>
                     </div>
 
                 </div>
@@ -220,7 +220,7 @@ export class AnalyzeModelScene extends MainScene {
                     cssClass: "column-icon",
                     formatter: (cell) => {
                         let cellData = <TabulatorVpaxModelColumn>cell.getData();
-                        return (cellData.isReferenced === false ? `<div class="icon icon-alert" title="${i18n(strings.columnWarningTooltip)}"></div>` : "");
+                        return (cellData.isReferenced === false ? `<div class="icon icon-alert" title="${i18n(strings.columnUnreferencedTooltip)}"></div>` : "");
                     }, 
                     sorter: (a, b, aRow, bRow, column, dir, sorterParams) => {
                         let cellData = <TabulatorVpaxModelColumn>aRow.getData();
@@ -318,7 +318,7 @@ export class AnalyzeModelScene extends MainScene {
                 initialFilter: (data:any) => this.unreferencedFilter(data),
                 rowFormatter: row => {
                     try { //Bypass calc rows
-                        let data = row.getData();
+                        let data = <TabulatorVpaxModelColumn>row.getData();
                         let element = row.getElement();
 
                         if (data.isReferenced === false){

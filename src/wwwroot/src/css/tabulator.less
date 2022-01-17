@@ -15,17 +15,41 @@
   
 
   .row-highlighted, .row-contains-highlighted .column-icon {
-    background-color: @table-cell-highlight-back-color !important;
+    background-color: @warning-back-color !important;
 
-    .dark & {background-color: @table-cell-highlight-back-color-dark !important;}
+    .dark & {background-color: @warning-back-color-dark !important;}
 
     &:hover, &.active {
-      background-color: darken(@table-cell-highlight-back-color, 10%) !important;
+      background-color: darken(@warning-back-color, 10%) !important;
 
-      .dark & {background-color: lighten(@table-cell-highlight-back-color-dark, 10%) !important;}
+      .dark & {background-color: lighten(@warning-back-color-dark, 10%) !important;}
     }
 
+    .icon {
+      &:before {
+        color:@warning-color;
+        .dark & {color: @warning-color-dark;}
+      }
+    }
+  }
 
+  .row-error, .row-contains-error .column-icon {
+    background-color: @error-back-color !important;
+
+    .dark & {background-color: @error-back-color-dark !important;}
+
+    &:hover, &.active {
+      background-color: darken(@error-back-color, 10%) !important;
+
+      .dark & {background-color: lighten(@error-back-color-dark, 10%) !important;}
+    }
+
+    .icon {
+      &:before {
+        color:@error-color;
+        .dark & {color: @error-color-dark;}
+      }
+    }
   }
 
   .row-aggregated {
@@ -49,21 +73,15 @@
   }
 
   .column-icon {
-    width: 38px !important; //IMPORTANT: this avoid showing horizontal scrollbar on Windows
-    .icon {
-      &:before {
-        font-size: 22px;
-        color:@warning-color;
-        .dark & {color: @warning-color-dark;}
-      }
-    }
+    width: 38px !important; //This avoid showing horizontal scrollbar (Tabulator bug)
+    vertical-align: middle;
   }
 
   .tabulator-headers .column-select {
     padding-left: 1px;
   }
   .column-select {
-    width: 38px !important; //IMPORTANT: this avoid showing horizontal scrollbar on Windows
+    width: 38px !important; //This avoid showing horizontal scrollbar (Tabulator bug)
   }
 
   .tree-toggle {

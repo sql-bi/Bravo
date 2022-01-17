@@ -12,19 +12,19 @@ import { Tabulator  } from 'tabulator-tables';
 
 import { Dic, Utils, _, __ } from '../helpers/utils';
 import { daxFunctions } from '../model/dax';
-import { Doc, DocType } from '../model/doc';
+import { Doc, DocType, MeasureStatus } from '../model/doc';
 import { i18n } from '../model/i18n'; 
 import { strings } from '../model/strings';
 import { Alert } from './alert';
 import { Menu, MenuItem } from './menu';
-import { TabularMeasure, daxMeasureName } from '../model/tabular';
+import { FormattedMeasure, TabularMeasure, daxMeasureName } from '../model/tabular';
 import { ContextMenu } from '../helpers/contextmenu';
 import { Loader } from '../helpers/loader';
 import * as sanitizeHtml from 'sanitize-html';
 import { MainScene } from './scene-main';
 import { LoaderScene } from './scene-loader';
 import { ErrorScene } from './scene-error';
-import { FormattedMeasure, UpdatePBICloudDatasetRequest, UpdatePBIDesktopReportRequest } from '../controllers/host';
+import { UpdatePBICloudDatasetRequest, UpdatePBIDesktopReportRequest } from '../controllers/host';
 import { SuccessScene } from './scene-success';
 import { AppError, AppProblem } from '../model/exceptions';
 import { DaxFormatterLineStyle, DaxFormatterSpacingStyle } from '../controllers/options';
@@ -173,7 +173,7 @@ export class DaxFormatterScene extends MainScene {
                     
                     <div class="refresh ctrl icon-refresh disable-on-syncing" title="${i18n(strings.refreshPreviewCtrlTitle)}"></div>
 
-                    <div class="open-with-dax-formatter ctrl icon-send-to-dax-formatter disable-on-syncing" title="${i18n(strings.openWithDaxFormatterCtrlTitle)}"></div>
+                   
                 </div>
 
                 <select class="zoom">
@@ -181,7 +181,9 @@ export class DaxFormatterScene extends MainScene {
                 </select>
             </div>
         `);
-        
+
+        /* <div class="open-with-dax-formatter ctrl icon-send-to-dax-formatter disable-on-syncing" title="${i18n(strings.openWithDaxFormatterCtrlTitle)}"></div> */
+
         this.editorToolbar = _(".toolbar", this.menu.body);
         this.zoomSelect = <HTMLSelectElement>_(".zoom", this.editorToolbar);
         this.formattedToolbar = _(".formatted-toolbar", this.editorToolbar);
@@ -298,6 +300,9 @@ export class DaxFormatterScene extends MainScene {
             this.previewing[daxMeasureName(measure)] = true;
         });
 
+        if (this.table)
+            this.table.redraw(true);
+
         host.formatDax({
             options: optionsController.options.customOptions.daxFormatter,
             measures: measures
@@ -312,8 +317,13 @@ export class DaxFormatterScene extends MainScene {
                     if (this.activeMeasure && measureKey == daxMeasureName(this.activeMeasure)) {
                         this.updateCodeMirror(element, measure);
                         this.toggleFormattedToolbar(true);
+                        
+                        
                     }
                 });
+                
+                if (this.table)
+                    this.table.redraw(true);
             })
             .catch((error: AppError) => {
                 
@@ -396,6 +406,41 @@ export class DaxFormatterScene extends MainScene {
                     }
                 });
                 columns.push({ 
+                    //field: "Icon", 
+                    title: "", 
+                    hozAlign:"center", 
+                    resizable: false, 
+                    width: 40,
+                    cssClass: "column-icon",
+                    formatter: (cell) => {
+                        
+                        const measure = <TabularMeasure>cell.getData();
+
+                        if (daxMeasureName(measure) in this.previewing) 
+                            return `<div class="loader"></div>`;
+
+                        const status = this.doc.analizeMeasure(measure);
+
+                        if (status == MeasureStatus.NotFormatted) {
+                            return `<div class="icon icon-circle" title="${i18n(strings.columnMeasureNotFormattedTooltip)}"></div>`;
+                        } else if (status == MeasureStatus.WithErrors) {
+                            return `<div class="icon icon-error" title="${i18n(strings.columnMeasureWithError)}"></div>`;
+                        } else if (status == MeasureStatus.Formatted) {
+                            return `<div class="icon icon-valid" title="${i18n(strings.columnMeasureFormatted)}"></div>`;
+                        } else {
+                            if (optionsController.options.customOptions.previewFormatting) {
+                                return `<div class="loader"></div>`;
+                            } else {
+                                return "";
+                            }
+                        }
+                    }, 
+                    sorter: (a, b, aRow, bRow, column, dir, sorterParams) => {
+                        const measure = <TabularMeasure>aRow.getData();
+                        return this.doc.analizeMeasure(measure);
+                    }
+                });
+                columns.push({ 
                     field: "name", 
                     title: i18n(strings.daxFormatterTableColMeasure),
                     cssClass: "column-name",
@@ -425,6 +470,19 @@ export class DaxFormatterScene extends MainScene {
                 initialSort:[
                     {column: "name", dir: "asc"}, 
                 ],
+                rowFormatter: row => {
+                    try { //Bypass calc rows
+                        const measure = <TabularMeasure>row.getData();
+                        if (daxMeasureName(measure) in this.previewing) 
+                            return;
+
+                        let element = row.getElement();
+                        const status = this.doc.analizeMeasure(measure);
+                        if (status == MeasureStatus.WithErrors) {
+                            element.classList.add("row-error");
+                        }
+                    }catch(e){}
+                },
                 columns: columns,
                 data: data
             };
@@ -695,5 +753,4 @@ export class DaxFormatterScene extends MainScene {
                 this.table.clearFilter();
         }
     }
-
 }
