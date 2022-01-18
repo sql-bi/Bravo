@@ -10,10 +10,12 @@ import { OptionsController } from './controllers/options';
 import { ThemeController } from './controllers/theme';
 import { Telemetry } from './controllers/telemetry';
 import { PBIDesktop } from './controllers/pbi-desktop';
+import { NotifyCenter } from './controllers/notifications';
 import { Debug } from './controllers/debug';
 
 // Load Tabulator modules
 import { Tabulator, ColumnCalcsModule, DataTreeModule, FilterModule, FormatModule, InteractionModule, ResizeColumnsModule, ResizeTableModule, SelectRowModule, SortModule  } from 'tabulator-tables';
+
 Tabulator.registerModule([ColumnCalcsModule, DataTreeModule, FilterModule, FormatModule, InteractionModule, ResizeColumnsModule, ResizeTableModule, SelectRowModule, SortModule]);
 
 // Init the app
@@ -24,8 +26,9 @@ let themeController = new ThemeController(CONFIG.theme);
 let auth = new Auth();
 let telemetry = new Telemetry(CONFIG.telemetry);
 let pbiDesktop = new PBIDesktop();
+let notificationCenter = new NotifyCenter();
 let app = new App();
 
 console.log("Bravo for Power BI", CONFIG);
 
-export { debug, host, optionsController, themeController, auth, telemetry, pbiDesktop };
+export { debug, host, optionsController, themeController, auth, telemetry, pbiDesktop, notificationCenter };

@@ -4,7 +4,7 @@
  * https://www.sqlbi.com
 */
 
-import { auth, host, optionsController, themeController } from "../main";
+import { auth, optionsController, themeController } from "../main";
 import { i18n } from '../model/i18n'; 
 import { ThemeChangeArg, ThemeType } from '../controllers/theme';
 import { __, _, Dic } from '../helpers/utils';
@@ -13,7 +13,7 @@ import { View } from './view';
 import { Account } from '../controllers/auth';
 import { ContextMenu, ContextMenuItemType } from '../helpers/contextmenu';
 import { PowerBiSignin } from './powerbi-signin';
-import { ApplicationUpdateAvailableWebMessage, WebMessageType } from '../model/message';
+import { OptionsDialog } from './options-dialog';
 export class Sidebar extends View {
 
     static DEFAULT_USER_PICTURE = "images/user.svg";
@@ -21,7 +21,6 @@ export class Sidebar extends View {
     items: Dic<string> = {};
     currentItem: string;
     collapsed = false;
-    ctrlOptions: HTMLElement;
 
     constructor(id: string, container: HTMLElement, items: Dic<string>) {
         super(id, container);
@@ -44,7 +43,7 @@ export class Sidebar extends View {
                 `).join("")}
             </div>
             <footer>
-                <div id="ctrl-options" class="ctrl icon-options solo" title="${i18n(strings.settingsCtrlTitle)}"><div class="notification">1</div></div>
+                <div id="ctrl-options" class="ctrl icon-options solo notification-holder" title="${i18n(strings.settingsCtrlTitle)}"></div>
 
                 <div id="ctrl-theme" class="ctrl icon-theme-${optionsController.options.theme.toLowerCase()} solo hide-if-collapsed" title="${i18n(strings.themeCtrlTitle)}" data-theme="${optionsController.options.theme}"></div> 
                 
@@ -53,8 +52,6 @@ export class Sidebar extends View {
             </footer>
         `;
         this.element.insertAdjacentHTML("beforeend", html);
-
-        this.ctrlOptions = _("#ctrl-options", this.element);
 
         //Select first item
         for (id in this.items) {
@@ -66,12 +63,6 @@ export class Sidebar extends View {
     }
 
     listen() {
-
-        host.on(WebMessageType.ApplicationUpdate, (data: ApplicationUpdateAvailableWebMessage)=>{
-            window.setTimeout(()=>{
-                this.toggleUpdateNotification(true);
-            }, 5000);
-        });
 
         __(`.side-menu .item`, this.element).forEach(div => {
 
@@ -155,9 +146,10 @@ export class Sidebar extends View {
             this.changeProfilePicture(i18n(strings.signInCtrlTitle));
         });
 
-        this.ctrlOptions.addEventListener("click", e => {
+        _("#ctrl-options", this.element).addEventListener("click", e => {
             e.preventDefault();
-            //TODO
+            let optionsDialog = new OptionsDialog();
+            optionsDialog.show();
         });
     }
 
@@ -196,18 +188,6 @@ export class Sidebar extends View {
             this.element.classList.remove("collapsed");
         }
         this.collapsed = collapse;
-    }
-
-    toggleUpdateNotification(toggle: boolean) {
-
-        let notificationElement = _(".notification", this.ctrlOptions);
-        if (toggle) {
-            notificationElement.classList.add("visible");
-            this.ctrlOptions.setAttribute("title", i18n(strings.settingsPlusUpdateCtrlTitle));
-        } else {
-            notificationElement.classList.remove("visible");
-            this.ctrlOptions.setAttribute("title", i18n(strings.settingsPlusUpdateCtrlTitle));
-        }
     }
 
 }

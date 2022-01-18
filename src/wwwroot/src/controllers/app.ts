@@ -14,11 +14,12 @@ import { Confirm } from '../view/confirm';
 import { Connect, ConnectResponse } from '../view/connect';
 import { Sheet } from './sheet';
 import { PageType } from './page';
-import { host, telemetry } from '../main';
+import { host, notificationCenter, telemetry } from '../main';
 import { i18n } from '../model/i18n'; 
-import { PBICloudDatasetOpenWebMessage, PBIDesktopReportOpenWebMessage, VpaxFileOpenWebMessage, WebMessageType } from '../model/message';
+import { ApplicationUpdateAvailableWebMessage, PBICloudDatasetOpenWebMessage, PBIDesktopReportOpenWebMessage, VpaxFileOpenWebMessage, WebMessageType } from '../model/message';
 import { PBIDesktopReport } from './pbi-desktop';
 import { PBICloudDataset } from './host';
+import { Notify, NotifyType } from './notifications';
 
 export class App {
 
@@ -83,6 +84,15 @@ export class App {
 
         host.on(WebMessageType.VpaxOpen, (data: VpaxFileOpenWebMessage) => {
             this.openFile(new File(data.blob, data.name, { lastModified: data.lastModified }));
+        });
+
+        host.on(WebMessageType.ApplicationUpdate, (data: ApplicationUpdateAvailableWebMessage)=>{
+            let notification: Notify = {
+                type: NotifyType.Badge,
+                data: data,
+                message: i18n(strings.updateMessage)
+            };
+            notificationCenter.add(notification);
         });
 
         // UI events
