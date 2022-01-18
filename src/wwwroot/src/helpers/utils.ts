@@ -174,35 +174,43 @@ export module Utils {
 
     export module Format {
 
-        export function bytes(value: number, decimals = 2, refValue = 0): string {
-            if (value === 0) return "0 Bytes";
-        
+        export function bytes(value: number, locale = "en", decimals = 2, base = 0): string {
+  
             const k = 1024;
             
             const sizes = ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
             
             let i = Math.floor(Math.log(value) / Math.log(k));
-            if (refValue) {
+            if (base) {
                 for (let l = 0; l < sizes.length; l++) {
-                    if (refValue >= Math.pow(k, l)) {
+                    if (base >= Math.pow(k, l)) {
                         i = l;
                         break;
                     }
                 }
             }
-        
-            let n = (value / Math.pow(k, i)).toFixed(i ? decimals : 0);
-            if (n == "0") n = `<${n}`;
+            let digits = (i ? decimals : 0);
+            let formatter = Intl.NumberFormat(locale, { 
+                maximumFractionDigits: digits, 
+                minimumFractionDigits: digits 
+            });
+            let n = formatter.format(value / Math.pow(k, i));
+            if (n == "0" && i > 0) n = `<${n}`;
    
             return `${n} ${sizes[i]}`;
         }
 
-        export function percentage(value: number, decimals = 2): string {
-            let n = (value * 100).toFixed(decimals);
-            if (value > 0 && n == "0") {
-                n = `<${1 / Math.pow(10, decimals)}`;
+        export function percentage(value: number, locale = "en", decimals = 2): string {
+            let formatter = Intl.NumberFormat(locale, { 
+                style: "percent",
+                maximumFractionDigits: decimals, 
+                minimumFractionDigits: decimals
+            });
+            let n = formatter.format(value);
+            if (value > 0 && n == "0%") {
+                n = `<${1 / Math.pow(10, decimals)}%`;
             }
-            return `${n}%`;
+            return n;
         }
 
         export function compress(value: number, decimals = 2): string {

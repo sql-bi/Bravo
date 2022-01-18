@@ -5,7 +5,6 @@
 */
 
 import { Dic, _, __, Utils } from "../helpers/utils";
-import { i18n } from '../model/i18n'; 
 import { strings } from '../model/strings';
 import { Sidebar } from '../view/sidebar';
 import { Tabs, AddedTabInfo, RemovedTabInfo } from '../view/tabs';
@@ -16,6 +15,7 @@ import { Connect, ConnectResponse } from '../view/connect';
 import { Sheet } from './sheet';
 import { PageType } from './page';
 import { host, telemetry } from '../main';
+import { i18n } from '../model/i18n'; 
 import { PBICloudDatasetOpenWebMessage, PBIDesktopReportOpenWebMessage, VpaxFileOpenWebMessage, WebMessageType } from '../model/message';
 import { PBIDesktopReport } from './pbi-desktop';
 import { PBICloudDataset } from './host';

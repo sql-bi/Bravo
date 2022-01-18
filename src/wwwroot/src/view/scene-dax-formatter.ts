@@ -3,8 +3,8 @@
  * Copyright (c) SQLBI corp. - All rights reserved.
  * https://www.sqlbi.com
 */
-import { host, optionsController, telemetry, themeController } from "../main";
-
+import { host, optionsController, telemetry, themeController } from '../main';
+import { i18n } from '../model/i18n'; 
 import * as CodeMirror from 'codemirror';
 import 'codemirror/addon/mode/simple';
 
@@ -13,7 +13,6 @@ import { Tabulator  } from 'tabulator-tables';
 import { Dic, Utils, _, __ } from '../helpers/utils';
 import { daxFunctions } from '../model/dax';
 import { Doc, DocType, MeasureStatus } from '../model/doc';
-import { i18n } from '../model/i18n'; 
 import { strings } from '../model/strings';
 import { Alert } from './alert';
 import { Menu, MenuItem } from './menu';
@@ -122,7 +121,7 @@ export class DaxFormatterScene extends MainScene {
 
         let html = `
             <div class="summary">
-                <p>${i18n(strings.daxFormatterSummary, this.doc.measures.length)}</p>
+                <p>${i18n(strings.daxFormatterSummary, {count: this.doc.measures.length})}</p>
             </div>
 
             <div class="cols">
@@ -405,55 +404,54 @@ export class DaxFormatterScene extends MainScene {
                         cell.getRow().toggleSelect();
                     }
                 });
-                columns.push({ 
-                    //field: "Icon", 
-                    title: "", 
-                    hozAlign:"center", 
-                    resizable: false, 
-                    width: 40,
-                    cssClass: "column-icon",
-                    formatter: (cell) => {
-                        
-                        const measure = <TabularMeasure>cell.getData();
-
-                        if (daxMeasureName(measure) in this.previewing) 
-                            return `<div class="loader"></div>`;
-
-                        const status = this.doc.analizeMeasure(measure);
-
-                        if (status == MeasureStatus.NotFormatted) {
-                            return `<div class="icon icon-circle" title="${i18n(strings.columnMeasureNotFormattedTooltip)}"></div>`;
-                        } else if (status == MeasureStatus.WithErrors) {
-                            return `<div class="icon icon-error" title="${i18n(strings.columnMeasureWithError)}"></div>`;
-                        } else if (status == MeasureStatus.Formatted) {
-                            return `<div class="icon icon-valid" title="${i18n(strings.columnMeasureFormatted)}"></div>`;
-                        } else {
-                            if (optionsController.options.customOptions.previewFormatting) {
-                                return `<div class="loader"></div>`;
-                            } else {
-                                return "";
-                            }
-                        }
-                    }, 
-                    sorter: (a, b, aRow, bRow, column, dir, sorterParams) => {
-                        const measure = <TabularMeasure>aRow.getData();
-                        return this.doc.analizeMeasure(measure);
-                    }
-                });
-                columns.push({ 
-                    field: "name", 
-                    title: i18n(strings.daxFormatterTableColMeasure),
-                    cssClass: "column-name",
-                    bottomCalc: "count",
-                    bottomCalcFormatter: (cell)=> i18n(strings.daxFormatterTableSelected, this.table.getSelectedData().length)
-                });
-            } else {
-                columns.push({ 
-                    field: "name", 
-                    title: i18n(strings.daxFormatterTableColMeasure),
-                    cssClass: "column-name"
-                });
             }
+            columns.push({ 
+                //field: "Icon", 
+                title: "", 
+                hozAlign:"center", 
+                resizable: false, 
+                width: 40,
+                cssClass: "column-icon",
+                formatter: (cell) => {
+                    
+                    const measure = <TabularMeasure>cell.getData();
+
+                    if (daxMeasureName(measure) in this.previewing) 
+                        return `<div class="loader"></div>`;
+
+                    const status = this.doc.analizeMeasure(measure);
+
+                    if (status == MeasureStatus.NotFormatted) {
+                        return `<div class="icon icon-circle" title="${i18n(strings.columnMeasureNotFormattedTooltip)}"></div>`;
+                    } else if (status == MeasureStatus.WithErrors) {
+                        return `<div class="icon icon-alert" title="${i18n(strings.columnMeasureWithError)}"></div>`;
+                    } else if (status == MeasureStatus.Formatted) {
+                        return `<div class="icon icon-valid" title="${i18n(strings.columnMeasureFormatted)}"></div>`;
+                    } else {
+                        if (optionsController.options.customOptions.previewFormatting) {
+                            return `<div class="loader"></div>`;
+                        } else {
+                            return "";
+                        }
+                    }
+                }, 
+                sorter: (a, b, aRow, bRow, column, dir, sorterParams) => {
+                    const measureA = <TabularMeasure>aRow.getData();
+                    const measureAStatus = this.doc.analizeMeasure(measureA);
+                    const measureB = <TabularMeasure>bRow.getData();
+                    const measureBStatus = this.doc.analizeMeasure(measureB);
+                    return (measureAStatus > measureBStatus ? 1 : -1);
+                }
+            });
+
+   
+            columns.push({ 
+                field: "name", 
+                title: i18n(strings.daxFormatterTableColMeasure),
+                cssClass: "column-name",
+                bottomCalc: this.doc.editable ? "count" : null,
+                bottomCalcFormatter: (cell)=> i18n(strings.daxFormatterTableSelected, {count: this.table.getSelectedData().length})
+            });
 
             columns.push({ 
                 field: "tableName", 
@@ -554,7 +552,7 @@ export class DaxFormatterScene extends MainScene {
         this.updateTable(false);
         this.maybeAutoGeneratePreview();
 
-        _(".summary p", this.element).innerHTML = i18n(strings.daxFormatterSummary, this.doc.measures.length);
+        _(".summary p", this.element).innerHTML = i18n(strings.daxFormatterSummary, {count: this.doc.measures.length});
     }
 
 
@@ -574,7 +572,10 @@ export class DaxFormatterScene extends MainScene {
         let errorResponse = (error: AppError) => {
             if (error.requestAborted) return;
 
-            let errorScene = new ErrorScene(Utils.DOM.uniqueId(), this.element.parentElement, error, true);
+            let errorScene = new ErrorScene(Utils.DOM.uniqueId(), this.element.parentElement, error, () => {
+                if (this.table)
+                    this.table.redraw(true);
+            });
             this.splice(errorScene);
         };
 
@@ -596,7 +597,7 @@ export class DaxFormatterScene extends MainScene {
 
                 if (measuresWithErrors.length) {
 
-                    throw AppError.InitFromInternalError(AppProblem.TOMDatabaseUpdateErrorMeasure, i18n(strings.errorTryingToUpdateMeasuresWithErrors, measuresWithErrors.join(", ")));
+                    throw AppError.InitFromInternalError(AppProblem.TOMDatabaseUpdateErrorMeasure, i18n(strings.errorTryingToUpdateMeasuresWithErrors, {measures: measuresWithErrors.join(", ")}));
                 }
 
                 let updateRequest;
@@ -639,7 +640,7 @@ export class DaxFormatterScene extends MainScene {
                         }
                         this.updateTable(true);
 
-                        let successScene = new SuccessScene(Utils.DOM.uniqueId(), this.element.parentElement, i18n(formattedMeasures.length == 1 ? strings.daxFormatterSuccessSceneMessageSingular : strings.daxFormatterSuccessSceneMessagePlural, formattedMeasures.length), ()=>{
+                        let successScene = new SuccessScene(Utils.DOM.uniqueId(), this.element.parentElement, i18n(strings.daxFormatterSuccessSceneMessage, {count: formattedMeasures.length}), ()=>{
                             this.pop();
                         });
                         this.splice(successScene);

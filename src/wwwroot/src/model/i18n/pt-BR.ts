@@ -3,17 +3,17 @@
  * Copyright (c) SQLBI corp. - All rights reserved.
  * https://www.sqlbi.com
 */
-import { Locale } from '../i18n';
 import { strings } from '../strings';
+import { Locale } from '../i18n';
 
 const locale: Locale = {
-    
-    locale: "it", //DO NOT TRANSLATE
-    enName: "Italian", //DO NOT TRANSLATE
 
-    name: "Italiano",
+    locale: "pt-BR", //DO NOT TRANSLATE
+    enName: "Portuguese (BR)", //DO NOT TRANSLATE
+
+    name: "Português (Brasil)",
     strings: {
-        [strings.addCtrlTitle]: "Apri",
+        
     }
 }
 export default locale;

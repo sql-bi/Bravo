@@ -5,9 +5,9 @@
 */
 
 import { auth, host, optionsController, themeController } from "../main";
+import { i18n } from '../model/i18n'; 
 import { ThemeChangeArg, ThemeType } from '../controllers/theme';
 import { __, _, Dic } from '../helpers/utils';
-import { i18n } from '../model/i18n'; 
 import { strings } from '../model/strings';
 import { View } from './view';
 import { Account } from '../controllers/auth';
@@ -131,7 +131,7 @@ export class Sidebar extends View {
                 new ContextMenu({
                     width: "auto",
                     items: [
-                        { label: i18n(strings.signedInCtrlTitle, auth.account.username), cssIcon: "icon-user", type: ContextMenuItemType.label},
+                        { label: i18n(strings.signedInCtrlTitle, {name: auth.account.username}), cssIcon: "icon-user", type: ContextMenuItemType.label},
                         { label: "-", type: ContextMenuItemType.separator },
                         { label: i18n(strings.signOut), onClick: () => { auth.signOut(); } },
                     ]
@@ -148,7 +148,7 @@ export class Sidebar extends View {
         });
 
         auth.on("signedIn", (account: Account) => {
-            this.changeProfilePicture(i18n(strings.signedInCtrlTitle, account.username), account.avatar);
+            this.changeProfilePicture(i18n(strings.signedInCtrlTitle, {name: account.username}), account.avatar);
         });
 
         auth.on("signedOut", () => {

@@ -14,6 +14,7 @@ import { BestPracticesScene } from '../view/scene-best-practices';
 import { DaxFormatterScene } from '../view/scene-dax-formatter';
 import { ExportDataScene } from '../view/scene-export-data';
 import { ManageDatesScene } from '../view/scene-manage-dates';
+import { WipScene } from '../view/scene-wip';
 import { View } from '../view/view';
 
 export enum PageType {
@@ -47,8 +48,8 @@ export class Page extends View {
         const classes = {
             [PageType.AnalyzeModel]: AnalyzeModelScene,
             [PageType.DaxFormatter]: DaxFormatterScene,
-            [PageType.ManageDates]: ManageDatesScene,
-            [PageType.ExportData]: ExportDataScene,
+            [PageType.ManageDates]: WipScene, //ManageDatesScene,
+            [PageType.ExportData]: WipScene, //ExportDataScene,
             //[PageType.BestPractices]: BestPracticesScene,
         }
         if (type in classes) {

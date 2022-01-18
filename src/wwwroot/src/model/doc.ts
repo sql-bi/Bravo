@@ -131,15 +131,20 @@ export class Doc {
     analizeMeasure(measure: TabularMeasure): MeasureStatus  {
 
         let key = daxMeasureName(measure);
-
         if (key in this.formattedMeasures) {
             let formattedMeasure = this.formattedMeasures[key];
             if (formattedMeasure.errors && formattedMeasure.errors.length) {
                 return MeasureStatus.WithErrors;
-            } else if (formattedMeasure.measure.trim() != measure.measure.trim()) {
-                return MeasureStatus.NotFormatted;
             } else {
-                return MeasureStatus.Formatted;
+                // Get rid of different carriage return chars or beginning/ending spaces
+                let comparableMeasure = measure.measure.replace(/\r\n/gm, "\n").trim();
+                let comparableFormattedMeasure = formattedMeasure.measure.replace(/\r\n/gm, "\n").trim();
+
+                if (comparableMeasure == comparableFormattedMeasure) {
+                    return MeasureStatus.Formatted;
+                } else {
+                    return MeasureStatus.NotFormatted;
+                }
             }
         }
         return MeasureStatus.Partial;

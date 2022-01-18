@@ -6,7 +6,7 @@
 
 import { ProblemDetails } from '../controllers/host';
 import { Utils } from '../helpers/utils';
-import { i18n } from './i18n';
+import { i18n } from '../model/i18n'; 
 import { strings } from './strings';
 
 export enum AppProblem {
@@ -57,7 +57,7 @@ export class AppError {
     }
 
     toString() {
-        return `${ i18n(strings.error) }${ this.code ? ` ${this.type != AppErrorType.Managed ? "HTTP/" : "" }${ this.code }` : "" }: ${ this.message }${ this.traceId ? `\n${strings.traceId}: ${this.traceId}` : ""}`;
+        return `${ i18n(strings.error) }${ this.code ? ` ${this.type != AppErrorType.Managed ? "HTTP/" : "" }${ this.code }` : "" }: ${ this.message }${ this.traceId ? `\n${ i18n(strings.traceId) }: ${this.traceId}` : ""}`;
     }
 
     static InitFromProblem(problem: ProblemDetails, message?: string) {

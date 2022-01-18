@@ -4,7 +4,7 @@
  * https://www.sqlbi.com
 */
 import { Utils, _ } from '../helpers/utils';
-import { i18n } from '../model/i18n';
+import { i18n } from '../model/i18n'; 
 import { strings } from '../model/strings';
 import { Connect } from './connect';
 

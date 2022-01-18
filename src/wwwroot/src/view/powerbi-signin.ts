@@ -6,9 +6,9 @@
 
 import { _ } from '../helpers/utils';
 import { auth } from '../main';
-import { i18n } from '../model/i18n'; 
 import { strings } from '../model/strings';
 import { Dialog, DialogResponse } from './dialog';
+import { i18n } from '../model/i18n'; 
 
 
 export class PowerBiSignin extends Dialog {

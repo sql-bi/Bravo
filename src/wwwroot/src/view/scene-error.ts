@@ -9,7 +9,7 @@ import { _ } from '../helpers/utils';
 import { i18n } from '../model/i18n'; 
 import { strings } from '../model/strings';
 import { BackableScene } from './scene-back';
-import { optionsController } from '../main';
+import { ContextMenu } from '../helpers/contextmenu';
 
 export class ErrorScene extends BackableScene {
 
@@ -36,11 +36,9 @@ export class ErrorScene extends BackableScene {
 
                 <p>${this.error.message}</p>
 
-                <div class="error-trace">
-                    ${this.error.traceId ? `<div><strong>${strings.traceId}:</strong> ${this.error.traceId}</div>` : ""}
+                ${this.error.traceId ? `<p><strong>${i18n(strings.traceId)}:</strong> ${this.error.traceId}</p>` : ""}
 
-                    <div class="copy-error ctrl icon-copy" title="${strings.copyErrorCtrlTitle}"></div>
-                </div>
+                <div class="copy-error ctrl icon-copy" title="${i18n(strings.copyErrorCtrlTitle)}"></div>
             
                 ${ this.onRetry ? `
                     <p><div class="retry-call button button-alt">${i18n(strings.errorRetry)}</div></p>
@@ -49,6 +47,18 @@ export class ErrorScene extends BackableScene {
         `;
 
         this.element.insertAdjacentHTML("beforeend", html); 
+
+        this.element.addEventListener("contextmenu", e => {
+            
+            new ContextMenu({ 
+                width: "auto",
+                items: [
+                    { label: i18n(strings.copyErrorCtrlTitle), cssIcon: "icon-copy", onClick: () => { 
+                        navigator.clipboard.writeText(this.error.toString());
+                    }}
+                ] 
+            }, e);
+        });
 
         _(".copy-error", this.element).addEventListener("click", e =>{
             e.preventDefault();

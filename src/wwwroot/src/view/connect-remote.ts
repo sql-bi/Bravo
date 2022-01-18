@@ -5,9 +5,9 @@
 */
 
 import { auth, host } from '../main';
+import { i18n } from '../model/i18n'; 
 import { Utils, _, __ } from '../helpers/utils';
 import { Doc, DocType } from '../model/doc';
-import { i18n } from '../model/i18n'; 
 import { strings } from '../model/strings';
 import { PBICloudDataset, PBICloudDatasetEndorsementstring } from '../controllers/host';
 import { Tabulator } from 'tabulator-tables';

@@ -4,9 +4,9 @@
  * https://www.sqlbi.com
 */
 import { host, themeController } from "../main";
+import { i18n, I18n } from '../model/i18n'; 
 import { Dic, Utils, _, __ } from '../helpers/utils';
 import { Doc, DocType } from '../model/doc';
-import { i18n } from '../model/i18n'; 
 import { strings } from '../model/strings';
 import { TabularColumn } from '../model/tabular';
 import { ThemeType } from '../controllers/theme';
@@ -55,8 +55,8 @@ export class AnalyzeModelScene extends MainScene {
 
         let html = `
             <div class="summary">
-                
-                <p>${i18n(this.doc.model.unreferencedCount == 1 ? strings.analyzeModelSummarySingular : strings.analyzeModelSummaryPlural, Utils.Format.bytes(this.doc.model.size, 2), this.doc.model.columnsCount, this.doc.model.unreferencedCount)}</p>
+
+                <p>${i18n(strings.analyzeModelSummary, {size: this.doc.model.size, count: this.doc.model.columnsCount }) + i18n(strings.analyzeModelSummary2, {count: this.doc.model.unreferencedCount})}</p>
             </div>
             <div class="fcols">
                 <div class="col coll">
@@ -68,7 +68,7 @@ export class AnalyzeModelScene extends MainScene {
                         </div>
 
                        
-                        <div class="filter-unreferenced toggle icon-filter-alerts" title="${i18n(strings.filterUnrefCtrlTitle)}"></div>
+                        <div class="filter-unreferenced toggle icon-filter-broken-links" title="${i18n(strings.filterUnrefCtrlTitle)}"></div>
 
                         <div class="group-by-table toggle icon-group" title="${i18n(strings.groupByTableCtrlTitle)}"></div>
 
@@ -86,7 +86,7 @@ export class AnalyzeModelScene extends MainScene {
                     <div class="table"></div>
 
                     <div class="warning-explanation">
-                        <div class="icon icon-alert"></div>
+                        <div class="icon icon-broken-link"></div>
                         <p>${i18n(strings.columnUnreferencedExplanation)}</p>
                     </div>
 
@@ -220,7 +220,7 @@ export class AnalyzeModelScene extends MainScene {
                     cssClass: "column-icon",
                     formatter: (cell) => {
                         let cellData = <TabulatorVpaxModelColumn>cell.getData();
-                        return (cellData.isReferenced === false ? `<div class="icon icon-alert" title="${i18n(strings.columnUnreferencedTooltip)}"></div>` : "");
+                        return (cellData.isReferenced === false ? `<div class="icon icon-broken-link" title="${i18n(strings.columnUnreferencedTooltip)}"></div>` : "");
                     }, 
                     sorter: (a, b, aRow, bRow, column, dir, sorterParams) => {
                         let cellData = <TabulatorVpaxModelColumn>aRow.getData();
@@ -274,9 +274,9 @@ export class AnalyzeModelScene extends MainScene {
                         let cellData = <TabulatorVpaxModelColumn>cell.getData();
                         let value = cell.getValue();
                         let sizePerc = Math.round((value / (cellData._children ? this.topSize.tables : this.topSize.columns)) * 100);
-                        return `${Utils.Format.bytes(value)}<div class="${cellData._children ? "size-indicator-alt" : "size-indicator"}" style="width:${sizePerc}%"></div>`;
+                        return `${Utils.Format.bytes(value, I18n.instance.locale.locale)}<div class="${cellData._children ? "size-indicator-alt" : "size-indicator"}" style="width:${sizePerc}%"></div>`;
                     }, 
-                    bottomCalcFormatter: (cell)=>Utils.Format.bytes(cell.getValue()),
+                    bottomCalcFormatter: (cell)=>Utils.Format.bytes(cell.getValue(), I18n.instance.locale.locale),
                 },
                 weight: { 
                     field: "weight", 
@@ -285,8 +285,8 @@ export class AnalyzeModelScene extends MainScene {
                     width: 80,
                     bottomCalc: "sum",
                     sorter: "number", 
-                    formatter: (cell)=>Utils.Format.percentage(cell.getValue(), 0),
-                    bottomCalcFormatter: (cell)=>Utils.Format.percentage(cell.getValue(), 0)
+                    formatter: (cell)=>Utils.Format.percentage(cell.getValue(), I18n.instance.locale.locale, 0),
+                    bottomCalcFormatter: (cell)=>Utils.Format.percentage(cell.getValue(), I18n.instance.locale.locale, 0)
                 }
             };
 
@@ -566,7 +566,7 @@ export class AnalyzeModelScene extends MainScene {
                                     if (item.columnName) {
                                         lines.push(`${i18n(strings.analyzeModelTableColTable)}: ${item.tableName}`);
                                     }
-                                    lines.push(`${i18n(strings.analyzeModelTableColSize)}: ${Utils.Format.bytes(item.size)}`);
+                                    lines.push(`${i18n(strings.analyzeModelTableColSize)}: ${Utils.Format.bytes(item.size, I18n.instance.locale.locale)}`);
                                     return lines;
                                 }
                             },
@@ -608,8 +608,7 @@ export class AnalyzeModelScene extends MainScene {
         this.updateTable(false);
         this.updateChart();
 
-        _(".summary p", this.element).innerHTML = i18n(this.doc.model.unreferencedCount == 1 ? strings.analyzeModelSummarySingular : strings.analyzeModelSummaryPlural, Utils.Format.bytes(this.doc.model.size, 2), this.doc.model.columnsCount, this.doc.model.unreferencedCount);
-
+        _(".summary p", this.element).innerHTML = i18n(strings.analyzeModelSummary, {size: this.doc.model.size, count: this.doc.model.columnsCount}) + i18n(strings.analyzeModelSummary2, {count: this.doc.model.unreferencedCount});
     }
 
     listen() {

@@ -20,6 +20,7 @@ export interface ClientOptions {
     previewFormatting: boolean
     loggedInOnce: boolean
     daxFormatter: FormatDaxOptions
+    locale: string
 }
 
 export enum DaxFormatterLineStyle {
@@ -59,6 +60,7 @@ export class OptionsController extends Dispatchable {
             editorZoom: 1,
             previewFormatting: false,
             loggedInOnce: false,
+            locale: navigator.language,
             daxFormatter: {
                 spacingStyle: DaxFormatterSpacingStyle.BestPractice,
                 lineStyle: DaxFormatterLineStyle.LongLine,

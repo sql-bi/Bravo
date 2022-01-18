@@ -3,16 +3,11 @@
  * Copyright (c) SQLBI corp. - All rights reserved.
  * https://www.sqlbi.com
 */
-import { AppError } from '../model/exceptions';
-import { Utils, _, __ } from '../helpers/utils';
-import { host } from '../main';
+import { _, __ } from '../helpers/utils';
 import { Doc, DocType } from '../model/doc';
-import { i18n } from '../model/i18n'; 
 import { strings } from '../model/strings';
 import { Scene } from './scene';
-import { ErrorScene } from './scene-error';
-import { LoaderScene } from './scene-loader';
-
+import { i18n } from '../model/i18n'; 
 export class MainScene extends Scene {
     doc: Doc;
 
