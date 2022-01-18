@@ -1,11 +1,13 @@
 ﻿using CsvHelper;
 using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
+using LargeXlsx;
 using Microsoft.AnalysisServices.AdomdClient;
 using Sqlbi.Bravo.Infrastructure.Extensions;
 using Sqlbi.Bravo.Models;
 using System;
 using System.Data;
+using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Text;
@@ -18,6 +20,10 @@ namespace Sqlbi.Bravo.Services
         void ExportDelimitedTextFile(PBIDesktopReport report, ExportDelimitedTextSettings settings, CancellationToken cancellationToken);
 
         void ExportDelimitedTextFile(PBICloudDataset dataset, ExportDelimitedTextSettings settings, CancellationToken cancellationToken);
+
+        void ExportExcelFile(PBIDesktopReport report, ExportExcelSettings settings, CancellationToken cancellationToken);
+
+        void ExportExcelFile(PBICloudDataset dataset, ExportExcelSettings settings, CancellationToken cancellationToken);
     }
 
     internal class ExportDataService : IExportDataService
@@ -42,7 +48,6 @@ namespace Sqlbi.Bravo.Services
             var (connectionString, databaseName) = report.GetConnectionParameters();
             try
             {
-                // TODO: catch exceptions
                 ExportDelimitedTextFileImpl(settings, connectionString, databaseName, cancellationToken);
             }
             catch (OperationCanceledException)
@@ -66,7 +71,35 @@ namespace Sqlbi.Bravo.Services
             // TODO: catch other exceptions
         }
 
-        private void ExportDelimitedTextFileImpl(ExportDelimitedTextSettings settings, string connectionString, string databaseName, CancellationToken cancellationToken)
+        public void ExportExcelFile(PBIDesktopReport report, ExportExcelSettings settings, CancellationToken cancellationToken)
+        {
+            var (connectionString, databaseName) = report.GetConnectionParameters();
+            try
+            {
+                ExportExcelFileImpl(settings, connectionString, databaseName, cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                // ignore
+            }
+            // TODO: catch other exceptions
+        }
+
+        public void ExportExcelFile(PBICloudDataset dataset, ExportExcelSettings settings, CancellationToken cancellationToken)
+        {
+            var (connectionString, databaseName) = dataset.GetConnectionParameters(_pbicloudService.CurrentAccessToken);
+            try
+            {
+                ExportExcelFileImpl(settings, connectionString, databaseName, cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                // ignore
+            }
+            // TODO: catch other exceptions
+        }
+
+        private static void ExportDelimitedTextFileImpl(ExportDelimitedTextSettings settings, string connectionString, string databaseName, CancellationToken cancellationToken)
         {
             Directory.CreateDirectory(settings.ExportPath);
 
@@ -87,6 +120,9 @@ namespace Sqlbi.Bravo.Services
             {
                 if (cancellationToken.IsCancellationRequested) 
                     break;
+                
+                // TODO: if the SSAS instance supports TOPNSKIP then use that to query batches of rows
+                command.CommandText = $"EVALUATE '{ tableName }'";
 
                 var fileTableName = tableName.ReplaceInvalidFileNameChars();
                 var fileName = Path.ChangeExtension(fileTableName, "csv");
@@ -98,49 +134,144 @@ namespace Sqlbi.Bravo.Services
 
                 using var streamWriter = new StreamWriter(path, append: false, encoding);
                 using var csvWriter = new CsvWriter(streamWriter, config);
-                
+                using var dataReader = command.ExecuteReader(CommandBehavior.SingleResult);
+                //using var dataReader = CreateTestDataReader();
+
+                WriteData(csvWriter, dataReader, shouldQuote: settings.QuoteStringFields, cancellationToken);
+            }
+
+            static void WriteData(CsvWriter writer, IDataReader reader, bool shouldQuote, CancellationToken cancellationToken)
+            {
+                // output dates using ISO 8601 format
+                writer.Context.TypeConverterOptionsCache.AddOptions(typeof(DateTime), options: DefaultDelimitedTextTypeConverterOptions);
+
+                // write header
+                for (int i = 0; i < reader.FieldCount; i++)
+                    writer.WriteField(reader.GetName(i), shouldQuote);
+
+                writer.NextRecord();
+
+                // write data
+                while (!cancellationToken.IsCancellationRequested && reader.Read())
+                {
+                    for (var i = 0; i < reader.FieldCount; i++)
+                    {
+                        var value = reader[i];
+
+                        if (reader.GetFieldType(i) == typeof(string))
+                        {
+                            writer.WriteField(reader.IsDBNull(i) ? string.Empty : value.ToString(), shouldQuote);
+                        }
+                        else
+                        {
+                            writer.WriteField(value);
+                        }
+                    }
+
+                    writer.NextRecord();
+                }
+            }
+        }
+
+        private static void ExportExcelFileImpl(ExportExcelSettings settings, string connectionString, string databaseName, CancellationToken cancellationToken)
+        {
+            var xlsxFile = new FileInfo(settings.ExportPath);
+            Directory.CreateDirectory(path: xlsxFile.Directory?.FullName!);
+
+            using var connection = new AdomdConnection(connectionString);
+            connection.Open();
+            connection.ChangeDatabase(databaseName);
+
+            using var command = connection.CreateCommand();
+            cancellationToken.Register(() => command.Cancel());
+
+            using var fileStream = new FileStream(xlsxFile.FullName, FileMode.Create, FileAccess.Write);
+            using var xlsxWriter = new XlsxWriter(fileStream);
+
+            foreach (var tableName in settings.Tables)
+            {
+                if (cancellationToken.IsCancellationRequested)
+                    break;
+
                 // TODO: if the SSAS instance supports TOPNSKIP then use that to query batches of rows
                 command.CommandText = $"EVALUATE '{ tableName }'";
-                command.CommandType = CommandType.Text;
 
                 using var dataReader = command.ExecuteReader(CommandBehavior.SingleResult);
                 //using var dataReader = CreateTestDataReader();
 
-                WriteData(csvWriter, dataReader);
+                xlsxWriter.BeginWorksheet(name: tableName, splitRow: 1);
+                {
+                    WriteData(xlsxWriter, dataReader, cancellationToken);
+                }
+                xlsxWriter.SetAutoFilter(fromRow: 1, fromColumn: 1, xlsxWriter.CurrentRowNumber, dataReader.FieldCount);
             }
 
-            void WriteData(CsvWriter csvWriter, IDataReader dataReader)
+            static void WriteData(XlsxWriter writer, IDataReader reader, CancellationToken cancellationToken)
             {
-                // output dates using ISO 8601 format
-                csvWriter.Context.TypeConverterOptionsCache.AddOptions(typeof(DateTime), options: DefaultDelimitedTextTypeConverterOptions);
+                var headerStyle = new XlsxStyle(
+                    font: new XlsxFont("Segoe UI", 9, Color.White, bold: true),
+                    fill: new XlsxFill(Color.FromArgb(0, 0x45, 0x86)),
+                    border: XlsxStyle.Default.Border,
+                    numberFormat: XlsxStyle.Default.NumberFormat,
+                    alignment: XlsxAlignment.Default);
 
                 // write header
-                for (int i = 0; i < dataReader.FieldCount; i++)
-                    csvWriter.WriteField(dataReader.GetName(i), shouldQuote: settings.QuoteStringFields ?? false);
+                writer.SetDefaultStyle(headerStyle).BeginRow();
 
-                csvWriter.NextRecord();
+                for (int i = 0; i < reader.FieldCount; i++)
+                    writer.Write(reader.GetName(i));
+
+                var rowCount = 1; // count header
 
                 // write data
-                while (dataReader.Read())
+                while (!cancellationToken.IsCancellationRequested && reader.Read())
                 {
-                    if (cancellationToken.IsCancellationRequested)
-                        break;
+                    writer.SetDefaultStyle(XlsxStyle.Default).BeginRow();
 
-                    for (var fieldOrdinal = 0; fieldOrdinal < dataReader.FieldCount; fieldOrdinal++)
+                    for (var i = 0; i < reader.FieldCount; i++)
                     {
-                        var fieldValue = dataReader[fieldOrdinal];
+                        var value = reader[i];
 
-                        if (dataReader.GetFieldType(fieldOrdinal) == typeof(string))
+                        switch (value)
                         {
-                            csvWriter.WriteField(dataReader.IsDBNull(fieldOrdinal) ? string.Empty : fieldValue.ToString(), shouldQuote: settings.QuoteStringFields ?? false);
-                        }
-                        else
-                        {
-                            csvWriter.WriteField(fieldValue);
+                            case null:
+                                writer.Write();
+                                break;
+                            case int @int:
+                                writer.Write(@int);
+                                break;
+                            case double @double:
+                                writer.Write(@double);
+                                break;
+                            case decimal @decimal:
+                                writer.Write(@decimal);
+                                break;
+                            case DateTime dateTime:
+                                writer.Write(dateTime);
+                                break;
+                            case string @string:
+                                writer.Write(@string);
+                                break;
+                            case bool @bool:
+                                writer.Write(@bool.ToString());
+                                break;
+                            case long @long:
+                                {
+                                    if (@long > int.MinValue && @long < int.MaxValue)
+                                        writer.Write(Convert.ToInt32(@long));
+                                    else
+                                        writer.Write(@long.ToString());
+                                }
+                                break;
+                            default:
+                                writer.Write(value.ToString());
+                                break;
                         }
                     }
 
-                    csvWriter.NextRecord();
+                    // break if we have reached the limit of an xlsx file
+                    if (++rowCount >= 999_999)
+                        break;
                 }
             }
         }

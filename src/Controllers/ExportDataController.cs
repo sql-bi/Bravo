@@ -29,7 +29,7 @@ namespace Sqlbi.Bravo.Controllers
         /// <response code="200">Status200OK - Success</response>
         /// <response code="400">Status400BadRequest - See the "instance" and "detail" properties to identify the specific occurrence of the problem</response>
         [HttpPost]
-        [ActionName("ExportDelimitedTextFileFromReport")]
+        [ActionName("ExportCsvFromReport")]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ExportResult))]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -42,7 +42,7 @@ namespace Sqlbi.Bravo.Controllers
                 request.Settings!.ExportPath = dialogResult.Path!;
                 try
                 { 
-                    _exportDataService.ExportDelimitedTextFile(request.Report!, request.Settings!, HttpContext.RequestAborted);
+                    _exportDataService.ExportDelimitedTextFile(request.Report!, request.Settings!, cancellationToken);
                 }
                 catch (BravoException ex)
                 {
@@ -60,7 +60,7 @@ namespace Sqlbi.Bravo.Controllers
         /// <response code="400">Status400BadRequest - See the "instance" and "detail" properties to identify the specific occurrence of the problem</response>
         /// <response code="401">Status401Unauthorized - Sign-in required</response>
         [HttpPost]
-        [ActionName("ExportDelimitedTextFileFromDataset")]
+        [ActionName("ExportCsvFromDataset")]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ExportResult))]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -77,7 +77,7 @@ namespace Sqlbi.Bravo.Controllers
                 request.Settings!.ExportPath = dialogResult.Path!;
                 try
                 {
-                    _exportDataService.ExportDelimitedTextFile(request.Dataset!, request.Settings!, HttpContext.RequestAborted);
+                    _exportDataService.ExportDelimitedTextFile(request.Dataset!, request.Settings!, cancellationToken);
                 }
                 catch (BravoException ex)
                 {
@@ -94,14 +94,28 @@ namespace Sqlbi.Bravo.Controllers
         /// <response code="200">Status200OK - Success</response>
         /// <response code="400">Status400BadRequest - See the "instance" and "detail" properties to identify the specific occurrence of the problem</response>
         [HttpPost]
-        [ActionName("ExportExcelFileFromReport")]
+        [ActionName("ExportXlsxFromReport")]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesDefaultResponseType]
-        public IActionResult ExportExcelFileFromPBIDesktopReport(CancellationToken cancellationToken)
+        public IActionResult ExportExcelFileFromPBIDesktopReport(ExportExcelFromPBIReportRequest request, CancellationToken cancellationToken)
         {
-            return Ok();
+            var dialogResult = WindowDialogHelper.SaveFileDialog(fileName: request.Report!.ReportName, defaultExt: "XLSX", cancellationToken);
+            if (dialogResult.Canceled == false)
+            {
+                request.Settings!.ExportPath = dialogResult.Path!;
+                try
+                {
+                    _exportDataService.ExportExcelFile(request.Report, request.Settings, cancellationToken);
+                }
+                catch (BravoException ex)
+                {
+                    return Problem(ex.ProblemDetail, ex.ProblemInstance, StatusCodes.Status400BadRequest);
+                }
+            }
+
+            return Ok(dialogResult);
         }
 
         /// <summary>
@@ -111,18 +125,32 @@ namespace Sqlbi.Bravo.Controllers
         /// <response code="400">Status400BadRequest - See the "instance" and "detail" properties to identify the specific occurrence of the problem</response>
         /// <response code="401">Status401Unauthorized - Sign-in required</response>
         [HttpPost]
-        [ActionName("ExporExcelFileFromDataset")]
+        [ActionName("ExporXlsxFromDataset")]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesDefaultResponseType]
-        public async Task<IActionResult> ExportExcelFileFromPBICloudDataset(CancellationToken cancellationToken)
+        public async Task<IActionResult> ExportExcelFileFromPBICloudDataset(ExportExcelFromPBICloudDatasetRequest request, CancellationToken cancellationToken)
         {
             if (await _pbicloudService.IsSignInRequiredAsync())
                 return Unauthorized();
 
-            return Ok();
+            var dialogResult = WindowDialogHelper.SaveFileDialog(fileName: request.Dataset!.DisplayName, defaultExt: "XLSX", cancellationToken);
+            if (dialogResult.Canceled == false)
+            {
+                request.Settings!.ExportPath = dialogResult.Path!;
+                try
+                {
+                    _exportDataService.ExportExcelFile(request.Dataset, request.Settings, cancellationToken);
+                }
+                catch (BravoException ex)
+                {
+                    return Problem(ex.ProblemDetail, ex.ProblemInstance, StatusCodes.Status400BadRequest);
+                }
+            }
+
+            return Ok(dialogResult);
         }
     }
 }

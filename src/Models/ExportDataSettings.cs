@@ -6,7 +6,7 @@ using System.Text.Json.Serialization;
 
 namespace Sqlbi.Bravo.Models
 {
-    public class ExportDataSettings
+    public abstract class ExportDataSettings
     {
         /// <summary>
         /// Names of tables to export
@@ -34,9 +34,9 @@ namespace Sqlbi.Bravo.Models
         public string? Delimiter { get; set; }
 
         /// <summary>
-        /// Specifies if all string fields should be quoted. Default is false if no value is provided
+        /// Specifies if all string fields should be quoted. Default is false
         /// </summary>
-        public bool? QuoteStringFields { get; set; }
+        public bool QuoteStringFields { get; set; } = false;
     }
 
     public class ExportExcelSettings : ExportDataSettings
