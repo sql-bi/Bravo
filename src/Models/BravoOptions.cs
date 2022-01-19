@@ -15,5 +15,21 @@ namespace Sqlbi.Bravo.Models
 
         [JsonPropertyName("customOptions")]
         public JsonElement? CustomOptions { get; set; }
+
+        public static BravoOptions CreateFrom(UserSettings settings)
+        {
+            JsonElement? customOptionsAsJsonElement = settings.CustomOptions is not null
+               ? JsonSerializer.Deserialize<JsonElement>(settings.CustomOptions)
+               : null;
+
+            var options = new BravoOptions
+            {
+                TelemetryEnabled = settings.TelemetryEnabled,
+                Theme = settings.Theme,
+                CustomOptions = customOptionsAsJsonElement
+            };
+
+            return options;
+        }
     }
 }

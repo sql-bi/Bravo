@@ -8,6 +8,7 @@ using Sqlbi.Bravo.Infrastructure.Extensions;
 using Sqlbi.Bravo.Infrastructure.Helpers;
 using Sqlbi.Bravo.Infrastructure.Messages;
 using Sqlbi.Bravo.Infrastructure.Windows.Interop;
+using Sqlbi.Bravo.Models;
 using Sqlbi.Infrastructure.Configuration.Settings;
 using System;
 using System.Diagnostics;
@@ -71,11 +72,11 @@ namespace Sqlbi.Bravo.Infrastructure
         {
             contentType = "text/javascript";
 
-            var config = JsonSerializer.Serialize(new
+            var config = new
             {
-                address = GetStartupAddress().ToString(),
-                theme = GetStartupTheme().ToString(),
+                address = GetAddress().ToString(),
                 version = AppConstants.ApplicationFileVersion,
+                options = BravoOptions.CreateFrom(_userSettings),
                 telemetry = new
                 {
                     instrumentationKey = AppConstants.TelemetryInstrumentationKey,
@@ -83,21 +84,22 @@ namespace Sqlbi.Bravo.Infrastructure
                     contextComponentVersion = ContextTelemetryInitializer.ComponentVersion,
                     contextSessionId = ContextTelemetryInitializer.SessionId,
                     contextUserId = ContextTelemetryInitializer.UserId,
-                }
-            }, AppConstants.DefaultJsonOptions);
+                },
+            };
+            config.options.Theme = GetTheme();
 
-            var script = $@"var CONFIG = { config };";
+            var script = $@"var CONFIG = { JsonSerializer.Serialize(config, AppConstants.DefaultJsonOptions) };";
             var stream = new MemoryStream(Encoding.UTF8.GetBytes(script));
 
             return stream;
 
-            Uri GetStartupAddress()
+            Uri GetAddress()
             {
                 var address = _host.GetListeningAddresses().Single(); // single address expected here
                 return address;
             }
 
-            ThemeType GetStartupTheme()
+            ThemeType GetTheme()
             {
                 var theme = _userSettings.Theme;
 

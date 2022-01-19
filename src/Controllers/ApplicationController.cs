@@ -53,18 +53,7 @@ namespace Sqlbi.Bravo.Controllers
         [ProducesDefaultResponseType]
         public IActionResult GetOptions()
         {
-            var userSettings = _userOptions.Value;
-
-            JsonElement? customOptionsAsJsonElement = userSettings.CustomOptions is not null
-                ? JsonSerializer.Deserialize<JsonElement>(userSettings.CustomOptions)
-                : null;
-
-            var options = new BravoOptions
-            {
-                TelemetryEnabled = userSettings.TelemetryEnabled,
-                Theme = userSettings.Theme,
-                CustomOptions = customOptionsAsJsonElement
-            };
+            var options = BravoOptions.CreateFrom(_userOptions.Value);
 
             return Ok(options);
         }
