@@ -23,7 +23,6 @@
 - Returns a specific error if disconnected from the Internet
 
 - Implement disconnected from Internet web message
-- Fix missing icon in taskbar
 - Returns enum property for checking unsupported datasets
 - Returns specific error for unsupported datasets (if opened via External Tools)
 - FYI: Different carriage returns in formatting service response (fixed on UI side)

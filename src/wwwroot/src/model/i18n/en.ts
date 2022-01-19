@@ -117,7 +117,7 @@ const locale: Locale = {
         [strings.helpCtrlTitle]: "Help",
         [strings.ManageDates]: "Manage Dates",
         [strings.menuCtrlTitle]: "Collapse/Expand menu",
-        [strings.notificationCtrlTitle]: "Notification",
+        [strings.notificationCtrlTitle]: "Notifications",
         [strings.openSourcePayoff]: `Bravo for Power BI is an open-source tool developed and mantained by SQLBI and the Github community. Join us at`,
         [strings.openWithDaxFormatterCtrlTitle]: "Format online with DAX Formatter",
         [strings.optionsDialogAboutMenu]: "About",

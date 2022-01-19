@@ -39,18 +39,43 @@
       float: left;.flexbox(center);
     }
 
-    .ctrl-theme {
+    .notification-ctrl {
       float: right;
+      margin-right: 5px;
 
       &:before {
-        font-size: 20px;
+        font-size: 22px;
+      }
+
+      .unread {
+          pointer-events: none;
+          font-family: @text-font;
+          position: absolute;
+          text-align: center;
+          line-height: 16px;
+          padding: 0 4px;
+          .border-radius(20px);
+          height: 16px;
+          font-size: 9px;
+          font-weight: 600;
+          min-width: 8px;
+          margin-left: 10px;
+          margin-top: -16px;
+
+          background-color: @accent-back-color;
+          color: @accent-color;
+
+          .dark & {
+              background-color: @accent-back-color-dark;
+              color: @accent-color-dark;
+          }
       }
     }
 
     .chrome-tabs-content {
       position: relative;
       float: left;
-      width: calc(100% - 65px);
+      width: calc(100% - 70px);
       height: 100%;
       overflow: hidden;
 
