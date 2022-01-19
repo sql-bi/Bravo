@@ -41,10 +41,10 @@ export class WelcomeScene extends Scene {
                 name: i18n(strings.ExportData),
                 videoId: ""
             },
-            {
+            /*{
                 name: i18n(strings.BestPractices),
                 videoId: ""
-            }
+            }*/
         ];
 
         let html = `
