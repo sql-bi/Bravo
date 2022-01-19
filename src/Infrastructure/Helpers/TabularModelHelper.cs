@@ -3,6 +3,7 @@ using Sqlbi.Bravo.Infrastructure.Security;
 using Sqlbi.Bravo.Models;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 using SSAS = Microsoft.AnalysisServices;
@@ -32,10 +33,10 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
         {
             using var server = new TOM.Server();
             server.Connect(connectionString);
-
+            
             var database = GetDatabase();
             var databaseETag = GetDatabaseETag(database.Name, database.Version, database.LastUpdate);
-
+            
             foreach (var formattedMeasure in measures)
             {
                 if (formattedMeasure.ETag != databaseETag)

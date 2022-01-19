@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Globalization;
+using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -7,6 +8,8 @@ namespace Sqlbi.Bravo.Infrastructure.Extensions
 {
     public static class StringExtensions
     {
+        private static Regex? _invalidFileNameCharsRegex;
+
         public static string ToPBIDesktopReportName(this string windowTitle)
         {
             var index = windowTitle.LastIndexOf(AppConstants.PBIDesktopMainWindowTitleSuffix);
@@ -59,6 +62,19 @@ namespace Sqlbi.Bravo.Infrastructure.Extensions
             stringBuilder.Append('\0');
             stringBuilder.Append('\0');
             return stringBuilder.ToString();
+        }
+
+        public static string ReplaceInvalidFileNameChars(this string path, string replacement = "_")
+        {
+            if (_invalidFileNameCharsRegex is null)
+            {
+                // Not necessary to include GetInvalidPathChars(), the illegal file name char list contains the illegal path char list
+                var pattern = Regex.Escape(new string(Path.GetInvalidFileNameChars()));
+                _invalidFileNameCharsRegex = new($"[{ pattern }]");
+            }
+
+            path = _invalidFileNameCharsRegex.Replace(path, replacement);
+            return path;
         }
     }
 }

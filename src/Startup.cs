@@ -63,6 +63,7 @@ namespace Sqlbi.Bravo
             services.AddSingleton<IPBICloudAuthenticationService, PBICloudAuthenticationService>();
             services.AddSingleton<IPBIDesktopService, PBIDesktopService>();
             services.AddSingleton<IPBICloudService, PBICloudService>();
+            services.AddSingleton<IExportDataService, ExportDataService>();
             services.AddSingleton<IDaxFormatterClient, DaxFormatterClient>();
             // services.AddHostedService<ApplicationInstanceHostedService>();
         }

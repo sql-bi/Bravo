@@ -28,13 +28,13 @@ namespace Sqlbi.Bravo.Models
         public string? ReportName { get; set; }
 
         /// <summary>
-        /// Server name of the local instance of Analysis Services Tabular
+        /// Server name of the local Analysis Services Tabular instance
         /// </summary>
         [JsonPropertyName("serverName")]
         public string? ServerName { get; set; }
 
         /// <summary>
-        /// Database name of the model hosted in the local instance of Analysis Services Tabular
+        /// Database name of the model hosted in the local Analysis Services Tabular instance
         /// </summary>
         [JsonPropertyName("databaseName")]
         public string? DatabaseName { get; set; }
