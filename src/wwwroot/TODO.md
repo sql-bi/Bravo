@@ -2,8 +2,12 @@
 
 **@daniele**
 - Format DAX
+    - Add filter by errors 
     - Fix dark/error highlight row
     - Current/Formatted side by side
+- Notification center messages
+- Connect
+    - Filter unsupported datasets
 - Options/About window
 - Telemetry 
     - Track idle time
@@ -15,12 +19,11 @@
 
 **@alberto**
 - Fix login window size?
-- Fix Blurring Icon?
-- Fix missing Icon in taskbar
+- Fix blurring icon
 - Returns a specific error if disconnected from the Internet
 
-- Error 302 after opening a desktop report connected to a remote dataset:
-    >Power BI Desktop instance database not found.
-    >Trace Id: 00-f44eafcf77b18149af48edd1d681af2f-812e477802b5d94b-00
-
-- FYI: Differences in carriage returns from formatting service
+- Implement disconnected from Internet web message
+- Fix missing icon in taskbar
+- Returns enum property for checking unsupported datasets
+- Returns specific error for unsupported datasets (if opened via External Tools)
+- FYI: Different carriage returns in formatting service response (fixed on UI side)
