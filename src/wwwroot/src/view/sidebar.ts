@@ -58,6 +58,7 @@ export class Sidebar extends View {
             this.select(id);
             break;
         }
+        this.toggle(optionsController.options.customOptions.sidebarCollapsed);
 
         this.listen();
     }
@@ -180,12 +181,13 @@ export class Sidebar extends View {
     }
 
     toggle(collapse = !this.collapsed) {
-
+console.log("Collapsing", collapse);
         if (collapse) {
             this.element.classList.add("collapsed");
         } else {
             this.element.classList.remove("collapsed");
         }
+        optionsController.update("sidebarCollapsed", collapse);
         this.collapsed = collapse;
     }
 

@@ -72,14 +72,8 @@ export class AnalyzeModelScene extends MainScene {
 
                         <div class="group-by-table toggle icon-group" title="${i18n(strings.groupByTableCtrlTitle)}"></div>
 
-                        <hr class="show-if-group">
-
-                        <div class="expand-all show-if-group ctrl icon-expand-all" title="${i18n(strings.expandAllCtrlTitle)}"></div>
-
-                        <div class="collapse-all show-if-group ctrl icon-collapse-all" title="${i18n(strings.collapseAllCtrlTitle)}"></div>
-
                         
-                        <div class="save-vpax ctrl icon-save disable-on-syncing enable-if-editable" ${this.doc.editable ? "" : "disabled"} ${this.doc.type == DocType.vpax ? "hidden" : ""} title="${i18n(strings.saveVpaxCtrlTile)}"></div>
+                        <div class="save-vpax ctrl icon-save disable-on-syncing enable-if-editable" ${this.doc.editable ? "" : "disabled"} ${this.doc.type == DocType.vpax ? "hidden" : ""} title="${i18n(strings.saveVpaxCtrlTile)}"> VPAX </div>
 
                     </div>
 
@@ -98,6 +92,15 @@ export class AnalyzeModelScene extends MainScene {
                 </div>
             </div>
         `;
+
+        /*
+            <hr class="show-if-group">
+
+            <div class="expand-all show-if-group ctrl icon-expand-all" title="${i18n(strings.expandAllCtrlTitle)}"></div>
+
+            <div class="collapse-all show-if-group ctrl icon-collapse-all" title="${i18n(strings.collapseAllCtrlTitle)}"></div>
+
+        */
         this.body.insertAdjacentHTML("beforeend", html);
 
         this.searchBox = <HTMLInputElement>_(".search input", this.body);
@@ -390,7 +393,6 @@ export class AnalyzeModelScene extends MainScene {
 
     expandTableColumns() {
         this.showAllColumns = true;
-        //options.update("model.showAllColumns", true);
 
         this.updateToolbar();
         this.updateTable(false);
@@ -409,9 +411,9 @@ export class AnalyzeModelScene extends MainScene {
         }
     }
 
-    unreferencedFilter(data: TabulatorVpaxModelColumn): boolean {
+    unreferencedFilter(column: TabulatorVpaxModelColumn): boolean {
         if (this.showUnrefOnly)
-            return data.isReferenced === false || data._containsUnreferenced || data._aggregated;
+            return column.isReferenced === false || column._containsUnreferenced || column._aggregated;
         return true;
     }
 
@@ -594,9 +596,9 @@ export class AnalyzeModelScene extends MainScene {
     }*/
 
     updateToolbar() {
-        __(".show-if-group", this.element).forEach((div: HTMLElement) => {
+        /*__(".show-if-group", this.element).forEach((div: HTMLElement) => {
             div.style.opacity = (this.groupByTable ? "1" : "0");
-        });
+        });*/
         _(".filter-unreferenced", this.element).toggleClass("active", this.showUnrefOnly);
         _(".group-by-table", this.element).toggleClass("active", this.groupByTable);
     }
@@ -632,7 +634,7 @@ export class AnalyzeModelScene extends MainScene {
             let el = <HTMLElement>e.currentTarget;
             el.toggleClass("active");
             this.showUnrefOnly = el.classList.contains("active");
-            //options.update("model.showUnrefOnly", this.showUnrefOnly);
+
             this.applyFilters();
             this.updateChart();
 
@@ -644,13 +646,13 @@ export class AnalyzeModelScene extends MainScene {
             let el = <HTMLElement>e.currentTarget;
             el.toggleClass("active");
             this.groupByTable = el.classList.contains("active");
-            //options.update("model.groupByTable", this.groupByTable);
+
             this.updateTable();
             this.updateChart();
             this.updateToolbar();
         });
 
-        _(".expand-all", this.element).addEventListener("click", e => {
+        /*_(".expand-all", this.element).addEventListener("click", e => {
             e.preventDefault();
             this.updateTable(true, true);
         });
@@ -658,7 +660,7 @@ export class AnalyzeModelScene extends MainScene {
         _(".collapse-all", this.element).addEventListener("click", e => {
             e.preventDefault();
             this.updateTable();
-        });
+        });*/
 
         _(".save-vpax", this.element).addEventListener("click", e => {
             e.preventDefault();

@@ -40,6 +40,9 @@ export class DaxFormatterScene extends MainScene {
     activeMeasure: TabularMeasure;
     previewing: Dic<boolean> = {};
 
+    showMeasuresWithErrorsOnly = false;
+    showUnformattedMeasuresOnly = false;
+
     constructor(id: string, container: HTMLElement, doc: Doc) {
         super(id, container, doc);
 
@@ -130,6 +133,10 @@ export class DaxFormatterScene extends MainScene {
                         <div class="search">
                             <input type="search" placeholder="${i18n(strings.searchPlaceholder)}">
                         </div>
+
+                        <div class="filter-measures-with-errors toggle icon-filter-alerts" title="${i18n(strings.filterErrorsCtrlTitle)}" disabled></div>
+
+                        <div class="filter-unformatted-measures toggle icon-filter-modified" title="${i18n(strings.filterUnformattedCtrlTitle)}" disabled></div>
                     </div>
                     <div class="table"></div>
                 </div>
@@ -164,7 +171,7 @@ export class DaxFormatterScene extends MainScene {
         }, "original", false);
 
         this.menu.body.insertAdjacentHTML("beforeend", `
-            <div class="toolbar">
+            <div class="editor-toolbar">
 
                 <div class="formatted-toolbar" hidden>
 
@@ -299,8 +306,7 @@ export class DaxFormatterScene extends MainScene {
             this.previewing[daxMeasureName(measure)] = true;
         });
 
-        if (this.table)
-            this.table.redraw(true);
+        this.updateMeasuresStatus();
 
         host.formatDax({
             options: optionsController.options.customOptions.daxFormatter,
@@ -321,8 +327,7 @@ export class DaxFormatterScene extends MainScene {
                     }
                 });
                 
-                if (this.table)
-                    this.table.redraw(true);
+                this.updateMeasuresStatus();
             })
             .catch((error: AppError) => {
                 
@@ -362,7 +367,7 @@ export class DaxFormatterScene extends MainScene {
         this.toggleEditorToolbar(false);
     }
 
-    deselectMeasure() {
+    deselectMeasures() {
         if (this.table) {
             this.table.deselectRow();
             __(".row-active", this.table.element).forEach((el: HTMLElement) => {
@@ -375,6 +380,21 @@ export class DaxFormatterScene extends MainScene {
         this.formatButton.toggleAttr("disabled", true);
     }
 
+    updateMeasuresStatus() {
+        
+        let canFilter = false;
+
+        if (this.table) {
+            this.table.redraw(true);
+
+            if (!Utils.Obj.isEmpty(this.doc.formattedMeasures))
+                canFilter = true;
+        }
+
+        _(".filter-measures-with-errors", this.element).toggleAttr("disabled", !canFilter);
+        _(".filter-unformatted-measures", this.element).toggleAttr("disabled", !canFilter);
+    }
+
     updateTable(redraw = true) {
 
         if (redraw) {
@@ -382,7 +402,7 @@ export class DaxFormatterScene extends MainScene {
                 this.table.destroy();
                 this.table = null;
             }
-            this.deselectMeasure();
+            this.deselectMeasures();
         }
         let data = this.doc.measures;
 
@@ -394,6 +414,9 @@ export class DaxFormatterScene extends MainScene {
                     formatter:"rowSelection", 
                     title: undefined,
                     titleFormatter:"rowSelection", 
+                    titleFormatterParams:{
+                        rowRange:"active"
+                    },
                     hozAlign: "center", 
                     headerHozAlign: "center",
                     cssClass: "column-select",
@@ -465,6 +488,7 @@ export class DaxFormatterScene extends MainScene {
                 //responsiveLayout: "collapse", // DO NOT USE IT
                 //selectable: true,
                 layout: "fitColumns", //"fitColumns", //fitData, fitDataFill, fitDataStretch, fitDataTable, fitColumns
+                initialFilter: (data:any) => this.measuresFilter(data),
                 initialSort:[
                     {column: "name", dir: "asc"}, 
                 ],
@@ -516,7 +540,7 @@ export class DaxFormatterScene extends MainScene {
     updateZoom(zoom: number) {
 
         if (!zoom) zoom = 1;
-        optionsController.update("customOptions.editorZoom", zoom);
+        optionsController.update("editorZoom", zoom);
 
         let defaultValues = [
             0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2 //, 2.5, 5, 0.1
@@ -573,8 +597,7 @@ export class DaxFormatterScene extends MainScene {
             if (error.requestAborted) return;
 
             let errorScene = new ErrorScene(Utils.DOM.uniqueId(), this.element.parentElement, error, () => {
-                if (this.table)
-                    this.table.redraw(true);
+                this.updateMeasuresStatus();
             });
             this.splice(errorScene);
         };
@@ -649,7 +672,7 @@ export class DaxFormatterScene extends MainScene {
             })
             .catch(error => errorResponse(error))
             .finally(() => {
-                this.deselectMeasure();
+                this.deselectMeasures();
             });
     }
 
@@ -665,6 +688,27 @@ export class DaxFormatterScene extends MainScene {
             let el = <HTMLInputElement>e.currentTarget;
             let selection = el.value.substring(el.selectionStart, el.selectionEnd);
             ContextMenu.editorContextMenu(e, selection, el.value, el);
+        });
+
+
+        _(".filter-measures-with-errors", this.element).addEventListener("click", e => {
+            e.preventDefault();
+            let el = <HTMLElement>e.currentTarget;
+            el.toggleClass("active");
+            this.showMeasuresWithErrorsOnly = el.classList.contains("active");
+            this.deselectMeasures();
+            
+            this.applyFilters();
+        });
+
+        _(".filter-unformatted-measures", this.element).addEventListener("click", e => {
+            e.preventDefault();
+            let el = <HTMLElement>e.currentTarget;
+            el.toggleClass("active");
+            this.showUnformattedMeasuresOnly = el.classList.contains("active");
+            this.deselectMeasures();
+
+            this.applyFilters();
         });
 
         this.zoomSelect.addEventListener("change", e => {
@@ -727,7 +771,7 @@ export class DaxFormatterScene extends MainScene {
 
         this.element.addLiveEventListener("change", "#gen-preview-auto-option", (e, element) => {
             e.preventDefault();
-            optionsController.update("customOptions.previewFormatting", (<HTMLInputElement>element).checked);
+            optionsController.update("previewFormatting", (<HTMLInputElement>element).checked);
             window.setTimeout(() => {
                 this.generatePreview(this.doc.measures);
             }, 300);
@@ -748,10 +792,23 @@ export class DaxFormatterScene extends MainScene {
     
     applyFilters() {
         if (this.table) {
+            this.table.clearFilter();
+
+            if (this.showMeasuresWithErrorsOnly || this.showUnformattedMeasuresOnly) 
+                this.table.addFilter(data => this.measuresFilter(data));
+
             if (this.searchBox.value)
-                this.table.setFilter("name", "like", sanitizeHtml(this.searchBox.value, { allowedTags: [], allowedAttributes: {}}));
-            else 
-                this.table.clearFilter();
+                this.table.addFilter("name", "like", sanitizeHtml(this.searchBox.value, { allowedTags: [], allowedAttributes: {}}));
         }
+    }
+
+    measuresFilter(measure: TabularMeasure): boolean {
+        if (this.showMeasuresWithErrorsOnly || this.showUnformattedMeasuresOnly) {
+
+            const status = this.doc.analizeMeasure(measure);
+
+            return (status == MeasureStatus.Partial || (this.showMeasuresWithErrorsOnly && status == MeasureStatus.WithErrors) || (this.showUnformattedMeasuresOnly && status == MeasureStatus.NotFormatted));
+        }
+        return true;
     }
 }

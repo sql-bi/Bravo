@@ -2,9 +2,7 @@
 
 **@daniele**
 - Format DAX
-    - Add filter by errors 
-    - Fix dark/error highlight row
-    - Current/Formatted side by side
+    - Current/Formatted side by side?
 - Notification center messages
 - Connect
     - Filter unsupported datasets
@@ -12,7 +10,6 @@
 - Telemetry 
     - Track idle time
     - Track UI events
-- Update notifications
 
 - Manage dates UI
 - Export Data UI

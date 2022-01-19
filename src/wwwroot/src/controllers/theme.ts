@@ -37,10 +37,10 @@ export class ThemeController extends Dispatchable {
         return this.appliedTheme == ThemeType.Light;
     }
     
-    constructor(initialTheme = ThemeType.Auto) {
+    constructor() {
         super();
         
-        this.theme = initialTheme;
+        this.theme = optionsController.options.theme;
 
         if (window.matchMedia) {
             const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");

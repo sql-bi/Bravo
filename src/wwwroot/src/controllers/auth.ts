@@ -42,7 +42,7 @@ export class Auth extends Dispatchable {
             .then(account => {
                 if (account) {
                     this.account = account;
-                    optionsController.update("customOptions.loggedInOnce", true);
+                    optionsController.update("loggedInOnce", true);
 
                     this.trigger("signedIn", this.account);
 

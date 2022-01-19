@@ -50,9 +50,17 @@
             }
         }
 
-        .search {
-            margin: 5px 0 35px 5px;
-            width:180px;
+        .toolbar {
+            width: 100%;
+            .flexbox(center);
+            .flex-wrap(wrap);
+            
+            margin: 0 0 30px 0;
+
+            .search {
+                margin: 5px 15px 5px 5px;
+                width:180px;
+            }
         }
 
         .preview {
@@ -88,7 +96,7 @@
                     background-color: @input-back-color-dark;
                 }
 
-                .toolbar {
+                .editor-toolbar {
                     margin: auto 0 0 0;
                     width: calc(100% - 10px);
                     padding: 2px 5px 0 5px;

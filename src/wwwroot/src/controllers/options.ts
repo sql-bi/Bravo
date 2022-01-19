@@ -16,6 +16,7 @@ export interface Options {
 } 
 
 export interface ClientOptions {
+    sidebarCollapsed: boolean
     editorZoom: number
     previewFormatting: boolean
     loggedInOnce: boolean
@@ -57,6 +58,7 @@ export class OptionsController extends Dispatchable {
         theme: ThemeType.Auto,
         telemetryEnabled: true,
         customOptions: {
+            sidebarCollapsed: false,
             editorZoom: 1,
             previewFormatting: false,
             loggedInOnce: false,
@@ -70,11 +72,15 @@ export class OptionsController extends Dispatchable {
         }
     };
 
-    constructor(mode: optionsMode = "host") {
+    constructor(options?: Options, mode: optionsMode = "host") {
         super();
         this.mode = mode;
-        this.options = this.defaultOptions;
-        this.load();
+        if (options) {
+            this.options = Utils.Obj.merge(this.defaultOptions, options);
+        } else { 
+            this.options = this.defaultOptions;
+            this.load();
+        }
         this.listen();
     }
 
@@ -149,10 +155,13 @@ export class OptionsController extends Dispatchable {
     }
 
     //Change option
-    update(option: string, value: any) {
+    update(propertyPath: string, value: any) {
 
-        let path = option.split(".");
-        let obj = this.options;
+        if (propertyPath != "theme" && propertyPath != "telemetryEnabled")
+            propertyPath = `customOptions.${propertyPath}`;
+        
+        let obj = this.options; 
+        let path = propertyPath.split(".");
         path.forEach((prop: string, i: number) => {
             if (i == path.length - 1) {
                 (<any>obj)[prop] = value;

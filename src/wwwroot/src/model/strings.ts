@@ -98,6 +98,8 @@ export enum strings {
     errorVpaxFileContainsCorruptedData,
     expandAllCtrlTitle,
     ExportData,
+    filterErrorsCtrlTitle,
+    filterUnformattedCtrlTitle,
     filterUnrefCtrlTitle,
     formattingMeasures,
     goBackCtrlTitle,

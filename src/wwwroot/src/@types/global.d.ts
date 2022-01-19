@@ -1,12 +1,12 @@
 import * as CodeMirror from 'codemirror';
+import { Options } from '../controllers/options';
 import { TelemetryConfig } from '../controllers/telemetry';
-import { ThemeType } from '../controllers/theme';
 
 declare global {
     var CONFIG: {
         address: string
-        theme: ThemeType
         version: string,
+        options: Options,
         telemetry?: TelemetryConfig
     };
 

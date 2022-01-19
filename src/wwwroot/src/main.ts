@@ -21,8 +21,8 @@ Tabulator.registerModule([ColumnCalcsModule, DataTreeModule, FilterModule, Forma
 // Init the app
 let debug = new Debug(process.env.MODE == "development");
 let host = new Host(CONFIG.address);
-let optionsController = new OptionsController();
-let themeController = new ThemeController(CONFIG.theme);
+let optionsController = new OptionsController(CONFIG.options);
+let themeController = new ThemeController();
 let auth = new Auth();
 let telemetry = new Telemetry(CONFIG.telemetry);
 let pbiDesktop = new PBIDesktop();
