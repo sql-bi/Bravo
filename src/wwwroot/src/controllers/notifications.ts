@@ -7,23 +7,12 @@
 import { Dispatchable } from '../helpers/dispatchable';
 import { Utils, _ } from '../helpers/utils';
 
-
-export enum NotifyType {
-    Badge,
-    //Alert
-}
-
 export interface Notify {
-    time?: number
+    id?: string
     expiration?: number
-    type: NotifyType
     message: string 
     data?: any
-    selector?: string
-    onClick?: (event: MouseEvent, notification: Notify)=>void
-    onRemove?: (notification: Notify)=>void
 }
-
 export class NotifyCenter extends Dispatchable {
 
     static DefaultNotificationHolderSelector = ".notification-holder";
@@ -36,7 +25,7 @@ export class NotifyCenter extends Dispatchable {
         super();
         this.notifications = [];
         this.checkInterval = window.setInterval(()=>{
-            this.checkNotifications();
+            this.checkNotificationsExpiration();
         }, NotifyCenter.CheckIntervalDuration * 1000);
     }
 
@@ -46,45 +35,64 @@ export class NotifyCenter extends Dispatchable {
         super.destroy();
     }
 
-    checkNotifications() {
+    checkNotificationsExpiration() {
         const now = new Date().getTime();
         for (let i = 0; i < this.notifications.length; i++) {
             let notification = this.notifications[i];
             if (Utils.Obj.isSet(notification.expiration) && notification.expiration < now) {
-                this.notifications.splice(i, 1);
-                if (Utils.Obj.isSet(notification.onRemove))
-                    notification.onRemove(notification);
+                this.remove(notification);
                 
-                this.checkNotifications();
+                this.checkNotificationsExpiration();
                 return;
             }
         }
     }
 
     add(notification: Notify) {
-        const now = new Date().getTime();
-        if (!notification.time)
-            notification.time = now;
+
+        if (!notification.id)
+            notification.id = Utils.Text.uuid();
 
         this.notifications.push(notification);
 
-        if (notification.type == NotifyType.Badge){
-            let holder = _(Utils.Obj.isSet(notification.selector) ? notification.selector : NotifyCenter.DefaultNotificationHolderSelector);
-            if (!holder.empty) {
+        let holder = _(NotifyCenter.DefaultNotificationHolderSelector);
+        if (!holder.empty) {
+            let badgeElement = _(".notification", holder);
+            if (badgeElement.empty) {
+                holder.insertAdjacentHTML("beforeend", `<div class="notification">1</div>`)
+            } else {
+                badgeElement.innerText = String(this.notifications.length);
+            }
+            holder.toggleAttr("disabled", false);
+        }
+          
+        this.trigger("add", notification);
+    }
+
+    remove(notification: Notify) {
+
+        for (let i = 0; i < this.notifications.length; i++) {
+            if (this.notifications[i].id == notification.id) {
+                this.notifications.splice(i, 1);
+                break;
+            }
+        }
+
+        let holder = _(NotifyCenter.DefaultNotificationHolderSelector);
+        if (!holder.empty) {
+            if (this.notifications.length) {
                 let badgeElement = _(".notification", holder);
                 if (badgeElement.empty) {
-                    holder.insertAdjacentHTML("beforeend", `<div class="notification">1</div>`)
+                    holder.insertAdjacentHTML("beforeend", `<div class="notification">${this.notifications.length}</div>`)
                 } else {
-                    let count = parseInt(badgeElement.innerText);
-                    badgeElement.innerText = String(count + 1);
+                    badgeElement.innerText = String(this.notifications.length);
                 }
-
-                if (Utils.Obj.isSet(notification.onClick)) {
-                    holder.addEventListener("click", e => {
-                        notification.onClick(e, notification);
-                    });
-                }
+            } else {
+                holder.innerHTML = "";
             }
-        }   
+            holder.toggleAttr("disabled", this.notifications.length == 0);
+        }
+
+        this.trigger("remove", notification);
     }
 }

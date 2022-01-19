@@ -135,10 +135,8 @@ export class ChromeTabs extends Dispatchable {
     }
 
     get tabContentWidths() {
-     const numberOfTabs = this.tabEls.length
-
+     /*const numberOfTabs = this.tabEls.length
       const widths = []
-      
       for (let i = 0; i < numberOfTabs; i += 1) {
         let tabEl = this.tabEls[i]
 
@@ -152,9 +150,26 @@ export class ChromeTabs extends Dispatchable {
         const flooredClampedTargetWidth = Math.floor(clampedTargetWidth)
 
         widths.push(flooredClampedTargetWidth)
+      }*/
+
+      const numberOfTabs = this.tabEls.length;
+      const tabsContentWidth = this.tabContentEl.clientWidth;
+      const tabsCumulativeOverlappedWidth = (numberOfTabs - 1) * TAB_CONTENT_OVERLAP_DISTANCE;
+      const targetWidth = (tabsContentWidth - (2 * TAB_CONTENT_MARGIN) + tabsCumulativeOverlappedWidth) / numberOfTabs;
+      const clampedTargetWidth = Math.max(TAB_CONTENT_MIN_WIDTH, Math.min(TAB_CONTENT_MAX_WIDTH, targetWidth));
+      const flooredClampedTargetWidth = Math.floor(clampedTargetWidth);
+      const totalTabsWidthUsingTarget = (flooredClampedTargetWidth * numberOfTabs) + (2 * TAB_CONTENT_MARGIN) - tabsCumulativeOverlappedWidth;
+      const totalExtraWidthDueToFlooring = tabsContentWidth - totalTabsWidthUsingTarget;
+
+      const widths = [];
+      let extraWidthRemaining = totalExtraWidthDueToFlooring;
+      for (let i = 0; i < numberOfTabs; i += 1) {
+        const extraWidth = flooredClampedTargetWidth < TAB_CONTENT_MAX_WIDTH && extraWidthRemaining > 0 ? 1 : 0
+        widths.push(flooredClampedTargetWidth + extraWidth);
+        if (extraWidthRemaining > 0) extraWidthRemaining -= 1;
       }
 
-      return widths
+      return widths;
     }
 
     get tabContentPositions() {

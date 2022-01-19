@@ -19,7 +19,7 @@ import { i18n } from '../model/i18n';
 import { ApplicationUpdateAvailableWebMessage, PBICloudDatasetOpenWebMessage, PBIDesktopReportOpenWebMessage, VpaxFileOpenWebMessage, WebMessageType } from '../model/message';
 import { PBIDesktopReport } from './pbi-desktop';
 import { PBICloudDataset } from './host';
-import { Notify, NotifyType } from './notifications';
+import { Notify } from './notifications';
 
 export class App {
 
@@ -88,7 +88,6 @@ export class App {
 
         host.on(WebMessageType.ApplicationUpdate, (data: ApplicationUpdateAvailableWebMessage)=>{
             let notification: Notify = {
-                type: NotifyType.Badge,
                 data: data,
                 message: i18n(strings.updateMessage)
             };

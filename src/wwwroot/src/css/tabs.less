@@ -32,33 +32,41 @@
     .dark & {
         background: @window-back-color-dark;
     }
-  }
+  
 
-  .chrome-tabs-add {
-    width: 16px;
-    float: left;.flexbox(center);
-  }
-
- 
-  .chrome-tabs .chrome-tabs-content {
-    position: relative;
-    width: calc(100% - 30px);
-    height: 100%;
-    margin-left: 30px;
-
-
-  }
-
-  &.empty {
     .chrome-tabs-add {
-      width: auto;
-      
+      width: 16px;
+      float: left;.flexbox(center);
+    }
+
+    .ctrl-theme {
+      float: right;
+
+      &:before {
+        font-size: 20px;
+      }
     }
 
     .chrome-tabs-content {
-      display: none;
+      position: relative;
+      float: left;
+      width: calc(100% - 65px);
+      height: 100%;
+      overflow: hidden;
+
     }
-  }
+
+    &.empty {
+      .chrome-tabs-add {
+        width: auto;
+        
+      }
+
+      .chrome-tabs-content {
+        display: none;
+      }
+    }
+}
   .chrome-tabs .chrome-tab {
     position: absolute;
     left: 0;

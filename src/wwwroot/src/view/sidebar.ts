@@ -43,9 +43,9 @@ export class Sidebar extends View {
                 `).join("")}
             </div>
             <footer>
-                <div id="ctrl-options" class="ctrl icon-options solo notification-holder" title="${i18n(strings.settingsCtrlTitle)}"></div>
+                <div id="ctrl-options" class="ctrl icon-options solo" title="${i18n(strings.settingsCtrlTitle)}"></div>
 
-                <div id="ctrl-theme" class="ctrl icon-theme-${optionsController.options.theme.toLowerCase()} solo hide-if-collapsed" title="${i18n(strings.themeCtrlTitle)}" data-theme="${optionsController.options.theme}"></div> 
+                <div id="ctrl-notifications" class="ctrl notification-holder icon-notifications solo hide-if-collapsed" title="${i18n(strings.notificationCtrlTitle)}" disabled></div> 
                 
                 <img id="ctrl-user" class="ctrl hide-if-collapsed" title="${i18n(strings.signInCtrlTitle)}" src="${ Sidebar.DEFAULT_USER_PICTURE }">
 
@@ -81,38 +81,6 @@ export class Sidebar extends View {
         _("#ctrl-burger", this.element).addEventListener("click", e => {
             e.preventDefault();
             this.toggle();
-        });
-
-        _("#ctrl-theme", this.element).addEventListener("click", e => {
-            e.preventDefault();
-            let el = (<HTMLElement>e.currentTarget);
-
-            let newTheme = <ThemeType>el.dataset.theme;
-            if (newTheme == ThemeType.Light) {
-                newTheme = ThemeType.Dark;
-            } else if (newTheme == ThemeType.Dark) {
-                newTheme = ThemeType.Auto;
-            } else {
-                newTheme = ThemeType.Light;
-            }
-
-            themeController.change(newTheme);
-        });
-
-        themeController.on("change", (arg: ThemeChangeArg) => {
-
-            let el = _("#ctrl-theme");
-
-            el.dataset.theme = arg.theme;
-
-            Object.values(ThemeType).forEach((value) => {
-                if (isNaN(Number(value))) {
-                    if (value == arg.theme)
-                        el.classList.add(`icon-theme-${value.toLowerCase()}`);
-                    else
-                        el.classList.remove(`icon-theme-${value.toLowerCase()}`);    
-                }
-            });
         });
 
         _("#ctrl-user", this.element).addEventListener("click", e => {

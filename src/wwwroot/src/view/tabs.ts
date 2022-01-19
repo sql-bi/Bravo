@@ -4,8 +4,10 @@
  * https://www.sqlbi.com
 */
 
+import { ThemeChangeArg, ThemeType } from '../controllers/theme';
 import { ContextMenu } from '../helpers/contextmenu';
 import { Dic, Utils, _, __ } from '../helpers/utils';
+import { optionsController, themeController } from '../main';
 import { Doc, DocType } from '../model/doc';
 import { i18n } from '../model/i18n'; 
 import { strings } from '../model/strings';
@@ -38,6 +40,8 @@ export class Tabs extends View {
             <div class="chrome-tabs empty">
                 <div class="chrome-tabs-add ctrl icon-add">${i18n(strings.addCtrlTitle)}</div>
                 <div class="chrome-tabs-content"></div>
+                <div class="ctrl ctrl-theme icon-theme-${optionsController.options.theme.toLowerCase()} solo" title="${i18n(strings.themeCtrlTitle)}" data-theme="${optionsController.options.theme}"></div> 
+                
                 <div class="chrome-tabs-bottom-bar"></div>
             </div>
             <div class="content"></div>
@@ -93,6 +97,38 @@ export class Tabs extends View {
                     ]
                 }, e.event);
             }
+        });
+
+        _(".ctrl-theme", this.element).addEventListener("click", e => {
+            e.preventDefault();
+            let el = (<HTMLElement>e.currentTarget);
+
+            let newTheme = <ThemeType>el.dataset.theme;
+            if (newTheme == ThemeType.Light) {
+                newTheme = ThemeType.Dark;
+            } else if (newTheme == ThemeType.Dark) {
+                newTheme = ThemeType.Auto;
+            } else {
+                newTheme = ThemeType.Light;
+            }
+
+            themeController.change(newTheme);
+        });
+
+        themeController.on("change", (arg: ThemeChangeArg) => {
+
+            __(".ctrl-theme").forEach((el: HTMLElement) => {
+                el.dataset.theme = arg.theme;
+
+                Object.values(ThemeType).forEach((value) => {
+                    if (isNaN(Number(value))) {
+                        if (value == arg.theme)
+                            el.classList.add(`icon-theme-${value.toLowerCase()}`);
+                        else
+                            el.classList.remove(`icon-theme-${value.toLowerCase()}`);    
+                    }
+                });
+            });
         });
     }
 

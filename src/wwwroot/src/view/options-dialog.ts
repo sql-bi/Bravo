@@ -18,7 +18,7 @@ export class OptionsDialog extends Dialog {
 
     constructor() {
 
-        super("options-dialog", document.body, "", [
+        super("options-dialog", document.body, i18n(strings.optionsDialogTitle), [
             { name: i18n(strings.dialogOK), action: "ok" }
         ]);
         
