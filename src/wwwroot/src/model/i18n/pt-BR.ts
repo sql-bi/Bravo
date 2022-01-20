@@ -3,7 +3,7 @@
  * Copyright (c) SQLBI corp. - All rights reserved.
  * https://www.sqlbi.com
 */
-import { strings } from '../strings';
+import { strings as _ } from '../strings';
 import { Locale } from '../i18n';
 
 const locale: Locale = {

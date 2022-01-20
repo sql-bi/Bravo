@@ -19,6 +19,8 @@ import * as sanitizeHtml from 'sanitize-html';
 export class ConnectRemote extends ConnectMenuItem {
     
     table: Tabulator;
+    showUnsupported = false;
+    searchBox: HTMLInputElement;
 
     render(element: HTMLElement) {
         super.render(element);
@@ -71,12 +73,24 @@ export class ConnectRemote extends ConnectMenuItem {
         } else {
 
             this.table = new Tabulator(`#${id}`, {
-                renderVerticalBuffer: 200,
+                renderVerticalBuffer: 400,
                 maxHeight: "100%",
                 layout: "fitColumns",
+                initialFilter: dataset => this.unsupportedFilter(dataset),
                 initialSort:[
                     {column: "name", dir: "asc"}, 
                 ],
+                rowFormatter: row => {
+                    try { //Bypass calc rows
+                        const dataset = <PBICloudDataset>row.getData();
+                        if (dataset.unsupported) {
+                            let element = row.getElement();
+                            element.classList.add("row-unsupported");
+
+                            //TODO unsupported tooltip explaining the reason
+                        }
+                    }catch(e){}
+                },
                 columns: [
                     { 
                         field: "name", 
@@ -143,13 +157,23 @@ export class ConnectRemote extends ConnectMenuItem {
         }
     }
 
-    applyFilter(value: string) {
+    applyFilters() {
+
         if (this.table) {
-            if (value)
-                this.table.setFilter("name", "like", sanitizeHtml(value, { allowedTags: [], allowedAttributes: {}}));
-            else 
-                this.table.clearFilter();
+            this.table.clearFilter();
+
+            if (this.showUnsupported) 
+            this.table.addFilter(dataset => this.unsupportedFilter(dataset));
+
+            if (this.searchBox.value)
+                this.table.addFilter("name", "like", sanitizeHtml(this.searchBox.value, { allowedTags: [], allowedAttributes: {}}));
         }
+    }
+
+    unsupportedFilter(dataset: PBICloudDataset) {
+        if (dataset.unsupported && !this.showUnsupported)
+            return false;
+        return true;
     }
 
     getRemoteDatasets() { 
@@ -166,6 +190,11 @@ export class ConnectRemote extends ConnectMenuItem {
                             <div class="search">
                                 <input type="search" placeholder="${i18n(strings.searchDatasetPlaceholder)}">
                             </div>
+
+                            <div class="filters">
+                                <label class="switch"><input type="checkbox" id="show-unsupported-datasets" ${this.showUnsupported ? "": "checked"}><span class="slider"></span></label> <label for="show-unsupported-datasets">${i18n(strings.hideUnsupportedCtrlTitle)}</label>
+                            </div>
+                            <hr>
                             <div class="refresh ctrl icon-refresh" title="${i18n(strings.refreshCtrlTitle)}"></div> 
                         </div>
                     ` : ""}
@@ -173,19 +202,24 @@ export class ConnectRemote extends ConnectMenuItem {
                 `;
                 _(".list", this.element).innerHTML = html;
 
-                let searchBox = <HTMLInputElement>_(".search input", this.element);
+                this.searchBox = <HTMLInputElement>_(".search input", this.element);
                 ["keyup", "search", "paste"].forEach(listener => {
-                    searchBox.addEventListener(listener, e => {
-                        let el = <HTMLInputElement>e.currentTarget;
-                        this.applyFilter(el.value);
+                    this.searchBox.addEventListener(listener, e => {
+                        this.applyFilters();
                     });
                 });
-                searchBox.addEventListener('contextmenu', e => {
+                this.searchBox.addEventListener('contextmenu', e => {
                     e.preventDefault();
         
                     let el = <HTMLInputElement>e.currentTarget;
                     let selection = el.value.substring(el.selectionStart, el.selectionEnd);
                     ContextMenu.editorContextMenu(e, selection, el.value, el);
+                });
+
+                _("#show-unsupported-datasets", this.element).addEventListener("change", e => {
+                    e.preventDefault();
+                    this.showUnsupported = !(<HTMLInputElement>e.currentTarget).checked;
+                    this.applyFilters();
                 });
 
                 _(".refresh", this.element).addEventListener("click", e => {

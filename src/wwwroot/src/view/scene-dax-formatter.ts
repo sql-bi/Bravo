@@ -488,7 +488,7 @@ export class DaxFormatterScene extends MainScene {
                 //responsiveLayout: "collapse", // DO NOT USE IT
                 //selectable: true,
                 layout: "fitColumns", //"fitColumns", //fitData, fitDataFill, fitDataStretch, fitDataTable, fitColumns
-                initialFilter: (data:any) => this.measuresFilter(data),
+                initialFilter: data => this.measuresFilter(data),
                 initialSort:[
                     {column: "name", dir: "asc"}, 
                 ],

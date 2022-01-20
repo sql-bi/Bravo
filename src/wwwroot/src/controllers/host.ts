@@ -50,6 +50,13 @@ export enum PBICloudDatasetEndorsementstring {
     Promoted = "Promoted", 
     Certified = "Certified"
 }
+
+export enum PBICloudDatasetUnsupported {
+    Supported,
+    PushDataset,
+    PersonalDataset
+}
+
 export interface PBICloudDataset {
     workspaceId?: string
     workspaceName?:	string
@@ -61,6 +68,7 @@ export interface PBICloudDataset {
     owner?:	string
     refreshed?: string
     endorsement: PBICloudDatasetEndorsementstring
+    unsupported?: PBICloudDatasetUnsupported
 }
 
 export interface UpdatePBIDesktopReportRequest{

@@ -4,7 +4,7 @@
  * https://www.sqlbi.com
 */
 import { Locale } from '../i18n';
-import { strings } from '../strings';
+import { strings as _ } from '../strings';
 
 const locale: Locale = {
     
@@ -13,7 +13,7 @@ const locale: Locale = {
 
     name: "Italiano",
     strings: {
-        [strings.addCtrlTitle]: "Apri",
+        [_.addCtrlTitle]: "Apri",
     }
 }
 export default locale;

@@ -318,7 +318,7 @@ export class AnalyzeModelScene extends MainScene {
                 initialSort:[
                     {column: "size", dir: "desc"}, 
                 ],
-                initialFilter: (data:any) => this.unreferencedFilter(data),
+                initialFilter: data => this.unreferencedFilter(data),
                 rowFormatter: row => {
                     try { //Bypass calc rows
                         let data = <TabulatorVpaxModelColumn>row.getData();

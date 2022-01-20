@@ -106,6 +106,7 @@ export enum strings {
     groupByTableCtrlTitle,
     helpConnectVideo,
     helpCtrlTitle,
+    hideUnsupportedCtrlTitle,
     ManageDates,
     menuCtrlTitle,
     notificationCtrlTitle,

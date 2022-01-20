@@ -4,8 +4,6 @@
 - Format DAX
     - Current/Formatted side by side?
 - Notification center messages
-- Connect
-    - Filter unsupported datasets
 - Options/About window
 - Telemetry 
     - Track idle time

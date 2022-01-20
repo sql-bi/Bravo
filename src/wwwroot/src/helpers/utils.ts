@@ -568,6 +568,16 @@ export interface Dic<T> {
     [key: string]: T
 }
 
+export class Singleton {
+    private static _instance: Singleton;
+    public static get instance(): Singleton {
+        if (!Singleton._instance)
+            Singleton._instance = new this();
+        return Singleton._instance;
+    }
+    //private constructor() { }
+}
+
 // DOM helpers
 declare global {
     interface Element {
