@@ -1,6 +1,10 @@
-﻿using Microsoft.AspNetCore.Hosting;
+﻿//using Hellang.Middleware.ProblemDetails;
+using Hellang.Middleware.ProblemDetails;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -17,7 +21,30 @@ namespace Sqlbi.Bravo.Infrastructure.Extensions
 {
     internal static class HostingExtensions
     {
-        public static IServiceCollection AddSwaggerGenCustom(this IServiceCollection services)
+        public static IServiceCollection AddAndConfigureProblemDetails(this IServiceCollection services)
+        {
+            services.AddProblemDetails((options) =>
+            {
+#if DEBUG
+                options.IncludeExceptionDetails = (context, exception) => true;
+#endif
+                options.Map<BravoException>((context, exception) =>
+                {
+                    var problemDetailsFactory = context.RequestServices.GetRequiredService<ProblemDetailsFactory>();
+                    var problemDetails = problemDetailsFactory.CreateProblemDetails(
+                        context,
+                        statusCode: StatusCodes.Status400BadRequest,
+                        detail: exception.ProblemDetail,
+                        instance: exception.ProblemInstance);
+
+                    return problemDetails;
+                });
+            });
+
+            return services;
+        }
+
+        public static IServiceCollection AddAndConfigureSwaggerGen(this IServiceCollection services)
         {
             services.AddSwaggerGen((options) =>
             {
@@ -58,10 +85,7 @@ namespace Sqlbi.Bravo.Infrastructure.Extensions
                 var feature = server.Features.Get<IServerAddressesFeature>();
                 if (feature is not null)
                 {
-                    var uris = feature.Addresses
-                        .Select((address) => new Uri(address, UriKind.Absolute))
-                        .ToArray();
-
+                    var uris = feature.Addresses.Select((address) => new Uri(address, UriKind.Absolute)).ToArray();
                     return uris;
                 }
             }

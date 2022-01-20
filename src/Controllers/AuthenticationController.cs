@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Sqlbi.Bravo.Infrastructure;
 using Sqlbi.Bravo.Models;
 using Sqlbi.Bravo.Services;
 using System.Net.Mime;
@@ -8,8 +7,13 @@ using System.Threading.Tasks;
 
 namespace Sqlbi.Bravo.Controllers
 {
+    /// <summary>
+    /// Authentication controller
+    /// </summary>
+    /// <response code="400">Status400BadRequest - See the "instance" and "detail" properties to identify the specific occurrence of the problem</response>
     [Route("auth/[action]")]
     [ApiController]
+    [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ProblemDetails))]
     public class AuthenticationController : ControllerBase
     {
         private readonly IPBICloudService _pbicloudService;
@@ -23,23 +27,14 @@ namespace Sqlbi.Bravo.Controllers
         /// Attempts to authenticate and acquire an access token for the account to access the PowerBI cloud services
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
-        /// <response code="400">Status400BadRequest - See the "instance" and "detail" properties to identify the specific occurrence of the problem</response>
         [HttpGet]
         [ActionName("powerbi/SignIn")]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(BravoAccount))]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesDefaultResponseType]
         public async Task<IActionResult> PowerBISignIn(string? upn)
         {
-            try
-            {
-                await _pbicloudService.SignInAsync(userPrincipalName: upn);
-            }
-            catch (SignInException ex)
-            {
-                return Problem(ex.ProblemDetail, ex.ProblemInstance, StatusCodes.Status400BadRequest);
-            }
+            await _pbicloudService.SignInAsync(userPrincipalName: upn);
 
             var account = _pbicloudService.CurrentAccount;
             return Ok(account);

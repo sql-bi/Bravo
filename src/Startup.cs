@@ -47,15 +47,10 @@ namespace Sqlbi.Bravo
                         .WithOrigins(CorsLocalhostOrigin); 
                 });
             });
-            services.AddProblemDetails((options) =>
-            {
 #if DEBUG
-                options.IncludeExceptionDetails = (context, exception) => true;
+            services.AddAndConfigureSwaggerGen();
 #endif
-            });
-#if DEBUG
-            services.AddSwaggerGenCustom();
-#endif
+            services.AddAndConfigureProblemDetails();
             services.AddHttpClient();
             services.AddWritableOptions<UserSettings>(section: Configuration.GetSection(nameof(UserSettings)), file: "appsettings.json"); //.ValidateDataAnnotations();
             services.AddOptions<StartupSettings>().Configure((settings) => settings.FromCommandLineArguments()); //.ValidateDataAnnotations();

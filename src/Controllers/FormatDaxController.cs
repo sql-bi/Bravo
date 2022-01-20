@@ -13,8 +13,13 @@ using System.Threading.Tasks;
 
 namespace Sqlbi.Bravo.Controllers
 {
+    /// <summary>
+    /// Format DAX controller
+    /// </summary>
+    /// <response code="400">Status400BadRequest - See the "instance" and "detail" properties to identify the specific occurrence of the problem</response>
     [Route("api/[action]")]
     [ApiController]
+    [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ProblemDetails))]
     public class FormatDaxController : ControllerBase
     {
         private readonly IDaxFormatterClient _daxformatterClient;
@@ -102,43 +107,33 @@ namespace Sqlbi.Bravo.Controllers
         /// Update a PBIDesktop report by applying changes to formatted measures
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
-        /// <response code="400">Status400BadRequest - See the "instance" and "detail" properties to identify the specific occurrence of the problem</response>
         [HttpPost]
         [ActionName("UpdateReport")]
         [Consumes(MediaTypeNames.Application.Json)]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(DatabaseUpdateResult))]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesDefaultResponseType]
         public IActionResult UpdatePBIDesktopReportAsync(UpdatePBIDesktopReportRequest request)
         {
-            try
+            var databaseETag = _pbidesktopService.Update(request.Report!, request.Measures!);
+            var updateResult = new DatabaseUpdateResult
             {
-                var databaseETag = _pbidesktopService.Update(request.Report!, request.Measures!);
+                DatabaseETag = databaseETag
+            };
 
-                return Ok(new DatabaseUpdateResult
-                {
-                    DatabaseETag = databaseETag
-                });
-            }
-            catch (TOMDatabaseException ex)
-            {
-                return Problem(ex.ProblemDetail, ex.ProblemInstance, StatusCodes.Status400BadRequest);
-            }
+            return Ok(updateResult);
         }
 
         /// <summary>
         /// Update a PBICloud dataset by applying changes to formatted measures 
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
-        /// <response code="400">Status400BadRequest - See the "instance" and "detail" properties to identify the specific occurrence of the problem</response>
         /// <response code="401">Status401Unauthorized - Sign-in required</response>
         [HttpPost]
         [ActionName("UpdateDataset")]
         [Consumes(MediaTypeNames.Application.Json)]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(DatabaseUpdateResult))]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesDefaultResponseType]
         public async Task<IActionResult> UpdatePBICloudDatasetAsync(UpdatePBICloudDatasetRequest request)
@@ -146,19 +141,13 @@ namespace Sqlbi.Bravo.Controllers
             if (await _pbicloudService.IsSignInRequiredAsync())
                 return Unauthorized();
 
-            try
+            var databaseETag = _pbicloudService.Update(request.Dataset!, request.Measures!);
+            var updateResult = new DatabaseUpdateResult
             {
-                var databaseETag = _pbicloudService.Update(request.Dataset!, request.Measures!);
+                DatabaseETag = databaseETag
+            };
 
-                return Ok(new DatabaseUpdateResult
-                {
-                    DatabaseETag = databaseETag
-                });
-            }
-            catch (TOMDatabaseException ex)
-            {
-                return Problem(ex.ProblemDetail, ex.ProblemInstance, StatusCodes.Status400BadRequest);
-            }
+            return Ok(updateResult);
         }
     }
 }
