@@ -127,7 +127,7 @@ namespace Sqlbi.Bravo.Infrastructure
 #if !DEBUG
             HandleHotKeys(register: true);
 #endif   
-            _windowSubclass = AppWindowSubclass.HookWindow(_window, _host);
+            _windowSubclass = AppWindowSubclass.Hook(_window);
          
             if (_startupSettings.IsExternalTool)
             {

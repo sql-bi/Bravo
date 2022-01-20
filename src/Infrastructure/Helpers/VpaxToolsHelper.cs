@@ -12,11 +12,10 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
     {
         public static Stream ExportVpax(string connectionString, string databaseName, bool includeTomModel, bool includeVpaModel, bool readStatisticsFromData, int sampleRows)
         {
-            var serverName = connectionString;
             try
             {
-                var daxModel = TomExtractor.GetDaxModel(serverName, databaseName, AppConstants.ApplicationName, AppConstants.ApplicationFileVersion, readStatisticsFromData, sampleRows);
-                var tomModel = includeTomModel ? TomExtractor.GetDatabase(serverName, databaseName) : null;
+                var daxModel = TomExtractor.GetDaxModel(connectionString, databaseName, AppConstants.ApplicationName, AppConstants.ApplicationFileVersion, readStatisticsFromData, sampleRows);
+                var tomModel = includeTomModel ? TomExtractor.GetDatabase(connectionString, databaseName) : null;
                 var vpaModel = includeVpaModel ? new Dax.ViewVpaExport.Model(daxModel) : null;
                 var stream = new MemoryStream();
 

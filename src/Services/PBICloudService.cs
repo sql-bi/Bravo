@@ -133,55 +133,123 @@ namespace Sqlbi.Bravo.Services
             var onlineWorkspaces = await GetWorkspacesAsync();
             var onlineDatasets = await GetSharedDatasetsAsync();
 
-            var selectedWorkspaces = onlineWorkspaces.Where((w) => w.CapacitySkuType == WorkspaceCapacitySkuType.Premium);
-            var selectedDatasets = onlineDatasets.Where(IsAccessibleByXmlaEndpoint);
+            /*
+             * SELECT datasets d INNER JOIN workspaces w ON d.WorkspaceObjectId = w.Id
+             * This query does not include the user's personal workspace datasets, this is because the GUIDs w.Id and d.WorkspaceObjectId do not match WHERE w.type = 'User'
+             */
+            //var datasets = onlineDatasets.Join(onlineWorkspaces, (d) => d.WorkspaceObjectId, (w) => w.Id, (d, w) => new PBICloudDataset
+            //{
+            //    WorkspaceId = w.Id,
+            //    WorkspaceName = w.Name,
+            //    Id = d.Model.Id,
+            //    ServerName = PBIPremiumServerUri.OriginalString,
+            //    DatabaseName = d.Model.DBName,
+            //    DisplayName = d.Model.DisplayName,
+            //    Description = d.Model.Description,
+            //    Owner = $"{ d.Model.CreatorUser.GivenName } { d.Model.CreatorUser.FamilyName }",
+            //    Refreshed = d.Model.LastRefreshTime,
+            //    Endorsement = (PBICloudDatasetEndorsement)(d.GalleryItem?.Stage ?? (int)PBICloudDatasetEndorsement.None)
+            //},
+            //StringComparer.InvariantCultureIgnoreCase);
 
-            var datasets = selectedDatasets.Join(selectedWorkspaces, (d) => d.WorkspaceObjectId, (w) => w.Id, (d, w) => new PBICloudDataset
-            {
-                WorkspaceId = w.Id,
-                WorkspaceName = w.Name,
-                Id = d.Model.Id,
-                ServerName = PBIPremiumServerUri.OriginalString,
-                DatabaseName = d.Model.DBName,
-                DisplayName = d.Model.DisplayName,
-                Description = d.Model.Description,
-                Owner = $"{ d.Model.CreatorUser.GivenName } { d.Model.CreatorUser.FamilyName }",
-                Refreshed = d.Model.LastRefreshTime,
-                Endorsement = (PBICloudDatasetEndorsement)(d.GalleryItem?.Stage ?? (int)PBICloudDatasetEndorsement.None)
-            },
-            StringComparer.InvariantCultureIgnoreCase);
+            /*
+             * SELECT datasets d LEFT OUTER JOIN workspaces w ON d.WorkspaceObjectId = w.Id
+             * Here we use a LEFT OUTER JOIN in order to include the user's personal workspace datasets.
+             */
+            var datasets = from od in onlineDatasets
+                           join ow in onlineWorkspaces on od.WorkspaceObjectId.ToLowerInvariant() equals ow.Id.ToLowerInvariant() into joinedWorkspaces
+                           from jw in joinedWorkspaces.DefaultIfEmpty()
+                           select new PBICloudDataset
+                           {
+                               WorkspaceId = jw?.Id,
+                               WorkspaceName = jw?.Name ?? GetWorkspaceName(od),
+                               Id = od.Model.Id,
+                               ServerName = PBIPremiumServerUri.OriginalString,
+                               DatabaseName = od.Model.DBName,
+                               DisplayName = od.Model.DisplayName,
+                               Description = od.Model.Description,
+                               Owner = $"{ od.Model.CreatorUser.GivenName } { od.Model.CreatorUser.FamilyName }",
+                               Refreshed = od.Model.LastRefreshTime,
+                               Endorsement = (PBICloudDatasetEndorsement)(od.GalleryItem?.Stage ?? (int)PBICloudDatasetEndorsement.None),
+                               ConnectionMode = GetConnectionMode(jw, od),
+                               Diagnostic = GetDiagnostic(jw, od)
+                           };
 
             return datasets.ToArray();
 
-            static bool IsAccessibleByXmlaEndpoint(SharedDataset dataset)
+            string? GetWorkspaceName(SharedDataset dataset)
             {
+                if (dataset.WorkspaceType == SharedDatasetWorkspaceType.PersonalGroup)
+                    return CurrentAccount?.UserPrincipalName;
+
+                return null;
+            }
+
+            static PBICloudDatasetConnectionMode GetConnectionMode(Workspace? workspace, SharedDataset dataset)
+            {
+                if (workspace is null || workspace.IsPersonalWorkspace || dataset.IsOnPersonalWorkspace)
+                    return PBICloudDatasetConnectionMode.UnsupportedPersonalWorkspace;
+
+                if (workspace.IsXmlaEndPointSupported == false)
+                    return PBICloudDatasetConnectionMode.UnsupportedWorkspaceSku;
+
                 // Exclude unsupported datasets - a.k.a. datasets not accessible by the XMLA endpoint
                 // see https://docs.microsoft.com/en-us/power-bi/admin/service-premium-connect-tools#unsupported-datasets
 
-                // TODO: Exclude datasets based on a live connection to an Azure Analysis Services or SQL Server Analysis Services model
-                //if (dataset.Model.DirectQueryMode)
-                //    return false;
+                if (dataset.Model.IsOnPremModel)
+                    return PBICloudDatasetConnectionMode.UnsupportedOnPremLiveConnection;
 
                 // TODO: Exclude datasets based on a live connection to a Power BI dataset in another workspace
                 //if ( ?? )
-                //    return false;
+                //return PBICloudDatasetXmlaConnectivity.UnsupportedLiveConnectionToExternalDatasets;
 
-                // Exclude datasets with Push data by using the REST API
                 if (dataset.Model.IsPushDataEnabled)
-                    return false;
+                    return PBICloudDatasetConnectionMode.UnsupportedPushDataset;
 
-                // Exclude excel workbook datasets
                 if (dataset.Model.IsExcelWorkbook)
-                    return false;
+                    return PBICloudDatasetConnectionMode.UnsupportedExcelWorkbookDataset;
 
-                return true;
+                return PBICloudDatasetConnectionMode.Supported;
+            }
+
+            static JsonElement GetDiagnostic(Workspace? workspace, SharedDataset dataset)
+            {
+                var diagnostic = new
+                {
+                    Workspace = new
+                    {
+                        workspace?.WorkspaceType,
+                        workspace?.CapacitySkuType
+                    },
+                    Dataset = new
+                    {
+                        dataset.WorkspaceType,
+                        dataset.Permissions,
+                    },
+                    Model = new
+                    {
+                        dataset.Model.Permissions,
+                        dataset.Model.IsHidden,
+                        dataset.Model.IsCloudModel,
+                        dataset.Model.IsOnPremModel,
+                        dataset.Model.IsExcelWorkbook,
+                        dataset.Model.IsWritablePbixModel,
+                        dataset.Model.IsWriteableModel,
+                        dataset.Model.IsPushDataEnabled,
+                        dataset.Model.IsPushStreaming,
+                        dataset.Model.DirectQueryMode,
+                        dataset.Model.InsightsSupported,
+                    }
+                };
+                var diagnosticString = JsonSerializer.Serialize(diagnostic, AppConstants.DefaultJsonOptions);
+                var diagnosticJson = JsonSerializer.Deserialize<JsonElement>(diagnosticString);
+
+                return diagnosticJson;
             }
         }
 
         public Stream ExportVpax(PBICloudDataset dataset, bool includeTomModel, bool includeVpaModel, bool readStatisticsFromData, int sampleRows)
         {
-            // TODO: add CancellationToken support
-
             var (connectionString, databaseName) = dataset.GetConnectionParameters(CurrentAuthentication?.AccessToken);
             var stream = VpaxToolsHelper.ExportVpax(connectionString, databaseName, includeTomModel, includeVpaModel, readStatisticsFromData, sampleRows);
 
@@ -190,8 +258,6 @@ namespace Sqlbi.Bravo.Services
 
         public string Update(PBICloudDataset dataset, IEnumerable<FormattedMeasure> measures)
         {
-            // TODO: add CancellationToken support
-
             var (connectionString, databaseName) = dataset.GetConnectionParameters(CurrentAuthentication?.AccessToken);
             var databaseETag = TabularModelHelper.Update(connectionString, databaseName, measures);
 
@@ -256,7 +322,7 @@ namespace Sqlbi.Bravo.Services
             var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
             var workspaces = JsonSerializer.Deserialize<IEnumerable<Workspace>>(content, _jsonOptions);
 
-            return workspaces ?? Array.Empty<Workspace>();
+            return workspaces?.ToArray() ?? Array.Empty<Workspace>();
         }
 
         private async Task<IEnumerable<SharedDataset>> GetSharedDatasetsAsync()
@@ -271,7 +337,7 @@ namespace Sqlbi.Bravo.Services
             var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
             var datasets = JsonSerializer.Deserialize<IEnumerable<SharedDataset>>(content, _jsonOptions);
 
-            return datasets ?? Array.Empty<SharedDataset>();
+            return datasets?.ToArray() ?? Array.Empty<SharedDataset>();
         }
     }
 }

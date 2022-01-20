@@ -7,11 +7,6 @@ using System;
 
 namespace Sqlbi.Bravo
 {
-    /*
-     * Toast notification 
-     * https://github.com/CommunityToolkit/WindowsCommunityToolkit
-     * https://docs.microsoft.com/en-us/windows/apps/design/shell/tiles-and-notifications/send-local-toast?tabs=desktop
-     */
     internal partial class Program
     {
         [STAThread]

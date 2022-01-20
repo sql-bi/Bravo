@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Hosting;
-using Sqlbi.Bravo.Infrastructure.Messages;
+﻿using Sqlbi.Bravo.Infrastructure.Messages;
 using Sqlbi.Bravo.Infrastructure.Windows;
 using Sqlbi.Bravo.Infrastructure.Windows.Interop;
 using System;
@@ -13,18 +12,16 @@ namespace Sqlbi.Bravo.Infrastructure
     {
         private readonly PhotinoNET.PhotinoWindow _window;
         private readonly IntPtr MSG_HANDLED = new(1);
-        private readonly IHost _host;
 
         /// <summary>
         /// Try to install a WndProc subclass callback to hook messages sent to the selected <see cref="PhotinoNET.PhotinoWindow"/> window
         /// </summary>
-        public static AppWindowSubclass HookWindow(PhotinoNET.PhotinoWindow window, IHost host) => new(window, host);
+        public static AppWindowSubclass Hook(PhotinoNET.PhotinoWindow window) => new(window);
 
-        private AppWindowSubclass(PhotinoNET.PhotinoWindow window, IHost host)
+        private AppWindowSubclass(PhotinoNET.PhotinoWindow window)
             : base(hWnd: window.WindowHandle)
         {
             _window = window;
-            _host = host;
         }
 
         protected override IntPtr WndProcHooked(IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam, IntPtr id, IntPtr data)
@@ -33,15 +30,7 @@ namespace Sqlbi.Bravo.Infrastructure
             {
                 case (uint)WindowMessage.WM_COPYDATA:
                     {
-                        try
-                        {
-                            HandleMsgWmCopyData(hWnd, copydataPtr: lParam);
-                        }
-                        catch
-                        {
-                            // Here we ignore any exception to avoid possible payload deserialization vulnerabilities
-                        }
-
+                        HandleMsgWmCopyData(hWnd, copydataPtr: lParam);
                         return MSG_HANDLED;
                     }
                 default:
@@ -53,34 +42,46 @@ namespace Sqlbi.Bravo.Infrastructure
 
         private void HandleMsgWmCopyData(IntPtr hWnd, IntPtr copydataPtr)
         {
-            // Restore original size and position only if the window is minimized, otherwise keep current position
-            if (_window.Minimized) NativeMethods.ShowWindow(hWnd, NativeMethods.SW_RESTORE);
-            // Regardless of current status, bring to front and activate the window
-            NativeMethods.SetForegroundWindow(hWnd);
-
-            var copyDataObject = Marshal.PtrToStructure(copydataPtr, typeof(User32.COPYDATASTRUCT));
-            if (copyDataObject == null)
-                return;
-
-            var copyData = (User32.COPYDATASTRUCT)copyDataObject;
-            if (copyData.cbData == 0)
-                return;
-
-            var startupMessage = JsonSerializer.Deserialize<AppInstanceStartupMessage>(json: copyData.lpData);
-            if (startupMessage?.IsExternalTool == true)
+            try
             {
-                // TODO: here we are ignoring non-externaltool invocations
-#if DEBUG
-                // TODO: remove diagnostic messages
-                var messageString = JsonSerializer.Serialize(startupMessage, new JsonSerializerOptions { WriteIndented = true });
-                Trace.WriteLine($"::Bravo:INF:WndProcHook[WM_COPYDATA]:{ messageString }");
-                //_window.OpenAlertWindow("::Bravo:INF:WndProcHook[WM_COPYDATA]", messageString);
-#endif
-                var webMessageString = startupMessage.ToWebMessageString(_host);
-                if (webMessageString is not null)
+                // Restore original size and position only if the window is minimized, otherwise keep current position
+                if (_window.Minimized) NativeMethods.ShowWindow(hWnd, NativeMethods.SW_RESTORE);
+                // Regardless of current status, bring to front and activate the window
+                NativeMethods.SetForegroundWindow(hWnd);
+
+                var copyDataObject = Marshal.PtrToStructure(copydataPtr, typeof(User32.COPYDATASTRUCT));
+                if (copyDataObject == null)
+                    return;
+
+                var copyData = (User32.COPYDATASTRUCT)copyDataObject;
+                if (copyData.cbData == 0)
+                    return;
+
+                var startupMessage = JsonSerializer.Deserialize<AppInstanceStartupMessage>(json: copyData.lpData);
+                if (startupMessage is not null)
                 {
+#if DEBUG
+                    var startupMessageString = JsonSerializer.Serialize(startupMessage, new JsonSerializerOptions { WriteIndented = true });
+                    Trace.WriteLine($"::Bravo:INF:WndProcHook[WM_COPYDATA]:{ startupMessageString }");
+#endif
+                    var webMessageString = startupMessage.ToWebMessageString();
+                    if (webMessageString is null)
+                    {
+                        var startupMessageJson = startupMessage.ToJsonElement();
+                        var unknownWebMessage = UnknownWebMessage.CreateFrom(startupMessageJson);
+
+                        webMessageString = unknownWebMessage.AsString;
+                    }
+
                     _window.SendWebMessage(webMessageString);
                 }
+            }
+            catch (Exception ex)
+            {
+                var exceptionWebMessage = UnknownWebMessage.CreateFrom(ex);
+                var exceptionWebMessageString = exceptionWebMessage.AsString;
+
+                _window.SendWebMessage(exceptionWebMessageString);
             }
         }
     }

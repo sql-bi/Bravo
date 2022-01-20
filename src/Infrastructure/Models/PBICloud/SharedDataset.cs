@@ -32,5 +32,7 @@ namespace Sqlbi.Bravo.Infrastructure.Models.PBICloud
 #pragma warning restore CS8632 // The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
 
         public DateTime LastVisitedTimeUTC { get; set; }
+
+        public bool IsOnPersonalWorkspace => WorkspaceType == SharedDatasetWorkspaceType.PersonalGroup;
     }
 }

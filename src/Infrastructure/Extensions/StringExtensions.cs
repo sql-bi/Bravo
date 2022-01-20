@@ -76,5 +76,10 @@ namespace Sqlbi.Bravo.Infrastructure.Extensions
             path = _invalidFileNameCharsRegex.Replace(path, replacement);
             return path;
         }
+
+        public static bool EqualsI(this string? current, string? value)
+        {
+            return current?.Equals(value, StringComparison.OrdinalIgnoreCase) ?? false;
+        }
     }
 }

@@ -101,7 +101,7 @@ namespace Sqlbi.Infrastructure.Configuration.Settings
                 }
                 else
                 {
-                    parentProcess = Process.GetCurrentProcess().GetParent();
+                    parentProcess = ProcessExtensions.GetCurrentProcessParent();
                 }
 
                 if (parentProcess is not null)
@@ -109,9 +109,10 @@ namespace Sqlbi.Infrastructure.Configuration.Settings
                     settings.ParentProcessId = parentProcess.Id;
                     settings.ParentProcessName = parentProcess.ProcessName;
                     //settings.ParentProcessMainWindowHandle = parentProcess.MainWindowHandle;
-                    settings.ParentProcessMainWindowTitle = parentProcess.GetMainWindowTitle(settings.IsPBIDesktopExternalTool ? (windowTitle) => windowTitle.IsPBIDesktopMainWindowTitle() : default).ToPBIDesktopReportName();
+                    settings.ParentProcessMainWindowTitle = settings.IsPBIDesktopExternalTool ? parentProcess.GetPBIDesktopMainWindowTitle() : parentProcess.GetMainWindowTitle();
                 }
             }
+            parentProcess?.Dispose();
         }
     }
 }

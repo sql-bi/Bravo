@@ -38,7 +38,7 @@
 
         //public const string NaturalLanguage6 = "naturallanguage6.dll";
 
-        //public const string Ntdll = "ntdll.dll";
+        public const string Ntdll = "ntdll.dll";
 
         //public const string Ole32 = "ole32.dll";
 

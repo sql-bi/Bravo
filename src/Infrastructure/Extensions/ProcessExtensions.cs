@@ -1,20 +1,61 @@
 ﻿using Sqlbi.Bravo.Infrastructure.Windows.Interop;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Management;
+using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 
 namespace Sqlbi.Bravo.Infrastructure.Extensions
 {
     public static class ProcessExtensions
     {
-        public static Process? SafeGetProcessById(int processId)
+        public static IReadOnlyList<Process> GetProcessesByName(string processName)
         {
+            var processes = Process.GetProcessesByName(processName).ToList();
+
+            for (var i = processes.Count - 1; i >= 0; i--)
+            {
+                if (processes[i].SessionId != AppConstants.CurrentSessionId)
+                {
+                    processes[i].Dispose();
+                    processes.RemoveAt(i);
+                }
+            }
+
+            return processes;
+        }
+
+        public static Process? GetCurrentProcessParent()
+        {
+            using var current = Process.GetCurrentProcess();
+            var parent = current.GetParent();
+
+            return parent;
+        }
+
+        public static Process? SafeGetProcessById(int? processId)
+        {
+            if (processId is null)
+                return null;
+
             try
             {
-                return Process.GetProcessById(processId);
+                var process = Process.GetProcessById(processId.Value); // Throws ArgumentException if the process specified by the processId parameter is not running.
+
+                if (process.SessionId != AppConstants.CurrentSessionId)
+                    return null;
+
+                if (process.HasExited)
+                    return null;
+
+                _ = process.ProcessName; // Throws InvalidOperationException if the process has exited, so the requested information is not available
+
+                return process;
             }
             catch (Exception ex) when (ex is ArgumentException || ex is InvalidOperationException)
             {
@@ -22,34 +63,131 @@ namespace Sqlbi.Bravo.Infrastructure.Extensions
             }
         }
 
-        public static Process? GetParent(this Process process)
+        //[DebuggerStepThrough]
+        [Obsolete("Use WMI query")]
+        public static Process? InteropGetParent(this Process process)
         {
-            var queryString = $"SELECT ParentProcessId FROM Win32_Process WHERE ProcessId = { process.Id }";
+            Ntdll.PROCESS_BASIC_INFORMATION processInformation;
+            int? retval;
+            try
+            {
+                retval = Ntdll.NtQueryInformationProcess(process.Handle, Ntdll.PROCESSINFOCLASS.ProcessBasicInformation, out processInformation, processInformationLength: (uint)Marshal.SizeOf(typeof(Ntdll.PROCESS_BASIC_INFORMATION)), returnLength: out _);
+            }
+            catch (Win32Exception ex) when (ex.ErrorCode == -2147467259) // System.ComponentModel.Win32Exception {"Access is denied."}
+            {
+                return null;
+            }
+            
+            if (retval.Value == (int)Ntdll.NTSTATUS.STATUS_SUCCESS)
+            {
+                var parentProcessId = (int)(uint)processInformation.InheritedFromUniqueProcessId;
+                var parentProcess = SafeGetProcessById(parentProcessId);
 
-            using var query = new ManagementObjectSearcher(queryString);
-            using var collection = query.Get();
-            using var item = collection.OfType<ManagementObject>().Single();
+                return parentProcess;
+            }
 
-            var parentProcessId = (int)(uint)item["ParentProcessId"];
-            var parentProcess = SafeGetProcessById(parentProcessId);
+            // TODO: How NTSTATUS codes are translated into Win32 errors ?
+            // throw new Win32Exception(retval);
 
-            return parentProcess;
+            return null;
         }
 
-        public static IEnumerable<int> GetChildProcessIds(this Process process, string? name = null)
+        public static Process? GetParent(this Process process)
         {
-            var queryString = $"SELECT ProcessId FROM Win32_Process WHERE ParentProcessId = { process.Id }";
+            // ManagementObjectSearcher.Get() raises a System.InvalidCastException when executed on the current thread, this regardless of the apartment state of the current thread (which is STA)
+            //
+            // System.InvalidCastException "Specified cast is not valid."
+            //    at System.StubHelpers.InterfaceMarshaler.ConvertToNative(Object objSrc, IntPtr itfMT, IntPtr classMT, Int32 flags)
+            //    at System.Management.SecuredIWbemServicesHandler.ExecQuery_(String strQueryLanguage, String strQuery, Int32 lFlags, IWbemContext pCtx, IEnumWbemClassObject& ppEnum)
+            //    at System.Management.ManagementObjectSearcher.Get()
 
-            if (name is not null)
-                queryString += $" AND Name = '{ name }'";
+            int? parentProcessId = null;
 
-            using var query = new ManagementObjectSearcher(queryString);
-            using var collection = query.Get();
-
-            foreach (var item in collection)
+            //var apartmentState = Thread.CurrentThread.GetApartmentState();
+            //if (apartmentState != ApartmentState.STA)
             {
-                if (item is not null)
-                    yield return (int)(uint)item["ProcessId"];
+                var threadStart = new ThreadStart(GetImpl);
+                var thread = new Thread(threadStart);
+                thread.CurrentCulture = thread.CurrentUICulture = CultureInfo.CurrentCulture;
+                thread.SetApartmentState(ApartmentState.STA);
+                thread.Start();
+                thread.Join();
+            }
+            //else
+            //{
+            //    GetImpl();
+            //}
+
+            if (parentProcessId is not null)
+            {
+                var parentProcess = SafeGetProcessById(parentProcessId.Value);
+                return parentProcess;
+            }
+
+            return null;
+
+            void GetImpl()
+            {
+                var queryString = $"SELECT ParentProcessId FROM Win32_Process WHERE ProcessId = { process.Id } AND SessionId = { AppConstants.CurrentSessionId }";
+
+                using var searcher = new ManagementObjectSearcher(queryString);
+                using var collection = searcher.Get();
+                using var @object = collection.OfType<ManagementObject>().SingleOrDefault();
+
+                if (@object is not null)
+                {
+                    parentProcessId = (int)(uint)@object["ParentProcessId"];
+                }
+            }
+        }
+
+        /// <param name="childProcessImageName">Name of the class or the subclass used in the creation of an instance</param>
+        public static IEnumerable<int> GetChildrenPIDs(this Process process, string? childProcessImageName = null)
+        {
+            // ManagementObjectSearcher.Get() raises a System.InvalidCastException when executed on the current thread, this regardless of the apartment state of the current thread (which is STA)
+            //
+            // System.InvalidCastException "Specified cast is not valid."
+            //    at System.StubHelpers.InterfaceMarshaler.ConvertToNative(Object objSrc, IntPtr itfMT, IntPtr classMT, Int32 flags)
+            //    at System.Management.SecuredIWbemServicesHandler.ExecQuery_(String strQueryLanguage, String strQuery, Int32 lFlags, IWbemContext pCtx, IEnumWbemClassObject& ppEnum)
+            //    at System.Management.ManagementObjectSearcher.Get()
+
+            var pids = new List<int>();
+
+            //var apartmentState = Thread.CurrentThread.GetApartmentState();
+            //if (apartmentState != ApartmentState.STA)
+            {
+                var threadStart = new ThreadStart(GetImpl);
+                var thread = new Thread(threadStart);
+                thread.CurrentCulture = thread.CurrentUICulture = CultureInfo.CurrentCulture;
+                thread.SetApartmentState(ApartmentState.STA);
+                thread.Start();
+                thread.Join();
+            }
+            //else
+            //{
+            //    GetImpl();
+            //}
+
+            return pids;
+
+            void GetImpl()
+            {
+                var queryString = $"SELECT ProcessId FROM Win32_Process WHERE ParentProcessId = { process.Id } AND SessionId = { AppConstants.CurrentSessionId }";
+
+                if (childProcessImageName is not null)
+                    queryString += $" AND Name = '{ childProcessImageName }'";
+
+                using var searcher = new ManagementObjectSearcher(queryString);
+                using var collection = searcher.Get();
+
+                foreach (var @object in collection)
+                {
+                    if (@object is not null)
+                    {
+                        var processId = (int)(uint)@object.GetPropertyValue("ProcessId");
+                        pids.Add(processId);
+                    }
+                }
             }
         }
 
@@ -88,6 +226,29 @@ namespace Sqlbi.Bravo.Infrastructure.Extensions
             }
 
             return builder.ToString();
+        }
+
+        public static string? GetPBIDesktopMainWindowTitle(this Process process)
+        {
+            var windowTitle = process.GetMainWindowTitle((windowTitle) => windowTitle.IsPBIDesktopMainWindowTitle());
+
+            // PBIDesktop is opening or the SSAS instance/model is not yet ready
+            if (string.IsNullOrWhiteSpace(windowTitle))
+                return null;
+
+            return windowTitle;
+        }
+
+        private static bool SafePredicate(Func<bool> predicate)
+        {
+            try
+            {
+                return predicate();
+            }
+            catch (Exception ex) when (ex is InvalidOperationException || ex is Win32Exception)
+            {
+                return false;
+            }
         }
     }
 }

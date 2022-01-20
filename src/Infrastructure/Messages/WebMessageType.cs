@@ -4,22 +4,19 @@ namespace Sqlbi.Bravo.Infrastructure.Messages
 {
     internal enum WebMessageType
     {
-        [JsonPropertyName("None")]
-        None = 0,
+        [JsonPropertyName("Unknown")]
+        Unknown = 0,
 
         [JsonPropertyName("ApplicationUpdate")]
         ApplicationUpdateAvailable = 1,
 
-        [JsonPropertyName("NetworkStatus")]
-        NetworkStatusChanged = 2,
-
         [JsonPropertyName("ReportOpen")]
-        PBIDesktopReportOpen = 3,
+        PBIDesktopReportOpen = 2,
 
         [JsonPropertyName("DatasetOpen")]
-        PBICloudDatasetOpen = 4,
+        PBICloudDatasetOpen = 3,
 
         [JsonPropertyName("VpaxOpen")]
-        VpaxFileOpen = 5,
+        VpaxFileOpen = 4,
     }
 }

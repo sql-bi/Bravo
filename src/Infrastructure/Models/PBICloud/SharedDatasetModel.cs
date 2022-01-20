@@ -17,9 +17,11 @@ namespace Sqlbi.Bravo.Infrastructure.Models.PBICloud
         public long Id { get; set; }
 
         public string DisplayName { get; set; }
-#nullable enable
+
+#pragma warning disable CS8632 // The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
         public string? Description { get; set; }
-#nullable disable
+#pragma warning restore CS8632 // The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
+
         public SharedDatasetPermissions Permissions { get; set; }
 
         public string DBName { get; set; }
@@ -44,9 +46,11 @@ namespace Sqlbi.Bravo.Infrastructure.Models.PBICloud
         public string ResourceName { get; set; }
 
         public DateTime NextRefreshTime { get; set; }
-#nullable enable
+
+#pragma warning disable CS8632 // The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
         public string? OnPremModelConnectionString { get; set; }
-#nullable disable
+#pragma warning restore CS8632 // The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
+
         public int? PushDataVersion { get; set; }
 
         public int? RealTimeMode { get; set; }

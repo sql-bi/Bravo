@@ -53,11 +53,11 @@ namespace Sqlbi.Bravo.Controllers
                     TableName = requestedMeasure.TableName,
                 };
 
-                var daxformatterExpressionPrefixLenght = $"[{ requestedMeasure.Name }] :=".Length;
+                var daxformatterExpressionPrefixLength = $"[{ requestedMeasure.Name }] :=".Length;
 
                 if (daxformatterMeasure.Errors.Count == 0)
                 {
-                    formattedMeasure.Expression = daxformatterMeasure.Formatted?.Remove(0, daxformatterExpressionPrefixLenght)?.TrimStart('\r', '\n', ' ')?.TrimEnd('\r', '\n', ' ');
+                    formattedMeasure.Expression = daxformatterMeasure.Formatted?.Remove(0, daxformatterExpressionPrefixLength)?.TrimStart('\r', '\n', ' ')?.TrimEnd('\r', '\n', ' ');
                 }
                 else
                 {
@@ -65,7 +65,7 @@ namespace Sqlbi.Bravo.Controllers
                     formattedMeasure.Errors = daxformatterMeasure.Errors?.Select((e) => new FormatterError
                     {
                         Line = e.Line,
-                        Column = e.Column - (e.Line == 0 ? daxformatterExpressionPrefixLenght : 0), // remove prefix only if the error is on the first line (zero-based index)
+                        Column = e.Column - (e.Line == 0 ? daxformatterExpressionPrefixLength : 0), // remove prefix only if the error is on the first line (zero-based index)
                         Message = e.Message
                     });
                 }
