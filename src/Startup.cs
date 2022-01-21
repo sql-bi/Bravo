@@ -56,6 +56,7 @@ namespace Sqlbi.Bravo
             services.AddOptions<StartupSettings>().Configure((settings) => settings.FromCommandLineArguments()); //.ValidateDataAnnotations();
             services.AddOptions<TelemetryConfiguration>().Configure((configuration) => TelemetryHelper.Configure(configuration));
             services.AddSingleton<IPBICloudAuthenticationService, PBICloudAuthenticationService>();
+            services.AddSingleton<IPBICloudSettingsService, PBICloudSettingsService>();
             services.AddSingleton<IPBIDesktopService, PBIDesktopService>();
             services.AddSingleton<IPBICloudService, PBICloudService>();
             services.AddSingleton<IExportDataService, ExportDataService>();
