@@ -1,10 +1,8 @@
-﻿//using Hellang.Middleware.ProblemDetails;
-using Hellang.Middleware.ProblemDetails;
+﻿using Hellang.Middleware.ProblemDetails;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -15,6 +13,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net.Sockets;
 using System.Reflection;
 
 namespace Sqlbi.Bravo.Infrastructure.Extensions
@@ -36,6 +35,19 @@ namespace Sqlbi.Bravo.Infrastructure.Extensions
                         statusCode: StatusCodes.Status400BadRequest,
                         detail: exception.ProblemDetail,
                         instance: exception.ProblemInstance);
+
+                    return problemDetails;
+                });
+
+                options.Map<Exception>(predicate: (context, exception) => exception.IsOrHasInner<SocketException>(), mapping: (context, exception) =>
+                {
+                    var socketException = exception.Find<SocketException>() ?? throw new BravoUnexpectedException("SocketException not found");
+                    var problemDetailsFactory = context.RequestServices.GetRequiredService<ProblemDetailsFactory>();
+                    var problemDetails = problemDetailsFactory.CreateProblemDetails(
+                        context,
+                        statusCode: StatusCodes.Status400BadRequest,
+                        detail: $"[{ socketException.SocketErrorCode }] { exception.Message }",
+                        instance: $"{ (int)BravoProblem.NetworkError }");
 
                     return problemDetails;
                 });

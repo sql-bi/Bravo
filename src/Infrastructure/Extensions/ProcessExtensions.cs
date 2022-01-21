@@ -141,7 +141,6 @@ namespace Sqlbi.Bravo.Infrastructure.Extensions
             }
         }
 
-        /// <param name="childProcessImageName">Name of the class or the subclass used in the creation of an instance</param>
         public static IEnumerable<int> GetChildrenPIDs(this Process process, string? childProcessImageName = null)
         {
             // ManagementObjectSearcher.Get() raises a System.InvalidCastException when executed on the current thread, this regardless of the apartment state of the current thread (which is STA)
