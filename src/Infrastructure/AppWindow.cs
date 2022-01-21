@@ -74,6 +74,7 @@ namespace Sqlbi.Bravo.Infrastructure
 
             var config = new
             {
+                token = AppConstants.ApiAuthenticationToken,
                 address = GetAddress().ToString(),
                 version = AppConstants.ApplicationFileVersion,
                 options = BravoOptions.CreateFrom(_userSettings),

@@ -12,6 +12,8 @@ namespace Sqlbi.Bravo.Infrastructure
         private static readonly string EnvironmentSpecialFolderLocalApplicationData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
         private static readonly FileVersionInfo VersionInfo = FileVersionInfo.GetVersionInfo(Process.GetCurrentProcess().MainModule!.FileName!);
 
+        public static readonly string ApiAuthenticationSchema = "BravoAuth";
+        public static readonly string ApiAuthenticationToken = Guid.NewGuid().ToString();
         public static readonly bool IsDebug = VersionInfo.IsDebug;
         public static readonly string ApplicationName = "Bravo";
         public static readonly string ApplicationStoreAliasName = "BravoStore";

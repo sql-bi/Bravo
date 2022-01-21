@@ -14,8 +14,13 @@ using System.Text.Json;
 
 namespace Sqlbi.Bravo.Controllers
 {
+    /// <summary>
+    /// Application controller
+    /// </summary>
+    /// <response code="400">Status400BadRequest - See the "instance" and "detail" properties to identify the specific occurrence of the problem</response>
     [Route("api/[action]")]
     [ApiController]
+    [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ProblemDetails))]
     public class ApplicationController : ControllerBase
     {
         private readonly IWritableOptions<UserSettings> _userOptions;
@@ -54,7 +59,6 @@ namespace Sqlbi.Bravo.Controllers
         public IActionResult GetOptions()
         {
             var options = BravoOptions.CreateFrom(_userOptions.Value);
-
             return Ok(options);
         }
 
@@ -126,31 +130,7 @@ namespace Sqlbi.Bravo.Controllers
         {
             if (address.IsAbsoluteUri && (Uri.UriSchemeHttps.Equals(address.Scheme) || Uri.UriSchemeHttp.Equals(address.Scheme)))
             {
-                Process.Start(new ProcessStartInfo
-                {
-                    UseShellExecute = true,
-                    FileName = address.OriginalString
-                });
-            }
-
-            return Ok();
-        }
-
-        /// <summary>
-        /// Opens the provided URL using the system's default browser
-        /// </summary>
-        /// <response code="200">Status200OK - Success</response>
-        [HttpGet]
-        [ActionName("DialogFolderBrowser")]
-        [Consumes(MediaTypeNames.Application.Json)]
-        [Produces(MediaTypeNames.Application.Json)]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesDefaultResponseType]
-        public IActionResult DialogFolderBrowser(Uri address)
-        {
-            if (address.IsAbsoluteUri && (Uri.UriSchemeHttps.Equals(address.Scheme) || Uri.UriSchemeHttp.Equals(address.Scheme)))
-            {
-                Process.Start(new ProcessStartInfo
+                _ = Process.Start(new ProcessStartInfo
                 {
                     UseShellExecute = true,
                     FileName = address.OriginalString

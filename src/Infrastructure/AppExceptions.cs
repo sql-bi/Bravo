@@ -4,6 +4,13 @@ using System.Text.Json.Serialization;
 
 namespace Sqlbi.Bravo.Infrastructure
 {
+    /// <summary>
+    /// Represents unexpected errors that occur during application execution.
+    /// </summary>
+    /// <remarks>
+    /// <see cref="BravoUnexpectedException"/> will be tracked in telemetry as an unhandled exception and should not be handled at the application level.
+    /// ** This class does not inherit from <see cref="BravoException"/> **
+    /// </remarks>
     [Serializable]
     public class BravoUnexpectedException : Exception
     {
@@ -13,6 +20,9 @@ namespace Sqlbi.Bravo.Infrastructure
         }
     }
 
+    /// <summary>
+    /// Represents the base class for error that occurs during application execution.
+    /// </summary>
     [Serializable]
     public class BravoException : Exception
     {
@@ -69,7 +79,6 @@ namespace Sqlbi.Bravo.Infrastructure
         }
     }
 
-    // TODO: @Daniele rename [JsonPropertyName] values
     public enum BravoProblem
     {
         [JsonPropertyName("None")]
@@ -99,35 +108,35 @@ namespace Sqlbi.Bravo.Infrastructure
         [JsonPropertyName("TOMDatabaseUpdateErrorMeasure")]
         TOMDatabaseUpdateErrorMeasure = 104,
 
-        /// <summary>
-        /// PBIDesktop process is no longer running or the identifier might be expired.
-        /// </summary> 
-        [JsonPropertyName("PBIDesktopProcessNotFound")]
-        PBIDesktopProcessNotFound = 200,
+        ///// <summary>
+        ///// PBIDesktop process is no longer running or the identifier might be expired.
+        ///// </summary> 
+        //[JsonPropertyName("PBIDesktopProcessNotFound")]
+        //PBIDesktopProcessNotFound = 200,
 
-        /// <summary>
-        /// PBIDesktop SSAS instance process not found.
-        /// </summary> 
-        [JsonPropertyName("PBIDesktopSSASProcessNotFound")]
-        PBIDesktopSSASProcessNotFound = 300,
+        ///// <summary>
+        ///// PBIDesktop SSAS instance process not found.
+        ///// </summary> 
+        //[JsonPropertyName("PBIDesktopSSASProcessNotFound")]
+        //PBIDesktopSSASProcessNotFound = 300,
 
-        /// <summary>
-        /// PBIDesktop SSAS instance connection not found.
-        /// </summary> 
-        [JsonPropertyName("PBIDesktopSSASConnectionNotFound")]
-        PBIDesktopSSASConnectionNotFound = 301,
+        ///// <summary>
+        ///// PBIDesktop SSAS instance connection not found.
+        ///// </summary> 
+        //[JsonPropertyName("PBIDesktopSSASConnectionNotFound")]
+        //PBIDesktopSSASConnectionNotFound = 301,
 
-        /// <summary>
-        /// PBIDesktop SSAS instance contains an unexpected number of databases.
-        /// </summary> 
-        [JsonPropertyName("PBIDesktopSSASDatabaseUnexpectedCount")]
-        PBIDesktopSSASDatabaseUnexpectedCount = 302,
+        ///// <summary>
+        ///// PBIDesktop SSAS instance contains an unexpected number of databases.
+        ///// </summary> 
+        //[JsonPropertyName("PBIDesktopSSASDatabaseUnexpectedCount")]
+        //PBIDesktopSSASDatabaseUnexpectedCount = 302,
 
-        /// <summary>
-        /// PBIDesktop SSAS instance does not contain any databases.
-        /// </summary> 
-        [JsonPropertyName("PBIDesktopSSASDatabaseCollectionEmpty")]
-        PBIDesktopSSASDatabaseCollectionEmpty = 303,
+        ///// <summary>
+        ///// PBIDesktop SSAS instance does not contain any databases.
+        ///// </summary> 
+        //[JsonPropertyName("PBIDesktopSSASDatabaseCollectionEmpty")]
+        //PBIDesktopSSASDatabaseCollectionEmpty = 303,
 
         /// <summary>
         /// An error occurs during token acquisition.
@@ -149,5 +158,11 @@ namespace Sqlbi.Bravo.Infrastructure
         /// </summary> 
         [JsonPropertyName("VpaxFileContainsCorruptedData")]
         VpaxFileContainsCorruptedData = 500,
+
+        /// <summary>
+        /// VPAX file format is not valid or file contains corrupted data
+        /// </summary> 
+        [JsonPropertyName("NetworkError")]
+        NetworkError = 600,
     }
 }

@@ -1,5 +1,4 @@
-﻿using Sqlbi.Bravo.Infrastructure.Extensions;
-using Sqlbi.Bravo.Infrastructure.Windows.Interop;
+﻿using Sqlbi.Bravo.Infrastructure.Windows.Interop;
 using Sqlbi.Bravo.Services;
 using System;
 using System.Collections.Generic;
@@ -57,7 +56,7 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
                         var endpointConnection = ipv4Connections.Where((c) => c.LocalEndPoint.Equals(endpoint)).DefaultIfEmpty();
                         if (endpointConnection is not null)
                         {
-                            var process = ProcessExtensions.SafeGetProcessById(endpointConnection.Single().ProcessId);
+                            var process = ProcessHelper.SafeGetProcessById(endpointConnection.Single().ProcessId);
                             return process;
                         }
                     }
@@ -68,7 +67,7 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
                         var endpointConnection = ipv6Connections.Where((c) => c.LocalEndPoint.Equals(endpoint)).DefaultIfEmpty();
                         if (endpointConnection is not null)
                         {
-                            var process = ProcessExtensions.SafeGetProcessById(endpointConnection.Single().ProcessId);
+                            var process = ProcessHelper.SafeGetProcessById(endpointConnection.Single().ProcessId);
                             return process;
                         }
                     }
