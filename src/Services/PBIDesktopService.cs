@@ -35,7 +35,7 @@ namespace Sqlbi.Bravo.Services
             var reports = new ConcurrentBag<PBIDesktopReport>();
             var parallelOptions = new ParallelOptions { CancellationToken = cancellationToken };
 
-            var parallelLoop = Parallel.ForEach(ProcessExtensions.GetProcessesByName(AppConstants.PBIDesktopProcessName), parallelOptions, (process) =>
+            var parallelLoop = Parallel.ForEach(source: ProcessHelper.GetProcessesByName(AppConstants.PBIDesktopProcessName), parallelOptions, (process) =>
             {
                 if (TryCreateFrom(process, out var report))
                     reports.Add(report);

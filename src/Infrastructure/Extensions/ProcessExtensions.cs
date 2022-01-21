@@ -1,4 +1,5 @@
-﻿using Sqlbi.Bravo.Infrastructure.Windows.Interop;
+﻿using Sqlbi.Bravo.Infrastructure.Helpers;
+using Sqlbi.Bravo.Infrastructure.Windows.Interop;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -14,55 +15,6 @@ namespace Sqlbi.Bravo.Infrastructure.Extensions
 {
     public static class ProcessExtensions
     {
-        public static IReadOnlyList<Process> GetProcessesByName(string processName)
-        {
-            var processes = Process.GetProcessesByName(processName).ToList();
-
-            for (var i = processes.Count - 1; i >= 0; i--)
-            {
-                if (processes[i].SessionId != AppConstants.CurrentSessionId)
-                {
-                    processes[i].Dispose();
-                    processes.RemoveAt(i);
-                }
-            }
-
-            return processes;
-        }
-
-        public static Process? GetCurrentProcessParent()
-        {
-            using var current = Process.GetCurrentProcess();
-            var parent = current.GetParent();
-
-            return parent;
-        }
-
-        public static Process? SafeGetProcessById(int? processId)
-        {
-            if (processId is null)
-                return null;
-
-            try
-            {
-                var process = Process.GetProcessById(processId.Value); // Throws ArgumentException if the process specified by the processId parameter is not running.
-
-                if (process.SessionId != AppConstants.CurrentSessionId)
-                    return null;
-
-                if (process.HasExited)
-                    return null;
-
-                _ = process.ProcessName; // Throws InvalidOperationException if the process has exited, so the requested information is not available
-
-                return process;
-            }
-            catch (Exception ex) when (ex is ArgumentException || ex is InvalidOperationException)
-            {
-                return null;
-            }
-        }
-
         //[DebuggerStepThrough]
         [Obsolete("Use WMI query")]
         public static Process? InteropGetParent(this Process process)
@@ -81,7 +33,7 @@ namespace Sqlbi.Bravo.Infrastructure.Extensions
             if (retval.Value == (int)Ntdll.NTSTATUS.STATUS_SUCCESS)
             {
                 var parentProcessId = (int)(uint)processInformation.InheritedFromUniqueProcessId;
-                var parentProcess = SafeGetProcessById(parentProcessId);
+                var parentProcess = ProcessHelper.SafeGetProcessById(parentProcessId);
 
                 return parentProcess;
             }
@@ -120,7 +72,7 @@ namespace Sqlbi.Bravo.Infrastructure.Extensions
 
             if (parentProcessId is not null)
             {
-                var parentProcess = SafeGetProcessById(parentProcessId.Value);
+                var parentProcess = ProcessHelper.SafeGetProcessById(parentProcessId.Value);
                 return parentProcess;
             }
 
@@ -236,18 +188,6 @@ namespace Sqlbi.Bravo.Infrastructure.Extensions
                 return null;
 
             return windowTitle;
-        }
-
-        private static bool SafePredicate(Func<bool> predicate)
-        {
-            try
-            {
-                return predicate();
-            }
-            catch (Exception ex) when (ex is InvalidOperationException || ex is Win32Exception)
-            {
-                return false;
-            }
         }
     }
 }

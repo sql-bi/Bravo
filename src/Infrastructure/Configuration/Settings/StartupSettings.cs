@@ -97,11 +97,11 @@ namespace Sqlbi.Infrastructure.Configuration.Settings
                 if (DesktopBridgeHelper.IsPackagedAppInstance && result.HasOption(parentProcessIdOption))
                 {
                     var parentProcessId = result.ValueForOption<int>(parentProcessIdOption);
-                    parentProcess = ProcessExtensions.SafeGetProcessById(parentProcessId);
+                    parentProcess = ProcessHelper.SafeGetProcessById(parentProcessId);
                 }
                 else
                 {
-                    parentProcess = ProcessExtensions.GetCurrentProcessParent();
+                    parentProcess = ProcessHelper.GetCurrentProcessParent();
                 }
 
                 if (parentProcess is not null)
