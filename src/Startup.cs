@@ -32,25 +32,13 @@ namespace Sqlbi.Bravo
                 jsonOptions.JsonSerializerOptions.Converters.Add(new JsonStringEnumMemberConverter()); // Macross.Json.Extensions https://github.com/dotnet/runtime/issues/31081#issuecomment-578459083
                 jsonOptions.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
             });
-            services.AddCors((corsOptions) =>
-            {
-                corsOptions.AddPolicy(CorsLocalhostOnlyPolicy, (policyBuilder) =>
-                {
-                    // for security, default to only accepting calls from the local machine
-                    policyBuilder.AllowAnyMethod().AllowAnyHeader()
-                        //.AllowAnyOrigin();
-
-                        // TOFIX: CORS error
-                        // Microsoft.AspNetCore.Hosting.Diagnostics: Information: Request starting HTTP/1.1 POST http://localhost:5000/api/GetModelFromDataset application/json 237
-                        // Microsoft.AspNetCore.Cors.Infrastructure.CorsService: Information: CORS policy execution failed
-                        // Microsoft.AspNetCore.Cors.Infrastructure.CorsService: Information: Request origin http://localhost:5000 does not have permission to access the resource.
-                        .WithOrigins(CorsLocalhostOrigin); 
-                });
-            });
+            services.AddAndConfigureCors(CorsLocalhostOnlyPolicy, CorsLocalhostOrigin);
+            services.AddAndConfigureAuthorization();
+            services.AddAndConfigureAuthentication();
+            services.AddAndConfigureProblemDetails();
 #if DEBUG
             services.AddAndConfigureSwaggerGen();
 #endif
-            services.AddAndConfigureProblemDetails();
             services.AddHttpClient();
             services.AddWritableOptions<UserSettings>(section: Configuration.GetSection(nameof(UserSettings)), file: "appsettings.json"); //.ValidateDataAnnotations();
             services.AddOptions<StartupSettings>().Configure((settings) => settings.FromCommandLineArguments()); //.ValidateDataAnnotations();
@@ -72,15 +60,18 @@ namespace Sqlbi.Bravo
 #endif
             application.UseProblemDetails();
             application.UseRouting();
-            application.UseCors(CorsLocalhostOnlyPolicy); // The call to UseCors must be placed after UseRouting, but before UseAuthorization and UseEndpoints
-            
-            // TODO: do we need https authz/authn ? 
-            //app.UseAuthentication();
-            //app.UseAuthorization(); e.g. FilterAttribute, IActionFilter .OnActionExecuting => if (filterContext.HttpContext.Request.IsLocal == false) filterContext.Result = new HttpForbiddenResult(); 
+            application.UseCors(CorsLocalhostOnlyPolicy); // this call must appear after UseRouting(), but before UseAuthorization() and UseEndpoints() for the middleware to function correctly
+            application.UseAuthentication();
+            application.UseAuthorization(); // this call must appear after UseRouting(), but before UseEndpoints() for the middleware to function correctly
 
             application.UseEndpoints((endpoints) =>
             {
+#if DEBUG
                 endpoints.MapControllers();
+#else
+                // Map controllers and marks them as RequireAuthorization so that all requests must be authorized
+                endpoints.MapControllers().RequireAuthorization();
+#endif
                 //endpoints.MapGet("/", async context =>
                 //{
                 //    await context.Response.WriteAsync($"Sqlbi.Bravo API on {Environment.MachineName}");

@@ -28,7 +28,7 @@ namespace Sqlbi.Bravo.Services
     {
         private const string MicrosoftAccountOnlyQueryParameter = "msafed=0";
 
-        private readonly CustomWebViewOptions _customSystemWebViewOptions;
+        private readonly MsalSystemWebViewOptions _systemWebViewOptions;
         private readonly SemaphoreSlim _tokenSemaphore = new(1);
         private readonly IPBICloudSettingsService _pbisettings;
         private readonly IWebHostEnvironment _environment;
@@ -41,7 +41,7 @@ namespace Sqlbi.Bravo.Services
             _pbisettings = pbisetting;
             _environment = environment;
 
-            _customSystemWebViewOptions = new CustomWebViewOptions(_environment.WebRootPath);
+            _systemWebViewOptions = new MsalSystemWebViewOptions(_environment.WebRootPath);
         }
 
         private IPublicClientApplication PublicClient => _publicClient ?? throw new BravoUnexpectedException("_publicClient is null");
@@ -188,7 +188,7 @@ namespace Sqlbi.Bravo.Services
                     {
                         // If for some reason the EmbeddedWebView is not available than fall back to the SystemWebView
                         builder = builder.WithUseEmbeddedWebView(useEmbeddedWebView: false)
-                            .WithSystemWebViewOptions(_customSystemWebViewOptions);
+                            .WithSystemWebViewOptions(_systemWebViewOptions);
                     }
 
                     var authenticationResult = await builder.ExecuteAsync(cancellationToken).ConfigureAwait(false);
