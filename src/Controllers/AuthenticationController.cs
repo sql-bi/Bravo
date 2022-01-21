@@ -73,5 +73,30 @@ namespace Sqlbi.Bravo.Controllers
             var account = _pbicloudService.CurrentAccount;
             return Ok(account);
         }
+
+        /// <summary>
+        /// Returns the account profile picture as base64 encoded image [data:image/jpeg;base64,...]
+        /// </summary>
+        /// <response code="200">Status200OK - Success</response>
+        /// <response code="404">Status404NotFound - Current account has no profile picture</response>
+        /// <response code="401">Status401Unauthorized - Sign-in required</response>
+        [HttpGet]
+        [ActionName("GetUserAvatar")]
+        [Produces(MediaTypeNames.Application.Json)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesDefaultResponseType]
+        public async Task<IActionResult> GetAccountAvatar()
+        {
+            if (await _pbicloudService.IsSignInRequiredAsync())
+                return Unauthorized();
+
+            var avatar = await _pbicloudService.GetAccountAvatarAsync();
+            if (avatar is null)
+                return NotFound();
+
+            return Ok(avatar);
+        }
     }
 }

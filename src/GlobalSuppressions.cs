@@ -7,7 +7,6 @@ using System.Diagnostics.CodeAnalysis;
 
 [assembly: SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "<Pending>", Scope = "member", Target = "~M:Sqlbi.Bravo.Startup.ConfigureServices(Microsoft.Extensions.DependencyInjection.IServiceCollection)")]
 [assembly: SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "<Pending>", Scope = "member", Target = "~M:Sqlbi.Bravo.Startup.Configure(Microsoft.AspNetCore.Builder.IApplicationBuilder,Microsoft.AspNetCore.Hosting.IWebHostEnvironment)")]
-[assembly: SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "<Pending>", Scope = "member", Target = "~M:Sqlbi.Bravo.Services.PBICloudSettingsService.InitializeGlobalService~Sqlbi.Bravo.Infrastructure.Models.PBICloud.GlobalService")]
 [assembly: SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "<Pending>", Scope = "member", Target = "~M:Sqlbi.Bravo.Infrastructure.Windows.WindowSubclass.IsOwnerThread(System.IntPtr)~System.Boolean")]
 [assembly: SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "<Pending>", Scope = "member", Target = "~M:Sqlbi.Bravo.Infrastructure.AppInstance.NotifyOwner")]
 [assembly: SuppressMessage("Style", "IDE0090:Use 'new(...)'", Justification = "<Pending>", Scope = "member", Target = "~F:Sqlbi.Bravo.Infrastructure.Windows.Interop.NativeMethods.NullHandleRef")]

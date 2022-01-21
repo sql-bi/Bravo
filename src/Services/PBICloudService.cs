@@ -35,6 +35,8 @@ namespace Sqlbi.Bravo.Services
         Stream ExportVpax(PBICloudDataset dataset, bool includeTomModel = true, bool includeVpaModel = true, bool readStatisticsFromData = true, int sampleRows = 0);
 
         string Update(PBICloudDataset dataset, IEnumerable<FormattedMeasure> measures);
+
+        Task<string?> GetAccountAvatarAsync();
      }
 
     internal class PBICloudService : IPBICloudService
@@ -82,7 +84,7 @@ namespace Sqlbi.Bravo.Services
             var refreshSucceeded = await _authenticationService.RefreshTokenAsync().ConfigureAwait(false);
             if (refreshSucceeded)
             {
-                await RefreshCurrentAccountAsync().ConfigureAwait(false);
+                RefreshCurrentAccount();
                 // No SignIn required - cached token is valid
                 return false;
             }
@@ -113,7 +115,7 @@ namespace Sqlbi.Bravo.Services
                 throw new SignInException(BravoProblem.SignInMsalExceptionOccurred, mex.ErrorCode, mex);
             }
 
-           await RefreshCurrentAccountAsync().ConfigureAwait(false);
+           RefreshCurrentAccount();
         }
 
         public async Task SignOutAsync()
@@ -264,12 +266,12 @@ namespace Sqlbi.Bravo.Services
             return databaseETag;
         }
 
-        private async Task<string?> GetAccountAvatarAsync(string username)
+        public async Task<string?> GetAccountAvatarAsync()
         {
             _httpClient.DefaultRequestHeaders.Accept.Clear();
             _httpClient.DefaultRequestHeaders.Authorization = AuthenticationHeaderValue.Parse(CurrentAuthentication?.CreateAuthorizationHeader());
 
-            var requestUri = new Uri(PBIApiUri, relativeUri: GetResourceUserPhotoRequestUri.FormatInvariant(username));
+            var requestUri = new Uri(PBIApiUri, relativeUri: GetResourceUserPhotoRequestUri.FormatInvariant(CurrentAuthentication?.Account.Username));
             using var response = await _httpClient.GetAsync(requestUri).ConfigureAwait(false);
 
             if (response.IsSuccessStatusCode)
@@ -294,7 +296,7 @@ namespace Sqlbi.Bravo.Services
             static string? GetMimeType(Bitmap bitmap) => ImageCodecInfo.GetImageDecoders().FirstOrDefault((c) => c.FormatID == bitmap.RawFormat.Guid)?.MimeType;
         }
 
-        private async Task RefreshCurrentAccountAsync()
+        private void RefreshCurrentAccount()
         {
             var currentAuthentication = CurrentAuthentication ?? throw new BravoUnexpectedException("CurrentAuthentication is null");
             var currentAccountChanged = currentAuthentication.Account.HomeAccountId.Identifier.Equals(CurrentAccount?.Identifier) == false;
@@ -305,7 +307,6 @@ namespace Sqlbi.Bravo.Services
                     Identifier = currentAuthentication.Account.HomeAccountId.Identifier,
                     UserPrincipalName = currentAuthentication.Account.Username,
                     Username = currentAuthentication.ClaimsPrincipal.FindFirst((c) => c.Type == "name")?.Value,
-                    Avatar = await GetAccountAvatarAsync(currentAuthentication.Account.Username).ConfigureAwait(false),
                 };
             }
         }
