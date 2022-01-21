@@ -65,7 +65,7 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
                 throw new InvalidOperationException("The current process is not running as packaged application");
 
             // This requires AppExecutionAlias activation in the MSIX installation package
-            var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData, Environment.SpecialFolderOption.DoNotVerify);
             var fileName = Path.Combine(localAppData, @"Microsoft\WindowsApps", Path.ChangeExtension(AppConstants.ApplicationStoreAliasName, ".exe"));
 
             var startInfo = new ProcessStartInfo

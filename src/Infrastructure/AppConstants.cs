@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Sqlbi.Bravo.Infrastructure.Security;
+using System;
 using System.Configuration;
 using System.Diagnostics;
 using System.IO;
@@ -9,11 +10,11 @@ namespace Sqlbi.Bravo.Infrastructure
 {
     internal static class AppConstants
     {
-        private static readonly string EnvironmentSpecialFolderLocalApplicationData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        private static readonly string EnvironmentSpecialFolderLocalApplicationData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData, Environment.SpecialFolderOption.DoNotVerify);
         private static readonly FileVersionInfo VersionInfo = FileVersionInfo.GetVersionInfo(Process.GetCurrentProcess().MainModule!.FileName!);
 
         public static readonly string ApiAuthenticationSchema = "BravoAuth";
-        public static readonly string ApiAuthenticationToken = Guid.NewGuid().ToString();
+        public static readonly string ApiAuthenticationToken = Cryptography.GenerateSimpleToken();
         public static readonly bool IsDebug = VersionInfo.IsDebug;
         public static readonly string ApplicationName = "Bravo";
         public static readonly string ApplicationStoreAliasName = "BravoStore";

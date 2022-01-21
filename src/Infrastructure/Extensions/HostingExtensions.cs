@@ -85,9 +85,8 @@ namespace Sqlbi.Bravo.Infrastructure.Extensions
         {
             services.AddProblemDetails((options) =>
             {
-#if DEBUG
                 options.IncludeExceptionDetails = (context, exception) => true;
-#endif
+
                 options.Map<BravoException>((context, exception) =>
                 {
                     var problemDetailsFactory = context.RequestServices.GetRequiredService<ProblemDetailsFactory>();

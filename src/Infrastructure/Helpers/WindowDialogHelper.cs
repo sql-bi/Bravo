@@ -28,7 +28,7 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
 
             using var dialog = new System.Windows.Forms.SaveFileDialog()
             {
-                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments, Environment.SpecialFolderOption.DoNotVerify),
                 Filter = $"{ defaultExt } files (*.{ defaultExtLowercase })|*.{ defaultExtLowercase }|All files (*.*)|*.*",
                 Title = "Save file",
                 DefaultExt = defaultExtLowercase,
@@ -41,7 +41,7 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
 
                 //var dialog2 = new Bravo.Infrastructure.Windows.SaveFileDialog
                 //{
-                //    InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+                //    InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments, Environment.SpecialFolderOption.DoNotVerify),
                 //    Filter = "Vpax files (*.vpax)|*.vpax|All files (*.*)|*.*",
                 //    Title = "Export file",
                 //    DefaultExt = "vpax",

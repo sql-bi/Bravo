@@ -129,12 +129,6 @@ namespace Sqlbi.Bravo.Infrastructure
             HandleHotKeys(register: true);
 #endif   
             _windowSubclass = AppWindowSubclass.Hook(_window);
-         
-            if (_startupSettings.IsExternalTool)
-            {
-                //_window.SendWebMessage(message);
-            }
-
             CheckForUpdate();
         }
 

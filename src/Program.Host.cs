@@ -31,7 +31,7 @@ namespace Sqlbi.Bravo
             {
                 //var hostingEnvironment = hostingContext.HostingEnvironment;
                 //var reloadConfigOnChange = hostingContext.Configuration.GetValue("hostBuilder:reloadConfigOnChange", defaultValue: true);
-
+                
                 // TODO: rename and move to user-settings file/folder
                 config.AddJsonFile($"appsettings.json", optional: true, reloadOnChange: true);
                 //config.AddJsonFile($"appsettings.{ hostingEnvironment.EnvironmentName }.json", optional: true, reloadConfigOnChange);
@@ -53,7 +53,6 @@ namespace Sqlbi.Bravo
             {
                 logging.AddFilter<ApplicationInsightsLoggerProvider>((LogLevel level) => level >= LogLevel.Warning);
                 logging.AddFilter<EventLogLoggerProvider>((LogLevel level) => level >= LogLevel.Warning);
-                //logging.AddConfiguration(context.Configuration.GetSection("Logging"));
                 logging.AddApplicationInsights();
                 logging.AddEventSourceLogger();
                 logging.AddEventLog();
@@ -76,14 +75,8 @@ namespace Sqlbi.Bravo
 
             hostBuilder.ConfigureWebHostDefaults((webBuilder) =>
             {
-                //webBuilder.ConfigureLogging(builder =>
-                //{
-                //    builder.
-                //});
-
                 // Empty and ignore default URLs configured on the IWebHostBuilder - this remove the warning 'Microsoft.AspNetCore.Server.Kestrel: Warning: Overriding address(es) 'https://localhost:5001/, http://localhost:5000/'. Binding to endpoints defined in UseKestrel() instead.'
                 webBuilder.UseUrls();
-
                 webBuilder.UseKestrel((serverOptions) =>
                 {
 #if DEBUG

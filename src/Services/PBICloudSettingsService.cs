@@ -33,8 +33,8 @@ namespace Sqlbi.Bravo.Services
         private const string GlobalServiceGetOrInsertClusterUrisByTenantlocationUrl = "spglobalservice/GetOrInsertClusterUrisByTenantlocation";
         private const string CloudEnvironmentGlobalCloudName = "GlobalCloud";
 
-        private readonly static string LocalDataClassicAppCachePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Microsoft\\Power BI Desktop");
-        private readonly static string LocalDataStoreAppCachePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Microsoft\\Power BI Desktop Store App");
+        private readonly static string LocalDataClassicAppCachePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData, Environment.SpecialFolderOption.DoNotVerify), "Microsoft\\Power BI Desktop");
+        private readonly static string LocalDataStoreAppCachePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile, Environment.SpecialFolderOption.DoNotVerify), "Microsoft\\Power BI Desktop Store App");
         private readonly HttpClient _httpClient;
 
         private GlobalService? _globalService;
