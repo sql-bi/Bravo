@@ -61,7 +61,8 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
         {
             var dialogOwner = Win32WindowWrapper.CreateFrom(Process.GetCurrentProcess().MainWindowHandle);
             var dialogResult = System.Windows.Forms.DialogResult.None;
-            var dialog = new System.Windows.Forms.FolderBrowserDialog()
+
+            using var dialog = new System.Windows.Forms.FolderBrowserDialog()
             {
                 RootFolder = Environment.SpecialFolder.MyDocuments,
                 ShowNewFolderButton = true,

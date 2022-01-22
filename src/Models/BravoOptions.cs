@@ -19,6 +19,9 @@ namespace Sqlbi.Bravo.Models
 
         public static BravoOptions CreateFromUserPreferences()
         {
+            //if (UserPreferences.Current.CustomOptions is null)
+            //    UserPreferences.Current.CustomOptions = JsonDocument.Parse("{}").RootElement;
+
             var options = new BravoOptions
             {
                 TelemetryEnabled = UserPreferences.Current.TelemetryEnabled,

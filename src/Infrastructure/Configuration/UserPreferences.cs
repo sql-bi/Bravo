@@ -2,6 +2,7 @@
 using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
 using Sqlbi.Bravo.Infrastructure.Helpers;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
 
@@ -48,7 +49,7 @@ namespace Sqlbi.Bravo.Infrastructure.Configuration
             }
             catch (Exception ex)
             {
-                ExceptionHelper.WriteEventLogWarning(ex);
+                ExceptionHelper.WriteToEventLog(ex, EventLogEntryType.Warning, throwOnError: false);
             }
 
             // Creation from file failed, the file is corrupted, does not exists or it's empty.
@@ -60,7 +61,7 @@ namespace Sqlbi.Bravo.Infrastructure.Configuration
                 }
                 catch (Exception ex)
                 {
-                    ExceptionHelper.WriteEventLogWarning(ex);
+                    ExceptionHelper.WriteToEventLog(ex, EventLogEntryType.Warning, throwOnError: false);
                 }
             }
             return defaultSettings;
@@ -91,18 +92,18 @@ namespace Sqlbi.Bravo.Infrastructure.Configuration
 
         private static void UpdateFromRegistry(UserSettings settings)
         {
-            var registryObject = Registry.GetValue(AppConstants.ApplicationRegistryHKLMKeyName, AppConstants.ApplicationRegistryHKLMApplicationTelemetryEnableValue, null);
+            var registryObject = Registry.GetValue(AppConstants.ApplicationRegistryKeyName, AppConstants.ApplicationRegistryApplicationTelemetryEnableValue, null);
             if (registryObject is not null)
             {
                 var registryValue = Convert.ToString(registryObject);
 
-                if (bool.TryParse(registryValue, out var boolValue))
-                {
-                    settings.TelemetryEnabled = boolValue;
-                }
-                else if (int.TryParse(registryValue, out var intValue))
+                if (int.TryParse(registryValue, out var intValue))
                 {
                     settings.TelemetryEnabled = Convert.ToBoolean(intValue);
+                }
+                else if(bool.TryParse(registryValue, out var boolValue))
+                {
+                    settings.TelemetryEnabled = boolValue;
                 }
             }
         }

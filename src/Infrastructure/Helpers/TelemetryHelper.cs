@@ -16,7 +16,7 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
         {
             configuration.TelemetryInitializers.Add(new OperationCorrelationTelemetryInitializer());
             configuration.TelemetryInitializers.Add(new ContextTelemetryInitializer());
-            configuration.TelemetryChannel.DeveloperMode = Debugger.IsAttached || AppConstants.IsDebug;
+            configuration.TelemetryChannel.DeveloperMode = Debugger.IsAttached || AppConstants.VersionInfo.IsDebug;
             configuration.InstrumentationKey = AppConstants.TelemetryInstrumentationKey;
             configuration.DisableTelemetry = UserPreferences.Current.TelemetryEnabled == false;
             

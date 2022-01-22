@@ -45,7 +45,7 @@ namespace Sqlbi.Bravo.Infrastructure
             var window = new PhotinoWindow()
                 .SetIconFile("wwwroot/bravo.ico")
                 .SetTitle(AppConstants.ApplicationMainWindowTitle)
-                .SetTemporaryFilesPath(AppConstants.ApplicationFolderTempDataPath)
+                .SetTemporaryFilesPath(AppConstants.ApplicationTempPath)
                 .SetContextMenuEnabled(contextMenuEnabled)
                 .SetDevToolsEnabled(devToolsEnabled)
                 .SetLogVerbosity(logVerbosity) // 0 = Critical Only, 1 = Critical and Warning, 2 = Verbose, >2 = All Details. Default is 2.
@@ -189,7 +189,7 @@ namespace Sqlbi.Bravo.Infrastructure
         /// </summary>
         private void CheckForUpdate()
         {
-            if (DesktopBridgeHelper.IsPackagedAppInstance)
+            if (AppConstants.IsPackagedAppInstance)
                 return;
 
             AutoUpdater.AppCastURL = $"https://cdn.sqlbi.com/updates/BravoAutoUpdater.xml?nocache={ DateTimeOffset.Now.ToUnixTimeSeconds() }";
@@ -200,7 +200,7 @@ namespace Sqlbi.Bravo.Infrastructure
             AutoUpdater.OpenDownloadPage = true;
             //AutoUpdater.ReportErrors = false;
             //AutoUpdater.RunUpdateAsAdmin = true;
-            AutoUpdater.PersistenceProvider = new JsonFilePersistenceProvider(jsonPath: Path.Combine(AppConstants.ApplicationFolderLocalDataPath, "autoupdater.json"));
+            AutoUpdater.PersistenceProvider = new JsonFilePersistenceProvider(jsonPath: Path.Combine(AppConstants.ApplicationDataPath, "autoupdater.json"));
             AutoUpdater.CheckForUpdateEvent += (updateInfo) =>
             {
                 if (updateInfo.Error is not null)

@@ -20,7 +20,7 @@ namespace Sqlbi.Bravo.Infrastructure.Configuration
 #if !DEBUG_WWWROOT
             Directory.SetCurrentDirectory(System.AppContext.BaseDirectory);
 #endif
-            Directory.CreateDirectory(AppConstants.ApplicationFolderLocalDataPath);
+            Directory.CreateDirectory(AppConstants.ApplicationDataPath);
         }
 
         private static void ConfigureSecurityProtocols()
@@ -41,7 +41,7 @@ namespace Sqlbi.Bravo.Infrastructure.Configuration
 
         private static void ConfigureMulticoreJit()
         {
-            ProfileOptimization.SetProfileRoot(AppConstants.ApplicationFolderLocalDataPath);
+            ProfileOptimization.SetProfileRoot(AppConstants.ApplicationDataPath);
             ProfileOptimization.StartProfile(".jitprofile");
         }
     }

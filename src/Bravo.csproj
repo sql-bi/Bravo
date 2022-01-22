@@ -9,7 +9,7 @@
     <Company>SQLBI</Company>
     <Authors>SQLBI</Authors>
     <Product>Bravo for Power BI</Product>
-    <Copyright>SQLBI Corp.</Copyright>
+    <Copyright>SQLBI Corporation</Copyright>
     <RootNamespace>Sqlbi.$(MSBuildProjectName.Replace(" ", "_"))</RootNamespace>
     <Nullable>enable</Nullable>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
