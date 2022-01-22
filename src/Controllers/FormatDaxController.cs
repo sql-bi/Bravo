@@ -45,10 +45,10 @@ namespace Sqlbi.Bravo.Controllers
         [ProducesDefaultResponseType]
         public async Task<IActionResult> FormatAsync(FormatDaxRequest request)
         {
-            var daxformatterResponse = await CallDaxFormatterAsync(request.Measures!, request.Options!).ConfigureAwait(false);
+            var daxformatterResponses = await CallDaxFormatterAsync(request.Measures!, request.Options!).ConfigureAwait(false);
             var response = new FormatDaxResponse();
 
-            foreach (var (daxformatterMeasure, index) in daxformatterResponse.WithIndex())
+            foreach (var (daxformatterResponse, index) in daxformatterResponses.WithIndex())
             {
                 var requestedMeasure = request.Measures!.ElementAt(index);
                 var formattedMeasure = new FormattedMeasure
@@ -60,14 +60,14 @@ namespace Sqlbi.Bravo.Controllers
 
                 var daxformatterExpressionPrefixLength = $"[{ requestedMeasure.Name }] :=".Length;
 
-                if (daxformatterMeasure.Errors.Count == 0)
+                if (daxformatterResponse.Errors.Count == 0)
                 {
-                    formattedMeasure.Expression = daxformatterMeasure.Formatted?.Remove(0, daxformatterExpressionPrefixLength)?.TrimStart('\r', '\n', ' ')?.TrimEnd('\r', '\n', ' ');
+                    formattedMeasure.Expression = daxformatterResponse.Formatted?.Remove(0, daxformatterExpressionPrefixLength)?.TrimStart('\n', ' ')?.TrimEnd('\n', ' ');
                 }
                 else
                 {
                     formattedMeasure.Expression = requestedMeasure.Expression; // in case of errors returns the original expression, as requested by Daniele
-                    formattedMeasure.Errors = daxformatterMeasure.Errors?.Select((e) => new FormatterError
+                    formattedMeasure.Errors = daxformatterResponse.Errors?.Select((e) => new FormatterError
                     {
                         Line = e.Line,
                         Column = e.Column - (e.Line == 0 ? daxformatterExpressionPrefixLength : 0), // remove prefix only if the error is on the first line (zero-based index)
@@ -98,8 +98,15 @@ namespace Sqlbi.Bravo.Controllers
                 foreach (var measure in measures)
                     request.Dax.Add($"[{ measure.Name }] := { measure.Expression }");
 
-                var response = await _daxformatterClient.FormatAsync(request).ConfigureAwait(false);
-                return response;
+                var responses = await _daxformatterClient.FormatAsync(request).ConfigureAwait(false);
+
+                foreach (var response in responses)
+                {
+                    // TODO: (HACK) daxformatter.com service applies CRLF as EOL character while SSAS uses LF.
+                    response.Formatted = response.Formatted?.Replace("\r\n", "\n");
+                }
+
+                return responses;
             }
         }
 

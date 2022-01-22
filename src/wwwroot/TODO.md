@@ -23,6 +23,6 @@
 - Icon in task manager
     See GH issue https://github.com/tryphotino/photino.NET/issues/85
 - Different carriage returns in formatting service response (fixable on UI side)
-    DaxFormatter service issue
+    Fixed on PR #51 (this is a DaxFormatter service issue, fix moved to .NET side)
 - Network error doens't return on getModelFromDataset - also the CPU raises - check if the problem is on the host
     Fixed on PR #50
