@@ -1,11 +1,10 @@
-﻿using Sqlbi.Bravo.Infrastructure.Windows.Interop;
-using System;
+﻿using System;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
 #nullable disable
 
-namespace Bravo.Infrastructure.Windows.Interop
+namespace Sqlbi.Bravo.Infrastructure.Windows.Interop
 {
     ///***************************************************************************
     ///***************************************************************************

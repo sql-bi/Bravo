@@ -44,8 +44,8 @@ namespace Sqlbi.Bravo.Infrastructure
             Problem = problem;
         }
 
-        public BravoException(BravoProblem problem, string message, Exception inner)
-            : base(message, inner)
+        public BravoException(BravoProblem problem, string message, Exception innerException)
+            : base(message, innerException)
         {
             Problem = problem;
         }
@@ -59,8 +59,8 @@ namespace Sqlbi.Bravo.Infrastructure
         {
         }
 
-        public SignInException(BravoProblem problem, string message, Exception inner)
-            : base(problem, message, inner)
+        public SignInException(BravoProblem problem, string message, Exception innerException)
+            : base(problem, message, innerException)
         {
         }
     }
@@ -75,6 +75,11 @@ namespace Sqlbi.Bravo.Infrastructure
 
         public TOMDatabaseException(BravoProblem problem, string message)
             : base(problem, message)
+        {
+        }
+
+        public TOMDatabaseException(BravoProblem problem, string message, Exception innerException)
+            : base(problem, message, innerException)
         {
         }
     }
@@ -113,6 +118,12 @@ namespace Sqlbi.Bravo.Infrastructure
         /// </summary> 
         [JsonPropertyName("ConnectionUnsupported")]
         ConnectionUnsupported = 200,
+
+        /// <summary>
+        /// An error occurred while saving user settings
+        /// </summary> 
+        [JsonPropertyName("UserSettingsSaveError")]
+        UserSettingsSaveError = 300,
 
         ///// <summary>
         ///// PBIDesktop process is no longer running or the identifier might be expired.

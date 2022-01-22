@@ -1,15 +1,13 @@
 ﻿using AutoUpdaterDotNET;
-using Bravo.Infrastructure.Windows.Interop;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Options;
 using PhotinoNET;
-using Sqlbi.Bravo.Infrastructure.Configuration.Options;
+using Sqlbi.Bravo.Infrastructure.Configuration;
+using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
 using Sqlbi.Bravo.Infrastructure.Extensions;
 using Sqlbi.Bravo.Infrastructure.Helpers;
 using Sqlbi.Bravo.Infrastructure.Messages;
 using Sqlbi.Bravo.Infrastructure.Windows.Interop;
 using Sqlbi.Bravo.Models;
-using Sqlbi.Infrastructure.Configuration.Settings;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -23,8 +21,6 @@ namespace Sqlbi.Bravo.Infrastructure
     {
         private readonly IHost _host;
         private readonly PhotinoWindow _window;
-        private readonly UserSettings _userSettings;
-        private readonly StartupSettings _startupSettings;
 
         private AppWindowSubclass? _windowSubclass;
         private bool _disposed;
@@ -33,8 +29,6 @@ namespace Sqlbi.Bravo.Infrastructure
         {
             _host = host;
             _window = CreateWindow();
-            _userSettings = (_host.Services.GetService(typeof(IWritableOptions<UserSettings>)) as IWritableOptions<UserSettings> ?? throw new BravoUnexpectedException("UserSettings is null")).Value;
-            _startupSettings = (_host.Services.GetService(typeof(IOptions<StartupSettings>)) as IOptions<StartupSettings> ?? throw new BravoUnexpectedException("StartupSettings is null")).Value;
         }
 
         private PhotinoWindow CreateWindow()
@@ -77,7 +71,7 @@ namespace Sqlbi.Bravo.Infrastructure
                 token = AppConstants.ApiAuthenticationToken,
                 address = GetAddress().ToString(),
                 version = AppConstants.ApplicationFileVersion,
-                options = BravoOptions.CreateFrom(_userSettings),
+                options = BravoOptions.CreateFromUserPreferences(),
                 telemetry = new
                 {
                     instrumentationKey = AppConstants.TelemetryInstrumentationKey,
@@ -102,7 +96,7 @@ namespace Sqlbi.Bravo.Infrastructure
 
             ThemeType GetTheme()
             {
-                var theme = _userSettings.Theme;
+                var theme = UserPreferences.Current.Theme;
 
                 if (theme == ThemeType.Auto)
                     theme = Uxtheme.IsSystemUsingDarkMode() ? ThemeType.Dark : ThemeType.Light;
@@ -115,10 +109,11 @@ namespace Sqlbi.Bravo.Infrastructure
         {
             Trace.WriteLine($"::Bravo:INF:OnWindowCreating:{ _window.Title }");
 
-            if (_userSettings.Theme != ThemeType.Auto) 
+            var theme = UserPreferences.Current.Theme;
+            if (theme != ThemeType.Auto) 
             {
                 // Set the startup theme based on the latest settings saved by the user
-                Uxtheme.SetStartupTheme(useDark: _userSettings.Theme == ThemeType.Dark);
+                Uxtheme.SetStartupTheme(useDark: theme == ThemeType.Dark);
             }
         }
 

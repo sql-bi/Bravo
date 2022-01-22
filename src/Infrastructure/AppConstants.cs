@@ -16,18 +16,22 @@ namespace Sqlbi.Bravo.Infrastructure
         public static readonly string ApiAuthenticationSchema = "BravoAuth";
         public static readonly string ApiAuthenticationToken = Cryptography.GenerateSimpleToken();
         public static readonly bool IsDebug = VersionInfo.IsDebug;
+        public static readonly string ApplicationManufacturer = "SQLBI";
         public static readonly string ApplicationName = "Bravo";
         public static readonly string ApplicationStoreAliasName = "BravoStore";
         public static readonly string ApplicationMainWindowTitle = "Bravo for Power BI";
         public static readonly string ApplicationInstanceUniqueName = $"{ApplicationName}-{Guid.NewGuid():D}";
         public static readonly string ApplicationFolderLocalDataPath = Path.Combine(EnvironmentSpecialFolderLocalApplicationData, ApplicationName);
         public static readonly string ApplicationFolderTempDataPath = Path.Combine(ApplicationFolderLocalDataPath, ".temp");
+        public static readonly string ApplicationRegistryHKLMKeyName = $@"HKEY_LOCAL_MACHINE\SOFTWARE\{ ApplicationManufacturer }\{ ApplicationName }";
+        public static readonly string ApplicationRegistryHKLMApplicationTelemetryEnableValue = "applicationTelemetryEnabled";
         public static readonly bool TelemetryEnabledDefault = true;
         public static readonly string TelemetryInstrumentationKey = "47a8970c-6293-408a-9cce-5b7b311574d3";
         public static readonly string PBIDesktopProcessName = "PBIDesktop";
         public static readonly string PBIDesktopSSASProcessImageName = "msmdsrv.exe";
         public static readonly string PBIDesktopMainWindowTitleSuffix = " - Power BI Desktop";
         public static readonly string DefaultMsalTokenCacheFilePath = Path.Combine(ApplicationFolderLocalDataPath!, ".msalcache");
+        public static readonly string UserSettingsFilePath = Path.Combine(ApplicationFolderLocalDataPath!, "usersettings.json");
         public static readonly TimeSpan MSALSignInTimeout = TimeSpan.FromMinutes(5);
 
         static AppConstants()
@@ -35,7 +39,7 @@ namespace Sqlbi.Bravo.Infrastructure
             CurrentSessionId = Process.GetCurrentProcess().SessionId;
             ApplicationFileVersion = VersionInfo.FileVersion ?? throw new ConfigurationErrorsException(nameof(VersionInfo.FileVersion));
             //ApplicationHostWindowTitle = VersionInfo.ProductName ?? throw new ConfigurationErrorsException(nameof(VersionInfo.ProductName));
-            DefaultJsonOptions = new(JsonSerializerDefaults.Web);
+            DefaultJsonOptions = new(JsonSerializerDefaults.Web) { MaxDepth = 32 }; // see Microsoft.AspNetCore.Mvc.JsonOptions.JsonSerializerOptions
             DefaultJsonOptions.Converters.Add(new JsonStringEnumMemberConverter()); // https://github.com/dotnet/runtime/issues/31081#issuecomment-578459083
         }
 
