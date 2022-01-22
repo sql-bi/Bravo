@@ -1,10 +1,9 @@
-﻿using Sqlbi.Bravo.Infrastructure.Windows.Interop;
-using System;
+﻿using System;
 using System.Runtime.InteropServices;
 
 #nullable disable
 
-namespace Bravo.Infrastructure.Windows.Interop
+namespace Sqlbi.Bravo.Infrastructure.Windows.Interop
 {
     internal static class Comdlg32
     {

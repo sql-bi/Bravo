@@ -1,15 +1,13 @@
 ﻿using AutoUpdaterDotNET;
-using Bravo.Infrastructure.Windows.Interop;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Options;
 using PhotinoNET;
-using Sqlbi.Bravo.Infrastructure.Configuration.Options;
+using Sqlbi.Bravo.Infrastructure.Configuration;
+using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
 using Sqlbi.Bravo.Infrastructure.Extensions;
 using Sqlbi.Bravo.Infrastructure.Helpers;
 using Sqlbi.Bravo.Infrastructure.Messages;
 using Sqlbi.Bravo.Infrastructure.Windows.Interop;
 using Sqlbi.Bravo.Models;
-using Sqlbi.Infrastructure.Configuration.Settings;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -23,8 +21,6 @@ namespace Sqlbi.Bravo.Infrastructure
     {
         private readonly IHost _host;
         private readonly PhotinoWindow _window;
-        private readonly UserSettings _userSettings;
-        private readonly StartupSettings _startupSettings;
 
         private AppWindowSubclass? _windowSubclass;
         private bool _disposed;
@@ -33,8 +29,6 @@ namespace Sqlbi.Bravo.Infrastructure
         {
             _host = host;
             _window = CreateWindow();
-            _userSettings = (_host.Services.GetService(typeof(IWritableOptions<UserSettings>)) as IWritableOptions<UserSettings> ?? throw new BravoUnexpectedException("UserSettings is null")).Value;
-            _startupSettings = (_host.Services.GetService(typeof(IOptions<StartupSettings>)) as IOptions<StartupSettings> ?? throw new BravoUnexpectedException("StartupSettings is null")).Value;
         }
 
         private PhotinoWindow CreateWindow()
@@ -51,7 +45,7 @@ namespace Sqlbi.Bravo.Infrastructure
             var window = new PhotinoWindow()
                 .SetIconFile("wwwroot/bravo.ico")
                 .SetTitle(AppConstants.ApplicationMainWindowTitle)
-                .SetTemporaryFilesPath(AppConstants.ApplicationFolderTempDataPath)
+                .SetTemporaryFilesPath(AppConstants.ApplicationTempPath)
                 .SetContextMenuEnabled(contextMenuEnabled)
                 .SetDevToolsEnabled(devToolsEnabled)
                 .SetLogVerbosity(logVerbosity) // 0 = Critical Only, 1 = Critical and Warning, 2 = Verbose, >2 = All Details. Default is 2.
@@ -77,7 +71,7 @@ namespace Sqlbi.Bravo.Infrastructure
                 token = AppConstants.ApiAuthenticationToken,
                 address = GetAddress().ToString(),
                 version = AppConstants.ApplicationFileVersion,
-                options = BravoOptions.CreateFrom(_userSettings),
+                options = BravoOptions.CreateFromUserPreferences(),
                 telemetry = new
                 {
                     instrumentationKey = AppConstants.TelemetryInstrumentationKey,
@@ -102,7 +96,7 @@ namespace Sqlbi.Bravo.Infrastructure
 
             ThemeType GetTheme()
             {
-                var theme = _userSettings.Theme;
+                var theme = UserPreferences.Current.Theme;
 
                 if (theme == ThemeType.Auto)
                     theme = Uxtheme.IsSystemUsingDarkMode() ? ThemeType.Dark : ThemeType.Light;
@@ -115,10 +109,11 @@ namespace Sqlbi.Bravo.Infrastructure
         {
             Trace.WriteLine($"::Bravo:INF:OnWindowCreating:{ _window.Title }");
 
-            if (_userSettings.Theme != ThemeType.Auto) 
+            var theme = UserPreferences.Current.Theme;
+            if (theme != ThemeType.Auto) 
             {
                 // Set the startup theme based on the latest settings saved by the user
-                Uxtheme.SetStartupTheme(useDark: _userSettings.Theme == ThemeType.Dark);
+                Uxtheme.SetStartupTheme(useDark: theme == ThemeType.Dark);
             }
         }
 
@@ -129,6 +124,16 @@ namespace Sqlbi.Bravo.Infrastructure
             HandleHotKeys(register: true);
 #endif   
             _windowSubclass = AppWindowSubclass.Hook(_window);
+
+            // Every time a Photino application starts up, Photino.Native attempts to creates a shortcut in Windows start menu.
+            // This behavior is enabled by default to allow toast notifications because, without a valid shortcut installed, Photino cannot raise a toast notification from a desktop app.
+            // If the user has chosen to activate the application shortcut during app installation, this results in a duplicate of the application shortcut in the Windows start menu.
+            // The issue has been reported on GitHub, meanwhile let's get rid of the shortcut created by Photino https://github.com/tryphotino/photino.NET/issues/85
+            var shortcutName = Path.ChangeExtension(AppConstants.ApplicationMainWindowTitle, "lnk");
+            var shortcutPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData, Environment.SpecialFolderOption.DoNotVerify), @"Microsoft\Windows\Start Menu\Programs", shortcutName);
+            if (File.Exists(shortcutPath))
+                File.Delete(shortcutPath);
+
             CheckForUpdate();
         }
 
@@ -194,7 +199,7 @@ namespace Sqlbi.Bravo.Infrastructure
         /// </summary>
         private void CheckForUpdate()
         {
-            if (DesktopBridgeHelper.IsPackagedAppInstance)
+            if (AppConstants.IsPackagedAppInstance)
                 return;
 
             AutoUpdater.AppCastURL = $"https://cdn.sqlbi.com/updates/BravoAutoUpdater.xml?nocache={ DateTimeOffset.Now.ToUnixTimeSeconds() }";
@@ -205,7 +210,7 @@ namespace Sqlbi.Bravo.Infrastructure
             AutoUpdater.OpenDownloadPage = true;
             //AutoUpdater.ReportErrors = false;
             //AutoUpdater.RunUpdateAsAdmin = true;
-            AutoUpdater.PersistenceProvider = new JsonFilePersistenceProvider(jsonPath: Path.Combine(AppConstants.ApplicationFolderLocalDataPath, "autoupdater.json"));
+            AutoUpdater.PersistenceProvider = new JsonFilePersistenceProvider(jsonPath: Path.Combine(AppConstants.ApplicationDataPath, "autoupdater.json"));
             AutoUpdater.CheckForUpdateEvent += (updateInfo) =>
             {
                 if (updateInfo.Error is not null)

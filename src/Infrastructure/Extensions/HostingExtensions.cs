@@ -121,7 +121,7 @@ namespace Sqlbi.Bravo.Infrastructure.Extensions
             services.AddSwaggerGen((options) =>
             {
                 // TODO: IncludeXmlComments fails due to a wrong xml file path while debugging the MSIX package
-                if (Debugger.IsAttached && DesktopBridgeHelper.IsPackagedAppInstance)
+                if (Debugger.IsAttached && AppConstants.IsPackagedAppInstance)
                     return;
 
                 var xmlFile = $"{ Assembly.GetExecutingAssembly().GetName().Name }.xml";

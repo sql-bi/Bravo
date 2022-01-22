@@ -9,7 +9,7 @@
     <Company>SQLBI</Company>
     <Authors>SQLBI</Authors>
     <Product>Bravo for Power BI</Product>
-    <Copyright>SQLBI Corp.</Copyright>
+    <Copyright>SQLBI Corporation</Copyright>
     <RootNamespace>Sqlbi.$(MSBuildProjectName.Replace(" ", "_"))</RootNamespace>
     <Nullable>enable</Nullable>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
@@ -44,9 +44,9 @@
     <PackageReference Include="LargeXlsx" Version="1.3.1" />
     <PackageReference Include="Macross.Json.Extensions" Version="2.2.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.ApplicationInsights" Version="2.20.0" />
-    <PackageReference Include="Microsoft.Identity.Client" Version="4.39.0" />
+    <PackageReference Include="Microsoft.Identity.Client" Version="4.40.0" />
     <PackageReference Include="Microsoft.Toolkit.Uwp.Notifications" Version="7.1.2" />
-    <PackageReference Include="Photino.NET" Version="2.1.10" />
+    <PackageReference Include="Photino.NET" Version="2.1.11" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.2.3" />
     <PackageReference Include="System.CommandLine" Version="2.0.0-beta1.21308.1" />
   </ItemGroup>

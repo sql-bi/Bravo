@@ -1,6 +1,7 @@
 ﻿using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.Channel;
 using Microsoft.ApplicationInsights.Extensibility;
+using Sqlbi.Bravo.Infrastructure.Configuration;
 using Sqlbi.Bravo.Infrastructure.Security;
 using System;
 using System.Diagnostics;
@@ -15,9 +16,9 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
         {
             configuration.TelemetryInitializers.Add(new OperationCorrelationTelemetryInitializer());
             configuration.TelemetryInitializers.Add(new ContextTelemetryInitializer());
-            configuration.TelemetryChannel.DeveloperMode = Debugger.IsAttached || AppConstants.IsDebug;
+            configuration.TelemetryChannel.DeveloperMode = Debugger.IsAttached || AppConstants.VersionInfo.IsDebug;
             configuration.InstrumentationKey = AppConstants.TelemetryInstrumentationKey;
-            configuration.DisableTelemetry = false;
+            configuration.DisableTelemetry = UserPreferences.Current.TelemetryEnabled == false;
             
             return configuration;
         }

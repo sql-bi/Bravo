@@ -40,7 +40,6 @@ namespace Sqlbi.Bravo
             services.AddAndConfigureSwaggerGen();
 #endif
             services.AddHttpClient();
-            services.AddWritableOptions<UserSettings>(section: Configuration.GetSection(nameof(UserSettings)), file: "appsettings.json"); //.ValidateDataAnnotations();
             services.AddOptions<StartupSettings>().Configure((settings) => settings.FromCommandLineArguments()); //.ValidateDataAnnotations();
             services.AddOptions<TelemetryConfiguration>().Configure((configuration) => TelemetryHelper.Configure(configuration));
             services.AddSingleton<IPBICloudAuthenticationService, PBICloudAuthenticationService>();
@@ -66,7 +65,6 @@ namespace Sqlbi.Bravo
 
             application.UseEndpoints((endpoints) =>
             {
-
                 // Map controllers and marks them as RequireAuthorization so that all requests must be authorized
                 endpoints.MapControllers().RequireAuthorization();
 

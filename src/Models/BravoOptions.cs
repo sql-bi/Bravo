@@ -1,5 +1,6 @@
 ﻿using Sqlbi.Bravo.Infrastructure;
-using Sqlbi.Infrastructure.Configuration.Settings;
+using Sqlbi.Bravo.Infrastructure.Configuration;
+using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -16,17 +17,16 @@ namespace Sqlbi.Bravo.Models
         [JsonPropertyName("customOptions")]
         public JsonElement? CustomOptions { get; set; }
 
-        public static BravoOptions CreateFrom(UserSettings settings)
+        public static BravoOptions CreateFromUserPreferences()
         {
-            JsonElement? customOptionsAsJsonElement = settings.CustomOptions is not null
-               ? JsonSerializer.Deserialize<JsonElement>(settings.CustomOptions)
-               : null;
+            //if (UserPreferences.Current.CustomOptions is null)
+            //    UserPreferences.Current.CustomOptions = JsonDocument.Parse("{}").RootElement;
 
             var options = new BravoOptions
             {
-                TelemetryEnabled = settings.TelemetryEnabled,
-                Theme = settings.Theme,
-                CustomOptions = customOptionsAsJsonElement
+                TelemetryEnabled = UserPreferences.Current.TelemetryEnabled,
+                CustomOptions = UserPreferences.Current.CustomOptions,
+                Theme = UserPreferences.Current.Theme,
             };
 
             return options;

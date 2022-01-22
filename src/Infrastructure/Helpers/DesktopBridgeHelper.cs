@@ -16,16 +16,6 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
         /// </summary>
         private const long APPMODEL_ERROR_NO_PACKAGE = 15700L;
 
-        /// <summary>
-        /// Returns true if the current app istance is running as packaged application
-        /// </summary>
-        public static readonly bool IsPackagedAppInstance;
-
-        static DesktopBridgeHelper()
-        {
-            IsPackagedAppInstance = IsRunningAsMsixPackage();
-        }
-
         private static bool IsWindows7OrLower()
         {
             var major = (double)Environment.OSVersion.Version.Major;
@@ -38,7 +28,7 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
         /// <summary>
         /// Returns true if the app is running as an MSIX package on Windows 10, version 1709 (build 16299) or later
         /// </summary>
-        private static bool IsRunningAsMsixPackage()
+        public static bool IsRunningAsMsixPackage()
         {
             // https://docs.microsoft.com/en-us/windows/msix/detect-package-identity
 
@@ -61,7 +51,7 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
         /// <exception cref="InvalidOperationException">If the current process is not running as an MSIX package application</exception>
         public static bool AppRunAs(bool environmentExit, params string[] customArgs)
         {
-            if (!IsPackagedAppInstance)
+            if (!IsRunningAsMsixPackage())
                 throw new InvalidOperationException("The current process is not running as packaged application");
 
             // This requires AppExecutionAlias activation in the MSIX installation package

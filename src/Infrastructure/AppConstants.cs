@@ -1,6 +1,7 @@
-﻿using Sqlbi.Bravo.Infrastructure.Security;
+﻿using Microsoft.Win32;
+using Sqlbi.Bravo.Infrastructure.Helpers;
+using Sqlbi.Bravo.Infrastructure.Security;
 using System;
-using System.Configuration;
 using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
@@ -10,32 +11,37 @@ namespace Sqlbi.Bravo.Infrastructure
 {
     internal static class AppConstants
     {
-        private static readonly string EnvironmentSpecialFolderLocalApplicationData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData, Environment.SpecialFolderOption.DoNotVerify);
-        private static readonly FileVersionInfo VersionInfo = FileVersionInfo.GetVersionInfo(Process.GetCurrentProcess().MainModule!.FileName!);
-
         public static readonly string ApiAuthenticationSchema = "BravoAuth";
         public static readonly string ApiAuthenticationToken = Cryptography.GenerateSimpleToken();
-        public static readonly bool IsDebug = VersionInfo.IsDebug;
+        public static readonly string ApplicationManufacturer = "SQLBI";
         public static readonly string ApplicationName = "Bravo";
         public static readonly string ApplicationStoreAliasName = "BravoStore";
         public static readonly string ApplicationMainWindowTitle = "Bravo for Power BI";
         public static readonly string ApplicationInstanceUniqueName = $"{ApplicationName}-{Guid.NewGuid():D}";
-        public static readonly string ApplicationFolderLocalDataPath = Path.Combine(EnvironmentSpecialFolderLocalApplicationData, ApplicationName);
-        public static readonly string ApplicationFolderTempDataPath = Path.Combine(ApplicationFolderLocalDataPath, ".temp");
+        public static readonly string ApplicationRegistryKeyName = $@"{ Registry.LocalMachine.Name }\SOFTWARE\{ ApplicationManufacturer }\{ ApplicationName }";
+        public static readonly string ApplicationRegistryApplicationTelemetryEnableValue = "applicationTelemetryEnabled";
         public static readonly bool TelemetryEnabledDefault = true;
         public static readonly string TelemetryInstrumentationKey = "47a8970c-6293-408a-9cce-5b7b311574d3";
         public static readonly string PBIDesktopProcessName = "PBIDesktop";
         public static readonly string PBIDesktopSSASProcessImageName = "msmdsrv.exe";
         public static readonly string PBIDesktopMainWindowTitleSuffix = " - Power BI Desktop";
-        public static readonly string DefaultMsalTokenCacheFilePath = Path.Combine(ApplicationFolderLocalDataPath!, ".msalcache");
         public static readonly TimeSpan MSALSignInTimeout = TimeSpan.FromMinutes(5);
 
         static AppConstants()
         {
-            CurrentSessionId = Process.GetCurrentProcess().SessionId;
-            ApplicationFileVersion = VersionInfo.FileVersion ?? throw new ConfigurationErrorsException(nameof(VersionInfo.FileVersion));
-            //ApplicationHostWindowTitle = VersionInfo.ProductName ?? throw new ConfigurationErrorsException(nameof(VersionInfo.ProductName));
-            DefaultJsonOptions = new(JsonSerializerDefaults.Web);
+            var currentProcess = Process.GetCurrentProcess();
+
+            CurrentSessionId = currentProcess.SessionId;
+            VersionInfo = FileVersionInfo.GetVersionInfo(currentProcess.MainModule?.FileName ?? throw new BravoUnexpectedException("MainModule.FileName is null"));
+            ApplicationFileVersion = VersionInfo.FileVersion ?? throw new BravoUnexpectedException("FileVersion is null");
+
+            IsPackagedAppInstance = !DesktopBridgeHelper.IsRunningAsMsixPackage();
+            ApplicationDataPath = Path.Combine(Environment.GetFolderPath(IsPackagedAppInstance ? Environment.SpecialFolder.LocalApplicationData : Environment.SpecialFolder.UserProfile, Environment.SpecialFolderOption.DoNotVerify), ApplicationName);
+            ApplicationTempPath = Path.Combine(ApplicationDataPath, ".temp");
+            UserSettingsFilePath = Path.Combine(ApplicationDataPath, "usersettings.json");
+            MsalTokenCacheFilePath = Path.Combine(ApplicationDataPath, ".msalcache");
+
+            DefaultJsonOptions = new(JsonSerializerDefaults.Web) { MaxDepth = 32 }; // see Microsoft.AspNetCore.Mvc.JsonOptions.JsonSerializerOptions
             DefaultJsonOptions.Converters.Add(new JsonStringEnumMemberConverter()); // https://github.com/dotnet/runtime/issues/31081#issuecomment-578459083
         }
 
@@ -45,8 +51,23 @@ namespace Sqlbi.Bravo.Infrastructure
         /// </summary>
         public static int CurrentSessionId { get; }
 
+        /// <summary>
+        /// Returns true if the current app istance is running as packaged application
+        /// </summary>
+        public static bool IsPackagedAppInstance { get; }
+    
         public static string ApplicationFileVersion { get; }
 
         public static JsonSerializerOptions DefaultJsonOptions { get; }
+
+        public static string ApplicationDataPath { get; }
+
+        public static string ApplicationTempPath { get; }
+
+        public static string UserSettingsFilePath { get; }
+
+        public static string MsalTokenCacheFilePath { get; }
+
+        public static FileVersionInfo VersionInfo { get; }
     }
 }

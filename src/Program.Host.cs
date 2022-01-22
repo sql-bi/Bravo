@@ -18,35 +18,9 @@ namespace Sqlbi.Bravo
 
             hostBuilder.UseEnvironment(Environments.Production);
             hostBuilder.UseContentRoot(Environment.CurrentDirectory);
-
             hostBuilder.ConfigureHostConfiguration((builder) =>
             {
                 builder.SetBasePath(Environment.CurrentDirectory);
-                //builder.AddJsonFile("hostsettings.json", optional: true);
-                //builder.AddEnvironmentVariables(prefix: "CUSTOMPREFIX_");
-                //builder.AddCommandLine(args);
-            });
-
-            hostBuilder.ConfigureAppConfiguration((HostBuilderContext hostingContext, IConfigurationBuilder config) =>
-            {
-                //var hostingEnvironment = hostingContext.HostingEnvironment;
-                //var reloadConfigOnChange = hostingContext.Configuration.GetValue("hostBuilder:reloadConfigOnChange", defaultValue: true);
-                
-                // TODO: rename and move to user-settings file/folder
-                config.AddJsonFile($"appsettings.json", optional: true, reloadOnChange: true);
-                //config.AddJsonFile($"appsettings.{ hostingEnvironment.EnvironmentName }.json", optional: true, reloadConfigOnChange);
-
-                //if (hostingEnvironment.IsDevelopment() && !string.IsNullOrEmpty(hostingEnvironment.ApplicationName))
-                //{
-                //    var assembly = Assembly.Load(new AssemblyName(hostingEnvironment.ApplicationName));
-                //    if (assembly != null)
-                //        config.AddUserSecrets(assembly, optional: true);
-                //}
-
-                //config.AddEnvironmentVariables();
-
-                //if (args != null)
-                //    config.AddCommandLine(args);
             });
 
             hostBuilder.ConfigureLogging((HostBuilderContext context, ILoggingBuilder logging) =>

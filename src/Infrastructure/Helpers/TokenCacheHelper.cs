@@ -7,25 +7,6 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
     internal static class TokenCacheHelper
     {
         private static readonly object _tokenCacheFileLock = new();
-        private static readonly string _tokenCacheFilePath;
-
-        static TokenCacheHelper()
-        {
-            _tokenCacheFilePath = AppConstants.DefaultMsalTokenCacheFilePath;
-
-            //try
-            //{
-            //    // For packaged desktop apps (MSIX packages, also called desktop bridge) the executing assembly folder is read-only. 
-            //    // In that case we need to use Windows.Storage.ApplicationData.Current.LocalCacheFolder.Path + "\msalcache.bin" which is a per-app read/write folder for packaged apps.
-            //    // See https://docs.microsoft.com/windows/msix/desktop/desktop-to-uwp-behind-the-scenes
-            //    CacheFilePath = Path.Combine(Windows.Storage.ApplicationData.Current.LocalCacheFolder.Path, ".msalcache.bin");
-            //}
-            //catch (InvalidOperationException)
-            //{
-            //    // Fall back for an unpackaged desktop app
-            //    CacheFilePath = AppConstants.TokenCacheFilePath;
-            //}
-        }
 
         private static void BeforeAccessNotification(TokenCacheNotificationArgs args)
         {
@@ -33,9 +14,9 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
             {
                 byte[]? msalV3State = null;
 
-                if (File.Exists(_tokenCacheFilePath))
+                if (File.Exists(AppConstants.MsalTokenCacheFilePath))
                 {
-                    var encryptedData = File.ReadAllBytes(_tokenCacheFilePath);
+                    var encryptedData = File.ReadAllBytes(AppConstants.MsalTokenCacheFilePath);
                     msalV3State = Cryptography.Unprotect(encryptedData);
                 }
 
@@ -52,7 +33,7 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
                     var msalV3State = args.TokenCache.SerializeMsalV3();
                     var encryptedData = Cryptography.Protect(msalV3State);
 
-                    File.WriteAllBytes(_tokenCacheFilePath, encryptedData);
+                    File.WriteAllBytes(AppConstants.MsalTokenCacheFilePath, encryptedData);
                 }
             }
         }

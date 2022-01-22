@@ -3,7 +3,6 @@ using Sqlbi.Bravo.Infrastructure.Security;
 using Sqlbi.Bravo.Models;
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using System.Text;
 using SSAS = Microsoft.AnalysisServices;
@@ -76,22 +75,9 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
                 }
                 catch (SSAS.AmoException ex)
                 {
-                    throw new TOMDatabaseException(BravoProblem.TOMDatabaseDatabaseNotFound, message: ex.Message);
+                    throw new TOMDatabaseException(BravoProblem.TOMDatabaseDatabaseNotFound, ex.Message, ex);
                 }
             }
         }
-
-        //public static bool ExecuteCommand(string connectionString, string database, string commandText)
-        //{
-        //    var connection = new SSAS.AdomdClient.AdomdConnection(connectionString);
-        //    connection.Open();
-        //    connection.ChangeDatabase(database);
-
-        //    var command = connection.CreateCommand();
-        //    command.CommandType = System.Data.CommandType.Text;
-        //    command.CommandText = commandText;
-
-        //    return command.ExecuteReader(CommandBehavior.SingleResult | CommandBehavior.CloseConnection);
-        //}
     }
 }

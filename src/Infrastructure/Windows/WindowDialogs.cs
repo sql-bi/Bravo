@@ -1,5 +1,4 @@
-﻿using Bravo.Infrastructure.Windows.Interop;
-using Sqlbi.Bravo.Infrastructure.Extensions;
+﻿using Sqlbi.Bravo.Infrastructure.Extensions;
 using Sqlbi.Bravo.Infrastructure.Windows.Interop;
 using System;
 using System.Drawing;

@@ -1,16 +1,14 @@
-﻿using Bravo.Infrastructure.Windows.Interop;
-using Microsoft.ApplicationInsights.Extensibility;
+﻿using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
-using Sqlbi.Bravo.Infrastructure;
-using Sqlbi.Bravo.Infrastructure.Configuration.Options;
+using Sqlbi.Bravo.Infrastructure.Configuration;
+using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
+using Sqlbi.Bravo.Infrastructure.Windows.Interop;
 using Sqlbi.Bravo.Models;
-using Sqlbi.Infrastructure.Configuration.Settings;
 using System;
 using System.Diagnostics;
 using System.Net.Mime;
-using System.Text.Json;
 
 namespace Sqlbi.Bravo.Controllers
 {
@@ -23,28 +21,11 @@ namespace Sqlbi.Bravo.Controllers
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ProblemDetails))]
     public class ApplicationController : ControllerBase
     {
-        private readonly IWritableOptions<UserSettings> _userOptions;
         private readonly TelemetryConfiguration _telemetryConfiguration;
 
-        public ApplicationController(IWritableOptions<UserSettings> userOptions, IOptions<TelemetryConfiguration> telemetryOptions)
+        public ApplicationController(IOptions<TelemetryConfiguration> telemetryOptions)
         {
-            _userOptions = userOptions;
             _telemetryConfiguration = telemetryOptions.Value;
-            
-            try
-            {
-                //_settings = options.Value;
-            }
-            catch /* (OptionsValidationException ex) */
-            {
-                throw;
-
-                // TODO: logging
-                //foreach (var failure in ex.Failures)
-                //{
-                //    _logger.LogError(failure);
-                //}
-            }
         }
 
         /// <summary>
@@ -58,7 +39,7 @@ namespace Sqlbi.Bravo.Controllers
         [ProducesDefaultResponseType]
         public IActionResult GetOptions()
         {
-            var options = BravoOptions.CreateFrom(_userOptions.Value);
+            var options = BravoOptions.CreateFromUserPreferences();
             return Ok(options);
         }
 
@@ -74,16 +55,12 @@ namespace Sqlbi.Bravo.Controllers
         [ProducesDefaultResponseType]
         public IActionResult UpdateOptions(BravoOptions options)
         {
-            var customOptionsAsString = JsonSerializer.Serialize(options.CustomOptions, AppConstants.DefaultJsonOptions);
+            UserPreferences.Current.TelemetryEnabled = options.TelemetryEnabled;
+            UserPreferences.Current.CustomOptions = options.CustomOptions;
+            UserPreferences.Current.Theme = options.Theme;
+            UserPreferences.Save();
 
-            _userOptions.Update((o) =>
-            {
-                o.TelemetryEnabled = options.TelemetryEnabled;
-                o.Theme = options.Theme;
-                o.CustomOptions = customOptionsAsString;
-            });
-
-            _telemetryConfiguration.DisableTelemetry = !options.TelemetryEnabled;
+            _telemetryConfiguration.DisableTelemetry = options.TelemetryEnabled == false;
 
             return Ok();
         }
@@ -120,11 +97,13 @@ namespace Sqlbi.Bravo.Controllers
         /// Opens the provided URL using the system's default browser
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
+        /// <response code="403">Status403Forbidden - The address provided is invalid or not allowed</response>
         [HttpGet]
         [ActionName("NavigateTo")]
         [Consumes(MediaTypeNames.Application.Json)]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesDefaultResponseType]
         public IActionResult BrowserNavigateTo(Uri address)
         {
@@ -135,9 +114,11 @@ namespace Sqlbi.Bravo.Controllers
                     UseShellExecute = true,
                     FileName = address.OriginalString
                 });
+
+                return Ok();
             }
 
-            return Ok();
+            return Forbid();
         }
     }
 }

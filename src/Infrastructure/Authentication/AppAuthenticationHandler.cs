@@ -18,8 +18,6 @@ namespace Sqlbi.Bravo.Infrastructure.Authentication
 
         protected override Task<AuthenticateResult> HandleAuthenticateAsync()
         {
-            var x = ClaimsPrincipal.Current;
-
             if (Request.Headers.TryGetValue(HeaderNames.Authorization, out var token))
             {
                 if (AppConstants.ApiAuthenticationToken.Equals(token))
