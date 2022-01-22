@@ -56,6 +56,15 @@ namespace Sqlbi.Bravo.Infrastructure.Security
 
             return stringBuilder.ToString();
         }
+
+        public static string GenerateSimpleToken()
+        {
+            var token = $"{Guid.NewGuid()}-{Guid.NewGuid()}";
+            var tokenBytes = Encoding.UTF8.GetBytes(token);
+
+            token = Convert.ToBase64String(tokenBytes, Base64FormattingOptions.None);
+            return token;
+        }
     }
 
     internal static class CriptographyExtensions

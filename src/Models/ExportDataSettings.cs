@@ -18,7 +18,7 @@ namespace Sqlbi.Bravo.Models
         /// Full local path where the files will be created
         /// </summary>
         [JsonIgnore]
-        public string ExportPath { get; set; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), $"BravoExportData-{DateTime.Now:yyyyMMddHHmmss}");
+        public string ExportPath { get; set; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments, Environment.SpecialFolderOption.DoNotVerify), $"BravoExportData-{DateTime.Now:yyyyMMddHHmmss}");
     }
 
     public class ExportDelimitedTextSettings : ExportDataSettings

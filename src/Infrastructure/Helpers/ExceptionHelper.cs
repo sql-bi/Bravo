@@ -21,6 +21,8 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
             {
                 if (innerException is T foundInnerException)
                     return foundInnerException;
+
+                innerException = innerException.InnerException;
             }
 
             return null;
