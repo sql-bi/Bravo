@@ -124,6 +124,16 @@ namespace Sqlbi.Bravo.Infrastructure
             HandleHotKeys(register: true);
 #endif   
             _windowSubclass = AppWindowSubclass.Hook(_window);
+
+            // Every time a Photino application starts up, Photino.Native attempts to creates a shortcut in Windows start menu.
+            // This behavior is enabled by default to allow toast notifications because, without a valid shortcut installed, Photino cannot raise a toast notification from a desktop app.
+            // If the user has chosen to activate the application shortcut during app installation, this results in a duplicate of the application shortcut in the Windows start menu.
+            // The issue has been reported on GitHub, meanwhile let's get rid of the shortcut created by Photino https://github.com/tryphotino/photino.NET/issues/85
+            var shortcutName = Path.ChangeExtension(AppConstants.ApplicationMainWindowTitle, "lnk");
+            var shortcutPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData, Environment.SpecialFolderOption.DoNotVerify), @"Microsoft\Windows\Start Menu\Programs", shortcutName);
+            if (File.Exists(shortcutPath))
+                File.Delete(shortcutPath);
+
             CheckForUpdate();
         }
 

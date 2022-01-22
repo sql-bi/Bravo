@@ -21,7 +21,7 @@
 - Fix blurring icon
 
 - Icon in task manager
-    See GH issue https://github.com/tryphotino/photino.NET/issues/85
+    Fixed on PR #51 by deleting the shortcut on app startup - waiting for an official fix -> see GH issue https://github.com/tryphotino/photino.NET/issues/85
 - Different carriage returns in formatting service response (fixable on UI side)
     Fixed on PR #51 (this is a DaxFormatter service issue, fix moved to .NET side)
 - Network error doens't return on getModelFromDataset - also the CPU raises - check if the problem is on the host
