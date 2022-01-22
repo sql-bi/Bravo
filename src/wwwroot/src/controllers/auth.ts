@@ -5,7 +5,7 @@
 */
 
 import { Dispatchable } from '../helpers/dispatchable';
-import { Utils } from '../helpers/utils';
+import { Dic, Utils } from '../helpers/utils';
 import { host, optionsController } from '../main';
 import { AppError } from '../model/exceptions';
 
@@ -18,6 +18,7 @@ export interface Account {
 
 export class Auth extends Dispatchable {
 
+    static UsersStorageName = "bravo-users";
     account: Account;
 
     get signedIn(): boolean {
@@ -29,13 +30,67 @@ export class Auth extends Dispatchable {
 
         host.getUser().then(account => {
             this.account = account;
+            this.getAvatar();
             this.trigger("signedIn", this.account);
+
         }).catch(error => {
             
         });
     }
 
-     signIn(emailAddress?: string) {
+    getCache(): Dic<string> {
+
+        let storage = {};
+        const rawData = localStorage.getItem(Auth.UsersStorageName);
+        if (rawData) {
+            try {
+                storage = JSON.parse(rawData);
+            } catch(error){}
+        }
+        return storage;
+    }
+
+    getCachedAvatar(id: string): string {
+        
+        let storage = this.getCache();
+        if (id in storage)
+            return storage[id];
+
+        return "";
+    }
+
+    cacheAvatar(id: string, avatar: string) {
+
+        let storage = this.getCache();
+        storage[id] = avatar;
+
+        try {
+            localStorage.setItem(Auth.UsersStorageName, JSON.stringify(storage));
+        } catch(error){}
+    }
+
+    deleteCachedAvatar(id: string) {
+        let storage = this.getCache();
+        delete storage[id];
+    }
+
+    getAvatar() {
+
+        if (!this.account.avatar)
+            this.account.avatar = this.getCachedAvatar(this.account.id);
+
+        host.getUserAvatar().then(avatar => {
+            this.account.avatar = avatar;
+            this.trigger("avatarUpdated", this.account);
+
+            this.cacheAvatar(this.account.id, avatar);
+
+        }).catch(error => {
+            
+        });
+    }
+
+    signIn(emailAddress?: string) {
         this.account = null;
 
         return host.signIn(emailAddress)
@@ -43,7 +98,7 @@ export class Auth extends Dispatchable {
                 if (account) {
                     this.account = account;
                     optionsController.update("loggedInOnce", true);
-
+                    this.getAvatar();
                     this.trigger("signedIn", this.account);
 
                 } else {
@@ -58,6 +113,7 @@ export class Auth extends Dispatchable {
 
     signOut() {
         host.signOut().then(()=> {
+            this.deleteCachedAvatar(this.account.id);
             this.account = null;
             this.trigger("signedOut");
         });

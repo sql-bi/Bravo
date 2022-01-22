@@ -108,6 +108,12 @@ namespace Sqlbi.Bravo.Infrastructure
         [JsonPropertyName("TOMDatabaseUpdateErrorMeasure")]
         TOMDatabaseUpdateErrorMeasure = 104,
 
+        /// <summary>
+        /// The connection to the requested resource is not supported
+        /// </summary> 
+        [JsonPropertyName("ConnectionUnsupported")]
+        ConnectionUnsupported = 200,
+
         ///// <summary>
         ///// PBIDesktop process is no longer running or the identifier might be expired.
         ///// </summary> 
@@ -160,7 +166,7 @@ namespace Sqlbi.Bravo.Infrastructure
         VpaxFileContainsCorruptedData = 500,
 
         /// <summary>
-        /// VPAX file format is not valid or file contains corrupted data
+        /// You are not connected to the Internet
         /// </summary> 
         [JsonPropertyName("NetworkError")]
         NetworkError = 600,

@@ -4,7 +4,9 @@
  * https://www.sqlbi.com
 */
 import { Utils } from '../helpers/utils';
+import { notificationCenter } from '../main';
 import { AppError } from '../model/exceptions';
+import { Notify } from './notifications';
 
 export class Debug { 
     
@@ -23,9 +25,17 @@ export class Debug {
             console.error = 
             function() {};
         } 
+
+        this.sendTestNotifications();
     }
 
-    catchApiCall(action: string, data = {}, ): Promise<any> {
+    sendTestNotifications() {
+        window.setTimeout(()=> {
+            notificationCenter.add(new Notify("This is a test notification"));
+        }, 6000);
+    }
+
+    catchApiCall(action: string, data = {}): Promise<any> {
         if (!this.enabled) return null;
 
         let genericError = AppError.InitFromResponseError(Utils.ResponseStatusCode.InternalError);

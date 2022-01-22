@@ -41,7 +41,6 @@ export class DaxFormatterScene extends MainScene {
     previewing: Dic<boolean> = {};
 
     showMeasuresWithErrorsOnly = false;
-    showUnformattedMeasuresOnly = false;
 
     constructor(id: string, container: HTMLElement, doc: Doc) {
         super(id, container, doc);
@@ -124,19 +123,17 @@ export class DaxFormatterScene extends MainScene {
 
         let html = `
             <div class="summary">
-                <p>${i18n(strings.daxFormatterSummary, {count: this.doc.measures.length})}</p>
+                <p></p>
             </div>
 
             <div class="cols">
                 <div class="col coll">
                     <div class="toolbar">
                         <div class="search">
-                            <input type="search" placeholder="${i18n(strings.searchPlaceholder)}">
+                            <input type="search" placeholder="${i18n(strings.searchMeasurePlaceholder)}" class="disable-if-empty">
                         </div>
 
-                        <div class="filter-measures-with-errors toggle icon-filter-alerts" title="${i18n(strings.filterErrorsCtrlTitle)}" disabled></div>
-
-                        <div class="filter-unformatted-measures toggle icon-filter-modified" title="${i18n(strings.filterUnformattedCtrlTitle)}" disabled></div>
+                        <div class="filter-measures-with-errors toggle icon-filter-errors disable-if-empty" title="${i18n(strings.filterMeasuresWithErrorsCtrlTitle)}" disabled></div>
                     </div>
                     <div class="table"></div>
                 </div>
@@ -197,8 +194,8 @@ export class DaxFormatterScene extends MainScene {
         this.searchBox = <HTMLInputElement>_(".search input", this.body);
         this.formatButton = _(".do-format", this.body);
 
-        this.updateTable();
-        this.maybeAutoGeneratePreview();
+        this.update();
+
         this.updateZoom(optionsController.options.customOptions.editorZoom);
         this.listen();
     }
@@ -326,8 +323,6 @@ export class DaxFormatterScene extends MainScene {
                         
                     }
                 });
-                
-                this.updateMeasuresStatus();
             })
             .catch((error: AppError) => {
                 
@@ -338,6 +333,7 @@ export class DaxFormatterScene extends MainScene {
             })
             .finally(() => {
                 _(".loader", element).remove(); //Remove any loader
+                this.updateMeasuresStatus();
             });
         
     }
@@ -445,11 +441,11 @@ export class DaxFormatterScene extends MainScene {
                     const status = this.doc.analizeMeasure(measure);
 
                     if (status == MeasureStatus.NotFormatted) {
-                        return `<div class="icon icon-circle" title="${i18n(strings.columnMeasureNotFormattedTooltip)}"></div>`;
+                        return `<div class="icon icon-unformatted" title="${i18n(strings.columnMeasureNotFormattedTooltip)}"></div>`;
                     } else if (status == MeasureStatus.WithErrors) {
                         return `<div class="icon icon-alert" title="${i18n(strings.columnMeasureWithError)}"></div>`;
                     } else if (status == MeasureStatus.Formatted) {
-                        return `<div class="icon icon-valid" title="${i18n(strings.columnMeasureFormatted)}"></div>`;
+                        return `<div class="icon icon-completed" title="${i18n(strings.columnMeasureFormatted)}"></div>`;
                     } else {
                         if (optionsController.options.customOptions.previewFormatting) {
                             return `<div class="loader"></div>`;
@@ -502,6 +498,8 @@ export class DaxFormatterScene extends MainScene {
                         const status = this.doc.analizeMeasure(measure);
                         if (status == MeasureStatus.WithErrors) {
                             element.classList.add("row-error");
+                        } else if (status == MeasureStatus.NotFormatted) {
+                            element.classList.add("row-highlighted");
                         }
                     }catch(e){}
                 },
@@ -686,6 +684,8 @@ export class DaxFormatterScene extends MainScene {
             e.preventDefault();
 
             let el = <HTMLInputElement>e.currentTarget;
+            if (el.hasAttribute("disabled")) return;
+
             let selection = el.value.substring(el.selectionStart, el.selectionEnd);
             ContextMenu.editorContextMenu(e, selection, el.value, el);
         });
@@ -694,20 +694,12 @@ export class DaxFormatterScene extends MainScene {
         _(".filter-measures-with-errors", this.element).addEventListener("click", e => {
             e.preventDefault();
             let el = <HTMLElement>e.currentTarget;
+            if (el.hasAttribute("disabled")) return;
+
             el.toggleClass("active");
             this.showMeasuresWithErrorsOnly = el.classList.contains("active");
             this.deselectMeasures();
             
-            this.applyFilters();
-        });
-
-        _(".filter-unformatted-measures", this.element).addEventListener("click", e => {
-            e.preventDefault();
-            let el = <HTMLElement>e.currentTarget;
-            el.toggleClass("active");
-            this.showUnformattedMeasuresOnly = el.classList.contains("active");
-            this.deselectMeasures();
-
             this.applyFilters();
         });
 
@@ -794,7 +786,7 @@ export class DaxFormatterScene extends MainScene {
         if (this.table) {
             this.table.clearFilter();
 
-            if (this.showMeasuresWithErrorsOnly || this.showUnformattedMeasuresOnly) 
+            if (this.showMeasuresWithErrorsOnly) 
                 this.table.addFilter(data => this.measuresFilter(data));
 
             if (this.searchBox.value)
@@ -803,11 +795,11 @@ export class DaxFormatterScene extends MainScene {
     }
 
     measuresFilter(measure: TabularMeasure): boolean {
-        if (this.showMeasuresWithErrorsOnly || this.showUnformattedMeasuresOnly) {
+        if (this.showMeasuresWithErrorsOnly) {
 
             const status = this.doc.analizeMeasure(measure);
 
-            return (status == MeasureStatus.Partial || (this.showMeasuresWithErrorsOnly && status == MeasureStatus.WithErrors) || (this.showUnformattedMeasuresOnly && status == MeasureStatus.NotFormatted));
+            return (status == MeasureStatus.Partial || (this.showMeasuresWithErrorsOnly && (status == MeasureStatus.WithErrors || status == MeasureStatus.NotFormatted)));
         }
         return true;
     }

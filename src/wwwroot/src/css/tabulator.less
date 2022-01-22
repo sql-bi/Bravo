@@ -33,6 +33,10 @@
     }
   }
 
+  .row-disabled {
+    opacity: 0.4;
+  }
+
   .row-error, .row-contains-error .column-icon {
     background-color: @error-back-color !important;
 
@@ -592,6 +596,16 @@
   border-color: transparent !important;
   background-color: @table-cell-active-back-color !important;
   .dark & {background-color: @table-cell-active-back-color-dark !important;}
+
+  &.row-highlighted {
+    background-color: darken(@warning-back-color, 20%) !important;
+    .dark & {background-color: lighten(@warning-back-color-dark, 20%) !important;}
+  }
+
+  &.row-error {
+    background-color: darken(@error-back-color, 20%) !important;
+    .dark & {background-color: lighten(@error-back-color-dark, 20%) !important;}
+  }
 
   & + .tabulator-row {
     border-color: transparent !important;

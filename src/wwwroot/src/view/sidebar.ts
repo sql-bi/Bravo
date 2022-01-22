@@ -107,7 +107,7 @@ export class Sidebar extends View {
             }
         });
 
-        auth.on("signedIn", (account: Account) => {
+        auth.on(["signedIn", "avatarUpdated"], (account: Account) => {
             this.changeProfilePicture(i18n(strings.signedInCtrlTitle, {name: account.username}), account.avatar);
         });
 
@@ -160,7 +160,7 @@ export class Sidebar extends View {
         if (picture)
             el.classList.add("photo");
         else
-            el.classList.remove("photo")
+            el.classList.remove("photo");
             
     }
  
@@ -181,11 +181,14 @@ export class Sidebar extends View {
     }
 
     toggle(collapse = !this.collapsed) {
-console.log("Collapsing", collapse);
+
+        let root = _(".root");
         if (collapse) {
             this.element.classList.add("collapsed");
+            root.classList.remove("has-sidebar");
         } else {
             this.element.classList.remove("collapsed");
+            root.classList.add("has-sidebar");
         }
         optionsController.update("sidebarCollapsed", collapse);
         this.collapsed = collapse;

@@ -38,8 +38,6 @@ export class Notify extends Dispatchable {
 }
 export class NotifyCenter extends Dispatchable {
 
-    static NotificationCtrlSelector = ".notification-ctrl";
-
     static CheckIntervalDuration = 30;
     checkInterval: number;
     notifications: Notify[];
@@ -74,11 +72,9 @@ export class NotifyCenter extends Dispatchable {
     add(notification: Notify) {
 
         this.notifications.push(notification);
-
-        this.updateUnreadCount();
           
         notification.on("read", ()=> {
-            this.updateUnreadCount();
+            this.trigger("read");
         });
         this.trigger("add", notification);
     }
@@ -91,35 +87,13 @@ export class NotifyCenter extends Dispatchable {
                 break;
             }
         }
-        this.updateUnreadCount();
         this.trigger("remove", notification);
     }
 
-    updateUnreadCount() {
-        let ctrl = _(NotifyCenter.NotificationCtrlSelector);
-        if (!ctrl.empty) {
-            if (this.notifications.length) {
-
-                let unreadCount = 0;
-                this.notifications.forEach(notification => {
-                    if (notification.unread)
-                        unreadCount++;
-                });
-
-                let unreadBadge = _(".unread", ctrl);
-                if (unreadBadge.empty) {
-                    if (unreadCount)
-                        ctrl.insertAdjacentHTML("beforeend", `<div class="unread">${unreadCount}</div>`)
-                } else {
-                    if (unreadCount)
-                        unreadBadge.innerText = String(unreadCount);
-                    else 
-                        ctrl.innerHTML = "";
-                }
-            } else {
-                ctrl.innerHTML = "";
-            }
-            ctrl.toggleAttr("disabled", this.notifications.length == 0);
-        }
+    markAllAsRead() {
+        this.notifications.forEach(notification => {
+            notification.unread = false;
+        });
+        this.trigger("read");
     }
 }

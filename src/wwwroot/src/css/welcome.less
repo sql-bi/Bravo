@@ -1,5 +1,7 @@
 // main: main.less
 
+
+
 .welcome {
 
     .coll {
@@ -80,23 +82,21 @@
             }
         }
     }
-    
-    .screen(1380px, {
-        .cols {
-            .flex-direction(column);
-        }
 
+    .hcols {
+        .cols { .flex-direction(column); }
+    
         .coll {
             padding: 0 0 60px 0;
             width: 100% !important;
         }
-
+    
         .colr {
             width: 100% !important;
             border-left: none;
             //border-top: 1px solid @border-color;
             padding: 10px 0 0 0;
-
+    
             .sep {
                 position: static;
                 margin: 0 0 30px 0;
@@ -104,14 +104,28 @@
                 height: 3px;
             }
         }
-
+    
         .help-content .videos {
             ul {
                 columns: 2;
                 max-width: 500px;
             }
         }
-    });
+    }
+
+    .screen(1200px, { .hcols() });
+
+    .has-sidebar &, .has-notifications & {
+        .screen(1300px, { .hcols() });
+    }
+
+    .has-sidebar.has-notifications & {
+        .screen(1650px, { .hcols() });
+    }
+    
+    
+
+    
 
     .dark & {
 
@@ -136,5 +150,5 @@
         
     }
 
-    
 }
+

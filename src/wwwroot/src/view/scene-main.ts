@@ -59,7 +59,7 @@ export class MainScene extends Scene {
     update() {
         super.update();
 
-        ["orphan", "readonly", "editable"].forEach(prop => {
+        ["orphan", "readonly", "editable", "empty"].forEach(prop => {
             const value: boolean = (<any>this.doc)[prop];
             __(`.show-if-${prop}`, this.element).forEach((div: HTMLElement) => {
                 div.toggle(value);
@@ -67,11 +67,11 @@ export class MainScene extends Scene {
             __(`.hide-if-${prop}`, this.element).forEach((div: HTMLElement) => {
                 div.toggle(!value);
             });
-            __(`.disable-if-${prop}`, this.element).forEach((div: HTMLElement) => {
-                div.toggleAttr("disabled", value);
-            });
             __(`.enable-if-${prop}`, this.element).forEach((div: HTMLElement) => {
                 div.toggleAttr("disabled", !value);
+            });
+            __(`.disable-if-${prop}`, this.element).forEach((div: HTMLElement) => {
+                div.toggleAttr("disabled", value);
             });
         });
 

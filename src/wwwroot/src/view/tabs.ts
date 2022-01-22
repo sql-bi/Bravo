@@ -41,8 +41,6 @@ export class Tabs extends View {
                 <div class="chrome-tabs-add ctrl icon-add">${i18n(strings.addCtrlTitle)}</div>
                 <div class="chrome-tabs-content"></div>
 
-                <div id="ctrl-notifications" class="ctrl notification-ctrl icon-notifications solo" title="${i18n(strings.notificationCtrlTitle)}" disabled></div> 
-                
                 <div class="chrome-tabs-bottom-bar"></div>
             </div>
             <div class="content"></div>

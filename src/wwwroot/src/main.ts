@@ -20,7 +20,7 @@ Tabulator.registerModule([ColumnCalcsModule, DataTreeModule, FilterModule, Forma
 
 // Init the app
 let debug = new Debug(process.env.MODE == "development");
-let host = new Host(CONFIG.address);
+let host = new Host(CONFIG.address, CONFIG.token);
 let optionsController = new OptionsController(CONFIG.options);
 let themeController = new ThemeController();
 let auth = new Auth();

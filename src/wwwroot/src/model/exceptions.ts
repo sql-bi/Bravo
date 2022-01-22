@@ -4,6 +4,7 @@
  * https://www.sqlbi.com
 */
 
+import * as sanitizeHtml from 'sanitize-html';
 import { ProblemDetails } from '../controllers/host';
 import { Utils } from '../helpers/utils';
 import { i18n } from '../model/i18n'; 
@@ -15,13 +16,11 @@ export enum AppProblem {
     TOMDatabaseUpdateFailed = 102,
     TOMDatabaseUpdateConflictMeasure = 103,
     TOMDatabaseUpdateErrorMeasure = 104,
-    PBIDesktopProcessNotFound = 200,
-    PBIDesktopSSASProcessNotFound = 300,
-    PBIDesktopSSASConnectionNotFound = 301,
-    PBIDesktopSSASDatabaseUnexpectedCount = 302,
+    ConnectionUnsupported = 200,
     SignInMsalExceptionOccurred = 400,
     SignInMsalTimeoutExpired = 401,
     VpaxFileContainsCorruptedData = 500,
+    NetworkError = 600
 }
 
 export enum AppErrorType {
@@ -57,7 +56,7 @@ export class AppError {
     }
 
     toString() {
-        return `${ i18n(strings.error) }${ this.code ? ` ${this.type != AppErrorType.Managed ? "HTTP/" : "" }${ this.code }` : "" }: ${ this.message }${ this.traceId ? `\n${ i18n(strings.traceId) }: ${this.traceId}` : ""}`;
+        return `${ i18n(strings.error) }${ this.code ? ` ${this.type != AppErrorType.Managed ? "HTTP/" : "" }${ this.code }` : "" }: ${ sanitizeHtml(this.message, { allowedTags: [], allowedAttributes: {} }) }${ this.traceId ? `\n${ i18n(strings.traceId) }: ${this.traceId}` : ""}`;
     }
 
     static InitFromProblem(problem: ProblemDetails, message?: string) {

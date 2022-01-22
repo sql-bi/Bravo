@@ -17,9 +17,10 @@ import { PageType } from './page';
 import { host, notificationCenter, telemetry } from '../main';
 import { i18n } from '../model/i18n'; 
 import { ApplicationUpdateAvailableWebMessage, PBICloudDatasetOpenWebMessage, PBIDesktopReportOpenWebMessage, VpaxFileOpenWebMessage, WebMessageType } from '../model/message';
-import { PBIDesktopReport } from './pbi-desktop';
-import { PBICloudDataset } from './host';
 import { Notify, NotifyType } from './notifications';
+import { NotificationSidebar } from '../view/notification-sidebar';
+import { PBIDesktopReport, PBIDesktopReportConnectionMode } from '../model/pbi-report';
+import { PBICloudDataset } from '../model/pbi-dataset';
 
 export class App {
 
@@ -28,6 +29,7 @@ export class App {
     element: HTMLElement;
     sidebar: Sidebar;
     tabs: Tabs;
+    notificationSidebar: NotificationSidebar;
     defaultConnectSelectedMenu: string;
 
     constructor() {
@@ -41,6 +43,8 @@ export class App {
         this.sidebar = new Sidebar("sidebar", this.element, sidebarItems);
 
         this.tabs = new Tabs("tabs", this.element);
+
+        this.notificationSidebar = new NotificationSidebar("notification-sidebar", this.element);
 
         this.listen();
 
@@ -214,11 +218,19 @@ export class App {
     }
 
     openReport(report: PBIDesktopReport) {
-        this.openDoc(new Doc(report.reportName, DocType.pbix, report));
+        if (report.connectionMode == PBIDesktopReportConnectionMode.Unknown) {
+
+        } else {
+            this.openDoc(new Doc(report.reportName, DocType.pbix, report));
+        }
     }
 
     openDataset(dataset: PBICloudDataset) {
-        this.openDoc(new Doc(dataset.name, DocType.dataset, dataset));
+        host.validateDatasetConnection(dataset)
+            .then(dataset => {
+                this.openDoc(new Doc(dataset.name, DocType.dataset, dataset));
+            });
+            //TODO catch error
     }
 
     openDoc(doc: Doc) {

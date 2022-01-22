@@ -1,0 +1,72 @@
+// main: main.less
+#notification-sidebar {
+    width: 300px;
+    transition: width .2s ease-in-out;
+
+    background: @window-back-color;
+    .flexbox(stretch, flex-start, column);
+
+    .dark & {
+        background: @window-back-color-dark;
+    }
+
+
+    .items {
+        margin-top: 42px;
+        height: calc(100% - 42px);
+        background: @back-color;
+        border-left: 8px solid @window-back-color;
+
+        .dark & { 
+            background-color: @back-color-dark;
+            border-color: @window-back-color-dark;
+        }
+    }
+
+
+    &.collapsed {
+        width: 0;
+
+        .hide-if-collapsed {
+            opacity: 0;
+
+        }
+    }
+    .hide-if-collapsed {
+        transition: opacity .2s ease-in-out;
+    }
+
+    .notification-ctrl {
+        position: absolute;
+        right: 5px;
+        top:5px;
+  
+        &:before {
+          font-size: 22px;
+        }
+  
+        .unread {
+            pointer-events: none;
+            font-family: @text-font;
+            position: absolute;
+            text-align: center;
+            line-height: 16px;
+            padding: 0 4px;
+            .border-radius(20px);
+            height: 16px;
+            font-size: 9px;
+            font-weight: 600;
+            min-width: 8px;
+            margin-left: 10px;
+            margin-top: -16px;
+  
+            background-color: @accent-back-color;
+            color: @accent-color;
+  
+            .dark & {
+                background-color: @accent-back-color-dark;
+                color: @accent-color-dark;
+            }
+        }
+      }
+}

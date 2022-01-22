@@ -21,14 +21,16 @@ export class ConnectMenuItem {
         this.element = element;
     }
 
-    renderError(message: strings, retry?: () => void) {
+    renderError(message: string, retry?: () => void) {
 
+        if (!this.element) return;
+        
         const retryId = Utils.DOM.uniqueId();
 
         _(".list", this.element).innerHTML = `
             <div class="notice">
                 <div>
-                    <p>${i18n(message)}</p>
+                    <p>${message}</p>
                     ${ retry ? `
                         <div id="${retryId}" class="button button-alt">${i18n(strings.errorRetry)}</div>
                     ` : ""}

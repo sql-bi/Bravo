@@ -55,8 +55,7 @@ export class AnalyzeModelScene extends MainScene {
 
         let html = `
             <div class="summary">
-
-                <p>${i18n(strings.analyzeModelSummary, {size: this.doc.model.size, count: this.doc.model.columnsCount }) + i18n(strings.analyzeModelSummary2, {count: this.doc.model.unreferencedCount})}</p>
+                <p></p>
             </div>
             <div class="fcols">
                 <div class="col coll">
@@ -64,16 +63,16 @@ export class AnalyzeModelScene extends MainScene {
                     <div class="toolbar">
             
                         <div class="search">
-                            <input type="search" placeholder="${i18n(strings.searchColumnPlaceholder)}">
+                            <input type="search" placeholder="${i18n(strings.searchColumnPlaceholder)}" class="disable-if-empty">
                         </div>
 
                        
-                        <div class="filter-unreferenced toggle icon-filter-broken-links" title="${i18n(strings.filterUnrefCtrlTitle)}"></div>
+                        <div class="filter-unreferenced toggle icon-filter-broken-links disable-if-empty" title="${i18n(strings.filterUnrefCtrlTitle)}"></div>
 
-                        <div class="group-by-table toggle icon-group" title="${i18n(strings.groupByTableCtrlTitle)}"></div>
+                        <div class="group-by-table toggle icon-group disable-if-empty" title="${i18n(strings.groupByTableCtrlTitle)}"></div>
 
                         
-                        <div class="save-vpax ctrl icon-save disable-on-syncing enable-if-editable" ${this.doc.editable ? "" : "disabled"} ${this.doc.type == DocType.vpax ? "hidden" : ""} title="${i18n(strings.saveVpaxCtrlTile)}"> VPAX </div>
+                        <div class="save-vpax ctrl icon-save disable-on-syncing enable-if-editable" ${this.doc.type == DocType.vpax ? "hidden" : ""} title="${i18n(strings.saveVpaxCtrlTile)}"> VPAX </div>
 
                     </div>
 
@@ -105,10 +104,8 @@ export class AnalyzeModelScene extends MainScene {
 
         this.searchBox = <HTMLInputElement>_(".search input", this.body);
 
-        this.updateData();
+        this.update();
         this.updateToolbar();
-        this.updateTable();
-        this.updateChart();
 
         this.listen();
     }
@@ -210,7 +207,8 @@ export class AnalyzeModelScene extends MainScene {
             (this.showAllColumns ? this.nestedData : this.nestedAggregatedData) :
             (this.showAllColumns ? this.fullData: this.aggregatedData)
         );
-
+        
+       
         if (!this.table) {
 
             const colConfig: Dic<Tabulator.ColumnDefinition> = {
@@ -304,6 +302,7 @@ export class AnalyzeModelScene extends MainScene {
                 maxHeight: "100%",
                 //responsiveLayout: "collapse", // DO NOT USE IT
                 layout: "fitColumns",
+                
                 dataTree: this.groupByTable,
                 dataTreeCollapseElement:`<span class="tree-toggle icon icon-collapse"></span>`,
                 dataTreeExpandElement:`<span class="tree-toggle icon icon-expand"></span>`,
@@ -388,7 +387,7 @@ export class AnalyzeModelScene extends MainScene {
 
         } else {
             this.table.setData(data);
-        }
+        } 
     }
 
     expandTableColumns() {
@@ -475,6 +474,8 @@ export class AnalyzeModelScene extends MainScene {
         if (this.showUnrefOnly) {
             data = data.filter(column => (column.isReferenced === false));
         }
+        if (!data.length) return;
+
         let groups = (this.groupByTable ? ["tableName", "columnName"] : ["name"]);
 
         Chart.defaults.font.family = "Segoe UI Variable,Segoe UI,-apple-system,Helvetica Neue,sans-serif";
@@ -625,6 +626,8 @@ export class AnalyzeModelScene extends MainScene {
         this.searchBox.addEventListener('contextmenu', e => {
             e.preventDefault();
             let el = <HTMLInputElement>e.currentTarget;
+            if (el.hasAttribute("disabled")) return;
+            
             let selection = el.value.substring(el.selectionStart, el.selectionEnd);
             ContextMenu.editorContextMenu(e, selection, el.value, el);
         });
@@ -632,6 +635,8 @@ export class AnalyzeModelScene extends MainScene {
         _(".filter-unreferenced", this.element).addEventListener("click", e => {
             e.preventDefault();
             let el = <HTMLElement>e.currentTarget;
+            if (el.hasAttribute("disabled")) return;
+
             el.toggleClass("active");
             this.showUnrefOnly = el.classList.contains("active");
 
@@ -644,6 +649,8 @@ export class AnalyzeModelScene extends MainScene {
 
             e.preventDefault();
             let el = <HTMLElement>e.currentTarget;
+            if (el.hasAttribute("disabled")) return;
+
             el.toggleClass("active");
             this.groupByTable = el.classList.contains("active");
 

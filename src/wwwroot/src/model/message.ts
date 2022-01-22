@@ -4,20 +4,25 @@
  * https://www.sqlbi.com
 */
 
-import { PBICloudDataset } from '../controllers/host';
-import { PBIDesktopReport } from '../controllers/pbi-desktop';
+import { PBICloudDataset } from '../model/pbi-dataset';
+import { PBIDesktopReport } from '../model/pbi-report';
 
 export enum WebMessageType {
-    None = "None",
+    Unknown = "Unknown",
     ApplicationUpdate = "ApplicationUpdate",
-    NetworkStatus = "NetworkStatus",
     ReportOpen = "ReportOpen",
     DatasetOpen = "DatasetOpen",
     VpaxOpen = "VpaxOpen",
+    //TokenUpdate = "TokenUpdate",
 }
 
 export interface WebMessage {
     type: WebMessageType
+}
+
+export interface UnknownWebMessage extends WebMessage {
+    message?: string
+    exception?: string
 }
 
 export interface ApplicationUpdateAvailableWebMessage extends WebMessage {
@@ -25,10 +30,6 @@ export interface ApplicationUpdateAvailableWebMessage extends WebMessage {
     installedVersion?: string
     downloadUrl?: string
     changelogUrl?: string
-}
-
-export interface NetworkStatusChangedWebMessage extends WebMessage {
-    internetAccess: boolean
 }
 
 export interface PBIDesktopReportOpenWebMessage extends WebMessage {
@@ -44,3 +45,7 @@ export interface VpaxFileOpenWebMessage extends WebMessage {
     name?: string
     lastModified?: number
 }
+
+/*export interface TokenUpdateWebMessage extends WebMessage {
+    token?: string
+}*/

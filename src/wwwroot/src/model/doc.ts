@@ -8,8 +8,8 @@ import { host, pbiDesktop } from "../main";
 import { Dic, Utils } from '../helpers/utils';
 import { daxMeasureName, FormattedMeasure, TabularDatabase, TabularDatabaseInfo, TabularMeasure } from './tabular';
 import { deepEqual } from 'fast-equals';
-import { PBICloudDataset } from '../controllers/host';
-import { PBIDesktopReport } from '../controllers/pbi-desktop';
+import { PBICloudDataset } from './pbi-dataset';
+import { PBIDesktopReport } from './pbi-report';
 import { AppError } from '../model/exceptions';
 import * as sanitizeHtml from 'sanitize-html';
 import { Md5 } from 'ts-md5/dist/md5';
@@ -40,8 +40,13 @@ export class Doc {
 
     readonly: boolean;
     orphan: boolean;
+
     get editable(): boolean {
         return (!this.readonly && !this.orphan);
+    }
+
+    get empty(): boolean {
+        return (!this.model || !this.model.size || (!this.model.columns.length && !this.measures.length));
     }
 
     constructor(name: string, type: DocType, sourceData: File | PBICloudDataset | PBIDesktopReport) {
@@ -78,7 +83,7 @@ export class Doc {
     sync() {
 
         const processResponse = (response: TabularDatabase)  => {
-            
+
             if (response && response.model) {
 
                 // Empty the formatted measures the returned model has some different measures
@@ -115,11 +120,11 @@ export class Doc {
                 
             } else if (this.type == DocType.dataset) {
                 return host.getModelFromDataset(<PBICloudDataset>this.sourceData)
-                    .then(response => processResponse(response));
+                    .then(response => processResponse(response))
 
             } else if (this.type == DocType.pbix) {
                 return host.getModelFromReport(<PBIDesktopReport>this.sourceData)
-                    .then(response => processResponse(response));
+                    .then(response => processResponse(response))
             }
         }
 
@@ -137,8 +142,8 @@ export class Doc {
                 return MeasureStatus.WithErrors;
             } else {
                 // Get rid of different carriage return chars or beginning/ending spaces
-                let comparableMeasure = measure.measure.replace(/\r\n/gm, "\n").trim();
-                let comparableFormattedMeasure = formattedMeasure.measure.replace(/\r\n/gm, "\n").trim();
+                let comparableMeasure = measure.measure; //measure.measure.replace(/\r\n/gm, "\n").trim();
+                let comparableFormattedMeasure = formattedMeasure.measure; //formattedMeasure.measure.replace(/\r\n/gm, "\n").trim();
 
                 if (comparableMeasure == comparableFormattedMeasure) {
                     return MeasureStatus.Formatted;

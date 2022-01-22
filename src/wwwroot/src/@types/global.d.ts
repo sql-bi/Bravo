@@ -7,6 +7,7 @@ declare global {
         address: string
         version: string,
         options: Options,
+        token?: string,
         telemetry?: TelemetryConfig
     };
 

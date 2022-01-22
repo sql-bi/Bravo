@@ -9,12 +9,13 @@ import { i18n } from '../model/i18n';
 import { Utils, _, __ } from '../helpers/utils';
 import { Doc, DocType } from '../model/doc';
 import { strings } from '../model/strings';
-import { PBICloudDataset, PBICloudDatasetEndorsementstring } from '../controllers/host';
+import { PBICloudDataset, PBICloudDatasetConnectionMode, PBICloudDatasetEndorsementstring } from '../model/pbi-dataset';
 import { Tabulator } from 'tabulator-tables';
 import { Loader } from '../helpers/loader';
 import { ContextMenu } from '../helpers/contextmenu';
 import { ConnectMenuItem } from './connect-item';
 import * as sanitizeHtml from 'sanitize-html';
+import { AppError } from '../model/exceptions';
 
 export class ConnectRemote extends ConnectMenuItem {
     
@@ -64,7 +65,7 @@ export class ConnectRemote extends ConnectMenuItem {
         let unopenedDatasets = datasets.filter(dataset => (this.dialog.openDocIds.indexOf(Doc.getId(DocType.dataset, dataset)) == -1));
 
         if (!unopenedDatasets.length) {
-            this.renderError(strings.errorDatasetsEmptyListing);
+            this.renderError(i18n(strings.errorDatasetsEmptyListing));
             return;
         }
 
@@ -83,23 +84,44 @@ export class ConnectRemote extends ConnectMenuItem {
                 rowFormatter: row => {
                     try { //Bypass calc rows
                         const dataset = <PBICloudDataset>row.getData();
-                        if (dataset.unsupported) {
+                        if (dataset.connectionMode != PBICloudDatasetConnectionMode.Supported) {
                             let element = row.getElement();
-                            element.classList.add("row-unsupported");
-
-                            //TODO unsupported tooltip explaining the reason
+                            element.classList.add("row-disabled");
                         }
                     }catch(e){}
                 },
                 columns: [
                     { 
+                        //field: "Icon", 
+                        title: "", 
+                        hozAlign:"center", 
+                        resizable: false, 
+                        width: 40,
+                        cssClass: "column-icon",
+                        formatter: (cell) => {
+
+                            const dataset = <PBICloudDataset>cell.getData();
+
+                            let icon = (dataset.connectionMode == PBICloudDatasetConnectionMode.Supported ? "dataset" : "alert");
+                            let tooltip = (dataset.connectionMode != PBICloudDatasetConnectionMode.Supported ? i18n(strings[`errorDatasetConnection${PBICloudDatasetConnectionMode[dataset.connectionMode]}`]) : "");
+
+                            return `<div class="icon-${icon}" title="${tooltip}"></div>`;
+                        }, 
+                        sorter: (a, b, aRow, bRow, column, dir, sorterParams) => {
+                            const datasetA = <PBICloudDataset>aRow.getData();
+                            const datasetB = <PBICloudDataset>bRow.getData();
+
+                            a = `${datasetA.connectionMode == PBICloudDatasetConnectionMode.Supported ? "_" : ""}${datasetA.name}`;
+
+                            b = `${datasetB.connectionMode == PBICloudDatasetConnectionMode.Supported ? "_" : ""}${datasetB.name}`;
+                            
+                            return String(a).toLowerCase().localeCompare(String(b).toLowerCase());
+                        }
+                    },
+                    { 
                         field: "name", 
                         title: i18n(strings.connectDatasetsTableNameCol),
-                        width: 280,
-                        formatter: (cell) => {
-                            let dataset = <PBICloudDataset>cell.getData();
-                            return `<span class="icon-dataset">${dataset.name}</span>`;
-                        }
+                        width: 240
                     },
                     { 
                         field: "endorsement", 
@@ -162,7 +184,6 @@ export class ConnectRemote extends ConnectMenuItem {
         if (this.table) {
             this.table.clearFilter();
 
-            if (this.showUnsupported) 
             this.table.addFilter(dataset => this.unsupportedFilter(dataset));
 
             if (this.searchBox.value)
@@ -171,7 +192,7 @@ export class ConnectRemote extends ConnectMenuItem {
     }
 
     unsupportedFilter(dataset: PBICloudDataset) {
-        if (dataset.unsupported && !this.showUnsupported)
+        if (dataset.connectionMode != PBICloudDatasetConnectionMode.Supported && !this.showUnsupported)
             return false;
         return true;
     }
@@ -194,12 +215,16 @@ export class ConnectRemote extends ConnectMenuItem {
                             <div class="filters">
                                 <label class="switch"><input type="checkbox" id="show-unsupported-datasets" ${this.showUnsupported ? "": "checked"}><span class="slider"></span></label> <label for="show-unsupported-datasets">${i18n(strings.hideUnsupportedCtrlTitle)}</label>
                             </div>
-                            <hr>
-                            <div class="refresh ctrl icon-refresh" title="${i18n(strings.refreshCtrlTitle)}"></div> 
+                           
                         </div>
                     ` : ""}
                     <div id="${ tableId }"></div>
                 `;
+
+                /*
+                <hr>
+                <div class="refresh ctrl icon-refresh" title="${i18n(strings.refreshCtrlTitle)}"></div> 
+                */
                 _(".list", this.element).innerHTML = html;
 
                 this.searchBox = <HTMLInputElement>_(".search input", this.element);
@@ -231,12 +256,12 @@ export class ConnectRemote extends ConnectMenuItem {
                 if (datasets.length) {
                     this.renderTable(tableId, datasets);
                 } else {
-                    this.renderError(strings.errorDatasetsEmptyListing);
+                    this.renderError(i18n(strings.errorDatasetsEmptyListing));
                 }
             })
-            .catch(error => {
+            .catch((error: AppError) => {
 
-                this.renderError(strings.errorDatasetsListing, ()=>{
+                this.renderError(error.toString(), ()=>{
                     this.getRemoteDatasets();
                 }); 
             })

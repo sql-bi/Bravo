@@ -8,13 +8,16 @@ import { Dispatchable } from '../helpers/dispatchable';
 import { Dic, Utils } from '../helpers/utils';
 import { auth, debug } from '../main';
 import { DocType } from '../model/doc';
-import { AppError, AppErrorType } from '../model/exceptions';
-import { WebMessage } from '../model/message';
+import { AppError, AppErrorType, AppProblem } from '../model/exceptions';
+import { /*TokenUpdateWebMessage,*/ WebMessage } from '../model/message';
+import { PBICloudDataset, PBICloudDatasetConnectionMode } from '../model/pbi-dataset';
 import { FormattedMeasure, TabularDatabase, TabularMeasure } from '../model/tabular';
 import { Account } from './auth';
 import { FormatDaxOptions, Options } from './options';
-import { PBIDesktopReport } from './pbi-desktop';
+import { PBIDesktopReport, PBIDesktopReportConnectionMode } from '../model/pbi-report';
 import { ThemeType } from './theme';
+import { i18n } from '../model/i18n';
+import { strings } from '../model/strings';
 
 declare global {
     
@@ -45,32 +48,6 @@ export interface FormatDaxRequest {
     measures: TabularMeasure[]
 }
 
-export enum PBICloudDatasetEndorsementstring {
-    None = "None",
-    Promoted = "Promoted", 
-    Certified = "Certified"
-}
-
-export enum PBICloudDatasetUnsupported {
-    Supported,
-    PushDataset,
-    PersonalDataset
-}
-
-export interface PBICloudDataset {
-    workspaceId?: string
-    workspaceName?:	string
-    id: number
-    name?: string
-    serverName?: string
-    databaseName?: string
-    description?: string
-    owner?:	string
-    refreshed?: string
-    endorsement: PBICloudDatasetEndorsementstring
-    unsupported?: PBICloudDatasetUnsupported
-}
-
 export interface UpdatePBIDesktopReportRequest{
     report: PBIDesktopReport
     measures: FormattedMeasure[]
@@ -95,13 +72,15 @@ export class Host extends Dispatchable {
     static DEFAULT_TIMEOUT = 60 * 1000;
 
     address: string;
+    token: string;
     requests: Dic<ApiRequest>;
 
-    constructor(address: string) {
+    constructor(address: string, token: string) {
         super();
         this.listen();
         this.requests = {};
         this.address = address;
+        this.token = token;
     }   
 
     // Listen for events
@@ -111,12 +90,16 @@ export class Host extends Dispatchable {
 
                 const webMessage = <WebMessage>JSON.parse(message);
                 if (!webMessage || !("type" in webMessage)) return;
-                console.log("Received", webMessage);
+                console.log("WebMessage Received", webMessage);
                 this.trigger(webMessage.type, webMessage);
             });
         } catch (e) {
             // Ignore error
         }
+
+        /*this.on(WebMessageType.TokenUpdate, (data: TokenUpdateWebMessage) => {
+            this.token = data.token;
+        });*/
     }
 
     // Send message to host
@@ -152,7 +135,7 @@ export class Host extends Dispatchable {
             }, timeout);
         }
 
-        return Utils.Request.ajax(`${this.address}${action}`, data, options)
+        return Utils.Request.ajax(`${this.address}${action}`, data, options, this.token)
             .catch(async (response: Response | Error) => {
 
                 let problem;
@@ -231,7 +214,7 @@ export class Host extends Dispatchable {
 
     /* Authentication */
     signIn(emailAddress?: string) {
-        return <Promise<Account>>this.apiCall("auth/powerbi/SignIn", emailAddress ? { upn: emailAddress } : {});
+        return <Promise<Account>>this.apiCall("auth/powerbi/SignIn", emailAddress ? { upn: emailAddress } : {}, {}, false);
     }
 
     signOut() {
@@ -242,6 +225,10 @@ export class Host extends Dispatchable {
         return <Promise<Account>>this.apiCall("auth/GetUser", {}, {}, false);
     }
 
+    getUserAvatar() {
+        return <Promise<string>>this.apiCall("auth/GetUserAvatar", {}, {}, false);
+    }
+
 
     /* Analyze Model */
 
@@ -250,11 +237,92 @@ export class Host extends Dispatchable {
     }
 
     getModelFromReport(report: PBIDesktopReport)  {
-        return <Promise<TabularDatabase>>this.apiCall("api/GetModelFromReport", report, { method: "POST" });
+        return this.validateReportConnection(report)
+            .then(report => {
+                return <Promise<TabularDatabase>>this.apiCall("api/GetModelFromReport", report, { method: "POST" });
+            });
+    }
+
+    validateReportConnection(report: PBIDesktopReport): Promise<PBIDesktopReport> {
+
+        const connectionError = (connectionMode: PBIDesktopReportConnectionMode) => {
+            let errorKey = `errorReportConnection${PBIDesktopReportConnectionMode[connectionMode]}`;
+            let stringEnum = (errorKey in strings ? (<any>strings)[errorKey] : strings.errorConnectionUnsupported);
+            let message = i18n(stringEnum);
+            return AppError.InitFromInternalError(AppProblem.ConnectionUnsupported, message);
+        };
+
+        return new Promise((resolve, reject) => {
+            if (report.connectionMode == PBIDesktopReportConnectionMode.Supported) {
+                resolve(report);
+            } else {
+                
+                if (report.connectionMode == PBIDesktopReportConnectionMode.Unknown) {
+                    this.listReports()
+                        .then((reports: PBIDesktopReport[]) => {
+                            for (let i = 0; i < reports.length; i++) {
+                                if (reports[i].id == report.id) {
+                                    if (reports[i].connectionMode == PBIDesktopReportConnectionMode.Supported) {
+                                        resolve(reports[i]);
+                                    }
+                                    break;
+                                }
+                            }
+                            reject(connectionError(report.connectionMode));
+                        })
+                        .catch(error => {
+                            throw error;
+                        });
+                } else {
+                    reject(connectionError(report.connectionMode));
+                }
+            }
+        });
     }
 
     getModelFromDataset(dataset: PBICloudDataset) {
-        return <Promise<TabularDatabase>>this.apiCall("api/GetModelFromDataset", dataset, { method: "POST" });
+        return this.validateDatasetConnection(dataset)
+            .then(dataset => {
+                return <Promise<TabularDatabase>>this.apiCall("api/GetModelFromDataset", dataset, { method: "POST" });
+            });
+    }
+    validateDatasetConnection(dataset: PBICloudDataset): Promise<PBICloudDataset> {
+
+        const connectionError = (connectionMode: PBICloudDatasetConnectionMode, diagnostic?: any) => {
+            let errorKey = `errorDatasetConnection${PBICloudDatasetConnectionMode[connectionMode]}`;
+            let stringEnum = (errorKey in strings ? (<any>strings)[errorKey] : strings.errorConnectionUnsupported);
+            let message = i18n(stringEnum);
+            if (diagnostic)
+                message += ` <blockquote>${JSON.stringify(diagnostic)}</blockquote>`;
+            return AppError.InitFromInternalError(AppProblem.ConnectionUnsupported, message);
+        };
+
+        return new Promise((resolve, reject) => {
+            if (dataset.connectionMode == PBICloudDatasetConnectionMode.Supported) {
+                resolve(dataset);
+            } else {
+                
+                if (dataset.connectionMode == PBICloudDatasetConnectionMode.Unknown) {
+                    this.listDatasets()
+                        .then((datasets: PBICloudDataset[]) => {
+                            for (let i = 0; i < datasets.length; i++) {
+                                if (datasets[i].databaseName == dataset.databaseName) {
+                                    if (datasets[i].connectionMode == PBICloudDatasetConnectionMode.Supported) {
+                                        resolve(datasets[i]);
+                                    }
+                                    break;
+                                }
+                            }
+                            reject(connectionError(dataset.connectionMode, dataset.diagnostic));
+                        })
+                        .catch(error => {
+                            throw error;
+                        });
+                } else {
+                    reject(connectionError(dataset.connectionMode, dataset.diagnostic));
+                }
+            }
+        });
     }
 
     listReports() {

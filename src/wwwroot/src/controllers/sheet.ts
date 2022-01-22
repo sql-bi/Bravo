@@ -13,7 +13,7 @@ import { View } from '../view/view';
 import { AppError, AppErrorType } from '../model/exceptions';
 import { Page, PageType } from './page';
 import { pbiDesktop } from '../main';
-import { PBIDesktopReport } from './pbi-desktop';
+import { PBIDesktopReport } from '../model/pbi-report';
 
 export class Sheet extends View { 
     

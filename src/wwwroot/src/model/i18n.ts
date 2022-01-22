@@ -67,21 +67,21 @@ export class I18n {
     formatters: Dic<LocaleFormatter> = {
 
         "number": (value: number) => {
-            return new Intl.NumberFormat(this.locale.locale).format(value);
+            return new Intl.NumberFormat(this.locale.locale).format(Number(value));
         },
 
         "currency": (value: number, symbol?: string) => {
             return new Intl.NumberFormat(this.locale.locale, {
                 style: "currency", currency: symbol
-            }).format(value);
+            }).format(Number(value));
         },
 
         "bytes": (value: number) => {
-            return Utils.Format.bytes(value, this.locale.locale);
+            return Utils.Format.bytes(Number(value), this.locale.locale);
         },
 
         "percentage": (value: number) => {
-            return Utils.Format.percentage(value, this.locale.locale);
+            return Utils.Format.percentage(Number(value), this.locale.locale);
         }
     }
 

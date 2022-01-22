@@ -31,7 +31,7 @@ export module Utils {
         }
 
         // Send ajax call
-        export function ajax(url: string, data = {}, options: RequestInit = {}) {
+        export function ajax(url: string, data = {}, options: RequestInit = {}, authorization = "") {
 
             let defaultOptions: RequestInit = {
                 method: "GET", // *GET, POST, PUT, DELETE, etc.
@@ -67,6 +67,9 @@ export module Utils {
                     } catch(e) {}
                 }
             }
+
+            if (authorization)
+                (<any>mergedOptions.headers)["Authorization"] = authorization; 
 
             const ajaxHandleResponseStatus = (response: Response) => {
                 return (response.status >= 200 && response.status < 300) ? 
@@ -177,9 +180,10 @@ export module Utils {
         export function bytes(value: number, locale = "en", decimals = 2, base = 0): string {
   
             const k = 1024;
-            
             const sizes = ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
-            
+
+            if (!value) return `0 ${sizes[0]}`;
+
             let i = Math.floor(Math.log(value) / Math.log(k));
             if (base) {
                 for (let l = 0; l < sizes.length; l++) {

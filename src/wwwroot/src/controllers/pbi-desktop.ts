@@ -7,13 +7,7 @@
 import { deepEqual } from 'fast-equals';
 import { Dispatchable } from '../helpers/dispatchable';
 import { host } from '../main';
-
-export interface PBIDesktopReport {
-    id: number
-    reportName?: string
-    serverName?: string
-    databaseName?: string
-}
+import { PBIDesktopReport } from '../model/pbi-report';
 
 export class PBIDesktop extends Dispatchable {
 
@@ -39,7 +33,6 @@ export class PBIDesktop extends Dispatchable {
         }
 
         const processReponse = (reports: PBIDesktopReport[]) => {
-
             const changed = (!deepEqual(reports, this.reports));
             this.reports = reports;
             this.trigger("change", changed);

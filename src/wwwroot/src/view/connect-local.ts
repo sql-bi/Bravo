@@ -8,9 +8,10 @@ import { pbiDesktop } from '../main';
 import { _, __ } from '../helpers/utils';
 import { Doc, DocType } from '../model/doc';
 import { strings } from '../model/strings';
-import { PBIDesktopReport } from '../controllers/pbi-desktop';
+import { PBIDesktopReport } from '../model/pbi-report';
 import { Tabulator } from 'tabulator-tables';
 import { ConnectMenuItem } from './connect-item';
+import { i18n } from '../model/i18n';
 
 export class ConnectLocal extends ConnectMenuItem {
 
@@ -28,7 +29,7 @@ export class ConnectLocal extends ConnectMenuItem {
             if (pbiDesktop.reports.length) {
                 this.renderTable();
             } else {
-                this.renderError(strings.errorReportsListing);
+                this.renderError(i18n(strings.errorReportsListing));
                 this.destroyTable();
             }
         }, this.dialog.id);
@@ -49,7 +50,7 @@ export class ConnectLocal extends ConnectMenuItem {
         let unopenedReports = pbiDesktop.reports.filter(report => (this.dialog.openDocIds.indexOf(Doc.getId(DocType.pbix, report)) == -1));
 
         if (!unopenedReports.length) {
-            this.renderError(strings.errorReportsEmptyListing);
+            this.renderError(i18n(strings.errorReportsEmptyListing));
             this.destroyTable();
             return;
         }
