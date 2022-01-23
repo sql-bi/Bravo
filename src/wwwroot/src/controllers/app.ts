@@ -7,7 +7,7 @@
 import { Dic, _, __, Utils } from "../helpers/utils";
 import { strings } from '../model/strings';
 import { Sidebar } from '../view/sidebar';
-import { Tabs, AddedTabInfo, RemovedTabInfo } from '../view/tabs';
+import { Tabs, RemovedTabInfo } from '../view/tabs';
 import { WelcomeScene } from '../view/scene-welcome';
 import { Doc, DocType } from '../model/doc';
 import { Confirm } from '../view/confirm';
@@ -16,11 +16,13 @@ import { Sheet } from './sheet';
 import { PageType } from './page';
 import { host, notificationCenter, telemetry } from '../main';
 import { i18n } from '../model/i18n'; 
-import { ApplicationUpdateAvailableWebMessage, PBICloudDatasetOpenWebMessage, PBIDesktopReportOpenWebMessage, VpaxFileOpenWebMessage, WebMessageType } from '../model/message';
+import { ApplicationUpdateAvailableWebMessage, PBICloudDatasetOpenWebMessage, PBIDesktopReportOpenWebMessage, UnknownWebMessage, VpaxFileOpenWebMessage, WebMessageType } from '../model/message';
 import { Notify, NotifyType } from './notifications';
 import { NotificationSidebar } from '../view/notification-sidebar';
-import { PBIDesktopReport, PBIDesktopReportConnectionMode } from '../model/pbi-report';
+import { PBIDesktopReport } from '../model/pbi-report';
 import { PBICloudDataset } from '../model/pbi-dataset';
+import { ErrorAlert } from '../view/error-alert';
+import { AppError } from '../model/exceptions';
 
 export class App {
 
@@ -92,6 +94,13 @@ export class App {
 
         host.on(WebMessageType.ApplicationUpdate, (data: ApplicationUpdateAvailableWebMessage)=>{
             notificationCenter.add(new Notify(i18n(strings.updateMessage), data, NotifyType.AppUpdate));
+        });
+
+        host.on(WebMessageType.Unknown, (data: UnknownWebMessage) => {
+            
+            let appError = AppError.InitFromResponseStatus(Utils.ResponseStatusCode.InternalError, `${data.exception ? data.exception : ""} ${data.message ? data.message : "" }` );
+            let alert = new ErrorAlert(appError, i18n(strings.unknownMessage));
+            alert.show();
         });
 
         // UI events
@@ -218,19 +227,11 @@ export class App {
     }
 
     openReport(report: PBIDesktopReport) {
-        if (report.connectionMode == PBIDesktopReportConnectionMode.Unknown) {
-
-        } else {
-            this.openDoc(new Doc(report.reportName, DocType.pbix, report));
-        }
+        this.openDoc(new Doc(report.reportName, DocType.pbix, report));
     }
 
     openDataset(dataset: PBICloudDataset) {
-        host.validateDatasetConnection(dataset)
-            .then(dataset => {
-                this.openDoc(new Doc(dataset.name, DocType.dataset, dataset));
-            });
-            //TODO catch error
+        this.openDoc(new Doc(dataset.name, DocType.dataset, dataset));
     }
 
     openDoc(doc: Doc) {
