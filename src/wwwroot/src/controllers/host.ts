@@ -249,7 +249,7 @@ export class Host extends Dispatchable {
             let errorKey = `errorReportConnection${PBIDesktopReportConnectionMode[connectionMode]}`;
             let message = i18n(errorKey in strings ? (<any>strings)[errorKey] : strings.errorConnectionUnsupported);
 
-            return AppError.InitFromResponseStatus(Utils.ResponseStatusCode.InternalError, message);
+            return AppError.InitFromProblemCode(AppProblem.ConnectionUnsupported, message);
         };
 
         return new Promise((resolve, reject) => {
@@ -275,7 +275,7 @@ export class Host extends Dispatchable {
             if (diagnostic)
                 message += ` <blockquote>${JSON.stringify(diagnostic)}</blockquote>`;
 
-            return AppError.InitFromResponseStatus(Utils.ResponseStatusCode.InternalError, message);
+            return AppError.InitFromProblemCode(AppProblem.ConnectionUnsupported, message);
         };
 
         return new Promise((resolve, reject) => {

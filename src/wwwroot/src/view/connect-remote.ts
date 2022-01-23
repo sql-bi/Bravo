@@ -261,7 +261,7 @@ export class ConnectRemote extends ConnectMenuItem {
             })
             .catch((error: AppError) => {
 
-                this.renderError(error.toString(), ()=>{
+                this.renderError(error.toString(), true, ()=>{
                     this.getRemoteDatasets();
                 }); 
             })

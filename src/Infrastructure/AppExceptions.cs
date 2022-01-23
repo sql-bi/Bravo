@@ -113,6 +113,12 @@ namespace Sqlbi.Bravo.Infrastructure
         [JsonPropertyName("TOMDatabaseUpdateErrorMeasure")]
         TOMDatabaseUpdateErrorMeasure = 104,
 
+        // <summary>
+        /// The connection to the requested resource is not supported
+        /// </summary> 
+        [JsonPropertyName("ConnectionUnsupported")]
+        ConnectionUnsupported = 200,
+
         /// <summary>
         /// An error occurred while saving user settings
         /// </summary> 

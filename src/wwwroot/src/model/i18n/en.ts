@@ -155,7 +155,7 @@ const locale: Locale = {
         [_.errorReportConnectionUnsupportedAnalysisServecesConnectionNotFound]: "Power BI Desktop Analysis Services TCP connection not found.",
         [_.errorReportConnectionUnsupportedAnalysisServecesProcessNotFound]: "Power BI Desktop Analysis Services instance process not found.", 
         [_.errorReportConnectionUnsupportedConnectionException]: "An exception was raised when connecting to the Power BI Desktop Analysis Services instance.",
-        [_.errorReportConnectionUnsupportedDatabaseCollectionIsEmpty]: "Power BI Desktop Analysis Services instance does not contains any databases.",
+        [_.errorReportConnectionUnsupportedDatabaseCollectionIsEmpty]: "The Power BI Desktop Analysis Services instance does not contain any databases. Try to connect to the report using the Bravo icon in the External Tools of Power BI Desktop.",
         [_.errorReportConnectionUnsupportedDatabaseCollectionUnexpectedCount]: "Power BI Desktop Analysis Services instance contains an unexpected number of databases (> 1) while we expect zero or one.",
         [_.errorReportConnectionUnsupportedProcessNotYetReady]: "Power BI Desktop process is opening or the Analysis Services instance is not yet ready.", 
         [_.errorReportsEmptyListing]: "No unopened reports available.",
@@ -172,6 +172,7 @@ const locale: Locale = {
         [_.errorTryingToUpdateMeasuresWithErrors]: `The requested update failed because the following measures contain errors:<br><strong>{measures}</strong><br><br><span class="link link-back">Go back</span> to see more details.`,
         [_.errorUnhandled]: "Unhandled error - please report it and provide the trace id, if available.",
         [_.errorUnspecified]: "Unspecified error.",
+        [_.errorUserSettingsSaveError]: "Unable to save the settings.",
         [_.errorVpaxFileContainsCorruptedData]: "The VPAX file format is not valid or contains corrupted data.",
 
     }

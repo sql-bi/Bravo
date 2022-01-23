@@ -17,6 +17,8 @@ export enum AppProblem {
     TOMDatabaseUpdateFailed = 102,
     TOMDatabaseUpdateConflictMeasure = 103,
     TOMDatabaseUpdateErrorMeasure = 104,
+    ConnectionUnsupported = 200,
+    UserSettingsSaveError = 300,
     SignInMsalExceptionOccurred = 400,
     SignInMsalTimeoutExpired = 401,
     VpaxFileContainsCorruptedData = 500,
