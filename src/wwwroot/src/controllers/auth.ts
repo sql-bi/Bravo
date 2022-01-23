@@ -103,11 +103,11 @@ export class Auth extends Dispatchable {
 
                 } else {
 
-                    throw AppError.InitFromResponseError(Utils.ResponseStatusCode.Aborted);
+                    throw AppError.InitFromResponseStatus(Utils.ResponseStatusCode.Aborted);
                 }
             })
             .catch(error => {
-                throw AppError.InitFromResponseError(Utils.ResponseStatusCode.NotAuthorized);
+                throw AppError.InitFromResponseStatus(Utils.ResponseStatusCode.NotAuthorized);
             });
     }
 

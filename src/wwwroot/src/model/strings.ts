@@ -119,6 +119,7 @@ export enum strings {
     syncCtrlTitle,
     themeCtrlTitle,
     traceId,
+    unknownMessage,
     updateMessage,
     welcomeHelpText,
     welcomeHelpTitle,

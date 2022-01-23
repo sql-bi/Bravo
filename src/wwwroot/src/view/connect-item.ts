@@ -31,6 +31,7 @@ export class ConnectMenuItem {
             <div class="notice">
                 <div>
                     <p>${message}</p>
+                    <p><span class="copy-error link">${i18n(strings.copyErrorCtrlTitle)}</span></p>
                     ${ retry ? `
                         <div id="${retryId}" class="button button-alt">${i18n(strings.errorRetry)}</div>
                     ` : ""}
@@ -44,6 +45,11 @@ export class ConnectMenuItem {
                 retry();
             }); 
         }
+
+        _(".copy-error", this.element).addEventListener("click", e =>{
+            e.preventDefault();
+            navigator.clipboard.writeText(message);
+        });
 
         this.dialog.okButton.toggleAttr("disabled", true);
     }

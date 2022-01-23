@@ -38,7 +38,7 @@ export class ErrorScene extends BackableScene {
 
                 ${this.error.traceId ? `<p><strong>${i18n(strings.traceId)}:</strong> ${this.error.traceId}</p>` : ""}
 
-                <div class="copy-error ctrl icon-copy" title="${i18n(strings.copyErrorCtrlTitle)}"></div>
+                <p><span class="copy-error link">${i18n(strings.copyErrorCtrlTitle)}</span></p>
             
                 ${ this.onRetry ? `
                     <p><div class="retry-call button button-alt">${i18n(strings.errorRetry)}</div></p>
@@ -47,18 +47,6 @@ export class ErrorScene extends BackableScene {
         `;
 
         this.element.insertAdjacentHTML("beforeend", html); 
-
-        this.element.addEventListener("contextmenu", e => {
-            
-            new ContextMenu({ 
-                width: "auto",
-                items: [
-                    { label: i18n(strings.copyErrorCtrlTitle), cssIcon: "icon-copy", onClick: () => { 
-                        navigator.clipboard.writeText(this.error.toString());
-                    }}
-                ] 
-            }, e);
-        });
 
         _(".copy-error", this.element).addEventListener("click", e =>{
             e.preventDefault();

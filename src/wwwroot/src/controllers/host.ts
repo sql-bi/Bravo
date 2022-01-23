@@ -6,7 +6,7 @@
 
 import { Dispatchable } from '../helpers/dispatchable';
 import { Dic, Utils } from '../helpers/utils';
-import { auth, debug } from '../main';
+import { auth, debug, telemetry } from '../main';
 import { DocType } from '../model/doc';
 import { AppError, AppErrorType, AppProblem } from '../model/exceptions';
 import { /*TokenUpdateWebMessage,*/ WebMessage } from '../model/message';
@@ -93,7 +93,7 @@ export class Host extends Dispatchable {
                 console.log("WebMessage Received", webMessage);
                 this.trigger(webMessage.type, webMessage);
             });
-        } catch (e) {
+        } catch (error) {
             // Ignore error
         }
 
@@ -247,35 +247,16 @@ export class Host extends Dispatchable {
 
         const connectionError = (connectionMode: PBIDesktopReportConnectionMode) => {
             let errorKey = `errorReportConnection${PBIDesktopReportConnectionMode[connectionMode]}`;
-            let stringEnum = (errorKey in strings ? (<any>strings)[errorKey] : strings.errorConnectionUnsupported);
-            let message = i18n(stringEnum);
-            return AppError.InitFromInternalError(AppProblem.ConnectionUnsupported, message);
+            let message = i18n(errorKey in strings ? (<any>strings)[errorKey] : strings.errorConnectionUnsupported);
+
+            return AppError.InitFromResponseStatus(Utils.ResponseStatusCode.InternalError, message);
         };
 
         return new Promise((resolve, reject) => {
             if (report.connectionMode == PBIDesktopReportConnectionMode.Supported) {
                 resolve(report);
             } else {
-                
-                if (report.connectionMode == PBIDesktopReportConnectionMode.Unknown) {
-                    this.listReports()
-                        .then((reports: PBIDesktopReport[]) => {
-                            for (let i = 0; i < reports.length; i++) {
-                                if (reports[i].id == report.id) {
-                                    if (reports[i].connectionMode == PBIDesktopReportConnectionMode.Supported) {
-                                        resolve(reports[i]);
-                                    }
-                                    break;
-                                }
-                            }
-                            reject(connectionError(report.connectionMode));
-                        })
-                        .catch(error => {
-                            throw error;
-                        });
-                } else {
-                    reject(connectionError(report.connectionMode));
-                }
+                reject(connectionError(report.connectionMode));
             }
         });
     }
@@ -290,11 +271,11 @@ export class Host extends Dispatchable {
 
         const connectionError = (connectionMode: PBICloudDatasetConnectionMode, diagnostic?: any) => {
             let errorKey = `errorDatasetConnection${PBICloudDatasetConnectionMode[connectionMode]}`;
-            let stringEnum = (errorKey in strings ? (<any>strings)[errorKey] : strings.errorConnectionUnsupported);
-            let message = i18n(stringEnum);
+            let message = i18n(errorKey in strings ? (<any>strings)[errorKey] : strings.errorConnectionUnsupported);
             if (diagnostic)
                 message += ` <blockquote>${JSON.stringify(diagnostic)}</blockquote>`;
-            return AppError.InitFromInternalError(AppProblem.ConnectionUnsupported, message);
+
+            return AppError.InitFromResponseStatus(Utils.ResponseStatusCode.InternalError, message);
         };
 
         return new Promise((resolve, reject) => {
@@ -316,7 +297,7 @@ export class Host extends Dispatchable {
                             reject(connectionError(dataset.connectionMode, dataset.diagnostic));
                         })
                         .catch(error => {
-                            throw error;
+                            reject(error);
                         });
                 } else {
                     reject(connectionError(dataset.connectionMode, dataset.diagnostic));

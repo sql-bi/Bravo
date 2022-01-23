@@ -618,7 +618,7 @@ export class DaxFormatterScene extends MainScene {
 
                 if (measuresWithErrors.length) {
 
-                    throw AppError.InitFromInternalError(AppProblem.TOMDatabaseUpdateErrorMeasure, i18n(strings.errorTryingToUpdateMeasuresWithErrors, {measures: measuresWithErrors.join(", ")}));
+                    throw AppError.InitFromProblemCode(AppProblem.TOMDatabaseUpdateErrorMeasure, i18n(strings.errorTryingToUpdateMeasuresWithErrors, {measures: measuresWithErrors.join(", ")}));
                 }
 
                 let updateRequest;
@@ -633,7 +633,7 @@ export class DaxFormatterScene extends MainScene {
                         measures: formattedMeasures
                     };
                 } else {
-                    throw AppError.InitFromResponseError(Utils.ResponseStatusCode.InternalError);
+                    throw AppError.InitFromResponseStatus(Utils.ResponseStatusCode.InternalError);
                 }
 
                 host.updateModel(updateRequest, this.doc.type)

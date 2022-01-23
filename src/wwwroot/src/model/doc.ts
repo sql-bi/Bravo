@@ -13,6 +13,8 @@ import { PBIDesktopReport } from './pbi-report';
 import { AppError } from '../model/exceptions';
 import * as sanitizeHtml from 'sanitize-html';
 import { Md5 } from 'ts-md5/dist/md5';
+import { i18n } from './i18n';
+import { strings } from './strings';
 
 export enum DocType {
     vpax,
@@ -50,7 +52,7 @@ export class Doc {
     }
 
     constructor(name: string, type: DocType, sourceData: File | PBICloudDataset | PBIDesktopReport) {
-        this.name = sanitizeHtml(name, { allowedTags: [], allowedAttributes: {} });
+        this.name = (name ? sanitizeHtml(name, { allowedTags: [], allowedAttributes: {} }) : i18n(strings.defaultTabName));
         this.type = type;
         this.sourceData = sourceData;
         this.id = Doc.getId(type, sourceData);
@@ -70,7 +72,7 @@ export class Doc {
 
                 case DocType.dataset:
                     let dataset = (<PBICloudDataset>sourceData);
-                    return `${type}_${dataset.workspaceId}-${dataset.id}`;
+                    return `${type}_${dataset.databaseName}`;
 
                 case DocType.pbix:
                     let report = (<PBIDesktopReport>sourceData);
@@ -129,7 +131,7 @@ export class Doc {
         }
 
         return new Promise((resolve, reject) => { 
-            reject(AppError.InitFromResponseError(Utils.ResponseStatusCode.InternalError)); 
+            reject(AppError.InitFromResponseStatus(Utils.ResponseStatusCode.InternalError)); 
         });
     }
 
@@ -141,11 +143,7 @@ export class Doc {
             if (formattedMeasure.errors && formattedMeasure.errors.length) {
                 return MeasureStatus.WithErrors;
             } else {
-                // Get rid of different carriage return chars or beginning/ending spaces
-                let comparableMeasure = measure.measure; //measure.measure.replace(/\r\n/gm, "\n").trim();
-                let comparableFormattedMeasure = formattedMeasure.measure; //formattedMeasure.measure.replace(/\r\n/gm, "\n").trim();
-
-                if (comparableMeasure == comparableFormattedMeasure) {
+                if (measure.measure.localeCompare(formattedMeasure.measure) == 0) {
                     return MeasureStatus.Formatted;
                 } else {
                     return MeasureStatus.NotFormatted;
