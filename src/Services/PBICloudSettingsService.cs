@@ -11,6 +11,7 @@ using System.Net.Http.Headers;
 using System.Net.Mime;
 using System.Text;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
@@ -35,6 +36,7 @@ namespace Sqlbi.Bravo.Services
 
         private readonly static string LocalDataClassicAppCachePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData, Environment.SpecialFolderOption.DoNotVerify), "Microsoft\\Power BI Desktop");
         private readonly static string LocalDataStoreAppCachePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile, Environment.SpecialFolderOption.DoNotVerify), "Microsoft\\Power BI Desktop Store App");
+        private readonly static SemaphoreSlim _initializeSemaphore = new(1, 1);
         private readonly HttpClient _httpClient;
 
         private GlobalService? _globalService;
@@ -64,8 +66,22 @@ namespace Sqlbi.Bravo.Services
 
         public async Task InitializeAsync()
         {
-            _globalService ??= await InitializeGlobalServiceAsync().ConfigureAwait(false);
-            _cloudEnvironment ??= InitializeGlobalCloudEnvironment();
+            if (_globalService is null || _cloudEnvironment is null)
+            {
+                await _initializeSemaphore.WaitAsync().ConfigureAwait(false);
+                try
+                {
+                    if (_globalService is null)
+                        _globalService = await InitializeGlobalServiceAsync().ConfigureAwait(false);
+
+                    if (_cloudEnvironment is null)
+                        _cloudEnvironment = InitializeGlobalCloudEnvironment();
+                }
+                finally
+                {
+                    _initializeSemaphore.Release();
+                }
+            }
         }
 
         private async Task<GlobalService> InitializeGlobalServiceAsync()
