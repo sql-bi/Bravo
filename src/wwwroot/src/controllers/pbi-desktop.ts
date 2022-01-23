@@ -7,11 +7,11 @@
 import { deepEqual } from 'fast-equals';
 import { Dispatchable } from '../helpers/dispatchable';
 import { host } from '../main';
-import { PBIDesktopReport } from '../model/pbi-report';
+import { PBIDesktopReport, PBIDesktopReportConnectionMode } from '../model/pbi-report';
 
 export class PBIDesktop extends Dispatchable {
 
-    static CheckSeconds = 10;
+    static CheckSeconds = 10
     checkTimeout: number;
 
     reports: PBIDesktopReport[] = [];
@@ -40,7 +40,7 @@ export class PBIDesktop extends Dispatchable {
 
         return host.listReports()
             .then((reports: PBIDesktopReport[]) => {
-                processReponse(reports);
+                processReponse(reports.filter(report => report.connectionMode != PBIDesktopReportConnectionMode.UnsupportedProcessNotYetReady));
             })
             .catch(error => {
                 processReponse([]);
