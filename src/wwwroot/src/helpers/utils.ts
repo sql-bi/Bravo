@@ -490,12 +490,12 @@ export module Utils {
         }
 
         // Merge two objects
-        export function merge<T>(source: T, target: T): T {
+        export function merge<T>(source: T, target: T, acceptNull = false): T {
             let result = <T>{};
             for (let prop in source) {
-                if (prop in target) {
+                if (prop in target && (target[prop] !== null || acceptNull)) {
                     if (Utils.Obj.isObject(source[prop]) && Utils.Obj.isObject(target[prop])) {
-                        result[prop] = Utils.Obj.merge(source[prop], target[prop]);
+                        result[prop] = Utils.Obj.merge(source[prop], target[prop], acceptNull);
                     } else {
                         result[prop] = target[prop];
                     }
@@ -505,7 +505,7 @@ export module Utils {
             }
             
             for (let prop in target) {
-                if (!(prop in source)) {
+                if (!(prop in source) && (target[prop] !== null || acceptNull)) {
                     result[prop] = target[prop];
                 }
             }
