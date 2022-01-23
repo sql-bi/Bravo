@@ -62,7 +62,7 @@ export class Sheet extends View {
             pbiDesktop.on("change", ()=>{
                 let orphan = true;
                 pbiDesktop.reports.forEach(report => {
-                    if (report.id == (<PBIDesktopReport>this.doc.sourceData).id) {
+                    if (this.doc.id == Doc.getId(DocType.pbix, report)) {
                         orphan = false;
                     }
                 });

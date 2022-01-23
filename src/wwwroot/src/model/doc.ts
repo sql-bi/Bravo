@@ -76,7 +76,7 @@ export class Doc {
 
                 case DocType.pbix:
                     let report = (<PBIDesktopReport>sourceData);
-                    return `${type}_${report.id}`;
+                    return `${type}_${report.id}_${report.reportName}`;
             }
         }
         return Utils.Text.uuid();
@@ -97,16 +97,6 @@ export class Doc {
                 this.loaded = true;
                 this.lastSync = Date.now();
 
-
-                //Update report name if local Power BI Desktop
-                if (this.type == DocType.pbix) {
-                    pbiDesktop.reports.forEach((report: PBIDesktopReport) => {
-                        if (report.id == (<PBIDesktopReport>this.sourceData).id) {
-                            this.name = sanitizeHtml(report.reportName, { allowedTags: [], allowedAttributes: {} });
-                            this.sourceData = report;
-                        }
-                    });
-                }
 
                 Promise.resolve();
 
