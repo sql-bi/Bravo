@@ -14,8 +14,10 @@
 - Export Data UI
 - i18n search for the first locale with the passed region
 - Fix all Tabulator custom sorters
+- Display application version
 
 **@alberto**
 
 - Fix blurring icon
+    Test fix included on PR #53
 - Lighter ListDatasets for detecting files closing

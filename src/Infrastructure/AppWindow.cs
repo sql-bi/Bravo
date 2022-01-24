@@ -70,7 +70,7 @@ namespace Sqlbi.Bravo.Infrastructure
             {
                 token = AppConstants.ApiAuthenticationToken,
                 address = GetAddress().ToString(),
-                version = AppConstants.ApplicationFileVersion,
+                version = AppConstants.ApplicationProductVersion,
                 options = BravoOptions.CreateFromUserPreferences(),
                 telemetry = new
                 {
@@ -208,7 +208,7 @@ namespace Sqlbi.Bravo.Infrastructure
             AutoUpdater.Synchronous = false;
             AutoUpdater.ShowSkipButton = false;
             AutoUpdater.ShowRemindLaterButton = false;
-            AutoUpdater.OpenDownloadPage = true;
+            AutoUpdater.OpenDownloadPage = false;
             //AutoUpdater.ReportErrors = false;
             //AutoUpdater.RunUpdateAsAdmin = true;
             AutoUpdater.PersistenceProvider = new JsonFilePersistenceProvider(jsonPath: Path.Combine(AppConstants.ApplicationDataPath, "autoupdater.json"));
@@ -241,7 +241,7 @@ namespace Sqlbi.Bravo.Infrastructure
                     NotificationHelper.NotifyUpdateAvailable(updateInfo);
                 }
             };
-            AutoUpdater.InstalledVersion = new Version(0, 4, 0, 0 /*AppConstants.ApplicationFileVersion*/); // TODO: AutoUpdater version
+            AutoUpdater.InstalledVersion = Version.Parse(AppConstants.ApplicationFileVersion);
             AutoUpdater.Start();
         }
 
