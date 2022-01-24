@@ -51,7 +51,7 @@ namespace Sqlbi.Bravo.Infrastructure
                 ArgumentDatabaseName = startupSettings.ArgumentDatabaseName,
             };
 
-            var hWnd = NativeMethods.FindWindow(lpClassName: null, lpWindowName: AppConstants.ApplicationMainWindowTitle);
+            var hWnd = User32.FindWindow(lpClassName: null, lpWindowName: AppConstants.ApplicationMainWindowTitle);
             if (hWnd != IntPtr.Zero)
             {
                 var json = JsonSerializer.Serialize(message);

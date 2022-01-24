@@ -45,9 +45,11 @@ namespace Sqlbi.Bravo.Infrastructure
             try
             {
                 // Restore original size and position only if the window is minimized, otherwise keep current position
-                if (_window.Minimized) NativeMethods.ShowWindow(hWnd, NativeMethods.SW_RESTORE);
-                // Regardless of current status, bring to front and activate the window
-                NativeMethods.SetForegroundWindow(hWnd);
+                if (_window.Minimized)
+                    User32.ShowWindow(hWnd, NativeMethods.SW_RESTORE);
+
+                // Regardless of the current state of the window, bring it to the foreground and activate it
+                User32.SetForegroundWindow(hWnd);
 
                 var copyDataObject = Marshal.PtrToStructure(copydataPtr, typeof(User32.COPYDATASTRUCT));
                 if (copyDataObject == null)

@@ -24,23 +24,9 @@ namespace Sqlbi.Bravo.Infrastructure.Windows.Interop
 
         public delegate IntPtr WndProc(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);
 
-        public delegate IntPtr SUBCLASSPROC(IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam, IntPtr id, IntPtr data);
-
         public delegate bool MonitorEnumProc(IntPtr monitor, IntPtr hdc, IntPtr lprcMonitor, IntPtr lParam);
 
-        public delegate bool EnumThreadDelegate(IntPtr hWnd, IntPtr lParam);
-
         public static readonly HandleRef NullHandleRef = new HandleRef(null, IntPtr.Zero);
-
-        [DllImport(ExternDll.User32, SetLastError = true)]
-        public static extern bool SetProcessDPIAware();
-
-        [DllImport(ExternDll.User32)]
-        public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
-
-        [DllImport(ExternDll.User32)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        public static extern bool SetForegroundWindow(IntPtr hWnd);
 
         [DllImport(ExternDll.User32, CharSet = CharSet.Auto)]
         [ResourceExposure(ResourceScope.None)]
@@ -69,41 +55,6 @@ namespace Sqlbi.Bravo.Infrastructure.Windows.Interop
         [DllImport(ExternDll.User32, CharSet = CharSet.Auto)]
         [ResourceExposure(ResourceScope.None)]
         public static extern bool SystemParametersInfo(int nAction, int nParam, ref RECT rc, int nUpdate);
-
-        [DllImport(ExternDll.User32)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        public static extern bool IsWindowVisible(IntPtr hWnd);
-
-        [DllImport(ExternDll.User32)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        public static extern bool EnumThreadWindows(int dwThreadId, EnumThreadDelegate lpfn, IntPtr lParam);
-
-        [DllImport(ExternDll.User32, SetLastError = true, CharSet = CharSet.Unicode)]
-        public static extern IntPtr FindWindow(string? lpClassName, string lpWindowName);
-
-        [DllImport(ExternDll.User32, CharSet = CharSet.Unicode, SetLastError = true)]
-        public static extern uint RegisterWindowMessage(string lpString);
-
-        [DllImport(ExternDll.Kernel32, SetLastError = true)]
-        public static extern int GetCurrentProcessId();
-
-        [DllImport(ExternDll.Kernel32, SetLastError = true)]
-        public static extern int GetCurrentThreadId();
-
-        [DllImport(ExternDll.User32, CharSet = CharSet.Auto, SetLastError = true)]
-        public static extern int GetWindowThreadProcessId(IntPtr hWnd, out int processId);
-
-        [DllImport(ExternDll.Comctl32, CharSet = CharSet.Auto, SetLastError = true)]
-        public static extern bool GetWindowSubclass(IntPtr hWnd, SUBCLASSPROC pfnSubclass, IntPtr uIdSubclass, ref IntPtr pdwRefData);
-
-        [DllImport(ExternDll.Comctl32, CharSet = CharSet.Auto, SetLastError = true)]
-        public static extern bool SetWindowSubclass(IntPtr hWnd, SUBCLASSPROC callback, IntPtr id, IntPtr data);
-
-        [DllImport(ExternDll.Comctl32, CharSet = CharSet.Auto, SetLastError = true)]
-        public static extern bool RemoveWindowSubclass(IntPtr hWnd, SUBCLASSPROC callback, IntPtr id);
-
-        [DllImport(ExternDll.Comctl32, CharSet = CharSet.Auto, SetLastError = true)]
-        public static extern IntPtr DefSubclassProc(IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam);
 
         [StructLayout(LayoutKind.Sequential)]
         public struct RECT
