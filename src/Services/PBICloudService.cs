@@ -85,8 +85,7 @@ namespace Sqlbi.Bravo.Services
             if (refreshSucceeded)
             {
                 RefreshCurrentAccount();
-                // No SignIn required - cached token is valid
-                return false;
+                return false;  // No SignIn required - cached token is valid
             }
             else
             {
@@ -302,12 +301,14 @@ namespace Sqlbi.Bravo.Services
             var currentAccountChanged = currentAuthentication.Account.HomeAccountId.Identifier.Equals(CurrentAccount?.Identifier) == false;
             if (currentAccountChanged)
             {
-                CurrentAccount = new BravoAccount
+                var account = new BravoAccount
                 {
                     Identifier = currentAuthentication.Account.HomeAccountId.Identifier,
                     UserPrincipalName = currentAuthentication.Account.Username,
                     Username = currentAuthentication.ClaimsPrincipal.FindFirst((c) => c.Type == "name")?.Value,
                 };
+
+                CurrentAccount = account;
             }
         }
 

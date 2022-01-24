@@ -35,8 +35,8 @@ namespace Sqlbi.Bravo.Infrastructure
             VersionInfo = FileVersionInfo.GetVersionInfo(currentProcess.MainModule?.FileName ?? throw new BravoUnexpectedException("MainModule.FileName is null"));
             ApplicationFileVersion = VersionInfo.FileVersion ?? throw new BravoUnexpectedException("FileVersion is null");
 
-            IsPackagedAppInstance = !DesktopBridgeHelper.IsRunningAsMsixPackage();
-            ApplicationDataPath = Path.Combine(Environment.GetFolderPath(IsPackagedAppInstance ? Environment.SpecialFolder.LocalApplicationData : Environment.SpecialFolder.UserProfile, Environment.SpecialFolderOption.DoNotVerify), ApplicationName);
+            IsPackagedAppInstance = DesktopBridgeHelper.IsRunningAsMsixPackage();
+            ApplicationDataPath = Path.Combine(Environment.GetFolderPath(IsPackagedAppInstance ? Environment.SpecialFolder.UserProfile : Environment.SpecialFolder.LocalApplicationData, Environment.SpecialFolderOption.DoNotVerify), ApplicationName);
             ApplicationTempPath = Path.Combine(ApplicationDataPath, ".temp");
             UserSettingsFilePath = Path.Combine(ApplicationDataPath, "usersettings.json");
             MsalTokenCacheFilePath = Path.Combine(ApplicationDataPath, ".msalcache");

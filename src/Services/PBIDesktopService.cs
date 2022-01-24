@@ -128,6 +128,9 @@ namespace Sqlbi.Bravo.Services
 
                     var database = server.Databases[0];
 
+                    // Do we need this check ?? (e.g UnsupportedDatabaseNotYetReadyOrUnloaded)
+                    // if (database.IsLoaded == false) { }
+
                     serverName = $"{ NetworkHelper.LocalHost }:{ ssasConnection.EndPoint.Port }"; // we're using 'localhost:<port>' instead of '<ipaddress>:<port>' in order to allow both ipv4 and ipv6 connections 
                     databaseName = database.Name;
                     connectivityMode = PBIDesktopReportConnectionMode.Supported;

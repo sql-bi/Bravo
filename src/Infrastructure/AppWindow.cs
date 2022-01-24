@@ -139,6 +139,7 @@ namespace Sqlbi.Bravo.Infrastructure
 
         private bool OnWindowClosing(object sender, EventArgs e)
         {
+            NotificationHelper.ClearNotifications();
 #if !DEBUG
             HandleHotKeys(register: false);
 #endif
@@ -202,7 +203,7 @@ namespace Sqlbi.Bravo.Infrastructure
             if (AppConstants.IsPackagedAppInstance)
                 return;
 
-            AutoUpdater.AppCastURL = $"https://cdn.sqlbi.com/updates/BravoAutoUpdater.xml?nocache={ DateTimeOffset.Now.ToUnixTimeSeconds() }";
+            AutoUpdater.AppCastURL = string.Format("https://cdn.sqlbi.com/updates/BravoAutoUpdater.xml?nocache={0}", DateTimeOffset.Now.ToUnixTimeSeconds());
             AutoUpdater.HttpUserAgent = "AutoUpdater";
             AutoUpdater.Synchronous = false;
             AutoUpdater.ShowSkipButton = false;
@@ -216,10 +217,8 @@ namespace Sqlbi.Bravo.Infrastructure
                 if (updateInfo.Error is not null)
                 {
                     TelemetryHelper.TrackException(updateInfo.Error);
-                    return;
                 }
-                
-                if (updateInfo.IsUpdateAvailable)
+                else if (updateInfo.IsUpdateAvailable)
                 {
                     var updateMessage = new ApplicationUpdateAvailableWebMessage
                     {
@@ -239,7 +238,7 @@ namespace Sqlbi.Bravo.Infrastructure
                     //thread.Start();
                     //thread.Join();
 
-                    //NotificationHelper.NotifyUpdateAvailable(updateInfo);
+                    NotificationHelper.NotifyUpdateAvailable(updateInfo);
                 }
             };
             AutoUpdater.InstalledVersion = new Version(0, 4, 0, 0 /*AppConstants.ApplicationFileVersion*/); // TODO: AutoUpdater version

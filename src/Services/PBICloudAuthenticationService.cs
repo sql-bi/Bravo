@@ -28,11 +28,11 @@ namespace Sqlbi.Bravo.Services
     {
         private const string MicrosoftAccountOnlyQueryParameter = "msafed=0";
 
+        private readonly static SemaphoreSlim _authenticationSemaphore = new(1, 1);
+        private readonly static SemaphoreSlim _publicClientSemaphore = new(1, 1);
         private readonly MsalSystemWebViewOptions _systemWebViewOptions;
-        private readonly SemaphoreSlim _tokenSemaphore = new(1);
         private readonly IPBICloudSettingsService _pbisettings;
         private readonly IWebHostEnvironment _environment;
-        private readonly object _publicClientLockObj = new();
 
         private IPublicClientApplication? _publicClient;
 
@@ -55,12 +55,12 @@ namespace Sqlbi.Bravo.Services
         /// </summary>
         public async Task ClearTokenCacheAsync()
         {
-            await _tokenSemaphore.WaitAsync();
+            await _authenticationSemaphore.WaitAsync().ConfigureAwait(false);
             try
             {
-                await EnsureInitializedAsync().ConfigureAwait(false);
-
                 Authentication = null;
+
+                await EnsureInitializedAsync().ConfigureAwait(false);
 
                 var accounts = (await PublicClient.GetAccountsAsync().ConfigureAwait(false)).ToArray();
 
@@ -69,41 +69,27 @@ namespace Sqlbi.Bravo.Services
             }
             finally
             {
-                _tokenSemaphore.Release();
+                _authenticationSemaphore.Release();
             }
         }
 
         public async Task<bool> RefreshTokenAsync()
         {
-            await EnsureInitializedAsync().ConfigureAwait(false);
-
-            var cachedAccount = await PublicClient.GetAccountAsync(Authentication?.Account.HomeAccountId.Identifier).ConfigureAwait(false);
-            if (cachedAccount is null)
-            {
-                return false; // Fail-fast here because no cached token is available
-            }
-
             try
             {
-                await AcquireTokenAsync(silent: true).ConfigureAwait(false);
+                await AcquireTokenAsync(silentOnly: true).ConfigureAwait(false);
             }
             catch (MsalUiRequiredException)
             {
                 return false;
             }
 
-            var accountChanged = !cachedAccount.HomeAccountId.Equals(Authentication?.Account.HomeAccountId);
-            if (accountChanged)
-            {
-                throw new BravoUnexpectedException("Account changed after token refresh");
-            }
-
             return true;
         }
 
-        public async Task AcquireTokenAsync(bool silent = false, string? loginHint = null, TimeSpan? timeout = null)
+        public async Task AcquireTokenAsync(bool silentOnly = false, string? loginHint = null, TimeSpan? timeout = null)
         {
-            await _tokenSemaphore.WaitAsync();
+            await _authenticationSemaphore.WaitAsync().ConfigureAwait(false);
             try
             {
                 await EnsureInitializedAsync().ConfigureAwait(false);
@@ -111,14 +97,15 @@ namespace Sqlbi.Bravo.Services
                 using var cancellationTokenSource = new CancellationTokenSource();
                 if (timeout.HasValue) cancellationTokenSource.CancelAfter(timeout.Value);
 
-                var identifier = Authentication?.Account.HomeAccountId.Identifier;
+                var previousIdentifier = Authentication?.Account.HomeAccountId.Identifier;
                 var previousAuthentication = Authentication;
-                var currentAuthentication = Authentication = await AcquireTokenImplAsync(silent, identifier, loginHint, cancellationTokenSource.Token).ConfigureAwait(false);
 
-                var accountChanged = !currentAuthentication.Account.HomeAccountId.Equals(previousAuthentication?.Account.HomeAccountId);
+                Authentication = await AcquireTokenImplAsync(silentOnly, previousIdentifier, loginHint, cancellationTokenSource.Token).ConfigureAwait(false);
+
+                var accountChanged = !Authentication.Account.HomeAccountId.Equals(previousAuthentication?.Account.HomeAccountId);
                 if (accountChanged)
                 { 
-                    await _pbisettings.RefreshAsync(currentAuthentication.AccessToken).ConfigureAwait(false);
+                    await _pbisettings.RefreshAsync(Authentication.AccessToken).ConfigureAwait(false);
                 }
 
                 //var impersonateTask = System.Security.Principal.WindowsIdentity.RunImpersonatedAsync(Microsoft.Win32.SafeHandles.SafeAccessTokenHandle.InvalidHandle, async () =>
@@ -129,7 +116,7 @@ namespace Sqlbi.Bravo.Services
             }
             finally
             {
-                _tokenSemaphore.Release();
+                _authenticationSemaphore.Release();
             }
         }
 
@@ -138,8 +125,6 @@ namespace Sqlbi.Bravo.Services
         /// </summary>
         private async Task<AuthenticationResult> AcquireTokenImplAsync(bool silent, string? identifier, string? loginHint, CancellationToken cancellationToken)
         {
-            Authentication = null;
-
             // Use account used to signed-in in Windows (WAM). WAM will always get an account in the cache so, if we want to have a chance to select the accounts interactively, we need to force the non-account.
             //identifier = PublicClientApplication.OperatingSystemAccount;
 
@@ -205,12 +190,13 @@ namespace Sqlbi.Bravo.Services
         {
             if (_publicClient is null)
             {
-                await _pbisettings.InitializeAsync().ConfigureAwait(false);
-
-                lock (_publicClientLockObj) 
+                await _publicClientSemaphore.WaitAsync().ConfigureAwait(false);
+                try
                 {
                     if (_publicClient is null)
                     {
+                        await _pbisettings.InitializeAsync().ConfigureAwait(false);
+
                         _publicClient = PublicClientApplicationBuilder.Create(_pbisettings.CloudEnvironment.ClientId)
                             .WithAuthority(_pbisettings.CloudEnvironment.Authority)
                             .WithDefaultRedirectUri()
@@ -218,6 +204,10 @@ namespace Sqlbi.Bravo.Services
 
                         TokenCacheHelper.EnableSerialization(_publicClient.UserTokenCache);
                     }
+                }
+                finally
+                {
+                    _publicClientSemaphore.Release();
                 }
             }
         }
