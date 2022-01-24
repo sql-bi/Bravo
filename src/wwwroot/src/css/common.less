@@ -463,6 +463,13 @@ a, .link {
         background-color: @window-back-color-alt-dark;
     }
 
+    &:hover {
+        background-color: darken(@window-back-color-alt, 2%);
+        .shadow(0, .5px, 1px, 0, rgba(0,0,0,0.1));
+        .dark & {
+            background-color: lighten(@window-back-color-alt-dark, 2%);
+        }
+    }
 
     .icon {
 

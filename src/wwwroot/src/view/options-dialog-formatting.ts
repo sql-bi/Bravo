@@ -34,24 +34,7 @@ export class OptionsDialogFormatting extends OptionsDialogMenuItem {
                     [ClientOptionsFormattingRegion.Auto, i18n(strings.optionFormattingSeparatorsValueAuto)],
                     [ClientOptionsFormattingRegion.US, i18n(strings.optionFormattingSeparatorsValueUS)],
                     [ClientOptionsFormattingRegion.EU, i18n(strings.optionFormattingSeparatorsValueEU)],
-                ],
-                onChange: e => {
-                    let ctrl = <HTMLSelectElement>e.currentTarget;
-                    if (ctrl.value == ClientOptionsFormattingRegion.US) {
-                        optionsController.options.customOptions.formatting.daxFormatter.listSeparator = ",";
-                        optionsController.options.customOptions.formatting.daxFormatter.decimalSeparator = ".";
-
-                    } else if (ctrl.value == ClientOptionsFormattingRegion.EU) {
-                        optionsController.options.customOptions.formatting.daxFormatter.listSeparator = ";";
-                        optionsController.options.customOptions.formatting.daxFormatter.decimalSeparator = ",";
-
-                    } else {
-                        //TODO
-
-                    }
-
-                    optionsController.save();
-                }
+                ]
             },
             {
                 option: "formatting.daxFormatter.lineStyle",

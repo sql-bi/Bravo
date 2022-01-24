@@ -3,7 +3,7 @@
 **@daniele**
 - Format DAX
     - Current/Formatted side by side?
-    - Manage auto separators
+    - Fix spacing option
     - Stop loaders on error
 
 - Notification center messages

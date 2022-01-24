@@ -23,10 +23,10 @@ import * as sanitizeHtml from 'sanitize-html';
 import { MainScene } from './scene-main';
 import { LoaderScene } from './scene-loader';
 import { ErrorScene } from './scene-error';
-import { UpdatePBICloudDatasetRequest, UpdatePBIDesktopReportRequest } from '../controllers/host';
+import { FormatDaxRequest, UpdatePBICloudDatasetRequest, UpdatePBIDesktopReportRequest } from '../controllers/host';
 import { SuccessScene } from './scene-success';
 import { AppError, AppProblem } from '../model/exceptions';
-import { DaxFormatterLineStyle, DaxFormatterSpacingStyle } from '../controllers/options';
+import { ClientOptionsFormattingRegion, DaxFormatterLineStyle, DaxFormatterSpacingStyle } from '../controllers/options';
 
 export class DaxFormatterScene extends MainScene {
     
@@ -305,10 +305,7 @@ export class DaxFormatterScene extends MainScene {
 
         this.updateMeasuresStatus();
 
-        host.formatDax({
-            options: optionsController.options.customOptions.formatting.daxFormatter,
-            measures: measures
-        })
+        host.formatDax(this.getFormatDaxRequest(measures))
             .then(formattedMeasures => {
                 
                 formattedMeasures.forEach(measure => {
@@ -583,6 +580,38 @@ export class DaxFormatterScene extends MainScene {
         _(".summary p", this.element).innerHTML = i18n(strings.daxFormatterSummary, {count: this.doc.measures.length});
     }
 
+    getFormatDaxRequest(measures: TabularMeasure[]): FormatDaxRequest {
+
+        // Set separator according to region
+        const separators: {[key: string]: string[]}  = {
+            [ClientOptionsFormattingRegion.US]: [',', '.'],
+            [ClientOptionsFormattingRegion.EU]: [';', ',']
+        };
+        let region = <string>optionsController.options.customOptions.formatting.region;
+    
+        if (!(region in separators)) {
+  
+            let lastC = -1;
+            let lastR;
+            for (let r in separators) {
+                let c = (measures[0].measure.match(new RegExp(separators[r][0], 'gmi')) || []).length;
+                if (c > lastC) {
+                    lastR = r;
+                    lastC = c;
+                }
+            }
+            region = lastR;
+        }
+
+        let formatOptions = optionsController.options.customOptions.formatting.daxFormatter;
+        formatOptions.listSeparator = separators[region][0];
+        formatOptions.decimalSeparator = separators[region][1];
+
+        return {
+            options: formatOptions,
+            measures: measures
+        };
+    }
 
     format() {
         if (!this.doc.editable) return;
@@ -606,10 +635,7 @@ export class DaxFormatterScene extends MainScene {
             this.splice(errorScene);
         };
 
-        host.formatDax({
-            options: optionsController.options.customOptions.formatting.daxFormatter,
-            measures: measures
-        })
+        host.formatDax(this.getFormatDaxRequest(measures))
             .then(formattedMeasures => {
 
                 // Update model's formatted measures
