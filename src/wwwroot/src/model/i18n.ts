@@ -64,6 +64,10 @@ export class I18n {
         return locales[localeKey];
     }
 
+    static get Locales() {
+        return locales;
+    }
+
     formatters: Dic<LocaleFormatter> = {
 
         "number": (value: number) => {
@@ -91,6 +95,8 @@ export class I18n {
         let formatters = (locale.formatters? { ...this.formatters, ...locale.formatters } : this.formatters);
 
         let text = (stringEnum in locale.strings ? locale.strings[stringEnum] : locales["en"].strings[stringEnum]);
+
+        if (!Utils.Obj.isSet(text)) return strings[stringEnum];
 
         return text.replace(/{.+?}}?/gm, (token) => {
 

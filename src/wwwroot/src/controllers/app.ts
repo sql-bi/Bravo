@@ -241,4 +241,8 @@ export class App {
             this.tabs.addTab(id, doc);
         }
     }
+
+    static Reload() {
+        document.location.reload();
+    }
 }

@@ -7,7 +7,7 @@
 import * as sanitizeHtml from 'sanitize-html';
 import { ProblemDetails } from '../controllers/host';
 import { Utils } from '../helpers/utils';
-import { debug, telemetry } from '../main';
+import { telemetry } from '../main';
 import { i18n } from '../model/i18n'; 
 import { strings } from './strings';
 

@@ -32,6 +32,8 @@
 				opacity:0;
 				animation: scaleUp .3s cubic-bezier(0.165, 0.840, 0.440, 1.000) forwards;
 
+				.flexbox(stretch, flex-start, column);
+
 				header {
 						.flexbox(flex-start, space-between);
 						padding-left: 30px;
@@ -54,6 +56,7 @@
 				}
 
 				footer {
+						margin-top: auto;
 						.flexbox(center, flex-end);
 						padding: 0 20px 20px 30px;
 
@@ -219,7 +222,13 @@
 
 #dialog-options {
 	.dialog-front {
-		width: 600px;
+		width: 650px;
+		max-width: 650px;
+		min-height: 560px;
+	}
+
+	.item-body {
+		margin-top: 20px;
 	}
 }
 

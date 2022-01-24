@@ -56,8 +56,10 @@ export class ThemeController extends Dispatchable {
         }
 
         optionsController.on("change", (changedOptions: any) => {
-            if ("theme" in changedOptions)
+            if ("theme" in changedOptions) {
+                host.changeTheme(changedOptions.theme);
                 this.apply(changedOptions.theme);
+            }
         });
 
         this.apply(this.theme);

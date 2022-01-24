@@ -14,6 +14,7 @@ const locale: Locale = {
     name: "Italiano",
     strings: {
         [_.addCtrlTitle]: "Apri",
+        [_.welcomeTitle]: "Benvenuto su Bravo for Power BI",
     }
 }
 export default locale;

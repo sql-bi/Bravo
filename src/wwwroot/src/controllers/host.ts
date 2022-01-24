@@ -352,6 +352,4 @@ export class Host extends Dispatchable {
         return this.apiCall("api/NavigateTo", { address: url });
     }
 
-    /**** Web Messages ****/
-
 }

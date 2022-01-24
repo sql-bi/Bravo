@@ -4,26 +4,49 @@
  * https://www.sqlbi.com
 */
 import { Dic, _, __ } from '../helpers/utils';
-import { Doc, DocType } from '../model/doc';
 import { i18n } from '../model/i18n'; 
 import { strings } from '../model/strings';
 import { Dialog } from './dialog';
 import { Menu, MenuItem } from './menu';
-import { AboutOptionsDialog } from './options-dialog-about';
-import { GeneralOptionsDialog } from './options-dialog-general';
+import { OptionsDialogAbout } from './options-dialog-about';
+import { OptionsDialogFormatting } from './options-dialog-formatting';
+import { OptionsDialogGeneral } from './options-dialog-general';
+import { OptionsDialogTelemetry } from './options-dialog-telemetry';
 
+export interface OptionStruct {
+    option?: string,
+    icon?: string
+    name: string
+    description?: string
+    type: OptionType
+    values?: string[][]
+    value?: any,
+    onChange?: (e: Event) => void,
+    onClick?: (e: Event) => void,
+    custom?: ()=> string
+}
+
+export enum OptionType {
+    button,
+    select,
+    switch,
+    description,
+    custom
+}
 export class OptionsDialog extends Dialog {
 
     menu: Menu;
 
     constructor() {
 
-        super("options-dialog", document.body, i18n(strings.optionsDialogTitle), [
-            { name: i18n(strings.dialogOK), action: "ok" }
+        super("options", document.body, i18n(strings.optionsDialogTitle), [
+            { name: i18n(strings.dialogOK), action: "ok", className: "button-alt" }
         ]);
         
-        let generalDialog = new GeneralOptionsDialog(this);
-        let aboutDialog = new AboutOptionsDialog(this);
+        let generalDialog = new OptionsDialogGeneral(this);
+        let formattingDialog = new OptionsDialogFormatting(this);
+        let telemetryDialog = new OptionsDialogTelemetry(this);
+        let aboutDialog = new OptionsDialogAbout(this);
 
         this.menu = new Menu("options-menu", this.body, <Dic<MenuItem>>{
             "general": {
@@ -31,6 +54,16 @@ export class OptionsDialog extends Dialog {
                 onRender: element => { generalDialog.render(element) },
                 onDestroy: ()=> { generalDialog.destroy() }
             },
+            "formatting": {
+                name: i18n(strings.optionsDialogFormattingMenu),  
+                onRender: element => { formattingDialog.render(element) },
+                onDestroy: ()=> { formattingDialog.destroy() }
+            },
+            "telemetry": {
+                name: i18n(strings.optionsDialogTelemetryMenu),  
+                onRender: element => { telemetryDialog.render(element) },
+                onDestroy: ()=> { telemetryDialog.destroy() }
+            },     
             "about": {
                 name: i18n(strings.optionsDialogAboutMenu), 
                 onRender: element => { aboutDialog.render(element) },

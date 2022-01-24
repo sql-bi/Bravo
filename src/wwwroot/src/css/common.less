@@ -152,6 +152,7 @@ select {
     background-size: 26px 7px;
     color: @text-color;
     padding:5px 30px 5px 10px;
+    line-height: normal;
     .border-radius;
 
     .dark & {
@@ -448,7 +449,56 @@ a, .link {
 
     }
 }
+.option {
+    padding:15px 20px;
+    margin: 5px 0;
+    list-style: none;
+    .border-radius();
+    background-color: @window-back-color-alt;
+    border: 1px solid @border-color;
+    .flexbox(center);
 
+    .dark & {
+        border-color: @border-color-dark;
+        background-color: @window-back-color-alt-dark;
+    }
+
+
+    .icon {
+
+        &:before {
+            font-size: 26px;
+            margin-right: 20px;
+        }
+    }
+
+    .title {
+        .name {  
+            font-size: 15px;
+            //font-weight: 500;
+        }
+        .desc {
+            font-size: 13px;
+            line-height: 1.4;
+            color: @notice-color;
+
+            .dark & {
+                color: @notice-color-dark;
+            }
+        }
+    }
+
+    .action {
+        margin-left: auto;
+        padding-left: 20px;
+        text-align: right;
+        font-size: 14px;
+
+        select {
+            min-width: 120px;
+        }
+    }
+}
 table {
     border-collapse: collapse;
 

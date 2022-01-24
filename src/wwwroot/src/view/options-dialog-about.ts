@@ -9,7 +9,7 @@ import { i18n } from '../model/i18n';
 import { strings } from '../model/strings';
 import { OptionsDialog } from './options-dialog';
 
-export class AboutOptionsDialog {
+export class OptionsDialogAbout {
 
     element: HTMLElement;
     dialog: OptionsDialog;
@@ -22,7 +22,7 @@ export class AboutOptionsDialog {
         this.element = element;
         
         let html = `
-           about
+        
         `;
         this.element.insertAdjacentHTML("beforeend", html);
     }

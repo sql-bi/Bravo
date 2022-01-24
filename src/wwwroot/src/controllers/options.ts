@@ -17,11 +17,28 @@ export interface Options {
 
 export interface ClientOptions {
     sidebarCollapsed: boolean
-    editorZoom: number
-    previewFormatting: boolean
     loggedInOnce: boolean
-    daxFormatter: FormatDaxOptions
+    editorZoom: number
     locale: string
+    formatting: ClientOptionsFormatting
+}
+
+export interface ClientOptionsFormatting {
+    preview: boolean
+    region: ClientOptionsFormattingRegion
+    daxFormatter: FormatDaxOptions
+}
+
+export enum ClientOptionsFormattingRegion {
+    Auto = "Auto",
+    US = "US",
+    EU = "EU"
+}
+export interface FormatDaxOptions {
+    lineStyle: DaxFormatterLineStyle
+    spacingStyle: DaxFormatterSpacingStyle
+    listSeparator?: string
+    decimalSeparator?: string
 }
 
 export enum DaxFormatterLineStyle {
@@ -32,18 +49,6 @@ export enum DaxFormatterLineStyle {
 export enum DaxFormatterSpacingStyle {
     BestPractice = "BestPractice", 
     NoSpaceAfterFunction = "NoSpaceAfterFunction"
-}
-
-export interface DaxFormatterRegion {
-    listSeparator: string
-    decimalSeparator: string
-}
-
-export interface FormatDaxOptions {
-    lineStyle: DaxFormatterLineStyle
-    spacingStyle: DaxFormatterSpacingStyle
-    listSeparator?: string
-    decimalSeparator?: string
 }
 
 type optionsMode = "host" | "browser"
@@ -60,14 +65,17 @@ export class OptionsController extends Dispatchable {
         customOptions: {
             sidebarCollapsed: false,
             editorZoom: 1,
-            previewFormatting: false,
             loggedInOnce: false,
             locale: navigator.language,
-            daxFormatter: {
-                spacingStyle: DaxFormatterSpacingStyle.BestPractice,
-                lineStyle: DaxFormatterLineStyle.LongLine,
-                decimalSeparator: ".",
-                listSeparator: ",",
+            formatting: {
+                preview: false,
+                region: ClientOptionsFormattingRegion.Auto,
+                daxFormatter: {
+                    spacingStyle: DaxFormatterSpacingStyle.BestPractice,
+                    lineStyle: DaxFormatterLineStyle.LongLine,
+                    decimalSeparator: ".",
+                    listSeparator: ",",
+                }
             }
         }
     };
@@ -155,15 +163,12 @@ export class OptionsController extends Dispatchable {
     }
 
     //Change option
-    update(propertyPath: string, value: any) {
+    update(optionPath: string, value: any, triggerChange = false) {
 
-        if (propertyPath != "theme" && propertyPath != "telemetryEnabled")
-            propertyPath = `customOptions.${propertyPath}`;
-        
         let obj = this.options; 
-        let path = propertyPath.split(".");
-        path.forEach((prop: string, i: number) => {
-            if (i == path.length - 1) {
+        let path = this.fixOptionPath(optionPath).split(".");
+        path.forEach((prop, index) => {
+            if (index == path.length - 1) {
                 (<any>obj)[prop] = value;
             } else { 
                 if (!(prop in obj))
@@ -172,5 +177,32 @@ export class OptionsController extends Dispatchable {
             }
         });
         this.save();
+
+        if (triggerChange)
+            this.trigger("change", obj);
+    }
+
+    getOption(optionPath: string): any {
+
+        let obj = this.options; 
+        let path = this.fixOptionPath(optionPath).split(".");
+        for (let i = 0; i < path.length; i++) {
+            let prop = path[i];
+            if (i == path.length - 1) {
+                return (<any>obj)[prop];
+            } else { 
+                if (!(prop in obj))
+                    break;
+                obj = (<any>obj)[prop];
+            }
+        }
+        return null;
+    }
+
+    fixOptionPath(optionPath: string): string {
+        const hostOptions = ["theme", "telemetryEnabled"];
+        if (hostOptions.indexOf(optionPath) == -1 && optionPath.indexOf("customOptions") == -1)
+            optionPath = `customOptions.${optionPath}`;
+        return optionPath;
     }
 }

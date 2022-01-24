@@ -172,9 +172,9 @@ export class DaxFormatterScene extends MainScene {
 
                 <div class="formatted-toolbar" hidden>
 
-                    <div class="copy-formula ctrl icon-copy disable-on-syncing" title="${i18n(strings.copyFormulaCtrlTitle)}"></div>
+                    <div class="copy-formula ctrl icon-copy solo disable-on-syncing" title="${i18n(strings.copyFormulaCtrlTitle)}"></div>
                     
-                    <div class="refresh ctrl icon-refresh disable-on-syncing" title="${i18n(strings.refreshPreviewCtrlTitle)}"></div>
+                    <div class="refresh ctrl icon-refresh solo disable-on-syncing" title="${i18n(strings.refreshPreviewCtrlTitle)}"></div>
 
                    
                 </div>
@@ -187,7 +187,7 @@ export class DaxFormatterScene extends MainScene {
 
         /* <div class="open-with-dax-formatter ctrl icon-send-to-dax-formatter disable-on-syncing" title="${i18n(strings.openWithDaxFormatterCtrlTitle)}"></div> */
 
-        this.editorToolbar = _(".toolbar", this.menu.body);
+        this.editorToolbar = _(".editor-toolbar", this.menu.body);
         this.zoomSelect = <HTMLSelectElement>_(".zoom", this.editorToolbar);
         this.formattedToolbar = _(".formatted-toolbar", this.editorToolbar);
 
@@ -261,7 +261,7 @@ export class DaxFormatterScene extends MainScene {
 
                     </div>
                     
-                    <label class="switch"><input type="checkbox" id="gen-preview-auto-option" ${optionsController.options.customOptions.previewFormatting ? "checked" : ""}><span class="slider"></span></label> <label for="gen-preview-auto-option">${i18n(strings.daxFormatterAutoPreviewOption)}</label>
+                    <label class="switch"><input type="checkbox" id="gen-preview-auto-option" ${optionsController.options.customOptions.formatting.preview ? "checked" : ""}><span class="slider"></span></label> <label for="gen-preview-auto-option">${i18n(strings.daxFormatterAutoPreviewOption)}</label>
                 </div>
             </div>
         `;
@@ -286,7 +286,7 @@ export class DaxFormatterScene extends MainScene {
     }
 
     maybeAutoGeneratePreview() {
-        if (optionsController.options.customOptions.previewFormatting) {
+        if (optionsController.options.customOptions.formatting.preview) {
             this.generatePreview(this.doc.measures);
         }
     }
@@ -306,7 +306,7 @@ export class DaxFormatterScene extends MainScene {
         this.updateMeasuresStatus();
 
         host.formatDax({
-            options: optionsController.options.customOptions.daxFormatter,
+            options: optionsController.options.customOptions.formatting.daxFormatter,
             measures: measures
         })
             .then(formattedMeasures => {
@@ -319,8 +319,6 @@ export class DaxFormatterScene extends MainScene {
                     if (this.activeMeasure && measureKey == daxMeasureName(this.activeMeasure)) {
                         this.updateCodeMirror(element, measure);
                         this.toggleFormattedToolbar(true);
-                        
-                        
                     }
                 });
             })
@@ -330,9 +328,10 @@ export class DaxFormatterScene extends MainScene {
                 this.renderPreviewError(error, ()=>{
                     this.generatePreview(measures);
                 });
+                this.previewing = {};
             })
             .finally(() => {
-                _(".loader", element).remove(); //Remove any loader
+                _(".loader", element).remove();
                 this.updateMeasuresStatus();
             });
         
@@ -341,18 +340,25 @@ export class DaxFormatterScene extends MainScene {
     renderPreviewError(error: AppError, retry?: () => void) {
 
         this.previewing = {};
+        let message = error.toString();
         const retryId = Utils.DOM.uniqueId();
 
         _('.cm-formatted', this.element).innerHTML = `
             <div class="notice">
                 <div>
-                    <p>${error.toString()}</p>
+                    <p>${message}</p>
+                    <p><span class="copy-error link">${i18n(strings.copyErrorCtrlTitle)}</span></p>
                     ${ retry ? `
                         <div id="${retryId}" class="button button-alt">${i18n(strings.errorRetry)}</div>
                     ` : ""}
                 </div>
             </div>
         `;
+
+        _(".copy-error", this.element).addEventListener("click", e =>{
+            e.preventDefault();
+            navigator.clipboard.writeText(message);
+        });
 
         if (retry) {
             _(`#${retryId}`, this.element).addEventListener("click", e => {
@@ -447,7 +453,7 @@ export class DaxFormatterScene extends MainScene {
                     } else if (status == MeasureStatus.Formatted) {
                         return `<div class="icon icon-completed" title="${i18n(strings.columnMeasureFormatted)}"></div>`;
                     } else {
-                        if (optionsController.options.customOptions.previewFormatting) {
+                        if (optionsController.options.customOptions.formatting.preview) {
                             return `<div class="loader"></div>`;
                         } else {
                             return "";
@@ -601,7 +607,7 @@ export class DaxFormatterScene extends MainScene {
         };
 
         host.formatDax({
-            options: optionsController.options.customOptions.daxFormatter,
+            options: optionsController.options.customOptions.formatting.daxFormatter,
             measures: measures
         })
             .then(formattedMeasures => {
@@ -734,12 +740,11 @@ export class DaxFormatterScene extends MainScene {
 
         _(".open-with-dax-formatter", this.formattedToolbar).addEventListener("click", e => {
             e.preventDefault();
-            
-            const formatOptions = optionsController.options.customOptions.daxFormatter;
+
             const fx = `${this.activeMeasure.name} = ${this.activeMeasure.measure}`;
-            const formatRegion = (formatOptions.decimalSeparator == "." ? "US" : "EU");
-            const formatLine = (formatOptions.lineStyle == DaxFormatterLineStyle.LongLine ? "long" : "short");
-            const formatSpacing = (formatOptions.spacingStyle == DaxFormatterSpacingStyle.BestPractice ? "" : "true");
+            const formatRegion = optionsController.options.customOptions.formatting.region;
+            const formatLine = (optionsController.options.customOptions.formatting.daxFormatter.lineStyle == DaxFormatterLineStyle.LongLine ? "long" : "short");
+            const formatSpacing = (optionsController.options.customOptions.formatting.daxFormatter.spacingStyle == DaxFormatterSpacingStyle.BestPractice ? "" : "true");
 
             let queryString = `fx=${encodeURIComponent(fx)}&r=${formatRegion}&s=${formatSpacing}&l=${formatLine}${themeController.isDark ? "&dark=1" : ""}`;
 
@@ -763,7 +768,7 @@ export class DaxFormatterScene extends MainScene {
 
         this.element.addLiveEventListener("change", "#gen-preview-auto-option", (e, element) => {
             e.preventDefault();
-            optionsController.update("previewFormatting", (<HTMLInputElement>element).checked);
+            optionsController.update("formatting.preview", (<HTMLInputElement>element).checked);
             window.setTimeout(() => {
                 this.generatePreview(this.doc.measures);
             }, 300);

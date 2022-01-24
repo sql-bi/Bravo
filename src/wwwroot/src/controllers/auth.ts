@@ -112,10 +112,10 @@ export class Auth extends Dispatchable {
     }
 
     signOut() {
-        host.signOut().then(()=> {
+        return host.signOut().then(()=> {
             this.deleteCachedAvatar(this.account.id);
             this.account = null;
             this.trigger("signedOut");
-        });
+        }).catch(error => {});
     }
 }
