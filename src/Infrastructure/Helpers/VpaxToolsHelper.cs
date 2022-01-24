@@ -14,7 +14,7 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
         {
             try
             {
-                var daxModel = TomExtractor.GetDaxModel(connectionString, databaseName, AppConstants.ApplicationName, AppConstants.ApplicationFileVersion, readStatisticsFromData, sampleRows);
+                var daxModel = TomExtractor.GetDaxModel(connectionString, databaseName, AppConstants.ApplicationName, AppConstants.ApplicationProductVersion, readStatisticsFromData, sampleRows);
                 var tomModel = includeTomModel ? TomExtractor.GetDatabase(connectionString, databaseName) : null;
                 var vpaModel = includeVpaModel ? new Dax.ViewVpaExport.Model(daxModel) : null;
                 var stream = new MemoryStream();

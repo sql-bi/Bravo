@@ -34,6 +34,7 @@ namespace Sqlbi.Bravo.Infrastructure
             CurrentSessionId = currentProcess.SessionId;
             VersionInfo = FileVersionInfo.GetVersionInfo(currentProcess.MainModule?.FileName ?? throw new BravoUnexpectedException("MainModule.FileName is null"));
             ApplicationFileVersion = VersionInfo.FileVersion ?? throw new BravoUnexpectedException("FileVersion is null");
+            ApplicationProductVersion = VersionInfo.ProductVersion ?? throw new BravoUnexpectedException("ProductVersion is null");
 
             IsPackagedAppInstance = DesktopBridgeHelper.IsRunningAsMsixPackage();
             ApplicationDataPath = Path.Combine(Environment.GetFolderPath(IsPackagedAppInstance ? Environment.SpecialFolder.UserProfile : Environment.SpecialFolder.LocalApplicationData, Environment.SpecialFolderOption.DoNotVerify), ApplicationName);
@@ -57,6 +58,8 @@ namespace Sqlbi.Bravo.Infrastructure
         public static bool IsPackagedAppInstance { get; }
     
         public static string ApplicationFileVersion { get; }
+
+        public static string ApplicationProductVersion { get; }
 
         public static JsonSerializerOptions DefaultJsonOptions { get; }
 
