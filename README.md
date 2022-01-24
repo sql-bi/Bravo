@@ -1,7 +1,6 @@
-# Bravo for Power BI
+# <img style="float:left;margin-right:10px" src="./src/wwwroot/favicons/icon-32.png"> Bravo for Power BI
 
 > DRAFT
-
 
 ### How to Compile Bravo UI
 
