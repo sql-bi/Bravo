@@ -56,7 +56,7 @@
 
         //public const string Psapi = "psapi.dll";
 
-        //public const string Shcore = "shcore.dll";
+        public const string Shcore = "shcore.dll";
 
         //public const string Shell32 = "shell32.dll";
 

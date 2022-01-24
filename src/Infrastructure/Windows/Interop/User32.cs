@@ -26,6 +26,31 @@ namespace Sqlbi.Bravo.Infrastructure.Windows.Interop
             //MOD_NOREPEAT = 0x4000
         }
 
+        /// <summary>
+        /// https://docs.microsoft.com/en-us/windows/win32/api/shellscalingapi/ne-shellscalingapi-process_dpi_awareness
+        /// </summary>
+        public enum PROCESS_DPI_AWARENESS
+        {
+            PROCESS_DPI_UNAWARE = 0,
+            PROCESS_SYSTEM_DPI_AWARE = 1,
+            PROCESS_PER_MONITOR_DPI_AWARE = 2
+        }
+
+        /// <summary>
+        /// https://docs.microsoft.com/en-us/windows/win32/hidpi/dpi-awareness-context
+        /// </summary>
+        public enum DPI_AWARENESS_CONTEXT
+        {
+            DPI_AWARENESS_CONTEXT_UNAWARE = -1,
+            DPI_AWARENESS_CONTEXT_SYSTEM_AWARE = -2,
+            DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE = -3,
+            DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2 = -4
+        }
+
+        public delegate bool EnumThreadDelegate(IntPtr hWnd, IntPtr lParam);
+
+        public delegate IntPtr SUBCLASSPROC(IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam, IntPtr id, IntPtr data);
+
         [DllImport(ExternDll.User32, SetLastError = true)]
         public static extern bool RegisterHotKey(IntPtr hWnd, int id, KeyModifier modifiers, System.Windows.Forms.Keys keys);
 
@@ -46,5 +71,59 @@ namespace Sqlbi.Bravo.Infrastructure.Windows.Interop
 
         [DllImport(ExternDll.User32, CharSet = CharSet.Auto)]
         public static extern int MessageBox(IntPtr hWnd, string text, string caption, uint type);
+
+        [DllImport(ExternDll.User32)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool IsWindowVisible(IntPtr hWnd);
+
+        [DllImport(ExternDll.User32)]
+        public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+        [DllImport(ExternDll.User32)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool SetForegroundWindow(IntPtr hWnd);
+
+        [DllImport(ExternDll.User32, SetLastError = true)]
+        public static extern bool SetProcessDPIAware();
+
+        [DllImport(ExternDll.User32, SetLastError = true)]
+        public static extern bool SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT value);
+
+        [DllImport(ExternDll.Shcore, SetLastError = true)]
+        internal static extern bool SetProcessDpiAwareness(PROCESS_DPI_AWARENESS awareness);
+
+        [DllImport(ExternDll.User32, SetLastError = true)]
+        private static extern bool EnableNonClientDpiScaling(IntPtr hWnd);
+
+        [DllImport(ExternDll.User32)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool EnumThreadWindows(int dwThreadId, EnumThreadDelegate lpfn, IntPtr lParam);
+
+        [DllImport(ExternDll.User32, SetLastError = true, CharSet = CharSet.Unicode)]
+        public static extern IntPtr FindWindow(string? lpClassName, string lpWindowName);
+
+        [DllImport(ExternDll.User32, CharSet = CharSet.Unicode, SetLastError = true)]
+        public static extern uint RegisterWindowMessage(string lpString);
+
+        [DllImport(ExternDll.Kernel32, SetLastError = true)]
+        public static extern int GetCurrentProcessId();
+
+        [DllImport(ExternDll.Kernel32, SetLastError = true)]
+        public static extern int GetCurrentThreadId();
+
+        [DllImport(ExternDll.User32, CharSet = CharSet.Auto, SetLastError = true)]
+        public static extern int GetWindowThreadProcessId(IntPtr hWnd, out int processId);
+
+        [DllImport(ExternDll.Comctl32, CharSet = CharSet.Auto, SetLastError = true)]
+        public static extern bool GetWindowSubclass(IntPtr hWnd, SUBCLASSPROC pfnSubclass, IntPtr uIdSubclass, ref IntPtr pdwRefData);
+
+        [DllImport(ExternDll.Comctl32, CharSet = CharSet.Auto, SetLastError = true)]
+        public static extern bool SetWindowSubclass(IntPtr hWnd, SUBCLASSPROC callback, IntPtr id, IntPtr data);
+
+        [DllImport(ExternDll.Comctl32, CharSet = CharSet.Auto, SetLastError = true)]
+        public static extern bool RemoveWindowSubclass(IntPtr hWnd, SUBCLASSPROC callback, IntPtr id);
+
+        [DllImport(ExternDll.Comctl32, CharSet = CharSet.Auto, SetLastError = true)]
+        public static extern IntPtr DefSubclassProc(IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam);
     }
 }

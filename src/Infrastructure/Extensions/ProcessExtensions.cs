@@ -151,9 +151,9 @@ namespace Sqlbi.Bravo.Infrastructure.Extensions
 
             foreach (ProcessThread thread in process.Threads)
             {
-                NativeMethods.EnumThreadWindows(thread.Id, (hWnd, lParam) =>
+                User32.EnumThreadWindows(thread.Id, (hWnd, lParam) =>
                 {
-                    if (NativeMethods.IsWindowVisible(hWnd))
+                    if (User32.IsWindowVisible(hWnd))
                     {
                         User32.SendMessage(hWnd, WindowMessage.WM_GETTEXT, builder.Capacity, builder);
 
