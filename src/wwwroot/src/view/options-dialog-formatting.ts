@@ -26,7 +26,7 @@ export class OptionsDialogFormatting extends OptionsDialogMenuItem {
             },
             {
                 option: "formatting.region",
-                //icon: "dax-formatter",
+                icon: "separators",
                 name: i18n(strings.optionFormattingSeparators),
                 description: i18n(strings.optionFormattingSeparatorsDescription),
                 type: OptionType.select,
@@ -38,7 +38,7 @@ export class OptionsDialogFormatting extends OptionsDialogMenuItem {
             },
             {
                 option: "formatting.daxFormatter.lineStyle",
-                //icon: "dax-formatter",
+                icon: "lines",
                 name: i18n(strings.optionFormattingLines),
                 description: i18n(strings.optionFormattingLinesDescription),
                 type: OptionType.select,
@@ -49,13 +49,13 @@ export class OptionsDialogFormatting extends OptionsDialogMenuItem {
             },
             {
                 option: "formatting.daxFormatter.spacingStyle",
-                //icon: "dax-formatter",
+                icon: "spaces",
                 name: i18n(strings.optionFormattingSpaces),
                 description: i18n(strings.optionFormattingSpacesDescription),
                 type: OptionType.select,
                 values: [
-                    [DaxFormatterSpacingStyle.BestPractice, i18n(strings.optionFormattingSpacesValueBestPractice)],
-                    [DaxFormatterSpacingStyle.BestPractice, i18n(strings.optionFormattingSpacesValueTrue)],
+                    [DaxFormatterSpacingStyle.SpaceAfterFunction, i18n(strings.optionFormattingSpacesValueBestPractice)],
+                    [DaxFormatterSpacingStyle.SpaceAfterFunction, i18n(strings.optionFormattingSpacesValueTrue)],
                     [DaxFormatterSpacingStyle.NoSpaceAfterFunction, i18n(strings.optionFormattingSpacesValueFalse)],
                 ]
             }

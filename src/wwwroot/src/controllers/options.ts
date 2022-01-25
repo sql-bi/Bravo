@@ -47,8 +47,8 @@ export enum DaxFormatterLineStyle {
 }
 
 export enum DaxFormatterSpacingStyle {
-    BestPractice = "BestPractice", 
-    NoSpaceAfterFunction = "NoSpaceAfterFunction"
+    SpaceAfterFunction = "SpaceAfterFunction", 
+    NoSpaceAfterFunction = "NoNpaceAfterFunction" //TODO Fix "NoSpaceAfterFunction"
 }
 
 type optionsMode = "host" | "browser"
@@ -71,10 +71,8 @@ export class OptionsController extends Dispatchable {
                 preview: false,
                 region: ClientOptionsFormattingRegion.Auto,
                 daxFormatter: {
-                    spacingStyle: DaxFormatterSpacingStyle.BestPractice,
+                    spacingStyle: DaxFormatterSpacingStyle.SpaceAfterFunction,
                     lineStyle: DaxFormatterLineStyle.LongLine,
-                    decimalSeparator: ".",
-                    listSeparator: ",",
                 }
             }
         }

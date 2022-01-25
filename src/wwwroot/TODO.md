@@ -3,7 +3,6 @@
 **@daniele**
 - Format DAX
     - Current/Formatted side by side?
-    - Fix spacing option
     - Stop loaders on error
 
 - Notification center messages
@@ -27,3 +26,5 @@
     Test fix included on PR #53
     - Not fixed on @daniele computer :)
 - Lighter ListDatasets for detecting files closing
+- Fix Dax formatter SpacingStyle enum
+    - NoNpaceAfterFunction  => NoSpaceAfterFunction 

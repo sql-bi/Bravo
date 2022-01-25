@@ -582,7 +582,7 @@ export class DaxFormatterScene extends MainScene {
 
     getFormatDaxRequest(measures: TabularMeasure[]): FormatDaxRequest {
 
-        // Set separator according to region
+        // Set separators according to the region
         const separators: {[key: string]: string[]}  = {
             [ClientOptionsFormattingRegion.US]: [',', '.'],
             [ClientOptionsFormattingRegion.EU]: [';', ',']
@@ -770,7 +770,7 @@ export class DaxFormatterScene extends MainScene {
             const fx = `${this.activeMeasure.name} = ${this.activeMeasure.measure}`;
             const formatRegion = optionsController.options.customOptions.formatting.region;
             const formatLine = (optionsController.options.customOptions.formatting.daxFormatter.lineStyle == DaxFormatterLineStyle.LongLine ? "long" : "short");
-            const formatSpacing = (optionsController.options.customOptions.formatting.daxFormatter.spacingStyle == DaxFormatterSpacingStyle.BestPractice ? "" : "true");
+            const formatSpacing = (optionsController.options.customOptions.formatting.daxFormatter.spacingStyle == DaxFormatterSpacingStyle.SpaceAfterFunction ? "" : "true");
 
             let queryString = `fx=${encodeURIComponent(fx)}&r=${formatRegion}&s=${formatSpacing}&l=${formatLine}${themeController.isDark ? "&dark=1" : ""}`;
 
@@ -798,6 +798,16 @@ export class DaxFormatterScene extends MainScene {
             window.setTimeout(() => {
                 this.generatePreview(this.doc.measures);
             }, 300);
+        });
+
+        optionsController.on("change", (changedOptions: any) => {
+            let watch = ["region", "daxFormatter", "spacingStyle", "lineStyle"];
+            for (let i = 0; i < watch.length; i++) {
+                if (watch[i] in changedOptions) {
+                    this.maybeAutoGeneratePreview();
+                    break;
+                }
+            }
         });
     }
 
