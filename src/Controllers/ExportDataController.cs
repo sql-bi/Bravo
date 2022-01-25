@@ -38,14 +38,18 @@ namespace Sqlbi.Bravo.Controllers
         [ProducesDefaultResponseType]
         public IActionResult ExportDelimitedTextFileFromPBIDesktopReport(ExportDelimitedTextFromPBIReportRequest request, CancellationToken cancellationToken)
         {
-            var dialogResult = WindowDialogHelper.BrowseFolderDialog(cancellationToken);
-            if (dialogResult.Canceled == false)
+            var (canceled, path) = WindowDialogHelper.BrowseFolderDialog(cancellationToken);
+            if (!canceled)
             {
-                request.Settings!.ExportPath = dialogResult.Path!;
+                request.Settings!.ExportPath = path!;
                 _exportDataService.ExportDelimitedTextFile(request.Report!, request.Settings!, cancellationToken);
             }
 
-            return Ok(dialogResult);
+            return Ok(new ExportResult
+            {
+                Canceled = canceled,
+                Path = path
+            });
         }
 
         /// <summary>
@@ -64,14 +68,18 @@ namespace Sqlbi.Bravo.Controllers
             if (await _pbicloudService.IsSignInRequiredAsync())
                 return Unauthorized();
 
-            var dialogResult = WindowDialogHelper.BrowseFolderDialog(cancellationToken);
-            if (dialogResult.Canceled == false)
+            var (canceled, path) = WindowDialogHelper.BrowseFolderDialog(cancellationToken);
+            if (!canceled)
             {
-                request.Settings!.ExportPath = dialogResult.Path!;
+                request.Settings!.ExportPath = path!;
                 _exportDataService.ExportDelimitedTextFile(request.Dataset!, request.Settings!, cancellationToken);
             }
 
-            return Ok(dialogResult);
+            return Ok(new ExportResult
+            {
+                Canceled = canceled,
+                Path = path
+            });
         }
 
         /// <summary>
@@ -81,18 +89,22 @@ namespace Sqlbi.Bravo.Controllers
         [HttpPost]
         [ActionName("ExportXlsxFromReport")]
         [Produces(MediaTypeNames.Application.Json)]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ExportResult))]
         [ProducesDefaultResponseType]
         public IActionResult ExportExcelFileFromPBIDesktopReport(ExportExcelFromPBIReportRequest request, CancellationToken cancellationToken)
         {
-            var dialogResult = WindowDialogHelper.SaveFileDialog(fileName: request.Report!.ReportName, defaultExt: "XLSX", cancellationToken);
-            if (dialogResult.Canceled == false)
+            var (canceled, path) = WindowDialogHelper.SaveFileDialog(fileName: request.Report!.ReportName, defaultExt: "XLSX", cancellationToken);
+            if (!canceled)
             {
-                request.Settings!.ExportPath = dialogResult.Path!;
+                request.Settings!.ExportPath = path!;
                 _exportDataService.ExportExcelFile(request.Report, request.Settings, cancellationToken);
             }
 
-            return Ok(dialogResult);
+            return Ok(new ExportResult
+            {
+                Canceled = canceled,
+                Path = path
+            });
         }
 
         /// <summary>
@@ -103,7 +115,7 @@ namespace Sqlbi.Bravo.Controllers
         [HttpPost]
         [ActionName("ExporXlsxFromDataset")]
         [Produces(MediaTypeNames.Application.Json)]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ExportResult))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesDefaultResponseType]
         public async Task<IActionResult> ExportExcelFileFromPBICloudDataset(ExportExcelFromPBICloudDatasetRequest request, CancellationToken cancellationToken)
@@ -111,14 +123,18 @@ namespace Sqlbi.Bravo.Controllers
             if (await _pbicloudService.IsSignInRequiredAsync())
                 return Unauthorized();
             
-            var dialogResult = WindowDialogHelper.SaveFileDialog(fileName: request.Dataset!.DisplayName, defaultExt: "XLSX", cancellationToken);
-            if (dialogResult.Canceled == false)
+            var (canceled, path) = WindowDialogHelper.SaveFileDialog(fileName: request.Dataset!.DisplayName, defaultExt: "XLSX", cancellationToken);
+            if (!canceled)
             {
-                request.Settings!.ExportPath = dialogResult.Path!;
+                request.Settings!.ExportPath = path!;
                 _exportDataService.ExportExcelFile(request.Dataset, request.Settings, cancellationToken);
             }
 
-            return Ok(dialogResult);
+            return Ok(new ExportResult
+            {
+                Canceled = canceled,
+                Path = path
+            });
         }
     }
 }

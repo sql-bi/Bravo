@@ -3,7 +3,9 @@ using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
 using LargeXlsx;
 using Microsoft.AnalysisServices.AdomdClient;
+using Sqlbi.Bravo.Infrastructure;
 using Sqlbi.Bravo.Infrastructure.Extensions;
+using Sqlbi.Bravo.Infrastructure.Helpers;
 using Sqlbi.Bravo.Models;
 using System;
 using System.Data;
@@ -45,14 +47,14 @@ namespace Sqlbi.Bravo.Services
 
         public void ExportDelimitedTextFile(PBIDesktopReport report, ExportDelimitedTextSettings settings, CancellationToken cancellationToken)
         {
+            var connectionString = ConnectionStringHelper.BuildForPBIDesktop(report.ServerName!);
             try
             {
-                ExportDelimitedTextFileImpl(settings, report.ServerName, report.DatabaseName, cancellationToken);
+                ExportDelimitedTextFileImpl(settings, connectionString, report.DatabaseName, cancellationToken);
             }
-            catch
+            catch (IOException ex)
             {
-                // TODO: catch exceptions
-                throw;
+                throw new BravoException(BravoProblem.ExportDataFileError, ex.Message, ex);
             }
         }
 
@@ -63,23 +65,22 @@ namespace Sqlbi.Bravo.Services
             {
                 ExportDelimitedTextFileImpl(settings, connectionString, databaseName, cancellationToken);
             }
-            catch
+            catch (IOException ex)
             {
-                // TODO: catch exceptions
-                throw;
+                throw new BravoException(BravoProblem.ExportDataFileError, ex.Message, ex);
             }
         }
 
         public void ExportExcelFile(PBIDesktopReport report, ExportExcelSettings settings, CancellationToken cancellationToken)
         {
+            var connectionString = ConnectionStringHelper.BuildForPBIDesktop(report.ServerName!);
             try
             {
-                ExportExcelFileImpl(settings, report.ServerName, report.DatabaseName, cancellationToken);
+                ExportExcelFileImpl(settings, connectionString, report.DatabaseName, cancellationToken);
             }
-            catch
+            catch (IOException ex)
             {
-                // TODO: catch exceptions
-                throw;
+                throw new BravoException(BravoProblem.ExportDataFileError, ex.Message, ex);
             }
         }
 
@@ -90,10 +91,9 @@ namespace Sqlbi.Bravo.Services
             {
                 ExportExcelFileImpl(settings, connectionString, databaseName, cancellationToken);
             }
-            catch
+            catch (IOException ex)
             {
-                // TODO: catch exceptions
-                throw;
+                throw new BravoException(BravoProblem.ExportDataFileError, ex.Message, ex);
             }
         }
 

@@ -38,7 +38,7 @@ namespace Sqlbi.Bravo.Infrastructure.Configuration
         private static void ConfigureProcessDpiAwareness()
         {
             var windows8Version = new Version(6, 3, 0); // win 8.1 (build number 9600) added support for per monitor dpi 
-            var windows10Version = new Version(10, 0, 15063); // Windows 10 version 1703 (build number 15063) added support for per monitor dpi 
+            var windows10Version = new Version(10, 0, 15063); // Windows 10 version 1703 (build number 15063) added support for per monitor dpi v2
             var environmentOSVersion = Environment.OSVersion.Version;
 
             if (environmentOSVersion >= windows8Version)

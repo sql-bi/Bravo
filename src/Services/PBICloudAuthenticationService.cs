@@ -123,7 +123,7 @@ namespace Sqlbi.Bravo.Services
         /// <summary>
         /// https://docs.microsoft.com/en-us/azure/active-directory/develop/scenario-desktop-acquire-token?tabs=dotnet
         /// </summary>
-        private async Task<AuthenticationResult> AcquireTokenImplAsync(bool silent, string? identifier, string? loginHint, CancellationToken cancellationToken)
+        private async Task<AuthenticationResult> AcquireTokenImplAsync(bool silentOnly, string? identifier, string? loginHint, CancellationToken cancellationToken)
         {
             // Use account used to signed-in in Windows (WAM). WAM will always get an account in the cache so, if we want to have a chance to select the accounts interactively, we need to force the non-account.
             //identifier = PublicClientApplication.OperatingSystemAccount;
@@ -140,7 +140,7 @@ namespace Sqlbi.Bravo.Services
             catch (MsalUiRequiredException)
             {
                 // Re-throw exception if silent-only token acquisition was requested
-                if (silent) throw;
+                if (silentOnly) throw;
                 try
                 {
                     var builder = PublicClient.AcquireTokenInteractive(_pbisettings.CloudEnvironment.Scopes)
