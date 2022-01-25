@@ -98,7 +98,7 @@ namespace Sqlbi.Bravo.Infrastructure
         OperationCancelled = 1,
 
         /// <summary>
-        /// 
+        /// A connection problem arises between the server and current application
         /// </summary>
         [JsonPropertyName("AnalysisServicesConnectionFailed")]
         AnalysisServicesConnectionFailed = 10,
@@ -195,5 +195,11 @@ namespace Sqlbi.Bravo.Infrastructure
         /// </summary> 
         [JsonPropertyName("NetworkError")]
         NetworkError = 600,
+
+        /// <summary>
+        /// An exception occurred while exporting data to file
+        /// </summary> 
+        [JsonPropertyName("ExportDataFileError")]
+        ExportDataFileError = 700,
     }
 }

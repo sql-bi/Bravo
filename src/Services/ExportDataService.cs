@@ -3,6 +3,7 @@ using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
 using LargeXlsx;
 using Microsoft.AnalysisServices.AdomdClient;
+using Sqlbi.Bravo.Infrastructure;
 using Sqlbi.Bravo.Infrastructure.Extensions;
 using Sqlbi.Bravo.Infrastructure.Helpers;
 using Sqlbi.Bravo.Models;
@@ -51,10 +52,9 @@ namespace Sqlbi.Bravo.Services
             {
                 ExportDelimitedTextFileImpl(settings, connectionString, report.DatabaseName, cancellationToken);
             }
-            catch
+            catch (IOException ex)
             {
-                // TODO: catch exceptions
-                throw;
+                throw new BravoException(BravoProblem.ExportDataFileError, ex.Message, ex);
             }
         }
 
@@ -65,10 +65,9 @@ namespace Sqlbi.Bravo.Services
             {
                 ExportDelimitedTextFileImpl(settings, connectionString, databaseName, cancellationToken);
             }
-            catch
+            catch (IOException ex)
             {
-                // TODO: catch exceptions
-                throw;
+                throw new BravoException(BravoProblem.ExportDataFileError, ex.Message, ex);
             }
         }
 
@@ -79,10 +78,9 @@ namespace Sqlbi.Bravo.Services
             {
                 ExportExcelFileImpl(settings, connectionString, report.DatabaseName, cancellationToken);
             }
-            catch
+            catch (IOException ex)
             {
-                // TODO: catch exceptions
-                throw;
+                throw new BravoException(BravoProblem.ExportDataFileError, ex.Message, ex);
             }
         }
 
@@ -93,10 +91,9 @@ namespace Sqlbi.Bravo.Services
             {
                 ExportExcelFileImpl(settings, connectionString, databaseName, cancellationToken);
             }
-            catch
+            catch (IOException ex)
             {
-                // TODO: catch exceptions
-                throw;
+                throw new BravoException(BravoProblem.ExportDataFileError, ex.Message, ex);
             }
         }
 
