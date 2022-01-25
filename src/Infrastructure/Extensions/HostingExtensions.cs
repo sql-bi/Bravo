@@ -1,4 +1,6 @@
 ﻿using Hellang.Middleware.ProblemDetails;
+using AMO = Microsoft.AnalysisServices;
+using TOM = Microsoft.AnalysisServices.AdomdClient;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
@@ -85,13 +87,13 @@ namespace Sqlbi.Bravo.Infrastructure.Extensions
         {
             services.AddProblemDetails((options) =>
             {
+                // We include the details of the exception so that the UI can dispaly it and the user can potentially copy/paste/share the stack trace of the exception
                 options.IncludeExceptionDetails = (context, exception) => true;
 
                 options.Map<BravoException>((context, exception) =>
                 {
                     var problemDetailsFactory = context.RequestServices.GetRequiredService<ProblemDetailsFactory>();
-                    var problemDetails = problemDetailsFactory.CreateProblemDetails(
-                        context,
+                    var problemDetails = problemDetailsFactory.CreateProblemDetails(context,
                         statusCode: StatusCodes.Status400BadRequest,
                         detail: exception.ProblemDetail,
                         instance: exception.ProblemInstance);
@@ -99,12 +101,46 @@ namespace Sqlbi.Bravo.Infrastructure.Extensions
                     return problemDetails;
                 });
 
+                options.Map<AMO.ConnectionException>((context, exception) =>
+                {
+                    var problemDetailsFactory = context.RequestServices.GetRequiredService<ProblemDetailsFactory>();
+                    var problemDetails = problemDetailsFactory.CreateProblemDetails(context,
+                        statusCode: StatusCodes.Status400BadRequest,
+                        detail: exception.Message,
+                        instance: $"{ (int)BravoProblem.AnalysisServicesConnectionFailed }");
+
+                    return problemDetails;
+                });
+
+                options.Map<TOM.AdomdException>((context, exception) =>
+                {
+                    var problemDetailsFactory = context.RequestServices.GetRequiredService<ProblemDetailsFactory>();
+                    var problemDetails = problemDetailsFactory.CreateProblemDetails(context,
+                        statusCode: StatusCodes.Status400BadRequest,
+                        detail: exception.Message,
+                        instance: $"{ (int)BravoProblem.AnalysisServicesConnectionFailed }");
+
+                    return problemDetails;
+                });
+
+                options.Map<OperationCanceledException>((context, exception) =>
+                {
+                    var problemDetailsFactory = context.RequestServices.GetRequiredService<ProblemDetailsFactory>();
+                    var problemDetails = problemDetailsFactory.CreateProblemDetails(context,
+                        statusCode: StatusCodes.Status400BadRequest,
+                        detail: exception.Message,
+                        instance: $"{ (int)BravoProblem.OperationCancelled }");
+
+                    return problemDetails;
+                });
+
+                // Do not change the Map<> order, this is because a SocketException can exists as an inner exception also for other types of exceptions (i.e. AMO.ConnectionException)
+                // This can result in a misleading message like a AMO.ConnectionException reported as a SocketException (NetworkError instead of AnalysisServicesConnectionFailed)
                 options.Map<Exception>(predicate: (context, exception) => exception.IsOrHasInner<SocketException>(), mapping: (context, exception) =>
                 {
                     var socketException = exception.Find<SocketException>() ?? throw new BravoUnexpectedException("SocketException not found");
                     var problemDetailsFactory = context.RequestServices.GetRequiredService<ProblemDetailsFactory>();
-                    var problemDetails = problemDetailsFactory.CreateProblemDetails(
-                        context,
+                    var problemDetails = problemDetailsFactory.CreateProblemDetails(context,
                         statusCode: StatusCodes.Status400BadRequest,
                         detail: $"[{ socketException.SocketErrorCode }] { exception.Message }",
                         instance: $"{ (int)BravoProblem.NetworkError }");

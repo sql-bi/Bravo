@@ -1,6 +1,7 @@
 ﻿using Sqlbi.Bravo.Infrastructure.Extensions;
 using System;
 using System.Text.Json.Serialization;
+using System.Threading.Tasks;
 
 namespace Sqlbi.Bravo.Infrastructure
 {
@@ -88,6 +89,19 @@ namespace Sqlbi.Bravo.Infrastructure
     {
         [JsonPropertyName("None")]
         None = 0,
+
+        /// <summary>
+        /// A <see cref="OperationCanceledException"/> or <see cref="TaskCanceledException"/> was thrown, an HTTP request was aborted or the user  cancelled a long-running operation.
+        /// This BravoProblem is a placehoder since the response message is never sent back to the user/UI due to the aborted request.
+        /// </summary>
+        [JsonPropertyName("OperationCancelled")]
+        OperationCancelled = 1,
+
+        /// <summary>
+        /// 
+        /// </summary>
+        [JsonPropertyName("AnalysisServicesConnectionFailed")]
+        AnalysisServicesConnectionFailed = 10,
 
         /// <summary>
         /// TOM database does not exists in the collection or the user does not have admin rights for it.
