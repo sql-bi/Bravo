@@ -12,6 +12,7 @@ namespace Sqlbi.Bravo.Models
         /// Names of tables to export
         /// </summary>
         [Required]
+        [JsonPropertyName("tables")]
         public IEnumerable<string> Tables { get; set; } = Array.Empty<string>();
 
         /// <summary>
@@ -26,16 +27,19 @@ namespace Sqlbi.Bravo.Models
         /// <summary>
         /// Specifies whether Unicode should be used as the character encoding for the file, otherwise UTF8 is used as default
         /// </summary>
+        [JsonPropertyName("unicodeEncoding")]
         public bool UnicodeEncoding { get; set; } = false;
 
         /// <summary>
         /// Specifies the delimiter used to separate fields. If not provided <see cref="System.Globalization.TextInfo.ListSeparator"/> is used as default
         /// </summary>
+        [JsonPropertyName("delimiter")]
         public string? Delimiter { get; set; }
 
         /// <summary>
         /// Specifies if all string fields should be quoted. Default is false
         /// </summary>
+        [JsonPropertyName("quoteStringFields")]
         public bool QuoteStringFields { get; set; } = false;
     }
 

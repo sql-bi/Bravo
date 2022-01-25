@@ -4,6 +4,7 @@ using CsvHelper.TypeConversion;
 using LargeXlsx;
 using Microsoft.AnalysisServices.AdomdClient;
 using Sqlbi.Bravo.Infrastructure.Extensions;
+using Sqlbi.Bravo.Infrastructure.Helpers;
 using Sqlbi.Bravo.Models;
 using System;
 using System.Data;
@@ -45,9 +46,10 @@ namespace Sqlbi.Bravo.Services
 
         public void ExportDelimitedTextFile(PBIDesktopReport report, ExportDelimitedTextSettings settings, CancellationToken cancellationToken)
         {
+            var connectionString = ConnectionStringHelper.BuildForPBIDesktop(report.ServerName!);
             try
             {
-                ExportDelimitedTextFileImpl(settings, report.ServerName, report.DatabaseName, cancellationToken);
+                ExportDelimitedTextFileImpl(settings, connectionString, report.DatabaseName, cancellationToken);
             }
             catch
             {
@@ -72,9 +74,10 @@ namespace Sqlbi.Bravo.Services
 
         public void ExportExcelFile(PBIDesktopReport report, ExportExcelSettings settings, CancellationToken cancellationToken)
         {
+            var connectionString = ConnectionStringHelper.BuildForPBIDesktop(report.ServerName!);
             try
             {
-                ExportExcelFileImpl(settings, report.ServerName, report.DatabaseName, cancellationToken);
+                ExportExcelFileImpl(settings, connectionString, report.DatabaseName, cancellationToken);
             }
             catch
             {

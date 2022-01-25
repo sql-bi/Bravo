@@ -20,10 +20,17 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
 
         public static string BuildForPBIDesktop(IPEndPoint endPoint)
         {
+            var dataSource = endPoint.ToString();
+            var connectionString = BuildForPBIDesktop(dataSource);
+
+            return connectionString;
+        }
+
+        public static string BuildForPBIDesktop(string dataSource)
+        {
             // PBIDesktop relies on a local Analysis Services instance that is binded to the loopback interface.
             // Because of this, we are reducing the maximum amount of time the client attempts a connection before timing out.
             var connectTimeout = 1;
-            var dataSource = endPoint.ToString();
 
             var builder = new OleDbConnectionStringBuilder()
             {

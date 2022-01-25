@@ -134,20 +134,24 @@ namespace Sqlbi.Bravo.Controllers
         [ProducesDefaultResponseType]
         public IActionResult ExportVpaxFromPBIDesktopReport(PBIDesktopReport report, CancellationToken cancellationToken)
         {
-            var dialogResult = WindowDialogHelper.SaveFileDialog(fileName: report.ReportName, defaultExt: "VPAX", cancellationToken);
-            if (dialogResult.Canceled == false)
+            var (canceled, path) = WindowDialogHelper.SaveFileDialog(fileName: report.ReportName, defaultExt: "VPAX", cancellationToken);
+            if (!canceled)
             {
                 using var stream = _pbidesktopService.ExportVpax(report, includeTomModel: false, includeVpaModel: false, readStatisticsFromData: false, sampleRows: 0);
 
                 if (!cancellationToken.IsCancellationRequested)
                 {
-                    using var fileStream = System.IO.File.Create(dialogResult.Path!);
+                    using var fileStream = System.IO.File.Create(path!);
                     stream.Seek(0, SeekOrigin.Begin);
                     stream.CopyTo(fileStream);
                 }
             }
 
-            return Ok(dialogResult);
+            return Ok(new ExportResult
+            {
+                Canceled = canceled,
+                Path = path
+            });
         }
 
         /// <summary>
@@ -167,20 +171,24 @@ namespace Sqlbi.Bravo.Controllers
             if (await _pbicloudService.IsSignInRequiredAsync())
                 return Unauthorized();
 
-            var dialogResult = WindowDialogHelper.SaveFileDialog(fileName: dataset.DisplayName, defaultExt: "VPAX", cancellationToken);
-            if (dialogResult.Canceled == false)
+            var (canceled, path) = WindowDialogHelper.SaveFileDialog(fileName: dataset.DisplayName, defaultExt: "VPAX", cancellationToken);
+            if (!canceled)
             {
                 using var stream = _pbicloudService.ExportVpax(dataset, includeTomModel: false, includeVpaModel: false, readStatisticsFromData: false, sampleRows: 0);
 
                 if (!cancellationToken.IsCancellationRequested)
                 {
-                    using var fileStream = System.IO.File.Create(dialogResult.Path!);
+                    using var fileStream = System.IO.File.Create(path!);
                     stream.Seek(0, SeekOrigin.Begin);
                     stream.CopyTo(fileStream);
                 }
             }
 
-            return Ok(dialogResult);
+            return Ok(new ExportResult
+            {
+                Canceled = canceled,
+                Path = path
+            });
         }
     }
 }
