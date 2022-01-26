@@ -27,11 +27,24 @@ export class Debug {
             function() {};
         } 
 
-        this.startupEvents();
+        this.test();
     }
 
-    startupEvents() {
-        
+    test() {
+        if (!this.enabled) return;
+
+        if (typeof CONFIG === "undefined") {
+            globalThis.CONFIG = {
+                address: "http://localhost/",
+                version: "debug",
+                options: null,
+                token: "",
+                telemetry: {
+                    instrumentationKey: ""
+                }
+            }
+        }
+
         //window.setTimeout(()=> { this.sendTestNotification("This is a test notification"); }, 3000);
         //window.setTimeout(()=> { this.sendUnknownWebMessage("Invalid"); }, 5000);
     }
