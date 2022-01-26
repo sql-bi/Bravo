@@ -45,6 +45,7 @@ namespace Sqlbi.Bravo.Installer.Wix
             telemetryConfiguration.InstrumentationKey = "47a8970c-6293-408a-9cce-5b7b311574d3";
             telemetryConfiguration.DisableTelemetry = false;
 
+            // Keep telemetry context configuration synchronized with Sqlbi.Bravo.Infrastructure.Helpers.ContextTelemetryInitializer
             var telemetryClient = new TelemetryClient(telemetryConfiguration);
             telemetryClient.Context.Device.OperatingSystem = Environment.OSVersion.ToString();
             telemetryClient.Context.Component.Version = productVersion;

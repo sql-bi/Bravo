@@ -4,6 +4,7 @@ using Microsoft.ApplicationInsights.Extensibility;
 using Sqlbi.Bravo.Infrastructure.Configuration;
 using Sqlbi.Bravo.Infrastructure.Security;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace Sqlbi.Bravo.Infrastructure.Helpers
@@ -42,21 +43,25 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
         public static readonly string ComponentVersion = AppConstants.ApplicationProductVersion;
         public static readonly string SessionId = Guid.NewGuid().ToString();
         public static readonly string? UserId = $"{ Environment.MachineName }\\{ Environment.UserName }".ToSHA256Hash();
+        public static readonly IReadOnlyDictionary<string, string> GlobalProperties = new Dictionary<string, string>
+        {
+            { "ProductName", AppConstants.ApplicationName },
+            { "Version", AppConstants.ApplicationProductVersion },
+            { "Build", AppConstants.ApplicationFileVersion },
+        };
 
         public void Initialize(ITelemetry telemetry)
         {
-            //if (telemetry is Microsoft.ApplicationInsights.DataContracts.ExceptionTelemetry exceptionTelemetry)
-            //{
-            //    if (exceptionTelemetry.Properties.ContainsKey("customProperty") == false)
-            //        exceptionTelemetry.Properties.Add("customProperty", "value");
-            //}
+            // Keep telemetry context configuration synchronized with Sqlbi.Bravo.Installer.Wix.Helpers.GetTelemetryClient()
 
-            var context = telemetry.Context;
+            telemetry.Context.Device.OperatingSystem = DeviceOperatingSystem;
+            telemetry.Context.Component.Version = ComponentVersion;
+            telemetry.Context.Session.Id = SessionId;
+            telemetry.Context.User.Id = UserId;
+
+            foreach (var property in GlobalProperties)
             {
-                context.Device.OperatingSystem = DeviceOperatingSystem;
-                context.Component.Version = ComponentVersion;
-                context.Session.Id = SessionId;
-                context.User.Id = UserId;
+                telemetry.Context.GlobalProperties.Add(property.Key, property.Value);
             }
         }
     }
