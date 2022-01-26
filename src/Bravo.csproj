@@ -28,6 +28,12 @@
     <IncludeOpenAPIAnalyzers>true</IncludeOpenAPIAnalyzers>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <!-- Don't change version here -->
+    <Version>0.0.0.999</Version>
+    <InformationalVersion>0.0.0.999-DEV</InformationalVersion>
+  </PropertyGroup>
+
   <ItemGroup>
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
       <_Parameter1>$(AssemblyName).Tests</_Parameter1>

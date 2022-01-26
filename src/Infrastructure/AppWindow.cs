@@ -71,6 +71,7 @@ namespace Sqlbi.Bravo.Infrastructure
                 token = AppConstants.ApiAuthenticationToken,
                 address = GetAddress().ToString(),
                 version = AppConstants.ApplicationProductVersion,
+                build = AppConstants.ApplicationFileVersion,
                 options = BravoOptions.CreateFromUserPreferences(),
                 telemetry = new
                 {

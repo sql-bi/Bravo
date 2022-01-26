@@ -3,15 +3,14 @@
   
   <String Id="ProductName">Bravo for Power BI</String>
   <String Id="ProductLanguage">1033</String>
-  <String Id="PackageDescription">TODO package description</String>
+  <String Id="PackageDescription">Bravo for Power BI</String>
   <String Id="PackageComments">This installer contains the logic and data required to install Bravo for Power BI</String>
   <String Id="MajorUpgradeDowngradeErrorMessage">A newer version of this application is already installed on this computer</String>
-  <String Id="ShortcutDescription">TODO app shortcut description</String>
-  <String Id="CreateDesktopShortcut">Create desktop shortcut</String>
-  <String Id="CreateProgramMenuShortcut">Create program menu shortcut</String>
+  <String Id="CreateDesktopShortcut">Create Desktop Shortcut</String>
+  <String Id="CreateProgramMenuShortcut">Create Program Menu Shortcut</String>
   <String Id="TelemetryInstallTitleText">Telemetry and error reports:</String>
-  <String Id="TelemetryInstallDescriptionText">Bravo for Power BI collects anonymous telemetry, which helps us improve the product. You can opt out at any time by launching the application and navigating to Settings &gt; Advanced.</String>
-  <String Id="InstallerTelemetryCheckBoxText">TODO - InstallerTelemetryCheckBoxText</String>
-  <String Id="ApplicationTelemetryCheckBoxText">TODO - ApplicationTelemetryCheckBoxText</String>
+  <String Id="TelemetryInstallDescriptionText">Bravo for Power BI collects anonymous telemetry, which helps us improve the product. You can opt out at any time by launching Bravo and navigating to Settings &gt; Telemetry.</String>
+  <String Id="InstallerTelemetryCheckBoxText">Enable Installer Telemetry</String>
+  <String Id="ApplicationTelemetryCheckBoxText">Enable Application Telemetry</String>
 
 </WixLocalization>
