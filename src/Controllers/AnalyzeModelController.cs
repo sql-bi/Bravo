@@ -123,6 +123,21 @@ namespace Sqlbi.Bravo.Controllers
         }
 
         /// <summary>
+        /// Returns a list of all open PBIDesktop reports as fast as possible, providing only process information and without attempting to establish a database connection
+        /// </summary>
+        /// <response code="200">Status200OK - Success</response>
+        [HttpGet]
+        [ActionName("QueryReports")]
+        [Produces(MediaTypeNames.Application.Json)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<PBIDesktopReport>))]
+        [ProducesDefaultResponseType]
+        public IActionResult QueryPBIDesktopReports(CancellationToken cancellationToken)
+        {
+            var reports = _pbidesktopService.QueryReports(cancellationToken);
+            return Ok(reports);
+        }
+
+        /// <summary>
         /// Returns a VPAX file stream from an active PBIDesktop report
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
