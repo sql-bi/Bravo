@@ -21,6 +21,8 @@ namespace Sqlbi.Bravo.Services
 {
     public interface IPBIDesktopService
     {
+        IEnumerable<PBIDesktopReport> QueryReports(CancellationToken cancellationToken);
+
         IEnumerable<PBIDesktopReport> GetReports(CancellationToken cancellationToken);
 
         Stream ExportVpax(PBIDesktopReport report, bool includeTomModel, bool includeVpaModel, bool readStatisticsFromData, int sampleRows);
@@ -30,27 +32,49 @@ namespace Sqlbi.Bravo.Services
 
     internal class PBIDesktopService : IPBIDesktopService
     {
+        public IEnumerable<PBIDesktopReport> QueryReports(CancellationToken cancellationToken)
+        {
+            var reports = new ConcurrentBag<PBIDesktopReport>();
+            var processes = ProcessHelper.GetProcessesByName(AppConstants.PBIDesktopProcessName);
+
+            foreach (var process in processes)
+            {
+                var report = new PBIDesktopReport
+                {
+                    ProcessId = process.Id,
+                    ReportName = process.GetPBIDesktopMainWindowTitle()?.ToPBIDesktopReportName(),
+
+                    // We leave the connection properties empty because we are only interested in the process state and to return the results as fast as possible 
+                    ServerName = null,
+                    DatabaseName = null,
+                    ConnectionMode = PBIDesktopReportConnectionMode.Unknown,
+                };
+
+                reports.Add(report);
+                process.Dispose();
+            }
+
+            return reports;
+        }
+
         public IEnumerable<PBIDesktopReport> GetReports(CancellationToken cancellationToken)
         {
             var reports = new ConcurrentBag<PBIDesktopReport>();
-            var parallelOptions = new ParallelOptions { CancellationToken = cancellationToken };
 
-            var parallelLoop = Parallel.ForEach(source: ProcessHelper.GetProcessesByName(AppConstants.PBIDesktopProcessName), parallelOptions, (process) =>
+            var processes = ProcessHelper.GetProcessesByName(AppConstants.PBIDesktopProcessName);
+            var parallelOptions = new ParallelOptions { CancellationToken = cancellationToken };
+            var parallelLoop = Parallel.ForEach(processes, parallelOptions, (process) =>
             {
-                if (TryCreateFrom(process, out var report))
-                    reports.Add(report);
+                var report = CreateFrom(process);
+                reports.Add(report);
+                process.Dispose();
             });
 
             return parallelLoop.IsCompleted ? reports : Array.Empty<PBIDesktopReport>();
 
-            static bool TryCreateFrom(Process process, [NotNullWhen(true)] out PBIDesktopReport? report, bool dispose = true)
+            static PBIDesktopReport CreateFrom(Process process)
             {
-                report = null;
-
-                if (!process.ProcessName.EqualsI(AppConstants.PBIDesktopProcessName))
-                    return false;
-
-                report = new PBIDesktopReport
+                var report = new PBIDesktopReport
                 {
                     ProcessId = process.Id,
                     ReportName = process.GetPBIDesktopMainWindowTitle()?.ToPBIDesktopReportName(),
@@ -70,10 +94,7 @@ namespace Sqlbi.Bravo.Services
                     report.ConnectionMode = connectivityMode;
                 }
 
-                if (dispose)
-                    process.Dispose();
-
-                return true;
+                return report;
 
                 void GetConnectionDetails(out string? serverName, out string? databaseName, out PBIDesktopReportConnectionMode connectivityMode)
                 {

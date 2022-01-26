@@ -48,6 +48,7 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
             { "ProductName", AppConstants.ApplicationName },
             { "Version", AppConstants.ApplicationProductVersion },
             { "Build", AppConstants.ApplicationFileVersion },
+            { "IsPackaged", AppConstants.IsPackagedAppInstance.ToString().ToLowerInvariant() },
         };
 
         public void Initialize(ITelemetry telemetry)
