@@ -13,6 +13,8 @@ import { strings } from './strings';
 
 export enum AppProblem {
     None = 0,
+    AnalysisServicesConnectionFailed = 10,
+
     TOMDatabaseDatabaseNotFound = 101,
     TOMDatabaseUpdateFailed = 102,
     TOMDatabaseUpdateConflictMeasure = 103,
@@ -22,7 +24,8 @@ export enum AppProblem {
     SignInMsalExceptionOccurred = 400,
     SignInMsalTimeoutExpired = 401,
     VpaxFileContainsCorruptedData = 500,
-    NetworkError = 600
+    NetworkError = 600,
+    ExportDataFileError = 700,
 }
 
 export enum AppErrorType {

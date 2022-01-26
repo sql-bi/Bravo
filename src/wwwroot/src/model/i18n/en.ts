@@ -171,6 +171,7 @@ const locale: Locale = {
 
         /* Errors */
         [_.errorAborted]: "Operation aborted.",
+        [_.errorAnalysisServicesConnectionFailed]: "A connection problem arises between the server and Bravo.",
         [_.errorConnectionUnsupported]: "The connection to the requested resource is not supported.",
         [_.errorDatasetConnectionUnknown]: "Unspecified connection.",
         [_.errorDatasetConnectionUnsupportedExcelWorkbookDataset]: "Excel workbook datasets are not supported.", 
@@ -181,6 +182,7 @@ const locale: Locale = {
         [_.errorDatasetConnectionUnsupportedWorkspaceSku]: "Workspace capacity SKU not supported.",
         [_.errorDatasetsEmptyListing]: "No unopened datasets available.",
         [_.errorDatasetsListing]: "Unable to retrieve the list of datasets of Power BI Service.",
+        [_.errorExportDataFileError]: "Something wrong happened while exporting data. Please try again.",
         [_.errorNetworkError]: "You are not connected to the Internet.",
         [_.errorNone]: "Unspecified error.",
         [_.errorNotAuthorized]: "You are not authorized to view the specified resource.",

@@ -162,6 +162,7 @@ export enum strings {
 
     /* Errors */
     errorAborted,
+    errorAnalysisServicesConnectionFailed,
     errorConnectionUnsupported,
     errorDatasetConnectionUnknown,
     errorDatasetConnectionUnsupportedExcelWorkbookDataset, 
@@ -172,6 +173,7 @@ export enum strings {
     errorDatasetConnectionUnsupportedWorkspaceSku,
     errorDatasetsEmptyListing,
     errorDatasetsListing,
+    errorExportDataFileError,
     errorNetworkError,
     errorNone,
     errorNotAuthorized,
