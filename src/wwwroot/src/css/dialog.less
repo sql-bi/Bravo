@@ -230,6 +230,43 @@
 	.item-body {
 		margin-top: 20px;
 	}
+
+	#body-about {
+		img {
+			width: 140px;
+			height: auto;
+		}
+		.col {
+			padding: 20px;
+		}
+		.coll {
+			width: 180px;
+		}
+		.colr {
+			width: 100%;
+		}
+		.update-status {
+			font-size: 17px;
+			line-height: 1.4;
+			margin: 0 0 10px 0;
+
+			.up-to-date {
+				color: @accent-back-color;
+
+				.dark & { color: @accent-back-color-dark }
+			}
+			.version {
+				font-size: 14px;
+			}
+		}	
+		.copyright {
+			color: @notice-color;
+			font-size: 12px;
+
+			.dark & { color: @notice-color-dark }
+		}
+		
+	}
 }
 
 #dialog-error {
