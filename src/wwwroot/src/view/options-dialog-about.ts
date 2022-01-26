@@ -24,7 +24,7 @@ export class OptionsDialogAbout {
         let html = `
             <div class="cols">
                 <div class="col coll">
-                    <img src="images/bravo.svg">
+                    <img src="images/bravo-shadows.svg">
                 </div>
                 <div class="col colr">
                     <h2>${i18n(strings.appName)}</h2>
@@ -37,6 +37,13 @@ export class OptionsDialogAbout {
                         ${i18n(strings.license)}
                     </div>
 
+                </div>
+            </div>
+            <div class="sqlbi">
+                <div><img src="images/sqlbi.svg"></div>
+                <div>
+                    ${i18n(strings.sqlbiPayoff)} &nbsp; 
+                    <span class="link" data-href="https://www.sqlbi.com">www.sqlbi.com</span>
                 </div>
             </div>
         `;

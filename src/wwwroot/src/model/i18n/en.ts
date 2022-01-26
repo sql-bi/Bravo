@@ -162,6 +162,7 @@ const locale: Locale = {
         [_.signIn]: "Sign In",
         [_.signInCtrlTitle]: "Sign In",
         [_.signOut]: "Sign Out",
+        [_.sqlbiPayoff]: "Bravo is brought to you by SQLBI.",
         [_.successTitle]: "Success",
         [_.syncCtrlTitle]: "Synchronize",
         [_.themeCtrlTitle]: "Change Theme",

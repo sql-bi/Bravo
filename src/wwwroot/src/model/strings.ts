@@ -152,6 +152,7 @@ export enum strings {
     signIn,
     signInCtrlTitle,
     signOut,
+    sqlbiPayoff,
     successTitle,
     syncCtrlTitle,
     themeCtrlTitle,
