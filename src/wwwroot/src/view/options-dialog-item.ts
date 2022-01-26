@@ -64,8 +64,8 @@ export class OptionsDialogMenuItem {
                     break;
 
                 case OptionType.custom:
-                    if (Utils.Obj.isSet(struct.custom))
-                        ctrlHtml = struct.custom();
+                    if (Utils.Obj.isSet(struct.customHtml))
+                        ctrlHtml = struct.customHtml();
                     break;
                     
                 default:
@@ -84,6 +84,9 @@ export class OptionsDialogMenuItem {
                         ${ctrlHtml}
                     </div>
                 </div>
+                ${struct.additionalNotes ? `
+                    <div class="option-notice">${struct.additionalNotes}</div>
+                ` : ""}
             `;
 
             this.element.insertAdjacentHTML("beforeend", html);

@@ -18,12 +18,13 @@ export interface OptionStruct {
     icon?: string
     name: string
     description?: string
+    additionalNotes?: string
     type: OptionType
     values?: string[][]
     value?: any,
     onChange?: (e: Event) => void,
     onClick?: (e: Event) => void,
-    custom?: ()=> string
+    customHtml?: ()=> string
 }
 
 export enum OptionType {

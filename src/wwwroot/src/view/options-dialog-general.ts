@@ -62,7 +62,7 @@ export class OptionsDialogGeneral extends OptionsDialogMenuItem {
                 name: i18n(strings.optionAccount),
                 description: i18n(strings.optionAccountDescription),
                 type: OptionType.custom,
-                custom: () => `
+                customHtml: () => `
                     <p>
                         ${auth.signedIn ? 
                             `${i18n(strings.signedInCtrlTitle, {name: auth.account.username})} 

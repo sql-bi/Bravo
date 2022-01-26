@@ -120,7 +120,7 @@ const locale: Locale = {
         [_.optionFormattingSpacesValueFalse]: "No space - IF( ",
         [_.optionTelemetry]: "Telemetry",
         [_.optionTelemetryDescription]: "Send anonymous usage data to SQLBI.",
-        [_.optionTelemetryExplanation]: "Help us understand how you use Bravo and how to improve it. No personal information is collected.",
+        [_.optionTelemetryExplanation]: "Help us understand how you use Bravo and how to improve it. No personal information is collected. Please note that if this option is disabled, the development team will not able to collect any unhandled errors and provide additional information or support.",
 
         [_.optionTheme]: "Theme",
         [_.optionThemeDescription]: "Set the theme of Bravo. Leave <em>Auto</em> to let the system choose.",
