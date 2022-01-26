@@ -80,6 +80,7 @@ namespace Sqlbi.Bravo.Infrastructure
                     contextComponentVersion = ContextTelemetryInitializer.ComponentVersion,
                     contextSessionId = ContextTelemetryInitializer.SessionId,
                     contextUserId = ContextTelemetryInitializer.UserId,
+                    globalProperties = ContextTelemetryInitializer.GlobalProperties
                 },
             };
             config.options.Theme = GetTheme();
