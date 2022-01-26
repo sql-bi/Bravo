@@ -11,11 +11,12 @@ namespace Sqlbi.Bravo.Installer.Wix
 {
     internal static class Helpers
     {
-        internal const string CustomDataPbitoolPath = "CUSTOMDATAPBITOOLPATH";
-        internal const string CustomDataProductName = "CUSTOMDATAPRODUCTNAME";
-        internal const string CustomDataProductVersion = "CUSTOMDATAPRODUCTVERSION";
-        internal const string CustomDataProductExecutablePath = "CUSTOMDATAPRODUCTEXECUTABLEPATH";
-        internal const string CustomDataInstallerTelemetryEnabled = "CUSTOMDATAINSTALLERTELEMETRYENABLED";
+        internal const string CustomDataPbitoolPath = "PBITOOLPATH";
+        internal const string CustomDataProductName = "PRODUCTNAME";
+        internal const string CustomDataProductVersion = "PRODUCTVERSION";
+        internal const string CustomDataProductBuild = "PRODUCTBUILD";
+        internal const string CustomDataProductExecutablePath = "PRODUCTEXECUTABLEPATH";
+        internal const string CustomDataInstallerTelemetryEnabled = "INSTALLERTELEMETRYENABLED";
 
         internal static void TrackEvent(Session session, string name)
         {
@@ -38,6 +39,7 @@ namespace Sqlbi.Bravo.Installer.Wix
         {
             var productName = session.CustomActionData[CustomDataProductName];
             var productVersion = session.CustomActionData[CustomDataProductVersion];
+            var productBuild = session.CustomActionData[CustomDataProductBuild];
 
             var telemetryConfiguration = TelemetryConfiguration.CreateDefault();
             telemetryConfiguration.InstrumentationKey = "47a8970c-6293-408a-9cce-5b7b311574d3";
@@ -49,6 +51,8 @@ namespace Sqlbi.Bravo.Installer.Wix
             telemetryClient.Context.Session.Id = Guid.NewGuid().ToString();
             telemetryClient.Context.User.Id = ToSHA256Hash($"{ Environment.MachineName }\\{ Environment.UserName }");
             telemetryClient.Context.GlobalProperties.Add("ProductName", productName);
+            telemetryClient.Context.GlobalProperties.Add("Version", productVersion);
+            telemetryClient.Context.GlobalProperties.Add("Build", productBuild);
 
             return telemetryClient;
         }
@@ -59,8 +63,6 @@ namespace Sqlbi.Bravo.Installer.Wix
             {
                 if (value == string.Empty)
                     return false;
-                else if (bool.TryParse(value, out var boolValue))
-                    return boolValue;
                 else if (int.TryParse(value, out var intValue))
                     return Convert.ToBoolean(intValue);
             }
@@ -89,17 +91,5 @@ namespace Sqlbi.Bravo.Installer.Wix
                 return stringBuilder.ToString();
             }
         }
-
-        //internal static bool IsProductInstalled(string name)
-        //{
-        //    var value = Registry.GetValue($@"HKEY_LOCAL_MACHINE\SOFTWARE\SQLBI\{ name }", "installFolder", null);
-        //    if (value != null)
-        //    {
-        //        var path = Convert.ToString(value);
-        //        if (Directory.Exists(path))
-        //            return true;
-        //    }
-        //    return false;
-        //}
     }
 }
