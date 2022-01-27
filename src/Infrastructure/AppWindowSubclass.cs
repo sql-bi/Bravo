@@ -46,7 +46,7 @@ namespace Sqlbi.Bravo.Infrastructure
             {
                 // Restore original size and position only if the window is minimized, otherwise keep current position
                 if (_window.Minimized)
-                    User32.ShowWindow(hWnd, NativeMethods.SW_RESTORE);
+                    User32.ShowWindow(hWnd, User32.SW_RESTORE);
 
                 // Regardless of the current state of the window, bring it to the foreground and activate it
                 User32.SetForegroundWindow(hWnd);

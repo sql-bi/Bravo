@@ -4,11 +4,13 @@
     {
         //public const string Activeds = "activeds.dll";
 
-        //public const string Advapi32 = "advapi32.dll";
+        public const string Advapi32 = "advapi32.dll";
 
         public const string Comctl32 = "comctl32.dll";
 
         public const string Comdlg32 = "comdlg32.dll";
+
+        public const string Credui = "credui.dll";
 
         //public const string DwmAPI = "dwmapi.dll";
 

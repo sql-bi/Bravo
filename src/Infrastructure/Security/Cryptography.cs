@@ -1,25 +1,27 @@
-﻿using System;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Security;
-using System.Security.Cryptography;
-using System.Text;
-
-namespace Sqlbi.Bravo.Infrastructure.Security
+﻿namespace Sqlbi.Bravo.Infrastructure.Security
 {
+    using System;
+    using System.Linq;
+    using System.Runtime.InteropServices;
+    using System.Security;
+    using System.Security.Cryptography;
+    using System.Text;
+
     internal static class Cryptography
     {
+        private static readonly byte[] DefaultEntropy = Encoding.Unicode.GetBytes($"{Environment.MachineName}|{Environment.UserName}|3ae*f-4aew1/L22");
+
         /// <summary>
         ///  Encrypts the data in a specified byte array.
         /// </summary>
         /// <remarks>The protected data is associated with the current user and only threads running under the current user context can unprotect the data.</remarks>
-        public static byte[] Protect(byte[] userData) => ProtectedData.Protect(userData, optionalEntropy: null, DataProtectionScope.CurrentUser);
+        public static byte[] Protect(byte[] userData, byte[]? entropy = null) => ProtectedData.Protect(userData, entropy ?? DefaultEntropy, DataProtectionScope.CurrentUser);
 
         /// <summary>
         ///  Decrypts the data in a specified byte array. 
         /// </summary>
         /// <remarks>The protected data is associated with the current user and only threads running under the current user context can unprotect the data.</remarks>
-        public static byte[] Unprotect(byte[] encryptedData) => ProtectedData.Unprotect(encryptedData, optionalEntropy: null, DataProtectionScope.CurrentUser);
+        public static byte[] Unprotect(byte[] encryptedData, byte[]? entropy = null) => ProtectedData.Unprotect(encryptedData, entropy ?? DefaultEntropy, DataProtectionScope.CurrentUser);
 
         /// <summary>
         /// Encodes the provided buffers into an MD5 hashed string
@@ -117,10 +119,10 @@ namespace Sqlbi.Bravo.Infrastructure.Security
         /// <summary>
         /// Converts the results of the ToProtectedString() method to SecureString
         /// </summary>
-        /// <param name="value">Protected string returned from method ToProtectedString()</param>
-        public static SecureString ToSecureString(this string value)
+        /// <param name="protectedString">Protected string returned from method ToProtectedString()</param>
+        public static SecureString ToSecureString(this string protectedString)
         {
-            var protectedBytes = Convert.FromBase64String(value);
+            var protectedBytes = Convert.FromBase64String(protectedString);
             var unprotectedBytes = Cryptography.Unprotect(protectedBytes);
             try
             {
@@ -131,7 +133,8 @@ namespace Sqlbi.Bravo.Infrastructure.Security
 
                     foreach (var @char in unprotectedChars)
                         secureString.AppendChar(@char);
-
+                    
+                    secureString.MakeReadOnly();
                     return secureString;
                 }
                 finally
