@@ -1,14 +1,14 @@
-﻿using Sqlbi.Bravo.Infrastructure.Helpers;
-using Sqlbi.Bravo.Infrastructure.Messages;
-using Sqlbi.Bravo.Infrastructure.Windows.Interop;
-using Sqlbi.Infrastructure.Configuration.Settings;
-using System;
-using System.Text;
-using System.Text.Json;
-using System.Threading;
-
-namespace Sqlbi.Bravo.Infrastructure
+﻿namespace Sqlbi.Bravo.Infrastructure
 {
+    using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
+    using Sqlbi.Bravo.Infrastructure.Helpers;
+    using Sqlbi.Bravo.Infrastructure.Messages;
+    using Sqlbi.Bravo.Infrastructure.Windows.Interop;
+    using System;
+    using System.Text;
+    using System.Text.Json;
+    using System.Threading;
+
     internal class AppInstance : IDisposable
     {
         private readonly Mutex _instanceMutex;

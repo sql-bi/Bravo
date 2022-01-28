@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Sqlbi.Bravo.Infrastructure.Configuration;
 using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
+using Sqlbi.Bravo.Infrastructure.Helpers;
 using Sqlbi.Bravo.Infrastructure.Windows.Interop;
 using Sqlbi.Bravo.Models;
 using System;
@@ -107,14 +108,8 @@ namespace Sqlbi.Bravo.Controllers
         [ProducesDefaultResponseType]
         public IActionResult BrowserNavigateTo(Uri address)
         {
-            if (address.IsAbsoluteUri && (Uri.UriSchemeHttps.Equals(address.Scheme) || Uri.UriSchemeHttp.Equals(address.Scheme)))
+            if (ProcessHelper.OpenInBrowser(address))
             {
-                _ = Process.Start(new ProcessStartInfo
-                {
-                    UseShellExecute = true,
-                    FileName = address.OriginalString
-                });
-
                 return Ok();
             }
 

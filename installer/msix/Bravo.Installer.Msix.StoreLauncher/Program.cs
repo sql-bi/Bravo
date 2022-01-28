@@ -63,7 +63,7 @@
         private static Process GetParentProcess()
         {
             var currentProcess = Process.GetCurrentProcess();
-            var queryString = string.Format("SELECT ParentProcessId FROM Win32_Process WHERE ProcessId = {0}", currentProcess.Id);
+            var queryString = string.Format("SELECT ParentProcessId FROM Win32_Process WHERE ProcessId = {0} AND SessionId = {1}", currentProcess.Id, currentProcess.SessionId);
 
             using (var query = new ManagementObjectSearcher(queryString))
             using (var collection = query.Get())

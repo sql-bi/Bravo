@@ -171,16 +171,16 @@ namespace Sqlbi.Bravo.Infrastructure
 
             if (register)
             {
-                _ = User32.RegisterHotKey(hWnd, id: HOTKEY_CONTROL_F, User32.KeyModifier.MOD_CONTROL, System.Windows.Forms.Keys.F);
-                _ = User32.RegisterHotKey(hWnd, id: HOTKEY_F3, User32.KeyModifier.MOD_NONE, System.Windows.Forms.Keys.F3);
-                _ = User32.RegisterHotKey(hWnd, id: HOTKEY_CONTROL_P, User32.KeyModifier.MOD_CONTROL, System.Windows.Forms.Keys.P);
-                _ = User32.RegisterHotKey(hWnd, id: HOTKEY_CONTROL_R, User32.KeyModifier.MOD_CONTROL, System.Windows.Forms.Keys.R);
-                _ = User32.RegisterHotKey(hWnd, id: HOTKEY_F5, User32.KeyModifier.MOD_NONE, System.Windows.Forms.Keys.F5);
+                _ = User32.RegisterHotKey(hWnd, id: HOTKEY_CONTROL_F, User32.MODEKEY.MOD_CONTROL, System.Windows.Forms.Keys.F);
+                _ = User32.RegisterHotKey(hWnd, id: HOTKEY_F3, User32.MODEKEY.MOD_NONE, System.Windows.Forms.Keys.F3);
+                _ = User32.RegisterHotKey(hWnd, id: HOTKEY_CONTROL_P, User32.MODEKEY.MOD_CONTROL, System.Windows.Forms.Keys.P);
+                _ = User32.RegisterHotKey(hWnd, id: HOTKEY_CONTROL_R, User32.MODEKEY.MOD_CONTROL, System.Windows.Forms.Keys.R);
+                _ = User32.RegisterHotKey(hWnd, id: HOTKEY_F5, User32.MODEKEY.MOD_NONE, System.Windows.Forms.Keys.F5);
                 //_ = User32.RegisterHotKey(hWnd, id: HOTKEY_CONTROL_PLUS, User32.KeyModifier.MOD_CONTROL, System.Windows.Forms.Keys.Add);
                 //_ = User32.RegisterHotKey(hWnd, id: HOTKEY_CONTROL_MINUS, User32.KeyModifier.MOD_CONTROL, System.Windows.Forms.Keys.Subtract);
-                _ = User32.RegisterHotKey(hWnd, id: HOTKEY_CONTROL_S, User32.KeyModifier.MOD_CONTROL, System.Windows.Forms.Keys.S);
-                _ = User32.RegisterHotKey(hWnd, id: HOTKEY_ALT_LEFTARROW, User32.KeyModifier.MOD_ALT, System.Windows.Forms.Keys.Left);
-                _ = User32.RegisterHotKey(hWnd, id: HOTKEY_ALT_RIGHTARROW, User32.KeyModifier.MOD_ALT, System.Windows.Forms.Keys.Right);
+                _ = User32.RegisterHotKey(hWnd, id: HOTKEY_CONTROL_S, User32.MODEKEY.MOD_CONTROL, System.Windows.Forms.Keys.S);
+                _ = User32.RegisterHotKey(hWnd, id: HOTKEY_ALT_LEFTARROW, User32.MODEKEY.MOD_ALT, System.Windows.Forms.Keys.Left);
+                _ = User32.RegisterHotKey(hWnd, id: HOTKEY_ALT_RIGHTARROW, User32.MODEKEY.MOD_ALT, System.Windows.Forms.Keys.Right);
             }
             else
             {
