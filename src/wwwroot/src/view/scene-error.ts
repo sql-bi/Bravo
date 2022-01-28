@@ -34,7 +34,7 @@ export class ErrorScene extends BackableScene {
 
                 <h1>${i18n(strings.errorTitle)}${this.error.code ? ` (${this.error.type != AppErrorType.Managed ? "HTTP/" : ""}${this.error.code})` : "" }</h1>
 
-                <p>
+                <p class="message">
                     ${this.error.message}
                 </p>
 
@@ -47,7 +47,7 @@ export class ErrorScene extends BackableScene {
                     ${this.error.traceId ? ` - ${i18n(strings.traceId)}: ${this.error.traceId}` : ""}
                 </p>
 
-                <p><span class="copy-error link">${i18n(strings.copyErrorCtrlTitle)}</span></p>
+                <p><span class="copy-error link">${i18n(strings.copyErrorDetails)}</span></p>
             
                 ${ this.onRetry ? `
                     <p><div class="retry-call button button-alt">${i18n(strings.errorRetry)}</div></p>
@@ -62,9 +62,9 @@ export class ErrorScene extends BackableScene {
             navigator.clipboard.writeText(this.error.toString());
 
             let ctrl = <HTMLElement>e.currentTarget;
-            ctrl.innerText = i18n(strings.copiedErrorCtrlTitle);
+            ctrl.innerText = i18n(strings.copiedErrorDetails);
             window.setTimeout(() => {
-                ctrl.innerText = i18n(strings.copyErrorCtrlTitle);
+                ctrl.innerText = i18n(strings.copyErrorDetails);
             }, 1500);
         });
 

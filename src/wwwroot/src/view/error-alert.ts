@@ -26,7 +26,7 @@ export class ErrorAlert extends Dialog {
 
     show() {
         let html = `
-            <p>${this.error.message}</p>
+            <p class="message">${this.error.message}</p>
 
             ${ this.error.details ? `
                 <blockquote>${this.error.details}</blockquote>
@@ -37,7 +37,7 @@ export class ErrorAlert extends Dialog {
                 ${this.error.traceId ? `<br> ${i18n(strings.traceId)}: ${this.error.traceId}` : ""}
             </p>
 
-            <p><span class="copy-error link">${i18n(strings.copyErrorCtrlTitle)}</span></p>
+            <p><span class="copy-error link">${i18n(strings.copyErrorDetails)}</span></p>
         `;
         this.body.insertAdjacentHTML("beforeend", html);
 
@@ -46,9 +46,9 @@ export class ErrorAlert extends Dialog {
             navigator.clipboard.writeText(this.error.toString());
 
             let ctrl = <HTMLElement>e.currentTarget;
-            ctrl.innerText = i18n(strings.copiedErrorCtrlTitle);
+            ctrl.innerText = i18n(strings.copiedErrorDetails);
             window.setTimeout(() => {
-                ctrl.innerText = i18n(strings.copyErrorCtrlTitle);
+                ctrl.innerText = i18n(strings.copyErrorDetails);
             }, 1500);
         });
 

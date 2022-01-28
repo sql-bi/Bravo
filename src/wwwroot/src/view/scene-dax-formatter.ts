@@ -344,7 +344,7 @@ export class DaxFormatterScene extends MainScene {
             <div class="notice">
                 <div>
                     <p>${message}</p>
-                    <p><span class="copy-error link">${i18n(strings.copyErrorCtrlTitle)}</span></p>
+                    <p><span class="copy-error link">${i18n(strings.copyErrorDetails)}</span></p>
                     ${ retry ? `
                         <div id="${retryId}" class="button button-alt">${i18n(strings.errorRetry)}</div>
                     ` : ""}
@@ -357,9 +357,9 @@ export class DaxFormatterScene extends MainScene {
             navigator.clipboard.writeText(message);
 
             let ctrl = <HTMLElement>e.currentTarget;
-            ctrl.innerText = i18n(strings.copiedErrorCtrlTitle);
+            ctrl.innerText = i18n(strings.copiedErrorDetails);
             window.setTimeout(() => {
-                ctrl.innerText = i18n(strings.copyErrorCtrlTitle);
+                ctrl.innerText = i18n(strings.copyErrorDetails);
             }, 1500);
         });
 
