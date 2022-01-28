@@ -1,12 +1,12 @@
-﻿using Microsoft.ApplicationInsights;
-using Microsoft.Extensions.Hosting;
-using Sqlbi.Bravo.Infrastructure;
-using Sqlbi.Bravo.Infrastructure.Configuration;
-using Sqlbi.Bravo.Infrastructure.Helpers;
-using System;
-
-namespace Sqlbi.Bravo
+﻿namespace Sqlbi.Bravo
 {
+    using Microsoft.ApplicationInsights;
+    using Microsoft.Extensions.Hosting;
+    using Sqlbi.Bravo.Infrastructure;
+    using Sqlbi.Bravo.Infrastructure.Configuration;
+    using Sqlbi.Bravo.Infrastructure.Helpers;
+    using System;
+
     internal partial class Program
     {
         [STAThread]
@@ -15,6 +15,7 @@ namespace Sqlbi.Bravo
             try
             {
                 StartupConfiguration.Configure();
+                WebView2Helper.EnsureRuntimeIsInstalled();
 
                 using var instance = new AppInstance();
                 if (instance.IsOwned)

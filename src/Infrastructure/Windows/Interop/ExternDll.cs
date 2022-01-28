@@ -72,6 +72,8 @@
 
         //public const string Vsassert = "vsassert.dll";
 
+        public const string WebView2Loader = "WebView2Loader.dll";
+
         //public const string Wininet = "wininet.dll";
 
         //public const string Winmm = "winmm.dll";

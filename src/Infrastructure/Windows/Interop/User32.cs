@@ -1,9 +1,9 @@
-﻿using System;
-using System.Runtime.InteropServices;
-using System.Text;
-
-namespace Sqlbi.Bravo.Infrastructure.Windows.Interop
+﻿namespace Sqlbi.Bravo.Infrastructure.Windows.Interop
 {
+    using System;
+    using System.Runtime.InteropServices;
+    using System.Text;
+
     internal static class User32
     {
         [StructLayout(LayoutKind.Sequential)]
@@ -16,7 +16,7 @@ namespace Sqlbi.Bravo.Infrastructure.Windows.Interop
         }
 
         [Flags]
-        public enum KeyModifier : uint
+        public enum MODEKEY : uint
         {
             MOD_NONE = 0x0000,
             MOD_ALT = 0x0001,
@@ -49,10 +49,8 @@ namespace Sqlbi.Bravo.Infrastructure.Windows.Interop
 
         public delegate bool EnumThreadDelegate(IntPtr hWnd, IntPtr lParam);
 
-        public delegate IntPtr SUBCLASSPROC(IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam, IntPtr id, IntPtr data);
-
         [DllImport(ExternDll.User32, SetLastError = true)]
-        public static extern bool RegisterHotKey(IntPtr hWnd, int id, KeyModifier modifiers, System.Windows.Forms.Keys keys);
+        public static extern bool RegisterHotKey(IntPtr hWnd, int id, MODEKEY modifiers, System.Windows.Forms.Keys keys);
 
         [DllImport(ExternDll.User32, SetLastError = true)]
         public static extern bool UnregisterHotKey(IntPtr hWnd, int id);
@@ -70,7 +68,7 @@ namespace Sqlbi.Bravo.Infrastructure.Windows.Interop
         public static extern IntPtr SendMessage(IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam);
 
         [DllImport(ExternDll.User32, CharSet = CharSet.Auto)]
-        public static extern int MessageBox(IntPtr hWnd, string text, string caption, uint type);
+        public static extern int MessageBox(IntPtr hWnd, string lpText, string lpCaption, uint uType);
 
         [DllImport(ExternDll.User32)]
         [return: MarshalAs(UnmanagedType.Bool)]
@@ -105,25 +103,7 @@ namespace Sqlbi.Bravo.Infrastructure.Windows.Interop
         [DllImport(ExternDll.User32, CharSet = CharSet.Unicode, SetLastError = true)]
         public static extern uint RegisterWindowMessage(string lpString);
 
-        [DllImport(ExternDll.Kernel32, SetLastError = true)]
-        public static extern int GetCurrentProcessId();
-
-        [DllImport(ExternDll.Kernel32, SetLastError = true)]
-        public static extern int GetCurrentThreadId();
-
         [DllImport(ExternDll.User32, CharSet = CharSet.Auto, SetLastError = true)]
         public static extern int GetWindowThreadProcessId(IntPtr hWnd, out int processId);
-
-        [DllImport(ExternDll.Comctl32, CharSet = CharSet.Auto, SetLastError = true)]
-        public static extern bool GetWindowSubclass(IntPtr hWnd, SUBCLASSPROC pfnSubclass, IntPtr uIdSubclass, ref IntPtr pdwRefData);
-
-        [DllImport(ExternDll.Comctl32, CharSet = CharSet.Auto, SetLastError = true)]
-        public static extern bool SetWindowSubclass(IntPtr hWnd, SUBCLASSPROC callback, IntPtr id, IntPtr data);
-
-        [DllImport(ExternDll.Comctl32, CharSet = CharSet.Auto, SetLastError = true)]
-        public static extern bool RemoveWindowSubclass(IntPtr hWnd, SUBCLASSPROC callback, IntPtr id);
-
-        [DllImport(ExternDll.Comctl32, CharSet = CharSet.Auto, SetLastError = true)]
-        public static extern IntPtr DefSubclassProc(IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam);
     }
 }

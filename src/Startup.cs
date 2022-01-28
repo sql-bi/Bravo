@@ -1,18 +1,18 @@
-﻿using Dax.Formatter;
-using Hellang.Middleware.ProblemDetails;
-using Microsoft.ApplicationInsights.Extensibility;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Sqlbi.Bravo.Infrastructure.Extensions;
-using Sqlbi.Bravo.Infrastructure.Helpers;
-using Sqlbi.Bravo.Services;
-using Sqlbi.Infrastructure.Configuration.Settings;
-using System.Text.Json.Serialization;
-
-namespace Sqlbi.Bravo
+﻿namespace Sqlbi.Bravo
 {
+    using Dax.Formatter;
+    using Hellang.Middleware.ProblemDetails;
+    using Microsoft.ApplicationInsights.Extensibility;
+    using Microsoft.AspNetCore.Builder;
+    using Microsoft.AspNetCore.Hosting;
+    using Microsoft.Extensions.Configuration;
+    using Microsoft.Extensions.DependencyInjection;
+    using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
+    using Sqlbi.Bravo.Infrastructure.Extensions;
+    using Sqlbi.Bravo.Infrastructure.Helpers;
+    using Sqlbi.Bravo.Services;
+    using System.Text.Json.Serialization;
+
     internal class Startup
     {
         private const string CorsLocalhostOnlyPolicy = "AllowLocalWebAPI";
