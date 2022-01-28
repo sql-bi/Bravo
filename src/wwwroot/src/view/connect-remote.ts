@@ -103,7 +103,7 @@ export class ConnectRemote extends ConnectMenuItem {
                             const dataset = <PBICloudDataset>cell.getData();
 
                             let icon = (dataset.connectionMode == PBICloudDatasetConnectionMode.Supported ? "dataset" : "alert");
-                            let tooltip = (dataset.connectionMode != PBICloudDatasetConnectionMode.Supported ? i18n(strings[`errorDatasetConnection${PBICloudDatasetConnectionMode[dataset.connectionMode]}`]) : "");
+                            let tooltip = (dataset.connectionMode != PBICloudDatasetConnectionMode.Supported ? i18n((<any>strings)[`errorDatasetConnection${PBICloudDatasetConnectionMode[dataset.connectionMode]}`]) : "");
 
                             return `<div class="icon-${icon}" title="${tooltip}"></div>`;
                         }, 
