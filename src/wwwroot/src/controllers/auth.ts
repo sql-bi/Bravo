@@ -5,9 +5,10 @@
 */
 
 import { Dispatchable } from '../helpers/dispatchable';
-import { Dic, Utils } from '../helpers/utils';
+import { Utils } from '../helpers/utils';
 import { host, optionsController } from '../main';
 import { AppError } from '../model/exceptions';
+import { CacheHelper } from './cache';
 
 export interface Account {
     id?: string
@@ -18,7 +19,7 @@ export interface Account {
 
 export class Auth extends Dispatchable {
 
-    static UsersStorageName = "bravo-users";
+    cache: CacheHelper;
     account: Account;
 
     get signedIn(): boolean {
@@ -27,6 +28,8 @@ export class Auth extends Dispatchable {
 
     constructor() {
         super();
+
+        this.cache = new CacheHelper("bravo-users");
 
         host.getUser().then(account => {
             this.account = account;
@@ -38,52 +41,16 @@ export class Auth extends Dispatchable {
         });
     }
 
-    getCache(): Dic<string> {
-
-        let storage = {};
-        const rawData = localStorage.getItem(Auth.UsersStorageName);
-        if (rawData) {
-            try {
-                storage = JSON.parse(rawData);
-            } catch(error){}
-        }
-        return storage;
-    }
-
-    getCachedAvatar(id: string): string {
-        
-        let storage = this.getCache();
-        if (id in storage)
-            return storage[id];
-
-        return "";
-    }
-
-    cacheAvatar(id: string, avatar: string) {
-
-        let storage = this.getCache();
-        storage[id] = avatar;
-
-        try {
-            localStorage.setItem(Auth.UsersStorageName, JSON.stringify(storage));
-        } catch(error){}
-    }
-
-    deleteCachedAvatar(id: string) {
-        let storage = this.getCache();
-        delete storage[id];
-    }
-
     getAvatar() {
 
         if (!this.account.avatar)
-            this.account.avatar = this.getCachedAvatar(this.account.id);
+            this.account.avatar = this.cache.getItem(this.account.id);
 
         host.getUserAvatar().then(avatar => {
             this.account.avatar = avatar;
             this.trigger("avatarUpdated", this.account);
 
-            this.cacheAvatar(this.account.id, avatar);
+            this.cache.setItem(this.account.id, avatar);
 
         }).catch(error => {
             
@@ -113,7 +80,7 @@ export class Auth extends Dispatchable {
 
     signOut() {
         return host.signOut().then(()=> {
-            this.deleteCachedAvatar(this.account.id);
+            this.cache.removeItem(this.account.id);
             this.account = null;
             this.trigger("signedOut");
         }).catch(error => {});
