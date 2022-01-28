@@ -13,6 +13,7 @@ export class PBIDesktop extends Dispatchable {
 
     static CheckSeconds = 10
     checkTimeout: number;
+    verifyConnections: boolean = false;
 
     reports: PBIDesktopReport[] = [];
 
@@ -29,6 +30,7 @@ export class PBIDesktop extends Dispatchable {
 
         if (this.solo) {
             this.reports = [];
+            this.verifyConnections = false;
             return;
         }
 
@@ -38,7 +40,7 @@ export class PBIDesktop extends Dispatchable {
             this.trigger("change", changed);
         };
 
-        return host.listReports()
+        return host.listReports(this.verifyConnections)
             .then((reports: PBIDesktopReport[]) => {
                 processReponse(reports.filter(report => report.connectionMode != PBIDesktopReportConnectionMode.UnsupportedProcessNotYetReady));
             })
