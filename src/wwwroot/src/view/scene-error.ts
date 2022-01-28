@@ -9,7 +9,7 @@ import { _ } from '../helpers/utils';
 import { i18n } from '../model/i18n'; 
 import { strings } from '../model/strings';
 import { BackableScene } from './scene-back';
-import { ContextMenu } from '../helpers/contextmenu';
+import { App } from '../controllers/app';
 
 export class ErrorScene extends BackableScene {
 
@@ -34,9 +34,18 @@ export class ErrorScene extends BackableScene {
 
                 <h1>${i18n(strings.errorTitle)}${this.error.code ? ` (${this.error.type != AppErrorType.Managed ? "HTTP/" : ""}${this.error.code})` : "" }</h1>
 
-                <p>${this.error.message}</p>
+                <p>
+                    ${this.error.message}
+                </p>
 
-                ${this.error.traceId ? `<p><strong>${i18n(strings.traceId)}:</strong> ${this.error.traceId}</p>` : ""}
+                ${ this.error.details ? `
+                    <blockquote>${this.error.details}</blockquote>
+                ` : "" }
+                
+                <p class="context">
+                    ${i18n(strings.version)}: ${App.instance.currentVersion.toString()}
+                    ${this.error.traceId ? ` - ${i18n(strings.traceId)}: ${this.error.traceId}` : ""}
+                </p>
 
                 <p><span class="copy-error link">${i18n(strings.copyErrorCtrlTitle)}</span></p>
             
@@ -51,6 +60,12 @@ export class ErrorScene extends BackableScene {
         _(".copy-error", this.element).addEventListener("click", e =>{
             e.preventDefault();
             navigator.clipboard.writeText(this.error.toString());
+
+            let ctrl = <HTMLElement>e.currentTarget;
+            ctrl.innerText = i18n(strings.copiedErrorCtrlTitle);
+            window.setTimeout(() => {
+                ctrl.innerText = i18n(strings.copyErrorCtrlTitle);
+            }, 1500);
         });
 
         if (this.onRetry){

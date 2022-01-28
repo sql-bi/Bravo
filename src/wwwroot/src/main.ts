@@ -3,7 +3,7 @@
  * Copyright (c) SQLBI corp. - All rights reserved.
  * https://www.sqlbi.com
 */
-import { App } from './controllers/app';
+import { App, AppVersion } from './controllers/app';
 import { Auth } from './controllers/auth';
 import { Host } from './controllers/host';
 import { OptionsController } from './controllers/options';
@@ -27,7 +27,12 @@ let auth = new Auth();
 let telemetry = new Telemetry(CONFIG.telemetry);
 let pbiDesktop = new PBIDesktop();
 let notificationCenter = new NotifyCenter();
-let app = new App();
+
+let app = App.instance;
+app.currentVersion = new AppVersion({
+    version: CONFIG.version,
+    build: CONFIG.build
+});
 
 console.log("Bravo for Power BI", CONFIG);
 

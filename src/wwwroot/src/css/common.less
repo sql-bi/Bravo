@@ -74,6 +74,14 @@ img, svg {
 form {
     display: inline;
 }
+iframe {
+    width: 0;
+    height: 0;
+    position: absolute;
+    border: 0;
+    left: -1000px;
+    top: -1000px;
+}
 input, select, textarea {
     .placeholder(@placeholder-color);
     &:focus { outline: none;}
@@ -369,7 +377,7 @@ a, .link {
         }
     }
 }
-.button, input[type=button] {
+.button, .link-button, input[type=button] {
     display: inline-block;
     padding:8px 18px;
     font-size: 14px;

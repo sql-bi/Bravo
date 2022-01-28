@@ -4,6 +4,7 @@
  * https://www.sqlbi.com
 */
 
+import { App } from '../controllers/app';
 import { _ } from '../helpers/utils';
 import { AppError } from '../model/exceptions';
 import { i18n } from '../model/i18n'; 
@@ -27,7 +28,14 @@ export class ErrorAlert extends Dialog {
         let html = `
             <p>${this.error.message}</p>
 
-            ${this.error.traceId ? `<p><strong>${i18n(strings.traceId)}:</strong> ${this.error.traceId}</p>` : ""}
+            ${ this.error.details ? `
+                <blockquote>${this.error.details}</blockquote>
+            ` : "" }
+            
+            <p class="context">
+                ${i18n(strings.version)}: ${App.instance.currentVersion.toString()}
+                ${this.error.traceId ? `<br> ${i18n(strings.traceId)}: ${this.error.traceId}` : ""}
+            </p>
 
             <p><span class="copy-error link">${i18n(strings.copyErrorCtrlTitle)}</span></p>
         `;
@@ -36,6 +44,12 @@ export class ErrorAlert extends Dialog {
         _(".copy-error", this.element).addEventListener("click", e =>{
             e.preventDefault();
             navigator.clipboard.writeText(this.error.toString());
+
+            let ctrl = <HTMLElement>e.currentTarget;
+            ctrl.innerText = i18n(strings.copiedErrorCtrlTitle);
+            window.setTimeout(() => {
+                ctrl.innerText = i18n(strings.copyErrorCtrlTitle);
+            }, 1500);
         });
 
         return super.show();

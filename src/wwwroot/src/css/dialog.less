@@ -232,7 +232,10 @@
 	}
 
 	#body-about {
-		h2 { font-weight: bold;}
+		h2 { 
+			font-size: 28px;
+			margin: 0;
+		}
 		img {
 			width: 170px;
 			height: auto;
@@ -246,19 +249,25 @@
 		.colr {
 			width: 100%;
 		}
+		.version {
+			font-size: 14px;
+			margin: 0 0 15px 0;
+		}
 		.update-status {
 			font-size: 17px;
 			line-height: 1.4;
 			margin: 0 0 10px 0;
 
 			.up-to-date {
+				color: @good-color;
+			}
+			.pending-update {
 				color: @accent-back-color;
+				margin: 0 0 10px 0;
 
 				.dark & { color: @accent-back-color-dark }
 			}
-			.version {
-				font-size: 14px;
-			}
+			
 		}	
 		.copyright {
 			color: @notice-color;

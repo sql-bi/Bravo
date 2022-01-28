@@ -147,7 +147,19 @@
             }
         }
 
+        p {
+            margin: 5px 0;
+        }
+
+        .context {
+            font-size: 14px;
+            color: @notice-color;
+
+            .dark & { color: @notice-color-dark }
+        }
+
         blockquote {
+            max-width: 70%;
             word-break: break-word;
             font-family: @code-font;
             font-size: 0.8em;

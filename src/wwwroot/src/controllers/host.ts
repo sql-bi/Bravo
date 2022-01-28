@@ -272,10 +272,9 @@ export class Host extends Dispatchable {
         const connectionError = (connectionMode: PBICloudDatasetConnectionMode, diagnostic?: any) => {
             let errorKey = `errorDatasetConnection${PBICloudDatasetConnectionMode[connectionMode]}`;
             let message = i18n(errorKey in strings ? (<any>strings)[errorKey] : strings.errorConnectionUnsupported);
-            if (diagnostic)
-                message += ` <blockquote>${JSON.stringify(diagnostic)}</blockquote>`;
+            let details = (diagnostic ? JSON.stringify(diagnostic) : null);
 
-            return AppError.InitFromProblemCode(AppProblem.ConnectionUnsupported, message);
+            return AppError.InitFromProblemCode(AppProblem.ConnectionUnsupported, message, details);
         };
 
         return new Promise((resolve, reject) => {
@@ -306,8 +305,8 @@ export class Host extends Dispatchable {
         });
     }
 
-    listReports() {
-        return <Promise<PBIDesktopReport[]>>this.apiCall("api/ListReports");
+    listReports(verifyConnections: boolean) {
+        return <Promise<PBIDesktopReport[]>>this.apiCall(`api/${verifyConnections ? "ListReports" : "QueryReports"}`);
     }
 
     listDatasets() {

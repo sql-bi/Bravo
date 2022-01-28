@@ -51,6 +51,12 @@ export class ConnectMenuItem {
             _(".copy-error", this.element).addEventListener("click", e =>{
                 e.preventDefault();
                 navigator.clipboard.writeText(message);
+
+                let ctrl = <HTMLElement>e.currentTarget;
+                ctrl.innerText = i18n(strings.copiedErrorCtrlTitle);
+                window.setTimeout(() => {
+                    ctrl.innerText = i18n(strings.copyErrorCtrlTitle);
+                }, 1500);
             });
         }
         this.dialog.okButton.toggleAttr("disabled", true);

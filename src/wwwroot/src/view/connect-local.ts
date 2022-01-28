@@ -25,6 +25,7 @@ export class ConnectLocal extends ConnectMenuItem {
         `;
         this.element.insertAdjacentHTML("beforeend", html);
 
+        pbiDesktop.verifyConnections = true;
         pbiDesktop.on("change", () => {
             if (pbiDesktop.reports.length) {
                 this.renderTable();
@@ -113,6 +114,7 @@ export class ConnectLocal extends ConnectMenuItem {
 
     destroy() {
         pbiDesktop.off("change", this.dialog.id);
+        pbiDesktop.verifyConnections = false;
         this.destroyTable();
         super.destroy();
     }

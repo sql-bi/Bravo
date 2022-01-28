@@ -24,6 +24,23 @@ import { PBICloudDataset } from '../model/pbi-dataset';
 import { ErrorAlert } from '../view/error-alert';
 import { AppError } from '../model/exceptions';
 
+export interface AppVersionInfo {
+    version: string
+    build?: string
+    downloadUrl?: string
+    changelogUrl?: string
+}
+export class AppVersion {
+    info: AppVersionInfo;
+
+    constructor(data: AppVersionInfo) {
+        this.info = data;
+    }
+
+    toString() {
+        return `${this.info.version}${this.info.build ? ` (${this.info.build})` : ""}`;
+    }
+}
 export class App {
 
     sheets: Dic<Sheet> = {};
@@ -34,10 +51,19 @@ export class App {
     notificationSidebar: NotificationSidebar;
     defaultConnectSelectedMenu: string;
 
-    constructor() {
+    currentVersion: AppVersion;
+    pendingVersion: AppVersion;
+
+    //Singleton
+    private static _instance: App;
+    public static get instance(): App {
+        return this._instance || (this._instance = new this());
+    }
+
+    private constructor() {
 
         this.element = _(".root");
-
+        
         let sidebarItems: Dic<string> = {};
         for(let type in PageType) {
             sidebarItems[type] = i18n((<any>strings)[type]);
@@ -67,14 +93,18 @@ export class App {
             }
         });
 
-        // Catch pseudo links
-        document.addLiveEventListener("click", ".link", (e, element) => {
+        // Catch pseudo links 
+        this.element.insertAdjacentHTML("beforeend", `<iframe name="downloader"></iframe>`);
+        document.addLiveEventListener("click", ".link, .link-button", (e, element) => {
+            e.preventDefault();
             if ("href" in element.dataset) {
-                e.preventDefault();
-                const url = element.dataset.href;
-                host.navigateTo(url);
+                const navigateUrl = element.dataset.href;
+                host.navigateTo(navigateUrl);
+                telemetry.track("Link", { url: navigateUrl});
 
-                telemetry.track("Link", { url: url});
+            } else if ("download" in element.dataset) {
+                const downloadUrl = element.dataset.download;
+                window.open(downloadUrl, "downloader");
             }
         });
 
@@ -94,6 +124,11 @@ export class App {
 
         host.on(WebMessageType.ApplicationUpdate, (data: ApplicationUpdateAvailableWebMessage)=>{
             notificationCenter.add(new Notify(i18n(strings.updateMessage), data, NotifyType.AppUpdate));
+            this.pendingVersion = new AppVersion({
+                version: data.currentVersion,
+                downloadUrl: data.downloadUrl,
+                changelogUrl: data.changelogUrl
+            });
         });
 
         host.on(WebMessageType.Unknown, (data: UnknownWebMessage) => {

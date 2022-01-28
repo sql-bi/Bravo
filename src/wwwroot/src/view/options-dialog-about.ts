@@ -4,6 +4,7 @@
  * https://www.sqlbi.com
 */
 
+import { App } from '../controllers/app';
 import {  _, __ } from '../helpers/utils';
 import { i18n } from '../model/i18n'; 
 import { strings } from '../model/strings';
@@ -28,9 +29,15 @@ export class OptionsDialogAbout {
                 </div>
                 <div class="col colr">
                     <h2>${i18n(strings.appName)}</h2>
+                    <div class="version">${i18n(strings.appVersion, { version: App.instance.currentVersion.toString()})}</div>
                     <div class="update-status">
-                        <div class="up-to-date">${i18n(strings.appUpToDate) /* TODO Check pending updates */}</div>
-                        <div class="version">${i18n(strings.version)} ${CONFIG.version}</div>
+                        ${ App.instance.pendingVersion ? `
+                            <div class="pending-update">${i18n(strings.appUpdateAvailable, { version: App.instance.pendingVersion.toString() })}</div>
+                            <span class="link-button" data-download="${App.instance.pendingVersion.info.downloadUrl}">${i18n(strings.appUpdateDownload)}</span> &nbsp; 
+                            <span class="link-button button-alt" data-href="${App.instance.pendingVersion.info.changelogUrl}">${i18n(strings.appUpdateChangelog)}</span>
+                        ` : `
+                            <div class="up-to-date">${i18n(strings.appUpToDate)}</div>
+                        `}
                     </div>
                     <div class="copyright">
                         ${new Date().getFullYear()} &copy; SQLBI Corp. ${i18n(strings.copyright)}<br>

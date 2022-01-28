@@ -6,6 +6,7 @@ declare global {
     var CONFIG: {
         address: string
         version: string,
+        build: string
         options: Options,
         token?: string,
         telemetry?: TelemetryConfig
