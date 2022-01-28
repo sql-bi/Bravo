@@ -6,7 +6,6 @@
     using System.Drawing;
     using System.IO;
     using System.Net.Http;
-    using System.Reflection;
     using System.Runtime.InteropServices;
     using System.Windows.Forms;
 

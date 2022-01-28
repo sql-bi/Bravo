@@ -27,6 +27,13 @@
         public static readonly string PBIDesktopMainWindowTitleSuffix = " - Power BI Desktop";
         public static readonly TimeSpan MSALSignInTimeout = TimeSpan.FromMinutes(5);
         public static readonly string ApplicationWebsiteUrl = "https://bravo.bi";
+        public static readonly string[] ApplicationTrustedUriHosts = new[]
+        {
+            "bravo.com",
+            "sqlbi.com",
+            "github.com",
+            "microsoft.com"
+        };
 
         static AppConstants()
         {
