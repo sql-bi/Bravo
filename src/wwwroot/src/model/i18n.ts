@@ -55,13 +55,24 @@ export class I18n {
     }
 
     get locale(): Locale {
-        let localeKey = (optionsController ? optionsController.options.customOptions.locale : navigator.language);
-        if (!(localeKey in locales)) {
-            localeKey = localeKey.split(/-|_/)[0];
-            if (!(localeKey in locales)) 
-                localeKey = "en";
+        let key = (optionsController ? optionsController.options.customOptions.locale : navigator.language);
+        if (!(key in locales)) {
+            key = "en";
+
+            let country = key.split(/-|_/)[0];
+            if (country in locales) {
+                key = country;
+            } else {
+                for (let _key in locales) {
+                    let _country = _key.split(/-|_/)[0];
+                    if (_country == country) {
+                        key = _key;
+                        break;
+                    }
+                }
+            }
         }
-        return locales[localeKey];
+        return locales[key];
     }
 
     static get Locales() {
