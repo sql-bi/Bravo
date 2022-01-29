@@ -1,11 +1,12 @@
-﻿using Sqlbi.Bravo.Models;
-using System;
-using System.ComponentModel.DataAnnotations;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-
-namespace Sqlbi.Bravo.Infrastructure.Messages
+﻿namespace Sqlbi.Bravo.Infrastructure.Messages
 {
+    using AutoUpdaterDotNET;
+    using Sqlbi.Bravo.Models;
+    using System;
+    using System.ComponentModel.DataAnnotations;
+    using System.Text.Json;
+    using System.Text.Json.Serialization;
+
     internal interface IWebMessage
     {
         /// <summary>
@@ -27,7 +28,7 @@ namespace Sqlbi.Bravo.Infrastructure.Messages
         public JsonElement? Exception { get; set; }
 
         [JsonIgnore]
-        public string AsString => JsonSerializer.Serialize(this, AppConstants.DefaultJsonOptions);
+        public string AsString => JsonSerializer.Serialize(this, AppEnvironment.DefaultJsonOptions);
 
         public static UnknownWebMessage CreateFrom(JsonElement message)
         {
@@ -51,7 +52,7 @@ namespace Sqlbi.Bravo.Infrastructure.Messages
                 Details = exception.ToString(),
             };
 
-            var exceptionObjectString = JsonSerializer.Serialize(exceptionObject, AppConstants.DefaultJsonOptions);
+            var exceptionObjectString = JsonSerializer.Serialize(exceptionObject, AppEnvironment.DefaultJsonOptions);
             var exceptionObjectJson = JsonSerializer.Deserialize<JsonElement>(exceptionObjectString);
 
             var webMessage = new UnknownWebMessage
@@ -83,7 +84,20 @@ namespace Sqlbi.Bravo.Infrastructure.Messages
         public string? ChangelogUrl { get; set; }
 
         [JsonIgnore]
-        public string AsString => JsonSerializer.Serialize(this, AppConstants.DefaultJsonOptions);
+        public string AsString => JsonSerializer.Serialize(this, AppEnvironment.DefaultJsonOptions);
+
+        public static ApplicationUpdateAvailableWebMessage CreateFrom(UpdateInfoEventArgs updateInfo)
+        {
+            var webMessage = new ApplicationUpdateAvailableWebMessage
+            {
+                DownloadUrl = updateInfo.DownloadURL,
+                ChangelogUrl = updateInfo.ChangelogURL,
+                CurrentVersion = updateInfo.CurrentVersion,
+                InstalledVersion = updateInfo.InstalledVersion.ToString(),
+            };
+
+            return webMessage;
+        }
     }
 
     internal class PBIDesktopReportOpenWebMessage : IWebMessage
@@ -96,7 +110,7 @@ namespace Sqlbi.Bravo.Infrastructure.Messages
         public PBIDesktopReport? Report { get; set; }
 
         [JsonIgnore]
-        public string AsString => JsonSerializer.Serialize(this, AppConstants.DefaultJsonOptions);
+        public string AsString => JsonSerializer.Serialize(this, AppEnvironment.DefaultJsonOptions);
 
         public static PBIDesktopReportOpenWebMessage CreateFrom(PBIDesktopReport report)
         {
@@ -119,7 +133,7 @@ namespace Sqlbi.Bravo.Infrastructure.Messages
         public PBICloudDataset? Dataset { get; set; }
 
         [JsonIgnore]
-        public string AsString => JsonSerializer.Serialize(this, AppConstants.DefaultJsonOptions);
+        public string AsString => JsonSerializer.Serialize(this, AppEnvironment.DefaultJsonOptions);
     }
 
     internal class VpaxFileOpenWebMessage : IWebMessage
@@ -138,6 +152,6 @@ namespace Sqlbi.Bravo.Infrastructure.Messages
         public long? LastModified { get; set; }
 
         [JsonIgnore]
-        public string AsString => JsonSerializer.Serialize(this, AppConstants.DefaultJsonOptions);
+        public string AsString => JsonSerializer.Serialize(this, AppEnvironment.DefaultJsonOptions);
     }
 }

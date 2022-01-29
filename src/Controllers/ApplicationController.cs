@@ -1,18 +1,18 @@
-﻿using Microsoft.ApplicationInsights.Extensibility;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
-using Sqlbi.Bravo.Infrastructure.Configuration;
-using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
-using Sqlbi.Bravo.Infrastructure.Helpers;
-using Sqlbi.Bravo.Infrastructure.Windows.Interop;
-using Sqlbi.Bravo.Models;
-using System;
-using System.Diagnostics;
-using System.Net.Mime;
-
-namespace Sqlbi.Bravo.Controllers
+﻿namespace Sqlbi.Bravo.Controllers
 {
+    using Microsoft.ApplicationInsights.Extensibility;
+    using Microsoft.AspNetCore.Http;
+    using Microsoft.AspNetCore.Mvc;
+    using Microsoft.Extensions.Options;
+    using Sqlbi.Bravo.Infrastructure.Configuration;
+    using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
+    using Sqlbi.Bravo.Infrastructure.Helpers;
+    using Sqlbi.Bravo.Infrastructure.Windows.Interop;
+    using Sqlbi.Bravo.Models;
+    using System;
+    using System.Diagnostics;
+    using System.Net.Mime;
+
     /// <summary>
     /// Application controller
     /// </summary>
@@ -78,7 +78,7 @@ namespace Sqlbi.Bravo.Controllers
         [ProducesDefaultResponseType]
         public IActionResult ChangeTheme(ThemeType theme)
         {
-            var windowHandle = Process.GetCurrentProcess().MainWindowHandle;
+            var windowHandle = ProcessHelper.GetCurrentProcessMainWindowHandle();
 
             switch (theme)
             {

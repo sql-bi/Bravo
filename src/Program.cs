@@ -15,7 +15,6 @@
             try
             {
                 StartupConfiguration.Configure();
-                WebView2Helper.EnsureRuntimeIsInstalled();
 
                 using var instance = new AppInstance();
                 if (instance.IsOwned)

@@ -1,26 +1,26 @@
-﻿using Hellang.Middleware.ProblemDetails;
-using AMO = Microsoft.AnalysisServices;
-using TOM = Microsoft.AnalysisServices.AdomdClient;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Hosting.Server;
-using Microsoft.AspNetCore.Hosting.Server.Features;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Options;
-using Sqlbi.Bravo.Infrastructure.Authentication;
-using Sqlbi.Bravo.Infrastructure.Configuration.Options;
-using Sqlbi.Bravo.Infrastructure.Helpers;
-using System;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Net.Sockets;
-using System.Reflection;
-
-namespace Sqlbi.Bravo.Infrastructure.Extensions
+﻿namespace Sqlbi.Bravo.Infrastructure.Extensions
 {
+    using Hellang.Middleware.ProblemDetails;
+    using AMO = Microsoft.AnalysisServices;
+    using TOM = Microsoft.AnalysisServices.AdomdClient;
+    using Microsoft.AspNetCore.Hosting;
+    using Microsoft.AspNetCore.Hosting.Server;
+    using Microsoft.AspNetCore.Hosting.Server.Features;
+    using Microsoft.AspNetCore.Http;
+    using Microsoft.Extensions.Configuration;
+    using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Hosting;
+    using Microsoft.Extensions.Options;
+    using Sqlbi.Bravo.Infrastructure.Authentication;
+    using Sqlbi.Bravo.Infrastructure.Configuration.Options;
+    using Sqlbi.Bravo.Infrastructure.Helpers;
+    using System;
+    using System.Diagnostics;
+    using System.IO;
+    using System.Linq;
+    using System.Net.Sockets;
+    using System.Reflection;
+
     internal static class HostingExtensions
     {
         public static IServiceCollection AddAndConfigureAuthorization(this IServiceCollection services)
@@ -56,8 +56,8 @@ namespace Sqlbi.Bravo.Infrastructure.Extensions
 
         public static IServiceCollection AddAndConfigureAuthentication(this IServiceCollection services)
         {
-            services.AddAuthentication(defaultScheme: AppConstants.ApiAuthenticationSchema)
-                .AddScheme<AppAuthenticationSchemeOptions, AppAuthenticationHandler>(AppConstants.ApiAuthenticationSchema, (options) => options.Validate());
+            services.AddAuthentication(defaultScheme: AppEnvironment.ApiAuthenticationSchema)
+                .AddScheme<AppAuthenticationSchemeOptions, AppAuthenticationHandler>(AppEnvironment.ApiAuthenticationSchema, (options) => options.Validate());
 
             return services;
         }
@@ -157,7 +157,7 @@ namespace Sqlbi.Bravo.Infrastructure.Extensions
             services.AddSwaggerGen((options) =>
             {
                 // TODO: IncludeXmlComments fails due to a wrong xml file path while debugging the MSIX package
-                if (Debugger.IsAttached && AppConstants.IsPackagedAppInstance)
+                if (Debugger.IsAttached && AppEnvironment.IsPackagedAppInstance)
                     return;
 
                 var xmlFile = $"{ Assembly.GetExecutingAssembly().GetName().Name }.xml";

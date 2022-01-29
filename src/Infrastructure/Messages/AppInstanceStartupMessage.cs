@@ -1,14 +1,12 @@
-﻿using Microsoft.Extensions.Hosting;
-using Sqlbi.Bravo.Infrastructure.Extensions;
-using Sqlbi.Bravo.Infrastructure.Helpers;
-using Sqlbi.Bravo.Models;
-using Sqlbi.Bravo.Services;
-using System.Linq;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-
-namespace Sqlbi.Bravo.Infrastructure.Messages
+﻿namespace Sqlbi.Bravo.Infrastructure.Messages
 {
+    using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
+    using Sqlbi.Bravo.Infrastructure.Extensions;
+    using Sqlbi.Bravo.Infrastructure.Helpers;
+    using Sqlbi.Bravo.Models;
+    using System.Text.Json;
+    using System.Text.Json.Serialization;
+
     internal class AppInstanceStartupMessage
     {
         [JsonPropertyName("parentProcessId")]
@@ -27,14 +25,28 @@ namespace Sqlbi.Bravo.Infrastructure.Messages
         public string? ArgumentDatabaseName { get; set; }
 
         [JsonIgnore]
-        public bool IsExternalTool => AppConstants.PBIDesktopProcessName.EqualsI(ParentProcessName);
+        public bool IsExternalTool => AppEnvironment.PBIDesktopProcessName.EqualsI(ParentProcessName);
+
+        public static AppInstanceStartupMessage CreateFrom(StartupSettings settings)
+        {
+            var message = new AppInstanceStartupMessage
+            {
+                ParentProcessId = settings.ParentProcessId,
+                ParentProcessName = settings.ParentProcessName,
+                ParentProcessMainWindowTitle = settings.ParentProcessMainWindowTitle,
+                ArgumentServerName = settings.ArgumentServerName,
+                ArgumentDatabaseName = settings.ArgumentDatabaseName,
+            };
+
+            return message;
+        }
     }
 
     internal static class AppInstanceStartupMessageExtensions
     {
         public static JsonElement ToJsonElement(this AppInstanceStartupMessage startupMessage)
         {
-            var messageString = JsonSerializer.Serialize(startupMessage, AppConstants.DefaultJsonOptions);
+            var messageString = JsonSerializer.Serialize(startupMessage, AppEnvironment.DefaultJsonOptions);
             var messageJson = JsonSerializer.Deserialize<JsonElement>(messageString);
 
             return messageJson;
@@ -80,7 +92,10 @@ namespace Sqlbi.Bravo.Infrastructure.Messages
                 }
             }
 
-            return null;
+            var startupMessageJson = startupMessage.ToJsonElement();
+            var unknownWebMessage = UnknownWebMessage.CreateFrom(startupMessageJson);
+
+            return unknownWebMessage.AsString;
         }
     }
 }

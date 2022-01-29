@@ -1,24 +1,23 @@
-﻿using Microsoft.AnalysisServices;
-using Microsoft.AnalysisServices.AdomdClient;
-using Sqlbi.Bravo.Infrastructure;
-using Sqlbi.Bravo.Infrastructure.Extensions;
-using Sqlbi.Bravo.Infrastructure.Helpers;
-using Sqlbi.Bravo.Models;
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Net.NetworkInformation;
-using System.Threading;
-using System.Threading.Tasks;
-using TOM = Microsoft.AnalysisServices.Tabular;
-
-namespace Sqlbi.Bravo.Services
+﻿namespace Sqlbi.Bravo.Services
 {
+    using Microsoft.AnalysisServices;
+    using Microsoft.AnalysisServices.AdomdClient;
+    using Sqlbi.Bravo.Infrastructure;
+    using Sqlbi.Bravo.Infrastructure.Extensions;
+    using Sqlbi.Bravo.Infrastructure.Helpers;
+    using Sqlbi.Bravo.Models;
+    using System;
+    using System.Collections.Concurrent;
+    using System.Collections.Generic;
+    using System.Diagnostics;
+    using System.IO;
+    using System.Linq;
+    using System.Net;
+    using System.Net.NetworkInformation;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using TOM = Microsoft.AnalysisServices.Tabular;
+
     public interface IPBIDesktopService
     {
         IEnumerable<PBIDesktopReport> QueryReports(CancellationToken cancellationToken);
@@ -35,14 +34,14 @@ namespace Sqlbi.Bravo.Services
         public IEnumerable<PBIDesktopReport> QueryReports(CancellationToken cancellationToken)
         {
             var reports = new ConcurrentBag<PBIDesktopReport>();
-            var processes = ProcessHelper.GetProcessesByName(AppConstants.PBIDesktopProcessName);
+            var processes = ProcessHelper.GetProcessesByName(AppEnvironment.PBIDesktopProcessName);
 
             foreach (var process in processes)
             {
                 var report = new PBIDesktopReport
                 {
                     ProcessId = process.Id,
-                    ReportName = process.GetPBIDesktopMainWindowTitle()?.ToPBIDesktopReportName(),
+                    ReportName = process.GetPBIDesktopMainWindowTitle(),
 
                     // We leave the connection properties empty because we are only interested in the process state and to return the results as fast as possible 
                     ServerName = null,
@@ -61,7 +60,7 @@ namespace Sqlbi.Bravo.Services
         {
             var reports = new ConcurrentBag<PBIDesktopReport>();
 
-            var processes = ProcessHelper.GetProcessesByName(AppConstants.PBIDesktopProcessName);
+            var processes = ProcessHelper.GetProcessesByName(AppEnvironment.PBIDesktopProcessName);
             var parallelOptions = new ParallelOptions { CancellationToken = cancellationToken };
             var parallelLoop = Parallel.ForEach(processes, parallelOptions, (process) =>
             {
@@ -77,7 +76,7 @@ namespace Sqlbi.Bravo.Services
                 var report = new PBIDesktopReport
                 {
                     ProcessId = process.Id,
-                    ReportName = process.GetPBIDesktopMainWindowTitle()?.ToPBIDesktopReportName(),
+                    ReportName = process.GetPBIDesktopMainWindowTitle(),
                     ServerName = null,
                     DatabaseName = null,
                 };
@@ -101,7 +100,7 @@ namespace Sqlbi.Bravo.Services
                     serverName = null;
                     databaseName = null;
 
-                    var ssasPIDs = process.GetChildrenPIDs(childProcessImageName: AppConstants.PBIDesktopSSASProcessImageName).ToArray();
+                    var ssasPIDs = process.GetChildrenPIDs(childProcessImageName: AppEnvironment.PBIDesktopSSASProcessImageName).ToArray();
                     if (ssasPIDs.Length != 1)
                     {
                         connectivityMode = PBIDesktopReportConnectionMode.UnsupportedAnalysisServecesProcessNotFound;

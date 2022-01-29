@@ -1,18 +1,15 @@
-﻿using Sqlbi.Bravo.Infrastructure.Helpers;
-using Sqlbi.Bravo.Infrastructure.Windows.Interop;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics;
-using System.Globalization;
-using System.Linq;
-using System.Management;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading;
-
-namespace Sqlbi.Bravo.Infrastructure.Extensions
+﻿namespace Sqlbi.Bravo.Infrastructure.Extensions
 {
+    using Sqlbi.Bravo.Infrastructure.Helpers;
+    using Sqlbi.Bravo.Infrastructure.Windows.Interop;
+    using System;
+    using System.Collections.Generic;
+    using System.ComponentModel;
+    using System.Diagnostics;
+    using System.Management;
+    using System.Runtime.InteropServices;
+    using System.Text;
+
     public static class ProcessExtensions
     {
         //[DebuggerStepThrough]
@@ -44,55 +41,6 @@ namespace Sqlbi.Bravo.Infrastructure.Extensions
             return null;
         }
 
-        public static Process? GetParent(this Process process)
-        {
-            // ManagementObjectSearcher.Get() raises a System.InvalidCastException when executed on the current thread, this regardless of the apartment state of the current thread (which is STA)
-            //
-            // System.InvalidCastException "Specified cast is not valid."
-            //    at System.StubHelpers.InterfaceMarshaler.ConvertToNative(Object objSrc, IntPtr itfMT, IntPtr classMT, Int32 flags)
-            //    at System.Management.SecuredIWbemServicesHandler.ExecQuery_(String strQueryLanguage, String strQuery, Int32 lFlags, IWbemContext pCtx, IEnumWbemClassObject& ppEnum)
-            //    at System.Management.ManagementObjectSearcher.Get()
-
-            int? parentProcessId = null;
-
-            //var apartmentState = Thread.CurrentThread.GetApartmentState();
-            //if (apartmentState != ApartmentState.STA)
-            {
-                var threadStart = new ThreadStart(GetImpl);
-                var thread = new Thread(threadStart);
-                thread.CurrentCulture = thread.CurrentUICulture = CultureInfo.CurrentCulture;
-                thread.SetApartmentState(ApartmentState.STA);
-                thread.Start();
-                thread.Join();
-            }
-            //else
-            //{
-            //    GetImpl();
-            //}
-
-            if (parentProcessId is not null)
-            {
-                var parentProcess = ProcessHelper.SafeGetProcessById(parentProcessId.Value);
-                return parentProcess;
-            }
-
-            return null;
-
-            void GetImpl()
-            {
-                var queryString = $"SELECT ParentProcessId FROM Win32_Process WHERE ProcessId = { process.Id } AND SessionId = { AppConstants.CurrentSessionId }";
-
-                using var searcher = new ManagementObjectSearcher(queryString);
-                using var collection = searcher.Get();
-                using var @object = collection.OfType<ManagementObject>().SingleOrDefault();
-
-                if (@object is not null)
-                {
-                    parentProcessId = (int)(uint)@object["ParentProcessId"];
-                }
-            }
-        }
-
         public static IEnumerable<int> GetChildrenPIDs(this Process process, string? childProcessImageName = null)
         {
             // ManagementObjectSearcher.Get() raises a System.InvalidCastException when executed on the current thread, this regardless of the apartment state of the current thread (which is STA)
@@ -103,27 +51,14 @@ namespace Sqlbi.Bravo.Infrastructure.Extensions
             //    at System.Management.ManagementObjectSearcher.Get()
 
             var pids = new List<int>();
-
-            //var apartmentState = Thread.CurrentThread.GetApartmentState();
-            //if (apartmentState != ApartmentState.STA)
-            {
-                var threadStart = new ThreadStart(GetImpl);
-                var thread = new Thread(threadStart);
-                thread.CurrentCulture = thread.CurrentUICulture = CultureInfo.CurrentCulture;
-                thread.SetApartmentState(ApartmentState.STA);
-                thread.Start();
-                thread.Join();
-            }
-            //else
-            //{
-            //    GetImpl();
-            //}
-
+            
+            ProcessHelper.RunOnSTAThread(GetImpl);
+            
             return pids;
 
             void GetImpl()
             {
-                var queryString = $"SELECT ProcessId FROM Win32_Process WHERE ParentProcessId = { process.Id } AND SessionId = { AppConstants.CurrentSessionId }";
+                var queryString = $"SELECT ProcessId FROM Win32_Process WHERE ParentProcessId = { process.Id } AND SessionId = { AppEnvironment.SessionId }";
 
                 if (childProcessImageName is not null)
                     queryString += $" AND Name = '{ childProcessImageName }'";
@@ -187,6 +122,7 @@ namespace Sqlbi.Bravo.Infrastructure.Extensions
             if (string.IsNullOrWhiteSpace(windowTitle))
                 return null;
 
+            windowTitle = windowTitle.ToPBIDesktopReportName();
             return windowTitle;
         }
     }

@@ -31,7 +31,7 @@
             try
             {
                 var settingsString = JsonSerializer.Serialize(Current, _serializationOptions);
-                File.WriteAllText(AppConstants.UserSettingsFilePath, settingsString);
+                File.WriteAllText(AppEnvironment.UserSettingsFilePath, settingsString);
             }
             catch (Exception ex)
             {
@@ -69,9 +69,9 @@
 
         private static UserSettings? CreateInstanceFromFile()
         {
-            if (File.Exists(AppConstants.UserSettingsFilePath))
+            if (File.Exists(AppEnvironment.UserSettingsFilePath))
             {
-                var settingsString = File.ReadAllText(AppConstants.UserSettingsFilePath);
+                var settingsString = File.ReadAllText(AppEnvironment.UserSettingsFilePath);
                 var settings = JsonSerializer.Deserialize<UserSettings>(settingsString, _serializationOptions);
 
                 // Input validation and sanitization
@@ -92,7 +92,7 @@
 
         private static void UpdateFromRegistry(UserSettings settings)
         {
-            var registryObject = Registry.GetValue(AppConstants.ApplicationRegistryKeyName, AppConstants.ApplicationRegistryApplicationTelemetryEnableValue, null);
+            var registryObject = Registry.GetValue(AppEnvironment.ApplicationRegistryKeyName, AppEnvironment.ApplicationRegistryApplicationTelemetryEnableValue, null);
             if (registryObject is not null)
             {
                 var registryValue = Convert.ToString(registryObject);

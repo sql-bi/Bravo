@@ -1,9 +1,11 @@
-﻿using Microsoft.Identity.Client;
-using Sqlbi.Bravo.Infrastructure.Security;
-using System.IO;
-
-namespace Sqlbi.Bravo.Infrastructure.Helpers
+﻿namespace Sqlbi.Bravo.Infrastructure.Helpers
 {
+    using Microsoft.Identity.Client;
+    using Sqlbi.Bravo.Infrastructure.Security;
+    using Sqlbi.Bravo.Infrastructure.Windows.Interop;
+    using System.IO;
+    using System.Security.Cryptography;
+
     internal static class TokenCacheHelper
     {
         private static readonly object _tokenCacheFileLock = new();
@@ -14,10 +16,18 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
             {
                 byte[]? msalV3State = null;
 
-                if (File.Exists(AppConstants.MsalTokenCacheFilePath))
+                if (File.Exists(AppEnvironment.MsalTokenCacheFilePath))
                 {
-                    var encryptedData = File.ReadAllBytes(AppConstants.MsalTokenCacheFilePath);
-                    msalV3State = Cryptography.Unprotect(encryptedData);
+                    var encryptedData = File.ReadAllBytes(AppEnvironment.MsalTokenCacheFilePath);
+                    try
+                    {
+                        msalV3State = Cryptography.Unprotect(encryptedData);
+                    }
+                    catch (CryptographicException ex) when (ex.HResult == HRESULT.E_INVALID_DATA)
+                    {
+                        // The token file is corrupted, we delete the file in order to force a new authentication
+                        File.Delete(AppEnvironment.MsalTokenCacheFilePath);
+                    }
                 }
 
                 args.TokenCache.DeserializeMsalV3(msalV3State);
@@ -33,7 +43,7 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
                     var msalV3State = args.TokenCache.SerializeMsalV3();
                     var encryptedData = Cryptography.Protect(msalV3State);
 
-                    File.WriteAllBytes(AppConstants.MsalTokenCacheFilePath, encryptedData);
+                    File.WriteAllBytes(AppEnvironment.MsalTokenCacheFilePath, encryptedData);
                 }
             }
         }

@@ -18,9 +18,9 @@
 
         public AppInstance()
         {
-            var prefix = AppConstants.IsPackagedAppInstance ? AppConstants.ApplicationStoreAliasName : AppConstants.ApplicationName;
+            var appName = AppEnvironment.IsPackagedAppInstance ? AppEnvironment.ApplicationStoreAliasName : AppEnvironment.ApplicationName;
 
-            _instanceMutex = new Mutex(initiallyOwned: true, name: $"{ prefix }|4f9wB", out _instanceOwned);
+            _instanceMutex = new Mutex(initiallyOwned: true, name: $"Local\\Mutex{ appName }4f9wB", out _instanceOwned);
 
             GC.KeepAlive(_instanceMutex);
 
@@ -41,17 +41,10 @@
         /// </summary>
         public void NotifyOwner()
         {
-            var startupSettings = StartupSettings.Get();
-            var message = new AppInstanceStartupMessage
-            {
-                ParentProcessId = startupSettings.ParentProcessId,
-                ParentProcessName = startupSettings.ParentProcessName,
-                ParentProcessMainWindowTitle = startupSettings.ParentProcessMainWindowTitle,
-                ArgumentServerName = startupSettings.ArgumentServerName,
-                ArgumentDatabaseName = startupSettings.ArgumentDatabaseName,
-            };
+            var startupSettings = StartupSettings.CreateFromCommandLineArguments();
+            var message = AppInstanceStartupMessage.CreateFrom(startupSettings);
 
-            var hWnd = User32.FindWindow(lpClassName: null, lpWindowName: AppConstants.ApplicationMainWindowTitle);
+            var hWnd = User32.FindWindow(lpClassName: null, lpWindowName: AppEnvironment.ApplicationMainWindowTitle);
             if (hWnd != IntPtr.Zero)
             {
                 var json = JsonSerializer.Serialize(message);
