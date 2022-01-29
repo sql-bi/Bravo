@@ -7,6 +7,7 @@
     using System.Diagnostics;
     using System.Globalization;
     using System.Linq;
+    using System.Management;
     using System.Threading;
 
     public static class ProcessHelper
@@ -27,7 +28,7 @@
             {
                 if (address.IsAbsoluteUri && !address.IsFile && !address.IsUnc && !address.IsLoopback)
                 {
-                    if (AppConstants.ApplicationTrustedUriHosts.Any((trustedHost) => address.Host.EqualsI(trustedHost) || address.Host.EndsWith($".{ trustedHost }", StringComparison.OrdinalIgnoreCase)))
+                    if (AppEnvironment.ApplicationTrustedUriHosts.Any((trustedHost) => address.Host.EqualsI(trustedHost) || address.Host.EndsWith($".{ trustedHost }", StringComparison.OrdinalIgnoreCase)))
                     {
                         using var process = Process.Start(new ProcessStartInfo
                         {
@@ -49,7 +50,7 @@
 
             for (var i = processes.Count - 1; i >= 0; i--)
             {
-                if (processes[i].SessionId != AppConstants.CurrentSessionId)
+                if (processes[i].SessionId != AppEnvironment.SessionId)
                 {
                     processes[i].Dispose();
                     processes.RemoveAt(i);
@@ -61,10 +62,40 @@
 
         public static Process? GetParentProcess()
         {
-            using var current = Process.GetCurrentProcess();
-            var parent = current.GetParent();
+            // ManagementObjectSearcher.Get() raises a System.InvalidCastException when executed on the current thread, this regardless of the apartment state of the current thread (which is STA)
+            //
+            // System.InvalidCastException "Specified cast is not valid."
+            //    at System.StubHelpers.InterfaceMarshaler.ConvertToNative(Object objSrc, IntPtr itfMT, IntPtr classMT, Int32 flags)
+            //    at System.Management.SecuredIWbemServicesHandler.ExecQuery_(String strQueryLanguage, String strQuery, Int32 lFlags, IWbemContext pCtx, IEnumWbemClassObject& ppEnum)
+            //    at System.Management.ManagementObjectSearcher.Get()
 
-            return parent;
+            var parentProcessId = (int?)null;
+
+            RunOnSTAThread(GetImpl);
+
+            var parentProcess = SafeGetProcessById(parentProcessId);
+            return parentProcess;
+
+            void GetImpl()
+            {
+                var queryString = $"SELECT ParentProcessId FROM Win32_Process WHERE ProcessId = { AppEnvironment.ProcessId } AND SessionId = { AppEnvironment.SessionId }";
+
+                using var searcher = new ManagementObjectSearcher(queryString);
+                using var collection = searcher.Get();
+                using var @object = collection.OfType<ManagementObject>().SingleOrDefault();
+
+                if (@object is not null)
+                {
+                    parentProcessId = (int)(uint)@object["ParentProcessId"];
+                }
+            }
+        }
+
+        public static IntPtr GetCurrentProcessMainWindowHandle()
+        {
+            using var current = Process.GetCurrentProcess();
+
+            return current.MainWindowHandle;
         }
 
         public static IntPtr GetParentProcessMainWindowHandle()
@@ -86,7 +117,7 @@
             {
                 var process = Process.GetProcessById(processId.Value); // Throws ArgumentException if the process specified by the processId parameter is not running.
 
-                if (process.SessionId != AppConstants.CurrentSessionId)
+                if (process.SessionId != AppEnvironment.SessionId)
                     return null;
 
                 if (process.HasExited)

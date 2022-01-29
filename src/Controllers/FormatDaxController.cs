@@ -84,8 +84,8 @@ namespace Sqlbi.Bravo.Controllers
             {
                 var request = new DaxFormatterMultipleRequest
                 {
-                    CallerApp = AppConstants.ApplicationName,
-                    CallerVersion = AppConstants.ApplicationProductVersion,
+                    CallerApp = AppEnvironment.ApplicationName,
+                    CallerVersion = AppEnvironment.ApplicationProductVersion,
                     MaxLineLength = options.LineStyle,
                     SkipSpaceAfterFunctionName = options.SpacingStyle,
                 };

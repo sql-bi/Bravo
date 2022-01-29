@@ -34,7 +34,7 @@
         public IEnumerable<PBIDesktopReport> QueryReports(CancellationToken cancellationToken)
         {
             var reports = new ConcurrentBag<PBIDesktopReport>();
-            var processes = ProcessHelper.GetProcessesByName(AppConstants.PBIDesktopProcessName);
+            var processes = ProcessHelper.GetProcessesByName(AppEnvironment.PBIDesktopProcessName);
 
             foreach (var process in processes)
             {
@@ -60,7 +60,7 @@
         {
             var reports = new ConcurrentBag<PBIDesktopReport>();
 
-            var processes = ProcessHelper.GetProcessesByName(AppConstants.PBIDesktopProcessName);
+            var processes = ProcessHelper.GetProcessesByName(AppEnvironment.PBIDesktopProcessName);
             var parallelOptions = new ParallelOptions { CancellationToken = cancellationToken };
             var parallelLoop = Parallel.ForEach(processes, parallelOptions, (process) =>
             {
@@ -100,7 +100,7 @@
                     serverName = null;
                     databaseName = null;
 
-                    var ssasPIDs = process.GetChildrenPIDs(childProcessImageName: AppConstants.PBIDesktopSSASProcessImageName).ToArray();
+                    var ssasPIDs = process.GetChildrenPIDs(childProcessImageName: AppEnvironment.PBIDesktopSSASProcessImageName).ToArray();
                     if (ssasPIDs.Length != 1)
                     {
                         connectivityMode = PBIDesktopReportConnectionMode.UnsupportedAnalysisServecesProcessNotFound;

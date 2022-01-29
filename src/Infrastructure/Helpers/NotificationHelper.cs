@@ -17,7 +17,7 @@
         {
             var builder = new ToastContentBuilder();
 
-            builder.AddText($"A new version of { AppConstants.ApplicationName } is available", AdaptiveTextStyle.Default);
+            builder.AddText($"A new version of { AppEnvironment.ApplicationName } is available", AdaptiveTextStyle.Default);
             builder.AddButton(new ToastButton().SetContent("Download").AddArgument(ArgumentKeyAction, ArgumentValueDownload).AddArgument(ArgumentKeyUrl, updateInfo.DownloadURL));
             builder.AddButton(new ToastButton().SetContent("View details").AddArgument(ArgumentKeyAction, ArgumentValueViewDetails).AddArgument(ArgumentKeyUrl, updateInfo.ChangelogURL));
             // builder.AddAttributionText("Via update notifier")

@@ -1,14 +1,14 @@
-﻿using Microsoft.AspNetCore.Authentication;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using Microsoft.Net.Http.Headers;
-using System;
-using System.Security.Claims;
-using System.Text.Encodings.Web;
-using System.Threading.Tasks;
-
-namespace Sqlbi.Bravo.Infrastructure.Authentication
+﻿namespace Sqlbi.Bravo.Infrastructure.Authentication
 {
+    using Microsoft.AspNetCore.Authentication;
+    using Microsoft.Extensions.Logging;
+    using Microsoft.Extensions.Options;
+    using Microsoft.Net.Http.Headers;
+    using System;
+    using System.Security.Claims;
+    using System.Text.Encodings.Web;
+    using System.Threading.Tasks;
+
     internal class AppAuthenticationHandler : AuthenticationHandler<AppAuthenticationSchemeOptions>
     {
         public AppAuthenticationHandler(IOptionsMonitor<AppAuthenticationSchemeOptions> options, ILoggerFactory logger, UrlEncoder encoder, ISystemClock clock) 
@@ -20,7 +20,7 @@ namespace Sqlbi.Bravo.Infrastructure.Authentication
         {
             if (Request.Headers.TryGetValue(HeaderNames.Authorization, out var token))
             {
-                if (AppConstants.ApiAuthenticationToken.Equals(token))
+                if (AppEnvironment.ApiAuthenticationToken.Equals(token))
                 {
                     var claims = new[] 
                     {

@@ -26,7 +26,7 @@
         public string? ArgumentDatabaseName { get; set; }
 
         [JsonIgnore]
-        public bool IsPBIDesktopExternalTool => IsExternalTool && AppConstants.PBIDesktopProcessName.Equals(ParentProcessName, StringComparison.OrdinalIgnoreCase);
+        public bool IsPBIDesktopExternalTool => IsExternalTool && AppEnvironment.PBIDesktopProcessName.Equals(ParentProcessName, StringComparison.OrdinalIgnoreCase);
 
         [JsonIgnore]
         public int? ParentProcessId { get; set; }
@@ -104,7 +104,7 @@
 
             Process? parentProcess = null;
             {
-                if (AppConstants.IsPackagedAppInstance && parseResult.HasOption(parentProcessIdOption))
+                if (AppEnvironment.IsPackagedAppInstance && parseResult.HasOption(parentProcessIdOption))
                 {
                     var parentProcessId = parseResult.ValueForOption<int>(parentProcessIdOption);
                     parentProcess = ProcessHelper.SafeGetProcessById(parentProcessId);

@@ -16,9 +16,9 @@
             {
                 byte[]? msalV3State = null;
 
-                if (File.Exists(AppConstants.MsalTokenCacheFilePath))
+                if (File.Exists(AppEnvironment.MsalTokenCacheFilePath))
                 {
-                    var encryptedData = File.ReadAllBytes(AppConstants.MsalTokenCacheFilePath);
+                    var encryptedData = File.ReadAllBytes(AppEnvironment.MsalTokenCacheFilePath);
                     try
                     {
                         msalV3State = Cryptography.Unprotect(encryptedData);
@@ -26,7 +26,7 @@
                     catch (CryptographicException ex) when (ex.HResult == HRESULT.E_INVALID_DATA)
                     {
                         // The token file is corrupted, we delete the file in order to force a new authentication
-                        File.Delete(AppConstants.MsalTokenCacheFilePath);
+                        File.Delete(AppEnvironment.MsalTokenCacheFilePath);
                     }
                 }
 
@@ -43,7 +43,7 @@
                     var msalV3State = args.TokenCache.SerializeMsalV3();
                     var encryptedData = Cryptography.Protect(msalV3State);
 
-                    File.WriteAllBytes(AppConstants.MsalTokenCacheFilePath, encryptedData);
+                    File.WriteAllBytes(AppEnvironment.MsalTokenCacheFilePath, encryptedData);
                 }
             }
         }

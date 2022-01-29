@@ -39,24 +39,24 @@
 
         public static void EnsureRuntimeIsInstalled()
         {
-            if (AppConstants.IsWebView2RuntimeInstalled)
+            if (AppEnvironment.IsWebView2RuntimeInstalled)
                 return;
 
-            var appIcon = Icon.ExtractAssociatedIcon(AppConstants.MainModuleFileName);
+            var appIcon = Icon.ExtractAssociatedIcon(AppEnvironment.ProcessPath);
             var icon = new TaskDialogIcon(appIcon!);
 
             var page = new TaskDialogPage()
             {
-                Caption = AppConstants.ApplicationMainWindowTitle,
+                Caption = AppEnvironment.ApplicationMainWindowTitle,
                 Heading = @$"
-{ AppConstants.ApplicationMainWindowTitle } requires the Microsoft Edge WebView2 runtime which is not currently installed.
+{ AppEnvironment.ApplicationMainWindowTitle } requires the Microsoft Edge WebView2 runtime which is not currently installed.
 
 Choose an option to proceed with the installation:",
                 Icon = icon,
                 AllowCancel = false,
                 Footnote = new TaskDialogFootnote()
                 {
-                    Text = $"For more details please refer to the following address:\r\n\r\n - { AppConstants.ApplicationWebsiteUrl }\r\n - { MicrosoftReferenceUrl }",
+                    Text = $"For more details please refer to the following address:\r\n\r\n - { AppEnvironment.ApplicationWebsiteUrl }\r\n - { MicrosoftReferenceUrl }",
                 },
                 Buttons =
                 {
@@ -83,8 +83,8 @@ Choose an option to proceed with the installation:",
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
-            var hwndOwner = ProcessHelper.GetParentProcessMainWindowHandle();
-            var dialogButton = TaskDialog.ShowDialog(hwndOwner, page, TaskDialogStartupLocation.CenterScreen);
+            var parentHwnd = ProcessHelper.GetParentProcessMainWindowHandle();
+            var dialogButton = TaskDialog.ShowDialog(parentHwnd, page, TaskDialogStartupLocation.CenterScreen);
 
             switch (dialogButton.Tag)
             {
@@ -110,7 +110,7 @@ Choose an option to proceed with the installation:",
             using var httpClient = new HttpClient();
 
             var fileBytes = httpClient.GetByteArrayAsync(EvergreenRuntimeBootstrapperUrl).GetAwaiter().GetResult();
-            var filePath = Path.Combine(AppConstants.ApplicationTempPath, $"MicrosoftEdgeWebview2Setup-{DateTime.Now:yyyyMMddHHmmss}.exe");
+            var filePath = Path.Combine(AppEnvironment.ApplicationTempPath, $"MicrosoftEdgeWebview2Setup-{DateTime.Now:yyyyMMddHHmmss}.exe");
 
             File.WriteAllBytes(filePath, fileBytes);
 

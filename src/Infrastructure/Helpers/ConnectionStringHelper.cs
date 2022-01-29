@@ -1,8 +1,8 @@
-﻿using System.Data.OleDb;
-using System.Net;
-
-namespace Sqlbi.Bravo.Infrastructure.Helpers
+﻿namespace Sqlbi.Bravo.Infrastructure.Helpers
 {
+    using System.Data.OleDb;
+    using System.Net;
+
     internal static class ConnectionStringHelper
     {
         // Connection string properties
@@ -40,7 +40,7 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
                 { ConnectTimeoutKey, connectTimeout },
                 { IntegratedSecurityKey, "SSPI" },
                 { PersistSecurityInfoKey, "True" },
-                { ApplicationNameKey, AppConstants.ApplicationInstanceUniqueName }
+                { ApplicationNameKey, AppEnvironment.ApplicationInstanceUniqueName }
             };
 
             return builder.ConnectionString;
@@ -55,7 +55,7 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
                 { InitialCatalogKey, databaseName },
                 { IntegratedSecurityKey, "ClaimsToken" },
                 { PasswordKey, accessToken! }, // The Analysis Services client libraries automatically add the auth-scheme value "Bearer" to the access token
-                { ApplicationNameKey, AppConstants.ApplicationInstanceUniqueName }
+                { ApplicationNameKey, AppEnvironment.ApplicationInstanceUniqueName }
 
                 //{ PersistSecurityInfoKey, "False" },
                 //{ UseEncryptionForDataKey, "True" },

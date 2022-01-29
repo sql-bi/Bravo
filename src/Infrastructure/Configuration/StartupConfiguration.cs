@@ -24,8 +24,8 @@
 #if !DEBUG_WWWROOT
             Directory.SetCurrentDirectory(System.AppContext.BaseDirectory);
 #endif
-            Directory.CreateDirectory(AppConstants.ApplicationDataPath);
-            Directory.CreateDirectory(AppConstants.ApplicationTempPath);
+            Directory.CreateDirectory(AppEnvironment.ApplicationDataPath);
+            Directory.CreateDirectory(AppEnvironment.ApplicationTempPath);
         }
 
         private static void ConfigureSecurityProtocols()
@@ -69,7 +69,7 @@
 
         private static void ConfigureMulticoreJit()
         {
-            ProfileOptimization.SetProfileRoot(AppConstants.ApplicationDataPath);
+            ProfileOptimization.SetProfileRoot(AppEnvironment.ApplicationDataPath);
             ProfileOptimization.StartProfile(".jitprofile");
         }
     }

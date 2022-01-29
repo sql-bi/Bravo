@@ -25,7 +25,7 @@
         public string? ArgumentDatabaseName { get; set; }
 
         [JsonIgnore]
-        public bool IsExternalTool => AppConstants.PBIDesktopProcessName.EqualsI(ParentProcessName);
+        public bool IsExternalTool => AppEnvironment.PBIDesktopProcessName.EqualsI(ParentProcessName);
 
         public static AppInstanceStartupMessage CreateFrom(StartupSettings settings)
         {
@@ -46,7 +46,7 @@
     {
         public static JsonElement ToJsonElement(this AppInstanceStartupMessage startupMessage)
         {
-            var messageString = JsonSerializer.Serialize(startupMessage, AppConstants.DefaultJsonOptions);
+            var messageString = JsonSerializer.Serialize(startupMessage, AppEnvironment.DefaultJsonOptions);
             var messageJson = JsonSerializer.Deserialize<JsonElement>(messageString);
 
             return messageJson;

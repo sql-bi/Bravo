@@ -3,15 +3,13 @@
     using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Infrastructure.Windows;
     using System;
-    using System.Diagnostics;
-    using System.Globalization;
     using System.Threading;
 
     internal static class WindowDialogHelper
     {
         public static (bool canceled, string? path) OpenFileDialog(string defaultExt, CancellationToken cancellationToken)
         {
-            var dialogOwner = Win32WindowWrapper.CreateFrom(Process.GetCurrentProcess().MainWindowHandle);
+            var dialogOwner = Win32WindowWrapper.CreateFrom(ProcessHelper.GetCurrentProcessMainWindowHandle());
             var dialogResult = System.Windows.Forms.DialogResult.None;
             var defaultExtLowercase = defaultExt.ToLower();
 
@@ -48,7 +46,7 @@
 
         public static (bool canceled, string? path) SaveFileDialog(string? fileName, string defaultExt, CancellationToken cancellationToken)
         {
-            var dialogOwner = Win32WindowWrapper.CreateFrom(Process.GetCurrentProcess().MainWindowHandle);
+            var dialogOwner = Win32WindowWrapper.CreateFrom(ProcessHelper.GetCurrentProcessMainWindowHandle());
             var dialogResult = System.Windows.Forms.DialogResult.None;
             var defaultExtLowercase = defaultExt.ToLower();
 
@@ -84,7 +82,7 @@
 
         public static (bool canceled, string? path) BrowseFolderDialog(CancellationToken cancellationToken)
         {
-            var dialogOwner = Win32WindowWrapper.CreateFrom(Process.GetCurrentProcess().MainWindowHandle);
+            var dialogOwner = Win32WindowWrapper.CreateFrom(ProcessHelper.GetCurrentProcessMainWindowHandle());
             var dialogResult = System.Windows.Forms.DialogResult.None;
 
             using var dialog = new System.Windows.Forms.FolderBrowserDialog()

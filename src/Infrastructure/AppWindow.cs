@@ -49,8 +49,8 @@
 #endif
             var window = new PhotinoWindow()
                 .SetIconFile("wwwroot/bravo.ico")
-                .SetTitle(AppConstants.ApplicationMainWindowTitle)
-                .SetTemporaryFilesPath(AppConstants.ApplicationTempPath)
+                .SetTitle(AppEnvironment.ApplicationMainWindowTitle)
+                .SetTemporaryFilesPath(AppEnvironment.ApplicationTempPath)
                 .SetContextMenuEnabled(contextMenuEnabled)
                 .SetDevToolsEnabled(devToolsEnabled)
                 .SetLogVerbosity(logVerbosity) // 0 = Critical Only, 1 = Critical and Warning, 2 = Verbose, >2 = All Details. Default is 2.
@@ -73,14 +73,14 @@
 
             var config = new
             {
-                token = AppConstants.ApiAuthenticationToken,
+                token = AppEnvironment.ApiAuthenticationToken,
                 address = GetAddress().ToString(),
-                version = AppConstants.ApplicationProductVersion,
-                build = AppConstants.ApplicationFileVersion,
+                version = AppEnvironment.ApplicationProductVersion,
+                build = AppEnvironment.ApplicationFileVersion,
                 options = BravoOptions.CreateFromUserPreferences(),
                 telemetry = new
                 {
-                    instrumentationKey = AppConstants.TelemetryInstrumentationKey,
+                    instrumentationKey = AppEnvironment.TelemetryInstrumentationKey,
                     contextDeviceOperatingSystem = ContextTelemetryInitializer.DeviceOperatingSystem,
                     contextComponentVersion = ContextTelemetryInitializer.ComponentVersion,
                     contextSessionId = ContextTelemetryInitializer.SessionId,
@@ -90,7 +90,7 @@
             };
             config.options.Theme = GetTheme();
 
-            var script = $@"var CONFIG = { JsonSerializer.Serialize(config, AppConstants.DefaultJsonOptions) };";
+            var script = $@"var CONFIG = { JsonSerializer.Serialize(config, AppEnvironment.DefaultJsonOptions) };";
             var stream = new MemoryStream(Encoding.UTF8.GetBytes(script));
 
             return stream;
@@ -136,7 +136,7 @@
             // This behavior is enabled by default to allow toast notifications because, without a valid shortcut installed, Photino cannot raise a toast notification from a desktop app.
             // If the user has chosen to activate the application shortcut during app installation, this results in a duplicate of the application shortcut in the Windows start menu.
             // The issue has been reported on GitHub, meanwhile let's get rid of the shortcut created by Photino https://github.com/tryphotino/photino.NET/issues/85
-            var shortcutName = Path.ChangeExtension(AppConstants.ApplicationMainWindowTitle, "lnk");
+            var shortcutName = Path.ChangeExtension(AppEnvironment.ApplicationMainWindowTitle, "lnk");
             var shortcutPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData, Environment.SpecialFolderOption.DoNotVerify), @"Microsoft\Windows\Start Menu\Programs", shortcutName);
             if (File.Exists(shortcutPath))
                 File.Delete(shortcutPath);
@@ -207,7 +207,7 @@
         /// </summary>
         private void CheckForUpdate()
         {
-            if (AppConstants.IsPackagedAppInstance)
+            if (AppEnvironment.IsPackagedAppInstance)
                 return;
 
             AutoUpdater.AppCastURL = string.Format("https://cdn.sqlbi.com/updates/BravoAutoUpdater.xml?nocache={0}", DateTimeOffset.Now.ToUnixTimeSeconds());
@@ -216,7 +216,7 @@
             AutoUpdater.ShowSkipButton = false;
             AutoUpdater.ShowRemindLaterButton = false;
             AutoUpdater.OpenDownloadPage = false;
-            AutoUpdater.PersistenceProvider = new JsonFilePersistenceProvider(jsonPath: Path.Combine(AppConstants.ApplicationDataPath, "autoupdater.json"));
+            AutoUpdater.PersistenceProvider = new JsonFilePersistenceProvider(jsonPath: Path.Combine(AppEnvironment.ApplicationDataPath, "autoupdater.json"));
             AutoUpdater.CheckForUpdateEvent += (updateInfo) =>
             {
                 if (updateInfo.Error is not null)
@@ -231,7 +231,7 @@
                     NotificationHelper.NotifyUpdateAvailable(updateInfo);
                 }
             };
-            AutoUpdater.InstalledVersion = Version.Parse(AppConstants.ApplicationFileVersion);
+            AutoUpdater.InstalledVersion = Version.Parse(AppEnvironment.ApplicationFileVersion);
             AutoUpdater.Start();
         }
 

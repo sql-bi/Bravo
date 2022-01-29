@@ -1,18 +1,18 @@
-﻿using System;
-using System.Globalization;
-using System.IO;
-using System.Text;
-using System.Text.RegularExpressions;
-
-namespace Sqlbi.Bravo.Infrastructure.Extensions
+﻿namespace Sqlbi.Bravo.Infrastructure.Extensions
 {
+    using System;
+    using System.Globalization;
+    using System.IO;
+    using System.Text;
+    using System.Text.RegularExpressions;
+
     public static class StringExtensions
     {
         private static Regex? _invalidFileNameCharsRegex;
 
         public static string ToPBIDesktopReportName(this string windowTitle)
         {
-            var index = windowTitle.LastIndexOf(AppConstants.PBIDesktopMainWindowTitleSuffix);
+            var index = windowTitle.LastIndexOf(AppEnvironment.PBIDesktopMainWindowTitleSuffix);
             if (index >= 0)
                 return windowTitle[..index];
 
@@ -21,7 +21,7 @@ namespace Sqlbi.Bravo.Infrastructure.Extensions
 
         public static bool IsPBIDesktopMainWindowTitle(this string windowTitle)
         {
-            return windowTitle.EndsWith(AppConstants.PBIDesktopMainWindowTitleSuffix);
+            return windowTitle.EndsWith(AppEnvironment.PBIDesktopMainWindowTitleSuffix);
         }
 
         /// <summary>

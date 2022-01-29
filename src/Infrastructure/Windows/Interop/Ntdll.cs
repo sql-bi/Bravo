@@ -1,8 +1,8 @@
-﻿using System;
-using System.Runtime.InteropServices;
-
-namespace Sqlbi.Bravo.Infrastructure.Windows.Interop
+﻿namespace Sqlbi.Bravo.Infrastructure.Windows.Interop
 {
+    using System;
+    using System.Runtime.InteropServices;
+
     internal static class Ntdll
     {
         internal enum NTSTATUS
