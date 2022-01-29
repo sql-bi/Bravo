@@ -4,9 +4,10 @@
  * https://www.sqlbi.com
 */
 
-import { _ } from '../helpers/utils';
+import { Notify } from '../controllers/notifications';
+import { Utils, _, __ } from '../helpers/utils';
 import { notificationCenter } from '../main';
-import { i18n } from '../model/i18n';
+import { I18n, i18n } from '../model/i18n';
 import { strings } from '../model/strings';
 import { View } from './view';
 
@@ -14,20 +15,31 @@ export class NotificationSidebar extends View {
 
     collapsed = false;
     ctrlNotifications: HTMLElement;
+    itemsTitle: HTMLElement;
+    itemsContainer: HTMLElement;
+    timeFormatter: Intl.RelativeTimeFormat;
 
     constructor(id: string, container: HTMLElement) {
         super(id, container);
 
+        this.timeFormatter = new Intl.RelativeTimeFormat(I18n.instance.locale.locale, { numeric: "auto", style: "long" });
+
         let html = `
-            <div id="ctrl-notifications" class="ctrl toggle notification-ctrl icon-notifications solo" title="${i18n(strings.notificationCtrlTitle)}" disabled></div> 
-    
-            <div class="items">
-               
-            </div>
+            <div id="ctrl-notifications" class="ctrl toggle notification-ctrl icon-notifications solo" title="${i18n(strings.notificationCtrlTitle)}"></div> 
+
+            <div class="items-title"></div>
+
+            <div class="items"></div>
         `;
         this.element.insertAdjacentHTML("beforeend", html);
 
         this.ctrlNotifications = _("#ctrl-notifications", this.element);
+        this.itemsTitle = _(".items-title", this.element);
+        this.itemsContainer = _(".items", this.element);
+
+        for (let id in notificationCenter.notifications) 
+            this.add(notificationCenter.notifications[id]);
+
         this.toggle(true);
         this.listen();
     }
@@ -36,13 +48,27 @@ export class NotificationSidebar extends View {
         this.ctrlNotifications.addEventListener("click", e => {
             e.preventDefault();
             let el = (<HTMLElement>e.currentTarget);
-            if (el.hasAttribute("disabled")) return;
             el.toggleClass("active");
             this.toggle();
         });
 
-        notificationCenter.on(["read", "remove", "add"], () => {
+        this.element.addLiveEventListener("click", ".remove-item", (e, element) => {
+            let id = element.parentElement.dataset.id;
+            if (id in notificationCenter.notifications) {
+                notificationCenter.remove(notificationCenter.notifications[id]);
+            }
+        });
+
+        notificationCenter.on("read", () => {
             this.updateUnreadCount();
+        });
+
+        notificationCenter.on("add", (notification: Notify) => {
+            this.add(notification);
+        });
+
+        notificationCenter.on("remove", (notification: Notify) => {
+            this.remove(notification);
         });
     }
 
@@ -54,6 +80,9 @@ export class NotificationSidebar extends View {
         } else {
             this.element.classList.remove("collapsed");
             root.classList.add("has-notifications");
+
+            notificationCenter.markAllAsRead();
+            this.updateUnreadCount();
         }
         this.collapsed = collapse;
     }
@@ -61,13 +90,10 @@ export class NotificationSidebar extends View {
     updateUnreadCount() {
 
         if (this.ctrlNotifications) {
-            if (notificationCenter.notifications.length) {
+            let count = notificationCenter.count;
+            if (count) {
 
-                let unreadCount = 0;
-                notificationCenter.notifications.forEach(notification => {
-                    if (notification.unread)
-                        unreadCount++;
-                });
+                let unreadCount = notificationCenter.unreadCount;
 
                 let unreadBadge = _(".unread", this.ctrlNotifications);
                 if (unreadBadge.empty) {
@@ -81,8 +107,47 @@ export class NotificationSidebar extends View {
                 }
             } else {
                 this.ctrlNotifications.innerHTML = "";
+                this.itemsContainer.innerHTML = "";
             }
-            this.ctrlNotifications.toggleAttr("disabled", notificationCenter.notifications.length == 0);
+            this.itemsTitle.innerText = (count ? i18n(strings.notificationsTitle, { count: count }) : "");
         }
+    }
+
+    add(notification: Notify) {
+
+        const now = new Date().getTime();
+        const daysAgo = Math.round((notification.time - now) / (1000 * 60 * 60 * 24));
+
+        let html = `
+            <div class="item" data-id="${notification.id}">
+                ${notification.dismissable ?  `
+                    <div class="remove-item ctrl solo icon-close"></div>
+                ` : ""}
+                <div class="title">${notification.message}</div>
+                
+                <div class="time">${Utils.Text.ucfirst(this.timeFormatter.format(daysAgo, 'day'))}</div>
+
+                ${ notification.actions ? `
+                    <div class="actions">
+                        ${notification.actions}
+                    </div>
+                ` : ""}
+            </div>
+        `;
+        this.itemsContainer.insertAdjacentHTML("afterbegin", html);
+
+        this.updateUnreadCount();
+    }
+    
+    remove(notification: Notify) {
+
+        if (!notification.dismissable) return;
+
+        __(".item", this.element).forEach((div: HTMLElement) => {
+            if (div.dataset.id == notification.id) {
+                div.remove();
+            }
+        });
+        this.updateUnreadCount();
     }
 }

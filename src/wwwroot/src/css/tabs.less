@@ -24,7 +24,7 @@
     position: relative;
     font-size: 13px;
     line-height: 1.4;
-    height: 46px;
+    height: 50px;
     padding: 8px 3px 4px 3px;
     overflow: hidden;
     background: @window-back-color;
@@ -270,11 +270,18 @@
   .chrome-tabs .chrome-tabs-bottom-bar {
     position: absolute;
     bottom: 0;
-    height: 4px;
+    height: 8px;
     left: 0;
     width: 100%;
     background: @back-color;
     z-index: 10;
+    
+    border-top-left-radius: 8px;
+    transition: border-radius .3s;
+
+    .has-notifications & {
+      border-top-right-radius: 8px;
+    }
 
     .dark & {
         background: @back-color-dark;

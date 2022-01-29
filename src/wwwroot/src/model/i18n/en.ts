@@ -32,6 +32,7 @@ const locale: Locale = {
         [_.appUpdateAvailable]: "New version available: {version}",
         [_.appUpdateChangelog]: "Changelog",
         [_.appUpdateDownload]: "Download",
+        [_.appUpdateViewDetails]: "View details",
         [_.BestPractices]: "Best Practices",
         [_.closeOtherTabs]: "Close others",
         [_.closeTab]: "Close",
@@ -100,6 +101,7 @@ const locale: Locale = {
         [_.ManageDates]: "Manage Dates",
         [_.menuCtrlTitle]: "Collapse/Expand menu",
         [_.notificationCtrlTitle]: "Notifications",
+        [_.notificationsTitle]: "{count} notification{{s}}",
         [_.openSourcePayoff]: "Bravo for Power BI is an open-source tool developed and mantained by SQLBI and the Github community. Join us at",
         [_.openWithDaxFormatterCtrlTitle]: "Format online with DAX Formatter",  
 
@@ -172,12 +174,12 @@ const locale: Locale = {
         [_.themeCtrlTitle]: "Change Theme",
         [_.traceId]: "Trace Id",
         [_.unknownMessage]: "Invalid Message Received",
-        [_.updateMessage]: "Update available",
+        [_.updateMessage]: "A new version of Bravo is available: {version}",
         [_.version]: "Version",
         [_.welcomeHelpText]: "Watch the videos below to learn how to use Bravo:",
         [_.welcomeHelpTitle]: "How to use Bravo?",
-        [_.welcomeText]: "Bravo is a powerful toolkit for your Power BI datasets that you can use to quick manage models, create date tables, export data, and more. Start by opening a dataset:",
-        [_.welcomeTitle]: "Welcome to Bravo for Power BI",
+        [_.welcomeText]: "Bravo is a handy Power BI toolkit that you can use to analyze your models, format measures, create date tables, and export data.",
+        [_.welcomeTitle]: "Bravo for Power BI",
 
         /* Errors */
         [_.errorAborted]: "Operation aborted.",

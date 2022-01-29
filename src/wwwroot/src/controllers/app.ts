@@ -17,7 +17,7 @@ import { PageType } from './page';
 import { host, notificationCenter, telemetry } from '../main';
 import { i18n } from '../model/i18n'; 
 import { ApplicationUpdateAvailableWebMessage, PBICloudDatasetOpenWebMessage, PBIDesktopReportOpenWebMessage, UnknownWebMessage, VpaxFileOpenWebMessage, WebMessageType } from '../model/message';
-import { Notify, NotifyType } from './notifications';
+import { Notify } from './notifications';
 import { NotificationSidebar } from '../view/notification-sidebar';
 import { PBIDesktopReport } from '../model/pbi-report';
 import { PBICloudDataset } from '../model/pbi-dataset';
@@ -123,7 +123,8 @@ export class App {
         });
 
         host.on(WebMessageType.ApplicationUpdate, (data: ApplicationUpdateAvailableWebMessage)=>{
-            notificationCenter.add(new Notify(i18n(strings.updateMessage), data, NotifyType.AppUpdate));
+            notificationCenter.add(new Notify(i18n(strings.updateMessage, { version: data.currentVersion }), data, `<span class="link" data-download="${data.downloadUrl}">${i18n(strings.appUpdateDownload)}</span> &nbsp;&nbsp; <span class="link" data-href="${data.changelogUrl}">${i18n(strings.appUpdateViewDetails)}</span>`, false, true));
+            
             this.pendingVersion = new AppVersion({
                 version: data.currentVersion,
                 downloadUrl: data.downloadUrl,

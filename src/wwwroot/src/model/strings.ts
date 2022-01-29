@@ -25,6 +25,7 @@ export enum strings {
     appUpdateAvailable,
     appUpdateChangelog,
     appUpdateDownload,
+    appUpdateViewDetails,
     BestPractices,
     closeOtherTabs,
     closeTab,
@@ -93,6 +94,7 @@ export enum strings {
     ManageDates,
     menuCtrlTitle,
     notificationCtrlTitle,
+    notificationsTitle,
     openSourcePayoff,
     openWithDaxFormatterCtrlTitle,
 

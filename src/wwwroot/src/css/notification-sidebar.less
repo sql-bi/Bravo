@@ -1,5 +1,6 @@
 // main: main.less
 #notification-sidebar {
+    overflow: hidden;
     width: 300px;
     transition: width .2s ease-in-out;
 
@@ -10,16 +11,65 @@
         background: @window-back-color-dark;
     }
 
-
-    .items {
+    .items-title {
         margin-top: 42px;
-        height: calc(100% - 42px);
-        background: @back-color;
-        border-left: 8px solid @window-back-color;
+        margin-left: 15px;
+        font-size: 14px;
+        height: 24px;
+        color: @notice-color;
+        .dark & { color: @notice-color-dark }
+    }
+    .items {
+        margin-top: 5px;
+        height: calc(100% - 70px);
+        overflow: hidden;
+        overflow-y: auto;
+        
+        background: url("@{images}/notifications-light.svg") no-repeat center;
 
-        .dark & { 
-            background-color: @back-color-dark;
-            border-color: @window-back-color-dark;
+        .dark & {
+            background-image: url("@{images}/notifications-dark.svg");
+        }
+
+        .item {
+            width: 245px;
+            background: @back-color;
+            padding: 10px 15px;
+            margin:5px 0 5px 12px;
+            .border-radius();
+
+            .dark & { 
+                background-color: @back-color-dark;
+            }
+
+            .remove-item {
+                float:right;
+                margin-right: -10px;
+                margin-top: -5px;
+                margin-left: 10px;
+
+                &:before {
+                    font-size: 14px;
+                }
+            }
+
+            .title {
+                font-weight: 500;
+                font-size: 14px;
+                line-height: 1.4;
+            }
+
+            .time {
+                color: @notice-color;
+                font-size: 12px;
+
+                .dark & { color: @notice-color-dark}
+            }
+
+            .actions {
+                margin: 10px 0 0 0;
+                font-size: 13px;
+            }
         }
     }
 
