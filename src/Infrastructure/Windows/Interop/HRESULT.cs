@@ -1,6 +1,6 @@
 ﻿namespace Sqlbi.Bravo.Infrastructure.Windows.Interop
 {
-    internal enum HRESULT
+    internal class HRESULT
     {
         //S_OK = 0,
         //S_FALSE = 1,
@@ -40,7 +40,8 @@
         //E_INVALIDARG = -2147024809,
         //E_ENDOFSTREAM = -2147024858,
         //E_FILELOAD = -2146232799,
-        E_FILENOTFOUND = -2147024894, 
+        public const int E_FILENOTFOUND = -2147024894;
+        public const int E_INVALID_DATA = -2147024883;
         //E_DIRECTORYNOTFOUND = -2147024893,
         //E_PATHTOOLONG = -2147024690,
         //E_IO = -2146232800,
