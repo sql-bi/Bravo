@@ -1,24 +1,14 @@
-﻿using Sqlbi.Bravo.Infrastructure.Extensions;
-using Sqlbi.Bravo.Infrastructure.Windows;
-using System;
-using System.Diagnostics;
-using System.Globalization;
-using System.Threading;
-
-namespace Sqlbi.Bravo.Infrastructure.Helpers
+﻿namespace Sqlbi.Bravo.Infrastructure.Helpers
 {
+    using Sqlbi.Bravo.Infrastructure.Extensions;
+    using Sqlbi.Bravo.Infrastructure.Windows;
+    using System;
+    using System.Diagnostics;
+    using System.Globalization;
+    using System.Threading;
+
     internal static class WindowDialogHelper
     {
-        private static void RunDialog(Action action)
-        {
-            var threadStart = new ThreadStart(action);
-            var thread = new Thread(threadStart);
-            thread.CurrentCulture = thread.CurrentUICulture = CultureInfo.CurrentCulture;
-            thread.SetApartmentState(ApartmentState.STA);
-            thread.Start();
-            thread.Join();
-        }
-
         public static (bool canceled, string? path) OpenFileDialog(string defaultExt, CancellationToken cancellationToken)
         {
             var dialogOwner = Win32WindowWrapper.CreateFrom(Process.GetCurrentProcess().MainWindowHandle);
@@ -37,7 +27,7 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
 
             if (!cancellationToken.IsCancellationRequested)
             {
-                RunDialog(() => dialogResult = dialog.ShowDialog(dialogOwner));
+                ProcessHelper.RunOnSTAThread(() => dialogResult = dialog.ShowDialog(dialogOwner));
 
                 //var dialog2 = new Bravo.Infrastructure.Windows.SaveFileDialog
                 //{
@@ -73,7 +63,7 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
 
             if (!cancellationToken.IsCancellationRequested)
             {
-                RunDialog(() => dialogResult = dialog.ShowDialog(dialogOwner));
+                ProcessHelper.RunOnSTAThread(() => dialogResult = dialog.ShowDialog(dialogOwner));
 
                 //var dialog2 = new Bravo.Infrastructure.Windows.SaveFileDialog
                 //{
@@ -105,7 +95,7 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
             
             if (!cancellationToken.IsCancellationRequested)
             {
-                RunDialog(() => dialogResult = dialog.ShowDialog(dialogOwner));
+                ProcessHelper.RunOnSTAThread(() => dialogResult = dialog.ShowDialog(dialogOwner));
             }
 
             var canceled = dialogResult == System.Windows.Forms.DialogResult.Cancel;

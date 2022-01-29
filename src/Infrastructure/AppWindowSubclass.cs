@@ -67,14 +67,6 @@ namespace Sqlbi.Bravo.Infrastructure
                     Trace.WriteLine($"::Bravo:INF:WndProcHook[WM_COPYDATA]:{ startupMessageString }");
 #endif
                     var webMessageString = startupMessage.ToWebMessageString();
-                    if (webMessageString is null)
-                    {
-                        var startupMessageJson = startupMessage.ToJsonElement();
-                        var unknownWebMessage = UnknownWebMessage.CreateFrom(startupMessageJson);
-
-                        webMessageString = unknownWebMessage.AsString;
-                    }
-
                     _window.SendWebMessage(webMessageString);
                 }
             }

@@ -41,15 +41,8 @@
         /// </summary>
         public void NotifyOwner()
         {
-            var startupSettings = StartupSettings.Get();
-            var message = new AppInstanceStartupMessage
-            {
-                ParentProcessId = startupSettings.ParentProcessId,
-                ParentProcessName = startupSettings.ParentProcessName,
-                ParentProcessMainWindowTitle = startupSettings.ParentProcessMainWindowTitle,
-                ArgumentServerName = startupSettings.ArgumentServerName,
-                ArgumentDatabaseName = startupSettings.ArgumentDatabaseName,
-            };
+            var startupSettings = StartupSettings.CreateFromCommandLineArguments();
+            var message = AppInstanceStartupMessage.CreateFrom(startupSettings);
 
             var hWnd = User32.FindWindow(lpClassName: null, lpWindowName: AppConstants.ApplicationMainWindowTitle);
             if (hWnd != IntPtr.Zero)

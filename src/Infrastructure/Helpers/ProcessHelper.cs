@@ -5,10 +5,22 @@
     using System.Collections.Generic;
     using System.ComponentModel;
     using System.Diagnostics;
+    using System.Globalization;
     using System.Linq;
+    using System.Threading;
 
     public static class ProcessHelper
     {
+        public static void RunOnSTAThread(Action action)
+        {
+            var threadStart = new ThreadStart(action);
+            var thread = new Thread(threadStart);
+            thread.CurrentCulture = thread.CurrentUICulture = CultureInfo.CurrentCulture;
+            thread.SetApartmentState(ApartmentState.STA);
+            thread.Start();
+            thread.Join();
+        }
+
         public static bool OpenInBrowser(Uri address)
         {
             if (address.Scheme.EqualsI(Uri.UriSchemeHttps) || address.Scheme.EqualsI(Uri.UriSchemeHttp))

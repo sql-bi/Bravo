@@ -1,11 +1,12 @@
-﻿using Sqlbi.Bravo.Models;
-using System;
-using System.ComponentModel.DataAnnotations;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-
-namespace Sqlbi.Bravo.Infrastructure.Messages
+﻿namespace Sqlbi.Bravo.Infrastructure.Messages
 {
+    using AutoUpdaterDotNET;
+    using Sqlbi.Bravo.Models;
+    using System;
+    using System.ComponentModel.DataAnnotations;
+    using System.Text.Json;
+    using System.Text.Json.Serialization;
+
     internal interface IWebMessage
     {
         /// <summary>
@@ -84,6 +85,19 @@ namespace Sqlbi.Bravo.Infrastructure.Messages
 
         [JsonIgnore]
         public string AsString => JsonSerializer.Serialize(this, AppConstants.DefaultJsonOptions);
+
+        public static ApplicationUpdateAvailableWebMessage CreateFrom(UpdateInfoEventArgs updateInfo)
+        {
+            var webMessage = new ApplicationUpdateAvailableWebMessage
+            {
+                DownloadUrl = updateInfo.DownloadURL,
+                ChangelogUrl = updateInfo.ChangelogURL,
+                CurrentVersion = updateInfo.CurrentVersion,
+                InstalledVersion = updateInfo.InstalledVersion.ToString(),
+            };
+
+            return webMessage;
+        }
     }
 
     internal class PBIDesktopReportOpenWebMessage : IWebMessage

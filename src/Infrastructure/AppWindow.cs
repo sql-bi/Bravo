@@ -1,22 +1,23 @@
-﻿using AutoUpdaterDotNET;
-using Microsoft.Extensions.Hosting;
-using PhotinoNET;
-using Sqlbi.Bravo.Infrastructure.Configuration;
-using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
-using Sqlbi.Bravo.Infrastructure.Extensions;
-using Sqlbi.Bravo.Infrastructure.Helpers;
-using Sqlbi.Bravo.Infrastructure.Messages;
-using Sqlbi.Bravo.Infrastructure.Windows.Interop;
-using Sqlbi.Bravo.Models;
-using System;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Text.Json;
-
-namespace Sqlbi.Bravo.Infrastructure
+﻿namespace Sqlbi.Bravo.Infrastructure
 {
+    using AutoUpdaterDotNET;
+    using Microsoft.Extensions.Hosting;
+    using Microsoft.Extensions.Options;
+    using PhotinoNET;
+    using Sqlbi.Bravo.Infrastructure.Configuration;
+    using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
+    using Sqlbi.Bravo.Infrastructure.Extensions;
+    using Sqlbi.Bravo.Infrastructure.Helpers;
+    using Sqlbi.Bravo.Infrastructure.Messages;
+    using Sqlbi.Bravo.Infrastructure.Windows.Interop;
+    using Sqlbi.Bravo.Models;
+    using System;
+    using System.Diagnostics;
+    using System.IO;
+    using System.Linq;
+    using System.Text;
+    using System.Text.Json;
+
     internal class AppWindow : IDisposable
     {
         private readonly IHost _host;
@@ -124,7 +125,7 @@ namespace Sqlbi.Bravo.Infrastructure
             Trace.WriteLine($"::Bravo:INF:OnWindowCreated:{ _window.Title } ( { string.Join(", ", _host.GetListeningAddresses().Select((a) => a.ToString())) } )");
 #if !DEBUG
             HandleHotKeys(register: true);
-#endif   
+#endif
             _windowSubclass = AppWindowSubclass.Hook(_window);
 
             // Every time a Photino application starts up, Photino.Native attempts to creates a shortcut in Windows start menu.
@@ -211,8 +212,6 @@ namespace Sqlbi.Bravo.Infrastructure
             AutoUpdater.ShowSkipButton = false;
             AutoUpdater.ShowRemindLaterButton = false;
             AutoUpdater.OpenDownloadPage = false;
-            //AutoUpdater.ReportErrors = false;
-            //AutoUpdater.RunUpdateAsAdmin = true;
             AutoUpdater.PersistenceProvider = new JsonFilePersistenceProvider(jsonPath: Path.Combine(AppConstants.ApplicationDataPath, "autoupdater.json"));
             AutoUpdater.CheckForUpdateEvent += (updateInfo) =>
             {
@@ -222,23 +221,8 @@ namespace Sqlbi.Bravo.Infrastructure
                 }
                 else if (updateInfo.IsUpdateAvailable)
                 {
-                    var updateMessage = new ApplicationUpdateAvailableWebMessage
-                    {
-                        DownloadUrl = updateInfo.DownloadURL,
-                        ChangelogUrl = updateInfo.ChangelogURL,
-                        CurrentVersion = updateInfo.CurrentVersion,
-                        InstalledVersion = updateInfo.InstalledVersion.ToString(),
-                    };
+                    var updateMessage = ApplicationUpdateAvailableWebMessage.CreateFrom(updateInfo);
                     _window.SendWebMessage(updateMessage.AsString);
-
-                    // TODO: complete check for update
-
-                    //var threadStart = new System.Threading.ThreadStart(() => AutoUpdater.ShowUpdateForm(updateInfo));
-                    //var thread = new System.Threading.Thread(threadStart);
-                    //thread.CurrentCulture = thread.CurrentUICulture = System.Globalization.CultureInfo.CurrentCulture;
-                    //thread.SetApartmentState(System.Threading.ApartmentState.STA);
-                    //thread.Start();
-                    //thread.Join();
 
                     NotificationHelper.NotifyUpdateAvailable(updateInfo);
                 }
