@@ -27,7 +27,7 @@
 #pragma warning disable CS8601 // Possible null reference assignment.
             var errorCode = GetAvailableCoreWebView2BrowserVersionString(browserExecutableFolder: null, ref versionInfo);
 #pragma warning restore CS8601 // Possible null reference assignment.
-            if (errorCode == (int)HRESULT.E_FILENOTFOUND)
+            if (errorCode == HRESULT.E_FILENOTFOUND)
             {
                 // WebView2 runtime not found
                 return null;

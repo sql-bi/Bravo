@@ -1,5 +1,6 @@
 ﻿namespace Sqlbi.Bravo.Infrastructure.Configuration
 {
+    using Sqlbi.Bravo.Infrastructure.Helpers;
     using Sqlbi.Bravo.Infrastructure.Windows.Interop;
     using System;
     using System.IO;
@@ -14,6 +15,8 @@
             ConfigureMulticoreJit();
             ConfigureSecurityProtocols();
             ConfigureProcessDpiAwareness();
+
+            WebView2Helper.EnsureRuntimeIsInstalled();
         }
 
         private static void ConfigureDirectories()
