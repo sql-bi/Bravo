@@ -187,6 +187,7 @@ namespace Sqlbi.Bravo.Infrastructure.Extensions
             if (string.IsNullOrWhiteSpace(windowTitle))
                 return null;
 
+            windowTitle = windowTitle.ToPBIDesktopReportName();
             return windowTitle;
         }
     }
