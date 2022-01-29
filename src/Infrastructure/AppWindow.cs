@@ -17,11 +17,14 @@
     using System.Linq;
     using System.Text;
     using System.Text.Json;
+    using System.Threading;
+    using System.Threading.Tasks;
 
     internal class AppWindow : IDisposable
     {
         private readonly IHost _host;
         private readonly PhotinoWindow _window;
+        private readonly StartupSettings _startupSettings;
 
         private AppWindowSubclass? _windowSubclass;
         private bool _disposed;
@@ -30,6 +33,7 @@
         {
             _host = host;
             _window = CreateWindow();
+            _startupSettings = (_host.Services.GetService(typeof(IOptions<StartupSettings>)) as IOptions<StartupSettings> ?? throw new BravoUnexpectedException("StartupSettings is null")).Value;
         }
 
         private PhotinoWindow CreateWindow()
@@ -236,6 +240,28 @@
         /// </summary>
         public void WaitForClose()
         {
+            if (!_startupSettings.IsEmpty)
+            {
+                // HACK: see issue https://github.com/tryphotino/photino.NET/issues/87
+                // This should be moved to the OnWindowCreated handler after the issue has been resolved
+                _ = Task.Factory.StartNew(() =>
+                {
+                    try
+                    {
+                        Thread.Sleep(2000);
+
+                        var startupMessage = AppInstanceStartupMessage.CreateFrom(_startupSettings);
+                        var webMessageString = startupMessage.ToWebMessageString();
+
+                        _window.SendWebMessage(webMessageString);
+                    }
+                    catch
+                    {
+                        // this is a temporary hack so here we can silently swallow the exception
+                    }
+                });
+            }
+
             _window.WaitForClose();
         }
 
