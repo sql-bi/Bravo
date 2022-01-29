@@ -1,22 +1,22 @@
-﻿using Sqlbi.Bravo.Infrastructure;
-using Sqlbi.Bravo.Infrastructure.Extensions;
-using Sqlbi.Bravo.Infrastructure.Models.PBICloud;
-using System;
-using System.IO;
-using System.IO.Compression;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Net.Mime;
-using System.Text;
-using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Xml.Linq;
-
-namespace Sqlbi.Bravo.Services
+﻿namespace Sqlbi.Bravo.Services
 {
+    using Sqlbi.Bravo.Infrastructure;
+    using Sqlbi.Bravo.Infrastructure.Extensions;
+    using Sqlbi.Bravo.Infrastructure.Models.PBICloud;
+    using System;
+    using System.IO;
+    using System.IO.Compression;
+    using System.Linq;
+    using System.Net;
+    using System.Net.Http;
+    using System.Net.Http.Headers;
+    using System.Net.Mime;
+    using System.Text;
+    using System.Text.Json;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using System.Xml.Linq;
+
     public interface IPBICloudSettingsService
     {
         CloudEnvironment CloudEnvironment { get; }
@@ -96,7 +96,7 @@ namespace Sqlbi.Bravo.Services
                 response.EnsureSuccessStatusCode();
 
                 var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-                var globalService = JsonSerializer.Deserialize<GlobalService>(json, AppConstants.DefaultJsonOptions) ?? throw new BravoUnexpectedException("PBICloud GlobalService is null");
+                var globalService = JsonSerializer.Deserialize<GlobalService>(json, AppEnvironment.DefaultJsonOptions) ?? throw new BravoUnexpectedException("PBICloud GlobalService is null");
 
                 return globalService;
             }
@@ -142,7 +142,7 @@ namespace Sqlbi.Bravo.Services
             response.EnsureSuccessStatusCode();
 
             var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-            var tenantCluster = JsonSerializer.Deserialize<TenantCluster>(json, AppConstants.DefaultJsonOptions) ?? throw new BravoUnexpectedException("TenantCluster is null");
+            var tenantCluster = JsonSerializer.Deserialize<TenantCluster>(json, AppEnvironment.DefaultJsonOptions) ?? throw new BravoUnexpectedException("TenantCluster is null");
 
             return tenantCluster;
         }

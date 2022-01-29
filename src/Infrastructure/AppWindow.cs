@@ -1,26 +1,30 @@
-﻿using AutoUpdaterDotNET;
-using Microsoft.Extensions.Hosting;
-using PhotinoNET;
-using Sqlbi.Bravo.Infrastructure.Configuration;
-using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
-using Sqlbi.Bravo.Infrastructure.Extensions;
-using Sqlbi.Bravo.Infrastructure.Helpers;
-using Sqlbi.Bravo.Infrastructure.Messages;
-using Sqlbi.Bravo.Infrastructure.Windows.Interop;
-using Sqlbi.Bravo.Models;
-using System;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Text.Json;
-
-namespace Sqlbi.Bravo.Infrastructure
+﻿namespace Sqlbi.Bravo.Infrastructure
 {
+    using AutoUpdaterDotNET;
+    using Microsoft.Extensions.Hosting;
+    using Microsoft.Extensions.Options;
+    using PhotinoNET;
+    using Sqlbi.Bravo.Infrastructure.Configuration;
+    using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
+    using Sqlbi.Bravo.Infrastructure.Extensions;
+    using Sqlbi.Bravo.Infrastructure.Helpers;
+    using Sqlbi.Bravo.Infrastructure.Messages;
+    using Sqlbi.Bravo.Infrastructure.Windows.Interop;
+    using Sqlbi.Bravo.Models;
+    using System;
+    using System.Diagnostics;
+    using System.IO;
+    using System.Linq;
+    using System.Text;
+    using System.Text.Json;
+    using System.Threading;
+    using System.Threading.Tasks;
+
     internal class AppWindow : IDisposable
     {
         private readonly IHost _host;
         private readonly PhotinoWindow _window;
+        private readonly StartupSettings _startupSettings;
 
         private AppWindowSubclass? _windowSubclass;
         private bool _disposed;
@@ -29,6 +33,7 @@ namespace Sqlbi.Bravo.Infrastructure
         {
             _host = host;
             _window = CreateWindow();
+            _startupSettings = (_host.Services.GetService(typeof(IOptions<StartupSettings>)) as IOptions<StartupSettings> ?? throw new BravoUnexpectedException("StartupSettings is null")).Value;
         }
 
         private PhotinoWindow CreateWindow()
@@ -44,8 +49,8 @@ namespace Sqlbi.Bravo.Infrastructure
 #endif
             var window = new PhotinoWindow()
                 .SetIconFile("wwwroot/bravo.ico")
-                .SetTitle(AppConstants.ApplicationMainWindowTitle)
-                .SetTemporaryFilesPath(AppConstants.ApplicationTempPath)
+                .SetTitle(AppEnvironment.ApplicationMainWindowTitle)
+                .SetTemporaryFilesPath(AppEnvironment.ApplicationTempPath)
                 .SetContextMenuEnabled(contextMenuEnabled)
                 .SetDevToolsEnabled(devToolsEnabled)
                 .SetLogVerbosity(logVerbosity) // 0 = Critical Only, 1 = Critical and Warning, 2 = Verbose, >2 = All Details. Default is 2.
@@ -68,14 +73,14 @@ namespace Sqlbi.Bravo.Infrastructure
 
             var config = new
             {
-                token = AppConstants.ApiAuthenticationToken,
+                token = AppEnvironment.ApiAuthenticationToken,
                 address = GetAddress().ToString(),
-                version = AppConstants.ApplicationProductVersion,
-                build = AppConstants.ApplicationFileVersion,
+                version = AppEnvironment.ApplicationProductVersion,
+                build = AppEnvironment.ApplicationFileVersion,
                 options = BravoOptions.CreateFromUserPreferences(),
                 telemetry = new
                 {
-                    instrumentationKey = AppConstants.TelemetryInstrumentationKey,
+                    instrumentationKey = AppEnvironment.TelemetryInstrumentationKey,
                     contextDeviceOperatingSystem = ContextTelemetryInitializer.DeviceOperatingSystem,
                     contextComponentVersion = ContextTelemetryInitializer.ComponentVersion,
                     contextSessionId = ContextTelemetryInitializer.SessionId,
@@ -85,7 +90,7 @@ namespace Sqlbi.Bravo.Infrastructure
             };
             config.options.Theme = GetTheme();
 
-            var script = $@"var CONFIG = { JsonSerializer.Serialize(config, AppConstants.DefaultJsonOptions) };";
+            var script = $@"var CONFIG = { JsonSerializer.Serialize(config, AppEnvironment.DefaultJsonOptions) };";
             var stream = new MemoryStream(Encoding.UTF8.GetBytes(script));
 
             return stream;
@@ -124,14 +129,14 @@ namespace Sqlbi.Bravo.Infrastructure
             Trace.WriteLine($"::Bravo:INF:OnWindowCreated:{ _window.Title } ( { string.Join(", ", _host.GetListeningAddresses().Select((a) => a.ToString())) } )");
 #if !DEBUG
             HandleHotKeys(register: true);
-#endif   
+#endif
             _windowSubclass = AppWindowSubclass.Hook(_window);
 
             // Every time a Photino application starts up, Photino.Native attempts to creates a shortcut in Windows start menu.
             // This behavior is enabled by default to allow toast notifications because, without a valid shortcut installed, Photino cannot raise a toast notification from a desktop app.
             // If the user has chosen to activate the application shortcut during app installation, this results in a duplicate of the application shortcut in the Windows start menu.
             // The issue has been reported on GitHub, meanwhile let's get rid of the shortcut created by Photino https://github.com/tryphotino/photino.NET/issues/85
-            var shortcutName = Path.ChangeExtension(AppConstants.ApplicationMainWindowTitle, "lnk");
+            var shortcutName = Path.ChangeExtension(AppEnvironment.ApplicationMainWindowTitle, "lnk");
             var shortcutPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData, Environment.SpecialFolderOption.DoNotVerify), @"Microsoft\Windows\Start Menu\Programs", shortcutName);
             if (File.Exists(shortcutPath))
                 File.Delete(shortcutPath);
@@ -202,7 +207,7 @@ namespace Sqlbi.Bravo.Infrastructure
         /// </summary>
         private void CheckForUpdate()
         {
-            if (AppConstants.IsPackagedAppInstance)
+            if (AppEnvironment.IsPackagedAppInstance)
                 return;
 
             AutoUpdater.AppCastURL = string.Format("https://cdn.sqlbi.com/updates/BravoAutoUpdater.xml?nocache={0}", DateTimeOffset.Now.ToUnixTimeSeconds());
@@ -211,9 +216,7 @@ namespace Sqlbi.Bravo.Infrastructure
             AutoUpdater.ShowSkipButton = false;
             AutoUpdater.ShowRemindLaterButton = false;
             AutoUpdater.OpenDownloadPage = false;
-            //AutoUpdater.ReportErrors = false;
-            //AutoUpdater.RunUpdateAsAdmin = true;
-            AutoUpdater.PersistenceProvider = new JsonFilePersistenceProvider(jsonPath: Path.Combine(AppConstants.ApplicationDataPath, "autoupdater.json"));
+            AutoUpdater.PersistenceProvider = new JsonFilePersistenceProvider(jsonPath: Path.Combine(AppEnvironment.ApplicationDataPath, "autoupdater.json"));
             AutoUpdater.CheckForUpdateEvent += (updateInfo) =>
             {
                 if (updateInfo.Error is not null)
@@ -222,28 +225,13 @@ namespace Sqlbi.Bravo.Infrastructure
                 }
                 else if (updateInfo.IsUpdateAvailable)
                 {
-                    var updateMessage = new ApplicationUpdateAvailableWebMessage
-                    {
-                        DownloadUrl = updateInfo.DownloadURL,
-                        ChangelogUrl = updateInfo.ChangelogURL,
-                        CurrentVersion = updateInfo.CurrentVersion,
-                        InstalledVersion = updateInfo.InstalledVersion.ToString(),
-                    };
+                    var updateMessage = ApplicationUpdateAvailableWebMessage.CreateFrom(updateInfo);
                     _window.SendWebMessage(updateMessage.AsString);
-
-                    // TODO: complete check for update
-
-                    //var threadStart = new System.Threading.ThreadStart(() => AutoUpdater.ShowUpdateForm(updateInfo));
-                    //var thread = new System.Threading.Thread(threadStart);
-                    //thread.CurrentCulture = thread.CurrentUICulture = System.Globalization.CultureInfo.CurrentCulture;
-                    //thread.SetApartmentState(System.Threading.ApartmentState.STA);
-                    //thread.Start();
-                    //thread.Join();
 
                     NotificationHelper.NotifyUpdateAvailable(updateInfo);
                 }
             };
-            AutoUpdater.InstalledVersion = Version.Parse(AppConstants.ApplicationFileVersion);
+            AutoUpdater.InstalledVersion = Version.Parse(AppEnvironment.ApplicationFileVersion);
             AutoUpdater.Start();
         }
 
@@ -252,6 +240,28 @@ namespace Sqlbi.Bravo.Infrastructure
         /// </summary>
         public void WaitForClose()
         {
+            if (!_startupSettings.IsEmpty)
+            {
+                // HACK: see issue https://github.com/tryphotino/photino.NET/issues/87
+                // This should be moved to the OnWindowCreated handler after the issue has been resolved
+                _ = Task.Factory.StartNew(() =>
+                {
+                    try
+                    {
+                        Thread.Sleep(2000);
+
+                        var startupMessage = AppInstanceStartupMessage.CreateFrom(_startupSettings);
+                        var webMessageString = startupMessage.ToWebMessageString();
+
+                        _window.SendWebMessage(webMessageString);
+                    }
+                    catch
+                    {
+                        // this is a temporary hack so here we can silently swallow the exception
+                    }
+                });
+            }
+
             _window.WaitForClose();
         }
 

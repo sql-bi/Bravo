@@ -1,16 +1,16 @@
-﻿using Microsoft.AspNetCore.Hosting;
-using Microsoft.Identity.Client;
-using Sqlbi.Bravo.Infrastructure;
-using Sqlbi.Bravo.Infrastructure.Authentication;
-using Sqlbi.Bravo.Infrastructure.Helpers;
-using System;
-using System.Diagnostics;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-
-namespace Sqlbi.Bravo.Services
+﻿namespace Sqlbi.Bravo.Services
 {
+    using Microsoft.AspNetCore.Hosting;
+    using Microsoft.Identity.Client;
+    using Sqlbi.Bravo.Infrastructure;
+    using Sqlbi.Bravo.Infrastructure.Authentication;
+    using Sqlbi.Bravo.Infrastructure.Helpers;
+    using System;
+    using System.Diagnostics;
+    using System.Linq;
+    using System.Threading;
+    using System.Threading.Tasks;
+
     public interface IPBICloudAuthenticationService
     {
         AuthenticationResult? Authentication { get; }
@@ -159,7 +159,7 @@ namespace Sqlbi.Bravo.Services
                         Debug.Assert(Thread.CurrentThread.GetApartmentState() == ApartmentState.MTA);
                         Debug.Assert(System.Windows.Forms.Application.MessageLoop == false);
 
-                        var parentWindowHandle = Process.GetCurrentProcess().MainWindowHandle;
+                        var parentHwnd = ProcessHelper.GetCurrentProcessMainWindowHandle();
 
                         // *** EmbeddedWebView requirements ***
                         // Requires VS project OutputType=WinExe and TargetFramework=net5-windows10.0.17763.0
@@ -167,7 +167,7 @@ namespace Sqlbi.Bravo.Services
                         // The framework 'Microsoft.Windows.SDK.NET' includes all the WPF(PresentationFramework.dll) and WinForm(System.Windows.Forms.dll) assemblies to the project.
 
                         builder = builder.WithUseEmbeddedWebView(useEmbeddedWebView: true)
-                            .WithParentActivityOrWindow(parentWindowHandle); // used to center embedded wiew on the parent window
+                            .WithParentActivityOrWindow(parentHwnd); // used to center embedded wiew on the parent window
                     }
                     else
                     {

@@ -57,7 +57,7 @@
 
             // This requires AppExecutionAlias activation in the MSIX installation package
             var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData, Environment.SpecialFolderOption.DoNotVerify);
-            var fileName = Path.Combine(localAppData, @"Microsoft\WindowsApps", Path.ChangeExtension(AppConstants.ApplicationStoreAliasName, ".exe"));
+            var fileName = Path.Combine(localAppData, @"Microsoft\WindowsApps", Path.ChangeExtension(AppEnvironment.ApplicationStoreAliasName, ".exe"));
 
             var startInfo = new ProcessStartInfo
             {

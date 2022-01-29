@@ -1,27 +1,15 @@
-﻿using Sqlbi.Bravo.Infrastructure.Extensions;
-using Sqlbi.Bravo.Infrastructure.Windows;
-using System;
-using System.Diagnostics;
-using System.Globalization;
-using System.Threading;
-
-namespace Sqlbi.Bravo.Infrastructure.Helpers
+﻿namespace Sqlbi.Bravo.Infrastructure.Helpers
 {
+    using Sqlbi.Bravo.Infrastructure.Extensions;
+    using Sqlbi.Bravo.Infrastructure.Windows;
+    using System;
+    using System.Threading;
+
     internal static class WindowDialogHelper
     {
-        private static void RunDialog(Action action)
-        {
-            var threadStart = new ThreadStart(action);
-            var thread = new Thread(threadStart);
-            thread.CurrentCulture = thread.CurrentUICulture = CultureInfo.CurrentCulture;
-            thread.SetApartmentState(ApartmentState.STA);
-            thread.Start();
-            thread.Join();
-        }
-
         public static (bool canceled, string? path) OpenFileDialog(string defaultExt, CancellationToken cancellationToken)
         {
-            var dialogOwner = Win32WindowWrapper.CreateFrom(Process.GetCurrentProcess().MainWindowHandle);
+            var dialogOwner = Win32WindowWrapper.CreateFrom(ProcessHelper.GetCurrentProcessMainWindowHandle());
             var dialogResult = System.Windows.Forms.DialogResult.None;
             var defaultExtLowercase = defaultExt.ToLower();
 
@@ -37,7 +25,7 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
 
             if (!cancellationToken.IsCancellationRequested)
             {
-                RunDialog(() => dialogResult = dialog.ShowDialog(dialogOwner));
+                ProcessHelper.RunOnSTAThread(() => dialogResult = dialog.ShowDialog(dialogOwner));
 
                 //var dialog2 = new Bravo.Infrastructure.Windows.SaveFileDialog
                 //{
@@ -58,7 +46,7 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
 
         public static (bool canceled, string? path) SaveFileDialog(string? fileName, string defaultExt, CancellationToken cancellationToken)
         {
-            var dialogOwner = Win32WindowWrapper.CreateFrom(Process.GetCurrentProcess().MainWindowHandle);
+            var dialogOwner = Win32WindowWrapper.CreateFrom(ProcessHelper.GetCurrentProcessMainWindowHandle());
             var dialogResult = System.Windows.Forms.DialogResult.None;
             var defaultExtLowercase = defaultExt.ToLower();
 
@@ -73,7 +61,7 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
 
             if (!cancellationToken.IsCancellationRequested)
             {
-                RunDialog(() => dialogResult = dialog.ShowDialog(dialogOwner));
+                ProcessHelper.RunOnSTAThread(() => dialogResult = dialog.ShowDialog(dialogOwner));
 
                 //var dialog2 = new Bravo.Infrastructure.Windows.SaveFileDialog
                 //{
@@ -94,7 +82,7 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
 
         public static (bool canceled, string? path) BrowseFolderDialog(CancellationToken cancellationToken)
         {
-            var dialogOwner = Win32WindowWrapper.CreateFrom(Process.GetCurrentProcess().MainWindowHandle);
+            var dialogOwner = Win32WindowWrapper.CreateFrom(ProcessHelper.GetCurrentProcessMainWindowHandle());
             var dialogResult = System.Windows.Forms.DialogResult.None;
 
             using var dialog = new System.Windows.Forms.FolderBrowserDialog()
@@ -105,7 +93,7 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
             
             if (!cancellationToken.IsCancellationRequested)
             {
-                RunDialog(() => dialogResult = dialog.ShowDialog(dialogOwner));
+                ProcessHelper.RunOnSTAThread(() => dialogResult = dialog.ShowDialog(dialogOwner));
             }
 
             var canceled = dialogResult == System.Windows.Forms.DialogResult.Cancel;

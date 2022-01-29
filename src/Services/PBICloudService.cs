@@ -1,23 +1,23 @@
-﻿using Microsoft.Identity.Client;
-using Sqlbi.Bravo.Infrastructure;
-using Sqlbi.Bravo.Infrastructure.Extensions;
-using Sqlbi.Bravo.Infrastructure.Helpers;
-using Sqlbi.Bravo.Infrastructure.Models.PBICloud;
-using Sqlbi.Bravo.Models;
-using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Drawing.Imaging;
-using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Text.Json;
-using System.Threading.Tasks;
-
-namespace Sqlbi.Bravo.Services
+﻿namespace Sqlbi.Bravo.Services
 {
+    using Microsoft.Identity.Client;
+    using Sqlbi.Bravo.Infrastructure;
+    using Sqlbi.Bravo.Infrastructure.Extensions;
+    using Sqlbi.Bravo.Infrastructure.Helpers;
+    using Sqlbi.Bravo.Infrastructure.Models.PBICloud;
+    using Sqlbi.Bravo.Models;
+    using System;
+    using System.Collections.Generic;
+    using System.Drawing;
+    using System.Drawing.Imaging;
+    using System.Globalization;
+    using System.IO;
+    using System.Linq;
+    using System.Net.Http;
+    using System.Net.Http.Headers;
+    using System.Text.Json;
+    using System.Threading.Tasks;
+
     public interface IPBICloudService
     {
         BravoAccount? CurrentAccount { get; }
@@ -103,7 +103,7 @@ namespace Sqlbi.Bravo.Services
 
             try
             {
-                await _authenticationService.AcquireTokenAsync(silent: false, loginHint, timeout: AppConstants.MSALSignInTimeout).ConfigureAwait(false);
+                await _authenticationService.AcquireTokenAsync(silent: false, loginHint, timeout: AppEnvironment.MSALSignInTimeout).ConfigureAwait(false);
             }
             catch (OperationCanceledException)
             {
@@ -242,7 +242,7 @@ namespace Sqlbi.Bravo.Services
                         dataset.Model.InsightsSupported,
                     }
                 };
-                var diagnosticString = JsonSerializer.Serialize(diagnostic, AppConstants.DefaultJsonOptions);
+                var diagnosticString = JsonSerializer.Serialize(diagnostic, AppEnvironment.DefaultJsonOptions);
                 var diagnosticJson = JsonSerializer.Deserialize<JsonElement>(diagnosticString);
 
                 return diagnosticJson;

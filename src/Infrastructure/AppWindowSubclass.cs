@@ -46,7 +46,7 @@ namespace Sqlbi.Bravo.Infrastructure
             {
                 // Restore original size and position only if the window is minimized, otherwise keep current position
                 if (_window.Minimized)
-                    User32.ShowWindow(hWnd, NativeMethods.SW_RESTORE);
+                    User32.ShowWindow(hWnd, User32.SW_RESTORE);
 
                 // Regardless of the current state of the window, bring it to the foreground and activate it
                 User32.SetForegroundWindow(hWnd);
@@ -67,14 +67,6 @@ namespace Sqlbi.Bravo.Infrastructure
                     Trace.WriteLine($"::Bravo:INF:WndProcHook[WM_COPYDATA]:{ startupMessageString }");
 #endif
                     var webMessageString = startupMessage.ToWebMessageString();
-                    if (webMessageString is null)
-                    {
-                        var startupMessageJson = startupMessage.ToJsonElement();
-                        var unknownWebMessage = UnknownWebMessage.CreateFrom(startupMessageJson);
-
-                        webMessageString = unknownWebMessage.AsString;
-                    }
-
                     _window.SendWebMessage(webMessageString);
                 }
             }

@@ -13,6 +13,9 @@
 
     internal class StartupSettings
     {
+        [JsonPropertyName("isEmpty")]
+        public bool IsEmpty { get; set; }
+
         [JsonPropertyName("externalTool")]
         public bool IsExternalTool { get; set; }
 
@@ -23,7 +26,7 @@
         public string? ArgumentDatabaseName { get; set; }
 
         [JsonIgnore]
-        public bool IsPBIDesktopExternalTool => IsExternalTool && AppConstants.PBIDesktopProcessName.Equals(ParentProcessName, StringComparison.OrdinalIgnoreCase);
+        public bool IsPBIDesktopExternalTool => IsExternalTool && AppEnvironment.PBIDesktopProcessName.Equals(ParentProcessName, StringComparison.OrdinalIgnoreCase);
 
         [JsonIgnore]
         public int? ParentProcessId { get; set; }
@@ -40,7 +43,7 @@
         [JsonIgnore]
         public ReadOnlyCollection<string>? CommandLineErrors { get; set; }
 
-        public static StartupSettings Get()
+        public static StartupSettings CreateFromCommandLineArguments()
         {
             var settings = new StartupSettings();
             {
@@ -55,6 +58,14 @@
     {
         public static void FromCommandLineArguments(this StartupSettings settings)
         {
+            var args = Environment.GetCommandLineArgs();
+            if (args.Length == 1)
+            {
+                // No args provided
+                settings.IsEmpty = true;
+                return;
+            }
+
             var serverOption = new Option<string>(new[] { "--server", "--s" })
             {
                 Description = "Server name",
@@ -80,23 +91,22 @@
                 parentProcessIdOption
             };
 
-            var args = Environment.GetCommandLineArgs();
-            var result = command.Parse(args);
+            var parseResult = command.Parse(args);
 
-            settings.IsExternalTool = result.HasOption(serverOption) || result.HasOption(databaseOption);
-            settings.CommandLineErrors = result.Errors.Select((e) => e.Message).ToList().AsReadOnly();
+            settings.IsExternalTool = parseResult.HasOption(serverOption) || parseResult.HasOption(databaseOption);
+            settings.CommandLineErrors = parseResult.Errors.Select((e) => e.Message).ToList().AsReadOnly();
 
             if (settings.CommandLineErrors.Count == 0)
             {
-                settings.ArgumentServerName = result.ValueForOption(serverOption);
-                settings.ArgumentDatabaseName = result.ValueForOption(databaseOption);
+                settings.ArgumentServerName = parseResult.ValueForOption(serverOption);
+                settings.ArgumentDatabaseName = parseResult.ValueForOption(databaseOption);
             }
 
             Process? parentProcess = null;
             {
-                if (AppConstants.IsPackagedAppInstance && result.HasOption(parentProcessIdOption))
+                if (AppEnvironment.IsPackagedAppInstance && parseResult.HasOption(parentProcessIdOption))
                 {
-                    var parentProcessId = result.ValueForOption<int>(parentProcessIdOption);
+                    var parentProcessId = parseResult.ValueForOption<int>(parentProcessIdOption);
                     parentProcess = ProcessHelper.SafeGetProcessById(parentProcessId);
                 }
                 else

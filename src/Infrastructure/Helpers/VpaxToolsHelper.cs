@@ -1,20 +1,19 @@
-﻿using Dax.Metadata.Extractor;
-using Dax.ViewModel;
-using Dax.Vpax.Tools;
-using Sqlbi.Bravo.Models;
-using System;
-using System.IO;
-using System.Linq;
-
-namespace Sqlbi.Bravo.Infrastructure.Helpers
+﻿namespace Sqlbi.Bravo.Infrastructure.Helpers
 {
+    using Dax.Metadata.Extractor;
+    using Dax.ViewModel;
+    using Dax.Vpax.Tools;
+    using Sqlbi.Bravo.Models;
+    using System;
+    using System.IO;
+    using System.Linq;
     internal static class VpaxToolsHelper
     {
         public static Stream ExportVpax(string connectionString, string databaseName, bool includeTomModel, bool includeVpaModel, bool readStatisticsFromData, int sampleRows)
         {
             try
             {
-                var daxModel = TomExtractor.GetDaxModel(connectionString, databaseName, AppConstants.ApplicationName, AppConstants.ApplicationProductVersion, readStatisticsFromData, sampleRows);
+                var daxModel = TomExtractor.GetDaxModel(connectionString, databaseName, AppEnvironment.ApplicationName, AppEnvironment.ApplicationProductVersion, readStatisticsFromData, sampleRows);
                 var tomModel = includeTomModel ? TomExtractor.GetDatabase(connectionString, databaseName) : null;
                 var vpaModel = includeVpaModel ? new Dax.ViewVpaExport.Model(daxModel) : null;
                 var stream = new MemoryStream();
