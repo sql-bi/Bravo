@@ -1,13 +1,13 @@
-﻿using Microsoft.Win32;
-using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
-using Sqlbi.Bravo.Infrastructure.Helpers;
-using System;
-using System.Diagnostics;
-using System.IO;
-using System.Text.Json;
-
-namespace Sqlbi.Bravo.Infrastructure.Configuration
+﻿namespace Sqlbi.Bravo.Infrastructure.Configuration
 {
+    using Microsoft.Win32;
+    using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
+    using Sqlbi.Bravo.Infrastructure.Helpers;
+    using System;
+    using System.Diagnostics;
+    using System.IO;
+    using System.Text.Json;
+
     internal static class UserPreferences
     {
         private static readonly JsonSerializerOptions _serializationOptions;

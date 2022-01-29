@@ -1,12 +1,12 @@
-﻿using Sqlbi.Bravo.Infrastructure.Windows.Interop;
-using System;
-using System.IO;
-using System.Net;
-using System.Runtime;
-
-namespace Sqlbi.Bravo.Infrastructure.Configuration
+﻿namespace Sqlbi.Bravo.Infrastructure.Configuration
 {
-    public static class StartupConfiguration
+    using Sqlbi.Bravo.Infrastructure.Windows.Interop;
+    using System;
+    using System.IO;
+    using System.Net;
+    using System.Runtime;
+
+    internal static class StartupConfiguration
     {
         public static void Configure()
         {
@@ -22,6 +22,7 @@ namespace Sqlbi.Bravo.Infrastructure.Configuration
             Directory.SetCurrentDirectory(System.AppContext.BaseDirectory);
 #endif
             Directory.CreateDirectory(AppConstants.ApplicationDataPath);
+            Directory.CreateDirectory(AppConstants.ApplicationTempPath);
         }
 
         private static void ConfigureSecurityProtocols()

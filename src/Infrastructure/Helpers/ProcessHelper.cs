@@ -1,14 +1,36 @@
-﻿using Sqlbi.Bravo.Infrastructure.Extensions;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics;
-using System.Linq;
-
-namespace Sqlbi.Bravo.Infrastructure.Helpers
+﻿namespace Sqlbi.Bravo.Infrastructure.Helpers
 {
+    using Sqlbi.Bravo.Infrastructure.Extensions;
+    using System;
+    using System.Collections.Generic;
+    using System.ComponentModel;
+    using System.Diagnostics;
+    using System.Linq;
+
     public static class ProcessHelper
     {
+        public static bool OpenInBrowser(Uri address)
+        {
+            if (address.Scheme.EqualsI(Uri.UriSchemeHttps) || address.Scheme.EqualsI(Uri.UriSchemeHttp))
+            {
+                if (address.IsAbsoluteUri && !address.IsFile && !address.IsUnc && !address.IsLoopback)
+                {
+                    if (AppConstants.ApplicationTrustedUriHosts.Any((trustedHost) => address.Host.EqualsI(trustedHost) || address.Host.EndsWith($".{ trustedHost }", StringComparison.OrdinalIgnoreCase)))
+                    {
+                        using var process = Process.Start(new ProcessStartInfo
+                        {
+                            FileName = address.OriginalString,
+                            UseShellExecute = true,
+                        });
+
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
         public static IReadOnlyList<Process> GetProcessesByName(string processName)
         {
             var processes = Process.GetProcessesByName(processName).ToList();
@@ -24,12 +46,23 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
 
             return processes;
         }
-        public static Process? GetCurrentProcessParent()
+
+        public static Process? GetParentProcess()
         {
             using var current = Process.GetCurrentProcess();
             var parent = current.GetParent();
 
             return parent;
+        }
+
+        public static IntPtr GetParentProcessMainWindowHandle()
+        {
+            using var parent = GetParentProcess();
+            
+            if (parent is not null)
+                return parent.MainWindowHandle;
+
+            return IntPtr.Zero;
         }
 
         public static Process? SafeGetProcessById(int? processId)

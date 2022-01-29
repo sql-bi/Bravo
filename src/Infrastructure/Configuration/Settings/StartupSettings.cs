@@ -1,17 +1,17 @@
-﻿using Sqlbi.Bravo.Infrastructure;
-using Sqlbi.Bravo.Infrastructure.Extensions;
-using Sqlbi.Bravo.Infrastructure.Helpers;
-using System;
-using System.Collections.ObjectModel;
-using System.CommandLine;
-using System.CommandLine.Parsing;
-using System.Diagnostics;
-using System.Linq;
-using System.Text.Json.Serialization;
-
-namespace Sqlbi.Infrastructure.Configuration.Settings
+﻿namespace Sqlbi.Bravo.Infrastructure.Configuration.Settings
 {
-    public class StartupSettings
+    using Sqlbi.Bravo.Infrastructure;
+    using Sqlbi.Bravo.Infrastructure.Extensions;
+    using Sqlbi.Bravo.Infrastructure.Helpers;
+    using System;
+    using System.Collections.ObjectModel;
+    using System.CommandLine;
+    using System.CommandLine.Parsing;
+    using System.Diagnostics;
+    using System.Linq;
+    using System.Text.Json.Serialization;
+
+    internal class StartupSettings
     {
         [JsonPropertyName("externalTool")]
         public bool IsExternalTool { get; set; }
@@ -101,7 +101,7 @@ namespace Sqlbi.Infrastructure.Configuration.Settings
                 }
                 else
                 {
-                    parentProcess = ProcessHelper.GetCurrentProcessParent();
+                    parentProcess = ProcessHelper.GetParentProcess();
                 }
 
                 if (parentProcess is not null)

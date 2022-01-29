@@ -1,20 +1,25 @@
-﻿using System;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.Security;
-using System.Threading;
-
-namespace Sqlbi.Bravo.Infrastructure.Helpers
+﻿namespace Sqlbi.Bravo.Infrastructure.Helpers
 {
+    using System;
+    using System.Diagnostics;
+    using System.Runtime.InteropServices;
+    using System.Security;
+    using System.Threading;
+
     internal static class ExceptionHelper
     {
         public static void WriteToEventLog(Exception exception, EventLogEntryType type, bool throwOnError = true)
         {
+            var message = exception.ToString();
+            WriteToEventLog(message, type, throwOnError);
+        }
+
+        public static void WriteToEventLog(string message, EventLogEntryType type, bool throwOnError = true)
+        {
             try
             {
                 using var eventLog = new EventLog(logName: "Application", machineName: ".", source: "Application");
-                var exceptionMessage = exception.ToString();
-                eventLog.WriteEntry(exceptionMessage, type);
+                eventLog.WriteEntry(message, type);
             }
             catch
             {

@@ -49,6 +49,7 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
             { "Version", AppConstants.ApplicationProductVersion },
             { "Build", AppConstants.ApplicationFileVersion },
             { "IsPackaged", AppConstants.IsPackagedAppInstance.ToString().ToLowerInvariant() },
+            { "WebView2Version", AppConstants.WebView2VersionInfo ?? string.Empty },
         };
 
         public void Initialize(ITelemetry telemetry)

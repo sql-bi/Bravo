@@ -1,11 +1,11 @@
-﻿using Sqlbi.Bravo.Infrastructure.Windows.Interop;
-using System;
-using System.Diagnostics;
-using System.Runtime.ConstrainedExecution;
-using System.Runtime.InteropServices;
-
-namespace Sqlbi.Bravo.Infrastructure.Windows
+﻿namespace Sqlbi.Bravo.Infrastructure.Windows
 {
+    using Sqlbi.Bravo.Infrastructure.Windows.Interop;
+    using System;
+    using System.Diagnostics;
+    using System.Runtime.ConstrainedExecution;
+    using System.Runtime.InteropServices;
+
     /// <summary>
     /// Installs a window subclass callback to hook messages sent to the specified window
     /// </summary>
@@ -14,7 +14,7 @@ namespace Sqlbi.Bravo.Infrastructure.Windows
     {
         private static readonly uint _disposeMsg;
 
-        private readonly User32.SUBCLASSPROC _wndProc;
+        private readonly Comctl32.SUBCLASSPROC _wndProc;
         private readonly IntPtr _wndProcPtr;
         private IntPtr _hWnd;
 
@@ -31,10 +31,10 @@ namespace Sqlbi.Bravo.Infrastructure.Windows
             _wndProc = WndProcStub;
             _wndProcPtr = Marshal.GetFunctionPointerForDelegate(_wndProc);
 
-            User32.SetWindowSubclass(hWnd, _wndProc, IntPtr.Zero, IntPtr.Zero);
+            Comctl32.SetWindowSubclass(hWnd, _wndProc, IntPtr.Zero, IntPtr.Zero);
         }
 
-        protected virtual IntPtr WndProcHooked(IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam, IntPtr id, IntPtr data) => User32.DefSubclassProc(hWnd, uMsg, wParam, lParam);
+        protected virtual IntPtr WndProcHooked(IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam, IntPtr id, IntPtr data) => Comctl32.DefSubclassProc(hWnd, uMsg, wParam, lParam);
 
         private IntPtr WndProcStub(IntPtr hwnd, uint msg, IntPtr wParam, IntPtr lParam, IntPtr id, IntPtr data) => WndProc(hwnd, msg, wParam, lParam, id, data);
 
@@ -71,8 +71,8 @@ namespace Sqlbi.Bravo.Infrastructure.Windows
             // Retrieves the identifier of the thread and the process that created the window
             var threadId = User32.GetWindowThreadProcessId(hWnd, out var processId);
 
-            var currentProcessId = User32.GetCurrentProcessId();
-            var currentThreadId = User32.GetCurrentThreadId();
+            var currentProcessId = Kernel32.GetCurrentProcessId();
+            var currentThreadId = Kernel32.GetCurrentThreadId();
 
             if (processId == currentProcessId && threadId == currentThreadId)
                 return true;
@@ -88,7 +88,7 @@ namespace Sqlbi.Bravo.Infrastructure.Windows
             if (_hWnd == IntPtr.Zero || !IsOwnerThread(_hWnd))
                 throw new InvalidOperationException("Dispose virtual should only be called by WindowSubclass once on the correct thread.");
 
-            User32.RemoveWindowSubclass(_hWnd, _wndProc, IntPtr.Zero);
+            Comctl32.RemoveWindowSubclass(_hWnd, _wndProc, IntPtr.Zero);
 
             _hWnd = IntPtr.Zero;
         }

@@ -1,10 +1,9 @@
-﻿using AutoUpdaterDotNET;
-using Microsoft.Toolkit.Uwp.Notifications;
-using System;
-using System.Diagnostics;
-
-namespace Sqlbi.Bravo.Infrastructure.Helpers
+﻿namespace Sqlbi.Bravo.Infrastructure.Helpers
 {
+    using AutoUpdaterDotNET;
+    using Microsoft.Toolkit.Uwp.Notifications;
+    using System;
+
     internal static class NotificationHelper
     {
         private const string ArgumentKeyUrl = "url";
@@ -87,15 +86,7 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
                         {
                             if (toastArgs.TryGetValue(ArgumentKeyUrl, out var urlValue) && Uri.TryCreate(urlValue, UriKind.Absolute, out var targetUri))
                             {
-                                // sanitize/check input before starting the process
-                                if (targetUri.IsAbsoluteUri && !targetUri.IsFile && !targetUri.IsUnc && !targetUri.IsLoopback && targetUri.Authority.Equals("github.com", StringComparison.OrdinalIgnoreCase))
-                                {
-                                    _ = Process.Start(new ProcessStartInfo
-                                    {
-                                        UseShellExecute = true,
-                                        FileName = urlValue
-                                    });
-                                }
+                                _ = ProcessHelper.OpenInBrowser(targetUri);
                             }
                         }
                         break;
