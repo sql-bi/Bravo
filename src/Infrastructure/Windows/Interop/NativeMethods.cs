@@ -22,8 +22,6 @@
         //public const int SM_CYXVIRTUALSCREEN = 79;
         //public const int SM_CMONITORS = 80;
 
-        //public delegate IntPtr WndProc(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);
-
         //public delegate bool MonitorEnumProc(IntPtr monitor, IntPtr hdc, IntPtr lprcMonitor, IntPtr lParam);
 
         //public static readonly HandleRef NullHandleRef = new HandleRef(null, IntPtr.Zero);
