@@ -41,8 +41,8 @@
     <UIRef Id="Custom_WixUI_InstallDir" />
     <UIRef Id="WixUI_ErrorProgressText" />
     
-    <WixVariable Id="WixUIDialogBmp" Value="..\assets\background.bmp" />
-    <WixVariable Id="WixUIBannerBmp" Value="..\assets\banner.bmp" />
+    <WixVariable Id="WixUIDialogBmp" Value="..\assets\background.png" />
+    <WixVariable Id="WixUIBannerBmp" Value="..\assets\banner.png" />
     <WixVariable Id="WixUILicenseRtf" Value="..\assets\license.rtf" />
      
     <Property Id="ARPPRODUCTICON">app.ico</Property>
