@@ -14,6 +14,7 @@
         public static readonly string ApiAuthenticationSchema = "BravoAuth";
         public static readonly string ApiAuthenticationToken = Cryptography.GenerateSimpleToken();
         public static readonly string ApplicationManufacturer = "SQLBI";
+        public static readonly string ApplicationWebsiteUrl = "https://bravo.bi";
         public static readonly string ApplicationName = "Bravo";
         public static readonly string ApplicationStoreAliasName = "BravoStore";
         public static readonly string ApplicationMainWindowTitle = "Bravo for Power BI";
@@ -26,13 +27,13 @@
         public static readonly string PBIDesktopSSASProcessImageName = "msmdsrv.exe";
         public static readonly string PBIDesktopMainWindowTitleSuffix = " - Power BI Desktop";
         public static readonly TimeSpan MSALSignInTimeout = TimeSpan.FromMinutes(5);
-        public static readonly string ApplicationWebsiteUrl = "https://bravo.bi";
-        public static readonly string[] ApplicationTrustedUriHosts = new[]
+        public static readonly string[] TrustedUriHosts = new[]
         {
-            "bravo.com",
+            "bravo.bi",
             "sqlbi.com",
             "github.com",
-            "microsoft.com"
+            "microsoft.com",
+            "daxformatter.com",
         };
 
         static AppEnvironment()
