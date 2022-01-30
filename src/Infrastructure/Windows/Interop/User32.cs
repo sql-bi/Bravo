@@ -64,6 +64,8 @@
 
         public delegate bool EnumThreadDelegate(IntPtr hWnd, IntPtr lParam);
 
+        public delegate IntPtr WndProc(IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam);
+
         [DllImport(ExternDll.User32, SetLastError = true)]
         public static extern bool RegisterHotKey(IntPtr hWnd, int id, MODEKEY modifiers, System.Windows.Forms.Keys keys);
 
@@ -115,10 +117,10 @@
         [DllImport(ExternDll.User32, SetLastError = true, CharSet = CharSet.Unicode)]
         public static extern IntPtr FindWindow(string? lpClassName, string lpWindowName);
 
-        [DllImport(ExternDll.User32, CharSet = CharSet.Unicode, SetLastError = true)]
-        public static extern uint RegisterWindowMessage(string lpString);
+        [DllImport(ExternDll.User32, CharSet = CharSet.Unicode, ExactSpelling = true)]
+        public static extern int RegisterWindowMessageW(string lpString);
 
-        [DllImport(ExternDll.User32, CharSet = CharSet.Auto, SetLastError = true)]
+        [DllImport(ExternDll.User32, CharSet = CharSet.Auto, BestFitMapping = false, SetLastError = true)]
         public static extern int GetWindowThreadProcessId(IntPtr hWnd, out int processId);
     }
 }

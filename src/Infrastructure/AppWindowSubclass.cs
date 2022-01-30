@@ -1,13 +1,13 @@
-﻿using Sqlbi.Bravo.Infrastructure.Messages;
-using Sqlbi.Bravo.Infrastructure.Windows;
-using Sqlbi.Bravo.Infrastructure.Windows.Interop;
-using System;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.Text.Json;
-
-namespace Sqlbi.Bravo.Infrastructure
+﻿namespace Sqlbi.Bravo.Infrastructure
 {
+    using Sqlbi.Bravo.Infrastructure.Messages;
+    using Sqlbi.Bravo.Infrastructure.Windows;
+    using Sqlbi.Bravo.Infrastructure.Windows.Interop;
+    using System;
+    using System.Diagnostics;
+    using System.Runtime.InteropServices;
+    using System.Text.Json;
+
     internal class AppWindowSubclass : WindowSubclass
     {
         private readonly PhotinoNET.PhotinoWindow _window;
@@ -24,20 +24,15 @@ namespace Sqlbi.Bravo.Infrastructure
             _window = window;
         }
 
-        protected override IntPtr WndProcHooked(IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam, IntPtr id, IntPtr data)
+        protected override IntPtr WndProc(IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam, IntPtr id, IntPtr data)
         {
-            switch (uMsg)
+            if (uMsg == (uint)WindowMessage.WM_COPYDATA)
             {
-                case (uint)WindowMessage.WM_COPYDATA:
-                    {
-                        HandleMsgWmCopyData(hWnd, copydataPtr: lParam);
-                        return MSG_HANDLED;
-                    }
-                default:
-                    break;
+                HandleMsgWmCopyData(hWnd, copydataPtr: lParam);
+                return MSG_HANDLED;
             }
 
-            return base.WndProcHooked(hWnd, uMsg, wParam, lParam, id, data);
+            return base.WndProc(hWnd, uMsg, wParam, lParam, id, data);
         }
 
         private void HandleMsgWmCopyData(IntPtr hWnd, IntPtr copydataPtr)
@@ -60,7 +55,7 @@ namespace Sqlbi.Bravo.Infrastructure
                     return;
 
                 var startupMessage = JsonSerializer.Deserialize<AppInstanceStartupMessage>(json: copyData.lpData);
-                if (startupMessage is not null)
+                if (startupMessage?.IsEmpty == false)
                 {
 #if DEBUG
                     var startupMessageString = JsonSerializer.Serialize(startupMessage, new JsonSerializerOptions { WriteIndented = true });

@@ -28,7 +28,7 @@
             {
                 if (address.IsAbsoluteUri && !address.IsFile && !address.IsUnc && !address.IsLoopback)
                 {
-                    if (AppEnvironment.ApplicationTrustedUriHosts.Any((trustedHost) => address.Host.EqualsI(trustedHost) || address.Host.EndsWith($".{ trustedHost }", StringComparison.OrdinalIgnoreCase)))
+                    if (AppEnvironment.TrustedUriHosts.Any((trustedHost) => address.Host.EqualsI(trustedHost) || address.Host.EndsWith($".{ trustedHost }", StringComparison.OrdinalIgnoreCase)))
                     {
                         using var process = Process.Start(new ProcessStartInfo
                         {

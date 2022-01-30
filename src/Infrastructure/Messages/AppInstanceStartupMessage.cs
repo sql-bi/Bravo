@@ -9,6 +9,9 @@
 
     internal class AppInstanceStartupMessage
     {
+        [JsonPropertyName("isEmpty")]
+        public bool? IsEmpty { get; set; }
+
         [JsonPropertyName("parentProcessId")]
         public int? ParentProcessId { get; set; }
 
@@ -31,6 +34,7 @@
         {
             var message = new AppInstanceStartupMessage
             {
+                IsEmpty = settings.IsEmpty,
                 ParentProcessId = settings.ParentProcessId,
                 ParentProcessName = settings.ParentProcessName,
                 ParentProcessMainWindowTitle = settings.ParentProcessMainWindowTitle,
