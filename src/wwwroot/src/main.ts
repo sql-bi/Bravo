@@ -19,7 +19,7 @@ import { Tabulator, ColumnCalcsModule, DataTreeModule, FilterModule, FormatModul
 Tabulator.registerModule([ColumnCalcsModule, DataTreeModule, FilterModule, FormatModule, InteractionModule, ResizeColumnsModule, ResizeTableModule, SelectRowModule, SortModule]);
 
 // Init the app
-let debug = new Debug(process.env.MODE == "development");
+let debug = new Debug(!!CONFIG.debug);
 let host = new Host(CONFIG.address, CONFIG.token);
 let optionsController = new OptionsController(CONFIG.options);
 let themeController = new ThemeController();

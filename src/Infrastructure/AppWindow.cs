@@ -73,6 +73,9 @@
 
             var config = new
             {
+#if DEBUG
+                debug = true,
+#endif
                 token = AppEnvironment.ApiAuthenticationToken,
                 address = GetAddress().ToString(),
                 version = AppEnvironment.ApplicationProductVersion,

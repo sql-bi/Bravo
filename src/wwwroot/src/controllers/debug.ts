@@ -35,6 +35,7 @@ export class Debug {
 
         if (typeof CONFIG === "undefined") {
             globalThis.CONFIG = {
+                debug: true,
                 address: "http://localhost/",
                 version: "0.0.0-0.1",
                 build: "0.1",

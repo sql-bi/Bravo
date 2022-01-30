@@ -4,6 +4,7 @@ import { TelemetryConfig } from '../controllers/telemetry';
 
 declare global {
     var CONFIG: {
+        debug?: boolean,
         address: string
         version: string,
         build: string

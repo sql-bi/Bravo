@@ -3,7 +3,6 @@
 **@daniele**
 - Format DAX
     - Current/Formatted side by side?
-    - Stop loaders on error
 
 - Manage dates UI
 - Export Data UI
