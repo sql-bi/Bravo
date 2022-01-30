@@ -33,7 +33,7 @@
     "draggabilly": "^2.4.1",
     "fast-equals": "^2.0.4",
     "sanitize-html": "^2.6.1",
-    "tabulator-tables": "^5.0.10",
+    "tabulator-tables": "^5.1.0",
     "ts-md5": "^1.2.10"
   },
   "main": "webpack.config.js",

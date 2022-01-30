@@ -3,6 +3,7 @@
 **@daniele**
 - Format DAX
     - Current/Formatted side by side?
+    - Update row color on preview/refresh/options change
 
 - Manage dates UI
 - Export Data UI
@@ -16,8 +17,3 @@
 
 - Fix Dax formatter SpacingStyle enum
     - NoNpaceAfterFunction  => NoSpaceAfterFunction 
-
-- api/NavigateTo with { address: "https://www.daxformatter.com/" } returns:
-    Error 403 Forbidden
-    Trace Id: 00-e7ee3877773b2841a0df0416a177b875-48ef2686ee943940-00
-    It worked before.
