@@ -5,10 +5,6 @@
     - Current/Formatted side by side?
     - Stop loaders on error
 
-- Telemetry 
-    - Change history on page change and use enableAutoRouteTracking 
-    - Track UI events
-
 - Fix all Tabulator custom sorters
 
 - Installer graphic
@@ -26,4 +22,7 @@
 - Fix Dax formatter SpacingStyle enum
     - NoNpaceAfterFunction  => NoSpaceAfterFunction 
 
-- Fix download on notification toast
+- api/NavigateTo with { address: "https://www.daxformatter.com/" } returns:
+    Error 403 Forbidden
+    Trace Id: 00-e7ee3877773b2841a0df0416a177b875-48ef2686ee943940-00
+    It worked before.

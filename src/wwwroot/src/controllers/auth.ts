@@ -6,7 +6,7 @@
 
 import { Dispatchable } from '../helpers/dispatchable';
 import { Utils } from '../helpers/utils';
-import { host, optionsController } from '../main';
+import { host, optionsController, telemetry } from '../main';
 import { AppError } from '../model/exceptions';
 import { CacheHelper } from './cache';
 
@@ -60,6 +60,8 @@ export class Auth extends Dispatchable {
     signIn(emailAddress?: string) {
         this.account = null;
 
+        telemetry.track("Sign In");
+
         return host.signIn(emailAddress)
             .then(account => {
                 if (account) {
@@ -79,6 +81,8 @@ export class Auth extends Dispatchable {
     }
 
     signOut() {
+        telemetry.track("Sign Out");
+
         return host.signOut().then(()=> {
             this.cache.removeItem(this.account.id);
             this.account = null;

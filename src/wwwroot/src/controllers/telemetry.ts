@@ -4,7 +4,8 @@
  * https://www.sqlbi.com
 */
 
-import { ApplicationInsights, ICustomProperties } from '@microsoft/applicationinsights-web'
+import { ApplicationInsights, ICustomProperties, IEventTelemetry, IExceptionTelemetry, IMetricTelemetry, IPageViewTelemetry } from '@microsoft/applicationinsights-web'
+import { Idle } from '../helpers/idle';
 import { Utils } from '../helpers/utils';
 import { optionsController, debug } from '../main';
 import { ProblemDetails } from './host';
@@ -14,14 +15,17 @@ export interface TelemetryConfig {
    contextDeviceOperatingSystem?: string,
    contextComponentVersion?: string,
    contextSessionId?: string,
-   contextUserId?: string
+   contextUserId?: string,
+   globalProperties?: any
 }
 
 export class Telemetry {
 
    appInsights: ApplicationInsights;
-   sessionStarted: boolean;
+   appOpenTracked: boolean;
    enabled: boolean;
+   history: string[] = [];
+   idle: Idle;
 
    constructor(config: TelemetryConfig) {
 
@@ -35,8 +39,8 @@ export class Telemetry {
          disablePageUnloadEvents: ["beforeunload", "unload", "visibilitychange", "pagehide"],
          disablePageShowEvents: ["pageshow", "visibilitychange"],
          disableAjaxTracking: true,
+         //enableDebug: debug.enabled,
          autoTrackPageVisitTime: false,
-         enableDebug: debug.enabled,
          enableAutoRouteTracking: false,
          disableTelemetry: !this.enabled
       } });
@@ -51,8 +55,15 @@ export class Telemetry {
 
       if (config.contextUserId)
          this.appInsights.context.user.id = config.contextUserId;
+      
+      if (config.globalProperties) {
+         this.appInsights.addTelemetryInitializer(initializer => {
+            for (let property in config.globalProperties)
+               initializer.data[property] = config.globalProperties[property];
+         });
+      }
 
-      this.trackStart();
+      this.trackAppOpen();
 
       // Detect telemetry option change
       optionsController.on("change", (changedOptions: any) => {
@@ -65,44 +76,93 @@ export class Telemetry {
                   disableTelemetry: !this.enabled
                }
             });
-            this.trackStart();
+            this.trackAppOpen();
          }
-     });
+      });
 
+      window.addEventListener('beforeunload', e => {
+         this.destroy();
+      });
+
+      this.idle = new Idle();
    }
 
-   trackStart() {
-      if (!this.enabled || this.sessionStarted) return;
-      this.appInsights.startTrackPage();
-      this.sessionStarted = true;
-   }
-
-   trackEnd() {
+   trackAppOpen() {
       if (!this.enabled) return;
-      this.appInsights.stopTrackPage();
+      if (this.appOpenTracked) return;
+
+      this.track("Start");
+      this.appOpenTracked = true;
+   }
+
+   trackAppClose() {
+      if (!this.enabled) return;
+      this.track("End");
    }
 
    trackError(problem: ProblemDetails, props?: ICustomProperties) {
       if (!this.enabled) return;
 
       const traceId = (problem.traceId ? problem.traceId : Utils.Text.uuid());
-      this.appInsights.trackException({ 
+      const exception: IExceptionTelemetry = { 
          id: traceId,
          exception: {
             name: String(problem.status),
             message: problem.title
          }
-      }, props);
+      };
+      
+      if (!debug.catchTelemetryTracking("error", exception, props))
+         this.appInsights.trackException(exception, props);
    }
 
-   track(name: string, props?: ICustomProperties) {
+   track(eventName: string, props?: ICustomProperties) {
       if (!this.enabled) return;
 
-      this.appInsights.trackEvent({ name: name }, props);
+      const event: IEventTelemetry = { name: eventName };
+
+      if (!debug.catchTelemetryTracking("event", event, props))
+         this.appInsights.trackEvent(event, props);
    }
 
+   trackPage(pageName: string) {
+      if (!this.enabled) return;
+      if (this.history.length && this.history[this.history.length - 1] == pageName) return;
+
+      this.trackPageTime();
+      this.history.push(pageName);
+
+      const pageView: IPageViewTelemetry = { name: pageName };
+
+      if (!debug.catchTelemetryTracking("pageView", pageView))
+         this.appInsights.trackPageView(pageView);
+   }
+
+   trackPreviousPage() {
+      if (this.history.length > 1) {
+         this.trackPage(this.history[this.history.length - 2]);
+      }
+   }
+
+   trackPageTime() {
+      if (!this.enabled) return;
+      if (!this.history.length) return;
+
+      const seconds = Math.round(this.idle.time / 1000);
+      if (seconds) {
+         const metric: IMetricTelemetry = { name: "PageVisitTime", average: seconds };
+         const props: ICustomProperties = { "PageName": this.history[this.history.length - 1] };
+
+         if (!debug.catchTelemetryTracking("metric", metric, props))
+            this.appInsights.trackMetric(metric, props);
+      }
+      this.idle.reset();
+   }
 
    destroy() {
-      this.trackEnd();
+      this.trackPageTime();
+      this.idle.destroy();
+      this.trackAppClose();
+      this.appInsights.flush();
    }
 }

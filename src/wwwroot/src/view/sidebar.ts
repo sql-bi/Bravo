@@ -4,7 +4,7 @@
  * https://www.sqlbi.com
 */
 
-import { auth, optionsController, themeController } from "../main";
+import { auth, optionsController, telemetry, themeController } from "../main";
 import { i18n } from '../model/i18n'; 
 import { ThemeChangeArg, ThemeType } from '../controllers/theme';
 import { __, _, Dic } from '../helpers/utils';
@@ -117,8 +117,13 @@ export class Sidebar extends View {
 
         _("#ctrl-options", this.element).addEventListener("click", e => {
             e.preventDefault();
+            telemetry.trackPage("Options");
             let optionsDialog = new OptionsDialog();
-            optionsDialog.show();
+            optionsDialog
+                .show()
+                .finally(()=>{
+                    telemetry.trackPreviousPage();
+                });
         });
 
         _("#ctrl-theme", this.element).addEventListener("click", e => {
@@ -186,6 +191,8 @@ export class Sidebar extends View {
         if (collapse) {
             this.element.classList.add("collapsed");
             root.classList.remove("has-sidebar");
+
+            telemetry.track("Collapse Sidebar");
         } else {
             this.element.classList.remove("collapsed");
             root.classList.add("has-sidebar");

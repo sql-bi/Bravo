@@ -11,24 +11,28 @@ export class Idle {
     
     awayTimer: number;
     isAway: boolean;
- 
     startTime: number;
     
-    _idleTime: number;
-    get idleTime(): number {
+    _time: number;
+    get time(): number {
        this.updateIdleTime();
-       return this._idleTime;
+       return this._time;
     } 
  
     constructor() {
-       this._idleTime = 0;
-       this.isAway = true;
+      this._time = 0;
+      this.isAway = true;
        
        Idle.CatchingEvents.forEach(event => {
           document.addEventListener(event, ()=>this.mouseListener());
        });
        document.addEventListener("visibilitychange", ()=>this.visibilityListener());
     } 
+
+    reset() {
+      this._time = 0;
+      this.updateStartTime();
+    }
     
     destroy() {
        Idle.CatchingEvents.forEach(event => {
@@ -38,6 +42,7 @@ export class Idle {
     }
  
     mouseListener() {
+
        if (this.isAway)
           this.active();
  
@@ -69,7 +74,7 @@ export class Idle {
  
     updateIdleTime() {
        const now = new Date().getTime();
-       this._idleTime += (now - this.startTime); 
+       this._time += (now - this.startTime); 
     }
  
     updateStartTime() {

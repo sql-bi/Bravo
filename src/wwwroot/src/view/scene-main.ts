@@ -8,6 +8,7 @@ import { Doc, DocType } from '../model/doc';
 import { strings } from '../model/strings';
 import { Scene } from './scene';
 import { i18n } from '../model/i18n'; 
+import { telemetry } from '../main';
 export class MainScene extends Scene {
     doc: Doc;
 
@@ -36,7 +37,7 @@ export class MainScene extends Scene {
                     
                     <div class="ctrl-sync ctrl icon-sync show-if-editable" ${this.doc.editable ? "" : "hidden"} title="${i18n(strings.syncCtrlTitle)}"></div>
         
-                    <div class="ctrl icon-help" title="${i18n(strings.helpCtrlTitle)}"></div>
+                    <div class="ctrl-help ctrl icon-help" title="${i18n(strings.helpCtrlTitle)}"></div>
                 </div>
             </header>
             <div class="scene-content">
@@ -50,9 +51,18 @@ export class MainScene extends Scene {
             e.preventDefault();
 
             if ((<HTMLElement>e.currentTarget).hasAttribute("disabled") || this.syncing) return;
+            telemetry.track("Sync");
+
             this.trigger("sync");
         });
 
+        _(".ctrl-help", this.element).addEventListener("click", e => {
+            e.preventDefault();
+
+            telemetry.track("Help");
+
+            //TODO
+        });
         
     }
 

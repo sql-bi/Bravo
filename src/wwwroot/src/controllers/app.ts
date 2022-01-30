@@ -100,7 +100,7 @@ export class App {
             if ("href" in element.dataset) {
                 const navigateUrl = element.dataset.href;
                 host.navigateTo(navigateUrl);
-                telemetry.track("Link", { url: navigateUrl});
+                telemetry.track("Link", { "Url": navigateUrl});
 
             } else if ("download" in element.dataset) {
                 const downloadUrl = element.dataset.download;
@@ -174,8 +174,9 @@ export class App {
         });
 
         this.sidebar.on("change", (id: string) => {
-            if (this.tabs.currentTab) 
+            if (this.tabs.currentTab) {
                 this.showSheet(this.tabs.currentTab, <PageType>id);
+            }
         });
     }
 
@@ -232,6 +233,8 @@ export class App {
             });
         }
         this.welcomeScene.show();
+
+        telemetry.trackPage("Welcome");
     }
 
     connect(selectedMenu: string) {
@@ -240,14 +243,17 @@ export class App {
         for (let id in this.sheets)
             openedDocs.push(this.sheets[id].doc.id);
 
+        telemetry.trackPage("Connect");
+
         let dialog = new Connect(openedDocs);
         dialog.show(selectedMenu)
             .then((response: ConnectResponse) => {
                 if (response.data) {
-                    if (response.action == "ok") {
-                        if (response.data.doc) {
-                            this.openDoc(response.data.doc);
-                        }
+
+                    if (response.action == "ok" && response.data.doc) {
+                        this.openDoc(response.data.doc);
+                    } else {
+                        telemetry.trackPreviousPage();
                     }
                     
                     if (response.data.lastOpenedMenu)

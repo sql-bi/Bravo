@@ -5,7 +5,7 @@
 */
 
 import { Dispatchable } from '../helpers/dispatchable';
-import { host, optionsController } from '../main';
+import { host, optionsController, telemetry } from '../main';
 
 export enum ThemeType {
     Auto = "Auto",
@@ -59,6 +59,8 @@ export class ThemeController extends Dispatchable {
             if ("theme" in changedOptions) {
                 host.changeTheme(changedOptions.theme);
                 this.apply(changedOptions.theme);
+
+                telemetry.track("Theme", { theme: changedOptions.theme });
             }
         });
 
@@ -69,6 +71,8 @@ export class ThemeController extends Dispatchable {
         optionsController.update("theme", theme);
         host.changeTheme(theme);
         this.apply(theme);
+
+        telemetry.track("Theme", { theme: theme });
     }
 
     apply(theme?: ThemeType) {

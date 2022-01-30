@@ -6,7 +6,7 @@
 
 import { Notify } from '../controllers/notifications';
 import { Utils, _, __ } from '../helpers/utils';
-import { notificationCenter } from '../main';
+import { notificationCenter, telemetry } from '../main';
 import { I18n, i18n } from '../model/i18n';
 import { strings } from '../model/strings';
 import { View } from './view';
@@ -48,6 +48,10 @@ export class NotificationSidebar extends View {
         this.ctrlNotifications.addEventListener("click", e => {
             e.preventDefault();
             let el = (<HTMLElement>e.currentTarget);
+
+            if (!el.classList.contains("active"))
+                telemetry.track("Notifications");
+
             el.toggleClass("active");
             this.toggle();
         });

@@ -625,6 +625,8 @@ export class DaxFormatterScene extends MainScene {
         let measures: TabularMeasure[] = this.table.getSelectedData();
         if (!measures.length) return;
 
+        telemetry.track("Format", { "Count": measures.length });
+
         this.formatButton.toggleAttr("disabled", true);
 
         let formattingScene = new LoaderScene(Utils.DOM.uniqueId(), this.element.parentElement, i18n(strings.formattingMeasures), ()=>{
@@ -734,6 +736,9 @@ export class DaxFormatterScene extends MainScene {
             let el = <HTMLElement>e.currentTarget;
             if (el.hasAttribute("disabled")) return;
 
+            if (!el.classList.contains("active"))
+                telemetry.track("Format DAX: Filter Errors");
+
             el.toggleClass("active");
             this.showMeasuresWithErrorsOnly = el.classList.contains("active");
             this.deselectMeasures();
@@ -781,6 +786,9 @@ export class DaxFormatterScene extends MainScene {
             let queryString = `fx=${encodeURIComponent(fx)}&r=${formatRegion}&s=${formatSpacing}&l=${formatLine}${themeController.isDark ? "&dark=1" : ""}`;
 
             host.navigateTo(`https://www.daxformatter.com/?${queryString}`);
+
+
+            telemetry.track("Format with DAX Formatter");
         });
 
         this.element.addLiveEventListener("click", ".show-data-usage", (e, element) => {
@@ -791,11 +799,15 @@ export class DaxFormatterScene extends MainScene {
         this.element.addLiveEventListener("click", ".gen-preview", (e, element) => {
             e.preventDefault();
             this.generatePreview([this.activeMeasure]);
+
+            telemetry.track("Format DAX: Preview");
         });
 
         this.element.addLiveEventListener("click", ".gen-preview-all", (e, element) => {
             e.preventDefault();
             this.generatePreview(this.doc.measures);
+
+            telemetry.track("Format DAX: Preview All");
         });
 
         this.element.addLiveEventListener("change", "#gen-preview-auto-option", (e, element) => {
@@ -826,7 +838,7 @@ export class DaxFormatterScene extends MainScene {
         `;
         dialog.show(html);
 
-        telemetry.track("DAX Formatter Data Usage");
+        telemetry.track("Data Usage Dialog");
     }
     
     applyFilters() {

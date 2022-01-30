@@ -3,7 +3,7 @@
  * Copyright (c) SQLBI corp. - All rights reserved.
  * https://www.sqlbi.com
 */
-import { host, themeController } from "../main";
+import { host, telemetry, themeController } from "../main";
 import { i18n, I18n } from '../model/i18n'; 
 import { Dic, Utils, _, __ } from '../helpers/utils';
 import { Doc, DocType } from '../model/doc';
@@ -636,6 +636,9 @@ export class AnalyzeModelScene extends MainScene {
             e.preventDefault();
             let el = <HTMLElement>e.currentTarget;
             if (el.hasAttribute("disabled")) return;
+            
+            if (!el.classList.contains("active"))
+                telemetry.track("Analyze Model: Filter Unreferenced");
 
             el.toggleClass("active");
             this.showUnrefOnly = el.classList.contains("active");
@@ -650,6 +653,9 @@ export class AnalyzeModelScene extends MainScene {
             e.preventDefault();
             let el = <HTMLElement>e.currentTarget;
             if (el.hasAttribute("disabled")) return;
+
+            if (!el.classList.contains("active"))
+                telemetry.track("Analyze Model: Group by Table");
 
             el.toggleClass("active");
             this.groupByTable = el.classList.contains("active");
@@ -673,6 +679,8 @@ export class AnalyzeModelScene extends MainScene {
             e.preventDefault();
             let el = <HTMLElement>e.currentTarget;
             if (el.hasAttribute("disabled")) return;
+
+            telemetry.track("Save VPAX");
 
             el.toggleAttr("disabled", true);
             if (this.doc.editable) {

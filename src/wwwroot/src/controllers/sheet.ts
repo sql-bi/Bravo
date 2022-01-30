@@ -12,7 +12,7 @@ import { LoaderScene } from '../view/scene-loader';
 import { View } from '../view/view';
 import { AppError, AppErrorType } from '../model/exceptions';
 import { Page, PageType } from './page';
-import { pbiDesktop } from '../main';
+import { pbiDesktop, telemetry } from '../main';
 import { PBIDesktopReport } from '../model/pbi-report';
 
 export class Sheet extends View { 
@@ -77,9 +77,11 @@ export class Sheet extends View {
 
     showPage(type?: PageType) {
 
-        if (type)
+        if (type) {
             this.currentPage = this.pages[type];
-
+            telemetry.trackPage(type);
+        }
+        
         if (!this.blockingScene) {
             if (!this.doc.loaded) {
                 this.sync(true);

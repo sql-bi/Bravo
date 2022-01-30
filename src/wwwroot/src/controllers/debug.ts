@@ -79,4 +79,11 @@ export class Debug {
                 return null;
         }
     }
+
+    catchTelemetryTracking(action: string, data: any, props?: any) {
+        if (!this.enabled) return false;
+
+        console.log("Telemetry", action, data, props);
+        return true;
+    }
 }
