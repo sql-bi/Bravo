@@ -468,7 +468,11 @@ export class DaxFormatterScene extends MainScene {
                     const measureAStatus = this.doc.analizeMeasure(measureA);
                     const measureB = <TabularMeasure>bRow.getData();
                     const measureBStatus = this.doc.analizeMeasure(measureB);
-                    return (measureAStatus > measureBStatus ? 1 : -1);
+             
+                    a = `${measureAStatus}_${measureA.name}`;
+                    b = `${measureBStatus}_${measureB.name}`;
+                    
+                    return String(a).toLowerCase().localeCompare(String(b).toLowerCase());
                 }
             });
 

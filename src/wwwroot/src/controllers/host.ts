@@ -6,7 +6,7 @@
 
 import { Dispatchable } from '../helpers/dispatchable';
 import { Dic, Utils } from '../helpers/utils';
-import { auth, debug, telemetry } from '../main';
+import { auth, debug } from '../main';
 import { DocType } from '../model/doc';
 import { AppError, AppErrorType, AppProblem } from '../model/exceptions';
 import { /*TokenUpdateWebMessage,*/ WebMessage } from '../model/message';

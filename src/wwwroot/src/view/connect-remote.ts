@@ -132,11 +132,14 @@ export class ConnectRemote extends ConnectMenuItem {
                             return (!dataset.endorsement || dataset.endorsement == PBICloudDatasetEndorsementstring.None ? '' : `<span class="endorsement-badge icon-${dataset.endorsement.toLowerCase()}">${dataset.endorsement}</span>`);
                         },
                         sorter: (a, b, aRow, bRow, column, dir, sorterParams) => {
-                            let datasetA = <PBICloudDataset>aRow.getData();
-                            let datasetB = <PBICloudDataset>bRow.getData();
-                            let colA = (!datasetA.endorsement || datasetA.endorsement == PBICloudDatasetEndorsementstring.None ? "": datasetA.endorsement);
-                            let colB = (!datasetB.endorsement || datasetB.endorsement == PBICloudDatasetEndorsementstring.None ? "": datasetB.endorsement);
-                            return (colA > colB ? 1 : -1);
+                            const datasetA = <PBICloudDataset>aRow.getData();
+                            const datasetB = <PBICloudDataset>bRow.getData();
+
+                            a = `${(!datasetA.endorsement || datasetA.endorsement == PBICloudDatasetEndorsementstring.None ? "zzz": datasetA.endorsement)}_${datasetA.name}`;
+
+                            b = `${(!datasetB.endorsement || datasetB.endorsement == PBICloudDatasetEndorsementstring.None ? "zzz": datasetB.endorsement)}_${datasetB.name}`;
+
+                            return String(a).toLowerCase().localeCompare(String(b).toLowerCase());
                         }
                     },
                     { 

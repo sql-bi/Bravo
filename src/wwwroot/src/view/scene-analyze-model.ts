@@ -224,8 +224,14 @@ export class AnalyzeModelScene extends MainScene {
                         return (cellData.isReferenced === false ? `<div class="icon icon-broken-link" title="${i18n(strings.columnUnreferencedTooltip)}"></div>` : "");
                     }, 
                     sorter: (a, b, aRow, bRow, column, dir, sorterParams) => {
-                        let cellData = <TabulatorVpaxModelColumn>aRow.getData();
-                        return (cellData.isReferenced === false ? 1 : -1);
+
+                        const columnA = <TabulatorVpaxModelColumn>aRow.getData();
+                        const columnB = <TabulatorVpaxModelColumn>bRow.getData();
+             
+                        a = `${columnA.isReferenced === false ? "_" : ""}${columnA.columnName}`;
+                        b = `${columnB.isReferenced === false ? "_" : ""}${columnB.columnName}`;
+                        
+                        return String(a).toLowerCase().localeCompare(String(b).toLowerCase());
                     }
                 },
                 /*tickbox: {

@@ -5,10 +5,6 @@
     - Current/Formatted side by side?
     - Stop loaders on error
 
-- Fix all Tabulator custom sorters
-
-- Installer graphic
-
 - Manage dates UI
 - Export Data UI
 
