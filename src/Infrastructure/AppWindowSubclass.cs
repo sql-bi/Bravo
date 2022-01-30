@@ -55,7 +55,7 @@
                     return;
 
                 var startupMessage = JsonSerializer.Deserialize<AppInstanceStartupMessage>(json: copyData.lpData);
-                if (startupMessage is not null)
+                if (startupMessage?.IsEmpty == false)
                 {
 #if DEBUG
                     var startupMessageString = JsonSerializer.Serialize(startupMessage, new JsonSerializerOptions { WriteIndented = true });

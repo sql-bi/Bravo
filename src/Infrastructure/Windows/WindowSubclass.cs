@@ -16,7 +16,7 @@
         private readonly IntPtr _hWnd;
         private object _lockSync = new();
         private bool _subclassInstalled;
-        private bool _disposed;
+        //private bool _disposed;
 
         //static WindowSubclass()
         //{
