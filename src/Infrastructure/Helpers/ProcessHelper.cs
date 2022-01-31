@@ -24,9 +24,9 @@
 
         public static bool OpenInBrowser(Uri address)
         {
-            if (address.Scheme.EqualsI(Uri.UriSchemeHttps) || address.Scheme.EqualsI(Uri.UriSchemeHttp))
+            if (address.IsAbsoluteUri && !address.IsFile && !address.IsUnc && !address.IsLoopback)
             {
-                if (address.IsAbsoluteUri && !address.IsFile && !address.IsUnc && !address.IsLoopback)
+                if (address.Scheme.EqualsI(Uri.UriSchemeHttps) || address.Scheme.EqualsI(Uri.UriSchemeHttp))
                 {
                     if (AppEnvironment.TrustedUriHosts.Any((trustedHost) => address.Host.EqualsI(trustedHost) || address.Host.EndsWith($".{ trustedHost }", StringComparison.OrdinalIgnoreCase)))
                     {

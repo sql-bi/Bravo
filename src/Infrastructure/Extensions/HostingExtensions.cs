@@ -112,16 +112,16 @@
                     return problemDetails;
                 });
 
-                options.Map<TOM.AdomdException>((context, exception) =>
-                {
-                    var problemDetailsFactory = context.RequestServices.GetRequiredService<ProblemDetailsFactory>();
-                    var problemDetails = problemDetailsFactory.CreateProblemDetails(context,
-                        statusCode: StatusCodes.Status400BadRequest,
-                        detail: exception.Message,
-                        instance: $"{ (int)BravoProblem.AnalysisServicesConnectionFailed }");
+                //options.Map<TOM.AdomdException>((context, exception) =>
+                //{
+                //    var problemDetailsFactory = context.RequestServices.GetRequiredService<ProblemDetailsFactory>();
+                //    var problemDetails = problemDetailsFactory.CreateProblemDetails(context,
+                //        statusCode: StatusCodes.Status400BadRequest,
+                //        detail: exception.Message,
+                //        instance: $"{ (int)BravoProblem.AnalysisServicesConnectionFailed }");
 
-                    return problemDetails;
-                });
+                //    return problemDetails;
+                //});
 
                 options.Map<OperationCanceledException>((context, exception) =>
                 {

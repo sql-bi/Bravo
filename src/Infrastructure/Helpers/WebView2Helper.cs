@@ -48,8 +48,7 @@
             var page = new TaskDialogPage()
             {
                 Caption = AppEnvironment.ApplicationMainWindowTitle,
-                Heading = @$"
-{ AppEnvironment.ApplicationMainWindowTitle } requires the Microsoft Edge WebView2 runtime which is not currently installed.
+                Heading = @$"{ AppEnvironment.ApplicationMainWindowTitle } requires the Microsoft Edge WebView2 runtime which is not currently installed.
 
 Choose an option to proceed with the installation:",
                 Icon = icon,
@@ -83,8 +82,7 @@ Choose an option to proceed with the installation:",
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
-            var parentHwnd = ProcessHelper.GetParentProcessMainWindowHandle();
-            var dialogButton = TaskDialog.ShowDialog(parentHwnd, page, TaskDialogStartupLocation.CenterScreen);
+            var dialogButton = TaskDialog.ShowDialog(page, TaskDialogStartupLocation.CenterScreen);
 
             switch (dialogButton.Tag)
             {
