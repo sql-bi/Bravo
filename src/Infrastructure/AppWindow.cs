@@ -12,7 +12,6 @@
     using Sqlbi.Bravo.Infrastructure.Windows.Interop;
     using Sqlbi.Bravo.Models;
     using System;
-    using System.Diagnostics;
     using System.IO;
     using System.Linq;
     using System.Text;
@@ -117,8 +116,6 @@
 
         private void OnWindowCreating(object? sender, EventArgs e)
         {
-            Trace.WriteLine($"::Bravo:INF:OnWindowCreating:{ _window.Title }");
-
             var theme = UserPreferences.Current.Theme;
             if (theme != ThemeType.Auto) 
             {
@@ -129,7 +126,6 @@
 
         private void OnWindowCreated(object? sender, EventArgs e)
         {
-            Trace.WriteLine($"::Bravo:INF:OnWindowCreated:{ _window.Title } ( { string.Join(", ", _host.GetListeningAddresses().Select((a) => a.ToString())) } )");
 #if !DEBUG
             HandleHotKeys(register: true);
 #endif
@@ -228,6 +224,12 @@
                 }
                 else if (updateInfo.IsUpdateAvailable)
                 {
+                    // HACK: see issue https://github.com/tryphotino/photino.NET/issues/87
+                    // Wait a bit in order to ensure that the PhotinoWindow message loop is started
+                    // This is to prevent the .NET Runtime corecrl.dll fault with a win32 access violation
+                    Thread.Sleep(5_000);
+                    // HACK END <<
+
                     var updateMessage = ApplicationUpdateAvailableWebMessage.CreateFrom(updateInfo);
                     _window.SendWebMessage(updateMessage.AsString);
 
@@ -243,15 +245,17 @@
         /// </summary>
         public void WaitForClose()
         {
+            // HACK: see issue https://github.com/tryphotino/photino.NET/issues/87
+            // Wait a bit in order to ensure that the PhotinoWindow message loop is started
+            // This is to prevent the .NET Runtime corecrl.dll fault with a win32 access violation
+            // This should be moved to the OnWindowCreated handler after the issue has been resolved
             if (!_startupSettings.IsEmpty)
             {
-                // HACK: see issue https://github.com/tryphotino/photino.NET/issues/87
-                // This should be moved to the OnWindowCreated handler after the issue has been resolved
                 _ = Task.Factory.StartNew(() =>
                 {
                     try
                     {
-                        Thread.Sleep(2000);
+                        Thread.Sleep(2_000);
 
                         var startupMessage = AppInstanceStartupMessage.CreateFrom(_startupSettings);
                         var webMessageString = startupMessage.ToWebMessageString();
@@ -264,6 +268,7 @@
                     }
                 });
             }
+            // HACK END <<
 
             _window.WaitForClose();
         }

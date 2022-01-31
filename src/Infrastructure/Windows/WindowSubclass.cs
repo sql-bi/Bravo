@@ -9,19 +9,11 @@
     /// </summary>
     internal abstract class WindowSubclass : CriticalFinalizerObject, IDisposable
     {
-        //private static readonly int DetachUnsubclassMessage;
-
         private readonly Comctl32.SUBCLASSPROC _subclassProc;
         private readonly IntPtr _subclassId;
         private readonly IntPtr _hWnd;
-        private object _lockSync = new();
+        private readonly object _lockSync = new();
         private bool _subclassInstalled;
-        //private bool _disposed;
-
-        //static WindowSubclass()
-        //{
-        //    DetachUnsubclassMessage = User32.RegisterWindowMessageW("bravo_DetachSubclass");
-        //}
 
         public WindowSubclass(IntPtr hWnd)
         {
@@ -40,7 +32,7 @@
             }
             finally
             {
-                if (uMsg == (uint)WindowMessage.WM_NCDESTROY /* || uMsg == DetachUnsubclassMessage */)
+                if (uMsg == (uint)WindowMessage.WM_NCDESTROY)
                 {
                     DetachSubclass();
                 }
