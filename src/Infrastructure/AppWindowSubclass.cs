@@ -24,7 +24,7 @@
             _window = window;
         }
 
-        protected override IntPtr WndProc(IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam, IntPtr id, IntPtr data)
+        protected override IntPtr WndProc(IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam, IntPtr uIdSubclass, IntPtr dwRefData)
         {
             if (uMsg == (uint)WindowMessage.WM_COPYDATA)
             {
@@ -32,7 +32,7 @@
                 return MSG_HANDLED;
             }
 
-            return base.WndProc(hWnd, uMsg, wParam, lParam, id, data);
+            return base.WndProc(hWnd, uMsg, wParam, lParam, uIdSubclass, dwRefData);
         }
 
         private void HandleMsgWmCopyData(IntPtr hWnd, IntPtr copydataPtr)
