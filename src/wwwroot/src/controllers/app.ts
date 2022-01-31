@@ -82,6 +82,37 @@ export class App {
     // Event listeners
     listen() {
 
+        // Catch system keys  
+        window.addEventListener("keydown", e => {
+
+            const keys = [
+                "Ctrl+s",           //Save
+                "Ctrl+p",           //Print
+                "Ctrl+r", "F5",     //Reload
+                "Ctrl+f", "F3",     //Find
+                "Alt+ArrowLeft",    //Back
+                "Alt+ArrowRight",   //Forward
+            ];
+
+            keys.forEach(keyCombo => {
+
+                let combo = keyCombo.toLowerCase().split("+");
+                let ctrl = (combo.length > 1 && combo[0] == "ctrl");
+                let alt = (combo.length > 1 && combo[0] == "alt");
+                let shift = (combo.length > 1 && combo[0] == "shift");
+                let key = combo[combo.length - 1];
+
+                let hotkeyMatched = true;
+                if ((ctrl && !e.ctrlKey) || (alt && !e.altKey) || (shift && !e.shiftKey)) hotkeyMatched = false;
+
+                if (hotkeyMatched && key == e.key.toLowerCase()) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+            });
+        });
+
+
         // Catch dropping external files
         window.addEventListener('dragover', e => { 
             e.preventDefault();
