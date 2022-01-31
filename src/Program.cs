@@ -35,6 +35,7 @@
             catch (Exception ex)
             {
                 TelemetryHelper.TrackException(ex);
+                ExceptionHelper.ShowDialog(ex);
                 throw;
             }
         }
