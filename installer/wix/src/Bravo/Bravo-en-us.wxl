@@ -13,4 +13,7 @@
   <String Id="InstallerTelemetryCheckBoxText">Enable Installer Telemetry</String>
   <String Id="ApplicationTelemetryCheckBoxText">Enable Application Telemetry</String>
 
+  <!-- WiX localization overriding --> 
+  <String Id="InstallDirDlgDescription">Click next to install to the default location or change it below</String>
+
 </WixLocalization>

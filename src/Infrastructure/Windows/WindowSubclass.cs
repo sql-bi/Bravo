@@ -10,7 +10,6 @@
     internal abstract class WindowSubclass : CriticalFinalizerObject, IDisposable
     {
         private readonly Comctl32.SUBCLASSPROC _subclassProc;
-        private readonly IntPtr _subclassId;
         private readonly IntPtr _hWnd;
         private readonly object _lockSync = new();
         private bool _subclassInstalled;
@@ -19,9 +18,8 @@
         {
             _hWnd = hWnd;
 
-            _subclassId = new(1);
             _subclassProc = SubclassProc;
-            _subclassInstalled = Comctl32.SetWindowSubclass(hWnd, _subclassProc, _subclassId, IntPtr.Zero);
+            _subclassInstalled = Comctl32.SetWindowSubclass(hWnd, _subclassProc, IntPtr.Zero, IntPtr.Zero);
         }
 
         private IntPtr SubclassProc(IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam, IntPtr uIdSubclass, IntPtr dwRefData)
@@ -47,7 +45,7 @@
                 {
                     if (_subclassInstalled)
                     {
-                        _ = Comctl32.RemoveWindowSubclass(_hWnd, _subclassProc, _subclassId);
+                        _ = Comctl32.RemoveWindowSubclass(_hWnd, _subclassProc, IntPtr.Zero);
                         _subclassInstalled = false;
                     }
                 }
