@@ -9,7 +9,6 @@
     using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Infrastructure.Helpers;
     using Sqlbi.Bravo.Infrastructure.Messages;
-    using Sqlbi.Bravo.Infrastructure.Windows.Interop;
     using Sqlbi.Bravo.Models;
     using System;
     using System.IO;
@@ -75,8 +74,8 @@
 #if DEBUG
                 debug = true,
 #endif
+                address = GetAddress(),
                 token = AppEnvironment.ApiAuthenticationToken,
-                address = GetAddress().ToString(),
                 version = AppEnvironment.ApplicationProductVersion,
                 build = AppEnvironment.ApplicationFileVersion,
                 options = BravoOptions.CreateFromUserPreferences(),
@@ -90,38 +89,24 @@
                     globalProperties = ContextTelemetryInitializer.GlobalProperties
                 },
             };
-            config.options.Theme = GetTheme();
 
             var script = $@"var CONFIG = { JsonSerializer.Serialize(config, AppEnvironment.DefaultJsonOptions) };";
             var stream = new MemoryStream(Encoding.UTF8.GetBytes(script));
 
             return stream;
 
-            Uri GetAddress()
+            string GetAddress()
             {
                 var address = _host.GetListeningAddresses().Single(); // single address expected here
-                return address;
-            }
-
-            ThemeType GetTheme()
-            {
-                var theme = UserPreferences.Current.Theme;
-
-                if (theme == ThemeType.Auto)
-                    theme = Uxtheme.IsSystemUsingDarkMode() ? ThemeType.Dark : ThemeType.Light;
-
-                return theme;
+                var addressString = address.ToString();
+                
+                return addressString;
             }
         }
 
         private void OnWindowCreating(object? sender, EventArgs e)
         {
-            var theme = UserPreferences.Current.Theme;
-            if (theme != ThemeType.Auto) 
-            {
-                // Set the startup theme based on the latest settings saved by the user
-                Uxtheme.SetStartupTheme(useDark: theme == ThemeType.Dark);
-            }
+            ThemeHelper.ChangeStartupTheme(UserPreferences.Current.Theme);
         }
 
         private void OnWindowCreated(object? sender, EventArgs e)
@@ -195,25 +180,27 @@
             // Wait a bit in order to ensure that the PhotinoWindow message loop is started
             // This is to prevent the .NET Runtime corecrl.dll fault with a win32 access violation
             // This should be moved to the OnWindowCreated handler after the issue has been resolved
-            if (!_startupSettings.IsEmpty)
+            _ = Task.Factory.StartNew(() =>
             {
-                _ = Task.Factory.StartNew(() =>
+                try
                 {
-                    try
-                    {
-                        Thread.Sleep(2_000);
+                    Thread.Sleep(2_000);
 
+                    ThemeHelper.AllowDarkModeForWindow(_window.WindowHandle);
+
+                    if (!_startupSettings.IsEmpty)
+                    {
                         var startupMessage = AppInstanceStartupMessage.CreateFrom(_startupSettings);
                         var webMessageString = startupMessage.ToWebMessageString();
 
                         _window.SendWebMessage(webMessageString);
                     }
-                    catch
-                    {
-                        // this is a temporary hack so here we can silently swallow the exception
-                    }
-                });
-            }
+                }
+                catch
+                {
+                    // this is a temporary hack so here we can silently swallow the exception
+                }
+            });
             // HACK END <<
 
             _window.WaitForClose();

@@ -78,18 +78,7 @@
         [ProducesDefaultResponseType]
         public IActionResult ChangeTheme(ThemeType theme)
         {
-            var windowHandle = ProcessHelper.GetCurrentProcessMainWindowHandle();
-
-            switch (theme)
-            {
-                case ThemeType.Light:
-                case ThemeType.Dark:
-                    Uxtheme.ChangeTheme(windowHandle, useDark: theme == ThemeType.Dark);
-                    break;
-                case ThemeType.Auto:
-                    Uxtheme.ChangeTheme(windowHandle, useDark: Uxtheme.IsSystemUsingDarkMode());
-                    break;
-            }
+            ThemeHelper.ChangeTheme(theme);
 
             return Ok();
         }
