@@ -6,6 +6,14 @@
 
     internal static class User32
     {
+        [Flags]
+        public enum KeyState
+        {
+            None = 0,
+            Down = 1,
+            Toggled = 2
+        }
+
         [StructLayout(LayoutKind.Sequential)]
         public struct COPYDATASTRUCT
         {
@@ -122,5 +130,8 @@
 
         [DllImport(ExternDll.User32, CharSet = CharSet.Auto, BestFitMapping = false, SetLastError = true)]
         public static extern int GetWindowThreadProcessId(IntPtr hWnd, out int processId);
+
+        [DllImport(ExternDll.User32, CharSet = CharSet.Auto, ExactSpelling = true)]
+        public static extern short GetKeyState(int nVirtKey);
     }
 }

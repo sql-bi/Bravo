@@ -1,9 +1,13 @@
 ﻿namespace Sqlbi.Bravo.Infrastructure
 {
     using Microsoft.Win32;
+    using Sqlbi.Bravo.Infrastructure.Configuration;
+    using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Infrastructure.Helpers;
     using Sqlbi.Bravo.Infrastructure.Security;
+    using Sqlbi.Bravo.Models;
     using System;
+    using System.Collections.Concurrent;
     using System.Diagnostics;
     using System.IO;
     using System.Text.Json;
@@ -51,10 +55,12 @@
             IsPackagedAppInstance = DesktopBridgeHelper.IsRunningAsMsixPackage();
             ApplicationDataPath = Path.Combine(Environment.GetFolderPath(IsPackagedAppInstance ? Environment.SpecialFolder.UserProfile : Environment.SpecialFolder.LocalApplicationData, Environment.SpecialFolderOption.DoNotVerify), ApplicationName);
             ApplicationTempPath = Path.Combine(ApplicationDataPath, ".temp");
+            ApplicationDiagnosticPath = Path.Combine(ApplicationDataPath, ".diagnostic");
             UserSettingsFilePath = Path.Combine(ApplicationDataPath, "usersettings.json");
             MsalTokenCacheFilePath = Path.Combine(ApplicationDataPath, ".msalcache");
             WebView2VersionInfo = WebView2Helper.GetRuntimeVersionInfo();
 
+            Diagnostics = new ConcurrentDictionary<string, DiagnosticMessage>();
             DefaultJsonOptions = new(JsonSerializerDefaults.Web) { MaxDepth = 32 }; // see Microsoft.AspNetCore.Mvc.JsonOptions.JsonSerializerOptions
             DefaultJsonOptions.Converters.Add(new JsonStringEnumMemberConverter()); // https://github.com/dotnet/runtime/issues/31081#issuecomment-578459083
         }
@@ -84,6 +90,8 @@
 
         public static string ApplicationTempPath { get; }
 
+        public static string ApplicationDiagnosticPath { get; }
+
         public static string UserSettingsFilePath { get; }
 
         public static string MsalTokenCacheFilePath { get; }
@@ -93,5 +101,54 @@
         public static string? WebView2VersionInfo { get; }
 
         public static bool IsWebView2RuntimeInstalled => WebView2VersionInfo is not null;
+
+        public static bool IsDiagnosticEnabled => UserPreferences.Current.DiagnosticEnabled;
+
+        public static ConcurrentDictionary<string, DiagnosticMessage> Diagnostics { get; }
+
+        public static void AddDiagnostics(DiagnosticMessageType type, string name, string content, bool writeFile = true)
+        {
+            if (UserPreferences.Current.DiagnosticEnabled)
+            {
+                var message = DiagnosticMessage.Create(type, name, content);
+
+                Diagnostics.AddOrUpdate(message.Name!, message, (key, value) => message);
+
+                if (writeFile)
+                {
+                    WriteDiagnosticFile(message);
+                }
+            }
+        }
+
+        private static void WriteDiagnosticFile(DiagnosticMessage message)
+        {
+            if (UserPreferences.Current.DiagnosticEnabled)
+            {
+                try
+                {
+                    Directory.CreateDirectory(ApplicationDiagnosticPath);
+
+                    var extension = message.Type switch
+                    {
+                        DiagnosticMessageType.Text => "txt",
+                        DiagnosticMessageType.Json => "json",
+                        _ => "bin",
+                    };
+
+                    _ = message.Name ?? throw new BravoUnexpectedException("message.Name is null");
+
+                    var name = Path.ChangeExtension(message.Name, extension);
+                    var safeName = name.ReplaceInvalidFileNameChars();
+                    var path = Path.Combine(ApplicationDiagnosticPath, safeName);
+
+                    File.WriteAllText(path, message.Content);
+                }
+                catch (Exception ex)
+                {
+                    ExceptionHelper.WriteToEventLog(ex, EventLogEntryType.Warning, throwOnError: false);
+                }
+            }
+        }
     }
 }
