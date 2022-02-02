@@ -1,5 +1,8 @@
 ﻿namespace Sqlbi.Bravo.Infrastructure
 {
+    using Sqlbi.Bravo.Infrastructure.Configuration;
+    using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
+    using Sqlbi.Bravo.Infrastructure.Helpers;
     using Sqlbi.Bravo.Infrastructure.Messages;
     using Sqlbi.Bravo.Infrastructure.Windows;
     using Sqlbi.Bravo.Infrastructure.Windows.Interop;
@@ -11,7 +14,6 @@
     internal class AppWindowSubclass : WindowSubclass
     {
         private readonly PhotinoNET.PhotinoWindow _window;
-        private readonly IntPtr MSG_HANDLED = new(1);
 
         /// <summary>
         /// Try to install a WndProc subclass callback to hook messages sent to the selected <see cref="PhotinoNET.PhotinoWindow"/> window
@@ -26,10 +28,14 @@
 
         protected override IntPtr WndProc(IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam, IntPtr uIdSubclass, IntPtr dwRefData)
         {
-            if (uMsg == (uint)WindowMessage.WM_COPYDATA)
+            switch (uMsg)
             {
-                HandleMsgWmCopyData(hWnd, copydataPtr: lParam);
-                return MSG_HANDLED;
+                case (uint)WindowMessage.WM_COPYDATA:
+                    HandleMsgWmCopyData(hWnd, copydataPtr: lParam);
+                    break;
+                case (uint)WindowMessage.WM_THEMECHANGED:
+                    HandleMsgWmThemeChanged(hWnd);
+                    break;
             }
 
             return base.WndProc(hWnd, uMsg, wParam, lParam, uIdSubclass, dwRefData);
@@ -68,9 +74,15 @@
             catch (Exception ex)
             {
                 var exceptionWebMessage = UnknownWebMessage.CreateFrom(ex);
-                var exceptionWebMessageString = exceptionWebMessage.AsString;
+                _window.SendWebMessage(exceptionWebMessage.AsString);
+            }
+        }
 
-                _window.SendWebMessage(exceptionWebMessageString);
+        private static void HandleMsgWmThemeChanged(IntPtr hWnd)
+        {
+            if (UserPreferences.Current.Theme == ThemeType.Auto)
+            {
+                ThemeHelper.UpdateNonClientAreaTheme(hWnd, ThemeType.Auto);
             }
         }
     }

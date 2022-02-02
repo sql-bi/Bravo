@@ -65,12 +65,12 @@
         [return: MarshalAs(UnmanagedType.U4)]
         public static extern PreferredAppMode SetPreferredAppMode(PreferredAppMode mode); // !!! 135 !!! same ordinal in 1903 and 1809 
 
-        [DllImport(ExternDll.Uxtheme, EntryPoint = "#138")]
-        [return: MarshalAs(UnmanagedType.U1)]
-        public static extern bool ShouldSystemUseDarkMode();
+        //[DllImport(ExternDll.Uxtheme, EntryPoint = "#138")]
+        //[return: MarshalAs(UnmanagedType.U1)]
+        //public static extern bool ShouldSystemUseDarkMode();
 
-        //[DllImport(ExternDll.Uxtheme, EntryPoint = "#139")]
-        //[return: MarshalAs(UnmanagedType.U1)] 
-        //private static extern bool IsDarkModeAllowedForApp(IntPtr hWnd);
+        [DllImport(ExternDll.Uxtheme, EntryPoint = "#139")]
+        [return: MarshalAs(UnmanagedType.U1)]
+        public static extern bool IsDarkModeAllowedForApp(IntPtr hWnd);
     }
 }

@@ -1,8 +1,11 @@
 ﻿namespace Sqlbi.Bravo.Infrastructure.Windows.Interop
 {
+    /// <summary>
+    /// https://github.com/dahall/Vanara/blob/3e1596ba7f60f6478e9efd0d5c1b30d102df9439/PInvoke/Shared/WinError/HRESULT.Values.cs
+    /// </summary>
     internal class HRESULT
     {
-        //S_OK = 0,
+        public const int S_OK = 0;
         //S_FALSE = 1,
         //DRAGDROP_S_DROP = 262400,
         //DRAGDROP_S_CANCEL = 262401,
