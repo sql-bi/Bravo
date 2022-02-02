@@ -1,11 +1,11 @@
-﻿using Sqlbi.Bravo.Infrastructure;
-using Sqlbi.Bravo.Infrastructure.Helpers;
-using System;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-
-namespace Sqlbi.Bravo.Models
+﻿namespace Sqlbi.Bravo.Models
 {
+    using Sqlbi.Bravo.Infrastructure;
+    using Sqlbi.Bravo.Infrastructure.Helpers;
+    using System;
+    using System.Text.Json;
+    using System.Text.Json.Serialization;
+
     public class PBICloudDataset
     {
         [JsonPropertyName("workspaceId")]
@@ -13,6 +13,9 @@ namespace Sqlbi.Bravo.Models
 
         [JsonPropertyName("workspaceName")]
         public string? WorkspaceName { get; set; }
+
+        [JsonPropertyName("workspaceObjectId")]
+        public string? WorkspaceObjectId { get; set; }
 
         [JsonPropertyName("id")]
         public long? Id { get; set; }

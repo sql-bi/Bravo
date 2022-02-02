@@ -135,58 +135,44 @@
             var onlineDatasets = await GetSharedDatasetsAsync();
 
             /*
-             * SELECT datasets d INNER JOIN workspaces w ON d.WorkspaceObjectId = w.Id
-             * This query does not include the user's personal workspace datasets, this is because the GUIDs w.Id and d.WorkspaceObjectId do not match WHERE w.type = 'User'
-             */
-            //var datasets = onlineDatasets.Join(onlineWorkspaces, (d) => d.WorkspaceObjectId, (w) => w.Id, (d, w) => new PBICloudDataset
-            //{
-            //    WorkspaceId = w.Id,
-            //    WorkspaceName = w.Name,
-            //    Id = d.Model.Id,
-            //    ServerName = PBIPremiumServerUri.OriginalString,
-            //    DatabaseName = d.Model.DBName,
-            //    DisplayName = d.Model.DisplayName,
-            //    Description = d.Model.Description,
-            //    Owner = $"{ d.Model.CreatorUser.GivenName } { d.Model.CreatorUser.FamilyName }",
-            //    Refreshed = d.Model.LastRefreshTime,
-            //    Endorsement = (PBICloudDatasetEndorsement)(d.GalleryItem?.Stage ?? (int)PBICloudDatasetEndorsement.None)
-            //},
-            //StringComparer.InvariantCultureIgnoreCase);
-
-            /*
              * SELECT datasets d LEFT OUTER JOIN workspaces w ON d.WorkspaceObjectId = w.Id
              * Here we use a LEFT OUTER JOIN in order to include the user's personal workspace datasets.
              */
             var datasets = from od in onlineDatasets
-                           join ow in onlineWorkspaces on od.WorkspaceObjectId.ToLowerInvariant() equals ow.Id.ToLowerInvariant() into joinedWorkspaces
+                           join ow in onlineWorkspaces on od.WorkspaceObjectId?.ToLowerInvariant() equals ow.WorkspaceObjectId?.ToLowerInvariant() into joinedWorkspaces
                            from jw in joinedWorkspaces.DefaultIfEmpty()
                            select new PBICloudDataset
                            {
                                WorkspaceId = jw?.Id,
                                WorkspaceName = jw?.Name ?? GetWorkspaceName(od),
-                               Id = od.Model.Id,
+                               WorkspaceObjectId = jw?.WorkspaceObjectId,
+                               Id = od.Model?.Id,
                                ServerName = PBIPremiumServerUri.OriginalString,
-                               DatabaseName = od.Model.DBName,
-                               DisplayName = od.Model.DisplayName,
-                               Description = od.Model.Description,
-                               Owner = $"{ od.Model.CreatorUser.GivenName } { od.Model.CreatorUser.FamilyName }",
-                               Refreshed = od.Model.LastRefreshTime,
+                               DatabaseName = od.Model?.DBName,
+                               DisplayName = od.Model?.DisplayName,
+                               Description = od.Model?.Description,
+                               Owner = $"{ od.Model?.CreatorUser?.GivenName } { od.Model?.CreatorUser?.FamilyName }",
+                               Refreshed = od.Model?.LastRefreshTime,
                                Endorsement = (PBICloudDatasetEndorsement)(od.GalleryItem?.Stage ?? (int)PBICloudDatasetEndorsement.None),
                                ConnectionMode = GetConnectionMode(jw, od),
                                Diagnostic = GetDiagnostic(jw, od)
                            };
 
+            //File.WriteAllText(Path.Combine(AppEnvironment.ApplicationTempPath, "onlineWorkspaces.json"), JsonSerializer.Serialize(onlineWorkspaces));
+            //File.WriteAllText(Path.Combine(AppEnvironment.ApplicationTempPath, "onlineDatasets.json"), JsonSerializer.Serialize(onlineDatasets));
+            //File.WriteAllText(Path.Combine(AppEnvironment.ApplicationTempPath, "datasets.json"), JsonSerializer.Serialize(datasets));
+
             return datasets.ToArray();
 
-            string? GetWorkspaceName(SharedDataset dataset)
+            string? GetWorkspaceName(CloudSharedModel dataset)
             {
-                if (dataset.WorkspaceType == SharedDatasetWorkspaceType.PersonalGroup)
+                if (dataset.IsOnPersonalWorkspace)
                     return CurrentAccount?.UserPrincipalName;
 
                 return null;
             }
 
-            static PBICloudDatasetConnectionMode GetConnectionMode(Workspace? workspace, SharedDataset dataset)
+            static PBICloudDatasetConnectionMode GetConnectionMode(CloudWorkspace? workspace, CloudSharedModel dataset)
             {
                 if (workspace is null || workspace.IsPersonalWorkspace || dataset.IsOnPersonalWorkspace)
                     return PBICloudDatasetConnectionMode.UnsupportedPersonalWorkspace;
@@ -194,26 +180,29 @@
                 if (workspace.IsXmlaEndPointSupported == false)
                     return PBICloudDatasetConnectionMode.UnsupportedWorkspaceSku;
 
-                // Exclude unsupported datasets - a.k.a. datasets not accessible by the XMLA endpoint
-                // see https://docs.microsoft.com/en-us/power-bi/admin/service-premium-connect-tools#unsupported-datasets
+                if (dataset.Model is not null)
+                {
+                    // Exclude unsupported datasets - a.k.a. datasets not accessible by the XMLA endpoint
+                    // see https://docs.microsoft.com/en-us/power-bi/admin/service-premium-connect-tools#unsupported-datasets
 
-                if (dataset.Model.IsOnPremModel)
-                    return PBICloudDatasetConnectionMode.UnsupportedOnPremLiveConnection;
+                    if (dataset.Model.IsOnPremModel)
+                        return PBICloudDatasetConnectionMode.UnsupportedOnPremLiveConnection;
 
-                // TODO: Exclude datasets based on a live connection to a Power BI dataset in another workspace
-                //if ( ?? )
-                //return PBICloudDatasetXmlaConnectivity.UnsupportedLiveConnectionToExternalDatasets;
+                    // TODO: Exclude datasets based on a live connection to a Power BI dataset in another workspace
+                    //if ( ?? )
+                    //return PBICloudDatasetXmlaConnectivity.UnsupportedLiveConnectionToExternalDatasets;
 
-                if (dataset.Model.IsPushDataEnabled)
-                    return PBICloudDatasetConnectionMode.UnsupportedPushDataset;
+                    if (dataset.Model.IsPushDataEnabled)
+                        return PBICloudDatasetConnectionMode.UnsupportedPushDataset;
 
-                if (dataset.Model.IsExcelWorkbook)
-                    return PBICloudDatasetConnectionMode.UnsupportedExcelWorkbookDataset;
+                    if (dataset.Model.IsExcelWorkbook)
+                        return PBICloudDatasetConnectionMode.UnsupportedExcelWorkbookDataset;
+                }
 
                 return PBICloudDatasetConnectionMode.Supported;
             }
 
-            static JsonElement GetDiagnostic(Workspace? workspace, SharedDataset dataset)
+            static JsonElement GetDiagnostic(CloudWorkspace? workspace, CloudSharedModel dataset)
             {
                 var diagnostic = new
                 {
@@ -229,19 +218,21 @@
                     },
                     Model = new
                     {
-                        dataset.Model.Permissions,
-                        dataset.Model.IsHidden,
-                        dataset.Model.IsCloudModel,
-                        dataset.Model.IsOnPremModel,
-                        dataset.Model.IsExcelWorkbook,
-                        dataset.Model.IsWritablePbixModel,
-                        dataset.Model.IsWriteableModel,
-                        dataset.Model.IsPushDataEnabled,
-                        dataset.Model.IsPushStreaming,
-                        dataset.Model.DirectQueryMode,
-                        dataset.Model.InsightsSupported,
+                        IsNull = dataset.Model is null,
+                        dataset.Model?.Permissions,
+                        dataset.Model?.IsHidden,
+                        dataset.Model?.IsCloudModel,
+                        dataset.Model?.IsOnPremModel,
+                        dataset.Model?.IsExcelWorkbook,
+                        dataset.Model?.IsWritablePbixModel,
+                        dataset.Model?.IsWriteableModel,
+                        dataset.Model?.IsPushDataEnabled,
+                        dataset.Model?.IsPushStreaming,
+                        dataset.Model?.DirectQueryMode,
+                        dataset.Model?.InsightsSupported,
                     }
                 };
+
                 var diagnosticString = JsonSerializer.Serialize(diagnostic, AppEnvironment.DefaultJsonOptions);
                 var diagnosticJson = JsonSerializer.Deserialize<JsonElement>(diagnosticString);
 
@@ -312,7 +303,7 @@
             }
         }
 
-        private async Task<IEnumerable<Workspace>> GetWorkspacesAsync()
+        private async Task<IEnumerable<CloudWorkspace>> GetWorkspacesAsync()
         {
             _httpClient.DefaultRequestHeaders.Accept.Clear();
             _httpClient.DefaultRequestHeaders.Authorization = AuthenticationHeaderValue.Parse(CurrentAuthentication?.CreateAuthorizationHeader());
@@ -322,12 +313,12 @@
             response.EnsureSuccessStatusCode();
 
             var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-            var workspaces = JsonSerializer.Deserialize<IEnumerable<Workspace>>(content, _jsonOptions);
+            var workspaces = JsonSerializer.Deserialize<IEnumerable<CloudWorkspace>>(content, _jsonOptions);
 
-            return workspaces?.ToArray() ?? Array.Empty<Workspace>();
+            return workspaces?.ToArray() ?? Array.Empty<CloudWorkspace>();
         }
 
-        private async Task<IEnumerable<SharedDataset>> GetSharedDatasetsAsync()
+        private async Task<IEnumerable<CloudSharedModel>> GetSharedDatasetsAsync()
         {
             _httpClient.DefaultRequestHeaders.Accept.Clear();
             _httpClient.DefaultRequestHeaders.Authorization = AuthenticationHeaderValue.Parse(CurrentAuthentication?.CreateAuthorizationHeader());
@@ -337,9 +328,9 @@
             response.EnsureSuccessStatusCode();
 
             var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-            var datasets = JsonSerializer.Deserialize<IEnumerable<SharedDataset>>(content, _jsonOptions);
+            var datasets = JsonSerializer.Deserialize<IEnumerable<CloudSharedModel>>(content, _jsonOptions);
 
-            return datasets?.ToArray() ?? Array.Empty<SharedDataset>();
+            return datasets?.ToArray() ?? Array.Empty<CloudSharedModel>();
         }
     }
 }

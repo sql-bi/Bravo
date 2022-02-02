@@ -1,9 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-
-namespace Sqlbi.Bravo.Infrastructure.Models.PBICloud
+﻿namespace Sqlbi.Bravo.Infrastructure.Models.PBICloud
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+
     public class LocalClientSite
     {
         public string? Url { get; init; }
