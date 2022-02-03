@@ -14,6 +14,9 @@
         [JsonPropertyName("theme")]
         public ThemeType Theme { get; set; } = ThemeType.Auto;
 
+        [JsonPropertyName("diagnosticEnabled")]
+        public bool DiagnosticEnabled { get; set; } = false;
+
         [JsonPropertyName("customOptions")]
         public JsonElement? CustomOptions { get; set; }
 
@@ -22,6 +25,7 @@
             var options = new BravoOptions
             {
                 TelemetryEnabled = UserPreferences.Current.TelemetryEnabled,
+                DiagnosticEnabled = UserPreferences.Current.DiagnosticEnabled,
                 CustomOptions = UserPreferences.Current.CustomOptions,
                 Theme = UserPreferences.Current.Theme,
             };

@@ -4,13 +4,13 @@
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.Extensions.Options;
+    using Sqlbi.Bravo.Infrastructure;
     using Sqlbi.Bravo.Infrastructure.Configuration;
     using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
     using Sqlbi.Bravo.Infrastructure.Helpers;
-    using Sqlbi.Bravo.Infrastructure.Windows.Interop;
     using Sqlbi.Bravo.Models;
     using System;
-    using System.Diagnostics;
+    using System.Collections.Generic;
     using System.Net.Mime;
 
     /// <summary>
@@ -57,6 +57,7 @@
         public IActionResult UpdateOptions(BravoOptions options)
         {
             UserPreferences.Current.TelemetryEnabled = options.TelemetryEnabled;
+            UserPreferences.Current.DiagnosticEnabled = options.DiagnosticEnabled;
             UserPreferences.Current.CustomOptions = options.CustomOptions;
             UserPreferences.Current.Theme = options.Theme;
             UserPreferences.Save();
@@ -103,6 +104,35 @@
             }
 
             return Forbid();
+        }
+
+        /// <summary>
+        /// Gets all the <see cref="DiagnosticMessage"/> for the application
+        /// </summary>
+        /// <response code="200">Status200OK - Success</response>
+        [HttpGet]
+        [ActionName("GetDiagnostics")]
+        [Consumes(MediaTypeNames.Application.Json)]
+        [Produces(MediaTypeNames.Application.Json)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<DiagnosticMessage>))]
+        [ProducesDefaultResponseType]
+        public IActionResult GetDiagnostics(bool all)
+        {
+            var messages = new List<DiagnosticMessage>();
+
+            if (UserPreferences.Current.DiagnosticEnabled)
+            {
+                foreach (var message in AppEnvironment.Diagnostics.Values)
+                {
+                    if (all || message.LastReadTimestamp is null)
+                    {
+                        message.LastReadTimestamp = DateTime.UtcNow;
+                        messages.Add(message);
+                    }
+                }
+            }
+
+            return Ok(messages);
         }
     }
 }

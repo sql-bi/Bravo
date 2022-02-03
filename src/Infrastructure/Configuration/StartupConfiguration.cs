@@ -6,11 +6,16 @@
     using System.IO;
     using System.Net;
     using System.Runtime;
+    using System.Windows.Forms;
 
     internal static class StartupConfiguration
     {
         public static void Configure()
         {
+            // required for System.Windows.Forms.TaskDialog dialogs
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
+
             ConfigureTheme();
             ConfigureDirectories();
             ConfigureMulticoreJit();

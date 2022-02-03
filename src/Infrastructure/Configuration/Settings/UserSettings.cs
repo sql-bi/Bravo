@@ -8,6 +8,9 @@
         [JsonPropertyName("telemetryEnabled")]
         public bool TelemetryEnabled { get; set; } = AppEnvironment.TelemetryEnabledDefault;
 
+        [JsonPropertyName("diagnosticEnabled")]
+        public bool DiagnosticEnabled { get; set; } = false;
+
         [JsonPropertyName("theme")]
         public ThemeType Theme { get; set; } = ThemeType.Auto;
 

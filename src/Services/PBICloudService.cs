@@ -134,11 +134,17 @@
             var onlineWorkspaces = await GetWorkspacesAsync();
             var onlineDatasets = await GetSharedDatasetsAsync();
 
+            if (AppEnvironment.IsDiagnosticEnabled)
+            {
+                AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{ nameof(PBICloudService) }-{ nameof(GetDatasetsAsync) }-{ nameof(onlineWorkspaces) }", content: JsonSerializer.Serialize(onlineWorkspaces));
+                AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{ nameof(PBICloudService) }-{ nameof(GetDatasetsAsync) }-{ nameof(onlineDatasets) }", content: JsonSerializer.Serialize(onlineDatasets));
+            }
+
             /*
              * SELECT datasets d LEFT OUTER JOIN workspaces w ON d.WorkspaceObjectId = w.Id
              * Here we use a LEFT OUTER JOIN in order to include the user's personal workspace datasets.
              */
-            var datasets = from od in onlineDatasets
+            var datasetsQuery = from od in onlineDatasets
                            join ow in onlineWorkspaces on od.WorkspaceObjectId?.ToLowerInvariant() equals ow.WorkspaceObjectId?.ToLowerInvariant() into joinedWorkspaces
                            from jw in joinedWorkspaces.DefaultIfEmpty()
                            select new PBICloudDataset
@@ -158,11 +164,12 @@
                                Diagnostic = GetDiagnostic(jw, od)
                            };
 
-            //File.WriteAllText(Path.Combine(AppEnvironment.ApplicationTempPath, "onlineWorkspaces.json"), JsonSerializer.Serialize(onlineWorkspaces));
-            //File.WriteAllText(Path.Combine(AppEnvironment.ApplicationTempPath, "onlineDatasets.json"), JsonSerializer.Serialize(onlineDatasets));
-            //File.WriteAllText(Path.Combine(AppEnvironment.ApplicationTempPath, "datasets.json"), JsonSerializer.Serialize(datasets));
+            var datasets = datasetsQuery.ToArray();
 
-            return datasets.ToArray();
+            if (AppEnvironment.IsDiagnosticEnabled)
+                AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{ nameof(PBICloudService) }-{ nameof(GetDatasetsAsync) }", content: JsonSerializer.Serialize(datasets));
+
+            return datasets;
 
             string? GetWorkspaceName(CloudSharedModel dataset)
             {
@@ -313,6 +320,10 @@
             response.EnsureSuccessStatusCode();
 
             var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+            
+            if (AppEnvironment.IsDiagnosticEnabled)
+                AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{ nameof(PBICloudService) }-{ nameof(GetWorkspacesAsync) }", content);
+
             var workspaces = JsonSerializer.Deserialize<IEnumerable<CloudWorkspace>>(content, _jsonOptions);
 
             return workspaces?.ToArray() ?? Array.Empty<CloudWorkspace>();
@@ -328,6 +339,10 @@
             response.EnsureSuccessStatusCode();
 
             var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+            
+            if (AppEnvironment.IsDiagnosticEnabled)
+                AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{ nameof(PBICloudService) }-{ nameof(GetSharedDatasetsAsync) }", content);
+
             var datasets = JsonSerializer.Deserialize<IEnumerable<CloudSharedModel>>(content, _jsonOptions);
 
             return datasets?.ToArray() ?? Array.Empty<CloudSharedModel>();

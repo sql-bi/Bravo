@@ -79,9 +79,6 @@ Choose an option to proceed with the installation:",
                 //}
             };
 
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-
             var dialogButton = TaskDialog.ShowDialog(page, TaskDialogStartupLocation.CenterScreen);
 
             switch (dialogButton.Tag)
