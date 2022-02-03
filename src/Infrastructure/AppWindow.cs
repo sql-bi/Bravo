@@ -140,7 +140,11 @@
             if (AppEnvironment.IsPackagedAppInstance)
                 return;
 
-            AutoUpdater.AppCastURL = string.Format("https://cdn.sqlbi.com/updates/BravoAutoUpdater.xml?nocache={0}", DateTimeOffset.Now.ToUnixTimeSeconds());
+            AutoUpdater.AppCastURL = UserPreferences.Current.UpdateChannel switch
+            {
+                // TODO: CheckForUpdate - add update channel URLs
+                _ => string.Format("https://cdn.sqlbi.com/updates/BravoAutoUpdater.xml?nocache={0}", DateTimeOffset.Now.ToUnixTimeSeconds()),
+            };
             AutoUpdater.HttpUserAgent = "AutoUpdater";
             AutoUpdater.Synchronous = false;
             AutoUpdater.ShowSkipButton = false;
