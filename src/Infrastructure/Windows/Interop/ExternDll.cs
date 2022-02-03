@@ -12,7 +12,7 @@
 
         public const string Credui = "credui.dll";
 
-        //public const string DwmAPI = "dwmapi.dll";
+        public const string Dwmapi = "dwmapi.dll";
 
         //public const string Gdi32 = "gdi32.dll";
 

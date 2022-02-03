@@ -11,6 +11,9 @@
         [JsonPropertyName("telemetryEnabled")]
         public bool TelemetryEnabled { get; set; } = AppEnvironment.TelemetryEnabledDefault;
 
+        [JsonPropertyName("updateChannel")]
+        public UpdateChannelType UpdateChannel { get; set; } = UpdateChannelType.Stable;
+
         [JsonPropertyName("theme")]
         public ThemeType Theme { get; set; } = ThemeType.Auto;
 
@@ -27,10 +30,21 @@
                 TelemetryEnabled = UserPreferences.Current.TelemetryEnabled,
                 DiagnosticEnabled = UserPreferences.Current.DiagnosticEnabled,
                 CustomOptions = UserPreferences.Current.CustomOptions,
+                UpdateChannel = UserPreferences.Current.UpdateChannel,
                 Theme = UserPreferences.Current.Theme,
             };
 
             return options;
+        }
+
+        public void SaveToUserPreferences()
+        {
+            UserPreferences.Current.TelemetryEnabled = TelemetryEnabled;
+            UserPreferences.Current.DiagnosticEnabled = DiagnosticEnabled;
+            UserPreferences.Current.CustomOptions = CustomOptions;
+            UserPreferences.Current.UpdateChannel = UpdateChannel;
+            UserPreferences.Current.Theme = Theme;
+            UserPreferences.Save();
         }
     }
 }

@@ -56,11 +56,7 @@
         [ProducesDefaultResponseType]
         public IActionResult UpdateOptions(BravoOptions options)
         {
-            UserPreferences.Current.TelemetryEnabled = options.TelemetryEnabled;
-            UserPreferences.Current.DiagnosticEnabled = options.DiagnosticEnabled;
-            UserPreferences.Current.CustomOptions = options.CustomOptions;
-            UserPreferences.Current.Theme = options.Theme;
-            UserPreferences.Save();
+            options.SaveToUserPreferences();
 
             _telemetryConfiguration.DisableTelemetry = options.TelemetryEnabled == false;
 

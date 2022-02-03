@@ -58,7 +58,7 @@
                 .Load("wwwroot/index.html")
                 .Center();
 
-            window.WindowCreating += OnWindowCreating;
+            //window.WindowCreating += OnWindowCreating;
             window.WindowCreated += OnWindowCreated;
             window.WindowClosing += OnWindowClosing;
 
@@ -104,10 +104,9 @@
             }
         }
 
-        private void OnWindowCreating(object? sender, EventArgs e)
-        {
-            ThemeHelper.ChangeStartupTheme(UserPreferences.Current.Theme);
-        }
+        //private void OnWindowCreating(object? sender, EventArgs e)
+        //{
+        //}
 
         private void OnWindowCreated(object? sender, EventArgs e)
         {
@@ -129,7 +128,8 @@
         {
             NotificationHelper.ClearNotifications();
 
-            return false; // Returning true stops window from closing
+            // Returning true prevents the window from closing
+            return false;
         }
 
         /// <summary>
@@ -140,7 +140,11 @@
             if (AppEnvironment.IsPackagedAppInstance)
                 return;
 
-            AutoUpdater.AppCastURL = string.Format("https://cdn.sqlbi.com/updates/BravoAutoUpdater.xml?nocache={0}", DateTimeOffset.Now.ToUnixTimeSeconds());
+            AutoUpdater.AppCastURL = UserPreferences.Current.UpdateChannel switch
+            {
+                // TODO: CheckForUpdate - add update channel URLs
+                _ => string.Format("https://cdn.sqlbi.com/updates/BravoAutoUpdater.xml?nocache={0}", DateTimeOffset.Now.ToUnixTimeSeconds()),
+            };
             AutoUpdater.HttpUserAgent = "AutoUpdater";
             AutoUpdater.Synchronous = false;
             AutoUpdater.ShowSkipButton = false;
@@ -179,21 +183,27 @@
             // HACK: see issue https://github.com/tryphotino/photino.NET/issues/87
             // Wait a bit in order to ensure that the PhotinoWindow message loop is started
             // This is to prevent the .NET Runtime corecrl.dll fault with a win32 access violation
-            // This should be moved to the OnWindowCreated handler after the issue has been resolved
             _ = Task.Factory.StartNew(() =>
             {
                 try
                 {
                     Thread.Sleep(2_000);
 
-                    ThemeHelper.AllowDarkModeForWindow(_window.WindowHandle);
-
-                    if (!_startupSettings.IsEmpty)
+                    // This should be moved to the 'OnWindowCreating' handler after the issue has been resolved
                     {
-                        var startupMessage = AppInstanceStartupMessage.CreateFrom(_startupSettings);
-                        var webMessageString = startupMessage.ToWebMessageString();
+                        ThemeHelper.AllowDarkModeForWindow(_window.WindowHandle);
+                        ThemeHelper.ChangeStartupTheme(_window.WindowHandle, UserPreferences.Current.Theme);
+                    }
 
-                        _window.SendWebMessage(webMessageString);
+                    // This should be moved to the 'OnWindowCreated' handler after the issue has been resolved
+                    {
+                        if (!_startupSettings.IsEmpty)
+                        {
+                            var startupMessage = AppInstanceStartupMessage.CreateFrom(_startupSettings);
+                            var webMessageString = startupMessage.ToWebMessageString();
+
+                            _window.SendWebMessage(webMessageString);
+                        }
                     }
                 }
                 catch

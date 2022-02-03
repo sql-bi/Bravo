@@ -9,6 +9,7 @@
     using System;
     using System.Collections.Concurrent;
     using System.Diagnostics;
+    using System.Drawing;
     using System.IO;
     using System.Text.Json;
     using System.Text.Json.Serialization;
@@ -31,6 +32,9 @@
         public static readonly string PBIDesktopSSASProcessImageName = "msmdsrv.exe";
         public static readonly string PBIDesktopMainWindowTitleSuffix = " - Power BI Desktop";
         public static readonly TimeSpan MSALSignInTimeout = TimeSpan.FromMinutes(5);
+        public static readonly Color ThemeColorDark = Color.FromArgb(red: 32, green: 32, blue: 32);
+        public static readonly Color ThemeColorLight = Color.FromArgb(red: 243, green: 243, blue: 243);
+
         public static readonly string[] TrustedUriHosts = new[]
         {
             "bravo.bi",
