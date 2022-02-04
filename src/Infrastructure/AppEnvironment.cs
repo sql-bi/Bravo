@@ -42,6 +42,7 @@
             "github.com",
             "microsoft.com",
             "daxformatter.com",
+            "bravorelease.blob.core.windows.net",
         };
 
         static AppEnvironment()

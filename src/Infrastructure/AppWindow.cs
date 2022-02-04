@@ -119,7 +119,16 @@
             var shortcutName = Path.ChangeExtension(AppEnvironment.ApplicationMainWindowTitle, "lnk");
             var shortcutPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData, Environment.SpecialFolderOption.DoNotVerify), @"Microsoft\Windows\Start Menu\Programs", shortcutName);
             if (File.Exists(shortcutPath))
-                File.Delete(shortcutPath);
+            {
+                try
+                {
+                    File.Delete(shortcutPath);
+                }
+                catch (IOException)
+                {
+                    // ignore "The process cannot access the file '..\Bravo for Power BI.lnk' because it is being used by another process."
+                }
+            }
 
             CheckForUpdate();
         }
