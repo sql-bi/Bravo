@@ -7,10 +7,6 @@ using System.Diagnostics.CodeAnalysis;
 
 [assembly: SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "<Pending>", Scope = "member", Target = "~M:Sqlbi.Bravo.Startup.ConfigureServices(Microsoft.Extensions.DependencyInjection.IServiceCollection)")]
 [assembly: SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "<Pending>", Scope = "member", Target = "~M:Sqlbi.Bravo.Startup.Configure(Microsoft.AspNetCore.Builder.IApplicationBuilder,Microsoft.AspNetCore.Hosting.IWebHostEnvironment)")]
-[assembly: SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "<Pending>", Scope = "member", Target = "~M:Sqlbi.Bravo.Infrastructure.Windows.WindowSubclass.IsOwnerThread(System.IntPtr)~System.Boolean")]
 [assembly: SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "<Pending>", Scope = "member", Target = "~M:Sqlbi.Bravo.Infrastructure.AppInstance.NotifyOwner")]
-[assembly: SuppressMessage("Style", "IDE0090:Use 'new(...)'", Justification = "<Pending>", Scope = "member", Target = "~F:Sqlbi.Bravo.Infrastructure.Windows.Interop.NativeMethods.NullHandleRef")]
-[assembly: SuppressMessage("Style", "IDE0090:Use 'new(...)'", Justification = "<Pending>", Scope = "member", Target = "~F:Sqlbi.Bravo.Infrastructure.Windows.Interop.NativeMethods.MONITORINFOEX.rcWork")]
-[assembly: SuppressMessage("Style", "IDE0090:Use 'new(...)'", Justification = "<Pending>", Scope = "member", Target = "~F:Sqlbi.Bravo.Infrastructure.Windows.Interop.NativeMethods.MONITORINFOEX.rcMonitor")]
 [assembly: SuppressMessage("Style", "IDE0037:Use inferred member name", Justification = "<Pending>", Scope = "member", Target = "~M:Sqlbi.Bravo.Infrastructure.Messages.UnknownWebMessage.CreateFrom(System.Exception)~Sqlbi.Bravo.Infrastructure.Messages.UnknownWebMessage")]
-[assembly: SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "<Pending>", Scope = "member", Target = "~M:Sqlbi.Bravo.Infrastructure.AppWindow.HandleHotKeys(System.Boolean)")]
+[assembly: SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "<Pending>", Scope = "member", Target = "~M:Sqlbi.Bravo.Infrastructure.Services.ExportData.ExportDataJobMap`1.Remove(`0)")]

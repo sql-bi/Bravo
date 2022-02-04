@@ -2,11 +2,14 @@
 {
     using Sqlbi.Bravo.Infrastructure;
     using Sqlbi.Bravo.Infrastructure.Helpers;
+    using Sqlbi.Bravo.Infrastructure.Models;
     using System;
+    using System.Diagnostics;
     using System.Text.Json;
     using System.Text.Json.Serialization;
 
-    public class PBICloudDataset
+    [DebuggerDisplay("{WorkspaceName} - {DisplayName} - {ConnectionMode}")]
+    public class PBICloudDataset : IPBIDataModel<PBICloudDataset>
     {
         [JsonPropertyName("workspaceId")]
         public string? WorkspaceId { get; set; }
@@ -46,6 +49,28 @@
 
         [JsonPropertyName("diagnostic")]
         public JsonElement? Diagnostic { get; set; }
+
+        public override bool Equals(object? obj)
+        {
+            return Equals(obj as PBICloudDataset);
+        }
+
+        public bool Equals(PBICloudDataset? other)
+        {
+            return other != null &&
+                   WorkspaceId == other.WorkspaceId &&
+                   WorkspaceObjectId == other.WorkspaceObjectId &&
+                   Id == other.Id;
+        }
+
+        public override int GetHashCode()
+        {
+            HashCode hash = new();
+            hash.Add(WorkspaceId);
+            hash.Add(WorkspaceObjectId);
+            hash.Add(Id);
+            return hash.ToHashCode();
+        }
     }
 
     public enum PBICloudDatasetEndorsement

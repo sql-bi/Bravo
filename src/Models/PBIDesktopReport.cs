@@ -1,9 +1,13 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.Text.Json.Serialization;
-
-namespace Sqlbi.Bravo.Models
+﻿namespace Sqlbi.Bravo.Models
 {
-    public class PBIDesktopReport
+    using Sqlbi.Bravo.Infrastructure.Models;
+    using System;
+    using System.ComponentModel.DataAnnotations;
+    using System.Diagnostics;
+    using System.Text.Json.Serialization;
+
+    [DebuggerDisplay("{ServerName} - {ReportName} - {ConnectionMode}")]
+    public class PBIDesktopReport : IPBIDataModel<PBIDesktopReport>
     {
         /// <summary>
         /// PBIDesktop process identifier (system PID)
@@ -32,6 +36,24 @@ namespace Sqlbi.Bravo.Models
 
         [JsonPropertyName("connectionMode")]
         public PBIDesktopReportConnectionMode ConnectionMode { get; set; } = PBIDesktopReportConnectionMode.Unknown;
+
+        public override bool Equals(object? obj)
+        {
+            return Equals(obj as PBIDesktopReport);
+        }
+
+        public bool Equals(PBIDesktopReport? other)
+        {
+            return other != null &&
+                   ProcessId == other.ProcessId &&
+                   ServerName == other.ServerName &&
+                   DatabaseName == other.DatabaseName;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(ProcessId, ServerName, DatabaseName);
+        }
     }
 
     public enum PBIDesktopReportConnectionMode

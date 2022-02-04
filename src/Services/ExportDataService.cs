@@ -1,103 +1,183 @@
-﻿using CsvHelper;
-using CsvHelper.Configuration;
-using CsvHelper.TypeConversion;
-using LargeXlsx;
-using Microsoft.AnalysisServices.AdomdClient;
-using Sqlbi.Bravo.Infrastructure;
-using Sqlbi.Bravo.Infrastructure.Extensions;
-using Sqlbi.Bravo.Infrastructure.Helpers;
-using Sqlbi.Bravo.Models;
-using System;
-using System.Data;
-using System.Drawing;
-using System.Globalization;
-using System.IO;
-using System.Text;
-using System.Threading;
-
-namespace Sqlbi.Bravo.Services
+﻿namespace Sqlbi.Bravo.Services
 {
+    using CsvHelper;
+    using CsvHelper.Configuration;
+    using CsvHelper.TypeConversion;
+    using LargeXlsx;
+    using Microsoft.AnalysisServices.AdomdClient;
+    using Sqlbi.Bravo.Infrastructure;
+    using Sqlbi.Bravo.Infrastructure.Extensions;
+    using Sqlbi.Bravo.Infrastructure.Helpers;
+    using Sqlbi.Bravo.Infrastructure.Services.ExportData;
+    using Sqlbi.Bravo.Models;
+    using System;
+    using System.Data;
+    using System.Drawing;
+    using System.Globalization;
+    using System.IO;
+    using System.Text;
+    using System.Threading;
+
     public interface IExportDataService
     {
-        void ExportDelimitedTextFile(PBIDesktopReport report, ExportDelimitedTextSettings settings, CancellationToken cancellationToken);
+        ExportDataJob ExportDelimitedTextFile(PBIDesktopReport report, ExportDelimitedTextSettings settings, CancellationToken cancellationToken);
 
-        void ExportDelimitedTextFile(PBICloudDataset dataset, ExportDelimitedTextSettings settings, CancellationToken cancellationToken);
+        ExportDataJob ExportDelimitedTextFile(PBICloudDataset dataset, ExportDelimitedTextSettings settings, CancellationToken cancellationToken);
 
-        void ExportExcelFile(PBIDesktopReport report, ExportExcelSettings settings, CancellationToken cancellationToken);
+        ExportDataJob ExportExcelFile(PBIDesktopReport report, ExportExcelSettings settings, CancellationToken cancellationToken);
 
-        void ExportExcelFile(PBICloudDataset dataset, ExportExcelSettings settings, CancellationToken cancellationToken);
+        ExportDataJob ExportExcelFile(PBICloudDataset dataset, ExportExcelSettings settings, CancellationToken cancellationToken);
+
+        ExportDataJob? QueryExportJob(PBIDesktopReport report);
+
+        ExportDataJob? QueryExportJob(PBICloudDataset dataset);
     }
 
     internal class ExportDataService : IExportDataService
     {
-        private static readonly TypeConverterOptions DefaultDelimitedTextTypeConverterOptions = new()
+        private static readonly TypeConverterOptions _defaultDelimitedTextTypeConverterOptions = new()
         {
             Formats = new[]
-                {
-                    string.Format("yyyy-MM-dd HH:mm:ss{0}000", CultureInfo.CurrentCulture.NumberFormat.CurrencyDecimalSeparator)
-                }
+            {
+                string.Format("yyyy-MM-dd HH:mm:ss{0}000", CultureInfo.CurrentCulture.NumberFormat.CurrencyDecimalSeparator)
+            }
         };
 
+        private readonly ExportDataJobMap<PBICloudDataset> _datasetJobs;
+        private readonly ExportDataJobMap<PBIDesktopReport> _reportJobs;
         private readonly IPBICloudService _pbicloudService;
 
         public ExportDataService(IPBICloudService pbicloudService)
         {
             _pbicloudService = pbicloudService;
+
+            _datasetJobs = new();
+            _reportJobs = new();
         }
 
-        public void ExportDelimitedTextFile(PBIDesktopReport report, ExportDelimitedTextSettings settings, CancellationToken cancellationToken)
+        public ExportDataJob ExportDelimitedTextFile(PBIDesktopReport report, ExportDelimitedTextSettings settings, CancellationToken cancellationToken)
         {
             var connectionString = ConnectionStringHelper.BuildForPBIDesktop(report.ServerName!);
+            var job = _reportJobs.AddNew(report);
+
             try
             {
-                ExportDelimitedTextFileImpl(settings, connectionString, report.DatabaseName, cancellationToken);
+                ExportDelimitedTextFileImpl(job, settings, connectionString, report.DatabaseName, cancellationToken);
+                job.SetCompleted();
+            }
+            catch (OperationCanceledException)
+            {
+                job.SetCanceled();
             }
             catch (IOException ex)
             {
+                job.SetFailed();
                 throw new BravoException(BravoProblem.ExportDataFileError, ex.Message, ex);
             }
+            finally
+            {
+                _reportJobs.Remove(report);
+            }
+
+            return job;
         }
 
-        public void ExportDelimitedTextFile(PBICloudDataset dataset, ExportDelimitedTextSettings settings, CancellationToken cancellationToken)
+        public ExportDataJob ExportDelimitedTextFile(PBICloudDataset dataset, ExportDelimitedTextSettings settings, CancellationToken cancellationToken)
         {
             var (connectionString, databaseName) = dataset.GetConnectionParameters(_pbicloudService.CurrentAccessToken);
+            var job = _datasetJobs.AddNew(dataset);
+
             try
             {
-                ExportDelimitedTextFileImpl(settings, connectionString, databaseName, cancellationToken);
+                ExportDelimitedTextFileImpl(job, settings, connectionString, databaseName, cancellationToken);
+                job.SetCompleted();
+            }
+            catch (OperationCanceledException)
+            {
+                job.SetCanceled();
             }
             catch (IOException ex)
             {
+                job.SetFailed();
                 throw new BravoException(BravoProblem.ExportDataFileError, ex.Message, ex);
             }
+            finally
+            {
+                _datasetJobs.Remove(dataset);
+            }
+
+            return job;
         }
 
-        public void ExportExcelFile(PBIDesktopReport report, ExportExcelSettings settings, CancellationToken cancellationToken)
+        public ExportDataJob ExportExcelFile(PBIDesktopReport report, ExportExcelSettings settings, CancellationToken cancellationToken)
         {
             var connectionString = ConnectionStringHelper.BuildForPBIDesktop(report.ServerName!);
+            var job = _reportJobs.AddNew(report);
+
             try
             {
-                ExportExcelFileImpl(settings, connectionString, report.DatabaseName, cancellationToken);
+                ExportExcelFileImpl(job, settings, connectionString, report.DatabaseName, cancellationToken);
+                job.SetCompleted();
+            }
+            catch (OperationCanceledException)
+            {
+                job.SetCanceled();
             }
             catch (IOException ex)
             {
+                job.SetFailed();
                 throw new BravoException(BravoProblem.ExportDataFileError, ex.Message, ex);
             }
+            finally
+            {
+                _reportJobs.Remove(report);
+            }
+
+            return job;
         }
 
-        public void ExportExcelFile(PBICloudDataset dataset, ExportExcelSettings settings, CancellationToken cancellationToken)
+        public ExportDataJob ExportExcelFile(PBICloudDataset dataset, ExportExcelSettings settings, CancellationToken cancellationToken)
         {
             var (connectionString, databaseName) = dataset.GetConnectionParameters(_pbicloudService.CurrentAccessToken);
+            var job = _datasetJobs.AddNew(dataset);
+
             try
             {
-                ExportExcelFileImpl(settings, connectionString, databaseName, cancellationToken);
+                ExportExcelFileImpl(job, settings, connectionString, databaseName, cancellationToken);
+                job.SetCompleted();
+            }
+            catch (OperationCanceledException)
+            {
+                job.SetCanceled();
             }
             catch (IOException ex)
             {
+                job.SetFailed();
                 throw new BravoException(BravoProblem.ExportDataFileError, ex.Message, ex);
             }
+            finally
+            {
+                _datasetJobs.Remove(dataset);
+            }
+
+            return job;
         }
 
-        private static void ExportDelimitedTextFileImpl(ExportDelimitedTextSettings settings, string? connectionString, string? databaseName, CancellationToken cancellationToken)
+        public ExportDataJob? QueryExportJob(PBIDesktopReport report)
+        {
+            _reportJobs.TryGet(report, out var job);
+
+            return job;
+        }
+
+        public ExportDataJob? QueryExportJob(PBICloudDataset dataset)
+        {
+            _datasetJobs.TryGet(dataset, out var job);
+
+            return job;
+        }
+
+        private static void ExportDelimitedTextFileImpl(ExportDataJob job, ExportDelimitedTextSettings settings, string? connectionString, string? databaseName, CancellationToken cancellationToken)
         {
             _ = connectionString ?? throw new ArgumentNullException(nameof(connectionString));
             _ = databaseName ?? throw new ArgumentNullException(nameof(databaseName));
@@ -119,32 +199,35 @@ namespace Sqlbi.Bravo.Services
 
             foreach (var tableName in settings.Tables)
             {
-                if (cancellationToken.IsCancellationRequested) 
-                    break;
-                
-                // TODO: if the SSAS instance supports TOPNSKIP then use that to query batches of rows
-                command.CommandText = $"EVALUATE '{ tableName }'";
+                cancellationToken.ThrowIfCancellationRequested();
 
-                var fileTableName = tableName.ReplaceInvalidFileNameChars();
-                var fileName = Path.ChangeExtension(fileTableName, "csv");
-                var path = Path.Combine(settings.ExportPath, fileName);
+                var table = job.AddNew(tableName);
+                {
+                    // TODO: if the SSAS instance supports TOPNSKIP then use that to query batches of rows
+                    command.CommandText = $"EVALUATE '{ tableName }'";
 
-                Encoding encoding = settings.UnicodeEncoding 
-                    ? new UnicodeEncoding() 
-                    : new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
+                    var fileTableName = tableName.ReplaceInvalidFileNameChars();
+                    var fileName = Path.ChangeExtension(fileTableName, "csv");
+                    var path = Path.Combine(settings.ExportPath, fileName);
 
-                using var streamWriter = new StreamWriter(path, append: false, encoding);
-                using var csvWriter = new CsvWriter(streamWriter, config);
-                using var dataReader = command.ExecuteReader(CommandBehavior.SingleResult);
-                //using var dataReader = CreateTestDataReader();
+                    Encoding encoding = settings.UnicodeEncoding
+                        ? new UnicodeEncoding()
+                        : new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
 
-                WriteData(csvWriter, dataReader, shouldQuote: settings.QuoteStringFields, cancellationToken);
+                    using var streamWriter = new StreamWriter(path, append: false, encoding);
+                    using var csvWriter = new CsvWriter(streamWriter, config);
+                    using var dataReader = command.ExecuteReader(CommandBehavior.SingleResult);
+                    //using var dataReader = CreateTestDataReader();
+
+                    WriteData(table, csvWriter, dataReader, shouldQuote: settings.QuoteStringFields, cancellationToken);
+                }
+                table.SetCompleted();
             }
 
-            static void WriteData(CsvWriter writer, IDataReader reader, bool shouldQuote, CancellationToken cancellationToken)
+            static void WriteData(ExportDataTable table, CsvWriter writer, IDataReader reader, bool shouldQuote, CancellationToken cancellationToken)
             {
                 // output dates using ISO 8601 format
-                writer.Context.TypeConverterOptionsCache.AddOptions(typeof(DateTime), options: DefaultDelimitedTextTypeConverterOptions);
+                writer.Context.TypeConverterOptionsCache.AddOptions(typeof(DateTime), options: _defaultDelimitedTextTypeConverterOptions);
 
                 // write header
                 for (int i = 0; i < reader.FieldCount; i++)
@@ -153,8 +236,10 @@ namespace Sqlbi.Bravo.Services
                 writer.NextRecord();
 
                 // write data
-                while (!cancellationToken.IsCancellationRequested && reader.Read())
+                while (reader.Read())
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
+
                     for (var i = 0; i < reader.FieldCount; i++)
                     {
                         var value = reader[i];
@@ -169,16 +254,17 @@ namespace Sqlbi.Bravo.Services
                         }
                     }
 
+                    table.Rows++;
                     writer.NextRecord();
                 }
             }
         }
 
-        private static void ExportExcelFileImpl(ExportExcelSettings settings, string? connectionString, string? databaseName, CancellationToken cancellationToken)
+        private static void ExportExcelFileImpl(ExportDataJob job, ExportExcelSettings settings, string? connectionString, string? databaseName, CancellationToken cancellationToken)
         {
             _ = connectionString ?? throw new ArgumentNullException(nameof(connectionString));
             _ = databaseName ?? throw new ArgumentNullException(nameof(databaseName));
-
+            
             var xlsxFile = new FileInfo(settings.ExportPath);
             Directory.CreateDirectory(path: xlsxFile.Directory?.FullName!);
 
@@ -194,23 +280,25 @@ namespace Sqlbi.Bravo.Services
 
             foreach (var tableName in settings.Tables)
             {
-                if (cancellationToken.IsCancellationRequested)
-                    break;
+                cancellationToken.ThrowIfCancellationRequested();
 
-                // TODO: if the SSAS instance supports TOPNSKIP then use that to query batches of rows
-                command.CommandText = $"EVALUATE '{ tableName }'";
-
-                using var dataReader = command.ExecuteReader(CommandBehavior.SingleResult);
-                //using var dataReader = CreateTestDataReader();
-
-                xlsxWriter.BeginWorksheet(name: tableName, splitRow: 1);
+                var table = job.AddNew(tableName);
                 {
-                    WriteData(xlsxWriter, dataReader, cancellationToken);
+                    // TODO: if the SSAS instance supports TOPNSKIP then use that to query batches of rows
+                    command.CommandText = $"EVALUATE '{ tableName }'";
+
+                    using var dataReader = command.ExecuteReader(CommandBehavior.SingleResult);
+                    //using var dataReader = CreateTestDataReader();
+
+                    xlsxWriter.BeginWorksheet(name: tableName, splitRow: 1);
+                    {
+                        WriteData(table, xlsxWriter, dataReader, cancellationToken);
+                    }
+                    xlsxWriter.SetAutoFilter(fromRow: 1, fromColumn: 1, xlsxWriter.CurrentRowNumber, dataReader.FieldCount);
                 }
-                xlsxWriter.SetAutoFilter(fromRow: 1, fromColumn: 1, xlsxWriter.CurrentRowNumber, dataReader.FieldCount);
             }
 
-            static void WriteData(XlsxWriter writer, IDataReader reader, CancellationToken cancellationToken)
+            static void WriteData(ExportDataTable table, XlsxWriter writer, IDataReader reader, CancellationToken cancellationToken)
             {
                 var headerStyle = new XlsxStyle(
                     font: new XlsxFont("Segoe UI", 9, Color.White, bold: true),
@@ -222,14 +310,16 @@ namespace Sqlbi.Bravo.Services
                 // write header
                 writer.SetDefaultStyle(headerStyle).BeginRow();
 
-                for (int i = 0; i < reader.FieldCount; i++)
+                for (var i = 0; i < reader.FieldCount; i++)
                     writer.Write(reader.GetName(i));
 
                 var rowCount = 1; // count header
 
                 // write data
-                while (!cancellationToken.IsCancellationRequested && reader.Read())
+                while (reader.Read())
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
+
                     writer.SetDefaultStyle(XlsxStyle.Default).BeginRow();
 
                     for (var i = 0; i < reader.FieldCount; i++)
@@ -273,10 +363,17 @@ namespace Sqlbi.Bravo.Services
                         }
                     }
 
-                    // break if we have reached the limit of an xlsx file
+                    table.Rows++;
+
                     if (++rowCount >= 999_999)
-                        break;
+                    {
+                        // Break and exit if we have reached the limit of an xlsx file
+                        table.SetTruncated();
+                        return;
+                    }
                 }
+
+                table.SetCompleted();
             }
         }
 
