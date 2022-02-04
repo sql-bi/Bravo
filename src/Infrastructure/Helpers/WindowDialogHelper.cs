@@ -1,13 +1,13 @@
 ﻿namespace Sqlbi.Bravo.Infrastructure.Helpers
 {
-    using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Infrastructure.Windows;
     using System;
+    using System.Diagnostics.CodeAnalysis;
     using System.Threading;
 
     internal static class WindowDialogHelper
     {
-        public static (bool canceled, string? path) OpenFileDialog(string defaultExt, CancellationToken cancellationToken)
+        public static bool OpenFileDialog(string defaultExt, [NotNullWhen(true)] out string? path, CancellationToken cancellationToken)
         {
             var dialogOwner = Win32WindowWrapper.CreateFrom(ProcessHelper.GetCurrentProcessMainWindowHandle());
             var dialogResult = System.Windows.Forms.DialogResult.None;
@@ -38,13 +38,19 @@
                 //var result = dialog2.ShowDialog(hWnd: Process.GetCurrentProcess().MainWindowHandle);
             }
 
-            var canceled = dialogResult == System.Windows.Forms.DialogResult.Cancel;
-            var path = dialog.FileName.NullIfEmpty();
-
-            return (canceled, path);
+            if (dialogResult == System.Windows.Forms.DialogResult.OK)
+            {
+                path = dialog.FileName;
+                return true;
+            }
+            else
+            {
+                path = null;
+                return false;
+            }
         }
 
-        public static (bool canceled, string? path) SaveFileDialog(string? fileName, string defaultExt, CancellationToken cancellationToken)
+        public static bool SaveFileDialog(string? fileName, string defaultExt, [NotNullWhen(true)] out string? path, CancellationToken cancellationToken)
         {
             var dialogOwner = Win32WindowWrapper.CreateFrom(ProcessHelper.GetCurrentProcessMainWindowHandle());
             var dialogResult = System.Windows.Forms.DialogResult.None;
@@ -74,13 +80,19 @@
                 //var result = dialog2.ShowDialog(hWnd: Process.GetCurrentProcess().MainWindowHandle);
             }
 
-            var canceled = dialogResult == System.Windows.Forms.DialogResult.Cancel;
-            var path = dialog.FileName.NullIfEmpty();
-
-            return (canceled, path);
+            if (dialogResult == System.Windows.Forms.DialogResult.OK)
+            {
+                path = dialog.FileName!;
+                return true;
+            }
+            else
+            {
+                path = null;
+                return false;
+            }
         }
 
-        public static (bool canceled, string? path) BrowseFolderDialog(CancellationToken cancellationToken)
+        public static bool BrowseFolderDialog([NotNullWhen(true)] out string? path, CancellationToken cancellationToken)
         {
             var dialogOwner = Win32WindowWrapper.CreateFrom(ProcessHelper.GetCurrentProcessMainWindowHandle());
             var dialogResult = System.Windows.Forms.DialogResult.None;
@@ -96,10 +108,16 @@
                 ProcessHelper.RunOnSTAThread(() => dialogResult = dialog.ShowDialog(dialogOwner));
             }
 
-            var canceled = dialogResult == System.Windows.Forms.DialogResult.Cancel;
-            var path = dialog.SelectedPath.NullIfEmpty();
-
-            return (canceled, path);
+            if (dialogResult == System.Windows.Forms.DialogResult.OK)
+            {
+                path = dialog.SelectedPath;
+                return true;
+            }
+            else
+            {
+                path = null;
+                return false;
+            }
         }
     }
 }

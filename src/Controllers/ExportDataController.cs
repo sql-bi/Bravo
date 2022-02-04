@@ -31,7 +31,7 @@
         /// Exports tables from a <see cref="PBIDesktopReport"/> using the provided <see cref="ExportDelimitedTextSettings"/> format settings 
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
-        /// <response code="204">Status204NoContent - User canceled action (e.g. a 'Cancel' button has been pressed on a dialog box)</response>
+        /// <response code="204">Status204NoContent - User canceled action (e.g. 'Cancel' button has been pressed on a dialog box)</response>
         [HttpPost]
         [ActionName("ExportCsvFromReport")]
         [Produces(MediaTypeNames.Application.Json)]
@@ -40,21 +40,22 @@
         [ProducesDefaultResponseType]
         public IActionResult ExportDelimitedTextFileFromPBIDesktopReport(ExportDelimitedTextFromPBIReportRequest request, CancellationToken cancellationToken)
         {
-            var (canceled, path) = WindowDialogHelper.BrowseFolderDialog(cancellationToken);
-            if (canceled)
-                return NoContent();
+            if (WindowDialogHelper.BrowseFolderDialog(out var path, cancellationToken))
+            {
+                request.Settings!.ExportPath = path;
+                var job = _exportDataService.ExportDelimitedTextFile(request.Report!, request.Settings!, cancellationToken);
 
-            request.Settings!.ExportPath = path!;
-            var job = _exportDataService.ExportDelimitedTextFile(request.Report!, request.Settings!, cancellationToken);
-
-            return Ok(job);
+                return Ok(job);
+            }
+            
+            return NoContent();
         }
 
         /// <summary>
         /// Exports tables from a <see cref="PBICloudDataset"/> using the provided <see cref="ExportDelimitedTextSettings"/> format settings 
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
-        /// <response code="204">Status204NoContent - User canceled action (e.g. a 'Cancel' button has been pressed on a dialog box)</response>
+        /// <response code="204">Status204NoContent - User canceled action (e.g. 'Cancel' button has been pressed on a dialog box)</response>
         /// <response code="401">Status401Unauthorized - Sign-in required</response>
         [HttpPost]
         [ActionName("ExportCsvFromDataset")]
@@ -68,21 +69,22 @@
             if (await _pbicloudService.IsSignInRequiredAsync())
                 return Unauthorized();
 
-            var (canceled, path) = WindowDialogHelper.BrowseFolderDialog(cancellationToken);
-            if (canceled)
-                return NoContent();
+            if (WindowDialogHelper.BrowseFolderDialog(out var path, cancellationToken))
+            {
+                request.Settings!.ExportPath = path!;
+                var job = _exportDataService.ExportDelimitedTextFile(request.Dataset!, request.Settings!, cancellationToken);
 
-            request.Settings!.ExportPath = path!;
-            var job = _exportDataService.ExportDelimitedTextFile(request.Dataset!, request.Settings!, cancellationToken);
-            
-            return Ok(job);
+                return Ok(job);
+            }
+
+            return NoContent();
         }
 
         /// <summary>
         /// Exports tables from a <see cref="PBIDesktopReport"/> using the provided <see cref="ExportExcelSettings"/> format settings 
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
-        /// <response code="204">Status204NoContent - User canceled action (e.g. a 'Cancel' button has been pressed on a dialog box)</response>
+        /// <response code="204">Status204NoContent - User canceled action (e.g. 'Cancel' button has been pressed on a dialog box)</response>
         [HttpPost]
         [ActionName("ExportXlsxFromReport")]
         [Produces(MediaTypeNames.Application.Json)]
@@ -91,14 +93,15 @@
         [ProducesDefaultResponseType]
         public IActionResult ExportExcelFileFromPBIDesktopReport(ExportExcelFromPBIReportRequest request, CancellationToken cancellationToken)
         {
-            var (canceled, path) = WindowDialogHelper.SaveFileDialog(fileName: request.Report!.ReportName, defaultExt: "XLSX", cancellationToken);
-            if (canceled)
-                return NoContent();
+            if (WindowDialogHelper.SaveFileDialog(fileName: request.Report!.ReportName, defaultExt: "XLSX", out var path, cancellationToken))
+            {
+                request.Settings!.ExportPath = path;
+                var job = _exportDataService.ExportExcelFile(request.Report, request.Settings, cancellationToken);
 
-            request.Settings!.ExportPath = path!;
-            var job = _exportDataService.ExportExcelFile(request.Report, request.Settings, cancellationToken);
+                return Ok(job);
+            }
 
-            return Ok(job);
+            return NoContent();
         }
 
         /// <summary>
@@ -119,14 +122,15 @@
             if (await _pbicloudService.IsSignInRequiredAsync())
                 return Unauthorized();
 
-            var (canceled, path) = WindowDialogHelper.SaveFileDialog(fileName: request.Dataset!.DisplayName, defaultExt: "XLSX", cancellationToken);
-            if (canceled)
-                return NoContent();
+            if (WindowDialogHelper.SaveFileDialog(fileName: request.Dataset!.DisplayName, defaultExt: "XLSX", out var path, cancellationToken))
+            {
+                request.Settings!.ExportPath = path;
+                var job = _exportDataService.ExportExcelFile(request.Dataset, request.Settings, cancellationToken);
 
-            request.Settings!.ExportPath = path!;
-            var job = _exportDataService.ExportExcelFile(request.Dataset, request.Settings, cancellationToken);
+                return Ok(job);
+            }
 
-            return Ok(job);
+            return NoContent();
         }
 
         /// <summary>

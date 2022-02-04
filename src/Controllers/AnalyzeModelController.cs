@@ -1,17 +1,17 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Sqlbi.Bravo.Infrastructure.Helpers;
-using Sqlbi.Bravo.Models;
-using Sqlbi.Bravo.Services;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Net.Mime;
-using System.Threading;
-using System.Threading.Tasks;
-
-namespace Sqlbi.Bravo.Controllers
+﻿namespace Sqlbi.Bravo.Controllers
 {
+    using Microsoft.AspNetCore.Http;
+    using Microsoft.AspNetCore.Mvc;
+    using Sqlbi.Bravo.Infrastructure.Helpers;
+    using Sqlbi.Bravo.Models;
+    using Sqlbi.Bravo.Services;
+    using System;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Net.Mime;
+    using System.Threading;
+    using System.Threading.Tasks;
+
     /// <summary>
     /// Analyze model controller
     /// </summary>
@@ -141,44 +141,45 @@ namespace Sqlbi.Bravo.Controllers
         /// Returns a VPAX file stream from an active PBIDesktop report
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
+        /// <response code="204">Status204NoContent - User canceled action (e.g. 'Cancel' button has been pressed on a dialog box)</response>
         [HttpPost]
         [ActionName("ExportVpaxFromReport")]
         [Consumes(MediaTypeNames.Application.Json)]
         [Produces(MediaTypeNames.Application.Json)]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ExportResult))]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesDefaultResponseType]
         public IActionResult ExportVpaxFromPBIDesktopReport(PBIDesktopReport report, CancellationToken cancellationToken)
         {
-            var (canceled, path) = WindowDialogHelper.SaveFileDialog(fileName: report.ReportName, defaultExt: "VPAX", cancellationToken);
-            if (!canceled)
+            if (WindowDialogHelper.SaveFileDialog(fileName: report.ReportName, defaultExt: "VPAX", out var path, cancellationToken))
             {
                 using var stream = _pbidesktopService.ExportVpax(report, includeTomModel: false, includeVpaModel: false, readStatisticsFromData: false, sampleRows: 0);
-
+                
                 if (!cancellationToken.IsCancellationRequested)
                 {
-                    using var fileStream = System.IO.File.Create(path!);
+                    using var fileStream = System.IO.File.Create(path);
                     stream.Seek(0, SeekOrigin.Begin);
                     stream.CopyTo(fileStream);
+
+                    return Ok();
                 }
             }
 
-            return Ok(new ExportResult
-            {
-                Canceled = canceled,
-                Path = path
-            });
+            return NoContent();
         }
 
         /// <summary>
         /// Returns a VPAX file stream from a PBICloud dataset
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
+        /// <response code="204">Status204NoContent - User canceled action (e.g. 'Cancel' button has been pressed on a dialog box)</response>
         /// <response code="401">Status401Unauthorized - Sign-in required</response>
         [HttpPost]
         [ActionName("ExportVpaxFromDataset")]
         [Consumes(MediaTypeNames.Application.Json)]
         [Produces(MediaTypeNames.Application.Json)]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ExportResult))]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesDefaultResponseType]
         public async Task<IActionResult> ExportVpaxFromPBICloudDataset(PBICloudDataset dataset, CancellationToken cancellationToken)
@@ -186,24 +187,21 @@ namespace Sqlbi.Bravo.Controllers
             if (await _pbicloudService.IsSignInRequiredAsync())
                 return Unauthorized();
 
-            var (canceled, path) = WindowDialogHelper.SaveFileDialog(fileName: dataset.DisplayName, defaultExt: "VPAX", cancellationToken);
-            if (!canceled)
+            if (WindowDialogHelper.SaveFileDialog(fileName: dataset.DisplayName, defaultExt: "VPAX", out var path, cancellationToken))
             {
                 using var stream = _pbicloudService.ExportVpax(dataset, includeTomModel: false, includeVpaModel: false, readStatisticsFromData: false, sampleRows: 0);
 
                 if (!cancellationToken.IsCancellationRequested)
                 {
-                    using var fileStream = System.IO.File.Create(path!);
+                    using var fileStream = System.IO.File.Create(path);
                     stream.Seek(0, SeekOrigin.Begin);
                     stream.CopyTo(fileStream);
+
+                    return Ok();
                 }
             }
 
-            return Ok(new ExportResult
-            {
-                Canceled = canceled,
-                Path = path
-            });
+            return NoContent();
         }
     }
 }
