@@ -40,6 +40,50 @@
         //[JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public WeeklyType? WeeklyType { get; set; }
 
+        public void CopyTo(TemplateConfiguration templateConfiguration)
+        {
+            SetIntVariable(nameof(FirstFiscalMonth), FirstFiscalMonth);
+            SetIntVariable(nameof(FirstDayOfWeek), (int?)FirstDayOfWeek);
+            SetIntVariable(nameof(MonthsInYear), MonthsInYear);
+            SetStringVariable(nameof(WorkingDayType), WorkingDayType);
+            SetStringVariable(nameof(NonWorkingDayType), NonWorkingDayType);
+            SetIntVariable(nameof(TypeStartFiscalYear), (int?)TypeStartFiscalYear);
+            SetStringVariable(nameof(QuarterWeekType), (int?)QuarterWeekType);
+            SetStringVariable(nameof(WeeklyType), WeeklyType);
+
+            void SetStringVariable<T>(string parameterName, T? value)
+            {
+                SetVariable(parameterName, value, "\"");
+            }
+
+            void SetIntVariable<T>(string parameterName, T? value)
+            {
+                SetVariable(parameterName, value, "");
+            }
+
+            void SetVariable<T>(string parameterName, T? value, string quote)
+            {
+                if (value is null)
+                    return;
+
+                string key = $"__{parameterName}";
+
+                if (!templateConfiguration.DefaultVariables.ContainsKey(key))
+                {
+                    throw new Exception($"Invalid { key } variable.");
+                }
+
+                string? variableValue = value.ToString();
+
+                if (variableValue is null)
+                {
+                    throw new Exception($"Null value for { key } variable.");
+                }
+
+                templateConfiguration.DefaultVariables[key] = $"{quote}{variableValue}{quote}";
+            }
+        }
+
         public static DateDefaults CreateFrom(TemplateConfiguration templateConfiguration)
         {
             var defaults = new DateDefaults

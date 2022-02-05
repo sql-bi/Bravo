@@ -28,7 +28,7 @@
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
         [HttpGet]
-        [ActionName("GetConfigurations")]
+        [ActionName("GetDateConfigurations")]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<DateConfiguration>))]
         [ProducesDefaultResponseType]
@@ -37,6 +37,22 @@
             var configurations = _manageDatesService.GetConfigurations();
 
             return Ok(configurations);
+        }
+
+        /// <summary>
+        /// ??
+        /// </summary>
+        /// <response code="200">Status200OK - Success</response>
+        [HttpGet]
+        [ActionName("ApplyDateConfiguration")]
+        [Produces(MediaTypeNames.Application.Json)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesDefaultResponseType]
+        public IActionResult ApplyConfiguration(DateConfiguration configuration)
+        {
+            var modelChanges = _manageDatesService.Apply(configuration, commitChanges: false, previewRows: 5);
+
+            return Ok(modelChanges);
         }
     }
 }
