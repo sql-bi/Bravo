@@ -1,6 +1,7 @@
 ﻿namespace Sqlbi.Bravo.Infrastructure.Extensions
 {
     using System;
+    using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
     using System.IO;
     using System.Text;
@@ -50,6 +51,11 @@
         public static string? NullIfWhiteSpace(this string? value)
         {
             return string.IsNullOrWhiteSpace(value) ? null : value;
+        }
+
+        public static bool IsNullOrEmpty([NotNullWhen(false)] this string? value)
+        {
+            return string.IsNullOrEmpty(value);
         }
 
         public static string FormatInvariant(this string format, object? arg0)

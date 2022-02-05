@@ -23,6 +23,12 @@
         [JsonPropertyName("customOptions")]
         public JsonElement? CustomOptions { get; set; }
 
+        /// <summary>
+        /// ManageDates WIP
+        /// </summary>
+        [JsonPropertyName("manageDatesTemplatePath")]
+        public string? ManageDatesTemplatePath { get; set; }
+
         public static BravoOptions CreateFromUserPreferences()
         {
             var options = new BravoOptions
@@ -32,6 +38,7 @@
                 CustomOptions = UserPreferences.Current.CustomOptions,
                 UpdateChannel = UserPreferences.Current.UpdateChannel,
                 Theme = UserPreferences.Current.Theme,
+                ManageDatesTemplatePath = UserPreferences.Current.ManageDatesTemplatePath,
             };
 
             return options;
@@ -44,6 +51,7 @@
             UserPreferences.Current.CustomOptions = CustomOptions;
             UserPreferences.Current.UpdateChannel = UpdateChannel;
             UserPreferences.Current.Theme = Theme;
+            UserPreferences.Current.ManageDatesTemplatePath = ManageDatesTemplatePath;
             UserPreferences.Save();
         }
     }

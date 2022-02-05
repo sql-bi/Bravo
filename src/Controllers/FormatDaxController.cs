@@ -1,20 +1,20 @@
-﻿using Dax.Formatter;
-using Dax.Formatter.Models;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Sqlbi.Bravo.Infrastructure;
-using Sqlbi.Bravo.Infrastructure.Extensions;
-using Sqlbi.Bravo.Models;
-using Sqlbi.Bravo.Services;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Mime;
-using System.Threading.Tasks;
-
-namespace Sqlbi.Bravo.Controllers
+﻿namespace Sqlbi.Bravo.Controllers
 {
+    using Dax.Formatter;
+    using Dax.Formatter.Models;
+    using Microsoft.AspNetCore.Http;
+    using Microsoft.AspNetCore.Mvc;
+    using Sqlbi.Bravo.Infrastructure;
+    using Sqlbi.Bravo.Infrastructure.Extensions;
+    using Sqlbi.Bravo.Models;
+    using Sqlbi.Bravo.Services;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Net.Mime;
+    using System.Threading.Tasks;
+
     /// <summary>
-    /// Format DAX controller
+    /// FormatDax module controller
     /// </summary>
     /// <response code="400">Status400BadRequest - See the "instance" and "detail" properties to identify the specific occurrence of the problem</response>
     [Route("api/[action]")]

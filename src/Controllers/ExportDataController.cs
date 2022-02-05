@@ -10,7 +10,7 @@
     using System.Threading.Tasks;
 
     /// <summary>
-    /// Export data controller
+    /// ExportData module controller
     /// </summary>
     /// <response code="400">Status400BadRequest - See the "instance" and "detail" properties to identify the specific occurrence of the problem</response>
     [Route("api/[action]")]
