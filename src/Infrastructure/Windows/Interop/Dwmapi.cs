@@ -34,6 +34,6 @@
         }
 
         [DllImport(ExternDll.Dwmapi, ExactSpelling = true)]
-        public static extern HRESULT DwmSetWindowAttribute(IntPtr hWnd, DWMWINDOWATTRIBUTE dwAttribute, [In] IntPtr pvAttribute, int cbAttribute);
+        public static extern int DwmSetWindowAttribute(IntPtr hWnd, DWMWINDOWATTRIBUTE dwAttribute, [In] IntPtr pvAttribute, int cbAttribute);
     }
 }

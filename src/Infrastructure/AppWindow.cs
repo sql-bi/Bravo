@@ -25,7 +25,6 @@
         private readonly StartupSettings _startupSettings;
 
         private AppWindowSubclass? _windowSubclass;
-        private bool _disposed;
 
         public AppWindow(IHost host)
         {
@@ -110,6 +109,8 @@
 
         private void OnWindowCreated(object? sender, EventArgs e)
         {
+            ThemeHelper.InitializeTheme(_window.WindowHandle, UserPreferences.Current.Theme);
+
             _windowSubclass = AppWindowSubclass.Hook(_window);
 
             // Every time a Photino application starts up, Photino.Native attempts to creates a shortcut in Windows start menu.
@@ -192,34 +193,26 @@
             // HACK: see issue https://github.com/tryphotino/photino.NET/issues/87
             // Wait a bit in order to ensure that the PhotinoWindow message loop is started
             // This is to prevent the .NET Runtime corecrl.dll fault with a win32 access violation
-            _ = Task.Factory.StartNew(() =>
+            // This should be moved to the 'OnWindowCreated' handler after the issue has been resolved
+            if (!_startupSettings.IsEmpty)
             {
-                try
+                _ = Task.Factory.StartNew(() =>
                 {
-                    Thread.Sleep(2_000);
-
-                    // This should be moved to the 'OnWindowCreating' handler after the issue has been resolved
+                    try
                     {
-                        ThemeHelper.AllowDarkModeForWindow(_window.WindowHandle);
-                        ThemeHelper.ChangeStartupTheme(_window.WindowHandle, UserPreferences.Current.Theme);
-                    }
+                        Thread.Sleep(2_000);
 
-                    // This should be moved to the 'OnWindowCreated' handler after the issue has been resolved
+                        var startupMessage = AppInstanceStartupMessage.CreateFrom(_startupSettings);
+                        var webMessageString = startupMessage.ToWebMessageString();
+
+                        _window.SendWebMessage(webMessageString);
+                    }
+                    catch
                     {
-                        if (!_startupSettings.IsEmpty)
-                        {
-                            var startupMessage = AppInstanceStartupMessage.CreateFrom(_startupSettings);
-                            var webMessageString = startupMessage.ToWebMessageString();
-
-                            _window.SendWebMessage(webMessageString);
-                        }
+                        // this is a temporary hack so here we can silently swallow the exception
                     }
-                }
-                catch
-                {
-                    // this is a temporary hack so here we can silently swallow the exception
-                }
-            });
+                });
+            }
             // HACK END <<
 
             _window.WaitForClose();
@@ -227,23 +220,9 @@
 
         #region IDisposable
 
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!_disposed)
-            {
-                if (disposing)
-                {
-                    _windowSubclass?.Dispose();
-                }
-
-                _disposed = true;
-            }
-        }
-
         public void Dispose()
         {
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
+            _windowSubclass?.Dispose();
         }
 
         #endregion

@@ -4,7 +4,7 @@
     internal enum WindowMessage: uint
     {
         //WM_NULL = 0,
-        //WM_CREATE = 1,
+        WM_CREATE = 1,
         //WM_DESTROY = 2,
         //WM_MOVE = 3,
         //WM_SIZE = 5,
@@ -79,7 +79,7 @@
         //WM_NCCALCSIZE = 131,
         //WM_NCHITTEST = 132,
         //WM_NCPAINT = 133,
-        //WM_NCACTIVATE = 134,
+        WM_NCACTIVATE = 134,
         //WM_GETDLGCODE = 135,
         //WM_SYNCPAINT = 136,
         //WM_MOUSEQUERY = 155,
