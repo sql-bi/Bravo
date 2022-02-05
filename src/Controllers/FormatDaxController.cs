@@ -6,7 +6,8 @@
     using Microsoft.AspNetCore.Mvc;
     using Sqlbi.Bravo.Infrastructure;
     using Sqlbi.Bravo.Infrastructure.Extensions;
-    using Sqlbi.Bravo.Models;
+    using Sqlbi.Bravo.Models.AnalyzeModel;
+    using Sqlbi.Bravo.Models.FormatDax;
     using Sqlbi.Bravo.Services;
     using System.Collections.Generic;
     using System.Linq;

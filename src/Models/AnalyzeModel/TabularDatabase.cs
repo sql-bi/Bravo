@@ -1,8 +1,8 @@
-﻿using System.Collections.Generic;
-using System.Text.Json.Serialization;
-
-namespace Sqlbi.Bravo.Models
+﻿namespace Sqlbi.Bravo.Models.AnalyzeModel
 {
+    using System.Collections.Generic;
+    using System.Text.Json.Serialization;
+
     public class TabularDatabase
     {
         [JsonPropertyName("model")]

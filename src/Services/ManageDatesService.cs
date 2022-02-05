@@ -8,7 +8,7 @@
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
-    using DaxTemplate = Dax.Template;
+    using Dax.Template;
 
     public interface IManageDatesService
     {
@@ -25,7 +25,7 @@
          
             if (Directory.Exists(path))
             {
-                var configurations = DaxTemplate.Package.FindTemplates(path).Select(DaxTemplate.Package.LoadFrom).Select((package) =>
+                var configurations = Package.FindTemplateFiles(path).Select(Package.LoadFromFile).Select((package) =>
                 {
                     var configuration = DateConfiguration.CreateFrom(package.Configuration);
                     return configuration;
@@ -39,13 +39,20 @@
 
         public ModelChanges? Apply(DateConfiguration configuration, bool commitChanges, int previewRows = 5)
         {
-            var path = configuration.TemplateId ?? throw new BravoUnexpectedException("configuration.TemplateId is null");
+            Package? templatePackage;
+            Uri templateUri = new(configuration.TemplateUri!, UriKind.Absolute);
 
-            var package = DaxTemplate.Package.LoadFrom(path);
+            if (templateUri.Scheme.Equals(Uri.UriSchemeFile))
             {
-                configuration.CopyTo(package.Configuration);
+                templatePackage = Package.LoadFromFile(templateUri.LocalPath);
+                configuration.CopyTo(templatePackage.Configuration);
             }
-            var engine = new DaxTemplate.Engine(package);
+            else
+            {
+                throw new BravoUnexpectedException("configuration.TemplateUri.Scheme unknown");
+            }
+
+            var templateEngine = new Engine(templatePackage);
 
             //engine.ApplyTemplates(model);
 

@@ -1,8 +1,7 @@
-﻿using System;
-using System.Text.Json.Serialization;
-
-namespace Sqlbi.Bravo.Models
+﻿namespace Sqlbi.Bravo.Models.AnalyzeModel
 {
+    using System.Text.Json.Serialization;
+
     public class TabularMeasure
     {
         [JsonPropertyName("etag")]

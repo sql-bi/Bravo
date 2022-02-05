@@ -10,6 +10,7 @@
     using Sqlbi.Bravo.Infrastructure.Helpers;
     using Sqlbi.Bravo.Infrastructure.Services.ExportData;
     using Sqlbi.Bravo.Models;
+    using Sqlbi.Bravo.Models.ExportData;
     using System;
     using System.Data;
     using System.Drawing;

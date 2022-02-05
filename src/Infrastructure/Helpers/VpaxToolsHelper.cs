@@ -4,6 +4,7 @@
     using Dax.ViewModel;
     using Dax.Vpax.Tools;
     using Sqlbi.Bravo.Models;
+    using Sqlbi.Bravo.Models.AnalyzeModel;
     using System;
     using System.IO;
     using System.Linq;

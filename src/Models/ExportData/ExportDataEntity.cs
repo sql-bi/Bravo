@@ -1,4 +1,4 @@
-﻿namespace Sqlbi.Bravo.Models
+﻿namespace Sqlbi.Bravo.Models.ExportData
 {
     using System.Collections.Generic;
     using System.Text.Json.Serialization;

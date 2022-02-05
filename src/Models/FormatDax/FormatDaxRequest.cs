@@ -1,10 +1,11 @@
-﻿using Dax.Formatter.Models;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Text.Json.Serialization;
-
-namespace Sqlbi.Bravo.Models
+﻿namespace Sqlbi.Bravo.Models.FormatDax
 {
+    using Dax.Formatter.Models;
+    using Sqlbi.Bravo.Models.AnalyzeModel;
+    using System.Collections.Generic;
+    using System.ComponentModel.DataAnnotations;
+    using System.Text.Json.Serialization;
+
     public class FormatDaxRequest
     {
         [Required]

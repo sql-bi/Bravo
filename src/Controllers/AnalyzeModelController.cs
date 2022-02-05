@@ -4,6 +4,7 @@
     using Microsoft.AspNetCore.Mvc;
     using Sqlbi.Bravo.Infrastructure.Helpers;
     using Sqlbi.Bravo.Models;
+    using Sqlbi.Bravo.Models.AnalyzeModel;
     using Sqlbi.Bravo.Services;
     using System;
     using System.Collections.Generic;

@@ -1,7 +1,7 @@
-﻿using System.Text.Json.Serialization;
-
-namespace Sqlbi.Bravo.Models
+﻿namespace Sqlbi.Bravo.Models.FormatDax
 {
+    using System.Text.Json.Serialization;
+
     public class DatabaseUpdateResult
     {
         /// <summary>

@@ -43,7 +43,7 @@
         /// ??
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
-        [HttpGet]
+        [HttpPost]
         [ActionName("ApplyDateConfiguration")]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK)]

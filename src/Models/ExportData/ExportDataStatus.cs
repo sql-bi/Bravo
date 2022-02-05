@@ -1,4 +1,4 @@
-﻿namespace Sqlbi.Bravo.Models
+﻿namespace Sqlbi.Bravo.Models.ExportData
 {
     public enum ExportDataStatus
     {

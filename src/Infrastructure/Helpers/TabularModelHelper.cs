@@ -1,15 +1,15 @@
-﻿using Sqlbi.Bravo.Infrastructure.Extensions;
-using Sqlbi.Bravo.Infrastructure.Security;
-using Sqlbi.Bravo.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using SSAS = Microsoft.AnalysisServices;
-using TOM = Microsoft.AnalysisServices.Tabular;
-
-namespace Sqlbi.Bravo.Infrastructure.Helpers
+﻿namespace Sqlbi.Bravo.Infrastructure.Helpers
 {
+    using Sqlbi.Bravo.Infrastructure.Extensions;
+    using Sqlbi.Bravo.Infrastructure.Security;
+    using Sqlbi.Bravo.Models.FormatDax;
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Text;
+    using SSAS = Microsoft.AnalysisServices;
+    using TOM = Microsoft.AnalysisServices.Tabular;
+
     internal static class TabularModelHelper
     {
         /// <summary>

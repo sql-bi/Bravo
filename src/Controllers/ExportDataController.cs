@@ -4,6 +4,7 @@
     using Microsoft.AspNetCore.Mvc;
     using Sqlbi.Bravo.Infrastructure.Helpers;
     using Sqlbi.Bravo.Models;
+    using Sqlbi.Bravo.Models.ExportData;
     using Sqlbi.Bravo.Services;
     using System.Net.Mime;
     using System.Threading;

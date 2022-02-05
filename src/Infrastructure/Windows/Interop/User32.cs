@@ -124,7 +124,7 @@
         [DllImport(ExternDll.User32, CharSet = CharSet.Auto)]
         public static extern IntPtr SendMessage(IntPtr hWnd, WindowMessage uMsg, int wParam, ref COPYDATASTRUCT lParam);
 
-        [DllImport(ExternDll.User32, CharSet = CharSet.Auto)]
+        [DllImport(ExternDll.User32, CharSet = CharSet.Unicode)]
         public static extern IntPtr SendMessage(IntPtr hWnd, WindowMessage uMsg, int wParam, StringBuilder lParam);
 
         [DllImport(ExternDll.User32, CharSet = CharSet.Auto)]
@@ -133,7 +133,7 @@
         [DllImport(ExternDll.User32, CharSet = CharSet.Auto)]
         public static extern IntPtr SendMessage(IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam);
 
-        [DllImport(ExternDll.User32, CharSet = CharSet.Auto)]
+        [DllImport(ExternDll.User32, CharSet = CharSet.Unicode)]
         public static extern int MessageBox(IntPtr hWnd, string lpText, string lpCaption, uint uType);
 
         [DllImport(ExternDll.User32)]

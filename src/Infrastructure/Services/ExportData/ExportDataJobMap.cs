@@ -1,7 +1,7 @@
 ﻿namespace Sqlbi.Bravo.Infrastructure.Services.ExportData
 {
     using Sqlbi.Bravo.Infrastructure.Models;
-    using Sqlbi.Bravo.Models;
+    using Sqlbi.Bravo.Models.ExportData;
     using System.Collections.Concurrent;
     using System.Diagnostics.CodeAnalysis;
 
