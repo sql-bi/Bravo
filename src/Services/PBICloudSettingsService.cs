@@ -1,8 +1,8 @@
 ﻿namespace Sqlbi.Bravo.Services
 {
     using Sqlbi.Bravo.Infrastructure;
+    using Sqlbi.Bravo.Infrastructure.Contracts.PBICloud;
     using Sqlbi.Bravo.Infrastructure.Extensions;
-    using Sqlbi.Bravo.Infrastructure.Models.PBICloud;
     using System;
     using System.IO;
     using System.IO.Compression;

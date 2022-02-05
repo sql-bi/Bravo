@@ -1,4 +1,4 @@
-﻿namespace Sqlbi.Bravo.Infrastructure.Models.PBICloud
+﻿namespace Sqlbi.Bravo.Infrastructure.Contracts.PBICloud
 {
     using System;
     using System.Collections.Generic;

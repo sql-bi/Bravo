@@ -1,9 +1,9 @@
-﻿using System.Collections.Generic;
+﻿#nullable disable
 
-#nullable disable
-
-namespace Sqlbi.Bravo.Infrastructure.Models.PBICloud
+namespace Sqlbi.Bravo.Infrastructure.Contracts.PBICloud
 {
+    using System.Collections.Generic;
+
     public class GlobalServiceEnvironmentService
     {
         public string Name { get; set; }

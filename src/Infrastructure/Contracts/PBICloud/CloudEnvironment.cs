@@ -1,12 +1,11 @@
 ﻿#nullable disable
 
-using System;
-using System.Diagnostics;
-
-namespace Sqlbi.Bravo.Infrastructure.Models.PBICloud
+namespace Sqlbi.Bravo.Infrastructure.Contracts.PBICloud
 {
+    using System;
+    using System.Diagnostics;
 
-    [DebuggerDisplay("Name = {Name}, AuthorityUri = {AuthorityUri}")]
+    [DebuggerDisplay("{Name}, {AuthorityUri}")]
     public class CloudEnvironment
     { 
         public CloudEnvironmentType Name { get; init; }

@@ -1,10 +1,10 @@
-﻿using System.Collections.Generic;
-using System.Diagnostics;
+﻿#nullable disable
 
-#nullable disable
-
-namespace Sqlbi.Bravo.Infrastructure.Models.PBICloud
+namespace Sqlbi.Bravo.Infrastructure.Contracts.PBICloud
 {
+    using System.Collections.Generic;
+    using System.Diagnostics;
+
     [DebuggerDisplay("{CloudName}")]
     public class GlobalServiceEnvironment
     {

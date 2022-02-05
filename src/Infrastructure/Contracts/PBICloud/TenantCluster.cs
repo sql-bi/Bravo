@@ -1,6 +1,6 @@
 ﻿#nullable disable
 
-namespace Sqlbi.Bravo.Infrastructure.Models.PBICloud
+namespace Sqlbi.Bravo.Infrastructure.Contracts.PBICloud
 {
     public class TenantCluster
     {
