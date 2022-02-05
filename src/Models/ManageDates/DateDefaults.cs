@@ -1,5 +1,8 @@
 ﻿namespace Sqlbi.Bravo.Models.ManageDates
 {
+    using Dax.Template.Tables;
+    using Sqlbi.Bravo.Infrastructure.Extensions;
+    using System;
     using System.Text.Json.Serialization;
 
     public class DateDefaults
@@ -36,6 +39,64 @@
         [JsonConverter(typeof(JsonStringEnumConverter))]
         //[JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public WeeklyType? WeeklyType { get; set; }
+
+        public static DateDefaults CreateFrom(TemplateConfiguration templateConfiguration)
+        {
+            var defaults = new DateDefaults
+            {
+                FirstFiscalMonth = GetIntParameter(nameof(FirstFiscalMonth)),
+                FirstDayOfWeek = (DayOfWeek?)GetIntParameter(nameof(FirstDayOfWeek)),
+                MonthsInYear = GetIntParameter(nameof(MonthsInYear)),
+                WorkingDayType = GetQuotedStringParameter(nameof(WorkingDayType)),
+                NonWorkingDayType = GetQuotedStringParameter(nameof(NonWorkingDayType)),
+                TypeStartFiscalYear = (TypeStartFiscalYear?)GetIntParameter(nameof(TypeStartFiscalYear)),
+            };
+
+            var quarterWeekTypeParameter = GetQuotedStringParameter(nameof(QuarterWeekType));
+            if (Enum.TryParse(quarterWeekTypeParameter, out QuarterWeekType quarterWeekType)) 
+                defaults.QuarterWeekType = quarterWeekType;
+
+            var weeklyTypeParameter = GetQuotedStringParameter(nameof(WeeklyType));
+            if (Enum.TryParse(weeklyTypeParameter, out WeeklyType weeklyType)) 
+                defaults.WeeklyType = weeklyType;
+
+            return defaults;
+
+            int? GetIntParameter(string? parameterName)
+            {
+                var value = GetStringParameter(parameterName);
+                if (value == null)
+                    return null;
+
+                if (int.TryParse(value, out var valueInt))
+                    return valueInt;
+
+                return null;
+            }
+
+            string? GetStringParameter(string? parameterName)
+            {
+                if (parameterName.IsNullOrEmpty())
+                    return null;
+
+                if (templateConfiguration.DefaultVariables.TryGetValue($"__{ parameterName }", out string? value))
+                    return value;
+
+                return null;
+            }
+
+            string? GetQuotedStringParameter(string? parameterName)
+            {
+                var value = GetStringParameter(parameterName);
+                if (value.IsNullOrEmpty())
+                    return null;
+
+                if ((value[0] == '"') && (value[^1] == '"'))
+                    value = value[1..^1];
+
+                return value;
+            }
+        }
     }
 
     public enum DayOfWeek
