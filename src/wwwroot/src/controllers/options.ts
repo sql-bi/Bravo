@@ -54,10 +54,10 @@ export enum DaxFormatterSpacingStyle {
 }
 
 export enum UpdateChannelType {
-    Stable = 0,
-    //Beta = 1,
-    Dev = 2,
-    //Canary = 3,
+    Stable = "Stable",
+    //Beta = "Beta",
+    Dev = "Dev",
+    //Canary = "Canary",
 }
 
 type optionsMode = "host" | "browser"
