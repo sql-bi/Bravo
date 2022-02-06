@@ -28,6 +28,9 @@ export class ErrorScene extends BackableScene {
     render() {
         super.render();
         
+        const issueTitle = "Provide a meaningful issue title";
+        const issueBody = "Provide a detailed explanation of the issue in English.\n\n---\n" + this.error.toString();
+
         let html = `
             <div class="error">
                 <div class="icon icon-alert"></div>
@@ -47,7 +50,10 @@ export class ErrorScene extends BackableScene {
                     ${this.error.traceId ? ` - ${i18n(strings.traceId)}: ${this.error.traceId}` : ""}
                 </p>
 
-                <p><span class="copy-error link">${i18n(strings.copyErrorDetails)}</span></p>
+                <p>
+                    <span class="copy-error link">${i18n(strings.copyErrorDetails)}</span> &nbsp;&nbsp; 
+                    <span class="create-issue link" data-href="https://github.com/sql-bi/bravo/issues/new?labels=bug&title=${encodeURIComponent(issueTitle)}&body=${encodeURIComponent(issueBody)}">${i18n(strings.createIssue)}</span>
+                </p>
             
                 ${ this.onRetry ? `
                     <p><div class="retry-call button button-alt">${i18n(strings.errorRetry)}</div></p>

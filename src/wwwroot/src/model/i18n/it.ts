@@ -61,6 +61,7 @@ const locale: Locale = {
         [_.copyErrorDetails]: "Copia Errore",
         [_.copiedErrorDetails]: "Copiato!",
         [_.copyFormulaCtrlTitle]: "Copia la misura formattata",
+        [_.createIssue]: "Segnala Errore",
         [_.cut]: "Taglia",
         [_.dataUsageLink]: "Come sono usati i tuoi dati?", 
         [_.dataUsageMessage]: `Per formattare il codice DAX, Bravo deve inviare le misure di questo modello a DAX Formatter (un servizio gestito da SQLBI) attraverso una connessione sicura.<p><strong>Il servizio non salva i tuoi dati da nessuna parte.</strong></p><p>Alcune informazioni, come le funzioni DAX più usate, un indice di complessità e la media della lunghezza delle query ricevute, possono essere salvate per successive analisi.</p>`,
@@ -132,7 +133,7 @@ const locale: Locale = {
         [_.optionFormattingSpacesValueFalse]: "Nessuno spazio - IF( ",
         [_.optionTelemetry]: "Telemetria",
         [_.optionTelemetryDescription]: "Invia informazioni di utilizzo anonime a SQLBI.",
-        [_.optionTelemetryExplanation]: "Aiutaci a capire come gli utenti usano Bravo e come migliorarlo. Nessuna informazione personale è inviata o salvata. Nota che se l'opzione è disattivata non saremo in grado di fornire supporto su errori non gestiti.",
+        [_.optionTelemetryMore]: "Aiutaci a capire come gli utenti usano Bravo e come migliorarlo. Nessuna informazione personale è inviata o salvata. Nota che se l'opzione è disattivata non saremo in grado di fornire supporto su errori non gestiti.",
 
         [_.optionTheme]: "Tema",
         [_.optionThemeDescription]: "Imposta il tema di Bravo. Seleziona <em>Auto</em> per usare il tema di sistema.",
@@ -140,10 +141,14 @@ const locale: Locale = {
         [_.optionThemeValueLight]: "Chiaro",
         [_.optionThemeValueDark]: "Scuro",
 
+        [_.optionDiagnostic]: "Pannello Diagnostico",
+        [_.optionDiagnosticDescription]: "Mostra errori e log avanzati in un pannello diagnostico.",
+        [_.optionDiagnosticMore]: "Per segnalare bug nell'applicazione vai su",
+
         [_.optionsDialogAboutMenu]: "Informazioni",
         [_.optionsDialogFormattingMenu]: "Formattazione",
         [_.optionsDialogGeneralMenu]: "Generale",
-        [_.optionsDialogTelemetryMenu]: "Telemetria",
+        [_.optionsDialogTelemetryMenu]: "Diagnostica",
         [_.optionsDialogTitle]: "Opzioni",
         [_.otherColumnsRowName]: "Altre colonne...",
         [_.paste]: "Incolla",
