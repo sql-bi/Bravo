@@ -40,7 +40,7 @@ export class OptionsDialogGeneral extends OptionsDialogMenuItem {
                 ]
             },
             {
-                option: "locale",
+                option: "customOptions.locale",
                 icon: "language",
                 name: i18n(strings.optionLanguage),
                 description: i18n(strings.optionLanguageDescription),

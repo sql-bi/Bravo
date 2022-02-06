@@ -12,6 +12,8 @@ import { ThemeType } from './theme';
 export interface Options {
     theme: ThemeType
     telemetryEnabled: boolean
+    updateChannel: UpdateChannelType
+    diagnosticEnabled: boolean
     customOptions?: ClientOptions
 } 
 
@@ -51,6 +53,13 @@ export enum DaxFormatterSpacingStyle {
     NoSpaceAfterFunction = "NoNpaceAfterFunction" //TODO Fix "NoSpaceAfterFunction"
 }
 
+export enum UpdateChannelType {
+    Stable = 0,
+    //Beta = 1,
+    Dev = 2,
+    //Canary = 3,
+}
+
 type optionsMode = "host" | "browser"
 export class OptionsController extends Dispatchable {
 
@@ -62,6 +71,8 @@ export class OptionsController extends Dispatchable {
     defaultOptions: Options = {
         theme: ThemeType.Auto,
         telemetryEnabled: true,
+        diagnosticEnabled: false,
+        updateChannel: UpdateChannelType.Stable,
         customOptions: {
             sidebarCollapsed: false,
             editorZoom: 1,
@@ -161,7 +172,7 @@ export class OptionsController extends Dispatchable {
         let triggerPath = "";
 
         let obj = this.options; 
-        let path = this.fixOptionPath(optionPath).split(".");
+        let path = optionPath.split(".");
 
         path.forEach((prop, index) => {
             if (index == path.length - 1) {
@@ -181,14 +192,14 @@ export class OptionsController extends Dispatchable {
 
         if (triggerChange) {
             this.trigger("change", changedOptions);
-            this.trigger(`${triggerPath.replace("customOptions.", "")}change`, changedOptions);
+            this.trigger(`${triggerPath}change`, changedOptions);
         }
     }
 
     getOption(optionPath: string): any {
 
         let obj = this.options; 
-        let path = this.fixOptionPath(optionPath).split(".");
+        let path = optionPath.split(".");
         for (let i = 0; i < path.length; i++) {
             let prop = path[i];
             if (i == path.length - 1) {
@@ -200,12 +211,5 @@ export class OptionsController extends Dispatchable {
             }
         }
         return null;
-    }
-
-    fixOptionPath(optionPath: string): string {
-        const hostOptions = ["theme", "telemetryEnabled"];
-        if (hostOptions.indexOf(optionPath) == -1 && optionPath.indexOf("customOptions") == -1)
-            optionPath = `customOptions.${optionPath}`;
-        return optionPath;
     }
 }

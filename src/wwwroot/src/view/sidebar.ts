@@ -197,7 +197,7 @@ export class Sidebar extends View {
             this.element.classList.remove("collapsed");
             root.classList.add("has-sidebar");
         }
-        optionsController.update("sidebarCollapsed", collapse);
+        optionsController.update("customOptions.sidebarCollapsed", collapse);
         this.collapsed = collapse;
     }
 

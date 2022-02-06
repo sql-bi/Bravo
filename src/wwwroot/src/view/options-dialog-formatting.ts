@@ -18,14 +18,14 @@ export class OptionsDialogFormatting extends OptionsDialogMenuItem {
 
         this.optionsStruct = [
             {
-                option: "formatting.preview",
+                option: "customOptions.formatting.preview",
                 icon: "dax-formatter",
                 name: i18n(strings.optionFormattingPreview),
                 description: i18n(strings.optionFormattingPreviewDescription),
                 type: OptionType.switch,
             },
             {
-                option: "formatting.region",
+                option: "customOptions.formatting.region",
                 icon: "separators",
                 name: i18n(strings.optionFormattingSeparators),
                 description: i18n(strings.optionFormattingSeparatorsDescription),
@@ -37,7 +37,7 @@ export class OptionsDialogFormatting extends OptionsDialogMenuItem {
                 ]
             },
             {
-                option: "formatting.daxFormatter.lineStyle",
+                option: "customOptions.formatting.daxFormatter.lineStyle",
                 icon: "lines",
                 name: i18n(strings.optionFormattingLines),
                 description: i18n(strings.optionFormattingLinesDescription),
@@ -48,7 +48,7 @@ export class OptionsDialogFormatting extends OptionsDialogMenuItem {
                 ]
             },
             {
-                option: "formatting.daxFormatter.spacingStyle",
+                option: "customOptions.formatting.daxFormatter.spacingStyle",
                 icon: "spaces",
                 name: i18n(strings.optionFormattingSpaces),
                 description: i18n(strings.optionFormattingSpacesDescription),

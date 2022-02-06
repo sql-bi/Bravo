@@ -551,7 +551,7 @@ export class DaxFormatterScene extends MainScene {
     updateZoom(zoom: number) {
 
         if (!zoom) zoom = 1;
-        optionsController.update("editorZoom", zoom);
+        optionsController.update("customOptions.editorZoom", zoom);
 
         let defaultValues = [
             0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2 //, 2.5, 5, 0.1
@@ -816,19 +816,19 @@ export class DaxFormatterScene extends MainScene {
 
         this.element.addLiveEventListener("change", "#gen-preview-auto-option", (e, element) => {
             e.preventDefault();
-            optionsController.update("formatting.preview", (<HTMLInputElement>element).checked);
+            optionsController.update("customOptions.formatting.preview", (<HTMLInputElement>element).checked);
             window.setTimeout(() => {
                 this.generatePreview(this.doc.measures);
             }, 300);
         });
 
-        optionsController.on("formatting.region.change", (changedOptions: any) => {
+        optionsController.on("customOptions.formatting.region.change", (changedOptions: any) => {
             this.maybeAutoGeneratePreview();
         });
-        optionsController.on("formatting.daxFormatter.spacingStyle.change", (changedOptions: any) => {
+        optionsController.on("customOptions.formatting.daxFormatter.spacingStyle.change", (changedOptions: any) => {
             this.maybeAutoGeneratePreview();
         });
-        optionsController.on("formatting.daxFormatter.lineStyle.change", (changedOptions: any) => {
+        optionsController.on("customOptions.formatting.daxFormatter.lineStyle.change", (changedOptions: any) => {
             this.maybeAutoGeneratePreview();
         });
     }
