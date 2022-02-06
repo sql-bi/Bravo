@@ -48,13 +48,17 @@ export class OptionsDialogGeneral extends OptionsDialogMenuItem {
                 values: languages,
                 onChange: e => {
 
-                    let alert = new Confirm();
-                    alert.show(i18n(strings.optionLanguageResetConfirm))
-                        .then((response: DialogResponse) => {
-                            if (response.action == "ok") {
-                                App.Reload();
-                            }
-                        });
+                    let element = <HTMLSelectElement>e.currentTarget;
+                    let newLanguage = element.value;
+                    if (newLanguage != I18n.instance.language) {
+                        let alert = new Confirm();
+                        alert.show(i18n(strings.optionLanguageResetConfirm))
+                            .then((response: DialogResponse) => {
+                                if (response.action == "ok") {
+                                    App.Reload();
+                                }
+                            });
+                    }
                 }
             },
             {

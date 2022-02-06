@@ -47,15 +47,19 @@ export interface LocaleFormatter {
 
 export class I18n {
     
+    language: string;
+
     //Singleton
-    private constructor() { }
+    private constructor(language: string) { 
+        this.language = language;
+    }
     private static _instance: I18n;
     public static get instance(): I18n {
-        return this._instance || (this._instance = new this());
+        return this._instance || (this._instance = new this(optionsController ? optionsController.options.customOptions.locale : navigator.language));
     }
 
     get locale(): Locale {
-        let key = (optionsController ? optionsController.options.customOptions.locale : navigator.language);
+        let key = this.language;
         if (!(key in locales)) {
             key = "en";
 

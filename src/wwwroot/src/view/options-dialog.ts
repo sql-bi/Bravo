@@ -22,6 +22,7 @@ export interface OptionStruct {
     type: OptionType
     values?: string[][]
     value?: any,
+    onBeforeChange?: (e: Event) => boolean,
     onChange?: (e: Event) => void,
     onClick?: (e: Event) => void,
     customHtml?: ()=> string
