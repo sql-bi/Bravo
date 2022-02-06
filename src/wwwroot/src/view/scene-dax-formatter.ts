@@ -822,14 +822,14 @@ export class DaxFormatterScene extends MainScene {
             }, 300);
         });
 
-        optionsController.on("change", (changedOptions: any) => {
-            let watch = ["region", "daxFormatter", "spacingStyle", "lineStyle"];
-            for (let i = 0; i < watch.length; i++) {
-                if (watch[i] in changedOptions) {
-                    this.maybeAutoGeneratePreview();
-                    break;
-                }
-            }
+        optionsController.on("formatting.region.change", (changedOptions: any) => {
+            this.maybeAutoGeneratePreview();
+        });
+        optionsController.on("formatting.daxFormatter.spacingStyle.change", (changedOptions: any) => {
+            this.maybeAutoGeneratePreview();
+        });
+        optionsController.on("formatting.daxFormatter.lineStyle.change", (changedOptions: any) => {
+            this.maybeAutoGeneratePreview();
         });
     }
 

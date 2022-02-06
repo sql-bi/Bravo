@@ -540,6 +540,25 @@ export module Utils {
             }
             return result;
         }
+
+        // Find a path in an object
+        export function matchPath(obj: any, path: string): boolean {
+
+            let match = false;
+            let pathArr = path.split(".");
+            for (let i = 0; i < pathArr.length; i++) {
+                match = false;
+                for (let prop in obj) {
+                    if (prop.toLocaleLowerCase() == pathArr[i].toLowerCase()) {
+                        match = true;
+                        obj = (<any>obj)[prop];
+                        break;
+                    }
+                }
+                if (!match) break;
+            }
+            return match;
+        }
     }
 
     export module Platform {

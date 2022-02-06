@@ -139,23 +139,15 @@ export class OptionsController extends Dispatchable {
     }
 
     // Save data
-    save(retry = false) {
+    save() {
         if (this.mode == "host") {
             host.updateOptions(this.options);
 
         } else {
             try {
                 localStorage.setItem(this.storageName, JSON.stringify(this.options));
-            } catch(e){
-                if (!retry) {
-                    //Storage quota exceeded 
-                    if (e.code == 22) {
-                        this.trigger("quotaExceeded");
-
-                        //Retry saving
-                        this.save(true);
-                    }
-                }
+            } catch(error){
+                console.error(error);
             }
         }
     }
@@ -163,21 +155,34 @@ export class OptionsController extends Dispatchable {
     //Change option
     update(optionPath: string, value: any, triggerChange = false) {
 
+        let changed = {};
+        let changedOptions = changed;
+
+        let triggerPath = "";
+
         let obj = this.options; 
         let path = this.fixOptionPath(optionPath).split(".");
+
         path.forEach((prop, index) => {
             if (index == path.length - 1) {
                 (<any>obj)[prop] = value;
+                (<any>changed)[prop] = value;
             } else { 
                 if (!(prop in obj))
                     (<any>obj)[prop] = {};
                 obj = (<any>obj)[prop];
+                
+                (<any>changed)[prop] = {};
+                changed = (<any>changed)[prop];
             }
+            triggerPath += `${prop}.`;
         });
         this.save();
 
-        if (triggerChange)
-            this.trigger("change", obj);
+        if (triggerChange) {
+            this.trigger("change", changedOptions);
+            this.trigger(`${triggerPath.replace("customOptions.", "")}change`, changedOptions);
+        }
     }
 
     getOption(optionPath: string): any {

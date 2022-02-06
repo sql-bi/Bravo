@@ -55,13 +55,12 @@ export class ThemeController extends Dispatchable {
             this.deviceTheme = ThemeType.Light;
         }
 
-        optionsController.on("change", (changedOptions: any) => {
-            if ("theme" in changedOptions) {
-                host.changeTheme(changedOptions.theme);
-                this.apply(changedOptions.theme);
+        optionsController.on("theme.change", (changedOptions: any) => {
 
-                telemetry.track("Theme", { theme: changedOptions.theme });
-            }
+            host.changeTheme(changedOptions.theme);
+            this.apply(changedOptions.theme);
+
+            telemetry.track("Theme", { theme: changedOptions.theme });
         });
 
         this.apply(this.theme);
