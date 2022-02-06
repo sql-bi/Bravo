@@ -11,9 +11,10 @@
     using System.Runtime.InteropServices;
     using System.Text.Json;
 
-    internal class AppWindowSubclass : WindowSubclass
+    internal class AppWindowSubclass : WindowSubclass, IDisposable
     {
         private readonly PhotinoNET.PhotinoWindow _window;
+        private readonly IntPtr TRUE = new(1); // Message handled, do not call the next handler in the subclass chain
 
         /// <summary>
         /// Try to install a WndProc subclass callback to hook messages sent to the selected <see cref="PhotinoNET.PhotinoWindow"/> window
@@ -31,44 +32,51 @@
             switch (uMsg)
             {
                 case (uint)WindowMessage.WM_COPYDATA:
-                    HandleMsgWmCopyData(hWnd, copydataPtr: lParam);
+                    {
+                        if (HandleMsgWmCopyData(hWnd, copydataPtr: lParam))
+                            return TRUE;
+                    }
                     break;
                 case (uint)WindowMessage.WM_THEMECHANGED:
-                    HandleMsgWmThemeChanged(hWnd);
+                    {
+                        if (HandleMsgWmThemeChanged(hWnd))
+                            return TRUE;
+                    }
                     break;
             }
 
             return base.WndProc(hWnd, uMsg, wParam, lParam, uIdSubclass, dwRefData);
         }
 
-        private void HandleMsgWmCopyData(IntPtr hWnd, IntPtr copydataPtr)
+        private bool HandleMsgWmCopyData(IntPtr hWnd, IntPtr copydataPtr)
         {
+            if (_window.Minimized)
+            {
+                // Restore original size and position only if the window is minimized, otherwise keeps the current position
+                _ = User32.ShowWindow(hWnd, User32.SW_RESTORE);
+            }
+
+            // Regardless of the current state, try to brings into the foreground and activates the window
+            _ = User32.SetForegroundWindow(hWnd);
+
             try
             {
-                // Restore original size and position only if the window is minimized, otherwise keep current position
-                if (_window.Minimized)
-                    User32.ShowWindow(hWnd, User32.SW_RESTORE);
-
-                // Regardless of the current state of the window, bring it to the foreground and activate it
-                User32.SetForegroundWindow(hWnd);
-
                 var copyDataObject = Marshal.PtrToStructure(copydataPtr, typeof(User32.COPYDATASTRUCT));
-                if (copyDataObject == null)
-                    return;
-
-                var copyData = (User32.COPYDATASTRUCT)copyDataObject;
-                if (copyData.cbData == 0)
-                    return;
-
-                var startupMessage = JsonSerializer.Deserialize<AppInstanceStartupMessage>(json: copyData.lpData);
-                if (startupMessage?.IsEmpty == false)
+                if (copyDataObject is User32.COPYDATASTRUCT copyData && copyData.cbData != 0)
                 {
+                    var startupMessage = JsonSerializer.Deserialize<AppInstanceStartupMessage>(json: copyData.lpData);
+                    if (startupMessage?.IsEmpty == false)
+                    {
 #if DEBUG
-                    var startupMessageString = JsonSerializer.Serialize(startupMessage, new JsonSerializerOptions { WriteIndented = true });
-                    Trace.WriteLine($"::Bravo:INF:WndProcHook[WM_COPYDATA]:{ startupMessageString }");
+                        var startupMessageString = JsonSerializer.Serialize(startupMessage, new JsonSerializerOptions { WriteIndented = true });
+                        Trace.WriteLine($"::Bravo:INF:WndProcHook[WM_COPYDATA]:{ startupMessageString }");
 #endif
-                    var webMessageString = startupMessage.ToWebMessageString();
-                    _window.SendWebMessage(webMessageString);
+                        var webMessageString = startupMessage.ToWebMessageString();
+                        _window.SendWebMessage(webMessageString);
+                    }
+
+                    // Here we return true because the WM_COPYDATA message has been received and processed, regardless of whether startupMessage is empty or not
+                    return true;
                 }
             }
             catch (Exception ex)
@@ -76,14 +84,29 @@
                 var exceptionWebMessage = UnknownWebMessage.CreateFrom(ex);
                 _window.SendWebMessage(exceptionWebMessage.AsString);
             }
+
+            return false;
         }
 
-        private static void HandleMsgWmThemeChanged(IntPtr hWnd)
+        private static bool HandleMsgWmThemeChanged(IntPtr hWnd)
         {
             if (UserPreferences.Current.Theme == ThemeType.Auto)
             {
-                ThemeHelper.UpdateNonClientAreaTheme(hWnd, ThemeType.Auto);
+                ThemeHelper.ChangeTheme(hWnd, ThemeType.Auto);
             }
+
+            // Here we always return true to avoid that the WM_THEMECHANGED message is sent to the Photino native WndProc
+            // This is due to the fact that the ThemeHelper class adds a custom non-client area color handler 
+            return true;
         }
+
+
+        #region IDisposable
+        
+        public void Dispose()
+        {
+        }
+
+        #endregion
     }
 }

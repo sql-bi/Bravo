@@ -75,7 +75,9 @@
         [ProducesDefaultResponseType]
         public IActionResult ChangeTheme(ThemeType theme)
         {
-            ThemeHelper.ChangeTheme(theme);
+            var hWnd = ProcessHelper.GetCurrentProcessMainWindowHandle();
+            
+            ThemeHelper.ChangeTheme(hWnd, theme);
 
             return Ok();
         }

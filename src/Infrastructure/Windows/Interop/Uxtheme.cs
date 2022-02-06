@@ -26,9 +26,10 @@
         };
 
         /*
-         * The Boolean representation that is required by the unmanaged method should be determined and matched to the appropriate System.Runtime.InteropServices.UnmanagedType.
-         * UnmanagedType.Bool is the Win32 BOOL type, which is always 4 bytes. UnmanagedType.U1 should be used for C++ bool or other 1-byte types
-         * https://docs.microsoft.com/en-us/visualstudio/code-quality/ca1414?view=vs-2022#rule-description
+         * - Mark boolean P/Invoke arguments with MarshalAs
+         *   The Boolean representation that is required by the unmanaged method should be determined and matched to the appropriate System.Runtime.InteropServices.UnmanagedType.
+         *   UnmanagedType.Bool is the Win32 BOOL type, which is always 4 bytes. UnmanagedType.U1 should be used for C++ bool or other 1-byte types
+         *   See https://docs.microsoft.com/en-us/visualstudio/code-quality/ca1414?view=vs-2022#rule-description
          */
 
         /*
@@ -41,6 +42,9 @@
         [DllImport(ExternDll.Uxtheme, EntryPoint = "#104")]
         public static extern void RefreshImmersiveColorPolicyState();
 
+        /// <summary>
+        /// Returns the 'deafault app mode' on 'Custom' color settings
+        /// </summary>
         [DllImport(ExternDll.Uxtheme, EntryPoint = "#132")]
         [return: MarshalAs(UnmanagedType.U1)]
         public static extern bool ShouldAppsUseDarkMode();
@@ -51,7 +55,7 @@
 
         [DllImport(ExternDll.Uxtheme, EntryPoint = "#135")]
         [return: MarshalAs(UnmanagedType.U1)]
-        public static extern bool AllowDarkModeForApp([MarshalAs(UnmanagedType.U1)] bool allow); // !!! 135 !!! same ordinal in 1903 and 1809 
+        public static extern bool AllowDarkModeForApp([MarshalAs(UnmanagedType.U1)] bool allow); // 135 in both 1903 and 1809 
 
         [DllImport(ExternDll.Uxtheme, EntryPoint = "#137")]
         [return: MarshalAs(UnmanagedType.U1)]
@@ -63,11 +67,14 @@
 
         [DllImport(ExternDll.Uxtheme, EntryPoint = "#135")]
         [return: MarshalAs(UnmanagedType.U4)]
-        public static extern PreferredAppMode SetPreferredAppMode(PreferredAppMode mode); // !!! 135 !!! same ordinal in 1903 and 1809 
+        public static extern PreferredAppMode SetPreferredAppMode(PreferredAppMode mode); // 135 in both 1903 and 1809 
 
-        //[DllImport(ExternDll.Uxtheme, EntryPoint = "#138")]
-        //[return: MarshalAs(UnmanagedType.U1)]
-        //public static extern bool ShouldSystemUseDarkMode();
+        /// <summary>
+        /// Returns the 'deafault Windows mode' on 'Custom' color settings
+        /// </summary>
+        [DllImport(ExternDll.Uxtheme, EntryPoint = "#138")]
+        [return: MarshalAs(UnmanagedType.U1)]
+        public static extern bool ShouldSystemUseDarkMode();
 
         [DllImport(ExternDll.Uxtheme, EntryPoint = "#139")]
         [return: MarshalAs(UnmanagedType.U1)]

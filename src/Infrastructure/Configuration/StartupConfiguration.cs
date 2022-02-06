@@ -16,18 +16,12 @@
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
-            ConfigureTheme();
             ConfigureDirectories();
             ConfigureMulticoreJit();
             ConfigureSecurityProtocols();
             ConfigureProcessDpiAwareness();
 
             WebView2Helper.EnsureRuntimeIsInstalled();
-        }
-
-        private static void ConfigureTheme()
-        {
-            ThemeHelper.AllowDarkModeForApp(allow: true, force: false);
         }
 
         private static void ConfigureDirectories()

@@ -4,7 +4,7 @@
     using System.Runtime.InteropServices;
 
     [StructLayout(LayoutKind.Explicit, Size = 4)]
-    public struct COLORREF
+    internal struct COLORREF
     {
         [FieldOffset(0)]
         private readonly uint Value;

@@ -1,16 +1,16 @@
-﻿using Sqlbi.Bravo.Infrastructure.Windows.Interop;
-using Sqlbi.Bravo.Services;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Net;
-using System.Net.NetworkInformation;
-using System.Net.Sockets;
-using System.Runtime.InteropServices;
-
-namespace Sqlbi.Bravo.Infrastructure.Helpers
+﻿namespace Sqlbi.Bravo.Infrastructure.Helpers
 {
+    using Sqlbi.Bravo.Infrastructure.Windows.Interop;
+    using Sqlbi.Bravo.Services;
+    using System;
+    using System.Collections.Generic;
+    using System.Diagnostics;
+    using System.Linq;
+    using System.Net;
+    using System.Net.NetworkInformation;
+    using System.Net.Sockets;
+    using System.Runtime.InteropServices;
+
     internal static class NetworkHelper
     {
         public static readonly string LocalHost = "localhost";

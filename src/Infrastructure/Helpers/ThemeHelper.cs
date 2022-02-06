@@ -3,124 +3,144 @@
     using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
     using Sqlbi.Bravo.Infrastructure.Windows.Interop;
     using System;
+    using System.Diagnostics;
     using System.Runtime.InteropServices;
 
     internal static class ThemeHelper
     {
-        private static readonly Version Windows11Version21H2 = new(10, 0, 22000);
         private static readonly Version Windows10Version1809 = new(10, 0, 17763);
+        private static readonly Version Windows10Version1909 = new(10, 0, 18363);
+        //private static readonly Version Windows10Version21H1 = new(10, 0, 19043);
+        private static readonly Version Windows10Version21H2 = new(10, 0, 22000);
         private static readonly bool IsWindows10Version1809 = Environment.OSVersion.Version == Windows10Version1809;
-        private static readonly bool IsWindows11OrNewer = Environment.OSVersion.Version >= Windows11Version21H2;
+        private static readonly bool IsWindows10Version1909OrNewer = Environment.OSVersion.Version >= Windows10Version1909;
+        //private static readonly bool IsWindows10Version21H1OrNewer = Environment.OSVersion.Version >= Windows10Version21H1;
+        private static readonly bool IsWindows10Version21H2OrNewer = Environment.OSVersion.Version >= Windows10Version21H2;
         private static readonly bool IsDarkModeSupported = Environment.OSVersion.Version >= Windows10Version1809;
 
-        public static void AllowDarkModeForApp(bool allow, bool force)
+        public static void InitializeTheme(IntPtr hWnd, ThemeType theme)
         {
             if (IsDarkModeSupported)
             {
                 if (IsWindows10Version1809)
                 {
-                    // Ordinal entry point *** 135 *** in 1809 (OS build 17763)
-                    _ = Uxtheme.AllowDarkModeForApp(allow);
+                    _ = Uxtheme.AllowDarkModeForApp(allow: true);
                 }
                 else
                 {
-                    // Ordinal entry point *** 135 *** in 1903 (OS build 18362) and later
-                    if (force)
-                    {
-                        _ = Uxtheme.SetPreferredAppMode(allow ? Uxtheme.PreferredAppMode.ForceDark : Uxtheme.PreferredAppMode.ForceLight);
-                    }
-                    else
-                    {
-                        _ = Uxtheme.SetPreferredAppMode(allow ? Uxtheme.PreferredAppMode.AllowDark : Uxtheme.PreferredAppMode.Default);
-                    }
+                    _ = Uxtheme.SetPreferredAppMode(mode: Uxtheme.PreferredAppMode.AllowDark);
                 }
 
                 Uxtheme.RefreshImmersiveColorPolicyState();
+
+                RefreshNonClientArea(hWnd, theme);
             }
         }
 
-        public static void AllowDarkModeForWindow(IntPtr hWnd, bool allow = true)
+        public static void ChangeTheme(IntPtr hWnd, ThemeType theme)
         {
             if (IsDarkModeSupported)
             {
-                _ = Uxtheme.AllowDarkModeForWindow(hWnd, allow);
-                // TODO: RefreshTitleBarThemeColor(hWnd);
+                RefreshNonClientArea(hWnd, theme);
             }
         }
 
-        public static void ChangeStartupTheme(IntPtr hWnd, ThemeType theme)
+        private static bool ShouldUseDarkMode(ThemeType theme)
         {
-            if (IsDarkModeSupported && theme != ThemeType.Auto)
+            if (IsDarkModeSupported /* && !SystemInformation.HighContrast */)
             {
-                // No need to send WM_THEMECHANGED message on app startup
-                ChangeTheme(theme, notifyThemeChanged: false);
-            }
+                bool useDarkMode;
 
-            UpdateNonClientAreaTheme(hWnd, theme);
-        }
-
-        public static void ChangeTheme(ThemeType theme, bool notifyThemeChanged = true)
-        {
-            if (IsDarkModeSupported)
-            {
-                switch (theme)
+                if (theme == ThemeType.Auto)
                 {
-                    case ThemeType.Light:
-                    case ThemeType.Dark:
-                        AllowDarkModeForApp(allow: theme == ThemeType.Dark, force: theme == ThemeType.Dark);
-                        break;
-                    case ThemeType.Auto:
-                        AllowDarkModeForApp(allow: true, force: false);
-                        break;
+                    useDarkMode = Uxtheme.ShouldAppsUseDarkMode();
+                }
+                else
+                {
+                    useDarkMode = theme == ThemeType.Dark; // Uxtheme.IsDarkModeAllowedForWindow(hWnd);
                 }
 
-                if (notifyThemeChanged)
-                {
-                    var hWnd = ProcessHelper.GetCurrentProcessMainWindowHandle();
-
-                    var retval = User32.SendMessage(hWnd, WindowMessage.WM_THEMECHANGED, IntPtr.Zero, IntPtr.Zero);
-                    if (retval == IntPtr.Zero)
-                    {
-                        UpdateNonClientAreaTheme(hWnd, theme);
-                    }
-                }
+                return useDarkMode;
             }
+
+            return false;
         }
 
-        public static void UpdateNonClientAreaTheme(IntPtr hWnd, ThemeType theme)
+        private static void RefreshNonClientArea(IntPtr hWnd, ThemeType theme)
         {
-            // Undocumented custom caption/text DWMWINDOWATTRIBUTE supported on Windows 11
-            const Dwmapi.DWMWINDOWATTRIBUTE DWMWA_CAPTION_COLOR = (Dwmapi.DWMWINDOWATTRIBUTE)35;
-            //const Dwmapi.DWMWINDOWATTRIBUTE DWMWA_TEXT_COLOR = (Dwmapi.DWMWINDOWATTRIBUTE)36;
+            Debug.Assert(IsDarkModeSupported);
 
-            // Only supported on Windows 11
-            if (IsWindows11OrNewer)
+            var useDarkMode = ShouldUseDarkMode(theme);
+
+            if (IsWindows10Version21H2OrNewer) // >= Windows 11
             {
-                var useDark = theme switch
-                {
-                    ThemeType.Auto => Uxtheme.ShouldAppsUseDarkMode(),
-                    _ => Uxtheme.IsDarkModeAllowedForApp(hWnd),
-                };
+                // Undocumented DWMWINDOWATTRIBUTE supported on Windows 11 only
+                const Dwmapi.DWMWINDOWATTRIBUTE DWMWA_CAPTION_COLOR = (Dwmapi.DWMWINDOWATTRIBUTE)35;
+                //const Dwmapi.DWMWINDOWATTRIBUTE DWMWA_TEXT_COLOR = (Dwmapi.DWMWINDOWATTRIBUTE)36;
 
-                COLORREF color = useDark
-                    ? AppEnvironment.ThemeColorDark 
-                    : AppEnvironment.ThemeColorLight;
-
-                var pinned = GCHandle.Alloc(color, GCHandleType.Pinned);
+                COLORREF color = useDarkMode ? AppEnvironment.ThemeColorDark : AppEnvironment.ThemeColorLight;
+                GCHandle pinnedColor = GCHandle.Alloc(color, GCHandleType.Pinned);
                 try
                 {
                     var dwAttribute = DWMWA_CAPTION_COLOR;
-                    var pvAttribute = pinned.AddrOfPinnedObject();
+                    var pvAttribute = pinnedColor.AddrOfPinnedObject();
                     var cbAttribute = Marshal.SizeOf(color);
 
                     _ = Dwmapi.DwmSetWindowAttribute(hWnd, dwAttribute, pvAttribute, cbAttribute);
                 }
                 finally
                 {
-                    if (pinned.IsAllocated)
-                        pinned.Free();
+                    if (pinnedColor.IsAllocated)
+                        pinnedColor.Free();
                 }
             }
+            else // if (IsWindows10Version1909OrNewer)
+            {
+                var size = Marshal.SizeOf(useDarkMode);
+                var ptr = Marshal.AllocHGlobal(size);
+                try
+                {
+                    Marshal.WriteInt32(ptr, ofs: 0, val: useDarkMode ? 1 : 0);
+
+                    var data = new User32.WINDOWCOMPOSITIONATTRIBDATA
+                    {
+                        Attrib = User32.WINDOWCOMPOSITIONATTRIB.WCA_USEDARKMODECOLORS,
+                        pvData = ptr,
+                        cbData = size
+                    };
+
+                    _ = User32.SetWindowCompositionAttribute(hWnd, ref data);
+
+                    // >> HACK: To force non-client area repainting
+                    // >>   Win10 20H2 build 19042
+                    var forceActive = new IntPtr(1); /* TRUE */
+                    var forceInactive = IntPtr.Zero; /* FALSE */
+                    _ = User32.SendMessage(hWnd, WindowMessage.WM_NCACTIVATE, wParam: forceInactive, IntPtr.Zero);
+                    _ = User32.SendMessage(hWnd, WindowMessage.WM_NCACTIVATE, wParam: forceActive, IntPtr.Zero);
+                    // << HACK
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(ptr);
+                }
+            }
+            //else
+            //{
+            //    const Dwmapi.DWMWINDOWATTRIBUTE DWMWA_USE_IMMERSIVE_DARK_MODE_19 = (Dwmapi.DWMWINDOWATTRIBUTE)19;
+            //    const Dwmapi.DWMWINDOWATTRIBUTE DWMWA_USE_IMMERSIVE_DARK_MODE_20 = (Dwmapi.DWMWINDOWATTRIBUTE)20;
+
+            //    var dwAttribute = DWMWA_USE_IMMERSIVE_DARK_MODE_20;
+            //    var pvAttribute = new IntPtr(useDarkMode ? 1 : 0);
+            //    var cbAttribute = Marshal.SizeOf(pvAttribute);
+
+            //    var hresult = Dwmapi.DwmSetWindowAttribute(hWnd, dwAttribute, pvAttribute, cbAttribute);
+            //    if (hresult != HRESULT.S_OK)
+            //    {
+            //        dwAttribute = DWMWA_USE_IMMERSIVE_DARK_MODE_19;
+
+            //        _ = Dwmapi.DwmSetWindowAttribute(hWnd, dwAttribute, pvAttribute, cbAttribute);
+            //    }
+            //}
         }
     }
 }
