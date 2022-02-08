@@ -52,8 +52,9 @@ export class ErrorScene extends BackableScene {
                 </p>
 
                 <p>
-                    <span class="copy-error link">${i18n(strings.copyErrorDetails)}</span>
-                    ${this.error.type != AppErrorType.Managed ? ` &nbsp;&nbsp;&nbsp; <span class="create-issue link" data-href="https://github.com/sql-bi/bravo/issues/new?labels=bug&title=${encodeURIComponent(issueTitle)}&body=${encodeURIComponent(issueBody)}">${i18n(strings.createIssue)}</span>` : ""}
+                    <span class="copy-error link">${i18n(strings.copyErrorDetails)}</span> 
+                     &nbsp;&nbsp;&nbsp; 
+                    <span class="create-issue link" data-href="https://github.com/sql-bi/bravo/issues/new?labels=bug&title=${encodeURIComponent(issueTitle)}&body=${encodeURIComponent(issueBody)}">${i18n(strings.createIssue)}</span>
                 </p>
             
                 ${ this.onRetry ? `
