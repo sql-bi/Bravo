@@ -250,8 +250,11 @@ export class App {
         });
 
         this.diagnosticPane.on("minimize", ()=> {
-            if (this.diagnosticSplit)
-                this.diagnosticSplit.setSizes([100, 0]);
+            if (this.diagnosticSplit) {
+                const sizes = [100, 0];
+                this.diagnosticSplit.setSizes(sizes);
+                optionsController.update("customOptions.panels", sizes);
+            }
         });
 
         // Options change
