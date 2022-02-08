@@ -48,7 +48,12 @@ export class DiagnosticPane extends View {
             let message = logger.logs[messageId];
             if (!message) return;
 
-            let messageStr = `${message.name}${message.content ? `\n${message.content}` : ""}\n${message.time}`;
+            let messageContent = message.content;
+            if (messageContent && !Utils.Obj.isString(messageContent)) {
+                messageContent = JSON.stringify(messageContent);
+            }
+
+            let messageStr = `${message.name}${messageContent ? `\n${messageContent}` : ""}\n${message.time}`;
 
             let items: ContextMenuItemOptions[] = [
                 { 
