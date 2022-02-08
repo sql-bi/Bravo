@@ -66,7 +66,7 @@ export class Auth extends Dispatchable {
             .then(account => {
                 if (account) {
                     this.account = account;
-                    optionsController.update("loggedInOnce", true);
+                    optionsController.update("customOptions.loggedInOnce", true);
                     this.getAvatar();
                     this.trigger("signedIn", this.account);
 
@@ -75,7 +75,7 @@ export class Auth extends Dispatchable {
                     throw AppError.InitFromResponseStatus(Utils.ResponseStatusCode.Aborted);
                 }
             })
-            .catch(error => {
+            .catch(ignore => {
                 throw AppError.InitFromResponseStatus(Utils.ResponseStatusCode.NotAuthorized);
             });
     }
@@ -87,6 +87,6 @@ export class Auth extends Dispatchable {
             this.cache.removeItem(this.account.id);
             this.account = null;
             this.trigger("signedOut");
-        }).catch(error => {});
+        }).catch(ignore => {});
     }
 }

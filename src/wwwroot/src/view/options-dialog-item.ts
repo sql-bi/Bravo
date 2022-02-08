@@ -94,7 +94,15 @@ export class OptionsDialogMenuItem {
             if (struct.type == OptionType.switch || struct.type == OptionType.select) {
                 _(`#${id}`, this.element).addEventListener("change", e => {
 
-                    let newValue = (<HTMLInputElement|HTMLSelectElement>e.currentTarget).value;
+                    let confirmed = true;
+                    if (Utils.Obj.isSet(struct.onBeforeChange))
+                        confirmed = struct.onBeforeChange(e);
+                    if (!confirmed) return;
+
+                    let element = e.currentTarget;
+                    let newValue = (struct.type == OptionType.select ?
+                        (<HTMLSelectElement>element).value : (<HTMLInputElement>element).checked
+                    );
                     optionsController.update(struct.option, newValue, true);
 
                     if (Utils.Obj.isSet(struct.onChange))

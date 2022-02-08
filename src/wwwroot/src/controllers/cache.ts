@@ -21,7 +21,7 @@ export class CacheHelper{
         if (rawData) {
             try {
                 cache = JSON.parse(rawData);
-            } catch(error){}
+            } catch(ignore){}
         }
         return cache;
     }
@@ -29,7 +29,7 @@ export class CacheHelper{
     saveCache<T>(cache: Dic<T>) {
         try {
             localStorage.setItem(this.storageName, JSON.stringify(cache));
-        } catch(error){}
+        } catch(ignore){}
     }
 
     setItem<T>(id: string, item: T) {

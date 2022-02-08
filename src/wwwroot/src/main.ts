@@ -11,6 +11,7 @@ import { ThemeController } from './controllers/theme';
 import { Telemetry } from './controllers/telemetry';
 import { PBIDesktop } from './controllers/pbi-desktop';
 import { NotifyCenter } from './controllers/notifications';
+import { Logger } from './controllers/logger';
 import { Debug } from './controllers/debug';
 
 // Load Tabulator modules
@@ -23,17 +24,15 @@ let debug = new Debug(!!CONFIG.debug);
 let host = new Host(CONFIG.address, CONFIG.token);
 let optionsController = new OptionsController(CONFIG.options);
 let themeController = new ThemeController();
+let logger = new Logger(CONFIG.options.diagnosticEnabled);
 let auth = new Auth();
 let telemetry = new Telemetry(CONFIG.telemetry);
 let pbiDesktop = new PBIDesktop();
 let notificationCenter = new NotifyCenter();
 
-let app = App.instance;
-app.currentVersion = new AppVersion({
+let app = new App(new AppVersion({
     version: CONFIG.version,
     build: CONFIG.build
-});
+}));
 
-console.log("Bravo for Power BI", CONFIG);
-
-export { debug, host, optionsController, themeController, auth, telemetry, pbiDesktop, notificationCenter };
+export { debug, host, optionsController, themeController, auth, telemetry, pbiDesktop, notificationCenter, logger, app };

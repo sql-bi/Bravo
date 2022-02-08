@@ -4,8 +4,8 @@
  * https://www.sqlbi.com
 */
 
-import { App } from '../controllers/app';
 import { _ } from '../helpers/utils';
+import { app } from '../main';
 import { AppError } from '../model/exceptions';
 import { i18n } from '../model/i18n'; 
 import { strings } from '../model/strings';
@@ -33,7 +33,7 @@ export class ErrorAlert extends Dialog {
             ` : "" }
             
             <p class="context">
-                ${i18n(strings.version)}: ${App.instance.currentVersion.toString()}
+                ${i18n(strings.version)}: ${app.currentVersion.toString()}
                 ${this.error.traceId ? `<br> ${i18n(strings.traceId)}: ${this.error.traceId}` : ""}
             </p>
 

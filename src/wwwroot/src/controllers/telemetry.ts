@@ -66,18 +66,17 @@ export class Telemetry {
       this.trackAppOpen();
 
       // Detect telemetry option change
-      optionsController.on("change", (changedOptions: any) => {
-         if ("telemetryEnabled" in changedOptions) {
+      optionsController.on("telemetryEnabled.change", (changedOptions: any) => {
 
-            this.enabled = optionsController.options.telemetryEnabled;
+         this.enabled = optionsController.options.telemetryEnabled;
 
-            this.appInsights.updateSnippetDefinitions({
-               config: {
-                  disableTelemetry: !this.enabled
-               }
-            });
-            this.trackAppOpen();
-         }
+         this.appInsights.updateSnippetDefinitions({
+            config: {
+               disableTelemetry: !this.enabled
+            }
+         });
+         this.trackAppOpen();
+         
       });
 
       window.addEventListener('beforeunload', e => {

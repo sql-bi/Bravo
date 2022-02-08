@@ -488,6 +488,9 @@ export module Utils {
         export function isDate(x: any): boolean {
             return Utils.Obj.is(x, "Date");
         }
+        export function isString(x: any): boolean {
+            return Utils.Obj.is(x, "String");
+        }
 
         // Merge two objects
         export function merge<T>(source: T, target: T, acceptNull = false): T {
@@ -539,6 +542,25 @@ export module Utils {
                 }
             }
             return result;
+        }
+
+        // Find a path in an object
+        export function matchPath(obj: any, path: string): boolean {
+
+            let match = false;
+            let pathArr = path.split(".");
+            for (let i = 0; i < pathArr.length; i++) {
+                match = false;
+                for (let prop in obj) {
+                    if (prop.toLocaleLowerCase() == pathArr[i].toLowerCase()) {
+                        match = true;
+                        obj = (<any>obj)[prop];
+                        break;
+                    }
+                }
+                if (!match) break;
+            }
+            return match;
         }
     }
 
@@ -637,10 +659,13 @@ export function __(selector: string, container: ParentNode = document): NodeList
 Node.prototype.addLiveEventListener = function(event: string, selector: string, callback: (e: Event, element: HTMLElement) => void) {
 
     (<Node>this).addEventListener(event, e => {
-        let element = (<HTMLElement>e.target);
-        if (element && element.matches(selector)) {
-            if (callback) {
-         	    callback(e, element);
+        let target = <HTMLElement>e.target;
+        if (target) {
+            let element = <HTMLElement>target.closest(selector);
+            if (element) {
+                if (callback) {
+                    callback(e, element);
+                }
             }
         }
     });

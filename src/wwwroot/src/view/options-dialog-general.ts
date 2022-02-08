@@ -4,10 +4,9 @@
  * https://www.sqlbi.com
 */
 
-import { App } from '../controllers/app';
 import { ThemeType } from '../controllers/theme';
 import {  _, __ } from '../helpers/utils';
-import { auth, optionsController, themeController } from '../main';
+import { app, auth } from '../main';
 import { I18n, i18n } from '../model/i18n'; 
 import { strings } from '../model/strings';
 import { Confirm } from './confirm';
@@ -40,7 +39,7 @@ export class OptionsDialogGeneral extends OptionsDialogMenuItem {
                 ]
             },
             {
-                option: "locale",
+                option: "customOptions.locale",
                 icon: "language",
                 name: i18n(strings.optionLanguage),
                 description: i18n(strings.optionLanguageDescription),
@@ -48,13 +47,17 @@ export class OptionsDialogGeneral extends OptionsDialogMenuItem {
                 values: languages,
                 onChange: e => {
 
-                    let alert = new Confirm();
-                    alert.show(i18n(strings.optionLanguageResetConfirm))
-                        .then((response: DialogResponse) => {
-                            if (response.action == "ok") {
-                                App.Reload();
-                            }
-                        });
+                    let element = <HTMLSelectElement>e.currentTarget;
+                    let newLanguage = element.value;
+                    if (newLanguage != I18n.instance.language) {
+                        let alert = new Confirm();
+                        alert.show(i18n(strings.optionLanguageResetConfirm))
+                            .then((response: DialogResponse) => {
+                                if (response.action == "ok") {
+                                    app.reload();
+                                }
+                            });
+                    }
                 }
             },
             {
