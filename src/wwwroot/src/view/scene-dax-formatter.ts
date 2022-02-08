@@ -836,7 +836,7 @@ export class DaxFormatterScene extends MainScene {
     showDataUsageDialog() {
         let dialog = new Alert("data-usage", i18n(strings.dataUsageTitle));
         let html = `
-            <img src="images/dax-formatter.svg">
+            <img src="images/dax-formatter${themeController.isDark ? "-dark" : ""}.svg">
             ${i18n(strings.dataUsageMessage)}
             <p><span class="link" data-href="https://www.daxformatter.com">https://www.daxformatter.com</span></p>
         `;
