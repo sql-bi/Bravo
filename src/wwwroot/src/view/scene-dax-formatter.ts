@@ -381,7 +381,10 @@ export class DaxFormatterScene extends MainScene {
         }
 
         this.activeMeasure = null;
-        _(".preview", this.element).toggle(false);
+        let previewElement = _(".preview", this.element);
+        previewElement.toggle(false);
+        previewElement.parentElement.classList.remove("solo");
+
         this.formatButton.toggleAttr("disabled", true);
     }
 
@@ -545,7 +548,10 @@ export class DaxFormatterScene extends MainScene {
 
                 row.getElement().classList.add("row-active");
 
-                _(".preview", this.element).toggle(true);
+                let previewElement = _(".preview", this.element);
+                previewElement.toggle(true);
+                previewElement.parentElement.classList.add("solo");
+
                 this.menu.reselect();
             });
 
@@ -848,7 +854,7 @@ export class DaxFormatterScene extends MainScene {
         let html = `
             <img src="images/dax-formatter${themeController.isDark ? "-dark" : ""}.svg">
             ${i18n(strings.dataUsageMessage)}
-            <p><span class="link" data-href="https://www.daxformatter.com">https://www.daxformatter.com</span></p>
+            <p><span class="link" data-href="https://www.daxformatter.com">www.daxformatter.com</span></p>
         `;
         dialog.show(html);
 
