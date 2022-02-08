@@ -9,7 +9,7 @@ import { _ } from '../helpers/utils';
 import { i18n } from '../model/i18n'; 
 import { strings } from '../model/strings';
 import { BackableScene } from './scene-back';
-import { App } from '../controllers/app';
+import { app, logger } from '../main';
 
 export class ErrorScene extends BackableScene {
 
@@ -27,9 +27,14 @@ export class ErrorScene extends BackableScene {
     
     render() {
         super.render();
-        
-        const issueTitle = "Provide a meaningful issue title";
-        const issueBody = "Provide a detailed explanation of the issue in English.\n\n---\n" + this.error.toString();
+
+        const issueTitle = i18n(strings.createIssueTitle);
+        const issueBody = i18n(strings.createIssueBody) + this.error.toString();
+
+        // Removed because we added diagnostic log
+        /*${ this.error.details ? `
+            <blockquote>${this.error.details}</blockquote>
+        ` : "" }*/
 
         let html = `
             <div class="error">
@@ -40,19 +45,15 @@ export class ErrorScene extends BackableScene {
                 <p class="message">
                     ${this.error.message}
                 </p>
-
-                ${ this.error.details ? `
-                    <blockquote>${this.error.details}</blockquote>
-                ` : "" }
                 
                 <p class="context">
-                    ${i18n(strings.version)}: ${App.instance.currentVersion.toString()}
+                    ${i18n(strings.version)}: ${app.currentVersion.toString()}
                     ${this.error.traceId ? ` - ${i18n(strings.traceId)}: ${this.error.traceId}` : ""}
                 </p>
 
                 <p>
-                    <span class="copy-error link">${i18n(strings.copyErrorDetails)}</span> &nbsp;&nbsp; 
-                    <span class="create-issue link" data-href="https://github.com/sql-bi/bravo/issues/new?labels=bug&title=${encodeURIComponent(issueTitle)}&body=${encodeURIComponent(issueBody)}">${i18n(strings.createIssue)}</span>
+                    <span class="copy-error link">${i18n(strings.copyErrorDetails)}</span>
+                    ${this.error.type != AppErrorType.Managed ? ` &nbsp;&nbsp;&nbsp; <span class="create-issue link" data-href="https://github.com/sql-bi/bravo/issues/new?labels=bug&title=${encodeURIComponent(issueTitle)}&body=${encodeURIComponent(issueBody)}">${i18n(strings.createIssue)}</span>` : ""}
                 </p>
             
                 ${ this.onRetry ? `
@@ -74,6 +75,11 @@ export class ErrorScene extends BackableScene {
             }, 1500);
         });
 
+        _(".show-diagnostics", this.element).addEventListener("click", e =>{
+            e.preventDefault();
+           
+        });
+
         if (this.onRetry){
             _(".retry-call", this.element).addEventListener("click", e => {
                 e.preventDefault();
@@ -81,7 +87,7 @@ export class ErrorScene extends BackableScene {
             });
         }
 
-        console.error(this.error);
+        try { logger.logError(this.error); } catch(ignore) {}
     }
 
 }

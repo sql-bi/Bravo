@@ -4,10 +4,9 @@
  * https://www.sqlbi.com
 */
 
-import { App } from '../controllers/app';
 import { ThemeType } from '../controllers/theme';
 import {  _, __ } from '../helpers/utils';
-import { auth, optionsController, themeController } from '../main';
+import { app, auth } from '../main';
 import { I18n, i18n } from '../model/i18n'; 
 import { strings } from '../model/strings';
 import { Confirm } from './confirm';
@@ -55,7 +54,7 @@ export class OptionsDialogGeneral extends OptionsDialogMenuItem {
                         alert.show(i18n(strings.optionLanguageResetConfirm))
                             .then((response: DialogResponse) => {
                                 if (response.action == "ok") {
-                                    App.Reload();
+                                    app.reload();
                                 }
                             });
                     }

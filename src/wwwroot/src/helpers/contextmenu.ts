@@ -162,7 +162,7 @@ export class ContextMenu{
                 element.value = text.substring(0, element.selectionStart) + text.substring(element.selectionEnd);
             }});
 
-        items.push({ label: i18n(strings.copy), cssIcon: "icon-copy", shortcut: `${ctrl}+X`, enabled: (text != ""), onClick: () => { 
+        items.push({ label: i18n(strings.copy), cssIcon: "icon-copy", shortcut: `${ctrl}+C`, enabled: (text != ""), onClick: () => { 
             navigator.clipboard.writeText(selectedText != "" ? selectedText : text);
         }});
 

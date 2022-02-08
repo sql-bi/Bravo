@@ -4,10 +4,9 @@
  * https://www.sqlbi.com
 */
 
-import { App } from '../controllers/app';
 import { UpdateChannelType } from '../controllers/options';
 import {  _, __ } from '../helpers/utils';
-import { optionsController } from '../main';
+import { app, optionsController } from '../main';
 import { i18n } from '../model/i18n'; 
 import { strings } from '../model/strings';
 import { OptionsDialog } from './options-dialog';
@@ -39,13 +38,13 @@ export class OptionsDialogAbout {
                                 <option value="${(<any>UpdateChannelType)[key]}" ${(<any>UpdateChannelType)[key] == updateChannel ? "selected" : ""}>${i18n((<any>strings)[`updateChannel${key}`])}</option>
                             `).join("")}
                         </select> &nbsp;
-                        ${i18n(strings.appVersion, { version: App.instance.currentVersion.toString()})}
+                        ${i18n(strings.appVersion, { version: app.currentVersion.toString()})}
                     </div>
                     <div class="update-status">
-                        ${ App.instance.pendingVersion ? `
-                            <div class="pending-update">${i18n(strings.appUpdateAvailable, { version: App.instance.pendingVersion.toString() })}</div>
-                            <span class="link-button" data-download="${App.instance.pendingVersion.info.downloadUrl}">${i18n(strings.appUpdateDownload)}</span> &nbsp; 
-                            <span class="link-button button-alt" data-href="${App.instance.pendingVersion.info.changelogUrl}">${i18n(strings.appUpdateChangelog)}</span>
+                        ${ app.pendingVersion ? `
+                            <div class="pending-update">${i18n(strings.appUpdateAvailable, { version: app.pendingVersion.toString() })}</div>
+                            <span class="link-button" data-download="${app.pendingVersion.info.downloadUrl}">${i18n(strings.appUpdateDownload)}</span> &nbsp; 
+                            <span class="link-button button-alt" data-href="${app.pendingVersion.info.changelogUrl}">${i18n(strings.appUpdateChangelog)}</span>
                         ` : `
                             <div class="up-to-date">${i18n(strings.appUpToDate)}</div>
                         `}

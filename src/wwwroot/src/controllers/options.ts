@@ -6,7 +6,8 @@
 
 import { Dispatchable } from '../helpers/dispatchable';
 import { Utils } from '../helpers/utils';
-import { host } from '../main';
+import { host, logger } from '../main';
+import { AppError } from '../model/exceptions';
 import { ThemeType } from './theme';
 
 export interface Options {
@@ -23,6 +24,7 @@ export interface ClientOptions {
     editorZoom: number
     locale: string
     formatting: ClientOptionsFormatting
+    panels: number[]
 }
 
 export interface ClientOptionsFormatting {
@@ -85,7 +87,8 @@ export class OptionsController extends Dispatchable {
                     spacingStyle: DaxFormatterSpacingStyle.SpaceAfterFunction,
                     lineStyle: DaxFormatterLineStyle.LongLine,
                 }
-            }
+            },
+            panels: [100, 0]
         }
     };
 
@@ -135,7 +138,7 @@ export class OptionsController extends Dispatchable {
                     }
                 })
                 .catch(error => {
-                    console.error(error);
+                    try { logger.logError(AppError.InitFromError(error)); } catch(ignore) {}
                 });
         } else {
             try {
@@ -144,7 +147,7 @@ export class OptionsController extends Dispatchable {
                 if (data)
                     this.options = Utils.Obj.merge(this.defaultOptions, data);
             } catch(error){
-                console.error(error);
+                try { logger.logError(AppError.InitFromError(error)); } catch(ignore) {}
             }
         }
     }
@@ -158,7 +161,7 @@ export class OptionsController extends Dispatchable {
             try {
                 localStorage.setItem(this.storageName, JSON.stringify(this.options));
             } catch(error){
-                console.error(error);
+                try { logger.logError(AppError.InitFromError(error)); } catch(ignore) {}
             }
         }
     }

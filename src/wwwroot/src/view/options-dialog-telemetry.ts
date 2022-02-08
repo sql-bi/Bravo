@@ -20,7 +20,15 @@ export class OptionsDialogTelemetry extends OptionsDialogMenuItem {
                 icon: "telemetry",
                 name: i18n(strings.optionTelemetry),
                 description: i18n(strings.optionTelemetryDescription),
-                additionalNotes: i18n(strings.optionTelemetryExplanation),
+                additionalNotes: i18n(strings.optionTelemetryMore),
+                type: OptionType.switch,
+            },
+            {
+                option: "diagnosticEnabled",
+                icon: "bug",
+                name: i18n(strings.optionDiagnostic),
+                description: i18n(strings.optionDiagnosticDescription),
+                additionalNotes: `${i18n(strings.optionDiagnosticMore)} <span class="link" data-href="https://github.com/sql-bi/bravo/issues">github.com/sql-bi/bravo/issues</a>`,
                 type: OptionType.switch,
             }
         ];

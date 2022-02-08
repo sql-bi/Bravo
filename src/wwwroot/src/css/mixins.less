@@ -273,3 +273,35 @@
       75%  {clip-path:polygon(50% 50%,0 0,100% 0,100% 100%,0 100%,0 100%)}
       100% {clip-path:polygon(50% 50%,0 0,100% 0,100% 100%,0 100%,0 0)}
   }
+
+
+  .expandable {
+      .expander {
+          .icon;
+          .icon-collapsed;
+            cursor: pointer;
+      }
+      .expandable-content {
+          display: none;
+      }
+
+      &.expanded {
+          .expander {
+              .icon-expanded;
+          }
+          .expandable-content {
+              display: block;
+          }
+      }
+  }
+
+  .json-formatter-toggler {
+      opacity: 1 !important;
+      font-size: 1em !important;
+      line-height: 1 !important;
+      .icon;
+      &:after {
+          
+        content: "\e908" !important
+      }
+  }

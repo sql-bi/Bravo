@@ -4,11 +4,9 @@
  * https://www.sqlbi.com
 */
 
-import * as sanitizeHtml from 'sanitize-html';
-import { App } from '../controllers/app';
 import { ProblemDetails } from '../controllers/host';
 import { Utils } from '../helpers/utils';
-import { telemetry } from '../main';
+import { app, logger, telemetry } from '../main';
 import { i18n } from '../model/i18n'; 
 import { strings } from './strings';
 
@@ -47,7 +45,7 @@ export class AppError {
     readonly requestAborted: boolean;
     readonly requestTimedout: boolean;
 
-    constructor(type: AppErrorType, message?: string, code?: number, traceId?: string, details?: string) {
+    private constructor(type: AppErrorType, message?: string, code?: number, traceId?: string, details?: string) {
         if (!message)
             message = i18n(strings.errorUnspecified);
 
@@ -63,7 +61,7 @@ export class AppError {
     }
 
     toString() {
-        return `${ i18n(strings.error) }${ this.code ? ` ${this.type != AppErrorType.Managed ? "HTTP/" : "" }${ this.code }` : "" }: ${ this.message }${ this.details ? `\n${this.details}` : "" }${ this.traceId ? `\n${ i18n(strings.traceId) }: ${this.traceId}` : ""}\n${i18n(strings.version)}: ${App.instance.currentVersion.toString()}`;
+        return `${ i18n(strings.error) }${ this.code ? ` ${this.type != AppErrorType.Managed ? "HTTP/" : "" }${ this.code }` : "" }: ${ this.message }${ this.details ? `\n${this.details}` : "" }${ this.traceId ? `\n${ i18n(strings.traceId) }: ${this.traceId}` : ""}\n${i18n(strings.version)}: ${app.currentVersion.toString()}`;
     }
 
     static InitFromProblem(problem: ProblemDetails, message?: string) {
@@ -127,5 +125,9 @@ export class AppError {
             telemetry.trackError(problem);
         }
         return AppError.InitFromProblem(problem, message);
+    }
+
+    static InitFromError(error: Error){
+        return AppError.InitFromProblem({ status: Utils.ResponseStatusCode.InternalError, title: error.message });
     }
 }

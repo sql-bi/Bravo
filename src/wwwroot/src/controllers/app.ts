@@ -14,7 +14,7 @@ import { Confirm } from '../view/confirm';
 import { Connect, ConnectResponse } from '../view/connect';
 import { Sheet } from './sheet';
 import { PageType } from './page';
-import { host, notificationCenter, telemetry } from '../main';
+import { host, logger, notificationCenter, optionsController, telemetry } from '../main';
 import { i18n } from '../model/i18n'; 
 import { ApplicationUpdateAvailableWebMessage, PBICloudDatasetOpenWebMessage, PBIDesktopReportOpenWebMessage, UnknownWebMessage, VpaxFileOpenWebMessage, WebMessageType } from '../model/message';
 import { Notify } from './notifications';
@@ -23,6 +23,8 @@ import { PBIDesktopReport } from '../model/pbi-report';
 import { PBICloudDataset } from '../model/pbi-dataset';
 import { ErrorAlert } from '../view/error-alert';
 import { AppError } from '../model/exceptions';
+import { DiagnosticPane } from '../view/diagnostic-pane';
+import Split, { SplitObject } from "split.js";
 
 export interface AppVersionInfo {
     version: string
@@ -45,38 +47,71 @@ export class App {
 
     sheets: Dic<Sheet> = {};
     welcomeScene: WelcomeScene;
-    element: HTMLElement;
     sidebar: Sidebar;
     tabs: Tabs;
+    diagnosticPane: DiagnosticPane;
+    diagnosticSplit: SplitObject;
     notificationSidebar: NotificationSidebar;
     defaultConnectSelectedMenu: string;
 
     currentVersion: AppVersion;
     pendingVersion: AppVersion;
 
-    //Singleton
-    private static _instance: App;
-    public static get instance(): App {
-        return this._instance || (this._instance = new this());
-    }
+    constructor(version: AppVersion) {
 
-    private constructor() {
+        _(".root").insertAdjacentHTML("beforeend", `
+            <div id="main-pane"></div>
+            <div id="bottom-pane"></div>
+            <iframe name="downloader"></iframe>
+        `);
 
-        this.element = _(".root");
-        
+        this.currentVersion = version;
+
+        let mainPane = _("#main-pane");
         let sidebarItems: Dic<string> = {};
         for(let type in PageType) {
             sidebarItems[type] = i18n((<any>strings)[type]);
         }
-        this.sidebar = new Sidebar("sidebar", this.element, sidebarItems);
+        this.sidebar = new Sidebar("sidebar", mainPane, sidebarItems);
 
-        this.tabs = new Tabs("tabs", this.element);
+        this.tabs = new Tabs("tabs", mainPane);
 
-        this.notificationSidebar = new NotificationSidebar("notification-sidebar", this.element);
+        this.notificationSidebar = new NotificationSidebar("notification-sidebar", mainPane);
+        
+        let bottomPane = _("#bottom-pane");
+        this.diagnosticPane = new DiagnosticPane("diagnostics", bottomPane, `Bravo for Power BI v${version.toString()}`);
+
+        this.updatePanels();
 
         this.listen();
 
         this.showWelcome();
+    }
+
+    updatePanels() {
+
+        if (optionsController.options.diagnosticEnabled) {
+            if (!this.diagnosticSplit) {
+                this.diagnosticSplit = Split(["#main-pane", "#bottom-pane"], {
+                    sizes: optionsController.options.customOptions.panels,
+                    minSize: [400, 0],
+                    gutterSize: 6,
+                    direction: "vertical",
+                    cursor: "n-resize",
+                    onDragEnd: sizes => {
+                        optionsController.update("customOptions.panels", sizes);
+                    }
+                });
+            }
+            this.diagnosticPane.show();
+        } else {
+            if (this.diagnosticSplit) {
+                this.diagnosticSplit.destroy();
+                this.diagnosticSplit = null;
+            }
+            this.diagnosticPane.hide();
+            this.diagnosticPane.clear();
+        }
     }
 
     // Event listeners
@@ -125,7 +160,6 @@ export class App {
         });
 
         // Catch pseudo links 
-        this.element.insertAdjacentHTML("beforeend", `<iframe name="downloader"></iframe>`);
         document.addLiveEventListener("click", ".link, .link-button", (e, element) => {
             e.preventDefault();
             if ("href" in element.dataset) {
@@ -140,7 +174,6 @@ export class App {
         });
 
         // Catch host messages
-
         host.on(WebMessageType.ReportOpen, (data: PBIDesktopReportOpenWebMessage) => {
             this.openReport(data.report);
         });
@@ -168,6 +201,8 @@ export class App {
             let appError = AppError.InitFromResponseStatus(Utils.ResponseStatusCode.InternalError, `${data.exception ? data.exception : ""} ${data.message ? data.message : "" }` );
             let alert = new ErrorAlert(appError, i18n(strings.unknownMessage));
             alert.show();
+
+            try { logger.logError(appError); } catch(ignore) {}
         });
 
         // UI events
@@ -208,6 +243,21 @@ export class App {
             if (this.tabs.currentTab) {
                 this.showSheet(this.tabs.currentTab, <PageType>id);
             }
+        });
+
+        this.diagnosticPane.on("close", ()=> {
+            optionsController.update("diagnosticEnabled", false, true);
+        });
+
+        this.diagnosticPane.on("minimize", ()=> {
+            if (this.diagnosticSplit)
+                this.diagnosticSplit.setSizes([100, 0]);
+        });
+
+        // Options change
+        optionsController.on("diagnosticEnabled.change", (changedOptions: any) => {
+            logger.enabled = changedOptions.diagnosticEnabled;
+            this.updatePanels();
         });
     }
 
@@ -315,7 +365,7 @@ export class App {
         }
     }
 
-    static Reload() {
+    reload() {
         document.location.reload();
     }
 }

@@ -488,6 +488,9 @@ export module Utils {
         export function isDate(x: any): boolean {
             return Utils.Obj.is(x, "Date");
         }
+        export function isString(x: any): boolean {
+            return Utils.Obj.is(x, "String");
+        }
 
         // Merge two objects
         export function merge<T>(source: T, target: T, acceptNull = false): T {
@@ -656,10 +659,13 @@ export function __(selector: string, container: ParentNode = document): NodeList
 Node.prototype.addLiveEventListener = function(event: string, selector: string, callback: (e: Event, element: HTMLElement) => void) {
 
     (<Node>this).addEventListener(event, e => {
-        let element = (<HTMLElement>e.target);
-        if (element && element.matches(selector)) {
-            if (callback) {
-         	    callback(e, element);
+        let target = <HTMLElement>e.target;
+        if (target) {
+            let element = <HTMLElement>target.closest(selector);
+            if (element) {
+                if (callback) {
+                    callback(e, element);
+                }
             }
         }
     });

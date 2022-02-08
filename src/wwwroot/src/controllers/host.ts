@@ -67,6 +67,17 @@ export interface FileActionResult {
     canceled?: boolean
 }
 
+export enum DiagnosticMessageType {
+    Text = "Text",
+    Json = "Json",
+}
+export interface DiagnosticMessage {
+    type: DiagnosticMessageType
+    name?: string
+    content?: string
+    timestamp?: string
+}
+
 export class Host extends Dispatchable {
 
     static DEFAULT_TIMEOUT = 60 * 1000;
@@ -351,4 +362,7 @@ export class Host extends Dispatchable {
         return this.apiCall("api/NavigateTo", { address: url });
     }
 
+    getDiagnostics(all = false) {
+        return <Promise<DiagnosticMessage[]>>this.apiCall("api/GetDiagnostics", { all: all });
+    } 
 }

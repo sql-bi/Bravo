@@ -187,7 +187,7 @@ export class Sidebar extends View {
 
     toggle(collapse = !this.collapsed) {
 
-        let root = _(".root");
+        let root = _("#main-pane");
         if (collapse) {
             this.element.classList.add("collapsed");
             root.classList.remove("has-sidebar");
