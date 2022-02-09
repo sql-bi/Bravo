@@ -278,6 +278,7 @@ a, .link {
         font-size: 14px;
         cursor: pointer !important;
         white-space: nowrap;
+        transition: all .2s ease-in-out;
 
         &:first-child {
             margin-left: 0;
@@ -303,7 +304,11 @@ a, .link {
         }
     }
 }
-
+.menu-body {
+    .item-body {
+        transition: width .2s ease-in-out;
+    }
+}
 .toolbar {
     .flexbox(center);
     font-size: 15px;

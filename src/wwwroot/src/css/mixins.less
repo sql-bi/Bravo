@@ -260,9 +260,13 @@
         inset: 0px;
         border-radius: 50%;
         border:24px solid @accent-back-color;
-        animation: prixClipFix 5s infinite linear;
+        animation: prixClipFix 10s infinite linear;
 
         .dark & { border-color: @accent-back-color-dark;}
+    }
+
+    &.fast:before {
+        animation: prixClipFix 2s infinite linear;;
     }
 }
 

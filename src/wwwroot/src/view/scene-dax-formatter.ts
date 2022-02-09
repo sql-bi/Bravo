@@ -34,9 +34,6 @@ export class DaxFormatterScene extends MainScene {
     menu: Menu;
     searchBox: HTMLInputElement;
     formatButton: HTMLElement;
-    zoomSelect: HTMLSelectElement;
-    editorToolbar: HTMLElement;
-    formattedToolbar: HTMLElement;
     activeMeasure: TabularMeasure;
     previewing: Dic<boolean> = {};
 
@@ -78,7 +75,6 @@ export class DaxFormatterScene extends MainScene {
     }
 
     updateCodeMirror(element: HTMLElement, measure: TabularMeasure | FormattedMeasure) {
-        this.toggleEditorToolbar(!!measure);
 
         if (!measure) return; // IMPORTANT: since the value is null only if nothing is selected, and since when nothing is selected the preview pane is hidden, Code Mirror won't apply the syntax highlight correctly.
 
@@ -96,6 +92,7 @@ export class DaxFormatterScene extends MainScene {
                 readOnly: "nocursor"
             }); 
             cm.on("contextmenu", (instance, e) => {
+                e.preventDefault();
                 ContextMenu.editorContextMenu(e, cm.getSelection(), cm.getValue());
             });
         }
@@ -137,7 +134,7 @@ export class DaxFormatterScene extends MainScene {
                     </div>
                     <div class="table"></div>
                 </div>
-                <div class="col colr">
+                <div class="col colr preview-container">
                     <div class="preview" hidden></div>
                 </div>
             </div>
@@ -157,39 +154,22 @@ export class DaxFormatterScene extends MainScene {
         this.menu = new Menu("preview-menu", _(".preview", this.body), <Dic<MenuItem>>{
             "original": {
                 name: i18n(strings.daxFormatterOriginalCode),
-                onRender: element => this.renderOriginalMenu(element),
-                onChange: element => this.switchToOriginalMenu(element)
+                onRender: element => this.renderMenuCurrent(element),
+                onChange: element => this.switchToMenuCurrent(element)
             },
             "formatted": {
                 name: i18n(strings.daxFormatterFormattedCode),
-                onRender: element => this.renderFormattedMenu(element),
-                onChange: element => this.switchToFormattedMenu(element)
+                onRender: element => this.renderMenuFormatted(element),
+                onChange: element => this.switchToMenuFormatted(element)
             }
         }, "original", false);
 
-        this.menu.body.insertAdjacentHTML("beforeend", `
-            <div class="editor-toolbar">
+        _("#preview-menu .menu", this.body).insertAdjacentHTML("beforeend", `
 
-                <div class="formatted-toolbar" hidden>
-
-                    <div class="copy-formula ctrl icon-copy solo disable-on-syncing" title="${i18n(strings.copyFormulaCtrlTitle)}"></div>
-                    
-                    <div class="refresh ctrl icon-refresh solo disable-on-syncing" title="${i18n(strings.refreshPreviewCtrlTitle)}"></div>
-
-                   
-                </div>
-
-                <select class="zoom">
-                    <option value="1" selected>100%</option>
-                </select>
+            <div class="toolbar">
+                <div class="toggle-side toggle solo icon-side" title="${i18n(strings.sideCtrlTitle)}"></div>
             </div>
         `);
-
-        /* <div class="open-with-dax-formatter ctrl icon-send-to-dax-formatter disable-on-syncing" title="${i18n(strings.openWithDaxFormatterCtrlTitle)}"></div> */
-
-        this.editorToolbar = _(".editor-toolbar", this.menu.body);
-        this.zoomSelect = <HTMLSelectElement>_(".zoom", this.editorToolbar);
-        this.formattedToolbar = _(".formatted-toolbar", this.editorToolbar);
 
         this.searchBox = <HTMLInputElement>_(".search input", this.body);
         this.formatButton = _(".do-format", this.body);
@@ -200,28 +180,41 @@ export class DaxFormatterScene extends MainScene {
         this.listen();
     }
 
-    renderOriginalMenu(element: HTMLElement) {
+    renderMenuCurrent(element: HTMLElement) {
         let html = `
             <div class="cm cm-original"></div>
+            <div class="toolbar">
+                <select class="zoom">
+                    <option value="1" selected>100%</option>
+                </select>
+            </div>
         `;
         element.insertAdjacentHTML("beforeend", html);
     }
 
-    switchToOriginalMenu(element: HTMLElement) {
+    switchToMenuCurrent(element: HTMLElement) {
 
         let editorEl = _('.cm-original', element);
         this.updateCodeMirror(editorEl, this.activeMeasure);  
-        this.toggleFormattedToolbar(false);
     }
 
-    renderFormattedMenu(element: HTMLElement) {
+    renderMenuFormatted(element: HTMLElement) {
         let html = `
             <div class="cm cm-formatted"></div>
+            <div class="toolbar">
+                <div class="refresh ctrl icon-refresh solo disable-on-syncing" title="${i18n(strings.refreshPreviewCtrlTitle)}"></div>
+
+                <div class="open-with-dax-formatter ctrl icon-send-to-dax-formatter disable-on-syncing" title="${i18n(strings.openWithDaxFormatterCtrlTitle)}"></div>
+                
+                <select class="zoom">
+                    <option value="1" selected>100%</option>
+                </select>
+            </div>
         `;
         element.insertAdjacentHTML("beforeend", html);
     }
 
-    switchToFormattedMenu(element: HTMLElement) {
+    switchToMenuFormatted(element: HTMLElement) {
 
         let editorElement = _('.cm-formatted', element);
         editorElement.innerHTML = "";
@@ -230,20 +223,17 @@ export class DaxFormatterScene extends MainScene {
             let key = daxMeasureName(this.activeMeasure);
             if (key in this.doc.formattedMeasures) {
                 this.updateCodeMirror(editorElement, this.doc.formattedMeasures[key]);
-                this.toggleFormattedToolbar(true);
             } else if (key in this.previewing) {
-                this.renderPreviewLoading();
+                this.renderFormattedPreviewLoading();
             } else {
-                this.renderPreviewOverlay();
+                this.renderFormattedOverlay();
             }
         } else {
             this.updateCodeMirror(editorElement, null);  
         }
     }
 
-    renderPreviewOverlay() {
-
-        this.toggleEditorToolbar(false);
+    renderFormattedOverlay() {
 
         let element = _('.cm-formatted', this.element);
 
@@ -268,36 +258,25 @@ export class DaxFormatterScene extends MainScene {
         element.innerHTML = html;
     }
 
-    toggleFormattedToolbar(toggle: boolean) {
-        if (this.formattedToolbar)
-            this.formattedToolbar.toggle(toggle);
-    }
-
-    toggleEditorToolbar(toggle: boolean) {
-        if (this.editorToolbar)
-            this.editorToolbar.toggle(toggle);
-    }
-
-    renderPreviewLoading() {
-        this.toggleEditorToolbar(false);
+    renderFormattedPreviewLoading() {
 
         let element = _('.cm-formatted', this.element);
         new Loader(element, false);
     }
 
-    maybeAutoGeneratePreview() {
+    maybeAutoGenerateFormattedPreview() {
         if (optionsController.options.customOptions.formatting.preview) {
-            this.generatePreview(this.doc.measures);
+            this.generateFormattedPreview(this.doc.measures);
         }
     }
 
-    generatePreview(measures: TabularMeasure[]) {
+    generateFormattedPreview(measures: TabularMeasure[]) {
 
         if (!measures.length || !measures[0]) return;
         
         let element = _('.cm-formatted', this.element);
 
-        this.renderPreviewLoading();
+        this.renderFormattedPreviewLoading();
 
         measures.forEach(measure => {
             this.previewing[daxMeasureName(measure)] = true;
@@ -315,15 +294,14 @@ export class DaxFormatterScene extends MainScene {
 
                     if (this.activeMeasure && measureKey == daxMeasureName(this.activeMeasure)) {
                         this.updateCodeMirror(element, measure);
-                        this.toggleFormattedToolbar(true);
                     }
                 });
             })
             .catch((error: AppError) => {
                 
                 if (error.requestAborted) return;
-                this.renderPreviewError(error, ()=>{
-                    this.generatePreview(measures);
+                this.renderFormattedPreviewError(error, ()=>{
+                    this.generateFormattedPreview(measures);
                 });
                 this.previewing = {};
             })
@@ -334,7 +312,7 @@ export class DaxFormatterScene extends MainScene {
         
     }
 
-    renderPreviewError(error: AppError, retry?: () => void) {
+    renderFormattedPreviewError(error: AppError, retry?: () => void) {
 
         this.previewing = {};
         let message = error.toString();
@@ -369,7 +347,35 @@ export class DaxFormatterScene extends MainScene {
                 retry();
             }); 
         }
-        this.toggleEditorToolbar(false);
+    }
+
+    togglePreview(toggle: boolean) {
+
+        this.updatePreview();
+
+        let previewElement = _(".preview", this.element);
+        previewElement.toggle(toggle);
+
+        if (toggle) {
+            previewElement.parentElement.classList.add("solo");
+
+            if (optionsController.options.customOptions.formatting.sidePreview) {
+                this.switchToMenuCurrent(previewElement);
+                this.switchToMenuFormatted(previewElement);
+            } else {
+                this.menu.reselect();
+            }
+
+        } else {
+            previewElement.parentElement.classList.remove("solo");
+        }
+    }
+
+    updatePreview() {
+
+        const sidePreview = optionsController.options.customOptions.formatting.sidePreview;
+        _(".toggle-side", this.body).toggleClass("active", sidePreview);
+        _(".preview", this.element).toggleClass("side-by-side", sidePreview);
     }
 
     deselectMeasures() {
@@ -381,7 +387,8 @@ export class DaxFormatterScene extends MainScene {
         }
 
         this.activeMeasure = null;
-        _(".preview", this.element).toggle(false);
+        this.togglePreview(false);
+
         this.formatButton.toggleAttr("disabled", true);
     }
 
@@ -414,8 +421,8 @@ export class DaxFormatterScene extends MainScene {
                 this.table.destroy();
                 this.table = null;
             }
-            this.deselectMeasures();
         }
+        this.deselectMeasures();
         let data = this.doc.measures;
 
         if (!this.table) {
@@ -545,8 +552,8 @@ export class DaxFormatterScene extends MainScene {
 
                 row.getElement().classList.add("row-active");
 
-                _(".preview", this.element).toggle(true);
-                this.menu.reselect();
+                this.togglePreview(true);
+                
             });
 
         } else {
@@ -573,18 +580,21 @@ export class DaxFormatterScene extends MainScene {
             defaultValues.sort();
         }
 
-        if (this.zoomSelect.length < defaultValues.length) {
-            this.zoomSelect.innerHTML = "";
-            defaultValues.forEach(value => {
-                let option = document.createElement("option");
-                option.value = value.toString();
-                option.text = `${(value * 100).toFixed(0)}%`;
-                if (value == zoom) option.selected = true;
-                this.zoomSelect.appendChild(option);
-            });
-        } else {
-            this.zoomSelect.value = fixedZoom.toString();
-        }
+        __(".preview .zoom", this.body).forEach((select: HTMLSelectElement) => {
+            if (select.length < defaultValues.length) {
+                select.innerHTML = "";
+                defaultValues.forEach(value => {
+                    let option = document.createElement("option");
+                    option.value = value.toString();
+                    option.text = `${(value * 100).toFixed(0)}%`;
+                    if (value == zoom) option.selected = true;
+                    select.appendChild(option);
+                });
+            } else {
+                select.value = fixedZoom.toString();
+            }
+        });
+
         __(".cm", this.body).forEach((el: HTMLElement) => {
             el.style.fontSize = `${zoom}em`;
             let cm = (<CodeMirrorElement>_(".CodeMirror", el)).CodeMirror;
@@ -595,7 +605,7 @@ export class DaxFormatterScene extends MainScene {
     update() {
         super.update();
         this.updateTable(false);
-        this.maybeAutoGeneratePreview();
+        this.maybeAutoGenerateFormattedPreview();
 
         _(".summary p", this.element).innerHTML = i18n(strings.daxFormatterSummary, {count: this.doc.measures.length});
     }
@@ -745,7 +755,7 @@ export class DaxFormatterScene extends MainScene {
         });
 
 
-        _(".filter-measures-with-errors", this.element).addEventListener("click", e => {
+        _(".filter-measures-with-errors", this.body).addEventListener("click", e => {
             e.preventDefault();
             let el = <HTMLElement>e.currentTarget;
             if (el.hasAttribute("disabled")) return;
@@ -760,8 +770,10 @@ export class DaxFormatterScene extends MainScene {
             this.applyFilters();
         });
 
-        this.zoomSelect.addEventListener("change", e => {
-            this.updateZoom(parseFloat((<HTMLSelectElement>e.currentTarget).value));
+        __(".preview .zoom", this.body).forEach(select => {
+            select.addEventListener("change", e => {
+                this.updateZoom(parseFloat((<HTMLSelectElement>e.currentTarget).value));
+            });
         });
         
         this.formatButton.addEventListener("click", e => {
@@ -775,21 +787,25 @@ export class DaxFormatterScene extends MainScene {
             this.format();
         });
 
-        _(".refresh", this.formattedToolbar).addEventListener("click", e => {
+        _(".refresh", this.body).addEventListener("click", e => {
             e.preventDefault();
-            this.generatePreview([this.activeMeasure]);
+            this.generateFormattedPreview([this.activeMeasure]);
         });
 
-        _(".copy-formula", this.formattedToolbar).addEventListener("click", e => {
-            e.preventDefault();
+        __(".copy-formula", this.body).forEach((div: HTMLElement) => {
+            div.addEventListener("click", e => {
+                e.preventDefault();
 
-            let editorElement = _('.cm-formatted', this.element);
-            let cm = (<CodeMirrorElement>_(".CodeMirror", editorElement)).CodeMirror;
-            if (cm)
-                navigator.clipboard.writeText(cm.getValue());
+                let container = div.closest(".item-body");
+            
+                let editorElement =  _(".cm", container);
+                let cm = (<CodeMirrorElement>_(".CodeMirror", editorElement)).CodeMirror;
+                if (cm)
+                    navigator.clipboard.writeText(cm.getValue());
+            });
         });
 
-        _(".open-with-dax-formatter", this.formattedToolbar).addEventListener("click", e => {
+        _(".open-with-dax-formatter", this.body).addEventListener("click", e => {
             e.preventDefault();
 
             const fx = `${this.activeMeasure.name} = ${this.activeMeasure.measure}`;
@@ -805,6 +821,14 @@ export class DaxFormatterScene extends MainScene {
             telemetry.track("Format with DAX Formatter");
         });
 
+        _(".toggle-side", this.body).addEventListener("click", e => {
+            e.preventDefault();
+            let el = <HTMLElement>e.currentTarget;
+            optionsController.update("customOptions.formatting.sidePreview", !el.classList.contains("active"));
+
+            this.togglePreview(true);
+        });
+
         this.element.addLiveEventListener("click", ".show-data-usage", (e, element) => {
             e.preventDefault();
             this.showDataUsageDialog();
@@ -812,14 +836,14 @@ export class DaxFormatterScene extends MainScene {
 
         this.element.addLiveEventListener("click", ".gen-preview", (e, element) => {
             e.preventDefault();
-            this.generatePreview([this.activeMeasure]);
+            this.generateFormattedPreview([this.activeMeasure]);
 
             telemetry.track("Format DAX: Preview");
         });
 
         this.element.addLiveEventListener("click", ".gen-preview-all", (e, element) => {
             e.preventDefault();
-            this.generatePreview(this.doc.measures);
+            this.generateFormattedPreview(this.doc.measures);
 
             telemetry.track("Format DAX: Preview All");
         });
@@ -828,18 +852,18 @@ export class DaxFormatterScene extends MainScene {
             e.preventDefault();
             optionsController.update("customOptions.formatting.preview", (<HTMLInputElement>element).checked);
             window.setTimeout(() => {
-                this.generatePreview(this.doc.measures);
+                this.generateFormattedPreview(this.doc.measures);
             }, 300);
         });
 
         optionsController.on("customOptions.formatting.region.change", (changedOptions: any) => {
-            this.maybeAutoGeneratePreview();
+            this.maybeAutoGenerateFormattedPreview();
         });
         optionsController.on("customOptions.formatting.daxFormatter.spacingStyle.change", (changedOptions: any) => {
-            this.maybeAutoGeneratePreview();
+            this.maybeAutoGenerateFormattedPreview();
         });
         optionsController.on("customOptions.formatting.daxFormatter.lineStyle.change", (changedOptions: any) => {
-            this.maybeAutoGeneratePreview();
+            this.maybeAutoGenerateFormattedPreview();
         });
     }
 
@@ -848,7 +872,7 @@ export class DaxFormatterScene extends MainScene {
         let html = `
             <img src="images/dax-formatter${themeController.isDark ? "-dark" : ""}.svg">
             ${i18n(strings.dataUsageMessage)}
-            <p><span class="link" data-href="https://www.daxformatter.com">https://www.daxformatter.com</span></p>
+            <p><span class="link" data-href="https://www.daxformatter.com">www.daxformatter.com</span></p>
         `;
         dialog.show(html);
 
@@ -876,4 +900,6 @@ export class DaxFormatterScene extends MainScene {
         }
         return true;
     }
+
+
 }

@@ -85,8 +85,10 @@ export class NotificationSidebar extends View {
             this.element.classList.remove("collapsed");
             root.classList.add("has-notifications");
 
-            notificationCenter.markAllAsRead();
-            this.updateUnreadCount();
+            window.setTimeout(()=>{
+                notificationCenter.markAllAsRead();
+                this.updateUnreadCount();
+            }, 1000);
         }
         this.collapsed = collapse;
     }

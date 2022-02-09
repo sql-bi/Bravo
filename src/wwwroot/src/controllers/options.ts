@@ -29,6 +29,7 @@ export interface ClientOptions {
 
 export interface ClientOptionsFormatting {
     preview: boolean
+    sidePreview: boolean
     region: ClientOptionsFormattingRegion
     daxFormatter: FormatDaxOptions
 }
@@ -82,6 +83,7 @@ export class OptionsController extends Dispatchable {
             locale: navigator.language,
             formatting: {
                 preview: false,
+                sidePreview: false,
                 region: ClientOptionsFormattingRegion.Auto,
                 daxFormatter: {
                     spacingStyle: DaxFormatterSpacingStyle.SpaceAfterFunction,
