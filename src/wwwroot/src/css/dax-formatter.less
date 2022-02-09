@@ -68,84 +68,117 @@
         .preview {
             width: 100%;
             height: 100%;
-        }
 
-        #preview-menu {
-            width: 100%;
-            height: 100%;
-            .flexbox(flex-start, stretch, column);
-        
-            .menu {
-                margin-top: 30px;
-            }
-
-            .menu-body {
-                position: relative;
-                height: calc(100% - 120px);
-                margin-top: 20px;
-                width: calc(100% - 2px);
-                font-size: 16px;
-                padding: 5px 0;
+            #preview-menu {
+                width: 100%;
+                height: 100%;
                 .flexbox(flex-start, stretch, column);
-                overflow: hidden;
+            
+                .menu {
+                    margin-top: 30px;
+                    width: 100%;
 
-                .border-radius;
-                border: 1px solid @border-color;
-                background: @input-back-color;
-
-                .dark & {
-                    border-color: @border-color-dark;
-                    background-color: @input-back-color-dark;
+                    .toolbar {
+                        width: auto;
+                        margin: 0 0 0 auto;
+                    }
                 }
 
-                .editor-toolbar {
-                    margin: auto 0 0 0;
-                    width: calc(100% - 10px);
-                    padding: 2px 5px 0 5px;
-                    .flexbox(center, space-between);
+                .menu-body {
+                    position: relative;
+                    height: calc(100% - 120px);
+                    width: 100%;
+                    margin-top: 20px;
+                    .flexbox(flex-start, stretch, column);
+                    overflow: hidden;
 
-                    .zoom {
-                        font-size: 14px;
-                        margin-left: auto;
+                    .item-body {
+                        height: 100%;
+                        width: calc(100% - 2px);
+                        padding: 5px 0;
+                        font-size: 16px;
+                        overflow: hidden;
+                        position: relative;
+
+                        .border-radius;
+                        border: 1px solid @border-color;
+                        background: @input-back-color;
+
+                        .dark & {
+                            border-color: @border-color-dark;
+                            background-color: @input-back-color-dark;
+                        }
                     }
 
-                    .formatted-toolbar {
+                    .toolbar {
+                        margin: auto 0 0 0;
+                        padding: 2px 2px 0 2px;
+                        height: 34px;
+                        width: calc(100% - 10px);
                         .flexbox(center);
 
-                        .ctrl {
-                            &:before {
-                                font-size: 22px;
+                        .zoom {
+                            margin-left: auto;
+                            font-size: 14px;
+                        }
+
+                        .ctrl:before {
+                            font-size: 22px;
+                        }
+                    }
+                    
+                    .cm {
+                        
+                        overflow: auto;
+                        height: calc(100% - 35px);
+                        width: calc(100% - 2px);
+
+                        .notice {
+                            width: 100%;
+                            height: 100%;
+                            text-align: center;
+                            .flexbox(center, center);
+        
+                            .button {
+                    
+                                margin: 10px;
+                            }
+        
+                        }
+                    }
+                    
+                }
+            }
+
+            &.side-by-side {
+                .menu {
+                    .item{
+                        cursor: default !important;
+                        opacity: 1 !important;
+
+                        &:nth-child(2) {
+                            margin-left: calc(50% - 40px);
+                        }
+                        
+                        .selector {
+                            background: @accent-back-color !important;
+                            .dark & {
+                                background-color: @accent-back-color-dark !important;
                             }
                         }
                     }
                 }
-                .measure-name {
-                    margin: 5px 0 10px 10px;
-                }
-                .item-body {
-                    height: calc(100% - 30px);
-                    width: 100%;
-                    position: relative;
-                }
-                .cm {
+                .menu-body {
+                    flex-direction: row !important;
+                    justify-content: space-between !important;
                     
-                    overflow: auto;
-                    height: 100%;
 
-                    .notice {
-                        width: 100%;
-                        height: 100%;
-                        text-align: center;
-                        .flexbox(center, center);
-    
-                        .button {
-                 
-                            margin: 10px;
-                        }
-    
+                    .item-body {
+                        display: block !important;
+                        width: calc(50% - 8px) !important;
+                        height: calc(100% - 12px) !important;
                     }
                 }
-                
             }
         }
 

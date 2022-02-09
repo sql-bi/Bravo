@@ -165,6 +165,7 @@ export enum strings {
     sheetOrphan,
     sheetOrphanPBIXTooltip,
     sheetOrphanTooltip,
+    sideCtrlTitle,
     signedInCtrlTitle,
     signIn,
     signInCtrlTitle,
