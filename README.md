@@ -20,4 +20,3 @@ To set up the environment and recompile the source you need to:
 
     - `webpack --watch --mode development` builds the package in development mode (larger and debuggable .js output) and watch for changes to .ts files
     
-    - `webpack --watch --mode development --env debug` like before, but adding a flag that allows running the project in the browser by creating a fake host with predefined models.
