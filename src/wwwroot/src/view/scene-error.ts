@@ -54,7 +54,10 @@ export class ErrorScene extends BackableScene {
                 <p>
                     <span class="copy-error link">${i18n(strings.copyErrorDetails)}</span> 
                      &nbsp;&nbsp;&nbsp; 
+                    <span class="show-diagnostics link">${i18n(strings.showDiagnosticPane)}</span> 
+                     &nbsp;&nbsp;&nbsp; 
                     <span class="create-issue link" data-href="https://github.com/sql-bi/bravo/issues/new?labels=bug&title=${encodeURIComponent(issueTitle)}&body=${encodeURIComponent(issueBody)}">${i18n(strings.createIssue)}</span>
+
                 </p>
             
                 ${ this.onRetry ? `
@@ -78,7 +81,7 @@ export class ErrorScene extends BackableScene {
 
         _(".show-diagnostics", this.element).addEventListener("click", e =>{
             e.preventDefault();
-           
+            app.showDiagnostics();
         });
 
         if (this.onRetry){
