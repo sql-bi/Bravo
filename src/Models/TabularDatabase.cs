@@ -34,5 +34,8 @@ namespace Sqlbi.Bravo.Models
 
         [JsonPropertyName("columns")]
         public IEnumerable<TabularColumn>? Columns { get; set; }
+
+        [JsonPropertyName("tables")]
+        public IEnumerable<TabularTable>? Tables { get; set; }
     }
 }
