@@ -13,7 +13,7 @@ export class ManageDatesScene extends MainScene {
 
     constructor(id: string, container: HTMLElement, doc: Doc) {
         super(id, container, doc); 
-        this.title = `${i18n(strings.ManageDates)} » ${doc.name}`;
+        this.path = i18n(strings.ManageDates);
         
         this.element.classList.add("manage-dates");
     }

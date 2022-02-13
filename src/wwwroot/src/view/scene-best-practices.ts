@@ -12,7 +12,7 @@ export class BestPracticesScene extends MainScene {
     
     constructor(id: string, container: HTMLElement, doc: Doc) {
         super(id, container, doc);
-        this.title = `${i18n(strings.BestPractices)} » ${doc.name}`;
+        this.path = i18n(strings.BestPractices);
         
         this.element.classList.add("best-practices");
     }

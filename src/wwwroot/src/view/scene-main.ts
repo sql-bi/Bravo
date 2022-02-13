@@ -11,6 +11,7 @@ import { i18n } from '../model/i18n';
 import { telemetry } from '../main';
 export class MainScene extends Scene {
     doc: Doc;
+    path: string;
 
     get syncing(): boolean {
         return this.element.classList.contains("syncing");
@@ -27,7 +28,7 @@ export class MainScene extends Scene {
         
         let html = `
             <header>
-                <h1 class="icon" title="${this.title}">${this.title}</h1>
+                <h1 class="icon" title="${this.title}">${this.path ? `<span class="parent">${this.path}</span> <span class="slash icon-right"></span> ` : "" }<span class="child">${this.title}</div></h1>
                 <div class="toolbar">
                     
                     <div class="readonly badge show-if-readonly" ${this.doc.readonly ? "" : "hidden"} title="${i18n(strings.docReadOnlyTooltip)}">${i18n(strings.docReadOnly)}</div>
@@ -85,9 +86,9 @@ export class MainScene extends Scene {
             });
         });
 
-        let h1 = _("h1", this.element);
-        h1.setAttribute("title", this.title);
-        h1.innerText = this.title;
+        // Update title
+        _("h1", this.element).setAttribute("title", this.title);
+        _("h1 .child", this.element).innerText = this.title;
     }
 
     destroy() {

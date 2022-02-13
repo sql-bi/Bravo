@@ -241,28 +241,28 @@ export class AnalyzeModelScene extends MainScene {
                 },*/
                 cardinality: { 
                     field: "columnCardinality", 
-                    title: i18n(strings.analyzeModelTableColCardinality),  
+                    title: i18n(strings.tableColCardinality),  
                     width: 120,
                     hozAlign:"right",
                     bottomCalc: "sum",
                     sorter: "number", 
-                    headerTooltip: i18n(strings.analyzeModelTableColCardinalityTooltip),
+                    headerTooltip: i18n(strings.tableColCardinalityTooltip),
                     formatter: (cell)=>Utils.Format.compress(cell.getValue()), 
                     bottomCalcFormatter: (cell)=>Utils.Format.compress(cell.getValue()),
                 },
                 entityName: { 
                     field: "columnName", 
-                    title: i18n(strings.analyzeModelTableColEntity), 
+                    title: i18n(strings.tableColEntity), 
                     cssClass: "column-name",
                 },
                 columnName: { 
                     field: "columnName", 
-                    title: i18n(strings.analyzeModelTableColColumn), 
+                    title: i18n(strings.tableColColumn), 
                     cssClass: "column-name",
                 },
                 tableName: { 
                     field: "tableName", 
-                    title: i18n(strings.analyzeModelTableColTable),  
+                    title: i18n(strings.tableColTable),  
                     formatter: (cell) => {
                         let cellData = <TabulatorVpaxModelColumn>cell.getData();
                         return (cellData._aggregated ? "" : cell.getValue())
@@ -270,7 +270,7 @@ export class AnalyzeModelScene extends MainScene {
                 },
                 size: { 
                     field: "size", 
-                    title: i18n(strings.analyzeModelTableColSize), 
+                    title: i18n(strings.tableColSize), 
                     hozAlign:"right",
                     width: 100,
                     bottomCalc: "sum",
@@ -285,7 +285,7 @@ export class AnalyzeModelScene extends MainScene {
                 },
                 weight: { 
                     field: "weight", 
-                    title: i18n(strings.analyzeModelTableColWeight), 
+                    title: i18n(strings.tableColWeight), 
                     hozAlign: "right", 
                     width: 80,
                     bottomCalc: "sum",
@@ -582,9 +582,9 @@ export class AnalyzeModelScene extends MainScene {
                                 if (item) {
                                     let lines = [];
                                     if (item.columnName) {
-                                        lines.push(`${i18n(strings.analyzeModelTableColTable)}: ${item.tableName}`);
+                                        lines.push(`${i18n(strings.tableColTable)}: ${item.tableName}`);
                                     }
-                                    lines.push(`${i18n(strings.analyzeModelTableColSize)}: ${Utils.Format.bytes(item.size, I18n.instance.locale.locale)}`);
+                                    lines.push(`${i18n(strings.tableColSize)}: ${Utils.Format.bytes(item.size, I18n.instance.locale.locale)}`);
                                     return lines;
                                 }
                             },

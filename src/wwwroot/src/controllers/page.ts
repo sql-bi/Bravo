@@ -49,7 +49,7 @@ export class Page extends View {
             [PageType.AnalyzeModel]: AnalyzeModelScene,
             [PageType.DaxFormatter]: DaxFormatterScene,
             [PageType.ManageDates]: WipScene, //ManageDatesScene,
-            [PageType.ExportData]: WipScene, //ExportDataScene,
+            [PageType.ExportData]: ExportDataScene,
             //[PageType.BestPractices]: BestPracticesScene,
         }
         if (type in classes) {

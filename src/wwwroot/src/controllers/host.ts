@@ -78,6 +78,61 @@ export interface DiagnosticMessage {
     timestamp?: string
 }
 
+
+export enum ExportDataFormat {
+    Csv = "Csv",
+    Xlsx = "Xlsx"
+}
+
+export enum ExportDataStatus {
+    Unknown = "Unknown", 
+    Running = "Running", 
+    Completed = "Completed", 
+    Canceled = "Canceled", 
+    Failed = "Failed", 
+    Truncated = "Truncated"
+}
+
+export interface ExportDataTable {
+    status: ExportDataStatus
+    name?: string
+    rows: number
+}
+export interface ExportDataJob {
+    status: ExportDataStatus
+    tables?: ExportDataTable[]
+}
+
+export interface ExportDelimitedTextSettings { 
+    tables: string[]
+    unicodeEncoding: boolean
+    delimiter?: string
+    quoteStringFields: boolean
+}
+
+export interface ExportExcelSettings {
+    tables: string[]
+}
+export interface ExportDelimitedTextFromPBIReportRequest{
+    settings: ExportDelimitedTextSettings
+    report: PBIDesktopReport
+}
+export interface ExportDelimitedTextFromPBICloudDatasetRequest{
+    settings: ExportDelimitedTextSettings
+    dataset: PBICloudDataset
+}
+
+export interface ExportExcelFromPBIReportRequest{
+    settings: ExportExcelSettings
+    report:	PBIDesktopReport
+}
+
+export interface ExportExcelFromPBICloudDatasetRequest{
+    settings: ExportExcelSettings
+    dataset: PBICloudDataset
+}
+
+
 export class Host extends Dispatchable {
 
     static DEFAULT_TIMEOUT = 60 * 1000;
@@ -342,6 +397,25 @@ export class Host extends Dispatchable {
 
     updateModel(request: UpdatePBIDesktopReportRequest | UpdatePBICloudDatasetRequest, type: DocType) {
         return <Promise<DatabaseUpdateResult>>this.apiCall(`api/Update${type == DocType.dataset ? "Dataset" : "Report"}`, request, { method: "POST" });
+    }
+
+    /* Export Data */
+
+    exportData(request: ExportDelimitedTextFromPBIReportRequest | ExportDelimitedTextFromPBICloudDatasetRequest | ExportExcelFromPBIReportRequest | ExportExcelFromPBICloudDatasetRequest, format: ExportDataFormat, type: DocType) {
+        return <Promise<ExportDataJob>>this.apiCall(`api/Export${format}From${type == DocType.dataset ? "Dataset" : "Report"}`, request, { method: "POST" }, true, 0);
+    }
+
+    queryExportData(datasource: PBIDesktopReport | PBICloudDataset, type: DocType) {
+        return <Promise<ExportDataJob>>this.apiCall(`api/QueryExportFrom${type == DocType.dataset ? "Dataset" : "Report"}`, datasource, { method: "POST" });
+    }
+
+    abortExportData(type: DocType) {
+
+        let actions: string[] = [];
+        Object.values(ExportDataFormat).forEach(format => {
+            actions.push(`api/Export${format}From${type == DocType.dataset ? "Dataset" : "Report"}`);
+        });
+        this.apiAbortByAction(actions);
     }
 
     /* Application */
