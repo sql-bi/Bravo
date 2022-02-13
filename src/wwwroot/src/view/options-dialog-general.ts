@@ -69,7 +69,7 @@ export class OptionsDialogGeneral extends OptionsDialogMenuItem {
                     <p>
                         ${auth.signedIn ? 
                             `${i18n(strings.signedInCtrlTitle, {name: auth.account.username})} 
-                                <span class="link signout">${i18n(strings.signOut)}</span>` :
+                                <br><span class="link signout">${i18n(strings.signOut)}</span>` :
                             `<div class="button signin">${i18n(strings.signIn)}</div>`
                         }
                     </p>

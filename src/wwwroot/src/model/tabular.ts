@@ -16,7 +16,13 @@ export interface TabularDatabaseInfo {
     maxRows: number
     size: number
     unreferencedCount: number
-    columns: TabularColumn[]
+    columns: TabularColumn[],
+    tables: TabularTable[]
+}
+export interface TabularTable {
+    name?: string
+    rowsCount: number
+    size: number
 }
 export interface TabularColumn {
     columnName?: string

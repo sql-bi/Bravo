@@ -5,12 +5,17 @@
 */
 
 import { Loader } from '../helpers/loader';
+import { _ } from '../helpers/utils';
 import { BackableScene } from './scene-back';
 
 export class LoaderScene extends BackableScene {
 
-    constructor(id: string, container: HTMLElement, title?: string, onBack?: (()=>void) | boolean) {
+    manual: boolean;
+    loader: Loader;
+
+    constructor(id: string, container: HTMLElement, title?: string, onBack?: (()=>void) | boolean, manual = false) {
         super(id, container, title, onBack);
+        this.manual = manual;
         this.render();
     }
 
@@ -20,12 +25,25 @@ export class LoaderScene extends BackableScene {
         let html = `
             <div class="loader-container">
                 ${ this.title ? `
-                    <p>${this.title}</p>
+                    <p class="job">${this.title}</p>
                 ` : "" }
-                ${ Loader.html(false) }
             </div>
         `;
 
         this.element.insertAdjacentHTML("beforeend", html); 
+
+        this.loader = new Loader(_(".loader-container", this.element), true, false, this.manual);
+    }
+
+    update(title?: string, progress?: number) {
+        super.update();
+
+        if (title) {
+            this.title = title;
+            _(".job", this.element).innerText = title;
+        }
+
+        if (progress) 
+            this.loader.setProgress(progress);
     }
 }

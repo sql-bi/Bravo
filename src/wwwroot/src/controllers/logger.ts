@@ -25,33 +25,17 @@ export class Logger extends Dispatchable {
     static CheckSeconds = 5;
     checkTimeout = 0;
     logs: Dic<LogMessage> = {};
-    _enabled = false;
 
-    get enabled(): boolean {
-        return this._enabled;
-    }
-
-    set enabled(enabled: boolean) {
-        this._enabled = enabled;
-        if (enabled) {
-            this.checkTimeout = window.setInterval(() => {
-                this.check();
-            }, Logger.CheckSeconds * 1000);
-            this.check(true);
-        } else {
-            window.clearTimeout(this.checkTimeout);
-            this.logs = {};
-        }
-    }
-
-    constructor(enabled:boolean) {
+    constructor() {
         super();
-        this.enabled = enabled;
+
+        this.checkTimeout = window.setInterval(() => {
+            this.check();
+        }, Logger.CheckSeconds * 1000);
+        this.check(true);
     }
 
     check(initial = false) {
-        if (!this.enabled) return;
-
         host.getDiagnostics(initial)
             .then((messages: DiagnosticMessage[]) => {
                 messages.forEach(message => {
@@ -62,7 +46,6 @@ export class Logger extends Dispatchable {
     }
 
     log(name: string, content?: any, time?: number, className?: string) {
-        if (!this.enabled) return;
 
         let message: LogMessage = {
             id: Utils.Text.uuid(),
@@ -78,7 +61,6 @@ export class Logger extends Dispatchable {
 
     logError(error: AppError) {
         console.error(error);
-        if (!this.enabled) return;
 
         const errorCode = `${error.type != AppErrorType.Managed ? "HTTP/" : "" }${ error.code }`;
         

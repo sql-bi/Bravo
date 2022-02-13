@@ -265,12 +265,29 @@
         .dark & { border-color: @accent-back-color-dark;}
     }
 
-    &.fast:before {
-        animation: prixClipFix 2s infinite linear;;
+    &.fast{
+        &:before {
+            animation: prixClipFix 2s infinite linear;
+        }
+    }
+    &.manual {
+        &:before { 
+            animation: none; 
+            transition: all .5s;
+        } 
+        &.p0:before   { clip-path:polygon(50% 50%,0 0,0 0,0 0,0 0,0 0) }
+        &.p12:before  { clip-path:polygon(50% 50%,0 0,50% 0,50% 0,50% 0,50% 0) }
+        &.p25:before  { clip-path:polygon(50% 50%,0 0,100% 0,100% 0,100% 0,100% 0) }
+        &.p37:before  { clip-path:polygon(50% 50%,0 0,100% 0,100% 50%,100% 50%,100% 50%) }
+        &.p50:before  { clip-path:polygon(50% 50%,0 0,100% 0,100% 100%,100% 100%,100% 100%) }
+        &.p62:before  { clip-path:polygon(50% 50%,0 0,100% 0,100% 100%,50% 100%,50% 100%) }
+        &.p75:before  { clip-path:polygon(50% 50%,0 0,100% 0,100% 100%,0 100%,0 100%) }
+        &.p87:before  { clip-path:polygon(50% 50%,0 0,100% 0,100% 100%,0 100%,0 50%) }
+        &.p100:before { clip-path:polygon(50% 50%,0 0,100% 0,100% 100%,0 100%,0 0) }
     }
 }
 
-  @keyframes prixClipFix {
+@keyframes prixClipFix {
       0%   {clip-path:polygon(50% 50%,0 0,0 0,0 0,0 0,0 0)}
       25%  {clip-path:polygon(50% 50%,0 0,100% 0,100% 0,100% 0,100% 0)}
       50%  {clip-path:polygon(50% 50%,0 0,100% 0,100% 100%,100% 100%,100% 100%)}

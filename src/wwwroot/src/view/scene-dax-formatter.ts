@@ -41,6 +41,7 @@ export class DaxFormatterScene extends MainScene {
 
     constructor(id: string, container: HTMLElement, doc: Doc) {
         super(id, container, doc);
+        this.path = i18n(strings.DaxFormatter);
 
         this.element.classList.add("dax-formatter");
 
@@ -139,7 +140,7 @@ export class DaxFormatterScene extends MainScene {
                 </div>
             </div>
 
-            <div class="action show-if-editable" ${this.doc.editable ? "" : "hidden"}>
+            <div class="scene-action show-if-editable" ${this.doc.editable ? "" : "hidden"}>
                 <div class="privacy-explanation">
                     <div class="icon icon-privacy"></div>
                     <p>${i18n(strings.daxFormatterAgreement)} <br>
@@ -493,16 +494,16 @@ export class DaxFormatterScene extends MainScene {
    
             columns.push({ 
                 field: "name", 
-                title: i18n(strings.daxFormatterTableColMeasure),
+                title: i18n(strings.tableColMeasure),
                 cssClass: "column-name",
                 bottomCalc: this.doc.editable ? "count" : null,
-                bottomCalcFormatter: (cell)=> i18n(strings.daxFormatterTableSelected, {count: this.table.getSelectedData().length})
+                bottomCalcFormatter: (cell)=> i18n(strings.tableSelectedCount, {count: this.table.getSelectedData().length})
             });
 
             columns.push({ 
                 field: "tableName", 
                 width: 100,
-                title: i18n(strings.daxFormatterTableColTable)
+                title: i18n(strings.tableColTable)
             });
 
             const tableConfig: Tabulator.Options = {

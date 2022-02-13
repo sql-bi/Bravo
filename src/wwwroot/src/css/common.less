@@ -496,6 +496,7 @@ a, .link {
         .name {  
             font-size: 15px;
             //font-weight: 500;
+            white-space: nowrap;
         }
         .desc {
             font-size: 13px;
@@ -509,13 +510,18 @@ a, .link {
     }
 
     .action {
+        width: 30%;
         margin-left: auto;
         padding-left: 20px;
         text-align: right;
         font-size: 14px;
 
         select {
-            min-width: 120px;
+            max-width: 100%;
+        }
+
+        input[type=text], input[type=password], input[type=email], input[type=search], input[type=number] {
+            width: 100px;
         }
     }
 }

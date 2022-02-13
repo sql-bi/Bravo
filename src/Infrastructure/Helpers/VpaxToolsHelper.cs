@@ -58,7 +58,7 @@
                     {
                         var column = new TabularColumn
                         {
-                            Name = c.ColumnName,
+                            Name = c.ColumnName, 
                             TableName = c.Table.TableName,
                             Cardinality = c.ColumnCardinality,
                             Size = c.TotalSize,
@@ -66,6 +66,16 @@
                             IsReferenced = c.IsReferenced,
                         };
                         return column;
+                    }),
+                    Tables = vpaModel.Tables.Select((t) =>
+                    {
+                        var table = new TabularTable
+                        {
+                            Name = t.TableName,
+                            RowsCount = t.RowsCount,
+                            Size = t.TableSize
+                        };
+                        return table;
                     })
                 },
                 Measures = vpaxContent.DaxModel.Tables.SelectMany((t) => t.Measures).Select((m) =>

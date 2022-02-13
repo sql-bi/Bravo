@@ -102,6 +102,8 @@ export class App {
                         optionsController.update("customOptions.panels", sizes);
                     }
                 });
+            } else {
+                this.diagnosticSplit.setSizes(optionsController.options.customOptions.panels);
             }
             this.diagnosticPane.show();
         } else {
@@ -259,7 +261,6 @@ export class App {
 
         // Options change
         optionsController.on("diagnosticEnabled.change", (changedOptions: any) => {
-            logger.enabled = changedOptions.diagnosticEnabled;
             this.updatePanels();
         });
     }
@@ -366,6 +367,11 @@ export class App {
             this.addSheet(id, doc);
             this.tabs.addTab(id, doc);
         }
+    }
+
+    showDiagnostics() {
+        optionsController.options.customOptions.panels = [70, 30];
+        optionsController.update("diagnosticEnabled", true, true);
     }
 
     reload() {

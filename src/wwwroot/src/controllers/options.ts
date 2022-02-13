@@ -90,7 +90,7 @@ export class OptionsController extends Dispatchable {
                     lineStyle: DaxFormatterLineStyle.LongLine,
                 }
             },
-            panels: [100, 0]
+            panels: [70, 30]
         }
     };
 

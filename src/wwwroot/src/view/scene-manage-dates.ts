@@ -5,12 +5,16 @@
 */
 
 import { Doc } from '../model/doc';
+import { i18n } from '../model/i18n';
+import { strings } from '../model/strings';
 import { MainScene } from './scene-main';
 
 export class ManageDatesScene extends MainScene {
 
     constructor(id: string, container: HTMLElement, doc: Doc) {
         super(id, container, doc); 
+        this.path = i18n(strings.ManageDates);
+        
         this.element.classList.add("manage-dates");
     }
 

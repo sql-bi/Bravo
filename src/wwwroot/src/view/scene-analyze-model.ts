@@ -69,8 +69,11 @@ export class AnalyzeModelScene extends MainScene {
                        
                         <div class="filter-unreferenced toggle icon-filter-broken-links disable-if-empty" title="${i18n(strings.filterUnrefCtrlTitle)}"></div>
 
+                        <hr>
+
                         <div class="group-by-table toggle icon-group disable-if-empty" title="${i18n(strings.groupByTableCtrlTitle)}"></div>
 
+                        <div class="collapse-all show-if-group ctrl icon-collapse-all" title="${i18n(strings.collapseAllCtrlTitle)}"></div>
                         
                         <div class="save-vpax ctrl icon-save disable-on-syncing enable-if-editable" ${this.doc.type == DocType.vpax ? "hidden" : ""} title="${i18n(strings.saveVpaxCtrlTile)}"> VPAX </div>
 
@@ -93,12 +96,7 @@ export class AnalyzeModelScene extends MainScene {
         `;
 
         /*
-            <hr class="show-if-group">
-
             <div class="expand-all show-if-group ctrl icon-expand-all" title="${i18n(strings.expandAllCtrlTitle)}"></div>
-
-            <div class="collapse-all show-if-group ctrl icon-collapse-all" title="${i18n(strings.collapseAllCtrlTitle)}"></div>
-
         */
         this.body.insertAdjacentHTML("beforeend", html);
 
@@ -243,28 +241,28 @@ export class AnalyzeModelScene extends MainScene {
                 },*/
                 cardinality: { 
                     field: "columnCardinality", 
-                    title: i18n(strings.analyzeModelTableColCardinality),  
+                    title: i18n(strings.tableColCardinality),  
                     width: 120,
                     hozAlign:"right",
                     bottomCalc: "sum",
                     sorter: "number", 
-                    headerTooltip: i18n(strings.analyzeModelTableColCardinalityTooltip),
+                    headerTooltip: i18n(strings.tableColCardinalityTooltip),
                     formatter: (cell)=>Utils.Format.compress(cell.getValue()), 
                     bottomCalcFormatter: (cell)=>Utils.Format.compress(cell.getValue()),
                 },
                 entityName: { 
                     field: "columnName", 
-                    title: i18n(strings.analyzeModelTableColEntity), 
+                    title: i18n(strings.tableColEntity), 
                     cssClass: "column-name",
                 },
                 columnName: { 
                     field: "columnName", 
-                    title: i18n(strings.analyzeModelTableColColumn), 
+                    title: i18n(strings.tableColColumn), 
                     cssClass: "column-name",
                 },
                 tableName: { 
                     field: "tableName", 
-                    title: i18n(strings.analyzeModelTableColTable),  
+                    title: i18n(strings.tableColTable),  
                     formatter: (cell) => {
                         let cellData = <TabulatorVpaxModelColumn>cell.getData();
                         return (cellData._aggregated ? "" : cell.getValue())
@@ -272,7 +270,7 @@ export class AnalyzeModelScene extends MainScene {
                 },
                 size: { 
                     field: "size", 
-                    title: i18n(strings.analyzeModelTableColSize), 
+                    title: i18n(strings.tableColSize), 
                     hozAlign:"right",
                     width: 100,
                     bottomCalc: "sum",
@@ -287,7 +285,7 @@ export class AnalyzeModelScene extends MainScene {
                 },
                 weight: { 
                     field: "weight", 
-                    title: i18n(strings.analyzeModelTableColWeight), 
+                    title: i18n(strings.tableColWeight), 
                     hozAlign: "right", 
                     width: 80,
                     bottomCalc: "sum",
@@ -394,6 +392,17 @@ export class AnalyzeModelScene extends MainScene {
         } else {
             this.table.setData(data);
         } 
+    }
+
+    collapseTable() {
+        if (this.table) {
+            let rows = this.table.getRows();
+            rows.forEach(row => {
+                if (row.getTreeChildren().length){
+                    row.treeCollapse();
+                }
+            });
+        }
     }
 
     expandTableColumns() {
@@ -573,9 +582,9 @@ export class AnalyzeModelScene extends MainScene {
                                 if (item) {
                                     let lines = [];
                                     if (item.columnName) {
-                                        lines.push(`${i18n(strings.analyzeModelTableColTable)}: ${item.tableName}`);
+                                        lines.push(`${i18n(strings.tableColTable)}: ${item.tableName}`);
                                     }
-                                    lines.push(`${i18n(strings.analyzeModelTableColSize)}: ${Utils.Format.bytes(item.size, I18n.instance.locale.locale)}`);
+                                    lines.push(`${i18n(strings.tableColSize)}: ${Utils.Format.bytes(item.size, I18n.instance.locale.locale)}`);
                                     return lines;
                                 }
                             },
@@ -603,9 +612,9 @@ export class AnalyzeModelScene extends MainScene {
     }*/
 
     updateToolbar() {
-        /*__(".show-if-group", this.element).forEach((div: HTMLElement) => {
+        __(".show-if-group", this.element).forEach((div: HTMLElement) => {
             div.style.opacity = (this.groupByTable ? "1" : "0");
-        });*/
+        });
         _(".filter-unreferenced", this.element).toggleClass("active", this.showUnrefOnly);
         _(".group-by-table", this.element).toggleClass("active", this.groupByTable);
     }
@@ -674,12 +683,12 @@ export class AnalyzeModelScene extends MainScene {
         /*_(".expand-all", this.element).addEventListener("click", e => {
             e.preventDefault();
             this.updateTable(true, true);
-        });
+        });*/
 
         _(".collapse-all", this.element).addEventListener("click", e => {
             e.preventDefault();
-            this.updateTable();
-        });*/
+            this.collapseTable();
+        });
 
         _(".save-vpax", this.element).addEventListener("click", e => {
             e.preventDefault();
