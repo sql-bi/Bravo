@@ -15,6 +15,7 @@
     using System.Drawing;
     using System.Globalization;
     using System.IO;
+    using System.Linq;
     using System.Text;
     using System.Threading;
 
@@ -278,7 +279,7 @@
             using var fileStream = new FileStream(xlsxFile.FullName, FileMode.Create, FileAccess.Write);
             using var xlsxWriter = new XlsxWriter(fileStream);
 
-            foreach (var tableName in settings.Tables)
+            foreach (var (tableName, tableIndex) in settings.Tables.WithIndex())
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
@@ -289,31 +290,49 @@
 
                     using var dataReader = command.ExecuteReader(CommandBehavior.SingleResult);
                     //using var dataReader = CreateTestDataReader();
+                    var worksheetName = GetWorksheetName(tableName, tableIndex);
 
-                    xlsxWriter.BeginWorksheet(name: tableName, splitRow: 1);
+                    xlsxWriter.BeginWorksheet(worksheetName, splitRow: 1);
                     {
                         WriteData(table, xlsxWriter, dataReader, cancellationToken);
                     }
-                    xlsxWriter.SetAutoFilter(fromRow: 1, fromColumn: 1, xlsxWriter.CurrentRowNumber, dataReader.FieldCount);
+                    xlsxWriter.SetAutoFilter(fromRow: 1, fromColumn: 1, rowCount: xlsxWriter.CurrentRowNumber, columnCount: dataReader.FieldCount);
                 }
+            }
+
+            WriteSummary(job, settings, xlsxWriter);
+
+            static string GetWorksheetName(string tableName, int tableIndex)
+            {
+                const int ExcelWorksheetNameMaxLength = 31;
+
+                var worksheetName = tableName;
+
+                if (tableName.Length > ExcelWorksheetNameMaxLength)
+                {
+                    var suffix = $"#{ tableIndex }";
+
+                    worksheetName = tableName[..(ExcelWorksheetNameMaxLength - suffix.Length)];
+                    worksheetName += suffix;
+                }
+
+                return worksheetName;
             }
 
             static void WriteData(ExportDataTable table, XlsxWriter writer, IDataReader reader, CancellationToken cancellationToken)
             {
                 var headerStyle = new XlsxStyle(
-                    font: new XlsxFont("Segoe UI", 9, Color.White, bold: true),
+                    font: new XlsxFont(XlsxFont.Default.Name, XlsxFont.Default.Size, Color.White, bold: true),
                     fill: new XlsxFill(Color.FromArgb(0, 0x45, 0x86)),
                     border: XlsxStyle.Default.Border,
                     numberFormat: XlsxStyle.Default.NumberFormat,
                     alignment: XlsxAlignment.Default);
-
+                
                 // write header
                 writer.SetDefaultStyle(headerStyle).BeginRow();
 
                 for (var i = 0; i < reader.FieldCount; i++)
                     writer.Write(reader.GetName(i));
-
-                var rowCount = 1; // count header
 
                 // write data
                 while (reader.Read())
@@ -363,9 +382,7 @@
                         }
                     }
 
-                    table.Rows++;
-
-                    if (++rowCount >= 999_999)
+                    if (++table.Rows >= 1_000_000)
                     {
                         // Break and exit if we have reached the limit of an xlsx file
                         table.SetTruncated();
@@ -374,6 +391,33 @@
                 }
 
                 table.SetCompleted();
+            }
+
+            static void WriteSummary(ExportDataJob job, ExportExcelSettings settings, XlsxWriter writer)
+            {
+                var headerStyle = new XlsxStyle(
+                    font: new XlsxFont(XlsxFont.Default.Name, XlsxFont.Default.Size, Color.White, bold: true),
+                    fill: new XlsxFill(Color.FromArgb(0, 0x45, 0x86)),
+                    border: XlsxStyle.Default.Border,
+                    numberFormat: XlsxStyle.Default.NumberFormat,
+                    alignment: XlsxAlignment.Default);
+                var warningStyle = XlsxStyle.Default.With(fill: new XlsxFill(Color.FromArgb(0xff, 0xff, 0x88))).With(border: XlsxBorder.Around(around: new XlsxBorder.Line(Color.DeepPink, XlsxBorder.Style.Dashed)));
+
+                writer.BeginWorksheet("BravoExportSummary");
+                writer.SetDefaultStyle(headerStyle).BeginRow().Write("Worksheet").Write("Table").Write("Rows").Write("Status");
+                writer.SetDefaultStyle(XlsxStyle.Default);
+
+                foreach (var (tableName, tableIndex) in settings.Tables.WithIndex())
+                {
+                    var table = job.Tables.Single((t) => t.Name.Equals(tableName));
+                    var statusStyle = table.Status == ExportDataStatus.Truncated ? warningStyle : XlsxStyle.Default;
+                    var worksheetName = GetWorksheetName(tableName, tableIndex);
+
+                    writer.BeginRow();
+                    writer.Write(worksheetName).Write(tableName).Write(table.Rows).Write(table.Status.ToString(), statusStyle);
+                }
+
+                writer.SetAutoFilter(fromRow: 1, fromColumn: 1, rowCount: writer.CurrentRowNumber, columnCount: 4);
             }
         }
 
