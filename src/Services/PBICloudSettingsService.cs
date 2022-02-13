@@ -194,9 +194,9 @@
                         {
                             Url = e.Attribute("Url")?.Value,
                             Version = e.Attribute("Version")?.Value,
-                            UserPrincipalName = e.Element("User")?.Value.NullIfEmpty(),
-                            DisplayName = e.Element("DisplayName")?.Value.NullIfEmpty(),
-                            Avatar = e.Element("Avatar")?.Value.NullIfEmpty(),
+                            UserPrincipalName = e.Element("User")?.Value.NullIfWhiteSpace(),
+                            DisplayName = e.Element("DisplayName")?.Value.NullIfWhiteSpace(),
+                            Avatar = e.Element("Avatar")?.Value.NullIfWhiteSpace(),
                         })
                         .Where((s) => Version.TryParse(s.Version, out var version) && version >= LatestSupportedVersion);
 

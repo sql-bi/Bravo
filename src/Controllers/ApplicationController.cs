@@ -132,5 +132,27 @@
 
             return Ok(messages);
         }
+
+        /// <summary>
+        /// Gets the current application version for the specified <see cref="UpdateChannelType"/>
+        /// </summary>
+        /// <response code="200">Status200OK - Success</response>
+        [HttpGet]
+        [ActionName("GetCurrentVersion")]
+        [Consumes(MediaTypeNames.Application.Json)]
+        [Produces(MediaTypeNames.Application.Json)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(BravoUpdate))]
+        [ProducesDefaultResponseType]
+        public IActionResult GetCurrentVersion(UpdateChannelType updateChannel)
+        {
+            BravoUpdate? bravoUpdate = null;
+
+            CommonHelper.CheckForUpdate(updateChannel, synchronousCallback: true, throwOnError: true, (update) =>
+            {
+                bravoUpdate = update;
+            });
+
+            return Ok(bravoUpdate);
+        }
     }
 }

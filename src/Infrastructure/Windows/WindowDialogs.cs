@@ -30,10 +30,10 @@ namespace Sqlbi.Bravo.Infrastructure.Windows
             ofn.lStructSize = Marshal.SizeOf(ofn);
             ofn.hwndOwner = hWnd;
             ofn.hInstance = IntPtr.Zero;
-            ofn.lpstrTitle = Title.NullIfEmpty();
-            ofn.lpstrDefExt = DefaultExt.NullIfEmpty();
+            ofn.lpstrTitle = Title.NullIfWhiteSpace();
+            ofn.lpstrDefExt = DefaultExt.NullIfWhiteSpace();
             ofn.lpstrFilter = Filter.ToFileDialogFilterString();
-            ofn.lpstrInitialDir = InitialDirectory.NullIfEmpty();
+            ofn.lpstrInitialDir = InitialDirectory.NullIfWhiteSpace();
             ofn.lpstrFile = new string(new char[Win32Constant.MAX_PATH]);
             ofn.nMaxFile = ofn.lpstrFile.Length;
             ofn.lpstrFileTitle = new string(new char[Win32Constant.MAX_PATH]);
@@ -68,10 +68,10 @@ namespace Sqlbi.Bravo.Infrastructure.Windows
             ofn.lStructSize = Marshal.SizeOf(ofn);
             ofn.hwndOwner = hWnd;
             ofn.hInstance = IntPtr.Zero;
-            ofn.lpstrTitle = Title.NullIfEmpty();
-            ofn.lpstrDefExt = DefaultExt.NullIfEmpty();
+            ofn.lpstrTitle = Title.NullIfWhiteSpace();
+            ofn.lpstrDefExt = DefaultExt.NullIfWhiteSpace();
             ofn.lpstrFilter = Filter.ToFileDialogFilterString();
-            ofn.lpstrInitialDir = InitialDirectory.NullIfEmpty();
+            ofn.lpstrInitialDir = InitialDirectory.NullIfWhiteSpace();
             ofn.lpstrFile = new string(new char[Win32Constant.MAX_PATH]);
             ofn.nMaxFile = ofn.lpstrFile.Length;
             ofn.lpstrFileTitle = new string(new char[Win32Constant.MAX_PATH]);
