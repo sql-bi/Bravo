@@ -187,7 +187,7 @@
 
             var config = new CsvConfiguration(CultureInfo.CurrentCulture);
             {
-                config.Delimiter = settings.Delimiter ?? CultureInfo.CurrentUICulture.TextInfo.ListSeparator;
+                config.Delimiter = settings.Delimiter.NullIfEmpty() ?? CultureInfo.CurrentUICulture.TextInfo.ListSeparator;
                 config.Validate();
             }
 

@@ -1,10 +1,10 @@
-﻿using Sqlbi.Bravo.Infrastructure.Extensions;
-using System;
-using System.Text.Json.Serialization;
-using System.Threading.Tasks;
-
-namespace Sqlbi.Bravo.Infrastructure
+﻿namespace Sqlbi.Bravo.Infrastructure
 {
+    using Sqlbi.Bravo.Infrastructure.Extensions;
+    using System;
+    using System.Text.Json.Serialization;
+    using System.Threading.Tasks;
+
     /// <summary>
     /// Represents unexpected errors that occur during application execution.
     /// </summary>
@@ -29,7 +29,7 @@ namespace Sqlbi.Bravo.Infrastructure
     {
         public BravoProblem Problem { get; private set; }
 
-        public string? ProblemDetail => Message.NullIfEmpty();
+        public string? ProblemDetail => Message.NullIfWhiteSpace();
 
         public string ProblemInstance => $"{ (int)Problem }";
 
