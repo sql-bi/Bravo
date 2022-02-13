@@ -110,27 +110,10 @@
         private void OnWindowCreated(object? sender, EventArgs e)
         {
             ThemeHelper.InitializeTheme(_window.WindowHandle, UserPreferences.Current.Theme);
-
+            
             _windowSubclass = AppWindowSubclass.Hook(_window);
 
-            // Every time a Photino application starts up, Photino.Native attempts to creates a shortcut in Windows start menu.
-            // This behavior is enabled by default to allow toast notifications because, without a valid shortcut installed, Photino cannot raise a toast notification from a desktop app.
-            // If the user has chosen to activate the application shortcut during app installation, this results in a duplicate of the application shortcut in the Windows start menu.
-            // The issue has been reported on GitHub, meanwhile let's get rid of the shortcut created by Photino https://github.com/tryphotino/photino.NET/issues/85
-            var shortcutName = Path.ChangeExtension(AppEnvironment.ApplicationMainWindowTitle, "lnk");
-            var shortcutPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData, Environment.SpecialFolderOption.DoNotVerify), @"Microsoft\Windows\Start Menu\Programs", shortcutName);
-            if (File.Exists(shortcutPath))
-            {
-                try
-                {
-                    File.Delete(shortcutPath);
-                }
-                catch (IOException)
-                {
-                    // ignore "The process cannot access the file '..\Bravo for Power BI.lnk' because it is being used by another process."
-                }
-            }
-
+            FixStartMenuShortcut();
             CheckForUpdate();
         }
 
@@ -142,47 +125,47 @@
             return false;
         }
 
-        /// <summary>
-        /// Async/non-blocking check for updates
-        /// </summary>
+        private static void FixStartMenuShortcut()
+        {
+            // Every time a Photino application starts up, Photino.Native attempts to creates a shortcut in Windows start menu.
+            // This behavior is enabled by default to allow toast notifications because, without a valid shortcut installed, Photino cannot raise a toast notification from a desktop app.
+            // If the user has chosen to activate the application shortcut during app installation, this results in a duplicate of the application shortcut in the Windows start menu.
+            // The issue has been reported on GitHub, meanwhile let's get rid of the shortcut created by Photino https://github.com/tryphotino/photino.NET/issues/85
+            
+            var shortcutName = Path.ChangeExtension(AppEnvironment.ApplicationMainWindowTitle, "lnk");
+            var shortcutPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData, Environment.SpecialFolderOption.DoNotVerify), @"Microsoft\Windows\Start Menu\Programs", shortcutName);
+           
+            if (File.Exists(shortcutPath))
+            {
+                try
+                {
+                    File.Delete(shortcutPath);
+                }
+                catch (IOException)
+                {
+                    // ignore "The process cannot access the file '..\Bravo for Power BI.lnk' because it is being used by another process."
+                }
+            }
+        }
+
         private void CheckForUpdate()
         {
             if (AppEnvironment.IsPackagedAppInstance)
                 return;
 
-            AutoUpdater.AppCastURL = UserPreferences.Current.UpdateChannel switch
+            CommonHelper.CheckForUpdate(UserPreferences.Current.UpdateChannel, synchronousCallback: false, throwOnError: false, updateCallback: (bravoUpdate) =>
             {
-                // TODO: CheckForUpdate - add update channel URLs
-                _ => string.Format("https://cdn.sqlbi.com/updates/BravoAutoUpdater.xml?nocache={0}", DateTimeOffset.Now.ToUnixTimeSeconds()),
-            };
-            AutoUpdater.HttpUserAgent = "AutoUpdater";
-            AutoUpdater.Synchronous = false;
-            AutoUpdater.ShowSkipButton = false;
-            AutoUpdater.ShowRemindLaterButton = false;
-            AutoUpdater.OpenDownloadPage = false;
-            AutoUpdater.PersistenceProvider = new JsonFilePersistenceProvider(jsonPath: Path.Combine(AppEnvironment.ApplicationDataPath, "autoupdater.json"));
-            AutoUpdater.CheckForUpdateEvent += (updateInfo) =>
-            {
-                if (updateInfo.Error is not null)
-                {
-                    TelemetryHelper.TrackException(updateInfo.Error);
-                }
-                else if (updateInfo.IsUpdateAvailable)
-                {
-                    // HACK: see issue https://github.com/tryphotino/photino.NET/issues/87
-                    // Wait a bit in order to ensure that the PhotinoWindow message loop is started
-                    // This is to prevent the .NET Runtime corecrl.dll fault with a win32 access violation
-                    Thread.Sleep(5_000);
-                    // HACK END <<
+                // HACK: see issue https://github.com/tryphotino/photino.NET/issues/87
+                // Wait a bit in order to ensure that the PhotinoWindow message loop is started
+                // This is to prevent the .NET Runtime corecrl.dll fault with a win32 access violation
+                Thread.Sleep(5_000);
+                // HACK END <<
 
-                    var updateMessage = ApplicationUpdateAvailableWebMessage.CreateFrom(updateInfo);
-                    _window.SendWebMessage(updateMessage.AsString);
+                var updateMessage = ApplicationUpdateAvailableWebMessage.CreateFrom(bravoUpdate);
+                _window.SendWebMessage(updateMessage.AsString);
 
-                    NotificationHelper.NotifyUpdateAvailable(updateInfo);
-                }
-            };
-            AutoUpdater.InstalledVersion = Version.Parse(AppEnvironment.ApplicationFileVersion);
-            AutoUpdater.Start();
+                NotificationHelper.NotifyUpdateAvailable(bravoUpdate);
+            });
         }
 
         /// <summary>

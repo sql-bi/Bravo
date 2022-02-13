@@ -1,6 +1,6 @@
 ﻿namespace Sqlbi.Bravo.Infrastructure.Messages
 {
-    using AutoUpdaterDotNET;
+    using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
     using Sqlbi.Bravo.Models;
     using System;
     using System.ComponentModel.DataAnnotations;
@@ -65,11 +65,14 @@
         }
     }
 
-    internal class ApplicationUpdateAvailableWebMessage : IWebMessage
+    internal class ApplicationUpdateAvailableWebMessage : IWebMessage, IUpdateInfo
     {
         [Required]
         [JsonPropertyName("type")]
         public WebMessageType MessageType => WebMessageType.ApplicationUpdateAvailable;
+
+        [JsonPropertyName("updateChannel")]
+        public UpdateChannelType? UpdateChannel { get; set; }
 
         [JsonPropertyName("currentVersion")]
         public string? CurrentVersion { get; set; }
@@ -86,14 +89,15 @@
         [JsonIgnore]
         public string AsString => JsonSerializer.Serialize(this, AppEnvironment.DefaultJsonOptions);
 
-        public static ApplicationUpdateAvailableWebMessage CreateFrom(UpdateInfoEventArgs updateInfo)
+        public static ApplicationUpdateAvailableWebMessage CreateFrom(BravoUpdate bravoUpdate)
         {
             var webMessage = new ApplicationUpdateAvailableWebMessage
             {
-                DownloadUrl = updateInfo.DownloadURL,
-                ChangelogUrl = updateInfo.ChangelogURL,
-                CurrentVersion = updateInfo.CurrentVersion,
-                InstalledVersion = updateInfo.InstalledVersion.ToString(),
+                UpdateChannel = bravoUpdate.UpdateChannel,
+                CurrentVersion = bravoUpdate.CurrentVersion,
+                InstalledVersion = bravoUpdate.InstalledVersion,
+                DownloadUrl = bravoUpdate.DownloadUrl,
+                ChangelogUrl = bravoUpdate.ChangelogUrl,
             };
 
             return webMessage;

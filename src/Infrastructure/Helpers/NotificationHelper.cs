@@ -1,7 +1,7 @@
 ﻿namespace Sqlbi.Bravo.Infrastructure.Helpers
 {
-    using AutoUpdaterDotNET;
     using Microsoft.Toolkit.Uwp.Notifications;
+    using Sqlbi.Bravo.Models;
     using System;
 
     internal static class NotificationHelper
@@ -13,13 +13,13 @@
 
         public static void RegisterNotificationHandler() => ToastNotificationManagerCompat.OnActivated += OnNotificationActivated;
 
-        public static void NotifyUpdateAvailable(UpdateInfoEventArgs updateInfo)
+        public static void NotifyUpdateAvailable(BravoUpdate bravoUpdate)
         {
             var builder = new ToastContentBuilder();
 
             builder.AddText($"A new version of { AppEnvironment.ApplicationName } is available", AdaptiveTextStyle.Default);
-            builder.AddButton(new ToastButton().SetContent("Download").AddArgument(ArgumentKeyAction, ArgumentValueDownload).AddArgument(ArgumentKeyUrl, updateInfo.DownloadURL));
-            builder.AddButton(new ToastButton().SetContent("View details").AddArgument(ArgumentKeyAction, ArgumentValueViewDetails).AddArgument(ArgumentKeyUrl, updateInfo.ChangelogURL));
+            builder.AddButton(new ToastButton().SetContent("Download").AddArgument(ArgumentKeyAction, ArgumentValueDownload).AddArgument(ArgumentKeyUrl, bravoUpdate.DownloadUrl));
+            builder.AddButton(new ToastButton().SetContent("View details").AddArgument(ArgumentKeyAction, ArgumentValueViewDetails).AddArgument(ArgumentKeyUrl, bravoUpdate.ChangelogUrl));
             // builder.AddAttributionText("Via update notifier")
             builder.AddVisualChild(new AdaptiveGroup()
             {
@@ -47,13 +47,13 @@
                         {
                             new AdaptiveText()
                             {
-                                Text = updateInfo.CurrentVersion,
+                                Text = bravoUpdate.CurrentVersion,
                                 HintStyle = AdaptiveTextStyle.Base,
                                 HintAlign = AdaptiveTextAlign.Left
                             },
                             new AdaptiveText()
                             {
-                                Text = updateInfo.InstalledVersion.ToString(),
+                                Text = bravoUpdate.InstalledVersion,
                                 HintStyle = AdaptiveTextStyle.CaptionSubtle,
                                 HintAlign = AdaptiveTextAlign.Left
                             }
