@@ -111,7 +111,7 @@
         /// <response code="204">Status204NoContent - User canceled action (e.g. a 'Cancel' button has been pressed on a dialog box)</response>
         /// <response code="401">Status401Unauthorized - Sign-in required</response>
         [HttpPost]
-        [ActionName("ExporXlsxFromDataset")]
+        [ActionName("ExportXlsxFromDataset")]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ExportDataJob))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
