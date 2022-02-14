@@ -5,6 +5,9 @@
 
     public class FormatDaxResponse : List<FormattedMeasure>
     {
+        // TODO: do not inherit from Generic.List<T>, add instead a 'Measures' property 
+        //[JsonPropertyName("measures")]
+        //public IEnumerable<FormattedMeasure>? Measures { get; set; }
     }
 
     public class FormattedMeasure

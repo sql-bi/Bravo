@@ -7,6 +7,7 @@
     using System;
     using System.IO;
     using System.Linq;
+
     internal static class VpaxToolsHelper
     {
         public static Stream ExportVpax(string connectionString, string databaseName, bool includeTomModel, bool includeVpaModel, bool readStatisticsFromData, int sampleRows)
