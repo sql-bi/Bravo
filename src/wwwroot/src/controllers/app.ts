@@ -93,19 +93,22 @@ export class App {
         if (optionsController.options.diagnosticEnabled) {
             if (!this.diagnosticSplit) {
                 this.diagnosticSplit = Split(["#main-pane", "#bottom-pane"], {
-                    sizes: optionsController.options.customOptions.panels,
+                    sizes: [100, 0], 
                     minSize: [400, 0],
                     gutterSize: 6,
                     direction: "vertical",
                     cursor: "n-resize",
+                    onDragStart: sizes => {
+                        _("#bottom-pane").classList.add("dragging");
+                    },
                     onDragEnd: sizes => {
                         optionsController.update("customOptions.panels", sizes);
+                        _("#bottom-pane").classList.remove("dragging");
                     }
                 });
-            } else {
-                this.diagnosticSplit.setSizes(optionsController.options.customOptions.panels);
             }
             this.diagnosticPane.show();
+            this.diagnosticSplit.setSizes(optionsController.options.customOptions.panels);
         } else {
             if (this.diagnosticSplit) {
                 this.diagnosticSplit.destroy();
