@@ -8,8 +8,8 @@
         [JsonPropertyName("telemetryEnabled")]
         public bool TelemetryEnabled { get; set; } = AppEnvironment.TelemetryEnabledDefault;
 
-        [JsonPropertyName("diagnosticEnabled")]
-        public bool DiagnosticEnabled { get; set; } = false;
+        [JsonPropertyName("diagnosticLevel")]
+        public DiagnosticLevelType DiagnosticLevel { get; set; } = DiagnosticLevelType.None;
 
         [JsonPropertyName("updateChannel")]
         public UpdateChannelType UpdateChannel { get; set; } = UpdateChannelType.Stable;
@@ -46,5 +46,12 @@
         ///// Canary build carries features that are released as soon as they’re built and are not tested or used
         ///// </summary>
         //Canary = 3,
+    }
+
+    public enum DiagnosticLevelType
+    {
+        None = 0,
+        Basic = 1,
+        Verbose = 2
     }
 }

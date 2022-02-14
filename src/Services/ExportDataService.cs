@@ -395,15 +395,22 @@
 
             static void WriteSummary(ExportDataJob job, ExportExcelSettings settings, XlsxWriter writer)
             {
+                if (!settings.CreateExportSummary)
+                    return;
+
                 var headerStyle = new XlsxStyle(
                     font: new XlsxFont(XlsxFont.Default.Name, XlsxFont.Default.Size, Color.White, bold: true),
                     fill: new XlsxFill(Color.FromArgb(0, 0x45, 0x86)),
                     border: XlsxStyle.Default.Border,
                     numberFormat: XlsxStyle.Default.NumberFormat,
                     alignment: XlsxAlignment.Default);
+                var infoStyle = XlsxStyle.Default.With(font: new XlsxFont(XlsxFont.Default.Name, XlsxFont.Default.Size, XlsxFont.Default.Color, bold: true));
                 var warningStyle = XlsxStyle.Default.With(fill: new XlsxFill(Color.FromArgb(0xff, 0xff, 0x88))).With(border: XlsxBorder.Around(around: new XlsxBorder.Line(Color.DeepPink, XlsxBorder.Style.Dashed)));
 
-                writer.BeginWorksheet("BravoExportSummary");
+                writer.BeginWorksheet("Bravo Export Summary");
+                writer.BeginRow().Write($"Exported with { AppEnvironment.ApplicationMainWindowTitle }", style: infoStyle);
+                writer.BeginRow().Write($"Version { AppEnvironment.ApplicationProductVersion } (build { AppEnvironment.ApplicationFileVersion })", style: infoStyle);
+                writer.SkipRows(1);
                 writer.SetDefaultStyle(headerStyle).BeginRow().Write("Worksheet").Write("Table").Write("Rows").Write("Status");
                 writer.SetDefaultStyle(XlsxStyle.Default);
 
@@ -417,7 +424,7 @@
                     writer.Write(worksheetName).Write(tableName).Write(table.Rows).Write(table.Status.ToString(), statusStyle);
                 }
 
-                writer.SetAutoFilter(fromRow: 1, fromColumn: 1, rowCount: writer.CurrentRowNumber, columnCount: 4);
+                writer.SetAutoFilter(fromRow: 4, fromColumn: 1, rowCount: writer.CurrentRowNumber, columnCount: 4);
             }
         }
 

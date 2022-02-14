@@ -45,5 +45,10 @@
 
     public class ExportExcelSettings : ExportDataSettings
     {
+        /// <summary>
+        /// Specifies whether an export summary worksheet should be created
+        /// </summary>
+        [JsonPropertyName("createExportSummary")]
+        public bool CreateExportSummary { get; set; } = true;
     }
 }

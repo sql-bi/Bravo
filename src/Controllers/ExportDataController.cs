@@ -111,7 +111,7 @@
         /// <response code="204">Status204NoContent - User canceled action (e.g. a 'Cancel' button has been pressed on a dialog box)</response>
         /// <response code="401">Status401Unauthorized - Sign-in required</response>
         [HttpPost]
-        [ActionName("ExporXlsxFromDataset")]
+        [ActionName("ExportXlsxFromDataset")]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ExportDataJob))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -137,18 +137,18 @@
         /// Returns the details of a <see cref="PBIDesktopReport"/> export job to allow monitoring of ongoing activity
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
-        /// <response code="404">Status404NotFound - Export job not found</response>
+        /// <response code="204">Status204NoContent - Export job not available for querying</response>
         [HttpPost]
         [ActionName("QueryExportFromReport")]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ExportDataJob))]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesDefaultResponseType]
         public IActionResult QueryExportFromReport(PBIDesktopReport report)
         {
             var job = _exportDataService.QueryExportJob(report);
             if (job is null)
-                return NotFound();
+                return NoContent();
 
             return Ok(job);
         }
@@ -157,18 +157,18 @@
         /// Returns the details of a <see cref="PBICloudDataset"/> export job to allow monitoring of ongoing activity
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
-        /// <response code="404">Status404NotFound - Export job not found</response>
+        /// <response code="204">Status204NoContent - Export job not available for querying</response>
         [HttpPost]
         [ActionName("QueryExportFromDataset")]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ExportDataJob))]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesDefaultResponseType]
         public IActionResult QueryExportFromDataset(PBICloudDataset dataset)
         {
             var job = _exportDataService.QueryExportJob(dataset);
             if (job is null)
-                return NotFound();
+                return NoContent();
 
             return Ok(job);
         }

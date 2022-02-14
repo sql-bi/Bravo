@@ -134,7 +134,7 @@
             var onlineWorkspaces = await GetWorkspacesAsync();
             var onlineDatasets = await GetSharedDatasetsAsync();
 
-            if (AppEnvironment.IsDiagnosticEnabled)
+            if (AppEnvironment.IsDiagnosticLevelVerbose)
             {
                 AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{ nameof(PBICloudService) }-{ nameof(GetDatasetsAsync) }-{ nameof(onlineWorkspaces) }", content: JsonSerializer.Serialize(onlineWorkspaces));
                 AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{ nameof(PBICloudService) }-{ nameof(GetDatasetsAsync) }-{ nameof(onlineDatasets) }", content: JsonSerializer.Serialize(onlineDatasets));
@@ -166,7 +166,7 @@
 
             var datasets = datasetsQuery.ToArray();
 
-            if (AppEnvironment.IsDiagnosticEnabled)
+            if (AppEnvironment.IsDiagnosticLevelVerbose)
                 AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{ nameof(PBICloudService) }-{ nameof(GetDatasetsAsync) }", content: JsonSerializer.Serialize(datasets));
 
             return datasets;
@@ -321,7 +321,7 @@
 
             var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
             
-            if (AppEnvironment.IsDiagnosticEnabled)
+            if (AppEnvironment.IsDiagnosticLevelVerbose)
                 AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{ nameof(PBICloudService) }-{ nameof(GetWorkspacesAsync) }", content);
 
             var workspaces = JsonSerializer.Deserialize<IEnumerable<CloudWorkspace>>(content, _jsonOptions);
@@ -340,7 +340,7 @@
 
             var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
             
-            if (AppEnvironment.IsDiagnosticEnabled)
+            if (AppEnvironment.IsDiagnosticLevelVerbose)
                 AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{ nameof(PBICloudService) }-{ nameof(GetSharedDatasetsAsync) }", content);
 
             var datasets = JsonSerializer.Deserialize<IEnumerable<CloudSharedModel>>(content, _jsonOptions);
