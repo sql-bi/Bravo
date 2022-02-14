@@ -25,7 +25,7 @@ export class NotificationSidebar extends View {
         this.timeFormatter = new Intl.RelativeTimeFormat(I18n.instance.locale.locale, { numeric: "auto", style: "long" });
 
         let html = `
-            <div id="ctrl-notifications" class="ctrl toggle notification-ctrl icon-notifications solo" title="${i18n(strings.notificationCtrlTitle)}"></div> 
+            <div id="ctrl-notifications" class="ctrl toggle notification-ctrl icon-notifications solo" title="${i18n(strings.notificationCtrlTitle)}"><div class="unread"></div></div> 
 
             <div class="items-title"></div>
 
@@ -96,23 +96,15 @@ export class NotificationSidebar extends View {
     updateUnreadCount() {
 
         if (this.ctrlNotifications) {
+            let unreadBadge = _(".unread", this.ctrlNotifications);
+
             let count = notificationCenter.count;
             if (count) {
-
                 let unreadCount = notificationCenter.unreadCount;
-
-                let unreadBadge = _(".unread", this.ctrlNotifications);
-                if (unreadBadge.empty) {
-                    if (unreadCount)
-                        this.ctrlNotifications.insertAdjacentHTML("beforeend", `<div class="unread">${unreadCount}</div>`)
-                } else {
-                    if (unreadCount)
-                        unreadBadge.innerText = String(unreadCount);
-                    else 
-                        this.ctrlNotifications.innerHTML = "";
-                }
+                unreadBadge.style.opacity = (unreadCount ? "1" : "0");
+                
             } else {
-                this.ctrlNotifications.innerHTML = "";
+                unreadBadge.style.opacity = "0";
                 this.itemsContainer.innerHTML = "";
             }
             this.itemsTitle.innerText = (count ? i18n(strings.notificationsTitle, { count: count }) : "");
