@@ -44,6 +44,11 @@
             var devToolsEnabled = false;
             var logVerbosity = 0;
 #endif
+
+            var htmlFile = ThemeHelper.ShouldUseDarkMode(UserPreferences.Current.Theme)
+                        ? "wwwroot/index-dark.html"
+                        : "wwwroot/index.html";
+
             var window = new PhotinoWindow()
                 .SetIconFile("wwwroot/bravo.ico")
                 .SetTitle(AppEnvironment.ApplicationMainWindowTitle)
@@ -54,7 +59,7 @@
                 .SetGrantBrowserPermissions(true)
                 .SetUseOsDefaultSize(true)
                 .RegisterCustomSchemeHandler("app", CustomSchemeHandler)
-                .Load("wwwroot/index.html")
+                .Load(htmlFile)
                 .Center();
 
             //window.WindowCreating += OnWindowCreating;
