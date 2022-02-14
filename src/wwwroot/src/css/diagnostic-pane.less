@@ -1,5 +1,7 @@
 // main: main.less
 #diagnostics {
+    background: @back-color;
+
     position: relative;
     padding: 0;
     font-family: @code-font;
@@ -9,7 +11,12 @@
     height: 100%;
     width: 100%;
 
+    .dark & { 
+        background: @back-color-dark;
+    }
+
     .toolbar {
+        background: @window-back-color;
         font-size: 12px;
         height: 30px;
         padding: 0 3px 0 10px;
@@ -17,6 +24,7 @@
         .flexbox(center);
 
         .dark & {
+            background-color: @window-back-color-dark;
             border-color: @border-color-dark;
         }
 

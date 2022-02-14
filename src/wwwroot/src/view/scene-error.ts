@@ -81,7 +81,7 @@ export class ErrorScene extends BackableScene {
 
         _(".show-diagnostics", this.element).addEventListener("click", e =>{
             e.preventDefault();
-            app.showDiagnostics();
+            app.toggleDiagnostics(true);
         });
 
         if (this.onRetry){

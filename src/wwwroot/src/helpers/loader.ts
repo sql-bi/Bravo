@@ -42,7 +42,7 @@ export class Loader {
         element.classList.add(`p${matchProgress}`);
     }
 
-    static html(solo = true, manual = false) {
-        return `<div class="loader${solo ? " solo" : ""}${manual ? " manual p0" : ""}"></div>`;
+    static html(solo = true, manual = false, speed = 0|1|2|3|5|20) {
+        return `<div class="loader${solo ? " solo" : ""}${manual ? " manual p0" : ""}${speed ? ` s${speed}` : ""}"></div>`;
     }
 }

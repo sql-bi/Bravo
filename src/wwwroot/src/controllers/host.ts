@@ -132,6 +132,14 @@ export interface ExportExcelFromPBICloudDatasetRequest{
     dataset: PBICloudDataset
 }
 
+export interface BravoUpdate {
+    updateChannel: UpdateChannelType
+    currentVersion?: string
+    installedVersion?: string
+    downloadUrl?: string
+    changelogUrl?: string
+} 
+
 export class Host extends Dispatchable {
 
     static DEFAULT_TIMEOUT = 60 * 1000;
@@ -155,7 +163,7 @@ export class Host extends Dispatchable {
 
                 const webMessage = <WebMessage>JSON.parse(message);
                 if (!webMessage || !("type" in webMessage)) return;
-
+                
                 if (webMessage.type != WebMessageType.Unknown)
                     try { logger.log("Message received", webMessage); } catch (ignore) {}
 
@@ -441,4 +449,8 @@ export class Host extends Dispatchable {
     getDiagnostics(all = false) {
         return <Promise<DiagnosticMessage[]>>this.apiCall("api/GetDiagnostics", { all: all });
     } 
+
+    getCurrentVersion(updateChannel: UpdateChannelType) {
+        return <Promise<BravoUpdate>>this.apiCall("api/GetCurrentVersion", { updateChannel: updateChannel });
+    }
 }

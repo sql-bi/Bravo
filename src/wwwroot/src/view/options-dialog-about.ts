@@ -4,7 +4,9 @@
  * https://www.sqlbi.com
 */
 
+import { AppVersion } from '../controllers/app';
 import { UpdateChannelType } from '../controllers/options';
+import { Loader } from '../helpers/loader';
 import {  _, __ } from '../helpers/utils';
 import { app, optionsController } from '../main';
 import { i18n } from '../model/i18n'; 
@@ -15,6 +17,7 @@ export class OptionsDialogAbout {
 
     element: HTMLElement;
     dialog: OptionsDialog;
+    updateStatusDiv: HTMLElement;
 
     constructor(dialog: OptionsDialog) {
         this.dialog = dialog;
@@ -40,15 +43,7 @@ export class OptionsDialogAbout {
                         </select> &nbsp;
                         ${i18n(strings.appVersion, { version: app.currentVersion.toString()})}
                     </div>
-                    <div class="update-status">
-                        ${ app.pendingVersion ? `
-                            <div class="pending-update">${i18n(strings.appUpdateAvailable, { version: app.pendingVersion.toString() })}</div>
-                            <span class="link-button" data-download="${app.pendingVersion.info.downloadUrl}">${i18n(strings.appUpdateDownload)}</span> &nbsp; 
-                            <span class="link-button button-alt" data-href="${app.pendingVersion.info.changelogUrl}">${i18n(strings.appUpdateChangelog)}</span>
-                        ` : `
-                            <div class="up-to-date">${i18n(strings.appUpToDate)}</div>
-                        `}
-                    </div>
+                    <div class="update-status"></div>
                     
                     <div class="copyright">
                         ${new Date().getFullYear()} &copy; SQLBI Corp. ${i18n(strings.copyright)}<br>
@@ -66,11 +61,40 @@ export class OptionsDialogAbout {
             </div>
         `;
         this.element.insertAdjacentHTML("beforeend", html);
+        this.updateStatusDiv = _(".update-status", this.element);
 
         _("#option-updatechannel").addEventListener("change", e => {
             let el = <HTMLSelectElement>e.currentTarget;
             optionsController.update("updateChannel", el.value);
+            this.checkForUpdates(true);
         });
+        this.checkForUpdates();
+    }
+
+    checkForUpdates(force = false) {
+
+        let statusHtml = (pendingVersion: AppVersion) => 
+            pendingVersion ? `
+                <div>
+                    <div class="pending-update">${i18n(strings.appUpdateAvailable, { version: pendingVersion.toString() })}</div>
+                    <span class="link-button" data-download="${pendingVersion.info.downloadUrl}">${i18n(strings.appUpdateDownload)}</span> &nbsp; 
+                    <span class="link-button button-alt" data-href="${pendingVersion.info.changelogUrl}">${i18n(strings.appUpdateChangelog)}</span>
+                </div>
+            ` : `
+                <div class="up-to-date">${i18n(strings.appUpToDate)}</div>
+            `;
+
+        if (!app.pendingVersion || force) {
+
+            this.updateStatusDiv.innerHTML = Loader.html(true, false, 2);
+            
+            app.checkForUpdates()
+                .then(pendingVersion => {
+                    this.updateStatusDiv.innerHTML = statusHtml(pendingVersion);
+                });
+        } else {
+            this.updateStatusDiv.innerHTML = statusHtml(app.pendingVersion);
+        }
     }
 
     destroy() {

@@ -265,11 +265,12 @@
         .dark & { border-color: @accent-back-color-dark;}
     }
 
-    &.fast{
-        &:before {
-            animation: prixClipFix 2s infinite linear;
-        }
-    }
+    &.s1:before  { animation: prixClipFix 1s  infinite linear; }
+    &.s2:before  { animation: prixClipFix 2s  infinite linear; }
+    &.s3:before  { animation: prixClipFix 3s  infinite linear; }
+    &.s5:before  { animation: prixClipFix 5s  infinite linear; }
+    &.s20:before { animation: prixClipFix 20s infinite linear; }
+
     &.manual {
         &:before { 
             animation: none; 
