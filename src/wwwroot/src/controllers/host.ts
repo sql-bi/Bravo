@@ -6,14 +6,14 @@
 
 import { Dispatchable } from '../helpers/dispatchable';
 import { Dic, Utils } from '../helpers/utils';
-import { auth, debug } from '../main';
+import { auth, debug, logger } from '../main';
 import { DocType } from '../model/doc';
 import { AppError, AppErrorType, AppProblem } from '../model/exceptions';
-import { /*TokenUpdateWebMessage,*/ WebMessage } from '../model/message';
+import { /*TokenUpdateWebMessage,*/ WebMessage, WebMessageType } from '../model/message';
 import { PBICloudDataset, PBICloudDatasetConnectionMode } from '../model/pbi-dataset';
 import { FormattedMeasure, TabularDatabase, TabularMeasure } from '../model/tabular';
 import { Account } from './auth';
-import { FormatDaxOptions, Options } from './options';
+import { FormatDaxOptions, Options, UpdateChannelType } from './options';
 import { PBIDesktopReport, PBIDesktopReportConnectionMode } from '../model/pbi-report';
 import { ThemeType } from './theme';
 import { i18n } from '../model/i18n';
@@ -132,7 +132,6 @@ export interface ExportExcelFromPBICloudDatasetRequest{
     dataset: PBICloudDataset
 }
 
-
 export class Host extends Dispatchable {
 
     static DEFAULT_TIMEOUT = 60 * 1000;
@@ -156,10 +155,13 @@ export class Host extends Dispatchable {
 
                 const webMessage = <WebMessage>JSON.parse(message);
                 if (!webMessage || !("type" in webMessage)) return;
-                console.log("WebMessage Received", webMessage);
+
+                if (webMessage.type != WebMessageType.Unknown)
+                    try { logger.log("Message received", webMessage); } catch (ignore) {}
+
                 this.trigger(webMessage.type, webMessage);
             });
-        } catch (error) {
+        } catch (ignore) {
             // Ignore error
         }
 
