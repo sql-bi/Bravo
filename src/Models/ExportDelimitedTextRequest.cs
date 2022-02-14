@@ -1,8 +1,8 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.Text.Json.Serialization;
-
-namespace Sqlbi.Bravo.Models
+﻿namespace Sqlbi.Bravo.Models
 {
+    using System.ComponentModel.DataAnnotations;
+    using System.Text.Json.Serialization;
+
     public class ExportDelimitedTextRequest
     {
         [Required]
