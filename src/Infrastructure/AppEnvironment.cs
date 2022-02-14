@@ -2,6 +2,7 @@
 {
     using Microsoft.Win32;
     using Sqlbi.Bravo.Infrastructure.Configuration;
+    using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
     using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Infrastructure.Helpers;
     using Sqlbi.Bravo.Infrastructure.Security;
@@ -107,13 +108,13 @@
 
         public static bool IsWebView2RuntimeInstalled => WebView2VersionInfo is not null;
 
-        public static bool IsDiagnosticEnabled => UserPreferences.Current.DiagnosticEnabled;
+        public static bool IsDiagnosticLevelVerbose => UserPreferences.Current.DiagnosticLevel == DiagnosticLevelType.Verbose;
 
         public static ConcurrentDictionary<string, DiagnosticMessage> Diagnostics { get; }
 
         public static void AddDiagnostics(DiagnosticMessageType type, string name, string content, bool writeFile = true)
         {
-            if (UserPreferences.Current.DiagnosticEnabled)
+            if (IsDiagnosticLevelVerbose)
             {
                 var message = DiagnosticMessage.Create(type, name, content);
 
@@ -128,7 +129,7 @@
 
         private static void WriteDiagnosticFile(DiagnosticMessage message)
         {
-            if (UserPreferences.Current.DiagnosticEnabled)
+            if (IsDiagnosticLevelVerbose)
             {
                 try
                 {

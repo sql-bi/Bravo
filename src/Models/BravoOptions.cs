@@ -17,8 +17,8 @@
         [JsonPropertyName("theme")]
         public ThemeType Theme { get; set; } = ThemeType.Auto;
 
-        [JsonPropertyName("diagnosticEnabled")]
-        public bool DiagnosticEnabled { get; set; } = false;
+        [JsonPropertyName("diagnosticLevel")]
+        public DiagnosticLevelType DiagnosticLevel { get; set; } = DiagnosticLevelType.None;
 
         [JsonPropertyName("customOptions")]
         public JsonElement? CustomOptions { get; set; }
@@ -28,7 +28,7 @@
             var options = new BravoOptions
             {
                 TelemetryEnabled = UserPreferences.Current.TelemetryEnabled,
-                DiagnosticEnabled = UserPreferences.Current.DiagnosticEnabled,
+                DiagnosticLevel = UserPreferences.Current.DiagnosticLevel,
                 CustomOptions = UserPreferences.Current.CustomOptions,
                 UpdateChannel = UserPreferences.Current.UpdateChannel,
                 Theme = UserPreferences.Current.Theme,
@@ -40,7 +40,7 @@
         public void SaveToUserPreferences()
         {
             UserPreferences.Current.TelemetryEnabled = TelemetryEnabled;
-            UserPreferences.Current.DiagnosticEnabled = DiagnosticEnabled;
+            UserPreferences.Current.DiagnosticLevel = DiagnosticLevel;
             UserPreferences.Current.CustomOptions = CustomOptions;
             UserPreferences.Current.UpdateChannel = UpdateChannel;
             UserPreferences.Current.Theme = Theme;

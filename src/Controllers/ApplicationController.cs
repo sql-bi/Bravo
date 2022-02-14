@@ -5,7 +5,6 @@
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.Extensions.Options;
     using Sqlbi.Bravo.Infrastructure;
-    using Sqlbi.Bravo.Infrastructure.Configuration;
     using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
     using Sqlbi.Bravo.Infrastructure.Helpers;
     using Sqlbi.Bravo.Models;
@@ -114,19 +113,16 @@
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<DiagnosticMessage>))]
         [ProducesDefaultResponseType]
-        public IActionResult GetDiagnostics(bool all)
+        public IActionResult GetDiagnostics(bool? all = null)
         {
             var messages = new List<DiagnosticMessage>();
-
-            if (UserPreferences.Current.DiagnosticEnabled)
+            
+            foreach (var message in AppEnvironment.Diagnostics.Values)
             {
-                foreach (var message in AppEnvironment.Diagnostics.Values)
+                if (all == true || message.LastReadTimestamp is null)
                 {
-                    if (all || message.LastReadTimestamp is null)
-                    {
-                        message.LastReadTimestamp = DateTime.UtcNow;
-                        messages.Add(message);
-                    }
+                    message.LastReadTimestamp = DateTime.UtcNow;
+                    messages.Add(message);
                 }
             }
 
