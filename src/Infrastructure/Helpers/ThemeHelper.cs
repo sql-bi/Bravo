@@ -45,7 +45,7 @@
             }
         }
 
-        private static bool ShouldUseDarkMode(ThemeType theme)
+        public static bool ShouldUseDarkMode(ThemeType theme)
         {
             if (IsDarkModeSupported /* && !SystemInformation.HighContrast */)
             {

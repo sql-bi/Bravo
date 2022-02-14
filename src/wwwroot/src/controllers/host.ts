@@ -6,14 +6,14 @@
 
 import { Dispatchable } from '../helpers/dispatchable';
 import { Dic, Utils } from '../helpers/utils';
-import { auth, debug } from '../main';
+import { auth, debug, logger } from '../main';
 import { DocType } from '../model/doc';
 import { AppError, AppErrorType, AppProblem } from '../model/exceptions';
-import { /*TokenUpdateWebMessage,*/ WebMessage } from '../model/message';
+import { /*TokenUpdateWebMessage,*/ WebMessage, WebMessageType } from '../model/message';
 import { PBICloudDataset, PBICloudDatasetConnectionMode } from '../model/pbi-dataset';
 import { FormattedMeasure, TabularDatabase, TabularMeasure } from '../model/tabular';
 import { Account } from './auth';
-import { FormatDaxOptions, Options } from './options';
+import { FormatDaxOptions, Options, UpdateChannelType } from './options';
 import { PBIDesktopReport, PBIDesktopReportConnectionMode } from '../model/pbi-report';
 import { ThemeType } from './theme';
 import { i18n } from '../model/i18n';
@@ -132,6 +132,13 @@ export interface ExportExcelFromPBICloudDatasetRequest{
     dataset: PBICloudDataset
 }
 
+export interface BravoUpdate {
+    updateChannel: UpdateChannelType
+    currentVersion?: string
+    installedVersion?: string
+    downloadUrl?: string
+    changelogUrl?: string
+} 
 
 export class Host extends Dispatchable {
 
@@ -156,10 +163,13 @@ export class Host extends Dispatchable {
 
                 const webMessage = <WebMessage>JSON.parse(message);
                 if (!webMessage || !("type" in webMessage)) return;
-                console.log("WebMessage Received", webMessage);
+                
+                if (webMessage.type != WebMessageType.Unknown)
+                    try { logger.log("Message received", webMessage); } catch (ignore) {}
+
                 this.trigger(webMessage.type, webMessage);
             });
-        } catch (error) {
+        } catch (ignore) {
             // Ignore error
         }
 
@@ -439,4 +449,8 @@ export class Host extends Dispatchable {
     getDiagnostics(all = false) {
         return <Promise<DiagnosticMessage[]>>this.apiCall("api/GetDiagnostics", { all: all });
     } 
+
+    getCurrentVersion(updateChannel: UpdateChannelType) {
+        return <Promise<BravoUpdate>>this.apiCall("api/GetCurrentVersion", { updateChannel: updateChannel });
+    }
 }

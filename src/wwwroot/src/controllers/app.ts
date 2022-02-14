@@ -93,7 +93,7 @@ export class App {
         if (optionsController.options.diagnosticEnabled) {
             if (!this.diagnosticSplit) {
                 this.diagnosticSplit = Split(["#main-pane", "#bottom-pane"], {
-                    sizes: optionsController.options.customOptions.panels,
+                    sizes: optionsController.options.customOptions.panels, 
                     minSize: [400, 0],
                     gutterSize: 6,
                     direction: "vertical",
@@ -103,7 +103,7 @@ export class App {
                     }
                 });
             } else {
-                this.diagnosticSplit.setSizes(optionsController.options.customOptions.panels);
+                this.diagnosticSplit.setSizes(optionsController.options.customOptions.panels)
             }
             this.diagnosticPane.show();
         } else {
@@ -112,7 +112,6 @@ export class App {
                 this.diagnosticSplit = null;
             }
             this.diagnosticPane.hide();
-            this.diagnosticPane.clear();
         }
     }
 
@@ -248,15 +247,12 @@ export class App {
         });
 
         this.diagnosticPane.on("close", ()=> {
-            optionsController.update("diagnosticEnabled", false, true);
+            optionsController.update("diagnosticEnabled", false);
+            this.updatePanels();
         });
 
         this.diagnosticPane.on("minimize", ()=> {
-            if (this.diagnosticSplit) {
-                const sizes = [100, 0];
-                this.diagnosticSplit.setSizes(sizes);
-                optionsController.update("customOptions.panels", sizes);
-            }
+            this.toggleDiagnostics(false);
         });
 
         // Options change
@@ -369,9 +365,31 @@ export class App {
         }
     }
 
-    showDiagnostics() {
-        optionsController.options.customOptions.panels = [70, 30];
-        optionsController.update("diagnosticEnabled", true, true);
+    toggleDiagnostics(toggle: boolean) {
+        const sizes = (toggle ? [70, 30] : [100, 0]);
+        if (toggle) optionsController.options.diagnosticEnabled = true;
+        optionsController.update("customOptions.panels", sizes);
+        this.updatePanels();
+    }
+
+    checkForUpdates() {
+        return host.getCurrentVersion(optionsController.options.updateChannel)
+            .then(data => {
+
+                let pendingVersion = null;
+                if (data.updateChannel == optionsController.options.updateChannel) {
+                    pendingVersion = new AppVersion({
+                        version: data.currentVersion,
+                        downloadUrl: data.downloadUrl,
+                        changelogUrl: data.changelogUrl
+                    });
+                }
+                this.pendingVersion = pendingVersion;
+                return pendingVersion;
+            })
+            .catch(ignore => {
+                return null;
+            });
     }
 
     reload() {

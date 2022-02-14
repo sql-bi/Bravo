@@ -3,6 +3,11 @@
 .root {
     .flexbox(stretch, flex-start, column);
     height: 100%;
+    background: @window-back-color url("@{images}/bravo.svg") no-repeat center;
+
+    .dark & { 
+        background-color: @window-back-color-dark;
+    }
 }
 
 #main-pane {
@@ -11,7 +16,7 @@
 }
 
 #bottom-pane {
-    
+
 }
 
 .gutter {
