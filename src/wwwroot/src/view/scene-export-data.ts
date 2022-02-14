@@ -10,7 +10,7 @@ import { ExportDataFormat, ExportDataStatus, ExportDelimitedTextFromPBICloudData
 import { Utils, _, __ } from '../helpers/utils';
 import { host, telemetry } from '../main';
 import { Doc, DocType } from '../model/doc';
-import { AppError } from '../model/exceptions';
+import { AppError, AppProblem } from '../model/exceptions';
 import { I18n, i18n } from '../model/i18n';
 import { PBICloudDataset } from '../model/pbi-dataset';
 import { PBIDesktopReport } from '../model/pbi-report';
@@ -407,16 +407,11 @@ export class ExportDataScene extends MainScene {
                             break;
 
                         case ExportDataStatus.Canceled:
-
+                            exportingScene.pop();
                             break;
-
+                            
                         case ExportDataStatus.Failed:
-
-                            break;
-
-                        case ExportDataStatus.Truncated:
-                            // exportingScene.pop(); ?
-                            break;
+                            throw AppError.InitFromProblemCode(AppProblem.ExportDataFileError);
                     }
     
                 }
