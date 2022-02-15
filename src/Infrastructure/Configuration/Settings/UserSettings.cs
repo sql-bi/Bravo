@@ -19,12 +19,6 @@
 
         [JsonPropertyName("customOptions")]
         public JsonElement? CustomOptions { get; set; }
-
-        /// <summary>
-        /// ManageDates WIP
-        /// </summary>
-        [JsonPropertyName("manageDatesTemplatePath")]
-        public string? ManageDatesTemplatePath { get; set; }
     }
 
     public enum ThemeType

@@ -1,6 +1,7 @@
 ﻿namespace Sqlbi.Bravo.Models.ManageDates
 {
     using Dax.Template.Tables;
+    using Sqlbi.Bravo.Infrastructure;
     using Sqlbi.Bravo.Infrastructure.Extensions;
     using System;
     using System.Text.Json.Serialization;
@@ -66,21 +67,15 @@
                 if (value is null)
                     return;
 
-                string key = $"__{parameterName}";
+                var variableKey = $"__{parameterName}";
 
-                if (!templateConfiguration.DefaultVariables.ContainsKey(key))
-                {
-                    throw new Exception($"Invalid { key } variable.");
-                }
+                BravoUnexpectedException.Assert(templateConfiguration.DefaultVariables.ContainsKey(variableKey));
 
-                string? variableValue = value.ToString();
+                var variableValue = value.ToString();
 
-                if (variableValue is null)
-                {
-                    throw new Exception($"Null value for { key } variable.");
-                }
+                BravoUnexpectedException.ThrowIfNull(variableValue);
 
-                templateConfiguration.DefaultVariables[key] = $"{quote}{variableValue}{quote}";
+                templateConfiguration.DefaultVariables[variableKey] = $"{ quote }{ variableValue }{ quote }";
             }
         }
 
@@ -97,10 +92,12 @@
             };
 
             var quarterWeekTypeParameter = GetQuotedStringParameter(nameof(QuarterWeekType));
+
             if (Enum.TryParse(quarterWeekTypeParameter, out QuarterWeekType quarterWeekType)) 
                 defaults.QuarterWeekType = quarterWeekType;
 
             var weeklyTypeParameter = GetQuotedStringParameter(nameof(WeeklyType));
+
             if (Enum.TryParse(weeklyTypeParameter, out WeeklyType weeklyType)) 
                 defaults.WeeklyType = weeklyType;
 
@@ -123,22 +120,22 @@
                 if (parameterName.IsNullOrEmpty())
                     return null;
 
-                if (templateConfiguration.DefaultVariables.TryGetValue($"__{ parameterName }", out string? value))
-                    return value;
+                if (templateConfiguration.DefaultVariables.TryGetValue($"__{ parameterName }", out var parameterValue))
+                    return parameterValue;
 
                 return null;
             }
 
             string? GetQuotedStringParameter(string? parameterName)
             {
-                var value = GetStringParameter(parameterName);
-                if (value.IsNullOrEmpty())
+                var parameterValue = GetStringParameter(parameterName);
+                if (parameterValue.IsNullOrEmpty())
                     return null;
 
-                if ((value[0] == '"') && (value[^1] == '"'))
-                    value = value[1..^1];
+                if ((parameterValue[0] == '"') && (parameterValue[^1] == '"'))
+                    parameterValue = parameterValue[1..^1];
 
-                return value;
+                return parameterValue;
             }
         }
     }

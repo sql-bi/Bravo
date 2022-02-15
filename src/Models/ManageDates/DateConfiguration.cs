@@ -22,14 +22,20 @@
         [JsonPropertyName("description")]
         public string? Description { get; init; }
 
+        #region Localization
+
         [JsonPropertyName("isoFormat")]
         public string? IsoFormat { get; set; }
 
-        [JsonPropertyName("isoCountry")]
-        public string? IsoCountry { get; set; }
-
         [JsonPropertyName("isoTranslation")]
         public string? IsoTranslation { get; set; }
+
+        #endregion
+
+        #region Scan
+
+        [JsonPropertyName("autoScan")]
+        public AutoScanEnum? AutoScan { get; set; }
 
         [JsonPropertyName("onlyTablesColumns")]
         public string[]? OnlyTablesColumns { get; set; }
@@ -37,11 +43,12 @@
         [JsonPropertyName("exceptTablesColumns")]
         public string[]? ExceptTablesColumns { get; set; }
 
-        [JsonPropertyName("tableSingleInstanceMeasures")]
-        public string? TableSingleInstanceMeasures { get; set; }
+        #endregion
 
-        [JsonPropertyName("targetMeasures")]
-        public string[]? TargetMeasures { get; set; }
+        #region Holidays
+
+        [JsonPropertyName("isoCountry")]
+        public string? IsoCountry { get; set; }
 
         [JsonPropertyName("firstYear")]
         public int? FirstYear { get; set; }
@@ -49,59 +56,79 @@
         [JsonPropertyName("lastYear")]
         public int? LastYear { get; set; }
 
-        [JsonPropertyName("autoScan")]
-        public AutoScanEnum? AutoScan { get; set; }
+        #endregion
+
+        #region MeasureTemplate
 
         [JsonPropertyName("autoNaming")]
         public AutoNamingEnum? AutoNaming { get; set; }
 
+        [JsonPropertyName("targetMeasures")]
+        public string[]? TargetMeasures { get; set; }
+
+        [JsonPropertyName("tableSingleInstanceMeasures")]
+        public string? TableSingleInstanceMeasures { get; set; }
+
+        #endregion
+
+        #region CustomDateTable
+
         [JsonPropertyName("defaults")]
         public DateDefaults? Defaults { get; set; }
 
-        //[JsonIgnore]
-        //public bool IsFileTemplate => Uri.TryCreate(TemplateUri, UriKind.Absolute, out var uri) && uri.IsFile;
+        #endregion
 
         public void CopyTo(TemplateConfiguration templateConfiguration)
         {
             templateConfiguration.TemplateUri ??= TemplateUri;
+            templateConfiguration.Name ??= Name;
+            templateConfiguration.Description ??= Description;
+            //
+            // Localization
+            //
             templateConfiguration.IsoFormat ??= IsoFormat;
-            templateConfiguration.IsoCountry ??= IsoCountry;
             templateConfiguration.IsoTranslation ??= IsoTranslation;
-            templateConfiguration.AutoNaming = AutoNaming ?? templateConfiguration.AutoNaming;
+            //
+            // Scan
+            //
             templateConfiguration.AutoScan ??= AutoScan;
-
-            Defaults?.CopyTo(templateConfiguration);
-
             if (OnlyTablesColumns?.Length > 0)
             {
                 templateConfiguration.OnlyTablesColumns = OnlyTablesColumns;
             }
-
             if (ExceptTablesColumns?.Length > 0)
             {
                 templateConfiguration.ExceptTablesColumns = ExceptTablesColumns;
             }
-
-            // ???? TableSingleInstanceMeasures
-            
-            if (TargetMeasures?.Length > 0)
-            {
-                templateConfiguration.TargetMeasures = TargetMeasures.Select((name) => new IMeasureTemplateConfig.TargetMeasure { Name = name }).ToArray();
-            }
-
+            //
+            // Holidays
+            //
+            templateConfiguration.IsoCountry ??= IsoCountry;
             if (FirstYear.HasValue)
             {
                 templateConfiguration.FirstYear = FirstYear.Value;
                 templateConfiguration.FirstYearMin = FirstYear.Value;
                 templateConfiguration.FirstYearMax = FirstYear.Value;
             }
-
             if (LastYear.HasValue)
             {
                 templateConfiguration.LastYear = LastYear.Value;
                 templateConfiguration.LastYearMin = LastYear.Value;
                 templateConfiguration.LastYearMax = LastYear.Value;
             }
+            //
+            // MeasureTemplate
+            //
+            templateConfiguration.AutoNaming = AutoNaming ?? templateConfiguration.AutoNaming;
+            if (TargetMeasures?.Length > 0)
+            {
+                templateConfiguration.TargetMeasures = TargetMeasures.Select((name) => new IMeasureTemplateConfig.TargetMeasure { Name = name }).ToArray();
+            }
+            // ???? TableSingleInstanceMeasures
+            //
+            // CustomDateTable
+            //
+            Defaults?.CopyTo(templateConfiguration);
         }
 
         public static DateConfiguration CreateFrom(TemplateConfiguration templateConfiguration)
@@ -111,20 +138,32 @@
                 TemplateUri = templateConfiguration.TemplateUri,
                 Name = templateConfiguration.Name,
                 Description = templateConfiguration.Description,
+                //
+                // Localization
+                //
                 IsoFormat = templateConfiguration.IsoFormat,
-                IsoCountry = templateConfiguration.IsoCountry,
                 IsoTranslation = templateConfiguration.IsoTranslation,
-
+                //
+                // Scan
+                //
+                AutoScan = templateConfiguration.AutoScan,
                 // ???? OnlyTablesColumns
                 // ???? ExceptTablesColumns
-                // ???? TableSingleInstanceMeasures
-                // ???? TargetMeasures
+                //
+                // Holidays
+                //
+                IsoCountry = templateConfiguration.IsoCountry,
                 // ???? FirstYear
                 // ???? LastYear
-
-                AutoScan = templateConfiguration.AutoScan,
+                //
+                // MeasureTemplate
+                //
                 AutoNaming = templateConfiguration.AutoNaming,
-
+                // ???? TargetMeasures
+                // ???? TableSingleInstanceMeasures
+                //
+                // CustomDateTable
+                //
                 Defaults = DateDefaults.CreateFrom(templateConfiguration)
             };
 

@@ -155,13 +155,15 @@
         {
             services.AddSwaggerGen((options) =>
             {
-                // TODO: IncludeXmlComments fails due to a wrong xml file path while debugging the MSIX package
-                if (Debugger.IsAttached && AppEnvironment.IsPackagedAppInstance)
-                    return;
+                options.CustomSchemaIds((type) => type.ToString());
 
-                var xmlFile = $"{ Assembly.GetExecutingAssembly().GetName().Name }.xml";
-                var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-                options.IncludeXmlComments(xmlPath, includeControllerXmlComments: true);
+                // Include xml comments only if we are not debugging the MSIX packaged application, this is because a wrong path is generated for xml files
+                if ((Debugger.IsAttached && AppEnvironment.IsPackagedAppInstance) == false)
+                {
+                    var xmlFile = $"{ Assembly.GetExecutingAssembly().GetName().Name }.xml";
+                    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+                    options.IncludeXmlComments(xmlPath, includeControllerXmlComments: true);
+                }
             });
 
             return services;
