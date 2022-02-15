@@ -3,7 +3,7 @@
     using Dax.Metadata.Extractor;
     using Dax.ViewModel;
     using Dax.Vpax.Tools;
-    using Sqlbi.Bravo.Models;
+    using Sqlbi.Bravo.Models.AnalyzeModel;
     using System;
     using System.IO;
     using System.Linq;
@@ -24,7 +24,7 @@
             }
             catch (ArgumentException ex) when (ex.Message == $"The database '{ databaseName }' could not be found. Either it does not exist or you do not have admin rights to it.") // TODO: avoid using the exception message here to filter the error
             {
-                throw new TOMDatabaseException(BravoProblem.TOMDatabaseDatabaseNotFound);
+                throw new BravoException(BravoProblem.TOMDatabaseDatabaseNotFound);
             }
         }
 

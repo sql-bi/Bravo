@@ -6,6 +6,7 @@
     using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Infrastructure.Helpers;
     using Sqlbi.Bravo.Models;
+    using Sqlbi.Bravo.Models.FormatDax;
     using System;
     using System.Collections.Concurrent;
     using System.Collections.Generic;

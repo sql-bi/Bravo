@@ -33,8 +33,9 @@
         public static readonly string PBIDesktopSSASProcessImageName = "msmdsrv.exe";
         public static readonly string PBIDesktopMainWindowTitleSuffix = " - Power BI Desktop";
         public static readonly TimeSpan MSALSignInTimeout = TimeSpan.FromMinutes(5);
-        public static readonly Color ThemeColorDark = Color.FromArgb(red: 32, green: 32, blue: 32);
-        public static readonly Color ThemeColorLight = Color.FromArgb(red: 243, green: 243, blue: 243);
+        public static readonly Color ThemeColorDark = ColorTranslator.FromHtml("#202020");
+        public static readonly Color ThemeColorLight = ColorTranslator.FromHtml("#F3F3F3");
+        
 
         public static readonly string[] TrustedUriHosts = new[]
         {
@@ -52,11 +53,16 @@
 
             ProcessId = Environment.ProcessId;
             SessionId = currentProcess.SessionId;
+
             // use Environment.ProcessPath on .NET 6
-            ProcessPath = currentProcess.MainModule?.FileName ?? throw new BravoUnexpectedException("MainModule.FileName is null");
+            BravoUnexpectedException.ThrowIfNull(currentProcess.MainModule?.FileName);
+            ProcessPath = currentProcess.MainModule.FileName;
+
             VersionInfo = FileVersionInfo.GetVersionInfo(ProcessPath);
-            ApplicationFileVersion = VersionInfo.FileVersion ?? throw new BravoUnexpectedException("FileVersion is null");
-            ApplicationProductVersion = VersionInfo.ProductVersion ?? throw new BravoUnexpectedException("ProductVersion is null");
+            BravoUnexpectedException.ThrowIfNull(VersionInfo.FileVersion);
+            ApplicationFileVersion = VersionInfo.FileVersion;
+            BravoUnexpectedException.ThrowIfNull(VersionInfo.ProductVersion);
+            ApplicationProductVersion = VersionInfo.ProductVersion;
 
             IsPackagedAppInstance = DesktopBridgeHelper.IsRunningAsMsixPackage();
             ApplicationDataPath = Path.Combine(Environment.GetFolderPath(IsPackagedAppInstance ? Environment.SpecialFolder.UserProfile : Environment.SpecialFolder.LocalApplicationData, Environment.SpecialFolderOption.DoNotVerify), ApplicationName);
@@ -142,7 +148,7 @@
                         _ => "bin",
                     };
 
-                    _ = message.Name ?? throw new BravoUnexpectedException("message.Name is null");
+                    BravoUnexpectedException.ThrowIfNull(message.Name);
 
                     var name = Path.ChangeExtension(message.Name, extension);
                     var safeName = name.ReplaceInvalidFileNameChars();

@@ -2,10 +2,11 @@
 {
     using Microsoft.Identity.Client;
     using Sqlbi.Bravo.Infrastructure;
+    using Sqlbi.Bravo.Infrastructure.Contracts.PBICloud;
     using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Infrastructure.Helpers;
-    using Sqlbi.Bravo.Infrastructure.Models.PBICloud;
     using Sqlbi.Bravo.Models;
+    using Sqlbi.Bravo.Models.FormatDax;
     using System;
     using System.Collections.Generic;
     using System.Drawing;
@@ -107,11 +108,11 @@
             }
             catch (OperationCanceledException)
             {
-                throw new SignInException(BravoProblem.SignInMsalTimeoutExpired);
+                throw new BravoException(BravoProblem.SignInMsalTimeoutExpired);
             }
             catch (MsalException mex)
             {
-                throw new SignInException(BravoProblem.SignInMsalExceptionOccurred, mex.ErrorCode, mex);
+                throw new BravoException(BravoProblem.SignInMsalExceptionOccurred, mex.ErrorCode, mex);
             }
 
            RefreshCurrentAccount();
@@ -123,10 +124,7 @@
 
             await _authenticationService.ClearTokenCacheAsync().ConfigureAwait(false);
 
-            if (CurrentAuthentication is not null)
-            {
-                throw new BravoUnexpectedException("CurrentAuthentication is not null");
-            }
+            BravoUnexpectedException.Assert(CurrentAuthentication is null);
         }
 
         public async Task<IEnumerable<PBICloudDataset>> GetDatasetsAsync()
@@ -295,15 +293,16 @@
 
         private void RefreshCurrentAccount()
         {
-            var currentAuthentication = CurrentAuthentication ?? throw new BravoUnexpectedException("CurrentAuthentication is null");
-            var currentAccountChanged = currentAuthentication.Account.HomeAccountId.Identifier.Equals(CurrentAccount?.Identifier) == false;
+            BravoUnexpectedException.ThrowIfNull(CurrentAuthentication);
+
+            var currentAccountChanged = CurrentAuthentication.Account.HomeAccountId.Identifier.Equals(CurrentAccount?.Identifier) == false;
             if (currentAccountChanged)
             {
                 var account = new BravoAccount
                 {
-                    Identifier = currentAuthentication.Account.HomeAccountId.Identifier,
-                    UserPrincipalName = currentAuthentication.Account.Username,
-                    Username = currentAuthentication.ClaimsPrincipal.FindFirst((c) => c.Type == "name")?.Value,
+                    Identifier = CurrentAuthentication.Account.HomeAccountId.Identifier,
+                    UserPrincipalName = CurrentAuthentication.Account.Username,
+                    Username = CurrentAuthentication.ClaimsPrincipal.FindFirst((c) => c.Type == "name")?.Value,
                 };
 
                 CurrentAccount = account;

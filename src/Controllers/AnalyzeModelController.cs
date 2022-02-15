@@ -4,6 +4,7 @@
     using Microsoft.AspNetCore.Mvc;
     using Sqlbi.Bravo.Infrastructure.Helpers;
     using Sqlbi.Bravo.Models;
+    using Sqlbi.Bravo.Models.AnalyzeModel;
     using Sqlbi.Bravo.Services;
     using System;
     using System.Collections.Generic;
@@ -13,7 +14,7 @@
     using System.Threading.Tasks;
 
     /// <summary>
-    /// Analyze model controller
+    /// AnalyzeModel module controller
     /// </summary>
     /// <response code="400">Status400BadRequest - See the "instance" and "detail" properties to identify the specific occurrence of the problem</response>
     [Route("api/[action]")]

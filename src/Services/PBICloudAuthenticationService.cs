@@ -44,7 +44,14 @@
             _systemWebViewOptions = new MsalSystemWebViewOptions(_environment.WebRootPath);
         }
 
-        private IPublicClientApplication PublicClient => _publicClient ?? throw new BravoUnexpectedException("_publicClient is null");
+        private IPublicClientApplication PublicClient
+        {
+            get
+            {
+                BravoUnexpectedException.ThrowIfNull(_publicClient);
+                return _publicClient;
+            }
+        }
 
         public AuthenticationResult? Authentication { get; private set; }
 

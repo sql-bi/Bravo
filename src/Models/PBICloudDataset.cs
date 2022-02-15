@@ -156,8 +156,11 @@
             // https://docs.microsoft.com/en-us/power-bi/admin/service-premium-connect-tools#duplicate-dataset-name
             //var datasetUniqueName = $"{ dataset.DisplayName } - { dataset.DatabaseName }";
 
-            if (dataset.ConnectionMode != PBICloudDatasetConnectionMode.Supported)
-                throw new BravoUnexpectedException("dataset.ConnectionMode is not 'Supported'");
+            BravoUnexpectedException.Assert(dataset.ConnectionMode == PBICloudDatasetConnectionMode.Supported);
+            BravoUnexpectedException.ThrowIfNull(dataset.ServerName);
+            BravoUnexpectedException.ThrowIfNull(dataset.DisplayName);
+            BravoUnexpectedException.ThrowIfNull(dataset.WorkspaceName);
+            BravoUnexpectedException.ThrowIfNull(accessToken);
 
             // TODO: add support for B2B users
             // - Users with UPNs in the same tenant (not B2B) can replace the tenant name with 'myorg'
@@ -166,7 +169,7 @@
             var tenantName = "myorg";
 
             var serverName = $"{ dataset.ServerName }/v1.0/{ tenantName }/{ dataset.WorkspaceName }";
-            var databaseName = dataset.DisplayName ?? throw new BravoUnexpectedException("dataset.DisplayName is null");
+            var databaseName = dataset.DisplayName;
             var connectionString = ConnectionStringHelper.BuildForPBICloudDataset(serverName, databaseName, accessToken);
 
             return (connectionString, databaseName);

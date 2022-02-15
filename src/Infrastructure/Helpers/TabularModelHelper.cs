@@ -1,15 +1,15 @@
-﻿using Sqlbi.Bravo.Infrastructure.Extensions;
-using Sqlbi.Bravo.Infrastructure.Security;
-using Sqlbi.Bravo.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using SSAS = Microsoft.AnalysisServices;
-using TOM = Microsoft.AnalysisServices.Tabular;
-
-namespace Sqlbi.Bravo.Infrastructure.Helpers
+﻿namespace Sqlbi.Bravo.Infrastructure.Helpers
 {
+    using Sqlbi.Bravo.Infrastructure.Extensions;
+    using Sqlbi.Bravo.Infrastructure.Security;
+    using Sqlbi.Bravo.Models.FormatDax;
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Text;
+    using SSAS = Microsoft.AnalysisServices;
+    using TOM = Microsoft.AnalysisServices.Tabular;
+
     internal static class TabularModelHelper
     {
         /// <summary>
@@ -33,16 +33,16 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
             using var server = new TOM.Server();
             server.Connect(connectionString);
             
-            var database = GetDatabase();
+            var database = server.Databases.FindByName(databaseName) ?? throw new BravoException(BravoProblem.TOMDatabaseDatabaseNotFound, databaseName);
             var databaseETag = GetDatabaseETag(database.Name, database.Version, database.LastUpdate);
             
             foreach (var formattedMeasure in measures)
             {
                 if (formattedMeasure.ETag != databaseETag)
-                    throw new TOMDatabaseException(BravoProblem.TOMDatabaseUpdateConflictMeasure);
+                    throw new BravoException(BravoProblem.TOMDatabaseUpdateConflictMeasure);
 
                 if (formattedMeasure.Errors?.Any() ?? false)
-                    throw new TOMDatabaseException(BravoProblem.TOMDatabaseUpdateErrorMeasure);
+                    throw new BravoException(BravoProblem.TOMDatabaseUpdateErrorMeasure);
 
                 var unformattedMeasure = database.Model.Tables[formattedMeasure.TableName].Measures[formattedMeasure.Name];
 
@@ -58,7 +58,7 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
                 if (saveResult.XmlaResults?.ContainsErrors == true)
                 {
                     var message = saveResult.XmlaResults.ToDescriptionString();
-                    throw new TOMDatabaseException(BravoProblem.TOMDatabaseUpdateFailed, message);
+                    throw new BravoException(BravoProblem.TOMDatabaseUpdateFailed, message);
                 }
 
                 database.Refresh();
@@ -66,18 +66,6 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
             }
 
             return databaseETag;
-
-            TOM.Database GetDatabase()
-            {
-                try
-                {
-                    return server.Databases.GetByName(databaseName);
-                }
-                catch (SSAS.AmoException ex)
-                {
-                    throw new TOMDatabaseException(BravoProblem.TOMDatabaseDatabaseNotFound, ex.Message, ex);
-                }
-            }
         }
     }
 }

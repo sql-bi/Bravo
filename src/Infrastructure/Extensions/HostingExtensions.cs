@@ -1,8 +1,6 @@
 ﻿namespace Sqlbi.Bravo.Infrastructure.Extensions
 {
     using Hellang.Middleware.ProblemDetails;
-    using AMO = Microsoft.AnalysisServices;
-    using TOM = Microsoft.AnalysisServices.AdomdClient;
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.AspNetCore.Hosting.Server;
     using Microsoft.AspNetCore.Hosting.Server.Features;
@@ -20,6 +18,7 @@
     using System.Linq;
     using System.Net.Sockets;
     using System.Reflection;
+    using AMO = Microsoft.AnalysisServices;
 
     internal static class HostingExtensions
     {
@@ -138,7 +137,7 @@
                 // This can result in a misleading message like a AMO.ConnectionException reported as a SocketException (NetworkError instead of AnalysisServicesConnectionFailed)
                 options.Map<Exception>(predicate: (context, exception) => exception.IsOrHasInner<SocketException>(), mapping: (context, exception) =>
                 {
-                    var socketException = exception.Find<SocketException>() ?? throw new BravoUnexpectedException("SocketException not found");
+                    var socketException = exception.Find<SocketException>(); BravoUnexpectedException.ThrowIfNull(socketException);
                     var problemDetailsFactory = context.RequestServices.GetRequiredService<ProblemDetailsFactory>();
                     var problemDetails = problemDetailsFactory.CreateProblemDetails(context,
                         statusCode: StatusCodes.Status400BadRequest,
@@ -156,13 +155,15 @@
         {
             services.AddSwaggerGen((options) =>
             {
-                // TODO: IncludeXmlComments fails due to a wrong xml file path while debugging the MSIX package
-                if (Debugger.IsAttached && AppEnvironment.IsPackagedAppInstance)
-                    return;
+                options.CustomSchemaIds((type) => type.ToString());
 
-                var xmlFile = $"{ Assembly.GetExecutingAssembly().GetName().Name }.xml";
-                var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-                options.IncludeXmlComments(xmlPath, includeControllerXmlComments: true);
+                // Include xml comments only if we are not debugging the MSIX packaged application, this is because a wrong path is generated for xml files
+                if ((Debugger.IsAttached && AppEnvironment.IsPackagedAppInstance) == false)
+                {
+                    var xmlFile = $"{ Assembly.GetExecutingAssembly().GetName().Name }.xml";
+                    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+                    options.IncludeXmlComments(xmlPath, includeControllerXmlComments: true);
+                }
             });
 
             return services;

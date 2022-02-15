@@ -21,17 +21,16 @@
             uiInfo.cbSize = Marshal.SizeOf(uiInfo);
 
             var outAuthBuffer = IntPtr.Zero;
-            var outAuthBufferSize = 0;
             var inAuthBuffer = IntPtr.Zero;
-            var inAuthBufferSize = 0;
             try
             {
                 var authPackage = 0;
+                var inAuthBufferSize = 0;
                 var flags = options.Flags;
                 var save = options.IsSaveChecked;
                 var authError = options.AuthError;
 
-                var retval = Credui.CredUIPromptForWindowsCredentialsW(ref uiInfo, authError, ref authPackage, inAuthBuffer, inAuthBufferSize, out outAuthBuffer, out outAuthBufferSize, ref save, flags);
+                var retval = Credui.CredUIPromptForWindowsCredentialsW(ref uiInfo, authError, ref authPackage, inAuthBuffer, inAuthBufferSize, out outAuthBuffer, out var outAuthBufferSize, ref save, flags);
                 try
                 {
                     switch (retval)

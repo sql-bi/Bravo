@@ -1,12 +1,12 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Sqlbi.Bravo.Models;
-using Sqlbi.Bravo.Services;
-using System.Net.Mime;
-using System.Threading.Tasks;
-
-namespace Sqlbi.Bravo.Controllers
+﻿namespace Sqlbi.Bravo.Controllers
 {
+    using Microsoft.AspNetCore.Http;
+    using Microsoft.AspNetCore.Mvc;
+    using Sqlbi.Bravo.Models;
+    using Sqlbi.Bravo.Services;
+    using System.Net.Mime;
+    using System.Threading.Tasks;
+
     /// <summary>
     /// Authentication controller
     /// </summary>

@@ -2,6 +2,8 @@
 {
     using Sqlbi.Bravo.Infrastructure.Extensions;
     using System;
+    using System.Diagnostics.CodeAnalysis;
+    using System.Runtime.CompilerServices;
     using System.Text.Json.Serialization;
     using System.Threading.Tasks;
 
@@ -9,13 +11,60 @@
     /// Represents unexpected errors that occur during application execution.
     /// </summary>
     /// <remarks>
-    /// <see cref="BravoUnexpectedException"/> will be tracked in telemetry as an unhandled exception and should not be handled at the application level.
-    /// ** This class does not inherit from <see cref="BravoException"/> **
+    /// This class does not inherit from <see cref="BravoException"/>. <see cref="BravoUnexpectedException"/> will be tracked in telemetry as an unhandled exception and should not be handled at the application level.
     /// </remarks>
     [Serializable]
     public class BravoUnexpectedException : Exception
     {
         public BravoUnexpectedException(string message)
+            : base(message)
+        {
+        }
+
+        /// <summary>
+        /// Throws an <see cref="BravoUnexpectedArgumentNullException"/> if <paramref name="argument"/> is null. See https://github.com/dotnet/runtime/issues/48573
+        /// </summary>
+        /// <param name="argument">The reference type argument to validate as non-null.</param>
+        /// <param name="paramName">The name of the parameter with which <paramref name="argument"/> corresponds.</param>
+        public static void ThrowIfNull([NotNull] object? argument, [CallerArgumentExpression("argument")] string? paramName = null)
+        {
+            if (argument is null)
+            {
+                ThrowUnexpectedArgumentNullException(paramName);
+            }
+        }
+
+        /// <summary>
+        /// Throws an <see cref="BravoUnexpectedInvalidOperationException"/> if <paramref name="condition"/> is false.
+        /// </summary>
+        /// <param name="condition">The Boolean condition to be evaluated.</param>
+        /// <param name="paramName">The name of the parameter with which <paramref name="condition"/> corresponds.</param>
+        public static void Assert([DoesNotReturnIf(false)] bool condition, [CallerArgumentExpression("condition")] string? paramName = null)
+        {
+            if (condition == false)
+            {
+                ThrowUnexpectedInvalidOperationException(paramName);
+            }
+        }
+
+        [DoesNotReturn]
+        private static void ThrowUnexpectedArgumentNullException(string? paramName) => throw new BravoUnexpectedArgumentNullException(paramName);
+
+        [DoesNotReturn]
+        private static void ThrowUnexpectedInvalidOperationException(string? condition) => throw new BravoUnexpectedInvalidOperationException($"Condition failed '{ condition }'");
+    }
+
+    public class BravoUnexpectedArgumentNullException : ArgumentNullException
+    {
+        public BravoUnexpectedArgumentNullException(string? paramName)
+            : base(paramName)
+        {
+        }
+    }
+
+    public class BravoUnexpectedInvalidOperationException : InvalidOperationException
+    {
+        public BravoUnexpectedInvalidOperationException(string? message)
             : base(message)
         {
         }
@@ -49,39 +98,6 @@
             : base(message, innerException)
         {
             Problem = problem;
-        }
-    }
-
-    [Serializable]
-    public class SignInException : BravoException
-    {
-        public SignInException(BravoProblem problem)
-            : base(problem)
-        {
-        }
-
-        public SignInException(BravoProblem problem, string message, Exception innerException)
-            : base(problem, message, innerException)
-        {
-        }
-    }
-
-    [Serializable]
-    public class TOMDatabaseException : BravoException
-    {
-        public TOMDatabaseException(BravoProblem problem)
-            : base(problem)
-        {
-        }
-
-        public TOMDatabaseException(BravoProblem problem, string message)
-            : base(problem, message)
-        {
-        }
-
-        public TOMDatabaseException(BravoProblem problem, string message, Exception innerException)
-            : base(problem, message, innerException)
-        {
         }
     }
 
