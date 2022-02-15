@@ -20,6 +20,10 @@
     </PackageReference>
   </ItemGroup>
 
+  <PropertyGroup>
+    <RestoreSources>$(RestoreSources);../../src/Assets/nupkgs;https://api.nuget.org/v3/index.json</RestoreSources>
+  </PropertyGroup>
+  
   <ItemGroup>
     <ProjectReference Include="..\..\src\Bravo.csproj" />
   </ItemGroup>
