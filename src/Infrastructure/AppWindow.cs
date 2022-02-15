@@ -1,6 +1,5 @@
 ﻿namespace Sqlbi.Bravo.Infrastructure
 {
-    using AutoUpdaterDotNET;
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Options;
     using PhotinoNET;
@@ -30,7 +29,11 @@
         {
             _host = host;
             _window = CreateWindow();
-            _startupSettings = (_host.Services.GetService(typeof(IOptions<StartupSettings>)) as IOptions<StartupSettings> ?? throw new BravoUnexpectedException("StartupSettings is null")).Value;
+
+            var startupSettingsOptions = _host.Services.GetService(typeof(IOptions<StartupSettings>)) as IOptions<StartupSettings>;
+            BravoUnexpectedException.ThrowIfNull(startupSettingsOptions);
+
+            _startupSettings = startupSettingsOptions.Value;
         }
 
         private PhotinoWindow CreateWindow()

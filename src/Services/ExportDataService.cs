@@ -59,7 +59,10 @@
 
         public ExportDataJob ExportDelimitedTextFile(PBIDesktopReport report, ExportDelimitedTextSettings settings, CancellationToken cancellationToken)
         {
-            var connectionString = ConnectionStringHelper.BuildForPBIDesktop(report.ServerName!);
+            BravoUnexpectedException.ThrowIfNull(report.ServerName);
+            BravoUnexpectedException.ThrowIfNull(report.DatabaseName);
+
+            var connectionString = ConnectionStringHelper.BuildForPBIDesktop(report.ServerName);
             var job = _reportJobs.AddNew(report);
 
             try
@@ -113,7 +116,10 @@
 
         public ExportDataJob ExportExcelFile(PBIDesktopReport report, ExportExcelSettings settings, CancellationToken cancellationToken)
         {
-            var connectionString = ConnectionStringHelper.BuildForPBIDesktop(report.ServerName!);
+            BravoUnexpectedException.ThrowIfNull(report.ServerName);
+            BravoUnexpectedException.ThrowIfNull(report.DatabaseName);
+
+            var connectionString = ConnectionStringHelper.BuildForPBIDesktop(report.ServerName);
             var job = _reportJobs.AddNew(report);
 
             try
@@ -179,11 +185,8 @@
             return job;
         }
 
-        private static void ExportDelimitedTextFileImpl(ExportDataJob job, ExportDelimitedTextSettings settings, string? connectionString, string? databaseName, CancellationToken cancellationToken)
+        private static void ExportDelimitedTextFileImpl(ExportDataJob job, ExportDelimitedTextSettings settings, string connectionString, string databaseName, CancellationToken cancellationToken)
         {
-            _ = connectionString ?? throw new ArgumentNullException(nameof(connectionString));
-            _ = databaseName ?? throw new ArgumentNullException(nameof(databaseName));
-
             Directory.CreateDirectory(settings.ExportPath);
 
             var config = new CsvConfiguration(CultureInfo.CurrentCulture);
@@ -262,13 +265,12 @@
             }
         }
 
-        private static void ExportExcelFileImpl(ExportDataJob job, ExportExcelSettings settings, string? connectionString, string? databaseName, CancellationToken cancellationToken)
+        private static void ExportExcelFileImpl(ExportDataJob job, ExportExcelSettings settings, string connectionString, string databaseName, CancellationToken cancellationToken)
         {
-            _ = connectionString ?? throw new ArgumentNullException(nameof(connectionString));
-            _ = databaseName ?? throw new ArgumentNullException(nameof(databaseName));
-            
             var xlsxFile = new FileInfo(settings.ExportPath);
-            Directory.CreateDirectory(path: xlsxFile.Directory?.FullName!);
+            
+            BravoUnexpectedException.ThrowIfNull(xlsxFile.Directory);
+            Directory.CreateDirectory(xlsxFile.Directory.FullName);
 
             using var connection = new AdomdConnection(connectionString);
             connection.Open();
@@ -428,32 +430,33 @@
                 writer.SetAutoFilter(fromRow: 4, fromColumn: 1, rowCount: writer.CurrentRowNumber, columnCount: 4);
             }
         }
-
-        private static IDataReader CreateTestData()
-        {
-            const int Columns = 100;
-            const int Rows = 10_000;
-
-            var table = new DataTable();
-
-            for (int c = 0; c < Columns; c++)
-            {
-                table.Columns.Add(new DataColumn($"col{ c }", typeof(string)));
-            }
-
-            for (int r = 0; r < Rows; r++)
-            {
-                var row = table.NewRow();
+        /*
+                private static IDataReader CreateTestData()
                 {
-                    for (var c = 0; c < Columns; c++)
-                    {
-                        row[c] = (r == c) ? null : $"Sample text [{ c },{ r }]";
-                    }
-                }
-                table.Rows.Add(row);
-            }
+                    const int Columns = 100;
+                    const int Rows = 10_000;
 
-            return table.CreateDataReader();
-        }
+                    var table = new DataTable();
+
+                    for (int c = 0; c < Columns; c++)
+                    {
+                        table.Columns.Add(new DataColumn($"col{ c }", typeof(string)));
+                    }
+
+                    for (int r = 0; r < Rows; r++)
+                    {
+                        var row = table.NewRow();
+                        {
+                            for (var c = 0; c < Columns; c++)
+                            {
+                                row[c] = (r == c) ? null : $"Sample text [{ c },{ r }]";
+                            }
+                        }
+                        table.Rows.Add(row);
+                    }
+
+                    return table.CreateDataReader();
+                }
+        */
     }
 }

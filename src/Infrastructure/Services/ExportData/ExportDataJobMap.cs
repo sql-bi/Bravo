@@ -18,11 +18,10 @@
         {
             var job = new ExportDataJob();
 
-            if (!_jobs.TryAdd(datamodel, job))
-            {
-                // Each IPBIDataModel is not allowed to start more than a single export job at a time
-                throw new BravoUnexpectedException($"Job already exists [{ typeof(T).Name }]");
-            }
+            var jobAdded = _jobs.TryAdd(datamodel, job);
+            
+            // Each IPBIDataModel is not allowed to start more than a single export job at a time
+            BravoUnexpectedException.Assert(jobAdded);
             
             job.SetRunning();
 
@@ -36,10 +35,9 @@
 
         public void Remove(T datamodel)
         {
-            if (!_jobs.TryRemove(datamodel, out _))
-            {
-                throw new BravoUnexpectedException($"Job not found [{ typeof(T).Name }]");
-            }
+            var jobRemoved = _jobs.TryRemove(datamodel, out _);
+
+            BravoUnexpectedException.Assert(jobRemoved);
         }
     }
 }

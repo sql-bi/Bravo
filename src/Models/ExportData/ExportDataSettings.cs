@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.ComponentModel.DataAnnotations;
+    using System.Globalization;
     using System.IO;
     using System.Text.Json.Serialization;
 
@@ -31,7 +32,7 @@
         public bool UnicodeEncoding { get; set; } = false;
 
         /// <summary>
-        /// Specifies the delimiter used to separate fields. If not provided <see cref="System.Globalization.TextInfo.ListSeparator"/> is used as default
+        /// Specifies the delimiter used to separate fields. If not provided <see cref="TextInfo.ListSeparator"/> is used as default
         /// </summary>
         [JsonPropertyName("delimiter")]
         public string? Delimiter { get; set; }

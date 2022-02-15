@@ -33,8 +33,7 @@
 
         public static void CheckForUpdate(UpdateChannelType updateChannel, bool synchronousCallback, bool throwOnError, Action<BravoUpdate> updateCallback)
         {
-            if (AppEnvironment.IsPackagedAppInstance)
-                throw new BravoUnexpectedException("CheckForUpdate of a packaged app instance");
+            BravoUnexpectedException.Assert(AppEnvironment.IsPackagedAppInstance == false);
 
             AutoUpdater.AppCastURL = updateChannel switch
             {

@@ -53,11 +53,16 @@
 
             ProcessId = Environment.ProcessId;
             SessionId = currentProcess.SessionId;
+
             // use Environment.ProcessPath on .NET 6
-            ProcessPath = currentProcess.MainModule?.FileName ?? throw new BravoUnexpectedException("MainModule.FileName is null");
+            BravoUnexpectedException.ThrowIfNull(currentProcess.MainModule?.FileName);
+            ProcessPath = currentProcess.MainModule.FileName;
+
             VersionInfo = FileVersionInfo.GetVersionInfo(ProcessPath);
-            ApplicationFileVersion = VersionInfo.FileVersion ?? throw new BravoUnexpectedException("FileVersion is null");
-            ApplicationProductVersion = VersionInfo.ProductVersion ?? throw new BravoUnexpectedException("ProductVersion is null");
+            BravoUnexpectedException.ThrowIfNull(VersionInfo.FileVersion);
+            ApplicationFileVersion = VersionInfo.FileVersion;
+            BravoUnexpectedException.ThrowIfNull(VersionInfo.ProductVersion);
+            ApplicationProductVersion = VersionInfo.ProductVersion;
 
             IsPackagedAppInstance = DesktopBridgeHelper.IsRunningAsMsixPackage();
             ApplicationDataPath = Path.Combine(Environment.GetFolderPath(IsPackagedAppInstance ? Environment.SpecialFolder.UserProfile : Environment.SpecialFolder.LocalApplicationData, Environment.SpecialFolderOption.DoNotVerify), ApplicationName);
@@ -143,7 +148,7 @@
                         _ => "bin",
                     };
 
-                    _ = message.Name ?? throw new BravoUnexpectedException("message.Name is null");
+                    BravoUnexpectedException.ThrowIfNull(message.Name);
 
                     var name = Path.ChangeExtension(message.Name, extension);
                     var safeName = name.ReplaceInvalidFileNameChars();

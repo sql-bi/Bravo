@@ -124,10 +124,7 @@
 
             await _authenticationService.ClearTokenCacheAsync().ConfigureAwait(false);
 
-            if (CurrentAuthentication is not null)
-            {
-                throw new BravoUnexpectedException("CurrentAuthentication is not null");
-            }
+            BravoUnexpectedException.Assert(CurrentAuthentication is null);
         }
 
         public async Task<IEnumerable<PBICloudDataset>> GetDatasetsAsync()
@@ -296,15 +293,16 @@
 
         private void RefreshCurrentAccount()
         {
-            var currentAuthentication = CurrentAuthentication ?? throw new BravoUnexpectedException("CurrentAuthentication is null");
-            var currentAccountChanged = currentAuthentication.Account.HomeAccountId.Identifier.Equals(CurrentAccount?.Identifier) == false;
+            BravoUnexpectedException.ThrowIfNull(CurrentAuthentication);
+
+            var currentAccountChanged = CurrentAuthentication.Account.HomeAccountId.Identifier.Equals(CurrentAccount?.Identifier) == false;
             if (currentAccountChanged)
             {
                 var account = new BravoAccount
                 {
-                    Identifier = currentAuthentication.Account.HomeAccountId.Identifier,
-                    UserPrincipalName = currentAuthentication.Account.Username,
-                    Username = currentAuthentication.ClaimsPrincipal.FindFirst((c) => c.Type == "name")?.Value,
+                    Identifier = CurrentAuthentication.Account.HomeAccountId.Identifier,
+                    UserPrincipalName = CurrentAuthentication.Account.Username,
+                    Username = CurrentAuthentication.ClaimsPrincipal.FindFirst((c) => c.Type == "name")?.Value,
                 };
 
                 CurrentAccount = account;

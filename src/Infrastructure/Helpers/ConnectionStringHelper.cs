@@ -46,7 +46,7 @@
             return builder.ConnectionString;
         }
 
-        public static string BuildForPBICloudDataset(string serverName, string databaseName, string? accessToken)
+        public static string BuildForPBICloudDataset(string serverName, string databaseName, string accessToken)
         {
             var builder = new OleDbConnectionStringBuilder()
             {
@@ -54,7 +54,7 @@
                 { DataSourceKey, serverName },
                 { InitialCatalogKey, databaseName },
                 { IntegratedSecurityKey, "ClaimsToken" },
-                { PasswordKey, accessToken! }, // The Analysis Services client libraries automatically add the auth-scheme value "Bearer" to the access token
+                { PasswordKey, accessToken }, // The Analysis Services client libraries automatically add the auth-scheme value "Bearer" to the access token
                 { ApplicationNameKey, AppEnvironment.ApplicationInstanceUniqueName }
 
                 //{ PersistSecurityInfoKey, "False" },

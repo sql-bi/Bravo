@@ -1,4 +1,4 @@
-﻿namespace Sqlbi.Bravo.Models
+﻿namespace Sqlbi.Bravo.Models.ExportData
 {
     using System.ComponentModel.DataAnnotations;
     using System.Text.Json.Serialization;
