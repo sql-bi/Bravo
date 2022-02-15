@@ -108,11 +108,11 @@
             }
             catch (OperationCanceledException)
             {
-                throw new SignInException(BravoProblem.SignInMsalTimeoutExpired);
+                throw new BravoException(BravoProblem.SignInMsalTimeoutExpired);
             }
             catch (MsalException mex)
             {
-                throw new SignInException(BravoProblem.SignInMsalExceptionOccurred, mex.ErrorCode, mex);
+                throw new BravoException(BravoProblem.SignInMsalExceptionOccurred, mex.ErrorCode, mex);
             }
 
            RefreshCurrentAccount();

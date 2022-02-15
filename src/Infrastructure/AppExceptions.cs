@@ -101,39 +101,6 @@
         }
     }
 
-    [Serializable]
-    public class SignInException : BravoException
-    {
-        public SignInException(BravoProblem problem)
-            : base(problem)
-        {
-        }
-
-        public SignInException(BravoProblem problem, string message, Exception innerException)
-            : base(problem, message, innerException)
-        {
-        }
-    }
-
-    [Serializable]
-    public class TOMDatabaseException : BravoException
-    {
-        public TOMDatabaseException(BravoProblem problem)
-            : base(problem)
-        {
-        }
-
-        public TOMDatabaseException(BravoProblem problem, string message)
-            : base(problem, message)
-        {
-        }
-
-        public TOMDatabaseException(BravoProblem problem, string message, Exception innerException)
-            : base(problem, message, innerException)
-        {
-        }
-    }
-
     public enum BravoProblem
     {
         [JsonPropertyName("None")]
