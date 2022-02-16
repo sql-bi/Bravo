@@ -6,61 +6,119 @@
 
 import { Dispatchable } from '../helpers/dispatchable';
 import { Dic, Utils } from '../helpers/utils';
-import { host } from '../main';
+import { host, optionsController } from '../main';
 import { AppError, AppErrorType } from '../model/exceptions';
 import { i18n } from '../model/i18n';
 import { strings } from '../model/strings';
 import { DiagnosticMessage } from './host';
+import { DiagnosticLevelType } from './options';
 
 export interface LogMessage {
     id: string
     name: string
     time: number
-    content?: any
+    objs?: any[]
     className?: string
 }
 
+export interface LogMessageUpdate {
+    id: string
+    obj: any
+}
+export interface LogMessageObj {
+    content: any
+    anonymize?: string | string[]
+    level?: DiagnosticLevelType
+}
 export class Logger extends Dispatchable {
 
     static CheckSeconds = 5;
     checkTimeout = 0;
     logs: Dic<LogMessage> = {};
+    _enabled = false;
 
-    constructor() {
+    get enabled(): boolean {
+        return this._enabled;
+    }
+
+    set enabled(enabled: boolean) {
+        if (enabled) {
+            this.checkTimeout = window.setInterval(() => {
+                this.check();
+            }, Logger.CheckSeconds * 1000);
+        } else {
+            window.clearInterval(this.checkTimeout);
+        }
+        this._enabled = enabled;
+    }
+
+    constructor(enabled: boolean) {
         super();
 
-        this.checkTimeout = window.setInterval(() => {
-            this.check();
-        }, Logger.CheckSeconds * 1000);
-        this.check(true);
+        this.enabled = enabled;
+
+        if (enabled)
+            this.check(true);
+
+        optionsController.on("diagnosticLevel.change", (changedOptions: any) => {
+            this.enabled = (optionsController.options.diagnosticLevel !== DiagnosticLevelType.None);
+        });
     }
 
     check(initial = false) {
+        if (!this.enabled) return;
+
         host.getDiagnostics(initial)
             .then((messages: DiagnosticMessage[]) => {
                 messages.forEach(message => {
-                    this.log(message.name, message.content, Date.parse(message.timestamp));
+                    this.log(message.name, { content: message.content }, DiagnosticLevelType.Verbose, Date.parse(message.timestamp));
                 });
             })
             .catch(ignore=>{});
     }
 
-    log(name: string, content?: any, time?: number, className?: string) {
+    log(name: string, obj?: LogMessageObj, level: DiagnosticLevelType = DiagnosticLevelType.Basic, time?: number, className?: string): string {
 
+        if (!this.enabled) return null;
+
+        if (!Logger.LevelMatch(level)) return null;
+
+        let id = Utils.DOM.uniqueId();
         let message: LogMessage = {
-            id: Utils.Text.uuid(),
+            id: id,
             name: name,
+            objs: [],
             time: time ? time : new Date().getTime(),
-            content: content,
             className: className
         }
 
+        if (obj)
+            message.objs.push(this.sanitizeLogContent(obj));
+
         this.logs[message.id] = message;
         this.trigger("log", message);
+
+        return id;
+    }
+
+    updateLog(id: string, obj: LogMessageObj) {
+        if (!this.enabled) return;
+
+        if (!obj) return;
+
+        if (obj.level && !Logger.LevelMatch(obj.level)) return;
+
+        if (id in this.logs) {
+            let content = this.sanitizeLogContent(obj);
+            this.logs[id].objs.push(content);
+            this.trigger("logUpdate", <LogMessageUpdate>{ id: id, obj: content});
+        }
     }
 
     logError(error: AppError) {
         console.error(error);
+
+        if (!this.enabled) return;
 
         const errorCode = `${error.type != AppErrorType.Managed ? "HTTP/" : "" }${ error.code }`;
         
@@ -78,6 +136,52 @@ export class Logger extends Dispatchable {
             Details: errorDetails,
         }; 
 
-        this.log(name, content, 0, "errorMessage");
+        this.log(name, { content: content }, DiagnosticLevelType.Basic, 0, "errorMessage");
+    }
+
+    sanitizeLogContent(content: LogMessageObj) {
+        
+        if (!content || !content.content) return null;
+
+        let json = content.content;
+        if (Utils.Obj.isString(json)) {
+            try { 
+                json = JSON.parse(json);
+            } catch(ignore){
+                return json;
+            }
+        } 
+        const anonymizeData = (optionsController.options.diagnosticLevel == DiagnosticLevelType.Basic);
+        if (anonymizeData && content.anonymize) {
+            return Utils.Obj.anonymize(json, content.anonymize);
+        }
+        return json;
+    }
+
+    static MessageToClipboard(message: LogMessage) {
+        return JSON.stringify({
+            name: message.name,
+            objects: message.objs,
+            time: message.time
+        });
+    }
+
+    static MessageToUrl(message: LogMessage) {
+        let messageObjStr = (message.objs ? JSON.stringify(message.objs) : "");
+        if (messageObjStr.length > 500) 
+            messageObjStr = messageObjStr.substring(0, 500) + " [truncated]";
+
+        return `${message.name}\n${messageObjStr}`;
+    }
+
+    static LevelMatch(level: DiagnosticLevelType) {
+        
+        if (level == optionsController.options.diagnosticLevel) {
+            return true;
+        } else if (level == DiagnosticLevelType.Basic && optionsController.options.diagnosticLevel == DiagnosticLevelType.Verbose) {
+            return true;
+        } else {
+            return false;
+        }
     }
 }

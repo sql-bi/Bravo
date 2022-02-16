@@ -87,7 +87,7 @@ export class WelcomeScene extends Scene {
                             </ul>
                         </div>
 
-                        <p class="note">${i18n(strings.openSourcePayoff)} <span class="link" data-href="https://github.com/sql-bi/bravo">github.com/sql-bi/bravo</span></p>
+                        <p class="note">${i18n(strings.openSourcePayoff)} <span class="link" href="https://github.com/sql-bi/bravo">github.com/sql-bi/bravo</span></p>
                     </div>
                 </div>
             </div>

@@ -28,8 +28,8 @@ export class ErrorScene extends BackableScene {
     render() {
         super.render();
 
-        const issueTitle = i18n(strings.createIssueTitle);
-        const issueBody = i18n(strings.createIssueBody) + this.error.toString();
+        let issueTitle = i18n(strings.createIssueTitle);
+        let issueBody = i18n(strings.createIssueBody) + this.error.toString();
 
         // Removed because we added diagnostic log
         /*${ this.error.details ? `
@@ -56,7 +56,7 @@ export class ErrorScene extends BackableScene {
                      &nbsp;&nbsp;&nbsp; 
                     <span class="show-diagnostics link">${i18n(strings.showDiagnosticPane)}</span> 
                      &nbsp;&nbsp;&nbsp; 
-                    <span class="create-issue link" data-href="https://github.com/sql-bi/bravo/issues/new?labels=bug&title=${encodeURIComponent(issueTitle)}&body=${encodeURIComponent(issueBody)}">${i18n(strings.createIssue)}</span>
+                    <span class="link create-issue" href="https://github.com/sql-bi/bravo/issues/new?labels=bug&title=${encodeURIComponent(issueTitle)}&body=${encodeURIComponent(issueBody)}">${i18n(strings.createIssue)}</span>
 
                 </p>
             
