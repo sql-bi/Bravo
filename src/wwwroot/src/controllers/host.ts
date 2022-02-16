@@ -14,7 +14,11 @@ import { PBICloudDataset, PBICloudDatasetConnectionMode, PBICloudDatasetPrivateP
 import { FormattedMeasure, TabularDatabase, TabularMeasure } from '../model/tabular';
 import { Account } from './auth';
 import { DiagnosticLevelType, FormatDaxOptions, Options, UpdateChannelType } from './options';
+<<<<<<< HEAD
 import { PBIDesktopReport, PBIDesktopReportConnectionMode, PBIDesktopReportPrivateProperties } from '../model/pbi-report';
+=======
+import { PBIDesktopReport, PBIDesktopReportConnectionMode } from '../model/pbi-report';
+>>>>>>> d0e326a2dac91c537137fa09d8cb9284c0c02f29
 import { ThemeType } from './theme';
 import { i18n } from '../model/i18n';
 import { strings } from '../model/strings';
@@ -142,7 +146,11 @@ export interface BravoUpdate {
 } 
 
 export interface ApiLogSettings {
+<<<<<<< HEAD
     anonymize?: string | string[]  // A list of properties to anonymize - it os applied to the request only because the response object is logged only with Verbose level which is not anonymized
+=======
+    anonymize?: string | string[]  // A list of properties to anonymize
+>>>>>>> d0e326a2dac91c537137fa09d8cb9284c0c02f29
     messageLevel?: DiagnosticLevelType // Minimum diagnostic level required to log the message
     dataLevel?: DiagnosticLevelType // Minimum diagnostic level required to log the obj data
 }
@@ -334,6 +342,7 @@ export class Host extends Dispatchable {
 
     /* Authentication */
     signIn(emailAddress?: string) {
+<<<<<<< HEAD
         const logSettings: ApiLogSettings = { anonymize: "*" };
         return <Promise<Account>>this.apiCall("auth/powerbi/SignIn", emailAddress ? { upn: emailAddress } : {}, {}, false, logSettings);
     }
@@ -341,6 +350,15 @@ export class Host extends Dispatchable {
     signOut() {
         const logSettings: ApiLogSettings = { anonymize: "*" };
         return this.apiCall("auth/powerbi/SignOut", {}, {}, false, logSettings);
+=======
+        const logOptions: ApiLogSettings = { anonymize: "*" };
+        return <Promise<Account>>this.apiCall("auth/powerbi/SignIn", emailAddress ? { upn: emailAddress } : {}, {}, false, logOptions);
+    }
+
+    signOut() {
+        const logOptions: ApiLogSettings = { anonymize: "*" };
+        return this.apiCall("auth/powerbi/SignOut", {}, {}, false, logOptions);
+>>>>>>> d0e326a2dac91c537137fa09d8cb9284c0c02f29
     }
 
     getUser() {
@@ -355,6 +373,7 @@ export class Host extends Dispatchable {
     /* Analyze Model */
 
     getModelFromVpax(file: File) {
+<<<<<<< HEAD
         const logSettings: ApiLogSettings = {};
         return <Promise<TabularDatabase>>this.apiCall("api/GetModelFromVpax", file, { method: "POST", headers: { /* IMPORTANT */ } }, true, logSettings); 
     }
@@ -366,6 +385,17 @@ export class Host extends Dispatchable {
         return this.validateReportConnection(report)
             .then(report => {
                 return <Promise<TabularDatabase>>this.apiCall("api/GetModelFromReport", report, { method: "POST" }, true, logSettings);
+=======
+        const logOptions: ApiLogSettings = {};
+        return <Promise<TabularDatabase>>this.apiCall("api/GetModelFromVpax", file, { method: "POST", headers: { /* IMPORTANT */ } }, true, logOptions); 
+    }
+
+    getModelFromReport(report: PBIDesktopReport)  {
+        const logOptions: ApiLogSettings = {};
+        return this.validateReportConnection(report)
+            .then(report => {
+                return <Promise<TabularDatabase>>this.apiCall("api/GetModelFromReport", report, { method: "POST" }, true, logOptions);
+>>>>>>> d0e326a2dac91c537137fa09d8cb9284c0c02f29
             });
     }
 
@@ -385,19 +415,30 @@ export class Host extends Dispatchable {
             if (report.connectionMode == PBIDesktopReportConnectionMode.Supported) {
                 resolve(report);
             } else {
+<<<<<<< HEAD
                 this.apiLog("api/GetModelFromReport", report, logSettings);
+=======
+                this.apiLog("api/GetModelFromReport", report);
+>>>>>>> d0e326a2dac91c537137fa09d8cb9284c0c02f29
                 reject(connectionError(report.connectionMode));
             }
         });
     }
 
     getModelFromDataset(dataset: PBICloudDataset) {
+<<<<<<< HEAD
         const logSettings: ApiLogSettings = {
             anonymize: PBICloudDatasetPrivateProperties
         };
         return this.validateDatasetConnection(dataset)
             .then(dataset => {
                 return <Promise<TabularDatabase>>this.apiCall("api/GetModelFromDataset", dataset, { method: "POST" }, true, logSettings);
+=======
+        const logOptions: ApiLogSettings = {};
+        return this.validateDatasetConnection(dataset)
+            .then(dataset => {
+                return <Promise<TabularDatabase>>this.apiCall("api/GetModelFromDataset", dataset, { method: "POST" }, true, logOptions);
+>>>>>>> d0e326a2dac91c537137fa09d8cb9284c0c02f29
             });
     }
     validateDatasetConnection(dataset: PBICloudDataset): Promise<PBICloudDataset> {
@@ -449,8 +490,13 @@ export class Host extends Dispatchable {
     }
 
     listDatasets() {
+<<<<<<< HEAD
         const logSettings: ApiLogSettings = {}; 
         return <Promise<PBICloudDataset[]>>this.apiCall("api/ListDatasets", {}, {}, true, logSettings);
+=======
+        const logOptions: ApiLogSettings = {};
+        return <Promise<PBICloudDataset[]>>this.apiCall("api/ListDatasets", {}, {}, true, logOptions);
+>>>>>>> d0e326a2dac91c537137fa09d8cb9284c0c02f29
     }
 
     exportVpax(datasource: PBIDesktopReport | PBICloudDataset, type: DocType) {
@@ -463,23 +509,33 @@ export class Host extends Dispatchable {
     /* Format DAX */
 
     formatDax(request: FormatDaxRequest) {
+<<<<<<< HEAD
         const logSettings: ApiLogSettings = {
             anonymize: [
                 "measure"
             ]
         };
         return <Promise<FormattedMeasure[]>>this.apiCall("api/FormatDax", request, { method: "POST" }, true, logSettings);
+=======
+        const logOptions: ApiLogSettings = {};
+        return <Promise<FormattedMeasure[]>>this.apiCall("api/FormatDax", request, { method: "POST" }, true, logOptions);
+>>>>>>> d0e326a2dac91c537137fa09d8cb9284c0c02f29
     }
     abortFormatDax(type: DocType) {
         this.apiAbortByAction(["api/FormatDax", `api/Update${type == DocType.dataset ? "Dataset" : "Report"}`]);
     }
 
     updateModel(request: UpdatePBIDesktopReportRequest | UpdatePBICloudDatasetRequest, type: DocType) {
+<<<<<<< HEAD
         const logSettings: ApiLogSettings = {
             anonymize: (type == DocType.dataset ? PBICloudDatasetPrivateProperties : PBIDesktopReportPrivateProperties)
         };
         
         return <Promise<DatabaseUpdateResult>>this.apiCall(`api/Update${type == DocType.dataset ? "Dataset" : "Report"}`, request, { method: "POST" }, true, logSettings);
+=======
+        const logOptions: ApiLogSettings = {};
+        return <Promise<DatabaseUpdateResult>>this.apiCall(`api/Update${type == DocType.dataset ? "Dataset" : "Report"}`, request, { method: "POST" }, true, logOptions);
+>>>>>>> d0e326a2dac91c537137fa09d8cb9284c0c02f29
     }
 
     /* Export Data */
