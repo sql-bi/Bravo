@@ -382,7 +382,7 @@ a, .link {
         }
     }
 }
-.button, .link-button, input[type=button] {
+.button, input[type=button] {
     display: inline-block;
     padding:8px 18px;
     font-size: 14px;
@@ -405,6 +405,7 @@ a, .link {
     &:hover{ 
         background: darken(@accent-back-color, 10%) !important;
         color:@accent-color; 
+        text-decoration: none !important;
     }
     
     &:active:not([disabled]) /*, &:focus*/  {

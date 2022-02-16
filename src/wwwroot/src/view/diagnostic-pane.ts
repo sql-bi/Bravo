@@ -4,20 +4,19 @@
  * https://www.sqlbi.com
 */
 
-import { LogMessage } from '../controllers/logger';
+import { Logger, LogMessage, LogMessageUpdate } from '../controllers/logger';
 import { ContextMenu, ContextMenuItemOptions, ContextMenuItemType } from '../helpers/contextmenu';
-import { Utils, _ } from '../helpers/utils';
-import { host, logger, themeController } from '../main';
+import { Utils, _, __ } from '../helpers/utils';
+import { host, logger } from '../main';
 import { I18n, i18n } from '../model/i18n';
 import { strings } from '../model/strings';
 import { View } from './view';
-import JSONFormatter, { JSONFormatterConfiguration } from 'json-formatter-js';
+import JSONFormatter from 'json-formatter-js';
 
 export class DiagnosticPane extends View {
 
     logTable: HTMLElement;
     timeFormatter: Intl.DateTimeFormat;
-    count = 0;
 
     constructor(id: string, container: HTMLElement, title: string) {
         super(id, container);
@@ -26,6 +25,8 @@ export class DiagnosticPane extends View {
             <div class="toolbar">
                 <div class="title">${title}</div>
                 <div class="controls">
+                    <div class="clear ctrl icon-clear solo" title="${i18n(strings.clearCtrlTitle)}"></div>
+                    <hr>
                     <div class="minimize-pane ctrl icon-minimize solo" title="${i18n(strings.minimizeCtrlTitle)}"></div>
                     <div class="close-pane ctrl icon-close solo" title="${i18n(strings.closeCtrlTitle)}"></div>
                 </div>
@@ -48,17 +49,10 @@ export class DiagnosticPane extends View {
             let message = logger.logs[messageId];
             if (!message) return;
 
-            let messageContent = message.content;
-            if (messageContent && !Utils.Obj.isString(messageContent)) {
-                messageContent = JSON.stringify(messageContent);
-            }
-
-            let messageStr = `${message.name}${messageContent ? `\n${messageContent}` : ""}\n${message.time}`;
-
             let items: ContextMenuItemOptions[] = [
                 { 
                     label: i18n(strings.copyMessage), cssIcon: "icon-copy", enabled: true, onClick: () => { 
-                        navigator.clipboard.writeText(messageStr);
+                        navigator.clipboard.writeText(Logger.MessageToClipboard(message));
                     }
                 },
                 {
@@ -68,7 +62,7 @@ export class DiagnosticPane extends View {
                 { 
                     label: i18n(strings.createIssue), cssIcon: "icon-github",  enabled: true, onClick: () => { 
                         const issueTitle = i18n(strings.createIssueTitle);
-                        const issueBody = i18n(strings.createIssueBody) + messageStr;
+                        const issueBody = i18n(strings.createIssueBody) + Logger.MessageToUrl(message);
 
                         host.navigateTo(`https://github.com/sql-bi/bravo/issues/new?labels=bug&title=${encodeURIComponent(issueTitle)}&body=${encodeURIComponent(issueBody)}`);
                     }
@@ -83,61 +77,85 @@ export class DiagnosticPane extends View {
         _(".close-pane", this.element).addEventListener("click", e => {
             e.preventDefault();
             this.trigger("close");
+            this.clear();
         });
         _(".minimize-pane", this.element).addEventListener("click", e => {
             e.preventDefault();
             this.trigger("minimize");
         });
+        _(".clear", this.element).addEventListener("click", e => {
+            e.preventDefault();
+            this.clear();
+        });
 
         logger.on("log", (message: LogMessage) => {
-            this.count++;
+            this.appendMessage(message);
+        });
 
-            let html = `
-                <div class="item ${message.className ? message.className : ""}" data-message="${message.id}">
-                    <div class="no">${this.count}.</div>
-                    <div class="message">
-                        <div class="name">${message.name}</div> 
-                        <div class="json"></div>
-                    </div>
-                    <div class="timestamp">
-                        ${this.timeFormatter.format(message.time)}
-                    </div>
+        logger.on("logUpdate", (update: LogMessageUpdate) => {
+            this.updateMessage(update.id, update.obj);
+        });
+
+        logger.on("logDelete", (deletedIds: string[]) => {
+            deletedIds.forEach(id => {
+                this.deleteMessage(id);
+            });
+        });
+    }
+
+    appendMessage(message: LogMessage) {
+
+        let html = `
+            <div class="item ${message.className ? message.className : ""}" data-message="${message.id}">
+                <div class="message">
+                    <div class="name">${message.name}</div> 
+                    <div class="objs"></div>
                 </div>
-            `;
-            this.logTable.insertAdjacentHTML("beforeend", html);
+                <div class="timestamp">
+                    ${this.timeFormatter.format(message.time)}
+                </div>
+            </div>
+        `;
+        this.logTable.insertAdjacentHTML("beforeend", html);
 
-            let messageEl = _(`.item[data-message="${message.id}"]`, this.logTable);
-            let jsonEl = _(".json", messageEl);
+        let item = _(`.item[data-message=${message.id}]`, this.logTable);
 
-            const jsonFormatterOptions: JSONFormatterConfiguration = {
+        // Render objects
+        message.objs.forEach(obj => {
+            this.appendMessageObj(obj, item);
+        });
+        
+        item.scrollIntoView();
+    }
+
+    updateMessage(id: string, obj: any) {
+        let item = _(`.item[data-message=${id}]`, this.logTable);
+
+        if (!item.empty) {
+            this.appendMessageObj(obj, item);
+        }
+    }
+
+    deleteMessage(id: string) {
+        let item = _(`.item[data-message=${id}]`, this.logTable);
+        if (!item.empty) item.remove();
+    }
+
+    appendMessageObj(obj: any, item: HTMLElement) {
+
+        if (obj) {
+            let formatter = new JSONFormatter(obj, 0, {
                 hoverPreviewEnabled: false,
                 animateClose: false,
                 animateOpen: false,
-                //theme: themeController.isDark ? "dark" : ""
-            };
-
-            if (message && message.content) {
-                if (Utils.Obj.isString(message.content)) {
-                    try {
-                        let json = JSON.parse(message.content);
-                        const formatter = new JSONFormatter(json, 0, jsonFormatterOptions);
-                        jsonEl.appendChild(formatter.render());
-                    }
-                    catch(error){
-                        jsonEl.innerHTML = message.content;
-                    }
-                } else if (!Utils.Obj.isEmpty(message.content)) {
-                    const formatter = new JSONFormatter(message.content, 0, jsonFormatterOptions);
-                    jsonEl.appendChild(formatter.render());
-                }
-            }
-
-            messageEl.scrollIntoView();
-        });
+            });
+            _(".objs", item).appendChild(formatter.render());
+            formatter = null;
+        }
     }
 
     clear() {
         this.logTable.innerHTML = "";
-        this.count = 0;
+        logger.clear();
     }
 }

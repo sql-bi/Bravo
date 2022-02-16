@@ -254,20 +254,17 @@
 			margin: 0 0 15px 0;
 		}
 		.update-status {
-			.flexbox(center);
+			.flexbox(center, center);
 			height: 80px;
-			font-size: 17px;
 			line-height: 1.4;
 			margin: 0 0 10px 0;
-
-			.loader {
-				width: 20px;
-				height: 20px;
-				margin: -10px 0 0 -10px;
-			}
+			height:100px;
+			text-align: center;
+			overflow: hidden;
 
 			.up-to-date {
 				color: @good-color;
+				font-size: 18px;
 			}
 			.pending-update {
 				color: @accent-back-color;
@@ -277,15 +274,10 @@
 			}
 			
 		}	
-		.copyright {
-			color: @notice-color;
-			font-size: 12px;
-
-			.dark & { color: @notice-color-dark }
-		}
+		
 		.sqlbi {
 
-			margin: 20px 0 0 30px;
+			margin: 0 0 0 30px;
 			.flexbox(center);
 			font-size: 14px;
 			line-height: 1.4;
@@ -295,6 +287,13 @@
 				height: auto;
 				margin: 0 30px 0 0
 			}
+		}
+		.copyright {
+			margin-top: 5px;
+			color: @notice-color;
+			font-size: 12px;
+
+			.dark & { color: @notice-color-dark }
 		}
 	}
 }

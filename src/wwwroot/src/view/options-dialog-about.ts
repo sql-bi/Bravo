@@ -43,12 +43,9 @@ export class OptionsDialogAbout {
                         </select> &nbsp;
                         ${i18n(strings.appVersion, { version: app.currentVersion.toString()})}
                     </div>
-                    <div class="update-status"></div>
+                    <div class="update-status list"></div>
                     
-                    <div class="copyright">
-                        ${new Date().getFullYear()} &copy; SQLBI Corp. ${i18n(strings.copyright)}<br>
-                        ${i18n(strings.license)}
-                    </div>
+                    
 
                 </div>
             </div>
@@ -56,7 +53,11 @@ export class OptionsDialogAbout {
                 <div><img src="images/sqlbi.svg"></div>
                 <div>
                     ${i18n(strings.sqlbiPayoff)} &nbsp; 
-                    <span class="link" data-href="https://www.sqlbi.com">www.sqlbi.com</span>
+                    <span class="link" href="https://www.sqlbi.com">www.sqlbi.com</span>
+                    
+                    <div class="copyright">
+                        ${new Date().getFullYear()} &copy; SQLBI Corp. ${i18n(strings.copyright)}
+                    </div>
                 </div>
             </div>
         `;
@@ -77,8 +78,8 @@ export class OptionsDialogAbout {
             pendingVersion ? `
                 <div>
                     <div class="pending-update">${i18n(strings.appUpdateAvailable, { version: pendingVersion.toString() })}</div>
-                    <span class="link-button" data-download="${pendingVersion.info.downloadUrl}">${i18n(strings.appUpdateDownload)}</span> &nbsp; 
-                    <span class="link-button button-alt" data-href="${pendingVersion.info.changelogUrl}">${i18n(strings.appUpdateChangelog)}</span>
+                    <span class="button" href="${pendingVersion.info.downloadUrl}" target="downloader">${i18n(strings.appUpdateDownload)}</span> &nbsp; 
+                    <span class="button button-alt" href="${pendingVersion.info.changelogUrl}">${i18n(strings.appUpdateChangelog)}</span>
                 </div>
             ` : `
                 <div class="up-to-date">${i18n(strings.appUpToDate)}</div>
@@ -86,7 +87,7 @@ export class OptionsDialogAbout {
 
         if (!app.pendingVersion || force) {
 
-            this.updateStatusDiv.innerHTML = Loader.html(true, false, 2);
+            this.updateStatusDiv.innerHTML = Loader.html(false, false, 5);
             
             app.checkForUpdates()
                 .then(pendingVersion => {

@@ -14,7 +14,7 @@ export interface Options {
     theme: ThemeType
     telemetryEnabled: boolean
     updateChannel: UpdateChannelType
-    diagnosticEnabled: boolean
+    diagnosticLevel: DiagnosticLevelType
     customOptions?: ClientOptions
 } 
 
@@ -63,6 +63,12 @@ export enum UpdateChannelType {
     //Canary = "Canary",
 }
 
+export enum DiagnosticLevelType {
+    None = "None", 
+    Basic = "Basic", 
+    Verbose = "Verbose"
+}
+
 type optionsMode = "host" | "browser"
 export class OptionsController extends Dispatchable {
 
@@ -74,7 +80,7 @@ export class OptionsController extends Dispatchable {
     defaultOptions: Options = {
         theme: ThemeType.Auto,
         telemetryEnabled: true,
-        diagnosticEnabled: false,
+        diagnosticLevel: DiagnosticLevelType.None,
         updateChannel: UpdateChannelType.Stable,
         customOptions: {
             sidebarCollapsed: false,
