@@ -25,6 +25,7 @@ import { ErrorAlert } from '../view/error-alert';
 import { AppError } from '../model/exceptions';
 import { DiagnosticPane } from '../view/diagnostic-pane';
 import Split, { SplitObject } from "split.js";
+import { DiagnosticLevelType } from './options';
 
 export interface AppVersionInfo {
     version: string
@@ -90,7 +91,7 @@ export class App {
 
     updatePanels() {
 
-        if (optionsController.options.diagnosticEnabled) {
+        if (optionsController.options.diagnosticLevel != DiagnosticLevelType.None) {
             if (!this.diagnosticSplit) {
                 this.diagnosticSplit = Split(["#main-pane", "#bottom-pane"], {
                     sizes: optionsController.options.customOptions.panels, 
@@ -160,17 +161,17 @@ export class App {
             }
         });
 
-        // Catch pseudo links 
-        document.addLiveEventListener("click", ".link, .link-button", (e, element) => {
+        // Catch links & pseudo links 
+        document.addLiveEventListener("click", "span[href], a[href], button[href]", (e, element) => {
             e.preventDefault();
-            if ("href" in element.dataset) {
-                const navigateUrl = element.dataset.href;
-                host.navigateTo(navigateUrl);
-                telemetry.track("Link", { "Url": navigateUrl});
 
-            } else if ("download" in element.dataset) {
-                const downloadUrl = element.dataset.download;
-                window.open(downloadUrl, "downloader");
+            const url = element.getAttribute("href");
+            const target = element.getAttribute("target");
+            if (target && target == "downloader") {
+                window.open(url, "downloader");
+            } else {
+                host.navigateTo(url);
+                telemetry.track("Link", { "Url": url});
             }
         });
 
@@ -188,7 +189,7 @@ export class App {
         });
 
         host.on(WebMessageType.ApplicationUpdate, (data: ApplicationUpdateAvailableWebMessage)=>{
-            notificationCenter.add(new Notify(i18n(strings.updateMessage, { version: data.currentVersion }), data, `<span class="link" data-download="${data.downloadUrl}">${i18n(strings.appUpdateDownload)}</span> &nbsp;&nbsp; <span class="link" data-href="${data.changelogUrl}">${i18n(strings.appUpdateViewDetails)}</span>`, false, true));
+            notificationCenter.add(new Notify(i18n(strings.updateMessage, { version: data.currentVersion }), data, `<span class="link" href="${data.downloadUrl}" target="downloader">${i18n(strings.appUpdateDownload)}</span> &nbsp;&nbsp; <span class="link" href="${data.changelogUrl}">${i18n(strings.appUpdateViewDetails)}</span>`, false, true));
             
             this.pendingVersion = new AppVersion({
                 version: data.currentVersion,
@@ -247,7 +248,7 @@ export class App {
         });
 
         this.diagnosticPane.on("close", ()=> {
-            optionsController.update("diagnosticEnabled", false);
+            optionsController.update("diagnosticLevel", DiagnosticLevelType.None);
             this.updatePanels();
         });
 
@@ -256,7 +257,7 @@ export class App {
         });
 
         // Options change
-        optionsController.on("diagnosticEnabled.change", (changedOptions: any) => {
+        optionsController.on("diagnosticLevel.change", (changedOptions: any) => {
             this.updatePanels();
         });
     }
@@ -367,7 +368,10 @@ export class App {
 
     toggleDiagnostics(toggle: boolean) {
         const sizes = (toggle ? [70, 30] : [100, 0]);
-        if (toggle) optionsController.options.diagnosticEnabled = true;
+        
+        if (toggle && optionsController.options.diagnosticLevel == DiagnosticLevelType.None) 
+            optionsController.options.diagnosticLevel = DiagnosticLevelType.Basic;
+
         optionsController.update("customOptions.panels", sizes);
         this.updatePanels();
     }

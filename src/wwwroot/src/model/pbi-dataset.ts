@@ -23,6 +23,7 @@ export enum PBICloudDatasetConnectionMode {
 export interface PBICloudDataset {
     workspaceId?: string
     workspaceName?:	string
+    workspaceObjectId?: string
     id: number
     name?: string
     serverName?: string
@@ -34,3 +35,12 @@ export interface PBICloudDataset {
     connectionMode: PBICloudDatasetConnectionMode
     diagnostic?: any
 }
+
+export let PBICloudDatasetPrivateProperties = [
+    "workspaceId",
+    "workspaceName",
+    "workspaceObjectId",
+    "serverName",
+    "databaseName",
+    "owner"
+];

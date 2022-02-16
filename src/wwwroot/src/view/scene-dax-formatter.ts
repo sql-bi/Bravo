@@ -873,7 +873,7 @@ export class DaxFormatterScene extends MainScene {
         let html = `
             <img src="images/dax-formatter${themeController.isDark ? "-dark" : ""}.svg">
             ${i18n(strings.dataUsageMessage)}
-            <p><span class="link" data-href="https://www.daxformatter.com">www.daxformatter.com</span></p>
+            <p><span class="link" href="https://www.daxformatter.com">www.daxformatter.com</span></p>
         `;
         dialog.show(html);
 

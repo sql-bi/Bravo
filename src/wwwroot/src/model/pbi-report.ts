@@ -23,3 +23,8 @@ export interface PBIDesktopReport {
     databaseName?: string
     connectionMode: PBIDesktopReportConnectionMode
 }
+
+export let PBIDesktopReportPrivateProperties = [
+    "serverName",
+    "databaseName",
+];

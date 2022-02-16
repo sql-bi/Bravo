@@ -4,6 +4,7 @@
  * https://www.sqlbi.com
 */
 
+import { DiagnosticLevelType } from '../controllers/options';
 import {  _, __ } from '../helpers/utils';
 import { i18n } from '../model/i18n'; 
 import { strings } from '../model/strings';
@@ -24,12 +25,17 @@ export class OptionsDialogTelemetry extends OptionsDialogMenuItem {
                 type: OptionType.switch,
             },
             {
-                option: "diagnosticEnabled",
+                option: "diagnosticLevel",
                 icon: "bug",
                 name: i18n(strings.optionDiagnostic),
                 description: i18n(strings.optionDiagnosticDescription),
-                additionalNotes: `${i18n(strings.optionDiagnosticMore)} <span class="link" data-href="https://github.com/sql-bi/bravo/issues">github.com/sql-bi/bravo/issues</a>`,
-                type: OptionType.switch,
+                additionalNotes: `${i18n(strings.optionDiagnosticMore)} <span class="link" href="https://github.com/sql-bi/bravo/issues">github.com/sql-bi/bravo/issues</span>`,
+                type: OptionType.select,
+                values: [
+                    [DiagnosticLevelType.None, i18n(strings.optionDiagnosticLevelNone)],
+                    [DiagnosticLevelType.Basic, i18n(strings.optionDiagnosticLevelBasic)],
+                    [DiagnosticLevelType.Verbose, i18n(strings.optionDiagnosticLevelVerbose)],
+                ]
             }
         ];
 

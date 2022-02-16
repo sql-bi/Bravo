@@ -141,6 +141,22 @@ export module Utils {
             return (pad4(buf[0]) + pad4(buf[1]) + "-" + pad4(buf[2]) + "-" + pad4(buf[3]) + "-" + pad4(buf[4]) + "-" + pad4(buf[5]) + pad4(buf[6]) + pad4(buf[7]));
         }
 
+        export function caesarCipher(s: string, k: number = 0, prefix = "---"): string {
+            let n = 26; // alphabet letters amount
+            if (!k) k = Math.round((Math.random() * 50) + 5);
+            if (k < 0) return caesarCipher(s, k + n, prefix);
+
+            return prefix + s.split('')
+                .map(c => {
+                    if (c.match(/[a-z]/i)) {
+                        let code = c.charCodeAt(0);
+                        let shift = (code >= 65 && code <= 90 ? 65 : (code >= 97 && code <= 122 ? 97 : 0));
+                        return String.fromCharCode(((code - shift + k) % n) + shift);
+                    }
+                    return c;
+                }).join('');
+        }
+        
     }
 
     export module DOM {
@@ -491,6 +507,9 @@ export module Utils {
         export function isString(x: any): boolean {
             return Utils.Obj.is(x, "String");
         }
+        export function isNumber(x: any): boolean {
+            return (!isNaN(Number(x)));
+        }
 
         // Merge two objects
         export function merge<T>(source: T, target: T, acceptNull = false): T {
@@ -562,6 +581,53 @@ export module Utils {
             }
             return match;
         }
+
+        export function anonymize(obj: any, props: string | string[]) {
+
+            let anonymizeProp = (prop: any) => {
+
+                const anon = "x";
+
+                if (Utils.Obj.isString(prop)) {
+                    let clearIndex = (prop.length > 6 ? prop.length - 3 : prop.length);
+                    let clearProp = prop.substring(clearIndex);
+                    prop = prop.substring(0, clearIndex).replace(/([a-zA-Z])/g, anon) + clearProp;
+
+                } else if (Utils.Obj.isNumber(prop)) {
+
+                    let strProp = String(prop);
+                    prop = strProp.substring(strProp.length - 1).padStart(strProp.length - 1, anon);
+                }
+
+                return prop;
+            }
+
+            let process = (source: any) => {
+
+                let target: any = null;
+
+                for (let key in source) {
+                    if (!target)
+                        target = (Utils.Obj.isArray(source) ? [] : {});
+
+                    if (typeof source[key] === "object" /*Utils.Obj.isObject(source[key])*/) {
+                        target[key] = process(source[key]);
+
+                    } else {
+                        if (props.indexOf(key) >= 0 || props == key || props == "*") {
+                            target[key] = anonymizeProp(source[key]);
+                        } else {
+                            target[key] = source[key];
+                        }
+                    }
+                }
+                return target;
+            };               
+
+            return process(obj);
+        
+        }
+
     }
 
     export module Platform {
