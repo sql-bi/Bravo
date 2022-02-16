@@ -1,0 +1,137 @@
+﻿{
+  "Holidays": [
+    {
+      "IsoCountry": "US",
+      "MonthNumber": 1,
+      "DayNumber": 1,
+      "WeekDayNumber": 0,
+      "OffsetWeek": 0,
+      "OffsetDays": 0,
+      "HolidayName": "New Year's Day",
+      "SubstituteHoliday": "NoSubstituteHoliday",
+      "ConflictPriority": 100
+    },
+    {
+      "IsoCountry": "US",
+      "MonthNumber": 1,
+      "DayNumber": 0,
+      "WeekDayNumber": 1,
+      "OffsetWeek": 3,
+      "OffsetDays": 0,
+      "HolidayName": "Martin Luther King, Jr.",
+      "SubstituteHoliday": "NoSubstituteHoliday",
+      "ConflictPriority": 100
+    },
+    {
+      "IsoCountry": "US",
+      "MonthNumber": 2,
+      "DayNumber": 0,
+      "WeekDayNumber": 1,
+      "OffsetWeek": 3,
+      "OffsetDays": 0,
+      "HolidayName": "Presidents' Day",
+      "SubstituteHoliday": "NoSubstituteHoliday",
+      "ConflictPriority": 100
+    },
+    {
+      "IsoCountry": "US",
+      "MonthNumber": 5,
+      "DayNumber": 0,
+      "WeekDayNumber": 1,
+      "OffsetWeek": -1,
+      "OffsetDays": 0,
+      "HolidayName": "Memorial Day",
+      "SubstituteHoliday": "NoSubstituteHoliday",
+      "ConflictPriority": 100
+    },
+    {
+      "IsoCountry": "US",
+      "MonthNumber": 6,
+      "DayNumber": 19,
+      "WeekDayNumber": 0,
+      "OffsetWeek": 0,
+      "OffsetDays": 0,
+      "HolidayName": "Juneteenth",
+      "SubstituteHoliday": "FridayIfSaturdayOrMondayIfSunday",
+      "ConflictPriority": 100,
+      "FirstYear": 2021
+    },
+    {
+      "IsoCountry": "US",
+      "MonthNumber": 7,
+      "DayNumber": 4,
+      "WeekDayNumber": 0,
+      "OffsetWeek": 0,
+      "OffsetDays": 0,
+      "HolidayName": "Independence Day",
+      "SubstituteHoliday": "NoSubstituteHoliday",
+      "ConflictPriority": 100
+    },
+    {
+      "IsoCountry": "US",
+      "MonthNumber": 9,
+      "DayNumber": 0,
+      "WeekDayNumber": 1,
+      "OffsetWeek": 1,
+      "OffsetDays": 0,
+      "HolidayName": "Labor Day",
+      "SubstituteHoliday": "NoSubstituteHoliday",
+      "ConflictPriority": 100
+    },
+    {
+      "IsoCountry": "US",
+      "MonthNumber": 10,
+      "DayNumber": 0,
+      "WeekDayNumber": 1,
+      "OffsetWeek": 2,
+      "OffsetDays": 0,
+      "HolidayName": "Columbus Day",
+      "SubstituteHoliday": "NoSubstituteHoliday",
+      "ConflictPriority": 100
+    },
+    {
+      "IsoCountry": "US",
+      "MonthNumber": 11,
+      "DayNumber": 11,
+      "WeekDayNumber": 0,
+      "OffsetWeek": 0,
+      "OffsetDays": 0,
+      "HolidayName": "Veterans Day",
+      "SubstituteHoliday": "NoSubstituteHoliday",
+      "ConflictPriority": 100
+    },
+    {
+      "IsoCountry": "US",
+      "MonthNumber": 11,
+      "DayNumber": 0,
+      "WeekDayNumber": 4,
+      "OffsetWeek": 4,
+      "OffsetDays": 0,
+      "HolidayName": "Thanksgiving Day",
+      "SubstituteHoliday": "NoSubstituteHoliday",
+      "ConflictPriority": 100
+    },
+    {
+      "IsoCountry": "US",
+      "MonthNumber": 11,
+      "DayNumber": 0,
+      "WeekDayNumber": 4,
+      "OffsetWeek": 4,
+      "OffsetDays": 1,
+      "HolidayName": "Black Friday",
+      "SubstituteHoliday": "NoSubstituteHoliday",
+      "ConflictPriority": 100
+    },
+    {
+      "IsoCountry": "US",
+      "MonthNumber": 12,
+      "DayNumber": 25,
+      "WeekDayNumber": 0,
+      "OffsetWeek": 0,
+      "OffsetDays": 0,
+      "HolidayName": "Christmas Day",
+      "SubstituteHoliday": "NoSubstituteHoliday",
+      "ConflictPriority": 100
+    }
+  ]
+}

@@ -1,21 +1,21 @@
 ﻿namespace Sqlbi.Bravo.Services
 {
-    using Dax.Template;
     using Dax.Template.Model;
     using Sqlbi.Bravo.Infrastructure;
-    using Sqlbi.Bravo.Infrastructure.Helpers;
+    using Sqlbi.Bravo.Infrastructure.Extensions;
+    using Sqlbi.Bravo.Infrastructure.Services;
+    using Sqlbi.Bravo.Infrastructure.Services.ManageDates;
     using Sqlbi.Bravo.Models;
     using Sqlbi.Bravo.Models.ManageDates;
-    using System;
     using System.Collections.Generic;
-    using System.IO;
     using System.Linq;
     using System.Threading;
-    using TOM = Microsoft.AnalysisServices.Tabular;
 
     public interface IManageDatesService
     {
-        IEnumerable<DateConfiguration> GetConfigurations();
+        IEnumerable<DateConfiguration> GetConfigurations(PBIDesktopReport report, CancellationToken cancellationToken);
+
+        DateConfiguration ValidateConfiguration(PBIDesktopReport report, DateConfiguration configuration, CancellationToken cancellationToken);
 
         ModelChanges? GetPreviewChanges(PBIDesktopReport report, PreviewChangesSettings settings, CancellationToken cancellationToken);
 
@@ -24,84 +24,108 @@
 
     internal class ManageDatesService : IManageDatesService
     {
-        public IEnumerable<DateConfiguration> GetConfigurations()
+        private readonly DaxTemplateManager _templateManager;
+
+        public ManageDatesService()
         {
-            var path = Path.Combine(AppContext.BaseDirectory, @"Assets\ManageDates\Templates");
-
-            if (Directory.Exists(path))
-            {
-                var configurations = Package.FindTemplateFiles(path).Select(Package.LoadFromFile).Select((package) =>
-                {
-                    var configuration = DateConfiguration.CreateFrom(package.Configuration);
-                    return configuration;
-                });
-
-                return configurations.ToArray();
-            }
-
-            return Array.Empty<DateConfiguration>();
+            _templateManager = new DaxTemplateManager();
         }
 
+        public IEnumerable<DateConfiguration> GetConfigurations(PBIDesktopReport report, CancellationToken cancellationToken)
+        {
+            var configurations = _templateManager.GetPackages().Select(DateConfiguration.CreateFrom).ToArray();
+            {
+                ValidateReferencedTables(report, configurations, assertValidation: false);
+            }
+            return configurations;
+        }
+
+        public DateConfiguration ValidateConfiguration(PBIDesktopReport report, DateConfiguration configuration, CancellationToken cancellationToken)
+        {
+            ValidateReferencedTables(report, configuration, assertValidation: false);
+
+            return configuration;
+        }
 
         public ModelChanges? GetPreviewChanges(PBIDesktopReport report, PreviewChangesSettings settings, CancellationToken cancellationToken)
         {
-            var modelChanges = ApplyTemplates(report, settings.Configuration!, previewChanges: true, settings.PreviewRows, cancellationToken);
+            BravoUnexpectedException.ThrowIfNull(settings.Configuration);
+            ValidateReferencedTables(report, settings.Configuration, assertValidation: true);
+
+            using var connection = TabularConnectionWrapper.ConnectTo(report);
+            var modelChanges = _templateManager.GetPreviewChanges(settings.Configuration, settings.PreviewRows, connection, cancellationToken);
+
             return modelChanges;
         }
 
         public void Update(PBIDesktopReport report, DateConfiguration configuration, CancellationToken cancellationToken)
         {
-            _ = ApplyTemplates(report, configuration, previewChanges: false, previewRows: 0, cancellationToken);
+            ValidateReferencedTables(report, configuration, assertValidation: true);
+
+            using var connection = TabularConnectionWrapper.ConnectTo(report);
+
+            _templateManager.ApplyTemplate(configuration, connection, cancellationToken);
         }
 
-        private static ModelChanges? ApplyTemplates(PBIDesktopReport report, DateConfiguration configuration, bool previewChanges, int previewRows, CancellationToken cancellationToken)
+        private static void ValidateReferencedTables(PBIDesktopReport report, DateConfiguration configuration, bool assertValidation) => ValidateReferencedTables(report, new[] { configuration }, assertValidation);
+
+        private static void ValidateReferencedTables(PBIDesktopReport report, DateConfiguration[] configurations, bool assertValidation)
         {
-            BravoUnexpectedException.ThrowIfNull(report.ServerName);
-            BravoUnexpectedException.ThrowIfNull(report.DatabaseName);
-            BravoUnexpectedException.ThrowIfNull(configuration.TemplateUri);
+            using var connection = TabularConnectionWrapper.ConnectTo(report);
 
-            var connectionString = ConnectionStringHelper.BuildForPBIDesktop(report.ServerName);
-            var databaseName = report.DatabaseName;
-
-            Package? package;
-            Uri templateUri = new(configuration.TemplateUri, UriKind.Absolute);
-
-            if (templateUri.Scheme.Equals(Uri.UriSchemeFile))
+            foreach (var configuration in configurations)
             {
-                package = Package.LoadFromFile(templateUri.LocalPath);
+                if (configuration.Bravo?.ReferencedTables is not null)
+                {
+                    foreach (var referencedTable in configuration.Bravo.ReferencedTables)
+                    {
+                        var table = connection.Model.Tables.Find(referencedTable.Name);
+
+                        if (table is null)
+                        {
+                            referencedTable.Action = ReferencedTableAction.ValidCreateNew;
+                        }
+                        else if (table.IsCalculated())
+                        {
+                            referencedTable.Action = ReferencedTableAction.ValidOverwrite;
+                        }
+                        else
+                        {
+                            referencedTable.Action = ReferencedTableAction.InvalidRenameRequired;
+                        }
+
+                        if (assertValidation)
+                        {
+                            BravoUnexpectedException.Assert(referencedTable.Action != ReferencedTableAction.InvalidRenameRequired);
+                        }
+                    }
+                }
             }
-            else
-            {
-                throw new NotImplementedException();
-            }
 
-            configuration.CopyTo(package.Configuration);
-            var engine = new Engine(package);
+            //foreach (var configuration in configurations)
+            //{
+            //    if (configuration.Bravo?.ReferencedTables is not null /* && Uri.TryCreate(configuration.TemplateUri, UriKind.Absolute, out var templateUri) */)
+            //    {
+            //        var packageText = File.ReadAllText(templateUri.LocalPath);
+            //        var packageObject = NJ.Linq.JObject.Parse(packageText);
 
-            using var server = new TOM.Server();
-            server.Connect(connectionString);
+            //        foreach (var referencedTable in configuration.Bravo.ReferencedTables)
+            //        {
+            //            if (referencedTable.Paths is not null)
+            //            {
+            //                foreach (var path in referencedTable.Paths)
+            //                {
+            //                    var token = packageObject.SelectToken(path, errorWhenNoMatch: true);
 
-            var database = server.Databases.FindByName(databaseName) ?? throw new BravoException(BravoProblem.TOMDatabaseDatabaseNotFound, databaseName);
-            var model = database.Model;
+            //                    BravoUnexpectedException.ThrowIfNull(token);
+            //                    BravoUnexpectedException.Assert(token.Type == NJ.Linq.JTokenType.String);
 
-            engine.ApplyTemplates(model);
-
-            if (previewChanges)
-            {
-                var modelChanges = engine.GetModelChanges(model);
-
-                if (previewRows > 0)
-                    modelChanges.PopulatePreview(model, previewRows);
-
-                return modelChanges;
-            }
-            else
-            {
-                // TODO: handle SaveChanges() errors
-                model.SaveChanges();
-
-                return null;
-            }
+            //                    var xx = token.ToString();
+            //                }
+            //            }
+            //        }
+            //    }
+            //}
         }
     }
 }

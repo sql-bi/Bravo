@@ -9,36 +9,28 @@
     public class DateDefaults
     {
         [JsonPropertyName("firstFiscalMonth")]
-        //[JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public int? FirstFiscalMonth { get; set; }
 
         [JsonPropertyName("firstDayOfWeek")]
-        //[JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public DayOfWeek? FirstDayOfWeek { get; set; }
 
         [JsonPropertyName("monthsInYear")]
-        //[JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public int? MonthsInYear { get; set; }
 
         [JsonPropertyName("workingDayType")]
-        //[JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string? WorkingDayType { get; set; }
 
         [JsonPropertyName("nonWorkingDayType")]
-        //[JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string? NonWorkingDayType { get; set; }
 
         [JsonPropertyName("typeStartFiscalYear")]
-        //[JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public TypeStartFiscalYear? TypeStartFiscalYear { get; set; }
 
         [JsonPropertyName("quarterWeekType")]
-        //[JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public QuarterWeekType? QuarterWeekType { get; set; }
 
         [JsonPropertyName("weeklyType")]
         [JsonConverter(typeof(JsonStringEnumConverter))]
-        //[JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public WeeklyType? WeeklyType { get; set; }
 
         public void CopyTo(TemplateConfiguration templateConfiguration)
