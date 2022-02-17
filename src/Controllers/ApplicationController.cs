@@ -104,6 +104,28 @@
         }
 
         /// <summary>
+        /// Opens the folder or file path provided
+        /// </summary>
+        /// <response code="200">Status200OK - Success</response>
+        /// <response code="403">Status403Forbidden - The path is invalid or not allowed</response>
+        [HttpGet]
+        [ActionName("FileSystemOpen")]
+        [Consumes(MediaTypeNames.Application.Json)]
+        [Produces(MediaTypeNames.Application.Json)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesDefaultResponseType]
+        public IActionResult FileSystemOpen(string path)
+        {
+            if (ProcessHelper.OpenPath(path))
+            {
+                return Ok();
+            }
+
+            return Forbid();
+        }
+
+        /// <summary>
         /// Gets all the <see cref="DiagnosticMessage"/> for the application
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
