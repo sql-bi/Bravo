@@ -16,12 +16,25 @@
 
     public class ExportDataJob : ExportDataEntity
     {
+        [JsonPropertyName("path")]
+        public string? Path { get; set; }
+
         [JsonPropertyName("tables")]
         public HashSet<ExportDataTable> Tables { get; set; } = new();
 
         public void SetCanceled() => Status = ExportDataStatus.Canceled;
 
         public void SetFailed() => Status = ExportDataStatus.Failed;
+
+        public static ExportDataJob CreateFrom(ExportDataSettings settings)
+        {
+            var job = new ExportDataJob
+            {
+                Path = settings.ExportPath
+            };
+
+            return job;
+        }
     }
 
     public class ExportDataTable : ExportDataEntity

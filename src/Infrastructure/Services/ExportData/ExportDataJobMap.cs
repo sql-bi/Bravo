@@ -14,9 +14,9 @@
             _jobs = new ConcurrentDictionary<T, ExportDataJob>();
         }
 
-        public ExportDataJob AddNew(T datamodel)
+        public ExportDataJob AddNew(T datamodel, ExportDataSettings settings)
         {
-            var job = new ExportDataJob();
+            var job = ExportDataJob.CreateFrom(settings);
 
             var jobAdded = _jobs.TryAdd(datamodel, job);
             

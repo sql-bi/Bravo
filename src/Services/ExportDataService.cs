@@ -63,7 +63,7 @@
             BravoUnexpectedException.ThrowIfNull(report.DatabaseName);
 
             var connectionString = ConnectionStringHelper.BuildForPBIDesktop(report.ServerName);
-            var job = _reportJobs.AddNew(report);
+            var job = _reportJobs.AddNew(report, settings);
 
             try
             {
@@ -90,7 +90,7 @@
         public ExportDataJob ExportDelimitedTextFile(PBICloudDataset dataset, ExportDelimitedTextSettings settings, CancellationToken cancellationToken)
         {
             var (connectionString, databaseName) = dataset.GetConnectionParameters(_pbicloudService.CurrentAccessToken);
-            var job = _datasetJobs.AddNew(dataset);
+            var job = _datasetJobs.AddNew(dataset, settings);
 
             try
             {
@@ -120,7 +120,7 @@
             BravoUnexpectedException.ThrowIfNull(report.DatabaseName);
 
             var connectionString = ConnectionStringHelper.BuildForPBIDesktop(report.ServerName);
-            var job = _reportJobs.AddNew(report);
+            var job = _reportJobs.AddNew(report, settings);
 
             try
             {
@@ -147,7 +147,7 @@
         public ExportDataJob ExportExcelFile(PBICloudDataset dataset, ExportExcelSettings settings, CancellationToken cancellationToken)
         {
             var (connectionString, databaseName) = dataset.GetConnectionParameters(_pbicloudService.CurrentAccessToken);
-            var job = _datasetJobs.AddNew(dataset);
+            var job = _datasetJobs.AddNew(dataset, settings);
 
             try
             {

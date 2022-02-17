@@ -39,7 +39,7 @@
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ExportDataJob))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesDefaultResponseType]
-        public IActionResult ExportDelimitedTextFileFromPBIDesktopReport(ExportDelimitedTextFromPBIReportRequest request, CancellationToken cancellationToken)
+        public IActionResult ExportDelimitedTextFile(ExportDelimitedTextFromPBIReportRequest request, CancellationToken cancellationToken)
         {
             if (WindowDialogHelper.BrowseFolderDialog(out var path, cancellationToken))
             {
@@ -65,14 +65,14 @@
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesDefaultResponseType]
-        public async Task<IActionResult> ExportDelimitedTextFileFromPBICloudDataset(ExportDelimitedTextFromPBICloudDatasetRequest request, CancellationToken cancellationToken)
+        public async Task<IActionResult> ExportDelimitedTextFile(ExportDelimitedTextFromPBICloudDatasetRequest request, CancellationToken cancellationToken)
         {
             if (await _pbicloudService.IsSignInRequiredAsync())
                 return Unauthorized();
 
             if (WindowDialogHelper.BrowseFolderDialog(out var path, cancellationToken))
             {
-                request.Settings!.ExportPath = path!;
+                request.Settings!.ExportPath = path;
                 var job = _exportDataService.ExportDelimitedTextFile(request.Dataset!, request.Settings!, cancellationToken);
 
                 return Ok(job);
@@ -92,7 +92,7 @@
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ExportDataJob))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesDefaultResponseType]
-        public IActionResult ExportExcelFileFromPBIDesktopReport(ExportExcelFromPBIReportRequest request, CancellationToken cancellationToken)
+        public IActionResult ExportExcelFile(ExportExcelFromPBIReportRequest request, CancellationToken cancellationToken)
         {
             if (WindowDialogHelper.SaveFileDialog(fileName: request.Report!.ReportName, defaultExt: "XLSX", out var path, cancellationToken))
             {
@@ -118,7 +118,7 @@
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesDefaultResponseType]
-        public async Task<IActionResult> ExportExcelFileFromPBICloudDataset(ExportExcelFromPBICloudDatasetRequest request, CancellationToken cancellationToken)
+        public async Task<IActionResult> ExportExcelFile(ExportExcelFromPBICloudDatasetRequest request, CancellationToken cancellationToken)
         {
             if (await _pbicloudService.IsSignInRequiredAsync())
                 return Unauthorized();
