@@ -195,13 +195,19 @@
             max-width: 500px;
             text-align: center;
 
-            .icon-completed {
+            .icon.big {
                 &:before {
                     font-size: 130px;
                     display: block;
                     margin: 0;
-                    color: @good-color;
                 }
+            }
+
+            .icon-completed:before {
+                color: @good-color;
+            }
+            .icon-error:before {
+                color: @bad-color;
             }
         }
         .dismiss {

@@ -15,6 +15,7 @@ import { I18n, i18n } from '../model/i18n';
 import { strings } from '../model/strings';
 import { TabularTable } from '../model/tabular';
 import { ErrorScene } from './scene-error';
+import { ExportedScene } from './scene-exported';
 import { ExportingScene } from './scene-exporting';
 import { MainScene } from './scene-main';
 import { SuccessScene } from './scene-success';
@@ -412,10 +413,8 @@ export class ExportDataScene extends MainScene {
                     switch (job.status) {
 
                         case ExportDataStatus.Completed:
-                            let successScene = new SuccessScene(Utils.DOM.uniqueId(), this.element.parentElement, i18n(strings.exportDataSuccessSceneMessage, {count: tableNames.length}), ()=>{
-                                this.pop();
-                            });
-                            this.splice(successScene);
+                            let exportedScene = new ExportedScene(Utils.DOM.uniqueId(), this.element.parentElement, job, exportType);
+                            this.splice(exportedScene);
                             break;
 
                         case ExportDataStatus.Canceled:
