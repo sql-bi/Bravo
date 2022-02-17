@@ -3,8 +3,11 @@
     using Dax.Template.Enums;
     using Dax.Template.Interfaces;
     using Dax.Template.Tables;
+    using Sqlbi.Bravo.Infrastructure;
+    using System;
     using System.ComponentModel.DataAnnotations;
     using System.Linq;
+    using System.Text.Json;
     using System.Text.Json.Serialization;
 
     public class DateConfiguration
@@ -14,15 +17,15 @@
         /// </summary>
         [Required]
         [JsonPropertyName("templateUri")]
-        public string? TemplateUri { get; init; }
+        public string? TemplateUri { get; set; }
 
         [JsonPropertyName("name")]
-        public string? Name { get; init; }
+        public string? Name { get; set; }
 
         [JsonPropertyName("description")]
-        public string? Description { get; init; }
+        public string? Description { get; set; }
 
-        #region Localization
+        #region ILocalization
 
         [JsonPropertyName("isoFormat")]
         public string? IsoFormat { get; set; }
@@ -32,7 +35,7 @@
 
         #endregion
 
-        #region Scan
+        #region IScanConfig
 
         [JsonPropertyName("autoScan")]
         public AutoScanEnum? AutoScan { get; set; }
@@ -45,10 +48,14 @@
 
         #endregion
 
-        #region Holidays
+        #region IHolidaysConfig
 
         [JsonPropertyName("isoCountry")]
         public string? IsoCountry { get; set; }
+
+        #endregion
+
+        #region IDateTemplateConfig
 
         [JsonPropertyName("firstYear")]
         public int? FirstYear { get; set; }
@@ -58,7 +65,7 @@
 
         #endregion
 
-        #region MeasureTemplate
+        #region IMeasureTemplateConfig
 
         [JsonPropertyName("autoNaming")]
         public AutoNamingEnum? AutoNaming { get; set; }
@@ -71,103 +78,153 @@
 
         #endregion
 
-        #region CustomDateTable
+        #region ICustomTableConfig
 
         [JsonPropertyName("defaults")]
         public DateDefaults? Defaults { get; set; }
 
         #endregion
 
+        [JsonPropertyName("bravo")]
+        public DateBravo? Bravo { get; set; }
+
         public void CopyTo(TemplateConfiguration templateConfiguration)
         {
-            templateConfiguration.TemplateUri ??= TemplateUri;
-            templateConfiguration.Name ??= Name;
-            templateConfiguration.Description ??= Description;
+            templateConfiguration.TemplateUri = TemplateUri ?? templateConfiguration.TemplateUri;
+            templateConfiguration.Name = Name ?? templateConfiguration.Name;
+            templateConfiguration.Description = Description ?? templateConfiguration.Description;
             //
-            // Localization
+            // ILocalization
             //
-            templateConfiguration.IsoFormat ??= IsoFormat;
-            templateConfiguration.IsoTranslation ??= IsoTranslation;
+            templateConfiguration.IsoFormat = IsoFormat ?? templateConfiguration.IsoFormat;
+            templateConfiguration.IsoTranslation = IsoTranslation ?? templateConfiguration.IsoTranslation;
             //
-            // Scan
+            // IScanConfig
             //
-            templateConfiguration.AutoScan ??= AutoScan;
+            templateConfiguration.AutoScan = AutoScan ?? templateConfiguration.AutoScan;
             if (OnlyTablesColumns?.Length > 0)
-            {
                 templateConfiguration.OnlyTablesColumns = OnlyTablesColumns;
-            }
             if (ExceptTablesColumns?.Length > 0)
-            {
                 templateConfiguration.ExceptTablesColumns = ExceptTablesColumns;
-            }
             //
-            // Holidays
+            // IHolidaysConfig
             //
-            templateConfiguration.IsoCountry ??= IsoCountry;
-            if (FirstYear.HasValue)
+            templateConfiguration.IsoCountry = IsoCountry ?? templateConfiguration.IsoCountry;
+            //
+            // IDateTemplateConfig
+            //
+            if (FirstYear is not null)
             {
-                templateConfiguration.FirstYear = FirstYear.Value;
-                templateConfiguration.FirstYearMin = FirstYear.Value;
-                templateConfiguration.FirstYearMax = FirstYear.Value;
+                templateConfiguration.FirstYear = FirstYear;
+                templateConfiguration.FirstYearMin = FirstYear;
+                templateConfiguration.FirstYearMax = FirstYear;
             }
-            if (LastYear.HasValue)
+            if (LastYear is not null)
             {
-                templateConfiguration.LastYear = LastYear.Value;
-                templateConfiguration.LastYearMin = LastYear.Value;
-                templateConfiguration.LastYearMax = LastYear.Value;
+                templateConfiguration.LastYear = LastYear;
+                templateConfiguration.LastYearMin = LastYear;
+                templateConfiguration.LastYearMax = LastYear;
             }
             //
-            // MeasureTemplate
+            // IMeasureTemplateConfig
             //
             templateConfiguration.AutoNaming = AutoNaming ?? templateConfiguration.AutoNaming;
             if (TargetMeasures?.Length > 0)
             {
-                templateConfiguration.TargetMeasures = TargetMeasures.Select((name) => new IMeasureTemplateConfig.TargetMeasure { Name = name }).ToArray();
+                templateConfiguration.TargetMeasures = TargetMeasures
+                    .Select((name) => new IMeasureTemplateConfig.TargetMeasure { Name = name })
+                    .ToArray();
             }
-            // ???? TableSingleInstanceMeasures
+            templateConfiguration.TableSingleInstanceMeasures = TableSingleInstanceMeasures ?? templateConfiguration.TableSingleInstanceMeasures;
+
             //
-            // CustomDateTable
+            // ICustomTableConfig
             //
             Defaults?.CopyTo(templateConfiguration);
         }
 
-        public static DateConfiguration CreateFrom(TemplateConfiguration templateConfiguration)
+        public static DateConfiguration CreateFrom(Dax.Template.Package package)
         {
             var configuration = new DateConfiguration
             {
-                TemplateUri = templateConfiguration.TemplateUri,
-                Name = templateConfiguration.Name,
-                Description = templateConfiguration.Description,
+                Bravo = TryGetBravoConfig(package),
+                TemplateUri = package.Configuration.TemplateUri,
+                Name = package.Configuration.Name,
+                Description = package.Configuration.Description,
                 //
-                // Localization
+                // ILocalization
                 //
-                IsoFormat = templateConfiguration.IsoFormat,
-                IsoTranslation = templateConfiguration.IsoTranslation,
+                IsoFormat = package.Configuration.IsoFormat,
+                IsoTranslation = package.Configuration.IsoTranslation,
                 //
-                // Scan
+                // IScanConfig
                 //
-                AutoScan = templateConfiguration.AutoScan,
-                // ???? OnlyTablesColumns
-                // ???? ExceptTablesColumns
+                AutoScan = package.Configuration.AutoScan,
+                OnlyTablesColumns = package.Configuration.OnlyTablesColumns,
+                ExceptTablesColumns = package.Configuration.ExceptTablesColumns,
                 //
-                // Holidays
+                // IHolidaysConfig
                 //
-                IsoCountry = templateConfiguration.IsoCountry,
-                // ???? FirstYear
-                // ???? LastYear
+                IsoCountry = package.Configuration.IsoCountry,
                 //
-                // MeasureTemplate
+                // IDateTemplateConfig
                 //
-                AutoNaming = templateConfiguration.AutoNaming,
-                // ???? TargetMeasures
-                // ???? TableSingleInstanceMeasures
+                FirstYear = package.Configuration.FirstYear,
+                LastYear = package.Configuration.LastYear,
                 //
-                // CustomDateTable
+                // IMeasureTemplateConfig
                 //
-                Defaults = DateDefaults.CreateFrom(templateConfiguration)
+                AutoNaming = package.Configuration.AutoNaming,
+                TargetMeasures = package.Configuration.TargetMeasures?.Where((measure) => measure.Name is not null).Select((measure) => measure.Name!).ToArray(),
+                TableSingleInstanceMeasures = package.Configuration.TableSingleInstanceMeasures,
+                //
+                // ICustomTableConfig
+                //
+                Defaults = DateDefaults.CreateFrom(package.Configuration)
             };
 
             return configuration;
+
+            static DateBravo? TryGetBravoConfig(Dax.Template.Package package)
+            {
+                var parentElement = package.JsonConfiguration.RootElement;
+
+                if (parentElement.TryGetProperty(Dax.Template.Package.PACKAGE_CONFIG, out var configElement) && configElement.ValueKind == JsonValueKind.Object)
+                    parentElement = configElement;
+
+                if (parentElement.TryGetProperty(nameof(Bravo), out var bravoElement) && bravoElement.ValueKind == JsonValueKind.Object)
+                {
+                    var bravoConfigText = bravoElement.GetRawText();
+                    var bravoConfig = JsonSerializer.Deserialize<DateBravo>(bravoConfigText, options: new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true,
+                    });
+
+                    return bravoConfig;
+                }
+
+                return null;
+            }
+        }
+    }
+
+    internal static class DateConfigurationExtensions
+    {
+        public static Dax.Template.Package GetPackage(this DateConfiguration configuration)
+        {
+            BravoUnexpectedException.ThrowIfNull(configuration.TemplateUri);
+
+            var templateUri = new Uri(configuration.TemplateUri, UriKind.Absolute);
+            if (templateUri.Scheme.Equals(Uri.UriSchemeFile))
+            {
+                var package = Dax.Template.Package.LoadFromFile(templateUri.LocalPath);
+                {
+                    configuration.CopyTo(package.Configuration);
+                }
+                return package;
+            }
+
+            throw new NotImplementedException();
         }
     }
 }
