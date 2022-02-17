@@ -2,6 +2,7 @@
 {
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
+    using Sqlbi.Bravo.Models;
     using Sqlbi.Bravo.Models.ManageDates;
     using Sqlbi.Bravo.Services;
     using System.Collections.Generic;
@@ -25,23 +26,39 @@
         }
 
         /// <summary>
-        /// Gets all available template configurations
+        /// Gets all the available <see cref="DateConfiguration"/> from the embedded templates
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
-        [HttpGet]
-        [ActionName("GetConfigurations")]
+        [HttpPost]
+        [ActionName("GetConfigurationsForReport")]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<DateConfiguration>))]
         [ProducesDefaultResponseType]
-        public IActionResult GetConfigurations()
+        public IActionResult GetConfigurations(PBIDesktopReport report, CancellationToken cancellationToken)
         {
-            var configurations = _manageDatesService.GetConfigurations();
+            var configurations = _manageDatesService.GetConfigurations(report, cancellationToken);
 
             return Ok(configurations);
         }
 
         /// <summary>
-        /// Applies the provided configuration without commit changes and returns a preview of changes to objects and data
+        /// Validate the <see cref="DateConfiguration"/> provided against the tabular model
+        /// </summary>
+        /// <response code="200">Status200OK - Success</response>
+        [HttpPost]
+        [ActionName("ValidateConfigurationForReport")]
+        [Produces(MediaTypeNames.Application.Json)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<DateConfiguration>))]
+        [ProducesDefaultResponseType]
+        public IActionResult ValidateConfiguration(ValidatePBIDesktopReportConfigurationRequest request, CancellationToken cancellationToken)
+        {
+            var configurations = _manageDatesService.ValidateConfiguration(request.Report!, request.Configuration!, cancellationToken);
+
+            return Ok(configurations);
+        }
+
+        /// <summary>
+        /// Applies the provided <see cref="DateConfiguration"/> without commit changes and returns a preview of changes to objects and data
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
         [HttpPost]
@@ -49,7 +66,7 @@
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesDefaultResponseType]
-        public IActionResult GetPreviewChangesFromPBIDesktopReport(PreviewChangesFromPBIDesktopReportRequest request, CancellationToken cancellationToken)
+        public IActionResult GetPreviewChanges(PreviewChangesFromPBIDesktopReportRequest request, CancellationToken cancellationToken)
         {
             var modelChanges = _manageDatesService.GetPreviewChanges(request.Report!, request.Settings!, cancellationToken);
 
@@ -57,7 +74,7 @@
         }
 
         /// <summary>
-        /// Update the model by appliying the provided configuration
+        /// Update the model by appliying the provided <see cref="DateConfiguration"/>
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
         [HttpPost]
@@ -65,7 +82,7 @@
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesDefaultResponseType]
-        public IActionResult UpdatePBIDesktopReport(UpdatePBIDesktopReportRequest request, CancellationToken cancellationToken)
+        public IActionResult Update(UpdatePBIDesktopReportRequest request, CancellationToken cancellationToken)
         {
             _manageDatesService.Update(request.Report!, request.Configuration!, cancellationToken);
 

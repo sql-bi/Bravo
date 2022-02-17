@@ -2,6 +2,7 @@
 {
     using System.Text.Json.Serialization;
 
+    // TODO: rename to 'UpdateResponse'
     public class DatabaseUpdateResult
     {
         /// <summary>

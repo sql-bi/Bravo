@@ -3,7 +3,7 @@
     using System.ComponentModel.DataAnnotations;
     using System.Text.Json.Serialization;
 
-    public class UpdatePBIDesktopReportRequest
+    public abstract class ConfigurationRequest
     {
         [Required]
         [JsonPropertyName("report")]
@@ -12,5 +12,13 @@
         [Required]
         [JsonPropertyName("configuration")]
         public DateConfiguration? Configuration { get; set; }
+    }
+
+    public class UpdatePBIDesktopReportRequest : ConfigurationRequest
+    {
+    }
+
+    public class ValidatePBIDesktopReportConfigurationRequest : ConfigurationRequest
+    {
     }
 }

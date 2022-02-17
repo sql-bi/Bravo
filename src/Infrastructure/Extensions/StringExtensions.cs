@@ -7,7 +7,7 @@
     using System.Text;
     using System.Text.RegularExpressions;
 
-    public static class StringExtensions
+    internal static class StringExtensions
     {
         private static Regex? _invalidFileNameCharsRegex;
 

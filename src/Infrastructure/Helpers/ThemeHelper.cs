@@ -9,11 +9,11 @@
     internal static class ThemeHelper
     {
         private static readonly Version Windows10Version1809 = new(10, 0, 17763);
-        private static readonly Version Windows10Version1909 = new(10, 0, 18363);
+        //private static readonly Version Windows10Version1909 = new(10, 0, 18363);
         //private static readonly Version Windows10Version21H1 = new(10, 0, 19043);
         private static readonly Version Windows10Version21H2 = new(10, 0, 22000);
         private static readonly bool IsWindows10Version1809 = Environment.OSVersion.Version == Windows10Version1809;
-        private static readonly bool IsWindows10Version1909OrNewer = Environment.OSVersion.Version >= Windows10Version1909;
+        //private static readonly bool IsWindows10Version1909OrNewer = Environment.OSVersion.Version >= Windows10Version1909;
         //private static readonly bool IsWindows10Version21H1OrNewer = Environment.OSVersion.Version >= Windows10Version21H1;
         private static readonly bool IsWindows10Version21H2OrNewer = Environment.OSVersion.Version >= Windows10Version21H2;
         private static readonly bool IsDarkModeSupported = Environment.OSVersion.Version >= Windows10Version1809;

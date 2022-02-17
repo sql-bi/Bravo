@@ -10,7 +10,7 @@
     using System.Runtime.InteropServices;
     using System.Text;
 
-    public static class ProcessExtensions
+    internal static class ProcessExtensions
     {
         //[DebuggerStepThrough]
         [Obsolete("Use WMI query")]

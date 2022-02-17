@@ -7,7 +7,6 @@
     using System.Collections.Generic;
     using System.Linq;
     using System.Text;
-    using SSAS = Microsoft.AnalysisServices;
     using TOM = Microsoft.AnalysisServices.Tabular;
 
     internal static class TabularModelHelper
@@ -32,10 +31,10 @@
         {
             using var server = new TOM.Server();
             server.Connect(connectionString);
-            
+
             var database = server.Databases.FindByName(databaseName) ?? throw new BravoException(BravoProblem.TOMDatabaseDatabaseNotFound, databaseName);
             var databaseETag = GetDatabaseETag(database.Name, database.Version, database.LastUpdate);
-            
+
             foreach (var formattedMeasure in measures)
             {
                 if (formattedMeasure.ETag != databaseETag)
