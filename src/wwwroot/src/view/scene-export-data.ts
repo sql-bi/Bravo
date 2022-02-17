@@ -65,7 +65,7 @@ export class ExportDataScene extends MainScene {
 
                         <div class="option">
                             <div class="title">
-                                <div class="name">${i18n(strings.exportDataExportAs)}</div>
+                                <div class="name"><strong>${i18n(strings.exportDataExportAs)}</strong></div>
 
                                 <div class="desc">
                                     ${i18n(strings.exportDataExportAsDesc)}
