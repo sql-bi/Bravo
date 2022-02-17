@@ -14,7 +14,7 @@ import { BestPracticesScene } from '../view/scene-best-practices';
 import { DaxFormatterScene } from '../view/scene-dax-formatter';
 import { ExportDataScene } from '../view/scene-export-data';
 import { ManageDatesScene } from '../view/scene-manage-dates';
-import { WipScene } from '../view/scene-wip';
+import { UnsupportedScene } from '../view/scene-unsupported';
 import { View } from '../view/view';
 
 export enum PageType {
@@ -48,12 +48,16 @@ export class Page extends View {
         const classes = {
             [PageType.AnalyzeModel]: AnalyzeModelScene,
             [PageType.DaxFormatter]: DaxFormatterScene,
-            [PageType.ManageDates]: WipScene, //ManageDatesScene,
+            [PageType.ManageDates]: ManageDatesScene,
             [PageType.ExportData]: ExportDataScene,
             //[PageType.BestPractices]: BestPracticesScene,
         }
         if (type in classes) {
-            let initialScene = new classes[type](Utils.DOM.uniqueId(), this.element, doc);
+            let initialScene = (doc.featureSupported(type) ? 
+                new classes[type](Utils.DOM.uniqueId(), this.element, doc) : 
+                new UnsupportedScene(Utils.DOM.uniqueId(), this.element, type)
+            );
+
             initialScene.element.style.zIndex = "1";
             this.scenes = [initialScene];
         }
