@@ -4,7 +4,7 @@
  * https://www.sqlbi.com
 */
 
-import { ExportDataJob, ExportDataStatus } from '../controllers/host';
+import { ExportDataStatus } from '../controllers/host';
 import { Utils, _, __ } from '../helpers/utils';
 import { host } from '../main';
 import { Doc } from '../model/doc';
@@ -23,7 +23,7 @@ export class ExportingScene extends LoaderScene {
     count: number;
 
     constructor(id: string, container: HTMLElement, doc: Doc, count: number) {
-        super(id, container, i18n(strings.exportDataExporting, { table: "" }), ()=>{
+        super(id, container, i18n(strings.exportDataStartExporting), ()=>{
             host.abortExportData(doc.type);
         }, true); 
 
@@ -38,22 +38,24 @@ export class ExportingScene extends LoaderScene {
     poll() {
         host.queryExportData(<PBICloudDataset|PBIDesktopReport>this.doc.sourceData, this.doc.type)
             .then(job => {
-               
-                if (job.status == ExportDataStatus.Running) {
+                if (job) {
+                    if (job.status == ExportDataStatus.Running) {
 
-                    let progress = 0;
-                    job.tables.forEach(table => {
-                        progress += table.rows;
-                    });
-                    progress /= this.count;
+                        if (job.tables.length) {
+                            let progress = 0;
+                            job.tables.forEach(table => {
+                                progress += table.rows;
+                            });
+                            progress /= this.count;
 
-                    let tableName = job.tables[job.tables.length - 1].name;
-                    this.update(i18n(strings.exportDataExporting, { table: tableName }), progress);
+                            let tableName = job.tables[job.tables.length - 1].name;
+                            this.update(i18n(strings.exportDataExporting, { table: tableName }), Math.max(0.05, progress));
+                        }
 
-                } else if (job.status == ExportDataStatus.Completed) {
-                    this.update(i18n(strings.exportDataExportingDone), 1);
-                } 
-
+                    } else if (job.status == ExportDataStatus.Completed) {
+                        this.update(i18n(strings.exportDataExportingDone), 1);
+                    } 
+                }
             })
             .catch(ignore => {});
     }

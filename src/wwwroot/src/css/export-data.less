@@ -69,7 +69,39 @@
                 margin-left: auto;
             }
         }
+    }
+}
 
-        
+.exported-data {
+
+    .success-message {
+        width: 100%;
+        max-width: 100% !important;
+        .flex-direction(row) !important;
+    }
+
+    .job-message {
+        max-width: 300px;
+        padding: 20px 60px;
+
+        .open-path {
+            font-size: 16px;
+        }
+    }
+    .table {
+        margin-top: 20px;
+
+        .job-status {
+            .icon-completed {
+                //opacity: 0.1;
+                color: @good-color;
+            }
+        }
+        .row-error {
+            .table-rows {
+                color: @error-color;
+            }
+
+        }
     }
 }

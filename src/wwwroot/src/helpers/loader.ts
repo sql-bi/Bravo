@@ -29,7 +29,7 @@ export class Loader {
         
         let element = _(".loader", this.container);
         const progresses = [
-            0, 12, 25, 37, 50, 62, 75, 87, 100
+            0, 5, 12, 25, 37, 50, 62, 75, 87, 100
         ];
         let matchProgress = 0;
         let percProgress = (progress * 100);

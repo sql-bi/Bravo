@@ -12,13 +12,11 @@ import { host, telemetry } from '../main';
 import { Doc, DocType } from '../model/doc';
 import { AppError, AppProblem } from '../model/exceptions';
 import { I18n, i18n } from '../model/i18n';
-import { PBICloudDataset } from '../model/pbi-dataset';
-import { PBIDesktopReport } from '../model/pbi-report';
 import { strings } from '../model/strings';
-import { TabularColumn, TabularTable } from '../model/tabular';
+import { TabularTable } from '../model/tabular';
 import { ErrorScene } from './scene-error';
+import { ExportedScene } from './scene-exported';
 import { ExportingScene } from './scene-exporting';
-import { LoaderScene } from './scene-loader';
 import { MainScene } from './scene-main';
 import { SuccessScene } from './scene-success';
 
@@ -82,7 +80,20 @@ export class ExportDataScene extends MainScene {
                         </div>
 
                         <div class="show-if-export-type show-if-export-type-xlsx">
+                            <div class="option">
+                                <div class="title">
+                                    <div class="name">${i18n(strings.exportDataExcelCreateExportSummary)}</div>
 
+                                    <div class="desc">
+                                        ${i18n(strings.exportDataExcelCreateExportSummaryDesc)}
+                                    </div>
+                                </div>
+                                <div class="action">
+                                    <div class="switch-container">
+                                        <label class="switch"><input type="checkbox" class="export-xlsx-summary" checked><span class="slider"></span></label> 
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="show-if-export-type show-if-export-type-csv" hidden>
@@ -335,8 +346,6 @@ export class ExportDataScene extends MainScene {
         
         this.exportButton.toggleAttr("disabled", true);
 
-        
-
         let exportRequest;
         if (exportType == ExportDataFormat.Csv) {
 
@@ -365,8 +374,12 @@ export class ExportDataScene extends MainScene {
                 };
             }
         } else if (exportType == ExportDataFormat.Xlsx) {
+
+            let createSummary = (<HTMLInputElement>_(".export-xlsx-summary", this.element)).checked;
+
             const settings = <ExportExcelSettings>{
-                tables: tableNames
+                tables: tableNames,
+                createExportSummary: createSummary
             };
             if (this.doc.type == DocType.dataset) {
                 exportRequest = <ExportExcelFromPBICloudDatasetRequest>{
@@ -400,10 +413,8 @@ export class ExportDataScene extends MainScene {
                     switch (job.status) {
 
                         case ExportDataStatus.Completed:
-                            let successScene = new SuccessScene(Utils.DOM.uniqueId(), this.element.parentElement, i18n(strings.exportDataSuccessSceneMessage, {count: tableNames.length}), ()=>{
-                                this.pop();
-                            });
-                            this.splice(successScene);
+                            let exportedScene = new ExportedScene(Utils.DOM.uniqueId(), this.element.parentElement, job, exportType);
+                            this.splice(exportedScene);
                             break;
 
                         case ExportDataStatus.Canceled:

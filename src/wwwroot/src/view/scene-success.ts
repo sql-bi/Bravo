@@ -28,7 +28,7 @@ export class SuccessScene extends Scene {
             <div class="success">
 
                 <div class="success-message">
-                    <div class="icon-completed"></div>
+                    <div class="icon icon-completed big"></div>
                     <p>${this.message}</p>
                 </div>
 
