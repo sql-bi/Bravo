@@ -151,11 +151,11 @@ export class Doc {
             case PageType.AnalyzeModel:
                 return true;
             case PageType.DaxFormatter:
-                return (this.type != DocType.vpax);
+                return true; //(this.type != DocType.vpax);
             case PageType.ExportData:
                 return (this.type != DocType.vpax);
             case PageType.ManageDates:
-                return false; //(this.type == DocType.pbix); //TODO Not exact...
+                return (this.type == DocType.pbix); //TODO Not exact...
             default:
                 return true;
         }

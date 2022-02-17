@@ -62,6 +62,7 @@ export enum strings {
     daxFormatterAgreement,
     daxFormatterAutoPreviewOption,
     daxFormatterFormat,
+    daxFormatterFormatDisabled,
     daxFormatterFormattedCode,
     daxFormatterOriginalCode,
     daxFormatterPreviewAllButton,
