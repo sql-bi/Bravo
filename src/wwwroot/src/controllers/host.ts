@@ -113,6 +113,7 @@ export interface ExportDelimitedTextSettings {
 
 export interface ExportExcelSettings {
     tables: string[]
+    createExportSummary: boolean
 }
 export interface ExportDelimitedTextFromPBIReportRequest{
     settings: ExportDelimitedTextSettings

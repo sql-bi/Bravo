@@ -95,6 +95,8 @@ const locale: Locale = {
         [_.exportDataCSVEncodingDesc]: "Choose the file enconding.",
         [_.exportDataCSVQuote]: "Enclose Strings in Quotes",
         [_.exportDataCSVQuoteDesc]: "Make sure every string is enclosed in double quotes.",
+        [_.exportDataExcelCreateExportSummary]: "Export Summary",
+        [_.exportDataExcelCreateExportSummaryDesc]: "Add an additional sheet to the export file with the summary of the job.",
         [_.exportDataExport]: "Export Selected",
         [_.exportDataExportAs]: "Export As",
         [_.exportDataExportAsDesc]: "Choose the format of the export.",

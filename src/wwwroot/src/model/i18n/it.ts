@@ -95,6 +95,8 @@ const locale: Locale = {
         [_.exportDataCSVEncodingDesc]: "Scegli la codifica del file.",
         [_.exportDataCSVQuote]: "Stringhe tra virgolette",
         [_.exportDataCSVQuoteDesc]: "Racchiudi tutte le stringhe tra virgolette.",
+        [_.exportDataExcelCreateExportSummary]: "Foglio di Riepilogo ",
+        [_.exportDataExcelCreateExportSummaryDesc]: "Aggiungi un foglio al file Excel con il riepilogo del processo.",
         [_.exportDataExport]: "Esporta",
         [_.exportDataExportAs]: "Esporta come",
         [_.exportDataExportAsDesc]: "Scegli il formato di esportazione.",

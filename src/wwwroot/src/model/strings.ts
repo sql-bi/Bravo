@@ -88,6 +88,8 @@ export enum strings {
     exportDataCSVEncodingDesc,
     exportDataCSVQuote,
     exportDataCSVQuoteDesc,
+    exportDataExcelCreateExportSummary,
+    exportDataExcelCreateExportSummaryDesc,
     exportDataExport,
     exportDataExportAs,
     exportDataExportAsDesc,
