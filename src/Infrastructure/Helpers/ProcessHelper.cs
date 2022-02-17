@@ -6,6 +6,7 @@
     using System.ComponentModel;
     using System.Diagnostics;
     using System.Globalization;
+    using System.IO;
     using System.Linq;
     using System.Management;
     using System.Threading;
@@ -39,6 +40,39 @@
                         return true;
                     }
                 }
+            }
+
+            return false;
+        }
+
+        public static bool OpenPath(string path)
+        {
+            if (File.Exists(path))
+            {
+                var allowedExtensions = new[] { ".xlsx" };
+                if (allowedExtensions.Any((ext) => ext.EqualsI(Path.GetExtension(path))))
+                {
+                    var startInfo = new ProcessStartInfo
+                    {
+                        FileName = path,
+                        UseShellExecute = true
+                    };
+
+                    using var process = Process.Start(startInfo);
+                    return true;
+                }
+            }
+            
+            if (Directory.Exists(path))
+            {
+                var startInfo = new ProcessStartInfo
+                {
+                    FileName = Environment.ExpandEnvironmentVariables("%WINDIR%\\explorer.exe"),
+                    Arguments = $"/root,\"{ path }\""
+                };
+
+                using var process = Process.Start(startInfo);
+                return true;
             }
 
             return false;
