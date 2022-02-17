@@ -15,6 +15,7 @@ import * as sanitizeHtml from 'sanitize-html';
 import { Md5 } from 'ts-md5/dist/md5';
 import { i18n } from './i18n';
 import { strings } from './strings';
+import { PageType } from '../controllers/page';
 
 export enum DocType {
     vpax,
@@ -141,5 +142,22 @@ export class Doc {
             }
         }
         return MeasureStatus.Partial;
+    }
+
+    featureSupported(feature: PageType) {
+        //TODO return attributes in this.sourceData when available
+
+        switch (feature) {
+            case PageType.AnalyzeModel:
+                return true;
+            case PageType.DaxFormatter:
+                return (this.type != DocType.vpax);
+            case PageType.ExportData:
+                return (this.type != DocType.vpax);
+            case PageType.ManageDates:
+                return false; //(this.type == DocType.pbix); //TODO Not exact...
+            default:
+                return true;
+        }
     }
 }
