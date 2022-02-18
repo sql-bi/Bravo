@@ -6,8 +6,8 @@
     using Sqlbi.Bravo.Infrastructure;
     using System;
     using System.ComponentModel.DataAnnotations;
+    using System.IO;
     using System.Linq;
-    using System.Text.Json;
     using System.Text.Json.Serialization;
 
     public class DateConfiguration
@@ -25,7 +25,7 @@
         [JsonPropertyName("description")]
         public string? Description { get; set; }
 
-        #region ILocalization
+        #region Dax.Template.ILocalization
 
         [JsonPropertyName("isoFormat")]
         public string? IsoFormat { get; set; }
@@ -35,7 +35,7 @@
 
         #endregion
 
-        #region IScanConfig
+        #region Dax.Template.IScanConfig
 
         [JsonPropertyName("autoScan")]
         public AutoScanEnum? AutoScan { get; set; }
@@ -48,14 +48,14 @@
 
         #endregion
 
-        #region IHolidaysConfig
+        #region Dax.Template.IHolidaysConfig
 
         [JsonPropertyName("isoCountry")]
         public string? IsoCountry { get; set; }
 
         #endregion
 
-        #region IDateTemplateConfig
+        #region Dax.Template.IDateTemplateConfig
 
         [JsonPropertyName("firstYear")]
         public int? FirstYear { get; set; }
@@ -65,7 +65,7 @@
 
         #endregion
 
-        #region IMeasureTemplateConfig
+        #region Dax.Template.IMeasureTemplateConfig
 
         [JsonPropertyName("autoNaming")]
         public AutoNamingEnum? AutoNaming { get; set; }
@@ -78,15 +78,68 @@
 
         #endregion
 
-        #region ICustomTableConfig
+        #region Dax.Template.ICustomTableConfig
 
         [JsonPropertyName("defaults")]
         public DateDefaults? Defaults { get; set; }
 
         #endregion
 
-        [JsonPropertyName("bravo")]
-        public DateBravo? Bravo { get; set; }
+        #region Date (Dax.Template.Tables.Dates.CustomDateTable)
+
+        [Required]
+        [JsonPropertyName("dateEnabled")]
+        public bool DateEnabled { get; set; } = false;
+
+        [Required]
+        [JsonPropertyName("dateTableName")]
+        public string DateTableName { get; set; } = "Date";
+
+        [Required]
+        [JsonPropertyName("dateTableValidation")]
+        public TableValidation DateTableValidation { get; set; } = TableValidation.Unknown;
+
+        [Required]
+        [JsonPropertyName("dateReferenceTableName")]
+        public string DateReferenceTableName { get; set; } = "DateTemplate";
+
+        [Required]
+        [JsonPropertyName("dateReferenceTableValidation")]
+        public TableValidation DateReferenceTableValidation { get; set; } = TableValidation.Unknown;
+
+        #endregion
+
+        #region Holidays (Dax.Template.Tables.Dates.HolidaysTable + Dax.Template.Tables.Dates.HolidaysDefinitionTable)
+
+        [Required]
+        [JsonPropertyName("holidaysEnabled")]
+        public bool HolidaysEnabled { get; set; } = false;
+
+        [Required]
+        [JsonPropertyName("holidaysTableName")]
+        public string HolidaysTableName { get; set; } = "Holidays";
+
+        [Required]
+        [JsonPropertyName("holidaysTableValidation")]
+        public TableValidation HolidaysTableValidation { get; set; } = TableValidation.Unknown;
+
+        [Required]
+        [JsonPropertyName("holidaysDefinitionTableName")]
+        public string HolidaysDefinitionTableName { get; set; } = "HolidaysDefinition";
+
+        [Required]
+        [JsonPropertyName("holidaysDefinitionTableValidation")]
+        public TableValidation HolidaysDefinitionTableValidation { get; set; } = TableValidation.Unknown;
+
+        #endregion
+
+        #region TimeIntelligence (Dax.Template.Measures.MeasuresTemplateDefinition.MeasureTemplate)
+
+        [Required]
+        [JsonPropertyName("timeIntelligenceEnabled")]
+        public bool TimeIntelligenceEnabled { get; set; } = false;
+
+        #endregion
 
         public void CopyTo(TemplateConfiguration templateConfiguration)
         {
@@ -94,12 +147,12 @@
             templateConfiguration.Name = Name ?? templateConfiguration.Name;
             templateConfiguration.Description = Description ?? templateConfiguration.Description;
             //
-            // ILocalization
+            // Dax.Template.ILocalization
             //
             templateConfiguration.IsoFormat = IsoFormat ?? templateConfiguration.IsoFormat;
             templateConfiguration.IsoTranslation = IsoTranslation ?? templateConfiguration.IsoTranslation;
             //
-            // IScanConfig
+            // Dax.Template.IScanConfig
             //
             templateConfiguration.AutoScan = AutoScan ?? templateConfiguration.AutoScan;
             if (OnlyTablesColumns?.Length > 0)
@@ -107,26 +160,26 @@
             if (ExceptTablesColumns?.Length > 0)
                 templateConfiguration.ExceptTablesColumns = ExceptTablesColumns;
             //
-            // IHolidaysConfig
+            // Dax.Template.IHolidaysConfig
             //
             templateConfiguration.IsoCountry = IsoCountry ?? templateConfiguration.IsoCountry;
             //
-            // IDateTemplateConfig
+            // Dax.Template.IDateTemplateConfig
             //
-            if (FirstYear is not null)
+            if (FirstYear.HasValue)
             {
-                templateConfiguration.FirstYear = FirstYear;
-                templateConfiguration.FirstYearMin = FirstYear;
-                templateConfiguration.FirstYearMax = FirstYear;
+                templateConfiguration.FirstYear = FirstYear.Value;
+                templateConfiguration.FirstYearMin = FirstYear.Value;
+                templateConfiguration.FirstYearMax = FirstYear.Value;
             }
-            if (LastYear is not null)
+            if (LastYear.HasValue)
             {
-                templateConfiguration.LastYear = LastYear;
-                templateConfiguration.LastYearMin = LastYear;
-                templateConfiguration.LastYearMax = LastYear;
+                templateConfiguration.LastYear = LastYear.Value;
+                templateConfiguration.LastYearMin = LastYear.Value;
+                templateConfiguration.LastYearMax = LastYear.Value;
             }
             //
-            // IMeasureTemplateConfig
+            // Dax.Template.Dax.Template.IMeasureTemplateConfig
             //
             templateConfiguration.AutoNaming = AutoNaming ?? templateConfiguration.AutoNaming;
             if (TargetMeasures?.Length > 0)
@@ -136,18 +189,81 @@
                     .ToArray();
             }
             templateConfiguration.TableSingleInstanceMeasures = TableSingleInstanceMeasures ?? templateConfiguration.TableSingleInstanceMeasures;
-
             //
-            // ICustomTableConfig
+            // Dax.Template.ICustomTableConfig
             //
             Defaults?.CopyTo(templateConfiguration);
+            //
+            // Date (Dax.Template.Tables.Dates.CustomDateTable)
+            //
+            var dateTemplateEntry = templateConfiguration.Templates?.SingleOrDefault((entry) => entry.Class?.Equals("CustomDateTable") ?? false);
+            {
+                if (dateTemplateEntry is not null)
+                {
+                    if (DateEnabled)
+                    {
+                        BravoUnexpectedException.Assert(DateTableValidation.IsValid());
+                        BravoUnexpectedException.Assert(DateReferenceTableValidation.IsValid());
+
+                        dateTemplateEntry.Table = DateTableName;
+                        dateTemplateEntry.ReferenceTable = DateReferenceTableName;
+                    }
+                    else
+                    {
+                        templateConfiguration.Templates = templateConfiguration.Templates!.Except(new[] { dateTemplateEntry }).ToArray();
+                    }
+                }
+            }
+            //
+            // Holidays (Dax.Template.Tables.Dates.HolidaysTable + Dax.Template.Tables.Dates.HolidaysDefinitionTable)
+            //
+            var holidaysTemplateEntry = templateConfiguration.Templates?.SingleOrDefault((entry) => entry.Class?.Equals("HolidaysTable") ?? false);
+            var holidaysDefinitionTemplateEntry = templateConfiguration.Templates?.SingleOrDefault((entry) => entry.Class?.Equals("HolidaysDefinitionTable") ?? false);
+            {
+                if (holidaysTemplateEntry is not null)
+                {
+                    BravoUnexpectedException.ThrowIfNull(holidaysDefinitionTemplateEntry);
+
+                    if (HolidaysEnabled)
+                    {
+                        BravoUnexpectedException.Assert(HolidaysTableValidation.IsValid());
+                        BravoUnexpectedException.Assert(HolidaysDefinitionTableValidation.IsValid());
+                        BravoUnexpectedException.ThrowIfNull(templateConfiguration.HolidaysReference);
+
+                        holidaysTemplateEntry.Table = templateConfiguration.HolidaysReference.TableName = HolidaysTableName;
+                        holidaysDefinitionTemplateEntry.Table = templateConfiguration.HolidaysDefinitionTable = HolidaysDefinitionTableName;
+                    }
+                    else
+                    {
+                        templateConfiguration.Templates = templateConfiguration.Templates!.Except(new[] { holidaysTemplateEntry, holidaysDefinitionTemplateEntry }).ToArray();
+                    }
+                }
+            }
+            //
+            // Time Intelligence (Dax.Template.Measures.MeasuresTemplateDefinition.MeasureTemplate)
+            //
+            var timeintelligenceTemplateEntry = templateConfiguration.Templates?.SingleOrDefault((entry) => entry.Class?.Equals("MeasuresTemplate") ?? false);
+            {
+                if (timeintelligenceTemplateEntry is not null)
+                {
+                    BravoUnexpectedException.ThrowIfNull(holidaysDefinitionTemplateEntry);
+
+                    if (TimeIntelligenceEnabled)
+                    {
+                        // nothing to do
+                    }
+                    else
+                    {
+                        templateConfiguration.Templates = templateConfiguration.Templates!.Except(new[] { timeintelligenceTemplateEntry }).ToArray();
+                    }
+                }
+            }
         }
 
         public static DateConfiguration CreateFrom(Dax.Template.Package package)
         {
             var configuration = new DateConfiguration
             {
-                Bravo = TryGetBravoConfig(package),
                 TemplateUri = package.Configuration.TemplateUri,
                 Name = package.Configuration.Name,
                 Description = package.Configuration.Description,
@@ -184,27 +300,6 @@
             };
 
             return configuration;
-
-            static DateBravo? TryGetBravoConfig(Dax.Template.Package package)
-            {
-                var parentElement = package.JsonConfiguration.RootElement;
-
-                if (parentElement.TryGetProperty(Dax.Template.Package.PACKAGE_CONFIG, out var configElement) && configElement.ValueKind == JsonValueKind.Object)
-                    parentElement = configElement;
-
-                if (parentElement.TryGetProperty(nameof(Bravo), out var bravoElement) && bravoElement.ValueKind == JsonValueKind.Object)
-                {
-                    var bravoConfigText = bravoElement.GetRawText();
-                    var bravoConfig = JsonSerializer.Deserialize<DateBravo>(bravoConfigText, options: new JsonSerializerOptions
-                    {
-                        PropertyNameCaseInsensitive = true,
-                    });
-
-                    return bravoConfig;
-                }
-
-                return null;
-            }
         }
     }
 
@@ -217,14 +312,39 @@
             var templateUri = new Uri(configuration.TemplateUri, UriKind.Absolute);
             if (templateUri.Scheme.Equals(Uri.UriSchemeFile))
             {
+                var customizedPackagePath = Path.ChangeExtension(templateUri.LocalPath, $"{DateTime.Now:yyyyMMddHHmmss}-{Guid.NewGuid():N}.json");
+
                 var package = Dax.Template.Package.LoadFromFile(templateUri.LocalPath);
                 {
                     configuration.CopyTo(package.Configuration);
+                    package.SaveTo(customizedPackagePath);
                 }
-                return package;
+
+                var customizedPackage = Dax.Template.Package.LoadFromFile(customizedPackagePath);
+                return customizedPackage;
             }
 
             throw new NotImplementedException();
         }
+    }
+
+    public enum TableValidation
+    {
+        Unknown = 0,
+
+        /// <summary>
+        /// A table with the same name does not exist and will be created or it exists and can be replaced
+        /// </summary>
+        Valid = 1,
+
+        /// <summary>
+        /// A table with the same name exists and cannot be replaced, a different name is required
+        /// </summary>
+        InvalidRenameRequired = 2,
+    }
+
+    internal static class TableValidationExtensions
+    {
+        public static bool IsValid(this TableValidation value) => value == TableValidation.Valid;
     }
 }
