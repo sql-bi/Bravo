@@ -11,8 +11,9 @@
 
     internal class DaxTemplateManager
     {
-        private readonly string AssetsPath = Path.Combine(AppContext.BaseDirectory, @"Assets\ManageDates\Templates");
+        private readonly string EmbeddedPath = Path.Combine(AppContext.BaseDirectory, @"Assets\ManageDates\Templates");
         private readonly string CachePath = Path.Combine(AppEnvironment.ApplicationTempPath, @"ManageDates\Templates");
+        private readonly string UserPath = Path.Combine(AppEnvironment.ApplicationDataPath, @"ManageDates\Templates");
 
         private static readonly object _cacheSyncLock = new();
         private bool _cacheInitialized = false;
@@ -70,7 +71,9 @@
 
                         Directory.CreateDirectory(CachePath);
                         
-                        foreach (var assetFile in Directory.EnumerateFiles(AssetsPath))
+                        var assetPath = Directory.Exists(UserPath) && Directory.EnumerateFiles(UserPath).Any() ? UserPath : EmbeddedPath;
+
+                        foreach (var assetFile in Directory.EnumerateFiles(assetPath))
                         {
                             var assetFileName = Path.GetFileName(assetFile);
                             var cacheFile = Path.Combine(CachePath, assetFileName);

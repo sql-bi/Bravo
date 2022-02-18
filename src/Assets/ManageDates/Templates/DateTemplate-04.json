@@ -1,0 +1,641 @@
+{
+  "_comment": "Reference Weekly Calendar + Holidays",
+  "CalendarType": "Weekly",
+  "FormatPrefixes": [ "Q", "FY", "FQ", "FM", "FW" ],
+  "Steps": [
+    {
+      "Name": "__GenerateFiscalYears",
+      "MultiLineExpression": [
+        "SELECTCOLUMNS (",
+        "    GENERATESERIES ( __FirstYear - __OffsetFiscalYear, __LastYear + __OffsetFiscalYear, 1 ),",
+        "    \"@YearNumber\", ''[Value]",
+        ")"
+      ]
+    },
+    {
+      "Name": "__Calendar",
+      "MultiLineExpression": [
+        "GENERATE (",
+        "    __GenerateFiscalYears,",
+        "    VAR _StartFiscalYearNumber = [@YearNumber] - ( __OffsetFiscalYear * __TypeStartFiscalYear )",
+        "    VAR _FirstDayCurrentYear = DATE ( _StartFiscalYearNumber, __FirstFiscalMonth, 1 )",
+        "    VAR _FirstDayNextYear = DATE ( _StartFiscalYearNumber + 1, __FirstFiscalMonth, 1 )",
+        "    VAR _DayOfWeekNumberCurrentYear = WEEKDAY ( _FirstDayCurrentYear, __WeekDayCalculationType )",
+        "    VAR _OffsetStartCurrentFiscalYear =",
+        "        SWITCH (",
+        "            __WeeklyType,",
+        "            \"Last\", 1 - _DayOfWeekNumberCurrentYear,",
+        "            \"Nearest\", IF (",
+        "                _DayOfWeekNumberCurrentYear >= 5,",
+        "                8 - _DayOfWeekNumberCurrentYear,",
+        "                1 - _DayOfWeekNumberCurrentYear",
+        "            ),",
+        "            ERROR ( \"Unknown WeeklyType definition\" )",
+        "        )",
+        "    VAR _DayOfWeekNumberNextYear = WEEKDAY ( _FirstDayNextYear, __WeekDayCalculationType )",
+        "    VAR _OffsetStartNextFiscalYear =",
+        "        SWITCH (",
+        "            __WeeklyType,",
+        "            \"Last\", - _DayOfWeekNumberNextYear,",
+        "           \"Nearest\", IF (",
+        "                _DayOfWeekNumberNextYear >= 5,",
+        "                7 - _DayOfWeekNumberNextYear,",
+        "                - _DayOfWeekNumberNextYear",
+        "            ),",
+        "            ERROR ( \"Unknown WeeklyType definition\" )",
+        "        )",
+        "    VAR _FirstDayOfFiscalYear = _FirstDayCurrentYear + _OffsetStartCurrentFiscalYear",
+        "    VAR _LastDayOfFiscalYear = _FirstDayNextYear + _OffsetStartNextFiscalYear",
+        "    RETURN",
+        "        GENERATE (",
+        "            ROW ( \"@StartOfYear\", _FirstDayOfFiscalYear, \"@EndOfYear\", _LastDayOfFiscalYear ),",
+        "            CALENDAR ( _FirstDayOfFiscalYear, _LastDayOfFiscalYear )",
+        "        )",
+        ")"
+      ]
+    }
+  ],
+  "GlobalVariables": [
+    {
+      "Name": "__FirstFiscalMonth",
+      "Expression": "1",
+      "IsConfigurable": true,
+      "Comment": "First month of the fiscal year"
+    },
+    {
+      "Name": "__FirstDayOfWeek",
+      "Expression": "0",
+      "IsConfigurable": true,
+      "Comment": "0 = Sunday, 1 = Monday, ..."
+    },
+    {
+      "Name": "__TypeStartFiscalYear",
+      "Expression": "1",
+      "IsConfigurable": true,
+      "MultiLineComment": [
+        "Fiscal year as Calendar Year of :",
+        "0 - First day of fiscal year",
+        "1 - Last day of fiscal year"
+      ]
+    },
+    {
+      "Name": "__QuarterWeekType",
+      "Expression": "\"445\"",
+      "IsConfigurable": true,
+      "Comment": "Supports only 445, 454, and 544"
+    },
+    {
+      "Name": "__WeeklyType",
+      "Expression": "\"Last\"",
+      "IsConfigurable": true,
+      "MultiLineComment": [
+        "Supports only Nearest or Last",
+        "Last:    for last weekday of the month at fiscal year end",
+        "Nearest: for last weekday nearest the end of month",
+        "Reference for Last/Nearest definition: https://en.wikipedia.org/wiki/4%E2%80%934%E2%80%935_calendar)"
+      ]
+    },
+    {
+      "Name": "__WorkingDays",
+      "Expression": "@@GETCONFIG( WorkingDays )",
+      "IsConfigurable": true,
+      "Comment": "Set the working days - 0 = Sunday, 1 = Monday, ... 6 = Saturday"
+    },
+    {
+      "Name": "__WorkingDayType",
+      "Expression": "\"Working day\"",
+      "IsConfigurable": true,
+      "Comment": "Description of working daysfor Working Day column"
+    },
+    {
+      "Name": "__NonWorkingDayType",
+      "Expression": "\"Non-working day\"",
+      "IsConfigurable": true,
+      "Comment": "Description of non-working days for Working Day column"
+    },
+    {
+      "Name": "__OffsetYears",
+      "Expression": "1",
+      "IsConfigurable": true,
+      "Comment": "Increase range of fiscal years before/after boundaries defined"
+    },
+    {
+      "Name": "__FirstTransactionDate",
+      "Expression": "@@GETMINDATE()"
+    },
+    {
+      "Name": "__LastTransactionDate",
+      "Expression": "@@GETMAXDATE()"
+    },
+    {
+      "Name": "__FirstYearTransaction",
+      "MultiLineExpression": [
+        "YEAR ( __FirstTransactionDate )",
+        "    + 1 * ( MONTH ( __FirstTransactionDate ) >= __FirstFiscalMonth",
+        "                && __FirstFiscalMonth > 1 )"
+      ]
+    },
+    {
+      "Name": "__LastYearTransaction",
+      "MultiLineExpression": [
+        "YEAR ( __LastTransactionDate )",
+        "    + 1 * ( MONTH ( __LastTransactionDate ) >= __FirstFiscalMonth",
+        "                && __FirstFiscalMonth > 1 )"
+      ]
+    },
+    {
+      "Name": "__FirstYear",
+      "Expression": "@@GETMINYEAR( __FirstYearTransaction )"
+    },
+    {
+      "Name": "__LastYear",
+      "Expression": "@@GETMAXYEAR( __LastYearTransaction )"
+    },
+    {
+      "Name": "__FirstDayCalendar",
+      "Expression": "DATE ( __FirstYear - 1, 1, 1 )"
+    },
+    {
+      "Name": "__LastDayCalendar",
+      "Expression": "DATE ( __LastYear + 1, 12, 31 )"
+    },
+    {
+      "Name": "__WeekDayCalculationType",
+      "Expression": "IF ( __FirstDayOfWeek = 0, 7, __FirstDayOfWeek ) + 10"
+    },
+    {
+      "Name": "__OffsetFiscalYear",
+      "Expression": "IF ( __FirstFiscalMonth > 1, __OffsetYears, 0 )"
+    },
+    {
+      "Name": "__WeeksInP1",
+      "MultiLineExpression": [
+        "SWITCH (",
+        "    __QuarterWeekType,",
+        "    \"445\", 4,",
+        "    \"454\", 4,",
+        "    \"544\", 5,",
+        "    ERROR ( \"__QuarterWeekType only supports 445, 454, and 544\" )",
+        ")"
+      ]
+    },
+    {
+      "Name": "__WeeksInP2",
+      "MultiLineExpression": [
+        "SWITCH (",
+        "    __QuarterWeekType,",
+        "    \"445\", 4,",
+        "    \"454\", 5,",
+        "    \"544\", 4,",
+        "    ERROR ( \"__QuarterWeekType only supports 445, 454, and 544\" )",
+        ")"
+      ]
+    },
+    {
+      "Name": "__WeeksInP3",
+      "MultiLineExpression": [
+        "SWITCH (",
+        "    __QuarterWeekType,",
+        "    \"445\", 5,",
+        "    \"454\", 4,",
+        "    \"544\", 4,",
+        "    ERROR ( \"__QuarterWeekType only supports 445, 454, and 544\" )",
+        ")"
+      ]
+    },
+    {
+      "Name": "__FirstSundayReference",
+      "Expression": "DATE ( 1900, 12, 30 )",
+      "Comment": "Do not change this"
+    },
+    {
+      "Name": "__FirstWeekReference",
+      "Expression": "__FirstSundayReference + __FirstDayOfWeek"
+    }
+  ],
+  "RowVariables": [
+    {
+      "Name": "__Date",
+      "Expression": "[Date]"
+    },
+    {
+      "Name": "__FiscalYearNumber",
+      "Expression": "[@YearNumber]"
+    },
+    {
+      "Name": "__FiscalYear",
+      "Expression": "FORMAT ( __FiscalYearNumber, \"@_FY_@ 0000\"@@GETISO() )"
+    },
+    {
+      "Name": "__FiscalDayOfYearNumber",
+      "Expression": "INT ( __Date - [@StartOfYear] + 1 )"
+    },
+    {
+      "Name": "__FiscalWeekNumber",
+      "Expression": "INT ( CEILING ( __FiscalDayOfYearNumber / 7, 1 ) )"
+    },
+    {
+      "Name": "__FiscalWeek",
+      "Expression": "FORMAT ( __FiscalWeekNumber, \"@_FW_@00\" )"
+    },
+    {
+      "Name": "__FiscalYearWeekNumber",
+      "Expression": "INT ( DIVIDE ( __Date - __FirstWeekReference, 7 ) ) + 1"
+    },
+    {
+      "Name": "__FiscalYearWeek",
+      "Expression": "FORMAT ( __FiscalWeekNumber, \"@_FW_@00\" ) & \"-\" & __FiscalYearNumber"
+    },
+    {
+      "Name": "__FiscalQuarterNumber",
+      "Expression": "IF ( __FiscalWeekNumber > 52, 4, ROUNDUP ( __FiscalWeekNumber / 13, 0 ) )"
+    },
+    {
+      "Name": "__FiscalQuarter",
+      "Expression": "FORMAT ( __FiscalYearNumber, \"@_FY_@ 0000\"@@GETISO() )"
+    },
+    {
+      "Name": "__FiscalWeekInQuarterNumber",
+      "Expression": "IF ( __FiscalWeekNumber > 52, 14, __FiscalWeekNumber - 13 * ( __FiscalQuarterNumber - 1 ) )"
+    },
+    {
+      "Name": "__FiscalYearMonthNumber",
+      "Expression": "__FiscalYearNumber * 12 - 1 + __FiscalMonthNumber"
+    },
+    {
+      "Name": "__FiscalYearMonth",
+      "Expression": "FORMAT ( __FiscalStartOfMonth + 14, \"@_FM_@ mmm yyyy\" )"
+    },
+    {
+      "Name": "__FiscalStartOfMonth",
+      "MultiLineExpression": [
+        "MINX (",
+        "    FILTER ( @@GETLASTSTEP() , [Fiscal Year Month Number] = __FiscalYearMonthNumber ),",
+        "    [Date]",
+        ")"
+      ]
+    },
+    {
+      "Name": "__FiscalStartOfQuarter",
+      "MultiLineExpression": [
+        "MINX (",
+        "    FILTER ( @@GETLASTSTEP() , [Fiscal Year Quarter Number] = __FiscalYearQuarterNumber ),",
+        "    [Date]",
+        ")"
+      ]
+    },
+    {
+      "Name": "__FiscalMonthNumber",
+      "MultiLineExpression": [
+        "( __FiscalQuarterNumber - 1 ) * 3",
+        "    + SWITCH (",
+        "        TRUE,",
+        "        __FiscalWeekInQuarterNumber <= __WeeksInP1, 1,",
+        "        __FiscalWeekInQuarterNumber <= ( __WeeksInP1 + __WeeksInP2 ), 2,",
+        "        3",
+        "    )"
+      ]
+    },
+    {
+      "Name": "__FiscalMonth",
+      "Expression": "FORMAT ( __FiscalStartOfMonth + 14, \"@_FM_@ mmm\" )"
+    },
+    {
+      "Name": "__FiscalYearQuarterNumber",
+      "Expression": "__FiscalYearNumber * 4 - 1 + __FiscalQuarterNumber"
+    },
+    {
+      "Name": "__FiscalYearQuarter",
+      "Expression": "\"FQ\" & __FiscalQuarterNumber & \"-\" & __FiscalYearNumber"
+    },
+    {
+      "Name": "__HolidayName",
+      "Expression": "@@GETHOLIDAYNAME( __Date )"
+    },
+    {
+      "Name": "__IsWorkingDay",
+      "Expression": "WEEKDAY ( __Date, 1 ) IN __WorkingDays && ISBLANK ( __HolidayName )"
+    },
+    {
+      "Name": "__WeekDayNumber",
+      "Expression": "WEEKDAY ( __Date, __WeekDayCalculationType )"
+    },
+    {
+      "Name": "__WeekDay",
+      "Expression": "FORMAT ( __Date, \"ddd\" )"
+    },
+    {
+      "Name": "__FiscalDayOfMonthNumber",
+      "Expression": "INT ( __Date - __FiscalStartOfMonth + 1 )"
+    },
+    {
+      "Name": "__FiscalDayOfQuarterNumber",
+      "Expression": "INT ( __Date - __FiscalStartOfQuarter + 1 )"
+    },
+    {
+      "Name": "__LastTransactionDate",
+      "Expression": "@@GETMAXDATE()"
+    }
+  ],
+  "Columns": [
+    {
+      "Name": "@StartOfYear",
+      "DataType": "Int64",
+      "IsTemporary": true,
+      "Step": "__Calendar"
+    },
+    {
+      "Name": "@EndOfYear",
+      "DataType": "Int64",
+      "IsTemporary": true,
+      "Step": "__Calendar"
+    },
+    {
+      "Name": "@YearNumber",
+      "DataType": "Int64",
+      "IsTemporary": true,
+      "Step": "__GenerateFiscalYears"
+    },
+    {
+      "Name": "Date",
+      "DataType": "DateTime",
+      "FormatString": "m/dd/yyyy",
+      "Step": "__Calendar",
+      "DataCategory": "PaddedDateTableDates",
+      "AttributeTypes": [
+        "Date",
+        "FiscalDate"
+      ]
+    },
+    {
+      "Name": "Sequential Day Number",
+      "DataType": "Int64",
+      "Expression": "INT ( __Date )",
+      "IsHidden": true,
+      "AttributeType": "ManufacturingDate",
+      "_comment": "We use ManufacturingDate as a special tag to identify an alternate date to avoid removing the filter on all the columns because of mark as date table"
+    },
+    {
+      "Name": "Fiscal Year Number",
+      "DataType": "Int64",
+      "Expression": "__FiscalYearNumber",
+      "IsHidden": true,
+      "AttributeType": "FiscalYears",
+      "DataCategory": "Years"
+    },
+    {
+      "Name": "Fiscal Year",
+      "DataType": "String",
+      "Expression": "__FiscalYear",
+      "SortByColumn": "Fiscal Year Number",
+      "DataCategory": "Years"
+    },
+    {
+      "Name": "Fiscal Quarter Number",
+      "DataType": "Int64",
+      "Expression": "__FiscalQuarterNumber",
+      "IsHidden": true,
+      "AttributeType": "FiscalQuarterOfYear",
+      "DataCategory": "Quarters"
+    },
+    {
+      "Name": "Fiscal Quarter",
+      "DataType": "String",
+      "Expression": "__FiscalQuarter",
+      "SortByColumn": "Fiscal Quarter Number",
+      "DataCategory": "Quarters"
+    },
+    {
+      "Name": "Fiscal Year Quarter Number",
+      "DataType": "Int64",
+      "Expression": "__FiscalYearQuarterNumber",
+      "IsHidden": true,
+      "AttributeType": "FiscalQuarters",
+      "DataCategory": "Quarters"
+    },
+    {
+      "Name": "Fiscal Year Quarter",
+      "DataType": "String",
+      "Expression": "__FiscalYearQuarter",
+      "SortByColumn": "Fiscal Year Quarter Number",
+      "DataCategory": "Quarters"
+    },
+    {
+      "Name": "Fiscal Month Number",
+      "DataType": "Int64",
+      "Expression": "__FiscalMonthNumber",
+      "IsHidden": true,
+      "AttributeType": "FiscalMonthOfYear",
+      "DataCategory": "MonthOfYear"
+    },
+    {
+      "Name": "Fiscal Month",
+      "DataType": "String",
+      "Expression": "__FiscalMonth",
+      "SortByColumn": "Fiscal Month Number",
+      "DataCategory": "MonthOfYear"
+    },
+    {
+      "Name": "Fiscal Year Month Number",
+      "DataType": "Int64",
+      "Expression": "__FiscalYearMonthNumber",
+      "IsHidden": true,
+      "AttributeType": "FiscalMonths",
+      "DataCategory": "Months"
+    },
+    {
+      "Name": "Fiscal Year Month",
+      "DataType": "String",
+      "Expression": "__FiscalYearMonth",
+      "SortByColumn": "Fiscal Year Month Number",
+      "DataCategory": "Months"
+    },
+    {
+      "Name": "Fiscal Week Number",
+      "DataType": "Int64",
+      "Expression": "__FiscalWeekNumber",
+      "IsHidden": true,
+      "AttributeType": "FiscalWeekOfYear"
+    },
+    {
+      "Name": "Fiscal Week",
+      "DataType": "String",
+      "Expression": "__FiscalWeek",
+      "SortByColumn": "Fiscal Week Number"
+    },
+    {
+      "Name": "Fiscal Year Week Number",
+      "DataType": "Int64",
+      "Expression": "__FiscalYearWeekNumber",
+      "IsHidden": true,
+      "AttributeType": "FiscalWeeks"
+    },
+    {
+      "Name": "Fiscal Year Week",
+      "DataType": "String",
+      "Expression": "__FiscalYearWeek",
+      "SortByColumn": "Fiscal Year Week Number"
+    },
+    {
+      "Name": "Working Day",
+      "Expression": "IF ( __IsWorkingDay, __WorkingDayType, __NonWorkingDayType )",
+      "DataType": "String",
+      "RequiresHolidays": true,
+      "Annotations": {
+        "SQLBI_FilterSafe": true
+      }
+    },
+    {
+      "Name": "IsWorking",
+      "Expression": "__IsWorkingDay",
+      "DataType": "Boolean",
+      "RequiresHolidays": true,
+      "IsHidden": true,
+      "AttributeType": "IsWorkingDay",
+      "Annotations": {
+        "SQLBI_FilterSafe": true
+      }
+    },
+    {
+      "Name": "Working Day Value",
+      "Expression": "IF ( __IsWorkingDay, 1 )",
+      "DataType": "Int64",
+      "RequiresHolidays": true,
+      "IsHidden": true,
+      "Annotations": {
+        "SQLBI_FilterSafe": true
+      }
+    },
+    {
+      "Name": "Holiday Name",
+      "Expression": "__HolidayName",
+      "DataType": "String",
+      "RequiresHolidays": true,
+      "Annotations": {
+        "SQLBI_FilterSafe": true
+      }
+    },
+    {
+      "Name": "Day of Week Number",
+      "Expression": "__WeekDayNumber",
+      "DataType": "Int64",
+      "IsHidden": true,
+      "AttributeType": "DayOfWeek",
+      "DataCategory": "DayOfWeek",
+      "Annotations": {
+        "SQLBI_FilterSafe": true
+      }
+    },
+    {
+      "Name": "Day of Week",
+      "Expression": "__WeekDay",
+      "DataType": "String",
+      "SortByColumn": "Day of Week Number",
+      "DataCategory": "DayOfWeek",
+      "Annotations": {
+        "SQLBI_FilterSafe": true
+      }
+    },
+    {
+      "Name": "Day of Fiscal Month Number",
+      "Expression": "__FiscalDayOfMonthNumber",
+      "DataType": "Int64",
+      "IsHidden": true,
+      "AttributeType": "FiscalDayOfMonth",
+      "DataCategory": "DayOfMonth"
+    },
+    {
+      "Name": "Day of Fiscal Quarter Number",
+      "Expression": "__FiscalDayOfQuarterNumber",
+      "DataType": "Int64",
+      "IsHidden": true,
+      "AttributeType": "FiscalDayOfQuarter",
+      "DataCategory": "DayOfQuarter"
+    },
+    {
+      "Name": "Day of Fiscal Year Number",
+      "Expression": "__FiscalDayOfYearNumber",
+      "DataType": "Int64",
+      "IsHidden": true,
+      "AttributeType": "FiscalDayOfYear",
+      "DataCategory": "DayOfYear"
+    },
+    {
+      "Name": "DateWithTransactions",
+      "Expression": "__Date <= __LastTransactionDate",
+      "DataType": "Boolean",
+      "IsHidden": true,
+      "AttributeType": "DateDuration"
+    }
+  ],
+  "Hierarchies": [
+    {
+      "Name": "Year-Month-Week",
+      "Levels": [
+        {
+          "Name": "Year",
+          "Column": "Fiscal Year"
+        },
+        {
+          "Name": "Month",
+          "Column": "Fiscal Year Month"
+        },
+        {
+          "Name": "Week",
+          "Column": "Fiscal Year Week"
+        }
+      ]
+    },
+    {
+      "Name": "Year-Quarter-Month-Week",
+      "Levels": [
+        {
+          "Name": "Year",
+          "Column": "Fiscal Year"
+        },
+        {
+          "Name": "Quarter",
+          "Column": "Fiscal Year Quarter"
+        },
+        {
+          "Name": "Month",
+          "Column": "Fiscal Year Month"
+        },
+        {
+          "Name": "Week",
+          "Column": "Fiscal Year Week"
+        }
+      ]
+    },
+    {
+      "Name": "Year-Quarter-Week",
+      "Levels": [
+        {
+          "Name": "Year",
+          "Column": "Fiscal Year"
+        },
+        {
+          "Name": "Quarter",
+          "Column": "Fiscal Year Quarter"
+        },
+        {
+          "Name": "Week",
+          "Column": "Fiscal Year Week"
+        }
+      ]
+    },
+    {
+      "Name": "Year-Week",
+      "Levels": [
+        {
+          "Name": "Year",
+          "Column": "Fiscal Year"
+        },
+        {
+          "Name": "Week",
+          "Column": "Fiscal Year Week"
+        }
+      ]
+    }
+  ]
+}

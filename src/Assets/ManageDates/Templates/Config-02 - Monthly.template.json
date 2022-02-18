@@ -1,0 +1,41 @@
+{
+  "Description": "Monthly calendar and monthly time intelligence",
+  "Templates": [
+    {
+      "Class": "CustomDateTable",
+      "Table": "Date",
+      "ReferenceTable": "DateAutoTemplate",
+      "Template": "DateTemplate-02.json",
+      "LocalizationFiles": [
+      ]
+    },
+    {
+      "Class": "MeasuresTemplate",
+      "Table": null,
+      "Template": "TimeIntelligence-02.json",
+      "Properties": {
+        "__DisplayFolderRule": "Time intelligence\\@_MEASURE_@\\@_TEMPLATEFOLDER_@",
+        "DisplayFolderRule": "Time intelligence\\@_TEMPLATEFOLDER_@\\@_TEMPLATE_@",
+        "_DisplayFolderRule": "Time intelligence\\@_TEMPLATEFOLDER_@\\@_MEASURE_@"
+      },
+      "_comment": "TargetMeasures can override the default setting"
+    }
+  ],
+  "IsoTranslation": "en-US",
+  "IsoFormat": "en-US",
+  "LocalizationFiles": [],
+  "OnlyTablesColumns": [],
+  "ExceptTablesColumns": [],
+  "FirstYearMin": null,
+  "FirstYearMax": null,
+  "LastYearMin": null,
+  "LastYearMax": null,
+  "AutoScan": "Full",
+  "DefaultVariables": {
+    "__FirstFiscalMonth": "4",
+    "__MonthsInYear": "12"
+  },
+  "IsoCountry": "US",
+  "AutoNaming": "Prefix",
+  "TargetMeasures": []
+}
