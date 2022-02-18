@@ -4,7 +4,7 @@
  * https://www.sqlbi.com
 */
 
-import { host, pbiDesktop } from "../main";
+import { host } from "../main";
 import { Dic, Utils } from '../helpers/utils';
 import { daxMeasureName, FormattedMeasure, TabularDatabase, TabularDatabaseInfo, TabularMeasure } from './tabular';
 import { deepEqual } from 'fast-equals';

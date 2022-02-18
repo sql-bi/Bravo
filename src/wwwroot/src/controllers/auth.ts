@@ -36,9 +36,7 @@ export class Auth extends Dispatchable {
             this.getAvatar();
             this.trigger("signedIn", this.account);
 
-        }).catch(error => {
-            
-        });
+        }).catch(ignore => {});
     }
 
     getAvatar() {
@@ -52,9 +50,7 @@ export class Auth extends Dispatchable {
 
             this.cache.setItem(this.account.id, avatar);
 
-        }).catch(error => {
-            
-        });
+        }).catch(ignore => {});
     }
 
     signIn(emailAddress?: string) {

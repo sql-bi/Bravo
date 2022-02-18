@@ -116,7 +116,7 @@ const locale: Locale = {
         [_.exportDataOpenFile]: "Apri file",
         [_.exportDataOpenFolder]: "Apri cartella",
         [_.failed]: "Fallito",
-        [_.filterMeasuresWithErrorsCtrlTitle]: "Mostra solo misure con errori",
+        [_.filterMeasuresWithErrorsCtrlTitle]: "Mostra solo misure non formattate o con errori",
         [_.filterUnrefCtrlTitle]: "Mostra solo colonne non referenziate.",
         [_.formattingMeasures]: "Formattazione in corso...",
         [_.goBackCtrlTitle]: "Annulla e torna indietro",
