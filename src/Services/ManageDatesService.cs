@@ -35,14 +35,14 @@
         {
             var configurations = _templateManager.GetPackages().Select(DateConfiguration.CreateFrom).ToArray();
             {
-                ValidateReferencedTables(report, configurations, assertValidation: false);
+                Validate(report, configurations, assertValidation: false);
             }
             return configurations;
         }
 
         public DateConfiguration ValidateConfiguration(PBIDesktopReport report, DateConfiguration configuration, CancellationToken cancellationToken)
         {
-            ValidateReferencedTables(report, configuration, assertValidation: false);
+            Validate(report, configuration, assertValidation: false);
 
             return configuration;
         }
@@ -50,7 +50,7 @@
         public ModelChanges? GetPreviewChanges(PBIDesktopReport report, PreviewChangesSettings settings, CancellationToken cancellationToken)
         {
             BravoUnexpectedException.ThrowIfNull(settings.Configuration);
-            ValidateReferencedTables(report, settings.Configuration, assertValidation: true);
+            Validate(report, settings.Configuration, assertValidation: true);
 
             using var connection = TabularConnectionWrapper.ConnectTo(report);
             var modelChanges = _templateManager.GetPreviewChanges(settings.Configuration, settings.PreviewRows, connection, cancellationToken);
@@ -60,72 +60,59 @@
 
         public void Update(PBIDesktopReport report, DateConfiguration configuration, CancellationToken cancellationToken)
         {
-            ValidateReferencedTables(report, configuration, assertValidation: true);
+            Validate(report, configuration, assertValidation: true);
 
             using var connection = TabularConnectionWrapper.ConnectTo(report);
 
             _templateManager.ApplyTemplate(configuration, connection, cancellationToken);
         }
 
-        private static void ValidateReferencedTables(PBIDesktopReport report, DateConfiguration configuration, bool assertValidation) => ValidateReferencedTables(report, new[] { configuration }, assertValidation);
+        private static void Validate(PBIDesktopReport report, DateConfiguration configuration, bool assertValidation) => Validate(report, new[] { configuration }, assertValidation);
 
-        private static void ValidateReferencedTables(PBIDesktopReport report, DateConfiguration[] configurations, bool assertValidation)
+        private static void Validate(PBIDesktopReport report, DateConfiguration[] configurations, bool assertValidation)
         {
             using var connection = TabularConnectionWrapper.ConnectTo(report);
 
             foreach (var configuration in configurations)
             {
-                if (configuration.Bravo?.ReferencedTables is not null)
+                if (configuration.DateEnabled)
                 {
-                    foreach (var referencedTable in configuration.Bravo.ReferencedTables)
-                    {
-                        var table = connection.Model.Tables.Find(referencedTable.Name);
+                    configuration.DateTableValidation = Validate(configuration.DateTableName);
+                    configuration.DateReferenceTableValidation = Validate(configuration.DateReferenceTableName);
+                }
 
-                        if (table is null)
-                        {
-                            referencedTable.Action = ReferencedTableAction.ValidCreateNew;
-                        }
-                        else if (table.IsCalculated())
-                        {
-                            referencedTable.Action = ReferencedTableAction.ValidOverwrite;
-                        }
-                        else
-                        {
-                            referencedTable.Action = ReferencedTableAction.InvalidRenameRequired;
-                        }
-
-                        if (assertValidation)
-                        {
-                            BravoUnexpectedException.Assert(referencedTable.Action != ReferencedTableAction.InvalidRenameRequired);
-                        }
-                    }
+                if (configuration.HolidaysEnabled)
+                {
+                    configuration.HolidaysTableValidation = Validate(configuration.HolidaysTableName);
+                    configuration.HolidaysDefinitionTableValidation = Validate(configuration.HolidaysDefinitionTableName);
                 }
             }
 
-            //foreach (var configuration in configurations)
-            //{
-            //    if (configuration.Bravo?.ReferencedTables is not null /* && Uri.TryCreate(configuration.TemplateUri, UriKind.Absolute, out var templateUri) */)
-            //    {
-            //        var packageText = File.ReadAllText(templateUri.LocalPath);
-            //        var packageObject = NJ.Linq.JObject.Parse(packageText);
+            TableValidation Validate(string tableName)
+            {
+                var validation = TableValidation.Unknown;
+                var table = connection.Model.Tables.Find(tableName);
 
-            //        foreach (var referencedTable in configuration.Bravo.ReferencedTables)
-            //        {
-            //            if (referencedTable.Paths is not null)
-            //            {
-            //                foreach (var path in referencedTable.Paths)
-            //                {
-            //                    var token = packageObject.SelectToken(path, errorWhenNoMatch: true);
+                if (table is null)
+                {
+                    validation = TableValidation.Valid;
+                }
+                else if (table.IsCalculated())
+                {
+                    validation = TableValidation.Valid;
+                }
+                else
+                {
+                    validation = TableValidation.InvalidRenameRequired;
+                }
 
-            //                    BravoUnexpectedException.ThrowIfNull(token);
-            //                    BravoUnexpectedException.Assert(token.Type == NJ.Linq.JTokenType.String);
+                if (assertValidation)
+                {
+                    BravoUnexpectedException.Assert(validation.IsValid());
+                }
 
-            //                    var xx = token.ToString();
-            //                }
-            //            }
-            //        }
-            //    }
-            //}
+                return validation;
+            }
         }
     }
 }

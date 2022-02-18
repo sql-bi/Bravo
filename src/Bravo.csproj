@@ -70,6 +70,12 @@
     <Content Remove="wwwroot\src\**;wwwroot\*.js;wwwroot\*.json" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Update="Assets\ManageDates\Templates\*.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
   <PropertyGroup Condition="'$(Configuration)' == 'Debug_wwwroot'">
     <DefineConstants>$(DefineConstants);DEBUG</DefineConstants>
   </PropertyGroup>
