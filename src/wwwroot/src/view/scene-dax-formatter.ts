@@ -140,14 +140,14 @@ export class DaxFormatterScene extends MainScene {
                 </div>
             </div>
 
-            <div class="scene-action show-if-editable" ${this.doc.editable ? "" : "hidden"}>
+            <div class="scene-action">
                 <div class="privacy-explanation">
                     <div class="icon icon-privacy"></div>
                     <p>${i18n(strings.daxFormatterAgreement)} <br>
                     <span class="show-data-usage link">${i18n(strings.dataUsageLink)}</span>
                     </p>
                 </div>
-                <div class="do-format button disable-on-syncing" disabled>${i18n(strings.daxFormatterFormat)}</div>
+                <div class="do-format button disable-on-syncing disable-if-readonly" disabled>${i18n(this.doc.editable ? strings.daxFormatterFormat : strings.daxFormatterFormatDisabled)}</div>
             </div>
         `;
         this.body.insertAdjacentHTML("beforeend", html);

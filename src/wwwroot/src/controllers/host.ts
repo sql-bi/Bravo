@@ -102,6 +102,7 @@ export interface ExportDataTable {
 export interface ExportDataJob {
     status: ExportDataStatus
     tables?: ExportDataTable[]
+    path?: string
 }
 
 export interface ExportDelimitedTextSettings { 
@@ -526,5 +527,9 @@ export class Host extends Dispatchable {
 
     getCurrentVersion(updateChannel: UpdateChannelType) {
         return <Promise<BravoUpdate>>this.apiCall("api/GetCurrentVersion", { updateChannel: updateChannel });
+    }
+
+    fileSystemOpen(path: string) {
+        return this.apiCall("api/FileSystemOpen", { path: path });
     }
 }

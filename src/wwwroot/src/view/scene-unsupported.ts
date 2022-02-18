@@ -29,7 +29,7 @@ export class UnsupportedScene extends Scene {
 
         let html = `
             <div class="error">
-                <div class="icon icon-unsupported-${feature}"></div>
+                <div class="icon icon-${feature}"></div>
 
                 <h1>${i18n(strings.sceneUnsupportedTitle)}</h1>
 

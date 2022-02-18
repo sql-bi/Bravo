@@ -18,7 +18,6 @@ import { ErrorScene } from './scene-error';
 import { ExportedScene } from './scene-exported';
 import { ExportingScene } from './scene-exporting';
 import { MainScene } from './scene-main';
-import { SuccessScene } from './scene-success';
 
 export class ExportDataScene extends MainScene {
 

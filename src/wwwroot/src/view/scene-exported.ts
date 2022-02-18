@@ -7,6 +7,8 @@
 import { Tabulator } from 'tabulator-tables';
 import { ExportDataFormat, ExportDataJob, ExportDataStatus, ExportDataTable } from '../controllers/host';
 import { Utils, _ } from '../helpers/utils';
+import { host, logger } from '../main';
+import { AppError } from '../model/exceptions';
 import { I18n, i18n } from '../model/i18n'; 
 import { strings } from '../model/strings';
 import { Scene } from './scene';
@@ -67,7 +69,12 @@ export class ExportedScene extends Scene {
 
         _(".open-path", this.element).addEventListener("click", e => {
             e.preventDefault();
-            //TODO
+            if (this.job.path) {
+                host.fileSystemOpen(this.job.path)
+                    .catch(error => {
+                        try { logger.logError(AppError.InitFromError(error)); } catch(ignore) {}
+                    });
+            }
         });
 
         this.updateTable();

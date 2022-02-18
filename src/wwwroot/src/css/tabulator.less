@@ -590,14 +590,7 @@
   background-color: darken(@table-cell-back-color-alt, 10%) !important;
   .dark & {background-color: lighten(@table-cell-back-color-alt-dark, 10%) !important;}
 }*/
-
-.tabulator-row.row-active, .tabulator-row.row-active:hover {
-  .border-radius();
-  border-color: transparent !important;
-  background-color: @table-cell-active-back-color !important;
-  .dark & {background-color: @table-cell-active-back-color-dark !important;}
-
-  &.row-highlighted {
+&.row-highlighted {
     background-color: darken(@warning-back-color, 20%) !important;
     .dark & {background-color: lighten(@warning-back-color-dark, 20%) !important;}
   }
@@ -607,6 +600,13 @@
     .dark & {background-color: lighten(@error-back-color-dark, 20%) !important;}
   }
 
+.tabulator-row.row-active, .tabulator-row.row-active:hover {
+  .border-radius();
+  border-color: transparent !important;
+  background-color: @table-cell-active-back-color !important;
+  .dark & {background-color: @table-cell-active-back-color-dark !important;}
+
+  
   & + .tabulator-row {
     border-color: transparent !important;
   }
