@@ -7,6 +7,7 @@
     using Sqlbi.Bravo.Infrastructure.Helpers;
     using Sqlbi.Bravo.Infrastructure.Security;
     using Sqlbi.Bravo.Models;
+    using Sqlbi.Bravo.Models.FormatDax;
     using System;
     using System.Collections.Concurrent;
     using System.Diagnostics;
@@ -35,7 +36,8 @@
         public static readonly TimeSpan MSALSignInTimeout = TimeSpan.FromMinutes(5);
         public static readonly Color ThemeColorDark = ColorTranslator.FromHtml("#202020");
         public static readonly Color ThemeColorLight = ColorTranslator.FromHtml("#F3F3F3");
-        
+        public static readonly DaxLineBreakStyle FormatDaxLineBreakDefault = DaxLineBreakStyle.InitialLineBreak;
+
 
         public static readonly string[] TrustedUriHosts = new[]
         {

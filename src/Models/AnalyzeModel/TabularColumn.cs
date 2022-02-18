@@ -1,7 +1,9 @@
 ﻿namespace Sqlbi.Bravo.Models.AnalyzeModel
 {
+    using System.Diagnostics;
     using System.Text.Json.Serialization;
 
+    [DebuggerDisplay("'{TableName}'[{Name}]")]
     public class TabularColumn
     {
         [JsonPropertyName("columnName")]

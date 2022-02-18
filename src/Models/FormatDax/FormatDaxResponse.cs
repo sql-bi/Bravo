@@ -1,5 +1,6 @@
 ﻿namespace Sqlbi.Bravo.Models.FormatDax
 {
+    using Sqlbi.Bravo.Infrastructure;
     using System.Collections.Generic;
     using System.Text.Json.Serialization;
 
@@ -23,6 +24,9 @@
 
         [JsonPropertyName("measure")]
         public string? Expression { get; set; }
+
+        [JsonPropertyName("lineBreakStyle")]
+        public DaxLineBreakStyle LineBreakStyle { get; set; } = AppEnvironment.FormatDaxLineBreakDefault;
 
         [JsonPropertyName("errors")]
         public IEnumerable<FormatterError>? Errors { get; set; }

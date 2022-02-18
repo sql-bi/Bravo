@@ -1,6 +1,7 @@
 ﻿namespace Sqlbi.Bravo.Models.FormatDax
 {
     using Dax.Formatter.Models;
+    using Sqlbi.Bravo.Infrastructure;
     using Sqlbi.Bravo.Models.AnalyzeModel;
     using System.Collections.Generic;
     using System.ComponentModel.DataAnnotations;
@@ -19,14 +20,26 @@
 
     public class FormatDaxOptions
     {
+        // TODO: remove AutoLineBreakStyle default value and enable [RequiredAttribute] as soon as Daniele adds the new UI-side parameter
+
+        /// <summary>
+        /// Auto-calculated <see cref="DaxLineBreakStyle"/> based on the existing measures in the model. See <see cref="TabularDatabaseInfo.AutoLineBreakStyle"/>
+        /// </summary>
+        //[Required]
+        [JsonPropertyName("autoLineBreakStyle")]
+        public DaxLineBreakStyle? AutoLineBreakStyle { get; set; } = AppEnvironment.FormatDaxLineBreakDefault;
+
+        /// <summary>
+        /// Preferred <see cref="DaxLineBreakStyle"/> from user settings
+        /// </summary>
+        [JsonPropertyName("lineBreakStyle")]
+        public DaxLineBreakStyle LineBreakStyle { get; set; } = AppEnvironment.FormatDaxLineBreakDefault;
+
         [JsonPropertyName("lineStyle")]
         public DaxFormatterLineStyle? LineStyle { get; set; }
 
         [JsonPropertyName("spacingStyle")]
         public DaxFormatterSpacingStyle? SpacingStyle { get; set; }
-
-        //[JsonPropertyName("separatorStyle")]
-        //public DaxFormatterSeparatorStyle SeparatorStyle { get; set; }
 
         [JsonPropertyName("listSeparator")]
         public char? ListSeparator { get; set; }
@@ -46,5 +59,28 @@
         string DatabaseName
         string DatabaseCompatibilityLevel
  */
+    }
+
+    public enum DaxLineBreakStyle
+    {
+        /// <summary>
+        /// No line break character at beginning of DAX expression
+        /// </summary>
+        None = 0,
+
+        /// <summary>
+        /// The first character of the DAX expression is a line break
+        /// </summary>
+        InitialLineBreak = 1,
+
+        ///// <summary>
+        ///// Like <see cref="InitialLineBreak"/> only for multi-line DAX expressions
+        ///// </summary>
+        //InitiaLineBreakOnMultilineOnly = 2,
+
+        /// <summary>
+        /// Automatically pick <see cref="None"/> or <see cref="InitialLineBreak"/> based on the existing measures in the model, using the prevalent technique in existing measures
+        /// </summary>
+        Auto = 3
     }
 }

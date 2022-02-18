@@ -3,7 +3,9 @@
     using Dax.Metadata.Extractor;
     using Dax.ViewModel;
     using Dax.Vpax.Tools;
+    using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Models.AnalyzeModel;
+    using Sqlbi.Bravo.Models.FormatDax;
     using System;
     using System.IO;
     using System.Linq;
@@ -45,7 +47,49 @@
             var databaseETag = TabularModelHelper.GetDatabaseETag(vpaModel.Model.ModelName.Name, vpaModel.Model.Version, vpaModel.Model.LastUpdate);
             var databaseSize = vpaModel.Columns.Sum((c) => c.TotalSize);
 
-            var databaseModel = new TabularDatabase
+            var tabularColumns = vpaModel.Columns.Select((c) =>
+            {
+                var column = new TabularColumn
+                {
+                    Name = c.ColumnName,
+                    TableName = c.Table.TableName,
+                    Cardinality = c.ColumnCardinality,
+                    Size = c.TotalSize,
+                    Weight = (double)c.TotalSize / databaseSize,
+                    IsReferenced = c.IsReferenced,
+                };
+
+                return column;
+            }).ToArray();
+
+            var tabularTables = vpaModel.Tables.Select((t) =>
+            {
+                var table = new TabularTable
+                {
+                    Name = t.TableName,
+                    RowsCount = t.RowsCount,
+                    Size = t.TableSize
+                };
+
+                return table;
+            }).ToArray();
+
+            var tabularMeasures = vpaxContent.DaxModel.Tables.SelectMany((t) => t.Measures).Select((m) =>
+            {
+                var (expression, lineBreakStyle) = m.MeasureExpression.Expression.NormalizeDax();
+                var measure = new TabularMeasure
+                {
+                    ETag = databaseETag,
+                    Name = m.MeasureName.Name,
+                    TableName = m.Table.TableName.Name,
+                    Expression = expression,
+                    LineBreakStyle = lineBreakStyle,
+                };
+
+                return measure;
+            }).ToArray();
+
+            var tabularDatabase = new TabularDatabase
             {
                 Info = new TabularDatabaseInfo
                 {
@@ -54,45 +98,25 @@
                     ColumnsCount = vpaModel.Columns.Count(),
                     TablesMaxRowsCount = vpaModel.Tables.Any() ? vpaModel.Tables.Max((t) => t.RowsCount) : 0,
                     DatabaseSize = databaseSize,
-                    ColumnsUnreferencedCount = vpaModel.Columns.Count((t) => t.IsReferenced == false),
-                    Columns = vpaModel.Columns.Select((c) =>
-                    {
-                        var column = new TabularColumn
-                        {
-                            Name = c.ColumnName, 
-                            TableName = c.Table.TableName,
-                            Cardinality = c.ColumnCardinality,
-                            Size = c.TotalSize,
-                            Weight = (double)c.TotalSize / databaseSize,
-                            IsReferenced = c.IsReferenced,
-                        };
-                        return column;
-                    }),
-                    Tables = vpaModel.Tables.Select((t) =>
-                    {
-                        var table = new TabularTable
-                        {
-                            Name = t.TableName,
-                            RowsCount = t.RowsCount,
-                            Size = t.TableSize
-                        };
-                        return table;
-                    })
+                    ColumnsUnreferencedCount = vpaModel.Columns.Count((c) => !c.IsReferenced),
+                    AutoLineBreakStyle = GetAutoLineBreakStyle(),
+                    Columns = tabularColumns,
+                    Tables = tabularTables,
                 },
-                Measures = vpaxContent.DaxModel.Tables.SelectMany((t) => t.Measures).Select((m) =>
-                {
-                    var measure = new TabularMeasure
-                    {
-                        ETag = databaseETag,
-                        Name = m.MeasureName.Name,
-                        TableName = m.Table.TableName.Name,
-                        Expression = m.MeasureExpression.Expression
-                    };
-                    return measure;
-                })
+                Measures = tabularMeasures
             };
 
-            return databaseModel;
+            return tabularDatabase;
+
+            DaxLineBreakStyle? GetAutoLineBreakStyle()
+            {
+                var preferredStyleQuery = tabularMeasures.GroupBy((measure) => measure.LineBreakStyle)
+                    .Select((group) => new { LineBreakStyle = group.Key, Count = group.Count() })
+                    .OrderByDescending((item) => item.Count)
+                    .FirstOrDefault();
+
+                return preferredStyleQuery?.LineBreakStyle;
+            }
         }
     }
 }
