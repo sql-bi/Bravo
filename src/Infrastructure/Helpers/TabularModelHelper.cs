@@ -44,9 +44,10 @@
                     throw new BravoException(BravoProblem.TOMDatabaseUpdateErrorMeasure);
 
                 var unformattedMeasure = database.Model.Tables[formattedMeasure.TableName].Measures[formattedMeasure.Name];
+                var formattedExpression = formattedMeasure.Expression.ApplyLineBreakStyle(formattedMeasure.LineBreakStyle);
 
-                if (unformattedMeasure.Expression != formattedMeasure.Expression)
-                    unformattedMeasure.Expression = formattedMeasure.Expression;
+                if (unformattedMeasure.Expression != formattedExpression)
+                    unformattedMeasure.Expression = formattedExpression;
             }
 
             if (database.Model.HasLocalChanges)

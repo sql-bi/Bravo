@@ -46,6 +46,7 @@
             services.AddSingleton<IPBICloudSettingsService, PBICloudSettingsService>();
             services.AddSingleton<IPBIDesktopService, PBIDesktopService>();
             services.AddSingleton<IPBICloudService, PBICloudService>();
+            services.AddSingleton<IFormatDaxService, FormatDaxService>();
             services.AddSingleton<IExportDataService, ExportDataService>();
             services.AddSingleton<IDaxFormatterClient, DaxFormatterClient>();
             services.AddSingleton<IManageDatesService, ManageDatesService>();

@@ -1,7 +1,10 @@
 ﻿namespace Sqlbi.Bravo.Models.AnalyzeModel
 {
+    using Sqlbi.Bravo.Models.FormatDax;
+    using System.Diagnostics;
     using System.Text.Json.Serialization;
 
+    [DebuggerDisplay("'{TableName}'[{Name}]")]
     public class TabularMeasure
     {
         [JsonPropertyName("etag")]
@@ -15,5 +18,8 @@
 
         [JsonPropertyName("measure")]
         public string? Expression { get; set; }
+
+        [JsonPropertyName("lineBreakStyle")]
+        public DaxLineBreakStyle? LineBreakStyle { get; set; }
     }
 }

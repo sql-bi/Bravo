@@ -1,5 +1,6 @@
 ﻿namespace Sqlbi.Bravo.Models.AnalyzeModel
 {
+    using Sqlbi.Bravo.Models.FormatDax;
     using System.Collections.Generic;
     using System.Text.Json.Serialization;
 
@@ -31,6 +32,9 @@
 
         [JsonPropertyName("unreferencedCount")]
         public int ColumnsUnreferencedCount { get; set; }
+
+        [JsonPropertyName("autoLineBreakStyle")]
+        public DaxLineBreakStyle? AutoLineBreakStyle { get; set; }
 
         [JsonPropertyName("columns")]
         public IEnumerable<TabularColumn>? Columns { get; set; }
