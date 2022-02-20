@@ -1,7 +1,6 @@
 ﻿namespace Sqlbi.Bravo.Services
 {
     using Microsoft.AnalysisServices;
-    using Microsoft.AnalysisServices.AdomdClient;
     using Sqlbi.Bravo.Infrastructure;
     using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Infrastructure.Helpers;
@@ -123,8 +122,11 @@
                         var connectionString = ConnectionStringHelper.BuildForPBIDesktop(ssasConnection.EndPoint);
                         server.Connect(connectionString);
                     }
-                    catch (AdomdException) // AdomdConnectionException
+                    catch (Exception ex)
                     {
+                        if (AppEnvironment.IsDiagnosticLevelVerbose)
+                            AppEnvironment.AddDiagnostics(DiagnosticMessageType.Text, name: $"{ nameof(PBIDesktopService) }-{ nameof(GetReports) }-{ nameof(GetConnectionDetails) }", ex.ToString(), severity: DiagnosticMessageSeverity.Warning);
+
                         connectivityMode = PBIDesktopReportConnectionMode.UnsupportedConnectionException;
                         return;
                     }

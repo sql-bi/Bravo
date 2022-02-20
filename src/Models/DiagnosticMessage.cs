@@ -8,6 +8,9 @@
         [JsonPropertyName("type")]
         public DiagnosticMessageType Type { get; set; } = DiagnosticMessageType.Text;
 
+        [JsonPropertyName("severity")]
+        public DiagnosticMessageSeverity Severity { get; set; } = DiagnosticMessageSeverity.None;
+
         [JsonPropertyName("name")]
         public string? Name { get; set; }
 
@@ -20,11 +23,12 @@
         [JsonIgnore]
         public DateTimeOffset? LastReadTimestamp { get; set; }
 
-        public static DiagnosticMessage Create(DiagnosticMessageType type, string name, string content)
+        public static DiagnosticMessage Create(DiagnosticMessageType type, DiagnosticMessageSeverity severity, string name, string content)
         {
             var message = new DiagnosticMessage
             {
                 Type = type,
+                Severity = severity,
                 Name = name,
                 Content = content,
                 Timestamp = DateTimeOffset.UtcNow,
@@ -39,5 +43,12 @@
     {
         Text = 0,
         Json = 1,
+    }
+
+    public enum DiagnosticMessageSeverity
+    {
+        None = 0,
+        Warning = 1,
+        Error = 2,
     }
 }

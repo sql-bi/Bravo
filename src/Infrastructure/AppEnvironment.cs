@@ -120,11 +120,11 @@
 
         public static ConcurrentDictionary<string, DiagnosticMessage> Diagnostics { get; }
 
-        public static void AddDiagnostics(DiagnosticMessageType type, string name, string content, bool writeFile = true)
+        public static void AddDiagnostics(DiagnosticMessageType type, string name, string content, DiagnosticMessageSeverity severity = DiagnosticMessageSeverity.None, bool writeFile = false)
         {
             if (IsDiagnosticLevelVerbose)
             {
-                var message = DiagnosticMessage.Create(type, name, content);
+                var message = DiagnosticMessage.Create(type, severity, name, content);
 
                 Diagnostics.AddOrUpdate(message.Name!, message, (key, value) => message);
 
