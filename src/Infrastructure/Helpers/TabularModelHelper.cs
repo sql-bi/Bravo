@@ -27,12 +27,8 @@
             return hash;
         }
 
-        public static string Update(string connectionString, string databaseName, IEnumerable<FormattedMeasure> measures)
+        public static string Update(TOM.Database database, IEnumerable<FormattedMeasure> measures)
         {
-            using var server = new TOM.Server();
-            server.Connect(connectionString);
-
-            var database = server.Databases.FindByName(databaseName) ?? throw new BravoException(BravoProblem.TOMDatabaseDatabaseNotFound, databaseName);
             var databaseETag = GetDatabaseETag(database.Name, database.Version, database.LastUpdate);
 
             foreach (var formattedMeasure in measures)

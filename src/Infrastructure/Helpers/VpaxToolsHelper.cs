@@ -1,39 +1,43 @@
 ﻿namespace Sqlbi.Bravo.Infrastructure.Helpers
 {
+    using Dax.Metadata;
     using Dax.Metadata.Extractor;
     using Dax.ViewModel;
     using Dax.Vpax.Tools;
+    using Microsoft.AnalysisServices.AdomdClient;
     using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Models.AnalyzeModel;
     using Sqlbi.Bravo.Models.FormatDax;
-    using System;
     using System.IO;
     using System.Linq;
+    using TOM = Microsoft.AnalysisServices.Tabular;
 
     internal static class VpaxToolsHelper
     {
-        public static Stream ExportVpax(string connectionString, string databaseName, bool includeTomModel, bool includeVpaModel, bool readStatisticsFromData, int sampleRows)
+        public static Stream GetVpax(TOM.Database database, bool includeVpaModel = false, bool includeTomDatabase = false, bool readStatisticsFromData = false, int sampleRows = 0)
         {
-            try
+            var daxModel = GetDaxModel(database);
+            var vpaModel = includeVpaModel ? new Dax.ViewVpaExport.Model(daxModel) : null;
+            var tomDatabase = includeTomDatabase ? (Microsoft.AnalysisServices.Database)database.Model.Database : null; // TOFIX: VertiPaq-Analyzer NuGet package - change tomModel from 'Microsoft.AnalysisServices.Database' to 'Microsoft.AnalysisServices.Tabular.Database'
+            
+            var stream = new MemoryStream();
             {
-                var daxModel = TomExtractor.GetDaxModel(connectionString, databaseName, AppEnvironment.ApplicationName, AppEnvironment.ApplicationProductVersion, readStatisticsFromData, sampleRows);
-                var tomModel = includeTomModel ? TomExtractor.GetDatabase(connectionString, databaseName) : null;
-                var vpaModel = includeVpaModel ? new Dax.ViewVpaExport.Model(daxModel) : null;
-                var stream = new MemoryStream();
-
-                VpaxTools.ExportVpax(stream, daxModel, vpaModel, tomModel);
-
-                return stream;
+                VpaxTools.ExportVpax(stream, daxModel, vpaModel, tomDatabase);
             }
-            catch (ArgumentException ex) when (ex.Message == $"The database '{ databaseName }' could not be found. Either it does not exist or you do not have admin rights to it.") // TODO: avoid using the exception message here to filter the error
-            {
-                throw new BravoException(BravoProblem.TOMDatabaseDatabaseNotFound);
-            }
+            return stream;
         }
 
-        public static TabularDatabase GetDatabaseFromVpax(Stream stream)
+        public static TabularDatabase GetDatabase(TOM.Database database)
         {
-            var vpaxContent = default(VpaxTools.VpaxContent);
+            var daxModel = GetDaxModel(database);
+            var tabularDatabase = GetDatabase(daxModel);
+
+            return tabularDatabase;
+        }
+
+        public static TabularDatabase GetDatabase(Stream stream)
+        {
+            VpaxTools.VpaxContent vpaxContent;
             try
             {
                 vpaxContent = VpaxTools.ImportVpax(stream);
@@ -43,7 +47,13 @@
                 throw new BravoException(BravoProblem.VpaxFileContainsCorruptedData);
             }
 
-            var vpaModel = new VpaModel(vpaxContent.DaxModel);
+            var tabularDatabase = GetDatabase(vpaxContent.DaxModel);
+            return tabularDatabase;
+        }
+
+        private static TabularDatabase GetDatabase(Model daxModel)
+        {
+            var vpaModel = new VpaModel(daxModel);
             var databaseETag = TabularModelHelper.GetDatabaseETag(vpaModel.Model.ModelName.Name, vpaModel.Model.Version, vpaModel.Model.LastUpdate);
             var databaseSize = vpaModel.Columns.Sum((c) => c.TotalSize);
 
@@ -74,7 +84,7 @@
                 return table;
             }).ToArray();
 
-            var tabularMeasures = vpaxContent.DaxModel.Tables.SelectMany((t) => t.Measures).Select((m) =>
+            var tabularMeasures = daxModel.Tables.SelectMany((t) => t.Measures).Select((m) =>
             {
                 var (expression, lineBreakStyle) = m.MeasureExpression.Expression.NormalizeDax();
                 var measure = new TabularMeasure
@@ -117,6 +127,30 @@
 
                 return preferredStyleQuery?.LineBreakStyle;
             }
+        }
+
+        private static Model GetDaxModel(TOM.Database database, bool includeStatistics = false, int sampleRows = 0)
+        {
+            var daxModel = TomExtractor.GetDaxModel(database.Model, extractorApp: AppEnvironment.ApplicationName, extractorVersion: AppEnvironment.ApplicationProductVersion);
+
+            using var connection = new AdomdConnection(database.Parent.ConnectionString);
+            {
+                DmvExtractor.PopulateFromDmv(
+                    daxModel,
+                    connection,
+                    serverName: database.Parent.Name,
+                    databaseName: database.Name,
+                    extractorApp: AppEnvironment.ApplicationName,
+                    extractorVersion: AppEnvironment.ApplicationProductVersion
+                    );
+
+                if (includeStatistics)
+                {
+                    StatExtractor.UpdateStatisticsModel(daxModel, connection, sampleRows);
+                }
+            }
+
+            return daxModel;
         }
     }
 }

@@ -9,28 +9,16 @@
     [DebuggerDisplay("{ServerName} - {ReportName} - {ConnectionMode}")]
     public class PBIDesktopReport : IPBIDataModel<PBIDesktopReport>
     {
-        /// <summary>
-        /// PBIDesktop process identifier (system PID)
-        /// </summary>
         [Required]
         [JsonPropertyName("id")]
         public int? ProcessId { get; set; }
 
-        /// <summary>
-        /// PBIDesktop report name (from main window title)
-        /// </summary>
         [JsonPropertyName("reportName")]
         public string? ReportName { get; set; }
 
-        /// <summary>
-        /// Server name of the local Analysis Services Tabular instance
-        /// </summary>
         [JsonPropertyName("serverName")]
         public string? ServerName { get; set; }
 
-        /// <summary>
-        /// Database name of the model hosted in the local Analysis Services Tabular instance
-        /// </summary>
         [JsonPropertyName("databaseName")]
         public string? DatabaseName { get; set; }
 

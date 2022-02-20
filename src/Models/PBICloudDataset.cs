@@ -141,7 +141,7 @@
         /// <summary>
         /// Builds the PBICloudDataset connection string and database name
         /// </summary>
-        public static (string connectionString, string databaseName) GetConnectionParameters(this PBICloudDataset dataset, string? accessToken)
+        public static (string connectionString, string databaseName) GetConnectionParameters(this PBICloudDataset dataset, string accessToken)
         {
             // Dataset connectivity with the XMLA endpoint
             // https://docs.microsoft.com/en-us/power-bi/admin/service-premium-connect-tools
