@@ -43,4 +43,67 @@
             return sourceType == TOM.PartitionSourceType.M || sourceType == TOM.PartitionSourceType.Query || sourceType == TOM.PartitionSourceType.PolicyRange;
         }
     }
+
+    internal static class ServerExtension
+    {
+        public static bool IsPowerBIDesktop(this TOM.Server server)
+        {
+            if (server.IsPowerBIOnPremis())
+            {
+                return server.ServerMode == ServerMode.SharePoint;
+            }
+
+            return false;
+        }
+
+        public static bool IsPowerBIDesktopReportServer(this TOM.Server server)
+        {
+            if (server.IsPowerBIOnPremis())
+            {
+                return server.ServerMode != ServerMode.SharePoint;
+            }
+
+            return false;
+        }
+
+        public static bool IsPowerBIService(this TOM.Server server)
+        {
+            if (server.CompatibilityMode == CompatibilityMode.PowerBI)
+            {
+                return server.ServerLocation == ServerLocation.Azure;
+            }
+
+            return false;
+        }
+
+        public static bool IsPowerBIOnPremis(this TOM.Server server)
+        {
+            if (server.CompatibilityMode == CompatibilityMode.PowerBI)
+            {
+                return server.ServerLocation == ServerLocation.OnPremise;
+            }
+
+            return false;
+        }
+
+        public static bool IsSQLServerAnalisysServices(this TOM.Server server)
+        {
+            if (server.CompatibilityMode == CompatibilityMode.AnalysisServices)
+            {
+                return server.ServerLocation == ServerLocation.OnPremise;
+            }
+
+            return false;
+        }
+
+        public static bool IsAzureAnalisysServices(this TOM.Server server)
+        {
+            if (server.CompatibilityMode == CompatibilityMode.AnalysisServices)
+            {
+                return server.ServerLocation == ServerLocation.Azure;
+            }
+
+            return false;
+        }
+    }
 }

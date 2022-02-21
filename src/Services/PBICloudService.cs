@@ -5,7 +5,9 @@
     using Sqlbi.Bravo.Infrastructure.Contracts.PBICloud;
     using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Infrastructure.Helpers;
+    using Sqlbi.Bravo.Infrastructure.Services;
     using Sqlbi.Bravo.Models;
+    using Sqlbi.Bravo.Models.AnalyzeModel;
     using Sqlbi.Bravo.Models.FormatDax;
     using System;
     using System.Collections.Generic;
@@ -18,6 +20,7 @@
     using System.Net.Http.Headers;
     using System.Text.Json;
     using System.Threading.Tasks;
+    using SSAS = Microsoft.AnalysisServices;
 
     public interface IPBICloudService
     {
@@ -33,11 +36,13 @@
 
         Task<IEnumerable<PBICloudDataset>> GetDatasetsAsync();
 
-        Stream ExportVpax(PBICloudDataset dataset, bool includeTomModel = true, bool includeVpaModel = true, bool readStatisticsFromData = true, int sampleRows = 0);
+        Task<string?> GetAccountAvatarAsync();
+
+        Stream GetVpax(PBICloudDataset dataset);
+
+        TabularDatabase GetDatabase(PBICloudDataset dataset);
 
         string Update(PBICloudDataset dataset, IEnumerable<FormattedMeasure> measures);
-
-        Task<string?> GetAccountAvatarAsync();
      }
 
     internal class PBICloudService : IPBICloudService
@@ -245,28 +250,14 @@
             }
         }
 
-        public Stream ExportVpax(PBICloudDataset dataset, bool includeTomModel, bool includeVpaModel, bool readStatisticsFromData, int sampleRows)
-        {
-            var (connectionString, databaseName) = dataset.GetConnectionParameters(CurrentAuthentication?.AccessToken);
-            var stream = VpaxToolsHelper.ExportVpax(connectionString, databaseName, includeTomModel, includeVpaModel, readStatisticsFromData, sampleRows);
-
-            return stream;
-        }
-
-        public string Update(PBICloudDataset dataset, IEnumerable<FormattedMeasure> measures)
-        {
-            var (connectionString, databaseName) = dataset.GetConnectionParameters(CurrentAuthentication?.AccessToken);
-            var databaseETag = TabularModelHelper.Update(connectionString, databaseName, measures);
-
-            return databaseETag;
-        }
-
         public async Task<string?> GetAccountAvatarAsync()
         {
-            _httpClient.DefaultRequestHeaders.Accept.Clear();
-            _httpClient.DefaultRequestHeaders.Authorization = AuthenticationHeaderValue.Parse(CurrentAuthentication?.CreateAuthorizationHeader());
+            BravoUnexpectedException.ThrowIfNull(CurrentAuthentication?.AccessToken);
 
-            var requestUri = new Uri(PBIApiUri, relativeUri: GetResourceUserPhotoRequestUri.FormatInvariant(CurrentAuthentication?.Account.Username));
+            _httpClient.DefaultRequestHeaders.Accept.Clear();
+            _httpClient.DefaultRequestHeaders.Authorization = AuthenticationHeaderValue.Parse(CurrentAuthentication.CreateAuthorizationHeader());
+
+            var requestUri = new Uri(PBIApiUri, relativeUri: GetResourceUserPhotoRequestUri.FormatInvariant(CurrentAuthentication.Account.Username));
             using var response = await _httpClient.GetAsync(requestUri).ConfigureAwait(false);
 
             if (response.IsSuccessStatusCode)
@@ -291,6 +282,42 @@
             static string? GetMimeType(Bitmap bitmap) => ImageCodecInfo.GetImageDecoders().FirstOrDefault((c) => c.FormatID == bitmap.RawFormat.Guid)?.MimeType;
         }
 
+        public Stream GetVpax(PBICloudDataset dataset)
+        {
+            BravoUnexpectedException.ThrowIfNull(CurrentAuthentication?.AccessToken);
+
+            using var connection = TabularConnectionWrapper.ConnectTo(dataset, CurrentAuthentication.AccessToken);
+            var stream = VpaxToolsHelper.GetVpax(connection.Database);
+
+            return stream;
+        }
+
+        public TabularDatabase GetDatabase(PBICloudDataset dataset)
+        {
+            BravoUnexpectedException.ThrowIfNull(CurrentAuthentication?.AccessToken);
+
+            using var connection = TabularConnectionWrapper.ConnectTo(dataset, CurrentAuthentication.AccessToken);
+            var database = VpaxToolsHelper.GetDatabase(connection.Database);
+            {
+                database.Features = AppFeature.All;
+                database.Features &= ~AppFeature.ManageDatesAll;
+
+                if (connection.Database.ReadWriteMode == SSAS.ReadWriteMode.ReadOnly)
+                    database.Features &= ~AppFeature.AllUpdateModel;
+            }
+            return database;
+        }
+
+        public string Update(PBICloudDataset dataset, IEnumerable<FormattedMeasure> measures)
+        {
+            BravoUnexpectedException.ThrowIfNull(CurrentAuthentication?.AccessToken);
+
+            using var connection = TabularConnectionWrapper.ConnectTo(dataset, CurrentAuthentication.AccessToken);
+            var databaseETag = TabularModelHelper.Update(connection.Database, measures);
+
+            return databaseETag;
+        }
+
         private void RefreshCurrentAccount()
         {
             BravoUnexpectedException.ThrowIfNull(CurrentAuthentication);
@@ -311,8 +338,10 @@
 
         private async Task<IEnumerable<CloudWorkspace>> GetWorkspacesAsync()
         {
+            BravoUnexpectedException.ThrowIfNull(CurrentAuthentication?.AccessToken);
+
             _httpClient.DefaultRequestHeaders.Accept.Clear();
-            _httpClient.DefaultRequestHeaders.Authorization = AuthenticationHeaderValue.Parse(CurrentAuthentication?.CreateAuthorizationHeader());
+            _httpClient.DefaultRequestHeaders.Authorization = AuthenticationHeaderValue.Parse(CurrentAuthentication.CreateAuthorizationHeader());
 
             var requestUri = new Uri(PBIApiUri, relativeUri: GetWorkspacesRequestUri);
             using var response = await _httpClient.GetAsync(requestUri).ConfigureAwait(false);
@@ -330,8 +359,10 @@
 
         private async Task<IEnumerable<CloudSharedModel>> GetSharedDatasetsAsync()
         {
+            BravoUnexpectedException.ThrowIfNull(CurrentAuthentication?.AccessToken);
+
             _httpClient.DefaultRequestHeaders.Accept.Clear();
-            _httpClient.DefaultRequestHeaders.Authorization = AuthenticationHeaderValue.Parse(CurrentAuthentication?.CreateAuthorizationHeader());
+            _httpClient.DefaultRequestHeaders.Authorization = AuthenticationHeaderValue.Parse(CurrentAuthentication.CreateAuthorizationHeader());
 
             var requestUri = new Uri(_authenticationService.TenantCluster, relativeUri: GetGallerySharedDatasetsRequestUri);
             using var response = await _httpClient.GetAsync(requestUri).ConfigureAwait(false);

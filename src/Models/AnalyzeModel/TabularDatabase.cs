@@ -1,11 +1,15 @@
 ﻿namespace Sqlbi.Bravo.Models.AnalyzeModel
 {
+    using Sqlbi.Bravo.Infrastructure;
     using Sqlbi.Bravo.Models.FormatDax;
     using System.Collections.Generic;
     using System.Text.Json.Serialization;
 
     public class TabularDatabase
     {
+        [JsonPropertyName("features")]
+        public AppFeature Features { get; set; } = AppFeature.None;
+
         [JsonPropertyName("model")]
         public TabularDatabaseInfo? Info { get; set; }
 

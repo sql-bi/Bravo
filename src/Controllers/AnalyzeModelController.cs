@@ -43,7 +43,7 @@
         [ProducesDefaultResponseType]
         public IActionResult GetDatabaseFromVpax()
         {
-            var database = VpaxToolsHelper.GetDatabaseFromVpax(stream: Request.Body);
+            var database = VpaxToolsHelper.GetDatabase(stream: Request.Body);
             return Ok(database);
         }
 
@@ -59,9 +59,7 @@
         [ProducesDefaultResponseType]
         public IActionResult GetDatabaseFromPBIDesktopReport(PBIDesktopReport report)
         {
-            var stream = _pbidesktopService.ExportVpax(report, includeTomModel: false, includeVpaModel: false, readStatisticsFromData: false, sampleRows: 0);
-            var database = VpaxToolsHelper.GetDatabaseFromVpax(stream);
-
+            var database = _pbidesktopService.GetDatabase(report);
             return Ok(database);
         }
 
@@ -82,9 +80,7 @@
             if (await _pbicloudService.IsSignInRequiredAsync())
                 return Unauthorized();
 
-            var stream = _pbicloudService.ExportVpax(dataset, includeTomModel: false, includeVpaModel: false, readStatisticsFromData: false, sampleRows: 0);
-            var database = VpaxToolsHelper.GetDatabaseFromVpax(stream);
-
+            var database = _pbicloudService.GetDatabase(dataset);
             return Ok(database);
         }
 
@@ -154,16 +150,15 @@
         {
             if (WindowDialogHelper.SaveFileDialog(fileName: report.ReportName, defaultExt: "VPAX", out var path, cancellationToken))
             {
-                using var stream = _pbidesktopService.ExportVpax(report, includeTomModel: false, includeVpaModel: false, readStatisticsFromData: false, sampleRows: 0);
+                using var stream = _pbidesktopService.GetVpax(report);
+                cancellationToken.ThrowIfCancellationRequested();
                 
-                if (!cancellationToken.IsCancellationRequested)
-                {
-                    using var fileStream = System.IO.File.Create(path);
-                    stream.Seek(0, SeekOrigin.Begin);
-                    stream.CopyTo(fileStream);
+                using var fileStream = System.IO.File.Create(path);
+                stream.Seek(0, SeekOrigin.Begin);
+                stream.CopyTo(fileStream);
 
-                    return Ok();
-                }
+                return Ok();
+                
             }
 
             return NoContent();
@@ -190,16 +185,14 @@
 
             if (WindowDialogHelper.SaveFileDialog(fileName: dataset.DisplayName, defaultExt: "VPAX", out var path, cancellationToken))
             {
-                using var stream = _pbicloudService.ExportVpax(dataset, includeTomModel: false, includeVpaModel: false, readStatisticsFromData: false, sampleRows: 0);
+                using var stream = _pbicloudService.GetVpax(dataset);
+                cancellationToken.ThrowIfCancellationRequested();
 
-                if (!cancellationToken.IsCancellationRequested)
-                {
-                    using var fileStream = System.IO.File.Create(path);
-                    stream.Seek(0, SeekOrigin.Begin);
-                    stream.CopyTo(fileStream);
+                using var fileStream = System.IO.File.Create(path);
+                stream.Seek(0, SeekOrigin.Begin);
+                stream.CopyTo(fileStream);
 
-                    return Ok();
-                }
+                return Ok();
             }
 
             return NoContent();

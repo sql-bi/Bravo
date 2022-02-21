@@ -89,6 +89,8 @@
 
         public ExportDataJob ExportDelimitedTextFile(PBICloudDataset dataset, ExportDelimitedTextSettings settings, CancellationToken cancellationToken)
         {
+            BravoUnexpectedException.ThrowIfNull(_pbicloudService.CurrentAccessToken);
+
             var (connectionString, databaseName) = dataset.GetConnectionParameters(_pbicloudService.CurrentAccessToken);
             var job = _datasetJobs.AddNew(dataset, settings);
 
@@ -146,6 +148,8 @@
 
         public ExportDataJob ExportExcelFile(PBICloudDataset dataset, ExportExcelSettings settings, CancellationToken cancellationToken)
         {
+            BravoUnexpectedException.ThrowIfNull(_pbicloudService.CurrentAccessToken);
+
             var (connectionString, databaseName) = dataset.GetConnectionParameters(_pbicloudService.CurrentAccessToken);
             var job = _datasetJobs.AddNew(dataset, settings);
 

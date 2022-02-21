@@ -4,7 +4,9 @@
     using Sqlbi.Bravo.Infrastructure;
     using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Infrastructure.Helpers;
+    using Sqlbi.Bravo.Infrastructure.Services;
     using Sqlbi.Bravo.Models;
+    using Sqlbi.Bravo.Models.AnalyzeModel;
     using Sqlbi.Bravo.Models.FormatDax;
     using System;
     using System.Collections.Concurrent;
@@ -24,7 +26,9 @@
 
         IEnumerable<PBIDesktopReport> GetReports(CancellationToken cancellationToken);
 
-        Stream ExportVpax(PBIDesktopReport report, bool includeTomModel, bool includeVpaModel, bool readStatisticsFromData, int sampleRows);
+        Stream GetVpax(PBIDesktopReport report);
+
+        TabularDatabase GetDatabase(PBIDesktopReport report);
 
         string Update(PBIDesktopReport report, IEnumerable<FormattedMeasure> measures);
     }
@@ -38,12 +42,14 @@
 
             foreach (var process in processes)
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 var report = new PBIDesktopReport
                 {
                     ProcessId = process.Id,
                     ReportName = process.GetPBIDesktopMainWindowTitle(),
 
-                    // We leave the connection properties empty because we are only interested in the process state and to return the results as fast as possible 
+                    // Ignore as they are not used on the UI side when querying for reports
                     ServerName = null,
                     DatabaseName = null,
                     ConnectionMode = PBIDesktopReportConnectionMode.Unknown,
@@ -117,9 +123,9 @@
                     }
 
                     using var server = new TOM.Server();
+                    var connectionString = ConnectionStringHelper.BuildForPBIDesktop(ssasConnection.EndPoint);
                     try
                     {
-                        var connectionString = ConnectionStringHelper.BuildForPBIDesktop(ssasConnection.EndPoint);
                         server.Connect(connectionString);
                     }
                     catch (Exception ex)
@@ -131,7 +137,7 @@
                         return;
                     }
 
-                    if (server.CompatibilityMode != CompatibilityMode.PowerBI)
+                    if (server.CompatibilityMode != CompatibilityMode.PowerBI && server.CompatibilityMode != CompatibilityMode.AnalysisServices)
                     {
                         connectivityMode = PBIDesktopReportConnectionMode.UnsupportedAnalysisServecesUnexpectedCompatibilityMode;
                         return;
@@ -161,15 +167,44 @@
             }
         }
 
-        public Stream ExportVpax(PBIDesktopReport report, bool includeTomModel, bool includeVpaModel, bool readStatisticsFromData, int sampleRows)
+        public Stream GetVpax(PBIDesktopReport report)
         {
-            var stream = VpaxToolsHelper.ExportVpax(report.ServerName!, report.DatabaseName!, includeTomModel, includeVpaModel, readStatisticsFromData, sampleRows);
+            BravoUnexpectedException.ThrowIfNull(report.ServerName);
+            BravoUnexpectedException.ThrowIfNull(report.DatabaseName);
+
+            using var connection = TabularConnectionWrapper.ConnectTo(report);
+            var stream = VpaxToolsHelper.GetVpax(connection.Database);
+
             return stream;
+        }
+
+        public TabularDatabase GetDatabase(PBIDesktopReport report)
+        {
+            BravoUnexpectedException.ThrowIfNull(report.ServerName);
+            BravoUnexpectedException.ThrowIfNull(report.DatabaseName);
+
+            using var connection = TabularConnectionWrapper.ConnectTo(report);
+            var database = VpaxToolsHelper.GetDatabase(connection.Database);
+            {
+                database.Features = AppFeature.All;
+
+                if (connection.Database.ReadWriteMode == ReadWriteMode.ReadOnly)
+                    database.Features &= ~AppFeature.AllUpdateModel;
+
+                if (connection.Server.IsPowerBIDesktop() == false)
+                    database.Features &= ~AppFeature.ManageDatesAll;
+            }
+            return database;
         }
 
         public string Update(PBIDesktopReport report, IEnumerable<FormattedMeasure> measures)
         {
-            var databaseETag = TabularModelHelper.Update(report.ServerName!, report.DatabaseName!, measures);
+            BravoUnexpectedException.ThrowIfNull(report.ServerName);
+            BravoUnexpectedException.ThrowIfNull(report.DatabaseName);
+
+            using var connection = TabularConnectionWrapper.ConnectTo(report);
+            var databaseETag = TabularModelHelper.Update(connection.Database, measures);
+
             return databaseETag;
         }
     }
