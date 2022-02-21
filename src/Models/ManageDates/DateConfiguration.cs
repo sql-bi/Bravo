@@ -12,6 +12,11 @@
 
     public class DateConfiguration
     {
+        internal const string DateTemplateClassName = "CustomDateTable";
+        internal const string HolidaysTemplateClassName = "HolidaysTable";
+        internal const string HolidaysDefinitionTemplateClassName = "HolidaysDefinitionTable";
+        internal const string TimeIntelligenceTemplateClassName = "MeasuresTemplate";
+
         /// <summary>
         /// For internal use only, not to be shown in Bravo UI
         /// </summary>
@@ -196,7 +201,7 @@
             //
             // Date (Dax.Template.Tables.Dates.CustomDateTable)
             //
-            var dateTemplateEntry = templateConfiguration.Templates?.SingleOrDefault((entry) => entry.Class?.Equals("CustomDateTable") ?? false);
+            var dateTemplateEntry = templateConfiguration.Templates?.SingleOrDefault((entry) => entry.Class?.Equals(DateTemplateClassName) ?? false);
             {
                 if (dateTemplateEntry is not null)
                 {
@@ -217,8 +222,8 @@
             //
             // Holidays (Dax.Template.Tables.Dates.HolidaysTable + Dax.Template.Tables.Dates.HolidaysDefinitionTable)
             //
-            var holidaysTemplateEntry = templateConfiguration.Templates?.SingleOrDefault((entry) => entry.Class?.Equals("HolidaysTable") ?? false);
-            var holidaysDefinitionTemplateEntry = templateConfiguration.Templates?.SingleOrDefault((entry) => entry.Class?.Equals("HolidaysDefinitionTable") ?? false);
+            var holidaysTemplateEntry = templateConfiguration.Templates?.SingleOrDefault((entry) => entry.Class?.Equals(HolidaysTemplateClassName) ?? false);
+            var holidaysDefinitionTemplateEntry = templateConfiguration.Templates?.SingleOrDefault((entry) => entry.Class?.Equals(HolidaysDefinitionTemplateClassName) ?? false);
             {
                 if (holidaysTemplateEntry is not null)
                 {
@@ -242,7 +247,7 @@
             //
             // Time Intelligence (Dax.Template.Measures.MeasuresTemplateDefinition.MeasureTemplate)
             //
-            var timeintelligenceTemplateEntry = templateConfiguration.Templates?.SingleOrDefault((entry) => entry.Class?.Equals("MeasuresTemplate") ?? false);
+            var timeintelligenceTemplateEntry = templateConfiguration.Templates?.SingleOrDefault((entry) => entry.Class?.Equals(TimeIntelligenceTemplateClassName) ?? false);
             {
                 if (timeintelligenceTemplateEntry is not null)
                 {
@@ -262,6 +267,11 @@
 
         public static DateConfiguration CreateFrom(Dax.Template.Package package)
         {
+            var dateTemplateEntry = package.Configuration.Templates?.SingleOrDefault((entry) => entry.Class?.Equals(DateTemplateClassName) ?? false);
+            var holidaysTemplateEntry = package.Configuration.Templates?.SingleOrDefault((entry) => entry.Class?.Equals(HolidaysTemplateClassName) ?? false);
+            var holidaysDefinitionTemplateEntry = package.Configuration.Templates?.SingleOrDefault((entry) => entry.Class?.Equals(HolidaysDefinitionTemplateClassName) ?? false);
+            var timeintelligenceTemplateEntry = package.Configuration.Templates?.SingleOrDefault((entry) => entry.Class?.Equals(TimeIntelligenceTemplateClassName) ?? false);
+
             var configuration = new DateConfiguration
             {
                 TemplateUri = package.Configuration.TemplateUri,
@@ -296,7 +306,13 @@
                 //
                 // ICustomTableConfig
                 //
-                Defaults = DateDefaults.CreateFrom(package.Configuration)
+                Defaults = DateDefaults.CreateFrom(package.Configuration),
+                //
+                // Enable disable templates
+                //
+                DateEnabled = dateTemplateEntry is not null,
+                HolidaysEnabled = holidaysTemplateEntry is not null && holidaysDefinitionTemplateEntry is not null,
+                TimeIntelligenceEnabled = timeintelligenceTemplateEntry is not null,
             };
 
             return configuration;
@@ -323,8 +339,10 @@
                 var customizedPackage = Dax.Template.Package.LoadFromFile(customizedPackagePath);
                 return customizedPackage;
             }
-
-            throw new NotImplementedException();
+            else
+            {
+                throw new NotImplementedException();
+            }
         }
     }
 

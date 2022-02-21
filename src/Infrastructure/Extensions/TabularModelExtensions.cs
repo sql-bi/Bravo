@@ -5,16 +5,29 @@
     using Microsoft.AnalysisServices;
     using TOM = Microsoft.AnalysisServices.Tabular;
 
-    internal static class XmlaResultExtensions
+    internal static class ModelOperationResultExtensions
     {
-        public static string ToDescriptionString(this XmlaResultCollection results)
+        public static string? ToDescriptionString(this TOM.ModelOperationResult operationResult)
         {
-            var descriptions = results.OfType<XmlaResult>()
+            var xmlaResults = operationResult.XmlaResults;
+            if (xmlaResults is null)
+                return null;
+
+            var descriptions = xmlaResults.OfType<XmlaResult>()
                 .SelectMany((r) => r.Messages.OfType<XmlaMessage>())
                 .Select((m) => m.Description)
                 .ToArray();
 
             return string.Join(Environment.NewLine, descriptions);
+        }
+
+        public static void ThrowOnError(this TOM.ModelOperationResult operationResult)
+        {
+            if (operationResult.XmlaResults is not null)
+            {
+                var message = operationResult.ToDescriptionString();
+                throw new BravoException(BravoProblem.TOMDatabaseUpdateFailed, message!);
+            }
         }
     }
 
