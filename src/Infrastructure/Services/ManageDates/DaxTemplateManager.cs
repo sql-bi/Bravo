@@ -2,6 +2,7 @@
 {
     using Dax.Template;
     using Dax.Template.Model;
+    using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Models.ManageDates;
     using System;
     using System.Collections.Generic;
@@ -54,8 +55,8 @@
 
             engine.ApplyTemplates(connection.Model, cancellationToken);
 
-            // TODO: handle SaveChanges() errors
-            connection.Model.SaveChanges();
+            if (connection.Model.HasLocalChanges)
+                connection.Model.SaveChanges().ThrowOnError();
         }
 
         private void EnsureCalcheInitialized()

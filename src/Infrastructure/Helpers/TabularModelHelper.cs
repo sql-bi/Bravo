@@ -49,13 +49,7 @@
             if (database.Model.HasLocalChanges)
             {
                 database.Update();
-
-                var saveResult = database.Model.SaveChanges();
-                if (saveResult.XmlaResults?.ContainsErrors == true)
-                {
-                    var message = saveResult.XmlaResults.ToDescriptionString();
-                    throw new BravoException(BravoProblem.TOMDatabaseUpdateFailed, message);
-                }
+                database.Model.SaveChanges().ThrowOnError();
 
                 database.Refresh();
                 databaseETag = GetDatabaseETag(database.Name, database.Version, database.LastUpdate);
