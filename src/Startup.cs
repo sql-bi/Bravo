@@ -89,6 +89,7 @@
             services.AddSingleton<IExportDataService, ExportDataService>();
             services.AddSingleton<IDaxFormatterClient, DaxFormatterClient>();
             services.AddSingleton<IManageDatesService, ManageDatesService>();
+            services.AddSingleton<IBestPracticeAnalyzerService, BestPracticeAnalyzerService>();
             // services.AddHostedService<ApplicationInstanceHostedService>();
         }
 

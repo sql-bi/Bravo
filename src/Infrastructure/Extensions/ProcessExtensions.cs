@@ -118,12 +118,20 @@
         {
             var windowTitle = process.GetMainWindowTitle((windowTitle) => windowTitle.IsPBIDesktopMainWindowTitle());
 
-            // PBIDesktop is opening or the SSAS instance/model is not yet ready
-            if (string.IsNullOrWhiteSpace(windowTitle))
+            if (windowTitle.IsNullOrWhiteSpace())
+            {
+                // PBIDesktop is opening or the SSAS instance/model is not yet ready
                 return null;
+            }
+            
+            var index = windowTitle.LastIndexOf(AppEnvironment.PBIDesktopMainWindowTitleSuffix);
+            if (index >= 0)
+            {
+                windowTitle = windowTitle[..index];
+                return windowTitle;
+            }
 
-            windowTitle = windowTitle.ToPBIDesktopReportName();
-            return windowTitle;
+            return null;
         }
     }
 }
