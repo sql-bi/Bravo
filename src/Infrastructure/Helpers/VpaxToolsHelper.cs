@@ -27,14 +27,6 @@
             return stream;
         }
 
-        public static TabularDatabase GetDatabase(TOM.Database database)
-        {
-            var daxModel = GetDaxModel(database);
-            var tabularDatabase = GetDatabase(daxModel);
-
-            return tabularDatabase;
-        }
-
         public static TabularDatabase GetDatabase(Stream stream)
         {
             VpaxTools.VpaxContent vpaxContent;
@@ -48,6 +40,23 @@
             }
 
             var tabularDatabase = GetDatabase(vpaxContent.DaxModel);
+            {
+                tabularDatabase.Features = AppFeature.All;
+                tabularDatabase.Features &= ~AppFeature.AnalyzeModelSynchronize;
+                tabularDatabase.Features &= ~AppFeature.AnalyzeModelExportVpax;
+                tabularDatabase.Features &= ~AppFeature.FormatDaxSynchronize;
+                tabularDatabase.Features &= ~AppFeature.FormatDaxUpdateModel;
+                tabularDatabase.Features &= ~AppFeature.ManageDatesAll;
+                tabularDatabase.Features &= ~AppFeature.ExportDataAll;
+            }
+            return tabularDatabase;
+        }
+
+        public static TabularDatabase GetDatabase(TOM.Database database)
+        {
+            var daxModel = GetDaxModel(database);
+            var tabularDatabase = GetDatabase(daxModel);
+
             return tabularDatabase;
         }
 

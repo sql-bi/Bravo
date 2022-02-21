@@ -20,6 +20,7 @@
     using System.Net.Http.Headers;
     using System.Text.Json;
     using System.Threading.Tasks;
+    using SSAS = Microsoft.AnalysisServices;
 
     public interface IPBICloudService
     {
@@ -297,7 +298,13 @@
 
             using var connection = TabularConnectionWrapper.ConnectTo(dataset, CurrentAuthentication.AccessToken);
             var database = VpaxToolsHelper.GetDatabase(connection.Database);
+            {
+                database.Features = AppFeature.All;
+                database.Features &= ~AppFeature.ManageDatesAll;
 
+                if (connection.Database.ReadWriteMode == SSAS.ReadWriteMode.ReadOnly)
+                    database.Features &= ~AppFeature.AllUpdateModel;
+            }
             return database;
         }
 

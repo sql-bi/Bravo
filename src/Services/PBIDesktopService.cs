@@ -137,7 +137,7 @@
                         return;
                     }
 
-                    if (server.CompatibilityMode != CompatibilityMode.PowerBI)
+                    if (server.CompatibilityMode != CompatibilityMode.PowerBI && server.CompatibilityMode != CompatibilityMode.AnalysisServices)
                     {
                         connectivityMode = PBIDesktopReportConnectionMode.UnsupportedAnalysisServecesUnexpectedCompatibilityMode;
                         return;
@@ -185,7 +185,15 @@
 
             using var connection = TabularConnectionWrapper.ConnectTo(report);
             var database = VpaxToolsHelper.GetDatabase(connection.Database);
+            {
+                database.Features = AppFeature.All;
 
+                if (connection.Database.ReadWriteMode == ReadWriteMode.ReadOnly)
+                    database.Features &= ~AppFeature.AllUpdateModel;
+
+                if (connection.Server.IsPowerBIDesktop() == false)
+                    database.Features &= ~AppFeature.ManageDatesAll;
+            }
             return database;
         }
 
