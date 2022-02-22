@@ -115,10 +115,6 @@
             {
                 throw new BravoException(BravoProblem.SignInMsalTimeoutExpired);
             }
-            catch (MsalException mex)
-            {
-                throw new BravoException(BravoProblem.SignInMsalExceptionOccurred, mex.ErrorCode, mex);
-            }
 
            RefreshCurrentAccount();
         }
@@ -287,7 +283,7 @@
             BravoUnexpectedException.ThrowIfNull(CurrentAuthentication?.AccessToken);
 
             using var connection = TabularConnectionWrapper.ConnectTo(dataset, CurrentAuthentication.AccessToken);
-            var stream = VpaxToolsHelper.GetVpax(connection.Database);
+            var stream = VpaxToolsHelper.GetVpax(connection);
 
             return stream;
         }
@@ -297,7 +293,7 @@
             BravoUnexpectedException.ThrowIfNull(CurrentAuthentication?.AccessToken);
 
             using var connection = TabularConnectionWrapper.ConnectTo(dataset, CurrentAuthentication.AccessToken);
-            var database = VpaxToolsHelper.GetDatabase(connection.Database);
+            var database = VpaxToolsHelper.GetDatabase(connection);
             {
                 database.Features = AppFeature.All;
                 database.Features &= ~AppFeature.ManageDatesAll;

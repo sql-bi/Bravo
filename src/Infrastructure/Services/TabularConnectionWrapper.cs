@@ -1,17 +1,20 @@
 ﻿namespace Sqlbi.Bravo.Infrastructure.Services
 {
+    using Microsoft.AnalysisServices.AdomdClient;
     using Sqlbi.Bravo.Infrastructure.Helpers;
+    using Sqlbi.Bravo.Infrastructure.Security;
     using Sqlbi.Bravo.Models;
     using System;
     using TOM = Microsoft.AnalysisServices.Tabular;
 
     internal class TabularConnectionWrapper : IDisposable
     {
-        //private readonly object _connectionSyncLock = new();
-        //private AdomdConnection? _connection;
+        private readonly string _connectionString;
 
-        public TabularConnectionWrapper(TOM.Server server, TOM.Database database)
+        public TabularConnectionWrapper(string connectionString, TOM.Server server, TOM.Database database)
         {
+            _connectionString = connectionString;
+
             Server = server;
             Database = database;
         }
@@ -22,30 +25,14 @@
 
         public TOM.Model Model => Database.Model;
 
-        //public AdomdConnection Connection
-        //{
-        //    get
-        //    {
-        //        if (_connection is null)
-        //        {
-        //            lock (_connectionSyncLock)
-        //            {
-        //                if (_connection is null)
-        //                {
-        //                    _connection = new AdomdConnection(Server.ConnectionString);
-        //                    _connection.Open();
-        //                }
-        //            }
-        //        }
-
-        //        return _connection;
-        //    }
-        //}
+        public AdomdConnection CreateConnection()
+        {
+            var connection = new AdomdConnection(_connectionString.ToUnprotectedString());
+            return connection;
+        }
 
         public void Dispose()
         {
-            //_connection?.Dispose();
-
             Database.Dispose();
             Server.Dispose();
         }
@@ -72,10 +59,10 @@
         private static TabularConnectionWrapper ConnectTo(string connectionString, string databaseName)
         {
             var server = new TOM.Server();
-            server.Connect(connectionString);
+            server.Connect(connectionString.ToUnprotectedString());
 
             var database = server.Databases.FindByName(databaseName) ?? throw new BravoException(BravoProblem.TOMDatabaseDatabaseNotFound, databaseName);
-            var connection = new TabularConnectionWrapper(server, database);
+            var connection = new TabularConnectionWrapper(connectionString, server, database);
 
             return connection;
         }

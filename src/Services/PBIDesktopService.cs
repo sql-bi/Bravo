@@ -4,6 +4,7 @@
     using Sqlbi.Bravo.Infrastructure;
     using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Infrastructure.Helpers;
+    using Sqlbi.Bravo.Infrastructure.Security;
     using Sqlbi.Bravo.Infrastructure.Services;
     using Sqlbi.Bravo.Models;
     using Sqlbi.Bravo.Models.AnalyzeModel;
@@ -126,7 +127,7 @@
                     var connectionString = ConnectionStringHelper.BuildForPBIDesktop(ssasConnection.EndPoint);
                     try
                     {
-                        server.Connect(connectionString);
+                        server.Connect(connectionString.ToUnprotectedString());
                     }
                     catch (Exception ex)
                     {
@@ -173,7 +174,7 @@
             BravoUnexpectedException.ThrowIfNull(report.DatabaseName);
 
             using var connection = TabularConnectionWrapper.ConnectTo(report);
-            var stream = VpaxToolsHelper.GetVpax(connection.Database);
+            var stream = VpaxToolsHelper.GetVpax(connection);
 
             return stream;
         }
@@ -184,7 +185,7 @@
             BravoUnexpectedException.ThrowIfNull(report.DatabaseName);
 
             using var connection = TabularConnectionWrapper.ConnectTo(report);
-            var database = VpaxToolsHelper.GetDatabase(connection.Database);
+            var database = VpaxToolsHelper.GetDatabase(connection);
             {
                 database.Features = AppFeature.All;
 

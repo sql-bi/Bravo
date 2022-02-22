@@ -23,7 +23,7 @@
 
         public static void ThrowOnError(this TOM.ModelOperationResult operationResult)
         {
-            if (operationResult.XmlaResults is not null)
+            if (operationResult.XmlaResults?.ContainsErrors == true)
             {
                 var message = operationResult.ToDescriptionString();
                 throw new BravoException(BravoProblem.TOMDatabaseUpdateFailed, message!);

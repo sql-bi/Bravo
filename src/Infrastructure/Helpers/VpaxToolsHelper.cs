@@ -4,22 +4,21 @@
     using Dax.Metadata.Extractor;
     using Dax.ViewModel;
     using Dax.Vpax.Tools;
-    using Microsoft.AnalysisServices.AdomdClient;
     using Sqlbi.Bravo.Infrastructure.Extensions;
+    using Sqlbi.Bravo.Infrastructure.Services;
     using Sqlbi.Bravo.Models.AnalyzeModel;
     using Sqlbi.Bravo.Models.FormatDax;
     using System.IO;
     using System.Linq;
-    using TOM = Microsoft.AnalysisServices.Tabular;
 
     internal static class VpaxToolsHelper
     {
-        public static Stream GetVpax(TOM.Database database, bool includeVpaModel = false, bool includeTomDatabase = false, bool readStatisticsFromData = false, int sampleRows = 0)
+        public static Stream GetVpax(TabularConnectionWrapper connection, bool includeVpaModel = false, bool includeTomDatabase = false, bool includetatistics = false, int sampleRows = 0)
         {
-            var daxModel = GetDaxModel(database);
+            var daxModel = GetDaxModel(connection, includetatistics, sampleRows);
             var vpaModel = includeVpaModel ? new Dax.ViewVpaExport.Model(daxModel) : null;
-            var tomDatabase = includeTomDatabase ? (Microsoft.AnalysisServices.Database)database.Model.Database : null; // TOFIX: VertiPaq-Analyzer NuGet package - change tomModel from 'Microsoft.AnalysisServices.Database' to 'Microsoft.AnalysisServices.Tabular.Database'
-            
+            var tomDatabase = includeTomDatabase ? (Microsoft.AnalysisServices.Database)connection.Database.Model.Database : null; // TOFIX: VertiPaq-Analyzer NuGet package - change tomModel from 'Microsoft.AnalysisServices.Database' to 'Microsoft.AnalysisServices.Tabular.Database'
+
             var stream = new MemoryStream();
             {
                 VpaxTools.ExportVpax(stream, daxModel, vpaModel, tomDatabase);
@@ -52,9 +51,9 @@
             return tabularDatabase;
         }
 
-        public static TabularDatabase GetDatabase(TOM.Database database)
+        public static TabularDatabase GetDatabase(TabularConnectionWrapper connection)
         {
-            var daxModel = GetDaxModel(database);
+            var daxModel = GetDaxModel(connection);
             var tabularDatabase = GetDatabase(daxModel);
 
             return tabularDatabase;
@@ -138,11 +137,12 @@
             }
         }
 
-        private static Model GetDaxModel(TOM.Database database, bool includeStatistics = false, int sampleRows = 0)
+        private static Model GetDaxModel(TabularConnectionWrapper connectionWrapper, bool includeStatistics = false, int sampleRows = 0)
         {
+            var database = connectionWrapper.Database;
             var daxModel = TomExtractor.GetDaxModel(database.Model, extractorApp: AppEnvironment.ApplicationName, extractorVersion: AppEnvironment.ApplicationProductVersion);
 
-            using var connection = new AdomdConnection(database.Parent.ConnectionString);
+            using var connection = connectionWrapper.CreateConnection();
             {
                 DmvExtractor.PopulateFromDmv(
                     daxModel,
