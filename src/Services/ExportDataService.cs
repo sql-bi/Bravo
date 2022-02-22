@@ -8,6 +8,7 @@
     using Sqlbi.Bravo.Infrastructure;
     using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Infrastructure.Helpers;
+    using Sqlbi.Bravo.Infrastructure.Security;
     using Sqlbi.Bravo.Infrastructure.Services.ExportData;
     using Sqlbi.Bravo.Models;
     using Sqlbi.Bravo.Models.ExportData;
@@ -199,7 +200,7 @@
                 config.Validate();
             }
 
-            using var connection = new AdomdConnection(connectionString);
+            using var connection = new AdomdConnection(connectionString.ToUnprotectedString());
             connection.Open();
             connection.ChangeDatabase(databaseName);
 
@@ -276,7 +277,7 @@
             BravoUnexpectedException.ThrowIfNull(xlsxFile.Directory);
             Directory.CreateDirectory(xlsxFile.Directory.FullName);
 
-            using var connection = new AdomdConnection(connectionString);
+            using var connection = new AdomdConnection(connectionString.ToUnprotectedString());
             connection.Open();
             connection.ChangeDatabase(databaseName);
 

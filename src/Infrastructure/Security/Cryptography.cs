@@ -28,13 +28,23 @@
         /// </summary>
         public static string MD5Hash(byte[][] buffers)
         {
+            var buffer = buffers.SelectMany((x) => x).ToArray(); // flatten byte arrays into a one-byte array (concatenate)
+            var hash = MD5Hash(buffer);
+
+            return hash;
+        }
+
+        /// <summary>
+        /// Encodes the provided buffers into an MD5 hashed string
+        /// </summary>
+        public static string MD5Hash(byte[] buffer)
+        {
             using var md5 = MD5.Create();
             md5.Initialize();
 
-            var buffer = buffers.SelectMany((x) => x).ToArray(); // flatten byte arrays into a one-byte array (concatenate)
             var hashBytes = md5.ComputeHash(buffer);
-
             var hash = BitConverter.ToString(hashBytes).Replace("-", string.Empty);
+
             return hash;
         }
 
@@ -44,13 +54,11 @@
                 return null;
 
             using var algorithm = new SHA256Managed();
-
             var stringBuilder = new StringBuilder();
 
             var buffer = Encoding.UTF8.GetBytes(value);
             var offset = 0;
             var count = Encoding.UTF8.GetByteCount(value);
-
             var bytes = algorithm.ComputeHash(buffer, offset, count);
 
             foreach (var @byte in bytes)
@@ -73,12 +81,27 @@
     {
         public static string? ToSHA256Hash(this string value) => Cryptography.SHA256Hash(value);
 
-        /// <summary>
-        /// Converts SecureString to a DPAPI protected Base64 string
-        /// </summary>
-        public static string ToProtectedString(this SecureString secure)
+        public static string ToProtectedString(this string unprotectedString)
         {
-            var unsecuredChars = new char[secure.Length];
+            var unprotectedBytes = Encoding.Unicode.GetBytes(unprotectedString);
+            var protectedBytes = Cryptography.Protect(unprotectedBytes);
+            var protectedString = Convert.ToBase64String(protectedBytes);
+
+            return protectedString;
+        }
+
+        public static string ToUnprotectedString(this string protectedString)
+        {
+            var protectedBytes = Convert.FromBase64String(protectedString);
+            var unprotectedBytes = Cryptography.Unprotect(protectedBytes);
+            var unprotectedString = Encoding.Unicode.GetString(unprotectedBytes);
+
+            return unprotectedString;
+        }
+
+        public static string ToProtectedString(this SecureString secureString)
+        {
+            var unsecuredChars = new char[secureString.Length];
             try
             {
                 var gch = GCHandle.Alloc(unsecuredChars, GCHandleType.Pinned);
@@ -87,13 +110,15 @@
                     var ptr = IntPtr.Zero;
                     try
                     {
-                        ptr = Marshal.SecureStringToGlobalAllocUnicode(secure);
+                        ptr = Marshal.SecureStringToGlobalAllocUnicode(secureString);
                         Marshal.Copy(ptr, unsecuredChars, 0, unsecuredChars.Length);
                         var unsecuredBytes = Encoding.Unicode.GetBytes(unsecuredChars);
                         try
                         {
                             var protectedBytes = Cryptography.Protect(unsecuredBytes);
-                            return Convert.ToBase64String(protectedBytes);
+                            var protectedString = Convert.ToBase64String(protectedBytes);
+
+                            return protectedString;
                         }
                         finally
                         {
@@ -116,10 +141,6 @@
             }
         }
 
-        /// <summary>
-        /// Converts the results of the ToProtectedString() method to SecureString
-        /// </summary>
-        /// <param name="protectedString">Protected string returned from method ToProtectedString()</param>
         public static SecureString ToSecureString(this string protectedString)
         {
             var protectedBytes = Convert.FromBase64String(protectedString);
@@ -133,7 +154,7 @@
 
                     foreach (var @char in unprotectedChars)
                         secureString.AppendChar(@char);
-                    
+
                     secureString.MakeReadOnly();
                     return secureString;
                 }

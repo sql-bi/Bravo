@@ -1,5 +1,6 @@
 ﻿namespace Sqlbi.Bravo.Infrastructure.Helpers
 {
+    using Sqlbi.Bravo.Infrastructure.Security;
     using System.Data.OleDb;
     using System.Net;
 
@@ -43,7 +44,7 @@
                 { ApplicationNameKey, AppEnvironment.ApplicationInstanceUniqueName }
             };
 
-            return builder.ConnectionString;
+            return builder.ConnectionString.ToProtectedString();
         }
 
         public static string BuildForPBICloudDataset(string serverName, string databaseName, string accessToken)
@@ -61,7 +62,7 @@
                 //{ UseEncryptionForDataKey, "True" },
             };
 
-            return builder.ConnectionString;
+            return builder.ConnectionString.ToProtectedString();
         }
     }
 }
