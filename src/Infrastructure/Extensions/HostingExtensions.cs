@@ -9,6 +9,7 @@
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Options;
+    using Microsoft.Identity.Client;
     using Sqlbi.Bravo.Infrastructure.Authentication;
     using Sqlbi.Bravo.Infrastructure.Configuration.Options;
     using Sqlbi.Bravo.Infrastructure.Helpers;
@@ -86,7 +87,7 @@
         {
             services.AddProblemDetails((options) =>
             {
-                // We include the details of the exception so that the UI can dispaly it and the user can potentially copy/paste/share the stack trace of the exception
+                // We include the details of the exception so that the UI can dispaly it and the user can view/copy/paste the stack trace of the exception
                 options.IncludeExceptionDetails = (context, exception) => true;
 
                 options.Map<BravoException>((context, exception) =>
@@ -96,6 +97,17 @@
                         statusCode: StatusCodes.Status400BadRequest,
                         detail: exception.ProblemDetail,
                         instance: exception.ProblemInstance);
+
+                    return problemDetails;
+                });
+
+                options.Map<MsalException>((context, exception) =>
+                {
+                    var problemDetailsFactory = context.RequestServices.GetRequiredService<ProblemDetailsFactory>();
+                    var problemDetails = problemDetailsFactory.CreateProblemDetails(context,
+                        statusCode: StatusCodes.Status400BadRequest,
+                        detail: exception.ErrorCode,
+                        instance: $"{ (int)BravoProblem.SignInMsalExceptionOccurred }");
 
                     return problemDetails;
                 });
@@ -110,17 +122,6 @@
 
                     return problemDetails;
                 });
-
-                //options.Map<TOM.AdomdException>((context, exception) =>
-                //{
-                //    var problemDetailsFactory = context.RequestServices.GetRequiredService<ProblemDetailsFactory>();
-                //    var problemDetails = problemDetailsFactory.CreateProblemDetails(context,
-                //        statusCode: StatusCodes.Status400BadRequest,
-                //        detail: exception.Message,
-                //        instance: $"{ (int)BravoProblem.AnalysisServicesConnectionFailed }");
-
-                //    return problemDetails;
-                //});
 
                 options.Map<OperationCanceledException>((context, exception) =>
                 {

@@ -115,10 +115,6 @@
             {
                 throw new BravoException(BravoProblem.SignInMsalTimeoutExpired);
             }
-            catch (MsalException mex)
-            {
-                throw new BravoException(BravoProblem.SignInMsalExceptionOccurred, mex.ErrorCode, mex);
-            }
 
            RefreshCurrentAccount();
         }
