@@ -1,5 +1,5 @@
 {
-  "Description": "Fiscal calendar",
+  "Description": "Custom calendar",
   "Templates": [
     {
       "Class": "HolidaysDefinitionTable",
@@ -44,7 +44,8 @@
   "LastYearMax": null,
   "AutoScan": "Full",
   "DefaultVariables": {
-    "__FirstFiscalMonth": "4"
+    "__FirstFiscalMonth": "4",
+    "__FirstDayOfWeek": "0"
   },
   "IsoCountry": "US",
   "InLieuOfPrefix": "(in lieu of ",
