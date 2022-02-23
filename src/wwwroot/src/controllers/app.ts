@@ -175,6 +175,20 @@ export class App {
             }
         });
 
+        // Catch expandable content
+        document.addLiveEventListener("click", ".expandable .expander", (e, element) => {
+            e.preventDefault();
+
+            let container = element.closest(".expandable");
+            if (!container.classList.contains("expanded")) {
+                element.innerText = element.dataset.less;
+                container.classList.add("expanded");
+            } else {
+                element.innerText = element.dataset.more;
+                container.classList.remove("expanded");
+            }
+        });
+
         // Catch host messages
         host.on(WebMessageType.ReportOpen, (data: PBIDesktopReportOpenWebMessage) => {
             this.openReport(data.report);
