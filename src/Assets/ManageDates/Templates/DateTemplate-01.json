@@ -56,7 +56,7 @@
     },
     {
       "Name": "__FiscalQuarterNumber",
-      "Expression": "FORMAT ( EOMONTH ( __Date, 1 - __FirstFiscalMonth ), \"@_FQ_@Q\" )"
+      "Expression": "FORMAT ( EOMONTH ( __Date, 1 - __FirstFiscalMonth ), \"@_FQ_@Q\"@@GETISO() )"
     },
     {
       "Name": "__HolidayName",

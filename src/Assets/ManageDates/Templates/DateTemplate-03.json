@@ -15,6 +15,12 @@
       "IsConfigurable": true
     },
     {
+      "Name": "__FirstDayOfWeek",
+      "Expression": "0",
+      "IsConfigurable": true,
+      "Comment": "0 = Sunday, 1 = Monday, ..."
+    },
+    {
       "Name": "__WorkingDays",
       "Expression": "@@GETCONFIG( WorkingDays )",
       "IsConfigurable": true
@@ -28,6 +34,10 @@
       "Name": "__NonWorkingDayType",
       "Expression": "\"Non-working day\"",
       "IsConfigurable": true
+    },
+    {
+      "Name": "__WeekDayCalculationType",
+      "Expression": "IF ( __FirstDayOfWeek = 0, 7, __FirstDayOfWeek ) + 10"
     }
   ],
   "RowVariables": [
@@ -83,6 +93,14 @@
         "    1 * ( MONTH ( ''[Date] ) <> 2 || DAY ( ''[Date] ) <> 29 )",
         ")"
       ]
+    },
+    {
+      "Name": "__WeekDayNumber",
+      "Expression": "WEEKDAY ( __Date, __WeekDayCalculationType )"
+    },
+    {
+      "Name": "__WeekDay",
+      "Expression": "FORMAT ( __Date, \"ddd\"@@GETISO() )"
     },
     {
       "Name": "__HolidayName",
@@ -199,7 +217,7 @@
     },
     {
       "Name": "Day of Week",
-      "Expression": "FORMAT ( __Date, \"ddd\"@@GETISO() )",
+      "Expression": "__WeekDay",
       "DataType": "String",
       "SortByColumn": "Day of Week Number",
       "AttributeType": "FiscalDayOfWeek",
@@ -210,7 +228,7 @@
     },
     {
       "Name": "Day of Week Number",
-      "Expression": "__FiscalMonthInQuarterNumber",
+      "Expression": "__WeekDayNumber",
       "DataType": "Int64",
       "IsHidden": true,
       "AttributeType": "FiscalDayOfWeek",
