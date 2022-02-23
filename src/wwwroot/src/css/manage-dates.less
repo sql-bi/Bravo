@@ -3,4 +3,71 @@
     h1 {
         .icon-manage-dates;
     }
+
+    .scene-content {
+        .flexbox(flex-start, stretch, column);
+
+        .cols {
+            height: 100%;
+            width: 100%;
+            .flex(0 1 auto);
+            overflow: auto;
+            margin-top: 35px;
+            
+            .coll {
+                width: 300px;
+                margin-right: 30px;
+                .flex(0 1 auto);
+                .flexbox(flex-start, flex-start, column);
+            }
+            .colr {
+                .flex(1 1 70%);
+                margin: 10px 0 20px 20px;
+    
+            }
+        }
+
+        .model-check {
+            padding: 15px 20px;
+            width: calc(100% - 40px);
+            height: calc(100% - 30px);
+            background: @window-back-color-alt;
+            border: 1px solid @border-color;
+            .border-radius();
+
+            .dark & { 
+                background: @window-back-color-alt-dark; 
+                border-color: @border-color-dark;
+            }
+        }
+
+        .menu-body-desc {
+            margin: 30px 0 20px 0;
+            font-size: 16px;
+            line-height: 1.4;
+            color: @notice-color;
+            max-width: 800px;
+
+            .dark & {
+                color: @notice-color-dark
+            }
+        }
+
+        .option {
+            max-width: 700px
+        }
+
+        .scene-action {
+            .flexbox(center, flex-end);
+            width: 100%;
+
+            .do-preview {
+                //margin-top: 10px;
+                margin-left: auto;
+            }
+        }
+    }
+
+
+
 }

@@ -145,8 +145,8 @@ export class OptionsController extends Dispatchable {
                         this.trigger("change", Utils.Obj.diff(this.defaultOptions, this.options));
                     }
                 })
-                .catch(error => {
-                    try { logger.logError(AppError.InitFromError(error)); } catch(ignore) {}
+                .catch((error: AppError) => {
+                    try { logger.logError(error); } catch(ignore) {}
                 });
         } else {
             try {

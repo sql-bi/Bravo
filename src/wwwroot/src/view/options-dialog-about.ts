@@ -79,7 +79,7 @@ export class OptionsDialogAbout {
                 <div>
                     <div class="pending-update">${i18n(strings.appUpdateAvailable, { version: pendingVersion.toString() })}</div>
                     <span class="button" href="${pendingVersion.info.downloadUrl}" target="downloader">${i18n(strings.appUpdateDownload)}</span> &nbsp; 
-                    <span class="button button-alt" href="${pendingVersion.info.changelogUrl}">${i18n(strings.appUpdateChangelog)}</span>
+                    <span class="link" href="${pendingVersion.info.changelogUrl}">${i18n(strings.appUpdateChangelog)}</span>
                 </div>
             ` : `
                 <div class="up-to-date">${i18n(strings.appUpToDate)}</div>

@@ -19,6 +19,8 @@ import { ThemeType } from './theme';
 import { i18n } from '../model/i18n';
 import { strings } from '../model/strings';
 import { LogMessageObj } from './logger';
+import { DateConfiguration } from '../model/dates';
+import { ModelChanges } from '../model/model-changes';
 
 declare global {
     
@@ -133,6 +135,18 @@ export interface ExportExcelFromPBIReportRequest{
 export interface ExportExcelFromPBICloudDatasetRequest{
     settings: ExportExcelSettings
     dataset: PBICloudDataset
+}
+
+export interface ManageDatesPBIDesktopReportConfigurationRequest {
+    configuration: DateConfiguration
+    report: PBIDesktopReport
+}
+export interface ManageDatesPreviewChangesFromPBIDesktopReportRequest {
+    settings: {
+        configuration: DateConfiguration
+        previewRows: number
+    }
+    report: PBIDesktopReport
 }
 
 export interface BravoUpdate {
@@ -501,6 +515,31 @@ export class Host extends Dispatchable {
             actions.push(`api/Export${format}From${type == DocType.dataset ? "Dataset" : "Report"}`);
         });
         this.apiAbortByAction(actions);
+    }
+
+    /* Manage Dates */
+    manageDatesGetConfigurations(datasource: PBIDesktopReport) {
+        return <Promise<DateConfiguration[]>>this.apiCall("ManageDates/GetConfigurationsForReport", datasource, { method: "POST" });
+    }
+
+    manageDatesValidateConfiguration(request: ManageDatesPBIDesktopReportConfigurationRequest) {
+        return <Promise<DateConfiguration>>this.apiCall("ManageDates/ValidateConfigurationForReport", request, { method: "POST" });
+    }
+
+    manageDatesPreviewChanges(request: ManageDatesPreviewChangesFromPBIDesktopReportRequest) {
+        return <Promise<ModelChanges>>this.apiCall("ManageDates/GetPreviewChangesFromReport", request, { method: "POST" });
+    }
+
+    abortManageDatesPreviewChanges() {
+        this.apiAbortByAction("ManageDates/GetPreviewChangesFromReport");
+    }
+
+    manageDatesUpdate(request: ManageDatesPBIDesktopReportConfigurationRequest) {
+        return this.apiCall("ManageDates/UpdateReport", request, { method: "POST" });
+    }
+
+    abortManageDatesUpdate() {
+        this.apiAbortByAction("ManageDates/UpdateReport");
     }
 
     /* Application */

@@ -127,6 +127,11 @@ export module Utils {
             return text.toLowerCase().replace(/[^a-zA-Z0-9]+(.)/g, (m, chr) => chr.toUpperCase());
         }
 
+        export function pascalCase(text: string): string {
+            let cText = Utils.Text.camelCase(text);
+            return cText.substring(0, 1).toUpperCase() + cText.substring(1);
+        }
+
         export function uuid(): string {
             const pad4 = function(num: number) {
                 var ret = num.toString(16);

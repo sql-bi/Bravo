@@ -126,7 +126,17 @@ const locale: Locale = {
         [_.hideUnsupportedCtrlTitle]: "Solo supportati",
         [_.license]: "Rilasciato con licenza MIT.",
         [_.loading]: "Caricamento...",
+
         [_.ManageDates]: "Gestisci Date",
+        [_.manageDatesModelCheck]: "Stato Modello",
+        [_.manageDatesMenuCalendar]: "Calendario",
+        [_.manageDatesMenuInterval]: "Intervallo Date",
+        [_.manageDatesMenuHolidays]: "Vacanze",
+        [_.manageDatesMenuTimeIntelligence]: "Time Intelligence",
+        [_.manageDatesMenuLocalization]: "Localizzazione",
+        [_.manageDatesPreviewCtrlTitle]: "Anteprima",
+        [_.manageDatesApplyCtrlTitle]: "Applica",
+
         [_.menuCtrlTitle]: "Mostra/Nascondi menu",
         [_.minimizeCtrlTitle]: "Riduci",
         [_.notificationCtrlTitle]: "Notifiche",
