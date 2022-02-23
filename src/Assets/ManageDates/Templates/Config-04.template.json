@@ -1,5 +1,5 @@
 {
-  "Description": "Custom calendar based on months with custom time intelligence",
+  "Description": "Weekly calendar",
   "Templates": [
     {
       "Class": "HolidaysDefinitionTable",
@@ -10,31 +10,36 @@
     {
       "Class": "HolidaysTable",
       "Table": "Holidays",
-      "Template": null
+      "Template": null,
+      "IsHidden": true
     },
     {
       "Class": "CustomDateTable",
       "Table": "Date",
       "ReferenceTable": "DateAutoTemplate",
-      "Template": "DateTemplate-03.json",
-      "LocalizationFiles": []
+      "Template": "DateTemplate-04.json",
+      "LocalizationFiles": [
+        "DateLocalization-04.json"
+      ]
     },
     {
       "Class": "MeasuresTemplate",
       "Table": null,
-      "Template": "TimeIntelligence-03.json",
+      "Template": "TimeIntelligence-04.json",
       "Properties": {
-        "DisplayFolderRule": "Time intelligence\\@_MEASURE_@\\@_TEMPLATEFOLDER_@",
+        "__DisplayFolderRule": "Time intelligence\\@_MEASURE_@\\@_TEMPLATEFOLDER_@",
         "_DisplayFolderRule": "Time intelligence\\@_TEMPLATEFOLDER_@\\@_TEMPLATE_@",
-        "__DisplayFolderRule": "Time intelligence\\@_TEMPLATEFOLDER_@\\@_MEASURE_@"
+        "___DisplayFolderRule": "Time intelligence\\@_TEMPLATEFOLDER_@\\@_MEASURE_@",
+        "DisplayFolderRule": "@_MEASURE_@\\@_TEMPLATEFOLDER_@"
       },
-      "_comment": "TargetMeasures can override the default setting"
+      "_comment": "TargetMeasures can override the default setting",
+      "TargetMeasures": []
     }
   ],
-  "IsoTranslation": "en-US",
-  "IsoFormat": "en-US",
+  "IsoTranslation": null,
+  "IsoFormat": null,
   "LocalizationFiles": [
-    "DateLocalization-03.json"
+    "DateLocalization-04.json"
   ],
   "OnlyTablesColumns": [],
   "ExceptTablesColumns": [],
@@ -44,7 +49,14 @@
   "LastYearMax": null,
   "AutoScan": "Full",
   "DefaultVariables": {
-    "__FirstFiscalMonth": "4"
+    "__FirstFiscalMonth": "4",
+    "__FirstDayOfWeek": "0",
+    "__TypeStartFiscalYear": "1",
+    "__QuarterWeekType": "\"445\"",
+    "__WeeklyType": "\"Last\"",
+    "__WorkingDayType": "\"Working day\"",
+    "__NonWorkingDayType": "\"Non-working day\"",
+    "__OffsetYears": "1"
   },
   "IsoCountry": "US",
   "InLieuOfPrefix": "(in lieu of ",
@@ -56,6 +68,5 @@
     "DateColumnName": "Holiday Date",
     "HolidayColumnName": "Holiday Name"
   },
-  "AutoNaming": "Prefix",
   "TargetMeasures": []
 }

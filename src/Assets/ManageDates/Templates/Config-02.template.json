@@ -1,5 +1,5 @@
 {
-  "Description": "Monthly calendar and monthly time intelligence",
+  "Description": "Monthly calendar",
   "Templates": [
     {
       "Class": "CustomDateTable",
