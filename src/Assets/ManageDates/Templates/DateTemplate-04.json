@@ -264,7 +264,7 @@
     },
     {
       "Name": "__FiscalYearMonth",
-      "Expression": "FORMAT ( __FiscalStartOfMonth + 14, \"@_FM_@ mmm yyyy\" )"
+      "Expression": "FORMAT ( __FiscalStartOfMonth + 14, \"@_FM_@ mmm yyyy\"@@GETISO() )"
     },
     {
       "Name": "__FiscalStartOfMonth",
@@ -298,7 +298,7 @@
     },
     {
       "Name": "__FiscalMonth",
-      "Expression": "FORMAT ( __FiscalStartOfMonth + 14, \"@_FM_@ mmm\" )"
+      "Expression": "FORMAT ( __FiscalStartOfMonth + 14, \"@_FM_@ mmm\"@@GETISO() )"
     },
     {
       "Name": "__FiscalYearQuarterNumber",
@@ -322,7 +322,7 @@
     },
     {
       "Name": "__WeekDay",
-      "Expression": "FORMAT ( __Date, \"ddd\" )"
+      "Expression": "FORMAT ( __Date, \"ddd\"@@GETISO() )"
     },
     {
       "Name": "__FiscalDayOfMonthNumber",
