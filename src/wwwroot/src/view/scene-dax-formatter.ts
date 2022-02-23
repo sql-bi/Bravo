@@ -168,7 +168,7 @@ export class DaxFormatterScene extends MainScene {
         _("#preview-menu .menu", this.body).insertAdjacentHTML("beforeend", `
 
             <div class="toolbar">
-                <div class="toggle-side toggle solo icon-side" title="${i18n(strings.sideCtrlTitle)}"></div>
+                <div class="toggle-side toggle solo icon-v-split" title="${i18n(strings.sideCtrlTitle)}"></div>
             </div>
         `);
 
@@ -637,6 +637,7 @@ export class DaxFormatterScene extends MainScene {
         let formatOptions = optionsController.options.customOptions.formatting.daxFormatter;
         formatOptions.listSeparator = separators[region][0];
         formatOptions.decimalSeparator = separators[region][1];
+        formatOptions.autoLineBreakStyle = this.doc.model.autoLineBreakStyle;
 
         return {
             options: formatOptions,
@@ -864,6 +865,9 @@ export class DaxFormatterScene extends MainScene {
             this.maybeAutoGenerateFormattedPreview();
         });
         optionsController.on("customOptions.formatting.daxFormatter.lineStyle.change", (changedOptions: any) => {
+            this.maybeAutoGenerateFormattedPreview();
+        });
+        optionsController.on("customOptions.formatting.daxFormatter.lineBreakStyle.change", (changedOptions: any) => {
             this.maybeAutoGenerateFormattedPreview();
         });
     }

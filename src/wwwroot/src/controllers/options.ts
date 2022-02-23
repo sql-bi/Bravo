@@ -8,6 +8,7 @@ import { Dispatchable } from '../helpers/dispatchable';
 import { Utils } from '../helpers/utils';
 import { host, logger } from '../main';
 import { AppError } from '../model/exceptions';
+import { DaxLineBreakStyle } from '../model/tabular';
 import { ThemeType } from './theme';
 
 export interface Options {
@@ -41,6 +42,8 @@ export enum ClientOptionsFormattingRegion {
 }
 export interface FormatDaxOptions {
     lineStyle: DaxFormatterLineStyle
+    lineBreakStyle: DaxLineBreakStyle
+    autoLineBreakStyle: DaxLineBreakStyle
     spacingStyle: DaxFormatterSpacingStyle
     listSeparator?: string
     decimalSeparator?: string
@@ -94,6 +97,8 @@ export class OptionsController extends Dispatchable {
                 daxFormatter: {
                     spacingStyle: DaxFormatterSpacingStyle.SpaceAfterFunction,
                     lineStyle: DaxFormatterLineStyle.LongLine,
+                    lineBreakStyle: DaxLineBreakStyle.InitialLineBreak,
+                    autoLineBreakStyle: DaxLineBreakStyle.InitialLineBreak
                 }
             },
             panels: [70, 30]

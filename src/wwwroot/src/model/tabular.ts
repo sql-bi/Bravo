@@ -16,6 +16,7 @@ export interface TabularDatabaseInfo {
     maxRows: number
     size: number
     unreferencedCount: number
+    autoLineBreakStyle: DaxLineBreakStyle
     columns: TabularColumn[],
     tables: TabularTable[]
 }
@@ -44,6 +45,13 @@ export interface FormatDaxError {
     line: number
     column: number
     message?: string
+}
+
+
+export enum DaxLineBreakStyle {
+    None = "None", 
+    InitialLineBreak = "InitialLineBreak", 
+    Auto = "Auto"
 }
 
 export interface FormattedMeasure extends TabularMeasure {
