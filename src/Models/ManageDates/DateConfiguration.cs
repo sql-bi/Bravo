@@ -118,7 +118,7 @@
 
         [Required]
         [JsonPropertyName("holidaysEnabled")]
-        public bool HolidaysEnabled { get; set; } = false;
+        public bool HolidaysEnabled { get; set; } = true;
 
         [Required]
         [JsonPropertyName("holidaysTableName")]

@@ -48,13 +48,13 @@
         [HttpPost]
         [ActionName("ValidateConfigurationForReport")]
         [Produces(MediaTypeNames.Application.Json)]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<DateConfiguration>))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(DateConfiguration))]
         [ProducesDefaultResponseType]
         public IActionResult ValidateConfiguration(ValidatePBIDesktopReportConfigurationRequest request, CancellationToken cancellationToken)
         {
-            var configurations = _manageDatesService.ValidateConfiguration(request.Report!, request.Configuration!, cancellationToken);
+            var configuration = _manageDatesService.ValidateConfiguration(request.Report!, request.Configuration!, cancellationToken);
 
-            return Ok(configurations);
+            return Ok(configuration);
         }
 
         /// <summary>
@@ -64,7 +64,7 @@
         [HttpPost]
         [ActionName("GetPreviewChangesFromReport")]
         [Produces(MediaTypeNames.Application.Json)]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Dax.Template.Model.ModelChanges))]
         [ProducesDefaultResponseType]
         public IActionResult GetPreviewChanges(PreviewChangesFromPBIDesktopReportRequest request, CancellationToken cancellationToken)
         {
