@@ -64,6 +64,7 @@
             var vpaModel = new VpaModel(daxModel);
             var databaseETag = TabularModelHelper.GetDatabaseETag(vpaModel.Model.ModelName.Name, vpaModel.Model.Version, vpaModel.Model.LastUpdate);
             var databaseSize = vpaModel.Columns.Sum((c) => c.TotalSize);
+            var tabularTables = vpaModel.Tables.Select(TabularTable.CreateFrom).ToArray();
 
             var tabularColumns = vpaModel.Columns.Select((c) =>
             {
@@ -78,18 +79,6 @@
                 };
 
                 return column;
-            }).ToArray();
-
-            var tabularTables = vpaModel.Tables.Select((t) =>
-            {
-                var table = new TabularTable
-                {
-                    Name = t.TableName,
-                    RowsCount = t.RowsCount,
-                    Size = t.TableSize
-                };
-
-                return table;
             }).ToArray();
 
             var tabularMeasures = daxModel.Tables.SelectMany((t) => t.Measures).Select((m) =>
