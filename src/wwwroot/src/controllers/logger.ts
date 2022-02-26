@@ -62,7 +62,7 @@ export class Logger extends Dispatchable {
         if (enabled)
             this.check(true);
 
-        optionsController.on("diagnosticLevel.change", (changedOptions: any) => {
+        optionsController.on("diagnosticLevel.change", () => {
             this.enabled = (optionsController.options.diagnosticLevel !== DiagnosticLevelType.None);
         });
     }
@@ -79,11 +79,12 @@ export class Logger extends Dispatchable {
             .catch(ignore=>{});
     }
 
-    log(name: string, obj?: LogMessageObj, level: DiagnosticLevelType = DiagnosticLevelType.Basic, time?: number, className?: string): string {
+    log(name: string, obj?: LogMessageObj, level: DiagnosticLevelType = DiagnosticLevelType.Basic, time?: number, className?: string, forceLogging = false): string {
 
-        if (!this.enabled) return null;
-
-        if (!Logger.LevelMatch(level)) return null;
+        if (!forceLogging) {
+            if (!this.enabled) return null;
+            if (!Logger.LevelMatch(level)) return null;
+        }
 
         let id = Utils.DOM.uniqueId();
         let message: LogMessage = {
@@ -122,8 +123,6 @@ export class Logger extends Dispatchable {
     logError(error: AppError) {
         console.error(error);
 
-        if (!this.enabled) return;
-
         const errorCode = `${error.type != AppErrorType.Managed ? "HTTP/" : "" }${ error.code }`;
         
         let errorDetails = error.details;
@@ -140,7 +139,7 @@ export class Logger extends Dispatchable {
             Details: errorDetails,
         }; 
 
-        this.log(name, { content: content }, DiagnosticLevelType.Basic, 0, "errorMessage");
+        this.log(name, { content: content }, DiagnosticLevelType.Basic, 0, "errorMessage", true);
     }
 
     sanitizeLogContent(content: LogMessageObj) {

@@ -262,7 +262,6 @@ export class App {
         });
 
         this.diagnosticPane.on("close", ()=> {
-            optionsController.update("diagnosticLevel", DiagnosticLevelType.None);
             this.updatePanels();
         });
 
@@ -270,8 +269,7 @@ export class App {
             this.toggleDiagnostics(false);
         });
 
-        // Options change
-        optionsController.on("diagnosticLevel.change", (changedOptions: any) => {
+        optionsController.on("diagnosticLevel.change", () => {
             this.updatePanels();
         });
     }
