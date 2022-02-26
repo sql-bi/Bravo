@@ -64,7 +64,7 @@ export class OptionsDialogGeneral extends OptionsDialogMenuItem {
                 icon: "powerbi",
                 name: i18n(strings.optionAccount),
                 description: i18n(strings.optionAccountDescription),
-                type: OptionType.custom,
+                type: OptionType.customCtrl,
                 customHtml: () => `
                     <p>
                         ${auth.signedIn ? 

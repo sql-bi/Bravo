@@ -92,12 +92,9 @@ export class ConnectRemote extends ConnectMenuItem {
                 },
                 columns: [
                     { 
-                        //field: "Icon", 
-                        title: "", 
-                        hozAlign:"center", 
-                        resizable: false, 
-                        width: 40,
-                        cssClass: "column-icon",
+                        field: "name", 
+                        title: i18n(strings.connectDatasetsTableNameCol),
+                        width: 280,
                         formatter: (cell) => {
 
                             const dataset = <PBICloudDataset>cell.getData();
@@ -105,23 +102,8 @@ export class ConnectRemote extends ConnectMenuItem {
                             let icon = (dataset.connectionMode == PBICloudDatasetConnectionMode.Supported ? "dataset" : "alert");
                             let tooltip = (dataset.connectionMode != PBICloudDatasetConnectionMode.Supported ? i18n((<any>strings)[`errorDatasetConnection${PBICloudDatasetConnectionMode[dataset.connectionMode]}`]) : "");
 
-                            return `<div class="icon-${icon}" title="${tooltip}"></div>`;
+                            return `<span class="icon-${icon}" title="${tooltip}">${dataset.name}</span>`;
                         }, 
-                        sorter: (a, b, aRow, bRow, column, dir, sorterParams) => {
-                            const datasetA = <PBICloudDataset>aRow.getData();
-                            const datasetB = <PBICloudDataset>bRow.getData();
-
-                            a = `${datasetA.connectionMode == PBICloudDatasetConnectionMode.Supported ? "_" : ""}${datasetA.name}`;
-
-                            b = `${datasetB.connectionMode == PBICloudDatasetConnectionMode.Supported ? "_" : ""}${datasetB.name}`;
-                            
-                            return String(a).toLowerCase().localeCompare(String(b).toLowerCase());
-                        }
-                    },
-                    { 
-                        field: "name", 
-                        title: i18n(strings.connectDatasetsTableNameCol),
-                        width: 240
                     },
                     { 
                         field: "endorsement", 

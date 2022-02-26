@@ -157,7 +157,7 @@ select {
     }
     //cursor: pointer;
     background: @input-back-color url(@select-arrow-image) no-repeat right center;
-    background-size: 26px 7px;
+    background-size: 18px 5px;
     color: @text-color;
     padding:5px 30px 5px 10px;
     line-height: normal;
@@ -463,18 +463,30 @@ a, .link {
 
     }
 }
-.option {
-    padding:15px 20px;
+.option-container {
+    max-width: 1000px;  
     margin: 5px 0;
     list-style: none;
     .border-radius();
     background-color: @window-back-color-alt;
     border: 1px solid @border-color;
-    .flexbox(center);
 
     .dark & {
         border-color: @border-color-dark;
         background-color: @window-back-color-alt-dark;
+    }
+}
+.option {
+    margin: 0;
+    padding:15px 20px;
+    .flexbox(center);
+
+    &.child {
+        border-top: 1px solid @border-color;
+
+        .dark & {
+            border-color: @border-color-dark;
+        }
     }
 
     &:hover {
@@ -519,11 +531,25 @@ a, .link {
 
         select {
             max-width: 100%;
+            min-width: 110px;
         }
 
-        input[type=text], input[type=password], input[type=email], input[type=search], input[type=number] {
-            width: 100px;
+        input[type=text] {
+            width: 80px;
         }
+        
+        input[type=password], input[type=email], input[type=search] {
+            width: 100%;
+        }
+
+        input[type=number] {
+            width: 50px;
+            //text-align: right;
+        }
+    }
+
+    .tabulator {
+        width: 100%;
     }
 }
 .option-notice {
