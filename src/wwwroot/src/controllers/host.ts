@@ -70,12 +70,19 @@ export interface FileActionResult {
     canceled?: boolean
 }
 
+export enum DiagnosticMessageSeverity {
+    None = "None",
+    Warning = "Warning",
+    Error = "Error",
+}
+
 export enum DiagnosticMessageType {
     Text = "Text",
     Json = "Json",
 }
 export interface DiagnosticMessage {
     type: DiagnosticMessageType
+    severity: DiagnosticMessageSeverity
     name?: string
     content?: string
     timestamp?: string
