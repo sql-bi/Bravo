@@ -167,6 +167,84 @@ export class ExportDataScene extends MainScene {
         this.exportTypeSelect = <HTMLSelectElement>_(".export-type", this.body);
         this.exportButton = _(".do-export", this.body);
 
+        let optionsStruct: OptionStruct[] = [
+            {
+                option: "format",
+                icon: "file",
+                name: i18n(strings.exportDataExportAs),
+                description: i18n(strings.exportDataExportAsDesc),
+                bold: true,
+                type: OptionType.select,
+                values: [
+                    [ExportDataFormat.Xlsx, i18n(strings.exportDataTypeXLSX)],
+                    [ExportDataFormat.Csv, i18n(strings.exportDataTypeCSV)]
+                ]
+            },
+            {
+                option: "createExportSummary",
+                parent: "format",
+                name: i18n(strings.exportDataExcelCreateExportSummary),
+                description: i18n(strings.exportDataExcelCreateExportSummaryDesc),
+                type: OptionType.switch,
+                toggledBy: {
+                    option: "format",
+                    value: ExportDataFormat.Xlsx
+                }
+            },
+            {
+                option: "encoding",
+                parent: "format",
+                name: i18n(strings.exportDataCSVEncoding),
+                description: i18n(strings.exportDataCSVEncodingDesc),
+                toggledBy: {
+                    option: "format",
+                    value: ExportDataFormat.Csv
+                },
+                type: OptionType.select,
+                values: [
+                    ["utf8", "UTF-8"],
+                    ["utf16", "UTF-16"],
+                ]
+            },
+            {
+                option: "delimiter",
+                parent: "format",
+                name: i18n(strings.exportDataCSVDelimiter),
+                description: i18n(strings.exportDataCSVDelimiterDesc),
+                toggledBy: {
+                    option: "format",
+                    value: ExportDataFormat.Csv
+                },
+                type: OptionType.select,
+                values: [
+                    ["", i18n(strings.exportDataCSVDelimiterSystem)],
+                    [",", i18n(strings.exportDataCSVDelimiterComma)],
+                    [";", i18n(strings.exportDataCSVDelimiterSemicolon)],
+                    ["\\t", i18n(strings.exportDataCSVDelimiterTab)],
+                    ["{custom}", i18n(strings.exportDataCSVDelimiterOther)]
+                ],
+                customValue: {
+                    connectedValue: "{custom}",
+                    attributes: `placeholder="${i18n(strings.exportDataCSVDelimiterPlaceholder)}" maxlength="1"`
+                }
+            },
+            {
+                option: "quoteStringFields",
+                parent: "format",
+                name: i18n(strings.exportDataCSVQuote),
+                description: i18n(strings.exportDataCSVQuoteDesc),
+                type: OptionType.switch,
+                toggledBy: {
+                    option: "format",
+                    value: ExportDataFormat.Csv
+                }
+            },
+        ];
+
+        optionsStruct.forEach(struct => {
+            Renderer.Options.render(struct, _(".options", this.body), this.config);
+        });
+
         this.update();
         
         this.listen();
