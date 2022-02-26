@@ -4,6 +4,7 @@
  * https://www.sqlbi.com
 */
 
+import { OptionsStore } from '../controllers/options';
 import { Loader } from '../helpers/loader';
 import { Dic, Utils, _ } from '../helpers/utils';
 import { host, logger } from '../main';
@@ -16,19 +17,25 @@ import { strings } from '../model/strings';
 import { Menu, MenuItem } from './menu';
 import { ErrorScene } from './scene-error';
 import { MainScene } from './scene-main';
+import { ManageDatesSceneCalendar } from './scene-manage-dates-calendar';
+import { ManageDatesSceneHolidays } from './scene-manage-dates-holidays';
+import { ManageDatesSceneInterval } from './scene-manage-dates-interval';
+import { ManageDatesSceneLocalization } from './scene-manage-dates-localization';
+import { ManageDatesSceneTimeIntelligence } from './scene-manage-dates-time-intelligence';
 
 export class ManageDatesScene extends MainScene {
 
     menu: Menu;
     modelCheckElement: HTMLElement;
-    templates: DateConfiguration[];
-    currentTemplate: DateConfiguration;
+    config: OptionsStore<DateConfiguration>;
     
     constructor(id: string, container: HTMLElement, doc: Doc) {
         super(id, container, doc); 
         this.path = i18n(strings.ManageDates);
         
         this.element.classList.add("manage-dates");
+
+        this.config = new OptionsStore<DateConfiguration>();
     }
 
     render() {
@@ -61,123 +68,76 @@ export class ManageDatesScene extends MainScene {
 
         host.manageDatesGetConfigurations(<PBIDesktopReport>this.doc.sourceData)
             .then(templates => {
-console.log(templates);
-                this.templates = templates; 
                 loader.remove();
+
+                if (!templates.length) {
+                    let errorScene = new ErrorScene(Utils.DOM.uniqueId(), this.element.parentElement, AppError.InitFromResponseStatus(Utils.ResponseStatusCode.InternalError));
+                    this.splice(errorScene);
+                    return;
+                }
+
+                this.config.options = Utils.Obj.clone(templates[0]);
+                
+                let calendarPane = new ManageDatesSceneCalendar(this.config, templates);
+                let intervalPane = new ManageDatesSceneInterval(this.config, this.doc.model);
+                let holidaysPane = new ManageDatesSceneHolidays(this.config);
+                let timeIntelligencePane = new ManageDatesSceneTimeIntelligence(this.config);
+                let localizationPane = new ManageDatesSceneLocalization(this.config);
 
                 this.menu = new Menu("date-config-menu", menuContainer, <Dic<MenuItem>>{
                     "calendar": {
                         name: i18n(strings.manageDatesMenuCalendar),
-                        onRender: element => this.calendarRender(element)
+                        onRender: element => calendarPane.render(element),
+                        onDestroy: () => calendarPane.destroy()
                     },
                     "interval": {
                         name: i18n(strings.manageDatesMenuInterval),
-                        onRender: element => this.intervalRender(element)
+                        onRender: element => intervalPane.render(element),
+                        onDestroy: () => intervalPane.destroy()
                     },
                     "holidays": {
                         name: i18n(strings.manageDatesMenuHolidays),
-                        onRender: element => this.holidaysRender(element)
+                        onRender: element => holidaysPane.render(element),
+                        onDestroy: () => holidaysPane.destroy()
                     },
                     "timeIntelligence": {
                         name: i18n(strings.manageDatesMenuTimeIntelligence),
-                        onRender: element => this.timeIntelligenceRender(element)
+                        onRender: element => timeIntelligencePane.render(element),
+                        onDestroy: () => timeIntelligencePane.destroy()
                     },
                     "localization": {
                         name: i18n(strings.manageDatesMenuLocalization),
-                        onRender: element => this.localizationRender(element)
+                        onRender: element => localizationPane.render(element),
+                        onDestroy: () => localizationPane.destroy()
                     },
                     
                 }, "calendar", false);
-        
-                this.updateCheck();
+
+                this.config.on("name.change", (changedOptions: any)=>{
+                    this.updateModelCheck();
+                });
+                this.updateModelCheck();
             })
             .catch((error: AppError) => {
-                let errorScene = new ErrorScene(Utils.DOM.uniqueId(), this.element.parentElement, error, true);
+                let errorScene = new ErrorScene(Utils.DOM.uniqueId(), this.element.parentElement, error);
                 this.splice(errorScene);
             });
     }
 
-    calendarRender(element: HTMLElement) {
-
-        let html = `
-            <div class="menu-body-desc">${i18n(strings.manageDatesCalendarDesc)}</div>
-
-            <div class="option">
-                <div class="title">
-                    <div class="name">${i18n(strings.manageDatesCalendarTemplateName)}</div>
-                </div>
-                <div class="action config-name-fallback">
-                    <select class="config-name">
-                    ${ this.templates
-                        .sort((a, b) => a.name.localeCompare(b.name))
-                        .map(template => `
-                            <option value="${template.name}">${this.localizeTemplateName(template.name, template.description)}</option>
-                        ` ).join("") }
-                    </select>
-              
-                </div>
-            </div>
-
-            <div class="calendar-options"></div>
-        `;
-
-        element.insertAdjacentHTML("beforeend", html);
-
-        //this.calendarOptionRender();
-    }
-
-    calendarOptionRender(element: HTMLElement) {
-
-    }
-
-    intervalRender(element: HTMLElement) {
-        let html = `
-            <div class="menu-body-desc">${i18n(strings.manageDatesIntervalDesc)}</div>
-        `;
-
-        element.insertAdjacentHTML("beforeend", html);
-    }
-
-    holidaysRender(element: HTMLElement) {
-        let html = `
-            <div class="menu-body-desc">${i18n(strings.manageDatesHolidaysDesc)}</div>
-        `;  
-
-        element.insertAdjacentHTML("beforeend", html);
-    }
-
-    timeIntelligenceRender(element: HTMLElement) {
-        let html = `
-            <div class="menu-body-desc">${i18n(strings.manageDatesTimeIntelligenceDesc)}</div>
-        `;
-
-        element.insertAdjacentHTML("beforeend", html);
-    }
-
-    localizationRender(element: HTMLElement) {
-        let html = `
-            <div class="menu-body-desc">${i18n(strings.manageDatesLocalizationDesc)}</div>
-        `;
-
-        element.insertAdjacentHTML("beforeend", html);
-    }
-
     update() {
         super.update();
-
-        this.updateCheck();
+        this.updateModelCheck();
     }
 
-    updateCheck() {
+    updateModelCheck() {
 
     }
 
-    localizeTemplateName(name: string, localizedDescription?: string) {
+    destroy() {
+        this.menu.destroy();
+        this.menu = null;
+        this.config = null;
 
-        const nameStr = `manageDatesTemplateName${Utils.Text.pascalCase(name)}`;
-        if (nameStr in strings)
-            return i18n((<any>strings)[nameStr]); 
-
-        return (localizedDescription ? localizedDescription : name);
+        super.destroy();
     }
 }

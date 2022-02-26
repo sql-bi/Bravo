@@ -76,27 +76,27 @@ export enum TableValidation {
 }
 
 export enum DayOfWeek {
-    Sunday = 0,
-    Monday = 1,
-    Tuesday = 2,
-    Wednesday = 3,
-    Thursday = 4,
-    Friday = 5,
-    Saturday = 6,
+    Sunday = "Sunday",
+    Monday = "Monday",
+    Tuesday = "Tuesday",
+    Wednesday = "Wednesday",
+    Thursday = "Thursday",
+    Friday = "Friday",
+    Saturday = "Saturday",
 }
 
 export enum TypeStartFiscalYear {
-    FirstDayOfFiscalYear = 0,
-    LastDayOfFiscalYear = 1,
+    FirstDayOfFiscalYear = "FirstDayOfFiscalYear",
+    LastDayOfFiscalYear = "LastDayOfFiscalYear",
 }
 
 export enum QuarterWeekType {
-    Weekly445 = 445,
-    Weekly454 = 454,
-    Weekly544 = 544,
+    Weekly445 = "Weekly445",
+    Weekly454 = "Weekly454",
+    Weekly544 = "Weekly544",
 }
 
 export enum WeeklyType {
-    Last = 0,
-    Nearest = 1,
+    Last = "Last",
+    Nearest = "Nearest",
 }

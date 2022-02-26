@@ -23,7 +23,16 @@
             .colr {
                 .flex(1 1 70%);
                 margin: 10px 0 20px 20px;
-    
+                height: calc(100% - 30px);
+
+                .date-config, #date-config-menu { 
+                    height: 100%;
+                }
+                .menu-body {
+                    padding: 30px 5px 0 0;
+                    height: calc(100% - 50px);
+                    overflow: auto;
+                }
             }
         }
 
@@ -42,7 +51,7 @@
         }
 
         .menu-body-desc {
-            margin: 30px 0 20px 0;
+            margin: 0 0 20px 0;
             font-size: 16px;
             line-height: 1.4;
             color: @notice-color;
@@ -68,6 +77,17 @@
         }
     }
 
+    .autoscan-select-tables {
+        width: 100%;
 
+        .toolbar {
+            margin-bottom: 20px;
+        }
+    }
+    #onlytablescolumns {
+        background: @back-color;
+
+        .dark & { background-color: @back-color-dark;}
+    }
 
 }
