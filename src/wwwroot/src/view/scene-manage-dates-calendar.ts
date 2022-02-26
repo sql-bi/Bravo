@@ -131,11 +131,9 @@ export class ManageDatesSceneCalendar extends ManageDatesScenePane {
             case "firstDayOfWeek":
                 let weekFormatter = new Intl.DateTimeFormat(I18n.instance.locale.locale, { weekday: "long" });
                 let weekValues: string[][] = [];
-
-                let weekDays = [DayOfWeek.Sunday, DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday, DayOfWeek.Thursday, DayOfWeek.Friday, DayOfWeek.Saturday];
                 
                 for (let i = 0; i < 7; i++) {
-                    weekValues.push([weekDays[i], weekFormatter.format(new Date(1970, 0, i + 4))]);
+                    weekValues.push([i.toString(), weekFormatter.format(new Date(1970, 0, i + 4))]);
                 }
 
                 return {
