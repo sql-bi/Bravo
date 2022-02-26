@@ -83,18 +83,22 @@ export class ConnectRemote extends ConnectMenuItem {
                 ],
                 rowFormatter: row => {
                     try { //Bypass calc rows
+                        if ((<any>row)._row && (<any>row)._row.type == "calc") return;
                         const dataset = <PBICloudDataset>row.getData();
                         if (dataset.connectionMode != PBICloudDatasetConnectionMode.Supported) {
                             let element = row.getElement();
                             element.classList.add("row-disabled");
                         }
-                    }catch(e){}
+                    }catch(ignore){}
                 },
                 columns: [
                     { 
-                        field: "name", 
-                        title: i18n(strings.connectDatasetsTableNameCol),
-                        width: 280,
+                        //field: "Icon", 
+                        title: "", 
+                        hozAlign:"center", 
+                        resizable: false, 
+                        width: 40,
+                        cssClass: "column-icon",
                         formatter: (cell) => {
 
                             const dataset = <PBICloudDataset>cell.getData();
@@ -102,8 +106,20 @@ export class ConnectRemote extends ConnectMenuItem {
                             let icon = (dataset.connectionMode == PBICloudDatasetConnectionMode.Supported ? "dataset" : "alert");
                             let tooltip = (dataset.connectionMode != PBICloudDatasetConnectionMode.Supported ? i18n((<any>strings)[`errorDatasetConnection${PBICloudDatasetConnectionMode[dataset.connectionMode]}`]) : "");
 
-                            return `<span class="icon-${icon}" title="${tooltip}">${dataset.name}</span>`;
+                            return `<div class="icon-${icon}" title="${tooltip}"></div>`;
                         }, 
+                        sorter: (a, b, aRow, bRow, column, dir, sorterParams) => {
+                            const datasetA = <PBICloudDataset>aRow.getData();
+                            const datasetB = <PBICloudDataset>bRow.getData();
+                            a = `${datasetA.connectionMode == PBICloudDatasetConnectionMode.Supported ? "_" : ""}${datasetA.name}`;
+                            b = `${datasetB.connectionMode == PBICloudDatasetConnectionMode.Supported ? "_" : ""}${datasetB.name}`;
+                            return String(a).toLowerCase().localeCompare(String(b).toLowerCase());
+                        }
+                    },
+                    { 
+                        field: "name", 
+                        title: i18n(strings.connectDatasetsTableNameCol),
+                        width: 240
                     },
                     { 
                         field: "endorsement", 

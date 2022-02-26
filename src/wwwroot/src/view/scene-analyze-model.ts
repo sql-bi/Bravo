@@ -324,6 +324,7 @@ export class AnalyzeModelScene extends MainScene {
                 initialFilter: data => this.unreferencedFilter(data),
                 rowFormatter: row => {
                     try { //Bypass calc rows
+                        if ((<any>row)._row && (<any>row)._row.type == "calc") return;
                         let data = <TabulatorVpaxModelColumn>row.getData();
                         let element = row.getElement();
 
@@ -335,7 +336,7 @@ export class AnalyzeModelScene extends MainScene {
                         if (data._aggregated) {
                             element.classList.add("row-aggregated");
                         }
-                    }catch(e){}
+                    }catch(ignore){}
                 },
                 columns: columns,
                 data: data

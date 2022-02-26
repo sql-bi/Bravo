@@ -400,7 +400,7 @@ export class DaxFormatterScene extends MainScene {
         if (this.table) {
             this.table.redraw(true);
 
-            let rows = this.table.getRows("visible");
+            let rows = this.table.getRows("active");
             rows.forEach(row => { 
                 if ("reformat" in row) { // This is a bug has been reported here: https://github.com/olifolkerd/tabulator/issues/3580
                     row.reformat();
@@ -517,8 +517,9 @@ export class DaxFormatterScene extends MainScene {
                     {column: "name", dir: "asc"}, 
                 ],
                 rowFormatter: row => {
-
                     try { //Bypass calc rows
+                        if ((<any>row)._row && (<any>row)._row.type == "calc") return;
+
                         const measure = <TabularMeasure>row.getData();
                         if (daxMeasureName(measure) in this.previewing) 
                             return;
@@ -532,7 +533,7 @@ export class DaxFormatterScene extends MainScene {
                         } else if (status == MeasureStatus.NotFormatted) {
                             element.classList.add("row-highlighted");
                         }
-                    }catch(e){}
+                    }catch(ignore){}
                 },
                 columns: columns,
                 data: data
