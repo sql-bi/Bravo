@@ -149,7 +149,7 @@ export class ExportDataScene extends MainScene {
                     ["", i18n(strings.exportDataCSVDelimiterSystem)],
                     [",", i18n(strings.exportDataCSVDelimiterComma)],
                     [";", i18n(strings.exportDataCSVDelimiterSemicolon)],
-                    ["\\t", i18n(strings.exportDataCSVDelimiterTab)],
+                    ["\t", i18n(strings.exportDataCSVDelimiterTab)],
                     ["{custom}", i18n(strings.exportDataCSVDelimiterOther)]
                 ],
                 customValue: {
