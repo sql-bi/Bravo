@@ -13,28 +13,6 @@ import { OptionsDialogFormatting } from './options-dialog-formatting';
 import { OptionsDialogGeneral } from './options-dialog-general';
 import { OptionsDialogTelemetry } from './options-dialog-telemetry';
 
-export interface OptionStruct {
-    option?: string,
-    icon?: string
-    name: string
-    description?: string
-    additionalNotes?: string
-    type: OptionType
-    values?: string[][]
-    value?: any,
-    onBeforeChange?: (e: Event) => boolean,
-    onChange?: (e: Event) => void,
-    onClick?: (e: Event) => void,
-    customHtml?: ()=> string
-}
-
-export enum OptionType {
-    button,
-    select,
-    switch,
-    description,
-    custom
-}
 export class OptionsDialog extends Dialog {
 
     menu: Menu;
@@ -45,31 +23,27 @@ export class OptionsDialog extends Dialog {
             { name: i18n(strings.dialogOK), action: "ok", className: "button-alt" }
         ]);
         
-        let generalDialog = new OptionsDialogGeneral(this);
-        let formattingDialog = new OptionsDialogFormatting(this);
-        let telemetryDialog = new OptionsDialogTelemetry(this);
-        let aboutDialog = new OptionsDialogAbout(this);
+        let generalPane = new OptionsDialogGeneral();
+        let formattingPane = new OptionsDialogFormatting();
+        let telemetryPane = new OptionsDialogTelemetry();
+        let aboutPane = new OptionsDialogAbout();
 
         this.menu = new Menu("options-menu", this.body, <Dic<MenuItem>>{
             "general": {
                 name: i18n(strings.optionsDialogGeneralMenu),  
-                onRender: element => { generalDialog.render(element) },
-                onDestroy: ()=> { generalDialog.destroy() }
+                onRender: element => { generalPane.render(element) },
             },
             "formatting": {
                 name: i18n(strings.optionsDialogFormattingMenu),  
-                onRender: element => { formattingDialog.render(element) },
-                onDestroy: ()=> { formattingDialog.destroy() }
+                onRender: element => { formattingPane.render(element) },
             },
             "telemetry": {
                 name: i18n(strings.optionsDialogTelemetryMenu),  
-                onRender: element => { telemetryDialog.render(element) },
-                onDestroy: ()=> { telemetryDialog.destroy() }
+                onRender: element => { telemetryPane.render(element) },
             },     
             "about": {
                 name: i18n(strings.optionsDialogAboutMenu), 
-                onRender: element => { aboutDialog.render(element) },
-                onDestroy: ()=> { aboutDialog.destroy() },
+                onRender: element => { aboutPane.render(element) },
             }
         });
     }

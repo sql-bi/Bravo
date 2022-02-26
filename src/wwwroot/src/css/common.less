@@ -498,7 +498,8 @@ a, .link {
     }
 
     .icon {
-
+        .flex-shrink(0);
+        width: 48px;
         &:before {
             font-size: 26px;
             margin-right: 20px;
@@ -510,6 +511,10 @@ a, .link {
             font-size: 15px;
             //font-weight: 500;
             white-space: nowrap;
+
+            &.bold {
+                font-weight: bold;
+            }
         }
         .desc {
             font-size: 13px;
@@ -519,7 +524,15 @@ a, .link {
             .dark & {
                 color: @notice-color-dark;
             }
+
+            em {
+                font-weight: 500;
+            }
         }
+    }
+
+    .custom-listener {
+        margin-top: 5px;
     }
 
     .action {
@@ -535,15 +548,16 @@ a, .link {
         }
 
         input[type=text] {
-            width: 80px;
+            width: 90px;
         }
         
         input[type=password], input[type=email], input[type=search] {
             width: 100%;
+            min-width: 90px;
         }
 
         input[type=number] {
-            width: 50px;
+            width: 90px;
             //text-align: right;
         }
     }

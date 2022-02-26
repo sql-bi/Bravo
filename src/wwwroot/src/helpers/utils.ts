@@ -123,6 +123,12 @@ export module Utils {
             return text.substring(0, 1).toUpperCase() + text.substring(1).toLocaleLowerCase();
         }
 
+        export function splinter(text: string, firstBlockLength: number): string[] {
+            let firstBlock = text.replace(new RegExp(`^(.{${firstBlockLength}}[^\\s]*).*`), "$1");
+            let secondBlock = text.substring(firstBlock.length);
+            return [firstBlock, secondBlock];
+        }
+
         export function camelCase(text: string): string {
             return text.toLowerCase().replace(/[^a-zA-Z0-9]+(.)/g, (m, chr) => chr.toUpperCase());
         }
@@ -161,7 +167,6 @@ export module Utils {
                     return c;
                 }).join('');
         }
-        
     }
 
     export module DOM {

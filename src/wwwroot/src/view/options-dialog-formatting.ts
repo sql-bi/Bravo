@@ -5,17 +5,18 @@
 */
 
 import { ClientOptionsFormattingRegion, DaxFormatterLineStyle, DaxFormatterSpacingStyle } from '../controllers/options';
+import { OptionStruct, OptionType, Renderer } from '../helpers/renderer';
 import {  _, __ } from '../helpers/utils';
 import { optionsController } from '../main';
 import { i18n } from '../model/i18n'; 
 import { strings } from '../model/strings';
 import { DaxLineBreakStyle } from '../model/tabular';
 
-export class OptionsDialogFormatting extends OptionsDialogMenuItem {
+export class OptionsDialogFormatting { 
 
     render(element: HTMLElement) {
 
-        this.optionsStruct = [
+        let optionsStruct: OptionStruct[] = [
             {
                 option: "customOptions.formatting.preview",
                 icon: "dax-formatter",
@@ -73,6 +74,8 @@ export class OptionsDialogFormatting extends OptionsDialogMenuItem {
             }
         ];
 
-        super.render(element);
+        optionsStruct.forEach(struct => {
+            Renderer.Options.render(struct, element, optionsController);
+        });
     }
 }

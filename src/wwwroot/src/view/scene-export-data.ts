@@ -7,6 +7,8 @@
 import * as sanitizeHtml from 'sanitize-html';
 import { Tabulator } from 'tabulator-tables';
 import { ExportDataFormat, ExportDataStatus, ExportDelimitedTextFromPBICloudDatasetRequest, ExportDelimitedTextFromPBIReportRequest, ExportDelimitedTextSettings, ExportExcelFromPBICloudDatasetRequest, ExportExcelFromPBIReportRequest, ExportExcelSettings } from '../controllers/host';
+import { OptionsStore } from '../controllers/options';
+import { OptionStruct, OptionType, Renderer } from '../helpers/renderer';
 import { Utils, _, __ } from '../helpers/utils';
 import { host, telemetry } from '../main';
 import { Doc, DocType } from '../model/doc';
@@ -19,18 +21,34 @@ import { ExportedScene } from './scene-exported';
 import { ExportingScene } from './scene-exporting';
 import { MainScene } from './scene-main';
 
+interface ExportSettings {
+    format: ExportDataFormat,
+    createExportSummary: boolean,
+    encoding: string,
+    delimiter: string,
+    quoteStringFields: boolean
+}
+
 export class ExportDataScene extends MainScene {
 
     table: Tabulator;
     searchBox: HTMLInputElement;
     exportTypeSelect: HTMLSelectElement;
     exportButton: HTMLElement;
+    config: OptionsStore<ExportSettings>;
 
     constructor(id: string, container: HTMLElement, doc: Doc) {
         super(id, container, doc); 
         this.path = i18n(strings.ExportData);
 
         this.element.classList.add("export-data");
+        this.config = new OptionsStore<ExportSettings>({
+            format: ExportDataFormat.Xlsx,
+            createExportSummary: true,
+            encoding: "utf8",
+            delimiter: "",
+            quoteStringFields: false
+        });
     }
 
     render() {
@@ -62,96 +80,7 @@ export class ExportDataScene extends MainScene {
                             </div>
                         </div>
 
-                        <div class="option">
-                            <div class="title">
-                                <div class="name"><strong>${i18n(strings.exportDataExportAs)}</strong></div>
-
-                                <div class="desc">
-                                    ${i18n(strings.exportDataExportAsDesc)}
-                                </div>
-                            </div>
-                            <div class="action">
-                                <select class="export-type">
-                                    <option value="${ExportDataFormat.Xlsx}">Excel</option>
-                                    <option value="${ExportDataFormat.Csv}">CSV</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="show-if-export-type show-if-export-type-xlsx">
-                            <div class="option">
-                                <div class="title">
-                                    <div class="name">${i18n(strings.exportDataExcelCreateExportSummary)}</div>
-
-                                    <div class="desc">
-                                        ${i18n(strings.exportDataExcelCreateExportSummaryDesc)}
-                                    </div>
-                                </div>
-                                <div class="action">
-                                    <div class="switch-container">
-                                        <label class="switch"><input type="checkbox" class="export-xlsx-summary" checked><span class="slider"></span></label> 
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="show-if-export-type show-if-export-type-csv" hidden>
-                            
-                            <div class="option">
-                                <div class="title">
-                                    <div class="name">${i18n(strings.exportDataCSVEncoding)}</div>
-
-                                    <div class="desc">
-                                        ${i18n(strings.exportDataCSVEncodingDesc)}
-                                    </div>
-                                </div>
-                                <div class="action">
-                                    <select class="export-csv-econding">
-                                        <option value="utf8">UTF-8</option>
-                                        <option value="utf16">Unicode (UTF-16)</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div class="option">
-                                <div class="title">
-                                    <div class="name">${i18n(strings.exportDataCSVDelimiter)}</div>
-
-                                    <div class="desc">
-                                        ${i18n(strings.exportDataCSVDelimiterDesc)}
-                                    </div>
-                                </div>
-                                <div class="action">
-                                    <select class="export-csv-delimiter">
-                                        <option value="">${i18n(strings.exportDataCSVDelimiterSystem)}</option>
-                                        <option value=",">${i18n(strings.exportDataCSVDelimiterComma)}</option>
-                                        <option value="\\t">${i18n(strings.exportDataCSVDelimiterTab)}</option>
-                                        <option value="custom">${i18n(strings.exportDataCSVDelimiterOther)}</option>
-                                    </select>
-                                    
-                                    <div class="show-if-export-csv-delimiter show-if-export-csv-delimiter-custom" hidden>
-                                        <input type="text" class="export-csv-delimiter-custom" value="," placeholder="${i18n(strings.exportDataCSVDelimiterPlaceholder)}" maxlength="1">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="option">
-                                <div class="title">
-                                    <div class="name">${i18n(strings.exportDataCSVQuote)}</div>
-
-                                    <div class="desc">
-                                        ${i18n(strings.exportDataCSVQuoteDesc)}
-                                    </div>
-                                </div>
-                                <div class="action">
-                                    <div class="switch-container">
-                                        <label class="switch"><input type="checkbox" class="export-csv-quote"><span class="slider"></span></label> 
-                                    </div>
-                                </div>
-                            </div>
-
-                        </div>
-
+                        <div class="options"></div>
                     </div>
 
                 </div>
@@ -164,7 +93,7 @@ export class ExportDataScene extends MainScene {
         this.body.insertAdjacentHTML("beforeend", html);
         
         this.searchBox = <HTMLInputElement>_(".search input", this.body);
-        this.exportTypeSelect = <HTMLSelectElement>_(".export-type", this.body);
+
         this.exportButton = _(".do-export", this.body);
 
         let optionsStruct: OptionStruct[] = [
@@ -265,12 +194,6 @@ export class ExportDataScene extends MainScene {
             });
         });
 
-        this.exportTypeSelect.addEventListener("change", e => {
-            let value = (<HTMLSelectElement>e.currentTarget).value;
-            __(".show-if-export-type", this.element).forEach((div: HTMLElement) => {
-                div.toggle(div.classList.contains(`show-if-export-type-${value.toLowerCase()}`));
-            });
-        });
 
         this.exportButton.addEventListener("click", e => {
             e.preventDefault();
@@ -281,13 +204,6 @@ export class ExportDataScene extends MainScene {
             if (el.hasAttribute("disabled")) return;
 
             this.export();
-        });
-
-        _(".export-csv-delimiter", this.element).addEventListener("change", e => {
-            let value = (<HTMLSelectElement>e.currentTarget).value;
-            __(".show-if-export-csv-delimiter", this.element).forEach((div: HTMLElement) => {
-                div.toggle(div.classList.contains(`show-if-export-csv-delimiter-${value.toLowerCase()}`));
-            });
         });
     }
 
@@ -415,29 +331,19 @@ export class ExportDataScene extends MainScene {
         tables.forEach((table: TabularTable) => {
             rowsCount += table.rowsCount;
         });
-        
 
-        let exportType = <ExportDataFormat>(this.exportTypeSelect.value);
-
-        telemetry.track("Export", { "Count": tableNames.length, "Type": exportType });
+        telemetry.track("Export", { "Count": tableNames.length, "Type": this.config.options.format });
         
         this.exportButton.toggleAttr("disabled", true);
 
         let exportRequest;
-        if (exportType == ExportDataFormat.Csv) {
-
-            let encoding = (<HTMLSelectElement>_(".export-csv-econding", this.element)).value;
-            let delimiter  = (<HTMLSelectElement>_(".export-csv-delimiter", this.element)).value;
-            if (delimiter == "custom") 
-                delimiter = sanitizeHtml((<HTMLInputElement>_(".export-csv-delimiter-custom", this.element)).value, { allowedTags: [], allowedAttributes: {} });
-
-            let quoteStrings = (<HTMLInputElement>_(".export-csv-quote", this.element)).checked;
+        if (this.config.options.format == ExportDataFormat.Csv) {
 
             const settings = <ExportDelimitedTextSettings>{
                 tables: tableNames,
-                unicodeEncoding: (encoding != "utf16"),
-                delimiter: delimiter,
-                quoteStringFields: quoteStrings
+                unicodeEncoding: (this.config.options.encoding != "utf16"),
+                delimiter: this.config.options.delimiter,
+                quoteStringFields: this.config.options.quoteStringFields
             };
             if (this.doc.type == DocType.dataset) {
                 exportRequest = <ExportDelimitedTextFromPBICloudDatasetRequest>{
@@ -450,13 +356,11 @@ export class ExportDataScene extends MainScene {
                     report: this.doc.sourceData
                 };
             }
-        } else if (exportType == ExportDataFormat.Xlsx) {
-
-            let createSummary = (<HTMLInputElement>_(".export-xlsx-summary", this.element)).checked;
+        } else if (this.config.options.format == ExportDataFormat.Xlsx) {
 
             const settings = <ExportExcelSettings>{
                 tables: tableNames,
-                createExportSummary: createSummary
+                createExportSummary: this.config.options.createExportSummary
             };
             if (this.doc.type == DocType.dataset) {
                 exportRequest = <ExportExcelFromPBICloudDatasetRequest>{
@@ -478,7 +382,7 @@ export class ExportDataScene extends MainScene {
         
         this.exportButton.toggleAttr("disabled", false);
 
-        host.exportData(exportRequest, exportType, this.doc.type)
+        host.exportData(exportRequest, this.config.options.format, this.doc.type)
             .then(job => {
 
                 if (!job) {
@@ -490,7 +394,7 @@ export class ExportDataScene extends MainScene {
                     switch (job.status) {
 
                         case ExportDataStatus.Completed:
-                            let exportedScene = new ExportedScene(Utils.DOM.uniqueId(), this.element.parentElement, job, exportType);
+                            let exportedScene = new ExportedScene(Utils.DOM.uniqueId(), this.element.parentElement, job, this.config.options.format);
                             this.splice(exportedScene);
                             break;
 
