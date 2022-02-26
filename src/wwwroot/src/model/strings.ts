@@ -84,6 +84,7 @@ export enum strings {
     ExportData,
     exportDataCSVDelimiter,
     exportDataCSVDelimiterDesc,
+    exportDataCSVCustomDelimiter,
     exportDataCSVDelimiterSystem,
     exportDataCSVDelimiterComma,
     exportDataCSVDelimiterSemicolon,

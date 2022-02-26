@@ -21,21 +21,15 @@ export interface OptionStruct {
     attributes?: string
     type: OptionType
     values?: string[][]
-    customValue?: OptionCustomValue
     range?: number[]
     value?: any
     toggledBy?: OptionToggler
-    onBeforeChange?: (e: Event, value: string | boolean) => boolean
+    customHtml?: ()=> string
+
     onChange?: (e: Event, value: string | boolean) => void
     onClick?: (e: Event) => void
-    customHtml?: ()=> string
+    onKeydown?: (e: Event, value: string) => void
 }
-
-export interface OptionCustomValue {
-    connectedValue: string
-    attributes?: string
-}
-
 export interface OptionToggler {
     option: string
     value: string[] | string | boolean
@@ -103,9 +97,6 @@ export module Renderer {
                                 <option value="${_value[0]}" ${value == _value[0] ? "selected" : ""}>${_value[1]}</option>
                             `).join("")}
                         </select>
-                        ${struct.customValue ? `
-                            <input type="text" class="custom-listener" ${struct.customValue.attributes ? struct.customValue.attributes : ""} ${value != struct.customValue.connectedValue ? "hidden" : ""}>
-                        ` : ""}
                     `;
                     break;
 
@@ -204,15 +195,6 @@ export module Renderer {
                     let _element = <HTMLInputElement|HTMLSelectElement>e.currentTarget; 
                     let newValue = (struct.type == OptionType.switch ? (<HTMLInputElement>_element).checked : _element.value);
 
-                    if (struct.type == OptionType.select && struct.customValue) {
-                        _(`#${id} .custom-listener`, element).toggle(struct.customValue.connectedValue == newValue);
-                    } 
-
-                    let confirmed = true;
-                    if (Utils.Obj.isSet(struct.onBeforeChange))
-                        confirmed = struct.onBeforeChange(e, newValue);
-                    if (!confirmed) return;
-  
                     if (struct.option) {
                         store.update(struct.option, newValue, true);
                     }
@@ -224,15 +206,17 @@ export module Renderer {
                     if (Utils.Obj.isSet(struct.onChange))
                         struct.onChange(e, newValue);
                 });
-
-                if (struct.type == OptionType.select && struct.customValue && struct.option) {
-                    _(`#${id} .custom-listener`, element).addEventListener("change", e => {
-                        let element = <HTMLInputElement>e.currentTarget; 
-                        let newValue = sanitizeHtml(element.value, { allowedTags: [], allowedAttributes: {} });
-                        store.update(struct.option, newValue, true);
-                    });
-                }
             }
+
+            if ((struct.type == OptionType.text || struct.type == OptionType.number) && Utils.Obj.isSet(struct.onKeydown)) {
+                _(`#${id} .listener`, element).addEventListener("keydown", e => {
+                    
+                    let _element = <HTMLInputElement>e.currentTarget; 
+                    let newValue = _element.value + e.key;
+                    struct.onKeydown(e, newValue);
+                });
+            }
+
             if (struct.type == OptionType.button && Utils.Obj.isSet(struct.onClick)) {
                 _(`#${id} .listener`, element).addEventListener("click", e => {
                     struct.onClick(e);

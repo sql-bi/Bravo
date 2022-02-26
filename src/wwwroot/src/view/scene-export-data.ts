@@ -22,10 +22,11 @@ import { ExportingScene } from './scene-exporting';
 import { MainScene } from './scene-main';
 
 interface ExportSettings {
-    format: ExportDataFormat,
-    createExportSummary: boolean,
-    encoding: string,
-    delimiter: string,
+    format: ExportDataFormat
+    createExportSummary: boolean
+    encoding: string
+    delimiter: string
+    customDelimiter: string
     quoteStringFields: boolean
 }
 
@@ -47,6 +48,7 @@ export class ExportDataScene extends MainScene {
             createExportSummary: true,
             encoding: "utf8",
             delimiter: "",
+            customDelimiter: "",
             quoteStringFields: false
         });
     }
@@ -151,10 +153,24 @@ export class ExportDataScene extends MainScene {
                     [";", i18n(strings.exportDataCSVDelimiterSemicolon)],
                     ["\t", i18n(strings.exportDataCSVDelimiterTab)],
                     ["{custom}", i18n(strings.exportDataCSVDelimiterOther)]
-                ],
-                customValue: {
-                    connectedValue: "{custom}",
-                    attributes: `placeholder="${i18n(strings.exportDataCSVDelimiterPlaceholder)}" maxlength="1"`
+                ]
+            },
+            {
+                option: "customDelimiter",
+                parent: "format",
+                name: `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;${i18n(strings.exportDataCSVCustomDelimiter)}`,
+                attributes: `placeholder="${i18n(strings.exportDataCSVDelimiterPlaceholder)}" maxlength="1"`,
+                toggledBy: {
+                    option: "delimiter",
+                    value: "{custom}"
+                },
+                type: OptionType.text,
+                onKeydown: (e, value: string) => {
+                    const disallowedChars = ["", "\r", "\n", "\\", `"`];
+                    if (disallowedChars.includes(value.trim())) { 
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }
                 }
             },
             {
@@ -392,10 +408,13 @@ export class ExportDataScene extends MainScene {
         let exportRequest;
         if (this.config.options.format == ExportDataFormat.Csv) {
 
+            let delimiter = this.config.options.delimiter;
+            if (delimiter == "{custom}") delimiter = this.config.options.customDelimiter;
+
             const settings = <ExportDelimitedTextSettings>{
                 tables: tableNames,
                 unicodeEncoding: (this.config.options.encoding != "utf16"),
-                delimiter: this.config.options.delimiter,
+                delimiter: delimiter,
                 quoteStringFields: this.config.options.quoteStringFields
             };
             if (this.doc.type == DocType.dataset) {
