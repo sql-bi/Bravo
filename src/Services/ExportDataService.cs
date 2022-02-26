@@ -75,7 +75,7 @@
             {
                 job.SetCanceled();
             }
-            catch (IOException ex)
+            catch (Exception ex) when (ex is not AdomdException)
             {
                 job.SetFailed();
                 throw new BravoException(BravoProblem.ExportDataFileError, ex.Message, ex);
@@ -104,7 +104,7 @@
             {
                 job.SetCanceled();
             }
-            catch (IOException ex)
+            catch (Exception ex) when (ex is not AdomdException)
             {
                 job.SetFailed();
                 throw new BravoException(BravoProblem.ExportDataFileError, ex.Message, ex);
@@ -134,7 +134,7 @@
             {
                 job.SetCanceled();
             }
-            catch (IOException ex)
+            catch (Exception ex) when (ex is not AdomdException)
             {
                 job.SetFailed();
                 throw new BravoException(BravoProblem.ExportDataFileError, ex.Message, ex);
@@ -163,7 +163,7 @@
             {
                 job.SetCanceled();
             }
-            catch (IOException ex)
+            catch (Exception ex) when (ex is not AdomdException)
             {
                 job.SetFailed();
                 throw new BravoException(BravoProblem.ExportDataFileError, ex.Message, ex);
@@ -196,7 +196,7 @@
 
             var config = new CsvConfiguration(CultureInfo.CurrentCulture);
             {
-                config.Delimiter = settings.Delimiter.NullIfEmpty() ?? CultureInfo.CurrentUICulture.TextInfo.ListSeparator;
+                config.Delimiter = settings.Delimiter.NullIfEmpty() ?? CultureInfo.CurrentCulture.TextInfo.ListSeparator;
                 config.Validate();
             }
 
