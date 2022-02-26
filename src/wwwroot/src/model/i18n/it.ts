@@ -116,6 +116,7 @@ const locale: Locale = {
         [_.exportDataSuccessSceneMessage]: "<strong>{count}/{total} tabell{{e|a}}</strong> {{sono state esportate|è stata esportata}} correttamente.",
         [_.exportDataOpenFile]: "Apri file",
         [_.exportDataOpenFolder]: "Apri cartella",
+        [_.exportDataNoColumns]: "Questa tabella non può essere esportata perché non contiene nessuna colonna.",
         [_.failed]: "Fallito",
         [_.filterMeasuresWithErrorsCtrlTitle]: "Mostra solo misure non formattate o con errori",
         [_.filterUnrefCtrlTitle]: "Mostra solo colonne non referenziate.",

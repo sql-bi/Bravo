@@ -109,6 +109,7 @@ export enum strings {
     exportDataSuccessSceneMessage,
     exportDataOpenFile,
     exportDataOpenFolder,
+    exportDataNoColumns,
     failed,
     filterMeasuresWithErrorsCtrlTitle,
     filterUnrefCtrlTitle,

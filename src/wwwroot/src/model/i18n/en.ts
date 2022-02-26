@@ -116,6 +116,7 @@ const locale: Locale = {
         [_.exportDataSuccessSceneMessage]: "<strong>{count}/{total} table{{s}}</strong> {{were|was}} exported successfully.",
         [_.exportDataOpenFile]: "Open Export File",
         [_.exportDataOpenFolder]: "Open Export Folder",
+        [_.exportDataNoColumns]: "This table is not exportable because it doesn't contain any columns.",
         [_.failed]: "Failed",
         [_.filterMeasuresWithErrorsCtrlTitle]: "Show unformatted measures/measures with errors only",
         [_.filterUnrefCtrlTitle]: "Show unreferenced columns only",

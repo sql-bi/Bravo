@@ -15,7 +15,7 @@ import { Doc, DocType } from '../model/doc';
 import { AppError, AppProblem } from '../model/exceptions';
 import { I18n, i18n } from '../model/i18n';
 import { strings } from '../model/strings';
-import { TabularTable } from '../model/tabular';
+import { TabularTable, TabularTableFeature, TabularTableFeatureUnsupportedReason } from '../model/tabular';
 import { ErrorScene } from './scene-error';
 import { ExportedScene } from './scene-exported';
 import { ExportingScene } from './scene-exporting';
@@ -184,7 +184,8 @@ export class ExportDataScene extends MainScene {
 
         this.updateTable();
 
-        _(".summary p", this.element).innerHTML = i18n(strings.exportDataSummary, {count: this.doc.model.tablesCount});
+        const exportableCount = this.doc.model.tables.filter(table => this.isExportable(table)).length;
+        _(".summary p", this.element).innerHTML = i18n(strings.exportDataSummary, {count: exportableCount});
     }
 
     listen() {
@@ -234,19 +235,39 @@ export class ExportDataScene extends MainScene {
                     cssClass: "column-select",
                     headerSort: false, 
                     resizable: false, 
-                    width: 40,
-                    cellClick: (e, cell) => {
-                        cell.getRow().toggleSelect();
-                    }
+                    width: 40
                 });
             }
+
+            columns.push({ 
+                //field: "Icon", 
+                title: "", 
+                hozAlign:"center", 
+                resizable: false, 
+                width: 40,
+                cssClass: "column-icon",
+                formatter: (cell) => {
+                    const table = <TabularTable>cell.getData();
+                    let icon = (this.isExportable(table) ? "table" : "alert");
+                    let tooltip = (this.isExportable(table) ? "" : this.notExportableReason(table));
+
+                    return `<div class="icon-${icon}" title="${tooltip}"></div>`;
+                }, 
+                sorter: (a, b, aRow, bRow, column, dir, sorterParams) => {
+                    const tableA = <TabularTable>aRow.getData();
+                    const tableB = <TabularTable>bRow.getData();
+                    a = `${this.isExportable(tableA) ? "_" : ""}${tableA.name}`;
+                    b = `${this.isExportable(tableB) ? "_" : ""}${tableB.name}`;
+                    return String(a).toLowerCase().localeCompare(String(b).toLowerCase());
+                }
+            });
   
             columns.push({ 
                 field: "name", 
                 title: i18n(strings.tableColTable),
                 cssClass: "table-name",
                 bottomCalc: this.doc.editable ? "count" : null,
-                bottomCalcFormatter: cell=> i18n(strings.tableSelectedCount, {count: this.table.getSelectedData().length})
+                bottomCalcFormatter: cell=> i18n(strings.tableSelectedCount, {count: this.getSelectedData().length})
             });
 
             columns.push({ 
@@ -258,7 +279,7 @@ export class ExportDataScene extends MainScene {
                 bottomCalc: this.doc.editable ? "sum" : null,
                 bottomCalcFormatter: cell => {
                     let sum = 0;
-                    this.table.getSelectedData().forEach((table: TabularTable) => {
+                    this.getSelectedData().forEach((table: TabularTable) => {
                         sum += table.rowsCount;
                     });
                     return (sum ? Utils.Format.compress(sum) : "");
@@ -277,7 +298,7 @@ export class ExportDataScene extends MainScene {
                 bottomCalc: this.doc.editable ? "sum" : null,
                 bottomCalcFormatter: cell => {
                     let sum = 0;
-                    this.table.getSelectedData().forEach((table: TabularTable) => {
+                    this.getSelectedData().forEach((table: TabularTable) => {
                         sum += table.size;
                     });
                     return (sum ? Utils.Format.bytes(sum, I18n.instance.locale.locale) : "");
@@ -285,14 +306,24 @@ export class ExportDataScene extends MainScene {
             });
 
             const tableConfig: Tabulator.Options = {
-                //debugInvalidOptions: false,
                 maxHeight: "100%",
-                //responsiveLayout: "collapse", // DO NOT USE IT
-                //selectable: true,
-                layout: "fitColumns", //"fitColumns", //fitData, fitDataFill, fitDataStretch, fitDataTable, fitColumns
+                selectable: true,
+                layout: "fitColumns",
                 initialSort:[
                     {column: "name", dir: "asc"}, 
                 ],
+                rowFormatter: row => {
+                    try { //Bypass calc rows
+                        if ((<any>row)._row && (<any>row)._row.type == "calc") return;
+
+                        const table = <TabularTable>row.getData();
+                        if (table && !this.isExportable(table)) {
+                            let element = row.getElement();
+                            element.classList.add("row-disabled");
+                        }
+                    }catch(ignore){}
+                },
+                selectableCheck: row => this.isExportable(row.getData()),
                 columns: columns,
                 data: data
             };
@@ -300,7 +331,8 @@ export class ExportDataScene extends MainScene {
             this.table = new Tabulator(`#${this.element.id} .table`, tableConfig);
             this.table.on("rowSelectionChanged", (data: any[], rows: Tabulator.RowComponent[]) =>{
                 this.table.recalc();
-                this.exportButton.toggleAttr("disabled", !rows.length || !this.doc.editable);
+                let count = this.getSelectedData().length;
+                this.exportButton.toggleAttr("disabled", !count || !this.doc.editable);
             });
 
         } else {
@@ -311,6 +343,27 @@ export class ExportDataScene extends MainScene {
             this.exportButton.toggleAttr("disabled", true);
         }
     }
+
+    getSelectedData(): TabularTable[] {
+        return (this.table ? 
+            this.table.getSelectedData().filter(table => this.isExportable(table)) : 
+            []
+        );
+    }
+    
+    isExportable(table: TabularTable): boolean {
+        return ((table.features & TabularTableFeature.ExportData) === TabularTableFeature.ExportData);
+    }
+
+    notExportableReason(table: TabularTable): string {
+
+        if ((table.featureUnsupportedReasons & TabularTableFeatureUnsupportedReason.ExportDataNoColumns) === TabularTableFeatureUnsupportedReason.ExportDataNoColumns) {
+            return i18n(strings.exportDataNoColumns);
+        }
+
+        return "";
+    }
+
     applyFilters() {
         if (this.table) {
             this.table.clearFilter();
@@ -323,10 +376,10 @@ export class ExportDataScene extends MainScene {
     export() {
         if (!this.doc.editable || this.doc.type == DocType.vpax) return;
 
-        let tables = this.table.getSelectedData();
+        let tables = this.getSelectedData();
         if (!tables.length) return;
 
-        let tableNames: string[] = this.table.getSelectedData().map(table => table.name);
+        let tableNames: string[] = tables.map(table => table.name);
         let rowsCount = 0;
         tables.forEach((table: TabularTable) => {
             rowsCount += table.rowsCount;
