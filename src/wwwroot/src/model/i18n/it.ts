@@ -255,6 +255,7 @@ const locale: Locale = {
         [_.searchDatasetPlaceholder]: "Cerca Dataset",
         [_.searchMeasurePlaceholder]: "Cerca Misura",
         [_.searchTablePlaceholder]: "Cerca Tabella",
+        [_.searchEntityPlaceholder]: "Search Tabella/Colonna",
         [_.settingsCtrlTitle]: "Opzioni",
         [_.sheetOrphan]: "Non disponibile",
         [_.sheetOrphanPBIXTooltip]: "Il report è stato chiuso su Power BI Desktop. Qualunque operazione di scrittura è disabilitata.",

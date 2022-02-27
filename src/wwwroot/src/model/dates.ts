@@ -14,7 +14,7 @@ export interface DateConfiguration {
     isoTranslation?: string                         // Translation of periods: e.g. Month vs Mese
 
     autoScan?: AutoScanEnum                         // Dates interval auto detection mode
-    onlyTablesColumns?: string[]                    // Tables to look into - used if the autoScan is "SelectedTablesColumns"
+    onlyTablesColumns?: string[]                    // Columns to look into - used if the autoScan is "SelectedTablesColumns"
     exceptTablesColumns?: string[]                  // Similar to previous, you defined what to exclude
 
     isoCountry?: string                             // The country to use for holidays

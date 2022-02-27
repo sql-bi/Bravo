@@ -248,6 +248,7 @@ export enum strings {
     searchDatasetPlaceholder,
     searchMeasurePlaceholder,
     searchTablePlaceholder,
+    searchEntityPlaceholder,
     settingsCtrlTitle,
     sheetOrphan,
     sheetOrphanPBIXTooltip,

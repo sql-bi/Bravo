@@ -29,12 +29,15 @@ export interface TabularTable {
     featureUnsupportedReasons: TabularTableFeatureUnsupportedReason
 }
 export interface TabularColumn {
+    name?: string
     columnName?: string
     tableName?: string
     columnCardinality: number
     size: number
     weight: number
     isReferenced?: boolean
+    isHidden?: boolean
+    dataType?: string
 }
 
 export interface TabularMeasure {

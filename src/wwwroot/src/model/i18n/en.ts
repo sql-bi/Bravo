@@ -256,6 +256,7 @@ const locale: Locale = {
         [_.searchDatasetPlaceholder]: "Search Dataset",
         [_.searchMeasurePlaceholder]: "Search Measure",
         [_.searchTablePlaceholder]: "Search Table",
+        [_.searchEntityPlaceholder]: "Search Table/Column",
         [_.settingsCtrlTitle]: "Options",
         [_.sheetOrphan]: "Not available",
         [_.sheetOrphanPBIXTooltip]: "The report was closed in Power BI Desktop. Any writing operation is disallowed.",

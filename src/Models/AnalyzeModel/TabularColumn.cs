@@ -23,5 +23,11 @@
 
         [JsonPropertyName("isReferenced")]
         public bool IsReferenced { get; set; }
+
+        [JsonPropertyName("dataType")]
+        public string? DataType { get; set; }
+
+        [JsonPropertyName("isHidden")]
+        public bool IsHidden { get; set; }
     }
 }

@@ -33,6 +33,20 @@
     }
   }
 
+  .row-hidden {
+    
+    .column-name {
+      opacity: 0.4;
+      .icon;
+      &:after {
+        float: right;
+        content: "\e92e"; //icon-hidden
+        margin: 4px 2px 0 0;
+        font-size: 17px;
+      }
+    }
+  }
+
   .row-disabled {
     opacity: 0.4;
   }
@@ -98,11 +112,18 @@
       font-size: 20px;
       font-weight: normal !important;
       vertical-align: text-top;
+      margin:5px !important;
+      cursor: pointer !important;
     }
   }
 
+  .item-type {
+    width: 30px;
+    display: inline-block;
+  }
+
   .tabulator-tree-level-0 .column-name {
-    font-weight:bold;
+    //font-weight:bold;
     cursor: pointer;
     
   }

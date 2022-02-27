@@ -73,17 +73,20 @@
         }
     }
 
-    .autoscan-select-tables {
-        width: 100%;
+    
 
-        .toolbar {
-            margin-bottom: 20px;
-        }
-    }
     #onlytablescolumns {
+        height: calc(100vh - 550px);
+        min-height: 200px;
         background: @back-color;
 
         .dark & { background-color: @back-color-dark;}
+        
+        .autoscan-table {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
     }
 
 }

@@ -8,6 +8,7 @@ import * as sanitizeHtml from 'sanitize-html';
 import { Tabulator } from 'tabulator-tables';
 import { ExportDataFormat, ExportDataStatus, ExportDelimitedTextFromPBICloudDatasetRequest, ExportDelimitedTextFromPBIReportRequest, ExportDelimitedTextSettings, ExportExcelFromPBICloudDatasetRequest, ExportExcelFromPBIReportRequest, ExportExcelSettings } from '../controllers/host';
 import { OptionsStore } from '../controllers/options';
+import { ContextMenu } from '../helpers/contextmenu';
 import { OptionStruct, OptionType, Renderer } from '../helpers/renderer';
 import { Utils, _, __ } from '../helpers/utils';
 import { host, telemetry } from '../main';
@@ -158,7 +159,7 @@ export class ExportDataScene extends MainScene {
             {
                 option: "customDelimiter",
                 parent: "format",
-                name: `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;${i18n(strings.exportDataCSVCustomDelimiter)}`,
+                name: `&mdash;&nbsp;&nbsp;${i18n(strings.exportDataCSVCustomDelimiter)}`,
                 attributes: `placeholder="${i18n(strings.exportDataCSVDelimiterPlaceholder)}" maxlength="1"`,
                 toggledBy: {
                     option: "delimiter",
@@ -209,6 +210,16 @@ export class ExportDataScene extends MainScene {
             this.searchBox.addEventListener(listener, e => {
                 this.applyFilters();
             });
+        });
+
+        this.searchBox.addEventListener('contextmenu', e => {
+            e.preventDefault();
+
+            let el = <HTMLInputElement>e.currentTarget;
+            if (el.hasAttribute("disabled")) return;
+
+            let selection = el.value.substring(el.selectionStart, el.selectionEnd);
+            ContextMenu.editorContextMenu(e, selection, el.value, el);
         });
 
 

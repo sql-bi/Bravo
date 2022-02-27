@@ -76,6 +76,8 @@
                     Size = c.TotalSize,
                     Weight = (double)c.TotalSize / databaseSize,
                     IsReferenced = c.IsReferenced,
+                    DataType = c.DataType,
+                    IsHidden = c.IsHidden
                 };
 
                 return column;
