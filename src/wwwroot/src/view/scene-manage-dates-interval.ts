@@ -4,28 +4,16 @@
  * https://www.sqlbi.com
 */
 
-import * as sanitizeHtml from 'sanitize-html';
-import { Tabulator } from 'tabulator-tables';
-import { OptionsStore } from '../controllers/options';
 import { OptionStruct, OptionType, Renderer } from '../helpers/renderer';
-import { Dic, Utils, _ } from '../helpers/utils';
+import { Utils, _ } from '../helpers/utils';
 import { AutoScanEnum, DateConfiguration } from '../model/dates';
 import { i18n } from '../model/i18n';
 import { strings } from '../model/strings';
-import { TabularColumn, TabularDatabaseInfo } from '../model/tabular';
 import { ManageDatesScenePane } from './scene-manage-dates-pane';
 import { TabularBrowser } from './tabular-browser';
 
 export class ManageDatesSceneInterval extends ManageDatesScenePane {
 
-    data: TabularDatabaseInfo
-    columnBrowser: TabularBrowser;
-
-    constructor(config: OptionsStore<DateConfiguration>, data: TabularDatabaseInfo) {
-        super(config);
-        this.data = data;
-    }
-    
     render(element: HTMLElement) {
         super.render(element);
 
@@ -95,11 +83,14 @@ export class ManageDatesSceneInterval extends ManageDatesScenePane {
             Renderer.Options.render(struct, _(".options", element), this.config);
         });
 
-        this.columnBrowser = new TabularBrowser(Utils.DOM.uniqueId(), _(".autoscan-table", element), this.data, {
+        let columnBrowser = new TabularBrowser(Utils.DOM.uniqueId(), _(".autoscan-table", element), this.doc.model, {
             selectable: true, 
             search: true
         });
 
+        columnBrowser.on("select", (columns: string[]) => {
+            this.config.options.onlyTablesColumns = columns;
+        });
     }
 
 }

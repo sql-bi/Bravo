@@ -100,3 +100,20 @@ export enum WeeklyType {
     Last = "Last",
     Nearest = "Nearest",
 }
+
+export let DateISOCOuntries: string[][] = [
+    ["AU", "Australia"],
+    ["AT", "Austria"],
+    ["BE", "Belgium"],
+    ["CA", "Canada"],
+    ["FR", "France"],
+    ["DE", "Germany"],
+    ["IT", "Italy"],
+    ["NL", "Netherlands"],
+    ["NO", "Norway"],
+    ["PT", "Portugal"],
+    ["ES", "Spain"],
+    ["SE", "Sweden"],
+    ["GB", "United Kingdom"],
+    ["US", "United States"],
+];

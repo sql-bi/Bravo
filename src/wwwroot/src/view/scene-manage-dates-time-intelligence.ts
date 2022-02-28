@@ -12,14 +12,18 @@ import { ManageDatesScenePane } from './scene-manage-dates-pane';
 
 export class ManageDatesSceneTimeIntelligence extends ManageDatesScenePane {
 
-    get enabled(): boolean {
-        return this.config.options.timeIntelligenceEnabled;
-    }
-
     render(element: HTMLElement) {
         super.render(element);
 
         let optionsStruct: OptionStruct[] = [
+            {
+                option: "timeIntelligenceEnabled",
+                name: i18n(strings.manageDatesTimeIntelligenceEnabledName),
+                description: i18n(strings.manageDatesTimeIntelligenceEnabledDesc),
+                icon: "folder-fx",
+                bold: true,
+                type: OptionType.switch,
+            },
         ];
 
         let html = `

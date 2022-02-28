@@ -18,8 +18,8 @@ export class ManageDatesSceneCalendar extends ManageDatesScenePane {
 
     templates: DateConfiguration[];
 
-    constructor(config: OptionsStore<DateConfiguration>, templates: DateConfiguration[]) {
-        super(config);
+    constructor(config: OptionsStore<DateConfiguration>, doc: Doc, templates: DateConfiguration[]) {
+        super(config, doc);
         this.templates = templates;
     }
 

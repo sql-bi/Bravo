@@ -19,7 +19,7 @@ import { ThemeType } from './theme';
 import { i18n } from '../model/i18n';
 import { strings } from '../model/strings';
 import { LogMessageObj } from './logger';
-import { DateConfiguration } from '../model/dates';
+import { DateConfiguration, TableValidation } from '../model/dates';
 import { ModelChanges } from '../model/model-changes';
 
 declare global {
@@ -529,8 +529,16 @@ export class Host extends Dispatchable {
         return <Promise<DateConfiguration[]>>this.apiCall("ManageDates/GetConfigurationsForReport", datasource, { method: "POST" });
     }
 
-    manageDatesValidateConfiguration(request: ManageDatesPBIDesktopReportConfigurationRequest) {
-        return <Promise<DateConfiguration>>this.apiCall("ManageDates/ValidateConfigurationForReport", request, { method: "POST" });
+    manageDatesValidateTableNames(request: ManageDatesPBIDesktopReportConfigurationRequest) {
+        return <Promise<Dic<TableValidation>>>this.apiCall("ManageDates/ValidateConfigurationForReport", request, { method: "POST" }).then((response: DateConfiguration) => {
+            let tables: Dic<TableValidation> = {
+                dateTableName: response.dateTableValidation,
+                dateReferenceTableName: response.dateReferenceTableValidation,
+                holidaysTableName: response.holidaysTableValidation,
+                holidaysDefinitionTableName: response.holidaysDefinitionTableValidation,
+            };
+            return tables;
+        });
     }
 
     manageDatesPreviewChanges(request: ManageDatesPreviewChangesFromPBIDesktopReportRequest) {

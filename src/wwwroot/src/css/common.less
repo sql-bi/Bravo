@@ -497,7 +497,7 @@ a, .link {
         }
     }
 
-    .icon {
+    .option-icon {
         .flex-shrink(0);
         width: 48px;
         &:before {
@@ -549,6 +549,53 @@ a, .link {
 
         input[type=text] {
             width: 90px;
+        }
+
+        .validation-container {
+            width: 135px;
+            margin-left: auto;
+            .flexbox(center);
+            .border-radius();
+
+            input {
+                border: none;
+            }
+
+            background-color: @input-back-color;
+
+            .dark & { 
+                background-color: @input-back-color-dark;
+            }
+            .status {
+                .flex(0 0 auto);
+                font-size: 16px;
+                line-height: 1;
+                width: 16px;
+                &:before {
+                    margin:0;
+                    //font-weight: bold;
+                }
+            }
+
+            &.valid {
+                border: 1px solid @good-color;
+
+                .status {
+                    .icon-completed;
+                    color: @good-color;
+                    cursor:help;
+                }
+
+            }
+            &.invalid {
+                border: 1px solid @bad-color;
+
+                .status {
+                    .icon-alert;
+                    color: @bad-color;
+                    cursor:help;
+                }
+            }
         }
         
         input[type=password], input[type=email], input[type=search] {

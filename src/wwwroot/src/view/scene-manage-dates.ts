@@ -7,7 +7,7 @@
 import { OptionsStore } from '../controllers/options';
 import { Loader } from '../helpers/loader';
 import { Dic, Utils, _ } from '../helpers/utils';
-import { host, logger } from '../main';
+import { host } from '../main';
 import { DateConfiguration } from '../model/dates';
 import { Doc } from '../model/doc';
 import { AppError } from '../model/exceptions';
@@ -20,7 +20,7 @@ import { MainScene } from './scene-main';
 import { ManageDatesSceneCalendar } from './scene-manage-dates-calendar';
 import { ManageDatesSceneHolidays } from './scene-manage-dates-holidays';
 import { ManageDatesSceneInterval } from './scene-manage-dates-interval';
-import { ManageDatesSceneLocalization } from './scene-manage-dates-localization';
+import { ManageDatesSceneDates } from './scene-manage-dates-dates';
 import { ManageDatesSceneTimeIntelligence } from './scene-manage-dates-time-intelligence';
 
 export class ManageDatesScene extends MainScene {
@@ -32,7 +32,6 @@ export class ManageDatesScene extends MainScene {
     constructor(id: string, container: HTMLElement, doc: Doc) {
         super(id, container, doc); 
         this.path = i18n(strings.ManageDates);
-        
         this.element.classList.add("manage-dates");
 
         this.config = new OptionsStore<DateConfiguration>();
@@ -77,12 +76,12 @@ export class ManageDatesScene extends MainScene {
                 }
 
                 this.config.options = Utils.Obj.clone(templates[0]);
-                
-                let calendarPane = new ManageDatesSceneCalendar(this.config, templates);
-                let intervalPane = new ManageDatesSceneInterval(this.config, this.doc.model);
-                let holidaysPane = new ManageDatesSceneHolidays(this.config);
-                let timeIntelligencePane = new ManageDatesSceneTimeIntelligence(this.config);
-                let localizationPane = new ManageDatesSceneLocalization(this.config);
+
+                let calendarPane = new ManageDatesSceneCalendar(this.config, this.doc, templates);
+                let intervalPane = new ManageDatesSceneInterval(this.config, this.doc);
+                let datesPane = new ManageDatesSceneDates(this.config, this.doc);
+                let holidaysPane = new ManageDatesSceneHolidays(this.config, this.doc);
+                let timeIntelligencePane = new ManageDatesSceneTimeIntelligence(this.config, this.doc);
 
                 this.menu = new Menu("date-config-menu", menuContainer, <Dic<MenuItem>>{
                     "calendar": {
@@ -95,6 +94,11 @@ export class ManageDatesScene extends MainScene {
                         onRender: element => intervalPane.render(element),
                         onDestroy: () => intervalPane.destroy()
                     },
+                    "dates": {
+                        name: i18n(strings.manageDatesMenuDates),
+                        onRender: element => datesPane.render(element),
+                        onDestroy: () => datesPane.destroy()
+                    },
                     "holidays": {
                         name: i18n(strings.manageDatesMenuHolidays),
                         onRender: element => holidaysPane.render(element),
@@ -105,15 +109,10 @@ export class ManageDatesScene extends MainScene {
                         onRender: element => timeIntelligencePane.render(element),
                         onDestroy: () => timeIntelligencePane.destroy()
                     },
-                    "localization": {
-                        name: i18n(strings.manageDatesMenuLocalization),
-                        onRender: element => localizationPane.render(element),
-                        onDestroy: () => localizationPane.destroy()
-                    },
-                    
+
                 }, "calendar", false);
 
-                this.config.on("name.change", (changedOptions: any)=>{
+                this.config.on("change", (changedOptions: any)=>{
                     this.updateModelCheck();
                 });
                 this.updateModelCheck();

@@ -4,11 +4,11 @@
  * https://www.sqlbi.com
 */
 
-import * as sanitizeHtml from 'sanitize-html';
 import { OptionsStore } from '../controllers/options';
 import { Utils, _, __ } from '../helpers/utils';
 import { i18n } from '../model/i18n';
 import { strings } from '../model/strings';
+import { ContextMenu } from './contextmenu';
 
 export interface OptionStruct {
     option?: string
@@ -24,8 +24,10 @@ export interface OptionStruct {
     range?: number[]
     value?: any
     toggledBy?: OptionToggler
+    validTooltip?: string
+    invalidTooltip?: string
     customHtml?: ()=> string
-
+    validation?: (name: string, value: string) => Promise<OptionValidation>
     onChange?: (e: Event, value: string | boolean) => void
     onClick?: (e: Event) => void
     onKeydown?: (e: Event, value: string) => void
@@ -33,6 +35,11 @@ export interface OptionStruct {
 export interface OptionToggler {
     option: string
     value: string[] | string | boolean
+}
+
+export interface OptionValidation {
+    valid: boolean
+    message: string
 }
 
 export enum OptionType {
@@ -110,7 +117,9 @@ export module Renderer {
 
                 case OptionType.text:
                     ctrlHtml = `
+                        ${Utils.Obj.isSet(struct.validation) ? `<div class="validation-container">` : ""}
                         <input type="text" class="listener" value="${value}" ${struct.attributes ? struct.attributes : ""}>
+                        ${Utils.Obj.isSet(struct.validation) ? `<div class="status icon"></div></div>` : ""}
                     `;
                     break;
 
@@ -158,11 +167,11 @@ export module Renderer {
                     ${struct.type == OptionType.custom ? 
                         (Utils.Obj.isSet(struct.customHtml) ? struct.customHtml() : "") :
                         ` 
-                            ${struct.icon ? `<div class="icon icon-${struct.icon}"></div>` : (struct.parent ? `<div class="icon"></div>` : "")}
+                            ${struct.icon ? `<div class="option-icon icon icon-${struct.icon}"></div>` : (struct.parent ? `<div class="option-icon icon"></div>` : "")}
                             <div class="title">
                                 <div class="name ${struct.bold ? "bold" : ""}">${struct.name}</div>
                                 ${struct.description && struct.type != OptionType.description ? 
-                                    `<div class="desc">${Renderer.Text.renderExpandable(struct.description, 150, 170)}</div>` :
+                                    `<div class="desc">${struct.description /*Renderer.Text.renderExpandable(struct.description, 150, 170)*/}</div>` :
                                     ""
                                 }
                             </div>
@@ -174,7 +183,7 @@ export module Renderer {
             `;
 
             if (struct.parent) {
-                _(`#${struct.parent}`, element)
+                _(`#${Utils.Text.slugify(struct.parent)}`, element)
                     .closest(".option-container")
                     .insertAdjacentHTML("beforeend", html);
             } else {
@@ -185,15 +194,20 @@ export module Renderer {
                     ` : ""}
                 `);
             }
+
+            const listener = _(`#${id} .listener`, element);
+
+            Options.validateOption(listener, struct);
+
             if (struct.type == OptionType.switch || 
                 struct.type == OptionType.select || 
                 struct.type == OptionType.text || 
                 struct.type == OptionType.number
             ) {
-                _(`#${id} .listener`, element).addEventListener("change", e => {
+                listener.addEventListener("change", e => {
                     
-                    let _element = <HTMLInputElement|HTMLSelectElement>e.currentTarget; 
-                    let newValue = (struct.type == OptionType.switch ? (<HTMLInputElement>_element).checked : _element.value);
+                    let el = <HTMLInputElement|HTMLSelectElement>e.currentTarget; 
+                    let newValue = (struct.type == OptionType.switch ? (<HTMLInputElement>el).checked : el.value.trim());
 
                     if (struct.option) {
                         store.update(struct.option, newValue, true);
@@ -203,23 +217,62 @@ export module Renderer {
                         div.toggle(div.classList.contains(`toggle-if-${Utils.Text.slugify(newValue.toString())}`));
                     });
 
+                    __(".option-container", element).forEach((div: HTMLElement) => {
+                        div.toggle(__(".option:not([hidden])", div).length > 0);
+                    });
+
+                    Options.validateOption(el, struct);
+
                     if (Utils.Obj.isSet(struct.onChange))
                         struct.onChange(e, newValue);
                 });
             }
 
-            if ((struct.type == OptionType.text || struct.type == OptionType.number) && Utils.Obj.isSet(struct.onKeydown)) {
-                _(`#${id} .listener`, element).addEventListener("keydown", e => {
-                    
-                    let _element = <HTMLInputElement>e.currentTarget; 
-                    let newValue = _element.value + e.key;
-                    struct.onKeydown(e, newValue);
+            if (struct.type == OptionType.text || struct.type == OptionType.number) {
+
+                if (Utils.Obj.isSet(struct.onKeydown)) {
+                    listener.addEventListener("keydown", e => {
+                        
+                        let el = <HTMLInputElement>e.currentTarget; 
+                        let newValue = el.value + e.key;
+                        struct.onKeydown(e, newValue);
+                    });
+                }
+
+                listener.addEventListener("contextmenu", e => {
+                    e.preventDefault();
+        
+                    let el = <HTMLInputElement>e.currentTarget;
+                    if (el.hasAttribute("disabled")) return;
+        
+                    let selection = el.value.substring(el.selectionStart, el.selectionEnd);
+                    ContextMenu.editorContextMenu(e, selection, el.value, el);
                 });
             }
 
             if (struct.type == OptionType.button && Utils.Obj.isSet(struct.onClick)) {
-                _(`#${id} .listener`, element).addEventListener("click", e => {
+                listener.addEventListener("click", e => {
                     struct.onClick(e);
+                });
+            }
+        }
+
+        export function validateOption(element: HTMLElement, struct: OptionStruct) {
+            if (struct.type == OptionType.text && Utils.Obj.isSet(struct.validation)) {
+                let validationDiv = element.parentElement;
+                validationDiv.classList.remove("valid", "invalid");
+                validationDiv.classList.add("validating");
+
+                struct.validation((struct.option ? struct.option : struct.name), (<HTMLInputElement>element).value).then(response => {
+                    validationDiv.classList.remove("validating");
+                    
+                    if (response.valid) {
+                        validationDiv.classList.add("valid");
+                        validationDiv.setAttribute("title", response.message);
+                    } else {
+                        validationDiv.classList.add("invalid");
+                        validationDiv.setAttribute("title", response.message);
+                    }
                 });
             }
         }

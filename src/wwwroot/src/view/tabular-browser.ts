@@ -26,6 +26,7 @@ export interface TabularBrowserConfig {
     activable?: boolean,
     selectable?: boolean,
     showSelectionCount?: boolean,
+    initialSelected?: string[]
 }
 
 
@@ -89,6 +90,16 @@ export class TabularBrowser extends View {
         }
 
         this.updateTable();
+
+        if (this.config.initialSelected && this.config.initialSelected.length) {
+            this.table.on("tableBuilt", ()=>{
+                this.table.selectRow(
+                    this.table.getRows().filter(
+                        row => this.config.initialSelected.includes((<Branch>row.getData()).name)
+                    )
+                );
+            });
+        }
     }
 
     update() {
