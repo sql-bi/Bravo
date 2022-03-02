@@ -6,6 +6,10 @@
     [DebuggerDisplay("'{TableName}'[{Name}]")]
     public class TabularColumn
     {
+
+        [JsonPropertyName("name")]
+        public string? TableColumnName { get; set; }
+
         [JsonPropertyName("columnName")]
         public string? Name { get; set; }
 

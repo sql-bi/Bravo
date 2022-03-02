@@ -8,7 +8,7 @@ import { OptionsStore } from '../controllers/options';
 import { Loader } from '../helpers/loader';
 import { Dic, Utils, _ } from '../helpers/utils';
 import { host } from '../main';
-import { DateConfiguration } from '../model/dates';
+import { DateConfiguration, TableValidation } from '../model/dates';
 import { Doc } from '../model/doc';
 import { AppError } from '../model/exceptions';
 import { i18n } from '../model/i18n';
@@ -23,18 +23,31 @@ import { ManageDatesSceneInterval } from './scene-manage-dates-interval';
 import { ManageDatesSceneDates } from './scene-manage-dates-dates';
 import { ManageDatesSceneTimeIntelligence } from './scene-manage-dates-time-intelligence';
 
+export interface ManageDatesConfig extends DateConfiguration {
+    region?: string
+    customRegion?: string
+}
+
+export enum ManageDatesStatus {
+    ok,
+    compatible,
+    incompatible
+}
+
 export class ManageDatesScene extends MainScene {
 
     menu: Menu;
     modelCheckElement: HTMLElement;
-    config: OptionsStore<DateConfiguration>;
+    config: OptionsStore<ManageDatesConfig>;
+    doButton: HTMLElement;
+    status: ManageDatesStatus;
     
     constructor(id: string, container: HTMLElement, doc: Doc) {
         super(id, container, doc); 
         this.path = i18n(strings.ManageDates);
         this.element.classList.add("manage-dates");
 
-        this.config = new OptionsStore<DateConfiguration>();
+        this.config = new OptionsStore<ManageDatesConfig>();
     }
 
     render() {
@@ -60,7 +73,8 @@ export class ManageDatesScene extends MainScene {
         `;
         this.body.insertAdjacentHTML("beforeend", html);
 
-        this.modelCheckElement = _(".model-check", this.body);
+        this.modelCheckElement = _(".model-check .status", this.body);
+        this.doButton = _(".do-preview", this.body);
 
         let menuContainer = _(".date-config", this.body);
         let loader = new Loader(menuContainer, true, true);
@@ -130,6 +144,73 @@ export class ManageDatesScene extends MainScene {
 
     updateModelCheck() {
 
+        this.status = ManageDatesStatus.ok;
+
+        if (this.config.options.dateTableValidation == TableValidation.InvalidRenameRequired ||
+            this.config.options.dateReferenceTableValidation == TableValidation.InvalidRenameRequired || (
+                this.config.options.holidaysEnabled && (
+                    this.config.options.holidaysTableValidation == TableValidation.InvalidRenameRequired ||
+                    this.config.options.holidaysDefinitionTableValidation == TableValidation.InvalidRenameRequired
+                )
+            )
+        ) {
+            this.status = ManageDatesStatus.incompatible;
+        } else {
+
+            let tableNames = [
+                this.config.options.dateTableName,
+                this.config.options.dateReferenceTableName
+            ];
+            if (this.config.options.holidaysEnabled) {
+                tableNames.push(this.config.options.holidaysTableName);
+                tableNames.push(this.config.options.holidaysDefinitionTableName);
+            }
+            for (let i = 0; i < tableNames.length; i++) {
+                if (this.doc.model.tables.filter(table => table.name.toLowerCase() == tableNames[i].toLowerCase()).length > 0) {
+                    this.status = ManageDatesStatus.compatible;
+                    break;
+                }
+            }
+        }
+
+        let html = ``;
+        switch (this.status) {
+            case ManageDatesStatus.incompatible:
+                html = `
+                    <div class="status-incompatible">
+                        <div class="icon icon-alert"></div>
+                        <div class="message">
+                            ${i18n(strings.manageDatesStatusIncompatible)}
+                        </div>  
+                    </div>
+                `;
+                break;
+
+            case ManageDatesStatus.compatible:
+                html = `
+                    <div class="status-compatible">
+                        <div class="icon icon-updatable"></div>
+                        <div class="message">
+                            ${i18n(strings.manageDatesStatusCompatible)}
+                        </div>  
+                    </div>
+                `;
+                break;
+
+            default:
+                html = `
+                    <div class="status-ok">
+                        <div class="icon icon-valid"></div>
+                        <div class="message">
+                            ${i18n(strings.manageDatesStatusOk)}
+                        </div>  
+                    </div>
+                `;
+        }
+
+        this.modelCheckElement.innerHTML = html;
+        this.doButton.toggleAttribute("disabled", this.status == ManageDatesStatus.incompatible);
+                    
     }
 
     destroy() {

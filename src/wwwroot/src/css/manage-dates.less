@@ -37,8 +37,8 @@
         }
 
         .model-check {
-            padding: 15px 20px;
-            width: calc(100% - 40px);
+            padding: 15px 25px;
+            width: calc(100% - 50px);
             height: calc(100% - 30px);
             background: @window-back-color-alt;
             border: 1px solid @border-color;
@@ -47,6 +47,34 @@
             .dark & { 
                 background: @window-back-color-alt-dark; 
                 border-color: @border-color-dark;
+            }
+
+            .status {
+                
+                font-size: 15px;
+                line-height: 1.5;
+
+                .hero {
+                    font-size: 18px;
+                    line-height: 1.4;
+                    margin-bottom: 20px;
+                }
+
+                .status-incompatible {
+                    color: @bad-color;
+                }
+                .status-ok, .status-compatible {
+                    color: @good-color;
+                }
+
+                .icon {
+                    text-align: center;
+                    margin: 30px 0 20px 0;
+                    &:before {
+                        
+                        font-size: 80px;
+                    }
+                }
             }
         }
 

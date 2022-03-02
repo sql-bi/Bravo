@@ -31,8 +31,8 @@
       "_comment": "TargetMeasures can override the default setting"
     }
   ],
-  "IsoTranslation": "en-US",
-  "IsoFormat": "en-US",
+  "IsoTranslation": null,
+  "IsoFormat": null,
   "LocalizationFiles": [
     "DateLocalization-03.json"
   ],

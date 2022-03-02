@@ -530,15 +530,7 @@ export class Host extends Dispatchable {
     }
 
     manageDatesValidateTableNames(request: ManageDatesPBIDesktopReportConfigurationRequest) {
-        return <Promise<Dic<TableValidation>>>this.apiCall("ManageDates/ValidateConfigurationForReport", request, { method: "POST" }).then((response: DateConfiguration) => {
-            let tables: Dic<TableValidation> = {
-                dateTableName: response.dateTableValidation,
-                dateReferenceTableName: response.dateReferenceTableValidation,
-                holidaysTableName: response.holidaysTableValidation,
-                holidaysDefinitionTableName: response.holidaysDefinitionTableValidation,
-            };
-            return tables;
-        });
+        return <Promise<DateConfiguration>>this.apiCall("ManageDates/ValidateConfigurationForReport", request, { method: "POST" });
     }
 
     manageDatesPreviewChanges(request: ManageDatesPreviewChangesFromPBIDesktopReportRequest) {

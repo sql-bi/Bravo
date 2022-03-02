@@ -26,6 +26,7 @@ export interface OptionStruct {
     toggledBy?: OptionToggler
     validTooltip?: string
     invalidTooltip?: string
+    silentUpdate?: boolean
     customHtml?: ()=> string
     validation?: (name: string, value: string) => Promise<OptionValidation>
     onChange?: (e: Event, value: string | boolean) => void
@@ -117,9 +118,9 @@ export module Renderer {
 
                 case OptionType.text:
                     ctrlHtml = `
-                        ${Utils.Obj.isSet(struct.validation) ? `<div class="validation-container">` : ""}
+                        ${Utils.Obj.isSet(struct.validation) ? `<div class="validation-container"><div class="validation-input">` : ""}
                         <input type="text" class="listener" value="${value}" ${struct.attributes ? struct.attributes : ""}>
-                        ${Utils.Obj.isSet(struct.validation) ? `<div class="status icon"></div></div>` : ""}
+                        ${Utils.Obj.isSet(struct.validation) ? `<div class="status icon"></div></div><div class="validation-desc"></div></div>` : ""}
                     `;
                     break;
 
@@ -208,10 +209,9 @@ export module Renderer {
                     
                     let el = <HTMLInputElement|HTMLSelectElement>e.currentTarget; 
                     let newValue = (struct.type == OptionType.switch ? (<HTMLInputElement>el).checked : el.value.trim());
-
-                    if (struct.option) {
-                        store.update(struct.option, newValue, true);
-                    }
+                    
+                    if (struct.option)
+                        store.update(struct.option, newValue, (struct.silentUpdate ? false : true));
 
                     __(`.toggled-by-${id}`, element).forEach((div: HTMLElement) => {
                         div.toggle(div.classList.contains(`toggle-if-${Utils.Text.slugify(newValue.toString())}`));
@@ -220,8 +220,8 @@ export module Renderer {
                     __(".option-container", element).forEach((div: HTMLElement) => {
                         div.toggle(__(".option:not([hidden])", div).length > 0);
                     });
-
-                    Options.validateOption(el, struct);
+                    
+                    Options.validateOption(el, struct); //Validate callback has the 
 
                     if (Utils.Obj.isSet(struct.onChange))
                         struct.onChange(e, newValue);
@@ -259,20 +259,23 @@ export module Renderer {
 
         export function validateOption(element: HTMLElement, struct: OptionStruct) {
             if (struct.type == OptionType.text && Utils.Obj.isSet(struct.validation)) {
-                let validationDiv = element.parentElement;
-                validationDiv.classList.remove("valid", "invalid");
-                validationDiv.classList.add("validating");
+                let validationContainer = element.closest(".validation-container");
+                validationContainer.classList.remove("valid", "invalid");
+                validationContainer.classList.add("validating");
+                
+                let validationDesc = _(".validation-desc", validationContainer);
+                validationDesc.innerText = i18n(strings.validating);
 
                 struct.validation((struct.option ? struct.option : struct.name), (<HTMLInputElement>element).value).then(response => {
-                    validationDiv.classList.remove("validating");
+                    validationContainer.classList.remove("validating");
                     
                     if (response.valid) {
-                        validationDiv.classList.add("valid");
-                        validationDiv.setAttribute("title", response.message);
+                        validationContainer.classList.add("valid");
                     } else {
-                        validationDiv.classList.add("invalid");
-                        validationDiv.setAttribute("title", response.message);
+                        validationContainer.classList.add("invalid");
                     }
+                    
+                    validationDesc.innerText = response.message;
                 });
             }
         }

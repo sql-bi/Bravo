@@ -6,7 +6,7 @@
 
 import { OptionStruct, OptionType, Renderer } from '../helpers/renderer';
 import { Utils, _ } from '../helpers/utils';
-import { AutoScanEnum, DateConfiguration } from '../model/dates';
+import { AutoScanEnum } from '../model/dates';
 import { i18n } from '../model/i18n';
 import { strings } from '../model/strings';
 import { ManageDatesScenePane } from './scene-manage-dates-pane';
@@ -89,7 +89,7 @@ export class ManageDatesSceneInterval extends ManageDatesScenePane {
         });
 
         columnBrowser.on("select", (columns: string[]) => {
-            this.config.options.onlyTablesColumns = columns;
+            this.config.update("onlyTablesColumns", columns);
         });
     }
 

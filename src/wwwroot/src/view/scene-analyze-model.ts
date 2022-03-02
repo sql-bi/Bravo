@@ -182,12 +182,7 @@ export class AnalyzeModelScene extends MainScene {
 
     updateData() {
 
-        this.fullData = [];
-        this.doc.model.columns.forEach((column: ExtendedTabularColumn) => {
-            column.name = `${column.tableName}[${column.columnName}]`;
-            this.fullData.push(column);
-        });
-
+        this.fullData = this.doc.model.columns;
         this.aggregatedData = this.aggregateData(this.fullData);
         this.nestedData = this.nestData(this.fullData);
         this.nestedAggregatedData = this.nestData(this.aggregatedData);

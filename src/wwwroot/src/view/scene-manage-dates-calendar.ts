@@ -12,13 +12,14 @@ import { DateConfiguration, DateDefaults, DayOfWeek, QuarterWeekType, TypeStartF
 import { Doc } from '../model/doc';
 import { I18n, i18n } from '../model/i18n';
 import { strings } from '../model/strings';
+import { ManageDatesConfig } from './scene-manage-dates';
 import { ManageDatesScenePane } from './scene-manage-dates-pane';
 
 export class ManageDatesSceneCalendar extends ManageDatesScenePane {
 
     templates: DateConfiguration[];
 
-    constructor(config: OptionsStore<DateConfiguration>, doc: Doc, templates: DateConfiguration[]) {
+    constructor(config: OptionsStore<ManageDatesConfig>, doc: Doc, templates: DateConfiguration[]) {
         super(config, doc);
         this.templates = templates;
     }

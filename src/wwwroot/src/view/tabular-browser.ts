@@ -44,6 +44,7 @@ export class TabularBrowser extends View {
         this.config = config;
 
         this.element.classList.add("tabular-browser");
+        console.log(JSON.parse(JSON.stringify(data)));
         this.branches = this.prepareData(data);
         this.render();
     }
@@ -148,7 +149,7 @@ export class TabularBrowser extends View {
 
             const tableConfig: Tabulator.Options = {
                 maxHeight: (this.config.search ? "calc(100% - 50px)" : "100%"),
-                //selectable: this.config.selectable,
+                selectable: this.config.selectable,
                 headerVisible: this.config.selectable,
                 layout: "fitColumns",
                 dataTree: true,
@@ -195,11 +196,12 @@ export class TabularBrowser extends View {
                     });
                     row.getElement().classList.add("row-active");
                 }
-                let el = _(".tree-toggle", <HTMLElement>e.target);
-                if (!el.empty) {
-                    row.treeToggle();
+                if (!this.config.selectable) {
+                    let el = _(".tree-toggle", <HTMLElement>e.target);
+                    if (!el.empty) {
+                        row.treeToggle();
+                    }
                 }
-
                 this.trigger("click", item);
             });
         } else {
@@ -225,7 +227,7 @@ export class TabularBrowser extends View {
     prepareData(data: TabularDatabaseInfo): Branch[] {
 
         let branches: Dic<Branch> = {};
-
+        
         data.tables
             .sort((a, b) => a.name.localeCompare(b.name))
             .forEach(table => {

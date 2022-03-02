@@ -12,14 +12,15 @@ import { Doc } from '../model/doc';
 import { i18n } from '../model/i18n';
 import { PBIDesktopReport } from '../model/pbi-report';
 import { strings } from '../model/strings';
+import { ManageDatesConfig } from './scene-manage-dates';
 
 export class ManageDatesScenePane {
 
     doc: Doc;
     element: HTMLElement;
-    config: OptionsStore<DateConfiguration>;
+    config: OptionsStore<ManageDatesConfig>;
 
-    constructor(config: OptionsStore<DateConfiguration>, doc: Doc) {
+    constructor(config: OptionsStore<ManageDatesConfig>, doc: Doc) {
         this.config = config;
         this.doc = doc;
     }
@@ -39,17 +40,22 @@ export class ManageDatesScenePane {
             report: <PBIDesktopReport>this.doc.sourceData,
             configuration: this.config.options
         }).then(response => {
-      
-            if (field in response && response[field] !== TableValidation.Valid)
-                return <OptionValidation>{ 
-                    valid: false,
-                    message: i18n((<any>strings)[`tableValidation${response[field]}`]) 
-                };
+
+            let validationFields = {
+                dateTableName: "dateTableValidation",
+                dateReferenceTableName: "dateReferenceTableValidation",
+                holidaysTableName: "holidaysTableValidation",
+                holidaysDefinitionTableName: "holidaysDefinitionTableValidation"
+            };
+            let validationField = (<any>validationFields)[field];
+            let status = (<any>response)[validationField];
+            this.config.update(validationField, status, true);
 
             return <OptionValidation>{ 
-                valid: true, 
-                message: i18n(strings.tableValidationValid) 
+                valid: status == TableValidation.Valid,
+                message: i18n((<any>strings)[`tableValidation${status}`]) 
             };
+
         }).catch(ignore => 
             <OptionValidation>{ 
                 valid: false,

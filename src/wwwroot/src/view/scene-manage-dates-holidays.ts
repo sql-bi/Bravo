@@ -48,6 +48,7 @@ export class ManageDatesSceneHolidays extends ManageDatesScenePane {
                     value: true
                 },
                 type: OptionType.text,
+                silentUpdate: true,
                 validation: (name, value) => this.validateField(name)
             },
             {
@@ -60,6 +61,7 @@ export class ManageDatesSceneHolidays extends ManageDatesScenePane {
                     value: true
                 },
                 type: OptionType.text,
+                silentUpdate: true,
                 validation: (name, value) => this.validateField(name)
             },
         ];

@@ -159,7 +159,7 @@ export class ExportDataScene extends MainScene {
             {
                 option: "customDelimiter",
                 parent: "format",
-                name: `&mdash;&nbsp;&nbsp;${i18n(strings.exportDataCSVCustomDelimiter)}`,
+                name: i18n(strings.exportDataCSVCustomDelimiter),
                 attributes: `placeholder="${i18n(strings.exportDataCSVDelimiterPlaceholder)}" maxlength="1"`,
                 toggledBy: {
                     option: "delimiter",
