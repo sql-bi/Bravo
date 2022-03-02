@@ -4,14 +4,10 @@
     using System;
     using System.Diagnostics;
     using System.IO;
-    using System.Runtime.InteropServices;
     using System.Text;
 
     internal static class DesktopBridgeHelper
     {
-        [DllImport(ExternDll.Kernel32, CharSet = CharSet.Unicode, SetLastError = true)]
-        private static extern int GetCurrentPackageFullName(ref int packageFullNameLength, StringBuilder packageFullName);
-
         /// <summary>
         /// The process has no package identity
         /// </summary>
@@ -38,10 +34,10 @@
 
             var packageFullNameLength = 0;
             var packageFullName = new StringBuilder(0);
-            _ = GetCurrentPackageFullName(ref packageFullNameLength, packageFullName);
+            _ = Kernel32.GetCurrentPackageFullName(ref packageFullNameLength, packageFullName);
 
             packageFullName = new StringBuilder(packageFullNameLength);
-            var retval = GetCurrentPackageFullName(ref packageFullNameLength, packageFullName);
+            var retval = Kernel32.GetCurrentPackageFullName(ref packageFullNameLength, packageFullName);
 
             return retval != APPMODEL_ERROR_NO_PACKAGE;
         }

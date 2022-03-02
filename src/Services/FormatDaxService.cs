@@ -74,18 +74,24 @@
             // TODO: move add/remove FormatPrefix to the Dax.Formatter NugGet package
             const string FormatPrefix = "[x] := ";
             const int FormatPrefixLength = 7;
-            
+
             var request = new DaxFormatterMultipleRequest
             {
-                CallerApp = AppEnvironment.ApplicationName,
-                CallerVersion = AppEnvironment.ApplicationProductVersion,
+                ServerName = options.ServerName,
+                ServerVersion = options.ServerVersion,
+                ServerType = null, // TODO: Dax.Formatter identify ServerType
+                ServerEdition = options.ServerEdition.TryParseTo<Dax.Formatter.AnalysisServices.ServerEdition>(),
+                ServerMode = options.ServerMode.TryParseTo<Dax.Formatter.AnalysisServices.ServerMode>(),
+                ServerLocation = options.ServerLocation.TryParseTo<Dax.Formatter.AnalysisServices.ServerLocation>(),
+                DatabaseName = options.DatabaseName,
+                DatabaseCompatibilityLevel = options.CompatibilityLevel is not null ? options.CompatibilityLevel.ToString() : null, // TODO: Dax.Formatter declare DatabaseCompatibilityLevel int? instead of string
                 MaxLineLength = options.LineStyle,
                 SkipSpaceAfterFunctionName = options.SpacingStyle,
+                ListSeparator = options.ListSeparator ?? ',', // TODO: Dax.Formatter declare ListSeparator nullable
+                DecimalSeparator = options.DecimalSeparator ?? '.', // TODO: Dax.Formatter declare DecimalSeparator nullable
+                CallerApp = AppEnvironment.ApplicationName,
+                CallerVersion = AppEnvironment.ApplicationProductVersion,
             };
-
-            // TODO: set DaxFormatterRequest ListSeparator and DecimalSeparator nullable
-            request.ListSeparator = options.ListSeparator.GetValueOrDefault(request.ListSeparator);
-            request.DecimalSeparator = options.DecimalSeparator.GetValueOrDefault(request.DecimalSeparator);
 
             foreach (var measure in measures)
             {
@@ -109,7 +115,7 @@
                         {
                             // subtract the length of the prefix we removed only if the error is on the first line (zero-based index)
                             error.Column -= FormatPrefixLength;
-                            // Don't 'break;' because we can have multilple errors on the first line
+                            // Don't 'break;' as we can have multilple errors reported for a single line
                         }
                     }
                 }

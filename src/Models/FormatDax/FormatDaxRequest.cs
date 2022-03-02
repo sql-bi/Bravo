@@ -6,6 +6,7 @@
     using System.Collections.Generic;
     using System.ComponentModel.DataAnnotations;
     using System.Text.Json.Serialization;
+    using TOM = Microsoft.AnalysisServices;
 
     public class FormatDaxRequest
     {
@@ -45,18 +46,26 @@
         [JsonPropertyName("decimalSeparator")]
         public char? DecimalSeparator { get; set; }
 
- /*
-        TODO: available Dax.Formatter options
+        [JsonPropertyName("serverName")]
+        public string? ServerName { get; set; }
 
-        string ServerName
-        ServerEdition? ServerEdition
-        ServerType? ServerType
-        ServerMode? ServerMode
-        ServerLocation? ServerLocation
-        string ServerVersion
-        string DatabaseName
-        string DatabaseCompatibilityLevel
- */
+        [JsonPropertyName("serverVersion")]
+        public string? ServerVersion { get; set; }
+
+        [JsonPropertyName("serverEdition")]
+        public TOM.ServerEdition? ServerEdition { get; set; }
+
+        [JsonPropertyName("serverMode")]
+        public TOM.ServerMode? ServerMode { get; set; }
+
+        [JsonPropertyName("serverLocation")]
+        public TOM.ServerLocation? ServerLocation { get; set; }
+
+        [JsonPropertyName("databaseName")]
+        public string? DatabaseName { get; set; }
+
+        [JsonPropertyName("compatibilityLevel")]
+        public int? CompatibilityLevel { get; set; }
     }
 
     public enum DaxLineBreakStyle
