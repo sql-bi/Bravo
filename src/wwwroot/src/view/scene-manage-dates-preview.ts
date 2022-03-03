@@ -4,24 +4,67 @@
  * https://www.sqlbi.com
 */
 
-import { _ } from '../helpers/utils';
+import { Utils, _ } from '../helpers/utils';
+import { host } from '../main';
+import { ManageDatesPreviewChangesFromPBIDesktopReportRequest } from '../controllers/host';
+import { DateConfiguration } from '../model/dates';
+import { Doc } from '../model/doc';
 import { i18n } from '../model/i18n';
 import { strings } from '../model/strings';
-import { BackableScene } from './scene-back';
+import { LoaderScene } from './scene-loader';
+import { PBIDesktopReport } from '../model/pbi-report';
+import { AppError } from '../model/exceptions';
+import { ErrorScene } from './scene-error';
+import { ModelChanges } from '../model/model-changes';
 
-export class ManageDatesPreviewScene extends BackableScene {
+export class ManageDatesPreviewScene extends LoaderScene {
 
-    constructor(id: string, container: HTMLElement) {
-        super(id, container, null, true); 
-        this.render();
+    dateConfig: DateConfiguration;
+    doc: Doc;
+
+    constructor(id: string, container: HTMLElement, dateConfig: DateConfiguration, doc: Doc) {
+        super(id, container, null/*i18n(strings.manageDatesPreviewLoading)*/, ()=>{
+            host.abortManageDatesPreviewChanges();
+        }); 
+
+        this.dateConfig = dateConfig;
+        this.doc = doc;
+
+        this.generatePreview();
     }
 
-    render() {
-        super.render();
-        
+    generatePreview() {
+
+        let request: ManageDatesPreviewChangesFromPBIDesktopReportRequest = {
+            settings: {
+                configuration: this.dateConfig,
+                previewRows: 100
+            },
+            report: <PBIDesktopReport>this.doc.sourceData
+        }
+
+console.log(request);
+
+        host.manageDatesPreviewChanges(request)
+            .then(changes => {
+                this.renderPreview(changes)
+            })
+            .catch((error: AppError) => {
+                if (error.requestAborted) return;
+
+                let errorScene = new ErrorScene(Utils.DOM.uniqueId(), this.element.parentElement, error, true);
+                this.splice(errorScene);
+            });
+    }
+
+    renderPreview(changes: ModelChanges) {
+        this.removeLoader();
+                        
+        console.log(changes);
+
         let html = `
-           
+            Done!
         `;
-        this.element.insertAdjacentHTML("beforeend", html);
+        this.element.insertAdjacentHTML("beforeend", html); 
     }
 }

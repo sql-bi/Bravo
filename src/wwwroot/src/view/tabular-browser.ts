@@ -44,7 +44,6 @@ export class TabularBrowser extends View {
         this.config = config;
 
         this.element.classList.add("tabular-browser");
-        console.log(JSON.parse(JSON.stringify(data)));
         this.branches = this.prepareData(data);
         this.render();
     }
@@ -148,7 +147,7 @@ export class TabularBrowser extends View {
             });
 
             const tableConfig: Tabulator.Options = {
-                maxHeight: (this.config.search ? "calc(100% - 50px)" : "100%"),
+                height: (this.config.search ? "calc(100% - 50px)" : "100%"),
                 selectable: this.config.selectable,
                 headerVisible: this.config.selectable,
                 layout: "fitColumns",

@@ -22,6 +22,7 @@ import { ManageDatesSceneHolidays } from './scene-manage-dates-holidays';
 import { ManageDatesSceneInterval } from './scene-manage-dates-interval';
 import { ManageDatesSceneDates } from './scene-manage-dates-dates';
 import { ManageDatesSceneTimeIntelligence } from './scene-manage-dates-time-intelligence';
+import { ManageDatesPreviewScene } from './scene-manage-dates-preview';
 
 export interface ManageDatesConfig extends DateConfiguration {
     region?: string
@@ -126,15 +127,27 @@ export class ManageDatesScene extends MainScene {
 
                 }, "calendar", false);
 
-                this.config.on("change", (changedOptions: any)=>{
-                    this.updateModelCheck();
-                });
                 this.updateModelCheck();
+
+                this.listen();
             })
             .catch((error: AppError) => {
                 let errorScene = new ErrorScene(Utils.DOM.uniqueId(), this.element.parentElement, error);
                 this.splice(errorScene);
             });
+    }
+
+    listen() {
+        this.config.on("change", (changedOptions: any)=>{
+            this.updateModelCheck();
+        });
+
+        this.doButton.addEventListener("click", e => {
+            e.preventDefault();
+
+            let previewScene = new ManageDatesPreviewScene(Utils.DOM.uniqueId(), this.element.parentElement, this.config.options, this.doc);
+            this.push(previewScene);
+        }); 
     }
 
     update() {
@@ -212,6 +225,8 @@ export class ManageDatesScene extends MainScene {
         this.doButton.toggleAttribute("disabled", this.status == ManageDatesStatus.incompatible);
                     
     }
+
+
 
     destroy() {
         this.menu.destroy();

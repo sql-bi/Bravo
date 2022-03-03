@@ -53,7 +53,9 @@ export class Page extends View {
             //[PageType.BestPractices]: BestPracticesScene,
         }
         if (type in classes) {
-            let initialScene = (doc.featureSupported(type) ? 
+            let initialScene = (doc.featureSupported(type)
+                && type !== PageType.ManageDates /* TODO Remove this line to enable ManageDates */ 
+                ? 
                 new classes[type](Utils.DOM.uniqueId(), this.element, doc) : 
                 new UnsupportedScene(Utils.DOM.uniqueId(), this.element, type)
             );

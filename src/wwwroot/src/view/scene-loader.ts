@@ -35,6 +35,10 @@ export class LoaderScene extends BackableScene {
         this.loader = new Loader(_(".loader-container", this.element), true, false, this.manual);
     }
 
+    removeLoader() {
+        _(".loader-container", this.element).remove();
+    }
+
     update(title?: string, progress?: number) {
         super.update();
 
