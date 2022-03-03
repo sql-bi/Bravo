@@ -157,7 +157,7 @@ export class ExportDataScene extends MainScene {
                     ["", i18n(strings.exportDataCSVDelimiterSystem)],
                     [",", i18n(strings.exportDataCSVDelimiterComma)],
                     [";", i18n(strings.exportDataCSVDelimiterSemicolon)],
-                    ["\t", i18n(strings.exportDataCSVDelimiterTab)],
+                    ["{tab}", i18n(strings.exportDataCSVDelimiterTab)],
                     ["{custom}", i18n(strings.exportDataCSVDelimiterOther)]
                 ]
             },
@@ -427,6 +427,7 @@ export class ExportDataScene extends MainScene {
         if (this.config.options.format == ExportDataFormat.Csv) {
 
             let delimiter = this.config.options.delimiter;
+            if (delimiter == "{tab}") delimiter = "\t";
             if (delimiter == "{custom}") delimiter = this.config.options.customDelimiter;
 
             const settings = <ExportDelimitedTextSettings>{
@@ -435,6 +436,7 @@ export class ExportDataScene extends MainScene {
                 delimiter: delimiter,
                 quoteStringFields: this.config.options.quoteStringFields
             };
+
             if (this.doc.type == DocType.dataset) {
                 exportRequest = <ExportDelimitedTextFromPBICloudDatasetRequest>{
                     settings: settings,
