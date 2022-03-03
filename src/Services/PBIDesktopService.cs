@@ -187,8 +187,6 @@
             using var connection = TabularConnectionWrapper.ConnectTo(report);
             var database = VpaxToolsHelper.GetDatabase(connection);
             {
-                database.Features = AppFeature.All;
-
                 if (connection.Database.ReadWriteMode == ReadWriteMode.ReadOnly)
                     database.Features &= ~AppFeature.AllUpdateModel;
 

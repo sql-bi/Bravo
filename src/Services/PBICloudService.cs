@@ -295,7 +295,6 @@
             using var connection = TabularConnectionWrapper.ConnectTo(dataset, CurrentAuthentication.AccessToken);
             var database = VpaxToolsHelper.GetDatabase(connection);
             {
-                database.Features = AppFeature.All;
                 database.Features &= ~AppFeature.ManageDatesAll;
 
                 if (connection.Database.ReadWriteMode == SSAS.ReadWriteMode.ReadOnly)

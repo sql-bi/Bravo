@@ -13,11 +13,14 @@
 
     internal static class VpaxToolsHelper
     {
-        public static Stream GetVpax(TabularConnectionWrapper connection, bool includeVpaModel = false, bool includeTomDatabase = false, bool includetatistics = false, int sampleRows = 0)
+        public static Stream GetVpax(TabularConnectionWrapper connection, bool includeVpaModel = false, /*bool includeTomDatabase = false,*/ bool includeStatistics = false, int sampleRows = 0)
         {
-            var daxModel = GetDaxModel(connection, includetatistics, sampleRows);
+            var daxModel = GetDaxModel(connection, includeStatistics, sampleRows);
             var vpaModel = includeVpaModel ? new Dax.ViewVpaExport.Model(daxModel) : null;
-            var tomDatabase = includeTomDatabase ? (Microsoft.AnalysisServices.Database)connection.Database.Model.Database : null; // TOFIX: VertiPaq-Analyzer NuGet package - change tomModel from 'Microsoft.AnalysisServices.Database' to 'Microsoft.AnalysisServices.Tabular.Database'
+
+            // TOFIX: VertiPaq-Analyzer NuGet package - change tomModel from 'Microsoft.AnalysisServices.Database' to 'Microsoft.AnalysisServices.Tabular.Database'
+            //var tomDatabase = includeTomDatabase ? (Microsoft.AnalysisServices.Database)connection.Database : null;
+            var tomDatabase = (Microsoft.AnalysisServices.Database?)null;
 
             var stream = new MemoryStream();
             {
@@ -40,7 +43,6 @@
 
             var tabularDatabase = GetDatabase(vpaxContent.DaxModel);
             {
-                tabularDatabase.Features = AppFeature.All;
                 tabularDatabase.Features &= ~AppFeature.AnalyzeModelSynchronize;
                 tabularDatabase.Features &= ~AppFeature.AnalyzeModelExportVpax;
                 tabularDatabase.Features &= ~AppFeature.FormatDaxSynchronize;
@@ -54,9 +56,17 @@
         public static TabularDatabase GetDatabase(TabularConnectionWrapper connection)
         {
             var daxModel = GetDaxModel(connection);
-            var tabularDatabase = GetDatabase(daxModel);
+            var database = GetDatabase(daxModel);
 
-            return tabularDatabase;
+            if (database.Info is not null)
+            {
+                database.Info.ServerVersion = connection.Server.Version;
+                database.Info.ServerEdition = connection.Server.Edition;
+                database.Info.ServerMode = connection.Server.ServerMode;
+                database.Info.ServerLocation = connection.Server.ServerLocation;
+            }
+
+            return database;
         }
 
         private static TabularDatabase GetDatabase(Model daxModel)
@@ -104,6 +114,14 @@
                 Info = new TabularDatabaseInfo
                 {
                     ETag = databaseETag,
+                    Name = daxModel.ModelName.Name,
+                    ServerName = daxModel.ServerName.Name,
+                    ServerVersion = null,
+                    ServerEdition = null,
+                    ServerMode = null,
+                    ServerLocation = null,
+                    CompatibilityMode = daxModel.CompatibilityMode.TryParseTo<Microsoft.AnalysisServices.CompatibilityMode>(),
+                    CompatibilityLevel = daxModel.CompatibilityLevel,
                     TablesCount = vpaModel.Tables.Count(),
                     ColumnsCount = vpaModel.Columns.Count(),
                     TablesMaxRowsCount = vpaModel.Tables.Any() ? vpaModel.Tables.Max((t) => t.RowsCount) : 0,
@@ -131,6 +149,7 @@
 
         private static Model GetDaxModel(TabularConnectionWrapper connectionWrapper, bool includeStatistics = false, int sampleRows = 0)
         {
+            var server = connectionWrapper.Server;
             var database = connectionWrapper.Database;
             var daxModel = TomExtractor.GetDaxModel(database.Model, extractorApp: AppEnvironment.ApplicationName, extractorVersion: AppEnvironment.ApplicationProductVersion);
 
@@ -139,7 +158,7 @@
                 DmvExtractor.PopulateFromDmv(
                     daxModel,
                     connection,
-                    serverName: database.Parent.Name,
+                    serverName: server.Name,
                     databaseName: database.Name,
                     extractorApp: AppEnvironment.ApplicationName,
                     extractorVersion: AppEnvironment.ApplicationProductVersion

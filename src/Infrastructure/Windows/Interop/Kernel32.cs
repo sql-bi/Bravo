@@ -2,6 +2,7 @@
 {
     using System;
     using System.Runtime.InteropServices;
+    using System.Text;
 
     internal static class Kernel32
     {
@@ -12,5 +13,8 @@
 
         [DllImport(ExternDll.Kernel32, SetLastError = true)]
         public static extern int GetCurrentThreadId();
+
+        [DllImport(ExternDll.Kernel32, CharSet = CharSet.Unicode, SetLastError = true)]
+        public static extern int GetCurrentPackageFullName(ref int packageFullNameLength, StringBuilder packageFullName);
     }
 }
