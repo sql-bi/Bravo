@@ -5,16 +5,15 @@
 */
 
 import { ThemeType } from '../controllers/theme';
+import { OptionStruct, OptionType, Renderer } from '../helpers/renderer';
 import {  _, __ } from '../helpers/utils';
-import { app, auth } from '../main';
+import { app, auth, optionsController } from '../main';
 import { I18n, i18n } from '../model/i18n'; 
 import { strings } from '../model/strings';
 import { Confirm } from './confirm';
 import { DialogResponse } from './dialog';
-import { OptionType } from './options-dialog';
-import { OptionsDialogMenuItem } from './options-dialog-item';
 
-export class OptionsDialogGeneral extends OptionsDialogMenuItem {
+export class OptionsDialogGeneral {
 
     render(element: HTMLElement) {
 
@@ -25,7 +24,7 @@ export class OptionsDialogGeneral extends OptionsDialogMenuItem {
             languages.push([locale, name]);
         }
 
-        this.optionsStruct = [
+        let optionsStruct: OptionStruct[] = [
             {
                 option: "theme",
                 icon: "theme-auto",
@@ -45,11 +44,9 @@ export class OptionsDialogGeneral extends OptionsDialogMenuItem {
                 description: i18n(strings.optionLanguageDescription),
                 type: OptionType.select,
                 values: languages,
-                onChange: e => {
+                onChange: (e, value) => {
 
-                    let element = <HTMLSelectElement>e.currentTarget;
-                    let newLanguage = element.value;
-                    if (newLanguage != I18n.instance.language) {
+                    if (value != I18n.instance.language) {
                         let alert = new Confirm();
                         alert.show(i18n(strings.optionLanguageResetConfirm))
                             .then((response: DialogResponse) => {
@@ -64,7 +61,7 @@ export class OptionsDialogGeneral extends OptionsDialogMenuItem {
                 icon: "powerbi",
                 name: i18n(strings.optionAccount),
                 description: i18n(strings.optionAccountDescription),
-                type: OptionType.custom,
+                type: OptionType.customCtrl,
                 customHtml: () => `
                     <p>
                         ${auth.signedIn ? 
@@ -77,13 +74,15 @@ export class OptionsDialogGeneral extends OptionsDialogMenuItem {
             },
         ];
 
-        super.render(element);
+        optionsStruct.forEach(struct => {
+            Renderer.Options.render(struct, element, optionsController);
+        });
 
-        this.element.addLiveEventListener("click", ".signin", (e, element) => {
+        element.addLiveEventListener("click", ".signin", (e, _element) => {
             e.preventDefault();
             auth.signIn()
                 .then(() => { 
-                   element.parentElement.innerHTML = `
+                   _element.parentElement.innerHTML = `
                         ${i18n(strings.signedInCtrlTitle, {name: auth.account.username})} 
                         <span class="link signout">${i18n(strings.signOut)}</span>
                     `;
@@ -91,11 +90,11 @@ export class OptionsDialogGeneral extends OptionsDialogMenuItem {
                 .catch(error => {});
         });
 
-        this.element.addLiveEventListener("click", ".signout", (e, element) => {
+        element.addLiveEventListener("click", ".signout", (e, _element) => {
             e.preventDefault();
             auth.signOut()
                 .then(()=>{
-                    element.parentElement.innerHTML = `
+                    _element.parentElement.innerHTML = `
                         <div class="button signin">${i18n(strings.signIn)}</div>
                     `;
                 }); 

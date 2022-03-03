@@ -168,7 +168,7 @@ export class DaxFormatterScene extends MainScene {
         _("#preview-menu .menu", this.body).insertAdjacentHTML("beforeend", `
 
             <div class="toolbar">
-                <div class="toggle-side toggle solo icon-side" title="${i18n(strings.sideCtrlTitle)}"></div>
+                <div class="toggle-side toggle solo icon-v-split" title="${i18n(strings.sideCtrlTitle)}"></div>
             </div>
         `);
 
@@ -400,7 +400,7 @@ export class DaxFormatterScene extends MainScene {
         if (this.table) {
             this.table.redraw(true);
 
-            let rows = this.table.getRows("visible");
+            let rows = this.table.getRows("active");
             rows.forEach(row => { 
                 if ("reformat" in row) { // This is a bug has been reported here: https://github.com/olifolkerd/tabulator/issues/3580
                     row.reformat();
@@ -517,8 +517,9 @@ export class DaxFormatterScene extends MainScene {
                     {column: "name", dir: "asc"}, 
                 ],
                 rowFormatter: row => {
-
                     try { //Bypass calc rows
+                        if ((<any>row)._row && (<any>row)._row.type == "calc") return;
+
                         const measure = <TabularMeasure>row.getData();
                         if (daxMeasureName(measure) in this.previewing) 
                             return;
@@ -532,7 +533,7 @@ export class DaxFormatterScene extends MainScene {
                         } else if (status == MeasureStatus.NotFormatted) {
                             element.classList.add("row-highlighted");
                         }
-                    }catch(e){}
+                    }catch(ignore){}
                 },
                 columns: columns,
                 data: data
@@ -637,6 +638,7 @@ export class DaxFormatterScene extends MainScene {
         let formatOptions = optionsController.options.customOptions.formatting.daxFormatter;
         formatOptions.listSeparator = separators[region][0];
         formatOptions.decimalSeparator = separators[region][1];
+        formatOptions.autoLineBreakStyle = this.doc.model.autoLineBreakStyle;
 
         return {
             options: formatOptions,
@@ -864,6 +866,9 @@ export class DaxFormatterScene extends MainScene {
             this.maybeAutoGenerateFormattedPreview();
         });
         optionsController.on("customOptions.formatting.daxFormatter.lineStyle.change", (changedOptions: any) => {
+            this.maybeAutoGenerateFormattedPreview();
+        });
+        optionsController.on("customOptions.formatting.daxFormatter.lineBreakStyle.change", (changedOptions: any) => {
             this.maybeAutoGenerateFormattedPreview();
         });
     }

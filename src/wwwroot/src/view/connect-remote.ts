@@ -83,12 +83,13 @@ export class ConnectRemote extends ConnectMenuItem {
                 ],
                 rowFormatter: row => {
                     try { //Bypass calc rows
+                        if ((<any>row)._row && (<any>row)._row.type == "calc") return;
                         const dataset = <PBICloudDataset>row.getData();
                         if (dataset.connectionMode != PBICloudDatasetConnectionMode.Supported) {
                             let element = row.getElement();
                             element.classList.add("row-disabled");
                         }
-                    }catch(e){}
+                    }catch(ignore){}
                 },
                 columns: [
                     { 
@@ -110,11 +111,8 @@ export class ConnectRemote extends ConnectMenuItem {
                         sorter: (a, b, aRow, bRow, column, dir, sorterParams) => {
                             const datasetA = <PBICloudDataset>aRow.getData();
                             const datasetB = <PBICloudDataset>bRow.getData();
-
                             a = `${datasetA.connectionMode == PBICloudDatasetConnectionMode.Supported ? "_" : ""}${datasetA.name}`;
-
                             b = `${datasetB.connectionMode == PBICloudDatasetConnectionMode.Supported ? "_" : ""}${datasetB.name}`;
-                            
                             return String(a).toLowerCase().localeCompare(String(b).toLowerCase());
                         }
                     },

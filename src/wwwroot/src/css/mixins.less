@@ -290,30 +290,42 @@
 }
 
 @keyframes prixClipFix {
-      0%   {clip-path:polygon(50% 50%,0 0,0 0,0 0,0 0,0 0)}
-      25%  {clip-path:polygon(50% 50%,0 0,100% 0,100% 0,100% 0,100% 0)}
-      50%  {clip-path:polygon(50% 50%,0 0,100% 0,100% 100%,100% 100%,100% 100%)}
-      75%  {clip-path:polygon(50% 50%,0 0,100% 0,100% 100%,0 100%,0 100%)}
-      100% {clip-path:polygon(50% 50%,0 0,100% 0,100% 100%,0 100%,0 0)}
-  }
+    0%   {clip-path:polygon(50% 50%,0 0,0 0,0 0,0 0,0 0)}
+    25%  {clip-path:polygon(50% 50%,0 0,100% 0,100% 0,100% 0,100% 0)}
+    50%  {clip-path:polygon(50% 50%,0 0,100% 0,100% 100%,100% 100%,100% 100%)}
+    75%  {clip-path:polygon(50% 50%,0 0,100% 0,100% 100%,0 100%,0 100%)}
+    100% {clip-path:polygon(50% 50%,0 0,100% 0,100% 100%,0 100%,0 0)}
+}
 
 
-  .expandable {
-      .expander {
-          .icon;
-          .icon-collapsed;
-            cursor: pointer;
-      }
-      .expandable-content {
-          display: none;
-      }
+.expandable {
+    .expander {
+        .icon;
+        .icon-collapsed;
+        cursor: pointer;
+        margin-left: 4px;
+        color: @accent-back-color !important;
+        font-size: 0.9em;
+        font-weight: 500;
 
-      &.expanded {
-          .expander {
-              .icon-expanded;
-          }
-          .expandable-content {
-              display: block;
-          }
-      }
-  }
+        &:before {
+            display: inline-block;
+            transition: transform 100ms ease-in;
+            margin: 0;
+        } 
+    }
+    .expandable-content {
+        display: none;
+    }
+
+    &.expanded {
+        .expander {
+            &:before {
+                transform: rotate(-90deg);   
+            }
+        }
+        .expandable-content {
+            display: initial;
+        }
+    }
+}

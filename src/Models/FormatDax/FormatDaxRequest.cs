@@ -20,14 +20,12 @@
 
     public class FormatDaxOptions
     {
-        // TODO: remove AutoLineBreakStyle default value and enable [RequiredAttribute] as soon as Daniele adds the new UI-side parameter
-
         /// <summary>
         /// Auto-calculated <see cref="DaxLineBreakStyle"/> based on the existing measures in the model. See <see cref="TabularDatabaseInfo.AutoLineBreakStyle"/>
         /// </summary>
-        //[Required]
+        [Required]
         [JsonPropertyName("autoLineBreakStyle")]
-        public DaxLineBreakStyle? AutoLineBreakStyle { get; set; } = AppEnvironment.FormatDaxLineBreakDefault;
+        public DaxLineBreakStyle? AutoLineBreakStyle { get; set; }
 
         /// <summary>
         /// Preferred <see cref="DaxLineBreakStyle"/> from user settings

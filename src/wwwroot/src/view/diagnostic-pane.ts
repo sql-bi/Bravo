@@ -7,15 +7,17 @@
 import { Logger, LogMessage, LogMessageUpdate } from '../controllers/logger';
 import { ContextMenu, ContextMenuItemOptions, ContextMenuItemType } from '../helpers/contextmenu';
 import { Utils, _, __ } from '../helpers/utils';
-import { host, logger } from '../main';
+import { host, logger, optionsController } from '../main';
 import { I18n, i18n } from '../model/i18n';
 import { strings } from '../model/strings';
 import { View } from './view';
 import JSONFormatter from 'json-formatter-js';
+import { DiagnosticLevelType } from '../controllers/options';
 
 export class DiagnosticPane extends View {
 
     logTable: HTMLElement;
+    diagnosticLevelElement: HTMLSelectElement;
     timeFormatter: Intl.DateTimeFormat;
 
     constructor(id: string, container: HTMLElement, title: string) {
@@ -24,10 +26,18 @@ export class DiagnosticPane extends View {
         let html = `
             <div class="toolbar">
                 <div class="title">${title}</div>
-                <div class="controls">
+                <div class="controls"> 
+                    <select class="diagnostic-level">
+                        <option value="${DiagnosticLevelType.Basic}">${i18n(strings.optionDiagnosticLevelBasic)}</option>
+                        <option value="${DiagnosticLevelType.Verbose}" ${optionsController.options.diagnosticLevel == DiagnosticLevelType.Verbose ? "selected" : ""}>${i18n(strings.optionDiagnosticLevelVerbose)}</option>
+                    </select>
+
                     <div class="clear ctrl icon-clear solo" title="${i18n(strings.clearCtrlTitle)}"></div>
+
                     <hr>
+
                     <div class="minimize-pane ctrl icon-minimize solo" title="${i18n(strings.minimizeCtrlTitle)}"></div>
+
                     <div class="close-pane ctrl icon-close solo" title="${i18n(strings.closeCtrlTitle)}"></div>
                 </div>
             </div>
@@ -37,6 +47,7 @@ export class DiagnosticPane extends View {
         this.element.insertAdjacentHTML("beforeend", html);
 
         this.logTable = _(".log", this.element);
+        this.diagnosticLevelElement = <HTMLSelectElement>_(".diagnostic-level", this.element);
         this.timeFormatter = new Intl.DateTimeFormat(I18n.instance.locale.locale, {hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
 
         this.listen();
@@ -73,9 +84,13 @@ export class DiagnosticPane extends View {
                 items: items 
             }, e);
         });
-
+        this.diagnosticLevelElement.addEventListener("click", e => {
+            e.preventDefault();
+            optionsController.update("diagnosticLevel", this.diagnosticLevelElement.value);
+        });
         _(".close-pane", this.element).addEventListener("click", e => {
             e.preventDefault();
+            optionsController.update("diagnosticLevel", DiagnosticLevelType.None);
             this.trigger("close");
             this.clear();
         });
@@ -86,6 +101,10 @@ export class DiagnosticPane extends View {
         _(".clear", this.element).addEventListener("click", e => {
             e.preventDefault();
             this.clear();
+        });
+
+        optionsController.on("diagnosticLevel.change", ()=>{
+            this.diagnosticLevelElement.value = optionsController.options.diagnosticLevel;
         });
 
         logger.on("log", (message: LogMessage) => {

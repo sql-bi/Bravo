@@ -11,21 +11,13 @@ import {  _, __ } from '../helpers/utils';
 import { app, optionsController } from '../main';
 import { i18n } from '../model/i18n'; 
 import { strings } from '../model/strings';
-import { OptionsDialog } from './options-dialog';
 
 export class OptionsDialogAbout {
 
-    element: HTMLElement;
-    dialog: OptionsDialog;
     updateStatusDiv: HTMLElement;
 
-    constructor(dialog: OptionsDialog) {
-        this.dialog = dialog;
-    }
-
     render(element: HTMLElement) {
-        this.element = element;
-        
+     
         const updateChannel = optionsController.options.updateChannel;
 
         let html = `
@@ -44,9 +36,6 @@ export class OptionsDialogAbout {
                         ${i18n(strings.appVersion, { version: app.currentVersion.toString()})}
                     </div>
                     <div class="update-status list"></div>
-                    
-                    
-
                 </div>
             </div>
             <div class="sqlbi">
@@ -61,8 +50,8 @@ export class OptionsDialogAbout {
                 </div>
             </div>
         `;
-        this.element.insertAdjacentHTML("beforeend", html);
-        this.updateStatusDiv = _(".update-status", this.element);
+        element.insertAdjacentHTML("beforeend", html);
+        this.updateStatusDiv = _(".update-status", element);
 
         _("#option-updatechannel").addEventListener("change", e => {
             let el = <HTMLSelectElement>e.currentTarget;
@@ -79,7 +68,7 @@ export class OptionsDialogAbout {
                 <div>
                     <div class="pending-update">${i18n(strings.appUpdateAvailable, { version: pendingVersion.toString() })}</div>
                     <span class="button" href="${pendingVersion.info.downloadUrl}" target="downloader">${i18n(strings.appUpdateDownload)}</span> &nbsp; 
-                    <span class="button button-alt" href="${pendingVersion.info.changelogUrl}">${i18n(strings.appUpdateChangelog)}</span>
+                    <span class="link" href="${pendingVersion.info.changelogUrl}">${i18n(strings.appUpdateChangelog)}</span>
                 </div>
             ` : `
                 <div class="up-to-date">${i18n(strings.appUpToDate)}</div>
@@ -96,10 +85,5 @@ export class OptionsDialogAbout {
         } else {
             this.updateStatusDiv.innerHTML = statusHtml(app.pendingVersion);
         }
-    }
-
-    destroy() {
-        this.dialog = null;
-        this.element = null;
     }
 }

@@ -175,6 +175,20 @@ export class App {
             }
         });
 
+        // Catch expandable content
+        document.addLiveEventListener("click", ".expandable .expander", (e, element) => {
+            e.preventDefault();
+
+            let container = element.closest(".expandable");
+            if (!container.classList.contains("expanded")) {
+                element.innerText = element.dataset.less;
+                container.classList.add("expanded");
+            } else {
+                element.innerText = element.dataset.more;
+                container.classList.remove("expanded");
+            }
+        });
+
         // Catch host messages
         host.on(WebMessageType.ReportOpen, (data: PBIDesktopReportOpenWebMessage) => {
             this.openReport(data.report);
@@ -248,7 +262,6 @@ export class App {
         });
 
         this.diagnosticPane.on("close", ()=> {
-            optionsController.update("diagnosticLevel", DiagnosticLevelType.None);
             this.updatePanels();
         });
 
@@ -256,8 +269,7 @@ export class App {
             this.toggleDiagnostics(false);
         });
 
-        // Options change
-        optionsController.on("diagnosticLevel.change", (changedOptions: any) => {
+        optionsController.on("diagnosticLevel.change", () => {
             this.updatePanels();
         });
     }

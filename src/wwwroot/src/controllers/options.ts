@@ -8,6 +8,7 @@ import { Dispatchable } from '../helpers/dispatchable';
 import { Utils } from '../helpers/utils';
 import { host, logger } from '../main';
 import { AppError } from '../model/exceptions';
+import { DaxLineBreakStyle } from '../model/tabular';
 import { ThemeType } from './theme';
 
 export interface Options {
@@ -41,6 +42,8 @@ export enum ClientOptionsFormattingRegion {
 }
 export interface FormatDaxOptions {
     lineStyle: DaxFormatterLineStyle
+    lineBreakStyle: DaxLineBreakStyle
+    autoLineBreakStyle: DaxLineBreakStyle
     spacingStyle: DaxFormatterSpacingStyle
     listSeparator?: string
     decimalSeparator?: string
@@ -70,12 +73,73 @@ export enum DiagnosticLevelType {
 }
 
 type optionsMode = "host" | "browser"
-export class OptionsController extends Dispatchable {
+
+export class OptionsStore<T> extends Dispatchable {
+
+    options: T;
+
+    constructor(options?: T) {
+        super();
+        this.options = options;
+    }
+
+    getOption(optionPath: string): any {
+
+        let obj = this.options; 
+        let path = optionPath.split(".");
+        for (let i = 0; i < path.length; i++) {
+            let prop = path[i];
+            if (i == path.length - 1) {
+                return (<any>obj)[prop];
+            } else { 
+                if (!(prop in obj))
+                    break;
+                obj = (<any>obj)[prop];
+            }
+        }
+        return null;
+    }
+
+    update(optionPath: string, value: any, triggerChange = false) {
+
+        let changed = {};
+        let changedOptions = changed;
+
+        let triggerPath = "";
+
+        let obj = this.options; 
+        let path = optionPath.split(".");
+
+        path.forEach((prop, index) => {
+            if (index == path.length - 1) {
+                (<any>obj)[prop] = value;
+                (<any>changed)[prop] = value;
+            } else { 
+                if (!(prop in obj))
+                    (<any>obj)[prop] = {};
+                obj = (<any>obj)[prop];
+                
+                (<any>changed)[prop] = {};
+                changed = (<any>changed)[prop];
+            }
+            triggerPath += `${prop}.`;
+        });
+        this.save();
+
+        if (triggerChange) {
+            this.trigger("change", changedOptions);
+            this.trigger(`${triggerPath}change`, changedOptions);
+        }
+    }
+
+    save() {
+        this.trigger("save");
+    }
+}
+export class OptionsController extends OptionsStore<Options> {
 
     storageName = "Bravo";
     mode: optionsMode;
-
-    options: Options;
 
     defaultOptions: Options = {
         theme: ThemeType.Auto,
@@ -94,6 +158,8 @@ export class OptionsController extends Dispatchable {
                 daxFormatter: {
                     spacingStyle: DaxFormatterSpacingStyle.SpaceAfterFunction,
                     lineStyle: DaxFormatterLineStyle.LongLine,
+                    lineBreakStyle: DaxLineBreakStyle.InitialLineBreak,
+                    autoLineBreakStyle: DaxLineBreakStyle.InitialLineBreak
                 }
             },
             panels: [70, 30]
@@ -101,7 +167,8 @@ export class OptionsController extends Dispatchable {
     };
 
     constructor(options?: Options, mode: optionsMode = "host") {
-        super();
+        super(options);
+
         this.mode = mode;
         if (options) {
             this.options = Utils.Obj.merge(this.defaultOptions, options);
@@ -145,8 +212,8 @@ export class OptionsController extends Dispatchable {
                         this.trigger("change", Utils.Obj.diff(this.defaultOptions, this.options));
                     }
                 })
-                .catch(error => {
-                    try { logger.logError(AppError.InitFromError(error)); } catch(ignore) {}
+                .catch((error: AppError) => {
+                    try { logger.logError(error); } catch(ignore) {}
                 });
         } else {
             try {
@@ -172,55 +239,5 @@ export class OptionsController extends Dispatchable {
                 try { logger.logError(AppError.InitFromError(error)); } catch(ignore) {}
             }
         }
-    }
-
-    //Change option
-    update(optionPath: string, value: any, triggerChange = false) {
-
-        let changed = {};
-        let changedOptions = changed;
-
-        let triggerPath = "";
-
-        let obj = this.options; 
-        let path = optionPath.split(".");
-
-        path.forEach((prop, index) => {
-            if (index == path.length - 1) {
-                (<any>obj)[prop] = value;
-                (<any>changed)[prop] = value;
-            } else { 
-                if (!(prop in obj))
-                    (<any>obj)[prop] = {};
-                obj = (<any>obj)[prop];
-                
-                (<any>changed)[prop] = {};
-                changed = (<any>changed)[prop];
-            }
-            triggerPath += `${prop}.`;
-        });
-        this.save();
-
-        if (triggerChange) {
-            this.trigger("change", changedOptions);
-            this.trigger(`${triggerPath}change`, changedOptions);
-        }
-    }
-
-    getOption(optionPath: string): any {
-
-        let obj = this.options; 
-        let path = optionPath.split(".");
-        for (let i = 0; i < path.length; i++) {
-            let prop = path[i];
-            if (i == path.length - 1) {
-                return (<any>obj)[prop];
-            } else { 
-                if (!(prop in obj))
-                    break;
-                obj = (<any>obj)[prop];
-            }
-        }
-        return null;
     }
 }

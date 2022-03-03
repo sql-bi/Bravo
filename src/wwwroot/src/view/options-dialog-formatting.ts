@@ -5,18 +5,18 @@
 */
 
 import { ClientOptionsFormattingRegion, DaxFormatterLineStyle, DaxFormatterSpacingStyle } from '../controllers/options';
+import { OptionStruct, OptionType, Renderer } from '../helpers/renderer';
 import {  _, __ } from '../helpers/utils';
 import { optionsController } from '../main';
 import { i18n } from '../model/i18n'; 
 import { strings } from '../model/strings';
-import { OptionType } from './options-dialog';
-import { OptionsDialogMenuItem } from './options-dialog-item';
+import { DaxLineBreakStyle } from '../model/tabular';
 
-export class OptionsDialogFormatting extends OptionsDialogMenuItem {
+export class OptionsDialogFormatting { 
 
     render(element: HTMLElement) {
 
-        this.optionsStruct = [
+        let optionsStruct: OptionStruct[] = [
             {
                 option: "customOptions.formatting.preview",
                 icon: "dax-formatter",
@@ -58,9 +58,24 @@ export class OptionsDialogFormatting extends OptionsDialogMenuItem {
                     [DaxFormatterSpacingStyle.SpaceAfterFunction, i18n(strings.optionFormattingSpacesValueTrue)],
                     [DaxFormatterSpacingStyle.NoSpaceAfterFunction, i18n(strings.optionFormattingSpacesValueFalse)],
                 ]
+            },
+            {
+                option: "customOptions.formatting.daxFormatter.lineBreakStyle",
+                icon: "breaks",
+                name: i18n(strings.optionFormattingBreaks),
+                description: i18n(strings.optionFormattingBreaksDescription),
+                type: OptionType.select,
+                values: [
+                    [DaxLineBreakStyle.None, i18n(strings.optionFormattingBreaksNone)],
+                    [DaxLineBreakStyle.InitialLineBreak, i18n(strings.optionFormattingBreaksInitial)],
+                    [DaxLineBreakStyle.Auto, i18n(strings.optionFormattingBreaksAuto)],
+                    
+                ]
             }
         ];
 
-        super.render(element);
+        optionsStruct.forEach(struct => {
+            Renderer.Options.render(struct, element, optionsController);
+        });
     }
 }

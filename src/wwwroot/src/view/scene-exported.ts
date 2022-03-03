@@ -151,6 +151,8 @@ export class ExportedScene extends Scene {
             rowFormatter: row => {
 
                 try { //Bypass calc rows
+                    if ((<any>row)._row && (<any>row)._row.type == "calc") return;
+                    
                     const table = <ExportDataTable>row.getData();
 
                     let element = row.getElement();
@@ -165,7 +167,7 @@ export class ExportedScene extends Scene {
                             element.classList.add("row-highlighted");
                             break;
                     }
-                }catch(e){}
+                }catch(ignore){}
             },
             columns: columns,
             data: this.job.tables

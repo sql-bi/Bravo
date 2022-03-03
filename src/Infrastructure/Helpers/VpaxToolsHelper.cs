@@ -72,10 +72,13 @@
                 {
                     Name = c.ColumnName,
                     TableName = c.Table.TableName,
+                    TableColumnName = c.TableColumnName,
                     Cardinality = c.ColumnCardinality,
                     Size = c.TotalSize,
                     Weight = (double)c.TotalSize / databaseSize,
                     IsReferenced = c.IsReferenced,
+                    DataType = c.DataType,
+                    IsHidden = c.IsHidden
                 };
 
                 return column;

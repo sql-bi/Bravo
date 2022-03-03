@@ -5,17 +5,17 @@
 */
 
 import { DiagnosticLevelType } from '../controllers/options';
+import { OptionStruct, OptionType, Renderer } from '../helpers/renderer';
 import {  _, __ } from '../helpers/utils';
+import { optionsController } from '../main';
 import { i18n } from '../model/i18n'; 
 import { strings } from '../model/strings';
-import { OptionType } from './options-dialog';
-import { OptionsDialogMenuItem } from './options-dialog-item';
 
-export class OptionsDialogTelemetry extends OptionsDialogMenuItem {
+export class OptionsDialogTelemetry {
 
     render(element: HTMLElement) {
 
-        this.optionsStruct = [
+        let optionsStruct: OptionStruct[] = [
             {
                 option: "telemetryEnabled",
                 icon: "telemetry",
@@ -39,6 +39,8 @@ export class OptionsDialogTelemetry extends OptionsDialogMenuItem {
             }
         ];
 
-        super.render(element);
+        optionsStruct.forEach(struct => {
+            Renderer.Options.render(struct, element, optionsController);
+        });
     }
 }

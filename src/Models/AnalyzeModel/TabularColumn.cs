@@ -6,6 +6,10 @@
     [DebuggerDisplay("'{TableName}'[{Name}]")]
     public class TabularColumn
     {
+
+        [JsonPropertyName("name")]
+        public string? TableColumnName { get; set; }
+
         [JsonPropertyName("columnName")]
         public string? Name { get; set; }
 
@@ -23,5 +27,11 @@
 
         [JsonPropertyName("isReferenced")]
         public bool IsReferenced { get; set; }
+
+        [JsonPropertyName("dataType")]
+        public string? DataType { get; set; }
+
+        [JsonPropertyName("isHidden")]
+        public bool IsHidden { get; set; }
     }
 }

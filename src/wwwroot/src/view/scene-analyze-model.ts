@@ -21,11 +21,10 @@ import { AppError } from '../model/exceptions';
 import { ErrorScene } from './scene-error';
 
 Chart.register(TreemapController, TreemapElement);
-interface TabulatorVpaxModelColumn extends TabularColumn {
-    name: string
+interface ExtendedTabularColumn extends TabularColumn {
     _containsUnreferenced?: boolean
     _aggregated?: boolean
-    _children?: TabulatorVpaxModelColumn[]
+    _children?: ExtendedTabularColumn[]
 }
 
 export class AnalyzeModelScene extends MainScene {
@@ -35,10 +34,10 @@ export class AnalyzeModelScene extends MainScene {
     topSize = { tables: 0, columns: 0 };
     searchBox: HTMLInputElement;
 
-    fullData: TabulatorVpaxModelColumn[];
-    nestedData: TabulatorVpaxModelColumn[];
-    nestedAggregatedData: TabulatorVpaxModelColumn[];
-    aggregatedData: TabulatorVpaxModelColumn[];
+    fullData: ExtendedTabularColumn[];
+    nestedData: ExtendedTabularColumn[];
+    nestedAggregatedData: ExtendedTabularColumn[];
+    aggregatedData: ExtendedTabularColumn[];
 
     showAllColumns = false; //options.data.model.showAllColumns;
     groupByTable = false; //options.data.model.groupByTable;
@@ -108,7 +107,7 @@ export class AnalyzeModelScene extends MainScene {
         this.listen();
     }
 
-    aggregateData(data: TabulatorVpaxModelColumn[]): TabulatorVpaxModelColumn[] {
+    aggregateData(data: ExtendedTabularColumn[]): ExtendedTabularColumn[] {
 
         // Thresholds
         const weightThreshold = 0.1;
@@ -146,9 +145,9 @@ export class AnalyzeModelScene extends MainScene {
         return aggregatedData;
     }
 
-    nestData(data: TabulatorVpaxModelColumn[]): TabulatorVpaxModelColumn[] {
+    nestData(data: ExtendedTabularColumn[]): ExtendedTabularColumn[] {
 
-        let nestedData: Dic<TabulatorVpaxModelColumn> = {};
+        let nestedData: Dic<ExtendedTabularColumn> = {};
         data.forEach(column => {
             if (column._aggregated) {
                 nestedData["-"] = column;
@@ -160,6 +159,7 @@ export class AnalyzeModelScene extends MainScene {
                         name: table,
                         tableName: table,
                         columnName: table,
+                        dataType: "table",
                         columnCardinality: 0,
                         size: 0,
                         weight: 0,
@@ -182,12 +182,7 @@ export class AnalyzeModelScene extends MainScene {
 
     updateData() {
 
-        this.fullData = [];
-        this.doc.model.columns.forEach((column: TabulatorVpaxModelColumn) => {
-            column.name = `${column.tableName}[${column.columnName}]`;
-            this.fullData.push(column);
-        });
-
+        this.fullData = this.doc.model.columns;
         this.aggregatedData = this.aggregateData(this.fullData);
         this.nestedData = this.nestData(this.fullData);
         this.nestedAggregatedData = this.nestData(this.aggregatedData);
@@ -209,6 +204,12 @@ export class AnalyzeModelScene extends MainScene {
        
         if (!this.table) {
 
+            const columnNameFormatter = (cell: Tabulator.CellComponent) => {
+                let cellData = <ExtendedTabularColumn>cell.getData();
+                let type = (cellData.dataType ? cellData.dataType.toLowerCase() : "");
+                return `<span class="item-type icon-type-${type}"></span>${cellData.columnName}`;
+            };
+
             const colConfig: Dic<Tabulator.ColumnDefinition> = {
                 icon: { 
                     //field: "Icon", 
@@ -218,13 +219,13 @@ export class AnalyzeModelScene extends MainScene {
                     width: 40,
                     cssClass: "column-icon",
                     formatter: (cell) => {
-                        let cellData = <TabulatorVpaxModelColumn>cell.getData();
+                        let cellData = <ExtendedTabularColumn>cell.getData();
                         return (cellData.isReferenced === false ? `<div class="icon icon-broken-link" title="${i18n(strings.columnUnreferencedTooltip)}"></div>` : "");
                     }, 
                     sorter: (a, b, aRow, bRow, column, dir, sorterParams) => {
 
-                        const columnA = <TabulatorVpaxModelColumn>aRow.getData();
-                        const columnB = <TabulatorVpaxModelColumn>bRow.getData();
+                        const columnA = <ExtendedTabularColumn>aRow.getData();
+                        const columnB = <ExtendedTabularColumn>bRow.getData();
              
                         a = `${columnA.isReferenced === false ? "_" : ""}${columnA.columnName}`;
                         b = `${columnB.isReferenced === false ? "_" : ""}${columnB.columnName}`;
@@ -254,17 +255,19 @@ export class AnalyzeModelScene extends MainScene {
                     field: "columnName", 
                     title: i18n(strings.tableColEntity), 
                     cssClass: "column-name",
+                    formatter: columnNameFormatter
                 },
                 columnName: { 
                     field: "columnName", 
                     title: i18n(strings.tableColColumn), 
                     cssClass: "column-name",
+                    formatter: columnNameFormatter
                 },
                 tableName: { 
                     field: "tableName", 
                     title: i18n(strings.tableColTable),  
                     formatter: (cell) => {
-                        let cellData = <TabulatorVpaxModelColumn>cell.getData();
+                        let cellData = <ExtendedTabularColumn>cell.getData();
                         return (cellData._aggregated ? "" : cell.getValue())
                     }
                 },
@@ -276,7 +279,7 @@ export class AnalyzeModelScene extends MainScene {
                     bottomCalc: "sum",
                     sorter: "number", 
                     formatter: (cell)=>{   
-                        let cellData = <TabulatorVpaxModelColumn>cell.getData();
+                        let cellData = <ExtendedTabularColumn>cell.getData();
                         let value = cell.getValue();
                         let sizePerc = Math.round((value / (cellData._children ? this.topSize.tables : this.topSize.columns)) * 100);
                         return `${Utils.Format.bytes(value, I18n.instance.locale.locale)}<div class="${cellData._children ? "size-indicator-alt" : "size-indicator"}" style="width:${sizePerc}%"></div>`;
@@ -324,7 +327,8 @@ export class AnalyzeModelScene extends MainScene {
                 initialFilter: data => this.unreferencedFilter(data),
                 rowFormatter: row => {
                     try { //Bypass calc rows
-                        let data = <TabulatorVpaxModelColumn>row.getData();
+                        if ((<any>row)._row && (<any>row)._row.type == "calc") return;
+                        let data = <ExtendedTabularColumn>row.getData();
                         let element = row.getElement();
 
                         if (data.isReferenced === false){
@@ -335,7 +339,7 @@ export class AnalyzeModelScene extends MainScene {
                         if (data._aggregated) {
                             element.classList.add("row-aggregated");
                         }
-                    }catch(e){}
+                    }catch(ignore){}
                 },
                 columns: columns,
                 data: data
@@ -345,7 +349,7 @@ export class AnalyzeModelScene extends MainScene {
             this.table.on("cellClick", (e, cell) => {
                 try {
                     
-                    let cellData = <TabulatorVpaxModelColumn>cell.getData();
+                    let cellData = <ExtendedTabularColumn>cell.getData();
                     if (cellData._aggregated && cell.getField() == "columnName") {
                         this.expandTableColumns();
                     }
@@ -362,7 +366,7 @@ export class AnalyzeModelScene extends MainScene {
 
                     if  (this.chart) {
                         let foundIndex = -1;
-                        let rowData = <TabulatorVpaxModelColumn>row.getData();
+                        let rowData = <ExtendedTabularColumn>row.getData();
                         let chartData = this.chart.data.datasets[0].data;
                         for (let i = 0; i < chartData.length; i++) {
                             let chartDataPoint = <any>chartData[i];
@@ -425,7 +429,7 @@ export class AnalyzeModelScene extends MainScene {
         }
     }
 
-    unreferencedFilter(column: TabulatorVpaxModelColumn): boolean {
+    unreferencedFilter(column: ExtendedTabularColumn): boolean {
         if (this.showUnrefOnly)
             return column.isReferenced === false || column._containsUnreferenced || column._aggregated;
         return true;
