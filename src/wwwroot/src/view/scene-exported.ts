@@ -145,6 +145,7 @@ export class ExportedScene extends Scene {
         const tableConfig: Tabulator.Options = {
             maxHeight: "80%",
             layout: "fitColumns",
+            placeholder: " ", // This fixes scrollbar appearing with empty tables
             initialSort:[
                 {column: "name", dir: "asc"}, 
             ],

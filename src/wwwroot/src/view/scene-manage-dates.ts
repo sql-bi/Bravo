@@ -23,6 +23,7 @@ import { ManageDatesSceneInterval } from './scene-manage-dates-interval';
 import { ManageDatesSceneDates } from './scene-manage-dates-dates';
 import { ManageDatesSceneTimeIntelligence } from './scene-manage-dates-time-intelligence';
 import { ManageDatesPreviewScene } from './scene-manage-dates-preview';
+import { PageType } from '../controllers/page';
 
 export interface ManageDatesConfig extends DateConfiguration {
     region?: string
@@ -32,7 +33,7 @@ export interface ManageDatesConfig extends DateConfiguration {
 export enum ManageDatesStatus {
     ok,
     compatible,
-    incompatible
+    incompatible,
 }
 
 export class ManageDatesScene extends MainScene {
@@ -40,11 +41,17 @@ export class ManageDatesScene extends MainScene {
     menu: Menu;
     modelCheckElement: HTMLElement;
     config: OptionsStore<ManageDatesConfig>;
-    doButton: HTMLElement;
+    previewButton: HTMLElement;
     status: ManageDatesStatus;
     
-    constructor(id: string, container: HTMLElement, doc: Doc) {
-        super(id, container, doc); 
+    //TODO Remove to enable manage dates
+    get supported() {
+        return false; 
+    }
+    //ENDTODO
+    
+    constructor(id: string, container: HTMLElement, doc: Doc, type: PageType) {
+        super(id, container, doc, type); 
         this.path = i18n(strings.ManageDates);
         this.element.classList.add("manage-dates");
 
@@ -52,8 +59,8 @@ export class ManageDatesScene extends MainScene {
     }
 
     render() {
-        super.render();
-        
+        if (!super.render()) return false;
+
         let html = `
             <div class="cols">
                 <div class="col coll">
@@ -69,13 +76,13 @@ export class ManageDatesScene extends MainScene {
             </div>
 
             <div class="scene-action">
-                <div class="do-preview button disable-on-syncing" disabled>${i18n(strings.manageDatesPreviewCtrlTitle)}</div>
+                <div class="do-preview button disable-on-syncing enable-if-editable" disabled>${i18n(strings.manageDatesPreviewCtrlTitle)}</div>
             </div>
         `;
         this.body.insertAdjacentHTML("beforeend", html);
 
         this.modelCheckElement = _(".model-check .status", this.body);
-        this.doButton = _(".do-preview", this.body);
+        this.previewButton = _(".do-preview", this.body);
 
         let menuContainer = _(".date-config", this.body);
         let loader = new Loader(menuContainer, true, true);
@@ -142,8 +149,10 @@ export class ManageDatesScene extends MainScene {
             this.updateModelCheck();
         });
 
-        this.doButton.addEventListener("click", e => {
+        this.previewButton.addEventListener("click", e => {
             e.preventDefault();
+
+            if (!this.canEdit) return;
 
             let previewScene = new ManageDatesPreviewScene(Utils.DOM.uniqueId(), this.element.parentElement, this.config.options, this.doc);
             this.push(previewScene);
@@ -151,7 +160,8 @@ export class ManageDatesScene extends MainScene {
     }
 
     update() {
-        super.update();
+        if (!super.update()) return false;
+
         this.updateModelCheck();
     }
 
@@ -187,42 +197,46 @@ export class ManageDatesScene extends MainScene {
         }
 
         let html = ``;
-        switch (this.status) {
-            case ManageDatesStatus.incompatible:
-                html = `
-                    <div class="status-incompatible">
-                        <div class="icon icon-alert"></div>
-                        <div class="message">
-                            ${i18n(strings.manageDatesStatusIncompatible)}
-                        </div>  
-                    </div>
-                `;
-                break;
+        if (!this.canEdit) {
+            html = ``; //TODO
+        } else {
+            switch (this.status) {
+                case ManageDatesStatus.incompatible:
+                    html = `
+                        <div class="status-incompatible">
+                            <div class="icon icon-alert"></div>
+                            <div class="message">
+                                ${i18n(strings.manageDatesStatusIncompatible)}
+                            </div>  
+                        </div>
+                    `;
+                    break;
 
-            case ManageDatesStatus.compatible:
-                html = `
-                    <div class="status-compatible">
-                        <div class="icon icon-updatable"></div>
-                        <div class="message">
-                            ${i18n(strings.manageDatesStatusCompatible)}
-                        </div>  
-                    </div>
-                `;
-                break;
+                case ManageDatesStatus.compatible:
+                    html = `
+                        <div class="status-compatible">
+                            <div class="icon icon-updatable"></div>
+                            <div class="message">
+                                ${i18n(strings.manageDatesStatusCompatible)}
+                            </div>  
+                        </div>
+                    `;
+                    break;
 
-            default:
-                html = `
-                    <div class="status-ok">
-                        <div class="icon icon-valid"></div>
-                        <div class="message">
-                            ${i18n(strings.manageDatesStatusOk)}
-                        </div>  
-                    </div>
-                `;
+                default:
+                    html = `
+                        <div class="status-ok">
+                            <div class="icon icon-valid"></div>
+                            <div class="message">
+                                ${i18n(strings.manageDatesStatusOk)}
+                            </div>  
+                        </div>
+                    `;
+            }
         }
 
         this.modelCheckElement.innerHTML = html;
-        this.doButton.toggleAttribute("disabled", this.status == ManageDatesStatus.incompatible);
+        this.previewButton.toggleAttribute("disabled", this.status == ManageDatesStatus.incompatible);
                     
     }
 

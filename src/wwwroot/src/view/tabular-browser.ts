@@ -151,6 +151,7 @@ export class TabularBrowser extends View {
                 selectable: this.config.selectable,
                 headerVisible: this.config.selectable,
                 layout: "fitColumns",
+                placeholder: " ", // This fixes scrollbar appearing with empty tables
                 dataTree: true,
                 dataTreeCollapseElement:`<span class="tree-toggle icon icon-collapse"></span>`,
                 dataTreeExpandElement:`<span class="tree-toggle icon icon-expand"></span>`,

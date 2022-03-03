@@ -35,7 +35,7 @@ export class ManageDatesScenePane {
     }
 
     validateField(field: string) {
-
+        
         return host.manageDatesValidateTableNames({
             report: <PBIDesktopReport>this.doc.sourceData,
             configuration: this.config.options

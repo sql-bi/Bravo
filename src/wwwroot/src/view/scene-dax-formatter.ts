@@ -27,9 +27,10 @@ import { FormatDaxRequest, UpdatePBICloudDatasetRequest, UpdatePBIDesktopReportR
 import { SuccessScene } from './scene-success';
 import { AppError, AppProblem } from '../model/exceptions';
 import { ClientOptionsFormattingRegion, DaxFormatterLineStyle, DaxFormatterSpacingStyle } from '../controllers/options';
+import { PageType } from '../controllers/page';
 
 export class DaxFormatterScene extends MainScene {
-    
+
     table: Tabulator;
     menu: Menu;
     searchBox: HTMLInputElement;
@@ -39,8 +40,12 @@ export class DaxFormatterScene extends MainScene {
 
     showMeasuresWithErrorsOnly = false;
 
-    constructor(id: string, container: HTMLElement, doc: Doc) {
-        super(id, container, doc);
+    get canFormat(): boolean {
+        return this.canEdit;
+    }
+
+    constructor(id: string, container: HTMLElement, doc: Doc, type: PageType) {
+        super(id, container, doc, type);
         this.path = i18n(strings.DaxFormatter);
 
         this.element.classList.add("dax-formatter");
@@ -117,7 +122,7 @@ export class DaxFormatterScene extends MainScene {
     }
 
     render() {
-        super.render();
+        if (!super.render()) return false;
 
         let html = `
             <div class="summary">
@@ -147,7 +152,7 @@ export class DaxFormatterScene extends MainScene {
                     <span class="show-data-usage link">${i18n(strings.dataUsageLink)}</span>
                     </p>
                 </div>
-                <div class="do-format button disable-on-syncing disable-if-readonly" disabled>${i18n(this.doc.editable ? strings.daxFormatterFormat : strings.daxFormatterFormatDisabled)}</div>
+                <div class="do-format button disable-on-syncing enable-if-editable" disabled>${i18n(!this.canFormat && this.doc.type == DocType.vpax ? strings.daxFormatterFormatDisabled : strings.daxFormatterFormat)}</div>
             </div>
         `;
         this.body.insertAdjacentHTML("beforeend", html);
@@ -429,7 +434,7 @@ export class DaxFormatterScene extends MainScene {
         if (!this.table) {
 
             let columns: Tabulator.ColumnDefinition[] = [];
-            if (this.doc.editable) {
+            if (this.canFormat) {
                 columns.push({
                     formatter:"rowSelection", 
                     title: undefined,
@@ -496,7 +501,7 @@ export class DaxFormatterScene extends MainScene {
                 field: "name", 
                 title: i18n(strings.tableColMeasure),
                 cssClass: "column-name",
-                bottomCalc: this.doc.editable ? "count" : null,
+                bottomCalc: this.canFormat ? "count" : null,
                 bottomCalcFormatter: (cell)=> i18n(strings.tableSelectedCount, {count: this.table.getSelectedData().length})
             });
 
@@ -507,11 +512,9 @@ export class DaxFormatterScene extends MainScene {
             });
 
             const tableConfig: Tabulator.Options = {
-                //debugInvalidOptions: false,
                 maxHeight: "100%",
-                //responsiveLayout: "collapse", // DO NOT USE IT
-                //selectable: true,
-                layout: "fitColumns", //"fitColumns", //fitData, fitDataFill, fitDataStretch, fitDataTable, fitColumns
+                layout: "fitColumns",
+                placeholder: " ", // This fixes scrollbar appearing with empty tables
                 initialFilter: data => this.measuresFilter(data),
                 initialSort:[
                     {column: "name", dir: "asc"}, 
@@ -542,7 +545,7 @@ export class DaxFormatterScene extends MainScene {
             this.table = new Tabulator(`#${this.element.id} .table`, tableConfig);
             this.table.on("rowSelectionChanged", (data: any[], rows: Tabulator.RowComponent[]) =>{
                 this.table.recalc();
-                this.formatButton.toggleAttr("disabled", !rows.length || !this.doc.editable);
+                this.formatButton.toggleAttr("disabled", !rows.length || !this.canFormat);
             });
             this.table.on("rowClick", (e, row) => {
 
@@ -605,7 +608,8 @@ export class DaxFormatterScene extends MainScene {
     }
 
     update() {
-        super.update();
+        if (!super.update()) return false;
+
         this.updateTable(false);
         this.maybeAutoGenerateFormattedPreview();
 
@@ -647,7 +651,7 @@ export class DaxFormatterScene extends MainScene {
     }
 
     format() {
-        if (!this.doc.editable) return;
+        if (!this.canFormat) return;
 
         let measures: TabularMeasure[] = this.table.getSelectedData();
         if (!measures.length) return;
@@ -782,7 +786,7 @@ export class DaxFormatterScene extends MainScene {
         this.formatButton.addEventListener("click", e => {
             e.preventDefault();
             
-            if (!this.doc.editable) return;
+            if (!this.canFormat) return;
 
             let el = <HTMLElement>e.currentTarget;
             if (el.hasAttribute("disabled")) return;
