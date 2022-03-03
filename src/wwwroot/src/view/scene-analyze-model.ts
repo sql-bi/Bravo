@@ -19,6 +19,7 @@ import { MainScene } from './scene-main';
 import { LoaderScene } from './scene-loader';
 import { AppError } from '../model/exceptions';
 import { ErrorScene } from './scene-error';
+import { PageType } from '../controllers/page';
 
 Chart.register(TreemapController, TreemapElement);
 interface ExtendedTabularColumn extends TabularColumn {
@@ -43,14 +44,18 @@ export class AnalyzeModelScene extends MainScene {
     groupByTable = false; //options.data.model.groupByTable;
     showUnrefOnly = false; //options.data.model.showUnrefOnly;
 
-    constructor(id: string, container: HTMLElement, doc: Doc) {
-        super(id, container, doc);
+    get canExportVpax(): boolean {
+        return this.doc.featureSupported("ExportVpax", this.type) && !this.doc.orphan;
+    }
+
+    constructor(id: string, container: HTMLElement, doc: Doc, type: PageType) {
+        super(id, container, doc, type);
 
         this.element.classList.add("analyze-model");
     }
 
     render() {
-        super.render();
+        if (!super.render()) return false;
 
         let html = `
             <div class="summary">
@@ -74,7 +79,7 @@ export class AnalyzeModelScene extends MainScene {
 
                         <div class="collapse-all show-if-group ctrl icon-collapse-all" title="${i18n(strings.collapseAllCtrlTitle)}"></div>
                         
-                        <div class="save-vpax ctrl icon-save disable-on-syncing enable-if-editable" ${this.doc.type == DocType.vpax ? "hidden" : ""} title="${i18n(strings.saveVpaxCtrlTile)}"> VPAX </div>
+                        <div class="save-vpax ctrl icon-save disable-on-syncing enable-if-exportable" ${!this.canExportVpax ? "hidden" : ""} title="${i18n(strings.saveVpaxCtrlTile)}"> VPAX </div>
 
                     </div>
 
@@ -305,11 +310,9 @@ export class AnalyzeModelScene extends MainScene {
 
             const tableConfig: Tabulator.Options = {
 
-                //debugInvalidOptions: false, 
                 maxHeight: "100%",
-                //responsiveLayout: "collapse", // DO NOT USE IT
                 layout: "fitColumns",
-                
+                placeholder: " ", // This fixes scrollbar appearing with empty tables
                 dataTree: this.groupByTable,
                 dataTreeCollapseElement:`<span class="tree-toggle icon icon-collapse"></span>`,
                 dataTreeExpandElement:`<span class="tree-toggle icon icon-expand"></span>`,
@@ -624,7 +627,9 @@ export class AnalyzeModelScene extends MainScene {
     }
 
     update() {
-        super.update();
+        if (!super.update()) return false;
+
+        this.updateConditionalElements("exportable", this.canExportVpax);
 
         this.updateData();
         this.updateTable(false);
@@ -702,7 +707,7 @@ export class AnalyzeModelScene extends MainScene {
             telemetry.track("Save VPAX");
 
             el.toggleAttr("disabled", true);
-            if (this.doc.editable) {
+            if (this.canExportVpax) {
 
                 let exportingScene = new LoaderScene(Utils.DOM.uniqueId(), this.element.parentElement, i18n(strings.savingVpax), ()=>{
                     host.abortExportVpax(this.doc.type);

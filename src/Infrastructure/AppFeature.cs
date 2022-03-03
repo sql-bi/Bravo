@@ -18,14 +18,16 @@
         FormatDaxAll = FormatDaxPage | FormatDaxSynchronize | FormatDaxUpdateModel,
 
         ManageDatesPage = 1 << 300,
-        ManageDatesUpdateModel = 1 << 301,
-        ManageDatesAll = ManageDatesPage | ManageDatesUpdateModel,
+        ManageDatesSynchronize = 1 << 301,
+        ManageDatesUpdateModel = 1 << 302,
+        ManageDatesAll = ManageDatesPage | ManageDatesSynchronize | ManageDatesUpdateModel,
 
         ExportDataPage = 1 << 400,
         ExportDataSynchronize = 1 << 401,
         ExportDataAll = ExportDataPage | ExportDataSynchronize,
 
         AllUpdateModel = FormatDaxUpdateModel | ManageDatesUpdateModel,
+        AllSynchronize = AnalyzeModelSynchronize | FormatDaxSynchronize | ManageDatesSynchronize | ExportDataSynchronize,
         All = AnalyzeModelAll | FormatDaxAll | ManageDatesAll | ExportDataAll,
     }
 }

@@ -15,7 +15,8 @@ import * as sanitizeHtml from 'sanitize-html';
 import { Md5 } from 'ts-md5/dist/md5';
 import { i18n } from './i18n';
 import { strings } from './strings';
-import { PageType } from '../controllers/page';
+import { Page, PageType } from '../controllers/page';
+import { AppFeature } from '../controllers/app';
 
 export enum DocType {
     vpax,
@@ -35,18 +36,14 @@ export class Doc {
     sourceData: File | PBICloudDataset | PBIDesktopReport;
     model: TabularDatabaseInfo;
     measures: TabularMeasure[];
+    features: AppFeature;
     formattedMeasures: Dic<FormattedMeasure>;
     lastSync: number;
 
     isDirty = false;
     loaded = false;
 
-    readonly: boolean;
     orphan: boolean;
-
-    get editable(): boolean {
-        return (!this.readonly && !this.orphan);
-    }
 
     get empty(): boolean {
         return (!this.model || !this.model.size || (!this.model.columns.length && !this.measures.length));
@@ -59,7 +56,6 @@ export class Doc {
         this.id = Doc.getId(type, sourceData);
         
         this.orphan = false;
-        this.readonly = (type == DocType.vpax);
     }
 
     static getId(type: DocType, sourceData: File | PBICloudDataset | PBIDesktopReport): string {
@@ -95,6 +91,7 @@ export class Doc {
 
                 this.model = response.model;
                 this.measures = response.measures;
+                this.features = response.features;
                 this.loaded = true;
                 this.lastSync = Date.now();
 
@@ -144,20 +141,33 @@ export class Doc {
         return MeasureStatus.Partial;
     }
 
-    featureSupported(feature: PageType) {
-        //TODO return attributes in this.sourceData when available
+    featureSupported(feature: string, pageType?: PageType) {
 
-        switch (feature) {
-            case PageType.AnalyzeModel:
-                return true;
-            case PageType.DaxFormatter:
-                return true; //(this.type != DocType.vpax);
-            case PageType.ExportData:
-                return (this.type != DocType.vpax);
-            case PageType.ManageDates:
-                return (this.type == DocType.pbix); //TODO Not exact...
-            default:
-                return true;
+        let expectedValue = AppFeature.None;
+
+        if (pageType) {
+            switch (pageType) {
+                case PageType.AnalyzeModel:
+                    expectedValue = (<any>AppFeature)[`AnalyzeModel${feature}`];
+                    break;
+                case PageType.DaxFormatter:
+                    expectedValue = (<any>AppFeature)[`FormatDax${feature}`];
+                    break;
+                case PageType.ManageDates:
+                    expectedValue = (<any>AppFeature)[`ManageDates${feature}`];
+                    break;
+                case PageType.ExportData:
+                    expectedValue = (<any>AppFeature)[`ExportData${feature}`];
+                    break;
+                /*
+                case PageType.BestPractices:
+                    expectedValue = (<any>AppFeature)[`BestPractices${type}`];
+                    break;
+                */
+            }
+        } else {
+            expectedValue = (<any>AppFeature)[feature];
         }
+        return ((this.features & expectedValue) === expectedValue);
     }
 }

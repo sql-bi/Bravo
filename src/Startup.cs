@@ -39,7 +39,6 @@
                         typeof(Sqlbi.Bravo.Infrastructure.Configuration.Settings.UpdateChannelType),
                         typeof(Sqlbi.Bravo.Infrastructure.Messages.WebMessageType),
                         typeof(Sqlbi.Bravo.Infrastructure.BravoProblem),
-                        typeof(Sqlbi.Bravo.Infrastructure.AppFeature),
                         typeof(Sqlbi.Bravo.Models.PBIDesktopReportConnectionMode),
                         typeof(Sqlbi.Bravo.Models.PBICloudDatasetConnectionMode),
                         typeof(Sqlbi.Bravo.Models.PBICloudDatasetEndorsement),
@@ -61,7 +60,7 @@
                         typeof(Sqlbi.Bravo.Models.ManageDates.TableValidation),
                         typeof(Sqlbi.Bravo.Models.ManageDates.TypeStartFiscalYear),
                         typeof(Sqlbi.Bravo.Models.ManageDates.WeeklyType)
-
+                        //, typeof(Sqlbi.Bravo.Infrastructure.AppFeature)
                         //, typeof(Sqlbi.Bravo.Models.ManageDates.DayOfWeek)
                         //, typeof(Sqlbi.Bravo.Models.ManageDates.QuarterWeekType)
                         //, typeof(Sqlbi.Bravo.Models.AnalyzeModel.TabularTableFeature)

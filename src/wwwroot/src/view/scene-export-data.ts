@@ -8,6 +8,7 @@ import * as sanitizeHtml from 'sanitize-html';
 import { Tabulator } from 'tabulator-tables';
 import { ExportDataFormat, ExportDataStatus, ExportDelimitedTextFromPBICloudDatasetRequest, ExportDelimitedTextFromPBIReportRequest, ExportDelimitedTextSettings, ExportExcelFromPBICloudDatasetRequest, ExportExcelFromPBIReportRequest, ExportExcelSettings } from '../controllers/host';
 import { OptionsStore } from '../controllers/options';
+import { PageType } from '../controllers/page';
 import { ContextMenu } from '../helpers/contextmenu';
 import { OptionStruct, OptionType, Renderer } from '../helpers/renderer';
 import { Utils, _, __ } from '../helpers/utils';
@@ -39,8 +40,12 @@ export class ExportDataScene extends MainScene {
     exportButton: HTMLElement;
     config: OptionsStore<ExportSettings>;
 
-    constructor(id: string, container: HTMLElement, doc: Doc) {
-        super(id, container, doc); 
+    get canExport(): boolean {
+        return !this.doc.orphan;
+    }
+
+    constructor(id: string, container: HTMLElement, doc: Doc, type: PageType) {
+        super(id, container, doc, type); 
         this.path = i18n(strings.ExportData);
 
         this.element.classList.add("export-data");
@@ -55,7 +60,7 @@ export class ExportDataScene extends MainScene {
     }
 
     render() {
-        super.render();
+        if (!super.render()) return false;
 
         let html = `
             <div class="summary">
@@ -88,9 +93,9 @@ export class ExportDataScene extends MainScene {
 
                 </div>
             </div>
-            <div class="scene-action show-if-editable" ${this.doc.editable ? "" : "hidden"}>
+            <div class="scene-action">
                 
-                <div class="do-export button disable-on-syncing" disabled>${i18n(strings.exportDataExport)}</div>
+                <div class="do-export button disable-on-syncing disable-if-orphan" disabled>${i18n(strings.exportDataExport)}</div>
             </div>
         `;
         this.body.insertAdjacentHTML("beforeend", html);
@@ -197,7 +202,7 @@ export class ExportDataScene extends MainScene {
     }
 
     update() {
-        super.update();
+        if (!super.update()) return false;
 
         this.updateTable();
 
@@ -226,7 +231,7 @@ export class ExportDataScene extends MainScene {
         this.exportButton.addEventListener("click", e => {
             e.preventDefault();
             
-            if (!this.doc.editable) return;
+            if (!this.canExport) return;
 
             let el = <HTMLElement>e.currentTarget;
             if (el.hasAttribute("disabled")) return;
@@ -249,7 +254,7 @@ export class ExportDataScene extends MainScene {
         if (!this.table) {
 
             let columns: Tabulator.ColumnDefinition[] = [];
-            if (this.doc.editable) {
+            if (this.canExport) {
                 columns.push({
                     formatter:"rowSelection", 
                     title: undefined,
@@ -293,7 +298,7 @@ export class ExportDataScene extends MainScene {
                 field: "name", 
                 title: i18n(strings.tableColTable),
                 cssClass: "table-name",
-                bottomCalc: this.doc.editable ? "count" : null,
+                bottomCalc: this.canExport ? "count" : null,
                 bottomCalcFormatter: cell=> i18n(strings.tableSelectedCount, {count: this.getSelectedData().length})
             });
 
@@ -303,7 +308,7 @@ export class ExportDataScene extends MainScene {
                 title: i18n(strings.tableColRows),
                 hozAlign:"right",
                 formatter: (cell)=>Utils.Format.compress(cell.getValue()), 
-                bottomCalc: this.doc.editable ? "sum" : null,
+                bottomCalc: this.canExport ? "sum" : null,
                 bottomCalcFormatter: cell => {
                     let sum = 0;
                     this.getSelectedData().forEach((table: TabularTable) => {
@@ -322,7 +327,7 @@ export class ExportDataScene extends MainScene {
                 formatter: cell=>{   
                     return Utils.Format.bytes(cell.getValue(), I18n.instance.locale.locale);
                 },
-                bottomCalc: this.doc.editable ? "sum" : null,
+                bottomCalc: this.canExport ? "sum" : null,
                 bottomCalcFormatter: cell => {
                     let sum = 0;
                     this.getSelectedData().forEach((table: TabularTable) => {
@@ -336,6 +341,7 @@ export class ExportDataScene extends MainScene {
                 maxHeight: "100%",
                 selectable: true,
                 layout: "fitColumns",
+                placeholder: " ", // This fixes scrollbar appearing with empty tables
                 initialSort:[
                     {column: "name", dir: "asc"}, 
                 ],
@@ -356,10 +362,11 @@ export class ExportDataScene extends MainScene {
             };
 
             this.table = new Tabulator(`#${this.element.id} .table`, tableConfig);
+  
             this.table.on("rowSelectionChanged", (data: any[], rows: Tabulator.RowComponent[]) =>{
                 this.table.recalc();
                 let count = this.getSelectedData().length;
-                this.exportButton.toggleAttr("disabled", !count || !this.doc.editable);
+                this.exportButton.toggleAttr("disabled", !count || !this.canExport);
             });
 
         } else {
@@ -401,7 +408,7 @@ export class ExportDataScene extends MainScene {
     }
 
     export() {
-        if (!this.doc.editable || this.doc.type == DocType.vpax) return;
+        if (!this.canExport) return;
 
         let tables = this.getSelectedData();
         if (!tables.length) return;
