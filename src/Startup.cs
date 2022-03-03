@@ -45,6 +45,7 @@
                         typeof(Sqlbi.Bravo.Models.DiagnosticMessageSeverity),
                         typeof(Sqlbi.Bravo.Models.DiagnosticMessageType),
                         typeof(Sqlbi.Bravo.Models.ExportData.ExportDataStatus),
+                        typeof(Sqlbi.Bravo.Models.AnalyzeModel.AppFeature),
                         typeof(Sqlbi.Bravo.Infrastructure.Contracts.PBICloud.CloudWorkspaceType),
                         typeof(Sqlbi.Bravo.Infrastructure.Contracts.PBICloud.CloudWorkspaceCapacitySkuType),
                         typeof(Sqlbi.Bravo.Infrastructure.Contracts.PBICloud.CloudSharedModelWorkspaceType),

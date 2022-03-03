@@ -18,7 +18,7 @@
             var daxModel = GetDaxModel(connection, includeStatistics, sampleRows);
             var vpaModel = includeVpaModel ? new Dax.ViewVpaExport.Model(daxModel) : null;
 
-            // TOFIX: VertiPaq-Analyzer NuGet package - change tomModel from 'Microsoft.AnalysisServices.Database' to 'Microsoft.AnalysisServices.Tabular.Database'
+            // TODO: VertiPaq-Analyzer NuGet package - change database from 'Microsoft.AnalysisServices.Database' to 'Microsoft.AnalysisServices.Tabular.Database'
             //var tomDatabase = includeTomDatabase ? (Microsoft.AnalysisServices.Database)connection.Database : null;
             var tomDatabase = (Microsoft.AnalysisServices.Database?)null;
 
@@ -41,16 +41,16 @@
                 throw new BravoException(BravoProblem.VpaxFileContainsCorruptedData);
             }
 
-            var tabularDatabase = GetDatabase(vpaxContent.DaxModel);
+            var database = GetDatabase(vpaxContent.DaxModel);
             {
-                tabularDatabase.Features &= ~AppFeature.AnalyzeModelSynchronize;
-                tabularDatabase.Features &= ~AppFeature.AnalyzeModelExportVpax;
-                tabularDatabase.Features &= ~AppFeature.FormatDaxSynchronize;
-                tabularDatabase.Features &= ~AppFeature.FormatDaxUpdateModel;
-                tabularDatabase.Features &= ~AppFeature.ManageDatesAll;
-                tabularDatabase.Features &= ~AppFeature.ExportDataAll;
+                database.Features &= ~AppFeature.AnalyzeModelSynchronize;
+                database.Features &= ~AppFeature.AnalyzeModelExportVpax;
+                database.Features &= ~AppFeature.FormatDaxSynchronize;
+                database.Features &= ~AppFeature.FormatDaxUpdateModel;
+                database.Features &= ~AppFeature.ManageDatesAll;
+                database.Features &= ~AppFeature.ExportDataAll;
             }
-            return tabularDatabase;
+            return database;
         }
 
         public static TabularDatabase GetDatabase(TabularConnectionWrapper connection)
@@ -82,7 +82,6 @@
                 {
                     Name = c.ColumnName,
                     TableName = c.Table.TableName,
-                    TableColumnName = c.TableColumnName,
                     Cardinality = c.ColumnCardinality,
                     Size = c.TotalSize,
                     Weight = (double)c.TotalSize / databaseSize,
@@ -133,6 +132,12 @@
                 },
                 Measures = tabularMeasures
             };
+
+            if (daxModel.Tables.Any((table) => table.IsLocalDateTable || table.IsTemplateDateTable))
+            {
+                tabularDatabase.Features &= ~AppFeature.ManageDatesAll;
+                tabularDatabase.FeatureUnsupportedReasons |= TabularDatabaseFeatureUnsupportedReason.ManageDatesAutoDateTimeEnabled;
+            }
 
             return tabularDatabase;
 

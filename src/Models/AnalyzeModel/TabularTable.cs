@@ -49,8 +49,8 @@
         None = 0,
 
         // AnalyzeModel range << 100,
-        // FormatDaxPage range << 200,
-        // ManageDatesPage range << 300,
+        // FormatDax range << 200,
+        // ManageDates range << 300,
 
         ExportData = 1 << 400,
 
@@ -63,8 +63,8 @@
         None = 0,
 
         // AnalyzeModel range << 100,
-        // FormatDaxPage range << 200,
-        // ManageDatesPage range << 300,
+        // FormatDax range << 200,
+        // ManageDates range << 300,
 
         /// <summary>
         /// The table has no columns so it cannot be used as an export data source
