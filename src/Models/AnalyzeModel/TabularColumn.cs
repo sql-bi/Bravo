@@ -1,5 +1,6 @@
 ﻿namespace Sqlbi.Bravo.Models.AnalyzeModel
 {
+    using Dax.ViewModel;
     using System.Diagnostics;
     using System.Text.Json.Serialization;
 
@@ -32,5 +33,22 @@
 
         [JsonPropertyName("isHidden")]
         public bool IsHidden { get; set; }
+
+        internal static TabularColumn CreateFrom(VpaColumn vpaColumn, long databaseSize)
+        {
+            var column = new TabularColumn
+            {
+                Name = vpaColumn.ColumnName,
+                TableName = vpaColumn.Table.TableName,
+                Cardinality = vpaColumn.ColumnCardinality,
+                Size = vpaColumn.TotalSize,
+                Weight = (double)vpaColumn.TotalSize / databaseSize,
+                IsReferenced = vpaColumn.IsReferenced,
+                DataType = vpaColumn.DataType,
+                IsHidden = vpaColumn.IsHidden
+            };
+
+            return column;
+        }
     }
 }
