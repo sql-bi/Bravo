@@ -13,15 +13,6 @@
     {
         private static Regex? _invalidFileNameCharsRegex;
 
-        public static string ToPBIDesktopReportName(this string windowTitle)
-        {
-            var index = windowTitle.LastIndexOf(AppEnvironment.PBIDesktopMainWindowTitleSuffix);
-            if (index >= 0)
-                return windowTitle[..index];
-
-            return windowTitle;
-        }
-
         public static bool IsPBIDesktopMainWindowTitle(this string windowTitle)
         {
             return windowTitle.EndsWith(AppEnvironment.PBIDesktopMainWindowTitleSuffix);
@@ -58,6 +49,11 @@
         public static bool IsNullOrEmpty([NotNullWhen(false)] this string? value)
         {
             return string.IsNullOrEmpty(value);
+        }
+
+        public static bool IsNullOrWhiteSpace([NotNullWhen(false)] this string? value)
+        {
+            return string.IsNullOrWhiteSpace(value);
         }
 
         public static string FormatInvariant(this string format, object? arg0)

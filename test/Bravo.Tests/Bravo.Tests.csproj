@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net5-windows10.0.17763.0</TargetFramework>
@@ -26,6 +26,21 @@
   
   <ItemGroup>
     <ProjectReference Include="..\..\src\Bravo.csproj" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Reference Include="Antlr4.Runtime">
+      <HintPath>..\..\src\Assets\lib\Antlr4.Runtime.dll</HintPath>
+    </Reference>
+    <Reference Include="TOMWrapper">
+      <HintPath>..\..\src\Assets\lib\TOMWrapper.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <None Update="_data\**">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>
