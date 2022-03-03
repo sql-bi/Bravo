@@ -45,9 +45,9 @@ export class ManageDatesScene extends MainScene {
     status: ManageDatesStatus;
     
     //TODO Remove to enable manage dates
-    get supported() {
+    /*get supported() {
         return false; 
-    }
+    }*/
     //ENDTODO
     
     constructor(id: string, container: HTMLElement, doc: Doc, type: PageType) {
