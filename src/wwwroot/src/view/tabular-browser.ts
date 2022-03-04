@@ -235,7 +235,7 @@ export class TabularBrowser extends View {
                     branches[table.name] = {
                         id: table.name,
                         name: table.name,
-                        type: "table",
+                        type: table.isDateTable ? "date-table" : "table",
                         isHidden: false,
                         _children: []
                     };

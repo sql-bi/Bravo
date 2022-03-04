@@ -280,7 +280,7 @@ export class ExportDataScene extends MainScene {
                 cssClass: "column-icon",
                 formatter: (cell) => {
                     const table = <TabularTable>cell.getData();
-                    let icon = (this.isExportable(table) ? "table" : "alert");
+                    let icon = (this.isExportable(table) ? (table.isDateTable ? "type-date-table" : "type-table") : "alert");
                     let tooltip = (this.isExportable(table) ? "" : this.notExportableReason(table));
 
                     return `<div class="icon-${icon}" title="${tooltip}"></div>`;

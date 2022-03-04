@@ -25,6 +25,7 @@ export interface TabularTable {
     name?: string
     rowsCount: number
     size: number
+    isDateTable?: boolean
     features: TabularTableFeature
     featureUnsupportedReasons: TabularTableFeatureUnsupportedReason
 }
