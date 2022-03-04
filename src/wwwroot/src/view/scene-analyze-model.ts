@@ -119,7 +119,7 @@ export class AnalyzeModelScene extends MainScene {
         const maxThreshold = 10;
         const minThreshold = 5
 
-        let aggregatedData = [];
+        let aggregatedData: ExtendedTabularColumn[] = [];
 
         let sortedColumns = data.sort((a, b) => b.size - a.size);
         let otherColumns = { count: 0, size: 0, weight: 0, cardinality: 0, _containsUnreferenced: false };
@@ -256,9 +256,9 @@ export class AnalyzeModelScene extends MainScene {
                     formatter: (cell)=>Utils.Format.compress(cell.getValue()), 
                     bottomCalcFormatter: (cell)=>Utils.Format.compress(cell.getValue()),
                 },
-                entityName: { 
+                path: { 
                     field: "columnName", 
-                    title: i18n(strings.tableColEntity), 
+                    title: i18n(strings.tableColPath), 
                     cssClass: "column-name",
                     formatter: columnNameFormatter
                 },
@@ -304,7 +304,7 @@ export class AnalyzeModelScene extends MainScene {
             };
 
             const columns: Tabulator.ColumnDefinition[] = (this.groupByTable ?
-                [colConfig.icon, /*colConfig.tickbox, */colConfig.entityName, colConfig.cardinality, colConfig.size, colConfig.weight] : 
+                [colConfig.icon, /*colConfig.tickbox, */colConfig.path, colConfig.cardinality, colConfig.size, colConfig.weight] : 
                 [colConfig.icon, /*colConfig.tickbox, */colConfig.columnName, colConfig.tableName, colConfig.cardinality, colConfig.size, colConfig.weight] 
             );
 

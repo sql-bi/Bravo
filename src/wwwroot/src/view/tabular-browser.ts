@@ -135,7 +135,7 @@ export class TabularBrowser extends View {
             
             columns.push({ 
                 field: "name", 
-                title: i18n(strings.tableColEntity),
+                title: i18n(strings.tableColPath),
                 headerSort: false,
                 cssClass: "column-name",
                 bottomCalc: this.config.selectable && this.config.showSelectionCount ? "count" : null,

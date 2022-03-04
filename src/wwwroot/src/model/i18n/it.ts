@@ -332,7 +332,7 @@ const locale: Locale = {
         [_.tableColCardinalityTooltip]: "Numero di elementi unici",
         [_.tableColColumn]: "Colonna",
         [_.tableColColumns]: "Colonne",
-        [_.tableColEntity]: "Tabella \\ Colonna",
+        [_.tableColPath]: "Tabella \\ Colonna",
         [_.tableColMeasure]: "Misura",
         [_.tableColRows]: "Righe",
         [_.tableColSize]: "Dimensioni",

@@ -324,7 +324,7 @@ export enum strings {
     tableColCardinalityTooltip,
     tableColColumn,
     tableColColumns,
-    tableColEntity,
+    tableColPath,
     tableColMeasure,
     tableColRows,
     tableColSize,
