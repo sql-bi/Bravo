@@ -71,8 +71,9 @@ export enum AutoNamingEnum {
 
 export enum TableValidation {
     Unknown = "Unknown",
-    Valid = "Valid",
-    InvalidRenameRequired = "InvalidRenameRequired",
+    ValidNotExists = "ValidNotExists",
+    ValidAlterable = "ValidAlterable",
+    InvalidExists = "InvalidExists",
 }
 
 export enum DayOfWeek {

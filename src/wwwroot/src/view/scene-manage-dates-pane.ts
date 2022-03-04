@@ -49,11 +49,12 @@ export class ManageDatesScenePane {
             };
             let validationField = (<any>validationFields)[field];
             let status = (<any>response)[validationField];
+            let valid = (validationField == TableValidation.ValidAlterable || validationField == TableValidation.ValidNotExists);
             this.config.update(validationField, status, true);
 
             return <OptionValidation>{ 
-                valid: status == TableValidation.Valid,
-                message: i18n((<any>strings)[`tableValidation${status}`]) 
+                valid: valid,
+                message: i18n(valid ? strings.tableValidationValid : strings.tableValidationInvalid) 
             };
 
         }).catch(ignore => 

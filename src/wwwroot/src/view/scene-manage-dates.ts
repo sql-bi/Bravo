@@ -169,36 +169,30 @@ export class ManageDatesScene extends MainScene {
 
         this.status = ManageDatesStatus.ok;
 
-        if (this.config.options.dateTableValidation == TableValidation.InvalidRenameRequired ||
-            this.config.options.dateReferenceTableValidation == TableValidation.InvalidRenameRequired || (
-                this.config.options.holidaysEnabled && (
-                    this.config.options.holidaysTableValidation == TableValidation.InvalidRenameRequired ||
-                    this.config.options.holidaysDefinitionTableValidation == TableValidation.InvalidRenameRequired
-                )
-            )
+        if (this.config.options.dateTableValidation == TableValidation.InvalidExists ||
+            this.config.options.dateReferenceTableValidation == TableValidation.InvalidExists ||
+            (this.config.options.holidaysEnabled && (
+                this.config.options.holidaysTableValidation == TableValidation.InvalidExists ||
+                this.config.options.holidaysDefinitionTableValidation == TableValidation.InvalidExists
+            ))
+            
         ) {
             this.status = ManageDatesStatus.incompatible;
-        } else {
 
-            let tableNames = [
-                this.config.options.dateTableName,
-                this.config.options.dateReferenceTableName
-            ];
-            if (this.config.options.holidaysEnabled) {
-                tableNames.push(this.config.options.holidaysTableName);
-                tableNames.push(this.config.options.holidaysDefinitionTableName);
-            }
-            for (let i = 0; i < tableNames.length; i++) {
-                if (this.doc.model.tables.filter(table => table.name.toLowerCase() == tableNames[i].toLowerCase()).length > 0) {
-                    this.status = ManageDatesStatus.compatible;
-                    break;
-                }
-            }
+        } else if (this.config.options.dateTableValidation == TableValidation.ValidAlterable ||
+            this.config.options.dateReferenceTableValidation == TableValidation.ValidAlterable || 
+            (this.config.options.holidaysEnabled && (
+                this.config.options.holidaysTableValidation == TableValidation.ValidAlterable ||
+                this.config.options.holidaysDefinitionTableValidation == TableValidation.ValidAlterable
+            ))
+        ) {
+            this.status = ManageDatesStatus.compatible;
+
         }
 
         let html = ``;
         if (!this.canEdit) {
-            html = ``; //TODO
+            html = ``; //TODO Show a message saying the editing is not available anymore
         } else {
             switch (this.status) {
                 case ManageDatesStatus.incompatible:
