@@ -87,6 +87,11 @@
                     configuration.HolidaysTableValidation = Validate(configuration.HolidaysTableName);
                     configuration.HolidaysDefinitionTableValidation = Validate(configuration.HolidaysDefinitionTableName);
                 }
+
+                if (configuration.TimeIntelligenceEnabled)
+                {
+                    // nothing todo
+                }
             }
 
             TableValidation Validate(string? tableName)
