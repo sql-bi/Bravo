@@ -3,6 +3,7 @@
     using Dax.Template.Model;
     using Sqlbi.Bravo.Infrastructure;
     using Sqlbi.Bravo.Infrastructure.Extensions;
+    using Sqlbi.Bravo.Infrastructure.Helpers;
     using Sqlbi.Bravo.Infrastructure.Services;
     using Sqlbi.Bravo.Infrastructure.Services.ManageDates;
     using Sqlbi.Bravo.Models;
@@ -88,22 +89,30 @@
                 }
             }
 
-            TableValidation Validate(string tableName)
+            TableValidation Validate(string? tableName)
             {
                 var validation = TableValidation.Unknown;
-                var table = connection.Model.Tables.Find(tableName);
 
-                if (table is null)
+                if (!TabularModelHelper.IsValidTableName(tableName))
                 {
-                    validation = TableValidation.ValidNotExists;
-                }
-                else if (table.IsCalculated())
-                {
-                    validation = TableValidation.ValidAlterable;
+                    validation = TableValidation.InvalidNamingRequirements;
                 }
                 else
                 {
-                    validation = TableValidation.InvalidExists;
+                    var table = connection.Model.Tables.Find(tableName);
+
+                    if (table is null)
+                    {
+                        validation = TableValidation.ValidNotExists;
+                    }
+                    else if (table.IsCalculated())
+                    {
+                        validation = TableValidation.ValidAlterable;
+                    }
+                    else
+                    {
+                        validation = TableValidation.InvalidExists;
+                    }
                 }
 
                 if (assertValidation)

@@ -98,7 +98,7 @@
 
         [Required]
         [JsonPropertyName("dateTableName")]
-        public string DateTableName { get; set; } = "Date";
+        public string? DateTableName { get; set; }
 
         [Required]
         [JsonPropertyName("dateTableValidation")]
@@ -106,7 +106,7 @@
 
         [Required]
         [JsonPropertyName("dateReferenceTableName")]
-        public string DateReferenceTableName { get; set; } = "DateTemplate";
+        public string? DateReferenceTableName { get; set; }
 
         [Required]
         [JsonPropertyName("dateReferenceTableValidation")]
@@ -118,11 +118,11 @@
 
         [Required]
         [JsonPropertyName("holidaysEnabled")]
-        public bool HolidaysEnabled { get; set; } = true;
+        public bool HolidaysEnabled { get; set; } = false;
 
         [Required]
         [JsonPropertyName("holidaysTableName")]
-        public string HolidaysTableName { get; set; } = "Holidays";
+        public string? HolidaysTableName { get; set; }
 
         [Required]
         [JsonPropertyName("holidaysTableValidation")]
@@ -130,7 +130,7 @@
 
         [Required]
         [JsonPropertyName("holidaysDefinitionTableName")]
-        public string HolidaysDefinitionTableName { get; set; } = "HolidaysDefinition";
+        public string? HolidaysDefinitionTableName { get; set; }
 
         [Required]
         [JsonPropertyName("holidaysDefinitionTableValidation")]
@@ -311,7 +311,11 @@
                 // Enable disable templates
                 //
                 DateEnabled = dateTemplateEntry is not null,
+                DateTableName = dateTemplateEntry?.Table,
+                DateReferenceTableName = dateTemplateEntry?.ReferenceTable,
                 HolidaysEnabled = holidaysTemplateEntry is not null && holidaysDefinitionTemplateEntry is not null,
+                HolidaysTableName = holidaysTemplateEntry?.Table,
+                HolidaysDefinitionTableName = holidaysTemplateEntry?.Table,
                 TimeIntelligenceEnabled = timeintelligenceTemplateEntry is not null,
             };
 
@@ -364,6 +368,11 @@
         /// A table with the same name already exists and cannot be altered, a different name is required
         /// </summary>
         InvalidExists = 100,
+
+        /// <summary>
+        /// The table name contains words or characters that cannot be used in the name of a table
+        /// </summary>
+        InvalidNamingRequirements = 101,
     }
 
     internal static class TableValidationExtensions
