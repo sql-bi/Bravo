@@ -592,6 +592,14 @@ a, .link {
                 }
             }
 
+            &.validating {
+                .validation-input {
+                    border: 1px dashed @border-color;
+
+                    .dark & { border-color: @border-color-dark;}
+                }
+            }
+
             &.valid {
 
                 .validation-input {
