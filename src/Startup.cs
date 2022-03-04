@@ -60,7 +60,7 @@
                         typeof(Sqlbi.Bravo.Models.ManageDates.TableValidation),
                         typeof(Sqlbi.Bravo.Models.ManageDates.TypeStartFiscalYear),
                         typeof(Sqlbi.Bravo.Models.ManageDates.WeeklyType)
-                        //, typeof(Sqlbi.Bravo.Infrastructure.AppFeature)
+                        //, typeof(Sqlbi.Bravo.Infrastructure.TabularDatabaseFeature)
                         //, typeof(Sqlbi.Bravo.Models.ManageDates.DayOfWeek)
                         //, typeof(Sqlbi.Bravo.Models.ManageDates.QuarterWeekType)
                         //, typeof(Sqlbi.Bravo.Models.AnalyzeModel.TabularTableFeature)
