@@ -1,6 +1,7 @@
 ﻿namespace Sqlbi.Bravo.Infrastructure.Services.ManageDates
 {
     using Dax.Template;
+    using Dax.Template.Exceptions;
     using Dax.Template.Model;
     using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Models.ManageDates;
@@ -22,41 +23,57 @@
         public IEnumerable<Package> GetPackages()
         {
             EnsureCalcheInitialized();
-
-            var packages = Package.FindTemplateFiles(CachePath).Select(Package.LoadFromFile);
-            return packages;
+            try
+            {
+                var packages = Package.FindTemplateFiles(CachePath).Select(Package.LoadFromFile);
+                return packages;
+            }
+            catch (TemplateException ex)
+            {
+                throw new BravoException(BravoProblem.ManageDateTemplateError, ex.Message, ex);
+            }
         }
 
         public ModelChanges GetPreviewChanges(DateConfiguration configuration, int previewRows, TabularConnectionWrapper connection, CancellationToken cancellationToken)
         {
             EnsureCalcheInitialized();
-
-            var package = configuration.GetPackage();
-            var engine = new Engine(package);
-
-            engine.ApplyTemplates(connection.Model, cancellationToken);
-
-            var modelChanges = engine.GetModelChanges(connection.Model, cancellationToken);
+            try
             {
+                var package = configuration.GetPackage();
+                var engine = new Engine(package);
+
+                engine.ApplyTemplates(connection.Model, cancellationToken);
+
+                var modelChanges = engine.GetModelChanges(connection.Model, cancellationToken);
+
                 if (previewRows > 0)
-                {
                     modelChanges.PopulatePreview(connection.Model, previewRows, cancellationToken);
-                }
+
+                return modelChanges;
             }
-            return modelChanges;
+            catch (TemplateException ex)
+            {
+                throw new BravoException(BravoProblem.ManageDateTemplateError, ex.Message, ex);
+            }
         }
 
         public void ApplyTemplate(DateConfiguration configuration, TabularConnectionWrapper connection, CancellationToken cancellationToken)
         {
             EnsureCalcheInitialized();
+            try
+            {
+                var package = configuration.GetPackage();
+                var engine = new Engine(package);
 
-            var package = configuration.GetPackage();
-            var engine = new Engine(package);
+                engine.ApplyTemplates(connection.Model, cancellationToken);
 
-            engine.ApplyTemplates(connection.Model, cancellationToken);
-
-            if (connection.Model.HasLocalChanges)
-                connection.Model.SaveChanges().ThrowOnError();
+                if (connection.Model.HasLocalChanges)
+                    connection.Model.SaveChanges().ThrowOnError();
+            }
+            catch (TemplateException ex)
+            {
+                throw new BravoException(BravoProblem.ManageDateTemplateError, ex.Message, ex);
+            }
         }
 
         private void EnsureCalcheInitialized()
