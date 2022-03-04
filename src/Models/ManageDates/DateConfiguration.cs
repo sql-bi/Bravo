@@ -92,6 +92,16 @@
 
         #region Date (Dax.Template.Tables.Dates.CustomDateTable)
 
+        /// <summary>
+        /// Indicates whether the <see cref="ITemplates.TemplateEntry"/> exists in the config.template.json
+        /// </summary>
+        [Required]
+        [JsonPropertyName("dateAvailable")]
+        public bool DateAvailable { get; set; } = false;
+
+        /// <summary>
+        /// Indicates whether the user has enabled this template for deploy
+        /// </summary>
         [Required]
         [JsonPropertyName("dateEnabled")]
         public bool DateEnabled { get; set; } = false;
@@ -116,6 +126,16 @@
 
         #region Holidays (Dax.Template.Tables.Dates.HolidaysTable + Dax.Template.Tables.Dates.HolidaysDefinitionTable)
 
+        /// <summary>
+        /// Indicates whether the <see cref="ITemplates.TemplateEntry"/> exists in the config.template.json
+        /// </summary>
+        [Required]
+        [JsonPropertyName("holidaysAvailable")]
+        public bool HolidaysAvailable { get; set; } = false;
+
+        /// <summary>
+        /// Indicates whether the user has enabled this template for deploy
+        /// </summary>
         [Required]
         [JsonPropertyName("holidaysEnabled")]
         public bool HolidaysEnabled { get; set; } = false;
@@ -140,6 +160,16 @@
 
         #region TimeIntelligence (Dax.Template.Measures.MeasuresTemplateDefinition.MeasureTemplate)
 
+        /// <summary>
+        /// Indicates whether the <see cref="ITemplates.TemplateEntry"/> exists in the config.template.json
+        /// </summary>
+        [Required]
+        [JsonPropertyName("timeIntelligenceAvailable")]
+        public bool TimeIntelligenceAvailable { get; set; } = false;
+
+        /// <summary>
+        /// Indicates whether the user has enabled this template for deploy
+        /// </summary>
         [Required]
         [JsonPropertyName("timeIntelligenceEnabled")]
         public bool TimeIntelligenceEnabled { get; set; } = false;
@@ -251,8 +281,6 @@
             {
                 if (timeintelligenceTemplateEntry is not null)
                 {
-                    BravoUnexpectedException.ThrowIfNull(holidaysDefinitionTemplateEntry);
-
                     if (TimeIntelligenceEnabled)
                     {
                         // nothing to do
@@ -310,13 +338,15 @@
                 //
                 // Enable disable templates
                 //
-                DateEnabled = dateTemplateEntry is not null,
+                DateAvailable = dateTemplateEntry is not null,
                 DateTableName = dateTemplateEntry?.Table,
                 DateReferenceTableName = dateTemplateEntry?.ReferenceTable,
-                HolidaysEnabled = holidaysTemplateEntry is not null && holidaysDefinitionTemplateEntry is not null,
+                //--
+                HolidaysAvailable = holidaysTemplateEntry is not null && holidaysDefinitionTemplateEntry is not null,
                 HolidaysTableName = holidaysTemplateEntry?.Table,
                 HolidaysDefinitionTableName = holidaysTemplateEntry?.Table,
-                TimeIntelligenceEnabled = timeintelligenceTemplateEntry is not null,
+                //--
+                TimeIntelligenceAvailable = timeintelligenceTemplateEntry is not null,
             };
 
             return configuration;
