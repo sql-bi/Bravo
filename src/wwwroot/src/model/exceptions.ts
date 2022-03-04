@@ -25,6 +25,7 @@ export enum AppProblem {
     VpaxFileContainsCorruptedData = 500,
     NetworkError = 600,
     ExportDataFileError = 700,
+    ManageDateTemplateError = 800,
 }
 
 export enum AppErrorType {
