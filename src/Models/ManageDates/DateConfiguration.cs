@@ -351,18 +351,23 @@
         Unknown = 0,
 
         /// <summary>
-        /// A table with the same name does not exist and will be created or it exists and can be replaced
+        /// A table with the same name does not exist and will be created
         /// </summary>
-        Valid = 1,
+        ValidNotExists = 1,
 
         /// <summary>
-        /// A table with the same name exists and cannot be replaced, a different name is required
+        /// A table with the same name already exists but will be altered
         /// </summary>
-        InvalidRenameRequired = 2,
+        ValidAlterable = 2,
+
+        /// <summary>
+        /// A table with the same name already exists and cannot be altered, a different name is required
+        /// </summary>
+        InvalidExists = 100,
     }
 
     internal static class TableValidationExtensions
     {
-        public static bool IsValid(this TableValidation value) => value == TableValidation.Valid;
+        public static bool IsValid(this TableValidation value) => value > TableValidation.Unknown && value < TableValidation.InvalidExists;
     }
 }

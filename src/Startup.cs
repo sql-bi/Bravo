@@ -30,7 +30,7 @@
 
             services.AddControllers().AddJsonOptions((jsonOptions) =>
             {
-                //jsonOptions.JsonSerializerOptions.Converters.Add(new JsonStringEnumMemberConverter()); // Macross.Json.Extensions https://github.com/dotnet/runtime/issues/31081#issuecomment-578459083
+                // TODO: when all JsonStringEnumMemberConverter target enum types will be commented out then the NuGet Macross.Json.Extensions package can be removed
                 jsonOptions.JsonSerializerOptions.Converters.Add(
                     new JsonStringEnumMemberConverter(
                         options: new JsonStringEnumMemberConverterOptions(deserializationFailureFallbackValue: null),

@@ -217,5 +217,11 @@
         /// </summary> 
         [JsonPropertyName("ExportDataFileError")]
         ExportDataFileError = 700,
+
+        /// <summary>
+        /// An exception occurred while executing the DAX template engine
+        /// </summary> 
+        [JsonPropertyName("ManageDateTemplateError")]
+        ManageDateTemplateError = 800,
     }
 }
