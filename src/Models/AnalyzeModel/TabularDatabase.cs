@@ -48,7 +48,7 @@
                 {
                     ETag = databaseETag,
                     Name = daxModel.ModelName.Name,
-                    CompatibilityMode = daxModel.CompatibilityMode.TryParseTo<Microsoft.AnalysisServices.CompatibilityMode>(),
+                    CompatibilityMode = daxModel.CompatibilityMode.TryParseTo<TOM.CompatibilityMode>(),
                     CompatibilityLevel = daxModel.CompatibilityLevel,
                     DatabaseSize = databaseSize,
                     AutoLineBreakStyle = autoLineBreakStyle,

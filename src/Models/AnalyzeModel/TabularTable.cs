@@ -19,10 +19,13 @@
         public string? Name { get; set; }
 
         [JsonPropertyName("rowsCount")]
-        public long RowsCount { get; set; }
+        public long? RowsCount { get; set; }
 
         [JsonPropertyName("size")]
-        public long Size { get; set; }
+        public long? Size { get; set; }
+
+        [JsonPropertyName("isDateTable")]
+        public bool? IsDateTable { get; set; }
 
         internal static TabularTable CreateFrom(VpaTable vpaTable)
         {
@@ -31,6 +34,7 @@
                 Name = vpaTable.TableName,
                 RowsCount = vpaTable.RowsCount,
                 Size = vpaTable.TableSize,
+                IsDateTable = vpaTable.IsDateTable
             };
 
             if (vpaTable.ColumnsNumber == 0L || (vpaTable.ColumnsNumber == 1L && vpaTable.Columns.Single().IsRowNumber))
