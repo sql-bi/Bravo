@@ -95,15 +95,15 @@
 
                 if (table is null)
                 {
-                    validation = TableValidation.Valid;
+                    validation = TableValidation.ValidNotExists;
                 }
                 else if (table.IsCalculated())
                 {
-                    validation = TableValidation.Valid;
+                    validation = TableValidation.ValidAlterable;
                 }
                 else
                 {
-                    validation = TableValidation.InvalidRenameRequired;
+                    validation = TableValidation.InvalidExists;
                 }
 
                 if (assertValidation)
