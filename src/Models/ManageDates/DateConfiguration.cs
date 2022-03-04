@@ -92,13 +92,23 @@
 
         #region Date (Dax.Template.Tables.Dates.CustomDateTable)
 
+        /// <summary>
+        /// Indicates whether the <see cref="ITemplates.TemplateEntry"/> exists in the config.template.json
+        /// </summary>
+        [Required]
+        [JsonPropertyName("dateAvailable")]
+        public bool DateAvailable { get; set; } = false;
+
+        /// <summary>
+        /// Indicates whether the user has enabled this template for deploy
+        /// </summary>
         [Required]
         [JsonPropertyName("dateEnabled")]
         public bool DateEnabled { get; set; } = false;
 
         [Required]
         [JsonPropertyName("dateTableName")]
-        public string DateTableName { get; set; } = "Date";
+        public string? DateTableName { get; set; }
 
         [Required]
         [JsonPropertyName("dateTableValidation")]
@@ -106,7 +116,7 @@
 
         [Required]
         [JsonPropertyName("dateReferenceTableName")]
-        public string DateReferenceTableName { get; set; } = "DateTemplate";
+        public string? DateReferenceTableName { get; set; }
 
         [Required]
         [JsonPropertyName("dateReferenceTableValidation")]
@@ -116,13 +126,23 @@
 
         #region Holidays (Dax.Template.Tables.Dates.HolidaysTable + Dax.Template.Tables.Dates.HolidaysDefinitionTable)
 
+        /// <summary>
+        /// Indicates whether the <see cref="ITemplates.TemplateEntry"/> exists in the config.template.json
+        /// </summary>
+        [Required]
+        [JsonPropertyName("holidaysAvailable")]
+        public bool HolidaysAvailable { get; set; } = false;
+
+        /// <summary>
+        /// Indicates whether the user has enabled this template for deploy
+        /// </summary>
         [Required]
         [JsonPropertyName("holidaysEnabled")]
-        public bool HolidaysEnabled { get; set; } = true;
+        public bool HolidaysEnabled { get; set; } = false;
 
         [Required]
         [JsonPropertyName("holidaysTableName")]
-        public string HolidaysTableName { get; set; } = "Holidays";
+        public string? HolidaysTableName { get; set; }
 
         [Required]
         [JsonPropertyName("holidaysTableValidation")]
@@ -130,7 +150,7 @@
 
         [Required]
         [JsonPropertyName("holidaysDefinitionTableName")]
-        public string HolidaysDefinitionTableName { get; set; } = "HolidaysDefinition";
+        public string? HolidaysDefinitionTableName { get; set; }
 
         [Required]
         [JsonPropertyName("holidaysDefinitionTableValidation")]
@@ -140,6 +160,16 @@
 
         #region TimeIntelligence (Dax.Template.Measures.MeasuresTemplateDefinition.MeasureTemplate)
 
+        /// <summary>
+        /// Indicates whether the <see cref="ITemplates.TemplateEntry"/> exists in the config.template.json
+        /// </summary>
+        [Required]
+        [JsonPropertyName("timeIntelligenceAvailable")]
+        public bool TimeIntelligenceAvailable { get; set; } = false;
+
+        /// <summary>
+        /// Indicates whether the user has enabled this template for deploy
+        /// </summary>
         [Required]
         [JsonPropertyName("timeIntelligenceEnabled")]
         public bool TimeIntelligenceEnabled { get; set; } = false;
@@ -251,8 +281,6 @@
             {
                 if (timeintelligenceTemplateEntry is not null)
                 {
-                    BravoUnexpectedException.ThrowIfNull(holidaysDefinitionTemplateEntry);
-
                     if (TimeIntelligenceEnabled)
                     {
                         // nothing to do
@@ -310,9 +338,15 @@
                 //
                 // Enable disable templates
                 //
-                DateEnabled = dateTemplateEntry is not null,
-                HolidaysEnabled = holidaysTemplateEntry is not null && holidaysDefinitionTemplateEntry is not null,
-                TimeIntelligenceEnabled = timeintelligenceTemplateEntry is not null,
+                DateAvailable = dateTemplateEntry is not null,
+                DateTableName = dateTemplateEntry?.Table,
+                DateReferenceTableName = dateTemplateEntry?.ReferenceTable,
+                //--
+                HolidaysAvailable = holidaysTemplateEntry is not null && holidaysDefinitionTemplateEntry is not null,
+                HolidaysTableName = holidaysTemplateEntry?.Table,
+                HolidaysDefinitionTableName = holidaysTemplateEntry?.Table,
+                //--
+                TimeIntelligenceAvailable = timeintelligenceTemplateEntry is not null,
             };
 
             return configuration;
@@ -364,6 +398,11 @@
         /// A table with the same name already exists and cannot be altered, a different name is required
         /// </summary>
         InvalidExists = 100,
+
+        /// <summary>
+        /// The table name contains words or characters that cannot be used in the name of a table
+        /// </summary>
+        InvalidNamingRequirements = 101,
     }
 
     internal static class TableValidationExtensions

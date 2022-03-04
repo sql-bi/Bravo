@@ -57,5 +57,16 @@
 
             return databaseETag;
         }
+
+        public static bool IsValidTableName(string? tableName)
+        {
+            if (tableName.IsNullOrWhiteSpace())
+                return false;
+
+            if (tableName.Any(char.IsControl))
+                return false;
+
+            return true;
+        }
     }
 }
