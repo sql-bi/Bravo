@@ -30,19 +30,12 @@ export interface ManageDatesConfig extends DateConfiguration {
     customRegion?: string
 }
 
-export enum ManageDatesStatus {
-    ok,
-    compatible,
-    incompatible,
-}
-
 export class ManageDatesScene extends MainScene {
 
     menu: Menu;
     modelCheckElement: HTMLElement;
     config: OptionsStore<ManageDatesConfig>;
     previewButton: HTMLElement;
-    status: ManageDatesStatus;
     
     //TODO Remove to enable manage dates
     get supported() {
@@ -167,70 +160,61 @@ export class ManageDatesScene extends MainScene {
 
     updateModelCheck() {
 
-        this.status = ManageDatesStatus.ok;
-
-        if (this.config.options.dateTableValidation == TableValidation.InvalidExists ||
-            this.config.options.dateReferenceTableValidation == TableValidation.InvalidExists ||
-            (this.config.options.holidaysEnabled && (
-                this.config.options.holidaysTableValidation == TableValidation.InvalidExists ||
-                this.config.options.holidaysDefinitionTableValidation == TableValidation.InvalidExists
-            ))
-            
-        ) {
-            this.status = ManageDatesStatus.incompatible;
-
-        } else if (this.config.options.dateTableValidation == TableValidation.ValidAlterable ||
-            this.config.options.dateReferenceTableValidation == TableValidation.ValidAlterable || 
-            (this.config.options.holidaysEnabled && (
-                this.config.options.holidaysTableValidation == TableValidation.ValidAlterable ||
-                this.config.options.holidaysDefinitionTableValidation == TableValidation.ValidAlterable
-            ))
-        ) {
-            this.status = ManageDatesStatus.compatible;
-
-        }
+        let containsInvalid = false;
+        let containsOverwritable = false;
 
         let html = ``;
         if (!this.canEdit) {
+
+            containsInvalid = true;
             html = ``; //TODO Show a message saying the editing is not available anymore
         } else {
-            switch (this.status) {
-                case ManageDatesStatus.incompatible:
-                    html = `
-                        <div class="status-incompatible">
-                            <div class="icon icon-alert"></div>
-                            <div class="message">
-                                ${i18n(strings.manageDatesStatusIncompatible)}
-                            </div>  
-                        </div>
-                    `;
-                    break;
 
-                case ManageDatesStatus.compatible:
-                    html = `
-                        <div class="status-compatible">
-                            <div class="icon icon-updatable"></div>
-                            <div class="message">
-                                ${i18n(strings.manageDatesStatusCompatible)}
-                            </div>  
-                        </div>
-                    `;
-                    break;
+            let fields = [this.config.options.dateTableValidation, this.config.options.dateReferenceTableValidation];
+            if (this.config.options.holidaysAvailable && this.config.options.holidaysEnabled)
+                fields = [...fields, ...[this.config.options.holidaysTableValidation, this.config.options.holidaysDefinitionTableValidation]];
 
-                default:
-                    html = `
-                        <div class="status-ok">
-                            <div class="icon icon-valid"></div>
-                            <div class="message">
-                                ${i18n(strings.manageDatesStatusOk)}
-                            </div>  
-                        </div>
-                    `;
+            fields.forEach(field => {
+                if (field == TableValidation.InvalidExists || field == TableValidation.InvalidNamingRequirements) {
+                    containsInvalid = true;
+                } else if (field == TableValidation.ValidAlterable) {
+                    containsOverwritable = true;
+                }
+            });
+
+
+            if (containsInvalid) {
+                html = `
+                    <div class="status-incompatible">
+                        <div class="icon icon-alert"></div>
+                        <div class="message">
+                            ${i18n(strings.manageDatesStatusIncompatible)}
+                        </div>  
+                    </div>
+                `;
+            } else if (containsOverwritable) {
+                html = `
+                    <div class="status-compatible">
+                        <div class="icon icon-updatable"></div>
+                        <div class="message">
+                            ${i18n(strings.manageDatesStatusCompatible)}
+                        </div>  
+                    </div>
+                `;
+            } else {
+                html = `
+                    <div class="status-ok">
+                        <div class="icon icon-valid"></div>
+                        <div class="message">
+                            ${i18n(strings.manageDatesStatusOk)}
+                        </div>  
+                    </div>
+                `;
             }
         }
 
         this.modelCheckElement.innerHTML = html;
-        this.previewButton.toggleAttribute("disabled", this.status == ManageDatesStatus.incompatible);
+        this.previewButton.toggleAttribute("disabled", containsInvalid);
                     
     }
 
