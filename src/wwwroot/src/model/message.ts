@@ -12,8 +12,7 @@ export enum WebMessageType {
     ApplicationUpdate = "ApplicationUpdate",
     ReportOpen = "ReportOpen",
     DatasetOpen = "DatasetOpen",
-    VpaxOpen = "VpaxOpen",
-    //TokenUpdate = "TokenUpdate",
+    VpaxOpen = "VpaxOpen"
 }
 
 export interface WebMessage {

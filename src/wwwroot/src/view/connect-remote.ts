@@ -9,7 +9,7 @@ import { i18n } from '../model/i18n';
 import { Utils, _, __ } from '../helpers/utils';
 import { Doc, DocType } from '../model/doc';
 import { strings } from '../model/strings';
-import { PBICloudDataset, PBICloudDatasetConnectionMode, PBICloudDatasetEndorsementstring } from '../model/pbi-dataset';
+import { PBICloudDataset, PBICloudDatasetConnectionMode, PBICloudDatasetEndorsement } from '../model/pbi-dataset';
 import { Tabulator } from 'tabulator-tables';
 import { Loader } from '../helpers/loader';
 import { ContextMenu } from '../helpers/contextmenu';
@@ -127,15 +127,15 @@ export class ConnectRemote extends ConnectMenuItem {
                         title: i18n(strings.connectDatasetsTableEndorsementCol), 
                         formatter: (cell) => {
                             let dataset = <PBICloudDataset>cell.getData();
-                            return (!dataset.endorsement || dataset.endorsement == PBICloudDatasetEndorsementstring.None ? '' : `<span class="endorsement-badge icon-${dataset.endorsement.toLowerCase()}">${dataset.endorsement}</span>`);
+                            return (!dataset.endorsement || dataset.endorsement == PBICloudDatasetEndorsement.None ? '' : `<span class="endorsement-badge icon-${dataset.endorsement.toLowerCase()}">${dataset.endorsement}</span>`);
                         },
                         sorter: (a, b, aRow, bRow, column, dir, sorterParams) => {
                             const datasetA = <PBICloudDataset>aRow.getData();
                             const datasetB = <PBICloudDataset>bRow.getData();
 
-                            a = `${(!datasetA.endorsement || datasetA.endorsement == PBICloudDatasetEndorsementstring.None ? "zzz": datasetA.endorsement)}_${datasetA.name}`;
+                            a = `${(!datasetA.endorsement || datasetA.endorsement == PBICloudDatasetEndorsement.None ? "zzz": datasetA.endorsement)}_${datasetA.name}`;
 
-                            b = `${(!datasetB.endorsement || datasetB.endorsement == PBICloudDatasetEndorsementstring.None ? "zzz": datasetB.endorsement)}_${datasetB.name}`;
+                            b = `${(!datasetB.endorsement || datasetB.endorsement == PBICloudDatasetEndorsement.None ? "zzz": datasetB.endorsement)}_${datasetB.name}`;
 
                             return String(a).toLowerCase().localeCompare(String(b).toLowerCase());
                         }

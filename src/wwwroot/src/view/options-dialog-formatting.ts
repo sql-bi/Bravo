@@ -42,9 +42,10 @@ export class OptionsDialogFormatting {
                 name: i18n(strings.optionFormattingLines),
                 description: i18n(strings.optionFormattingLinesDescription),
                 type: OptionType.select,
+                valueType: "number",
                 values: [
-                    [DaxFormatterLineStyle.LongLine, i18n(strings.optionFormattingLinesValueLong)],
-                    [DaxFormatterLineStyle.ShortLine, i18n(strings.optionFormattingLinesValueShort)],
+                    [DaxFormatterLineStyle.LongLine.toString(), i18n(strings.optionFormattingLinesValueLong)],
+                    [DaxFormatterLineStyle.ShortLine.toString(), i18n(strings.optionFormattingLinesValueShort)],
                 ]
             },
             {
@@ -53,10 +54,11 @@ export class OptionsDialogFormatting {
                 name: i18n(strings.optionFormattingSpaces),
                 description: i18n(strings.optionFormattingSpacesDescription),
                 type: OptionType.select,
+                valueType: "number",
                 values: [
-                    [DaxFormatterSpacingStyle.SpaceAfterFunction, i18n(strings.optionFormattingSpacesValueBestPractice)],
-                    [DaxFormatterSpacingStyle.SpaceAfterFunction, i18n(strings.optionFormattingSpacesValueTrue)],
-                    [DaxFormatterSpacingStyle.NoSpaceAfterFunction, i18n(strings.optionFormattingSpacesValueFalse)],
+                    [DaxFormatterSpacingStyle.SpaceAfterFunction.toString(), i18n(strings.optionFormattingSpacesValueBestPractice)],
+                    [DaxFormatterSpacingStyle.SpaceAfterFunction.toString(), i18n(strings.optionFormattingSpacesValueTrue)],
+                    [DaxFormatterSpacingStyle.NoSpaceAfterFunction.toString(), i18n(strings.optionFormattingSpacesValueFalse)],
                 ]
             },
             {
@@ -65,10 +67,11 @@ export class OptionsDialogFormatting {
                 name: i18n(strings.optionFormattingBreaks),
                 description: i18n(strings.optionFormattingBreaksDescription),
                 type: OptionType.select,
+                valueType: "number",
                 values: [
-                    [DaxLineBreakStyle.None, i18n(strings.optionFormattingBreaksNone)],
-                    [DaxLineBreakStyle.InitialLineBreak, i18n(strings.optionFormattingBreaksInitial)],
-                    [DaxLineBreakStyle.Auto, i18n(strings.optionFormattingBreaksAuto)],
+                    [DaxLineBreakStyle.None.toString(), i18n(strings.optionFormattingBreaksNone)],
+                    [DaxLineBreakStyle.InitialLineBreak.toString(), i18n(strings.optionFormattingBreaksInitial)],
+                    [DaxLineBreakStyle.Auto.toString(), i18n(strings.optionFormattingBreaksAuto)],
                     
                 ]
             }

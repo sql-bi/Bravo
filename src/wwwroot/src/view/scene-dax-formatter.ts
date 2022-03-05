@@ -222,7 +222,7 @@ export class DaxFormatterScene extends MainScene {
 
     switchToMenuFormatted(element: HTMLElement) {
 
-        let editorElement = _('.cm-formatted', element);
+        let editorElement = _(".cm-formatted", element);
         editorElement.innerHTML = "";
         
         if (this.activeMeasure) {
@@ -241,7 +241,7 @@ export class DaxFormatterScene extends MainScene {
 
     renderFormattedOverlay() {
 
-        let element = _('.cm-formatted', this.element);
+        let element = _(".cm-formatted", this.element);
 
         let html = `
             <div class="gen-preview-overlay">

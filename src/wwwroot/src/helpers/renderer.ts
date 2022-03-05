@@ -20,6 +20,7 @@ export interface OptionStruct {
     additionalNotes?: string
     attributes?: string
     type: OptionType
+    valueType?: "string"|"number"|"boolean"
     values?: string[][]
     range?: number[]
     value?: any
@@ -29,7 +30,7 @@ export interface OptionStruct {
     silentUpdate?: boolean
     customHtml?: ()=> string
     validation?: (name: string, value: string) => Promise<OptionValidation>
-    onChange?: (e: Event, value: string | boolean) => void
+    onChange?: (e: Event, value: any) => void
     onClick?: (e: Event) => void
     onKeydown?: (e: Event, value: string) => void
 }
@@ -82,6 +83,10 @@ export module Renderer {
         export function render(struct: OptionStruct, element: HTMLElement, store: OptionsStore<any>) {
             let id = Utils.Text.slugify(struct.option ? struct.option : struct.name); //Utils.DOM.uniqueId()
             let value = (Utils.Obj.isSet(struct.value) ? struct.value : (struct.option ? store.getOption(struct.option) : ""));
+            let valueType = (struct.valueType ? struct.valueType : 
+                (struct.type == OptionType.switch ? "boolean" : (
+                 struct.type == OptionType.number ? "number": 
+                 "string")));
 
             let ctrlHtml = "";
             switch (struct.type) {
@@ -210,9 +215,15 @@ export module Renderer {
                     let el = <HTMLInputElement|HTMLSelectElement>e.currentTarget; 
                     let newValue = (struct.type == OptionType.switch ? (<HTMLInputElement>el).checked : el.value.trim());
                     
-                    if (struct.option)
-                        store.update(struct.option, newValue, (struct.silentUpdate ? false : true));
-
+                    if (struct.option) {
+                        let optionValue: any = newValue;
+                        if (typeof newValue === "string") {
+                            if (valueType == "number") optionValue = Number(newValue);
+                            if (valueType == "boolean") optionValue = (newValue == "true");
+                        }
+                        store.update(struct.option, optionValue, (struct.silentUpdate ? false : true));
+                    }
+                    
                     __(`.toggled-by-${id}`, element).forEach((div: HTMLElement) => {
                         div.toggle(div.classList.contains(`toggle-if-${Utils.Text.slugify(newValue.toString())}`));
                     });

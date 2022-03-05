@@ -25,12 +25,13 @@ export class ManageDatesSceneInterval extends ManageDatesScenePane {
                 description: i18n(strings.manageDatesAutoScanDesc),
                 bold: true,
                 type: OptionType.select,
+                valueType: "number",
                 values: [
-                    [AutoScanEnum.Full, i18n(strings.manageDatesAutoScanFull)],
-                    [AutoScanEnum.SelectedTablesColumns, i18n(strings.manageDatesAutoScanSelectedTablesColumns)],
-                    [AutoScanEnum.ScanActiveRelationships, i18n(strings.manageDatesAutoScanActiveRelationships)],
-                    [AutoScanEnum.ScanInactiveRelationships, i18n(strings.manageDatesAutoScanInactiveRelationships)],
-                    [AutoScanEnum.Disabled, i18n(strings.manageDatesAutoScanDisabled)]
+                    [AutoScanEnum.Full.toString(), i18n(strings.manageDatesAutoScanFull)],
+                    [AutoScanEnum.SelectedTablesColumns.toString(), i18n(strings.manageDatesAutoScanSelectedTablesColumns)],
+                    [AutoScanEnum.ScanActiveRelationships.toString(), i18n(strings.manageDatesAutoScanActiveRelationships)],
+                    [AutoScanEnum.ScanInactiveRelationships.toString(), i18n(strings.manageDatesAutoScanInactiveRelationships)],
+                    [AutoScanEnum.Disabled.toString(), i18n(strings.manageDatesAutoScanDisabled)]
                 ]
             },
             {
@@ -38,7 +39,7 @@ export class ManageDatesSceneInterval extends ManageDatesScenePane {
                 parent: "autoscan",
                 toggledBy: {
                     option: "autoscan",
-                    value: AutoScanEnum.SelectedTablesColumns
+                    value: AutoScanEnum.SelectedTablesColumns.toString()
                 },
                 type: OptionType.custom,
                 customHtml: ()=> `
@@ -50,7 +51,7 @@ export class ManageDatesSceneInterval extends ManageDatesScenePane {
                 parent: "autoscan",
                 toggledBy: {
                     option: "autoscan",
-                    value: AutoScanEnum.Disabled
+                    value: AutoScanEnum.Disabled.toString()
                 },
                 name: i18n(strings.manageDatesAutoScanFirstYear),
                 description: i18n(strings.manageDatesAutoScanFirstYearDesc),
@@ -63,7 +64,7 @@ export class ManageDatesSceneInterval extends ManageDatesScenePane {
                 parent: "autoscan",
                 toggledBy: {
                     option: "autoscan",
-                    value: AutoScanEnum.Disabled
+                    value: AutoScanEnum.Disabled.toString()
                 },
                 name: i18n(strings.manageDatesAutoScanLastYear),
                 description: i18n(strings.manageDatesAutoScanLastYearDesc),

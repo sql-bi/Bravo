@@ -30,19 +30,22 @@ export interface DateConfiguration {
 
     defaults?: DateDefaults                         // Specific options of selected template
 
-    dateEnabled: boolean                            // Dates allowed
+    dateAvailable: boolean                          // Date feature available
+    dateEnabled: boolean                            // Dates enabled
     dateTableName: string                           // The name of the "Date" table    
     dateTableValidation: TableValidation            // "Date" table name validity 
     dateReferenceTableName: string                  // The name of the "DateTemple" table
     dateReferenceTableValidation: TableValidation   // "DateTemple" table name validity
 
-    holidaysEnabled: boolean                        // Holidays allowed
+    holidaysAvailable: boolean                      // Holidays feature available
+    holidaysEnabled: boolean                        // Holidays enabled
     holidaysTableName: string                       // The name of the "Holidays" table  
     holidaysTableValidation: TableValidation        // "Holidays" table name validity
     holidaysDefinitionTableName: string             // The name of the "HolidaysDefinition" table
     holidaysDefinitionTableValidation: TableValidation // "HolidaysDefinition" table name validity
 
-    timeIntelligenceEnabled: boolean                // Time Intelligence allowed
+    timeIntelligenceAvailable: boolean              // Time Intelligence feature available
+    timeIntelligenceEnabled: boolean                // Time Intelligence enabled
 }
 
 export interface DateDefaults {
@@ -57,23 +60,24 @@ export interface DateDefaults {
 }
 
 export enum AutoScanEnum {
-    Disabled = "Disabled",                                      // Don't use autoscan 
-    SelectedTablesColumns = "SelectedTablesColumns",            // Look into the tables passed by the user
-    ScanActiveRelationships = "ScanActiveRelationships",        // Look only in tables witn active relationships
-    ScanInactiveRelationships = "ScanInactiveRelationships",    // Ditto, but the relationships must be inactive
-    Full = "Full"                                               // Look into all tables
+    Disabled = 0,                  // Don't use autoscan 
+    SelectedTablesColumns = 1,     // Look into the tables passed by the user
+    ScanActiveRelationships = 2,   // Look only in tables witn active relationships
+    ScanInactiveRelationships = 4, // As before, but the relationships must be inactive
+    Full = 127                     // Look into all tables
 }
 
 export enum AutoNamingEnum {
-    Suffix = "Suffix",
-    Prefix = "Prefix"
+    Suffix = 0,
+    Prefix = 1
 }
 
 export enum TableValidation {
-    Unknown = "Unknown",
-    ValidNotExists = "ValidNotExists",
-    ValidAlterable = "ValidAlterable",
-    InvalidExists = "InvalidExists",
+    Unknown = 0,
+    ValidNotExists = 1,
+    ValidAlterable = 2,
+    InvalidExists = 100,
+    InvalidNamingRequirements = 101,
 }
 
 export enum DayOfWeek {
@@ -87,8 +91,8 @@ export enum DayOfWeek {
 }
 
 export enum TypeStartFiscalYear {
-    FirstDayOfFiscalYear = "FirstDayOfFiscalYear",
-    LastDayOfFiscalYear = "LastDayOfFiscalYear",
+    FirstDayOfFiscalYear = 0,
+    LastDayOfFiscalYear = 1,
 }
 
 export enum QuarterWeekType {
@@ -98,8 +102,8 @@ export enum QuarterWeekType {
 }
 
 export enum WeeklyType {
-    Last = "Last",
-    Nearest = "Nearest",
+    Last = 0,
+    Nearest = 1,
 }
 
 export let DateISOCOuntries: string[][] = [
