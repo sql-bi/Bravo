@@ -122,16 +122,13 @@
 
         public static void AddDiagnostics(DiagnosticMessageType type, string name, string content, DiagnosticMessageSeverity severity = DiagnosticMessageSeverity.None, bool writeFile = false)
         {
-            if (IsDiagnosticLevelVerbose)
+            var message = DiagnosticMessage.Create(type, severity, name, content);
+
+            Diagnostics.AddOrUpdate(message.Name!, message, (key, value) => message);
+
+            if (writeFile)
             {
-                var message = DiagnosticMessage.Create(type, severity, name, content);
-
-                Diagnostics.AddOrUpdate(message.Name!, message, (key, value) => message);
-
-                if (writeFile)
-                {
-                    WriteDiagnosticFile(message);
-                }
+                WriteDiagnosticFile(message);
             }
         }
 

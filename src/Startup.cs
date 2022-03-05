@@ -11,7 +11,6 @@
     using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Infrastructure.Helpers;
     using Sqlbi.Bravo.Services;
-    using System.Text.Json.Serialization;
 
     internal class Startup
     {
@@ -27,49 +26,7 @@
 
         public void ConfigureServices(IServiceCollection services)
         {
-
-            services.AddControllers().AddJsonOptions((jsonOptions) =>
-            {
-                // TODO: when all JsonStringEnumMemberConverter target enum types will be commented out then the NuGet Macross.Json.Extensions package can be removed
-                jsonOptions.JsonSerializerOptions.Converters.Add(
-                    new JsonStringEnumMemberConverter(
-                        options: new JsonStringEnumMemberConverterOptions(deserializationFailureFallbackValue: null),
-                        typeof(Sqlbi.Bravo.Infrastructure.Configuration.Settings.ThemeType),
-                        typeof(Sqlbi.Bravo.Infrastructure.Configuration.Settings.DiagnosticLevelType),
-                        typeof(Sqlbi.Bravo.Infrastructure.Configuration.Settings.UpdateChannelType),
-                        typeof(Sqlbi.Bravo.Infrastructure.Messages.WebMessageType),
-                        typeof(Sqlbi.Bravo.Models.PBIDesktopReportConnectionMode),
-                        typeof(Sqlbi.Bravo.Models.PBICloudDatasetConnectionMode),
-                        typeof(Sqlbi.Bravo.Models.PBICloudDatasetEndorsement)
-                        //, typeof(Sqlbi.Bravo.Infrastructure.BravoProblem)
-                        //, typeof(Sqlbi.Bravo.Models.DiagnosticMessageSeverity)
-                        //, typeof(Sqlbi.Bravo.Models.DiagnosticMessageType)
-                        //, typeof(Sqlbi.Bravo.Models.ExportData.ExportDataStatus)
-                        //, typeof(Sqlbi.Bravo.Infrastructure.Contracts.PBICloud.CloudWorkspaceType)
-                        //, typeof(Sqlbi.Bravo.Infrastructure.Contracts.PBICloud.CloudWorkspaceCapacitySkuType)
-                        //, typeof(Sqlbi.Bravo.Infrastructure.Contracts.PBICloud.CloudSharedModelWorkspaceType)
-                        //, typeof(Sqlbi.Bravo.Infrastructure.Contracts.PBICloud.CloudPromotionalStage)
-                        //, typeof(Sqlbi.Bravo.Infrastructure.Contracts.PBICloud.CloudPermissions)
-                        //, typeof(Sqlbi.Bravo.Infrastructure.Contracts.PBICloud.CloudOrganizationalGalleryItemStatus)
-                        //, typeof(Sqlbi.Bravo.Infrastructure.Contracts.PBICloud.CloudEnvironmentType)
-                        //, typeof(Dax.Formatter.Models.DaxFormatterLineStyle),
-                        //, typeof(Dax.Formatter.Models.DaxFormatterSpacingStyle),
-                        //, typeof(Sqlbi.Bravo.Models.FormatDax.DaxLineBreakStyle)
-                        //, typeof(Dax.Template.Enums.AutoScanEnum)
-                        //, typeof(Dax.Template.Enums.AutoNamingEnum)
-                        //, typeof(Sqlbi.Bravo.Models.ManageDates.TypeStartFiscalYear)
-                        //, typeof(Sqlbi.Bravo.Models.ManageDates.WeeklyType)
-                        //, typeof(Sqlbi.Bravo.Models.ManageDates.TableValidation)
-                        //, typeof(Sqlbi.Bravo.Infrastructure.TabularDatabaseFeature)
-                        //, typeof(Sqlbi.Bravo.Models.ManageDates.DayOfWeek)
-                        //, typeof(Sqlbi.Bravo.Models.ManageDates.QuarterWeekType)
-                        //, typeof(Sqlbi.Bravo.Models.AnalyzeModel.TabularTableFeature)
-                        //, typeof(Sqlbi.Bravo.Models.AnalyzeModel.TabularTableFeatureUnsupportedReason)
-                        )
-                    );
-                jsonOptions.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
-            });
-
+            services.AddAndConfigureControllers();
             services.AddAndConfigureCors(CorsLocalhostOnlyPolicy, CorsLocalhostOrigin);
             services.AddAndConfigureAuthorization();
             services.AddAndConfigureAuthentication();
@@ -89,7 +46,6 @@
             services.AddSingleton<IDaxFormatterClient, DaxFormatterClient>();
             services.AddSingleton<IManageDatesService, ManageDatesService>();
             services.AddSingleton<IBestPracticeAnalyzerService, BestPracticeAnalyzerService>();
-            // services.AddHostedService<ApplicationInstanceHostedService>();
         }
 
         public void Configure(IApplicationBuilder application, IWebHostEnvironment environment)
