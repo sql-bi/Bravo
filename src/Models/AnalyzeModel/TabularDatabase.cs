@@ -13,7 +13,7 @@
     public class TabularDatabase
     {
         [JsonPropertyName("features")]
-        public AppFeature Features { get; set; } = AppFeature.All;
+        public TabularDatabaseFeature Features { get; set; } = TabularDatabaseFeature.All;
 
         [JsonPropertyName("featureUnsupportedReasons")]
         public TabularDatabaseFeatureUnsupportedReason FeatureUnsupportedReasons { get; set; } = TabularDatabaseFeatureUnsupportedReason.None;
@@ -69,7 +69,7 @@
 
             if (daxModel.Tables.Any(IsAutoDateTimeTable))
             {
-                tabularDatabase.Features &= ~AppFeature.ManageDatesAll;
+                tabularDatabase.Features &= ~TabularDatabaseFeature.ManageDatesAll;
                 tabularDatabase.FeatureUnsupportedReasons |= TabularDatabaseFeatureUnsupportedReason.ManageDatesAutoDateTimeEnabled;
             }
 
@@ -97,7 +97,7 @@
     }
 
     [Flags]
-    public enum AppFeature // TODO: @daniele - breaking change, rename 'AppFeature' to 'TabularDatabaseFeature' see https://docs.microsoft.com/en-us/visualstudio/ide/reference/rename?view=vs-2022#how-to
+    public enum TabularDatabaseFeature
     {
         None = 0,
 

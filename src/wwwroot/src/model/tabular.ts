@@ -4,12 +4,10 @@
  * https://www.sqlbi.com
 */
 
-import { AppFeature } from '../controllers/app';
-
 export interface TabularDatabase {
     model: TabularDatabaseInfo
     measures: TabularMeasure[]
-    features: AppFeature
+    features: TabularDatabaseFeature
 }
 
 export interface TabularDatabaseInfo {
@@ -27,6 +25,7 @@ export interface TabularTable {
     name?: string
     rowsCount: number
     size: number
+    isDateTable?: boolean
     features: TabularTableFeature
     featureUnsupportedReasons: TabularTableFeatureUnsupportedReason
 }
@@ -57,9 +56,9 @@ export interface FormatDaxError {
 
 
 export enum DaxLineBreakStyle {
-    None = "None", 
-    InitialLineBreak = "InitialLineBreak", 
-    Auto = "Auto"
+    None = 0, 
+    InitialLineBreak = 1, 
+    Auto = 2
 }
 
 export interface FormattedMeasure extends TabularMeasure {
@@ -67,23 +66,49 @@ export interface FormattedMeasure extends TabularMeasure {
 }
 
 export function daxMeasureName(measure: TabularMeasure): string {
-    return `${measure.tableName}[${measure.name}]`;
+    return `'${measure.tableName}'[${measure.name}]`;
 }
 
 export enum TabularTableFeature {
     None = 0,
-    // AnalyzeModel range << 100,
-    // FormatDaxPage range << 200,
-    // ManageDatesPage range << 300,
     ExportData = 1 << 400,
     All = ExportData,
 }
 
 export enum TabularTableFeatureUnsupportedReason {
     None = 0,
-
-    // AnalyzeModel range << 100,
-    // FormatDaxPage range << 200,
-    // ManageDatesPage range << 300,
     ExportDataNoColumns = 1 << 400,
+}
+
+
+export enum TabularDatabaseFeature {
+    None = 0,
+
+    AnalyzeModelPage = 1 << 100,
+    AnalyzeModelSynchronize = 1 << 101,
+    AnalyzeModelExportVpax = 1 << 102,
+    AnalyzeModelAll = AnalyzeModelPage | AnalyzeModelSynchronize | AnalyzeModelExportVpax,
+
+    FormatDaxPage = 1 << 200,
+    FormatDaxSynchronize = 1 << 201,
+    FormatDaxUpdateModel = 1 << 202,
+    FormatDaxAll = FormatDaxPage | FormatDaxSynchronize | FormatDaxUpdateModel,
+
+    ManageDatesPage = 1 << 300,
+    ManageDatesSynchronize = 1 << 301,
+    ManageDatesUpdateModel = 1 << 302,
+    ManageDatesAll = ManageDatesPage | ManageDatesSynchronize | ManageDatesUpdateModel,
+
+    ExportDataPage = 1 << 400,
+    ExportDataSynchronize = 1 << 401,
+    ExportDataAll = ExportDataPage | ExportDataSynchronize,
+
+    AllUpdateModel = FormatDaxUpdateModel | ManageDatesUpdateModel,
+    AllSynchronize = AnalyzeModelSynchronize | FormatDaxSynchronize | ManageDatesSynchronize | ExportDataSynchronize,
+    All = AnalyzeModelAll | FormatDaxAll | ManageDatesAll | ExportDataAll,
+}
+
+export enum TabularDatabaseFeatureUnsupportedReason {
+    None = 0,
+    ManageDatesAutoDateTimeEnabled = 1 << 300,
 }

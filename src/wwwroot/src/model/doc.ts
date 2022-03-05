@@ -6,7 +6,7 @@
 
 import { host } from "../main";
 import { Dic, Utils } from '../helpers/utils';
-import { daxMeasureName, FormattedMeasure, TabularDatabase, TabularDatabaseInfo, TabularMeasure } from './tabular';
+import { daxMeasureName, FormattedMeasure, TabularDatabase, TabularDatabaseFeature, TabularDatabaseInfo, TabularMeasure } from './tabular';
 import { deepEqual } from 'fast-equals';
 import { PBICloudDataset } from './pbi-dataset';
 import { PBIDesktopReport } from './pbi-report';
@@ -16,7 +16,6 @@ import { Md5 } from 'ts-md5/dist/md5';
 import { i18n } from './i18n';
 import { strings } from './strings';
 import { Page, PageType } from '../controllers/page';
-import { AppFeature } from '../controllers/app';
 
 export enum DocType {
     vpax,
@@ -36,7 +35,7 @@ export class Doc {
     sourceData: File | PBICloudDataset | PBIDesktopReport;
     model: TabularDatabaseInfo;
     measures: TabularMeasure[];
-    features: AppFeature;
+    features: TabularDatabaseFeature;
     formattedMeasures: Dic<FormattedMeasure>;
     lastSync: number;
 
@@ -143,30 +142,30 @@ export class Doc {
 
     featureSupported(feature: string, pageType?: PageType) {
 
-        let expectedValue = AppFeature.None;
+        let expectedValue = TabularDatabaseFeature.None;
 
         if (pageType) {
             switch (pageType) {
                 case PageType.AnalyzeModel:
-                    expectedValue = (<any>AppFeature)[`AnalyzeModel${feature}`];
+                    expectedValue = (<any>TabularDatabaseFeature)[`AnalyzeModel${feature}`];
                     break;
                 case PageType.DaxFormatter:
-                    expectedValue = (<any>AppFeature)[`FormatDax${feature}`];
+                    expectedValue = (<any>TabularDatabaseFeature)[`FormatDax${feature}`];
                     break;
                 case PageType.ManageDates:
-                    expectedValue = (<any>AppFeature)[`ManageDates${feature}`];
+                    expectedValue = (<any>TabularDatabaseFeature)[`ManageDates${feature}`];
                     break;
                 case PageType.ExportData:
-                    expectedValue = (<any>AppFeature)[`ExportData${feature}`];
+                    expectedValue = (<any>TabularDatabaseFeature)[`ExportData${feature}`];
                     break;
                 /*
                 case PageType.BestPractices:
-                    expectedValue = (<any>AppFeature)[`BestPractices${type}`];
+                    expectedValue = (<any>TabularDatabaseFeature)[`BestPractices${type}`];
                     break;
                 */
             }
         } else {
-            expectedValue = (<any>AppFeature)[feature];
+            expectedValue = (<any>TabularDatabaseFeature)[feature];
         }
         return ((this.features & expectedValue) === expectedValue);
     }

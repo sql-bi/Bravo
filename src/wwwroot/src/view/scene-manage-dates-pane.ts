@@ -35,32 +35,36 @@ export class ManageDatesScenePane {
     }
 
     validateField(field: string) {
-        
+
+        let validationFields = {
+            dateTableName: "dateTableValidation",
+            dateReferenceTableName: "dateReferenceTableValidation",
+            holidaysTableName: "holidaysTableValidation",
+            holidaysDefinitionTableName: "holidaysDefinitionTableValidation"
+        };
+        let validationField = (<any>validationFields)[field];
+
         return host.manageDatesValidateTableNames({
             report: <PBIDesktopReport>this.doc.sourceData,
             configuration: this.config.options
         }).then(response => {
 
-            let validationFields = {
-                dateTableName: "dateTableValidation",
-                dateReferenceTableName: "dateReferenceTableValidation",
-                holidaysTableName: "holidaysTableValidation",
-                holidaysDefinitionTableName: "holidaysDefinitionTableValidation"
-            };
-            let validationField = (<any>validationFields)[field];
             let status = (<any>response)[validationField];
+            let valid = (status == TableValidation.ValidAlterable || status == TableValidation.ValidNotExists);
             this.config.update(validationField, status, true);
 
             return <OptionValidation>{ 
-                valid: status == TableValidation.Valid,
-                message: i18n((<any>strings)[`tableValidation${status}`]) 
+                valid: valid,
+                message: i18n(valid ? strings.tableValidationValid : strings.tableValidationInvalid) 
             };
 
-        }).catch(ignore => 
-            <OptionValidation>{ 
+        }).catch(ignore => {
+            
+            this.config.update(validationField, TableValidation.InvalidNamingRequirements, true);
+            return <OptionValidation>{ 
                 valid: false,
                 message: i18n(strings.tableValidationInvalid) 
             }
-        );
+        });
     }
 }

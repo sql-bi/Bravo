@@ -50,13 +50,13 @@ export interface FormatDaxOptions {
 }
 
 export enum DaxFormatterLineStyle {
-    LongLine = "LongLine",
-    ShortLine = "ShortLine"
+    LongLine = 0,
+    ShortLine = 1
 }
 
 export enum DaxFormatterSpacingStyle {
-    SpaceAfterFunction = "SpaceAfterFunction", 
-    NoSpaceAfterFunction = "NoNpaceAfterFunction" //TODO Fix "NoSpaceAfterFunction"
+    SpaceAfterFunction = 0, 
+    NoSpaceAfterFunction = 1
 }
 
 export enum UpdateChannelType {

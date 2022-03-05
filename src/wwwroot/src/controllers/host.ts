@@ -71,14 +71,14 @@ export interface FileActionResult {
 }
 
 export enum DiagnosticMessageSeverity {
-    None = "None",
-    Warning = "Warning",
-    Error = "Error",
+    None = 0,
+    Warning = 1,
+    Error = 2,
 }
 
 export enum DiagnosticMessageType {
-    Text = "Text",
-    Json = "Json",
+    Text = 0,
+    Json = 1,
 }
 export interface DiagnosticMessage {
     type: DiagnosticMessageType
@@ -95,12 +95,12 @@ export enum ExportDataFormat {
 }
 
 export enum ExportDataStatus {
-    Unknown = "Unknown", 
-    Running = "Running", 
-    Completed = "Completed", 
-    Canceled = "Canceled", 
-    Failed = "Failed", 
-    Truncated = "Truncated"
+    Unknown = 0, 
+    Running = 1, 
+    Completed = 2, 
+    Canceled = 3, 
+    Failed = 4, 
+    Truncated = 5
 }
 
 export interface ExportDataTable {
@@ -201,10 +201,6 @@ export class Host extends Dispatchable {
         } catch (ignore) {
             // Ignore error
         }
-
-        /*this.on(WebMessageType.TokenUpdate, (data: TokenUpdateWebMessage) => {
-            this.token = data.token;
-        });*/
     }
 
     // Send message to host

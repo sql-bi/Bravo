@@ -82,8 +82,11 @@ export class ManageDatesSceneCalendar extends ManageDatesScenePane {
         this.config.options.name = template.name;
         this.config.options.description = template.description
         this.config.options.templateUri = template.templateUri;
-        this.config.options.dateEnabled = template.dateEnabled;
+        this.config.options.dateAvailable = true; //template.dateAvailable;
+        this.config.options.dateEnabled = true; //template.dateEnabled;
+        this.config.options.holidaysAvailable = template.holidaysAvailable;
         this.config.options.holidaysEnabled = template.holidaysEnabled;
+        this.config.options.timeIntelligenceAvailable = template.timeIntelligenceAvailable;
         this.config.options.timeIntelligenceEnabled = template.timeIntelligenceEnabled;
         this.config.options.defaults = template.defaults;
 
@@ -125,6 +128,7 @@ export class ManageDatesSceneCalendar extends ManageDatesScenePane {
                     description: i18n(strings.manageDatesTemplateFirstFiscalMonthDesc),
                     option: optionName,
                     type: OptionType.select,
+                    valueType: "number",
                     values: monthValues,
                     toggledBy: toggledBy
                 };
@@ -143,6 +147,7 @@ export class ManageDatesSceneCalendar extends ManageDatesScenePane {
                     description: i18n(strings.manageDatesTemplateFirstDayOfWeekDesc),
                     option: optionName,
                     type: OptionType.select,
+                    valueType: "number",
                     values: weekValues,
                     toggledBy: toggledBy
                 };
@@ -165,6 +170,7 @@ export class ManageDatesSceneCalendar extends ManageDatesScenePane {
                     description: i18n(strings.manageDatesTemplateQuarterWeekTypeDesc),
                     option: optionName,
                     type: OptionType.select,
+                    valueType: "number",
                     values: [
                         [QuarterWeekType.Weekly445.toString(), "4-4-5"],
                         [QuarterWeekType.Weekly454.toString(), "4-5-4"],
@@ -180,6 +186,7 @@ export class ManageDatesSceneCalendar extends ManageDatesScenePane {
                     description: i18n(strings.manageDatesTemplateWeeklyTypeDesc),
                     option: optionName,
                     type: OptionType.select,
+                    valueType: "number",
                     values: [
                         [WeeklyType.Last.toString(), i18n(strings.manageDatesTemplateWeeklyTypeLast)],
                         [WeeklyType.Nearest.toString(), i18n(strings.manageDatesTemplateWeeklyTypeNearest)],
@@ -194,6 +201,7 @@ export class ManageDatesSceneCalendar extends ManageDatesScenePane {
                     description: i18n(strings.manageDatesTemplateTypeStartFiscalYearDesc),
                     option: optionName,
                     type: OptionType.select,
+                    valueType: "number",
                     values: [
                         [TypeStartFiscalYear.FirstDayOfFiscalYear.toString(), i18n(strings.manageDatesTemplateTypeStartFiscalYearFirst)],
                         [TypeStartFiscalYear.LastDayOfFiscalYear.toString(), i18n(strings.manageDatesTemplateTypeStartFiscalYearLast)],

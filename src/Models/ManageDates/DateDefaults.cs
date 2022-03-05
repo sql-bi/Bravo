@@ -30,7 +30,6 @@
         public QuarterWeekType? QuarterWeekType { get; set; }
 
         [JsonPropertyName("weeklyType")]
-        [JsonConverter(typeof(JsonStringEnumConverter))]
         public WeeklyType? WeeklyType { get; set; }
 
         public void CopyTo(TemplateConfiguration templateConfiguration)

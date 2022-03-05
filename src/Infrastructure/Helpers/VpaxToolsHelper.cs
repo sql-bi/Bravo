@@ -38,12 +38,12 @@
 
             var database = TabularDatabase.CreateFrom(vpaxContent.DaxModel);
             {
-                database.Features &= ~AppFeature.AnalyzeModelSynchronize;
-                database.Features &= ~AppFeature.AnalyzeModelExportVpax;
-                database.Features &= ~AppFeature.FormatDaxSynchronize;
-                database.Features &= ~AppFeature.FormatDaxUpdateModel;
-                database.Features &= ~AppFeature.ManageDatesAll;
-                database.Features &= ~AppFeature.ExportDataAll;
+                database.Features &= ~TabularDatabaseFeature.AnalyzeModelSynchronize;
+                database.Features &= ~TabularDatabaseFeature.AnalyzeModelExportVpax;
+                database.Features &= ~TabularDatabaseFeature.FormatDaxSynchronize;
+                database.Features &= ~TabularDatabaseFeature.FormatDaxUpdateModel;
+                database.Features &= ~TabularDatabaseFeature.ManageDatesAll;
+                database.Features &= ~TabularDatabaseFeature.ExportDataAll;
             }
             return database;
         }

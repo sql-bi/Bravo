@@ -3,7 +3,7 @@
  * Copyright (c) SQLBI corp. - All rights reserved.
  * https://www.sqlbi.com
 */
-export enum PBICloudDatasetEndorsementstring {
+export enum PBICloudDatasetEndorsement {
     None = "None",
     Promoted = "Promoted", 
     Certified = "Certified"
@@ -31,7 +31,7 @@ export interface PBICloudDataset {
     description?: string
     owner?:	string
     refreshed?: string
-    endorsement: PBICloudDatasetEndorsementstring
+    endorsement: PBICloudDatasetEndorsement
     connectionMode: PBICloudDatasetConnectionMode
     diagnostic?: any
 }

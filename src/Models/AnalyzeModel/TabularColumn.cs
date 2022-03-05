@@ -7,11 +7,11 @@
     [DebuggerDisplay("'{TableName}'[{Name}]")]
     public class TabularColumn
     {
-        [JsonPropertyName("columnName")] // TODO: @daniele - would it be better to rename "columnName" to "name" ?
-        public string? Name { get; set; }
-
-        [JsonPropertyName("fullName")]
+        [JsonPropertyName("name")]
         public string? FullName => $"'{ TableName }'[{ Name }]";
+
+        [JsonPropertyName("columnName")] 
+        public string? Name { get; set; }
 
         [JsonPropertyName("tableName")]
         public string? TableName { get; set; }
