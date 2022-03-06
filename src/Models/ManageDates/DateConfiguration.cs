@@ -344,7 +344,7 @@
                 //--
                 HolidaysAvailable = holidaysTemplateEntry is not null && holidaysDefinitionTemplateEntry is not null,
                 HolidaysTableName = holidaysTemplateEntry?.Table,
-                HolidaysDefinitionTableName = holidaysTemplateEntry?.Table,
+                HolidaysDefinitionTableName = holidaysDefinitionTemplateEntry?.Table,
                 //--
                 TimeIntelligenceAvailable = timeintelligenceTemplateEntry is not null,
             };
