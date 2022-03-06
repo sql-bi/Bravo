@@ -130,6 +130,16 @@
     {
         None = 0,
 
+        /// <summary>
+        /// The state of the connected database instance is read-only
+        /// </summary>
+        ReadOnly = 1 << 1,
+
+        /// <summary>
+        /// The <see cref="TabularDatabase"/> was generated from a VPAX file that is a representation of the Tabular model and includes only its metadata
+        /// </summary>
+        MetadataOnly = 1 << 2,
+
         // AnalyzeModel range << 100,
         // FormatDax range << 200,
 
@@ -137,6 +147,11 @@
         /// Models with auto date/time option enabled are not supported, user must disable this option on the model before using ManageDate templates
         /// </summary>
         ManageDatesAutoDateTimeEnabled = 1 << 300,
+
+        /// <summary>
+        /// Feature supported only for models in Power BI Desktop mode
+        /// </summary>
+        ManageDatesPBIDesktopModelOnly = 1 << 301,
 
         // ExportData range << 400,
     }

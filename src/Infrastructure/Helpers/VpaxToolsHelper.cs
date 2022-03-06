@@ -44,6 +44,9 @@
                 database.Features &= ~TabularDatabaseFeature.FormatDaxUpdateModel;
                 database.Features &= ~TabularDatabaseFeature.ManageDatesAll;
                 database.Features &= ~TabularDatabaseFeature.ExportDataAll;
+
+                database.FeatureUnsupportedReasons |= TabularDatabaseFeatureUnsupportedReason.MetadataOnly;
+                database.FeatureUnsupportedReasons |= TabularDatabaseFeatureUnsupportedReason.ReadOnly;
             }
             return database;
         }
