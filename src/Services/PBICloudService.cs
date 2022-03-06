@@ -296,9 +296,13 @@
             var database = VpaxToolsHelper.GetDatabase(connection);
             {
                 database.Features &= ~TabularDatabaseFeature.ManageDatesAll;
+                database.FeatureUnsupportedReasons |= TabularDatabaseFeatureUnsupportedReason.ManageDatesPBIDesktopModelOnly;
 
                 if (connection.Database.ReadWriteMode == SSAS.ReadWriteMode.ReadOnly)
+                {
                     database.Features &= ~TabularDatabaseFeature.AllUpdateModel;
+                    database.FeatureUnsupportedReasons |= TabularDatabaseFeatureUnsupportedReason.ReadOnly;
+                }
             }
             return database;
         }
