@@ -271,6 +271,11 @@
                     else
                     {
                         templateConfiguration.Templates = templateConfiguration.Templates!.Except(new[] { holidaysTemplateEntry, holidaysDefinitionTemplateEntry }).ToArray();
+                        
+                        // HACK >> to fix TemplateException($"Holidays table '{config.HolidaysReference?.TableName}' not found.");
+                        templateConfiguration.HolidaysReference = null;
+                        templateConfiguration.HolidaysDefinitionTable = null;
+                        // HACK <<
                     }
                 }
             }
