@@ -188,10 +188,16 @@
             var database = VpaxToolsHelper.GetDatabase(connection);
             {
                 if (connection.Database.ReadWriteMode == ReadWriteMode.ReadOnly)
+                {
                     database.Features &= ~TabularDatabaseFeature.AllUpdateModel;
+                    database.FeatureUnsupportedReasons |= TabularDatabaseFeatureUnsupportedReason.ReadOnly;
+                }
 
                 if (connection.Server.IsPowerBIDesktop() == false)
+                {
                     database.Features &= ~TabularDatabaseFeature.ManageDatesAll;
+                    database.FeatureUnsupportedReasons |= TabularDatabaseFeatureUnsupportedReason.ManageDatesPBIDesktopModelOnly;
+                }
             }
             return database;
         }
