@@ -290,13 +290,17 @@ export module Renderer {
                 struct.validation((struct.option ? struct.option : struct.name), (<HTMLInputElement>element).value).then(response => {
                     validationContainer.classList.remove("validating");
                     
-                    if (response.valid) {
-                        validationContainer.classList.add("valid");
+                    if (response) {
+                        if (response.valid) {
+                            validationContainer.classList.add("valid");
+                        } else {
+                            validationContainer.classList.add("invalid");
+                        }
+                        
+                        validationDesc.innerText = response.message;
                     } else {
-                        validationContainer.classList.add("invalid");
+                        validationDesc.innerText = "";
                     }
-                    
-                    validationDesc.innerText = response.message;
                 });
             }
         }

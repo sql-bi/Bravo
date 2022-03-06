@@ -180,7 +180,14 @@ export class ManageDatesScene extends MainScene {
         if (!this.canEdit) {
 
             containsInvalid = true;
-            html = ``; //TODO Show a message saying the editing is not available anymore
+            html = `
+                <div class="status-incompatible">
+                    <div class="icon icon-error"></div>
+                    <div class="message">
+                        ${i18n(strings.manageDatesStatusNotAvailable)}
+                    </div>  
+                </div>
+            `;
         } else {
 
             let fields = [this.config.options.dateTableValidation, this.config.options.dateReferenceTableValidation];

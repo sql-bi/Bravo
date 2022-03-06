@@ -211,6 +211,7 @@ export enum strings {
     manageDatesPreviewLoading,
     manageDatesStatusCompatible,
     manageDatesStatusIncompatible,
+    manageDatesStatusNotAvailable,
     manageDatesStatusOk,
     manageDatesTemplateFirstDayOfWeek,
     manageDatesTemplateFirstDayOfWeekDesc,

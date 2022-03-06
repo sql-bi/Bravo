@@ -61,27 +61,35 @@ export class ManageDatesScenePane {
             });
         }
 
-        return host.manageDatesValidateTableNames({
-            report: <PBIDesktopReport>this.doc.sourceData,
-            configuration: this.config.options
-        }).then(response => {
+        if (this.doc.orphan) {
+            return new Promise<OptionValidation>((resolve, reject)=>{
+                resolve(null);
+            });
 
-            let status = (<any>response)[validationField];
-            let valid = (status > TableValidation.Unknown && status < TableValidation.InvalidExists);
-            this.config.update(validationField, status, true);
+        } else {
 
-            return <OptionValidation>{ 
-                valid: valid,
-                message: i18n(valid ? strings.tableValidationValid : strings.tableValidationInvalid) 
-            };
+            return host.manageDatesValidateTableNames({
+                report: <PBIDesktopReport>this.doc.sourceData,
+                configuration: this.config.options
+            }).then(response => {
 
-        }).catch(ignore => {
-            
-            this.config.update(validationField, TableValidation.InvalidNamingRequirements, true);
-            return <OptionValidation>{ 
-                valid: false,
-                message: i18n(strings.tableValidationInvalid) 
-            }
-        });
+                let status = (<any>response)[validationField];
+                let valid = (status > TableValidation.Unknown && status < TableValidation.InvalidExists);
+                this.config.update(validationField, status, true);
+
+                return <OptionValidation>{ 
+                    valid: valid,
+                    message: i18n(valid ? strings.tableValidationValid : strings.tableValidationInvalid) 
+                };
+
+            }).catch(ignore => {
+                
+                this.config.update(validationField, TableValidation.InvalidNamingRequirements, true);
+                return <OptionValidation>{ 
+                    valid: false,
+                    message: i18n(strings.tableValidationInvalid) 
+                }
+            });
+        }
     }
 }
