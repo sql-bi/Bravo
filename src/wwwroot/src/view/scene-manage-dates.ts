@@ -38,9 +38,9 @@ export class ManageDatesScene extends MainScene {
     previewButton: HTMLElement;
     
     //TODO Remove to enable manage dates
-    get supported() {
+    /*get supported() {
         return false; 
-    }
+    }*/
     //ENDTODO
     
     constructor(id: string, container: HTMLElement, doc: Doc, type: PageType) {
@@ -91,6 +91,7 @@ export class ManageDatesScene extends MainScene {
                 }
 
                 this.config.options = Utils.Obj.clone(templates[0]);
+                this.config.options.dateEnabled = true;
 
                 let calendarPane = new ManageDatesSceneCalendar(this.config, this.doc, templates);
                 let intervalPane = new ManageDatesSceneInterval(this.config, this.doc);
@@ -116,11 +117,13 @@ export class ManageDatesScene extends MainScene {
                     },
                     "holidays": {
                         name: i18n(strings.manageDatesMenuHolidays),
+                        disabled: !this.config.options.holidaysAvailable,
                         onRender: element => holidaysPane.render(element),
                         onDestroy: () => holidaysPane.destroy()
                     },
                     "timeIntelligence": {
                         name: i18n(strings.manageDatesMenuTimeIntelligence),
+                        disabled: !this.config.options.timeIntelligenceAvailable,
                         onRender: element => timeIntelligencePane.render(element),
                         onDestroy: () => timeIntelligencePane.destroy()
                     },
@@ -142,6 +145,10 @@ export class ManageDatesScene extends MainScene {
             this.updateModelCheck();
         });
 
+        this.config.on("availability.change", (changedOptions: any)=>{
+            this.updateAvailableFeatures();
+        });
+
         this.previewButton.addEventListener("click", e => {
             e.preventDefault();
 
@@ -156,6 +163,12 @@ export class ManageDatesScene extends MainScene {
         if (!super.update()) return false;
 
         this.updateModelCheck();
+        this.updateAvailableFeatures();
+    }
+
+    updateAvailableFeatures() {
+        this.menu.disable("holidays", !this.config.options.holidaysAvailable);
+        this.menu.disable("timeIntelligence", !this.config.options.timeIntelligenceAvailable);
     }
 
     updateModelCheck() {
@@ -175,7 +188,7 @@ export class ManageDatesScene extends MainScene {
                 fields = [...fields, ...[this.config.options.holidaysTableValidation, this.config.options.holidaysDefinitionTableValidation]];
 
             fields.forEach(field => {
-                if (field == TableValidation.InvalidExists || field == TableValidation.InvalidNamingRequirements) {
+                if (field >= TableValidation.InvalidExists) {
                     containsInvalid = true;
                 } else if (field == TableValidation.ValidAlterable) {
                     containsOverwritable = true;
