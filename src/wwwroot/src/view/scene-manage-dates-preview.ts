@@ -43,7 +43,7 @@ export class ManageDatesPreviewScene extends LoaderScene {
             report: <PBIDesktopReport>this.doc.sourceData
         }
 
-console.log(request);
+console.log("Request", request);
 
         host.manageDatesPreviewChanges(request)
             .then(changes => {
@@ -60,10 +60,10 @@ console.log(request);
     renderPreview(changes: ModelChanges) {
         this.removeLoader();
                         
-        console.log(changes);
+console.log("Preview", changes);
 
         let html = `
-            Done!
+            TODO Show preview - inspect console
         `;
         this.element.insertAdjacentHTML("beforeend", html); 
     }

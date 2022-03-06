@@ -39,7 +39,7 @@ export class ManageDatesSceneInterval extends ManageDatesScenePane {
                 parent: "autoscan",
                 toggledBy: {
                     option: "autoscan",
-                    value: AutoScanEnum.SelectedTablesColumns.toString()
+                    value: AutoScanEnum.SelectedTablesColumns
                 },
                 type: OptionType.custom,
                 customHtml: ()=> `
@@ -51,7 +51,7 @@ export class ManageDatesSceneInterval extends ManageDatesScenePane {
                 parent: "autoscan",
                 toggledBy: {
                     option: "autoscan",
-                    value: AutoScanEnum.Disabled.toString()
+                    value: AutoScanEnum.Disabled
                 },
                 name: i18n(strings.manageDatesAutoScanFirstYear),
                 description: i18n(strings.manageDatesAutoScanFirstYearDesc),
@@ -64,7 +64,7 @@ export class ManageDatesSceneInterval extends ManageDatesScenePane {
                 parent: "autoscan",
                 toggledBy: {
                     option: "autoscan",
-                    value: AutoScanEnum.Disabled.toString()
+                    value: AutoScanEnum.Disabled
                 },
                 name: i18n(strings.manageDatesAutoScanLastYear),
                 description: i18n(strings.manageDatesAutoScanLastYearDesc),
