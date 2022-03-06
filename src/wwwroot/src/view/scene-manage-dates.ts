@@ -45,7 +45,7 @@ export class ManageDatesScene extends MainScene {
     
     constructor(id: string, container: HTMLElement, doc: Doc, type: PageType) {
         super(id, container, doc, type); 
-        this.path = i18n(strings.ManageDates);
+        this.path = `/${i18n(strings.ManageDates)}`;
         this.element.classList.add("manage-dates");
 
         this.config = new OptionsStore<ManageDatesConfig>();
@@ -89,7 +89,7 @@ export class ManageDatesScene extends MainScene {
                     this.splice(errorScene);
                     return;
                 }
-
+ console.log("Templates", templates);
                 this.config.options = Utils.Obj.clone(templates[0]);
                 this.config.options.dateEnabled = true;
 

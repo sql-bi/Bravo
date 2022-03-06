@@ -46,7 +46,7 @@ export class DaxFormatterScene extends MainScene {
 
     constructor(id: string, container: HTMLElement, doc: Doc, type: PageType) {
         super(id, container, doc, type);
-        this.path = i18n(strings.DaxFormatter);
+        this.path = `/${i18n(strings.DaxFormatter)}`;
 
         this.element.classList.add("dax-formatter");
 

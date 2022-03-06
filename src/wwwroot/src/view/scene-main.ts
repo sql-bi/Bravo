@@ -54,7 +54,12 @@ export abstract class MainScene extends Scene {
 
         let html = `
             <header>
-                <h1 class="icon" title="${this.title}">${this.path ? `<span class="parent">${this.path}</span> <span class="slash icon-right"></span> ` : "" }<span class="child">${this.title}</div></h1>
+                <h1 class="icon">
+                    <div class="parent ${this.path ? "": "solo"}" title="${this.title}">${this.title}</div>
+                    ${this.path ? this.path.split("/").map(item => 
+                        `<div class="child">${item}</div>`
+                    ).join(`<div class="slash icon-right"></div>`) : "" }
+                </h1>
                 <div class="toolbar">
                     
                     <div class="orphan badge show-if-orphan" ${this.doc.orphan ? "" : "hidden"} title="${i18n(this.doc.type == DocType.pbix ? strings.sheetOrphanPBIXTooltip : strings.sheetOrphanTooltip)}">${i18n(strings.sheetOrphan)}</div>
@@ -107,8 +112,9 @@ export abstract class MainScene extends Scene {
         this.updateConditionalElements("empty", this.doc.empty);
 
         // Update title
-        _("h1", this.element).setAttribute("title", this.title);
-        _("h1 .child", this.element).innerText = this.title;
+        let titleElement = _("h1 .parent", this.element);
+        titleElement.setAttribute("title", this.title);
+        titleElement.innerText = this.title;
 
         return true;
     }

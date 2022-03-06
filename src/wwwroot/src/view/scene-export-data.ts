@@ -46,7 +46,7 @@ export class ExportDataScene extends MainScene {
 
     constructor(id: string, container: HTMLElement, doc: Doc, type: PageType) {
         super(id, container, doc, type); 
-        this.path = i18n(strings.ExportData);
+        this.path = `/${i18n(strings.ExportData)}`;
 
         this.element.classList.add("export-data");
         this.config = new OptionsStore<ExportSettings>({
