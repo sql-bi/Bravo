@@ -241,7 +241,7 @@
 
                 // write header
                 for (int i = 0; i < reader.FieldCount; i++)
-                    writer.WriteField(reader.GetName(i), shouldQuote);
+                    writer.WriteField(GetDaxColumnName(reader, i), shouldQuote);
 
                 writer.NextRecord();
 
@@ -340,7 +340,7 @@
                 writer.SetDefaultStyle(headerStyle).BeginRow();
 
                 for (var i = 0; i < reader.FieldCount; i++)
-                    writer.Write(reader.GetName(i));
+                    writer.Write(GetDaxColumnName(reader, i));
 
                 // write data
                 while (reader.Read())
@@ -435,6 +435,30 @@
                 writer.SetAutoFilter(fromRow: 4, fromColumn: 1, rowCount: writer.CurrentRowNumber, columnCount: 4);
             }
         }
+
+        private static string? GetDaxColumnName(IDataReader reader, int fieldIndex)
+        {
+            var fqn = reader.GetName(fieldIndex);
+            if (fqn is not null)
+            {
+                var firstIndex = fqn.IndexOf('[');
+                if (firstIndex != -1)
+                {
+                    var lastIndex = fqn.LastIndexOf(']');
+                    if (lastIndex != -1)
+                    {
+                        if (++firstIndex < lastIndex) // start of the range is inclusive, math notation is [start..end[
+                        {
+                            var columnName = fqn[firstIndex..lastIndex];
+                            return columnName;
+                        }
+                    }
+                }
+            }
+
+            return null;
+        }
+
         /*
                 private static IDataReader CreateTestData()
                 {
