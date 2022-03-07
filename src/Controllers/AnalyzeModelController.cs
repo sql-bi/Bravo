@@ -41,9 +41,9 @@
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(TabularDatabase))]
         [ProducesDefaultResponseType]
-        public IActionResult GetDatabaseFromVpax()
+        public IActionResult GetDatabase()
         {
-            var database = VpaxToolsHelper.GetDatabase(stream: Request.Body);
+            var database = TabularDatabase.CreateFromVpax(stream: Request.Body);
             return Ok(database);
         }
 
@@ -57,7 +57,7 @@
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(TabularDatabase))]
         [ProducesDefaultResponseType]
-        public IActionResult GetDatabaseFromPBIDesktopReport(PBIDesktopReport report)
+        public IActionResult GetDatabase(PBIDesktopReport report)
         {
             var database = _pbidesktopService.GetDatabase(report);
             return Ok(database);
@@ -75,7 +75,7 @@
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(TabularDatabase))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesDefaultResponseType]
-        public async Task<IActionResult> GetDatabaseFromPBICloudDataset(PBICloudDataset dataset)
+        public async Task<IActionResult> GetDatabase(PBICloudDataset dataset)
         {
             if (await _pbicloudService.IsSignInRequiredAsync())
                 return Unauthorized();
@@ -146,7 +146,7 @@
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesDefaultResponseType]
-        public IActionResult ExportVpaxFromPBIDesktopReport(PBIDesktopReport report, CancellationToken cancellationToken)
+        public IActionResult ExportVpax(PBIDesktopReport report, CancellationToken cancellationToken)
         {
             if (WindowDialogHelper.SaveFileDialog(fileName: report.ReportName, defaultExt: "VPAX", out var path, cancellationToken))
             {
@@ -178,7 +178,7 @@
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesDefaultResponseType]
-        public async Task<IActionResult> ExportVpaxFromPBICloudDataset(PBICloudDataset dataset, CancellationToken cancellationToken)
+        public async Task<IActionResult> ExportVpax(PBICloudDataset dataset, CancellationToken cancellationToken)
         {
             if (await _pbicloudService.IsSignInRequiredAsync())
                 return Unauthorized();

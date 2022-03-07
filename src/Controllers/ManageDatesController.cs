@@ -74,7 +74,7 @@
         }
 
         /// <summary>
-        /// Update the model by appliying the provided <see cref="DateConfiguration"/>
+        /// Update the <see cref="PBIDesktopReport"/> by appliying the provided <see cref="DateConfiguration"/>
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
         [HttpPost]

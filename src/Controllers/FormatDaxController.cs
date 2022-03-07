@@ -2,6 +2,7 @@
 {
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
+    using Sqlbi.Bravo.Models;
     using Sqlbi.Bravo.Models.FormatDax;
     using Sqlbi.Bravo.Services;
     using System.Net.Mime;
@@ -37,7 +38,7 @@
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(FormatDaxResponse))]
         [ProducesDefaultResponseType]
-        public async Task<IActionResult> FormatAsync(FormatDaxRequest request)
+        public async Task<IActionResult> Format(FormatDaxRequest request)
         {
             var formattedMeasures = await _formatDaxService.FormatAsync(request.Measures!, request.Options!);
 
@@ -51,7 +52,7 @@
         }
 
         /// <summary>
-        /// Update a PBIDesktop report by applying changes to formatted measures
+        /// Update a <see cref="PBIDesktopReport"/> by applying changes to formatted measures
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
         [HttpPost]
@@ -60,7 +61,7 @@
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(DatabaseUpdateResult))]
         [ProducesDefaultResponseType]
-        public IActionResult UpdatePBIDesktopReportAsync(UpdatePBIDesktopReportRequest request)
+        public IActionResult Update(UpdatePBIDesktopReportRequest request)
         {
             var databaseETag = _pbidesktopService.Update(request.Report!, request.Measures!);
             var updateResult = new DatabaseUpdateResult
@@ -72,7 +73,7 @@
         }
 
         /// <summary>
-        /// Update a PBICloud dataset by applying changes to formatted measures 
+        /// Update a <see cref="PBICloudDataset"/> by applying changes to formatted measures 
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
         /// <response code="401">Status401Unauthorized - Sign-in required</response>
@@ -83,7 +84,7 @@
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(DatabaseUpdateResult))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesDefaultResponseType]
-        public async Task<IActionResult> UpdatePBICloudDatasetAsync(UpdatePBICloudDatasetRequest request)
+        public async Task<IActionResult> Update(UpdatePBICloudDatasetRequest request)
         {
             if (await _pbicloudService.IsSignInRequiredAsync())
                 return Unauthorized();

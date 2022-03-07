@@ -1,15 +1,17 @@
 ﻿namespace Sqlbi.Bravo.Models
 {
     using Sqlbi.Bravo.Infrastructure;
+    using Sqlbi.Bravo.Infrastructure.Contracts.PBICloud;
+    using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Infrastructure.Helpers;
     using Sqlbi.Bravo.Infrastructure.Models;
+    using Sqlbi.Bravo.Services;
     using System;
     using System.Diagnostics;
-    using System.Text.Json;
     using System.Text.Json.Serialization;
 
     [DebuggerDisplay("{WorkspaceName} - {DisplayName} - {ConnectionMode}")]
-    public class PBICloudDataset : IPBIDataModel<PBICloudDataset>
+    public class PBICloudDataset : IDataModel<PBICloudDataset>
     {
         [JsonPropertyName("workspaceId")]
         public string? WorkspaceId { get; set; }
@@ -44,11 +46,57 @@
         [JsonPropertyName("endorsement")]
         public PBICloudDatasetEndorsement? Endorsement { get; set; }
 
+        [JsonPropertyName("workspaceType")]
+        public PBICloudDatasetWorkspaceType? WorkspaceType { get; set; }
+
+        [JsonPropertyName("capacitySkuType")]
+        public PBICloudDatasetCapacitySkuType? CapacitySkuType { get; set; }
+
+        [JsonPropertyName("isPushDataEnabled")]
+        public bool? IsPushDataEnabled { get; set; }
+
+        [JsonPropertyName("isExcelWorkbook")]
+        public bool? IsExcelWorkbook { get; set; }
+
+        [JsonPropertyName("isOnPremModel")]
+        public bool? IsOnPremModel { get; set; }
+
+        [JsonPropertyName("isXmlaEndPointSupported")]
+        public bool IsXmlaEndPointSupported
+        {
+            get
+            {
+                if (WorkspaceType == PBICloudDatasetWorkspaceType.PersonalGroup)
+                    return false;
+
+                if (CapacitySkuType != PBICloudDatasetCapacitySkuType.Premium)
+                    return false;
+
+                // Exclude unsupported datasets - a.k.a. datasets not accessible by the XMLA endpoint
+                // see https://docs.microsoft.com/en-us/power-bi/admin/service-premium-connect-tools#unsupported-datasets
+
+                // Datasets based on a live connection to an Azure Analysis Services or SQL Server Analysis Services model are unsupported
+                if (IsOnPremModel ?? false)
+                    return false;
+
+                // TODO: Exclude datasets based on a live connection to a Power BI dataset in another workspace
+                // if ( ... )
+                //    return false;
+
+                // Datasets with Push data by using the REST API are unsupported
+                if (IsPushDataEnabled ?? false)
+                    return false;
+
+                // Excel workbook datasets are unsupported
+                if (IsExcelWorkbook ?? false)
+                    return false;
+
+                return true;
+            }
+        }
+
         [JsonPropertyName("connectionMode")]
         public PBICloudDatasetConnectionMode ConnectionMode { get; set; } = PBICloudDatasetConnectionMode.Unknown;
-
-        [JsonPropertyName("diagnostic")]
-        public JsonElement? Diagnostic { get; set; }
 
         public override bool Equals(object? obj)
         {
@@ -59,7 +107,6 @@
         {
             return other != null &&
                    WorkspaceId == other.WorkspaceId &&
-                   WorkspaceObjectId == other.WorkspaceObjectId &&
                    Id == other.Id;
         }
 
@@ -67,12 +114,57 @@
         {
             HashCode hash = new();
             hash.Add(WorkspaceId);
-            hash.Add(WorkspaceObjectId);
             hash.Add(Id);
             return hash.ToHashCode();
         }
+
+        internal static PBICloudDataset CreateFrom(CloudWorkspace workspace, CloudSharedModel dataset)
+        {
+            BravoUnexpectedException.ThrowIfNull(workspace);
+            BravoUnexpectedException.ThrowIfNull(dataset);
+            BravoUnexpectedException.ThrowIfNull(dataset.Model);
+
+            var model = dataset.Model;
+
+            var pbicloudDataset = new PBICloudDataset
+            {
+                WorkspaceId = workspace.Id,
+                WorkspaceName = workspace.Name.NullIfEmpty() ?? dataset.WorkspaceName,
+                WorkspaceObjectId = workspace.ObjectId,
+                Id = model.Id,
+                ServerName = null,
+                DatabaseName = null,
+                DisplayName = model.DisplayName,
+                Description = model.Description,
+                Owner = $"{ model.CreatorUser?.GivenName } { model.CreatorUser?.FamilyName }",
+                Refreshed = model.LastRefreshTime,
+                Endorsement = dataset.GalleryItem?.Stage.TryParseTo<PBICloudDatasetEndorsement>(),
+                WorkspaceType = dataset.WorkspaceType.TryParseTo<PBICloudDatasetWorkspaceType>(),
+                CapacitySkuType = workspace.CapacitySkuType.TryParseTo<PBICloudDatasetCapacitySkuType>(),
+                IsPushDataEnabled = model.IsPushDataEnabled,
+                IsExcelWorkbook = model.IsExcelWorkbook,
+                IsOnPremModel = model.IsOnPremModel,
+                ConnectionMode = PBICloudDatasetConnectionMode.Supported,
+            };
+
+            if (pbicloudDataset.IsXmlaEndPointSupported)
+            {
+                pbicloudDataset.ServerName = PBICloudService.PBIPremiumServerUri.OriginalString;
+                pbicloudDataset.DatabaseName = model.DBName;
+            }
+            else
+            {
+                pbicloudDataset.ServerName = PBICloudService.PBIDatasetServerUri.OriginalString;
+                pbicloudDataset.DatabaseName = $"{ model.VSName }-{ model.DBName }";
+            }
+
+            return pbicloudDataset;
+        }
     }
 
+    /// <summary>
+    /// Re-mapping <see cref="CloudPromotionalStage"/>
+    /// </summary>
     public enum PBICloudDatasetEndorsement
     {
         [JsonPropertyName("None")]
@@ -86,8 +178,26 @@
     }
 
     /// <summary>
-    /// XMLA endpoint connectivity supported/unsupported [https://docs.microsoft.com/en-us/power-bi/admin/service-premium-connect-tools#unsupported-datasets]
+    /// Re-mapping <see cref="CloudSharedModelWorkspaceType"/>
     /// </summary>
+    public enum PBICloudDatasetWorkspaceType
+    {
+        Personal = 0,
+        Workspace = 1,
+        Group = 2,
+        PersonalGroup = 3
+    }
+
+    /// <summary>
+    /// Re-mapping <see cref="PBICloudDatasetCapacitySkuType"/>
+    /// </summary>
+    public enum PBICloudDatasetCapacitySkuType
+    {
+        Unknown = 0,
+        Premium,
+        Shared,
+    }
+
     public enum PBICloudDatasetConnectionMode
     {
         [JsonPropertyName("Unknown")]
@@ -95,45 +205,6 @@
 
         [JsonPropertyName("Supported")]
         Supported = 1,
-
-        /// <summary>
-        /// Workspace capacity SKU unsupported.
-        /// </summary>
-        /// <remarks>
-        /// The XMLA endpoint is available for Power BI Premium Capacity workspaces (i.e. workspaces assigned to a Px, Ax or EMx SKU), Power BI Embedded workspaces, or Power BI Premium-Per-User (PPU) workspaces
-        /// </remarks>
-        [JsonPropertyName("UnsupportedWorkspaceSku")]
-        UnsupportedWorkspaceSku = 2,
-
-        /// <summary>
-        /// Workspace type 'My Workspace' is unsupported.
-        /// </summary>
-        [JsonPropertyName("UnsupportedPersonalWorkspace")]
-        UnsupportedPersonalWorkspace = 3,
-
-        /// <summary>
-        /// Datasets with Push data by using the REST API are unsupported
-        /// </summary>
-        [JsonPropertyName("UnsupportedPushDataset")]
-        UnsupportedPushDataset = 4,
-
-        /// <summary>
-        /// Excel workbook datasets are unsupported
-        /// </summary>
-        [JsonPropertyName("UnsupportedExcelWorkbookDataset")]
-        UnsupportedExcelWorkbookDataset = 5,
-
-        /// <summary>
-        /// Datasets based on a live connection to a Power BI dataset in another workspace are unsupported
-        /// </summary>
-        [JsonPropertyName("UnsupportedLiveConnectionToExternalDatasets")]
-        UnsupportedLiveConnectionToExternalDatasets = 6,
-
-        /// <summary>
-        /// Datasets based on a live connection to an Azure Analysis Services or SQL Server Analysis Services model are unsupported
-        /// </summary>
-        [JsonPropertyName("UnsupportedOnPremLiveConnection")]
-        UnsupportedOnPremLiveConnection = 7,
     }
 
     internal static class PBICloudDatasetExtensions
@@ -158,21 +229,34 @@
 
             BravoUnexpectedException.Assert(dataset.ConnectionMode == PBICloudDatasetConnectionMode.Supported);
             BravoUnexpectedException.ThrowIfNull(dataset.ServerName);
-            BravoUnexpectedException.ThrowIfNull(dataset.DisplayName);
-            BravoUnexpectedException.ThrowIfNull(dataset.WorkspaceName);
             BravoUnexpectedException.ThrowIfNull(accessToken);
 
-            // TODO: add support for B2B users
-            // - Users with UPNs in the same tenant (not B2B) can replace the tenant name with 'myorg'
-            // - B2B users must specify their organization UPN in tenant name
-            // var homeTenant = CurrentAuthentication?.Account.GetTenantProfiles().SingleOrDefault((t) => t.IsHomeTenant);
-            var tenantName = "myorg";
+            if (dataset.IsXmlaEndPointSupported)
+            {
+                BravoUnexpectedException.ThrowIfNull(dataset.DisplayName);
+                BravoUnexpectedException.ThrowIfNull(dataset.WorkspaceName);
 
-            var serverName = $"{ dataset.ServerName }/v1.0/{ tenantName }/{ dataset.WorkspaceName }";
-            var databaseName = dataset.DisplayName;
-            var connectionString = ConnectionStringHelper.BuildForPBICloudDataset(serverName, databaseName, accessToken);
+                // TODO: add support for B2B users
+                // - Users with UPNs in the same tenant (not B2B) can replace the tenant name with 'myorg'
+                // - B2B users must specify their organization UPN in tenant name
+                // var homeTenant = CurrentAuthentication?.Account.GetTenantProfiles().SingleOrDefault((t) => t.IsHomeTenant);
+                var tenantName = "myorg";
+                var serverName = $"{ dataset.ServerName }/v1.0/{ tenantName }/{ dataset.WorkspaceName }";
+                var databaseName = dataset.DisplayName;
+                var connectionString = ConnectionStringHelper.BuildForPBICloudDataset(serverName, databaseName, accessToken);
 
-            return (connectionString, databaseName);
+                return (connectionString, databaseName);
+            }
+            else
+            {
+                BravoUnexpectedException.ThrowIfNull(dataset.DatabaseName);
+
+                var serverName = dataset.ServerName;
+                var databaseName = dataset.DatabaseName;
+                var connectionString = ConnectionStringHelper.BuildForPBICloudDataset(serverName, databaseName, accessToken);
+
+                return (connectionString, databaseName);
+            }
         }
     }
 }

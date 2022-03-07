@@ -1,7 +1,9 @@
 ﻿namespace Sqlbi.Bravo.Models.AnalyzeModel
 {
     using Dax.ViewModel;
+    using Sqlbi.Bravo.Infrastructure.Extensions;
     using System;
+    using System.Data;
     using System.Diagnostics;
     using System.Linq;
     using System.Text.Json.Serialization;
@@ -30,6 +32,27 @@
         [JsonPropertyName("isHidden")]
         public bool? IsHidden { get; set; }
 
+        internal static TabularTable CreateFromDmvTables(IDataReader reader, string[] tablesWithColumns)
+        {
+            var table = new TabularTable
+            {
+                Name = (string)reader["DIMENSION_UNIQUE_NAME"],
+                RowsCount = (uint)reader["DIMENSION_CARDINALITY"],
+                // Just using the 'DIMENSION_TYPE' property returns an incomplete result compared to the one obtained via VertipaqAnalyzer, so the result may be different in some cases
+                IsDateTable = ((short)reader["DIMENSION_TYPE"]) == 1, /* MD_DIMTYPE_TIME */ 
+            };
+
+            table.Name = table.Name.GetDaxName();
+
+            if (!tablesWithColumns.Contains(table.Name))
+            {
+                table.Features &= ~TabularTableFeature.ExportData;
+                table.FeatureUnsupportedReasons |= TabularTableFeatureUnsupportedReason.ExportDataNoColumns;
+            }
+
+            return table;
+        }
+
         internal static TabularTable CreateFrom(VpaTable vpaTable, Dax.Metadata.Model daxModel)
         {
             var table = new TabularTable
@@ -49,6 +72,11 @@
 
             return table;
         }
+    }
+
+    internal static class TabularTableExtensions
+    {
+        public static bool IsNotAutoDateTimeTable(TabularTable table) => !StringExtensions.IsAutoDateTimePrivateTableName(table.Name);
     }
 
     [Flags]

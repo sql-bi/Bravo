@@ -1,4 +1,4 @@
-﻿namespace Sqlbi.Bravo.Services
+﻿namespace Sqlbi.Bravo.Infrastructure.Services
 {
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.Identity.Client;

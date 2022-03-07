@@ -3,12 +3,15 @@
     using Dax.ViewModel;
     using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Infrastructure.Helpers;
+    using Sqlbi.Bravo.Infrastructure.Services;
     using Sqlbi.Bravo.Models.FormatDax;
     using System;
     using System.Collections.Generic;
+    using System.Data;
+    using System.IO;
     using System.Linq;
     using System.Text.Json.Serialization;
-    using TOM = Microsoft.AnalysisServices;
+    using SSAS = Microsoft.AnalysisServices;
 
     public class TabularDatabase
     {
@@ -24,6 +27,46 @@
         [JsonPropertyName("measures")]
         public IEnumerable<TabularMeasure>? Measures { get; set; }
 
+        internal static TabularDatabase CreateFromVpax(Stream stream)
+        {
+            var daxModel = VpaxToolsHelper.GetDaxModel(stream);
+            var database = CreateFrom(daxModel);
+            {
+                database.Features &= ~TabularDatabaseFeature.AnalyzeModelSynchronize;
+                database.Features &= ~TabularDatabaseFeature.AnalyzeModelExportVpax;
+                database.Features &= ~TabularDatabaseFeature.FormatDaxSynchronize;
+                database.Features &= ~TabularDatabaseFeature.FormatDaxUpdateModel;
+                database.Features &= ~TabularDatabaseFeature.ManageDatesAll;
+                database.Features &= ~TabularDatabaseFeature.ExportDataAll;
+
+                database.FeatureUnsupportedReasons |= TabularDatabaseFeatureUnsupportedReason.MetadataOnly;
+                database.FeatureUnsupportedReasons |= TabularDatabaseFeatureUnsupportedReason.ReadOnly;
+            }
+            return database;
+        }
+
+        internal static TabularDatabase CreateFrom(TabularConnectionWrapper connection)
+        {
+            var daxModel = VpaxToolsHelper.GetDaxModel(connection);
+            var database = CreateFrom(daxModel);
+
+            if (database.Info is not null)
+            {
+                database.Info.ServerVersion = connection.Server.Version;
+                database.Info.ServerEdition = connection.Server.Edition;
+                database.Info.ServerMode = connection.Server.ServerMode;
+                database.Info.ServerLocation = connection.Server.ServerLocation;
+            }
+
+            if (connection.Database.ReadWriteMode == SSAS.ReadWriteMode.ReadOnly)
+            {
+                database.Features &= ~TabularDatabaseFeature.AllUpdateModel;
+                database.FeatureUnsupportedReasons |= TabularDatabaseFeatureUnsupportedReason.ReadOnly;
+            }
+
+            return database;
+        }
+
         internal static TabularDatabase CreateFrom(Dax.Metadata.Model daxModel)
         {
             var vpaModel = new VpaModel(daxModel);
@@ -37,18 +80,18 @@
 
             var databaseETag = TabularModelHelper.GetDatabaseETag(vpaModel.Model.ModelName.Name, vpaModel.Model.Version, vpaModel.Model.LastUpdate);
             var databaseSize = includedColumns.Sum((c) => c.TotalSize);
-            var tabularTables = includedTables.Select((t) => TabularTable.CreateFrom(t, daxModel)).ToArray();
-            var tabularColumns = includedColumns.Select((c) => TabularColumn.CreateFrom(c, databaseSize)).ToArray();
-            var tabularMeasures = includedMeasures.Select((m) => TabularMeasure.CreateFrom(m, databaseETag)).ToArray();
-            var autoLineBreakStyle = tabularMeasures.GetAutoLineBreakStyle();
+            var tables = includedTables.Select((t) => TabularTable.CreateFrom(t, daxModel)).ToArray();
+            var columns = includedColumns.Select((c) => TabularColumn.CreateFrom(c, databaseSize)).ToArray();
+            var measures = includedMeasures.Select((m) => TabularMeasure.CreateFrom(m, databaseETag)).ToArray();
+            var autoLineBreakStyle = measures.GetAutoLineBreakStyle();
 
-            var tabularDatabase = new TabularDatabase
+            var database = new TabularDatabase
             {
                 Info = new TabularDatabaseInfo
                 {
                     ETag = databaseETag,
                     Name = daxModel.ModelName.Name,
-                    CompatibilityMode = daxModel.CompatibilityMode.TryParseTo<TOM.CompatibilityMode>(),
+                    CompatibilityMode = daxModel.CompatibilityMode.TryParseTo<SSAS.CompatibilityMode>(),
                     CompatibilityLevel = daxModel.CompatibilityLevel,
                     DatabaseSize = databaseSize,
                     AutoLineBreakStyle = autoLineBreakStyle,
@@ -57,23 +100,23 @@
                     ServerEdition = null,
                     ServerMode = null,
                     ServerLocation = null,
-                    TablesMaxRowsCount = includedTables.Length == 0 ? 0 : includedTables.Max((t) => t.RowsCount),
+                    TablesMaxRowsCount = includedTables.Length == 0 ? 0L : includedTables.Max((t) => t.RowsCount),
                     TablesCount = includedTables.Length,
-                    Tables = tabularTables,
+                    Tables = tables,
                     ColumnsUnreferencedCount = includedColumns.Count((c) => !c.IsReferenced),
                     ColumnsCount = includedColumns.Length,
-                    Columns = tabularColumns,
+                    Columns = columns,
                 },
-                Measures = tabularMeasures
+                Measures = measures
             };
 
             if (daxModel.Tables.Any(IsAutoDateTimeTable))
             {
-                tabularDatabase.Features &= ~TabularDatabaseFeature.ManageDatesAll;
-                tabularDatabase.FeatureUnsupportedReasons |= TabularDatabaseFeatureUnsupportedReason.ManageDatesAutoDateTimeEnabled;
+                database.Features &= ~TabularDatabaseFeature.ManageDatesAll;
+                database.FeatureUnsupportedReasons |= TabularDatabaseFeatureUnsupportedReason.ManageDatesAutoDateTimeEnabled;
             }
 
-            return tabularDatabase;
+            return database;
 
             static bool IsAutoDateTimeTable(Dax.Metadata.Table daxTable)
             {
@@ -89,6 +132,52 @@
                     return false;
 
                 if (IsAutoDateTimeTable(daxTable))
+                    return false;
+
+                return true;
+            }
+        }
+
+        internal static TabularDatabase CreateFromDmvSchema(AdomdConnectionWrapper connection)
+        {
+            using var tablesWithColumnsCommand = connection.CreateDmvTablesWithColumnsCommand();
+            using var tablesWithColumnsReader = tablesWithColumnsCommand.ExecuteReader(CommandBehavior.SingleResult);
+            var tablesWithColumns = tablesWithColumnsReader.Select((reader) => ((string)reader["DIMENSION_UNIQUE_NAME"]).GetDaxName()!).ToArray();
+
+            using var tablesCommand = connection.CreateDmvTablesCommand();
+            using var tablesReader = tablesCommand.ExecuteReader(CommandBehavior.SingleResult);
+            var tables = tablesReader.Select((reader) => TabularTable.CreateFromDmvTables(reader, tablesWithColumns)).Where(IsIncluded).ToArray();
+
+            var database = new TabularDatabase
+            {
+                Info = new TabularDatabaseInfo
+                {
+                    ETag = null,
+                    Name = connection.Connection.Database,
+                    CompatibilityMode = null,
+                    CompatibilityLevel = null,
+                    DatabaseSize = null,
+                    AutoLineBreakStyle = null,
+                    ServerName = null,
+                    ServerVersion = null,
+                    ServerEdition = null,
+                    ServerMode = null,
+                    ServerLocation = null,
+                    TablesMaxRowsCount = tables.Length == 0L ? 0L : tables.Max((t) => t.RowsCount),
+                    TablesCount = tables.Length,
+                    Tables = tables,
+                    ColumnsUnreferencedCount = 0,
+                    ColumnsCount = 0,
+                    Columns = Array.Empty<TabularColumn>(),
+                },
+                Measures = Array.Empty<TabularMeasure>(),
+            };
+
+            return database;
+
+            static bool IsIncluded(TabularTable table)
+            {
+                if (table.Name.IsAutoDateTimePrivateTableName())
                     return false;
 
                 return true;
@@ -140,6 +229,14 @@
         /// </summary>
         MetadataOnly = 1 << 2,
 
+        /// <summary>
+        /// The XMLA endpoint is not supported for the <see cref="PBICloudDataset"/> workspace capacity SKU
+        /// </summary>
+        /// <remarks>
+        /// The XMLA endpoint is available for Power BI Premium Capacity workspaces (i.e. workspaces assigned to a Px, Ax or EMx SKU), Power BI Embedded workspaces, or Power BI Premium-Per-User (PPU) workspaces
+        /// </remarks>
+        XmlaEndpointNotSupported = 1 << 3,
+
         // AnalyzeModel range << 100,
         // FormatDax range << 200,
 
@@ -165,7 +262,7 @@
         public string? Name { get; set; }
 
         [JsonPropertyName("compatibilityMode")]
-        public TOM.CompatibilityMode? CompatibilityMode { get; set; }
+        public SSAS.CompatibilityMode? CompatibilityMode { get; set; }
 
         [JsonPropertyName("compatibilityLevel")]
         public int? CompatibilityLevel { get; set; }
@@ -177,28 +274,28 @@
         public string? ServerVersion { get; set; }
 
         [JsonPropertyName("serverEdition")]
-        public TOM.ServerEdition? ServerEdition { get; set; }
+        public SSAS.ServerEdition? ServerEdition { get; set; }
 
         [JsonPropertyName("serverMode")]
-        public TOM.ServerMode? ServerMode { get; set; }
+        public SSAS.ServerMode? ServerMode { get; set; }
 
         [JsonPropertyName("serverLocation")]
-        public TOM.ServerLocation? ServerLocation { get; set; }
+        public SSAS.ServerLocation? ServerLocation { get; set; }
 
         [JsonPropertyName("tablesCount")]
-        public int TablesCount { get; set; }
+        public int? TablesCount { get; set; }
 
         [JsonPropertyName("columnsCount")]
-        public int ColumnsCount { get; set; }
+        public int? ColumnsCount { get; set; }
 
         [JsonPropertyName("maxRows")]
-        public long TablesMaxRowsCount { get; set; }
+        public long? TablesMaxRowsCount { get; set; }
 
         [JsonPropertyName("size")]
-        public long DatabaseSize { get; set; }
+        public long? DatabaseSize { get; set; }
 
         [JsonPropertyName("unreferencedCount")]
-        public int ColumnsUnreferencedCount { get; set; }
+        public int? ColumnsUnreferencedCount { get; set; }
 
         [JsonPropertyName("autoLineBreakStyle")]
         public DaxLineBreakStyle? AutoLineBreakStyle { get; set; }

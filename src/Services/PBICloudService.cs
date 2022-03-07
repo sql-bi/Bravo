@@ -20,7 +20,6 @@
     using System.Net.Http.Headers;
     using System.Text.Json;
     using System.Threading.Tasks;
-    using SSAS = Microsoft.AnalysisServices;
 
     public interface IPBICloudService
     {
@@ -59,6 +58,7 @@
         };
 
         public static readonly Uri PBIApiUri = new("https://api.powerbi.com");
+        public static readonly Uri PBIDatasetServerUri = new($"{ PBIDatasetProtocolScheme }://api.powerbi.com");
         public static readonly Uri PBIPremiumServerUri = new($"{ PBIPremiumProtocolScheme }://api.powerbi.com");
 
         /// <summary>
@@ -139,111 +139,12 @@
                 AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{ nameof(PBICloudService) }-{ nameof(GetDatasetsAsync) }-{ nameof(onlineDatasets) }", content: JsonSerializer.Serialize(onlineDatasets));
             }
 
-            /*
-             * SELECT datasets d LEFT OUTER JOIN workspaces w ON d.WorkspaceObjectId = w.Id
-             * Here we use a LEFT OUTER JOIN in order to include the user's personal workspace datasets.
-             */
-            var datasetsQuery = from od in onlineDatasets
-                           join ow in onlineWorkspaces on od.WorkspaceObjectId?.ToLowerInvariant() equals ow.WorkspaceObjectId?.ToLowerInvariant() into joinedWorkspaces
-                           from jw in joinedWorkspaces.DefaultIfEmpty()
-                           select new PBICloudDataset
-                           {
-                               WorkspaceId = jw?.Id,
-                               WorkspaceName = jw?.Name ?? GetWorkspaceName(od),
-                               WorkspaceObjectId = jw?.WorkspaceObjectId,
-                               Id = od.Model?.Id,
-                               ServerName = PBIPremiumServerUri.OriginalString,
-                               DatabaseName = od.Model?.DBName,
-                               DisplayName = od.Model?.DisplayName,
-                               Description = od.Model?.Description,
-                               Owner = $"{ od.Model?.CreatorUser?.GivenName } { od.Model?.CreatorUser?.FamilyName }",
-                               Refreshed = od.Model?.LastRefreshTime,
-                               Endorsement = (PBICloudDatasetEndorsement)(od.GalleryItem?.Stage ?? (int)PBICloudDatasetEndorsement.None),
-                               ConnectionMode = GetConnectionMode(jw, od),
-                               Diagnostic = GetDiagnostic(jw, od)
-                           };
-
-            var datasets = datasetsQuery.ToArray();
+            var datasets = onlineWorkspaces.Join(onlineDatasets, (w) => w.ObjectId?.ToLowerInvariant(), (d) => d.ObjectId?.ToLowerInvariant(), PBICloudDataset.CreateFrom).ToArray();
 
             if (AppEnvironment.IsDiagnosticLevelVerbose)
                 AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{ nameof(PBICloudService) }-{ nameof(GetDatasetsAsync) }", content: JsonSerializer.Serialize(datasets));
 
             return datasets;
-
-            string? GetWorkspaceName(CloudSharedModel dataset)
-            {
-                if (dataset.IsOnPersonalWorkspace)
-                    return CurrentAccount?.UserPrincipalName;
-
-                return null;
-            }
-
-            static PBICloudDatasetConnectionMode GetConnectionMode(CloudWorkspace? workspace, CloudSharedModel dataset)
-            {
-                if (workspace is null || workspace.IsPersonalWorkspace || dataset.IsOnPersonalWorkspace)
-                    return PBICloudDatasetConnectionMode.UnsupportedPersonalWorkspace;
-
-                if (workspace.IsXmlaEndPointSupported == false)
-                    return PBICloudDatasetConnectionMode.UnsupportedWorkspaceSku;
-
-                if (dataset.Model is not null)
-                {
-                    // Exclude unsupported datasets - a.k.a. datasets not accessible by the XMLA endpoint
-                    // see https://docs.microsoft.com/en-us/power-bi/admin/service-premium-connect-tools#unsupported-datasets
-
-                    if (dataset.Model.IsOnPremModel)
-                        return PBICloudDatasetConnectionMode.UnsupportedOnPremLiveConnection;
-
-                    // TODO: Exclude datasets based on a live connection to a Power BI dataset in another workspace
-                    //if ( ?? )
-                    //return PBICloudDatasetXmlaConnectivity.UnsupportedLiveConnectionToExternalDatasets;
-
-                    if (dataset.Model.IsPushDataEnabled)
-                        return PBICloudDatasetConnectionMode.UnsupportedPushDataset;
-
-                    if (dataset.Model.IsExcelWorkbook)
-                        return PBICloudDatasetConnectionMode.UnsupportedExcelWorkbookDataset;
-                }
-
-                return PBICloudDatasetConnectionMode.Supported;
-            }
-
-            static JsonElement GetDiagnostic(CloudWorkspace? workspace, CloudSharedModel dataset)
-            {
-                var diagnostic = new
-                {
-                    Workspace = new
-                    {
-                        workspace?.WorkspaceType,
-                        workspace?.CapacitySkuType
-                    },
-                    Dataset = new
-                    {
-                        dataset.WorkspaceType,
-                        dataset.Permissions,
-                    },
-                    Model = new
-                    {
-                        IsNull = dataset.Model is null,
-                        dataset.Model?.Permissions,
-                        dataset.Model?.IsHidden,
-                        dataset.Model?.IsCloudModel,
-                        dataset.Model?.IsOnPremModel,
-                        dataset.Model?.IsExcelWorkbook,
-                        dataset.Model?.IsWritablePbixModel,
-                        dataset.Model?.IsWriteableModel,
-                        dataset.Model?.IsPushDataEnabled,
-                        dataset.Model?.IsPushStreaming,
-                        dataset.Model?.DirectQueryMode,
-                        dataset.Model?.InsightsSupported,
-                    }
-                };
-
-                var diagnosticString = JsonSerializer.Serialize(diagnostic, AppEnvironment.DefaultJsonOptions);
-                var diagnosticJson = JsonSerializer.Deserialize<JsonElement>(diagnosticString);
-
-                return diagnosticJson;
-            }
         }
 
         public async Task<string?> GetAccountAvatarAsync()
@@ -291,19 +192,27 @@
         public TabularDatabase GetDatabase(PBICloudDataset dataset)
         {
             BravoUnexpectedException.ThrowIfNull(CurrentAuthentication?.AccessToken);
+            BravoUnexpectedException.ThrowIfNull(dataset.DisplayName);
+            TabularDatabase database;
 
-            using var connection = TabularConnectionWrapper.ConnectTo(dataset, CurrentAuthentication.AccessToken);
-            var database = VpaxToolsHelper.GetDatabase(connection);
+            if (dataset.IsXmlaEndPointSupported)
             {
-                database.Features &= ~TabularDatabaseFeature.ManageDatesAll;
-                database.FeatureUnsupportedReasons |= TabularDatabaseFeatureUnsupportedReason.ManageDatesPBIDesktopModelOnly;
-
-                if (connection.Database.ReadWriteMode == SSAS.ReadWriteMode.ReadOnly)
-                {
-                    database.Features &= ~TabularDatabaseFeature.AllUpdateModel;
-                    database.FeatureUnsupportedReasons |= TabularDatabaseFeatureUnsupportedReason.ReadOnly;
-                }
+                using var connection = TabularConnectionWrapper.ConnectTo(dataset, CurrentAuthentication.AccessToken);
+                database = TabularDatabase.CreateFrom(connection);
             }
+            else
+            {
+                using var connection = AdomdConnectionWrapper.ConnectTo(dataset, CurrentAuthentication.AccessToken);
+                database = TabularDatabase.CreateFromDmvSchema(connection);
+
+                database.Features &= ~TabularDatabaseFeature.AnalyzeModelAll;
+                database.Features &= ~TabularDatabaseFeature.FormatDaxAll;
+                database.FeatureUnsupportedReasons |= TabularDatabaseFeatureUnsupportedReason.XmlaEndpointNotSupported;
+            }
+
+            database.Features &= ~TabularDatabaseFeature.ManageDatesAll;
+            database.FeatureUnsupportedReasons |= TabularDatabaseFeatureUnsupportedReason.ManageDatesPBIDesktopModelOnly;
+
             return database;
         }
 

@@ -1,9 +1,8 @@
 ﻿namespace Sqlbi.Bravo.Infrastructure.Models
 {
     using System;
-    using TOM = Microsoft.AnalysisServices;
 
-    internal interface IPBIDataModel<T> : IEquatable<T>
+    internal interface IDataModel<T> : IEquatable<T>
     {
         public string? ServerName { get; set; }
 

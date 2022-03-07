@@ -7,7 +7,7 @@
     using System.Text.Json.Serialization;
 
     [DebuggerDisplay("{ServerName} - {ReportName} - {ConnectionMode}")]
-    public class PBIDesktopReport : IPBIDataModel<PBIDesktopReport>
+    public class PBIDesktopReport : IDataModel<PBIDesktopReport>
     {
         [Required]
         [JsonPropertyName("id")]

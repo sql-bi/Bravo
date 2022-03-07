@@ -38,6 +38,21 @@
         [JsonPropertyName("lastVisitedTimeUTC")]
         public DateTime? LastVisitedTimeUTC { get; set; }
 
+        [JsonPropertyName("__objectId")]
+        public string? ObjectId
+        {
+            get
+            {
+                if (IsOnPersonalWorkspace)
+                {
+                    return CloudWorkspace.PersonalWorkspaceId;
+                }
+
+                return WorkspaceObjectId;
+            }
+        }
+
+        [JsonPropertyName("__isOnPersonalWorkspace")]
         public bool IsOnPersonalWorkspace => WorkspaceType == CloudSharedModelWorkspaceType.PersonalGroup;
     }
 }

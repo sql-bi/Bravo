@@ -185,14 +185,8 @@
             BravoUnexpectedException.ThrowIfNull(report.DatabaseName);
 
             using var connection = TabularConnectionWrapper.ConnectTo(report);
-            var database = VpaxToolsHelper.GetDatabase(connection);
+            var database = TabularDatabase.CreateFrom(connection);
             {
-                if (connection.Database.ReadWriteMode == ReadWriteMode.ReadOnly)
-                {
-                    database.Features &= ~TabularDatabaseFeature.AllUpdateModel;
-                    database.FeatureUnsupportedReasons |= TabularDatabaseFeatureUnsupportedReason.ReadOnly;
-                }
-
                 if (connection.Server.IsPowerBIDesktop() == false)
                 {
                     database.Features &= ~TabularDatabaseFeature.ManageDatesAll;

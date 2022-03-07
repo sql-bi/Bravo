@@ -5,7 +5,7 @@
     using System.Collections.Concurrent;
     using System.Diagnostics.CodeAnalysis;
 
-    internal class ExportDataJobMap<T> where T : class, IPBIDataModel<T>
+    internal class ExportDataJobMap<T> where T : class, IDataModel<T>
     {
         private readonly ConcurrentDictionary<T, ExportDataJob> _jobs;
         
