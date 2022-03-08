@@ -27,6 +27,9 @@
         [JsonPropertyName("isDateTable")]
         public bool? IsDateTable { get; set; }
 
+        [JsonPropertyName("isHidden")]
+        public bool? IsHidden { get; set; }
+
         internal static TabularTable CreateFrom(VpaTable vpaTable)
         {
             var table = new TabularTable
@@ -34,7 +37,8 @@
                 Name = vpaTable.TableName,
                 RowsCount = vpaTable.RowsCount,
                 Size = vpaTable.TableSize,
-                IsDateTable = vpaTable.IsDateTable
+                IsDateTable = vpaTable.IsDateTable,
+                IsHidden = false //TODO Expose IsHidden property 
             };
 
             if (vpaTable.ColumnsNumber == 0L || (vpaTable.ColumnsNumber == 1L && vpaTable.Columns.Single().IsRowNumber))

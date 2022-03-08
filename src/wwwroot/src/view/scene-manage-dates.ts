@@ -16,7 +16,7 @@ import { PBIDesktopReport } from '../model/pbi-report';
 import { strings } from '../model/strings';
 import { Menu, MenuItem } from './menu';
 import { ErrorScene } from './scene-error';
-import { MainScene } from './scene-main';
+import { DocScene } from './scene-doc';
 import { ManageDatesSceneCalendar } from './scene-manage-dates-calendar';
 import { ManageDatesSceneHolidays } from './scene-manage-dates-holidays';
 import { ManageDatesSceneInterval } from './scene-manage-dates-interval';
@@ -30,7 +30,7 @@ export interface ManageDatesConfig extends DateConfiguration {
     customRegion?: string
 }
 
-export class ManageDatesScene extends MainScene {
+export class ManageDatesScene extends DocScene {
 
     menu: Menu;
     modelCheckElement: HTMLElement;
@@ -44,8 +44,7 @@ export class ManageDatesScene extends MainScene {
     //ENDTODO
     
     constructor(id: string, container: HTMLElement, doc: Doc, type: PageType) {
-        super(id, container, doc, type); 
-        this.path = `/${i18n(strings.ManageDates)}`;
+        super(id, container, [doc.name, i18n(strings.ManageDates)], doc, type, true); 
         this.element.classList.add("manage-dates");
 
         this.config = new OptionsStore<ManageDatesConfig>();
@@ -69,13 +68,13 @@ export class ManageDatesScene extends MainScene {
             </div>
 
             <div class="scene-action">
-                <div class="do-preview button disable-on-syncing enable-if-editable" disabled>${i18n(strings.manageDatesPreviewCtrlTitle)}</div>
+                <div class="do-proceed button disable-on-syncing enable-if-editable" disabled>${i18n(strings.manageDatesPreviewCtrlTitle)}</div>
             </div>
         `;
         this.body.insertAdjacentHTML("beforeend", html);
 
         this.modelCheckElement = _(".model-check .status", this.body);
-        this.previewButton = _(".do-preview", this.body);
+        this.previewButton = _(".do-proceed", this.body);
 
         let menuContainer = _(".date-config", this.body);
         let loader = new Loader(menuContainer, true, true);
@@ -89,7 +88,7 @@ export class ManageDatesScene extends MainScene {
                     this.splice(errorScene);
                     return;
                 }
- console.log("Templates", templates);
+
                 this.config.options = Utils.Obj.clone(templates[0]);
                 this.config.options.dateEnabled = true;
 
@@ -130,8 +129,6 @@ export class ManageDatesScene extends MainScene {
 
                 }, "calendar", false);
 
-                this.updateModelCheck();
-
                 this.listen();
             })
             .catch((error: AppError) => {
@@ -154,7 +151,7 @@ export class ManageDatesScene extends MainScene {
 
             if (!this.canEdit) return;
 
-            let previewScene = new ManageDatesPreviewScene(Utils.DOM.uniqueId(), this.element.parentElement, this.config.options, this.doc);
+            let previewScene = new ManageDatesPreviewScene(Utils.DOM.uniqueId(), this.element.parentElement, this.path, this.doc, this.type, this.config.options);
             this.push(previewScene);
         }); 
     }

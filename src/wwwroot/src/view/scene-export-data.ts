@@ -21,7 +21,7 @@ import { TabularTable, TabularTableFeature, TabularTableFeatureUnsupportedReason
 import { ErrorScene } from './scene-error';
 import { ExportedScene } from './scene-exported';
 import { ExportingScene } from './scene-exporting';
-import { MainScene } from './scene-main';
+import { DocScene } from './scene-doc';
 
 interface ExportSettings {
     format: ExportDataFormat
@@ -32,7 +32,7 @@ interface ExportSettings {
     quoteStringFields: boolean
 }
 
-export class ExportDataScene extends MainScene {
+export class ExportDataScene extends DocScene {
 
     table: Tabulator;
     searchBox: HTMLInputElement;
@@ -45,8 +45,7 @@ export class ExportDataScene extends MainScene {
     }
 
     constructor(id: string, container: HTMLElement, doc: Doc, type: PageType) {
-        super(id, container, doc, type); 
-        this.path = `/${i18n(strings.ExportData)}`;
+        super(id, container, [doc.name, i18n(strings.ExportData)], doc, type, true); 
 
         this.element.classList.add("export-data");
         this.config = new OptionsStore<ExportSettings>({

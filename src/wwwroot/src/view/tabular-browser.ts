@@ -7,26 +7,36 @@
 import { Tabulator } from 'tabulator-tables';
 import { View } from './view';
 import * as sanitizeHtml from 'sanitize-html';
-import { TabularDatabaseInfo } from '../model/tabular';
+import { TabularDatabaseModel } from '../model/tabular';
 import { Dic, _, __ } from '../helpers/utils';
 import { strings } from '../model/strings';
 import { i18n } from '../model/i18n';
 import { ContextMenu } from '../helpers/contextmenu';
 
-interface Branch {
+export enum BranchType {
+    Table,
+    Column,
+    Hierarchy,
+    Folder
+} 
+export interface Branch {
     id: string
+    parent: string
     name: string
-    type: string
+    dataType: string
+    type: BranchType
     isHidden: boolean
     _children?: Branch[]
 }
 
 export interface TabularBrowserConfig {
-    search?: boolean,
-    activable?: boolean,
-    selectable?: boolean,
-    showSelectionCount?: boolean,
+    search?: boolean
+    activable?: boolean
+    selectable?: boolean
+    showSelectionCount?: boolean
     initialSelected?: string[]
+    noBorders?: boolean
+    placeholder?: string
 }
 
 
@@ -39,7 +49,7 @@ export class TabularBrowser extends View {
     searchBox: HTMLInputElement;
     branches: Branch[];
 
-    constructor(id: string, container: HTMLElement, data: TabularDatabaseInfo, config: TabularBrowserConfig) {
+    constructor(id: string, container: HTMLElement, data: TabularDatabaseModel, config: TabularBrowserConfig) {
         super(id, container);
         this.config = config;
 
@@ -135,14 +145,14 @@ export class TabularBrowser extends View {
             
             columns.push({ 
                 field: "name", 
-                title: i18n(strings.tableColPath),
+                title: this.config.selectable ? i18n(strings.tableColPath) : undefined,
                 headerSort: false,
                 cssClass: "column-name",
                 bottomCalc: this.config.selectable && this.config.showSelectionCount ? "count" : null,
                 bottomCalcFormatter: cell=> i18n(strings.tableSelectedCount, {count: this.table.getSelectedData().length}),
                 formatter: (cell) => {
                     const item = <Branch>cell.getData();
-                    return `<span class="item-type icon-type-${item.type}"></span>${item.name}`;
+                    return `<span class="item-type icon-type-${item.dataType}"></span>${item.name}`;
                 }
             });
 
@@ -151,7 +161,7 @@ export class TabularBrowser extends View {
                 selectable: this.config.selectable,
                 headerVisible: this.config.selectable,
                 layout: "fitColumns",
-                placeholder: " ", // This fixes scrollbar appearing with empty tables
+                placeholder: (this.config.placeholder ? this.config.placeholder : " "), // This fixes scrollbar appearing with empty tables
                 dataTree: true,
                 dataTreeCollapseElement:`<span class="tree-toggle icon icon-collapse"></span>`,
                 dataTreeExpandElement:`<span class="tree-toggle icon icon-expand"></span>`,
@@ -177,6 +187,9 @@ export class TabularBrowser extends View {
 
             this.table = new Tabulator(`#${this.element.id} .table`, tableConfig);
 
+            if (this.config.noBorders)
+                this.table.element.classList.add("no-borders");
+                
             if (this.config.selectable) {
                 this.table.on("rowSelectionChanged", (data: any[], rows: Tabulator.RowComponent[]) =>{
                     if (this.config.showSelectionCount)
@@ -188,20 +201,20 @@ export class TabularBrowser extends View {
 
             this.table.on("rowClick", (e, row) => {
 
-                let item = row.getData();
+                let item = <Branch>row.getData();
                 if (this.config.activable) {
                     this.activeItem = item;
                     __(".row-active", this.table.element).forEach((el: HTMLElement) => {
                         el.classList.remove("row-active");
                     });
                     row.getElement().classList.add("row-active");
-                }
-                if (!this.config.selectable) {
+                } else if (!this.config.selectable) {
                     let el = _(".tree-toggle", <HTMLElement>e.target);
                     if (!el.empty) {
                         row.treeToggle();
                     }
                 }
+                
                 this.trigger("click", item);
             });
         } else {
@@ -224,7 +237,7 @@ export class TabularBrowser extends View {
         this.activeItem = null;
     }
 
-    prepareData(data: TabularDatabaseInfo): Branch[] {
+    prepareData(data: TabularDatabaseModel): Branch[] {
 
         let branches: Dic<Branch> = {};
         
@@ -234,9 +247,11 @@ export class TabularBrowser extends View {
                 if (!(table.name in branches))
                     branches[table.name] = {
                         id: table.name,
+                        parent: null,
                         name: table.name,
-                        type: table.isDateTable ? "date-table" : "table",
-                        isHidden: false,
+                        type: BranchType.Table,
+                        dataType: table.isDateTable ? "date-table" : "table",
+                        isHidden: table.isHidden,
                         _children: []
                     };
             });
@@ -247,11 +262,20 @@ export class TabularBrowser extends View {
                 if (column.tableName in branches)
                     branches[column.tableName]._children.push({
                         id: column.name,
+                        parent: column.tableName,
                         name: column.columnName,
-                        type: (column.dataType ? column.dataType.toLowerCase() : ""),
+                        type: BranchType.Column,
+                        dataType: (column.dataType ? column.dataType.toLowerCase() : ""),
                         isHidden: column.isHidden
                     })
             });
+
+        //TODO Add hierarchies
+        /*data.hierarchies
+            .sort((a, b) => a.name.localeCompare(b.name))
+            .forEach(level => {
+            });
+        */
         
         return Object.values(branches);
     }

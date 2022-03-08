@@ -7,13 +7,12 @@ import { Page, PageType } from '../controllers/page';
 import { Doc } from '../model/doc';
 import { i18n } from '../model/i18n';
 import { strings } from '../model/strings';
-import { MainScene } from './scene-main';
+import { DocScene } from './scene-doc';
 
-export class BestPracticesScene extends MainScene {
+export class BestPracticesScene extends DocScene {
 
     constructor(id: string, container: HTMLElement, doc: Doc, type: PageType) {
-        super(id, container, doc, type);
-        this.path = `/${i18n(strings.BestPractices)}`;
+        super(id, container, [doc.name, i18n(strings.BestPractices)], doc, type, true);
         
         this.element.classList.add("best-practices");
     }

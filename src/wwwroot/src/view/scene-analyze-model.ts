@@ -15,7 +15,7 @@ import Chart from "chart.js/auto";
 import { TreemapController, TreemapElement, TreemapScriptableContext } from 'chartjs-chart-treemap';
 import * as sanitizeHtml from 'sanitize-html';
 import { ContextMenu } from '../helpers/contextmenu';
-import { MainScene } from './scene-main';
+import { DocScene } from './scene-doc';
 import { LoaderScene } from './scene-loader';
 import { AppError } from '../model/exceptions';
 import { ErrorScene } from './scene-error';
@@ -28,7 +28,7 @@ interface ExtendedTabularColumn extends TabularColumn {
     _children?: ExtendedTabularColumn[]
 }
 
-export class AnalyzeModelScene extends MainScene {
+export class AnalyzeModelScene extends DocScene {
 
     table: Tabulator;
     chart: Chart;
@@ -49,7 +49,7 @@ export class AnalyzeModelScene extends MainScene {
     }
 
     constructor(id: string, container: HTMLElement, doc: Doc, type: PageType) {
-        super(id, container, doc, type);
+        super(id, container, [doc.name], doc, type, true);
 
         this.element.classList.add("analyze-model");
     }

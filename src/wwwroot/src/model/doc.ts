@@ -6,7 +6,7 @@
 
 import { host } from "../main";
 import { Dic, Utils } from '../helpers/utils';
-import { daxMeasureName, FormattedMeasure, TabularDatabase, TabularDatabaseFeature, TabularDatabaseInfo, TabularMeasure } from './tabular';
+import { daxName, FormattedMeasure, TabularDatabase, TabularDatabaseFeature, TabularDatabaseInfo, TabularMeasure } from './tabular';
 import { deepEqual } from 'fast-equals';
 import { PBICloudDataset } from './pbi-dataset';
 import { PBIDesktopReport } from './pbi-report';
@@ -124,13 +124,13 @@ export class Doc {
 
     analizeMeasure(measure: TabularMeasure): MeasureStatus  {
 
-        let key = daxMeasureName(measure);
+        let key = daxName(measure.tableName, measure.name);
         if (key in this.formattedMeasures) {
             let formattedMeasure = this.formattedMeasures[key];
             if (formattedMeasure.errors && formattedMeasure.errors.length) {
                 return MeasureStatus.WithErrors;
             } else {
-                if (measure.measure.localeCompare(formattedMeasure.measure) == 0) {
+                if (measure.expression.localeCompare(formattedMeasure.expression) == 0) {
                     return MeasureStatus.Formatted;
                 } else {
                     return MeasureStatus.NotFormatted;

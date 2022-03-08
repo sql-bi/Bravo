@@ -16,6 +16,7 @@
             
             .coll {
                 width: 300px;
+                height: calc(100% - 20px);
                 margin-right: 30px;
                 .flex(0 1 auto);
                 .flexbox(flex-start, flex-start, column);
@@ -36,16 +37,35 @@
             }
         }
 
+        #browser-menu {
+            width: 100%;
+            margin: 20px 0;
+            height: 100%;
+
+            .menu-body {
+                height: calc(100% - 50px);
+            }
+            .item-body {
+                height: 100%;
+                overflow: auto;
+            }
+
+            .tabular-browser {
+                margin: 20px 0 0 0;
+                height: calc(100% - 20px);
+            }
+        }
+
         .model-check {
             padding: 15px 25px;
-            width: calc(100% - 50px);
+            width: calc(100% - 52px);
             height: calc(100% - 30px);
             background: @window-back-color-alt;
             border: 1px solid @border-color;
             .border-radius();
 
             .dark & { 
-                background: @window-back-color-alt-dark; 
+                background: @window-back-color-dark; 
                 border-color: @border-color-dark;
             }
 
@@ -94,14 +114,12 @@
             .flexbox(center, flex-end);
             width: 100%;
 
-            .do-preview {
+            .do-proceed {
                 //margin-top: 10px;
                 margin-left: auto;
             }
         }
     }
-
-    
 
     #onlytablescolumns {
         height: calc(100vh - 550px);

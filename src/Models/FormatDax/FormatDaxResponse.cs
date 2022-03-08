@@ -22,7 +22,7 @@
         [JsonPropertyName("tableName")]
         public string? TableName { get; set; }
 
-        [JsonPropertyName("measure")]
+        [JsonPropertyName("expression")]
         public string? Expression { get; set; }
 
         [JsonPropertyName("lineBreakStyle")]
