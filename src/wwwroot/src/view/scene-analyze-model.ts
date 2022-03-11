@@ -20,6 +20,7 @@ import { LoaderScene } from './scene-loader';
 import { AppError } from '../model/exceptions';
 import { ErrorScene } from './scene-error';
 import { PageType } from '../controllers/page';
+import { tabulatorTreeChildrenFilter, TabulatorTreeChildrenFilterParams } from '../model/extend-tabulator';
 
 Chart.register(TreemapController, TreemapElement);
 interface ExtendedTabularColumn extends TabularColumn {
@@ -221,7 +222,7 @@ export class AnalyzeModelScene extends DocScene {
                     title: "", 
                     hozAlign:"center", 
                     resizable: false, 
-                    width: 40,
+                    width: 45,
                     cssClass: "column-icon",
                     formatter: (cell) => {
                         let cellData = <ExtendedTabularColumn>cell.getData();
@@ -259,6 +260,7 @@ export class AnalyzeModelScene extends DocScene {
                 path: { 
                     field: "columnName", 
                     title: i18n(strings.tableColPath), 
+                    tooltip: true,
                     cssClass: "column-name",
                     formatter: columnNameFormatter
                 },
@@ -318,7 +320,7 @@ export class AnalyzeModelScene extends DocScene {
                 dataTreeExpandElement:`<span class="tree-toggle icon icon-expand"></span>`,
                 dataTreeBranchElement: false,
                 dataTreeElementColumn: "columnName",
-                dataTreeChildIndent: 50,
+                dataTreeChildIndent: 40,
                 dataTreeSelectPropagate: true,
                 dataTreeStartExpanded: (startExpanded ? true : row => {
                     let data = row.getData();
@@ -427,8 +429,14 @@ export class AnalyzeModelScene extends DocScene {
             if (this.showUnrefOnly)
                 this.table.addFilter(data => this.unreferencedFilter(data));
                 
-            if (this.searchBox.value)
-                this.table.addFilter("columnName", "like", sanitizeHtml(this.searchBox.value, { allowedTags: [], allowedAttributes: {}}));
+            if (this.searchBox.value) {
+                this.table.addFilter(tabulatorTreeChildrenFilter, <TabulatorTreeChildrenFilterParams>{ 
+                    column: "columnName",
+                    comparison: "like",
+                    value: sanitizeHtml(this.searchBox.value, { allowedTags: [], allowedAttributes: {}})
+                });
+                //this.table.addFilter("columnName", "like", sanitizeHtml(this.searchBox.value, { allowedTags: [], allowedAttributes: {}}));
+            }
         }
     }
 

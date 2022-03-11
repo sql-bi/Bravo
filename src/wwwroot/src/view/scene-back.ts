@@ -22,7 +22,7 @@ export class BackableScene extends Scene {
 
         if (this.onBack) {
             let html = `
-                <div class="go-back ctrl icon-previous" title="${i18n(strings.goBackCtrlTitle)}"></div>
+                <div class="go-back solo ctrl icon-previous" title="${i18n(strings.goBackCtrlTitle)}"></div>
             `;
 
             this.element.insertAdjacentHTML("beforeend", html); 

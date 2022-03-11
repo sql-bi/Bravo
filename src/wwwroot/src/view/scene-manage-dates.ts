@@ -28,6 +28,7 @@ import { PageType } from '../controllers/page';
 export interface ManageDatesConfig extends DateConfiguration {
     region?: string
     customRegion?: string
+    targetMeasuresMode?: string
 }
 
 export class ManageDatesScene extends DocScene {
@@ -58,7 +59,7 @@ export class ManageDatesScene extends DocScene {
                 <div class="col coll">
                     <div class="model-check">
                         <div class="notice">${i18n(strings.manageDatesModelCheck)}</div>
-                        <div class="status"></div>
+                        <div class="status">${Loader.html(true)}</div>
                     </div>
                 </div>
 

@@ -19,6 +19,7 @@ export interface OptionStruct {
     description?: string
     additionalNotes?: string
     attributes?: string
+    cssClass?: string
     type: OptionType
     valueType?: "string"|"number"|"boolean"
     values?: string[][]
@@ -81,9 +82,6 @@ export module Renderer {
     export module Options {
 
         export function render(struct: OptionStruct, element: HTMLElement, store: OptionsStore<any>) {
-
-            
-
 
             let id = Utils.Text.slugify(struct.option ? struct.option : struct.name); //Utils.DOM.uniqueId()
             let value = (Utils.Obj.isSet(struct.value) ? struct.value : (struct.option ? store.getOption(struct.option) : ""));
@@ -173,7 +171,7 @@ export module Renderer {
             }
 
             let html = `
-                <div id="${id}" class="option ${struct.parent ? "child": ""} ${toggledByClass}" ${isHidden ? "hidden" : ""}> 
+                <div id="${id}" class="option ${struct.parent ? "child": ""} ${toggledByClass} ${struct.cssClass ? struct.cssClass : ""}" ${isHidden ? "hidden" : ""}> 
                     ${struct.type == OptionType.custom ? 
                         (Utils.Obj.isSet(struct.customHtml) ? struct.customHtml() : "") :
                         ` 

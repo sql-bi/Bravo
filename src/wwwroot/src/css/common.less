@@ -510,6 +510,20 @@ a, .link {
         }
     }
 
+    &.contains-tabular-browser {
+        background: @back-color;
+        overflow: hidden;
+        min-height: 200px;
+
+        .dark & { background-color: @back-color-dark;}
+        
+        .tabular-browser {
+            //width: 100%;
+            height: 100%;
+            //overflow: hidden;
+        }
+    }
+
     .title {
         .name {  
             font-size: 15px;

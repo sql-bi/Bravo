@@ -24,6 +24,9 @@
         [JsonPropertyName("lineBreakStyle")]
         public DaxLineBreakStyle? LineBreakStyle { get; set; }
 
+        [JsonPropertyName("isHidden")]
+        public bool? IsHidden { get; set; }
+
         internal static TabularMeasure CreateFrom(Dax.Metadata.Measure daxMeasure, string databaseETag)
         {
             var (expression, lineBreakStyle) = daxMeasure.MeasureExpression.Expression.NormalizeDax();
@@ -35,6 +38,7 @@
                 TableName = daxMeasure.Table.TableName.Name,
                 Expression = expression,
                 LineBreakStyle = lineBreakStyle,
+                IsHidden = false //TODO Expose IsHidden property 
             };
 
             return measure;

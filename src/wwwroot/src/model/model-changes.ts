@@ -3,7 +3,6 @@
  * Copyright (c) SQLBI corp. - All rights reserved.
  * https://www.sqlbi.com
 */
-
 export interface ModelChanges {
     removedObjects: TableChanges[]
     modifiedObjects: TableChanges[]
@@ -37,3 +36,8 @@ export interface HierarchyChanges {
     levels?: string[]
 }
 
+export enum ChangeType {
+    Added,
+    Modified,
+    Deleted
+}

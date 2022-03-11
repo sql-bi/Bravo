@@ -12,7 +12,6 @@ export interface TabularDatabase {
 export interface TabularDatabaseModel {
     columns: TabularColumn[]
     tables: TabularTable[]
-    hierarchies?: TabularHierarchy[]
 }
 export interface TabularDatabaseInfo extends TabularDatabaseModel {
     etag?:	string
@@ -30,7 +29,7 @@ export interface TabularTable {
     isDateTable?: boolean
     isHidden?: boolean
     features?: TabularTableFeature
-    featureUnsupportedReasons?: TabularTableFeatureUnsupportedReason,
+    featureUnsupportedReasons?: TabularTableFeatureUnsupportedReason
 }
 export interface TabularColumn {
     name?: string
@@ -44,18 +43,13 @@ export interface TabularColumn {
     dataType?: string
 }
 
-export interface TabularHierarchy {
-    name?: string
-    levels?: string[]
-    isHidden?: boolean
-}
-
 export interface TabularMeasure {
     etag?:	string
     name?:	string
     tableName?:	string
-    expression?: string,
+    expression?: string
     lineBreakStyle?: DaxLineBreakStyle
+    isHidden?: boolean
 }
 
 export interface FormatDaxError {

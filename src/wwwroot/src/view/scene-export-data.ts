@@ -256,7 +256,6 @@ export class ExportDataScene extends DocScene {
             if (this.canExport) {
                 columns.push({
                     formatter:"rowSelection", 
-                    title: undefined,
                     titleFormatter:"rowSelection", 
                     titleFormatterParams:{
                         rowRange:"active"

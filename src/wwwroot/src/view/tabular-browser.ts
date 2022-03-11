@@ -12,21 +12,26 @@ import { Dic, _, __ } from '../helpers/utils';
 import { strings } from '../model/strings';
 import { i18n } from '../model/i18n';
 import { ContextMenu } from '../helpers/contextmenu';
+import { tabulatorTreeChildrenFilter, TabulatorTreeChildrenFilterParams } from '../model/extend-tabulator';
+
 
 export enum BranchType {
     Table,
     Column,
+    Measure,
     Hierarchy,
     Folder
 } 
 export interface Branch {
     id: string
-    parent: string
     name: string
     dataType: string
     type: BranchType
     isHidden: boolean
+    isInactive?: boolean  // It can't be clicked
+    isUnselectable?: boolean // It can't be selected
     _children?: Branch[]
+    attributes?: any
 }
 
 export interface TabularBrowserConfig {
@@ -36,7 +41,8 @@ export interface TabularBrowserConfig {
     showSelectionCount?: boolean
     initialSelected?: string[]
     noBorders?: boolean
-    placeholder?: string
+    placeholder?: string,
+    additionalColumns?: Tabulator.ColumnDefinition[]
 }
 
 
@@ -49,12 +55,12 @@ export class TabularBrowser extends View {
     searchBox: HTMLInputElement;
     branches: Branch[];
 
-    constructor(id: string, container: HTMLElement, data: TabularDatabaseModel, config: TabularBrowserConfig) {
+    constructor(id: string, container: HTMLElement, branches: Branch[], config: TabularBrowserConfig) {
         super(id, container);
         this.config = config;
 
         this.element.classList.add("tabular-browser");
-        this.branches = this.prepareData(data);
+        this.branches = branches;
         this.render();
     }
 
@@ -71,7 +77,7 @@ export class TabularBrowser extends View {
             ${ this.config.search ? `
                 <div class="toolbar">
                     <div class="search">
-                        <input type="search" placeholder="${i18n(strings.searchEntityPlaceholder)}">
+                        <input type="search" placeholder="${i18n(strings.searchPlaceholder)}">
                     </div>
                 </div>
             ` : ""}
@@ -101,15 +107,18 @@ export class TabularBrowser extends View {
 
         this.updateTable();
 
-        if (this.config.initialSelected && this.config.initialSelected.length) {
-            this.table.on("tableBuilt", ()=>{
+        this.table.on("tableBuilt", ()=>{
+
+            if (this.config.initialSelected && this.config.initialSelected.length) {
                 this.table.selectRow(
                     this.table.getRows().filter(
                         row => this.config.initialSelected.includes((<Branch>row.getData()).name)
                     )
                 );
-            });
-        }
+            }
+
+            this.trigger("loaded");
+        });
     }
 
     update() {
@@ -128,7 +137,6 @@ export class TabularBrowser extends View {
             if (this.config.selectable) {
                 columns.push({
                     formatter:"rowSelection", 
-                    title: undefined,
                     titleFormatter:"rowSelection", 
                     titleFormatterParams:{
                         rowRange:"active"
@@ -146,8 +154,10 @@ export class TabularBrowser extends View {
             columns.push({ 
                 field: "name", 
                 title: this.config.selectable ? i18n(strings.tableColPath) : undefined,
+                resizable: false,
                 headerSort: false,
                 cssClass: "column-name",
+                tooltip: true,
                 bottomCalc: this.config.selectable && this.config.showSelectionCount ? "count" : null,
                 bottomCalcFormatter: cell=> i18n(strings.tableSelectedCount, {count: this.table.getSelectedData().length}),
                 formatter: (cell) => {
@@ -156,7 +166,10 @@ export class TabularBrowser extends View {
                 }
             });
 
-            const tableConfig: Tabulator.Options = {
+            if (this.config.additionalColumns)
+                columns = [...columns, ...this.config.additionalColumns];
+
+            let tableConfig: Tabulator.Options = {
                 height: (this.config.search ? "calc(100% - 50px)" : "100%"),
                 selectable: this.config.selectable,
                 headerVisible: this.config.selectable,
@@ -167,9 +180,10 @@ export class TabularBrowser extends View {
                 dataTreeExpandElement:`<span class="tree-toggle icon icon-expand"></span>`,
                 dataTreeBranchElement: false,
                 dataTreeElementColumn: "name",
-                dataTreeChildIndent: 50,
+                dataTreeChildIndent: 35,
                 dataTreeSelectPropagate: true,
                 dataTreeStartExpanded: false,
+                dataTreeFilter:true,
                 columns: columns,
                 data: this.branches,
                 rowFormatter: row => {
@@ -181,9 +195,19 @@ export class TabularBrowser extends View {
                         if (item.isHidden){
                             element.classList.add("row-hidden");
                         }
+                        if (item.isInactive === true){
+                            element.classList.add("row-inactive");
+                        }
                     }catch(ignore){}
                 },
             };
+
+            if (this.config.selectable) {
+               tableConfig.selectableCheck = (row => {
+                    let item = <Branch>row.getData();
+                    return (item.isUnselectable !== true);
+               });
+            }
 
             this.table = new Tabulator(`#${this.element.id} .table`, tableConfig);
 
@@ -202,7 +226,8 @@ export class TabularBrowser extends View {
             this.table.on("rowClick", (e, row) => {
 
                 let item = <Branch>row.getData();
-                if (this.config.activable) {
+
+                if (this.config.activable && item.isInactive !== true) {
                     this.activeItem = item;
                     __(".row-active", this.table.element).forEach((el: HTMLElement) => {
                         el.classList.remove("row-active");
@@ -214,8 +239,9 @@ export class TabularBrowser extends View {
                         row.treeToggle();
                     }
                 }
-                
-                this.trigger("click", item);
+
+                if (item.isInactive !== true)
+                    this.trigger("click", item);
             });
         } else {
             this.deactivate();
@@ -237,55 +263,19 @@ export class TabularBrowser extends View {
         this.activeItem = null;
     }
 
-    prepareData(data: TabularDatabaseModel): Branch[] {
-
-        let branches: Dic<Branch> = {};
-        
-        data.tables
-            .sort((a, b) => a.name.localeCompare(b.name))
-            .forEach(table => {
-                if (!(table.name in branches))
-                    branches[table.name] = {
-                        id: table.name,
-                        parent: null,
-                        name: table.name,
-                        type: BranchType.Table,
-                        dataType: table.isDateTable ? "date-table" : "table",
-                        isHidden: table.isHidden,
-                        _children: []
-                    };
-            });
-
-        data.columns
-            .sort((a, b) => a.name.localeCompare(b.name))
-            .forEach(column => {
-                if (column.tableName in branches)
-                    branches[column.tableName]._children.push({
-                        id: column.name,
-                        parent: column.tableName,
-                        name: column.columnName,
-                        type: BranchType.Column,
-                        dataType: (column.dataType ? column.dataType.toLowerCase() : ""),
-                        isHidden: column.isHidden
-                    })
-            });
-
-        //TODO Add hierarchies
-        /*data.hierarchies
-            .sort((a, b) => a.name.localeCompare(b.name))
-            .forEach(level => {
-            });
-        */
-        
-        return Object.values(branches);
-    }
-
     applyFilters() {
         if (this.table) {
-            this.table.clearFilter();
 
-            if (this.searchBox.value)
-                this.table.addFilter("name", "like", sanitizeHtml(this.searchBox.value, { allowedTags: [], allowedAttributes: {}}));
+            if (this.searchBox.value) {
+                this.table.setFilter(tabulatorTreeChildrenFilter, <TabulatorTreeChildrenFilterParams>{ 
+                    column: "name",
+                    comparison: "like",
+                    value: sanitizeHtml(this.searchBox.value, { allowedTags: [], allowedAttributes: {}})
+                });
+                //this.table.setFilter("name", "like", sanitizeHtml(this.searchBox.value, { allowedTags: [], allowedAttributes: {}}));
+            } else {
+                this.table.clearFilter();
+            }
         }
     }
 
@@ -301,5 +291,45 @@ export class TabularBrowser extends View {
         this.branches = null;
         this.destroyTable();
         super.destroy();
+    }
+
+    /* Converters */
+    static ConvertModelToBranches(model: TabularDatabaseModel): Branch[] {
+
+        let branches: Dic<Branch> = {};
+        
+        model.tables
+            .sort((a, b) => a.name.localeCompare(b.name))
+            .forEach(table => {
+                if (!(table.name in branches))
+                    branches[table.name] = {
+                        id: table.name,
+                        name: table.name,
+                        type: BranchType.Table,
+                        dataType: table.isDateTable ? "date-table" : "table",
+                        isHidden: table.isHidden,
+                        //_children: []
+                    };
+            });
+
+        model.columns
+            .sort((a, b) => a.name.localeCompare(b.name))
+            .forEach(column => {
+                if (column.tableName in branches) {
+
+                    if (!("_children" in branches[column.tableName]))
+                        branches[column.tableName]._children = [];
+                        
+                    branches[column.tableName]._children.push({
+                        id: column.name,
+                        name: column.columnName,
+                        type: BranchType.Column,
+                        dataType: (column.dataType ? column.dataType.toLowerCase() : ""),
+                        isHidden: column.isHidden
+                    });
+                }
+            });
+        
+        return Object.values(branches);
     }
 }

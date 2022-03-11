@@ -38,12 +38,26 @@
     .column-name {
       opacity: 0.7;
       .icon;
+
       &:after {
-        float: right;
         content: "\e92e"; //icon-hidden
         margin: 4px 2px 0 0;
         font-size: 17px;
+        position: absolute;
+        right: 0;
+        background: @table-cell-back-color;
+        padding: 0 3px;
+
+        .dark & { background: @table-cell-back-color-dark}
       }
+    }
+    &.row-highlighted .column-name:after {
+        background-color: @warning-back-color !important;
+        .dark & {background-color: lighten(@warning-back-color-dark, 10%) !important;}
+    }
+    &.row-error .column-name:after {
+      background-color: @error-back-color !important;
+      .dark & {background-color: @error-back-color-dark !important;}
     }
   }
 
@@ -98,9 +112,9 @@
   .tabulator-headers .column-select {
     padding-left: 1px;
   }
-  .column-select {
-    width: 38px !important; //This avoid showing horizontal scrollbar (Tabulator bug)
-  }
+  /*.column-select {
+    width: 35px !important; //This avoid showing horizontal scrollbar (Tabulator bug)
+  }*/
 
   .tabulator-unselectable  .column-select input {
     display: none;
@@ -108,11 +122,14 @@
   }
 
   .tree-toggle {
+    display: inline-block;
+    width: 26px;
+    text-align: center;
     &:before {
       font-size: 20px;
       font-weight: normal !important;
       vertical-align: text-top;
-      margin:5px !important;
+      margin:0 !important;
       cursor: pointer !important;
     }
   }
@@ -122,11 +139,17 @@
     display: inline-block;
   }
 
-  .tabulator-tree-level-0 .column-name {
-    //font-weight:bold;
-    cursor: pointer;
-    
-  }
+  /*.tabulator-tree-level-0,
+  .tabulator-tree-level-1,
+  .tabulator-tree-level-2,
+  .tabulator-tree-level-3,
+  .tabulator-tree-level-4,
+  .tabulator-tree-level-5 {
+    .column-name {
+      //font-weight:bold;
+      cursor: pointer;
+    }
+  }*/
 }
 
 .tabulator[tabulator-layout="fitDataFill"] .tabulator-tableholder .tabulator-table {
@@ -621,9 +644,15 @@
   .dark & { background-color: @table-cell-back-color-alt-dark; }
 }
 
-.tabulator-row.tabulator-selectable:not(.tabulator-calcs):hover, /*.tabulator-row.tabulator-selected,*/ .tabulator-row.active {
+.tabulator-row:not(.tabulator-calcs):not(.row-inactive):hover,
+.tabulator-row.active {
   background-color: darken(@table-cell-back-color-alt, 5%);
   .dark & {background-color: lighten(@table-cell-back-color-alt-dark, 5%);}
+
+  &.row-hidden .column-name:after {
+    background-color: darken(@table-cell-back-color-alt, 5%);
+    .dark & {background-color: lighten(@table-cell-back-color-alt-dark, 5%);}
+  }
 }
 
 /*.tabulator-row.tabulator-selected, .tabulator-row.tabulator-selected:hover {
@@ -646,7 +675,11 @@
   background-color: @table-cell-active-back-color !important;
   .dark & {background-color: @table-cell-active-back-color-dark !important;}
 
-  
+  &.row-hidden .column-name:after {
+    background-color: @table-cell-active-back-color !important;
+    .dark & {background-color: @table-cell-active-back-color-dark !important;}
+  }
+
   & + .tabulator-row {
     border-color: transparent !important;
   }

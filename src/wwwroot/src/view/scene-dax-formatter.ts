@@ -392,7 +392,6 @@ export class DaxFormatterScene extends DocScene {
             if (this.canFormat) {
                 columns.push({
                     formatter:"rowSelection", 
-                    title: undefined,
                     titleFormatter:"rowSelection", 
                     titleFormatterParams:{
                         rowRange:"active"

@@ -14,26 +14,37 @@ import { strings } from '../model/strings';
 import { PBIDesktopReport } from '../model/pbi-report';
 import { AppError } from '../model/exceptions';
 import { ErrorScene } from './scene-error';
-import { ModelChanges, TableChanges } from '../model/model-changes';
+import { ChangeType, ColumnChanges, ModelChanges, TableChanges } from '../model/model-changes';
 import { Loader } from '../helpers/loader';
 import { Branch, BranchType, TabularBrowser } from './tabular-browser';
-import { daxName, TabularColumn, TabularDatabaseModel, TabularHierarchy, TabularTable} from '../model/tabular';
-import { Menu, MenuItem } from './menu';
-import { daxCodeMirror } from '../helpers/cm-utils';
+import { daxName, TabularColumn, TabularDatabaseModel, TabularTable} from '../model/tabular';
+import { Tabulator } from 'tabulator-tables';
 import { DocScene } from './scene-doc';
 import { PageType } from '../controllers/page';
 import { LoaderScene } from './scene-loader';
 import { SuccessScene } from './scene-success';
+import { DaxEditor } from './dax-editor';
+import { Menu, MenuItem } from './menu';
+
+interface PreviewData {
+    table?: any[],
+    expression?: string
+}
 export class ManageDatesPreviewScene extends DocScene {
 
-    menu: Menu;
     dateConfig: DateConfiguration;
 
-    data: Dic<TabularDatabaseModel> = {};
-    preview: Dic<{
-        expression: string,
-        table: any[]
-    }> = {};
+    previews: Dic<PreviewData> = {};
+    activeBranches: Dic<Branch> = {};
+
+    treeMenu: Menu;
+    
+    previewMenu: Menu;
+    expressionEditor: DaxEditor;
+    sampleTable: Tabulator;
+    
+
+    applyButton: HTMLElement;
 
     constructor(id: string, container: HTMLElement, path: string[], doc: Doc, type: PageType, dateConfig: DateConfiguration) {
         super(id, container, [...path, i18n(strings.manageDatesPreview)], doc, type, false, ()=>{
@@ -42,6 +53,7 @@ export class ManageDatesPreviewScene extends DocScene {
 
         this.element.classList.add("manage-dates");
         this.dateConfig = dateConfig;
+        
     }
 
     render() {
@@ -53,22 +65,22 @@ export class ManageDatesPreviewScene extends DocScene {
     }
 
     generatePreview() {
-
+console.log("Request", this.dateConfig);
         let request: ManageDatesPreviewChangesFromPBIDesktopReportRequest = {
             settings: {
                 configuration: this.dateConfig,
-                previewRows: 100
+                previewRows: 20
             },
             report: <PBIDesktopReport>this.doc.sourceData
         }
-
-console.log("Request", request);
         let loader = new Loader(this.body, true, true);
         host.manageDatesPreviewChanges(request)
             .then(changes => {
                 loader.remove();
-                this.loadData(changes);
-                this.renderPreview();
+
+console.log("Response", changes);
+                this.loadSampleData(changes)
+                this.renderPreview(changes);
             })
             .catch((error: AppError) => {
                 if (error.requestAborted) return;
@@ -78,83 +90,308 @@ console.log("Request", request);
             });
     }
 
-    loadData(changes: ModelChanges) {
-console.log("Preview", changes);
+    convertColumnsChangesToBranches(changes: ModelChanges): Branch[] {
 
-        this.data = {};
-        this.preview = {};
+        let branches: Dic<Branch> = {};
         
-        ["modified", "removed"].forEach(container => {
-            let data: TabularDatabaseModel = {
-                columns: [],
-                tables: [],
-                hierarchies: []
-            };
-            
-            (<any>changes)[`${container}Objects`].forEach((table: TableChanges) => {
-                data.tables.push(<TabularTable>{
-                    name: table.name,
-                    isHidden: table.isHidden,
-                   //isDateTable: false, //TODO Should it be a date table?
-                });
-                this.preview[table.name] = {
-                    table: table.preview,
-                    expression: table.expression
-                };
+        ["modified", "removed"].forEach(group => {
 
-                table.columns.forEach(column => {
-                    data.columns.push(<TabularColumn>{
-                        name: daxName(table.name, column.name),
-                        columnName: column.name,
-                        tableName: table.name,
-                        isHidden: column.isHidden,
-                        dataType: column.dataType
-                    });
-                });
-                
+            let groupAttribute: ChangeType = (group == "modified" ? ChangeType.Modified : ChangeType.Deleted);
 
-                data.hierarchies = <TabularHierarchy[]>table.hierarchies;
+            (<any>changes)[`${group}Objects`].forEach((table: TableChanges) => {
 
-                //TODO measures
+                let tableAttribute = groupAttribute;
 
-                
+                if ((table.columns && table.columns.length) || (table.hierarchies && table.hierarchies.length)) {
+                    if (!(table.name in branches)) {
+
+                        if (tableAttribute == ChangeType.Modified) {
+                            if (this.doc.model.tables.findIndex(t => t.name === table.name) < 0)
+                                tableAttribute = ChangeType.Added;
+                        }
+
+                        branches[table.name] = {
+                            id: table.name,
+                            name: table.name,
+                            type: BranchType.Table,
+                            dataType: "table", //table.isDateTable ? "date-table" : "table",
+                            isHidden: table.isHidden,
+                            attributes: tableAttribute,
+                            _children: []
+                        };
+
+                    } else {
+                        tableAttribute = groupAttribute; // If the table exists it can only be a deleted table
+
+                        branches[table.name].attributes = tableAttribute;
+                    }
+                    
+                    if (table.columns) {
+                        table.columns.forEach(column => {
+
+                            let id = daxName(table.name, column.name);
+
+                            let columnAttribute = tableAttribute;
+                            if (columnAttribute == ChangeType.Modified) {
+                                if (this.doc.model.columns.findIndex(c => c.name === id) < 0)
+                                    columnAttribute = ChangeType.Added;
+                            }
+                            
+                            branches[table.name]._children.push({
+                                id: id,
+                                name: column.name,
+                                type: BranchType.Column,
+                                isHidden: column.isHidden,
+                                dataType: (column.dataType ? column.dataType.toLowerCase() : ""),
+                                attributes: columnAttribute
+                            });
+                        });
+                    }
+
+                    if (table.hierarchies) {
+                        table.hierarchies.forEach(hierarchy => {
+
+                            let hierarchyAttribute = ChangeType.Added;
+                            let id = daxName(table.name, `Hierarchy[${hierarchy.name}]`);
+
+                            let hierarchyChildren: Branch[] = [];
+                            hierarchy.levels.forEach(level => {
+
+                                let hierarchyColumns = table.columns.filter(c => c.name == level);
+                                let column: ColumnChanges = (hierarchyColumns.length ? hierarchyColumns[0] : {
+                                    name: level,
+                                    isHidden: false
+                                });
+                                
+                                hierarchyChildren.push({
+                                    id: daxName(table.name, column.name),
+                                    name: level,
+                                    type: BranchType.Column,
+                                    isHidden: column.isHidden,
+                                    isInactive: hierarchyColumns.length == 0,
+                                    attributes: hierarchyAttribute,
+                                    dataType: (column.dataType ? column.dataType.toLowerCase() : "")
+                                });
+                            });
+
+                            branches[table.name]._children.push({
+                                id: id,
+                                name: hierarchy.name,
+                                type: BranchType.Hierarchy,
+                                isHidden: hierarchy.isHidden,
+                                isInactive: true,
+                                dataType: "hierarchy",
+                                attributes: hierarchyAttribute,
+                                _children: hierarchyChildren
+                            });
+                        });
+                    }
+                }
             });
-
-            this.data[container] = data;
         });
+
+        return Object.values(branches);
     }
 
-    renderPreview() {
+    convertMeasuresChangesToBranches(changes: ModelChanges): Branch[] {
+
+        let branches: Dic<Branch> = {};
+        
+        ["modified", "removed"].forEach(group => {
+
+            let groupAttribute: ChangeType = (group == "modified" ? ChangeType.Modified : ChangeType.Deleted);
+
+            (<any>changes)[`${group}Objects`].forEach((table: TableChanges) => {
+
+                let tableAttribute = groupAttribute;
+
+                if (table.measures && table.measures.length) {
+                    if (!(table.name in branches)) {
+
+                        if (tableAttribute == ChangeType.Modified) {
+                            if (this.doc.model.tables.findIndex(t => t.name === table.name) < 0)
+                                tableAttribute = ChangeType.Added;
+                        }
+
+                        branches[table.name] = {
+                            id: table.name,
+                            name: table.name,
+                            type: BranchType.Table,
+                            dataType: "table", //table.isDateTable ? "date-table" : "table",
+                            isHidden: table.isHidden,
+                            isInactive: true,
+                            attributes: tableAttribute,
+                            _children: []
+                        };
+
+                    } else {
+                        tableAttribute = groupAttribute; // If the table exists it can only be a deleted table
+
+                        branches[table.name].attributes = tableAttribute;
+                    }
+
+                    table.measures.forEach(measure => {
+                        
+                        let measureAttributes = tableAttribute;
+                        if (measureAttributes == ChangeType.Modified) {
+                            if (this.doc.measures.findIndex(m => m.tableName === table.name && m.name === measure.name) < 0)
+                                measureAttributes = ChangeType.Added;
+                        }
+
+                        let folders = (measure.displayFolder ? measure.displayFolder.split("\\") : []);
+                        
+                        let b = branches[table.name]._children;
+                        folders.forEach(folder => {
+                            if (folder.trim() == "") return;
+
+                            let i = b.findIndex(n => n.name === folder);
+                            if (i >= 0) {
+                                b = b[i]._children;
+                            } else {
+                                b.push({
+                                    id: daxName(table.name, `Folder[${folder}]`),
+                                    name: folder,
+                                    type: BranchType.Folder,
+                                    isHidden: false,
+                                    isInactive: true,
+                                    dataType: "folder",
+                                    _children: []
+                                });
+                                b = b[b.length - 1]._children;
+                            }
+                        });
+
+                        let id = daxName(table.name, measure.name);
+                        b.push({
+                            id: id,
+                            name: measure.name,
+                            type: BranchType.Measure,
+                            isHidden: measure.isHidden,
+                            isInactive: (measure.expression ? false : true),
+                            dataType: "measure",
+                            attributes: measureAttributes,
+                        });
+                    });
+                }
+            });
+        });
+
+        return Object.values(branches);
+    }
+
+    loadSampleData(changes: ModelChanges) {
+
+        const fixCrLn = (expression: string) => expression.replace(/^\r?\n/, "");
+
+        let previews: Dic<PreviewData> = {};
+
+        ["modified", "removed"].forEach(group => {
+
+            (<any>changes)[`${group}Objects`].forEach((table: TableChanges) => {
+
+                if (table.preview || table.expression) {
+                    previews[table.name] = {};
+                    if (table.preview) 
+                        previews[table.name].table = table.preview;
+                    if (table.expression)
+                        previews[table.name].expression = fixCrLn(table.expression);
+                }
+                
+                if (table.columns) {
+                    table.columns.forEach(column => {
+                        previews[daxName(table.name, column.name)] = { 
+                            table: table.preview.map(row => ({ [column.name]: row[column.name] }))
+                        };
+                    });
+                }
+
+                table.measures.forEach(measure => {
+                    if (measure.expression)
+                        previews[daxName(table.name, measure.name)] = { 
+                            expression: fixCrLn(measure.expression) 
+                        };
+                });
+            });
+        });
+
+        this.previews = previews;
+    }
+
+    renderPreview(changes: ModelChanges) {
+
+        let hasHolidays = (this.dateConfig.holidaysAvailable && this.dateConfig.holidaysEnabled);
+        let hasTimeIntelligence = (this.dateConfig.timeIntelligenceAvailable && this.dateConfig.timeIntelligenceEnabled);
 
         let html = `
             <div class="cols">
                 <div class="coll">
                 </div>
-                <div class="colr">
-                    <div class="table-preview" hidden></div>
-                    <div class="expression-preview" hidden></div>
+                <div class="colr" hidden>
                 </div>
             </div>
             <div class="scene-action">
-                <div class="do-proceed button enable-if-editable">${i18n(strings.manageDatesApplyCtrlTitle)}</div>
+                <div class="do-proceed button enable-if-editable" disabled>${i18n(strings.manageDatesApplyCtrlTitle)}</div>
             </div>
         `;
         this.body.insertAdjacentHTML("beforeend", html); 
 
-        this.menu = new Menu("browser-menu", _(".coll", this.body), <Dic<MenuItem>>{
-            "modified": {
-                name: i18n(strings.manageDatesMenuModified),
-                onRender: element => this.renderBrowser(element, "modified"),
-                //onChange: element => this.switchToMenuCurrent(element)
+        let treeMenuItems: Dic<MenuItem> = {
+            "date-tree": {
+                name: i18n(hasHolidays ? strings.manageDatesMenuPreviewTreeDateHolidays : strings.manageDatesMenuPreviewTreeDate),
+                onRender: element => {
+                    element.insertAdjacentHTML("beforeend", `
+                        <div class="columns-browser changes-browser"></div>
+                    `);
+                },
+                onChange: element => {
+                    this.selectOnMenuChange(".columns-browser");
+                }
             },
-            "removed": {
-                name: i18n(strings.manageDatesMenuRemoved),
-                onRender: element => this.renderBrowser(element, "removed"),
-                //onChange: element => this.switchToMenuFormatted(element)
-            }
-        }, "modified", false);
+        };
 
-        _(".do-proceed", this.body).addEventListener("click", e => {
+        if (hasTimeIntelligence)
+            treeMenuItems["tm-tree"] = {
+                name: i18n(strings.manageDatesMenuPreviewTreeTimeIntelligence),
+                onRender: element => {
+                    element.insertAdjacentHTML("beforeend", `
+                        <div class="measures-browser changes-browser"></div>
+                    `);
+                },
+                onChange: element => {
+                    this.selectOnMenuChange(".measures-browser");
+                }
+            };
+
+        this.treeMenu = new Menu("tree-menu", _(".coll", this.body), treeMenuItems, "date-tree", false);
+
+        this.previewMenu = new Menu("preview-menu", _(".colr", this.body), <Dic<MenuItem>>{
+            "sample-preview": {
+                name: i18n(strings.manageDatesMenuPreviewTable),
+                onRender: element => {
+                    element.insertAdjacentHTML("beforeend", `
+                        <div class="table-preview"></div>
+                    `);
+                }
+            },
+            "expression-preview": {
+                name: i18n(strings.manageDatesMenuPreviewCode),
+                onRender: element => {
+                    this.expressionEditor = new DaxEditor(Utils.DOM.uniqueId(), element, 1);
+                },
+                onChange: (element: HTMLElement) => {
+                    if (this.expressionEditor)
+                        this.expressionEditor.editor.refresh();
+                }
+            }
+        }, "sample-preview", false);
+
+        this.applyButton = _(".do-proceed", this.body);
+
+        this.renderBrowser(".columns-browser", this.convertColumnsChangesToBranches(changes));
+        if (hasTimeIntelligence)
+            this.renderBrowser(".measures-browser", this.convertMeasuresChangesToBranches(changes));
+
+        this.applyButton.addEventListener("click", e => {
             e.preventDefault();
 
             if (!this.canEdit) return;
@@ -194,51 +431,114 @@ console.log("Preview", changes);
             });
     }
 
-    renderBrowser(element: HTMLElement, collection: string) {
-        let browser = new TabularBrowser(Utils.DOM.uniqueId(), element, this.data[collection], {
+    renderBrowser(selector: string, data: Branch[]) {
+        let browser = new TabularBrowser(Utils.DOM.uniqueId(), _(selector, this.body), data, {
             selectable: false, 
-            search: false,
+            search: true,
             activable: true,
             noBorders: true,
-            placeholder: i18n(collection == "modified" ? strings.manageDatesMenuModifiedPlaceholder : strings.manageDatesMenuRemovedPlaceholder)
+            placeholder: i18n(strings.manageDatesBrowserPlaceholder),
+            additionalColumns: [
+                { 
+                    field: "attributes", 
+                    headerSort: false,
+                    resizable: false,
+                    width: 30,
+                    cssClass: "change-attribute",
+                    hozAlign: "center",
+                    formatter: (cell) => {
+                        const item = <Branch>cell.getData();
+                        if (Utils.Obj.isSet(item.attributes)) {
+                            let statusText = ChangeType[item.attributes];
+                            return `<span class="status-${statusText}" title="${i18n((<any>strings)[`changeStatus${statusText}Title`])}">${i18n((<any>strings)[`changeStatus${statusText}`])}</span>`;
+                        } else {
+                            return "";
+                        }
+                    }
+                }
+            ]
         });       
 
         browser.on("click", (item: Branch)=>{
-            if (item.id in this.preview) {
-                
-                if (item.type == BranchType.Table) {
-                    this.renderPreviewTable(this.preview[item.id].table);
-                } else if (item.type == BranchType.Column) {
-                    this.renderPreviewExpression(this.preview[item.parent].expression);
-                } else {
-                    this.clearPreviewContent();
-                }
+            this.select(item, selector);
+        });
+
+        browser.on("loaded", ()=>{
+            if (!this.canEdit) return;
+            this.applyButton.toggleAttr("disabled", false);
+        });
+    }
+
+    selectOnMenuChange(id: string) {
+        if (this.activeBranches && (id in this.activeBranches)) {
+            this.select(this.activeBranches[id], id);
+        }
+    }
+
+
+    select(item: Branch, id: string) {
+        let exists = (this.previews && (item.id in this.previews));
+        _(".colr", this.body).toggle(exists);
+
+        if (exists) {
+            this.activeBranches[id] = item;
+            let preview = this.previews[item.id];
+  
+            let hasTable = ("table" in preview);
+            let hasExpression = ("expression" in preview);
+
+            this.previewMenu.disable("sample-preview", !hasTable);
+            this.previewMenu.disable("expression-preview", !hasExpression);
+            if (hasExpression) this.updateCode(preview.expression);
+            if (hasTable) this.updateTable(preview.table);
+
+            if (!(hasExpression && hasTable)) {
+                if (hasExpression) this.previewMenu.select("expression-preview");
+                else this.previewMenu.select("sample-preview");
             }
+           
+        }
+    }
+
+    updateCode(expression: string) {
+        if (this.expressionEditor)
+            this.expressionEditor.value = expression;
+    }
+
+    updateTable(data: any[]) {
+        this.clearTable();
+
+        this.sampleTable = new Tabulator(`#${this.element.id} .table-preview`, {
+            maxHeight: "100%",
+            //layout: "fitDataTable",
+            //renderHorizontal: "virtual",
+            placeholder: " ", // This fixes scrollbar appearing with empty tables
+            columnDefaults:{
+                maxWidth: 200,
+            },
+            autoColumns: true,
+            data: data
         });
     }
 
-    renderPreviewExpression(expression: string) {
-        this.clearPreviewContent();
-        let el = _(".expression-preview", this.body);
-        el.toggle(true);
-    }
-
-    renderPreviewTable(table: any[]) {
-        this.clearPreviewContent();
-        let el = _(".table-preview", this.body);
-        el.toggle(true);
-    }
-
-    clearPreviewContent() {
-        __(".table-preview, .expression-preview", this.body).forEach((div: HTMLElement) => {
-            div.toggle(false);
-        });
+    clearTable () {
+        if (this.sampleTable) {
+            this.sampleTable.destroy();
+            this.sampleTable = null;
+        }
     }
 
     destroy() {
 
-        this.data = null;
-        this.preview = null;
+        this.previews = null;
+        if (this.treeMenu)
+            this.treeMenu.destroy();
+        if (this.previewMenu)
+            this.previewMenu.destroy();
+
+        this.clearTable();
+        if (this.expressionEditor)
+            this.expressionEditor.destroy();
 
         super.destroy();
     }
