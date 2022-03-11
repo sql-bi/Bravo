@@ -355,11 +355,12 @@
                     writer.Write(GetDaxColumnName(reader, i));
 
                 // write data
+                writer.SetDefaultStyle(XlsxStyle.Default);
+
                 while (reader.Read())
                 {
                     cancellationToken.ThrowIfCancellationRequested();
-
-                    writer.SetDefaultStyle(XlsxStyle.Default).BeginRow();
+                    writer.BeginRow();
 
                     for (var i = 0; i < reader.FieldCount; i++)
                     {
@@ -388,13 +389,8 @@
                             case bool @bool:
                                 writer.Write(@bool.ToString());
                                 break;
-                            case long @long:
-                                {
-                                    if (@long > int.MinValue && @long < int.MaxValue)
-                                        writer.Write(Convert.ToInt32(@long));
-                                    else
-                                        writer.Write(@long.ToString());
-                                }
+                            case long @long when @long >= int.MinValue && @long <= int.MaxValue:
+                                writer.Write(Convert.ToInt32(@long));
                                 break;
                             default:
                                 writer.Write(value.ToString());
