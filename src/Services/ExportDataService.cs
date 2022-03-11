@@ -229,19 +229,26 @@
                     using var dataReader = command.ExecuteReader(CommandBehavior.SingleResult);
                     //using var dataReader = CreateTestDataReader();
 
-                    WriteData(table, csvWriter, dataReader, shouldQuote: settings.QuoteStringFields, cancellationToken);
+                    WriteData(table, csvWriter, dataReader, settings.QuoteStringFields, cancellationToken);
                 }
                 table.SetCompleted();
             }
 
-            static void WriteData(ExportDataTable table, CsvWriter writer, IDataReader reader, bool shouldQuote, CancellationToken cancellationToken)
+            static void WriteData(ExportDataTable table, CsvWriter writer, IDataReader reader, bool quoteStringFields, CancellationToken cancellationToken)
             {
                 // output dates using ISO 8601 format
                 writer.Context.TypeConverterOptionsCache.AddOptions(typeof(DateTime), options: _defaultDelimitedTextTypeConverterOptions);
 
                 // write header
                 for (int i = 0; i < reader.FieldCount; i++)
-                    writer.WriteField(GetDaxColumnName(reader, i), shouldQuote);
+                {
+                    var stringField = GetDaxColumnName(reader, i);
+
+                    if (quoteStringFields)
+                        writer.WriteField(stringField, shouldQuote: true);
+                    else
+                        writer.WriteField(stringField); // use default ConfigurationFunctions.ShouldQuote()
+                }
 
                 writer.NextRecord();
 
@@ -252,15 +259,20 @@
 
                     for (var i = 0; i < reader.FieldCount; i++)
                     {
-                        var value = reader[i];
+                        var field = reader[i];
 
                         if (reader.GetFieldType(i) == typeof(string))
                         {
-                            writer.WriteField(reader.IsDBNull(i) ? string.Empty : value.ToString(), shouldQuote);
+                            var stringField = reader.IsDBNull(i) ? string.Empty : field.ToString();
+
+                            if (quoteStringFields)
+                                writer.WriteField(stringField, shouldQuote: true);
+                            else
+                                writer.WriteField(field); // use default ConfigurationFunctions.ShouldQuote()
                         }
                         else
                         {
-                            writer.WriteField(value);
+                            writer.WriteField(field);
                         }
                     }
 
