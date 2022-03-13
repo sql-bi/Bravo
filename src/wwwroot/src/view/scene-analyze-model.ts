@@ -15,11 +15,12 @@ import Chart from "chart.js/auto";
 import { TreemapController, TreemapElement, TreemapScriptableContext } from 'chartjs-chart-treemap';
 import * as sanitizeHtml from 'sanitize-html';
 import { ContextMenu } from '../helpers/contextmenu';
-import { MainScene } from './scene-main';
+import { DocScene } from './scene-doc';
 import { LoaderScene } from './scene-loader';
 import { AppError } from '../model/exceptions';
 import { ErrorScene } from './scene-error';
 import { PageType } from '../controllers/page';
+import { tabulatorTreeChildrenFilter, TabulatorTreeChildrenFilterParams } from '../model/extend-tabulator';
 
 Chart.register(TreemapController, TreemapElement);
 interface ExtendedTabularColumn extends TabularColumn {
@@ -28,7 +29,12 @@ interface ExtendedTabularColumn extends TabularColumn {
     _children?: ExtendedTabularColumn[]
 }
 
-export class AnalyzeModelScene extends MainScene {
+interface AnalyzeMoldelFilter {
+    showUnrefOnly: boolean
+    searchValue: string
+}
+
+export class AnalyzeModelScene extends DocScene {
 
     table: Tabulator;
     chart: Chart;
@@ -49,7 +55,7 @@ export class AnalyzeModelScene extends MainScene {
     }
 
     constructor(id: string, container: HTMLElement, doc: Doc, type: PageType) {
-        super(id, container, doc, type);
+        super(id, container, [doc.name], doc, type, true);
 
         this.element.classList.add("analyze-model");
     }
@@ -221,7 +227,7 @@ export class AnalyzeModelScene extends MainScene {
                     title: "", 
                     hozAlign:"center", 
                     resizable: false, 
-                    width: 40,
+                    width: 45,
                     cssClass: "column-icon",
                     formatter: (cell) => {
                         let cellData = <ExtendedTabularColumn>cell.getData();
@@ -259,6 +265,7 @@ export class AnalyzeModelScene extends MainScene {
                 path: { 
                     field: "columnName", 
                     title: i18n(strings.tableColPath), 
+                    tooltip: true,
                     cssClass: "column-name",
                     formatter: columnNameFormatter
                 },
@@ -318,7 +325,7 @@ export class AnalyzeModelScene extends MainScene {
                 dataTreeExpandElement:`<span class="tree-toggle icon icon-expand"></span>`,
                 dataTreeBranchElement: false,
                 dataTreeElementColumn: "columnName",
-                dataTreeChildIndent: 50,
+                dataTreeChildIndent: 40,
                 dataTreeSelectPropagate: true,
                 dataTreeStartExpanded: (startExpanded ? true : row => {
                     let data = row.getData();
@@ -327,7 +334,10 @@ export class AnalyzeModelScene extends MainScene {
                 initialSort:[
                     {column: "size", dir: "desc"}, 
                 ],
-                initialFilter: data => this.unreferencedFilter(data),
+                initialFilter: data => this.filter(data, {
+                    showUnrefOnly: this.showUnrefOnly,
+                    searchValue: (this.searchBox ? this.searchBox.value : "")
+                }),
                 rowFormatter: row => {
                     try { //Bypass calc rows
                         if ((<any>row)._row && (<any>row)._row.type == "calc") return;
@@ -422,19 +432,29 @@ export class AnalyzeModelScene extends MainScene {
 
     applyFilters() {
         if (this.table) {
-            this.table.clearFilter();
-
-            if (this.showUnrefOnly)
-                this.table.addFilter(data => this.unreferencedFilter(data));
-                
-            if (this.searchBox.value)
-                this.table.addFilter("columnName", "like", sanitizeHtml(this.searchBox.value, { allowedTags: [], allowedAttributes: {}}));
+            this.table.setFilter(this.filter, {
+                showUnrefOnly: this.showUnrefOnly,
+                searchValue: (this.searchBox ? this.searchBox.value : "")
+            });
         }
     }
 
-    unreferencedFilter(column: ExtendedTabularColumn): boolean {
-        if (this.showUnrefOnly)
-            return column.isReferenced === false || column._containsUnreferenced || column._aggregated;
+    filter(column: ExtendedTabularColumn, params: AnalyzeMoldelFilter): boolean {
+
+        if (params.showUnrefOnly) {
+            if (!(column.isReferenced === false || column._containsUnreferenced || column._aggregated))
+                return false;
+        }
+
+        let searchValue = (params.searchValue != "" ? sanitizeHtml(params.searchValue, { allowedTags: [], allowedAttributes: {}}) : "");
+        if (searchValue != "") {
+            if (!tabulatorTreeChildrenFilter(column, { 
+                column: "columnName",
+                comparison: "like",
+                value: searchValue
+            })) return false;
+        }
+
         return true;
     }
 

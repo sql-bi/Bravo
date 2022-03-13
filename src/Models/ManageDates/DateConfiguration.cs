@@ -138,7 +138,7 @@
         /// </summary>
         [Required]
         [JsonPropertyName("holidaysEnabled")]
-        public bool HolidaysEnabled { get; set; } = false;
+        public bool HolidaysEnabled { get; set; } = true;
 
         [Required]
         [JsonPropertyName("holidaysTableName")]
@@ -172,7 +172,7 @@
         /// </summary>
         [Required]
         [JsonPropertyName("timeIntelligenceEnabled")]
-        public bool TimeIntelligenceEnabled { get; set; } = false;
+        public bool TimeIntelligenceEnabled { get; set; } = true;
 
         #endregion
 

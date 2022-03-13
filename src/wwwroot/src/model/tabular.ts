@@ -9,8 +9,11 @@ export interface TabularDatabase {
     measures: TabularMeasure[]
     features: TabularDatabaseFeature
 }
-
-export interface TabularDatabaseInfo {
+export interface TabularDatabaseModel {
+    columns: TabularColumn[]
+    tables: TabularTable[]
+}
+export interface TabularDatabaseInfo extends TabularDatabaseModel {
     etag?:	string
     tablesCount: number
     columnsCount: number
@@ -18,24 +21,23 @@ export interface TabularDatabaseInfo {
     size: number
     unreferencedCount: number
     autoLineBreakStyle: DaxLineBreakStyle
-    columns: TabularColumn[],
-    tables: TabularTable[]
 }
 export interface TabularTable {
     name?: string
-    rowsCount: number
-    size: number
+    rowsCount?: number
+    size?: number
     isDateTable?: boolean
-    features: TabularTableFeature
-    featureUnsupportedReasons: TabularTableFeatureUnsupportedReason
+    isHidden?: boolean
+    features?: TabularTableFeature
+    featureUnsupportedReasons?: TabularTableFeatureUnsupportedReason
 }
 export interface TabularColumn {
     name?: string
     columnName?: string
     tableName?: string
-    columnCardinality: number
-    size: number
-    weight: number
+    columnCardinality?: number
+    size?: number
+    weight?: number
     isReferenced?: boolean
     isHidden?: boolean
     dataType?: string
@@ -45,7 +47,9 @@ export interface TabularMeasure {
     etag?:	string
     name?:	string
     tableName?:	string
-    measure?:	string
+    expression?: string
+    lineBreakStyle?: DaxLineBreakStyle
+    isHidden?: boolean
 }
 
 export interface FormatDaxError {
@@ -65,8 +69,8 @@ export interface FormattedMeasure extends TabularMeasure {
     errors?: FormatDaxError[]
 }
 
-export function daxMeasureName(measure: TabularMeasure): string {
-    return `'${measure.tableName}'[${measure.name}]`;
+export function daxName(tableName: string, columnName: string) {
+    return `'${tableName}'[${columnName}]`;
 }
 
 export enum TabularTableFeature {

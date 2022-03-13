@@ -5,22 +5,17 @@
 */
 import { host, optionsController, telemetry, themeController } from '../main';
 import { i18n } from '../model/i18n'; 
-import * as CodeMirror from 'codemirror';
-import 'codemirror/addon/mode/simple';
-
 import { Tabulator  } from 'tabulator-tables';
-
 import { Dic, Utils, _, __ } from '../helpers/utils';
-import { daxFunctions } from '../model/dax';
 import { Doc, DocType, MeasureStatus } from '../model/doc';
 import { strings } from '../model/strings';
 import { Alert } from './alert';
 import { Menu, MenuItem } from './menu';
-import { FormattedMeasure, TabularMeasure, daxMeasureName } from '../model/tabular';
+import { FormattedMeasure, TabularMeasure, daxName } from '../model/tabular';
 import { ContextMenu } from '../helpers/contextmenu';
 import { Loader } from '../helpers/loader';
 import * as sanitizeHtml from 'sanitize-html';
-import { MainScene } from './scene-main';
+import { DocScene } from './scene-doc';
 import { LoaderScene } from './scene-loader';
 import { ErrorScene } from './scene-error';
 import { FormatDaxRequest, UpdatePBICloudDatasetRequest, UpdatePBIDesktopReportRequest } from '../controllers/host';
@@ -28,8 +23,9 @@ import { SuccessScene } from './scene-success';
 import { AppError, AppProblem } from '../model/exceptions';
 import { ClientOptionsFormattingRegion, DaxFormatterLineStyle, DaxFormatterSpacingStyle } from '../controllers/options';
 import { PageType } from '../controllers/page';
+import { daxCodeMirror } from '../helpers/cm-utils';
 
-export class DaxFormatterScene extends MainScene {
+export class DaxFormatterScene extends DocScene {
 
     table: Tabulator;
     menu: Menu;
@@ -45,39 +41,9 @@ export class DaxFormatterScene extends MainScene {
     }
 
     constructor(id: string, container: HTMLElement, doc: Doc, type: PageType) {
-        super(id, container, doc, type);
-        this.path = i18n(strings.DaxFormatter);
+        super(id, container, [doc.name, i18n(strings.DaxFormatter)], doc, type, true);
 
         this.element.classList.add("dax-formatter");
-
-        this.initCodeMirror();
-    }
-
-    initCodeMirror() {
-
-        const daxFunctionsPattern = daxFunctions.map(fn => fn.name.replace(/\./gm, "\\.")).join("|");
-
-        CodeMirror.defineSimpleMode("dax", {
-            start: [
-                { regex: /(?:--|\/\/).*/, token: "comment" },
-                { regex: /\/\*/, token: "comment", next: "comment" },
-                { regex: /"(?:[^\\]|\\.)*?(?:"|$)/, token: "string" },
-                { regex: /'(?:[^']|'')*'(?!')(?:\[[ \w\xA0-\uFFFF]+\])?|\w+\[[ \w\xA0-\uFFFF]+\]/gm, token: "column" },
-                { regex: /\[[ \w\xA0-\uFFFF]+\]/gm,  token: "measure" },
-                { regex: new RegExp("\\b(?:" + daxFunctionsPattern + ")\\b", "gmi"), token: "function" },
-                { regex: /:=|[-+*\/=^]|\b(?:IN|NOT)\b/i, token: "operator" },
-                { regex: /0x[a-f\d]+|[-+]?(?:\.\d+|\d+\.?\d*)(?:e[-+]?\d+)?/i, token: "number" },
-                { regex: /[\[\](){}`,]/gm, token: "parenthesis" },
-            ],
-            comment: [
-                { regex: /.*?\*\//, token: "comment", next: "start" },
-                { regex: /.*/, token: "comment" }
-            ],
-            meta: {
-                dontIndentStates: ["comment"],
-                lineComment: "//"
-            }
-        });
     }
 
     updateCodeMirror(element: HTMLElement, measure: TabularMeasure | FormattedMeasure) {
@@ -86,21 +52,10 @@ export class DaxFormatterScene extends MainScene {
 
         let cm = (<CodeMirrorElement>_(".CodeMirror", element)).CodeMirror;
         if (cm) {
-            cm.getDoc().setValue(measure.measure);
+            cm.getDoc().setValue(measure.expression);
             //cm.refresh();
         } else {
-            cm = CodeMirror(element, {
-                value: measure.measure,
-                mode: "dax",
-                lineNumbers: true,
-                lineWrapping: true,
-                indentUnit: 4,
-                readOnly: "nocursor"
-            }); 
-            cm.on("contextmenu", (instance, e) => {
-                e.preventDefault();
-                ContextMenu.editorContextMenu(e, cm.getSelection(), cm.getValue());
-            });
+            cm = daxCodeMirror(element, measure.expression);
         }
 
         //Show errors
@@ -148,7 +103,7 @@ export class DaxFormatterScene extends MainScene {
             <div class="scene-action">
                 <div class="privacy-explanation">
                     <div class="icon icon-privacy"></div>
-                    <p>${i18n(strings.daxFormatterAgreement)} <br>
+                    <p>${i18n(strings.daxFormatterAgreement)} 
                     <span class="show-data-usage link">${i18n(strings.dataUsageLink)}</span>
                     </p>
                 </div>
@@ -226,7 +181,7 @@ export class DaxFormatterScene extends MainScene {
         editorElement.innerHTML = "";
         
         if (this.activeMeasure) {
-            let key = daxMeasureName(this.activeMeasure);
+            const key = daxName(this.activeMeasure.tableName, this.activeMeasure.name);
             if (key in this.doc.formattedMeasures) {
                 this.updateCodeMirror(editorElement, this.doc.formattedMeasures[key]);
             } else if (key in this.previewing) {
@@ -285,7 +240,7 @@ export class DaxFormatterScene extends MainScene {
         this.renderFormattedPreviewLoading();
 
         measures.forEach(measure => {
-            this.previewing[daxMeasureName(measure)] = true;
+            this.previewing[daxName(measure.tableName, measure.name)] = true;
         });
 
         this.updateMeasuresStatus();
@@ -294,11 +249,11 @@ export class DaxFormatterScene extends MainScene {
             .then(formattedMeasures => {
                 
                 formattedMeasures.forEach(measure => {
-                    let measureKey = daxMeasureName(measure);
+                    let measureKey = daxName(measure.tableName, measure.name);
                     this.doc.formattedMeasures[measureKey] = measure;
                     delete this.previewing[measureKey];
 
-                    if (this.activeMeasure && measureKey == daxMeasureName(this.activeMeasure)) {
+                    if (this.activeMeasure && measureKey == daxName(this.activeMeasure.tableName, this.activeMeasure.name)) {
                         this.updateCodeMirror(element, measure);
                     }
                 });
@@ -437,7 +392,6 @@ export class DaxFormatterScene extends MainScene {
             if (this.canFormat) {
                 columns.push({
                     formatter:"rowSelection", 
-                    title: undefined,
                     titleFormatter:"rowSelection", 
                     titleFormatterParams:{
                         rowRange:"active"
@@ -464,7 +418,7 @@ export class DaxFormatterScene extends MainScene {
 
                     const measure = <TabularMeasure>cell.getData();
 
-                    if (daxMeasureName(measure) in this.previewing) 
+                    if (daxName(measure.tableName, measure.name) in this.previewing) 
                         return `<div class="loader"></div>`;
 
                     const status = this.doc.analizeMeasure(measure);
@@ -524,7 +478,7 @@ export class DaxFormatterScene extends MainScene {
                         if ((<any>row)._row && (<any>row)._row.type == "calc") return;
 
                         const measure = <TabularMeasure>row.getData();
-                        if (daxMeasureName(measure) in this.previewing) 
+                        if (daxName(measure.tableName, measure.name) in this.previewing) 
                             return;
 
                         let element = row.getElement();
@@ -630,7 +584,7 @@ export class DaxFormatterScene extends MainScene {
             let lastC = -1;
             let lastR;
             for (let r in separators) {
-                let c = (measures[0].measure.match(new RegExp(separators[r][0], 'gmi')) || []).length;
+                let c = (measures[0].expression.match(new RegExp(separators[r][0], 'gmi')) || []).length;
                 if (c > lastC) {
                     lastR = r;
                     lastC = c;
@@ -680,7 +634,7 @@ export class DaxFormatterScene extends MainScene {
                 // Update model's formatted measures
                 let measuresWithErrors: string[] = [];
                 formattedMeasures.forEach(measure => {
-                    const measureName = daxMeasureName(measure);
+                    const measureName = daxName(measure.tableName, measure.name);
                     this.doc.formattedMeasures[measureName] = measure;
                     if (measure.errors && measure.errors.length) {
                         measuresWithErrors.push(measureName);
@@ -716,10 +670,13 @@ export class DaxFormatterScene extends MainScene {
 
                             // Update measures with formatted version
                             formattedMeasures.forEach(formattedMeasure => {
-                                const measureName = daxMeasureName(formattedMeasure);
+                                const measureName = daxName(formattedMeasure.tableName, formattedMeasure.name);
                                 for (let i = 0; i < this.doc.measures.length; i++) {
-                                    if (measureName == daxMeasureName(this.doc.measures[i])) {
-                                        this.doc.measures[i].measure = formattedMeasure.measure;
+
+                                    let docMeasureName = daxName(this.doc.measures[i].tableName, this.doc.measures[i].name)
+                                    
+                                    if (measureName == docMeasureName) {
+                                        this.doc.measures[i].expression = formattedMeasure.expression;
                                         break;
                                     }
                                 }
@@ -815,7 +772,7 @@ export class DaxFormatterScene extends MainScene {
         _(".open-with-dax-formatter", this.body).addEventListener("click", e => {
             e.preventDefault();
 
-            const fx = `${this.activeMeasure.name} = ${this.activeMeasure.measure}`;
+            const fx = `${this.activeMeasure.name} = ${this.activeMeasure.expression}`;
             const formatRegion = optionsController.options.customOptions.formatting.region;
             const formatLine = (optionsController.options.customOptions.formatting.daxFormatter.lineStyle == DaxFormatterLineStyle.LongLine ? "long" : "short");
             const formatSpacing = (optionsController.options.customOptions.formatting.daxFormatter.spacingStyle == DaxFormatterSpacingStyle.SpaceAfterFunction ? "" : "true");

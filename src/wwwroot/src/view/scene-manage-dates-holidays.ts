@@ -24,6 +24,10 @@ export class ManageDatesSceneHolidays extends ManageDatesScenePane {
                 icon: "holidays",
                 bold: true,
                 type: OptionType.switch,
+                onChange: (e, value) =>  {
+                    _("#holidaystablename .listener", element).dispatchEvent(new Event("change"));
+                    _("#holidaysdefinitiontablename .listener", element).dispatchEvent(new Event("change"));
+                }
             },
             {
                 option: "isoCountry",

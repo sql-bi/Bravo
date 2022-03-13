@@ -16,7 +16,7 @@ import { PBIDesktopReport } from '../model/pbi-report';
 import { strings } from '../model/strings';
 import { Menu, MenuItem } from './menu';
 import { ErrorScene } from './scene-error';
-import { MainScene } from './scene-main';
+import { DocScene } from './scene-doc';
 import { ManageDatesSceneCalendar } from './scene-manage-dates-calendar';
 import { ManageDatesSceneHolidays } from './scene-manage-dates-holidays';
 import { ManageDatesSceneInterval } from './scene-manage-dates-interval';
@@ -28,9 +28,10 @@ import { PageType } from '../controllers/page';
 export interface ManageDatesConfig extends DateConfiguration {
     region?: string
     customRegion?: string
+    targetMeasuresMode?: string
 }
 
-export class ManageDatesScene extends MainScene {
+export class ManageDatesScene extends DocScene {
 
     menu: Menu;
     modelCheckElement: HTMLElement;
@@ -38,14 +39,13 @@ export class ManageDatesScene extends MainScene {
     previewButton: HTMLElement;
     
     //TODO Remove to enable manage dates
-    get supported() {
+    /*get supported() {
         return false; 
-    }
+    }*/
     //ENDTODO
     
     constructor(id: string, container: HTMLElement, doc: Doc, type: PageType) {
-        super(id, container, doc, type); 
-        this.path = i18n(strings.ManageDates);
+        super(id, container, [doc.name, i18n(strings.ManageDates)], doc, type, true); 
         this.element.classList.add("manage-dates");
 
         this.config = new OptionsStore<ManageDatesConfig>();
@@ -59,7 +59,7 @@ export class ManageDatesScene extends MainScene {
                 <div class="col coll">
                     <div class="model-check">
                         <div class="notice">${i18n(strings.manageDatesModelCheck)}</div>
-                        <div class="status"></div>
+                        <div class="status">${Loader.html(true)}</div>
                     </div>
                 </div>
 
@@ -69,13 +69,13 @@ export class ManageDatesScene extends MainScene {
             </div>
 
             <div class="scene-action">
-                <div class="do-preview button disable-on-syncing enable-if-editable" disabled>${i18n(strings.manageDatesPreviewCtrlTitle)}</div>
+                <div class="do-proceed button disable-on-syncing enable-if-editable" disabled>${i18n(strings.manageDatesPreviewCtrlTitle)}</div>
             </div>
         `;
         this.body.insertAdjacentHTML("beforeend", html);
 
         this.modelCheckElement = _(".model-check .status", this.body);
-        this.previewButton = _(".do-preview", this.body);
+        this.previewButton = _(".do-proceed", this.body);
 
         let menuContainer = _(".date-config", this.body);
         let loader = new Loader(menuContainer, true, true);
@@ -91,6 +91,7 @@ export class ManageDatesScene extends MainScene {
                 }
 
                 this.config.options = Utils.Obj.clone(templates[0]);
+                this.config.options.dateEnabled = true;
 
                 let calendarPane = new ManageDatesSceneCalendar(this.config, this.doc, templates);
                 let intervalPane = new ManageDatesSceneInterval(this.config, this.doc);
@@ -116,18 +117,18 @@ export class ManageDatesScene extends MainScene {
                     },
                     "holidays": {
                         name: i18n(strings.manageDatesMenuHolidays),
+                        disabled: !this.config.options.holidaysAvailable,
                         onRender: element => holidaysPane.render(element),
                         onDestroy: () => holidaysPane.destroy()
                     },
                     "timeIntelligence": {
                         name: i18n(strings.manageDatesMenuTimeIntelligence),
+                        disabled: !this.config.options.timeIntelligenceAvailable,
                         onRender: element => timeIntelligencePane.render(element),
                         onDestroy: () => timeIntelligencePane.destroy()
                     },
 
                 }, "calendar", false);
-
-                this.updateModelCheck();
 
                 this.listen();
             })
@@ -142,12 +143,16 @@ export class ManageDatesScene extends MainScene {
             this.updateModelCheck();
         });
 
+        this.config.on("availability.change", (changedOptions: any)=>{
+            this.updateAvailableFeatures();
+        });
+
         this.previewButton.addEventListener("click", e => {
             e.preventDefault();
 
             if (!this.canEdit) return;
 
-            let previewScene = new ManageDatesPreviewScene(Utils.DOM.uniqueId(), this.element.parentElement, this.config.options, this.doc);
+            let previewScene = new ManageDatesPreviewScene(Utils.DOM.uniqueId(), this.element.parentElement, this.path, this.doc, this.type, this.config.options);
             this.push(previewScene);
         }); 
     }
@@ -156,6 +161,12 @@ export class ManageDatesScene extends MainScene {
         if (!super.update()) return false;
 
         this.updateModelCheck();
+        this.updateAvailableFeatures();
+    }
+
+    updateAvailableFeatures() {
+        this.menu.disable("holidays", !this.config.options.holidaysAvailable);
+        this.menu.disable("timeIntelligence", !this.config.options.timeIntelligenceAvailable);
     }
 
     updateModelCheck() {
@@ -167,7 +178,14 @@ export class ManageDatesScene extends MainScene {
         if (!this.canEdit) {
 
             containsInvalid = true;
-            html = ``; //TODO Show a message saying the editing is not available anymore
+            html = `
+                <div class="status-incompatible">
+                    <div class="icon icon-error"></div>
+                    <div class="message">
+                        ${i18n(strings.manageDatesStatusNotAvailable)}
+                    </div>  
+                </div>
+            `;
         } else {
 
             let fields = [this.config.options.dateTableValidation, this.config.options.dateReferenceTableValidation];
@@ -175,7 +193,7 @@ export class ManageDatesScene extends MainScene {
                 fields = [...fields, ...[this.config.options.holidaysTableValidation, this.config.options.holidaysDefinitionTableValidation]];
 
             fields.forEach(field => {
-                if (field == TableValidation.InvalidExists || field == TableValidation.InvalidNamingRequirements) {
+                if (field >= TableValidation.InvalidExists) {
                     containsInvalid = true;
                 } else if (field == TableValidation.ValidAlterable) {
                     containsOverwritable = true;

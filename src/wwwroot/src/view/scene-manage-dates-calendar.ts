@@ -82,23 +82,21 @@ export class ManageDatesSceneCalendar extends ManageDatesScenePane {
         this.config.options.name = template.name;
         this.config.options.description = template.description
         this.config.options.templateUri = template.templateUri;
-        this.config.options.dateAvailable = true; //template.dateAvailable;
-        this.config.options.dateEnabled = true; //template.dateEnabled;
+        this.config.options.dateAvailable = true; // template.dateAvailable;
         this.config.options.holidaysAvailable = template.holidaysAvailable;
-        this.config.options.holidaysEnabled = template.holidaysEnabled;
         this.config.options.timeIntelligenceAvailable = template.timeIntelligenceAvailable;
-        this.config.options.timeIntelligenceEnabled = template.timeIntelligenceEnabled;
         this.config.options.defaults = template.defaults;
 
         for (let option in template.defaults) {
             let optionName = `defaults.${option}`;
             let optionValue = (<any>template.defaults)[option];
 
-            //TODO This doesn't work with switch
+            //TODO This works only with strings|numbers - for booleans specific conditions are needed
             (<HTMLInputElement|HTMLSelectElement>_(`#${Utils.Text.slugify(optionName)} .listener`, this.element)).value = optionValue;   
         }
 
         this.config.save();
+        this.config.trigger("availability.change");
     }
    
     conditionalOption(option: string): OptionStruct {

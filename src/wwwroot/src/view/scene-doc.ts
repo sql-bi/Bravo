@@ -11,20 +11,23 @@ import { i18n } from '../model/i18n';
 import { telemetry } from '../main';
 import { Page, PageType } from '../controllers/page';
 import { UnsupportedScene } from './scene-unsupported';
-export abstract class MainScene extends Scene {
+import { NavigatorScene } from './scene-navigator';
+
+export abstract class DocScene extends NavigatorScene {
     doc: Doc;
-    path: string;
     type: PageType;
+    showToolbar: boolean;
 
     get syncing(): boolean {
         return this.element.classList.contains("syncing");
     }
 
-    constructor(id: string, container: HTMLElement, doc: Doc, type: PageType) {
-        super(id, container, doc.name);
+    constructor(id: string, container: HTMLElement, path: string[], doc: Doc, type: PageType, showToolbar: boolean, onBack?: ()=>void) {
+        super(id, container, path, onBack);
 
         this.doc = doc;
         this.type = type;
+        this.showToolbar = showToolbar;
     }
 
     get supported(): boolean {
@@ -52,47 +55,45 @@ export abstract class MainScene extends Scene {
             return false;
         }
 
-        let html = `
-            <header>
-                <h1 class="icon" title="${this.title}">${this.path ? `<span class="parent">${this.path}</span> <span class="slash icon-right"></span> ` : "" }<span class="child">${this.title}</div></h1>
-                <div class="toolbar">
-                    
-                    <div class="orphan badge show-if-orphan" ${this.doc.orphan ? "" : "hidden"} title="${i18n(this.doc.type == DocType.pbix ? strings.sheetOrphanPBIXTooltip : strings.sheetOrphanTooltip)}">${i18n(strings.sheetOrphan)}</div>
-                    
-                    <div class="readonly badge show-if-limited" ${this.limited ? "" : "hidden"} title="${i18n(strings.docLimitedTooltip)}">${i18n(strings.docLimited)}</div>
-                    
-                    <div class="ctrl-sync ctrl icon-sync show-if-syncable" ${this.canSync ? "" : "hidden"} title="${i18n(strings.syncCtrlTitle)}"></div>
-        
-                    <div class="ctrl-help ctrl icon-help" title="${i18n(strings.helpCtrlTitle)}"></div>
-                </div>
-            </header>
-            <div class="scene-content">
-            </div>
-        `;
-        this.element.insertAdjacentHTML("beforeend", html);
-
-        this.body = _(".scene-content", this.element);
-
-        _(".ctrl-sync", this.element).addEventListener("click", e => {
-            e.preventDefault();
-
-            if ((<HTMLElement>e.currentTarget).hasAttribute("disabled") || this.syncing) return;
-            if (!this.canSync) return;
-            
-            telemetry.track("Sync");
-
-            this.trigger("sync");
-        });
-
-        _(".ctrl-help", this.element).addEventListener("click", e => {
-            e.preventDefault();
-
-            telemetry.track("Help");
-
-            //TODO
-        });
+        this.renderToolbar();
 
         return true;
+    }
+
+    renderToolbar() {
+        let toolbarHtml = `
+            <div class="orphan badge show-if-orphan" ${this.doc.orphan ? "" : "hidden"} title="${i18n(this.doc.type == DocType.pbix ? strings.sheetOrphanPBIXTooltip : strings.sheetOrphanTooltip)}">${i18n(strings.sheetOrphan)}</div>
+                        
+            <div class="readonly badge show-if-limited" ${this.limited ? "" : "hidden"} title="${i18n(strings.docLimitedTooltip)}">${i18n(strings.docLimited)}</div>
+            
+            ${this.showToolbar ? `
+                <div class="ctrl-sync ctrl icon-sync show-if-syncable" ${this.canSync ? "" : "hidden"} title="${i18n(strings.syncCtrlTitle)}"></div>
+
+                <div class="ctrl-help ctrl icon-help" title="${i18n(strings.helpCtrlTitle)}"></div>
+            ` : ""}
+        `;
+        this.toolbar.insertAdjacentHTML("beforeend", toolbarHtml);
+
+        if (this.showToolbar) {
+            _(".ctrl-sync", this.toolbar).addEventListener("click", e => {
+                e.preventDefault();
+
+                if ((<HTMLElement>e.currentTarget).hasAttribute("disabled") || this.syncing) return;
+                if (!this.canSync) return;
+                
+                telemetry.track("Sync");
+
+                this.trigger("sync");
+            });
+
+            _(".ctrl-help", this.toolbar).addEventListener("click", e => {
+                e.preventDefault();
+
+                telemetry.track("Help");
+
+                //TODO
+            });
+        }
     }
 
     update() {
@@ -105,10 +106,6 @@ export abstract class MainScene extends Scene {
         this.updateConditionalElements("limited", this.limited);
         this.updateConditionalElements("orphan", this.doc.orphan);
         this.updateConditionalElements("empty", this.doc.empty);
-
-        // Update title
-        _("h1", this.element).setAttribute("title", this.title);
-        _("h1 .child", this.element).innerText = this.title;
 
         return true;
     }

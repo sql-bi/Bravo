@@ -5,31 +5,25 @@
 */
 
 export interface DateConfiguration {
+    
+    // Template
     templateUri?: string                            // Internal use only
-
     name?: string                                   // Template name
-    description?: string                            // English, Not localized description of the template, don't use it
+    description?: string                            // English, not localized template description
+    defaults?: DateDefaults                         // Specific options of selected template
 
+    // Localization
     isoFormat?: string                              // Format of the dates: e.g. 2/21/2022 vs 21/02/2022
     isoTranslation?: string                         // Translation of periods: e.g. Month vs Mese
 
+    // Date interval
     autoScan?: AutoScanEnum                         // Dates interval auto detection mode
     onlyTablesColumns?: string[]                    // Columns to look into - used if the autoScan is "SelectedTablesColumns"
     exceptTablesColumns?: string[]                  // Similar to previous, you defined what to exclude
-
-    isoCountry?: string                             // The country to use for holidays
-
     firstYear?: number                              // Force first year of the interval
     lastYear?: number                               // Force last year of the interval
 
-    autoNaming?: AutoNamingEnum                     // Choose where to append the target measure name to 
-                                                    //      every Time Intelligence function name 
-
-    targetMeasures?: string[]                       // Measures to use for generating Time Intelligence functions
-    tableSingleInstanceMeasures?: string            // ?
-
-    defaults?: DateDefaults                         // Specific options of selected template
-
+    // Dates
     dateAvailable: boolean                          // Date feature available
     dateEnabled: boolean                            // Dates enabled
     dateTableName: string                           // The name of the "Date" table    
@@ -37,6 +31,7 @@ export interface DateConfiguration {
     dateReferenceTableName: string                  // The name of the "DateTemple" table
     dateReferenceTableValidation: TableValidation   // "DateTemple" table name validity
 
+    // Holidays
     holidaysAvailable: boolean                      // Holidays feature available
     holidaysEnabled: boolean                        // Holidays enabled
     holidaysTableName: string                       // The name of the "Holidays" table  
@@ -44,8 +39,16 @@ export interface DateConfiguration {
     holidaysDefinitionTableName: string             // The name of the "HolidaysDefinition" table
     holidaysDefinitionTableValidation: TableValidation // "HolidaysDefinition" table name validity
 
+    isoCountry?: string                             // The country to use for holidays
+
+    // Time Intelligence
     timeIntelligenceAvailable: boolean              // Time Intelligence feature available
     timeIntelligenceEnabled: boolean                // Time Intelligence enabled
+    
+    autoNaming?: AutoNamingEnum                     // Choose how to append the target measure name to the function
+    targetMeasures?: string[]                       // Measures to use for generating Time Intelligence functions
+    tableSingleInstanceMeasures?: string            // ?
+
 }
 
 export interface DateDefaults {

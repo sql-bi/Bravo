@@ -3,7 +3,7 @@
     h1 {
         .icon-manage-dates;
     }
-
+    
     .scene-content {
         .flexbox(flex-start, stretch, column);
 
@@ -13,39 +13,47 @@
             .flex(0 1 auto);
             overflow: auto;
             margin-top: 35px;
+            padding-bottom: 30px;
             
             .coll {
                 width: 300px;
-                margin-right: 30px;
+                height: 100%;
+                margin-right: 20px;
                 .flex(0 1 auto);
                 .flexbox(flex-start, flex-start, column);
             }
             .colr {
-                .flex(1 1 70%);
-                margin: 10px 0 20px 20px;
-                height: calc(100% - 30px);
+                .flex(1 1 auto);
+                margin: 0 0 0 20px;
+                width: calc(100% - 350px);
+                height: 100%;
 
                 .date-config, #date-config-menu { 
                     height: 100%;
                 }
-                .menu-body {
-                    padding: 30px 5px 0 0;
-                    height: calc(100% - 50px);
-                    overflow: auto;
-                }
+                
             }
         }
+        .menu-body {
+            padding: 30px 0 0 0;
+            height: calc(100% - 72px);
+        }
 
+        .item-body {
+            height: 100%;
+        }
+       
         .model-check {
+            position: relative;
             padding: 15px 25px;
-            width: calc(100% - 50px);
+            width: calc(100% - 52px);
             height: calc(100% - 30px);
             background: @window-back-color-alt;
             border: 1px solid @border-color;
             .border-radius();
 
             .dark & { 
-                background: @window-back-color-alt-dark; 
+                background: @window-back-color-dark; 
                 border-color: @border-color-dark;
             }
 
@@ -94,27 +102,144 @@
             .flexbox(center, flex-end);
             width: 100%;
 
-            .do-preview {
+            .do-proceed {
                 //margin-top: 10px;
                 margin-left: auto;
             }
         }
     }
 
-    
-
     #onlytablescolumns {
-        height: calc(100vh - 550px);
-        min-height: 200px;
-        background: @back-color;
-
-        .dark & { background-color: @back-color-dark;}
-        
-        .autoscan-table {
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-        }
+        height: calc(100vh - 542px);
+    }
+    #targetmeasures {
+        height: calc(100vh - 552px);
     }
 
+}
+
+.manage-dates-preview {
+    h1 {
+        .icon-manage-dates;
+    }
+
+    .scene-content {
+        .flexbox(flex-start, stretch, column);
+
+        .cols {
+            height: 100%;
+            width: 100%;
+            .flex(0 1 auto);
+            overflow: auto;
+            margin-top: 35px;
+            padding-bottom: 30px;
+            
+            .coll {
+                height: 100%;
+                .flex(0 1 auto);
+                .flexbox(flex-start, flex-start, column);
+            }
+            .gutter {
+                background-color: @back-color;
+                .dark & {
+                    background-color: @back-color-dark;
+                }
+            }
+            .colr {
+                .flex(1 1 auto);
+                height: 100%;
+
+                background: url("@{images}/preview-light.svg") no-repeat center;
+
+                .dark & {
+                    background-image: url("@{images}/preview-dark.svg");
+                }
+            }
+        }
+        .menu-body {
+            padding: 30px 0 0 0;
+            height: calc(100% - 72px);
+        }
+
+        .changes-browser {
+            width: 100%;
+            height: 100%;
+
+            .change-attribute {
+                font-size: 12px;
+                font-weight: bold;
+                width: 22px !important; //This avoid showing horizontal scrollbar (Tabulator bug)
+                
+                .status-Added { color: @change-a-color }
+                .status-Modified { color: @change-m-color }
+                .status-Deleted { color: @change-d-color }
+            }
+        }
+
+        .preview-pane-content {
+            height: 100%;
+        }
+        #preview-menu, #tree-menu {
+            height: 100%;
+            width: 100%;
+        }
+        .item-body {
+            height: 100%;
+        }
+        #body-sample-preview {
+            overflow: hidden;
+
+            .border-radius();
+            background-color: @window-back-color;
+            border: 1px solid @border-color;
+            .dark & {
+                background-color: @window-back-color-dark;
+                border-color: @border-color-dark;
+            }
+
+            .table-preview {
+                height: 100%;
+                min-width: 100%;
+                font-size: 13px;
+            }
+        }
+
+        .expression-preview {
+            height: calc(100% - 10px);
+        }
+        
+        .scene-action {
+            .flexbox(center, flex-end);
+            width: 100%;
+            margin: 20px 0 0 0;
+
+            .backup-reminder {
+                padding: 0 20px 0 0;
+                font-size: 15px;
+                line-height: 1.4;
+                color: @notice-color;
+    
+                .flexbox(center);
+                .icon{
+                    
+                    &:before {
+                        font-size: 38px;
+                        margin-right: 10px;
+                    }
+                }
+                p {
+                    margin:0
+                }
+    
+                .dark & { 
+                    color: @notice-color-dark;
+                }
+            }
+
+            .do-proceed {
+                //margin-top: 10px;
+                margin-left: auto;
+            }
+        }
+    }
 }

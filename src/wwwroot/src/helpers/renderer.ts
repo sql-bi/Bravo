@@ -19,6 +19,7 @@ export interface OptionStruct {
     description?: string
     additionalNotes?: string
     attributes?: string
+    cssClass?: string
     type: OptionType
     valueType?: "string"|"number"|"boolean"
     values?: string[][]
@@ -36,7 +37,7 @@ export interface OptionStruct {
 }
 export interface OptionToggler {
     option: string
-    value: string[] | string | boolean
+    value: string[] | string | boolean | number
 }
 
 export interface OptionValidation {
@@ -81,6 +82,7 @@ export module Renderer {
     export module Options {
 
         export function render(struct: OptionStruct, element: HTMLElement, store: OptionsStore<any>) {
+
             let id = Utils.Text.slugify(struct.option ? struct.option : struct.name); //Utils.DOM.uniqueId()
             let value = (Utils.Obj.isSet(struct.value) ? struct.value : (struct.option ? store.getOption(struct.option) : ""));
             let valueType = (struct.valueType ? struct.valueType : 
@@ -169,7 +171,7 @@ export module Renderer {
             }
 
             let html = `
-                <div id="${id}" class="option ${struct.parent ? "child": ""} ${toggledByClass}" ${isHidden ? "hidden" : ""}> 
+                <div id="${id}" class="option ${struct.parent ? "child": ""} ${toggledByClass} ${struct.cssClass ? struct.cssClass : ""}" ${isHidden ? "hidden" : ""}> 
                     ${struct.type == OptionType.custom ? 
                         (Utils.Obj.isSet(struct.customHtml) ? struct.customHtml() : "") :
                         ` 
@@ -201,6 +203,13 @@ export module Renderer {
                 `);
             }
 
+            const toggleOptionContainer = () => {
+                __(".option-container", element).forEach((div: HTMLElement) => {
+                    div.toggle(__(".option:not([hidden])", div).length > 0);
+                });
+            };
+            toggleOptionContainer();
+
             const listener = _(`#${id} .listener`, element);
 
             Options.validateOption(listener, struct);
@@ -213,25 +222,22 @@ export module Renderer {
                 listener.addEventListener("change", e => {
                     
                     let el = <HTMLInputElement|HTMLSelectElement>e.currentTarget; 
-                    let newValue = (struct.type == OptionType.switch ? (<HTMLInputElement>el).checked : el.value.trim());
-                    
+                    let newValue: any = (struct.type == OptionType.switch ? (<HTMLInputElement>el).checked : el.value.trim());
+                    if (typeof newValue === "string") {
+                        if (valueType == "number") newValue = Number(newValue);
+                        if (valueType == "boolean") newValue = (newValue == "true");
+                    }
+
                     if (struct.option) {
-                        let optionValue: any = newValue;
-                        if (typeof newValue === "string") {
-                            if (valueType == "number") optionValue = Number(newValue);
-                            if (valueType == "boolean") optionValue = (newValue == "true");
-                        }
-                        store.update(struct.option, optionValue, (struct.silentUpdate ? false : true));
+                        store.update(struct.option, newValue, (struct.silentUpdate ? false : true));
                     }
                     
                     __(`.toggled-by-${id}`, element).forEach((div: HTMLElement) => {
                         div.toggle(div.classList.contains(`toggle-if-${Utils.Text.slugify(newValue.toString())}`));
                     });
 
-                    __(".option-container", element).forEach((div: HTMLElement) => {
-                        div.toggle(__(".option:not([hidden])", div).length > 0);
-                    });
-                    
+                    toggleOptionContainer();
+
                     Options.validateOption(el, struct); //Validate callback has the 
 
                     if (Utils.Obj.isSet(struct.onChange))
@@ -268,6 +274,8 @@ export module Renderer {
             }
         }
 
+        
+
         export function validateOption(element: HTMLElement, struct: OptionStruct) {
             if (struct.type == OptionType.text && Utils.Obj.isSet(struct.validation)) {
                 let validationContainer = element.closest(".validation-container");
@@ -280,13 +288,17 @@ export module Renderer {
                 struct.validation((struct.option ? struct.option : struct.name), (<HTMLInputElement>element).value).then(response => {
                     validationContainer.classList.remove("validating");
                     
-                    if (response.valid) {
-                        validationContainer.classList.add("valid");
+                    if (response) {
+                        if (response.valid) {
+                            validationContainer.classList.add("valid");
+                        } else {
+                            validationContainer.classList.add("invalid");
+                        }
+                        
+                        validationDesc.innerText = response.message;
                     } else {
-                        validationContainer.classList.add("invalid");
+                        validationDesc.innerText = "";
                     }
-                    
-                    validationDesc.innerText = response.message;
                 });
             }
         }

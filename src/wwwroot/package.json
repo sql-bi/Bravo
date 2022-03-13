@@ -36,7 +36,7 @@
     "json-formatter-js": "^2.3.4",
     "sanitize-html": "^2.6.1",
     "split.js": "^1.6.5",
-    "tabulator-tables": "^5.1.0",
+    "tabulator-tables": ">5.1.4",
     "ts-md5": "^1.2.10"
   },
   "main": "webpack.config.js",

@@ -3,6 +3,9 @@
     h1 {
         .icon-dax-formatter;
     }
+    .show-data-usage {
+        word-break: keep-all;
+    }
     .scene-content {
         .flexbox(flex-start, stretch, column);
 
@@ -61,7 +64,7 @@
             .search {
                 margin: 5px 15px 5px 5px;
                 min-width:150px;
-                width: 50%;
+                width: 60%;
             }
         }
 
@@ -75,7 +78,6 @@
                 .flexbox(flex-start, stretch, column);
             
                 .menu {
-                    margin-top: 30px;
                     width: 100%;
 
                     .toolbar {
@@ -86,7 +88,7 @@
 
                 .menu-body {
                     position: relative;
-                    height: calc(100% - 120px);
+                    height: calc(100% - 65px);
                     width: 100%;
                     margin-top: 20px;
                     .flexbox(flex-start, stretch, column);
@@ -228,21 +230,18 @@
         .scene-action {
             .flexbox(center, flex-end);
             width: 100%;
-            //margin:20px 0 0 0;
+            margin:20px 0 0 0;
 
             .notice {
-
                 margin-right: 20px;
             }
             .do-format {
-                //margin-top: 10px;
                 margin-left: auto;
             }
         }
 
         .privacy-explanation {
-            margin: 20px 0 0 0;
-            padding: 10px;
+            padding: 0 20px 0 0;
             font-size: 15px;
             line-height: 1.4;
             color: @notice-color;

@@ -3,37 +3,41 @@
  * Copyright (c) SQLBI corp. - All rights reserved.
  * https://www.sqlbi.com
 */
-
 export interface ModelChanges {
     removedObjects: TableChanges[]
-    modifiedObject: TableChanges[]
+    modifiedObjects: TableChanges[]
 }
 
 export interface TableChanges {
     name?: string
     isHidden: boolean
     expression?: string
-    preview?: any
+    preview?: any[]
     columns?: ColumnChanges[]
     measures?: MeasureChanges[]
     hierarchies?: HierarchyChanges[]
 }
-
-export interface EntityChange {
+export interface ColumnChanges {
     name?: string
     isHidden: boolean
-}
-
-export interface ColumnChanges extends EntityChange {
     dataType?: string
 }
 
-export interface MeasureChanges extends EntityChange {
+export interface MeasureChanges {
+    name?: string
+    isHidden: boolean
     expression?: string
     displayFolder?: string
 }
 
-export interface HierarchyChanges extends EntityChange {
+export interface HierarchyChanges {
+    name?: string
+    isHidden: boolean
     levels?: string[]
 }
 
+export enum ChangeType {
+    Added,
+    Modified,
+    Deleted
+}

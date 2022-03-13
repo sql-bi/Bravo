@@ -5,12 +5,12 @@
 */
 
 import { OptionStruct, OptionType, Renderer } from '../helpers/renderer';
-import { Utils, _ } from '../helpers/utils';
+import { Dic, Utils, _ } from '../helpers/utils';
 import { AutoScanEnum } from '../model/dates';
 import { i18n } from '../model/i18n';
 import { strings } from '../model/strings';
 import { ManageDatesScenePane } from './scene-manage-dates-pane';
-import { TabularBrowser } from './tabular-browser';
+import { Branch, BranchType, TabularBrowser } from './tabular-browser';
 
 export class ManageDatesSceneInterval extends ManageDatesScenePane {
 
@@ -36,22 +36,20 @@ export class ManageDatesSceneInterval extends ManageDatesScenePane {
             },
             {
                 option: "onlyTablesColumns",
+                cssClass: "contains-tabular-browser",
                 parent: "autoscan",
                 toggledBy: {
                     option: "autoscan",
-                    value: AutoScanEnum.SelectedTablesColumns.toString()
+                    value: AutoScanEnum.SelectedTablesColumns
                 },
-                type: OptionType.custom,
-                customHtml: ()=> `
-                    <div class="autoscan-table"></div>
-                `
+                type: OptionType.custom
             },
             {
                 option: "firstYear",
                 parent: "autoscan",
                 toggledBy: {
                     option: "autoscan",
-                    value: AutoScanEnum.Disabled.toString()
+                    value: AutoScanEnum.Disabled
                 },
                 name: i18n(strings.manageDatesAutoScanFirstYear),
                 description: i18n(strings.manageDatesAutoScanFirstYearDesc),
@@ -64,7 +62,7 @@ export class ManageDatesSceneInterval extends ManageDatesScenePane {
                 parent: "autoscan",
                 toggledBy: {
                     option: "autoscan",
-                    value: AutoScanEnum.Disabled.toString()
+                    value: AutoScanEnum.Disabled
                 },
                 name: i18n(strings.manageDatesAutoScanLastYear),
                 description: i18n(strings.manageDatesAutoScanLastYearDesc),
@@ -84,14 +82,54 @@ export class ManageDatesSceneInterval extends ManageDatesScenePane {
             Renderer.Options.render(struct, _(".options", element), this.config);
         });
 
-        let columnBrowser = new TabularBrowser(Utils.DOM.uniqueId(), _(".autoscan-table", element), this.doc.model, {
+        let columnBrowser = new TabularBrowser(Utils.DOM.uniqueId(), _("#onlytablescolumns", element), this.prepareData(), {
             selectable: true, 
             search: true
         });
-
+        
         columnBrowser.on("select", (columns: string[]) => {
             this.config.update("onlyTablesColumns", columns);
         });
+
+    }
+
+    prepareData(): Branch[] {
+        let branches: Dic<Branch> = {};
+        
+        this.doc.model.tables 
+            .sort((a, b) => a.name.localeCompare(b.name))
+            .forEach(table => {
+                if (!(table.name in branches))
+                    branches[table.name] = {
+                        id: table.name,
+                        name: table.name,
+                        type: BranchType.Table,
+                        dataType: table.isDateTable ? "date-table" : "table",
+                        isHidden: table.isHidden,
+                        _children: []
+                    };
+            });
+
+        this.doc.model.columns
+            .sort((a, b) => a.name.localeCompare(b.name))
+            .forEach(column => {
+                if (column.tableName in branches && column.dataType == "DateTime") {
+                    branches[column.tableName]._children.push({
+                        id: column.name,
+                        name: column.columnName,
+                        type: BranchType.Column,
+                        dataType: column.dataType.toLowerCase(),
+                        isHidden: column.isHidden
+                    });
+                }
+            });
+
+        for (let key in branches) {
+            if (!branches[key]._children.length)
+                delete branches[key];
+        }
+        
+        return Object.values(branches);
     }
 
 }

@@ -44,27 +44,52 @@ export class ManageDatesScenePane {
         };
         let validationField = (<any>validationFields)[field];
 
-        return host.manageDatesValidateTableNames({
-            report: <PBIDesktopReport>this.doc.sourceData,
-            configuration: this.config.options
-        }).then(response => {
-
-            let status = (<any>response)[validationField];
-            let valid = (status == TableValidation.ValidAlterable || status == TableValidation.ValidNotExists);
-            this.config.update(validationField, status, true);
-
-            return <OptionValidation>{ 
-                valid: valid,
-                message: i18n(valid ? strings.tableValidationValid : strings.tableValidationInvalid) 
-            };
-
-        }).catch(ignore => {
-            
+        //Check other field names
+        let tableNames: string[] = [];
+        for (let tableField in validationFields) {
+            if (tableField != field)
+                tableNames.push(this.config.getOption(tableField));
+        }
+        let fieldValue = this.config.getOption(field);
+        if (tableNames.includes(fieldValue)) {
             this.config.update(validationField, TableValidation.InvalidNamingRequirements, true);
-            return <OptionValidation>{ 
-                valid: false,
-                message: i18n(strings.tableValidationInvalid) 
-            }
-        });
+            return new Promise<OptionValidation>((resolve, reject)=>{
+                resolve(<OptionValidation>{ 
+                    valid: false,
+                    message: i18n(strings.tableValidationInvalid) 
+                });
+            });
+        }
+
+        if (this.doc.orphan) {
+            return new Promise<OptionValidation>((resolve, reject)=>{
+                resolve(null);
+            });
+
+        } else {
+
+            return host.manageDatesValidateTableNames({
+                report: <PBIDesktopReport>this.doc.sourceData,
+                configuration: this.config.options
+            }).then(response => {
+
+                let status = (<any>response)[validationField];
+                let valid = (status > TableValidation.Unknown && status < TableValidation.InvalidExists);
+                this.config.update(validationField, status, true);
+
+                return <OptionValidation>{ 
+                    valid: valid,
+                    message: i18n(valid ? strings.tableValidationValid : strings.tableValidationInvalid) 
+                };
+
+            }).catch(ignore => {
+                
+                this.config.update(validationField, TableValidation.InvalidNamingRequirements, true);
+                return <OptionValidation>{ 
+                    valid: false,
+                    message: i18n(strings.tableValidationInvalid) 
+                }
+            });
+        }
     }
 }

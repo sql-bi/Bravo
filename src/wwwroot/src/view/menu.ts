@@ -9,10 +9,11 @@ import { View } from './view';
 
 export interface MenuItem {
     name: string
-    onRender?: (element: HTMLElement) => void,
-    onChange?: (element: HTMLElement) => void,
-    onDestroy?: () => void,
+    onRender?: (element: HTMLElement) => void
+    onChange?: (element: HTMLElement) => void
+    onDestroy?: () => void
     hidden?: boolean
+    disabled?: boolean
 }
 
 export class Menu extends View {
@@ -30,7 +31,7 @@ export class Menu extends View {
         let html = `
             <div class="menu">
                 ${ Object.keys(items).map(id => `
-                    <div id="item-${id}" class="item" ${this.items[id].hidden ? "hidden" : ""}>
+                    <div id="item-${id}" class="item ${this.items[id].disabled ? "disabled" : ""}" ${this.items[id].hidden ? "hidden" : ""}>
                         <span class="name">${this.items[id].name}</span>
                         <span class="selector"></span>
                     </div>
@@ -57,6 +58,16 @@ export class Menu extends View {
         this.listen();
     }
 
+    disable(id: string, toggle: boolean) {
+        let itemHeader = _(`#item-${id}`, this.element);
+        if (!itemHeader.empty) {
+            if (toggle)
+                itemHeader.classList.add("disabled");
+            else
+                itemHeader.classList.remove("disabled");
+        }
+    }
+
     getItemElement(id: string): HTMLElement {
         return _(`#body-${id}`, this.body);
     }
@@ -67,7 +78,11 @@ export class Menu extends View {
             div.addEventListener("click", e => {
                 e.preventDefault();
                 e.stopPropagation();
-                this.select((<HTMLElement>e.currentTarget).id.replace("item-", ""));
+
+                let el = (<HTMLElement>e.currentTarget);
+                if (el.classList.contains("disabled")) return;
+
+                this.select(el.id.replace("item-", ""));
             });
         });
     }

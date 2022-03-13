@@ -1,4 +1,4 @@
-// Type definitions for tabulator-tables  - v5.0.1b
+// Type definitions for tabulator-tables  - v5.1.7
 // We added a few changes to v5.0.1 which is online: npm i @types/tabulator-tables
 // Project: http://tabulator.info
 // Definitions by: Josh Harris <https://github.com/jojoshua>, Mike Lischke <https://github.com/mike-lischke>, Daniele Perilli <https://github.com/danieleperilli>
@@ -976,7 +976,7 @@ declare module "tabulator-tables" {
 
         interface ColumnLayout {
             /** title - Required This is the title that will be displayed in the header for this column */
-            title: string;
+            title?: string;
             /** field - Required (not required in icon/button columns) this is the key for this column in the data array*/
             field?: string | undefined;
             /** visible - (boolean, default - true) determines if the column is visible. (see Column Visibility for more details */
@@ -2237,7 +2237,13 @@ declare module "tabulator-tables" {
             filterParams?: Tabulator.FilterParams,
         ) => void;
         /** If you want to add another filter to the existing filters then you can call the addFilter function: */
-        addFilter: Tabulator.FilterFunction;
+        addFilter: (
+            p1: string | Tabulator.Filter[] | any[] | ((data: any, filterParams: any) => boolean),
+            p2?: Tabulator.FilterType | {},
+            value?: any,
+            filterParams?: Tabulator.FilterParams,
+        ) => void; //Tabulator.FilterFunction;
+        
         /** You can retrieve an array of the current programtic filters using the getFilters function, this will not include any of the header filters: */
         getFilters: (includeHeaderFilters: boolean) => Tabulator.Filter[];
         /** You can programatically set the header filter value of a column by calling the setHeaderFilterValue function, This function takes any of the standard column component look up options as its first parameter, with the value for the header filter as the second option */
