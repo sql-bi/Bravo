@@ -16,8 +16,8 @@ import { AppError } from '../model/exceptions';
 import { ErrorScene } from './scene-error';
 import { ChangeType, ColumnChanges, ModelChanges, TableChanges } from '../model/model-changes';
 import { Loader } from '../helpers/loader';
-import { Branch, BranchType, TabularBrowser } from './tabular-browser';
-import { daxName, TabularColumn, TabularDatabaseModel, TabularTable} from '../model/tabular';
+import { Branch, BranchType, PlainTreeFilter, TabularBrowser } from './tabular-browser';
+import { daxName } from '../model/tabular';
 import { Tabulator } from 'tabulator-tables';
 import { DocScene } from './scene-doc';
 import { PageType } from '../controllers/page';
@@ -25,6 +25,7 @@ import { LoaderScene } from './scene-loader';
 import { SuccessScene } from './scene-success';
 import { DaxEditor } from './dax-editor';
 import { Menu, MenuItem } from './menu';
+import Split, { SplitObject } from "split.js";
 
 interface PreviewData {
     table?: any[],
@@ -36,9 +37,9 @@ export class ManageDatesPreviewScene extends DocScene {
 
     previews: Dic<PreviewData> = {};
     activeBranches: Dic<Branch> = {};
+    browsers: Dic<TabularBrowser> = {};
 
     treeMenu: Menu;
-    
     previewMenu: Menu;
     expressionEditor: DaxEditor;
     sampleTable: Tabulator;
@@ -51,7 +52,7 @@ export class ManageDatesPreviewScene extends DocScene {
             host.abortManageDatesPreviewChanges();
         }); 
 
-        this.element.classList.add("manage-dates");
+        this.element.classList.add("manage-dates-preview");
         this.dateConfig = dateConfig;
         
     }
@@ -65,7 +66,7 @@ export class ManageDatesPreviewScene extends DocScene {
     }
 
     generatePreview() {
-console.log("Request", this.dateConfig);
+
         let request: ManageDatesPreviewChangesFromPBIDesktopReportRequest = {
             settings: {
                 configuration: this.dateConfig,
@@ -78,7 +79,6 @@ console.log("Request", this.dateConfig);
             .then(changes => {
                 loader.remove();
 
-console.log("Response", changes);
                 this.loadSampleData(changes)
                 this.renderPreview(changes);
             })
@@ -324,12 +324,17 @@ console.log("Response", changes);
 
         let html = `
             <div class="cols">
-                <div class="coll">
+                <div class="coll browser-pane">
                 </div>
-                <div class="colr" hidden>
+                <div class="colr preview-pane">
+                    <div class="preview-pane-content"></div>
                 </div>
             </div>
             <div class="scene-action">
+                <div class="backup-reminder">
+                    <div class="icon icon-backup"></div>
+                    <p>${i18n(strings.backupReminder)}</p>
+                </div>
                 <div class="do-proceed button enable-if-editable" disabled>${i18n(strings.manageDatesApplyCtrlTitle)}</div>
             </div>
         `;
@@ -362,9 +367,9 @@ console.log("Response", changes);
                 }
             };
 
-        this.treeMenu = new Menu("tree-menu", _(".coll", this.body), treeMenuItems, "date-tree", false);
+        this.treeMenu = new Menu("tree-menu", _(".browser-pane", this.body), treeMenuItems, "date-tree", false);
 
-        this.previewMenu = new Menu("preview-menu", _(".colr", this.body), <Dic<MenuItem>>{
+        this.previewMenu = new Menu("preview-menu", _(".preview-pane-content", this.body), <Dic<MenuItem>>{
             "sample-preview": {
                 name: i18n(strings.manageDatesMenuPreviewTable),
                 onRender: element => {
@@ -387,9 +392,9 @@ console.log("Response", changes);
 
         this.applyButton = _(".do-proceed", this.body);
 
-        this.renderBrowser(".columns-browser", this.convertColumnsChangesToBranches(changes));
+        this.renderBrowser(".columns-browser", this.convertColumnsChangesToBranches(changes), PlainTreeFilter.ParentOnly);
         if (hasTimeIntelligence)
-            this.renderBrowser(".measures-browser", this.convertMeasuresChangesToBranches(changes));
+            this.renderBrowser(".measures-browser", this.convertMeasuresChangesToBranches(changes), PlainTreeFilter.LastChildrenOnly);
 
         this.applyButton.addEventListener("click", e => {
             e.preventDefault();
@@ -399,6 +404,20 @@ console.log("Response", changes);
             this.applyChanges();
         }); 
 
+        Split([`#${this.element.id} .browser-pane`, `#${this.element.id} .preview-pane`], {
+            sizes: [20, 80], 
+            minSize: [270, 400],
+            gutterSize: 20,
+            
+            direction: "horizontal",
+            cursor: "ew-resize",
+            onDragEnd: sizes => {
+                for (let key in this.browsers) {
+                    this.browsers[key].redraw();
+                }
+                //optionsController.update("customOptions.panels", sizes);
+            }
+        });
     }
 
     applyChanges() {
@@ -431,20 +450,21 @@ console.log("Response", changes);
             });
     }
 
-    renderBrowser(selector: string, data: Branch[]) {
+    renderBrowser(selector: string, data: Branch[], plainTree: PlainTreeFilter) {
         let browser = new TabularBrowser(Utils.DOM.uniqueId(), _(selector, this.body), data, {
             selectable: false, 
             search: true,
             activable: true,
             noBorders: true,
+            toggableTree: plainTree,
             placeholder: i18n(strings.manageDatesBrowserPlaceholder),
             additionalColumns: [
                 { 
                     field: "attributes", 
                     headerSort: false,
                     resizable: false,
-                    width: 30,
                     cssClass: "change-attribute",
+                    width: 40,
                     hozAlign: "center",
                     formatter: (cell) => {
                         const item = <Branch>cell.getData();
@@ -465,20 +485,33 @@ console.log("Response", changes);
 
         browser.on("loaded", ()=>{
             if (!this.canEdit) return;
-            this.applyButton.toggleAttr("disabled", false);
+            window.setTimeout(() => {
+                this.applyButton.toggleAttr("disabled", false);
+            }, 3000);
         });
+
+        browser.on("deactivate", ()=>{
+            this.togglePreviewPane(false);
+        });
+        this.browsers[selector] = browser;
+    }
+
+    togglePreviewPane(toggle: boolean) {
+        _(".preview-pane-content", this.body).toggle(toggle);
     }
 
     selectOnMenuChange(id: string) {
         if (this.activeBranches && (id in this.activeBranches)) {
             this.select(this.activeBranches[id], id);
+        } else {
+            this.togglePreviewPane(false);
         }
     }
 
 
     select(item: Branch, id: string) {
         let exists = (this.previews && (item.id in this.previews));
-        _(".colr", this.body).toggle(exists);
+        this.togglePreviewPane(exists);
 
         if (exists) {
             this.activeBranches[id] = item;
@@ -511,7 +544,6 @@ console.log("Response", changes);
         this.sampleTable = new Tabulator(`#${this.element.id} .table-preview`, {
             maxHeight: "100%",
             //layout: "fitDataTable",
-            //renderHorizontal: "virtual",
             placeholder: " ", // This fixes scrollbar appearing with empty tables
             columnDefaults:{
                 maxWidth: 200,
@@ -531,6 +563,7 @@ console.log("Response", changes);
     destroy() {
 
         this.previews = null;
+        this.browsers = null;
         if (this.treeMenu)
             this.treeMenu.destroy();
         if (this.previewMenu)

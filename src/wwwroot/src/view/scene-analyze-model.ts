@@ -29,6 +29,11 @@ interface ExtendedTabularColumn extends TabularColumn {
     _children?: ExtendedTabularColumn[]
 }
 
+interface AnalyzeMoldelFilter {
+    showUnrefOnly: boolean
+    searchValue: string
+}
+
 export class AnalyzeModelScene extends DocScene {
 
     table: Tabulator;
@@ -329,7 +334,10 @@ export class AnalyzeModelScene extends DocScene {
                 initialSort:[
                     {column: "size", dir: "desc"}, 
                 ],
-                initialFilter: data => this.unreferencedFilter(data),
+                initialFilter: data => this.filter(data, {
+                    showUnrefOnly: this.showUnrefOnly,
+                    searchValue: (this.searchBox ? this.searchBox.value : "")
+                }),
                 rowFormatter: row => {
                     try { //Bypass calc rows
                         if ((<any>row)._row && (<any>row)._row.type == "calc") return;
@@ -424,25 +432,29 @@ export class AnalyzeModelScene extends DocScene {
 
     applyFilters() {
         if (this.table) {
-            this.table.clearFilter();
-
-            if (this.showUnrefOnly)
-                this.table.addFilter(data => this.unreferencedFilter(data));
-                
-            if (this.searchBox.value) {
-                this.table.addFilter(tabulatorTreeChildrenFilter, <TabulatorTreeChildrenFilterParams>{ 
-                    column: "columnName",
-                    comparison: "like",
-                    value: sanitizeHtml(this.searchBox.value, { allowedTags: [], allowedAttributes: {}})
-                });
-                //this.table.addFilter("columnName", "like", sanitizeHtml(this.searchBox.value, { allowedTags: [], allowedAttributes: {}}));
-            }
+            this.table.setFilter(this.filter, {
+                showUnrefOnly: this.showUnrefOnly,
+                searchValue: (this.searchBox ? this.searchBox.value : "")
+            });
         }
     }
 
-    unreferencedFilter(column: ExtendedTabularColumn): boolean {
-        if (this.showUnrefOnly)
-            return column.isReferenced === false || column._containsUnreferenced || column._aggregated;
+    filter(column: ExtendedTabularColumn, params: AnalyzeMoldelFilter): boolean {
+
+        if (params.showUnrefOnly) {
+            if (!(column.isReferenced === false || column._containsUnreferenced || column._aggregated))
+                return false;
+        }
+
+        let searchValue = (params.searchValue != "" ? sanitizeHtml(params.searchValue, { allowedTags: [], allowedAttributes: {}}) : "");
+        if (searchValue != "") {
+            if (!tabulatorTreeChildrenFilter(column, { 
+                column: "columnName",
+                comparison: "like",
+                value: searchValue
+            })) return false;
+        }
+
         return true;
     }
 

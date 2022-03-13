@@ -98,7 +98,7 @@ export class App {
                     minSize: [400, 0],
                     gutterSize: 6,
                     direction: "vertical",
-                    cursor: "n-resize",
+                    cursor: "ns-resize",
                     onDragEnd: sizes => {
                         optionsController.update("customOptions.panels", sizes);
                     }

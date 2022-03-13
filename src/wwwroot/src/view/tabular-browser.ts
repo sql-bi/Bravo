@@ -8,7 +8,7 @@ import { Tabulator } from 'tabulator-tables';
 import { View } from './view';
 import * as sanitizeHtml from 'sanitize-html';
 import { TabularDatabaseModel } from '../model/tabular';
-import { Dic, _, __ } from '../helpers/utils';
+import { Dic, Utils, _, __ } from '../helpers/utils';
 import { strings } from '../model/strings';
 import { i18n } from '../model/i18n';
 import { ContextMenu } from '../helpers/contextmenu';
@@ -34,6 +34,16 @@ export interface Branch {
     attributes?: any
 }
 
+export enum PlainTreeFilter {
+    ParentOnly,
+    LastChildrenOnly,
+}
+
+interface TabularBrowserFilter {
+    viewAsTree: boolean
+    searchValue: string
+}
+
 export interface TabularBrowserConfig {
     search?: boolean
     activable?: boolean
@@ -41,8 +51,9 @@ export interface TabularBrowserConfig {
     showSelectionCount?: boolean
     initialSelected?: string[]
     noBorders?: boolean
-    placeholder?: string,
+    placeholder?: string
     additionalColumns?: Tabulator.ColumnDefinition[]
+    toggableTree?: PlainTreeFilter
 }
 
 
@@ -54,6 +65,8 @@ export class TabularBrowser extends View {
     table: Tabulator;
     searchBox: HTMLInputElement;
     branches: Branch[];
+    rows: Branch[];
+    viewAsTree: boolean = true;
 
     constructor(id: string, container: HTMLElement, branches: Branch[], config: TabularBrowserConfig) {
         super(id, container);
@@ -61,6 +74,7 @@ export class TabularBrowser extends View {
 
         this.element.classList.add("tabular-browser");
         this.branches = branches;
+
         this.render();
     }
 
@@ -74,11 +88,16 @@ export class TabularBrowser extends View {
     render() {
 
         let html = `
-            ${ this.config.search ? `
+            ${ this.config.search || Utils.Obj.isSet(this.config.toggableTree) ? `
                 <div class="toolbar">
-                    <div class="search">
-                        <input type="search" placeholder="${i18n(strings.searchPlaceholder)}">
-                    </div>
+                    ${ this.config.search ? `
+                        <div class="search">
+                            <input type="search" placeholder="${i18n(strings.searchPlaceholder)}">
+                        </div>
+                    ` : "" }
+                    ${ Utils.Obj.isSet(this.config.toggableTree) ? `
+                        <div class="toggle-tree toggle icon-group ${this.viewAsTree ? "active" : ""}" title="${i18n(strings.toggleTree)}"></div>
+                    ` : "" }
                 </div>
             ` : ""}
             <div class="table"></div>
@@ -102,6 +121,18 @@ export class TabularBrowser extends View {
     
                 let selection = el.value.substring(el.selectionStart, el.selectionEnd);
                 ContextMenu.editorContextMenu(e, selection, el.value, el);
+            });
+        }
+
+        if (Utils.Obj.isSet(this.config.toggableTree)) {
+            _(".toggle-tree", this.element).addEventListener("click", e => {
+                e.preventDefault();
+                this.viewAsTree = !this.viewAsTree;
+
+                let el = <HTMLElement>e.currentTarget;
+                el.toggleClass("active", this.viewAsTree);
+
+                this.updateTable();
             });
         }
 
@@ -130,6 +161,13 @@ export class TabularBrowser extends View {
         if (redraw)
             this.destroyTable();
 
+        let data = this.branches;
+        if (!this.viewAsTree && Utils.Obj.isSet(this.config.toggableTree)) {
+            if (!this.rows)
+                this.rows = TabularBrowser.ConvertBranchesToRows(this.branches, this.config.toggableTree);
+            data = this.rows;
+        }
+
         if (!this.table) {
 
             let columns: Tabulator.ColumnDefinition[] = [];
@@ -146,7 +184,7 @@ export class TabularBrowser extends View {
                     cssClass: "column-select",
                     headerSort: false, 
                     resizable: false, 
-                    width: 40
+                    width: 50
                 });
             }
 
@@ -175,7 +213,7 @@ export class TabularBrowser extends View {
                 headerVisible: this.config.selectable,
                 layout: "fitColumns",
                 placeholder: (this.config.placeholder ? this.config.placeholder : " "), // This fixes scrollbar appearing with empty tables
-                dataTree: true,
+                dataTree: this.viewAsTree,
                 dataTreeCollapseElement:`<span class="tree-toggle icon icon-collapse"></span>`,
                 dataTreeExpandElement:`<span class="tree-toggle icon icon-expand"></span>`,
                 dataTreeBranchElement: false,
@@ -184,8 +222,12 @@ export class TabularBrowser extends View {
                 dataTreeSelectPropagate: true,
                 dataTreeStartExpanded: false,
                 dataTreeFilter:true,
+                initialFilter: data => this.filter(data, {
+                    viewAsTree: this.viewAsTree,
+                    searchValue: (this.searchBox ? this.searchBox.value : "")
+                }),
                 columns: columns,
-                data: this.branches,
+                data: data,
                 rowFormatter: row => {
                     try { //Bypass calc rows
                         if ((<any>row)._row && (<any>row)._row.type == "calc") return;
@@ -245,13 +287,14 @@ export class TabularBrowser extends View {
             });
         } else {
             this.deactivate();
-            this.table.setData(this.branches);
+            this.table.setData(data);
         }
     }
 
     deselect() {
         if (this.table)
             this.table.deselectRow();
+        this.trigger("deselect");
     }
 
     deactivate() {
@@ -261,22 +304,33 @@ export class TabularBrowser extends View {
             });
         }
         this.activeItem = null;
+        this.trigger("deactivate");
     }
 
     applyFilters() {
         if (this.table) {
+            this.table.setFilter(this.filter, {
+                viewAsTree: this.viewAsTree,
+                searchValue: (this.searchBox ? this.searchBox.value : "")
+            });
+        }
+    }
 
-            if (this.searchBox.value) {
-                this.table.setFilter(tabulatorTreeChildrenFilter, <TabulatorTreeChildrenFilterParams>{ 
+    filter(branch: Branch, params: TabularBrowserFilter): boolean {
+        let searchValue = (params.searchValue != "" ? sanitizeHtml(params.searchValue, { allowedTags: [], allowedAttributes: {}}) : "");
+        if (searchValue != "") {
+            if (params.viewAsTree) {
+                if (!tabulatorTreeChildrenFilter(branch, <TabulatorTreeChildrenFilterParams>{ 
                     column: "name",
                     comparison: "like",
-                    value: sanitizeHtml(this.searchBox.value, { allowedTags: [], allowedAttributes: {}})
-                });
-                //this.table.setFilter("name", "like", sanitizeHtml(this.searchBox.value, { allowedTags: [], allowedAttributes: {}}));
+                    value: searchValue
+                })) return false;
             } else {
-                this.table.clearFilter();
+                if (!branch.name.toLowerCase().includes(searchValue.toLowerCase()))
+                    return false;
             }
         }
+        return true
     }
 
     destroyTable() {
@@ -284,7 +338,7 @@ export class TabularBrowser extends View {
             this.table.destroy();
             this.table = null;
         }
-        this.activeItem = null;
+        this.deactivate();
     }
 
     destroy() {
@@ -293,7 +347,38 @@ export class TabularBrowser extends View {
         super.destroy();
     }
 
+    redraw() {
+        if (this.table)
+            this.table.redraw();
+    }
+
     /* Converters */
+
+    static ConvertBranchesToRows(branches: Branch[], filter: PlainTreeFilter): Branch[] {
+        let rows: Branch[] = [];
+
+        const iterate = (branches: Branch[]) => {
+            branches.forEach(branch => {
+
+                switch (filter) {
+                    case PlainTreeFilter.ParentOnly:
+                        rows.push(branch);
+                        break;
+                    case PlainTreeFilter.LastChildrenOnly:
+                        if ("_children" in branch && branch._children.length) {
+                            iterate(branch._children)
+                        } else {
+                            rows.push(branch);
+                        }
+                        break;
+                }
+            });
+        };
+        
+        iterate(branches);
+        return rows;
+    }
+
     static ConvertModelToBranches(model: TabularDatabaseModel): Branch[] {
 
         let branches: Dic<Branch> = {};

@@ -103,7 +103,7 @@ export class DaxFormatterScene extends DocScene {
             <div class="scene-action">
                 <div class="privacy-explanation">
                     <div class="icon icon-privacy"></div>
-                    <p>${i18n(strings.daxFormatterAgreement)} <br>
+                    <p>${i18n(strings.daxFormatterAgreement)} 
                     <span class="show-data-usage link">${i18n(strings.dataUsageLink)}</span>
                     </p>
                 </div>

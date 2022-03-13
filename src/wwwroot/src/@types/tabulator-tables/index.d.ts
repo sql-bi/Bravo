@@ -1,4 +1,4 @@
-// Type definitions for tabulator-tables  - v5.0.1b
+// Type definitions for tabulator-tables  - v5.1.7
 // We added a few changes to v5.0.1 which is online: npm i @types/tabulator-tables
 // Project: http://tabulator.info
 // Definitions by: Josh Harris <https://github.com/jojoshua>, Mike Lischke <https://github.com/mike-lischke>, Daniele Perilli <https://github.com/danieleperilli>
