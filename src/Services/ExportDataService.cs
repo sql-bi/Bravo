@@ -446,22 +446,11 @@
 
         private static string? GetDaxColumnName(IDataReader reader, int fieldIndex)
         {
-            var fqn = reader.GetName(fieldIndex);
-            if (fqn is not null)
+            var fullyQualifiedName = reader.GetName(fieldIndex);
+            if (fullyQualifiedName is not null)
             {
-                var firstIndex = fqn.IndexOf('[');
-                if (firstIndex != -1)
-                {
-                    var lastIndex = fqn.LastIndexOf(']');
-                    if (lastIndex != -1)
-                    {
-                        if (++firstIndex < lastIndex) // start of the range is inclusive, math notation is [start..end[
-                        {
-                            var columnName = fqn[firstIndex..lastIndex];
-                            return columnName;
-                        }
-                    }
-                }
+                var columnName = fullyQualifiedName.GetDaxName();
+                return columnName;
             }
 
             return null;

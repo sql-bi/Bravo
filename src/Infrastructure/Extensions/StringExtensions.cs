@@ -91,6 +91,28 @@
             return current?.Equals(value, StringComparison.OrdinalIgnoreCase) ?? false;
         }
 
+        public static string? GetDaxName(this string? fullyQualifiedName)
+        {
+            if (fullyQualifiedName is not null)
+            {
+                var firstIndex = fullyQualifiedName.IndexOf('[');
+                if (firstIndex != -1)
+                {
+                    var lastIndex = fullyQualifiedName.LastIndexOf(']');
+                    if (lastIndex != -1)
+                    {
+                        if (++firstIndex < lastIndex) // start of the range is inclusive, math notation is [start..end[
+                        {
+                            var columnName = fullyQualifiedName[firstIndex..lastIndex];
+                            return columnName;
+                        }
+                    }
+                }
+            }
+
+            return null;
+        }
+
         /// <summary>
         /// Remove initial CR/LF or SPACE/CR/LF after the last non-empty character of the expression.
         /// </summary>
