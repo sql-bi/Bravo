@@ -34,7 +34,7 @@
             }
         }
 
-        public ModelChanges GetPreviewChanges(DateConfiguration configuration, int previewRows, TabularConnectionWrapper connection, CancellationToken cancellationToken)
+        public ModelChanges GetPreviewChanges(DateConfiguration configuration, int previewRows, TabularConnectionWrapper connectionWrapper, CancellationToken cancellationToken)
         {
             EnsureCalcheInitialized();
             try
@@ -42,12 +42,14 @@
                 var package = configuration.GetPackage();
                 var engine = new Engine(package);
 
-                engine.ApplyTemplates(connection.Model, cancellationToken);
-
-                var modelChanges = engine.GetModelChanges(connection.Model, cancellationToken);
+                engine.ApplyTemplates(connectionWrapper.Model, cancellationToken);
+                var modelChanges = Engine.GetModelChanges(connectionWrapper.Model, cancellationToken);
 
                 if (previewRows > 0)
-                    modelChanges.PopulatePreview(connection.Model, previewRows, cancellationToken);
+                {
+                    using var connection = connectionWrapper.CreateConnection();
+                    modelChanges.PopulatePreview(connection, connectionWrapper.Model, previewRows, cancellationToken);
+                }
 
                 return modelChanges;
             }
