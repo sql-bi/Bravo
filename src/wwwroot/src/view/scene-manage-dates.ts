@@ -24,6 +24,7 @@ import { ManageDatesSceneDates } from './scene-manage-dates-dates';
 import { ManageDatesSceneTimeIntelligence } from './scene-manage-dates-time-intelligence';
 import { ManageDatesPreviewScene } from './scene-manage-dates-preview';
 import { PageType } from '../controllers/page';
+import { ManageDatesScenePane } from './scene-manage-dates-pane';
 
 export interface ManageDatesConfig extends DateConfiguration {
     region?: string
@@ -37,6 +38,7 @@ export class ManageDatesScene extends DocScene {
     modelCheckElement: HTMLElement;
     config: OptionsStore<ManageDatesConfig>;
     previewButton: HTMLElement;
+    panes: ManageDatesScenePane[] = [];
     
     //TODO Remove to enable manage dates
     /*get supported() {
@@ -94,10 +96,15 @@ export class ManageDatesScene extends DocScene {
                 this.config.options.dateEnabled = true;
 
                 let calendarPane = new ManageDatesSceneCalendar(this.config, this.doc, templates);
+                this.panes.push(calendarPane);
                 let intervalPane = new ManageDatesSceneInterval(this.config, this.doc);
+                this.panes.push(intervalPane);
                 let datesPane = new ManageDatesSceneDates(this.config, this.doc);
+                this.panes.push(datesPane);
                 let holidaysPane = new ManageDatesSceneHolidays(this.config, this.doc);
+                this.panes.push(holidaysPane);
                 let timeIntelligencePane = new ManageDatesSceneTimeIntelligence(this.config, this.doc);
+                this.panes.push(timeIntelligencePane);
 
                 this.menu = new Menu("date-config-menu", menuContainer, <Dic<MenuItem>>{
                     "calendar": {
@@ -162,6 +169,10 @@ export class ManageDatesScene extends DocScene {
 
         this.updateModelCheck();
         this.updateAvailableFeatures();
+
+        this.panes.forEach(pane => {
+            pane.update();
+        });
     }
 
     updateAvailableFeatures() {
@@ -236,12 +247,11 @@ export class ManageDatesScene extends DocScene {
                     
     }
 
-
-
     destroy() {
         this.menu.destroy();
         this.menu = null;
         this.config = null;
+        this.panes = null;
 
         super.destroy();
     }

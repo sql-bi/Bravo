@@ -14,6 +14,8 @@ import { Branch, BranchType, TabularBrowser } from './tabular-browser';
 
 export class ManageDatesSceneInterval extends ManageDatesScenePane {
 
+    columnBrowser: TabularBrowser;
+
     render(element: HTMLElement) {
         super.render(element);
 
@@ -82,18 +84,18 @@ export class ManageDatesSceneInterval extends ManageDatesScenePane {
             Renderer.Options.render(struct, _(".options", element), this.config);
         });
 
-        let columnBrowser = new TabularBrowser(Utils.DOM.uniqueId(), _("#onlytablescolumns", element), this.prepareData(), {
+        this.columnBrowser = new TabularBrowser(Utils.DOM.uniqueId(), _("#onlytablescolumns", element), this.modelToBranches(), {
             selectable: true, 
             search: true
         });
         
-        columnBrowser.on("select", (columns: string[]) => {
+        this.columnBrowser.on("select", (columns: string[]) => {
             this.config.update("onlyTablesColumns", columns);
         });
 
     }
 
-    prepareData(): Branch[] {
+    modelToBranches(): Branch[] {
         let branches: Dic<Branch> = {};
         
         this.doc.model.tables 
@@ -132,4 +134,17 @@ export class ManageDatesSceneInterval extends ManageDatesScenePane {
         return Object.values(branches);
     }
 
+    update() {
+        super.update();
+
+        if (this.columnBrowser) {
+            this.columnBrowser.branches = this.modelToBranches();
+            this.columnBrowser.update();
+        }
+    }
+
+    destroy() {
+        this.columnBrowser = null;
+        super.destroy();
+    }
 }

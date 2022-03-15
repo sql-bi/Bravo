@@ -29,6 +29,10 @@ export class ManageDatesScenePane {
         this.element = element;
     }
 
+    update() {
+        
+    }
+
     destroy() {
         this.config = null;
         this.doc = null;
