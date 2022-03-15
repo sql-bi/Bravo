@@ -382,12 +382,16 @@
                     border: XlsxStyle.Default.Border,
                     numberFormat: XlsxStyle.Default.NumberFormat,
                     alignment: XlsxAlignment.Default);
-                
+                var dateTimeStyle = XlsxStyle.Default.With(new XlsxNumberFormat($"yyyy-mm-dd hh:mm:ss"));
+
                 // write header
                 writer.SetDefaultStyle(headerStyle).BeginRow();
 
                 for (var i = 0; i < reader.FieldCount; i++)
-                    writer.Write(GetDaxColumnName(reader, i));
+                {
+                    var daxColumnName = GetDaxColumnName(reader, i);
+                    writer.Write(daxColumnName);
+                }
 
                 // write data
                 writer.SetDefaultStyle(XlsxStyle.Default);
@@ -416,7 +420,7 @@
                                 writer.Write(@decimal);
                                 break;
                             case DateTime dateTime:
-                                writer.Write(dateTime);
+                                writer.Write(dateTime, dateTimeStyle);
                                 break;
                             case string @string:
                                 writer.Write(@string);
