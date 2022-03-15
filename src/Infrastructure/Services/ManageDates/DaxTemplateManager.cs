@@ -25,7 +25,9 @@
             EnsureCalcheInitialized();
             try
             {
-                var packages = Package.FindTemplateFiles(CachePath).Select(Package.LoadFromFile);
+                var files = Package.FindTemplateFiles(CachePath);
+                var packages = files.Select(Package.LoadFromFile).ToArray();
+
                 return packages;
             }
             catch (TemplateException ex)
@@ -68,6 +70,7 @@
                 var engine = new Engine(package);
 
                 engine.ApplyTemplates(connection.Model, cancellationToken);
+                configuration.SerializeTo(connection.Model);
 
                 if (connection.Model.HasLocalChanges)
                     connection.Model.SaveChanges().ThrowOnError();

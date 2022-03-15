@@ -1,6 +1,7 @@
 ﻿namespace Sqlbi.Bravo.Infrastructure.Extensions
 {
     using System;
+    using System.Text.Json;
 
     internal static class EnumExtensions
     {
@@ -28,6 +29,13 @@
             }
 
             return null;
+        }
+
+        public static T? JsonClone<T>(this T value)
+        {
+            var json = JsonSerializer.Serialize(value);
+            var instance = JsonSerializer.Deserialize<T>(json);
+            return instance;
         }
     }
 }

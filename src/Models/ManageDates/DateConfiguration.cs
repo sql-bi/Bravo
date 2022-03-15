@@ -7,18 +7,37 @@
     using Sqlbi.Bravo.Infrastructure.Extensions;
     using System;
     using System.ComponentModel.DataAnnotations;
+    using System.Diagnostics;
     using System.IO;
     using System.Linq;
+    using System.Text.Json;
     using System.Text.Json.Serialization;
+    using TOM = Microsoft.AnalysisServices.Tabular;
 
+    [DebuggerDisplay("{Name} {IsCurrent}")]
     public class DateConfiguration
     {
+        internal const string ExtendedPropertyName = "SQLBI_BRAVO_ManageDatesConfiguration";
+
+        internal static readonly JsonSerializerOptions ExtendedPropertyJsonOptions = new()
+        {
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+        };
+        
+        public DateConfiguration()
+        {
+            IsCurrent = false;
+        }
+
         /// <summary>
         /// For internal use only, not to be shown in Bravo UI
         /// </summary>
         [Required]
         [JsonPropertyName("templateUri")]
         public string? TemplateUri { get; set; }
+
+        [JsonPropertyName("isCurrent")]
+        public bool IsCurrent { get; private set; } = false;
 
         [JsonPropertyName("name")]
         public string? Name { get; set; }
@@ -342,6 +361,23 @@
 
             return configuration;
         }
+
+        public static DateConfiguration? GetCurrentFrom(TOM.Model model)
+        {
+            var property = model.ExtendedProperties.Find(ExtendedPropertyName);
+
+            if (property is not null && property is TOM.JsonExtendedProperty jsonProperty)
+            {
+                var configuration = JsonSerializer.Deserialize<DateConfiguration>(jsonProperty.Value, ExtendedPropertyJsonOptions);
+
+                if (configuration is not null)
+                    configuration.IsCurrent = true;
+
+                return configuration;
+            }
+
+            return null;
+        }
     }
 
     internal static class DateConfigurationExtensions
@@ -367,6 +403,32 @@
             else
             {
                 throw new NotImplementedException();
+            }
+        }
+
+        public static void SerializeTo(this DateConfiguration configuration, TOM.Model model)
+        {
+            var configurationString = JsonSerializer.Serialize(configuration, DateConfiguration.ExtendedPropertyJsonOptions);
+            var configurationProperty = model.ExtendedProperties.Find(DateConfiguration.ExtendedPropertyName);
+
+            if (configurationProperty is null)
+            {
+                var jsonProperty = new TOM.JsonExtendedProperty
+                {
+                    Name = DateConfiguration.ExtendedPropertyName,
+                    Value = configurationString,
+                };
+
+                model.ExtendedProperties.Add(jsonProperty);
+            }
+            else
+            {
+                BravoUnexpectedException.Assert(configurationProperty is TOM.JsonExtendedProperty);
+
+                var jsonProperty = (TOM.JsonExtendedProperty)configurationProperty;
+
+                if (jsonProperty.Value != configurationString)
+                    jsonProperty.Value = configurationString;
             }
         }
     }
