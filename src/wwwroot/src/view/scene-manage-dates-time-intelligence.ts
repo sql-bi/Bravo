@@ -25,6 +25,11 @@ export class ManageDatesSceneTimeIntelligence extends ManageDatesScenePane {
                 icon: "folder-fx",
                 bold: true,
                 type: OptionType.switch,
+                onChange: (e, value) =>  {
+                    let el = (<HTMLSelectElement>_("#targetmeasuresmode .listener", element));
+                    el.value = "";
+                    el.dispatchEvent(new Event("change"));
+                }
             },
             {
                 option: "targetMeasuresMode",
