@@ -7,16 +7,27 @@
     using Sqlbi.Bravo.Infrastructure.Extensions;
     using System;
     using System.ComponentModel.DataAnnotations;
+    using System.Diagnostics;
     using System.IO;
     using System.Linq;
+    using System.Text.Json;
     using System.Text.Json.Serialization;
+    using TOM = Microsoft.AnalysisServices.Tabular;
 
+    [DebuggerDisplay("{Name} {IsCurrent}")]
     public class DateConfiguration
     {
-        internal const string DateTemplateClassName = "CustomDateTable";
-        internal const string HolidaysTemplateClassName = "HolidaysTable";
-        internal const string HolidaysDefinitionTemplateClassName = "HolidaysDefinitionTable";
-        internal const string TimeIntelligenceTemplateClassName = "MeasuresTemplate";
+        internal const string ExtendedPropertyName = "SQLBI_BRAVO_ManageDatesConfiguration";
+
+        internal static readonly JsonSerializerOptions ExtendedPropertyJsonOptions = new()
+        {
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+        };
+        
+        public DateConfiguration()
+        {
+            IsCurrent = false;
+        }
 
         /// <summary>
         /// For internal use only, not to be shown in Bravo UI
@@ -24,6 +35,9 @@
         [Required]
         [JsonPropertyName("templateUri")]
         public string? TemplateUri { get; set; }
+
+        [JsonPropertyName("isCurrent")]
+        public bool IsCurrent { get; private set; } = false;
 
         [JsonPropertyName("name")]
         public string? Name { get; set; }
@@ -191,10 +205,8 @@
             // Dax.Template.IScanConfig
             //
             templateConfiguration.AutoScan = AutoScan ?? templateConfiguration.AutoScan;
-            if (OnlyTablesColumns?.Length > 0)
-                templateConfiguration.OnlyTablesColumns = OnlyTablesColumns;
-            if (ExceptTablesColumns?.Length > 0)
-                templateConfiguration.ExceptTablesColumns = ExceptTablesColumns;
+            if (OnlyTablesColumns?.Length > 0) templateConfiguration.OnlyTablesColumns = OnlyTablesColumns;
+            if (ExceptTablesColumns?.Length > 0) templateConfiguration.ExceptTablesColumns = ExceptTablesColumns;
             //
             // Dax.Template.IHolidaysConfig
             //
@@ -230,81 +242,73 @@
             //
             Defaults?.CopyTo(templateConfiguration);
             //
-            // Date (Dax.Template.Tables.Dates.CustomDateTable)
+            // ITemplates.TemplateEntry
             //
-            var dateTemplateEntry = templateConfiguration.Templates?.SingleOrDefault((entry) => entry.Class?.Equals(DateTemplateClassName) ?? false);
+            var templateEntries = templateConfiguration.GetTemplateEntries();
+            //
+            // ITemplates.TemplateEntry - Date (Dax.Template.Tables.Dates.CustomDateTable)
+            //
+            if (templateEntries.Date is not null)
             {
-                if (dateTemplateEntry is not null)
+                if (DateEnabled)
                 {
-                    if (DateEnabled)
-                    {
-                        BravoUnexpectedException.Assert(DateTableValidation.IsValid());
-                        BravoUnexpectedException.Assert(DateReferenceTableValidation.IsValid());
+                    BravoUnexpectedException.Assert(DateTableValidation.IsValid());
+                    BravoUnexpectedException.Assert(DateReferenceTableValidation.IsValid());
 
-                        dateTemplateEntry.Table = DateTableName;
-                        dateTemplateEntry.ReferenceTable = DateReferenceTableName;
-                    }
-                    else
-                    {
-                        templateConfiguration.Templates = templateConfiguration.Templates!.Except(new[] { dateTemplateEntry }).ToArray();
-                    }
+                    templateEntries.Date.Table = DateTableName;
+                    templateEntries.Date.ReferenceTable = DateReferenceTableName;
+                }
+                else
+                {
+                    templateConfiguration.RemoveTemplateEntry(templateEntries.Date);
                 }
             }
             //
-            // Holidays (Dax.Template.Tables.Dates.HolidaysTable + Dax.Template.Tables.Dates.HolidaysDefinitionTable)
-            //
-            var holidaysTemplateEntry = templateConfiguration.Templates?.SingleOrDefault((entry) => entry.Class?.Equals(HolidaysTemplateClassName) ?? false);
-            var holidaysDefinitionTemplateEntry = templateConfiguration.Templates?.SingleOrDefault((entry) => entry.Class?.Equals(HolidaysDefinitionTemplateClassName) ?? false);
+            // ITemplates.TemplateEntry - Holidays (Dax.Template.Tables.Dates.HolidaysTable + Dax.Template.Tables.Dates.HolidaysDefinitionTable)
+            // 
+            if (templateEntries.Holidays is not null)
             {
-                if (holidaysTemplateEntry is not null)
+                BravoUnexpectedException.ThrowIfNull(templateEntries.HolidaysDefinition);
+
+                if (HolidaysEnabled)
                 {
-                    BravoUnexpectedException.ThrowIfNull(holidaysDefinitionTemplateEntry);
+                    BravoUnexpectedException.Assert(HolidaysTableValidation.IsValid());
+                    BravoUnexpectedException.Assert(HolidaysDefinitionTableValidation.IsValid());
+                    BravoUnexpectedException.ThrowIfNull(templateConfiguration.HolidaysReference);
 
-                    if (HolidaysEnabled)
-                    {
-                        BravoUnexpectedException.Assert(HolidaysTableValidation.IsValid());
-                        BravoUnexpectedException.Assert(HolidaysDefinitionTableValidation.IsValid());
-                        BravoUnexpectedException.ThrowIfNull(templateConfiguration.HolidaysReference);
+                    templateEntries.Holidays.Table = templateConfiguration.HolidaysReference.TableName = HolidaysTableName;
+                    templateEntries.HolidaysDefinition.Table = templateConfiguration.HolidaysDefinitionTable = HolidaysDefinitionTableName;
+                }
+                else
+                {
+                    templateConfiguration.RemoveTemplateEntry(templateEntries.Holidays);
+                    templateConfiguration.RemoveTemplateEntry(templateEntries.HolidaysDefinition);
 
-                        holidaysTemplateEntry.Table = templateConfiguration.HolidaysReference.TableName = HolidaysTableName;
-                        holidaysDefinitionTemplateEntry.Table = templateConfiguration.HolidaysDefinitionTable = HolidaysDefinitionTableName;
-                    }
-                    else
-                    {
-                        templateConfiguration.Templates = templateConfiguration.Templates!.Except(new[] { holidaysTemplateEntry, holidaysDefinitionTemplateEntry }).ToArray();
-                        
-                        // HACK >> to fix TemplateException($"Holidays table '{config.HolidaysReference?.TableName}' not found.");
-                        templateConfiguration.HolidaysReference = null;
-                        templateConfiguration.HolidaysDefinitionTable = null;
-                        // HACK <<
-                    }
+                    // HACK >> to fix TemplateException($"Holidays table '{config.HolidaysReference?.TableName}' not found.");
+                    templateConfiguration.HolidaysReference = null;
+                    templateConfiguration.HolidaysDefinitionTable = null;
+                    // HACK <<
                 }
             }
             //
-            // Time Intelligence (Dax.Template.Measures.MeasuresTemplateDefinition.MeasureTemplate)
+            // ITemplates.TemplateEntry - TimeIntelligence (Dax.Template.Measures.MeasuresTemplateDefinition.MeasureTemplate)
             //
-            var timeintelligenceTemplateEntry = templateConfiguration.Templates?.SingleOrDefault((entry) => entry.Class?.Equals(TimeIntelligenceTemplateClassName) ?? false);
+            if (templateEntries.TimeIntelligence is not null)
             {
-                if (timeintelligenceTemplateEntry is not null)
+                if (TimeIntelligenceEnabled)
                 {
-                    if (TimeIntelligenceEnabled)
-                    {
-                        // nothing to do
-                    }
-                    else
-                    {
-                        templateConfiguration.Templates = templateConfiguration.Templates!.Except(new[] { timeintelligenceTemplateEntry }).ToArray();
-                    }
+                    // nothing to do
+                }
+                else
+                {
+                    templateConfiguration.RemoveTemplateEntry(templateEntries.TimeIntelligence);
                 }
             }
         }
 
         public static DateConfiguration CreateFrom(Dax.Template.Package package)
         {
-            var dateTemplateEntry = package.Configuration.Templates?.SingleOrDefault((entry) => entry.Class?.Equals(DateTemplateClassName) ?? false);
-            var holidaysTemplateEntry = package.Configuration.Templates?.SingleOrDefault((entry) => entry.Class?.Equals(HolidaysTemplateClassName) ?? false);
-            var holidaysDefinitionTemplateEntry = package.Configuration.Templates?.SingleOrDefault((entry) => entry.Class?.Equals(HolidaysDefinitionTemplateClassName) ?? false);
-            var timeintelligenceTemplateEntry = package.Configuration.Templates?.SingleOrDefault((entry) => entry.Class?.Equals(TimeIntelligenceTemplateClassName) ?? false);
+            var templateEntries = package.Configuration.GetTemplateEntries();
 
             var configuration = new DateConfiguration
             {
@@ -342,20 +346,37 @@
                 //
                 Defaults = DateDefaults.CreateFrom(package.Configuration),
                 //
-                // Enable disable templates
+                // ITemplates.TemplateEntry - enable/disable
                 //
-                DateAvailable = dateTemplateEntry is not null,
-                DateTableName = dateTemplateEntry?.Table,
-                DateReferenceTableName = dateTemplateEntry?.ReferenceTable,
+                DateAvailable = templateEntries.Date is not null,
+                DateTableName = templateEntries.Date?.Table,
+                DateReferenceTableName = templateEntries.Date?.ReferenceTable,
                 //--
-                HolidaysAvailable = holidaysTemplateEntry is not null && holidaysDefinitionTemplateEntry is not null,
-                HolidaysTableName = holidaysTemplateEntry?.Table,
-                HolidaysDefinitionTableName = holidaysDefinitionTemplateEntry?.Table,
+                HolidaysAvailable = templateEntries.Holidays is not null && templateEntries.HolidaysDefinition is not null,
+                HolidaysTableName = templateEntries.Holidays?.Table,
+                HolidaysDefinitionTableName = templateEntries.HolidaysDefinition?.Table,
                 //--
-                TimeIntelligenceAvailable = timeintelligenceTemplateEntry is not null,
+                TimeIntelligenceAvailable = templateEntries.TimeIntelligence is not null,
             };
 
             return configuration;
+        }
+
+        public static DateConfiguration? GetCurrentFrom(TOM.Model model)
+        {
+            var property = model.ExtendedProperties.Find(ExtendedPropertyName);
+
+            if (property is not null && property is TOM.JsonExtendedProperty jsonProperty)
+            {
+                var configuration = JsonSerializer.Deserialize<DateConfiguration>(jsonProperty.Value, ExtendedPropertyJsonOptions);
+
+                if (configuration is not null)
+                    configuration.IsCurrent = true;
+
+                return configuration;
+            }
+
+            return null;
         }
     }
 
@@ -383,6 +404,55 @@
             {
                 throw new NotImplementedException();
             }
+        }
+
+        public static void SerializeTo(this DateConfiguration configuration, TOM.Model model)
+        {
+            var configurationString = JsonSerializer.Serialize(configuration, DateConfiguration.ExtendedPropertyJsonOptions);
+            var configurationProperty = model.ExtendedProperties.Find(DateConfiguration.ExtendedPropertyName);
+
+            if (configurationProperty is null)
+            {
+                var jsonProperty = new TOM.JsonExtendedProperty
+                {
+                    Name = DateConfiguration.ExtendedPropertyName,
+                    Value = configurationString,
+                };
+
+                model.ExtendedProperties.Add(jsonProperty);
+            }
+            else
+            {
+                BravoUnexpectedException.Assert(configurationProperty is TOM.JsonExtendedProperty);
+
+                var jsonProperty = (TOM.JsonExtendedProperty)configurationProperty;
+
+                if (jsonProperty.Value != configurationString)
+                    jsonProperty.Value = configurationString;
+            }
+        }
+    }
+
+    internal static class TemplateConfigurationExtensions
+    {
+        private const string DateTemplateClassName = "CustomDateTable";
+        private const string HolidaysTemplateClassName = "HolidaysTable";
+        private const string HolidaysDefinitionTemplateClassName = "HolidaysDefinitionTable";
+        private const string TimeIntelligenceTemplateClassName = "MeasuresTemplate";
+
+        public static (ITemplates.TemplateEntry? Date, ITemplates.TemplateEntry? Holidays, ITemplates.TemplateEntry? HolidaysDefinition, ITemplates.TemplateEntry? TimeIntelligence) GetTemplateEntries(this TemplateConfiguration configuration)
+        {
+            var date = configuration.Templates?.SingleOrDefault((entry) => entry.Class?.Equals(DateTemplateClassName) ?? false);
+            var holidays = configuration.Templates?.SingleOrDefault((entry) => entry.Class?.Equals(HolidaysTemplateClassName) ?? false);
+            var holidaysDefinition = configuration.Templates?.SingleOrDefault((entry) => entry.Class?.Equals(HolidaysDefinitionTemplateClassName) ?? false);
+            var timeIntelligence = configuration.Templates?.SingleOrDefault((entry) => entry.Class?.Equals(TimeIntelligenceTemplateClassName) ?? false);
+
+            return (date, holidays, holidaysDefinition, timeIntelligence);
+        }
+
+        public static void RemoveTemplateEntry(this TemplateConfiguration configuration, ITemplates.TemplateEntry entry)
+        {
+            configuration.Templates = configuration.Templates?.Except(new[] { entry }).ToArray();
         }
     }
 

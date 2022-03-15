@@ -34,10 +34,17 @@
 
         public IEnumerable<DateConfiguration> GetConfigurations(PBIDesktopReport report, CancellationToken cancellationToken)
         {
-            var configurations = _templateManager.GetPackages().Select(DateConfiguration.CreateFrom).ToArray();
-            {
-                Validate(report, configurations, assertValidation: false);
-            }
+            var packages = _templateManager.GetPackages();
+            var configurations = packages.Select(DateConfiguration.CreateFrom).ToList();
+
+            using var connection = TabularConnectionWrapper.ConnectTo(report);
+            var currentConfiguration = DateConfiguration.GetCurrentFrom(connection.Model);
+
+            if (currentConfiguration is not null)
+                configurations.Insert(0, currentConfiguration);
+
+            Validate(report, configurations, assertValidation: false);
+
             return configurations;
         }
 
@@ -70,7 +77,7 @@
 
         private static void Validate(PBIDesktopReport report, DateConfiguration configuration, bool assertValidation) => Validate(report, new[] { configuration }, assertValidation);
 
-        private static void Validate(PBIDesktopReport report, DateConfiguration[] configurations, bool assertValidation)
+        private static void Validate(PBIDesktopReport report, IEnumerable<DateConfiguration> configurations, bool assertValidation)
         {
             using var connection = TabularConnectionWrapper.ConnectTo(report);
 
