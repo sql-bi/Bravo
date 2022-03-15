@@ -31,8 +31,9 @@ export class SuccessScene extends Scene {
                     <div class="icon icon-completed big"></div>
                     <p>${this.message}</p>
                 </div>
-
-                <div class="dismiss button">${i18n(strings.doneCtrlTitle)}</div>
+                <div class="scene-action">
+                    <div class="dismiss button">${i18n(strings.doneCtrlTitle)}</div>
+                </div>
             </div>
         `;
 

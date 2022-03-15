@@ -334,7 +334,7 @@ export class ManageDatesPreviewScene extends DocScene {
             </div>
             <div class="scene-action">
                 <div class="backup-reminder">
-                    <div class="icon icon-backup"></div>
+                    <div class="icon icon-save"></div>
                     <p>${i18n(strings.backupReminder)}</p>
                 </div>
                 <div class="do-proceed button enable-if-editable" disabled>${i18n(strings.manageDatesApplyCtrlTitle)}</div>
