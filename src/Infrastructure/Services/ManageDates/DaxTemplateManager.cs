@@ -47,7 +47,7 @@
 
                 if (previewRows > 0)
                 {
-                    using var connection = connectionWrapper.CreateConnection();
+                    using var connection = connectionWrapper.CreateAdomdConnection();
                     modelChanges.PopulatePreview(connection, connectionWrapper.Model, previewRows, cancellationToken);
                 }
 

@@ -19,14 +19,14 @@
         }
 
         /// <summary>
-        /// Convert the old Microsoft datetime offset "/Date(1617810719887)/" to <see cref="DateTimeOffset"/>
+        /// Convert the old .NET JavaScriptSerializer/DataContractJsonSerializer date format "/Date(1617810719887)/" to <see cref="DateTimeOffset"/>
         /// </summary>
-        /// <param name="microsoftDateTimeOffset">Old Microsoft datetime offset string "/Date(1617810719887)/"</param>
-        public static DateTimeOffset? ToDateTimeOffset(this string microsoftDateTimeOffset)
+        /// <param name="value">Json date string in format "/Date(1617810719887)/"</param>
+        public static DateTimeOffset? ToDateTimeOffset(this string value)
         {
             var regex = new Regex("^\\/Date\\(([0-9]+)\\)\\/$");
 
-            var match = regex.Match(microsoftDateTimeOffset);
+            var match = regex.Match(value);
             if (match.Success)
             {
                 var seconds = long.Parse(match.Groups[1].Value);
@@ -103,8 +103,8 @@
                     {
                         if (++firstIndex < lastIndex) // start of the range is inclusive, math notation is [start..end[
                         {
-                            var columnName = fullyQualifiedName[firstIndex..lastIndex];
-                            return columnName;
+                            var objectName = fullyQualifiedName[firstIndex..lastIndex];
+                            return objectName;
                         }
                     }
                 }
@@ -158,6 +158,30 @@
             }
 
             return (expression, lineBreakStyle);
+        }
+
+        public static bool IsAutoDateTimePrivateTableName(this string? tableName)
+        {
+            if (tableName is not null)
+            {
+                var localTableIndex = tableName.IndexOf("LocalDateTable_");
+                if (localTableIndex == 0)
+                {
+                    var guidString = tableName.Remove(localTableIndex, "LocalDateTable_".Length);
+                    var isGuid = Guid.TryParse(guidString, out _);
+                    return isGuid;
+                }
+
+                var templateTableIndex = tableName.IndexOf("DateTableTemplate_");
+                if (templateTableIndex == 0)
+                {
+                    var guidString = tableName.Remove(templateTableIndex, "DateTableTemplate_".Length);
+                    var isGuid = Guid.TryParse(guidString, out _);
+                    return isGuid;
+                }
+            }
+
+            return false;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

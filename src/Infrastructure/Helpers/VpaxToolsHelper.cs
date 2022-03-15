@@ -3,7 +3,6 @@
     using Dax.Metadata.Extractor;
     using Dax.Vpax.Tools;
     using Sqlbi.Bravo.Infrastructure.Services;
-    using Sqlbi.Bravo.Models.AnalyzeModel;
     using System.IO;
 
     internal static class VpaxToolsHelper
@@ -24,9 +23,10 @@
             return stream;
         }
 
-        public static TabularDatabase GetDatabase(Stream stream)
+        public static Dax.Metadata.Model GetDaxModel(Stream stream)
         {
             VpaxTools.VpaxContent vpaxContent;
+
             try
             {
                 vpaxContent = VpaxTools.ImportVpax(stream);
@@ -36,44 +36,16 @@
                 throw new BravoException(BravoProblem.VpaxFileContainsCorruptedData);
             }
 
-            var database = TabularDatabase.CreateFrom(vpaxContent.DaxModel);
-            {
-                database.Features &= ~TabularDatabaseFeature.AnalyzeModelSynchronize;
-                database.Features &= ~TabularDatabaseFeature.AnalyzeModelExportVpax;
-                database.Features &= ~TabularDatabaseFeature.FormatDaxSynchronize;
-                database.Features &= ~TabularDatabaseFeature.FormatDaxUpdateModel;
-                database.Features &= ~TabularDatabaseFeature.ManageDatesAll;
-                database.Features &= ~TabularDatabaseFeature.ExportDataAll;
-
-                database.FeatureUnsupportedReasons |= TabularDatabaseFeatureUnsupportedReason.MetadataOnly;
-                database.FeatureUnsupportedReasons |= TabularDatabaseFeatureUnsupportedReason.ReadOnly;
-            }
-            return database;
+            return vpaxContent.DaxModel;
         }
 
-        public static TabularDatabase GetDatabase(TabularConnectionWrapper connection)
-        {
-            var daxModel = GetDaxModel(connection);
-            var database = TabularDatabase.CreateFrom(daxModel);
-
-            if (database.Info is not null)
-            {
-                database.Info.ServerVersion = connection.Server.Version;
-                database.Info.ServerEdition = connection.Server.Edition;
-                database.Info.ServerMode = connection.Server.ServerMode;
-                database.Info.ServerLocation = connection.Server.ServerLocation;
-            }
-
-            return database;
-        }
-
-        private static Dax.Metadata.Model GetDaxModel(TabularConnectionWrapper connectionWrapper, bool includeStatistics = false, int sampleRows = 0)
+        public static Dax.Metadata.Model GetDaxModel(TabularConnectionWrapper connectionWrapper, bool includeStatistics = false, int sampleRows = 0)
         {
             var server = connectionWrapper.Server;
             var database = connectionWrapper.Database;
             var daxModel = TomExtractor.GetDaxModel(database.Model, extractorApp: AppEnvironment.ApplicationName, extractorVersion: AppEnvironment.ApplicationProductVersion);
 
-            using var connection = connectionWrapper.CreateConnection();
+            using var connection = connectionWrapper.CreateAdomdConnection(open: false);
             {
                 DmvExtractor.PopulateFromDmv(
                     daxModel,

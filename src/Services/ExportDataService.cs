@@ -8,7 +8,7 @@
     using Sqlbi.Bravo.Infrastructure;
     using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Infrastructure.Helpers;
-    using Sqlbi.Bravo.Infrastructure.Security;
+    using Sqlbi.Bravo.Infrastructure.Services;
     using Sqlbi.Bravo.Infrastructure.Services.ExportData;
     using Sqlbi.Bravo.Models;
     using Sqlbi.Bravo.Models.ExportData;
@@ -60,15 +60,13 @@
 
         public ExportDataJob ExportDelimitedTextFile(PBIDesktopReport report, ExportDelimitedTextSettings settings, CancellationToken cancellationToken)
         {
-            BravoUnexpectedException.ThrowIfNull(report.ServerName);
-            BravoUnexpectedException.ThrowIfNull(report.DatabaseName);
-
-            var connectionString = ConnectionStringHelper.BuildForPBIDesktop(report.ServerName);
             var job = _reportJobs.AddNew(report, settings);
 
             try
             {
-                ExportDelimitedTextFileImpl(job, settings, connectionString, report.DatabaseName, cancellationToken);
+                using var connection = AdomdConnectionWrapper.ConnectTo(report);
+
+                ExportDelimitedTextFileImpl(job, settings, connection, cancellationToken);
                 job.SetCompleted();
             }
             catch (OperationCanceledException)
@@ -90,14 +88,13 @@
 
         public ExportDataJob ExportDelimitedTextFile(PBICloudDataset dataset, ExportDelimitedTextSettings settings, CancellationToken cancellationToken)
         {
-            BravoUnexpectedException.ThrowIfNull(_pbicloudService.CurrentAccessToken);
-
-            var (connectionString, databaseName) = dataset.GetConnectionParameters(_pbicloudService.CurrentAccessToken);
             var job = _datasetJobs.AddNew(dataset, settings);
 
             try
             {
-                ExportDelimitedTextFileImpl(job, settings, connectionString, databaseName, cancellationToken);
+                using var connection = AdomdConnectionWrapper.ConnectTo(dataset, _pbicloudService.CurrentAccessToken!);
+
+                ExportDelimitedTextFileImpl(job, settings, connection, cancellationToken);
                 job.SetCompleted();
             }
             catch (OperationCanceledException)
@@ -119,15 +116,13 @@
 
         public ExportDataJob ExportExcelFile(PBIDesktopReport report, ExportExcelSettings settings, CancellationToken cancellationToken)
         {
-            BravoUnexpectedException.ThrowIfNull(report.ServerName);
-            BravoUnexpectedException.ThrowIfNull(report.DatabaseName);
-
-            var connectionString = ConnectionStringHelper.BuildForPBIDesktop(report.ServerName);
             var job = _reportJobs.AddNew(report, settings);
 
             try
             {
-                ExportExcelFileImpl(job, settings, connectionString, report.DatabaseName, cancellationToken);
+                using var connection = AdomdConnectionWrapper.ConnectTo(report);
+
+                ExportExcelFileImpl(job, settings, connection, cancellationToken);
                 job.SetCompleted();
             }
             catch (OperationCanceledException)
@@ -149,14 +144,13 @@
 
         public ExportDataJob ExportExcelFile(PBICloudDataset dataset, ExportExcelSettings settings, CancellationToken cancellationToken)
         {
-            BravoUnexpectedException.ThrowIfNull(_pbicloudService.CurrentAccessToken);
-
-            var (connectionString, databaseName) = dataset.GetConnectionParameters(_pbicloudService.CurrentAccessToken);
             var job = _datasetJobs.AddNew(dataset, settings);
 
             try
             {
-                ExportExcelFileImpl(job, settings, connectionString, databaseName, cancellationToken);
+                using var connection = AdomdConnectionWrapper.ConnectTo(dataset, _pbicloudService.CurrentAccessToken!);
+
+                ExportExcelFileImpl(job, settings, connection, cancellationToken);
                 job.SetCompleted();
             }
             catch (OperationCanceledException)
@@ -190,7 +184,7 @@
             return job;
         }
 
-        private static void ExportDelimitedTextFileImpl(ExportDataJob job, ExportDelimitedTextSettings settings, string connectionString, string databaseName, CancellationToken cancellationToken)
+        private static void ExportDelimitedTextFileImpl(ExportDataJob job, ExportDelimitedTextSettings settings, AdomdConnectionWrapper connection, CancellationToken cancellationToken)
         {
             Directory.CreateDirectory(settings.ExportPath);
 
@@ -200,11 +194,7 @@
                 config.Validate();
             }
 
-            using var connection = new AdomdConnection(connectionString.ToUnprotectedString());
-            connection.Open();
-            connection.ChangeDatabase(databaseName);
-
-            using var command = connection.CreateCommand();
+            using var command = connection.CreateAdomdCommand();
             cancellationToken.Register(() => command.Cancel());
 
             foreach (var tableName in settings.Tables)
@@ -282,18 +272,14 @@
             }
         }
 
-        private static void ExportExcelFileImpl(ExportDataJob job, ExportExcelSettings settings, string connectionString, string databaseName, CancellationToken cancellationToken)
+        private static void ExportExcelFileImpl(ExportDataJob job, ExportExcelSettings settings, AdomdConnectionWrapper connection, CancellationToken cancellationToken)
         {
             var xlsxFile = new FileInfo(settings.ExportPath);
-            
+
             BravoUnexpectedException.ThrowIfNull(xlsxFile.Directory);
             Directory.CreateDirectory(xlsxFile.Directory.FullName);
 
-            using var connection = new AdomdConnection(connectionString.ToUnprotectedString());
-            connection.Open();
-            connection.ChangeDatabase(databaseName);
-
-            using var command = connection.CreateCommand();
+            using var command = connection.CreateAdomdCommand();
             cancellationToken.Register(() => command.Cancel());
 
             using var fileStream = new FileStream(xlsxFile.FullName, FileMode.Create, FileAccess.Write);

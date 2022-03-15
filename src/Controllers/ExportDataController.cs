@@ -145,7 +145,7 @@
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ExportDataJob))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesDefaultResponseType]
-        public IActionResult QueryExportFromReport(PBIDesktopReport report)
+        public IActionResult QueryExportJob(PBIDesktopReport report)
         {
             var job = _exportDataService.QueryExportJob(report);
             if (job is null)
@@ -165,7 +165,7 @@
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ExportDataJob))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesDefaultResponseType]
-        public IActionResult QueryExportFromDataset(PBICloudDataset dataset)
+        public IActionResult QueryExportJob(PBICloudDataset dataset)
         {
             var job = _exportDataService.QueryExportJob(dataset);
             if (job is null)

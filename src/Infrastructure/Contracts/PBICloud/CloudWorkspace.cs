@@ -1,42 +1,53 @@
 ﻿namespace Sqlbi.Bravo.Infrastructure.Contracts.PBICloud
 {
     using System;
+    using System.Text.Json.Serialization;
 
     public sealed class CloudWorkspace
     {
-        private static readonly string PersonalWorkspaceDefaultId = Guid.Empty.ToString();
+        internal static readonly string PersonalWorkspaceId = Guid.Empty.ToString();
 
-        private string? _workspaceObjectId;
+        [JsonPropertyName("id")]
+        public string? Id { get; set; }
 
-        private string? _workspaceName;
+        [JsonPropertyName("name")]
+        public string? Name { get; set; }
 
-        public string? Id 
-        {
-            get => IsPersonalWorkspace ? PersonalWorkspaceDefaultId : _workspaceObjectId;
-            set => _workspaceObjectId = value;
-        }
-
-        public string? Name
-        {
-            get => IsPersonalWorkspace ? null : _workspaceName;
-            set => _workspaceName = value;
-        }
-
+        [JsonPropertyName("type")]
         public string? Type { get; set; }
 
+        [JsonPropertyName("capacitySku")]
         public string? CapacitySku { get; set; }
 
-        public string? WorkspaceObjectId => _workspaceObjectId;
+        [JsonPropertyName("capacityObjectId")]
+        public string? CapacityObjectId { get; set; }
 
+        [JsonPropertyName("capacityUri")]
+        public string? CapacityUri { get; set; }
+
+        [JsonPropertyName("__objectId")]
+        public string? ObjectId
+        {
+            get
+            {
+                if (IsPersonalWorkspace)
+                {
+                    return PersonalWorkspaceId;
+                }
+
+                return Id;
+            }
+        }
+
+        [JsonPropertyName("__isIsLegacyV1Workspace")]
         public bool IsLegacyV1Workspace => WorkspaceType == CloudWorkspaceType.Group;
 
-        public bool IsXmlaEndPointSupported => CapacitySkuType == CloudWorkspaceCapacitySkuType.Premium;
-
+        [JsonPropertyName("__isPersonalWorkspace")]
         public bool IsPersonalWorkspace
         {
             get
             {
-                if (string.IsNullOrEmpty(_workspaceName))
+                if (string.IsNullOrEmpty(Name))
                 {
                     return WorkspaceType == CloudWorkspaceType.User;
                 }
@@ -45,8 +56,10 @@
             }
         }
 
+        [JsonPropertyName("__workspaceType")]
         public CloudWorkspaceType WorkspaceType => (CloudWorkspaceType)Enum.Parse(typeof(CloudWorkspaceType), Type!); // here we don't expect null, but in case we let the ArgumentNullException arise
 
+        [JsonPropertyName("__capacitySkuType")]
         public CloudWorkspaceCapacitySkuType CapacitySkuType => (CloudWorkspaceCapacitySkuType)Enum.Parse(typeof(CloudWorkspaceCapacitySkuType), CapacitySku!); // here we don't expect null, but in case we let the ArgumentNullException arise
     }
 }
