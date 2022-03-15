@@ -90,7 +90,7 @@ export class ManageDatesPreviewScene extends DocScene {
             });
     }
 
-    convertColumnsChangesToBranches(changes: ModelChanges): Branch[] {
+    convertTablesAndColumnsChangesToBranches(changes: ModelChanges): Branch[] {
 
         let branches: Dic<Branch> = {};
         
@@ -121,9 +121,8 @@ export class ManageDatesPreviewScene extends DocScene {
                         };
 
                     } else {
-                        tableAttribute = groupAttribute; // If the table exists it can only be a deleted table
 
-                        branches[table.name].attributes = tableAttribute;
+                        branches[table.name].attributes = ChangeType.Modified; // If the table exists in both groups it must be labeled as modified
                     }
                     
                     if (table.columns) {
@@ -151,7 +150,7 @@ export class ManageDatesPreviewScene extends DocScene {
                     if (table.hierarchies) {
                         table.hierarchies.forEach(hierarchy => {
 
-                            let hierarchyAttribute = ChangeType.Added;
+                            let hierarchyAttribute = tableAttribute;
                             let id = daxName(table.name, `Hierarchy[${hierarchy.name}]`);
 
                             let hierarchyChildren: Branch[] = [];
@@ -225,9 +224,8 @@ export class ManageDatesPreviewScene extends DocScene {
                         };
 
                     } else {
-                        tableAttribute = groupAttribute; // If the table exists it can only be a deleted table
 
-                        branches[table.name].attributes = tableAttribute;
+                        branches[table.name].attributes = ChangeType.Modified; // If the table exists in both groups it must be labeled as modified
                     }
 
                     table.measures.forEach(measure => {
@@ -239,10 +237,13 @@ export class ManageDatesPreviewScene extends DocScene {
                         }
 
                         let folders = (measure.displayFolder ? measure.displayFolder.split("\\") : []);
-                        
+                
+                        if (!("_children" in branches[table.name]))
+                            branches[table.name]._children = [];
+
                         let b = branches[table.name]._children;
                         folders.forEach(folder => {
-                            if (folder.trim() == "") return;
+                            if (folder.trim() == "" || !b) return;
 
                             let i = b.findIndex(n => n.name === folder);
                             if (i >= 0) {
@@ -259,6 +260,7 @@ export class ManageDatesPreviewScene extends DocScene {
                                 });
                                 b = b[b.length - 1]._children;
                             }
+                            
                         });
 
                         let id = daxName(table.name, measure.name);
@@ -297,7 +299,7 @@ export class ManageDatesPreviewScene extends DocScene {
                         previews[table.name].expression = fixCrLn(table.expression);
                 }
                 
-                if (table.columns) {
+                if (table.columns && table.preview) {
                     table.columns.forEach(column => {
                         previews[daxName(table.name, column.name)] = { 
                             table: table.preview.map(row => ({ [column.name]: row[column.name] }))
@@ -332,7 +334,7 @@ export class ManageDatesPreviewScene extends DocScene {
             </div>
             <div class="scene-action">
                 <div class="backup-reminder">
-                    <div class="icon icon-backup"></div>
+                    <div class="icon icon-save"></div>
                     <p>${i18n(strings.backupReminder)}</p>
                 </div>
                 <div class="do-proceed button enable-if-editable" disabled>${i18n(strings.manageDatesApplyCtrlTitle)}</div>
@@ -392,7 +394,7 @@ export class ManageDatesPreviewScene extends DocScene {
 
         this.applyButton = _(".do-proceed", this.body);
 
-        this.renderBrowser(".columns-browser", this.convertColumnsChangesToBranches(changes), PlainTreeFilter.ParentOnly);
+        this.renderBrowser(".columns-browser", this.convertTablesAndColumnsChangesToBranches(changes), PlainTreeFilter.ParentOnly);
         if (hasTimeIntelligence)
             this.renderBrowser(".measures-browser", this.convertMeasuresChangesToBranches(changes), PlainTreeFilter.LastChildrenOnly);
 
@@ -433,11 +435,14 @@ export class ManageDatesPreviewScene extends DocScene {
         
         host.manageDatesUpdate(request)
             .then(()=>{
-                let successScene = new SuccessScene(Utils.DOM.uniqueId(), this.element.parentElement, i18n(strings.manageDatesSuccessSceneMessage), ()=>{
-                    this.pop();
-                });
-                this.splice(successScene);
 
+                this.doc.sync()
+                    .then(()=> {
+                        let successScene = new SuccessScene(Utils.DOM.uniqueId(), this.element.parentElement, i18n(strings.manageDatesSuccessSceneMessage), ()=>{
+                            this.pop();
+                        });
+                        this.splice(successScene);
+                    });
             })
             .catch((error: AppError) => {
                 if (error.requestAborted) return;
@@ -476,7 +481,13 @@ export class ManageDatesPreviewScene extends DocScene {
                         }
                     }
                 }
-            ]
+            ],
+            rowFormatter: (item, element) => {
+                if (Utils.Obj.isSet(item.attributes)) {
+                    let statusText = ChangeType[item.attributes];
+                    element.classList.add(`row-status-${statusText}`);
+                }
+            }
         });       
 
         browser.on("click", (item: Branch)=>{

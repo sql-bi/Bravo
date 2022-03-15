@@ -149,24 +149,33 @@ export module Renderer {
             let isHidden = false;
             let toggledByClass = "";
             if (struct.toggledBy) {
-                let toggler = <HTMLElement>_(`#${Utils.Text.slugify(struct.toggledBy.option)} .listener`, element);
+                let toggler = <HTMLElement>_(`#${Utils.Text.slugify(struct.toggledBy.option)}`, element);
                 if (toggler) {
-                    // TODO: This doesn't work with input text
-                    let togglerValue = (toggler.nodeName == "SELECT" ? 
-                        (<HTMLSelectElement>toggler).value : 
-                        (<HTMLInputElement>toggler).checked.toString()
-                    );
 
-                    isHidden = true;
-                    toggledByClass = ` toggled-by-${Utils.Text.slugify(struct.toggledBy.option)}`;
-                    let _values = <string[]>(Utils.Obj.isArray(struct.toggledBy.value) ? 
-                        struct.toggledBy.value : 
-                        [struct.toggledBy.value.toString()]
-                    );
-                    _values.forEach(_value => {
-                        toggledByClass += ` toggle-if-${Utils.Text.slugify(_value)}`;
-                        if (togglerValue == _value) isHidden = false;
-                    });
+                    if (toggler.hasAttribute("hidden")) {
+                        isHidden = true;
+                    } else {
+                        let listener = _(".listener", toggler);
+                        if (listener) {
+
+                            // TODO: This doesn't work with input text
+                            let togglerValue = (listener.nodeName == "SELECT" ? 
+                                (<HTMLSelectElement>listener).value : 
+                                (<HTMLInputElement>listener).checked.toString()
+                            );
+
+                            isHidden = true;
+                            toggledByClass = ` toggled-by-${Utils.Text.slugify(struct.toggledBy.option)}`;
+                            let _values = <string[]>(Utils.Obj.isArray(struct.toggledBy.value) ? 
+                                struct.toggledBy.value : 
+                                [struct.toggledBy.value.toString()]
+                            );
+                            _values.forEach(_value => {
+                                toggledByClass += ` toggle-if-${Utils.Text.slugify(_value)}`;
+                                if (togglerValue == _value) isHidden = false;
+                            });
+                        }
+                    }
                 }
             }
 

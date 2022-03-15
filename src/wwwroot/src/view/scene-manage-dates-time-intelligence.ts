@@ -14,6 +14,8 @@ import { Branch, BranchType, TabularBrowser } from './tabular-browser';
 
 export class ManageDatesSceneTimeIntelligence extends ManageDatesScenePane {
 
+    columnBrowser: TabularBrowser;
+
     render(element: HTMLElement) {
         super.render(element);
 
@@ -25,6 +27,11 @@ export class ManageDatesSceneTimeIntelligence extends ManageDatesScenePane {
                 icon: "folder-fx",
                 bold: true,
                 type: OptionType.switch,
+                onChange: (e, value) =>  {
+                    let el = (<HTMLSelectElement>_("#targetmeasuresmode .listener", element));
+                    el.value = "";
+                    el.dispatchEvent(new Event("change"));
+                }
             },
             {
                 option: "targetMeasuresMode",
@@ -63,12 +70,12 @@ export class ManageDatesSceneTimeIntelligence extends ManageDatesScenePane {
             Renderer.Options.render(struct, _(".options", element), this.config);
         });
 
-        let columnBrowser = new TabularBrowser(Utils.DOM.uniqueId(), _("#targetmeasures", element), this.prepareData(), {
+        this.columnBrowser = new TabularBrowser(Utils.DOM.uniqueId(), _("#targetmeasures", element), this.modelToBranches(), {
             selectable: true, 
             search: true
         });
 
-        columnBrowser.on("select", (columns: string[]) => {
+        this.columnBrowser.on("select", (columns: string[]) => {
             this.config.update("targetMeasures", columns);
         });
 
@@ -78,7 +85,7 @@ export class ManageDatesSceneTimeIntelligence extends ManageDatesScenePane {
         });
     }
 
-    prepareData(): Branch[] {
+    modelToBranches(): Branch[] {
         let branches: Dic<Branch> = {};
         
         this.doc.model.tables 
@@ -100,7 +107,7 @@ export class ManageDatesSceneTimeIntelligence extends ManageDatesScenePane {
             .forEach(measure => {
                 if (measure.tableName in branches) {
                     branches[measure.tableName]._children.push({
-                        id: daxName(measure.tableName, measure.name),
+                        id: measure.name,
                         name: measure.name,
                         type: BranchType.Measure,
                         dataType: "measure",
@@ -115,5 +122,19 @@ export class ManageDatesSceneTimeIntelligence extends ManageDatesScenePane {
         }
         
         return Object.values(branches);
+    }
+
+    update() {
+        super.update();
+
+        if (this.columnBrowser) {
+            this.columnBrowser.branches = this.modelToBranches();
+            this.columnBrowser.update();
+        }
+    }
+
+    destroy() {
+        this.columnBrowser = null;
+        super.destroy();
     }
 }

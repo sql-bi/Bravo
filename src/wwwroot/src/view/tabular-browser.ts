@@ -54,6 +54,7 @@ export interface TabularBrowserConfig {
     placeholder?: string
     additionalColumns?: Tabulator.ColumnDefinition[]
     toggableTree?: PlainTreeFilter
+    rowFormatter?: (branch: Branch, element: HTMLElement)=>void
 }
 
 
@@ -240,6 +241,10 @@ export class TabularBrowser extends View {
                         if (item.isInactive === true){
                             element.classList.add("row-inactive");
                         }
+
+                        if (this.config.rowFormatter)
+                            this.config.rowFormatter(item, element);
+                            
                     }catch(ignore){}
                 },
             };
