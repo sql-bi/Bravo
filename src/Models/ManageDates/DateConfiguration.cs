@@ -221,8 +221,7 @@
             if (TargetMeasures?.Length > 0)
             {
                 templateConfiguration.TargetMeasures = TargetMeasures
-                    //.Select((name) => new IMeasureTemplateConfig.TargetMeasure { Name = name })            // TODO: restore after issue 149 is fixed
-                    .Select((name) => new IMeasureTemplateConfig.TargetMeasure { Name = name.GetDaxName() }) // TODO: remove after issue 149 is fixed
+                    .Select((name) => new IMeasureTemplateConfig.TargetMeasure { Name = name })
                     .ToArray();
             }
             templateConfiguration.TableSingleInstanceMeasures = TableSingleInstanceMeasures ?? templateConfiguration.TableSingleInstanceMeasures;

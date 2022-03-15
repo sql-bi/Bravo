@@ -105,7 +105,7 @@ export class ManageDatesSceneTimeIntelligence extends ManageDatesScenePane {
             .forEach(measure => {
                 if (measure.tableName in branches) {
                     branches[measure.tableName]._children.push({
-                        id: daxName(measure.tableName, measure.name),
+                        id: measure.name,
                         name: measure.name,
                         type: BranchType.Measure,
                         dataType: "measure",
