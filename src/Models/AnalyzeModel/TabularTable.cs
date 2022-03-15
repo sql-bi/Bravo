@@ -30,7 +30,7 @@
         [JsonPropertyName("isHidden")]
         public bool? IsHidden { get; set; }
 
-        internal static TabularTable CreateFrom(VpaTable vpaTable)
+        internal static TabularTable CreateFrom(VpaTable vpaTable, Dax.Metadata.Model daxModel)
         {
             var table = new TabularTable
             {
@@ -38,7 +38,7 @@
                 RowsCount = vpaTable.RowsCount,
                 Size = vpaTable.TableSize,
                 IsDateTable = vpaTable.IsDateTable,
-                IsHidden = false //TODO Expose IsHidden property 
+                IsHidden = daxModel.Tables.Single((t) => t.TableName.Name == vpaTable.TableName).IsHidden // TODO: VertipaqAnalyzer - add property VpaTable.IsHidden
             };
 
             if (vpaTable.ColumnsNumber == 0L || (vpaTable.ColumnsNumber == 1L && vpaTable.Columns.Single().IsRowNumber))

@@ -214,7 +214,7 @@
                 var table = job.AddNew(tableName);
                 {
                     // TODO: if the SSAS instance supports TOPNSKIP then use that to query batches of rows
-                    command.CommandText = $"EVALUATE '{ tableName }'";
+                    command.CommandText = $"EVALUATE { TabularModelHelper.GetDaxTableName(tableName) }";
 
                     var fileTableName = tableName.ReplaceInvalidFileNameChars();
                     var fileName = Path.ChangeExtension(fileTableName, "csv");
@@ -306,7 +306,7 @@
                 var table = job.AddNew(tableName);
                 {
                     // TODO: if the SSAS instance supports TOPNSKIP then use that to query batches of rows
-                    command.CommandText = $"EVALUATE '{ tableName }'";
+                    command.CommandText = $"EVALUATE { TabularModelHelper.GetDaxTableName(tableName) }";
 
                     using var dataReader = command.ExecuteReader(CommandBehavior.SingleResult);
                     //using var dataReader = CreateTestDataReader();
@@ -324,15 +324,50 @@
 
             static string GetWorksheetName(string tableName, int tableIndex)
             {
-                const int ExcelWorksheetNameMaxLength = 31;
+                const char ApostropheChar = '\'';
+                const int WorksheetNameMaxLength = 31;
+                /* const */ var WorksheetNameForbiddenChars = new[] { '\\', '/', '?', '*', '[', ']', ':' };
 
                 var worksheetName = tableName;
+                var appendSuffix = false;
+                var suffix = $"#{ tableIndex }";
 
-                if (tableName.Length > ExcelWorksheetNameMaxLength)
+                // Worksheet name cannot be left blank
+                if (worksheetName == string.Empty)
                 {
-                    var suffix = $"#{ tableIndex }";
+                    worksheetName = "Sheet";
+                    appendSuffix = true;
+                }
 
-                    worksheetName = tableName[..(ExcelWorksheetNameMaxLength - suffix.Length)];
+                // Worksheet cannot be named 'history' because it's a reserved name
+                if (worksheetName.EqualsI("history"))
+                    appendSuffix = true;
+
+                // Apostrophe cannot be used at the beginning or end of the worksheet name
+                if (worksheetName.StartsWith(ApostropheChar) || worksheetName.EndsWith(ApostropheChar))
+                {
+                    worksheetName = worksheetName.TrimStart(ApostropheChar).TrimEnd(ApostropheChar);
+                    appendSuffix = true;
+                }
+
+                // Worksheet name does not contain forbidden characters
+                if (worksheetName.IndexOfAny(WorksheetNameForbiddenChars) != -1)
+                {
+                    foreach (var forbiddenChar in WorksheetNameForbiddenChars)
+                        worksheetName = worksheetName.Replace(forbiddenChar, '_');
+
+                    appendSuffix = true;
+                }
+
+                // Worksheet name cannot exceed 31 characters
+                if (worksheetName.Length > WorksheetNameMaxLength)
+                {
+                    worksheetName = worksheetName[..(WorksheetNameMaxLength - suffix.Length)];
+                    appendSuffix = true;
+                }
+
+                if (appendSuffix)
+                {
                     worksheetName += suffix;
                 }
 
@@ -347,12 +382,16 @@
                     border: XlsxStyle.Default.Border,
                     numberFormat: XlsxStyle.Default.NumberFormat,
                     alignment: XlsxAlignment.Default);
-                
+                var dateTimeStyle = XlsxStyle.Default.With(new XlsxNumberFormat($"yyyy-mm-dd hh:mm:ss"));
+
                 // write header
                 writer.SetDefaultStyle(headerStyle).BeginRow();
 
                 for (var i = 0; i < reader.FieldCount; i++)
-                    writer.Write(GetDaxColumnName(reader, i));
+                {
+                    var daxColumnName = GetDaxColumnName(reader, i);
+                    writer.Write(daxColumnName);
+                }
 
                 // write data
                 writer.SetDefaultStyle(XlsxStyle.Default);
@@ -381,7 +420,7 @@
                                 writer.Write(@decimal);
                                 break;
                             case DateTime dateTime:
-                                writer.Write(dateTime);
+                                writer.Write(dateTime, dateTimeStyle);
                                 break;
                             case string @string:
                                 writer.Write(@string);

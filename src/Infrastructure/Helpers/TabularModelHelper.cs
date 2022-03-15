@@ -68,5 +68,11 @@
 
             return true;
         }
+
+        public static string GetDaxTableName(string? tableName)
+        {
+            var daxTableName = $"'{ tableName?.Replace("'", "''") }'";
+            return daxTableName;
+        }
     }
 }
