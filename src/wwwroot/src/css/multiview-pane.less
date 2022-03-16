@@ -1,0 +1,87 @@
+// main: main.less
+.multiview-pane {
+
+    #multiview-menu {
+        width: 100%;
+        height: 100%;
+        .flexbox(flex-start, stretch, column);
+    
+        .menu {
+            width: 100%;
+
+            .toolbar {
+                width: auto;
+                margin: 0 0 0 auto;
+            }
+        }
+
+        .menu-body {
+            position: relative;
+            height: calc(100% - 65px);
+            width: 100%;
+            margin-top: 20px;
+            .flexbox(flex-start, stretch, column);
+            overflow: hidden;
+
+            .item-body {
+                height: 100%;
+                width: 100%;
+                font-size: 16px;
+                overflow: hidden;
+                position: relative;
+            }
+            
+        }
+
+        .gutter {
+            background-color: @back-color;
+            .dark & {
+                background-color: @back-color-dark;
+            }
+
+            &.gutter-vertical {
+                width: 100%;
+            }
+            &.gutter-horizontal {
+                height: 100%;
+            }
+        }
+    }
+
+    /*&.layout-VerticalSplit, &.layout-HorizontalSplit {
+        .menu-body {
+            justify-content: space-between !important;
+        }
+    }*/
+
+    &.layout-VerticalSplit {
+        .menu-body {
+            flex-direction: row !important;
+        }
+    }
+
+    &.layout-HorizontalSplit, &.layout-VerticalSplit {
+        .menu {
+            .item:nth-child(2) {
+                margin-left: auto
+            }
+            .toolbar {
+                margin-left: 20px !important;
+            }
+        }
+    }
+
+    /*&:not(.dragging) {
+        .menu {
+            .item, .toolbar {
+                transition: all .2s ease-in-out;
+            }
+        }
+        .menu-body {
+            .item-body, .gutter {
+                transition: all .2s ease-in-out;
+            }
+
+        }
+    }*/
+}

@@ -378,6 +378,7 @@ const locale: Locale = {
         [_.welcomeHelpTitle]: "Come usare Bravo?",
         [_.welcomeText]: "Bravo è un comodo strumento per Power BI che può essere usato per analizzare i tuoi modelli, formattare le misure DAX, creare tabelle date ed esportare i dati.",
         [_.welcomeTitle]: "Bravo for Power BI",
+        [_.wrappingTitle]: "A capo automatico",
     }
 }
 export default locale;

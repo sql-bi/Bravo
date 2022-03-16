@@ -52,7 +52,7 @@ export interface TabularMeasure {
     isHidden?: boolean
 }
 
-export interface FormatDaxError {
+export interface DaxError {
     line: number
     column: number
     message?: string
@@ -66,7 +66,7 @@ export enum DaxLineBreakStyle {
 }
 
 export interface FormattedMeasure extends TabularMeasure {
-    errors?: FormatDaxError[]
+    errors?: DaxError[]
 }
 
 export function daxName(tableName: string, columnName: string) {

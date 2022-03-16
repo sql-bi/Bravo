@@ -268,51 +268,6 @@ a, .link {
     }
 }
 
-.menu {
-    .flexbox(center);
-
-    .item {
-        .flexbox(center, flex-end, column);
-        margin: 0 0 0 30px;
-        opacity: .7;
-        font-size: 14px;
-        cursor: pointer !important;
-        white-space: nowrap;
-        transition: all .2s ease-in-out;
-
-        &:first-child {
-            margin-left: 0;
-        }
-
-        &.disabled {
-            cursor: not-allowed !important;
-        }
-
-        .selector {
-            .flex(0 0 auto);
-            background: transparent;
-            .border-radius;
-            width: 95%;
-            height: 4px;
-            margin-top: 2px;
-            transition: background .2s ease-in-out;
-        }
-        &.selected {
-            opacity: 1;
-            .selector {
-                background: @accent-back-color;
-                .dark & {
-                    background-color: @accent-back-color-dark;
-                }
-            }
-        }
-    }
-}
-.menu-body {
-    .item-body {
-        transition: width .2s ease-in-out;
-    }
-}
 .toolbar {
     .flexbox(center);
     font-size: 15px;

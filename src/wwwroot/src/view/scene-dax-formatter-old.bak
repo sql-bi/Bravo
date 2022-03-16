@@ -10,6 +10,7 @@ import { Dic, Utils, _, __ } from '../helpers/utils';
 import { Doc, DocType, MeasureStatus } from '../model/doc';
 import { strings } from '../model/strings';
 import { Alert } from './alert';
+import { Menu, MenuItem } from './menu';
 import { FormattedMeasure, TabularMeasure, daxName } from '../model/tabular';
 import { ContextMenu } from '../helpers/contextmenu';
 import { Loader } from '../helpers/loader';
@@ -22,19 +23,12 @@ import { SuccessScene } from './scene-success';
 import { AppError, AppProblem } from '../model/exceptions';
 import { ClientOptionsFormattingRegion, DaxFormatterLineStyle, DaxFormatterSpacingStyle } from '../controllers/options';
 import { PageType } from '../controllers/page';
-import { MultiViewPane, MultiViewPaneMode, ViewPane } from './multiview-pane';
-import { DaxEditor } from './dax-editor';
+import { daxCodeMirror } from '../helpers/cm-utils';
 
 export class DaxFormatterScene extends DocScene {
 
     table: Tabulator;
-    
-    previewContainer: HTMLElement;
-    previewOverlay: HTMLElement;
-    previewPane: MultiViewPane;
-    formattedEditor: DaxEditor;
-    currentEditor: DaxEditor;
-
+    menu: Menu;
     searchBox: HTMLInputElement;
     formatButton: HTMLElement;
     activeMeasure: TabularMeasure;
@@ -52,15 +46,33 @@ export class DaxFormatterScene extends DocScene {
         this.element.classList.add("dax-formatter");
     }
 
-    updateEditor(editor: DaxEditor, measure?: TabularMeasure | FormattedMeasure) {
+    updateCodeMirror(element: HTMLElement, measure: TabularMeasure | FormattedMeasure) {
 
-        if (measure) {
-            editor.value = measure.expression;
-            const errors = (<FormattedMeasure>measure).errors;
-            if (errors)
-                editor.highlightErrors(errors);
+        if (!measure) return; // IMPORTANT: since the value is null only if nothing is selected, and since when nothing is selected the preview pane is hidden, Code Mirror won't apply the syntax highlight correctly.
+
+        let cm = (<CodeMirrorElement>_(".CodeMirror", element)).CodeMirror;
+        if (cm) {
+            cm.getDoc().setValue(measure.expression);
+            //cm.refresh();
         } else {
-            editor.value = "";
+            cm = daxCodeMirror(element, measure.expression);
+        }
+
+        //Show errors
+        const errors = (<FormattedMeasure>measure).errors;
+        if (errors) {
+
+            errors.forEach(error => {
+                let errorMarker = document.createElement("div");
+                errorMarker.classList.add("CodeMirror-error-marker");
+                cm.addWidget({ch: error.column, line: error.line}, errorMarker, true);
+
+                let errorLine = document.createElement("div");
+                errorLine.classList.add("CodeMirror-error-line");
+                errorLine.innerText = `Ln ${error.line+1}, Col ${error.column+1}: ${error.message}`;
+                cm.addLineWidget(error.line, errorLine, { coverGutter: false })
+
+            });
         }
     }
 
@@ -73,7 +85,7 @@ export class DaxFormatterScene extends DocScene {
             </div>
 
             <div class="cols">
-                <div class="col coll browser">
+                <div class="col coll">
                     <div class="toolbar">
                         <div class="search">
                             <input type="search" placeholder="${i18n(strings.searchMeasurePlaceholder)}" class="disable-if-empty">
@@ -83,7 +95,7 @@ export class DaxFormatterScene extends DocScene {
                     </div>
                     <div class="table"></div>
                 </div>
-                <div class="col colr">
+                <div class="col colr preview-container">
                     <div class="preview" hidden></div>
                 </div>
             </div>
@@ -100,99 +112,174 @@ export class DaxFormatterScene extends DocScene {
         `;
         this.body.insertAdjacentHTML("beforeend", html);
 
-        this.previewContainer = _(".preview", this.body);
-
-        this.previewPane = new MultiViewPane("preview-menu", _(".preview", this.body), <Dic<ViewPane>>{
-            "current": {
+        this.menu = new Menu("preview-menu", _(".preview", this.body), <Dic<MenuItem>>{
+            "original": {
                 name: i18n(strings.daxFormatterOriginalCode),
-                onRender: element => {
-                    this.currentEditor = new DaxEditor(Utils.DOM.uniqueId(), element, optionsController.options.customOptions.editor.zoom, optionsController.options.customOptions.editor.wrapping);
-                },
-                onChange: element => {
-                    if (this.currentEditor)
-                        this.updateEditor(this.currentEditor, this.activeMeasure);
-                }
+                onRender: element => this.renderMenuCurrent(element),
+                onChange: element => this.switchToMenuCurrent(element)
             },
             "formatted": {
                 name: i18n(strings.daxFormatterFormattedCode),
-                onRender: element => {
-                    this.formattedEditor = new DaxEditor(Utils.DOM.uniqueId(), element, optionsController.options.customOptions.editor.zoom, optionsController.options.customOptions.editor.wrapping, [
-                        {
-                            className: ["refresh", "disable-on-syncing"],
-                            icon: "refresh",
-                            title: i18n(strings.refreshPreviewCtrlTitle),
-                            onClick: (e) => {
-                                this.generateFormattedPreview(this.doc.measures);
-                            }
-                        },
-                        {
-                            className: ["open-with-dax-formatter", "disable-on-syncing"],
-                            icon: "send-to-dax-formatter",
-                            title: i18n(strings.openWithDaxFormatterCtrlTitle),
-                            onClick: (e) => {
-                                this.formatWithDaxFormatter();
-                            }
-                        }
-                    ]);
-                },
-                onChange: element => {
-                    if (this.formattedEditor) {
-                        if (this.activeMeasure) {
-                            const key = daxName(this.activeMeasure.tableName, this.activeMeasure.name);
-                            if (key in this.doc.formattedMeasures) {
-                                this.togglePreviewOverlay(false);
-                                this.updateEditor(this.formattedEditor, this.doc.formattedMeasures[key]);
-                            } else if (key in this.previewing) {
-                                this.updateEditor(this.formattedEditor);
-                                this.renderPreviewLoading();
-                            } else {
-                                this.updateEditor(this.formattedEditor);
-                                this.renderPreviewOverlay();
-                            }
-                        } 
-                    }
-                }
+                onRender: element => this.renderMenuFormatted(element),
+                onChange: element => this.switchToMenuFormatted(element)
             }
-        }, optionsController.options.customOptions.formatting.previewLayout);
+        }, false);
 
+        _("#preview-menu .menu", this.body).insertAdjacentHTML("beforeend", `
 
-        this.previewOverlay = document.createElement("div");
-        this.previewOverlay.classList.add("preview-overlay");
-        _("#body-formatted", this.body).append(this.previewOverlay);
+            <div class="toolbar">
+                <div class="toggle-side toggle solo icon-VerticalSplit" title="${i18n(strings.sideCtrlTitle)}"></div>
+            </div>
+        `);
 
         this.searchBox = <HTMLInputElement>_(".search input", this.body);
         this.formatButton = _(".do-format", this.body);
 
         this.update();
 
+        this.updateZoom(optionsController.options.customOptions.editorZoom);
         this.listen();
     }
 
-    renderPreviewOverlay() {
+    renderMenuCurrent(element: HTMLElement) {
         let html = `
-            <div class="gen-preview-action">
-                ${i18n(strings.daxFormatterPreviewDesc)} 
-                <span class="show-data-usage link hide-if-editable">${i18n(strings.dataUsageLink)}</span>
-
-                <div class="gen-preview-ctrl">
-                    <span class="gen-preview button button-alt">${i18n(strings.daxFormatterPreviewButton)}</span>
-                    <span class="gen-preview-all button button-alt">${i18n(strings.daxFormatterPreviewAllButton)}</span>
-                </div>
-                
-                <label class="switch"><input type="checkbox" id="gen-preview-auto-option" ${optionsController.options.customOptions.formatting.preview ? "checked" : ""}><span class="slider"></span></label> <label for="gen-preview-auto-option">${i18n(strings.daxFormatterAutoPreviewOption)}</label>
+            <div class="cm cm-original"></div>
+            <div class="toolbar">
+                <select class="zoom">
+                    <option value="1" selected>100%</option>
+                </select>
             </div>
         `;
-        this.previewOverlay.innerHTML = html;
-        this.togglePreviewOverlay(true);
+        element.insertAdjacentHTML("beforeend", html);
     }
 
-    renderPreviewError(error: AppError, retry?: () => void) {
+    switchToMenuCurrent(element: HTMLElement) {
+
+        let editorEl = _('.cm-original', element);
+        this.updateCodeMirror(editorEl, this.activeMeasure);  
+    }
+
+    renderMenuFormatted(element: HTMLElement) {
+        let html = `
+            <div class="cm cm-formatted"></div>
+            <div class="toolbar">
+                <div class="refresh ctrl icon-refresh solo disable-on-syncing" title="${i18n(strings.refreshPreviewCtrlTitle)}"></div>
+
+                <div class="open-with-dax-formatter ctrl icon-send-to-dax-formatter disable-on-syncing" title="${i18n(strings.openWithDaxFormatterCtrlTitle)}"></div>
+                
+                <select class="zoom">
+                    <option value="1" selected>100%</option>
+                </select>
+            </div>
+        `;
+        element.insertAdjacentHTML("beforeend", html);
+    }
+
+    switchToMenuFormatted(element: HTMLElement) {
+
+        let editorElement = _(".cm-formatted", element);
+        editorElement.innerHTML = "";
+        
+        if (this.activeMeasure) {
+            const key = daxName(this.activeMeasure.tableName, this.activeMeasure.name);
+            if (key in this.doc.formattedMeasures) {
+                this.updateCodeMirror(editorElement, this.doc.formattedMeasures[key]);
+            } else if (key in this.previewing) {
+                this.renderFormattedPreviewLoading();
+            } else {
+                this.renderFormattedOverlay();
+            }
+        } else {
+            this.updateCodeMirror(editorElement, null);  
+        }
+    }
+
+    renderFormattedOverlay() {
+
+        let element = _(".cm-formatted", this.element);
+
+        let html = `
+            <div class="gen-preview-overlay">
+                <div class="gen-preview-action">
+                    ${i18n(strings.daxFormatterPreviewDesc)} 
+                    <span class="show-data-usage link hide-if-editable">${i18n(strings.dataUsageLink)}</span>
+
+                    <div class="gen-preview-ctrl">
+
+                        <span class="gen-preview button button-alt">${i18n(strings.daxFormatterPreviewButton)}</span>
+
+                        <span class="gen-preview-all button button-alt">${i18n(strings.daxFormatterPreviewAllButton)}</span>
+
+                    </div>
+                    
+                    <label class="switch"><input type="checkbox" id="gen-preview-auto-option" ${optionsController.options.customOptions.formatting.preview ? "checked" : ""}><span class="slider"></span></label> <label for="gen-preview-auto-option">${i18n(strings.daxFormatterAutoPreviewOption)}</label>
+                </div>
+            </div>
+        `;
+        element.innerHTML = html;
+    }
+
+    renderFormattedPreviewLoading() {
+
+        let element = _('.cm-formatted', this.element);
+        new Loader(element, false);
+    }
+
+    maybeAutoGenerateFormattedPreview() {
+        if (optionsController.options.customOptions.formatting.preview) {
+            this.generateFormattedPreview(this.doc.measures);
+        }
+    }
+
+    generateFormattedPreview(measures: TabularMeasure[]) {
+
+        if (!measures.length || !measures[0]) return;
+        
+        let element = _('.cm-formatted', this.element);
+
+        this.renderFormattedPreviewLoading();
+
+        measures.forEach(measure => {
+            this.previewing[daxName(measure.tableName, measure.name)] = true;
+        });
+
+        this.updateMeasuresStatus();
+
+        host.formatDax(this.getFormatDaxRequest(measures))
+            .then(formattedMeasures => {
+                
+                formattedMeasures.forEach(measure => {
+                    let measureKey = daxName(measure.tableName, measure.name);
+                    this.doc.formattedMeasures[measureKey] = measure;
+                    delete this.previewing[measureKey];
+
+                    if (this.activeMeasure && measureKey == daxName(this.activeMeasure.tableName, this.activeMeasure.name)) {
+                        this.updateCodeMirror(element, measure);
+                    }
+                });
+            })
+            .catch((error: AppError) => {
+                
+                if (error.requestAborted) return;
+                this.renderFormattedPreviewError(error, ()=>{
+                    this.generateFormattedPreview(measures);
+                });
+                this.previewing = {};
+            })
+            .finally(() => {
+                _(".loader", element).remove();
+                this.updateMeasuresStatus();
+            });
+        
+    }
+
+    renderFormattedPreviewError(error: AppError, retry?: () => void) {
 
         this.previewing = {};
         let message = error.toString();
         const retryId = Utils.DOM.uniqueId();
 
-        this.previewOverlay.innerHTML = `
+        _('.cm-formatted', this.element).innerHTML = `
             <div class="notice">
                 <div>
                     <p>${message}</p>
@@ -203,7 +290,6 @@ export class DaxFormatterScene extends DocScene {
                 </div>
             </div>
         `;
-        this.togglePreviewOverlay(true);
 
         _(".copy-error", this.element).addEventListener("click", e =>{
             e.preventDefault();
@@ -224,65 +310,33 @@ export class DaxFormatterScene extends DocScene {
         }
     }
 
-    togglePreviewOverlay(toggle: boolean) {
-        if (this.previewOverlay) {
-            this.previewOverlay.toggle(toggle)
-        }
-    }
-
-    renderPreviewLoading() {
-        new Loader(this.previewOverlay, false);
-        this.togglePreviewOverlay(true);
-    }
-
-    maybeAutoGenerateFormattedPreview() {
-        if (optionsController.options.customOptions.formatting.preview) {
-            this.generateFormattedPreview(this.doc.measures);
-        }
-    }
-
-    generateFormattedPreview(measures: TabularMeasure[]) {
-
-        if (!measures.length || !measures[0]) return;
-
-        this.renderPreviewLoading();
-
-        measures.forEach(measure => {
-            this.previewing[daxName(measure.tableName, measure.name)] = true;
-        });
-
-        this.updateMeasuresStatus();
-
-        host.formatDax(this.getFormatDaxRequest(measures))
-            .then(formattedMeasures => {
-                
-                formattedMeasures.forEach(measure => {
-                    let measureKey = daxName(measure.tableName, measure.name);
-                    this.doc.formattedMeasures[measureKey] = measure;
-                    delete this.previewing[measureKey];
-
-                    if (this.activeMeasure && measureKey == daxName(this.activeMeasure.tableName, this.activeMeasure.name)) {
-                        this.togglePreviewOverlay(false);
-                        this.updateEditor(this.formattedEditor, measure);
-                    }
-                });
-                this.togglePreviewOverlay(false);
-            })
-            .catch((error: AppError) => {
-
-                this.renderPreviewError(error, ()=>{
-                    this.generateFormattedPreview(measures);
-                });
-            })
-            .finally(() => {
-                this.updateMeasuresStatus();
-            });
-    }
-
     togglePreview(toggle: boolean) {
-        this.previewContainer.toggle(toggle);
-        if (toggle)
-            this.previewPane.updateLayout();
+
+        this.updatePreview();
+
+        let previewElement = _(".preview", this.element);
+        previewElement.toggle(toggle);
+
+        if (toggle) {
+            previewElement.parentElement.classList.add("solo");
+
+            if (optionsController.options.customOptions.formatting.sidePreview) {
+                this.switchToMenuCurrent(previewElement);
+                this.switchToMenuFormatted(previewElement);
+            } else {
+                this.menu.select(this.menu.currentItems/*, true*/);
+            }
+
+        } else {
+            previewElement.parentElement.classList.remove("solo");
+        }
+    }
+
+    updatePreview() {
+
+        const sidePreview = optionsController.options.customOptions.formatting.sidePreview;
+        _(".toggle-side", this.body).toggleClass("active", sidePreview);
+        _(".preview", this.element).toggleClass("side-by-side", sidePreview);
     }
 
     deselectMeasures() {
@@ -402,15 +456,14 @@ export class DaxFormatterScene extends DocScene {
                 title: i18n(strings.tableColMeasure),
                 cssClass: "column-name",
                 bottomCalc: this.canFormat ? "count" : null,
-                bottomCalcFormatter: (cell)=> i18n(strings.tableSelectedCount, {count: this.table.getSelectedData().length}),
-                resizable: false
+                bottomCalcFormatter: (cell)=> i18n(strings.tableSelectedCount, {count: this.table.getSelectedData().length})
             });
 
-            /*columns.push({ 
+            columns.push({ 
                 field: "tableName", 
                 width: 100,
                 title: i18n(strings.tableColTable)
-            });*/
+            });
 
             const tableConfig: Tabulator.Options = {
                 maxHeight: "100%",
@@ -471,6 +524,42 @@ export class DaxFormatterScene extends DocScene {
         }
     }
 
+    updateZoom(zoom: number) {
+
+        if (!zoom) zoom = 1;
+        optionsController.update("customOptions.editorZoom", zoom);
+
+        let defaultValues = [
+            0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2 //, 2.5, 5, 0.1
+        ];
+        let fixedZoom = Number((zoom * 100).toFixed(0)) / 100;
+        let found = (defaultValues.indexOf(fixedZoom) > -1);
+        if (!found) {
+            defaultValues.push(fixedZoom);
+            defaultValues.sort();
+        }
+
+        __(".preview .zoom", this.body).forEach((select: HTMLSelectElement) => {
+            if (select.length < defaultValues.length) {
+                select.innerHTML = "";
+                defaultValues.forEach(value => {
+                    let option = document.createElement("option");
+                    option.value = value.toString();
+                    option.text = `${(value * 100).toFixed(0)}%`;
+                    if (value == zoom) option.selected = true;
+                    select.appendChild(option);
+                });
+            } else {
+                select.value = fixedZoom.toString();
+            }
+        });
+
+        __(".cm", this.body).forEach((el: HTMLElement) => {
+            el.style.fontSize = `${zoom}em`;
+            let cm = (<CodeMirrorElement>_(".CodeMirror", el)).CodeMirror;
+            if (cm) cm.refresh();
+        });
+    }
 
     update() {
         if (!super.update()) return false;
@@ -645,6 +734,11 @@ export class DaxFormatterScene extends DocScene {
             this.applyFilters();
         });
 
+        __(".preview .zoom", this.body).forEach(select => {
+            select.addEventListener("change", e => {
+                this.updateZoom(parseFloat((<HTMLSelectElement>e.currentTarget).value));
+            });
+        });
         
         this.formatButton.addEventListener("click", e => {
             e.preventDefault();
@@ -657,36 +751,51 @@ export class DaxFormatterScene extends DocScene {
             this.format();
         });
 
+        _(".refresh", this.body).addEventListener("click", e => {
+            e.preventDefault();
+            this.generateFormattedPreview([this.activeMeasure]);
+        });
+
+        __(".copy-formula", this.body).forEach((div: HTMLElement) => {
+            div.addEventListener("click", e => {
+                e.preventDefault();
+
+                let container = div.closest(".item-body");
+            
+                let editorElement =  _(".cm", container);
+                let cm = (<CodeMirrorElement>_(".CodeMirror", editorElement)).CodeMirror;
+                if (cm)
+                    navigator.clipboard.writeText(cm.getValue());
+            });
+        });
+
+        _(".open-with-dax-formatter", this.body).addEventListener("click", e => {
+            e.preventDefault();
+
+            const fx = `${this.activeMeasure.name} = ${this.activeMeasure.expression}`;
+            const formatRegion = optionsController.options.customOptions.formatting.region;
+            const formatLine = (optionsController.options.customOptions.formatting.daxFormatter.lineStyle == DaxFormatterLineStyle.LongLine ? "long" : "short");
+            const formatSpacing = (optionsController.options.customOptions.formatting.daxFormatter.spacingStyle == DaxFormatterSpacingStyle.SpaceAfterFunction ? "" : "true");
+
+            let queryString = `fx=${encodeURIComponent(fx)}&r=${formatRegion}&s=${formatSpacing}&l=${formatLine}${themeController.isDark ? "&dark=1" : ""}&cache=${new Date().getTime()}`;
+
+            host.navigateTo(`https://www.daxformatter.com/?${queryString}`);
+
+
+            telemetry.track("Format with DAX Formatter");
+        });
+
+        _(".toggle-side", this.body).addEventListener("click", e => {
+            e.preventDefault();
+            let el = <HTMLElement>e.currentTarget;
+            optionsController.update("customOptions.formatting.sidePreview", !el.classList.contains("active"));
+
+            this.togglePreview(true);
+        });
+
         this.element.addLiveEventListener("click", ".show-data-usage", (e, element) => {
             e.preventDefault();
             this.showDataUsageDialog();
-        });
-
-
-        this.previewPane.on("size.change", ()=>{
-            this.currentEditor.editor.refresh();
-            this.formattedEditor.editor.refresh();
-        });
-
-        this.previewPane.on("mode.change", (mode: MultiViewPaneMode) =>{
-            optionsController.update("customOptions.formatting.previewLayout", mode);
-        });
-
-        this.currentEditor.on("zoom.change", (zoom: number) => {
-            this.formattedEditor.updateZoom(zoom, false);
-            optionsController.update("customOptions.editor.zoom", zoom);
-        });
-        this.currentEditor.on("wrapping.change", (wrapping: boolean) => {
-            this.formattedEditor.updateWrapping(wrapping, false)
-            optionsController.update("customOptions.editor.wrapping", wrapping);
-        });
-        this.formattedEditor.on("zoom.change", (zoom: number) => {
-            this.currentEditor.updateZoom(zoom, false);
-            optionsController.update("customOptions.editor.zoom", zoom);
-        });
-        this.formattedEditor.on("wrapping.change", (wrapping: boolean) => {
-            this.currentEditor.updateWrapping(wrapping, false)
-            optionsController.update("customOptions.editor.wrapping", wrapping);
         });
 
         this.element.addLiveEventListener("click", ".gen-preview", (e, element) => {
@@ -711,9 +820,6 @@ export class DaxFormatterScene extends DocScene {
             }, 300);
         });
 
-        optionsController.on("customOptions.formatting.preview.change", (changedOptions: any) => {
-            this.maybeAutoGenerateFormattedPreview();
-        });
         optionsController.on("customOptions.formatting.region.change", (changedOptions: any) => {
             this.maybeAutoGenerateFormattedPreview();
         });
@@ -760,23 +866,6 @@ export class DaxFormatterScene extends DocScene {
             return (status == MeasureStatus.Partial || (this.showMeasuresWithErrorsOnly && (status == MeasureStatus.WithErrors || status == MeasureStatus.NotFormatted)));
         }
         return true;
-    }
-
-    formatWithDaxFormatter() {
-
-        if (!this.activeMeasure) return;
-
-        const fx = `${this.activeMeasure.name} = ${this.activeMeasure.expression}`;
-        const formatRegion = optionsController.options.customOptions.formatting.region;
-        const formatLine = (optionsController.options.customOptions.formatting.daxFormatter.lineStyle == DaxFormatterLineStyle.LongLine ? "long" : "short");
-        const formatSpacing = (optionsController.options.customOptions.formatting.daxFormatter.spacingStyle == DaxFormatterSpacingStyle.SpaceAfterFunction ? "" : "true");
-
-        let queryString = `fx=${encodeURIComponent(fx)}&r=${formatRegion}&s=${formatSpacing}&l=${formatLine}${themeController.isDark ? "&dark=1" : ""}&cache=${new Date().getTime()}`;
-
-        host.navigateTo(`https://www.daxformatter.com/?${queryString}`);
-
-
-        telemetry.track("Format with DAX Formatter");
     }
 
 

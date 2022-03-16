@@ -135,7 +135,7 @@ export class ManageDatesScene extends DocScene {
                         onDestroy: () => timeIntelligencePane.destroy()
                     },
 
-                }, "calendar", false);
+                }, false);
 
                 this.listen();
             })

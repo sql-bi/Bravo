@@ -9,6 +9,7 @@ import { Utils } from '../helpers/utils';
 import { host, logger } from '../main';
 import { AppError } from '../model/exceptions';
 import { DaxLineBreakStyle } from '../model/tabular';
+import { MultiViewPaneMode } from '../view/multiview-pane';
 import { ThemeType } from './theme';
 
 export interface Options {
@@ -22,17 +23,22 @@ export interface Options {
 export interface ClientOptions {
     sidebarCollapsed: boolean
     loggedInOnce: boolean
-    editorZoom: number
     locale: string
     formatting: ClientOptionsFormatting
+    editor: ClientOptionsEditor
     panels: number[]
 }
 
 export interface ClientOptionsFormatting {
     preview: boolean
-    sidePreview: boolean
+    previewLayout: MultiViewPaneMode
     region: ClientOptionsFormattingRegion
     daxFormatter: FormatDaxOptions
+}
+
+export interface ClientOptionsEditor {
+    zoom: number
+    wrapping: boolean
 }
 
 export enum ClientOptionsFormattingRegion {
@@ -148,12 +154,11 @@ export class OptionsController extends OptionsStore<Options> {
         updateChannel: UpdateChannelType.Stable,
         customOptions: {
             sidebarCollapsed: false,
-            editorZoom: 1,
             loggedInOnce: false,
             locale: navigator.language,
             formatting: {
                 preview: false,
-                sidePreview: false,
+                previewLayout: MultiViewPaneMode.Tabs,
                 region: ClientOptionsFormattingRegion.Auto,
                 daxFormatter: {
                     spacingStyle: DaxFormatterSpacingStyle.SpaceAfterFunction,
@@ -161,6 +166,10 @@ export class OptionsController extends OptionsStore<Options> {
                     lineBreakStyle: DaxLineBreakStyle.InitialLineBreak,
                     autoLineBreakStyle: DaxLineBreakStyle.InitialLineBreak
                 }
+            },
+            editor: {
+                zoom: 1,
+                wrapping: true
             },
             panels: [70, 30]
         }

@@ -4,7 +4,7 @@
  * https://www.sqlbi.com
 */
 
-import { Dic, _, __ } from '../helpers/utils';
+import { Dic, Utils, _, __ } from '../helpers/utils';
 import { View } from './view';
 
 export interface MenuItem {
@@ -19,11 +19,11 @@ export interface MenuItem {
 export class Menu extends View {
 
     items: Dic<MenuItem> = {};
-    currentItem: string;
+    currentItems: string[];
 
     header: HTMLElement;
 
-    constructor(id: string, container: HTMLElement, items: Dic<MenuItem>, selectedId: string = null, lazyRendering = true) {
+    constructor(id: string, container: HTMLElement, items: Dic<MenuItem>, lazyRendering = true, selectedId: string = null) {
         super(id, container);
 
         this.items = items;
@@ -51,21 +51,18 @@ export class Menu extends View {
                 this.render(itemId);
             });
         }
+        if (!selectedId)
+            selectedId = Object.keys(items)[0];
 
-        if (selectedId)
-            this.select(selectedId);
+        this.select(selectedId);
 
         this.listen();
     }
 
     disable(id: string, toggle: boolean) {
         let itemHeader = _(`#item-${id}`, this.element);
-        if (!itemHeader.empty) {
-            if (toggle)
-                itemHeader.classList.add("disabled");
-            else
-                itemHeader.classList.remove("disabled");
-        }
+        if (!itemHeader.empty)
+            itemHeader.toggleClass("disabled", toggle);
     }
 
     getItemElement(id: string): HTMLElement {
@@ -80,7 +77,7 @@ export class Menu extends View {
                 e.stopPropagation();
 
                 let el = (<HTMLElement>e.currentTarget);
-                if (el.classList.contains("disabled")) return;
+                if (el.classList.contains("disabled") || el.classList.contains("selected")) return;
 
                 this.select(el.id.replace("item-", ""));
             });
@@ -103,35 +100,40 @@ export class Menu extends View {
         return itemBody;
     }
 
-    reselect() {
-        let id = this.currentItem;
-        this.currentItem = "";
-        this.select(id);
-    }
+    select(id: string | string[]) {
+        
+        const ids = <string[]>(Utils.Obj.isArray(id) ? id : [id]);
 
-    select(id: string) {
-        if (this.currentItem == id) return;
-
-        // Apply selection
         __(`.menu .item`, this.element).forEach((div: HTMLElement) => {
-            if (div.id == `item-${id}`) {
-                div.classList.add("selected");
-                div.toggle(true);
-            } else {
-                div.classList.remove("selected");
+            let select = false;
+            for (let i = 0; i < ids.length; i++) {
+                if (div.id == `item-${ids[i]}`) {
+                    select = true;
+                    break;
+                }
             }
+            div.toggleClass("selected", select);
         });
-
         __(".item-body", this.body).forEach((div: HTMLElement) => {
-            div.toggle(div.id == `body-${id}`);
+            let toggle = false;
+            for (let i = 0; i < ids.length; i++) {
+                if (div.id == `body-${ids[i]}`) {
+                    toggle = true;
+                    break;
+                }
+            }
+            div.toggle(toggle);
         });
-        let itemBody = this.render(id);
 
-        if (this.items[id].onChange)
-            this.items[id].onChange(itemBody);
+        ids.forEach(id => {
 
-        this.currentItem = id;
-        this.trigger("change", this.currentItem);
+            let itemBody = this.render(id);
+            if (this.items[id].onChange)
+                this.items[id].onChange(itemBody);
+
+            this.trigger("change", id);
+        });
+        this.currentItems = ids;
     }
 
     destroy() {

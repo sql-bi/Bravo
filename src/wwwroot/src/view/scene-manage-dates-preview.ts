@@ -5,7 +5,7 @@
 */
 
 import { Dic, Utils, _, __ } from '../helpers/utils';
-import { host } from '../main';
+import { host, optionsController } from '../main';
 import { ManageDatesPBIDesktopReportConfigurationRequest, ManageDatesPreviewChangesFromPBIDesktopReportRequest } from '../controllers/host';
 import { DateConfiguration } from '../model/dates';
 import { Doc } from '../model/doc';
@@ -369,7 +369,7 @@ export class ManageDatesPreviewScene extends DocScene {
                 }
             };
 
-        this.treeMenu = new Menu("tree-menu", _(".browser-pane", this.body), treeMenuItems, "date-tree", false);
+        this.treeMenu = new Menu("tree-menu", _(".browser-pane", this.body), treeMenuItems, false);
 
         this.previewMenu = new Menu("preview-menu", _(".preview-pane-content", this.body), <Dic<MenuItem>>{
             "sample-preview": {
@@ -383,16 +383,23 @@ export class ManageDatesPreviewScene extends DocScene {
             "expression-preview": {
                 name: i18n(strings.manageDatesMenuPreviewCode),
                 onRender: element => {
-                    this.expressionEditor = new DaxEditor(Utils.DOM.uniqueId(), element, 1);
+                    this.expressionEditor = new DaxEditor(Utils.DOM.uniqueId(), element, optionsController.options.customOptions.editor.zoom, optionsController.options.customOptions.editor.wrapping);
                 },
                 onChange: (element: HTMLElement) => {
                     if (this.expressionEditor)
                         this.expressionEditor.editor.refresh();
                 }
             }
-        }, "sample-preview", false);
+        }, false);
 
         this.applyButton = _(".do-proceed", this.body);
+
+        this.expressionEditor.on("zoom.change", (zoom: number) => {
+            optionsController.update("customOptions.editor.zoom", zoom);
+        });
+        this.expressionEditor.on("wrapping.change", (wrapping: boolean) => {
+            optionsController.update("customOptions.editor.wrapping", wrapping);
+        });
 
         this.renderBrowser(".columns-browser", this.convertTablesAndColumnsChangesToBranches(changes), PlainTreeFilter.ParentOnly);
         if (hasTimeIntelligence)
