@@ -1,6 +1,6 @@
 // main: main.less
 .dax-editor {
-    height: 100%;
+    height: calc(100% - 12px);
     width: calc(100% - 2px);
     padding: 5px 0;
     font-size: 16px;
@@ -18,13 +18,16 @@
 
     .toolbar {
         margin: auto 0 0 0;
-        padding: 2px 2px 0 2px;
+        padding: 2px 5px 0 5px;
         height: 34px;
         width: calc(100% - 10px);
         .flexbox(center);
 
-        .zoom {
+        .wrapping {
             margin-left: auto;
+        }
+        .zoom {
+            //margin-left: 10px;
             font-size: 14px;
         }
 

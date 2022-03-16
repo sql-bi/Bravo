@@ -17,180 +17,83 @@
             
             .coll {
                 width: 320px;
-                margin-right: 30px;
-                .flex(1 1 auto);
+                margin-right: 15px;
+                .flex(0 1 auto);
                 .flexbox(flex-start, flex-start, column);
             }
             .colr {
                 .flex(1 1 70%);
-                margin: 0 0 0 20px;
+                margin: 0 0 0 15px;
                 background: url("@{images}/measure-light.svg") no-repeat center;
 
                 .dark & {
                     background-image: url("@{images}/measure-dark.svg");
                 }
-               
-                 &.solo { background: none;}
             }
         }
 
-        .table {
-            width:100%;
+        .browser {
+            .table {
+                width:100%;
 
-            .column-icon {
-                .loader {
-                    width: 16px;
-                    height: 16px;
-                    margin: 8px 0 0 4px;
+                .column-icon {
+                    .loader {
+                        width: 16px;
+                        height: 16px;
+                        margin: 8px 0 0 4px;
 
-                    &:before {
-                        border-width: 8px;
+                        &:before {
+                            border-width: 8px;
+                        }
                     }
-                }
-                .icon-completed {
-                    opacity: 0.1;
-                }
+                    .icon-completed {
+                        opacity: 0.1;
+                    }
 
+                }
             }
-        }
 
-        .toolbar {
-            width: 100%;
-            .flexbox(center);
-            .flex-wrap(wrap);
-            
-            margin: 0 0 30px 0;
+            .toolbar {
+                width: 100%;
+                .flexbox(center);
+                .flex-wrap(wrap);
+                
+                margin: 0 0 30px 0;
 
-            .search {
-                margin: 5px 15px 5px 5px;
-                min-width:150px;
-                width: 60%;
+                .search {
+                    margin: 5px 15px 5px 5px;
+                    min-width:150px;
+                    width: 60%;
+                }
             }
         }
 
         .preview {
             width: 100%;
             height: 100%;
+            position: relative;
+            background: @back-color;
 
-            #preview-menu {
-                width: 100%;
+            .dark & { background-color: @back-color-dark;}
+
+            .multiview-pane {
                 height: 100%;
-                .flexbox(flex-start, stretch, column);
-            
-                .menu {
-                    width: 100%;
-
-                    .toolbar {
-                        width: auto;
-                        margin: 0 0 0 auto;
-                    }
-                }
-
-                .menu-body {
-                    position: relative;
-                    height: calc(100% - 65px);
-                    width: 100%;
-                    margin-top: 20px;
-                    .flexbox(flex-start, stretch, column);
-                    overflow: hidden;
-
-                    .item-body {
-                        height: 100%;
-                        width: calc(100% - 2px);
-                        padding: 5px 0;
-                        font-size: 16px;
-                        overflow: hidden;
-                        position: relative;
-
-                        .border-radius;
-                        border: 1px solid @border-color;
-                        background: @input-back-color;
-
-                        .dark & {
-                            border-color: @border-color-dark;
-                            background-color: @input-back-color-dark;
-                        }
-                    }
-
-                    .toolbar {
-                        margin: auto 0 0 0;
-                        padding: 2px 2px 0 2px;
-                        height: 34px;
-                        width: calc(100% - 10px);
-                        .flexbox(center);
-
-                        .zoom {
-                            margin-left: auto;
-                            font-size: 14px;
-                        }
-
-                        .ctrl:before {
-                            font-size: 22px;
-                        }
-                    }
-                    
-                    .cm {
-                        
-                        overflow: auto;
-                        height: calc(100% - 35px);
-                        width: calc(100% - 2px);
-
-                        .notice {
-                            width: 100%;
-                            height: 100%;
-                            text-align: center;
-                            .flexbox(center, center);
-        
-                            .button {
-                    
-                                margin: 10px;
-                            }
-        
-                        }
-                    }
-                    
-                }
-            }
-
-            &.side-by-side {
-                .menu {
-                    .item{
-                        cursor: default !important;
-                        opacity: 1 !important;
-
-                        &:nth-child(2) {
-                            margin-left: calc(50% - 40px);
-                        }
-                        
-                        .selector {
-                            background: @accent-back-color !important;
-                            .dark & {
-                                background-color: @accent-back-color-dark !important;
-                            }
-                        }
-                    }
-                }
-                .menu-body {
-                    flex-direction: row !important;
-                    justify-content: space-between !important;
-                    
-
-                    .item-body {
-                        display: block !important;
-                        width: calc(50% - 8px) !important;
-                        height: calc(100% - 12px) !important;
-                    }
-                }
             }
         }
 
-        .gen-preview-overlay {
+        .preview-overlay {
             position: absolute;
-            top: 0;
-            right: 0;
-            bottom: 0;
-            left: 0;
+            top: 2px;
+            right: 2px;
+            bottom: 2px;
+            left: 2px;
+            z-index: 9;
             padding:20px;
+            background: fade(@back-color, 80%);
+
+            .dark & {
+                background-color: fade(@back-color-dark, 80%);
+            }
 
             .flexbox(center, center, column);
             transition: opacity .3s;
@@ -221,10 +124,6 @@
                     }
                 }
             }
-
-            
-
-
         }
 
         .scene-action {

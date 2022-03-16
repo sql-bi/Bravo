@@ -378,6 +378,7 @@ const locale: Locale = {
         [_.welcomeHelpTitle]: "How to use Bravo?",
         [_.welcomeText]: "Bravo is a handy Power BI toolkit that you can use to analyze your models, format measures, create date tables, and export data.",
         [_.welcomeTitle]: "Bravo for Power BI",
+        [_.wrappingTitle]: "Auto word wrap",
     }
 }
 export default locale;

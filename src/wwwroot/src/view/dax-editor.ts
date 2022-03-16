@@ -10,12 +10,17 @@ import 'codemirror/addon/mode/simple';
 import { daxFunctions } from '../model/dax';
 import { ContextMenu } from '../helpers/contextmenu';
 import { _ } from '../helpers/utils';
+import { Control, ControlConfig } from './control';
+import { DaxError } from '../model/tabular';
+import { strings } from '../model/strings';
+import { i18n } from '../model/i18n';
 
 export class DaxEditor extends View {
 
     editor: CodeMirror.Editor;
     zoom: number;
-    toolbar: string; 
+    wrapping: boolean;
+    controls: ControlConfig[]; 
     
     get value(): string {
         if (this.editor)
@@ -30,7 +35,7 @@ export class DaxEditor extends View {
         }
     }
 
-    constructor(id: string, container: HTMLElement, zoom = 1, toolbar?: string ) {
+    constructor(id: string, container: HTMLElement, zoom = 1, wrapping = true, controls?: ControlConfig[]) {
         super(id, container);
         this.element.classList.add("dax-editor");
 
@@ -38,7 +43,8 @@ export class DaxEditor extends View {
             this.initDaxCodeMirror();
 
         this.zoom = zoom;
-        this.toolbar = toolbar;
+        this.wrapping = wrapping;
+        this.controls = controls;
         this.render();
     }
 
@@ -46,43 +52,69 @@ export class DaxEditor extends View {
 
         let html = `
             <div class="cm"></div>
-            <div class="toolbar">
-                ${this.toolbar ? this.toolbar : ""}
-
-                ${this.zoom ? `
-                    <select class="zoom">
-                        <option value="1" selected>100%</option>
-                    </select>
-                ` : ""}
-            </div>
+            <div class="toolbar"></div>
         `;
 
         this.element.insertAdjacentHTML("beforeend", html);
+        
+        let toolbar = _(".toolbar", this.element);
+
+        if (this.controls)
+            this.controls.forEach(controlConfig => {
+                new Control(toolbar, controlConfig);
+            });
+
+        toolbar.insertAdjacentHTML("beforeend", `
+            <div class="wrapping ctrl icon-wrapping solo toggle${this.wrapping ? " active" : ""}" title="${i18n(strings.wrappingTitle)}"></div>
+        `);
+
+        if (this.zoom) {
+            toolbar.insertAdjacentHTML("beforeend", `
+                <select class="zoom">
+                    <option value="1" selected>100%</option>
+                </select>
+            `);
+
+            _(".zoom", this.element).addEventListener("change", e => {
+                this.updateZoom(parseFloat((<HTMLSelectElement>e.currentTarget).value));
+            });
+        }
+
+        _(".wrapping", this.element).addEventListener("click", e => {
+            let el = <HTMLElement>e.currentTarget;
+            el.toggleClass("active");
+            this.updateWrapping(el.classList.contains("active"));
+        });
+
+        this.renderEditor();
+    }
+
+    renderEditor() {
 
         this.editor = CodeMirror(_(".cm", this.element), {
             mode: "dax",
-            //value: "...",
             lineNumbers: true,
-            lineWrapping: true,
+            lineWrapping: this.wrapping,
             indentUnit: 4,
             readOnly: "nocursor"
         }); 
-        this.updateZoom(this.zoom);
-        this.listen();
-    }
-
-    listen() {
         this.editor.on("contextmenu", (instance, e) => {
             e.preventDefault();
             ContextMenu.editorContextMenu(e, this.editor.getSelection(), this.editor.getValue());
         });
-
-        _(".zoom", this.element).addEventListener("change", e => {
-            this.updateZoom(parseFloat((<HTMLSelectElement>e.currentTarget).value));
-        });
+        this.updateZoom(this.zoom);
+        
     }
 
-    updateZoom(zoom: number) {
+    updateWrapping(wrapping: boolean, triggerEvent = true) {
+        this.wrapping = wrapping;
+        _(".wrapping", this.element).toggleClass("active", wrapping);
+        this.editor.setOption('lineWrapping', wrapping);
+        if (triggerEvent)
+            this.trigger("wrapping.change", wrapping);
+    }
+
+    updateZoom(zoom: number, triggerEvent = true) {
 
         if (!zoom) return;
 
@@ -114,7 +146,9 @@ export class DaxEditor extends View {
         el.style.fontSize = `${zoom}em`;
         this.editor.refresh();
         
-        this.trigger("zoom.change", zoom);
+        this.zoom = zoom;
+        if (triggerEvent)
+            this.trigger("zoom.change", zoom);
     }
 
     initDaxCodeMirror() {
@@ -142,5 +176,25 @@ export class DaxEditor extends View {
                 lineComment: "//"
             }
         });
+    }
+
+    highlightErrors(errors: DaxError[]) {
+
+        errors.forEach(error => {
+            let errorMarker = document.createElement("div");
+            errorMarker.classList.add("CodeMirror-error-marker");
+            this.editor.addWidget({ch: error.column, line: error.line}, errorMarker, true);
+
+            let errorLine = document.createElement("div");
+            errorLine.classList.add("CodeMirror-error-line");
+            errorLine.innerText = `Ln ${error.line+1}, Col ${error.column+1}: ${error.message}`;
+            this.editor.addLineWidget(error.line, errorLine, { coverGutter: false })
+
+        });
+    }
+
+    destroy() {
+        this.editor = null;
+        super.destroy();
     }
 }

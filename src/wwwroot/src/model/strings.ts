@@ -370,4 +370,5 @@ export enum strings {
     welcomeHelpTitle,
     welcomeText,
     welcomeTitle,
+    wrappingTitle
 };
