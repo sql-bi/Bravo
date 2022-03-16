@@ -11,7 +11,7 @@ import { DocType } from '../model/doc';
 import { AppError, AppErrorType, AppProblem } from '../model/exceptions';
 import { /*TokenUpdateWebMessage,*/ WebMessage, WebMessageType } from '../model/message';
 import { PBICloudDataset, PBICloudDatasetConnectionMode, PBICloudDatasetPrivateProperties } from '../model/pbi-dataset';
-import { FormattedMeasure, TabularDatabase, TabularMeasure } from '../model/tabular';
+import { FormattedMeasure, TabularDatabase, TabularDatabaseServer, TabularMeasure } from '../model/tabular';
 import { Account } from './auth';
 import { DiagnosticLevelType, FormatDaxOptions, Options, UpdateChannelType } from './options';
 import { PBIDesktopReport, PBIDesktopReportConnectionMode, PBIDesktopReportPrivateProperties } from '../model/pbi-report';
@@ -47,8 +47,12 @@ export interface ProblemDetails {
 }
 
 export interface FormatDaxRequest {
-    options: FormatDaxOptions
+    options: FormatDaxRequestOptions
     measures: TabularMeasure[]
+}
+
+export interface FormatDaxRequestOptions extends TabularDatabaseServer, FormatDaxOptions {
+    databaseName?: string
 }
 
 export interface UpdatePBIDesktopReportRequest{
