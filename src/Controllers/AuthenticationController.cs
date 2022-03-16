@@ -2,6 +2,7 @@
 {
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
+    using Sqlbi.Bravo.Infrastructure.Services.PowerBI;
     using Sqlbi.Bravo.Models;
     using Sqlbi.Bravo.Services;
     using System.Net.Mime;
@@ -16,10 +17,12 @@
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ProblemDetails))]
     public class AuthenticationController : ControllerBase
     {
+        private readonly IAuthenticationService _authenticationService;
         private readonly IPBICloudService _pbicloudService;
 
-        public AuthenticationController(IPBICloudService pbicloudService)
+        public AuthenticationController(IAuthenticationService authenticationService, IPBICloudService pbicloudService)
         {
+            _authenticationService = authenticationService;
             _pbicloudService = pbicloudService;
         }
 
@@ -34,10 +37,8 @@
         [ProducesDefaultResponseType]
         public async Task<IActionResult> PowerBISignIn(string? upn)
         {
-            await _pbicloudService.SignInAsync(userPrincipalName: upn);
-
-            var account = _pbicloudService.CurrentAccount;
-            return Ok(account);
+            await _authenticationService.PBICloudSignInAsync(userPrincipalName: upn);
+            return Ok(_authenticationService.Account);
         }
 
         /// <summary>
@@ -50,7 +51,7 @@
         [ProducesDefaultResponseType]
         public async Task<IActionResult> PowerBISignOut()
         {
-            await _pbicloudService.SignOutAsync();
+            await _authenticationService.PBICloudSignOutAsync();
             return Ok();
         }
 
@@ -67,11 +68,10 @@
         [ProducesDefaultResponseType]
         public async Task<IActionResult> GetAccount()
         {
-            if (await _pbicloudService.IsSignInRequiredAsync())
+            if (await _authenticationService.IsPBICloudSignInRequiredAsync())
                 return Unauthorized();
 
-            var account = _pbicloudService.CurrentAccount;
-            return Ok(account);
+            return Ok(_authenticationService.Account);
         }
 
         /// <summary>
@@ -89,7 +89,7 @@
         [ProducesDefaultResponseType]
         public async Task<IActionResult> GetAccountAvatar()
         {
-            if (await _pbicloudService.IsSignInRequiredAsync())
+            if (await _authenticationService.IsPBICloudSignInRequiredAsync())
                 return Unauthorized();
 
             var avatar = await _pbicloudService.GetAccountAvatarAsync();

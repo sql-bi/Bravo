@@ -23,13 +23,13 @@
 
     public interface IExportDataService
     {
-        ExportDataJob ExportDelimitedTextFile(PBIDesktopReport report, ExportDelimitedTextSettings settings, CancellationToken cancellationToken);
+        ExportDataJob ExportDelimitedTextFile(PBIDesktopReport report, ExportDelimitedTextSettings settings, string path, CancellationToken cancellationToken);
 
-        ExportDataJob ExportDelimitedTextFile(PBICloudDataset dataset, ExportDelimitedTextSettings settings, CancellationToken cancellationToken);
+        ExportDataJob ExportDelimitedTextFile(PBICloudDataset dataset, ExportDelimitedTextSettings settings, string path, string accessToken, CancellationToken cancellationToken);
 
-        ExportDataJob ExportExcelFile(PBIDesktopReport report, ExportExcelSettings settings, CancellationToken cancellationToken);
+        ExportDataJob ExportExcelFile(PBIDesktopReport report, ExportExcelSettings settings, string path, CancellationToken cancellationToken);
 
-        ExportDataJob ExportExcelFile(PBICloudDataset dataset, ExportExcelSettings settings, CancellationToken cancellationToken);
+        ExportDataJob ExportExcelFile(PBICloudDataset dataset, ExportExcelSettings settings, string path, string accessToken, CancellationToken cancellationToken);
 
         ExportDataJob? QueryExportJob(PBIDesktopReport report);
 
@@ -46,22 +46,14 @@
             }
         };
 
-        private readonly ExportDataJobMap<PBICloudDataset> _datasetJobs;
-        private readonly ExportDataJobMap<PBIDesktopReport> _reportJobs;
-        private readonly IPBICloudService _pbicloudService;
+        private readonly ExportDataJobMap<PBICloudDataset> _datasetJobs = new();
+        private readonly ExportDataJobMap<PBIDesktopReport> _reportJobs = new();
 
-        public ExportDataService(IPBICloudService pbicloudService)
+        public ExportDataJob ExportDelimitedTextFile(PBIDesktopReport report, ExportDelimitedTextSettings settings, string path, CancellationToken cancellationToken)
         {
-            _pbicloudService = pbicloudService;
+            settings.ExportPath = path;
 
-            _datasetJobs = new();
-            _reportJobs = new();
-        }
-
-        public ExportDataJob ExportDelimitedTextFile(PBIDesktopReport report, ExportDelimitedTextSettings settings, CancellationToken cancellationToken)
-        {
             var job = _reportJobs.AddNew(report, settings);
-
             try
             {
                 using var connection = AdomdConnectionWrapper.ConnectTo(report);
@@ -86,13 +78,14 @@
             return job;
         }
 
-        public ExportDataJob ExportDelimitedTextFile(PBICloudDataset dataset, ExportDelimitedTextSettings settings, CancellationToken cancellationToken)
+        public ExportDataJob ExportDelimitedTextFile(PBICloudDataset dataset, ExportDelimitedTextSettings settings, string path, string accessToken, CancellationToken cancellationToken)
         {
-            var job = _datasetJobs.AddNew(dataset, settings);
+            settings.ExportPath = path;
 
+            var job = _datasetJobs.AddNew(dataset, settings);
             try
             {
-                using var connection = AdomdConnectionWrapper.ConnectTo(dataset, _pbicloudService.CurrentAccessToken!);
+                using var connection = AdomdConnectionWrapper.ConnectTo(dataset, accessToken);
 
                 ExportDelimitedTextFileImpl(job, settings, connection, cancellationToken);
                 job.SetCompleted();
@@ -114,10 +107,11 @@
             return job;
         }
 
-        public ExportDataJob ExportExcelFile(PBIDesktopReport report, ExportExcelSettings settings, CancellationToken cancellationToken)
+        public ExportDataJob ExportExcelFile(PBIDesktopReport report, ExportExcelSettings settings, string path, CancellationToken cancellationToken)
         {
-            var job = _reportJobs.AddNew(report, settings);
+            settings.ExportPath = path;
 
+            var job = _reportJobs.AddNew(report, settings);
             try
             {
                 using var connection = AdomdConnectionWrapper.ConnectTo(report);
@@ -142,13 +136,14 @@
             return job;
         }
 
-        public ExportDataJob ExportExcelFile(PBICloudDataset dataset, ExportExcelSettings settings, CancellationToken cancellationToken)
+        public ExportDataJob ExportExcelFile(PBICloudDataset dataset, ExportExcelSettings settings, string path, string accessToken, CancellationToken cancellationToken)
         {
-            var job = _datasetJobs.AddNew(dataset, settings);
+            settings.ExportPath = path;
 
+            var job = _datasetJobs.AddNew(dataset, settings);
             try
             {
-                using var connection = AdomdConnectionWrapper.ConnectTo(dataset, _pbicloudService.CurrentAccessToken!);
+                using var connection = AdomdConnectionWrapper.ConnectTo(dataset, accessToken);
 
                 ExportExcelFileImpl(job, settings, connection, cancellationToken);
                 job.SetCompleted();

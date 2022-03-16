@@ -1,4 +1,4 @@
-﻿namespace Sqlbi.Bravo.Infrastructure.Services
+﻿namespace Sqlbi.Bravo.Infrastructure.Services.PowerBI
 {
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.Identity.Client;
@@ -31,15 +31,15 @@
         private readonly static SemaphoreSlim _authenticationSemaphore = new(1, 1);
         private readonly static SemaphoreSlim _publicClientSemaphore = new(1, 1);
         private readonly MsalSystemWebViewOptions _systemWebViewOptions;
-        private readonly IPBICloudSettingsService _pbisettings;
+        private readonly IPBICloudSettingsService _pbicloudSettings;
         private readonly IWebHostEnvironment _environment;
 
         private IPublicClientApplication? _publicClient;
 
-        public PBICloudAuthenticationService(IPBICloudSettingsService pbisetting, IWebHostEnvironment environment)
+        public PBICloudAuthenticationService(IWebHostEnvironment environment, IPBICloudSettingsService pbicloudSetting)
         {
-            _pbisettings = pbisetting;
             _environment = environment;
+            _pbicloudSettings = pbicloudSetting;
 
             _systemWebViewOptions = new MsalSystemWebViewOptions(_environment.WebRootPath);
         }
@@ -55,11 +55,8 @@
 
         public AuthenticationResult? Authentication { get; private set; }
 
-        public Uri TenantCluster => new(_pbisettings.TenantCluster.FixedClusterUri);
+        public Uri TenantCluster => new(_pbicloudSettings.TenantCluster.FixedClusterUri);
 
-        /// <summary>
-        /// Removes all account information from MSAL's token cache, removes app-only (not OS-wide) and does not affect the browser cookies
-        /// </summary>
         public async Task ClearTokenCacheAsync()
         {
             await _authenticationSemaphore.WaitAsync().ConfigureAwait(false);
@@ -72,7 +69,9 @@
                 var accounts = (await PublicClient.GetAccountsAsync().ConfigureAwait(false)).ToArray();
 
                 foreach (var account in accounts)
+                {
                     await PublicClient.RemoveAsync(account).ConfigureAwait(false);
+                }
             }
             finally
             {
@@ -112,7 +111,7 @@
                 var accountChanged = !Authentication.Account.HomeAccountId.Equals(previousAuthentication?.Account.HomeAccountId);
                 if (accountChanged)
                 { 
-                    await _pbisettings.RefreshAsync(Authentication.AccessToken).ConfigureAwait(false);
+                    await _pbicloudSettings.RefreshAsync(Authentication.AccessToken).ConfigureAwait(false);
                 }
 
                 //var impersonateTask = System.Security.Principal.WindowsIdentity.RunImpersonatedAsync(Microsoft.Win32.SafeHandles.SafeAccessTokenHandle.InvalidHandle, async () =>
@@ -127,9 +126,6 @@
             }
         }
 
-        /// <summary>
-        /// https://docs.microsoft.com/en-us/azure/active-directory/develop/scenario-desktop-acquire-token?tabs=dotnet
-        /// </summary>
         private async Task<AuthenticationResult> AcquireTokenImplAsync(bool silentOnly, string? identifier, string? loginHint, CancellationToken cancellationToken)
         {
             // Use account used to signed-in in Windows (WAM). WAM will always get an account in the cache so, if we want to have a chance to select the accounts interactively, we need to force the non-account.
@@ -141,7 +137,7 @@
             try
             {
                 // Try to acquire an access token from the cache, if UI interaction is required, MsalUiRequiredException will be thrown.
-                var authenticationResult = await PublicClient.AcquireTokenSilent(_pbisettings.CloudEnvironment.Scopes, account).ExecuteAsync(cancellationToken).ConfigureAwait(false);
+                var authenticationResult = await PublicClient.AcquireTokenSilent(_pbicloudSettings.CloudEnvironment.Scopes, account).ExecuteAsync(cancellationToken).ConfigureAwait(false);
                 return authenticationResult;
             }
             catch (MsalUiRequiredException)
@@ -150,7 +146,7 @@
                 if (silentOnly) throw;
                 try
                 {
-                    var builder = PublicClient.AcquireTokenInteractive(_pbisettings.CloudEnvironment.Scopes)
+                    var builder = PublicClient.AcquireTokenInteractive(_pbicloudSettings.CloudEnvironment.Scopes)
                         .WithExtraQueryParameters(MicrosoftAccountOnlyQueryParameter);
 
                     //.WithClaims(murex.Claims)
@@ -202,10 +198,10 @@
                 {
                     if (_publicClient is null)
                     {
-                        await _pbisettings.InitializeAsync().ConfigureAwait(false);
+                        await _pbicloudSettings.InitializeAsync().ConfigureAwait(false);
 
-                        _publicClient = PublicClientApplicationBuilder.Create(_pbisettings.CloudEnvironment.ClientId)
-                            .WithAuthority(_pbisettings.CloudEnvironment.Authority)
+                        _publicClient = PublicClientApplicationBuilder.Create(_pbicloudSettings.CloudEnvironment.ClientId)
+                            .WithAuthority(_pbicloudSettings.CloudEnvironment.Authority)
                             .WithDefaultRedirectUri()
                             .Build();
 

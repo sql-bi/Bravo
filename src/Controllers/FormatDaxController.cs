@@ -2,6 +2,7 @@
 {
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
+    using Sqlbi.Bravo.Infrastructure.Services.PowerBI;
     using Sqlbi.Bravo.Models;
     using Sqlbi.Bravo.Models.FormatDax;
     using Sqlbi.Bravo.Services;
@@ -18,14 +19,12 @@
     public class FormatDaxController : ControllerBase
     {
         private readonly IFormatDaxService _formatDaxService;
-        private readonly IPBIDesktopService _pbidesktopService;
-        private readonly IPBICloudService _pbicloudService;
+        private readonly IAuthenticationService _authenticationService;
 
-        public FormatDaxController(IFormatDaxService formatDaxService, IPBIDesktopService pbidesktopService, IPBICloudService pbicloudService)
+        public FormatDaxController(IFormatDaxService formatDaxService, IAuthenticationService authenticationService)
         {
             _formatDaxService = formatDaxService;
-            _pbidesktopService = pbidesktopService;
-            _pbicloudService = pbicloudService;
+            _authenticationService = authenticationService;
         }
 
         /// <summary>
@@ -63,12 +62,7 @@
         [ProducesDefaultResponseType]
         public IActionResult Update(UpdatePBIDesktopReportRequest request)
         {
-            var databaseETag = _pbidesktopService.Update(request.Report!, request.Measures!);
-            var updateResult = new DatabaseUpdateResult
-            {
-                DatabaseETag = databaseETag
-            };
-
+            var updateResult = _formatDaxService.Update(request.Report!, request.Measures!);
             return Ok(updateResult);
         }
 
@@ -86,15 +80,10 @@
         [ProducesDefaultResponseType]
         public async Task<IActionResult> Update(UpdatePBICloudDatasetRequest request)
         {
-            if (await _pbicloudService.IsSignInRequiredAsync())
+            if (await _authenticationService.IsPBICloudSignInRequiredAsync())
                 return Unauthorized();
 
-            var databaseETag = _pbicloudService.Update(request.Dataset!, request.Measures!);
-            var updateResult = new DatabaseUpdateResult
-            {
-                DatabaseETag = databaseETag
-            };
-
+            var updateResult = _formatDaxService.Update(request.Dataset!, request.Measures!, _authenticationService.PBICloudAuthentication.AccessToken);
             return Ok(updateResult);
         }
     }

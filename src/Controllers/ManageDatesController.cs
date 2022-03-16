@@ -37,7 +37,6 @@
         public IActionResult GetConfigurations(PBIDesktopReport report, CancellationToken cancellationToken)
         {
             var configurations = _manageDatesService.GetConfigurations(report, cancellationToken);
-
             return Ok(configurations);
         }
 
@@ -53,7 +52,6 @@
         public IActionResult ValidateConfiguration(ValidatePBIDesktopReportConfigurationRequest request, CancellationToken cancellationToken)
         {
             var configuration = _manageDatesService.ValidateConfiguration(request.Report!, request.Configuration!, cancellationToken);
-
             return Ok(configuration);
         }
 
@@ -69,7 +67,6 @@
         public IActionResult GetPreviewChanges(PreviewChangesFromPBIDesktopReportRequest request, CancellationToken cancellationToken)
         {
             var modelChanges = _manageDatesService.GetPreviewChanges(request.Report!, request.Settings!, cancellationToken);
-
             return Ok(modelChanges);
         }
 
@@ -85,7 +82,6 @@
         public IActionResult Update(UpdatePBIDesktopReportRequest request, CancellationToken cancellationToken)
         {
             _manageDatesService.Update(request.Report!, request.Configuration!, cancellationToken);
-
             return Ok();
         }
     }

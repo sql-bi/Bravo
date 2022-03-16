@@ -27,7 +27,7 @@
             return hash;
         }
 
-        public static string Update(TOM.Database database, IEnumerable<FormattedMeasure> measures)
+        public static DatabaseUpdateResult Update(TOM.Database database, IEnumerable<FormattedMeasure> measures)
         {
             var databaseETag = GetDatabaseETag(database.Name, database.Version, database.LastUpdate);
 
@@ -55,7 +55,12 @@
                 databaseETag = GetDatabaseETag(database.Name, database.Version, database.LastUpdate);
             }
 
-            return databaseETag;
+            var updateResult = new DatabaseUpdateResult
+            {
+                DatabaseETag = databaseETag
+            };
+
+            return updateResult;
         }
 
         public static bool IsValidTableName(string? tableName)
