@@ -135,7 +135,7 @@
         }
 
         /// <summary>
-        /// Returns a VPAX file stream from an active PBIDesktop report
+        /// Prompts the user to select a location for saving a VPAX file generated from an active <see cref="PBIDesktopReport"/>
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
         /// <response code="204">Status204NoContent - User canceled action (e.g. 'Cancel' button has been pressed on a dialog box)</response>
@@ -165,7 +165,7 @@
         }
 
         /// <summary>
-        /// Returns a VPAX file stream from a PBICloud dataset
+        /// Prompts the user to select a location for saving a VPAX file generated from an active <see cref="PBICloudDataset"/>
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
         /// <response code="204">Status204NoContent - User canceled action (e.g. 'Cancel' button has been pressed on a dialog box)</response>
