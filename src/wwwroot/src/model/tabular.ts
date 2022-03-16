@@ -13,8 +13,18 @@ export interface TabularDatabaseModel {
     columns: TabularColumn[]
     tables: TabularTable[]
 }
-export interface TabularDatabaseInfo extends TabularDatabaseModel {
+export interface TabularDatabaseServer {
+    compatibilityLevel?: number
+    compatibilityMode?: number
+    serverName?: string
+    serverVersion?: string
+    serverEdition?: number
+    serverMode?: number 
+    serverLocation?: number
+}
+export interface TabularDatabaseInfo extends TabularDatabaseServer, TabularDatabaseModel {
     etag?:	string
+    name?: string
     tablesCount: number
     columnsCount: number
     maxRows: number

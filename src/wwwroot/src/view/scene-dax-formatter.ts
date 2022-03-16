@@ -17,7 +17,7 @@ import * as sanitizeHtml from 'sanitize-html';
 import { DocScene } from './scene-doc';
 import { LoaderScene } from './scene-loader';
 import { ErrorScene } from './scene-error';
-import { FormatDaxRequest, UpdatePBICloudDatasetRequest, UpdatePBIDesktopReportRequest } from '../controllers/host';
+import { FormatDaxRequest, FormatDaxRequestOptions, UpdatePBICloudDatasetRequest, UpdatePBIDesktopReportRequest } from '../controllers/host';
 import { SuccessScene } from './scene-success';
 import { AppError, AppProblem } from '../model/exceptions';
 import { ClientOptionsFormattingRegion, DaxFormatterLineStyle, DaxFormatterSpacingStyle } from '../controllers/options';
@@ -504,10 +504,19 @@ export class DaxFormatterScene extends DocScene {
             region = lastR;
         }
 
-        let formatOptions = optionsController.options.customOptions.formatting.daxFormatter;
+        let formatOptions = <FormatDaxRequestOptions>optionsController.options.customOptions.formatting.daxFormatter;
         formatOptions.listSeparator = separators[region][0];
         formatOptions.decimalSeparator = separators[region][1];
         formatOptions.autoLineBreakStyle = this.doc.model.autoLineBreakStyle;
+
+        formatOptions.databaseName = this.doc.model.name;
+        //formatOptions.compatibilityMode = this.doc.model.compatibilityMode;
+        formatOptions.compatibilityLevel = this.doc.model.compatibilityLevel;
+        formatOptions.serverName = this.doc.model.serverName;
+        formatOptions.serverVersion = this.doc.model.serverVersion;
+        formatOptions.serverEdition = this.doc.model.serverEdition;
+        formatOptions.serverMode = this.doc.model.serverMode;
+        formatOptions.serverLocation = this.doc.model.serverLocation;
 
         return {
             options: formatOptions,
