@@ -45,12 +45,18 @@
             return false;
         }
 
-        public static bool OpenPath(string path)
+        public static bool OpenPath(string path, bool waitForIdle = false)
         {
             if (File.Exists(path))
             {
-                var allowedExtensions = new[] { ".xlsx" };
-                if (allowedExtensions.Any((ext) => ext.EqualsI(Path.GetExtension(path))))
+                const string Pbix = ".pbix";
+                const string Xlsx = ".xlsx";
+
+                var allowedExtensions = new[] { Pbix, Xlsx };
+                var extension = Path.GetExtension(path);
+                var isPbix = extension.EqualsI(Pbix);
+
+                if (allowedExtensions.Any((ext) => ext.EqualsI(extension)))
                 {
                     var startInfo = new ProcessStartInfo
                     {
@@ -59,6 +65,34 @@
                     };
 
                     using var process = Process.Start(startInfo);
+
+                    if (waitForIdle && process is not null)
+                    {
+                        try
+                        {
+                            process.WaitForInputIdle(5_000);
+                        }
+                        catch (InvalidOperationException)
+                        {
+                            // ignore
+                        }
+
+                        if (isPbix)
+                        {
+                            for (var i = 0; i < 60; i++)
+                            {
+                                if (process.HasExited)
+                                    break;
+
+                                // If the result is null it means that the SSAS instance is not ready yet
+                                if (process.GetPBIDesktopMainWindowTitle() is not null)
+                                    break;
+
+                                Thread.Sleep(1_000);
+                            }
+                        } 
+                    }
+
                     return true;
                 }
             }
