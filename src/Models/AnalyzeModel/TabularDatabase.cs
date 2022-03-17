@@ -96,7 +96,7 @@
                     CompatibilityLevel = daxModel.CompatibilityLevel,
                     DatabaseSize = databaseSize,
                     AutoLineBreakStyle = autoLineBreakStyle,
-                    ServerName = daxModel.ServerName.Name,
+                    ServerName = daxModel.ServerName?.Name,
                     ServerVersion = null,
                     ServerEdition = null,
                     ServerMode = null,
