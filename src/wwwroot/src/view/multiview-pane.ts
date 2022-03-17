@@ -94,7 +94,7 @@ export class MultiViewPane extends View {
     updateSplit() {
         this.destroySplit();
         if (this.mode != MultiViewPaneMode.Tabs) {
-            this.split = Split(Object.keys(this.panes).map(id => `#body-${id}`), {
+            this.split = Split(Object.keys(this.panes).map(id => `#${this.element.id} #body-${id}`), {
                 //sizes: [50, 50], 
                 //minSize: [400, 0],
                 gutterSize: 10,

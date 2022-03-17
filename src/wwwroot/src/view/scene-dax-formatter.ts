@@ -102,7 +102,7 @@ export class DaxFormatterScene extends DocScene {
 
         this.previewContainer = _(".preview", this.body);
 
-        this.previewPane = new MultiViewPane("preview-menu", _(".preview", this.body), <Dic<ViewPane>>{
+        this.previewPane = new MultiViewPane(Utils.DOM.uniqueId(), _(".preview", this.body), <Dic<ViewPane>>{
             "current": {
                 name: i18n(strings.daxFormatterOriginalCode),
                 onRender: element => {
@@ -319,6 +319,7 @@ export class DaxFormatterScene extends DocScene {
 
         _(".filter-measures-with-errors", this.element).toggleAttr("disabled", !canFilter);
         _(".filter-unformatted-measures", this.element).toggleAttr("disabled", !canFilter);
+        this.updateSummary();
     }
 
     updateTable(redraw = true) {
@@ -478,7 +479,28 @@ export class DaxFormatterScene extends DocScene {
         this.updateTable(false);
         this.maybeAutoGenerateFormattedPreview();
 
-        _(".summary p", this.element).innerHTML = i18n(strings.daxFormatterSummary, {count: this.doc.measures.length});
+        this.updateSummary();
+    }
+
+    updateSummary() {
+        let summary = {
+            count: this.doc.measures.length,
+            analyzable: 0,
+            errors: 0,
+            formattable: 0
+        };
+        this.doc.measures.forEach(measure => {
+            const status = this.doc.analizeMeasure(measure);
+            if (status == MeasureStatus.NotAnalyzed) {
+                summary.analyzable += 1;
+            } else if (status == MeasureStatus.NotFormatted) {
+                summary.formattable += 1;
+            } else if (status == MeasureStatus.WithErrors) {
+                summary.errors += 1;
+            }
+        });
+
+        _(".summary p", this.element).innerHTML = i18n(strings.daxFormatterSummary, summary);
     }
 
     getFormatDaxRequest(measures: TabularMeasure[]): FormatDaxRequest {
@@ -766,7 +788,7 @@ export class DaxFormatterScene extends DocScene {
 
             const status = this.doc.analizeMeasure(measure);
 
-            return (status == MeasureStatus.Partial || (this.showMeasuresWithErrorsOnly && (status == MeasureStatus.WithErrors || status == MeasureStatus.NotFormatted)));
+            return (status == MeasureStatus.NotAnalyzed || (this.showMeasuresWithErrorsOnly && (status == MeasureStatus.WithErrors || status == MeasureStatus.NotFormatted)));
         }
         return true;
     }

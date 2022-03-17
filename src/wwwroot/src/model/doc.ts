@@ -23,7 +23,7 @@ export enum DocType {
     dataset,
 }
 export enum MeasureStatus {
-    Partial,
+    NotAnalyzed,
     Formatted,
     NotFormatted,
     WithErrors
@@ -137,7 +137,7 @@ export class Doc {
                 }
             }
         }
-        return MeasureStatus.Partial;
+        return MeasureStatus.NotAnalyzed;
     }
 
     featureSupported(feature: string, pageType?: PageType): [boolean, string] {
