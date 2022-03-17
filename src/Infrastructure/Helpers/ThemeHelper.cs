@@ -37,6 +37,16 @@
             }
         }
 
+        public static void ChangeTheme(ThemeType theme)
+        {
+            if (IsDarkModeSupported)
+            {
+                var hWnd = ProcessHelper.GetCurrentProcessMainWindowHandle();
+
+                ChangeTheme(hWnd, theme);
+            }
+        }
+
         public static void ChangeTheme(IntPtr hWnd, ThemeType theme)
         {
             if (IsDarkModeSupported)

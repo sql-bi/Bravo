@@ -74,10 +74,7 @@
         [ProducesDefaultResponseType]
         public IActionResult ChangeTheme(ThemeType theme)
         {
-            var hWnd = ProcessHelper.GetCurrentProcessMainWindowHandle();
-            
-            ThemeHelper.ChangeTheme(hWnd, theme);
-
+            ThemeHelper.ChangeTheme(theme);
             return Ok();
         }
 
@@ -96,9 +93,7 @@
         public IActionResult BrowserNavigateTo(Uri address)
         {
             if (ProcessHelper.OpenInBrowser(address))
-            {
                 return Ok();
-            }
 
             return Forbid();
         }
@@ -122,9 +117,7 @@
             if (WindowDialogHelper.OpenFileDialog(defaultExt: "PBIX", out var path, cancellationToken: HttpContext.RequestAborted))
             {
                 if (ProcessHelper.OpenPath(path, waitForStarted))
-                {
                     return Ok();
-                }
 
                 return Forbid();
             }
@@ -147,9 +140,7 @@
         public IActionResult FileSystemOpen(string path, bool waitForStarted = false)
         {
             if (ProcessHelper.OpenPath(path, waitForStarted))
-            {
                 return Ok();
-            }
 
             return Forbid();
         }

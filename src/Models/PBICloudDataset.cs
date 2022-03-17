@@ -5,7 +5,7 @@
     using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Infrastructure.Helpers;
     using Sqlbi.Bravo.Infrastructure.Models;
-    using Sqlbi.Bravo.Services;
+    using Sqlbi.Bravo.Infrastructure.Services.PowerBI;
     using System;
     using System.Diagnostics;
     using System.Text.Json.Serialization;
@@ -118,19 +118,19 @@
             return hash.ToHashCode();
         }
 
-        internal static PBICloudDataset CreateFrom(CloudWorkspace workspace, CloudSharedModel dataset)
+        internal static PBICloudDataset CreateFrom(CloudWorkspace cloudWorkspace, CloudSharedModel cloudModel)
         {
-            BravoUnexpectedException.ThrowIfNull(workspace);
-            BravoUnexpectedException.ThrowIfNull(dataset);
-            BravoUnexpectedException.ThrowIfNull(dataset.Model);
+            BravoUnexpectedException.ThrowIfNull(cloudWorkspace);
+            BravoUnexpectedException.ThrowIfNull(cloudModel);
+            BravoUnexpectedException.ThrowIfNull(cloudModel.Model);
 
-            var model = dataset.Model;
+            var model = cloudModel.Model;
 
-            var pbicloudDataset = new PBICloudDataset
+            var cloudDataset = new PBICloudDataset
             {
-                WorkspaceId = workspace.Id,
-                WorkspaceName = workspace.Name.NullIfEmpty() ?? dataset.WorkspaceName,
-                WorkspaceObjectId = workspace.ObjectId,
+                WorkspaceId = cloudWorkspace.Id,
+                WorkspaceName = cloudWorkspace.Name.NullIfEmpty() ?? cloudModel.WorkspaceName,
+                WorkspaceObjectId = cloudWorkspace.ObjectId,
                 Id = model.Id,
                 ServerName = null,
                 DatabaseName = null,
@@ -138,27 +138,27 @@
                 Description = model.Description,
                 Owner = $"{ model.CreatorUser?.GivenName } { model.CreatorUser?.FamilyName }",
                 Refreshed = model.LastRefreshTime,
-                Endorsement = dataset.GalleryItem?.Stage.TryParseTo<PBICloudDatasetEndorsement>(),
-                WorkspaceType = dataset.WorkspaceType.TryParseTo<PBICloudDatasetWorkspaceType>(),
-                CapacitySkuType = workspace.CapacitySkuType.TryParseTo<PBICloudDatasetCapacitySkuType>(),
+                Endorsement = cloudModel.GalleryItem?.Stage.TryParseTo<PBICloudDatasetEndorsement>(),
+                WorkspaceType = cloudModel.WorkspaceType.TryParseTo<PBICloudDatasetWorkspaceType>(),
+                CapacitySkuType = cloudWorkspace.CapacitySkuType.TryParseTo<PBICloudDatasetCapacitySkuType>(),
                 IsPushDataEnabled = model.IsPushDataEnabled,
                 IsExcelWorkbook = model.IsExcelWorkbook,
                 IsOnPremModel = model.IsOnPremModel,
                 ConnectionMode = PBICloudDatasetConnectionMode.Supported,
             };
 
-            if (pbicloudDataset.IsXmlaEndPointSupported)
+            if (cloudDataset.IsXmlaEndPointSupported)
             {
-                pbicloudDataset.ServerName = PBICloudService.PBIPremiumServerUri.OriginalString;
-                pbicloudDataset.DatabaseName = model.DBName;
+                cloudDataset.ServerName = PBICloudService.PBIPremiumServerUri.OriginalString;
+                cloudDataset.DatabaseName = model.DBName;
             }
             else
             {
-                pbicloudDataset.ServerName = PBICloudService.PBIDatasetServerUri.OriginalString;
-                pbicloudDataset.DatabaseName = $"{ model.VSName }-{ model.DBName }";
+                cloudDataset.ServerName = PBICloudService.PBIDatasetServerUri.OriginalString;
+                cloudDataset.DatabaseName = $"{ model.VSName }-{ model.DBName }";
             }
 
-            return pbicloudDataset;
+            return cloudDataset;
         }
     }
 

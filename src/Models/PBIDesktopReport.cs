@@ -1,10 +1,19 @@
 ﻿namespace Sqlbi.Bravo.Models
 {
+    using Sqlbi.Bravo.Infrastructure;
+    using Sqlbi.Bravo.Infrastructure.Extensions;
+    using Sqlbi.Bravo.Infrastructure.Helpers;
     using Sqlbi.Bravo.Infrastructure.Models;
+    using Sqlbi.Bravo.Infrastructure.Security;
     using System;
     using System.ComponentModel.DataAnnotations;
     using System.Diagnostics;
+    using System.Linq;
+    using System.Net;
+    using System.Net.NetworkInformation;
     using System.Text.Json.Serialization;
+    using SSAS = Microsoft.AnalysisServices;
+    using TOM = Microsoft.AnalysisServices.Tabular;
 
     [DebuggerDisplay("{ServerName} - {ReportName} - {ConnectionMode}")]
     public class PBIDesktopReport : IDataModel<PBIDesktopReport>
@@ -41,6 +50,99 @@
         public override int GetHashCode()
         {
             return HashCode.Combine(ProcessId, ServerName, DatabaseName);
+        }
+
+        internal static PBIDesktopReport CreateFrom(Process process, bool connectionModeEnabled = true)
+        {
+            var report = new PBIDesktopReport
+            {
+                ProcessId = process.Id,
+                ReportName = process.GetPBIDesktopMainWindowTitle(),
+                ServerName = null,
+                DatabaseName = null,
+                ConnectionMode = PBIDesktopReportConnectionMode.Unknown,
+            };
+
+            if (connectionModeEnabled)
+            {
+                if (report.ReportName is null)
+                {
+                    report.ConnectionMode = PBIDesktopReportConnectionMode.UnsupportedProcessNotYetReady;
+                }
+                else
+                {
+                    GetConnectionMode(out var serverName, out var databaseName, out var connectionMode);
+                    report.ServerName = serverName;
+                    report.DatabaseName = databaseName;
+                    report.ConnectionMode = connectionMode;
+                }
+            }
+
+            return report;
+
+            void GetConnectionMode(out string? serverName, out string? databaseName, out PBIDesktopReportConnectionMode connectionMode)
+            {
+                serverName = null;
+                databaseName = null;
+
+                var ssasPIDs = process.GetChildrenPIDs(childProcessImageName: AppEnvironment.PBIDesktopSSASProcessImageName).ToArray();
+                if (ssasPIDs.Length != 1)
+                {
+                    connectionMode = PBIDesktopReportConnectionMode.UnsupportedAnalysisServecesProcessNotFound;
+                    return;
+                }
+
+                var ssasPID = ssasPIDs.Single();
+
+                var ssasConnection = NetworkHelper.GetTcpConnections((c) => c.ProcessId == ssasPID && c.State == TcpState.Listen && IPAddress.IsLoopback(c.EndPoint.Address)).FirstOrDefault();
+                if (ssasConnection == default)
+                {
+                    connectionMode = PBIDesktopReportConnectionMode.UnsupportedAnalysisServecesConnectionNotFound;
+                    return;
+                }
+
+                using var server = new TOM.Server();
+                var connectionString = ConnectionStringHelper.BuildForPBIDesktop(ssasConnection.EndPoint);
+                try
+                {
+                    server.Connect(connectionString.ToUnprotectedString());
+                }
+                catch (Exception ex)
+                {
+                    if (AppEnvironment.IsDiagnosticLevelVerbose)
+                        AppEnvironment.AddDiagnostics(DiagnosticMessageType.Text, name: $"{ nameof(PBIDesktopReport) }-{ nameof(CreateFrom) }-{ nameof(GetConnectionMode) }", ex.ToString(), severity: DiagnosticMessageSeverity.Warning);
+
+                    connectionMode = PBIDesktopReportConnectionMode.UnsupportedConnectionException;
+                    return;
+                }
+
+                if (server.CompatibilityMode != SSAS.CompatibilityMode.PowerBI && server.CompatibilityMode != SSAS.CompatibilityMode.AnalysisServices)
+                {
+                    connectionMode = PBIDesktopReportConnectionMode.UnsupportedAnalysisServecesUnexpectedCompatibilityMode;
+                    return;
+                }
+
+                if (server.Databases.Count == 0)
+                {
+                    connectionMode = PBIDesktopReportConnectionMode.UnsupportedDatabaseCollectionIsEmpty;
+                    return;
+                }
+
+                if (server.Databases.Count > 1)
+                {
+                    connectionMode = PBIDesktopReportConnectionMode.UnsupportedDatabaseCollectionUnexpectedCount;
+                    return;
+                }
+
+                var database = server.Databases[0];
+
+                // Do we need this check ?? (e.g UnsupportedDatabaseNotYetReadyOrUnloaded)
+                // if (database.IsLoaded == false) { }
+
+                serverName = $"{ NetworkHelper.LocalHost }:{ ssasConnection.EndPoint.Port }"; // we're using 'localhost:<port>' instead of '<ipaddress>:<port>' in order to allow both ipv4 and ipv6 connections 
+                databaseName = database.Name;
+                connectionMode = PBIDesktopReportConnectionMode.Supported;
+            }
         }
     }
 

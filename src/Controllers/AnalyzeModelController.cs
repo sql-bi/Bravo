@@ -6,9 +6,7 @@
     using Sqlbi.Bravo.Models;
     using Sqlbi.Bravo.Models.AnalyzeModel;
     using Sqlbi.Bravo.Services;
-    using System;
     using System.Collections.Generic;
-    using System.IO;
     using System.Net.Mime;
     using System.Threading;
     using System.Threading.Tasks;
@@ -22,13 +20,13 @@
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ProblemDetails))]
     public class AnalyzeModelController : ControllerBase
     {
-        private readonly IPBIDesktopService _pbidesktopService;
-        private readonly IPBICloudService _pbicloudService;
+        private readonly IAnalyzeModelService _analyzeModelService;
+        private readonly IAuthenticationService _authenticationService;
 
-        public AnalyzeModelController(IPBIDesktopService pbidesktopService, IPBICloudService pbicloudService)
+        public AnalyzeModelController(IAnalyzeModelService analyzeModelService, IAuthenticationService authenticationService)
         {
-            _pbidesktopService = pbidesktopService;
-            _pbicloudService = pbicloudService;
+            _analyzeModelService = analyzeModelService;
+            _authenticationService = authenticationService;
         }
 
         /// <summary>
@@ -43,7 +41,7 @@
         [ProducesDefaultResponseType]
         public IActionResult GetDatabase()
         {
-            var database = TabularDatabase.CreateFromVpax(stream: Request.Body);
+            var database = _analyzeModelService.GetDatabase(stream: Request.Body);
             return Ok(database);
         }
 
@@ -57,9 +55,9 @@
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(TabularDatabase))]
         [ProducesDefaultResponseType]
-        public IActionResult GetDatabase(PBIDesktopReport report)
+        public IActionResult GetDatabase(PBIDesktopReport report, CancellationToken cancellationToken)
         {
-            var database = _pbidesktopService.GetDatabase(report);
+            var database = _analyzeModelService.GetDatabase(report, cancellationToken);
             return Ok(database);
         }
 
@@ -75,12 +73,12 @@
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(TabularDatabase))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesDefaultResponseType]
-        public async Task<IActionResult> GetDatabase(PBICloudDataset dataset)
+        public async Task<IActionResult> GetDatabase(PBICloudDataset dataset, CancellationToken cancellationToken)
         {
-            if (await _pbicloudService.IsSignInRequiredAsync())
+            if (await _authenticationService.IsPBICloudSignInRequiredAsync())
                 return Unauthorized();
 
-            var database = _pbicloudService.GetDatabase(dataset);
+            var database = _analyzeModelService.GetDatabase(dataset, _authenticationService.PBICloudAuthentication.AccessToken, cancellationToken);
             return Ok(database);
         }
 
@@ -95,12 +93,12 @@
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<PBICloudDataset>))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesDefaultResponseType]
-        public async Task<IActionResult> GetPBICloudDatasets()
+        public async Task<IActionResult> GetDatasets(CancellationToken cancellationToken)
         {
-            if (await _pbicloudService.IsSignInRequiredAsync())
+            if (await _authenticationService.IsPBICloudSignInRequiredAsync())
                 return Unauthorized();
 
-            var datasets = await _pbicloudService.GetDatasetsAsync();
+            var datasets = await _analyzeModelService.GetDatasetsAsync(cancellationToken);
             return Ok(datasets);
         }
 
@@ -113,9 +111,9 @@
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<PBIDesktopReport>))]
         [ProducesDefaultResponseType]
-        public IActionResult GetPBIDesktopReports(CancellationToken cancellationToken)
+        public IActionResult GetReports(CancellationToken cancellationToken)
         {
-            var reports = _pbidesktopService.GetReports(cancellationToken);
+            var reports = _analyzeModelService.GetReports(cancellationToken);
             return Ok(reports);
         }
 
@@ -130,7 +128,7 @@
         [ProducesDefaultResponseType]
         public IActionResult QueryPBIDesktopReports(CancellationToken cancellationToken)
         {
-            var reports = _pbidesktopService.QueryReports(cancellationToken);
+            var reports = _analyzeModelService.QueryReports(cancellationToken);
             return Ok(reports);
         }
 
@@ -150,15 +148,8 @@
         {
             if (WindowDialogHelper.SaveFileDialog(fileName: report.ReportName, defaultExt: "VPAX", out var path, cancellationToken))
             {
-                using var stream = _pbidesktopService.GetVpax(report);
-                cancellationToken.ThrowIfCancellationRequested();
-                
-                using var fileStream = System.IO.File.Create(path);
-                stream.Seek(0, SeekOrigin.Begin);
-                stream.CopyTo(fileStream);
-
+                _analyzeModelService.ExportVpax(report, path, cancellationToken);
                 return Ok();
-                
             }
 
             return NoContent();
@@ -180,18 +171,12 @@
         [ProducesDefaultResponseType]
         public async Task<IActionResult> ExportVpax(PBICloudDataset dataset, CancellationToken cancellationToken)
         {
-            if (await _pbicloudService.IsSignInRequiredAsync())
+            if (await _authenticationService.IsPBICloudSignInRequiredAsync())
                 return Unauthorized();
 
             if (WindowDialogHelper.SaveFileDialog(fileName: dataset.DisplayName, defaultExt: "VPAX", out var path, cancellationToken))
             {
-                using var stream = _pbicloudService.GetVpax(dataset);
-                cancellationToken.ThrowIfCancellationRequested();
-
-                using var fileStream = System.IO.File.Create(path);
-                stream.Seek(0, SeekOrigin.Begin);
-                stream.CopyTo(fileStream);
-
+                _analyzeModelService.ExportVpax(dataset, path, _authenticationService.PBICloudAuthentication.AccessToken, cancellationToken);
                 return Ok();
             }
 

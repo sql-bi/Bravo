@@ -1,7 +1,7 @@
 ﻿namespace Sqlbi.Bravo.Infrastructure.Helpers
 {
+    using Sqlbi.Bravo.Infrastructure.Services.PowerBI;
     using Sqlbi.Bravo.Infrastructure.Windows.Interop;
-    using Sqlbi.Bravo.Services;
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
