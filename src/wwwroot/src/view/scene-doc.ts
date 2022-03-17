@@ -30,27 +30,28 @@ export abstract class DocScene extends NavigatorScene {
         this.showToolbar = showToolbar;
     }
 
-    get supported(): boolean {
+    get supported(): [boolean, string] {
         return this.doc.featureSupported("Page", this.type);
     }
 
     get limited(): boolean {
-        return !this.doc.featureSupported("All", this.type);
+        return !this.doc.featureSupported("All", this.type)[0];
     }
 
     get canSync(): boolean {
-        return this.doc.featureSupported("Synchronize", this.type) && !this.doc.orphan;
+        return this.doc.featureSupported("Synchronize", this.type)[0] && !this.doc.orphan;
     }
 
     get canEdit(): boolean {
-        return this.doc.featureSupported("UpdateModel", this.type) && !this.doc.orphan;
+        return this.doc.featureSupported("UpdateModel", this.type)[0] && !this.doc.orphan;
     }
 
     render() {
         super.render();
 
-        if (!this.supported) {
-            let blockingScene = new UnsupportedScene(Utils.DOM.uniqueId(), this.element, this.type);
+        let sceneSupported = this.supported;
+        if (!sceneSupported[0]) {
+            let blockingScene = new UnsupportedScene(Utils.DOM.uniqueId(), this.element, this.type, sceneSupported[1]);
             this.push(blockingScene);
             return false;
         }
@@ -99,7 +100,7 @@ export abstract class DocScene extends NavigatorScene {
     update() {
         super.update();
 
-        if (!this.supported) return false;
+        if (!this.supported[0]) return false;
 
         this.updateConditionalElements("syncable", this.canSync);
         this.updateConditionalElements("editable", this.canEdit);

@@ -6,7 +6,7 @@
 
 import { host } from "../main";
 import { Dic, Utils } from '../helpers/utils';
-import { daxName, FormattedMeasure, TabularDatabase, TabularDatabaseFeature, TabularDatabaseInfo, TabularMeasure } from './tabular';
+import { daxName, FormattedMeasure, TabularDatabase, TabularDatabaseFeature, TabularDatabaseFeatureUnsupportedReason, TabularDatabaseInfo, TabularMeasure } from './tabular';
 import { deepEqual } from 'fast-equals';
 import { PBICloudDataset } from './pbi-dataset';
 import { PBIDesktopReport } from './pbi-report';
@@ -35,7 +35,7 @@ export class Doc {
     sourceData: File | PBICloudDataset | PBIDesktopReport;
     model: TabularDatabaseInfo;
     measures: TabularMeasure[];
-    features: TabularDatabaseFeature;
+    features: [TabularDatabaseFeature, TabularDatabaseFeatureUnsupportedReason];
     formattedMeasures: Dic<FormattedMeasure>;
     lastSync: number;
 
@@ -90,7 +90,7 @@ export class Doc {
 
                 this.model = response.model;
                 this.measures = response.measures;
-                this.features = response.features;
+                this.features = [response.features, response.featureUnsupportedReasons];
                 this.loaded = true;
                 this.lastSync = Date.now();
 
@@ -140,33 +140,57 @@ export class Doc {
         return MeasureStatus.Partial;
     }
 
-    featureSupported(feature: string, pageType?: PageType) {
+    featureSupported(feature: string, pageType?: PageType): [boolean, string] {
 
-        let expectedValue = TabularDatabaseFeature.None;
+        let pageFeaturesPrefixes = {
+            [PageType.AnalyzeModel]: "AnalyzeModel",
+            [PageType.DaxFormatter]: "FormatDax",
+            [PageType.ManageDates]: "ManageDates",
+            [PageType.ExportData]: "ExportData",
+            //[PageType.BestPractices]: "BestPractices",
+        };
+        let featurePrefix = (pageType ? pageFeaturesPrefixes[pageType] : "");
 
-        if (pageType) {
-            switch (pageType) {
-                case PageType.AnalyzeModel:
-                    expectedValue = (<any>TabularDatabaseFeature)[`AnalyzeModel${feature}`];
-                    break;
-                case PageType.DaxFormatter:
-                    expectedValue = (<any>TabularDatabaseFeature)[`FormatDax${feature}`];
-                    break;
-                case PageType.ManageDates:
-                    expectedValue = (<any>TabularDatabaseFeature)[`ManageDates${feature}`];
-                    break;
-                case PageType.ExportData:
-                    expectedValue = (<any>TabularDatabaseFeature)[`ExportData${feature}`];
-                    break;
-                /*
-                case PageType.BestPractices:
-                    expectedValue = (<any>TabularDatabaseFeature)[`BestPractices${type}`];
-                    break;
-                */
+        // Check if feature is supported
+        let expectedValue = (<any>TabularDatabaseFeature)[`${featurePrefix}${feature}`];
+        let supported = ((this.features[0] & expectedValue) === expectedValue);
+
+        // Get the unsupported reasons if any
+        let reasons: Dic<string[]> = {
+            common: []
+        };
+        Object.keys(TabularDatabaseFeatureUnsupportedReason).forEach(r => {
+            let enumValue = Number(r);
+            if (!isNaN(enumValue) && enumValue) { //Exclude None
+                if ((this.features[1] & enumValue) === enumValue) {
+                    let enumText = TabularDatabaseFeatureUnsupportedReason[enumValue];
+
+                    let found = false;
+                    let prefixes = Object.values(pageFeaturesPrefixes);
+                    for (let i = 0; i < prefixes.length; i++) {
+                        let prefix = prefixes[i];
+                        if (enumText.startsWith(prefix)) {
+                            if (!(prefix in reasons))
+                                reasons[prefix] = [];
+                            reasons[prefix].push(enumText);
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found)
+                        reasons.common.push(enumText);
+                }
             }
-        } else {
-            expectedValue = (<any>TabularDatabaseFeature)[feature];
+        });
+        let group = (pageType && (featurePrefix in reasons) ? featurePrefix : "common");
+        let reason = (reasons[group].length ? reasons[group][reasons[group].length - 1] : "");
+
+        let reasonMessage = "";
+        if (reason) {
+            try { reasonMessage = i18n((<any>strings)[`sceneUnsupportedReason${reason}`]); }
+            catch(ignore){}
         }
-        return ((this.features & expectedValue) === expectedValue);
+
+        return [supported, reasonMessage];
     }
 }

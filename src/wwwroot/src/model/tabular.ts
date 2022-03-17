@@ -8,6 +8,7 @@ export interface TabularDatabase {
     model: TabularDatabaseInfo
     measures: TabularMeasure[]
     features: TabularDatabaseFeature
+    featureUnsupportedReasons?: TabularDatabaseFeatureUnsupportedReason
 }
 export interface TabularDatabaseModel {
     columns: TabularColumn[]
@@ -124,5 +125,9 @@ export enum TabularDatabaseFeature {
 
 export enum TabularDatabaseFeatureUnsupportedReason {
     None = 0,
+    ReadOnly = 1 << 1,
+    MetadataOnly = 1 << 2,
+    XmlaEndpointNotSupported = 1 << 3,
     ManageDatesAutoDateTimeEnabled = 1 << 300,
+    ManageDatesPBIDesktopModelOnly = 1 << 301,
 }

@@ -12,40 +12,24 @@ import { Scene } from './scene';
 
 export class UnsupportedScene extends Scene {
 
-    constructor(id: string, container: HTMLElement, feature: PageType) {
+    constructor(id: string, container: HTMLElement, feature: PageType, reason?: string) {
         super(id, container, "");
         
         this.element.classList.add("unsupported-scene");
-        this.render(feature);
+        this.render(feature, reason);
     }
     
-    render(feature?: PageType) {
+    render(feature?: PageType, reason?: string) {
         super.render();
-        
-        let specificMessage = "";
-        try {
-            specificMessage = i18n((<any>strings)[`sceneUnsupported${feature}Desc`]);
-        } catch(ignore) {}
 
         let html = `
             <div class="error">
                 <div class="icon icon-unsupported-${feature}"></div>
-
                 <h1>${i18n(strings.sceneUnsupportedTitle)}</h1>
-
-                <p>
-                    ${i18n(strings.sceneUnsupportedDesc)}
-                    
-                    ${specificMessage ? `
-                        <br>
-                        <strong>${i18n((<any>strings)[`sceneUnsupported${feature}Desc`])}</strong>
-                    ` : ""}
-                </p>
-
+                <p class="message">${reason ? reason : i18n(strings.sceneUnsupportedReason)}</p>
             </div>
         `;
 
         this.element.insertAdjacentHTML("beforeend", html); 
     }
-
 }
