@@ -102,7 +102,7 @@ export class DaxFormatterScene extends DocScene {
 
         this.previewContainer = _(".preview", this.body);
 
-        this.previewPane = new MultiViewPane("preview-menu", _(".preview", this.body), <Dic<ViewPane>>{
+        this.previewPane = new MultiViewPane(Utils.DOM.uniqueId(), _(".preview", this.body), <Dic<ViewPane>>{
             "current": {
                 name: i18n(strings.daxFormatterOriginalCode),
                 onRender: element => {
