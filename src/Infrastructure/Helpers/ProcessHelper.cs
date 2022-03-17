@@ -5,6 +5,7 @@
     using System.Collections.Generic;
     using System.ComponentModel;
     using System.Diagnostics;
+    using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
     using System.IO;
     using System.Linq;
@@ -23,7 +24,7 @@
             thread.Join();
         }
 
-        public static bool OpenInBrowser(Uri address)
+        public static bool OpenBrowser(Uri address)
         {
             if (address.IsAbsoluteUri && !address.IsFile && !address.IsUnc && !address.IsLoopback)
             {
@@ -45,58 +46,8 @@
             return false;
         }
 
-        public static bool OpenPath(string path, bool waitForIdle = false)
+        public static bool OpenFileExplorer(string path)
         {
-            if (File.Exists(path))
-            {
-                const string Pbix = ".pbix";
-                const string Xlsx = ".xlsx";
-
-                var allowedExtensions = new[] { Pbix, Xlsx };
-                var extension = Path.GetExtension(path);
-                var isPbix = extension.EqualsI(Pbix);
-
-                if (allowedExtensions.Any((ext) => ext.EqualsI(extension)))
-                {
-                    var startInfo = new ProcessStartInfo
-                    {
-                        FileName = path,
-                        UseShellExecute = true
-                    };
-
-                    using var process = Process.Start(startInfo);
-
-                    if (waitForIdle && process is not null)
-                    {
-                        try
-                        {
-                            process.WaitForInputIdle(5_000);
-                        }
-                        catch (InvalidOperationException)
-                        {
-                            // ignore
-                        }
-
-                        if (isPbix)
-                        {
-                            for (var i = 0; i < 60; i++)
-                            {
-                                if (process.HasExited)
-                                    break;
-
-                                // If the result is null it means that the SSAS instance is not ready yet
-                                if (process.GetPBIDesktopMainWindowTitle() is not null)
-                                    break;
-
-                                Thread.Sleep(1_000);
-                            }
-                        } 
-                    }
-
-                    return true;
-                }
-            }
-            
             if (Directory.Exists(path))
             {
                 var startInfo = new ProcessStartInfo
@@ -107,6 +58,83 @@
 
                 using var process = Process.Start(startInfo);
                 return true;
+            }
+
+            return false;
+        }
+
+        public static bool OpenShellExecute(string path, bool waitForStarted, [NotNullWhen(true)] out int? processId)
+        {
+            if (File.Exists(path))
+            {
+                const string Pbix = ".pbix";
+                const string Xlsx = ".xlsx";
+
+                var extension = Path.GetExtension(path);
+                var isAllowed = (new[] { Pbix, Xlsx }).Any((ext) => ext.EqualsI(extension));
+                var isPbix = extension.EqualsI(Pbix);
+
+                if (isAllowed)
+                {
+                    var startInfo = new ProcessStartInfo
+                    {
+                        FileName = path,
+                        UseShellExecute = true
+                    };
+
+                    using var process = Process.Start(startInfo);
+
+                    if (process is not null)
+                    {
+                        processId = process.Id;
+
+                        if (waitForStarted)
+                        {
+                            try
+                            {
+                                process.WaitForInputIdle(5_000);
+                            }
+                            catch (InvalidOperationException)
+                            {
+                                // ignore
+                            }
+
+                            if (isPbix)
+                            {
+                                for (var i = 0; i < 60; i++)
+                                {
+                                    if (process.HasExited)
+                                        break;
+
+                                    // If the result is null it means that the SSAS instance is not ready yet
+                                    if (process.GetPBIDesktopMainWindowTitle() is not null)
+                                        break;
+
+                                    Thread.Sleep(1_000);
+                                }
+                            }
+                        }
+
+                        return true;
+                    }
+                }
+            }
+
+            processId = null;
+            return false;
+        }
+
+        public static bool Open(string path)
+        {
+            if (File.Exists(path))
+            {
+                if (OpenShellExecute(path, waitForStarted: false, out _))
+                    return true;
+            }
+            else if (Directory.Exists(path))
+            {
+                if (OpenFileExplorer(path))
+                    return true;
             }
 
             return false;

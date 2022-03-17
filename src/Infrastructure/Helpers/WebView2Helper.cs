@@ -87,7 +87,7 @@ Choose an option to proceed with the installation:",
                     DownloadAndInstallRuntime();
                     break;
                 case 20:
-                    _ = ProcessHelper.OpenInBrowser(new Uri(MicrosoftReferenceUrl, uriKind: UriKind.Absolute));
+                    _ = ProcessHelper.OpenBrowser(new Uri(MicrosoftReferenceUrl, uriKind: UriKind.Absolute));
                     break;
                 case 30:
                     // default to Environment.Exit
