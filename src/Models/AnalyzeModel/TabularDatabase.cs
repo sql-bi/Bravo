@@ -13,6 +13,7 @@
     using System.Text.Json.Serialization;
     using System.Threading;
     using SSAS = Microsoft.AnalysisServices;
+    using TOM = Microsoft.AnalysisServices.Tabular;
 
     public class TabularDatabase
     {
@@ -49,7 +50,7 @@
         internal static TabularDatabase CreateFrom(TabularConnectionWrapper connection, CancellationToken cancellationToken)
         {
             var daxModel = VpaxToolsHelper.GetDaxModel(connection, cancellationToken);
-            var database = CreateFrom(daxModel);
+            var database = CreateFrom(daxModel, connection.Model);
 
             if (database.Info is not null)
             {
@@ -68,7 +69,7 @@
             return database;
         }
 
-        internal static TabularDatabase CreateFrom(Dax.Metadata.Model daxModel)
+        internal static TabularDatabase CreateFrom(Dax.Metadata.Model daxModel, TOM.Model? tomModel = default)
         {
             var vpaModel = new VpaModel(daxModel);
 
@@ -83,7 +84,7 @@
             var databaseSize = includedColumns.Sum((c) => c.TotalSize);
             var tables = includedTables.Select((t) => TabularTable.CreateFrom(t, daxModel)).ToArray();
             var columns = includedColumns.Select((c) => TabularColumn.CreateFrom(c, databaseSize)).ToArray();
-            var measures = includedMeasures.Select((m) => TabularMeasure.CreateFrom(m, databaseETag)).ToArray();
+            var measures = includedMeasures.Select((m) => TabularMeasure.CreateFrom(m, databaseETag, tomModel)).ToArray();
             var autoLineBreakStyle = measures.GetAutoLineBreakStyle();
 
             var database = new TabularDatabase
