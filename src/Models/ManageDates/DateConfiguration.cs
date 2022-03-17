@@ -291,8 +291,8 @@
                     // HACK <<
 
                     // TODO: enable when the property is available, remove previous HACK and RemoveTemplateEntry() calls
-                    //templateEntries.HolidaysReference.IsEnabled = false;
-                    //templateEntries.HolidaysDefinitionTable.IsEnabled = false;
+                    //templateEntries.Holidays.IsEnabled = false;
+                    //templateEntries.HolidaysDefinition.IsEnabled = false;
                 }
             }
             //

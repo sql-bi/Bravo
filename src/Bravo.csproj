@@ -47,7 +47,7 @@
   <ItemGroup>
     <PackageReference Include="Autoupdater.NET.Official" Version="1.7.0" />
     <PackageReference Include="CsvHelper" Version="27.2.1" />
-    <PackageReference Include="Dax.Template" Version="0.1.0-beta4" />
+    <PackageReference Include="Dax.Template" Version="0.1.0-beta6" />
     <PackageReference Include="Dax.Formatter" Version="1.0.0" />
     <PackageReference Include="Dax.ViewModel" Version="1.2.2" />
     <PackageReference Include="Dax.Vpax.NetCore" Version="1.2.2" />

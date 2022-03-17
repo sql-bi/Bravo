@@ -10,6 +10,7 @@
     using Sqlbi.Bravo.Infrastructure.Messages;
     using Sqlbi.Bravo.Models;
     using System;
+    using System.Globalization;
     using System.IO;
     using System.Linq;
     using System.Text;
@@ -85,6 +86,10 @@
                 version = AppEnvironment.ApplicationProductVersion,
                 build = AppEnvironment.ApplicationFileVersion,
                 options = BravoOptions.CreateFromUserPreferences(),
+                culture = new
+                {
+                    IetfLanguageTag = CultureInfo.CurrentCulture.IetfLanguageTag
+                },
                 telemetry = new
                 {
                     instrumentationKey = AppEnvironment.TelemetryInstrumentationKey,

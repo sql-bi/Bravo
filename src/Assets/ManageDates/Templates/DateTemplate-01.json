@@ -47,6 +47,10 @@
       "Expression": "__MonthNumber - 3 * (__QuarterNumber - 1)"
     },
     {
+      "Name": "__YearQuarterNumber",
+      "Expression": "CONVERT ( __YearNumber * 4 + __QuarterNumber - 1, INTEGER )"
+    },
+    {
       "Name": "__WeekdayNumber",
       "Expression": "WEEKDAY ( __Date, 1 ) - 1"
     },
@@ -55,8 +59,16 @@
       "Expression": "__YearNumber + 1 * ( __FirstFiscalMonth > 1 && __MonthNumber >= __FirstFiscalMonth )"
     },
     {
+      "Name": "__FiscalYearQuarterNumber",
+      "Expression": "CONVERT ( __FiscalYearNumber * 4 + __FiscalQuarterNumber - 1, INTEGER )"
+    },
+    {
+      "Name": "__FiscalMonthNumber",
+      "Expression": "__MonthNumber - __FirstFiscalMonth + 1 + 12 * (__MonthNumber < __FirstFiscalMonth)"
+    },
+    {
       "Name": "__FiscalQuarterNumber",
-      "Expression": "FORMAT ( EOMONTH ( __Date, 1 - __FirstFiscalMonth ), \"@_FQ_@Q\"@@GETISO() )"
+      "Expression": "ROUNDUP ( __FiscalMonthNumber / 3, 0 )"
     },
     {
       "Name": "__HolidayName",
@@ -85,49 +97,57 @@
     },
     {
       "Name": "Year",
-      "Expression": "DATE(__YearNumber, 12, 31)",
-      "DataType": "DateTime",
-      "FormatString": "yyyy",
+      "Expression": "__YearNumber",
+      "DataType": "Int64",
       "DataCategory": "Years"
     },
     {
-      "Name": "Year Quarter Date",
-      "Expression": "EOMONTH( __Date, 3 - __MonthNumberQ )",
-      "DataType": "DateTime",
-      "FormatString": "m/dd/yyyy",
+      "Name": "Year Quarter Number",
+      "Expression": "__YearQuarterNumber",
+      "DataType": "Int64",
       "IsHidden": true,
       "DataCategory": "Quarters"
     },
     {
       "Name": "Year Quarter",
-      "_comment": "TODO Add FORMAT argument for localization",
-      "Expression": "FORMAT( __Date, \"@_Q_@Q-YYYY\")",
+      "Expression": "FORMAT ( __QuarterNumber, \"@_Q_@0\"@@GETISO() ) & \"-\" & FORMAT ( __YearNumber, \"0000\"@@GETISO() )",
       "DataType": "String",
-      "SortByColumn": "Year Quarter Date"
+      "SortByColumn": "Year Quarter Number",
+      "DataCategory": "Quarters"
     },
     {
       "Name": "Quarter",
-      "Expression": "FORMAT( __Date, \"@_Q_@Q\" )",
+      "Expression": "FORMAT( __QuarterNumber, \"@_Q_@0\"@@GETISO() )",
       "DataType": "String",
       "DataCategory": "QuarterOfYear"
     },
     {
-      "_comment": "Use this version for end-of-month",
-      "_Name": "Year Month",
-      "_Expression": "EOMONTH( _Date, 0 )",
-      "_DataType": "DateTime",
-      "_comment_1": "Use this version for beginning-of-month",
       "Name": "Year Month",
-      "Expression": "EOMONTH( __Date, -1 ) + 1",
-      "DataType": "DateTime",
-      "FormatString": "mmm yyyy",
+      "Expression": "FORMAT ( __Date, \"mmm yyyy\"@@GETISO() )",
+      "DataType": "String",
+      "SortByColumn": "Year Month Number",
+      "DataCategory": "Months"
+    },
+    {
+      "Name": "Year Month Number",
+      "Expression": "__YearNumber * 12 + __MonthNumber - 1",
+      "DataType": "Int64",
+      "IsHidden": true,
+      "AttributeType": "FiscalMonths",
       "DataCategory": "Months"
     },
     {
       "Name": "Month",
-      "Expression": "DATE(1900, MONTH( __Date ), 1 )",
-      "DataType": "DateTime",
-      "FormatString": "mmm",
+      "Expression": "FORMAT ( __Date, \"mmm\"@@GETISO() )",
+      "DataType": "String",
+      "SortByColumn": "Month Number",
+      "DataCategory": "MonthOfYear"
+    },
+    {
+      "Name": "Month Number",
+      "Expression": "__MonthNumber",
+      "DataType": "Int64",
+      "IsHidden": true,
       "DataCategory": "MonthOfYear"
     },
     {
@@ -142,34 +162,39 @@
     },
     {
       "Name": "Fiscal Year",
-      "Expression": "DATE(__FiscalYearNumber + (__FirstFiscalMonth = 1), __FirstFiscalMonth, 1) - 1",
-      "DataType": "DateTime",
-      "FormatString": "@_FY_@ yyyy",
-      "DisplayFolder": "Fiscal",
-      "DataCategory": "FiscalYears"
+      "Expression": "FORMAT ( __FiscalYearNumber, \"@_FY_@ 0000\"@@GETISO() )",
+      "DataType": "String",
+      "SortByColumn": "Fiscal Year Number",
+      "DataCategory": "Years"
+    },
+    {
+      "Name": "Fiscal Year Number",
+      "Expression": "__FiscalYearNumber",
+      "DataType": "Int64",
+      "IsHidden": true,
+      "AttributeType": "FiscalYears",
+      "DataCategory": "Years"
     },
     {
       "Name": "Fiscal Year Quarter",
-      "Expression": "__FiscalQuarterNumber & \"-\" & __FiscalYearNumber",
+      "Expression": "FORMAT ( __FiscalQuarterNumber, \"@_FQ_@0\"@@GETISO() ) & \"-\" & FORMAT ( __FiscalYearNumber, \"0000\"@@GETISO() )",
       "DataType": "String",
-      "SortByColumn": "Fiscal Year Quarter Date",
-      "DisplayFolder": "Fiscal"
+      "SortByColumn": "Fiscal Year Quarter Number",
+      "DataCategory": "Quarters"
     },
     {
-      "Name": "Fiscal Year Quarter Date",
-      "Expression": "EOMONTH( __Date, 3 - __MonthNumberQ )",
-      "DataType": "DateTime",
-      "FormatString": "m/dd/yyyy",
+      "Name": "Fiscal Year Quarter Number",
+      "Expression": "__FiscalYearQuarterNumber",
+      "DataType": "Int64",
       "IsHidden": true,
-      "DisplayFolder": "Fiscal",
-      "DataCategory": "FiscalQuarters"
+      "AttributeType": "FiscalQuarters",
+      "DataCategory": "Quarters"
     },
     {
       "Name": "Fiscal Quarter",
-      "Expression": "__FiscalQuarterNumber",
+      "Expression": "FORMAT( __FiscalQuarterNumber, \"@_FQ_@0\"@@GETISO() )",
       "DataType": "String",
-      "DisplayFolder": "Fiscal",
-      "DataCategory": "FiscalQuarterOfYear"
+      "DataCategory": "QuarterOfYear"
     },
     {
       "Name": "IsWorking",

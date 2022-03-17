@@ -77,7 +77,7 @@
                 dateDefaults.FirstFiscalMonth = 0; // Zero-based
 
             // Override the template value only if the variable exists, otherwise keep the null value
-            if (dateDefaults.FirstFiscalMonth is not null)
+            if (dateDefaults.FirstDayOfWeek is not null)
                 dateDefaults.FirstDayOfWeek = DateTimeFormatInfo.CurrentInfo.FirstDayOfWeek;
 
             return dateDefaults;
