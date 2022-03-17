@@ -5,6 +5,7 @@
     using Microsoft.AspNetCore.Hosting.Server;
     using Microsoft.AspNetCore.Hosting.Server.Features;
     using Microsoft.AspNetCore.Http;
+    using Microsoft.AspNetCore.Mvc;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
@@ -78,7 +79,7 @@
 
                 apiOptions.InvalidModelStateResponseFactory = (context) =>
                 {
-                    AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"InvalidModelState", content: JsonSerializer.Serialize(context.ModelState), severity: DiagnosticMessageSeverity.Error);
+                    AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{ nameof(MvcCoreMvcBuilderExtensions.ConfigureApiBehaviorOptions) }.{ nameof(apiOptions.InvalidModelStateResponseFactory) }", content: JsonSerializer.Serialize(new ValidationProblemDetails(context.ModelState)), severity: DiagnosticMessageSeverity.Error);
 
                     // Invoke the defaultFactory delegate to preserve the default behavior
                     return defaultFactory(context);

@@ -71,10 +71,6 @@
                 // Map controllers and marks them as RequireAuthorization so that all requests must be authorized
                 endpoints.MapControllers().RequireAuthorization();
 #endif
-                //endpoints.MapGet("/", async context =>
-                //{
-                //    await context.Response.WriteAsync($"Sqlbi.Bravo API on {Environment.MachineName}");
-                //});
             });
         }
     }

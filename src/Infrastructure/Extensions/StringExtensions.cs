@@ -73,6 +73,15 @@
             return stringBuilder.ToString();
         }
 
+        public static bool ContainsInvalidPathChars(this string path)
+        {
+            if (path is null)
+                return false;
+
+            var indexOfAny = path.IndexOfAny(Path.GetInvalidPathChars());
+            return indexOfAny != -1;
+        }
+
         public static string ReplaceInvalidFileNameChars(this string path, string replacement = "_")
         {
             if (_invalidFileNameCharsRegex is null)
