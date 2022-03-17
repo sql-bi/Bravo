@@ -51,7 +51,7 @@ export class AnalyzeModelScene extends DocScene {
     showUnrefOnly = false; //options.data.model.showUnrefOnly;
 
     get canExportVpax(): boolean {
-        return this.doc.featureSupported("ExportVpax", this.type) && !this.doc.orphan;
+        return this.doc.featureSupported("ExportVpax", this.type)[0] && !this.doc.orphan;
     }
 
     constructor(id: string, container: HTMLElement, doc: Doc, type: PageType) {

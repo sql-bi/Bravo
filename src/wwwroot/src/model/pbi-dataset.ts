@@ -12,12 +12,6 @@ export enum PBICloudDatasetEndorsement {
 export enum PBICloudDatasetConnectionMode {
     Unknown = "Unknown", 
     Supported = "Supported", 
-    UnsupportedWorkspaceSku = "UnsupportedWorkspaceSku", 
-    UnsupportedPersonalWorkspace = "UnsupportedPersonalWorkspace", 
-    UnsupportedPushDataset = "UnsupportedPushDataset", 
-    UnsupportedExcelWorkbookDataset = "UnsupportedExcelWorkbookDataset", 
-    UnsupportedLiveConnectionToExternalDatasets = "UnsupportedLiveConnectionToExternalDatasets", 
-    UnsupportedOnPremLiveConnection = "UnsupportedOnPremLiveConnection"
 }
 
 export interface PBICloudDataset {
