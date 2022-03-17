@@ -21,13 +21,13 @@ export class ConnectMenuItem {
         this.element = element;
     }
 
-    renderError(message: string, copy = false, retry?: () => void) {
+    renderError(element: HTMLElement, message: string, copy = false, retry?: () => void) {
 
         if (!this.element) return;
         
         const retryId = Utils.DOM.uniqueId();
 
-        _(".list", this.element).innerHTML = `
+        element.innerHTML = `
             <div class="notice">
                 <div>
                     <p>${message}</p>
@@ -42,13 +42,13 @@ export class ConnectMenuItem {
         `;
 
         if (retry) {
-            _(`#${retryId}`, this.element).addEventListener("click", e => {
+            _(`#${retryId}`, element).addEventListener("click", e => {
                 e.preventDefault();
                 retry();
             }); 
         }
         if (copy) {
-            _(".copy-error", this.element).addEventListener("click", e =>{
+            _(".copy-error", element).addEventListener("click", e =>{
                 e.preventDefault();
                 navigator.clipboard.writeText(message);
 

@@ -21,6 +21,7 @@ export class ConnectRemote extends ConnectMenuItem {
     
     table: Tabulator;
     showUnsupported = false;
+    listElement: HTMLElement;
     searchBox: HTMLInputElement;
 
     render(element: HTMLElement) {
@@ -31,9 +32,10 @@ export class ConnectRemote extends ConnectMenuItem {
             </div>
         `;
         this.element.insertAdjacentHTML("beforeend", html);
+        this.listElement = _(".list", this.element);
 
         if (!auth.signedIn) {
-            _(".list", this.element).innerHTML = `
+            this.listElement.innerHTML = `
                 <div class="quick-signin notice">
                     <div>
                         <p>${i18n(strings.errorNotConnected)}</p>
@@ -65,7 +67,7 @@ export class ConnectRemote extends ConnectMenuItem {
         let unopenedDatasets = datasets.filter(dataset => (this.dialog.openDocIds.indexOf(Doc.getId(DocType.dataset, dataset)) == -1));
 
         if (!unopenedDatasets.length) {
-            this.renderError(i18n(strings.errorDatasetsEmptyListing));
+            this.renderError(this.listElement, i18n(strings.errorDatasetsEmptyListing));
             return;
         }
 
@@ -200,7 +202,7 @@ export class ConnectRemote extends ConnectMenuItem {
 
     getRemoteDatasets() { 
 
-        let loader = new Loader(_(".list", this.element), false);
+        let loader = new Loader(this.listElement, false);
 
         host.listDatasets()
             .then((datasets: PBICloudDataset[]) => {
@@ -228,7 +230,7 @@ export class ConnectRemote extends ConnectMenuItem {
                 /*
                     
                 */
-                _(".list", this.element).innerHTML = html;
+                this.listElement.innerHTML = html;
 
                 this.searchBox = <HTMLInputElement>_(".search input", this.element);
                 ["keyup", "search", "paste"].forEach(listener => {
@@ -259,12 +261,12 @@ export class ConnectRemote extends ConnectMenuItem {
                 if (datasets.length) {
                     this.renderTable(tableId, datasets);
                 } else {
-                    this.renderError(i18n(strings.errorDatasetsEmptyListing));
+                    this.renderError(this.listElement, i18n(strings.errorDatasetsEmptyListing));
                 }
             })
             .catch((error: AppError) => {
 
-                this.renderError(error.toString(), true, ()=>{
+                this.renderError(this.listElement, error.toString(), true, ()=>{
                     this.getRemoteDatasets();
                 }); 
             })

@@ -129,6 +129,44 @@
 		margin:10px;
 	}
 
+	#body-attach-pbi {
+		.list {
+			position: relative;
+		
+			.observing {
+				position: absolute;
+				left: 2px;
+				top: 2px;
+				right: 2px;
+				bottom: 2px;
+				z-index: 9;
+				cursor: wait !important;
+
+				background-color: fade(@back-color, 80%);
+				.dark & { background-color: fade(@back-color-dark, 80%); }
+
+				.cancel-observing {
+					position: absolute;
+					right: 10px;
+					top:10px
+				}
+			}
+			.browse-reports {
+				display: inline-block;
+				margin-left: 10px;
+				font-size: 14px
+			}
+			.table {
+				height: calc(100% - 28px);
+
+				.tabulator-placeholder {
+					position: absolute;
+					top: 0;
+				}
+			}
+		}
+	}
+
 	#body-connect-pbi {
 		.toolbar {
 			.flexbox(center);
@@ -155,6 +193,8 @@
 		.tabulator {
 			height: calc(100% - 50px);
 		}
+
+		
 	}
 
 	#body-open-vpax {

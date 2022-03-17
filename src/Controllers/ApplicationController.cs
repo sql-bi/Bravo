@@ -104,11 +104,11 @@
         /// <response code="200">Status200OK - Success</response>
         /// <response code="403">Status403Forbidden - The path is invalid or not allowed</response>
         /// <response code="204">Status204NoContent - User canceled action (e.g. 'Cancel' button has been pressed on a dialog box)</response>
-        [HttpPost]
+        [HttpGet]
         [ActionName("StartPBIDesktopFromPBIX")]
         [Consumes(MediaTypeNames.Application.Json)]
         [Produces(MediaTypeNames.Application.Json)]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(String))]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesDefaultResponseType]
@@ -117,7 +117,9 @@
             if (WindowDialogHelper.OpenFileDialog(defaultExt: "PBIX", out var path, cancellationToken: HttpContext.RequestAborted))
             {
                 if (ProcessHelper.OpenPath(path, waitForStarted))
-                    return Ok();
+                {
+                    return Ok(path);
+                }
 
                 return Forbid();
             }
