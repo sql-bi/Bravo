@@ -77,7 +77,7 @@ export class ConnectRemote extends ConnectMenuItem {
                 renderVerticalBuffer: 400,
                 maxHeight: "100%",
                 layout: "fitColumns",
-                initialFilter: dataset => this.unsupportedFilter(dataset),
+                //initialFilter: dataset => this.unsupportedFilter(dataset),
                 initialSort:[
                     {column: "name", dir: "asc"}, 
                 ],
@@ -185,18 +185,18 @@ export class ConnectRemote extends ConnectMenuItem {
         if (this.table) {
             this.table.clearFilter();
 
-            this.table.addFilter(dataset => this.unsupportedFilter(dataset));
+            //this.table.addFilter(dataset => this.unsupportedFilter(dataset));
 
             if (this.searchBox.value)
                 this.table.addFilter("name", "like", sanitizeHtml(this.searchBox.value, { allowedTags: [], allowedAttributes: {}}));
         }
     }
 
-    unsupportedFilter(dataset: PBICloudDataset) {
+    /*unsupportedFilter(dataset: PBICloudDataset) {
         if (dataset.connectionMode != PBICloudDatasetConnectionMode.Supported && !this.showUnsupported)
             return false;
         return true;
-    }
+    }*/
 
     getRemoteDatasets() { 
 
@@ -213,18 +213,20 @@ export class ConnectRemote extends ConnectMenuItem {
                                 <input type="search" placeholder="${i18n(strings.searchDatasetPlaceholder)}">
                             </div>
 
-                            <div class="filters">
-                                <label class="switch"><input type="checkbox" id="show-unsupported-datasets" ${this.showUnsupported ? "": "checked"}><span class="slider"></span></label> <label for="show-unsupported-datasets">${i18n(strings.hideUnsupportedCtrlTitle)}</label>
-                            </div>
+                            <div class="refresh ctrl icon-refresh" title="${i18n(strings.refreshCtrlTitle)}"></div> 
                            
                         </div>
                     ` : ""}
                     <div id="${ tableId }"></div>
                 `;
+                /*
+                    <div class="filters">
+                        <label class="switch"><input type="checkbox" id="show-unsupported-datasets" ${this.showUnsupported ? "": "checked"}><span class="slider"></span></label> <label for="show-unsupported-datasets">${i18n(strings.hideUnsupportedCtrlTitle)}</label>
+                    </div>
+                */
 
                 /*
-                <hr>
-                <div class="refresh ctrl icon-refresh" title="${i18n(strings.refreshCtrlTitle)}"></div> 
+                    
                 */
                 _(".list", this.element).innerHTML = html;
 
