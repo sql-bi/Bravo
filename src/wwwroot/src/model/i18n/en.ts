@@ -76,7 +76,7 @@ const locale: Locale = {
         [_.daxFormatterPreviewButton]: "Preview",
         [_.daxFormatterPreviewDesc]: "To generate a preview, Bravo needs to send this measure to the DAX Formatter service.",
         [_.daxFormatterSuccessSceneMessage]: "Congratulations, <strong>{count} measure{{s}}</strong> {{were|was}} formatted successfully.",
-        [_.daxFormatterSummary]: "Your dataset contains <strong>{count} measure{{s}}</strong> that can be formatted.",
+        [_.daxFormatterSummary]: `Your dataset contains {count} measure{{s}}: <strong>{analyzable}</strong> to analyze, <span class="text-error"><strong>{errors}</strong> with errors</strong></span>, <span class="text-highlight"><strong>{formattable}</strong> to format.</span>`,
         [_.defaultTabName]: "Untitled",
         [_.dialogCancel]: "Cancel",
         [_.dialogOK]: "OK",
