@@ -260,7 +260,8 @@
                 }
                 else
                 {
-                    templateConfiguration.RemoveTemplateEntry(templateEntries.Date);
+                    // TODO: enable when the property is available
+                    //templateEntries.Date.IsEnabled = false;
                 }
             }
             //
@@ -288,6 +289,10 @@
                     templateConfiguration.HolidaysReference = null;
                     templateConfiguration.HolidaysDefinitionTable = null;
                     // HACK <<
+
+                    // TODO: enable when the property is available, remove previous HACK and RemoveTemplateEntry() calls
+                    //templateEntries.HolidaysReference.IsEnabled = false;
+                    //templateEntries.HolidaysDefinitionTable.IsEnabled = false;
                 }
             }
             //
@@ -301,7 +306,11 @@
                 }
                 else
                 {
+                    BravoUnexpectedException.Assert(templateEntries.TimeIntelligence.TargetMeasures.IsEmpty());
+
                     templateConfiguration.RemoveTemplateEntry(templateEntries.TimeIntelligence);
+                    // TODO: enable when the property is available, remove previous RemoveTemplateEntry() call
+                    //templateEntries.TimeIntelligence.IsEnabled = false;
                 }
             }
         }
