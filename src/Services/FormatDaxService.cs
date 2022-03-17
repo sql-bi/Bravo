@@ -4,6 +4,9 @@
     using Dax.Formatter.Models;
     using Sqlbi.Bravo.Infrastructure;
     using Sqlbi.Bravo.Infrastructure.Extensions;
+    using Sqlbi.Bravo.Infrastructure.Helpers;
+    using Sqlbi.Bravo.Infrastructure.Services;
+    using Sqlbi.Bravo.Models;
     using Sqlbi.Bravo.Models.AnalyzeModel;
     using Sqlbi.Bravo.Models.FormatDax;
     using System.Collections.Generic;
@@ -13,6 +16,10 @@
     public interface IFormatDaxService
     {
         Task<IEnumerable<FormattedMeasure>> FormatAsync(IEnumerable<TabularMeasure> measures, FormatDaxOptions options);
+
+        DatabaseUpdateResult Update(PBIDesktopReport report, IEnumerable<FormattedMeasure> measures);
+
+        DatabaseUpdateResult Update(PBICloudDataset dataset, IEnumerable<FormattedMeasure> measures, string accessToken);
     }
 
     internal class FormatDaxService : IFormatDaxService
@@ -67,6 +74,22 @@
             }
 
             return formattedMeasures;
+        }
+
+        public DatabaseUpdateResult Update(PBIDesktopReport report, IEnumerable<FormattedMeasure> measures)
+        {
+            using var connection = TabularConnectionWrapper.ConnectTo(report);
+            var updateResult = TabularModelHelper.Update(connection.Database, measures);
+
+            return updateResult;
+        }
+
+        public DatabaseUpdateResult Update(PBICloudDataset dataset, IEnumerable<FormattedMeasure> measures, string accessToken)
+        {
+            using var connection = TabularConnectionWrapper.ConnectTo(dataset, accessToken);
+            var updateResult = TabularModelHelper.Update(connection.Database, measures);
+
+            return updateResult;
         }
 
         private async Task<IReadOnlyList<DaxFormatterResponse>> CallDaxFormatterAsync(IEnumerable<TabularMeasure> measures, FormatDaxOptions options)

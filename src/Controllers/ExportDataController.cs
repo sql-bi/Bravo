@@ -20,12 +20,12 @@
     public class ExportDataController : ControllerBase
     {
         private readonly IExportDataService _exportDataService;
-        private readonly IPBICloudService _pbicloudService;
+        private readonly IAuthenticationService _authenticationService;
 
-        public ExportDataController(IExportDataService exportDataService, IPBICloudService pbicloudService)
+        public ExportDataController(IExportDataService exportDataService, IAuthenticationService authenticationService)
         {
             _exportDataService = exportDataService;
-            _pbicloudService = pbicloudService;
+            _authenticationService = authenticationService;
         }
 
         /// <summary>
@@ -43,9 +43,7 @@
         {
             if (WindowDialogHelper.BrowseFolderDialog(out var path, cancellationToken))
             {
-                request.Settings!.ExportPath = path;
-                var job = _exportDataService.ExportDelimitedTextFile(request.Report!, request.Settings!, cancellationToken);
-
+                var job = _exportDataService.ExportDelimitedTextFile(request.Report!, request.Settings!, path, cancellationToken);
                 return Ok(job);
             }
             
@@ -67,14 +65,12 @@
         [ProducesDefaultResponseType]
         public async Task<IActionResult> ExportDelimitedTextFile(ExportDelimitedTextFromPBICloudDatasetRequest request, CancellationToken cancellationToken)
         {
-            if (await _pbicloudService.IsSignInRequiredAsync())
+            if (await _authenticationService.IsPBICloudSignInRequiredAsync())
                 return Unauthorized();
 
             if (WindowDialogHelper.BrowseFolderDialog(out var path, cancellationToken))
             {
-                request.Settings!.ExportPath = path;
-                var job = _exportDataService.ExportDelimitedTextFile(request.Dataset!, request.Settings!, cancellationToken);
-
+                var job = _exportDataService.ExportDelimitedTextFile(request.Dataset!, request.Settings!, path, _authenticationService.PBICloudAuthentication.AccessToken, cancellationToken);
                 return Ok(job);
             }
 
@@ -96,9 +92,7 @@
         {
             if (WindowDialogHelper.SaveFileDialog(fileName: request.Report!.ReportName, defaultExt: "XLSX", out var path, cancellationToken))
             {
-                request.Settings!.ExportPath = path;
-                var job = _exportDataService.ExportExcelFile(request.Report, request.Settings, cancellationToken);
-
+                var job = _exportDataService.ExportExcelFile(request.Report, request.Settings!, path, cancellationToken);
                 return Ok(job);
             }
 
@@ -120,14 +114,12 @@
         [ProducesDefaultResponseType]
         public async Task<IActionResult> ExportExcelFile(ExportExcelFromPBICloudDatasetRequest request, CancellationToken cancellationToken)
         {
-            if (await _pbicloudService.IsSignInRequiredAsync())
+            if (await _authenticationService.IsPBICloudSignInRequiredAsync())
                 return Unauthorized();
 
             if (WindowDialogHelper.SaveFileDialog(fileName: request.Dataset!.DisplayName, defaultExt: "XLSX", out var path, cancellationToken))
             {
-                request.Settings!.ExportPath = path;
-                var job = _exportDataService.ExportExcelFile(request.Dataset, request.Settings, cancellationToken);
-
+                var job = _exportDataService.ExportExcelFile(request.Dataset, request.Settings!, path, _authenticationService.PBICloudAuthentication.AccessToken, cancellationToken);
                 return Ok(job);
             }
 
@@ -148,6 +140,7 @@
         public IActionResult QueryExportJob(PBIDesktopReport report)
         {
             var job = _exportDataService.QueryExportJob(report);
+
             if (job is null)
                 return NoContent();
 
@@ -168,6 +161,7 @@
         public IActionResult QueryExportJob(PBICloudDataset dataset)
         {
             var job = _exportDataService.QueryExportJob(dataset);
+
             if (job is null)
                 return NoContent();
 

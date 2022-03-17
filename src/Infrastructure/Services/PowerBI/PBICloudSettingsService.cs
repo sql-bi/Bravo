@@ -1,9 +1,8 @@
-﻿namespace Sqlbi.Bravo.Infrastructure.Services
+﻿namespace Sqlbi.Bravo.Infrastructure.Services.PowerBI
 {
     using Sqlbi.Bravo.Infrastructure;
     using Sqlbi.Bravo.Infrastructure.Contracts.PBICloud;
     using Sqlbi.Bravo.Infrastructure.Extensions;
-    using Sqlbi.Bravo.Services;
     using System;
     using System.Linq;
     using System.Net;
@@ -68,7 +67,7 @@
         public async Task RefreshAsync(string accessToken)
         {
             _tenantCluster = await GetTenantClusterAsync(accessToken).ConfigureAwait(false);
-            //_localClientSites = await RefreshLocalClientSitesAsync().ConfigureAwait(false);
+            //_localClientSites = Contracts.PBIDesktop.LocalClientSites.Create();
         }
 
         public async Task InitializeAsync()
@@ -154,72 +153,5 @@
 
             return tenantCluster;
         }
-        /*
-                private async Task RefreshLocalClientSitesAsync()
-                {
-                    static readonly string LocalDataClassicAppCachePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData, Environment.SpecialFolderOption.DoNotVerify), "Microsoft\\Power BI Desktop");
-                    static readonly string LocalDataStoreAppCachePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile, Environment.SpecialFolderOption.DoNotVerify), "Microsoft\\Power BI Desktop Store App");
-
-                    const string UserCacheFile = "User.zip";
-
-                    var classicAppCacheFile = new FileInfo(fileName: Path.Combine(LocalDataClassicAppCachePath, UserCacheFile));
-                    var storeAppCacheFile = new FileInfo(fileName: Path.Combine(LocalDataStoreAppCachePath, UserCacheFile));
-
-                    if (classicAppCacheFile.Exists && storeAppCacheFile.Exists)
-                    {
-                        var lastWritedCacheFile = classicAppCacheFile.LastWriteTime >= storeAppCacheFile.LastWriteTime ? classicAppCacheFile : storeAppCacheFile;
-                        if ((_localClientSites = GetLocalClientSites(lastWritedCacheFile.FullName)) is not null)
-                            return;
-                    }
-
-                    if (classicAppCacheFile.Exists)
-                    {
-                        if ((_localClientSites = GetLocalClientSites(classicAppCacheFile.FullName)) is not null)
-                            return;
-                    }
-
-                    if (storeAppCacheFile.Exists)
-                    {
-                        if ((_localClientSites = GetLocalClientSites(storeAppCacheFile.FullName)) is not null)
-                            return;
-                    }
-
-                    _localClientSites = null;
-                    await Task.CompletedTask;
-
-                    static LocalClientSites? GetLocalClientSites(string archiveFile)
-                    {
-                        Version LatestSupportedVersion = new("2.9.0.0");
-
-                        using var archive = ZipFile.OpenRead(archiveFile);
-                        var entry = archive.GetEntry("ClientAccess/ClientAccess.xml");
-                        if (entry is not null)
-                        {
-                            using var reader = new StreamReader(entry.Open());
-                            var document = XDocument.Load(reader);
-
-                            var elements = document.Root?.Descendants("Sites").Descendants("Site");
-                            if (elements is not null)
-                            {
-                                var sites = elements.Select((e) => new LocalClientSite
-                                {
-                                    Url = e.Attribute("Url")?.Value,
-                                    Version = e.Attribute("Version")?.Value,
-                                    UserPrincipalName = e.Element("User")?.Value.NullIfWhiteSpace(),
-                                    DisplayName = e.Element("DisplayName")?.Value.NullIfWhiteSpace(),
-                                    Avatar = e.Element("Avatar")?.Value.NullIfWhiteSpace(),
-                                })
-                                .Where((s) => Version.TryParse(s.Version, out var version) && version >= LatestSupportedVersion);
-
-                                var clientSites = new LocalClientSites(sites);
-                                if (clientSites.Count > 0)
-                                    return clientSites;
-                            }
-                        }
-
-                        return null;
-                    }
-                }
-        */
     }
 }

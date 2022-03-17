@@ -11,6 +11,7 @@
     using System.IO;
     using System.Linq;
     using System.Text.Json.Serialization;
+    using System.Threading;
     using SSAS = Microsoft.AnalysisServices;
 
     public class TabularDatabase
@@ -45,9 +46,9 @@
             return database;
         }
 
-        internal static TabularDatabase CreateFrom(TabularConnectionWrapper connection)
+        internal static TabularDatabase CreateFrom(TabularConnectionWrapper connection, CancellationToken cancellationToken)
         {
-            var daxModel = VpaxToolsHelper.GetDaxModel(connection);
+            var daxModel = VpaxToolsHelper.GetDaxModel(connection, cancellationToken);
             var database = CreateFrom(daxModel);
 
             if (database.Info is not null)
@@ -95,7 +96,7 @@
                     CompatibilityLevel = daxModel.CompatibilityLevel,
                     DatabaseSize = databaseSize,
                     AutoLineBreakStyle = autoLineBreakStyle,
-                    ServerName = daxModel.ServerName.Name,
+                    ServerName = daxModel.ServerName?.Name,
                     ServerVersion = null,
                     ServerEdition = null,
                     ServerMode = null,
