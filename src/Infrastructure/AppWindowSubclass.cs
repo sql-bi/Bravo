@@ -6,6 +6,7 @@
     using Sqlbi.Bravo.Infrastructure.Messages;
     using Sqlbi.Bravo.Infrastructure.Windows;
     using Sqlbi.Bravo.Infrastructure.Windows.Interop;
+    using Sqlbi.Bravo.Models;
     using System;
     using System.Diagnostics;
     using System.Runtime.InteropServices;
@@ -64,13 +65,12 @@
                 var copyDataObject = Marshal.PtrToStructure(copydataPtr, typeof(User32.COPYDATASTRUCT));
                 if (copyDataObject is User32.COPYDATASTRUCT copyData && copyData.cbData != 0)
                 {
+                    if (AppEnvironment.IsDiagnosticLevelVerbose)
+                        AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{ nameof(AppWindowSubclass) }.{ nameof(HandleMsgWmCopyData) }", content: copyData.lpData);
+
                     var startupMessage = JsonSerializer.Deserialize<AppInstanceStartupMessage>(json: copyData.lpData);
                     if (startupMessage?.IsEmpty == false)
                     {
-#if DEBUG
-                        var startupMessageString = JsonSerializer.Serialize(startupMessage, new JsonSerializerOptions { WriteIndented = true });
-                        Trace.WriteLine($"::Bravo:INF:WndProcHook[WM_COPYDATA]:{ startupMessageString }");
-#endif
                         var webMessageString = startupMessage.ToWebMessageString();
                         _window.SendWebMessage(webMessageString);
                     }
@@ -81,8 +81,13 @@
             }
             catch (Exception ex)
             {
-                var exceptionWebMessage = UnknownWebMessage.CreateFrom(ex);
-                _window.SendWebMessage(exceptionWebMessage.AsString);
+                var exceptionMessage = UnknownWebMessage.CreateFrom(ex);
+                var exceptionMessageString = exceptionMessage.AsString;
+
+                _window.SendWebMessage(exceptionMessageString);
+
+                if (AppEnvironment.IsDiagnosticLevelVerbose)
+                    AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{ nameof(AppWindowSubclass) }.{ nameof(HandleMsgWmCopyData) }.{ nameof(Exception) }", content: exceptionMessageString);
             }
 
             return false;

@@ -4,6 +4,7 @@
     using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Infrastructure.Helpers;
     using Sqlbi.Bravo.Models;
+    using System.IO;
     using System.Text.Json;
     using System.Text.Json.Serialization;
 
@@ -58,48 +59,56 @@
 
         public static string? ToWebMessageString(this AppInstanceStartupMessage startupMessage)
         {
-            if (startupMessage.IsExternalTool && startupMessage.ArgumentServerName is not null)
+            if (startupMessage.ArgumentServerName is null)
             {
-                if (NetworkHelper.IsPBICloudDatasetServer(startupMessage.ArgumentServerName))
-                {
-                    // protocol schema => pbiazure:// OR powerbi://
+                var jsonMessage = startupMessage.ToJsonElement();
+                var webMessage = UnknownWebMessage.CreateFrom(jsonMessage);
 
-                    var webMessage = new PBICloudDatasetOpenWebMessage
-                    {
-                        Dataset = new PBICloudDataset
-                        {
-                            //ServerName = startupMessage.ArgumentServerName,
-                            DatabaseName = startupMessage.ArgumentDatabaseName,
-                            ConnectionMode = PBICloudDatasetConnectionMode.Unknown
-                        },
-                    };
-                    return webMessage.AsString;
-                }
-                else
-                {
-                    // address => localhost:port OR <ipaddress>[:port] OR <hostname>[:port] OR ... ??
-                    // ***
-                    // SQL Server Analysis Services instance listens on one TCP port for all IP addresses (included loopback) assigned or aliased to the computer
-                    // ***
-
-                    var report = new PBIDesktopReport
-                    {
-                        ProcessId = startupMessage.ParentProcessId,
-                        ReportName = startupMessage.ParentProcessMainWindowTitle,
-                        ServerName = startupMessage.ArgumentServerName,
-                        DatabaseName = startupMessage.ArgumentDatabaseName,
-                        ConnectionMode = PBIDesktopReportConnectionMode.Supported
-                    };
-
-                    var webMessage = PBIDesktopReportOpenWebMessage.CreateFrom(report);
-                    return webMessage.AsString;
-                }
+                return webMessage.AsString;
             }
+            else if (NetworkHelper.IsPBICloudDatasetServer(startupMessage.ArgumentServerName))
+            {
+                // protocol schema => pbiazure:// OR powerbi://
 
-            var startupMessageJson = startupMessage.ToJsonElement();
-            var unknownWebMessage = UnknownWebMessage.CreateFrom(startupMessageJson);
+                var webMessage = new PBICloudDatasetOpenWebMessage
+                {
+                    Dataset = new PBICloudDataset
+                    {
+                        //ServerName = startupMessage.ArgumentServerName,
+                        DatabaseName = startupMessage.ArgumentDatabaseName,
+                        ConnectionMode = PBICloudDatasetConnectionMode.Unknown
+                    },
+                };
 
-            return unknownWebMessage.AsString;
+                return webMessage.AsString;
+            }
+            else
+            {
+                // address => localhost:port OR <ipaddress>[:port] OR <hostname>[:port] OR ... ??
+                // ***
+                // SQL Server Analysis Services instance listens on one TCP port for all IP addresses (included loopback) assigned or aliased to the computer
+                // ***
+
+                var report = new PBIDesktopReport
+                {
+                    ProcessId = startupMessage.ParentProcessId,
+                    ReportName = startupMessage.ParentProcessMainWindowTitle,
+                    ServerName = startupMessage.ArgumentServerName,
+                    DatabaseName = startupMessage.ArgumentDatabaseName,
+                    ConnectionMode = PBIDesktopReportConnectionMode.Supported
+                };
+
+                if (!startupMessage.IsExternalTool)
+                {
+                    if (report.ReportName?.ContainsInvalidPathChars() == false)
+                        report.ReportName = Path.GetFileNameWithoutExtension(report.ReportName);
+
+                    report.ReportName += $" ({ startupMessage.ParentProcessId })";
+                }
+
+                var webMessage = PBIDesktopReportOpenWebMessage.CreateFrom(report);
+                return webMessage.AsString;
+            } 
         }
     }
 }

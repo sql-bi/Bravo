@@ -86,7 +86,7 @@
                         {
                             if (toastArgs.TryGetValue(ArgumentKeyUrl, out var urlValue) && Uri.TryCreate(urlValue, UriKind.Absolute, out var targetUri))
                             {
-                                _ = ProcessHelper.OpenInBrowser(targetUri);
+                                _ = ProcessHelper.OpenBrowser(targetUri);
                             }
                         }
                         break;

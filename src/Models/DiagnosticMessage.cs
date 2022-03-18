@@ -29,7 +29,7 @@
             {
                 Type = type,
                 Severity = severity,
-                Name = name,
+                Name = $"[HOST] { name }",
                 Content = content,
                 Timestamp = DateTimeOffset.UtcNow,
                 LastReadTimestamp = null

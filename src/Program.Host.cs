@@ -23,10 +23,10 @@
                 builder.SetBasePath(Environment.CurrentDirectory);
             });
 
-            hostBuilder.ConfigureLogging((HostBuilderContext context, ILoggingBuilder logging) =>
+            hostBuilder.ConfigureLogging((context, logging) =>
             {
-                logging.AddFilter<ApplicationInsightsLoggerProvider>((LogLevel level) => level >= LogLevel.Warning);
-                logging.AddFilter<EventLogLoggerProvider>((LogLevel level) => level >= LogLevel.Warning);
+                logging.AddFilter<ApplicationInsightsLoggerProvider>((level) => level >= LogLevel.Warning);
+                logging.AddFilter<EventLogLoggerProvider>((level) => level >= LogLevel.Warning);
                 logging.AddApplicationInsights();
                 logging.AddEventSourceLogger();
                 logging.AddEventLog();
@@ -34,13 +34,13 @@
                 logging.AddConsole();
                 logging.AddDebug();
 #endif
-                logging.Configure((LoggerFactoryOptions options) =>
+                logging.Configure((options) =>
                 {
                     options.ActivityTrackingOptions = ActivityTrackingOptions.SpanId | ActivityTrackingOptions.TraceId | ActivityTrackingOptions.ParentId;
                 });
             });
 
-            hostBuilder.UseDefaultServiceProvider((HostBuilderContext context, ServiceProviderOptions options) =>
+            hostBuilder.UseDefaultServiceProvider((context, options) =>
             {
 #if DEBUG
                 options.ValidateOnBuild = options.ValidateScopes = true;

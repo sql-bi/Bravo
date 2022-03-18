@@ -93,11 +93,11 @@
                 telemetry = new
                 {
                     instrumentationKey = AppEnvironment.TelemetryInstrumentationKey,
-                    contextDeviceOperatingSystem = ContextTelemetryInitializer.DeviceOperatingSystem,
-                    contextComponentVersion = ContextTelemetryInitializer.ComponentVersion,
-                    contextSessionId = ContextTelemetryInitializer.SessionId,
-                    contextUserId = ContextTelemetryInitializer.UserId,
-                    globalProperties = ContextTelemetryInitializer.GlobalProperties
+                    contextDeviceOperatingSystem = AppTelemetryInitializer.DeviceOperatingSystem,
+                    contextComponentVersion = AppTelemetryInitializer.ComponentVersion,
+                    contextSessionId = AppTelemetryInitializer.SessionId,
+                    contextUserId = AppTelemetryInitializer.UserId,
+                    globalProperties = AppTelemetryInitializer.GlobalProperties
                 },
             };
 
