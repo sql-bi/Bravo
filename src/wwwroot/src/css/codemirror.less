@@ -453,3 +453,59 @@
     margin-top: 7px;
     cursor: default;
   }
+
+  /* Special chars */
+  .cm-invisibles {
+    /*.CodeMirror-code div:not(:last-child) .CodeMirror-line:after {
+      content: '↓'; //'↵';
+      font-size: 0.9em;
+      top:0.2em;
+      text-align: center;
+      opacity: 0.2;
+      z-index: 1;
+      height: inherit;
+      position: absolute;
+      white-space: nowrap;
+      pointer-events: none;
+    }*/
+    
+    .cm-special-chars,
+    .cm-tab {
+      position: relative;
+      opacity: 0.4;
+    }
+    
+    .cm-special-chars:after,
+    .cm-tab:after {
+      opacity: 0.4;
+      text-align: center;
+      left: 0;
+      top: 0;
+      width: 100%;
+      position: absolute;
+      overflow: hidden;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+    
+    .cm-space {
+      white-space: break-spaces;
+      word-break: break-all;
+    }
+    
+    .cm-space:after {
+      content: '·';
+      width: inherit;
+      top:-0.2em;
+    }
+    
+    .cm-tab {
+      white-space: pre-wrap;
+    }
+    
+    .cm-tab:after {
+      content: '→';
+      direction: rtl;
+      text-align: left;
+    }
+  }
