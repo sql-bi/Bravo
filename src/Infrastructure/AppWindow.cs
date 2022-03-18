@@ -8,6 +8,7 @@
     using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Infrastructure.Helpers;
     using Sqlbi.Bravo.Infrastructure.Messages;
+    using Sqlbi.Bravo.Infrastructure.Windows.Interop;
     using Sqlbi.Bravo.Models;
     using System;
     using System.Globalization;
@@ -21,14 +22,16 @@
     internal class AppWindow : IDisposable
     {
         private readonly IHost _host;
+        private readonly AppInstance _instance;
         private readonly PhotinoWindow _window;
         private readonly StartupSettings _startupSettings;
 
         private AppWindowSubclass? _windowSubclass;
 
-        public AppWindow(IHost host)
+        public AppWindow(IHost host, AppInstance instance)
         {
             _host = host;
+            _instance = instance;
             _window = CreateWindow();
 
             var startupSettingsOptions = _host.Services.GetService(typeof(IOptions<StartupSettings>)) as IOptions<StartupSettings>;
@@ -189,25 +192,43 @@
             // Wait a bit in order to ensure that the PhotinoWindow message loop is started
             // This is to prevent the .NET Runtime corecrl.dll fault with a win32 access violation
             // This should be moved to the 'OnWindowCreated' handler after the issue has been resolved
-            if (!_startupSettings.IsEmpty)
+            _ = Task.Factory.StartNew(() =>
             {
-                _ = Task.Factory.StartNew(() =>
+                try
                 {
-                    try
-                    {
-                        Thread.Sleep(2_000);
+                    Thread.Sleep(2_000);
 
+                    if (!_startupSettings.IsEmpty)
+                    {
                         var startupMessage = AppInstanceStartupMessage.CreateFrom(_startupSettings);
-                        var webMessageString = startupMessage.ToWebMessageString();
+                        var startupMessageString = startupMessage.ToWebMessageString();
 
-                        _window.SendWebMessage(webMessageString);
+                        _window.SendWebMessage(startupMessageString);
                     }
-                    catch
+
+                    _instance.OnNewInstance += (sender, arg) =>
                     {
-                        // this is a temporary hack so here we can silently swallow the exception
-                    }
-                });
-            }
+                        if (_window.Minimized)
+                        {
+                            User32.ShowWindow(_window.WindowHandle, User32.SW_RESTORE);
+                        }
+                        User32.SetForegroundWindow(_window.WindowHandle);
+
+                        if (arg.Message?.IsEmpty == false)
+                        {
+                            var webMessageString = arg.Message.ToWebMessageString();
+                            _window.SendWebMessage(webMessageString);
+                        }
+                    };
+                }
+                catch (Exception ex)
+                {
+                    TelemetryHelper.TrackException(ex);
+
+                    if (AppEnvironment.IsDiagnosticLevelVerbose)
+                        AppEnvironment.AddDiagnostics(name: $"{ nameof(AppWindow) }.{ nameof(WaitForClose) }", ex);
+                }
+            });
             // HACK END <<
 
             _window.WaitForClose();

@@ -22,7 +22,7 @@
                     using var host = CreateHost();
                     host.Start();
                     {
-                        using var window = new AppWindow(host);
+                        using var window = new AppWindow(host, instance);
                         window.WaitForClose();
                     }
                     host.StopAsync().GetAwaiter().GetResult();

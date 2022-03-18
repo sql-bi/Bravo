@@ -110,7 +110,7 @@
                 catch (Exception ex)
                 {
                     if (AppEnvironment.IsDiagnosticLevelVerbose)
-                        AppEnvironment.AddDiagnostics(DiagnosticMessageType.Text, name: $"{ nameof(PBIDesktopReport) }.{ nameof(CreateFrom) }.{ nameof(GetConnectionMode) }", ex.ToString(), severity: DiagnosticMessageSeverity.Warning);
+                        AppEnvironment.AddDiagnostics(name: $"{ nameof(PBIDesktopReport) }.{ nameof(CreateFrom) }.{ nameof(GetConnectionMode) }", ex, DiagnosticMessageSeverity.Warning);
 
                     connectionMode = PBIDesktopReportConnectionMode.UnsupportedConnectionException;
                     return;

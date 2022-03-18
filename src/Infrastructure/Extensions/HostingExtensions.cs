@@ -79,7 +79,8 @@
 
                 apiOptions.InvalidModelStateResponseFactory = (context) =>
                 {
-                    AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{ nameof(MvcCoreMvcBuilderExtensions.ConfigureApiBehaviorOptions) }.{ nameof(apiOptions.InvalidModelStateResponseFactory) }", content: JsonSerializer.Serialize(new ValidationProblemDetails(context.ModelState)), severity: DiagnosticMessageSeverity.Error);
+                    var content = JsonSerializer.Serialize(new ValidationProblemDetails(context.ModelState));
+                    AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{ nameof(MvcCoreMvcBuilderExtensions.ConfigureApiBehaviorOptions) }.{ nameof(apiOptions.InvalidModelStateResponseFactory) }", content,  DiagnosticMessageSeverity.Error);
 
                     // Invoke the defaultFactory delegate to preserve the default behavior
                     return defaultFactory(context);
@@ -217,7 +218,7 @@
                 // Because exceptions are handled polymorphically, this will act as a "catch all" mapping, which is why it's added last
                 options.Map<Exception>(mapping: (context, exception) =>
                 {
-                    AppEnvironment.AddDiagnostics(DiagnosticMessageType.Text, name: "UnhandledException", exception.ToString(), severity: DiagnosticMessageSeverity.Error);
+                    AppEnvironment.AddDiagnostics(name: "UnhandledException", exception);
 
                     var problemDetails = StatusCodeProblemDetails.Create(StatusCodes.Status500InternalServerError);
                     return problemDetails;

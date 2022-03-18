@@ -8,7 +8,6 @@
     using Sqlbi.Bravo.Infrastructure.Windows.Interop;
     using Sqlbi.Bravo.Models;
     using System;
-    using System.Diagnostics;
     using System.Runtime.InteropServices;
     using System.Text.Json;
 
@@ -32,12 +31,12 @@
         {
             switch (uMsg)
             {
-                case (uint)WindowMessage.WM_COPYDATA:
-                    {
-                        if (HandleMsgWmCopyData(hWnd, copydataPtr: lParam))
-                            return TRUE;
-                    }
-                    break;
+                //case (uint)WindowMessage.WM_COPYDATA:
+                //    {
+                //        if (HandleMsgWmCopyData(hWnd, copydataPtr: lParam))
+                //            return TRUE;
+                //    }
+                //    break;
                 case (uint)WindowMessage.WM_THEMECHANGED:
                     {
                         if (HandleMsgWmThemeChanged(hWnd))
@@ -49,49 +48,49 @@
             return base.WndProc(hWnd, uMsg, wParam, lParam, uIdSubclass, dwRefData);
         }
 
-        private bool HandleMsgWmCopyData(IntPtr hWnd, IntPtr copydataPtr)
-        {
-            if (_window.Minimized)
-            {
-                // Restore original size and position only if the window is minimized, otherwise keeps the current position
-                _ = User32.ShowWindow(hWnd, User32.SW_RESTORE);
-            }
+        //private bool HandleMsgWmCopyData(IntPtr hWnd, IntPtr copydataPtr)
+        //{
+        //    if (_window.Minimized)
+        //    {
+        //        // Restore original size and position only if the window is minimized, otherwise keeps the current position
+        //        _ = User32.ShowWindow(hWnd, User32.SW_RESTORE);
+        //    }
 
-            // Regardless of the current state, try to brings into the foreground and activates the window
-            _ = User32.SetForegroundWindow(hWnd);
+        //    // Regardless of the current state, try to brings into the foreground and activates the window
+        //    _ = User32.SetForegroundWindow(hWnd);
 
-            try
-            {
-                var copyDataObject = Marshal.PtrToStructure(copydataPtr, typeof(User32.COPYDATASTRUCT));
-                if (copyDataObject is User32.COPYDATASTRUCT copyData && copyData.cbData != 0)
-                {
-                    if (AppEnvironment.IsDiagnosticLevelVerbose)
-                        AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{ nameof(AppWindowSubclass) }.{ nameof(HandleMsgWmCopyData) }", content: copyData.lpData);
+        //    try
+        //    {
+        //        var copyDataObject = Marshal.PtrToStructure(copydataPtr, typeof(User32.COPYDATASTRUCT));
+        //        if (copyDataObject is User32.COPYDATASTRUCT copyData && copyData.cbData != 0)
+        //        {
+        //            if (AppEnvironment.IsDiagnosticLevelVerbose)
+        //                AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{ nameof(AppWindowSubclass) }.{ nameof(HandleMsgWmCopyData) }", content: copyData.lpData);
 
-                    var startupMessage = JsonSerializer.Deserialize<AppInstanceStartupMessage>(json: copyData.lpData);
-                    if (startupMessage?.IsEmpty == false)
-                    {
-                        var webMessageString = startupMessage.ToWebMessageString();
-                        _window.SendWebMessage(webMessageString);
-                    }
+        //            var startupMessage = JsonSerializer.Deserialize<AppInstanceStartupMessage>(json: copyData.lpData);
+        //            if (startupMessage?.IsEmpty == false)
+        //            {
+        //                var webMessageString = startupMessage.ToWebMessageString();
+        //                _window.SendWebMessage(webMessageString);
+        //            }
 
-                    // Here we return true because the WM_COPYDATA message has been received and processed, regardless of whether startupMessage is empty or not
-                    return true;
-                }
-            }
-            catch (Exception ex)
-            {
-                var exceptionMessage = UnknownWebMessage.CreateFrom(ex);
-                var exceptionMessageString = exceptionMessage.AsString;
+        //            // Here we return true because the WM_COPYDATA message has been received and processed, regardless of whether startupMessage is empty or not
+        //            return true;
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        var exceptionMessage = UnknownWebMessage.CreateFrom(ex);
+        //        var exceptionMessageString = exceptionMessage.AsString;
 
-                _window.SendWebMessage(exceptionMessageString);
+        //        _window.SendWebMessage(exceptionMessageString);
 
-                if (AppEnvironment.IsDiagnosticLevelVerbose)
-                    AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{ nameof(AppWindowSubclass) }.{ nameof(HandleMsgWmCopyData) }.{ nameof(Exception) }", content: exceptionMessageString);
-            }
+        //        if (AppEnvironment.IsDiagnosticLevelVerbose)
+        //            AppEnvironment.AddDiagnostics(name: $"{ nameof(AppWindowSubclass) }.{ nameof(HandleMsgWmCopyData) }", ex);
+        //    }
 
-            return false;
-        }
+        //    return false;
+        //}
 
         private static bool HandleMsgWmThemeChanged(IntPtr hWnd)
         {
