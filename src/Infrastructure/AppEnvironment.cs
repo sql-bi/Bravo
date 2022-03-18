@@ -120,6 +120,12 @@
 
         public static ConcurrentDictionary<string, DiagnosticMessage> Diagnostics { get; }
 
+        public static void AddDiagnostics(string name, Exception exception, DiagnosticMessageSeverity severity = DiagnosticMessageSeverity.Error)
+        {
+            var content = exception.ToString();
+            AddDiagnostics(DiagnosticMessageType.Text, $"{ name }({ nameof(Exception) })", content, severity);
+        }
+
         public static void AddDiagnostics(DiagnosticMessageType type, string name, string content, DiagnosticMessageSeverity severity = DiagnosticMessageSeverity.None, bool writeFile = false)
         {
             var message = DiagnosticMessage.Create(type, severity, name, content);
