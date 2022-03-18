@@ -20,6 +20,7 @@ export class DaxEditor extends View {
     editor: CodeMirror.Editor;
     zoom: number;
     wrapping: boolean;
+    whitespaces: boolean;
     controls: ControlConfig[]; 
     
     get value(): string {
@@ -31,11 +32,12 @@ export class DaxEditor extends View {
     set value(value: string) {
         if (this.editor) {
             this.editor.getDoc().setValue(value);
+            
             this.editor.refresh();
         }
     }
 
-    constructor(id: string, container: HTMLElement, zoom = 1, wrapping = true, controls?: ControlConfig[]) {
+    constructor(id: string, container: HTMLElement, zoom = 1, wrapping = true, whitespaces = false, controls?: ControlConfig[]) {
         super(id, container);
         this.element.classList.add("dax-editor");
 
@@ -44,6 +46,7 @@ export class DaxEditor extends View {
 
         this.zoom = zoom;
         this.wrapping = wrapping;
+        this.whitespaces = whitespaces;
         this.controls = controls;
         this.render();
     }
@@ -65,6 +68,8 @@ export class DaxEditor extends View {
             });
 
         toolbar.insertAdjacentHTML("beforeend", `
+            <div class="toggle-whitespaces ctrl icon-paragraph solo toggle${this.whitespaces ? " active" : ""}" title="${i18n(strings.whitespacesTitle)}"></div>
+
             <div class="wrapping ctrl icon-wrapping solo toggle${this.wrapping ? " active" : ""}" title="${i18n(strings.wrappingTitle)}"></div>
         `);
 
@@ -79,6 +84,13 @@ export class DaxEditor extends View {
                 this.updateZoom(parseFloat((<HTMLSelectElement>e.currentTarget).value));
             });
         }
+
+        _(".toggle-whitespaces", this.element).addEventListener("click", e => {
+            let el = <HTMLElement>e.currentTarget;
+            el.toggleClass("active");
+            this.toggleHiddenCharacters(el.classList.contains("active"));
+        });
+
 
         _(".wrapping", this.element).addEventListener("click", e => {
             let el = <HTMLElement>e.currentTarget;
@@ -98,6 +110,7 @@ export class DaxEditor extends View {
             indentUnit: 4,
             readOnly: "nocursor"
         }); 
+        this.toggleHiddenCharacters(this.whitespaces);
         this.editor.on("contextmenu", (instance, e) => {
             e.preventDefault();
             ContextMenu.editorContextMenu(e, this.editor.getSelection(), this.editor.getValue());
@@ -176,6 +189,7 @@ export class DaxEditor extends View {
                 lineComment: "//"
             }
         });
+
     }
 
     highlightErrors(errors: DaxError[]) {
@@ -191,6 +205,38 @@ export class DaxEditor extends View {
             this.editor.addLineWidget(error.line, errorLine, { coverGutter: false })
 
         });
+    }
+
+    toggleHiddenCharacters(toggle: boolean, triggerEvent = true) {
+        const overlayName = "invisibles";
+
+        let element = this.editor.getWrapperElement();
+        element.toggleClass(`cm-${overlayName}`, toggle);
+        if (!toggle) {
+            try {
+                this.editor.removeOverlay(overlayName);
+            } catch(ignore) {}
+        } else {
+            let alterList = ["alter1", "alter2"]; //Needed because CodeMirror make some transformations and remove same sequential classes
+            let spacesCount = 0;
+            this.editor.addOverlay({
+                name: overlayName,
+                token: (stream: CodeMirror.StringStream) => {
+                    if (stream.match(/(?= )/)) {
+                      let alterSpace = spacesCount++ % alterList.length;
+                      stream.eat(/ /);
+                      return `space special-chars ${alterList[alterSpace]}`;
+                    }
+                    while (stream.next() != null && !stream.match(" ", false)) {}
+                    return null;
+                  }
+            });
+        }
+
+        this.whitespaces = toggle;
+        _(".toggle-whitespaces", this.element).toggleClass("active", toggle);
+        if (triggerEvent)
+            this.trigger("whitespaces.change", toggle);
     }
 
     destroy() {

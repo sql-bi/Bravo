@@ -106,7 +106,7 @@ export class DaxFormatterScene extends DocScene {
             "current": {
                 name: i18n(strings.daxFormatterOriginalCode),
                 onRender: element => {
-                    this.currentEditor = new DaxEditor(Utils.DOM.uniqueId(), element, optionsController.options.customOptions.editor.zoom, optionsController.options.customOptions.editor.wrapping);
+                    this.currentEditor = new DaxEditor(Utils.DOM.uniqueId(), element, optionsController.options.customOptions.editor.zoom, optionsController.options.customOptions.editor.wrapping, optionsController.options.customOptions.editor.whitespaces);
                 },
                 onChange: element => {
                     if (this.currentEditor)
@@ -116,7 +116,7 @@ export class DaxFormatterScene extends DocScene {
             "formatted": {
                 name: i18n(strings.daxFormatterFormattedCode),
                 onRender: element => {
-                    this.formattedEditor = new DaxEditor(Utils.DOM.uniqueId(), element, optionsController.options.customOptions.editor.zoom, optionsController.options.customOptions.editor.wrapping, [
+                    this.formattedEditor = new DaxEditor(Utils.DOM.uniqueId(), element, optionsController.options.customOptions.editor.zoom, optionsController.options.customOptions.editor.wrapping, optionsController.options.customOptions.editor.whitespaces, [
                         {
                             className: ["refresh", "disable-on-syncing"],
                             icon: "refresh",
@@ -708,8 +708,12 @@ export class DaxFormatterScene extends DocScene {
             optionsController.update("customOptions.editor.zoom", zoom);
         });
         this.currentEditor.on("wrapping.change", (wrapping: boolean) => {
-            this.formattedEditor.updateWrapping(wrapping, false)
+            this.formattedEditor.updateWrapping(wrapping, false);
             optionsController.update("customOptions.editor.wrapping", wrapping);
+        });
+        this.currentEditor.on("whitespaces.change", (whitespaces: boolean) => {
+            this.formattedEditor.toggleHiddenCharacters(whitespaces, false);
+            optionsController.update("customOptions.editor.whitespaces", whitespaces);
         });
         this.formattedEditor.on("zoom.change", (zoom: number) => {
             this.currentEditor.updateZoom(zoom, false);
@@ -718,6 +722,10 @@ export class DaxFormatterScene extends DocScene {
         this.formattedEditor.on("wrapping.change", (wrapping: boolean) => {
             this.currentEditor.updateWrapping(wrapping, false)
             optionsController.update("customOptions.editor.wrapping", wrapping);
+        });
+        this.formattedEditor.on("whitespaces.change", (whitespaces: boolean) => {
+            this.currentEditor.toggleHiddenCharacters(whitespaces, false);
+            optionsController.update("customOptions.editor.whitespaces", whitespaces);
         });
 
         this.element.addLiveEventListener("click", ".gen-preview", (e, element) => {

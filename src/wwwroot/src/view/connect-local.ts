@@ -129,8 +129,10 @@ export class ConnectLocal extends ConnectMenuItem {
         overlay.classList.add("observing");
         overlay.innerHTML = `
             <div class="notice">
-                <p>${i18n(strings.powerBiObserving)}</p>
-                <div class="cancel-observing ctrl solo icon-close"></div>
+                <p>
+                    ${i18n(strings.powerBiObserving)} 
+                    <span class="cancel-observing link">${i18n(strings.powerBiObservingCancel)}</span>
+                </p>
             </div>
         `;
         _(".list", this.element).append(overlay);

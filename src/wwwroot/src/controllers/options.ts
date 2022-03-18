@@ -39,6 +39,7 @@ export interface ClientOptionsFormatting {
 export interface ClientOptionsEditor {
     zoom: number
     wrapping: boolean
+    whitespaces: boolean
 }
 
 export enum ClientOptionsFormattingRegion {
@@ -169,7 +170,8 @@ export class OptionsController extends OptionsStore<Options> {
             },
             editor: {
                 zoom: 1,
-                wrapping: true
+                wrapping: true,
+                whitespaces: false
             },
             panels: [70, 30]
         }

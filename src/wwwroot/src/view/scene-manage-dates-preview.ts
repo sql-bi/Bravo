@@ -383,7 +383,7 @@ export class ManageDatesPreviewScene extends DocScene {
             "expression-preview": {
                 name: i18n(strings.manageDatesMenuPreviewCode),
                 onRender: element => {
-                    this.expressionEditor = new DaxEditor(Utils.DOM.uniqueId(), element, optionsController.options.customOptions.editor.zoom, optionsController.options.customOptions.editor.wrapping);
+                    this.expressionEditor = new DaxEditor(Utils.DOM.uniqueId(), element, optionsController.options.customOptions.editor.zoom, optionsController.options.customOptions.editor.wrapping, optionsController.options.customOptions.editor.whitespaces);
                 },
                 onChange: (element: HTMLElement) => {
                     if (this.expressionEditor)
@@ -399,6 +399,9 @@ export class ManageDatesPreviewScene extends DocScene {
         });
         this.expressionEditor.on("wrapping.change", (wrapping: boolean) => {
             optionsController.update("customOptions.editor.wrapping", wrapping);
+        });
+        this.expressionEditor.on("whitespaces.change", (whitespaces: boolean) => {
+            optionsController.update("customOptions.editor.whitespaces", whitespaces);
         });
 
         this.renderBrowser(".columns-browser", this.convertTablesAndColumnsChangesToBranches(changes), PlainTreeFilter.ParentOnly);
