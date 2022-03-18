@@ -55,7 +55,7 @@ export class I18n {
     }
     private static _instance: I18n;
     public static get instance(): I18n {
-        return this._instance || (this._instance = new this(optionsController ? optionsController.options.customOptions.locale : navigator.language));
+        return this._instance || (this._instance = new this(optionsController ? optionsController.options.customOptions.locale : CONFIG.culture.ietfLanguageTag /*navigator.language*/));
     }
 
     get locale(): Locale {

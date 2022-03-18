@@ -11,6 +11,9 @@ declare global {
         options: Options,
         token?: string,
         telemetry?: TelemetryConfig
+        culture: {
+            ietfLanguageTag: string
+        }
     };
 
     interface CodeMirrorElement extends HTMLElement {

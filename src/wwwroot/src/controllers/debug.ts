@@ -41,6 +41,9 @@ export class Debug {
                 build: "0.1",
                 options: null,
                 token: "",
+                culture: {
+                    ietfLanguageTag: navigator.language
+                },
                 telemetry: {
                     instrumentationKey: ""
                 }

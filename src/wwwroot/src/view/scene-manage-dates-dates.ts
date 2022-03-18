@@ -143,7 +143,7 @@ export class ManageDatesSceneDates extends ManageDatesScenePane {
             region = this.config.options.isoFormat;
             customRegion = this.config.options.isoFormat;
         } else {
-            let locale = navigator.language; //I18n.instance.locale.locale; This is a limited subset of available languages
+            let locale = CONFIG.culture.ietfLanguageTag; //navigator.language;
             if (this.regions.filter(culture => culture[0] == locale).length > 0) {
                 region = locale;
                 customRegion = locale;
