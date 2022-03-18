@@ -250,18 +250,13 @@
             //
             if (templateEntries.Date is not null)
             {
-                if (DateEnabled)
+                if (templateEntries.Date.IsEnabled = DateEnabled)
                 {
                     BravoUnexpectedException.Assert(DateTableValidation.IsValid());
                     BravoUnexpectedException.Assert(DateReferenceTableValidation.IsValid());
 
                     templateEntries.Date.Table = DateTableName;
                     templateEntries.Date.ReferenceTable = DateReferenceTableName;
-                }
-                else
-                {
-                    // TODO: enable when the property is available
-                    //templateEntries.Date.IsEnabled = false;
                 }
             }
             //
@@ -271,7 +266,7 @@
             {
                 BravoUnexpectedException.ThrowIfNull(templateEntries.HolidaysDefinition);
 
-                if (HolidaysEnabled)
+                if (templateEntries.Holidays.IsEnabled = templateEntries.HolidaysDefinition.IsEnabled = HolidaysEnabled)
                 {
                     BravoUnexpectedException.Assert(HolidaysTableValidation.IsValid());
                     BravoUnexpectedException.Assert(HolidaysDefinitionTableValidation.IsValid());
@@ -280,37 +275,15 @@
                     templateEntries.Holidays.Table = templateConfiguration.HolidaysReference.TableName = HolidaysTableName;
                     templateEntries.HolidaysDefinition.Table = templateConfiguration.HolidaysDefinitionTable = HolidaysDefinitionTableName;
                 }
-                else
-                {
-                    templateConfiguration.RemoveTemplateEntry(templateEntries.Holidays);
-                    templateConfiguration.RemoveTemplateEntry(templateEntries.HolidaysDefinition);
-
-                    // HACK >> to fix TemplateException($"Holidays table '{config.HolidaysReference?.TableName}' not found.");
-                    templateConfiguration.HolidaysReference = null;
-                    templateConfiguration.HolidaysDefinitionTable = null;
-                    // HACK <<
-
-                    // TODO: enable when the property is available, remove previous HACK and RemoveTemplateEntry() calls
-                    //templateEntries.Holidays.IsEnabled = false;
-                    //templateEntries.HolidaysDefinition.IsEnabled = false;
-                }
             }
             //
             // ITemplates.TemplateEntry - TimeIntelligence (Dax.Template.Measures.MeasuresTemplateDefinition.MeasureTemplate)
             //
             if (templateEntries.TimeIntelligence is not null)
             {
-                if (TimeIntelligenceEnabled)
+                if (templateEntries.TimeIntelligence.IsEnabled = TimeIntelligenceEnabled)
                 {
                     // nothing to do
-                }
-                else
-                {
-                    BravoUnexpectedException.Assert(templateEntries.TimeIntelligence.TargetMeasures.IsEmpty());
-
-                    templateConfiguration.RemoveTemplateEntry(templateEntries.TimeIntelligence);
-                    // TODO: enable when the property is available, remove previous RemoveTemplateEntry() call
-                    //templateEntries.TimeIntelligence.IsEnabled = false;
                 }
             }
         }
@@ -457,11 +430,6 @@
             var timeIntelligence = configuration.Templates?.SingleOrDefault((entry) => entry.Class?.Equals(TimeIntelligenceTemplateClassName) ?? false);
 
             return (date, holidays, holidaysDefinition, timeIntelligence);
-        }
-
-        public static void RemoveTemplateEntry(this TemplateConfiguration configuration, ITemplates.TemplateEntry entry)
-        {
-            configuration.Templates = configuration.Templates?.Except(new[] { entry }).ToArray();
         }
     }
 
