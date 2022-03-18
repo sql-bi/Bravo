@@ -1,9 +1,9 @@
 ﻿namespace Sqlbi.Bravo.Models.ManageDates
 {
     using Dax.Template.Tables;
-    using Sqlbi.Bravo.Infrastructure;
     using Sqlbi.Bravo.Infrastructure.Extensions;
     using System;
+    using System.Globalization;
     using System.Text.Json.Serialization;
 
     public class DateDefaults
@@ -34,69 +34,57 @@
 
         public void CopyTo(TemplateConfiguration templateConfiguration)
         {
-            SetIntVariable(nameof(FirstFiscalMonth), FirstFiscalMonth);
-            SetIntVariable(nameof(FirstDayOfWeek), (int?)FirstDayOfWeek);
-            SetIntVariable(nameof(MonthsInYear), MonthsInYear);
-            SetStringVariable(nameof(WorkingDayType), WorkingDayType);
-            SetStringVariable(nameof(NonWorkingDayType), NonWorkingDayType);
-            SetIntVariable(nameof(TypeStartFiscalYear), (int?)TypeStartFiscalYear);
-            SetStringVariable(nameof(QuarterWeekType), (int?)QuarterWeekType);
-            SetStringVariable(nameof(WeeklyType), WeeklyType);
+            Set(nameof(FirstFiscalMonth), FirstFiscalMonth, quoted: false);
+            Set(nameof(FirstDayOfWeek), (int?)FirstDayOfWeek, quoted: false);
+            Set(nameof(MonthsInYear), MonthsInYear, quoted: false);
+            Set(nameof(TypeStartFiscalYear), (int?)TypeStartFiscalYear, quoted: false);
+            Set(nameof(WorkingDayType), WorkingDayType, quoted: true);
+            Set(nameof(NonWorkingDayType), NonWorkingDayType, quoted: true);
+            Set(nameof(QuarterWeekType), (int?)QuarterWeekType, quoted: true);
+            Set(nameof(WeeklyType), WeeklyType, quoted: true);
 
-            void SetStringVariable<T>(string parameterName, T? value)
-            {
-                SetVariable(parameterName, value, "\"");
-            }
-
-            void SetIntVariable<T>(string parameterName, T? value)
-            {
-                SetVariable(parameterName, value, "");
-            }
-
-            void SetVariable<T>(string parameterName, T? value, string quote)
+            void Set<T>(string name, T? value, bool quoted)
             {
                 if (value is null)
                     return;
 
-                var variableKey = $"__{parameterName}";
+                var parameterKey = $"__{ name }";
 
-                BravoUnexpectedException.Assert(templateConfiguration.DefaultVariables.ContainsKey(variableKey));
+                if (templateConfiguration.DefaultVariables.ContainsKey(parameterKey))
+                {
+                    var parameterValue = quoted ? $"\"{ value }\"" : $"{ value }";
 
-                var variableValue = value.ToString();
-
-                BravoUnexpectedException.ThrowIfNull(variableValue);
-
-                templateConfiguration.DefaultVariables[variableKey] = $"{ quote }{ variableValue }{ quote }";
+                    templateConfiguration.DefaultVariables[parameterKey] = parameterValue;
+                }
             }
         }
 
         public static DateDefaults CreateFrom(TemplateConfiguration templateConfiguration)
         {
-            var defaults = new DateDefaults
+            DateDefaults dateDefaults = new();
+
+            dateDefaults.FirstFiscalMonth = GetInt(nameof(FirstFiscalMonth));
+            dateDefaults.FirstDayOfWeek = GetString(nameof(FirstDayOfWeek)).TryParseTo<DayOfWeek>();
+            dateDefaults.MonthsInYear = GetInt(nameof(MonthsInYear));
+            dateDefaults.WorkingDayType = GetString(nameof(WorkingDayType), unquote: true);
+            dateDefaults.NonWorkingDayType = GetString(nameof(NonWorkingDayType), unquote: true);
+            dateDefaults.TypeStartFiscalYear = GetString(nameof(TypeStartFiscalYear)).TryParseTo<TypeStartFiscalYear>();
+            dateDefaults.QuarterWeekType = GetString(nameof(QuarterWeekType), unquote: true).TryParseTo<QuarterWeekType>();
+            dateDefaults.WeeklyType = GetString(nameof(WeeklyType), unquote: true).TryParseTo<WeeklyType>();
+
+            // Override the template value only if the variable exists, otherwise keep the null value
+            if (dateDefaults.FirstFiscalMonth is not null)
+                dateDefaults.FirstFiscalMonth = 0; // Zero-based
+
+            // Override the template value only if the variable exists, otherwise keep the null value
+            if (dateDefaults.FirstDayOfWeek is not null)
+                dateDefaults.FirstDayOfWeek = DateTimeFormatInfo.CurrentInfo.FirstDayOfWeek;
+
+            return dateDefaults;
+
+            int? GetInt(string? name)
             {
-                FirstFiscalMonth = GetIntParameter(nameof(FirstFiscalMonth)),
-                FirstDayOfWeek = (DayOfWeek?)GetIntParameter(nameof(FirstDayOfWeek)),
-                MonthsInYear = GetIntParameter(nameof(MonthsInYear)),
-                WorkingDayType = GetQuotedStringParameter(nameof(WorkingDayType)),
-                NonWorkingDayType = GetQuotedStringParameter(nameof(NonWorkingDayType)),
-                TypeStartFiscalYear = (TypeStartFiscalYear?)GetIntParameter(nameof(TypeStartFiscalYear)),
-            };
-
-            var quarterWeekTypeParameter = GetQuotedStringParameter(nameof(QuarterWeekType));
-
-            if (Enum.TryParse(quarterWeekTypeParameter, out QuarterWeekType quarterWeekType)) 
-                defaults.QuarterWeekType = quarterWeekType;
-
-            var weeklyTypeParameter = GetQuotedStringParameter(nameof(WeeklyType));
-
-            if (Enum.TryParse(weeklyTypeParameter, out WeeklyType weeklyType)) 
-                defaults.WeeklyType = weeklyType;
-
-            return defaults;
-
-            int? GetIntParameter(string? parameterName)
-            {
-                var value = GetStringParameter(parameterName);
+                var value = GetString(name);
                 if (value == null)
                     return null;
 
@@ -106,40 +94,27 @@
                 return null;
             }
 
-            string? GetStringParameter(string? parameterName)
+            string? GetString(string? name, bool unquote = false)
             {
-                if (parameterName.IsNullOrEmpty())
+                if (name.IsNullOrEmpty())
                     return null;
 
-                if (templateConfiguration.DefaultVariables.TryGetValue($"__{ parameterName }", out var parameterValue))
+                var parameterKey = $"__{ name }";
+
+                if (templateConfiguration.DefaultVariables.TryGetValue(parameterKey, out var parameterValue))
+                {
+                    if (unquote)
+                    {
+                        if (parameterValue[0] == '"' && parameterValue[^1] == '"')
+                            parameterValue = parameterValue[1..^1];
+                    }
+
                     return parameterValue;
+                }
 
                 return null;
             }
-
-            string? GetQuotedStringParameter(string? parameterName)
-            {
-                var parameterValue = GetStringParameter(parameterName);
-                if (parameterValue.IsNullOrEmpty())
-                    return null;
-
-                if ((parameterValue[0] == '"') && (parameterValue[^1] == '"'))
-                    parameterValue = parameterValue[1..^1];
-
-                return parameterValue;
-            }
         }
-    }
-
-    public enum DayOfWeek
-    {
-        Sunday = 0,
-        Monday = 1,
-        Tuesday = 2,
-        Wednesday = 3,
-        Thursday = 4,
-        Friday = 5,
-        Saturday = 6,
     }
 
     public enum TypeStartFiscalYear

@@ -7,7 +7,7 @@
 
     internal static class ModelOperationResultExtensions
     {
-        public static string? ToDescriptionString(this TOM.ModelOperationResult operationResult)
+        public static string? ToMessageString(this TOM.ModelOperationResult operationResult)
         {
             var xmlaResults = operationResult.XmlaResults;
             if (xmlaResults is null)
@@ -25,7 +25,7 @@
         {
             if (operationResult.XmlaResults?.ContainsErrors == true)
             {
-                var message = operationResult.ToDescriptionString();
+                var message = operationResult.ToMessageString();
                 throw new BravoException(BravoProblem.TOMDatabaseUpdateFailed, message!);
             }
         }
@@ -54,6 +54,24 @@
         {
             var sourceType = GetSourceType(table);
             return sourceType == TOM.PartitionSourceType.M || sourceType == TOM.PartitionSourceType.Query || sourceType == TOM.PartitionSourceType.PolicyRange;
+        }
+    }
+
+    internal static class ModelExtensions
+    {
+        public static TOM.Measure? Find(this TOM.Model? model, string tableName, string measureName)
+        {
+            if (model is not null)
+            {
+                var table = model.Tables.Find(tableName);
+                if (table is not null)
+                {
+                    var measure = table.Measures.Find(measureName);
+                    return measure;
+                }
+            }
+
+            return null;
         }
     }
 

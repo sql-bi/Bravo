@@ -13,6 +13,7 @@
     using System.Text.Json.Serialization;
     using System.Threading;
     using SSAS = Microsoft.AnalysisServices;
+    using TOM = Microsoft.AnalysisServices.Tabular;
 
     public class TabularDatabase
     {
@@ -49,15 +50,7 @@
         internal static TabularDatabase CreateFrom(TabularConnectionWrapper connection, CancellationToken cancellationToken)
         {
             var daxModel = VpaxToolsHelper.GetDaxModel(connection, cancellationToken);
-            var database = CreateFrom(daxModel);
-
-            if (database.Info is not null)
-            {
-                database.Info.ServerVersion = connection.Server.Version;
-                database.Info.ServerEdition = connection.Server.Edition;
-                database.Info.ServerMode = connection.Server.ServerMode;
-                database.Info.ServerLocation = connection.Server.ServerLocation;
-            }
+            var database = CreateFrom(daxModel, connection);
 
             if (connection.Database.ReadWriteMode == SSAS.ReadWriteMode.ReadOnly)
             {
@@ -68,7 +61,7 @@
             return database;
         }
 
-        internal static TabularDatabase CreateFrom(Dax.Metadata.Model daxModel)
+        internal static TabularDatabase CreateFrom(Dax.Metadata.Model daxModel, TabularConnectionWrapper? connection = default)
         {
             var vpaModel = new VpaModel(daxModel);
 
@@ -83,7 +76,7 @@
             var databaseSize = includedColumns.Sum((c) => c.TotalSize);
             var tables = includedTables.Select((t) => TabularTable.CreateFrom(t, daxModel)).ToArray();
             var columns = includedColumns.Select((c) => TabularColumn.CreateFrom(c, databaseSize)).ToArray();
-            var measures = includedMeasures.Select((m) => TabularMeasure.CreateFrom(m, databaseETag)).ToArray();
+            var measures = includedMeasures.Select((m) => TabularMeasure.CreateFrom(m, databaseETag, connection?.Model)).ToArray();
             var autoLineBreakStyle = measures.GetAutoLineBreakStyle();
 
             var database = new TabularDatabase
@@ -92,15 +85,16 @@
                 {
                     ETag = databaseETag,
                     Name = daxModel.ModelName.Name,
+                    Culture = connection?.Model.Culture,
                     CompatibilityMode = daxModel.CompatibilityMode.TryParseTo<SSAS.CompatibilityMode>(),
                     CompatibilityLevel = daxModel.CompatibilityLevel,
                     DatabaseSize = databaseSize,
                     AutoLineBreakStyle = autoLineBreakStyle,
-                    ServerName = daxModel.ServerName?.Name,
-                    ServerVersion = null,
-                    ServerEdition = null,
-                    ServerMode = null,
-                    ServerLocation = null,
+                    ServerName = daxModel.ServerName?.Name ?? connection?.Server.Name,
+                    ServerVersion = connection?.Server.Version,
+                    ServerEdition = connection?.Server.Edition,
+                    ServerMode = connection?.Server.ServerMode,
+                    ServerLocation = connection?.Server.ServerLocation,
                     TablesMaxRowsCount = includedTables.Length == 0 ? 0L : includedTables.Max((t) => t.RowsCount),
                     TablesCount = includedTables.Length,
                     Tables = tables,
@@ -261,6 +255,9 @@
 
         [JsonPropertyName("name")]
         public string? Name { get; set; }
+
+        [JsonPropertyName("culture")]
+        public string? Culture { get; set; }
 
         [JsonPropertyName("compatibilityMode")]
         public SSAS.CompatibilityMode? CompatibilityMode { get; set; }

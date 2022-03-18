@@ -5,10 +5,13 @@
     using System.Diagnostics;
     using System.Linq;
     using System.Text.Json.Serialization;
+    using TOM = Microsoft.AnalysisServices.Tabular;
 
     [DebuggerDisplay("'{TableName}'[{Name}]")]
     public class TabularMeasure
     {
+        private const string SqlbiDaxTemplateTimeIntelligenceMeasureAnnotation = "SQLBI_Template";
+
         [JsonPropertyName("etag")]
         public string? ETag { get; set; }
 
@@ -21,13 +24,19 @@
         [JsonPropertyName("expression")]
         public string? Expression { get; set; }
 
+        [JsonPropertyName("displayFolder")]
+        public string? DisplayFolder { get; set; }
+
         [JsonPropertyName("lineBreakStyle")]
         public DaxLineBreakStyle? LineBreakStyle { get; set; }
 
         [JsonPropertyName("isHidden")]
         public bool? IsHidden { get; set; }
 
-        internal static TabularMeasure CreateFrom(Dax.Metadata.Measure daxMeasure, string databaseETag)
+        [JsonPropertyName("isManageDatesTimeIntelligence")]
+        public bool? IsManageDatesTimeIntelligence { get; set; }
+
+        internal static TabularMeasure CreateFrom(Dax.Metadata.Measure daxMeasure, string databaseETag, TOM.Model? tomModel = default)
         {
             var (expression, lineBreakStyle) = daxMeasure.MeasureExpression.Expression.NormalizeDax();
 
@@ -37,9 +46,18 @@
                 Name = daxMeasure.MeasureName.Name,
                 TableName = daxMeasure.Table.TableName.Name,
                 Expression = expression,
+                DisplayFolder = daxMeasure.DisplayFolder,
                 LineBreakStyle = lineBreakStyle,
-                IsHidden = false //TODO Expose IsHidden property 
+                IsHidden = null,
+                IsManageDatesTimeIntelligence = null
             };
+
+            var tomMeasure = tomModel.Find(measure.TableName, measure.Name);
+            if (tomMeasure is not null)
+            {
+                measure.IsHidden = tomMeasure.IsHidden;
+                measure.IsManageDatesTimeIntelligence = tomMeasure.Annotations.Contains(SqlbiDaxTemplateTimeIntelligenceMeasureAnnotation);
+            }
 
             return measure;
         }

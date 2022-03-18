@@ -11,6 +11,7 @@
     using System;
     using System.Collections.Generic;
     using System.Net.Mime;
+    using System.Threading;
 
     /// <summary>
     /// Application controller
@@ -108,18 +109,16 @@
         [ActionName("StartPBIDesktopFromPBIX")]
         [Consumes(MediaTypeNames.Application.Json)]
         [Produces(MediaTypeNames.Application.Json)]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(String))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesDefaultResponseType]
-        public IActionResult StartPBIDesktopFromPBIX(bool waitForStarted = true)
+        public IActionResult StartPBIDesktopFromPBIX(bool waitForStarted, CancellationToken cancellationToken)
         {
-            if (WindowDialogHelper.OpenFileDialog(defaultExt: "PBIX", out var path, cancellationToken: HttpContext.RequestAborted))
+            if (WindowDialogHelper.OpenFileDialog(defaultExt: "PBIX", out var path, cancellationToken))
             {
                 if (ProcessHelper.OpenPath(path, waitForStarted))
-                {
                     return Ok(path);
-                }
 
                 return Forbid();
             }
