@@ -4,13 +4,10 @@
  * https://www.sqlbi.com
 */
 
-import { OptionsStore } from '../controllers/options';
 import { OptionStruct, OptionType, Renderer } from '../helpers/renderer';
-import { Utils, _ } from '../helpers/utils';
-import { Doc } from '../model/doc';
-import { I18n, i18n } from '../model/i18n';
+import { _ } from '../helpers/utils';
+import { i18n } from '../model/i18n';
 import { strings } from '../model/strings';
-import { ManageDatesConfig } from './scene-manage-dates';
 import { ManageDatesScenePane } from './scene-manage-dates-pane';
 
 export class ManageDatesSceneDates extends ManageDatesScenePane {
@@ -71,14 +68,10 @@ export class ManageDatesSceneDates extends ManageDatesScenePane {
         ["tr-TR", "Turkish (Turkey)"]
     ];
 
-    constructor(config: OptionsStore<ManageDatesConfig>, doc: Doc) {
-        super(config, doc);
-        
-        this.getRegion();
-    }
-
     render(element: HTMLElement) {
         super.render(element);
+
+        this.getRegion();
 
         let optionsStruct: OptionStruct[] = [
             {

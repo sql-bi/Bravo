@@ -209,7 +209,7 @@ const locale: Locale = {
         [_.manageDatesMenuInterval]: "Intervallo",
         [_.manageDatesMenuTimeIntelligence]: "Time Intelligence",
         [_.manageDatesModelCheck]: "Verifica Modello",
-        [_.manageDatesPreviewCtrlTitle]: "Anteprima",
+        [_.manageDatesPreviewCtrlTitle]: "Anteprima Modifiche",
         [_.manageDatesPreview]: "Anteprima...",
         [_.manageDatesStatusCompatible]: `<div class="hero">Questo modello <b>contiene già delle tabelle data compatibili</b> con Bravo.</div>Se applichi qualche modifica, queste tabelle verranno aggiornate ma le relazioni rimarranno intatte.`,
         [_.manageDatesStatusIncompatible]: `<div class="hero">Questo modello <b>contiene alcune tabelle non compatibili</b> con Bravo.</div>Per apportare qualche modifica, devi scegliere un nome diverso per una o più delle tabelle create da questo tool.<br><br>Verifica <b>Date</b> e <b>Vacanze</b>.`,

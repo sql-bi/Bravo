@@ -40,12 +40,6 @@ export class ManageDatesScene extends DocScene {
     previewButton: HTMLElement;
     panes: ManageDatesScenePane[] = [];
     
-    //TODO Remove to enable manage dates
-    /*get supported() {
-        return false; 
-    }*/
-    //ENDTODO
-    
     constructor(id: string, container: HTMLElement, doc: Doc, type: PageType) {
         super(id, container, [doc.name, i18n(strings.ManageDates)], doc, type, true); 
         this.element.classList.add("manage-dates");
@@ -82,28 +76,19 @@ export class ManageDatesScene extends DocScene {
         let menuContainer = _(".date-config", this.body);
         let loader = new Loader(menuContainer, true, true);
 
-        host.manageDatesGetConfigurations(<PBIDesktopReport>this.doc.sourceData)
+        this.getDatesConfiguration()
             .then(templates => {
                 loader.remove();
-
-                if (!templates.length) {
-                    let errorScene = new ErrorScene(Utils.DOM.uniqueId(), this.element.parentElement, AppError.InitFromResponseStatus(Utils.ResponseStatusCode.InternalError));
-                    this.splice(errorScene);
-                    return;
-                }
-
-                this.config.options = Utils.Obj.clone(templates[0]);
-                this.config.options.dateEnabled = true;
-
+console.log("Config", this.config.options);
                 let calendarPane = new ManageDatesSceneCalendar(this.config, this.doc, templates);
                 this.panes.push(calendarPane);
-                let intervalPane = new ManageDatesSceneInterval(this.config, this.doc);
+                let intervalPane = new ManageDatesSceneInterval(this.config, this.doc, templates);
                 this.panes.push(intervalPane);
-                let datesPane = new ManageDatesSceneDates(this.config, this.doc);
+                let datesPane = new ManageDatesSceneDates(this.config, this.doc, templates);
                 this.panes.push(datesPane);
-                let holidaysPane = new ManageDatesSceneHolidays(this.config, this.doc);
+                let holidaysPane = new ManageDatesSceneHolidays(this.config, this.doc, templates);
                 this.panes.push(holidaysPane);
-                let timeIntelligencePane = new ManageDatesSceneTimeIntelligence(this.config, this.doc);
+                let timeIntelligencePane = new ManageDatesSceneTimeIntelligence(this.config, this.doc, templates);
                 this.panes.push(timeIntelligencePane);
 
                 this.menu = new Menu("date-config-menu", menuContainer, <Dic<MenuItem>>{
@@ -145,6 +130,38 @@ export class ManageDatesScene extends DocScene {
             });
     }
 
+    getDatesConfiguration() {
+    
+        return host.manageDatesGetConfigurations(<PBIDesktopReport>this.doc.sourceData)
+        .then(templates => {
+           
+            if (!templates.length)
+                throw AppError.InitFromResponseStatus(Utils.ResponseStatusCode.InternalError);
+
+            //Remove templates duplicates and assign current
+            let currentTemplate: DateConfiguration;
+            let uniqueTemplates:Dic<DateConfiguration> = {};
+            templates.forEach(template => {
+
+                if (!currentTemplate || template.isCurrent)
+                    currentTemplate = template;
+
+                if (template.templateUri in uniqueTemplates) {
+                    if (template.isCurrent)
+                        uniqueTemplates[template.templateUri] = template;
+                } else {
+                    uniqueTemplates[template.templateUri] = template;
+                }
+            });
+
+            this.config.options = Utils.Obj.clone(currentTemplate);
+            this.config.options.dateEnabled = true;
+            this.config.save();
+
+            return Object.values(uniqueTemplates);
+        });
+    }
+
     listen() {
         this.config.on("change", (changedOptions: any)=>{
             this.updateModelCheck();
@@ -167,12 +184,19 @@ export class ManageDatesScene extends DocScene {
     update() {
         if (!super.update()) return false;
 
-        this.updateModelCheck();
-        this.updateAvailableFeatures();
+        this.getDatesConfiguration()
+            .then(templates => {
 
-        this.panes.forEach(pane => {
-            pane.update();
-        });
+                this.updateAvailableFeatures();
+
+                this.panes.forEach(pane => {
+                    pane.templates = templates;
+                    pane.update();
+                });
+            })
+            .finally(()=>{
+                this.updateModelCheck();
+            })
     }
 
     updateAvailableFeatures() {

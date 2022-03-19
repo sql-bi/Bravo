@@ -554,9 +554,7 @@ export class ManageDatesPreviewScene extends DocScene {
 
         browser.on("loaded", ()=>{
             if (!this.canEdit) return;
-            window.setTimeout(() => {
-                this.applyButton.toggleAttr("disabled", false);
-            }, 3000);
+            this.applyButton.toggleAttr("disabled", false);
         });
 
         browser.on("deactivate", ()=>{

@@ -8,16 +8,16 @@ import { OptionStruct, OptionType, Renderer } from '../helpers/renderer';
 import { Dic, Utils, _ } from '../helpers/utils';
 import { i18n } from '../model/i18n';
 import { strings } from '../model/strings';
-import { daxName } from '../model/tabular';
 import { ManageDatesScenePane } from './scene-manage-dates-pane';
 import { Branch, BranchType, TabularBrowser } from './tabular-browser';
 
 export class ManageDatesSceneTimeIntelligence extends ManageDatesScenePane {
 
-    columnBrowser: TabularBrowser;
-
     render(element: HTMLElement) {
         super.render(element);
+
+        if (this.config.options.targetMeasures && this.config.options.targetMeasures.length)
+            this.config.options.targetMeasuresMode = "{custom}";
 
         let optionsStruct: OptionStruct[] = [
             {
@@ -70,12 +70,13 @@ export class ManageDatesSceneTimeIntelligence extends ManageDatesScenePane {
             Renderer.Options.render(struct, _(".options", element), this.config);
         });
 
-        this.columnBrowser = new TabularBrowser(Utils.DOM.uniqueId(), _("#targetmeasures", element), this.modelToBranches(), {
+        let columnBrowser = new TabularBrowser(Utils.DOM.uniqueId(), _("#targetmeasures", element), this.modelToBranches(), {
             selectable: true, 
-            search: true
+            search: true,
+            initialSelected: this.config.options.targetMeasures
         });
 
-        this.columnBrowser.on("select", (columns: string[]) => {
+        columnBrowser.on("select", (columns: string[]) => {
             this.config.update("targetMeasures", columns);
         });
 
@@ -122,19 +123,5 @@ export class ManageDatesSceneTimeIntelligence extends ManageDatesScenePane {
         }
         
         return Object.values(branches);
-    }
-
-    update() {
-        super.update();
-
-        if (this.columnBrowser) {
-            this.columnBrowser.branches = this.modelToBranches();
-            this.columnBrowser.update();
-        }
-    }
-
-    destroy() {
-        this.columnBrowser = null;
-        super.destroy();
     }
 }

@@ -4,25 +4,14 @@
  * https://www.sqlbi.com
 */
 
-
-import { OptionsStore } from '../controllers/options';
 import { OptionStruct, OptionToggler, OptionType, Renderer } from '../helpers/renderer';
 import { Utils, _ } from '../helpers/utils';
-import { DateConfiguration, DateDefaults, DayOfWeek, QuarterWeekType, TypeStartFiscalYear, WeeklyType } from '../model/dates';
-import { Doc } from '../model/doc';
+import { DateConfiguration, QuarterWeekType, TypeStartFiscalYear, WeeklyType } from '../model/dates';
 import { I18n, i18n } from '../model/i18n';
 import { strings } from '../model/strings';
-import { ManageDatesConfig } from './scene-manage-dates';
 import { ManageDatesScenePane } from './scene-manage-dates-pane';
 
 export class ManageDatesSceneCalendar extends ManageDatesScenePane {
-
-    templates: DateConfiguration[];
-
-    constructor(config: OptionsStore<ManageDatesConfig>, doc: Doc, templates: DateConfiguration[]) {
-        super(config, doc);
-        this.templates = templates;
-    }
 
     render(element: HTMLElement) {
         super.render(element);
@@ -73,8 +62,6 @@ export class ManageDatesSceneCalendar extends ManageDatesScenePane {
         optionsStruct.forEach(struct => {
             Renderer.Options.render(struct, _(".options", element), this.config);
         });
-
-        this.changeTemplate(this.config.options);
     }
 
     changeTemplate(template: DateConfiguration) {

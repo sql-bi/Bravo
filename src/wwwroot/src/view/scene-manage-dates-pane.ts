@@ -17,12 +17,14 @@ import { ManageDatesConfig } from './scene-manage-dates';
 export class ManageDatesScenePane {
 
     doc: Doc;
+    templates: DateConfiguration[];
     element: HTMLElement;
     config: OptionsStore<ManageDatesConfig>;
 
-    constructor(config: OptionsStore<ManageDatesConfig>, doc: Doc) {
+    constructor(config: OptionsStore<ManageDatesConfig>, doc: Doc, templates: DateConfiguration[]) {
         this.config = config;
         this.doc = doc;
+        this.templates = templates;
     }
 
     render(element: HTMLElement) {
@@ -30,12 +32,14 @@ export class ManageDatesScenePane {
     }
 
     update() {
-        
+        this.element.innerHTML = "";
+        this.render(this.element);
     }
 
     destroy() {
         this.config = null;
         this.doc = null;
+        this.templates = null;
     }
 
     validateField(field: string) {
