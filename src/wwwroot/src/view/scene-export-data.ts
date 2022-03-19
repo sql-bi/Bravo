@@ -294,8 +294,9 @@ export class ExportDataScene extends DocScene {
   
             columns.push({ 
                 field: "name", 
+                tooltip: true,
                 title: i18n(strings.tableColTable),
-                cssClass: "table-name",
+                cssClass: "column-name",
                 bottomCalc: this.canExport ? "count" : null,
                 bottomCalcFormatter: cell=> i18n(strings.tableSelectedCount, {count: this.getSelectedData().length})
             });
@@ -348,9 +349,12 @@ export class ExportDataScene extends DocScene {
                         if ((<any>row)._row && (<any>row)._row.type == "calc") return;
 
                         const table = <TabularTable>row.getData();
-                        if (table && !this.isExportable(table)) {
+                        if (table) {
                             let element = row.getElement();
-                            element.classList.add("row-disabled");
+                            if (!this.isExportable(table))
+                                element.classList.add("row-disabled");
+                            if (table.isHidden)
+                                element.classList.add("row-hidden");
                         }
                     }catch(ignore){}
                 },

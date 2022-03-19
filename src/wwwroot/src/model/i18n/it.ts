@@ -77,6 +77,7 @@ const locale: Locale = {
         [_.daxFormatterPreviewDesc]: "Per generare un'anteprima, Bravo deve inviare questa misura a DAX Formatter.",
         [_.daxFormatterSuccessSceneMessage]: "Congratulazioni, <strong>{count} misur{{e|a}}</strong> {{sono state formattate|è stata formattata}} correttamente.",
         [_.daxFormatterSummary]: `Il dataset contiene {count} misur{{e|a}}: <strong>{analyzable}</strong> da analizzare, <span class="text-error"><strong>{errors}</strong> con errori</span>, <span class="text-highlight"><strong>{formattable}</strong> da formattare.</span>`,
+        [_.daxFormatterSummaryNoAnalysis]: `Il dataset contiene <strong>{count}</strong> misur{{e|a}}: <span class="text-error"><strong>{errors}</strong> con errori</span> e <span class="text-highlight"><strong>{formattable}</strong> da formattare.</span>`,
         [_.defaultTabName]: "Senza nome",
         [_.dialogCancel]: "Annulla",
         [_.dialogOK]: "OK",

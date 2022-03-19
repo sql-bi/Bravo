@@ -271,12 +271,14 @@ export class AnalyzeModelScene extends DocScene {
                 },
                 columnName: { 
                     field: "columnName", 
+                    tooltip: true,
                     title: i18n(strings.tableColColumn), 
                     cssClass: "column-name",
                     formatter: columnNameFormatter
                 },
                 tableName: { 
                     field: "tableName", 
+                    tooltip: true,
                     title: i18n(strings.tableColTable),  
                     formatter: (cell) => {
                         let cellData = <ExtendedTabularColumn>cell.getData();

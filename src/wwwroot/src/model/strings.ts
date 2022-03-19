@@ -69,6 +69,7 @@ export enum strings {
     daxFormatterPreviewDesc,
     daxFormatterSuccessSceneMessage,
     daxFormatterSummary,
+    daxFormatterSummaryNoAnalysis,
     defaultTabName,
     dialogCancel,
     dialogOK,
