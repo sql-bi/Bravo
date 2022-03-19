@@ -302,26 +302,34 @@ export class ManageDatesPreviewScene extends DocScene {
             (<any>changes)[`${group}Objects`].forEach((table: TableChanges) => {
 
                 if (table.preview || table.expression) {
-                    previews[table.name] = {};
+                    let key = table.name;
+                    if (!(key in previews))
+                        previews[key] = {};
+
                     if (table.preview) 
-                        previews[table.name].table = table.preview;
+                        previews[key].table = table.preview;
                     if (table.expression)
-                        previews[table.name].expression = fixCrLn(table.expression);
+                        previews[key].expression = fixCrLn(table.expression);
                 }
                 
                 if (table.columns && table.preview) {
                     table.columns.forEach(column => {
-                        previews[daxName(table.name, column.name)] = { 
-                            table: table.preview.map(row => ({ [column.name]: row[column.name] }))
-                        };
+                        let key = daxName(table.name, column.name);
+                        if (!(key in previews))
+                            previews[key] = {};
+
+                        previews[key].table = table.preview.map(row => ({ [column.name]: row[column.name] }));
                     });
                 }
 
                 table.measures.forEach(measure => {
-                    if (measure.expression)
-                        previews[daxName(table.name, measure.name)] = { 
-                            expression: fixCrLn(measure.expression) 
-                        };
+                    if (measure.expression) {
+                        let key = daxName(table.name, measure.name);
+                        if (!(key in previews))
+                            previews[key] = {};
+
+                        previews[key].expression = fixCrLn(measure.expression);
+                    }
                 });
             });
         });
