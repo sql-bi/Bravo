@@ -5,7 +5,7 @@
 */
 
 import { Dic, Utils, _, __ } from '../helpers/utils';
-import { host, optionsController } from '../main';
+import { host, optionsController, telemetry } from '../main';
 import { ManageDatesPBIDesktopReportConfigurationRequest, ManageDatesPreviewChangesFromPBIDesktopReportRequest } from '../controllers/host';
 import { DateConfiguration } from '../model/dates';
 import { Doc } from '../model/doc';
@@ -482,6 +482,8 @@ export class ManageDatesPreviewScene extends DocScene {
 
     applyChanges() {
 
+        telemetry.track("Manage Dates: Apply");
+        
         let savingScene = new LoaderScene(Utils.DOM.uniqueId(), this.element.parentElement, i18n(strings.manageDatesCreatingTables));
         this.push(savingScene);
 

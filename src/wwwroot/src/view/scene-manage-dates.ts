@@ -7,7 +7,7 @@
 import { OptionsStore } from '../controllers/options';
 import { Loader } from '../helpers/loader';
 import { Dic, Utils, _ } from '../helpers/utils';
-import { host } from '../main';
+import { host, telemetry } from '../main';
 import { DateConfiguration, TableValidation } from '../model/dates';
 import { Doc } from '../model/doc';
 import { AppError } from '../model/exceptions';
@@ -79,7 +79,7 @@ export class ManageDatesScene extends DocScene {
         this.getDatesConfiguration()
             .then(templates => {
                 loader.remove();
-console.log("Config", this.config.options);
+
                 let calendarPane = new ManageDatesSceneCalendar(this.config, this.doc, templates);
                 this.panes.push(calendarPane);
                 let intervalPane = new ManageDatesSceneInterval(this.config, this.doc, templates);
@@ -175,6 +175,8 @@ console.log("Config", this.config.options);
             e.preventDefault();
 
             if (!this.canEdit) return;
+
+            telemetry.track("Manage Dates: Preview");
 
             let previewScene = new ManageDatesPreviewScene(Utils.DOM.uniqueId(), this.element.parentElement, this.path, this.doc, this.type, this.config.options);
             this.push(previewScene);
