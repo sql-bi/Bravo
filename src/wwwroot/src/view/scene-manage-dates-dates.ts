@@ -87,7 +87,11 @@ export class ManageDatesSceneDates extends ManageDatesScenePane {
                 description: i18n(strings.manageDatesISOFormatDesc),
                 icon: "iso-format",
                 type: OptionType.select,
-                values: [...this.regions, ...[["{custom}", i18n(strings.manageDatesISOFormatOther)]]]
+                values: [
+                    ["", i18n(strings.modelLanguage, { culture: this.doc.model.culture})], 
+                    ...this.regions, 
+                    ["{custom}", i18n(strings.manageDatesISOFormatOther)]
+                ]
             },
             {
                 option: "customRegion",
@@ -143,14 +147,8 @@ export class ManageDatesSceneDates extends ManageDatesScenePane {
             region = this.config.options.isoFormat;
             customRegion = this.config.options.isoFormat;
         } else {
-            let locale = CONFIG.culture.ietfLanguageTag; //navigator.language;
-            if (this.regions.filter(culture => culture[0] == locale).length > 0) {
-                region = locale;
-                customRegion = locale;
-            } else {
-                region = "{custom}";
-                customRegion = locale;
-            }
+            region = "";
+            customRegion = this.doc.model.culture;
         }
 
         this.config.options.region = region;
@@ -161,9 +159,9 @@ export class ManageDatesSceneDates extends ManageDatesScenePane {
     setRegion() {
         let region = this.config.options.region;
         if (region == "{custom}") region = this.config.options.customRegion;
-        if (!region) region = "en-US";
+        if (!region) region = this.doc.model.culture;
 
-        this.config.options.isoFormat = region;
+        this.config.options.isoFormat = (region == this.doc.model.culture ? null : region); //Business logic needed by the library
         this.config.options.isoTranslation = region;
         this.config.save();
     }

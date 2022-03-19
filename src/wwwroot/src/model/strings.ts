@@ -251,6 +251,7 @@ export enum strings {
     changeStatusDeletedTitle,
     menuCtrlTitle,
     minimizeCtrlTitle,
+    modelLanguage,
     more,
     notificationCtrlTitle,
     notificationsTitle,
