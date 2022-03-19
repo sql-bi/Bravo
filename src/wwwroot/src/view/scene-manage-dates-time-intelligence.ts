@@ -105,7 +105,7 @@ export class ManageDatesSceneTimeIntelligence extends ManageDatesScenePane {
         this.doc.measures
             .sort((a, b) => a.name.localeCompare(b.name))
             .forEach(measure => {
-                if (measure.tableName in branches) {
+                if (measure.tableName in branches && !measure.isManageDatesTimeIntelligence) {
                     branches[measure.tableName]._children.push({
                         id: measure.name,
                         name: measure.name,

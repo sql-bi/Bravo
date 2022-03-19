@@ -26,6 +26,7 @@ export interface TabularDatabaseServer {
 export interface TabularDatabaseInfo extends TabularDatabaseServer, TabularDatabaseModel {
     etag?:	string
     name?: string
+    culture?: string
     tablesCount: number
     columnsCount: number
     maxRows: number
@@ -59,8 +60,10 @@ export interface TabularMeasure {
     name?:	string
     tableName?:	string
     expression?: string
+    displayFolder?: string
     lineBreakStyle?: DaxLineBreakStyle
     isHidden?: boolean
+    isManageDatesTimeIntelligence?: boolean
 }
 
 export interface DaxError {
