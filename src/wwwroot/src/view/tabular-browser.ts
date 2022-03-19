@@ -227,6 +227,9 @@ export class TabularBrowser extends View {
                     viewAsTree: this.viewAsTree,
                     searchValue: (this.searchBox ? this.searchBox.value : "")
                 }),
+                initialSort: [
+                    {column: "name", dir: "asc"}, 
+                ],
                 columns: columns,
                 data: data,
                 rowFormatter: row => {
