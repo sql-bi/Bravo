@@ -11,9 +11,8 @@
             height: 100%;
             width: 100%;
             .flex(0 1 auto);
-            overflow: auto;
+            overflow: hidden;
             margin-top: 35px;
-            padding-bottom: 30px;
             
             .coll {
                 width: 300px;
@@ -34,9 +33,12 @@
                 
             }
         }
+        .menu {
+            margin-bottom: 30px;
+        }
         .menu-body {
-            padding: 30px 0 0 0;
             height: calc(100% - 72px);
+            overflow: auto;
         }
 
         .item-body {
@@ -45,11 +47,12 @@
        
         .model-check {
             position: relative;
-            padding: 15px 25px;
-            width: calc(100% - 52px);
+            padding: 15px;
+            width: calc(100% - 32px);
             height: calc(100% - 30px);
             background: @window-back-color-alt;
             border: 1px solid @border-color;
+            overflow: auto;
             .border-radius();
 
             .dark & { 
@@ -58,7 +61,7 @@
             }
 
             .status {
-                
+                padding: 0 10px;
                 font-size: 15px;
                 line-height: 1.5;
 
@@ -97,9 +100,45 @@
                 color: @notice-color-dark
             }
         }
-        
+        .gutter-vertical {
+            width: 100%;
+            background-color: @back-color;
+            .dark & {
+                background-color: @back-color-dark
+            }
+        }
+        .instant-preview {
+            width: calc(100% - 16px);
+            overflow: hidden;
+            position: relative;
+            padding: 8px;
+
+            .border-radius();
+            background-color: @window-back-color-alt;
+            border: 1px solid @border-color;
+            .dark & {
+                background-color: @window-back-color-alt-dark;
+                border-color: @border-color-dark;
+            }
+
+            .notice {
+                padding: 7px;
+            }
+
+            .table-preview {
+                height: calc(100% - 30px);
+                width: 100%;
+                font-size: 13px;
+
+                .tabulator-header {
+                    background: none !important;
+                }
+            }
+            
+        }
         .scene-action {
             .flexbox(center, flex-end);
+            margin-top: 30px;
             width: 100%;
 
             .do-proceed {
@@ -192,19 +231,23 @@
         }
         #body-sample-preview {
             overflow: hidden;
-
+            padding:8px;
             .border-radius();
-            background-color: @window-back-color;
+            background-color: @window-back-color-alt;
             border: 1px solid @border-color;
             .dark & {
-                background-color: @window-back-color-dark;
+                background-color: @window-back-color-alt-dark;
                 border-color: @border-color-dark;
             }
-
+            
             .table-preview {
                 height: 100%;
                 min-width: 100%;
                 font-size: 13px;
+
+                .tabulator-header {
+                    background: none !important;
+                }
             }
         }
 

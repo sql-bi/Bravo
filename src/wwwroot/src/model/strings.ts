@@ -202,6 +202,7 @@ export enum strings {
     manageDatesMenuInterval,
     manageDatesMenuTimeIntelligence,
     manageDatesModelCheck,
+    manageDatesInstantPreview,
     manageDatesPreviewCtrlTitle,
     manageDatesPreview,
     manageDatesStatusCompatible,

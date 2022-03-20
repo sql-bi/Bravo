@@ -25,6 +25,9 @@ import { ManageDatesSceneTimeIntelligence } from './scene-manage-dates-time-inte
 import { ManageDatesPreviewScene } from './scene-manage-dates-preview';
 import { PageType } from '../controllers/page';
 import { ManageDatesScenePane } from './scene-manage-dates-pane';
+import Split, { SplitObject } from "split.js";
+import { Tabulator } from 'tabulator-tables';
+import { ManageDatesPreviewChangesFromPBIDesktopReportRequest } from '../controllers/host';
 
 export interface ManageDatesConfig extends DateConfiguration {
     region?: string
@@ -39,6 +42,8 @@ export class ManageDatesScene extends DocScene {
     config: OptionsStore<ManageDatesConfig>;
     previewButton: HTMLElement;
     panes: ManageDatesScenePane[] = [];
+    sampleTable: Tabulator;
+    scheduledUpdateTimeout: number;
     
     constructor(id: string, container: HTMLElement, doc: Doc, type: PageType) {
         super(id, container, [doc.name, i18n(strings.ManageDates)], doc, type, true); 
@@ -64,6 +69,11 @@ export class ManageDatesScene extends DocScene {
                 </div>
             </div>
 
+            <div class="instant-preview">
+                <div class="notice">${i18n(strings.manageDatesInstantPreview)}</div>
+                <div class="table-preview">${Loader.html(true)}</div>
+            </div>
+
             <div class="scene-action">
                 <div class="do-proceed button disable-on-syncing enable-if-editable" disabled>${i18n(strings.manageDatesPreviewCtrlTitle)}</div>
             </div>
@@ -75,6 +85,14 @@ export class ManageDatesScene extends DocScene {
 
         let menuContainer = _(".date-config", this.body);
         let loader = new Loader(menuContainer, true, true);
+
+        Split([`#${this.element.id} .cols`, `#${this.element.id} .instant-preview`], {
+            sizes: [75, 25], 
+            minSize: [400, 30],
+            gutterSize: 20,
+            direction: "vertical",
+            cursor: "ns-resize"
+        });
 
         this.getDatesConfiguration()
             .then(templates => {
@@ -162,9 +180,62 @@ export class ManageDatesScene extends DocScene {
         });
     }
 
+    generatePreview() {
+
+        this.clearTable();
+        new Loader(_(".table-preview", this.element), false, true);
+        let request: ManageDatesPreviewChangesFromPBIDesktopReportRequest = {
+            settings: {
+                configuration: this.config.options,
+                previewRows: 20
+            },
+            report: <PBIDesktopReport>this.doc.sourceData
+        }
+        
+        host.manageDatesPreviewChanges(request)
+            .then(changes => {
+                let preview = [];
+                if ("modifiedObjects" in changes) {
+                    for (let i = 0; i < changes.modifiedObjects.length; i++) {
+                        let table = changes.modifiedObjects[i];
+                        if (table.name == this.config.options.dateTableName && table.preview) {
+                            preview = table.preview;
+                            break;
+                        }
+                    }
+                }
+                this.updateTable(preview);
+            })
+            .catch(ignore => {});
+    }
+
+    updateTable(data: any[]) {
+        this.clearTable();
+
+        this.sampleTable = new Tabulator(`#${this.element.id} .table-preview`, {
+            maxHeight: "100%",
+            //layout: "fitColumns",
+            placeholder: " ", // This fixes scrollbar appearing with empty tables
+            columnDefaults:{
+                maxWidth: 100,
+                tooltip: true,
+                headerTooltip: true
+            },
+            autoColumns: true,
+            data: data
+        });
+    }
+
+    clearTable () {
+        if (this.sampleTable) {
+            this.sampleTable.destroy();
+            this.sampleTable = null;
+        }
+    }
+
     listen() {
         this.config.on("change", (changedOptions: any)=>{
-            this.updateModelCheck();
+            this.scheduleUpdate();
         });
 
         this.config.on("availability.change", (changedOptions: any)=>{
@@ -183,6 +254,16 @@ export class ManageDatesScene extends DocScene {
         }); 
     }
 
+    scheduleUpdate() {
+        if (this.scheduledUpdateTimeout) return;
+
+        this.scheduledUpdateTimeout = window.setTimeout(()=> {
+            this.updateModelCheck();
+            this.generatePreview();
+            this.scheduledUpdateTimeout = null;
+        }, 500);
+    }
+
     update() {
         if (!super.update()) return false;
 
@@ -198,6 +279,7 @@ export class ManageDatesScene extends DocScene {
             })
             .finally(()=>{
                 this.updateModelCheck();
+                this.generatePreview();
             })
     }
 
@@ -274,6 +356,7 @@ export class ManageDatesScene extends DocScene {
     }
 
     destroy() {
+        this.clearTable();
         this.menu.destroy();
         this.menu = null;
         this.config = null;

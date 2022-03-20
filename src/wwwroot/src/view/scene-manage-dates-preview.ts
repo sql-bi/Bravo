@@ -610,12 +610,15 @@ export class ManageDatesPreviewScene extends DocScene {
     updateTable(data: any[]) {
         this.clearTable();
 
+        let columnsCount = (data.length ? Object.keys(data[0]).length : 0);
         this.sampleTable = new Tabulator(`#${this.element.id} .table-preview`, {
             maxHeight: "100%",
             //layout: "fitDataTable",
             placeholder: " ", // This fixes scrollbar appearing with empty tables
             columnDefaults:{
-                maxWidth: 200,
+                maxWidth: (columnsCount > 4 ? 100 : 1000),
+                tooltip: true,
+                headerTooltip: true
             },
             autoColumns: true,
             data: data

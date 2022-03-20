@@ -210,6 +210,7 @@ const locale: Locale = {
         [_.manageDatesMenuInterval]: "Interval",
         [_.manageDatesMenuTimeIntelligence]: "Time Intelligence",
         [_.manageDatesModelCheck]: "Model Check",
+        [_.manageDatesInstantPreview]: "Sample Data",
         [_.manageDatesPreviewCtrlTitle]: "Preview Changes",
         [_.manageDatesPreview]: "Preview",
         [_.manageDatesStatusCompatible]: `<div class="hero">This model already contains some <b>date tables compatible</b> with Bravo.</div>If you change something here, these tables will be updated and their relationships will remain intact.`,

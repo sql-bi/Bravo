@@ -210,6 +210,7 @@ const locale: Locale = {
         [_.manageDatesMenuInterval]: "Intervallo",
         [_.manageDatesMenuTimeIntelligence]: "Time Intelligence",
         [_.manageDatesModelCheck]: "Verifica Modello",
+        [_.manageDatesInstantPreview]: "Campione Dati",
         [_.manageDatesPreviewCtrlTitle]: "Anteprima Modifiche",
         [_.manageDatesPreview]: "Anteprima...",
         [_.manageDatesStatusCompatible]: `<div class="hero">Questo modello <b>contiene già delle tabelle data compatibili</b> con Bravo.</div>Se applichi qualche modifica, queste tabelle verranno aggiornate ma le relazioni rimarranno intatte.`,
