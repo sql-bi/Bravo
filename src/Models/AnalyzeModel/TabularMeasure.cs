@@ -1,6 +1,7 @@
 ﻿namespace Sqlbi.Bravo.Models.AnalyzeModel
 {
     using Sqlbi.Bravo.Infrastructure.Extensions;
+    using Sqlbi.Bravo.Infrastructure.Services.ManageDates;
     using Sqlbi.Bravo.Models.FormatDax;
     using System.Diagnostics;
     using System.Linq;
@@ -10,8 +11,6 @@
     [DebuggerDisplay("'{TableName}'[{Name}]")]
     public class TabularMeasure
     {
-        private const string SqlbiDaxTemplateTimeIntelligenceMeasureAnnotation = "SQLBI_Template";
-
         [JsonPropertyName("etag")]
         public string? ETag { get; set; }
 
@@ -56,7 +55,7 @@
             if (tomMeasure is not null)
             {
                 measure.IsHidden = tomMeasure.IsHidden;
-                measure.IsManageDatesTimeIntelligence = tomMeasure.Annotations.Contains(SqlbiDaxTemplateTimeIntelligenceMeasureAnnotation);
+                measure.IsManageDatesTimeIntelligence = tomMeasure.Annotations.Contains(DaxTemplateManager.SqlbiDaxTemplateAnnotation);
             }
 
             return measure;

@@ -23,13 +23,12 @@
                 BitConverter.GetBytes(lastUpdate.Ticks)
             };
 
-            var hash = Cryptography.MD5Hash(buffers);
-            return hash;
+            var etag = Cryptography.MD5Hash(buffers);
+            return etag;
         }
-
         public static DatabaseUpdateResult Update(TOM.Database database, IEnumerable<FormattedMeasure> measures)
         {
-            var databaseETag = GetDatabaseETag(database.Name, database.Version, database.LastUpdate);
+            var databaseETag = database.GetETag(refresh: false);
 
             foreach (var formattedMeasure in measures)
             {
@@ -48,11 +47,8 @@
 
             if (database.Model.HasLocalChanges)
             {
-                database.Update();
                 database.Model.SaveChanges().ThrowOnError();
-
-                database.Refresh();
-                databaseETag = GetDatabaseETag(database.Name, database.Version, database.LastUpdate);
+                databaseETag = database.GetETag();
             }
 
             var updateResult = new DatabaseUpdateResult
