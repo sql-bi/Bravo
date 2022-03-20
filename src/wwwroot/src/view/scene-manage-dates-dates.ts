@@ -4,13 +4,10 @@
  * https://www.sqlbi.com
 */
 
-import { OptionsStore } from '../controllers/options';
 import { OptionStruct, OptionType, Renderer } from '../helpers/renderer';
-import { Utils, _ } from '../helpers/utils';
-import { Doc } from '../model/doc';
-import { I18n, i18n } from '../model/i18n';
+import { _ } from '../helpers/utils';
+import { i18n } from '../model/i18n';
 import { strings } from '../model/strings';
-import { ManageDatesConfig } from './scene-manage-dates';
 import { ManageDatesScenePane } from './scene-manage-dates-pane';
 
 export class ManageDatesSceneDates extends ManageDatesScenePane {
@@ -71,14 +68,10 @@ export class ManageDatesSceneDates extends ManageDatesScenePane {
         ["tr-TR", "Turkish (Turkey)"]
     ];
 
-    constructor(config: OptionsStore<ManageDatesConfig>, doc: Doc) {
-        super(config, doc);
-        
-        this.getRegion();
-    }
-
     render(element: HTMLElement) {
         super.render(element);
+
+        this.getRegion();
 
         let optionsStruct: OptionStruct[] = [
             {
@@ -87,7 +80,11 @@ export class ManageDatesSceneDates extends ManageDatesScenePane {
                 description: i18n(strings.manageDatesISOFormatDesc),
                 icon: "iso-format",
                 type: OptionType.select,
-                values: [...this.regions, ...[["{custom}", i18n(strings.manageDatesISOFormatOther)]]]
+                values: [
+                    ["", i18n(strings.modelLanguage, { culture: this.doc.model.culture})], 
+                    ...this.regions, 
+                    ["{custom}", i18n(strings.manageDatesISOFormatOther)]
+                ]
             },
             {
                 option: "customRegion",
@@ -143,14 +140,8 @@ export class ManageDatesSceneDates extends ManageDatesScenePane {
             region = this.config.options.isoFormat;
             customRegion = this.config.options.isoFormat;
         } else {
-            let locale = navigator.language; //I18n.instance.locale.locale; This is a limited subset of available languages
-            if (this.regions.filter(culture => culture[0] == locale).length > 0) {
-                region = locale;
-                customRegion = locale;
-            } else {
-                region = "{custom}";
-                customRegion = locale;
-            }
+            region = "";
+            customRegion = this.doc.model.culture;
         }
 
         this.config.options.region = region;
@@ -161,9 +152,9 @@ export class ManageDatesSceneDates extends ManageDatesScenePane {
     setRegion() {
         let region = this.config.options.region;
         if (region == "{custom}") region = this.config.options.customRegion;
-        if (!region) region = "en-US";
+        if (!region) region = this.doc.model.culture;
 
-        this.config.options.isoFormat = region;
+        this.config.options.isoFormat = (region == this.doc.model.culture ? null : region); //Business logic needed by the library
         this.config.options.isoTranslation = region;
         this.config.save();
     }

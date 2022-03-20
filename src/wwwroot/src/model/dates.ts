@@ -8,6 +8,7 @@ export interface DateConfiguration {
     
     // Template
     templateUri?: string                            // Internal use only
+    isCurrent?: boolean                             // True if the template is currently applied to the model
     name?: string                                   // Template name
     description?: string                            // English, not localized template description
     defaults?: DateDefaults                         // Specific options of selected template

@@ -5,7 +5,7 @@
 */
 
 import { Dic, Utils, _, __ } from '../helpers/utils';
-import { host, optionsController } from '../main';
+import { host, optionsController, telemetry } from '../main';
 import { ManageDatesPBIDesktopReportConfigurationRequest, ManageDatesPreviewChangesFromPBIDesktopReportRequest } from '../controllers/host';
 import { DateConfiguration } from '../model/dates';
 import { Doc } from '../model/doc';
@@ -114,7 +114,7 @@ export class ManageDatesPreviewScene extends DocScene {
                             id: table.name,
                             name: table.name,
                             type: BranchType.Table,
-                            dataType: "table", //table.isDateTable ? "date-table" : "table",
+                            dataType: "table",  //table.isDateTable ? "date-table" : "table",
                             isHidden: table.isHidden,
                             attributes: tableAttribute,
                             _children: []
@@ -202,15 +202,8 @@ export class ManageDatesPreviewScene extends DocScene {
 
             (<any>changes)[`${group}Objects`].forEach((table: TableChanges) => {
 
-                let tableAttribute = groupAttribute;
-
                 if (table.measures && table.measures.length) {
                     if (!(table.name in branches)) {
-
-                        if (tableAttribute == ChangeType.Modified) {
-                            if (this.doc.model.tables.findIndex(t => t.name === table.name) < 0)
-                                tableAttribute = ChangeType.Added;
-                        }
 
                         branches[table.name] = {
                             id: table.name,
@@ -219,7 +212,7 @@ export class ManageDatesPreviewScene extends DocScene {
                             dataType: "table", //table.isDateTable ? "date-table" : "table",
                             isHidden: table.isHidden,
                             isInactive: true,
-                            attributes: tableAttribute,
+                            attributes: ChangeType.Modified, //We don't delete tables with this feature
                             _children: []
                         };
 
@@ -229,21 +222,30 @@ export class ManageDatesPreviewScene extends DocScene {
                     }
 
                     table.measures.forEach(measure => {
-                        
-                        let measureAttributes = tableAttribute;
-                        if (measureAttributes == ChangeType.Modified) {
-                            if (this.doc.measures.findIndex(m => m.tableName === table.name && m.name === measure.name) < 0)
-                                measureAttributes = ChangeType.Added;
-                        }
 
                         let folders = (measure.displayFolder ? measure.displayFolder.split("\\") : []);
                 
                         if (!("_children" in branches[table.name]))
                             branches[table.name]._children = [];
 
+                        let path = "";
                         let b = branches[table.name]._children;
                         folders.forEach(folder => {
+
+                            if (path != "") path += "\\";
+                            path += folder;
+
                             if (folder.trim() == "" || !b) return;
+                            
+                            let folderAttributes = groupAttribute;
+                            let pathExistsInOtherMeasures = (this.doc.measures.findIndex(m => m.tableName === table.name && m.displayFolder.startsWith(path)) >= 0);
+                            if (pathExistsInOtherMeasures) {
+                                if (folderAttributes == ChangeType.Deleted)
+                                    folderAttributes = ChangeType.Modified;
+                            } else {
+                                if (folderAttributes == ChangeType.Modified)
+                                    folderAttributes = ChangeType.Added;
+                            }
 
                             let i = b.findIndex(n => n.name === folder);
                             if (i >= 0) {
@@ -256,12 +258,19 @@ export class ManageDatesPreviewScene extends DocScene {
                                     isHidden: false,
                                     isInactive: true,
                                     dataType: "folder",
+                                    attributes: folderAttributes,
                                     _children: []
                                 });
                                 b = b[b.length - 1]._children;
                             }
                             
                         });
+
+                        let measureAttributes = groupAttribute;
+                        if (measureAttributes == ChangeType.Modified) {
+                            if (this.doc.measures.findIndex(m => m.tableName === table.name && m.name === measure.name) < 0)
+                                measureAttributes = ChangeType.Added;
+                        }
 
                         let id = daxName(table.name, measure.name);
                         b.push({
@@ -283,6 +292,7 @@ export class ManageDatesPreviewScene extends DocScene {
 
     loadSampleData(changes: ModelChanges) {
 
+        //Fix initial line carriage
         const fixCrLn = (expression: string) => expression.replace(/^\r?\n/, "");
 
         let previews: Dic<PreviewData> = {};
@@ -292,26 +302,34 @@ export class ManageDatesPreviewScene extends DocScene {
             (<any>changes)[`${group}Objects`].forEach((table: TableChanges) => {
 
                 if (table.preview || table.expression) {
-                    previews[table.name] = {};
+                    let key = table.name;
+                    if (!(key in previews))
+                        previews[key] = {};
+
                     if (table.preview) 
-                        previews[table.name].table = table.preview;
+                        previews[key].table = table.preview;
                     if (table.expression)
-                        previews[table.name].expression = fixCrLn(table.expression);
+                        previews[key].expression = fixCrLn(table.expression);
                 }
                 
                 if (table.columns && table.preview) {
                     table.columns.forEach(column => {
-                        previews[daxName(table.name, column.name)] = { 
-                            table: table.preview.map(row => ({ [column.name]: row[column.name] }))
-                        };
+                        let key = daxName(table.name, column.name);
+                        if (!(key in previews))
+                            previews[key] = {};
+
+                        previews[key].table = table.preview.map(row => ({ [column.name]: row[column.name] }));
                     });
                 }
 
                 table.measures.forEach(measure => {
-                    if (measure.expression)
-                        previews[daxName(table.name, measure.name)] = { 
-                            expression: fixCrLn(measure.expression) 
-                        };
+                    if (measure.expression) {
+                        let key = daxName(table.name, measure.name);
+                        if (!(key in previews))
+                            previews[key] = {};
+
+                        previews[key].expression = fixCrLn(measure.expression);
+                    }
                 });
             });
         });
@@ -321,8 +339,8 @@ export class ManageDatesPreviewScene extends DocScene {
 
     renderPreview(changes: ModelChanges) {
 
-        let hasHolidays = (this.dateConfig.holidaysAvailable && this.dateConfig.holidaysEnabled);
-        let hasTimeIntelligence = (this.dateConfig.timeIntelligenceAvailable && this.dateConfig.timeIntelligenceEnabled);
+        let hasHolidays = this.hasHolidays(changes);
+        let hasTimeIntelligence = this.hasTimeIntelligence(changes);
 
         let html = `
             <div class="cols">
@@ -334,7 +352,7 @@ export class ManageDatesPreviewScene extends DocScene {
             </div>
             <div class="scene-action">
                 <div class="backup-reminder">
-                    <div class="icon icon-save"></div>
+                    <div class="icon icon-info"></div>
                     <p>${i18n(strings.backupReminder)}</p>
                 </div>
                 <div class="do-proceed button enable-if-editable" disabled>${i18n(strings.manageDatesApplyCtrlTitle)}</div>
@@ -432,8 +450,40 @@ export class ManageDatesPreviewScene extends DocScene {
         });
     }
 
+    hasHolidays(changes: ModelChanges): boolean {
+       
+        let available = (this.dateConfig.holidaysAvailable && this.dateConfig.holidaysEnabled);
+        ["modified", "removed"].forEach(group => {
+            if (available) return;
+            (<any>changes)[`${group}Objects`].forEach((table: TableChanges) => {
+                if (table.name == this.dateConfig.holidaysDefinitionTableName || table.name == this.dateConfig.holidaysTableName) {
+                    available = true;
+                    return;
+                }
+            });
+        });
+        return available;
+    }
+
+    hasTimeIntelligence(changes: ModelChanges): boolean {
+
+        let available = (this.dateConfig.timeIntelligenceAvailable && this.dateConfig.timeIntelligenceEnabled);
+        ["modified", "removed"].forEach(group => {
+            if (available) return;
+            (<any>changes)[`${group}Objects`].forEach((table: TableChanges) => {
+                if (table.measures && table.measures.length) {
+                    available = true;
+                    return;
+                }
+            });
+        });
+        return available;
+    }
+
     applyChanges() {
 
+        telemetry.track("Manage Dates: Apply");
+        
         let savingScene = new LoaderScene(Utils.DOM.uniqueId(), this.element.parentElement, i18n(strings.manageDatesCreatingTables));
         this.push(savingScene);
 
@@ -506,9 +556,7 @@ export class ManageDatesPreviewScene extends DocScene {
 
         browser.on("loaded", ()=>{
             if (!this.canEdit) return;
-            window.setTimeout(() => {
-                this.applyButton.toggleAttr("disabled", false);
-            }, 3000);
+            this.applyButton.toggleAttr("disabled", false);
         });
 
         browser.on("deactivate", ()=>{
@@ -562,12 +610,15 @@ export class ManageDatesPreviewScene extends DocScene {
     updateTable(data: any[]) {
         this.clearTable();
 
+        let columnsCount = (data.length ? Object.keys(data[0]).length : 0);
         this.sampleTable = new Tabulator(`#${this.element.id} .table-preview`, {
             maxHeight: "100%",
             //layout: "fitDataTable",
             placeholder: " ", // This fixes scrollbar appearing with empty tables
             columnDefaults:{
-                maxWidth: 200,
+                maxWidth: (columnsCount > 4 ? 100 : 1000),
+                tooltip: true,
+                headerTooltip: true
             },
             autoColumns: true,
             data: data

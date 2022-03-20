@@ -156,7 +156,7 @@ export class OptionsController extends OptionsStore<Options> {
         customOptions: {
             sidebarCollapsed: false,
             loggedInOnce: false,
-            locale: navigator.language,
+            locale: CONFIG.culture.ietfLanguageTag, //navigator.language,
             formatting: {
                 preview: false,
                 previewLayout: MultiViewPaneMode.Tabs,

@@ -401,6 +401,7 @@ export class DaxFormatterScene extends DocScene {
             columns.push({ 
                 field: "name", 
                 title: i18n(strings.tableColMeasure),
+                tooltip: true,
                 cssClass: "column-name",
                 bottomCalc: this.canFormat ? "count" : null,
                 bottomCalcFormatter: (cell)=> i18n(strings.tableSelectedCount, {count: this.table.getSelectedData().length}),
@@ -431,6 +432,8 @@ export class DaxFormatterScene extends DocScene {
 
                         let element = row.getElement();
                         element.classList.remove("row-error", "row-highlighted");
+                        if (measure.isHidden)
+                            element.classList.add("row-hidden");
 
                         const status = this.doc.analizeMeasure(measure);
                         if (status == MeasureStatus.WithErrors) {
@@ -500,7 +503,7 @@ export class DaxFormatterScene extends DocScene {
             }
         });
 
-        _(".summary p", this.element).innerHTML = i18n(strings.daxFormatterSummary, summary);
+        _(".summary p", this.element).innerHTML = i18n(summary.analyzable ? strings.daxFormatterSummary : strings.daxFormatterSummaryNoAnalysis, summary);
     }
 
     getFormatDaxRequest(measures: TabularMeasure[]): FormatDaxRequest {

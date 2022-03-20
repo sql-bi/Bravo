@@ -5,7 +5,7 @@
 */
 
 import { OptionStruct, OptionType, Renderer } from '../helpers/renderer';
-import { Utils, _ } from '../helpers/utils';
+import { _ } from '../helpers/utils';
 import { DateISOCOuntries } from '../model/dates';
 import { i18n } from '../model/i18n';
 import { strings } from '../model/strings';

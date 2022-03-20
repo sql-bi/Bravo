@@ -14,14 +14,12 @@ import { Branch, BranchType, TabularBrowser } from './tabular-browser';
 
 export class ManageDatesSceneInterval extends ManageDatesScenePane {
 
-    columnBrowser: TabularBrowser;
-
     render(element: HTMLElement) {
         super.render(element);
 
         let optionsStruct: OptionStruct[] = [
             {
-                option: "autoscan",
+                option: "autoScan",
                 icon: "date-scan",
                 name: i18n(strings.manageDatesAutoScan),
                 description: i18n(strings.manageDatesAutoScanDesc),
@@ -39,38 +37,36 @@ export class ManageDatesSceneInterval extends ManageDatesScenePane {
             {
                 option: "onlyTablesColumns",
                 cssClass: "contains-tabular-browser",
-                parent: "autoscan",
+                parent: "autoScan",
                 toggledBy: {
-                    option: "autoscan",
+                    option: "autoScan",
                     value: AutoScanEnum.SelectedTablesColumns
                 },
                 type: OptionType.custom
             },
             {
                 option: "firstYear",
-                parent: "autoscan",
+                parent: "autoScan",
                 toggledBy: {
-                    option: "autoscan",
+                    option: "autoScan",
                     value: AutoScanEnum.Disabled
                 },
                 name: i18n(strings.manageDatesAutoScanFirstYear),
                 description: i18n(strings.manageDatesAutoScanFirstYearDesc),
                 type: OptionType.number,
-                range: [1970],
-                value: new Date().getFullYear()
+                range: [1970]
             },
             {
                 option: "lastYear",
-                parent: "autoscan",
+                parent: "autoScan",
                 toggledBy: {
-                    option: "autoscan",
+                    option: "autoScan",
                     value: AutoScanEnum.Disabled
                 },
                 name: i18n(strings.manageDatesAutoScanLastYear),
                 description: i18n(strings.manageDatesAutoScanLastYearDesc),
                 type: OptionType.number,
-                range: [1970],
-                value: new Date().getFullYear()
+                range: [1970]
             },
         ];
 
@@ -84,12 +80,13 @@ export class ManageDatesSceneInterval extends ManageDatesScenePane {
             Renderer.Options.render(struct, _(".options", element), this.config);
         });
 
-        this.columnBrowser = new TabularBrowser(Utils.DOM.uniqueId(), _("#onlytablescolumns", element), this.modelToBranches(), {
+        let columnBrowser = new TabularBrowser(Utils.DOM.uniqueId(), _("#onlytablescolumns", element), this.modelToBranches(), {
             selectable: true, 
-            search: true
+            search: true,
+            initialSelected: this.config.options.onlyTablesColumns
         });
         
-        this.columnBrowser.on("select", (columns: string[]) => {
+        columnBrowser.on("select", (columns: string[]) => {
             this.config.update("onlyTablesColumns", columns);
         });
 
@@ -132,19 +129,5 @@ export class ManageDatesSceneInterval extends ManageDatesScenePane {
         }
         
         return Object.values(branches);
-    }
-
-    update() {
-        super.update();
-
-        if (this.columnBrowser) {
-            this.columnBrowser.branches = this.modelToBranches();
-            this.columnBrowser.update();
-        }
-    }
-
-    destroy() {
-        this.columnBrowser = null;
-        super.destroy();
     }
 }

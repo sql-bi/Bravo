@@ -7,7 +7,7 @@
 import { OptionsStore } from '../controllers/options';
 import { Loader } from '../helpers/loader';
 import { Dic, Utils, _ } from '../helpers/utils';
-import { host } from '../main';
+import { host, telemetry } from '../main';
 import { DateConfiguration, TableValidation } from '../model/dates';
 import { Doc } from '../model/doc';
 import { AppError } from '../model/exceptions';
@@ -25,6 +25,9 @@ import { ManageDatesSceneTimeIntelligence } from './scene-manage-dates-time-inte
 import { ManageDatesPreviewScene } from './scene-manage-dates-preview';
 import { PageType } from '../controllers/page';
 import { ManageDatesScenePane } from './scene-manage-dates-pane';
+import Split, { SplitObject } from "split.js";
+import { Tabulator } from 'tabulator-tables';
+import { ManageDatesPreviewChangesFromPBIDesktopReportRequest } from '../controllers/host';
 
 export interface ManageDatesConfig extends DateConfiguration {
     region?: string
@@ -39,12 +42,8 @@ export class ManageDatesScene extends DocScene {
     config: OptionsStore<ManageDatesConfig>;
     previewButton: HTMLElement;
     panes: ManageDatesScenePane[] = [];
-    
-    //TODO Remove to enable manage dates
-    /*get supported() {
-        return false; 
-    }*/
-    //ENDTODO
+    sampleTable: Tabulator;
+    scheduledUpdateTimeout: number;
     
     constructor(id: string, container: HTMLElement, doc: Doc, type: PageType) {
         super(id, container, [doc.name, i18n(strings.ManageDates)], doc, type, true); 
@@ -70,6 +69,11 @@ export class ManageDatesScene extends DocScene {
                 </div>
             </div>
 
+            <div class="instant-preview">
+                <div class="notice">${i18n(strings.manageDatesInstantPreview)}</div>
+                <div class="table-preview">${Loader.html(true)}</div>
+            </div>
+
             <div class="scene-action">
                 <div class="do-proceed button disable-on-syncing enable-if-editable" disabled>${i18n(strings.manageDatesPreviewCtrlTitle)}</div>
             </div>
@@ -82,28 +86,27 @@ export class ManageDatesScene extends DocScene {
         let menuContainer = _(".date-config", this.body);
         let loader = new Loader(menuContainer, true, true);
 
-        host.manageDatesGetConfigurations(<PBIDesktopReport>this.doc.sourceData)
+        Split([`#${this.element.id} .cols`, `#${this.element.id} .instant-preview`], {
+            sizes: [75, 25], 
+            minSize: [400, 30],
+            gutterSize: 20,
+            direction: "vertical",
+            cursor: "ns-resize"
+        });
+
+        this.getDatesConfiguration()
             .then(templates => {
                 loader.remove();
 
-                if (!templates.length) {
-                    let errorScene = new ErrorScene(Utils.DOM.uniqueId(), this.element.parentElement, AppError.InitFromResponseStatus(Utils.ResponseStatusCode.InternalError));
-                    this.splice(errorScene);
-                    return;
-                }
-
-                this.config.options = Utils.Obj.clone(templates[0]);
-                this.config.options.dateEnabled = true;
-
                 let calendarPane = new ManageDatesSceneCalendar(this.config, this.doc, templates);
                 this.panes.push(calendarPane);
-                let intervalPane = new ManageDatesSceneInterval(this.config, this.doc);
+                let intervalPane = new ManageDatesSceneInterval(this.config, this.doc, templates);
                 this.panes.push(intervalPane);
-                let datesPane = new ManageDatesSceneDates(this.config, this.doc);
+                let datesPane = new ManageDatesSceneDates(this.config, this.doc, templates);
                 this.panes.push(datesPane);
-                let holidaysPane = new ManageDatesSceneHolidays(this.config, this.doc);
+                let holidaysPane = new ManageDatesSceneHolidays(this.config, this.doc, templates);
                 this.panes.push(holidaysPane);
-                let timeIntelligencePane = new ManageDatesSceneTimeIntelligence(this.config, this.doc);
+                let timeIntelligencePane = new ManageDatesSceneTimeIntelligence(this.config, this.doc, templates);
                 this.panes.push(timeIntelligencePane);
 
                 this.menu = new Menu("date-config-menu", menuContainer, <Dic<MenuItem>>{
@@ -145,9 +148,94 @@ export class ManageDatesScene extends DocScene {
             });
     }
 
+    getDatesConfiguration() {
+    
+        return host.manageDatesGetConfigurations(<PBIDesktopReport>this.doc.sourceData)
+        .then(templates => {
+           
+            if (!templates.length)
+                throw AppError.InitFromResponseStatus(Utils.ResponseStatusCode.InternalError);
+
+            //Remove templates duplicates and assign current
+            let currentTemplate: DateConfiguration;
+            let uniqueTemplates:Dic<DateConfiguration> = {};
+            templates.forEach(template => {
+
+                if (!currentTemplate || template.isCurrent)
+                    currentTemplate = template;
+
+                if (template.templateUri in uniqueTemplates) {
+                    if (template.isCurrent)
+                        uniqueTemplates[template.templateUri] = template;
+                } else {
+                    uniqueTemplates[template.templateUri] = template;
+                }
+            });
+
+            this.config.options = Utils.Obj.clone(currentTemplate);
+            this.config.options.dateEnabled = true;
+            this.config.save();
+
+            return Object.values(uniqueTemplates);
+        });
+    }
+
+    generatePreview() {
+
+        this.clearTable();
+        new Loader(_(".table-preview", this.element), false, true);
+        let request: ManageDatesPreviewChangesFromPBIDesktopReportRequest = {
+            settings: {
+                configuration: this.config.options,
+                previewRows: 20
+            },
+            report: <PBIDesktopReport>this.doc.sourceData
+        }
+        
+        host.manageDatesPreviewChanges(request)
+            .then(changes => {
+                let preview = [];
+                if ("modifiedObjects" in changes) {
+                    for (let i = 0; i < changes.modifiedObjects.length; i++) {
+                        let table = changes.modifiedObjects[i];
+                        if (table.name == this.config.options.dateTableName && table.preview) {
+                            preview = table.preview;
+                            break;
+                        }
+                    }
+                }
+                this.updateTable(preview);
+            })
+            .catch(ignore => {});
+    }
+
+    updateTable(data: any[]) {
+        this.clearTable();
+
+        this.sampleTable = new Tabulator(`#${this.element.id} .table-preview`, {
+            maxHeight: "100%",
+            //layout: "fitColumns",
+            placeholder: " ", // This fixes scrollbar appearing with empty tables
+            columnDefaults:{
+                maxWidth: 100,
+                tooltip: true,
+                headerTooltip: true
+            },
+            autoColumns: true,
+            data: data
+        });
+    }
+
+    clearTable () {
+        if (this.sampleTable) {
+            this.sampleTable.destroy();
+            this.sampleTable = null;
+        }
+    }
+
     listen() {
         this.config.on("change", (changedOptions: any)=>{
-            this.updateModelCheck();
+            this.scheduleUpdate();
         });
 
         this.config.on("availability.change", (changedOptions: any)=>{
@@ -159,20 +247,40 @@ export class ManageDatesScene extends DocScene {
 
             if (!this.canEdit) return;
 
+            telemetry.track("Manage Dates: Preview");
+
             let previewScene = new ManageDatesPreviewScene(Utils.DOM.uniqueId(), this.element.parentElement, this.path, this.doc, this.type, this.config.options);
             this.push(previewScene);
         }); 
     }
 
+    scheduleUpdate() {
+        if (this.scheduledUpdateTimeout) return;
+
+        this.scheduledUpdateTimeout = window.setTimeout(()=> {
+            this.updateModelCheck();
+            this.generatePreview();
+            this.scheduledUpdateTimeout = null;
+        }, 500);
+    }
+
     update() {
         if (!super.update()) return false;
 
-        this.updateModelCheck();
-        this.updateAvailableFeatures();
+        this.getDatesConfiguration()
+            .then(templates => {
 
-        this.panes.forEach(pane => {
-            pane.update();
-        });
+                this.updateAvailableFeatures();
+
+                this.panes.forEach(pane => {
+                    pane.templates = templates;
+                    pane.update();
+                });
+            })
+            .finally(()=>{
+                this.updateModelCheck();
+                this.generatePreview();
+            })
     }
 
     updateAvailableFeatures() {
@@ -248,6 +356,7 @@ export class ManageDatesScene extends DocScene {
     }
 
     destroy() {
+        this.clearTable();
         this.menu.destroy();
         this.menu = null;
         this.config = null;
