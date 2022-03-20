@@ -12,6 +12,7 @@
     using System.Collections.Generic;
     using System.Net.Mime;
     using System.Threading;
+    using System.Threading.Tasks;
 
     /// <summary>
     /// Application controller
@@ -209,16 +210,15 @@
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(BravoUpdate))]
         [ProducesDefaultResponseType]
-        public IActionResult GetCurrentVersion(UpdateChannelType updateChannel)
+        public async Task<IActionResult> GetCurrentVersion(UpdateChannelType updateChannel, bool notify = false, CancellationToken cancellationToken = default)
         {
-            BravoUpdate? bravoUpdate = null;
+            var update = await CommonHelper.CheckForUpdateAsync(updateChannel, cancellationToken);
 
-            CommonHelper.CheckForUpdate(updateChannel, synchronousCallback: true, throwOnError: true, (update) =>
-            {
-                bravoUpdate = update;
-            });
+            // TODO: remove the syncronous method 'AppWindow.CheckForUpdate' and use the asynchronous 'api/GetCurrentVersion(.., nodify = true)' instead
+            if (notify)
+                NotificationHelper.NotifyUpdateAvailable(update);
 
-            return Ok(bravoUpdate);
+            return Ok(update);
         }
     }
 }

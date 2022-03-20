@@ -1,11 +1,14 @@
 ﻿namespace Sqlbi.Bravo.Infrastructure.Helpers
 {
-    using AutoUpdaterDotNET;
     using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
     using Sqlbi.Bravo.Infrastructure.Windows.Interop;
     using Sqlbi.Bravo.Models;
     using System;
+    using System.Net.Http;
+    using System.Threading;
+    using System.Threading.Tasks;
     using System.Windows.Forms;
+    using System.Xml.Linq;
 
     internal static class CommonHelper
     {
@@ -31,44 +34,33 @@
             return state.HasFlag(User32.KeyState.Down);
         }
 
-        public static void CheckForUpdate(UpdateChannelType updateChannel, bool synchronousCallback, bool throwOnError, Action<BravoUpdate> updateCallback)
+        public static void CheckForUpdate(UpdateChannelType updateChannel, Action<BravoUpdate> updateCallback, CancellationToken cancellationToken = default)
         {
-            BravoUnexpectedException.Assert(AppEnvironment.IsPackagedAppInstance == false);
-
-            AutoUpdater.AppCastURL = updateChannel switch
-            {
-                // TODO: CheckForUpdate - add update channel URLs
-                _ => string.Format("https://cdn.sqlbi.com/updates/BravoAutoUpdater.xml?nocache={0}", DateTimeOffset.Now.ToUnixTimeSeconds()),
-            };
-            AutoUpdater.HttpUserAgent = "AutoUpdater";
-            AutoUpdater.Synchronous = synchronousCallback;
-            //AutoUpdater.PersistenceProvider = new JsonFilePersistenceProvider(jsonPath: Path.Combine(AppEnvironment.ApplicationDataPath, "autoupdater.json"));
-            AutoUpdater.CheckForUpdateEvent += OnUpdate;
-            AutoUpdater.InstalledVersion = Version.Parse(AppEnvironment.ApplicationFileVersion);
-            AutoUpdater.Start();
-
-            void OnUpdate(UpdateInfoEventArgs updateInfo)
+            _ = Task.Factory.StartNew(async () =>
             {
                 try
                 {
-                    if (updateInfo.Error is not null)
-                    {
-                        TelemetryHelper.TrackException(updateInfo.Error);
-
-                        if (throwOnError)
-                            throw updateInfo.Error;
-                    }
-                    else if (updateInfo.IsUpdateAvailable)
-                    {
-                        var bravoUpdate = BravoUpdate.CreateFrom(updateChannel, updateInfo);
-                        updateCallback(bravoUpdate);
-                    }
+                    var bravoUpdate = await CheckForUpdateAsync(updateChannel, cancellationToken);
+                    updateCallback(bravoUpdate);
                 }
-                finally
+                catch (Exception ex)
                 {
-                    AutoUpdater.CheckForUpdateEvent -= OnUpdate;
+                    AppEnvironment.AddDiagnostics($"{ nameof(CommonHelper) }.{ nameof(CheckForUpdate) }", ex);
+                    TelemetryHelper.TrackException(ex);
                 }
-            }
+            });
+        }
+
+        public async static Task<BravoUpdate> CheckForUpdateAsync(UpdateChannelType updateChannel, CancellationToken cancellationToken)
+        {
+            using var httpClient = new HttpClient();
+
+            var requestUri = string.Format("https://cdn.sqlbi.com/updates/BravoAutoUpdater.xml?nocache={0}", DateTimeOffset.Now.ToUnixTimeSeconds());
+            var text = await httpClient.GetStringAsync(requestUri, cancellationToken).ConfigureAwait(false);
+            var document = XDocument.Parse(text);
+            var bravoUpdate = BravoUpdate.CreateFrom(updateChannel, document);
+
+            return bravoUpdate;
         }
     }
 }
