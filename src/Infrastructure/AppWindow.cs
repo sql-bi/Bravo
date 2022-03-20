@@ -168,7 +168,7 @@
             if (AppEnvironment.IsPackagedAppInstance)
                 return;
 
-            CommonHelper.CheckForUpdate(UserPreferences.Current.UpdateChannel, synchronousCallback: false, throwOnError: false, updateCallback: (bravoUpdate) =>
+            CommonHelper.CheckForUpdate(UserPreferences.Current.UpdateChannel, updateCallback: (bravoUpdate) =>
             {
                 // HACK: see issue https://github.com/tryphotino/photino.NET/issues/87
                 // Wait a bit in order to ensure that the PhotinoWindow message loop is started

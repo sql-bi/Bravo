@@ -1,8 +1,9 @@
 ﻿namespace Sqlbi.Bravo.Models
 {
-    using AutoUpdaterDotNET;
+    using Sqlbi.Bravo.Infrastructure;
     using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
     using System.Text.Json.Serialization;
+    using System.Xml.Linq;
 
     public interface IUpdateInfo
     {
@@ -34,16 +35,20 @@
         [JsonPropertyName("changelogUrl")]
         public string? ChangelogUrl { get; set; }
 
-        public static BravoUpdate CreateFrom(UpdateChannelType updateChannel, UpdateInfoEventArgs updateInfo)
+        public static BravoUpdate CreateFrom(UpdateChannelType updateChannel, XDocument document)
         {
             var bravoUpdate = new BravoUpdate
             {
                 UpdateChannel = updateChannel,
-                DownloadUrl = updateInfo.DownloadURL,
-                ChangelogUrl = updateInfo.ChangelogURL,
-                CurrentVersion = updateInfo.CurrentVersion,
-                InstalledVersion = updateInfo.InstalledVersion.ToString(),
+                InstalledVersion = AppEnvironment.ApplicationFileVersion,
             };
+
+            if (document.Root is not null)
+            {
+                bravoUpdate.DownloadUrl = document.Root.Element("url")?.Value;
+                bravoUpdate.ChangelogUrl = document.Root.Element("changelog")?.Value;
+                bravoUpdate.CurrentVersion = document.Root.Element("version")?.Value;
+            }
 
             return bravoUpdate;
         }
