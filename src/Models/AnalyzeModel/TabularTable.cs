@@ -7,10 +7,13 @@
     using System.Diagnostics;
     using System.Linq;
     using System.Text.Json.Serialization;
+    using TOM = Microsoft.AnalysisServices.Tabular;
 
     [DebuggerDisplay("{Name}")]
     public class TabularTable
     {
+        private const string SqlbiDaxTemplateTableAnnotation = "SQLBI_Template";
+
         [JsonPropertyName("features")]
         public TabularTableFeature Features { get; set; } = TabularTableFeature.All;
 
@@ -31,6 +34,9 @@
 
         [JsonPropertyName("isHidden")]
         public bool? IsHidden { get; set; }
+
+        [JsonPropertyName("isManageDates")]
+        public bool? IsManageDates { get; set; }
 
         internal static TabularTable CreateFromDmvTables(IDataReader reader, string[] tablesWithColumns)
         {
@@ -53,7 +59,7 @@
             return table;
         }
 
-        internal static TabularTable CreateFrom(VpaTable vpaTable, Dax.Metadata.Model daxModel)
+        internal static TabularTable CreateFrom(VpaTable vpaTable, TOM.Model? tomModel = default)
         {
             var table = new TabularTable
             {
@@ -61,8 +67,16 @@
                 RowsCount = vpaTable.RowsCount,
                 Size = vpaTable.TableSize,
                 IsDateTable = vpaTable.IsDateTable,
-                IsHidden = daxModel.Tables.Single((t) => t.TableName.Name == vpaTable.TableName).IsHidden // TODO: VertipaqAnalyzer - add property VpaTable.IsHidden
+                IsHidden = null,
+                IsManageDates = null
             };
+
+            var tomTable = tomModel?.Tables.Find(table.Name);
+            if (tomTable is not null)
+            {
+                table.IsHidden = tomTable.IsHidden;
+                table.IsManageDates = tomTable.Annotations.Contains(SqlbiDaxTemplateTableAnnotation);
+            }
 
             if (vpaTable.ColumnsNumber == 0L || (vpaTable.ColumnsNumber == 1L && vpaTable.Columns.Single().IsRowNumber))
             {

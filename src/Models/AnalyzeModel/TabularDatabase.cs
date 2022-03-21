@@ -74,7 +74,7 @@
 
             var databaseETag = TabularModelHelper.GetDatabaseETag(vpaModel.Model.ModelName.Name, vpaModel.Model.Version, vpaModel.Model.LastUpdate);
             var databaseSize = includedColumns.Sum((c) => c.TotalSize);
-            var tables = includedTables.Select((t) => TabularTable.CreateFrom(t, daxModel)).ToArray();
+            var tables = includedTables.Select((t) => TabularTable.CreateFrom(t, connection?.Model)).ToArray();
             var columns = includedColumns.Select((c) => TabularColumn.CreateFrom(c, databaseSize)).ToArray();
             var measures = includedMeasures.Select((m) => TabularMeasure.CreateFrom(m, databaseETag, connection?.Model)).ToArray();
             var autoLineBreakStyle = measures.GetAutoLineBreakStyle();

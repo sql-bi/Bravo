@@ -61,14 +61,11 @@
     {
         public static TOM.Measure? Find(this TOM.Model? model, string tableName, string measureName)
         {
-            if (model is not null)
+            var table = model?.Tables.Find(tableName);
+            if (table is not null)
             {
-                var table = model.Tables.Find(tableName);
-                if (table is not null)
-                {
-                    var measure = table.Measures.Find(measureName);
-                    return measure;
-                }
+                var measure = table.Measures.Find(measureName);
+                return measure;
             }
 
             return null;
