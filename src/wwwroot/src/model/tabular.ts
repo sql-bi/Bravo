@@ -39,6 +39,7 @@ export interface TabularTable {
     rowsCount?: number
     size?: number
     isDateTable?: boolean
+    isManageDates?: boolean
     isHidden?: boolean
     features?: TabularTableFeature
     featureUnsupportedReasons?: TabularTableFeatureUnsupportedReason

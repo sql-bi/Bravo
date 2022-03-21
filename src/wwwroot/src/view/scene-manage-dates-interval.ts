@@ -98,12 +98,12 @@ export class ManageDatesSceneInterval extends ManageDatesScenePane {
         this.doc.model.tables 
             .sort((a, b) => a.name.localeCompare(b.name))
             .forEach(table => {
-                if (!(table.name in branches))
+                if (!(table.name in branches) && !table.isDateTable && !table.isManageDates)
                     branches[table.name] = {
                         id: table.name,
                         name: table.name,
                         type: BranchType.Table,
-                        dataType: table.isDateTable ? "date-table" : "table",
+                        dataType: "table",
                         isHidden: table.isHidden,
                         _children: []
                     };
