@@ -101,10 +101,6 @@
                 {
                     settings.TelemetryEnabled = Convert.ToBoolean(intValue);
                 }
-                else if(bool.TryParse(registryValue, out var boolValue))
-                {
-                    settings.TelemetryEnabled = boolValue;
-                }
             }
         }
     }
