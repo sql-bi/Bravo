@@ -6,8 +6,8 @@
   <String Id="PackageDescription">Bravo for Power BI</String>
   <String Id="PackageComments">This installer contains the logic and data required to install Bravo for Power BI</String>
   <String Id="MajorUpgradeDowngradeErrorMessage">A newer version of this application is already installed on this computer</String>
-  <String Id="CreateDesktopShortcut">Create Desktop Shortcut</String>
-  <String Id="CreateProgramMenuShortcut">Create Program Menu Shortcut</String>
+  <String Id="DesktopShortcutCheckBoxText">Create Desktop Shortcut</String>
+  <String Id="ProgramMenuShortcutCheckBoxText">Create Program Menu Shortcut</String>
   <String Id="TelemetryInstallTitleText">Telemetry and error reports:</String>
   <String Id="TelemetryInstallDescriptionText">Bravo for Power BI collects anonymous telemetry, which helps us improve the product. You can opt-out at any time by launching Bravo and navigating to Settings &gt; Telemetry.</String>
   <String Id="InstallerTelemetryCheckBoxText">Enable Installer Telemetry</String>

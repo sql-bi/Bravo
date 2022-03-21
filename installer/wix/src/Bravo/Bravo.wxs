@@ -44,17 +44,55 @@
     <WixVariable Id="WixUIDialogBmp" Value="..\assets\background.png" />
     <WixVariable Id="WixUIBannerBmp" Value="..\assets\banner.png" />
     <WixVariable Id="WixUILicenseRtf" Value="..\assets\license.rtf" />
-     
+
+    <Property Id="ARPNOREPAIR" Value="yes" />
     <Property Id="ARPPRODUCTICON">app.ico</Property>
     <Property Id="ARPURLINFOABOUT">$(var.AppUrlInfoAbout)</Property>
     <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
-    <Property Id="CREATEDESKTOPSHORTCUT" Value="1" Secure="yes" />
-    <Property Id="CREATEPROGRAMMENUSHORTCUT" Value="1" Secure="yes" />
-    <Property Id="APPLICATIONTELEMETRYENABLED" Value="1" Secure="yes" />
-    <Property Id="INSTALLERTELEMETRYENABLED" Value="1" Secure="yes" />
-    <Property Id="INSTALLERTELEMETRYENABLEDUNINSTALL" Secure="yes">
-      <RegistrySearch Id="installerTelemetryEnabled" Root="HKLM" Key="Software\[Manufacturer]\$(var.AppName)" Name="installerTelemetryEnabled" Type="raw" />
+
+    <!-- defines uninitialized properties and allows setting values from the commandline -->
+    <Property Id="DESKTOPSHORTCUTENABLED" Secure="yes" />
+    <Property Id="PROGRAMMENUSHORTCUTENABLED" Secure="yes" />
+    <Property Id="INSTALLERTELEMETRYENABLED" Secure="yes" />
+    <Property Id="APPLICATIONTELEMETRYENABLED" Secure="yes" />
+
+    <!-- "remember" properties allow to retain the settings of a previous installation, if any -->
+    <Property Id="DESKTOPSHORTCUTENABLEDREMEMBER">
+      <RegistrySearch Id="searchDesktopShortcutEnabledRemember" Root="HKLM" Key="Software\[Manufacturer]\$(var.AppName)" Name="desktopShortcutEnabled" Type="raw" Win64="$(var.Win64)" />
     </Property>
+    <Property Id="PROGRAMMENUSHORTCUTENABLEDREMEMBER">
+      <RegistrySearch Id="searchProgramMenuShortcutEnabledRemember" Root="HKLM" Key="Software\[Manufacturer]\$(var.AppName)" Name="programMenuShortcutEnabled" Type="raw" Win64="$(var.Win64)" />
+    </Property>
+    <Property Id="INSTALLERTELEMETRYENABLEDREMEMBER">
+      <RegistrySearch Id="searchInstallerTelemetryEnabledRemember" Root="HKLM" Key="Software\[Manufacturer]\$(var.AppName)" Name="installerTelemetryEnabled" Type="raw" Win64="$(var.Win64)" />
+    </Property>
+    <Property Id="APPLICATIONTELEMETRYENABLEDREMEMBER">
+      <RegistrySearch Id="searchApplicationTelemetryEnabledRemember" Root="HKLM" Key="Software\[Manufacturer]\$(var.AppName)" Name="applicationTelemetryEnabled" Type="raw" Win64="$(var.Win64)" />
+    </Property>
+    
+    <!-- Set 'remember' properties defalt value to '1' if the product is not installed or if their registry value is equal to '1' -->
+    <SetProperty Action="DefaultDESKTOPSHORTCUTENABLEDREMEMBER" Id="DESKTOPSHORTCUTENABLEDREMEMBER" Value="1" After="AppSearch" Sequence="ui"><![CDATA[NOT WIX_UPGRADE_DETECTED OR DESKTOPSHORTCUTENABLEDREMEMBER = "1"]]></SetProperty>
+    <SetProperty Action="DefaultPROGRAMMENUSHORTCUTENABLEDREMEMBER" Id="PROGRAMMENUSHORTCUTENABLEDREMEMBER" Value="1" After="AppSearch" Sequence="ui"><![CDATA[NOT WIX_UPGRADE_DETECTED OR PROGRAMMENUSHORTCUTENABLEDREMEMBER = "1"]]></SetProperty>
+    <SetProperty Action="DefaultINSTALLERTELEMETRYENABLEDREMEMBER" Id="INSTALLERTELEMETRYENABLEDREMEMBER" Value="1" After="AppSearch" Sequence="ui"><![CDATA[NOT WIX_UPGRADE_DETECTED OR INSTALLERTELEMETRYENABLEDREMEMBER = "1"]]></SetProperty>
+    <SetProperty Action="DefaultAPPLICATIONTELEMETRYENABLEDREMEMBER" Id="APPLICATIONTELEMETRYENABLEDREMEMBER" Value="1" After="AppSearch" Sequence="ui"><![CDATA[NOT WIX_UPGRADE_DETECTED OR APPLICATIONTELEMETRYENABLEDREMEMBER = "1"]]></SetProperty>
+
+    <!-- Undefine "remember" properties if their value exists and is <> '1', this is because an undefined property will result to an unchecked WiX CheckBox -->
+    <SetProperty Action="UndefineDESKTOPSHORTCUTENABLEDREMEMBER" Id="DESKTOPSHORTCUTENABLEDREMEMBER" Value="{}" After="AppSearch" Sequence="ui"><![CDATA[DESKTOPSHORTCUTENABLEDREMEMBER AND DESKTOPSHORTCUTENABLEDREMEMBER <> "1"]]></SetProperty>
+    <SetProperty Action="UndefinePROGRAMMENUSHORTCUTENABLEDREMEMBER" Id="PROGRAMMENUSHORTCUTENABLEDREMEMBER" Value="{}" After="AppSearch" Sequence="ui"><![CDATA[PROGRAMMENUSHORTCUTENABLEDREMEMBER AND PROGRAMMENUSHORTCUTENABLEDREMEMBER <> "1"]]></SetProperty>
+    <SetProperty Action="UndefineINSTALLERTELEMETRYENABLEDREMEMBER" Id="INSTALLERTELEMETRYENABLEDREMEMBER" Value="{}" After="AppSearch" Sequence="ui"><![CDATA[INSTALLERTELEMETRYENABLEDREMEMBER AND INSTALLERTELEMETRYENABLEDREMEMBER <> "1"]]></SetProperty>
+    <SetProperty Action="UndefineAPPLICATIONTELEMETRYENABLEDREMEMBER" Id="APPLICATIONTELEMETRYENABLEDREMEMBER" Value="{}" After="AppSearch" Sequence="ui"><![CDATA[APPLICATIONTELEMETRYENABLEDREMEMBER AND APPLICATIONTELEMETRYENABLEDREMEMBER <> "1"]]></SetProperty>
+
+    <!-- Overrides property value only if it has not been provided via the command line. Command line properties have a higher priority than registry settings. -->
+    <SetProperty Action="OverrideDESKTOPSHORTCUTENABLED" Id="DESKTOPSHORTCUTENABLED" Value="[DESKTOPSHORTCUTENABLEDREMEMBER]" After="AppSearch" Sequence="ui"><![CDATA[NOT DESKTOPSHORTCUTENABLED]]></SetProperty>
+    <SetProperty Action="OverridePROGRAMMENUSHORTCUTENABLED" Id="PROGRAMMENUSHORTCUTENABLED" Value="[PROGRAMMENUSHORTCUTENABLEDREMEMBER]" After="AppSearch" Sequence="ui"><![CDATA[NOT PROGRAMMENUSHORTCUTENABLED]]></SetProperty>
+    <SetProperty Action="OverrideINSTALLERTELEMETRYENABLED" Id="INSTALLERTELEMETRYENABLED" Value="[INSTALLERTELEMETRYENABLEDREMEMBER]" After="AppSearch" Sequence="ui"><![CDATA[NOT INSTALLERTELEMETRYENABLED]]></SetProperty>
+    <SetProperty Action="OverrideAPPLICATIONTELEMETRYENABLED" Id="APPLICATIONTELEMETRYENABLED" Value="[APPLICATIONTELEMETRYENABLEDREMEMBER]" After="AppSearch" Sequence="ui"><![CDATA[NOT APPLICATIONTELEMETRYENABLED]]></SetProperty>
+
+    <!-- Undefine property if the value is <> '1', this is because an undefined property will result to an unchecked WiX CheckBox -->
+    <SetProperty Action="UndefineDESKTOPSHORTCUTENABLED" Id="DESKTOPSHORTCUTENABLED" Value="{}" After="AppSearch" Sequence="ui"><![CDATA[DESKTOPSHORTCUTENABLED AND DESKTOPSHORTCUTENABLED <> "1"]]></SetProperty>
+    <SetProperty Action="UndefinePROGRAMMENUSHORTCUTENABLED" Id="PROGRAMMENUSHORTCUTENABLED" Value="{}" After="AppSearch" Sequence="ui"><![CDATA[PROGRAMMENUSHORTCUTENABLED AND PROGRAMMENUSHORTCUTENABLED <> "1"]]></SetProperty>
+    <SetProperty Action="UndefineINSTALLERTELEMETRYENABLED" Id="INSTALLERTELEMETRYENABLED" Value="{}" After="AppSearch" Sequence="ui"><![CDATA[INSTALLERTELEMETRYENABLED AND INSTALLERTELEMETRYENABLED <> "1"]]></SetProperty>
+    <SetProperty Action="UndefineAPPLICATIONTELEMETRYENABLED" Id="APPLICATIONTELEMETRYENABLED" Value="{}" After="AppSearch" Sequence="ui"><![CDATA[APPLICATIONTELEMETRYENABLED AND APPLICATIONTELEMETRYENABLED <> "1"]]></SetProperty>
 
     <CustomAction Id="SetPropertyValuesRegisterExternalTool" Property="RegisterExternalTool" Value="PRODUCTNAME=$(var.AppName);PRODUCTVERSION=$(var.ProductVersion);PRODUCTBUILD=$(var.ProductBuild);INSTALLERTELEMETRYENABLED=[INSTALLERTELEMETRYENABLED];PRODUCTEXECUTABLEPATH=[INSTALLFOLDER]$(var.AppExecutableName);PBITOOLPATH=[POWERBIEXTERNALTOOLSFOLDER]$(var.PbitoolName)" />
     <CustomAction Id="RegisterExternalTool" BinaryKey="CustomActionBinary" DllEntry="RegisterExternalTool" Execute="deferred" Impersonate="no" />
@@ -62,7 +100,7 @@
     <CustomAction Id="AfterInstall" BinaryKey="CustomActionBinary" DllEntry="AfterInstall" Execute="deferred" Impersonate="no" />
     <CustomAction Id="SetPropertyValuesUnregisterExternalTool" Property="UnregisterExternalTool" Value="PRODUCTNAME=$(var.AppName);PRODUCTVERSION=$(var.ProductVersion);PRODUCTBUILD=$(var.ProductBuild);INSTALLERTELEMETRYENABLED=[INSTALLERTELEMETRYENABLED];PRODUCTEXECUTABLEPATH=[INSTALLFOLDER]$(var.AppExecutableName);PBITOOLPATH=[POWERBIEXTERNALTOOLSFOLDER]$(var.PbitoolName)" />
     <CustomAction Id="UnregisterExternalTool" BinaryKey="CustomActionBinary" DllEntry="UnregisterExternalTool" Execute="deferred" Impersonate="no" />
-    <CustomAction Id="SetPropertyValuesAfterUninstall" Property="AfterUninstall" Value="PRODUCTNAME=$(var.AppName);PRODUCTVERSION=$(var.ProductVersion);PRODUCTBUILD=$(var.ProductBuild);INSTALLERTELEMETRYENABLED=[INSTALLERTELEMETRYENABLEDUNINSTALL]" />
+    <CustomAction Id="SetPropertyValuesAfterUninstall" Property="AfterUninstall" Value="PRODUCTNAME=$(var.AppName);PRODUCTVERSION=$(var.ProductVersion);PRODUCTBUILD=$(var.ProductBuild);INSTALLERTELEMETRYENABLED=[INSTALLERTELEMETRYENABLED]" />
     <CustomAction Id="AfterUninstall" BinaryKey="CustomActionBinary" DllEntry="AfterUninstall" Execute="deferred" Impersonate="no" />
 
     <InstallExecuteSequence>
@@ -75,7 +113,7 @@
       <Custom Action="SetPropertyValuesAfterUninstall" After="UnregisterExternalTool" />
       <Custom Action="AfterUninstall" After="SetPropertyValuesAfterUninstall"><![CDATA[(NOT UPGRADINGPRODUCTCODE) AND (REMOVE="ALL")]]></Custom>
     </InstallExecuteSequence>
-    
+
   </Product>
 
   <Fragment>
@@ -85,10 +123,10 @@
           <Directory Id="INSTALLFOLDER" Name="$(var.AppInstallSubfolder)" />
         </Directory>
       </Directory>
-      
+
       <Directory Id="DesktopFolder" Name="Desktop" />
       <Directory Id="ProgramMenuFolder" Name="ProgramMenu" />
-      
+
       <Directory Id="CommonFilesFolder">
         <Directory Id="MicrosoftShared" Name="Microsoft Shared">
           <Directory Id="PowerBIDesktop" Name="Power BI Desktop">
@@ -102,17 +140,17 @@
   <Fragment>
     <DirectoryRef Id="DesktopFolder">
       <Component Id="DesktopShortcut" Guid="{8C035041-08C9-44CB-B254-D66DA096C53D}" Win64="$(var.Win64)">
-        <Condition><![CDATA[CREATEDESKTOPSHORTCUT = 1]]></Condition>
+        <Condition><![CDATA[DESKTOPSHORTCUTENABLED = "1"]]></Condition>
         <Shortcut Id="DesktopShortcut" Directory="DesktopFolder" Name="$(var.ProductName)" WorkingDirectory="INSTALLFOLDER" Target="[INSTALLFOLDER]$(var.AppExecutableName)" />
-        <RegistryValue Root="HKCU" Key="Software\[Manufacturer]\$(var.AppName)" Name="installedDesktopShortcut" Value="1" Type="integer" KeyPath="yes" />
+        <RegistryValue Root="HKCU" Key="Software\[Manufacturer]\$(var.AppName)" Name="desktopShortcutEnabled" Value="1" Type="integer" KeyPath="yes" />
       </Component>
     </DirectoryRef>
-    
+
     <DirectoryRef Id="ProgramMenuFolder">
       <Component Id="ProgramMenuShortcut" Guid="{B6EB02B3-E16E-4661-89E4-A46C50815577}" Win64="$(var.Win64)">
-        <Condition><![CDATA[CREATEPROGRAMMENUSHORTCUT = 1]]></Condition>
+        <Condition><![CDATA[PROGRAMMENUSHORTCUTENABLED = "1"]]></Condition>
         <Shortcut Id="ProgramMenuShortcut" Directory="ProgramMenuFolder" Name="$(var.ProductName)" WorkingDirectory="INSTALLFOLDER" Target="[INSTALLFOLDER]$(var.AppExecutableName)" />
-        <RegistryValue Root="HKCU" Key="Software\[Manufacturer]\$(var.AppName)" Name="installedProgramMenuShortcut" Value="1" Type="integer" KeyPath="yes" />
+        <RegistryValue Root="HKCU" Key="Software\[Manufacturer]\$(var.AppName)" Name="programMenuShortcutEnabled" Value="1" Type="integer" KeyPath="yes" />
       </Component>
     </DirectoryRef>
 
@@ -121,6 +159,8 @@
         <File Id="app.exe" Name="$(var.AppExecutableName)" Source="$(var.PublishFolder)\$(var.AppExecutableName)" Checksum="yes" KeyPath="yes" />
         <RemoveFile Id="REMOVEALL" Directory="INSTALLFOLDER" Name="*.*" On="both" />
         <RegistryValue Root="HKLM" Key="Software\[Manufacturer]\$(var.AppName)" Name="installFolder" Value="[INSTALLFOLDER]" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\[Manufacturer]\$(var.AppName)" Name="desktopShortcutEnabled" Value="[DESKTOPSHORTCUTENABLED]" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\[Manufacturer]\$(var.AppName)" Name="programMenuShortcutEnabled" Value="[PROGRAMMENUSHORTCUTENABLED]" Type="string" />
         <RegistryValue Root="HKLM" Key="Software\[Manufacturer]\$(var.AppName)" Name="installerTelemetryEnabled" Value="[INSTALLERTELEMETRYENABLED]" Type="string" />
         <RegistryValue Root="HKLM" Key="Software\[Manufacturer]\$(var.AppName)" Name="applicationTelemetryEnabled" Value="[APPLICATIONTELEMETRYENABLED]" Type="string" />
       </Component>
@@ -189,9 +229,9 @@
 
     <UIRef Id="WixUI_Common" />
   </Fragment>
-  
+
   <Fragment>
-    <UI>      
+    <UI>
       <!-- https://github.com/wixtoolset/wix3/blob/develop/src/ext/UIExtension/wixlib/InstallDirDlg.wxs -->
       
       <Dialog Id="Custom_InstallDirDlg" Width="370" Height="270" Title="!(loc.InstallDirDlg_Title)">
@@ -207,8 +247,8 @@
         <Control Id="BannerLine" Type="Line" X="0" Y="44" Width="370" Height="0" />
         <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" />
         
-        <Control Id="Custom_DesktopShortcutCheckBox" Type="CheckBox" X="20" Y="160" Width="320" Height="18" Property="CREATEDESKTOPSHORTCUT" Text="!(loc.CreateDesktopShortcut)" CheckBoxValue="1" TabSkip="no" />
-        <Control Id="Custom_ProgramMenuShortcutCheckBox" Type="CheckBox" X="20" Y="180" Width="320" Height="18" Property="CREATEPROGRAMMENUSHORTCUT" Text="!(loc.CreateProgramMenuShortcut)" CheckBoxValue="1" TabSkip="no" />
+        <Control Id="Custom_DesktopShortcutCheckBox" Type="CheckBox" X="20" Y="160" Width="320" Height="18" Property="DESKTOPSHORTCUTENABLED" Text="!(loc.DesktopShortcutCheckBoxText)" CheckBoxValue="1" TabSkip="no" />
+        <Control Id="Custom_ProgramMenuShortcutCheckBox" Type="CheckBox" X="20" Y="180" Width="320" Height="18" Property="PROGRAMMENUSHORTCUTENABLED" Text="!(loc.ProgramMenuShortcutCheckBoxText)" CheckBoxValue="1" TabSkip="no" />
 
         <Control Id="FolderLabel" Type="Text" X="20" Y="60" Width="290" Height="30" NoPrefix="yes" Text="!(loc.InstallDirDlgFolderLabel)" />
         <Control Id="Folder" Type="PathEdit" X="20" Y="100" Width="320" Height="18" Property="WIXUI_INSTALLDIR" Indirect="yes" />
