@@ -69,6 +69,7 @@ export class Logger extends Dispatchable {
 
     check(initial = false) {
         if (!this.enabled) return;
+        if (!Logger.LevelMatch(DiagnosticLevelType.Verbose)) return;
 
         host.getDiagnostics(initial)
             .then((messages: DiagnosticMessage[]) => {
