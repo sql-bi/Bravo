@@ -212,13 +212,13 @@
         [ProducesDefaultResponseType]
         public async Task<IActionResult> GetCurrentVersion(UpdateChannelType updateChannel, bool notify = false, CancellationToken cancellationToken = default)
         {
-            var update = await CommonHelper.CheckForUpdateAsync(updateChannel, cancellationToken);
+            var bravoUpdate = await CommonHelper.CheckForUpdateAsync(updateChannel, cancellationToken);
 
             // TODO: remove the syncronous method 'AppWindow.CheckForUpdate' and use the asynchronous 'api/GetCurrentVersion(.., nodify = true)' instead
-            if (notify)
-                NotificationHelper.NotifyUpdateAvailable(update);
+            if (bravoUpdate.IsNewerVersion && notify)
+                NotificationHelper.NotifyUpdateAvailable(bravoUpdate);
 
-            return Ok(update);
+            return Ok(bravoUpdate);
         }
     }
 }

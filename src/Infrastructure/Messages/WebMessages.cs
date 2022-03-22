@@ -74,6 +74,9 @@
         [JsonPropertyName("updateChannel")]
         public UpdateChannelType? UpdateChannel { get; set; }
 
+        [JsonPropertyName("isNewerVersion")]
+        public bool IsNewerVersion { get; set; }
+
         [JsonPropertyName("currentVersion")]
         public string? CurrentVersion { get; set; }
 
@@ -94,6 +97,7 @@
             var webMessage = new ApplicationUpdateAvailableWebMessage
             {
                 UpdateChannel = bravoUpdate.UpdateChannel,
+                IsNewerVersion = bravoUpdate.IsNewerVersion,
                 CurrentVersion = bravoUpdate.CurrentVersion,
                 InstalledVersion = bravoUpdate.InstalledVersion,
                 DownloadUrl = bravoUpdate.DownloadUrl,
