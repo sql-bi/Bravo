@@ -13,6 +13,8 @@
 
     internal class DaxTemplateManager
     {
+        public const string SqlbiDaxTemplateAnnotation = "SQLBI_Template";
+
         private readonly string EmbeddedPath = Path.Combine(AppContext.BaseDirectory, @"Assets\ManageDates\Templates");
         private readonly string CachePath = Path.Combine(AppEnvironment.ApplicationTempPath, @"ManageDates\Templates");
         private readonly string UserPath = Path.Combine(AppEnvironment.ApplicationDataPath, @"ManageDates\Templates");
@@ -45,15 +47,22 @@
                 var engine = new Engine(package);
 
                 engine.ApplyTemplates(connectionWrapper.Model, cancellationToken);
-                var modelChanges = Engine.GetModelChanges(connectionWrapper.Model, cancellationToken);
-
-                if (previewRows > 0)
+                try
                 {
-                    using var connection = connectionWrapper.CreateAdomdConnection();
-                    modelChanges.PopulatePreview(connection, connectionWrapper.Model, previewRows, cancellationToken);
-                }
+                    var modelChanges = Engine.GetModelChanges(connectionWrapper.Model, cancellationToken);
 
-                return modelChanges;
+                    if (previewRows > 0)
+                    {
+                        using var connection = connectionWrapper.CreateAdomdConnection();
+                        modelChanges.PopulatePreview(connection, connectionWrapper.Model, previewRows, cancellationToken);
+                    }
+
+                    return modelChanges;
+                }
+                finally
+                {
+                    connectionWrapper.Model.UndoLocalChanges();
+                }
             }
             catch (TemplateException ex)
             {
@@ -71,9 +80,7 @@
 
                 engine.ApplyTemplates(connection.Model, cancellationToken);
                 configuration.SerializeTo(connection.Model);
-
-                if (connection.Model.HasLocalChanges)
-                    connection.Model.SaveChanges().ThrowOnError();
+                connection.Model.SaveChanges().ThrowOnError();
             }
             catch (TemplateException ex)
             {

@@ -1,8 +1,9 @@
 ﻿namespace Sqlbi.Bravo.Infrastructure.Extensions
 {
+    using Microsoft.AnalysisServices;
+    using Sqlbi.Bravo.Infrastructure.Helpers;
     using System;
     using System.Linq;
-    using Microsoft.AnalysisServices;
     using TOM = Microsoft.AnalysisServices.Tabular;
 
     internal static class ModelOperationResultExtensions
@@ -69,6 +70,20 @@
             }
 
             return null;
+        }
+    }
+
+    internal static class DatabaseExtensions
+    {
+        public static string? GetETag(this TOM.Database database, bool refresh = true)
+        {
+            if (refresh)
+            {
+                database.Refresh(full: false);
+            }
+
+            var etag = TabularModelHelper.GetDatabaseETag(database.Name, database.Version, database.LastUpdate);
+            return etag;
         }
     }
 

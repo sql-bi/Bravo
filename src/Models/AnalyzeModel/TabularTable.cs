@@ -2,6 +2,7 @@
 {
     using Dax.ViewModel;
     using Sqlbi.Bravo.Infrastructure.Extensions;
+    using Sqlbi.Bravo.Infrastructure.Services.ManageDates;
     using System;
     using System.Data;
     using System.Diagnostics;
@@ -12,8 +13,6 @@
     [DebuggerDisplay("{Name}")]
     public class TabularTable
     {
-        private const string SqlbiDaxTemplateTableAnnotation = "SQLBI_Template";
-
         [JsonPropertyName("features")]
         public TabularTableFeature Features { get; set; } = TabularTableFeature.All;
 
@@ -75,7 +74,7 @@
             if (tomTable is not null)
             {
                 table.IsHidden = tomTable.IsHidden;
-                table.IsManageDates = tomTable.Annotations.Contains(SqlbiDaxTemplateTableAnnotation);
+                table.IsManageDates = tomTable.Annotations.Contains(DaxTemplateManager.SqlbiDaxTemplateAnnotation);
             }
 
             if (vpaTable.ColumnsNumber == 0L || (vpaTable.ColumnsNumber == 1L && vpaTable.Columns.Single().IsRowNumber))
@@ -86,11 +85,6 @@
 
             return table;
         }
-    }
-
-    internal static class TabularTableExtensions
-    {
-        public static bool IsNotAutoDateTimeTable(TabularTable table) => !StringExtensions.IsAutoDateTimePrivateTableName(table.Name);
     }
 
     [Flags]
