@@ -27,6 +27,7 @@ export class MultiViewPane extends View {
     panes: Dic<ViewPane>;
     menu: Menu;
     split: SplitObject;
+    sizes: number[];
 
     set mode(mode: MultiViewPaneMode) {
 
@@ -53,7 +54,7 @@ export class MultiViewPane extends View {
         return this._mode;
     }
 
-    constructor(id: string, container: HTMLElement, panes: Dic<ViewPane>, mode: MultiViewPaneMode = MultiViewPaneMode.Tabs) {
+    constructor(id: string, container: HTMLElement, panes: Dic<ViewPane>, mode: MultiViewPaneMode = MultiViewPaneMode.Tabs, sizes?: number[]) {
         super(id, container);
         this.element.classList.add("multiview-pane");
 
@@ -67,6 +68,7 @@ export class MultiViewPane extends View {
 
         this.panes = panes;
         this.mode = mode;
+        this.sizes = sizes;
 
         this.listen();
         this.updateSplit();
@@ -95,8 +97,7 @@ export class MultiViewPane extends View {
         this.destroySplit();
         if (this.mode != MultiViewPaneMode.Tabs) {
             this.split = Split(Object.keys(this.panes).map(id => `#${this.element.id} #body-${id}`), {
-                //sizes: [50, 50], 
-                //minSize: [400, 0],
+                sizes: this.sizes, 
                 gutterSize: 10,
                 direction: (this.mode == MultiViewPaneMode.HorizontalSplit ? "vertical" : "horizontal"),
                 cursor: (this.mode == MultiViewPaneMode.HorizontalSplit ? "ns-resize" : "ew-resize" ),

@@ -435,7 +435,7 @@ export class ManageDatesPreviewScene extends DocScene {
         }); 
 
         Split([`#${this.element.id} .browser-pane`, `#${this.element.id} .preview-pane`], {
-            sizes: [20, 80], 
+            sizes: optionsController.options.customOptions.sizes.manageDatesPreview,  
             minSize: [270, 400],
             gutterSize: 20,
             
@@ -445,7 +445,7 @@ export class ManageDatesPreviewScene extends DocScene {
                 for (let key in this.browsers) {
                     this.browsers[key].redraw();
                 }
-                //optionsController.update("customOptions.panels", sizes);
+                optionsController.update("customOptions.sizes.manageDatesPreview", sizes);
             }
         });
     }

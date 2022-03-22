@@ -94,17 +94,17 @@ export class App {
         if (optionsController.options.diagnosticLevel != DiagnosticLevelType.None) {
             if (!this.diagnosticSplit) {
                 this.diagnosticSplit = Split(["#main-pane", "#bottom-pane"], {
-                    sizes: optionsController.options.customOptions.panels, 
+                    sizes: optionsController.options.customOptions.sizes.main, 
                     minSize: [400, 0],
                     gutterSize: 6,
                     direction: "vertical",
                     cursor: "ns-resize",
                     onDragEnd: sizes => {
-                        optionsController.update("customOptions.panels", sizes);
+                        optionsController.update("customOptions.sizes.main", sizes);
                     }
                 });
             } else {
-                this.diagnosticSplit.setSizes(optionsController.options.customOptions.panels)
+                this.diagnosticSplit.setSizes(optionsController.options.customOptions.sizes.main)
             }
             this.diagnosticPane.show();
         } else {
@@ -379,12 +379,12 @@ export class App {
     }
 
     toggleDiagnostics(toggle: boolean) {
-        const sizes = (toggle ? [70, 30] : [100, 0]);
+        const sizes = (toggle ? optionsController.options.customOptions.sizes.main : [100, 0]);
         
         if (toggle && optionsController.options.diagnosticLevel == DiagnosticLevelType.None) 
             optionsController.options.diagnosticLevel = DiagnosticLevelType.Basic;
 
-        optionsController.update("customOptions.panels", sizes);
+        optionsController.update("customOptions.sizes.main", sizes);
         this.updatePanels();
     }
 

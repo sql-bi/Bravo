@@ -153,7 +153,7 @@ export class DaxFormatterScene extends DocScene {
                     }
                 }
             }
-        }, optionsController.options.customOptions.formatting.previewLayout);
+        }, optionsController.options.customOptions.formatting.previewLayout, optionsController.options.customOptions.sizes.formatDax);
 
 
         this.previewOverlay = document.createElement("div");
@@ -697,7 +697,8 @@ export class DaxFormatterScene extends DocScene {
         });
 
 
-        this.previewPane.on("size.change", ()=>{
+        this.previewPane.on("size.change", (sizes: number[]) =>{
+            optionsController.update("customOptions.sizes.formatDax", sizes);
             this.currentEditor.editor.refresh();
             this.formattedEditor.editor.refresh();
         });
