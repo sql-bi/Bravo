@@ -56,8 +56,6 @@
 
         public async static Task<BravoUpdate> CheckForUpdateAsync(UpdateChannelType updateChannel, CancellationToken cancellationToken)
         {
-            using var httpClient = new HttpClient();
-
             var channelPath = updateChannel switch
             {
                 UpdateChannelType.Stable => "bravo-public",
@@ -65,7 +63,8 @@
                 _ => throw new BravoUnexpectedException($"Unexpected { nameof(UpdateChannelType) } '{ updateChannel }'")
             };
 
-            var requestUri = $"http://artifacts.bravo.bi/{ channelPath }/currentversion.json?nocache={ DateTimeOffset.Now.ToUnixTimeSeconds() }";
+            using var httpClient = new HttpClient();
+            var requestUri = $"https://bravorelease.blob.core.windows.net/{ channelPath }/currentversion.json?nocache={ DateTimeOffset.Now.ToUnixTimeSeconds() }";
             var json = await httpClient.GetStringAsync(requestUri, cancellationToken).ConfigureAwait(false);
 
             using var document = JsonDocument.Parse(json);
