@@ -117,13 +117,8 @@ export class ManageDatesSceneInterval extends ManageDatesScenePane {
     }
 
     toggleAutomaticScan() {
-        let disabled = (this.config.options.firstYear != null && this.config.options.lastYear != null);
-
-        if (this.autoScanContainer) {
-            this.autoScanContainer.toggleAttr("disabled", disabled);
-            this.autoScanContainer.toggleClass("disabled", disabled);
-            _(".listener", this.autoScanContainer).toggleAttr("disabled", disabled);
-        }
+        if (this.autoScanContainer)
+            this.autoScanContainer.toggle(!this.config.options.firstYear || !this.config.options.lastYear);
     }
 
     fixDatesRange() {
