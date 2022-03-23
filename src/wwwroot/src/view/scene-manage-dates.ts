@@ -46,6 +46,7 @@ export class ManageDatesScene extends DocScene {
     sampleDataTable: Tabulator;
     sampleDataSplit: SplitObject;
     toggleSampleDataButton: HTMLElement;
+    previewError: AppError;
     
     constructor(id: string, container: HTMLElement, doc: Doc, type: PageType) {
         super(id, container, [doc.name, i18n(strings.ManageDates)], doc, type, true); 
@@ -226,13 +227,17 @@ export class ManageDatesScene extends DocScene {
                 _(".sample-data .table", this.element).innerHTML = `
                     <div class="error">${i18n(strings.manageDatesSampleDataError)}</div>
                 `;
+                this.previewError = error;
                 try { logger.logError(error); } catch(ignore) {}
+            })
+            .finally(() => {
+                this.updateModelCheck();
             });
     }
 
     updateSampleData(data: any[]) {
         this.clearSampleData();
-
+        this.previewError = null;
         this.sampleDataTable = new Tabulator(`#${this.element.id} .sample-data .table`, {
             maxHeight: "100%",
             renderVerticalBuffer: 1000, 
@@ -273,7 +278,7 @@ export class ManageDatesScene extends DocScene {
         return newConfig;
     }   
 
-    clearSampleData () {
+    clearSampleData() {
         if (this.sampleDataTable) {
             this.sampleDataTable.destroy();
             this.sampleDataTable = null;
@@ -292,7 +297,7 @@ export class ManageDatesScene extends DocScene {
         this.previewButton.addEventListener("click", e => {
             e.preventDefault();
 
-            if (!this.canEdit) return;
+            if (!this.canEdit || this.previewButton.hasAttribute("disabled")) return;
 
             telemetry.track("Manage Dates: Preview");
 
@@ -311,7 +316,6 @@ export class ManageDatesScene extends DocScene {
         if (this.scheduledUpdateTimeout) return;
 
         this.scheduledUpdateTimeout = window.setTimeout(()=> {
-            this.updateModelCheck();
             this.loadSampleData();
             this.scheduledUpdateTimeout = null;
         }, 1500);
@@ -331,7 +335,6 @@ export class ManageDatesScene extends DocScene {
                 });
             })
             .finally(()=>{
-                this.updateModelCheck();
                 this.loadSampleData();
             })
     }
@@ -343,13 +346,12 @@ export class ManageDatesScene extends DocScene {
 
     updateModelCheck() {
 
-        let containsInvalid = false;
-        let containsOverwritable = false;
+        let disabled = false;
 
         let html = ``;
         if (!this.canEdit) {
 
-            containsInvalid = true;
+            disabled = true;
             html = `
                 <div class="status-incompatible">
                     <div class="icon icon-error"></div>
@@ -358,8 +360,23 @@ export class ManageDatesScene extends DocScene {
                     </div>  
                 </div>
             `;
-        } else {
+        } else if (this.previewError) {
+            disabled = true;
 
+            html = `
+            <div class="status-incompatible">
+                <div class="icon icon-error"></div>
+                <div class="message">
+                    ${i18n(strings.manageDatesStatusError, { error: this.previewError.details })}
+                </div>  
+            </div>
+        `;
+
+        } else {
+            let containsInvalid = false;
+            let containsOverwritable = false;
+
+            //Check table names validation
             let fields = [this.config.options.dateTableValidation, this.config.options.dateReferenceTableValidation];
             if (this.config.options.holidaysAvailable && this.config.options.holidaysEnabled)
                 fields = [...fields, ...[this.config.options.holidaysTableValidation, this.config.options.holidaysDefinitionTableValidation]];
@@ -372,8 +389,8 @@ export class ManageDatesScene extends DocScene {
                 }
             });
 
-
             if (containsInvalid) {
+                disabled = true;
                 html = `
                     <div class="status-incompatible">
                         <div class="icon icon-alert"></div>
@@ -404,7 +421,7 @@ export class ManageDatesScene extends DocScene {
         }
 
         this.modelCheckElement.innerHTML = html;
-        this.previewButton.toggleAttribute("disabled", containsInvalid);
+        this.previewButton.toggleAttribute("disabled", disabled);
                     
     }
 

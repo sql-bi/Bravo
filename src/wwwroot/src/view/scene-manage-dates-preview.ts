@@ -429,7 +429,7 @@ export class ManageDatesPreviewScene extends DocScene {
         this.applyButton.addEventListener("click", e => {
             e.preventDefault();
 
-            if (!this.canEdit) return;
+            if (!this.canEdit || this.applyButton.hasAttribute("disabled")) return;
 
             this.applyChanges();
         }); 

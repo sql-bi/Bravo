@@ -220,6 +220,7 @@ const locale: Locale = {
         [_.manageDatesStatusCompatible]: `<div class="hero">This model already contains some <b>date tables compatible</b> with Bravo.</div>If you change something here, these tables will be updated and their relationships will remain intact.`,
         [_.manageDatesStatusIncompatible]: `<div class="hero">This model contains some <b>date tables that are not compatible</b> with Bravo.</div>To make any changes here, you need to choose a different name for one or more tables that will be created by this tool.<br><br>Check <b>Dates</b> and <b>Holidays</b>.`,
         [_.manageDatesStatusNotAvailable]: `<div class="hero">This model is no longer available.</div> Try to restart the application.`,
+        [_.manageDatesStatusError]: `<div class="hero">The current settings cannot be applied.</div> Error {error}`,
         [_.manageDatesStatusOk]: `<div class="hero">This model <b>is compatible with the Manage Dates feature</b>.</div>You can create new date tables without worrying about breaking measures or reports.`,
         [_.manageDatesTemplateFirstDayOfWeek]: "First Day of the Week",
         [_.manageDatesTemplateFirstDayOfWeekDesc]: "For Weekly ISO, set <em>Monday</em>.",

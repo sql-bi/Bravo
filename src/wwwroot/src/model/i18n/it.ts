@@ -220,6 +220,7 @@ const locale: Locale = {
         [_.manageDatesStatusCompatible]: `<div class="hero">Questo modello <b>contiene già delle tabelle data compatibili</b> con Bravo.</div>Se applichi qualche modifica, queste tabelle verranno aggiornate ma le relazioni rimarranno intatte.`,
         [_.manageDatesStatusIncompatible]: `<div class="hero">Questo modello <b>contiene alcune tabelle non compatibili</b> con Bravo.</div>Per apportare qualche modifica, devi scegliere un nome diverso per una o più delle tabelle create da questo tool.<br><br>Verifica <b>Date</b> e <b>Vacanze</b>.`,
         [_.manageDatesStatusNotAvailable]: `<div class="hero">Questo modello non è più disponibile.</div> Prova a riavviare l'applicazione.`,
+        [_.manageDatesStatusError]: `<div class="hero">Le impostazioni selezionate non possono essere applicate.</div> Errore {error}`,
         [_.manageDatesStatusOk]: `<div class="hero">Questo modello <b>è compatibile con questo tool</b>.</div>Puoi creare nuove tabelle data senza preoccuparti di rompere alcuna misura o report esistenti.`,
         [_.manageDatesTemplateFirstDayOfWeek]: "Primo Giorno della Settimana",
         [_.manageDatesTemplateFirstDayOfWeekDesc]: "Per calendari settimanali ISO, usa <em>Lunedì</em>.",

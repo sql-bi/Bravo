@@ -210,6 +210,7 @@ export enum strings {
     manageDatesStatusCompatible,
     manageDatesStatusIncompatible,
     manageDatesStatusNotAvailable,
+    manageDatesStatusError,
     manageDatesStatusOk,
     manageDatesTemplateFirstDayOfWeek,
     manageDatesTemplateFirstDayOfWeekDesc,
