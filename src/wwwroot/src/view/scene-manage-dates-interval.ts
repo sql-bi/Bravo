@@ -14,16 +14,58 @@ import { Branch, BranchType, TabularBrowser } from './tabular-browser';
 
 export class ManageDatesSceneInterval extends ManageDatesScenePane {
 
+    autoScanContainer: HTMLElement;
+    firstYearElement: HTMLInputElement;
+    lastYearElement: HTMLInputElement; 
+    minYear = 1970;
+
     render(element: HTMLElement) {
         super.render(element);
 
         let optionsStruct: OptionStruct[] = [
             {
+                icon: "date-range",
+                bold: true,
+                name: i18n(strings.manageDatesYearRange),
+                description: i18n(strings.manageDatesYearRangeDesc),
+                type: OptionType.customCtrl
+            },
+            {
+                option: "firstYear",
+                parent: i18n(strings.manageDatesYearRange),
+                name: i18n(strings.manageDatesAutoScanFirstYear),
+                description: i18n(strings.manageDatesAutoScanFirstYearDesc),
+                placeholder: i18n(strings.manageDatesAuto),
+                type: OptionType.number,
+                range: [this.minYear],
+                onChange: (e, value: number) => {
+                    if (!value)
+                        this.config.options.firstYear = null;
+                    this.fixDatesRange();
+                    this.toggleAutomaticScan();
+                }
+            },
+            {
+                option: "lastYear",
+                parent: i18n(strings.manageDatesYearRange),
+                name: i18n(strings.manageDatesAutoScanLastYear),
+                description: i18n(strings.manageDatesAutoScanLastYearDesc),
+                placeholder: i18n(strings.manageDatesAuto),
+                type: OptionType.number,
+                range: [this.minYear],
+                onChange: (e, value: number) => {
+                    if (!value) 
+                        this.config.options.lastYear = null;
+                    this.fixDatesRange();
+                    this.toggleAutomaticScan();
+                }
+            },
+            {
                 option: "autoScan",
-                icon: "date-scan",
+                parent: i18n(strings.manageDatesYearRange),
+                //icon: "date-scan",
                 name: i18n(strings.manageDatesAutoScan),
                 description: i18n(strings.manageDatesAutoScanDesc),
-                bold: true,
                 type: OptionType.select,
                 valueType: "number",
                 values: [
@@ -31,7 +73,7 @@ export class ManageDatesSceneInterval extends ManageDatesScenePane {
                     [AutoScanEnum.SelectedTablesColumns.toString(), i18n(strings.manageDatesAutoScanSelectedTablesColumns)],
                     [AutoScanEnum.ScanActiveRelationships.toString(), i18n(strings.manageDatesAutoScanActiveRelationships)],
                     [AutoScanEnum.ScanInactiveRelationships.toString(), i18n(strings.manageDatesAutoScanInactiveRelationships)],
-                    [AutoScanEnum.Disabled.toString(), i18n(strings.manageDatesAutoScanDisabled)]
+                    //[AutoScanEnum.Disabled.toString(), i18n(strings.manageDatesAutoScanDisabled)]
                 ]
             },
             {
@@ -44,30 +86,7 @@ export class ManageDatesSceneInterval extends ManageDatesScenePane {
                 },
                 type: OptionType.custom
             },
-            {
-                option: "firstYear",
-                parent: "autoScan",
-                toggledBy: {
-                    option: "autoScan",
-                    value: AutoScanEnum.Disabled
-                },
-                name: i18n(strings.manageDatesAutoScanFirstYear),
-                description: i18n(strings.manageDatesAutoScanFirstYearDesc),
-                type: OptionType.number,
-                range: [1970]
-            },
-            {
-                option: "lastYear",
-                parent: "autoScan",
-                toggledBy: {
-                    option: "autoScan",
-                    value: AutoScanEnum.Disabled
-                },
-                name: i18n(strings.manageDatesAutoScanLastYear),
-                description: i18n(strings.manageDatesAutoScanLastYearDesc),
-                type: OptionType.number,
-                range: [1970]
-            },
+            
         ];
 
         let html = `
@@ -87,9 +106,35 @@ export class ManageDatesSceneInterval extends ManageDatesScenePane {
         });
         
         columnBrowser.on("select", (columns: string[]) => {
-            this.config.update("onlyTablesColumns", columns);
+            this.config.update("onlyTablesColumns", columns, true);
         });
 
+        this.firstYearElement = <HTMLInputElement>_("#firstyear .listener", this.element);
+        this.lastYearElement = <HTMLInputElement>_("#lastyear .listener", this.element);
+        this.autoScanContainer = _("#autoscan", this.element);
+
+        this.toggleAutomaticScan();
+    }
+
+    toggleAutomaticScan() {
+        let disabled = (this.config.options.firstYear != null && this.config.options.lastYear != null);
+
+        if (this.autoScanContainer) {
+            this.autoScanContainer.toggleAttr("disabled", disabled);
+            this.autoScanContainer.toggleClass("disabled", disabled);
+            _(".listener", this.autoScanContainer).toggleAttr("disabled", disabled);
+        }
+    }
+
+    fixDatesRange() {
+        if (this.firstYearElement && this.lastYearElement) {
+            let firstYear = (this.firstYearElement.value ? Number(this.firstYearElement.value) : this.minYear);
+            this.lastYearElement.setAttribute("min", firstYear.toString());
+            if (this.lastYearElement.value && Number(this.lastYearElement.value) < firstYear) {
+                this.lastYearElement.value = firstYear.toString();
+                this.config.update("lastYear", firstYear);
+            }
+        }
     }
 
     modelToBranches(): Branch[] {

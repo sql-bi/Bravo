@@ -448,7 +448,7 @@ a, .link {
         }
     }
 
-    &:hover {
+    &:not(.disabled):hover {
         background-color: darken(@window-back-color-alt, 2%);
         .shadow(0, .5px, 1px, 0, rgba(0,0,0,0.1));
         .dark & {
@@ -497,6 +497,8 @@ a, .link {
             .dark & {
                 color: @notice-color-dark;
             }
+
+            
 
             em {
                 font-weight: 500;
@@ -614,6 +616,14 @@ a, .link {
             width: 90px;
             //text-align: right;
         }
+    }
+}
+.option.disabled {
+    .desc {
+        color: @disabled-color !important;
+    }
+    .listener {
+        .disabled;
     }
 }
 .option-notice {

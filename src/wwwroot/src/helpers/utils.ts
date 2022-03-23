@@ -484,9 +484,9 @@ export module Utils {
         }
 
         // Check if object is empty = no properties
-        export function isEmpty(object: any, includeNull = true): boolean {
-            for (let prop in object) {
-                if (object[prop] !== null || includeNull) {
+        export function isEmpty(obj: any, includeNull = true): boolean {
+            for (let prop in obj) {
+                if (obj[prop] !== null || includeNull) {
                     return false;
                 }
             }
@@ -494,8 +494,8 @@ export module Utils {
         }
 
         // Check if the object has been set
-        export function isSet(object: any): boolean { 
-            return (typeof object !== "undefined" && object !== null); 
+        export function isSet(obj: any, nullIsOk = false): boolean { 
+            return (typeof obj !== "undefined" && (nullIsOk || obj !== null)); 
         }
 
         // Check object type

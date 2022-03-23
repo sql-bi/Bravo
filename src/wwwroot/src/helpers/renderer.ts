@@ -14,6 +14,7 @@ export interface OptionStruct {
     option?: string
     icon?: string
     bold?: boolean
+    placeholder?: string
     parent?: string
     name?: string
     description?: string
@@ -31,6 +32,7 @@ export interface OptionStruct {
     silentUpdate?: boolean
     customHtml?: ()=> string
     validation?: (name: string, value: string) => Promise<OptionValidation>
+    onBeforeChange?: (e: Event, value: any) => void
     onChange?: (e: Event, value: any) => void
     onClick?: (e: Event) => void
     onKeydown?: (e: Event, value: string) => void
@@ -126,14 +128,14 @@ export module Renderer {
                 case OptionType.text:
                     ctrlHtml = `
                         ${Utils.Obj.isSet(struct.validation) ? `<div class="validation-container"><div class="validation-input">` : ""}
-                        <input type="text" class="listener" value="${value}" ${struct.attributes ? struct.attributes : ""}>
+                        <input type="text" class="listener" value="${value}" ${struct.attributes ? struct.attributes : ""} ${struct.placeholder ? ` placeholder="${struct.placeholder}"` : ""}>
                         ${Utils.Obj.isSet(struct.validation) ? `<div class="status icon"></div></div><div class="validation-desc"></div></div>` : ""}
                     `;
                     break;
 
                 case OptionType.number:
                     ctrlHtml = `
-                        <input type="number" ${struct.range && struct.range.length ? `min="${struct.range[0]}"` : ""} ${struct.range && struct.range.length > 1 ? `max="${struct.range[1]}"` : ""} class="listener" value="${value}" ${struct.attributes ? struct.attributes : ""}>
+                        <input type="number" ${struct.range && struct.range.length ? `min="${struct.range[0]}"` : ""} ${struct.range && struct.range.length > 1 ? `max="${struct.range[1]}"` : ""} class="listener" value="${value}" ${struct.attributes ? struct.attributes : ""} ${struct.placeholder ? ` placeholder="${struct.placeholder}"` : ""}>
                     `;
                     break;
 
@@ -231,15 +233,22 @@ export module Renderer {
                 listener.addEventListener("change", e => {
                     
                     let el = <HTMLInputElement|HTMLSelectElement>e.currentTarget; 
-                    let newValue: any = (struct.type == OptionType.switch ? (<HTMLInputElement>el).checked : el.value.trim());
-                    if (typeof newValue === "string") {
-                        if (valueType == "number") newValue = Number(newValue);
-                        if (valueType == "boolean") newValue = (newValue == "true");
-                    }
 
-                    if (struct.option) {
+                    const getValue = (el: HTMLInputElement|HTMLSelectElement) => {
+                        let convertedValue: any = (struct.type == OptionType.switch ? (<HTMLInputElement>el).checked : el.value.trim());
+                        if (typeof convertedValue === "string") {
+                            if (valueType == "number") convertedValue = Number(convertedValue);
+                            if (valueType == "boolean") convertedValue = (convertedValue == "true");
+                        }
+                        return convertedValue;
+                    };
+
+                    if (Utils.Obj.isSet(struct.onBeforeChange))
+                        struct.onBeforeChange(e, getValue(el));
+
+                    let newValue = getValue(el);
+                    if (struct.option)
                         store.update(struct.option, newValue, (struct.silentUpdate ? false : true));
-                    }
                     
                     __(`.toggled-by-${id}`, element).forEach((div: HTMLElement) => {
                         div.toggle(div.classList.contains(`toggle-if-${Utils.Text.slugify(newValue.toString())}`));
