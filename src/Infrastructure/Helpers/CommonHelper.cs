@@ -5,10 +5,10 @@
     using Sqlbi.Bravo.Models;
     using System;
     using System.Net.Http;
+    using System.Text.Json;
     using System.Threading;
     using System.Threading.Tasks;
     using System.Windows.Forms;
-    using System.Xml.Linq;
 
     internal static class CommonHelper
     {
@@ -41,7 +41,10 @@
                 try
                 {
                     var bravoUpdate = await CheckForUpdateAsync(updateChannel, cancellationToken);
-                    updateCallback(bravoUpdate);
+                    if (bravoUpdate.IsNewerVersion)
+                    {
+                        updateCallback(bravoUpdate);
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -53,12 +56,32 @@
 
         public async static Task<BravoUpdate> CheckForUpdateAsync(UpdateChannelType updateChannel, CancellationToken cancellationToken)
         {
-            using var httpClient = new HttpClient();
+            var channelPath = updateChannel switch
+            {
+                UpdateChannelType.Stable => "bravo-public",
+                UpdateChannelType.Dev => "bravo-internal", 
+                _ => throw new BravoUnexpectedException($"Unexpected { nameof(UpdateChannelType) } '{ updateChannel }'")
+            };
 
-            var requestUri = string.Format("https://cdn.sqlbi.com/updates/BravoAutoUpdater.xml?nocache={0}", DateTimeOffset.Now.ToUnixTimeSeconds());
-            var text = await httpClient.GetStringAsync(requestUri, cancellationToken).ConfigureAwait(false);
-            var document = XDocument.Parse(text);
-            var bravoUpdate = BravoUpdate.CreateFrom(updateChannel, document);
+            using var httpClient = new HttpClient();
+            var requestUri = $"https://bravorelease.blob.core.windows.net/{ channelPath }/currentversion.json?nocache={ DateTimeOffset.Now.ToUnixTimeSeconds() }";
+            var json = await httpClient.GetStringAsync(requestUri, cancellationToken).ConfigureAwait(false);
+
+            using var document = JsonDocument.Parse(json);
+
+            var bravoUpdate = new BravoUpdate
+            {
+                UpdateChannel = updateChannel,
+                InstalledVersion = AppEnvironment.ApplicationFileVersion,
+                CurrentVersion = document.RootElement.GetProperty("version").GetString(),
+                DownloadUrl = document.RootElement.GetProperty("download").GetString(),
+                ChangelogUrl = document.RootElement.GetProperty("changelog").GetString(),
+            };
+
+            var installedVersion = Version.Parse(bravoUpdate.InstalledVersion);
+            var currentVersion = Version.Parse(bravoUpdate.CurrentVersion!);
+
+            bravoUpdate.IsNewerVersion = currentVersion > installedVersion;
 
             return bravoUpdate;
         }
