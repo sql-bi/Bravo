@@ -1,0 +1,31 @@
+name: 💡 Feature Request
+labels: ["bug", "enhancement"]
+description: Suggest an idea for this project
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for submitting a feature request! 
+        
+        ---
+  - type: textarea
+    id: the-feature-request
+    attributes:
+      label: The feature request
+      description:
+        Write a clear and concise description of what the feature or problem is.
+    validations:
+      required: true
+  - type: textarea
+    id: proposed-solution
+    attributes:
+      label: Proposed solution
+      description: Share how this will benefit Bravo for Power BI and its users.
+    validations:
+      required: true
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional context
+      description:
+        Please include any other context, like screenshots or mockups, if applicable.

@@ -1586,6 +1586,250 @@
       "HolidayName": "Midsubber Eve",
       "SubstituteHoliday": "NoSubstituteHoliday",
       "ConflictPriority": 50
+    },
+
+    {
+      "IsoCountry": "DK",
+      "MonthNumber": 1,
+      "DayNumber": 1,
+      "WeekDayNumber": 0,
+      "OffsetWeek": 0,
+      "OffsetDays": 0,
+      "HolidayName": "New Year's Day",
+      "SubstituteHoliday": "NoSubstituteHoliday",
+      "ConflictPriority": 100
+    },
+    {
+      "IsoCountry": "DK",
+      "MonthNumber": 99,
+      "DayNumber": -3,
+      "WeekDayNumber": 0,
+      "OffsetWeek": 0,
+      "OffsetDays": 0,
+      "HolidayName": "Maundy Thursday",
+      "SubstituteHoliday": "NoSubstituteHoliday",
+      "ConflictPriority": 50
+    },
+    {
+      "IsoCountry": "DK",
+      "MonthNumber": 99,
+      "DayNumber": -2,
+      "WeekDayNumber": 0,
+      "OffsetWeek": 0,
+      "OffsetDays": 0,
+      "HolidayName": "Good Friday",
+      "SubstituteHoliday": "NoSubstituteHoliday",
+      "ConflictPriority": 50
+    },
+    {
+      "IsoCountry": "DK",
+      "MonthNumber": 99,
+      "DayNumber": 1,
+      "WeekDayNumber": 0,
+      "OffsetWeek": 0,
+      "OffsetDays": 0,
+      "HolidayName": "Easter Monday",
+      "SubstituteHoliday": "NoSubstituteHoliday",
+      "ConflictPriority": 50
+    },
+    {
+      "IsoCountry": "DK",
+      "MonthNumber": 99,
+      "DayNumber": 26,
+      "WeekDayNumber": 0,
+      "OffsetWeek": 0,
+      "OffsetDays": 0,
+      "HolidayName": "Prayer Day",
+      "SubstituteHoliday": "NoSubstituteHoliday",
+      "ConflictPriority": 50
+    },
+    {
+      "IsoCountry": "DK",
+      "MonthNumber": 99,
+      "DayNumber": 39,
+      "WeekDayNumber": 0,
+      "OffsetWeek": 0,
+      "OffsetDays": 0,
+      "HolidayName": "Ascension Day",
+      "SubstituteHoliday": "NoSubstituteHoliday",
+      "ConflictPriority": 50
+    },
+    {
+      "IsoCountry": "DK",
+      "MonthNumber": 99,
+      "DayNumber": 50,
+      "WeekDayNumber": 0,
+      "OffsetWeek": 0,
+      "OffsetDays": 0,
+      "HolidayName": "Whit Monday",
+      "SubstituteHoliday": "NoSubstituteHoliday",
+      "ConflictPriority": 50
+    },
+    {
+      "IsoCountry": "DK",
+      "MonthNumber": 5,
+      "DayNumber": 1,
+      "WeekDayNumber": 0,
+      "OffsetWeek": 0,
+      "OffsetDays": 0,
+      "HolidayName": "Labour Day",
+      "SubstituteHoliday": "NoSubstituteHoliday",
+      "ConflictPriority": 100
+    },
+    {
+      "IsoCountry": "DK",
+      "MonthNumber": 6,
+      "DayNumber": 5,
+      "WeekDayNumber": 0,
+      "OffsetWeek": 0,
+      "OffsetDays": 0,
+      "HolidayName": "Constitution Day",
+      "SubstituteHoliday": "NoSubstituteHoliday",
+      "ConflictPriority": 50
+    },
+    {
+      "IsoCountry": "DK",
+      "MonthNumber": 12,
+      "DayNumber": 24,
+      "WeekDayNumber": 0,
+      "OffsetWeek": 0,
+      "OffsetDays": 0,
+      "HolidayName": "Christmas Eve",
+      "SubstituteHoliday": "NoSubstituteHoliday",
+      "ConflictPriority": 50
+    },
+    {
+      "IsoCountry": "DK",
+      "MonthNumber": 12,
+      "DayNumber": 25,
+      "WeekDayNumber": 0,
+      "OffsetWeek": 0,
+      "OffsetDays": 0,
+      "HolidayName": "Christmas Day",
+      "SubstituteHoliday": "NoSubstituteHoliday",
+      "ConflictPriority": 100
+    },
+    {
+      "IsoCountry": "DK",
+      "MonthNumber": 12,
+      "DayNumber": 26,
+      "WeekDayNumber": 0,
+      "OffsetWeek": 0,
+      "OffsetDays": 0,
+      "HolidayName": "Second Day of Christmas",
+      "SubstituteHoliday": "NoSubstituteHoliday",
+      "ConflictPriority": 100
+    },
+    {
+      "IsoCountry": "DK",
+      "MonthNumber": 12,
+      "DayNumber": 31,
+      "WeekDayNumber": 0,
+      "OffsetWeek": 0,
+      "OffsetDays": 0,
+      "HolidayName": "New Year's Eve",
+      "SubstituteHoliday": "NoSubstituteHoliday",
+      "ConflictPriority": 100
+    },
+
+    {
+      "IsoCountry": "BR",
+      "MonthNumber": 1,
+      "DayNumber": 1,
+      "WeekDayNumber": 0,
+      "OffsetWeek": 0,
+      "OffsetDays": 0,
+      "HolidayName": "New Year's Day",
+      "SubstituteHoliday": "NoSubstituteHoliday",
+      "ConflictPriority": 100
+    },
+    {
+      "IsoCountry": "BR",
+      "MonthNumber": 4,
+      "DayNumber": 21,
+      "WeekDayNumber": 0,
+      "OffsetWeek": 0,
+      "OffsetDays": 0,
+      "HolidayName": "Tiradentes' Day",
+      "SubstituteHoliday": "NoSubstituteHoliday",
+      "ConflictPriority": 50
+    },
+    {
+      "IsoCountry": "BR",
+      "MonthNumber": 99,
+      "DayNumber": -2,
+      "WeekDayNumber": 0,
+      "OffsetWeek": 0,
+      "OffsetDays": 0,
+      "HolidayName": "Good Friday",
+      "SubstituteHoliday": "NoSubstituteHoliday",
+      "ConflictPriority": 50
+    },
+    {
+      "IsoCountry": "BR",
+      "MonthNumber": 5,
+      "DayNumber": 1,
+      "WeekDayNumber": 0,
+      "OffsetWeek": 0,
+      "OffsetDays": 0,
+      "HolidayName": "Labour Day",
+      "SubstituteHoliday": "NoSubstituteHoliday",
+      "ConflictPriority": 100
+    },
+    {
+      "IsoCountry": "BR",
+      "MonthNumber": 9,
+      "DayNumber": 7,
+      "WeekDayNumber": 0,
+      "OffsetWeek": 0,
+      "OffsetDays": 0,
+      "HolidayName": "Independence Day",
+      "SubstituteHoliday": "NoSubstituteHoliday",
+      "ConflictPriority": 100
+    },
+    {
+      "IsoCountry": "BR",
+      "MonthNumber": 10,
+      "DayNumber": 12,
+      "WeekDayNumber": 0,
+      "OffsetWeek": 0,
+      "OffsetDays": 0,
+      "HolidayName": "Lady of Aparecida",
+      "SubstituteHoliday": "NoSubstituteHoliday",
+      "ConflictPriority": 100
+    },
+    {
+      "IsoCountry": "BR",
+      "MonthNumber": 11,
+      "DayNumber": 2,
+      "WeekDayNumber": 0,
+      "OffsetWeek": 0,
+      "OffsetDays": 0,
+      "HolidayName": "All Soul's Day'",
+      "SubstituteHoliday": "NoSubstituteHoliday",
+      "ConflictPriority": 100
+    },
+    {
+      "IsoCountry": "BR",
+      "MonthNumber": 11,
+      "DayNumber": 15,
+      "WeekDayNumber": 0,
+      "OffsetWeek": 0,
+      "OffsetDays": 0,
+      "HolidayName": "Republic Day'",
+      "SubstituteHoliday": "NoSubstituteHoliday",
+      "ConflictPriority": 100
+    },
+    {
+      "IsoCountry": "BR",
+      "MonthNumber": 12,
+      "DayNumber": 25,
+      "WeekDayNumber": 0,
+      "OffsetWeek": 0,
+      "OffsetDays": 0,
+      "HolidayName": "Christmas Day",
+      "SubstituteHoliday": "NoSubstituteHoliday",
+      "ConflictPriority": 100
     }
   ]
 }
