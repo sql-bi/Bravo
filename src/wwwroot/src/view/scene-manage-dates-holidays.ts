@@ -6,7 +6,7 @@
 
 import { OptionStruct, OptionType, Renderer } from '../helpers/renderer';
 import { _ } from '../helpers/utils';
-import { DateISOCOuntries } from '../model/dates';
+import { HolidaysCountries } from '../model/dates';
 import { i18n } from '../model/i18n';
 import { strings } from '../model/strings';
 import { ManageDatesScenePane } from './scene-manage-dates-pane';
@@ -40,7 +40,7 @@ export class ManageDatesSceneHolidays extends ManageDatesScenePane {
                 },
                 
                 type: OptionType.select,
-                values: DateISOCOuntries
+                values: HolidaysCountries
             },
             {
                 option: "holidaysTableName",
