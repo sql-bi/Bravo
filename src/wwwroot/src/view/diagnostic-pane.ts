@@ -92,7 +92,7 @@ export class DiagnosticPane extends View {
             e.preventDefault();
             optionsController.update("diagnosticLevel", DiagnosticLevelType.None);
             this.trigger("close");
-            this.clear();
+            //this.clear();
         });
         _(".minimize-pane", this.element).addEventListener("click", e => {
             e.preventDefault();

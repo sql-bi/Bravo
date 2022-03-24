@@ -429,13 +429,13 @@ export class ManageDatesPreviewScene extends DocScene {
         this.applyButton.addEventListener("click", e => {
             e.preventDefault();
 
-            if (!this.canEdit) return;
+            if (!this.canEdit || this.applyButton.hasAttribute("disabled")) return;
 
             this.applyChanges();
         }); 
 
         Split([`#${this.element.id} .browser-pane`, `#${this.element.id} .preview-pane`], {
-            sizes: [20, 80], 
+            sizes: optionsController.options.customOptions.sizes.manageDatesPreview,  
             minSize: [270, 400],
             gutterSize: 20,
             
@@ -445,7 +445,7 @@ export class ManageDatesPreviewScene extends DocScene {
                 for (let key in this.browsers) {
                     this.browsers[key].redraw();
                 }
-                //optionsController.update("customOptions.panels", sizes);
+                optionsController.update("customOptions.sizes.manageDatesPreview", sizes);
             }
         });
     }
@@ -495,14 +495,12 @@ export class ManageDatesPreviewScene extends DocScene {
         
         host.manageDatesUpdate(request)
             .then(()=>{
-
-                this.doc.sync()
-                    .then(()=> {
-                        let successScene = new SuccessScene(Utils.DOM.uniqueId(), this.element.parentElement, i18n(strings.manageDatesSuccessSceneMessage), ()=>{
-                            this.pop();
-                        });
-                        this.splice(successScene);
-                    });
+                this.trigger("sync"); //Force a sync
+                
+                let successScene = new SuccessScene(Utils.DOM.uniqueId(), this.element.parentElement, i18n(strings.manageDatesSuccessSceneMessage), ()=>{
+                    this.pop();
+                });
+                this.splice(successScene);
             })
             .catch((error: AppError) => {
                 if (error.requestAborted) return;

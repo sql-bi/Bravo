@@ -4,7 +4,8 @@
  * https://www.sqlbi.com
 */
 
-import { _ } from '../helpers/utils';
+import { _, __ } from '../helpers/utils';
+import { host } from '../main';
 import { i18n } from '../model/i18n'; 
 import { strings } from '../model/strings';
 import { Scene } from '../view/scene';
@@ -112,6 +113,15 @@ export class WelcomeScene extends Scene {
         _(".quick-open-vpax", this.element).addEventListener("click", e => {
             e.preventDefault();
             this.trigger("quickAction", "open-vpax");
+        });
+
+        __(".help-video", this.element).forEach(div => {
+            div.addEventListener("click", e => {
+                e.preventDefault();
+                
+                //TODO Open the documentation page/video
+                host.navigateTo("https://bravo.bi");
+            });
         });
     } 
 }

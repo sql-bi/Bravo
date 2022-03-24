@@ -5,7 +5,7 @@
 */
 
 import { Dispatchable } from '../helpers/dispatchable';
-import { Utils } from '../helpers/utils';
+import { Dic, Utils } from '../helpers/utils';
 import { host, logger } from '../main';
 import { AppError } from '../model/exceptions';
 import { DaxLineBreakStyle } from '../model/tabular';
@@ -26,7 +26,7 @@ export interface ClientOptions {
     locale: string
     formatting: ClientOptionsFormatting
     editor: ClientOptionsEditor
-    panels: number[]
+    sizes: Dic<number[]>
 }
 
 export interface ClientOptionsFormatting {
@@ -173,7 +173,12 @@ export class OptionsController extends OptionsStore<Options> {
                 wrapping: true,
                 whitespaces: false
             },
-            panels: [70, 30]
+            sizes: {
+                main: [70, 30],
+                formatDax: [50, 50],
+                manageDates: [75, 25],
+                manageDatesPreview: [20, 80]
+            }
         }
     };
 

@@ -7,8 +7,8 @@
 import { OptionsStore } from '../controllers/options';
 import { Loader } from '../helpers/loader';
 import { Dic, Utils, _ } from '../helpers/utils';
-import { host, telemetry } from '../main';
-import { DateConfiguration, TableValidation } from '../model/dates';
+import { host, logger, optionsController, telemetry } from '../main';
+import { AutoScanEnum, DateConfiguration, TableValidation } from '../model/dates';
 import { Doc } from '../model/doc';
 import { AppError } from '../model/exceptions';
 import { i18n } from '../model/i18n';
@@ -42,14 +42,21 @@ export class ManageDatesScene extends DocScene {
     config: OptionsStore<ManageDatesConfig>;
     previewButton: HTMLElement;
     panes: ManageDatesScenePane[] = [];
-    sampleTable: Tabulator;
     scheduledUpdateTimeout: number;
+    sampleDataTable: Tabulator;
+    sampleDataSplit: SplitObject;
+    toggleSampleDataButton: HTMLElement;
+    previewError: AppError;
     
     constructor(id: string, container: HTMLElement, doc: Doc, type: PageType) {
         super(id, container, [doc.name, i18n(strings.ManageDates)], doc, type, true); 
         this.element.classList.add("manage-dates");
 
         this.config = new OptionsStore<ManageDatesConfig>();
+    }
+
+    get hasSampleData(): boolean {
+        return (optionsController.options.customOptions.sizes.manageDates[0] < 100);
     }
 
     render() {
@@ -69,9 +76,12 @@ export class ManageDatesScene extends DocScene {
                 </div>
             </div>
 
-            <div class="instant-preview">
-                <div class="notice">${i18n(strings.manageDatesInstantPreview)}</div>
-                <div class="table-preview">${Loader.html(true)}</div>
+            <div class="sample-data">
+                <div class="panel-title">
+                    <div class="notice">${i18n(strings.manageDatesSampleData)}</div>
+                    <div class="toggle-table ctrl solo ${this.hasSampleData ? "icon-up expanded" : "icon-down"}"></div>
+                </div>
+                <div class="table"></div>
             </div>
 
             <div class="scene-action">
@@ -82,16 +92,23 @@ export class ManageDatesScene extends DocScene {
 
         this.modelCheckElement = _(".model-check .status", this.body);
         this.previewButton = _(".do-proceed", this.body);
+        this.toggleSampleDataButton = _(".sample-data .toggle-table", this.body);
 
         let menuContainer = _(".date-config", this.body);
         let loader = new Loader(menuContainer, true, true);
 
-        Split([`#${this.element.id} .cols`, `#${this.element.id} .instant-preview`], {
-            sizes: [75, 25], 
-            minSize: [400, 30],
+        this.sampleDataSplit = Split([`#${this.element.id} .cols`, `#${this.element.id} .sample-data`], {
+            sizes: optionsController.options.customOptions.sizes.manageDates, 
+            minSize: [400, 28],
             gutterSize: 20,
             direction: "vertical",
-            cursor: "ns-resize"
+            cursor: "ns-resize",
+            onDragEnd: sizes => {
+                optionsController.update("customOptions.sizes.manageDates", sizes);
+
+                const height = _(`#${this.element.id} .sample-data`).clientHeight;
+                this.toggleSampleDataButtonStatus(height > 120);
+            }
         });
 
         this.getDatesConfiguration()
@@ -180,13 +197,13 @@ export class ManageDatesScene extends DocScene {
         });
     }
 
-    generatePreview() {
+    loadSampleData() {
 
-        this.clearTable();
-        new Loader(_(".table-preview", this.element), false, true);
+        this.clearSampleData();
+        new Loader(_(".sample-data .table", this.element), false, true);
         let request: ManageDatesPreviewChangesFromPBIDesktopReportRequest = {
             settings: {
-                configuration: this.config.options,
+                configuration: this.sanitizeConfig(this.config.options),
                 previewRows: 20
             },
             report: <PBIDesktopReport>this.doc.sourceData
@@ -204,16 +221,26 @@ export class ManageDatesScene extends DocScene {
                         }
                     }
                 }
-                this.updateTable(preview);
+                this.updateSampleData(preview);
             })
-            .catch(ignore => {});
+            .catch((error: AppError) => {
+                _(".sample-data .table", this.element).innerHTML = `
+                    <div class="error">${i18n(strings.manageDatesSampleDataError)}</div>
+                `;
+                this.previewError = error;
+                try { logger.logError(error); } catch(ignore) {}
+            })
+            .finally(() => {
+                this.updateModelCheck();
+            });
     }
 
-    updateTable(data: any[]) {
-        this.clearTable();
-
-        this.sampleTable = new Tabulator(`#${this.element.id} .table-preview`, {
+    updateSampleData(data: any[]) {
+        this.clearSampleData();
+        this.previewError = null;
+        this.sampleDataTable = new Tabulator(`#${this.element.id} .sample-data .table`, {
             maxHeight: "100%",
+            renderVerticalBuffer: 1000, 
             //layout: "fitColumns",
             placeholder: " ", // This fixes scrollbar appearing with empty tables
             columnDefaults:{
@@ -226,10 +253,34 @@ export class ManageDatesScene extends DocScene {
         });
     }
 
-    clearTable () {
-        if (this.sampleTable) {
-            this.sampleTable.destroy();
-            this.sampleTable = null;
+    toggleSampleDataButtonStatus(toggle: boolean) {
+        this.toggleSampleDataButton.toggleClass("expanded", toggle);
+        this.toggleSampleDataButton.classList.remove(`icon-${toggle ? "down" : "up"}`);
+        this.toggleSampleDataButton.classList.add(`icon-${toggle ? "up" : "down"}`);
+    }
+
+    toggleSampleData(toggle: boolean) {
+        this.toggleSampleDataButtonStatus(toggle);
+
+        const sizes = (toggle ? [75, 25] : [100, 0]);
+        optionsController.update("customOptions.sizes.manageDates", sizes);
+        this.sampleDataSplit.setSizes(sizes);
+    }
+
+    sanitizeConfig(config: DateConfiguration) {
+        let newConfig = <DateConfiguration>Utils.Obj.clone(config);
+
+        // Set auto scan disabled if both first and last year are set
+        if (Utils.Obj.isSet(newConfig.firstYear) && Utils.Obj.isSet(newConfig.lastYear))
+            newConfig.autoScan = AutoScanEnum.Disabled;
+
+        return newConfig;
+    }   
+
+    clearSampleData() {
+        if (this.sampleDataTable) {
+            this.sampleDataTable.destroy();
+            this.sampleDataTable = null;
         }
     }
 
@@ -245,23 +296,28 @@ export class ManageDatesScene extends DocScene {
         this.previewButton.addEventListener("click", e => {
             e.preventDefault();
 
-            if (!this.canEdit) return;
+            if (!this.canEdit || this.previewButton.hasAttribute("disabled")) return;
 
             telemetry.track("Manage Dates: Preview");
 
-            let previewScene = new ManageDatesPreviewScene(Utils.DOM.uniqueId(), this.element.parentElement, this.path, this.doc, this.type, this.config.options);
+            let previewScene = new ManageDatesPreviewScene(Utils.DOM.uniqueId(), this.element.parentElement, this.path, this.doc, this.type, this.sanitizeConfig(this.config.options));
             this.push(previewScene);
         }); 
+
+        this.toggleSampleDataButton.addEventListener("click", e => {
+            e.preventDefault();
+            let toggle = !this.toggleSampleDataButton.classList.contains("expanded");
+            this.toggleSampleData(toggle);
+        });
     }
 
     scheduleUpdate() {
         if (this.scheduledUpdateTimeout) return;
 
         this.scheduledUpdateTimeout = window.setTimeout(()=> {
-            this.updateModelCheck();
-            this.generatePreview();
+            this.loadSampleData();
             this.scheduledUpdateTimeout = null;
-        }, 500);
+        }, 1500);
     }
 
     update() {
@@ -278,8 +334,7 @@ export class ManageDatesScene extends DocScene {
                 });
             })
             .finally(()=>{
-                this.updateModelCheck();
-                this.generatePreview();
+                this.loadSampleData();
             })
     }
 
@@ -290,13 +345,12 @@ export class ManageDatesScene extends DocScene {
 
     updateModelCheck() {
 
-        let containsInvalid = false;
-        let containsOverwritable = false;
+        let disabled = false;
 
         let html = ``;
         if (!this.canEdit) {
 
-            containsInvalid = true;
+            disabled = true;
             html = `
                 <div class="status-incompatible">
                     <div class="icon icon-error"></div>
@@ -305,8 +359,23 @@ export class ManageDatesScene extends DocScene {
                     </div>  
                 </div>
             `;
-        } else {
+        } else if (this.previewError) {
+            disabled = true;
 
+            html = `
+            <div class="status-incompatible">
+                <div class="icon icon-error"></div>
+                <div class="message">
+                    ${i18n(strings.manageDatesStatusError, { error: this.previewError.details })}
+                </div>  
+            </div>
+        `;
+
+        } else {
+            let containsInvalid = false;
+            let containsOverwritable = false;
+
+            //Check table names validation
             let fields = [this.config.options.dateTableValidation, this.config.options.dateReferenceTableValidation];
             if (this.config.options.holidaysAvailable && this.config.options.holidaysEnabled)
                 fields = [...fields, ...[this.config.options.holidaysTableValidation, this.config.options.holidaysDefinitionTableValidation]];
@@ -319,8 +388,8 @@ export class ManageDatesScene extends DocScene {
                 }
             });
 
-
             if (containsInvalid) {
+                disabled = true;
                 html = `
                     <div class="status-incompatible">
                         <div class="icon icon-alert"></div>
@@ -351,12 +420,16 @@ export class ManageDatesScene extends DocScene {
         }
 
         this.modelCheckElement.innerHTML = html;
-        this.previewButton.toggleAttribute("disabled", containsInvalid);
+        this.previewButton.toggleAttribute("disabled", disabled);
                     
     }
 
     destroy() {
-        this.clearTable();
+        this.clearSampleData();
+        if (this.sampleDataSplit) {
+            this.sampleDataSplit.destroy();
+            this.sampleDataSplit = null;
+        }
         this.menu.destroy();
         this.menu = null;
         this.config = null;

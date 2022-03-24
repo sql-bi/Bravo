@@ -46,7 +46,7 @@ export class ManageDatesSceneCalendar extends ManageDatesScenePane {
                 }
             }
         ];
-        optionsStruct.push(this.conditionalOption("monthsInYear"));
+        //optionsStruct.push(this.conditionalOption("monthsInYear"));
         optionsStruct.push(this.conditionalOption("quarterWeekType"));
         optionsStruct.push(this.conditionalOption("firstFiscalMonth"));
         optionsStruct.push(this.conditionalOption("firstDayOfWeek"));
@@ -137,7 +137,7 @@ export class ManageDatesSceneCalendar extends ManageDatesScenePane {
                     toggledBy: toggledBy
                 };
 
-            case "monthsInYear":
+            /*case "monthsInYear":
                 return {
                     name: i18n(strings.manageDatesTemplateMonthsInYear),
                     parent: parentOption,
@@ -146,7 +146,7 @@ export class ManageDatesSceneCalendar extends ManageDatesScenePane {
                     type: OptionType.number,
                     range: [12, 13],
                     toggledBy: toggledBy
-                }; 
+                }; */
 
             case "quarterWeekType":
                 return {

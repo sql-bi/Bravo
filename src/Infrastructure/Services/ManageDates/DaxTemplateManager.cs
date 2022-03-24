@@ -3,6 +3,7 @@
     using Dax.Template;
     using Dax.Template.Exceptions;
     using Dax.Template.Model;
+    using Microsoft.AnalysisServices.AdomdClient;
     using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Models.ManageDates;
     using System;
@@ -65,6 +66,10 @@
                 }
             }
             catch (TemplateException ex)
+            {
+                throw new BravoException(BravoProblem.ManageDateTemplateError, ex.Message, ex);
+            }
+            catch (AdomdException ex)
             {
                 throw new BravoException(BravoProblem.ManageDateTemplateError, ex.Message, ex);
             }

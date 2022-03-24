@@ -107,32 +107,49 @@
                 background-color: @back-color-dark
             }
         }
-        .instant-preview {
-            width: calc(100% - 16px);
+        .sample-data {
+            width: calc(100% - 21px);
             overflow: hidden;
             position: relative;
-            padding: 8px;
+            padding: 8px 6px 8px 15px;
 
             .border-radius();
             background-color: @window-back-color-alt;
             border: 1px solid @border-color;
             .dark & {
-                background-color: @window-back-color-alt-dark;
+                background-color: @window-back-color-dark;
                 border-color: @border-color-dark;
             }
 
-            .notice {
-                padding: 7px;
+            .panel-title {
+                width: 100%;
+                .flexbox(center);
+          
+                .toggle-table {
+                    font-size: .8em;
+                    margin-left: auto;
+                    text-align: right;
+                }
             }
 
-            .table-preview {
+            .table {
+                overflow: hidden;
+                position: relative;
                 height: calc(100% - 30px);
-                width: 100%;
+                margin-top: 5px;
+                width: calc(100% - 8px);
                 font-size: 13px;
 
                 .tabulator-header {
                     background: none !important;
                 }
+            }
+
+            .error {
+                color: @notice-color;
+                margin-top: -15px;
+
+                .dark & { color: @notice-color-dark; }
             }
             
         }
@@ -148,12 +165,12 @@
         }
     }
 
-    #onlytablescolumns {
+    /*#onlytablescolumns {
         height: calc(100vh - 542px);
     }
     #targetmeasures {
         height: calc(100vh - 552px);
-    }
+    }*/
 
 }
 
@@ -236,7 +253,7 @@
             background-color: @window-back-color-alt;
             border: 1px solid @border-color;
             .dark & {
-                background-color: @window-back-color-alt-dark;
+                background-color: @window-back-color-dark;
                 border-color: @border-color-dark;
             }
             
