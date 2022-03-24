@@ -15,6 +15,7 @@ export interface OptionStruct {
     icon?: string
     bold?: boolean
     placeholder?: string
+    readonly?: boolean
     parent?: string
     name?: string
     description?: string
@@ -109,7 +110,7 @@ export module Renderer {
                 case OptionType.select:
 
                     ctrlHtml = `
-                        <select class="listener" ${struct.attributes ? struct.attributes : ""}>
+                        <select class="listener" ${struct.readonly ? "readonly" : ""} ${struct.attributes ? struct.attributes : ""}>
                             ${struct.values.map(_value => `
                                 <option value="${_value[0]}" ${value == _value[0] ? "selected" : ""}>${_value[1]}</option>
                             `).join("")}
@@ -120,7 +121,7 @@ export module Renderer {
                 case OptionType.switch:
                     ctrlHtml = `
                         <div class="switch-container">
-                            <label class="switch"><input type="checkbox" class="listener" ${value ? "checked" : ""} ${struct.attributes ? struct.attributes : ""}><span class="slider"></span></label> 
+                            <label class="switch"><input type="checkbox" class="listener" ${value ? "checked" : ""} ${struct.readonly ? "readonly" : ""} ${struct.attributes ? struct.attributes : ""}><span class="slider"></span></label> 
                         </div>
                     `;
                     break;
@@ -128,14 +129,14 @@ export module Renderer {
                 case OptionType.text:
                     ctrlHtml = `
                         ${Utils.Obj.isSet(struct.validation) ? `<div class="validation-container"><div class="validation-input">` : ""}
-                        <input type="text" class="listener" value="${value}" ${struct.attributes ? struct.attributes : ""} ${struct.placeholder ? ` placeholder="${struct.placeholder}"` : ""}>
+                        <input type="text" class="listener" value="${value}" ${struct.attributes ? struct.attributes : ""} ${struct.readonly ? "readonly" : ""} ${struct.placeholder ? ` placeholder="${struct.placeholder}"` : ""}>
                         ${Utils.Obj.isSet(struct.validation) ? `<div class="status icon"></div></div><div class="validation-desc"></div></div>` : ""}
                     `;
                     break;
 
                 case OptionType.number:
                     ctrlHtml = `
-                        <input type="number" ${struct.range && struct.range.length ? `min="${struct.range[0]}"` : ""} ${struct.range && struct.range.length > 1 ? `max="${struct.range[1]}"` : ""} class="listener" value="${value}" ${struct.attributes ? struct.attributes : ""} ${struct.placeholder ? ` placeholder="${struct.placeholder}"` : ""}>
+                        <input type="number" ${struct.range && struct.range.length ? `min="${struct.range[0]}"` : ""} ${struct.readonly ? "readonly" : ""} ${struct.range && struct.range.length > 1 ? `max="${struct.range[1]}"` : ""} class="listener" value="${value}" ${struct.attributes ? struct.attributes : ""} ${struct.placeholder ? ` placeholder="${struct.placeholder}"` : ""}>
                     `;
                     break;
 
@@ -222,80 +223,81 @@ export module Renderer {
             toggleOptionContainer();
 
             const listener = _(`#${id} .listener`, element);
+            
+            if (!struct.readonly) {
+                Options.validateOption(listener, struct);
 
-            Options.validateOption(listener, struct);
-
-            if (struct.type == OptionType.switch || 
-                struct.type == OptionType.select || 
-                struct.type == OptionType.text || 
-                struct.type == OptionType.number
-            ) {
-                listener.addEventListener("change", e => {
-                    
-                    let el = <HTMLInputElement|HTMLSelectElement>e.currentTarget; 
-
-                    const getValue = (el: HTMLInputElement|HTMLSelectElement) => {
-                        let convertedValue: any = (struct.type == OptionType.switch ? (<HTMLInputElement>el).checked : el.value.trim());
-                        if (typeof convertedValue === "string") {
-                            if (valueType == "number") convertedValue = Number(convertedValue);
-                            if (valueType == "boolean") convertedValue = (convertedValue == "true");
-                        }
-                        return convertedValue;
-                    };
-
-                    if (Utils.Obj.isSet(struct.onBeforeChange))
-                        struct.onBeforeChange(e, getValue(el));
-
-                    let newValue = getValue(el);
-                    if (struct.option)
-                        store.update(struct.option, newValue, (struct.silentUpdate ? false : true));
-                    
-                    __(`.toggled-by-${id}`, element).forEach((div: HTMLElement) => {
-                        div.toggle(div.classList.contains(`toggle-if-${Utils.Text.slugify(newValue.toString())}`));
-                    });
-
-                    toggleOptionContainer();
-
-                    Options.validateOption(el, struct); //Validate callback has the 
-
-                    if (Utils.Obj.isSet(struct.onChange))
-                        struct.onChange(e, newValue);
-                });
-            }
-
-            if (struct.type == OptionType.text || struct.type == OptionType.number) {
-
-                if (Utils.Obj.isSet(struct.onKeydown)) {
-                    listener.addEventListener("keydown", e => {
+                if (struct.type == OptionType.switch || 
+                    struct.type == OptionType.select || 
+                    struct.type == OptionType.text || 
+                    struct.type == OptionType.number
+                ) {
+                
+                    listener.addEventListener("change", e => {
                         
-                        let el = <HTMLInputElement>e.currentTarget; 
-                        let newValue = el.value + e.key;
-                        struct.onKeydown(e, newValue);
+                        let el = <HTMLInputElement|HTMLSelectElement>e.currentTarget; 
+
+                        const getValue = (el: HTMLInputElement|HTMLSelectElement) => {
+                            let convertedValue: any = (struct.type == OptionType.switch ? (<HTMLInputElement>el).checked : el.value.trim());
+                            if (typeof convertedValue === "string") {
+                                if (valueType == "number") convertedValue = Number(convertedValue);
+                                if (valueType == "boolean") convertedValue = (convertedValue == "true");
+                            }
+                            return convertedValue;
+                        };
+
+                        if (Utils.Obj.isSet(struct.onBeforeChange))
+                            struct.onBeforeChange(e, getValue(el));
+
+                        let newValue = getValue(el);
+                        if (struct.option)
+                            store.update(struct.option, newValue, (struct.silentUpdate ? false : true));
+                        
+                        __(`.toggled-by-${id}`, element).forEach((div: HTMLElement) => {
+                            div.toggle(div.classList.contains(`toggle-if-${Utils.Text.slugify(newValue.toString())}`));
+                        });
+
+                        toggleOptionContainer();
+
+                        Options.validateOption(el, struct); //Validate callback has the 
+
+                        if (Utils.Obj.isSet(struct.onChange))
+                            struct.onChange(e, newValue);
                     });
                 }
 
-                listener.addEventListener("contextmenu", e => {
-                    e.preventDefault();
-        
-                    let el = <HTMLInputElement>e.currentTarget;
-                    if (el.hasAttribute("disabled")) return;
-        
-                    let selection = el.value.substring(el.selectionStart, el.selectionEnd);
-                    ContextMenu.editorContextMenu(e, selection, el.value, el);
-                });
-            }
+                if (struct.type == OptionType.text || struct.type == OptionType.number) {
 
-            if (struct.type == OptionType.button && Utils.Obj.isSet(struct.onClick)) {
-                listener.addEventListener("click", e => {
-                    struct.onClick(e);
-                });
+                    if (Utils.Obj.isSet(struct.onKeydown)) {
+                        listener.addEventListener("keydown", e => {
+                            
+                            let el = <HTMLInputElement>e.currentTarget; 
+                            let newValue = el.value + e.key;
+                            struct.onKeydown(e, newValue);
+                        });
+                    }
+
+                    listener.addEventListener("contextmenu", e => {
+                        e.preventDefault();
+            
+                        let el = <HTMLInputElement>e.currentTarget;
+                        if (el.hasAttribute("disabled")) return;
+            
+                        let selection = el.value.substring(el.selectionStart, el.selectionEnd);
+                        ContextMenu.editorContextMenu(e, selection, el.value, el);
+                    });
+                }
+
+                if (struct.type == OptionType.button && Utils.Obj.isSet(struct.onClick)) {
+                    listener.addEventListener("click", e => {
+                        struct.onClick(e);
+                    });
+                }
             }
         }
 
-        
-
         export function validateOption(element: HTMLElement, struct: OptionStruct) {
-            if (struct.type == OptionType.text && Utils.Obj.isSet(struct.validation)) {
+            if (struct.type == OptionType.text && !struct.readonly && Utils.Obj.isSet(struct.validation)) {
                 let validationContainer = element.closest(".validation-container");
                 validationContainer.classList.remove("valid", "invalid");
                 validationContainer.classList.add("validating");

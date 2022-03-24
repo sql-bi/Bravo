@@ -495,14 +495,12 @@ export class ManageDatesPreviewScene extends DocScene {
         
         host.manageDatesUpdate(request)
             .then(()=>{
-
-                this.doc.sync()
-                    .then(()=> {
-                        let successScene = new SuccessScene(Utils.DOM.uniqueId(), this.element.parentElement, i18n(strings.manageDatesSuccessSceneMessage), ()=>{
-                            this.pop();
-                        });
-                        this.splice(successScene);
-                    });
+                this.trigger("sync"); //Force a sync
+                
+                let successScene = new SuccessScene(Utils.DOM.uniqueId(), this.element.parentElement, i18n(strings.manageDatesSuccessSceneMessage), ()=>{
+                    this.pop();
+                });
+                this.splice(successScene);
             })
             .catch((error: AppError) => {
                 if (error.requestAborted) return;

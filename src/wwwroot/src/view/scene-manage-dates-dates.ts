@@ -105,6 +105,7 @@ export class ManageDatesSceneDates extends ManageDatesScenePane {
                 icon: "table",
                 type: OptionType.text,
                 silentUpdate: true,
+                readonly: this.fieldReadonly("dateTableName"),
                 validation: (name, value) => this.validateField(name)
             },
             {
@@ -114,6 +115,7 @@ export class ManageDatesSceneDates extends ManageDatesScenePane {
                 icon: "table-fx",
                 type: OptionType.text,
                 silentUpdate: true,
+                readonly: this.fieldReadonly("dateReferenceTableName"),
                 validation: (name, value) => this.validateField(name)
             },
         ];

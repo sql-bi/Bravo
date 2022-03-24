@@ -248,7 +248,7 @@ a, .link {
         cursor: default !important;
         color: @disabled-color !important;
 
-        .dark & { color: @disabled-color-dark }
+        .dark & { color: @disabled-color-dark !important }
     }
     &:before, &:after {
         font-size: 16px;
@@ -616,11 +616,16 @@ a, .link {
             width: 90px;
             //text-align: right;
         }
+        input[readonly] {   
+            color: @disabled-color !important;
+            .dark & { color: @disabled-color-dark !important }
+        }
     }
 }
 .option.disabled {
     .desc {
         color: @disabled-color !important;
+        .dark & { color: @disabled-color-dark !important }
     }
     .listener {
         .disabled;

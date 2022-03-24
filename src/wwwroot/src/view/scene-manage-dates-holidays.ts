@@ -52,6 +52,7 @@ export class ManageDatesSceneHolidays extends ManageDatesScenePane {
                     value: true
                 },
                 type: OptionType.text,
+                readonly: this.fieldReadonly("holidaysTableName"),
                 silentUpdate: true,
                 validation: (name, value) => this.validateField(name)
             },
@@ -65,6 +66,7 @@ export class ManageDatesSceneHolidays extends ManageDatesScenePane {
                     value: true
                 },
                 type: OptionType.text,
+                readonly: this.fieldReadonly("holidaysDefinitionTableName"),
                 silentUpdate: true,
                 validation: (name, value) => this.validateField(name)
             },

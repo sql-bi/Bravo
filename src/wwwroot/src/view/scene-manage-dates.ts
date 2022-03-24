@@ -265,13 +265,12 @@ export class ManageDatesScene extends DocScene {
         const sizes = (toggle ? [75, 25] : [100, 0]);
         optionsController.update("customOptions.sizes.manageDates", sizes);
         this.sampleDataSplit.setSizes(sizes);
-
-
     }
 
     sanitizeConfig(config: DateConfiguration) {
         let newConfig = <DateConfiguration>Utils.Obj.clone(config);
 
+        // Set auto scan disabled if both first and last year are set
         if (Utils.Obj.isSet(newConfig.firstYear) && Utils.Obj.isSet(newConfig.lastYear))
             newConfig.autoScan = AutoScanEnum.Disabled;
 

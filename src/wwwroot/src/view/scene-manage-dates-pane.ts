@@ -42,6 +42,26 @@ export class ManageDatesScenePane {
         this.templates = null;
     }
 
+    fieldReadonly(field: string) {
+        let dateTablesReadonly = false;
+        let holidaysTablesReadonly = false;
+        this.templates.forEach(template => {
+            if (template.isCurrent) {
+                dateTablesReadonly = true;
+
+                if (template.holidaysAvailable && template.holidaysEnabled)
+                    holidaysTablesReadonly = true;
+            }
+        });
+
+        if (field == "dateTableName" || field == "dateReferenceTableName")
+            return dateTablesReadonly;
+        else if (field == "holidaysTableName" || field == "holidaysDefinitionTableName")
+            return holidaysTablesReadonly;
+        else
+            return false;
+    }
+
     validateField(field: string) {
 
         let validationFields = {
