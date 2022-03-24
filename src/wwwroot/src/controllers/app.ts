@@ -379,7 +379,7 @@ export class App {
     }
 
     toggleDiagnostics(toggle: boolean) {
-        const sizes = (toggle ? optionsController.options.customOptions.sizes.main : [100, 0]);
+        const sizes = (toggle ? [70, 30] : [100, 0]);
         
         if (toggle && optionsController.options.diagnosticLevel == DiagnosticLevelType.None) 
             optionsController.options.diagnosticLevel = DiagnosticLevelType.Basic;
