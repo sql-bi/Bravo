@@ -1,0 +1,502 @@
+{
+  "_comment": "Standard Time Intelligence",
+  "_comment1": "NOTE: current version does not support filter safe filters (Day of Week, Working Days, Holidays)",
+  "_comment2": "NOTE: current version does not support fiscal calculations",
+  "TargetTable": {
+    "SQLBI_CalendarType": "Calendar"
+  },
+  "TemplateAnnotations": {
+    "SQLBI_Template": "TimeIntelligence",
+    "SQLBI_TimeIntelligence": "Standard",
+    "SQLBI_CalendarType": "Calendar"
+  },
+  "MeasureTemplates": [
+    {
+      "Name": "_ShowValueForDates",
+      "IsHidden": true,
+      "IsSingleInstance": true,
+      "MultiLineComment": [
+        "Returns TRUE if the period selected is earlier",
+        "than the last period with data."
+      ],
+      "MultiLineExpression": [
+        "VAR __LastDateWithData =",
+        "    CALCULATE (",
+        "        @@GETMAXDATE(),",
+        "        REMOVEFILTERS ()",
+        "    )",
+        "VAR __FirstDateVisible =",
+        "    MIN ( @_C-SQLBI_AttributeTypes-Date_@ )",
+        "VAR __Result =",
+        "    __FirstDateVisible <= __LastDateWithData",
+        "RETURN",
+        "    __Result"
+      ]
+    },
+    {
+      "Name": "YTD",
+      "DisplayFolder": "To-date total",
+      "MultiLineExpression": [
+        "IF (",
+        "    [_ShowValueForDates],",
+        "    CALCULATE (",
+        "        @@GETMEASURE(),",
+        "        DATESYTD ( @_C-SQLBI_AttributeTypes-Date_@ )",
+        "    )",
+        ")"
+      ]
+    },
+    {
+      "Name": "QTD",
+      "DisplayFolder": "To-date total",
+      "MultiLineExpression": [
+        "IF (",
+        "    [_ShowValueForDates],",
+        "    CALCULATE (",
+        "        @@GETMEASURE(),",
+        "        DATESQTD ( @_C-SQLBI_AttributeTypes-Date_@ )",
+        "    )",
+        ")"
+      ]
+    },
+    {
+      "Name": "MTD",
+      "DisplayFolder": "To-date total",
+      "MultiLineExpression": [
+        "IF (",
+        "    [_ShowValueForDates],",
+        "    CALCULATE (",
+        "        @@GETMEASURE(),",
+        "        DATESMTD ( @_C-SQLBI_AttributeTypes-Date_@ )",
+        "    )",
+        ")"
+      ]
+    },
+    {
+      "Name": "PY",
+      "DisplayFolder": "Growth",
+      "MultiLineExpression": [
+        "IF (",
+        "    [_ShowValueForDates],",
+        "    CALCULATE (",
+        "        @@GETMEASURE(),",
+        "        CALCULATETABLE (",
+        "            DATEADD ( @_C-SQLBI_AttributeTypes-Date_@, -1, YEAR ),",
+        "            @_C-SQLBI_AttributeTypes-DateDuration_@ = TRUE",
+        "        )",
+        "    )",
+        ")"
+      ]
+    },
+    {
+      "Name": "YOY",
+      "DisplayFolder": "Growth",
+      "MultiLineExpression": [
+        "VAR __ValueCurrentPeriod = @@GETMEASURE()",
+        "VAR __ValuePreviousPeriod = @@GETMEASURE( PY )",
+        "VAR __Result =",
+        "    IF (",
+        "        NOT ISBLANK ( __ValueCurrentPeriod ) && NOT ISBLANK ( __ValuePreviousPeriod ),",
+        "        __ValueCurrentPeriod - __ValuePreviousPeriod",
+        "    )",
+        "RETURN",
+        "    __Result"
+      ]
+    },
+    {
+      "Name": "YOY %",
+      "DisplayFolder": "Growth",
+      "FormatString": "0.00%",
+      "MultiLineExpression": [
+        "DIVIDE ( ",
+        "    @@GETMEASURE( YOY ),",
+        "    @@GETMEASURE( PY )",
+        ")"
+      ]
+    },
+    {
+      "Name": "PQ",
+      "DisplayFolder": "Growth",
+      "MultiLineExpression": [
+        "IF (",
+        "    [_ShowValueForDates],",
+        "    CALCULATE (",
+        "        @@GETMEASURE(),",
+        "        CALCULATETABLE (",
+        "            DATEADD ( @_C-SQLBI_AttributeTypes-Date_@, -1, QUARTER ),",
+        "            @_C-SQLBI_AttributeTypes-DateDuration_@ = TRUE",
+        "        )",
+        "    )",
+        ")"
+      ]
+    },
+    {
+      "Name": "QOQ",
+      "DisplayFolder": "Growth",
+      "MultiLineExpression": [
+        "VAR __ValueCurrentPeriod = @@GETMEASURE()",
+        "VAR __ValuePreviousPeriod = @@GETMEASURE( PQ )",
+        "VAR __Result =",
+        "    IF (",
+        "        NOT ISBLANK ( __ValueCurrentPeriod ) && NOT ISBLANK ( __ValuePreviousPeriod ),",
+        "        __ValueCurrentPeriod - __ValuePreviousPeriod",
+        "    )",
+        "RETURN",
+        "    __Result"
+      ]
+    },
+    {
+      "Name": "QOQ %",
+      "DisplayFolder": "Growth",
+      "FormatString": "0.00%",
+      "MultiLineExpression": [
+        "DIVIDE ( ",
+        "    @@GETMEASURE( QOQ ),",
+        "    @@GETMEASURE( PQ )",
+        ")"
+      ]
+    },
+    {
+      "Name": "PM",
+      "DisplayFolder": "Growth",
+      "MultiLineExpression": [
+        "IF (",
+        "    [_ShowValueForDates],",
+        "    CALCULATE (",
+        "        @@GETMEASURE(),",
+        "        CALCULATETABLE (",
+        "            DATEADD ( @_C-SQLBI_AttributeTypes-Date_@, -1, MONTH ),",
+        "            @_C-SQLBI_AttributeTypes-DateDuration_@ = TRUE",
+        "        )",
+        "    )",
+        ")"
+      ]
+    },
+    {
+      "Name": "MOM",
+      "DisplayFolder": "Growth",
+      "MultiLineExpression": [
+        "VAR __ValueCurrentPeriod = @@GETMEASURE()",
+        "VAR __ValuePreviousPeriod = @@GETMEASURE( PM )",
+        "VAR __Result =",
+        "    IF (",
+        "        NOT ISBLANK ( __ValueCurrentPeriod ) && NOT ISBLANK ( __ValuePreviousPeriod ),",
+        "        __ValueCurrentPeriod - __ValuePreviousPeriod",
+        "    )",
+        "RETURN",
+        "    __Result"
+      ]
+    },
+    {
+      "Name": "MOM %",
+      "DisplayFolder": "Growth",
+      "FormatString": "0.00%",
+      "MultiLineExpression": [
+        "DIVIDE ( ",
+        "    @@GETMEASURE( MOM ),",
+        "    @@GETMEASURE( PM )",
+        ")"
+      ]
+    },
+    {
+      "Name": "PYTD",
+      "DisplayFolder": "To-date growth",
+      "MultiLineExpression": [
+        "IF (",
+        "    [_ShowValueForDates],",
+        "    CALCULATE (",
+        "        @@GETMEASURE( YTD ),",
+        "        CALCULATETABLE (",
+        "            DATEADD ( @_C-SQLBI_AttributeTypes-Date_@, -1, YEAR ),",
+        "            @_C-SQLBI_AttributeTypes-DateDuration_@ = TRUE",
+        "        )",
+        "    )",
+        ")"
+      ]
+    },
+    {
+      "Name": "YOYTD",
+      "DisplayFolder": "To-date growth",
+      "MultiLineExpression": [
+        "VAR __ValueCurrentPeriod = @@GETMEASURE( YTD )",
+        "VAR __ValuePreviousPeriod = @@GETMEASURE( PYTD )",
+        "VAR __Result =",
+        "    IF (",
+        "        NOT ISBLANK ( __ValueCurrentPeriod ) && NOT ISBLANK ( __ValuePreviousPeriod ),",
+        "        __ValueCurrentPeriod - __ValuePreviousPeriod",
+        "    )",
+        "RETURN",
+        "    __Result"
+      ]
+    },
+    {
+      "Name": "YOYTD %",
+      "DisplayFolder": "To-date growth",
+      "FormatString": "0.00%",
+      "MultiLineExpression": [
+        "DIVIDE ( ",
+        "    @@GETMEASURE( YOYTD ),",
+        "    @@GETMEASURE( PYTD )",
+        ")"
+      ]
+    },
+    {
+      "Name": "PQTD",
+      "DisplayFolder": "To-date growth",
+      "MultiLineExpression": [
+        "IF (",
+        "    [_ShowValueForDates],",
+        "    CALCULATE (",
+        "        @@GETMEASURE( QTD ),",
+        "        CALCULATETABLE (",
+        "            DATEADD ( @_C-SQLBI_AttributeTypes-Date_@, -1, QUARTER ),",
+        "            @_C-SQLBI_AttributeTypes-DateDuration_@ = TRUE",
+        "        )",
+        "    )",
+        ")"
+      ]
+    },
+    {
+      "Name": "QOQTD",
+      "DisplayFolder": "To-date growth",
+      "MultiLineExpression": [
+        "VAR __ValueCurrentPeriod = @@GETMEASURE( QTD )",
+        "VAR __ValuePreviousPeriod = @@GETMEASURE( PQTD )",
+        "VAR __Result =",
+        "    IF (",
+        "        NOT ISBLANK ( __ValueCurrentPeriod ) && NOT ISBLANK ( __ValuePreviousPeriod ),",
+        "        __ValueCurrentPeriod - __ValuePreviousPeriod",
+        "    )",
+        "RETURN",
+        "    __Result"
+      ]
+    },
+    {
+      "Name": "QOQTD %",
+      "DisplayFolder": "To-date growth",
+      "FormatString": "0.00%",
+      "MultiLineExpression": [
+        "DIVIDE ( ",
+        "    @@GETMEASURE( QOQTD ),",
+        "    @@GETMEASURE( PQTD )",
+        ")"
+      ]
+    },
+    {
+      "Name": "PMTD",
+      "DisplayFolder": "To-date growth",
+      "MultiLineExpression": [
+        "IF (",
+        "    [_ShowValueForDates],",
+        "    CALCULATE (",
+        "        @@GETMEASURE( MTD ),",
+        "        CALCULATETABLE (",
+        "            DATEADD ( @_C-SQLBI_AttributeTypes-Date_@, -1, MONTH ),",
+        "            @_C-SQLBI_AttributeTypes-DateDuration_@ = TRUE",
+        "        )",
+        "    )",
+        ")"
+      ]
+    },
+    {
+      "Name": "MOMTD",
+      "DisplayFolder": "To-date growth",
+      "MultiLineExpression": [
+        "VAR __ValueCurrentPeriod = @@GETMEASURE( MTD )",
+        "VAR __ValuePreviousPeriod = @@GETMEASURE( PMTD )",
+        "VAR __Result =",
+        "    IF (",
+        "        NOT ISBLANK ( __ValueCurrentPeriod ) && NOT ISBLANK ( __ValuePreviousPeriod ),",
+        "        __ValueCurrentPeriod - __ValuePreviousPeriod",
+        "    )",
+        "RETURN",
+        "    __Result"
+      ]
+    },
+    {
+      "Name": "MOMTD %",
+      "DisplayFolder": "To-date growth",
+      "FormatString": "0.00%",
+      "MultiLineExpression": [
+        "DIVIDE ( ",
+        "    @@GETMEASURE( MOMTD ),",
+        "    @@GETMEASURE( PMTD )",
+        ")"
+      ]
+    },
+    {
+      "Name": "PYC",
+      "DisplayFolder": "Growth over full period",
+      "MultiLineExpression": [
+        "IF (",
+        "    [_ShowValueForDates],",
+        "    CALCULATE (",
+        "        @@GETMEASURE(),",
+        "        PARALLELPERIOD ( @_C-SQLBI_AttributeTypes-Date_@, -1, YEAR )",
+        "    )",
+        ")"
+      ]
+    },
+    {
+      "Name": "YTDOPY",
+      "DisplayFolder": "Growth over full period",
+      "MultiLineExpression": [
+        "VAR __ValueCurrentPeriod = @@GETMEASURE( YTD )",
+        "VAR __ValuePreviousPeriod = @@GETMEASURE( PYC )",
+        "VAR __Result =",
+        "    IF (",
+        "        NOT ISBLANK ( __ValueCurrentPeriod ) && NOT ISBLANK ( __ValuePreviousPeriod ),",
+        "        __ValueCurrentPeriod - __ValuePreviousPeriod",
+        "    )",
+        "RETURN",
+        "    __Result"
+      ]
+    },
+    {
+      "Name": "YDTOPY %",
+      "DisplayFolder": "Growth over full period",
+      "FormatString": "0.00%",
+      "MultiLineExpression": [
+        "DIVIDE ( ",
+        "    @@GETMEASURE( YTDOPY ),",
+        "    @@GETMEASURE( PYC )",
+        ")"
+      ]
+    },
+    {
+      "Name": "PQC",
+      "DisplayFolder": "Growth over full period",
+      "MultiLineExpression": [
+        "IF (",
+        "    [_ShowValueForDates],",
+        "    CALCULATE (",
+        "        @@GETMEASURE(),",
+        "        PARALLELPERIOD ( @_C-SQLBI_AttributeTypes-Date_@, -1, QUARTER )",
+        "    )",
+        ")"
+      ]
+    },
+    {
+      "Name": "QTDOPQ",
+      "DisplayFolder": "Growth over full period",
+      "MultiLineExpression": [
+        "VAR __ValueCurrentPeriod = @@GETMEASURE( QTD )",
+        "VAR __ValuePreviousPeriod = @@GETMEASURE( PQC )",
+        "VAR __Result =",
+        "    IF (",
+        "        NOT ISBLANK ( __ValueCurrentPeriod ) && NOT ISBLANK ( __ValuePreviousPeriod ),",
+        "        __ValueCurrentPeriod - __ValuePreviousPeriod",
+        "    )",
+        "RETURN",
+        "    __Result"
+      ]
+    },
+    {
+      "Name": "QDTOPQ %",
+      "DisplayFolder": "Growth over full period",
+      "FormatString": "0.00%",
+      "MultiLineExpression": [
+        "DIVIDE ( ",
+        "    @@GETMEASURE( QTDOPQ ),",
+        "    @@GETMEASURE( PQC )",
+        ")"
+      ]
+    },
+    {
+      "Name": "PMC",
+      "DisplayFolder": "Growth over full period",
+      "MultiLineExpression": [
+        "IF (",
+        "    [_ShowValueForDates],",
+        "    CALCULATE (",
+        "        @@GETMEASURE(),",
+        "        PARALLELPERIOD ( @_C-SQLBI_AttributeTypes-Date_@, -1, MONTH )",
+        "    )",
+        ")"
+      ]
+    },
+    {
+      "Name": "MTDOPM",
+      "DisplayFolder": "Growth over full period",
+      "MultiLineExpression": [
+        "VAR __ValueCurrentPeriod = @@GETMEASURE( MTD )",
+        "VAR __ValuePreviousPeriod = @@GETMEASURE( PMC )",
+        "VAR __Result =",
+        "    IF (",
+        "        NOT ISBLANK ( __ValueCurrentPeriod ) && NOT ISBLANK ( __ValuePreviousPeriod ),",
+        "        __ValueCurrentPeriod - __ValuePreviousPeriod",
+        "    )",
+        "RETURN",
+        "    __Result"
+      ]
+    },
+    {
+      "Name": "MTDOPM %",
+      "DisplayFolder": "Growth over full period",
+      "FormatString": "0.00%",
+      "MultiLineExpression": [
+        "DIVIDE ( ",
+        "    @@GETMEASURE( MTDOPM ),",
+        "    @@GETMEASURE( PMC )",
+        ")"
+      ]
+    },
+    {
+      "Name": "MAT",
+      "DisplayFolder": "Moving annual growth",
+      "MultiLineExpression": [
+        "IF (",
+        "    [_ShowValueForDates],",
+        "    CALCULATE (",
+        "        @@GETMEASURE(),",
+        "        DATESINPERIOD (",
+        "            @_C-SQLBI_AttributeTypes-Date_@,",
+        "            MAX ( @_C-SQLBI_AttributeTypes-Date_@ ),",
+        "            -1,",
+        "            YEAR",
+        "        )",
+        "    )",
+        ")"
+      ]
+    },
+    {
+      "Name": "PYMAT",
+      "DisplayFolder": "Moving annual growth",
+      "MultiLineExpression": [
+        "IF (",
+        "    [_ShowValueForDates],",
+        "    CALCULATE (",
+        "        @@GETMEASURE( MAT ),",
+        "        DATEADD ( @_C-SQLBI_AttributeTypes-Date_@, -1, YEAR )",
+        "    )",
+        ")"
+      ]
+    },
+    {
+      "Name": "MATG",
+      "DisplayFolder": "Moving annual growth",
+      "MultiLineExpression": [
+        "VAR __ValueCurrentPeriod = @@GETMEASURE( MAT )",
+        "VAR __ValuePreviousPeriod = @@GETMEASURE( PYMAT )",
+        "VAR __Result =",
+        "    IF (",
+        "        NOT ISBLANK ( __ValueCurrentPeriod ) && NOT ISBLANK ( __ValuePreviousPeriod ),",
+        "        __ValueCurrentPeriod - __ValuePreviousPeriod",
+        "    )",
+        "RETURN",
+        "    __Result"
+      ]
+    },
+    {
+      "Name": "MATG %",
+      "DisplayFolder": "Moving annual growth",
+      "FormatString": "0.00%",
+      "MultiLineExpression": [
+        "DIVIDE ( ",
+        "    @@GETMEASURE( MATG ),",
+        "    @@GETMEASURE( PYMAT )",
+        ")"
+      ]
+    }
+  ]
+}

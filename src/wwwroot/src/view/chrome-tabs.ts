@@ -20,7 +20,7 @@ const TAB_CONTENT_OVERLAP_DISTANCE = 1
 const TAB_OVERLAP_DISTANCE = (TAB_CONTENT_MARGIN * 2) + TAB_CONTENT_OVERLAP_DISTANCE
 
 const TAB_CONTENT_MIN_WIDTH = 24
-const TAB_CONTENT_MAX_WIDTH = 270
+const TAB_CONTENT_MAX_WIDTH = 220
 
 const TAB_SIZE_SMALL = 84
 const TAB_SIZE_SMALLER = 60
@@ -57,20 +57,29 @@ const tabTemplate = `
   </div>
 `
 
-const defaultTabProperties = {
+const defaultTabProperties: ChromeTabsProperties = {
   title: "New tab",
   id: "",
-  favicon: false
 }
 
 let instanceId = 0
   
+export interface ChromeTabsProperties {
+  title?: string
+  id?: string
+  favicon?: string
+}
+
 export interface ChromeTabsReorderInfo {
   element: HTMLElement
   originalIndex: number
   destIndex: number
 }
 
+export interface ChromeTabsMenuEvent {
+  element: HTMLElement
+  event: MouseEvent
+}
 export class ChromeTabs extends Dispatchable {
 
     el: HTMLElement;
@@ -117,7 +126,7 @@ export class ChromeTabs extends Dispatchable {
       this.tabEls.forEach((tabEl: HTMLElement) => this.setTabCloseEventListener(tabEl))
     }
 
-    get tabEls() {
+    get tabEls(): HTMLElement[] {
       return Array.prototype.slice.call(__('.chrome-tab', this.el))
     }
 
@@ -126,10 +135,8 @@ export class ChromeTabs extends Dispatchable {
     }
 
     get tabContentWidths() {
-     const numberOfTabs = this.tabEls.length
-
+     /*const numberOfTabs = this.tabEls.length
       const widths = []
-      
       for (let i = 0; i < numberOfTabs; i += 1) {
         let tabEl = this.tabEls[i]
 
@@ -143,9 +150,26 @@ export class ChromeTabs extends Dispatchable {
         const flooredClampedTargetWidth = Math.floor(clampedTargetWidth)
 
         widths.push(flooredClampedTargetWidth)
+      }*/
+
+      const numberOfTabs = this.tabEls.length;
+      const tabsContentWidth = this.tabContentEl.clientWidth;
+      const tabsCumulativeOverlappedWidth = (numberOfTabs - 1) * TAB_CONTENT_OVERLAP_DISTANCE;
+      const targetWidth = (tabsContentWidth - (2 * TAB_CONTENT_MARGIN) + tabsCumulativeOverlappedWidth) / numberOfTabs;
+      const clampedTargetWidth = Math.max(TAB_CONTENT_MIN_WIDTH, Math.min(TAB_CONTENT_MAX_WIDTH, targetWidth));
+      const flooredClampedTargetWidth = Math.floor(clampedTargetWidth);
+      const totalTabsWidthUsingTarget = (flooredClampedTargetWidth * numberOfTabs) + (2 * TAB_CONTENT_MARGIN) - tabsCumulativeOverlappedWidth;
+      const totalExtraWidthDueToFlooring = tabsContentWidth - totalTabsWidthUsingTarget;
+
+      const widths = [];
+      let extraWidthRemaining = totalExtraWidthDueToFlooring;
+      for (let i = 0; i < numberOfTabs; i += 1) {
+        const extraWidth = flooredClampedTargetWidth < TAB_CONTENT_MAX_WIDTH && extraWidthRemaining > 0 ? 1 : 0
+        widths.push(flooredClampedTargetWidth + extraWidth);
+        if (extraWidthRemaining > 0) extraWidthRemaining -= 1;
       }
 
-      return widths
+      return widths;
     }
 
     get tabContentPositions() {
@@ -206,7 +230,7 @@ export class ChromeTabs extends Dispatchable {
       return <HTMLElement>div.firstElementChild
     }
 
-    addTab(tabProperties: any, { animate = true, background = false } = {}) {
+    addTab(tabProperties: ChromeTabsProperties, { animate = true, background = false } = {}) {
       const tabEl = this.createNewTabEl()
 
       if (animate) {
@@ -234,12 +258,13 @@ export class ChromeTabs extends Dispatchable {
           e.preventDefault();
           e.stopPropagation();
           if (e.which == 2) { // Middle click
-            this.trigger("tabClose", tabEl)  
+            this.trigger("tabClose", tabEl);
             //this.removeTab(tabEl)
           } else if (e.which == 3) { // Right click
-              //TODO Show menu
+            this.trigger("tabMenu", <ChromeTabsMenuEvent>{ element: tabEl, event: e });
           }
       });
+      
     }
 
     get activeTabEl() {
@@ -273,17 +298,15 @@ export class ChromeTabs extends Dispatchable {
       this.setupDraggabilly()
     }
 
-    updateTab(tabEl: HTMLElement, tabProperties: any) {
+    updateTab(tabEl: HTMLElement, tabProperties: ChromeTabsProperties) {
       _('.chrome-tab-title', tabEl).textContent = tabProperties.title
 
-      const faviconEl = _('.chrome-tab-favicon', tabEl)
       if (tabProperties.favicon) {
-        //faviconEl.style.backgroundImage = `url('${ tabProperties.favicon }')`
-        faviconEl.classList.add(tabProperties.favicon);
-        faviconEl.removeAttribute('hidden')
-      } else {
-        faviconEl.setAttribute('hidden', '')
-        //faviconEl.removeAttribute('style')
+          const faviconEl = _('.chrome-tab-favicon', tabEl)
+        
+          //faviconEl.style.backgroundImage = `url('${ tabProperties.favicon }')`
+          faviconEl.classList.add(tabProperties.favicon);
+          faviconEl.removeAttribute('hidden')
       }
 
       if (tabProperties.id) {

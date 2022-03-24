@@ -1,39 +1,43 @@
-﻿using AutoUpdaterDotNET;
-using Bravo.Infrastructure.Windows.Interop;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Options;
-using PhotinoNET;
-using Sqlbi.Bravo.Infrastructure.Configuration.Options;
-using Sqlbi.Bravo.Infrastructure.Extensions;
-using Sqlbi.Bravo.Infrastructure.Helpers;
-using Sqlbi.Bravo.Infrastructure.Messages;
-using Sqlbi.Bravo.Infrastructure.Windows.Interop;
-using Sqlbi.Infrastructure.Configuration.Settings;
-using System;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Text.Json;
-
-namespace Sqlbi.Bravo.Infrastructure
+﻿namespace Sqlbi.Bravo.Infrastructure
 {
+    using Microsoft.Extensions.Hosting;
+    using Microsoft.Extensions.Options;
+    using PhotinoNET;
+    using Sqlbi.Bravo.Infrastructure.Configuration;
+    using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
+    using Sqlbi.Bravo.Infrastructure.Extensions;
+    using Sqlbi.Bravo.Infrastructure.Helpers;
+    using Sqlbi.Bravo.Infrastructure.Messages;
+    using Sqlbi.Bravo.Infrastructure.Windows.Interop;
+    using Sqlbi.Bravo.Models;
+    using System;
+    using System.Globalization;
+    using System.IO;
+    using System.Linq;
+    using System.Text;
+    using System.Text.Json;
+    using System.Threading;
+    using System.Threading.Tasks;
+
     internal class AppWindow : IDisposable
     {
         private readonly IHost _host;
+        private readonly AppInstance _instance;
         private readonly PhotinoWindow _window;
-        private readonly UserSettings _userSettings;
         private readonly StartupSettings _startupSettings;
 
         private AppWindowSubclass? _windowSubclass;
-        private bool _disposed;
 
-        public AppWindow(IHost host)
+        public AppWindow(IHost host, AppInstance instance)
         {
             _host = host;
+            _instance = instance;
             _window = CreateWindow();
-            _userSettings = (_host.Services.GetService(typeof(IWritableOptions<UserSettings>)) as IWritableOptions<UserSettings> ?? throw new BravoUnexpectedException("UserSettings is null")).Value;
-            _startupSettings = (_host.Services.GetService(typeof(IOptions<StartupSettings>)) as IOptions<StartupSettings> ?? throw new BravoUnexpectedException("StartupSettings is null")).Value;
+
+            var startupSettingsOptions = _host.Services.GetService(typeof(IOptions<StartupSettings>)) as IOptions<StartupSettings>;
+            BravoUnexpectedException.ThrowIfNull(startupSettingsOptions);
+
+            _startupSettings = startupSettingsOptions.Value;
         }
 
         private PhotinoWindow CreateWindow()
@@ -47,20 +51,24 @@ namespace Sqlbi.Bravo.Infrastructure
             var devToolsEnabled = false;
             var logVerbosity = 0;
 #endif
+            var indexHtml = ThemeHelper.ShouldUseDarkMode(UserPreferences.Current.Theme)
+                ? "wwwroot/index-dark.html"
+                : "wwwroot/index.html";
+
             var window = new PhotinoWindow()
                 .SetIconFile("wwwroot/bravo.ico")
-                .SetTitle(AppConstants.ApplicationMainWindowTitle)
-                .SetTemporaryFilesPath(AppConstants.ApplicationFolderTempDataPath)
+                .SetTitle(AppEnvironment.ApplicationMainWindowTitle)
+                .SetTemporaryFilesPath(AppEnvironment.ApplicationTempPath)
                 .SetContextMenuEnabled(contextMenuEnabled)
                 .SetDevToolsEnabled(devToolsEnabled)
                 .SetLogVerbosity(logVerbosity) // 0 = Critical Only, 1 = Critical and Warning, 2 = Verbose, >2 = All Details. Default is 2.
                 .SetGrantBrowserPermissions(true)
                 .SetUseOsDefaultSize(true)
                 .RegisterCustomSchemeHandler("app", CustomSchemeHandler)
-                .Load("wwwroot/index.html")
+                .Load(indexHtml)
                 .Center();
 
-            window.WindowCreating += OnWindowCreating;
+            //window.WindowCreating += OnWindowCreating;
             window.WindowCreated += OnWindowCreated;
             window.WindowClosing += OnWindowClosing;
 
@@ -71,177 +79,108 @@ namespace Sqlbi.Bravo.Infrastructure
         {
             contentType = "text/javascript";
 
-            var config = JsonSerializer.Serialize(new
+            var config = new
             {
-                address = GetStartupAddress().ToString(),
-                theme = GetStartupTheme().ToString(),
-                version = AppConstants.ApplicationFileVersion,
+#if DEBUG
+                debug = true,
+#endif
+                address = GetAddress(),
+                token = AppEnvironment.ApiAuthenticationToken,
+                version = AppEnvironment.ApplicationProductVersion,
+                build = AppEnvironment.ApplicationFileVersion,
+                options = BravoOptions.CreateFromUserPreferences(),
+                culture = new
+                {
+                    IetfLanguageTag = CultureInfo.CurrentCulture.IetfLanguageTag
+                },
                 telemetry = new
                 {
-                    instrumentationKey = AppConstants.TelemetryInstrumentationKey,
-                    contextDeviceOperatingSystem = ContextTelemetryInitializer.DeviceOperatingSystem,
-                    contextComponentVersion = ContextTelemetryInitializer.ComponentVersion,
-                    contextSessionId = ContextTelemetryInitializer.SessionId,
-                    contextUserId = ContextTelemetryInitializer.UserId,
-                }
-            });
-            var script = $@"var CONFIG = { config };";
+                    instrumentationKey = AppEnvironment.TelemetryInstrumentationKey,
+                    contextDeviceOperatingSystem = AppTelemetryInitializer.DeviceOperatingSystem,
+                    contextComponentVersion = AppTelemetryInitializer.ComponentVersion,
+                    contextSessionId = AppTelemetryInitializer.SessionId,
+                    contextUserId = AppTelemetryInitializer.UserId,
+                    globalProperties = AppTelemetryInitializer.GlobalProperties
+                },
+            };
+
+            var script = $@"var CONFIG = { JsonSerializer.Serialize(config, AppEnvironment.DefaultJsonOptions) };";
             var stream = new MemoryStream(Encoding.UTF8.GetBytes(script));
 
             return stream;
 
-            Uri GetStartupAddress()
+            string GetAddress()
             {
                 var address = _host.GetListeningAddresses().Single(); // single address expected here
-                return address;
-            }
-
-            ThemeType GetStartupTheme()
-            {
-                var theme = _userSettings.Theme;
-
-                if (theme == ThemeType.Auto)
-                    theme = Uxtheme.IsSystemUsingDarkMode() ? ThemeType.Dark : ThemeType.Light;
-
-                return theme;
+                var addressString = address.ToString();
+                
+                return addressString;
             }
         }
 
-        private void OnWindowCreating(object? sender, EventArgs e)
-        {
-            Trace.WriteLine($"::Bravo:INF:OnWindowCreating:{ _window.Title }");
-
-            if (_userSettings.Theme != ThemeType.Auto) 
-            {
-                // Set the startup theme based on the latest settings saved by the user
-                Uxtheme.SetStartupTheme(useDark: _userSettings.Theme == ThemeType.Dark);
-            }
-        }
+        //private void OnWindowCreating(object? sender, EventArgs e)
+        //{
+        //}
 
         private void OnWindowCreated(object? sender, EventArgs e)
         {
-            Trace.WriteLine($"::Bravo:INF:OnWindowCreated:{ _window.Title } ( { string.Join(", ", _host.GetListeningAddresses().Select((a) => a.ToString())) } )");
-#if !DEBUG
-            HandleHotKeys(register: true);
-#endif   
+            ThemeHelper.InitializeTheme(_window.WindowHandle, UserPreferences.Current.Theme);
+            
             _windowSubclass = AppWindowSubclass.Hook(_window);
-         
-            if (_startupSettings.IsExternalTool)
-            {
-                //_window.SendWebMessage(message);
-            }
 
+            FixStartMenuShortcut();
             CheckForUpdate();
         }
 
         private bool OnWindowClosing(object sender, EventArgs e)
         {
-#if !DEBUG
-            HandleHotKeys(register: false);
-#endif
-            return false; // Returning true stops window from closing
+            NotificationHelper.ClearNotifications();
+
+            // Returning true prevents the window from closing
+            return false;
         }
 
-        /// <summary>
-        /// Register hotkeys in order to override WebView2 accelerator keys like Ctrl-P for print, Ctrl-R and F5 for reload ecc..
-        /// </summary>
-        private void HandleHotKeys(bool register)
+        private static void FixStartMenuShortcut()
         {
-            // TODO: instead of register hot-keys we should use property 'Microsoft.Web.WebView2.Core.CoreWebView2Settings.AreBrowserAcceleratorKeysEnabled'
-            // Unfortunatly CoreWebView2Settings.AreBrowserAcceleratorKeysEnabled property is not yet implemented on Photino.NET
-
-            const int HOTKEY_CONTROL_F = 1;       // Ctrl-F and F3 for Find on Page
-            const int HOTKEY_F3 = 2;              // Ctrl-F and F3 for Find on Page
-            const int HOTKEY_CONTROL_P = 3;       // Ctrl-P for Print
-            const int HOTKEY_CONTROL_R = 4;       // Ctrl-R and F5 for Reload
-            const int HOTKEY_F5 = 5;              // Ctrl-R and F5 for Reload
-            //const int HOTKEY_CONTROL_PLUS = 6;  // Ctrl-Plus and Ctrl-Minus for zooming
-            //const int HOTKEY_CONTROL_MINUS = 7; // Ctrl-Plus and Ctrl-Minus for zooming
-            const int HOTKEY_CONTROL_S = 8;       // Ctrl-S for SaveAs
-            const int HOTKEY_ALT_LEFTARROW = 9;   // Alt-Left arrow for Back
-            const int HOTKEY_ALT_RIGHTARROW = 10; // Alt-Right arrow for Forward
-
-            var hWnd = _window.WindowHandle;
-
-            if (register)
+            // Every time a Photino application starts up, Photino.Native attempts to creates a shortcut in Windows start menu.
+            // This behavior is enabled by default to allow toast notifications because, without a valid shortcut installed, Photino cannot raise a toast notification from a desktop app.
+            // If the user has chosen to activate the application shortcut during app installation, this results in a duplicate of the application shortcut in the Windows start menu.
+            // The issue has been reported on GitHub, meanwhile let's get rid of the shortcut created by Photino https://github.com/tryphotino/photino.NET/issues/85
+            
+            var shortcutName = Path.ChangeExtension(AppEnvironment.ApplicationMainWindowTitle, "lnk");
+            var shortcutPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData, Environment.SpecialFolderOption.DoNotVerify), @"Microsoft\Windows\Start Menu\Programs", shortcutName);
+           
+            if (File.Exists(shortcutPath))
             {
-                _ = User32.RegisterHotKey(hWnd, id: HOTKEY_CONTROL_F, User32.KeyModifier.MOD_CONTROL, System.Windows.Forms.Keys.F);
-                _ = User32.RegisterHotKey(hWnd, id: HOTKEY_F3, User32.KeyModifier.MOD_NONE, System.Windows.Forms.Keys.F3);
-                _ = User32.RegisterHotKey(hWnd, id: HOTKEY_CONTROL_P, User32.KeyModifier.MOD_CONTROL, System.Windows.Forms.Keys.P);
-                _ = User32.RegisterHotKey(hWnd, id: HOTKEY_CONTROL_R, User32.KeyModifier.MOD_CONTROL, System.Windows.Forms.Keys.R);
-                _ = User32.RegisterHotKey(hWnd, id: HOTKEY_F5, User32.KeyModifier.MOD_NONE, System.Windows.Forms.Keys.F5);
-                //_ = User32.RegisterHotKey(hWnd, id: HOTKEY_CONTROL_PLUS, User32.KeyModifier.MOD_CONTROL, System.Windows.Forms.Keys.Add);
-                //_ = User32.RegisterHotKey(hWnd, id: HOTKEY_CONTROL_MINUS, User32.KeyModifier.MOD_CONTROL, System.Windows.Forms.Keys.Subtract);
-                _ = User32.RegisterHotKey(hWnd, id: HOTKEY_CONTROL_S, User32.KeyModifier.MOD_CONTROL, System.Windows.Forms.Keys.S);
-                _ = User32.RegisterHotKey(hWnd, id: HOTKEY_ALT_LEFTARROW, User32.KeyModifier.MOD_ALT, System.Windows.Forms.Keys.Left);
-                _ = User32.RegisterHotKey(hWnd, id: HOTKEY_ALT_RIGHTARROW, User32.KeyModifier.MOD_ALT, System.Windows.Forms.Keys.Right);
-            }
-            else
-            {
-                _ = User32.UnregisterHotKey(hWnd, id: HOTKEY_CONTROL_F);
-                _ = User32.UnregisterHotKey(hWnd, id: HOTKEY_F3);
-                _ = User32.UnregisterHotKey(hWnd, id: HOTKEY_CONTROL_P);
-                _ = User32.UnregisterHotKey(hWnd, id: HOTKEY_CONTROL_R);
-                _ = User32.UnregisterHotKey(hWnd, id: HOTKEY_F5);
-                //_ = User32.UnregisterHotKey(hWnd, id: HOTKEY_CONTROL_PLUS);
-                //_ = User32.UnregisterHotKey(hWnd, id: HOTKEY_CONTROL_MINUS);
-                _ = User32.UnregisterHotKey(hWnd, id: HOTKEY_CONTROL_S);
-                _ = User32.UnregisterHotKey(hWnd, id: HOTKEY_ALT_LEFTARROW);
-                _ = User32.UnregisterHotKey(hWnd, id: HOTKEY_ALT_RIGHTARROW);
+                try
+                {
+                    File.Delete(shortcutPath);
+                }
+                catch (IOException)
+                {
+                    // ignore "The process cannot access the file '..\Bravo for Power BI.lnk' because it is being used by another process."
+                }
             }
         }
 
-        /// <summary>
-        /// Async/non-blocking check for updates
-        /// </summary>
         private void CheckForUpdate()
         {
-            if (DesktopBridgeHelpers.IsPackagedAppInstance)
+            if (AppEnvironment.IsPackagedAppInstance)
                 return;
 
-            AutoUpdater.AppCastURL = $"https://cdn.sqlbi.com/updates/BravoAutoUpdater.xml?nocache={ DateTimeOffset.Now.ToUnixTimeSeconds() }";
-            AutoUpdater.HttpUserAgent = "AutoUpdater";
-            AutoUpdater.Synchronous = false;
-            AutoUpdater.ShowSkipButton = false;
-            AutoUpdater.ShowRemindLaterButton = false;
-            AutoUpdater.OpenDownloadPage = true;
-            //AutoUpdater.ReportErrors = false;
-            //AutoUpdater.RunUpdateAsAdmin = true;
-            AutoUpdater.PersistenceProvider = new JsonFilePersistenceProvider(jsonPath: Path.Combine(AppConstants.ApplicationFolderLocalDataPath, "autoupdater.json"));
-            AutoUpdater.CheckForUpdateEvent += (updateInfo) =>
+            CommonHelper.CheckForUpdate(UserPreferences.Current.UpdateChannel, updateCallback: (bravoUpdate) =>
             {
-                if (updateInfo.Error is not null)
-                {
-                    TelemetryHelper.TrackException(updateInfo.Error);
-                    return;
-                }
-                
-                if (updateInfo.IsUpdateAvailable)
-                {
-                    var updateMessage = new ApplicationUpdateAvailableWebMessage
-                    {
-                        DownloadUrl = updateInfo.DownloadURL,
-                        ChangelogUrl = updateInfo.ChangelogURL,
-                        CurrentVersion = updateInfo.CurrentVersion,
-                        InstalledVersion = updateInfo.InstalledVersion.ToString(),
-                    };
-                    var updateMessageString = JsonSerializer.Serialize(updateMessage, new(JsonSerializerDefaults.Web));
-                    _window.SendWebMessage(updateMessageString);
+                // HACK: see issue https://github.com/tryphotino/photino.NET/issues/87
+                // Wait a bit in order to ensure that the PhotinoWindow message loop is started
+                // This is to prevent the .NET Runtime corecrl.dll fault with a win32 access violation
+                Thread.Sleep(5_000);
+                // HACK END <<
 
-                    // TODO: complete check for update
+                var updateMessage = ApplicationUpdateAvailableWebMessage.CreateFrom(bravoUpdate);
+                _window.SendWebMessage(updateMessage.AsString);
 
-                    //var threadStart = new System.Threading.ThreadStart(() => AutoUpdater.ShowUpdateForm(updateInfo));
-                    //var thread = new System.Threading.Thread(threadStart);
-                    //thread.CurrentCulture = thread.CurrentUICulture = System.Globalization.CultureInfo.CurrentCulture;
-                    //thread.SetApartmentState(System.Threading.ApartmentState.STA);
-                    //thread.Start();
-                    //thread.Join();
-
-                    //NotificationHelper.NotifyUpdateAvailable(updateInfo);
-                }
-            };
-            AutoUpdater.InstalledVersion = new Version(0, 4, 0, 0 /*AppConstants.ApplicationFileVersion*/); // TODO: AutoUpdater version
-            AutoUpdater.Start();
+                NotificationHelper.NotifyUpdateAvailable(bravoUpdate);
+            });
         }
 
         /// <summary>
@@ -249,28 +188,57 @@ namespace Sqlbi.Bravo.Infrastructure
         /// </summary>
         public void WaitForClose()
         {
+            // HACK: see issue https://github.com/tryphotino/photino.NET/issues/87
+            // Wait a bit in order to ensure that the PhotinoWindow message loop is started
+            // This is to prevent the .NET Runtime corecrl.dll fault with a win32 access violation
+            // This should be moved to the 'OnWindowCreated' handler after the issue has been resolved
+            _ = Task.Factory.StartNew(() =>
+            {
+                try
+                {
+                    Thread.Sleep(2_000);
+
+                    if (!_startupSettings.IsEmpty)
+                    {
+                        var startupMessage = AppInstanceStartupMessage.CreateFrom(_startupSettings);
+                        var startupMessageString = startupMessage.ToWebMessageString();
+
+                        _window.SendWebMessage(startupMessageString);
+                    }
+
+                    _instance.OnNewInstance += (sender, arg) =>
+                    {
+                        if (_window.Minimized)
+                        {
+                            User32.ShowWindow(_window.WindowHandle, User32.SW_RESTORE);
+                        }
+                        User32.SetForegroundWindow(_window.WindowHandle);
+
+                        if (arg.Message?.IsEmpty == false)
+                        {
+                            var webMessageString = arg.Message.ToWebMessageString();
+                            _window.SendWebMessage(webMessageString);
+                        }
+                    };
+                }
+                catch (Exception ex)
+                {
+                    TelemetryHelper.TrackException(ex);
+
+                    if (AppEnvironment.IsDiagnosticLevelVerbose)
+                        AppEnvironment.AddDiagnostics(name: $"{ nameof(AppWindow) }.{ nameof(WaitForClose) }", ex);
+                }
+            });
+            // HACK END <<
+
             _window.WaitForClose();
         }
 
         #region IDisposable
 
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!_disposed)
-            {
-                if (disposing)
-                {
-                    _windowSubclass?.Dispose();
-                }
-
-                _disposed = true;
-            }
-        }
-
         public void Dispose()
         {
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
+            _windowSubclass?.Dispose();
         }
 
         #endregion

@@ -3,7 +3,7 @@
 
   <String Id="ProductName">Bravo for Power BI (Store Launcher)</String>
   <String Id="ProductLanguage">1033</String>
-  <String Id="PackageDescription">TODO package description</String>
+  <String Id="PackageDescription">Bravo for Power BI (Store Launcher)</String>
   <String Id="PackageComments">This installer contains the logic and data required to install Bravo for Power BI (Store Launcher)</String>
   <String Id="MajorUpgradeDowngradeErrorMessage">A newer version of this application is already installed on this computer</String>
 

@@ -4,127 +4,164 @@
  * https://www.sqlbi.com
 */
 
-import { ApplicationInsights, ICustomProperties } from '@microsoft/applicationinsights-web'
-import { optionsController } from '../main';
-import { debug } from '../debug';
+import { ApplicationInsights, ICustomProperties, IEventTelemetry, IExceptionTelemetry, IMetricTelemetry, IPageViewTelemetry } from '@microsoft/applicationinsights-web'
+import { Idle } from '../helpers/idle';
+import { Utils } from '../helpers/utils';
+import { optionsController, debug } from '../main';
+import { ProblemDetails } from './host';
+
+export interface TelemetryConfig {
+   instrumentationKey: string,
+   contextDeviceOperatingSystem?: string,
+   contextComponentVersion?: string,
+   contextSessionId?: string,
+   contextUserId?: string,
+   globalProperties?: any
+}
 
 export class Telemetry {
 
    appInsights: ApplicationInsights;
+   appOpenTracked: boolean;
+   enabled: boolean;
+   history: string[] = [];
+   idle: Idle;
 
-   constructor() {
+   constructor(config: TelemetryConfig) {
+
+      this.enabled = optionsController.options.telemetryEnabled;
 
       // Configuration options at https://docs.microsoft.com/en-us/azure/azure-monitor/app/javascript
       this.appInsights = new ApplicationInsights({ config: {
-         instrumentationKey: CONFIG.telemetry.instrumentationKey,
+         instrumentationKey: config.instrumentationKey,
          disableCookiesUsage: true,
          disableExceptionTracking: true,
          disablePageUnloadEvents: ["beforeunload", "unload", "visibilitychange", "pagehide"],
          disablePageShowEvents: ["pageshow", "visibilitychange"],
          disableAjaxTracking: true,
+         //enableDebug: debug.enabled,
          autoTrackPageVisitTime: false,
-         enableDebug: (!!debug),
          enableAutoRouteTracking: false,
-         disableTelemetry: !optionsController.options.telemetryEnabled
+         disableTelemetry: !this.enabled
       } });
       this.appInsights.loadAppInsights();
 
-      optionsController.on("change", (changedOptions: any) => {
-         if ("telemetryEnabled" in changedOptions) {
+      // Set telemetry context
+      if (config.contextComponentVersion)
+         this.appInsights.context.application.ver = config.contextComponentVersion;
+      
+      if (config.contextSessionId)
+         this.appInsights.context.session.id = config.contextSessionId;
 
-            this.appInsights.updateSnippetDefinitions({
-               config: {
-                  disableTelemetry: !optionsController.options.telemetryEnabled
-               }
-            });
+      if (config.contextUserId)
+         this.appInsights.context.user.id = config.contextUserId;
+      
+      if (config.globalProperties) {
+         this.appInsights.addTelemetryInitializer(initializer => {
+            for (let property in config.globalProperties)
+               initializer.data[property] = config.globalProperties[property];
+         });
+      }
+
+      this.trackAppOpen();
+
+      // Detect telemetry option change
+      optionsController.on("telemetryEnabled.change", (changedOptions: any) => {
+
+         this.enabled = optionsController.options.telemetryEnabled;
+
+         this.appInsights.updateSnippetDefinitions({
+            config: {
+               disableTelemetry: !this.enabled
+            }
+         });
+         this.trackAppOpen();
+         
+      });
+
+      window.addEventListener('beforeunload', e => {
+         this.destroy();
+      });
+
+      this.idle = new Idle();
+   }
+
+   trackAppOpen() {
+      if (!this.enabled) return;
+      if (this.appOpenTracked) return;
+
+      this.track("Start");
+      this.appOpenTracked = true;
+   }
+
+   trackAppClose() {
+      if (!this.enabled) return;
+      this.track("End");
+   }
+
+   trackError(problem: ProblemDetails, props?: ICustomProperties) {
+      if (!this.enabled) return;
+
+      const traceId = (problem.traceId ? problem.traceId : Utils.Text.uuid());
+      const exception: IExceptionTelemetry = { 
+         id: traceId,
+         exception: {
+            name: String(problem.status),
+            message: problem.title
          }
-     });
-
-     this.catchIdle();
-
-   }
-
-   track(name: string, props?: ICustomProperties) {
-      if (!optionsController.options.telemetryEnabled) return;
-
-      this.appInsights.trackEvent({ name: name }, props);
-   }
-
-   catchIdle() {
+      };
       
-   }
-}
-
-export class Idle {
-
-   static AwayTimeout = 15000;
-   static Interactions = ["click", "mousemove", "mousedown", "keydown", "scroll", "mousewheel", "touchmove", "touchstart"];
-   
-   awayTimer: number;
-   isAway: boolean;
-
-   startTime: number;
-   
-   _idleTime: number;
-   get idleTime(): number {
-      this.updateIdleTime();
-      return this._idleTime;
-   } 
-
-   constructor() {
-      this._idleTime = 0;
-      this.isAway = true;
-      
-      Idle.Interactions.forEach(event => {
-         document.addEventListener(event, ()=>this.mouseListener());
-      });
-      document.addEventListener("visibilitychange", ()=>this.visibilityListener());
-   } 
-   
-   destroy() {
-      Idle.Interactions.forEach(event => {
-         document.removeEventListener(event, ()=>this.mouseListener());
-      });
-      document.removeEventListener("visibilitychange", ()=>this.visibilityListener());
+      if (!debug.catchTelemetryTracking("error", exception, props))
+         this.appInsights.trackException(exception, props);
    }
 
-   mouseListener() {
-      if (this.isAway)
-         this.active();
+   track(eventName: string, props?: ICustomProperties) {
+      if (!this.enabled) return;
 
-      window.clearTimeout(this.awayTimer);
-      this.awayTimer = window.setTimeout(()=> {
-         this.away();
-     }, Idle.AwayTimeout);
+      const event: IEventTelemetry = { name: eventName };
+
+      if (!debug.catchTelemetryTracking("event", event, props))
+         this.appInsights.trackEvent(event, props);
    }
 
-   visibilityListener() {
-      if (document.visibilityState === 'hidden') {
-         window.clearTimeout(this.awayTimer);
-         this.away();
-      } else if (document.visibilityState === 'visible') {
-      	this.mouseListener();
+   trackPage(pageName: string) {
+      if (!this.enabled) return;
+      if (this.history.length && this.history[this.history.length - 1] == pageName) return;
+
+      this.trackPageTime();
+      this.history.push(pageName);
+
+      const pageView: IPageViewTelemetry = { name: pageName };
+
+      if (!debug.catchTelemetryTracking("pageView", pageView))
+         this.appInsights.trackPageView(pageView);
+   }
+
+   trackPreviousPage() {
+      if (this.history.length > 1) {
+         this.trackPage(this.history[this.history.length - 2]);
       }
    }
 
-   active() {
-      this.isAway = false;
-      this.updateStartTime();
+   trackPageTime() {
+      if (!this.enabled) return;
+      if (!this.history.length) return;
+
+      const seconds = Math.round(this.idle.time / 1000);
+      if (seconds) {
+         const metric: IMetricTelemetry = { name: "PageVisitTime", average: seconds };
+         const props: ICustomProperties = { "PageName": this.history[this.history.length - 1] };
+
+         if (!debug.catchTelemetryTracking("metric", metric, props))
+            this.appInsights.trackMetric(metric, props);
+      }
+      this.idle.reset();
    }
 
-   away() {
-      if (this.isAway) return;
-      this.isAway = true;
-      this.updateIdleTime();
+   destroy() {
+      this.trackPageTime();
+      this.idle.destroy();
+      this.trackAppClose();
+      this.appInsights.flush();
    }
-
-   updateIdleTime() {
-      const now = new Date().getTime();
-      this._idleTime += (now - this.startTime); 
-   }
-
-   updateStartTime() {
-      this.startTime = new Date().getTime();
-   }
-
 }

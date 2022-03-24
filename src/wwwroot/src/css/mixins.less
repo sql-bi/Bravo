@@ -167,9 +167,15 @@
     }
 }
 .text-highlight {
-    background: @table-cell-highlight-back-color;
+    background: @warning-back-color;
     .dark & { 
-        background: @table-cell-highlight-back-color-dark;
+        background: @warning-back-color-dark;
+    }
+}
+.text-error {
+    background: @error-back-color;
+    .dark & { 
+        background: @error-back-color-dark;
     }
 }
 .disabled {
@@ -188,6 +194,33 @@
         }
     }
 }
+.badge {
+    display: table;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1;
+    text-transform: uppercase;
+    background-color: @badge-back-color;
+    color: @badge-color;
+    padding: 4px 8px;
+    .border-radius(4px);
+    border: 1px solid darken(@badge-back-color, 10%);
+    cursor: default;
+
+    &.readonly {
+        background-color: @readonly-badge-back-color;
+        color: @readonly-badge-color;
+        border-color: darken(@readonly-badge-back-color, 10%);
+    }
+    &.orphan {
+        background-color: @orphan-badge-back-color;
+        color: @orphan-badge-color;
+        border-color: darken(@orphan-badge-back-color, 10%);
+    }
+
+
+}
+
 .wait {
     cursor: wait !important;
   }
@@ -233,16 +266,72 @@
         inset: 0px;
         border-radius: 50%;
         border:24px solid @accent-back-color;
-        animation: prixClipFix 5s infinite linear;
+        animation: prixClipFix 10s infinite linear;
 
         .dark & { border-color: @accent-back-color-dark;}
     }
+
+    &.s1:before  { animation: prixClipFix 1s  infinite linear; }
+    &.s2:before  { animation: prixClipFix 2s  infinite linear; }
+    &.s3:before  { animation: prixClipFix 3s  infinite linear; }
+    &.s5:before  { animation: prixClipFix 5s  infinite linear; }
+    &.s20:before { animation: prixClipFix 20s infinite linear; }
+
+    &.manual {
+        &:before { 
+            animation: none; 
+            transition: all .5s;
+        } 
+        &.p0:before   { clip-path:polygon(50% 50%,0 0,0 0,0 0,0 0,0 0) }
+        &.p5:before   { clip-path:polygon(50% 50%,0 0,25% 0,25% 0,25% 0,25% 0) }
+        &.p12:before  { clip-path:polygon(50% 50%,0 0,50% 0,50% 0,50% 0,50% 0) }
+        &.p25:before  { clip-path:polygon(50% 50%,0 0,100% 0,100% 0,100% 0,100% 0) }
+        &.p37:before  { clip-path:polygon(50% 50%,0 0,100% 0,100% 50%,100% 50%,100% 50%) }
+        &.p50:before  { clip-path:polygon(50% 50%,0 0,100% 0,100% 100%,100% 100%,100% 100%) }
+        &.p62:before  { clip-path:polygon(50% 50%,0 0,100% 0,100% 100%,50% 100%,50% 100%) }
+        &.p75:before  { clip-path:polygon(50% 50%,0 0,100% 0,100% 100%,0 100%,0 100%) }
+        &.p87:before  { clip-path:polygon(50% 50%,0 0,100% 0,100% 100%,0 100%,0 50%) }
+        &.p100:before { clip-path:polygon(50% 50%,0 0,100% 0,100% 100%,0 100%,0 0) }
+    }
 }
 
-  @keyframes prixClipFix {
-      0%   {clip-path:polygon(50% 50%,0 0,0 0,0 0,0 0,0 0)}
-      25%  {clip-path:polygon(50% 50%,0 0,100% 0,100% 0,100% 0,100% 0)}
-      50%  {clip-path:polygon(50% 50%,0 0,100% 0,100% 100%,100% 100%,100% 100%)}
-      75%  {clip-path:polygon(50% 50%,0 0,100% 0,100% 100%,0 100%,0 100%)}
-      100% {clip-path:polygon(50% 50%,0 0,100% 0,100% 100%,0 100%,0 0)}
-  }
+@keyframes prixClipFix {
+    0%   {clip-path:polygon(50% 50%,0 0,0 0,0 0,0 0,0 0)}
+    25%  {clip-path:polygon(50% 50%,0 0,100% 0,100% 0,100% 0,100% 0)}
+    50%  {clip-path:polygon(50% 50%,0 0,100% 0,100% 100%,100% 100%,100% 100%)}
+    75%  {clip-path:polygon(50% 50%,0 0,100% 0,100% 100%,0 100%,0 100%)}
+    100% {clip-path:polygon(50% 50%,0 0,100% 0,100% 100%,0 100%,0 0)}
+}
+
+
+.expandable {
+    .expander {
+        .icon;
+        .icon-collapsed;
+        cursor: pointer;
+        margin-left: 4px;
+        color: @accent-back-color !important;
+        font-size: 0.9em;
+        font-weight: 500;
+
+        &:before {
+            display: inline-block;
+            transition: transform 100ms ease-in;
+            margin: 0;
+        } 
+    }
+    .expandable-content {
+        display: none;
+    }
+
+    &.expanded {
+        .expander {
+            &:before {
+                transform: rotate(-90deg);   
+            }
+        }
+        .expandable-content {
+            display: initial;
+        }
+    }
+}

@@ -31,7 +31,7 @@
 
     &.exiting {
         animation-duration: .3s;
-        animation-name: sliding; //appearing
+        animation-name: appearing; //sliding; //
         animation-direction: reverse;
         animation-timing-function: ease-out;
     }
@@ -43,13 +43,48 @@
 
         h1 {
             margin:0;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            overflow: hidden;
-            max-width: calc(100% - 70px);
+            .flexbox(center);
+            width: 100%;
+
             &:before {
                 margin-right: 15px;
                 font-size: 1.3em
+            }
+
+            .breadcrumb {
+                .flexbox(center);
+                width: calc(100% - 100px);
+                .item {
+                    .flex(0 0 auto);
+                }
+                .parent {
+                    .flex(0 1 auto);
+                    opacity: 0.5;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    &.solo { opacity: 1;}
+                }
+                .child {
+                    opacity: 0.7;
+                    cursor: pointer !important;
+
+                    &:hover {
+                        opacity: 1;
+                    }
+                }
+                .slash {
+                    .flex(0 0 auto);
+                    width: 50px;
+                    text-align: center;
+                    opacity: 0.7;
+                    &:before {
+                        font-size: 26px;
+                        margin: -6px 0 0 0;
+                        display: inline-block;
+                    }
+                }
+                
             }
         }
         .toolbar {
@@ -65,32 +100,26 @@
                 }
 
             }
-
-            .readonly {
-                text-transform: uppercase;
-                letter-spacing: 1px;
-                color: @disabled-color;
-                font-weight: 500;
-                font-size: 12px;
-
-                .dark & {
-                    color: @disabled-color-dark;
-                }
-            }
         }
     }
 
     .go-back {
         position: absolute;
-        left: 20px;
-        top: 20px;
+        left: 15px;
+        top: 40px;
         margin: 0;
         display: inline-block;
         &:before {
             margin: 0;
             font-size: 20px;
         }
+
+        &.solo {
+            left: 20px;
+            top: 10px;
+        }
     }
+
     .scene-content {
         height: calc(100% - 70px);
 
@@ -126,17 +155,10 @@
         text-align: center;
         font-size: 16px;
 
-        .icon-bravo-error {
+        .icon {
             margin: 0 0 20px 0;
             &:before {
-                font-size: 160px;
-                line-height: 1;
-                margin: 0;
-            }
-        }
-        .icon-alert {
-            &:before {
-                font-size: 100px;
+                font-size: 130px;
                 line-height: 1;
                 margin: 0;
             }
@@ -148,6 +170,29 @@
                 content: "" !important; 
             }
         }
+        .message {
+            font-size: 18px;
+            margin: 5px 0 20px 0;
+        }
+        p {
+            margin: 5px 0;
+            max-width: 700px;
+        }
+
+        .context {
+            font-size: 14px;
+            color: @notice-color;
+
+            .dark & { color: @notice-color-dark }
+        }
+
+        blockquote {
+            font-size: 13px;
+            max-width: 70%;
+            word-break: break-word;
+            font-family: @code-font;
+            margin:0 0 20px 0;
+        }
     }
 
     .success {
@@ -155,7 +200,7 @@
 
         .success-message {
 
-            height: calc(100% - 35px);
+            height: calc(100% - 55px);
             .flexbox(center, center, column);
             font-size: 25px;
             line-height: 1.5;
@@ -163,17 +208,25 @@
             max-width: 500px;
             text-align: center;
 
-            .icon-completed {
+            .icon.big {
                 &:before {
                     font-size: 130px;
                     display: block;
                     margin: 0;
-                    color: @good-color;
                 }
             }
+
+            .icon-completed:before {
+                color: @good-color;
+            }
+            .icon-error:before {
+                color: @bad-color;
+            }
         }
-        .dismiss {
-            float: right;
+
+        .scene-action {
+            .flexbox(center, flex-end);
+            width: 100%;
         }
     }
 }

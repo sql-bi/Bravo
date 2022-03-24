@@ -1,23 +1,22 @@
-﻿using Sqlbi.Bravo.Infrastructure.Windows.Interop;
-using System;
-using System.Runtime.InteropServices;
-using System.Windows.Forms;
-
-#nullable disable
-
-namespace Bravo.Infrastructure.Windows.Interop
+﻿namespace Sqlbi.Bravo.Infrastructure.Windows.Interop
 {
+    using System;
+    using System.Runtime.InteropServices;
+
     ///***************************************************************************
     ///***************************************************************************
     /// <remarks>
     ///     This class uses undocumented APIs introduced in Windows 10 build 1809
     ///     APIs are not documented and exported by ordinal only.
+    ///
+    ///     Discussion: Dark mode for applications
+    ///     https://github.com/microsoft/WindowsAppSDK/issues/41#issue-622186032
     /// </remarks>
     ///***************************************************************************
     ///***************************************************************************
     internal static class Uxtheme
     {
-        private enum PreferredAppMode
+        public enum PreferredAppMode
         {
             Default = 0,
             AllowDark = 1,
@@ -27,23 +26,40 @@ namespace Bravo.Infrastructure.Windows.Interop
         };
 
         /*
+         * - Mark boolean P/Invoke arguments with MarshalAs
+         *   The Boolean representation that is required by the unmanaged method should be determined and matched to the appropriate System.Runtime.InteropServices.UnmanagedType.
+         *   UnmanagedType.Bool is the Win32 BOOL type, which is always 4 bytes. UnmanagedType.U1 should be used for C++ bool or other 1-byte types
+         *   See https://docs.microsoft.com/en-us/visualstudio/code-quality/ca1414?view=vs-2022#rule-description
+         */
+
+        /*
          * OS version 1809 ( OS build 17763 )
          */
 
-        //[DllImport(ExternDll.Uxtheme, EntryPoint = "#104")]
-        //private static extern void RefreshImmersiveColorPolicyState();
+        /// <summary>
+        /// This undocumented API apparently triggers a refresh/repaint after changing the dark mode of a window
+        /// </summary>
+        [DllImport(ExternDll.Uxtheme, EntryPoint = "#104")]
+        public static extern void RefreshImmersiveColorPolicyState();
 
+        /// <summary>
+        /// Returns the 'deafault app mode' on 'Custom' color settings
+        /// </summary>
         [DllImport(ExternDll.Uxtheme, EntryPoint = "#132")]
-        private static extern bool ShouldAppsUseDarkMode();
+        [return: MarshalAs(UnmanagedType.U1)]
+        public static extern bool ShouldAppsUseDarkMode();
 
-        //[DllImport(ExternDll.Uxtheme, EntryPoint = "#133")]
-        //private static extern bool AllowDarkModeForWindow(IntPtr hWnd, bool allow);
+        [DllImport(ExternDll.Uxtheme, EntryPoint = "#133")]
+        [return: MarshalAs(UnmanagedType.U1)]
+        public static extern bool AllowDarkModeForWindow(IntPtr hWnd, [MarshalAs(UnmanagedType.U1)] bool allow);
 
         [DllImport(ExternDll.Uxtheme, EntryPoint = "#135")]
-        private static extern bool AllowDarkModeForApp(bool allow); // !!! 135 !!! same ordinal in 1903 and 1809 
+        [return: MarshalAs(UnmanagedType.U1)]
+        public static extern bool AllowDarkModeForApp([MarshalAs(UnmanagedType.U1)] bool allow); // 135 in both 1903 and 1809 
 
-        //[DllImport(ExternDll.Uxtheme, EntryPoint = "#137")]
-        //private static extern bool IsDarkModeAllowedForWindow(IntPtr hWnd);
+        [DllImport(ExternDll.Uxtheme, EntryPoint = "#137")]
+        [return: MarshalAs(UnmanagedType.U1)]
+        public static extern bool IsDarkModeAllowedForWindow(IntPtr hWnd);
 
         /*
          * OS version 1903 ( OS build 18362 )
@@ -51,80 +67,17 @@ namespace Bravo.Infrastructure.Windows.Interop
 
         [DllImport(ExternDll.Uxtheme, EntryPoint = "#135")]
         [return: MarshalAs(UnmanagedType.U4)]
-        private static extern PreferredAppMode SetPreferredAppMode(PreferredAppMode mode); // !!! 135 !!! same ordinal in 1903 and 1809 
+        public static extern PreferredAppMode SetPreferredAppMode(PreferredAppMode mode); // 135 in both 1903 and 1809 
 
+        /// <summary>
+        /// Returns the 'deafault Windows mode' on 'Custom' color settings
+        /// </summary>
         [DllImport(ExternDll.Uxtheme, EntryPoint = "#138")]
-        private static extern bool ShouldSystemUseDarkMode();
+        [return: MarshalAs(UnmanagedType.U1)]
+        public static extern bool ShouldSystemUseDarkMode();
 
-        //[DllImport(ExternDll.Uxtheme, EntryPoint = "#139")]
-        //private static extern bool IsDarkModeAllowedForApp(IntPtr hWnd);
-
-        /* */
-
-        private static readonly bool IsWindows10OSVersion1809OrLower = Environment.OSVersion.Version.Major == 10 && Environment.OSVersion.Version.Build < 18362;
-
-        private static bool IsDarkModeSupported()
-        {
-            // Windows 10 release information https://docs.microsoft.com/en-us/windows/release-health/release-information
-
-            var version = Environment.OSVersion.Version;
-
-            if (version.Major == 10 && version.Build >= 17763 /* Version 1809 */)
-                return true;
-
-            if (version.Major > 10)
-                return true;
-
-            return false;
-        }
-
-        private static void SetAppTheme(bool useDark)
-        {
-            if (IsWindows10OSVersion1809OrLower)
-            {
-                // Ordinal entry point *** 135 *** in 1809 (OS build 17763)
-                _ = AllowDarkModeForApp(allow: useDark);
-            }
-            else
-            {
-                // Ordinal entry point *** 135 *** in 1903 (OS build 18362)
-                _ = SetPreferredAppMode(useDark ? PreferredAppMode.ForceDark : PreferredAppMode.ForceLight);
-            }
-        }
-
-        public static void SetStartupTheme(bool useDark)
-        {
-            if (IsDarkModeSupported())
-            {
-                // No need to send any messges here (i.e. WM_THEMECHANGED)
-                SetAppTheme(useDark);
-            }
-        }
-
-        public static void ChangeTheme(IntPtr hWnd, bool useDark)
-        {
-            if (IsDarkModeSupported())
-            {
-                SetAppTheme(useDark);
-                User32.SendMessage(hWnd, WindowMessage.WM_THEMECHANGED, IntPtr.Zero, IntPtr.Zero);
-            }
-        }
-
-        public static bool IsSystemUsingDarkMode()
-        {
-            if (IsDarkModeSupported() && !SystemInformation.HighContrast)
-            {
-                if (IsWindows10OSVersion1809OrLower)
-                {
-                    return ShouldAppsUseDarkMode();
-                }
-                else
-                {
-                    return ShouldSystemUseDarkMode();
-                }
-            }
-
-            return false;
-        }
+        [DllImport(ExternDll.Uxtheme, EntryPoint = "#139")]
+        [return: MarshalAs(UnmanagedType.U1)]
+        public static extern bool IsDarkModeAllowedForApp(IntPtr hWnd);
     }
 }

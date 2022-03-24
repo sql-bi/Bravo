@@ -32,6 +32,9 @@
 @window-back-color-alt: #FBFBFB;
     @window-back-color-alt-dark: #2b2b2b;
 
+@gutter-back-color: darken(@window-back-color, 5%);
+    @gutter-back-color-dark: @window-back-color-dark;
+
 @input-back-color: #fff;
     @input-back-color-dark: #202020;
 @input-border-color: #333;
@@ -65,8 +68,7 @@
     @table-cell-color-dark: @text-color-dark;
 @table-sorter-color: #ccc;
     @table-sorter-color-dark: #555;
-@table-cell-highlight-back-color: #fffad6;
-    @table-cell-highlight-back-color-dark: #645500;
+
 @table-cell-active-back-color: #C8E1FF;
     @table-cell-active-back-color-dark: #1881ff;
 @table-cell-size-indicator: @accent-back-color;
@@ -97,14 +99,32 @@
 @notice-color: #969696;
     @notice-color-dark: #a3a3a3;
 
-@error-color: #D93124;
+@error-color: #eb1414;
     @error-color-dark: @error-color;
-@warning-color: #000;
+@error-back-color: #FFEFF0;
+    @error-back-color-dark: #4c2020;
+@warning-color: #6c5f01;
     @warning-color-dark: #ffd900;
+@warning-back-color: #fffad6;
+    @warning-back-color-dark: #645500;
 
 @promoted-color: #4668C5;
 @certified-color: #24891C;
 @good-color: #24891C;
+@ok-color: #ffd900;
+@bad-color: #eb1414;
+
+@change-a-color: #24891C;
+@change-m-color: #bba92c;
+@change-d-color: #eb1414;
+
+//Badges
+@badge-color: #333;
+@badge-back-color: #f2f1f3;
+@readonly-badge-color: @badge-color;
+@readonly-badge-back-color: @badge-back-color;
+@orphan-badge-color: @error-color;
+@orphan-badge-back-color: @error-back-color;
 
 //DAX Syntax colors
 @comment-color: #39A03B;

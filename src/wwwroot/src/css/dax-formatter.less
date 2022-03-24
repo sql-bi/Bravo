@@ -3,6 +3,9 @@
     h1 {
         .icon-dax-formatter;
     }
+    .show-data-usage {
+        word-break: keep-all;
+    }
     .scene-content {
         .flexbox(flex-start, stretch, column);
 
@@ -14,104 +17,84 @@
             
             .coll {
                 width: 320px;
-                margin-right: 30px;
-                .flex(1 1 auto);
+                margin-right: 15px;
+                .flex(0 1 auto);
                 .flexbox(flex-start, flex-start, column);
             }
             .colr {
                 .flex(1 1 70%);
-                margin: 0 0 0 20px;
+                margin: 0 0 0 15px;
                 background: url("@{images}/measure-light.svg") no-repeat center;
 
                 .dark & {
                     background-image: url("@{images}/measure-dark.svg");
                 }
-               
             }
         }
 
-        .table {
-            width:100%
-        }
+        .browser {
+            .table {
+                width:100%;
 
-        .search {
-            margin: 5px 0 35px 5px;
-            width:180px;
+                .column-icon {
+                    .loader {
+                        width: 16px;
+                        height: 16px;
+                        margin: 8px 0 0 4px;
+
+                        &:before {
+                            border-width: 8px;
+                        }
+                    }
+                    .icon-completed {
+                        opacity: 0.1;
+                    }
+
+                }
+            }
+
+            .toolbar {
+                width: 100%;
+                .flexbox(center);
+                .flex-wrap(wrap);
+                
+                margin: 0 0 30px 0;
+
+                .search {
+                    margin: 5px 15px 5px 5px;
+                    min-width:150px;
+                    width: 60%;
+                }
+            }
         }
 
         .preview {
             width: 100%;
             height: 100%;
-        }
+            position: relative;
+            background: @back-color;
 
-        #preview-menu {
-            width: 100%;
-            height: 100%;
-            .flexbox(flex-start, stretch, column);
-        
-            .menu {
-                margin-top: 30px;
-            }
+            .dark & { background-color: @back-color-dark;}
 
-            .menu-body {
-                position: relative;
-                height: calc(100% - 120px);
-                margin-top: 20px;
-                width: calc(100% - 2px);
-                font-size: 16px;
-                padding: 5px 0;
-                .flexbox(flex-start, stretch, column);
-                overflow: hidden;
-
-                .border-radius;
-                border: 1px solid @border-color;
-                background: @input-back-color;
-
-                .dark & {
-                    border-color: @border-color-dark;
-                    background-color: @input-back-color-dark;
-                }
-
-                .toolbar {
-                    margin: auto 0 0 0;
-                    width: calc(100% - 10px);
-                    padding: 0 5px;
-                    .flexbox(center, space-between);
-                
-                    .refresh-preview {
-                        &:before {
-                            font-size: 18px;
-                        }
-                    }
-                    .zoom {
-                        font-size: 14px;
-                        margin-left: auto;
-                    }
-                }
-                .measure-name {
-                    margin: 5px 0 10px 10px;
-                }
-                .item-body {
-                    height: calc(100% - 30px);
-                    width: 100%;
-                    position: relative;
-                }
-                .cm {
-                    
-                    overflow: auto;
-                    height: 100%;
-                }
-                
+            .multiview-pane {
+                height: 100%;
             }
         }
 
-        .gen-preview-overlay {
+        .preview-overlay {
             position: absolute;
-            top: 0;
-            right: 0;
-            bottom: 0;
-            left: 0;
+            top: 2px;
+            right: 2px;
+            bottom: 2px;
+            left: 2px;
+            z-index: 9;
             padding:20px;
+            background: fade(@back-color, 80%);
+            overflow: auto;
+
+            .dark & {
+                background-color: fade(@back-color-dark, 80%);
+            }
 
             .flexbox(center, center, column);
             transition: opacity .3s;
@@ -134,38 +117,31 @@
                 }
 
                 .gen-preview-ctrl {
-                    margin-top: 20px;
+                    margin: 20px 0;
                     .flexbox(center, center);
 
                     .button {
-                        margin: 0 10px;
+                        margin: 0 5px;
                     }
                 }
             }
-
-            
-
-
         }
 
-        .action {
+        .scene-action {
             .flexbox(center, flex-end);
             width: 100%;
-            //margin:20px 0 0 0;
+            margin:20px 0 0 0;
 
             .notice {
-
                 margin-right: 20px;
             }
             .do-format {
-                //margin-top: 10px;
                 margin-left: auto;
             }
         }
 
         .privacy-explanation {
-            margin: 20px 0 0 0;
-            padding: 10px;
+            padding: 0 20px 0 0;
             font-size: 15px;
             line-height: 1.4;
             color: @notice-color;

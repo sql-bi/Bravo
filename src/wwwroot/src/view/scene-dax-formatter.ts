@@ -3,114 +3,83 @@
  * Copyright (c) SQLBI corp. - All rights reserved.
  * https://www.sqlbi.com
 */
-import { host, optionsController, telemetry } from "../main";
-
-import * as CodeMirror from 'codemirror';
-import 'codemirror/addon/mode/simple';
-
-import { Tabulator  } from 'tabulator-tables';
-
-import { Dic, Utils, _, __ } from '../helpers/utils';
-import { daxFunctions } from '../model/dax';
-import { Doc, DocType } from '../model/doc';
+import { host, optionsController, telemetry, themeController } from '../main';
 import { i18n } from '../model/i18n'; 
+import { Tabulator  } from 'tabulator-tables';
+import { Dic, Utils, _, __ } from '../helpers/utils';
+import { Doc, DocType, MeasureStatus } from '../model/doc';
 import { strings } from '../model/strings';
 import { Alert } from './alert';
-import { Menu, MenuItem } from './menu';
-import { TabularMeasure, daxMeasureName } from '../model/tabular';
+import { FormattedMeasure, TabularMeasure, daxName } from '../model/tabular';
 import { ContextMenu } from '../helpers/contextmenu';
 import { Loader } from '../helpers/loader';
 import * as sanitizeHtml from 'sanitize-html';
-import { MainScene } from './scene-main';
+import { DocScene } from './scene-doc';
 import { LoaderScene } from './scene-loader';
 import { ErrorScene } from './scene-error';
-import { UpdatePBICloudDatasetRequest, UpdatePBIDesktopReportRequest } from '../controllers/host';
+import { FormatDaxRequest, FormatDaxRequestOptions, UpdatePBICloudDatasetRequest, UpdatePBIDesktopReportRequest } from '../controllers/host';
 import { SuccessScene } from './scene-success';
-import { AppError } from '../model/exceptions';
+import { AppError, AppProblem } from '../model/exceptions';
+import { ClientOptionsFormattingRegion, DaxFormatterLineStyle, DaxFormatterSpacingStyle } from '../controllers/options';
+import { PageType } from '../controllers/page';
+import { MultiViewPane, MultiViewPaneMode, ViewPane } from './multiview-pane';
+import { DaxEditor } from './dax-editor';
 
-export class DaxFormatterScene extends MainScene {
-    
+export class DaxFormatterScene extends DocScene {
+
     table: Tabulator;
-    menu: Menu;
+    
+    previewContainer: HTMLElement;
+    previewOverlay: HTMLElement;
+    previewPane: MultiViewPane;
+    formattedEditor: DaxEditor;
+    currentEditor: DaxEditor;
+
     searchBox: HTMLInputElement;
     formatButton: HTMLElement;
-    zoomSelect: HTMLSelectElement;
-    refreshButton: HTMLElement;
     activeMeasure: TabularMeasure;
     previewing: Dic<boolean> = {};
 
-    constructor(id: string, container: HTMLElement, doc: Doc) {
-        super(id, container, doc);
+    showMeasuresWithErrorsOnly = false;
+
+    get canFormat(): boolean {
+        return this.canEdit;
+    }
+
+    constructor(id: string, container: HTMLElement, doc: Doc, type: PageType) {
+        super(id, container, [doc.name, i18n(strings.DaxFormatter)], doc, type, true);
 
         this.element.classList.add("dax-formatter");
-
-        this.initCodeMirror();
     }
 
-    initCodeMirror() {
+    updateEditor(editor: DaxEditor, measure?: TabularMeasure | FormattedMeasure) {
 
-        const daxFunctionsPattern = daxFunctions.map(fn => fn.name.replace(/\./gm, "\\.")).join("|");
-
-        CodeMirror.defineSimpleMode("dax", {
-            start: [
-                { regex: /(?:--|\/\/).*/, token: "comment" },
-                { regex: /\/\*/, token: "comment", next: "comment" },
-                { regex: /"(?:[^\\]|\\.)*?(?:"|$)/, token: "string" },
-                { regex: /'(?:[^']|'')*'(?!')(?:\[[ \w\xA0-\uFFFF]+\])?|\w+\[[ \w\xA0-\uFFFF]+\]/gm, token: "column" },
-                { regex: /\[[ \w\xA0-\uFFFF]+\]/gm,  token: "measure" },
-                { regex: new RegExp("\\b(?:" + daxFunctionsPattern + ")\\b", "gmi"), token: "function" },
-                { regex: /:=|[-+*\/=^]|\b(?:IN|NOT)\b/i, token: "operator" },
-                { regex: /0x[a-f\d]+|[-+]?(?:\.\d+|\d+\.?\d*)(?:e[-+]?\d+)?/i, token: "number" },
-                { regex: /[\[\](){}`,]/gm, token: "parenthesis" },
-            ],
-            comment: [
-                { regex: /.*?\*\//, token: "comment", next: "start" },
-                { regex: /.*/, token: "comment" }
-            ],
-            meta: {
-                dontIndentStates: ["comment"],
-                lineComment: "//"
-            }
-        });
-    }
-
-    updateCodeMirror(element: HTMLElement, value: string) {
-        if (!value) return; // IMPORTANT: since the value is null only if nothing is selected, and since when nothing is selected the preview pane is hidden, Code Mirror won't apply the syntax highlight correctly.
-
-        let cm = (<CodeMirrorElement>_(".CodeMirror", element)).CodeMirror;
-        if (cm) {
-            cm.getDoc().setValue(value);
-            //cm.refresh();
+        if (measure) {
+            editor.value = measure.expression;
+            const errors = (<FormattedMeasure>measure).errors;
+            if (errors)
+                editor.highlightErrors(errors);
         } else {
-            cm = CodeMirror(element, {
-                value: value,
-                mode: "dax",
-                lineNumbers: true,
-                lineWrapping: true,
-                indentUnit: 4,
-                readOnly: "nocursor"
-            }); 
-            cm.on("contextmenu", (instance, e) => {
-                ContextMenu.editorContextMenu(e, cm.getSelection(), cm.getValue());
-            });
+            editor.value = "";
         }
-       
     }
 
     render() {
-        super.render();
+        if (!super.render()) return false;
 
         let html = `
             <div class="summary">
-                <p>${i18n(strings.daxFormatterSummary, this.doc.measures.length)}</p>
+                <p></p>
             </div>
 
             <div class="cols">
-                <div class="col coll">
+                <div class="col coll browser">
                     <div class="toolbar">
                         <div class="search">
-                            <input type="search" placeholder="${i18n(strings.searchPlaceholder)}">
+                            <input type="search" placeholder="${i18n(strings.searchMeasurePlaceholder)}" class="disable-if-empty">
                         </div>
+
+                        <div class="filter-measures-with-errors toggle icon-filter-errors disable-if-empty" title="${i18n(strings.filterMeasuresWithErrorsCtrlTitle)}" disabled></div>
                     </div>
                     <div class="table"></div>
                 </div>
@@ -119,208 +88,261 @@ export class DaxFormatterScene extends MainScene {
                 </div>
             </div>
 
-            ${this.doc.readonly ? "" : `
-                <div class="action">
-                    <div class="privacy-explanation">
-                        <div class="icon icon-privacy"></div>
-                        <p>${i18n(strings.daxFormatterAgreement)} <br>
-                        <span class="show-data-usage link">${i18n(strings.dataUsageLink)}</span>
-                        </p>
-                    </div>
-                    <div class="do-format button disable-on-syncing" disabled>${i18n(strings.daxFormatterFormat)}</div>
+            <div class="scene-action">
+                <div class="privacy-explanation">
+                    <div class="icon icon-privacy"></div>
+                    <p>${i18n(strings.daxFormatterAgreement)} 
+                    <span class="show-data-usage link">${i18n(strings.dataUsageLink)}</span>
+                    </p>
                 </div>
-            `}
+                <div class="do-format button disable-on-syncing enable-if-editable" disabled>${i18n(!this.canFormat && this.doc.type == DocType.vpax ? strings.daxFormatterFormatDisabled : strings.daxFormatterFormat)}</div>
+            </div>
         `;
         this.body.insertAdjacentHTML("beforeend", html);
 
-        this.menu = new Menu("preview-menu", _(".preview", this.body), <Dic<MenuItem>>{
-            "original": {
+        this.previewContainer = _(".preview", this.body);
+
+        this.previewPane = new MultiViewPane(Utils.DOM.uniqueId(), _(".preview", this.body), <Dic<ViewPane>>{
+            "current": {
                 name: i18n(strings.daxFormatterOriginalCode),
-                onRender: element => this.renderOriginalMenu(element),
-                onChange: element => this.switchToOriginalMenu(element)
+                onRender: element => {
+                    this.currentEditor = new DaxEditor(Utils.DOM.uniqueId(), element, optionsController.options.customOptions.editor.zoom, optionsController.options.customOptions.editor.wrapping, optionsController.options.customOptions.editor.whitespaces);
+                },
+                onChange: element => {
+                    if (this.currentEditor)
+                        this.updateEditor(this.currentEditor, this.activeMeasure);
+                }
             },
             "formatted": {
                 name: i18n(strings.daxFormatterFormattedCode),
-                onRender: element => this.renderFormattedMenu(element),
-                onChange: element => this.switchToFormattedMenu(element)
+                onRender: element => {
+                    this.formattedEditor = new DaxEditor(Utils.DOM.uniqueId(), element, optionsController.options.customOptions.editor.zoom, optionsController.options.customOptions.editor.wrapping, optionsController.options.customOptions.editor.whitespaces, [
+                        {
+                            className: ["refresh", "disable-on-syncing"],
+                            icon: "refresh",
+                            title: i18n(strings.refreshPreviewCtrlTitle),
+                            onClick: (e) => {
+                                this.generateFormattedPreview(this.doc.measures);
+                            }
+                        },
+                        {
+                            className: ["open-with-dax-formatter", "disable-on-syncing"],
+                            icon: "send-to-dax-formatter",
+                            title: i18n(strings.openWithDaxFormatterCtrlTitle),
+                            onClick: (e) => {
+                                this.formatWithDaxFormatter();
+                            }
+                        }
+                    ]);
+                },
+                onChange: element => {
+                    if (this.formattedEditor) {
+                        if (this.activeMeasure) {
+                            const key = daxName(this.activeMeasure.tableName, this.activeMeasure.name);
+                            if (key in this.doc.formattedMeasures) {
+                                this.togglePreviewOverlay(false);
+                                this.updateEditor(this.formattedEditor, this.doc.formattedMeasures[key]);
+                            } else if (key in this.previewing) {
+                                this.updateEditor(this.formattedEditor);
+                                this.renderPreviewLoading();
+                            } else {
+                                this.updateEditor(this.formattedEditor);
+                                this.renderPreviewOverlay();
+                            }
+                        } 
+                    }
+                }
             }
-        }, "original", false);
+        }, optionsController.options.customOptions.formatting.previewLayout, optionsController.options.customOptions.sizes.formatDax);
 
-        this.menu.body.insertAdjacentHTML("beforeend", `
-            <div class="toolbar">
 
-                <div class="refresh-preview ctrl icon-refresh disable-on-syncing" title="${i18n(strings.refreshPreviewCtrlTitle)}" hidden></div>
-
-                <select class="zoom">
-                    <option value="1" selected>100%</option>
-                </select>
-            </div>
-        `);
-        this.zoomSelect = <HTMLSelectElement>_(".zoom", this.menu.body);
-        this.refreshButton = _(".refresh-preview", this.menu.body);
+        this.previewOverlay = document.createElement("div");
+        this.previewOverlay.classList.add("preview-overlay");
+        _("#body-formatted", this.body).append(this.previewOverlay);
 
         this.searchBox = <HTMLInputElement>_(".search input", this.body);
         this.formatButton = _(".do-format", this.body);
 
-        this.updateTable();
-        this.updateZoom(optionsController.options.customOptions.editorZoom);
+        this.update();
+
         this.listen();
     }
 
-    renderOriginalMenu(element: HTMLElement) {
+    renderPreviewOverlay() {
         let html = `
-            <div class="cm cm-original"></div>
+            <div class="gen-preview-action">
+                ${i18n(strings.daxFormatterPreviewDesc)} 
+                <span class="show-data-usage link hide-if-editable">${i18n(strings.dataUsageLink)}</span>
+
+                <div class="gen-preview-ctrl">
+                    <span class="gen-preview button button-alt">${i18n(strings.daxFormatterPreviewButton)}</span>
+                    <span class="gen-preview-all button button-alt">${i18n(strings.daxFormatterPreviewAllButton)}</span>
+                </div>
+                
+                <label class="switch"><input type="checkbox" id="gen-preview-auto-option" ${optionsController.options.customOptions.formatting.preview ? "checked" : ""}><span class="slider"></span></label> <label for="gen-preview-auto-option">${i18n(strings.daxFormatterAutoPreviewOption)}</label>
+            </div>
         `;
-        element.insertAdjacentHTML("beforeend", html);
+        this.previewOverlay.innerHTML = html;
+        this.togglePreviewOverlay(true);
     }
 
-    switchToOriginalMenu(element: HTMLElement) {
+    renderPreviewError(error: AppError, retry?: () => void) {
 
-        let editorEl = _('.cm-original', element);
-        this.updateCodeMirror(editorEl, this.activeMeasure ? this.activeMeasure.measure : null);  
-        this.togglePreviewRefresh(false);
-    }
+        this.previewing = {};
+        let message = error.toString();
+        const retryId = Utils.DOM.uniqueId();
 
-    renderFormattedMenu(element: HTMLElement) {
-        let html = `
-            <div class="cm cm-formatted"></div>
-        `;
-        element.insertAdjacentHTML("beforeend", html);
-    }
-
-    switchToFormattedMenu(element: HTMLElement) {
-
-        let editorElement = _('.cm-formatted', element);
-        editorElement.innerHTML = "";
-        
-        if (this.activeMeasure) {
-            let key = daxMeasureName(this.activeMeasure);
-            if (key in this.doc.formattedMeasures) {
-                this.updateCodeMirror(editorElement, this.doc.formattedMeasures[key]);
-                this.togglePreviewRefresh(true);
-            } else if (this.previewing[key] === true || this.previewing["*"]) {
-                this.renderPreviewLoading(editorElement);
-            } else {
-                this.renderPreviewOverlay(editorElement);
-            }
-        } else {
-            
-            this.updateCodeMirror(editorElement, null);  
-            this.togglePreviewRefresh(false);
-        }
-    }
-
-    renderPreviewOverlay(element: HTMLElement) {
-        let html = `
-            <div class="gen-preview-overlay">
-                <div class="gen-preview-action">
-                    ${i18n(strings.daxFormatterPreviewDesc)}
-                    ${ this.doc.readonly ? `
-                        <div class="show-data-usage link">${i18n(strings.dataUsageLink)}</div>
+        this.previewOverlay.innerHTML = `
+            <div class="notice">
+                <div>
+                    <p>${message}</p>
+                    <p><span class="copy-error link">${i18n(strings.copyErrorDetails)}</span></p>
+                    ${ retry ? `
+                        <div id="${retryId}" class="button button-alt">${i18n(strings.errorRetry)}</div>
                     ` : ""}
-
-                    <div class="gen-preview-ctrl">
-
-                        <span class="gen-preview button button-alt">${i18n(strings.daxFormatterPreviewButton)}</span>
-
-                        <span class="gen-preview-all button">${i18n(strings.daxFormatterPreviewAllButton)}</span>
-                    </div>
                 </div>
             </div>
         `;
-        element.innerHTML = html;
+        this.togglePreviewOverlay(true);
 
-        this.togglePreviewRefresh(false);
-
-        _(".gen-preview", element).addEventListener("click", e => {
+        _(".copy-error", this.element).addEventListener("click", e =>{
             e.preventDefault();
-            this.generatePreview(element, false);
+            navigator.clipboard.writeText(message);
+
+            let ctrl = <HTMLElement>e.currentTarget;
+            ctrl.innerText = i18n(strings.copiedErrorDetails);
+            window.setTimeout(() => {
+                ctrl.innerText = i18n(strings.copyErrorDetails);
+            }, 1500);
         });
 
-        _(".gen-preview-all", element).addEventListener("click", e => {
-            e.preventDefault();
-            this.generatePreview(element, true);
-        });
-
-        if (this.doc.readonly) {
-            _(".gen-preview-action .show-data-usage", this.element).addEventListener("click", e => {
+        if (retry) {
+            _(`#${retryId}`, this.element).addEventListener("click", e => {
                 e.preventDefault();
-                this.showDataUsageDialog();
+                retry();
+            }); 
+        }
+    }
+
+    togglePreviewOverlay(toggle: boolean) {
+        if (this.previewOverlay) {
+            this.previewOverlay.toggle(toggle)
+        }
+    }
+
+    renderPreviewLoading() {
+        new Loader(this.previewOverlay, false);
+        this.togglePreviewOverlay(true);
+    }
+
+    maybeAutoGenerateFormattedPreview() {
+        if (optionsController.options.customOptions.formatting.preview) {
+            this.generateFormattedPreview(this.doc.measures);
+        }
+    }
+
+    generateFormattedPreview(measures: TabularMeasure[]) {
+
+        if (!measures.length || !measures[0]) return;
+
+        this.renderPreviewLoading();
+
+        measures.forEach(measure => {
+            this.previewing[daxName(measure.tableName, measure.name)] = true;
+        });
+
+        this.updateMeasuresStatus();
+
+        host.formatDax(this.getFormatDaxRequest(measures))
+            .then(formattedMeasures => {
+                
+                formattedMeasures.forEach(measure => {
+                    let measureKey = daxName(measure.tableName, measure.name);
+                    this.doc.formattedMeasures[measureKey] = measure;
+                    delete this.previewing[measureKey];
+
+                    if (this.activeMeasure && measureKey == daxName(this.activeMeasure.tableName, this.activeMeasure.name)) {
+                        this.togglePreviewOverlay(false);
+                        this.updateEditor(this.formattedEditor, measure);
+                    }
+                });
+                this.togglePreviewOverlay(false);
+            })
+            .catch((error: AppError) => {
+
+                this.renderPreviewError(error, ()=>{
+                    this.generateFormattedPreview(measures);
+                });
+            })
+            .finally(() => {
+                this.updateMeasuresStatus();
+            });
+    }
+
+    togglePreview(toggle: boolean) {
+        this.previewContainer.toggle(toggle);
+        if (toggle)
+            this.previewPane.updateLayout();
+    }
+
+    deselectMeasures() {
+        if (this.table) {
+            this.table.deselectRow();
+            __(".row-active", this.table.element).forEach((el: HTMLElement) => {
+                el.classList.remove("row-active");
             });
         }
+
+        this.activeMeasure = null;
+        this.togglePreview(false);
+
+        this.formatButton.toggleAttr("disabled", true);
     }
 
-    togglePreviewRefresh(toggle: boolean) {
-        if (this.refreshButton)
-            this.refreshButton.toggle(toggle);
-    }
+    updateMeasuresStatus() {
+        
+        let canFilter = false;
 
-    renderPreviewLoading(element: HTMLElement) {
-        this.togglePreviewRefresh(false);
-        new Loader(element, false);
-    }
+        if (this.table) {
+            this.table.redraw(true);
 
-    generatePreview(element: HTMLElement, all: boolean) {
-        if (this.activeMeasure) {
-            this.renderPreviewLoading(element);
+            let rows = this.table.getRows("active");
+            rows.forEach(row => { 
+                if ("reformat" in row) { // This is a bug has been reported here: https://github.com/olifolkerd/tabulator/issues/3580
+                    row.reformat();
+                }
+            });
 
-            if (all) {
-                this.previewing["*"] = true;
-            } else {
-                this.previewing[daxMeasureName(this.activeMeasure)] = true;
-            }
-
-            host.formatDax({
-                options: optionsController.options.customOptions.daxFormatter,
-                measures: all ? this.doc.measures : [this.activeMeasure]
-            })
-                .then(measures => {
-                    
-                    measures.forEach(measure => {
-                        let measureKey = daxMeasureName(measure);
-                        this.doc.formattedMeasures[measureKey] = measure.measure;
-                        this.previewing[measureKey] = false;
-
-                        if (measureKey == daxMeasureName(this.activeMeasure)) {
-                            this.updateCodeMirror(element, measure.measure);
-                            this.togglePreviewRefresh(true);
-                        }
-                    });
-                })
-                .catch(error => {
-                    //TODO catch DAX Format error
-
-                    this.previewing = {};
-                    this.togglePreviewRefresh(false);
-                })
-                .finally(() => {
-                    _(".loader", element).remove(); //Remove any loader
-                });
+            if (!Utils.Obj.isEmpty(this.doc.formattedMeasures))
+                canFilter = true;
         }
+
+        _(".filter-measures-with-errors", this.element).toggleAttr("disabled", !canFilter);
+        _(".filter-unformatted-measures", this.element).toggleAttr("disabled", !canFilter);
+        this.updateSummary();
     }
 
     updateTable(redraw = true) {
 
         if (redraw) {
             if (this.table) {
-                this.table.off("rowClick");
-                this.table.off("rowSelectionChanged");
-                //this.table.destroy();
-                this.activeMeasure = null;
+                this.table.destroy();
+                this.table = null;
             }
-            this.table = null;
-
         }
+        this.deselectMeasures();
         let data = this.doc.measures;
 
         if (!this.table) {
 
             let columns: Tabulator.ColumnDefinition[] = [];
-            if (!this.doc.readonly) {
+            if (this.canFormat) {
                 columns.push({
                     formatter:"rowSelection", 
-                    title: undefined,
                     titleFormatter:"rowSelection", 
+                    titleFormatterParams:{
+                        rowRange:"active"
+                    },
                     hozAlign: "center", 
                     headerHozAlign: "center",
                     cssClass: "column-select",
@@ -331,36 +353,96 @@ export class DaxFormatterScene extends MainScene {
                         cell.getRow().toggleSelect();
                     }
                 });
-                columns.push({ 
-                    field: "name", 
-                    title: i18n(strings.daxFormatterTableColMeasure),
-                    cssClass: "column-name",
-                    bottomCalc: "count",
-                    bottomCalcFormatter: (cell)=> i18n(strings.daxFormatterTableSelected, this.table.getSelectedData().length)
-                });
-            } else {
-                columns.push({ 
-                    field: "name", 
-                    title: i18n(strings.daxFormatterTableColMeasure),
-                    cssClass: "column-name"
-                });
             }
-
             columns.push({ 
-                field: "tableName", 
-                width: 100,
-                title: i18n(strings.daxFormatterTableColTable)
+                //field: "Icon", 
+                title: "", 
+                hozAlign:"center", 
+                resizable: false, 
+                width: 40,
+                cssClass: "column-icon",
+                formatter: (cell) => {
+
+                    const measure = <TabularMeasure>cell.getData();
+
+                    if (daxName(measure.tableName, measure.name) in this.previewing) 
+                        return `<div class="loader"></div>`;
+
+                    const status = this.doc.analizeMeasure(measure);
+
+                    if (status == MeasureStatus.NotFormatted) {
+                        return `<div class="icon icon-unformatted" title="${i18n(strings.columnMeasureNotFormattedTooltip)}"></div>`;
+                    } else if (status == MeasureStatus.WithErrors) {
+                        return `<div class="icon icon-alert" title="${i18n(strings.columnMeasureWithError)}"></div>`;
+                    } else if (status == MeasureStatus.Formatted) {
+                        return `<div class="icon icon-completed" title="${i18n(strings.columnMeasureFormatted)}"></div>`;
+                    } else {
+                        if (optionsController.options.customOptions.formatting.preview) {
+                            return `<div class="loader"></div>`;
+                        } else {
+                            return "";
+                        }
+                    }
+                }, 
+                sorter: (a, b, aRow, bRow, column, dir, sorterParams) => {
+                    const measureA = <TabularMeasure>aRow.getData();
+                    const measureAStatus = this.doc.analizeMeasure(measureA);
+                    const measureB = <TabularMeasure>bRow.getData();
+                    const measureBStatus = this.doc.analizeMeasure(measureB);
+             
+                    a = `${measureAStatus}_${measureA.name}`;
+                    b = `${measureBStatus}_${measureB.name}`;
+                    
+                    return String(a).toLowerCase().localeCompare(String(b).toLowerCase());
+                }
             });
 
+   
+            columns.push({ 
+                field: "name", 
+                title: i18n(strings.tableColMeasure),
+                tooltip: true,
+                cssClass: "column-name",
+                bottomCalc: this.canFormat ? "count" : null,
+                bottomCalcFormatter: (cell)=> i18n(strings.tableSelectedCount, {count: this.table.getSelectedData().length}),
+                resizable: false
+            });
+
+            /*columns.push({ 
+                field: "tableName", 
+                width: 100,
+                title: i18n(strings.tableColTable)
+            });*/
+
             const tableConfig: Tabulator.Options = {
-                //debugInvalidOptions: false,
                 maxHeight: "100%",
-                //responsiveLayout: "collapse", // DO NOT USE IT
-                //selectable: true,
-                layout: "fitColumns", //"fitColumns", //fitData, fitDataFill, fitDataStretch, fitDataTable, fitColumns
+                layout: "fitColumns",
+                placeholder: " ", // This fixes scrollbar appearing with empty tables
+                initialFilter: data => this.measuresFilter(data),
                 initialSort:[
                     {column: "name", dir: "asc"}, 
                 ],
+                rowFormatter: row => {
+                    try { //Bypass calc rows
+                        if ((<any>row)._row && (<any>row)._row.type == "calc") return;
+
+                        const measure = <TabularMeasure>row.getData();
+                        if (daxName(measure.tableName, measure.name) in this.previewing) 
+                            return;
+
+                        let element = row.getElement();
+                        element.classList.remove("row-error", "row-highlighted");
+                        if (measure.isHidden)
+                            element.classList.add("row-hidden");
+
+                        const status = this.doc.analizeMeasure(measure);
+                        if (status == MeasureStatus.WithErrors) {
+                            element.classList.add("row-error");
+                        } else if (status == MeasureStatus.NotFormatted) {
+                            element.classList.add("row-highlighted");
+                        }
+                    }catch(ignore){}
+                },
                 columns: columns,
                 data: data
             };
@@ -368,7 +450,7 @@ export class DaxFormatterScene extends MainScene {
             this.table = new Tabulator(`#${this.element.id} .table`, tableConfig);
             this.table.on("rowSelectionChanged", (data: any[], rows: Tabulator.RowComponent[]) =>{
                 this.table.recalc();
-                this.formatButton.toggleAttr("disabled", !rows.length || this.doc.readonly);
+                this.formatButton.toggleAttr("disabled", !rows.length || !this.canFormat);
             });
             this.table.on("rowClick", (e, row) => {
 
@@ -380,8 +462,8 @@ export class DaxFormatterScene extends MainScene {
 
                 row.getElement().classList.add("row-active");
 
-                _(".preview", this.element).toggle(true);
-                this.menu.reselect();
+                this.togglePreview(true);
+                
             });
 
         } else {
@@ -393,52 +475,87 @@ export class DaxFormatterScene extends MainScene {
         }
     }
 
-    updateZoom(zoom: number) {
-
-        if (!zoom) zoom = 1;
-        optionsController.update("customOptions.editorZoom", zoom);
-
-        let defaultValues = [
-            0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2 //, 2.5, 5, 0.1
-        ];
-        let fixedZoom = Number((zoom * 100).toFixed(0)) / 100;
-        let found = (defaultValues.indexOf(fixedZoom) > -1);
-        if (!found) {
-            defaultValues.push(fixedZoom);
-            defaultValues.sort();
-        }
-
-        if (this.zoomSelect.length < defaultValues.length) {
-            this.zoomSelect.innerHTML = "";
-            defaultValues.forEach(value => {
-                let option = document.createElement("option");
-                option.value = value.toString();
-                option.text = `${(value * 100).toFixed(0)}%`;
-                if (value == zoom) option.selected = true;
-                this.zoomSelect.appendChild(option);
-            });
-        } else {
-            this.zoomSelect.value = fixedZoom.toString();
-        }
-        __(".cm", this.body).forEach((el: HTMLElement) => {
-            el.style.fontSize = `${zoom}em`;
-            let cm = (<CodeMirrorElement>_(".CodeMirror", el)).CodeMirror;
-            if (cm) cm.refresh();
-        });
-    }
 
     update() {
-        this.updateTable(false);
+        if (!super.update()) return false;
 
-        _(".summary p", this.element).innerHTML = i18n(strings.daxFormatterSummary, this.doc.measures.length);
+        this.updateTable(false);
+        this.maybeAutoGenerateFormattedPreview();
+
+        this.updateSummary();
     }
 
+    updateSummary() {
+        let summary = {
+            count: this.doc.measures.length,
+            analyzable: 0,
+            errors: 0,
+            formattable: 0
+        };
+        this.doc.measures.forEach(measure => {
+            const status = this.doc.analizeMeasure(measure);
+            if (status == MeasureStatus.NotAnalyzed) {
+                summary.analyzable += 1;
+            } else if (status == MeasureStatus.NotFormatted) {
+                summary.formattable += 1;
+            } else if (status == MeasureStatus.WithErrors) {
+                summary.errors += 1;
+            }
+        });
+
+        _(".summary p", this.element).innerHTML = i18n(summary.analyzable ? strings.daxFormatterSummary : strings.daxFormatterSummaryNoAnalysis, summary);
+    }
+
+    getFormatDaxRequest(measures: TabularMeasure[]): FormatDaxRequest {
+
+        // Set separators according to the region
+        const separators: {[key: string]: string[]}  = {
+            [ClientOptionsFormattingRegion.US]: [',', '.'],
+            [ClientOptionsFormattingRegion.EU]: [';', ',']
+        };
+        let region = <string>optionsController.options.customOptions.formatting.region;
+    
+        if (!(region in separators)) {
+  
+            let lastC = -1;
+            let lastR;
+            for (let r in separators) {
+                let c = (measures[0].expression.match(new RegExp(separators[r][0], 'gmi')) || []).length;
+                if (c > lastC) {
+                    lastR = r;
+                    lastC = c;
+                }
+            }
+            region = lastR;
+        }
+
+        let formatOptions = <FormatDaxRequestOptions>optionsController.options.customOptions.formatting.daxFormatter;
+        formatOptions.listSeparator = separators[region][0];
+        formatOptions.decimalSeparator = separators[region][1];
+        formatOptions.autoLineBreakStyle = this.doc.model.autoLineBreakStyle;
+
+        formatOptions.databaseName = this.doc.model.name;
+        //formatOptions.compatibilityMode = this.doc.model.compatibilityMode;
+        formatOptions.compatibilityLevel = this.doc.model.compatibilityLevel;
+        formatOptions.serverName = this.doc.model.serverName;
+        formatOptions.serverVersion = this.doc.model.serverVersion;
+        formatOptions.serverEdition = this.doc.model.serverEdition;
+        formatOptions.serverMode = this.doc.model.serverMode;
+        formatOptions.serverLocation = this.doc.model.serverLocation;
+
+        return {
+            options: formatOptions,
+            measures: measures
+        };
+    }
 
     format() {
-        if (this.doc.readonly) return;
+        if (!this.canFormat) return;
 
         let measures: TabularMeasure[] = this.table.getSelectedData();
         if (!measures.length) return;
+
+        telemetry.track("Format", { "Count": measures.length });
 
         this.formatButton.toggleAttr("disabled", true);
 
@@ -450,42 +567,74 @@ export class DaxFormatterScene extends MainScene {
         let errorResponse = (error: AppError) => {
             if (error.requestAborted) return;
 
-            let errorScene = new ErrorScene(Utils.DOM.uniqueId(), this.element.parentElement, error, true);
+            let errorScene = new ErrorScene(Utils.DOM.uniqueId(), this.element.parentElement, error, () => {
+                this.updateMeasuresStatus();
+            });
             this.splice(errorScene);
         };
 
-        host.formatDax({
-            options: optionsController.options.customOptions.daxFormatter,
-            measures: measures
-        })
-            .then(measures => {
-                
-                measures.forEach(measure => {
-                    this.doc.formattedMeasures[daxMeasureName(measure)] = measure.measure;
+        host.formatDax(this.getFormatDaxRequest(measures))
+            .then(formattedMeasures => {
+
+                // Update model's formatted measures
+                let measuresWithErrors: string[] = [];
+                formattedMeasures.forEach(measure => {
+                    const measureName = daxName(measure.tableName, measure.name);
+                    this.doc.formattedMeasures[measureName] = measure;
+                    if (measure.errors && measure.errors.length) {
+                        measuresWithErrors.push(measureName);
+                    }
                 });
+
+                if (measuresWithErrors.length) {
+
+                    throw AppError.InitFromProblemCode(AppProblem.TOMDatabaseUpdateErrorMeasure, i18n(strings.errorTryingToUpdateMeasuresWithErrors, {measures: measuresWithErrors.join(", ")}));
+                }
 
                 let updateRequest;
                 if (this.doc.type == DocType.dataset) {
                     updateRequest = <UpdatePBICloudDatasetRequest>{
                         dataset: this.doc.sourceData,
-                        measures: measures
+                        measures: formattedMeasures
                     };
                 } else if (this.doc.type == DocType.pbix) {
                     updateRequest = <UpdatePBIDesktopReportRequest>{
                         report: this.doc.sourceData,
-                        measures: measures
+                        measures: formattedMeasures
                     };
+                } else {
+                    throw AppError.InitFromResponseStatus(Utils.ResponseStatusCode.InternalError);
                 }
+
                 host.updateModel(updateRequest, this.doc.type)
-                    .then(() => {
+                    .then(response => {
+                      
+                        // Update model's measures (formula and etag)
+                        // Strip errors from formatted measures
+                        if (response.etag) {
 
-                       /*
-                       //TODO
-                       this.doc.measures = measures;
-                       this.updateTable(false);
-                        */
+                            // Update measures with formatted version
+                            formattedMeasures.forEach(formattedMeasure => {
+                                const measureName = daxName(formattedMeasure.tableName, formattedMeasure.name);
+                                for (let i = 0; i < this.doc.measures.length; i++) {
 
-                        let successScene = new SuccessScene(Utils.DOM.uniqueId(), this.element.parentElement, i18n(measures.length == 1 ? strings.daxFormatterSuccessSceneMessageSingular : strings.daxFormatterSuccessSceneMessagePlural, measures.length), ()=>{
+                                    let docMeasureName = daxName(this.doc.measures[i].tableName, this.doc.measures[i].name)
+                                    
+                                    if (measureName == docMeasureName) {
+                                        this.doc.measures[i].expression = formattedMeasure.expression;
+                                        break;
+                                    }
+                                }
+                            });
+
+                            // Update all measures etags
+                            for (let i = 0; i < this.doc.measures.length; i++) {
+                                this.doc.measures[i].etag = response.etag;
+                            }
+                        }
+                        this.updateTable(true);
+
+                        let successScene = new SuccessScene(Utils.DOM.uniqueId(), this.element.parentElement, i18n(strings.daxFormatterSuccessSceneMessage, {count: formattedMeasures.length}), ()=>{
                             this.pop();
                         });
                         this.splice(successScene);
@@ -494,8 +643,7 @@ export class DaxFormatterScene extends MainScene {
             })
             .catch(error => errorResponse(error))
             .finally(() => {
-                this.formatButton.toggleAttr("disabled", true);
-                this.table.deselectRow();
+                this.deselectMeasures();
             });
     }
 
@@ -509,54 +657,170 @@ export class DaxFormatterScene extends MainScene {
             e.preventDefault();
 
             let el = <HTMLInputElement>e.currentTarget;
+            if (el.hasAttribute("disabled")) return;
+
             let selection = el.value.substring(el.selectionStart, el.selectionEnd);
             ContextMenu.editorContextMenu(e, selection, el.value, el);
         });
 
-        this.zoomSelect.addEventListener("change", e => {
-            this.updateZoom(parseFloat((<HTMLSelectElement>e.currentTarget).value));
+
+        _(".filter-measures-with-errors", this.body).addEventListener("click", e => {
+            e.preventDefault();
+            let el = <HTMLElement>e.currentTarget;
+            if (el.hasAttribute("disabled")) return;
+
+            if (!el.classList.contains("active"))
+                telemetry.track("Format DAX: Filter Errors");
+
+            el.toggleClass("active");
+            this.showMeasuresWithErrorsOnly = el.classList.contains("active");
+            this.deselectMeasures();
+            
+            this.applyFilters();
         });
 
-        if (!this.doc.readonly) {
-            this.formatButton.addEventListener("click", e => {
-                e.preventDefault();
-                let el = <HTMLElement>e.currentTarget;
-                if (el.hasAttribute("disabled")) return;
-
-                this.format();
-            });
-        }
-
-        this.refreshButton.addEventListener("click", e => {
+        
+        this.formatButton.addEventListener("click", e => {
             e.preventDefault();
-            this.generatePreview(_('.cm-formatted', this.element), false)
-        })
+            
+            if (!this.canFormat) return;
 
-        _(".show-data-usage", this.element).addEventListener("click", e => {
+            let el = <HTMLElement>e.currentTarget;
+            if (el.hasAttribute("disabled")) return;
+
+            this.format();
+        });
+
+        this.element.addLiveEventListener("click", ".show-data-usage", (e, element) => {
             e.preventDefault();
             this.showDataUsageDialog();
+        });
+
+
+        this.previewPane.on("size.change", (sizes: number[]) =>{
+            optionsController.update("customOptions.sizes.formatDax", sizes);
+            this.currentEditor.editor.refresh();
+            this.formattedEditor.editor.refresh();
+        });
+
+        this.previewPane.on("mode.change", (mode: MultiViewPaneMode) =>{
+            optionsController.update("customOptions.formatting.previewLayout", mode);
+        });
+
+        this.currentEditor.on("zoom.change", (zoom: number) => {
+            this.formattedEditor.updateZoom(zoom, false);
+            optionsController.update("customOptions.editor.zoom", zoom);
+        });
+        this.currentEditor.on("wrapping.change", (wrapping: boolean) => {
+            this.formattedEditor.updateWrapping(wrapping, false);
+            optionsController.update("customOptions.editor.wrapping", wrapping);
+        });
+        this.currentEditor.on("whitespaces.change", (whitespaces: boolean) => {
+            this.formattedEditor.toggleHiddenCharacters(whitespaces, false);
+            optionsController.update("customOptions.editor.whitespaces", whitespaces);
+        });
+        this.formattedEditor.on("zoom.change", (zoom: number) => {
+            this.currentEditor.updateZoom(zoom, false);
+            optionsController.update("customOptions.editor.zoom", zoom);
+        });
+        this.formattedEditor.on("wrapping.change", (wrapping: boolean) => {
+            this.currentEditor.updateWrapping(wrapping, false)
+            optionsController.update("customOptions.editor.wrapping", wrapping);
+        });
+        this.formattedEditor.on("whitespaces.change", (whitespaces: boolean) => {
+            this.currentEditor.toggleHiddenCharacters(whitespaces, false);
+            optionsController.update("customOptions.editor.whitespaces", whitespaces);
+        });
+
+        this.element.addLiveEventListener("click", ".gen-preview", (e, element) => {
+            e.preventDefault();
+            this.generateFormattedPreview([this.activeMeasure]);
+
+            telemetry.track("Format DAX: Preview");
+        });
+
+        this.element.addLiveEventListener("click", ".gen-preview-all", (e, element) => {
+            e.preventDefault();
+            this.generateFormattedPreview(this.doc.measures);
+
+            telemetry.track("Format DAX: Preview All");
+        });
+
+        this.element.addLiveEventListener("change", "#gen-preview-auto-option", (e, element) => {
+            e.preventDefault();
+            optionsController.update("customOptions.formatting.preview", (<HTMLInputElement>element).checked);
+            window.setTimeout(() => {
+                this.generateFormattedPreview(this.doc.measures);
+            }, 300);
+        });
+
+        optionsController.on("customOptions.formatting.preview.change", (changedOptions: any) => {
+            this.maybeAutoGenerateFormattedPreview();
+        });
+        optionsController.on("customOptions.formatting.region.change", (changedOptions: any) => {
+            this.maybeAutoGenerateFormattedPreview();
+        });
+        optionsController.on("customOptions.formatting.daxFormatter.spacingStyle.change", (changedOptions: any) => {
+            this.maybeAutoGenerateFormattedPreview();
+        });
+        optionsController.on("customOptions.formatting.daxFormatter.lineStyle.change", (changedOptions: any) => {
+            this.maybeAutoGenerateFormattedPreview();
+        });
+        optionsController.on("customOptions.formatting.daxFormatter.lineBreakStyle.change", (changedOptions: any) => {
+            this.maybeAutoGenerateFormattedPreview();
         });
     }
 
     showDataUsageDialog() {
         let dialog = new Alert("data-usage", i18n(strings.dataUsageTitle));
         let html = `
-            <a href="https://www.daxformatter.com" target="_blank"><img src="images/dax-formatter.svg"></a>
+            <img src="images/dax-formatter${themeController.isDark ? "-dark" : ""}.svg">
             ${i18n(strings.dataUsageMessage)}
-            <p><a href="https://www.daxformatter.com" target="_blank">www.daxformatter.com</a></p>
+            <p><span class="link" href="https://www.daxformatter.com">www.daxformatter.com</span></p>
         `;
         dialog.show(html);
 
-        telemetry.track("Dax Formatter Privacy Dialog");
+        telemetry.track("Data Usage Dialog");
     }
     
     applyFilters() {
         if (this.table) {
+            this.table.clearFilter();
+
+            if (this.showMeasuresWithErrorsOnly) 
+                this.table.addFilter(data => this.measuresFilter(data));
+
             if (this.searchBox.value)
-                this.table.setFilter("name", "like", sanitizeHtml(this.searchBox.value, { allowedTags: [], allowedAttributes: {}}));
-            else 
-                this.table.clearFilter();
+                this.table.addFilter("name", "like", sanitizeHtml(this.searchBox.value, { allowedTags: [], allowedAttributes: {}}));
         }
     }
+
+    measuresFilter(measure: TabularMeasure): boolean {
+        if (this.showMeasuresWithErrorsOnly) {
+
+            const status = this.doc.analizeMeasure(measure);
+
+            return (status == MeasureStatus.NotAnalyzed || (this.showMeasuresWithErrorsOnly && (status == MeasureStatus.WithErrors || status == MeasureStatus.NotFormatted)));
+        }
+        return true;
+    }
+
+    formatWithDaxFormatter() {
+
+        if (!this.activeMeasure) return;
+
+        const fx = `${this.activeMeasure.name} = ${this.activeMeasure.expression}`;
+        const formatRegion = optionsController.options.customOptions.formatting.region;
+        const formatLine = (optionsController.options.customOptions.formatting.daxFormatter.lineStyle == DaxFormatterLineStyle.LongLine ? "long" : "short");
+        const formatSpacing = (optionsController.options.customOptions.formatting.daxFormatter.spacingStyle == DaxFormatterSpacingStyle.SpaceAfterFunction ? "" : "true");
+
+        let queryString = `fx=${encodeURIComponent(fx)}&r=${formatRegion}&s=${formatSpacing}&l=${formatLine}${themeController.isDark ? "&dark=1" : ""}&cache=${new Date().getTime()}`;
+
+        host.navigateTo(`https://www.daxformatter.com/?${queryString}`);
+
+
+        telemetry.track("Format with DAX Formatter");
+    }
+
 
 }

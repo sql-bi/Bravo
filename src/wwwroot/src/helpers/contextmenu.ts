@@ -7,6 +7,8 @@
  * MIT License
 */
 
+import { i18n } from '../model/i18n';
+import { strings } from '../model/strings';
 import { Utils } from './utils';
 
 export interface ContextMenuOptions {
@@ -69,12 +71,20 @@ export class ContextMenu{
             ContextMenu.positionMenu(this.position, event, this.menuControl);        
         }
 
-        document.onclick = function(e){
-            if(!(<HTMLElement>e.target).classList.contains('contextualJs')){
-                ContextMenu.closeMenu();
-            }
-        }    
+        document.addEventListener("click", e => {
+            this.catch(e);
+        });   
+        document.addEventListener("auxclick", e => {
+            this.catch(e);
+        }); 
     }
+
+    catch(e: MouseEvent) {
+        if(!(<HTMLElement>e.target).classList.contains('contextualJs')){
+            ContextMenu.closeMenu();
+        }
+    }
+
     /**
      * Adds item to this contextual menu instance
      * @param {ContextMenuItem} item item to add to the contextual menu
@@ -147,17 +157,17 @@ export class ContextMenu{
 
         let items = [];
         if (element) 
-            items.push({ label: "Cut", cssIcon: "icon-cut", shortcut: `${ctrl}+X`, enabled: (selectedText != ""), onClick: () => { 
+            items.push({ label: i18n(strings.cut), cssIcon: "icon-cut", shortcut: `${ctrl}+X`, enabled: (selectedText != ""), onClick: () => { 
                 navigator.clipboard.writeText(selectedText);
                 element.value = text.substring(0, element.selectionStart) + text.substring(element.selectionEnd);
             }});
 
-        items.push({ label: "Copy", cssIcon: "icon-copy", shortcut: `${ctrl}+X`, enabled: (text != ""), onClick: () => { 
+        items.push({ label: i18n(strings.copy), cssIcon: "icon-copy", shortcut: `${ctrl}+C`, enabled: (text != ""), onClick: () => { 
             navigator.clipboard.writeText(selectedText != "" ? selectedText : text);
         }});
 
         if (element) 
-            items.push({ label: "Paste", cssIcon: "icon-paste", shortcut: `${ctrl}+V`, enabled: (clipboardText != ""), onClick: () => { 
+            items.push({ label: i18n(strings.paste), cssIcon: "icon-paste", shortcut: `${ctrl}+V`, enabled: (clipboardText != ""), onClick: () => { 
                 element.value = text.substring(0, element.selectionStart) + clipboardText + text.substring(element.selectionEnd);
             }});
 

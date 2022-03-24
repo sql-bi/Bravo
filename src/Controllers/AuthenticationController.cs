@@ -1,21 +1,28 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Sqlbi.Bravo.Infrastructure;
-using Sqlbi.Bravo.Models;
-using Sqlbi.Bravo.Services;
-using System.Net.Mime;
-using System.Threading.Tasks;
-
-namespace Sqlbi.Bravo.Controllers
+﻿namespace Sqlbi.Bravo.Controllers
 {
+    using Microsoft.AspNetCore.Http;
+    using Microsoft.AspNetCore.Mvc;
+    using Sqlbi.Bravo.Infrastructure.Services.PowerBI;
+    using Sqlbi.Bravo.Models;
+    using Sqlbi.Bravo.Services;
+    using System.Net.Mime;
+    using System.Threading.Tasks;
+
+    /// <summary>
+    /// Authentication controller
+    /// </summary>
+    /// <response code="400">Status400BadRequest - See the "instance" and "detail" properties to identify the specific occurrence of the problem</response>
     [Route("auth/[action]")]
     [ApiController]
+    [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ProblemDetails))]
     public class AuthenticationController : ControllerBase
     {
+        private readonly IAuthenticationService _authenticationService;
         private readonly IPBICloudService _pbicloudService;
 
-        public AuthenticationController(IPBICloudService pbicloudService)
+        public AuthenticationController(IAuthenticationService authenticationService, IPBICloudService pbicloudService)
         {
+            _authenticationService = authenticationService;
             _pbicloudService = pbicloudService;
         }
 
@@ -23,26 +30,15 @@ namespace Sqlbi.Bravo.Controllers
         /// Attempts to authenticate and acquire an access token for the account to access the PowerBI cloud services
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
-        /// <response code="400">Status400BadRequest - See the "instance" and "detail" properties to identify the specific occurrence of the problem</response>
         [HttpGet]
         [ActionName("powerbi/SignIn")]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(BravoAccount))]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesDefaultResponseType]
         public async Task<IActionResult> PowerBISignIn(string? upn)
         {
-            try
-            {
-                await _pbicloudService.SignInAsync(userPrincipalName: upn);
-            }
-            catch (SignInException ex)
-            {
-                return Problem(ex.ProblemDetail, ex.ProblemInstance, StatusCodes.Status400BadRequest);
-            }
-
-            var account = _pbicloudService.CurrentAccount;
-            return Ok(account);
+            await _authenticationService.PBICloudSignInAsync(userPrincipalName: upn);
+            return Ok(_authenticationService.Account);
         }
 
         /// <summary>
@@ -55,7 +51,7 @@ namespace Sqlbi.Bravo.Controllers
         [ProducesDefaultResponseType]
         public async Task<IActionResult> PowerBISignOut()
         {
-            await _pbicloudService.SignOutAsync();
+            await _authenticationService.PBICloudSignOutAsync();
             return Ok();
         }
 
@@ -72,11 +68,35 @@ namespace Sqlbi.Bravo.Controllers
         [ProducesDefaultResponseType]
         public async Task<IActionResult> GetAccount()
         {
-            if (await _pbicloudService.IsSignInRequiredAsync())
+            if (await _authenticationService.IsPBICloudSignInRequiredAsync())
                 return Unauthorized();
 
-            var account = _pbicloudService.CurrentAccount;
-            return Ok(account);
+            return Ok(_authenticationService.Account);
+        }
+
+        /// <summary>
+        /// Returns the account profile picture as base64 encoded image [data:image/jpeg;base64,...]
+        /// </summary>
+        /// <response code="200">Status200OK - Success</response>
+        /// <response code="404">Status404NotFound - Current account has no profile picture</response>
+        /// <response code="401">Status401Unauthorized - Sign-in required</response>
+        [HttpGet]
+        [ActionName("GetUserAvatar")]
+        [Produces(MediaTypeNames.Application.Json)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesDefaultResponseType]
+        public async Task<IActionResult> GetAccountAvatar()
+        {
+            if (await _authenticationService.IsPBICloudSignInRequiredAsync())
+                return Unauthorized();
+
+            var avatar = await _pbicloudService.GetAccountAvatarAsync();
+            if (avatar is null)
+                return NotFound();
+
+            return Ok(avatar);
         }
     }
 }

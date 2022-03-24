@@ -1,31 +1,14 @@
-﻿using Microsoft.Identity.Client;
-using Sqlbi.Bravo.Infrastructure.Security;
-using System.IO;
-
-namespace Sqlbi.Bravo.Infrastructure.Helpers
+﻿namespace Sqlbi.Bravo.Infrastructure.Helpers
 {
+    using Microsoft.Identity.Client;
+    using Sqlbi.Bravo.Infrastructure.Security;
+    using Sqlbi.Bravo.Infrastructure.Windows.Interop;
+    using System.IO;
+    using System.Security.Cryptography;
+
     internal static class TokenCacheHelper
     {
         private static readonly object _tokenCacheFileLock = new();
-        private static readonly string _tokenCacheFilePath;
-
-        static TokenCacheHelper()
-        {
-            _tokenCacheFilePath = AppConstants.DefaultMsalTokenCacheFilePath;
-
-            //try
-            //{
-            //    // For packaged desktop apps (MSIX packages, also called desktop bridge) the executing assembly folder is read-only. 
-            //    // In that case we need to use Windows.Storage.ApplicationData.Current.LocalCacheFolder.Path + "\msalcache.bin" which is a per-app read/write folder for packaged apps.
-            //    // See https://docs.microsoft.com/windows/msix/desktop/desktop-to-uwp-behind-the-scenes
-            //    CacheFilePath = Path.Combine(Windows.Storage.ApplicationData.Current.LocalCacheFolder.Path, ".msalcache.bin");
-            //}
-            //catch (InvalidOperationException)
-            //{
-            //    // Fall back for an unpackaged desktop app
-            //    CacheFilePath = AppConstants.TokenCacheFilePath;
-            //}
-        }
 
         private static void BeforeAccessNotification(TokenCacheNotificationArgs args)
         {
@@ -33,10 +16,18 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
             {
                 byte[]? msalV3State = null;
 
-                if (File.Exists(_tokenCacheFilePath))
+                if (File.Exists(AppEnvironment.MsalTokenCacheFilePath))
                 {
-                    var encryptedData = File.ReadAllBytes(_tokenCacheFilePath);
-                    msalV3State = Cryptography.Unprotect(encryptedData);
+                    var encryptedData = File.ReadAllBytes(AppEnvironment.MsalTokenCacheFilePath);
+                    try
+                    {
+                        msalV3State = Cryptography.Unprotect(encryptedData);
+                    }
+                    catch (CryptographicException ex) when (ex.HResult == HRESULT.E_INVALID_DATA)
+                    {
+                        // The token file is corrupted, we delete the file in order to force a new authentication
+                        File.Delete(AppEnvironment.MsalTokenCacheFilePath);
+                    }
                 }
 
                 args.TokenCache.DeserializeMsalV3(msalV3State);
@@ -52,7 +43,7 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
                     var msalV3State = args.TokenCache.SerializeMsalV3();
                     var encryptedData = Cryptography.Protect(msalV3State);
 
-                    File.WriteAllBytes(_tokenCacheFilePath, encryptedData);
+                    File.WriteAllBytes(AppEnvironment.MsalTokenCacheFilePath, encryptedData);
                 }
             }
         }

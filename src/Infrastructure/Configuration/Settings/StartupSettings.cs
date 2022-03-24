@@ -1,18 +1,21 @@
-﻿using Sqlbi.Bravo.Infrastructure;
-using Sqlbi.Bravo.Infrastructure.Extensions;
-using Sqlbi.Bravo.Infrastructure.Helpers;
-using System;
-using System.Collections.ObjectModel;
-using System.CommandLine;
-using System.CommandLine.Parsing;
-using System.Diagnostics;
-using System.Linq;
-using System.Text.Json.Serialization;
-
-namespace Sqlbi.Infrastructure.Configuration.Settings
+﻿namespace Sqlbi.Bravo.Infrastructure.Configuration.Settings
 {
-    public class StartupSettings
+    using Sqlbi.Bravo.Infrastructure;
+    using Sqlbi.Bravo.Infrastructure.Extensions;
+    using Sqlbi.Bravo.Infrastructure.Helpers;
+    using System;
+    using System.Collections.ObjectModel;
+    using System.CommandLine;
+    using System.CommandLine.Parsing;
+    using System.Diagnostics;
+    using System.Linq;
+    using System.Text.Json.Serialization;
+
+    internal class StartupSettings
     {
+        [JsonPropertyName("isEmpty")]
+        public bool IsEmpty { get; set; }
+
         [JsonPropertyName("externalTool")]
         public bool IsExternalTool { get; set; }
 
@@ -23,7 +26,7 @@ namespace Sqlbi.Infrastructure.Configuration.Settings
         public string? ArgumentDatabaseName { get; set; }
 
         [JsonIgnore]
-        public bool IsPBIDesktopExternalTool => IsExternalTool && AppConstants.PBIDesktopProcessName.Equals(ParentProcessName, StringComparison.OrdinalIgnoreCase);
+        public bool IsPBIDesktopExternalTool => IsExternalTool && AppEnvironment.PBIDesktopProcessName.Equals(ParentProcessName, StringComparison.OrdinalIgnoreCase);
 
         [JsonIgnore]
         public int? ParentProcessId { get; set; }
@@ -40,7 +43,7 @@ namespace Sqlbi.Infrastructure.Configuration.Settings
         [JsonIgnore]
         public ReadOnlyCollection<string>? CommandLineErrors { get; set; }
 
-        public static StartupSettings Get()
+        public static StartupSettings CreateFromCommandLineArguments()
         {
             var settings = new StartupSettings();
             {
@@ -55,6 +58,14 @@ namespace Sqlbi.Infrastructure.Configuration.Settings
     {
         public static void FromCommandLineArguments(this StartupSettings settings)
         {
+            var args = Environment.GetCommandLineArgs();
+            if (args.Length == 1)
+            {
+                // No args provided
+                settings.IsEmpty = true;
+                return;
+            }
+
             var serverOption = new Option<string>(new[] { "--server", "--s" })
             {
                 Description = "Server name",
@@ -80,28 +91,27 @@ namespace Sqlbi.Infrastructure.Configuration.Settings
                 parentProcessIdOption
             };
 
-            var args = Environment.GetCommandLineArgs();
-            var result = command.Parse(args);
+            var parseResult = command.Parse(args);
 
-            settings.IsExternalTool = result.HasOption(serverOption) || result.HasOption(databaseOption);
-            settings.CommandLineErrors = result.Errors.Select((e) => e.Message).ToList().AsReadOnly();
+            settings.IsExternalTool = parseResult.HasOption(serverOption) || parseResult.HasOption(databaseOption);
+            settings.CommandLineErrors = parseResult.Errors.Select((e) => e.Message).ToList().AsReadOnly();
 
             if (settings.CommandLineErrors.Count == 0)
             {
-                settings.ArgumentServerName = result.ValueForOption(serverOption);
-                settings.ArgumentDatabaseName = result.ValueForOption(databaseOption);
+                settings.ArgumentServerName = parseResult.ValueForOption(serverOption);
+                settings.ArgumentDatabaseName = parseResult.ValueForOption(databaseOption);
             }
 
             Process? parentProcess = null;
             {
-                if (DesktopBridgeHelpers.IsPackagedAppInstance && result.HasOption(parentProcessIdOption))
+                if (AppEnvironment.IsPackagedAppInstance && parseResult.HasOption(parentProcessIdOption))
                 {
-                    var parentProcessId = result.ValueForOption<int>(parentProcessIdOption);
-                    parentProcess = ProcessExtensions.SafeGetProcessById(parentProcessId);
+                    var parentProcessId = parseResult.ValueForOption<int>(parentProcessIdOption);
+                    parentProcess = ProcessHelper.SafeGetProcessById(parentProcessId);
                 }
                 else
                 {
-                    parentProcess = Process.GetCurrentProcess().GetParent();
+                    parentProcess = ProcessHelper.GetParentProcess();
                 }
 
                 if (parentProcess is not null)
@@ -109,9 +119,10 @@ namespace Sqlbi.Infrastructure.Configuration.Settings
                     settings.ParentProcessId = parentProcess.Id;
                     settings.ParentProcessName = parentProcess.ProcessName;
                     //settings.ParentProcessMainWindowHandle = parentProcess.MainWindowHandle;
-                    settings.ParentProcessMainWindowTitle = parentProcess.GetMainWindowTitle(settings.IsPBIDesktopExternalTool ? (windowTitle) => windowTitle.IsPBIDesktopMainWindowTitle() : default).ToPBIDesktopReportName();
+                    settings.ParentProcessMainWindowTitle = settings.IsPBIDesktopExternalTool ? parentProcess.GetPBIDesktopMainWindowTitle() : parentProcess.GetMainWindowTitle();
                 }
             }
+            parentProcess?.Dispose();
         }
     }
 }

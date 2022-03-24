@@ -1,25 +1,13 @@
-﻿using Bravo.Infrastructure.Windows.Interop;
-using Sqlbi.Bravo.Infrastructure.Extensions;
-using Sqlbi.Bravo.Infrastructure.Windows.Interop;
-using System;
-using System.Drawing;
-using System.Runtime.InteropServices;
-
-#nullable disable
+﻿#nullable disable
 
 namespace Sqlbi.Bravo.Infrastructure.Windows
 {
-    internal enum DialogResult
-    {
-        None = 0,
-        OK = 1,
-        Cancel = 2,
-        Abort = 3,
-        Retry = 4,
-        Ignore = 5,
-        Yes = 6,
-        No = 7,
-    }
+    using Sqlbi.Bravo.Infrastructure.Extensions;
+    using Sqlbi.Bravo.Infrastructure.Windows.Interop;
+    using System;
+    using System.Drawing;
+    using System.Runtime.InteropServices;
+    using System.Windows.Forms;
 
     /// <summary>
     /// .NET wrapper around the Win32 open file dialog
@@ -42,10 +30,10 @@ namespace Sqlbi.Bravo.Infrastructure.Windows
             ofn.lStructSize = Marshal.SizeOf(ofn);
             ofn.hwndOwner = hWnd;
             ofn.hInstance = IntPtr.Zero;
-            ofn.lpstrTitle = Title.NullIfEmpty();
-            ofn.lpstrDefExt = DefaultExt.NullIfEmpty();
+            ofn.lpstrTitle = Title.NullIfWhiteSpace();
+            ofn.lpstrDefExt = DefaultExt.NullIfWhiteSpace();
             ofn.lpstrFilter = Filter.ToFileDialogFilterString();
-            ofn.lpstrInitialDir = InitialDirectory.NullIfEmpty();
+            ofn.lpstrInitialDir = InitialDirectory.NullIfWhiteSpace();
             ofn.lpstrFile = new string(new char[Win32Constant.MAX_PATH]);
             ofn.nMaxFile = ofn.lpstrFile.Length;
             ofn.lpstrFileTitle = new string(new char[Win32Constant.MAX_PATH]);
@@ -80,10 +68,10 @@ namespace Sqlbi.Bravo.Infrastructure.Windows
             ofn.lStructSize = Marshal.SizeOf(ofn);
             ofn.hwndOwner = hWnd;
             ofn.hInstance = IntPtr.Zero;
-            ofn.lpstrTitle = Title.NullIfEmpty();
-            ofn.lpstrDefExt = DefaultExt.NullIfEmpty();
+            ofn.lpstrTitle = Title.NullIfWhiteSpace();
+            ofn.lpstrDefExt = DefaultExt.NullIfWhiteSpace();
             ofn.lpstrFilter = Filter.ToFileDialogFilterString();
-            ofn.lpstrInitialDir = InitialDirectory.NullIfEmpty();
+            ofn.lpstrInitialDir = InitialDirectory.NullIfWhiteSpace();
             ofn.lpstrFile = new string(new char[Win32Constant.MAX_PATH]);
             ofn.nMaxFile = ofn.lpstrFile.Length;
             ofn.lpstrFileTitle = new string(new char[Win32Constant.MAX_PATH]);

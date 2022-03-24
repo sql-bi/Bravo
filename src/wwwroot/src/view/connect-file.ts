@@ -37,18 +37,7 @@ export class ConnectFile extends ConnectMenuItem {
             if (fileElement.files) {
                 let files: File[] = fileElement.files;
                 if (files.length) {
-                    let file = files[0];
-                    let fileHash = Doc.getId(DocType.vpax, file);
-
-                    if (this.dialog.openDocIds.indexOf(fileHash) > -1) {
-                        this.dialog.data.switchToDoc = fileHash;
-                        this.dialog.trigger("action", "cancel");
-                        
-                    } else {
-
-                        this.dialog.data.doc = new Doc(file.name, DocType.vpax, file);
-                        this.dialog.trigger("action", "ok");
-                    }
+                    this.openFile(files[0]);
                 }
             }
         });
@@ -57,11 +46,7 @@ export class ConnectFile extends ConnectMenuItem {
         let dropArea = _(".drop-area", this.element);
         dropArea.addEventListener('drop', (e) => {
             if (e.dataTransfer.files.length) {
-                let file = e.dataTransfer.files[0];
-                if (file.name.slice(-5) == ".vpax") {
-                    this.dialog.data.doc = new Doc(file.name, DocType.vpax, file);
-                    this.dialog.trigger("action", "ok");
-                }
+                this.openFile(e.dataTransfer.files[0]);
             }
         }, false);
 
@@ -78,5 +63,12 @@ export class ConnectFile extends ConnectMenuItem {
                 dropArea.classList.remove('highlight');
             }, false);
         });
+    }
+
+    openFile(file: File) {
+        if (file && file.name.slice(-5) == ".vpax") {
+            this.dialog.data.doc = new Doc(file.name, DocType.vpax, file);
+            this.dialog.trigger("action", "ok");
+        }
     }
 }

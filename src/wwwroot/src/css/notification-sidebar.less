@@ -1,0 +1,127 @@
+// main: main.less
+#notification-sidebar {
+    overflow: hidden;
+    width: 300px;
+    transition: width .2s ease-in-out;
+
+    background: @window-back-color;
+    .flexbox(stretch, flex-start, column);
+
+    .dark & {
+        background: @window-back-color-dark;
+    }
+
+    .items-title {
+        margin-top: 42px;
+        margin-left: 15px;
+        font-size: 14px;
+        height: 24px;
+        color: @notice-color;
+        .dark & { color: @notice-color-dark }
+    }
+    .items {
+        margin-top: 5px;
+        height: calc(100% - 70px);
+        overflow: hidden;
+        overflow-y: auto;
+        
+        background: url("@{images}/notifications-light.svg") no-repeat center;
+
+        .dark & {
+            background-image: url("@{images}/notifications-dark.svg");
+        }
+
+        .item {
+            width: 245px;
+            background: @back-color;
+            padding: 10px 15px;
+            margin:5px 0 5px 12px;
+            .border-radius();
+
+            .dark & { 
+                background-color: @back-color-dark;
+            }
+
+            .remove-item {
+                float:right;
+                margin-right: -10px;
+                margin-top: -5px;
+                margin-left: 10px;
+
+                &:before {
+                    font-size: 14px;
+                }
+            }
+
+            .title {
+                font-weight: 500;
+                font-size: 14px;
+                line-height: 1.4;
+            }
+
+            .time {
+                color: @notice-color;
+                font-size: 12px;
+
+                .dark & { color: @notice-color-dark}
+            }
+
+            .actions {
+                margin: 10px 0 0 0;
+                font-size: 13px;
+            }
+        }
+    }
+
+
+    &.collapsed {
+        width: 0;
+
+        .hide-if-collapsed {
+            opacity: 0;
+
+        }
+    }
+    .hide-if-collapsed {
+        transition: opacity .2s ease-in-out;
+    }
+
+    .notification-ctrl {
+        position: absolute;
+        right: 5px;
+        top:5px;
+  
+        &:before {
+          font-size: 22px;
+        }
+  
+        .unread {
+            opacity: 0;
+            pointer-events: none;
+            position: absolute;
+            .border-radius(10px);
+            height: 10px;
+            width: 10px;
+            margin-left: 10px;
+            margin-top: -24px;
+  
+            background-color: @accent-back-color;
+            border: 2px solid @window-back-color;
+            transition: opacity .3s;
+  
+            .dark & {
+                background-color: @accent-back-color-dark;
+                border-color: @window-back-color-dark;
+            }
+
+            
+        }
+        &:hover:not([disabled]) .unread, &:not([disabled]).active .unread {
+            border-color: darken(@control-back-color, 10%);
+
+            .dark & {
+                border-color: lighten(@control-back-color-dark, 10%);
+            }
+        }
+      }
+}

@@ -4,13 +4,15 @@
     {
         //public const string Activeds = "activeds.dll";
 
-        //public const string Advapi32 = "advapi32.dll";
+        public const string Advapi32 = "advapi32.dll";
 
         public const string Comctl32 = "comctl32.dll";
 
         public const string Comdlg32 = "comdlg32.dll";
 
-        //public const string DwmAPI = "dwmapi.dll";
+        public const string Credui = "credui.dll";
+
+        public const string Dwmapi = "dwmapi.dll";
 
         //public const string Gdi32 = "gdi32.dll";
 
@@ -38,7 +40,7 @@
 
         //public const string NaturalLanguage6 = "naturallanguage6.dll";
 
-        //public const string Ntdll = "ntdll.dll";
+        public const string Ntdll = "ntdll.dll";
 
         //public const string Ole32 = "ole32.dll";
 
@@ -56,7 +58,7 @@
 
         //public const string Psapi = "psapi.dll";
 
-        //public const string Shcore = "shcore.dll";
+        public const string Shcore = "shcore.dll";
 
         //public const string Shell32 = "shell32.dll";
 
@@ -71,6 +73,8 @@
         //public const string Version = "version.dll";
 
         //public const string Vsassert = "vsassert.dll";
+
+        public const string WebView2Loader = "WebView2Loader.dll";
 
         //public const string Wininet = "wininet.dll";
 

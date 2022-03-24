@@ -1,16 +1,33 @@
-﻿using Sqlbi.Bravo.Infrastructure.Windows.Interop;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Net.NetworkInformation;
-using System.Net.Sockets;
-using System.Runtime.InteropServices;
-
-namespace Sqlbi.Bravo.Infrastructure.Helpers
+﻿namespace Sqlbi.Bravo.Infrastructure.Helpers
 {
+    using Sqlbi.Bravo.Infrastructure.Services.PowerBI;
+    using Sqlbi.Bravo.Infrastructure.Windows.Interop;
+    using System;
+    using System.Collections.Generic;
+    using System.Diagnostics;
+    using System.Linq;
+    using System.Net;
+    using System.Net.NetworkInformation;
+    using System.Net.Sockets;
+    using System.Runtime.InteropServices;
+
     internal static class NetworkHelper
     {
+        public static readonly string LocalHost = "localhost";
+
+        public static bool IsPBICloudDatasetServer(string address)
+        {
+            if (address.Contains(Uri.SchemeDelimiter) && Uri.TryCreate(address, UriKind.Absolute, out var addressUri))
+            {
+                var isGenericDataset = addressUri.Scheme.Equals(PBICloudService.PBIDatasetProtocolScheme, StringComparison.OrdinalIgnoreCase);
+                var isPremiumDataset = addressUri.Scheme.Equals(PBICloudService.PBIPremiumProtocolScheme, StringComparison.OrdinalIgnoreCase);
+
+                return isPremiumDataset || isGenericDataset;
+            }
+
+            return false;
+        }
+
         public static IPAddress GetLoopbackAddress()
         {
             if (Socket.OSSupportsIPv6)
@@ -29,14 +46,45 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
             return IPAddress.Loopback;
         }
 
+        public static Process? FindEndPointProcess(IPEndPoint endpoint)
+        {
+            switch (endpoint.AddressFamily)
+            {
+                case AddressFamily.InterNetwork:
+                    {
+                        var ipv4Connections = GetTcpConnections<Iphlpapi.MIB_TCPROW_OWNER_PID, Iphlpapi.MIB_TCPTABLE_OWNER_PID>(AddressFamily.InterNetwork);
+                        var endpointConnection = ipv4Connections.Where((c) => c.LocalEndPoint.Equals(endpoint)).DefaultIfEmpty();
+                        if (endpointConnection is not null)
+                        {
+                            var process = ProcessHelper.SafeGetProcessById(endpointConnection.Single().ProcessId);
+                            return process;
+                        }
+                    }
+                    break;
+                case AddressFamily.InterNetworkV6:
+                    {
+                        var ipv6Connections = GetTcpConnections<Iphlpapi.MIB_TCP6ROW_OWNER_PID, Iphlpapi.MIB_TCP6TABLE_OWNER_PID>(AddressFamily.InterNetworkV6);
+                        var endpointConnection = ipv6Connections.Where((c) => c.LocalEndPoint.Equals(endpoint)).DefaultIfEmpty();
+                        if (endpointConnection is not null)
+                        {
+                            var process = ProcessHelper.SafeGetProcessById(endpointConnection.Single().ProcessId);
+                            return process;
+                        }
+                    }
+                    break;
+            }
+
+            return null;
+        }
+
         public static IEnumerable<(IPEndPoint EndPoint, TcpState State, int ProcessId)> GetTcpConnections(Func<(IPEndPoint EndPoint, TcpState State, int ProcessId), bool> predicate)
         {
-            //var ipv6Connections = GetTcpConnections<Iphlpapi.MIB_TCP6ROW_OWNER_PID, Iphlpapi.MIB_TCP6TABLE_OWNER_PID>(AddressFamily.InterNetworkV6).Select((r) => (r.LocalEndPoint, r.TcpState, r.ProcessId));
-            //foreach (var connection in ipv6Connections.Where(predicate))
-            //    yield return connection;
-
             var ipv4Connections = GetTcpConnections<Iphlpapi.MIB_TCPROW_OWNER_PID, Iphlpapi.MIB_TCPTABLE_OWNER_PID>(AddressFamily.InterNetwork).Select((r) => (r.LocalEndPoint, r.TcpState, r.ProcessId));
             foreach (var connection in ipv4Connections.Where(predicate))
+                yield return connection;
+
+            var ipv6Connections = GetTcpConnections<Iphlpapi.MIB_TCP6ROW_OWNER_PID, Iphlpapi.MIB_TCP6TABLE_OWNER_PID>(AddressFamily.InterNetworkV6).Select((r) => (r.LocalEndPoint, r.TcpState, r.ProcessId));
+            foreach (var connection in ipv6Connections.Where(predicate))
                 yield return connection;
         }
 

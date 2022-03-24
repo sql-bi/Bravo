@@ -4,15 +4,16 @@
  * https://www.sqlbi.com
 */
 
-import { auth, host, optionsController, themeController } from "../main";
+import { auth, optionsController, telemetry, themeController } from "../main";
+import { i18n } from '../model/i18n'; 
 import { ThemeChangeArg, ThemeType } from '../controllers/theme';
 import { __, _, Dic } from '../helpers/utils';
-import { i18n } from '../model/i18n'; 
 import { strings } from '../model/strings';
 import { View } from './view';
 import { Account } from '../controllers/auth';
 import { ContextMenu, ContextMenuItemType } from '../helpers/contextmenu';
 import { PowerBiSignin } from './powerbi-signin';
+import { OptionsDialog } from './options-dialog';
 export class Sidebar extends View {
 
     static DEFAULT_USER_PICTURE = "images/user.svg";
@@ -45,7 +46,7 @@ export class Sidebar extends View {
                 <div id="ctrl-options" class="ctrl icon-options solo" title="${i18n(strings.settingsCtrlTitle)}"></div>
 
                 <div id="ctrl-theme" class="ctrl icon-theme-${optionsController.options.theme.toLowerCase()} solo hide-if-collapsed" title="${i18n(strings.themeCtrlTitle)}" data-theme="${optionsController.options.theme}"></div> 
-                
+
                 <img id="ctrl-user" class="ctrl hide-if-collapsed" title="${i18n(strings.signInCtrlTitle)}" src="${ Sidebar.DEFAULT_USER_PICTURE }">
 
             </footer>
@@ -57,11 +58,13 @@ export class Sidebar extends View {
             this.select(id);
             break;
         }
+        this.toggle(optionsController.options.customOptions.sidebarCollapsed);
 
         this.listen();
     }
 
     listen() {
+
         __(`.side-menu .item`, this.element).forEach(div => {
 
             div.addEventListener("click", (e) => {
@@ -79,6 +82,48 @@ export class Sidebar extends View {
         _("#ctrl-burger", this.element).addEventListener("click", e => {
             e.preventDefault();
             this.toggle();
+        });
+
+        _("#ctrl-user", this.element).addEventListener("click", e => {
+            e.preventDefault();
+            if (auth.signedIn) {
+
+                new ContextMenu({
+                    width: "auto",
+                    items: [
+                        { label: i18n(strings.signedInCtrlTitle, {name: auth.account.username}), cssIcon: "icon-user", type: ContextMenuItemType.label},
+                        { label: "-", type: ContextMenuItemType.separator },
+                        { label: i18n(strings.signOut), onClick: () => { auth.signOut(); } },
+                    ]
+                }, e);
+                
+            } else {
+                if (!optionsController.options.customOptions.loggedInOnce) {
+                    let signinDialog = new PowerBiSignin();
+                    signinDialog.show();
+                } else {
+                    auth.signIn();
+                }
+            }
+        });
+
+        auth.on(["signedIn", "avatarUpdated"], (account: Account) => {
+            this.changeProfilePicture(i18n(strings.signedInCtrlTitle, {name: account.username}), account.avatar);
+        });
+
+        auth.on("signedOut", () => {
+            this.changeProfilePicture(i18n(strings.signInCtrlTitle));
+        });
+
+        _("#ctrl-options", this.element).addEventListener("click", e => {
+            e.preventDefault();
+            telemetry.trackPage("Options");
+            let optionsDialog = new OptionsDialog();
+            optionsDialog
+                .show()
+                .finally(()=>{
+                    telemetry.trackPreviousPage();
+                });
         });
 
         _("#ctrl-theme", this.element).addEventListener("click", e => {
@@ -100,7 +145,6 @@ export class Sidebar extends View {
         themeController.on("change", (arg: ThemeChangeArg) => {
 
             let el = _("#ctrl-theme");
-
             el.dataset.theme = arg.theme;
 
             Object.values(ThemeType).forEach((value) => {
@@ -112,37 +156,6 @@ export class Sidebar extends View {
                 }
             });
         });
-
-        _("#ctrl-user", this.element).addEventListener("click", e => {
-            e.preventDefault();
-            if (auth.signedIn) {
-
-                new ContextMenu({
-                    width: "auto",
-                    items: [
-                        { label: i18n(strings.signedInCtrlTitle, auth.account.username), cssIcon: "icon-user", type: ContextMenuItemType.label},
-                        { label: "-", type: ContextMenuItemType.separator },
-                        { label: i18n(strings.signOut), onClick: () => { auth.signOut(); } },
-                    ]
-                }, e);
-                
-            } else {
-                if (!optionsController.options.customOptions.loggedInOnce) {
-                    let signinDialog = new PowerBiSignin();
-                    signinDialog.show();
-                } else {
-                    auth.signIn();
-                }
-            }
-        });
-
-        auth.on("signedIn", (account: Account) => {
-            this.changeProfilePicture(i18n(strings.signedInCtrlTitle, account.username), account.avatar);
-        });
-
-        auth.on("signedOut", () => {
-            this.changeProfilePicture(i18n(strings.signInCtrlTitle));
-        });
     }
 
     changeProfilePicture(title: string, picture?: string) {
@@ -152,7 +165,7 @@ export class Sidebar extends View {
         if (picture)
             el.classList.add("photo");
         else
-            el.classList.remove("photo")
+            el.classList.remove("photo");
             
     }
  
@@ -174,11 +187,17 @@ export class Sidebar extends View {
 
     toggle(collapse = !this.collapsed) {
 
+        let root = _("#main-pane");
         if (collapse) {
             this.element.classList.add("collapsed");
+            root.classList.remove("has-sidebar");
+
+            telemetry.track("Collapse Sidebar");
         } else {
             this.element.classList.remove("collapsed");
+            root.classList.add("has-sidebar");
         }
+        optionsController.update("customOptions.sidebarCollapsed", collapse);
         this.collapsed = collapse;
     }
 

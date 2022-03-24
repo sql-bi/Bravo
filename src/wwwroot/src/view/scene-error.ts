@@ -9,6 +9,7 @@ import { _ } from '../helpers/utils';
 import { i18n } from '../model/i18n'; 
 import { strings } from '../model/strings';
 import { BackableScene } from './scene-back';
+import { app, logger } from '../main';
 
 export class ErrorScene extends BackableScene {
 
@@ -26,19 +27,39 @@ export class ErrorScene extends BackableScene {
     
     render() {
         super.render();
-        
+
+        let issueTitle = i18n(strings.createIssueTitle);
+        let issueBody = i18n(strings.createIssueBody) + this.error.toString();
+
+        // Removed because we added diagnostic log
+        /*${ this.error.details ? `
+            <blockquote>${this.error.details}</blockquote>
+        ` : "" }*/
+
         let html = `
             <div class="error">
                 <div class="icon icon-alert"></div>
 
                 <h1>${i18n(strings.errorTitle)}${this.error.code ? ` (${this.error.type != AppErrorType.Managed ? "HTTP/" : ""}${this.error.code})` : "" }</h1>
 
-                <p>${this.error.message}</p>
+                <p class="message">
+                    ${this.error.message}
+                </p>
+                
+                <p class="context">
+                    ${i18n(strings.version)}: ${app.currentVersion.toString()}
+                    ${this.error.traceId ? ` - ${i18n(strings.traceId)}: ${this.error.traceId}` : ""}
+                </p>
 
-                ${this.error.traceId ? `
-                    <p><strong>${strings.traceId}:</strong> ${this.error.traceId}</p>
-                ` : ""}
+                <p>
+                    <span class="copy-error link">${i18n(strings.copyErrorDetails)}</span> 
+                     &nbsp;&nbsp;&nbsp; 
+                    <span class="show-diagnostics link">${i18n(strings.showDiagnosticPane)}</span> 
+                     &nbsp;&nbsp;&nbsp; 
+                    <span class="link create-issue" href="https://github.com/sql-bi/bravo/issues/new?labels=bug&title=${encodeURIComponent(issueTitle)}&body=${encodeURIComponent(issueBody)}">${i18n(strings.createIssue)}</span>
 
+                </p>
+            
                 ${ this.onRetry ? `
                     <p><div class="retry-call button button-alt">${i18n(strings.errorRetry)}</div></p>
                 ` : "" }
@@ -47,6 +68,22 @@ export class ErrorScene extends BackableScene {
 
         this.element.insertAdjacentHTML("beforeend", html); 
 
+        _(".copy-error", this.element).addEventListener("click", e =>{
+            e.preventDefault();
+            navigator.clipboard.writeText(this.error.toString());
+
+            let ctrl = <HTMLElement>e.currentTarget;
+            ctrl.innerText = i18n(strings.copiedErrorDetails);
+            window.setTimeout(() => {
+                ctrl.innerText = i18n(strings.copyErrorDetails);
+            }, 1500);
+        });
+
+        _(".show-diagnostics", this.element).addEventListener("click", e =>{
+            e.preventDefault();
+            app.toggleDiagnostics(true);
+        });
+
         if (this.onRetry){
             _(".retry-call", this.element).addEventListener("click", e => {
                 e.preventDefault();
@@ -54,7 +91,7 @@ export class ErrorScene extends BackableScene {
             });
         }
 
-        console.error(this.error);
+        try { logger.logError(this.error); } catch(ignore) {}
     }
 
 }

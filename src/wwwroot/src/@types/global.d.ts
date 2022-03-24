@@ -1,17 +1,18 @@
 import * as CodeMirror from 'codemirror';
-import { ThemeType } from '../controllers/theme';
+import { Options } from '../controllers/options';
+import { TelemetryConfig } from '../controllers/telemetry';
 
 declare global {
     var CONFIG: {
+        debug?: boolean,
         address: string
-        theme: ThemeType
         version: string,
-        telemetry?: {
-            instrumentationKey: string,
-            contextDeviceOperatingSystem: string,
-            contextComponentVersion: string,
-            contextSessionId: string,
-            contextUserId: string
+        build: string
+        options: Options,
+        token?: string,
+        telemetry?: TelemetryConfig
+        culture: {
+            ietfLanguageTag: string
         }
     };
 

@@ -352,3 +352,4 @@ MigrationBackup/
 .vscode
 .DS_Store
 *.code-workspace
+Thumbs.db

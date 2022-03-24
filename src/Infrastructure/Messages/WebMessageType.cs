@@ -1,12 +1,22 @@
-﻿namespace Sqlbi.Bravo.Infrastructure.Messages
+﻿using System.Text.Json.Serialization;
+
+namespace Sqlbi.Bravo.Infrastructure.Messages
 {
     internal enum WebMessageType
     {
-        None = 0,
+        [JsonPropertyName("Unknown")]
+        Unknown = 0,
+
+        [JsonPropertyName("ApplicationUpdate")]
         ApplicationUpdateAvailable = 1,
-        NetworkStatusChanged = 2,
-        PBIDesktopReportOpen = 3,
-        PBICloudDatasetOpen = 4,
-        VpaxFileOpen = 5,
+
+        [JsonPropertyName("ReportOpen")]
+        PBIDesktopReportOpen = 2,
+
+        [JsonPropertyName("DatasetOpen")]
+        PBICloudDatasetOpen = 3,
+
+        [JsonPropertyName("VpaxOpen")]
+        VpaxFileOpen = 4,
     }
 }

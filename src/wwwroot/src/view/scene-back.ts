@@ -22,19 +22,27 @@ export class BackableScene extends Scene {
 
         if (this.onBack) {
             let html = `
-                <div class="go-back ctrl icon-previous" title="${i18n(strings.goBackCtrlTitle)}"></div>
+                <div class="go-back solo ctrl icon-previous" title="${i18n(strings.goBackCtrlTitle)}"></div>
             `;
 
             this.element.insertAdjacentHTML("beforeend", html); 
 
             _(".go-back", this.element).addEventListener("click", e => {
                 e.preventDefault();
-                if (typeof this.onBack === "function")
-                    this.onBack();
-                    
-                this.pop();
+                this.back();
+            });
+            this.element.addLiveEventListener("click", ".link-back", (e, element) => {
+                e.preventDefault();
+                this.back();
             });
         }
+    }
+
+    back() {
+        if (typeof this.onBack === "function")
+            this.onBack();
+            
+        this.pop();
     }
 
 }

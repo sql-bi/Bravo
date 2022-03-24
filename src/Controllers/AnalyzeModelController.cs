@@ -1,34 +1,32 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Sqlbi.Bravo.Infrastructure;
-using Sqlbi.Bravo.Infrastructure.Helpers;
-using Sqlbi.Bravo.Infrastructure.Models.PBICloud;
-using Sqlbi.Bravo.Infrastructure.Windows;
-using Sqlbi.Bravo.Models;
-using Sqlbi.Bravo.Services;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Net.Mime;
-using System.Threading;
-using System.Threading.Tasks;
-
-namespace Sqlbi.Bravo.Controllers
+﻿namespace Sqlbi.Bravo.Controllers
 {
+    using Microsoft.AspNetCore.Http;
+    using Microsoft.AspNetCore.Mvc;
+    using Sqlbi.Bravo.Infrastructure.Helpers;
+    using Sqlbi.Bravo.Models;
+    using Sqlbi.Bravo.Models.AnalyzeModel;
+    using Sqlbi.Bravo.Services;
+    using System.Collections.Generic;
+    using System.Net.Mime;
+    using System.Threading;
+    using System.Threading.Tasks;
+
+    /// <summary>
+    /// AnalyzeModel module controller
+    /// </summary>
+    /// <response code="400">Status400BadRequest - See the "instance" and "detail" properties to identify the specific occurrence of the problem</response>
     [Route("api/[action]")]
     [ApiController]
+    [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ProblemDetails))]
     public class AnalyzeModelController : ControllerBase
     {
-        private readonly IPBIDesktopService _pbidesktopService;
-        private readonly IPBICloudService _pbicloudService;
+        private readonly IAnalyzeModelService _analyzeModelService;
+        private readonly IAuthenticationService _authenticationService;
 
-        public AnalyzeModelController(IPBIDesktopService pbidesktopService, IPBICloudService pbicloudService)
+        public AnalyzeModelController(IAnalyzeModelService analyzeModelService, IAuthenticationService authenticationService)
         {
-            _pbidesktopService = pbidesktopService;
-            _pbicloudService = pbicloudService;
+            _analyzeModelService = analyzeModelService;
+            _authenticationService = authenticationService;
         }
 
         /// <summary>
@@ -41,77 +39,47 @@ namespace Sqlbi.Bravo.Controllers
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(TabularDatabase))]
         [ProducesDefaultResponseType]
-        public IActionResult GetDatabaseFromVpax()
+        public IActionResult GetDatabase()
         {
-            try
-            {
-                var database = VpaxToolsHelper.GetDatabaseFromVpax(stream: Request.Body);
-
-                return Ok(database);
-            }
-            catch(BravoException ex)
-            {
-                return Problem(ex.ProblemDetail, ex.ProblemInstance, StatusCodes.Status400BadRequest);
-            }
+            var database = _analyzeModelService.GetDatabase(stream: Request.Body);
+            return Ok(database);
         }
 
         /// <summary>
         /// Returns a database model from a PBIDesktop instance
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
-        /// <response code="400">Status400BadRequest - See the "instance" and "detail" properties to identify the specific occurrence of the problem</response>
         [HttpPost]
         [ActionName("GetModelFromReport")]
         [Consumes(MediaTypeNames.Application.Json)]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(TabularDatabase))]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesDefaultResponseType]
-        public IActionResult GetDatabaseFromPBIDesktopReport(PBIDesktopReport report)
+        public IActionResult GetDatabase(PBIDesktopReport report, CancellationToken cancellationToken)
         {
-            try
-            {
-                var stream = _pbidesktopService.ExportVpax(report, includeTomModel: false, includeVpaModel: false, readStatisticsFromData: false, sampleRows: 0);
-                var database = VpaxToolsHelper.GetDatabaseFromVpax(stream);
-
-                return Ok(database);
-            }
-            catch (BravoException ex)
-            {
-                return Problem(ex.ProblemDetail, ex.ProblemInstance, StatusCodes.Status400BadRequest);
-            }
+            var database = _analyzeModelService.GetDatabase(report, cancellationToken);
+            return Ok(database);
         }
 
         /// <summary>
         /// Returns a database model from a PBICloud dataset
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
-        /// <response code="400">Status400BadRequest - See the "instance" and "detail" properties to identify the specific occurrence of the problem</response>
         /// <response code="401">Status401Unauthorized - Sign-in required</response>
         [HttpPost]
         [ActionName("GetModelFromDataset")]
         [Consumes(MediaTypeNames.Application.Json)]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(TabularDatabase))]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesDefaultResponseType]
-        public async Task<IActionResult> GetDatabaseFromPBICloudDataset(PBICloudDataset dataset)
+        public async Task<IActionResult> GetDatabase(PBICloudDataset dataset, CancellationToken cancellationToken)
         {
-            if (await _pbicloudService.IsSignInRequiredAsync())
+            if (await _authenticationService.IsPBICloudSignInRequiredAsync())
                 return Unauthorized();
 
-            try
-            {
-                var stream = _pbicloudService.ExportVpax(dataset, includeTomModel: false, includeVpaModel: false, readStatisticsFromData: false, sampleRows: 0);
-                var database = VpaxToolsHelper.GetDatabaseFromVpax(stream);
-
-                return Ok(database);
-            }
-            catch (BravoException ex)
-            {
-                return Problem(ex.ProblemDetail, ex.ProblemInstance, StatusCodes.Status400BadRequest);
-            }
+            var database = _analyzeModelService.GetDatabase(dataset, _authenticationService.PBICloudAuthentication.AccessToken, cancellationToken);
+            return Ok(database);
         }
 
         /// <summary>
@@ -125,35 +93,12 @@ namespace Sqlbi.Bravo.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<PBICloudDataset>))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesDefaultResponseType]
-        public async Task<IActionResult> GetPBICloudDatasets()
+        public async Task<IActionResult> GetDatasets(CancellationToken cancellationToken)
         {
-            if (await _pbicloudService.IsSignInRequiredAsync())
+            if (await _authenticationService.IsPBICloudSignInRequiredAsync())
                 return Unauthorized();
 
-            var onlineWorkspaces = await _pbicloudService.GetWorkspacesAsync();
-            var onlineDatasets = await _pbicloudService.GetSharedDatasetsAsync();
-
-            var selectedWorkspaces = onlineWorkspaces.Where((w) => w.CapacitySkuType == WorkspaceCapacitySkuType.Premium);
-            // Exclude datasets not accessible by the XMLA endpoint (unsupported-datasets) https://docs.microsoft.com/en-us/power-bi/admin/service-premium-connect-tools#unsupported-datasets
-            // - (TODO) Datasets based on a live connection to an Azure Analysis Services or SQL Server Analysis Services model.
-            // - (TODO) Datasets based on a live connection to a Power BI dataset in another workspace.
-            // - Datasets with Push data by using the REST API.
-            // - Excel workbook datasets.
-            var selectedDatasets = onlineDatasets.Where((d) => !d.Model.IsExcelWorkbook && !d.Model.IsPushDataEnabled);
-
-            var datasets = selectedDatasets.Join(selectedWorkspaces, (d) => d.WorkspaceObjectId, (w) => w.Id, resultSelector: (d, w) => new PBICloudDataset
-            {
-                WorkspaceId = d.WorkspaceId,
-                WorkspaceName = d.WorkspaceName,
-                Id = d.Model.Id,
-                DisplayName = d.Model.DisplayName,
-                Description = d.Model.Description,
-                Owner = $"{ d.Model.CreatorUser.GivenName } { d.Model.CreatorUser.FamilyName }",
-                Refreshed = d.Model.LastRefreshTime,
-                Endorsement = (PBICloudDatasetEndorsement)(d.GalleryItem?.Stage ?? (int)PBICloudDatasetEndorsement.None)
-            },
-            StringComparer.InvariantCultureIgnoreCase).ToArray();
-
+            var datasets = await _analyzeModelService.GetDatasetsAsync(cancellationToken);
             return Ok(datasets);
         }
 
@@ -166,125 +111,76 @@ namespace Sqlbi.Bravo.Controllers
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<PBIDesktopReport>))]
         [ProducesDefaultResponseType]
-        public IActionResult GetPBIDesktopReports()
+        public IActionResult GetReports(CancellationToken cancellationToken)
         {
-            var reports = _pbidesktopService.GetReports();
+            var reports = _analyzeModelService.GetReports(cancellationToken);
             return Ok(reports);
         }
 
         /// <summary>
-        /// Returns a VPAX file stream from an active PBIDesktop report
+        /// Returns a list of all open PBIDesktop reports as fast as possible, providing only process information and without attempting to establish a database connection
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
-        /// <response code="400">Status400BadRequest - See the "instance" and "detail" properties to identify the specific occurrence of the problem</response>
+        [HttpGet]
+        [ActionName("QueryReports")]
+        [Produces(MediaTypeNames.Application.Json)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<PBIDesktopReport>))]
+        [ProducesDefaultResponseType]
+        public IActionResult QueryPBIDesktopReports(CancellationToken cancellationToken)
+        {
+            var reports = _analyzeModelService.QueryReports(cancellationToken);
+            return Ok(reports);
+        }
+
+        /// <summary>
+        /// Prompts the user to select a location for saving a VPAX file generated from an active <see cref="PBIDesktopReport"/>
+        /// </summary>
+        /// <response code="200">Status200OK - Success</response>
+        /// <response code="204">Status204NoContent - User canceled action (e.g. 'Cancel' button has been pressed on a dialog box)</response>
         [HttpPost]
         [ActionName("ExportVpaxFromReport")]
         [Consumes(MediaTypeNames.Application.Json)]
         [Produces(MediaTypeNames.Application.Json)]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(FileActionResult))]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesDefaultResponseType]
-        public IActionResult ExportVpaxFromPBIDesktopReport(PBIDesktopReport report)
+        public IActionResult ExportVpax(PBIDesktopReport report, CancellationToken cancellationToken)
         {
-            Stream stream;
-            try
+            if (WindowDialogHelper.SaveFileDialog(fileName: report.ReportName, defaultExt: "VPAX", out var path, cancellationToken))
             {
-                stream = _pbidesktopService.ExportVpax(report, includeTomModel: false, includeVpaModel: false, readStatisticsFromData: false, sampleRows: 0);
-            }
-            catch (TOMDatabaseException ex)
-            {
-                return Problem(ex.ProblemDetail, ex.ProblemInstance, StatusCodes.Status400BadRequest);
+                _analyzeModelService.ExportVpax(report, path, cancellationToken);
+                return Ok();
             }
 
-            var exportResult = ExportVpaxFile(fileName: report.ReportName, stream);
-            return Ok(exportResult);
+            return NoContent();
         }
 
         /// <summary>
-        /// Returns a VPAX file stream from a PBICloud dataset
+        /// Prompts the user to select a location for saving a VPAX file generated from an active <see cref="PBICloudDataset"/>
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
-        /// <response code="400">Status400BadRequest - See the "instance" and "detail" properties to identify the specific occurrence of the problem</response>
+        /// <response code="204">Status204NoContent - User canceled action (e.g. 'Cancel' button has been pressed on a dialog box)</response>
         /// <response code="401">Status401Unauthorized - Sign-in required</response>
         [HttpPost]
         [ActionName("ExportVpaxFromDataset")]
         [Consumes(MediaTypeNames.Application.Json)]
         [Produces(MediaTypeNames.Application.Json)]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(FileActionResult))]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesDefaultResponseType]
-        public async Task<IActionResult> ExportVpaxFromPBICloudDataset(PBICloudDataset dataset)
+        public async Task<IActionResult> ExportVpax(PBICloudDataset dataset, CancellationToken cancellationToken)
         {
-            if (await _pbicloudService.IsSignInRequiredAsync())
+            if (await _authenticationService.IsPBICloudSignInRequiredAsync())
                 return Unauthorized();
 
-            Stream stream;
-            try
+            if (WindowDialogHelper.SaveFileDialog(fileName: dataset.DisplayName, defaultExt: "VPAX", out var path, cancellationToken))
             {
-                stream = _pbicloudService.ExportVpax(dataset, includeTomModel: false, includeVpaModel: false, readStatisticsFromData: false, sampleRows: 0);
-            }
-            catch (TOMDatabaseException ex)
-            {
-                return Problem(ex.ProblemDetail, ex.ProblemInstance, StatusCodes.Status400BadRequest);
+                _analyzeModelService.ExportVpax(dataset, path, _authenticationService.PBICloudAuthentication.AccessToken, cancellationToken);
+                return Ok();
             }
 
-            var exportResult = ExportVpaxFile(fileName: dataset.DisplayName, stream);
-            return Ok(exportResult);
-        }
-
-        private FileActionResult ExportVpaxFile(string? fileName, Stream stream)
-        {
-            var dialogOwner = Win32WindowWrapper.CreateFrom(Process.GetCurrentProcess().MainWindowHandle);
-            var dialogResult = System.Windows.Forms.DialogResult.None;
-            var dialog = new System.Windows.Forms.SaveFileDialog()
-            {
-                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-                Filter = "Vpax files (*.vpax)|*.vpax|All files (*.*)|*.*",
-                Title = "Export file",
-                DefaultExt = "vpax",
-                FileName = fileName
-            };
-
-            if (HttpContext.RequestAborted.IsCancellationRequested)
-            {
-                return new FileActionResult
-                { 
-                    Canceled = true
-                };
-            }
-
-            var threadStart = new ThreadStart(() => dialogResult = dialog.ShowDialog(dialogOwner));
-            var thread = new Thread(threadStart);
-            thread.CurrentCulture = thread.CurrentUICulture = CultureInfo.CurrentCulture;
-            thread.SetApartmentState(ApartmentState.STA);
-            thread.Start();
-            thread.Join();
-
-            //var dialog2 = new Bravo.Infrastructure.Windows.SaveFileDialog
-            //{
-            //    InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-            //    Filter = "Vpax files (*.vpax)|*.vpax|All files (*.*)|*.*",
-            //    Title = "Export file",
-            //    DefaultExt = "vpax",
-            //    //FileName = fileName
-            //};
-            //var result = dialog2.ShowDialog(hWnd: Process.GetCurrentProcess().MainWindowHandle);
-
-            var actionResult = new FileActionResult
-            {
-                Canceled = dialogResult == System.Windows.Forms.DialogResult.Cancel,
-                Path = dialog.FileName
-            };
-
-            if (actionResult.Canceled == false)
-            {
-                using var fileStream = System.IO.File.Create(actionResult.Path!);
-                stream.Seek(0, SeekOrigin.Begin);
-                stream.CopyTo(fileStream);
-            }
-
-            return actionResult;
+            return NoContent();
         }
     }
 }

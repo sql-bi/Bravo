@@ -1,39 +1,60 @@
-﻿using Sqlbi.Bravo.Infrastructure;
-using System.Text.Json.Serialization;
-
-namespace Sqlbi.Infrastructure.Configuration.Settings
+﻿namespace Sqlbi.Bravo.Infrastructure.Configuration.Settings
 {
+    using System.Text.Json;
+    using System.Text.Json.Serialization;
+
     public class UserSettings
     {
         [JsonPropertyName("telemetryEnabled")]
-        public bool TelemetryEnabled { get; set; } = AppConstants.TelemetryEnabledDefault;
+        public bool TelemetryEnabled { get; set; } = AppEnvironment.TelemetryEnabledDefault;
+
+        [JsonPropertyName("diagnosticLevel")]
+        public DiagnosticLevelType DiagnosticLevel { get; set; } = DiagnosticLevelType.None;
+
+        [JsonPropertyName("updateChannel")]
+        public UpdateChannelType UpdateChannel { get; set; } = UpdateChannelType.Stable;
 
         [JsonPropertyName("theme")]
-        [Newtonsoft.Json.JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))] // Newtonsoft.Json attribute required by WritableOptions<T>, see Update() metod
         public ThemeType Theme { get; set; } = ThemeType.Auto;
 
-        //[JsonExtensionData]
-        //[JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
-        //public Dictionary<string, JsonElement> ExtensionData { get; set; } // = new();
-
-        //[JsonPropertyName("customData")]
-        //public JsonElement? CustomData { get; set; }
-
-        // TODO: 'string CustomOptions' is a workaround, we should instead use 'JsonElement? CustomData'
-
         [JsonPropertyName("customOptions")]
-        public string? CustomOptions { get; set; }
+        public JsonElement? CustomOptions { get; set; }
     }
 
     public enum ThemeType
     {
-        [JsonPropertyName("auto")]
-        Auto,
+        Auto = 0,
+        Light = 1,
+        Dark = 2
+    }
 
-        [JsonPropertyName("light")]
-        Light,
+    public enum UpdateChannelType
+    {
+        /// <summary>
+        /// (Default) Stable builds are the best ones to use, they are a result of the code being built in Canary, tested in Dev and bug fixed in Beta
+        /// </summary>
+        Stable = 0,
 
-        [JsonPropertyName("dark")]
-        Dark
+        ///// <summary>
+        ///// Beta channel is the best build to get if you’re interested in being the first one to know about upcoming features 
+        ///// </summary>
+        //Beta = 1,
+
+        /// <summary>
+        /// Dev build will carry the improvements made to the application and tested by the developers, it’s still not recommended to use it because it can have bugs
+        /// </summary>
+        Dev = 2,
+
+        ///// <summary>
+        ///// Canary build carries features that are released as soon as they’re built and are not tested or used
+        ///// </summary>
+        //Canary = 3,
+    }
+
+    public enum DiagnosticLevelType
+    {
+        None = 0,
+        Basic = 1,
+        Verbose = 2
     }
 }

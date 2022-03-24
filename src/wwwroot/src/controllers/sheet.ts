@@ -5,13 +5,15 @@
 */
 
 import { Dic, Utils, __ } from '../helpers/utils';
-import { Doc } from '../model/doc';
+import { Doc, DocType } from '../model/doc';
 import { Scene } from '../view/scene';
 import { ErrorScene } from '../view/scene-error';
 import { LoaderScene } from '../view/scene-loader';
 import { View } from '../view/view';
 import { AppError, AppErrorType } from '../model/exceptions';
 import { Page, PageType } from './page';
+import { pbiDesktop, telemetry } from '../main';
+import { PBIDesktopReport } from '../model/pbi-report';
 
 export class Sheet extends View { 
     
@@ -39,8 +41,11 @@ export class Sheet extends View {
 
     destroy() {
         this.pages = null;
+    
+        if (this.doc.type == DocType.pbix)
+            pbiDesktop.off("change", this.id);
         this.doc = null;
-        
+
         super.destroy();
     }
 
@@ -52,13 +57,31 @@ export class Sheet extends View {
                 this.sync(false);
             });
         }
+
+        if (this.doc.type == DocType.pbix) {
+            pbiDesktop.on("change", ()=>{
+                let orphan = true;
+                pbiDesktop.reports.forEach(report => {
+                    if (this.doc.id == Doc.getId(DocType.pbix, report)) {
+                        orphan = false;
+                    }
+                });
+                if (orphan != this.doc.orphan) {
+                    this.doc.orphan = orphan;
+                    this.update();
+                }
+
+            }, this.id);
+        }
     }
 
     showPage(type?: PageType) {
 
-        if (type)
+        if (type) {
             this.currentPage = this.pages[type];
-
+            telemetry.trackPage(type);
+        }
+        
         if (!this.blockingScene) {
             if (!this.doc.loaded) {
                 this.sync(true);
@@ -76,7 +99,7 @@ export class Sheet extends View {
             this.pages[type].update();
     }
 
-    sync(initial: boolean, signInIfRequired = true) {
+    sync(initial: boolean) {
         if (this.syncing || this.loading) return;
 
         this.loading = initial;
@@ -102,6 +125,7 @@ export class Sheet extends View {
 
                 } else {
                     this.update();
+                    this.trigger("sync");
                 }
             })
             .catch((error: AppError) => {

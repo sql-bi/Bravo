@@ -31,7 +31,7 @@ export module Utils {
         }
 
         // Send ajax call
-        export function ajax(url: string, data = {}, options: RequestInit = {}) {
+        export function ajax(url: string, data = {}, options: RequestInit = {}, authorization = "") {
 
             let defaultOptions: RequestInit = {
                 method: "GET", // *GET, POST, PUT, DELETE, etc.
@@ -67,6 +67,9 @@ export module Utils {
                     } catch(e) {}
                 }
             }
+
+            if (authorization)
+                (<any>mergedOptions.headers)["Authorization"] = authorization; 
 
             const ajaxHandleResponseStatus = (response: Response) => {
                 return (response.status >= 200 && response.status < 300) ? 
@@ -113,15 +116,26 @@ export module Utils {
     export module Text {
 
         export function slugify(text: string): string {
-            return text.toLowerCase().replace(/\s|_/g, '-').replace(/'|"/g, '').replace(/\[|\]/g, '-');
+            return text.toLowerCase().replace(/\s|\.|_/g, '-').replace(/'|"/g, '').replace(/\[|\]/g, '-');
         }
 
         export function ucfirst(text: string): string {
             return text.substring(0, 1).toUpperCase() + text.substring(1).toLocaleLowerCase();
         }
 
+        export function splinter(text: string, firstBlockLength: number): string[] {
+            let firstBlock = text.replace(new RegExp(`^(.{${firstBlockLength}}[^\\s]*).*`), "$1");
+            let secondBlock = text.substring(firstBlock.length);
+            return [firstBlock, secondBlock];
+        }
+
         export function camelCase(text: string): string {
             return text.toLowerCase().replace(/[^a-zA-Z0-9]+(.)/g, (m, chr) => chr.toUpperCase());
+        }
+
+        export function pascalCase(text: string): string {
+            let cText = Utils.Text.camelCase(text);
+            return cText.substring(0, 1).toUpperCase() + cText.substring(1);
         }
 
         export function uuid(): string {
@@ -138,6 +152,21 @@ export module Utils {
             return (pad4(buf[0]) + pad4(buf[1]) + "-" + pad4(buf[2]) + "-" + pad4(buf[3]) + "-" + pad4(buf[4]) + "-" + pad4(buf[5]) + pad4(buf[6]) + pad4(buf[7]));
         }
 
+        export function caesarCipher(s: string, k: number = 0, prefix = "---"): string {
+            let n = 26; // alphabet letters amount
+            if (!k) k = Math.round((Math.random() * 50) + 5);
+            if (k < 0) return caesarCipher(s, k + n, prefix);
+
+            return prefix + s.split('')
+                .map(c => {
+                    if (c.match(/[a-z]/i)) {
+                        let code = c.charCodeAt(0);
+                        let shift = (code >= 65 && code <= 90 ? 65 : (code >= 97 && code <= 122 ? 97 : 0));
+                        return String.fromCharCode(((code - shift + k) % n) + shift);
+                    }
+                    return c;
+                }).join('');
+        }
     }
 
     export module DOM {
@@ -174,35 +203,44 @@ export module Utils {
 
     export module Format {
 
-        export function bytes(value: number, decimals = 2, refValue = 0): string {
-            if (value === 0) return "0 Bytes";
-        
+        export function bytes(value: number, locale = "en", decimals = 2, base = 0): string {
+  
             const k = 1024;
-            
             const sizes = ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
-            
+
+            if (!value) return `0 ${sizes[0]}`;
+
             let i = Math.floor(Math.log(value) / Math.log(k));
-            if (refValue) {
+            if (base) {
                 for (let l = 0; l < sizes.length; l++) {
-                    if (refValue >= Math.pow(k, l)) {
+                    if (base >= Math.pow(k, l)) {
                         i = l;
                         break;
                     }
                 }
             }
-        
-            let n = (value / Math.pow(k, i)).toFixed(i ? decimals : 0);
-            if (n == "0") n = `<${n}`;
+            let digits = (i ? decimals : 0);
+            let formatter = Intl.NumberFormat(locale, { 
+                maximumFractionDigits: digits, 
+                minimumFractionDigits: digits 
+            });
+            let n = formatter.format(value / Math.pow(k, i));
+            if (n == "0" && i > 0) n = `<${n}`;
    
             return `${n} ${sizes[i]}`;
         }
 
-        export function percentage(value: number, decimals = 2): string {
-            let n = (value * 100).toFixed(decimals);
-            if (value > 0 && n == "0") {
-                n = `<${1 / Math.pow(10, decimals)}`;
+        export function percentage(value: number, locale = "en", decimals = 2): string {
+            let formatter = Intl.NumberFormat(locale, { 
+                style: "percent",
+                maximumFractionDigits: decimals, 
+                minimumFractionDigits: decimals
+            });
+            let n = formatter.format(value);
+            if (value > 0 && n == "0%") {
+                n = `<${1 / Math.pow(10, decimals)}%`;
             }
-            return `${n}%`;
+            return n;
         }
 
         export function compress(value: number, decimals = 2): string {
@@ -446,9 +484,9 @@ export module Utils {
         }
 
         // Check if object is empty = no properties
-        export function isEmpty(object: any, includeNull = true): boolean {
-            for (let prop in object) {
-                if (object[prop] !== null || includeNull) {
+        export function isEmpty(obj: any, includeNull = true): boolean {
+            for (let prop in obj) {
+                if (obj[prop] !== null || includeNull) {
                     return false;
                 }
             }
@@ -456,8 +494,8 @@ export module Utils {
         }
 
         // Check if the object has been set
-        export function isSet(object: any): boolean { 
-            return (typeof object !== "undefined" && object !== null); 
+        export function isSet(obj: any, nullIsOk = false): boolean { 
+            return (typeof obj !== "undefined" && (nullIsOk || obj !== null)); 
         }
 
         // Check object type
@@ -476,14 +514,20 @@ export module Utils {
         export function isDate(x: any): boolean {
             return Utils.Obj.is(x, "Date");
         }
+        export function isString(x: any): boolean {
+            return Utils.Obj.is(x, "String");
+        }
+        export function isNumber(x: any): boolean {
+            return (!isNaN(Number(x)));
+        }
 
         // Merge two objects
-        export function merge<T>(source: T, target: T): T {
+        export function merge<T>(source: T, target: T, acceptNull = false): T {
             let result = <T>{};
             for (let prop in source) {
-                if (prop in target) {
+                if (prop in target && (target[prop] !== null || acceptNull)) {
                     if (Utils.Obj.isObject(source[prop]) && Utils.Obj.isObject(target[prop])) {
-                        result[prop] = Utils.Obj.merge(source[prop], target[prop]);
+                        result[prop] = Utils.Obj.merge(source[prop], target[prop], acceptNull);
                     } else {
                         result[prop] = target[prop];
                     }
@@ -493,7 +537,7 @@ export module Utils {
             }
             
             for (let prop in target) {
-                if (!(prop in source)) {
+                if (!(prop in source) && (target[prop] !== null || acceptNull)) {
                     result[prop] = target[prop];
                 }
             }
@@ -528,6 +572,72 @@ export module Utils {
             }
             return result;
         }
+
+        // Find a path in an object
+        export function matchPath(obj: any, path: string): boolean {
+
+            let match = false;
+            let pathArr = path.split(".");
+            for (let i = 0; i < pathArr.length; i++) {
+                match = false;
+                for (let prop in obj) {
+                    if (prop.toLocaleLowerCase() == pathArr[i].toLowerCase()) {
+                        match = true;
+                        obj = (<any>obj)[prop];
+                        break;
+                    }
+                }
+                if (!match) break;
+            }
+            return match;
+        }
+
+        export function anonymize(obj: any, props: string | string[]) {
+
+            let anonymizeProp = (prop: any) => {
+
+                const anon = "x";
+
+                if (Utils.Obj.isString(prop)) {
+                    let clearIndex = (prop.length > 6 ? prop.length - 3 : prop.length);
+                    let clearProp = prop.substring(clearIndex);
+                    prop = prop.substring(0, clearIndex).replace(/([a-zA-Z])/g, anon) + clearProp;
+
+                } else if (Utils.Obj.isNumber(prop)) {
+
+                    let strProp = String(prop);
+                    prop = strProp.substring(strProp.length - 1).padStart(strProp.length - 1, anon);
+                }
+
+                return prop;
+            }
+
+            let process = (source: any) => {
+
+                let target: any = null;
+
+                for (let key in source) {
+                    if (!target)
+                        target = (Utils.Obj.isArray(source) ? [] : {});
+
+                    if (typeof source[key] === "object" /*Utils.Obj.isObject(source[key])*/) {
+                        target[key] = process(source[key]);
+
+                    } else {
+                        if (props.indexOf(key) >= 0 || props == key || props == "*") {
+                            target[key] = anonymizeProp(source[key]);
+                        } else {
+                            target[key] = source[key];
+                        }
+                    }
+                }
+                return target;
+            };               
+
+            return process(obj);
+        
+        }
+
     }
 
     export module Platform {
@@ -560,6 +670,16 @@ export interface Dic<T> {
     [key: string]: T
 }
 
+export class Singleton {
+    private static _instance: Singleton;
+    public static get instance(): Singleton {
+        if (!Singleton._instance)
+            Singleton._instance = new this();
+        return Singleton._instance;
+    }
+    //private constructor() { }
+}
+
 // DOM helpers
 declare global {
     interface Element {
@@ -567,8 +687,9 @@ declare global {
         toggleAttr(name: string, toggle?: boolean, value?: string): void
         toggle(toggle: boolean): void
     }
-    interface ParentNode {
+    interface Node {
         empty: boolean
+        addLiveEventListener(event: string, selector: string, callback: (e: Event, element: HTMLElement) => void): void
     }
 }
 HTMLElement.prototype.toggleClass = function(name: string, toggle?: boolean) {
@@ -608,6 +729,22 @@ export function _(selector: string, container: ParentNode = document): HTMLEleme
 }
 export function __(selector: string, container: ParentNode = document): NodeList {
     return container.querySelectorAll(selector);
+}
+
+// Live event listeners
+Node.prototype.addLiveEventListener = function(event: string, selector: string, callback: (e: Event, element: HTMLElement) => void) {
+
+    (<Node>this).addEventListener(event, e => {
+        let target = <HTMLElement>e.target;
+        if (target) {
+            let element = <HTMLElement>target.closest(selector);
+            if (element) {
+                if (callback) {
+                    callback(e, element);
+                }
+            }
+        }
+    });
 }
 
 // On ready

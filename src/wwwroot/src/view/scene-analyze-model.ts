@@ -3,10 +3,10 @@
  * Copyright (c) SQLBI corp. - All rights reserved.
  * https://www.sqlbi.com
 */
-import { themeController } from "../main";
+import { host, telemetry, themeController } from "../main";
+import { i18n, I18n } from '../model/i18n'; 
 import { Dic, Utils, _, __ } from '../helpers/utils';
-import { Doc } from '../model/doc';
-import { i18n } from '../model/i18n'; 
+import { Doc, DocType } from '../model/doc';
 import { strings } from '../model/strings';
 import { TabularColumn } from '../model/tabular';
 import { ThemeType } from '../controllers/theme';
@@ -15,45 +15,57 @@ import Chart from "chart.js/auto";
 import { TreemapController, TreemapElement, TreemapScriptableContext } from 'chartjs-chart-treemap';
 import * as sanitizeHtml from 'sanitize-html';
 import { ContextMenu } from '../helpers/contextmenu';
-import { MainScene } from './scene-main';
+import { DocScene } from './scene-doc';
+import { LoaderScene } from './scene-loader';
+import { AppError } from '../model/exceptions';
+import { ErrorScene } from './scene-error';
+import { PageType } from '../controllers/page';
+import { tabulatorTreeChildrenFilter, TabulatorTreeChildrenFilterParams } from '../model/extend-tabulator';
 
 Chart.register(TreemapController, TreemapElement);
-interface TabulatorVpaxModelColumn extends TabularColumn {
-    name: string
+interface ExtendedTabularColumn extends TabularColumn {
     _containsUnreferenced?: boolean
     _aggregated?: boolean
-    _children?: TabulatorVpaxModelColumn[]
+    _children?: ExtendedTabularColumn[]
 }
 
-export class AnalyzeModelScene extends MainScene {
+interface AnalyzeMoldelFilter {
+    showUnrefOnly: boolean
+    searchValue: string
+}
+
+export class AnalyzeModelScene extends DocScene {
 
     table: Tabulator;
     chart: Chart;
     topSize = { tables: 0, columns: 0 };
     searchBox: HTMLInputElement;
 
-    fullData: TabulatorVpaxModelColumn[];
-    nestedData: TabulatorVpaxModelColumn[];
-    nestedAggregatedData: TabulatorVpaxModelColumn[];
-    aggregatedData: TabulatorVpaxModelColumn[];
+    fullData: ExtendedTabularColumn[];
+    nestedData: ExtendedTabularColumn[];
+    nestedAggregatedData: ExtendedTabularColumn[];
+    aggregatedData: ExtendedTabularColumn[];
 
     showAllColumns = false; //options.data.model.showAllColumns;
     groupByTable = false; //options.data.model.groupByTable;
     showUnrefOnly = false; //options.data.model.showUnrefOnly;
 
-    constructor(id: string, container: HTMLElement, doc: Doc) {
-        super(id, container, doc);
+    get canExportVpax(): boolean {
+        return this.doc.featureSupported("ExportVpax", this.type)[0] && !this.doc.orphan;
+    }
+
+    constructor(id: string, container: HTMLElement, doc: Doc, type: PageType) {
+        super(id, container, [doc.name], doc, type, true);
 
         this.element.classList.add("analyze-model");
     }
 
     render() {
-        super.render();
+        if (!super.render()) return false;
 
         let html = `
             <div class="summary">
-                
-                <p>${i18n(this.doc.model.unreferencedCount == 1 ? strings.analyzeModelSummarySingular : strings.analyzeModelSummaryPlural, Utils.Format.bytes(this.doc.model.size, 2), this.doc.model.columnsCount, this.doc.model.unreferencedCount)}</p>
+                <p></p>
             </div>
             <div class="fcols">
                 <div class="col coll">
@@ -61,27 +73,27 @@ export class AnalyzeModelScene extends MainScene {
                     <div class="toolbar">
             
                         <div class="search">
-                            <input type="search" placeholder="${i18n(strings.searchColumnPlaceholder)}">
+                            <input type="search" placeholder="${i18n(strings.searchColumnPlaceholder)}" class="disable-if-empty">
                         </div>
 
                        
-                        <div class="filter-unreferenced toggle icon-filter-alerts" title="${i18n(strings.filterUnrefCtrlTitle)}"></div>
+                        <div class="filter-unreferenced toggle icon-filter-broken-links disable-if-empty" title="${i18n(strings.filterUnrefCtrlTitle)}"></div>
 
-                        <div class="group-by-table toggle icon-group" title="${i18n(strings.groupByTableCtrlTitle)}"></div>
+                        <hr>
 
-                        <hr class="show-if-group">
-
-                        <div class="expand-all show-if-group ctrl icon-expand-all" title="${i18n(strings.expandAllCtrlTitle)}"></div>
+                        <div class="group-by-table toggle icon-group disable-if-empty" title="${i18n(strings.groupByTableCtrlTitle)}"></div>
 
                         <div class="collapse-all show-if-group ctrl icon-collapse-all" title="${i18n(strings.collapseAllCtrlTitle)}"></div>
+                        
+                        <div class="save-vpax ctrl icon-save disable-on-syncing enable-if-exportable" ${!this.canExportVpax ? "hidden" : ""} title="${i18n(strings.saveVpaxCtrlTile)}"> VPAX </div>
 
                     </div>
 
                     <div class="table"></div>
 
                     <div class="warning-explanation">
-                        <div class="icon icon-alert"></div>
-                        <p>${i18n(strings.columnWarningExplanation)}</p>
+                        <div class="icon icon-broken-link"></div>
+                        <p>${i18n(strings.columnUnreferencedExplanation)}</p>
                     </div>
 
                 </div>
@@ -92,26 +104,28 @@ export class AnalyzeModelScene extends MainScene {
                 </div>
             </div>
         `;
+
+        /*
+            <div class="expand-all show-if-group ctrl icon-expand-all" title="${i18n(strings.expandAllCtrlTitle)}"></div>
+        */
         this.body.insertAdjacentHTML("beforeend", html);
 
         this.searchBox = <HTMLInputElement>_(".search input", this.body);
 
-        this.updateData();
+        this.update();
         this.updateToolbar();
-        this.updateTable();
-        this.updateChart();
 
         this.listen();
     }
 
-    aggregateData(data: TabulatorVpaxModelColumn[]): TabulatorVpaxModelColumn[] {
+    aggregateData(data: ExtendedTabularColumn[]): ExtendedTabularColumn[] {
 
         // Thresholds
         const weightThreshold = 0.1;
         const maxThreshold = 10;
         const minThreshold = 5
 
-        let aggregatedData = [];
+        let aggregatedData: ExtendedTabularColumn[] = [];
 
         let sortedColumns = data.sort((a, b) => b.size - a.size);
         let otherColumns = { count: 0, size: 0, weight: 0, cardinality: 0, _containsUnreferenced: false };
@@ -127,23 +141,24 @@ export class AnalyzeModelScene extends MainScene {
                 if (column.isReferenced === false) otherColumns._containsUnreferenced = true;
             }
         });
-        aggregatedData.push({
-            name: i18n(strings.aggregatedTableName),
-            tableName: i18n(strings.aggregatedTableName),
-            columnName: i18n(strings.otherColumnsRowName),
-            size: otherColumns.size,
-            weight: otherColumns.weight,
-            columnCardinality: otherColumns.cardinality,
-            _containsUnreferenced: otherColumns._containsUnreferenced,
-            _aggregated: true
-        });
+        if (otherColumns.count)
+            aggregatedData.push({
+                name: i18n(strings.aggregatedTableName),
+                tableName: i18n(strings.aggregatedTableName),
+                columnName: i18n(strings.otherColumnsRowName),
+                size: otherColumns.size,
+                weight: otherColumns.weight,
+                columnCardinality: otherColumns.cardinality,
+                _containsUnreferenced: otherColumns._containsUnreferenced,
+                _aggregated: true
+            });
 
         return aggregatedData;
     }
 
-    nestData(data: TabulatorVpaxModelColumn[]): TabulatorVpaxModelColumn[] {
+    nestData(data: ExtendedTabularColumn[]): ExtendedTabularColumn[] {
 
-        let nestedData: Dic<TabulatorVpaxModelColumn> = {};
+        let nestedData: Dic<ExtendedTabularColumn> = {};
         data.forEach(column => {
             if (column._aggregated) {
                 nestedData["-"] = column;
@@ -155,6 +170,7 @@ export class AnalyzeModelScene extends MainScene {
                         name: table,
                         tableName: table,
                         columnName: table,
+                        dataType: "table",
                         columnCardinality: 0,
                         size: 0,
                         weight: 0,
@@ -177,12 +193,7 @@ export class AnalyzeModelScene extends MainScene {
 
     updateData() {
 
-        this.fullData = [];
-        this.doc.model.columns.forEach((column: TabulatorVpaxModelColumn) => {
-            column.name = `${column.tableName}[${column.columnName}]`;
-            this.fullData.push(column);
-        });
-
+        this.fullData = this.doc.model.columns;
         this.aggregatedData = this.aggregateData(this.fullData);
         this.nestedData = this.nestData(this.fullData);
         this.nestedAggregatedData = this.nestData(this.aggregatedData);
@@ -192,20 +203,23 @@ export class AnalyzeModelScene extends MainScene {
 
         if (redraw) {
             if (this.table) {
-                this.table.off("cellClick");
-                this.table.off("rowClick");
-                this.table.off("rowMouseOver");
-                this.table.off("rowMouseOut");
-                //this.table.destroy();
+                this.table.destroy();
+                this.table = null;
             }
-            this.table = null;
         }
         let data = (this.groupByTable ? 
             (this.showAllColumns ? this.nestedData : this.nestedAggregatedData) :
             (this.showAllColumns ? this.fullData: this.aggregatedData)
         );
-
+        
+       
         if (!this.table) {
+
+            const columnNameFormatter = (cell: Tabulator.CellComponent) => {
+                let cellData = <ExtendedTabularColumn>cell.getData();
+                let type = (cellData.dataType ? cellData.dataType.toLowerCase() : "");
+                return `<span class="item-type icon-type-${type}"></span>${cellData.columnName}`;
+            };
 
             const colConfig: Dic<Tabulator.ColumnDefinition> = {
                 icon: { 
@@ -213,15 +227,21 @@ export class AnalyzeModelScene extends MainScene {
                     title: "", 
                     hozAlign:"center", 
                     resizable: false, 
-                    width: 40,
+                    width: 45,
                     cssClass: "column-icon",
                     formatter: (cell) => {
-                        let cellData = <TabulatorVpaxModelColumn>cell.getData();
-                        return (cellData.isReferenced === false ? `<div class="icon icon-alert" title="${i18n(strings.columnWarningTooltip)}"></div>` : "");
+                        let cellData = <ExtendedTabularColumn>cell.getData();
+                        return (cellData.isReferenced === false ? `<div class="icon icon-broken-link" title="${i18n(strings.columnUnreferencedTooltip)}"></div>` : "");
                     }, 
                     sorter: (a, b, aRow, bRow, column, dir, sorterParams) => {
-                        let cellData = <TabulatorVpaxModelColumn>aRow.getData();
-                        return (cellData.isReferenced === false ? 1 : -1);
+
+                        const columnA = <ExtendedTabularColumn>aRow.getData();
+                        const columnB = <ExtendedTabularColumn>bRow.getData();
+             
+                        a = `${columnA.isReferenced === false ? "_" : ""}${columnA.columnName}`;
+                        b = `${columnB.isReferenced === false ? "_" : ""}${columnB.columnName}`;
+                        
+                        return String(a).toLowerCase().localeCompare(String(b).toLowerCase());
                     }
                 },
                 /*tickbox: {
@@ -233,77 +253,81 @@ export class AnalyzeModelScene extends MainScene {
                 },*/
                 cardinality: { 
                     field: "columnCardinality", 
-                    title: i18n(strings.analyzeModelTableColCardinality),  
+                    title: i18n(strings.tableColCardinality),  
                     width: 120,
                     hozAlign:"right",
                     bottomCalc: "sum",
                     sorter: "number", 
-                    headerTooltip: i18n(strings.analyzeModelTableColCardinalityTooltip),
+                    headerTooltip: i18n(strings.tableColCardinalityTooltip),
                     formatter: (cell)=>Utils.Format.compress(cell.getValue()), 
                     bottomCalcFormatter: (cell)=>Utils.Format.compress(cell.getValue()),
                 },
-                entityName: { 
+                path: { 
                     field: "columnName", 
-                    title: i18n(strings.analyzeModelTableColEntity), 
+                    title: i18n(strings.tableColPath), 
+                    tooltip: true,
                     cssClass: "column-name",
+                    formatter: columnNameFormatter
                 },
                 columnName: { 
                     field: "columnName", 
-                    title: i18n(strings.analyzeModelTableColColumn), 
+                    tooltip: true,
+                    title: i18n(strings.tableColColumn), 
                     cssClass: "column-name",
+                    formatter: columnNameFormatter
                 },
                 tableName: { 
                     field: "tableName", 
-                    title: i18n(strings.analyzeModelTableColTable),  
+                    tooltip: true,
+                    title: i18n(strings.tableColTable),  
                     formatter: (cell) => {
-                        let cellData = <TabulatorVpaxModelColumn>cell.getData();
+                        let cellData = <ExtendedTabularColumn>cell.getData();
                         return (cellData._aggregated ? "" : cell.getValue())
                     }
                 },
                 size: { 
                     field: "size", 
-                    title: i18n(strings.analyzeModelTableColSize), 
+                    title: i18n(strings.tableColSize), 
                     hozAlign:"right",
                     width: 100,
                     bottomCalc: "sum",
                     sorter: "number", 
                     formatter: (cell)=>{   
-                        let cellData = <TabulatorVpaxModelColumn>cell.getData();
+                        let cellData = <ExtendedTabularColumn>cell.getData();
                         let value = cell.getValue();
                         let sizePerc = Math.round((value / (cellData._children ? this.topSize.tables : this.topSize.columns)) * 100);
-                        return `${Utils.Format.bytes(value)}<div class="${cellData._children ? "size-indicator-alt" : "size-indicator"}" style="width:${sizePerc}%"></div>`;
+                        return `${Utils.Format.bytes(value, I18n.instance.locale.locale)}<div class="${cellData._children ? "size-indicator-alt" : "size-indicator"}" style="width:${sizePerc}%"></div>`;
                     }, 
-                    bottomCalcFormatter: (cell)=>Utils.Format.bytes(cell.getValue()),
+                    bottomCalcFormatter: (cell)=>Utils.Format.bytes(cell.getValue(), I18n.instance.locale.locale),
                 },
                 weight: { 
                     field: "weight", 
-                    title: i18n(strings.analyzeModelTableColWeight), 
+                    title: i18n(strings.tableColWeight), 
                     hozAlign: "right", 
                     width: 80,
                     bottomCalc: "sum",
                     sorter: "number", 
-                    formatter: (cell)=>Utils.Format.percentage(cell.getValue(), 0),
-                    bottomCalcFormatter: (cell)=>Utils.Format.percentage(cell.getValue(), 0)
+                    formatter: (cell)=>Utils.Format.percentage(cell.getValue(), I18n.instance.locale.locale, 0),
+                    bottomCalcFormatter: (cell)=>Utils.Format.percentage(cell.getValue(), I18n.instance.locale.locale, 0)
                 }
             };
 
             const columns: Tabulator.ColumnDefinition[] = (this.groupByTable ?
-                [colConfig.icon, /*colConfig.tickbox, */colConfig.entityName, colConfig.cardinality, colConfig.size, colConfig.weight] : 
+                [colConfig.icon, /*colConfig.tickbox, */colConfig.path, colConfig.cardinality, colConfig.size, colConfig.weight] : 
                 [colConfig.icon, /*colConfig.tickbox, */colConfig.columnName, colConfig.tableName, colConfig.cardinality, colConfig.size, colConfig.weight] 
             );
 
             const tableConfig: Tabulator.Options = {
 
-                //debugInvalidOptions: false, 
                 maxHeight: "100%",
-                //responsiveLayout: "collapse", // DO NOT USE IT
                 layout: "fitColumns",
+                placeholder: " ", // This fixes scrollbar appearing with empty tables
                 dataTree: this.groupByTable,
                 dataTreeCollapseElement:`<span class="tree-toggle icon icon-collapse"></span>`,
                 dataTreeExpandElement:`<span class="tree-toggle icon icon-expand"></span>`,
                 dataTreeBranchElement: false,
                 dataTreeElementColumn: "columnName",
-                dataTreeChildIndent: 50,
+                dataTreeChildIndent: 40,
                 dataTreeSelectPropagate: true,
                 dataTreeStartExpanded: (startExpanded ? true : row => {
                     let data = row.getData();
@@ -312,10 +336,14 @@ export class AnalyzeModelScene extends MainScene {
                 initialSort:[
                     {column: "size", dir: "desc"}, 
                 ],
-                initialFilter: (data:any) => this.unreferencedFilter(data),
+                initialFilter: data => this.filter(data, {
+                    showUnrefOnly: this.showUnrefOnly,
+                    searchValue: (this.searchBox ? this.searchBox.value : "")
+                }),
                 rowFormatter: row => {
                     try { //Bypass calc rows
-                        let data = row.getData();
+                        if ((<any>row)._row && (<any>row)._row.type == "calc") return;
+                        let data = <ExtendedTabularColumn>row.getData();
                         let element = row.getElement();
 
                         if (data.isReferenced === false){
@@ -326,7 +354,7 @@ export class AnalyzeModelScene extends MainScene {
                         if (data._aggregated) {
                             element.classList.add("row-aggregated");
                         }
-                    }catch(e){}
+                    }catch(ignore){}
                 },
                 columns: columns,
                 data: data
@@ -336,7 +364,7 @@ export class AnalyzeModelScene extends MainScene {
             this.table.on("cellClick", (e, cell) => {
                 try {
                     
-                    let cellData = <TabulatorVpaxModelColumn>cell.getData();
+                    let cellData = <ExtendedTabularColumn>cell.getData();
                     if (cellData._aggregated && cell.getField() == "columnName") {
                         this.expandTableColumns();
                     }
@@ -353,7 +381,7 @@ export class AnalyzeModelScene extends MainScene {
 
                     if  (this.chart) {
                         let foundIndex = -1;
-                        let rowData = <TabulatorVpaxModelColumn>row.getData();
+                        let rowData = <ExtendedTabularColumn>row.getData();
                         let chartData = this.chart.data.datasets[0].data;
                         for (let i = 0; i < chartData.length; i++) {
                             let chartDataPoint = <any>chartData[i];
@@ -382,12 +410,22 @@ export class AnalyzeModelScene extends MainScene {
 
         } else {
             this.table.setData(data);
+        } 
+    }
+
+    collapseTable() {
+        if (this.table) {
+            let rows = this.table.getRows();
+            rows.forEach(row => {
+                if (row.getTreeChildren().length){
+                    row.treeCollapse();
+                }
+            });
         }
     }
 
     expandTableColumns() {
         this.showAllColumns = true;
-        //options.update("model.showAllColumns", true);
 
         this.updateToolbar();
         this.updateTable(false);
@@ -396,19 +434,29 @@ export class AnalyzeModelScene extends MainScene {
 
     applyFilters() {
         if (this.table) {
-            this.table.clearFilter();
-
-            if (this.showUnrefOnly)
-                this.table.addFilter(data => this.unreferencedFilter(data));
-                
-            if (this.searchBox.value)
-                this.table.addFilter("columnName", "like", sanitizeHtml(this.searchBox.value, { allowedTags: [], allowedAttributes: {}}));
+            this.table.setFilter(this.filter, {
+                showUnrefOnly: this.showUnrefOnly,
+                searchValue: (this.searchBox ? this.searchBox.value : "")
+            });
         }
     }
 
-    unreferencedFilter(data: TabulatorVpaxModelColumn): boolean {
-        if (this.showUnrefOnly)
-            return data.isReferenced === false || data._containsUnreferenced || data._aggregated;
+    filter(column: ExtendedTabularColumn, params: AnalyzeMoldelFilter): boolean {
+
+        if (params.showUnrefOnly) {
+            if (!(column.isReferenced === false || column._containsUnreferenced || column._aggregated))
+                return false;
+        }
+
+        let searchValue = (params.searchValue != "" ? sanitizeHtml(params.searchValue, { allowedTags: [], allowedAttributes: {}}) : "");
+        if (searchValue != "") {
+            if (!tabulatorTreeChildrenFilter(column, { 
+                column: "columnName",
+                comparison: "like",
+                value: searchValue
+            })) return false;
+        }
+
         return true;
     }
 
@@ -470,6 +518,8 @@ export class AnalyzeModelScene extends MainScene {
         if (this.showUnrefOnly) {
             data = data.filter(column => (column.isReferenced === false));
         }
+        if (!data.length) return;
+
         let groups = (this.groupByTable ? ["tableName", "columnName"] : ["name"]);
 
         Chart.defaults.font.family = "Segoe UI Variable,Segoe UI,-apple-system,Helvetica Neue,sans-serif";
@@ -561,9 +611,9 @@ export class AnalyzeModelScene extends MainScene {
                                 if (item) {
                                     let lines = [];
                                     if (item.columnName) {
-                                        lines.push(`${i18n(strings.analyzeModelTableColTable)}: ${item.tableName}`);
+                                        lines.push(`${i18n(strings.tableColTable)}: ${item.tableName}`);
                                     }
-                                    lines.push(`${i18n(strings.analyzeModelTableColSize)}: ${Utils.Format.bytes(item.size)}`);
+                                    lines.push(`${i18n(strings.tableColSize)}: ${Utils.Format.bytes(item.size, I18n.instance.locale.locale)}`);
                                     return lines;
                                 }
                             },
@@ -599,11 +649,15 @@ export class AnalyzeModelScene extends MainScene {
     }
 
     update() {
+        if (!super.update()) return false;
+
+        this.updateConditionalElements("exportable", this.canExportVpax);
+
         this.updateData();
         this.updateTable(false);
         this.updateChart();
 
-        _(".summary p", this.element).innerHTML = i18n(this.doc.model.unreferencedCount == 1 ? strings.analyzeModelSummarySingular : strings.analyzeModelSummaryPlural, Utils.Format.bytes(this.doc.model.size, 2), this.doc.model.columnsCount, this.doc.model.unreferencedCount);
+        _(".summary p", this.element).innerHTML = i18n(strings.analyzeModelSummary, {size: this.doc.model.size, count: this.doc.model.columnsCount}) + i18n(strings.analyzeModelSummary2, {count: this.doc.model.unreferencedCount});
     }
 
     listen() {
@@ -618,6 +672,8 @@ export class AnalyzeModelScene extends MainScene {
         this.searchBox.addEventListener('contextmenu', e => {
             e.preventDefault();
             let el = <HTMLInputElement>e.currentTarget;
+            if (el.hasAttribute("disabled")) return;
+            
             let selection = el.value.substring(el.selectionStart, el.selectionEnd);
             ContextMenu.editorContextMenu(e, selection, el.value, el);
         });
@@ -625,9 +681,14 @@ export class AnalyzeModelScene extends MainScene {
         _(".filter-unreferenced", this.element).addEventListener("click", e => {
             e.preventDefault();
             let el = <HTMLElement>e.currentTarget;
+            if (el.hasAttribute("disabled")) return;
+            
+            if (!el.classList.contains("active"))
+                telemetry.track("Analyze Model: Filter Unreferenced");
+
             el.toggleClass("active");
             this.showUnrefOnly = el.classList.contains("active");
-            //options.update("model.showUnrefOnly", this.showUnrefOnly);
+
             this.applyFilters();
             this.updateChart();
 
@@ -637,22 +698,58 @@ export class AnalyzeModelScene extends MainScene {
 
             e.preventDefault();
             let el = <HTMLElement>e.currentTarget;
+            if (el.hasAttribute("disabled")) return;
+
+            if (!el.classList.contains("active"))
+                telemetry.track("Analyze Model: Group by Table");
+
             el.toggleClass("active");
             this.groupByTable = el.classList.contains("active");
-            //options.update("model.groupByTable", this.groupByTable);
+
             this.updateTable();
             this.updateChart();
             this.updateToolbar();
         });
 
-        _(".expand-all", this.element).addEventListener("click", e => {
+        /*_(".expand-all", this.element).addEventListener("click", e => {
             e.preventDefault();
             this.updateTable(true, true);
-        });
+        });*/
 
         _(".collapse-all", this.element).addEventListener("click", e => {
             e.preventDefault();
-            this.updateTable();
+            this.collapseTable();
+        });
+
+        _(".save-vpax", this.element).addEventListener("click", e => {
+            e.preventDefault();
+            let el = <HTMLElement>e.currentTarget;
+            if (el.hasAttribute("disabled")) return;
+
+            telemetry.track("Save VPAX");
+
+            el.toggleAttr("disabled", true);
+            if (this.canExportVpax) {
+
+                let exportingScene = new LoaderScene(Utils.DOM.uniqueId(), this.element.parentElement, i18n(strings.savingVpax), ()=>{
+                    host.abortExportVpax(this.doc.type);
+                });
+                this.push(exportingScene);
+
+                host.exportVpax(<any>this.doc.sourceData, this.doc.type)
+                    .then(data => {
+                        this.pop();
+                    })
+                    .catch((error: AppError) => {
+                        if (error.requestAborted) return;
+
+                        let errorScene = new ErrorScene(Utils.DOM.uniqueId(), this.element.parentElement, error, true);
+                        this.splice(errorScene);
+                    })
+                    .finally(() => {
+                        el.toggleAttr("disabled", false);
+                    });
+            }
         });
 
         themeController.on("change", () => {

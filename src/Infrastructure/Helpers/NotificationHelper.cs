@@ -1,10 +1,9 @@
-﻿using AutoUpdaterDotNET;
-using Microsoft.Toolkit.Uwp.Notifications;
-using System;
-using System.Diagnostics;
-
-namespace Sqlbi.Bravo.Infrastructure.Helpers
+﻿namespace Sqlbi.Bravo.Infrastructure.Helpers
 {
+    using Microsoft.Toolkit.Uwp.Notifications;
+    using Sqlbi.Bravo.Models;
+    using System;
+
     internal static class NotificationHelper
     {
         private const string ArgumentKeyUrl = "url";
@@ -12,51 +11,15 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
         private const string ArgumentValueDownload = "download";
         private const string ArgumentValueViewDetails = "viewDetails";
 
-        public static void RegisterNotificationHandler()
-        {
-            ToastNotificationManagerCompat.OnActivated += OnActivated;
-        }
+        public static void RegisterNotificationHandler() => ToastNotificationManagerCompat.OnActivated += OnNotificationActivated;
 
-        private static void OnActivated(ToastNotificationActivatedEventArgsCompat eventArgs)
-        {   
-            var toastArgs = ToastArguments.Parse(eventArgs.Argument);
-
-            if (toastArgs.TryGetValue(ArgumentKeyAction, out var actionValue))
-            {
-                switch (actionValue)
-                {
-                    case ArgumentValueDownload:
-                    case ArgumentValueViewDetails:
-                        {
-                            if (toastArgs.TryGetValue(ArgumentKeyUrl, out var urlValue) && Uri.TryCreate(urlValue, UriKind.Absolute, out var targetUri))
-                            {
-                                // sanitize/check input before starting the process
-                                if (targetUri.IsAbsoluteUri && !targetUri.IsFile && !targetUri.IsUnc && !targetUri.IsLoopback && targetUri.Authority.Equals("github.com", StringComparison.OrdinalIgnoreCase)) 
-                                {
-                                    Process.Start(new ProcessStartInfo
-                                    {
-                                        UseShellExecute = true,
-                                        FileName = urlValue
-                                    });
-                                }
-                            }
-                        }
-                        break;
-                }
-            }
-        }
-
-        public static void NotifyUpdateAvailable(UpdateInfoEventArgs updateInfo)
+        public static void NotifyUpdateAvailable(BravoUpdate bravoUpdate)
         {
             var builder = new ToastContentBuilder();
 
-            // TODO: NotifyUpdate
-            var changelogUrl = "https://github.com/ravibpatel/AutoUpdater.NET/releases/latest"; //updateInfo.ChangelogURL
-            var downloadUrl = "https://github.com/ravibpatel/AutoUpdater.NET/releases/download/v1.7.0/AutoUpdater.NET-1.7.0.zip"; // updateInfo.DownloadURL
-
-            builder.AddText($"A new version of { AppConstants.ApplicationName } is available", AdaptiveTextStyle.Default);
-            builder.AddButton(new ToastButton().SetContent("Download").AddArgument(ArgumentKeyAction, ArgumentValueDownload).AddArgument(ArgumentKeyUrl, downloadUrl));
-            builder.AddButton(new ToastButton().SetContent("View details").AddArgument(ArgumentKeyAction, ArgumentValueViewDetails).AddArgument(ArgumentKeyUrl, changelogUrl));
+            builder.AddText($"A new version of { AppEnvironment.ApplicationName } is available", AdaptiveTextStyle.Default);
+            builder.AddButton(new ToastButton().SetContent("Download").AddArgument(ArgumentKeyAction, ArgumentValueDownload).AddArgument(ArgumentKeyUrl, bravoUpdate.DownloadUrl));
+            builder.AddButton(new ToastButton().SetContent("View details").AddArgument(ArgumentKeyAction, ArgumentValueViewDetails).AddArgument(ArgumentKeyUrl, bravoUpdate.ChangelogUrl));
             // builder.AddAttributionText("Via update notifier")
             builder.AddVisualChild(new AdaptiveGroup()
             {
@@ -84,13 +47,13 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
                         {
                             new AdaptiveText()
                             {
-                                Text = updateInfo.CurrentVersion,
+                                Text = bravoUpdate.CurrentVersion,
                                 HintStyle = AdaptiveTextStyle.Base,
                                 HintAlign = AdaptiveTextAlign.Left
                             },
                             new AdaptiveText()
                             {
-                                Text = updateInfo.InstalledVersion.ToString(),
+                                Text = bravoUpdate.InstalledVersion,
                                 HintStyle = AdaptiveTextStyle.CaptionSubtle,
                                 HintAlign = AdaptiveTextAlign.Left
                             }
@@ -103,6 +66,32 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
             {
                 customize.ExpirationTime = DateTime.Now.AddMinutes(10);
             });
+        }
+
+        public static void ClearNotifications()
+        {
+            ToastNotificationManagerCompat.History.Clear();
+        }
+
+        private static void OnNotificationActivated(ToastNotificationActivatedEventArgsCompat eventArgs)
+        {
+            var toastArgs = ToastArguments.Parse(eventArgs.Argument);
+
+            if (toastArgs.TryGetValue(ArgumentKeyAction, out var actionValue))
+            {
+                switch (actionValue)
+                {
+                    case ArgumentValueDownload:
+                    case ArgumentValueViewDetails:
+                        {
+                            if (toastArgs.TryGetValue(ArgumentKeyUrl, out var urlValue) && Uri.TryCreate(urlValue, UriKind.Absolute, out var targetUri))
+                            {
+                                _ = ProcessHelper.OpenBrowser(targetUri);
+                            }
+                        }
+                        break;
+                }
+            }
         }
     }
 }

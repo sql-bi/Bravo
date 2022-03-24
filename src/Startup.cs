@@ -1,18 +1,18 @@
-﻿using Dax.Formatter;
-using Hellang.Middleware.ProblemDetails;
-using Microsoft.ApplicationInsights.Extensibility;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Sqlbi.Bravo.Infrastructure.Extensions;
-using Sqlbi.Bravo.Infrastructure.Helpers;
-using Sqlbi.Bravo.Services;
-using Sqlbi.Infrastructure.Configuration.Settings;
-using System.Text.Json.Serialization;
-
-namespace Sqlbi.Bravo
+﻿namespace Sqlbi.Bravo
 {
+    using Dax.Formatter;
+    using Hellang.Middleware.ProblemDetails;
+    using Microsoft.ApplicationInsights.Extensibility;
+    using Microsoft.AspNetCore.Builder;
+    using Microsoft.AspNetCore.Hosting;
+    using Microsoft.Extensions.Configuration;
+    using Microsoft.Extensions.DependencyInjection;
+    using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
+    using Sqlbi.Bravo.Infrastructure.Extensions;
+    using Sqlbi.Bravo.Infrastructure.Helpers;
+    using Sqlbi.Bravo.Infrastructure.Services.PowerBI;
+    using Sqlbi.Bravo.Services;
+
     internal class Startup
     {
         private const string CorsLocalhostOnlyPolicy = "AllowLocalWebAPI";
@@ -27,44 +27,28 @@ namespace Sqlbi.Bravo
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllers().AddJsonOptions((jsonOptions) =>
-            {
-                jsonOptions.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-                jsonOptions.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
-            });
-            services.AddCors((corsOptions) =>
-            {
-                corsOptions.AddPolicy(CorsLocalhostOnlyPolicy, (policyBuilder) =>
-                {
-                    // for security, default to only accepting calls from the local machine
-                    policyBuilder.AllowAnyMethod().AllowAnyHeader()
-                        //.AllowAnyOrigin();
-
-                        // TOFIX: CORS error
-                        // Microsoft.AspNetCore.Hosting.Diagnostics: Information: Request starting HTTP/1.1 POST http://localhost:5000/api/GetModelFromDataset application/json 237
-                        // Microsoft.AspNetCore.Cors.Infrastructure.CorsService: Information: CORS policy execution failed
-                        // Microsoft.AspNetCore.Cors.Infrastructure.CorsService: Information: Request origin http://localhost:5000 does not have permission to access the resource.
-                        .WithOrigins(CorsLocalhostOrigin); 
-                });
-            });
-            services.AddProblemDetails((options) =>
-            {
+            services.AddAndConfigureControllers();
+            services.AddAndConfigureCors(CorsLocalhostOnlyPolicy, CorsLocalhostOrigin);
+            services.AddAndConfigureAuthorization();
+            services.AddAndConfigureAuthentication();
+            services.AddAndConfigureProblemDetails();
 #if DEBUG
-                options.IncludeExceptionDetails = (context, exception) => true;
-#endif
-            });
-#if DEBUG
-            services.AddSwaggerGenCustom();
+            services.AddAndConfigureSwaggerGen();
 #endif
             services.AddHttpClient();
-            services.AddWritableOptions<UserSettings>(section: Configuration.GetSection(nameof(UserSettings)), file: "appsettings.json"); //.ValidateDataAnnotations();
             services.AddOptions<StartupSettings>().Configure((settings) => settings.FromCommandLineArguments()); //.ValidateDataAnnotations();
             services.AddOptions<TelemetryConfiguration>().Configure((configuration) => TelemetryHelper.Configure(configuration));
             services.AddSingleton<IPBICloudAuthenticationService, PBICloudAuthenticationService>();
+            services.AddSingleton<IPBICloudSettingsService, PBICloudSettingsService>();
             services.AddSingleton<IPBIDesktopService, PBIDesktopService>();
             services.AddSingleton<IPBICloudService, PBICloudService>();
+            services.AddSingleton<IFormatDaxService, FormatDaxService>();
+            services.AddSingleton<IExportDataService, ExportDataService>();
             services.AddSingleton<IDaxFormatterClient, DaxFormatterClient>();
-            // services.AddHostedService<ApplicationInstanceHostedService>();
+            services.AddSingleton<IManageDatesService, ManageDatesService>();
+            services.AddSingleton<IAnalyzeModelService, AnalyzeModelService>();
+            services.AddSingleton<IAuthenticationService, AuthenticationService>();
+            services.AddSingleton<IBestPracticeAnalyzerService, BestPracticeAnalyzerService>();
         }
 
         public void Configure(IApplicationBuilder application, IWebHostEnvironment environment)
@@ -75,19 +59,18 @@ namespace Sqlbi.Bravo
 #endif
             application.UseProblemDetails();
             application.UseRouting();
-            application.UseCors(CorsLocalhostOnlyPolicy); // The call to UseCors must be placed after UseRouting, but before UseAuthorization and UseEndpoints
-            
-            // TODO: do we need https authz/authn ? 
-            //app.UseAuthentication();
-            //app.UseAuthorization(); e.g. FilterAttribute, IActionFilter .OnActionExecuting => if (filterContext.HttpContext.Request.IsLocal == false) filterContext.Result = new HttpForbiddenResult(); 
+            application.UseCors(CorsLocalhostOnlyPolicy); // this call must appear after UseRouting(), but before UseAuthorization() and UseEndpoints() for the middleware to function correctly
+            application.UseAuthentication();
+            application.UseAuthorization(); // this call must appear after UseRouting(), but before UseEndpoints() for the middleware to function correctly
 
             application.UseEndpoints((endpoints) =>
             {
+#if DEBUG
                 endpoints.MapControllers();
-                //endpoints.MapGet("/", async context =>
-                //{
-                //    await context.Response.WriteAsync($"Sqlbi.Bravo API on {Environment.MachineName}");
-                //});
+#else
+                // Map controllers and marks them as RequireAuthorization so that all requests must be authorized
+                endpoints.MapControllers().RequireAuthorization();
+#endif
             });
         }
     }

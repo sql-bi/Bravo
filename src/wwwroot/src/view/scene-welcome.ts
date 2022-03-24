@@ -4,7 +4,8 @@
  * https://www.sqlbi.com
 */
 
-import { _ } from '../helpers/utils';
+import { _, __ } from '../helpers/utils';
+import { host } from '../main';
 import { i18n } from '../model/i18n'; 
 import { strings } from '../model/strings';
 import { Scene } from '../view/scene';
@@ -41,10 +42,10 @@ export class WelcomeScene extends Scene {
                 name: i18n(strings.ExportData),
                 videoId: ""
             },
-            {
+            /*{
                 name: i18n(strings.BestPractices),
                 videoId: ""
-            }
+            }*/
         ];
 
         let html = `
@@ -64,7 +65,7 @@ export class WelcomeScene extends Scene {
                             <img src="images/connect-pbi.svg">
                             <span class="name">${i18n(strings.quickActionConnectPBITitle)}</span>
                         </div>
-                        <div class="ctrl quick-open-vpx">
+                        <div class="ctrl quick-open-vpax">
                             <img src="images/vertipaq.svg">
                             <span class="name">${i18n(strings.quickActionOpenVPXTitle)}</span>
                         </div>
@@ -87,7 +88,7 @@ export class WelcomeScene extends Scene {
                             </ul>
                         </div>
 
-                        <p class="note">${i18n(strings.openSourcePayoff)} <a href="https://github.com/sql-bi/bravo" target="_blank" class="ext-link">github.com/sql-bi/bravo</a></p>
+                        <p class="note">${i18n(strings.openSourcePayoff)} <span class="link" href="https://github.com/sql-bi/bravo">github.com/sql-bi/bravo</span></p>
                     </div>
                 </div>
             </div>
@@ -109,9 +110,18 @@ export class WelcomeScene extends Scene {
             this.trigger("quickAction", "connect-pbi");
         });
 
-        _(".quick-open-vpx", this.element).addEventListener("click", e => {
+        _(".quick-open-vpax", this.element).addEventListener("click", e => {
             e.preventDefault();
-            this.trigger("quickAction", "open-vpx");
+            this.trigger("quickAction", "open-vpax");
+        });
+
+        __(".help-video", this.element).forEach(div => {
+            div.addEventListener("click", e => {
+                e.preventDefault();
+                
+                //TODO Open the documentation page/video
+                host.navigateTo("https://bravo.bi");
+            });
         });
     } 
 }

@@ -1,24 +1,25 @@
-﻿using Microsoft.ApplicationInsights;
-using Microsoft.ApplicationInsights.Channel;
-using Microsoft.ApplicationInsights.Extensibility;
-using Sqlbi.Bravo.Infrastructure.Security;
-using System;
-using System.Diagnostics;
-
-namespace Sqlbi.Bravo.Infrastructure.Helpers
+﻿namespace Sqlbi.Bravo.Infrastructure.Helpers
 {
+    using Microsoft.ApplicationInsights;
+    using Microsoft.ApplicationInsights.Extensibility;
+    using Sqlbi.Bravo.Infrastructure.Configuration;
+    using System;
+    using System.Diagnostics;
+
     internal static class TelemetryHelper
     {
         private static readonly Lazy<TelemetryConfiguration> _telemetryConfiguration = new(Configure(new TelemetryConfiguration()));
 
         public static TelemetryConfiguration Configure(TelemetryConfiguration configuration)
         {
+            //configuration.DefaultTelemetrySink.TelemetryProcessorChainBuilder.Use((next) => new AppTelemetryProcessor(next)).Build();
             configuration.TelemetryInitializers.Add(new OperationCorrelationTelemetryInitializer());
-            configuration.TelemetryInitializers.Add(new ContextTelemetryInitializer());
-            configuration.TelemetryChannel.DeveloperMode = Debugger.IsAttached || AppConstants.IsDebug;
-            configuration.InstrumentationKey = AppConstants.TelemetryInstrumentationKey;
-            configuration.DisableTelemetry = false;
-            
+            configuration.TelemetryInitializers.Add(new AppTelemetryInitializer());
+            configuration.InstrumentationKey = AppEnvironment.TelemetryInstrumentationKey;
+            configuration.DisableTelemetry = UserPreferences.Current.TelemetryEnabled == false;
+#if DEBUG
+            configuration.TelemetryChannel.DeveloperMode = Debugger.IsAttached;
+#endif
             return configuration;
         }
 
@@ -32,31 +33,6 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
             var telemetryClient = new TelemetryClient(TelemetryConfigurationInstance);
             telemetryClient.TrackException(exception);
             telemetryClient.Flush(); // Flush is blocking when using InMemoryChannel, no need for Sleep/Delay
-        }
-    }
-
-    internal class ContextTelemetryInitializer : ITelemetryInitializer
-    {
-        public static readonly string DeviceOperatingSystem = Environment.OSVersion.ToString();
-        public static readonly string ComponentVersion = AppConstants.ApplicationFileVersion;
-        public static readonly string SessionId = Guid.NewGuid().ToString();
-        public static readonly string? UserId = $"{ Environment.MachineName }\\{ Environment.UserName }".ToSHA256Hash();
-
-        public void Initialize(ITelemetry telemetry)
-        {
-            //if (telemetry is Microsoft.ApplicationInsights.DataContracts.ExceptionTelemetry exceptionTelemetry)
-            //{
-            //    if (exceptionTelemetry.Properties.ContainsKey("customProperty") == false)
-            //        exceptionTelemetry.Properties.Add("customProperty", "value");
-            //}
-
-            var context = telemetry.Context;
-            {
-                context.Device.OperatingSystem = DeviceOperatingSystem;
-                context.Component.Version = ComponentVersion;
-                context.Session.Id = SessionId;
-                context.User.Id = UserId;
-            }
         }
     }
 }

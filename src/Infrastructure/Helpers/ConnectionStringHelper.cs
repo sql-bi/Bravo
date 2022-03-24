@@ -1,15 +1,13 @@
-﻿using System.Data.OleDb;
-using System.Net;
-
-namespace Sqlbi.Bravo.Infrastructure.Helpers
+﻿namespace Sqlbi.Bravo.Infrastructure.Helpers
 {
+    using Sqlbi.Bravo.Infrastructure.Security;
+    using System.Data.OleDb;
+    using System.Net;
+
     internal static class ConnectionStringHelper
     {
-        //public const string ASAzureLinkProtocolScheme = "link://";
-        //public const string ASAzureProtocolScheme = "asazure://";
-        //public const string PBIDedicatedProtocolScheme = "pbidedicated://";
-        //public const string PBIPremiumProtocolScheme = "powerbi://";
-        public const string PBIDatasetProtocolScheme = "pbiazure";
+        // Connection string properties
+        // https://docs.microsoft.com/en-us/analysis-services/instances/connection-string-properties-analysis-services?view=asallproducts-allversions
 
         private const string PasswordKey = "Password";
         private const string ProviderKey = "Provider";
@@ -19,25 +17,37 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
         private const string PersistSecurityInfoKey = "Persist Security Info";
         //private const string UseEncryptionForDataKey = "Use Encryption for Data";
         private const string ApplicationNameKey = "Application Name";
+        private const string ConnectTimeoutKey = "Connect Timeout";
 
-        public static string BuildForPBIDesktop(IPEndPoint endpoint) => BuildForPBIDesktop(serverName: endpoint.ToString(), databaseName: null);
-
-        public static string BuildForPBIDesktop(string serverName, string? databaseName)
+        public static string BuildForPBIDesktop(IPEndPoint endPoint)
         {
+            var dataSource = endPoint.ToString();
+            var connectionString = BuildForPBIDesktop(dataSource);
+
+            return connectionString;
+        }
+
+        public static string BuildForPBIDesktop(string dataSource)
+        {
+            // PBIDesktop relies on a local Analysis Services instance that is binded to the loopback interface.
+            // Because of this, we are reducing the maximum amount of time the client attempts a connection before timing out.
+            var connectTimeout = 1;
+
             var builder = new OleDbConnectionStringBuilder()
             {
                 { ProviderKey, "MSOLAP" },
-                { DataSourceKey, serverName },
-                { InitialCatalogKey, databaseName! },
+                { DataSourceKey, dataSource },
+                //{ InitialCatalogKey, databaseName },
+                { ConnectTimeoutKey, connectTimeout },
                 { IntegratedSecurityKey, "SSPI" },
                 { PersistSecurityInfoKey, "True" },
-                { ApplicationNameKey, AppConstants.ApplicationInstanceUniqueName }
+                { ApplicationNameKey, AppEnvironment.ApplicationInstanceUniqueName }
             };
 
-            return builder.ConnectionString;
+            return builder.ConnectionString.ToProtectedString();
         }
 
-        public static string BuildForPBICloudDataset(string serverName, string databaseName, string? accessToken)
+        public static string BuildForPBICloudDataset(string serverName, string databaseName, string accessToken)
         {
             var builder = new OleDbConnectionStringBuilder()
             {
@@ -45,14 +55,14 @@ namespace Sqlbi.Bravo.Infrastructure.Helpers
                 { DataSourceKey, serverName },
                 { InitialCatalogKey, databaseName },
                 { IntegratedSecurityKey, "ClaimsToken" },
-                { PasswordKey, accessToken! }, // The Analysis Services client libraries automatically add the auth-scheme value "Bearer" to the access token
-                { ApplicationNameKey, AppConstants.ApplicationInstanceUniqueName }
+                { PasswordKey, accessToken }, // The Analysis Services client libraries automatically add the auth-scheme value "Bearer" to the access token
+                { ApplicationNameKey, AppEnvironment.ApplicationInstanceUniqueName }
 
                 //{ PersistSecurityInfoKey, "False" },
                 //{ UseEncryptionForDataKey, "True" },
             };
 
-            return builder.ConnectionString;
+            return builder.ConnectionString.ToProtectedString();
         }
     }
 }

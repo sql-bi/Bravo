@@ -3,4 +3,98 @@
     h1 {
         .icon-export-data;
     }
+    .scene-content {
+        .flexbox(flex-start, stretch, column);
+
+        .cols {
+            height: 100%;
+            width: 100%;
+            .flex(0 1 auto);
+            overflow: auto;
+            
+            .coll {
+                width: 50%;
+                margin-right: 30px;
+                .flex(1 1 auto);
+                .flexbox(flex-start, flex-start, column);
+            }
+            .colr {
+                width: calc(50% - 60px);
+                margin: 0 0 0 20px;
+
+            }
+        }
+
+        .table {
+            width:100%;
+        }
+
+        .toolbar {
+            width: 100%;
+            .flexbox(center);
+            .flex-wrap(wrap);
+            
+            margin: 0 0 30px 0;
+
+            .search {
+                margin: 5px 15px 5px 5px;
+                min-width:150px;
+                width: 50%;
+            }
+        }
+
+        .export-options {
+            margin-top: 30px;
+
+            .menu {
+                margin-bottom: 20px;
+                cursor: default !important;
+            }
+        }
+
+        .scene-action {
+            .flexbox(center, flex-end);
+            width: 100%;
+            padding-top: 20px;
+
+            .do-export {
+                //margin-top: 10px;
+                margin-left: auto;
+            }
+        }
+    }
+}
+
+.exported-data {
+
+    .success-message {
+        width: 100%;
+        max-width: 100% !important;
+        .flex-direction(row) !important;
+    }
+
+    .job-message {
+        max-width: 300px;
+        padding: 20px 60px;
+
+        .open-path {
+            font-size: 16px;
+        }
+    }
+    .table {
+        margin-top: 20px;
+
+        .job-status {
+            .icon-completed {
+                //opacity: 0.1;
+                color: @good-color;
+            }
+        }
+        .row-error {
+            .table-rows {
+                color: @error-color;
+            }
+
+        }
+    }
 }

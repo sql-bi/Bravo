@@ -15,17 +15,73 @@
   
 
   .row-highlighted, .row-contains-highlighted .column-icon {
-    background-color: @table-cell-highlight-back-color !important;
+    background-color: @warning-back-color !important;
 
-    .dark & {background-color: @table-cell-highlight-back-color-dark !important;}
+    .dark & {background-color: @warning-back-color-dark !important;}
 
     &:hover, &.active {
-      background-color: darken(@table-cell-highlight-back-color, 10%) !important;
+      background-color: darken(@warning-back-color, 10%) !important;
 
-      .dark & {background-color: lighten(@table-cell-highlight-back-color-dark, 10%) !important;}
+      .dark & {background-color: lighten(@warning-back-color-dark, 10%) !important;}
     }
 
+    .icon {
+      &:before {
+        color:@warning-color;
+        .dark & {color: @warning-color-dark;}
+      }
+    }
+  }
 
+  .row-hidden {
+    
+    .column-name {
+      opacity: 0.7;
+      .icon;
+
+      &:after {
+        content: "\e92e"; //icon-hidden
+        margin: 4px 2px 0 0;
+        font-size: 17px;
+        position: absolute;
+        right: 0;
+        background: @table-cell-back-color;
+        padding: 0 3px;
+
+        .dark & { background: @table-cell-back-color-dark}
+      }
+    }
+    &.row-highlighted .column-name:after {
+        background-color: @warning-back-color !important;
+        .dark & {background-color: lighten(@warning-back-color-dark, 10%) !important;}
+    }
+    &.row-error .column-name:after {
+      background-color: @error-back-color !important;
+      .dark & {background-color: @error-back-color-dark !important;}
+    }
+  }
+
+  .row-disabled {
+    opacity: 0.4;
+  }
+
+  .row-error, .row-contains-error .column-icon {
+    background-color: @error-back-color !important;
+
+    .dark & {background-color: @error-back-color-dark !important;}
+
+    &:hover, &.active {
+      background-color: darken(@error-back-color, 10%) !important;
+
+      .dark & {background-color: lighten(@error-back-color-dark, 10%) !important;}
+    }
+
+    .icon {
+      &:before {
+        color:@error-color;
+        .dark & {color: @error-color-dark;}
+      }
+    }
   }
 
   .row-aggregated {
@@ -49,36 +105,52 @@
   }
 
   .column-icon {
-    width: 38px !important; //IMPORTANT: this avoid showing horizontal scrollbar on Windows
-    .icon {
-      &:before {
-        font-size: 22px;
-        color:@warning-color;
-        .dark & {color: @warning-color-dark;}
-      }
-    }
+    width: 38px !important; //This avoid showing horizontal scrollbar (Tabulator bug)
+    vertical-align: middle;
   }
 
   .tabulator-headers .column-select {
     padding-left: 1px;
   }
   .column-select {
-    width: 38px !important; //IMPORTANT: this avoid showing horizontal scrollbar on Windows
+    width: 38px !important; //This avoid showing horizontal scrollbar (Tabulator bug)
+    min-width: 38px !important;
+  }
+
+  .tabulator-unselectable  .column-select input {
+    display: none;
+
   }
 
   .tree-toggle {
+    display: inline-block;
+    width: 26px;
+    text-align: center;
     &:before {
       font-size: 20px;
       font-weight: normal !important;
       vertical-align: text-top;
+      margin:0 !important;
+      cursor: pointer !important;
     }
   }
 
-  .tabulator-tree-level-0 .column-name {
-    font-weight:bold;
-    cursor: pointer;
-    
+  .item-type {
+    width: 30px;
+    display: inline-block;
   }
+
+  /*.tabulator-tree-level-0,
+  .tabulator-tree-level-1,
+  .tabulator-tree-level-2,
+  .tabulator-tree-level-3,
+  .tabulator-tree-level-4,
+  .tabulator-tree-level-5 {
+    .column-name {
+      //font-weight:bold;
+      cursor: pointer;
+    }
+  }*/
 }
 
 .tabulator[tabulator-layout="fitDataFill"] .tabulator-tableholder .tabulator-table {
@@ -117,6 +189,10 @@
   }
 }
 
+.tabulator.no-borders .tabulator-header {
+  border:none;
+}
+
 .tabulator .tabulator-header.tabulator-header-hidden {
   display: none;
 }
@@ -136,6 +212,10 @@
   &:last-child {
     border-right: 0;
   }
+}
+
+.tabulator.no-borders  .tabulator-header .tabulator-col {
+  border:none
 }
 
 .tabulator .tabulator-header .tabulator-col.tabulator-moving {
@@ -214,6 +294,10 @@
   margin-right: -1px;
 
   .dark & { border-color: @border-color-dark; }
+}
+
+.tabulator.no-borders .tabulator-header .tabulator-col.tabulator-col-group .tabulator-col-group-cols {
+  border: none
 }
 
 .tabulator .tabulator-header .tabulator-col:first-child .tabulator-col-resize-handle.prev {
@@ -371,13 +455,15 @@
   box-sizing: border-box;
   display: flex;
   align-items: center;
-  width: 100%;
+  width: 90%;
+  color: @notice-color;
+  padding:0 0 0 5px;
 }
 
-.tabulator .tabulator-tableholder .tabulator-placeholder[tabulator-render-mode="virtual"] {
+/*.tabulator .tabulator-tableholder .tabulator-placeholder[tabulator-render-mode="virtual"] {
   min-height: 100%;
   min-width: 100%;
-}
+}*/
 
 .tabulator .tabulator-tableholder .tabulator-placeholder span {
   display: inline-block;
@@ -538,6 +624,8 @@
   background-color: @table-cell-back-color;
   
   border-top: 1px solid @border-color;
+
+  .no-borders & { border: none}
   .dark & { 
     background-color: @table-cell-back-color-dark; 
     border-color: @border-color-dark;
@@ -559,21 +647,41 @@
   .dark & { background-color: @table-cell-back-color-alt-dark; }
 }
 
-.tabulator-row.tabulator-selectable:not(.tabulator-calcs):hover, /*.tabulator-row.tabulator-selected,*/ .tabulator-row.active {
+.tabulator-row:not(.tabulator-calcs):not(.row-inactive):hover,
+.tabulator-row.active {
   background-color: darken(@table-cell-back-color-alt, 5%);
   .dark & {background-color: lighten(@table-cell-back-color-alt-dark, 5%);}
+
+  &.row-hidden .column-name:after {
+    background-color: darken(@table-cell-back-color-alt, 5%);
+    .dark & {background-color: lighten(@table-cell-back-color-alt-dark, 5%);}
+  }
 }
 
 /*.tabulator-row.tabulator-selected, .tabulator-row.tabulator-selected:hover {
   background-color: darken(@table-cell-back-color-alt, 10%) !important;
   .dark & {background-color: lighten(@table-cell-back-color-alt-dark, 10%) !important;}
 }*/
+&.row-highlighted {
+    background-color: darken(@warning-back-color, 20%) !important;
+    .dark & {background-color: lighten(@warning-back-color-dark, 20%) !important;}
+  }
+
+  &.row-error {
+    background-color: darken(@error-back-color, 20%) !important;
+    .dark & {background-color: lighten(@error-back-color-dark, 20%) !important;}
+  }
 
 .tabulator-row.row-active, .tabulator-row.row-active:hover {
   .border-radius();
   border-color: transparent !important;
   background-color: @table-cell-active-back-color !important;
   .dark & {background-color: @table-cell-active-back-color-dark !important;}
+
+  &.row-hidden .column-name:after {
+    background-color: @table-cell-active-back-color !important;
+    .dark & {background-color: @table-cell-active-back-color-dark !important;}
+  }
 
   & + .tabulator-row {
     border-color: transparent !important;

@@ -1,18 +1,27 @@
-﻿using Sqlbi.Bravo.Infrastructure.Windows.Interop;
-using System.IO;
-using System.Net;
-using System.Runtime;
-
-namespace Sqlbi.Bravo.Infrastructure.Configuration
+﻿namespace Sqlbi.Bravo.Infrastructure.Configuration
 {
-    public static class StartupConfiguration
+    using Sqlbi.Bravo.Infrastructure.Helpers;
+    using Sqlbi.Bravo.Infrastructure.Windows.Interop;
+    using System;
+    using System.IO;
+    using System.Net;
+    using System.Runtime;
+    using System.Windows.Forms;
+
+    internal static class StartupConfiguration
     {
         public static void Configure()
         {
+            // required for System.Windows.Forms.TaskDialog dialogs
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
+
             ConfigureDirectories();
             ConfigureMulticoreJit();
             ConfigureSecurityProtocols();
-            ConfigureProcessDpiAware();
+            ConfigureProcessDpiAwareness();
+
+            WebView2Helper.EnsureRuntimeIsInstalled();
         }
 
         private static void ConfigureDirectories()
@@ -20,7 +29,8 @@ namespace Sqlbi.Bravo.Infrastructure.Configuration
 #if !DEBUG_WWWROOT
             Directory.SetCurrentDirectory(System.AppContext.BaseDirectory);
 #endif
-            Directory.CreateDirectory(AppConstants.ApplicationFolderLocalDataPath);
+            Directory.CreateDirectory(AppEnvironment.ApplicationDataPath);
+            Directory.CreateDirectory(AppEnvironment.ApplicationTempPath);
         }
 
         private static void ConfigureSecurityProtocols()
@@ -34,14 +44,37 @@ namespace Sqlbi.Bravo.Infrastructure.Configuration
             ServicePointManager.SecurityProtocol = excludeSsl | includeTls;
         }
 
-        private static void ConfigureProcessDpiAware()
+        private static void ConfigureProcessDpiAwareness()
         {
-            NativeMethods.SetProcessDPIAware();
+            var windows8Version = new Version(6, 3, 0); // win 8.1 (build number 9600) added support for per monitor dpi 
+            var windows10Version = new Version(10, 0, 15063); // Windows 10 version 1703 (build number 15063) added support for per monitor dpi v2
+            var environmentOSVersion = Environment.OSVersion.Version;
+
+            if (environmentOSVersion >= windows8Version)
+            {
+                if (environmentOSVersion >= windows10Version)
+                {
+                    _ = User32.SetProcessDpiAwarenessContext(User32.DPI_AWARENESS_CONTEXT.DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
+
+                    // Applications running at a DPI_AWARENESS_CONTEXT of DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2 automatically scale their non-client areas by default.
+                    // Here we don't need to call User32.EnableNonClientDpiScaling function.
+                }
+                else
+                {
+                    _ = User32.SetProcessDpiAwareness(User32.PROCESS_DPI_AWARENESS.PROCESS_PER_MONITOR_DPI_AWARE);
+                    // TODO: need to call User32.EnableNonClientDpiScaling function, see comment above
+                }
+            }
+            else
+            {
+                _ = User32.SetProcessDPIAware();
+                // TODO: need to call User32.EnableNonClientDpiScaling function, see comment above
+            }
         }
 
         private static void ConfigureMulticoreJit()
         {
-            ProfileOptimization.SetProfileRoot(AppConstants.ApplicationFolderLocalDataPath);
+            ProfileOptimization.SetProfileRoot(AppEnvironment.ApplicationDataPath);
             ProfileOptimization.StartProfile(".jitprofile");
         }
     }

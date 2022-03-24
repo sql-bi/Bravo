@@ -1,10 +1,10 @@
 ﻿namespace Sqlbi.Bravo.Infrastructure.Windows.Interop
 {
     // MS.Internal.Interop.WindowMessage
-    internal enum WindowMessage
+    internal enum WindowMessage: uint
     {
         //WM_NULL = 0,
-        //WM_CREATE = 1,
+        WM_CREATE = 1,
         //WM_DESTROY = 2,
         //WM_MOVE = 3,
         //WM_SIZE = 5,
@@ -75,11 +75,11 @@
         //WM_GETICON = 0x7F,
         //WM_SETICON = 0x80,
         //WM_NCCREATE = 129,
-        //WM_NCDESTROY = 130,
+        WM_NCDESTROY = 130,
         //WM_NCCALCSIZE = 131,
         //WM_NCHITTEST = 132,
         //WM_NCPAINT = 133,
-        //WM_NCACTIVATE = 134,
+        WM_NCACTIVATE = 134,
         //WM_GETDLGCODE = 135,
         //WM_SYNCPAINT = 136,
         //WM_MOUSEQUERY = 155,

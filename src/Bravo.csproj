@@ -9,7 +9,7 @@
     <Company>SQLBI</Company>
     <Authors>SQLBI</Authors>
     <Product>Bravo for Power BI</Product>
-    <Copyright>SQLBI Corp.</Copyright>
+    <Copyright>SQLBI Corporation</Copyright>
     <RootNamespace>Sqlbi.$(MSBuildProjectName.Replace(" ", "_"))</RootNamespace>
     <Nullable>enable</Nullable>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
@@ -28,6 +28,16 @@
     <IncludeOpenAPIAnalyzers>true</IncludeOpenAPIAnalyzers>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <RestoreSources>$(RestoreSources);./Assets/nupkgs;https://api.nuget.org/v3/index.json</RestoreSources>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- Don't change version here -->
+    <Version>0.0.0.999</Version>
+    <InformationalVersion>0.0.0.999-DEV</InformationalVersion>
+  </PropertyGroup>
+
   <ItemGroup>
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
       <_Parameter1>$(AssemblyName).Tests</_Parameter1>
@@ -35,15 +45,18 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Autoupdater.NET.Official" Version="1.7.0" />
+    <PackageReference Include="CsvHelper" Version="27.2.1" />
+    <PackageReference Include="Dax.Template" Version="0.1.0-beta12" />
     <PackageReference Include="Dax.Formatter" Version="1.0.0" />
-    <PackageReference Include="Dax.ViewModel" Version="1.2.0" />
-    <PackageReference Include="Dax.Vpax.NetCore" Version="1.2.0" />
-    <PackageReference Include="Hellang.Middleware.ProblemDetails" Version="6.3.0" />
+    <PackageReference Include="Dax.ViewModel" Version="1.2.2" />
+    <PackageReference Include="Dax.Vpax.NetCore" Version="1.2.2" />
+    <PackageReference Include="Hellang.Middleware.ProblemDetails" Version="6.4.0" />
+    <PackageReference Include="LargeXlsx" Version="1.5.0" />
+    <PackageReference Include="Macross.Json.Extensions" Version="2.2.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.ApplicationInsights" Version="2.20.0" />
-    <PackageReference Include="Microsoft.Identity.Client" Version="4.39.0" />
+    <PackageReference Include="Microsoft.Identity.Client" Version="4.40.0" />
     <PackageReference Include="Microsoft.Toolkit.Uwp.Notifications" Version="7.1.2" />
-    <PackageReference Include="Photino.NET" Version="2.1.10" />
+    <PackageReference Include="Photino.NET" Version="2.1.11" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.2.3" />
     <PackageReference Include="System.CommandLine" Version="2.0.0-beta1.21308.1" />
   </ItemGroup>
@@ -54,6 +67,21 @@
     </None>
     <None Remove="wwwroot\src\**;wwwroot\*.js;wwwroot\*.json" />
     <Content Remove="wwwroot\src\**;wwwroot\*.js;wwwroot\*.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Antlr4.Runtime">
+      <HintPath>Assets\lib\Antlr4.Runtime.dll</HintPath>
+    </Reference>
+    <Reference Include="TOMWrapper">
+      <HintPath>Assets\lib\TOMWrapper.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Update="Assets\ManageDates\Templates\*.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <PropertyGroup Condition="'$(Configuration)' == 'Debug_wwwroot'">

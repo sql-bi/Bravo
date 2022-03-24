@@ -1,0 +1,128 @@
+// main: main.less
+#diagnostics {
+    background: @back-color;
+
+    position: relative;
+    padding: 0;
+    font-family: @code-font;
+    font-size: 12px;
+    overflow: hidden;
+    
+    height: 100%;
+    width: 100%;
+
+    .dark & { 
+        background: @back-color-dark;
+    }
+
+    .toolbar {
+        background: @window-back-color;
+        font-size: 12px;
+        height: 30px;
+        padding: 0 3px 0 10px;
+        border-bottom: 1px solid @border-color;
+        .flexbox(center);
+
+        .dark & {
+            background-color: @window-back-color-dark;
+            border-color: @border-color-dark;
+        }
+
+        .title {
+            font-weight: bold;
+        }
+        .controls {
+            .flexbox(center);
+            margin-left: auto;
+
+            .ctrl {
+                &:before {
+                    font-size: 12px;
+                }
+            }
+        }
+        select {
+            font-family: @text-font;
+            font-size: 12px;
+            margin: 0 10px 0 0;
+            padding-top: 2px;
+            padding-bottom: 2px;
+        }
+    }
+    .log {
+        word-break: break-all;
+        display: block;
+        max-height: calc(100% - 30px);
+        overflow-y: auto;
+
+        .item {
+            padding:5px 20px;
+            border-bottom: 1px solid @border-color;
+            background-color: @table-cell-back-color;
+            color: @table-cell-color;
+            //user-select: text;
+            .flexbox();
+
+            &:hover {
+                background-color: darken(@table-cell-back-color, 2%);
+            }
+
+            &.errorMessage {
+                color: @error-color !important;
+                background-color: @error-back-color;
+            }
+
+            .dark & {
+                background-color: @table-cell-back-color-dark;
+                color: @table-cell-color-dark;
+                border-color: @border-color-dark;
+
+                &:hover {
+                    background-color: darken(@table-cell-back-color-dark, 5%);
+                } 
+
+                &.errorMessage {
+                    color: @error-color-dark !important;
+                    background-color: @error-back-color-dark;
+                }
+            }
+            .no {
+                min-width: 20px;
+                padding-right: 5px;
+                color: @notice-color;
+
+                .dark & {
+                    color: @notice-color-dark;
+                }
+            }
+            .message {
+                .flex(1 1 100%);
+                .flexbox();
+                .flex-wrap(wrap);
+
+                .objs {
+                    .flexbox();
+
+                    & > .json-formatter-row {
+                        margin-left: 6px;
+                    }
+                }
+            }
+
+            .timestamp {
+                width: 100px;
+                white-space: nowrap;
+                margin-left: auto;
+                text-align: right;
+
+                color: @notice-color;
+
+                .dark & {
+                    color: @notice-color-dark;
+                }
+            }
+
+        }
+    }
+    
+}

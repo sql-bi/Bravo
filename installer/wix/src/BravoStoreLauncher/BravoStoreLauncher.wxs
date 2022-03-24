@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
 
-  <?define ProductVersion=!(bind.FileVersion.app.exe) ?>
+  <?define ProductVersion=$(var.Version) ?>
+  <?define ProductBuild=!(bind.fileVersion.app.exe) ?>
   <?define ProductManufacturer = "SQLBI" ?>
   <?define AppUrlInfoAbout = "https://github.com/sql-bi/bravo" ?>
   <?define AppInstallFolder = "SQLBI" ?>
@@ -20,7 +21,7 @@
     <?define Win64 = "no" ?>
   <?endif ?>
   
-  <Product Id="*" Name="$(var.ProductName)" Language="!(loc.ProductLanguage)" Version="$(var.ProductVersion)" Manufacturer="$(var.ProductManufacturer)" UpgradeCode="{A55F72BA-6477-4DAF-999C-13E056F1678E}">
+  <Product Id="*" Name="$(var.ProductName)" Language="!(loc.ProductLanguage)" Version="$(var.ProductBuild)" Manufacturer="$(var.ProductManufacturer)" UpgradeCode="{A55F72BA-6477-4DAF-999C-13E056F1678E}">
 
     <Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" Manufacturer="$(var.ProductManufacturer)" Description="!(loc.PackageDescription)" Comments="!(loc.PackageComments)" />
     <Binary Id="CustomActionBinary" SourceFile="..\assets\Bravo.Installer.Wix.CA.dll" />
@@ -44,13 +45,13 @@
     <Property Id="ARPURLINFOABOUT">$(var.AppUrlInfoAbout)</Property>
     <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
     
-    <CustomAction Id="SetPropertyValuesRegisterExternalTool" Property="RegisterExternalTool" Value="CUSTOMDATAPRODUCTNAME=$(var.AppName);CUSTOMDATAPRODUCTVERSION=$(var.ProductVersion);CUSTOMDATAPRODUCTEXECUTABLEPATH=[INSTALLFOLDER]$(var.AppExecutableName);CUSTOMDATAPBITOOLPATH=[POWERBIEXTERNALTOOLSFOLDER]$(var.PbitoolName)" />
+    <CustomAction Id="SetPropertyValuesRegisterExternalTool" Property="RegisterExternalTool" Value="PRODUCTNAME=$(var.AppName);PRODUCTVERSION=$(var.ProductVersion);PRODUCTBUILD=$(var.ProductBuild);PRODUCTEXECUTABLEPATH=[INSTALLFOLDER]$(var.AppExecutableName);PBITOOLPATH=[POWERBIEXTERNALTOOLSFOLDER]$(var.PbitoolName)" />
     <CustomAction Id="RegisterExternalTool" BinaryKey="CustomActionBinary" DllEntry="RegisterExternalTool" Execute="deferred" Impersonate="no" />
-    <CustomAction Id="SetPropertyValuesAfterInstall" Property="AfterInstall" Value="CUSTOMDATAPRODUCTNAME=$(var.AppName);CUSTOMDATAPRODUCTVERSION=$(var.ProductVersion)" />
+    <CustomAction Id="SetPropertyValuesAfterInstall" Property="AfterInstall" Value="PRODUCTNAME=$(var.AppName);PRODUCTVERSION=$(var.ProductVersion);PRODUCTBUILD=$(var.ProductBuild)" />
     <CustomAction Id="AfterInstall" BinaryKey="CustomActionBinary" DllEntry="AfterInstall" Execute="deferred" Impersonate="no" />
-    <CustomAction Id="SetPropertyValuesUnregisterExternalTool" Property="UnregisterExternalTool" Value="CUSTOMDATAPRODUCTNAME=$(var.AppName);CUSTOMDATAPRODUCTVERSION=$(var.ProductVersion);CUSTOMDATAPRODUCTEXECUTABLEPATH=[INSTALLFOLDER]$(var.AppExecutableName);CUSTOMDATAPBITOOLPATH=[POWERBIEXTERNALTOOLSFOLDER]$(var.PbitoolName)" />
+    <CustomAction Id="SetPropertyValuesUnregisterExternalTool" Property="UnregisterExternalTool" Value="PRODUCTNAME=$(var.AppName);PRODUCTVERSION=$(var.ProductVersion);PRODUCTBUILD=$(var.ProductBuild);PRODUCTEXECUTABLEPATH=[INSTALLFOLDER]$(var.AppExecutableName);PBITOOLPATH=[POWERBIEXTERNALTOOLSFOLDER]$(var.PbitoolName)" />
     <CustomAction Id="UnregisterExternalTool" BinaryKey="CustomActionBinary" DllEntry="UnregisterExternalTool" Execute="deferred" Impersonate="no" />
-    <CustomAction Id="SetPropertyValuesAfterUninstall" Property="AfterUninstall" Value="CUSTOMDATAPRODUCTNAME=$(var.AppName);CUSTOMDATAPRODUCTVERSION=$(var.ProductVersion)" />
+    <CustomAction Id="SetPropertyValuesAfterUninstall" Property="AfterUninstall" Value="PRODUCTNAME=$(var.AppName);PRODUCTVERSION=$(var.ProductVersion);PRODUCTBUILD=$(var.ProductBuild)" />
     <CustomAction Id="AfterUninstall" BinaryKey="CustomActionBinary" DllEntry="AfterUninstall" Execute="deferred" Impersonate="no" />
 
     <InstallExecuteSequence>
@@ -87,7 +88,7 @@
   <Fragment>
     <DirectoryRef Id="INSTALLFOLDER">
       <Component Id="app.exe" Guid="{E880F50A-6C3B-4EB6-B639-752803CEF497}" Win64="$(var.Win64)">
-        <File Id="app.exe" Name="$(var.AppExecutableName)" Source="$(var.PublishFolder)\$(var.AppExecutableName)" Checksum="yes" KeyPath="yes" />
+        <File Id="app.exe" Name="$(var.AppExecutableName)" Source="$(var.PublishFolder)\$(var.AppExecutableName)" Assembly=".net" Checksum="yes" KeyPath="yes" />
         <RemoveFile Id="REMOVEALL" Directory="INSTALLFOLDER" Name="*.*" On="both" />
         <RegistryValue Root="HKLM" Key="Software\[Manufacturer]\$(var.AppName)" Name="installFolder" Value="[INSTALLFOLDER]" Type="string" />
       </Component>

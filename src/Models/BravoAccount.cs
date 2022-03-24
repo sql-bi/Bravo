@@ -1,7 +1,7 @@
-﻿using System.Text.Json.Serialization;
-
-namespace Sqlbi.Bravo.Models
+﻿namespace Sqlbi.Bravo.Models
 {
+    using System.Text.Json.Serialization;
+
     public class BravoAccount
     {
         /// <summary>
@@ -21,11 +21,5 @@ namespace Sqlbi.Bravo.Models
         /// </summary>
         [JsonPropertyName("username")]
         public string? Username { get; set; }
-
-        /// <summary>
-        /// User profile picture as base64 encoded image [data:image/jpeg;base64,...]
-        /// </summary>
-        [JsonPropertyName("avatar")]
-        public string? Avatar { get; set; }
     }
 }

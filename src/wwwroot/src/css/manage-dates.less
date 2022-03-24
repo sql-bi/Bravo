@@ -3,4 +3,307 @@
     h1 {
         .icon-manage-dates;
     }
+    
+    .scene-content {
+        .flexbox(flex-start, stretch, column);
+
+        .cols {
+            height: 100%;
+            width: 100%;
+            .flex(0 1 auto);
+            overflow: hidden;
+            margin-top: 35px;
+            
+            .coll {
+                width: 300px;
+                height: 100%;
+                margin-right: 20px;
+                .flex(0 1 auto);
+                .flexbox(flex-start, flex-start, column);
+            }
+            .colr {
+                .flex(1 1 auto);
+                margin: 0 0 0 20px;
+                width: calc(100% - 350px);
+                height: 100%;
+
+                .date-config, #date-config-menu { 
+                    height: 100%;
+                }
+                
+            }
+        }
+        .menu {
+            margin-bottom: 30px;
+        }
+        .menu-body {
+            height: calc(100% - 72px);
+            overflow: auto;
+        }
+
+        .item-body {
+            height: 100%;
+        }
+       
+        .model-check {
+            position: relative;
+            padding: 15px;
+            width: calc(100% - 32px);
+            height: calc(100% - 30px);
+            background: @window-back-color-alt;
+            border: 1px solid @border-color;
+            overflow: auto;
+            .border-radius();
+
+            .dark & { 
+                background: @window-back-color-dark; 
+                border-color: @border-color-dark;
+            }
+
+            .status {
+                padding: 0 10px;
+                font-size: 15px;
+                line-height: 1.5;
+
+                .hero {
+                    font-size: 18px;
+                    line-height: 1.4;
+                    margin-bottom: 20px;
+                }
+
+                .status-incompatible {
+                    color: @bad-color;
+                }
+                .status-ok, .status-compatible {
+                    color: @good-color;
+                }
+
+                .icon {
+                    text-align: center;
+                    margin: 30px 0 20px 0;
+                    &:before {
+                        
+                        font-size: 80px;
+                    }
+                }
+            }
+        }
+
+        .menu-body-desc {
+            margin: 0 0 20px 0;
+            font-size: 16px;
+            line-height: 1.4;
+            color: @notice-color;
+            max-width: 800px;
+
+            .dark & {
+                color: @notice-color-dark
+            }
+        }
+        .gutter-vertical {
+            width: 100%;
+            background-color: @back-color;
+            .dark & {
+                background-color: @back-color-dark
+            }
+        }
+        .sample-data {
+            width: calc(100% - 21px);
+            overflow: hidden;
+            position: relative;
+            padding: 8px 6px 8px 15px;
+
+            .border-radius();
+            background-color: @window-back-color-alt;
+            border: 1px solid @border-color;
+            .dark & {
+                background-color: @window-back-color-dark;
+                border-color: @border-color-dark;
+            }
+
+            .panel-title {
+                width: 100%;
+                .flexbox(center);
+          
+                .toggle-table {
+                    font-size: .8em;
+                    margin-left: auto;
+                    text-align: right;
+                }
+            }
+
+            .table {
+                overflow: hidden;
+                position: relative;
+                height: calc(100% - 30px);
+                margin-top: 5px;
+                width: calc(100% - 8px);
+                font-size: 13px;
+
+                .tabulator-header {
+                    background: none !important;
+                }
+            }
+
+            .error {
+                color: @notice-color;
+                margin-top: -15px;
+
+                .dark & { color: @notice-color-dark; }
+            }
+            
+        }
+        .scene-action {
+            .flexbox(center, flex-end);
+            margin-top: 30px;
+            width: 100%;
+
+            .do-proceed {
+                //margin-top: 10px;
+                margin-left: auto;
+            }
+        }
+    }
+
+    /*#onlytablescolumns {
+        height: calc(100vh - 542px);
+    }
+    #targetmeasures {
+        height: calc(100vh - 552px);
+    }*/
+
+}
+
+.manage-dates-preview {
+    h1 {
+        .icon-manage-dates;
+    }
+
+    .scene-content {
+        .flexbox(flex-start, stretch, column);
+
+        .cols {
+            height: 100%;
+            width: 100%;
+            .flex(0 1 auto);
+            overflow: auto;
+            margin-top: 35px;
+            padding-bottom: 30px;
+            
+            .coll {
+                height: 100%;
+                .flex(0 1 auto);
+                .flexbox(flex-start, flex-start, column);
+            }
+            .gutter {
+                background-color: @back-color;
+                .dark & {
+                    background-color: @back-color-dark;
+                }
+            }
+            .colr {
+                .flex(1 1 auto);
+                height: 100%;
+
+                background: url("@{images}/preview-light.svg") no-repeat center;
+
+                .dark & {
+                    background-image: url("@{images}/preview-dark.svg");
+                }
+            }
+        }
+        .menu-body {
+            padding: 30px 0 0 0;
+            height: calc(100% - 72px);
+        }
+
+        .changes-browser {
+            width: 100%;
+            height: 100%;
+
+            //.row-status-Added { color: @change-a-color }
+            //.row-status-Modified { color: @change-m-color }
+            .row-status-Deleted { color: @change-d-color }
+
+            .change-attribute {
+                font-size: 12px;
+                font-weight: bold;
+                width: 22px !important; //This avoid showing horizontal scrollbar (Tabulator bug)
+                
+                .status-Added { color: @change-a-color }
+                .status-Modified { color: @change-m-color }
+                .status-Deleted { color: @change-d-color }
+            }
+        }
+
+        .preview-pane-content {
+            height: 100%;
+        }
+        #preview-menu, #tree-menu {
+            height: 100%;
+            width: 100%;
+        }
+        .item-body {
+            height: 100%;
+        }
+        #body-sample-preview {
+            overflow: hidden;
+            padding:8px;
+            .border-radius();
+            background-color: @window-back-color-alt;
+            border: 1px solid @border-color;
+            .dark & {
+                background-color: @window-back-color-dark;
+                border-color: @border-color-dark;
+            }
+            
+            .table-preview {
+                height: 100%;
+                min-width: 100%;
+                font-size: 13px;
+
+                .tabulator-header {
+                    background: none !important;
+                }
+            }
+        }
+
+        .expression-preview {
+            height: calc(100% - 10px);
+        }
+        
+        .scene-action {
+            .flexbox(center, flex-end);
+            width: 100%;
+            margin: 20px 0 0 0;
+
+            .backup-reminder {
+                padding: 0 20px 0 0;
+                font-size: 15px;
+                line-height: 1.4;
+                color: @notice-color;
+    
+                .flexbox(center);
+                .icon{
+                    
+                    &:before {
+                        font-size: 38px;
+                        margin-right: 10px;
+                    }
+                }
+                p {
+                    margin:0
+                }
+    
+                .dark & { 
+                    color: @notice-color-dark;
+                }
+            }
+
+            .do-proceed {
+                //margin-top: 10px;
+                margin-left: auto;
+            }
+        }
+    }
 }

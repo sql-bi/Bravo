@@ -5,7 +5,7 @@
 */
 
 import { Dispatchable } from '../helpers/dispatchable';
-import { host, optionsController } from '../main';
+import { host, optionsController, telemetry } from '../main';
 
 export enum ThemeType {
     Auto = "Auto",
@@ -37,10 +37,10 @@ export class ThemeController extends Dispatchable {
         return this.appliedTheme == ThemeType.Light;
     }
     
-    constructor(initialTheme = ThemeType.Auto) {
+    constructor() {
         super();
         
-        this.theme = initialTheme;
+        this.theme = optionsController.options.theme;
 
         if (window.matchMedia) {
             const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
@@ -55,9 +55,12 @@ export class ThemeController extends Dispatchable {
             this.deviceTheme = ThemeType.Light;
         }
 
-        optionsController.on("change", (changedOptions: any) => {
-            if ("theme" in changedOptions)
-                this.apply(changedOptions.theme);
+        optionsController.on("theme.change", (changedOptions: any) => {
+
+            host.changeTheme(changedOptions.theme);
+            this.apply(changedOptions.theme);
+
+            telemetry.track("Theme", { theme: changedOptions.theme });
         });
 
         this.apply(this.theme);
@@ -67,6 +70,8 @@ export class ThemeController extends Dispatchable {
         optionsController.update("theme", theme);
         host.changeTheme(theme);
         this.apply(theme);
+
+        telemetry.track("Theme", { theme: theme });
     }
 
     apply(theme?: ThemeType) {

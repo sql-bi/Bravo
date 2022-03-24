@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
 
-  <?define ProductVersion=!(bind.FileVersion.app.exe) ?>
+  <?define ProductVersion=$(var.Version) ?>
+  <?define ProductBuild=!(bind.fileVersion.app.exe) ?>
   <?define ProductManufacturer = "SQLBI" ?>
   <?define AppUrlInfoAbout = "https://github.com/sql-bi/bravo" ?>
   <?define AppInstallFolder = "SQLBI" ?>
@@ -20,7 +21,7 @@
     <?define Win64 = "no" ?>
   <?endif ?>
   
-  <Product Id="*" Name="$(var.ProductName)" Language="!(loc.ProductLanguage)" Version="$(var.ProductVersion)" Manufacturer="$(var.ProductManufacturer)" UpgradeCode="{888BDB48-B16A-4D9A-8FE6-0206897B1162}">
+  <Product Id="*" Name="$(var.ProductName)" Language="!(loc.ProductLanguage)" Version="$(var.ProductBuild)" Manufacturer="$(var.ProductManufacturer)" UpgradeCode="{888BDB48-B16A-4D9A-8FE6-0206897B1162}">
 
     <Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" Manufacturer="$(var.ProductManufacturer)" Description="!(loc.PackageDescription)" Comments="!(loc.PackageComments)"  />
     <Binary Id="CustomActionBinary" SourceFile="..\assets\Bravo.Installer.Wix.CA.dll" />
@@ -40,8 +41,8 @@
     <UIRef Id="Custom_WixUI_InstallDir" />
     <UIRef Id="WixUI_ErrorProgressText" />
     
-    <WixVariable Id="WixUIDialogBmp" Value="..\assets\background.bmp" />
-    <WixVariable Id="WixUIBannerBmp" Value="..\assets\banner.bmp" />
+    <WixVariable Id="WixUIDialogBmp" Value="..\assets\background.png" />
+    <WixVariable Id="WixUIBannerBmp" Value="..\assets\banner.png" />
     <WixVariable Id="WixUILicenseRtf" Value="..\assets\license.rtf" />
      
     <Property Id="ARPPRODUCTICON">app.ico</Property>
@@ -54,14 +55,14 @@
     <Property Id="INSTALLERTELEMETRYENABLEDUNINSTALL" Secure="yes">
       <RegistrySearch Id="installerTelemetryEnabled" Root="HKLM" Key="Software\[Manufacturer]\$(var.AppName)" Name="installerTelemetryEnabled" Type="raw" />
     </Property>
-    
-    <CustomAction Id="SetPropertyValuesRegisterExternalTool" Property="RegisterExternalTool" Value="CUSTOMDATAPRODUCTNAME=$(var.AppName);CUSTOMDATAPRODUCTVERSION=>$(var.ProductVersion);INSTALLERTELEMETRYENABLED=[INSTALLERTELEMETRYENABLED];CUSTOMDATAPRODUCTEXECUTABLEPATH=[INSTALLFOLDER]$(var.AppExecutableName);CUSTOMDATAPBITOOLPATH=[POWERBIEXTERNALTOOLSFOLDER]$(var.PbitoolName)" />
+
+    <CustomAction Id="SetPropertyValuesRegisterExternalTool" Property="RegisterExternalTool" Value="PRODUCTNAME=$(var.AppName);PRODUCTVERSION=$(var.ProductVersion);PRODUCTBUILD=$(var.ProductBuild);INSTALLERTELEMETRYENABLED=[INSTALLERTELEMETRYENABLED];PRODUCTEXECUTABLEPATH=[INSTALLFOLDER]$(var.AppExecutableName);PBITOOLPATH=[POWERBIEXTERNALTOOLSFOLDER]$(var.PbitoolName)" />
     <CustomAction Id="RegisterExternalTool" BinaryKey="CustomActionBinary" DllEntry="RegisterExternalTool" Execute="deferred" Impersonate="no" />
-    <CustomAction Id="SetPropertyValuesAfterInstall" Property="AfterInstall" Value="CUSTOMDATAPRODUCTNAME=$(var.AppName);CUSTOMDATAPRODUCTVERSION=>$(var.ProductVersion);CUSTOMDATAINSTALLERTELEMETRYENABLED=[INSTALLERTELEMETRYENABLED]" />
+    <CustomAction Id="SetPropertyValuesAfterInstall" Property="AfterInstall" Value="PRODUCTNAME=$(var.AppName);PRODUCTVERSION=$(var.ProductVersion);PRODUCTBUILD=$(var.ProductBuild);INSTALLERTELEMETRYENABLED=[INSTALLERTELEMETRYENABLED]" />
     <CustomAction Id="AfterInstall" BinaryKey="CustomActionBinary" DllEntry="AfterInstall" Execute="deferred" Impersonate="no" />
-    <CustomAction Id="SetPropertyValuesUnregisterExternalTool" Property="UnregisterExternalTool" Value="CUSTOMDATAPRODUCTNAME=$(var.AppName);CUSTOMDATAPRODUCTVERSION=>$(var.ProductVersion);INSTALLERTELEMETRYENABLED=[INSTALLERTELEMETRYENABLED];CUSTOMDATAPRODUCTEXECUTABLEPATH=[INSTALLFOLDER]$(var.AppExecutableName);CUSTOMDATAPBITOOLPATH=[POWERBIEXTERNALTOOLSFOLDER]$(var.PbitoolName)" />
+    <CustomAction Id="SetPropertyValuesUnregisterExternalTool" Property="UnregisterExternalTool" Value="PRODUCTNAME=$(var.AppName);PRODUCTVERSION=$(var.ProductVersion);PRODUCTBUILD=$(var.ProductBuild);INSTALLERTELEMETRYENABLED=[INSTALLERTELEMETRYENABLED];PRODUCTEXECUTABLEPATH=[INSTALLFOLDER]$(var.AppExecutableName);PBITOOLPATH=[POWERBIEXTERNALTOOLSFOLDER]$(var.PbitoolName)" />
     <CustomAction Id="UnregisterExternalTool" BinaryKey="CustomActionBinary" DllEntry="UnregisterExternalTool" Execute="deferred" Impersonate="no" />
-    <CustomAction Id="SetPropertyValuesAfterUninstall" Property="AfterUninstall" Value="CUSTOMDATAPRODUCTNAME=$(var.AppName);CUSTOMDATAPRODUCTVERSION=>$(var.ProductVersion);CUSTOMDATAINSTALLERTELEMETRYENABLED=[INSTALLERTELEMETRYENABLEDUNINSTALL]" />
+    <CustomAction Id="SetPropertyValuesAfterUninstall" Property="AfterUninstall" Value="PRODUCTNAME=$(var.AppName);PRODUCTVERSION=$(var.ProductVersion);PRODUCTBUILD=$(var.ProductBuild);INSTALLERTELEMETRYENABLED=[INSTALLERTELEMETRYENABLEDUNINSTALL]" />
     <CustomAction Id="AfterUninstall" BinaryKey="CustomActionBinary" DllEntry="AfterUninstall" Execute="deferred" Impersonate="no" />
 
     <InstallExecuteSequence>

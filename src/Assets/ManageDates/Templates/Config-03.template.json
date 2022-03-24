@@ -1,0 +1,62 @@
+{
+  "Description": "Custom calendar",
+  "Templates": [
+    {
+      "Class": "HolidaysDefinitionTable",
+      "Table": "HolidaysDefinition",
+      "Template": "HolidaysDefinition.json",
+      "IsHidden": true
+    },
+    {
+      "Class": "HolidaysTable",
+      "Table": "Holidays",
+      "Template": null
+    },
+    {
+      "Class": "CustomDateTable",
+      "Table": "Date",
+      "ReferenceTable": "DateAutoTemplate",
+      "Template": "DateTemplate-03.json",
+      "LocalizationFiles": []
+    },
+    {
+      "Class": "MeasuresTemplate",
+      "Table": null,
+      "Template": "TimeIntelligence-03.json",
+      "Properties": {
+        "DisplayFolderRule": "Time intelligence\\@_MEASURE_@\\@_TEMPLATEFOLDER_@",
+        "_DisplayFolderRule": "Time intelligence\\@_TEMPLATEFOLDER_@\\@_TEMPLATE_@",
+        "__DisplayFolderRule": "Time intelligence\\@_TEMPLATEFOLDER_@\\@_MEASURE_@"
+      },
+      "_comment": "TargetMeasures can override the default setting"
+    }
+  ],
+  "IsoTranslation": null,
+  "IsoFormat": null,
+  "LocalizationFiles": [
+    "DateLocalization-03.json"
+  ],
+  "OnlyTablesColumns": [],
+  "ExceptTablesColumns": [],
+  "FirstYearMin": null,
+  "FirstYearMax": null,
+  "LastYearMin": null,
+  "LastYearMax": null,
+  "AutoScan": "Full",
+  "DefaultVariables": {
+    "__FirstFiscalMonth": "4",
+    "__FirstDayOfWeek": "0"
+  },
+  "IsoCountry": "US",
+  "InLieuOfPrefix": "(in lieu of ",
+  "InLieuOfSuffix": ")",
+  "WorkingDays": "{ 2, 3, 4, 5, 6 }",
+  "HolidaysDefinitionTable": "HolidaysDefinition",
+  "HolidaysReference": {
+    "TableName": "Holidays",
+    "DateColumnName": "Holiday Date",
+    "HolidayColumnName": "Holiday Name"
+  },
+  "AutoNaming": "Prefix",
+  "TargetMeasures": []
+}

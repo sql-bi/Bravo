@@ -1,11 +1,11 @@
-﻿using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Options;
-using System;
-using System.IO;
-
-namespace Sqlbi.Bravo.Infrastructure.Configuration.Options
+﻿namespace Sqlbi.Bravo.Infrastructure.Configuration.Options
 {
+    using Microsoft.AspNetCore.Hosting;
+    using Microsoft.Extensions.Configuration;
+    using Microsoft.Extensions.Options;
+    using System;
+    using System.IO;
+
     internal class WritableOptions<T> : IWritableOptions<T> where T : class, new()
     {
         private readonly IWebHostEnvironment _environment;
@@ -38,7 +38,7 @@ namespace Sqlbi.Bravo.Infrastructure.Configuration.Options
             if (fileInfo.Exists)
             {
                 var fileContent = File.ReadAllText(filePath);
-                var fileJObject = Newtonsoft.Json.JsonConvert.DeserializeObject<Newtonsoft.Json.Linq.JObject>(fileContent) ?? throw new BravoUnexpectedException($"Deserialized object is null");
+                var fileJObject = Newtonsoft.Json.JsonConvert.DeserializeObject<Newtonsoft.Json.Linq.JObject>(fileContent); BravoUnexpectedException.ThrowIfNull(fileJObject);
 
                 var sectionObject = fileJObject.TryGetValue(_section, out var section)
                     ? Newtonsoft.Json.JsonConvert.DeserializeObject<T>(section.ToString())
