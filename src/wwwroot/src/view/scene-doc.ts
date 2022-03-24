@@ -8,7 +8,7 @@ import { Doc, DocType } from '../model/doc';
 import { strings } from '../model/strings';
 import { Scene } from './scene';
 import { i18n } from '../model/i18n'; 
-import { telemetry } from '../main';
+import { host, telemetry } from '../main';
 import { Page, PageType } from '../controllers/page';
 import { UnsupportedScene } from './scene-unsupported';
 import { NavigatorScene } from './scene-navigator';
@@ -92,7 +92,8 @@ export abstract class DocScene extends NavigatorScene {
 
                 telemetry.track("Help");
 
-                //TODO
+                //TODO Open the documentation website
+                host.navigateTo("https://bravo.bi");
             });
         }
     }
