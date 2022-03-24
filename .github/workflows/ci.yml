@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-ant-test:
+  build-and-test:
 
     runs-on: windows-latest
 
