@@ -110,11 +110,13 @@ export enum WeeklyType {
     Nearest = 1,
 }
 
-export let DateISOCOuntries: string[][] = [
+export let HolidaysCountries: string[][] = [
     ["AU", "Australia"],
     ["AT", "Austria"],
     ["BE", "Belgium"],
+    ["BR", "Brazil"],
     ["CA", "Canada"],
+    ["DK", "Denmark"],
     ["FR", "France"],
     ["DE", "Germany"],
     ["IT", "Italy"],
