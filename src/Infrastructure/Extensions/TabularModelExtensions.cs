@@ -3,6 +3,7 @@
     using Microsoft.AnalysisServices;
     using Sqlbi.Bravo.Infrastructure.Helpers;
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using TOM = Microsoft.AnalysisServices.Tabular;
 
@@ -58,11 +59,23 @@
         }
     }
 
-    internal static class ModelExtensions
+    internal static class TableCollectionExtensions
     {
-        public static TOM.Measure? Find(this TOM.Model? model, string tableName, string measureName)
+        public static IEnumerable<TOM.Table> FindByAnnotation(this IEnumerable<TOM.Table> tables, string annotationName, string annotationValue)
         {
-            var table = model?.Tables.Find(tableName);
+            foreach (var table in tables)
+            {
+                var annotation = table.Annotations.Find(annotationName);
+                if (annotation?.Value.Equals(annotationValue) == true)
+                {
+                    yield return table;
+                }
+            }
+        }
+
+        public static TOM.Measure? FindMeasure(this TOM.TableCollection tables, string tableName, string measureName)
+        {
+            var table = tables.Find(tableName);
             if (table is not null)
             {
                 var measure = table.Measures.Find(measureName);

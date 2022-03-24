@@ -74,7 +74,7 @@
             if (tomTable is not null)
             {
                 table.IsHidden = tomTable.IsHidden;
-                table.IsManageDates = tomTable.Annotations.Contains(DaxTemplateManager.SqlbiDaxTemplateAnnotation);
+                table.IsManageDates = tomTable.Annotations.Contains(DaxTemplateManager.SqlbiTemplateAnnotation);
             }
 
             if (vpaTable.ColumnsNumber == 0L || (vpaTable.ColumnsNumber == 1L && vpaTable.Columns.Single().IsRowNumber))
