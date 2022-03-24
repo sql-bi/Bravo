@@ -5,6 +5,7 @@
     using Dax.Template.Tables;
     using Sqlbi.Bravo.Infrastructure;
     using Sqlbi.Bravo.Infrastructure.Extensions;
+    using Sqlbi.Bravo.Infrastructure.Services.ManageDates;
     using System;
     using System.ComponentModel.DataAnnotations;
     using System.Diagnostics;
@@ -351,11 +352,52 @@
             if (property is not null && property is TOM.JsonExtendedProperty jsonProperty)
             {
                 var configuration = JsonSerializer.Deserialize<DateConfiguration>(jsonProperty.Value, ExtendedPropertyJsonOptions);
-
                 if (configuration is not null)
+                {
                     configuration.IsCurrent = true;
 
-                return configuration;
+                    // Update the configuration.[Date/Holidays]TableName properties from the connected TOM Model by searching based on annotations
+                    // This ensures that the names in the configuration are correct even if the table has been renamed manually or with another tool
+                    // We do not update the name property in case more than one table of each type is detected because the Dax.Template library will raise an exception 
+
+                    if (configuration.DateAvailable && configuration.DateEnabled)
+                    {
+                        // search all tables where annotations 'SQLBI_Template = Dates'
+                        var datesTemplateTables = model.Tables.FindByAnnotation(DaxTemplateManager.SqlbiTemplateAnnotation, DaxTemplateManager.SqlbiTemplateAnnotationDatesValue).ToArray();
+                        if (datesTemplateTables.Length > 0)
+                        {
+                            // filter where annotation 'SQLBI_TemplateTable = Date'
+                            var datesTemplateDateTables = datesTemplateTables.FindByAnnotation(DaxTemplateManager.SqlbiTemplateTableAnnotation, DaxTemplateManager.SqlbiTemplateTableAnnotationDateValue).Take(2).ToArray();
+                            if (datesTemplateDateTables.Length == 1)
+                                configuration.DateTableName = datesTemplateDateTables[0].Name;
+
+                            // filter where annotation 'SQLBI_TemplateTable = DateAutoTemplate'
+                            var datesTemplateDateReferenceTables = datesTemplateTables.FindByAnnotation(DaxTemplateManager.SqlbiTemplateTableAnnotation, DaxTemplateManager.SqlbiTemplateTableAnnotationDateAutoTemplateValue).Take(2).ToArray();
+                            if (datesTemplateDateReferenceTables.Length == 1)
+                                configuration.DateReferenceTableName = datesTemplateDateReferenceTables[0].Name;
+                        }
+                    }
+
+                    if (configuration.HolidaysAvailable && configuration.HolidaysEnabled)
+                    {
+                        // search all tables where annotation 'SQLBI_Template = Holidays'
+                        var holidaysTemplateTables = model.Tables.FindByAnnotation(DaxTemplateManager.SqlbiTemplateAnnotation, DaxTemplateManager.SqlbiTemplateAnnotationHolidaysValue).ToArray();
+                        if (holidaysTemplateTables.Length > 0)
+                        {
+                            // filter where annotation 'SQLBI_TemplateTable = Holidays'
+                            var holidaysTemplateHolidaysTables = holidaysTemplateTables.FindByAnnotation(DaxTemplateManager.SqlbiTemplateTableAnnotation, DaxTemplateManager.SqlbiTemplateTableAnnotationHolidaysValue).Take(2).ToArray();
+                            if (holidaysTemplateHolidaysTables.Length == 1)
+                                configuration.HolidaysTableName = holidaysTemplateHolidaysTables[0].Name;
+
+                            // filter where annotation 'SQLBI_TemplateTable = HolidaysDefinition'
+                            var holidaysTemplateHolidaysDefinitionTables = holidaysTemplateTables.FindByAnnotation(DaxTemplateManager.SqlbiTemplateTableAnnotation, DaxTemplateManager.SqlbiTemplateTableAnnotationHolidaysDefinitionValue).Take(2).ToArray();
+                            if (holidaysTemplateHolidaysDefinitionTables.Length == 1)
+                                configuration.HolidaysDefinitionTableName = holidaysTemplateHolidaysDefinitionTables[0].Name;
+                        }
+                    }
+
+                    return configuration;
+                }
             }
 
             return null;

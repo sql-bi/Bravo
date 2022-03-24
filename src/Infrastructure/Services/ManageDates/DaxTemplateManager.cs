@@ -14,7 +14,14 @@
 
     internal class DaxTemplateManager
     {
-        public const string SqlbiDaxTemplateAnnotation = "SQLBI_Template";
+        public const string SqlbiTemplateAnnotation = "SQLBI_Template";
+        public const string SqlbiTemplateAnnotationDatesValue = "Dates";
+        public const string SqlbiTemplateAnnotationHolidaysValue = "Holidays";
+        public const string SqlbiTemplateTableAnnotation = "SQLBI_TemplateTable";
+        public const string SqlbiTemplateTableAnnotationDateValue = "Date";
+        public const string SqlbiTemplateTableAnnotationDateAutoTemplateValue = "DateAutoTemplate";
+        public const string SqlbiTemplateTableAnnotationHolidaysValue = "Holidays";
+        public const string SqlbiTemplateTableAnnotationHolidaysDefinitionValue = "HolidaysDefinition";
 
         private readonly string EmbeddedPath = Path.Combine(AppContext.BaseDirectory, @"Assets\ManageDates\Templates");
         private readonly string CachePath = Path.Combine(AppEnvironment.ApplicationTempPath, @"ManageDates\Templates");
@@ -65,11 +72,7 @@
                     connectionWrapper.Model.UndoLocalChanges();
                 }
             }
-            catch (TemplateException ex)
-            {
-                throw new BravoException(BravoProblem.ManageDateTemplateError, ex.Message, ex);
-            }
-            catch (AdomdException ex)
+            catch (Exception ex) when (ex is TemplateException || ex is AdomdException)
             {
                 throw new BravoException(BravoProblem.ManageDateTemplateError, ex.Message, ex);
             }

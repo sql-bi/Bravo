@@ -51,11 +51,11 @@
                 IsManageDatesTimeIntelligence = null
             };
 
-            var tomMeasure = tomModel.Find(measure.TableName, measure.Name);
+            var tomMeasure = tomModel?.Tables?.FindMeasure(measure.TableName, measure.Name);
             if (tomMeasure is not null)
             {
                 measure.IsHidden = tomMeasure.IsHidden;
-                measure.IsManageDatesTimeIntelligence = tomMeasure.Annotations.Contains(DaxTemplateManager.SqlbiDaxTemplateAnnotation);
+                measure.IsManageDatesTimeIntelligence = tomMeasure.Annotations.Contains(DaxTemplateManager.SqlbiTemplateAnnotation);
             }
 
             return measure;
