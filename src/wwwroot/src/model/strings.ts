@@ -83,6 +83,7 @@ export enum strings {
     errorAborted,
     errorAnalysisServicesConnectionFailed,
     errorConnectionUnsupported,
+    errorCheckForUpdates,
     errorDatasetConnectionUnknown,
     errorDatasetsEmptyListing,
     errorDatasetsListing,
