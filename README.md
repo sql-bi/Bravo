@@ -1,6 +1,21 @@
 # <img style="float:left;margin-right:10px" src="./src/wwwroot/favicons/icon-32.png"> Bravo for Power BI
 
-> DRAFT
+Bravo is your trusted mate who helps you create a Power BI model!
+
+ - Analyze your model and find the more expensive columns and tables.
+ 
+ - Format your DAX measures.
+
+ - Create a Date table that you can connect to multiple tables and applies the time intelligence functions you want to your measures.
+
+ - Export data from Power BI to Excel and CSV files.
+
+Bravo is not a replacement for more advanced tools like DAX Studio and Tabular Editor: those tools are still required for more advanced tasks and options. But when the task is simple, or if you are still moving your first steps with Power BI, Bravo is there to help you.
+
+Bravo is free and open-source. The codebase is C# and TypeScript. However, you can contribute also by just testing the tool and reviewing the translations!
+
+### Public Preview
+Bravo is in public preview. We plan to write documentation and more instructions about the code before the final release (1.0).
 
 ### How to Compile Bravo UI
 
