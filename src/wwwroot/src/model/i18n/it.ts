@@ -92,6 +92,7 @@ const locale: Locale = {
         [_.errorAnalysisServicesConnectionFailed]: "Si è verificato un problema di connessione tra il server e Bravo.",
         [_.errorConnectionUnsupported]: "La connessione alla risorsa richiesta non è supportata.",
         [_.errorDatasetConnectionUnknown]: "Connessione non specificata.",
+        [_.errorCheckForUpdates]: "Impossibile controllare gli aggiornamenti - server remoto non raggiungibile.",
         [_.errorDatasetsEmptyListing]: "Nessun report aperto disponibile.",
         [_.errorDatasetsListing]: "Impossibile recuperare la lista dei tuoi dataset su Power BI Service.",
         [_.errorExportDataFileError]: "Si è verificato un problema durante l'esportazione. Riprova.",

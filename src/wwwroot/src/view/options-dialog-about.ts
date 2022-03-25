@@ -8,7 +8,8 @@ import { AppVersion } from '../controllers/app';
 import { UpdateChannelType } from '../controllers/options';
 import { Loader } from '../helpers/loader';
 import {  _, __ } from '../helpers/utils';
-import { app, optionsController } from '../main';
+import { app, logger, optionsController } from '../main';
+import { AppError } from '../model/exceptions';
 import { i18n } from '../model/i18n'; 
 import { strings } from '../model/strings';
 
@@ -33,7 +34,7 @@ export class OptionsDialogAbout {
                                 <option value="${(<any>UpdateChannelType)[key]}" ${(<any>UpdateChannelType)[key] == updateChannel ? "selected" : ""}>${i18n((<any>strings)[`updateChannel${key}`])}</option>
                             `).join("")}
                         </select> &nbsp;
-                        ${i18n(strings.appVersion, { version: app.currentVersion.toString()})}
+                        ${i18n(strings.appVersion, { version: app.currentVersion.info.build})}
                     </div>
                     <div class="update-status list"></div>
                 </div>
@@ -63,27 +64,33 @@ export class OptionsDialogAbout {
 
     checkForUpdates(force = false) {
 
-        let statusHtml = (pendingVersion: AppVersion) => 
-            pendingVersion ? `
+        let statusHtml = (newVersion: AppVersion) => 
+            newVersion ? `
                 <div>
-                    <div class="pending-update">${i18n(strings.appUpdateAvailable, { version: pendingVersion.toString() })}</div>
-                    <span class="button" href="${pendingVersion.info.downloadUrl}" target="downloader">${i18n(strings.appUpdateDownload)}</span> &nbsp; 
-                    <span class="link" href="${pendingVersion.info.changelogUrl}">${i18n(strings.appUpdateChangelog)}</span>
+                    <div class="pending-update">${i18n(strings.appUpdateAvailable, { version: newVersion.toString() })}</div>
+                    <span class="button" href="${newVersion.info.downloadUrl}" target="downloader">${i18n(strings.appUpdateDownload)}</span> &nbsp; 
+                    <span class="link" href="${newVersion.info.changelogUrl}">${i18n(strings.appUpdateChangelog)}</span>
                 </div>
             ` : `
                 <div class="up-to-date">${i18n(strings.appUpToDate)}</div>
             `;
 
-        if (!app.pendingVersion || force) {
+        if (!app.newVersion || force) {
 
             this.updateStatusDiv.innerHTML = Loader.html(false, false, 5);
             
             app.checkForUpdates()
-                .then(pendingVersion => {
-                    this.updateStatusDiv.innerHTML = statusHtml(pendingVersion);
+                .then(newVersion => {
+                    this.updateStatusDiv.innerHTML = statusHtml(newVersion);
+                })
+                .catch((error: AppError) => {
+
+                    this.updateStatusDiv.innerHTML = `<div class="notice">${i18n(strings.errorCheckForUpdates)}</div>`;
+ 
+                    try { logger.logError(error); } catch(ignore) {}
                 });
         } else {
-            this.updateStatusDiv.innerHTML = statusHtml(app.pendingVersion);
+            this.updateStatusDiv.innerHTML = statusHtml(app.newVersion);
         }
     }
 }
