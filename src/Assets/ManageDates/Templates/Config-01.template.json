@@ -36,7 +36,9 @@
   ],
   "IsoTranslation": null,
   "IsoFormat": null,
-  "LocalizationFiles": [],
+  "LocalizationFiles": [
+    "DateLocalization-01.json"
+  ],
   "OnlyTablesColumns": [],
   "ExceptTablesColumns": [],
   "FirstYearMin": null,
