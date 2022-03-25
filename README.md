@@ -1,4 +1,4 @@
-# <img style="float:left;margin-right:10px" src="./src/wwwroot/favicons/icon-32.png"> Bravo for Power BI
+# <img style="display:inline-block; height:35px; width:45px" src="./src/wwwroot/images/bravo.svg"> Bravo for Power BI
 
 Bravo is your trusted mate who helps you create a Power BI model!
 
