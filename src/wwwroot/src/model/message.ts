@@ -29,6 +29,7 @@ export interface ApplicationUpdateAvailableWebMessage extends WebMessage {
     installedVersion?: string
     downloadUrl?: string
     changelogUrl?: string
+    isNewerVersion: boolean
 }
 
 export interface PBIDesktopReportOpenWebMessage extends WebMessage {

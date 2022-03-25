@@ -56,7 +56,7 @@ export class App {
     defaultConnectSelectedMenu: string;
 
     currentVersion: AppVersion;
-    pendingVersion: AppVersion;
+    newVersion: AppVersion;
 
     constructor(version: AppVersion) {
 
@@ -205,7 +205,7 @@ export class App {
         host.on(WebMessageType.ApplicationUpdate, (data: ApplicationUpdateAvailableWebMessage)=>{
             notificationCenter.add(new Notify(i18n(strings.updateMessage, { version: data.currentVersion }), data, `<span class="link" href="${data.downloadUrl}" target="downloader">${i18n(strings.appUpdateDownload)}</span> &nbsp;&nbsp; <span class="link" href="${data.changelogUrl}">${i18n(strings.appUpdateViewDetails)}</span>`, false, true));
             
-            this.pendingVersion = new AppVersion({
+            this.newVersion = new AppVersion({
                 version: data.currentVersion,
                 downloadUrl: data.downloadUrl,
                 changelogUrl: data.changelogUrl
@@ -392,20 +392,20 @@ export class App {
         return host.getCurrentVersion(optionsController.options.updateChannel)
             .then(data => {
 
-                let pendingVersion = null;
-                if (data.updateChannel == optionsController.options.updateChannel) {
-                    pendingVersion = new AppVersion({
+                let newVersion = null;
+                if (data.updateChannel == optionsController.options.updateChannel && data.isNewerVersion) {
+                    newVersion = new AppVersion({
                         version: data.currentVersion,
                         downloadUrl: data.downloadUrl,
                         changelogUrl: data.changelogUrl
                     });
                 }
-                this.pendingVersion = pendingVersion;
-                return pendingVersion;
-            })
-            .catch(ignore => {
-                return null;
+                this.newVersion = newVersion;
+                return newVersion;
             });
+            /*.catch(ignore => {
+                return null;
+            });*/
     }
 
     reload() {

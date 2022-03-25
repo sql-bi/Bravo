@@ -166,6 +166,7 @@ export interface BravoUpdate {
     installedVersion?: string
     downloadUrl?: string
     changelogUrl?: string
+    isNewerVersion: boolean
 } 
 
 export interface ApiLogSettings {
