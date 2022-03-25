@@ -354,7 +354,10 @@
                 var configuration = JsonSerializer.Deserialize<DateConfiguration>(jsonProperty.Value, ExtendedPropertyJsonOptions);
                 if (configuration is not null)
                 {
-                    configuration.IsCurrent = true;
+                    var datesTemplateTableCount = 0;
+                    var holidaysTemplateTableCount = 0;
+
+                    #region Update TableName properties from TOM Model
 
                     // Update the configuration.[Date/Holidays]TableName properties from the connected TOM Model by searching based on annotations
                     // This ensures that the names in the configuration are correct even if the table has been renamed manually or with another tool
@@ -376,6 +379,7 @@
                             if (datesTemplateDateReferenceTables.Length == 1)
                                 configuration.DateReferenceTableName = datesTemplateDateReferenceTables[0].Name;
                         }
+                        datesTemplateTableCount = datesTemplateTables.Length;
                     }
 
                     if (configuration.HolidaysAvailable && configuration.HolidaysEnabled)
@@ -394,8 +398,18 @@
                             if (holidaysTemplateHolidaysDefinitionTables.Length == 1)
                                 configuration.HolidaysDefinitionTableName = holidaysTemplateHolidaysDefinitionTables[0].Name;
                         }
+                        holidaysTemplateTableCount = holidaysTemplateTables.Length;
                     }
 
+                    #endregion
+
+                    if (datesTemplateTableCount == 0 && holidaysTemplateTableCount == 0)
+                    {
+                        // Ignore the current configuration if the user deleted all tables created via Dax.Template
+                        return null;
+                    }
+
+                    configuration.IsCurrent = true;
                     return configuration;
                 }
             }
