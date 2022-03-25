@@ -61,7 +61,7 @@
           "Name": "Data",
           "Description": "",
           "DisplayFolders": "",
-          "FormatString": "dd/mm/yyyy"
+          "FormatString": null
         },
         {
           "OriginalName": "Year",
@@ -598,7 +598,7 @@
           "Name": "Data",
           "Description": "",
           "DisplayFolders": "",
-          "FormatString": "dd/mm/yyyy"
+          "FormatString": null
         },
         {
           "OriginalName": "Year",
@@ -777,7 +777,7 @@
           "Name": "Datum",
           "Description": "",
           "DisplayFolders": "",
-          "FormatString": "dd/mm/yyyy"
+          "FormatString": null
         },
         {
           "OriginalName": "Year",
