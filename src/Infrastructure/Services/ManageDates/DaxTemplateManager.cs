@@ -5,6 +5,7 @@
     using Dax.Template.Model;
     using Microsoft.AnalysisServices.AdomdClient;
     using Sqlbi.Bravo.Infrastructure.Extensions;
+    using Sqlbi.Bravo.Infrastructure.Helpers;
     using Sqlbi.Bravo.Models.ManageDates;
     using System;
     using System.Collections.Generic;
@@ -42,6 +43,7 @@
             }
             catch (TemplateException ex)
             {
+                TelemetryHelper.TrackException(ex);
                 throw new BravoException(BravoProblem.ManageDateTemplateError, ex.Message, ex);
             }
         }
@@ -74,6 +76,7 @@
             }
             catch (Exception ex) when (ex is TemplateException || ex is AdomdException)
             {
+                TelemetryHelper.TrackException(ex);
                 throw new BravoException(BravoProblem.ManageDateTemplateError, ex.Message, ex);
             }
         }
@@ -92,6 +95,7 @@
             }
             catch (TemplateException ex)
             {
+                TelemetryHelper.TrackException(ex);
                 throw new BravoException(BravoProblem.ManageDateTemplateError, ex.Message, ex);
             }
         }
