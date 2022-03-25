@@ -95,7 +95,7 @@
     {
       "Name": "Date",
       "DataType": "DateTime",
-      "FormatString": "m/dd/yyyy",
+      "FormatString": null,
       "Step": "__Calendar",
       "DataCategory": "PaddedDateTableDates",
       "AttributeTypes": [
