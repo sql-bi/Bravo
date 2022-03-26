@@ -14,6 +14,9 @@ Bravo is not a replacement for more advanced tools like DAX Studio and Tabular E
 
 Bravo is free and open-source. The codebase is C# and TypeScript. However, you can contribute also by just testing the tool and reviewing the translations!
 
+[Terms and conditions](TERMS.md)  
+[License](LICENSE)
+
 ### Public Preview
 Bravo is in public preview. We plan to write documentation and more instructions about the code before the final release (1.0).
 
