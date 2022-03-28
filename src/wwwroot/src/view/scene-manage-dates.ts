@@ -201,6 +201,8 @@ export class ManageDatesScene extends DocScene {
 
         this.clearSampleData();
         new Loader(_(".sample-data .table", this.element), false, true);
+        new Loader(this.modelCheckElement, false, true);
+        
         let request: ManageDatesPreviewChangesFromPBIDesktopReportRequest = {
             settings: {
                 configuration: this.sanitizeConfig(this.config.options),
@@ -359,17 +361,6 @@ export class ManageDatesScene extends DocScene {
                     </div>  
                 </div>
             `;
-        } else if (this.previewError) {
-            disabled = true;
-
-            html = `
-            <div class="status-incompatible">
-                <div class="icon icon-error"></div>
-                <div class="message">
-                    ${i18n(strings.manageDatesStatusError, { error: this.previewError.details })}
-                </div>  
-            </div>
-        `;
 
         } else {
             let containsInvalid = false;
@@ -398,25 +389,40 @@ export class ManageDatesScene extends DocScene {
                         </div>  
                     </div>
                 `;
-            } else if (containsOverwritable) {
-                html = `
-                    <div class="status-compatible">
-                        <div class="icon icon-updatable"></div>
-                        <div class="message">
-                            ${i18n(strings.manageDatesStatusCompatible)}
-                        </div>  
-                    </div>
-                `;
             } else {
-                html = `
-                    <div class="status-ok">
-                        <div class="icon icon-valid"></div>
-                        <div class="message">
-                            ${i18n(strings.manageDatesStatusOk)}
-                        </div>  
-                    </div>
-                `;
+
+                if (this.previewError) {
+                    disabled = true;
+        
+                    html = `
+                        <div class="status-incompatible">
+                            <div class="icon icon-error"></div>
+                            <div class="message">
+                                ${i18n(strings.manageDatesStatusError, { error: this.previewError.details })}
+                            </div>  
+                        </div>
+                    `;
+                } else if (containsOverwritable) {
+                    html = `
+                        <div class="status-compatible">
+                            <div class="icon icon-updatable"></div>
+                            <div class="message">
+                                ${i18n(strings.manageDatesStatusCompatible)}
+                            </div>  
+                        </div>
+                    `;
+                } else {
+                    html = `
+                        <div class="status-ok">
+                            <div class="icon icon-valid"></div>
+                            <div class="message">
+                                ${i18n(strings.manageDatesStatusOk)}
+                            </div>  
+                        </div>
+                    `;
+                }
             }
+
         }
 
         this.modelCheckElement.innerHTML = html;
