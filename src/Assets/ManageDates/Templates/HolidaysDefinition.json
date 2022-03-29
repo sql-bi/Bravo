@@ -1878,6 +1878,19 @@
     },
     {
       "IsoCountry": "JP",
+      "MonthNumber": 2,
+      "DayNumber": 23,
+      "WeekDayNumber": 0,
+      "OffsetWeek": 0,
+      "OffsetDays": 0,
+      "HolidayName": "The Emperor's Birthday",
+      "SubstituteHoliday": "SubstituteHolidayWithNextNextWorkingDay",
+      "ConflictPriority": 100,
+      "FirstYear": 1989,
+      "LastYear": 2019
+    },
+    {
+      "IsoCountry": "JP",
       "MonthNumber": 3,
       "DayNumber": 21,
       "WeekDayNumber": 0,
