@@ -1695,6 +1695,8 @@ declare module "tabulator-tables" {
             validate: () => true | CellComponent[];
             /**The isFrozen function on a Row Component will return a boolean representing the current frozen state of the row. */
             isFrozen: () => boolean;
+
+            isTreeExpanded: () => boolean;
         }
 
         interface GroupComponent {
