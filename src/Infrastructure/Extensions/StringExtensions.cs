@@ -142,7 +142,7 @@
                 if (!expression.StartsWith("\n\n"))
                 {
                     // remove a single EOL leading character, if any
-                    if (expression[0] == '\n')
+                    if (expression.Length > 0 && expression[0] == '\n')
                     {
                         expression = expression[1..];
                         lineBreakStyle = DaxLineBreakStyle.InitialLineBreak;
@@ -154,14 +154,14 @@
                 if (!expression.EndsWith("\n\n"))
                 {
                     // remove a single EOL trailing character, if any
-                    if (expression[^1] == '\n')
+                    if (expression.Length > 0 && expression[^1] == '\n')
                         expression = expression[..^1];
                 }
 
                 if (!expression.EndsWith("  "))
                 {
                     // remove a single SPACE trailing character, if any
-                    if (expression[^1] == ' ')
+                    if (expression.Length > 0 && expression[^1] == ' ')
                         expression = expression[..^1];
                 }
             }
