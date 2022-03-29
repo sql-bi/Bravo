@@ -1830,6 +1830,183 @@
       "HolidayName": "Christmas Day",
       "SubstituteHoliday": "NoSubstituteHoliday",
       "ConflictPriority": 100
+    },
+    {
+      "IsoCountry": "JP",
+      "MonthNumber": 1,
+      "DayNumber": 1,
+      "WeekDayNumber": 0,
+      "OffsetWeek": 0,
+      "OffsetDays": 0,
+      "HolidayName": "New Year's Day",
+      "SubstituteHoliday": "SubstituteHolidayWithNextNextWorkingDay",
+      "ConflictPriority": 100
+    },
+    {
+      "IsoCountry": "JP",
+      "MonthNumber": 1,
+      "DayNumber": 0,
+      "WeekDayNumber": 1,
+      "OffsetWeek": 2,
+      "OffsetDays": 0,
+      "HolidayName": "Coming of Age Day",
+      "SubstituteHoliday": "NoSubstituteHoliday",
+      "ConflictPriority": 100
+    },
+    {
+      "IsoCountry": "JP",
+      "MonthNumber": 2,
+      "DayNumber": 11,
+      "WeekDayNumber": 0,
+      "OffsetWeek": 0,
+      "OffsetDays": 0,
+      "HolidayName": "National Foundation Day",
+      "SubstituteHoliday": "SubstituteHolidayWithNextNextWorkingDay",
+      "ConflictPriority": 100
+    },
+    {
+      "IsoCountry": "JP",
+      "MonthNumber": 2,
+      "DayNumber": 23,
+      "WeekDayNumber": 0,
+      "OffsetWeek": 0,
+      "OffsetDays": 0,
+      "HolidayName": "The Emperor's Birthday",
+      "SubstituteHoliday": "SubstituteHolidayWithNextNextWorkingDay",
+      "ConflictPriority": 100,
+      "FirstYear": 2020
+    },
+    {
+      "IsoCountry": "JP",
+      "MonthNumber": 3,
+      "DayNumber": 21,
+      "WeekDayNumber": 0,
+      "OffsetWeek": 0,
+      "OffsetDays": 0,
+      "HolidayName": "Vernal Equinox Day",
+      "SubstituteHoliday": "SubstituteHolidayWithNextNextWorkingDay",
+      "ConflictPriority": 100
+    },
+    {
+      "IsoCountry": "JP",
+      "MonthNumber": 4,
+      "DayNumber": 29,
+      "WeekDayNumber": 0,
+      "OffsetWeek": 0,
+      "OffsetDays": 0,
+      "HolidayName": "Shōwa Day",
+      "SubstituteHoliday": "SubstituteHolidayWithNextNextWorkingDay",
+      "ConflictPriority": 100
+    },
+    {
+      "IsoCountry": "JP",
+      "MonthNumber": 5,
+      "DayNumber": 3,
+      "WeekDayNumber": 0,
+      "OffsetWeek": 0,
+      "OffsetDays": 0,
+      "HolidayName": "Constitution Memorial Day",
+      "SubstituteHoliday": "SubstituteHolidayWithNextNextWorkingDay",
+      "ConflictPriority": 100
+    },
+    {
+      "IsoCountry": "JP",
+      "MonthNumber": 5,
+      "DayNumber": 4,
+      "WeekDayNumber": 0,
+      "OffsetWeek": 0,
+      "OffsetDays": 0,
+      "HolidayName": "	Greenery Day",
+      "SubstituteHoliday": "SubstituteHolidayWithNextNextWorkingDay",
+      "ConflictPriority": 100
+    },
+    {
+      "IsoCountry": "JP",
+      "MonthNumber": 5,
+      "DayNumber": 5,
+      "WeekDayNumber": 0,
+      "OffsetWeek": 0,
+      "OffsetDays": 0,
+      "HolidayName": "Children's Day",
+      "SubstituteHoliday": "SubstituteHolidayWithNextNextWorkingDay",
+      "ConflictPriority": 100
+    },
+    {
+      "IsoCountry": "JP",
+      "MonthNumber": 7,
+      "DayNumber": 0,
+      "WeekDayNumber": 1,
+      "OffsetWeek": 3,
+      "OffsetDays": 0,
+      "HolidayName": "Marine Day",
+      "SubstituteHoliday": "NoSubstituteHoliday",
+      "ConflictPriority": 100
+    },
+    {
+      "IsoCountry": "JP",
+      "MonthNumber": 8,
+      "DayNumber": 11,
+      "WeekDayNumber": 0,
+      "OffsetWeek": 0,
+      "OffsetDays": 0,
+      "HolidayName": "Mountain Day",
+      "SubstituteHoliday": "SubstituteHolidayWithNextNextWorkingDay",
+      "ConflictPriority": 100
+    },
+    {
+      "IsoCountry": "JP",
+      "MonthNumber": 9,
+      "DayNumber": 0,
+      "WeekDayNumber": 1,
+      "OffsetWeek": 3,
+      "OffsetDays": 0,
+      "HolidayName": "Respect for the Aged Day",
+      "SubstituteHoliday": "NoSubstituteHoliday",
+      "ConflictPriority": 100
+    },
+    {
+      "IsoCountry": "JP",
+      "MonthNumber": 9,
+      "DayNumber": 21,
+      "WeekDayNumber": 0,
+      "OffsetWeek": 0,
+      "OffsetDays": 0,
+      "HolidayName": "Autumnal Equinox Day",
+      "SubstituteHoliday": "SubstituteHolidayWithNextNextWorkingDay",
+      "ConflictPriority": 100
+    },
+    {
+      "IsoCountry": "JP",
+      "MonthNumber": 10,
+      "DayNumber": 0,
+      "WeekDayNumber": 1,
+      "OffsetWeek": 2,
+      "OffsetDays": 0,
+      "HolidayName": "Sports Day",
+      "SubstituteHoliday": "NoSubstituteHoliday",
+      "ConflictPriority": 100
+    },
+    {
+      "IsoCountry": "JP",
+      "MonthNumber": 11,
+      "DayNumber": 3,
+      "WeekDayNumber": 0,
+      "OffsetWeek": 0,
+      "OffsetDays": 0,
+      "HolidayName": "Culture Day",
+      "SubstituteHoliday": "SubstituteHolidayWithNextNextWorkingDay",
+      "ConflictPriority": 100
+    },
+    {
+      "IsoCountry": "JP",
+      "MonthNumber": 11,
+      "DayNumber": 23,
+      "WeekDayNumber": 0,
+      "OffsetWeek": 0,
+      "OffsetDays": 0,
+      "HolidayName": "Labour Thanksgiving Day",
+      "SubstituteHoliday": "SubstituteHolidayWithNextNextWorkingDay",
+      "ConflictPriority": 100
     }
   ]
 }
