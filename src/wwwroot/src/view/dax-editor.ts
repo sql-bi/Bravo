@@ -8,7 +8,7 @@ import { View } from './view';
 import * as CodeMirror from 'codemirror';
 import 'codemirror/addon/mode/simple';
 import { ContextMenu } from '../helpers/contextmenu';
-import { _ } from '../helpers/utils';
+import { _, __ } from '../helpers/utils';
 import { Control, ControlConfig } from './control';
 import { DaxError } from '../model/tabular';
 import { strings } from '../model/strings';
@@ -212,6 +212,13 @@ export class DaxEditor extends View {
             errorLine.innerText = `Ln ${error.line+1}, Col ${error.column+1}: ${error.message}`;
             this.editor.addLineWidget(error.line, errorLine, { coverGutter: false })
 
+        });
+    }
+
+    removeErrors() {
+        let el = this.editor.getWrapperElement();
+        __(".CodeMirror-error-marker, .CodeMirror-error-line", el).forEach((div: HTMLElement) => {
+            div.remove();
         });
     }
 

@@ -53,6 +53,8 @@ export class DaxFormatterScene extends DocScene {
     }
 
     updateEditor(editor: DaxEditor, measure?: TabularMeasure | FormattedMeasure) {
+        
+        editor.removeErrors();
 
         if (measure && measure.expression) {
             editor.value = measure.expression;
