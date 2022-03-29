@@ -72,10 +72,13 @@ export class DiagnosticPane extends View {
                 },
                 { 
                     label: i18n(strings.createIssue), cssIcon: "icon-github",  enabled: true, onClick: () => { 
-                        const issueTitle = i18n(strings.createIssueTitle);
-                        const issueBody = i18n(strings.createIssueBody) + Logger.MessageToUrl(message);
 
-                        host.navigateTo(`https://github.com/sql-bi/bravo/issues/new?labels=bug&title=${encodeURIComponent(issueTitle)}&body=${encodeURIComponent(issueBody)}`);
+                        let messageObjStr = (message.objs ? JSON.stringify(message.objs) : "");
+                        if (messageObjStr.length > 500) 
+                            messageObjStr = messageObjStr.substring(0, 500) + " [truncated]";
+                        let messageStr = `${message.name}\n${messageObjStr}`;
+
+                        host.navigateTo(Logger.GithubIssueUrl(messageStr));
                     }
                 }
             ];
