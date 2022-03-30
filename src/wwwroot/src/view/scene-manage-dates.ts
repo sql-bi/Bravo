@@ -200,13 +200,13 @@ export class ManageDatesScene extends DocScene {
     loadSampleData() {
 
         this.clearSampleData();
-        new Loader(_(".sample-data .table", this.element), false, true);
+        let sampleDataEl = _(".sample-data .table", this.element);
+
+        new Loader(sampleDataEl, false, true);
         new Loader(this.modelCheckElement, false, true);
         
         let renderSampleDataError = ()=> {
-            _(".sample-data .table", this.element).innerHTML = `
-                <div class="error">${i18n(strings.manageDatesSampleDataError)}</div>
-            `;
+            sampleDataEl.innerHTML = `<div class="error">${i18n(strings.manageDatesSampleDataError)}</div>`;
         };
         
         let tableNamesValidity = this.checkTableNames();
