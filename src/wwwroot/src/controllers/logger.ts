@@ -6,7 +6,7 @@
 
 import { Dispatchable } from '../helpers/dispatchable';
 import { Dic, Utils } from '../helpers/utils';
-import { host, optionsController } from '../main';
+import { app, host, optionsController } from '../main';
 import { AppError, AppErrorType } from '../model/exceptions';
 import { i18n } from '../model/i18n';
 import { strings } from '../model/strings';
@@ -187,14 +187,6 @@ export class Logger extends Dispatchable {
         });
     }
 
-    static MessageToUrl(message: LogMessage) {
-        let messageObjStr = (message.objs ? JSON.stringify(message.objs) : "");
-        if (messageObjStr.length > 500) 
-            messageObjStr = messageObjStr.substring(0, 500) + " [truncated]";
-
-        return `${message.name}\n${messageObjStr}`;
-    }
-
     static LevelMatch(level: DiagnosticLevelType) {
         
         if (level == optionsController.options.diagnosticLevel) {
@@ -204,5 +196,12 @@ export class Logger extends Dispatchable {
         } else {
             return false;
         }
+    }
+
+    static GithubIssueUrl(message: string, context: string = "") {
+        const version = (app ? app.currentVersion.toString() : "");
+        const problem = encodeURIComponent(message);
+
+        return `https://github.com/sql-bi/bravo/issues/new?labels=bug%2Cuntriaged&template=bug_report.yml&application-version=${version}&describe-problem=${problem}&logs=${context}`;
     }
 }

@@ -33,20 +33,21 @@ interface AnalyzeMoldelFilter {
     showUnrefOnly: boolean
     searchValue: string
 }
-
 export class AnalyzeModelScene extends DocScene {
 
     table: Tabulator;
     chart: Chart;
     topSize = { tables: 0, columns: 0 };
     searchBox: HTMLInputElement;
+    collapseAll: HTMLElement;
+    expandAll: HTMLElement;
 
     fullData: ExtendedTabularColumn[];
     nestedData: ExtendedTabularColumn[];
     nestedAggregatedData: ExtendedTabularColumn[];
     aggregatedData: ExtendedTabularColumn[];
 
-    showAllColumns = false; //options.data.model.showAllColumns;
+    showAllRows = false; //options.data.model.showAllColumns;
     groupByTable = false; //options.data.model.groupByTable;
     showUnrefOnly = false; //options.data.model.showUnrefOnly;
 
@@ -82,9 +83,11 @@ export class AnalyzeModelScene extends DocScene {
                         <hr>
 
                         <div class="group-by-table toggle icon-group disable-if-empty" title="${i18n(strings.groupByTableCtrlTitle)}"></div>
-
+                        
+                        <div class="expand-all show-if-group ctrl icon-expand-all" title="${i18n(strings.expandAllCtrlTitle)}"></div>
                         <div class="collapse-all show-if-group ctrl icon-collapse-all" title="${i18n(strings.collapseAllCtrlTitle)}"></div>
                         
+
                         <div class="save-vpax ctrl icon-save disable-on-syncing enable-if-exportable" ${!this.canExportVpax ? "hidden" : ""} title="${i18n(strings.saveVpaxCtrlTile)}"> VPAX </div>
 
                     </div>
@@ -105,12 +108,11 @@ export class AnalyzeModelScene extends DocScene {
             </div>
         `;
 
-        /*
-            <div class="expand-all show-if-group ctrl icon-expand-all" title="${i18n(strings.expandAllCtrlTitle)}"></div>
-        */
         this.body.insertAdjacentHTML("beforeend", html);
 
         this.searchBox = <HTMLInputElement>_(".search input", this.body);
+        this.expandAll = _(".expand-all", this.element);
+        this.collapseAll = _(".collapse-all", this.element);
 
         this.update();
         this.updateToolbar();
@@ -208,8 +210,8 @@ export class AnalyzeModelScene extends DocScene {
             }
         }
         let data = (this.groupByTable ? 
-            (this.showAllColumns ? this.nestedData : this.nestedAggregatedData) :
-            (this.showAllColumns ? this.fullData: this.aggregatedData)
+            (this.showAllRows ? this.nestedData : this.nestedAggregatedData) :
+            (this.showAllRows ? this.fullData: this.aggregatedData)
         );
         
        
@@ -366,7 +368,7 @@ export class AnalyzeModelScene extends DocScene {
                     
                     let cellData = <ExtendedTabularColumn>cell.getData();
                     if (cellData._aggregated && cell.getField() == "columnName") {
-                        this.expandTableColumns();
+                        this.toggleAllRows();
                     }
                 } catch(err) {}
             });
@@ -407,25 +409,68 @@ export class AnalyzeModelScene extends DocScene {
                     this.chart.render();
                 }
             });
+            this.table.on("dataTreeRowExpanded", (e, row) => {
+                this.updateTreeControls();
+            });
+            this.table.on("dataTreeRowCollapsed", (e, row) => {
+                this.updateTreeControls();
+            });
+            this.table.on("tableBuilt", ()=> {
+                this.updateTreeControls();
+            });
 
         } else {
             this.table.setData(data);
+            this.updateTreeControls();
         } 
     }
 
-    collapseTable() {
+    expandTree(expand: boolean) {
         if (this.table) {
             let rows = this.table.getRows();
             rows.forEach(row => {
-                if (row.getTreeChildren().length){
-                    row.treeCollapse();
-                }
+                try {
+                    if (row.getTreeChildren().length){
+                        if (expand)
+                            row.treeExpand();
+                        else
+                            row.treeCollapse();
+                    }
+                } catch (ignore) {}
             });
         }
+
+
     }
 
-    expandTableColumns() {
-        this.showAllColumns = true;
+    updateTreeControls(){
+        
+        let nodeCount = 0;
+        let expandedCount = 0;
+        let collapsedCount = 0;
+        if (this.table) {
+            let rows = this.table.getRows();
+            for (let i = 0; i < rows.length; i++) {
+                let row = rows[i];
+                try {
+                    if (row.getTreeChildren().length){
+                        nodeCount++;
+                        if (row.isTreeExpanded())
+                            expandedCount++;
+                        else
+                            collapsedCount++;
+
+                        if (collapsedCount && expandedCount) break;
+                    }
+                } catch (ignore) {}
+            }
+        }
+        this.expandAll.toggleAttr("disabled", expandedCount == nodeCount);
+        this.collapseAll.toggleAttr("disabled", collapsedCount == nodeCount);
+    }
+
+    toggleAllRows(toggle = true) {
+        this.showAllRows = toggle;
 
         this.updateToolbar();
         this.updateTable(false);
@@ -511,7 +556,7 @@ export class AnalyzeModelScene extends DocScene {
         if (this.chart) 
             this.chart.destroy();
 
-        let data = (this.showAllColumns ?
+        let data = (this.showAllRows ?
             this.fullData : 
             this.aggregatedData
         );
@@ -664,8 +709,8 @@ export class AnalyzeModelScene extends DocScene {
 
         ["keyup", "search", "paste"].forEach(listener => {
             this.searchBox.addEventListener(listener, e => {
-                if (!this.showAllColumns)
-                    this.expandTableColumns();
+                if (!this.showAllRows)
+                    this.toggleAllRows();
                 this.applyFilters();
             });
         });
@@ -711,14 +756,20 @@ export class AnalyzeModelScene extends DocScene {
             this.updateToolbar();
         });
 
-        /*_(".expand-all", this.element).addEventListener("click", e => {
+        this.expandAll.addEventListener("click", e => {
             e.preventDefault();
-            this.updateTable(true, true);
-        });*/
+            let el = <HTMLElement>e.currentTarget;
+            if (el.hasAttribute("disabled")) return;
 
-        _(".collapse-all", this.element).addEventListener("click", e => {
+            this.expandTree(true);
+        });
+
+        this.collapseAll.addEventListener("click", e => {
             e.preventDefault();
-            this.collapseTable();
+
+            let el = <HTMLElement>e.currentTarget;
+            if (el.hasAttribute("disabled")) return;
+            this.expandTree(false);
         });
 
         _(".save-vpax", this.element).addEventListener("click", e => {

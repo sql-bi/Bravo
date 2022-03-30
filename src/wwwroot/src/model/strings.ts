@@ -51,8 +51,6 @@ export enum strings {
     copyMessage,
     copyright,
     createIssue,
-    createIssueBody,
-    createIssueTitle,
     cut,
     dataUsageLink, 
     dataUsageMessage,
