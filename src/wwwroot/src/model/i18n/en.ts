@@ -59,8 +59,6 @@ const locale: Locale = {
         [_.copyMessage]: "Copy Message",
         [_.copyright]: "All rights are reserved.",
         [_.createIssue]: "Report Issue",
-        [_.createIssueBody]: "Provide a detailed explanation of the issue in English.\n\n---\n",
-        [_.createIssueTitle]: "Provide a meaningful issue title",
         [_.cut]: "Cut",
         [_.dataUsageLink]: "How your data is used?", 
         [_.dataUsageMessage]: `To format your code, Bravo sends the measures of this dataset to DAX Formatter, a service managed by SQLBI, over a secure connection.<p><strong>The service does not store your data anywhere.</strong></p><p>Some information such as the most used DAX functions, a complexity index, and average query length can be saved for statistical purposes.</p>`,

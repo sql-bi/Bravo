@@ -61,8 +61,8 @@ export class AppError {
         this.traceId = traceId;
     }
 
-    toString() {
-        return `${ i18n(strings.error) }${ this.code ? ` ${this.type != AppErrorType.Managed ? "HTTP/" : "" }${ this.code }` : "" }: ${ this.message }${ this.details ? `\n${this.details}` : "" }${ this.traceId ? `\n${ i18n(strings.traceId) }: ${this.traceId}` : ""}\n${i18n(strings.version)}: ${app.currentVersion.toString()}`;
+    toString(includeTraceId = true, includeVersion = true) {
+        return `${ i18n(strings.error) }${ this.code ? ` ${this.type != AppErrorType.Managed ? "HTTP/" : "" }${ this.code }` : "" }: ${ this.message }${ this.details ? `\n${this.details}` : "" }${ includeTraceId && this.traceId ? `\n${ i18n(strings.traceId) }: ${this.traceId}` : ""}${ includeVersion ? `\n${i18n(strings.version)}: ${app.currentVersion.toString()}` : ""}`;
     }
 
     static InitFromProblem(problem: ProblemDetails, message?: string) {

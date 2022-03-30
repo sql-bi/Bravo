@@ -37,7 +37,7 @@
 
         internal static TabularMeasure CreateFrom(Dax.Metadata.Measure daxMeasure, string databaseETag, TOM.Model? tomModel = default)
         {
-            var (expression, lineBreakStyle) = daxMeasure.MeasureExpression.Expression.NormalizeDax();
+            var (expression, lineBreakStyle) = daxMeasure.MeasureExpression?.Expression.NormalizeDax() ?? (null, DaxLineBreakStyle.None);
 
             var measure = new TabularMeasure
             {

@@ -102,12 +102,14 @@ export class Page extends View {
 
     hideScene(scene: Scene, remove = false) {
         scene.element.classList.add("exiting");
-        scene.element.addEventListener("animationend", e => {
-            scene.element.classList.remove("exiting");
+        window.setTimeout(() => {
+        //scene.element.addEventListener("animationend", e => {
+            //scene.element.classList.remove("exiting");
             scene.hide();
             if (remove)
                 this.removeScene(scene);
-        });
+        //});
+        }, 350);
     }
 
     removeScene(scene: Scene) {

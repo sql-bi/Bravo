@@ -38,4 +38,10 @@ export class Scene extends View {
     splice(scene: Scene) {
         this.trigger("splice", scene);
     }
+
+    reload() {
+        this.element.innerHTML = "";
+        this.rendered = false;
+        this.render();
+    }
 }

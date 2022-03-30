@@ -51,8 +51,9 @@ export abstract class DocScene extends NavigatorScene {
 
         let sceneSupported = this.supported;
         if (!sceneSupported[0]) {
-            let blockingScene = new UnsupportedScene(Utils.DOM.uniqueId(), this.element, this.type, sceneSupported[1]);
+            let blockingScene = new UnsupportedScene(Utils.DOM.uniqueId(), this.element, this, sceneSupported[1]);
             this.push(blockingScene);
+            this.rendered = false;
             return false;
         }
 
@@ -81,10 +82,8 @@ export abstract class DocScene extends NavigatorScene {
 
                 if ((<HTMLElement>e.currentTarget).hasAttribute("disabled") || this.syncing) return;
                 if (!this.canSync) return;
-                
-                telemetry.track("Sync");
 
-                this.trigger("sync");
+                this.sync();
             });
 
             _(".ctrl-help", this.toolbar).addEventListener("click", e => {
@@ -98,10 +97,15 @@ export abstract class DocScene extends NavigatorScene {
         }
     }
 
+    sync() {
+        telemetry.track("Sync");
+        this.trigger("sync");
+    }
+
     update() {
         super.update();
 
-        if (!this.supported[0]) return false;
+        if (!this.supported[0] || !this.rendered) return false;
 
         this.updateConditionalElements("syncable", this.canSync);
         this.updateConditionalElements("editable", this.canEdit);

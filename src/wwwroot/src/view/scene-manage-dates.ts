@@ -67,7 +67,7 @@ export class ManageDatesScene extends DocScene {
                 <div class="col coll">
                     <div class="model-check">
                         <div class="notice">${i18n(strings.manageDatesModelCheck)}</div>
-                        <div class="status">${Loader.html(true)}</div>
+                        <div class="status"></div>
                     </div>
                 </div>
 
@@ -200,41 +200,53 @@ export class ManageDatesScene extends DocScene {
     loadSampleData() {
 
         this.clearSampleData();
-        new Loader(_(".sample-data .table", this.element), false, true);
+        let sampleDataEl = _(".sample-data .table", this.element);
+
+        new Loader(sampleDataEl, false, true);
         new Loader(this.modelCheckElement, false, true);
         
-        let request: ManageDatesPreviewChangesFromPBIDesktopReportRequest = {
-            settings: {
-                configuration: this.sanitizeConfig(this.config.options),
-                previewRows: 20
-            },
-            report: <PBIDesktopReport>this.doc.sourceData
-        }
+        let renderSampleDataError = ()=> {
+            sampleDataEl.innerHTML = `<div class="error">${i18n(strings.manageDatesSampleDataError)}</div>`;
+        };
         
-        host.manageDatesPreviewChanges(request)
-            .then(changes => {
-                let preview = [];
-                if ("modifiedObjects" in changes) {
-                    for (let i = 0; i < changes.modifiedObjects.length; i++) {
-                        let table = changes.modifiedObjects[i];
-                        if (table.name == this.config.options.dateTableName && table.preview) {
-                            preview = table.preview;
-                            break;
+        let tableNamesValidity = this.checkTableNames();
+        if (tableNamesValidity == TableValidation.InvalidExists) {
+            renderSampleDataError();
+            this.updateModelCheck();
+
+        } else {
+            
+            let request: ManageDatesPreviewChangesFromPBIDesktopReportRequest = {
+                settings: {
+                    configuration: this.sanitizeConfig(this.config.options),
+                    previewRows: 20
+                },
+                report: <PBIDesktopReport>this.doc.sourceData
+            }
+
+            host.manageDatesPreviewChanges(request)
+                .then(changes => {
+                    let preview = [];
+                    if ("modifiedObjects" in changes) {
+                        for (let i = 0; i < changes.modifiedObjects.length; i++) {
+                            let table = changes.modifiedObjects[i];
+                            if (table.name == this.config.options.dateTableName && table.preview) {
+                                preview = table.preview;
+                                break;
+                            }
                         }
                     }
-                }
-                this.updateSampleData(preview);
-            })
-            .catch((error: AppError) => {
-                _(".sample-data .table", this.element).innerHTML = `
-                    <div class="error">${i18n(strings.manageDatesSampleDataError)}</div>
-                `;
-                this.previewError = error;
-                try { logger.logError(error); } catch(ignore) {}
-            })
-            .finally(() => {
-                this.updateModelCheck();
-            });
+                    this.updateSampleData(preview);
+                })
+                .catch((error: AppError) => {
+                    renderSampleDataError();
+                    this.previewError = error;
+                    try { logger.logError(error); } catch(ignore) {}
+                })
+                .finally(() => {
+                    this.updateModelCheck();
+                });
+        }
     }
 
     updateSampleData(data: any[]) {
@@ -345,6 +357,33 @@ export class ManageDatesScene extends DocScene {
         this.menu.disable("timeIntelligence", !this.config.options.timeIntelligenceAvailable);
     }
 
+    checkTableNames(): TableValidation {
+
+        let invalid = false;
+        let alterable = false;
+
+        //Check table names validation
+        let fields = [this.config.options.dateTableValidation, this.config.options.dateReferenceTableValidation];
+        if (this.config.options.holidaysAvailable && this.config.options.holidaysEnabled)
+            fields = [...fields, ...[this.config.options.holidaysTableValidation, this.config.options.holidaysDefinitionTableValidation]];
+
+        fields.forEach(field => {
+            if (field >= TableValidation.InvalidExists) {
+                invalid = true;
+            } else if (field == TableValidation.ValidAlterable) {
+                alterable = true;
+            }
+        });
+
+        return (invalid ? 
+            TableValidation.InvalidExists : 
+            (alterable ? 
+                TableValidation.ValidAlterable : 
+                TableValidation.ValidNotExists
+            )
+        );
+    }
+
     updateModelCheck() {
 
         let disabled = false;
@@ -363,23 +402,10 @@ export class ManageDatesScene extends DocScene {
             `;
 
         } else {
-            let containsInvalid = false;
-            let containsOverwritable = false;
 
-            //Check table names validation
-            let fields = [this.config.options.dateTableValidation, this.config.options.dateReferenceTableValidation];
-            if (this.config.options.holidaysAvailable && this.config.options.holidaysEnabled)
-                fields = [...fields, ...[this.config.options.holidaysTableValidation, this.config.options.holidaysDefinitionTableValidation]];
+            let tableNamesValidity = this.checkTableNames();
 
-            fields.forEach(field => {
-                if (field >= TableValidation.InvalidExists) {
-                    containsInvalid = true;
-                } else if (field == TableValidation.ValidAlterable) {
-                    containsOverwritable = true;
-                }
-            });
-
-            if (containsInvalid) {
+            if (tableNamesValidity == TableValidation.InvalidExists) {
                 disabled = true;
                 html = `
                     <div class="status-incompatible">
@@ -402,7 +428,7 @@ export class ManageDatesScene extends DocScene {
                             </div>  
                         </div>
                     `;
-                } else if (containsOverwritable) {
+                } else if (tableNamesValidity == TableValidation.ValidAlterable) {
                     html = `
                         <div class="status-compatible">
                             <div class="icon icon-updatable"></div>
