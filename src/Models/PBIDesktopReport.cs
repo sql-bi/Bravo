@@ -102,7 +102,7 @@
                 }
 
                 using var server = new TOM.Server();
-                var connectionString = ConnectionStringHelper.BuildForPBIDesktop(ssasConnection.EndPoint);
+                var connectionString = ConnectionStringHelper.BuildFor(ssasConnection.EndPoint);
                 try
                 {
                     server.Connect(connectionString.ToUnprotectedString());

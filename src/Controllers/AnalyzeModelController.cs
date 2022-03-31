@@ -103,7 +103,7 @@
         }
 
         /// <summary>
-        /// Returns a list of all open PBIDesktop reports
+        /// Returns a list of all open <see cref="PBIDesktopReport"/>
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
         [HttpGet]
@@ -118,7 +118,7 @@
         }
 
         /// <summary>
-        /// Returns a list of all open PBIDesktop reports as fast as possible, providing only process information and without attempting to establish a database connection
+        /// Returns a list of all open <see cref="PBIDesktopReport"/> reports as fast as possible, providing only process information and without attempting to establish a database connection
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
         [HttpGet]
@@ -126,7 +126,7 @@
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<PBIDesktopReport>))]
         [ProducesDefaultResponseType]
-        public IActionResult QueryPBIDesktopReports(CancellationToken cancellationToken)
+        public IActionResult QueryReports(CancellationToken cancellationToken)
         {
             var reports = _analyzeModelService.QueryReports(cancellationToken);
             return Ok(reports);
