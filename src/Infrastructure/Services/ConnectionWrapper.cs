@@ -46,18 +46,19 @@
 
         public static TabularConnectionWrapper ConnectTo(PBICloudDataset dataset, string accessToken)
         {
-            var (connectionString, databaseName) = dataset.GetConnectionParameters(accessToken);
-            var connection = ConnectTo(connectionString, databaseName);
+            BravoUnexpectedException.ThrowIfNull(dataset.DatabaseName);
+
+            var connectionString = ConnectionStringHelper.BuildFor(dataset, accessToken);
+            var connection = ConnectTo(connectionString, dataset.DatabaseName);
 
             return connection;
         }
 
         public static TabularConnectionWrapper ConnectTo(PBIDesktopReport report)
         {
-            BravoUnexpectedException.ThrowIfNull(report.ServerName);
             BravoUnexpectedException.ThrowIfNull(report.DatabaseName);
 
-            var connectionString = ConnectionStringHelper.BuildForPBIDesktop(report.ServerName);
+            var connectionString = ConnectionStringHelper.BuildFor(report);
             var connection = ConnectTo(connectionString, report.DatabaseName);
 
             return connection;
@@ -115,34 +116,31 @@
             Connection.Dispose();
         }
 
-        public static AdomdConnectionWrapper ConnectTo(PBICloudDataset dataset, string accessToken, bool open = true)
+        public static AdomdConnectionWrapper ConnectTo(PBICloudDataset dataset, string accessToken)
         {
-            var (connectionString, databaseName) = dataset.GetConnectionParameters(accessToken);
-            var connection = ConnectTo(connectionString, databaseName, open);
+            BravoUnexpectedException.ThrowIfNull(dataset.DatabaseName);
+
+            var connectionString = ConnectionStringHelper.BuildFor(dataset, accessToken);
+            var connection = ConnectTo(connectionString, dataset.DatabaseName);
 
             return connection;
         }
 
-        public static AdomdConnectionWrapper ConnectTo(PBIDesktopReport report, bool open = true)
+        public static AdomdConnectionWrapper ConnectTo(PBIDesktopReport report)
         {
-            BravoUnexpectedException.ThrowIfNull(report.ServerName);
             BravoUnexpectedException.ThrowIfNull(report.DatabaseName);
 
-            var connectionString = ConnectionStringHelper.BuildForPBIDesktop(report.ServerName);
-            var connection = ConnectTo(connectionString, report.DatabaseName, open);
+            var connectionString = ConnectionStringHelper.BuildFor(report);
+            var connection = ConnectTo(connectionString, report.DatabaseName);
 
             return connection;
         }
 
-        private static AdomdConnectionWrapper ConnectTo(string connectionString, string databaseName, bool open = true)
+        private static AdomdConnectionWrapper ConnectTo(string connectionString, string databaseName)
         {
             var connection = new AdomdConnection(connectionString.ToUnprotectedString());
-
-            if (open)
-            {
-                connection.Open();
-                connection.ChangeDatabase(databaseName);
-            }
+            connection.Open();
+            connection.ChangeDatabase(databaseName);
 
             var wrapper = new AdomdConnectionWrapper(connection);
             return wrapper;

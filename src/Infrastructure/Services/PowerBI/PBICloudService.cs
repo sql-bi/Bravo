@@ -54,7 +54,10 @@
         public const string PBIPremiumProtocolScheme = "powerbi";
         //public const string PBIDedicatedProtocolScheme = "pbidedicated";
         //public const string ASAzureLinkProtocolScheme = "link";
-        //public const string ASAzureProtocolScheme = "asazure";
+        /// <summary>
+        /// Azure Analysis Services (asazure://centralus.asazure.windows.net/MyModelName)
+        /// </summary>
+        public const string ASAzureProtocolScheme = "asazure";
 
         public PBICloudService(IAuthenticationService authenticationService, HttpClient httpClient)
         {

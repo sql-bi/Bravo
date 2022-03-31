@@ -15,6 +15,23 @@
     {
         public static readonly string LocalHost = "localhost";
 
+        /// <summary>
+        /// Returns true if the protocol schema for the provided <paramref name="address"/> URI is <see cref="PBICloudService.ASAzureProtocolScheme"/>
+        /// </summary>
+        public static bool IsASAzureServer(string address)
+        {
+            if (address.Contains(Uri.SchemeDelimiter) && Uri.TryCreate(address, UriKind.Absolute, out var addressUri))
+            {
+                if (addressUri.Scheme.Equals(PBICloudService.ASAzureProtocolScheme, StringComparison.OrdinalIgnoreCase))
+                    return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Returns true if the protocol schema for the provided <paramref name="address"/> URI is <see cref="PBICloudService.PBIDatasetProtocolScheme"/> or <see cref="PBICloudService.PBIPremiumProtocolScheme"/>
+        /// </summary>
         public static bool IsPBICloudDatasetServer(string address)
         {
             if (address.Contains(Uri.SchemeDelimiter) && Uri.TryCreate(address, UriKind.Absolute, out var addressUri))

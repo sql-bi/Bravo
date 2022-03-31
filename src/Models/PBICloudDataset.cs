@@ -5,6 +5,7 @@
     using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Infrastructure.Helpers;
     using Sqlbi.Bravo.Infrastructure.Models;
+    using Sqlbi.Bravo.Infrastructure.Security;
     using Sqlbi.Bravo.Infrastructure.Services.PowerBI;
     using System;
     using System.Diagnostics;
@@ -42,6 +43,9 @@
 
         [JsonPropertyName("refreshed")]
         public DateTime? Refreshed { get; set; }
+
+        [JsonPropertyName("onPremModelConnectionString")]
+        public string? OnPremModelConnectionString { get; set; }
 
         [JsonPropertyName("endorsement")]
         public PBICloudDatasetEndorsement? Endorsement { get; set; }
@@ -138,6 +142,7 @@
                 Description = model.Description,
                 Owner = $"{ model.CreatorUser?.GivenName } { model.CreatorUser?.FamilyName }",
                 Refreshed = model.LastRefreshTime,
+                OnPremModelConnectionString = model.OnPremModelConnectionString,
                 Endorsement = cloudModel.GalleryItem?.Stage.TryParseTo<PBICloudDatasetEndorsement>(),
                 WorkspaceType = cloudModel.WorkspaceType.TryParseTo<PBICloudDatasetWorkspaceType>(),
                 CapacitySkuType = cloudWorkspace.CapacitySkuType.TryParseTo<PBICloudDatasetCapacitySkuType>(),
@@ -150,13 +155,18 @@
             if (cloudDataset.IsXmlaEndPointSupported)
             {
                 cloudDataset.ServerName = PBICloudService.PBIPremiumServerUri.OriginalString;
-                cloudDataset.DatabaseName = model.DBName;
+                cloudDataset.DatabaseName = model.DisplayName;
+            }
+            else if (cloudDataset.IsOnPremModel == true)
+            {
+                cloudDataset.ServerName = ConnectionStringHelper.FindServerName(cloudDataset.OnPremModelConnectionString);
+                cloudDataset.DatabaseName = ConnectionStringHelper.FindDatabaseName(cloudDataset.OnPremModelConnectionString);
             }
             else
             {
                 cloudDataset.ServerName = PBICloudService.PBIDatasetServerUri.OriginalString;
                 cloudDataset.DatabaseName = $"{ model.VSName }-{ model.DBName }";
-            }
+            } 
 
             return cloudDataset;
         }
@@ -205,58 +215,5 @@
 
         [JsonPropertyName("Supported")]
         Supported = 1,
-    }
-
-    internal static class PBICloudDatasetExtensions
-    {
-        /// <summary>
-        /// Builds the PBICloudDataset connection string and database name
-        /// </summary>
-        public static (string connectionString, string databaseName) GetConnectionParameters(this PBICloudDataset dataset, string accessToken)
-        {
-            // Dataset connectivity with the XMLA endpoint
-            // https://docs.microsoft.com/en-us/power-bi/admin/service-premium-connect-tools
-            // Connection string properties
-            // https://docs.microsoft.com/en-us/analysis-services/instances/connection-string-properties-analysis-services?view=asallproducts-allversions
-
-            // TODO: Handle possible duplicated workspace name - when connecting to a workspace with the same name as another workspace, append the workspace guid to the workspace name
-            // https://docs.microsoft.com/en-us/power-bi/admin/service-premium-connect-tools#duplicate-workspace-names
-            //var workspaceUniqueName = $"{ dataset.WorkspaceName } - { dataset.WorkspaceId }";
-
-            // TODO: Handle possible duplicated dataset name - when connecting to a dataset with the same name as another dataset in the same workspace, append the dataset guid to the dataset name
-            // https://docs.microsoft.com/en-us/power-bi/admin/service-premium-connect-tools#duplicate-dataset-name
-            //var datasetUniqueName = $"{ dataset.DisplayName } - { dataset.DatabaseName }";
-
-            BravoUnexpectedException.Assert(dataset.ConnectionMode == PBICloudDatasetConnectionMode.Supported);
-            BravoUnexpectedException.ThrowIfNull(dataset.ServerName);
-            BravoUnexpectedException.ThrowIfNull(accessToken);
-
-            if (dataset.IsXmlaEndPointSupported)
-            {
-                BravoUnexpectedException.ThrowIfNull(dataset.DisplayName);
-                BravoUnexpectedException.ThrowIfNull(dataset.WorkspaceName);
-
-                // TODO: add support for B2B users
-                // - Users with UPNs in the same tenant (not B2B) can replace the tenant name with 'myorg'
-                // - B2B users must specify their organization UPN in tenant name
-                // var homeTenant = CurrentAuthentication?.Account.GetTenantProfiles().SingleOrDefault((t) => t.IsHomeTenant);
-                var tenantName = "myorg";
-                var serverName = $"{ dataset.ServerName }/v1.0/{ tenantName }/{ dataset.WorkspaceName }";
-                var databaseName = dataset.DisplayName;
-                var connectionString = ConnectionStringHelper.BuildForPBICloudDataset(serverName, databaseName, accessToken);
-
-                return (connectionString, databaseName);
-            }
-            else
-            {
-                BravoUnexpectedException.ThrowIfNull(dataset.DatabaseName);
-
-                var serverName = dataset.ServerName;
-                var databaseName = dataset.DatabaseName;
-                var connectionString = ConnectionStringHelper.BuildForPBICloudDataset(serverName, databaseName, accessToken);
-
-                return (connectionString, databaseName);
-            }
-        }
     }
 }

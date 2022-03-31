@@ -66,15 +66,13 @@
 
                 return webMessage.AsString;
             }
-            else if (NetworkHelper.IsPBICloudDatasetServer(startupMessage.ArgumentServerName))
+            else if (NetworkHelper.IsPBICloudDatasetServer(startupMessage.ArgumentServerName) || NetworkHelper.IsASAzureServer(startupMessage.ArgumentServerName))
             {
-                // protocol schema => pbiazure:// OR powerbi://
-
                 var webMessage = new PBICloudDatasetOpenWebMessage
                 {
                     Dataset = new PBICloudDataset
                     {
-                        //ServerName = startupMessage.ArgumentServerName,
+                        ServerName = startupMessage.ArgumentServerName,
                         DatabaseName = startupMessage.ArgumentDatabaseName,
                         ConnectionMode = PBICloudDatasetConnectionMode.Unknown
                     },
