@@ -11,7 +11,7 @@ import en from './en';
 //import de from './de';
 import it from './it';
 //import pl from './pl';
-//import ru from './ru';
+import ru from './ru';
 //import zh_CN from './zh-CN';
 //import zh_TW from './zh-TW';
 
@@ -23,7 +23,7 @@ const locales = {
     //[de.locale]: de, 
     [it.locale]: it,
     //[pl.locale]: pl,
-    //[ru.locale]: ru,
+    [ru.locale]: ru,
     //[zh_CN.locale]: zh_CN,
     //[zh_TW.locale]: zh_TW,    
 }; 
