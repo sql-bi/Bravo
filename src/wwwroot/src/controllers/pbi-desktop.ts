@@ -13,7 +13,6 @@ export class PBIDesktop extends Dispatchable {
 
     static CheckSeconds = 10
     checkTimeout: number;
-    verifyConnections = false;
 
     observing: string;
     excludeFromObserving: number[] = []; 
@@ -24,31 +23,34 @@ export class PBIDesktop extends Dispatchable {
         super();
 
         this.checkTimeout = window.setInterval(() => {
-            this.check();
+            this.poll();
         }, PBIDesktop.CheckSeconds * 1000);
         
     }
 
-    check() {
+    poll() {
 
         if (this.solo) {
             this.reports = [];
-            this.verifyConnections = false;
             return;
         }
 
         const processReponse = (reports: PBIDesktopReport[]) => {
+
+            // Sort reports - order is casually changed
+            reports.sort((a, b) => a.id.toString().localeCompare(b.id.toString()));
             const changed = (!deepEqual(reports, this.reports));
+
             this.reports = reports;
-            this.trigger("change", changed);
+            this.trigger("poll", changed);
         };
 
-        return host.listReports(this.verifyConnections)
+        return host.listReports()
             .then((reports: PBIDesktopReport[]) => {
                 processReponse(reports.filter(report => report.connectionMode != PBIDesktopReportConnectionMode.UnsupportedProcessNotYetReady));
                 this.observe();
             })
-            .catch(error => {
+            .catch(ignore => {
                 processReponse([]);
             });
     }

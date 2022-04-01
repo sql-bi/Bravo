@@ -43,7 +43,7 @@ export class Sheet extends View {
         this.pages = null;
     
         if (this.doc.type == DocType.pbix)
-            pbiDesktop.off("change", this.id);
+            pbiDesktop.off("poll", this.id);
         this.doc = null;
 
         super.destroy();
@@ -59,15 +59,21 @@ export class Sheet extends View {
         }
 
         if (this.doc.type == DocType.pbix) {
-            pbiDesktop.on("change", ()=>{
+            pbiDesktop.on("poll", (changed: boolean)=>{
+                //if (!changed) return;
+
                 let orphan = true;
+                let name = this.doc.name;
                 pbiDesktop.reports.forEach(report => {
                     if (this.doc.id == Doc.getId(DocType.pbix, report)) {
                         orphan = false;
+                        name = report.reportName;
                     }
                 });
-                if (orphan != this.doc.orphan) {
+
+                if (orphan != this.doc.orphan || name != this.doc.name) {
                     this.doc.orphan = orphan;
+                    this.doc.name = name;
                     this.update();
                 }
 
@@ -97,6 +103,8 @@ export class Sheet extends View {
     update() {
         for (let type in this.pages)
             this.pages[type].update();
+            
+        this.trigger("sync");
     }
 
     sync(initial: boolean) {
@@ -125,7 +133,6 @@ export class Sheet extends View {
 
                 } else {
                     this.update();
-                    this.trigger("sync");
                 }
             })
             .catch((error: AppError) => {

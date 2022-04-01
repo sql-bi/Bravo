@@ -68,11 +68,13 @@ export class Doc {
 
                 case DocType.dataset:
                     let dataset = (<PBICloudDataset>sourceData);
-                    return `${type}_${dataset.databaseName}`;
+                    return `${type}_${dataset.serverName}_${dataset.databaseName}`;
+                    //return `${type}_${dataset.databaseName}`;
 
                 case DocType.pbix:
                     let report = (<PBIDesktopReport>sourceData);
-                    return `${type}_${report.id}_${report.reportName}`;
+                    return `${type}_${report.serverName}_${report.databaseName}`;
+                    //return `${type}_${report.id}_${report.reportName}`;
             }
         }
         return Utils.Text.uuid();
