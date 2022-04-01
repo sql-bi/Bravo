@@ -159,22 +159,14 @@ export class ConnectRemote extends ConnectMenuItem {
 
             this.table.on("rowClick", (e, row) => {
 
+                this.deselectRows();
+                
+                let dataset = <PBICloudDataset>row.getData();
+                this.dialog.data.doc = new Doc(dataset.name, DocType.dataset, dataset);
+            
                 let rowElement = row.getElement();
-                /*if (rowElement.classList.contains("row-active")) {
-                    rowElement.classList.remove("row-active");
-                    this.okButton.toggleAttr("disabled", true);
-                } else {*/
-
-                    let dataset = <PBICloudDataset>row.getData();
-                    this.dialog.data.doc = new Doc(dataset.name, DocType.dataset, dataset);
-
-                    __(".row-active", this.table.element).forEach((el: HTMLElement) => {
-                        el.classList.remove("row-active");
-                    });
-
-                    rowElement.classList.add("row-active");
-                    this.dialog.okButton.toggleAttr("disabled", false);
-                //}
+                rowElement.classList.add("row-active");
+                this.dialog.okButton.toggleAttr("disabled", false);
             });
             this.table.on("rowDblClick", (e, row) => {
                 this.dialog.trigger("action", "ok");
@@ -182,6 +174,25 @@ export class ConnectRemote extends ConnectMenuItem {
         }
     }
 
+    deselectRows() {
+        this.dialog.data.doc = null;
+        __(".tabulator-row.row-active", this.element).forEach((el: HTMLElement) => {
+            el.classList.remove("row-active");
+        });
+        this.dialog.okButton.toggleAttr("disabled", true);
+    }
+
+    appear() {
+        this.dialog.okButton.toggle(true);
+
+        // Use timeout to avoid animation interfering with selection
+        window.setTimeout(()=>{ 
+            this.deselectRows(); 
+            if (this.table)
+                this.table.redraw(true);
+        }, 0);
+    }
+    
     applyFilters() {
 
         if (this.table) {

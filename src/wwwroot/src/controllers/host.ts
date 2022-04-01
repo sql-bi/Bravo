@@ -468,8 +468,8 @@ export class Host extends Dispatchable {
         });
     }
 
-    listReports(verifyConnections: boolean) {
-        return <Promise<PBIDesktopReport[]>>this.apiCall(`api/${verifyConnections ? "ListReports" : "QueryReports"}`);
+    listReports() {
+        return <Promise<PBIDesktopReport[]>>this.apiCall("api/ListReports");
     }
 
     listDatasets() {

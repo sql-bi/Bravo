@@ -55,27 +55,19 @@ export class Connect extends Dialog {
                 name: i18n(strings.connectDialogConnectPBIMenu),  
                 onRender: element => { connectLocal.render(element) },
                 onDestroy: ()=> { connectLocal.destroy() },
-                onChange: element => {
-                    this.okButton.toggle(true);
-                    this.okButton.toggleAttr("disabled", !this.data || !this.data.doc || this.data.doc.type != DocType.pbix);
-                }
+                onChange: ()=> { connectLocal.appear() },
             },
             "connect-pbi": {
                 name: i18n(strings.connectDialogAttachPBIMenu), 
                 onRender: element => { connectRemote.render(element) },
                 onDestroy: ()=> { connectRemote.destroy() },
-                onChange: element => {
-                    this.okButton.toggle(true);
-                    this.okButton.toggleAttr("disabled", !this.data || !this.data.doc || this.data.doc.type != DocType.dataset);
-                }
+                onChange: ()=> { connectRemote.appear() },
             },
             "open-vpax": {    
                 name: i18n(strings.connectDialogOpenVPXMenu),    
                 onRender: element => { connectFile.render(element) },
                 onDestroy: ()=> { connectFile.destroy() },
-                onChange: element => {
-                    this.okButton.toggle(false);
-                }
+                onChange: ()=> { connectFile.appear() },
             }
         });
 

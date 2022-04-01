@@ -16,21 +16,21 @@ import { i18n } from '../model/i18n';
 export class ConnectLocal extends ConnectMenuItem {
 
     table: Tabulator;
-    tableElement: HTMLElement;
+    tableId: string;
 
     render(element: HTMLElement) {
         super.render(element);
 
+        this.tableId = Utils.DOM.uniqueId();
+
         let html = `
             <div class="list">
-                <div id="connect-pbi-reports" class="table"></div>
+                <div id="${this.tableId}" class="table"></div>
                 <span class="browse-reports link">${i18n(strings.connectBrowse)}...</span>
             </div>
         `;
         this.element.insertAdjacentHTML("beforeend", html);
-        this.tableElement = _("#connect-pbi-reports", this.element);
         
-
         // Browse
         _(".browse-reports", this.element).addEventListener("click", e => {
             e.preventDefault();
@@ -44,11 +44,18 @@ export class ConnectLocal extends ConnectMenuItem {
             .catch(ignore=>{});
         });
 
-        pbiDesktop.verifyConnections = true;
-        pbiDesktop.on("change", () => {
-            this.updateTable();
+        let updateOnChange = false;
+        pbiDesktop.on("poll", (changed: boolean) => {
+            if (this.element.hidden) {
+                updateOnChange = false;
+            } else {
+                if (!updateOnChange || changed) {
+                    this.updateTable();
+                    updateOnChange = true;
+                }
+            }
         }, this.dialog.id);
-        pbiDesktop.check();
+        pbiDesktop.poll();
     }
 
     updateTable() {
@@ -60,11 +67,13 @@ export class ConnectLocal extends ConnectMenuItem {
             if (!unopenedReports.length) {
                 this.table.clearData();
             } else {
-                this.table.updateOrAddData(unopenedReports);
+                this.table.replaceData(unopenedReports);
             }
+
+            this.dialog.okButton.toggleAttr("disabled", true);
             
         } else {
-            this.table = new Tabulator("#connect-pbi-reports", {
+            this.table = new Tabulator(`#${this.tableId}`, {
                 renderVertical: "basic",
                 height: "calc(100% - 28px)",
                 headerVisible: false,
@@ -87,29 +96,38 @@ export class ConnectLocal extends ConnectMenuItem {
             });
 
             this.table.on("rowClick", (e, row) => {
+                this.deselectRows();
+
+                let report = <PBIDesktopReport>row.getData();
+                this.dialog.data.doc = new Doc(report.reportName, DocType.pbix, report);
                 
                 let rowElement = row.getElement();
-                /*if (rowElement.classList.contains("row-active")) {
-                    rowElement.classList.remove("row-active");
-                    this.okButton.toggleAttr("disabled", true);
-                } else {*/
-
-                    let report = <PBIDesktopReport>row.getData();
-
-                    this.dialog.data.doc = new Doc(report.reportName, DocType.pbix, report);
-
-                    __(".row-active", this.table.element).forEach((el: HTMLElement) => {
-                        el.classList.remove("row-active");
-                    });
-                    rowElement.classList.add("row-active");
-                    this.dialog.okButton.toggleAttr("disabled", false);
-                    
-                //}
+                rowElement.classList.add("row-active");
+                this.dialog.okButton.toggleAttr("disabled", false);
             });
             this.table.on("rowDblClick", (e, row) => {
                 this.dialog.trigger("action", "ok");
             });
         }
+    }
+    
+    deselectRows() {
+        this.dialog.data.doc = null;
+        __(".tabulator-row.row-active", this.element).forEach((el: HTMLElement) => {
+            el.classList.remove("row-active");
+        });
+        this.dialog.okButton.toggleAttr("disabled", true);
+    }
+
+    appear() {
+        this.dialog.okButton.toggle(true);
+
+        // Use timeout to avoid animation interfering with selection
+        window.setTimeout(()=>{ 
+            this.deselectRows(); 
+            if (this.table)
+                this.table.redraw(true);
+        }, 0);
     }
 
     waitForReportOpen(reportName: string) {
@@ -155,8 +173,7 @@ export class ConnectLocal extends ConnectMenuItem {
     }
 
     destroy() {
-        pbiDesktop.off("change", this.dialog.id);
-        pbiDesktop.verifyConnections = false;
+        pbiDesktop.off("poll", this.dialog.id);
         this.destroyTable();
         super.destroy();
     }
