@@ -36,4 +36,15 @@ To set up the environment and recompile the source you need to:
     - `webpack --mode production` builds the final package (compressed .js output)
 
     - `webpack --watch --mode development` builds the package in development mode (larger and debuggable .js output) and watch for changes to .ts files
-    
+
+### How to help with translations
+You can create a pull request adding/updating a localization file.
+This folder contains the localization files for the user interface: https://github.com/sql-bi/Bravo/tree/develop/src/wwwroot/src/model/i18n
+You can copy the en.ts file into another language (use the ISO code) and translate the English strings to the corresponding language.
+
+The strings used in the Dates templates are here in another repository and folder: https://github.com/sql-bi/DaxTemplate/tree/main/TestDaxTemplates/Templates
+
+Please use the DaxTemplate repository to make any change to the Dates templates. We will apply differences and copy them to the Bravo repository: https://github.com/sql-bi/Bravo/tree/develop/src/Assets/ManageDates/Templates
+
+After the 1.0 release of Bravo we will maintain also the Bravo templates file directly in the Bravo repository.
+
