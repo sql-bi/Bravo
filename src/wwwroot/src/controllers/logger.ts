@@ -10,7 +10,7 @@ import { app, host, optionsController } from '../main';
 import { AppError, AppErrorType } from '../model/exceptions';
 import { i18n } from '../model/i18n';
 import { strings } from '../model/strings';
-import { DiagnosticMessage } from './host';
+import { DiagnosticMessage, DiagnosticMessageSeverity } from './host';
 import { DiagnosticLevelType } from './options';
 
 export interface LogMessage {
@@ -74,7 +74,7 @@ export class Logger extends Dispatchable {
         host.getDiagnostics(initial)
             .then((messages: DiagnosticMessage[]) => {
                 messages.forEach(message => {
-                    this.log(message.name, { content: message.content }, DiagnosticLevelType.Verbose, Date.parse(message.timestamp));
+                    this.log(message.name, { content: message.content }, DiagnosticLevelType.Verbose, Date.parse(message.timestamp), message.severity > DiagnosticMessageSeverity.None ? "errorMessage" : "");
                 });
             })
             .catch(ignore=>{});
