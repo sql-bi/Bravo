@@ -34,26 +34,6 @@
             return state.HasFlag(User32.KeyState.Down);
         }
 
-        public static void CheckForUpdate(UpdateChannelType updateChannel, Action<BravoUpdate> updateCallback, CancellationToken cancellationToken = default)
-        {
-            _ = Task.Factory.StartNew(async () =>
-            {
-                try
-                {
-                    var bravoUpdate = await CheckForUpdateAsync(updateChannel, cancellationToken);
-                    if (bravoUpdate.IsNewerVersion)
-                    {
-                        updateCallback(bravoUpdate);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    AppEnvironment.AddDiagnostics($"{ nameof(CommonHelper) }.{ nameof(CheckForUpdate) }", ex);
-                    TelemetryHelper.TrackException(ex);
-                }
-            });
-        }
-
         public async static Task<BravoUpdate> CheckForUpdateAsync(UpdateChannelType updateChannel, CancellationToken cancellationToken)
         {
             var channelPath = updateChannel switch
