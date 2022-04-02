@@ -253,8 +253,8 @@
             {
                 if (templateEntries.Date.IsEnabled = DateEnabled)
                 {
-                    BravoUnexpectedException.Assert(DateTableValidation.IsValid());
-                    BravoUnexpectedException.Assert(DateReferenceTableValidation.IsValid());
+                    DateTableValidation.Assert();
+                    DateReferenceTableValidation.Assert();
 
                     templateEntries.Date.Table = DateTableName;
                     templateEntries.Date.ReferenceTable = DateReferenceTableName;
@@ -269,8 +269,8 @@
 
                 if (templateEntries.Holidays.IsEnabled = templateEntries.HolidaysDefinition.IsEnabled = HolidaysEnabled)
                 {
-                    BravoUnexpectedException.Assert(HolidaysTableValidation.IsValid());
-                    BravoUnexpectedException.Assert(HolidaysDefinitionTableValidation.IsValid());
+                    HolidaysTableValidation.Assert();
+                    HolidaysDefinitionTableValidation.Assert();
                     BravoUnexpectedException.ThrowIfNull(templateConfiguration.HolidaysReference);
 
                     templateEntries.Holidays.Table = templateConfiguration.HolidaysReference.TableName = HolidaysTableName;
@@ -516,6 +516,11 @@
 
     internal static class TableValidationExtensions
     {
-        public static bool IsValid(this TableValidation value) => value > TableValidation.Unknown && value < TableValidation.InvalidExists;
+        public static void Assert(this TableValidation value)
+        {
+            BravoUnexpectedException.Assert(value != TableValidation.Unknown);
+            BravoUnexpectedException.Assert(value != TableValidation.InvalidExists);
+            BravoUnexpectedException.Assert(value != TableValidation.InvalidNamingRequirements);
+        }
     }
 }

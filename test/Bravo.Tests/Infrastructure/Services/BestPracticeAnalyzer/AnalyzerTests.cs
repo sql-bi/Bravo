@@ -60,8 +60,9 @@
             Assert.True(results.Length > 0);
             foreach (var result in results)
             {
+                Assert.NotNull(result.Object);
                 Assert.IsType<Measure>(result.Object);
-                Assert.Contains("/", (result.Object as Measure).Expression);
+                Assert.Contains("/", (result.Object as Measure)!.Expression);
             }
         }
 
