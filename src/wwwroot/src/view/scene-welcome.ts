@@ -52,7 +52,7 @@ export class WelcomeScene extends Scene {
             <div class="cols">
                 <div class="col coll">
                     <header>
-                        <h1>${i18n(strings.welcomeTitle)}</h1>
+                        <h1>${i18n(strings.appName)}</h1>
                     </header> 
                     <p>${i18n(strings.welcomeText)}</p>
     
@@ -88,7 +88,7 @@ export class WelcomeScene extends Scene {
                             </ul>
                         </div>
 
-                        <p class="note">${i18n(strings.openSourcePayoff)} <span class="link" href="https://github.com/sql-bi/bravo">github.com/sql-bi/bravo</span></p>
+                        <p class="note">${i18n(strings.openSourcePayoff, { appName: i18n(strings.appName) })} <span class="link" href="https://github.com/sql-bi/bravo">github.com/sql-bi/bravo</span></p>
                     </div>
                 </div>
             </div>
