@@ -16,7 +16,7 @@ import { Sheet } from './sheet';
 import { PageType } from './page';
 import { host, logger, notificationCenter, optionsController, telemetry } from '../main';
 import { i18n } from '../model/i18n'; 
-import { ApplicationUpdateAvailableWebMessage, PBICloudDatasetOpenWebMessage, PBIDesktopReportOpenWebMessage, UnknownWebMessage, VpaxFileOpenWebMessage, WebMessageType } from '../model/message';
+import { PBICloudDatasetOpenWebMessage, PBIDesktopReportOpenWebMessage, UnknownWebMessage, VpaxFileOpenWebMessage, WebMessageType } from '../model/message';
 import { Notify } from './notifications';
 import { NotificationSidebar } from '../view/notification-sidebar';
 import { PBIDesktopReport } from '../model/pbi-report';
@@ -87,6 +87,8 @@ export class App {
         this.listen();
 
         this.showWelcome();
+
+        this.checkForUpdates(true);
     }
 
     updatePanels() {
@@ -200,16 +202,6 @@ export class App {
 
         host.on(WebMessageType.VpaxOpen, (data: VpaxFileOpenWebMessage) => {
             this.openFile(new File(data.blob, data.name, { lastModified: data.lastModified }));
-        });
-
-        host.on(WebMessageType.ApplicationUpdate, (data: ApplicationUpdateAvailableWebMessage)=>{
-            notificationCenter.add(new Notify(i18n(strings.updateMessage, { version: data.currentVersion }), data, `<span class="link" href="${data.downloadUrl}" target="downloader">${i18n(strings.appUpdateDownload)}</span> &nbsp;&nbsp; <span class="link" href="${data.changelogUrl}">${i18n(strings.appUpdateViewDetails)}</span>`, false, true));
-            
-            this.newVersion = new AppVersion({
-                version: data.currentVersion,
-                downloadUrl: data.downloadUrl,
-                changelogUrl: data.changelogUrl
-            });
         });
 
         host.on(WebMessageType.Unknown, (data: UnknownWebMessage) => {
@@ -388,8 +380,8 @@ export class App {
         this.updatePanels();
     }
 
-    checkForUpdates() {
-        return host.getCurrentVersion(optionsController.options.updateChannel)
+    checkForUpdates(notify = false) {
+        return host.getCurrentVersion(optionsController.options.updateChannel, notify)
             .then(data => {
 
                 let newVersion = null;
@@ -401,6 +393,11 @@ export class App {
                     });
                 }
                 this.newVersion = newVersion;
+
+                if (notify && newVersion) {
+                    notificationCenter.add(new Notify(i18n(strings.updateMessage, { version: newVersion.info.version }), newVersion.info, `<span class="link" href="${newVersion.info.downloadUrl}" target="downloader">${i18n(strings.appUpdateDownload)}</span> &nbsp;&nbsp; <span class="link" href="${newVersion.info.changelogUrl}">${i18n(strings.appUpdateViewDetails)}</span>`, false, true));
+                }
+
                 return newVersion;
             });
             /*.catch(ignore => {

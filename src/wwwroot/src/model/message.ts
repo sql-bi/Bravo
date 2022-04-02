@@ -9,7 +9,6 @@ import { PBIDesktopReport } from '../model/pbi-report';
 
 export enum WebMessageType {
     Unknown = "Unknown",
-    ApplicationUpdate = "ApplicationUpdate",
     ReportOpen = "ReportOpen",
     DatasetOpen = "DatasetOpen",
     VpaxOpen = "VpaxOpen"
@@ -22,14 +21,6 @@ export interface WebMessage {
 export interface UnknownWebMessage extends WebMessage {
     message?: string
     exception?: string
-}
-
-export interface ApplicationUpdateAvailableWebMessage extends WebMessage {
-    currentVersion?: string
-    installedVersion?: string
-    downloadUrl?: string
-    changelogUrl?: string
-    isNewerVersion: boolean
 }
 
 export interface PBIDesktopReportOpenWebMessage extends WebMessage {
