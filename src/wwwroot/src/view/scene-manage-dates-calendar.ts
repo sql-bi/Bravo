@@ -105,7 +105,7 @@ export class ManageDatesSceneCalendar extends ManageDatesScenePane {
                 let monthFormatter = new Intl.DateTimeFormat(I18n.instance.locale.locale, { month: "long" });
                 let monthValues: string[][] = [];
                 for (let i = 0; i < 12; i++)
-                monthValues.push([i.toString(), monthFormatter.format(new Date(1970, i, 1))]);
+                    monthValues.push([(i + 1).toString(), monthFormatter.format(new Date(1970, i, 1))]);
 
                 return {
                     name: i18n(strings.manageDatesTemplateFirstFiscalMonth),
