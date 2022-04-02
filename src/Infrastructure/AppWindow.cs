@@ -129,7 +129,7 @@
             _windowSubclass = AppWindowSubclass.Hook(_window);
 
             FixStartMenuShortcut();
-            CheckForUpdate();
+            //CheckForUpdate(); //TODO Remove this and all implementations
         }
 
         private bool OnWindowClosing(object sender, EventArgs e)

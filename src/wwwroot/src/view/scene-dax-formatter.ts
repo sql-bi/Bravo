@@ -24,6 +24,8 @@ import { ClientOptionsFormattingRegion, DaxFormatterLineStyle, DaxFormatterSpaci
 import { PageType } from '../controllers/page';
 import { MultiViewPane, MultiViewPaneMode, ViewPane } from './multiview-pane';
 import { DaxEditor } from './dax-editor';
+import { Confirm } from './confirm';
+import { DialogResponse } from './dialog';
 
 export class DaxFormatterScene extends DocScene {
 
@@ -278,6 +280,7 @@ export class DaxFormatterScene extends DocScene {
             })
             .finally(() => {
                 this.updateMeasuresStatus();
+                this.updateSummary();
             });
     }
 
@@ -321,7 +324,6 @@ export class DaxFormatterScene extends DocScene {
 
         _(".filter-measures-with-errors", this.element).toggleAttr("disabled", !canFilter);
         _(".filter-unformatted-measures", this.element).toggleAttr("disabled", !canFilter);
-        this.updateSummary();
     }
 
     updateTable(redraw = true) {
@@ -531,7 +533,7 @@ export class DaxFormatterScene extends DocScene {
             region = lastR;
         }
 
-        let formatOptions = <FormatDaxRequestOptions>optionsController.options.customOptions.formatting.daxFormatter;
+        let formatOptions = <FormatDaxRequestOptions>Utils.Obj.clone(optionsController.options.customOptions.formatting.daxFormatter);
         formatOptions.listSeparator = separators[region][0];
         formatOptions.decimalSeparator = separators[region][1];
         formatOptions.autoLineBreakStyle = this.doc.model.autoLineBreakStyle;
@@ -571,6 +573,7 @@ export class DaxFormatterScene extends DocScene {
 
             let errorScene = new ErrorScene(Utils.DOM.uniqueId(), this.element.parentElement, error, () => {
                 this.updateMeasuresStatus();
+                this.updateSummary();
             });
             this.splice(errorScene);
         };
@@ -696,6 +699,25 @@ export class DaxFormatterScene extends DocScene {
         this.element.addLiveEventListener("click", ".show-data-usage", (e, element) => {
             e.preventDefault();
             this.showDataUsageDialog();
+        });
+
+        this.element.addLiveEventListener("click", ".manual-analyze", (e, element) => {
+            e.preventDefault();
+            if (element.hasAttribute("disabled")) return;
+
+            let alert = new Confirm();
+            alert.show(i18n(strings.daxFormatterAnalyzeConfirm))
+                .then((response: DialogResponse) => {
+                    if (response.action == "ok") {
+
+                        element.toggleAttr("disabled", true);
+                        element.innerHTML = Loader.html(false);
+                        
+                        this.generateFormattedPreview(this.doc.measures);
+
+                        telemetry.track("Format DAX: Analyze");
+                    }
+                });
         });
 
 
