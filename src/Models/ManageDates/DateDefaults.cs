@@ -74,7 +74,7 @@
 
             // Override the template value only if the variable exists, otherwise keep the null value
             if (dateDefaults.FirstFiscalMonth is not null)
-                dateDefaults.FirstFiscalMonth = 0; // Zero-based
+                dateDefaults.FirstFiscalMonth = 1;
 
             // Override the template value only if the variable exists, otherwise keep the null value
             if (dateDefaults.FirstDayOfWeek is not null)
