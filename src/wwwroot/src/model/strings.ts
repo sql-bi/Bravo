@@ -63,6 +63,7 @@ export enum strings {
     dataUsageTitle,
     DaxFormatter,
     daxFormatterAgreement,
+    daxFormatterAnalyzeConfirm,
     daxFormatterAutoPreviewOption,
     daxFormatterFormat,
     daxFormatterFormatDisabled,

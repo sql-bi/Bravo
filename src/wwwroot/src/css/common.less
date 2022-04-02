@@ -200,7 +200,9 @@ a, .link {
     &:active {
         transform: translateY(1px);
     }
-
+    &[disabled] {
+        cursor: default;
+    }
     .dark & {
         color: @accent-back-color-dark;
         &:visited {
