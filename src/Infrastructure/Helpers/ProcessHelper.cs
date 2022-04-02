@@ -12,7 +12,7 @@
     using System.Management;
     using System.Threading;
 
-    public static class ProcessHelper
+    internal static class ProcessHelper
     {
         public static void RunOnSTAThread(Action action)
         {

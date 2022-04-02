@@ -129,7 +129,6 @@
             _windowSubclass = AppWindowSubclass.Hook(_window);
 
             FixStartMenuShortcut();
-            //CheckForUpdate(); //TODO Remove this and all implementations
         }
 
         private bool OnWindowClosing(object sender, EventArgs e)
@@ -161,26 +160,6 @@
                     // ignore "The process cannot access the file '..\Bravo for Power BI.lnk' because it is being used by another process."
                 }
             }
-        }
-
-        private void CheckForUpdate()
-        {
-            if (AppEnvironment.IsPackagedAppInstance)
-                return;
-
-            CommonHelper.CheckForUpdate(UserPreferences.Current.UpdateChannel, updateCallback: (bravoUpdate) =>
-            {
-                // HACK: see issue https://github.com/tryphotino/photino.NET/issues/87
-                // Wait a bit in order to ensure that the PhotinoWindow message loop is started
-                // This is to prevent the .NET Runtime corecrl.dll fault with a win32 access violation
-                Thread.Sleep(5_000);
-                // HACK END <<
-
-                var updateMessage = ApplicationUpdateAvailableWebMessage.CreateFrom(bravoUpdate);
-                _window.SendWebMessage(updateMessage.AsString);
-
-                NotificationHelper.NotifyUpdateAvailable(bravoUpdate);
-            });
         }
 
         /// <summary>
