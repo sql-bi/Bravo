@@ -11,10 +11,10 @@
   <?define AppName = "Bravo" ?>
   
   <?if $(sys.BUILDARCH) = x64 ?>
-    <?define ProductName = "!(loc.ProductName)" ?>
+    <?define ProductName = "!(loc.ProductName) (User)" ?>
     <?define Win64 = "yes" ?>
   <?else ?>
-    <?define ProductName = "!(loc.ProductName) (32 bit)" ?>
+    <?define ProductName = "!(loc.ProductName) (User/32bit)" ?>
     <?define Win64 = "no" ?>
   <?endif ?>
   

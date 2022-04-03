@@ -146,8 +146,8 @@
             // If the user has chosen to activate the application shortcut during app installation, this results in a duplicate of the application shortcut in the Windows start menu.
             // The issue has been reported on GitHub, meanwhile let's get rid of the shortcut created by Photino https://github.com/tryphotino/photino.NET/issues/85
 
-            // Remove only if per-machine, don't delete the shortcut if the current instance of the app is portable or per-user
-            if (AppEnvironment.IsInstalledPerMachineAppInstance)
+            // TODO: remove the shortcut only if the current instance is per-machine or per-user installed
+            // if (AppEnvironment.IsInstalledAppInstance)
             {
                 var shortcutName = Path.ChangeExtension(AppEnvironment.ApplicationMainWindowTitle, "lnk");
                 var shortcutPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData, Environment.SpecialFolderOption.DoNotVerify), @"Microsoft\Windows\Start Menu\Programs", shortcutName);
