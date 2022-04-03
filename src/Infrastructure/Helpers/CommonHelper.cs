@@ -4,6 +4,7 @@
     using Sqlbi.Bravo.Infrastructure.Windows.Interop;
     using Sqlbi.Bravo.Models;
     using System;
+    using System.IO;
     using System.Net.Http;
     using System.Text.Json;
     using System.Threading;
@@ -34,6 +35,15 @@
             return state.HasFlag(User32.KeyState.Down);
         }
 
+        public static string NormalizePath(string path)
+        {
+            var uri = new Uri(path);
+            var fullPath = Path.GetFullPath(uri.LocalPath);
+            var normalizedPath = fullPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar).ToLowerInvariant();
+
+            return normalizedPath;
+        }
+
         public async static Task<BravoUpdate> CheckForUpdateAsync(UpdateChannelType updateChannel, CancellationToken cancellationToken)
         {
             var channelPath = updateChannel switch
@@ -58,12 +68,56 @@
                 ChangelogUrl = document.RootElement.GetProperty("changelog").GetString(),
             };
 
-            var installedVersion = Version.Parse(bravoUpdate.InstalledVersion);
-            var currentVersion = Version.Parse(bravoUpdate.CurrentVersion!);
-
-            bravoUpdate.IsNewerVersion = currentVersion > installedVersion;
+            bravoUpdate.IsNewerVersion = GetIsNewerVersion(bravoUpdate);
+            bravoUpdate.DownloadUrl = GetDownloadUrl(bravoUpdate);
 
             return bravoUpdate;
+
+            static bool GetIsNewerVersion(BravoUpdate bravoUpdate)
+            {
+                var installedVersion = Version.Parse(bravoUpdate.InstalledVersion!);
+                var currentVersion = Version.Parse(bravoUpdate.CurrentVersion!);
+
+                return currentVersion > installedVersion;
+            }
+
+            static string GetDownloadUrl(BravoUpdate bravoUpdate)
+            {
+                BravoUnexpectedException.Assert(AppEnvironment.IsPackagedAppInstance == false);
+
+                var downloadUri = new Uri(bravoUpdate.DownloadUrl!, UriKind.Absolute);
+                var downloadFileNameWithoutExtension = Path.GetFileNameWithoutExtension(downloadUri.LocalPath);
+                var downloadFileExtension = Path.GetExtension(downloadUri.LocalPath);
+                var downloadFileName = Path.GetFileName(downloadUri.LocalPath);
+
+                if (AppEnvironment.IsFrameworkDependantAppInstance)
+                {
+                    downloadFileNameWithoutExtension += "-frameworkdependant";
+                }
+
+                if (AppEnvironment.IsInstalledPerMachineAppInstance)
+                {
+                    // keep current value
+                }
+                else if (AppEnvironment.IsInstalledPerUserAppInstance)
+                {
+                    downloadFileNameWithoutExtension += "-userinstaller";
+                }
+                else if (AppEnvironment.IsPortableAppInstance)
+                {
+                    downloadFileNameWithoutExtension += "-portable";
+                    downloadFileExtension = ".zip";
+                }
+
+                var newFileName = $"{ downloadFileNameWithoutExtension }{ downloadFileExtension }";
+                var newPath = downloadUri.LocalPath.Replace(downloadFileName, newFileName);
+                var uriBuilder = new UriBuilder(downloadUri)
+                {
+                    Path = newPath
+                };
+
+                return uriBuilder.Uri.AbsoluteUri;
+            }
         }
     }
 }

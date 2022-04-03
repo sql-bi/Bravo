@@ -144,6 +144,7 @@
       <Component Id="app.exe" Guid="{E880F50A-6C3B-4EB6-B639-752803CEF497}" Win64="$(var.Win64)">
         <File Id="app.exe" Name="$(var.AppExecutableName)" Source="$(var.PublishFolder)\$(var.AppExecutableName)" Checksum="yes" KeyPath="yes" />
         <RemoveFile Id="REMOVEALL" Directory="INSTALLFOLDER" Name="*.*" On="both" />
+        <RegistryValue Root="HKCU" Key="Software\[Manufacturer]\$(var.AppName)" Name="installFolder" Value="[INSTALLFOLDER]" Type="string" />
         <RegistryValue Root="HKCU" Key="Software\[Manufacturer]\$(var.AppName)" Name="desktopShortcutEnabled" Value="[DESKTOPSHORTCUTENABLED]" Type="string" />
         <RegistryValue Root="HKCU" Key="Software\[Manufacturer]\$(var.AppName)" Name="programMenuShortcutEnabled" Value="[PROGRAMMENUSHORTCUTENABLED]" Type="string" />
         <RegistryValue Root="HKCU" Key="Software\[Manufacturer]\$(var.AppName)" Name="installerTelemetryEnabled" Value="[INSTALLERTELEMETRYENABLED]" Type="string" />
