@@ -25,6 +25,7 @@
         private const string ProviderMsolapValue = "MSOLAP";
         private const string IntegratedSecuritySspiValue = "SSPI";
         private const string IntegratedSecurityClaimsTokenValue = "ClaimsToken";
+        private const string PersistSecurityInfoValue = "False"; // 'False' here is used as a best practice in order to discard security-sensitive information after the connection has been opened
 
         public static string BuildFor(IPEndPoint endPoint)
         {
@@ -40,7 +41,7 @@
                 //{ InitialCatalogKey, databaseName },
                 { ConnectTimeoutKey, connectTimeout },
                 { IntegratedSecurityKey, IntegratedSecuritySspiValue },
-                { PersistSecurityInfoKey, "True" },
+                { PersistSecurityInfoKey, PersistSecurityInfoValue },
                 { ApplicationNameKey, AppEnvironment.ApplicationInstanceUniqueName }
             };
 
@@ -58,7 +59,7 @@
                 { DataSourceKey, report.ServerName },
                 { InitialCatalogKey, report.DatabaseName },
                 { IntegratedSecurityKey, IntegratedSecuritySspiValue },
-                { PersistSecurityInfoKey, "True" },
+                { PersistSecurityInfoKey, PersistSecurityInfoValue },
                 { ApplicationNameKey, AppEnvironment.ApplicationInstanceUniqueName }
             };
 
@@ -68,8 +69,6 @@
         public static string BuildFor(PBICloudDataset dataset, string accessToken)
         {
             BravoUnexpectedException.Assert(dataset.ConnectionMode == PBICloudDatasetConnectionMode.Supported);
-            BravoUnexpectedException.ThrowIfNull(dataset.ServerName);
-            BravoUnexpectedException.ThrowIfNull(dataset.DatabaseName);
 
             if (dataset.IsXmlaEndPointSupported)
             {
@@ -80,13 +79,13 @@
 
                 // TODO: Handle possible duplicated workspace name - when connecting to a workspace with the same name as another workspace, append the workspace guid to the workspace name
                 // https://docs.microsoft.com/en-us/power-bi/admin/service-premium-connect-tools#duplicate-workspace-names
-                //var workspaceUniqueName = $"{ dataset.WorkspaceName } - { dataset.WorkspaceId }";
 
                 // TODO: Handle possible duplicated dataset name - when connecting to a dataset with the same name as another dataset in the same workspace, append the dataset guid to the dataset name
                 // https://docs.microsoft.com/en-us/power-bi/admin/service-premium-connect-tools#duplicate-dataset-name
-                //var datasetUniqueName = $"{ dataset.DisplayName } - { dataset.DatabaseName }";
 
+                BravoUnexpectedException.ThrowIfNull(dataset.ServerName);
                 BravoUnexpectedException.ThrowIfNull(dataset.WorkspaceName);
+                BravoUnexpectedException.ThrowIfNull(dataset.ExternalDatabaseName);
                 BravoUnexpectedException.ThrowIfNull(accessToken);
 
                 // TODO: add support for B2B users
@@ -95,7 +94,7 @@
                 // var homeTenant = CurrentAuthentication?.Account.GetTenantProfiles().SingleOrDefault((t) => t.IsHomeTenant);
                 var tenantName = "myorg";
                 var serverName = $"{ dataset.ServerName }/v1.0/{ tenantName }/{ dataset.WorkspaceName }";
-                var databaseName = dataset.DatabaseName;
+                var databaseName = dataset.ExternalDatabaseName;
                 var connectionString = Build(serverName, databaseName, accessToken);
 
                 return connectionString.ToProtectedString();
@@ -108,10 +107,12 @@
             }
             else
             {
+                BravoUnexpectedException.ThrowIfNull(dataset.ServerName);
+                BravoUnexpectedException.ThrowIfNull(dataset.ExternalDatabaseName);
                 BravoUnexpectedException.ThrowIfNull(accessToken);
 
                 var serverName = dataset.ServerName;
-                var databaseName = dataset.DatabaseName;
+                var databaseName = dataset.ExternalDatabaseName;
                 var connectionString = Build(serverName, databaseName, accessToken);
 
                 return connectionString.ToProtectedString();
@@ -125,11 +126,9 @@
                     { DataSourceKey, serverName },
                     { InitialCatalogKey, databaseName },
                     { IntegratedSecurityKey, IntegratedSecurityClaimsTokenValue },
+                    { PersistSecurityInfoKey, PersistSecurityInfoValue },
                     { PasswordKey, accessToken }, // The Analysis Services client libraries automatically add the auth-scheme value "Bearer" to the access token
                     { ApplicationNameKey, AppEnvironment.ApplicationInstanceUniqueName }
-
-                    //{ PersistSecurityInfoKey, "False" },
-                    //{ UseEncryptionForDataKey, "True" },
                 };
 
                 return builder.ConnectionString;
