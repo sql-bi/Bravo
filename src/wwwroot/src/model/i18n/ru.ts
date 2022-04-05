@@ -274,7 +274,7 @@ const locale: Locale = {
         [_.optionAccount]: "Power BI аккаунт",
         [_.optionAccountDescription]: "Настройте учетную запись для доступа к онлайн-наборам данных Power BI.",
         [_.optionDiagnostic]: "Уровень диагностики",
-        [_.optionDiagnosticDescription]: "Показывать ошибки и журналы на панели диагностики. Выберите <em>Основной</em>, чтобы регистрировать только несколько сообщений (которые будут анонимными). <em>Подробный</em> регистрирует все сообщения ( который останется целым)",
+        [_.optionDiagnosticDescription]: "Показывать ошибки и журналы на панели диагностики. Выберите <em>Основной</em>, чтобы регистрировать только несколько сообщений. <em>Подробный</em> регистрирует все сообщения.",
         [_.optionDiagnosticLevelBasic]: "Основной",
         [_.optionDiagnosticLevelNone]: "Нет",
         [_.optionDiagnosticLevelVerbose]: "Подробный",

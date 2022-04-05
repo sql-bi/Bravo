@@ -276,7 +276,7 @@ const locale: Locale = {
         [_.optionAccount]: "Compte Power BI",
         [_.optionAccountDescription]: "Définir le compte pour accéder aux jeux données en ligne de Power BI.",
         [_.optionDiagnostic]: "Niveau de Diagnostique",
-        [_.optionDiagnosticDescription]: "Afficher les erreurs et les journaux d'exécution dans le panneau de diagnostique. Choisir <em>Basic</em> de journaliser uniquement quelques messages (qui seront anonymisés). <em>Afficher</em> tous les messages des journaux d'exécution (qui s'afficheront en entier).",
+        [_.optionDiagnosticDescription]: "Afficher les erreurs et les journaux d'exécution dans le panneau de diagnostique. Choisir <em>Basic</em> de journaliser uniquement quelques messages. <em>Afficher</em> tous les messages des journaux d'exécution.",
         [_.optionDiagnosticLevelBasic]: "De base",
         [_.optionDiagnosticLevelNone]: "Aucun",
         [_.optionDiagnosticLevelVerbose]: "Afficher",

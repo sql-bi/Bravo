@@ -63,7 +63,7 @@ export class DiagnosticPane extends View {
             let items: ContextMenuItemOptions[] = [
                 { 
                     label: i18n(strings.copyMessage), cssIcon: "icon-copy", enabled: true, onClick: () => { 
-                        navigator.clipboard.writeText(Logger.MessageToClipboard(message));
+                        navigator.clipboard.writeText(logger.exportMessage(message, "clipboard"));
                     }
                 },
                 {
@@ -72,13 +72,7 @@ export class DiagnosticPane extends View {
                 },
                 { 
                     label: i18n(strings.createIssue), cssIcon: "icon-github",  enabled: true, onClick: () => { 
-
-                        let messageObjStr = (message.objs ? JSON.stringify(message.objs) : "");
-                        if (messageObjStr.length > 500) 
-                            messageObjStr = messageObjStr.substring(0, 500) + " [truncated]";
-                        let messageStr = `${message.name}\n${messageObjStr}`;
-
-                        host.navigateTo(Logger.GithubIssueUrl(messageStr));
+                        host.navigateTo(logger.exportMessage(message, "github"));
                     }
                 }
             ];

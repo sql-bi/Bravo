@@ -193,13 +193,12 @@ export class DaxFormatterScene extends DocScene {
     renderPreviewError(error: AppError, retry?: () => void) {
 
         this.previewing = {};
-        let message = error.toString();
         const retryId = Utils.DOM.uniqueId();
 
         this.previewOverlay.innerHTML = `
             <div class="notice">
                 <div>
-                    <p>${message}</p>
+                    <p>${error.toString()}</p>
                     <p><span class="copy-error link">${i18n(strings.copyErrorDetails)}</span></p>
                     ${ retry ? `
                         <div id="${retryId}" class="button button-alt">${i18n(strings.errorRetry)}</div>
@@ -211,7 +210,7 @@ export class DaxFormatterScene extends DocScene {
 
         _(".copy-error", this.element).addEventListener("click", e =>{
             e.preventDefault();
-            navigator.clipboard.writeText(message);
+            navigator.clipboard.writeText(error.toString(true, true, true));
 
             let ctrl = <HTMLElement>e.currentTarget;
             ctrl.innerText = i18n(strings.copiedErrorDetails);

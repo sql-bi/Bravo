@@ -277,7 +277,7 @@ const locale: Locale = {
         [_.optionAccount]: "Power BI-Konto",
         [_.optionAccountDescription]: "Legen Sie das Konto für den Zugriff auf Power BI Online-Datensätze fest.",
         [_.optionDiagnostic]: "Diagnosestufe",
-        [_.optionDiagnosticDescription]: "Fehler und Protokolle in einem Diagnosefenster anzeigen. Wählen Sie <em>Standard</em>, um nur einige Meldungen zu protokollieren (die anonymisiert werden). <em>Ausführlich </em> protokolliert alle Meldungen (die vollständig bleiben).",
+        [_.optionDiagnosticDescription]: "Fehler und Protokolle in einem Diagnosefenster anzeigen. Wählen Sie <em>Standard</em>, um nur einige Meldungen zu protokollieren. <em>Ausführlich </em> protokolliert alle Meldungen.",
         [_.optionDiagnosticLevelBasic]: "Standard",
         [_.optionDiagnosticLevelNone]: "Keine",
         [_.optionDiagnosticLevelVerbose]: "Ausführlich",

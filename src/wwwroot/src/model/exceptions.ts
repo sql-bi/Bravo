@@ -8,6 +8,7 @@ import { ProblemDetails } from '../controllers/host';
 import { Utils } from '../helpers/utils';
 import { app, logger, telemetry } from '../main';
 import { i18n } from '../model/i18n'; 
+import { pii } from './pii';
 import { strings } from './strings';
 
 export enum AppProblem {
@@ -61,8 +62,12 @@ export class AppError {
         this.traceId = traceId;
     }
 
-    toString(includeTraceId = true, includeVersion = true) {
-        return `${ i18n(strings.error) }${ this.code ? ` ${this.type != AppErrorType.Managed ? "HTTP/" : "" }${ this.code }` : "" }: ${ this.message }${ this.details ? `\n${this.details}` : "" }${ includeTraceId && this.traceId ? `\n${ i18n(strings.traceId) }: ${this.traceId}` : ""}${ includeVersion ? `\n${i18n(strings.version)}: ${app.currentVersion.toString()}` : ""}`;
+    toString(anonymize = false, includeTraceId = true, includeVersion = true) {
+
+        let message = (anonymize ? Utils.Obj.anonymize(this.message, pii) : this.message);
+        let details = (this.details ? (anonymize ? Utils.Obj.anonymize(this.details, pii) : this.details) : null);
+
+        return `${ i18n(strings.error) }${ this.code ? ` ${this.type != AppErrorType.Managed ? "HTTP/" : "" }${ this.code }` : "" }: ${ message }${ details ? `\n${details}` : "" }${ includeTraceId && this.traceId ? `\n${ i18n(strings.traceId) }: ${this.traceId}` : ""}${ includeVersion ? `\n${i18n(strings.version)}: ${app.currentVersion.toString()}` : ""}`;
     }
 
     static InitFromProblem(problem: ProblemDetails, message?: string) {

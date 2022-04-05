@@ -9,6 +9,7 @@ import { Dic, Utils } from '../helpers/utils';
 import { app, host, optionsController } from '../main';
 import { AppError, AppErrorType } from '../model/exceptions';
 import { i18n } from '../model/i18n';
+import { pii } from '../model/pii';
 import { strings } from '../model/strings';
 import { DiagnosticMessage, DiagnosticMessageSeverity } from './host';
 import { DiagnosticLevelType } from './options';
@@ -27,7 +28,6 @@ export interface LogMessageUpdate {
 }
 export interface LogMessageObj {
     content: any
-    anonymize?: string | string[]
     level?: DiagnosticLevelType
 }
 export class Logger extends Dispatchable {
@@ -155,10 +155,6 @@ export class Logger extends Dispatchable {
                 return json;
             }
         } 
-        const anonymizeData = (optionsController.options.diagnosticLevel == DiagnosticLevelType.Basic);
-        if (anonymizeData && content.anonymize) {
-            return Utils.Obj.anonymize(json, content.anonymize);
-        }
         return json;
     }
 
@@ -179,12 +175,25 @@ export class Logger extends Dispatchable {
         this.logs = {};
     }
 
-    static MessageToClipboard(message: LogMessage) {
-        return JSON.stringify({
-            name: message.name,
-            objects: message.objs,
-            time: message.time
-        });
+    exportMessage(message: LogMessage, destination: "clipboard"|"github", anonymize = true) {
+        
+        let objs = (anonymize ? Utils.Obj.anonymize(message.objs, pii) : message.objs);
+
+        if (destination == "clipboard") {
+            return JSON.stringify({
+                name: message.name,
+                objects: objs,
+                time: message.time
+            });
+        } else if (destination == "github") {
+            const maxLength = 500;
+            let truncatedObjs = (objs ? JSON.stringify(objs) : "");
+            if (truncatedObjs.length > maxLength) 
+                truncatedObjs = truncatedObjs.substring(0, maxLength) + " [truncated]";
+            return Logger.GithubIssueUrl(`${message.name}\n${truncatedObjs}`);
+        }
+
+        return null;
     }
 
     static LevelMatch(level: DiagnosticLevelType) {

@@ -10,11 +10,11 @@ import { auth, debug, logger } from '../main';
 import { DocType } from '../model/doc';
 import { AppError, AppErrorType, AppProblem } from '../model/exceptions';
 import { /*TokenUpdateWebMessage,*/ WebMessage, WebMessageType } from '../model/message';
-import { PBICloudDataset, PBICloudDatasetConnectionMode, PBICloudDatasetPrivateProperties } from '../model/pbi-dataset';
+import { PBICloudDataset, PBICloudDatasetConnectionMode } from '../model/pbi-dataset';
 import { FormattedMeasure, TabularDatabase, TabularDatabaseServer, TabularMeasure } from '../model/tabular';
 import { Account } from './auth';
 import { DiagnosticLevelType, FormatDaxOptions, Options, UpdateChannelType } from './options';
-import { PBIDesktopReport, PBIDesktopReportConnectionMode, PBIDesktopReportPrivateProperties } from '../model/pbi-report';
+import { PBIDesktopReport, PBIDesktopReportConnectionMode } from '../model/pbi-report';
 import { ThemeType } from './theme';
 import { i18n } from '../model/i18n';
 import { strings } from '../model/strings';
@@ -170,7 +170,6 @@ export interface BravoUpdate {
 } 
 
 export interface ApiLogSettings {
-    anonymize?: string | string[]  // A list of properties to anonymize - it os applied to the request only because the response object is logged only with Verbose level which is not anonymized
     messageLevel?: DiagnosticLevelType // Minimum diagnostic level required to log the message
     dataLevel?: DiagnosticLevelType // Minimum diagnostic level required to log the obj data
 }
@@ -199,7 +198,7 @@ export class Host extends Dispatchable {
                 const webMessage = <WebMessage>JSON.parse(message);
                 if (!webMessage || !("type" in webMessage)) return;
 
-                try { logger.log("Message", { content: webMessage, anonymize: [...PBICloudDatasetPrivateProperties, ...PBIDesktopReportPrivateProperties] }); } catch (ignore) {}
+                try { logger.log("Message", { content: webMessage }); } catch (ignore) {}
 
                 this.trigger(webMessage.type, webMessage);
             });
@@ -335,8 +334,6 @@ export class Host extends Dispatchable {
             obj = {
                 content: data,
             }
-            if (settings && settings.anonymize)
-                obj.anonymize = settings.anonymize;
             if (settings && settings.dataLevel)
                 obj.level = settings.dataLevel;
         }
@@ -358,12 +355,14 @@ export class Host extends Dispatchable {
 
     /* Authentication */
     signIn(emailAddress?: string) {
-        const logSettings: ApiLogSettings = { anonymize: "*" };
+        const logSettings: ApiLogSettings = {};
+
         return <Promise<Account>>this.apiCall("auth/powerbi/SignIn", emailAddress ? { upn: emailAddress } : {}, {}, false, logSettings);
     }
 
     signOut() {
-        const logSettings: ApiLogSettings = { anonymize: "*" };
+        const logSettings: ApiLogSettings = {};
+
         return this.apiCall("auth/powerbi/SignOut", {}, {}, false, logSettings);
     }
 
@@ -380,13 +379,13 @@ export class Host extends Dispatchable {
 
     getModelFromVpax(file: File) {
         const logSettings: ApiLogSettings = {};
+
         return <Promise<TabularDatabase>>this.apiCall("api/GetModelFromVpax", file, { method: "POST", headers: { /* IMPORTANT */ } }, true, logSettings); 
     }
 
     getModelFromReport(report: PBIDesktopReport)  {
-        const logSettings: ApiLogSettings = {
-            anonymize: PBIDesktopReportPrivateProperties
-        };
+        const logSettings: ApiLogSettings = {};
+
         return this.validateReportConnection(report)
             .then(report => {
                 return <Promise<TabularDatabase>>this.apiCall("api/GetModelFromReport", report, { method: "POST" }, true, logSettings);
@@ -394,9 +393,7 @@ export class Host extends Dispatchable {
     }
 
     validateReportConnection(report: PBIDesktopReport): Promise<PBIDesktopReport> {
-        const logSettings: ApiLogSettings = {
-            anonymize: PBIDesktopReportPrivateProperties
-        };
+        const logSettings: ApiLogSettings = {};
 
         const connectionError = (connectionMode: PBIDesktopReportConnectionMode) => {
             let errorKey = `errorReportConnection${PBIDesktopReportConnectionMode[connectionMode]}`;
@@ -416,18 +413,15 @@ export class Host extends Dispatchable {
     }
 
     getModelFromDataset(dataset: PBICloudDataset) {
-        const logSettings: ApiLogSettings = {
-            anonymize: PBICloudDatasetPrivateProperties
-        };
+        const logSettings: ApiLogSettings = {};
+
         return this.validateDatasetConnection(dataset)
             .then(dataset => {
                 return <Promise<TabularDatabase>>this.apiCall("api/GetModelFromDataset", dataset, { method: "POST" }, true, logSettings);
             });
     }
     validateDatasetConnection(dataset: PBICloudDataset): Promise<PBICloudDataset> {
-        const logSettings: ApiLogSettings = {
-            anonymize: PBICloudDatasetPrivateProperties
-        };
+        const logSettings: ApiLogSettings = {};
 
         const connectionError = (connectionMode: PBICloudDatasetConnectionMode, diagnostic?: any) => {
             let errorKey = `errorDatasetConnection${PBICloudDatasetConnectionMode[connectionMode]}`;
@@ -474,6 +468,7 @@ export class Host extends Dispatchable {
 
     listDatasets() {
         const logSettings: ApiLogSettings = {}; 
+
         return <Promise<PBICloudDataset[]>>this.apiCall("api/ListDatasets", {}, {}, true, logSettings);
     }
 
@@ -487,11 +482,8 @@ export class Host extends Dispatchable {
     /* Format DAX */
 
     formatDax(request: FormatDaxRequest) {
-        const logSettings: ApiLogSettings = {
-            anonymize: [
-                "measure"
-            ]
-        };
+        const logSettings: ApiLogSettings = {};
+
         return <Promise<FormattedMeasure[]>>this.apiCall("api/FormatDax", request, { method: "POST" }, true, logSettings);
     }
     abortFormatDax(type: DocType) {
@@ -499,9 +491,7 @@ export class Host extends Dispatchable {
     }
 
     updateModel(request: UpdatePBIDesktopReportRequest | UpdatePBICloudDatasetRequest, type: DocType) {
-        const logSettings: ApiLogSettings = {
-            anonymize: (type == DocType.dataset ? PBICloudDatasetPrivateProperties : PBIDesktopReportPrivateProperties)
-        };
+        const logSettings: ApiLogSettings = {};
         
         return <Promise<DatabaseUpdateResult>>this.apiCall(`api/Update${type == DocType.dataset ? "Dataset" : "Report"}`, request, { method: "POST" }, true, logSettings);
     }

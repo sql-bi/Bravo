@@ -275,7 +275,7 @@ const locale: Locale = {
         [_.optionAccount]: "Power BI Account",
         [_.optionAccountDescription]: "Set the account to access Power BI online datasets.",
         [_.optionDiagnostic]: "Diagnostics Level",
-        [_.optionDiagnosticDescription]: "Show errors and logs in a diagnostics pane. Choose <em>Basic</em> to log only a few messages (which will be anonymized). <em>Verbose</em> logs all messages (which will remain integral).",
+        [_.optionDiagnosticDescription]: "Show errors and logs in a diagnostics pane. Choose <em>Basic</em> to log only a few messages. <em>Verbose</em> logs all messages.",
         [_.optionDiagnosticLevelBasic]: "Basic",
         [_.optionDiagnosticLevelNone]: "None",
         [_.optionDiagnosticLevelVerbose]: "Verbose",
