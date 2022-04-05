@@ -134,4 +134,5 @@ export enum TabularDatabaseFeatureUnsupportedReason {
     XmlaEndpointNotSupported = 1 << 3,
     ManageDatesAutoDateTimeEnabled = 1 << 300,
     ManageDatesPBIDesktopModelOnly = 1 << 301,
+    ManageDatesEmptyTableCollection = 1 << 302,
 }

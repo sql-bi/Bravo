@@ -5,7 +5,7 @@
 */
 
 import { AppError, AppErrorType } from '../model/exceptions';
-import { _ } from '../helpers/utils';
+import { Utils, _ } from '../helpers/utils';
 import { i18n } from '../model/i18n'; 
 import { strings } from '../model/strings';
 import { BackableScene } from './scene-back';
@@ -42,6 +42,7 @@ export class ErrorScene extends BackableScene {
 
                 <p class="message">
                     ${this.error.message}
+                    ${Utils.Obj.isString(this.error.details) ? `<br>${this.error.details}` : ""}
                 </p>
                 
                 <p class="context">

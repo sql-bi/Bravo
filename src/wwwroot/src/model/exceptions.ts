@@ -79,40 +79,40 @@ export class AppError {
 
         let traceId = problem.traceId;
 
-        if (problem.status == Utils.ResponseStatusCode.BadRequest) {
+        // 400 (Handled)
+        if (problem.status == Utils.ResponseStatusCode.BadRequest) { 
             errorType = AppErrorType.Managed;
             errorCode = Number(problem.instance);
             const key = `error${AppProblem[errorCode]}`;
             errorMessage = i18n(key in strings ? (<any>strings)[key] : strings.errorUnhandled);
-            if (problem.detail) { 
-                if (Utils.Obj.isString(problem.detail))
-                    errorMessage = problem.detail;
-                else
-                    errorDetails = problem.detail;
-            }
+            errorDetails = problem.detail;
 
         } else {
             errorCode = problem.status;
 
+            // Not authorized
             if (problem.status == Utils.ResponseStatusCode.NotAuthorized) {
                 errorType = AppErrorType.Auth;
                 errorMessage = i18n(strings.errorNotAuthorized);
-                
+            
+            // Aborted
             } else if (problem.status == Utils.ResponseStatusCode.Aborted) {
                 errorType = AppErrorType.Abort;
                 errorMessage = i18n(strings.errorAborted);
 
+            // Timeout
             } else if (problem.status == Utils.ResponseStatusCode.Timeout) {
                 errorType = AppErrorType.Abort;
                 errorMessage = i18n(strings.errorTimeout);
 
+            // HTTP error (unhandled)
             } else {
                 errorType = AppErrorType.Response;
                 errorMessage = problem.title ? problem.title : i18n(strings.errorUnspecified);
-
                 if (errorMessage.trim().slice(-1) != ".") errorMessage += "."; 
                 
                 errorDetails = problem.detail;
+                
             }
         }
 
