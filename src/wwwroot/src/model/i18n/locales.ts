@@ -8,7 +8,7 @@ import en from './en';
 //import es from './es';
 //import pt_BR from './pt-BR';
 import fr from './fr';
-//import de from './de';
+import de from './de';
 import it from './it';
 //import ja from './ja';
 //import pl from './pl';
@@ -21,7 +21,7 @@ const locales = {
     //[es.locale]: es, 
     //[pt_BR.locale]: pt_BR,
     [fr.locale]: fr,  
-    //[de.locale]: de, 
+    [de.locale]: de, 
     [it.locale]: it,
     //[ja.locale]: ja,
     //[pl.locale]: pl,
