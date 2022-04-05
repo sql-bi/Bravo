@@ -417,7 +417,8 @@ export class Host extends Dispatchable {
 
         return this.validateDatasetConnection(dataset)
             .then(dataset => {
-                return <Promise<TabularDatabase>>this.apiCall("api/GetModelFromDataset", dataset, { method: "POST" }, true, logSettings);
+                return this.apiCall("api/GetModelFromDataset", dataset, { method: "POST" }, true, logSettings)
+                    .then(database => <[TabularDatabase, PBICloudDataset]>[database, dataset]);
             });
     }
     validateDatasetConnection(dataset: PBICloudDataset): Promise<PBICloudDataset> {
@@ -443,6 +444,7 @@ export class Host extends Dispatchable {
                                 if (datasets[i].databaseName == dataset.databaseName) {
                                     if (datasets[i].connectionMode == PBICloudDatasetConnectionMode.Supported) {
                                         resolve(datasets[i]);
+                                        return;
                                     }
                                     break;
                                 }
