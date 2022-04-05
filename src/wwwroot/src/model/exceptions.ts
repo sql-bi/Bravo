@@ -79,7 +79,12 @@ export class AppError {
             errorCode = Number(problem.instance);
             const key = `error${AppProblem[errorCode]}`;
             errorMessage = i18n(key in strings ? (<any>strings)[key] : strings.errorUnhandled);
-            errorDetails = problem.detail;
+            if (problem.detail) { 
+                if (Utils.Obj.isString(problem.detail))
+                    errorMessage = problem.detail;
+                else
+                    errorDetails = problem.detail;
+            }
 
         } else {
             errorCode = problem.status;
