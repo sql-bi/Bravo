@@ -324,6 +324,7 @@ export enum strings {
     savingVpax,
     sceneUnsupportedReason,
     sceneUnsupportedReasonManageDatesAutoDateTimeEnabled,
+    sceneUnsupportedReasonManageDatesEmptyTableCollection,
     sceneUnsupportedReasonManageDatesPBIDesktopModelOnly,
     sceneUnsupportedReasonMetadataOnly,
     sceneUnsupportedReasonReadOnly,

@@ -126,13 +126,12 @@ export class Sheet extends View {
         
         this.doc.sync()
             .then(() => {
+                
+                this.update();
 
                 if (initial) {
                     this.removeBlockingScene();
                     this.showPage();
-
-                } else {
-                    this.update();
                 }
             })
             .catch((error: AppError) => {

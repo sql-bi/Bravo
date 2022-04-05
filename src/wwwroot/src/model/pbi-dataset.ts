@@ -29,12 +29,3 @@ export interface PBICloudDataset {
     connectionMode: PBICloudDatasetConnectionMode
     diagnostic?: any
 }
-
-export let PBICloudDatasetPrivateProperties = [
-    "workspaceId",
-    "workspaceName",
-    "workspaceObjectId",
-    "serverName",
-    "databaseName",
-    "owner"
-];

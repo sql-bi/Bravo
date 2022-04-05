@@ -43,7 +43,7 @@ export class ErrorAlert extends Dialog {
 
         _(".copy-error", this.element).addEventListener("click", e =>{
             e.preventDefault();
-            navigator.clipboard.writeText(this.error.toString());
+            navigator.clipboard.writeText(this.error.toString(true));
 
             let ctrl = <HTMLElement>e.currentTarget;
             ctrl.innerText = i18n(strings.copiedErrorDetails);

@@ -592,48 +592,59 @@ export module Utils {
             return match;
         }
 
-        export function anonymize(obj: any, props: string | string[]) {
-
-            let anonymizeProp = (prop: any) => {
-
-                const anon = "x";
-
+        // Anonymization
+        export function anonymize(obj: any, props?: string | string[]) {
+            
+            const anonChar = "x";
+            
+            const obfuscate = (prop: any) => {
+        
                 if (Utils.Obj.isString(prop)) {
                     let clearIndex = (prop.length > 6 ? prop.length - 3 : prop.length);
                     let clearProp = prop.substring(clearIndex);
-                    prop = prop.substring(0, clearIndex).replace(/([a-zA-Z])/g, anon) + clearProp;
-
+                    prop = prop.substring(0, clearIndex).replace(/([a-zA-Z])/g, anonChar) + clearProp;
+        
                 } else if (Utils.Obj.isNumber(prop)) {
-
+        
                     let strProp = String(prop);
-                    prop = strProp.substring(strProp.length - 1).padStart(strProp.length - 1, anon);
+                    prop = strProp.substring(strProp.length - 1).padStart(strProp.length - 1, anonChar);
                 }
-
+        
                 return prop;
-            }
-
-            let process = (source: any) => {
-
-                let target: any = null;
-
-                for (let key in source) {
-                    if (!target)
-                        target = (Utils.Obj.isArray(source) ? [] : {});
-
-                    if (typeof source[key] === "object" /*Utils.Obj.isObject(source[key])*/) {
-                        target[key] = process(source[key]);
-
-                    } else {
-                        if (props.indexOf(key) >= 0 || props == key || props == "*") {
-                            target[key] = anonymizeProp(source[key]);
+            };
+        
+            const removePii = (value: string) => {
+                return value.replace(/<pii>(.|\n)+?<\/pii>/gi, anonChar + anonChar + anonChar);
+            };
+        
+            const process = (source: any) => {
+        
+                if (Utils.Obj.isString(source)) {
+                    return removePii(source);
+        
+                } else if (Utils.Obj.isObject(source) || Utils.Obj.isArray(source)) {
+                    
+                    let target: any = null;
+                    for (let key in source) {
+                        if (!target)
+                            target = (Utils.Obj.isArray(source) ? [] : {});
+                        
+                        let propValue = source[key];
+                        if (props && (props.indexOf(key) >= 0 || props == key || props == "*")) {
+                            if (!Utils.Obj.isObject(propValue) && !Utils.Obj.isArray(propValue))
+                                target[key] = obfuscate(propValue);
+                            else
+                                target[key] = anonChar + anonChar + anonChar
                         } else {
-                            target[key] = source[key];
+                            target[key] = process(propValue);
                         }
                     }
+                    return target;
                 }
-                return target;
+        
+                return source;
             };               
-
+        
             return process(obj);
         
         }

@@ -10,7 +10,7 @@ import { Dic, Utils, _ } from '../helpers/utils';
 import { host, logger, optionsController, telemetry } from '../main';
 import { AutoScanEnum, DateConfiguration, TableValidation } from '../model/dates';
 import { Doc } from '../model/doc';
-import { AppError } from '../model/exceptions';
+import { AppError, AppErrorType } from '../model/exceptions';
 import { i18n } from '../model/i18n';
 import { PBIDesktopReport } from '../model/pbi-report';
 import { strings } from '../model/strings';
@@ -239,9 +239,16 @@ export class ManageDatesScene extends DocScene {
                     this.updateSampleData(preview);
                 })
                 .catch((error: AppError) => {
-                    renderSampleDataError();
-                    this.previewError = error;
-                    try { logger.logError(error); } catch(ignore) {}
+
+                    if (error.type != AppErrorType.Managed) {
+                        let errorScene = new ErrorScene(Utils.DOM.uniqueId(), this.element.parentElement, error);
+                        this.push(errorScene);
+                    
+                    } else {
+                        renderSampleDataError();
+                        this.previewError = error;
+                        try { logger.logError(error); } catch(ignore) {}
+                    }
                 })
                 .finally(() => {
                     this.updateModelCheck();
@@ -424,7 +431,7 @@ export class ManageDatesScene extends DocScene {
                         <div class="status-incompatible">
                             <div class="icon icon-error"></div>
                             <div class="message">
-                                ${i18n(strings.manageDatesStatusError, { error: this.previewError.details })}
+                                ${i18n(strings.manageDatesStatusError, { error: this.previewError.toString(false, false, false)})}
                             </div>  
                         </div>
                     `;

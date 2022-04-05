@@ -5,7 +5,7 @@
 */
 
 import { AppError, AppErrorType } from '../model/exceptions';
-import { _ } from '../helpers/utils';
+import { Utils, _ } from '../helpers/utils';
 import { i18n } from '../model/i18n'; 
 import { strings } from '../model/strings';
 import { BackableScene } from './scene-back';
@@ -42,6 +42,7 @@ export class ErrorScene extends BackableScene {
 
                 <p class="message">
                     ${this.error.message}
+                    ${Utils.Obj.isString(this.error.details) ? `<br>${this.error.details}` : ""}
                 </p>
                 
                 <p class="context">
@@ -54,7 +55,7 @@ export class ErrorScene extends BackableScene {
                      &nbsp;&nbsp;&nbsp; 
                     <span class="show-diagnostics link">${i18n(strings.showDiagnosticPane)}</span> 
                      &nbsp;&nbsp;&nbsp; 
-                    <span class="link create-issue" href="${Logger.GithubIssueUrl(this.error.toString(false, false), this.error.traceId ? `${ i18n(strings.traceId) }: ${this.error.traceId}` : "")}">${i18n(strings.createIssue)}</span>
+                    <span class="link create-issue" href="${Logger.GithubIssueUrl(this.error.toString(true, false, false), this.error.traceId ? `${ i18n(strings.traceId) }: ${this.error.traceId}` : "")}">${i18n(strings.createIssue)}</span>
 
                 </p>
             
@@ -68,7 +69,7 @@ export class ErrorScene extends BackableScene {
 
         _(".copy-error", this.element).addEventListener("click", e =>{
             e.preventDefault();
-            navigator.clipboard.writeText(this.error.toString());
+            navigator.clipboard.writeText(this.error.toString(true));
 
             let ctrl = <HTMLElement>e.currentTarget;
             ctrl.innerText = i18n(strings.copiedErrorDetails);
