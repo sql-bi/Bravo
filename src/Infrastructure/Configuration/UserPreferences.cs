@@ -112,6 +112,10 @@
                         {
                             settings.TelemetryEnabled = Convert.ToBoolean(intValue);
                         }
+                        else
+                        {
+                            settings.TelemetryEnabled = false;
+                        }
                     }
                 }
             }
