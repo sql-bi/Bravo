@@ -212,7 +212,7 @@
                         }
                         break;
                     default:
-                        throw new BravoUnexpectedException(lineBreakStyle.ToString());
+                        throw new BravoUnexpectedException($"Unexpected { nameof(DaxLineBreakStyle) } value ({ lineBreakStyle })");
                 }
             }
 
