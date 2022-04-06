@@ -40,8 +40,8 @@
 
         public void Dispose()
         {
-            Database.Dispose();
-            Server.Dispose();
+            Database?.Dispose();
+            Server?.Dispose();
         }
 
         public static TabularConnectionWrapper ConnectTo(PBICloudDataset dataset, string accessToken)
