@@ -102,7 +102,7 @@
                 case 20:
                     break;
                 default:
-                    throw new BravoUnexpectedException($"TaskDialog result '{ dialogButton.Tag }'");
+                    throw new BravoUnexpectedException($"Unexpected { nameof(TaskDialogButton) } result ({ dialogButton.Tag })");
             }
         }
     }

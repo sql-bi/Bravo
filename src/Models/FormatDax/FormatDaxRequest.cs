@@ -83,11 +83,11 @@
         ///// <summary>
         ///// Like <see cref="InitialLineBreak"/> only for multi-line DAX expressions
         ///// </summary>
-        //InitiaLineBreakOnMultilineOnly = 2,
+        //InitiaLineBreakOnMultilineOnly = TBD,
 
         /// <summary>
         /// Automatically pick <see cref="None"/> or <see cref="InitialLineBreak"/> based on the existing measures in the model, using the prevalent technique in existing measures
         /// </summary>
-        Auto = 3
+        Auto = 2
     }
 }
