@@ -339,7 +339,7 @@ const locale: Locale = {
         [_.sceneUnsupportedReasonReadOnly]: "La connessione al database è di sola lettura.",
         [_.sceneUnsupportedReasonXmlaEndpointNotSupported]: "XMLA endpoint non è supportato per questo dataset.",
         [_.sceneUnsupportedTitle]: "Non supportato",
-        [_.searchColumnPlaceholder]: "Cerca Colunna",
+        [_.searchColumnPlaceholder]: "Cerca Colonna",
         [_.searchDatasetPlaceholder]: "Cerca Dataset",
         [_.searchEntityPlaceholder]: "Search Tabella/Colonna",
         [_.searchMeasurePlaceholder]: "Cerca Misura",
