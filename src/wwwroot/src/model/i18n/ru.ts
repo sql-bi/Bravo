@@ -281,7 +281,7 @@ const locale: Locale = {
         [_.optionDiagnosticMore]: "Чтобы сообщить о проблеме с приложением, используйте",
         [_.optionFormattingBreaks]: "Разрыв имени-выражения",
         [_.optionFormattingBreaksAuto]: "Авто",
-        [_.optionFormattingBreaksDescription]: "Выберите способ разделения имени меры и выражения. Установите <em>Auto</em> для автоматического определения стиля, используемого в модели.",
+        [_.optionFormattingBreaksDescription]: "Выберите способ разделения имени меры и выражения. Установите <em>Авто</em> для автоматического определения стиля, используемого в модели.",
         [_.optionFormattingBreaksInitial]: "Разрыв строки",
         [_.optionFormattingBreaksNone]: "Та же строка",
         [_.optionFormattingLines]: "Строки",
