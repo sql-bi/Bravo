@@ -26,7 +26,7 @@
     public class ExportDelimitedTextSettings : ExportDataSettings
     {
         /// <summary>
-        /// Specifies whether Unicode should be used as the character encoding for the file, otherwise UTF8 is used as default
+        /// Specifies whether UTF-16 should be used as the character encoding for the file, otherwise UTF-8 is used as default
         /// </summary>
         [JsonPropertyName("unicodeEncoding")]
         public bool UnicodeEncoding { get; set; } = false;
