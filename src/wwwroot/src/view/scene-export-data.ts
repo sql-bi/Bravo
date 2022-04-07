@@ -434,7 +434,7 @@ export class ExportDataScene extends DocScene {
 
             const settings = <ExportDelimitedTextSettings>{
                 tables: tableNames,
-                unicodeEncoding: (this.config.options.encoding != "utf16"),
+                unicodeEncoding: (this.config.options.encoding == "utf16"),
                 delimiter: delimiter,
                 quoteStringFields: this.config.options.quoteStringFields
             };
