@@ -53,13 +53,12 @@
             if (value is null)
                 return null;
 
-            using var algorithm = new SHA256Managed();
+            using var algorithm = SHA256.Create();
             var stringBuilder = new StringBuilder();
 
             var buffer = Encoding.UTF8.GetBytes(value);
-            var offset = 0;
             var count = Encoding.UTF8.GetByteCount(value);
-            var bytes = algorithm.ComputeHash(buffer, offset, count);
+            var bytes = algorithm.ComputeHash(buffer, offset: 0, count);
 
             foreach (var @byte in bytes)
                 stringBuilder.Append(@byte.ToString("x2"));
