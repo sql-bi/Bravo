@@ -137,7 +137,7 @@
         [ActionName("PBIDesktopOpenPBIX")]
         [Consumes(MediaTypeNames.Application.Json)]
         [Produces(MediaTypeNames.Application.Json)]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(int))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(PBIDesktopReport))]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesDefaultResponseType]
@@ -145,8 +145,11 @@
         {
             if (WindowDialogHelper.OpenFileDialog(defaultExt: "PBIX", out var path, cancellationToken))
             {
-                if (ProcessHelper.OpenShellExecute(path, waitForStarted, out var processId))
-                    return Ok(processId);
+                if (ProcessHelper.OpenShellExecute(path, waitForStarted, out var processId, cancellationToken))
+                {
+                    var report = PBIDesktopReport.CreateFrom(processId.Value);
+                    return Ok(report);
+                }
 
                 return Forbid();
             }
