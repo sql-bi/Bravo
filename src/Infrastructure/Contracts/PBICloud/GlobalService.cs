@@ -1,11 +1,11 @@
-﻿#nullable disable
-
-namespace Sqlbi.Bravo.Infrastructure.Contracts.PBICloud
+﻿namespace Sqlbi.Bravo.Infrastructure.Contracts.PBICloud
 {
     using System.Collections.Generic;
+    using System.Text.Json.Serialization;
 
     public class GlobalService
     {
-        public IEnumerable<GlobalServiceEnvironment> Environments { get; set; }
+        [JsonPropertyName("environments")]
+        public IEnumerable<GlobalServiceEnvironment>? Environments { get; set; }
     }
 }
