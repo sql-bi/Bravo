@@ -3,6 +3,8 @@
     using Sqlbi.Bravo.Infrastructure;
     using Sqlbi.Bravo.Infrastructure.Contracts.PBICloud;
     using Sqlbi.Bravo.Infrastructure.Extensions;
+    using Sqlbi.Bravo.Infrastructure.Models.PBICloud;
+    using Sqlbi.Bravo.Models;
     using System;
     using System.Linq;
     using System.Net;
@@ -16,7 +18,7 @@
 
     public interface IPBICloudSettingsService
     {
-        CloudEnvironment CloudEnvironment { get; }
+        IPBICloudEnvironment CloudEnvironment { get; }
 
         TenantCluster TenantCluster { get; }
 
@@ -29,13 +31,12 @@
     {
         private const string GlobalServiceEnvironmentsDiscoverUrl = "powerbi/globalservice/v201606/environments/discover?client=powerbi-msolap";
         private const string GlobalServiceGetOrInsertClusterUrisByTenantlocationUrl = "spglobalservice/GetOrInsertClusterUrisByTenantlocation";
-        private const string CloudEnvironmentGlobalCloudName = "GlobalCloud";
 
         private readonly static SemaphoreSlim _initializeSemaphore = new(1, 1);
         private readonly HttpClient _httpClient;
 
         private GlobalService? _globalService;
-        private CloudEnvironment? _cloudEnvironment;
+        private IPBICloudEnvironment? _cloudEnvironment;
         private TenantCluster? _tenantCluster;
 
         public PBICloudSettingsService()
@@ -45,7 +46,7 @@
             _httpClient.BaseAddress = PBICloudService.PBIApiUri;
         }
 
-        public CloudEnvironment CloudEnvironment
+        public IPBICloudEnvironment CloudEnvironment
         {
             get
             {
@@ -81,7 +82,7 @@
                         _globalService = await InitializeGlobalServiceAsync().ConfigureAwait(false);
 
                     if (_cloudEnvironment is null)
-                        _cloudEnvironment = InitializeGlobalCloudEnvironment();
+                        _cloudEnvironment = InitializeCloudEnvironment();
                 }
                 finally
                 {
@@ -101,9 +102,15 @@
                 using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseContentRead).ConfigureAwait(false);
                 response.EnsureSuccessStatusCode();
 
-                var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-                var globalService = JsonSerializer.Deserialize<GlobalService>(json, AppEnvironment.DefaultJsonOptions); BravoUnexpectedException.ThrowIfNull(globalService);
+                var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
 
+                if (AppEnvironment.IsDiagnosticLevelVerbose)
+                    AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{ nameof(PBICloudSettingsService) }.{ nameof(InitializeGlobalServiceAsync) }", content);
+
+                var globalService = JsonSerializer.Deserialize<GlobalService>(content, AppEnvironment.DefaultJsonOptions);
+                {
+                    BravoUnexpectedException.ThrowIfNull(globalService);
+                }
                 return globalService;
             }
             finally
@@ -112,45 +119,41 @@
             }
         }
 
-        private CloudEnvironment InitializeGlobalCloudEnvironment()
+        private IPBICloudEnvironment InitializeCloudEnvironment()
         {
-            var environmentName = CloudEnvironmentGlobalCloudName;
-            var globalEnvironment = _globalService?.Environments.SingleOrDefault((c) => environmentName.EqualsI(c.CloudName)); BravoUnexpectedException.ThrowIfNull(globalEnvironment);
+            var pbicloudEnvironmentType = PBICloudEnvironmentType.Public;
+            var globalServiceCloudName = pbicloudEnvironmentType.ToGlobalServiceCloudName();
+            var globalServiceEnvironment = _globalService?.Environments?.SingleOrDefault((c) => globalServiceCloudName.EqualsI(c.CloudName));
 
-            var authority = globalEnvironment.Services.Single((s) => "aad".EqualsI(s.Name));
-            var frontend = globalEnvironment.Services.Single((s) => "powerbi-frontend".EqualsI(s.Name));
-            var backend = globalEnvironment.Services.Single((s) => "powerbi-backend".EqualsI(s.Name));
-            var gateway = globalEnvironment.Clients.Single((c) => "powerbi-gateway".EqualsI(c.Name));
+            BravoUnexpectedException.ThrowIfNull(globalServiceEnvironment);
 
-            var cloudEnvironment = new CloudEnvironment
-            {
-                Name = CloudEnvironmentType.Public,
-                Authority = new Uri(authority.Endpoint, UriKind.Absolute),
-                ClientId = gateway.AppId,
-                Scopes = new string[] { $"{ backend.ResourceId }/.default" },
-                Endpoint = new Uri(frontend.Endpoint, UriKind.Absolute),
-                //RedirectUri = gateway.RedirectUri,
-                //ResourceUri = backend.ResourceId,
-            };
+            var pbicloudEnvironment = PBICloudEnvironment.CreateFrom(pbicloudEnvironmentType, globalServiceEnvironment);
 
-            return cloudEnvironment;
+            if (AppEnvironment.IsDiagnosticLevelVerbose)
+                AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{ nameof(PBICloudSettingsService) }.{ nameof(InitializeCloudEnvironment) }", content: JsonSerializer.Serialize(pbicloudEnvironment));
+
+            return pbicloudEnvironment;
         }
 
         private async Task<TenantCluster> GetTenantClusterAsync(string accessToken)
         {
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
-            using var request = new HttpRequestMessage(HttpMethod.Put, GlobalServiceGetOrInsertClusterUrisByTenantlocationUrl)
-            {
-                Content = new StringContent(string.Empty, Encoding.UTF8, MediaTypeNames.Application.Json)
-            };
+            using var request = new HttpRequestMessage(HttpMethod.Put, GlobalServiceGetOrInsertClusterUrisByTenantlocationUrl);
+            request.Content = new StringContent(string.Empty, Encoding.UTF8, MediaTypeNames.Application.Json);
 
             using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseContentRead).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
 
-            var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-            var tenantCluster = JsonSerializer.Deserialize<TenantCluster>(json, AppEnvironment.DefaultJsonOptions); BravoUnexpectedException.ThrowIfNull(tenantCluster);
+            var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
 
+            if (AppEnvironment.IsDiagnosticLevelVerbose)
+                AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{ nameof(PBICloudSettingsService) }.{ nameof(GetTenantClusterAsync) }", content);
+
+            var tenantCluster = JsonSerializer.Deserialize<TenantCluster>(content, AppEnvironment.DefaultJsonOptions);
+            {
+                BravoUnexpectedException.ThrowIfNull(tenantCluster);
+            }
             return tenantCluster;
         }
     }

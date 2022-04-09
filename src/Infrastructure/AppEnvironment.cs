@@ -151,6 +151,11 @@
 
         public static bool IsDiagnosticLevelVerbose => UserPreferences.Current.DiagnosticLevel == DiagnosticLevelType.Verbose;
 
+        /// <summary>
+        /// Not yet supported
+        /// </summary>
+        public static bool IsIntegratedWindowsAuthenticationSsoSupportEnabled { get; } = false;
+
         public static ConcurrentDictionary<string, DiagnosticMessage> Diagnostics { get; }
 
         public static void AddDiagnostics(string name, Exception exception, DiagnosticMessageSeverity severity = DiagnosticMessageSeverity.Error)

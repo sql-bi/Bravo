@@ -1,12 +1,10 @@
 ﻿namespace Sqlbi.Bravo.Infrastructure.Services.PowerBI
 {
-    using Microsoft.AspNetCore.Hosting;
     using Microsoft.Identity.Client;
     using Sqlbi.Bravo.Infrastructure;
-    using Sqlbi.Bravo.Infrastructure.Authentication;
+    using Sqlbi.Bravo.Infrastructure.Configuration;
     using Sqlbi.Bravo.Infrastructure.Helpers;
     using System;
-    using System.Diagnostics;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
@@ -26,22 +24,17 @@
 
     internal class PBICloudAuthenticationService : IPBICloudAuthenticationService
     {
-        private const string MicrosoftAccountOnlyQueryParameter = "msafed=0";
+        private const string MicrosoftAccountOnlyQueryParameter = "msafed=0"; // Restrict logins to only AAD based organizational accounts
 
-        private readonly static SemaphoreSlim _authenticationSemaphore = new(1, 1);
-        private readonly static SemaphoreSlim _publicClientSemaphore = new(1, 1);
-        private readonly MsalSystemWebViewOptions _systemWebViewOptions;
+        private readonly static SemaphoreSlim _authenticationSemaphore = new(1, 1); // TODO: dispose
+        private readonly static SemaphoreSlim _publicClientSemaphore = new(1, 1); // TODO: dispose
         private readonly IPBICloudSettingsService _pbicloudSettings;
-        private readonly IWebHostEnvironment _environment;
 
         private IPublicClientApplication? _publicClient;
 
-        public PBICloudAuthenticationService(IWebHostEnvironment environment, IPBICloudSettingsService pbicloudSetting)
+        public PBICloudAuthenticationService(IPBICloudSettingsService pbicloudSetting)
         {
-            _environment = environment;
             _pbicloudSettings = pbicloudSetting;
-
-            _systemWebViewOptions = new MsalSystemWebViewOptions(_environment.WebRootPath);
         }
 
         private IPublicClientApplication PublicClient
@@ -89,13 +82,13 @@
             try
             {
                 await AcquireTokenAsync(silentOnly: true).ConfigureAwait(false);
+
+                return true;
             }
             catch (MsalUiRequiredException)
             {
                 return false;
             }
-
-            return true;
         }
 
         public async Task AcquireTokenAsync(bool silentOnly = false, string? loginHint = null, TimeSpan? timeout = null)
@@ -137,53 +130,58 @@
 
             // Use one of the Accounts known by Windows (WAM), if a null account identifier is provided then force WAM to display the dialog with the accounts
             var account = await PublicClient.GetAccountAsync(identifier).ConfigureAwait(false);
+            var scopes = _pbicloudSettings.CloudEnvironment.AzureADScopes;
 
             try
             {
                 // Try to acquire an access token from the cache, if UI interaction is required, MsalUiRequiredException will be thrown.
-                var authenticationResult = await PublicClient.AcquireTokenSilent(_pbicloudSettings.CloudEnvironment.Scopes, account).ExecuteAsync(cancellationToken).ConfigureAwait(false);
+                var authenticationResult = await PublicClient.AcquireTokenSilent(scopes, account).WithExtraQueryParameters(MicrosoftAccountOnlyQueryParameter).ExecuteAsync(cancellationToken).ConfigureAwait(false);
                 return authenticationResult;
+
+                //if ()
+                //{
+                //    AcquireTokenSilent(scopes, account)
+                //}
+                //else
+                //{
+                //    if (AppEnvironment.IsIntegratedWindowsAuthenticationSsoSupportEnabled)
+                //    {
+                //        ////var authenticationResult = await AcquireTokenByIntegratedWindowsAuth(scopes).ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+                //        ////// Assert UPN from local windows account is equals to UPN from authentication result
+                //        ////BravoUnexpectedException.Assert(authenticationResult.ClaimsPrincipal.Identity.Name == account.Username);
+                //    }
+                //    else
+                //    {
+                //        ////AcquireTokenInteractive(scopes)
+                //    }
+                //}
             }
-            catch (MsalUiRequiredException)
+            catch (MsalUiRequiredException ex)
             {
                 // Re-throw exception if silent-only token acquisition was requested
                 if (silentOnly) throw;
                 try
                 {
-                    var builder = PublicClient.AcquireTokenInteractive(_pbicloudSettings.CloudEnvironment.Scopes)
-                        .WithExtraQueryParameters(MicrosoftAccountOnlyQueryParameter);
+                    // *** EmbeddedWebView requirements ***
+                    // Requires VS project OutputType=WinExe and TargetFramework=net5-windows10.0.17763.0
+                    // Using 'TargetFramework=net5-windows10.0.17763.0' the framework 'Microsoft.Windows.SDK.NET' is also included as project dependency.
+                    // The framework 'Microsoft.Windows.SDK.NET' includes all the WPF(PresentationFramework.dll) and WinForm(System.Windows.Forms.dll) assemblies to the project.
 
-                    //.WithClaims(murex.Claims)
-                    //.WithPrompt(Prompt.SelectAccount) // Force a sign-in (Prompt.SelectAccount), as the MSAL web browser might contain cookies for the current user and we don't necessarily want to re-sign-in the same user 
+                    var useEmbeddedBrowser = !UserPreferences.Current.UseSystemBrowserForAuthentication;
+                    var parameterBuilder = PublicClient.AcquireTokenInteractive(scopes)
+                        .WithExtraQueryParameters(MicrosoftAccountOnlyQueryParameter)
+                        .WithUseEmbeddedWebView(useEmbeddedBrowser)
+                        .WithPrompt(Prompt.SelectAccount) // Force a sign-in (Prompt.SelectAccount), as the MSAL web browser might contain cookies for the current user and we don't necessarily want to re-sign-in the same user                         
+                        .WithLoginHint(loginHint)
+                        .WithClaims(ex.Claims);
 
-                    if (account is not null)
-                        builder.WithAccount(account);
-                    else if (loginHint is not null)
-                        builder.WithLoginHint(loginHint);
-
-                    if (PublicClient.IsEmbeddedWebViewAvailable())
+                    if (useEmbeddedBrowser)
                     {
-                        Debug.Assert(Thread.CurrentThread.GetApartmentState() == ApartmentState.MTA);
-                        Debug.Assert(System.Windows.Forms.Application.MessageLoop == false);
-
-                        var parentHwnd = ProcessHelper.GetCurrentProcessMainWindowHandle();
-
-                        // *** EmbeddedWebView requirements ***
-                        // Requires VS project OutputType=WinExe and TargetFramework=net5-windows10.0.17763.0
-                        // Using 'TargetFramework=net5-windows10.0.17763.0' the framework 'Microsoft.Windows.SDK.NET' is also included as project dependency.
-                        // The framework 'Microsoft.Windows.SDK.NET' includes all the WPF(PresentationFramework.dll) and WinForm(System.Windows.Forms.dll) assemblies to the project.
-
-                        builder = builder.WithUseEmbeddedWebView(useEmbeddedWebView: true)
-                            .WithParentActivityOrWindow(parentHwnd); // used to center embedded wiew on the parent window
-                    }
-                    else
-                    {
-                        // If for some reason the EmbeddedWebView is not available than fall back to the SystemWebView
-                        builder = builder.WithUseEmbeddedWebView(useEmbeddedWebView: false)
-                            .WithSystemWebViewOptions(_systemWebViewOptions);
+                        var mainwindowHwnd = ProcessHelper.GetCurrentProcessMainWindowHandle();
+                        parameterBuilder.WithParentActivityOrWindow(mainwindowHwnd);
                     }
 
-                    var authenticationResult = await builder.ExecuteAsync(cancellationToken).ConfigureAwait(false);
+                    var authenticationResult = await parameterBuilder.ExecuteAsync(cancellationToken).ConfigureAwait(false);
                     return authenticationResult;
                 }
                 catch (MsalException) // ex.ErrorCode => Microsoft.Identity.Client.MsalError
@@ -204,12 +202,7 @@
                     {
                         await _pbicloudSettings.InitializeAsync().ConfigureAwait(false);
 
-                        _publicClient = PublicClientApplicationBuilder.Create(_pbicloudSettings.CloudEnvironment.ClientId)
-                            .WithAuthority(_pbicloudSettings.CloudEnvironment.Authority)
-                            .WithDefaultRedirectUri()
-                            .Build();
-
-                        TokenCacheHelper.EnableSerialization(_publicClient.UserTokenCache);
+                        _publicClient = MsalHelper.CreatePublicClientApplication(_pbicloudSettings.CloudEnvironment);
                     }
                 }
                 finally

@@ -80,6 +80,9 @@
         [JsonPropertyName("customOptions")]
         public JsonElement? CustomOptions { get; set; }
 
+        [JsonIgnore]
+        public bool UseSystemBrowserForAuthentication { get; set; } = false;
+
         public bool Validate(bool throwOnError = true)
         {
             try
