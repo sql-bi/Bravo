@@ -28,7 +28,7 @@ REM  ***
 ECHO *** BRAVO BUILD ***
 REM  ***
 SET runtime=win-%arch%
-SET framework=net5-windows10.0.17763.0
+SET framework=net6-windows10.0.17763.0
 SET publishfolder=%~dp0src\bin\%configuration%\%framework%\%runtime%\publish
 CD /d "%~dp0src"
 IF EXIST %publishfolder% RMDIR /s /q %publishfolder%
