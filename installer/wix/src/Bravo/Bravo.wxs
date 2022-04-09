@@ -43,24 +43,27 @@
     <Property Id="WINDOWSBUILDNUMBER" Secure="yes">
       <RegistrySearch Id="BuildNumberSearch" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion" Name="CurrentBuildNumber" Type="raw" />
     </Property>
-    <Condition Message="This application is only supported on Windows 11 series operating systems or Windows 10 version 1809 (build 17763) or higher.">
+    <Condition Message="!(loc.SupportedWindowsVersionConditionMessage)">
       <![CDATA[(WINDOWSBUILDNUMBER >= 17763)]]>
     </Condition>
     
     <Icon Id="app.ico" SourceFile="$(var.PublishFolder)\$(var.AppExecutableName)" />
-
-    <UIRef Id="Custom_WixUI_InstallDir" />
-    <UIRef Id="WixUI_ErrorProgressText" />
-    
+    <UI>
+      <UIRef Id="Custom_WixUI_InstallDir" />
+      <UIRef Id="WixUI_ErrorProgressText" />
+      <Publish Dialog="ExitDialog" Control="Finish" Event="DoAction" Value="LaunchApplication">WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 and NOT Installed</Publish>
+    </UI>
     <WixVariable Id="WixUIDialogBmp" Value="..\assets\background.png" />
     <WixVariable Id="WixUIBannerBmp" Value="..\assets\banner.png" />
     <WixVariable Id="WixUILicenseRtf" Value="..\assets\license.rtf" />
 
+    <Property Id="WixShellExecTarget" Value="[#app.exe]" />
     <Property Id="ARPNOREPAIR" Value="yes" />
     <Property Id="ARPPRODUCTICON">app.ico</Property>
     <Property Id="ARPURLINFOABOUT">$(var.AppUrlInfoAbout)</Property>
     <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
-
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOX" Value="1" />
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="Launch $(var.ProductName)" />
     <!-- defines uninitialized properties and allows setting values from the commandline -->
     <Property Id="DESKTOPSHORTCUTENABLED" Secure="yes" />
     <Property Id="PROGRAMMENUSHORTCUTENABLED" Secure="yes" />
@@ -113,6 +116,7 @@
     <CustomAction Id="UnregisterExternalTool" BinaryKey="CustomActionBinary" DllEntry="UnregisterExternalTool" Execute="deferred" Impersonate="no" />
     <CustomAction Id="SetPropertyValuesAfterUninstall" Property="AfterUninstall" Value="PRODUCTNAME=$(var.AppName);PRODUCTVERSION=$(var.ProductVersion);PRODUCTBUILD=$(var.ProductBuild);INSTALLERTELEMETRYENABLED=[INSTALLERTELEMETRYENABLED]" />
     <CustomAction Id="AfterUninstall" BinaryKey="CustomActionBinary" DllEntry="AfterUninstall" Execute="deferred" Impersonate="no" />
+    <CustomAction Id="LaunchApplication" BinaryKey="WixCA" DllEntry="WixShellExec" />
 
     <InstallExecuteSequence>
       <Custom Action="SetPropertyValuesRegisterExternalTool" After="InstallFiles" />
