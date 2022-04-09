@@ -102,7 +102,7 @@
                 case 20:
                     break;
                 default:
-                    throw new BravoUnexpectedException($"Unexpected { nameof(TaskDialogButton) } result ({ dialogButton.Tag })");
+                    throw new BravoUnexpectedInvalidOperationException($"Unhandled { nameof(TaskDialogButton) } result ({ dialogButton.Tag })");
             }
         }
     }

@@ -67,7 +67,7 @@
             {
                 UpdateChannelType.Stable => "bravo-public",
                 UpdateChannelType.Dev => "bravo-internal", 
-                _ => throw new BravoUnexpectedException($"Unexpected { nameof(UpdateChannelType) } value ({ updateChannel })")
+                _ => throw new BravoUnexpectedInvalidOperationException($"Unhandled { nameof(UpdateChannelType) } value ({ updateChannel })")
             };
 
             using var httpClient = new HttpClient();
