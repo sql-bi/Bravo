@@ -56,7 +56,9 @@ export class ExportedScene extends Scene {
                     <div class="table"></div>
                 </div>
 
-                <div class="dismiss button">${i18n(strings.doneCtrlTitle)}</div>
+                <div class="scene-action">
+                    <div class="dismiss button">${i18n(strings.doneCtrlTitle)}</div>
+                </div>
             </div>
         `;
 
