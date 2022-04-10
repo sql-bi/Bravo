@@ -8,16 +8,15 @@ module.exports = (env, argv) => {
 
   return {
     entry: [
-      "./src/main.ts",
-      "./src/css/main.less"
+      "./main.ts",
+      "./css/main.less"
     ],
     mode: mode,
     module: {
       rules: [
         {
           test: /\.tsx?$/,
-          use: 'ts-loader',
-          exclude: /node_modules/,
+          use: 'ts-loader'
         },
         {
           test: /\.less$/i,
@@ -48,19 +47,17 @@ module.exports = (env, argv) => {
       extensions: ['.tsx', '.ts', '.js'],
     },
     output: {
-      filename: "main.js",
-      path: path.resolve(__dirname, "js"),
+      filename: "./js/main.js"
     },
     watchOptions: {
-      poll: true,
-      ignored: /node_modules/
+      poll: true
     },
     plugins:[
       new webpack.DefinePlugin({
         'process.env.MODE': JSON.stringify(mode)
       }),
       new MiniCssExtractPlugin({
-        filename: "../css/[name].css"
+          filename: "./css/[name].css"
       }),
     ],
     optimization: {
