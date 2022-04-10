@@ -109,7 +109,7 @@ export class Page extends View {
             if (remove)
                 this.removeScene(scene);
         //});
-        }, 350);
+        }, 290);
     }
 
     removeScene(scene: Scene) {
