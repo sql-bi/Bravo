@@ -34,14 +34,22 @@ export class ConnectLocal extends ConnectMenuItem {
         // Browse
         _(".browse-reports", this.element).addEventListener("click", e => {
             e.preventDefault();
-            
-            host.startPBIDesktopFromPBIX()
-            .then(path => {
-                let match = path.match(/\\([^\\\.]+?)\.pbix/i); 
-                if (match)
-                    this.waitForReportOpen(match[1]);
-            })
-            .catch(ignore=>{});
+
+            this.waitForReportOpen();
+            host.openPBIX()
+                .then(report => {
+                    if (report) {
+                        this.dialog.data.doc = new Doc(report.reportName, DocType.pbix, report);
+                        window.setTimeout(()=>{
+                            this.dialog.trigger("action", "ok");
+                        }, 3000); // The timeout is needed to avoid the 'Power BI Desktop process is opening...' error
+                    } else {
+                        this.stopWaitingForReportOpen();
+                    }
+                })
+                .catch(ignore=>{
+                    this.stopWaitingForReportOpen();
+                });
         });
 
         let updateOnChange = false;
@@ -130,18 +138,7 @@ export class ConnectLocal extends ConnectMenuItem {
         }, 0);
     }
 
-    waitForReportOpen(reportName: string) {
-
-        let listenerId = Utils.Text.uuid();
-
-        pbiDesktop.on("observed.found", (report: PBIDesktopReport) => {
-
-            this.dialog.data.doc = new Doc(report.reportName, DocType.pbix, report);
-            window.setTimeout(()=>{
-                this.dialog.trigger("action", "ok");
-            }, 1500);
-        }, listenerId);
-        pbiDesktop.startObserving(reportName);
+    waitForReportOpen() {
 
         let overlay = document.createElement("div");
         overlay.classList.add("observing");
@@ -157,12 +154,15 @@ export class ConnectLocal extends ConnectMenuItem {
 
         _(".cancel-observing", overlay).addEventListener("click", e => {
             e.preventDefault();
-            pbiDesktop.stopObserving();
-            pbiDesktop.off("observed.found", listenerId);
-
-            overlay.remove();
+            this.stopWaitingForReportOpen();
         });
 
+    }
+
+    stopWaitingForReportOpen() {
+        host.abortOpenPBIX();
+        if (this.element)
+            _(".observing", this.element).remove();
     }
 
     destroyTable() {
@@ -174,6 +174,7 @@ export class ConnectLocal extends ConnectMenuItem {
 
     destroy() {
         pbiDesktop.off("poll", this.dialog.id);
+        this.stopWaitingForReportOpen();
         this.destroyTable();
         super.destroy();
     }
