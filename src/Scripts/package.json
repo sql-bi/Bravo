@@ -8,8 +8,8 @@
     "build": "npm run build:Release",
     "build:Release": "webpack --mode production --env production --env configuration=Release",
     "build:Debug": "webpack --mode development --env configuration=Debug",
-    "build:UI": "webpack --mode production --env configuration=Release --output-path ../bin/x64/Debug_wwwroot/net6-windows10.0.17763.0/win-x64/wwwroot",
-    "watch:UI": "webpack --watch --mode development --env configuration=Debug --output-path ../bin/x64/Debug_wwwroot/net6-windows10.0.17763.0/win-x64/wwwroot"
+    "build:UI": "webpack --mode development --output-path ../wwwroot",
+    "watch:UI": "webpack --watch --mode development --output-path ../wwwroot"
   },
   "devDependencies": {
     "@types/codemirror": "^5.60.5",

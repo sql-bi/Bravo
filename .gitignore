@@ -349,7 +349,14 @@ MigrationBackup/
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
 
+# Visual Studio Code files
 .vscode
-.DS_Store
 *.code-workspace
+
+# System Files
+.DS_Store
 Thumbs.db
+
+# Debug wwwroot
+src/wwwroot/js
+src/wwwroot/css
