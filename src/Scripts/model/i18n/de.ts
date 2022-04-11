@@ -10,8 +10,8 @@ import { strings as _ } from '../strings';
 
 const locale: Locale = {
 
-    locale: "de", //DO NOT TRANSLATE
-    name: "Deutsch", //DO NOT TRANSLATE
+    locale: "de",
+    name: "Deutsch",
 
     strings: {
         [_.addCtrlTitle]: "Öffnen",

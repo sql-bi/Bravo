@@ -4,6 +4,7 @@
  * https://www.sqlbi.com
 */
 
+import cz from './cz';
 import en from './en';
 //import es from './es';
 //import pt_BR from './pt-BR';
@@ -16,17 +17,19 @@ import ru from './ru';
 //import zh_CN from './zh-CN';
 //import zh_TW from './zh-TW';
 
-const locales = { 
-    [en.locale]: en, 
+const locales = {
+    [en.locale]: en,
+    [cz.locale]: cz,
     //[es.locale]: es, 
     //[pt_BR.locale]: pt_BR,
-    [fr.locale]: fr,  
-    [de.locale]: de, 
+    [fr.locale]: fr,
+    [de.locale]: de,
     [it.locale]: it,
     //[ja.locale]: ja,
     [pl.locale]: pl,
     [ru.locale]: ru,
     //[zh_CN.locale]: zh_CN,
-    //[zh_TW.locale]: zh_TW,    
-}; 
+    //[zh_TW.locale]: zh_TW,
+};
+
 export default locales;

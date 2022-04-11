@@ -7,18 +7,17 @@ import { Locale } from '../i18n';
 import { strings as _ } from '../strings';
 
 const locale: Locale = {
-    
-    locale: "it", //DO NOT TRANSLATE
-    enName: "Italian", //DO NOT TRANSLATE
 
+    locale: "it",
     name: "Italiano",
-    
+
     strings: {
         [_.addCtrlTitle]: "Apri",
         [_.aggregatedTableName]: "Tabelle multiple",
         [_.AnalyzeModel]: "Analizza Modello",
         [_.analyzeModelSummary]: `Il tuo dataset è grande <strong>{size:bytes}</strong> e contiene <strong>{count}</strong> {{colonne|colonna}}`,
         [_.analyzeModelSummary2]: `, di cui <span class="text-highlight"><strong>{count}</strong> non {{sono referenziate|è referenziata}} nel modello.</span>`,
+        [_.appName]: "Bravo for Power BI", //DO NOT TRANSLATE
         [_.appUpdateAvailable]: "Nuova versione disponibile: {version}",
         [_.appUpdateChangelog]: "Changelog",
         [_.appUpdateDownload]: "Download",
