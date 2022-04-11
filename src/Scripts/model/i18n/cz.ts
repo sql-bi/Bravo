@@ -8,8 +8,9 @@ import { strings as _ } from '../strings';
 
 const locale: Locale = {
 
-    locale: "cz",
-    name: "Czech",
+    locale: "cz", //DO NOT TRANSLATE
+    enName: "Czech", //DO NOT TRANSLATE
+    name: "čeština",
 
     strings: {
         [_.addCtrlTitle]: "Otevřít",

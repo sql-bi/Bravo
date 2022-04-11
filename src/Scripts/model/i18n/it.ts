@@ -7,8 +7,9 @@ import { Locale } from '../i18n';
 import { strings as _ } from '../strings';
 
 const locale: Locale = {
-
-    locale: "it",
+    
+    locale: "it", //DO NOT TRANSLATE
+    enName: "Italian", //DO NOT TRANSLATE
     name: "Italiano",
 
     strings: {
