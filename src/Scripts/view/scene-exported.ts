@@ -32,9 +32,16 @@ export class ExportedScene extends Scene {
 
         const count = this.job.tables.length;
         let successCount = 0;
+        let warningCount = 0;
+        let errorCount = 0;
         this.job.tables.forEach(table => {
-            if (table.status == ExportDataStatus.Completed)
+            if (table.status == ExportDataStatus.Completed) {
                 successCount++;
+            } else if (table.status == ExportDataStatus.Truncated) {
+                warningCount++;
+            } else {
+                errorCount++;
+            }
         });
         const isFile = (this.format == ExportDataFormat.Xlsx);
 
@@ -44,8 +51,8 @@ export class ExportedScene extends Scene {
                 <div class="success-message">
 
                     <div class="job-message">
-                        <div class="icon big ${successCount ? "icon-completed" : "icon-error"}"></div>
-                        <p>${i18n(strings.exportDataSuccessSceneMessage, { count: successCount, total: count})}</p>
+                        <div class="icon big ${warningCount ? "icon-alert" : (errorCount ? "icon-error" : "icon-completed")}"></div>
+                        <p>${i18n(strings.exportDataSuccessSceneMessage, { count: successCount + warningCount, total: count})}</p>
                         ${successCount ? `
                             <p>
                                 <span class="open-path link">${i18n(isFile ? strings.exportDataOpenFile : strings.exportDataOpenFolder)}</span> 
@@ -56,7 +63,9 @@ export class ExportedScene extends Scene {
                     <div class="table"></div>
                 </div>
 
-                <div class="dismiss button">${i18n(strings.doneCtrlTitle)}</div>
+                <div class="scene-action">
+                    <div class="dismiss button">${i18n(strings.doneCtrlTitle)}</div>
+                </div>
             </div>
         `;
 

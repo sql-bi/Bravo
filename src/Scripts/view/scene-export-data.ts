@@ -324,7 +324,8 @@ export class ExportDataScene extends DocScene {
                 width: 100,
                 sorter: "number", 
                 formatter: cell=>{   
-                    return Utils.Format.bytes(cell.getValue(), I18n.instance.locale.locale);
+                    let value = cell.getValue();
+                    return (Utils.Obj.isSet(value) ? Utils.Format.bytes(value, I18n.instance.locale.locale) : "N/A");
                 },
                 bottomCalc: this.canExport ? "sum" : null,
                 bottomCalcFormatter: cell => {

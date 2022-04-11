@@ -572,7 +572,10 @@ export class Host extends Dispatchable {
         return this.apiCall("api/FileSystemOpen", { path: path });
     }
 
-    startPBIDesktopFromPBIX() {
-        return <Promise<string>>this.apiCall("api/StartPBIDesktopFromPBIX", { waitForStarted: false });
+    openPBIX() {
+        return <Promise<PBIDesktopReport>>this.apiCall("api/PBIDesktopOpenPBIX", { waitForStarted: true });
+    }
+    abortOpenPBIX() {
+        this.apiAbortByAction("api/PBIDesktopOpenPBIX");
     }
 }
