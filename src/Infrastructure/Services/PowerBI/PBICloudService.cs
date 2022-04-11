@@ -3,9 +3,7 @@
     using Sqlbi.Bravo.Infrastructure;
     using Sqlbi.Bravo.Infrastructure.Contracts.PBICloud;
     using Sqlbi.Bravo.Infrastructure.Extensions;
-    using Sqlbi.Bravo.Infrastructure.Services;
     using Sqlbi.Bravo.Models;
-    using Sqlbi.Bravo.Models.AnalyzeModel;
     using Sqlbi.Bravo.Services;
     using System;
     using System.Collections.Generic;
@@ -40,24 +38,12 @@
             PropertyNameCaseInsensitive = false, // required by SharedDatasetModel LastRefreshTime/lastRefreshTime properties
         };
 
-        public static readonly Uri PBIApiUri = new("https://api.powerbi.com");
-        public static readonly Uri PBIDatasetServerUri = new($"{ PBIDatasetProtocolScheme }://api.powerbi.com");
-        public static readonly Uri PBIPremiumServerUri = new($"{ PBIPremiumProtocolScheme }://api.powerbi.com");
-
-        /// <summary>
-        /// All Power BI workspaces published to the Power BI service
-        /// </summary>
+        public const string PBCommercialUri = "https://api.powerbi.com";
         public const string PBIDatasetProtocolScheme = "pbiazure";
-        /// <summary>
-        /// All Power BI workspaces published to the Power BI service and assigned to Premium Capacity (i.e. workspaces assigned to a Px, Ax or EMx SKU), or Premium-Per-User (PPU)
-        /// </summary>
-        public const string PBIPremiumProtocolScheme = "powerbi";
-        //public const string PBIDedicatedProtocolScheme = "pbidedicated";
-        //public const string ASAzureLinkProtocolScheme = "link";
-        /// <summary>
-        /// Azure Analysis Services (asazure://centralus.asazure.windows.net/MyModelName)
-        /// </summary>
+        public const string PBIPremiumXmlaEndpointProtocolScheme = "powerbi";
+        //public const string PBIPremiumDedicatedProtocolScheme = "pbidedicated";
         public const string ASAzureProtocolScheme = "asazure";
+        //public const string ASAzureLinkProtocolScheme = "link";
 
         public PBICloudService(IAuthenticationService authenticationService, HttpClient httpClient)
         {
@@ -68,9 +54,10 @@
         public async Task<string?> GetAccountAvatarAsync()
         {
             _httpClient.DefaultRequestHeaders.Accept.Clear();
-            _httpClient.DefaultRequestHeaders.Authorization = AuthenticationHeaderValue.Parse(_authenticationService.PBICloudAuthentication.CreateAuthorizationHeader());
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _authenticationService.PBICloudAuthentication.AccessToken);
 
-            var requestUri = new Uri(PBIApiUri, relativeUri: GetResourceUserPhotoRequestUri.FormatInvariant(_authenticationService.PBICloudAuthentication.Account.Username));
+            var baseUri = new Uri(_authenticationService.PBICloudEnvironment.ServiceEndpoint);
+            var requestUri = new Uri(baseUri, relativeUri: GetResourceUserPhotoRequestUri.FormatInvariant(_authenticationService.PBICloudAuthentication.Account.Username));
             using var response = await _httpClient.GetAsync(requestUri).ConfigureAwait(false);
 
             if (response.IsSuccessStatusCode)
@@ -106,7 +93,7 @@
                 AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{ nameof(PBICloudService) }.{ nameof(GetDatasetsAsync) }.{ nameof(onlineDatasets) }", content: JsonSerializer.Serialize(onlineDatasets));
             }
 
-            var datasets = onlineWorkspaces.Join(onlineDatasets, (w) => w.ObjectId?.ToLowerInvariant(), (d) => d.ObjectId?.ToLowerInvariant(), PBICloudDataset.CreateFrom).ToArray();
+            var datasets = onlineWorkspaces.Join(onlineDatasets, (w) => w.ObjectId?.ToLowerInvariant(), (d) => d.ObjectId?.ToLowerInvariant(), (w, d) => PBICloudDataset.CreateFrom(_authenticationService.PBICloudEnvironment, w, d)).ToArray();
 
             if (AppEnvironment.IsDiagnosticLevelVerbose)
                 AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{ nameof(PBICloudService) }.{ nameof(GetDatasetsAsync) }", content: JsonSerializer.Serialize(datasets));
@@ -117,9 +104,10 @@
         private async Task<IEnumerable<CloudWorkspace>> GetWorkspacesAsync(CancellationToken cancellationToken)
         {
             _httpClient.DefaultRequestHeaders.Accept.Clear();
-            _httpClient.DefaultRequestHeaders.Authorization = AuthenticationHeaderValue.Parse(_authenticationService.PBICloudAuthentication.CreateAuthorizationHeader());
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _authenticationService.PBICloudAuthentication.AccessToken);
 
-            var requestUri = new Uri(PBIApiUri, relativeUri: GetWorkspacesRequestUri);
+            var baseUri = new Uri(_authenticationService.PBICloudEnvironment.ClusterEndpoint);
+            var requestUri = new Uri(baseUri, relativeUri: GetWorkspacesRequestUri);
             using var response = await _httpClient.GetAsync(requestUri, cancellationToken).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
 
@@ -128,17 +116,17 @@
             if (AppEnvironment.IsDiagnosticLevelVerbose)
                 AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{ nameof(PBICloudService) }.{ nameof(GetWorkspacesAsync) }", content);
 
-            var workspaces = JsonSerializer.Deserialize<IEnumerable<CloudWorkspace>>(content, _jsonOptions);
-
-            return workspaces?.ToArray() ?? Array.Empty<CloudWorkspace>();
+            var workspaces = JsonSerializer.Deserialize<CloudWorkspace[]>(content, _jsonOptions);
+            return workspaces ?? Array.Empty<CloudWorkspace>();
         }
 
         private async Task<IEnumerable<CloudSharedModel>> GetSharedDatasetsAsync(CancellationToken cancellationToken)
         {
             _httpClient.DefaultRequestHeaders.Accept.Clear();
-            _httpClient.DefaultRequestHeaders.Authorization = AuthenticationHeaderValue.Parse(_authenticationService.PBICloudAuthentication.CreateAuthorizationHeader());
-
-            var requestUri = new Uri(_authenticationService.PBICloudTenantCluster, relativeUri: GetGallerySharedDatasetsRequestUri);
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _authenticationService.PBICloudAuthentication.AccessToken);
+            
+            var baseUri = new Uri(_authenticationService.PBICloudEnvironment.ClusterEndpoint);
+            var requestUri = new Uri(baseUri, relativeUri: GetGallerySharedDatasetsRequestUri);
             using var response = await _httpClient.GetAsync(requestUri, cancellationToken).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
 
@@ -147,9 +135,8 @@
             if (AppEnvironment.IsDiagnosticLevelVerbose)
                 AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{ nameof(PBICloudService) }.{ nameof(GetSharedDatasetsAsync) }", content);
 
-            var datasets = JsonSerializer.Deserialize<IEnumerable<CloudSharedModel>>(content, _jsonOptions);
-
-            return datasets?.ToArray() ?? Array.Empty<CloudSharedModel>();
+            var datasets = JsonSerializer.Deserialize<CloudSharedModel[]>(content, _jsonOptions);
+            return datasets ?? Array.Empty<CloudSharedModel>();
         }
     }
 }

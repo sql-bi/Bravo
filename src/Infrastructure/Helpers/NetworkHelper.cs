@@ -39,14 +39,14 @@
         }
 
         /// <summary>
-        /// Returns true if the protocol schema for the provided <paramref name="address"/> URI is <see cref="PBICloudService.PBIDatasetProtocolScheme"/> or <see cref="PBICloudService.PBIPremiumProtocolScheme"/>
+        /// Returns true if the protocol schema for the provided <paramref name="address"/> URI is <see cref="PBICloudService.PBIDatasetProtocolScheme"/> or <see cref="PBICloudService.PBIPremiumXmlaEndpointProtocolScheme"/>
         /// </summary>
         public static bool IsPBICloudDatasetServer(string address)
         {
             if (address.Contains(Uri.SchemeDelimiter) && Uri.TryCreate(address, UriKind.Absolute, out var addressUri))
             {
                 var isGenericDataset = addressUri.Scheme.Equals(PBICloudService.PBIDatasetProtocolScheme, StringComparison.OrdinalIgnoreCase);
-                var isPremiumDataset = addressUri.Scheme.Equals(PBICloudService.PBIPremiumProtocolScheme, StringComparison.OrdinalIgnoreCase);
+                var isPremiumDataset = addressUri.Scheme.Equals(PBICloudService.PBIPremiumXmlaEndpointProtocolScheme, StringComparison.OrdinalIgnoreCase);
 
                 return isPremiumDataset || isGenericDataset;
             }

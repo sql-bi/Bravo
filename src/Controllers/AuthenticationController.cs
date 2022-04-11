@@ -2,10 +2,16 @@
 {
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
+    using Sqlbi.Bravo.Infrastructure;
+    using Sqlbi.Bravo.Infrastructure.Configuration;
+    using Sqlbi.Bravo.Infrastructure.Models.PBICloud;
     using Sqlbi.Bravo.Infrastructure.Services.PowerBI;
     using Sqlbi.Bravo.Models;
     using Sqlbi.Bravo.Services;
+    using System.Collections.Generic;
+    using System.Linq;
     using System.Net.Mime;
+    using System.Threading;
     using System.Threading.Tasks;
 
     /// <summary>
@@ -27,18 +33,42 @@
         }
 
         /// <summary>
+        /// TODO
+        /// </summary>
+        /// <response code="200">Status200OK - Success</response>
+        [HttpGet]
+        [ActionName("powerbi/GetEnvironments")]
+        [Produces(MediaTypeNames.Application.Json)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<IPBICloudEnvironment>))]
+        [ProducesDefaultResponseType]
+        public async Task<IActionResult> GetPBICloudEnvironmentsAsync(string userPrincipalName, CancellationToken cancellationToken)
+        {
+            var environments = await _authenticationService.GetPBICloudEnvironmentsAsync(userPrincipalName, cancellationToken);
+            return Ok(environments);
+        }
+
+        /// <summary>
         /// Attempts to authenticate and acquire an access token for the account to access the PowerBI cloud services
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
         [HttpGet]
         [ActionName("powerbi/SignIn")]
         [Produces(MediaTypeNames.Application.Json)]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(BravoAccount))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IBravoAccount))]
         [ProducesDefaultResponseType]
-        public async Task<IActionResult> PowerBISignIn(string? upn)
+        public async Task<IActionResult> PBICloudSignInAsync(string userPrincipalName, CancellationToken cancellationToken)
         {
-            await _authenticationService.PBICloudSignInAsync(userPrincipalName: upn);
-            return Ok(_authenticationService.Account);
+            // TODO: testing cloud environments
+            var discoveredEnvironments = await _authenticationService.GetPBICloudEnvironmentsAsync(userPrincipalName, cancellationToken);
+
+            BravoUnexpectedException.Assert(discoveredEnvironments.Any());
+
+            var environment = discoveredEnvironments.SingleOrDefault((env) => env.Type == UserPreferences.Current.Experimental?.PBIEnvironment);
+            if (environment is null)
+                environment = discoveredEnvironments.First();
+
+            await _authenticationService.PBICloudSignInAsync(userPrincipalName, environment, cancellationToken);
+            return Ok(_authenticationService.PBICloudAuthentication.Account);
         }
 
         /// <summary>
@@ -49,9 +79,9 @@
         [ActionName("powerbi/SignOut")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesDefaultResponseType]
-        public async Task<IActionResult> PowerBISignOut()
+        public async Task<IActionResult> PBICloudSignOutAsync(CancellationToken cancellationToken)
         {
-            await _authenticationService.PBICloudSignOutAsync();
+            await _authenticationService.PBICloudSignOutAsync(cancellationToken);
             return Ok();
         }
 
@@ -63,15 +93,15 @@
         [HttpGet]
         [ActionName("GetUser")]
         [Produces(MediaTypeNames.Application.Json)]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(BravoAccount))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IBravoAccount))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesDefaultResponseType]
-        public async Task<IActionResult> GetAccount()
+        public async Task<IActionResult> GetPBICloudAccountAsync(CancellationToken cancellationToken)
         {
-            if (await _authenticationService.IsPBICloudSignInRequiredAsync())
+            if (await _authenticationService.IsPBICloudSignInRequiredAsync(cancellationToken))
                 return Unauthorized();
 
-            return Ok(_authenticationService.Account);
+            return Ok(_authenticationService.PBICloudAuthentication.Account);
         }
 
         /// <summary>
@@ -87,9 +117,9 @@
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesDefaultResponseType]
-        public async Task<IActionResult> GetAccountAvatar()
+        public async Task<IActionResult> GetPBICloudAccountAvatarAsync(CancellationToken cancellationToken)
         {
-            if (await _authenticationService.IsPBICloudSignInRequiredAsync())
+            if (await _authenticationService.IsPBICloudSignInRequiredAsync(cancellationToken))
                 return Unauthorized();
 
             var avatar = await _pbicloudService.GetAccountAvatarAsync();

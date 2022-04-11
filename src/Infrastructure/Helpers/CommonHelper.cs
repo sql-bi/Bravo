@@ -16,6 +16,57 @@
 
     internal static class CommonHelper
     {
+        public static string? ChangeUriScheme(string? uriString, string scheme)
+        {
+            if (Uri.TryCreate(uriString, UriKind.Absolute, out var uri))
+            {
+                var uriBuilder = new UriBuilder(uri)
+                {
+                    Scheme = scheme
+                };
+                
+                return uriBuilder.Uri.AbsoluteUri;
+            }
+
+            return null;
+        }
+
+        public static string? ReadRegistryString(RegistryKey registryKey, string keyName, string valueName)
+        {
+            try
+            {
+                using var registrySubKey = registryKey.OpenSubKey(keyName, writable: false);
+
+                if (registrySubKey is not null)
+                {
+                    var value = registrySubKey.GetValue(valueName, defaultValue: null, RegistryValueOptions.DoNotExpandEnvironmentNames);
+                    if (value is not null)
+                    {
+                        var valueKind = registrySubKey.GetValueKind(valueName);
+                        if (valueKind == RegistryValueKind.String)
+                        {
+                            var valueString = (string)value;
+                            return valueString;
+                        }
+                    }
+                }
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+            catch (SecurityException)
+            {
+            }
+            catch (ObjectDisposedException)
+            {
+            }
+            catch (IOException)
+            {
+            }
+
+            return null;
+        }
+
         public static User32.KeyState GetKeyState(Keys key)
         {
             var state = User32.KeyState.None;

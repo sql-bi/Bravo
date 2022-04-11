@@ -1,12 +1,11 @@
 ﻿namespace Sqlbi.Bravo.Infrastructure.Models.PBICloud
 {
     using Sqlbi.Bravo.Infrastructure.Extensions;
-    using System;
 
     public enum PBICloudEnvironmentType
     {
         /// <summary>
-        /// GlobalService "cloudName": "GlobalCloud",
+        /// GlobalService "cloudName": "GlobalCloud" - (Commercial Cloud),
         /// </summary>
         Public = 0,
 
@@ -36,7 +35,7 @@
         USGovMil = 5,
 
         /// <summary>
-        /// ???
+        /// Others
         /// </summary>
         Custom = 6
     }
@@ -62,16 +61,31 @@
                 PBICloudEnvironmentType.China => ChinaCloud,
                 PBICloudEnvironmentType.USGovHigh => USGovDoDL4Cloud,
                 PBICloudEnvironmentType.USGovMil => USGovDoDL5Cloud,
-                PBICloudEnvironmentType.Custom => throw new NotImplementedException(),
                 _ => throw new BravoUnexpectedInvalidOperationException($"Unhandled { nameof(PBICloudEnvironmentType) } value ({ environmentType })"),
             };
 
             return cloudName;
         }
 
-        public static PBICloudEnvironmentType ToCloudEnvironmentType(string globalServicecloudName)
+        public static string ToCloudEnvironmentDescription(this PBICloudEnvironmentType environmentType)
         {
-            return globalServicecloudName switch
+            var cloudName = environmentType switch
+            {
+                PBICloudEnvironmentType.Public => "Power BI",
+                PBICloudEnvironmentType.Germany => "Power BI Germany",
+                PBICloudEnvironmentType.USGov => "Power BI for US Government",
+                PBICloudEnvironmentType.China => "Power BI China (operated by 21Vianet)",
+                PBICloudEnvironmentType.USGovHigh => "Power BI for US Government (L4)",
+                PBICloudEnvironmentType.USGovMil => "Power BI for US Government (L5)",
+                _ => $"Custom",
+            };
+
+            return cloudName;
+        }
+
+        public static PBICloudEnvironmentType ToCloudEnvironmentType(this string globalServiceCloudName)
+        {
+            var environmentType = globalServiceCloudName switch
             {
                 var name when GlobalCloud.EqualsI(name) => PBICloudEnvironmentType.Public,
                 var name when GermanyCloud.EqualsI(name) => PBICloudEnvironmentType.Germany,
@@ -79,10 +93,10 @@
                 var name when ChinaCloud.EqualsI(name) => PBICloudEnvironmentType.China,
                 var name when USGovDoDL4Cloud.EqualsI(name) => PBICloudEnvironmentType.USGovHigh,
                 var name when USGovDoDL5Cloud.EqualsI(name) => PBICloudEnvironmentType.USGovMil,
-                var name when USNatCloud.EqualsI(name) => throw new NotSupportedException($"Unsupported GlobalServiceCloudName ({ globalServicecloudName })"),
-                var name when USSecCloud.EqualsI(name) => throw new NotSupportedException($"Unsupported GlobalServiceCloudName ({ globalServicecloudName })"),
-                _ => throw new BravoUnexpectedInvalidOperationException($"Unhandled GlobalServiceCloudName value ({ globalServicecloudName })"),
+                _ => PBICloudEnvironmentType.Custom
             };
+
+            return environmentType;
         }
     }
 }

@@ -75,7 +75,7 @@
         [ProducesDefaultResponseType]
         public async Task<IActionResult> GetDatabase(PBICloudDataset dataset, CancellationToken cancellationToken)
         {
-            if (await _authenticationService.IsPBICloudSignInRequiredAsync())
+            if (await _authenticationService.IsPBICloudSignInRequiredAsync(cancellationToken))
                 return Unauthorized();
 
             var database = _analyzeModelService.GetDatabase(dataset, _authenticationService.PBICloudAuthentication.AccessToken, cancellationToken);
@@ -95,7 +95,7 @@
         [ProducesDefaultResponseType]
         public async Task<IActionResult> GetDatasets(CancellationToken cancellationToken)
         {
-            if (await _authenticationService.IsPBICloudSignInRequiredAsync())
+            if (await _authenticationService.IsPBICloudSignInRequiredAsync(cancellationToken))
                 return Unauthorized();
 
             var datasets = await _analyzeModelService.GetDatasetsAsync(cancellationToken);
@@ -171,7 +171,7 @@
         [ProducesDefaultResponseType]
         public async Task<IActionResult> ExportVpax(PBICloudDataset dataset, CancellationToken cancellationToken)
         {
-            if (await _authenticationService.IsPBICloudSignInRequiredAsync())
+            if (await _authenticationService.IsPBICloudSignInRequiredAsync(cancellationToken))
                 return Unauthorized();
 
             if (WindowDialogHelper.SaveFileDialog(fileName: dataset.DisplayName, defaultExt: "VPAX", out var path, cancellationToken))
