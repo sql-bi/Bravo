@@ -95,7 +95,8 @@ export class Sheet extends View {
                 for (let _type in this.pages)
                     this.pages[_type].hide();
 
-                this.currentPage.show();
+                if (this.currentPage)
+                    this.currentPage.show();
             }
         }
     }
@@ -130,6 +131,7 @@ export class Sheet extends View {
                 this.update();
 
                 if (initial) {
+                    this.trigger("load");
                     this.removeBlockingScene();
                     this.showPage();
                 }

@@ -151,6 +151,8 @@ export class Doc {
 
     featureSupported(feature: string, pageType?: PageType): [boolean, string] {
 
+        if (!this.features) return [false, null];
+
         let pageFeaturesPrefixes = {
             [PageType.AnalyzeModel]: "AnalyzeModel",
             [PageType.DaxFormatter]: "FormatDax",

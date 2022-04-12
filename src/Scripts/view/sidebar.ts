@@ -22,7 +22,7 @@ export class Sidebar extends View {
     currentItem: string;
     collapsed = false;
 
-    constructor(id: string, container: HTMLElement, items: Dic<string>) {
+    constructor(id: string, container: HTMLElement, items: Dic<string>, autoSelect = false) {
         super(id, container);
 
         this.items = items;
@@ -53,11 +53,14 @@ export class Sidebar extends View {
         `;
         this.element.insertAdjacentHTML("beforeend", html);
 
-        //Select first item
-        for (id in this.items) {
-            this.select(id);
-            break;
+        // Auto Select first item
+        if (autoSelect) {
+            for (let id in this.items) {
+                this.select(id);
+                break;
+            }
         }
+        
         this.toggle(optionsController.options.customOptions.sidebarCollapsed);
 
         this.listen();
@@ -70,6 +73,10 @@ export class Sidebar extends View {
             div.addEventListener("click", (e) => {
                 e.preventDefault();
                 e.stopPropagation();
+
+                let el = (<HTMLElement>e.currentTarget);
+                if (el.classList.contains("disabled")) return;
+
                 this.select((<HTMLElement>e.currentTarget).id.replace("item-", ""));
             });
             div.addEventListener("dblclick", (e) => {
@@ -185,6 +192,40 @@ export class Sidebar extends View {
         this.trigger("change", this.currentItem);
     }
 
+    toggleDisable(id: string, disable: boolean) {
+        __(`.side-menu .item`, this.element).forEach((div: HTMLElement) => {
+            if (id == "*" || div.id == `item-${id}`) {
+                div.toggleClass("disabled", disable);
+            }
+        });
+    }
+
+    toggleInactive(id: string, inactive: boolean) {
+        __(`.side-menu .item`, this.element).forEach((div: HTMLElement) => {
+            if (id == "*" || div.id == `item-${id}`) {
+                div.toggleClass("inactive", inactive);
+            }
+        });
+    }
+
+    disableAll() {
+        this.toggleDisable("*", true);
+    }
+
+    enableAll() {
+        this.toggleDisable("*", false);
+    }
+
+    disactivateAll() {
+        this.toggleInactive("*", true);
+    }
+
+    resetInitialState() {
+        this.toggleInactive("*", false);
+        this.toggleDisable("*", true);
+        this.currentItem = null;
+    }
+
     toggle(collapse = !this.collapsed) {
 
         let root = _("#main-pane");
@@ -200,5 +241,5 @@ export class Sidebar extends View {
         optionsController.update("customOptions.sidebarCollapsed", collapse);
         this.collapsed = collapse;
     }
-
+    
 }

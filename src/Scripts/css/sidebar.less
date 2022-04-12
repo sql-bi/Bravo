@@ -79,7 +79,12 @@
                 background-color: @back-color;
             }
             &.disabled {
-                opacity: .4 !important;
+                opacity: .6 !important;
+            }
+            &.inactive {
+                .icon, .name {
+                    opacity: .4 !important;
+                }
             }
        
             .dark & { 
@@ -114,7 +119,7 @@
                 transition: background .2s ease-in-out;
             }
     
-            &.selected .selector {
+            &:not(.disabled).selected .selector {
                 background: @accent-back-color;
                 .dark & {
                     background-color: @accent-back-color-dark;
