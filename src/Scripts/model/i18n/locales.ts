@@ -3,21 +3,22 @@
  * Copyright (c) SQLBI corp. - All rights reserved.
  * https://www.sqlbi.com
 */
-
-import cz from './cz';
 import en from './en';
-import fr from './fr';
+import cz from './cz';
 import de from './de';
+import fr from './fr';
 import it from './it';
+import nl from './nl';
 import pl from './pl';
 import ru from './ru';
 
 const locales = {
     [en.locale]: en,
     [cz.locale]: cz,
-    [fr.locale]: fr,
     [de.locale]: de,
+    [fr.locale]: fr,
     [it.locale]: it,
+    [nl.locale]: nl,
     [pl.locale]: pl,
     [ru.locale]: ru,
 };
