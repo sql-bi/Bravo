@@ -156,6 +156,7 @@ const locale: Locale = {
         [_.exportDataExporting]: "Exportiere {table}...",
         [_.exportDataExportingDone]: "Erledigt!",
         [_.exportDataNoColumns]: "Diese Tabelle ist nicht exportierbar, da sie keine Spalten enthält.",
+        [_.exportDataNotQueryable]: "Diese Tabelle kann nicht exportiert werden, da sie eine oder mehrere Spalten enthält, die mit einem ungültigen Ausdruck berechnet wurden, oder Spalten, die neu errechnet werden müssen.",
         [_.exportDataOpenFile]: "Öffne Export-Datei",
         [_.exportDataOpenFolder]: "Öffne Export-Ordner",
         [_.exportDataOptions]: "Export Optionen",

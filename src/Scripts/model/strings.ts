@@ -145,6 +145,7 @@ export enum strings {
     exportDataExporting,
     exportDataExportingDone,
     exportDataNoColumns,
+    exportDataNotQueryable,
     exportDataOpenFile,
     exportDataOpenFolder,
     exportDataOptions,
