@@ -34,6 +34,9 @@
         [JsonPropertyName("isHidden")]
         public bool? IsHidden { get; set; }
 
+        [JsonPropertyName("isQueryable")]
+        public bool? IsQueryable { get; set; }
+
         [JsonPropertyName("isManageDates")]
         public bool? IsManageDates { get; set; }
 
@@ -67,6 +70,7 @@
                 Size = vpaTable.TableSize,
                 IsDateTable = vpaTable.IsDateTable,
                 IsHidden = null,
+                IsQueryable = null,
                 IsManageDates = null
             };
 
@@ -74,7 +78,14 @@
             if (tomTable is not null)
             {
                 table.IsHidden = tomTable.IsHidden;
+                table.IsQueryable = tomTable.IsQueryable();
                 table.IsManageDates = tomTable.Annotations.Contains(DaxTemplateManager.SqlbiTemplateAnnotation);
+            }
+
+            if (table.IsQueryable == false)
+            {
+                table.Features &= ~TabularTableFeature.ExportData;
+                table.FeatureUnsupportedReasons |= TabularTableFeatureUnsupportedReason.ExportDataNotQueryable;
             }
 
             if (vpaTable.ColumnsNumber == 0L || (vpaTable.ColumnsNumber == 1L && vpaTable.Columns.Single().IsRowNumber))
@@ -117,5 +128,10 @@
         /// https://github.com/sql-bi/Bravo/issues/128 "Query (%, %) Table '%' cannot be used in computations because it does not have any columns."
         /// </example> 
         ExportDataNoColumns = 1 << 400,
+
+        /// <summary>
+        /// The table has columns that are not queryable (i.e. TOM.ObjectState IN CalculationNeeded, SemanticError, EvaluationError, SyntaxError, ...)
+        /// </summary> 
+        ExportDataNotQueryable = 1 << 401,
     }
 }

@@ -156,6 +156,7 @@ const locale: Locale = {
         [_.exportDataExporting]: "Export {table}...",
         [_.exportDataExportingDone]: "Fait!",
         [_.exportDataNoColumns]: "Cette table n'est pas exportable car elle ne comporte aucune colonne.",
+        [_.exportDataNotQueryable]: "Cette table n'est pas exportable car il contient une ou plusieurs colonnes calculées avec une expression invalide ou des colonnes qui doivent être recalculées.",
         [_.exportDataOpenFile]: "Ouvrir le fichier exporté",
         [_.exportDataOpenFolder]: "Ouvrier le dossier d'export",
         [_.exportDataOptions]: "Options d'export",

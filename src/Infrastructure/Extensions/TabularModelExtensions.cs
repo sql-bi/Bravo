@@ -33,8 +33,31 @@
         }
     }
 
+    internal static class TabularExtension
+    {
+        public static bool IsQueryable(this TOM.ObjectState state)
+        {
+            return state == TOM.ObjectState.Ready || state == TOM.ObjectState.NoData;
+        }
+    }
+
+    internal static class ColumnExtension
+    {
+        public static bool IsQueryable(this TOM.Column column)
+        {
+            var isQueryable = column.State.IsQueryable();
+            return isQueryable;
+        }
+    }
+
     internal static class TableExtension
     {
+        public static bool IsQueryable(this TOM.Table table)
+        {
+            var isQueryable = table.Columns.Any((column) => column.IsQueryable());
+            return isQueryable;
+        }
+
         public static TOM.PartitionSourceType GetSourceType(this TOM.Table table)
         {
             return table.Partitions.FirstOrDefault()?.SourceType ?? TOM.PartitionSourceType.None;

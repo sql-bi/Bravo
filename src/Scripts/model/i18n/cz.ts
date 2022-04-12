@@ -154,6 +154,7 @@ const locale: Locale = {
         [_.exportDataExporting]: "Exportuji {table}...",
         [_.exportDataExportingDone]: "Hotovo!",
         [_.exportDataNoColumns]: "Tuto tabulku nelze exportovat, protože neobsahuje žádné sloupce.",
+        [_.exportDataNotQueryable]: "Tuto tabulku nelze exportovat, protože obsahuje jeden nebo více sloupců vypočtených pomocí neplatného výrazu nebo sloupců, které je třeba přepočítat.",
         [_.exportDataOpenFile]: "Otevřít Exportovaný Soubor",
         [_.exportDataOpenFolder]: "Otevřít Složku s Exporty",
         [_.exportDataOptions]: "Možnosti Exportu",

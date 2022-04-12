@@ -398,6 +398,10 @@ export class ExportDataScene extends DocScene {
             return i18n(strings.exportDataNoColumns);
         }
 
+        if ((table.featureUnsupportedReasons & TabularTableFeatureUnsupportedReason.ExportDataNotQueryable) === TabularTableFeatureUnsupportedReason.ExportDataNotQueryable) {
+            return i18n(strings.exportDataNotQueryable);
+        }
+
         return "";
     }
 

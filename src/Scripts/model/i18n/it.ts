@@ -154,6 +154,7 @@ const locale: Locale = {
         [_.exportDataExporting]: "Esportazione {table} in corso...",
         [_.exportDataExportingDone]: "Completato!",
         [_.exportDataNoColumns]: "Questa tabella non può essere esportata perché non contiene nessuna colonna.",
+        [_.exportDataNotQueryable]: "Questa tabella non può essere esportata perché contiene una o più colonne calcolate con un'espressione non valida o colonne che devono essere ricalcolate.",
         [_.exportDataOpenFile]: "Apri file",
         [_.exportDataOpenFolder]: "Apri cartella",
         [_.exportDataOptions]: "Opzioni",

@@ -154,6 +154,7 @@ const locale: Locale = {
         [_.exportDataExporting]: "Exporteert {table}...",
         [_.exportDataExportingDone]: "Klaar!",
         [_.exportDataNoColumns]: "Deze table kan niet geexporteerd worden omdat het geen kolommen bevat.",
+        [_.exportDataNotQueryable]: "Deze tabel kan niet worden geëxporteerd omdat hij een of meer kolommen bevat die met een ongeldige uitdrukking zijn berekend of kolommen die moeten worden bijgewerkt (d.w.z. herberekend).",
         [_.exportDataOpenFile]: "Open geexporteerd bestand",
         [_.exportDataOpenFolder]: "Exportmap openen",
         [_.exportDataOptions]: "Exporteer opties",

@@ -97,6 +97,7 @@ export enum TabularTableFeature {
 export enum TabularTableFeatureUnsupportedReason {
     None = 0,
     ExportDataNoColumns = 1 << 400,
+    ExportDataNotQueryable = 1 << 401,
 }
 
 
