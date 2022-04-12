@@ -53,7 +53,7 @@ export class ExportedScene extends Scene {
                     <div class="job-message">
                         <div class="icon big ${warningCount ? "icon-alert" : (errorCount ? "icon-error" : "icon-completed")}"></div>
                         <p>${i18n(strings.exportDataSuccessSceneMessage, { count: successCount + warningCount, total: count})}</p>
-                        ${successCount ? `
+                        ${successCount || warningCount ? `
                             <p>
                                 <span class="open-path link">${i18n(isFile ? strings.exportDataOpenFile : strings.exportDataOpenFolder)}</span> 
                             </p>
