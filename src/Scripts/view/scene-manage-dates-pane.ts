@@ -62,7 +62,7 @@ export class ManageDatesScenePane {
             return false;
     }
 
-    validateField(field: string) {
+    validateField(field: string, silentUpdate: boolean) {
 
         let validationFields = {
             dateTableName: "dateTableValidation",
@@ -80,7 +80,7 @@ export class ManageDatesScenePane {
         }
         let fieldValue = this.config.getOption(field);
         if (tableNames.includes(fieldValue)) {
-            this.config.update(validationField, TableValidation.InvalidNamingRequirements, true);
+            this.config.update(validationField, TableValidation.InvalidNamingRequirements, !silentUpdate);
             return new Promise<OptionValidation>((resolve, reject)=>{
                 resolve(<OptionValidation>{ 
                     valid: false,
@@ -103,7 +103,7 @@ export class ManageDatesScenePane {
 
                 let status = (<any>response)[validationField];
                 let valid = (status > TableValidation.Unknown && status < TableValidation.InvalidExists);
-                this.config.update(validationField, status, true);
+                this.config.update(validationField, status, !silentUpdate);
 
                 return <OptionValidation>{ 
                     valid: valid,
@@ -112,7 +112,7 @@ export class ManageDatesScenePane {
 
             }).catch(ignore => {
                 
-                this.config.update(validationField, TableValidation.InvalidNamingRequirements, true);
+                this.config.update(validationField, TableValidation.InvalidNamingRequirements, !silentUpdate);
                 return <OptionValidation>{ 
                     valid: false,
                     message: i18n(strings.tableValidationInvalid) 

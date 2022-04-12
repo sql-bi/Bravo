@@ -67,7 +67,7 @@ export class ManageDatesScene extends DocScene {
                 <div class="col coll">
                     <div class="model-check">
                         <div class="notice">${i18n(strings.manageDatesModelCheck)}</div>
-                        <div class="status"></div>
+                        <div class="status">${Loader.html(true)}</div>
                     </div>
                 </div>
 
@@ -81,7 +81,7 @@ export class ManageDatesScene extends DocScene {
                     <div class="notice">${i18n(strings.manageDatesSampleData)}</div>
                     <div class="toggle-table ctrl solo ${this.hasSampleData ? "icon-up expanded" : "icon-down"}"></div>
                 </div>
-                <div class="table"></div>
+                <div class="table">${Loader.html(true)}</div>
             </div>
 
             <div class="scene-action">
@@ -163,10 +163,13 @@ export class ManageDatesScene extends DocScene {
                 let errorScene = new ErrorScene(Utils.DOM.uniqueId(), this.element.parentElement, error);
                 this.splice(errorScene);
             });
+
+        // Do not call this.update() because we already got date config - but we need to call any update functions in parents
+        super.update();
     }
 
     getDatesConfiguration() {
-    
+
         return host.manageDatesGetConfigurations(<PBIDesktopReport>this.doc.sourceData)
         .then(templates => {
            
@@ -198,62 +201,57 @@ export class ManageDatesScene extends DocScene {
     }
 
     loadSampleData() {
-
-        this.clearSampleData();
-        let sampleDataEl = _(".sample-data .table", this.element);
-
-        new Loader(sampleDataEl, false, true);
-        new Loader(this.modelCheckElement, false, true);
         
         let renderSampleDataError = ()=> {
-            sampleDataEl.innerHTML = `<div class="error">${i18n(strings.manageDatesSampleDataError)}</div>`;
+            _(".sample-data .table", this.element).innerHTML = `<div class="error">${i18n(strings.manageDatesSampleDataError)}</div>`;
         };
         
-        let tableNamesValidity = this.checkTableNames();
-        if (tableNamesValidity == TableValidation.InvalidExists) {
-            renderSampleDataError();
-            this.updateModelCheck();
+        this.checkTableNames().then(tableNamesValidity => {
+            if (tableNamesValidity == TableValidation.InvalidExists) {
+                renderSampleDataError();
+                this.updateModelCheck(tableNamesValidity);
 
-        } else {
-            
-            let request: ManageDatesPreviewChangesFromPBIDesktopReportRequest = {
-                settings: {
-                    configuration: this.sanitizeConfig(this.config.options),
-                    previewRows: 20
-                },
-                report: <PBIDesktopReport>this.doc.sourceData
-            }
+            } else {
+                
+                let request: ManageDatesPreviewChangesFromPBIDesktopReportRequest = {
+                    settings: {
+                        configuration: this.sanitizeConfig(this.config.options),
+                        previewRows: 20
+                    },
+                    report: <PBIDesktopReport>this.doc.sourceData
+                }
 
-            host.manageDatesPreviewChanges(request)
-                .then(changes => {
-                    let preview = [];
-                    if ("modifiedObjects" in changes) {
-                        for (let i = 0; i < changes.modifiedObjects.length; i++) {
-                            let table = changes.modifiedObjects[i];
-                            if (table.name == this.config.options.dateTableName && table.preview) {
-                                preview = table.preview;
-                                break;
+                host.manageDatesPreviewChanges(request)
+                    .then(changes => {
+                        let preview = [];
+                        if ("modifiedObjects" in changes) {
+                            for (let i = 0; i < changes.modifiedObjects.length; i++) {
+                                let table = changes.modifiedObjects[i];
+                                if (table.name == this.config.options.dateTableName && table.preview) {
+                                    preview = table.preview;
+                                    break;
+                                }
                             }
                         }
-                    }
-                    this.updateSampleData(preview);
-                })
-                .catch((error: AppError) => {
+                        this.updateSampleData(preview);
+                    })
+                    .catch((error: AppError) => {
 
-                    if (error.type != AppErrorType.Managed) {
-                        let errorScene = new ErrorScene(Utils.DOM.uniqueId(), this.element.parentElement, error);
-                        this.push(errorScene);
-                    
-                    } else {
-                        renderSampleDataError();
-                        this.previewError = error;
-                        try { logger.logError(error); } catch(ignore) {}
-                    }
-                })
-                .finally(() => {
-                    this.updateModelCheck();
-                });
-        }
+                        if (error.type != AppErrorType.Managed) {
+                            let errorScene = new ErrorScene(Utils.DOM.uniqueId(), this.element.parentElement, error);
+                            this.push(errorScene);
+                        
+                        } else {
+                            renderSampleDataError();
+                            this.previewError = error;
+                            try { logger.logError(error); } catch(ignore) {}
+                        }
+                    })
+                    .finally(() => {
+                        this.updateModelCheck(tableNamesValidity);
+                    });
+            }
+        });
     }
 
     updateSampleData(data: any[]) {
@@ -335,14 +333,18 @@ export class ManageDatesScene extends DocScene {
     scheduleUpdate() {
         if (this.scheduledUpdateTimeout) return;
 
+        this.scheduleLoadSampleData();
+
         this.scheduledUpdateTimeout = window.setTimeout(()=> {
             this.loadSampleData();
+
             this.scheduledUpdateTimeout = null;
         }, 1500);
     }
 
     update() {
         if (!super.update()) return false;
+        this.scheduleLoadSampleData();
 
         this.getDatesConfiguration()
             .then(templates => {
@@ -355,7 +357,8 @@ export class ManageDatesScene extends DocScene {
                 });
             })
             .finally(()=>{
-                this.loadSampleData();
+                
+                this.loadSampleData(); 
             })
     }
 
@@ -364,34 +367,68 @@ export class ManageDatesScene extends DocScene {
         this.menu.disable("timeIntelligence", !this.config.options.timeIntelligenceAvailable);
     }
 
-    checkTableNames(): TableValidation {
+    checkTableNames(retry = false): Promise<TableValidation> {
 
+        let unknown = false;
         let invalid = false;
         let alterable = false;
 
         //Check table names validation
-        let fields = [this.config.options.dateTableValidation, this.config.options.dateReferenceTableValidation];
+
+        let fields = ["dateTableValidation", "dateReferenceTableValidation"];
         if (this.config.options.holidaysAvailable && this.config.options.holidaysEnabled)
-            fields = [...fields, ...[this.config.options.holidaysTableValidation, this.config.options.holidaysDefinitionTableValidation]];
+            fields = [...fields, ...["holidaysTableValidation", "holidaysDefinitionTableValidation"]];
 
         fields.forEach(field => {
-            if (field >= TableValidation.InvalidExists) {
+            let value: TableValidation = (<any>this.config.options)[field];
+            if (value == TableValidation.Unknown) {
+                unknown = true;
+            } else if (value >= TableValidation.InvalidExists) {
                 invalid = true;
-            } else if (field == TableValidation.ValidAlterable) {
+            } else if (value == TableValidation.ValidAlterable) {
                 alterable = true;
             }
         });
 
-        return (invalid ? 
-            TableValidation.InvalidExists : 
-            (alterable ? 
-                TableValidation.ValidAlterable : 
-                TableValidation.ValidNotExists
-            )
-        );
+        if (unknown && !retry) {
+            
+            return host.manageDatesValidateTableNames({
+                report: <PBIDesktopReport>this.doc.sourceData,
+                configuration: this.config.options
+            }).then(response => {
+
+                fields.forEach(field => {
+                    (<any>this.config.options)[field] = (<any>response)[field];
+                });
+                this.config.save();
+
+                return this.checkTableNames(true);
+
+            }).catch(ignore => {
+                return TableValidation.InvalidExists;
+            });
+
+
+        } else {
+            return new Promise((resolve, reject) => {
+                resolve(invalid || unknown ? 
+                    TableValidation.InvalidExists : 
+                    (alterable ? 
+                        TableValidation.ValidAlterable : 
+                        TableValidation.ValidNotExists
+                    )
+                );
+            });
+        }
     }
 
-    updateModelCheck() {
+    scheduleLoadSampleData() {
+        this.clearSampleData();
+        new Loader(_(".sample-data .table", this.element), false, true);
+        new Loader(this.modelCheckElement, false, true);
+    }
+
+    updateModelCheck(tableNamesValidity: TableValidation) {
 
         let disabled = false;
 
@@ -409,8 +446,6 @@ export class ManageDatesScene extends DocScene {
             `;
 
         } else {
-
-            let tableNamesValidity = this.checkTableNames();
 
             if (tableNamesValidity == TableValidation.InvalidExists) {
                 disabled = true;

@@ -121,8 +121,16 @@ export class Doc {
                     });
 
             } else if (this.type == DocType.pbix) {
+
                 return host.getModelFromReport(<PBIDesktopReport>this.sourceData)
-                    .then(response => processResponse(response))
+                    .then(response => {
+
+                        // Update the source dataset as it may have changed
+                        this.sourceData = response[1]; 
+                        this.name = sanitizeHtml(this.sourceData.reportName, { allowedTags: [], allowedAttributes: {} });
+
+                        return processResponse(response[0])
+                    });
             }
         }
 

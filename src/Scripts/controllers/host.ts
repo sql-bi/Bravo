@@ -388,7 +388,8 @@ export class Host extends Dispatchable {
 
         return this.validateReportConnection(report)
             .then(report => {
-                return <Promise<TabularDatabase>>this.apiCall("api/GetModelFromReport", report, { method: "POST" }, true, logSettings);
+                return this.apiCall("api/GetModelFromReport", report, { method: "POST" }, true, logSettings)
+                    .then(database => <[TabularDatabase, PBIDesktopReport]>[database, report]);
             });
     }
 
@@ -403,13 +404,38 @@ export class Host extends Dispatchable {
         };
 
         return new Promise((resolve, reject) => {
+
+            return this.listReports()
+                .then((reports: PBIDesktopReport[]) => {
+                    let foundReport = report;
+                    for (let i = 0; i < reports.length; i++) {
+                        if (reports[i].serverName == report.serverName && reports[i].databaseName == report.databaseName ) {
+
+                            foundReport = reports[i];
+                            if (reports[i].connectionMode == PBIDesktopReportConnectionMode.Supported) {
+                                resolve(foundReport);
+                                return;
+                            }
+                            break;
+                        }
+                    }
+
+                    this.apiLog("api/GetModelFromReport", foundReport, logSettings);
+                    reject(connectionError(foundReport.connectionMode));
+                })
+                .catch(error => {
+                    reject(error);
+                });
+        });
+
+        /*return new Promise((resolve, reject) => {
             if (report.connectionMode == PBIDesktopReportConnectionMode.Supported) {
                 resolve(report);
             } else {
                 this.apiLog("api/GetModelFromReport", report, logSettings);
                 reject(connectionError(report.connectionMode));
             }
-        });
+        });*/
     }
 
     getModelFromDataset(dataset: PBICloudDataset) {
@@ -433,34 +459,26 @@ export class Host extends Dispatchable {
         };
 
         return new Promise((resolve, reject) => {
-            if (dataset.connectionMode == PBICloudDatasetConnectionMode.Supported) {
-                resolve(dataset);
-            } else {
-                
-                if (dataset.connectionMode == PBICloudDatasetConnectionMode.Unknown) {
-                    this.listDatasets()
-                        .then((datasets: PBICloudDataset[]) => {
-                            for (let i = 0; i < datasets.length; i++) {
-                                if (datasets[i].databaseName == dataset.databaseName) {
-                                    if (datasets[i].connectionMode == PBICloudDatasetConnectionMode.Supported) {
-                                        resolve(datasets[i]);
-                                        return;
-                                    }
-                                    break;
-                                }
+            this.listDatasets()
+                .then((datasets: PBICloudDataset[]) => {
+                    let foundDataset = dataset;
+                    for (let i = 0; i < datasets.length; i++) {
+                        if (datasets[i].serverName == dataset.serverName && datasets[i].databaseName == dataset.databaseName) {
+                            foundDataset = datasets[i];
+                            if (foundDataset.connectionMode == PBICloudDatasetConnectionMode.Supported) {
+                                resolve(foundDataset);
+                                return;
                             }
+                            break;
+                        }
+                    }
 
-                            this.apiLog("api/GetModelFromDataset", dataset, logSettings);
-                            reject(connectionError(dataset.connectionMode, dataset.diagnostic));
-                        })
-                        .catch(error => {
-                            reject(error);
-                        });
-                } else {
-                    this.apiLog("api/GetModelFromDataset", dataset, logSettings);
-                    reject(connectionError(dataset.connectionMode, dataset.diagnostic));
-                }
-            }
+                    this.apiLog("api/GetModelFromDataset", foundDataset, logSettings);
+                    reject(connectionError(foundDataset.connectionMode, foundDataset.diagnostic));
+                })
+                .catch(error => {
+                    reject(error);
+                });
         });
     }
 
