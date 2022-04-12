@@ -8,7 +8,7 @@ import { strings as _ } from '../strings';
 
 const locale: Locale = {
 
-    locale: "en", //DO NOT TRANSLATE
+    locale: "nl", //DO NOT TRANSLATE
     enName: "Dutch", //DO NOT TRANSLATE
     name: "Nederlands",
 
@@ -304,7 +304,7 @@ const locale: Locale = {
         [_.optionFormattingSpacesValueTrue]: "Tussenruimte - Of ( ",
         [_.optionLanguage]: "Taal",
         [_.optionLanguageDescription]: "Kies de taal voor Bravo. Herladen vereist.",
-        [_.optionLanguageResetConfirm]: "Wil je Bravo opnieuw laden om de nieuwe taal toe te passen??",
+        [_.optionLanguageResetConfirm]: "Wil je Bravo opnieuw laden om de nieuwe taal toe te passen?",
         [_.optionsDialogAboutMenu]: "Over",
         [_.optionsDialogFormattingMenu]: "Opmaak",
         [_.optionsDialogGeneralMenu]: "Generiek",
