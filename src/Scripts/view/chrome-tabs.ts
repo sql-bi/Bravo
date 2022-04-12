@@ -299,6 +299,7 @@ export class ChromeTabs extends Dispatchable {
     }
 
     updateTab(tabEl: HTMLElement, tabProperties: ChromeTabsProperties) {
+      tabEl.setAttribute("title", tabProperties.title);
       _('.chrome-tab-title', tabEl).textContent = tabProperties.title
 
       if (tabProperties.favicon) {

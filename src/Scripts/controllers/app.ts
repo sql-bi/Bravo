@@ -268,14 +268,20 @@ export class App {
 
     addSheet(id: string, doc: Doc) {
 
-        let container = this.tabs.body;
-        if (this.welcomeScene)
-            this.welcomeScene.hide();
+        this.hideWelcome();
+        this.sidebar.disactivateAll();
 
+        let container = this.tabs.body;
         let sheet = new Sheet(id, container, doc);
         this.sheets[id] = sheet;
 
+        sheet.on("load", ()=>{
+            if (this.tabs.currentTab == id)
+                this.selectFirstSupportedPage(sheet);
+        });
         sheet.on("sync", ()=>{
+            if (this.tabs.currentTab == id)
+                this.updateSidebarStatus(sheet);
             this.tabs.updateTab(id, doc.name);
         });
     }
@@ -288,7 +294,26 @@ export class App {
         }
     }
 
-    showSheet(id: string, page: PageType) {
+    updateSidebarStatus(sheet: Sheet) {
+        for (let type in sheet.pages) {
+            let pageSupported = sheet.doc.featureSupported("Page", <PageType>type);
+            this.sidebar.toggleInactive(type, !pageSupported[0]);
+        }
+    }
+
+    selectFirstSupportedPage(sheet: Sheet) {
+        let page: PageType;
+        for (let type in sheet.pages) {
+            let pageSupported = sheet.doc.featureSupported("Page", <PageType>type);
+            if (pageSupported[0]) {
+                if (this.sidebar.currentItem == type || !page)
+                    page = <PageType>type;
+            }
+        }
+        this.sidebar.select(page);
+    }
+
+    showSheet(id: string, page?: PageType) {
 
         //Hide all other sheets
         for (let _id in this.sheets) {
@@ -297,6 +322,7 @@ export class App {
         }
 
         let sheet = this.sheets[id];
+        this.updateSidebarStatus(sheet);
         sheet.show();
         sheet.showPage(page);
     }
@@ -319,8 +345,16 @@ export class App {
             });
         }
         this.welcomeScene.show();
+        this.sidebar.resetInitialState();
 
         telemetry.trackPage("Welcome");
+    }
+
+    hideWelcome() {
+        if (this.welcomeScene)
+            this.welcomeScene.hide();
+
+        this.sidebar.enableAll();
     }
 
     connect(selectedMenu: string) {

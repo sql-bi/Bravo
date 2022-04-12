@@ -106,7 +106,7 @@ export class ManageDatesSceneDates extends ManageDatesScenePane {
                 type: OptionType.text,
                 silentUpdate: true,
                 readonly: this.fieldReadonly("dateTableName"),
-                validation: (name, value) => this.validateField(name)
+                validation: (name, value, initial) => this.validateField(name, initial)
             },
             {
                 option: "dateReferenceTableName",
@@ -116,7 +116,7 @@ export class ManageDatesSceneDates extends ManageDatesScenePane {
                 type: OptionType.text,
                 silentUpdate: true,
                 readonly: this.fieldReadonly("dateReferenceTableName"),
-                validation: (name, value) => this.validateField(name)
+                validation: (name, value, initial) => this.validateField(name, initial)
             },
         ];
 

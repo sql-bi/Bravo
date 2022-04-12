@@ -12,15 +12,15 @@
 		transform:scale(1);
 
 		.dialog-back {
-				position: absolute;
-				top: 0;
-				left: 0;
-				bottom: 0;
-				right: 0;
-				background: @back-color;
-				opacity: 0.4;
-				z-index: -1;
-				animation: fadeIn .5s cubic-bezier(0.165, 0.840, 0.440, 1.000) forwards;
+			position: absolute;
+			top: 0;
+			left: 0;
+			bottom: 0;
+			right: 0;
+			background: @back-color;
+			opacity: 0.4;
+			z-index: -1;
+			animation: fadeIn .5s cubic-bezier(0.165, 0.840, 0.440, 1.000) forwards;
 		}
 		.dialog-front {
 				background: @window-back-color;
@@ -69,21 +69,22 @@
 		.dark & {
 
 				.dialog-back {
-						background-color: @back-color-dark;
+					background-color: @back-color-dark;
+					opacity: 0.8;
 				}
 				.dialog-front {
-						background-color: @window-back-color-dark;
-						.shadow(0, 0, 8px, 0, rgba(0,0,0,0.6));
+					background-color: @window-back-color-dark;
+					.shadow(0, 0, 8px, 0, rgba(0,0,0,0.6));
 				}
 		}
 
 		&.out {
 				animation: quickScaleDown 0s .5s linear forwards;
 				.dialog-back {
-						animation: fadeOut .5s cubic-bezier(0.165, 0.840, 0.440, 1.000) forwards;
+					animation: fadeOut .5s cubic-bezier(0.165, 0.840, 0.440, 1.000) forwards;
 				}
 				.dialog-front {
-						animation: scaleDown .5s cubic-bezier(0.165, 0.840, 0.440, 1.000) forwards;
+					animation: scaleDown .5s cubic-bezier(0.165, 0.840, 0.440, 1.000) forwards;
 				}
 		}
 

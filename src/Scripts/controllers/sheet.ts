@@ -63,17 +63,13 @@ export class Sheet extends View {
                 //if (!changed) return;
 
                 let orphan = true;
-                let name = this.doc.name;
                 pbiDesktop.reports.forEach(report => {
                     if (this.doc.id == Doc.getId(DocType.pbix, report)) {
                         orphan = false;
-                        name = report.reportName;
                     }
                 });
-
-                if (orphan != this.doc.orphan || name != this.doc.name) {
+                if (orphan != this.doc.orphan) {
                     this.doc.orphan = orphan;
-                    this.doc.name = name;
                     this.update();
                 }
 
@@ -95,7 +91,8 @@ export class Sheet extends View {
                 for (let _type in this.pages)
                     this.pages[_type].hide();
 
-                this.currentPage.show();
+                if (this.currentPage)
+                    this.currentPage.show();
             }
         }
     }
@@ -130,6 +127,7 @@ export class Sheet extends View {
                 this.update();
 
                 if (initial) {
+                    this.trigger("load");
                     this.removeBlockingScene();
                     this.showPage();
                 }

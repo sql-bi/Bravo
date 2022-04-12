@@ -47,16 +47,17 @@ export abstract class DocScene extends NavigatorScene {
     }
 
     render() {
-        super.render();
-
+        
+        // Show unsupported
         let sceneSupported = this.supported;
         if (!sceneSupported[0]) {
             let blockingScene = new UnsupportedScene(Utils.DOM.uniqueId(), this.element, this, sceneSupported[1]);
             this.push(blockingScene);
-            this.rendered = false;
+            this.show();
             return false;
         }
 
+        super.render();
         this.renderToolbar();
 
         return true;

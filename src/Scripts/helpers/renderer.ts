@@ -32,7 +32,7 @@ export interface OptionStruct {
     invalidTooltip?: string
     silentUpdate?: boolean
     customHtml?: ()=> string
-    validation?: (name: string, value: string) => Promise<OptionValidation>
+    validation?: (name: string, value: string, initial: boolean) => Promise<OptionValidation>
     onBeforeChange?: (e: Event, value: any) => void
     onChange?: (e: Event, value: any) => void
     onClick?: (e: Event) => void
@@ -225,7 +225,7 @@ export module Renderer {
             const listener = _(`#${id} .listener`, element);
             
             if (!struct.readonly) {
-                Options.validateOption(listener, struct);
+                Options.validateOption(listener, struct, true);
 
                 if (struct.type == OptionType.switch || 
                     struct.type == OptionType.select || 
@@ -296,7 +296,7 @@ export module Renderer {
             }
         }
 
-        export function validateOption(element: HTMLElement, struct: OptionStruct) {
+        export function validateOption(element: HTMLElement, struct: OptionStruct, initial = false) {
             if (struct.type == OptionType.text && !struct.readonly && Utils.Obj.isSet(struct.validation)) {
                 let validationContainer = element.closest(".validation-container");
                 validationContainer.classList.remove("valid", "invalid");
@@ -305,7 +305,7 @@ export module Renderer {
                 let validationDesc = _(".validation-desc", validationContainer);
                 validationDesc.innerText = i18n(strings.validating);
 
-                struct.validation((struct.option ? struct.option : struct.name), (<HTMLInputElement>element).value).then(response => {
+                struct.validation((struct.option ? struct.option : struct.name), (<HTMLInputElement>element).value, initial).then(response => {
                     validationContainer.classList.remove("validating");
                     
                     if (response) {
