@@ -39,7 +39,7 @@
     },
     {
       "Name": "__FiscalYearNumber",
-      "Expression": "QUOTIENT ( __YearMonthNumber + 1 * (__FirstFiscalMonth > 1) * (__MonthsInYear + 1 - __FirstFiscalMonth), __MonthsInYear ) + 1"
+      "Expression": "QUOTIENT ( __YearMonthNumber + 1 * (__FirstFiscalMonth > 1) * (__MonthsInYear + 1 - __FirstFiscalMonth), __MonthsInYear )"
     },
     {
       "Name": "__MonthNumber",
