@@ -176,7 +176,7 @@ export interface ApiLogSettings {
 
 export class Host extends Dispatchable {
 
-    static DEFAULT_TIMEOUT = 60 * 1000;
+    static DEFAULT_TIMEOUT = 5 * 60 * 1000;
 
     address: string;
     token: string;
