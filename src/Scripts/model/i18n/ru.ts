@@ -8,15 +8,17 @@ import { strings as _ } from '../strings';
 
 const locale: Locale = {
 
-    locale: "ru", //DO NOT TRANSLATE
-    name: "Русский", //DO NOT TRANSLATE
+    locale: "ru", // DO NOT TRANSLATE
+    enName: "Russian", // DO NOT TRANSLATE
+    name: "Русский",
 
     strings: {
         [_.addCtrlTitle]: "Открыть",
-        [_.aggregatedTableName]: "Multiple tables",
+        [_.aggregatedTableName]: "Несколько таблиц",
         [_.AnalyzeModel]: "Анализ модели",
         [_.analyzeModelSummary]: `Размер вашего источника данных <strong>{size:bytes}</strong> байт, включая <strong>{count}</strong> стобцов`,
-        [_.analyzeModelSummary2]: `, <span class="text-highlight"><strong>{count}</strong> of which {{are|is}} not referenced within the model.</span>`,//Don't understand
+        [_.analyzeModelSummary2]: `, <span class="text-highlight"><strong>{count}</strong> из которых не упоминаются в модели.</span>`,
+        [_.appName]: "Bravo for Power BI", //DO NOT TRANSLATE
         [_.appUpdateAvailable]: "Доступна новая версия: {version}",
         [_.appUpdateChangelog]: "Журнал изменений",
         [_.appUpdateDownload]: "Загрузить",
