@@ -85,22 +85,22 @@
     </Property>
     
     <!-- Set 'remember' properties default value to '1' if the product is not installed or if their registry value is equal to '1' -->
-    <SetProperty Action="DefaultDESKTOPSHORTCUTENABLEDREMEMBER" Id="DESKTOPSHORTCUTENABLEDREMEMBER" Value="1" After="AppSearch" Sequence="ui"><![CDATA[NOT Installed OR DESKTOPSHORTCUTENABLEDREMEMBER = "1"]]></SetProperty>
-    <SetProperty Action="DefaultPROGRAMMENUSHORTCUTENABLEDREMEMBER" Id="PROGRAMMENUSHORTCUTENABLEDREMEMBER" Value="1" After="AppSearch" Sequence="ui"><![CDATA[NOT Installed OR PROGRAMMENUSHORTCUTENABLEDREMEMBER = "1"]]></SetProperty>
-    <SetProperty Action="DefaultINSTALLERTELEMETRYENABLEDREMEMBER" Id="INSTALLERTELEMETRYENABLEDREMEMBER" Value="1" After="AppSearch" Sequence="ui"><![CDATA[NOT Installed OR INSTALLERTELEMETRYENABLEDREMEMBER = "1"]]></SetProperty>
-    <SetProperty Action="DefaultAPPLICATIONTELEMETRYENABLEDREMEMBER" Id="APPLICATIONTELEMETRYENABLEDREMEMBER" Value="1" After="AppSearch" Sequence="ui"><![CDATA[NOT Installed OR APPLICATIONTELEMETRYENABLEDREMEMBER = "1"]]></SetProperty>
+    <SetProperty Action="DefaultDESKTOPSHORTCUTENABLEDREMEMBER" Id="DESKTOPSHORTCUTENABLEDREMEMBER" Value="1" After="AppSearch" Sequence="first"><![CDATA[NOT Installed OR DESKTOPSHORTCUTENABLEDREMEMBER = "1"]]></SetProperty>
+    <SetProperty Action="DefaultPROGRAMMENUSHORTCUTENABLEDREMEMBER" Id="PROGRAMMENUSHORTCUTENABLEDREMEMBER" Value="1" After="AppSearch" Sequence="first"><![CDATA[NOT Installed OR PROGRAMMENUSHORTCUTENABLEDREMEMBER = "1"]]></SetProperty>
+    <SetProperty Action="DefaultINSTALLERTELEMETRYENABLEDREMEMBER" Id="INSTALLERTELEMETRYENABLEDREMEMBER" Value="1" After="AppSearch" Sequence="first"><![CDATA[NOT Installed OR INSTALLERTELEMETRYENABLEDREMEMBER = "1"]]></SetProperty>
+    <SetProperty Action="DefaultAPPLICATIONTELEMETRYENABLEDREMEMBER" Id="APPLICATIONTELEMETRYENABLEDREMEMBER" Value="1" After="AppSearch" Sequence="first"><![CDATA[NOT Installed OR APPLICATIONTELEMETRYENABLEDREMEMBER = "1"]]></SetProperty>
 
     <!-- Undefine "remember" properties if their value exists and is <> '1', this is because an undefined property will result to an unchecked WiX CheckBox -->
-    <SetProperty Action="UndefineDESKTOPSHORTCUTENABLEDREMEMBER" Id="DESKTOPSHORTCUTENABLEDREMEMBER" Value="{}" After="AppSearch" Sequence="ui"><![CDATA[DESKTOPSHORTCUTENABLEDREMEMBER AND DESKTOPSHORTCUTENABLEDREMEMBER <> "1"]]></SetProperty>
-    <SetProperty Action="UndefinePROGRAMMENUSHORTCUTENABLEDREMEMBER" Id="PROGRAMMENUSHORTCUTENABLEDREMEMBER" Value="{}" After="AppSearch" Sequence="ui"><![CDATA[PROGRAMMENUSHORTCUTENABLEDREMEMBER AND PROGRAMMENUSHORTCUTENABLEDREMEMBER <> "1"]]></SetProperty>
-    <SetProperty Action="UndefineINSTALLERTELEMETRYENABLEDREMEMBER" Id="INSTALLERTELEMETRYENABLEDREMEMBER" Value="{}" After="AppSearch" Sequence="ui"><![CDATA[INSTALLERTELEMETRYENABLEDREMEMBER AND INSTALLERTELEMETRYENABLEDREMEMBER <> "1"]]></SetProperty>
-    <SetProperty Action="UndefineAPPLICATIONTELEMETRYENABLEDREMEMBER" Id="APPLICATIONTELEMETRYENABLEDREMEMBER" Value="{}" After="AppSearch" Sequence="ui"><![CDATA[APPLICATIONTELEMETRYENABLEDREMEMBER AND APPLICATIONTELEMETRYENABLEDREMEMBER <> "1"]]></SetProperty>
+    <SetProperty Action="UndefineDESKTOPSHORTCUTENABLEDREMEMBER" Id="DESKTOPSHORTCUTENABLEDREMEMBER" Value="{}" After="AppSearch" Sequence="first"><![CDATA[DESKTOPSHORTCUTENABLEDREMEMBER AND DESKTOPSHORTCUTENABLEDREMEMBER <> "1"]]></SetProperty>
+    <SetProperty Action="UndefinePROGRAMMENUSHORTCUTENABLEDREMEMBER" Id="PROGRAMMENUSHORTCUTENABLEDREMEMBER" Value="{}" After="AppSearch" Sequence="first"><![CDATA[PROGRAMMENUSHORTCUTENABLEDREMEMBER AND PROGRAMMENUSHORTCUTENABLEDREMEMBER <> "1"]]></SetProperty>
+    <SetProperty Action="UndefineINSTALLERTELEMETRYENABLEDREMEMBER" Id="INSTALLERTELEMETRYENABLEDREMEMBER" Value="{}" After="AppSearch" Sequence="first"><![CDATA[INSTALLERTELEMETRYENABLEDREMEMBER AND INSTALLERTELEMETRYENABLEDREMEMBER <> "1"]]></SetProperty>
+    <SetProperty Action="UndefineAPPLICATIONTELEMETRYENABLEDREMEMBER" Id="APPLICATIONTELEMETRYENABLEDREMEMBER" Value="{}" After="AppSearch" Sequence="first"><![CDATA[APPLICATIONTELEMETRYENABLEDREMEMBER AND APPLICATIONTELEMETRYENABLEDREMEMBER <> "1"]]></SetProperty>
 
     <!-- Overrides property value only if it has not been provided via the command line. Command line properties have a higher priority than registry settings. -->
-    <SetProperty Action="OverrideDESKTOPSHORTCUTENABLED" Id="DESKTOPSHORTCUTENABLED" Value="[DESKTOPSHORTCUTENABLEDREMEMBER]" After="AppSearch" Sequence="ui"><![CDATA[NOT DESKTOPSHORTCUTENABLED]]></SetProperty>
-    <SetProperty Action="OverridePROGRAMMENUSHORTCUTENABLED" Id="PROGRAMMENUSHORTCUTENABLED" Value="[PROGRAMMENUSHORTCUTENABLEDREMEMBER]" After="AppSearch" Sequence="ui"><![CDATA[NOT PROGRAMMENUSHORTCUTENABLED]]></SetProperty>
-    <SetProperty Action="OverrideINSTALLERTELEMETRYENABLED" Id="INSTALLERTELEMETRYENABLED" Value="[INSTALLERTELEMETRYENABLEDREMEMBER]" After="AppSearch" Sequence="ui"><![CDATA[NOT INSTALLERTELEMETRYENABLED]]></SetProperty>
-    <SetProperty Action="OverrideAPPLICATIONTELEMETRYENABLED" Id="APPLICATIONTELEMETRYENABLED" Value="[APPLICATIONTELEMETRYENABLEDREMEMBER]" After="AppSearch" Sequence="ui"><![CDATA[NOT APPLICATIONTELEMETRYENABLED]]></SetProperty>
+    <SetProperty Action="OverrideDESKTOPSHORTCUTENABLED" Id="DESKTOPSHORTCUTENABLED" Value="[DESKTOPSHORTCUTENABLEDREMEMBER]" After="AppSearch" Sequence="first"><![CDATA[NOT DESKTOPSHORTCUTENABLED]]></SetProperty>
+    <SetProperty Action="OverridePROGRAMMENUSHORTCUTENABLED" Id="PROGRAMMENUSHORTCUTENABLED" Value="[PROGRAMMENUSHORTCUTENABLEDREMEMBER]" After="AppSearch" Sequence="first"><![CDATA[NOT PROGRAMMENUSHORTCUTENABLED]]></SetProperty>
+    <SetProperty Action="OverrideINSTALLERTELEMETRYENABLED" Id="INSTALLERTELEMETRYENABLED" Value="[INSTALLERTELEMETRYENABLEDREMEMBER]" After="AppSearch" Sequence="first"><![CDATA[NOT INSTALLERTELEMETRYENABLED]]></SetProperty>
+    <SetProperty Action="OverrideAPPLICATIONTELEMETRYENABLED" Id="APPLICATIONTELEMETRYENABLED" Value="[APPLICATIONTELEMETRYENABLEDREMEMBER]" After="AppSearch" Sequence="first"><![CDATA[NOT APPLICATIONTELEMETRYENABLED]]></SetProperty>
 
     <!-- Undefine property if the value is <> '1', this is because an undefined property will result to an unchecked WiX CheckBox -->
     <SetProperty Action="UndefineDESKTOPSHORTCUTENABLED" Id="DESKTOPSHORTCUTENABLED" Value="{}" After="AppSearch" Sequence="ui"><![CDATA[DESKTOPSHORTCUTENABLED AND DESKTOPSHORTCUTENABLED <> "1"]]></SetProperty>
@@ -128,7 +128,7 @@
       <Custom Action="SetPropertyValuesUnregisterExternalTool" After="RemoveFiles" />
       <Custom Action="UnregisterExternalTool" After="SetPropertyValuesUnregisterExternalTool"><![CDATA[(NOT UPGRADINGPRODUCTCODE) AND (REMOVE="ALL")]]></Custom>
       <Custom Action="SetPropertyValuesAfterUninstall" After="UnregisterExternalTool" />
-      <Custom Action="AfterUninstall" After="SetPropertyValuesAfterUninstall"><![CDATA[(NOT UPGRADINGPRODUCTCODE) AND (REMOVE="ALL")]]></Custom>
+      <Custom Action="AfterUninstall" After="SetPropertyValuesAfterUninstall"><![CDATA[(REMOVE="ALL") AND (NOT UPGRADINGPRODUCTCODE)]]></Custom>
     </InstallExecuteSequence>
 
   </Product>
