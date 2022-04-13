@@ -40,9 +40,6 @@
       <MergeRef Id="VCRedist"/>
     </Feature>
 
-    <Property Id="WINDOWSBUILDNUMBER" Secure="yes">
-      <RegistrySearch Id="BuildNumberSearch" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion" Name="CurrentBuildNumber" Type="raw" />
-    </Property>
     <Condition Message="!(loc.SupportedWindowsVersionConditionMessage)">
       <![CDATA[(WINDOWSBUILDNUMBER >= 17763)]]>
     </Condition>
@@ -64,12 +61,13 @@
     <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
     <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOX" Value="1" />
     <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="Launch $(var.ProductName)" />
-    <!-- defines uninitialized properties and allows setting values from the commandline -->
     <Property Id="DESKTOPSHORTCUTENABLED" Secure="yes" />
     <Property Id="PROGRAMMENUSHORTCUTENABLED" Secure="yes" />
     <Property Id="INSTALLERTELEMETRYENABLED" Secure="yes" />
     <Property Id="APPLICATIONTELEMETRYENABLED" Secure="yes" />
-
+    <Property Id="WINDOWSBUILDNUMBER" Secure="yes">
+      <RegistrySearch Id="BuildNumberSearch" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion" Name="CurrentBuildNumber" Type="raw" />
+    </Property>
     <!-- "remember" properties allow to retain the settings of a previous installation, if any -->
     <Property Id="DESKTOPSHORTCUTENABLEDREMEMBER">
       <RegistrySearch Id="searchDesktopShortcutEnabledRemember" Root="HKLM" Key="Software\[Manufacturer]\$(var.AppName)" Name="desktopShortcutEnabled" Type="raw" Win64="$(var.Win64)" />
@@ -84,11 +82,11 @@
       <RegistrySearch Id="searchApplicationTelemetryEnabledRemember" Root="HKLM" Key="Software\[Manufacturer]\$(var.AppName)" Name="applicationTelemetryEnabled" Type="raw" Win64="$(var.Win64)" />
     </Property>
     
-    <!-- Set 'remember' properties defalt value to '1' if the product is not installed or if their registry value is equal to '1' -->
-    <SetProperty Action="DefaultDESKTOPSHORTCUTENABLEDREMEMBER" Id="DESKTOPSHORTCUTENABLEDREMEMBER" Value="1" After="AppSearch" Sequence="ui"><![CDATA[NOT WIX_UPGRADE_DETECTED OR DESKTOPSHORTCUTENABLEDREMEMBER = "1"]]></SetProperty>
-    <SetProperty Action="DefaultPROGRAMMENUSHORTCUTENABLEDREMEMBER" Id="PROGRAMMENUSHORTCUTENABLEDREMEMBER" Value="1" After="AppSearch" Sequence="ui"><![CDATA[NOT WIX_UPGRADE_DETECTED OR PROGRAMMENUSHORTCUTENABLEDREMEMBER = "1"]]></SetProperty>
-    <SetProperty Action="DefaultINSTALLERTELEMETRYENABLEDREMEMBER" Id="INSTALLERTELEMETRYENABLEDREMEMBER" Value="1" After="AppSearch" Sequence="ui"><![CDATA[NOT WIX_UPGRADE_DETECTED OR INSTALLERTELEMETRYENABLEDREMEMBER = "1"]]></SetProperty>
-    <SetProperty Action="DefaultAPPLICATIONTELEMETRYENABLEDREMEMBER" Id="APPLICATIONTELEMETRYENABLEDREMEMBER" Value="1" After="AppSearch" Sequence="ui"><![CDATA[NOT WIX_UPGRADE_DETECTED OR APPLICATIONTELEMETRYENABLEDREMEMBER = "1"]]></SetProperty>
+    <!-- Set 'remember' properties default value to '1' if the product is not installed or if their registry value is equal to '1' -->
+    <SetProperty Action="DefaultDESKTOPSHORTCUTENABLEDREMEMBER" Id="DESKTOPSHORTCUTENABLEDREMEMBER" Value="1" After="AppSearch" Sequence="ui"><![CDATA[NOT Installed OR DESKTOPSHORTCUTENABLEDREMEMBER = "1"]]></SetProperty>
+    <SetProperty Action="DefaultPROGRAMMENUSHORTCUTENABLEDREMEMBER" Id="PROGRAMMENUSHORTCUTENABLEDREMEMBER" Value="1" After="AppSearch" Sequence="ui"><![CDATA[NOT Installed OR PROGRAMMENUSHORTCUTENABLEDREMEMBER = "1"]]></SetProperty>
+    <SetProperty Action="DefaultINSTALLERTELEMETRYENABLEDREMEMBER" Id="INSTALLERTELEMETRYENABLEDREMEMBER" Value="1" After="AppSearch" Sequence="ui"><![CDATA[NOT Installed OR INSTALLERTELEMETRYENABLEDREMEMBER = "1"]]></SetProperty>
+    <SetProperty Action="DefaultAPPLICATIONTELEMETRYENABLEDREMEMBER" Id="APPLICATIONTELEMETRYENABLEDREMEMBER" Value="1" After="AppSearch" Sequence="ui"><![CDATA[NOT Installed OR APPLICATIONTELEMETRYENABLEDREMEMBER = "1"]]></SetProperty>
 
     <!-- Undefine "remember" properties if their value exists and is <> '1', this is because an undefined property will result to an unchecked WiX CheckBox -->
     <SetProperty Action="UndefineDESKTOPSHORTCUTENABLEDREMEMBER" Id="DESKTOPSHORTCUTENABLEDREMEMBER" Value="{}" After="AppSearch" Sequence="ui"><![CDATA[DESKTOPSHORTCUTENABLEDREMEMBER AND DESKTOPSHORTCUTENABLEDREMEMBER <> "1"]]></SetProperty>
