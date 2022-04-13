@@ -62,6 +62,7 @@
     <Property Id="PROGRAMMENUSHORTCUTENABLED" Secure="yes" />
     <Property Id="INSTALLERTELEMETRYENABLED" Secure="yes" />
     <Property Id="APPLICATIONTELEMETRYENABLED" Secure="yes" />
+    <Property Id="TELEMETRYUSERID" Secure="yes" />
     <Property Id="WINDOWSBUILDNUMBER" Secure="yes">
       <RegistrySearch Id="BuildNumberSearch" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion" Name="CurrentBuildNumber" Type="raw" />
     </Property>
@@ -104,13 +105,15 @@
     <SetProperty Action="UndefineINSTALLERTELEMETRYENABLED" Id="INSTALLERTELEMETRYENABLED" Value="{}" After="AppSearch" Sequence="ui"><![CDATA[INSTALLERTELEMETRYENABLED AND INSTALLERTELEMETRYENABLED <> "1"]]></SetProperty>
     <SetProperty Action="UndefineAPPLICATIONTELEMETRYENABLED" Id="APPLICATIONTELEMETRYENABLED" Value="{}" After="AppSearch" Sequence="ui"><![CDATA[APPLICATIONTELEMETRYENABLED AND APPLICATIONTELEMETRYENABLED <> "1"]]></SetProperty>
 
-    <CustomAction Id="SetPropertyValuesAfterInstall" Property="AfterInstall" Value="PRODUCTNAME=$(var.AppName)-perUser;PRODUCTVERSION=$(var.ProductVersion);PRODUCTBUILD=$(var.ProductBuild);INSTALLERTELEMETRYENABLED=[INSTALLERTELEMETRYENABLED]" />
+    <CustomAction Id="SetPropertyTelemetryUserId" BinaryKey="CustomActionBinary" DllEntry="SetPropertyTelemetryUserId" Execute="immediate" Impersonate="yes" />
+    <CustomAction Id="SetPropertyValuesAfterInstall" Property="AfterInstall" Value="PRODUCTNAME=$(var.AppName)-perUser;PRODUCTVERSION=$(var.ProductVersion);PRODUCTBUILD=$(var.ProductBuild);INSTALLERTELEMETRYENABLED=[INSTALLERTELEMETRYENABLED];TELEMETRYUSERID=[TELEMETRYUSERID]" />
     <CustomAction Id="AfterInstall" BinaryKey="CustomActionBinary" DllEntry="AfterInstall" Execute="deferred" Impersonate="yes" />
-    <CustomAction Id="SetPropertyValuesAfterUninstall" Property="AfterUninstall" Value="PRODUCTNAME=$(var.AppName)-perUser;PRODUCTVERSION=$(var.ProductVersion);PRODUCTBUILD=$(var.ProductBuild);INSTALLERTELEMETRYENABLED=[INSTALLERTELEMETRYENABLED]" />
+    <CustomAction Id="SetPropertyValuesAfterUninstall" Property="AfterUninstall" Value="PRODUCTNAME=$(var.AppName)-perUser;PRODUCTVERSION=$(var.ProductVersion);PRODUCTBUILD=$(var.ProductBuild);INSTALLERTELEMETRYENABLED=[INSTALLERTELEMETRYENABLED];TELEMETRYUSERID=[TELEMETRYUSERID]" />
     <CustomAction Id="AfterUninstall" BinaryKey="CustomActionBinary" DllEntry="AfterUninstall" Execute="deferred" Impersonate="yes" />
     <CustomAction Id="LaunchApplication" BinaryKey="WixCA" DllEntry="WixShellExec" />
     
     <InstallExecuteSequence>
+      <Custom Action="SetPropertyTelemetryUserId" After="AppSearch" />
       <Custom Action="SetPropertyValuesAfterInstall" After="InstallFiles" />
       <Custom Action="AfterInstall" After="SetPropertyValuesAfterInstall"><![CDATA[NOT Installed AND NOT REMOVE]]></Custom>
       <Custom Action="SetPropertyValuesAfterUninstall" After="RemoveFiles" />

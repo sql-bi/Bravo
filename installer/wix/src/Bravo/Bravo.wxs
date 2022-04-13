@@ -65,6 +65,7 @@
     <Property Id="PROGRAMMENUSHORTCUTENABLED" Secure="yes" />
     <Property Id="INSTALLERTELEMETRYENABLED" Secure="yes" />
     <Property Id="APPLICATIONTELEMETRYENABLED" Secure="yes" />
+    <Property Id="TELEMETRYUSERID" Secure="yes" />
     <Property Id="WINDOWSBUILDNUMBER" Secure="yes">
       <RegistrySearch Id="BuildNumberSearch" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion" Name="CurrentBuildNumber" Type="raw" />
     </Property>
@@ -106,17 +107,19 @@
     <SetProperty Action="UndefineINSTALLERTELEMETRYENABLED" Id="INSTALLERTELEMETRYENABLED" Value="{}" After="AppSearch" Sequence="ui"><![CDATA[INSTALLERTELEMETRYENABLED AND INSTALLERTELEMETRYENABLED <> "1"]]></SetProperty>
     <SetProperty Action="UndefineAPPLICATIONTELEMETRYENABLED" Id="APPLICATIONTELEMETRYENABLED" Value="{}" After="AppSearch" Sequence="ui"><![CDATA[APPLICATIONTELEMETRYENABLED AND APPLICATIONTELEMETRYENABLED <> "1"]]></SetProperty>
 
-    <CustomAction Id="SetPropertyValuesRegisterExternalTool" Property="RegisterExternalTool" Value="PRODUCTNAME=$(var.AppName);PRODUCTVERSION=$(var.ProductVersion);PRODUCTBUILD=$(var.ProductBuild);INSTALLERTELEMETRYENABLED=[INSTALLERTELEMETRYENABLED];PRODUCTEXECUTABLEPATH=[INSTALLFOLDER]$(var.AppExecutableName);PBITOOLPATH=[POWERBIEXTERNALTOOLSFOLDER]$(var.PbitoolName)" />
+    <CustomAction Id="SetPropertyTelemetryUserId" BinaryKey="CustomActionBinary" DllEntry="SetPropertyTelemetryUserId" Execute="immediate" Impersonate="yes" />
+    <CustomAction Id="SetPropertyValuesRegisterExternalTool" Property="RegisterExternalTool" Value="PRODUCTNAME=$(var.AppName);PRODUCTVERSION=$(var.ProductVersion);PRODUCTBUILD=$(var.ProductBuild);INSTALLERTELEMETRYENABLED=[INSTALLERTELEMETRYENABLED];TELEMETRYUSERID=[TELEMETRYUSERID];PRODUCTEXECUTABLEPATH=[INSTALLFOLDER]$(var.AppExecutableName);PBITOOLPATH=[POWERBIEXTERNALTOOLSFOLDER]$(var.PbitoolName)" />
     <CustomAction Id="RegisterExternalTool" BinaryKey="CustomActionBinary" DllEntry="RegisterExternalTool" Execute="deferred" Impersonate="no" />
-    <CustomAction Id="SetPropertyValuesAfterInstall" Property="AfterInstall" Value="PRODUCTNAME=$(var.AppName);PRODUCTVERSION=$(var.ProductVersion);PRODUCTBUILD=$(var.ProductBuild);INSTALLERTELEMETRYENABLED=[INSTALLERTELEMETRYENABLED]" />
+    <CustomAction Id="SetPropertyValuesAfterInstall" Property="AfterInstall" Value="PRODUCTNAME=$(var.AppName);PRODUCTVERSION=$(var.ProductVersion);PRODUCTBUILD=$(var.ProductBuild);INSTALLERTELEMETRYENABLED=[INSTALLERTELEMETRYENABLED];TELEMETRYUSERID=[TELEMETRYUSERID]" />
     <CustomAction Id="AfterInstall" BinaryKey="CustomActionBinary" DllEntry="AfterInstall" Execute="deferred" Impersonate="no" />
-    <CustomAction Id="SetPropertyValuesUnregisterExternalTool" Property="UnregisterExternalTool" Value="PRODUCTNAME=$(var.AppName);PRODUCTVERSION=$(var.ProductVersion);PRODUCTBUILD=$(var.ProductBuild);INSTALLERTELEMETRYENABLED=[INSTALLERTELEMETRYENABLED];PRODUCTEXECUTABLEPATH=[INSTALLFOLDER]$(var.AppExecutableName);PBITOOLPATH=[POWERBIEXTERNALTOOLSFOLDER]$(var.PbitoolName)" />
+    <CustomAction Id="SetPropertyValuesUnregisterExternalTool" Property="UnregisterExternalTool" Value="PRODUCTNAME=$(var.AppName);PRODUCTVERSION=$(var.ProductVersion);PRODUCTBUILD=$(var.ProductBuild);INSTALLERTELEMETRYENABLED=[INSTALLERTELEMETRYENABLED];TELEMETRYUSERID=[TELEMETRYUSERID];PRODUCTEXECUTABLEPATH=[INSTALLFOLDER]$(var.AppExecutableName);PBITOOLPATH=[POWERBIEXTERNALTOOLSFOLDER]$(var.PbitoolName)" />
     <CustomAction Id="UnregisterExternalTool" BinaryKey="CustomActionBinary" DllEntry="UnregisterExternalTool" Execute="deferred" Impersonate="no" />
-    <CustomAction Id="SetPropertyValuesAfterUninstall" Property="AfterUninstall" Value="PRODUCTNAME=$(var.AppName);PRODUCTVERSION=$(var.ProductVersion);PRODUCTBUILD=$(var.ProductBuild);INSTALLERTELEMETRYENABLED=[INSTALLERTELEMETRYENABLED]" />
+    <CustomAction Id="SetPropertyValuesAfterUninstall" Property="AfterUninstall" Value="PRODUCTNAME=$(var.AppName);PRODUCTVERSION=$(var.ProductVersion);PRODUCTBUILD=$(var.ProductBuild);INSTALLERTELEMETRYENABLED=[INSTALLERTELEMETRYENABLED];TELEMETRYUSERID=[TELEMETRYUSERID]" />
     <CustomAction Id="AfterUninstall" BinaryKey="CustomActionBinary" DllEntry="AfterUninstall" Execute="deferred" Impersonate="no" />
     <CustomAction Id="LaunchApplication" BinaryKey="WixCA" DllEntry="WixShellExec" />
 
     <InstallExecuteSequence>
+      <Custom Action="SetPropertyTelemetryUserId" After="AppSearch" />
       <Custom Action="SetPropertyValuesRegisterExternalTool" After="InstallFiles" />
       <Custom Action="RegisterExternalTool" After="SetPropertyValuesRegisterExternalTool"><![CDATA[NOT Installed AND NOT REMOVE]]></Custom>
       <Custom Action="SetPropertyValuesAfterInstall" After="RegisterExternalTool" />
