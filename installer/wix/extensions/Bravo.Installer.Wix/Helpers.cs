@@ -18,6 +18,7 @@ namespace Sqlbi.Bravo.Installer.Wix
         internal const string PropertyProductExecutablePath = "PRODUCTEXECUTABLEPATH";
         internal const string PropertyInstallerTelemetryEnabled = "INSTALLERTELEMETRYENABLED";
         internal const string PropertyTelemetryUserId = "TELEMETRYUSERID";
+        internal const string PropertyInstallScope = "INSTALLSCOPE";
 
         internal static void Log(Session session, string name)
         {
@@ -48,6 +49,7 @@ namespace Sqlbi.Bravo.Installer.Wix
             var productVersion = session.CustomActionData[PropertyProductVersion];
             var productBuild = session.CustomActionData[PropertyProductBuild];
             var userId = session.CustomActionData[PropertyTelemetryUserId];
+            var installScope = session.CustomActionData[PropertyInstallScope];
 
             var telemetryConfiguration = TelemetryConfiguration.CreateDefault();
             telemetryConfiguration.InstrumentationKey = "47a8970c-6293-408a-9cce-5b7b311574d3";
@@ -59,6 +61,7 @@ namespace Sqlbi.Bravo.Installer.Wix
             telemetryClient.Context.Component.Version = productVersion;
             telemetryClient.Context.Session.Id = Guid.NewGuid().ToString();
             telemetryClient.Context.User.Id = userId;
+            telemetryClient.Context.GlobalProperties.Add("InstallScope", installScope);
             telemetryClient.Context.GlobalProperties.Add("ProductName", productName);
             telemetryClient.Context.GlobalProperties.Add("Version", productVersion);
             telemetryClient.Context.GlobalProperties.Add("Build", productBuild);
