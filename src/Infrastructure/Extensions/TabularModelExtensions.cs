@@ -54,7 +54,7 @@
     {
         public static bool IsQueryable(this TOM.Table table)
         {
-            var isQueryable = table.Columns.Any((column) => column.IsQueryable());
+            var isQueryable = table.Columns.All((column) => column.IsQueryable());
             return isQueryable;
         }
 
