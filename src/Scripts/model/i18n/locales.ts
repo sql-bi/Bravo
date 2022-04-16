@@ -5,6 +5,7 @@
 */
 import en from './en';
 import cz from './cz';
+import da from './da';
 import de from './de';
 import fr from './fr';
 import it from './it';
@@ -15,6 +16,7 @@ import ru from './ru';
 const locales = {
     [en.locale]: en,
     [cz.locale]: cz,
+    [da.locale]: da,
     [de.locale]: de,
     [fr.locale]: fr,
     [it.locale]: it,
