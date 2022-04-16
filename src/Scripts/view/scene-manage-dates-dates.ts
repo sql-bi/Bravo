@@ -48,7 +48,7 @@ export class ManageDatesSceneDates extends ManageDatesScenePane {
         ["it-CH", "Italian (Switzerland)"],
         ["ja-JP", "Japanese (Japan)"],
         ["ko-KR", "Korean (Republic of Korea)"],
-        ["no-NO", "Norwegian (Norway)"],
+        ["nb-NO", "Norwegian (Norway)"],
         ["pl-PL", "Polish (Poland)"],
         ["pt-BR", "Portuguese (Brazil)"],
         ["pt-PT", "Portuguese (Portugal)"],
