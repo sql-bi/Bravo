@@ -13,6 +13,7 @@ import it from './it';
 import nl from './nl';
 import pl from './pl';
 import ru from './ru';
+import pt from './pt';
 
 const locales = {
     [en.locale]: en,
@@ -25,6 +26,7 @@ const locales = {
     [nl.locale]: nl,
     [pl.locale]: pl,
     [ru.locale]: ru,
+    [pt.locale]: pt,
 };
 
 export default locales;
