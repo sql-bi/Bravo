@@ -232,16 +232,6 @@
             }
         }
 
-        public static Process UnsafeGetProcessById(int processId)
-        {
-            var process = Process.GetProcessById(processId);
-            _ = process.ProcessName; // Throws InvalidOperationException if the process has exited, so the requested information is not available
-
-            BravoUnexpectedException.Assert(process.SessionId == AppEnvironment.SessionId);
-
-            return process;
-        }
-
         private static bool SafePredicate(Func<bool> predicate)
         {
             try
