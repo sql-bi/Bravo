@@ -116,7 +116,7 @@ export module Utils {
     export module Text {
 
         export function slugify(text: string): string {
-            return text.toLowerCase().replace(/\s|\.|_/g, '-').replace(/'|"/g, '').replace(/\[|\]/g, '-');
+            return text.toLowerCase().replace(/\s|\.|\/|\\|_/g, '-').replace(/'|"/g, '').replace(/\[|\]/g, '-');
         }
 
         export function ucfirst(text: string): string {
