@@ -7,6 +7,31 @@ namespace Sqlbi.Bravo.Installer.Wix
     public class CustomAction
     {
         [CustomAction]
+        public static ActionResult DeleteUserAppLocalFolder(Session session)
+        {
+            session.Log($"::BRAVO<BEGIN> ({ nameof(DeleteUserAppLocalFolder) })");
+            try
+            {
+                Helpers.Log(session, nameof(DeleteUserAppLocalFolder));
+
+                var localAppDataSubfolder = session.CustomActionData[Helpers.PropertyLocalAppDataSubfolder];
+                var localApplicationDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+                var userAppLocalFolder = Path.Combine(localApplicationDataPath, localAppDataSubfolder);
+
+                session.Log($"::BRAVO<LOG> ({ nameof(DeleteUserAppLocalFolder) }) - DeleteDirectory({ userAppLocalFolder })");
+                Directory.Delete(userAppLocalFolder, recursive: true);
+            }
+            catch (Exception ex)
+            {
+                session.Log($"::BRAVO<ERROR> ({ nameof(DeleteUserAppLocalFolder) }) - { ex }");
+                Helpers.TrackException(session, ex);
+            }
+
+            session.Log($"::BRAVO<END> ({ nameof(DeleteUserAppLocalFolder) })");
+            return ActionResult.Success;
+        }
+
+        [CustomAction]
         public static ActionResult SetPropertyTelemetryUserId(Session session)
         {
             // The telemetry user id is computed from the name of the user who is currently logged into the operating system.
