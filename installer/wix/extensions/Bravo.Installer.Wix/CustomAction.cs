@@ -19,7 +19,8 @@ namespace Sqlbi.Bravo.Installer.Wix
                 var userAppLocalFolder = Path.Combine(localApplicationDataPath, localAppDataSubfolder);
 
                 session.Log($"::BRAVO<LOG> ({ nameof(DeleteUserAppLocalFolder) }) - DeleteDirectory({ userAppLocalFolder })");
-                Directory.Delete(userAppLocalFolder, recursive: true);
+                if (Directory.Exists(userAppLocalFolder))
+                    Directory.Delete(userAppLocalFolder, recursive: true);
             }
             catch (Exception ex)
             {
