@@ -8,9 +8,9 @@ import { strings as _ } from '../strings';
 
 const locale: Locale = {
 
-    locale: "pt", //DO NOT TRANSLATE
-    enName: "Portuguese", //DO NOT TRANSLATE
-    name: "Português", //DO NOT TRANSLATE
+    locale: "pt", // DO NOT TRANSLATE
+    enName: "Portuguese", // DO NOT TRANSLATE
+    name: "Português",
 
     strings: {
         [_.addCtrlTitle]: "Abrir",
@@ -18,7 +18,7 @@ const locale: Locale = {
         [_.AnalyzeModel]: "Analisar Modelo",
         [_.analyzeModelSummary]: `O seu conjunto de dados tem <strong>{size:bytes}</strong> e contém <strong>{count}</strong> coluna{{s}}`,
         [_.analyzeModelSummary2]: `, <span class="text-highlight"><strong>{count}</strong> dessa(s) não {{estão referenciadas|está referenciada}} no modelo.</span>`,
-        [_.appName]: "Bravo for Power BI", //DO NOT TRANSLATE
+        [_.appName]: "Bravo for Power BI", // DO NOT TRANSLATE
         [_.appUpdateAvailable]: "Nova versão disponível: {version}",
         [_.appUpdateChangelog]: "Registo de alterações",
         [_.appUpdateDownload]: "Transferir",
