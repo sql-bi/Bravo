@@ -109,6 +109,8 @@
     <CustomAction Id="SetPropertyTelemetryUserId" BinaryKey="CustomActionBinary" DllEntry="SetPropertyTelemetryUserId" Execute="immediate" Impersonate="yes" />
     <CustomAction Id="SetPropertyValuesAfterInstall" Property="AfterInstall" Value="INSTALLSCOPE=$(var.InstallScope);PRODUCTNAME=$(var.AppName);PRODUCTVERSION=$(var.ProductVersion);PRODUCTBUILD=$(var.ProductBuild);INSTALLERTELEMETRYENABLED=[INSTALLERTELEMETRYENABLED];TELEMETRYUSERID=[TELEMETRYUSERID]" />
     <CustomAction Id="AfterInstall" BinaryKey="CustomActionBinary" DllEntry="AfterInstall" Execute="deferred" Impersonate="yes" />
+    <CustomAction Id="SetPropertyValuesDeleteUserAppLocalFolder" Property="DeleteUserAppLocalFolder" Value="INSTALLSCOPE=$(var.InstallScope);PRODUCTNAME=$(var.AppName);PRODUCTVERSION=$(var.ProductVersion);PRODUCTBUILD=$(var.ProductBuild);INSTALLERTELEMETRYENABLED=[INSTALLERTELEMETRYENABLED];TELEMETRYUSERID=[TELEMETRYUSERID];LOCALAPPDATASUBFOLDER=$(var.AppInstallSubfolder)" />
+    <CustomAction Id="DeleteUserAppLocalFolder" BinaryKey="CustomActionBinary" DllEntry="DeleteUserAppLocalFolder" Execute="deferred" Impersonate="yes" />
     <CustomAction Id="SetPropertyValuesAfterUninstall" Property="AfterUninstall" Value="INSTALLSCOPE=$(var.InstallScope);PRODUCTNAME=$(var.AppName);PRODUCTVERSION=$(var.ProductVersion);PRODUCTBUILD=$(var.ProductBuild);INSTALLERTELEMETRYENABLED=[INSTALLERTELEMETRYENABLED];TELEMETRYUSERID=[TELEMETRYUSERID]" />
     <CustomAction Id="AfterUninstall" BinaryKey="CustomActionBinary" DllEntry="AfterUninstall" Execute="deferred" Impersonate="yes" />
     <CustomAction Id="LaunchApplication" BinaryKey="WixCA" DllEntry="WixShellExec" />
@@ -117,8 +119,10 @@
       <Custom Action="SetPropertyTelemetryUserId" After="AppSearch" />
       <Custom Action="SetPropertyValuesAfterInstall" After="InstallFiles" />
       <Custom Action="AfterInstall" After="SetPropertyValuesAfterInstall"><![CDATA[NOT Installed AND NOT REMOVE]]></Custom>
-      <Custom Action="SetPropertyValuesAfterUninstall" After="RemoveFiles" />
-      <Custom Action="AfterUninstall" After="SetPropertyValuesAfterUninstall"><![CDATA[(REMOVE="ALL") AND (NOT UPGRADINGPRODUCTCODE)]]></Custom>
+      <Custom Action="SetPropertyValuesDeleteUserAppLocalFolder" After="RemoveFiles" />
+      <Custom Action="DeleteUserAppLocalFolder" After="SetPropertyValuesDeleteUserAppLocalFolder"><![CDATA[(NOT UPGRADINGPRODUCTCODE) AND (REMOVE="ALL")]]></Custom>
+      <Custom Action="SetPropertyValuesAfterUninstall" After="DeleteUserAppLocalFolder" />
+      <Custom Action="AfterUninstall" After="SetPropertyValuesAfterUninstall"><![CDATA[(NOT UPGRADINGPRODUCTCODE) AND (REMOVE="ALL")]]></Custom>
     </InstallExecuteSequence>
 
   </Product>

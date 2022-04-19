@@ -115,6 +115,8 @@
     <CustomAction Id="AfterInstall" BinaryKey="CustomActionBinary" DllEntry="AfterInstall" Execute="deferred" Impersonate="no" />
     <CustomAction Id="SetPropertyValuesUnregisterExternalTool" Property="UnregisterExternalTool" Value="INSTALLSCOPE=$(var.InstallScope);PRODUCTNAME=$(var.AppName);PRODUCTVERSION=$(var.ProductVersion);PRODUCTBUILD=$(var.ProductBuild);INSTALLERTELEMETRYENABLED=[INSTALLERTELEMETRYENABLED];TELEMETRYUSERID=[TELEMETRYUSERID];PRODUCTEXECUTABLEPATH=[INSTALLFOLDER]$(var.AppExecutableName);PBITOOLPATH=[POWERBIEXTERNALTOOLSFOLDER]$(var.PbitoolName)" />
     <CustomAction Id="UnregisterExternalTool" BinaryKey="CustomActionBinary" DllEntry="UnregisterExternalTool" Execute="deferred" Impersonate="no" />
+    <CustomAction Id="SetPropertyValuesDeleteUserAppLocalFolder" Property="DeleteUserAppLocalFolder" Value="INSTALLSCOPE=$(var.InstallScope);PRODUCTNAME=$(var.AppName);PRODUCTVERSION=$(var.ProductVersion);PRODUCTBUILD=$(var.ProductBuild);INSTALLERTELEMETRYENABLED=[INSTALLERTELEMETRYENABLED];TELEMETRYUSERID=[TELEMETRYUSERID];LOCALAPPDATASUBFOLDER=$(var.AppInstallSubfolder)" />
+    <CustomAction Id="DeleteUserAppLocalFolder" BinaryKey="CustomActionBinary" DllEntry="DeleteUserAppLocalFolder" Execute="deferred" Impersonate="no" />
     <CustomAction Id="SetPropertyValuesAfterUninstall" Property="AfterUninstall" Value="INSTALLSCOPE=$(var.InstallScope);PRODUCTNAME=$(var.AppName);PRODUCTVERSION=$(var.ProductVersion);PRODUCTBUILD=$(var.ProductBuild);INSTALLERTELEMETRYENABLED=[INSTALLERTELEMETRYENABLED];TELEMETRYUSERID=[TELEMETRYUSERID]" />
     <CustomAction Id="AfterUninstall" BinaryKey="CustomActionBinary" DllEntry="AfterUninstall" Execute="deferred" Impersonate="no" />
     <CustomAction Id="LaunchApplication" BinaryKey="WixCA" DllEntry="WixShellExec" />
@@ -127,8 +129,10 @@
       <Custom Action="AfterInstall" After="SetPropertyValuesAfterInstall"><![CDATA[NOT Installed AND NOT REMOVE]]></Custom>
       <Custom Action="SetPropertyValuesUnregisterExternalTool" After="RemoveFiles" />
       <Custom Action="UnregisterExternalTool" After="SetPropertyValuesUnregisterExternalTool"><![CDATA[(NOT UPGRADINGPRODUCTCODE) AND (REMOVE="ALL")]]></Custom>
-      <Custom Action="SetPropertyValuesAfterUninstall" After="UnregisterExternalTool" />
-      <Custom Action="AfterUninstall" After="SetPropertyValuesAfterUninstall"><![CDATA[(REMOVE="ALL") AND (NOT UPGRADINGPRODUCTCODE)]]></Custom>
+      <Custom Action="SetPropertyValuesDeleteUserAppLocalFolder" After="UnregisterExternalTool" />
+      <Custom Action="DeleteUserAppLocalFolder" After="SetPropertyValuesDeleteUserAppLocalFolder"><![CDATA[(NOT UPGRADINGPRODUCTCODE) AND (REMOVE="ALL")]]></Custom>
+      <Custom Action="SetPropertyValuesAfterUninstall" After="DeleteUserAppLocalFolder" />
+      <Custom Action="AfterUninstall" After="SetPropertyValuesAfterUninstall"><![CDATA[(NOT UPGRADINGPRODUCTCODE) AND (REMOVE="ALL")]]></Custom>
     </InstallExecuteSequence>
 
   </Product>

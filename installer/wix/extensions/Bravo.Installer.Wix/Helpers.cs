@@ -19,6 +19,7 @@ namespace Sqlbi.Bravo.Installer.Wix
         internal const string PropertyInstallerTelemetryEnabled = "INSTALLERTELEMETRYENABLED";
         internal const string PropertyTelemetryUserId = "TELEMETRYUSERID";
         internal const string PropertyInstallScope = "INSTALLSCOPE";
+        internal const string PropertyLocalAppDataSubfolder = "LOCALAPPDATASUBFOLDER";
 
         internal static void Log(Session session, string name)
         {
