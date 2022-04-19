@@ -12,8 +12,8 @@ import gr from './gr';
 import it from './it';
 import nl from './nl';
 import pl from './pl';
-import ru from './ru';
 import pt from './pt';
+import ru from './ru';
 
 const locales = {
     [en.locale]: en,
@@ -25,8 +25,8 @@ const locales = {
     [it.locale]: it,
     [nl.locale]: nl,
     [pl.locale]: pl,
-    [ru.locale]: ru,
     [pt.locale]: pt,
+    [ru.locale]: ru,
 };
 
 export default locales;
