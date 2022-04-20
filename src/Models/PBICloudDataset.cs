@@ -5,7 +5,6 @@
     using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Infrastructure.Helpers;
     using Sqlbi.Bravo.Infrastructure.Models;
-    using Sqlbi.Bravo.Infrastructure.Security;
     using Sqlbi.Bravo.Infrastructure.Services.PowerBI;
     using System;
     using System.Diagnostics;
@@ -31,6 +30,9 @@
 
         [JsonPropertyName("databaseName")]
         public string? DatabaseName { get; set; }
+
+        [JsonPropertyName("externalDatabaseName")]
+        public string? ExternalDatabaseName { get; set; }
 
         [JsonPropertyName("name")]
         public string? DisplayName { get; set; }
@@ -138,6 +140,7 @@
                 Id = model.Id,
                 ServerName = null,
                 DatabaseName = null,
+                ExternalDatabaseName = null,
                 DisplayName = model.DisplayName,
                 Description = model.Description,
                 Owner = $"{ model.CreatorUser?.GivenName } { model.CreatorUser?.FamilyName }",
@@ -155,17 +158,20 @@
             if (cloudDataset.IsXmlaEndPointSupported)
             {
                 cloudDataset.ServerName = PBICloudService.PBIPremiumServerUri.OriginalString;
-                cloudDataset.DatabaseName = model.DisplayName;
+                cloudDataset.DatabaseName = model.DBName;
+                cloudDataset.ExternalDatabaseName = model.DisplayName;
             }
             else if (cloudDataset.IsOnPremModel == true)
             {
                 cloudDataset.ServerName = ConnectionStringHelper.FindServerName(cloudDataset.OnPremModelConnectionString);
                 cloudDataset.DatabaseName = ConnectionStringHelper.FindDatabaseName(cloudDataset.OnPremModelConnectionString);
+                cloudDataset.ExternalDatabaseName = cloudDataset.DatabaseName;
             }
             else
             {
                 cloudDataset.ServerName = PBICloudService.PBIDatasetServerUri.OriginalString;
-                cloudDataset.DatabaseName = $"{ model.VSName }-{ model.DBName }";
+                cloudDataset.DatabaseName = model.DBName;
+                cloudDataset.ExternalDatabaseName = $"{ model.VSName }-{ model.DBName }";
             } 
 
             return cloudDataset;

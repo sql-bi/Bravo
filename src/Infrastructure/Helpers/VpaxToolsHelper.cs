@@ -10,21 +10,11 @@
     {
         public static void ExportVpax(TabularConnectionWrapper connection, string path, CancellationToken cancellationToken)
         {
-            using var vpaxStream = GetVpax(connection, cancellationToken);
-            using var fileStream = File.Create(path);
+            var daxModel = GetDaxModel(connection, cancellationToken, includeStatistics: true);
+            var vpaModel = new Dax.ViewVpaExport.Model(daxModel);
+            var tomDatabase = connection.Database;
 
-            vpaxStream.Seek(0, SeekOrigin.Begin);
-            vpaxStream.CopyTo(fileStream);
-        }
-
-        public static Stream GetVpax(TabularConnectionWrapper connection, CancellationToken cancellationToken)
-        {
-            var daxModel = GetDaxModel(connection, cancellationToken);
-            var stream = new MemoryStream();
-
-            VpaxTools.ExportVpax(stream, daxModel, viewVpa: null, database: null);
-            
-            return stream;
+            VpaxTools.ExportVpax(path, daxModel, vpaModel, tomDatabase);
         }
 
         public static Dax.Metadata.Model GetDaxModel(Stream stream)
@@ -43,29 +33,22 @@
             return vpaxContent.DaxModel;
         }
 
-        public static Dax.Metadata.Model GetDaxModel(TabularConnectionWrapper connectionWrapper, CancellationToken cancellationToken)
+        public static Dax.Metadata.Model GetDaxModel(TabularConnectionWrapper connectionWrapper, CancellationToken cancellationToken, bool includeStatistics = false, int sampleRows = 0)
         {
             var server = connectionWrapper.Server;
             var database = connectionWrapper.Database;
             var daxModel = TomExtractor.GetDaxModel(database.Model, extractorApp: AppEnvironment.ApplicationName, extractorVersion: AppEnvironment.ApplicationProductVersion);
 
-            cancellationToken.ThrowIfCancellationRequested();
-
             using var connection = connectionWrapper.CreateAdomdConnection(open: false);
             {
-                DmvExtractor.PopulateFromDmv(
-                    daxModel,
-                    connection,
-                    serverName: server.Name,
-                    databaseName: database.Name,
-                    extractorApp: AppEnvironment.ApplicationName,
-                    extractorVersion: AppEnvironment.ApplicationProductVersion
-                    );
+                cancellationToken.ThrowIfCancellationRequested();
+                DmvExtractor.PopulateFromDmv(daxModel, connection, server.Name, database.Name, extractorApp: AppEnvironment.ApplicationName, extractorVersion: AppEnvironment.ApplicationProductVersion);
 
-                //if (includeStatistics)
-                //{
-                //    StatExtractor.UpdateStatisticsModel(daxModel, connection, sampleRows);
-                //}
+                if (includeStatistics)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    StatExtractor.UpdateStatisticsModel(daxModel, connection, sampleRows);
+                }
             }
 
             return daxModel;

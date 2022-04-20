@@ -63,7 +63,7 @@
             return false;
         }
 
-        public static bool OpenShellExecute(string path, bool waitForStarted, [NotNullWhen(true)] out int? processId)
+        public static bool OpenShellExecute(string path, bool waitForStarted, [NotNullWhen(true)] out int? processId, CancellationToken cancellationToken = default)
         {
             if (File.Exists(path))
             {
@@ -86,6 +86,7 @@
 
                     if (process is not null)
                     {
+                        cancellationToken.ThrowIfCancellationRequested();
                         processId = process.Id;
 
                         if (waitForStarted)
@@ -103,6 +104,8 @@
                             {
                                 for (var i = 0; i < 60; i++)
                                 {
+                                    cancellationToken.ThrowIfCancellationRequested();
+
                                     if (process.HasExited)
                                         break;
 

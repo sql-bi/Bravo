@@ -1,0 +1,398 @@
+// main: main.less
+
+.dialog {
+		position:absolute;
+		top: 0;
+		left: 0;
+		bottom: 0;
+		right: 0;
+		z-index: 99999;
+		overflow: hidden;
+		.flexbox(center, center);
+		transform:scale(1);
+
+		.dialog-back {
+			position: absolute;
+			top: 0;
+			left: 0;
+			bottom: 0;
+			right: 0;
+			background: @back-color;
+			opacity: 0.4;
+			z-index: -1;
+			animation: fadeIn .5s cubic-bezier(0.165, 0.840, 0.440, 1.000) forwards;
+		}
+		.dialog-front {
+				background: @window-back-color;
+				padding: 10px;
+				.shadow(0, 0, 8px, 0, rgba(0,0,0,0.2));
+				.border-radius(8px);
+				min-width: 350px;
+				max-width: 600px;
+				opacity:0;
+				animation: scaleUp .3s cubic-bezier(0.165, 0.840, 0.440, 1.000) forwards;
+
+				.flexbox(stretch, flex-start, column);
+
+				header {
+						.flexbox(flex-start, space-between);
+						padding-left: 30px;
+
+						h1 { 
+								margin:30px 0 0 0;
+								font-size: 30px;
+								//font-weight: 600;
+
+								&:before {
+									margin-right: 5px;
+									font-size: 1.3em;
+									//font-weight: normal;
+
+							}
+						}
+				}
+				.content {
+						padding: 30px;
+				}
+
+				footer {
+						margin-top: auto;
+						.flexbox(center, flex-end);
+						padding: 0 20px 20px 30px;
+
+						.button {
+								margin:0 5px
+						}
+				}
+		}
+
+		.dark & {
+
+				.dialog-back {
+					background-color: @back-color-dark;
+					opacity: 0.8;
+				}
+				.dialog-front {
+					background-color: @window-back-color-dark;
+					.shadow(0, 0, 8px, 0, rgba(0,0,0,0.6));
+				}
+		}
+
+		&.out {
+				animation: quickScaleDown 0s .5s linear forwards;
+				.dialog-back {
+					animation: fadeOut .5s cubic-bezier(0.165, 0.840, 0.440, 1.000) forwards;
+				}
+				.dialog-front {
+					animation: scaleDown .5s cubic-bezier(0.165, 0.840, 0.440, 1.000) forwards;
+				}
+		}
+
+		.list {
+				margin-top: 20px;
+				height: 250px;
+				position: relative;
+				overflow: auto;
+
+				.notice {
+					width: calc(100% - 40px);
+					padding: 0 20px;
+					height: 100%;
+					text-align: center;
+					.flexbox(center, center);
+
+					.button {
+			 
+						margin: 10px;
+					}
+
+				}
+				
+
+				table, td, th {
+					background: none !important;
+				}
+
+				.tabulator .tabulator-header {
+					background: none !important;
+				}
+
+		}
+}
+
+#dialog-connect {
+
+	.dialog-front {
+		width: 700px;
+		max-width: 700px;
+	}
+	.browse {
+		margin:10px;
+	}
+
+	#body-attach-pbi {
+		.list {
+			position: relative;
+		
+			.observing {
+				position: absolute;
+				left: 2px;
+				top: 2px;
+				right: 2px;
+				bottom: 2px;
+				z-index: 9;
+				cursor: wait !important;
+
+				background-color: fade(@back-color, 80%);
+				.dark & { background-color: fade(@back-color-dark, 80%); }
+			}
+			.browse-reports {
+				display: inline-block;
+				margin-left: 10px;
+				font-size: 14px
+			}
+			.table {
+				height: calc(100% - 28px);
+
+				.tabulator-placeholder {
+					position: absolute;
+					top: 0;
+				}
+			}
+		}
+	}
+
+	#body-connect-pbi {
+		.toolbar {
+			.flexbox(center);
+			margin-bottom: 15px;
+
+			.search {
+				width: 200px;
+			}
+
+			.filters {
+				margin-left: auto;
+				margin-right: 10px;
+				font-size: 14px;
+			}
+
+			.refresh {
+				margin-left: auto;
+
+				&:before {
+					font-size: 22px;
+				}
+			}
+		}
+		.tabulator {
+			height: calc(100% - 50px);
+		}
+
+		
+	}
+
+	#body-open-vpax {
+		.drop-area {
+			.flexbox(center, center, column);
+			text-align: center;
+			border-color: transparent;
+			outline: 2px dashed @border-color;
+
+			&.highlight {
+				
+				outline-color: darken(@border-color, 20%);
+				background-color: darken(@window-back-color-alt, 10%);
+			}
+
+			.dark & {
+				outline-color: @border-color-dark;
+				&.highlight {
+					outline-color: lighten(@border-color-dark, 20%);
+					background-color: lighten(@window-back-color-alt-dark, 10%);
+				}
+			}
+
+			p {
+				color: @notice-color;
+				font-size: 14px;
+				line-height: 1.5;
+			}
+
+		}
+	}
+
+}
+#dialog-data-usage {
+	img {
+		float: right;
+		width: 140px;
+		height: auto;
+		margin: 10px 0 10px 50px;
+	}
+} 
+#dialog-power-bi-signin {
+
+	.dialog-front {
+		width: 400px;
+
+		input[type=email] {
+			padding: 8px 6px;
+			width: calc(100% - 12px);
+			border: 1px solid @input-border-color;
+			background-color: @input-back-color;
+
+			.dark & { 
+					border: @input-border-color-dark;
+					background-color: darken(@input-back-color-dark, 10%);
+			}
+
+			&:invalid {
+				border-color: @error-color;
+			}
+			
+		}
+	}
+}
+
+#dialog-options {
+	.dialog-front {
+		width: 650px;
+		max-width: 650px;
+		//min-height: 560px;
+	}
+
+	.item-body {
+		margin-top: 20px;
+	}
+
+	#body-about {
+		h2 { 
+			font-size: 28px;
+			margin: 0 0 5px 0;
+		}
+		img {
+			width: 170px;
+			height: auto;
+		}
+		.col {
+			padding: 20px;
+		}
+		.coll {
+			width: 180px;
+		}
+		.colr {
+			width: 100%;
+		}
+		.version {
+			font-size: 14px;
+			margin: 0 0 15px 0;
+		}
+		.update-status {
+			.flexbox(center, center);
+			height: 80px;
+			line-height: 1.4;
+			margin: 0 0 10px 0;
+			height:100px;
+			text-align: center;
+			overflow: hidden;
+
+			.up-to-date {
+				//color: @good-color;
+				font-size: 18px;
+				font-weight: 500;
+			}
+			.pending-update {
+				font-weight: 500;
+				//color: @accent-back-color;
+				margin: 0 0 10px 0;
+
+				//.dark & { color: @accent-back-color-dark }
+			}
+			
+		}	
+		
+		.sqlbi {
+
+			margin: 0 0 0 30px;
+			.flexbox(center);
+			font-size: 14px;
+			line-height: 1.4;
+			
+			img { 
+				width: 120px;
+				height: auto;
+				margin: 0 30px 0 0
+			}
+		}
+		.copyright {
+			margin-top: 5px;
+			color: @notice-color;
+			font-size: 12px;
+
+			.dark & { color: @notice-color-dark }
+		}
+	}
+}
+
+#dialog-error {
+
+	.dialog-front {
+		width: 500px;
+	}
+}
+	
+@keyframes fadeIn {
+		0% {
+			background:rgba(0,0,0,.0);
+		}
+		100% {
+			background:rgba(0,0,0,.7);
+		}
+	}
+	
+	@keyframes fadeOut {
+		0% {
+			background:rgba(0,0,0,.7);
+		}
+		100% {
+			background:rgba(0,0,0,.0);
+		}
+	}
+	
+	@keyframes scaleUp {
+		0% {
+			transform:scale(.8) translateY(1000px);
+			opacity:0;
+		}
+		100% {
+			transform:scale(1) translateY(0px);
+			opacity:1;
+		}
+	}
+	
+	@keyframes scaleDown {
+		0% {
+			transform:scale(1) translateY(0px);
+			opacity:1;
+		}
+		100% {
+			transform:scale(.8) translateY(1000px);
+			opacity:0;
+		}
+	}
+
+	@keyframes quickScaleDown {
+		0% {
+			transform:scale(1);
+		}
+		99.9% {
+			transform:scale(1);
+		}
+		100% {
+			transform:scale(0);
+		}
+	}
+
+	
+	

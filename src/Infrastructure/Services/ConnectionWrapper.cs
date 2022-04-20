@@ -40,8 +40,8 @@
 
         public void Dispose()
         {
-            Database.Dispose();
-            Server.Dispose();
+            Database?.Dispose();
+            Server?.Dispose();
         }
 
         public static TabularConnectionWrapper ConnectTo(PBICloudDataset dataset, string accessToken)
@@ -49,7 +49,7 @@
             BravoUnexpectedException.ThrowIfNull(dataset.DatabaseName);
 
             var connectionString = ConnectionStringHelper.BuildFor(dataset, accessToken);
-            var connection = ConnectTo(connectionString, dataset.DatabaseName);
+            var connection = ConnectTo(connectionString, dataset.DatabaseName, findById: true);
 
             return connection;
         }
@@ -59,17 +59,17 @@
             BravoUnexpectedException.ThrowIfNull(report.DatabaseName);
 
             var connectionString = ConnectionStringHelper.BuildFor(report);
-            var connection = ConnectTo(connectionString, report.DatabaseName);
+            var connection = ConnectTo(connectionString, report.DatabaseName, findById: false);
 
             return connection;
         }
 
-        private static TabularConnectionWrapper ConnectTo(string connectionString, string databaseName)
+        private static TabularConnectionWrapper ConnectTo(string connectionString, string databaseName, bool findById)
         {
             var server = new TOM.Server();
             server.Connect(connectionString.ToUnprotectedString());
 
-            var database = server.Databases.FindByName(databaseName) ?? throw new BravoException(BravoProblem.TOMDatabaseDatabaseNotFound, databaseName);
+            var database = findById ? server.Databases.Find(databaseName) : server.Databases.FindByName(databaseName) ?? throw new BravoException(BravoProblem.TOMDatabaseDatabaseNotFound, databaseName);
             var connection = new TabularConnectionWrapper(connectionString, server, database);
 
             return connection;
@@ -118,10 +118,10 @@
 
         public static AdomdConnectionWrapper ConnectTo(PBICloudDataset dataset, string accessToken)
         {
-            BravoUnexpectedException.ThrowIfNull(dataset.DatabaseName);
+            BravoUnexpectedException.ThrowIfNull(dataset.ExternalDatabaseName);
 
             var connectionString = ConnectionStringHelper.BuildFor(dataset, accessToken);
-            var connection = ConnectTo(connectionString, dataset.DatabaseName);
+            var connection = ConnectTo(connectionString, dataset.ExternalDatabaseName);
 
             return connection;
         }

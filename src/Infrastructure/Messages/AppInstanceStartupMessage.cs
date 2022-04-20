@@ -43,6 +43,9 @@
                 ArgumentDatabaseName = settings.ArgumentDatabaseName,
             };
 
+            if (AppEnvironment.IsDiagnosticLevelVerbose)
+                AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{ nameof(AppInstanceStartupMessage) }.{ nameof(CreateFrom) }", content: JsonSerializer.Serialize(message));
+
             return message;
         }
     }

@@ -107,37 +107,10 @@
         /// <response code="403">Status403Forbidden - The path is invalid or not allowed</response>
         /// <response code="204">Status204NoContent - User canceled action (e.g. 'Cancel' button has been pressed on a dialog box)</response>
         [HttpGet]
-        [ActionName("StartPBIDesktopFromPBIX")]
-        [Consumes(MediaTypeNames.Application.Json)]
-        [Produces(MediaTypeNames.Application.Json)]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesDefaultResponseType]
-        public IActionResult StartPBIDesktopFromPBIX(bool waitForStarted, CancellationToken cancellationToken)
-        {
-            if (WindowDialogHelper.OpenFileDialog(defaultExt: "PBIX", out var path, cancellationToken))
-            {
-                if (ProcessHelper.OpenShellExecute(path, waitForStarted, out _))
-                    return Ok(path);
-
-                return Forbid();
-            }
-
-            return NoContent();
-        }
-
-        /// <summary>
-        /// Launches the Power BI Desktop process after displaying a dialog box that prompts the user to select the PBIX file to be opened
-        /// </summary>
-        /// <response code="200">Status200OK - Success</response>
-        /// <response code="403">Status403Forbidden - The path is invalid or not allowed</response>
-        /// <response code="204">Status204NoContent - User canceled action (e.g. 'Cancel' button has been pressed on a dialog box)</response>
-        [HttpGet]
         [ActionName("PBIDesktopOpenPBIX")]
         [Consumes(MediaTypeNames.Application.Json)]
         [Produces(MediaTypeNames.Application.Json)]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(int))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(PBIDesktopReport))]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesDefaultResponseType]
@@ -145,8 +118,14 @@
         {
             if (WindowDialogHelper.OpenFileDialog(defaultExt: "PBIX", out var path, cancellationToken))
             {
-                if (ProcessHelper.OpenShellExecute(path, waitForStarted, out var processId))
-                    return Ok(processId);
+                if (ProcessHelper.OpenShellExecute(path, waitForStarted, out var processId, cancellationToken))
+                {
+                    var report = PBIDesktopReport.CreateFrom(processId.Value);
+                    if (report is null)
+                        return NoContent();
+
+                    return Ok(report);
+                }
 
                 return Forbid();
             }

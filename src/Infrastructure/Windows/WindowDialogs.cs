@@ -130,4 +130,24 @@ namespace Sqlbi.Bravo.Infrastructure.Windows
             }
         }
     }
+
+    internal class MessageDialog
+    {
+        public static void Show(string heading, string text)
+        {
+            var appIcon = Icon.ExtractAssociatedIcon(AppEnvironment.ProcessPath);
+            var icon = new TaskDialogIcon(appIcon!);
+
+            var page = new TaskDialogPage()
+            {
+                Caption = AppEnvironment.ApplicationMainWindowTitle,
+                Heading = heading,
+                Text = text,
+                Icon = icon,
+                AllowCancel = true
+            };
+
+            _ = TaskDialog.ShowDialog(page, TaskDialogStartupLocation.CenterScreen);
+        }
+    }
 }

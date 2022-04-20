@@ -9,6 +9,7 @@
   <?define AppInstallSubfolder = "Bravo" ?>
   <?define AppExecutableName = "Bravo.exe" ?>
   <?define AppName = "Bravo" ?>
+  <?define InstallScope = "perMachine" ?>
   <?define PbitoolName = "bravo.pbitool.json" ?>
   
   <?if $(sys.BUILDARCH) = x64 ?>
@@ -26,7 +27,7 @@
   <Product Id="*" Name="$(var.ProductName)" Language="!(loc.ProductLanguage)" Version="$(var.ProductBuild)" Manufacturer="$(var.ProductManufacturer)" UpgradeCode="{888BDB48-B16A-4D9A-8FE6-0206897B1162}">
 
     <!-- Package/@InstallerVersion upgraded to 301 from 200 in order to match the merged VCRedist MSVC merge module version -->
-    <Package InstallerVersion="301" Compressed="yes" InstallScope="perMachine" Manufacturer="$(var.ProductManufacturer)" Description="!(loc.PackageDescription)" Comments="!(loc.PackageComments)"  />
+    <Package InstallerVersion="301" Compressed="yes" InstallScope="$(var.InstallScope)" Manufacturer="$(var.ProductManufacturer)" Description="!(loc.PackageDescription)" Comments="!(loc.PackageComments)"  />
     <Binary Id="CustomActionBinary" SourceFile="..\assets\Bravo.Installer.Wix.CA.dll" />
     <MajorUpgrade AllowSameVersionUpgrades="yes" AllowDowngrades="no" DowngradeErrorMessage="!(loc.MajorUpgradeDowngradeErrorMessage)" Schedule="afterInstallValidate" />
     <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
@@ -40,26 +41,35 @@
       <MergeRef Id="VCRedist"/>
     </Feature>
 
-    <Icon Id="app.ico" SourceFile="$(var.PublishFolder)\$(var.AppExecutableName)" />
-
-    <UIRef Id="Custom_WixUI_InstallDir" />
-    <UIRef Id="WixUI_ErrorProgressText" />
+    <Condition Message="!(loc.SupportedWindowsVersionConditionMessage)">
+      <![CDATA[(WINDOWSBUILDNUMBER >= 17763)]]>
+    </Condition>
     
+    <Icon Id="app.ico" SourceFile="$(var.PublishFolder)\$(var.AppExecutableName)" />
+    <UI>
+      <UIRef Id="Custom_WixUI_InstallDir" />
+      <UIRef Id="WixUI_ErrorProgressText" />
+      <Publish Dialog="ExitDialog" Control="Finish" Event="DoAction" Value="LaunchApplication">WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 and NOT Installed</Publish>
+    </UI>
     <WixVariable Id="WixUIDialogBmp" Value="..\assets\background.png" />
     <WixVariable Id="WixUIBannerBmp" Value="..\assets\banner.png" />
     <WixVariable Id="WixUILicenseRtf" Value="..\assets\license.rtf" />
 
+    <Property Id="WixShellExecTarget" Value="[#app.exe]" />
     <Property Id="ARPNOREPAIR" Value="yes" />
     <Property Id="ARPPRODUCTICON">app.ico</Property>
     <Property Id="ARPURLINFOABOUT">$(var.AppUrlInfoAbout)</Property>
     <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
-
-    <!-- defines uninitialized properties and allows setting values from the commandline -->
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOX" Value="1" />
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="Launch $(var.ProductName)" />
     <Property Id="DESKTOPSHORTCUTENABLED" Secure="yes" />
     <Property Id="PROGRAMMENUSHORTCUTENABLED" Secure="yes" />
     <Property Id="INSTALLERTELEMETRYENABLED" Secure="yes" />
     <Property Id="APPLICATIONTELEMETRYENABLED" Secure="yes" />
-
+    <Property Id="TELEMETRYUSERID" Secure="yes" />
+    <Property Id="WINDOWSBUILDNUMBER" Secure="yes">
+      <RegistrySearch Id="BuildNumberSearch" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion" Name="CurrentBuildNumber" Type="raw" />
+    </Property>
     <!-- "remember" properties allow to retain the settings of a previous installation, if any -->
     <Property Id="DESKTOPSHORTCUTENABLEDREMEMBER">
       <RegistrySearch Id="searchDesktopShortcutEnabledRemember" Root="HKLM" Key="Software\[Manufacturer]\$(var.AppName)" Name="desktopShortcutEnabled" Type="raw" Win64="$(var.Win64)" />
@@ -74,47 +84,54 @@
       <RegistrySearch Id="searchApplicationTelemetryEnabledRemember" Root="HKLM" Key="Software\[Manufacturer]\$(var.AppName)" Name="applicationTelemetryEnabled" Type="raw" Win64="$(var.Win64)" />
     </Property>
     
-    <!-- Set 'remember' properties defalt value to '1' if the product is not installed or if their registry value is equal to '1' -->
-    <SetProperty Action="DefaultDESKTOPSHORTCUTENABLEDREMEMBER" Id="DESKTOPSHORTCUTENABLEDREMEMBER" Value="1" After="AppSearch" Sequence="ui"><![CDATA[NOT WIX_UPGRADE_DETECTED OR DESKTOPSHORTCUTENABLEDREMEMBER = "1"]]></SetProperty>
-    <SetProperty Action="DefaultPROGRAMMENUSHORTCUTENABLEDREMEMBER" Id="PROGRAMMENUSHORTCUTENABLEDREMEMBER" Value="1" After="AppSearch" Sequence="ui"><![CDATA[NOT WIX_UPGRADE_DETECTED OR PROGRAMMENUSHORTCUTENABLEDREMEMBER = "1"]]></SetProperty>
-    <SetProperty Action="DefaultINSTALLERTELEMETRYENABLEDREMEMBER" Id="INSTALLERTELEMETRYENABLEDREMEMBER" Value="1" After="AppSearch" Sequence="ui"><![CDATA[NOT WIX_UPGRADE_DETECTED OR INSTALLERTELEMETRYENABLEDREMEMBER = "1"]]></SetProperty>
-    <SetProperty Action="DefaultAPPLICATIONTELEMETRYENABLEDREMEMBER" Id="APPLICATIONTELEMETRYENABLEDREMEMBER" Value="1" After="AppSearch" Sequence="ui"><![CDATA[NOT WIX_UPGRADE_DETECTED OR APPLICATIONTELEMETRYENABLEDREMEMBER = "1"]]></SetProperty>
+    <!-- Set 'remember' properties default value to '1' if the product is not installed or if their registry value is equal to '1' -->
+    <SetProperty Action="DefaultDESKTOPSHORTCUTENABLEDREMEMBER" Id="DESKTOPSHORTCUTENABLEDREMEMBER" Value="1" After="AppSearch" Sequence="first"><![CDATA[NOT WIX_UPGRADE_DETECTED OR DESKTOPSHORTCUTENABLEDREMEMBER = "1"]]></SetProperty>
+    <SetProperty Action="DefaultPROGRAMMENUSHORTCUTENABLEDREMEMBER" Id="PROGRAMMENUSHORTCUTENABLEDREMEMBER" Value="1" After="AppSearch" Sequence="first"><![CDATA[NOT WIX_UPGRADE_DETECTED OR PROGRAMMENUSHORTCUTENABLEDREMEMBER = "1"]]></SetProperty>
+    <SetProperty Action="DefaultINSTALLERTELEMETRYENABLEDREMEMBER" Id="INSTALLERTELEMETRYENABLEDREMEMBER" Value="1" After="AppSearch" Sequence="first"><![CDATA[NOT WIX_UPGRADE_DETECTED OR INSTALLERTELEMETRYENABLEDREMEMBER = "1"]]></SetProperty>
+    <SetProperty Action="DefaultAPPLICATIONTELEMETRYENABLEDREMEMBER" Id="APPLICATIONTELEMETRYENABLEDREMEMBER" Value="1" After="AppSearch" Sequence="first"><![CDATA[NOT WIX_UPGRADE_DETECTED OR APPLICATIONTELEMETRYENABLEDREMEMBER = "1"]]></SetProperty>
 
     <!-- Undefine "remember" properties if their value exists and is <> '1', this is because an undefined property will result to an unchecked WiX CheckBox -->
-    <SetProperty Action="UndefineDESKTOPSHORTCUTENABLEDREMEMBER" Id="DESKTOPSHORTCUTENABLEDREMEMBER" Value="{}" After="AppSearch" Sequence="ui"><![CDATA[DESKTOPSHORTCUTENABLEDREMEMBER AND DESKTOPSHORTCUTENABLEDREMEMBER <> "1"]]></SetProperty>
-    <SetProperty Action="UndefinePROGRAMMENUSHORTCUTENABLEDREMEMBER" Id="PROGRAMMENUSHORTCUTENABLEDREMEMBER" Value="{}" After="AppSearch" Sequence="ui"><![CDATA[PROGRAMMENUSHORTCUTENABLEDREMEMBER AND PROGRAMMENUSHORTCUTENABLEDREMEMBER <> "1"]]></SetProperty>
-    <SetProperty Action="UndefineINSTALLERTELEMETRYENABLEDREMEMBER" Id="INSTALLERTELEMETRYENABLEDREMEMBER" Value="{}" After="AppSearch" Sequence="ui"><![CDATA[INSTALLERTELEMETRYENABLEDREMEMBER AND INSTALLERTELEMETRYENABLEDREMEMBER <> "1"]]></SetProperty>
-    <SetProperty Action="UndefineAPPLICATIONTELEMETRYENABLEDREMEMBER" Id="APPLICATIONTELEMETRYENABLEDREMEMBER" Value="{}" After="AppSearch" Sequence="ui"><![CDATA[APPLICATIONTELEMETRYENABLEDREMEMBER AND APPLICATIONTELEMETRYENABLEDREMEMBER <> "1"]]></SetProperty>
+    <SetProperty Action="UndefineDESKTOPSHORTCUTENABLEDREMEMBER" Id="DESKTOPSHORTCUTENABLEDREMEMBER" Value="{}" After="AppSearch" Sequence="first"><![CDATA[DESKTOPSHORTCUTENABLEDREMEMBER AND DESKTOPSHORTCUTENABLEDREMEMBER <> "1"]]></SetProperty>
+    <SetProperty Action="UndefinePROGRAMMENUSHORTCUTENABLEDREMEMBER" Id="PROGRAMMENUSHORTCUTENABLEDREMEMBER" Value="{}" After="AppSearch" Sequence="first"><![CDATA[PROGRAMMENUSHORTCUTENABLEDREMEMBER AND PROGRAMMENUSHORTCUTENABLEDREMEMBER <> "1"]]></SetProperty>
+    <SetProperty Action="UndefineINSTALLERTELEMETRYENABLEDREMEMBER" Id="INSTALLERTELEMETRYENABLEDREMEMBER" Value="{}" After="AppSearch" Sequence="first"><![CDATA[INSTALLERTELEMETRYENABLEDREMEMBER AND INSTALLERTELEMETRYENABLEDREMEMBER <> "1"]]></SetProperty>
+    <SetProperty Action="UndefineAPPLICATIONTELEMETRYENABLEDREMEMBER" Id="APPLICATIONTELEMETRYENABLEDREMEMBER" Value="{}" After="AppSearch" Sequence="first"><![CDATA[APPLICATIONTELEMETRYENABLEDREMEMBER AND APPLICATIONTELEMETRYENABLEDREMEMBER <> "1"]]></SetProperty>
 
     <!-- Overrides property value only if it has not been provided via the command line. Command line properties have a higher priority than registry settings. -->
-    <SetProperty Action="OverrideDESKTOPSHORTCUTENABLED" Id="DESKTOPSHORTCUTENABLED" Value="[DESKTOPSHORTCUTENABLEDREMEMBER]" After="AppSearch" Sequence="ui"><![CDATA[NOT DESKTOPSHORTCUTENABLED]]></SetProperty>
-    <SetProperty Action="OverridePROGRAMMENUSHORTCUTENABLED" Id="PROGRAMMENUSHORTCUTENABLED" Value="[PROGRAMMENUSHORTCUTENABLEDREMEMBER]" After="AppSearch" Sequence="ui"><![CDATA[NOT PROGRAMMENUSHORTCUTENABLED]]></SetProperty>
-    <SetProperty Action="OverrideINSTALLERTELEMETRYENABLED" Id="INSTALLERTELEMETRYENABLED" Value="[INSTALLERTELEMETRYENABLEDREMEMBER]" After="AppSearch" Sequence="ui"><![CDATA[NOT INSTALLERTELEMETRYENABLED]]></SetProperty>
-    <SetProperty Action="OverrideAPPLICATIONTELEMETRYENABLED" Id="APPLICATIONTELEMETRYENABLED" Value="[APPLICATIONTELEMETRYENABLEDREMEMBER]" After="AppSearch" Sequence="ui"><![CDATA[NOT APPLICATIONTELEMETRYENABLED]]></SetProperty>
+    <SetProperty Action="OverrideDESKTOPSHORTCUTENABLED" Id="DESKTOPSHORTCUTENABLED" Value="[DESKTOPSHORTCUTENABLEDREMEMBER]" After="AppSearch" Sequence="first"><![CDATA[NOT DESKTOPSHORTCUTENABLED]]></SetProperty>
+    <SetProperty Action="OverridePROGRAMMENUSHORTCUTENABLED" Id="PROGRAMMENUSHORTCUTENABLED" Value="[PROGRAMMENUSHORTCUTENABLEDREMEMBER]" After="AppSearch" Sequence="first"><![CDATA[NOT PROGRAMMENUSHORTCUTENABLED]]></SetProperty>
+    <SetProperty Action="OverrideINSTALLERTELEMETRYENABLED" Id="INSTALLERTELEMETRYENABLED" Value="[INSTALLERTELEMETRYENABLEDREMEMBER]" After="AppSearch" Sequence="first"><![CDATA[NOT INSTALLERTELEMETRYENABLED]]></SetProperty>
+    <SetProperty Action="OverrideAPPLICATIONTELEMETRYENABLED" Id="APPLICATIONTELEMETRYENABLED" Value="[APPLICATIONTELEMETRYENABLEDREMEMBER]" After="AppSearch" Sequence="first"><![CDATA[NOT APPLICATIONTELEMETRYENABLED]]></SetProperty>
 
     <!-- Undefine property if the value is <> '1', this is because an undefined property will result to an unchecked WiX CheckBox -->
-    <SetProperty Action="UndefineDESKTOPSHORTCUTENABLED" Id="DESKTOPSHORTCUTENABLED" Value="{}" After="AppSearch" Sequence="ui"><![CDATA[DESKTOPSHORTCUTENABLED AND DESKTOPSHORTCUTENABLED <> "1"]]></SetProperty>
-    <SetProperty Action="UndefinePROGRAMMENUSHORTCUTENABLED" Id="PROGRAMMENUSHORTCUTENABLED" Value="{}" After="AppSearch" Sequence="ui"><![CDATA[PROGRAMMENUSHORTCUTENABLED AND PROGRAMMENUSHORTCUTENABLED <> "1"]]></SetProperty>
-    <SetProperty Action="UndefineINSTALLERTELEMETRYENABLED" Id="INSTALLERTELEMETRYENABLED" Value="{}" After="AppSearch" Sequence="ui"><![CDATA[INSTALLERTELEMETRYENABLED AND INSTALLERTELEMETRYENABLED <> "1"]]></SetProperty>
-    <SetProperty Action="UndefineAPPLICATIONTELEMETRYENABLED" Id="APPLICATIONTELEMETRYENABLED" Value="{}" After="AppSearch" Sequence="ui"><![CDATA[APPLICATIONTELEMETRYENABLED AND APPLICATIONTELEMETRYENABLED <> "1"]]></SetProperty>
+    <SetProperty Action="UndefineDESKTOPSHORTCUTENABLED" Id="DESKTOPSHORTCUTENABLED" Value="{}" After="AppSearch" Sequence="first"><![CDATA[DESKTOPSHORTCUTENABLED AND DESKTOPSHORTCUTENABLED <> "1"]]></SetProperty>
+    <SetProperty Action="UndefinePROGRAMMENUSHORTCUTENABLED" Id="PROGRAMMENUSHORTCUTENABLED" Value="{}" After="AppSearch" Sequence="first"><![CDATA[PROGRAMMENUSHORTCUTENABLED AND PROGRAMMENUSHORTCUTENABLED <> "1"]]></SetProperty>
+    <SetProperty Action="UndefineINSTALLERTELEMETRYENABLED" Id="INSTALLERTELEMETRYENABLED" Value="{}" After="AppSearch" Sequence="first"><![CDATA[INSTALLERTELEMETRYENABLED AND INSTALLERTELEMETRYENABLED <> "1"]]></SetProperty>
+    <SetProperty Action="UndefineAPPLICATIONTELEMETRYENABLED" Id="APPLICATIONTELEMETRYENABLED" Value="{}" After="AppSearch" Sequence="first"><![CDATA[APPLICATIONTELEMETRYENABLED AND APPLICATIONTELEMETRYENABLED <> "1"]]></SetProperty>
 
-    <CustomAction Id="SetPropertyValuesRegisterExternalTool" Property="RegisterExternalTool" Value="PRODUCTNAME=$(var.AppName);PRODUCTVERSION=$(var.ProductVersion);PRODUCTBUILD=$(var.ProductBuild);INSTALLERTELEMETRYENABLED=[INSTALLERTELEMETRYENABLED];PRODUCTEXECUTABLEPATH=[INSTALLFOLDER]$(var.AppExecutableName);PBITOOLPATH=[POWERBIEXTERNALTOOLSFOLDER]$(var.PbitoolName)" />
+    <CustomAction Id="SetPropertyTelemetryUserId" BinaryKey="CustomActionBinary" DllEntry="SetPropertyTelemetryUserId" Execute="immediate" Impersonate="yes" />
+    <CustomAction Id="SetPropertyValuesRegisterExternalTool" Property="RegisterExternalTool" Value="INSTALLSCOPE=$(var.InstallScope);PRODUCTNAME=$(var.AppName);PRODUCTVERSION=$(var.ProductVersion);PRODUCTBUILD=$(var.ProductBuild);INSTALLERTELEMETRYENABLED=[INSTALLERTELEMETRYENABLED];TELEMETRYUSERID=[TELEMETRYUSERID];PRODUCTEXECUTABLEPATH=[INSTALLFOLDER]$(var.AppExecutableName);PBITOOLPATH=[POWERBIEXTERNALTOOLSFOLDER]$(var.PbitoolName)" />
     <CustomAction Id="RegisterExternalTool" BinaryKey="CustomActionBinary" DllEntry="RegisterExternalTool" Execute="deferred" Impersonate="no" />
-    <CustomAction Id="SetPropertyValuesAfterInstall" Property="AfterInstall" Value="PRODUCTNAME=$(var.AppName);PRODUCTVERSION=$(var.ProductVersion);PRODUCTBUILD=$(var.ProductBuild);INSTALLERTELEMETRYENABLED=[INSTALLERTELEMETRYENABLED]" />
+    <CustomAction Id="SetPropertyValuesAfterInstall" Property="AfterInstall" Value="INSTALLSCOPE=$(var.InstallScope);PRODUCTNAME=$(var.AppName);PRODUCTVERSION=$(var.ProductVersion);PRODUCTBUILD=$(var.ProductBuild);INSTALLERTELEMETRYENABLED=[INSTALLERTELEMETRYENABLED];TELEMETRYUSERID=[TELEMETRYUSERID]" />
     <CustomAction Id="AfterInstall" BinaryKey="CustomActionBinary" DllEntry="AfterInstall" Execute="deferred" Impersonate="no" />
-    <CustomAction Id="SetPropertyValuesUnregisterExternalTool" Property="UnregisterExternalTool" Value="PRODUCTNAME=$(var.AppName);PRODUCTVERSION=$(var.ProductVersion);PRODUCTBUILD=$(var.ProductBuild);INSTALLERTELEMETRYENABLED=[INSTALLERTELEMETRYENABLED];PRODUCTEXECUTABLEPATH=[INSTALLFOLDER]$(var.AppExecutableName);PBITOOLPATH=[POWERBIEXTERNALTOOLSFOLDER]$(var.PbitoolName)" />
+    <CustomAction Id="SetPropertyValuesUnregisterExternalTool" Property="UnregisterExternalTool" Value="INSTALLSCOPE=$(var.InstallScope);PRODUCTNAME=$(var.AppName);PRODUCTVERSION=$(var.ProductVersion);PRODUCTBUILD=$(var.ProductBuild);INSTALLERTELEMETRYENABLED=[INSTALLERTELEMETRYENABLED];TELEMETRYUSERID=[TELEMETRYUSERID];PRODUCTEXECUTABLEPATH=[INSTALLFOLDER]$(var.AppExecutableName);PBITOOLPATH=[POWERBIEXTERNALTOOLSFOLDER]$(var.PbitoolName)" />
     <CustomAction Id="UnregisterExternalTool" BinaryKey="CustomActionBinary" DllEntry="UnregisterExternalTool" Execute="deferred" Impersonate="no" />
-    <CustomAction Id="SetPropertyValuesAfterUninstall" Property="AfterUninstall" Value="PRODUCTNAME=$(var.AppName);PRODUCTVERSION=$(var.ProductVersion);PRODUCTBUILD=$(var.ProductBuild);INSTALLERTELEMETRYENABLED=[INSTALLERTELEMETRYENABLED]" />
+    <CustomAction Id="SetPropertyValuesDeleteUserAppLocalFolder" Property="DeleteUserAppLocalFolder" Value="INSTALLSCOPE=$(var.InstallScope);PRODUCTNAME=$(var.AppName);PRODUCTVERSION=$(var.ProductVersion);PRODUCTBUILD=$(var.ProductBuild);INSTALLERTELEMETRYENABLED=[INSTALLERTELEMETRYENABLED];TELEMETRYUSERID=[TELEMETRYUSERID];LOCALAPPDATASUBFOLDER=$(var.AppInstallSubfolder)" />
+    <CustomAction Id="DeleteUserAppLocalFolder" BinaryKey="CustomActionBinary" DllEntry="DeleteUserAppLocalFolder" Execute="deferred" Impersonate="no" />
+    <CustomAction Id="SetPropertyValuesAfterUninstall" Property="AfterUninstall" Value="INSTALLSCOPE=$(var.InstallScope);PRODUCTNAME=$(var.AppName);PRODUCTVERSION=$(var.ProductVersion);PRODUCTBUILD=$(var.ProductBuild);INSTALLERTELEMETRYENABLED=[INSTALLERTELEMETRYENABLED];TELEMETRYUSERID=[TELEMETRYUSERID]" />
     <CustomAction Id="AfterUninstall" BinaryKey="CustomActionBinary" DllEntry="AfterUninstall" Execute="deferred" Impersonate="no" />
+    <CustomAction Id="LaunchApplication" BinaryKey="WixCA" DllEntry="WixShellExec" />
 
     <InstallExecuteSequence>
+      <Custom Action="SetPropertyTelemetryUserId" After="AppSearch" />
       <Custom Action="SetPropertyValuesRegisterExternalTool" After="InstallFiles" />
       <Custom Action="RegisterExternalTool" After="SetPropertyValuesRegisterExternalTool"><![CDATA[NOT Installed AND NOT REMOVE]]></Custom>
       <Custom Action="SetPropertyValuesAfterInstall" After="RegisterExternalTool" />
       <Custom Action="AfterInstall" After="SetPropertyValuesAfterInstall"><![CDATA[NOT Installed AND NOT REMOVE]]></Custom>
       <Custom Action="SetPropertyValuesUnregisterExternalTool" After="RemoveFiles" />
       <Custom Action="UnregisterExternalTool" After="SetPropertyValuesUnregisterExternalTool"><![CDATA[(NOT UPGRADINGPRODUCTCODE) AND (REMOVE="ALL")]]></Custom>
-      <Custom Action="SetPropertyValuesAfterUninstall" After="UnregisterExternalTool" />
+      <Custom Action="SetPropertyValuesDeleteUserAppLocalFolder" After="UnregisterExternalTool" />
+      <Custom Action="DeleteUserAppLocalFolder" After="SetPropertyValuesDeleteUserAppLocalFolder"><![CDATA[(NOT UPGRADINGPRODUCTCODE) AND (REMOVE="ALL")]]></Custom>
+      <Custom Action="SetPropertyValuesAfterUninstall" After="DeleteUserAppLocalFolder" />
       <Custom Action="AfterUninstall" After="SetPropertyValuesAfterUninstall"><![CDATA[(NOT UPGRADINGPRODUCTCODE) AND (REMOVE="ALL")]]></Custom>
     </InstallExecuteSequence>
 

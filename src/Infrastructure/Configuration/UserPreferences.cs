@@ -92,14 +92,31 @@
 
         private static void UpdateFromRegistry(UserSettings settings)
         {
-            var registryObject = Registry.GetValue(AppEnvironment.ApplicationRegistryKeyName, AppEnvironment.ApplicationRegistryApplicationTelemetryEnableValue, null);
-            if (registryObject is not null)
-            {
-                var registryValue = Convert.ToString(registryObject);
+            var registryKey = AppEnvironment.ApplicationInstallerRegistryHKey;
+            if (registryKey is null)
+                return;
 
-                if (int.TryParse(registryValue, out var intValue))
+            using var registrySubKey = registryKey.OpenSubKey(AppEnvironment.ApplicationRegistryKeyName, writable: false);
+
+            if (registrySubKey is not null)
+            {
+                var value = registrySubKey.GetValue(AppEnvironment.ApplicationRegistryApplicationTelemetryEnableValue, defaultValue: null, RegistryValueOptions.DoNotExpandEnvironmentNames);
+                if (value is not null)
                 {
-                    settings.TelemetryEnabled = Convert.ToBoolean(intValue);
+                    var valueKind = registrySubKey.GetValueKind(AppEnvironment.ApplicationRegistryApplicationTelemetryEnableValue);
+                    if (valueKind == RegistryValueKind.String)
+                    {
+                        var valueString = (string)value;
+
+                        if (int.TryParse(valueString, out var intValue))
+                        {
+                            settings.TelemetryEnabled = Convert.ToBoolean(intValue);
+                        }
+                        else
+                        {
+                            settings.TelemetryEnabled = false;
+                        }
+                    }
                 }
             }
         }

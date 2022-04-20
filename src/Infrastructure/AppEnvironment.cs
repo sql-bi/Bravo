@@ -13,11 +13,16 @@
     using System.Diagnostics;
     using System.Drawing;
     using System.IO;
+    using System.Linq;
     using System.Text.Json;
     using System.Text.Json.Serialization;
 
     internal static class AppEnvironment
     {
+        private static readonly Lazy<bool> _isInstalledPerMachineAppInstance;
+        private static readonly Lazy<bool> _isInstalledPerUserAppInstance;
+        private static readonly Lazy<bool> _isFrameworkDependantAppInstance;
+
         public static readonly string ApiAuthenticationSchema = "BravoAuth";
         public static readonly string ApiAuthenticationToken = Cryptography.GenerateSimpleToken();
         public static readonly string ApplicationManufacturer = "SQLBI";
@@ -26,8 +31,9 @@
         public static readonly string ApplicationStoreAliasName = "BravoStore";
         public static readonly string ApplicationMainWindowTitle = "Bravo for Power BI";
         public static readonly string ApplicationInstanceUniqueName = $"{ApplicationName}-{Guid.NewGuid():D}";
-        public static readonly string ApplicationRegistryKeyName = $@"{ Registry.LocalMachine.Name }\SOFTWARE\{ ApplicationManufacturer }\{ ApplicationName }";
+        public static readonly string ApplicationRegistryKeyName = $@"SOFTWARE\{ ApplicationManufacturer }\{ ApplicationName }";
         public static readonly string ApplicationRegistryApplicationTelemetryEnableValue = "applicationTelemetryEnabled";
+        public static readonly string ApplicationRegistryApplicationInstallFolderValue = "installFolder";
         public static readonly bool TelemetryEnabledDefault = true;
         public static readonly string TelemetryInstrumentationKey = "47a8970c-6293-408a-9cce-5b7b311574d3";
         public static readonly string PBIDesktopProcessName = "PBIDesktop";
@@ -37,7 +43,6 @@
         public static readonly Color ThemeColorDark = ColorTranslator.FromHtml("#202020");
         public static readonly Color ThemeColorLight = ColorTranslator.FromHtml("#F3F3F3");
         public static readonly DaxLineBreakStyle FormatDaxLineBreakDefault = DaxLineBreakStyle.InitialLineBreak;
-
 
         public static readonly string[] TrustedUriHosts = new[]
         {
@@ -66,6 +71,7 @@
             BravoUnexpectedException.ThrowIfNull(VersionInfo.ProductVersion);
             ApplicationProductVersion = VersionInfo.ProductVersion;
 
+            IsOSVersionUnsupported = Environment.OSVersion.Version < new Version(10, 0, 17763);
             IsPackagedAppInstance = DesktopBridgeHelper.IsRunningAsMsixPackage();
             ApplicationDataPath = Path.Combine(Environment.GetFolderPath(IsPackagedAppInstance ? Environment.SpecialFolder.UserProfile : Environment.SpecialFolder.LocalApplicationData, Environment.SpecialFolderOption.DoNotVerify), ApplicationName);
             ApplicationTempPath = Path.Combine(ApplicationDataPath, ".temp");
@@ -77,6 +83,10 @@
             Diagnostics = new ConcurrentDictionary<string, DiagnosticMessage>();
             DefaultJsonOptions = new(JsonSerializerDefaults.Web) { MaxDepth = 32 }; // see Microsoft.AspNetCore.Mvc.JsonOptions.JsonSerializerOptions
             DefaultJsonOptions.Converters.Add(new JsonStringEnumMemberConverter()); // https://github.com/dotnet/runtime/issues/31081#issuecomment-578459083
+
+            _isInstalledPerMachineAppInstance = new(() => IsRunningFromInstallFolder(Registry.LocalMachine));
+            _isInstalledPerUserAppInstance = new(() => IsRunningFromInstallFolder(Registry.CurrentUser));
+            _isFrameworkDependantAppInstance = new(() => IsFrameworkDependantPublishMode());
         }
 
         /// <summary>
@@ -89,11 +99,43 @@
 
         public static string ProcessPath { get; }
 
+        public static bool IsOSVersionUnsupported { get; }
+
         /// <summary>
         /// Returns true if the current app istance is running as packaged application
         /// </summary>
         public static bool IsPackagedAppInstance { get; }
-    
+
+        /// <summary>
+        /// Returns true if the current app istance was published as a framework-dependent mode
+        /// </summary>
+        public static bool IsFrameworkDependantAppInstance => _isFrameworkDependantAppInstance.Value;
+
+        /// <summary>
+        /// Returns true if the current app istance was installed from portable ZIP package
+        /// </summary>
+        public static bool IsPortableAppInstance => !IsPackagedAppInstance && !IsInstalledAppInstance;
+
+        /// <summary>
+        /// Returns true if the current app istance was installed from an MSI package
+        /// </summary>
+        public static bool IsInstalledAppInstance => IsInstalledPerMachineAppInstance || IsInstalledPerUserAppInstance;
+
+        /// <summary>
+        /// Returns true if the current app istance was installed from a per-machine MSI package
+        /// </summary>
+        public static bool IsInstalledPerMachineAppInstance => _isInstalledPerMachineAppInstance.Value;
+
+        /// <summary>
+        /// Returns true if the current app istance was installed from a per-user MSI package
+        /// </summary>
+        public static bool IsInstalledPerUserAppInstance => _isInstalledPerUserAppInstance.Value;
+
+        /// <summary>
+        /// Returns the HKEY registry key used to install the current application instance. Returns null if it is a packaged or portable app instance
+        /// </summary>
+        public static RegistryKey? ApplicationInstallerRegistryHKey => IsInstalledPerMachineAppInstance ? Registry.LocalMachine : IsInstalledPerUserAppInstance ? Registry.CurrentUser : null;
+
         public static string ApplicationFileVersion { get; }
 
         public static string ApplicationProductVersion { get; }
@@ -166,6 +208,43 @@
                     ExceptionHelper.WriteToEventLog(ex, EventLogEntryType.Warning, throwOnError: false);
                 }
             }
+        }
+
+        private static bool IsRunningFromInstallFolder(RegistryKey registryKey)
+        {
+            if (IsPackagedAppInstance)
+                return false;
+
+            using var registrySubKey = registryKey.OpenSubKey(ApplicationRegistryKeyName, writable: false);
+
+            if (registrySubKey is not null)
+            {
+                var value = registrySubKey.GetValue(ApplicationRegistryApplicationInstallFolderValue, defaultValue: null, RegistryValueOptions.DoNotExpandEnvironmentNames);
+                if (value != null)
+                {
+                    var valueKind = registrySubKey.GetValueKind(ApplicationRegistryApplicationInstallFolderValue);
+                    if (valueKind == RegistryValueKind.String)
+                    {
+                        var valueString = (string)value;
+                        var installPath = CommonHelper.NormalizePath(valueString);
+                        var runningPath = CommonHelper.NormalizePath(AppContext.BaseDirectory);
+
+                        return installPath == runningPath;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        private static bool IsFrameworkDependantPublishMode()
+        {
+            var coreclrFound = Directory.EnumerateFiles(AppContext.BaseDirectory).Any((name) =>
+            {
+                return Path.GetFileName(name).EqualsI("coreclr.dll");
+            });
+
+            return !coreclrFound;
         }
     }
 }

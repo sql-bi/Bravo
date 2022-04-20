@@ -1,8 +1,10 @@
 ﻿namespace Sqlbi.Bravo.Models.AnalyzeModel
 {
     using Dax.ViewModel;
+    using Sqlbi.Bravo.Infrastructure.Extensions;
     using System.Diagnostics;
     using System.Text.Json.Serialization;
+    using TOM = Microsoft.AnalysisServices.Tabular;
 
     [DebuggerDisplay("'{TableName}'[{Name}]")]
     public class TabularColumn
@@ -34,6 +36,9 @@
         [JsonPropertyName("isHidden")]
         public bool IsHidden { get; set; }
 
+        [JsonPropertyName("isQueryable")]
+        public bool? IsQueryable { get; set; }
+
         internal static TabularColumn CreateFrom(VpaColumn vpaColumn, long databaseSize)
         {
             var column = new TabularColumn
@@ -45,7 +50,8 @@
                 Weight = (double)vpaColumn.TotalSize / databaseSize,
                 IsReferenced = vpaColumn.IsReferenced,
                 DataType = vpaColumn.DataType,
-                IsHidden = vpaColumn.IsHidden
+                IsHidden = vpaColumn.IsHidden,
+                IsQueryable = vpaColumn.State.TryParseTo<TOM.ObjectState>()?.IsQueryable(),
             };
 
             return column;

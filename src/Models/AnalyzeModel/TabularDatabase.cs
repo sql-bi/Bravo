@@ -111,6 +111,12 @@
                 database.FeatureUnsupportedReasons |= TabularDatabaseFeatureUnsupportedReason.ManageDatesAutoDateTimeEnabled;
             }
 
+            if (daxModel.Tables.Count == 0)
+            {
+                database.Features &= ~TabularDatabaseFeature.ManageDatesAll;
+                database.FeatureUnsupportedReasons |= TabularDatabaseFeatureUnsupportedReason.ManageDatesEmptyTableCollection;
+            }
+
             return database;
 
             static bool IsAutoDateTimeTable(Dax.Metadata.Table daxTable)
@@ -244,6 +250,11 @@
         /// Feature supported only for models in Power BI Desktop mode
         /// </summary>
         ManageDatesPBIDesktopModelOnly = 1 << 301,
+
+         /// <summary>
+        /// Feature supported only by databases that have at least one table
+        /// </summary>
+        ManageDatesEmptyTableCollection = 1 << 302,
 
         // ExportData range << 400,
     }

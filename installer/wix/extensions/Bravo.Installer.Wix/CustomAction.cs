@@ -7,17 +7,66 @@ namespace Sqlbi.Bravo.Installer.Wix
     public class CustomAction
     {
         [CustomAction]
+        public static ActionResult DeleteUserAppLocalFolder(Session session)
+        {
+            session.Log($"::BRAVO<BEGIN> ({ nameof(DeleteUserAppLocalFolder) })");
+            try
+            {
+                Helpers.Log(session, nameof(DeleteUserAppLocalFolder));
+
+                var localAppDataSubfolder = session.CustomActionData[Helpers.PropertyLocalAppDataSubfolder];
+                var localApplicationDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+                var userAppLocalFolder = Path.Combine(localApplicationDataPath, localAppDataSubfolder);
+
+                session.Log($"::BRAVO<LOG> ({ nameof(DeleteUserAppLocalFolder) }) - DeleteDirectory({ userAppLocalFolder })");
+                if (Directory.Exists(userAppLocalFolder))
+                    Directory.Delete(userAppLocalFolder, recursive: true);
+            }
+            catch (Exception ex)
+            {
+                session.Log($"::BRAVO<ERROR> ({ nameof(DeleteUserAppLocalFolder) }) - { ex }");
+                Helpers.TrackException(session, ex);
+            }
+
+            session.Log($"::BRAVO<END> ({ nameof(DeleteUserAppLocalFolder) })");
+            return ActionResult.Success;
+        }
+
+        [CustomAction]
+        public static ActionResult SetPropertyTelemetryUserId(Session session)
+        {
+            // The telemetry user id is computed from the name of the user who is currently logged into the operating system.
+            // Here we are using a dedicated custom action that must be executed with the Execute="immediate" Impersonate="yes" properties.
+            // This is to ensure that the correct value from Environment.UserName is used instead of using the localsystem/administrator account used to run the installer when a per-machine install scope is used.
+
+            session.Log($"::BRAVO<BEGIN> ({ nameof(SetPropertyTelemetryUserId) })");
+            try
+            {
+                Helpers.Log(session, nameof(SetPropertyTelemetryUserId));
+
+                var userId = $"{ Environment.MachineName }\\{ Environment.UserName }".ToSHA256Hash();
+                session[Helpers.PropertyTelemetryUserId] = userId;
+            }
+            catch (Exception ex)
+            {
+                session.Log($"::BRAVO<ERROR> ({ nameof(SetPropertyTelemetryUserId) }) - { ex }");
+                Helpers.TrackException(session, ex);
+            }
+
+            session.Log($"::BRAVO<END> ({ nameof(SetPropertyTelemetryUserId) })");
+            return ActionResult.Success;
+        }
+
+        [CustomAction]
         public static ActionResult RegisterExternalTool(Session session)
         {
             session.Log($"::BRAVO<BEGIN> ({ nameof(RegisterExternalTool) })");
             try
             {
-                foreach (var pairs in session.CustomActionData)
-                    session.Log($"::BRAVO<LOG> ({ nameof(RegisterExternalTool) }) - CustomActionData({ pairs.Key }, { pairs.Value })");
+                Helpers.Log(session, nameof(RegisterExternalTool));
 
-                var pbitoolPath = session.CustomActionData[Helpers.CustomDataPbitoolPath];
-                var executablePath = session.CustomActionData[Helpers.CustomDataProductExecutablePath].Replace("\\", "\\\\");
-
+                var pbitoolPath = session.CustomActionData[Helpers.PropertyPbitoolPath];
+                var executablePath = session.CustomActionData[Helpers.PropertyProductExecutablePath].Replace("\\", "\\\\");
                 var content = File.ReadAllText(pbitoolPath);
                 {
                     content = content.Replace("<#!PATH!#>", executablePath);
@@ -48,8 +97,7 @@ namespace Sqlbi.Bravo.Installer.Wix
             session.Log($"::BRAVO<BEGIN> ({ nameof(AfterInstall) })");
             try
             {
-                foreach (var pairs in session.CustomActionData)
-                    session.Log($"::BRAVO<LOG> ({ nameof(AfterInstall) }) - CustomActionData({ pairs.Key }, { pairs.Value })");
+                Helpers.Log(session, nameof(AfterInstall));
 
                 if (Helpers.IsTelemetryEnabled(session))
                 {
@@ -72,8 +120,7 @@ namespace Sqlbi.Bravo.Installer.Wix
             session.Log($"::BRAVO<BEGIN> ({ nameof(AfterUninstall) })");
             try
             {
-                foreach (var pairs in session.CustomActionData)
-                    session.Log($"::BRAVO<LOG> ({ nameof(AfterUninstall) }) - CustomActionData({ pairs.Key }, { pairs.Value })");
+                Helpers.Log(session, nameof(AfterUninstall));
 
                 if (Helpers.IsTelemetryEnabled(session))
                 {
