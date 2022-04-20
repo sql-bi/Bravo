@@ -121,6 +121,9 @@
                 if (ProcessHelper.OpenShellExecute(path, waitForStarted, out var processId, cancellationToken))
                 {
                     var report = PBIDesktopReport.CreateFrom(processId.Value);
+                    if (report is null)
+                        return NoContent();
+
                     return Ok(report);
                 }
 

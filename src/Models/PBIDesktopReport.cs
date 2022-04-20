@@ -52,12 +52,17 @@
             return HashCode.Combine(ProcessId, ServerName, DatabaseName);
         }
 
-        internal static PBIDesktopReport CreateFrom(int processId, bool connectionModeEnabled = true)
+        internal static PBIDesktopReport? CreateFrom(int processId, bool connectionModeEnabled = true)
         {
-            using var process = ProcessHelper.UnsafeGetProcessById(processId);
-            var report = CreateFrom(process, connectionModeEnabled);
+            using var process = ProcessHelper.SafeGetProcessById(processId);
 
-            return report;
+            if (process is not null)
+            {
+                var report = CreateFrom(process, connectionModeEnabled);
+                return report;
+            }
+
+            return null;
         }
 
         internal static PBIDesktopReport CreateFrom(Process process, bool connectionModeEnabled = true)

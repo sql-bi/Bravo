@@ -71,6 +71,7 @@
             BravoUnexpectedException.ThrowIfNull(VersionInfo.ProductVersion);
             ApplicationProductVersion = VersionInfo.ProductVersion;
 
+            IsOSVersionUnsupported = Environment.OSVersion.Version < new Version(10, 0, 17763);
             IsPackagedAppInstance = DesktopBridgeHelper.IsRunningAsMsixPackage();
             ApplicationDataPath = Path.Combine(Environment.GetFolderPath(IsPackagedAppInstance ? Environment.SpecialFolder.UserProfile : Environment.SpecialFolder.LocalApplicationData, Environment.SpecialFolderOption.DoNotVerify), ApplicationName);
             ApplicationTempPath = Path.Combine(ApplicationDataPath, ".temp");
@@ -97,6 +98,8 @@
         public static int ProcessId { get; }
 
         public static string ProcessPath { get; }
+
+        public static bool IsOSVersionUnsupported { get; }
 
         /// <summary>
         /// Returns true if the current app istance is running as packaged application
