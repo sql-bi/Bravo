@@ -121,7 +121,7 @@ const locale: Locale = {
         [_.errorSignInMsalExceptionOccurred]: "Erro inesperado no pedido de início de sessão.",
         [_.errorSignInMsalTimeoutExpired]: "O pedido de início de sessão foi cancelado porque o tempo limite foi excedido antes da operação estar terminada.",
         [_.errorTimeout]: "Tempo limite excedido.",
-        [_.errorTitle]: "Whoops...",
+        [_.errorTitle]: "Opa...",
         [_.errorTOMDatabaseDatabaseNotFound]: "A base de dados não existe na coleção ou o utilizador não tem direitos de administrador à mesma.",
         [_.errorTOMDatabaseUpdateConflictMeasure]: "O pedido de atualização está em conflito com o atual estado do recurso alvo.",
         [_.errorTOMDatabaseUpdateErrorMeasure]: "O pedido de atualização falhou porque uma ou mais medidas contêm erros.", 
@@ -384,7 +384,7 @@ const locale: Locale = {
         [_.welcomeHelpText]: "Veja os vídeos abaixo para aprender a usar o Bravo:",
         [_.welcomeHelpTitle]: "Como usar o Bravo?",
         [_.welcomeText]: "O Bravo é um conjunto de ferramentas úteis para Power BI, que pode usar para analisar os seus modelos, formatar medidas, criar tabelas de datas e exportar dados.",
-        [_.whitespacesTitle]: "Whitespaces",
+        [_.whitespacesTitle]: "Espaços em branco",
         [_.wrappingTitle]: "Quebra de linhas automática",
     }
 }
