@@ -53,7 +53,7 @@
             EnsureCacheInitialized();
             try
             {
-                var package = configuration.GetPackage();
+                var package = configuration.GetPackage(_cachePath);
                 var engine = new Engine(package);
 
                 engine.ApplyTemplates(connectionWrapper.Model, cancellationToken);
@@ -86,7 +86,7 @@
             EnsureCacheInitialized();
             try
             {
-                var package = configuration.GetPackage();
+                var package = configuration.GetPackage(_cachePath);
                 var engine = new Engine(package);
 
                 engine.ApplyTemplates(connection.Model, cancellationToken);
