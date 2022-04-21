@@ -77,6 +77,11 @@
     <EmbeddedResource Include="Assets\ManageDates\Templates\*.json" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Remove="Scripts\*.json" />
+    <None Include="Scripts\*.json" />
+  </ItemGroup>
+
   <!-- 
   ** The following custom MSBuild targets add the static client web assets into the build process
   ** - ClientAssetsRestore => restore client web assets from npm
