@@ -8,8 +8,9 @@ import { strings as _ } from '../strings';
 
 const locale: Locale = {
 
-    locale: "en", //DO NOT TRANSLATE
-    name: "English", //DO NOT TRANSLATE
+    locale: "en", // DO NOT TRANSLATE
+    enName: "English", // DO NOT TRANSLATE
+    name: "English",
 
     strings: {
         [_.addCtrlTitle]: "打开",
@@ -152,7 +153,8 @@ const locale: Locale = {
         [_.exportDataExportAsDesc]: "",
         [_.exportDataExporting]: "正在导出 {table}...",
         [_.exportDataExportingDone]: "完成!",
-        [_.exportDataNoColumns]: "无法导出该表,因为它没有包含任何列。",
+        [_.exportDataNoColumns]: "这个表不能被导出,因为它没有包含任何列。",
+        [_.exportDataNotQueryable]: "这个表不能被导出，因为它包含一个或多个具有无效表达式的计算列或需要重新计算的列。",
         [_.exportDataOpenFile]: "打开导出文件",
         [_.exportDataOpenFolder]: "打开导出文件所在的文件夹",
         [_.exportDataOptions]: "导出选项",
@@ -305,7 +307,7 @@ const locale: Locale = {
         [_.optionLanguageDescription]: "选择Bravo的语言. 需要重新加载.",
         [_.optionLanguageResetConfirm]: "您需要重新加载Bravo以应用新的语言设置吗?",
         [_.optionsDialogAboutMenu]: "关于",
-        [_.optionsDialogFormattingMenu]: "格式化",
+        [_.optionsDialogFormattingMenu]: "正在格式化",
         [_.optionsDialogGeneralMenu]: "通用",
         [_.optionsDialogTelemetryMenu]: "诊断",
         [_.optionsDialogTitle]: "选项",
@@ -332,6 +334,7 @@ const locale: Locale = {
         [_.savingVpax]: "生成 VPAX...",
         [_.sceneUnsupportedReason]: "该数据源不能使用此功能.",
         [_.sceneUnsupportedReasonManageDatesAutoDateTimeEnabled]: `不支持启用自动日期/时间选项的模型.<br><span class="link" href="https://www.sqlbi.com/tv/disabling-auto-date-time-in-power-bi/">Power BI禁用自动日期/时间 (video)</span>`,
+        [_.sceneUnsupportedReasonManageDatesEmptyTableCollection]: "该功能需要数据库中至少有一张表",
         [_.sceneUnsupportedReasonManageDatesPBIDesktopModelOnly]: "该功能仅由Power BI桌面模式下的模型支持.",
         [_.sceneUnsupportedReasonMetadataOnly]: "该数据库是由VPAX文件生成的, 其中只包括其元数据.",
         [_.sceneUnsupportedReasonReadOnly]: "与该数据库的连接是只读的.",
