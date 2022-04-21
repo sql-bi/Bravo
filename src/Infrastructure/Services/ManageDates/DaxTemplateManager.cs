@@ -23,20 +23,20 @@
         public const string SqlbiTemplateTableAnnotationDateAutoTemplateValue = "DateAutoTemplate";
         public const string SqlbiTemplateTableAnnotationHolidaysValue = "Holidays";
         public const string SqlbiTemplateTableAnnotationHolidaysDefinitionValue = "HolidaysDefinition";
+        public const string SqlbiTemplateEmbeddedResourcePrefix = "Sqlbi.Bravo.Assets.ManageDates.Templates.";
 
-        private readonly string EmbeddedPath = Path.Combine(AppContext.BaseDirectory, @"Assets\ManageDates\Templates");
-        private readonly string CachePath = Path.Combine(AppEnvironment.ApplicationTempPath, @"ManageDates\Templates");
-        private readonly string UserPath = Path.Combine(AppEnvironment.ApplicationDataPath, @"ManageDates\Templates");
+        private readonly string _cachePath = Path.Combine(AppEnvironment.ApplicationTempPath, @"ManageDates\Templates");
+        private readonly string _userPath = Path.Combine(AppEnvironment.ApplicationDataPath, @"ManageDates\Templates");
+        private readonly object _cacheSyncLock = new();
 
-        private static readonly object _cacheSyncLock = new();
         private bool _cacheInitialized = false;
         
         public IEnumerable<Package> GetPackages()
         {
-            EnsureCalcheInitialized();
+            EnsureCacheInitialized();
             try
             {
-                var files = Package.FindTemplateFiles(CachePath);
+                var files = Package.FindTemplateFiles(_cachePath);
                 var packages = files.Select(Package.LoadFromFile).ToArray();
 
                 return packages;
@@ -50,7 +50,7 @@
 
         public ModelChanges GetPreviewChanges(DateConfiguration configuration, int previewRows, TabularConnectionWrapper connectionWrapper, CancellationToken cancellationToken)
         {
-            EnsureCalcheInitialized();
+            EnsureCacheInitialized();
             try
             {
                 var package = configuration.GetPackage();
@@ -83,7 +83,7 @@
 
         public void ApplyTemplate(DateConfiguration configuration, TabularConnectionWrapper connection, CancellationToken cancellationToken)
         {
-            EnsureCalcheInitialized();
+            EnsureCacheInitialized();
             try
             {
                 var package = configuration.GetPackage();
@@ -100,7 +100,7 @@
             }
         }
 
-        private void EnsureCalcheInitialized()
+        private void EnsureCacheInitialized()
         {
             if (!_cacheInitialized)
             {
@@ -108,19 +108,39 @@
                 {
                     if (!_cacheInitialized)
                     {
-                        if (Directory.Exists(CachePath))
-                            Directory.Delete(CachePath, recursive: true);
+                        if (Directory.Exists(_cachePath))
+                            Directory.Delete(_cachePath, recursive: true);
 
-                        Directory.CreateDirectory(CachePath);
+                        Directory.CreateDirectory(_cachePath);
                         
-                        var assetPath = Directory.Exists(UserPath) && Directory.EnumerateFiles(UserPath).Any() ? UserPath : EmbeddedPath;
-
-                        foreach (var assetFile in Directory.EnumerateFiles(assetPath))
+                        if (Directory.Exists(_userPath))
                         {
-                            var assetFileName = Path.GetFileName(assetFile);
-                            var cacheFile = Path.Combine(CachePath, assetFileName);
+                            foreach (var assetFile in Directory.EnumerateFiles(_userPath))
+                            {
+                                var assetFileName = Path.GetFileName(assetFile);
+                                var cacheFile = Path.Combine(_cachePath, assetFileName);
 
-                            File.Copy(assetFile, cacheFile);
+                                File.Copy(assetFile, cacheFile);
+                            }
+                        }
+                        else
+                        {
+                            var assembly = typeof(Program).Assembly;
+                            var resourceNames = assembly.GetManifestResourceNames();
+                            var templateNames = resourceNames.Where((name) => name.StartsWith(SqlbiTemplateEmbeddedResourcePrefix));
+
+                            foreach (var templateName in templateNames)
+                            {
+                                using var resourceStream = assembly.GetManifestResourceStream(templateName);
+                                if (resourceStream is not null)
+                                {
+                                    var cacheFileName = templateName.Remove(0, SqlbiTemplateEmbeddedResourcePrefix.Length);
+                                    var cacheFilePath = Path.Combine(_cachePath, cacheFileName);
+
+                                    using var fileStream = File.Create(cacheFilePath);
+                                    resourceStream.CopyTo(fileStream);
+                                }
+                            }
                         }
 
                         _cacheInitialized = true;
