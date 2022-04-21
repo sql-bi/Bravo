@@ -14,6 +14,7 @@ import nl from './nl';
 import pl from './pl';
 import pt from './pt';
 import ru from './ru';
+import zh from './zh';
 
 const locales = {
     [en.locale]: en,
@@ -27,6 +28,7 @@ const locales = {
     [pl.locale]: pl,
     [pt.locale]: pt,
     [ru.locale]: ru,
+    [zh.locale]: zh,
 };
 
 export default locales;
