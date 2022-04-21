@@ -73,9 +73,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Update="Assets\ManageDates\Templates\*.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
+    <Content Remove="Assets\ManageDates\Templates\*.json" />
+    <EmbeddedResource Include="Assets\ManageDates\Templates\*.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Remove="Scripts\*.json" />
+    <None Include="Scripts\*.json" />
   </ItemGroup>
 
   <!-- 
