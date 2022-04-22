@@ -5,7 +5,9 @@
     using System;
     using System.Data.OleDb;
     using System.Diagnostics.CodeAnalysis;
+    using System.Globalization;
     using System.Net;
+    using System.Threading;
 
     internal static class ConnectionStringHelper
     {
@@ -21,11 +23,14 @@
         //private const string UseEncryptionForDataKey = "Use Encryption for Data";
         private const string ApplicationNameKey = "Application Name";
         private const string ConnectTimeoutKey = "Connect Timeout";
+        private const string LocaleIdentifierKey = "LocaleIdentifier";
 
         private const string ProviderMsolapValue = "MSOLAP";
         private const string IntegratedSecuritySspiValue = "SSPI";
         private const string IntegratedSecurityClaimsTokenValue = "ClaimsToken";
         private const string PersistSecurityInfoValue = "False"; // 'False' here is used as a best practice in order to discard security-sensitive information after the connection has been opened
+
+        private static readonly Lazy<int> _localeIdentifier = new(() => GetLocaleIdentifier());
 
         public static string BuildFor(IPEndPoint endPoint)
         {
@@ -42,6 +47,7 @@
                 { ConnectTimeoutKey, connectTimeout },
                 { IntegratedSecurityKey, IntegratedSecuritySspiValue },
                 { PersistSecurityInfoKey, PersistSecurityInfoValue },
+                { LocaleIdentifierKey, _localeIdentifier.Value },
                 { ApplicationNameKey, AppEnvironment.ApplicationInstanceUniqueName }
             };
 
@@ -60,6 +66,7 @@
                 { InitialCatalogKey, report.DatabaseName },
                 { IntegratedSecurityKey, IntegratedSecuritySspiValue },
                 { PersistSecurityInfoKey, PersistSecurityInfoValue },
+                { LocaleIdentifierKey, _localeIdentifier.Value },
                 { ApplicationNameKey, AppEnvironment.ApplicationInstanceUniqueName }
             };
 
@@ -127,6 +134,7 @@
                     { InitialCatalogKey, databaseName },
                     { IntegratedSecurityKey, IntegratedSecurityClaimsTokenValue },
                     { PersistSecurityInfoKey, PersistSecurityInfoValue },
+                    { LocaleIdentifierKey, _localeIdentifier.Value },
                     { PasswordKey, accessToken }, // The Analysis Services client libraries automatically add the auth-scheme value "Bearer" to the access token
                     { ApplicationNameKey, AppEnvironment.ApplicationInstanceUniqueName }
                 };
@@ -176,6 +184,32 @@
             }
 
             return false;
+        }
+
+        private static int GetLocaleIdentifier()
+        {
+            // See https://github.com/sql-bi/Bravo/issues/324 and Microsoft.AnalysisServices.XmlaReader.ClientLocaleHelper.ClientLocaleHelper
+
+            var lcid = Thread.CurrentThread.CurrentUICulture.LCID;
+            try
+            {
+                _ = CultureInfo.GetCultureInfo(lcid);
+            }
+            catch (CultureNotFoundException)
+            {
+                lcid = Thread.CurrentThread.CurrentUICulture.Parent.LCID;
+                try
+                {
+                    _ = CultureInfo.GetCultureInfo(lcid);
+                }
+                catch (CultureNotFoundException)
+                {
+                   var fallbackCulture = CultureInfo.GetCultureInfo("en-US");
+                   lcid = fallbackCulture.LCID;
+                }
+            }
+
+            return lcid;
         }
     }
 }
