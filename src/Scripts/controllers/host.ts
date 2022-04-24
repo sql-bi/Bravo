@@ -352,7 +352,7 @@ export class Host extends Dispatchable {
     signIn(emailAddress?: string) {
         const logSettings: ApiLogSettings = {};
 
-        return <Promise<Account>>this.apiCall("auth/powerbi/SignIn", emailAddress ? { upn: emailAddress } : {}, {}, false, logSettings);
+        return <Promise<Account>>this.apiCall("auth/powerbi/SignIn", emailAddress ? { userPrincipalName: emailAddress } : {}, {}, false, logSettings);
     }
 
     signOut() {

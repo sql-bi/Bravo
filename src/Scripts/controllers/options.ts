@@ -38,7 +38,6 @@ export enum ProxyType {
 
 export interface ClientOptions {
     sidebarCollapsed: boolean
-    loggedInOnce: boolean
     locale: string
     formatting: ClientOptionsFormatting
     editor: ClientOptionsEditor
@@ -195,7 +194,6 @@ export class OptionsController extends OptionsStore<Options> {
         },
         customOptions: {
             sidebarCollapsed: false,
-            loggedInOnce: false,
             locale: CONFIG.culture.ietfLanguageTag, //navigator.language,
             formatting: {
                 preview: false,

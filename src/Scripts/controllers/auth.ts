@@ -12,7 +12,7 @@ import { CacheHelper } from './cache';
 
 export interface Account {
     id?: string
-    upn?: string //UserPrincipalName
+    userPrincipalName?: string
     username?: string
     avatar?: string
 }
@@ -62,7 +62,6 @@ export class Auth extends Dispatchable {
             .then(account => {
                 if (account) {
                     this.account = account;
-                    optionsController.update("customOptions.loggedInOnce", true);
                     this.getAvatar();
                     this.trigger("signedIn", this.account);
 
