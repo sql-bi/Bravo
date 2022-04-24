@@ -90,9 +90,9 @@
                 var downloadFileExtension = Path.GetExtension(downloadUri.LocalPath);
                 var downloadFileName = Path.GetFileName(downloadUri.LocalPath);
 
-                if (AppEnvironment.IsFrameworkDependantAppInstance)
+                if (AppEnvironment.IsFrameworkDependentAppInstance)
                 {
-                    downloadFileNameWithoutExtension += "-frameworkdependant";
+                    downloadFileNameWithoutExtension += "-frameworkdependent";
                 }
 
                 if (AppEnvironment.IsInstalledPerMachineAppInstance)

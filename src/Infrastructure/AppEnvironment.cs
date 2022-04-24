@@ -21,7 +21,7 @@
     {
         private static readonly Lazy<bool> _isInstalledPerMachineAppInstance;
         private static readonly Lazy<bool> _isInstalledPerUserAppInstance;
-        private static readonly Lazy<bool> _isFrameworkDependantAppInstance;
+        private static readonly Lazy<bool> _isFrameworkDependentAppInstance;
 
         public static readonly string ApiAuthenticationSchema = "BravoAuth";
         public static readonly string ApiAuthenticationToken = Cryptography.GenerateSimpleToken();
@@ -86,7 +86,7 @@
 
             _isInstalledPerMachineAppInstance = new(() => IsRunningFromInstallFolder(Registry.LocalMachine));
             _isInstalledPerUserAppInstance = new(() => IsRunningFromInstallFolder(Registry.CurrentUser));
-            _isFrameworkDependantAppInstance = new(() => IsFrameworkDependantPublishMode());
+            _isFrameworkDependentAppInstance = new(() => IsFrameworkDependentPublishMode());
         }
 
         /// <summary>
@@ -109,7 +109,7 @@
         /// <summary>
         /// Returns true if the current app istance was published as a framework-dependent mode
         /// </summary>
-        public static bool IsFrameworkDependantAppInstance => _isFrameworkDependantAppInstance.Value;
+        public static bool IsFrameworkDependentAppInstance => _isFrameworkDependentAppInstance.Value;
 
         /// <summary>
         /// Returns true if the current app istance was installed from portable ZIP package
@@ -237,7 +237,7 @@
             return false;
         }
 
-        private static bool IsFrameworkDependantPublishMode()
+        private static bool IsFrameworkDependentPublishMode()
         {
             var coreclrFound = Directory.EnumerateFiles(AppContext.BaseDirectory).Any((name) =>
             {
