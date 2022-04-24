@@ -53,7 +53,7 @@
                         TableName = requestedMeasure.TableName,
                     };
 
-                    if (daxformatterResponse.Errors.Count == 0)
+                    if (daxformatterResponse.Errors is null || daxformatterResponse.Errors.Count == 0)
                     {
                         formattedMeasure.Expression = daxformatterResponse.Formatted;
                         formattedMeasure.LineBreakStyle = lineBreakStyle.Value;

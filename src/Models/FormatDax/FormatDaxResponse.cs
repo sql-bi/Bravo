@@ -35,10 +35,10 @@
     public class FormatterError
     {
         [JsonPropertyName("line")]
-        public int Line { get; set; }
+        public int? Line { get; set; }
 
         [JsonPropertyName("column")]
-        public int Column { get; set; }
+        public int? Column { get; set; }
 
         [JsonPropertyName("message")]
         public string? Message { get; set; }
