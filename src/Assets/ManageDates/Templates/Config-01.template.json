@@ -10,7 +10,8 @@
     {
       "Class": "HolidaysTable",
       "Table": "Holidays",
-      "Template": null
+      "Template": null,
+      "IsHidden": true
     },
     {
       "Class": "CustomDateTable",
