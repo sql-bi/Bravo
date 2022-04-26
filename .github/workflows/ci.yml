@@ -1,9 +1,9 @@
 name: CI
-
 on:
   pull_request:
   workflow_dispatch:
-
+env:
+  CONFIGURATION: 'Release'
 jobs:
   build-and-test:
     runs-on: windows-latest
@@ -12,12 +12,12 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: |
-          5.0.x
-          6.0.x
+        dotnet-version: 6.0.x
+    - name: .NET info
+      run: dotnet --info
     - name: .NET restore
       run: dotnet restore
     - name: .NET build
-      run: dotnet build --no-restore
+      run: dotnet build './Bravo.sln' --configuration ${{ env.CONFIGURATION }} --no-restore
     - name: .NET test
-      run: dotnet test --no-build --verbosity normal
+      run: dotnet test './Bravo.sln' --configuration ${{ env.CONFIGURATION }} --no-build --verbosity normal
