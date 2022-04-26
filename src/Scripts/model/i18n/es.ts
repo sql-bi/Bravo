@@ -18,7 +18,7 @@ const locale: Locale = {
         [_.AnalyzeModel]: "Analizar Modelo",
         [_.analyzeModelSummary]: `Su conjunto de datos tiene <strong>{size:bytes}</strong> de largo y contiene <strong>{count}</strong> columna{{s}}`,
         [_.analyzeModelSummary2]: `, <span class=text-highlight><strong>{count}</strong>  de los cuales no {{están|está}} referenciados en el modelo.</span>`,
-        [_.appName]: "Bravo para Power BI",
+        [_.appName]: "Bravo for Power BI", // DO NOT TRANSLATE
         [_.appUpdateAvailable]: "Nueva versión disponible: {version}",
         [_.appUpdateChangelog]: "Registro de cambios",
         [_.appUpdateDownload]: "Descargar",
