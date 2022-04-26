@@ -125,7 +125,7 @@
 
             foreach (var response in responses)
             {
-                if (response.Errors.Count == 0)
+                if (response.Errors is null || response.Errors.Count == 0)
                 {
                     response.Formatted = response.Formatted?.Remove(0, FormatPrefixLength - 1);
                     response.Formatted = response.Formatted?.NormalizeDax().Expression;
