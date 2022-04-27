@@ -386,8 +386,6 @@ const locale: Locale = {
         [_.welcomeText]: "Bravo es un práctico kit de herramientas de Power BI que puede usar para analizar sus modelos, formatear medidas, crear tablas de fechas y exportar datos.",
         [_.whitespacesTitle]: "Espacios en blanco",
         [_.wrappingTitle]: "Ajuste automático de línea",
-
-
     }
 }
 export default locale;
