@@ -13,15 +13,12 @@
     using System.Diagnostics;
     using System.Drawing;
     using System.IO;
-    using System.Linq;
     using System.Text.Json;
     using System.Text.Json.Serialization;
 
     internal static class AppEnvironment
     {
-        private static readonly Lazy<bool> _isInstalledPerMachineAppInstance;
-        private static readonly Lazy<bool> _isInstalledPerUserAppInstance;
-        private static readonly Lazy<bool> _isFrameworkDependentAppInstance;
+        private static readonly Lazy<AppDeploymentMode> _deploymentMode;
 
         public static readonly string ApiAuthenticationSchema = "BravoAuth";
         public static readonly string ApiAuthenticationToken = Cryptography.GenerateSimpleToken();
@@ -56,6 +53,8 @@
 
         static AppEnvironment()
         {
+            _deploymentMode = new(() => GetDeploymentMode());
+
             var currentProcess = Process.GetCurrentProcess();
 
             ProcessId = Environment.ProcessId;
@@ -72,8 +71,7 @@
             ApplicationProductVersion = VersionInfo.ProductVersion;
 
             IsOSVersionUnsupported = Environment.OSVersion.Version < new Version(10, 0, 17763);
-            IsPackagedAppInstance = DesktopBridgeHelper.IsRunningAsMsixPackage();
-            ApplicationDataPath = Path.Combine(Environment.GetFolderPath(IsPackagedAppInstance ? Environment.SpecialFolder.UserProfile : Environment.SpecialFolder.LocalApplicationData, Environment.SpecialFolderOption.DoNotVerify), ApplicationName);
+            ApplicationDataPath = Path.Combine(Environment.GetFolderPath(DeploymentMode == AppDeploymentMode.Packaged ? Environment.SpecialFolder.UserProfile : Environment.SpecialFolder.LocalApplicationData, Environment.SpecialFolderOption.DoNotVerify), ApplicationName);
             ApplicationTempPath = Path.Combine(ApplicationDataPath, ".temp");
             ApplicationDiagnosticPath = Path.Combine(ApplicationDataPath, ".diagnostic");
             UserSettingsFilePath = Path.Combine(ApplicationDataPath, "usersettings.json");
@@ -83,10 +81,6 @@
             Diagnostics = new ConcurrentDictionary<string, DiagnosticMessage>();
             DefaultJsonOptions = new(JsonSerializerDefaults.Web) { MaxDepth = 32 }; // see Microsoft.AspNetCore.Mvc.JsonOptions.JsonSerializerOptions
             DefaultJsonOptions.Converters.Add(new JsonStringEnumMemberConverter()); // https://github.com/dotnet/runtime/issues/31081#issuecomment-578459083
-
-            _isInstalledPerMachineAppInstance = new(() => IsRunningFromInstallFolder(Registry.LocalMachine));
-            _isInstalledPerUserAppInstance = new(() => IsRunningFromInstallFolder(Registry.CurrentUser));
-            _isFrameworkDependentAppInstance = new(() => IsFrameworkDependentPublishMode());
         }
 
         /// <summary>
@@ -99,42 +93,41 @@
 
         public static string ProcessPath { get; }
 
+        public static AppPublishMode PublishMode
+        {
+            get
+            {
+#if SELFCONTAINED
+                return AppPublishMode.SelfContained;
+#elif FRAMEWORKDEPENDENT
+                return AppPublishMode.FrameworkDependent;
+#else
+                return AppPublishMode.None;
+#endif
+            }
+        }
+
+        public static AppDeploymentMode DeploymentMode => _deploymentMode.Value;
+
         public static bool IsOSVersionUnsupported { get; }
-
-        /// <summary>
-        /// Returns true if the current app istance is running as packaged application
-        /// </summary>
-        public static bool IsPackagedAppInstance { get; }
-
-        /// <summary>
-        /// Returns true if the current app istance was published as a framework-dependent mode
-        /// </summary>
-        public static bool IsFrameworkDependentAppInstance => _isFrameworkDependentAppInstance.Value;
-
-        /// <summary>
-        /// Returns true if the current app istance was installed from portable ZIP package
-        /// </summary>
-        public static bool IsPortableAppInstance => !IsPackagedAppInstance && !IsInstalledAppInstance;
-
-        /// <summary>
-        /// Returns true if the current app istance was installed from an MSI package
-        /// </summary>
-        public static bool IsInstalledAppInstance => IsInstalledPerMachineAppInstance || IsInstalledPerUserAppInstance;
-
-        /// <summary>
-        /// Returns true if the current app istance was installed from a per-machine MSI package
-        /// </summary>
-        public static bool IsInstalledPerMachineAppInstance => _isInstalledPerMachineAppInstance.Value;
-
-        /// <summary>
-        /// Returns true if the current app istance was installed from a per-user MSI package
-        /// </summary>
-        public static bool IsInstalledPerUserAppInstance => _isInstalledPerUserAppInstance.Value;
 
         /// <summary>
         /// Returns the HKEY registry key used to install the current application instance. Returns null if it is a packaged or portable app instance
         /// </summary>
-        public static RegistryKey? ApplicationInstallerRegistryHKey => IsInstalledPerMachineAppInstance ? Registry.LocalMachine : IsInstalledPerUserAppInstance ? Registry.CurrentUser : null;
+        public static RegistryKey? ApplicationInstallerRegistryHKey
+        {
+            get
+            {
+                var registryKey = DeploymentMode switch
+                {
+                    AppDeploymentMode.PerUser => Registry.CurrentUser,
+                    AppDeploymentMode.PerMachine => Registry.LocalMachine,
+                    _ => null,
+                };
+
+                return registryKey;
+            }
+        }
 
         public static string ApplicationFileVersion { get; }
 
@@ -210,41 +203,62 @@
             }
         }
 
-        private static bool IsRunningFromInstallFolder(RegistryKey registryKey)
+        private static AppDeploymentMode GetDeploymentMode()
         {
-            if (IsPackagedAppInstance)
-                return false;
+            if (DesktopBridgeHelper.IsRunningAsMsixPackage())
+                return AppDeploymentMode.Packaged;
 
-            using var registrySubKey = registryKey.OpenSubKey(ApplicationRegistryKeyName, writable: false);
-
-            if (registrySubKey is not null)
+            var hklmValueString = CommonHelper.ReadRegistryString(Registry.LocalMachine, keyName: ApplicationRegistryKeyName, valueName: ApplicationRegistryApplicationInstallFolderValue);
+            if (hklmValueString is not null)
             {
-                var value = registrySubKey.GetValue(ApplicationRegistryApplicationInstallFolderValue, defaultValue: null, RegistryValueOptions.DoNotExpandEnvironmentNames);
-                if (value != null)
-                {
-                    var valueKind = registrySubKey.GetValueKind(ApplicationRegistryApplicationInstallFolderValue);
-                    if (valueKind == RegistryValueKind.String)
-                    {
-                        var valueString = (string)value;
-                        var installPath = CommonHelper.NormalizePath(valueString);
-                        var runningPath = CommonHelper.NormalizePath(AppContext.BaseDirectory);
-
-                        return installPath == runningPath;
-                    }
-                }
+                var installPath = CommonHelper.NormalizePath(hklmValueString);
+                var runningPath = CommonHelper.NormalizePath(AppContext.BaseDirectory);
+                if (installPath == runningPath)
+                    return AppDeploymentMode.PerMachine;
             }
 
-            return false;
-        }
-
-        private static bool IsFrameworkDependentPublishMode()
-        {
-            var coreclrFound = Directory.EnumerateFiles(AppContext.BaseDirectory).Any((name) =>
+            var hkcuValueString = CommonHelper.ReadRegistryString(Registry.CurrentUser, keyName: ApplicationRegistryKeyName, valueName: ApplicationRegistryApplicationInstallFolderValue);
+            if (hkcuValueString is not null)
             {
-                return Path.GetFileName(name).EqualsI("coreclr.dll");
-            });
+                var installPath = CommonHelper.NormalizePath(hkcuValueString);
+                var runningPath = CommonHelper.NormalizePath(AppContext.BaseDirectory);
+                if (installPath == runningPath)
+                    return AppDeploymentMode.PerUser;
+            }
 
-            return !coreclrFound;
+            return AppDeploymentMode.Portable;
         }
+    }
+
+    public enum AppDeploymentMode
+    {
+        None = 0,
+
+        /// <summary>
+        /// Portable ZIP package
+        /// </summary>
+        Portable = 1,
+
+        /// <summary>
+        /// MSI package per-user installation that does not require elevated privileges to install
+        /// </summary>
+        PerUser = 2,
+
+        /// <summary>
+        /// MSI package per-machine installation that requires elevated privileges to install
+        /// </summary>
+        PerMachine = 3,
+
+        /// <summary>
+        /// MSIX packaged application
+        /// </summary>
+        Packaged = 4,
+    }
+
+    public enum AppPublishMode
+    {
+        None = 0,
+        SelfContained = 1,
+        FrameworkDependent = 2,
     }
 }

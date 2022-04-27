@@ -1,11 +1,13 @@
 ﻿namespace Sqlbi.Bravo.Infrastructure.Helpers
 {
+    using Microsoft.Win32;
     using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
     using Sqlbi.Bravo.Infrastructure.Windows.Interop;
     using Sqlbi.Bravo.Models;
     using System;
     using System.IO;
     using System.Net.Http;
+    using System.Security;
     using System.Text.Json;
     using System.Threading;
     using System.Threading.Tasks;
@@ -26,6 +28,42 @@
                     state |= User32.KeyState.Toggled;
             }
             return state;
+        }
+
+        public static string? ReadRegistryString(RegistryKey registryKey, string keyName, string valueName)
+        {
+            try
+            {
+                using var registrySubKey = registryKey.OpenSubKey(keyName, writable: false);
+
+                if (registrySubKey is not null)
+                {
+                    var value = registrySubKey.GetValue(valueName, defaultValue: null, RegistryValueOptions.DoNotExpandEnvironmentNames);
+                    if (value is not null)
+                    {
+                        var valueKind = registrySubKey.GetValueKind(valueName);
+                        if (valueKind == RegistryValueKind.String)
+                        {
+                            var valueString = (string)value;
+                            return valueString;
+                        }
+                    }
+                }
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+            catch (SecurityException)
+            {
+            }
+            catch (ObjectDisposedException)
+            {
+            }
+            catch (IOException)
+            {
+            }
+
+            return null;
         }
 
         public static bool IsKeyDown(Keys key)
@@ -83,27 +121,27 @@
 
             static string GetDownloadUrl(BravoUpdate bravoUpdate)
             {
-                BravoUnexpectedException.Assert(AppEnvironment.IsPackagedAppInstance == false);
+                BravoUnexpectedException.Assert(AppEnvironment.DeploymentMode != AppDeploymentMode.Packaged);
 
                 var downloadUri = new Uri(bravoUpdate.DownloadUrl!, UriKind.Absolute);
                 var downloadFileNameWithoutExtension = Path.GetFileNameWithoutExtension(downloadUri.LocalPath);
                 var downloadFileExtension = Path.GetExtension(downloadUri.LocalPath);
                 var downloadFileName = Path.GetFileName(downloadUri.LocalPath);
 
-                if (AppEnvironment.IsFrameworkDependentAppInstance)
+                if (AppEnvironment.PublishMode == AppPublishMode.FrameworkDependent)
                 {
                     downloadFileNameWithoutExtension += "-frameworkdependent";
                 }
 
-                if (AppEnvironment.IsInstalledPerMachineAppInstance)
+                if (AppEnvironment.DeploymentMode == AppDeploymentMode.PerMachine)
                 {
                     // keep current value
                 }
-                else if (AppEnvironment.IsInstalledPerUserAppInstance)
+                else if (AppEnvironment.DeploymentMode == AppDeploymentMode.PerUser)
                 {
                     downloadFileNameWithoutExtension += "-userinstaller";
                 }
-                else if (AppEnvironment.IsPortableAppInstance)
+                else if (AppEnvironment.DeploymentMode == AppDeploymentMode.Portable)
                 {
                     downloadFileNameWithoutExtension += "-portable";
                     downloadFileExtension = ".zip";

@@ -16,6 +16,7 @@ IF %ERRORLEVEL% NEQ 0 (
 
 SET arch=x64
 SET selfcontained=true
+SET publishmode=SELFCONTAINED
 SET configuration=Release
 SET version="0.0.0.999-DEV"& :: Do not change, see also <InformationalVersion> on Bravo.csproj 
 SET verbosity="Minimal"& :: Minimal,Normal,Diagnostic,Detailed
@@ -27,12 +28,10 @@ SET msbuild="%WINDIR%\Microsoft.NET\Framework\v4.0.30319\MSBuild.exe"
 REM  ***
 ECHO *** BRAVO BUILD ***
 REM  ***
-SET runtime=win-%arch%
-SET framework=net6-windows10.0.17763.0
-SET publishfolder=%~dp0src\bin\%configuration%\%framework%\%runtime%\publish
+SET publishfolder=%~dp0src\bin\_publish
 CD /d "%~dp0src"
 IF EXIST %publishfolder% RMDIR /s /q %publishfolder%
-dotnet publish Bravo.csproj --configuration %configuration% --output %publishfolder% --self-contained %selfcontained% --verbosity %verbosity% --force --nologo || GOTO :error
+dotnet publish Bravo.csproj --configuration %configuration% --output %publishfolder% --self-contained %selfcontained% --verbosity %verbosity% --nologo /p:AdditionalConstants=%publishmode% || GOTO :error
 
 REM  ***
 ECHO *** BRAVO INSTALLER ***

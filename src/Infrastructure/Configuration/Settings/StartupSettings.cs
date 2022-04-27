@@ -104,7 +104,7 @@
 
             Process? parentProcess = null;
             {
-                if (AppEnvironment.IsPackagedAppInstance && parseResult.HasOption(parentProcessIdOption))
+                if (AppEnvironment.DeploymentMode == AppDeploymentMode.Packaged && parseResult.HasOption(parentProcessIdOption))
                 {
                     var parentProcessId = parseResult.ValueForOption<int>(parentProcessIdOption);
                     parentProcess = ProcessHelper.SafeGetProcessById(parentProcessId);
