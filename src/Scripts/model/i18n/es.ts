@@ -332,7 +332,7 @@ const locale: Locale = {
         [_.saveVpaxCtrlTile]: "Guardar como VPAX",
         [_.savingVpax]: "Generando VPAX...",
         [_.sceneUnsupportedReason]: "Esta función no está disponible para esta fuente de datos.",
-        [_.sceneUnsupportedReasonManageDatesAutoDateTimeEnabled]: `Los modelos con la opción de fecha/hora automática activada no son compatibles.<br><span class=link href=https://www.sqlbi.com/tv/disabling-auto-date-time-in-power-bi/> Deshabilitar fecha y hora automática en Power BI (vídeo)</span>,
+        [_.sceneUnsupportedReasonManageDatesAutoDateTimeEnabled]: `Los modelos con la opción de fecha/hora automática activada no son compatibles.<br><span class=link href=https://www.sqlbi.com/tv/disabling-auto-date-time-in-power-bi/> Deshabilitar fecha y hora automática en Power BI (vídeo)</span>`,
         [_.sceneUnsupportedReasonManageDatesEmptyTableCollection]: "Esta función sólo es compatible con las bases de datos que tienen al menos una tabla.",
         [_.sceneUnsupportedReasonManageDatesPBIDesktopModelOnly]: "Esta función sólo es compatible con los modelos en modo Power BI Desktop.",
         [_.sceneUnsupportedReasonMetadataOnly]: "La base de datos fue generada por un archivo VPAX, que incluye solo su metadata.",
