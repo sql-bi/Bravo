@@ -48,8 +48,8 @@
         private const string ChinaCloud = "ChinaCloud";
         private const string USGovDoDL4Cloud = "USGovDoDL4Cloud";
         private const string USGovDoDL5Cloud = "USGovDoDL5Cloud";
-        private const string USNatCloud = "USNatCloud";
-        private const string USSecCloud = "USSecCloud";
+        //private const string USNatCloud = "USNatCloud";
+        //private const string USSecCloud = "USSecCloud";
 
         public static string ToGlobalServiceCloudName(this PBICloudEnvironmentType environmentType)
         {
@@ -77,7 +77,7 @@
                 PBICloudEnvironmentType.China => "Power BI China (operated by 21Vianet)",
                 PBICloudEnvironmentType.USGovHigh => "Power BI for US Government (L4)",
                 PBICloudEnvironmentType.USGovMil => "Power BI for US Government (L5)",
-                _ => $"Custom",
+                _ => nameof(PBICloudEnvironmentType.Custom),
             };
 
             return cloudName;

@@ -1,5 +1,6 @@
 ﻿namespace Sqlbi.Bravo.Infrastructure.Helpers
 {
+    using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Infrastructure.Services.PowerBI;
     using Sqlbi.Bravo.Infrastructure.Windows.Interop;
     using System;
@@ -31,7 +32,7 @@
         {
             if (address.Contains(Uri.SchemeDelimiter) && Uri.TryCreate(address, UriKind.Absolute, out var addressUri))
             {
-                if (addressUri.Scheme.Equals(PBICloudService.ASAzureProtocolScheme, StringComparison.OrdinalIgnoreCase))
+                if (addressUri.Scheme.EqualsI(PBICloudService.ASAzureProtocolScheme))
                     return true;
             }
 
@@ -45,8 +46,8 @@
         {
             if (address.Contains(Uri.SchemeDelimiter) && Uri.TryCreate(address, UriKind.Absolute, out var addressUri))
             {
-                var isGenericDataset = addressUri.Scheme.Equals(PBICloudService.PBIDatasetProtocolScheme, StringComparison.OrdinalIgnoreCase);
-                var isPremiumDataset = addressUri.Scheme.Equals(PBICloudService.PBIPremiumXmlaEndpointProtocolScheme, StringComparison.OrdinalIgnoreCase);
+                var isGenericDataset = addressUri.Scheme.EqualsI(PBICloudService.PBIDatasetProtocolScheme);
+                var isPremiumDataset = addressUri.Scheme.EqualsI(PBICloudService.PBIPremiumXmlaEndpointProtocolScheme); // <-- can be removed ??
 
                 return isPremiumDataset || isGenericDataset;
             }

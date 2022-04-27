@@ -38,7 +38,6 @@
             PropertyNameCaseInsensitive = false, // required by SharedDatasetModel LastRefreshTime/lastRefreshTime properties
         };
 
-        public const string PBCommercialUri = "https://api.powerbi.com";
         public const string PBIDatasetProtocolScheme = "pbiazure";
         public const string PBIPremiumXmlaEndpointProtocolScheme = "powerbi";
         //public const string PBIPremiumDedicatedProtocolScheme = "pbidedicated";
@@ -56,7 +55,7 @@
             _httpClient.DefaultRequestHeaders.Accept.Clear();
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _authenticationService.PBICloudAuthentication.AccessToken);
 
-            var baseUri = new Uri(_authenticationService.PBICloudEnvironment.ServiceEndpoint);
+            var baseUri = new Uri(_authenticationService.PBICloudEnvironment.ServiceEndpoint!);
             var requestUri = new Uri(baseUri, relativeUri: GetResourceUserPhotoRequestUri.FormatInvariant(_authenticationService.PBICloudAuthentication.Account.Username));
             using var response = await _httpClient.GetAsync(requestUri).ConfigureAwait(false);
 
@@ -106,7 +105,7 @@
             _httpClient.DefaultRequestHeaders.Accept.Clear();
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _authenticationService.PBICloudAuthentication.AccessToken);
 
-            var baseUri = new Uri(_authenticationService.PBICloudEnvironment.ClusterEndpoint);
+            var baseUri = new Uri(_authenticationService.PBICloudEnvironment.ClusterEndpoint!);
             var requestUri = new Uri(baseUri, relativeUri: GetWorkspacesRequestUri);
             using var response = await _httpClient.GetAsync(requestUri, cancellationToken).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
@@ -125,7 +124,7 @@
             _httpClient.DefaultRequestHeaders.Accept.Clear();
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _authenticationService.PBICloudAuthentication.AccessToken);
             
-            var baseUri = new Uri(_authenticationService.PBICloudEnvironment.ClusterEndpoint);
+            var baseUri = new Uri(_authenticationService.PBICloudEnvironment.ClusterEndpoint!);
             var requestUri = new Uri(baseUri, relativeUri: GetGallerySharedDatasetsRequestUri);
             using var response = await _httpClient.GetAsync(requestUri, cancellationToken).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();

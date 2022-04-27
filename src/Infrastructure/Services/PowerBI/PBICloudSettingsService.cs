@@ -39,7 +39,7 @@
         {
             _httpClient = new HttpClient();
             _httpClient.DefaultRequestHeaders.Accept.Clear();
-            _environmentDiscoverBaseUri = new(() => GetEnvironmentDiscoverBaseUri());
+            _environmentDiscoverBaseUri = new(() => GetEnvironmentDiscoveryBaseUri());
         }
 
         public async Task<TenantCluster> GetTenantClusterAsync(string accessToken, CancellationToken cancellationToken)
@@ -91,22 +91,23 @@
             }
         }
 
-        private static Uri GetEnvironmentDiscoverBaseUri()
+        private static Uri GetEnvironmentDiscoveryBaseUri()
         {
+            const string PBICommercialUriString = "https://api.powerbi.com";
             const string PowerBIDiscoveryUrl = "PowerBIDiscoveryUrl";
 
             // Uri strings from endpoint query > globalservice/v202003/environments/discover?client=powerbi-msolap
-            string[] TrustedDiscoverUriString = new[]
+            var TrustedDiscoverUriString = new Uri[]
             {
-                PBICloudService.PBCommercialUri,                               // PBICloudEnvironmentType.Public
-                "https://api.powerbi.cn",                                      // PBICloudEnvironmentType.China
-                "https://api.powerbi.de",                                      // PBICloudEnvironmentType.Germany
-                "https://api.powerbigov.us",                                   // PBICloudEnvironmentType.USGov
-                "https://api.high.powerbigov.us",                              // PBICloudEnvironmentType.USGovHigh
-                "https://api.mil.powerbigov.us",                               // PBICloudEnvironmentType.USGovMil
-                // "https://biazure-int-edog-redirect.analysis-df.windows.net", // disabled PpeCloud
-                // "https://api.powerbi.eaglex.ic.gov",                         // disabled USNatCloud
-                // "https://api.powerbi.microsoft.scloud",                      // disabled USSecCloud
+                new Uri(PBICommercialUriString),                                        // PBICloudEnvironmentType.Public
+                new Uri("https://api.powerbi.cn"),                                      // PBICloudEnvironmentType.China
+                new Uri("https://api.powerbi.de"),                                      // PBICloudEnvironmentType.Germany
+                new Uri("https://api.powerbigov.us"),                                   // PBICloudEnvironmentType.USGov
+                new Uri("https://api.high.powerbigov.us"),                              // PBICloudEnvironmentType.USGovHigh
+                new Uri("https://api.mil.powerbigov.us"),                               // PBICloudEnvironmentType.USGovMil
+                //new Uri("https://api.powerbi.eaglex.ic.gov"),                         // USNatCloud
+                //new Uri("https://api.powerbi.microsoft.scloud"),                      // USSecCloud
+                //new Uri("https://biazure-int-edog-redirect.analysis-df.windows.net"), // PpeCloud
             };
 
             // https://docs.microsoft.com/en-us/power-bi/enterprise/service-govus-overview#sign-in-to-power-bi-for-us-government
@@ -117,22 +118,19 @@
             if (uriString is null)
                 uriString = CommonHelper.ReadRegistryString(Registry.LocalMachine, keyName: "SOFTWARE\\WOW6432Node\\Policies\\Microsoft\\Microsoft Power BI", valueName: PowerBIDiscoveryUrl);
 
-            if (uriString is not null)
+            if (uriString is null)
+                uriString = PBICommercialUriString;
+ 
+            if (Uri.TryCreate(uriString, UriKind.Absolute, out var discoveryUri) == false || TrustedDiscoverUriString.Contains(discoveryUri) == false)
             {
-                if (TrustedDiscoverUriString.Contains(uriString, StringComparer.OrdinalIgnoreCase) == false)
-                {
-                    throw new BravoUnexpectedInvalidOperationException($"Untrusted { nameof(PowerBIDiscoveryUrl) } value ({ uriString })");
-                }
+                throw new BravoUnexpectedInvalidOperationException($"Unsupported Power BI environment discovery URL ({ uriString })");
             }
-            else
-            {
-                uriString = PBICloudService.PBCommercialUri;
-            }
+
+            var baseUri = new Uri(uriString, UriKind.Absolute);
 
             if (AppEnvironment.IsDiagnosticLevelVerbose)
-                AppEnvironment.AddDiagnostics(DiagnosticMessageType.Text, name: $"{ nameof(PBICloudSettingsService) }.{ nameof(GetEnvironmentDiscoverBaseUri) }", content: uriString);
+                AppEnvironment.AddDiagnostics(DiagnosticMessageType.Text, name: $"{ nameof(PBICloudSettingsService) }.{ nameof(GetEnvironmentDiscoveryBaseUri) }", content: baseUri.AbsoluteUri);
 
-            var baseUri = new Uri(uriString);
             return baseUri;
         }
     }

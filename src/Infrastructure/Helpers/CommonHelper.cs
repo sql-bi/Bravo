@@ -16,7 +16,7 @@
 
     internal static class CommonHelper
     {
-        public static string? ChangeUriScheme(string? uriString, string scheme)
+        public static string? ChangeUriScheme(string? uriString, string scheme, bool ignorePort = false)
         {
             if (Uri.TryCreate(uriString, UriKind.Absolute, out var uri))
             {
@@ -24,6 +24,11 @@
                 {
                     Scheme = scheme
                 };
+
+                if (ignorePort)
+                {
+                    uriBuilder.Port = -1;
+                }
                 
                 return uriBuilder.Uri.AbsoluteUri;
             }
@@ -107,6 +112,12 @@
             normalizedPath = new DirectoryInfo(normalizedPath).FullName;
 
             return normalizedPath;
+        }
+
+        public static string NormalizeUriString(string uriString)
+        {
+            var uri = new Uri(uriString, UriKind.Absolute);
+            return uri.AbsoluteUri;
         }
 
         public async static Task<BravoUpdate> CheckForUpdateAsync(UpdateChannelType updateChannel, CancellationToken cancellationToken)

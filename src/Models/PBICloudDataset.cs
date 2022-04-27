@@ -142,7 +142,7 @@
                 WorkspaceName = cloudWorkspace.Name.NullIfEmpty() ?? cloudModel.WorkspaceName,
                 WorkspaceObjectId = cloudWorkspace.ObjectId,
                 Id = model.Id,
-                ServerName = PBICloudService.PBIDatasetServerUri.OriginalString,
+                ServerName = CommonHelper.ChangeUriScheme(environment.ServiceEndpoint, PBICloudService.PBIDatasetProtocolScheme, ignorePort: true),
                 DatabaseName = model.DBName,
                 ExternalServerName = null,
                 ExternalDatabaseName = null,
@@ -162,7 +162,7 @@
 
             if (cloudDataset.IsXmlaEndPointSupported)
             {
-                cloudDataset.ExternalServerName = CommonHelper.ChangeUriScheme(environment.ClusterEndpoint, PBICloudService.PBIPremiumXmlaEndpointProtocolScheme);
+                cloudDataset.ExternalServerName = CommonHelper.ChangeUriScheme(environment.ClusterEndpoint, PBICloudService.PBIPremiumXmlaEndpointProtocolScheme, ignorePort: true);
                 cloudDataset.ExternalDatabaseName = model.DisplayName;
             }
             else if (cloudDataset.IsOnPremModel == true)
@@ -172,7 +172,7 @@
             }
             else
             {
-                cloudDataset.ExternalServerName = CommonHelper.ChangeUriScheme(environment.ServiceEndpoint, PBICloudService.PBIDatasetProtocolScheme);
+                cloudDataset.ExternalServerName = cloudDataset.ServerName;
                 cloudDataset.ExternalDatabaseName = $"{ model.VSName }-{ model.DBName }";
             } 
 

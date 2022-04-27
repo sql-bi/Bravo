@@ -8,13 +8,16 @@
     using System.Text.Json.Serialization;
 
     [DebuggerDisplay("{Type}, {AzureADAuthority}")]
-    internal class PBICloudEnvironment: IPBICloudEnvironment
+    public class PBICloudEnvironment: IPBICloudEnvironment
     {
         [JsonPropertyName("type")]
         public PBICloudEnvironmentType? Type { get; set; }
 
         [JsonPropertyName("name")]
         public string? Name { get; set; }
+
+        [JsonPropertyName("description")]
+        public string? Description { get; set; }
 
         [JsonPropertyName("aadAuthority")]
         public string? AzureADAuthority { get; set; }
@@ -50,6 +53,7 @@
             {
                 Type = globalServiceEnvironment.CloudName?.ToCloudEnvironmentType(),
                 Name = globalServiceEnvironment.CloudName,
+                Description = null,
                 AzureADAuthority = authorityService?.Endpoint,
                 AzureADClientId = powerbiClient?.AppId,
                 AzureADRedirectAddress = powerbiClient?.RedirectUri,
@@ -60,7 +64,7 @@
             };
 
             if (pbicloudEnvironment.Type is not null)
-                pbicloudEnvironment.Name += $" - { pbicloudEnvironment.Type.Value.ToCloudEnvironmentDescription() }";
+                pbicloudEnvironment.Description = pbicloudEnvironment.Type.Value.ToCloudEnvironmentDescription();
 
             if (pbicloudEnvironment.AzureADResource is not null)
                 pbicloudEnvironment.AzureADScopes = new string[] { $"{ pbicloudEnvironment.AzureADResource }/.default" };
@@ -97,6 +101,11 @@
         /// Cloud environment name.
         /// </summary>
         string? Name { get; set; }
+
+        /// <summary>
+        /// Cloud environment description.
+        /// </summary>
+        string? Description { get; set; }
 
         /// <summary>
         /// Azure Active Directory Secure Token Service (STS) Authority
