@@ -235,7 +235,7 @@
                 options.CustomSchemaIds((type) => type.ToString());
 
                 // Include xml comments only if we are not debugging the MSIX packaged application, this is because a wrong path is generated for xml files
-                if ((Debugger.IsAttached && AppEnvironment.IsPackagedAppInstance) == false)
+                if ((Debugger.IsAttached && AppEnvironment.DeploymentMode == AppDeploymentMode.Packaged) == false)
                 {
                     var xmlFile = $"{ Assembly.GetExecutingAssembly().GetName().Name }.xml";
                     var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
