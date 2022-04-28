@@ -14,7 +14,14 @@
             var vpaModel = new Dax.ViewVpaExport.Model(daxModel);
             var tomDatabase = connection.Database;
 
-            VpaxTools.ExportVpax(path, daxModel, vpaModel, tomDatabase);
+            try
+            {
+                VpaxTools.ExportVpax(path, daxModel, vpaModel, tomDatabase);
+            }
+            catch (IOException ex)
+            {
+                throw new BravoException(BravoProblem.VpaxFileExportError, ex.Message, ex);
+            }
         }
 
         public static Dax.Metadata.Model GetDaxModel(Stream stream)
@@ -25,9 +32,9 @@
             {
                 vpaxContent = VpaxTools.ImportVpax(stream);
             }
-            catch (FileFormatException)
+            catch (FileFormatException ex)
             {
-                throw new BravoException(BravoProblem.VpaxFileContainsCorruptedData);
+                throw new BravoException(BravoProblem.VpaxFileImportError, ex.Message, ex);
             }
 
             return vpaxContent.DaxModel;
