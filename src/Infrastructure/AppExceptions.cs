@@ -201,10 +201,16 @@
         SignInMsalTimeoutExpired = 401,
 
         /// <summary>
-        /// VPAX file format is not valid or file contains corrupted data
+        /// An error occurred while importing the VPAX file
         /// </summary> 
-        [JsonPropertyName("VpaxFileContainsCorruptedData")]
-        VpaxFileContainsCorruptedData = 500,
+        [JsonPropertyName("VpaxFileImportError")]
+        VpaxFileImportError = 500,
+
+        /// <summary>
+        /// An error has occurred while exporting the VPAX file
+        /// </summary> 
+        [JsonPropertyName("VpaxFileExportError")]
+        VpaxFileExportError = 501,
 
         /// <summary>
         /// You are not connected to the Internet

@@ -159,6 +159,9 @@
 
                 options.Map<BravoException>((context, exception) =>
                 {
+                    if (AppEnvironment.IsDiagnosticLevelVerbose)
+                        AppEnvironment.AddDiagnostics(name: nameof(BravoException), exception);
+
                     var problemDetailsFactory = context.RequestServices.GetRequiredService<ProblemDetailsFactory>();
                     var problemDetails = problemDetailsFactory.CreateProblemDetails(context,
                         statusCode: StatusCodes.Status400BadRequest,
