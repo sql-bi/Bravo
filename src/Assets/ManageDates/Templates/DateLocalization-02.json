@@ -1038,13 +1038,13 @@
         },
         {
           "OriginalName": "Day of Week",
-          "Name": "星期名称",
+          "Name": "周内日",
           "Description": "",
           "DisplayFolders": ""
         },
         {
           "OriginalName": "Day of Week Number",
-          "Name": "星期名称编号",
+          "Name": "周内日序号",
           "Description": "",
           "DisplayFolders": ""
         },
