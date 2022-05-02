@@ -24,15 +24,16 @@ Bravo requires a 64-bit Windows operating system. You can install Bravo on the f
  - Windows Server 2019 or higher
 
 ### How to Help with Translations
-You can create a pull request adding/updating a localization file.
-This folder contains the localization files for the user interface: https://github.com/sql-bi/Bravo/tree/main/src/Scripts/model/i18n.  
-You can copy the `en.ts` file into another language (use the ISO code) and translate the English strings to the corresponding language.  
-Don't forget to update the file `locales.ts` too.
 
+#### User Interface Translations
+You can [fork the Bravo repository](https://github.com/sql-bi/Bravo/fork) and create a pull request adding or updating a localization file.
+This folder contains the localization files for the user interface: https://github.com/sql-bi/Bravo/tree/main/src/Scripts/model/i18n.
+You can copy the `en.ts` file into another language (use the ISO code) and translate the English strings to the corresponding language.
+In case you are adding a translation for a new language then you must also to include it among the existing languages in the https://github.com/sql-bi/Bravo/blob/main/src/Scripts/model/i18n/locales.ts file.
 
-The strings used in the Dates templates are here in another repository and folder: https://github.com/sql-bi/DaxTemplate/tree/main/TestDaxTemplates/Templates
-
-Please use the DaxTemplate repository to make any change to the Dates templates. We will apply differences and copy them to the Bravo repository: https://github.com/sql-bi/Bravo/tree/main/src/Assets/ManageDates/Templates
+#### Dates Template Translations
+You can [fork the Dax Template](https://github.com/sql-bi/DaxTemplate/fork) repository and create a pull request adding or updating a file containing the strings used in the Dates templates.
+The strings used in the Dates templates are here in another repository and folder: https://github.com/sql-bi/DaxTemplate/tree/main/src/Dax.Template.TestUI/Templates.
+Please use the [DaxTemplate repository](https://github.com/sql-bi/DaxTemplate) to make any change to the Dates templates, we will apply differences and copy them to the Bravo repository.
 
 After the 1.0 release of Bravo we will maintain also the Bravo templates file directly in the Bravo repository.
-
