@@ -833,6 +833,174 @@
           "DisplayFolders": ""
         }
       ]
+    },
+    {
+      "Iso": "zh",
+      "Table": {
+        "OriginalName": null,
+        "Name": "",
+        "Description": ""
+      },
+      "Hierarchies": [
+        {
+          "OriginalName": "Fiscal",
+          "Name": "财政",
+          "Description": "",
+          "DisplayFolders": "",
+          "Levels": [
+            {
+              "OriginalName": "Year",
+              "Name": "年份",
+              "Description": ""
+            },
+            {
+              "OriginalName": "Quarter",
+              "Name": "季度",
+              "Description": ""
+            },
+            {
+              "OriginalName": "Month",
+              "Name": "月份名称",
+              "Description": ""
+            }
+          ]
+        }
+      ],
+      "Columns": [
+        {
+          "OriginalName": "Date",
+          "Name": "日期",
+          "Description": "",
+          "DisplayFolders": "",
+          "FormatString": null
+        },
+        {
+          "OriginalName": "DateKey",
+          "Name": "日期键",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Sequential Day Number",
+          "Name": "顺序日期计数",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Year Month",
+          "Name": "年月名称",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Year Month Number",
+          "Name": "年月数",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Fiscal Year",
+          "Name": "财政年份名称",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Fiscal Year Number",
+          "Name": "财政年份数",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Fiscal Year Quarter",
+          "Name": "财政年季名称",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Fiscal Year Quarter Number",
+          "Name": "财政年季数",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Fiscal Quarter",
+          "Name": "财政季度名称",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Month",
+          "Name": "月份名称",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Fiscal Month Number",
+          "Name": "财政月份数",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Fiscal Month in Quarter Number",
+          "Name": "当前财政季度中的财政月份数",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Day of Week",
+          "Name": "星期名称",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Day of Week Number",
+          "Name": "星期名称编号",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Day of Month Number",
+          "Name": "当前月份下日期序号",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Day of Fiscal Year Number",
+          "Name": "当前财政年度下日期序号",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Working Day",
+          "Name": "工作日",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "IsWorking",
+          "Name": "是否工作",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Working Day Value",
+          "Name": "工作日标记",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Holiday Name",
+          "Name": "假期名称",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "DateWithTransactions",
+          "Name": "交易日",
+          "Description": "",
+          "DisplayFolders": ""
+        }
+      ]
     }
   ]
 }
