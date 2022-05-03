@@ -12,6 +12,7 @@
     internal static class StringExtensions
     {
         private static Regex? _invalidFileNameCharsRegex;
+        private static Regex? _invalidPathCharsRegex;
 
         public static bool IsPBIDesktopMainWindowTitle(this string windowTitle)
         {
@@ -80,6 +81,18 @@
 
             var indexOfAny = path.IndexOfAny(Path.GetInvalidPathChars());
             return indexOfAny != -1;
+        }
+
+        public static string ReplaceInvalidPathChars(this string path, string replacement = "_")
+        {
+            if (_invalidPathCharsRegex is null)
+            {
+                var pattern = Regex.Escape(new string(Path.GetInvalidPathChars()));
+                _invalidPathCharsRegex = new($"[{ pattern }]");
+            }
+
+            path = _invalidPathCharsRegex.Replace(path, replacement);
+            return path;
         }
 
         public static string ReplaceInvalidFileNameChars(this string path, string replacement = "_")
