@@ -4,7 +4,6 @@
     using CsvHelper.Configuration;
     using CsvHelper.TypeConversion;
     using LargeXlsx;
-    using Microsoft.AnalysisServices.AdomdClient;
     using Sqlbi.Bravo.Infrastructure;
     using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Infrastructure.Helpers;
@@ -51,7 +50,7 @@
 
         public ExportDataJob ExportDelimitedTextFile(PBIDesktopReport report, ExportDelimitedTextSettings settings, string path, CancellationToken cancellationToken)
         {
-            settings.ExportPath = path;
+            settings.ExportPath = GetExportPath(path, report.ReportName, settings);
 
             var job = _reportJobs.AddNew(report, settings);
             try
@@ -80,7 +79,7 @@
 
         public ExportDataJob ExportDelimitedTextFile(PBICloudDataset dataset, ExportDelimitedTextSettings settings, string path, string accessToken, CancellationToken cancellationToken)
         {
-            settings.ExportPath = path;
+            settings.ExportPath = GetExportPath(path, dataset.DisplayName, settings);
 
             var job = _datasetJobs.AddNew(dataset, settings);
             try
@@ -474,6 +473,19 @@
             }
 
             return null;
+        }
+
+        private static string GetExportPath(string path, string? name, ExportDelimitedTextSettings settings)
+        {
+            if (settings.CreateSubfolder && !name.IsNullOrWhiteSpace())
+            {
+                var subfolderName = name.ReplaceInvalidPathChars();
+                var subfolderPath = Path.Combine(path, subfolderName);
+
+                return subfolderPath;
+            }
+
+            return path;
         }
 
         /*
