@@ -7,11 +7,11 @@
 export enum PBIDesktopReportConnectionMode {
     Unknown = "Unknown", 
     Supported = "Supported", 
-    UnsupportedProcessNotYetReady = "UnsupportedProcessNotYetReady", 
-    UnsupportedAnalysisServecesProcessNotFound = "UnsupportedAnalysisServecesProcessNotFound", 
-    UnsupportedAnalysisServecesConnectionNotFound = "UnsupportedAnalysisServecesConnectionNotFound", 
-    UnsupportedAnalysisServecesCompatibilityMode = "UnsupportedAnalysisServecesCompatibilityMode", 
-    UnsupportedDatabaseCollectionIsEmpty = "UnsupportedDatabaseCollectionIsEmpty", 
+    UnsupportedProcessNotReady = "UnsupportedProcessNotReady", 
+    UnsupportedAnalysisServicesProcessNotFound = "UnsupportedAnalysisServicesProcessNotFound", 
+    UnsupportedAnalysisServicesConnectionNotFound = "UnsupportedAnalysisServicesConnectionNotFound", 
+    UnsupportedAnalysisServicesCompatibilityMode = "UnsupportedAnalysisServicesCompatibilityMode", 
+    UnsupportedDatabaseCollectionEmpty = "UnsupportedDatabaseCollectionEmpty", 
     UnsupportedDatabaseCollectionUnexpectedCount = "UnsupportedDatabaseCollectionUnexpectedCount", 
     UnsupportedConnectionException = "UnsupportedConnectionException"
 }

@@ -44,7 +44,7 @@ export class PBIDesktop extends Dispatchable {
 
         return host.listReports()
             .then((reports: PBIDesktopReport[]) => {
-                processReponse(reports.filter(report => report.connectionMode != PBIDesktopReportConnectionMode.UnsupportedProcessNotYetReady));
+                processReponse(reports.filter(report => report.connectionMode != PBIDesktopReportConnectionMode.UnsupportedProcessNotReady));
             })
             .catch(ignore => {
                 processReponse([]);

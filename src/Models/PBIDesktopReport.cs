@@ -80,7 +80,7 @@
             {
                 if (report.ReportName is null)
                 {
-                    report.ConnectionMode = PBIDesktopReportConnectionMode.UnsupportedProcessNotYetReady;
+                    report.ConnectionMode = PBIDesktopReportConnectionMode.UnsupportedProcessNotReady;
                 }
                 else
                 {
@@ -101,7 +101,7 @@
                 var ssasPIDs = process.GetChildrenPIDs(childProcessImageName: AppEnvironment.PBIDesktopSSASProcessImageName).ToArray();
                 if (ssasPIDs.Length != 1)
                 {
-                    connectionMode = PBIDesktopReportConnectionMode.UnsupportedAnalysisServecesProcessNotFound;
+                    connectionMode = PBIDesktopReportConnectionMode.UnsupportedAnalysisServicesProcessNotFound;
                     return;
                 }
 
@@ -110,7 +110,7 @@
                 var ssasConnection = NetworkHelper.GetTcpConnections((c) => c.ProcessId == ssasPID && c.State == TcpState.Listen && IPAddress.IsLoopback(c.EndPoint.Address)).FirstOrDefault();
                 if (ssasConnection == default)
                 {
-                    connectionMode = PBIDesktopReportConnectionMode.UnsupportedAnalysisServecesConnectionNotFound;
+                    connectionMode = PBIDesktopReportConnectionMode.UnsupportedAnalysisServicesConnectionNotFound;
                     return;
                 }
 
@@ -131,13 +131,13 @@
 
                 if (server.CompatibilityMode != SSAS.CompatibilityMode.PowerBI && server.CompatibilityMode != SSAS.CompatibilityMode.AnalysisServices)
                 {
-                    connectionMode = PBIDesktopReportConnectionMode.UnsupportedAnalysisServecesUnexpectedCompatibilityMode;
+                    connectionMode = PBIDesktopReportConnectionMode.UnsupportedAnalysisServicesCompatibilityMode;
                     return;
                 }
 
                 if (server.Databases.Count == 0)
                 {
-                    connectionMode = PBIDesktopReportConnectionMode.UnsupportedDatabaseCollectionIsEmpty;
+                    connectionMode = PBIDesktopReportConnectionMode.UnsupportedDatabaseCollectionEmpty;
                     return;
                 }
 
@@ -170,32 +170,32 @@
         /// <summary>
         /// PBIDesktop process is opening or the Analysis Services instance/model is not yet ready
         /// </summary>
-        [JsonPropertyName("UnsupportedProcessNotYetReady")]
-        UnsupportedProcessNotYetReady = 2,
+        [JsonPropertyName("UnsupportedProcessNotReady")]
+        UnsupportedProcessNotReady = 2,
 
         /// <summary>
         /// PBIDesktop Analysis Services instance process not found.
         /// </summary>
-        [JsonPropertyName("UnsupportedAnalysisServecesProcessNotFound")]
-        UnsupportedAnalysisServecesProcessNotFound = 3,
+        [JsonPropertyName("UnsupportedAnalysisServicesProcessNotFound")]
+        UnsupportedAnalysisServicesProcessNotFound = 3,
 
         /// <summary>
         /// PBIDesktop Analysis Services TCP connection not found.
         /// </summary>
-        [JsonPropertyName("UnsupportedAnalysisServecesConnectionNotFound")]
-        UnsupportedAnalysisServecesConnectionNotFound = 4,
+        [JsonPropertyName("UnsupportedAnalysisServicesConnectionNotFound")]
+        UnsupportedAnalysisServicesConnectionNotFound = 4,
 
         /// <summary>
         /// PBIDesktop Analysis Services instance compatibility mode is not PowerBI.
         /// </summary>
-        [JsonPropertyName("UnsupportedAnalysisServecesCompatibilityMode")]
-        UnsupportedAnalysisServecesUnexpectedCompatibilityMode = 5,
+        [JsonPropertyName("UnsupportedAnalysisServicesCompatibilityMode")]
+        UnsupportedAnalysisServicesCompatibilityMode = 5,
 
         /// <summary>
         /// PBIDesktop Analysis Services instance does not contains any databases. The PBIDesktop report is connected to an external database/model like Power BI datasets or .. ??
         /// </summary>
-        [JsonPropertyName("UnsupportedDatabaseCollectionIsEmpty")]
-        UnsupportedDatabaseCollectionIsEmpty = 6,
+        [JsonPropertyName("UnsupportedDatabaseCollectionEmpty")]
+        UnsupportedDatabaseCollectionEmpty = 6,
 
         /// <summary>
         /// PBIDesktop Analysis Services instance contains an unexpected number of databases (> 1) while we expect zero or one.
