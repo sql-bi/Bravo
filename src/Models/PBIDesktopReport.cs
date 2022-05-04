@@ -129,7 +129,7 @@
                     return;
                 }
 
-                if (server.CompatibilityMode != SSAS.CompatibilityMode.PowerBI && server.CompatibilityMode != SSAS.CompatibilityMode.AnalysisServices)
+                if (server.CompatibilityMode != SSAS.CompatibilityMode.PowerBI)
                 {
                     connectionMode = PBIDesktopReportConnectionMode.UnsupportedAnalysisServicesCompatibilityMode;
                     return;
