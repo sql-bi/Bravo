@@ -189,7 +189,7 @@ export class Host extends Dispatchable {
         this.requests = {};
         this.address = address;
         this.token = token;
-    }   
+    }
 
     // Listen for events
     listen() {
@@ -201,7 +201,7 @@ export class Host extends Dispatchable {
 
                 try { logger.log("Message", { content: webMessage }); } catch (ignore) {}
 
-                this.trigger(webMessage.type, webMessage);
+                this.trigger(WebMessageType[webMessage.type], webMessage);
             });
         } catch (ignore) {
             // Ignore error

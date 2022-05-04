@@ -10,8 +10,8 @@ export enum PBICloudDatasetEndorsement {
 }
 
 export enum PBICloudDatasetConnectionMode {
-    Unknown = "Unknown", 
-    Supported = "Supported", 
+    Unknown = 0, 
+    Supported = 1, 
 }
 
 export interface PBICloudDataset {

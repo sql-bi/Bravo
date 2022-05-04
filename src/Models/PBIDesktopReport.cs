@@ -172,52 +172,46 @@
 
     public enum PBIDesktopReportConnectionMode
     {
-        [JsonPropertyName("Unknown")]
         Unknown = 0,
 
-        [JsonPropertyName("Supported")]
+        /// <summary>
+        /// Connection supported
+        /// </summary>
         Supported = 1,
 
         /// <summary>
         /// PBIDesktop process is opening or the Analysis Services instance/model is not yet ready
         /// </summary>
-        [JsonPropertyName("UnsupportedProcessNotReady")]
         UnsupportedProcessNotReady = 2,
 
         /// <summary>
         /// PBIDesktop Analysis Services instance process not found.
         /// </summary>
-        [JsonPropertyName("UnsupportedAnalysisServicesProcessNotFound")]
         UnsupportedAnalysisServicesProcessNotFound = 3,
 
         /// <summary>
         /// PBIDesktop Analysis Services TCP connection not found.
         /// </summary>
-        [JsonPropertyName("UnsupportedAnalysisServicesConnectionNotFound")]
         UnsupportedAnalysisServicesConnectionNotFound = 4,
 
         /// <summary>
         /// PBIDesktop Analysis Services instance compatibility mode is not PowerBI.
         /// </summary>
-        [JsonPropertyName("UnsupportedAnalysisServicesCompatibilityMode")]
         UnsupportedAnalysisServicesCompatibilityMode = 5,
 
         /// <summary>
         /// PBIDesktop Analysis Services instance does not contains any databases. The PBIDesktop report is connected to an external database/model like Power BI datasets or .. ??
         /// </summary>
-        [JsonPropertyName("UnsupportedDatabaseCollectionEmpty")]
         UnsupportedDatabaseCollectionEmpty = 6,
 
         /// <summary>
         /// PBIDesktop Analysis Services instance contains an unexpected number of databases (> 1) while we expect zero or one.
         /// </summary>
-        [JsonPropertyName("UnsupportedDatabaseCollectionUnexpectedCount")]
         UnsupportedDatabaseCollectionUnexpectedCount = 7,
 
         /// <summary>
         /// An exception was raised when connecting to the PBIDesktop Analysis Services instance.
         /// </summary>
-        [JsonPropertyName("UnsupportedConnectionException")]
         UnsupportedConnectionException = 8,
     }
 }

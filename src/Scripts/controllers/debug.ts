@@ -59,7 +59,7 @@ export class Debug {
     }
 
     sendUnknownWebMessage(message: string) {
-        host.trigger(WebMessageType.Unknown, <WebMessage>{
+        host.trigger(WebMessageType[WebMessageType.Unknown], <WebMessage>{
             type: WebMessageType.Unknown,
             exception: message,
             message: "Additional details"

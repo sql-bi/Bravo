@@ -41,9 +41,9 @@
                         typeof(Sqlbi.Bravo.Infrastructure.Configuration.Settings.ThemeType),
                         typeof(Sqlbi.Bravo.Infrastructure.Configuration.Settings.DiagnosticLevelType),
                         typeof(Sqlbi.Bravo.Infrastructure.Configuration.Settings.UpdateChannelType),
-                        typeof(Sqlbi.Bravo.Infrastructure.Messages.WebMessageType),
-                        typeof(Sqlbi.Bravo.Models.PBIDesktopReportConnectionMode),
-                        typeof(Sqlbi.Bravo.Models.PBICloudDatasetConnectionMode),
+                        //typeof(Sqlbi.Bravo.Infrastructure.Messages.WebMessageType),
+                        //typeof(Sqlbi.Bravo.Models.PBIDesktopReportConnectionMode),
+                        //typeof(Sqlbi.Bravo.Models.PBICloudDatasetConnectionMode),
                         typeof(Sqlbi.Bravo.Models.PBICloudDatasetEndorsement)
                         //, typeof(Sqlbi.Bravo.Infrastructure.BravoProblem)
                         //, typeof(Sqlbi.Bravo.Models.DiagnosticMessageSeverity)

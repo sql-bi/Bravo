@@ -8,10 +8,10 @@ import { PBICloudDataset } from '../model/pbi-dataset';
 import { PBIDesktopReport } from '../model/pbi-report';
 
 export enum WebMessageType {
-    Unknown = "Unknown",
-    ReportOpen = "ReportOpen",
-    DatasetOpen = "DatasetOpen",
-    VpaxOpen = "VpaxOpen"
+    Unknown = 0,
+    ReportOpen = 1,
+    DatasetOpen = 2,
+    VpaxOpen = 3
 }
 
 export interface WebMessage {
