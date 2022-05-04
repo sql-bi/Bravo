@@ -7,6 +7,7 @@
     using System.IO;
     using System.Text.Json;
     using System.Text.Json.Serialization;
+    using SSAS = Microsoft.AnalysisServices;
 
     internal class AppInstanceStartupMessage
     {
@@ -98,6 +99,7 @@
                     ReportName = startupMessage.ParentProcessMainWindowTitle,
                     ServerName = startupMessage.ArgumentServerName,
                     DatabaseName = startupMessage.ArgumentDatabaseName,
+                    CompatibilityMode = SSAS.CompatibilityMode.Unknown,
                     ConnectionMode = PBIDesktopReportConnectionMode.Supported
                 };
 

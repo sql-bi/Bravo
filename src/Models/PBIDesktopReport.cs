@@ -18,6 +18,10 @@
     [DebuggerDisplay("{ServerName} - {ReportName} - {ConnectionMode}")]
     public class PBIDesktopReport : IDataModel<PBIDesktopReport>
     {
+        public PBIDesktopReport()
+        {
+        }
+
         [Required]
         [JsonPropertyName("id")]
         public int? ProcessId { get; set; }
@@ -30,6 +34,9 @@
 
         [JsonPropertyName("databaseName")]
         public string? DatabaseName { get; set; }
+
+        [JsonPropertyName("compatibilityMode")]
+        public SSAS.CompatibilityMode CompatibilityMode { get; set; } = SSAS.CompatibilityMode.Unknown;
 
         [JsonPropertyName("connectionMode")]
         public PBIDesktopReportConnectionMode ConnectionMode { get; set; } = PBIDesktopReportConnectionMode.Unknown;
@@ -73,6 +80,7 @@
                 ReportName = process.GetPBIDesktopMainWindowTitle(),
                 ServerName = null,
                 DatabaseName = null,
+                CompatibilityMode = SSAS.CompatibilityMode.Unknown,
                 ConnectionMode = PBIDesktopReportConnectionMode.Unknown,
             };
 
@@ -84,19 +92,21 @@
                 }
                 else
                 {
-                    GetConnectionMode(out var serverName, out var databaseName, out var connectionMode);
+                    GetConnectionMode(out var serverName, out var databaseName, out var compatibilityMode, out var connectionMode);
                     report.ServerName = serverName;
                     report.DatabaseName = databaseName;
+                    report.CompatibilityMode = compatibilityMode;
                     report.ConnectionMode = connectionMode;
                 }
             }
 
             return report;
 
-            void GetConnectionMode(out string? serverName, out string? databaseName, out PBIDesktopReportConnectionMode connectionMode)
+            void GetConnectionMode(out string? serverName, out string? databaseName, out SSAS.CompatibilityMode compatibilityMode, out PBIDesktopReportConnectionMode connectionMode)
             {
                 serverName = null;
                 databaseName = null;
+                compatibilityMode = SSAS.CompatibilityMode.Unknown;
 
                 var ssasPIDs = process.GetChildrenPIDs(childProcessImageName: AppEnvironment.PBIDesktopSSASProcessImageName).ToArray();
                 if (ssasPIDs.Length != 1)
@@ -119,6 +129,7 @@
                 try
                 {
                     server.Connect(connectionString.ToUnprotectedString());
+                    compatibilityMode = server.CompatibilityMode;
                 }
                 catch (Exception ex)
                 {
