@@ -236,7 +236,7 @@ const locale: Locale = {
         [_.manageDatesSampleDataError]: "Örnek veri oluşturulamıyor.",
         [_.manageDatesStatusCompatible]: `<div class="hero">Bu model zaten Bravo ile uyumlu bazı <b>tarih tabloları</b> içeriyor.</div>Burada bir şeyi değiştirirseniz, bu tablolar güncellenir ve bunların özellikleri ilişkiler bozulmadan kalacaktır.`,
         [_.manageDatesStatusError]: `<div class="hero">Mevcut ayarlar uygulanamıyor.</div>{hata}`,
-        [_.manageDatesStatusInCompatible]: `<div class="hero">Bu model, Bravo ile <b>uyumlu olmayan</b> bazı tarih tabloları içeriyor.</div>Burada herhangi bir değişiklik yapmak için, bir bu araç tarafından oluşturulacak bir veya daha fazla tablo için farklı bir ad seçmelisiniz.<br><br><b>Tarihleri</b> ve <b>Tatilleri</b> kontrol edin.`,
+        [_.manageDatesStatusIncompatible]: `<div class="hero">Bu model, Bravo ile <b>uyumlu olmayan</b> bazı tarih tabloları içeriyor.</div>Burada herhangi bir değişiklik yapmak için, bir bu araç tarafından oluşturulacak bir veya daha fazla tablo için farklı bir ad seçmelisiniz.<br><br><b>Tarihleri</b> ve <b>Tatilleri</b> kontrol edin.`,
         [_.manageDatesStatusNotAvailable]: `<div class="hero">Bu model artık mevcut değil.</div> Uygulamayı yeniden başlatmayı deneyin.`,
         [_.manageDatesStatusOk]: `<div class="hero">Bu model <b>Tarihleri Yönet özelliğiyle</b> uyumludur.</div>Ölçüleri veya raporları bozma konusunda endişelenmeden yeni tarih tabloları oluşturabilirsiniz. `,
         [_.manageDatesSuccessSceneMessage]: "Tebrikler, modeliniz başarıyla güncellendi.",
