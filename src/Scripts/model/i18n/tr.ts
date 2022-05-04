@@ -2,6 +2,8 @@
  * Bravo for Power BI
  * Copyright (c) SQLBI corp. - All rights reserved.
  * https://www.sqlbi.com
+ * 
+ * Turkish translation by: onuromer
 */
 import { Locale } from '../i18n';
 import { strings as _ } from '../strings';
@@ -312,7 +314,7 @@ const locale: Locale = {
         [_.optionsDialogGeneralMenu]: "Genel",
         [_.optionsDialogTelemetryMenu]: "Telemetri",
         [_.optionsDialogTitle]: "Seçenekler",
-        [_.optionTelemetri]: "Telemetri",
+        [_.optionTelemetry]: "Telemetri",
         [_.optionTelemetryDescription]: "Anonim kullanım verilerini SQLBI'ye gönder.",
         [_.optionTelemetryMore]: "Bravo'yu nasıl kullandığınızı ve nasıl iyileştireceğimizi anlamamıza yardımcı olun. Hiçbir kişisel bilgi toplanmaz. Bu seçenek devre dışı bırakılırsa geliştirme ekibinin işlenmemiş hataları toplayamayacağını, ek bilgi veya destek sağlayamacağını lütfen unutmayın.",
         [_.optionTheme]: "Tema",
@@ -359,7 +361,7 @@ const locale: Locale = {
         [_.signOut]: "Oturumu Kapat",
         [_.sqlbiPayoff]: "Bravo bir SQLBI projesidir.",
         [_.syncCtrlTitle]: "Senkronize et",
-        [_.tableColKardinallik]: "Kardinalite",
+        [_.tableColCardinality]: "Kardinalite",
         [_.tableColCardinalityTooltip]: "Benzersiz öğelerin sayısı",
         [_.tableColColumn]: "Sütun",
         [_.tableColColumns]: "Sütunlar",
@@ -379,7 +381,7 @@ const locale: Locale = {
         [_.updateChannelBeta]: "Beta",
         [_.updateChannelCanary]: "Canary",
         [_.updateChannelDev]: "Dev",
-        [_.updateChannelStabil]: "Stabil",
+        [_.updateChannelStable]: "Stabil",
         [_.updateMessage]: "Bravo'nun yeni bir sürümü mevcut: {version}",
         [_.validating]: "Doğrulanıyor...",
         [_.version]: "Sürüm",
