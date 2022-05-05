@@ -182,6 +182,18 @@
                     return problemDetails;
                 });
 
+                options.Map<AMO.AsClientException>((context, exception) => exception.IsOrHasInner<MsalException>(), mapping: (context, exception) =>
+                {
+                    var msalException = exception.Find<MsalException>(); BravoUnexpectedException.ThrowIfNull(msalException);
+                    var problemDetailsFactory = context.RequestServices.GetRequiredService<ProblemDetailsFactory>();
+                    var problemDetails = problemDetailsFactory.CreateProblemDetails(context,
+                        statusCode: StatusCodes.Status400BadRequest,
+                        detail: msalException.ErrorCode,
+                        instance: $"{ (int)BravoProblem.SignInMsalExceptionOccurred }");
+
+                    return problemDetails;
+                });
+
                 options.Map<AMO.ConnectionException>((context, exception) =>
                 {
                     var problemDetailsFactory = context.RequestServices.GetRequiredService<ProblemDetailsFactory>();
