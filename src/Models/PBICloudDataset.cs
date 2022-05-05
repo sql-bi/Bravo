@@ -31,6 +31,9 @@
         [JsonPropertyName("databaseName")]
         public string? DatabaseName { get; set; }
 
+        [JsonPropertyName("externalServerName")]
+        public string? ExternalServerName { get; set; }
+
         [JsonPropertyName("externalDatabaseName")]
         public string? ExternalDatabaseName { get; set; }
 
@@ -138,8 +141,9 @@
                 WorkspaceName = cloudWorkspace.Name.NullIfEmpty() ?? cloudModel.WorkspaceName,
                 WorkspaceObjectId = cloudWorkspace.ObjectId,
                 Id = model.Id,
-                ServerName = null,
-                DatabaseName = null,
+                ServerName = PBICloudService.PBIDatasetServerUri.OriginalString,
+                DatabaseName = model.DBName,
+                ExternalServerName = null,
                 ExternalDatabaseName = null,
                 DisplayName = model.DisplayName,
                 Description = model.Description,
@@ -157,20 +161,17 @@
 
             if (cloudDataset.IsXmlaEndPointSupported)
             {
-                cloudDataset.ServerName = PBICloudService.PBIPremiumServerUri.OriginalString;
-                cloudDataset.DatabaseName = model.DBName;
+                cloudDataset.ExternalServerName = PBICloudService.PBIPremiumServerUri.OriginalString;
                 cloudDataset.ExternalDatabaseName = model.DisplayName;
             }
             else if (cloudDataset.IsOnPremModel == true)
             {
-                cloudDataset.ServerName = ConnectionStringHelper.FindServerName(cloudDataset.OnPremModelConnectionString);
-                cloudDataset.DatabaseName = ConnectionStringHelper.FindDatabaseName(cloudDataset.OnPremModelConnectionString);
-                cloudDataset.ExternalDatabaseName = cloudDataset.DatabaseName;
+                cloudDataset.ExternalServerName = cloudDataset.ServerName = ConnectionStringHelper.FindServerName(cloudDataset.OnPremModelConnectionString);
+                cloudDataset.ExternalDatabaseName = cloudDataset.DatabaseName = ConnectionStringHelper.FindDatabaseName(cloudDataset.OnPremModelConnectionString);
             }
             else
             {
-                cloudDataset.ServerName = PBICloudService.PBIDatasetServerUri.OriginalString;
-                cloudDataset.DatabaseName = model.DBName;
+                cloudDataset.ExternalServerName = PBICloudService.PBIDatasetServerUri.OriginalString;
                 cloudDataset.ExternalDatabaseName = $"{ model.VSName }-{ model.DBName }";
             } 
 
