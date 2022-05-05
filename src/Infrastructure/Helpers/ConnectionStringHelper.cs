@@ -90,8 +90,8 @@
                 // TODO: Handle possible duplicated dataset name - when connecting to a dataset with the same name as another dataset in the same workspace, append the dataset guid to the dataset name
                 // https://docs.microsoft.com/en-us/power-bi/admin/service-premium-connect-tools#duplicate-dataset-name
 
-                BravoUnexpectedException.ThrowIfNull(dataset.ServerName);
                 BravoUnexpectedException.ThrowIfNull(dataset.WorkspaceName);
+                BravoUnexpectedException.ThrowIfNull(dataset.ExternalServerName);
                 BravoUnexpectedException.ThrowIfNull(dataset.ExternalDatabaseName);
                 BravoUnexpectedException.ThrowIfNull(accessToken);
 
@@ -100,7 +100,7 @@
                 // - B2B users must specify their organization UPN in tenant name
                 // var homeTenant = CurrentAuthentication?.Account.GetTenantProfiles().SingleOrDefault((t) => t.IsHomeTenant);
                 var tenantName = "myorg";
-                var serverName = $"{ dataset.ServerName }/v1.0/{ tenantName }/{ dataset.WorkspaceName }";
+                var serverName = $"{ dataset.ExternalServerName }/v1.0/{ tenantName }/{ dataset.WorkspaceName }";
                 var databaseName = dataset.ExternalDatabaseName;
                 var connectionString = Build(serverName, databaseName, accessToken);
 
@@ -114,11 +114,11 @@
             }
             else
             {
-                BravoUnexpectedException.ThrowIfNull(dataset.ServerName);
+                BravoUnexpectedException.ThrowIfNull(dataset.ExternalServerName);
                 BravoUnexpectedException.ThrowIfNull(dataset.ExternalDatabaseName);
                 BravoUnexpectedException.ThrowIfNull(accessToken);
 
-                var serverName = dataset.ServerName;
+                var serverName = dataset.ExternalServerName;
                 var databaseName = dataset.ExternalDatabaseName;
                 var connectionString = Build(serverName, databaseName, accessToken);
 
