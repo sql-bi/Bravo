@@ -57,9 +57,9 @@
             return string.IsNullOrWhiteSpace(value);
         }
 
-        public static string FormatInvariant(this string format, object? arg0)
+        public static string FormatInvariant(this string format, params object?[] args)
         {
-            return string.Format(CultureInfo.InvariantCulture, format, arg0);
+            return string.Format(CultureInfo.InvariantCulture, format, args);
         }
 
         public static string ToFileDialogFilterString(this string filter)
@@ -111,6 +111,11 @@
         public static bool EqualsI(this string? current, string? value)
         {
             return current?.Equals(value, StringComparison.OrdinalIgnoreCase) ?? false;
+        }
+
+        public static bool EqualsTI(this string? current, string? value)
+        {
+            return EqualsI(current, value?.Trim());
         }
 
         public static string? GetDaxName(this string? fullyQualifiedName)

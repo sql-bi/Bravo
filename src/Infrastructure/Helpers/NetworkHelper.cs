@@ -13,7 +13,16 @@
 
     internal static class NetworkHelper
     {
-        public static readonly string LocalHost = "localhost";
+        /// <summary>
+        /// Standard host name given to the address of the loopback network interface
+        /// </summary>
+        public static readonly string Localhost = "localhost";
+
+        /// <summary>
+        /// A special proxy bypass rule which has the effect of subtracting the implicit loopback rules
+        /// https://chromium.googlesource.com/chromium/src/+/HEAD/net/docs/proxy.md#overriding-the-implicit-bypass-rules
+        /// </summary>
+        public static readonly string LoopbackProxyBypassRule = "<-loopback>";
 
         /// <summary>
         /// Returns true if the protocol schema for the provided <paramref name="address"/> URI is <see cref="PBICloudService.ASAzureProtocolScheme"/>

@@ -17,6 +17,9 @@
         [JsonPropertyName("theme")]
         public ThemeType Theme { get; set; } = ThemeType.Auto;
 
+        [JsonPropertyName("proxy")]
+        public ProxySettings? Proxy { get; set; }
+
         [JsonPropertyName("diagnosticLevel")]
         public DiagnosticLevelType DiagnosticLevel { get; set; } = DiagnosticLevelType.None;
 
@@ -32,6 +35,7 @@
                 CustomOptions = UserPreferences.Current.CustomOptions,
                 UpdateChannel = UserPreferences.Current.UpdateChannel,
                 Theme = UserPreferences.Current.Theme,
+                Proxy = UserPreferences.Current.Proxy,
             };
 
             return options;
@@ -44,6 +48,7 @@
             UserPreferences.Current.CustomOptions = CustomOptions;
             UserPreferences.Current.UpdateChannel = UpdateChannel;
             UserPreferences.Current.Theme = Theme;
+            UserPreferences.Current.Proxy = Proxy;
             UserPreferences.Save();
         }
     }

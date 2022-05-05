@@ -37,6 +37,7 @@
                 jsonOptions.JsonSerializerOptions.Converters.Add(
                     new JsonStringEnumMemberConverter(
                         options: new JsonStringEnumMemberConverterOptions(deserializationFailureFallbackValue: null),
+                        typeof(Sqlbi.Bravo.Infrastructure.Configuration.Settings.ProxyType),
                         typeof(Sqlbi.Bravo.Infrastructure.Configuration.Settings.ThemeType),
                         typeof(Sqlbi.Bravo.Infrastructure.Configuration.Settings.DiagnosticLevelType),
                         typeof(Sqlbi.Bravo.Infrastructure.Configuration.Settings.UpdateChannelType),

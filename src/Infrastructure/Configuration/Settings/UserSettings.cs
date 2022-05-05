@@ -17,6 +17,9 @@
         [JsonPropertyName("theme")]
         public ThemeType Theme { get; set; } = ThemeType.Auto;
 
+        [JsonPropertyName("proxy")]
+        public ProxySettings? Proxy { get; set; }
+
         [JsonPropertyName("customOptions")]
         public JsonElement? CustomOptions { get; set; }
     }

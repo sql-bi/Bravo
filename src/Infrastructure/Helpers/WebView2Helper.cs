@@ -1,11 +1,18 @@
 ﻿namespace Sqlbi.Bravo.Infrastructure.Helpers
 {
+    using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
+    using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Infrastructure.Windows.Interop;
+    using Sqlbi.Bravo.Models;
     using System;
+    using System.Collections.Generic;
     using System.Diagnostics;
     using System.Drawing;
     using System.IO;
+    using System.Linq;
+    using System.Net;
     using System.Net.Http;
+    using System.Reflection;
     using System.Runtime.InteropServices;
     using System.Windows.Forms;
 
@@ -20,6 +27,13 @@
         /// </summary>
         public static string EvergreenRuntimeBootstrapperUrl = "https://go.microsoft.com/fwlink/p/?LinkId=2124703";
         public static string MicrosoftReferenceUrl = "https://developer.microsoft.com/en-us/microsoft-edge/webview2";
+
+        /// <summary>
+        /// Additional environment variables verified when WebView2Environment is created.
+        /// If additional browser arguments is specified in environment variable or in the registry, it is appended to the corresponding values in CreateCoreWebView2EnvironmentWithOptions parameters.
+        /// https://docs.microsoft.com/en-us/microsoft-edge/webview2/reference/win32/webview2-idl
+        /// </summary>
+        private const string EnvironmentVariableAdditionalBrowserArguments = "WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS";
 
         public static string? GetRuntimeVersionInfo()
         {
@@ -115,6 +129,124 @@ Choose an option to proceed with the installation:",
             if (process.ExitCode != NativeMethods.NO_ERROR)
             {
                 ExceptionHelper.WriteToEventLog($"WebView2 bootstrapper exit code '{ process.ExitCode }'", EventLogEntryType.Warning);
+            }
+        }
+
+        public static void SetWebView2CmdlineProxyArguments(ProxySettings? proxySettings, IWebProxy systemProxy)
+        {
+            // Command-line options for proxy settings
+            // https://docs.microsoft.com/en-us/deployedge/edge-learnmore-cmdline-options-proxy-settings#command-line-options-for-proxy-settings
+
+            var proxyArguments = (proxySettings?.Type) switch
+            {
+                ProxyType.None => "--no-proxy-server",
+                ProxyType.Custom => GetCustomProxyArguments(proxySettings),
+                _ => GetSystemProxyArguments(systemProxy),
+            };
+
+            if (AppEnvironment.IsDiagnosticLevelVerbose)
+                AppEnvironment.AddDiagnostics(DiagnosticMessageType.Text, name: $"{ nameof(WebView2Helper) }.{ nameof(SetWebView2CmdlineProxyArguments) }", content: proxyArguments);
+
+            Environment.SetEnvironmentVariable(EnvironmentVariableAdditionalBrowserArguments, proxyArguments, EnvironmentVariableTarget.Process);
+
+            static string GetCustomProxyArguments(ProxySettings proxySettings)
+            {
+                var server = proxySettings.Address;
+                var bypassList = string.Join(';', ProxySettings.GetSafeBypassList(proxySettings.BypassList, includeLoopback: true));
+                var arguments = "--proxy-server=\"{0}\" --proxy-bypass-list=\"{1}\"".FormatInvariant(server, bypassList);
+
+                return arguments;
+            }
+
+            static string GetSystemProxyArguments(IWebProxy systemProxy)
+            {
+                var systemProxyType = systemProxy.GetType();
+
+                if (systemProxyType.FullName == "System.Net.Http.HttpEnvironmentProxy")
+                {
+                    string[]? bypass = null;
+                    Uri? httpsProxyUri = null;
+                    Uri? httpProxyUri = null;
+
+                    var bypassObject = systemProxyType.GetField("_bypass", BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(systemProxy);
+                    if (bypassObject is IEnumerable<string> items)
+                        bypass = items.ToArray();
+
+                    var httpProxyUriObject = systemProxyType.GetField("_httpProxyUri", BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(systemProxy);
+                    if (httpProxyUriObject is Uri httpUri)
+                        httpProxyUri = httpUri;
+
+                    var httpsProxyUriObject = systemProxyType.GetField("_httpsProxyUri", BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(systemProxy);
+                    if (httpsProxyUriObject is Uri httpsUri)
+                        httpsProxyUri = httpsUri;
+
+                    var arguments = string.Empty;
+                    {
+                        var server = "{0};{1}".FormatInvariant(httpProxyUri, httpsProxyUri).Trim(';');
+                        if (server.Length > 0)
+                        {
+                            arguments += ' ' + "--proxy-server=\"{0}\"".FormatInvariant(server);
+                        }
+
+                        var bypassList = string.Join(';', ProxySettings.GetSafeBypassList(bypass, includeLoopback: true));
+                        if (bypassList.Length > 0)
+                        {
+                            arguments += ' ' + "--proxy-bypass-list=\"{0}\"".FormatInvariant(bypassList);
+                        }
+                    }
+                    return arguments;
+                }
+                else if (systemProxyType.FullName == "System.Net.Http.HttpWindowsProxy")
+                {
+                    string[]? bypass = null;
+                    string? proxy = null;
+                    string? autoConfigUrl = null;
+
+                    var bypassObject = systemProxyType.GetField("_bypass", BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(systemProxy);
+                    if (bypassObject is IEnumerable<string> items)
+                        bypass = items.ToArray();
+
+                    var proxyHelperObject = systemProxyType.GetField("_proxyHelper", BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(systemProxy);
+                    var proxyHelperType = proxyHelperObject?.GetType();
+                    if (proxyHelperType?.FullName == "System.Net.Http.WinInetProxyHelper")
+                    {
+                        var proxyObject = proxyHelperType.GetField("_proxy", BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(proxyHelperObject);
+                        if (proxyObject is string proxyValue)
+                            proxy = proxyValue;
+
+                        var autoConfigUrlObject = proxyHelperType.GetField("_autoConfigUrl", BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(proxyHelperObject);
+                        if (autoConfigUrlObject is string autoConfigUrlValue)
+                            autoConfigUrl = autoConfigUrlValue;
+                    }
+
+                    var arguments = string.Empty;
+                    {
+                        if (proxy?.Length > 0)
+                        {
+                            arguments += ' ' + "--proxy-server=\"{0}\"".FormatInvariant(proxy);
+                        }
+
+                        var bypassList = string.Join(';', ProxySettings.GetSafeBypassList(bypass, includeLoopback: true));
+                        if (bypassList.Length > 0)
+                        {
+                            arguments += ' ' + "--proxy-bypass-list=\"{0}\"".FormatInvariant(bypassList);
+                        }
+
+                        if (autoConfigUrl?.Length > 0)
+                        {
+                            arguments += ' ' + "--proxy-pac-url=\"{0}\"".FormatInvariant(autoConfigUrl);
+                        }
+                    }
+                    return arguments;
+                }
+                else if (systemProxyType.FullName == "System.Net.Http.HttpNoProxy")
+                {
+                    return "--no-proxy-server";
+                }
+                else
+                {
+                    throw new BravoUnexpectedException($"Unexpected { nameof(IWebProxy) } type ({ systemProxyType.FullName })");
+                }
             }
         }
     }
