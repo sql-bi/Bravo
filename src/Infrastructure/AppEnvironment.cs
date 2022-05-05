@@ -40,6 +40,7 @@
         public static readonly Color ThemeColorDark = ColorTranslator.FromHtml("#202020");
         public static readonly Color ThemeColorLight = ColorTranslator.FromHtml("#F3F3F3");
         public static readonly DaxLineBreakStyle FormatDaxLineBreakDefault = DaxLineBreakStyle.InitialLineBreak;
+        public static readonly string CredentialManagerProxyCredentialName = "Bravo for Power BI/proxy";
 
         public static readonly string[] TrustedUriHosts = new[]
         {

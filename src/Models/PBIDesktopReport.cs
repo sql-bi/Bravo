@@ -152,7 +152,7 @@
                 // Do we need this check ?? (e.g UnsupportedDatabaseNotYetReadyOrUnloaded)
                 // if (database.IsLoaded == false) { }
 
-                serverName = $"{ NetworkHelper.LocalHost }:{ ssasConnection.EndPoint.Port }"; // we're using 'localhost:<port>' instead of '<ipaddress>:<port>' in order to allow both ipv4 and ipv6 connections 
+                serverName = $"{ NetworkHelper.Localhost }:{ ssasConnection.EndPoint.Port }"; // we're using 'localhost:<port>' instead of '<ipaddress>:<port>' in order to allow both ipv4 and ipv6 connections 
                 databaseName = database.Name;
                 connectionMode = PBIDesktopReportConnectionMode.Supported;
             }

@@ -7,6 +7,7 @@
     using Sqlbi.Bravo.Infrastructure;
     using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
     using Sqlbi.Bravo.Infrastructure.Helpers;
+    using Sqlbi.Bravo.Infrastructure.Security;
     using Sqlbi.Bravo.Models;
     using System;
     using System.Collections.Generic;
@@ -197,6 +198,51 @@
                 NotificationHelper.NotifyUpdateAvailable(bravoUpdate);
 
             return Ok(bravoUpdate);
+        }
+
+        /// <summary>
+        /// Displays a dialog box that prompts the user to enter credentials to authenticate to the HTTP proxy
+        /// </summary>
+        /// <response code="200">Status200OK - Success</response>
+        /// <response code="204">Status204NoContent - User canceled action (e.g. 'Cancel' button has been pressed on a dialog box)</response>
+        [HttpGet]
+        [ActionName("UpdateProxyCredentials")]
+        [Consumes(MediaTypeNames.Application.Json)]
+        [Produces(MediaTypeNames.Application.Json)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesDefaultResponseType]
+        public IActionResult UpdateProxyCredentials()
+        {
+            var credentialOptions = new CredentialDialogOptions(caption: "Enter proxy credentials", message: "Enter credentials to authenticate to the HTTP Proxy")
+            {
+                HwndParent = ProcessHelper.GetCurrentProcessMainWindowHandle(),
+            };
+
+            var networkCredential = CredentialDialog.PromptForCredentials(credentialOptions);
+            if (networkCredential is not null)
+            {
+                CredentialManager.WriteCredential(AppEnvironment.CredentialManagerProxyCredentialName, networkCredential.UserName, networkCredential.Password);
+                return Ok();
+            }
+
+            return NoContent();
+        }
+
+        /// <summary>
+        /// Removes credentials to authenticate to the HTTP proxy, if any
+        /// </summary>
+        /// <response code="200">Status200OK - Success</response>
+        [HttpGet]
+        [ActionName("DeleteProxyCredentials")]
+        [Consumes(MediaTypeNames.Application.Json)]
+        [Produces(MediaTypeNames.Application.Json)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesDefaultResponseType]
+        public IActionResult DeleteProxyCredentials()
+        {
+            _ = CredentialManager.DeleteCredential(AppEnvironment.CredentialManagerProxyCredentialName);
+            return Ok();
         }
     }
 }
