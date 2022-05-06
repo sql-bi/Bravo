@@ -2063,7 +2063,8 @@
       "OffsetDays": 0,
       "HolidayName": "Sports Day",
       "SubstituteHoliday": "SubstituteHolidayWithNextNextWorkingDay",
-      "ConflictPriority": 100
+      "ConflictPriority": 100,
+      "LastYear": 1999
     },
     {
       "IsoCountry": "JP",
@@ -2074,7 +2075,8 @@
       "OffsetDays": 0,
       "HolidayName": "Sports Day",
       "SubstituteHoliday": "NoSubstituteHoliday",
-      "ConflictPriority": 100
+      "ConflictPriority": 100,
+      "FirstYear": 2000
     },
     {
       "IsoCountry": "JP",
