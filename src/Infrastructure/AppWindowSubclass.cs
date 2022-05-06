@@ -3,28 +3,22 @@
     using Sqlbi.Bravo.Infrastructure.Configuration;
     using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
     using Sqlbi.Bravo.Infrastructure.Helpers;
-    using Sqlbi.Bravo.Infrastructure.Messages;
     using Sqlbi.Bravo.Infrastructure.Windows;
     using Sqlbi.Bravo.Infrastructure.Windows.Interop;
-    using Sqlbi.Bravo.Models;
     using System;
-    using System.Runtime.InteropServices;
-    using System.Text.Json;
 
-    internal class AppWindowSubclass : WindowSubclass, IDisposable
+    internal class AppWindowSubclass : WindowSubclass
     {
-        private readonly PhotinoNET.PhotinoWindow _window;
         private readonly IntPtr TRUE = new(1); // Message handled, do not call the next handler in the subclass chain
 
         /// <summary>
-        /// Try to install a WndProc subclass callback to hook messages sent to the selected <see cref="PhotinoNET.PhotinoWindow"/> window
+        /// Try to install a WndProc subclass callback to hook messages sent to the selected window
         /// </summary>
-        public static AppWindowSubclass Hook(PhotinoNET.PhotinoWindow window) => new(window);
+        public static AppWindowSubclass Hook(IntPtr hWnd) => new(hWnd);
 
-        private AppWindowSubclass(PhotinoNET.PhotinoWindow window)
-            : base(hWnd: window.WindowHandle)
+        private AppWindowSubclass(IntPtr hWnd)
+            : base(hWnd)
         {
-            _window = window;
         }
 
         protected override IntPtr WndProc(IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam, IntPtr uIdSubclass, IntPtr dwRefData)
@@ -103,14 +97,5 @@
             // This is due to the fact that the ThemeHelper class adds a custom non-client area color handler 
             return true;
         }
-
-
-        #region IDisposable
-        
-        public void Dispose()
-        {
-        }
-
-        #endregion
     }
 }

@@ -1,8 +1,10 @@
 ﻿namespace Sqlbi.Bravo.Infrastructure
 {
+    using Microsoft.AspNetCore.Http;
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Options;
-    using PhotinoNET;
+    using Microsoft.Web.WebView2.Core;
+    using Microsoft.Web.WebView2.WinForms;
     using Sqlbi.Bravo.Infrastructure.Configuration;
     using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
     using Sqlbi.Bravo.Infrastructure.Extensions;
@@ -11,74 +13,225 @@
     using Sqlbi.Bravo.Infrastructure.Windows.Interop;
     using Sqlbi.Bravo.Models;
     using System;
+    using System.Drawing;
     using System.Globalization;
     using System.IO;
     using System.Linq;
     using System.Text;
     using System.Text.Json;
-    using System.Threading;
-    using System.Threading.Tasks;
+    using System.Windows.Forms;
 
-    internal class AppWindow : IDisposable
+    internal partial class AppWindow : Form
     {
         private readonly IHost _host;
         private readonly AppInstance _instance;
-        private readonly PhotinoWindow _window;
-        private readonly StartupSettings _startupSettings;
-
-        private AppWindowSubclass? _windowSubclass;
+        private readonly Color _startupThemeColor;
 
         public AppWindow(IHost host, AppInstance instance)
         {
             _host = host;
             _instance = instance;
-            _window = CreateWindow();
+            _startupThemeColor = ThemeHelper.ShouldUseDarkMode(UserPreferences.Current.Theme) ? AppEnvironment.ThemeColorDark : AppEnvironment.ThemeColorLight;
 
-            var startupSettingsOptions = _host.Services.GetService(typeof(IOptions<StartupSettings>)) as IOptions<StartupSettings>;
-            BravoUnexpectedException.ThrowIfNull(startupSettingsOptions);
+            InitializeComponent();
+            InitializeWebViewAsync();
 
-            _startupSettings = startupSettingsOptions.Value;
+            // How does the window manager decide where to place a newly-created window ? https://devblogs.microsoft.com/oldnewthing/20121126-00/?p=5993
+            StartPosition = FormStartPosition.WindowsDefaultBounds;
         }
 
-        private PhotinoWindow CreateWindow()
+        private WebView2 WebView => webView;
+
+        private async void InitializeWebViewAsync()
         {
+            //await System.Threading.Tasks.Task.Delay(3_000);
+
+            // @daniele
+            // - removed index-dark.html
+            // - added support for Settings.IsStatusBarEnabled
+            // - added support for Settings.AreBrowserAcceleratorKeysEnabled
+            // - should we remove file:// protocol and enable virtual hostname ?? (WebResourceRequested event not available, requires CONFIG rafactoring using web-message)
+
+            WebView.Visible = false;
+
+            var options = new CoreWebView2EnvironmentOptions(additionalBrowserArguments: null, language: null, targetCompatibleBrowserVersion: null, allowSingleSignOnUsingOSPrimaryAccount: false);
+            {
+                options.AdditionalBrowserArguments = "";
+            }
+            var environment = await CoreWebView2Environment.CreateAsync(browserExecutableFolder: null, userDataFolder: AppEnvironment.ApplicationTempPath, options);
+            {
+                //environment.BrowserProcessExited
+            }
+            await WebView.EnsureCoreWebView2Async(environment);
 #if DEBUG
-            var contextMenuEnabled = true;
-            var devToolsEnabled = true;
-            var logVerbosity = 3;
+            var isDebug = true;
 #else
-            var contextMenuEnabled = false;
-            var devToolsEnabled = false;
-            var logVerbosity = 0;
+            var isDebug = false;
 #endif
-            var indexHtml = ThemeHelper.ShouldUseDarkMode(UserPreferences.Current.Theme)
-                ? "wwwroot/index-dark.html"
-                : "wwwroot/index.html";
+            WebView.AllowExternalDrop = true;
+            WebView.DefaultBackgroundColor = _startupThemeColor;
+            WebView.CoreWebView2.Settings.AreBrowserAcceleratorKeysEnabled = isDebug;
+            WebView.CoreWebView2.Settings.AreDefaultScriptDialogsEnabled = isDebug;
+            WebView.CoreWebView2.Settings.AreDefaultContextMenusEnabled = isDebug;
+            WebView.CoreWebView2.Settings.AreDevToolsEnabled = isDebug;
+            WebView.CoreWebView2.Settings.AreHostObjectsAllowed = false;
+            WebView.CoreWebView2.Settings.IsWebMessageEnabled = true;
+            WebView.CoreWebView2.Settings.IsScriptEnabled = true;
+            WebView.CoreWebView2.Settings.IsStatusBarEnabled = false;
+            //WebView.CoreWebView2.Settings.IsZoomControlEnabled = true;
+            //WebView.CoreWebView2.Settings.IsBuiltInErrorPageEnabled = true;
+            WebView.CoreWebView2.Settings.IsPasswordAutosaveEnabled = false;
+            WebView.CoreWebView2.Settings.IsGeneralAutofillEnabled = false;
+            WebView.CoreWebView2.Settings.IsPinchZoomEnabled = false;
+            WebView.CoreWebView2.Settings.IsSwipeNavigationEnabled = false;
+            //WebView.CoreWebView2.Settings.HiddenPdfToolbarItems = CoreWebView2PdfToolbarItems.None;
+#if DEBUG
+            WebView.CoreWebView2.OpenDevToolsWindow();
+            //WebView.CoreWebView2.OpenTaskManagerWindow();
+            WebView.CoreWebView2.PermissionRequested += OnWebViewPermissionRequested;
+            WebView.CoreWebView2.NavigationStarting += OnWebViewNavigationStarting;
+            WebView.CoreWebView2.NavigationCompleted += OnWebViewNavigationCompleted;
+            WebView.CoreWebView2.ContentLoading += OnWebViewContentLoading;
+            WebView.CoreWebView2.WebMessageReceived += OnWebViewWebWebMessageReceived;
+            WebView.CoreWebView2.WebResourceResponseReceived += OnWebViewWebResourceResponseReceived;
+#endif
+            WebView.CoreWebView2.DOMContentLoaded += OnWebViewDOMContentLoaded;
+            WebView.CoreWebView2.WebResourceRequested += OnWebViewWebResourceRequested;
 
-            var window = new PhotinoWindow()
-                .SetIconFile("wwwroot/bravo.ico")
-                .SetTitle(AppEnvironment.ApplicationMainWindowTitle)
-                .SetTemporaryFilesPath(AppEnvironment.ApplicationTempPath)
-                .SetContextMenuEnabled(contextMenuEnabled)
-                .SetDevToolsEnabled(devToolsEnabled)
-                .SetLogVerbosity(logVerbosity) // 0 = Critical Only, 1 = Critical and Warning, 2 = Verbose, >2 = All Details. Default is 2.
-                .SetGrantBrowserPermissions(true)
-                .SetUseOsDefaultSize(true)
-                .RegisterCustomSchemeHandler("app", CustomSchemeHandler)
-                .Load(indexHtml)
-                .Center();
-
-            //window.WindowCreating += OnWindowCreating;
-            window.WindowCreated += OnWindowCreated;
-            window.WindowClosing += OnWindowClosing;
-
-            return window;
+            await WebView.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(@"
+window.external = {
+    sendMessage: function(message) {
+        window.chrome.webview.postMessage(message);
+    },
+    receiveMessage: function(callback) {
+        window.chrome.webview.addEventListener('message', function(e) {
+            callback(e.data);
+        });
+    }
+};");
+            WebView.CoreWebView2.AddWebResourceRequestedFilter("*", CoreWebView2WebResourceContext.All);
+            WebView.Source = new Uri(Path.Combine(Environment.CurrentDirectory, "wwwroot\\index.html"));
+            //WebView.CoreWebView2.SetVirtualHostNameToFolderMapping("bravo.example", "wwwroot", CoreWebView2HostResourceAccessKind.Allow);
+            //WebView.CoreWebView2.Navigate("https://bravo.example/index.html"); // For '.example' see rfc6761
         }
 
-        private Stream CustomSchemeHandler(object sender, string scheme, string url, out string contentType)
+        protected override void WndProc(ref Message message)
         {
-            contentType = "text/javascript";
+            if (message.Msg == (int)WindowMessage.WM_THEMECHANGED)
+            {
+                if (UserPreferences.Current.Theme == ThemeType.Auto)
+                {
+                    ThemeHelper.ChangeTheme(message.HWnd, ThemeType.Auto);
+                }
+            }
 
+            base.WndProc(ref message);
+        }
+
+        private void OnFormLoad(object? sender, EventArgs e)
+        {
+            ThemeHelper.InitializeTheme(Handle, UserPreferences.Current.Theme);
+
+            Text = AppEnvironment.ApplicationMainWindowTitle;
+            BackgroundImageLayout = ImageLayout.Center;
+            BackColor = _startupThemeColor;
+
+            CenterToScreen();
+
+            _instance.OnNewInstance += OnNewInstanceRestoreFormWindowToForeground;
+        }
+
+        private void OnFormClosed(object? sender, FormClosedEventArgs e)
+        {
+            _instance.OnNewInstance -= OnNewInstanceRestoreFormWindowToForeground;
+            _instance.OnNewInstance -= OnNewInstanceSendStartupWebMessage;
+
+            NotificationHelper.ClearNotifications();
+        }
+
+        private void OnWebViewDOMContentLoaded(object? sender, CoreWebView2DOMContentLoadedEventArgs e)
+        {
+            WebViewLog(message: $"::OnWebViewDOMContentLoaded({ e.NavigationId })");
+
+            if (WebView.Visible == false)
+            {
+                WebView.Visible = true;
+                SendAppStartupWebMessage();
+
+                _instance.OnNewInstance += OnNewInstanceSendStartupWebMessage;
+            }
+        }
+
+        private void OnWebViewPermissionRequested(object? sender, CoreWebView2PermissionRequestedEventArgs e)
+        {
+            WebViewLog(message: $"::OnWebViewPermissionRequested({ e.PermissionKind }|{ e.State })");
+        }
+
+        private void OnWebViewNavigationStarting(object? sender, CoreWebView2NavigationStartingEventArgs e)
+        {
+            WebViewLog(message: $"::OnWebViewNavigationStarting({ e.NavigationId }|{ e.Uri })");
+        }
+
+        private void OnWebViewNavigationCompleted(object? sender, CoreWebView2NavigationCompletedEventArgs e)
+        {
+            WebViewLog(message: $"::OnWebViewNavigationCompleted({ e.NavigationId }|{ e.IsSuccess }|{ e.WebErrorStatus })");
+        }
+
+        private void OnWebViewContentLoading(object? sender, CoreWebView2ContentLoadingEventArgs e)
+        {
+            WebViewLog(message: $"::OnWebViewContentLoading({ e.NavigationId }|{ e.IsErrorPage })");
+        }
+
+        private void OnWebViewWebResourceRequested(object? sender, CoreWebView2WebResourceRequestedEventArgs e)
+        {
+            WebViewLog(message: $"::OnWebViewWebResourceRequested({ e.ResourceContext }|{ e.Request.Uri })");
+
+            if (e.ResourceContext == CoreWebView2WebResourceContext.Script && e.Request.Uri.EqualsI("app://config.js"))
+            {
+                var content = GetJSConfig();
+                e.Response = WebView.CoreWebView2.Environment.CreateWebResourceResponse(content, StatusCodes.Status200OK, "OK", "Content-Type: text/javascript");
+            }
+        }
+
+        private void OnWebViewWebWebMessageReceived(object? sender, CoreWebView2WebMessageReceivedEventArgs e)
+        {
+            var messageString = e.TryGetWebMessageAsString();
+
+            WebViewLog(message: $"::OnWebViewWebWebMessageReceived({ e.Source }|{ messageString })");
+        }
+
+        private void OnWebViewWebResourceResponseReceived(object? sender, CoreWebView2WebResourceResponseReceivedEventArgs e)
+        {
+            WebViewLog(message: $"::OnWebViewWebResourceResponseReceived({ e.Response.StatusCode }{ e.Response.ReasonPhrase }|{ e.Request.Uri })");
+        }
+
+        private void OnNewInstanceRestoreFormWindowToForeground(object? sender, AppInstanceStartupEventArgs _)
+        {
+            Invoke(() =>
+            {
+                if (WindowState == FormWindowState.Minimized)
+                {
+                    User32.ShowWindow(Handle, User32.SW_RESTORE);
+                }
+
+                User32.SetForegroundWindow(Handle);
+            });
+        }
+
+        private void OnNewInstanceSendStartupWebMessage(object? sender, AppInstanceStartupEventArgs e)
+        {
+            if (e.Message?.IsEmpty == false)
+            {
+                Invoke(() =>
+                {
+                    var webMessageString = e.Message.ToWebMessageString();
+                    WebView.CoreWebView2.PostWebMessageAsString(webMessageString);
+                });
+            }
+        }
+
+        private Stream GetJSConfig()
+        {
             var config = new
             {
 #if DEBUG
@@ -91,8 +244,8 @@
                 options = BravoOptions.CreateFromUserPreferences(),
                 culture = new
                 {
-                    IetfLanguageTag = CultureInfo.CurrentCulture.IetfLanguageTag,
-                    TwoLetterISOLanguageName = CultureInfo.CurrentCulture.TwoLetterISOLanguageName
+                    ietfLanguageTag = CultureInfo.CurrentCulture.IetfLanguageTag,
+                    twoLetterISOLanguageName = CultureInfo.CurrentCulture.TwoLetterISOLanguageName
                 },
                 telemetry = new
                 {
@@ -114,117 +267,34 @@
             {
                 var address = _host.GetListeningAddresses().Single(); // single address expected here
                 var addressString = address.ToString();
-                
+
                 return addressString;
             }
         }
 
-        //private void OnWindowCreating(object? sender, EventArgs e)
-        //{
-        //}
-
-        private void OnWindowCreated(object? sender, EventArgs e)
+        private void SendAppStartupWebMessage()
         {
-            ThemeHelper.InitializeTheme(_window.WindowHandle, UserPreferences.Current.Theme);
-            
-            _windowSubclass = AppWindowSubclass.Hook(_window);
-
-            FixStartMenuShortcut();
-        }
-
-        private bool OnWindowClosing(object sender, EventArgs e)
-        {
-            NotificationHelper.ClearNotifications();
-
-            // Returning true prevents the window from closing
-            return false;
-        }
-
-        private static void FixStartMenuShortcut()
-        {
-            // Every time a Photino application starts up, Photino.Native attempts to creates a shortcut in Windows start menu.
-            // This behavior is enabled by default to allow toast notifications because, without a valid shortcut installed, Photino cannot raise a toast notification from a desktop app.
-            // If the user has chosen to activate the application shortcut during app installation, this results in a duplicate of the application shortcut in the Windows start menu.
-            // The issue has been reported on GitHub, meanwhile let's get rid of the shortcut created by Photino https://github.com/tryphotino/photino.NET/issues/85
-
-            // TODO: remove the shortcut only if the current instance is per-machine or per-user installed
-            // if (AppEnvironment.IsInstalledAppInstance)
+            var startupSettingsOptions = _host.Services.GetService(typeof(IOptions<StartupSettings>)) as IOptions<StartupSettings>;
+            if (startupSettingsOptions is not null)
             {
-                var shortcutName = Path.ChangeExtension(AppEnvironment.ApplicationMainWindowTitle, "lnk");
-                var shortcutPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData, Environment.SpecialFolderOption.DoNotVerify), @"Microsoft\Windows\Start Menu\Programs", shortcutName);
-
-                if (File.Exists(shortcutPath))
+                var startupSettings = startupSettingsOptions.Value;
+                if (startupSettings.IsEmpty == false)
                 {
-                    try
-                    {
-                        File.Delete(shortcutPath);
-                    }
-                    catch (IOException)
-                    {
-                        // ignore "The process cannot access the file '..\Bravo for Power BI.lnk' because it is being used by another process."
-                    }
+                    var startupMessage = AppInstanceStartupMessage.CreateFrom(startupSettingsOptions.Value);
+                    var startupMessageString = startupMessage.ToWebMessageString();
+
+                    WebView.CoreWebView2.PostWebMessageAsString(startupMessageString);
                 }
             }
         }
 
-        /// <summary>
-        /// Starts the native <see cref="PhotinoWindow"/> window that runs the message loop
-        /// </summary>
-        public void WaitForClose()
+        private void WebViewLog(string message)
         {
-            // HACK: see issue https://github.com/tryphotino/photino.NET/issues/87
-            // Wait a bit in order to ensure that the PhotinoWindow message loop is started
-            // This is to prevent the .NET Runtime corecrl.dll fault with a win32 access violation
-            // This should be moved to the 'OnWindowCreated' handler after the issue has been resolved
-            _ = Task.Factory.StartNew(() =>
-            {
-                try
-                {
-                    Thread.Sleep(2_000);
-
-                    if (!_startupSettings.IsEmpty)
-                    {
-                        var startupMessage = AppInstanceStartupMessage.CreateFrom(_startupSettings);
-                        var startupMessageString = startupMessage.ToWebMessageString();
-
-                        _window.SendWebMessage(startupMessageString);
-                    }
-
-                    _instance.OnNewInstance += (sender, arg) =>
-                    {
-                        if (_window.Minimized)
-                        {
-                            User32.ShowWindow(_window.WindowHandle, User32.SW_RESTORE);
-                        }
-                        User32.SetForegroundWindow(_window.WindowHandle);
-
-                        if (arg.Message?.IsEmpty == false)
-                        {
-                            var webMessageString = arg.Message.ToWebMessageString();
-                            _window.SendWebMessage(webMessageString);
-                        }
-                    };
-                }
-                catch (Exception ex)
-                {
-                    TelemetryHelper.TrackException(ex);
-
-                    if (AppEnvironment.IsDiagnosticLevelVerbose)
-                        AppEnvironment.AddDiagnostics(name: $"{ nameof(AppWindow) }.{ nameof(WaitForClose) }", ex);
-                }
-            });
-            // HACK END <<
-
-            _window.WaitForClose();
+#if DEBUG
+            WebView.CoreWebView2.ExecuteScriptAsync($"console.log('{ message }');");
+#endif
+            //if (AppEnvironment.IsDiagnosticLevelVerbose)
+            //    AppEnvironment.AddDiagnostics(DiagnosticMessageType.Text, name: $"{ nameof(AppWindow) }.{ nameof(WebView2) }", content: message);
         }
-
-        #region IDisposable
-
-        public void Dispose()
-        {
-            _windowSubclass?.Dispose();
-        }
-
-        #endregion
     }
 }

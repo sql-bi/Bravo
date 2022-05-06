@@ -62,12 +62,14 @@
 
         public static string? ToWebMessageString(this AppInstanceStartupMessage startupMessage)
         {
+            string? webMessageString = null;
+
             if (startupMessage.ArgumentServerName is null)
             {
                 var jsonMessage = startupMessage.ToJsonElement();
                 var webMessage = UnknownWebMessage.CreateFrom(jsonMessage);
 
-                return webMessage.AsString;
+                webMessageString = webMessage.AsString;
             }
             else if (NetworkHelper.IsPBICloudDatasetServer(startupMessage.ArgumentServerName) || NetworkHelper.IsASAzureServer(startupMessage.ArgumentServerName))
             {
@@ -81,7 +83,7 @@
                     },
                 };
 
-                return webMessage.AsString;
+                webMessageString = webMessage.AsString;
             }
             else
             {
@@ -108,8 +110,13 @@
                 }
 
                 var webMessage = PBIDesktopReportOpenWebMessage.CreateFrom(report);
-                return webMessage.AsString;
-            } 
+                webMessageString = webMessage.AsString;
+            }
+
+            if (AppEnvironment.IsDiagnosticLevelVerbose)
+                AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{ nameof(AppInstanceStartupMessage) }.{ nameof(ToWebMessageString) }", content: webMessageString);
+
+            return webMessageString;
         }
     }
 }
