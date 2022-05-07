@@ -4,6 +4,7 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net6-windows10.0.17763.0</TargetFramework>
     <SupportedOSPlatformVersion>7.0</SupportedOSPlatformVersion>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <UseWindowsForms>True</UseWindowsForms>
     <ApplicationIcon>Assets\bravo.ico</ApplicationIcon>
     <Company>SQLBI</Company>
@@ -18,6 +19,7 @@
     <Configurations>$(Configurations);Debug_wwwroot</Configurations>
     <AnalysisLevel>latest</AnalysisLevel>
     <IncludeOpenAPIAnalyzers>true</IncludeOpenAPIAnalyzers>
+    <IsPackable>false</IsPackable>
   </PropertyGroup>
 
   <Choose>
