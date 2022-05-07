@@ -1,7 +1,7 @@
 *      @albertospelta
 
-/src/.azure/       @albertospelta
-/src/.github/      @albertospelta
+.azure/       @albertospelta
+.github/      @albertospelta
 
 /src/Scripts/      @danieleperilli
 /src/wwwroot/      @danieleperilli
