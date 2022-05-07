@@ -117,12 +117,18 @@ window.external = {
 
         protected override void WndProc(ref Message message)
         {
-            if (message.Msg == (int)WindowMessage.WM_THEMECHANGED)
+            switch (message.Msg)
             {
-                if (UserPreferences.Current.Theme == ThemeType.Auto)
-                {
-                    ThemeHelper.ChangeTheme(message.HWnd, ThemeType.Auto);
-                }
+                // Form.StyleChanged event detects all theme change except for Aero color changes
+                // The Aero color change triggers the WM_DWMCOLORIZATIONCOLORCHANGED message
+                case (int)WindowMessage.WM_DWMCOLORIZATIONCOLORCHANGED:
+                case (int)WindowMessage.WM_DWMCOMPOSITIONCHANGED:
+                case (int)WindowMessage.WM_THEMECHANGED:
+                    if (UserPreferences.Current.Theme == ThemeType.Auto)
+                    {
+                        ThemeHelper.ChangeTheme(message.HWnd, ThemeType.Auto);
+                    }
+                    break;
             }
 
             base.WndProc(ref message);
