@@ -11,10 +11,19 @@
         private const string ArgumentValueDownload = "download";
         private const string ArgumentValueViewDetails = "viewDetails";
 
-        public static void RegisterNotificationHandler() => ToastNotificationManagerCompat.OnActivated += OnNotificationActivated;
+        public static void RegisterNotificationHandler()
+        {
+            if (OperatingSystem.IsWindowsVersionAtLeast(10, 0, 17763, 0))
+            {
+                ToastNotificationManagerCompat.OnActivated += OnNotificationActivated;
+            }
+        }
 
         public static void NotifyUpdateAvailable(BravoUpdate bravoUpdate)
         {
+            if (!OperatingSystem.IsWindowsVersionAtLeast(10, 0, 17763, 0))
+                return;
+
             var builder = new ToastContentBuilder();
 
             builder.AddText($"A new version of { AppEnvironment.ApplicationName } is available", AdaptiveTextStyle.Default);
@@ -64,17 +73,26 @@
 
             builder.Show((customize) =>
             {
-                customize.ExpirationTime = DateTime.Now.AddMinutes(10);
+                if (OperatingSystem.IsWindowsVersionAtLeast(10, 0, 17763, 0))
+                {
+                    customize.ExpirationTime = DateTime.Now.AddMinutes(10);
+                }
             });
         }
 
         public static void ClearNotifications()
         {
-            ToastNotificationManagerCompat.History.Clear();
+            if (OperatingSystem.IsWindowsVersionAtLeast(10, 0, 17763, 0))
+            {
+                ToastNotificationManagerCompat.History.Clear();
+            }
         }
 
         private static void OnNotificationActivated(ToastNotificationActivatedEventArgsCompat eventArgs)
         {
+            if (!OperatingSystem.IsWindowsVersionAtLeast(10, 0, 17763, 0))
+                return;
+            
             var toastArgs = ToastArguments.Parse(eventArgs.Argument);
 
             if (toastArgs.TryGetValue(ArgumentKeyAction, out var actionValue))

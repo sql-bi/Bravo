@@ -15,6 +15,7 @@ IF %ERRORLEVEL% NEQ 0 (
 )
 
 SET arch=x64
+SET runtime=win-%arch%
 SET selfcontained=true
 SET publishmode=SELFCONTAINED
 SET configuration=Release
@@ -31,7 +32,7 @@ REM  ***
 SET publishfolder=%~dp0src\bin\_publish
 CD /d "%~dp0src"
 IF EXIST %publishfolder% RMDIR /s /q %publishfolder%
-dotnet publish Bravo.csproj --configuration %configuration% --output %publishfolder% --self-contained %selfcontained% --verbosity %verbosity% --nologo /p:AdditionalConstants=%publishmode% || GOTO :error
+dotnet publish Bravo.csproj --configuration %configuration% --output %publishfolder% --runtime %runtime% --self-contained %selfcontained% --verbosity %verbosity% --nologo /p:AdditionalConstants=%publishmode% || GOTO :error
 
 REM  ***
 ECHO *** BRAVO INSTALLER ***
