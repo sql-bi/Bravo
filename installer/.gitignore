@@ -4,4 +4,3 @@ wix/**/*.wixobj
 wix/**/*.wixpdb
 wix/**/*.msi
 wix/**/Components.wxs
-wix/**/VCRedist.wxs
