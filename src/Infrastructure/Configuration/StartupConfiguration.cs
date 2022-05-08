@@ -2,28 +2,24 @@
 {
     using Sqlbi.Bravo.Infrastructure.Helpers;
     using Sqlbi.Bravo.Infrastructure.Services;
-    using Sqlbi.Bravo.Infrastructure.Windows;
     using Sqlbi.Bravo.Infrastructure.Windows.Interop;
     using System;
     using System.IO;
     using System.Net;
     using System.Net.Http;
     using System.Runtime;
-    using System.Windows.Forms;
 
     internal static class StartupConfiguration
     {
         public static void Configure()
         {
-            // required for System.Windows.Forms.TaskDialog dialogs
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
+            ApplicationConfiguration.Initialize();
 
-            if (AppEnvironment.IsOSVersionUnsupported)
-            {
-                MessageDialog.Show(heading: "Unsupported Windows OS version", text: "This application is only supported on Windows 10 series operating systems version 1809 (build 17763) or higher.");
-                Environment.Exit(NativeMethods.NO_ERROR);
-            }
+            //if (AppEnvironment.IsOSVersionUnsupported)
+            //{
+            //    MessageDialog.Show(heading: "Unsupported Windows OS version", text: "This application is only supported on Windows 10 series operating systems version 1809 (build 17763) or higher.");
+            //    Environment.Exit(NativeMethods.NO_ERROR);
+            //}
 
             ConfigureProxy();
             ConfigureDirectories();

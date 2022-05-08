@@ -71,7 +71,6 @@
             BravoUnexpectedException.ThrowIfNull(VersionInfo.ProductVersion);
             ApplicationProductVersion = VersionInfo.ProductVersion;
 
-            IsOSVersionUnsupported = Environment.OSVersion.Version < new Version(10, 0, 17763);
             ApplicationDataPath = Path.Combine(Environment.GetFolderPath(DeploymentMode == AppDeploymentMode.Packaged ? Environment.SpecialFolder.UserProfile : Environment.SpecialFolder.LocalApplicationData, Environment.SpecialFolderOption.DoNotVerify), ApplicationName);
             ApplicationTempPath = Path.Combine(ApplicationDataPath, ".temp");
             ApplicationDiagnosticPath = Path.Combine(ApplicationDataPath, ".diagnostic");
@@ -109,8 +108,6 @@
         }
 
         public static AppDeploymentMode DeploymentMode => _deploymentMode.Value;
-
-        public static bool IsOSVersionUnsupported { get; }
 
         /// <summary>
         /// Returns the HKEY registry key used to install the current application instance. Returns null if it is a packaged or portable app instance

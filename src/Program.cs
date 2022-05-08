@@ -6,6 +6,7 @@
     using Sqlbi.Bravo.Infrastructure.Configuration;
     using Sqlbi.Bravo.Infrastructure.Helpers;
     using System;
+    using System.Windows.Forms;
 
     internal partial class Program
     {
@@ -22,8 +23,8 @@
                     using var host = CreateHost();
                     host.Start();
                     {
-                        using var window = new AppWindow(host, instance);
-                        window.WaitForClose();
+                        var window = new AppWindow(host, instance);
+                        Application.Run(window);
                     }
                     host.StopAsync().GetAwaiter().GetResult();
                 }
