@@ -13,6 +13,7 @@
     using Sqlbi.Bravo.Infrastructure.Windows.Interop;
     using Sqlbi.Bravo.Models;
     using System;
+    using System.Diagnostics;
     using System.Drawing;
     using System.Globalization;
     using System.IO;
@@ -45,12 +46,6 @@
         private async void InitializeWebViewAsync()
         {
             //await System.Threading.Tasks.Task.Delay(3_000);
-
-            // @daniele
-            // - removed index-dark.html
-            // - added support for Settings.IsStatusBarEnabled
-            // - added support for Settings.AreBrowserAcceleratorKeysEnabled
-            // - should we remove file:// protocol and enable virtual hostname ?? (WebResourceRequested event not available, requires CONFIG rafactoring using web-message)
 
             WebView.Visible = false;
 
@@ -85,15 +80,15 @@
             WebView.CoreWebView2.Settings.IsPinchZoomEnabled = false;
             WebView.CoreWebView2.Settings.IsSwipeNavigationEnabled = false;
             //WebView.CoreWebView2.Settings.HiddenPdfToolbarItems = CoreWebView2PdfToolbarItems.None;
-#if DEBUG
+#if DEBUG_WWWROOT
             WebView.CoreWebView2.OpenDevToolsWindow();
             //WebView.CoreWebView2.OpenTaskManagerWindow();
-            WebView.CoreWebView2.PermissionRequested += OnWebViewPermissionRequested;
-            WebView.CoreWebView2.NavigationStarting += OnWebViewNavigationStarting;
-            WebView.CoreWebView2.NavigationCompleted += OnWebViewNavigationCompleted;
-            WebView.CoreWebView2.ContentLoading += OnWebViewContentLoading;
-            WebView.CoreWebView2.WebMessageReceived += OnWebViewWebWebMessageReceived;
-            WebView.CoreWebView2.WebResourceResponseReceived += OnWebViewWebResourceResponseReceived;
+            //WebView.CoreWebView2.PermissionRequested += OnWebViewPermissionRequested;
+            //WebView.CoreWebView2.NavigationStarting += OnWebViewNavigationStarting;
+            //WebView.CoreWebView2.NavigationCompleted += OnWebViewNavigationCompleted;
+            //WebView.CoreWebView2.ContentLoading += OnWebViewContentLoading;
+            //WebView.CoreWebView2.WebMessageReceived += OnWebViewWebWebMessageReceived;
+            //WebView.CoreWebView2.WebResourceResponseReceived += OnWebViewWebResourceResponseReceived;
 #endif
             WebView.CoreWebView2.DOMContentLoaded += OnWebViewDOMContentLoaded;
             WebView.CoreWebView2.WebResourceRequested += OnWebViewWebResourceRequested;
@@ -294,11 +289,11 @@ window.external = {
             }
         }
 
+        [Conditional("DEBUG")]
         private void WebViewLog(string message)
         {
-#if DEBUG
-            WebView.CoreWebView2.ExecuteScriptAsync($"console.log('{ message }');");
-#endif
+            // WebView.CoreWebView2.ExecuteScriptAsync($"console.log('{ message }');");
+
             //if (AppEnvironment.IsDiagnosticLevelVerbose)
             //    AppEnvironment.AddDiagnostics(DiagnosticMessageType.Text, name: $"{ nameof(AppWindow) }.{ nameof(WebView2) }", content: message);
         }
