@@ -6,6 +6,7 @@
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
+    <IsPublishable>false</IsPublishable>
     <Configurations>$(Configurations);Debug_wwwroot</Configurations>
   </PropertyGroup>
 
