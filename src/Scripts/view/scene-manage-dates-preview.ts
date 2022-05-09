@@ -169,7 +169,7 @@ export class ManageDatesPreviewScene extends DocScene {
                                     isHidden: column.isHidden,
                                     isInactive: hierarchyColumns.length == 0,
                                     attributes: hierarchyAttribute,
-                                    dataType: (column.dataType ? column.dataType.toLowerCase() : "")
+                                    dataType: ""
                                 });
                             });
 
