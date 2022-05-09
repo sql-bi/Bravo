@@ -123,6 +123,7 @@ export interface ExportDelimitedTextSettings {
     unicodeEncoding: boolean
     delimiter?: string
     quoteStringFields: boolean
+    createSubfolder: boolean
 }
 
 export interface ExportExcelSettings {

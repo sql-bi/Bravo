@@ -145,6 +145,8 @@ const locale: Locale = {
         [_.exportDataCSVDelimiterTab]: "Табуляция",
         [_.exportDataCSVEncoding]: "Кодировка",
         [_.exportDataCSVEncodingDesc]: "",
+        [_.exportDataCSVFolder]: "Сохранить в подпапке",
+        [_.exportDataCSVFolderDesc]: "Сохраните сгенерированные файлы CSV в подпапке.",
         [_.exportDataCSVQuote]: "Заключить строки в кавычки",
         [_.exportDataCSVQuoteDesc]: "Убедитесь, что каждая строка заключена в двойные кавычки.",
         [_.exportDataExcelCreateExportSummary]: "Экспорт сведенных данных",

@@ -145,6 +145,8 @@ const locale: Locale = {
         [_.exportDataCSVDelimiterTab]: "Χαρακτήρας Tab",
         [_.exportDataCSVEncoding]: "Κωδικοποίηση",
         [_.exportDataCSVEncodingDesc]: "",
+        [_.exportDataCSVFolder]: "Αποθήκευση σε υποψήφιο",
+        [_.exportDataCSVFolderDesc]: "Αποθηκεύστε τα δημιουργημένα αρχεία CSV σε έναν υποτονό.",
         [_.exportDataCSVQuote]: "Βάλε εισαγωγικά στα αλφαριθμητικά",
         [_.exportDataCSVQuoteDesc]: "Βεβαιώσου ότι τα αλφαριθμητικά είναι μέσα σε διπλά εισαγωγικά.",
         [_.exportDataExcelCreateExportSummary]: "Εξαγωγή Περίληψης",

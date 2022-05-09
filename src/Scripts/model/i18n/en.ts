@@ -145,6 +145,8 @@ const locale: Locale = {
         [_.exportDataCSVDelimiterTab]: "Tab",
         [_.exportDataCSVEncoding]: "Encoding",
         [_.exportDataCSVEncodingDesc]: "",
+        [_.exportDataCSVFolder]: "Save in a Subfolder",
+        [_.exportDataCSVFolderDesc]: "Save generated CSV files in a subfolder.",
         [_.exportDataCSVQuote]: "Enclose Strings in Quotes",
         [_.exportDataCSVQuoteDesc]: "Make sure every string is enclosed in double quotes.",
         [_.exportDataExcelCreateExportSummary]: "Export Summary",

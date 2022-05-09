@@ -145,6 +145,8 @@ const locale: Locale = {
         [_.exportDataCSVDelimiterTab]: "Tab",
         [_.exportDataCSVEncoding]: "Codifica",
         [_.exportDataCSVEncodingDesc]: "",
+        [_.exportDataCSVFolder]: "Salva in una sottocartella",
+        [_.exportDataCSVFolderDesc]: "Salva file CSV generati in una sottocartella.",
         [_.exportDataCSVQuote]: "Stringhe tra virgolette",
         [_.exportDataCSVQuoteDesc]: "Racchiudi tutte le stringhe tra virgolette.",
         [_.exportDataExcelCreateExportSummary]: "Foglio di Riepilogo ",

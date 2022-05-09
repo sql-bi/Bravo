@@ -145,6 +145,8 @@ const locale: Locale = {
         [_.exportDataCSVDelimiterTab]: "Tabulador",
         [_.exportDataCSVEncoding]: "Codificação",
         [_.exportDataCSVEncodingDesc]: "",
+        [_.exportDataCSVFolder]: "Salvar em uma subpasta",
+        [_.exportDataCSVFolderDesc]: "Salvar arquivos CSV gerados em uma subpasta.",
         [_.exportDataCSVQuote]: "Coloque Texto Entre Aspas",
         [_.exportDataCSVQuoteDesc]: "Certifique-se que todo o texto está entre aspas.",
         [_.exportDataExcelCreateExportSummary]: "Exportar Sumário",

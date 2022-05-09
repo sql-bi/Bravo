@@ -145,6 +145,8 @@ const locale: Locale = {
         [_.exportDataCSVDelimiterTab]: "Tab",
         [_.exportDataCSVEncoding]: "Tegnsæt",
         [_.exportDataCSVEncodingDesc]: "",
+        [_.exportDataCSVFolder]: "Gem i en undermappe",
+        [_.exportDataCSVFolderDesc]: "Gem genererede CSV -filer i en undermappe.",
         [_.exportDataCSVQuote]: "Afgræns strenge med citationstegn",
         [_.exportDataCSVQuoteDesc]: "Sørger for at strenge er afgrænset af citationstegn.",
         [_.exportDataExcelCreateExportSummary]: "Eksport Opsummering",

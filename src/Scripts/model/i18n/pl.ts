@@ -145,6 +145,8 @@ const locale: Locale = {
         [_.exportDataCSVDelimiterTab]: "Tab",
         [_.exportDataCSVEncoding]: "Kodowanie",
         [_.exportDataCSVEncodingDesc]: "",
+        [_.exportDataCSVFolder]: "Zapisz w podfolderze",
+        [_.exportDataCSVFolderDesc]: "Zapisz wygenerowane pliki CSV w podfolderze.",
         [_.exportDataCSVQuote]: "Umieść tekst w cudzysłowie",
         [_.exportDataCSVQuoteDesc]: "Upewnij się, że każdy tekst umieszczony jest w cudzysłowie.",
         [_.exportDataExcelCreateExportSummary]: "Eksportuj podsumowanie",

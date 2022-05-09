@@ -145,6 +145,8 @@ const locale: Locale = {
         [_.exportDataCSVDelimiterTab]: "制表符",
         [_.exportDataCSVEncoding]: "编码格式",
         [_.exportDataCSVEncodingDesc]: "",
+        [_.exportDataCSVFolder]: "保存在子文件夹中",
+        [_.exportDataCSVFolderDesc]: "将生成的CSV文件保存在子文件夹中。",
         [_.exportDataCSVQuote]: "用引号包含字符串",
         [_.exportDataCSVQuoteDesc]: "确保每一个字符串都包含在双引号中",
         [_.exportDataExcelCreateExportSummary]: "导出记录日志",

@@ -147,6 +147,8 @@ const locale: Locale = {
         [_.exportDataCSVDelimiterTab]: "Sekme",
         [_.exportDataCSVEncoding]: "Dil Kodlaması",
         [_.exportDataCSVEncodingDesc]: "",
+        [_.exportDataCSVFolder]: "Bir alt klasöre kaydedin",
+        [_.exportDataCSVFolderDesc]: "Oluşturulan CSV dosyalarını bir alt klasöre kaydedin.",
         [_.exportDataCSVQuote]: "Dizeleri Çift Tırnak İçine Alın",
         [_.exportDataCSVQuoteDesc]: "Her dizenin çift tırnak içine alındığından emin olun.",
         [_.exportDataExcelCreateExportSummary]: "Dışa Aktarma Özeti",
