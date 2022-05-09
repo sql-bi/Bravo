@@ -147,6 +147,8 @@ const locale: Locale = {
         [_.exportDataCSVDelimiterTab]: "Tabulation",
         [_.exportDataCSVEncoding]: "Encodage",
         [_.exportDataCSVEncodingDesc]: "",
+        [_.exportDataCSVFolder]: "Sauver dans un sous-dossier",
+        [_.exportDataCSVFolderDesc]: "Enregistrer les fichiers CSV générés dans un sous-dossier.",
         [_.exportDataCSVQuote]: "Mettre les chaînes de caractères entre Apostrophes",
         [_.exportDataCSVQuoteDesc]: "S'assurer que chaque chaîne de caractères est mise entre Guillemets.",
         [_.exportDataExcelCreateExportSummary]: "Exporter le résumé",

@@ -3,9 +3,11 @@
 namespace Sqlbi.Bravo.Infrastructure.Windows
 {
     using Sqlbi.Bravo.Infrastructure.Extensions;
+    using Sqlbi.Bravo.Infrastructure.Helpers;
     using Sqlbi.Bravo.Infrastructure.Windows.Interop;
     using System;
     using System.Drawing;
+    using System.Linq;
     using System.Runtime.InteropServices;
     using System.Windows.Forms;
 
@@ -147,7 +149,32 @@ namespace Sqlbi.Bravo.Infrastructure.Windows
                 AllowCancel = true
             };
 
-            _ = TaskDialog.ShowDialog(page, TaskDialogStartupLocation.CenterScreen);
+            var hwndOwner = ProcessHelper.GetCurrentProcessMainWindowHandle();
+            _ = TaskDialog.ShowDialog(hwndOwner, page, TaskDialogStartupLocation.CenterScreen);
+        }
+
+        public static TaskDialogButton ShowDialog(string heading, string text, params TaskDialogButton[] buttons)
+        {
+            var appIcon = Icon.ExtractAssociatedIcon(AppEnvironment.ProcessPath);
+            var icon = new TaskDialogIcon(appIcon!);
+
+            var page = new TaskDialogPage()
+            {
+                Caption = AppEnvironment.ApplicationMainWindowTitle,
+                Heading = heading,
+                Text = text,
+                Icon = icon,
+                AllowCancel = buttons.Any((button) => button == TaskDialogButton.Cancel),
+                AllowMinimize = false
+            };
+
+            foreach (var button in buttons)
+                page.Buttons.Add(button);
+
+            var hwndOwner = ProcessHelper.GetCurrentProcessMainWindowHandle();
+            var clickedButton = TaskDialog.ShowDialog(hwndOwner, page, TaskDialogStartupLocation.CenterScreen);
+
+            return clickedButton;
         }
     }
 }

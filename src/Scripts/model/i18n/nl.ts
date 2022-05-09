@@ -145,6 +145,8 @@ const locale: Locale = {
         [_.exportDataCSVDelimiterTab]: "Tab",
         [_.exportDataCSVEncoding]: "Codering",
         [_.exportDataCSVEncodingDesc]: "",
+        [_.exportDataCSVFolder]: "Opslaan in een submap",
+        [_.exportDataCSVFolderDesc]: "Opslaan gegenereerde CSV -bestanden in een submap.",
         [_.exportDataCSVQuote]: "Tekenreeksen tussen aanhalingstekens insluiten",
         [_.exportDataCSVQuoteDesc]: "Zorg ervoor dat elke tekenreeks tussen dubbele aanhalingstekens staat.",
         [_.exportDataExcelCreateExportSummary]: "Exporteer samenvatting",
