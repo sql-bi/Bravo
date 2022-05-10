@@ -288,6 +288,8 @@ const locale: Locale = {
         [_.optionFormattingBreaksDescription]: "Kies hoe je de meetwaarde en definitie wilt scheiden. Definieer <em>Auto</em> om automatisch de stijl te bepalen die in het model wordt gebruikt.",
         [_.optionFormattingBreaksInitial]: "Enter",
         [_.optionFormattingBreaksNone]: "Zelfde regel",
+        [_.optionFormattingIncludeTimeIntelligence]: "Neem tijdinformatie op",
+        [_.optionFormattingIncludeTimeIntelligenceDescription]: "Voeg automatisch maatregelen op door datums te beheren voor tijdinformatie.",
         [_.optionFormattingLines]: "Regel",
         [_.optionFormattingLinesDescription]: "Kies ervoor om regels kort of lang te houden.",
         [_.optionFormattingLinesValueLong]: "Lange regels",

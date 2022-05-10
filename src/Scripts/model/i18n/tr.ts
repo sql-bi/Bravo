@@ -290,6 +290,8 @@ const locale: Locale = {
         [_.optionFormattingBreaksDescription]: "Ölçü adının ve ifadenin nasıl ayrılacağını seçin. Modelde kullanılan stili otomatik olarak belirlemek için <em>Otomatik</em> öğesini ayarlayın.",
         [_.optionFormattingBreaksInitial]: "Satır Sonu",
         [_.optionFormattingBreaksNone]: "Aynı Satır",
+        [_.optionFormattingIncludeTimeIntelligence]: "Zaman Zekası ekleyin",
+        [_.optionFormattingIncludeTimeIntelligenceDescription]: "Zaman istihbaratının yönetilmesini yöneten önlemleri otomatik olarak ekleyin.",
         [_.optionFormattingLines]: "Satırlar",
         [_.optionFormattingLinesDescription]: "Satırları kısa veya uzun tutmayı seçin.",
         [_.optionFormattingLinesValueLong]: "Uzun satırlar",

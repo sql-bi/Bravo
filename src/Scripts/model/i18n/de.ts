@@ -290,6 +290,8 @@ const locale: Locale = {
         [_.optionFormattingBreaksDescription]: "Wählen Sie, wie der Measurename und Ausdruck voneinander getrennt werden sollen. Stellen Sie auf <em>Auto</em>, um den im Modell verwendeten Stil automatisch zu bestimmen.",
         [_.optionFormattingBreaksInitial]: "Zeilenumbruch",
         [_.optionFormattingBreaksNone]: "Gleiche Zeile",
+        [_.optionFormattingIncludeTimeIntelligence]: "Zeit intelligenz einbeziehen",
+        [_.optionFormattingIncludeTimeIntelligenceDescription]: "Fügen Sie die automatischen Maßnahmen ein, die durch Verwaltung von Daten für die Zeit intelligenz erstellt wurden.",
         [_.optionFormattingLines]: "Zeilen",
         [_.optionFormattingLinesDescription]: "Wählen Sie, ob Sie die Zeilen kurz oder lang halten wollen.",
         [_.optionFormattingLinesValueLong]: "Lange Zeilen",

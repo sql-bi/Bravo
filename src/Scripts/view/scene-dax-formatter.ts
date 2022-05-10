@@ -44,6 +44,13 @@ export class DaxFormatterScene extends DocScene {
 
     showMeasuresWithErrorsOnly = false;
 
+    get formattableMeasures(): TabularMeasure[] {
+        if (!optionsController.options.customOptions.formatting.daxFormatter.includeTimeIntelligence) {
+            return this.doc.measures.filter(measure => !measure.isManageDatesTimeIntelligence);
+        }
+        return this.doc.measures;
+    }
+
     get canFormat(): boolean {
         return this.canEdit;
     }
@@ -126,7 +133,7 @@ export class DaxFormatterScene extends DocScene {
                             icon: "refresh",
                             title: i18n(strings.refreshPreviewCtrlTitle),
                             onClick: (e) => {
-                                this.generateFormattedPreview(this.doc.measures);
+                                this.generateFormattedPreview(this.formattableMeasures);
                             }
                         },
                         {
@@ -240,7 +247,7 @@ export class DaxFormatterScene extends DocScene {
 
     maybeAutoGenerateFormattedPreview() {
         if (optionsController.options.customOptions.formatting.preview) {
-            this.generateFormattedPreview(this.doc.measures);
+            this.generateFormattedPreview(this.formattableMeasures);
         }
     }
 
@@ -334,7 +341,7 @@ export class DaxFormatterScene extends DocScene {
             }
         }
         this.deselectMeasures();
-        let data = this.doc.measures;
+        let data = this.formattableMeasures;
 
         if (!this.table) {
 
@@ -489,13 +496,14 @@ export class DaxFormatterScene extends DocScene {
     }
 
     updateSummary() {
+
         let summary = {
-            count: this.doc.measures.length,
+            count: this.formattableMeasures.length,
             analyzable: 0,
             errors: 0,
             formattable: 0
         };
-        this.doc.measures.forEach(measure => {
+        this.formattableMeasures.forEach(measure => {
             const status = this.doc.analizeMeasure(measure);
             if (status == MeasureStatus.NotAnalyzed) {
                 summary.analyzable += 1;
@@ -640,6 +648,7 @@ export class DaxFormatterScene extends DocScene {
 
                         let successScene = new SuccessScene(Utils.DOM.uniqueId(), this.element.parentElement, i18n(strings.daxFormatterSuccessSceneMessage, {count: formattedMeasures.length}), ()=>{
                             this.pop();
+                            this.updateSummary();
                         });
                         this.splice(successScene);
                     })
@@ -712,7 +721,7 @@ export class DaxFormatterScene extends DocScene {
                         element.toggleAttr("disabled", true);
                         element.innerHTML = Loader.html(false);
                         
-                        this.generateFormattedPreview(this.doc.measures);
+                        this.generateFormattedPreview(this.formattableMeasures);
 
                         telemetry.track("Format DAX: Analyze");
                     }
@@ -764,7 +773,7 @@ export class DaxFormatterScene extends DocScene {
 
         this.element.addLiveEventListener("click", ".gen-preview-all", (e, element) => {
             e.preventDefault();
-            this.generateFormattedPreview(this.doc.measures);
+            this.generateFormattedPreview(this.formattableMeasures);
 
             telemetry.track("Format DAX: Preview All");
         });
@@ -773,7 +782,7 @@ export class DaxFormatterScene extends DocScene {
             e.preventDefault();
             optionsController.update("customOptions.formatting.preview", (<HTMLInputElement>element).checked);
             window.setTimeout(() => {
-                this.generateFormattedPreview(this.doc.measures);
+                this.generateFormattedPreview(this.formattableMeasures);
             }, 300);
         });
 
@@ -790,6 +799,11 @@ export class DaxFormatterScene extends DocScene {
             this.maybeAutoGenerateFormattedPreview();
         });
         optionsController.on("customOptions.formatting.daxFormatter.lineBreakStyle.change", (changedOptions: any) => {
+            this.maybeAutoGenerateFormattedPreview();
+        });
+        optionsController.on("customOptions.formatting.daxFormatter.includeTimeIntelligence.change", (changedOptions: any) => {
+            this.updateTable(false);
+            this.updateSummary();
             this.maybeAutoGenerateFormattedPreview();
         });
     }
@@ -810,8 +824,7 @@ export class DaxFormatterScene extends DocScene {
         if (this.table) {
             this.table.clearFilter();
 
-            if (this.showMeasuresWithErrorsOnly) 
-                this.table.addFilter(data => this.measuresFilter(data));
+            this.table.addFilter(data => this.measuresFilter(data));
 
             if (this.searchBox.value)
                 this.table.addFilter("name", "like", sanitizeHtml(this.searchBox.value, { allowedTags: [], allowedAttributes: {}}));
@@ -819,12 +832,14 @@ export class DaxFormatterScene extends DocScene {
     }
 
     measuresFilter(measure: TabularMeasure): boolean {
+
+        // Error filter
         if (this.showMeasuresWithErrorsOnly) {
-
             const status = this.doc.analizeMeasure(measure);
-
-            return (status == MeasureStatus.NotAnalyzed || (this.showMeasuresWithErrorsOnly && (status == MeasureStatus.WithErrors || status == MeasureStatus.NotFormatted)));
+            if (status == MeasureStatus.Formatted)
+                return false;
         }
+
         return true;
     }
 
