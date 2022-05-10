@@ -10,6 +10,7 @@
     using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Infrastructure.Helpers;
     using Sqlbi.Bravo.Infrastructure.Messages;
+    using Sqlbi.Bravo.Infrastructure.Services;
     using Sqlbi.Bravo.Infrastructure.Windows.Interop;
     using Sqlbi.Bravo.Models;
     using System;
@@ -52,7 +53,10 @@
 
             var options = new CoreWebView2EnvironmentOptions(additionalBrowserArguments: null, language: null, targetCompatibleBrowserVersion: null, allowSingleSignOnUsingOSPrimaryAccount: false);
             {
-                options.AdditionalBrowserArguments = "";
+                options.AdditionalBrowserArguments = WebView2Helper.GetProxyArguments(UserPreferences.Current.Proxy, WebProxyWrapper.Current.DefaultSystemProxy);
+
+                if (AppEnvironment.IsDiagnosticLevelVerbose)
+                    AppEnvironment.AddDiagnostics(DiagnosticMessageType.Text, name: $"{ nameof(AppWindow) }.{ nameof(InitializeWebViewAsync) }.{ nameof(options.AdditionalBrowserArguments) }", content: options.AdditionalBrowserArguments);
             }
             var environment = await CoreWebView2Environment.CreateAsync(browserExecutableFolder: null, userDataFolder: AppEnvironment.ApplicationTempPath, options);
             {

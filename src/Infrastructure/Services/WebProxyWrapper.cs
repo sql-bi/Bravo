@@ -18,18 +18,20 @@
         public static readonly WebProxyWrapper Current = new();
 
         private static readonly object _proxyLock = new();
+        private readonly IWebProxy _defaultSystemProxy;
         private readonly IWebProxy _systemProxy;
         private IWebProxy? _customProxy;
         private IWebProxy? _noProxy;
 
         private WebProxyWrapper()
         {
+            _defaultSystemProxy = HttpClient.DefaultProxy;
             // For .NET Core The initial value of the static property HttpClient.DefaultProxy represents the system proxy on the machine.
             // DO NOT USE WebRequest.GetSystemWebProxy() or WebProxy.GetDefaultProxy() as these legacy methods return a proxy configured with the Internet Explorer settings
-            _systemProxy = new HttpSystemProxy(HttpClient.DefaultProxy);
-
-            WebView2Helper.SetWebView2CmdlineProxyArguments(UserPreferences.Current.Proxy, HttpClient.DefaultProxy);
+            _systemProxy = new HttpSystemProxy(_defaultSystemProxy);
         }
+
+        public IWebProxy DefaultSystemProxy => _defaultSystemProxy;
 
         #region IWebProxy
 
