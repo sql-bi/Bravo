@@ -84,7 +84,6 @@
 #if DEBUG_WWWROOT
             WebView.CoreWebView2.OpenDevToolsWindow();
             //WebView.CoreWebView2.OpenTaskManagerWindow();
-            //WebView.CoreWebView2.PermissionRequested += OnWebViewPermissionRequested;
             //WebView.CoreWebView2.NavigationStarting += OnWebViewNavigationStarting;
             //WebView.CoreWebView2.NavigationCompleted += OnWebViewNavigationCompleted;
             //WebView.CoreWebView2.ContentLoading += OnWebViewContentLoading;
@@ -93,6 +92,7 @@
 #endif
             WebView.CoreWebView2.DOMContentLoaded += OnWebViewDOMContentLoaded;
             WebView.CoreWebView2.WebResourceRequested += OnWebViewWebResourceRequested;
+            WebView.CoreWebView2.PermissionRequested += OnWebViewPermissionRequested;
 
             await WebView.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(@"
 window.external = {
@@ -167,6 +167,9 @@ window.external = {
         private void OnWebViewPermissionRequested(object? sender, CoreWebView2PermissionRequestedEventArgs e)
         {
             WebViewLog(message: $"::OnWebViewPermissionRequested({ e.PermissionKind }|{ e.State })");
+
+            if (e.PermissionKind == CoreWebView2PermissionKind.ClipboardRead)
+                e.State = CoreWebView2PermissionState.Allow;
         }
 
         private void OnWebViewNavigationStarting(object? sender, CoreWebView2NavigationStartingEventArgs e)
@@ -186,7 +189,7 @@ window.external = {
 
         private void OnWebViewWebResourceRequested(object? sender, CoreWebView2WebResourceRequestedEventArgs e)
         {
-            WebViewLog(message: $"::OnWebViewWebResourceRequested({ e.ResourceContext }|{ e.Request.Uri })");
+            //WebViewLog(message: $"::OnWebViewWebResourceRequested({ e.ResourceContext }|{ e.Request.Uri })");
 
             if (e.ResourceContext == CoreWebView2WebResourceContext.Script && e.Request.Uri.EqualsI("app://config.js"))
             {
@@ -297,7 +300,7 @@ window.external = {
         [Conditional("DEBUG")]
         private void WebViewLog(string message)
         {
-            // WebView.CoreWebView2.ExecuteScriptAsync($"console.log('{ message }');");
+            WebView.CoreWebView2.ExecuteScriptAsync($"console.log('[WEBVIEW]{ message }');");
 
             //if (AppEnvironment.IsDiagnosticLevelVerbose)
             //    AppEnvironment.AddDiagnostics(DiagnosticMessageType.Text, name: $"{ nameof(AppWindow) }.{ nameof(WebView2) }", content: message);
