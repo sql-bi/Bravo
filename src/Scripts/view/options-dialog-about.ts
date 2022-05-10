@@ -34,7 +34,8 @@ export class OptionsDialogAbout {
                                 <option value="${(<any>UpdateChannelType)[key]}" ${(<any>UpdateChannelType)[key] == updateChannel ? "selected" : ""}>${i18n((<any>strings)[`updateChannel${key}`])}</option>
                             `).join("")}
                         </select> &nbsp;
-                        ${i18n(strings.appVersion, { version: app.currentVersion.info.build})}
+                        <span class="display-version">${i18n(strings.appVersion, { version: app.currentVersion.info.build})}</span>
+                        <span class="ctrl copy-version icon-copy" title="${i18n(strings.copy)}"></span>
                     </div>
                     <div class="update-status list"></div>
                 </div>
@@ -54,10 +55,15 @@ export class OptionsDialogAbout {
         element.insertAdjacentHTML("beforeend", html);
         this.updateStatusDiv = _(".update-status", element);
 
-        _("#option-updatechannel").addEventListener("change", e => {
+        _("#option-updatechannel", element).addEventListener("change", e => {
             let el = <HTMLSelectElement>e.currentTarget;
             optionsController.update("updateChannel", el.value);
             this.checkForUpdates(true);
+        });
+
+        _(".copy-version", element).addEventListener("click", e => {
+            e.preventDefault();
+            navigator.clipboard.writeText(app.currentVersion.toString());
         });
         this.checkForUpdates();
     }

@@ -307,6 +307,17 @@
 		.version {
 			font-size: 14px;
 			margin: 0 0 15px 0;
+			.flexbox(center);
+
+			.display-version {
+				margin: 0 5px;
+			}
+			.copy-version {
+				&:before {
+					font-size: 22px;
+					margin: 0
+				}
+			}
 		}
 		.update-status {
 			.flexbox(center, center);
