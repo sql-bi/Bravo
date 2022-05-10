@@ -10,13 +10,21 @@ export interface TabularDatabase {
     features: TabularDatabaseFeature
     featureUnsupportedReasons?: TabularDatabaseFeatureUnsupportedReason
 }
+
+// @see: https://docs.microsoft.com/en-us/dotnet/api/microsoft.analysisservices.compatibilitymode
+export enum ASCompatibilityMode {
+    Unknown = 0,
+    AnalysisServices = 1,
+    PowerBI = 2,	
+    Excel = 4	
+}
 export interface TabularDatabaseModel {
     columns: TabularColumn[]
     tables: TabularTable[]
 }
 export interface TabularDatabaseServer {
     compatibilityLevel?: number
-    compatibilityMode?: number
+    compatibilityMode?: ASCompatibilityMode
     serverName?: string
     serverVersion?: string
     serverEdition?: number

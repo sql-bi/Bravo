@@ -127,6 +127,10 @@ export class Doc {
 
                         // Update the source dataset as it may have changed
                         this.sourceData = response[1]; 
+
+                        // Update report compatibility mode with the one in the response
+                        this.sourceData.compatibilityMode = response[0].model.compatibilityMode;
+
                         this.name = sanitizeHtml(this.sourceData.reportName, { allowedTags: [], allowedAttributes: {} });
 
                         return processResponse(response[0])

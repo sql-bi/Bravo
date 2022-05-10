@@ -13,7 +13,7 @@ import { View } from '../view/view';
 import { AppError, AppErrorType } from '../model/exceptions';
 import { Page, PageType } from './page';
 import { pbiDesktop, telemetry } from '../main';
-import { PBIDesktopReport } from '../model/pbi-report';
+import { ASCompatibilityMode } from '../model/tabular';
 
 export class Sheet extends View { 
     
@@ -61,6 +61,9 @@ export class Sheet extends View {
         if (this.doc.type == DocType.pbix) {
             pbiDesktop.on("poll", (changed: boolean)=>{
                 //if (!changed) return;
+
+                // Don't do nothing since the model has not been yet populated
+                if (!this.doc.model || this.doc.model.compatibilityMode != ASCompatibilityMode.PowerBI) return;
 
                 let orphan = true;
                 pbiDesktop.reports.forEach(report => {

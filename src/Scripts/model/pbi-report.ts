@@ -4,6 +4,8 @@
  * https://www.sqlbi.com
 */
 
+import { ASCompatibilityMode } from './tabular'
+
 export enum PBIDesktopReportConnectionMode {
     Unknown = 0, 
     Supported = 1, 
@@ -16,19 +18,11 @@ export enum PBIDesktopReportConnectionMode {
     UnsupportedConnectionException = 8
 }
 
-// https://docs.microsoft.com/en-us/dotnet/api/microsoft.analysisservices.compatibilitymode
-export enum MicrosoftAnalysisServicesCompatibilityMode {
-    Unknown = 0,
-    AnalysisServices = 1,
-    PowerBI = 2,
-    Excel = 4
-}
-
 export interface PBIDesktopReport {
     id: number
     reportName?: string
     serverName?: string
     databaseName?: string
-    //compatibilityMode: MicrosoftAnalysisServicesCompatibilityMode
+    compatibilityMode?: ASCompatibilityMode
     connectionMode: PBIDesktopReportConnectionMode
 }
