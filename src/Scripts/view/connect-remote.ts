@@ -76,7 +76,7 @@ export class ConnectRemote extends ConnectMenuItem {
         } else {
 
             this.table = new Tabulator(`#${id}`, {
-                renderVerticalBuffer: 400,
+                //renderVerticalBuffer: 500,
                 maxHeight: "100%",
                 layout: "fitColumns",
                 //initialFilter: dataset => this.unsupportedFilter(dataset),
@@ -121,7 +121,7 @@ export class ConnectRemote extends ConnectMenuItem {
                     { 
                         field: "name", 
                         title: i18n(strings.connectDatasetsTableNameCol),
-                        width: 240
+   
                     },
                     { 
                         field: "endorsement", 
@@ -150,7 +150,7 @@ export class ConnectRemote extends ConnectMenuItem {
                     },
                     { 
                         field: "workspaceName", 
-                        width: 100,
+
                         title: i18n(strings.connectDatasetsTableWorkspaceCol)
                     },
                 ],
