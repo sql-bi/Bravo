@@ -281,6 +281,8 @@ export enum strings {
     optionFormattingBreaksDescription,
     optionFormattingBreaksInitial,
     optionFormattingBreaksNone,
+    optionFormattingIncludeTimeIntelligence,
+    optionFormattingIncludeTimeIntelligenceDescription,
     optionFormattingLines,
     optionFormattingLinesDescription,
     optionFormattingLinesValueLong,

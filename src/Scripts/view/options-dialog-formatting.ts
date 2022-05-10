@@ -74,6 +74,13 @@ export class OptionsDialogFormatting {
                     [DaxLineBreakStyle.Auto.toString(), i18n(strings.optionFormattingBreaksAuto)],
                     
                 ]
+            },
+            {
+                option: "customOptions.formatting.daxFormatter.includeTimeIntelligence",
+                icon: "folder-fx",
+                name: i18n(strings.optionFormattingIncludeTimeIntelligence),
+                description: i18n(strings.optionFormattingIncludeTimeIntelligenceDescription),
+                type: OptionType.switch
             }
         ];
 

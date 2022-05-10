@@ -290,6 +290,8 @@ const locale: Locale = {
         [_.optionFormattingBreaksDescription]: "Vælg hvordan målingsnavn og -udtryk skal adskilles. Ved <em>Auto</em> bruges den type adskillelse som allerede anvendes i modellen.",
         [_.optionFormattingBreaksInitial]: "Linjeskift",
         [_.optionFormattingBreaksNone]: "Samme linje",
+        [_.optionFormattingIncludeTimeIntelligence]: "Inkluder tidsintelligens",
+        [_.optionFormattingIncludeTimeIntelligenceDescription]: "Medtag foranstaltninger oprettet automatisk efter administrationsdatoer for tidsinformation.",
         [_.optionFormattingLines]: "Linjelængde",
         [_.optionFormattingLinesDescription]: "Vælg om linjer skal holdes korte eller lange.",
         [_.optionFormattingLinesValueLong]: "Lange linjer",

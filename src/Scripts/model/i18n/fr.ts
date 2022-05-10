@@ -292,6 +292,8 @@ const locale: Locale = {
         [_.optionFormattingBreaksDescription]: "Choisir comment séparer le libellé de la mesure et l'expression. Sélectionner <em>Automatique</em> pour déterminer automatiquement le style utilisé dans le modèle.",
         [_.optionFormattingBreaksInitial]: "Saut de Ligne",
         [_.optionFormattingBreaksNone]: "Même Ligne",
+        [_.optionFormattingIncludeTimeIntelligence]: "Inclure l'intelligence temporelle",
+        [_.optionFormattingIncludeTimeIntelligenceDescription]: "Incluez des mesures créées automatiquement en gérant les dates pour l'intelligence temporelle.",
         [_.optionFormattingLines]: "Lignes",
         [_.optionFormattingLinesDescription]: "Choisir de garder les lignes courtes ou longues.",
         [_.optionFormattingLinesValueLong]: "Lignes longues",

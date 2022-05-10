@@ -290,6 +290,8 @@ const locale: Locale = {
         [_.optionFormattingBreaksDescription]: "Επέλεξε πως θα διαχωρίζονται οι μετρήσεις και οι εκφράσεις. Όρισε <em>Αυτόματα</em> για τον αυτόματο τρόπο ορισμού που θα χρησιμοποιηθεί στο μοντέλο.",
         [_.optionFormattingBreaksInitial]: "Διαχώριση Γραμμής",
         [_.optionFormattingBreaksNone]: "Ίδια Γραμμή",
+        [_.optionFormattingIncludeTimeIntelligence]: "Συμπεριλάβετε το χρόνο νοημοσύνης",
+        [_.optionFormattingIncludeTimeIntelligenceDescription]: "Συμπεριλάβετε τα μέτρα που δημιουργούνται αυτόματα με τις ημερομηνίες διαχείρισης για το χρόνο πληροφοριών.",
         [_.optionFormattingLines]: "Γραμμές",
         [_.optionFormattingLinesDescription]: "Επέλεξε το αν θα κρατήσεις μεγάλες ή μικρές γραμμές.",
         [_.optionFormattingLinesValueLong]: "Μεγάλες γραμμές",

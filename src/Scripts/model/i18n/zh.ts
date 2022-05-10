@@ -290,6 +290,8 @@ const locale: Locale = {
         [_.optionFormattingBreaksDescription]: "如何区分度量值的名称与其表达式. 选择 <em>自动</em> 以自动确定模型中使用的样式",
         [_.optionFormattingBreaksInitial]: "换行",
         [_.optionFormattingBreaksNone]: "同一行",
+        [_.optionFormattingIncludeTimeIntelligence]: "包括时间智能",
+        [_.optionFormattingIncludeTimeIntelligenceDescription]: "包括通过管理日期自动创建的措施以供时间智能创建。",
         [_.optionFormattingLines]: "代码行",
         [_.optionFormattingLinesDescription]: "选择使用长代码行或短代码行",
         [_.optionFormattingLinesValueLong]: "长代码行",

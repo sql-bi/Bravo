@@ -54,6 +54,7 @@ export interface FormatDaxOptions {
     spacingStyle: DaxFormatterSpacingStyle
     listSeparator?: string
     decimalSeparator?: string
+    includeTimeIntelligence?: boolean
 }
 
 export enum DaxFormatterLineStyle {
@@ -165,7 +166,8 @@ export class OptionsController extends OptionsStore<Options> {
                     spacingStyle: DaxFormatterSpacingStyle.SpaceAfterFunction,
                     lineStyle: DaxFormatterLineStyle.LongLine,
                     lineBreakStyle: DaxLineBreakStyle.InitialLineBreak,
-                    autoLineBreakStyle: DaxLineBreakStyle.InitialLineBreak
+                    autoLineBreakStyle: DaxLineBreakStyle.InitialLineBreak,
+                    includeTimeIntelligence: false
                 }
             },
             editor: {

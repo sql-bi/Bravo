@@ -290,6 +290,8 @@ const locale: Locale = {
         [_.optionFormattingBreaksDescription]: "Vyberte, jak oddělit název míry a výraz. Nastavením <em>Automaticky</em> automaticky určíte styl použitý v modelu.",
         [_.optionFormattingBreaksInitial]: "Zalomení řádku",
         [_.optionFormattingBreaksNone]: "Stejný řádek",
+        [_.optionFormattingIncludeTimeIntelligence]: "Zahrnout časovou inteligenci",
+        [_.optionFormattingIncludeTimeIntelligenceDescription]: "Zahrňte opatření vytvořená automaticky správou dat pro časovou inteligenci.",
         [_.optionFormattingLines]: "Řádky",
         [_.optionFormattingLinesDescription]: "Zvolte, zda budou řádky krátké nebo dlouhé.",
         [_.optionFormattingLinesValueLong]: "Dlouhé řádky",

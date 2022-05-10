@@ -290,6 +290,8 @@ const locale: Locale = {
         [_.optionFormattingBreaksDescription]: "Выберите способ разделения имени меры и выражения. Установите <em>Авто</em> для автоматического определения стиля, используемого в модели.",
         [_.optionFormattingBreaksInitial]: "Разрыв строки",
         [_.optionFormattingBreaksNone]: "Та же строка",
+        [_.optionFormattingIncludeTimeIntelligence]: "Включите интеллект времени",
+        [_.optionFormattingIncludeTimeIntelligenceDescription]: "Включите меры, созданные автоматически путем управления датами для интеллекта времени.",
         [_.optionFormattingLines]: "Строки",
         [_.optionFormattingLinesDescription]: "Выберите короткие или длинные строки.",
         [_.optionFormattingLinesValueLong]: "Длинные строки",

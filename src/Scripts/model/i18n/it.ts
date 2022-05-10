@@ -290,6 +290,8 @@ const locale: Locale = {
         [_.optionFormattingBreaksDescription]: "Scegli come separare il nome della misura e l'espressione. Imposta <em>Auto</em> per scegliere automaticamente in base al modello.",
         [_.optionFormattingBreaksInitial]: "A Capo",
         [_.optionFormattingBreaksNone]: "Stessa Linea",
+        [_.optionFormattingIncludeTimeIntelligence]: "Includi Time Intelligence",
+        [_.optionFormattingIncludeTimeIntelligenceDescription]: "Includi misure create automaticamente da Manage Dates per la Time Intelligence.",
         [_.optionFormattingLines]: "Linee",
         [_.optionFormattingLinesDescription]: "Scegli se tenere le linee lunghe o corte.",
         [_.optionFormattingLinesValueLong]: "Linee lunghe",

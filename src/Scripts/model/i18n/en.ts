@@ -290,6 +290,8 @@ const locale: Locale = {
         [_.optionFormattingBreaksDescription]: "Choose how to separate measure name and expression. Set <em>Auto</em> to automatically determine the style used in the model.",
         [_.optionFormattingBreaksInitial]: "Line Break",
         [_.optionFormattingBreaksNone]: "Same Line",
+        [_.optionFormattingIncludeTimeIntelligence]: "Include Time Intelligence",
+        [_.optionFormattingIncludeTimeIntelligenceDescription]: "Include measures created automatically by Manage Dates for Time Intelligence.",
         [_.optionFormattingLines]: "Lines",
         [_.optionFormattingLinesDescription]: "Choose to keep lines short or long.",
         [_.optionFormattingLinesValueLong]: "Long lines",

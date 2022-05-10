@@ -290,6 +290,8 @@ const locale: Locale = {
         [_.optionFormattingBreaksDescription]: "Wybierz sposób oddzielania nazwy miary i wyrażenia. Ustaw opcję <em>Auto</em>, aby automatycznie określić styl używany w modelu.",
         [_.optionFormattingBreaksInitial]: "Łamanie linii",
         [_.optionFormattingBreaksNone]: "W tej samej linii",
+        [_.optionFormattingIncludeTimeIntelligence]: "Obejmują inteligencję czasu",
+        [_.optionFormattingIncludeTimeIntelligenceDescription]: "Uwzględnij środki tworzone automatycznie przez zarządzanie datami inteligencji czasu.",
         [_.optionFormattingLines]: "Linie",
         [_.optionFormattingLinesDescription]: "Wybierzy czy linie mają być długie czy krótkie.",
         [_.optionFormattingLinesValueLong]: "Długie linie",
