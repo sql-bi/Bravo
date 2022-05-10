@@ -158,6 +158,7 @@ window.external = {
             if (WebView.Visible == false)
             {
                 WebView.Visible = true;
+                BackgroundImage = null;
                 SendAppStartupWebMessage();
 
                 _instance.OnNewInstance += OnNewInstanceSendStartupWebMessage;
