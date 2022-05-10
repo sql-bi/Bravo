@@ -217,10 +217,7 @@
 
     public enum PBICloudDatasetConnectionMode
     {
-        [JsonPropertyName("Unknown")]
         Unknown = 0,
-
-        [JsonPropertyName("Supported")]
         Supported = 1,
     }
 }

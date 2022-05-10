@@ -14,7 +14,6 @@
     using System.Drawing;
     using System.IO;
     using System.Text.Json;
-    using System.Text.Json.Serialization;
 
     internal static class AppEnvironment
     {
@@ -54,17 +53,15 @@
 
         static AppEnvironment()
         {
-            _deploymentMode = new(() => GetDeploymentMode());
+            Debug.Assert(Environment.ProcessPath is not null);
 
-            var currentProcess = Process.GetCurrentProcess();
+            _deploymentMode = new(() => GetDeploymentMode());
+            using var currentProcess = Process.GetCurrentProcess();
 
             ProcessId = Environment.ProcessId;
             SessionId = currentProcess.SessionId;
-
-            // use Environment.ProcessPath on .NET 6
-            BravoUnexpectedException.ThrowIfNull(currentProcess.MainModule?.FileName);
-            ProcessPath = currentProcess.MainModule.FileName;
-
+            ProcessPath = Environment.ProcessPath!;
+            
             VersionInfo = FileVersionInfo.GetVersionInfo(ProcessPath);
             BravoUnexpectedException.ThrowIfNull(VersionInfo.FileVersion);
             ApplicationFileVersion = VersionInfo.FileVersion;
@@ -80,7 +77,6 @@
 
             Diagnostics = new ConcurrentDictionary<string, DiagnosticMessage>();
             DefaultJsonOptions = new(JsonSerializerDefaults.Web) { MaxDepth = 32 }; // see Microsoft.AspNetCore.Mvc.JsonOptions.JsonSerializerOptions
-            DefaultJsonOptions.Converters.Add(new JsonStringEnumMemberConverter()); // https://github.com/dotnet/runtime/issues/31081#issuecomment-578459083
         }
 
         /// <summary>

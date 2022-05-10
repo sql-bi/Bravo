@@ -192,19 +192,19 @@ export class App {
         });
 
         // Catch host messages
-        host.on(WebMessageType.ReportOpen, (data: PBIDesktopReportOpenWebMessage) => {
+        host.on(WebMessageType[WebMessageType.ReportOpen], (data: PBIDesktopReportOpenWebMessage) => {
             this.openReport(data.report);
         });
 
-        host.on(WebMessageType.DatasetOpen, (data: PBICloudDatasetOpenWebMessage) => {
+        host.on(WebMessageType[WebMessageType.DatasetOpen], (data: PBICloudDatasetOpenWebMessage) => {
             this.openDataset(data.dataset);
         });
 
-        host.on(WebMessageType.VpaxOpen, (data: VpaxFileOpenWebMessage) => {
+        host.on(WebMessageType[WebMessageType.VpaxOpen], (data: VpaxFileOpenWebMessage) => {
             this.openFile(new File(data.blob, data.name, { lastModified: data.lastModified }));
         });
 
-        host.on(WebMessageType.Unknown, (data: UnknownWebMessage) => {
+        host.on(WebMessageType[WebMessageType.Unknown], (data: UnknownWebMessage) => {
             
             let appError = AppError.InitFromResponseStatus(Utils.ResponseStatusCode.InternalError, `${data.exception ? data.exception : ""} ${data.message ? data.message : "" }` );
             let alert = new ErrorAlert(appError, i18n(strings.unknownMessage));

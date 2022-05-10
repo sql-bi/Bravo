@@ -189,7 +189,7 @@ export class Host extends Dispatchable {
         this.requests = {};
         this.address = address;
         this.token = token;
-    }   
+    }
 
     // Listen for events
     listen() {
@@ -201,7 +201,7 @@ export class Host extends Dispatchable {
 
                 try { logger.log("Message", { content: webMessage }); } catch (ignore) {}
 
-                this.trigger(webMessage.type, webMessage);
+                this.trigger(WebMessageType[webMessage.type], webMessage);
             });
         } catch (ignore) {
             // Ignore error
@@ -405,38 +405,13 @@ export class Host extends Dispatchable {
         };
 
         return new Promise((resolve, reject) => {
-
-            return this.listReports()
-                .then((reports: PBIDesktopReport[]) => {
-                    let foundReport = report;
-                    for (let i = 0; i < reports.length; i++) {
-                        if (reports[i].serverName == report.serverName && reports[i].databaseName == report.databaseName ) {
-
-                            foundReport = reports[i];
-                            if (reports[i].connectionMode == PBIDesktopReportConnectionMode.Supported) {
-                                resolve(foundReport);
-                                return;
-                            }
-                            break;
-                        }
-                    }
-
-                    this.apiLog("api/GetModelFromReport", foundReport, logSettings);
-                    reject(connectionError(foundReport.connectionMode));
-                })
-                .catch(error => {
-                    reject(error);
-                });
-        });
-
-        /*return new Promise((resolve, reject) => {
             if (report.connectionMode == PBIDesktopReportConnectionMode.Supported) {
                 resolve(report);
             } else {
                 this.apiLog("api/GetModelFromReport", report, logSettings);
                 reject(connectionError(report.connectionMode));
             }
-        });*/
+        });
     }
 
     getModelFromDataset(dataset: PBICloudDataset) {

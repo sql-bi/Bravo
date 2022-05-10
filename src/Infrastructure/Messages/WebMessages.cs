@@ -69,7 +69,7 @@
     {
         [Required]
         [JsonPropertyName("type")]
-        public WebMessageType MessageType => WebMessageType.PBIDesktopReportOpen;
+        public WebMessageType MessageType => WebMessageType.ReportOpen;
 
         [JsonPropertyName("report")]
         public PBIDesktopReport? Report { get; set; }
@@ -92,7 +92,7 @@
     {
         [Required]
         [JsonPropertyName("type")]
-        public WebMessageType MessageType => WebMessageType.PBICloudDatasetOpen;
+        public WebMessageType MessageType => WebMessageType.DatasetOpen;
 
         [JsonPropertyName("dataset")]
         public PBICloudDataset? Dataset { get; set; }
@@ -105,7 +105,7 @@
     {
         [Required]
         [JsonPropertyName("type")]
-        public WebMessageType MessageType => WebMessageType.VpaxFileOpen;
+        public WebMessageType MessageType => WebMessageType.VpaxOpen;
 
         [JsonPropertyName("name")]
         public string? Name { get; set; }

@@ -11,6 +11,7 @@
     using System.Linq;
     using System.Management;
     using System.Threading;
+    using System.Windows.Forms;
 
     internal static class ProcessHelper
     {
@@ -22,6 +23,30 @@
             thread.SetApartmentState(ApartmentState.STA);
             thread.Start();
             thread.Join();
+        }
+
+        public static void RunOnUIThread(Control control, Action action) => RunOnUIThread(action, control);
+        
+        public static void RunOnUIThread(Action action, Control? control = null)
+        {
+            if (control is null)
+            {
+                var mainWindowHandle = GetCurrentProcessMainWindowHandle();
+                control = Control.FromHandle(mainWindowHandle);
+            }
+
+            //if (!Application.MessageLoop)
+            //{
+            //}
+
+            if (control.InvokeRequired)
+            {
+                control.Invoke(action);
+            }
+            else
+            {
+                action();
+            }
         }
 
         public static bool OpenBrowser(Uri address)

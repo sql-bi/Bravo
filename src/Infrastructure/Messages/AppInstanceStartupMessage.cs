@@ -7,6 +7,7 @@
     using System.IO;
     using System.Text.Json;
     using System.Text.Json.Serialization;
+    using SSAS = Microsoft.AnalysisServices;
 
     internal class AppInstanceStartupMessage
     {
@@ -87,10 +88,7 @@
             }
             else
             {
-                // address => localhost:port OR <ipaddress>[:port] OR <hostname>[:port] OR ... ??
-                // ***
                 // SQL Server Analysis Services instance listens on one TCP port for all IP addresses (included loopback) assigned or aliased to the computer
-                // ***
 
                 var report = new PBIDesktopReport
                 {
@@ -98,6 +96,7 @@
                     ReportName = startupMessage.ParentProcessMainWindowTitle,
                     ServerName = startupMessage.ArgumentServerName,
                     DatabaseName = startupMessage.ArgumentDatabaseName,
+                    CompatibilityMode = SSAS.CompatibilityMode.Unknown,
                     ConnectionMode = PBIDesktopReportConnectionMode.Supported
                 };
 

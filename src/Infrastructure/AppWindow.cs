@@ -20,6 +20,7 @@
     using System.Linq;
     using System.Text;
     using System.Text.Json;
+    using System.Text.Json.Serialization;
     using System.Windows.Forms;
 
     internal partial class AppWindow : Form
@@ -208,7 +209,7 @@ window.external = {
 
         private void OnNewInstanceRestoreFormWindowToForeground(object? sender, AppInstanceStartupEventArgs _)
         {
-            Invoke(() =>
+            ProcessHelper.RunOnUIThread(this, () =>
             {
                 if (WindowState == FormWindowState.Minimized)
                 {
@@ -223,7 +224,7 @@ window.external = {
         {
             if (e.Message?.IsEmpty == false)
             {
-                Invoke(() =>
+                ProcessHelper.RunOnUIThread(this, () =>
                 {
                     var webMessageString = e.Message.ToWebMessageString();
                     WebView.CoreWebView2.PostWebMessageAsString(webMessageString);
@@ -259,7 +260,11 @@ window.external = {
                 },
             };
 
-            var script = $@"var CONFIG = { JsonSerializer.Serialize(config, AppEnvironment.DefaultJsonOptions) };";
+            // TODO: use AppEnvironment.DefaultJsonOptions instead - see AddJsonOptions in HostingExtensions.AddAndConfigureControllers
+            var jsonOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web) { MaxDepth = 32 };
+            jsonOptions.Converters.Add(new JsonStringEnumMemberConverter()); // https://github.com/dotnet/runtime/issues/31081#issuecomment-578459083
+
+            var script = $@"var CONFIG = { JsonSerializer.Serialize(config, jsonOptions) };";
             var stream = new MemoryStream(Encoding.UTF8.GetBytes(script));
 
             return stream;

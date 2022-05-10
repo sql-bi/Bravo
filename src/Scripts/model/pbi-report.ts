@@ -4,16 +4,18 @@
  * https://www.sqlbi.com
 */
 
+import { ASCompatibilityMode } from './tabular'
+
 export enum PBIDesktopReportConnectionMode {
-    Unknown = "Unknown", 
-    Supported = "Supported", 
-    UnsupportedProcessNotYetReady = "UnsupportedProcessNotYetReady", 
-    UnsupportedAnalysisServecesProcessNotFound = "UnsupportedAnalysisServecesProcessNotFound", 
-    UnsupportedAnalysisServecesConnectionNotFound = "UnsupportedAnalysisServecesConnectionNotFound", 
-    UnsupportedAnalysisServecesCompatibilityMode = "UnsupportedAnalysisServecesCompatibilityMode", 
-    UnsupportedDatabaseCollectionIsEmpty = "UnsupportedDatabaseCollectionIsEmpty", 
-    UnsupportedDatabaseCollectionUnexpectedCount = "UnsupportedDatabaseCollectionUnexpectedCount", 
-    UnsupportedConnectionException = "UnsupportedConnectionException"
+    Unknown = 0, 
+    Supported = 1, 
+    UnsupportedProcessNotReady = 2, 
+    UnsupportedAnalysisServicesProcessNotFound = 3, 
+    UnsupportedAnalysisServicesConnectionNotFound = 4, 
+    UnsupportedAnalysisServicesCompatibilityMode = 5, 
+    UnsupportedDatabaseCollectionEmpty = 6, 
+    UnsupportedDatabaseCollectionUnexpectedCount = 7, 
+    UnsupportedConnectionException = 8
 }
 
 export interface PBIDesktopReport {
@@ -21,5 +23,6 @@ export interface PBIDesktopReport {
     reportName?: string
     serverName?: string
     databaseName?: string
+    compatibilityMode?: ASCompatibilityMode
     connectionMode: PBIDesktopReportConnectionMode
 }

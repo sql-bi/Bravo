@@ -18,6 +18,10 @@
     [DebuggerDisplay("{ServerName} - {ReportName} - {ConnectionMode}")]
     public class PBIDesktopReport : IDataModel<PBIDesktopReport>
     {
+        public PBIDesktopReport()
+        {
+        }
+
         [Required]
         [JsonPropertyName("id")]
         public int? ProcessId { get; set; }
@@ -30,6 +34,9 @@
 
         [JsonPropertyName("databaseName")]
         public string? DatabaseName { get; set; }
+
+        [JsonPropertyName("compatibilityMode")]
+        public SSAS.CompatibilityMode CompatibilityMode { get; set; } = SSAS.CompatibilityMode.Unknown;
 
         [JsonPropertyName("connectionMode")]
         public PBIDesktopReportConnectionMode ConnectionMode { get; set; } = PBIDesktopReportConnectionMode.Unknown;
@@ -73,6 +80,7 @@
                 ReportName = process.GetPBIDesktopMainWindowTitle(),
                 ServerName = null,
                 DatabaseName = null,
+                CompatibilityMode = SSAS.CompatibilityMode.Unknown,
                 ConnectionMode = PBIDesktopReportConnectionMode.Unknown,
             };
 
@@ -80,28 +88,30 @@
             {
                 if (report.ReportName is null)
                 {
-                    report.ConnectionMode = PBIDesktopReportConnectionMode.UnsupportedProcessNotYetReady;
+                    report.ConnectionMode = PBIDesktopReportConnectionMode.UnsupportedProcessNotReady;
                 }
                 else
                 {
-                    GetConnectionMode(out var serverName, out var databaseName, out var connectionMode);
+                    GetConnectionMode(out var serverName, out var databaseName, out var compatibilityMode, out var connectionMode);
                     report.ServerName = serverName;
                     report.DatabaseName = databaseName;
+                    report.CompatibilityMode = compatibilityMode;
                     report.ConnectionMode = connectionMode;
                 }
             }
 
             return report;
 
-            void GetConnectionMode(out string? serverName, out string? databaseName, out PBIDesktopReportConnectionMode connectionMode)
+            void GetConnectionMode(out string? serverName, out string? databaseName, out SSAS.CompatibilityMode compatibilityMode, out PBIDesktopReportConnectionMode connectionMode)
             {
                 serverName = null;
                 databaseName = null;
+                compatibilityMode = SSAS.CompatibilityMode.Unknown;
 
                 var ssasPIDs = process.GetChildrenPIDs(childProcessImageName: AppEnvironment.PBIDesktopSSASProcessImageName).ToArray();
                 if (ssasPIDs.Length != 1)
                 {
-                    connectionMode = PBIDesktopReportConnectionMode.UnsupportedAnalysisServecesProcessNotFound;
+                    connectionMode = PBIDesktopReportConnectionMode.UnsupportedAnalysisServicesProcessNotFound;
                     return;
                 }
 
@@ -110,7 +120,7 @@
                 var ssasConnection = NetworkHelper.GetTcpConnections((c) => c.ProcessId == ssasPID && c.State == TcpState.Listen && IPAddress.IsLoopback(c.EndPoint.Address)).FirstOrDefault();
                 if (ssasConnection == default)
                 {
-                    connectionMode = PBIDesktopReportConnectionMode.UnsupportedAnalysisServecesConnectionNotFound;
+                    connectionMode = PBIDesktopReportConnectionMode.UnsupportedAnalysisServicesConnectionNotFound;
                     return;
                 }
 
@@ -119,6 +129,7 @@
                 try
                 {
                     server.Connect(connectionString.ToUnprotectedString());
+                    compatibilityMode = server.CompatibilityMode;
                 }
                 catch (Exception ex)
                 {
@@ -129,15 +140,15 @@
                     return;
                 }
 
-                if (server.CompatibilityMode != SSAS.CompatibilityMode.PowerBI && server.CompatibilityMode != SSAS.CompatibilityMode.AnalysisServices)
+                if (server.CompatibilityMode != SSAS.CompatibilityMode.PowerBI)
                 {
-                    connectionMode = PBIDesktopReportConnectionMode.UnsupportedAnalysisServecesUnexpectedCompatibilityMode;
+                    connectionMode = PBIDesktopReportConnectionMode.UnsupportedAnalysisServicesCompatibilityMode;
                     return;
                 }
 
                 if (server.Databases.Count == 0)
                 {
-                    connectionMode = PBIDesktopReportConnectionMode.UnsupportedDatabaseCollectionIsEmpty;
+                    connectionMode = PBIDesktopReportConnectionMode.UnsupportedDatabaseCollectionEmpty;
                     return;
                 }
 
@@ -161,52 +172,46 @@
 
     public enum PBIDesktopReportConnectionMode
     {
-        [JsonPropertyName("Unknown")]
         Unknown = 0,
 
-        [JsonPropertyName("Supported")]
+        /// <summary>
+        /// Connection supported
+        /// </summary>
         Supported = 1,
 
         /// <summary>
         /// PBIDesktop process is opening or the Analysis Services instance/model is not yet ready
         /// </summary>
-        [JsonPropertyName("UnsupportedProcessNotYetReady")]
-        UnsupportedProcessNotYetReady = 2,
+        UnsupportedProcessNotReady = 2,
 
         /// <summary>
         /// PBIDesktop Analysis Services instance process not found.
         /// </summary>
-        [JsonPropertyName("UnsupportedAnalysisServecesProcessNotFound")]
-        UnsupportedAnalysisServecesProcessNotFound = 3,
+        UnsupportedAnalysisServicesProcessNotFound = 3,
 
         /// <summary>
         /// PBIDesktop Analysis Services TCP connection not found.
         /// </summary>
-        [JsonPropertyName("UnsupportedAnalysisServecesConnectionNotFound")]
-        UnsupportedAnalysisServecesConnectionNotFound = 4,
+        UnsupportedAnalysisServicesConnectionNotFound = 4,
 
         /// <summary>
         /// PBIDesktop Analysis Services instance compatibility mode is not PowerBI.
         /// </summary>
-        [JsonPropertyName("UnsupportedAnalysisServecesCompatibilityMode")]
-        UnsupportedAnalysisServecesUnexpectedCompatibilityMode = 5,
+        UnsupportedAnalysisServicesCompatibilityMode = 5,
 
         /// <summary>
         /// PBIDesktop Analysis Services instance does not contains any databases. The PBIDesktop report is connected to an external database/model like Power BI datasets or .. ??
         /// </summary>
-        [JsonPropertyName("UnsupportedDatabaseCollectionIsEmpty")]
-        UnsupportedDatabaseCollectionIsEmpty = 6,
+        UnsupportedDatabaseCollectionEmpty = 6,
 
         /// <summary>
         /// PBIDesktop Analysis Services instance contains an unexpected number of databases (> 1) while we expect zero or one.
         /// </summary>
-        [JsonPropertyName("UnsupportedDatabaseCollectionUnexpectedCount")]
         UnsupportedDatabaseCollectionUnexpectedCount = 7,
 
         /// <summary>
         /// An exception was raised when connecting to the PBIDesktop Analysis Services instance.
         /// </summary>
-        [JsonPropertyName("UnsupportedConnectionException")]
         UnsupportedConnectionException = 8,
     }
 }
