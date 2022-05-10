@@ -1,133 +1,153 @@
 // main: main.less
 
 .dialog {
-		position:absolute;
+	position:absolute;
+	top: 0;
+	left: 0;
+	bottom: 0;
+	right: 0;
+	z-index: 99999;
+	overflow: hidden;
+	.flexbox(center, center);
+	transform:scale(1);
+
+	.dialog-back {
+		position: absolute;
 		top: 0;
 		left: 0;
 		bottom: 0;
 		right: 0;
-		z-index: 99999;
-		overflow: hidden;
-		.flexbox(center, center);
-		transform:scale(1);
+		background: @back-color;
+		opacity: 0.4;
+		z-index: -1;
+		animation: fadeIn .5s cubic-bezier(0.165, 0.840, 0.440, 1.000) forwards;
+	}
+	.dialog-front {
+		background: @window-back-color;
+		padding: 10px;
+		.shadow(0, 0, 8px, 0, rgba(0,0,0,0.2));
+		.border-radius(8px);
+		min-width: 350px;
+		max-width: 600px;
+		opacity:0;
+		animation: scaleUp .3s cubic-bezier(0.165, 0.840, 0.440, 1.000) forwards;
+
+		.flexbox(stretch, flex-start, column);
+
+		header {
+			.flexbox(flex-start, space-between);
+			padding-left: 30px;
+
+			h1 { 
+				margin:30px 0 0 0;
+				font-size: 30px;
+				//font-weight: 600;
+
+				&:before {
+					margin-right: 5px;
+					font-size: 1.3em;
+					//font-weight: normal;
+				}
+			}
+		}
+		.content {
+			padding: 30px;
+			height: 100%;
+			overflow: hidden;
+		}
+
+		footer {
+			margin-top: auto;
+			.flexbox(center, flex-end);
+			padding: 0 20px 20px 30px;
+
+			.button {
+					margin:0 5px
+			}
+		}
+	}
+
+	.dark & {
 
 		.dialog-back {
-			position: absolute;
-			top: 0;
-			left: 0;
-			bottom: 0;
-			right: 0;
-			background: @back-color;
-			opacity: 0.4;
-			z-index: -1;
-			animation: fadeIn .5s cubic-bezier(0.165, 0.840, 0.440, 1.000) forwards;
+			background-color: @back-color-dark;
+			opacity: 0.8;
 		}
 		.dialog-front {
-				background: @window-back-color;
-				padding: 10px;
-				.shadow(0, 0, 8px, 0, rgba(0,0,0,0.2));
-				.border-radius(8px);
-				min-width: 350px;
-				max-width: 600px;
-				opacity:0;
-				animation: scaleUp .3s cubic-bezier(0.165, 0.840, 0.440, 1.000) forwards;
+			background-color: @window-back-color-dark;
+			.shadow(0, 0, 8px, 0, rgba(0,0,0,0.6));
+		}
+	}
 
-				.flexbox(stretch, flex-start, column);
+	&.out {
+		animation: quickScaleDown 0s .5s linear forwards;
 
-				header {
-						.flexbox(flex-start, space-between);
-						padding-left: 30px;
+		.dialog-back {
+			animation: fadeOut .5s cubic-bezier(0.165, 0.840, 0.440, 1.000) forwards;
+		}
+		.dialog-front {
+			animation: scaleDown .5s cubic-bezier(0.165, 0.840, 0.440, 1.000) forwards;
+		}
+	}
 
-						h1 { 
-								margin:30px 0 0 0;
-								font-size: 30px;
-								//font-weight: 600;
+	.list {
+		margin-top: 20px;
+		height: 250px;
+		position: relative;
+		overflow: auto;
 
-								&:before {
-									margin-right: 5px;
-									font-size: 1.3em;
-									//font-weight: normal;
+		.notice {
+			width: calc(100% - 40px);
+			padding: 0 20px;
+			height: 100%;
+			text-align: center;
+			.flexbox(center, center);
 
-							}
-						}
-				}
-				.content {
-						padding: 30px;
-				}
-
-				footer {
-						margin-top: auto;
-						.flexbox(center, flex-end);
-						padding: 0 20px 20px 30px;
-
-						.button {
-								margin:0 5px
-						}
-				}
+			.button {
+		
+				margin: 10px;
+			}
 		}
 
-		.dark & {
-
-				.dialog-back {
-					background-color: @back-color-dark;
-					opacity: 0.8;
-				}
-				.dialog-front {
-					background-color: @window-back-color-dark;
-					.shadow(0, 0, 8px, 0, rgba(0,0,0,0.6));
-				}
+		table, td, th {
+			background: none !important;
 		}
 
-		&.out {
-				animation: quickScaleDown 0s .5s linear forwards;
-				.dialog-back {
-					animation: fadeOut .5s cubic-bezier(0.165, 0.840, 0.440, 1.000) forwards;
-				}
-				.dialog-front {
-					animation: scaleDown .5s cubic-bezier(0.165, 0.840, 0.440, 1.000) forwards;
-				}
+		.tabulator .tabulator-header {
+			background: none !important;
 		}
-
-		.list {
-				margin-top: 20px;
-				height: 250px;
-				position: relative;
-				overflow: auto;
-
-				.notice {
-					width: calc(100% - 40px);
-					padding: 0 20px;
-					height: 100%;
-					text-align: center;
-					.flexbox(center, center);
-
-					.button {
-			 
-						margin: 10px;
-					}
-
-				}
-				
-
-				table, td, th {
-					background: none !important;
-				}
-
-				.tabulator .tabulator-header {
-					background: none !important;
-				}
-
-		}
+	}
 }
 
 #dialog-connect {
 
 	.dialog-front {
-		width: 700px;
-		max-width: 700px;
+		width: 80%;
+		max-width: 1000px;
+		min-width: 600px;
+
+		height: 80%;
+		max-height: 900px;
+		min-height: 400px;
 	}
 	.browse {
 		margin:10px;
+	}
+
+	#connect-menu {
+		height: 100%;
+
+		.menu-body {
+			height: calc(100% - 30px);
+
+			.item-body {
+				height: 100%;
+
+				.list {
+					height: calc(100% - 20px);
+				}
+			}
+		}
 	}
 
 	#body-attach-pbi {
@@ -287,6 +307,17 @@
 		.version {
 			font-size: 14px;
 			margin: 0 0 15px 0;
+			.flexbox(center);
+
+			.display-version {
+				margin: 0 5px;
+			}
+			.copy-version {
+				&:before {
+					font-size: 22px;
+					margin: 0
+				}
+			}
 		}
 		.update-status {
 			.flexbox(center, center);
@@ -343,56 +374,53 @@
 }
 	
 @keyframes fadeIn {
-		0% {
-			background:rgba(0,0,0,.0);
-		}
-		100% {
-			background:rgba(0,0,0,.7);
-		}
+	0% {
+		background:rgba(0,0,0,.0);
 	}
-	
-	@keyframes fadeOut {
-		0% {
-			background:rgba(0,0,0,.7);
-		}
-		100% {
-			background:rgba(0,0,0,.0);
-		}
+	100% {
+		background:rgba(0,0,0,.7);
 	}
-	
-	@keyframes scaleUp {
-		0% {
-			transform:scale(.8) translateY(1000px);
-			opacity:0;
-		}
-		100% {
-			transform:scale(1) translateY(0px);
-			opacity:1;
-		}
-	}
-	
-	@keyframes scaleDown {
-		0% {
-			transform:scale(1) translateY(0px);
-			opacity:1;
-		}
-		100% {
-			transform:scale(.8) translateY(1000px);
-			opacity:0;
-		}
-	}
+}
 
-	@keyframes quickScaleDown {
-		0% {
-			transform:scale(1);
-		}
-		99.9% {
-			transform:scale(1);
-		}
-		100% {
-			transform:scale(0);
-		}
+@keyframes fadeOut {
+	0% {
+		background:rgba(0,0,0,.7);
 	}
+	100% {
+		background:rgba(0,0,0,.0);
+	}
+}
 
-	
-	
+@keyframes scaleUp {
+	0% {
+		transform:scale(.8) translateY(1000px);
+		opacity:0;
+	}
+	100% {
+		transform:scale(1) translateY(0px);
+		opacity:1;
+	}
+}
+
+@keyframes scaleDown {
+	0% {
+		transform:scale(1) translateY(0px);
+		opacity:1;
+	}
+	100% {
+		transform:scale(.8) translateY(1000px);
+		opacity:0;
+	}
+}
+
+@keyframes quickScaleDown {
+	0% {
+		transform:scale(1);
+	}
+	99.9% {
+		transform:scale(1);
+	}
+	100% {
+		transform:scale(0);
+	}
+}

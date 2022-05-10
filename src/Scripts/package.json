@@ -9,7 +9,8 @@
     "build:Release": "webpack --mode production --env production --env configuration=Release",
     "build:Debug": "webpack --mode development --env configuration=Debug",
     "build:UI": "webpack --mode development --output-path ../wwwroot",
-    "watch:UI": "webpack --watch --mode development --output-path ../wwwroot"
+    "watch:UI": "webpack --watch --mode development --output-path ../wwwroot",
+    "update:UI": "npm update --prefix ./src/Scripts/"
   },
   "devDependencies": {
     "@types/codemirror": "^5.60.5",
