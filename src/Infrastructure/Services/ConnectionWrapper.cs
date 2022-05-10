@@ -67,7 +67,11 @@
         private static TabularConnectionWrapper ConnectTo(string connectionString, string databaseName, bool findById)
         {
             var server = new TOM.Server();
-            server.Connect(connectionString.ToUnprotectedString());
+
+            ProcessHelper.RunOnUIThread(() =>
+            {
+                server.Connect(connectionString.ToUnprotectedString());
+            });
 
             var database = findById ? server.Databases.Find(databaseName) : server.Databases.FindByName(databaseName) ?? throw new BravoException(BravoProblem.TOMDatabaseDatabaseNotFound, databaseName);
             var connection = new TabularConnectionWrapper(connectionString, server, database);
