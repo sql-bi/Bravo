@@ -10,6 +10,7 @@
     using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Infrastructure.Helpers;
     using Sqlbi.Bravo.Infrastructure.Messages;
+    using Sqlbi.Bravo.Infrastructure.Services;
     using Sqlbi.Bravo.Infrastructure.Windows.Interop;
     using Sqlbi.Bravo.Models;
     using System;
@@ -52,7 +53,10 @@
 
             var options = new CoreWebView2EnvironmentOptions(additionalBrowserArguments: null, language: null, targetCompatibleBrowserVersion: null, allowSingleSignOnUsingOSPrimaryAccount: false);
             {
-                options.AdditionalBrowserArguments = "";
+                options.AdditionalBrowserArguments = WebView2Helper.GetProxyArguments(UserPreferences.Current.Proxy, WebProxyWrapper.Current.DefaultSystemProxy);
+
+                if (AppEnvironment.IsDiagnosticLevelVerbose)
+                    AppEnvironment.AddDiagnostics(DiagnosticMessageType.Text, name: $"{ nameof(AppWindow) }.{ nameof(InitializeWebViewAsync) }.{ nameof(options.AdditionalBrowserArguments) }", content: options.AdditionalBrowserArguments);
             }
             var environment = await CoreWebView2Environment.CreateAsync(browserExecutableFolder: null, userDataFolder: AppEnvironment.ApplicationTempPath, options);
             {
@@ -84,7 +88,6 @@
 #if DEBUG_WWWROOT
             WebView.CoreWebView2.OpenDevToolsWindow();
             //WebView.CoreWebView2.OpenTaskManagerWindow();
-            //WebView.CoreWebView2.PermissionRequested += OnWebViewPermissionRequested;
             //WebView.CoreWebView2.NavigationStarting += OnWebViewNavigationStarting;
             //WebView.CoreWebView2.NavigationCompleted += OnWebViewNavigationCompleted;
             //WebView.CoreWebView2.ContentLoading += OnWebViewContentLoading;
@@ -93,6 +96,7 @@
 #endif
             WebView.CoreWebView2.DOMContentLoaded += OnWebViewDOMContentLoaded;
             WebView.CoreWebView2.WebResourceRequested += OnWebViewWebResourceRequested;
+            WebView.CoreWebView2.PermissionRequested += OnWebViewPermissionRequested;
 
             await WebView.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(@"
 window.external = {
@@ -158,6 +162,7 @@ window.external = {
             if (WebView.Visible == false)
             {
                 WebView.Visible = true;
+                BackgroundImage = null;
                 SendAppStartupWebMessage();
 
                 _instance.OnNewInstance += OnNewInstanceSendStartupWebMessage;
@@ -167,6 +172,9 @@ window.external = {
         private void OnWebViewPermissionRequested(object? sender, CoreWebView2PermissionRequestedEventArgs e)
         {
             WebViewLog(message: $"::OnWebViewPermissionRequested({ e.PermissionKind }|{ e.State })");
+
+            if (e.PermissionKind == CoreWebView2PermissionKind.ClipboardRead)
+                e.State = CoreWebView2PermissionState.Allow;
         }
 
         private void OnWebViewNavigationStarting(object? sender, CoreWebView2NavigationStartingEventArgs e)
@@ -186,7 +194,7 @@ window.external = {
 
         private void OnWebViewWebResourceRequested(object? sender, CoreWebView2WebResourceRequestedEventArgs e)
         {
-            WebViewLog(message: $"::OnWebViewWebResourceRequested({ e.ResourceContext }|{ e.Request.Uri })");
+            //WebViewLog(message: $"::OnWebViewWebResourceRequested({ e.ResourceContext }|{ e.Request.Uri })");
 
             if (e.ResourceContext == CoreWebView2WebResourceContext.Script && e.Request.Uri.EqualsI("app://config.js"))
             {
@@ -297,7 +305,7 @@ window.external = {
         [Conditional("DEBUG")]
         private void WebViewLog(string message)
         {
-            // WebView.CoreWebView2.ExecuteScriptAsync($"console.log('{ message }');");
+            WebView.CoreWebView2.ExecuteScriptAsync($"console.log('[WEBVIEW]{ message }');");
 
             //if (AppEnvironment.IsDiagnosticLevelVerbose)
             //    AppEnvironment.AddDiagnostics(DiagnosticMessageType.Text, name: $"{ nameof(AppWindow) }.{ nameof(WebView2) }", content: message);

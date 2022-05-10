@@ -2,12 +2,11 @@
 {
     using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
     using Sqlbi.Bravo.Infrastructure.Extensions;
+    using Sqlbi.Bravo.Infrastructure.Windows;
     using Sqlbi.Bravo.Infrastructure.Windows.Interop;
-    using Sqlbi.Bravo.Models;
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
-    using System.Drawing;
     using System.IO;
     using System.Linq;
     using System.Net;
@@ -27,13 +26,6 @@
         /// </summary>
         public static string EvergreenRuntimeBootstrapperUrl = "https://go.microsoft.com/fwlink/p/?LinkId=2124703";
         public static string MicrosoftReferenceUrl = "https://developer.microsoft.com/en-us/microsoft-edge/webview2";
-
-        /// <summary>
-        /// Additional environment variables verified when WebView2Environment is created.
-        /// If additional browser arguments is specified in environment variable or in the registry, it is appended to the corresponding values in CreateCoreWebView2EnvironmentWithOptions parameters.
-        /// https://docs.microsoft.com/en-us/microsoft-edge/webview2/reference/win32/webview2-idl
-        /// </summary>
-        private const string EnvironmentVariableAdditionalBrowserArguments = "WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS";
 
         public static string? GetRuntimeVersionInfo()
         {
@@ -56,58 +48,26 @@
             if (AppEnvironment.IsWebView2RuntimeInstalled)
                 return;
 
-            var appIcon = Icon.ExtractAssociatedIcon(AppEnvironment.ProcessPath);
-            var icon = new TaskDialogIcon(appIcon!);
+            var heading = $"{ AppEnvironment.ApplicationMainWindowTitle } requires the Microsoft Edge WebView2 runtime which is not currently installed.\r\n\r\nChoose an option to proceed with the installation:";
+            var footnoteText = $"For more details please refer to the following address:\r\n\r\n - { AppEnvironment.ApplicationWebsiteUrl }\r\n - { MicrosoftReferenceUrl }";
+            var automaticButton = new TaskDialogCommandLinkButton("&Automatic", "Download and install Microsoft Edge WebView2 runtime now");
+            var manualButton = new TaskDialogCommandLinkButton("&Manual", "Open the browser on the download page");
+            var cancelButton = new TaskDialogCommandLinkButton("&Cancel", "Close the application without installing");
 
-            var page = new TaskDialogPage()
+            var dialogButton = MessageDialog.ShowDialog(heading, text: null, footnoteText, allowCancel: false, automaticButton, manualButton, cancelButton);
+
+            if (dialogButton == automaticButton)
             {
-                Caption = AppEnvironment.ApplicationMainWindowTitle,
-                Heading = @$"{ AppEnvironment.ApplicationMainWindowTitle } requires the Microsoft Edge WebView2 runtime which is not currently installed.
-
-Choose an option to proceed with the installation:",
-                Icon = icon,
-                AllowCancel = false,
-                Footnote = new TaskDialogFootnote()
-                {
-                    Text = $"For more details please refer to the following address:\r\n\r\n - { AppEnvironment.ApplicationWebsiteUrl }\r\n - { MicrosoftReferenceUrl }",
-                },
-                Buttons =
-                {
-                    new TaskDialogCommandLinkButton("&Automatic", "Download and install Microsoft Edge WebView2 runtime now")
-                    {
-                        Tag = 10
-                    },
-                    new TaskDialogCommandLinkButton("&Manual", "Open the browser on the download page")
-                    {
-                        Tag = 20
-                    },
-                    new TaskDialogCommandLinkButton("&Cancel", "Close the application without installing")
-                    {
-                        Tag = 30,
-                    }
-                },
-                //Expander = new TaskDialogExpander()
-                //{
-                //    Text = " ... ",
-                //    Position = TaskDialogExpanderPosition.AfterFootnote
-                //}
-            };
-
-            var dialogButton = TaskDialog.ShowDialog(page, TaskDialogStartupLocation.CenterScreen);
-
-            switch (dialogButton.Tag)
+                DownloadAndInstallRuntime();
+            }
+            else if (dialogButton == manualButton)
             {
-                case 10:
-                    DownloadAndInstallRuntime();
-                    break;
-                case 20:
-                    _ = ProcessHelper.OpenBrowser(new Uri(MicrosoftReferenceUrl, uriKind: UriKind.Absolute));
-                    break;
-                case 30:
-                    // default to Environment.Exit
-                    break;
-                default:
-                    throw new BravoUnexpectedException($"Unexpected { nameof(TaskDialogButton) } result ({ dialogButton.Tag })");
+                var address = new Uri(MicrosoftReferenceUrl, uriKind: UriKind.Absolute);
+                _ = ProcessHelper.OpenBrowser(address);
+            }
+            else if (dialogButton == cancelButton)
+            {
+                //
             }
 
             Environment.Exit(NativeMethods.NO_ERROR);
@@ -132,7 +92,7 @@ Choose an option to proceed with the installation:",
             }
         }
 
-        public static void SetWebView2CmdlineProxyArguments(ProxySettings? proxySettings, IWebProxy systemProxy)
+        public static string GetProxyArguments(ProxySettings? proxySettings, IWebProxy systemProxy)
         {
             // Command-line options for proxy settings
             // https://docs.microsoft.com/en-us/deployedge/edge-learnmore-cmdline-options-proxy-settings#command-line-options-for-proxy-settings
@@ -144,10 +104,7 @@ Choose an option to proceed with the installation:",
                 _ => GetSystemProxyArguments(systemProxy),
             };
 
-            if (AppEnvironment.IsDiagnosticLevelVerbose)
-                AppEnvironment.AddDiagnostics(DiagnosticMessageType.Text, name: $"{ nameof(WebView2Helper) }.{ nameof(SetWebView2CmdlineProxyArguments) }", content: proxyArguments);
-
-            Environment.SetEnvironmentVariable(EnvironmentVariableAdditionalBrowserArguments, proxyArguments, EnvironmentVariableTarget.Process);
+            return proxyArguments;
 
             static string GetCustomProxyArguments(ProxySettings proxySettings)
             {
@@ -180,21 +137,23 @@ Choose an option to proceed with the installation:",
                     if (httpsProxyUriObject is Uri httpsUri)
                         httpsProxyUri = httpsUri;
 
-                    var arguments = string.Empty;
+                    var arguments = new List<string>();
                     {
                         var server = "{0};{1}".FormatInvariant(httpProxyUri, httpsProxyUri).Trim(';');
                         if (server.Length > 0)
                         {
-                            arguments += ' ' + "--proxy-server=\"{0}\"".FormatInvariant(server);
+                            arguments.Add("--proxy-server=\"{0}\"".FormatInvariant(server));
                         }
 
                         var bypassList = string.Join(';', ProxySettings.GetSafeBypassList(bypass, includeLoopback: true));
                         if (bypassList.Length > 0)
                         {
-                            arguments += ' ' + "--proxy-bypass-list=\"{0}\"".FormatInvariant(bypassList);
+                            arguments.Add("--proxy-bypass-list=\"{0}\"".FormatInvariant(bypassList));
                         }
                     }
-                    return arguments;
+
+                    var proxyArguments = string.Join(' ', arguments);
+                    return proxyArguments;
                 }
                 else if (systemProxyType.FullName == "System.Net.Http.HttpWindowsProxy")
                 {
@@ -219,25 +178,27 @@ Choose an option to proceed with the installation:",
                             autoConfigUrl = autoConfigUrlValue;
                     }
 
-                    var arguments = string.Empty;
+                    var arguments = new List<string>();
                     {
                         if (proxy?.Length > 0)
                         {
-                            arguments += ' ' + "--proxy-server=\"{0}\"".FormatInvariant(proxy);
+                            arguments.Add("--proxy-server=\"{0}\"".FormatInvariant(proxy));
                         }
 
                         var bypassList = string.Join(';', ProxySettings.GetSafeBypassList(bypass, includeLoopback: true));
                         if (bypassList.Length > 0)
                         {
-                            arguments += ' ' + "--proxy-bypass-list=\"{0}\"".FormatInvariant(bypassList);
+                            arguments.Add("--proxy-bypass-list=\"{0}\"".FormatInvariant(bypassList));
                         }
 
                         if (autoConfigUrl?.Length > 0)
                         {
-                            arguments += ' ' + "--proxy-pac-url=\"{0}\"".FormatInvariant(autoConfigUrl);
+                            arguments.Add("--proxy-pac-url=\"{0}\"".FormatInvariant(autoConfigUrl));
                         }
                     }
-                    return arguments;
+
+                    var proxyArguments = string.Join(' ', arguments);
+                    return proxyArguments;
                 }
                 else if (systemProxyType.FullName == "System.Net.Http.HttpNoProxy")
                 {
