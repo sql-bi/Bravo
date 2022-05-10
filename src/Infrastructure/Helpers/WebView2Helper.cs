@@ -2,12 +2,11 @@
 {
     using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
     using Sqlbi.Bravo.Infrastructure.Extensions;
+    using Sqlbi.Bravo.Infrastructure.Windows;
     using Sqlbi.Bravo.Infrastructure.Windows.Interop;
-    using Sqlbi.Bravo.Models;
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
-    using System.Drawing;
     using System.IO;
     using System.Linq;
     using System.Net;
@@ -49,58 +48,26 @@
             if (AppEnvironment.IsWebView2RuntimeInstalled)
                 return;
 
-            var appIcon = Icon.ExtractAssociatedIcon(AppEnvironment.ProcessPath);
-            var icon = new TaskDialogIcon(appIcon!);
+            var heading = $"{ AppEnvironment.ApplicationMainWindowTitle } requires the Microsoft Edge WebView2 runtime which is not currently installed.\r\n\r\nChoose an option to proceed with the installation:";
+            var footnoteText = $"For more details please refer to the following address:\r\n\r\n - { AppEnvironment.ApplicationWebsiteUrl }\r\n - { MicrosoftReferenceUrl }";
+            var automaticButton = new TaskDialogCommandLinkButton("&Automatic", "Download and install Microsoft Edge WebView2 runtime now");
+            var manualButton = new TaskDialogCommandLinkButton("&Manual", "Open the browser on the download page");
+            var cancelButton = new TaskDialogCommandLinkButton("&Cancel", "Close the application without installing");
 
-            var page = new TaskDialogPage()
+            var dialogButton = MessageDialog.ShowDialog(heading, text: null, footnoteText, allowCancel: false, automaticButton, manualButton, cancelButton);
+
+            if (dialogButton == automaticButton)
             {
-                Caption = AppEnvironment.ApplicationMainWindowTitle,
-                Heading = @$"{ AppEnvironment.ApplicationMainWindowTitle } requires the Microsoft Edge WebView2 runtime which is not currently installed.
-
-Choose an option to proceed with the installation:",
-                Icon = icon,
-                AllowCancel = false,
-                Footnote = new TaskDialogFootnote()
-                {
-                    Text = $"For more details please refer to the following address:\r\n\r\n - { AppEnvironment.ApplicationWebsiteUrl }\r\n - { MicrosoftReferenceUrl }",
-                },
-                Buttons =
-                {
-                    new TaskDialogCommandLinkButton("&Automatic", "Download and install Microsoft Edge WebView2 runtime now")
-                    {
-                        Tag = 10
-                    },
-                    new TaskDialogCommandLinkButton("&Manual", "Open the browser on the download page")
-                    {
-                        Tag = 20
-                    },
-                    new TaskDialogCommandLinkButton("&Cancel", "Close the application without installing")
-                    {
-                        Tag = 30,
-                    }
-                },
-                //Expander = new TaskDialogExpander()
-                //{
-                //    Text = " ... ",
-                //    Position = TaskDialogExpanderPosition.AfterFootnote
-                //}
-            };
-
-            var dialogButton = TaskDialog.ShowDialog(page, TaskDialogStartupLocation.CenterScreen);
-
-            switch (dialogButton.Tag)
+                DownloadAndInstallRuntime();
+            }
+            else if (dialogButton == manualButton)
             {
-                case 10:
-                    DownloadAndInstallRuntime();
-                    break;
-                case 20:
-                    _ = ProcessHelper.OpenBrowser(new Uri(MicrosoftReferenceUrl, uriKind: UriKind.Absolute));
-                    break;
-                case 30:
-                    // default to Environment.Exit
-                    break;
-                default:
-                    throw new BravoUnexpectedException($"Unexpected { nameof(TaskDialogButton) } result ({ dialogButton.Tag })");
+                var address = new Uri(MicrosoftReferenceUrl, uriKind: UriKind.Absolute);
+                _ = ProcessHelper.OpenBrowser(address);
+            }
+            else if (dialogButton == cancelButton)
+            {
+                //
             }
 
             Environment.Exit(NativeMethods.NO_ERROR);

@@ -202,7 +202,7 @@
                 var heading = $"The destination folder you chose already contains a subfolder named '{ subfolderName }'";
                 var text = "Choose an option to proceed";
 
-                var clickedButton = MessageDialog.ShowDialog(heading, text, overwriteButton, keepbothButton, cancelButton);
+                var clickedButton = MessageDialog.ShowDialog(heading, text, footnoteText: null, allowCancel: true, overwriteButton, keepbothButton, cancelButton);
 
                 if (clickedButton == overwriteButton)
                 {

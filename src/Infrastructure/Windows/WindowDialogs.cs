@@ -153,7 +153,7 @@ namespace Sqlbi.Bravo.Infrastructure.Windows
             _ = TaskDialog.ShowDialog(hwndOwner, page, TaskDialogStartupLocation.CenterScreen);
         }
 
-        public static TaskDialogButton ShowDialog(string heading, string text, params TaskDialogButton[] buttons)
+        public static TaskDialogButton ShowDialog(string heading, string text, string? footnoteText, bool allowCancel, params TaskDialogButton[] buttons)
         {
             var appIcon = Icon.ExtractAssociatedIcon(AppEnvironment.ProcessPath);
             var icon = new TaskDialogIcon(appIcon!);
@@ -164,9 +164,18 @@ namespace Sqlbi.Bravo.Infrastructure.Windows
                 Heading = heading,
                 Text = text,
                 Icon = icon,
-                AllowCancel = buttons.Any((button) => button == TaskDialogButton.Cancel),
+                AllowCancel = allowCancel, // || buttons.Any((button) => button == TaskDialogButton.Cancel),
                 AllowMinimize = false
             };
+
+            if (footnoteText is not null)
+            {
+                page.Footnote = new TaskDialogFootnote()
+                {
+                    Text = footnoteText,
+                };
+            }
+
 
             foreach (var button in buttons)
                 page.Buttons.Add(button);
