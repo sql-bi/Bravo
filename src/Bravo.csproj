@@ -86,13 +86,20 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Remove="Assets\ManageDates\Templates\*.json" />
-    <EmbeddedResource Include="Assets\ManageDates\Templates\*.json" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Content Remove="Scripts\*.json" />
     <None Include="Scripts\*.json" />
+    <Content Remove="Assets\ManageDates\Templates\*.json" />
+    <EmbeddedResource Include="Assets\ManageDates\Templates\*.json" />
+    <Content Include="Assets\bravo.ico" />
+    <Compile Update="Properties\Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <EmbeddedResource Update="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
   </ItemGroup>
 
   <!-- 
@@ -115,25 +122,6 @@
 
   <ItemGroup>
     <ClientAssetsInputs Include="$(ClientAssetsDirectory)**" Exclude="$(DefaultItemExcludes)" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Include="Assets\bravo.ico" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Update="Properties\Resources.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Update="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
   </ItemGroup>
 
   <!--
