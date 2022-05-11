@@ -10,6 +10,8 @@
     using System.IO;
     using System.Linq;
     using System.Management;
+    using System.Security.Claims;
+    using System.Security.Principal;
     using System.Threading;
     using System.Windows.Forms;
 
@@ -257,7 +259,42 @@
             }
         }
 
-        private static bool SafePredicate(Func<bool> predicate)
+        public static bool IsUserAdministrator()
+        {
+            // Move to Infrastructure.Security namespace
+
+            using var windowsIdentity = WindowsIdentity.GetCurrent();
+
+            if (windowsIdentity is not null)
+            {
+                var windowsPrincipal = new WindowsPrincipal(windowsIdentity);
+                var userClaims = new List<Claim>(windowsPrincipal.UserClaims);
+
+                var builtinAdministratorsSid = new SecurityIdentifier(WellKnownSidType.BuiltinAdministratorsSid, domainSid: null);
+                var isUserAdministrator = windowsPrincipal.UserClaims.Any((claim) => claim.Value.Contains(builtinAdministratorsSid.Value));
+
+                return isUserAdministrator;
+            }
+
+            return false;
+        }
+
+        public static bool IsRunningAsAdministrator()
+        {
+            // Move to Infrastructure.Security namespace
+
+            using var windowsIdentity = WindowsIdentity.GetCurrent();
+
+            if (windowsIdentity?.Owner is not null)
+            {
+                var isRunningAsAdministrator = windowsIdentity.Owner.IsWellKnown(WellKnownSidType.BuiltinAdministratorsSid);
+                return isRunningAsAdministrator;
+            }
+
+            return false;
+        }
+
+        public static bool SafePredicate(Func<bool> predicate)
         {
             try
             {

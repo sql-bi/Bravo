@@ -1,13 +1,10 @@
-﻿#nullable disable
-
-namespace Sqlbi.Bravo.Infrastructure.Windows
+﻿namespace Sqlbi.Bravo.Infrastructure.Windows
 {
     using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Infrastructure.Helpers;
     using Sqlbi.Bravo.Infrastructure.Windows.Interop;
     using System;
     using System.Drawing;
-    using System.Linq;
     using System.Runtime.InteropServices;
     using System.Windows.Forms;
 
@@ -16,15 +13,15 @@ namespace Sqlbi.Bravo.Infrastructure.Windows
     /// </summary>
     internal class OpenFileDialog
     {
-        public string DefaultExt { get; set; } = null;
+        public string? DefaultExt { get; set; } = null;
         
-        public string File { get; set; } = null;
+        public string? File { get; set; } = null;
         
-        public string Filter { get; set; } = null;
+        public string? Filter { get; set; } = null;
 
-        public string InitialDirectory { get; set; } = null;
+        public string? InitialDirectory { get; set; } = null;
 
-        public string Title { get; set; } = null;
+        public string? Title { get; set; } = null;
 
         public DialogResult ShowDialog(IntPtr hWnd)
         {
@@ -54,15 +51,15 @@ namespace Sqlbi.Bravo.Infrastructure.Windows
     /// </summary>
     internal class SaveFileDialog
     {
-        public string DefaultExt { get; set; } = null;
+        public string? DefaultExt { get; set; } = null;
 
-        public string FileName { get; set; } = null;
+        public string? FileName { get; set; } = null;
 
-        public string Filter { get; set; } = null;
+        public string? Filter { get; set; } = null;
 
-        public string InitialDirectory { get; set; } = null;
+        public string? InitialDirectory { get; set; } = null;
 
-        public string Title { get; set; } = null;
+        public string? Title { get; set; } = null;
 
         public DialogResult ShowDialog(IntPtr hWnd)
         {
@@ -153,7 +150,7 @@ namespace Sqlbi.Bravo.Infrastructure.Windows
             _ = TaskDialog.ShowDialog(hwndOwner, page, TaskDialogStartupLocation.CenterScreen);
         }
 
-        public static TaskDialogButton ShowDialog(string heading, string text, string? footnoteText, bool allowCancel, params TaskDialogButton[] buttons)
+        public static TaskDialogButton ShowDialog(string heading, string? text, string? footnoteText, bool allowCancel, params TaskDialogButton[] buttons)
         {
             var appIcon = Icon.ExtractAssociatedIcon(AppEnvironment.ProcessPath);
             var icon = new TaskDialogIcon(appIcon!);
@@ -175,7 +172,6 @@ namespace Sqlbi.Bravo.Infrastructure.Windows
                     Text = footnoteText,
                 };
             }
-
 
             foreach (var button in buttons)
                 page.Buttons.Add(button);
