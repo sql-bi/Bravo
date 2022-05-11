@@ -22,6 +22,7 @@
     <IsPackable>false</IsPackable>
     <IsPublishable>true</IsPublishable>
     <SatelliteResourceLanguages>en-US</SatelliteResourceLanguages>
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
   </PropertyGroup>
 
   <Choose>
