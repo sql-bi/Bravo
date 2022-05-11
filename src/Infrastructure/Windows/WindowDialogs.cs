@@ -150,7 +150,7 @@
             _ = TaskDialog.ShowDialog(hwndOwner, page, TaskDialogStartupLocation.CenterScreen);
         }
 
-        public static TaskDialogButton ShowDialog(string heading, string text, string? footnoteText, bool allowCancel, params TaskDialogButton[] buttons)
+        public static TaskDialogButton ShowDialog(string heading, string? text, string? footnoteText, bool allowCancel, params TaskDialogButton[] buttons)
         {
             var appIcon = Icon.ExtractAssociatedIcon(AppEnvironment.ProcessPath);
             var icon = new TaskDialogIcon(appIcon!);
