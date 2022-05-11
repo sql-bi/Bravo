@@ -62,9 +62,9 @@
             return string.Format(CultureInfo.InvariantCulture, format, args);
         }
 
-        public static string ToFileDialogFilterString(this string filter)
+        public static string ToFileDialogFilterString(this string? filter)
         {
-            if (string.IsNullOrWhiteSpace(filter))
+            if (filter.IsNullOrWhiteSpace())
                 filter = " |*.*";
 
             var stringBuilder = new StringBuilder(filter);
