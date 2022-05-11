@@ -47,7 +47,7 @@
 
         private async void InitializeWebViewAsync()
         {
-            //await System.Threading.Tasks.Task.Delay(3_000);
+            // TODO: WebView2 PreferredColorScheme https://docs.microsoft.com/en-us/microsoft-edge/webview2/reference/win32/icorewebview2profile?view=webview2-1.0.1210.39&preserve-view=true#get_preferredcolorscheme
 
             WebView.Visible = false;
 

@@ -59,14 +59,14 @@
     <PackageReference Include="Dax.Formatter" Version="1.1.0" />
     <PackageReference Include="Dax.ViewModel" Version="1.2.4" />
     <PackageReference Include="Dax.Vpax.NetCore" Version="1.2.4" />
-    <PackageReference Include="Hellang.Middleware.ProblemDetails" Version="6.4.0" />
+    <PackageReference Include="Hellang.Middleware.ProblemDetails" Version="6.4.2" />
     <PackageReference Include="LargeXlsx" Version="1.5.0" />
     <PackageReference Include="Macross.Json.Extensions" Version="2.2.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.ApplicationInsights" Version="2.20.0" />
     <PackageReference Include="Microsoft.Identity.Client" Version="4.40.0" />
     <PackageReference Include="Microsoft.Toolkit.Uwp.Notifications" Version="7.1.2" />
-    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.1185.39" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.2.3" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.1210.39" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.3.1" PrivateAssets="all" />
     <PackageReference Include="System.CommandLine" Version="2.0.0-beta1.21308.1" />
   </ItemGroup>
 
