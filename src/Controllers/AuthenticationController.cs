@@ -81,14 +81,14 @@
         /// Attempts to authenticate and acquire an access token for the account to access the PowerBI cloud services
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
-        [HttpGet]
+        [HttpPost]
         [ActionName("powerbi/SignInV2")]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IBravoAccount))]
         [ProducesDefaultResponseType]
-        public async Task<IActionResult> PBICloudSignInAsync(string userPrincipalName, PBICloudEnvironment environment, CancellationToken cancellationToken)
+        public async Task<IActionResult> PBICloudSignInAsync(PBICloudAuthenticationRequest request, CancellationToken cancellationToken)
         {
-            await _authenticationService.PBICloudSignInAsync(userPrincipalName, environment, cancellationToken);
+            await _authenticationService.PBICloudSignInAsync(request.UserPrincipalName!, request.Environment!, cancellationToken);
             return Ok(_authenticationService.PBICloudAuthentication.Account);
         }
 

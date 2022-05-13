@@ -21,6 +21,7 @@ import { strings } from '../model/strings';
 import { LogMessageObj } from './logger';
 import { DateConfiguration, TableValidation } from '../model/dates';
 import { ModelChanges } from '../model/model-changes';
+import { PBICloudEnvironment } from '../model/pbi-cloud';
 
 declare global {
     
@@ -46,6 +47,10 @@ export interface ProblemDetails {
     traceId?: string
 }
 
+export interface PBICloudAutenthicationRequest {
+    userPrincipalName: string
+    environment: PBICloudEnvironment
+}
 export interface FormatDaxRequest {
     options: FormatDaxRequestOptions
     measures: TabularMeasure[]
@@ -349,11 +354,21 @@ export class Host extends Dispatchable {
     /**** APIs ****/
 
     /* Authentication */
-    signIn(emailAddress?: string) {
+    getEnvironments(userPrincipalName: string) {
+        return <Promise<PBICloudEnvironment[]>>this.apiCall("auth/powerbi/GetEnvironments", { userPrincipalName: userPrincipalName }, {}, false);
+    }
+
+    signIn(request?: PBICloudAutenthicationRequest) {
         const logSettings: ApiLogSettings = {};
 
-        return <Promise<Account>>this.apiCall("auth/powerbi/SignIn", emailAddress ? { userPrincipalName: emailAddress } : {}, {}, false, logSettings);
+        return <Promise<Account>>this.apiCall("auth/powerbi/SignInV2", request || {}, { method: "POST" }, false, logSettings);
     }
+
+    /*signIn(userPrincipalName?: string) {
+        const logSettings: ApiLogSettings = {};
+
+        return <Promise<Account>>this.apiCall("auth/powerbi/SignIn", userPrincipalName ? { userPrincipalName: userPrincipalName } : {}, {}, false, logSettings);
+    }*/
 
     signOut() {
         const logSettings: ApiLogSettings = {};
@@ -368,6 +383,7 @@ export class Host extends Dispatchable {
     getUserAvatar() {
         return <Promise<string>>this.apiCall("auth/GetUserAvatar", {}, {}, false);
     }
+
 
 
     /* Analyze Model */
