@@ -12,7 +12,7 @@ import { AppError, AppErrorType, AppProblem } from '../model/exceptions';
 import { /*TokenUpdateWebMessage,*/ WebMessage, WebMessageType } from '../model/message';
 import { PBICloudDataset, PBICloudDatasetConnectionMode } from '../model/pbi-dataset';
 import { FormattedMeasure, TabularDatabase, TabularDatabaseServer, TabularMeasure } from '../model/tabular';
-import { Account } from './auth';
+import { Account, SignInRequest } from './auth';
 import { DiagnosticLevelType, FormatDaxOptions, Options, UpdateChannelType } from './options';
 import { PBIDesktopReport, PBIDesktopReportConnectionMode } from '../model/pbi-report';
 import { ThemeType } from './theme';
@@ -22,6 +22,8 @@ import { LogMessageObj } from './logger';
 import { DateConfiguration, TableValidation } from '../model/dates';
 import { ModelChanges } from '../model/model-changes';
 import { PBICloudEnvironment } from '../model/pbi-cloud';
+import { PowerBISignin } from '../view/powerbi-signin';
+import { DialogResponse } from '../view/dialog';
 
 declare global {
     
@@ -281,13 +283,36 @@ export class Host extends Dispatchable {
                     //Remove the timeout because the call will be re-executed
                     this.apiCallCompleted(requestId); 
 
-                    return auth.signIn()
-                        .then(()=>{
-                            return this.apiCall(action, data, options, false, null, timeout);
-                        })
-                        .catch(error => {
-                            throw error;
-                        });
+                    if (auth.account) {
+                        // Try automatic sign-in with saved account (if any)
+                        const signinRequest: SignInRequest = { 
+                            userPrincipalName: auth.account.userPrincipalName, 
+                            environmentName: auth.account.environmentName, 
+                            environments: auth.account.environments 
+                        };
+                        return auth.signIn(signinRequest)
+                            .then(()=>{
+                                return this.apiCall(action, data, options, false, null, timeout);
+                            })
+                            .catch(error => {
+                                throw error;
+                            });
+
+                    } else {
+
+                        // Show the sign-in dialog
+                        let signinDialog = new PowerBISignin();
+                        return signinDialog.show()
+                            .then((response: DialogResponse) => {
+                                if (response.action == "signin")
+                                    return this.apiCall(action, data, options, false, null, timeout);
+                                
+                                throw error;
+                            })
+                            .catch(error => {
+                                throw error;
+                            });
+                    }
 
                 } else {
                     throw error;
