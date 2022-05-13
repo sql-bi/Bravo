@@ -6,6 +6,7 @@
     using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Infrastructure.Helpers;
     using Sqlbi.Bravo.Infrastructure.Security;
+    using Sqlbi.Bravo.Infrastructure.Security.Policies;
     using Sqlbi.Bravo.Models;
     using Sqlbi.Bravo.Models.FormatDax;
     using System;
@@ -74,6 +75,7 @@
             UserSettingsFilePath = Path.Combine(ApplicationDataPath, "usersettings.json");
             MsalTokenCacheFilePath = Path.Combine(ApplicationDataPath, ".msalcache");
             WebView2VersionInfo = WebView2Helper.GetRuntimeVersionInfo();
+            GroupPolicies = new GroupPolicyManager();
 
             Diagnostics = new ConcurrentDictionary<string, DiagnosticMessage>();
             DefaultJsonOptions = new(JsonSerializerDefaults.Web) { MaxDepth = 32 }; // see Microsoft.AspNetCore.Mvc.JsonOptions.JsonSerializerOptions
@@ -143,6 +145,8 @@
 
         public static string? WebView2VersionInfo { get; }
 
+        public static GroupPolicyManager GroupPolicies { get; }
+
         public static bool IsWebView2RuntimeInstalled => WebView2VersionInfo is not null;
 
         public static bool IsDiagnosticLevelVerbose => UserPreferences.Current.DiagnosticLevel == DiagnosticLevelType.Verbose;
@@ -202,21 +206,17 @@
             if (DesktopBridgeHelper.IsRunningAsMsixPackage())
                 return AppDeploymentMode.Packaged;
 
-            var hklmValueString = CommonHelper.ReadRegistryString(Registry.LocalMachine, keyName: ApplicationRegistryKeyName, valueName: ApplicationRegistryApplicationInstallFolderValue);
+            var hklmValueString = Registry.LocalMachine.GetStringValue(subkeyName: ApplicationRegistryKeyName, valueName: ApplicationRegistryApplicationInstallFolderValue);
             if (hklmValueString is not null)
             {
-                var installPath = CommonHelper.NormalizePath(hklmValueString);
-                var runningPath = CommonHelper.NormalizePath(AppContext.BaseDirectory);
-                if (installPath == runningPath)
+                if (CommonHelper.AreDirectoryPathsEqual(AppContext.BaseDirectory, hklmValueString))
                     return AppDeploymentMode.PerMachine;
             }
 
-            var hkcuValueString = CommonHelper.ReadRegistryString(Registry.CurrentUser, keyName: ApplicationRegistryKeyName, valueName: ApplicationRegistryApplicationInstallFolderValue);
+            var hkcuValueString = Registry.CurrentUser.GetStringValue(subkeyName: ApplicationRegistryKeyName, valueName: ApplicationRegistryApplicationInstallFolderValue);
             if (hkcuValueString is not null)
             {
-                var installPath = CommonHelper.NormalizePath(hkcuValueString);
-                var runningPath = CommonHelper.NormalizePath(AppContext.BaseDirectory);
-                if (installPath == runningPath)
+                if (CommonHelper.AreDirectoryPathsEqual(AppContext.BaseDirectory, hkcuValueString))
                     return AppDeploymentMode.PerUser;
             }
 

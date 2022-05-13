@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--  (c) SQLBI Corporation  -->
+<policyDefinitionResources revision="1.0" schemaVersion="1.0">
+  <displayName />
+  <description />
+  <resources>
+
+    <stringTable>
+      <string id="sqlbi">SQLBI</string>
+    </stringTable>
+
+  </resources>
+</policyDefinitionResources>

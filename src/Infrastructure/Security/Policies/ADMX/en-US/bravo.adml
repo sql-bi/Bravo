@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--  (c) SQLBI Corporation  -->
+<policyDefinitionResources revision="1.0" schemaVersion="1.0">
+  <displayName></displayName>
+  <description></description>
+  <resources>
+
+    <stringTable>
+      <string id="Bravo">Bravo for Power BI</string>
+      <string id="OptionSettings_group">Application Options</string>
+
+      <!-- OptionSettings -->
+      
+      <string id="UpdateChannel">Configures the release channel to be used when checking for updates</string>
+      <string id="UpdateChannel_Stable">STABLE - stable build release channel</string>
+      <string id="UpdateChannel_Dev">DEV - internal development build release channel</string>
+      <string id="UpdateChannel_explanation">
+        If the status is set to Not Configured or Disabled, the stable channel are used by default and this setting can be configured by the user.
+
+        If the status is set to Disabled, the selected update channel is forcibly used.
+      </string>
+      
+      <string id="UpdateCheckEnabled">Configure update checking and update notifications</string>
+      <string id="UpdateCheckEnabled_explanation">
+        If the status is set to Not Configured, update checking and update notifications are enabled by default and this setting can be configured by the user.
+
+        If the status is set to Enabled, update checking and update notifications forcibly enabled.
+
+        If the status is set to Disabled, update checking and update notifications are forcibly disabled.
+      </string>
+      
+    </stringTable>
+
+    <presentationTable>
+
+      <presentation id="UpdateChannel">
+        <dropdownList refId="UpdateChannel" noSort="true">Channels</dropdownList>
+      </presentation>
+      
+    </presentationTable>
+
+  </resources>
+</policyDefinitionResources>

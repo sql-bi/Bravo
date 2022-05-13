@@ -41,6 +41,7 @@
                         typeof(Sqlbi.Bravo.Infrastructure.Configuration.Settings.ThemeType),
                         typeof(Sqlbi.Bravo.Infrastructure.Configuration.Settings.DiagnosticLevelType),
                         typeof(Sqlbi.Bravo.Infrastructure.Configuration.Settings.UpdateChannelType),
+                        typeof(Sqlbi.Bravo.Infrastructure.Security.Policies.PolicyStatus),
                         //typeof(Sqlbi.Bravo.Infrastructure.Messages.WebMessageType),
                         //typeof(Sqlbi.Bravo.Models.PBIDesktopReportConnectionMode),
                         //typeof(Sqlbi.Bravo.Models.PBICloudDatasetConnectionMode),

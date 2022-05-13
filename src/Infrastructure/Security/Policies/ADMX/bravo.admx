@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--  (c) SQLBI Corporation  -->
+<policyDefinitions revision="1.0" schemaVersion="1.0">
+
+  <policyNamespaces>
+    <target prefix="bravo" namespace="SQLBI.Policies.Bravo" />
+      <using prefix="sqlbi" namespace="SQLBI.Policies" />
+      <using prefix="windows" namespace="Microsoft.Policies.Windows" />
+  </policyNamespaces>
+
+  <resources minRequiredRevision="1.0" />
+
+  <categories>
+    <category name="Bravo" displayName="$(string.Bravo)">
+      <parentCategory ref="sqlbi:SQLBI" />
+    </category>
+    <category name="OptionSettings" displayName="$(string.OptionSettings_group)" >
+      <parentCategory ref="Bravo"/>
+    </category>
+  </categories>
+
+  <policies>
+    
+    <!-- OptionSettings -->
+
+    <policy name="UpdateChannel" class="Both" displayName="$(string.UpdateChannel)" explainText="$(string.UpdateChannel_explanation)" key="Software\Policies\SQLBI\Bravo\OptionSettings" presentation="$(presentation.UpdateChannel)">
+      <parentCategory ref="OptionSettings" />
+      <supportedOn ref="windows:SUPPORTED_Windows7" />
+      <elements>
+        <enum id="UpdateChannel" valueName="UpdateChannel">
+          <item displayName="$(string.UpdateChannel_Stable)">
+            <value>
+              <decimal value="0"/>
+            </value>
+          </item>
+          <item displayName="$(string.UpdateChannel_Dev)">
+            <value>
+              <decimal value="2"/>
+            </value>
+          </item>
+        </enum>
+      </elements>
+    </policy>
+    
+    <policy name="UpdateCheckEnabled" class="Both" displayName="$(string.UpdateCheckEnabled)" explainText="$(string.UpdateCheckEnabled_explanation)" key="Software\Policies\SQLBI\Bravo\OptionSettings" valueName="UpdateCheckEnabled">
+      <parentCategory ref="OptionSettings" />
+      <supportedOn ref="windows:SUPPORTED_Windows7" />
+      <enabledValue>
+        <decimal value="1" />
+      </enabledValue>
+      <disabledValue>
+        <decimal value="0" />
+      </disabledValue>
+    </policy>
+    
+  </policies>
+
+</policyDefinitions>

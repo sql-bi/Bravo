@@ -5,6 +5,7 @@
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.Extensions.Options;
     using Sqlbi.Bravo.Infrastructure;
+    using Sqlbi.Bravo.Infrastructure.Configuration;
     using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
     using Sqlbi.Bravo.Infrastructure.Helpers;
     using Sqlbi.Bravo.Infrastructure.Security;
@@ -60,7 +61,7 @@
         {
             options.SaveToUserPreferences();
 
-            _telemetryConfiguration.DisableTelemetry = options.TelemetryEnabled == false;
+            _telemetryConfiguration.DisableTelemetry = UserPreferences.Current.TelemetryEnabled == false;
 
             return Ok();
         }
@@ -192,6 +193,15 @@
         [ProducesDefaultResponseType]
         public async Task<IActionResult> GetCurrentVersion(UpdateChannelType updateChannel, bool notify, CancellationToken cancellationToken)
         {
+            if (UserPreferences.Current.UpdateCheckEnabled == false)
+            {
+                // TODO: @daniele - remove this 'if' statement when 'UpdateCheckEnabled' is supported.
+                return Ok(new BravoUpdate
+                {
+                    IsNewerVersion = false,
+                });
+            }
+
             var bravoUpdate = await CommonHelper.CheckForUpdateAsync(updateChannel, cancellationToken);
 
             if (bravoUpdate.IsNewerVersion && notify)
