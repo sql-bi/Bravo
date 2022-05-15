@@ -45,7 +45,7 @@
                 Name = daxMeasure.MeasureName.Name,
                 TableName = daxMeasure.Table.TableName.Name,
                 Expression = expression,
-                DisplayFolder = daxMeasure.DisplayFolder,
+                DisplayFolder = daxMeasure.DisplayFolder?.Note,
                 LineBreakStyle = lineBreakStyle,
                 IsHidden = null,
                 IsManageDatesTimeIntelligence = null
