@@ -61,12 +61,7 @@
                     else
                     {
                         formattedMeasure.Expression = requestedMeasure.Expression; // in case of errors returns the original expression, as requested by Daniele
-                        formattedMeasure.Errors = daxformatterResponse.Errors?.Select((e) => new FormatterError
-                        {
-                            Line = e.Line,
-                            Column = e.Column,
-                            Message = e.Message
-                        });
+                        formattedMeasure.Errors = daxformatterResponse.Errors?.Select(FormatterError.CreateFrom);
                     }
 
                     formattedMeasures.Add(formattedMeasure);
