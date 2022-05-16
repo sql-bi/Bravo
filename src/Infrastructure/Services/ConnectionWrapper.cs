@@ -64,18 +64,20 @@
             return connection;
         }
 
-        private static TabularConnectionWrapper ConnectTo(string connectionString, string databaseName, bool findById)
+        private static TabularConnectionWrapper ConnectTo(string connectionString, string databaseIdOrName, bool findById)
         {
-            var server = new TOM.Server();
+            using var server = new TOM.Server();
 
             ProcessHelper.RunOnUIThread(() =>
             {
                 server.Connect(connectionString.ToUnprotectedString());
             });
 
-            var database = findById ? server.Databases.Find(databaseName) : server.Databases.FindByName(databaseName) ?? throw new BravoException(BravoProblem.TOMDatabaseDatabaseNotFound, databaseName);
-            var connection = new TabularConnectionWrapper(connectionString, server, database);
+            var database = findById ? server.Databases.Find(databaseIdOrName) : server.Databases.FindByName(databaseIdOrName);
+            if (database is null)
+                throw new BravoException(BravoProblem.TOMDatabaseDatabaseNotFound, databaseIdOrName);
 
+            var connection = new TabularConnectionWrapper(connectionString, server, database);
             return connection;
         }
     }
