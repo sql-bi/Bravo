@@ -1,6 +1,5 @@
 ﻿namespace Sqlbi.Bravo.Infrastructure.Configuration.Settings
 {
-    using Sqlbi.Bravo.Infrastructure.Models.PBICloud;
     using Sqlbi.Bravo.Infrastructure.Security.Policies;
     using System.Text.Json;
     using System.Text.Json.Serialization;
@@ -83,23 +82,6 @@
 
         [JsonPropertyName("customOptions")]
         public JsonElement? CustomOptions { get; set; }
-    }
-
-    public class ExperimentalSettings
-    {
-        /// <summary>
-        /// Not yet implemented
-        /// </summary>
-        [JsonPropertyName("useIntegratedWindowsAuthenticationSso")]
-        public bool? UseIntegratedWindowsAuthenticationSso { get; }
-
-        [JsonPropertyName("useSystemBrowserForAuthentication")]
-        public bool? UseSystemBrowserForAuthentication { get; set; }
-
-        [JsonPropertyName("pbiEnvironment")]
-        public PBICloudEnvironmentType? PBIEnvironment { get; set; }
-        [JsonIgnore]
-        public bool UseSystemBrowserForAuthentication { get; set; } = false;
 
         public bool Validate(bool throwOnError = true)
         {

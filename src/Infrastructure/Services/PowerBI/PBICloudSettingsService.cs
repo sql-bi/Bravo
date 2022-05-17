@@ -113,10 +113,10 @@
             // https://docs.microsoft.com/en-us/power-bi/enterprise/service-govus-overview#sign-in-to-power-bi-for-us-government
             // https://github.com/microsoft/Federal-Business-Applications/tree/main/whitepapers/power-bi-registry-settings
 
-            var uriString = CommonHelper.ReadRegistryString(Registry.LocalMachine, keyName: "SOFTWARE\\Microsoft\\Microsoft Power BI", valueName: PowerBIDiscoveryUrl);
+            var uriString = Registry.LocalMachine.GetStringValue(subkeyName: "SOFTWARE\\Microsoft\\Microsoft Power BI", valueName: PowerBIDiscoveryUrl);
 
             if (uriString is null)
-                uriString = CommonHelper.ReadRegistryString(Registry.LocalMachine, keyName: "SOFTWARE\\WOW6432Node\\Policies\\Microsoft\\Microsoft Power BI", valueName: PowerBIDiscoveryUrl);
+                uriString = Registry.LocalMachine.GetStringValue(subkeyName: "SOFTWARE\\WOW6432Node\\Policies\\Microsoft\\Microsoft Power BI", valueName: PowerBIDiscoveryUrl);
 
             if (uriString is null)
                 uriString = PBICommercialUriString;

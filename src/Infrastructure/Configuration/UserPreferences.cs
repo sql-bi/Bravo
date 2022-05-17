@@ -1,6 +1,7 @@
 ﻿namespace Sqlbi.Bravo.Infrastructure.Configuration
 {
     using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
+    using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Infrastructure.Helpers;
     using System;
     using System.Diagnostics;
@@ -99,7 +100,7 @@
             var registryKey = AppEnvironment.ApplicationInstallerRegistryHKey;
             if (registryKey is not null)
             {
-                var valueString = CommonHelper.ReadRegistryString(registryKey, keyName: AppEnvironment.ApplicationRegistryKeyName, valueName: AppEnvironment.ApplicationRegistryApplicationTelemetryEnableValue);
+                var valueString = registryKey.GetStringValue(subkeyName: AppEnvironment.ApplicationRegistryKeyName, valueName: AppEnvironment.ApplicationRegistryApplicationTelemetryEnableValue);
                 if (valueString is not null)
                 {
                     if (int.TryParse(valueString, out var intValue))
