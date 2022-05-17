@@ -138,7 +138,7 @@ window.external = {
         {
             ThemeHelper.InitializeTheme(Handle, UserPreferences.Current.Theme);
 
-            Text = AppEnvironment.ApplicationMainWindowTitle;
+            Text = $"{ AppEnvironment.ApplicationMainWindowTitle } - v{ string.Join('-', AppEnvironment.ApplicationProductVersion.Split('-').Take(4)) }";
             BackgroundImageLayout = ImageLayout.Center;
             BackColor = _startupThemeColor;
 
