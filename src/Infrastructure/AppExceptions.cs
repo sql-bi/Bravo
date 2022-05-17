@@ -54,6 +54,14 @@
         private static void ThrowUnexpectedInvalidOperationException(string? condition) => throw new BravoUnexpectedInvalidOperationException($"Condition failed '{ condition }'");
     }
 
+    public class BravoUnexpectedPolicyViolationException : BravoUnexpectedException
+    {
+        public BravoUnexpectedPolicyViolationException(string policyName)
+            : base(message: policyName)
+        {
+        }
+    }
+
     public class BravoUnexpectedArgumentNullException : ArgumentNullException
     {
         public BravoUnexpectedArgumentNullException(string? paramName)

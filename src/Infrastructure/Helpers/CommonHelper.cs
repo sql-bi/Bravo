@@ -1,13 +1,14 @@
 ﻿namespace Sqlbi.Bravo.Infrastructure.Helpers
 {
-    using Microsoft.Win32;
+    using Sqlbi.Bravo.Infrastructure.Configuration;
     using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
+    using Sqlbi.Bravo.Infrastructure.Extensions;
+    using Sqlbi.Bravo.Infrastructure.Security.Policies;
     using Sqlbi.Bravo.Infrastructure.Windows.Interop;
     using Sqlbi.Bravo.Models;
     using System;
     using System.IO;
     using System.Net.Http;
-    using System.Security;
     using System.Text.Json;
     using System.Threading;
     using System.Threading.Tasks;
@@ -30,42 +31,6 @@
             return state;
         }
 
-        public static string? ReadRegistryString(RegistryKey registryKey, string keyName, string valueName)
-        {
-            try
-            {
-                using var registrySubKey = registryKey.OpenSubKey(keyName, writable: false);
-
-                if (registrySubKey is not null)
-                {
-                    var value = registrySubKey.GetValue(valueName, defaultValue: null, RegistryValueOptions.DoNotExpandEnvironmentNames);
-                    if (value is not null)
-                    {
-                        var valueKind = registrySubKey.GetValueKind(valueName);
-                        if (valueKind == RegistryValueKind.String)
-                        {
-                            var valueString = (string)value;
-                            return valueString;
-                        }
-                    }
-                }
-            }
-            catch (UnauthorizedAccessException)
-            {
-            }
-            catch (SecurityException)
-            {
-            }
-            catch (ObjectDisposedException)
-            {
-            }
-            catch (IOException)
-            {
-            }
-
-            return null;
-        }
-
         public static bool IsKeyDown(Keys key)
         {
             var state = GetKeyState(key);
@@ -73,17 +38,31 @@
             return state.HasFlag(User32.KeyState.Down);
         }
 
-        public static string NormalizePath(string path)
+        public static bool AreDirectoryPathsEqual(string path1, string path2)
         {
-            var uri = new Uri(path);
-            var fullPath = Path.GetFullPath(uri.LocalPath);
-            var normalizedPath = fullPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar).ToLowerInvariant();
+            var normalizedPath1 = NormalizeDirectoryPath(path1);
+            var normalizedPath2 = NormalizeDirectoryPath(path2);
+
+            var equals =  normalizedPath1.EqualsI(normalizedPath2);
+            return equals;
+        }
+
+        public static string NormalizeDirectoryPath(string path)
+        {
+            var normalizedPath = path;
+
+            normalizedPath = normalizedPath.Trim();
+            normalizedPath = Path.TrimEndingDirectorySeparator(normalizedPath);
+            normalizedPath = new DirectoryInfo(normalizedPath).FullName;
 
             return normalizedPath;
         }
 
         public async static Task<BravoUpdate> CheckForUpdateAsync(UpdateChannelType updateChannel, CancellationToken cancellationToken)
         {
+            UserPreferences.Current.AssertUpdateCheckEnabledPolicy();
+            UserPreferences.Current.AssertUpdateChannelPolicy(updateChannel);
+
             var channelPath = updateChannel switch
             {
                 UpdateChannelType.Stable => "bravo-public",

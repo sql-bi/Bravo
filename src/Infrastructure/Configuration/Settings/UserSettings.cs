@@ -1,10 +1,50 @@
 ﻿namespace Sqlbi.Bravo.Infrastructure.Configuration.Settings
 {
+    using Sqlbi.Bravo.Infrastructure.Security.Policies;
     using System.Text.Json;
     using System.Text.Json.Serialization;
 
-    public class UserSettings
+    public interface IUserSettings
     {
+        bool TelemetryEnabled { get; set; }
+
+        DiagnosticLevelType DiagnosticLevel { get; set; }
+
+        UpdateChannelType UpdateChannel { get; set; }
+
+        bool UpdateCheckEnabled { get; set; }
+
+        PolicyStatus UpdateCheckEnabledPolicy { get; }
+
+        ThemeType Theme { get; set; }
+
+        ProxySettings? Proxy { get; set; }
+
+        JsonElement? CustomOptions { get; set; }
+    }
+
+    public class UserSettings : IUserSettings
+    {
+        private UpdateChannelType _updateChannel;
+        private bool _updateCheckEnabled;
+
+        public UserSettings()
+        {
+            if (AppEnvironment.GroupPolicies.Enabled)
+            {
+                {
+                    var (policy, value) = AppEnvironment.GroupPolicies.GetPolicyForUpdateChannel();
+                    UpdateChannel = value;
+                    UpdateChannelPolicy = policy;
+                }
+                {
+                    var (policy, value) = AppEnvironment.GroupPolicies.GetPolicyForUpdateCheckEnabled();
+                    UpdateCheckEnabled = value;
+                    UpdateCheckEnabledPolicy = policy;
+                }
+            }
+        }
+
         [JsonPropertyName("telemetryEnabled")]
         public bool TelemetryEnabled { get; set; } = AppEnvironment.TelemetryEnabledDefault;
 
@@ -12,7 +52,24 @@
         public DiagnosticLevelType DiagnosticLevel { get; set; } = DiagnosticLevelType.None;
 
         [JsonPropertyName("updateChannel")]
-        public UpdateChannelType UpdateChannel { get; set; } = UpdateChannelType.Stable;
+        public UpdateChannelType UpdateChannel
+        {
+            get => _updateChannel;
+            set => _updateChannel = GetSetterValue(_updateChannel, value, UpdateChannelPolicy);
+        }
+
+        [JsonIgnore]
+        public PolicyStatus UpdateChannelPolicy { get; } = PolicyStatus.NotConfigured;
+
+        [JsonPropertyName("updateCheckEnabled")]
+        public bool UpdateCheckEnabled 
+        { 
+            get => _updateCheckEnabled;
+            set => _updateCheckEnabled = GetSetterValue(_updateCheckEnabled, value, UpdateCheckEnabledPolicy);
+        }
+
+        [JsonIgnore]
+        public PolicyStatus UpdateCheckEnabledPolicy { get; } = PolicyStatus.NotConfigured;
 
         [JsonPropertyName("theme")]
         public ThemeType Theme { get; set; } = ThemeType.Auto;
@@ -22,6 +79,36 @@
 
         [JsonPropertyName("customOptions")]
         public JsonElement? CustomOptions { get; set; }
+
+        internal void AssertUpdateChannelPolicy(UpdateChannelType updateChannel)
+        {
+            if (UpdateChannelPolicy == PolicyStatus.Forced && UpdateChannel != updateChannel)
+            {
+                throw new BravoUnexpectedPolicyViolationException(policyName: nameof(UpdateChannelPolicy));
+            }
+        }
+
+        internal void AssertUpdateCheckEnabledPolicy()
+        {
+            if (UpdateCheckEnabledPolicy == PolicyStatus.Forced && UpdateCheckEnabled == false)
+            {
+                throw new BravoUnexpectedPolicyViolationException(policyName: nameof(UpdateCheckEnabledPolicy));
+            }
+        }
+
+        private T GetSetterValue<T>(T currentValue, T setterValue, PolicyStatus policy)
+        {
+            if (policy == PolicyStatus.NotConfigured)
+            {
+                return setterValue;
+            }
+            else if (policy == PolicyStatus.Forced)
+            {
+                return currentValue;
+            }
+
+            throw new BravoUnexpectedException($"Unexpected { nameof(PolicyStatus) } value ({ policy })");
+        }
     }
 
     public enum ThemeType

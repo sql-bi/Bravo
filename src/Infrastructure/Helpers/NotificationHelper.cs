@@ -1,6 +1,7 @@
 ﻿namespace Sqlbi.Bravo.Infrastructure.Helpers
 {
     using Microsoft.Toolkit.Uwp.Notifications;
+    using Sqlbi.Bravo.Infrastructure.Configuration;
     using Sqlbi.Bravo.Models;
     using System;
 
@@ -21,6 +22,8 @@
 
         public static void NotifyUpdateAvailable(BravoUpdate bravoUpdate)
         {
+            UserPreferences.Current.AssertUpdateCheckEnabledPolicy();
+
             if (!OperatingSystem.IsWindowsVersionAtLeast(10, 0, 17763, 0))
                 return;
 
