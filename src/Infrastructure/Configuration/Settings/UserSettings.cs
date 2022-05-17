@@ -25,8 +25,8 @@
 
     public class UserSettings : IUserSettings
     {
-        private UpdateChannelType _updateChannel;
-        private bool _updateCheckEnabled;
+        private UpdateChannelType _updateChannel = UpdateChannelType.Stable;
+        private bool _updateCheckEnabled = true;
 
         public UserSettings()
         {
