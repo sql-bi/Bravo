@@ -80,6 +80,23 @@
         [JsonPropertyName("customOptions")]
         public JsonElement? CustomOptions { get; set; }
 
+        public bool Validate(bool throwOnError = true)
+        {
+            try
+            {
+                Proxy?.Validate(throwOnError);
+
+                return true;
+            }
+            catch
+            {
+                if (throwOnError)
+                    throw;
+
+                return false;
+            }
+        }
+
         internal void AssertUpdateChannelPolicy(UpdateChannelType updateChannel)
         {
             if (UpdateChannelPolicy == PolicyStatus.Forced && UpdateChannel != updateChannel)

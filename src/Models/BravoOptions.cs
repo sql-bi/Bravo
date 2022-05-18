@@ -14,6 +14,7 @@
         }
 
         private BravoOptions(UserSettings userSettings)
+            : this()
         {
             TelemetryEnabled = userSettings.TelemetryEnabled;
             DiagnosticLevel = userSettings.DiagnosticLevel;
@@ -61,6 +62,8 @@
 
         public void SaveToUserPreferences()
         {
+            Validate();
+
             var settings = UserPreferences.Current;
             {
                 BravoUnexpectedException.Assert(settings.UpdateChannelPolicy == UpdateChannelPolicy);
@@ -75,6 +78,23 @@
                 settings.CustomOptions = CustomOptions;
             }
             UserPreferences.Save();
+        }
+
+        private bool Validate(bool throwOnError = true)
+        {
+            try
+            {
+                Proxy?.Validate(throwOnError);
+
+                return true;
+            }
+            catch
+            {
+                if (throwOnError)
+                    throw;
+
+                return false;
+            }
         }
     }
 }

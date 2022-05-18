@@ -1,5 +1,6 @@
 ﻿namespace Sqlbi.Bravo.Controllers
 {
+    using Hellang.Middleware.ProblemDetails;
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
@@ -7,6 +8,7 @@
     using Sqlbi.Bravo.Infrastructure;
     using Sqlbi.Bravo.Infrastructure.Configuration;
     using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
+    using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Infrastructure.Helpers;
     using Sqlbi.Bravo.Infrastructure.Security;
     using Sqlbi.Bravo.Models;
@@ -59,7 +61,26 @@
         [ProducesDefaultResponseType]
         public IActionResult UpdateOptions(BravoOptions options)
         {
-            options.SaveToUserPreferences();
+            if (options.Proxy is not null)
+            { 
+                if (options.Proxy.Address.IsEmptyOrWhiteSpace() == true)
+                    options.Proxy.Address = null;
+
+                if (options.Proxy.BypassList.IsEmptyOrWhiteSpace() == true)
+                    options.Proxy.BypassList = null;
+            }
+            
+            try
+            {
+                options.SaveToUserPreferences();
+            }
+            catch (Exception ex)
+            {
+                var problem = StatusCodeProblemDetails.Create(StatusCodes.Status400BadRequest);
+                problem.Detail = ex.Message;
+
+                return BadRequest(problem);
+            }
 
             _telemetryConfiguration.DisableTelemetry = UserPreferences.Current.TelemetryEnabled == false;
 
