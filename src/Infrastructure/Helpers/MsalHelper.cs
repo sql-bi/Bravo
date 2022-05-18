@@ -15,7 +15,7 @@
 
         public static IPublicClientApplication CreatePublicClientApplication(IPBICloudEnvironment pbicloudEnvironment)
         {
-            var useEmbeddedBrowser = !(UserPreferences.Current.Experimental?.UseSystemBrowserForAuthentication == true);
+            var useEmbeddedBrowser = !UserPreferences.Current.UseSystemBrowserForAuthentication;
             var redirectUri = (useEmbeddedBrowser ? pbicloudEnvironment.AzureADRedirectAddress : SystemBrowserRedirectUri);
             var authorityUri = pbicloudEnvironment.AzureADAuthority;
 
@@ -46,7 +46,7 @@
             // The TargetFramework OS 'windows10.0.17763.0' requires 'Microsoft.Windows.SDK.NET' as project dependency.
             // The 'Microsoft.Windows.SDK.NET' includes all the WPF(PresentationFramework.dll) and WinForm(System.Windows.Forms.dll) assemblies to the project.
 
-            var useEmbeddedBrowser = !(UserPreferences.Current.Experimental?.UseSystemBrowserForAuthentication == true);
+            var useEmbeddedBrowser = !UserPreferences.Current.UseSystemBrowserForAuthentication;
             var extraQueryParameters = MicrosoftAccountOnlyQueryParameter;
             var prompt = Prompt.SelectAccount; // Force a sign-in as the MSAL web browser might contain cookies for the current user and we don't necessarily want to re-sign-in the same user
             var scopes = environment.AzureADScopes;

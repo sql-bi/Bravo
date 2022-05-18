@@ -13,8 +13,7 @@
         {
         }
 
-        private BravoOptions(UserSettings userSettings)
-            : this()
+        private BravoOptions(IUserSettings userSettings)
         {
             TelemetryEnabled = userSettings.TelemetryEnabled;
             DiagnosticLevel = userSettings.DiagnosticLevel;
@@ -24,6 +23,7 @@
             UpdateCheckEnabledPolicy = userSettings.UpdateCheckEnabledPolicy;
             Theme = userSettings.Theme;
             Proxy = userSettings.Proxy;
+            UseSystemBrowserForAuthentication = userSettings.UseSystemBrowserForAuthentication;
             CustomOptions = userSettings.CustomOptions;
         }
 
@@ -47,6 +47,9 @@
 
         [JsonPropertyName("proxy")]
         public ProxySettings? Proxy { get; set; }
+
+        [JsonPropertyName("useSystemBrowserForAuthentication")]
+        public bool UseSystemBrowserForAuthentication { get; set; } = false;
 
         [JsonPropertyName("diagnosticLevel")]
         public DiagnosticLevelType DiagnosticLevel { get; set; } = DiagnosticLevelType.None;
@@ -75,6 +78,7 @@
                 settings.UpdateCheckEnabled = UpdateCheckEnabled;
                 settings.Theme = Theme;
                 settings.Proxy = Proxy;
+                settings.UseSystemBrowserForAuthentication = UseSystemBrowserForAuthentication;
                 settings.CustomOptions = CustomOptions;
             }
             UserPreferences.Save();
