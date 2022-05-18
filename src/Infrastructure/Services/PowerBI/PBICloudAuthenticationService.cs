@@ -65,7 +65,7 @@
 
                 var environmentChanged = !CurrentEnvironment.Equals(previousEnvironment);
                 var authenticationChanged = !CurrentAuthentication.Equals(previousAuthentication);
-                if (authenticationChanged || environmentChanged)
+                if (authenticationChanged || environmentChanged || CurrentEnvironment.ClusterEndpoint is null)
                 {
                     var tenantCluster = await _pbicloudSettings.GetTenantClusterAsync(CurrentAuthentication.AccessToken, cancellationToken).ConfigureAwait(false);
                     CurrentEnvironment.ClusterEndpoint = tenantCluster.FixedClusterUri;

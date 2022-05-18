@@ -13,5 +13,4 @@
         [JsonPropertyName("environment")]
         public PBICloudEnvironment? Environment { get; set; }
     }
-
 }
