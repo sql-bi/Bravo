@@ -51,38 +51,8 @@
         /// Attempts to authenticate and acquire an access token for the account to access the PowerBI cloud services
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
-        [HttpGet]
-        [ActionName("powerbi/SignIn")]
-        [Produces(MediaTypeNames.Application.Json)]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IBravoAccount))]
-        [ProducesDefaultResponseType]
-        public async Task<IActionResult> PBICloudSignInAsync(string userPrincipalName, CancellationToken cancellationToken)
-        {
-            var discoveredEnvironments = await _authenticationService.GetPBICloudEnvironmentsAsync(userPrincipalName, cancellationToken);
-            BravoUnexpectedException.Assert(discoveredEnvironments.Any());
-
-            if (UserPreferences.Current.Experimental?.PBIEnvironment is not null)
-            {
-                var experimentalEnvironment = discoveredEnvironments.SingleOrDefault((env) => env.Type == UserPreferences.Current.Experimental.PBIEnvironment);
-                BravoUnexpectedException.Assert(experimentalEnvironment is not null);
-
-                await _authenticationService.PBICloudSignInAsync(userPrincipalName, experimentalEnvironment, cancellationToken);
-            }
-            else
-            {
-                var environment = discoveredEnvironments.First();
-                await _authenticationService.PBICloudSignInAsync(userPrincipalName, environment, cancellationToken);
-            }
-
-            return Ok(_authenticationService.PBICloudAuthentication.Account);
-        }
-
-        /// <summary>
-        /// Attempts to authenticate and acquire an access token for the account to access the PowerBI cloud services
-        /// </summary>
-        /// <response code="200">Status200OK - Success</response>
         [HttpPost]
-        [ActionName("powerbi/SignInV2")]
+        [ActionName("powerbi/SignIn")]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IBravoAccount))]
         [ProducesDefaultResponseType]

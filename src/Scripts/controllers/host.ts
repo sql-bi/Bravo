@@ -386,7 +386,7 @@ export class Host extends Dispatchable {
     signIn(request?: PBICloudAutenthicationRequest) {
         const logSettings: ApiLogSettings = {};
 
-        return <Promise<Account>>this.apiCall("auth/powerbi/SignInV2", request || {}, { method: "POST" }, false, logSettings);
+        return <Promise<Account>>this.apiCall("auth/powerbi/SignIn", request || {}, { method: "POST" }, false, logSettings);
     }
 
     /*signIn(userPrincipalName?: string) {
