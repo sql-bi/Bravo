@@ -25,11 +25,11 @@
             Model = Database.Model;
         }
 
-        public TOM.Server Server { get; private set; }
+        public TOM.Server Server { get; }
 
-        public TOM.Database Database { get; private set; }
+        public TOM.Database Database { get; }
 
-        public TOM.Model Model { get; private set; }
+        public TOM.Model Model { get; }
 
         public AdomdConnection CreateAdomdConnection(bool open = true)
         {
@@ -80,7 +80,7 @@
             Connection.ChangeDatabase(databaseName);
         }
 
-        public AdomdConnection Connection { get; private set; }
+        public AdomdConnection Connection { get; }
 
         public AdomdCommand CreateAdomdCommand()
         {

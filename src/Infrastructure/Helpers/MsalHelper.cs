@@ -52,16 +52,22 @@
             var scopes = environment.AzureADScopes;
             var loginHint = userPrincipalName;
 
-            var publicClient = CreatePublicClientApplication(environment);
-            var parameterBuilder = publicClient.AcquireTokenInteractive(scopes).WithExtraQueryParameters(extraQueryParameters).WithUseEmbeddedWebView(useEmbeddedBrowser).WithLoginHint(loginHint).WithPrompt(prompt).WithClaims(claims);
-
-            if (useEmbeddedBrowser)
+            var acquireTokenTask = ProcessHelper.RunOnUISynchronizationContextContext(async () =>
             {
-                var mainwindowHwnd = ProcessHelper.GetCurrentProcessMainWindowHandle();
-                parameterBuilder.WithParentActivityOrWindow(mainwindowHwnd);
-            }
+                var publicClient = CreatePublicClientApplication(environment);
+                var parameterBuilder = publicClient.AcquireTokenInteractive(scopes).WithExtraQueryParameters(extraQueryParameters).WithUseEmbeddedWebView(useEmbeddedBrowser).WithLoginHint(loginHint).WithPrompt(prompt).WithClaims(claims);
 
-            var msalAuthenticationResult = await parameterBuilder.ExecuteAsync(cancellationToken).ConfigureAwait(false);
+                if (useEmbeddedBrowser)
+                {
+                    var mainwindowHwnd = ProcessHelper.GetCurrentProcessMainWindowHandle();
+                    parameterBuilder.WithParentActivityOrWindow(mainwindowHwnd);
+                }
+
+                var msalAuthenticationResult = await parameterBuilder.ExecuteAsync(cancellationToken).ConfigureAwait(false);
+                return msalAuthenticationResult;
+            });
+
+            var msalAuthenticationResult = await acquireTokenTask.ConfigureAwait(false);
             var pbicloudAuthenticationResult = new PBICloudAuthenticationResult(msalAuthenticationResult);
 
             return pbicloudAuthenticationResult;
