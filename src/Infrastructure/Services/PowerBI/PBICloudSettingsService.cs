@@ -84,8 +84,8 @@
                     AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{ nameof(PBICloudSettingsService) }.{ nameof(GetEnvironmentsAsync) }", content);
 
                 var globalService = JsonSerializer.Deserialize<GlobalService>(content, AppEnvironment.DefaultJsonOptions);
-                var environments = globalService?.Environments?.Select(PBICloudEnvironment.CreateFrom).ToArray();
-
+                var environments = globalService?.Environments?.Select(PBICloudEnvironment.CreateFrom).Where((e) => !e.IsMicrosoftInternal).ToArray();
+                
                 return environments ?? Array.Empty<PBICloudEnvironment>();
             }
         }

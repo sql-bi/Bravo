@@ -43,6 +43,9 @@
         [JsonPropertyName("isValid")]
         public bool IsValid => Type is not null;
 
+        [JsonIgnore]
+        public bool IsMicrosoftInternal => Type == PBICloudEnvironmentType.Custom && Name.EqualsI("PpeCloud");
+
         public static PBICloudEnvironment CreateFrom(GlobalServiceEnvironment globalServiceEnvironment)
         {
             var authorityService = globalServiceEnvironment.Services?.SingleOrDefault((s) => "aad".EqualsI(s.Name));
