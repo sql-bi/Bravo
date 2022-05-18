@@ -217,7 +217,7 @@ window.external = {
 
         private void OnNewInstanceRestoreFormWindowToForeground(object? sender, AppInstanceStartupEventArgs _)
         {
-            ProcessHelper.RunOnUIThread(this, () =>
+            ProcessHelper.InvokeOnUIThread(this, () =>
             {
                 if (WindowState == FormWindowState.Minimized)
                 {
@@ -232,7 +232,7 @@ window.external = {
         {
             if (e.Message?.IsEmpty == false)
             {
-                ProcessHelper.RunOnUIThread(this, () =>
+                ProcessHelper.InvokeOnUIThread(this, () =>
                 {
                     var webMessageString = e.Message.ToWebMessageString();
                     WebView.CoreWebView2.PostWebMessageAsString(webMessageString);
