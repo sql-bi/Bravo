@@ -69,11 +69,6 @@ export interface DatabaseUpdateResult {
     etag?: string
 }
 
-export interface FileActionResult {
-    path?: string
-    canceled?: boolean
-}
-
 export enum DiagnosticMessageSeverity {
     None = 0,
     Warning = 1,
@@ -298,7 +293,6 @@ export class Host extends Dispatchable {
             });
     }
 
-
     apiCallCompleted(requestId: string) {
         if (requestId in this.requests) {
             if ("timeout" in this.requests[requestId])
@@ -469,7 +463,8 @@ export class Host extends Dispatchable {
     }
 
     exportVpax(datasource: PBIDesktopReport | PBICloudDataset, type: DocType) {
-        return <Promise<FileActionResult>>this.apiCall(`api/ExportVpaxFrom${type == DocType.dataset ? "Dataset" : "Report"}`, datasource, { method: "POST" });
+        return <Promise<boolean>>this.apiCall(`api/ExportVpaxFrom${type == DocType.dataset ? "Dataset" : "Report"}`, datasource, { method: "POST" })
+            .then(response => (response !== null));
     }
     abortExportVpax(type: DocType) {
         this.apiAbortByAction(`api/ExportVpaxFrom${type == DocType.dataset ? "Dataset" : "Report"}`);
@@ -572,4 +567,14 @@ export class Host extends Dispatchable {
     abortOpenPBIX() {
         this.apiAbortByAction("api/PBIDesktopOpenPBIX");
     }
+
+    updateProxyCredentials() {
+        return <Promise<boolean>>this.apiCall("api/UpdateProxyCredentials")
+            .then(response => (response !== null));
+    } 
+
+    deleteProxyCredentials() {
+        this.apiCall("api/DeleteProxyCredentials");
+    }
+
 }
