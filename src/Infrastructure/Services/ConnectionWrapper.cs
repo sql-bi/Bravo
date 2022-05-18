@@ -11,19 +11,25 @@
     {
         private readonly string _connectionString;
 
-        private TabularConnectionWrapper(string connectionString, TOM.Server server, TOM.Database database)
+        private TabularConnectionWrapper(string connectionString, string databaseIdOrName, bool findById)
         {
             _connectionString = connectionString;
 
-            Server = server;
-            Database = database;
+            Server = new TOM.Server();
+            ProcessHelper.InvokeOnUIThread(() => Server.Connect(connectionString.ToUnprotectedString()));
+            Database = findById ? Server.Databases.Find(databaseIdOrName) : Server.Databases.FindByName(databaseIdOrName);
+
+            if (Database is null)
+                throw new BravoException(BravoProblem.TOMDatabaseDatabaseNotFound, databaseIdOrName);
+
+            Model = Database.Model;
         }
 
         public TOM.Server Server { get; private set; }
 
         public TOM.Database Database { get; private set; }
 
-        public TOM.Model Model => Database.Model;
+        public TOM.Model Model { get; private set; }
 
         public AdomdConnection CreateAdomdConnection(bool open = true)
         {
@@ -49,7 +55,7 @@
             BravoUnexpectedException.ThrowIfNull(dataset.DatabaseName);
 
             var connectionString = ConnectionStringHelper.BuildFor(dataset, accessToken);
-            var connection = ConnectTo(connectionString, dataset.DatabaseName, findById: true);
+            var connection = new TabularConnectionWrapper(connectionString, dataset.DatabaseName, findById: true);
 
             return connection;
         }
@@ -59,25 +65,8 @@
             BravoUnexpectedException.ThrowIfNull(report.DatabaseName);
 
             var connectionString = ConnectionStringHelper.BuildFor(report);
-            var connection = ConnectTo(connectionString, report.DatabaseName, findById: false);
+            var connection = new TabularConnectionWrapper(connectionString, report.DatabaseName, findById: false);
 
-            return connection;
-        }
-
-        private static TabularConnectionWrapper ConnectTo(string connectionString, string databaseIdOrName, bool findById)
-        {
-            using var server = new TOM.Server();
-
-            ProcessHelper.RunOnUIThread(() =>
-            {
-                server.Connect(connectionString.ToUnprotectedString());
-            });
-
-            var database = findById ? server.Databases.Find(databaseIdOrName) : server.Databases.FindByName(databaseIdOrName);
-            if (database is null)
-                throw new BravoException(BravoProblem.TOMDatabaseDatabaseNotFound, databaseIdOrName);
-
-            var connection = new TabularConnectionWrapper(connectionString, server, database);
             return connection;
         }
     }

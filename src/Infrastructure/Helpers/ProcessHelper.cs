@@ -27,9 +27,9 @@
             thread.Join();
         }
 
-        public static void RunOnUIThread(Control control, Action action) => RunOnUIThread(action, control);
+        public static void InvokeOnUIThread(Control control, Action action) => InvokeOnUIThread(action, control);
         
-        public static void RunOnUIThread(Action action, Control? control = null)
+        public static void InvokeOnUIThread(Action action, Control? control = null)
         {
             if (control is null)
             {

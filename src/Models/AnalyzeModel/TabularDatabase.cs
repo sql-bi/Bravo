@@ -13,7 +13,6 @@
     using System.Text.Json.Serialization;
     using System.Threading;
     using SSAS = Microsoft.AnalysisServices;
-    using TOM = Microsoft.AnalysisServices.Tabular;
 
     public class TabularDatabase
     {
