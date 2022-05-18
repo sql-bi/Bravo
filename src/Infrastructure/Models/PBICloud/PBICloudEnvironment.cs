@@ -64,7 +64,12 @@
             };
 
             if (pbicloudEnvironment.Type is not null)
+            {
                 pbicloudEnvironment.Description = pbicloudEnvironment.Type.Value.ToCloudEnvironmentDescription();
+
+                if (pbicloudEnvironment.Type == PBICloudEnvironmentType.Custom)
+                    pbicloudEnvironment.Description += $" - { pbicloudEnvironment.Name }";
+            }
 
             if (pbicloudEnvironment.AzureADResource is not null)
                 pbicloudEnvironment.AzureADScopes = new string[] { $"{ pbicloudEnvironment.AzureADResource }/.default" };
