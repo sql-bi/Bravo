@@ -74,10 +74,15 @@
                 var settingsString = File.ReadAllText(AppEnvironment.UserSettingsFilePath);
                 var settings = JsonSerializer.Deserialize<UserSettings>(settingsString, _serializationOptions);
 
-                // Input validation and sanitization
+                // Validation
                 if (settings is not null)
                 {
-                    // JsonSerializer does not enforce enum values
+                    var validProxy = settings.Proxy?.Validate(throwOnError: false);
+                    if (validProxy == false)
+                    {
+                        settings.Proxy = null;
+                    }
+
                     if (!Enum.IsDefined(typeof(ThemeType), (int)settings.Theme))
                     {
                         settings.Theme = ThemeType.Auto;

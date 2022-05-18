@@ -139,6 +139,7 @@ input[type=text], input[type=search], input[type=password], input[type=email], i
 
     input {
         width: 100%;
+        border: none !important;
     }
 }
 input[type=file] {
@@ -450,7 +451,7 @@ a, .link {
         }
     }
 
-    &:not(.disabled):hover {
+    &:not(.disabled):not(.contains-tabular-browser):hover {
         background-color: darken(@window-back-color-alt, 2%);
         .shadow(0, .5px, 1px, 0, rgba(0,0,0,0.1));
         .dark & {
@@ -467,10 +468,11 @@ a, .link {
         }
     }
 
+
+    
     &.contains-tabular-browser {
         background: @back-color;
         overflow: hidden;
-        min-height: 200px;
 
         .dark & { background-color: @back-color-dark;}
         
@@ -500,16 +502,27 @@ a, .link {
                 color: @notice-color-dark;
             }
 
-            
+            p {
+                margin: 10px 0 0 0;
+            }
 
             em {
                 font-weight: 500;
+            }
+
+            .hl {
+                color: @highlight-color;
             }
         }
     }
 
     .custom-listener {
         margin-top: 5px;
+    }
+
+    textarea {
+        width: calc(100% - 20px);
+        margin-top: 10px;
     }
 
     .action {
@@ -525,8 +538,10 @@ a, .link {
         }
 
         input[type=text] {
-            width: 90px;
+            width: calc(100% - 20px);
+            min-width: 110px;
         }
+
 
         .validation-container {
             width: 170px;
@@ -621,6 +636,14 @@ a, .link {
         input[readonly] {   
             color: @disabled-color !important;
             .dark & { color: @disabled-color-dark !important }
+        }
+    }
+
+    textarea, select, input[type=text], input[type=password], input[type=email], input[type=search], input[type=number] {
+        border: 1px solid @border-color;
+
+        .dark & {
+            border-color: @border-color-dark;
         }
     }
 }

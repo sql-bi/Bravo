@@ -788,7 +788,7 @@ export class AnalyzeModelScene extends DocScene {
                 this.push(exportingScene);
 
                 host.exportVpax(<any>this.doc.sourceData, this.doc.type)
-                    .then(data => {
+                    .then(ok => {
                         this.pop();
                     })
                     .catch((error: AppError) => {

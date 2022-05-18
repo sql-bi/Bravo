@@ -53,6 +53,7 @@ export enum OptionType {
     select,
     switch,
     text,
+    textarea,
     number,
     description,
     customCtrl,
@@ -134,6 +135,12 @@ export module Renderer {
                     `;
                     break;
 
+                case OptionType.textarea:
+                    ctrlHtml = `
+                        <textarea rows="3" class="listener" ${struct.attributes ? struct.attributes : ""} ${struct.readonly ? "readonly" : ""} ${struct.placeholder ? ` placeholder="${struct.placeholder}"` : ""}>${value}</textarea>
+                    `;
+                    break;
+
                 case OptionType.number:
                     ctrlHtml = `
                         <input type="number" ${struct.range && struct.range.length ? `min="${struct.range[0]}"` : ""} ${struct.readonly ? "readonly" : ""} ${struct.range && struct.range.length > 1 ? `max="${struct.range[1]}"` : ""} class="listener" value="${value}" ${struct.attributes ? struct.attributes : ""} ${struct.placeholder ? ` placeholder="${struct.placeholder}"` : ""}>
@@ -184,9 +191,9 @@ export module Renderer {
 
             let html = `
                 <div id="${id}" class="option ${struct.parent ? "child": ""} ${toggledByClass} ${struct.cssClass ? struct.cssClass : ""}" ${isHidden ? "hidden" : ""}> 
-                    ${struct.type == OptionType.custom ? 
-                        (Utils.Obj.isSet(struct.customHtml) ? struct.customHtml() : "") :
-                        ` 
+                    ${struct.type == OptionType.custom 
+                        ? (Utils.Obj.isSet(struct.customHtml) ? struct.customHtml() : "") 
+                        : ` 
                             ${struct.icon ? `<div class="option-icon icon icon-${struct.icon}"></div>` : (struct.parent ? `<div class="option-icon icon"></div>` : "")}
                             <div class="title">
                                 <div class="name ${struct.bold ? "bold" : ""}">${struct.name}</div>
@@ -194,10 +201,13 @@ export module Renderer {
                                     `<div class="desc">${struct.description /*Renderer.Text.renderExpandable(struct.description, 150, 170)*/}</div>` :
                                     ""
                                 }
+                                ${struct.type == OptionType.textarea ? ctrlHtml : ""}
                             </div>
-                            <div class="action">
-                                ${ctrlHtml}
-                            </div>
+                            ${struct.type == OptionType.textarea ? "": `
+                                <div class="action">
+                                    ${ctrlHtml}
+                                </div>
+                            `}
                         `}
                 </div>
             `;
@@ -235,7 +245,7 @@ export module Renderer {
                 
                     listener.addEventListener("change", e => {
                         
-                        let el = <HTMLInputElement|HTMLSelectElement>e.currentTarget; 
+                        let el = <HTMLInputElement|HTMLSelectElement>e.target; 
 
                         const getValue = (el: HTMLInputElement|HTMLSelectElement) => {
                             let convertedValue: any = (struct.type == OptionType.switch ? (<HTMLInputElement>el).checked : el.value.trim());

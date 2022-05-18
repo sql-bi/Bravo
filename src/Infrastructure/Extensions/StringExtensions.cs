@@ -57,6 +57,11 @@
             return string.IsNullOrWhiteSpace(value);
         }
 
+        public static bool IsEmptyOrWhiteSpace([NotNullWhen(false)] this string? value)
+        {
+            return value is not null && string.IsNullOrWhiteSpace(value);
+        }
+
         public static string FormatInvariant(this string format, params object?[] args)
         {
             return string.Format(CultureInfo.InvariantCulture, format, args);

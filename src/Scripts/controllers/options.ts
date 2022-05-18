@@ -17,8 +17,23 @@ export interface Options {
     telemetryEnabled: boolean
     updateChannel: UpdateChannelType
     diagnosticLevel: DiagnosticLevelType
+    proxy: ProxyOptions
     customOptions?: ClientOptions
 } 
+
+export interface ProxyOptions {
+    type: ProxyType
+    useDefaultCredentials: boolean
+    address: string
+    bypassOnLocal: boolean
+    bypassList: string
+}
+
+export enum ProxyType {
+    None = "None",
+    System = "System",
+    Custom = "Custom"
+}
 
 export interface ClientOptions {
     sidebarCollapsed: boolean
@@ -154,6 +169,13 @@ export class OptionsController extends OptionsStore<Options> {
         telemetryEnabled: true,
         diagnosticLevel: DiagnosticLevelType.None,
         updateChannel: UpdateChannelType.Stable,
+        proxy: {
+            type: ProxyType.System,
+            useDefaultCredentials: true,
+            address: "",
+            bypassOnLocal: true,
+            bypassList: ""
+        },
         customOptions: {
             sidebarCollapsed: false,
             loggedInOnce: false,

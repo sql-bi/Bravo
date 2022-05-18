@@ -10,6 +10,9 @@ export module Utils {
     export type RequestAbortReason = "user" | "timeout";
 
     export enum ResponseStatusCode {
+        Ok = 200,
+        NoContent = 204,
+        MultipleChoice = 300,
         BadRequest = 400,
         NotAuthorized = 401,
         NotFound = 404,
@@ -72,16 +75,20 @@ export module Utils {
                 (<any>mergedOptions.headers)["Authorization"] = authorization; 
 
             const ajaxHandleResponseStatus = (response: Response) => {
-                return (response.status >= 200 && response.status < 300) ? 
+                return (response.status >= ResponseStatusCode.Ok && response.status < ResponseStatusCode.MultipleChoice) ? 
                     Promise.resolve(response) :
                     Promise.reject(response);
             };
             
             const ajaxHandleContentType = (response: Response) => {
-                const contentType = response.headers.get('content-type');
-                return contentType && contentType.startsWith('application/json;') ?
-                    response.json() :
-                    response.text();
+                if (response.status == ResponseStatusCode.NoContent) {
+                    return Promise.resolve(null);
+                } else {
+                    const contentType = response.headers.get('content-type');
+                    return contentType && contentType.startsWith('application/json;') ?
+                        response.json() :
+                        response.text();
+                }
             }
 
             return fetch(url, mergedOptions)

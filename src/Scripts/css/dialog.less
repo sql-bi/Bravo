@@ -29,6 +29,8 @@
 		.border-radius(8px);
 		min-width: 350px;
 		max-width: 600px;
+		height: 80%;
+		max-height: 780px;
 		opacity:0;
 		animation: scaleUp .3s cubic-bezier(0.165, 0.840, 0.440, 1.000) forwards;
 
@@ -54,6 +56,26 @@
 			padding: 30px;
 			height: 100%;
 			overflow: hidden;
+
+			.menu-container {
+				height: 100%;
+				.flexbox();
+				.flex-direction(column);
+		
+				.menu-body {
+					margin-top: 20px;
+					height: calc(100% - 20px);
+					
+					overflow: auto;
+
+					.item-body {
+						height: calc(100% - 20px);
+					}
+				}
+
+				
+			}
+		
 		}
 
 		footer {
@@ -139,9 +161,10 @@
 
 		.menu-body {
 			height: calc(100% - 30px);
+			overflow: hidden;
 
 			.item-body {
-				height: 100%;
+				height: calc(100% - 20px);
 
 				.list {
 					height: calc(100% - 20px);
@@ -218,6 +241,8 @@
 			text-align: center;
 			border-color: transparent;
 			outline: 2px dashed @border-color;
+			margin-left: 2px;
+			width: calc(100% - 22px);
 
 			&.highlight {
 				
@@ -282,11 +307,9 @@
 		//min-height: 560px;
 	}
 
-	.item-body {
-		margin-top: 20px;
-	}
-
 	#body-about {
+		.flexbox(flex-start, flex-start, column);
+
 		h2 { 
 			font-size: 28px;
 			margin: 0 0 5px 0;
@@ -294,6 +317,9 @@
 		img {
 			width: 170px;
 			height: auto;
+		}
+		.cols {
+			width: 100%;
 		}
 		.col {
 			padding: 20px;
@@ -322,10 +348,10 @@
 		.update-status {
 			.flexbox(center, center);
 			height: 80px;
+			
 			line-height: 1.4;
 			margin: 0 0 10px 0;
 			height:100px;
-			text-align: center;
 			overflow: hidden;
 
 			.up-to-date {
@@ -345,7 +371,7 @@
 		
 		.sqlbi {
 
-			margin: 0 0 0 30px;
+			margin: auto 0 0 30px;
 			.flexbox(center);
 			font-size: 14px;
 			line-height: 1.4;

@@ -6,7 +6,9 @@
     using System;
     using System.Linq;
     using System.Net;
+    using System.Runtime.CompilerServices;
     using System.Text.Json.Serialization;
+    using System.Text.RegularExpressions;
 
     public class ProxySettings
     {
@@ -36,7 +38,44 @@
         /// An array of addresses that do not use the proxy server
         /// </summary>
         [JsonPropertyName("bypassList")]
-        public string[]? BypassList { get; set; }
+        public string? BypassList { get; set; }
+
+        [MethodImpl(MethodImplOptions.NoOptimization)]
+        public bool Validate(bool throwOnError = true)
+        {
+            try
+            {
+                var bypassList = BypassList?.Split(";", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                if (bypassList?.Length > 0)
+                {
+                    foreach (var bypassListItem in bypassList)
+                    {
+                        _ = new Regex(bypassListItem, RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+                    }
+                }
+
+                if (Address is not null)
+                {
+                    if (Address.Contains(Uri.SchemeDelimiter))
+                    {
+                        _ = new Uri(Address);
+                    }
+                    else
+                    {
+                        _ = new Uri($"{ Uri.UriSchemeHttp }{ Uri.SchemeDelimiter }{ Address }");
+                    }
+                }
+
+                return true;
+            }
+            catch
+            {
+                if (throwOnError)
+                    throw;
+
+                return false;
+            }
+        }
 
         internal ICredentials? GetCredentials()
         {
@@ -50,6 +89,14 @@
             }
 
             return CredentialCache.DefaultCredentials;
+        }
+
+        internal static string[] GetSafeBypassList(string? bypassListString, bool includeLoopback)
+        {
+            var bypassList = bypassListString?.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            var safeBypassList = GetSafeBypassList(bypassList, includeLoopback);
+
+            return safeBypassList;
         }
 
         internal static string[] GetSafeBypassList(string[]? bypassList, bool includeLoopback)

@@ -25,6 +25,7 @@ export class Menu extends View {
 
     constructor(id: string, container: HTMLElement, items: Dic<MenuItem>, lazyRendering = true, selectedId: string = null) {
         super(id, container);
+        this.element.classList.add("menu-container");
 
         this.items = items;
 

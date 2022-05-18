@@ -12,6 +12,7 @@ import { OptionsDialogAbout } from './options-dialog-about';
 import { OptionsDialogFormatting } from './options-dialog-formatting';
 import { OptionsDialogGeneral } from './options-dialog-general';
 import { OptionsDialogTelemetry } from './options-dialog-telemetry';
+import { OptionsDialogProxy } from './options-dialog-proxy';
 
 export class OptionsDialog extends Dialog {
 
@@ -26,6 +27,7 @@ export class OptionsDialog extends Dialog {
         let generalPane = new OptionsDialogGeneral();
         let formattingPane = new OptionsDialogFormatting();
         let telemetryPane = new OptionsDialogTelemetry();
+        let proxyPane = new OptionsDialogProxy();
         let aboutPane = new OptionsDialogAbout();
 
         this.menu = new Menu("options-menu", this.body, <Dic<MenuItem>>{
@@ -37,10 +39,14 @@ export class OptionsDialog extends Dialog {
                 name: i18n(strings.optionsDialogFormattingMenu),  
                 onRender: element => { formattingPane.render(element) },
             },
+            "proxy": {
+                name: i18n(strings.optionsDialogProxyMenu),  
+                onRender: element => { proxyPane.render(element) },
+            },  
             "telemetry": {
                 name: i18n(strings.optionsDialogTelemetryMenu),  
                 onRender: element => { telemetryPane.render(element) },
-            },     
+            },  
             "about": {
                 name: i18n(strings.optionsDialogAboutMenu), 
                 onRender: element => { aboutPane.render(element) },
