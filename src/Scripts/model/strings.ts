@@ -299,6 +299,7 @@ export enum strings {
     optionFormattingSpacesValueBestPractice,
     optionFormattingSpacesValueFalse,
     optionFormattingSpacesValueTrue,
+    optionInvalidValue,
     optionLanguage,
     optionLanguageDescription,
     optionLanguageResetConfirm,

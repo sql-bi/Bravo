@@ -542,7 +542,9 @@ export class Host extends Dispatchable {
     }
 
     updateOptions(options: Options) {
-        return this.apiCall("api/UpdateOptions", options, { method: "POST" });
+        return this.apiCall("api/UpdateOptions", options, { method: "POST" })
+            .then(() => true)
+            .catch(ignore => false);
     }
 
     navigateTo(url: string) {

@@ -90,6 +90,7 @@ export module Renderer {
 
             let id = Utils.Text.slugify(struct.option ? struct.option : struct.name); //Utils.DOM.uniqueId()
             let value = (Utils.Obj.isSet(struct.value) ? struct.value : (struct.option ? store.getOption(struct.option) : ""));
+            let valid = (struct.option ? store.isValid(struct.option) : true);
             let valueType = (struct.valueType ? struct.valueType : 
                 (struct.type == OptionType.switch ? "boolean" : (
                  struct.type == OptionType.number ? "number": 
@@ -130,15 +131,25 @@ export module Renderer {
 
                 case OptionType.text:
                     ctrlHtml = `
-                        ${Utils.Obj.isSet(struct.validation) ? `<div class="validation-container"><div class="validation-input">` : ""}
-                        <input type="text" class="listener" value="${value}" ${struct.attributes ? struct.attributes : ""} ${struct.readonly ? "readonly" : ""} ${struct.placeholder ? ` placeholder="${struct.placeholder}"` : ""}>
-                        ${Utils.Obj.isSet(struct.validation) ? `<div class="status icon"></div></div><div class="validation-desc"></div></div>` : ""}
+                        <div class="validation-container${!valid ? " invalid" : ""}">
+                            <div class="validation-input">
+                                <input type="text" class="listener" value="${value}" ${struct.attributes ? struct.attributes : ""} ${struct.readonly ? "readonly" : ""} ${struct.placeholder ? ` placeholder="${struct.placeholder}"` : ""}>
+                                <div class="status icon"></div>
+                            </div>
+                            <div class="validation-desc">${!valid ? i18n(strings.optionInvalidValue) : ""}</div>
+                        </div>
                     `;
                     break;
 
                 case OptionType.textarea:
                     ctrlHtml = `
-                        <textarea rows="3" class="listener" ${struct.attributes ? struct.attributes : ""} ${struct.readonly ? "readonly" : ""} ${struct.placeholder ? ` placeholder="${struct.placeholder}"` : ""}>${value}</textarea>
+                        <div class="validation-container contains-textarea${!valid ? " invalid" : ""}">
+                            <div class="validation-input">
+                                <textarea rows="3" class="listener" ${struct.attributes ? struct.attributes : ""} ${struct.readonly ? "readonly" : ""} ${struct.placeholder ? ` placeholder="${struct.placeholder}"` : ""}>${value}</textarea>
+                                <div class="status icon"></div>
+                            </div>
+                            <div class="validation-desc">${!valid ? i18n(strings.optionInvalidValue) : ""}</div>
+                        </div>
                     `;
                     break;
 
@@ -261,7 +272,10 @@ export module Renderer {
                         const applyValue = () => {
                             let newValue = getValue();
                             if (struct.option)
-                                store.update(struct.option, (struct.type == OptionType.switch && struct.reverse ? !newValue : newValue), (struct.silentUpdate ? false : true));
+                                store.update(struct.option, (struct.type == OptionType.switch && struct.reverse ? !newValue : newValue), (struct.silentUpdate ? false : true))
+                                    .then(ok => {
+                                        renderCtrlStatus(el, { valid: ok, message: ok ? "": i18n(strings.optionInvalidValue) });
+                                    });
                             
                             __(`.toggled-by-${id}`, element).forEach((div: HTMLElement) => {
                                 div.toggle(div.classList.contains(`toggle-if-${Utils.Text.slugify(newValue.toString())}`));
@@ -324,21 +338,24 @@ export module Renderer {
                 let validationDesc = _(".validation-desc", validationContainer);
                 validationDesc.innerText = i18n(strings.validating);
 
-                struct.validation((struct.option ? struct.option : struct.name), (<HTMLInputElement>element).value, initial).then(response => {
-                    validationContainer.classList.remove("validating");
-                    
-                    if (response) {
-                        if (response.valid) {
-                            validationContainer.classList.add("valid");
-                        } else {
-                            validationContainer.classList.add("invalid");
-                        }
-                        
-                        validationDesc.innerText = response.message;
-                    } else {
-                        validationDesc.innerText = "";
-                    }
-                });
+                struct.validation((struct.option ? struct.option : struct.name), (<HTMLInputElement>element).value, initial)
+                    .then(response => renderCtrlStatus(element, response));
+            }
+        }
+
+        function renderCtrlStatus(element: HTMLElement, response: OptionValidation) {
+            const validationContainer = element.closest(".validation-container");
+            if (!validationContainer) return;
+
+            validationContainer.classList.remove("validating");
+
+            const validationDesc = _(".validation-desc", validationContainer);
+            if (response && !response.valid) {
+                validationContainer.classList.add("invalid");
+                validationDesc.innerText = response.message;
+            } else {
+                validationContainer.classList.remove("invalid");
+                validationDesc.innerText = "";
             }
         }
     }

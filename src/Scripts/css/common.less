@@ -523,6 +523,7 @@ a, .link {
     textarea {
         width: calc(100% - 20px);
         margin-top: 10px;
+        resize: none
     }
 
     .action {
@@ -542,88 +543,6 @@ a, .link {
             min-width: 110px;
         }
 
-
-        .validation-container {
-            width: 170px;
-            margin-left: auto;
-
-            .validation-input {
-                .flexbox(center);
-                .border-radius();
-
-                input {
-                    border: none;
-                    width: 125px;
-                }
-
-                background-color: @input-back-color;
-
-                .dark & { 
-                    background-color: @input-back-color-dark;
-                }
-                .status {
-                    .flex(0 0 auto);
-                    font-size: 16px;
-                    line-height: 1;
-                    width: 16px;
-                    &:before {
-                        margin:0;
-                        //font-weight: bold;
-                    }
-                }
-            }
-
-            .validation-desc {
-                font-size: 12px;
-                line-height: 1.3;
-                margin: 5px 5px 0 0;
-                color: @notice-color;
-
-                .dark & {
-                    color: @notice-color-dark;
-                }
-            }
-
-            &.validating {
-                .validation-input {
-                    border: 1px dashed @border-color;
-
-                    .dark & { border-color: @border-color-dark;}
-                }
-            }
-
-            &.valid {
-
-                .validation-input {
-                    border: 1px solid @good-color;
-
-                    .status {
-                        .icon-completed;
-                        color: @good-color;
-                    }
-                }
-
-                .validation-desc {
-                    color: @good-color;
-                }
-
-            }
-            &.invalid {
-
-                .validation-input {
-                    border: 1px solid @bad-color;
-
-                    .status {
-                        .icon-alert;
-                        color: @bad-color;
-                    }
-                }
-                .validation-desc {
-                    color: @bad-color;
-                }
-            }
-        }
-        
         input[type=password], input[type=email], input[type=search] {
             width: 100%;
             min-width: 90px;
@@ -636,6 +555,101 @@ a, .link {
         input[readonly] {   
             color: @disabled-color !important;
             .dark & { color: @disabled-color-dark !important }
+        }
+    }
+    
+    .validation-container {
+        width: 170px;
+
+        &.contains-textarea {
+            margin-top: 10px;
+            width: 100%;
+        }
+
+        margin-left: auto;
+
+        .validation-input {
+            .flexbox(center);
+            .border-radius();
+
+            border: 1px solid @border-color;
+            .dark & { border-color: @border-color-dark;}
+
+            input, textarea {
+                border: none;
+                margin-top: 0;
+                padding-right: 0;
+                width: calc(100% - 35px);
+            }
+
+            input {
+            }
+
+            background-color: @input-back-color;
+
+            .dark & { 
+                background-color: @input-back-color-dark;
+            }
+            .status {
+                .flex(0 0 auto);
+                font-size: 16px;
+                line-height: 1;
+                width: 16px;
+                &:before {
+                    margin:0 5px;
+                    //font-weight: bold;
+                }
+            }
+        }
+
+        .validation-desc {
+            font-size: 12px;
+            line-height: 1.3;
+            margin: 5px 5px 0 0;
+            color: @notice-color;
+
+            .dark & {
+                color: @notice-color-dark;
+            }
+        }
+
+        &.validating {
+            .validation-input {
+                border: 1px dashed @border-color;
+
+                .dark & { border-color: @border-color-dark;}
+            }
+        }
+
+        &.valid {
+
+            .validation-input {
+                border: 1px solid @good-color;
+
+                .status {
+                    .icon-completed;
+                    color: @good-color;
+                }
+            }
+
+            .validation-desc {
+                color: @good-color;
+            }
+
+        }
+        &.invalid {
+
+            .validation-input {
+                border: 1px solid @bad-color;
+
+                .status {
+                    .icon-alert;
+                    color: @bad-color;
+                }
+            }
+            .validation-desc {
+                color: @bad-color;
+            }
         }
     }
 
