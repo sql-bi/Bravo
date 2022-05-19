@@ -16,7 +16,7 @@
             _connectionString = connectionString;
 
             Server = new TOM.Server();
-            ProcessHelper.InvokeOnUIThread(() => Server.Connect(connectionString.ToUnprotectedString()));
+            ProcessHelper.RunOnUISynchronizationContext(() => Server.Connect(connectionString.ToUnprotectedString()));
             Database = findById ? Server.Databases.Find(databaseIdOrName) : Server.Databases.FindByName(databaseIdOrName);
 
             if (Database is null)
@@ -73,9 +73,11 @@
 
     internal class AdomdConnectionWrapper : IDisposable
     {
-        private AdomdConnectionWrapper(AdomdConnection connection)
+        private AdomdConnectionWrapper(string connectionString, string databaseName)
         {
-            Connection = connection;
+            Connection = new AdomdConnection(connectionString.ToUnprotectedString());
+            ProcessHelper.RunOnUISynchronizationContext(() => Connection.Open());
+            Connection.ChangeDatabase(databaseName);
         }
 
         public AdomdConnection Connection { get; private set; }
@@ -116,7 +118,7 @@
             BravoUnexpectedException.ThrowIfNull(dataset.ExternalDatabaseName);
 
             var connectionString = ConnectionStringHelper.BuildFor(dataset, accessToken);
-            var connection = ConnectTo(connectionString, dataset.ExternalDatabaseName);
+            var connection = new AdomdConnectionWrapper(connectionString, dataset.ExternalDatabaseName);
 
             return connection;
         }
@@ -126,19 +128,9 @@
             BravoUnexpectedException.ThrowIfNull(report.DatabaseName);
 
             var connectionString = ConnectionStringHelper.BuildFor(report);
-            var connection = ConnectTo(connectionString, report.DatabaseName);
+            var connection = new AdomdConnectionWrapper(connectionString, report.DatabaseName);
 
             return connection;
-        }
-
-        private static AdomdConnectionWrapper ConnectTo(string connectionString, string databaseName)
-        {
-            var connection = new AdomdConnection(connectionString.ToUnprotectedString());
-            connection.Open();
-            connection.ChangeDatabase(databaseName);
-
-            var wrapper = new AdomdConnectionWrapper(connection);
-            return wrapper;
         }
     }
 }

@@ -64,14 +64,19 @@
             {
                 Authentication = null;
 
-                await EnsureInitializedAsync().ConfigureAwait(false);
-
-                var accounts = (await PublicClient.GetAccountsAsync().ConfigureAwait(false)).ToArray();
-
-                foreach (var account in accounts)
+                _ = await ProcessHelper.RunOnUISynchronizationContextContext(async () =>
                 {
-                    await PublicClient.RemoveAsync(account).ConfigureAwait(false);
-                }
+                    await EnsureInitializedAsync().ConfigureAwait(false);
+
+                    var accounts = (await PublicClient.GetAccountsAsync().ConfigureAwait(false)).ToArray();
+
+                    foreach (var account in accounts)
+                    {
+                        await PublicClient.RemoveAsync(account).ConfigureAwait(false);
+                    }
+
+                    return true;
+                });
             }
             finally
             {
@@ -98,27 +103,26 @@
             await _authenticationSemaphore.WaitAsync().ConfigureAwait(false);
             try
             {
-                await EnsureInitializedAsync().ConfigureAwait(false);
-
-                using var cancellationTokenSource = new CancellationTokenSource();
-                if (timeout.HasValue) cancellationTokenSource.CancelAfter(timeout.Value);
-
-                var previousIdentifier = Authentication?.Account.HomeAccountId.Identifier;
-                var previousAuthentication = Authentication;
-
-                Authentication = await AcquireTokenImplAsync(silentOnly, previousIdentifier, loginHint, cancellationTokenSource.Token).ConfigureAwait(false);
-
-                var accountChanged = !Authentication.Account.HomeAccountId.Equals(previousAuthentication?.Account.HomeAccountId);
-                if (accountChanged)
+                _ = await ProcessHelper.RunOnUISynchronizationContextContext(async () =>
                 { 
-                    await _pbicloudSettings.RefreshAsync(Authentication.AccessToken).ConfigureAwait(false);
-                }
+                    await EnsureInitializedAsync().ConfigureAwait(false);
 
-                //var impersonateTask = System.Security.Principal.WindowsIdentity.RunImpersonatedAsync(Microsoft.Win32.SafeHandles.SafeAccessTokenHandle.InvalidHandle, async () =>
-                //{
-                //    _authenticationResult = await AcquireTokenImplAsync(...);
-                //});
-                //await impersonateTask.ConfigureAwait(false);
+                    using var cancellationTokenSource = new CancellationTokenSource();
+                    if (timeout.HasValue) cancellationTokenSource.CancelAfter(timeout.Value);
+
+                    var previousIdentifier = Authentication?.Account.HomeAccountId.Identifier;
+                    var previousAuthentication = Authentication;
+
+                    Authentication = await AcquireTokenImplAsync(silentOnly, previousIdentifier, loginHint, cancellationTokenSource.Token).ConfigureAwait(false);
+
+                    var accountChanged = !Authentication.Account.HomeAccountId.Equals(previousAuthentication?.Account.HomeAccountId);
+                    if (accountChanged)
+                    { 
+                        await _pbicloudSettings.RefreshAsync(Authentication.AccessToken).ConfigureAwait(false);
+                    }
+
+                    return true;
+                });
             }
             finally
             {

@@ -13,6 +13,7 @@
     using System.Security.Claims;
     using System.Security.Principal;
     using System.Threading;
+    using System.Threading.Tasks;
     using System.Windows.Forms;
 
     internal static class ProcessHelper
@@ -48,6 +49,37 @@
             else
             {
                 action();
+            }
+        }
+
+        public static async Task<T> RunOnUISynchronizationContextContext<T>(Func<Task<T>> callback)
+        {
+            var previousSynchronizationContext = SynchronizationContext.Current;
+
+            SynchronizationContext.SetSynchronizationContext(AppWindow.UISynchronizationContext);
+            try
+            {
+                var result = await callback();
+                return result;
+            }
+            finally
+            {
+                SynchronizationContext.SetSynchronizationContext(previousSynchronizationContext);
+            }
+        }
+
+        public static void RunOnUISynchronizationContext(Action action)
+        {
+            var previousSynchronizationContext = SynchronizationContext.Current;
+
+            SynchronizationContext.SetSynchronizationContext(AppWindow.UISynchronizationContext);
+            try
+            {
+                action();
+            }
+            finally
+            {
+                SynchronizationContext.SetSynchronizationContext(previousSynchronizationContext);
             }
         }
 

@@ -22,10 +22,13 @@
     using System.Text;
     using System.Text.Json;
     using System.Text.Json.Serialization;
+    using System.Threading;
     using System.Windows.Forms;
 
     internal partial class AppWindow : Form
     {
+        public static SynchronizationContext? UISynchronizationContext { get; set; }
+
         private readonly IHost _host;
         private readonly AppInstance _instance;
         private readonly Color _startupThemeColor;
@@ -36,6 +39,7 @@
             _instance = instance;
             _startupThemeColor = ThemeHelper.ShouldUseDarkMode(UserPreferences.Current.Theme) ? AppEnvironment.ThemeColorDark : AppEnvironment.ThemeColorLight;
 
+            UISynchronizationContext = new WindowsFormsSynchronizationContext();
             InitializeComponent();
             InitializeWebViewAsync();
 
