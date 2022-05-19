@@ -31,9 +31,10 @@ export interface OptionStruct {
     validTooltip?: string
     invalidTooltip?: string
     silentUpdate?: boolean
+    reverse?: boolean
     customHtml?: ()=> string
     validation?: (name: string, value: string, initial: boolean) => Promise<OptionValidation>
-    onBeforeChange?: (e: Event, value: any) => void
+    onBeforeChange?: (e: Event, value: any) => Promise<boolean>
     onChange?: (e: Event, value: any) => void
     onClick?: (e: Event) => void
     onKeydown?: (e: Event, value: string) => void
@@ -122,7 +123,7 @@ export module Renderer {
                 case OptionType.switch:
                     ctrlHtml = `
                         <div class="switch-container">
-                            <label class="switch"><input type="checkbox" class="listener" ${value ? "checked" : ""} ${struct.readonly ? "readonly" : ""} ${struct.attributes ? struct.attributes : ""}><span class="slider"></span></label> 
+                            <label class="switch"><input type="checkbox" class="listener" ${(value && !struct.reverse) || (!value && struct.reverse) ? "checked" : ""} ${struct.readonly ? "readonly" : ""} ${struct.attributes ? struct.attributes : ""}><span class="slider"></span></label> 
                         </div>
                     `;
                     break;
@@ -240,6 +241,7 @@ export module Renderer {
                 if (struct.type == OptionType.switch || 
                     struct.type == OptionType.select || 
                     struct.type == OptionType.text || 
+                    struct.type == OptionType.textarea || 
                     struct.type == OptionType.number
                 ) {
                 
@@ -247,7 +249,7 @@ export module Renderer {
                         
                         let el = <HTMLInputElement|HTMLSelectElement>e.target; 
 
-                        const getValue = (el: HTMLInputElement|HTMLSelectElement) => {
+                        const getValue = () => {
                             let convertedValue: any = (struct.type == OptionType.switch ? (<HTMLInputElement>el).checked : el.value.trim());
                             if (typeof convertedValue === "string") {
                                 if (valueType == "number") convertedValue = Number(convertedValue);
@@ -256,27 +258,34 @@ export module Renderer {
                             return convertedValue;
                         };
 
+                        const applyValue = () => {
+                            let newValue = getValue();
+                            if (struct.option)
+                                store.update(struct.option, (struct.type == OptionType.switch && struct.reverse ? !newValue : newValue), (struct.silentUpdate ? false : true));
+                            
+                            __(`.toggled-by-${id}`, element).forEach((div: HTMLElement) => {
+                                div.toggle(div.classList.contains(`toggle-if-${Utils.Text.slugify(newValue.toString())}`));
+                            });
+
+                            toggleOptionContainer();
+
+                            Options.validateOption(el, struct); //Validate callback
+
+                            if (Utils.Obj.isSet(struct.onChange))
+                                struct.onChange(e, newValue);
+                        };
+
                         if (Utils.Obj.isSet(struct.onBeforeChange))
-                            struct.onBeforeChange(e, getValue(el));
-
-                        let newValue = getValue(el);
-                        if (struct.option)
-                            store.update(struct.option, newValue, (struct.silentUpdate ? false : true));
-                        
-                        __(`.toggled-by-${id}`, element).forEach((div: HTMLElement) => {
-                            div.toggle(div.classList.contains(`toggle-if-${Utils.Text.slugify(newValue.toString())}`));
-                        });
-
-                        toggleOptionContainer();
-
-                        Options.validateOption(el, struct); //Validate callback has the 
-
-                        if (Utils.Obj.isSet(struct.onChange))
-                            struct.onChange(e, newValue);
+                            struct.onBeforeChange(e, getValue())
+                                .then(changed => {
+                                    if (changed) applyValue()
+                                 });
+                        else
+                            applyValue();
                     });
                 }
 
-                if (struct.type == OptionType.text || struct.type == OptionType.number) {
+                if (struct.type == OptionType.text || struct.type == OptionType.number || struct.type == OptionType.textarea) {
 
                     if (Utils.Obj.isSet(struct.onKeydown)) {
                         listener.addEventListener("keydown", e => {
@@ -307,7 +316,7 @@ export module Renderer {
         }
 
         export function validateOption(element: HTMLElement, struct: OptionStruct, initial = false) {
-            if (struct.type == OptionType.text && !struct.readonly && Utils.Obj.isSet(struct.validation)) {
+            if ((struct.type == OptionType.text || struct.type == OptionType.textarea) && !struct.readonly && Utils.Obj.isSet(struct.validation)) {
                 let validationContainer = element.closest(".validation-container");
                 validationContainer.classList.remove("valid", "invalid");
                 validationContainer.classList.add("validating");

@@ -73,17 +73,31 @@ export class OptionsDialogProxy {
                     option: "proxy.type",
                     value: ProxyType.Custom
                 },
-                name: i18n(strings.optionProxyDefaultCredentials),
-                description: i18n(strings.optionProxyDefaultCredentialsDescription),
+                name: i18n(strings.optionProxyCustomCredentials),
+                description: `${i18n(strings.optionProxyCustomCredentialsDescription)} <span class="link open-credential-manager">${i18n(strings.optionProxyCustomCredentialsEdit)}</span>`,
                 type: OptionType.switch,
+                reverse: true,
                 onBeforeChange: (e, value) => {
-                    if (!value) {
-                        host.updateProxyCredentials()
+                    let el = <HTMLInputElement>e.target;
+                    if (value) {
+                        return host.updateProxyCredentials()
                             .then(ok => {
-                                if (!ok) (<HTMLInputElement>e.target).checked = true; 
-                            });
+                                if (!ok) el.checked = false; 
+                                return ok;
+                            })
+                            .catch(ignore => false);
                     } else {
-                        host.deleteProxyCredentials();
+                        let dialog = new Confirm();
+                        return dialog.show(i18n(strings.optionProxyConfirmDeleteCredentials))
+                            .then((response: DialogResponse) => {
+                                let ok = (response.action == "ok");
+                                if (ok)
+                                    host.deleteProxyCredentials();
+                                else 
+                                    el.checked = true;
+
+                                return ok;
+                            });
                     }
                 }
             },
@@ -92,5 +106,10 @@ export class OptionsDialogProxy {
         optionsStruct.forEach(struct => {
             Renderer.Options.render(struct, element, optionsController);
         });
+
+        _(".open-credential-manager", element).addEventListener("click", e => {
+            e.preventDefault();
+            host.openCredentialsManager();
+        })
     }
 }

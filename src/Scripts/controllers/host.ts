@@ -577,4 +577,7 @@ export class Host extends Dispatchable {
         this.apiCall("api/DeleteProxyCredentials");
     }
 
+    openCredentialsManager() {
+        this.apiCall("api/OpenControlPanelItem", { canonicalName: "/name Microsoft.CredentialManager /page ?SelectedVault=CredmanVault" });
+    }
 }
