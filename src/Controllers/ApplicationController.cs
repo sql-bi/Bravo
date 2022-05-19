@@ -53,6 +53,7 @@
         /// Update the application options
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
+        /// <response code="400">Status400BadRequest - See the "instance" and "detail" properties to identify the specific occurrence of the problem</response>
         [HttpPost]
         [ActionName("UpdateOptions")]
         [Consumes(MediaTypeNames.Application.Json)]

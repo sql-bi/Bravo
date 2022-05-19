@@ -100,6 +100,7 @@ type optionsMode = "host" | "browser"
 export class OptionsStore<T> extends Dispatchable {
 
     options: T;
+    invalidOptions: Dic<boolean> = {};
 
     constructor(options?: T) {
         super();
@@ -121,6 +122,10 @@ export class OptionsStore<T> extends Dispatchable {
             }
         }
         return null;
+    }
+
+    isValid(optionPath: string) {
+        return (!this.invalidOptions[optionPath]);
     }
 
     update(optionPath: string, value: any, triggerChange = false) {
@@ -147,16 +152,26 @@ export class OptionsStore<T> extends Dispatchable {
             }
             triggerPath += `${prop}.`;
         });
-        this.save();
 
-        if (triggerChange) {
-            this.trigger("change", changedOptions);
-            this.trigger(`${triggerPath}change`, changedOptions);
-        }
+        return this.save()
+            .then(ok => {
+                if (ok) 
+                    delete this.invalidOptions[optionPath];
+                else
+                    this.invalidOptions[optionPath] = true;
+                return ok;
+            })
+            .finally(() => {
+                if (triggerChange) {
+                    this.trigger("change", changedOptions);
+                    this.trigger(`${triggerPath}change`, changedOptions);
+                }
+            });
     }
 
     save() {
         this.trigger("save");
+        return Promise.resolve(true);
     }
 }
 export class OptionsController extends OptionsStore<Options> {
@@ -270,7 +285,7 @@ export class OptionsController extends OptionsStore<Options> {
     // Save data
     save() {
         if (this.mode == "host") {
-            host.updateOptions(this.options);
+            return host.updateOptions(this.options);
 
         } else {
             try {
@@ -278,6 +293,7 @@ export class OptionsController extends OptionsStore<Options> {
             } catch(error){
                 try { logger.logError(AppError.InitFromError(error)); } catch(ignore) {}
             }
+            return Promise.resolve(true);
         }
     }
 }
