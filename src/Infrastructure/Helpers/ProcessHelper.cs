@@ -13,6 +13,7 @@
     using System.Security.Claims;
     using System.Security.Principal;
     using System.Threading;
+    using System.Threading.Tasks;
     using System.Windows.Forms;
 
     internal static class ProcessHelper
@@ -49,6 +50,50 @@
             {
                 action();
             }
+        }
+
+        public static async Task<T> RunOnUISynchronizationContextContext<T>(Func<Task<T>> callback)
+        {
+            var previousSynchronizationContext = SynchronizationContext.Current;
+
+            SynchronizationContext.SetSynchronizationContext(AppWindow.UISynchronizationContext);
+            try
+            {
+                var result = await callback();
+                return result;
+            }
+            finally
+            {
+                SynchronizationContext.SetSynchronizationContext(previousSynchronizationContext);
+            }
+        }
+
+        public static void RunOnUISynchronizationContext(Action action)
+        {
+            var previousSynchronizationContext = SynchronizationContext.Current;
+
+            SynchronizationContext.SetSynchronizationContext(AppWindow.UISynchronizationContext);
+            try
+            {
+                action();
+            }
+            finally
+            {
+                SynchronizationContext.SetSynchronizationContext(previousSynchronizationContext);
+            }
+        }
+
+        public static void OpenControlPanelItem(string canonicalName)
+        {
+            // https://docs.microsoft.com/en-us/windows/win32/shell/controlpanel-canonical-names
+             
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = Environment.ExpandEnvironmentVariables("%WINDIR%\\System32\\control.exe"),
+                Arguments = canonicalName
+            };
+
+            using var process = Process.Start(startInfo); 
         }
 
         public static bool OpenBrowser(Uri address)

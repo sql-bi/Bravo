@@ -275,5 +275,24 @@
             _ = CredentialManager.DeleteCredential(AppEnvironment.CredentialManagerProxyCredentialName);
             return Ok();
         }
+
+        /// <summary>
+        /// Opens a Windows Control Panel items based on the canonical name provided
+        /// </summary>
+        /// <response code="200">Status200OK - Success</response>
+        [HttpGet]
+        [ActionName("OpenControlPanelItem")]
+        [Consumes(MediaTypeNames.Application.Json)]
+        [Produces(MediaTypeNames.Application.Json)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesDefaultResponseType]
+        public IActionResult OpenControlPanelItem(string canonicalName)
+        {
+            // Opens Windows Credential Manager on Windows Credentials page
+            //      /name Microsoft.CredentialManager /page ?SelectedVault=CredmanVault
+
+            ProcessHelper.OpenControlPanelItem(canonicalName);
+            return Ok();
+        }
     }
 }
