@@ -51,6 +51,19 @@
             }
         }
 
+        public static void OpenControlPanelItem(string canonicalName)
+        {
+            // https://docs.microsoft.com/en-us/windows/win32/shell/controlpanel-canonical-names
+             
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = Environment.ExpandEnvironmentVariables("%WINDIR%\\System32\\control.exe"),
+                Arguments = canonicalName
+            };
+
+            using var process = Process.Start(startInfo); 
+        }
+
         public static bool OpenBrowser(Uri address)
         {
             if (address.IsAbsoluteUri && !address.IsFile && !address.IsUnc && !address.IsLoopback)
