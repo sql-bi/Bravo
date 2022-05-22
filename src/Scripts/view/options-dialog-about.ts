@@ -8,7 +8,7 @@ import { AppVersion } from '../controllers/app';
 import { UpdateChannelType } from '../controllers/options';
 import { Loader } from '../helpers/loader';
 import {  _, __ } from '../helpers/utils';
-import { app, logger, optionsController } from '../main';
+import { app, logger, optionsController, themeController } from '../main';
 import { AppError } from '../model/exceptions';
 import { i18n } from '../model/i18n'; 
 import { strings } from '../model/strings';
@@ -38,10 +38,13 @@ export class OptionsDialogAbout {
                         <span class="ctrl copy-version icon-copy" title="${i18n(strings.copy)}"></span>
                     </div>
                     <div class="update-status list"></div>
+                    <div class="auto-check-option">
+                        <label><input type="checkbox" ${optionsController.options.updateCheckEnabled ? " checked" : ""}>  &nbsp;${i18n(strings.optionCheckForUpdates)}</label>
+                    </div>
                 </div>
             </div>
             <div class="sqlbi">
-                <div><img src="images/sqlbi.svg"></div>
+                <div><img src="images/sqlbi.svg" class="light-logo"><img src="images/sqlbi-invert.svg" class="dark-logo"></div>
                 <div>
                     ${i18n(strings.sqlbiPayoff)} &nbsp; 
                     <span class="link" href="https://www.sqlbi.com">www.sqlbi.com</span>
@@ -64,6 +67,11 @@ export class OptionsDialogAbout {
         _(".copy-version", element).addEventListener("click", e => {
             e.preventDefault();
             navigator.clipboard.writeText(app.currentVersion.toString());
+        });
+
+        _(".auto-check-option input", element).addEventListener("change", e => {
+            let el = <HTMLInputElement>e.currentTarget;
+            optionsController.update("updateCheckEnabled", el.checked);
         });
         this.checkForUpdates();
     }

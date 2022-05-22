@@ -555,8 +555,8 @@ export class Host extends Dispatchable {
         return <Promise<DiagnosticMessage[]>>this.apiCall("api/GetDiagnostics", { all: all });
     } 
 
-    getCurrentVersion(updateChannel: UpdateChannelType, notify = false) {
-        return <Promise<BravoUpdate>>this.apiCall("api/GetCurrentVersion", { updateChannel: updateChannel, notify: notify });
+    getCurrentVersion(updateChannel: UpdateChannelType) {
+        return <Promise<BravoUpdate>>this.apiCall("api/GetCurrentVersion", { updateChannel: updateChannel });
     }
 
     fileSystemOpen(path: string) {

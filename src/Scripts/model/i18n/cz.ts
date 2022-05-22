@@ -279,6 +279,7 @@ const locale: Locale = {
         [_.openWithDaxFormatterCtrlTitle]: "Formátujte online pomocí DAX Formatter",  
         [_.optionAccount]: "Power BI Účet",
         [_.optionAccountDescription]: "Nastavte účet pro přístup k online datovým sadám Power BI.",
+        [_.optionCheckForUpdates]: "Automaticky zkontrolujte aktualizace",
         [_.optionDiagnostic]: "Diagnostická úroveň",
         [_.optionDiagnosticDescription]: "Zobrazit chyby a protokoly v podokně diagnostiky. Zvolte <em>Základní</em>, chcete-li protokolovat pouze několik zpráv. <em>Úplný</em> protokoluje všechny zprávy.",
         [_.optionDiagnosticLevelBasic]: "Základní",

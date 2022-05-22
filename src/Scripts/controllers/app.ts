@@ -414,8 +414,11 @@ export class App {
         this.updatePanels();
     }
 
-    checkForUpdates(notify = false) {
-        return host.getCurrentVersion(optionsController.options.updateChannel, notify)
+    checkForUpdates(automatic = false) {
+
+        if (automatic && !optionsController.options.updateCheckEnabled) return;
+        
+        return host.getCurrentVersion(optionsController.options.updateChannel)
             .then(data => {
 
                 let newVersion = null;
@@ -428,7 +431,7 @@ export class App {
                 }
                 this.newVersion = newVersion;
 
-                if (notify && newVersion) {
+                if (automatic && newVersion) {
                     notificationCenter.add(new Notify(i18n(strings.updateMessage, { version: newVersion.info.version }), newVersion.info, `<span class="link" href="${newVersion.info.downloadUrl}" target="downloader">${i18n(strings.appUpdateDownload)}</span> &nbsp;&nbsp; <span class="link" href="${newVersion.info.changelogUrl}">${i18n(strings.appUpdateViewDetails)}</span>`, false, true));
                 }
 

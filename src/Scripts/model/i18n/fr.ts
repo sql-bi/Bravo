@@ -281,6 +281,7 @@ const locale: Locale = {
         [_.openWithDaxFormatterCtrlTitle]: "Formater en ligne avec DAX Formatter",  
         [_.optionAccount]: "Compte Power BI",
         [_.optionAccountDescription]: "Définir le compte pour accéder aux jeux données en ligne de Power BI.",
+        [_.optionCheckForUpdates]: "Vérifiez automatiquement les mises à jour",
         [_.optionDiagnostic]: "Niveau de Diagnostique",
         [_.optionDiagnosticDescription]: "Afficher les erreurs et les journaux d'exécution dans le panneau de diagnostique. Choisir <em>Basic</em> de journaliser uniquement quelques messages. <em>Afficher</em> tous les messages des journaux d'exécution.",
         [_.optionDiagnosticLevelBasic]: "De base",
