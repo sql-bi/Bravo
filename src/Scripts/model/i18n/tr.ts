@@ -254,7 +254,7 @@ const locale: Locale = {
         [_.manageDatesTemplateNameConfig04]: "Haftalık",
         [_.manageDatesTemplateQuarterWeekType]: "Haftalık Sistem",
         [_.manageDatesTemplateQuarterWeekTypeDesc]: "",
-        [_.manageDatesTemplateTypeStartFiscalYear]: "Mali Yılın İlk Günü",
+        [_.manageDatesTemplateTypeStartFiscalYear]: "Mali yılı tanımlayan tarih",
         [_.manageDatesTemplateTypeStartFiscalYearDesc]: "Haftalık ISO için, değeri <em>Yılın Sonu</em>'nu olarak belirleyin.",
         [_.manageDatesTemplateTypeStartFiscalYearFirst]: "Yılın Başı",
         [_.manageDatesTemplateTypeStartFiscalYearLast]: "Yılın Sonu",

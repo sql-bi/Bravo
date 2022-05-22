@@ -252,7 +252,7 @@ const locale: Locale = {
         [_.manageDatesTemplateNameConfig04]: "Týdenní",
         [_.manageDatesTemplateQuarterWeekType]: "Týdenní systém",
         [_.manageDatesTemplateQuarterWeekTypeDesc]: "",
-        [_.manageDatesTemplateTypeStartFiscalYear]: "První den fiskálního roku",
+        [_.manageDatesTemplateTypeStartFiscalYear]: "Datum definování fiskálního roku",
         [_.manageDatesTemplateTypeStartFiscalYearDesc]: "Pro Týdenní ISO nastavte <em>Poslední v roce</em>.",
         [_.manageDatesTemplateTypeStartFiscalYearFirst]: "První v roce",
         [_.manageDatesTemplateTypeStartFiscalYearLast]: "Poslední v roce",

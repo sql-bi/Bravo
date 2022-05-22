@@ -252,7 +252,7 @@ const locale: Locale = {
         [_.manageDatesTemplateNameConfig04]: "Tygodniowy",
         [_.manageDatesTemplateQuarterWeekType]: "Tygodniowy systemowy",
         [_.manageDatesTemplateQuarterWeekTypeDesc]: "",
-        [_.manageDatesTemplateTypeStartFiscalYear]: "Pierwszy dzień roku obrachunkowego",
+        [_.manageDatesTemplateTypeStartFiscalYear]: "Data definiująca rok obrotowy",
         [_.manageDatesTemplateTypeStartFiscalYearDesc]: "Dla tygodniowego ISO ustaw <em>Ostatni dzień roku</em>.",
         [_.manageDatesTemplateTypeStartFiscalYearFirst]: "Pierwszy dzień roku",
         [_.manageDatesTemplateTypeStartFiscalYearLast]: "Ostatni dzień roku",
