@@ -252,7 +252,7 @@ const locale: Locale = {
         [_.manageDatesTemplateNameConfig04]: "Weekly",
         [_.manageDatesTemplateQuarterWeekType]: "Weekly System",
         [_.manageDatesTemplateQuarterWeekTypeDesc]: "",
-        [_.manageDatesTemplateTypeStartFiscalYear]: "First Day of the Fiscal Year",
+        [_.manageDatesTemplateTypeStartFiscalYear]: "Date defining the Fiscal Year",
         [_.manageDatesTemplateTypeStartFiscalYearDesc]: "For Weekly ISO, set <em>Last of the Year</em>.",
         [_.manageDatesTemplateTypeStartFiscalYearFirst]: "First of the Year",
         [_.manageDatesTemplateTypeStartFiscalYearLast]: "Last of the Year",

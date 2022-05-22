@@ -254,7 +254,7 @@ const locale: Locale = {
         [_.manageDatesTemplateNameConfig04]: "Hebdomadaire",
         [_.manageDatesTemplateQuarterWeekType]: "Système Hebdomadaire",
         [_.manageDatesTemplateQuarterWeekTypeDesc]: "",
-        [_.manageDatesTemplateTypeStartFiscalYear]: "Premier Jour de l'Année Fiscale",
+        [_.manageDatesTemplateTypeStartFiscalYear]: "Date de définition de l'exercice",
         [_.manageDatesTemplateTypeStartFiscalYearDesc]: "Pour respecter l'ISO Hebdomadaire, sélectionnez <em>Dernier de l'Année</em>.",
         [_.manageDatesTemplateTypeStartFiscalYearFirst]: "Premier de l'Année",
         [_.manageDatesTemplateTypeStartFiscalYearLast]: "Dernier de l'Année",

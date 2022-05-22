@@ -252,7 +252,7 @@ const locale: Locale = {
         [_.manageDatesTemplateNameConfig04]: "Ugentlig",
         [_.manageDatesTemplateQuarterWeekType]: "Ugesystem",
         [_.manageDatesTemplateQuarterWeekTypeDesc]: "",
-        [_.manageDatesTemplateTypeStartFiscalYear]: "Første dag i Regnskabsåret",
+        [_.manageDatesTemplateTypeStartFiscalYear]: "Dato definerer regnskabsåret",
         [_.manageDatesTemplateTypeStartFiscalYearDesc]: "Ved brug af ugentlig ISO, anvend <em>Årets slutning</em>.",
         [_.manageDatesTemplateTypeStartFiscalYearFirst]: "Årets begyndelse",
         [_.manageDatesTemplateTypeStartFiscalYearLast]: "Årets slutning",

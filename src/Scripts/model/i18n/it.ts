@@ -252,7 +252,7 @@ const locale: Locale = {
         [_.manageDatesTemplateNameConfig04]: "Settimanale",
         [_.manageDatesTemplateQuarterWeekType]: "Sistema",
         [_.manageDatesTemplateQuarterWeekTypeDesc]: "",
-        [_.manageDatesTemplateTypeStartFiscalYear]: "Primo Giorno dell'Anno Fiscale",
+        [_.manageDatesTemplateTypeStartFiscalYear]: "Data che definisce l'anno fiscale",
         [_.manageDatesTemplateTypeStartFiscalYearDesc]: "Scegli quando iniziare l'anno fiscale. Per calendari settimanali ISO, usa <em>Ultimo dell'Anno</em>.",
         [_.manageDatesTemplateTypeStartFiscalYearFirst]: "Primo dell'Anno",
         [_.manageDatesTemplateTypeStartFiscalYearLast]: "Ultimo dell'Anno",

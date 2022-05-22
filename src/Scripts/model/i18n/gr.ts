@@ -252,7 +252,7 @@ const locale: Locale = {
         [_.manageDatesTemplateNameConfig04]: "Εβδομαδιαία",
         [_.manageDatesTemplateQuarterWeekType]: "Εβδομαδιαίο Σύστημα",
         [_.manageDatesTemplateQuarterWeekTypeDesc]: "",
-        [_.manageDatesTemplateTypeStartFiscalYear]: "Πρώτη ημέρα του Οικονομικού Έτους",
+        [_.manageDatesTemplateTypeStartFiscalYear]: "Ημερομηνία ορίζοντας τη χρήση",
         [_.manageDatesTemplateTypeStartFiscalYearDesc]: "Για το Εβδομαδιαίο ISO, όρισε το <em>Τέλος του Έτους</em>.",
         [_.manageDatesTemplateTypeStartFiscalYearFirst]: "Αρχή του Έτους",
         [_.manageDatesTemplateTypeStartFiscalYearLast]: "Τέλος του Έτους",

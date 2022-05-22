@@ -252,7 +252,7 @@ const locale: Locale = {
         [_.manageDatesTemplateNameConfig04]: "周模板",
         [_.manageDatesTemplateQuarterWeekType]: "周历系统",
         [_.manageDatesTemplateQuarterWeekTypeDesc]: "",
-        [_.manageDatesTemplateTypeStartFiscalYear]: "财政年份的第一天",
+        [_.manageDatesTemplateTypeStartFiscalYear]: "定义会计年度的日期",
         [_.manageDatesTemplateTypeStartFiscalYearDesc]: "对于ISO周, 请选择 <em>年度最后一天</em>.",
         [_.manageDatesTemplateTypeStartFiscalYearFirst]: "年度第一天",
         [_.manageDatesTemplateTypeStartFiscalYearLast]: "年度最后一天",

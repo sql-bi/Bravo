@@ -252,7 +252,7 @@ const locale: Locale = {
         [_.manageDatesTemplateNameConfig04]: "Wekelijks",
         [_.manageDatesTemplateQuarterWeekType]: "Wekelijks Systeem",
         [_.manageDatesTemplateQuarterWeekTypeDesc]: "",
-        [_.manageDatesTemplateTypeStartFiscalYear]: "Eerste Dag van het Fiscale Jaar",
+        [_.manageDatesTemplateTypeStartFiscalYear]: "Datum die het fiscale jaar definieert",
         [_.manageDatesTemplateTypeStartFiscalYearDesc]: "Voor wekelijkse ISO, definieer <em>Laatste van het Jaar</em>.",
         [_.manageDatesTemplateTypeStartFiscalYearFirst]: "Eerste van het Jaar",
         [_.manageDatesTemplateTypeStartFiscalYearLast]: "Laatste van het Jaar",

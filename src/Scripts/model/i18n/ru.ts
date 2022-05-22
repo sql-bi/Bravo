@@ -252,7 +252,7 @@ const locale: Locale = {
         [_.manageDatesTemplateNameConfig04]: "Еженедельный",
         [_.manageDatesTemplateQuarterWeekType]: "Еженедельная система", //???
         [_.manageDatesTemplateQuarterWeekTypeDesc]: "",
-        [_.manageDatesTemplateTypeStartFiscalYear]: "Первый день финансового года",
+        [_.manageDatesTemplateTypeStartFiscalYear]: "Дата определения финансового года",
         [_.manageDatesTemplateTypeStartFiscalYearDesc]: "Для Еженедельного ISO установите <em>Последний год</em>.",
         [_.manageDatesTemplateTypeStartFiscalYearFirst]: "Первый год",
         [_.manageDatesTemplateTypeStartFiscalYearLast]: "Последний год",
