@@ -47,8 +47,7 @@ export class Auth extends Dispatchable {
         host.getUser().then(account => {
             this.account = account;
 
-            if (!CONFIG.debug)
-                this.getAvatar();
+            this.getAvatar();
             this.trigger("signedIn", this.account);
 
         }).catch(ignore => {});

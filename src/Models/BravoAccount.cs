@@ -23,7 +23,7 @@
         /// <summary>
         /// User name in UserPrincipalName (UPN) format - e.g. john.doe@contoso.com
         /// </summary>
-        [JsonPropertyName("upn")]
+        [JsonPropertyName("userPrincipalName")]
         public string UserPrincipalName { get; set; }
 
         /// <summary>
