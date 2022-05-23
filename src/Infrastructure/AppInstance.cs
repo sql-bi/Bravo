@@ -33,9 +33,7 @@
             if (_owned)
             {
                 StartPipeServer();
-
                 GC.KeepAlive(_mutex);
-                NotificationHelper.RegisterNotificationHandler();
             }
         }
 

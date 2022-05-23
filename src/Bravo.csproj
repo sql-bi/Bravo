@@ -68,7 +68,6 @@
     <PackageReference Include="Microsoft.AnalysisServices.NetCore.retail.amd64" Version="19.39.2.2" />
     <PackageReference Include="Microsoft.Extensions.Logging.ApplicationInsights" Version="2.20.0" />
     <PackageReference Include="Microsoft.Identity.Client" Version="4.40.0" />
-    <PackageReference Include="Microsoft.Toolkit.Uwp.Notifications" Version="7.1.2" />
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.1210.39" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.3.1" PrivateAssets="all" />
     <PackageReference Include="System.CommandLine" Version="2.0.0-beta1.21308.1" />
