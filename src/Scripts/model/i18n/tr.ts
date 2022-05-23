@@ -281,6 +281,7 @@ const locale: Locale = {
         [_.openWithDaxFormatterCtrlTitle]: "DAX Formatter ile çevrimiçi biçimlendir",
         [_.optionAccount]: "Power BI Hesabı",
         [_.optionAccountDescription]: "Hesabı Power BI çevrimiçi veri setlerine erişmek için ayarlayın.",
+        [_.optionCheckForUpdates]: "Güncellemeleri otomatik olarak kontrol edin",
         [_.optionDiagnostic]: "Loglama Düzeyi",
         [_.optionDiagnosticDescription]: "Bir tanılama bölmesinde hataları ve günlükleri göster. Yalnızca birkaç iletiyi günlüğe kaydetmek için <em>Temel</em>'i seçin. <em>Ayrıntılı</em> tüm iletileri günlüğe kaydeder.",
         [_.optionDiagnosticLevelBasic]: "Temel",

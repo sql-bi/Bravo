@@ -155,8 +155,6 @@ window.external = {
         {
             _instance.OnNewInstance -= OnNewInstanceRestoreFormWindowToForeground;
             _instance.OnNewInstance -= OnNewInstanceSendStartupWebMessage;
-
-            NotificationHelper.ClearNotifications();
         }
 
         private void OnWebViewDOMContentLoaded(object? sender, CoreWebView2DOMContentLoadedEventArgs e)

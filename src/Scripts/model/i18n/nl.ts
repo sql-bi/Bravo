@@ -279,6 +279,7 @@ const locale: Locale = {
         [_.openWithDaxFormatterCtrlTitle]: "Formatteer online met DAX Formatter",  
         [_.optionAccount]: "Power BI account",
         [_.optionAccountDescription]: "Definieer het account voor toegang tot Power BI online datasets.",
+        [_.optionCheckForUpdates]: "Controleer automatisch op updates",
         [_.optionDiagnostic]: "Diagnostisch niveau",
         [_.optionDiagnosticDescription]: "Toon foutmeldingen en log gegevens in het diagnose paneel. Kies <em>Basis</em> voor beperkte logging. <em>Uitgebreid</em> voor alle logging.",
         [_.optionDiagnosticLevelBasic]: "Basis",

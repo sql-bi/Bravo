@@ -16,6 +16,7 @@ export interface Options {
     theme: ThemeType
     telemetryEnabled: boolean
     updateChannel: UpdateChannelType
+    updateCheckEnabled: boolean
     diagnosticLevel: DiagnosticLevelType
     proxy: ProxyOptions
     customOptions?: ClientOptions
@@ -184,6 +185,7 @@ export class OptionsController extends OptionsStore<Options> {
         telemetryEnabled: true,
         diagnosticLevel: DiagnosticLevelType.None,
         updateChannel: UpdateChannelType.Stable,
+        updateCheckEnabled: true,
         proxy: {
             type: ProxyType.System,
             useDefaultCredentials: true,

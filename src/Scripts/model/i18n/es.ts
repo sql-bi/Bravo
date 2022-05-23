@@ -278,6 +278,7 @@ const locale: Locale = {
         [_.openWithDaxFormatterCtrlTitle]: "Dar formato en linea con DAX Formatter",
         [_.optionAccount]: "Cuenta de Power BI",
         [_.optionAccountDescription]: "Configurar la cuenta para acceder a los conjuntos de datos en el servicio de Power BI.",
+        [_.optionCheckForUpdates]: "Verifique automáticamente las actualizaciones",
         [_.optionDiagnostic]: "Nivel de diagnóstico",
         [_.optionDiagnosticDescription]: "Mostrar errores y registros en un panel de diagnóstico.  Seleccionar <em>Básico</em> para registrar solo algunos mensajes. O <em>Completo</em> para registrar todos los mensajes.",
         [_.optionDiagnosticLevelBasic]: "Básico",

@@ -9,6 +9,7 @@ import { Utils, _, __ } from '../helpers/utils';
 import { notificationCenter, telemetry } from '../main';
 import { I18n, i18n } from '../model/i18n';
 import { strings } from '../model/strings';
+import { Toast } from './toast';
 import { View } from './view';
 
 export class NotificationSidebar extends View {
@@ -69,6 +70,7 @@ export class NotificationSidebar extends View {
 
         notificationCenter.on("add", (notification: Notify) => {
             this.add(notification);
+            
         });
 
         notificationCenter.on("remove", (notification: Notify) => {
@@ -135,6 +137,11 @@ export class NotificationSidebar extends View {
         this.itemsContainer.insertAdjacentHTML("afterbegin", html);
 
         this.updateUnreadCount();
+
+        const toast = new Toast(notification.id, notification.message);
+        toast.on("click", (notificationId: string) => { 
+            this.toggle(false);
+        }); 
     }
     
     remove(notification: Notify) {

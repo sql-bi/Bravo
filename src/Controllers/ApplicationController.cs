@@ -213,22 +213,9 @@
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(BravoUpdate))]
         [ProducesDefaultResponseType]
-        public async Task<IActionResult> GetCurrentVersion(UpdateChannelType updateChannel, bool notify, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetCurrentVersion(UpdateChannelType updateChannel, CancellationToken cancellationToken)
         {
-            if (UserPreferences.Current.UpdateCheckEnabled == false)
-            {
-                // TODO: @daniele - remove this 'if' statement when 'UpdateCheckEnabled' is supported.
-                return Ok(new BravoUpdate
-                {
-                    IsNewerVersion = false,
-                });
-            }
-
             var bravoUpdate = await CommonHelper.CheckForUpdateAsync(updateChannel, cancellationToken);
-
-            if (bravoUpdate.IsNewerVersion && notify)
-                NotificationHelper.NotifyUpdateAvailable(bravoUpdate);
-
             return Ok(bravoUpdate);
         }
 

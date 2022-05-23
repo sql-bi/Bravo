@@ -279,6 +279,7 @@ const locale: Locale = {
         [_.openWithDaxFormatterCtrlTitle]: "Οnline μορφοποίηση με το DAX Formatter",  
         [_.optionAccount]: "Λογ/μός Power BI",
         [_.optionAccountDescription]: "Όρισε το λογ/μο με τον οποίο μπορείς να προσπελάσεις τα online σετ δεδομένων στο Power BI online.",
+        [_.optionCheckForUpdates]: "Ελέγξτε αυτόματα για ενημερώσεις",
         [_.optionDiagnostic]: "Επίπεδο Διαγνωστικών",
         [_.optionDiagnosticDescription]: "Προβολή σφαλμάτων και μηνυμάτων καταγραφής στο διαγνωστικό παράθυρο. Επέλεξε <em>Βασική</em> για την καταγραφή μερικών μηνυμάτων. <em>Αναλυτική</em> για την καταγραφή όλων των μηνυμάτων.",
         [_.optionDiagnosticLevelBasic]: "Βασική",

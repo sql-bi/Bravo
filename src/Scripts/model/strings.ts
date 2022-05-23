@@ -270,6 +270,7 @@ export enum strings {
     openWithDaxFormatterCtrlTitle,
     optionAccount,
     optionAccountDescription,
+    optionCheckForUpdates,
     optionDiagnostic,
     optionDiagnosticDescription,
     optionDiagnosticLevelBasic,
