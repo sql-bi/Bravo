@@ -174,29 +174,28 @@ export module Renderer {
                 let toggler = <HTMLElement>_(`#${Utils.Text.slugify(struct.toggledBy.option)}`, element);
                 if (toggler) {
 
-                    if (toggler.hasAttribute("hidden")) {
+                    if (toggler.hasAttribute("hidden")) 
                         isHidden = true;
-                    } else {
-                        let listener = _(".listener", toggler);
-                        if (listener) {
 
-                            // TODO: This doesn't work with input text
-                            let togglerValue = (listener.nodeName == "SELECT" ? 
-                                (<HTMLSelectElement>listener).value : 
-                                (<HTMLInputElement>listener).checked.toString()
-                            );
+                    let listener = _(".listener", toggler);
+                    if (listener) {
 
-                            isHidden = true;
-                            toggledByClass = ` toggled-by-${Utils.Text.slugify(struct.toggledBy.option)}`;
-                            let _values = <string[]>(Utils.Obj.isArray(struct.toggledBy.value) ? 
-                                struct.toggledBy.value : 
-                                [struct.toggledBy.value.toString()]
-                            );
-                            _values.forEach(_value => {
-                                toggledByClass += ` toggle-if-${Utils.Text.slugify(_value)}`;
-                                if (togglerValue == _value) isHidden = false;
-                            });
-                        }
+                        // TODO: This doesn't work with input text
+                        let togglerValue = (listener.nodeName == "SELECT" ? 
+                            (<HTMLSelectElement>listener).value : 
+                            (<HTMLInputElement>listener).checked.toString()
+                        );
+
+                        isHidden = true;
+                        toggledByClass = ` toggled-by-${Utils.Text.slugify(struct.toggledBy.option)}`;
+                        let _values = <string[]>(Utils.Obj.isArray(struct.toggledBy.value) ? 
+                            struct.toggledBy.value : 
+                            [struct.toggledBy.value.toString()]
+                        );
+                        _values.forEach(_value => {
+                            toggledByClass += ` toggle-if-${Utils.Text.slugify(_value)}`;
+                            if (togglerValue == _value) isHidden = false;
+                        });
                     }
                 }
             }
@@ -225,9 +224,11 @@ export module Renderer {
             `;
 
             if (struct.parent) {
-                _(`#${Utils.Text.slugify(struct.parent)}`, element)
-                    .closest(".option-container")
-                    .insertAdjacentHTML("beforeend", html);
+                let container = _(`#${Utils.Text.slugify(struct.parent)}`, element);
+                if (container) 
+                    container
+                        .closest(".option-container")
+                        .insertAdjacentHTML("beforeend", html);
             } else {
                 element.insertAdjacentHTML("beforeend", `
                     <div class="option-container">${html}</div>
@@ -292,7 +293,7 @@ export module Renderer {
                         if (Utils.Obj.isSet(struct.onBeforeChange))
                             struct.onBeforeChange(e, getValue())
                                 .then(changed => {
-                                    if (changed) applyValue()
+                                    if (changed) applyValue();
                                  });
                         else
                             applyValue();
