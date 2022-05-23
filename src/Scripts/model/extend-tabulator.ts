@@ -4,6 +4,7 @@
  * https://www.sqlbi.com
 */
 
+import { Tabulator } from 'tabulator-tables';
 import { Utils } from '../helpers/utils';
 
 export interface TabulatorTreeChildrenFilterParams {
@@ -39,4 +40,24 @@ export function tabulatorTreeChildrenFilter(data: any, params: TabulatorTreeChil
     };
 
     return matchNode(data);
+}
+
+export function tabulatorGetAllRows(table: Tabulator) {
+
+    let rows: Tabulator.RowComponent[] = [];
+
+    const traverseRow = (row: Tabulator.RowComponent) => {
+        rows.push(row);
+
+        let children = row.getTreeChildren();
+        if (children && children.length){
+            for (let childrenRow of children)
+                traverseRow(childrenRow);
+        }
+    }
+
+    for (let row of table.getRows())
+        traverseRow(row);
+
+    return rows;
 }

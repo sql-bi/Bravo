@@ -12,7 +12,7 @@ import { Dic, Utils, _, __ } from '../helpers/utils';
 import { strings } from '../model/strings';
 import { i18n } from '../model/i18n';
 import { ContextMenu } from '../helpers/contextmenu';
-import { tabulatorTreeChildrenFilter, TabulatorTreeChildrenFilterParams } from '../model/extend-tabulator';
+import { tabulatorGetAllRows, tabulatorTreeChildrenFilter, TabulatorTreeChildrenFilterParams } from '../model/extend-tabulator';
 
 
 export enum BranchType {
@@ -143,7 +143,7 @@ export class TabularBrowser extends View {
 
             if (this.config.initialSelected && this.config.initialSelected.length) {
                 this.table.selectRow(
-                    this.table.getRows().filter(
+                    tabulatorGetAllRows(this.table).filter(
                         row => this.config.initialSelected.includes((<Branch>row.getData()).name)
                     )
                 );
