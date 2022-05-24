@@ -68,7 +68,7 @@ export class Auth extends Dispatchable {
 
         telemetry.track("Sign In");
 
-        let environment = request && request.environments.find(env => env.name == request.environmentName);
+        let environment = request && request.environments && request.environments.find(env => env.name == request.environmentName);
 
         return host.signIn(request ? { userPrincipalName: request.userPrincipalName, environment: environment } : null)
             .then(account => {
