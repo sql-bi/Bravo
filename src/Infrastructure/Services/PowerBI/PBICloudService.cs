@@ -56,7 +56,7 @@
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _authenticationService.PBICloudAuthentication.AccessToken);
 
             var baseUri = new Uri(_authenticationService.PBICloudEnvironment.ServiceEndpoint!);
-            var requestUri = new Uri(baseUri, relativeUri: GetResourceUserPhotoRequestUri.FormatInvariant(_authenticationService.PBICloudAuthentication.Account.Username));
+            var requestUri = new Uri(baseUri, relativeUri: GetResourceUserPhotoRequestUri.FormatInvariant(_authenticationService.PBICloudAuthentication.Account.UserPrincipalName));
             using var response = await _httpClient.GetAsync(requestUri).ConfigureAwait(false);
 
             if (response.IsSuccessStatusCode)
