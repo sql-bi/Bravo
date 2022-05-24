@@ -147,7 +147,7 @@ export class PowerBISignin extends Dialog {
                 .then(() => { 
                     super.onAction("cancel", resolve, reject);
                 })
-                .catch(error => {
+                .catch(ignore => {
                     this.signInButton.toggleAttr("disabled", false);
                     this.element.classList.remove("wait");
                 });

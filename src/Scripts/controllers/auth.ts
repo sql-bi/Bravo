@@ -44,13 +44,13 @@ export class Auth extends Dispatchable {
 
         this.cache = new CacheHelper("bravo-users");
 
-        host.getUser().then(account => {
-            this.account = account;
-
-            this.getAvatar();
-            this.trigger("signedIn", this.account);
-
-        }).catch(ignore => {});
+        let cachedAccount = this.getCachedAccount();
+        if (cachedAccount)
+            this.signIn({
+                userPrincipalName:  cachedAccount.userPrincipalName,
+                environments: cachedAccount.environments,
+                environmentName: cachedAccount.environmentName
+            }).catch(ignore => {});
     }
 
     getAvatar() {

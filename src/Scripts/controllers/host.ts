@@ -401,10 +401,6 @@ export class Host extends Dispatchable {
         return this.apiCall("auth/powerbi/SignOut", {}, {}, false, logSettings);
     }
 
-    getUser() {
-        return <Promise<Account>>this.apiCall("auth/GetUser", {}, {}, false);
-    }
-
     getUserAvatar() {
         return <Promise<string>>this.apiCall("auth/GetUserAvatar", {}, {}, false);
     }

@@ -77,25 +77,6 @@
         }
 
         /// <summary>
-        /// Returns information about the currently logged in user
-        /// </summary>
-        /// <response code="200">Status200OK - Success</response>
-        /// <response code="401">Status401Unauthorized - Sign-in required</response>
-        [HttpGet]
-        [ActionName("GetUser")]
-        [Produces(MediaTypeNames.Application.Json)]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IBravoAccount))]
-        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [ProducesDefaultResponseType]
-        public async Task<IActionResult> GetPBICloudAccountAsync(CancellationToken cancellationToken)
-        {
-            if (await _authenticationService.IsPBICloudSignInRequiredAsync(cancellationToken))
-                return Unauthorized();
-
-            return Ok(_authenticationService.PBICloudAuthentication.Account);
-        }
-
-        /// <summary>
         /// Returns the account profile picture as base64 encoded image [data:image/jpeg;base64,...]
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
