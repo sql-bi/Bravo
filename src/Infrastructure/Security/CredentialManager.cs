@@ -49,27 +49,24 @@
             if (userNameLength > Advapi32.CRED_MAX_USERNAME_LENGTH) throw new ArgumentOutOfRangeException(nameof(userName));
             if (passwordLength > Advapi32.CRED_MAX_CREDENTIAL_BLOB_SIZE) throw new ArgumentOutOfRangeException(nameof(password));
 
-            var targetNamePtr = Marshal.StringToCoTaskMemUni(targetName);
-            var userNamePtr = Marshal.StringToCoTaskMemUni(userName);
-            var passwordbPtr = Marshal.StringToCoTaskMemUni(password);
+            var credential = new Advapi32.CREDENTIAL
+            {
+                // Flags =
+                Type = Advapi32.CREDENTIAL_TYPE.CRED_TYPE_GENERIC,
+                TargetName = Marshal.StringToCoTaskMemUni(targetName),
+                Comment = IntPtr.Zero,
+                // LastWritten =
+                CredentialBlobSize = (uint)passwordLength,
+                CredentialBlob = Marshal.StringToCoTaskMemUni(password),
+                Persist = persist,
+                AttributeCount = 0,
+                Attributes = IntPtr.Zero,
+                TargetAlias = IntPtr.Zero,
+                UserName = Marshal.StringToCoTaskMemUni(userName),
+            };
+
             try
             {
-                var credential = new Advapi32.CREDENTIAL
-                {
-                    // Flags = ,
-                    Type = Advapi32.CREDENTIAL_TYPE.CRED_TYPE_GENERIC,
-                    TargetName = targetNamePtr,
-                    Comment = IntPtr.Zero,
-                    // LastWritten = ,
-                    CredentialBlobSize = (uint)passwordLength,
-                    CredentialBlob = passwordbPtr,
-                    Persist = persist,
-                    AttributeCount = 0,
-                    Attributes = IntPtr.Zero,
-                    TargetAlias = IntPtr.Zero,
-                    UserName = userNamePtr,
-                };
-
                 var written = Advapi32.CredWriteW(ref credential, flags: 0);
                 if (written == false)
                 {
@@ -79,12 +76,9 @@
             }
             finally
             {
-                if (targetNamePtr != IntPtr.Zero)
-                    Marshal.ZeroFreeCoTaskMemUnicode(targetNamePtr);
-                if (passwordbPtr != IntPtr.Zero)
-                    Marshal.ZeroFreeCoTaskMemUnicode(passwordbPtr);
-                if (userNamePtr != IntPtr.Zero)
-                    Marshal.ZeroFreeCoTaskMemUnicode(userNamePtr);
+                Marshal.FreeCoTaskMem(credential.TargetName);
+                Marshal.FreeCoTaskMem(credential.UserName);
+                Marshal.FreeCoTaskMem(credential.CredentialBlob);
             }
         }
 
