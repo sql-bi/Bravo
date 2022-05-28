@@ -216,6 +216,9 @@
         public async Task<IActionResult> GetCurrentVersion(UpdateChannelType updateChannel, CancellationToken cancellationToken)
         {
             var bravoUpdate = await CommonHelper.CheckForUpdateAsync(updateChannel, cancellationToken);
+            if (bravoUpdate.IsNewerVersion)
+                System.Media.SystemSounds.Beep.Play();
+
             return Ok(bravoUpdate);
         }
 
