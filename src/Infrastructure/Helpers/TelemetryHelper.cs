@@ -8,6 +8,12 @@
 
     internal static class TelemetryHelper
     {
+        /// <summary>
+        /// Default endpoint for Ingestion
+        /// Microsoft.ApplicationInsights.Extensibility.Implementation.Endpoints.Constants
+        /// </summary>
+        private const string DefaultIngestionEndpoint = "https://dc.services.visualstudio.com/";
+
         private static readonly Lazy<TelemetryConfiguration> _telemetryConfiguration = new(Configure(new TelemetryConfiguration()));
 
         public static TelemetryConfiguration Configure(TelemetryConfiguration configuration)
@@ -33,6 +39,15 @@
             var telemetryClient = new TelemetryClient(TelemetryConfigurationInstance);
             telemetryClient.TrackException(exception);
             telemetryClient.Flush(); // Flush is blocking when using InMemoryChannel, no need for Sleep/Delay
+        }
+
+        public static bool IsTelemetryUri(string uriString)
+        {
+            var requestedUri = new Uri(uriString);
+            var telemetryUri = new Uri(uriString: DefaultIngestionEndpoint);
+
+            var result = Uri.Compare(requestedUri, telemetryUri, UriComponents.Scheme | UriComponents.HostAndPort, UriFormat.Unescaped, StringComparison.OrdinalIgnoreCase);
+            return result == 0;
         }
     }
 }
