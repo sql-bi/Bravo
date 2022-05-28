@@ -2,7 +2,6 @@
 {
     using Sqlbi.Bravo.Infrastructure.Configuration;
     using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
-    using Sqlbi.Bravo.Infrastructure.Helpers;
     using System;
     using System.Net;
     using System.Net.Http;
@@ -10,28 +9,24 @@
     /// <summary>
     /// Implements a <see cref="WebProxy"/> wrapper that supports the system proxy on the machine or a single manual configured proxy server
     /// </summary>
-    /// <remarks>
-    /// Proxy resolution through the WPAD auto-detect protocol and the Proxy Automatic Configuration (PAC) files is not currently supported
-    /// </remarks>
     internal sealed class WebProxyWrapper : IWebProxy
     {
         public static readonly WebProxyWrapper Current = new();
 
         private static readonly object _proxyLock = new();
-        private readonly IWebProxy _defaultSystemProxy;
-        private readonly IWebProxy _systemProxy;
+        private readonly IWebProxy _defaultProxy;
+        private IWebProxy? _systemProxy;
         private IWebProxy? _customProxy;
         private IWebProxy? _noProxy;
 
         private WebProxyWrapper()
         {
-            _defaultSystemProxy = HttpClient.DefaultProxy;
             // For .NET Core The initial value of the static property HttpClient.DefaultProxy represents the system proxy on the machine.
             // DO NOT USE WebRequest.GetSystemWebProxy() or WebProxy.GetDefaultProxy() as these legacy methods return a proxy configured with the Internet Explorer settings
-            _systemProxy = new HttpSystemProxy(_defaultSystemProxy);
+            _defaultProxy = HttpClient.DefaultProxy;
         }
 
-        public IWebProxy DefaultSystemProxy => _defaultSystemProxy;
+        public IWebProxy DefaultSystemProxy => _defaultProxy;
 
         #region IWebProxy
 
@@ -45,7 +40,7 @@
             set
             {
                 var webProxy = GetWebProxy();
-                if (webProxy is not null && webProxy.Credentials != value)
+                if (webProxy is not null)
                     webProxy.Credentials = value;
             }
         }
@@ -106,6 +101,26 @@
             }
             else
             {
+                if (_systemProxy is null)
+                {
+                    lock (_proxyLock)
+                    {
+                        if (_systemProxy is null)
+                        {   
+                            _systemProxy = new HttpSystemProxy(_defaultProxy);
+
+                            if (proxy?.UseDefaultCredentials == false)
+                            {
+                                var credentials = proxy.GetCredentials();
+                                if (credentials is not null)
+                                {
+                                    _systemProxy.Credentials = credentials;
+                                }
+                            }
+                        }
+                    }
+                }
+
                 return _systemProxy;
             }
         }
@@ -113,28 +128,28 @@
 
     internal sealed class HttpSystemProxy : IWebProxy
     {
-        private readonly IWebProxy _systemProxy;
+        private readonly IWebProxy _defaultProxy;
 
-        public HttpSystemProxy(IWebProxy systemProxy)
+        public HttpSystemProxy(IWebProxy defaultProxy)
         {
-            _systemProxy = systemProxy;
+            _defaultProxy = defaultProxy;
         }
 
         public ICredentials? Credentials
         { 
-            get => _systemProxy.Credentials;
-            set => _systemProxy.Credentials = value;
+            get => _defaultProxy.Credentials;
+            set => _defaultProxy.Credentials = value;
         }
 
         public Uri? GetProxy(Uri destination)
         {
-            var proxyUri = _systemProxy.GetProxy(destination);
+            var proxyUri = _defaultProxy.GetProxy(destination);
             return proxyUri;
         }
 
         public bool IsBypassed(Uri host)
         {
-            var isBypassed = _systemProxy.IsBypassed(host);
+            var isBypassed = _defaultProxy.IsBypassed(host);
             return isBypassed;
         }
     }

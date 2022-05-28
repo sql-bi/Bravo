@@ -10,6 +10,7 @@
     using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Infrastructure.Helpers;
     using Sqlbi.Bravo.Infrastructure.Messages;
+    using Sqlbi.Bravo.Infrastructure.Security;
     using Sqlbi.Bravo.Infrastructure.Services;
     using Sqlbi.Bravo.Infrastructure.Windows.Interop;
     using Sqlbi.Bravo.Models;
@@ -101,6 +102,7 @@
             WebView.CoreWebView2.DOMContentLoaded += OnWebViewDOMContentLoaded;
             WebView.CoreWebView2.WebResourceRequested += OnWebViewWebResourceRequested;
             WebView.CoreWebView2.PermissionRequested += OnWebViewPermissionRequested;
+            WebView.CoreWebView2.BasicAuthenticationRequested += OnWebViewBasicAuthenticationRequested;
 
             await WebView.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(@"
 window.external = {
@@ -179,6 +181,51 @@ window.external = {
                 e.State = CoreWebView2PermissionState.Allow;
         }
 
+        private void OnWebViewBasicAuthenticationRequested(object? sender, CoreWebView2BasicAuthenticationRequestedEventArgs e)
+        {
+            var proxy = UserPreferences.Current.Proxy;
+            if (proxy?.Type != ProxyType.None && proxy?.UseDefaultCredentials == false)
+            {
+                if (TelemetryHelper.IsTelemetryUri(e.Uri))
+                {
+                    if (CredentialManager.TryGetCredential(targetName: AppEnvironment.CredentialManagerProxyCredentialName, out var genericCredential))
+                    {
+                        var credential = genericCredential.ToNetworkCredential();
+                        if (credential is not null)
+                        {
+                            e.Response.UserName = credential.UserName;
+                            e.Response.Password = credential.Password;
+                            return;
+                        }
+                    }
+                }
+            }
+
+            //var deferral = e.GetDeferral();
+
+            //SynchronizationContext.Current?.Post((_) =>
+            //{
+            //    using (deferral)
+            //    {
+            //        var credentialOptions = new CredentialDialogOptions(caption: "Authentication request", message: $"Authentication request from { e.Uri }\r\nChallenge: { e.Challenge }")
+            //        {
+            //            HwndParent = Handle
+            //        };
+
+            //        var credential = CredentialDialog.PromptForCredentials(credentialOptions);
+            //        if (credential is not null)
+            //        {
+            //            e.Response.UserName = credential.UserName;
+            //            e.Response.Password = credential.Password;
+            //        }
+            //        else
+            //        {
+            //            e.Cancel = true;
+            //        }
+            //    }
+            //}, state: null);
+        }
+
         private void OnWebViewNavigationStarting(object? sender, CoreWebView2NavigationStartingEventArgs e)
         {
             WebViewLog(message: $"::OnWebViewNavigationStarting({ e.NavigationId }|{ e.Uri })");
@@ -200,7 +247,7 @@ window.external = {
 
             if (e.ResourceContext == CoreWebView2WebResourceContext.Script && e.Request.Uri.EqualsI("app://config.js"))
             {
-                var content = GetJSConfig();
+                var content = GetConfigJs();
                 e.Response = WebView.CoreWebView2.Environment.CreateWebResourceResponse(content, StatusCodes.Status200OK, "OK", "Content-Type: text/javascript");
             }
         }
@@ -242,7 +289,7 @@ window.external = {
             }
         }
 
-        private Stream GetJSConfig()
+        private Stream GetConfigJs()
         {
             var config = new
             {
