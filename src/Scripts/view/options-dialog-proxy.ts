@@ -71,7 +71,7 @@ export class OptionsDialogProxy {
                 parent: "proxy.type",
                 toggledBy: {
                     option: "proxy.type",
-                    value: ProxyType.Custom
+                    value: [ProxyType.Custom, ProxyType.System]
                 },
                 name: i18n(strings.optionProxyCustomCredentials),
                 description: `${i18n(strings.optionProxyCustomCredentialsDescription)} <span class="link open-credential-manager">${i18n(strings.optionProxyCustomCredentialsEdit)}</span>`,
