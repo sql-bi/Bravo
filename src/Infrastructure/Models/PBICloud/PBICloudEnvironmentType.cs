@@ -1,6 +1,7 @@
 ﻿namespace Sqlbi.Bravo.Infrastructure.Models.PBICloud
 {
     using Sqlbi.Bravo.Infrastructure.Extensions;
+    using System;
 
     public enum PBICloudEnvironmentType
     {
@@ -42,29 +43,67 @@
 
     internal static class PBICloudEnvironmentTypeExtensions
     {
-        private const string GlobalCloud = "GlobalCloud";
-        private const string GermanyCloud  = "GermanyCloud";
-        private const string USGovCloud = "USGovCloud";
-        private const string ChinaCloud = "ChinaCloud";
-        private const string USGovDoDL4Cloud = "USGovDoDL4Cloud";
-        private const string USGovDoDL5Cloud = "USGovDoDL5Cloud";
-        //private const string USNatCloud = "USNatCloud";
-        //private const string USSecCloud = "USSecCloud";
+        private const string GlobalCloudName = "GlobalCloud";
+        private const string GermanyCloudName  = "GermanyCloud";
+        private const string USGovCloudName = "USGovCloud";
+        private const string ChinaCloudName = "ChinaCloud";
+        private const string USGovDoDL4CloudName = "USGovDoDL4Cloud";
+        private const string USGovDoDL5CloudName = "USGovDoDL5Cloud";
+        //private const string USNatCloudName = "USNatCloud";
+        //private const string USSecCloudName = "USSecCloud";
+        internal const string PpeCloudName = "PpeCloud";
+
+        // Uri strings from > globalservice/v202003/environments/discover?client=powerbi-msolap
+        internal const string GlobalCloudApiUri = "https://api.powerbi.com";
+        private const string GermanyCloudApiUri = "https://api.powerbi.de";
+        private const string USGovCloudApiUri = "https://api.powerbigov.us";
+        private const string ChinaCloudApiUri = "https://api.powerbi.cn";
+        private const string USGovDoDL4CloudApiUri = "https://api.high.powerbigov.us";
+        private const string USGovDoDL5CloudApiUri = "https://api.mil.powerbigov.us";
+        //private const string USNatCloudNameApiUri = "https://api.powerbi.eaglex.ic.gov";
+        //private const string USSecCloudNameApiUri = "https://api.powerbi.microsoft.scloud";
+        //private const string PpeCloudNameApiUri = "https://biazure-int-edog-redirect.analysis-df.windows.net";
+
+        public static Uri[] TrustedApiUris = new Uri[]
+        {
+            new Uri(GlobalCloudApiUri),
+            new Uri(GermanyCloudApiUri),
+            new Uri(USGovCloudApiUri),
+            new Uri(ChinaCloudApiUri),
+            new Uri(USGovDoDL4CloudApiUri),
+            new Uri(USGovDoDL5CloudApiUri),
+        };
 
         public static string ToGlobalServiceCloudName(this PBICloudEnvironmentType environmentType)
         {
             var cloudName = environmentType switch
             {
-                PBICloudEnvironmentType.Public => GlobalCloud,
-                PBICloudEnvironmentType.Germany => GermanyCloud,
-                PBICloudEnvironmentType.USGov => USGovCloud,
-                PBICloudEnvironmentType.China => ChinaCloud,
-                PBICloudEnvironmentType.USGovHigh => USGovDoDL4Cloud,
-                PBICloudEnvironmentType.USGovMil => USGovDoDL5Cloud,
-                _ => throw new BravoUnexpectedInvalidOperationException($"Unhandled { nameof(PBICloudEnvironmentType) } value ({ environmentType })"),
+                PBICloudEnvironmentType.Public => GlobalCloudName,
+                PBICloudEnvironmentType.Germany => GermanyCloudName,
+                PBICloudEnvironmentType.USGov => USGovCloudName,
+                PBICloudEnvironmentType.China => ChinaCloudName,
+                PBICloudEnvironmentType.USGovHigh => USGovDoDL4CloudName,
+                PBICloudEnvironmentType.USGovMil => USGovDoDL5CloudName,
+                _ => throw new BravoUnexpectedInvalidOperationException($"Unsupported { nameof(PBICloudEnvironmentType) } value ({ environmentType })"),
             };
 
             return cloudName;
+        }
+
+        public static PBICloudEnvironmentType ToCloudEnvironmentType(this string globalServiceCloudName)
+        {
+            var environmentType = globalServiceCloudName switch
+            {
+                var name when GlobalCloudName.EqualsI(name) => PBICloudEnvironmentType.Public,
+                var name when GermanyCloudName.EqualsI(name) => PBICloudEnvironmentType.Germany,
+                var name when USGovCloudName.EqualsI(name) => PBICloudEnvironmentType.USGov,
+                var name when ChinaCloudName.EqualsI(name) => PBICloudEnvironmentType.China,
+                var name when USGovDoDL4CloudName.EqualsI(name) => PBICloudEnvironmentType.USGovHigh,
+                var name when USGovDoDL5CloudName.EqualsI(name) => PBICloudEnvironmentType.USGovMil,
+                _ => PBICloudEnvironmentType.Custom
+            };
+
+            return environmentType;
         }
 
         public static string ToCloudEnvironmentDescription(this PBICloudEnvironmentType environmentType)
@@ -81,22 +120,6 @@
             };
 
             return cloudName;
-        }
-
-        public static PBICloudEnvironmentType ToCloudEnvironmentType(this string globalServiceCloudName)
-        {
-            var environmentType = globalServiceCloudName switch
-            {
-                var name when GlobalCloud.EqualsI(name) => PBICloudEnvironmentType.Public,
-                var name when GermanyCloud.EqualsI(name) => PBICloudEnvironmentType.Germany,
-                var name when USGovCloud.EqualsI(name) => PBICloudEnvironmentType.USGov,
-                var name when ChinaCloud.EqualsI(name) => PBICloudEnvironmentType.China,
-                var name when USGovDoDL4Cloud.EqualsI(name) => PBICloudEnvironmentType.USGovHigh,
-                var name when USGovDoDL5Cloud.EqualsI(name) => PBICloudEnvironmentType.USGovMil,
-                _ => PBICloudEnvironmentType.Custom
-            };
-
-            return environmentType;
         }
     }
 }

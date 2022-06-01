@@ -92,22 +92,7 @@
 
         private static Uri GetEnvironmentDiscoveryBaseUri()
         {
-            const string PBICommercialUriString = "https://api.powerbi.com";
             const string PowerBIDiscoveryUrl = "PowerBIDiscoveryUrl";
-
-            // Uri strings from endpoint query > globalservice/v202003/environments/discover?client=powerbi-msolap
-            var TrustedDiscoverUriString = new Uri[]
-            {
-                new Uri(PBICommercialUriString),                                        // PBICloudEnvironmentType.Public
-                new Uri("https://api.powerbi.cn"),                                      // PBICloudEnvironmentType.China
-                new Uri("https://api.powerbi.de"),                                      // PBICloudEnvironmentType.Germany
-                new Uri("https://api.powerbigov.us"),                                   // PBICloudEnvironmentType.USGov
-                new Uri("https://api.high.powerbigov.us"),                              // PBICloudEnvironmentType.USGovHigh
-                new Uri("https://api.mil.powerbigov.us"),                               // PBICloudEnvironmentType.USGovMil
-                //new Uri("https://api.powerbi.eaglex.ic.gov"),                         // USNatCloud
-                //new Uri("https://api.powerbi.microsoft.scloud"),                      // USSecCloud
-                //new Uri("https://biazure-int-edog-redirect.analysis-df.windows.net"), // PpeCloud
-            };
 
             // https://docs.microsoft.com/en-us/power-bi/enterprise/service-govus-overview#sign-in-to-power-bi-for-us-government
             // https://github.com/microsoft/Federal-Business-Applications/tree/main/whitepapers/power-bi-registry-settings
@@ -118,9 +103,9 @@
                 uriString = Registry.LocalMachine.GetStringValue(subkeyName: "SOFTWARE\\WOW6432Node\\Policies\\Microsoft\\Microsoft Power BI", valueName: PowerBIDiscoveryUrl);
 
             if (uriString is null)
-                uriString = PBICommercialUriString;
+                uriString = PBICloudEnvironmentTypeExtensions.GlobalCloudApiUri;
  
-            if (Uri.TryCreate(uriString, UriKind.Absolute, out var discoveryUri) == false || TrustedDiscoverUriString.Contains(discoveryUri) == false)
+            if (Uri.TryCreate(uriString, UriKind.Absolute, out var discoveryUri) == false || PBICloudEnvironmentTypeExtensions.TrustedApiUris.Contains(discoveryUri) == false)
             {
                 throw new BravoUnexpectedInvalidOperationException($"Unsupported Power BI environment discovery URL ({ uriString })");
             }

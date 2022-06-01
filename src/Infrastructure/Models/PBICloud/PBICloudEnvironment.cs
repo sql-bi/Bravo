@@ -44,7 +44,7 @@
         public bool IsValid => Type is not null;
 
         [JsonIgnore]
-        public bool IsMicrosoftInternal => Type == PBICloudEnvironmentType.Custom && Name.EqualsI("PpeCloud");
+        public bool IsMicrosoftInternal => Type == PBICloudEnvironmentType.Custom && Name.EqualsI(PBICloudEnvironmentTypeExtensions.PpeCloudName);
 
         public static PBICloudEnvironment CreateFrom(GlobalServiceEnvironment globalServiceEnvironment)
         {
@@ -65,6 +65,9 @@
                 ServiceEndpoint = powerbiService?.Endpoint,
                 ClusterEndpoint = null
             };
+
+            if (pbicloudEnvironment.Type is null && globalServiceEnvironment.CloudName is not null)
+                pbicloudEnvironment.Type = PBICloudEnvironmentType.Custom;
 
             if (pbicloudEnvironment.Type is not null)
             {
