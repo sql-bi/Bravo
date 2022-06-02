@@ -5,6 +5,7 @@
     using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
     using System.IO;
+    using System.Linq;
     using System.Runtime.CompilerServices;
     using System.Text;
     using System.Text.RegularExpressions;
@@ -13,6 +14,21 @@
     {
         private static Regex? _invalidFileNameCharsRegex;
         private static Regex? _invalidPathCharsRegex;
+
+        public static string AppendApplicationVersion(this string value)
+        {
+            var valueAndVersion = $"{value} - v{GetVersionParts(AppEnvironment.ApplicationProductVersion, parts: 4)}";
+            return valueAndVersion;
+        }
+
+        public static string GetVersionParts(this string? version, int parts)
+        {
+            if  (version.IsNullOrWhiteSpace())
+                return string.Empty;
+
+            var versionParts = string.Join('-', version.Split('-').Take(parts));
+            return versionParts;
+        }
 
         public static bool IsPBIDesktopMainWindowTitle(this string windowTitle)
         {
