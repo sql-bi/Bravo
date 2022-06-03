@@ -2441,7 +2441,8 @@ declare module "tabulator-tables" {
     class ResponsiveLayoutModule {}
     class SelectRowModule {}
     class SortModule {}
-    class TabulatorFull {}
+    class TabulatorFull extends Tabulator { }
+    class TooltipModule {}
     class ValidateModule {}
 
     export {
@@ -2481,6 +2482,7 @@ declare module "tabulator-tables" {
         SortModule,
         Tabulator,
         TabulatorFull,
+        TooltipModule,
         ValidateModule,
     };
 }

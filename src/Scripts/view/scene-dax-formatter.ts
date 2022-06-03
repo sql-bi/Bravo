@@ -315,7 +315,11 @@ export class DaxFormatterScene extends DocScene {
         let canFilter = false;
 
         if (this.table) {
-            this.table.redraw(true);
+
+            // If the table is not initialized yet it could raise an error
+            try {
+                this.table.redraw(true);
+            } catch(ignore) {};
 
             let rows = this.table.getRows("active");
             rows.forEach(row => { 

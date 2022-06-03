@@ -10,7 +10,7 @@
     "build:Debug": "webpack --mode development --env configuration=Debug",
     "build:UI": "webpack --mode development --output-path ../wwwroot",
     "watch:UI": "webpack --watch --mode development --output-path ../wwwroot",
-    "update:UI": "npm update --prefix ./src/Scripts/"
+    "update:UI": "npm update"
   },
   "devDependencies": {
     "@types/codemirror": "^5.60.5",
@@ -38,7 +38,7 @@
     "json-formatter-js": "https://github.com/danieleperilli/json-formatter-js.git",
     "sanitize-html": "^2.6.1",
     "split.js": "^1.6.5",
-    "tabulator-tables": ">5.1.4",
+    "tabulator-tables": "^5.2.6",
     "ts-md5": "^1.2.10"
   }
 }
