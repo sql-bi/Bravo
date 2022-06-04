@@ -18,10 +18,8 @@ Bravo is free and open-source. The codebase is C# and TypeScript. However, you c
 Bravo is in public preview. We plan to write documentation and more instructions about the code before the final release (1.0).
 
 ### Installation Requirements
-Bravo requires a 64-bit Windows operating system. You can install Bravo on the following Windows platforms:
- - Windows 11
- - Windows 10 version 1809 (build 17763) or higher
- - Windows Server 2019 or higher
+Bravo requires a 64-bit Windows operating system and can run on all OS versions supported by Power BI Desktop ([Windows 8.1 / Windows Server 2012 R2, or later](https://docs.microsoft.com/en-us/power-bi/fundamentals/desktop-get-the-desktop#minimum-requirements)). 
+Bravo could also run on Windows 7 SP1 and Windows Server 2012, even though it is not supported and not tested by the development team.
 
 ### How to Help with Translations
 
@@ -32,8 +30,5 @@ You can copy the `en.ts` file into another language (use the ISO code) and trans
 In case you are adding a translation for a new language then you must also to include it among the existing languages in the https://github.com/sql-bi/Bravo/blob/main/src/Scripts/model/i18n/locales.ts file.
 
 #### Dates Template Translations
-You can [fork the Dax Template](https://github.com/sql-bi/DaxTemplate/fork) repository and create a pull request adding or updating a file containing the strings used in the Dates templates.
-The strings used in the Dates templates are here in another repository and folder: https://github.com/sql-bi/DaxTemplate/tree/main/src/Dax.Template.TestUI/Templates.
-Please use the [DaxTemplate repository](https://github.com/sql-bi/DaxTemplate) to make any change to the Dates templates, we will apply differences and copy them to the Bravo repository.
-
-After the 1.0 release of Bravo we will maintain also the Bravo templates file directly in the Bravo repository.
+You can [fork the Bravo repository](https://github.com/sql-bi/Bravo/fork) and create a pull request updating a file containing the strings used in the Dates templates.
+This folder contains the files used in the Dates templates: https://github.com/sql-bi/Bravo/tree/main/src/Assets/ManageDates/Templates.
