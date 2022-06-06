@@ -23,7 +23,7 @@
                     {
                         msalV3State = Cryptography.Unprotect(encryptedData);
                     }
-                    catch (CryptographicException ex) when (ex.HResult == HRESULT.E_INVALID_DATA)
+                    catch (CryptographicException ex) when (ex.HResult == HRESULT.ERROR_INVALID_DATA)
                     {
                         // The token file is corrupted, we delete the file in order to force a new authentication
                         File.Delete(AppEnvironment.MsalTokenCacheFilePath);

@@ -1,5 +1,6 @@
 ﻿namespace Sqlbi.Bravo.Infrastructure.Helpers
 {
+    using Microsoft.Web.WebView2.Core;
     using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
     using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Infrastructure.Windows;
@@ -12,13 +13,12 @@
     using System.Net;
     using System.Net.Http;
     using System.Reflection;
-    using System.Runtime.InteropServices;
     using System.Windows.Forms;
 
     internal static class WebView2Helper
     {
-        [DllImport(ExternDll.WebView2Loader)]
-        internal static extern int GetAvailableCoreWebView2BrowserVersionString([In][MarshalAs(UnmanagedType.LPWStr)] string? browserExecutableFolder, [MarshalAs(UnmanagedType.LPWStr)] ref string versionInfo);
+        //[DllImport(ExternDll.WebView2Loader)]
+        //internal static extern int GetAvailableCoreWebView2BrowserVersionString([In][MarshalAs(UnmanagedType.LPWStr)] string? browserExecutableFolder, [MarshalAs(UnmanagedType.LPWStr)] ref string versionInfo);
 
         /// <summary>
         /// The Bootstrapper is a tiny installer that downloads the Evergreen Runtime matching device architecture and installs it locally.
@@ -27,8 +27,34 @@
         public static string EvergreenRuntimeBootstrapperUrl = "https://go.microsoft.com/fwlink/p/?LinkId=2124703";
         public static string MicrosoftReferenceUrl = "https://developer.microsoft.com/en-us/microsoft-edge/webview2";
 
+        public static void TryAndIgnoreUnsupportedInterfaceError(Action action)
+        {
+            try
+            {
+                action?.Invoke();
+            }
+            catch (InvalidCastException ex) when (ex.HResult == HRESULT.E_NOINTERFACE)
+            {
+                // Ignore error if feature is unsupported
+                //
+                // Feature-detecting to test whether the installed Runtime supports recently added APIs
+                // https://docs.microsoft.com/en-us/microsoft-edge/webview2/concepts/versioning#feature-detecting-to-test-whether-the-installed-runtime-supports-recently-added-apis
+                //
+            }
+        }
+
         public static string? GetRuntimeVersionInfo()
         {
+            try
+            {
+                var versionInfo = CoreWebView2Environment.GetAvailableBrowserVersionString(browserExecutableFolder: null);
+                return versionInfo;
+            }
+            catch (WebView2RuntimeNotFoundException)
+            {
+                return null;
+            }
+/*
             var versionInfo = (string?)null;
 #pragma warning disable CS8601 // Possible null reference assignment.
             var errorCode = GetAvailableCoreWebView2BrowserVersionString(browserExecutableFolder: null, ref versionInfo);
@@ -41,6 +67,7 @@
 
             Marshal.ThrowExceptionForHR(errorCode);
             return versionInfo;
+*/
         }
 
         public static void EnsureRuntimeIsInstalled()
