@@ -52,6 +52,11 @@
 
         private async void InitializeWebViewAsync()
         {
+            //
+            // Feature-detecting to test whether the installed Runtime supports recently added APIs
+            // https://docs.microsoft.com/en-us/microsoft-edge/webview2/concepts/versioning#feature-detecting-to-test-whether-the-installed-runtime-supports-recently-added-apis
+            //
+
             // TODO: WebView2 PreferredColorScheme https://docs.microsoft.com/en-us/microsoft-edge/webview2/reference/win32/icorewebview2profile?view=webview2-1.0.1210.39&preserve-view=true#get_preferredcolorscheme
 
             WebView.Visible = false;
@@ -73,8 +78,7 @@
 #else
             var isDebug = false;
 #endif
-            WebView.AllowExternalDrop = true;
-            WebView.DefaultBackgroundColor = _startupThemeColor;
+            WebView2Helper.TryAndIgnoreUnsupportedInterfaceError(() => WebView.DefaultBackgroundColor = _startupThemeColor);
             WebView.CoreWebView2.Settings.AreBrowserAcceleratorKeysEnabled = isDebug;
             WebView.CoreWebView2.Settings.AreDefaultScriptDialogsEnabled = isDebug;
             WebView.CoreWebView2.Settings.AreDefaultContextMenusEnabled = isDebug;
