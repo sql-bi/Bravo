@@ -9,7 +9,12 @@
 
     internal static class Cryptography
     {
-        private static readonly byte[] DefaultEntropy = Encoding.Unicode.GetBytes($"{Environment.MachineName}|{Environment.UserName}|3ae*f-4aew1/L22");
+        // !!!
+        // !!! Do not use Environment.MachineName for entropy string as the DataProtectionScope is DataProtectionScope.CurrentUser only.
+        // !!! 
+        // This prevent an error where a user with a roaming profile cannot decrypt the data from another computer on the network (e.g. MSAL.NET token cache)
+        // See CryptProtectData function (dpapi.h) https://docs.microsoft.com/en-us/windows/win32/api/dpapi/nf-dpapi-cryptprotectdata
+        private static readonly byte[] DefaultEntropy = Encoding.Unicode.GetBytes($"{Environment.UserName}|3ae*f-4aew1/L22");
 
         /// <summary>
         ///  Encrypts the data in a specified byte array.
