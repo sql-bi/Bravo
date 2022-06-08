@@ -94,7 +94,7 @@
 
                 switch (retval)
                 {
-                    case NativeMethods.NO_ERROR:
+                    case NativeMethods.ERROR_SUCCESS:
                         networkCredential.Domain = domainBuffer.ToString();
                         networkCredential.UserName = userNameBuffer.ToString();
                         break;
