@@ -12,7 +12,7 @@ import { strings } from '../model/strings';
 import { View } from './view';
 import { Account } from '../controllers/auth';
 import { ContextMenu, ContextMenuItemType } from '../helpers/contextmenu';
-import { PowerBiSignin } from './powerbi-signin';
+import { PowerBISignin } from './powerbi-signin';
 import { OptionsDialog } from './options-dialog';
 export class Sidebar extends View {
 
@@ -105,12 +105,8 @@ export class Sidebar extends View {
                 }, e);
                 
             } else {
-                if (!optionsController.options.customOptions.loggedInOnce) {
-                    let signinDialog = new PowerBiSignin();
-                    signinDialog.show();
-                } else {
-                    auth.signIn();
-                }
+                let signinDialog = new PowerBISignin();
+                signinDialog.show();
             }
         });
 

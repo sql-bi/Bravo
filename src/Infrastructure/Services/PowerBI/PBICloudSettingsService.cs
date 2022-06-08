@@ -1,9 +1,13 @@
 ﻿namespace Sqlbi.Bravo.Infrastructure.Services.PowerBI
 {
+    using Microsoft.Win32;
     using Sqlbi.Bravo.Infrastructure;
     using Sqlbi.Bravo.Infrastructure.Contracts.PBICloud;
     using Sqlbi.Bravo.Infrastructure.Extensions;
+    using Sqlbi.Bravo.Infrastructure.Models.PBICloud;
+    using Sqlbi.Bravo.Models;
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using System.Net;
     using System.Net.Http;
@@ -13,145 +17,105 @@
     using System.Text.Json;
     using System.Threading;
     using System.Threading.Tasks;
+    using System.Web;
 
     public interface IPBICloudSettingsService
     {
-        CloudEnvironment CloudEnvironment { get; }
+        Task<TenantCluster> GetTenantClusterAsync(string accessToken, CancellationToken cancellationToken);
 
-        TenantCluster TenantCluster { get; }
-
-        Task InitializeAsync();
-
-        Task RefreshAsync(string accessToken);
+        Task<IEnumerable<IPBICloudEnvironment>> GetEnvironmentsAsync(string userPrincipalName, CancellationToken cancellationToken);
     }
 
     internal class PBICloudSettingsService : IPBICloudSettingsService
     {
-        private const string GlobalServiceEnvironmentsDiscoverUrl = "powerbi/globalservice/v201606/environments/discover?client=powerbi-msolap";
+        private const string GlobalServiceEnvironmentsDiscoverUrl = "powerbi/globalservice/v202003/environments/discover?user={0}";
         private const string GlobalServiceGetOrInsertClusterUrisByTenantlocationUrl = "spglobalservice/GetOrInsertClusterUrisByTenantlocation";
-        private const string CloudEnvironmentGlobalCloudName = "GlobalCloud";
 
-        private readonly static SemaphoreSlim _initializeSemaphore = new(1, 1);
+        private readonly Lazy<Uri> _environmentDiscoverBaseUri;
         private readonly HttpClient _httpClient;
-
-        private GlobalService? _globalService;
-        private CloudEnvironment? _cloudEnvironment;
-        private TenantCluster? _tenantCluster;
 
         public PBICloudSettingsService()
         {
             _httpClient = new HttpClient();
             _httpClient.DefaultRequestHeaders.Accept.Clear();
-            _httpClient.BaseAddress = PBICloudService.PBIApiUri;
+            _environmentDiscoverBaseUri = new(() => GetEnvironmentDiscoveryBaseUri());
         }
 
-        public CloudEnvironment CloudEnvironment
-        {
-            get
-            {
-                BravoUnexpectedException.ThrowIfNull(_cloudEnvironment);
-                return _cloudEnvironment;
-            }
-        }
-
-        public TenantCluster TenantCluster
-        {
-            get
-            {
-                BravoUnexpectedException.ThrowIfNull(_tenantCluster);
-                return _tenantCluster;
-            }
-        }
-
-        /// <remarks>Refresh is required only if the login account has changed</remarks>
-        public async Task RefreshAsync(string accessToken)
-        {
-            _tenantCluster = await GetTenantClusterAsync(accessToken).ConfigureAwait(false);
-            //_localClientSites = Contracts.PBIDesktop.LocalClientSites.Create();
-        }
-
-        public async Task InitializeAsync()
-        {
-            if (_globalService is null || _cloudEnvironment is null)
-            {
-                await _initializeSemaphore.WaitAsync().ConfigureAwait(false);
-                try
-                {
-                    if (_globalService is null)
-                        _globalService = await InitializeGlobalServiceAsync().ConfigureAwait(false);
-
-                    if (_cloudEnvironment is null)
-                        _cloudEnvironment = InitializeGlobalCloudEnvironment();
-                }
-                finally
-                {
-                    _initializeSemaphore.Release();
-                }
-            }
-        }
-
-        private async Task<GlobalService> InitializeGlobalServiceAsync()
-        {
-            var securityProtocol = ServicePointManager.SecurityProtocol;
-            try
-            {
-                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
-
-                using var request = new HttpRequestMessage(HttpMethod.Post, GlobalServiceEnvironmentsDiscoverUrl);
-                using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseContentRead).ConfigureAwait(false);
-                response.EnsureSuccessStatusCode();
-
-                var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-                var globalService = JsonSerializer.Deserialize<GlobalService>(json, AppEnvironment.DefaultJsonOptions); BravoUnexpectedException.ThrowIfNull(globalService);
-
-                return globalService;
-            }
-            finally
-            {
-                ServicePointManager.SecurityProtocol = securityProtocol;
-            }
-        }
-
-        private CloudEnvironment InitializeGlobalCloudEnvironment()
-        {
-            var environmentName = CloudEnvironmentGlobalCloudName;
-            var globalEnvironment = _globalService?.Environments.SingleOrDefault((c) => environmentName.EqualsI(c.CloudName)); BravoUnexpectedException.ThrowIfNull(globalEnvironment);
-
-            var authority = globalEnvironment.Services.Single((s) => "aad".EqualsI(s.Name));
-            var frontend = globalEnvironment.Services.Single((s) => "powerbi-frontend".EqualsI(s.Name));
-            var backend = globalEnvironment.Services.Single((s) => "powerbi-backend".EqualsI(s.Name));
-            var gateway = globalEnvironment.Clients.Single((c) => "powerbi-gateway".EqualsI(c.Name));
-
-            var cloudEnvironment = new CloudEnvironment
-            {
-                Name = CloudEnvironmentType.Public,
-                Authority = new Uri(authority.Endpoint, UriKind.Absolute),
-                ClientId = gateway.AppId,
-                Scopes = new string[] { $"{ backend.ResourceId }/.default" },
-                Endpoint = new Uri(frontend.Endpoint, UriKind.Absolute),
-                //RedirectUri = gateway.RedirectUri,
-                //ResourceUri = backend.ResourceId,
-            };
-
-            return cloudEnvironment;
-        }
-
-        private async Task<TenantCluster> GetTenantClusterAsync(string accessToken)
+        public async Task<TenantCluster> GetTenantClusterAsync(string accessToken, CancellationToken cancellationToken)
         {
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
-            using var request = new HttpRequestMessage(HttpMethod.Put, GlobalServiceGetOrInsertClusterUrisByTenantlocationUrl)
-            {
-                Content = new StringContent(string.Empty, Encoding.UTF8, MediaTypeNames.Application.Json)
-            };
+            var requestUri = new Uri(_environmentDiscoverBaseUri.Value, relativeUri: GlobalServiceGetOrInsertClusterUrisByTenantlocationUrl);
+            using var request = new HttpRequestMessage(HttpMethod.Put, requestUri);
+            request.Content = new StringContent(string.Empty, Encoding.UTF8, MediaTypeNames.Application.Json);
 
-            using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseContentRead).ConfigureAwait(false);
+            using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseContentRead, cancellationToken).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
+            var content = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
 
-            var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-            var tenantCluster = JsonSerializer.Deserialize<TenantCluster>(json, AppEnvironment.DefaultJsonOptions); BravoUnexpectedException.ThrowIfNull(tenantCluster);
+            if (AppEnvironment.IsDiagnosticLevelVerbose)
+                AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{ nameof(PBICloudSettingsService) }.{ nameof(GetTenantClusterAsync) }", content);
 
+            var tenantCluster = JsonSerializer.Deserialize<TenantCluster>(content, AppEnvironment.DefaultJsonOptions);
+            BravoUnexpectedException.ThrowIfNull(tenantCluster);
+            
             return tenantCluster;
+        }
+
+        public async Task<IEnumerable<IPBICloudEnvironment>> GetEnvironmentsAsync(string userPrincipalName, CancellationToken cancellationToken)
+        {
+            var relativeUri = GlobalServiceEnvironmentsDiscoverUrl.FormatInvariant(HttpUtility.UrlEncode(userPrincipalName));
+            var requestUri = new Uri(_environmentDiscoverBaseUri.Value, relativeUri);
+
+            using var request = new HttpRequestMessage(HttpMethod.Post, requestUri);
+            using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseContentRead, cancellationToken).ConfigureAwait(false);
+
+            if (response.StatusCode == HttpStatusCode.NotFound)
+            {
+                return Array.Empty<PBICloudEnvironment>();
+            }
+            else
+            {
+                response.EnsureSuccessStatusCode();
+
+                var content = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+
+                if (AppEnvironment.IsDiagnosticLevelVerbose)
+                    AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{ nameof(PBICloudSettingsService) }.{ nameof(GetEnvironmentsAsync) }", content);
+
+                var globalService = JsonSerializer.Deserialize<GlobalService>(content, AppEnvironment.DefaultJsonOptions);
+                var environments = globalService?.Environments?.Select(PBICloudEnvironment.CreateFrom).Where((e) => !e.IsMicrosoftInternal).ToArray();
+                
+                return environments ?? Array.Empty<PBICloudEnvironment>();
+            }
+        }
+
+        private static Uri GetEnvironmentDiscoveryBaseUri()
+        {
+            const string PowerBIDiscoveryUrl = "PowerBIDiscoveryUrl";
+
+            // https://docs.microsoft.com/en-us/power-bi/enterprise/service-govus-overview#sign-in-to-power-bi-for-us-government
+            // https://github.com/microsoft/Federal-Business-Applications/tree/main/whitepapers/power-bi-registry-settings
+
+            var uriString = Registry.LocalMachine.GetStringValue(subkeyName: "SOFTWARE\\Microsoft\\Microsoft Power BI", valueName: PowerBIDiscoveryUrl);
+
+            if (uriString is null)
+                uriString = Registry.LocalMachine.GetStringValue(subkeyName: "SOFTWARE\\WOW6432Node\\Policies\\Microsoft\\Microsoft Power BI", valueName: PowerBIDiscoveryUrl);
+
+            if (uriString is null)
+                uriString = PBICloudEnvironmentTypeExtensions.GlobalCloudApiUri;
+ 
+            if (Uri.TryCreate(uriString, UriKind.Absolute, out var discoveryUri) == false || PBICloudEnvironmentTypeExtensions.TrustedApiUris.Contains(discoveryUri) == false)
+            {
+                throw new BravoUnexpectedInvalidOperationException($"Unsupported Power BI environment discovery URL ({ uriString })");
+            }
+
+            var baseUri = new Uri(uriString, UriKind.Absolute);
+
+            if (AppEnvironment.IsDiagnosticLevelVerbose)
+                AppEnvironment.AddDiagnostics(DiagnosticMessageType.Text, name: $"{ nameof(PBICloudSettingsService) }.{ nameof(GetEnvironmentDiscoveryBaseUri) }", content: baseUri.AbsoluteUri);
+
+            return baseUri;
         }
     }
 }

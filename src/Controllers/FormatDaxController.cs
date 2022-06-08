@@ -7,6 +7,7 @@
     using Sqlbi.Bravo.Models.FormatDax;
     using Sqlbi.Bravo.Services;
     using System.Net.Mime;
+    using System.Threading;
     using System.Threading.Tasks;
 
     /// <summary>
@@ -78,9 +79,9 @@
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(DatabaseUpdateResult))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesDefaultResponseType]
-        public async Task<IActionResult> Update(UpdatePBICloudDatasetRequest request)
+        public async Task<IActionResult> Update(UpdatePBICloudDatasetRequest request, CancellationToken cancellationToken)
         {
-            if (await _authenticationService.IsPBICloudSignInRequiredAsync())
+            if (await _authenticationService.IsPBICloudSignInRequiredAsync(cancellationToken))
                 return Unauthorized();
 
             var updateResult = _formatDaxService.Update(request.Dataset!, request.Measures!, _authenticationService.PBICloudAuthentication.AccessToken);

@@ -3,7 +3,6 @@
     using Sqlbi.Bravo.Infrastructure.Configuration;
     using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
     using Sqlbi.Bravo.Infrastructure.Extensions;
-    using Sqlbi.Bravo.Infrastructure.Security.Policies;
     using Sqlbi.Bravo.Infrastructure.Windows.Interop;
     using Sqlbi.Bravo.Models;
     using System;
@@ -16,6 +15,26 @@
 
     internal static class CommonHelper
     {
+        public static string? ChangeUriScheme(string? uriString, string scheme, bool ignorePort = false)
+        {
+            if (Uri.TryCreate(uriString, UriKind.Absolute, out var uri))
+            {
+                var uriBuilder = new UriBuilder(uri)
+                {
+                    Scheme = scheme
+                };
+
+                if (ignorePort)
+                {
+                    uriBuilder.Port = -1;
+                }
+                
+                return uriBuilder.Uri.AbsoluteUri;
+            }
+
+            return null;
+        }
+
         public static User32.KeyState GetKeyState(Keys key)
         {
             var state = User32.KeyState.None;
@@ -58,6 +77,12 @@
             return normalizedPath;
         }
 
+        public static string NormalizeUriString(string uriString)
+        {
+            var uri = new Uri(uriString, UriKind.Absolute);
+            return uri.AbsoluteUri;
+        }
+
         public async static Task<BravoUpdate> CheckForUpdateAsync(UpdateChannelType updateChannel, CancellationToken cancellationToken)
         {
             UserPreferences.Current.AssertUpdateCheckEnabledPolicy();
@@ -67,7 +92,7 @@
             {
                 UpdateChannelType.Stable => "bravo-public",
                 UpdateChannelType.Dev => "bravo-internal", 
-                _ => throw new BravoUnexpectedException($"Unexpected { nameof(UpdateChannelType) } value ({ updateChannel })")
+                _ => throw new BravoUnexpectedInvalidOperationException($"Unhandled { nameof(UpdateChannelType) } value ({ updateChannel })")
             };
 
             using var httpClient = new HttpClient();

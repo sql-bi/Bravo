@@ -189,18 +189,18 @@
         [ProducesDefaultResponseType]
         public IActionResult GetDiagnostics(bool? all = null)
         {
-            var messages = new List<DiagnosticMessage>();
+            var messages = new SortedList<DateTime, DiagnosticMessage>();
             
             foreach (var message in AppEnvironment.Diagnostics.Values)
             {
-                if (all == true || message.LastReadTimestamp is null)
+                if (all == true || message.ReadTimestamp is null)
                 {
-                    message.LastReadTimestamp = DateTime.UtcNow;
-                    messages.Add(message);
+                    message.ReadTimestamp = DateTime.UtcNow;
+                    messages.Add(message.Timestamp, message);
                 }
             }
 
-            return Ok(messages);
+            return Ok(messages.Values);
         }
 
         /// <summary>

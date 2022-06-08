@@ -289,9 +289,10 @@
 		max-height: 330px;
 		width: 400px;
 
-		input[type=email] {
+		input[type=email], select {
 			padding: 8px 6px;
-			width: calc(100% - 12px);
+
+			width: calc(100% - 14px);
 			border: 1px solid @input-border-color;
 			background-color: @input-back-color;
 
@@ -303,7 +304,23 @@
 			&:invalid {
 				border-color: @error-color;
 			}
+		}
+
+		select {
+			width: 100%;
 			
+		}
+
+		.env-list {
+			margin-top: 5px;
+			height: 25px;
+
+			.status {
+				font-size: 0.9em;
+				color: @notice-color;
+
+                .dark & { color: @notice-color-dark; }
+            }
 		}
 	}
 }

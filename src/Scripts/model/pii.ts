@@ -7,7 +7,7 @@
 // Personal identifiable information - Used by anonymization
 
 const userPii = [
-    "upn",
+    "userPrincipalName",
     "username",
     "emailAddress"
 ];

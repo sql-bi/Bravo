@@ -12,6 +12,8 @@
 
         UpdateChannelType UpdateChannel { get; set; }
 
+        PolicyStatus UpdateChannelPolicy { get; }
+
         bool UpdateCheckEnabled { get; set; }
 
         PolicyStatus UpdateCheckEnabledPolicy { get; }
@@ -19,6 +21,8 @@
         ThemeType Theme { get; set; }
 
         ProxySettings? Proxy { get; set; }
+
+        bool UseSystemBrowserForAuthentication { get; set; }
 
         JsonElement? CustomOptions { get; set; }
     }
@@ -77,8 +81,14 @@
         [JsonPropertyName("proxy")]
         public ProxySettings? Proxy { get; set; }
 
+        [JsonPropertyName("useSystemBrowserForAuthentication")]
+        public bool UseSystemBrowserForAuthentication { get; set; } = false;
+
         [JsonPropertyName("customOptions")]
         public JsonElement? CustomOptions { get; set; }
+
+        //[JsonPropertyName("experimental")]
+        //public ExperimentalSettings? Experimental { get; set; }
 
         public bool Validate(bool throwOnError = true)
         {

@@ -16,6 +16,8 @@ import { ContextMenu } from '../helpers/contextmenu';
 import { ConnectMenuItem } from './connect-item';
 import * as sanitizeHtml from 'sanitize-html';
 import { AppError } from '../model/exceptions';
+import { PowerBISignin } from './powerbi-signin';
+import { DialogResponse } from './dialog';
 
 export class ConnectRemote extends ConnectMenuItem {
     
@@ -48,11 +50,14 @@ export class ConnectRemote extends ConnectMenuItem {
                 e.preventDefault();
                 let button = <HTMLHtmlElement>e.currentTarget;
                 button.toggleAttr("disabled", true);
-                auth.signIn()
-                    .then(() => { 
-                        this.getRemoteDatasets();
+
+                let signinDialog = new PowerBISignin();
+                signinDialog.show()
+                    .then((response: DialogResponse) => {
+                        if (response.action == "signin")
+                            this.getRemoteDatasets();
                     })
-                    .catch(error => {})
+                    .catch(ignore => {})
                     .finally(()=>{
                         button.toggleAttr("disabled", false);
                     });

@@ -18,10 +18,10 @@
         public string? Content { get; set; }
 
         [JsonPropertyName("timestamp")]
-        public DateTimeOffset? Timestamp { get; set; }
+        public DateTime Timestamp { get; set; } = DateTime.UtcNow;
 
         [JsonIgnore]
-        public DateTimeOffset? LastReadTimestamp { get; set; }
+        public DateTime? ReadTimestamp { get; set; }
 
         public static DiagnosticMessage Create(DiagnosticMessageType type, DiagnosticMessageSeverity severity, string name, string content)
         {
@@ -31,8 +31,7 @@
                 Severity = severity,
                 Name = $"[HOST] { name }",
                 Content = content,
-                Timestamp = DateTimeOffset.UtcNow,
-                LastReadTimestamp = null
+                ReadTimestamp = null
             };
 
             return message;

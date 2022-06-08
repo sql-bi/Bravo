@@ -1,7 +1,7 @@
 ﻿namespace Sqlbi.Bravo.Infrastructure.Configuration
 {
-    using Microsoft.Win32;
     using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
+    using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Infrastructure.Helpers;
     using System;
     using System.Diagnostics;
@@ -98,29 +98,18 @@
         private static void UpdateFromRegistry(UserSettings settings)
         {
             var registryKey = AppEnvironment.ApplicationInstallerRegistryHKey;
-            if (registryKey is null)
-                return;
-
-            using var registrySubKey = registryKey.OpenSubKey(AppEnvironment.ApplicationRegistryKeyName, writable: false);
-
-            if (registrySubKey is not null)
+            if (registryKey is not null)
             {
-                var value = registrySubKey.GetValue(AppEnvironment.ApplicationRegistryApplicationTelemetryEnableValue, defaultValue: null, RegistryValueOptions.DoNotExpandEnvironmentNames);
-                if (value is not null)
+                var valueString = registryKey.GetStringValue(subkeyName: AppEnvironment.ApplicationRegistryKeyName, valueName: AppEnvironment.ApplicationRegistryApplicationTelemetryEnableValue);
+                if (valueString is not null)
                 {
-                    var valueKind = registrySubKey.GetValueKind(AppEnvironment.ApplicationRegistryApplicationTelemetryEnableValue);
-                    if (valueKind == RegistryValueKind.String)
+                    if (int.TryParse(valueString, out var intValue))
                     {
-                        var valueString = (string)value;
-
-                        if (int.TryParse(valueString, out var intValue))
-                        {
-                            settings.TelemetryEnabled = Convert.ToBoolean(intValue);
-                        }
-                        else
-                        {
-                            settings.TelemetryEnabled = false;
-                        }
+                        settings.TelemetryEnabled = Convert.ToBoolean(intValue);
+                    }
+                    else
+                    {
+                        settings.TelemetryEnabled = false;
                     }
                 }
             }

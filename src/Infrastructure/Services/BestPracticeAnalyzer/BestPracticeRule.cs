@@ -11,7 +11,7 @@
 
     internal class BestPracticeRule
     {
-        private Dictionary<RuleScope, IQueryable> _queries;
+        private readonly Dictionary<RuleScope, IQueryable> _queries;
         private bool _invalidCompatibilityLevel = false;
         private bool _needsRecompile = true;
         private string? _expression;

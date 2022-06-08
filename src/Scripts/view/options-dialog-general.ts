@@ -12,6 +12,7 @@ import { I18n, i18n } from '../model/i18n';
 import { strings } from '../model/strings';
 import { Confirm } from './confirm';
 import { DialogResponse } from './dialog';
+import { PowerBISignin } from './powerbi-signin';
 
 export class OptionsDialogGeneral {
 
@@ -80,14 +81,17 @@ export class OptionsDialogGeneral {
 
         element.addLiveEventListener("click", ".signin", (e, _element) => {
             e.preventDefault();
-            auth.signIn()
-                .then(() => { 
-                   _element.parentElement.innerHTML = `
-                        ${i18n(strings.signedInCtrlTitle, {name: auth.account.username})} 
-                        <span class="link signout">${i18n(strings.signOut)}</span>
-                    `;
+            
+            let signinDialog = new PowerBISignin();
+            signinDialog.show()
+                .then((response: DialogResponse) => { 
+                    if (response.action == "signin")
+                        _element.parentElement.innerHTML = `
+                            ${i18n(strings.signedInCtrlTitle, {name: auth.account.username})} 
+                            <span class="link signout">${i18n(strings.signOut)}</span>
+                        `;
                 })
-                .catch(error => {});
+                .catch(ignore => {});
         });
 
         element.addLiveEventListener("click", ".signout", (e, _element) => {

@@ -251,7 +251,7 @@
                         }
                         break;
                     default:
-                        throw new BravoUnexpectedException($"Unexpected { nameof(DaxLineBreakStyle) } value ({ lineBreakStyle })");
+                        throw new BravoUnexpectedInvalidOperationException($"Unhandled { nameof(DaxLineBreakStyle) } value ({ lineBreakStyle })");
                 }
             }
 

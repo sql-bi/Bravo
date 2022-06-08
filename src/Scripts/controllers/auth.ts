@@ -6,21 +6,34 @@
 
 import { Dispatchable } from '../helpers/dispatchable';
 import { Utils } from '../helpers/utils';
-import { host, optionsController, telemetry } from '../main';
+import { host, telemetry } from '../main';
 import { AppError } from '../model/exceptions';
+import { PBICloudEnvironment } from '../model/pbi-cloud';
 import { CacheHelper } from './cache';
+import { PBICloudAutenthicationRequest } from './host';
 
 export interface Account {
     id?: string
-    upn?: string //UserPrincipalName
+    userPrincipalName?: string
     username?: string
     avatar?: string
+}
+
+export interface ExtendedAccount extends Account {
+    environments?: PBICloudEnvironment[]
+    environmentName?: string
+}
+
+export interface SignInRequest {
+    userPrincipalName: string
+    environmentName: string
+    environments: PBICloudEnvironment[]
 }
 
 export class Auth extends Dispatchable {
 
     cache: CacheHelper;
-    account: Account;
+    account: ExtendedAccount;
 
     get signedIn(): boolean {
         return (!!this.account);
@@ -31,38 +44,41 @@ export class Auth extends Dispatchable {
 
         this.cache = new CacheHelper("bravo-users");
 
-        host.getUser().then(account => {
-            this.account = account;
-            this.getAvatar();
-            this.trigger("signedIn", this.account);
-
-        }).catch(ignore => {});
+        let cachedAccount = this.getCachedAccount();
+        if (cachedAccount)
+            this.signIn({
+                userPrincipalName:  cachedAccount.userPrincipalName,
+                environments: cachedAccount.environments,
+                environmentName: cachedAccount.environmentName
+            }).catch(ignore => {});
     }
 
     getAvatar() {
 
-        if (!this.account.avatar)
-            this.account.avatar = this.cache.getItem(this.account.id);
-
         host.getUserAvatar().then(avatar => {
             this.account.avatar = avatar;
+            this.saveAccountInCache();
+            
             this.trigger("avatarUpdated", this.account);
-
-            this.cache.setItem(this.account.id, avatar);
-
         }).catch(ignore => {});
     }
 
-    signIn(emailAddress?: string) {
+    signIn(request: SignInRequest) {
         this.account = null;
 
         telemetry.track("Sign In");
 
-        return host.signIn(emailAddress)
+        let environment = request && request.environments && request.environments.find(env => env.name == request.environmentName);
+
+        return host.signIn(request ? { userPrincipalName: request.userPrincipalName, environment: environment } : null)
             .then(account => {
                 if (account) {
                     this.account = account;
-                    optionsController.update("customOptions.loggedInOnce", true);
+                    this.account.environments = request && request.environments;
+                    this.account.environmentName = request && request.environmentName;
+
+                    this.saveAccountInCache();
+                    
                     this.getAvatar();
                     this.trigger("signedIn", this.account);
 
@@ -76,11 +92,33 @@ export class Auth extends Dispatchable {
             });
     }
 
+    saveAccountInCache() {
+        if (this.account) {
+
+            // Get cached account avatar if it doesn't exist
+            if (!this.account.avatar) {
+                let cachedAccount = this.getCachedAccount();
+                if (cachedAccount && cachedAccount.id == this.account.id)
+                    this.account.avatar = cachedAccount.avatar;
+            }
+
+            this.cache.setItem("last", this.account);
+        }
+    }
+
+    getCachedAccount() {
+        return <ExtendedAccount>this.cache.getItem("last");
+    }
+
+    removeCachedAccount() {
+        this.cache.removeItem("last");
+    }
+
     signOut() {
         telemetry.track("Sign Out");
 
         return host.signOut().then(()=> {
-            this.cache.removeItem(this.account.id);
+            this.removeCachedAccount();
             this.account = null;
             this.trigger("signedOut");
         }).catch(ignore => {});

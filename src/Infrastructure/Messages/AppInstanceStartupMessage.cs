@@ -78,7 +78,7 @@
                 {
                     Dataset = new PBICloudDataset
                     {
-                        ServerName = startupMessage.ArgumentServerName,
+                        ServerName = CommonHelper.NormalizeUriString(startupMessage.ArgumentServerName),
                         DatabaseName = startupMessage.ArgumentDatabaseName,
                         ConnectionMode = PBICloudDatasetConnectionMode.Unknown
                     },

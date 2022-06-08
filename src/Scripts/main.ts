@@ -25,8 +25,8 @@ let host = new Host(CONFIG.address, CONFIG.token);
 let optionsController = new OptionsController(CONFIG.options);
 let themeController = new ThemeController();
 let logger = new Logger(CONFIG.options.diagnosticLevel !== DiagnosticLevelType.None);
-let auth = new Auth();
 let telemetry = new Telemetry(CONFIG.telemetry);
+let auth = new Auth();
 let pbiDesktop = new PBIDesktop();
 let notificationCenter = new NotifyCenter();
 

@@ -75,7 +75,7 @@
         [ProducesDefaultResponseType]
         public async Task<IActionResult> ExportDelimitedTextFile(ExportDelimitedTextFromPBICloudDatasetRequest request, CancellationToken cancellationToken)
         {
-            if (await _authenticationService.IsPBICloudSignInRequiredAsync())
+            if (await _authenticationService.IsPBICloudSignInRequiredAsync(cancellationToken))
                 return Unauthorized();
 
             if (WindowDialogHelper.BrowseFolderDialog(out var path, cancellationToken))
@@ -130,7 +130,7 @@
         [ProducesDefaultResponseType]
         public async Task<IActionResult> ExportExcelFile(ExportExcelFromPBICloudDatasetRequest request, CancellationToken cancellationToken)
         {
-            if (await _authenticationService.IsPBICloudSignInRequiredAsync())
+            if (await _authenticationService.IsPBICloudSignInRequiredAsync(cancellationToken))
                 return Unauthorized();
 
             if (WindowDialogHelper.SaveFileDialog(fileName: request.Dataset!.DisplayName, defaultExt: "XLSX", out var path, cancellationToken))
