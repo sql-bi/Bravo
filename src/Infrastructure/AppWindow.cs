@@ -28,6 +28,17 @@
 
     internal partial class AppWindow : Form
     {
+        private const string WindowExternalWebMessageCallbackScript = @"
+window.external = {
+    sendMessage: function(message) {
+        window.chrome.webview.postMessage(message);
+    },
+    receiveMessage: function(callback) {
+        window.chrome.webview.addEventListener('message', function(e) {
+            callback(e.data);
+        });
+    }
+};";
         public static SynchronizationContext? UISynchronizationContext { get; set; }
 
         private readonly IHost _host;
@@ -56,15 +67,23 @@
             // Feature-detecting to test whether the installed Runtime supports recently added APIs
             // https://docs.microsoft.com/en-us/microsoft-edge/webview2/concepts/versioning#feature-detecting-to-test-whether-the-installed-runtime-supports-recently-added-apis
             //
-
-            // TODO: WebView2 PreferredColorScheme https://docs.microsoft.com/en-us/microsoft-edge/webview2/reference/win32/icorewebview2profile?view=webview2-1.0.1210.39&preserve-view=true#get_preferredcolorscheme
+            // ICoreWebView2_2          - SDK >= 1.0.705.50  - Runtime >= 86.0.616.0
+            // ICoreWebView2_10         - SDK >= 1.0.1150.38 - Runtime >= 99.0.1150.38
+            // ICoreWebView2Settings3   - SDK >= 1.0.864.35  - Runtime >= 91.0.864.35
+            // ICoreWebView2Settings4   - SDK >= 1.0.902.49  - Runtime >= 92.0.902.49
+            // ICoreWebView2Settings5   - SDK >= 1.0.902.49  - Runtime >= 92.0.902.49
+            // ICoreWebView2Settings6   - SDK >= 1.0.992.28  - Runtime >= 94.0.992.31
+            // ICoreWebView2Controller2 - SDK >= 1.0.774.44  - Runtime >= 89.0.774.44
+            //
+            // winget show --id=Microsoft.EdgeWebView2Runtime --versions
+            // winget install --id=Microsoft.EdgeWebView2Runtime --version 95.0.1020.53 --architecture x64
 
             WebView.Visible = false;
 
             var options = new CoreWebView2EnvironmentOptions(additionalBrowserArguments: null, language: null, targetCompatibleBrowserVersion: null, allowSingleSignOnUsingOSPrimaryAccount: false);
             {
-                options.AdditionalBrowserArguments = WebView2Helper.GetProxyArguments(UserPreferences.Current.Proxy, WebProxyWrapper.Current.DefaultSystemProxy);
-
+                /* ICoreWebView2EnvironmentOptions */ options.AdditionalBrowserArguments = WebView2Helper.GetProxyArguments(UserPreferences.Current.Proxy, WebProxyWrapper.Current.DefaultSystemProxy);
+                
                 if (AppEnvironment.IsDiagnosticLevelVerbose)
                     AppEnvironment.AddDiagnostics(DiagnosticMessageType.Text, name: $"{ nameof(AppWindow) }.{ nameof(InitializeWebViewAsync) }.{ nameof(options.AdditionalBrowserArguments) }", content: options.AdditionalBrowserArguments);
             }
@@ -78,22 +97,20 @@
 #else
             var isDebug = false;
 #endif
-            WebView2Helper.TryAndIgnoreUnsupportedInterfaceError(() => WebView.DefaultBackgroundColor = _startupThemeColor);
-            WebView.CoreWebView2.Settings.AreBrowserAcceleratorKeysEnabled = isDebug;
-            WebView.CoreWebView2.Settings.AreDefaultScriptDialogsEnabled = isDebug;
-            WebView.CoreWebView2.Settings.AreDefaultContextMenusEnabled = isDebug;
-            WebView.CoreWebView2.Settings.AreDevToolsEnabled = isDebug;
-            WebView.CoreWebView2.Settings.AreHostObjectsAllowed = false;
-            WebView.CoreWebView2.Settings.IsWebMessageEnabled = true;
-            WebView.CoreWebView2.Settings.IsScriptEnabled = true;
-            WebView.CoreWebView2.Settings.IsStatusBarEnabled = false;
-            //WebView.CoreWebView2.Settings.IsZoomControlEnabled = true;
-            //WebView.CoreWebView2.Settings.IsBuiltInErrorPageEnabled = true;
-            WebView.CoreWebView2.Settings.IsPasswordAutosaveEnabled = false;
-            WebView.CoreWebView2.Settings.IsGeneralAutofillEnabled = false;
-            WebView.CoreWebView2.Settings.IsPinchZoomEnabled = false;
-            WebView.CoreWebView2.Settings.IsSwipeNavigationEnabled = false;
-            //WebView.CoreWebView2.Settings.HiddenPdfToolbarItems = CoreWebView2PdfToolbarItems.None;
+            /* ICoreWebView2Controller2 */ WebView2Helper.TryAndIgnoreUnsupportedError(() => WebView.DefaultBackgroundColor = _startupThemeColor);
+            /* ICoreWebView2Controller4 */ // WebView2Helper.TryAndIgnoreUnsupportedError(() => WebView.AllowExternalDrop = true); // Commented out because the default value is true
+            /* ICoreWebView2Settings3   */ WebView2Helper.TryAndIgnoreUnsupportedError(() => WebView.CoreWebView2.Settings.AreBrowserAcceleratorKeysEnabled = isDebug);
+            /* ICoreWebView2Settings    */ WebView.CoreWebView2.Settings.AreDefaultScriptDialogsEnabled = isDebug;
+            /* ICoreWebView2Settings    */ WebView.CoreWebView2.Settings.AreDefaultContextMenusEnabled = isDebug;
+            /* ICoreWebView2Settings    */ WebView.CoreWebView2.Settings.AreDevToolsEnabled = isDebug;
+            /* ICoreWebView2Settings    */ WebView.CoreWebView2.Settings.AreHostObjectsAllowed = false;
+            /* ICoreWebView2Settings    */ WebView.CoreWebView2.Settings.IsWebMessageEnabled = true;
+            /* ICoreWebView2Settings    */ WebView.CoreWebView2.Settings.IsScriptEnabled = true;
+            /* ICoreWebView2Settings    */ WebView.CoreWebView2.Settings.IsStatusBarEnabled = false;
+            /* ICoreWebView2Settings4   */ WebView2Helper.TryAndIgnoreUnsupportedError(() => WebView.CoreWebView2.Settings.IsPasswordAutosaveEnabled = false);
+            /* ICoreWebView2Settings4   */ WebView2Helper.TryAndIgnoreUnsupportedError(() => WebView.CoreWebView2.Settings.IsGeneralAutofillEnabled = false);
+            /* ICoreWebView2Settings5   */ WebView2Helper.TryAndIgnoreUnsupportedError(() => WebView.CoreWebView2.Settings.IsPinchZoomEnabled = false);
+            /* ICoreWebView2Settings6   */ WebView2Helper.TryAndIgnoreUnsupportedError(() => WebView.CoreWebView2.Settings.IsSwipeNavigationEnabled = false);
 #if DEBUG_WWWROOT
             WebView.CoreWebView2.OpenDevToolsWindow();
             //WebView.CoreWebView2.OpenTaskManagerWindow();
@@ -103,25 +120,15 @@
             //WebView.CoreWebView2.WebMessageReceived += OnWebViewWebWebMessageReceived;
             //WebView.CoreWebView2.WebResourceResponseReceived += OnWebViewWebResourceResponseReceived;
 #endif
-            WebView.CoreWebView2.DOMContentLoaded += OnWebViewDOMContentLoaded;
-            WebView.CoreWebView2.WebResourceRequested += OnWebViewWebResourceRequested;
-            WebView.CoreWebView2.PermissionRequested += OnWebViewPermissionRequested;
-            WebView.CoreWebView2.BasicAuthenticationRequested += OnWebViewBasicAuthenticationRequested;
+            /* ICoreWebView2_2  */ WebView.CoreWebView2.DOMContentLoaded += OnWebViewDOMContentLoaded;
+            /* ICoreWebView2    */ WebView.CoreWebView2.WebResourceRequested += OnWebViewWebResourceRequested;
+            /* ICoreWebView2    */ WebView.CoreWebView2.PermissionRequested += OnWebViewPermissionRequested;
+            /* ICoreWebView2_10 */ WebView2Helper.TryAndIgnoreUnsupportedError(() => WebView.CoreWebView2.BasicAuthenticationRequested += OnWebViewBasicAuthenticationRequested);
 
-            await WebView.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(@"
-window.external = {
-    sendMessage: function(message) {
-        window.chrome.webview.postMessage(message);
-    },
-    receiveMessage: function(callback) {
-        window.chrome.webview.addEventListener('message', function(e) {
-            callback(e.data);
-        });
-    }
-};");
-            WebView.CoreWebView2.AddWebResourceRequestedFilter("*", CoreWebView2WebResourceContext.All);
+            /* ICoreWebView2 */ await WebView.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(WindowExternalWebMessageCallbackScript);
+            /* ICoreWebView2 */ WebView.CoreWebView2.AddWebResourceRequestedFilter("*", CoreWebView2WebResourceContext.All);
             WebView.Source = new Uri(Path.Combine(Environment.CurrentDirectory, "wwwroot\\index.html"));
-            //WebView.CoreWebView2.SetVirtualHostNameToFolderMapping("bravo.example", "wwwroot", CoreWebView2HostResourceAccessKind.Allow);
+            // /* ICoreWebView2_3 */ WebView.CoreWebView2.SetVirtualHostNameToFolderMapping("bravo.example", "wwwroot", CoreWebView2HostResourceAccessKind.Allow);
             //WebView.CoreWebView2.Navigate("https://bravo.example/index.html"); // For '.example' see rfc6761
         }
 

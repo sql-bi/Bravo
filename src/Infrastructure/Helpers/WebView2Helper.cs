@@ -27,19 +27,23 @@
         public static string EvergreenRuntimeBootstrapperUrl = "https://go.microsoft.com/fwlink/p/?LinkId=2124703";
         public static string MicrosoftReferenceUrl = "https://developer.microsoft.com/en-us/microsoft-edge/webview2";
 
-        public static void TryAndIgnoreUnsupportedInterfaceError(Action action)
+        public static void TryAndIgnoreUnsupportedError(Action action)
         {
+            //
+            // Feature-detecting to test whether the installed Runtime supports recently added APIs
+            // https://docs.microsoft.com/en-us/microsoft-edge/webview2/concepts/versioning#feature-detecting-to-test-whether-the-installed-runtime-supports-recently-added-apis
+            //
             try
             {
                 action?.Invoke();
             }
+            catch (NotImplementedException ex) when (ex.InnerException is InvalidCastException innerEx && innerEx.HResult == HRESULT.E_NOINTERFACE)
+            {
+                // Ignore unsupported feature
+            }
             catch (InvalidCastException ex) when (ex.HResult == HRESULT.E_NOINTERFACE)
             {
-                // Ignore error if feature is unsupported
-                //
-                // Feature-detecting to test whether the installed Runtime supports recently added APIs
-                // https://docs.microsoft.com/en-us/microsoft-edge/webview2/concepts/versioning#feature-detecting-to-test-whether-the-installed-runtime-supports-recently-added-apis
-                //
+                // Ignore unsupported feature
             }
         }
 
