@@ -75,8 +75,15 @@ window.external = {
             // ICoreWebView2Settings6   - SDK >= 1.0.992.28  - Runtime >= 94.0.992.31
             // ICoreWebView2Controller2 - SDK >= 1.0.774.44  - Runtime >= 89.0.774.44
             //
-            // winget show --id=Microsoft.EdgeWebView2Runtime --versions
-            // winget install --id=Microsoft.EdgeWebView2Runtime --version 95.0.1020.53 --architecture x64
+            // How to test a specific runtime version:
+            //
+            // - winget (not all versions are available)
+            //   winget show --id=Microsoft.EdgeWebView2Runtime --versions
+            //   winget install --id=Microsoft.EdgeWebView2Runtime --version 95.0.1020.53 --architecture x64
+            // - Download installer from https://www.catalog.update.microsoft.com/Search.aspx?q=WebView2
+            //   uncompress microsoftedgestandaloneinstallerx64_<guid>.exe
+            //   uncompress MicrosoftEdge_X64_<version>.exe.{<guid>}
+            //   create webview environment and pass the folder path in then 'browserExecutableFolder' arguments => .\microsoftedgestandaloneinstallerx64_<guid>\MicrosoftEdge_X64_<version>\MSEDGE\Chrome-bin\<version>
 
             WebView.Visible = false;
 
