@@ -10,9 +10,13 @@
     using System.IO;
     using System.Linq;
     using System.Management;
+    using System.Security.Claims;
+    using System.Security.Principal;
     using System.Threading;
+    using System.Threading.Tasks;
+    using System.Windows.Forms;
 
-    public static class ProcessHelper
+    internal static class ProcessHelper
     {
         public static void RunOnSTAThread(Action action)
         {
@@ -22,6 +26,74 @@
             thread.SetApartmentState(ApartmentState.STA);
             thread.Start();
             thread.Join();
+        }
+
+        public static void InvokeOnUIThread(Control control, Action action) => InvokeOnUIThread(action, control);
+        
+        public static void InvokeOnUIThread(Action action, Control? control = null)
+        {
+            if (control is null)
+            {
+                var mainWindowHandle = GetCurrentProcessMainWindowHandle();
+                control = Control.FromHandle(mainWindowHandle);
+            }
+
+            //if (!Application.MessageLoop)
+            //{
+            //}
+
+            if (control.InvokeRequired)
+            {
+                control.Invoke(action);
+            }
+            else
+            {
+                action();
+            }
+        }
+
+        public static async Task<T> RunOnUISynchronizationContextContext<T>(Func<Task<T>> callback)
+        {
+            var previousSynchronizationContext = SynchronizationContext.Current;
+
+            SynchronizationContext.SetSynchronizationContext(AppWindow.UISynchronizationContext);
+            try
+            {
+                var result = await callback();
+                return result;
+            }
+            finally
+            {
+                SynchronizationContext.SetSynchronizationContext(previousSynchronizationContext);
+            }
+        }
+
+        public static void RunOnUISynchronizationContext(Action action)
+        {
+            var previousSynchronizationContext = SynchronizationContext.Current;
+
+            SynchronizationContext.SetSynchronizationContext(AppWindow.UISynchronizationContext);
+            try
+            {
+                action();
+            }
+            finally
+            {
+                SynchronizationContext.SetSynchronizationContext(previousSynchronizationContext);
+            }
+        }
+
+        public static void OpenControlPanelItem(string canonicalName)
+        {
+            // https://docs.microsoft.com/en-us/windows/win32/shell/controlpanel-canonical-names
+             
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = Environment.ExpandEnvironmentVariables("%WINDIR%\\System32\\control.exe"),
+                Arguments = canonicalName
+            };
+
+            using var process = Process.Start(startInfo); 
         }
 
         public static bool OpenBrowser(Uri address)
@@ -63,7 +135,7 @@
             return false;
         }
 
-        public static bool OpenShellExecute(string path, bool waitForStarted, [NotNullWhen(true)] out int? processId)
+        public static bool OpenShellExecute(string path, bool waitForStarted, [NotNullWhen(true)] out int? processId, CancellationToken cancellationToken = default)
         {
             if (File.Exists(path))
             {
@@ -86,6 +158,7 @@
 
                     if (process is not null)
                     {
+                        cancellationToken.ThrowIfCancellationRequested();
                         processId = process.Id;
 
                         if (waitForStarted)
@@ -103,6 +176,8 @@
                             {
                                 for (var i = 0; i < 60; i++)
                                 {
+                                    cancellationToken.ThrowIfCancellationRequested();
+
                                     if (process.HasExited)
                                         break;
 
@@ -229,7 +304,42 @@
             }
         }
 
-        private static bool SafePredicate(Func<bool> predicate)
+        public static bool IsUserAdministrator()
+        {
+            // Move to Infrastructure.Security namespace
+
+            using var windowsIdentity = WindowsIdentity.GetCurrent();
+
+            if (windowsIdentity is not null)
+            {
+                var windowsPrincipal = new WindowsPrincipal(windowsIdentity);
+                var userClaims = new List<Claim>(windowsPrincipal.UserClaims);
+
+                var builtinAdministratorsSid = new SecurityIdentifier(WellKnownSidType.BuiltinAdministratorsSid, domainSid: null);
+                var isUserAdministrator = windowsPrincipal.UserClaims.Any((claim) => claim.Value.Contains(builtinAdministratorsSid.Value));
+
+                return isUserAdministrator;
+            }
+
+            return false;
+        }
+
+        public static bool IsRunningAsAdministrator()
+        {
+            // Move to Infrastructure.Security namespace
+
+            using var windowsIdentity = WindowsIdentity.GetCurrent();
+
+            if (windowsIdentity?.Owner is not null)
+            {
+                var isRunningAsAdministrator = windowsIdentity.Owner.IsWellKnown(WellKnownSidType.BuiltinAdministratorsSid);
+                return isRunningAsAdministrator;
+            }
+
+            return false;
+        }
+
+        public static bool SafePredicate(Func<bool> predicate)
         {
             try
             {

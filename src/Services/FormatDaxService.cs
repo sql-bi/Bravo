@@ -53,7 +53,7 @@
                         TableName = requestedMeasure.TableName,
                     };
 
-                    if (daxformatterResponse.Errors.Count == 0)
+                    if (daxformatterResponse.Errors is null || daxformatterResponse.Errors.Count == 0)
                     {
                         formattedMeasure.Expression = daxformatterResponse.Formatted;
                         formattedMeasure.LineBreakStyle = lineBreakStyle.Value;
@@ -61,12 +61,7 @@
                     else
                     {
                         formattedMeasure.Expression = requestedMeasure.Expression; // in case of errors returns the original expression, as requested by Daniele
-                        formattedMeasure.Errors = daxformatterResponse.Errors?.Select((e) => new FormatterError
-                        {
-                            Line = e.Line,
-                            Column = e.Column,
-                            Message = e.Message
-                        });
+                        formattedMeasure.Errors = daxformatterResponse.Errors?.Select(FormatterError.CreateFrom);
                     }
 
                     formattedMeasures.Add(formattedMeasure);
@@ -125,7 +120,7 @@
 
             foreach (var response in responses)
             {
-                if (response.Errors.Count == 0)
+                if (response.Errors is null || response.Errors.Count == 0)
                 {
                     response.Formatted = response.Formatted?.Remove(0, FormatPrefixLength - 1);
                     response.Formatted = response.Formatted?.NormalizeDax().Expression;

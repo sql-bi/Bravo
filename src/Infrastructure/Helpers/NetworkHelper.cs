@@ -1,5 +1,6 @@
 ﻿namespace Sqlbi.Bravo.Infrastructure.Helpers
 {
+    using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Infrastructure.Services.PowerBI;
     using Sqlbi.Bravo.Infrastructure.Windows.Interop;
     using System;
@@ -13,14 +14,40 @@
 
     internal static class NetworkHelper
     {
-        public static readonly string LocalHost = "localhost";
+        /// <summary>
+        /// Standard host name given to the address of the loopback network interface
+        /// </summary>
+        public static readonly string Localhost = "localhost";
 
+        /// <summary>
+        /// A special proxy bypass rule which has the effect of subtracting the implicit loopback rules
+        /// https://chromium.googlesource.com/chromium/src/+/HEAD/net/docs/proxy.md#overriding-the-implicit-bypass-rules
+        /// </summary>
+        public static readonly string LoopbackProxyBypassRule = "<-loopback>";
+
+        /// <summary>
+        /// Returns true if the protocol schema for the provided <paramref name="address"/> URI is <see cref="PBICloudService.ASAzureProtocolScheme"/>
+        /// </summary>
+        public static bool IsASAzureServer(string address)
+        {
+            if (address.Contains(Uri.SchemeDelimiter) && Uri.TryCreate(address, UriKind.Absolute, out var addressUri))
+            {
+                if (addressUri.Scheme.EqualsI(PBICloudService.ASAzureProtocolScheme))
+                    return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Returns true if the protocol schema for the provided <paramref name="address"/> URI is <see cref="PBICloudService.PBIDatasetProtocolScheme"/> or <see cref="PBICloudService.PBIPremiumXmlaEndpointProtocolScheme"/>
+        /// </summary>
         public static bool IsPBICloudDatasetServer(string address)
         {
             if (address.Contains(Uri.SchemeDelimiter) && Uri.TryCreate(address, UriKind.Absolute, out var addressUri))
             {
-                var isGenericDataset = addressUri.Scheme.Equals(PBICloudService.PBIDatasetProtocolScheme, StringComparison.OrdinalIgnoreCase);
-                var isPremiumDataset = addressUri.Scheme.Equals(PBICloudService.PBIPremiumProtocolScheme, StringComparison.OrdinalIgnoreCase);
+                var isGenericDataset = addressUri.Scheme.EqualsI(PBICloudService.PBIDatasetProtocolScheme);
+                var isPremiumDataset = addressUri.Scheme.EqualsI(PBICloudService.PBIPremiumXmlaEndpointProtocolScheme); // <-- can be removed ??
 
                 return isPremiumDataset || isGenericDataset;
             }

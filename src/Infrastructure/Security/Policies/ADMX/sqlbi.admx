@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<!--  (c) SQLBI Corporation  -->
+<policyDefinitions revision="1.0" schemaVersion="1.0">
+  <policyNamespaces>
+    <target namespace="SQLBI.Policies" prefix="sqlbi" />
+  </policyNamespaces>
+
+  <resources minRequiredRevision="1.0" />
+
+  <categories>
+    <category name="SQLBI" displayName="$(string.sqlbi)" />
+  </categories>
+
+</policyDefinitions>

@@ -21,6 +21,16 @@
       "Comment": "0 = Sunday, 1 = Monday, ..."
     },
     {
+      "Name": "__TypeStartFiscalYear",
+      "Expression": "1",
+      "IsConfigurable": true,
+      "MultiLineComment": [
+        "Fiscal year as Calendar Year of :",
+        "0 - First day of fiscal year",
+        "1 - Last day of fiscal year"
+      ]
+    },
+    {
       "Name": "__WorkingDays",
       "Expression": "@@GETCONFIG( WorkingDays )",
       "IsConfigurable": true
@@ -38,6 +48,14 @@
     {
       "Name": "__WeekDayCalculationType",
       "Expression": "IF ( __FirstDayOfWeek = 0, 7, __FirstDayOfWeek ) + 10"
+    },
+    {
+      "Name": "__OffsetFiscalYearBeforeMonth",
+      "Expression": "IF ( __FirstFiscalMonth > 1, __TypeStartFiscalYear - 1, 0 )"
+    },
+    {
+      "Name": "__OffsetFiscalYearOnOrAfterMonth",
+      "Expression": "IF ( __FirstFiscalMonth > 1, __TypeStartFiscalYear, 0 )"
     }
   ],
   "RowVariables": [
@@ -63,7 +81,7 @@
     },
     {
       "Name": "__FiscalYearNumber",
-      "Expression": "__YearNumber + 1 * ( __FirstFiscalMonth > 1 && __MonthNumber >= __FirstFiscalMonth )"
+      "Expression": "__YearNumber + __OffsetFiscalYearOnOrAfterMonth * ( __FirstFiscalMonth > 1 && __MonthNumber >= __FirstFiscalMonth ) + __OffsetFiscalYearBeforeMonth * ( __FirstFiscalMonth > 1 && __MonthNumber < __FirstFiscalMonth )"
     },
     {
       "Name": "__FiscalMonthNumber",

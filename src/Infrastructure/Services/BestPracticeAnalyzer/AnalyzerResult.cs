@@ -44,7 +44,7 @@
         /// <summary>
         /// Indicates whether this rule should be ignored on this particular object
         /// </summary>
-        public bool Ignored
+        public static bool Ignored
         {
             get
             {

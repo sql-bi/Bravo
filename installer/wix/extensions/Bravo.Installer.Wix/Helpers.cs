@@ -11,12 +11,21 @@ namespace Sqlbi.Bravo.Installer.Wix
 {
     internal static class Helpers
     {
-        internal const string CustomDataPbitoolPath = "PBITOOLPATH";
-        internal const string CustomDataProductName = "PRODUCTNAME";
-        internal const string CustomDataProductVersion = "PRODUCTVERSION";
-        internal const string CustomDataProductBuild = "PRODUCTBUILD";
-        internal const string CustomDataProductExecutablePath = "PRODUCTEXECUTABLEPATH";
-        internal const string CustomDataInstallerTelemetryEnabled = "INSTALLERTELEMETRYENABLED";
+        internal const string PropertyPbitoolPath = "PBITOOLPATH";
+        internal const string PropertyProductName = "PRODUCTNAME";
+        internal const string PropertyProductVersion = "PRODUCTVERSION";
+        internal const string PropertyProductBuild = "PRODUCTBUILD";
+        internal const string PropertyProductExecutablePath = "PRODUCTEXECUTABLEPATH";
+        internal const string PropertyInstallerTelemetryEnabled = "INSTALLERTELEMETRYENABLED";
+        internal const string PropertyTelemetryUserId = "TELEMETRYUSERID";
+        internal const string PropertyInstallScope = "INSTALLSCOPE";
+        internal const string PropertyLocalAppDataSubfolder = "LOCALAPPDATASUBFOLDER";
+
+        internal static void Log(Session session, string name)
+        {
+            foreach (var pairs in session.CustomActionData)
+                session.Log($"::BRAVO<LOG> ({ name }) - CustomActionData({ pairs.Key }, { pairs.Value })");
+        }
 
         internal static void TrackEvent(Session session, string name)
         {
@@ -24,7 +33,7 @@ namespace Sqlbi.Bravo.Installer.Wix
             var telemetryEvent = new EventTelemetry(name);
             telemetryClient.TrackEvent(telemetryEvent);
             telemetryClient.Flush();
-            Thread.Sleep(500);
+            Thread.Sleep(1000);
         }
 
         internal static void TrackException(Session session, Exception exception)
@@ -32,14 +41,16 @@ namespace Sqlbi.Bravo.Installer.Wix
             var telemetryClient = GetTelemetryClient(session);
             telemetryClient.TrackException(exception);
             telemetryClient.Flush();
-            Thread.Sleep(500);
+            Thread.Sleep(1000);
         }
 
         internal static TelemetryClient GetTelemetryClient(Session session)
         {
-            var productName = session.CustomActionData[CustomDataProductName];
-            var productVersion = session.CustomActionData[CustomDataProductVersion];
-            var productBuild = session.CustomActionData[CustomDataProductBuild];
+            var productName = session.CustomActionData[PropertyProductName];
+            var productVersion = session.CustomActionData[PropertyProductVersion];
+            var productBuild = session.CustomActionData[PropertyProductBuild];
+            var userId = session.CustomActionData[PropertyTelemetryUserId];
+            var installScope = session.CustomActionData[PropertyInstallScope];
 
             var telemetryConfiguration = TelemetryConfiguration.CreateDefault();
             telemetryConfiguration.InstrumentationKey = "47a8970c-6293-408a-9cce-5b7b311574d3";
@@ -50,7 +61,8 @@ namespace Sqlbi.Bravo.Installer.Wix
             telemetryClient.Context.Device.OperatingSystem = Environment.OSVersion.ToString();
             telemetryClient.Context.Component.Version = productVersion;
             telemetryClient.Context.Session.Id = Guid.NewGuid().ToString();
-            telemetryClient.Context.User.Id = ToSHA256Hash($"{ Environment.MachineName }\\{ Environment.UserName }");
+            telemetryClient.Context.User.Id = userId;
+            telemetryClient.Context.GlobalProperties.Add("InstallScope", installScope);
             telemetryClient.Context.GlobalProperties.Add("ProductName", productName);
             telemetryClient.Context.GlobalProperties.Add("Version", productVersion);
             telemetryClient.Context.GlobalProperties.Add("Build", productBuild);
@@ -60,11 +72,12 @@ namespace Sqlbi.Bravo.Installer.Wix
 
         internal static bool IsTelemetryEnabled(Session session)
         {
-            if (session.CustomActionData.TryGetValue(CustomDataInstallerTelemetryEnabled, out var value))
+            if (session.CustomActionData.TryGetValue(PropertyInstallerTelemetryEnabled, out var value))
             {
-                if (value == string.Empty)
+                if (string.IsNullOrEmpty(value))
                     return false;
-                else if (int.TryParse(value, out var intValue))
+                
+                if (int.TryParse(value, out var intValue))
                     return Convert.ToBoolean(intValue);
             }
 
@@ -72,19 +85,17 @@ namespace Sqlbi.Bravo.Installer.Wix
             return true;
         }
 
-        internal static string ToSHA256Hash(string value)
+        internal static string ToSHA256Hash(this string value)
         {
             if (value == null)
                 return null;
 
-            using (var algorithm = new SHA256Managed())
+            using (var algorithm = SHA256.Create())
             {
                 var stringBuilder = new StringBuilder();
                 var buffer = Encoding.UTF8.GetBytes(value);
-                var offset = 0;
                 var count = Encoding.UTF8.GetByteCount(value);
-
-                var bytes = algorithm.ComputeHash(buffer, offset, count);
+                var bytes = algorithm.ComputeHash(buffer, offset: 0, count);
 
                 foreach (var @byte in bytes)
                     stringBuilder.Append(@byte.ToString("x2"));

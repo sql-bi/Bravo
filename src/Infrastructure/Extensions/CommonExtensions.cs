@@ -31,6 +31,20 @@
             return null;
         }
 
+        public static TEnum? TryParseTo<TEnum>(this int? value) where TEnum : struct, Enum
+        {
+            if (value is not null)
+            {
+                if (Enum.IsDefined(typeof(TEnum), value.Value))
+                {
+                    var @enum = (TEnum)Enum.ToObject(typeof(TEnum), value.Value);
+                    return @enum;
+                }
+            }
+
+            return null;
+        }
+
         public static T? JsonClone<T>(this T value)
         {
             var json = JsonSerializer.Serialize(value);

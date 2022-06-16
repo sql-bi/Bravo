@@ -1,5 +1,6 @@
 ﻿namespace Sqlbi.Bravo.Models.FormatDax
 {
+    using Dax.Formatter.Models;
     using Sqlbi.Bravo.Infrastructure;
     using System.Collections.Generic;
     using System.Text.Json.Serialization;
@@ -35,12 +36,22 @@
     public class FormatterError
     {
         [JsonPropertyName("line")]
-        public int Line { get; set; }
+        public int? Line { get; set; }
 
         [JsonPropertyName("column")]
-        public int Column { get; set; }
+        public int? Column { get; set; }
 
         [JsonPropertyName("message")]
         public string? Message { get; set; }
+
+        public static FormatterError CreateFrom(DaxFormatterError error)
+        {
+            return new FormatterError
+            {
+                Line = error.Line,
+                Column = error.Column,
+                Message = error.Message
+            };
+        }
     }
 }

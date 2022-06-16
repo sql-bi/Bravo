@@ -20,48 +20,40 @@
             };
             uiInfo.cbSize = Marshal.SizeOf(uiInfo);
 
-            var outAuthBuffer = IntPtr.Zero;
+            var authPackage = 0;
             var inAuthBuffer = IntPtr.Zero;
+            var inAuthBufferSize = 0;
+            var flags = options.Flags;
+            var save = options.IsSaveChecked;
+            var authError = options.AuthError;
+
+            var retval = Credui.CredUIPromptForWindowsCredentialsW(ref uiInfo, authError, ref authPackage, inAuthBuffer, inAuthBufferSize, out var outAuthBuffer, out var outAuthBufferSize, ref save, flags);
             try
             {
-                var authPackage = 0;
-                var inAuthBufferSize = 0;
-                var flags = options.Flags;
-                var save = options.IsSaveChecked;
-                var authError = options.AuthError;
-
-                var retval = Credui.CredUIPromptForWindowsCredentialsW(ref uiInfo, authError, ref authPackage, inAuthBuffer, inAuthBufferSize, out outAuthBuffer, out var outAuthBufferSize, ref save, flags);
-                try
+                switch (retval)
                 {
-                    switch (retval)
-                    {
-                        case NativeMethods.ERROR_SUCCESS:
-                            {
-                                var networkCredential = CredUnPackNetworkCredential(outAuthBuffer, outAuthBufferSize);
-                                return networkCredential;
-                            }
-                        case NativeMethods.ERROR_CANCELLED:
-                            return null;
-                    }
+                    case NativeMethods.ERROR_SUCCESS:
+                        {
+                            var networkCredential = CredUnPackNetworkCredential(outAuthBuffer, outAuthBufferSize);
+                            return networkCredential;
+                        }
+                    case NativeMethods.ERROR_CANCELLED:
+                        return null;
+                }
 
-                    throw new Win32Exception(retval);
-                }
-                finally
-                {
-                    if (outAuthBuffer != IntPtr.Zero)
-                    {
-                        // Make sure buffer is zeroed out. TODO: where is SecureZeroMem ??
-                        var zeroedBuffer = new byte[outAuthBufferSize];
-                        Marshal.Copy(zeroedBuffer, 0, outAuthBuffer, outAuthBufferSize);
-                    }
-                }
+                throw new Win32Exception(retval);
             }
             finally
             {
-                if (inAuthBuffer != IntPtr.Zero)
-                    Marshal.ZeroFreeCoTaskMemUnicode(inAuthBuffer);
                 if (outAuthBuffer != IntPtr.Zero)
-                    Marshal.ZeroFreeCoTaskMemUnicode(outAuthBuffer);
+                {
+                    // Make sure buffer is zeroed out. TODO: where is SecureZeroMem ??
+                    var zeroedBuffer = new byte[outAuthBufferSize];
+                    Marshal.Copy(zeroedBuffer, 0, outAuthBuffer, outAuthBufferSize);
+                }
+
+                Marshal.FreeCoTaskMem(inAuthBuffer);
+                Marshal.FreeCoTaskMem(outAuthBuffer);
             }
         }
 

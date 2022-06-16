@@ -1,8 +1,7 @@
-﻿#nullable disable
-
-namespace Sqlbi.Bravo.Infrastructure.Windows
+﻿namespace Sqlbi.Bravo.Infrastructure.Windows
 {
     using Sqlbi.Bravo.Infrastructure.Extensions;
+    using Sqlbi.Bravo.Infrastructure.Helpers;
     using Sqlbi.Bravo.Infrastructure.Windows.Interop;
     using System;
     using System.Drawing;
@@ -14,15 +13,15 @@ namespace Sqlbi.Bravo.Infrastructure.Windows
     /// </summary>
     internal class OpenFileDialog
     {
-        public string DefaultExt { get; set; } = null;
+        public string? DefaultExt { get; set; } = null;
         
-        public string File { get; set; } = null;
+        public string? File { get; set; } = null;
         
-        public string Filter { get; set; } = null;
+        public string? Filter { get; set; } = null;
 
-        public string InitialDirectory { get; set; } = null;
+        public string? InitialDirectory { get; set; } = null;
 
-        public string Title { get; set; } = null;
+        public string? Title { get; set; } = null;
 
         public DialogResult ShowDialog(IntPtr hWnd)
         {
@@ -52,15 +51,15 @@ namespace Sqlbi.Bravo.Infrastructure.Windows
     /// </summary>
     internal class SaveFileDialog
     {
-        public string DefaultExt { get; set; } = null;
+        public string? DefaultExt { get; set; } = null;
 
-        public string FileName { get; set; } = null;
+        public string? FileName { get; set; } = null;
 
-        public string Filter { get; set; } = null;
+        public string? Filter { get; set; } = null;
 
-        public string InitialDirectory { get; set; } = null;
+        public string? InitialDirectory { get; set; } = null;
 
-        public string Title { get; set; } = null;
+        public string? Title { get; set; } = null;
 
         public DialogResult ShowDialog(IntPtr hWnd)
         {
@@ -128,6 +127,59 @@ namespace Sqlbi.Bravo.Infrastructure.Windows
             {
                 Marshal.FreeCoTaskMem(lpCustColors);
             }
+        }
+    }
+
+    internal class MessageDialog
+    {
+        public static void Show(string heading, string text)
+        {
+            var appIcon = Icon.ExtractAssociatedIcon(AppEnvironment.ProcessPath);
+            var icon = new TaskDialogIcon(appIcon!);
+
+            var page = new TaskDialogPage()
+            {
+                Caption = AppEnvironment.ApplicationMainWindowTitle,
+                Heading = heading,
+                Text = text,
+                Icon = icon,
+                AllowCancel = true
+            };
+
+            var hwndOwner = ProcessHelper.GetCurrentProcessMainWindowHandle();
+            _ = TaskDialog.ShowDialog(hwndOwner, page, TaskDialogStartupLocation.CenterScreen);
+        }
+
+        public static TaskDialogButton ShowDialog(string heading, string? text, string? footnoteText, bool allowCancel, params TaskDialogButton[] buttons)
+        {
+            var appIcon = Icon.ExtractAssociatedIcon(AppEnvironment.ProcessPath);
+            var icon = new TaskDialogIcon(appIcon!);
+
+            var page = new TaskDialogPage()
+            {
+                Caption = AppEnvironment.ApplicationMainWindowTitle,
+                Heading = heading,
+                Text = text,
+                Icon = icon,
+                AllowCancel = allowCancel, // || buttons.Any((button) => button == TaskDialogButton.Cancel),
+                AllowMinimize = false
+            };
+
+            if (footnoteText is not null)
+            {
+                page.Footnote = new TaskDialogFootnote()
+                {
+                    Text = footnoteText,
+                };
+            }
+
+            foreach (var button in buttons)
+                page.Buttons.Add(button);
+
+            var hwndOwner = ProcessHelper.GetCurrentProcessMainWindowHandle();
+            var clickedButton = TaskDialog.ShowDialog(hwndOwner, page, TaskDialogStartupLocation.CenterScreen);
+
+            return clickedButton;
         }
     }
 }

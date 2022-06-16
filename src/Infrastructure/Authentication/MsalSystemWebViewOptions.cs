@@ -1,9 +1,9 @@
-﻿using Microsoft.Identity.Client;
-using System.IO;
-
-namespace Sqlbi.Bravo.Infrastructure.Authentication
+﻿namespace Sqlbi.Bravo.Infrastructure.Authentication
 {
-    public class MsalSystemWebViewOptions : SystemWebViewOptions
+    using Microsoft.Identity.Client;
+    using System.IO;
+
+    internal class MsalSystemWebViewOptions : SystemWebViewOptions
     {
         public MsalSystemWebViewOptions(string webrootPath)
         {

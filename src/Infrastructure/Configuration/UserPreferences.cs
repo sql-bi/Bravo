@@ -1,7 +1,7 @@
 ﻿namespace Sqlbi.Bravo.Infrastructure.Configuration
 {
-    using Microsoft.Win32;
     using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
+    using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Infrastructure.Helpers;
     using System;
     using System.Diagnostics;
@@ -74,10 +74,15 @@
                 var settingsString = File.ReadAllText(AppEnvironment.UserSettingsFilePath);
                 var settings = JsonSerializer.Deserialize<UserSettings>(settingsString, _serializationOptions);
 
-                // Input validation and sanitization
+                // Validation
                 if (settings is not null)
                 {
-                    // JsonSerializer does not enforce enum values
+                    var validProxy = settings.Proxy?.Validate(throwOnError: false);
+                    if (validProxy == false)
+                    {
+                        settings.Proxy = null;
+                    }
+
                     if (!Enum.IsDefined(typeof(ThemeType), (int)settings.Theme))
                     {
                         settings.Theme = ThemeType.Auto;
@@ -92,14 +97,20 @@
 
         private static void UpdateFromRegistry(UserSettings settings)
         {
-            var registryObject = Registry.GetValue(AppEnvironment.ApplicationRegistryKeyName, AppEnvironment.ApplicationRegistryApplicationTelemetryEnableValue, null);
-            if (registryObject is not null)
+            var registryKey = AppEnvironment.ApplicationInstallerRegistryHKey;
+            if (registryKey is not null)
             {
-                var registryValue = Convert.ToString(registryObject);
-
-                if (int.TryParse(registryValue, out var intValue))
+                var valueString = registryKey.GetStringValue(subkeyName: AppEnvironment.ApplicationRegistryKeyName, valueName: AppEnvironment.ApplicationRegistryApplicationTelemetryEnableValue);
+                if (valueString is not null)
                 {
-                    settings.TelemetryEnabled = Convert.ToBoolean(intValue);
+                    if (int.TryParse(valueString, out var intValue))
+                    {
+                        settings.TelemetryEnabled = Convert.ToBoolean(intValue);
+                    }
+                    else
+                    {
+                        settings.TelemetryEnabled = false;
+                    }
                 }
             }
         }

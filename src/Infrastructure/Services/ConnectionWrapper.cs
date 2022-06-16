@@ -11,19 +11,25 @@
     {
         private readonly string _connectionString;
 
-        private TabularConnectionWrapper(string connectionString, TOM.Server server, TOM.Database database)
+        private TabularConnectionWrapper(string connectionString, string databaseIdOrName, bool findById)
         {
             _connectionString = connectionString;
 
-            Server = server;
-            Database = database;
+            Server = new TOM.Server();
+            ProcessHelper.RunOnUISynchronizationContext(() => Server.Connect(connectionString.ToUnprotectedString()));
+            Database = findById ? Server.Databases.Find(databaseIdOrName) : Server.Databases.FindByName(databaseIdOrName);
+
+            if (Database is null)
+                throw new BravoException(BravoProblem.TOMDatabaseDatabaseNotFound, databaseIdOrName);
+
+            Model = Database.Model;
         }
 
-        public TOM.Server Server { get; private set; }
+        public TOM.Server Server { get; }
 
-        public TOM.Database Database { get; private set; }
+        public TOM.Database Database { get; }
 
-        public TOM.Model Model => Database.Model;
+        public TOM.Model Model { get; }
 
         public AdomdConnection CreateAdomdConnection(bool open = true)
         {
@@ -40,36 +46,26 @@
 
         public void Dispose()
         {
-            Database.Dispose();
-            Server.Dispose();
+            Database?.Dispose();
+            Server?.Dispose();
         }
 
         public static TabularConnectionWrapper ConnectTo(PBICloudDataset dataset, string accessToken)
         {
-            var (connectionString, databaseName) = dataset.GetConnectionParameters(accessToken);
-            var connection = ConnectTo(connectionString, databaseName);
+            BravoUnexpectedException.ThrowIfNull(dataset.DatabaseName);
+
+            var connectionString = ConnectionStringHelper.BuildFor(dataset, accessToken);
+            var connection = new TabularConnectionWrapper(connectionString, dataset.DatabaseName, findById: true);
 
             return connection;
         }
 
         public static TabularConnectionWrapper ConnectTo(PBIDesktopReport report)
         {
-            BravoUnexpectedException.ThrowIfNull(report.ServerName);
             BravoUnexpectedException.ThrowIfNull(report.DatabaseName);
 
-            var connectionString = ConnectionStringHelper.BuildForPBIDesktop(report.ServerName);
-            var connection = ConnectTo(connectionString, report.DatabaseName);
-
-            return connection;
-        }
-
-        private static TabularConnectionWrapper ConnectTo(string connectionString, string databaseName)
-        {
-            var server = new TOM.Server();
-            server.Connect(connectionString.ToUnprotectedString());
-
-            var database = server.Databases.FindByName(databaseName) ?? throw new BravoException(BravoProblem.TOMDatabaseDatabaseNotFound, databaseName);
-            var connection = new TabularConnectionWrapper(connectionString, server, database);
+            var connectionString = ConnectionStringHelper.BuildFor(report);
+            var connection = new TabularConnectionWrapper(connectionString, report.DatabaseName, findById: false);
 
             return connection;
         }
@@ -77,12 +73,14 @@
 
     internal class AdomdConnectionWrapper : IDisposable
     {
-        private AdomdConnectionWrapper(AdomdConnection connection)
+        private AdomdConnectionWrapper(string connectionString, string databaseName)
         {
-            Connection = connection;
+            Connection = new AdomdConnection(connectionString.ToUnprotectedString());
+            ProcessHelper.RunOnUISynchronizationContext(() => Connection.Open());
+            Connection.ChangeDatabase(databaseName);
         }
 
-        public AdomdConnection Connection { get; private set; }
+        public AdomdConnection Connection { get; }
 
         public AdomdCommand CreateAdomdCommand()
         {
@@ -115,37 +113,24 @@
             Connection.Dispose();
         }
 
-        public static AdomdConnectionWrapper ConnectTo(PBICloudDataset dataset, string accessToken, bool open = true)
+        public static AdomdConnectionWrapper ConnectTo(PBICloudDataset dataset, string accessToken)
         {
-            var (connectionString, databaseName) = dataset.GetConnectionParameters(accessToken);
-            var connection = ConnectTo(connectionString, databaseName, open);
+            BravoUnexpectedException.ThrowIfNull(dataset.ExternalDatabaseName);
+
+            var connectionString = ConnectionStringHelper.BuildFor(dataset, accessToken);
+            var connection = new AdomdConnectionWrapper(connectionString, dataset.ExternalDatabaseName);
 
             return connection;
         }
 
-        public static AdomdConnectionWrapper ConnectTo(PBIDesktopReport report, bool open = true)
+        public static AdomdConnectionWrapper ConnectTo(PBIDesktopReport report)
         {
-            BravoUnexpectedException.ThrowIfNull(report.ServerName);
             BravoUnexpectedException.ThrowIfNull(report.DatabaseName);
 
-            var connectionString = ConnectionStringHelper.BuildForPBIDesktop(report.ServerName);
-            var connection = ConnectTo(connectionString, report.DatabaseName, open);
+            var connectionString = ConnectionStringHelper.BuildFor(report);
+            var connection = new AdomdConnectionWrapper(connectionString, report.DatabaseName);
 
             return connection;
-        }
-
-        private static AdomdConnectionWrapper ConnectTo(string connectionString, string databaseName, bool open = true)
-        {
-            var connection = new AdomdConnection(connectionString.ToUnprotectedString());
-
-            if (open)
-            {
-                connection.Open();
-                connection.ChangeDatabase(databaseName);
-            }
-
-            var wrapper = new AdomdConnectionWrapper(connection);
-            return wrapper;
         }
     }
 }

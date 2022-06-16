@@ -37,12 +37,14 @@
                 jsonOptions.JsonSerializerOptions.Converters.Add(
                     new JsonStringEnumMemberConverter(
                         options: new JsonStringEnumMemberConverterOptions(deserializationFailureFallbackValue: null),
+                        typeof(Sqlbi.Bravo.Infrastructure.Configuration.Settings.ProxyType),
                         typeof(Sqlbi.Bravo.Infrastructure.Configuration.Settings.ThemeType),
                         typeof(Sqlbi.Bravo.Infrastructure.Configuration.Settings.DiagnosticLevelType),
                         typeof(Sqlbi.Bravo.Infrastructure.Configuration.Settings.UpdateChannelType),
-                        typeof(Sqlbi.Bravo.Infrastructure.Messages.WebMessageType),
-                        typeof(Sqlbi.Bravo.Models.PBIDesktopReportConnectionMode),
-                        typeof(Sqlbi.Bravo.Models.PBICloudDatasetConnectionMode),
+                        typeof(Sqlbi.Bravo.Infrastructure.Security.Policies.PolicyStatus),
+                        //typeof(Sqlbi.Bravo.Infrastructure.Messages.WebMessageType),
+                        //typeof(Sqlbi.Bravo.Models.PBIDesktopReportConnectionMode),
+                        //typeof(Sqlbi.Bravo.Models.PBICloudDatasetConnectionMode),
                         typeof(Sqlbi.Bravo.Models.PBICloudDatasetEndorsement)
                         //, typeof(Sqlbi.Bravo.Infrastructure.BravoProblem)
                         //, typeof(Sqlbi.Bravo.Models.DiagnosticMessageSeverity)
@@ -159,6 +161,9 @@
 
                 options.Map<BravoException>((context, exception) =>
                 {
+                    if (AppEnvironment.IsDiagnosticLevelVerbose)
+                        AppEnvironment.AddDiagnostics(name: nameof(BravoException), exception);
+
                     var problemDetailsFactory = context.RequestServices.GetRequiredService<ProblemDetailsFactory>();
                     var problemDetails = problemDetailsFactory.CreateProblemDetails(context,
                         statusCode: StatusCodes.Status400BadRequest,
@@ -174,6 +179,18 @@
                     var problemDetails = problemDetailsFactory.CreateProblemDetails(context,
                         statusCode: StatusCodes.Status400BadRequest,
                         detail: exception.ErrorCode,
+                        instance: $"{ (int)BravoProblem.SignInMsalExceptionOccurred }");
+
+                    return problemDetails;
+                });
+
+                options.Map<AMO.AsClientException>((context, exception) => exception.IsOrHasInner<MsalException>(), mapping: (context, exception) =>
+                {
+                    var msalException = exception.Find<MsalException>(); BravoUnexpectedException.ThrowIfNull(msalException);
+                    var problemDetailsFactory = context.RequestServices.GetRequiredService<ProblemDetailsFactory>();
+                    var problemDetails = problemDetailsFactory.CreateProblemDetails(context,
+                        statusCode: StatusCodes.Status400BadRequest,
+                        detail: msalException.ErrorCode,
                         instance: $"{ (int)BravoProblem.SignInMsalExceptionOccurred }");
 
                     return problemDetails;
@@ -235,7 +252,7 @@
                 options.CustomSchemaIds((type) => type.ToString());
 
                 // Include xml comments only if we are not debugging the MSIX packaged application, this is because a wrong path is generated for xml files
-                if ((Debugger.IsAttached && AppEnvironment.IsPackagedAppInstance) == false)
+                if ((Debugger.IsAttached && AppEnvironment.DeploymentMode == AppDeploymentMode.Packaged) == false)
                 {
                     var xmlFile = $"{ Assembly.GetExecutingAssembly().GetName().Name }.xml";
                     var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);

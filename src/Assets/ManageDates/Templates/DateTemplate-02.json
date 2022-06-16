@@ -22,6 +22,22 @@
     {
       "Name": "__OffsetFiscalMonthNumber",
       "Expression": "__MonthsInYear + 1 - (__MonthsInYear - 12)"
+    },
+    {
+      "Name": "__OffsetYears",
+      "Expression": "1",
+      "IsConfigurable": true,
+      "Comment": "Increase range of fiscal years before/after boundaries defined"
+    },
+    {
+      "Name": "__TypeStartFiscalYear",
+      "Expression": "1",
+      "IsConfigurable": true,
+      "MultiLineComment": [
+        "Fiscal year as Calendar Year of :",
+        "0 - First day of fiscal year",
+        "1 - Last day of fiscal year"
+      ]
     }
   ],
   "RowVariables": [
@@ -39,7 +55,7 @@
     },
     {
       "Name": "__FiscalYearNumber",
-      "Expression": "QUOTIENT ( __YearMonthNumber + 1 * (__FirstFiscalMonth > 1) * (__MonthsInYear + 1 - __FirstFiscalMonth), __MonthsInYear ) + 1"
+      "Expression": "QUOTIENT ( __YearMonthNumber + __TypeStartFiscalYear * (__FirstFiscalMonth > 1) * (__MonthsInYear + 1 - __FirstFiscalMonth), __MonthsInYear )"
     },
     {
       "Name": "__MonthNumber",

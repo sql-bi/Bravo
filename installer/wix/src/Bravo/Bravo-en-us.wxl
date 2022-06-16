@@ -12,6 +12,7 @@
   <String Id="TelemetryInstallDescriptionText">Bravo for Power BI collects anonymous telemetry, which helps us improve the product. You can opt-out at any time by launching Bravo and navigating to Settings &gt; Telemetry.</String>
   <String Id="InstallerTelemetryCheckBoxText">Enable Installer Telemetry</String>
   <String Id="ApplicationTelemetryCheckBoxText">Enable Application Telemetry</String>
+  <String Id="SupportedWindowsVersionConditionMessage">This application is only supported on Windows series operating systems - Windows Client version 7 SP1 or higher - Windows Server version 2012 or higher.</String>
 
   <!-- WiX localization overriding --> 
   <String Id="InstallDirDlgDescription">Click next to install to the default location or change it below</String>

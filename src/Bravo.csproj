@@ -1,11 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <OutputType>WinExe</OutputType> 
-    <TargetFramework>net5-windows10.0.17763.0</TargetFramework>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net6-windows10.0.17763.0</TargetFramework>
+    <SupportedOSPlatformVersion>7.0</SupportedOSPlatformVersion>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
-    <Platforms>x64</Platforms>
-    <ApplicationIcon>wwwroot\bravo.ico</ApplicationIcon>
+    <UseWindowsForms>True</UseWindowsForms>
+    <ApplicationIcon>Assets\bravo.ico</ApplicationIcon>
     <Company>SQLBI</Company>
     <Authors>SQLBI</Authors>
     <Product>Bravo for Power BI</Product>
@@ -14,24 +15,33 @@
     <Nullable>enable</Nullable>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);1591</NoWarn>
-    <!--
-    We are not using VS as build tool to build JS content but VS still reporting Intellisense warning messages despite the use of TypeScriptCompileBlocked.
-    See open issues on developercommunity.visualstudio.com
-    - Make IntelliSense respect TypescriptCompileBlocked setting to suppress Typescript IntelliSense errors 
-    https://developercommunity.visualstudio.com/t/Make-IntelliSense-respect-TypescriptComp/1580469
-    - Permanent warning "Please install the 'Microsoft.TypeScript.MSBuild' NuGet package to enable TypeScript compilation in your project
-    https://developercommunity.visualstudio.com/t/permanent-warning-please-install-the-microsofttype/1555740
-    -->
     <TypeScriptCompileBlocked>true</TypeScriptCompileBlocked>
-    <Configurations>Debug;Release;Debug_wwwroot</Configurations>
+    <Configurations>$(Configurations);Debug_wwwroot</Configurations>
     <AnalysisLevel>latest</AnalysisLevel>
     <IncludeOpenAPIAnalyzers>true</IncludeOpenAPIAnalyzers>
+    <IsPackable>false</IsPackable>
+    <IsPublishable>true</IsPublishable>
+    <SatelliteResourceLanguages>en-US</SatelliteResourceLanguages>
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
   </PropertyGroup>
 
+  <Choose>
+    <When Condition=" '$(Configuration)' == 'Debug_wwwroot' ">
+      <PropertyGroup>
+        <DefineConstants>$(AdditionalConstants);DEBUG</DefineConstants>
+      </PropertyGroup>
+    </When>
+    <Otherwise>
+      <PropertyGroup>
+        <DefineConstants>$(AdditionalConstants)</DefineConstants>
+      </PropertyGroup>
+    </Otherwise>
+  </Choose>
+<!--
   <PropertyGroup>
     <RestoreSources>$(RestoreSources);./Assets/nupkgs;https://api.nuget.org/v3/index.json</RestoreSources>
   </PropertyGroup>
-
+-->
   <PropertyGroup>
     <!-- Don't change version here -->
     <Version>0.0.0.999</Version>
@@ -46,27 +56,28 @@
 
   <ItemGroup>
     <PackageReference Include="CsvHelper" Version="27.2.1" />
-    <PackageReference Include="Dax.Template" Version="0.1.0-beta17" />
-    <PackageReference Include="Dax.Formatter" Version="1.0.0" />
-    <PackageReference Include="Dax.ViewModel" Version="1.2.2" />
-    <PackageReference Include="Dax.Vpax.NetCore" Version="1.2.2" />
-    <PackageReference Include="Hellang.Middleware.ProblemDetails" Version="6.4.0" />
+    <PackageReference Include="Dax.Model.Extractor" Version="1.2.5-preview3" />
+    <PackageReference Include="Dax.Template" Version="0.1.0-preview1" />
+    <PackageReference Include="Dax.Formatter" Version="1.1.0" />
+    <PackageReference Include="Dax.ViewModel" Version="1.2.5-preview3" />
+    <PackageReference Include="Dax.Vpax" Version="1.2.5-preview3" />
+    <PackageReference Include="Hellang.Middleware.ProblemDetails" Version="6.4.2" />
     <PackageReference Include="LargeXlsx" Version="1.5.0" />
     <PackageReference Include="Macross.Json.Extensions" Version="2.2.0" />
+    <PackageReference Include="Microsoft.AnalysisServices.AdomdClient.NetCore.retail.amd64" Version="19.39.2.2" />
+    <PackageReference Include="Microsoft.AnalysisServices.NetCore.retail.amd64" Version="19.39.2.2" />
     <PackageReference Include="Microsoft.Extensions.Logging.ApplicationInsights" Version="2.20.0" />
-    <PackageReference Include="Microsoft.Identity.Client" Version="4.40.0" />
-    <PackageReference Include="Microsoft.Toolkit.Uwp.Notifications" Version="7.1.2" />
-    <PackageReference Include="Photino.NET" Version="2.1.11" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.2.3" />
+    <PackageReference Include="Microsoft.Identity.Client" Version="4.44.0" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.1150.38" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.3.1" PrivateAssets="all" />
     <PackageReference Include="System.CommandLine" Version="2.0.0-beta1.21308.1" />
+    <PackageReference Include="System.Management" Version="6.0.0" />
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(Configuration)' != 'Debug_wwwroot' ">
+  <ItemGroup>
     <None Include="wwwroot\**">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Remove="wwwroot\src\**;wwwroot\*.js;wwwroot\*.json" />
-    <Content Remove="wwwroot\src\**;wwwroot\*.js;wwwroot\*.json" />
   </ItemGroup>
 
   <ItemGroup>
@@ -79,13 +90,81 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Update="Assets\ManageDates\Templates\*.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
+    <Content Remove="Scripts\*.json" />
+    <None Include="Scripts\*.json" />
+    <Content Remove="Assets\ManageDates\Templates\*.json" />
+    <EmbeddedResource Include="Assets\ManageDates\Templates\*.json" />
+    <Content Include="Assets\bravo.ico" />
+    <Compile Update="Properties\Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <EmbeddedResource Update="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
   </ItemGroup>
 
-  <PropertyGroup Condition="'$(Configuration)' == 'Debug_wwwroot'">
-    <DefineConstants>$(DefineConstants);DEBUG</DefineConstants>
+  <!-- 
+  ** The following custom MSBuild targets add the static client web assets into the build process
+  ** - ClientAssetsRestore => restore client web assets from npm
+  ** - ClientAssetsBuild   => run npm build and collect the outputs as static web assets (wwwroot)
+  ** - DefineClientAssets  => capture all the files in the output content and link them to the wwwroot folder - this target run only when the sources are changed
+  **
+  ** https://devblogs.microsoft.com/dotnet/build-client-web-assets-for-your-razor-class-library/ 
+  ** https://github.com/aspnet/AspLabs/blob/main/src/ClientAssets/Microsoft.AspNetCore.ClientAssets/build/netstandard2.0/Microsoft.AspNetCore.ClientAssets.targets
+  ** https://docs.microsoft.com/en-us/archive/msdn-magazine/2009/february/msbuild-best-practices-for-creating-reliable-builds-part-1
+  -->
+
+  <PropertyGroup>
+    <ClientAssetsDirectory Condition="'$(ClientAssetsDirectory)' == ''">Scripts\</ClientAssetsDirectory>
+    <ClientAssetsRestoreInputs Condition="'$(ClientAssetsRestoreInputs)' == ''">$(ClientAssetsDirectory)package-lock.json;$(ClientAssetsDirectory)package.json</ClientAssetsRestoreInputs>
+    <ClientAssetsRestoreOutputs Condition="'$(ClientAssetsRestoreOutputs)' == ''">$(ClientAssetsDirectory)node_modules\.package-lock.json</ClientAssetsRestoreOutputs>
+    <ClientAssetsEnabled Condition="'$(Configuration)' != 'Debug_wwwroot'">true</ClientAssetsEnabled>
   </PropertyGroup>
-  
+
+  <ItemGroup>
+    <ClientAssetsInputs Include="$(ClientAssetsDirectory)**" Exclude="$(DefaultItemExcludes)" />
+  </ItemGroup>
+
+  <!--
+  Target Name="EnsureNodeJsInstalled" BeforeTargets="Build" Condition=" '$(Configuration)' == 'Debug' And !Exists('Scripts\dist') ">
+    <Message Importance="high" Text="::EnsureNodeJsInstalled - retreiving Node.js version ..." />
+    <Exec Command="node - - version" ContinueOnError="true">
+      <Output TaskParameter="ExitCode" PropertyName="ErrorCode" />
+    </Exec>
+    <Error Condition="'$(ErrorCode)' != '0'" Text="Node.js is required to build and run this project." />
+  </Target
+  -->
+
+  <Target Name="ClientAssetsRestore" Condition="'$(ClientAssetsEnabled)' == 'true'" BeforeTargets="Build" Inputs="$(ClientAssetsRestoreInputs)" Outputs="$(ClientAssetsRestoreOutputs)">
+    <Message Importance="high" Text="::ClientAssetsRestore - running 'npm install' ..." />
+    <Exec Command="npm install" WorkingDirectory="$(ClientAssetsDirectory)" />
+  </Target>
+
+  <Target Name="ClientAssetsBuild" Condition="'$(ClientAssetsEnabled)' == 'true'" DependsOnTargets="ClientAssetsRestore" BeforeTargets="AssignTargetPaths" Inputs="@(ClientAssetsInputs)" Outputs="$(IntermediateOutputPath)clientassetsbuild.complete.txt">
+    <PropertyGroup>
+      <_ClientAssetsOutputFullPath>$([System.IO.Path]::GetFullPath('$(IntermediateOutputPath)clientassets'))\</_ClientAssetsOutputFullPath>
+    </PropertyGroup>
+    <MakeDir Directories="$(_ClientAssetsOutputFullPath)" />
+    <Message Importance="high" Text="::ClientAssetsBuild - running 'npm run build:$(Configuration)' ..." />
+    <Exec Command="npm run build:$(Configuration) -- --output-path $(_ClientAssetsOutputFullPath)" WorkingDirectory="$(ClientAssetsDirectory)" />
+    <ItemGroup>
+      <_ClientAssetsBuildOutput Include="$(IntermediateOutputPath)clientassets\**"></_ClientAssetsBuildOutput>
+    </ItemGroup>
+    <WriteLinesToFile File="$(IntermediateOutputPath)clientassetsbuild.complete.txt" Lines="@(_ClientAssetsBuildOutput)" />
+  </Target>
+
+  <Target Name="DefineClientAssets" Condition="'$(ClientAssetsEnabled)' == 'true'" AfterTargets="ClientAssetsBuild">
+    <ItemGroup>
+      <FileWrites Include="@(_ClientAssetsBuildOutput)" />
+      <FileWrites Include="$(IntermediateOutputPath)clientassetsbuild.complete.txt" />
+      <Message Importance="high" Text="::DefineClientAssets - link 'wwwroot\%(_ClientAssetsBuildOutput.RecursiveDir)\%(_ClientAssetsBuildOutput.FileName)%(_ClientAssetsBuildOutput.Extension)' ..." />
+      <Content Include="@(_ClientAssetsBuildOutput)" Link="wwwroot\%(_ClientAssetsBuildOutput.RecursiveDir)\%(_ClientAssetsBuildOutput.FileName)%(_ClientAssetsBuildOutput.Extension)">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
+    </ItemGroup>
+  </Target>
+
 </Project>

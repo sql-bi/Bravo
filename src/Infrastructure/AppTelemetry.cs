@@ -17,7 +17,8 @@
             { "ProductName", AppEnvironment.ApplicationName },
             { "Version", AppEnvironment.ApplicationProductVersion },
             { "Build", AppEnvironment.ApplicationFileVersion },
-            { "IsPackaged", AppEnvironment.IsPackagedAppInstance.ToString().ToLowerInvariant() },
+            { "PublishMode", AppEnvironment.PublishMode.ToString() },
+            { "InstallScope", AppEnvironment.DeploymentMode.ToString() },
             { "WebView2Version", AppEnvironment.WebView2VersionInfo ?? string.Empty },
         };
 

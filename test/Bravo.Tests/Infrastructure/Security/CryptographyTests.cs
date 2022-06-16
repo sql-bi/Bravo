@@ -48,10 +48,19 @@
         }
 
         [Fact]
-        public void SHA256Hash_SimpleTest()
+        public void SHA256Hash_SimpleTest1()
         {
             var actual = Cryptography.SHA256Hash("Bravo");
             var expected = "8123f58e72483f148509ae2da7feda62076dbe2ae3a045323bea4458a62d0952";
+
+            Assert.Equal(expected, actual);
+        }
+
+        [Fact]
+        public void SHA256Hash_SimpleTest2()
+        {
+            var actual = Cryptography.SHA256Hash("LAPTOP-12C9A7VU\\SYSTEM");
+            var expected = "e4f87d099028e128ea2b413f4fa6fc741426bef314de588b0920e89f22015bd0";
 
             Assert.Equal(expected, actual);
         }

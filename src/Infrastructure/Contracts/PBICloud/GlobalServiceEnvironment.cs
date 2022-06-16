@@ -1,17 +1,19 @@
-﻿#nullable disable
-
-namespace Sqlbi.Bravo.Infrastructure.Contracts.PBICloud
+﻿namespace Sqlbi.Bravo.Infrastructure.Contracts.PBICloud
 {
     using System.Collections.Generic;
     using System.Diagnostics;
+    using System.Text.Json.Serialization;
 
     [DebuggerDisplay("{CloudName}")]
     public class GlobalServiceEnvironment
     {
-        public string CloudName { get; set; }
+        [JsonPropertyName("cloudName")]
+        public string? CloudName { get; set; }
 
-        public IEnumerable<GlobalServiceEnvironmentService> Services { get; set; }
+        [JsonPropertyName("services")]
+        public IEnumerable<GlobalServiceEnvironmentService>? Services { get; set; }
 
-        public IEnumerable<GlobalServiceEnvironmentClient> Clients { get; set; }
+        [JsonPropertyName("clients")]
+        public IEnumerable<GlobalServiceEnvironmentClient>? Clients { get; set; }
     }
 }

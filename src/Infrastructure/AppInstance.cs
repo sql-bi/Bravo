@@ -23,7 +23,7 @@
 
         public AppInstance()
         {
-            var appName = AppEnvironment.IsPackagedAppInstance ? AppEnvironment.ApplicationStoreAliasName : AppEnvironment.ApplicationName;
+            var appName = AppEnvironment.DeploymentMode == AppDeploymentMode.Packaged ? AppEnvironment.ApplicationStoreAliasName : AppEnvironment.ApplicationName;
             var appGuid = "8D4D9F1D39F94C7789D84729480D8198"; // Do not change !!
 
             _pipeName = $"Local\\Pipe{ appName }{ appGuid }";
@@ -33,9 +33,7 @@
             if (_owned)
             {
                 StartPipeServer();
-
                 GC.KeepAlive(_mutex);
-                NotificationHelper.RegisterNotificationHandler();
             }
         }
 

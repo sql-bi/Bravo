@@ -7,6 +7,7 @@
     using System.IO;
     using System.Text.Json;
     using System.Text.Json.Serialization;
+    using SSAS = Microsoft.AnalysisServices;
 
     internal class AppInstanceStartupMessage
     {
@@ -43,6 +44,9 @@
                 ArgumentDatabaseName = settings.ArgumentDatabaseName,
             };
 
+            if (AppEnvironment.IsDiagnosticLevelVerbose)
+                AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{ nameof(AppInstanceStartupMessage) }.{ nameof(CreateFrom) }", content: JsonSerializer.Serialize(message));
+
             return message;
         }
     }
@@ -59,35 +63,32 @@
 
         public static string? ToWebMessageString(this AppInstanceStartupMessage startupMessage)
         {
+            string? webMessageString = null;
+
             if (startupMessage.ArgumentServerName is null)
             {
                 var jsonMessage = startupMessage.ToJsonElement();
                 var webMessage = UnknownWebMessage.CreateFrom(jsonMessage);
 
-                return webMessage.AsString;
+                webMessageString = webMessage.AsString;
             }
-            else if (NetworkHelper.IsPBICloudDatasetServer(startupMessage.ArgumentServerName))
+            else if (NetworkHelper.IsPBICloudDatasetServer(startupMessage.ArgumentServerName) || NetworkHelper.IsASAzureServer(startupMessage.ArgumentServerName))
             {
-                // protocol schema => pbiazure:// OR powerbi://
-
                 var webMessage = new PBICloudDatasetOpenWebMessage
                 {
                     Dataset = new PBICloudDataset
                     {
-                        //ServerName = startupMessage.ArgumentServerName,
+                        ServerName = CommonHelper.NormalizeUriString(startupMessage.ArgumentServerName),
                         DatabaseName = startupMessage.ArgumentDatabaseName,
                         ConnectionMode = PBICloudDatasetConnectionMode.Unknown
                     },
                 };
 
-                return webMessage.AsString;
+                webMessageString = webMessage.AsString;
             }
             else
             {
-                // address => localhost:port OR <ipaddress>[:port] OR <hostname>[:port] OR ... ??
-                // ***
                 // SQL Server Analysis Services instance listens on one TCP port for all IP addresses (included loopback) assigned or aliased to the computer
-                // ***
 
                 var report = new PBIDesktopReport
                 {
@@ -95,6 +96,7 @@
                     ReportName = startupMessage.ParentProcessMainWindowTitle,
                     ServerName = startupMessage.ArgumentServerName,
                     DatabaseName = startupMessage.ArgumentDatabaseName,
+                    CompatibilityMode = SSAS.CompatibilityMode.Unknown,
                     ConnectionMode = PBIDesktopReportConnectionMode.Supported
                 };
 
@@ -107,8 +109,13 @@
                 }
 
                 var webMessage = PBIDesktopReportOpenWebMessage.CreateFrom(report);
-                return webMessage.AsString;
-            } 
+                webMessageString = webMessage.AsString;
+            }
+
+            if (AppEnvironment.IsDiagnosticLevelVerbose)
+                AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{ nameof(AppInstanceStartupMessage) }.{ nameof(ToWebMessageString) }", content: webMessageString);
+
+            return webMessageString;
         }
     }
 }

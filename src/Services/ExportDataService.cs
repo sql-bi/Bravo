@@ -4,7 +4,6 @@
     using CsvHelper.Configuration;
     using CsvHelper.TypeConversion;
     using LargeXlsx;
-    using Microsoft.AnalysisServices.AdomdClient;
     using Sqlbi.Bravo.Infrastructure;
     using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Infrastructure.Helpers;
@@ -65,7 +64,7 @@
             {
                 job.SetCanceled();
             }
-            catch (Exception ex) when (ex is not AdomdException)
+            catch (Exception ex)
             {
                 job.SetFailed();
                 throw new BravoException(BravoProblem.ExportDataFileError, ex.Message, ex);
@@ -94,7 +93,7 @@
             {
                 job.SetCanceled();
             }
-            catch (Exception ex) when (ex is not AdomdException)
+            catch (Exception ex)
             {
                 job.SetFailed();
                 throw new BravoException(BravoProblem.ExportDataFileError, ex.Message, ex);
@@ -123,7 +122,7 @@
             {
                 job.SetCanceled();
             }
-            catch (Exception ex) when (ex is not AdomdException)
+            catch (Exception ex)
             {
                 job.SetFailed();
                 throw new BravoException(BravoProblem.ExportDataFileError, ex.Message, ex);
@@ -152,7 +151,7 @@
             {
                 job.SetCanceled();
             }
-            catch (Exception ex) when (ex is not AdomdException)
+            catch (Exception ex)
             {
                 job.SetFailed();
                 throw new BravoException(BravoProblem.ExportDataFileError, ex.Message, ex);

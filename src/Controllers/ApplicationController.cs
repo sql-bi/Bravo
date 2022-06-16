@@ -1,12 +1,16 @@
 ﻿namespace Sqlbi.Bravo.Controllers
 {
+    using Hellang.Middleware.ProblemDetails;
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.Extensions.Options;
     using Sqlbi.Bravo.Infrastructure;
+    using Sqlbi.Bravo.Infrastructure.Configuration;
     using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
+    using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Infrastructure.Helpers;
+    using Sqlbi.Bravo.Infrastructure.Security;
     using Sqlbi.Bravo.Models;
     using System;
     using System.Collections.Generic;
@@ -49,6 +53,7 @@
         /// Update the application options
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
+        /// <response code="400">Status400BadRequest - See the "instance" and "detail" properties to identify the specific occurrence of the problem</response>
         [HttpPost]
         [ActionName("UpdateOptions")]
         [Consumes(MediaTypeNames.Application.Json)]
@@ -57,9 +62,28 @@
         [ProducesDefaultResponseType]
         public IActionResult UpdateOptions(BravoOptions options)
         {
-            options.SaveToUserPreferences();
+            if (options.Proxy is not null)
+            { 
+                if (options.Proxy.Address.IsEmptyOrWhiteSpace() == true)
+                    options.Proxy.Address = null;
 
-            _telemetryConfiguration.DisableTelemetry = options.TelemetryEnabled == false;
+                if (options.Proxy.BypassList.IsEmptyOrWhiteSpace() == true)
+                    options.Proxy.BypassList = null;
+            }
+            
+            try
+            {
+                options.SaveToUserPreferences();
+            }
+            catch (Exception ex)
+            {
+                var problem = StatusCodeProblemDetails.Create(StatusCodes.Status400BadRequest);
+                problem.Detail = ex.Message;
+
+                return BadRequest(problem);
+            }
+
+            _telemetryConfiguration.DisableTelemetry = UserPreferences.Current.TelemetryEnabled == false;
 
             return Ok();
         }
@@ -107,37 +131,10 @@
         /// <response code="403">Status403Forbidden - The path is invalid or not allowed</response>
         /// <response code="204">Status204NoContent - User canceled action (e.g. 'Cancel' button has been pressed on a dialog box)</response>
         [HttpGet]
-        [ActionName("StartPBIDesktopFromPBIX")]
-        [Consumes(MediaTypeNames.Application.Json)]
-        [Produces(MediaTypeNames.Application.Json)]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesDefaultResponseType]
-        public IActionResult StartPBIDesktopFromPBIX(bool waitForStarted, CancellationToken cancellationToken)
-        {
-            if (WindowDialogHelper.OpenFileDialog(defaultExt: "PBIX", out var path, cancellationToken))
-            {
-                if (ProcessHelper.OpenShellExecute(path, waitForStarted, out _))
-                    return Ok(path);
-
-                return Forbid();
-            }
-
-            return NoContent();
-        }
-
-        /// <summary>
-        /// Launches the Power BI Desktop process after displaying a dialog box that prompts the user to select the PBIX file to be opened
-        /// </summary>
-        /// <response code="200">Status200OK - Success</response>
-        /// <response code="403">Status403Forbidden - The path is invalid or not allowed</response>
-        /// <response code="204">Status204NoContent - User canceled action (e.g. 'Cancel' button has been pressed on a dialog box)</response>
-        [HttpGet]
         [ActionName("PBIDesktopOpenPBIX")]
         [Consumes(MediaTypeNames.Application.Json)]
         [Produces(MediaTypeNames.Application.Json)]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(int))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(PBIDesktopReport))]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesDefaultResponseType]
@@ -145,8 +142,14 @@
         {
             if (WindowDialogHelper.OpenFileDialog(defaultExt: "PBIX", out var path, cancellationToken))
             {
-                if (ProcessHelper.OpenShellExecute(path, waitForStarted, out var processId))
-                    return Ok(processId);
+                if (ProcessHelper.OpenShellExecute(path, waitForStarted, out var processId, cancellationToken))
+                {
+                    var report = PBIDesktopReport.CreateFrom(processId.Value);
+                    if (report is null)
+                        return NoContent();
+
+                    return Ok(report);
+                }
 
                 return Forbid();
             }
@@ -186,18 +189,18 @@
         [ProducesDefaultResponseType]
         public IActionResult GetDiagnostics(bool? all = null)
         {
-            var messages = new List<DiagnosticMessage>();
+            var messages = new SortedList<DateTime, DiagnosticMessage>();
             
             foreach (var message in AppEnvironment.Diagnostics.Values)
             {
-                if (all == true || message.LastReadTimestamp is null)
+                if (all == true || message.ReadTimestamp is null)
                 {
-                    message.LastReadTimestamp = DateTime.UtcNow;
-                    messages.Add(message);
+                    message.ReadTimestamp = DateTime.UtcNow;
+                    messages.Add(message.Timestamp, message);
                 }
             }
 
-            return Ok(messages);
+            return Ok(messages.Values);
         }
 
         /// <summary>
@@ -210,15 +213,77 @@
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(BravoUpdate))]
         [ProducesDefaultResponseType]
-        public async Task<IActionResult> GetCurrentVersion(UpdateChannelType updateChannel, bool notify = false, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> GetCurrentVersion(UpdateChannelType updateChannel, CancellationToken cancellationToken)
         {
             var bravoUpdate = await CommonHelper.CheckForUpdateAsync(updateChannel, cancellationToken);
-
-            // TODO: remove the syncronous method 'AppWindow.CheckForUpdate' and use the asynchronous 'api/GetCurrentVersion(.., nodify = true)' instead
-            if (bravoUpdate.IsNewerVersion && notify)
-                NotificationHelper.NotifyUpdateAvailable(bravoUpdate);
+            if (bravoUpdate.IsNewerVersion)
+                System.Media.SystemSounds.Beep.Play();
 
             return Ok(bravoUpdate);
+        }
+
+        /// <summary>
+        /// Displays a dialog box that prompts the user to enter credentials to authenticate to the HTTP proxy
+        /// </summary>
+        /// <response code="200">Status200OK - Success</response>
+        /// <response code="204">Status204NoContent - User canceled action (e.g. 'Cancel' button has been pressed on a dialog box)</response>
+        [HttpGet]
+        [ActionName("UpdateProxyCredentials")]
+        [Consumes(MediaTypeNames.Application.Json)]
+        [Produces(MediaTypeNames.Application.Json)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesDefaultResponseType]
+        public IActionResult UpdateProxyCredentials()
+        {
+            var credentialOptions = new CredentialDialogOptions(caption: "Enter proxy credentials", message: "Enter credentials to authenticate to the HTTP Proxy")
+            {
+                HwndParent = ProcessHelper.GetCurrentProcessMainWindowHandle(),
+            };
+
+            var networkCredential = CredentialDialog.PromptForCredentials(credentialOptions);
+            if (networkCredential is not null)
+            {
+                CredentialManager.WriteCredential(AppEnvironment.CredentialManagerProxyCredentialName, networkCredential.UserName, networkCredential.Password);
+                return Ok();
+            }
+
+            return NoContent();
+        }
+
+        /// <summary>
+        /// Removes credentials to authenticate to the HTTP proxy, if any
+        /// </summary>
+        /// <response code="200">Status200OK - Success</response>
+        [HttpGet]
+        [ActionName("DeleteProxyCredentials")]
+        [Consumes(MediaTypeNames.Application.Json)]
+        [Produces(MediaTypeNames.Application.Json)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesDefaultResponseType]
+        public IActionResult DeleteProxyCredentials()
+        {
+            _ = CredentialManager.DeleteCredential(AppEnvironment.CredentialManagerProxyCredentialName);
+            return Ok();
+        }
+
+        /// <summary>
+        /// Opens a Windows Control Panel items based on the canonical name provided
+        /// </summary>
+        /// <response code="200">Status200OK - Success</response>
+        [HttpGet]
+        [ActionName("OpenControlPanelItem")]
+        [Consumes(MediaTypeNames.Application.Json)]
+        [Produces(MediaTypeNames.Application.Json)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesDefaultResponseType]
+        public IActionResult OpenControlPanelItem(string canonicalName)
+        {
+            // Opens Windows Credential Manager on Windows Credentials page
+            //      /name Microsoft.CredentialManager /page ?SelectedVault=CredmanVault
+
+            ProcessHelper.OpenControlPanelItem(canonicalName);
+            return Ok();
         }
     }
 }

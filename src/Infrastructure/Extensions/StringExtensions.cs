@@ -5,6 +5,7 @@
     using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
     using System.IO;
+    using System.Linq;
     using System.Runtime.CompilerServices;
     using System.Text;
     using System.Text.RegularExpressions;
@@ -12,6 +13,22 @@
     internal static class StringExtensions
     {
         private static Regex? _invalidFileNameCharsRegex;
+        private static Regex? _invalidPathCharsRegex;
+
+        public static string AppendApplicationVersion(this string value)
+        {
+            var valueAndVersion = $"{value} - v{GetVersionParts(AppEnvironment.ApplicationProductVersion, parts: 4)}";
+            return valueAndVersion;
+        }
+
+        public static string GetVersionParts(this string? version, int parts)
+        {
+            if  (version.IsNullOrWhiteSpace())
+                return string.Empty;
+
+            var versionParts = string.Join('-', version.Split('-').Take(parts));
+            return versionParts;
+        }
 
         public static bool IsPBIDesktopMainWindowTitle(this string windowTitle)
         {
@@ -56,14 +73,19 @@
             return string.IsNullOrWhiteSpace(value);
         }
 
-        public static string FormatInvariant(this string format, object? arg0)
+        public static bool IsEmptyOrWhiteSpace([NotNullWhen(false)] this string? value)
         {
-            return string.Format(CultureInfo.InvariantCulture, format, arg0);
+            return value is not null && string.IsNullOrWhiteSpace(value);
         }
 
-        public static string ToFileDialogFilterString(this string filter)
+        public static string FormatInvariant(this string format, params object?[] args)
         {
-            if (string.IsNullOrWhiteSpace(filter))
+            return string.Format(CultureInfo.InvariantCulture, format, args);
+        }
+
+        public static string ToFileDialogFilterString(this string? filter)
+        {
+            if (filter.IsNullOrWhiteSpace())
                 filter = " |*.*";
 
             var stringBuilder = new StringBuilder(filter);
@@ -82,6 +104,18 @@
             return indexOfAny != -1;
         }
 
+        public static string ReplaceInvalidPathChars(this string path, string replacement = "_")
+        {
+            if (_invalidPathCharsRegex is null)
+            {
+                var pattern = Regex.Escape(new string(Path.GetInvalidPathChars()));
+                _invalidPathCharsRegex = new($"[{ pattern }]");
+            }
+
+            path = _invalidPathCharsRegex.Replace(path, replacement);
+            return path;
+        }
+
         public static string ReplaceInvalidFileNameChars(this string path, string replacement = "_")
         {
             if (_invalidFileNameCharsRegex is null)
@@ -98,6 +132,11 @@
         public static bool EqualsI(this string? current, string? value)
         {
             return current?.Equals(value, StringComparison.OrdinalIgnoreCase) ?? false;
+        }
+
+        public static bool EqualsTI(this string? current, string? value)
+        {
+            return EqualsI(current, value?.Trim());
         }
 
         public static string? GetDaxName(this string? fullyQualifiedName)
@@ -212,7 +251,7 @@
                         }
                         break;
                     default:
-                        throw new BravoUnexpectedException(lineBreakStyle.ToString());
+                        throw new BravoUnexpectedInvalidOperationException($"Unhandled { nameof(DaxLineBreakStyle) } value ({ lineBreakStyle })");
                 }
             }
 

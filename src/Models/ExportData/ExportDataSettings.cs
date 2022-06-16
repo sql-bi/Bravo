@@ -1,5 +1,6 @@
 ﻿namespace Sqlbi.Bravo.Models.ExportData
 {
+    using Sqlbi.Bravo.Infrastructure.Models;
     using System;
     using System.Collections.Generic;
     using System.ComponentModel.DataAnnotations;
@@ -26,7 +27,7 @@
     public class ExportDelimitedTextSettings : ExportDataSettings
     {
         /// <summary>
-        /// Specifies whether Unicode should be used as the character encoding for the file, otherwise UTF8 is used as default
+        /// Specifies whether UTF-16 should be used as the character encoding for the file, otherwise UTF-8 is used as default
         /// </summary>
         [JsonPropertyName("unicodeEncoding")]
         public bool UnicodeEncoding { get; set; } = false;
@@ -42,6 +43,12 @@
         /// </summary>
         [JsonPropertyName("quoteStringFields")]
         public bool QuoteStringFields { get; set; } = false;
+
+        /// <summary>
+        /// Specifies whether to export the data to a subfolder with the same name as the source <see cref="IDataModel{T}"/>
+        /// </summary>
+        [JsonPropertyName("createSubfolder")]
+        public bool CreateSubfolder { get; set; } = false;
     }
 
     public class ExportExcelSettings : ExportDataSettings

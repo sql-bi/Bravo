@@ -67,7 +67,7 @@
             BravoUnexpectedException.ThrowIfNull(dataset.DisplayName);
             TabularDatabase database;
 
-            if (dataset.IsXmlaEndPointSupported)
+            if (dataset.IsXmlaEndPointSupported || dataset.IsOnPremModel == true)
             {
                 using var connection = TabularConnectionWrapper.ConnectTo(dataset, accessToken);
                 database = TabularDatabase.CreateFrom(connection, cancellationToken);

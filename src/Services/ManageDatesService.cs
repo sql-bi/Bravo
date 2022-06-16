@@ -87,12 +87,24 @@
                 {
                     configuration.DateTableValidation = Validate(configuration.DateTableName);
                     configuration.DateReferenceTableValidation = Validate(configuration.DateReferenceTableName);
+
+                    if (assertValidation)
+                    {
+                        configuration.DateTableValidation.Assert();
+                        configuration.DateReferenceTableValidation.Assert();
+                    }
                 }
 
                 if (configuration.HolidaysEnabled)
                 {
                     configuration.HolidaysTableValidation = Validate(configuration.HolidaysTableName);
                     configuration.HolidaysDefinitionTableValidation = Validate(configuration.HolidaysDefinitionTableName);
+
+                    if (assertValidation)
+                    {
+                        configuration.HolidaysTableValidation.Assert();
+                        configuration.HolidaysDefinitionTableValidation.Assert();
+                    }
                 }
 
                 if (configuration.TimeIntelligenceEnabled)
@@ -125,11 +137,6 @@
                     {
                         validation = TableValidation.InvalidExists;
                     }
-                }
-
-                if (assertValidation)
-                {
-                    BravoUnexpectedException.Assert(validation.IsValid());
                 }
 
                 return validation;
