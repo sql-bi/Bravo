@@ -101,7 +101,7 @@
                 //
             }
 
-            Environment.Exit(NativeMethods.NO_ERROR);
+            Environment.Exit(NativeMethods.ERROR_SUCCESS);
         }
 
         private static void DownloadAndInstallRuntime()
@@ -117,7 +117,7 @@
             using var process = Process.Start(filePath); // add switches ? i.e. /silent /install
             process.WaitForExit();
 
-            if (process.ExitCode != NativeMethods.NO_ERROR)
+            if (process.ExitCode != NativeMethods.ERROR_SUCCESS)
             {
                 ExceptionHelper.WriteToEventLog($"WebView2 bootstrapper exit code '{ process.ExitCode }'", EventLogEntryType.Warning);
             }

@@ -13,5 +13,7 @@
         public const int ERROR_INVALID_DATA = unchecked((int)0x8007000D);
 
         public const int E_NOINTERFACE = unchecked((int)0x80004002);
+
+        public const int NTE_BAD_KEY_STATE = unchecked((int)0x8009000B);
     }
 }

@@ -2,56 +2,80 @@
 {
     using Microsoft.Identity.Client;
     using Sqlbi.Bravo.Infrastructure.Security;
-    using Sqlbi.Bravo.Infrastructure.Windows.Interop;
+    using Sqlbi.Bravo.Models;
+    using System;
     using System.IO;
     using System.Security.Cryptography;
 
     internal static class TokenCacheHelper
     {
-        private static readonly object _tokenCacheFileLock = new();
+        private static readonly object _tokenCacheLock = new();
 
-        private static void BeforeAccessNotification(TokenCacheNotificationArgs args)
+        private static void BeforeAccessCallback(TokenCacheNotificationArgs args)
         {
-            lock (_tokenCacheFileLock)
+            lock (_tokenCacheLock)
             {
-                byte[]? msalV3State = null;
+                byte[]? cachedBytes = null;
 
                 if (File.Exists(AppEnvironment.MsalTokenCacheFilePath))
                 {
-                    var encryptedData = File.ReadAllBytes(AppEnvironment.MsalTokenCacheFilePath);
-                    try
+                    var encryptedBytes = File.ReadAllBytes(AppEnvironment.MsalTokenCacheFilePath);
+                    if (encryptedBytes.Length > 0)
                     {
-                        msalV3State = Cryptography.Unprotect(encryptedData);
-                    }
-                    catch (CryptographicException ex) when (ex.HResult == HRESULT.ERROR_INVALID_DATA)
-                    {
-                        // The token file is corrupted, we delete the file in order to force a new authentication
-                        File.Delete(AppEnvironment.MsalTokenCacheFilePath);
+                        try
+                        {
+                            cachedBytes = Cryptography.Unprotect(encryptedBytes);
+                        }
+                        catch (CryptographicException ex)
+                        {
+                            AppEnvironment.AddDiagnostics(name: $"{nameof(TokenCacheHelper)}.{nameof(BeforeAccessCallback)}", ex, DiagnosticMessageSeverity.Warning);
+
+                            // Delete the file in order to force a new authentication
+                            File.Delete(AppEnvironment.MsalTokenCacheFilePath);
+                        }
                     }
                 }
 
-                args.TokenCache.DeserializeMsalV3(msalV3State);
+                args.TokenCache.DeserializeMsalV3(cachedBytes);
             }
         }
 
-        private static void AfterAccessNotification(TokenCacheNotificationArgs args)
+        private static void AfterAccessCallback(TokenCacheNotificationArgs args)
         {
             if (args.HasStateChanged) // if the access operation resulted in a cache update
             {
-                lock (_tokenCacheFileLock)
+                lock (_tokenCacheLock)
                 {
-                    var msalV3State = args.TokenCache.SerializeMsalV3();
-                    var encryptedData = Cryptography.Protect(msalV3State);
+                    var cachedBytes = args.TokenCache.SerializeMsalV3();
+                    var encryptedBytes = Cryptography.Protect(cachedBytes);
 
-                    File.WriteAllBytes(AppEnvironment.MsalTokenCacheFilePath, encryptedData);
+                    File.WriteAllBytes(AppEnvironment.MsalTokenCacheFilePath, encryptedBytes);
                 }
             }
         }
 
-        public static void EnableSerialization(ITokenCache tokenCache)
+        /// <summary>
+        /// Registers a token cache to synchronize with the persistent storage.
+        /// </summary>
+        /// <param name="tokenCache">The application token cache, typically referenced as <see cref="IClientApplicationBase.UserTokenCache"/></param>
+        /// <remarks>Call <see cref="UnregisterCache(ITokenCache)"/> to have the given token cache stop syncronizing.</remarks>
+        public static void RegisterCache(ITokenCache tokenCache)
         {
-            tokenCache.SetBeforeAccess(BeforeAccessNotification);
-            tokenCache.SetAfterAccess(AfterAccessNotification);
+            ArgumentNullException.ThrowIfNull(tokenCache);
+
+            tokenCache.SetBeforeAccess(BeforeAccessCallback);
+            tokenCache.SetAfterAccess(AfterAccessCallback);
+        }
+
+        /// <summary>
+        /// Unregisters a token cache so it no longer synchronizes with on disk storage.
+        /// </summary>
+        public static void UnregisterCache(ITokenCache tokenCache)
+        {
+            ArgumentNullException.ThrowIfNull(tokenCache);
+
+            tokenCache.SetBeforeAccess(beforeAccess: null);
+            tokenCache.SetAfterAccess(afterAccess: null);
         }
     }
 }

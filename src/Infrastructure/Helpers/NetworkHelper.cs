@@ -139,7 +139,7 @@
                 try
                 {
                     retval = Iphlpapi.GetExtendedTcpTable(pTcpTable, ref dwOutBufLen, order: false, ipVersion, Iphlpapi.TCP_TABLE_CLASS.TCP_TABLE_OWNER_PID_ALL);
-                    if (retval == NativeMethods.NO_ERROR)
+                    if (retval == NativeMethods.ERROR_SUCCESS)
                     {
                         var tableObject = Marshal.PtrToStructure(pTcpTable, typeof(TTable));
                         if (tableObject != null)
@@ -170,7 +170,7 @@
                 }
             }
 
-            if (retval == NativeMethods.ERROR_NO_DATA)
+            if (retval == NativeMethods.ERROR_INSUFFICIENT_BUFFER)
             {
                 return Array.Empty<TRow>();
             }

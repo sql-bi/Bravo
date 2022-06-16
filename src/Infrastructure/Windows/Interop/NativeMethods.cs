@@ -2,8 +2,7 @@
 {
     internal static class NativeMethods
     {
-        public const int NO_ERROR = 0;
-        public const int ERROR_SUCCESS = NO_ERROR;
+        public const int ERROR_SUCCESS = 0;
         public const int ERROR_INVALID_PARAMETER = 87;
         public const int ERROR_INSUFFICIENT_BUFFER = 122;
         public const int ERROR_NO_DATA = 232;
