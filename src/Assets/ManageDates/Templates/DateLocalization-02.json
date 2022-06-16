@@ -989,6 +989,20 @@
           "FormatString": null
         },
         {
+          "OriginalName": "Year Month Key",
+          "Name": "年份月份",
+          "Description": "",
+          "DisplayFolders": "",
+          "FormatString": null
+        },
+        {
+          "OriginalName": "Month in Quarter Number",
+          "Name": "本季度月份序号",
+          "Description": "",
+          "DisplayFolders": "",
+          "FormatString": null
+        },
+        {
           "OriginalName": "Year",
           "Name": "年份",
           "Description": "",
@@ -1051,6 +1065,18 @@
         {
           "OriginalName": "Fiscal Year",
           "Name": "财政年份名称",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Fiscal Month",
+          "Name": "财政月份名称",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Fiscal Month in Quarter Number",
+          "Name": "本季度财政月份序号",
           "Description": "",
           "DisplayFolders": ""
         },

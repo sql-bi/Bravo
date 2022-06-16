@@ -798,6 +798,12 @@
           "DisplayFolders": ""
         },
         {
+          "OriginalName": "Quarter",
+          "Name": "Quartal",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
           "OriginalName": "Year Month",
           "Name": "Jahr Monat",
           "Description": "",
@@ -973,6 +979,12 @@
         {
           "OriginalName": "Year Quarter",
           "Name": "年季名称",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Quarter",
+          "Name": "季度名称",
           "Description": "",
           "DisplayFolders": ""
         },
