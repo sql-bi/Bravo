@@ -21,7 +21,7 @@
 
             // TODO: should we add logging .WithLogging() ??
             var publicClient = PublicClientApplicationBuilder.Create(pbicloudEnvironment.AzureADClientId).WithAuthority(authorityUri).WithRedirectUri(redirectUri).Build();
-            TokenCacheHelper.EnableSerialization(publicClient.UserTokenCache);
+            TokenCacheHelper.RegisterCache(publicClient.UserTokenCache);
 
             return publicClient;
         }
