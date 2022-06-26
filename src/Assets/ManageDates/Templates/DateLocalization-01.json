@@ -76,6 +76,12 @@
           "DisplayFolders": ""
         },
         {
+          "OriginalName": "Quarter",
+          "Name": "Trimestre",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
           "OriginalName": "Year Quarter",
           "Name": "Anno Trimestre",
           "Description": "",
@@ -261,6 +267,12 @@
           "DisplayFolders": ""
         },
         {
+          "OriginalName": "Quarter",
+          "Name": "Trimestre",
+          "Description": "",
+          "DisplayFolders": ""
+        },  
+        {
           "OriginalName": "Year Month",
           "Name": "Année Mois",
           "Description": "",
@@ -440,6 +452,12 @@
           "DisplayFolders": ""
         },
         {
+          "OriginalName": "Quarter",
+          "Name": "Trimestre",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
           "OriginalName": "Year Month",
           "Name": "Año Mes",
           "Description": "",
@@ -615,6 +633,12 @@
         {
           "OriginalName": "Year Quarter",
           "Name": "Ano Trimestre",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Quarter",
+          "Name": "Trimestre",
           "Description": "",
           "DisplayFolders": ""
         },
