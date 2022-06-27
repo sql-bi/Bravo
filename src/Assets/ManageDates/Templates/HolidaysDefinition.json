@@ -2253,6 +2253,61 @@
       "HolidayName": "День народного единства",
       "SubstituteHoliday": "NoSubstituteHoliday",
       "ConflictPriority": 100
+    },
+    {
+      "IsoCountry": "CN",
+      "MonthNumber": 1,
+      "DayNumber": 1,
+      "WeekDayNumber": 0,
+      "OffsetWeek": 0,
+      "OffsetDays": 0,
+      "HolidayName": "元旦",
+      "SubstituteHoliday": "NoSubstituteHoliday",
+      "ConflictPriority": 100
+    },
+    {
+      "IsoCountry": "CN",
+      "MonthNumber": 5,
+      "DayNumber": 1,
+      "WeekDayNumber": 0,
+      "OffsetWeek": 0,
+      "OffsetDays": 0,
+      "HolidayName": "劳动节",
+      "SubstituteHoliday": "NoSubstituteHoliday",
+      "ConflictPriority": 100
+    },
+    {
+      "IsoCountry": "CN",
+      "MonthNumber": 10,
+      "DayNumber": 1,
+      "WeekDayNumber": 0,
+      "OffsetWeek": 0,
+      "OffsetDays": 0,
+      "HolidayName": "国庆节",
+      "SubstituteHoliday": "NoSubstituteHoliday",
+      "ConflictPriority": 100
+    },
+    {
+      "IsoCountry": "CN",
+      "MonthNumber": 10,
+      "DayNumber": 2,
+      "WeekDayNumber": 0,
+      "OffsetWeek": 0,
+      "OffsetDays": 0,
+      "HolidayName": "国庆节",
+      "SubstituteHoliday": "NoSubstituteHoliday",
+      "ConflictPriority": 100
+    },
+    {
+      "IsoCountry": "CN",
+      "MonthNumber": 10,
+      "DayNumber": 3,
+      "WeekDayNumber": 0,
+      "OffsetWeek": 0,
+      "OffsetDays": 0,
+      "HolidayName": "国庆节",
+      "SubstituteHoliday": "NoSubstituteHoliday",
+      "ConflictPriority": 100
     }
   ]
 }
