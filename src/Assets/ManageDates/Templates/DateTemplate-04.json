@@ -211,6 +211,18 @@
     {
       "Name": "__FirstWeekReference",
       "Expression": "__FirstSundayReference + __FirstDayOfWeek"
+    },
+    {
+      "Name": "__IsStandardLocale",
+      "Expression": "IF ( FORMAT( DATE( 2000, 1, 1 ), \"oooo\"@@GETISO() ) = \"oooo\", TRUE, FALSE )"
+    },
+    {
+      "Name": "__DayFormatString",
+      "Expression": "IF( __IsStandardLocale, \"ddd\", \"aaa\" )"
+    },
+    {
+      "Name": "__MonthFormatString",
+      "Expression": "IF( __IsStandardLocale, \"mmm\", \"ooo\" )"
     }
   ],
   "RowVariables": [
@@ -264,7 +276,7 @@
     },
     {
       "Name": "__FiscalYearMonth",
-      "Expression": "FORMAT ( __FiscalStartOfMonth + 14, \"@_FM_@ mmm yyyy\"@@GETISO() )"
+      "Expression": "FORMAT ( __FiscalStartOfMonth + 14, \"@_FM_@ \" & __MonthFormatString & \" yyyy\"@@GETISO() )"
     },
     {
       "Name": "__FiscalStartOfMonth",
@@ -298,7 +310,7 @@
     },
     {
       "Name": "__FiscalMonth",
-      "Expression": "FORMAT ( __FiscalStartOfMonth + 14, \"@_FM_@ mmm\"@@GETISO() )"
+      "Expression": "FORMAT ( __FiscalStartOfMonth + 14, \"@_FM_@ \" & __MonthFormatString@@GETISO() )"
     },
     {
       "Name": "__FiscalYearQuarterNumber",
@@ -322,7 +334,7 @@
     },
     {
       "Name": "__WeekDay",
-      "Expression": "FORMAT ( __Date, \"ddd\"@@GETISO() )"
+      "Expression": "FORMAT ( __Date, __DayFormatString@@GETISO() )"
     },
     {
       "Name": "__FiscalDayOfMonthNumber",
