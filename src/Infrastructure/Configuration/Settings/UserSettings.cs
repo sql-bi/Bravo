@@ -1,6 +1,7 @@
 ﻿namespace Sqlbi.Bravo.Infrastructure.Configuration.Settings
 {
     using Sqlbi.Bravo.Infrastructure.Security.Policies;
+    using Sqlbi.Bravo.Models;
     using System.Text.Json;
     using System.Text.Json.Serialization;
 
@@ -12,11 +13,7 @@
 
         UpdateChannelType UpdateChannel { get; set; }
 
-        PolicyStatus UpdateChannelPolicy { get; }
-
         bool UpdateCheckEnabled { get; set; }
-
-        PolicyStatus UpdateCheckEnabledPolicy { get; }
 
         ThemeType Theme { get; set; }
 
@@ -29,60 +26,54 @@
 
     public class UserSettings : IUserSettings
     {
-        private UpdateChannelType _updateChannel = UpdateChannelType.Stable;
-        private bool _updateCheckEnabled = true;
+        public const bool DefaultTelemetryEnabled = true;
+        public const DiagnosticLevelType DefaultDiagnosticLevel = DiagnosticLevelType.None;
+        public const UpdateChannelType DefaultUpdateChannel = UpdateChannelType.Stable;
+        public const bool DefaultUpdateCheckEnabled = true;
+        public const ThemeType DefaultTheme = ThemeType.Auto;
+        public const bool DefaultUseSystemBrowserForAuthentication = false;
 
-        public UserSettings()
-        {
-            if (AppEnvironment.GroupPolicies.Enabled)
-            {
-                {
-                    var (policy, value) = AppEnvironment.GroupPolicies.GetPolicyForUpdateChannel();
-                    UpdateChannel = value;
-                    UpdateChannelPolicy = policy;
-                }
-                {
-                    var (policy, value) = AppEnvironment.GroupPolicies.GetPolicyForUpdateCheckEnabled();
-                    UpdateCheckEnabled = value;
-                    UpdateCheckEnabledPolicy = policy;
-                }
-            }
-        }
+        private bool _telemetryEnabled = DefaultTelemetryEnabled;
+        private UpdateChannelType _updateChannel = DefaultUpdateChannel;
+        private bool _updateCheckEnabled = DefaultUpdateCheckEnabled;
+        private bool _useSystemBrowserForAuthentication = DefaultUseSystemBrowserForAuthentication;
 
         [JsonPropertyName("telemetryEnabled")]
-        public bool TelemetryEnabled { get; set; } = AppEnvironment.TelemetryEnabledDefault;
+        public bool TelemetryEnabled
+        {
+            get => _telemetryEnabled;
+            set => _telemetryEnabled = GetSetterValue(value, BravoPolicies.Current.TelemetryEnabledPolicy, BravoPolicies.Current.TelemetryEnabled);
+        }
 
         [JsonPropertyName("diagnosticLevel")]
-        public DiagnosticLevelType DiagnosticLevel { get; set; } = DiagnosticLevelType.None;
+        public DiagnosticLevelType DiagnosticLevel { get; set; } = DefaultDiagnosticLevel;
 
         [JsonPropertyName("updateChannel")]
         public UpdateChannelType UpdateChannel
         {
             get => _updateChannel;
-            set => _updateChannel = GetSetterValue(_updateChannel, value, UpdateChannelPolicy);
+            set => _updateChannel = GetSetterValue(value, BravoPolicies.Current.UpdateChannelPolicy, BravoPolicies.Current.UpdateChannel);
         }
-
-        [JsonIgnore]
-        public PolicyStatus UpdateChannelPolicy { get; } = PolicyStatus.NotConfigured;
 
         [JsonPropertyName("updateCheckEnabled")]
-        public bool UpdateCheckEnabled 
+        public bool UpdateCheckEnabled
         { 
             get => _updateCheckEnabled;
-            set => _updateCheckEnabled = GetSetterValue(_updateCheckEnabled, value, UpdateCheckEnabledPolicy);
+            set => _updateCheckEnabled = GetSetterValue(value, BravoPolicies.Current.UpdateCheckEnabledPolicy, BravoPolicies.Current.UpdateCheckEnabled);
         }
 
-        [JsonIgnore]
-        public PolicyStatus UpdateCheckEnabledPolicy { get; } = PolicyStatus.NotConfigured;
-
         [JsonPropertyName("theme")]
-        public ThemeType Theme { get; set; } = ThemeType.Auto;
+        public ThemeType Theme { get; set; } = DefaultTheme;
 
         [JsonPropertyName("proxy")]
         public ProxySettings? Proxy { get; set; }
 
         [JsonPropertyName("useSystemBrowserForAuthentication")]
-        public bool UseSystemBrowserForAuthentication { get; set; } = false;
+        public bool UseSystemBrowserForAuthentication
+        {
+            get => _useSystemBrowserForAuthentication;
+            set => _useSystemBrowserForAuthentication = GetSetterValue(value, BravoPolicies.Current.UseSystemBrowserForAuthenticationPolicy, BravoPolicies.Current.UseSystemBrowserForAuthentication);
+        }
 
         [JsonPropertyName("customOptions")]
         public JsonElement? CustomOptions { get; set; }
@@ -90,51 +81,18 @@
         //[JsonPropertyName("experimental")]
         //public ExperimentalSettings? Experimental { get; set; }
 
-        public bool Validate(bool throwOnError = true)
+        private T GetSetterValue<T>(T setterValue, PolicyStatus policyStatus, T policyValue)
         {
-            try
+            if (policyStatus == PolicyStatus.Forced)
             {
-                Proxy?.Validate(throwOnError);
-
-                return true;
+                return policyValue;
             }
-            catch
-            {
-                if (throwOnError)
-                    throw;
-
-                return false;
-            }
-        }
-
-        internal void AssertUpdateChannelPolicy(UpdateChannelType updateChannel)
-        {
-            if (UpdateChannelPolicy == PolicyStatus.Forced && UpdateChannel != updateChannel)
-            {
-                throw new BravoUnexpectedPolicyViolationException(policyName: nameof(UpdateChannelPolicy));
-            }
-        }
-
-        internal void AssertUpdateCheckEnabledPolicy()
-        {
-            if (UpdateCheckEnabledPolicy == PolicyStatus.Forced && UpdateCheckEnabled == false)
-            {
-                throw new BravoUnexpectedPolicyViolationException(policyName: nameof(UpdateCheckEnabledPolicy));
-            }
-        }
-
-        private T GetSetterValue<T>(T currentValue, T setterValue, PolicyStatus policy)
-        {
-            if (policy == PolicyStatus.NotConfigured)
+            else if (policyStatus == PolicyStatus.NotConfigured)
             {
                 return setterValue;
             }
-            else if (policy == PolicyStatus.Forced)
-            {
-                return currentValue;
-            }
 
-            throw new BravoUnexpectedException($"Unexpected { nameof(PolicyStatus) } value ({ policy })");
+            throw new BravoUnexpectedException($"Unexpected { nameof(PolicyStatus) } value ({ policyStatus })");
         }
     }
 

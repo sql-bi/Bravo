@@ -23,6 +23,28 @@
     
     <!-- OptionSettings -->
 
+    <policy name="TelemetryEnabled" class="Both" displayName="$(string.TelemetryEnabled)" explainText="$(string.TelemetryEnabled_explanation)" key="Software\Policies\SQLBI\Bravo\OptionSettings" valueName="TelemetryEnabled">
+        <parentCategory ref="OptionSettings" />
+        <supportedOn ref="windows:SUPPORTED_Windows7" />
+        <enabledValue>
+            <decimal value="1" />
+        </enabledValue>
+        <disabledValue>
+            <decimal value="0" />
+        </disabledValue>
+    </policy>
+
+    <policy name="UseSystemBrowserForAuthentication" class="Both" displayName="$(string.UseSystemBrowserForAuthentication)" explainText="$(string.UseSystemBrowserForAuthentication_explanation)" key="Software\Policies\SQLBI\Bravo\OptionSettings" valueName="UseSystemBrowserForAuthentication">
+        <parentCategory ref="OptionSettings" />
+        <supportedOn ref="windows:SUPPORTED_Windows7" />
+        <enabledValue>
+            <decimal value="1" />
+        </enabledValue>
+        <disabledValue>
+            <decimal value="0" />
+        </disabledValue>
+    </policy>
+
     <policy name="UpdateChannel" class="Both" displayName="$(string.UpdateChannel)" explainText="$(string.UpdateChannel_explanation)" key="Software\Policies\SQLBI\Bravo\OptionSettings" presentation="$(presentation.UpdateChannel)">
       <parentCategory ref="OptionSettings" />
       <supportedOn ref="windows:SUPPORTED_Windows7" />

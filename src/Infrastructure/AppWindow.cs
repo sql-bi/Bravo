@@ -319,6 +319,7 @@ window.external = {
                 version = AppEnvironment.ApplicationProductVersion,
                 build = AppEnvironment.ApplicationFileVersion,
                 options = BravoOptions.CreateFromUserPreferences(),
+                policies = BravoPolicies.Current,
                 culture = new
                 {
                     ietfLanguageTag = CultureInfo.CurrentCulture.IetfLanguageTag,
