@@ -5,7 +5,7 @@
     using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Infrastructure.Helpers;
     using Sqlbi.Bravo.Infrastructure.Services;
-    using Sqlbi.Bravo.Infrastructure.Services.ManageDates;
+    using Sqlbi.Bravo.Infrastructure.Services.DaxTemplate;
     using Sqlbi.Bravo.Models;
     using Sqlbi.Bravo.Models.ManageDates;
     using System.Collections.Generic;
