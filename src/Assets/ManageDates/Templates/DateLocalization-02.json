@@ -46,7 +46,7 @@
               "OriginalName": "Month",
               "Name": "Mese",
               "Description": ""
-            }            
+            }
           ]
         },
         {
@@ -64,7 +64,7 @@
               "OriginalName": "Month",
               "Name": "Mese",
               "Description": ""
-            }            
+            }
           ]
         },
         {
@@ -82,56 +82,10 @@
               "OriginalName": "Quarter",
               "Name": "Trimestre",
               "Description": ""
-            },            
-            {
-              "OriginalName": "Month",
-              "Name": "Mese",
-              "Description": ""
-            }            
-          ]
-        },
-        {
-          "OriginalName": "Calendar",
-          "Name": "Solare",
-          "Description": "",
-          "DisplayFolders": "",
-          "Levels": [
-            {
-              "OriginalName": "Year",
-              "Name": "Anno",
-              "Description": ""
             },
             {
               "OriginalName": "Month",
               "Name": "Mese",
-              "Description": ""
-            },
-            {
-              "OriginalName": "Date",
-              "Name": "Data",
-              "Description": ""
-            }
-          ]
-        },
-        {
-          "OriginalName": "Fiscal",
-          "Name": "Fiscale",
-          "Description": "",
-          "DisplayFolders": "",
-          "Levels": [
-            {
-              "OriginalName": "Year",
-              "Name": "Anno",
-              "Description": ""
-            },
-            {
-              "OriginalName": "Month",
-              "Name": "Mese",
-              "Description": ""
-            },
-            {
-              "OriginalName": "Date",
-              "Name": "Data",
               "Description": ""
             }
           ]
@@ -275,52 +229,6 @@
         "Description": ""
       },
       "Hierarchies": [
-        {
-          "OriginalName": "Calendar",
-          "Name": "Solaire",
-          "Description": "",
-          "DisplayFolders": "",
-          "Levels": [
-            {
-              "OriginalName": "Year",
-              "Name": "An",
-              "Description": ""
-            },
-            {
-              "OriginalName": "Month",
-              "Name": "Mois",
-              "Description": ""
-            },
-            {
-              "OriginalName": "Date",
-              "Name": "Date",
-              "Description": ""
-            }
-          ]
-        },
-        {
-          "OriginalName": "Fiscal",
-          "Name": "Fiscal",
-          "Description": "",
-          "DisplayFolders": "",
-          "Levels": [
-            {
-              "OriginalName": "Year",
-              "Name": "An",
-              "Description": ""
-            },
-            {
-              "OriginalName": "Month",
-              "Name": "Mois",
-              "Description": ""
-            },
-            {
-              "OriginalName": "Date",
-              "Name": "Date",
-              "Description": ""
-            }
-          ]
-        }
       ],
       "Columns": [
         {
@@ -460,52 +368,6 @@
         "Description": ""
       },
       "Hierarchies": [
-        {
-          "OriginalName": "Calendar",
-          "Name": "Solar",
-          "Description": "",
-          "DisplayFolders": "",
-          "Levels": [
-            {
-              "OriginalName": "Year",
-              "Name": "Año",
-              "Description": ""
-            },
-            {
-              "OriginalName": "Month",
-              "Name": "Mes",
-              "Description": ""
-            },
-            {
-              "OriginalName": "Date",
-              "Name": "Fecha",
-              "Description": ""
-            }
-          ]
-        },
-        {
-          "OriginalName": "Fiscal",
-          "Name": "Fiscal",
-          "Description": "",
-          "DisplayFolders": "",
-          "Levels": [
-            {
-              "OriginalName": "Year",
-              "Name": "Año",
-              "Description": ""
-            },
-            {
-              "OriginalName": "Month",
-              "Name": "Mes",
-              "Description": ""
-            },
-            {
-              "OriginalName": "Date",
-              "Name": "Fecha",
-              "Description": ""
-            }
-          ]
-        }
       ],
       "Columns": [
         {
@@ -645,52 +507,6 @@
         "Description": ""
       },
       "Hierarchies": [
-        {
-          "OriginalName": "Calendar",
-          "Name": "Solar",
-          "Description": "",
-          "DisplayFolders": "",
-          "Levels": [
-            {
-              "OriginalName": "Year",
-              "Name": "Ano",
-              "Description": ""
-            },
-            {
-              "OriginalName": "Month",
-              "Name": "Mês",
-              "Description": ""
-            },
-            {
-              "OriginalName": "Date",
-              "Name": "Data",
-              "Description": ""
-            }
-          ]
-        },
-        {
-          "OriginalName": "Fiscal",
-          "Name": "Fiscal",
-          "Description": "",
-          "DisplayFolders": "",
-          "Levels": [
-            {
-              "OriginalName": "Year",
-              "Name": "Ano",
-              "Description": ""
-            },
-            {
-              "OriginalName": "Month",
-              "Name": "Mês",
-              "Description": ""
-            },
-            {
-              "OriginalName": "Date",
-              "Name": "Data",
-              "Description": ""
-            }
-          ]
-        }
       ],
       "Columns": [
         {
@@ -868,7 +684,7 @@
               "OriginalName": "Month",
               "Name": "Monat",
               "Description": ""
-            }            
+            }
           ]
         },
         {
@@ -886,7 +702,7 @@
               "OriginalName": "Month",
               "Name": "Monat",
               "Description": ""
-            }            
+            }
           ]
         },
         {
@@ -904,56 +720,10 @@
               "OriginalName": "Quarter",
               "Name": "Quartal",
               "Description": ""
-            },            
-            {
-              "OriginalName": "Month",
-              "Name": "Monat",
-              "Description": ""
-            }            
-          ]
-        },
-        {
-          "OriginalName": "Calendar",
-          "Name": "Kalender",
-          "Description": "",
-          "DisplayFolders": "",
-          "Levels": [
-            {
-              "OriginalName": "Year",
-              "Name": "Jahr",
-              "Description": ""
             },
             {
               "OriginalName": "Month",
               "Name": "Monat",
-              "Description": ""
-            },
-            {
-              "OriginalName": "Date",
-              "Name": "Datum",
-              "Description": ""
-            }
-          ]
-        },
-        {
-          "OriginalName": "Fiscal",
-          "Name": "Fiskalisch",
-          "Description": "",
-          "DisplayFolders": "",
-          "Levels": [
-            {
-              "OriginalName": "Year",
-              "Name": "Jahr",
-              "Description": ""
-            },
-            {
-              "OriginalName": "Month",
-              "Name": "Monat",
-              "Description": ""
-            },
-            {
-              "OriginalName": "Date",
-              "Name": "Datum",
               "Description": ""
             }
           ]
@@ -1167,7 +937,7 @@
               "OriginalName": "Month",
               "Name": "月",
               "Description": ""
-            }            
+            }
           ]
         },
         {
@@ -1185,7 +955,7 @@
               "OriginalName": "Month",
               "Name": "月",
               "Description": ""
-            }            
+            }
           ]
         },
         {
@@ -1203,56 +973,10 @@
               "OriginalName": "Quarter",
               "Name": "季",
               "Description": ""
-            },            
+            },
             {
               "OriginalName": "Month",
               "Name": "月",
-              "Description": ""
-            }            
-          ]
-        },
-        {
-          "OriginalName": "Calendar",
-          "Name": "日历",
-          "Description": "",
-          "DisplayFolders": "",
-          "Levels": [
-            {
-              "OriginalName": "Year",
-              "Name": "年份",
-              "Description": ""
-            },
-            {
-              "OriginalName": "Month",
-              "Name": "月份名称",
-              "Description": ""
-            },
-            {
-              "OriginalName": "Date",
-              "Name": "日期",
-              "Description": ""
-            }
-          ]
-        },
-        {
-          "OriginalName": "Fiscal",
-          "Name": "财政",
-          "Description": "",
-          "DisplayFolders": "",
-          "Levels": [
-            {
-              "OriginalName": "Year",
-              "Name": "年份",
-              "Description": ""
-            },
-            {
-              "OriginalName": "Month",
-              "Name": "月份名称",
-              "Description": ""
-            },
-            {
-              "OriginalName": "Date",
-              "Name": "日期",
               "Description": ""
             }
           ]
