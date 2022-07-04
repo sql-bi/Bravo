@@ -76,6 +76,12 @@
           "DisplayFolders": ""
         },
         {
+          "OriginalName": "Quarter",
+          "Name": "Trimestre",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
           "OriginalName": "Year Quarter",
           "Name": "Anno Trimestre",
           "Description": "",
@@ -261,6 +267,12 @@
           "DisplayFolders": ""
         },
         {
+          "OriginalName": "Quarter",
+          "Name": "Trimestre",
+          "Description": "",
+          "DisplayFolders": ""
+        },  
+        {
           "OriginalName": "Year Month",
           "Name": "Année Mois",
           "Description": "",
@@ -436,6 +448,12 @@
         {
           "OriginalName": "Year Quarter",
           "Name": "Año Trimestre",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Quarter",
+          "Name": "Trimestre",
           "Description": "",
           "DisplayFolders": ""
         },
@@ -619,6 +637,12 @@
           "DisplayFolders": ""
         },
         {
+          "OriginalName": "Quarter",
+          "Name": "Trimestre",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
           "OriginalName": "Year Month",
           "Name": "Ano Mês",
           "Description": "",
@@ -798,6 +822,12 @@
           "DisplayFolders": ""
         },
         {
+          "OriginalName": "Quarter",
+          "Name": "Quartal",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
           "OriginalName": "Year Month",
           "Name": "Jahr Monat",
           "Description": "",
@@ -973,6 +1003,12 @@
         {
           "OriginalName": "Year Quarter",
           "Name": "年季名称",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Quarter",
+          "Name": "季度名称",
           "Description": "",
           "DisplayFolders": ""
         },
