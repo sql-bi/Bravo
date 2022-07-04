@@ -1336,7 +1336,7 @@
         },
         {
           "OriginalName": "Fiscal Month Number",
-          "Name": "财政月份名称",
+          "Name": "财政月份数",
           "Description": "",
           "DisplayFolders": ""
         },
