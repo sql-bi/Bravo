@@ -1,6 +1,9 @@
 ﻿namespace Sqlbi.Bravo.Services
 {
+    using Dax.Template;
+    using Dax.Template.Exceptions;
     using Dax.Template.Model;
+    using Microsoft.AnalysisServices.AdomdClient;
     using Sqlbi.Bravo.Infrastructure;
     using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Infrastructure.Helpers;
@@ -8,6 +11,7 @@
     using Sqlbi.Bravo.Infrastructure.Services.DaxTemplate;
     using Sqlbi.Bravo.Models;
     using Sqlbi.Bravo.Models.ManageDates;
+    using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading;
@@ -34,9 +38,17 @@
 
         public IEnumerable<DateConfiguration> GetConfigurations(PBIDesktopReport report, CancellationToken cancellationToken)
         {
-            var packages = _templateManager.GetPackages();
-            var configurations = packages.Select(DateConfiguration.CreateFrom).ToList();
+            IEnumerable<Package> packages;
+            try
+            {
+                packages = _templateManager.GetPackages();
+            }
+            catch (TemplateException ex)
+            {
+                throw new BravoException(BravoProblem.ManageDateTemplateError, ex.Message, ex);
+            }
 
+            var configurations = packages.Select(DateConfiguration.CreateFrom).ToList();
             using var connection = TabularConnectionWrapper.ConnectTo(report);
             var currentConfiguration = DateConfiguration.GetCurrentFrom(connection.Model);
 
@@ -61,9 +73,15 @@
             Validate(report, settings.Configuration, assertValidation: true);
 
             using var connection = TabularConnectionWrapper.ConnectTo(report);
-            var modelChanges = _templateManager.GetPreviewChanges(settings.Configuration, settings.PreviewRows, connection, cancellationToken);
-
-            return modelChanges;
+            try
+            {
+                var modelChanges = _templateManager.GetPreviewChanges(settings.Configuration, settings.PreviewRows, connection, cancellationToken);
+                return modelChanges;
+            }
+            catch (Exception ex) when (ex is TemplateException || ex is AdomdException)
+            {
+                throw new BravoException(BravoProblem.ManageDateTemplateError, ex.Message, ex);
+            }
         }
 
         public void Update(PBIDesktopReport report, DateConfiguration configuration, CancellationToken cancellationToken)
@@ -71,8 +89,14 @@
             Validate(report, configuration, assertValidation: true);
 
             using var connection = TabularConnectionWrapper.ConnectTo(report);
-
-            _templateManager.ApplyTemplate(configuration, connection, cancellationToken);
+            try
+            {
+                _templateManager.ApplyTemplate(configuration, connection, cancellationToken);
+            }
+            catch (TemplateException ex)
+            {
+                throw new BravoException(BravoProblem.ManageDateTemplateError, ex.Message, ex);
+            }
         }
 
         private static void Validate(PBIDesktopReport report, DateConfiguration configuration, bool assertValidation) => Validate(report, new[] { configuration }, assertValidation);

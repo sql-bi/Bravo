@@ -48,7 +48,7 @@
             catch (TemplateException ex)
             {
                 TelemetryHelper.TrackException(ex);
-                throw new BravoException(BravoProblem.ManageDateTemplateError, ex.Message, ex);
+                throw;
             }
         }
 
@@ -80,7 +80,7 @@
             catch (Exception ex) when (ex is TemplateException || ex is AdomdException)
             {
                 TelemetryHelper.TrackException(ex);
-                throw new BravoException(BravoProblem.ManageDateTemplateError, ex.Message, ex);
+                throw;
             }
         }
 
@@ -98,17 +98,17 @@
             catch (TemplateException ex)
             {
                 TelemetryHelper.TrackException(ex);
-                throw new BravoException(BravoProblem.ManageDateTemplateError, ex.Message, ex);
+                throw;
             }
         }
 
         private void InitializeCache()
         {
-            if (!CacheInitialized)
+            if (CacheInitialized == false)
             {
                 lock (_cacheSyncLock)
                 {
-                    if (!CacheInitialized)
+                    if (CacheInitialized == false)
                     {
                         if (Directory.Exists(_cachePath))
                             Directory.Delete(_cachePath, recursive: true);
