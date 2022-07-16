@@ -1,9 +1,9 @@
-﻿namespace Sqlbi.Bravo.Models.ManageDates
+﻿namespace Sqlbi.Bravo.Models.TemplateDevelopment
 {
     using System.ComponentModel.DataAnnotations;
     using System.Text.Json.Serialization;
 
-    public class PreviewChangesFromPBIDesktopReportRequest
+    public class WorkspacePreviewChangesRequest
     {
         [Required]
         [JsonPropertyName("report")]
@@ -11,17 +11,17 @@
 
         [Required]
         [JsonPropertyName("settings")]
-        public PreviewChangesSettings? Settings { get; set; }
+        public WorkspacePreviewChangesSettings? Settings { get; set; }
     }
 
-    public class PreviewChangesSettings
+    public class WorkspacePreviewChangesSettings
     {
         /// <summary>
-        /// Date template configuration to apply
+        /// Full path of the package to be applied
         /// </summary>
         [Required]
-        [JsonPropertyName("configuration")]
-        public DateConfiguration? Configuration { get; set; }
+        [JsonPropertyName("package")]
+        public string? Package { get; set; }
 
         /// <summary>
         /// Number of records generated as a preview of requested changes

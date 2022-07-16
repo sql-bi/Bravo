@@ -21,7 +21,8 @@
         private static readonly Lazy<AppDeploymentMode> _deploymentMode;
 
         public static readonly string ApiAuthenticationSchema = "BravoAuth";
-        public static readonly string ApiAuthenticationToken = "NmMzMTU1OWUtMmMwYS00YzU5LTg4ODYtNDA1YjU4ZTk4YzMwLTVhZWZiMzgzLTExMDktNGFmMS1hMDQ2LTQxN2IwNTNjNTQ0Yg=="; // Cryptography.GenerateSimpleToken();
+        public static readonly string ApiAuthenticationToken = Cryptography.GenerateSimpleToken();
+        public static readonly string ApiAuthenticationTokenTemplateDevelopment = Cryptography.GenerateSimpleToken();
         public static readonly string ApplicationManufacturer = "SQLBI";
         public static readonly string ApplicationWebsiteUrl = "https://bravo.bi";
         public static readonly string ApplicationName = "Bravo";
@@ -76,6 +77,7 @@
             MsalTokenCacheFilePath = Path.Combine(ApplicationDataPath, ".msalcache");
             WebView2VersionInfo = WebView2Helper.GetRuntimeVersionInfo();
             GroupPolicies = new GroupPolicyManager();
+            TemplateDevelopmentEnabled = false;
 
             Diagnostics = new ConcurrentDictionary<string, DiagnosticMessage>();
             DefaultJsonOptions = new(JsonSerializerDefaults.Web) { MaxDepth = 32 }; // see Microsoft.AspNetCore.Mvc.JsonOptions.JsonSerializerOptions
@@ -146,6 +148,8 @@
         public static string? WebView2VersionInfo { get; }
 
         public static GroupPolicyManager GroupPolicies { get; }
+
+        public static bool TemplateDevelopmentEnabled { get; set; }
 
         public static bool IsWebView2RuntimeInstalled => WebView2VersionInfo is not null;
 

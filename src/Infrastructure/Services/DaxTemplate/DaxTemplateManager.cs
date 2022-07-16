@@ -52,29 +52,73 @@
             }
         }
 
-        public ModelChanges GetPreviewChanges(DateConfiguration configuration, int previewRows, TabularConnectionWrapper connectionWrapper, CancellationToken cancellationToken)
+        public IEnumerable<string> GetTemplateFiles(DateConfiguration configuration)
+        {
+            var package = configuration.LoadPackage(_cachePath);
+            var files = new List<string>();
+
+            if (package.Configuration?.Templates is not null)
+            {
+                foreach (var template in package.Configuration.Templates)
+                {
+                    if (template.Template is not null)
+                    {
+                        var path = Path.Combine(_cachePath, template.Template);
+                        files.Add(path);
+                    }
+                }
+            }
+
+            if (package.Configuration?.LocalizationFiles is not null)
+            {
+                foreach (var localizationFile in package.Configuration.LocalizationFiles)
+                {
+                    var path = Path.Combine(_cachePath, localizationFile);
+                    files.Add(path);
+                }
+            }
+
+            return files;
+        }
+
+        public ModelChanges GetPreviewChanges(DateConfiguration configuration, int previewRows, TabularConnectionWrapper connection, CancellationToken cancellationToken)
         {
             try
             {
                 var package = configuration.GetPackage(_cachePath);
+                var modelChanges = GetPreviewChanges(package, previewRows, connection, cancellationToken);
+
+                return modelChanges;
+            }
+            catch (Exception ex) when (ex is TemplateException || ex is AdomdException)
+            {
+                TelemetryHelper.TrackException(ex);
+                throw;
+            }
+        }
+
+        public ModelChanges GetPreviewChanges(Package package, int previewRows, TabularConnectionWrapper connection, CancellationToken cancellationToken)
+        {
+            try
+            {
                 var engine = new Engine(package);
 
-                engine.ApplyTemplates(connectionWrapper.Model, cancellationToken);
+                engine.ApplyTemplates(connection.Model, cancellationToken);
                 try
                 {
-                    var modelChanges = Engine.GetModelChanges(connectionWrapper.Model, cancellationToken);
+                    var modelChanges = Engine.GetModelChanges(connection.Model, cancellationToken);
 
                     if (previewRows > 0)
                     {
-                        using var connection = connectionWrapper.CreateAdomdConnection();
-                        modelChanges.PopulatePreview(connection, connectionWrapper.Model, previewRows, cancellationToken);
+                        using var adomdConnection = connection.CreateAdomdConnection();
+                        modelChanges.PopulatePreview(adomdConnection, connection.Model, previewRows, cancellationToken);
                     }
 
                     return modelChanges;
                 }
                 finally
                 {
-                    connectionWrapper.Model.UndoLocalChanges();
+                    connection.Model.UndoLocalChanges();
                 }
             }
             catch (Exception ex) when (ex is TemplateException || ex is AdomdException)

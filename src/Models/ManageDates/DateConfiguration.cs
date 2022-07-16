@@ -420,21 +420,27 @@
 
     internal static class DateConfigurationExtensions
     {
-        public static Dax.Template.Package GetPackage(this DateConfiguration configuration, string cachePath)
+        public static Dax.Template.Package LoadPackage(this DateConfiguration configuration, string path)
         {
             FixTemplateUri(configuration);
 
-            BravoUnexpectedException.ThrowIfNull(configuration.TemplateUri);
-
-            var templatePath = Path.Combine(cachePath, configuration.TemplateUri);
-            var customTemplatePath = Path.ChangeExtension(templatePath, $"{DateTime.Now:yyyyMMddHHmmss}-{Guid.NewGuid():N}.json");
+            var templatePath = Path.Combine(path, configuration.TemplateUri!);
             var package = Dax.Template.Package.LoadFromFile(templatePath);
 
-            configuration.CopyTo(package.Configuration);
-            package.SaveTo(customTemplatePath);
+            return package;
+        }
 
-            var customPackage = Dax.Template.Package.LoadFromFile(customTemplatePath);
-            return customPackage;
+        public static Dax.Template.Package GetPackage(this DateConfiguration configuration, string path)
+        {
+            var package = LoadPackage(configuration, path);
+            configuration.CopyTo(package.Configuration);
+            
+            var sourceTemplatePath = Path.Combine(path, configuration.TemplateUri!);
+            var templatePath = Path.ChangeExtension(sourceTemplatePath, $"{DateTime.Now:yyyyMMddHHmmss}-{Guid.NewGuid():N}.json");
+            package.SaveTo(templatePath);
+
+            var updatedPackage = Dax.Template.Package.LoadFromFile(templatePath);
+            return updatedPackage;
         }
 
         public static void SerializeTo(this DateConfiguration configuration, TOM.Model model)

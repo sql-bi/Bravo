@@ -163,36 +163,6 @@
         [JsonPropertyName("UserSettingsSaveError")]
         UserSettingsSaveError = 300,
 
-        ///// <summary>
-        ///// PBIDesktop process is no longer running or the identifier might be expired.
-        ///// </summary> 
-        //[JsonPropertyName("PBIDesktopProcessNotFound")]
-        //PBIDesktopProcessNotFound = 200,
-
-        ///// <summary>
-        ///// PBIDesktop SSAS instance process not found.
-        ///// </summary> 
-        //[JsonPropertyName("PBIDesktopSSASProcessNotFound")]
-        //PBIDesktopSSASProcessNotFound = 300,
-
-        ///// <summary>
-        ///// PBIDesktop SSAS instance connection not found.
-        ///// </summary> 
-        //[JsonPropertyName("PBIDesktopSSASConnectionNotFound")]
-        //PBIDesktopSSASConnectionNotFound = 301,
-
-        ///// <summary>
-        ///// PBIDesktop SSAS instance contains an unexpected number of databases.
-        ///// </summary> 
-        //[JsonPropertyName("PBIDesktopSSASDatabaseUnexpectedCount")]
-        //PBIDesktopSSASDatabaseUnexpectedCount = 302,
-
-        ///// <summary>
-        ///// PBIDesktop SSAS instance does not contain any databases.
-        ///// </summary> 
-        //[JsonPropertyName("PBIDesktopSSASDatabaseCollectionEmpty")]
-        //PBIDesktopSSASDatabaseCollectionEmpty = 303,
-
         /// <summary>
         /// An error occurs during token acquisition.
         /// </summary> 
@@ -237,5 +207,11 @@
         /// </summary> 
         [JsonPropertyName("ManageDateTemplateError")]
         ManageDateTemplateError = 800,
+
+        /// <summary>
+        /// An exception occurred while executing the template development APIs
+        /// </summary> 
+        [JsonPropertyName("TemplateDevelopmentError")]
+        TemplateDevelopmentError = 900,
     }
 }

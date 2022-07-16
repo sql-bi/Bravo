@@ -48,6 +48,7 @@
             services.AddSingleton<IManageDatesService, ManageDatesService>();
             services.AddSingleton<IAnalyzeModelService, AnalyzeModelService>();
             services.AddSingleton<IAuthenticationService, AuthenticationService>();
+            services.AddSingleton<ITemplateDevelopmentService, TemplateDevelopmentService>();
             services.AddSingleton<IBestPracticeAnalyzerService, BestPracticeAnalyzerService>();
         }
 
