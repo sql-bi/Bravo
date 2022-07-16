@@ -322,7 +322,7 @@
         },
         {
           "OriginalName": "Fiscal Year Quarter",
-          "Name": "Anno Trimestre Fiscale",
+          "Name": "Année Trimestre Fiscal",
           "Description": "",
           "DisplayFolders": ""
         },
@@ -565,7 +565,7 @@
       "Hierarchies": [
         {
           "OriginalName": "Calendar",
-          "Name": "Solar",
+          "Name": "Civil",
           "Description": "",
           "DisplayFolders": "",
           "Levels": [
