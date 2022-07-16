@@ -456,6 +456,88 @@
         "Description": ""
       },
       "Hierarchies": [
+        {
+          "OriginalName": "Fiscal Year-Month",
+          "Name": "Año-Mes Fiscal",
+          "Description": "",
+          "DisplayFolders": "",
+          "Levels": [
+            {
+              "OriginalName": "Year",
+              "Name": "Año",
+              "Description": ""
+            },
+            {
+              "OriginalName": "Month",
+              "Name": "Mes",
+              "Description": ""
+            }
+          ]
+        },
+        {
+          "OriginalName": "Fiscal Year-Quarter",
+          "Name": "Año-Trimestre Fiscal",
+          "Description": "",
+          "DisplayFolders": "",
+          "Levels": [
+            {
+              "OriginalName": "Year",
+              "Name": "Año",
+              "Description": ""
+            },
+            {
+              "OriginalName": "Quarter",
+              "Name": "Trimestre",
+              "Description": ""
+            },
+            {
+              "OriginalName": "Month",
+              "Name": "Mes",
+              "Description": ""
+            }
+          ]
+        },
+        {
+          "OriginalName": "Year-Month",
+          "Name": "Año-Mes",
+          "Description": "",
+          "DisplayFolders": "",
+          "Levels": [
+            {
+              "OriginalName": "Year",
+              "Name": "Año",
+              "Description": ""
+            },
+            {
+              "OriginalName": "Month",
+              "Name": "Mes",
+              "Description": ""
+            }
+          ]
+        },
+        {
+          "OriginalName": "Year-Quarter",
+          "Name": "Año-Trimestre",
+          "Description": "",
+          "DisplayFolders": "",
+          "Levels": [
+            {
+              "OriginalName": "Year",
+              "Name": "Año",
+              "Description": ""
+            },
+            {
+              "OriginalName": "Quarter",
+              "Name": "Trimestre",
+              "Description": ""
+            },
+            {
+              "OriginalName": "Month",
+              "Name": "Mes",
+              "Description": ""
+            }
+          ]
+        }
       ],
       "Columns": [
         {
@@ -552,6 +634,12 @@
         {
           "OriginalName": "Fiscal Quarter",
           "Name": "Trimestre Fiscal",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Fiscal Month",
+          "Name": "Mes Fiscal",
           "Description": "",
           "DisplayFolders": ""
         },
