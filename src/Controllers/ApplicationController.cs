@@ -128,8 +128,8 @@
         /// Launches the Power BI Desktop process after displaying a dialog box that prompts the user to select the PBIX file to be opened
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
-        /// <response code="403">Status403Forbidden - The path is invalid or not allowed</response>
         /// <response code="204">Status204NoContent - User canceled action (e.g. 'Cancel' button has been pressed on a dialog box)</response>
+        /// <response code="403">Status403Forbidden - The path is invalid or not allowed</response>
         [HttpGet]
         [ActionName("PBIDesktopOpenPBIX")]
         [Consumes(MediaTypeNames.Application.Json)]
@@ -145,9 +145,6 @@
                 if (ProcessHelper.OpenShellExecute(path, waitForStarted, out var processId, cancellationToken))
                 {
                     var report = PBIDesktopReport.CreateFrom(processId.Value);
-                    if (report is null)
-                        return NoContent();
-
                     return Ok(report);
                 }
 
