@@ -4,7 +4,9 @@
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Options;
     using Microsoft.Net.Http.Headers;
+    using Sqlbi.Bravo.Controllers;
     using System;
+    using System.Net;
     using System.Security.Claims;
     using System.Text.Encodings.Web;
     using System.Threading.Tasks;
@@ -18,14 +20,17 @@
 
         protected override Task<AuthenticateResult> HandleAuthenticateAsync()
         {
-            if (Request.Headers.TryGetValue(HeaderNames.Authorization, out var token))
+            // RemoteIpAddress is null when Kestrel is behind a reverse proxy or the connection is not a TPC connection (like a Unix domain socket)
+            var isLoopbackRequest = Context.Connection.RemoteIpAddress is not null && IPAddress.IsLoopback(Context.Connection.RemoteIpAddress);
+            
+            if (isLoopbackRequest && Request.Headers.TryGetValue(HeaderNames.Authorization, out var token))
             {
                 var authenticated = AppEnvironment.ApiAuthenticationToken.Equals(token);
                 if (authenticated == false)
                 {
                     if (AppEnvironment.TemplateDevelopmentEnabled && AppEnvironment.ApiAuthenticationTokenTemplateDevelopment.Equals(token))
                     {
-                        // TODO: allow only TemplateDevelopment controller actions 
+                        //if (Request.Path.StartsWithSegments(TemplateDevelopmentController.ControllerName))
                         authenticated = true;
                     }
                 }
@@ -44,7 +49,6 @@
 
                     return Task.FromResult(AuthenticateResult.Success(authenticationTicket));
                 }
-
             }
 
             return Task.FromResult(AuthenticateResult.Fail("Authorization failed"));
