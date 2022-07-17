@@ -54,27 +54,35 @@
 
         public IEnumerable<string> GetTemplateFiles(DateConfiguration configuration)
         {
-            var package = configuration.LoadPackage(_cachePath);
             var files = new List<string>();
 
-            if (package.Configuration?.Templates is not null)
+            var package = configuration.LoadPackage(_cachePath);
             {
-                foreach (var template in package.Configuration.Templates)
+                if (package.Configuration.TemplateUri is not null)
                 {
-                    if (template.Template is not null)
+                    var path = Path.Combine(_cachePath, package.Configuration.TemplateUri);
+                    files.Add(path);
+                }
+
+                if (package.Configuration?.Templates is not null)
+                {
+                    foreach (var template in package.Configuration.Templates)
                     {
-                        var path = Path.Combine(_cachePath, template.Template);
-                        files.Add(path);
+                        if (template.Template is not null)
+                        {
+                            var path = Path.Combine(_cachePath, template.Template);
+                            files.Add(path);
+                        }
                     }
                 }
-            }
 
-            if (package.Configuration?.LocalizationFiles is not null)
-            {
-                foreach (var localizationFile in package.Configuration.LocalizationFiles)
+                if (package.Configuration?.LocalizationFiles is not null)
                 {
-                    var path = Path.Combine(_cachePath, localizationFile);
-                    files.Add(path);
+                    foreach (var localizationFile in package.Configuration.LocalizationFiles)
+                    {
+                        var path = Path.Combine(_cachePath, localizationFile);
+                        files.Add(path);
+                    }
                 }
             }
 

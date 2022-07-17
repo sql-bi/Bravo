@@ -36,9 +36,12 @@
 
     internal class TemplateDevelopmentService : ITemplateDevelopmentService
     {
-        private const string WorkspaceConfigFileName = "bravo-config.json";
         private const string WorkspaceGitignoreFileName = ".gitignore";
+        private const string WorkspaceConfigFileName = "bravo-config.json";
+        private const string VSCodeExtensionsFileName = "extensions.json";
+        private const string VSCodeExtensionName = "sqlbi.bravo-date-template";
 
+        private readonly JsonSerializerOptions _serializerOptions;
         private readonly DaxTemplateManager _templateManager;
         private readonly IServer _hostingServer;
 
@@ -46,6 +49,7 @@
         {
             _hostingServer = hostingServer;
             _templateManager = new DaxTemplateManager();
+            _serializerOptions = new JsonSerializerOptions(AppEnvironment.DefaultJsonOptions) { WriteIndented = true };
         }
 
         public bool Enabled => AppEnvironment.TemplateDevelopmentEnabled;
@@ -67,17 +71,19 @@
         {
             var workspaceName = name.ReplaceInvalidFileNameChars();
             var workspacePath = Path.Combine(path, workspaceName);
+            var workspaceTemplatePath = Path.Combine(workspacePath, "src\\Templates");
 
             Directory.CreateDirectory(workspacePath);
+            Directory.CreateDirectory(workspaceTemplatePath);
 
             var templateFiles = _templateManager.GetTemplateFiles(configuration);
             {
                 templateFiles.ForEach((templateFilePath) =>
                 {
                     var templateFileName = Path.GetFileName(templateFilePath);
-                    var workspaceFilePath = Path.Combine(workspacePath, templateFileName);
+                    var workspaceTemplateFilePath = Path.Combine(workspaceTemplatePath, templateFileName);
 
-                    File.Copy(templateFilePath, workspaceFilePath, overwrite: false);
+                    File.Copy(templateFilePath, workspaceTemplateFilePath, overwrite: false);
                 });
             }
 
@@ -87,41 +93,67 @@
         public void ConfigureWorkspace(string path)
         {
             var workspacePath = path;
-            var configPath = Path.Combine(workspacePath, WorkspaceConfigFileName);
+            var workspaceName = Path.GetDirectoryName(path);
+
+            // bravo-config.json
+            var configFile = Path.Combine(workspacePath, WorkspaceConfigFileName);
             {
                 var configContent = GetWorkspaceConfigContent();
-                File.WriteAllText(configPath, configContent);
+                File.WriteAllText(configFile, configContent);
             }
-            var gitignorePath = Path.Combine(workspacePath, WorkspaceGitignoreFileName);
+
+            // .gitignore
+            var gitignoreFile = Path.Combine(workspacePath, WorkspaceGitignoreFileName);
             {
                 var gitignoreContent = GetWorkspaceGitignoreContent();
-                var gitignoreExists = File.Exists(gitignorePath);
 
-                if (gitignoreExists)
+                if (File.Exists(gitignoreFile))
                 {
-                    var gitignoreContainsConfigFile = File.ReadLines(gitignorePath).Any((line) => line.EqualsTI(WorkspaceConfigFileName));
+                    var gitignoreContainsConfigFile = File.ReadLines(gitignoreFile).Any((line) => line.EqualsTI(WorkspaceConfigFileName));
                     if (gitignoreContainsConfigFile == false)
                     {
-                        File.AppendAllText(gitignorePath, gitignoreContent);
+                        File.AppendAllText(gitignoreFile, gitignoreContent);
                     }
                 }
                 else
                 {
-                    File.WriteAllText(gitignorePath, gitignoreContent);
+                    File.WriteAllText(gitignoreFile, gitignoreContent);
+                }
+            }
+
+            // .vscode\extensions.json
+            var vscodePath = Path.Combine(workspacePath, ".vscode");
+            var vscodeExtensionsFile = Path.Combine(vscodePath, VSCodeExtensionsFileName);
+            {
+                if (File.Exists(vscodeExtensionsFile) == false)
+                {
+                    Directory.CreateDirectory(vscodePath);
+
+                    var content = GetVSCodeExtensionsContent();
+                    File.WriteAllText(vscodeExtensionsFile, content);
+                }
+            }
+
+            // <workspace-name>.code-workspace file
+            var codeworkspaceName = $"{workspaceName}.code-workspace";
+            var codeworkspaceFile = Path.Combine(workspacePath, codeworkspaceName);
+            {
+                if (File.Exists(codeworkspaceFile) == false)
+                {
+                    var content = GetVSCodeCodeworkspaceContent();
+                    File.WriteAllText(codeworkspaceFile, content);
                 }
             }
         }
 
         public ModelChanges? GetPreviewChanges(PBIDesktopReport report, WorkspacePreviewChangesSettings settings, CancellationToken cancellationToken)
         {
-            BravoUnexpectedException.ThrowIfNull(settings.Package);
-
-            //Validate(report, settings.Configuration, assertValidation: true);
+            BravoUnexpectedException.ThrowIfNull(settings.PackageFile);
 
             using var connection = TabularConnectionWrapper.ConnectTo(report);
             try
             {
-                var package = Dax.Template.Package.LoadFromFile(settings.Package);
+                var package = Dax.Template.Package.LoadFromFile(settings.PackageFile);
                 var modelChanges = _templateManager.GetPreviewChanges(package, settings.PreviewRows, connection, cancellationToken);
 
                 return modelChanges;
@@ -134,25 +166,51 @@
 
         private string GetWorkspaceConfigContent()
         {
-            var workspaceConfig = new
+            var config = new
             {
                 Address = _hostingServer.GetListeningAddress(),
-                Token = AppEnvironment.ApiAuthenticationTokenTemplateDevelopment, //.ToProtectedString(),
-                //
-                Port = _hostingServer.GetListeningAddress().Port, // TODO: remove and use the address
+                Token = AppEnvironment.ApiAuthenticationTokenTemplateDevelopment,
             };
 
-            var configContent = JsonSerializer.Serialize(workspaceConfig, AppEnvironment.DefaultJsonOptions);
-            return configContent;
+            var content = JsonSerializer.Serialize(config, _serializerOptions);
+            return content;
         }
 
         private string GetWorkspaceGitignoreContent()
         {
-            var gitignoreContent = $@"
+            var content = $@"
 # Bravo workspace config file
 {WorkspaceConfigFileName}
 ";
-            return gitignoreContent;
+            return content;
+        }
+
+        private string GetVSCodeExtensionsContent()
+        {
+            var extensions = new
+            {
+                Recommendations = new[]
+                {
+                    VSCodeExtensionName
+                },
+            };
+
+            var content = JsonSerializer.Serialize(extensions , _serializerOptions);
+            return content;
+        }
+
+        private string GetVSCodeCodeworkspaceContent()
+        {
+            var codeworkspace = new
+            {
+                Folders = new[]
+                {
+                    "."
+                }
+            };
+
+            var content = JsonSerializer.Serialize(codeworkspace, _serializerOptions);
+            return content;
         }
     }
 }

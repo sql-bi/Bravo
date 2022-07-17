@@ -422,10 +422,11 @@
     {
         public static Dax.Template.Package LoadPackage(this DateConfiguration configuration, string path)
         {
-            FixTemplateUri(configuration);
-
-            var templatePath = Path.Combine(path, configuration.TemplateUri!);
+            var templateUriFixed = FixTemplateUri(configuration.TemplateUri);
+            var templatePath = Path.Combine(path, templateUriFixed);
             var package = Dax.Template.Package.LoadFromFile(templatePath);
+
+            package.Configuration.TemplateUri = configuration.TemplateUri = templateUriFixed;
 
             return package;
         }
@@ -445,7 +446,7 @@
 
         public static void SerializeTo(this DateConfiguration configuration, TOM.Model model)
         {
-            FixTemplateUri(configuration);
+            configuration.TemplateUri = FixTemplateUri(configuration.TemplateUri);
 
             var configurationString = JsonSerializer.Serialize(configuration, DateConfiguration.ExtendedPropertyJsonOptions);
             var configurationProperty = model.ExtendedProperties.Find(DateConfiguration.ExtendedPropertyName);
@@ -471,16 +472,18 @@
             }
         }
 
-        private static void FixTemplateUri(DateConfiguration configuration)
+        private static string FixTemplateUri(string? uriString)
         {
-            BravoUnexpectedException.ThrowIfNull(configuration.TemplateUri);
+            BravoUnexpectedException.ThrowIfNull(uriString);
 
-            // HACK: to remove %LOCALAPPDATA% path from 'configuration.TemplateUri' - versions 0.9.0 to 0.9.3
+            // HACK: to remove %LOCALAPPDATA% path from 'configuration.TemplateUri' - Bravo versions 0.9.0 to 0.9.3
 
-            if (Uri.TryCreate(configuration.TemplateUri, UriKind.Absolute, out var templateUri) && templateUri.Scheme.Equals(Uri.UriSchemeFile))
+            if (Uri.TryCreate(uriString, UriKind.Absolute, out var uri) && uri.Scheme.Equals(Uri.UriSchemeFile))
             {
-                configuration.TemplateUri = Path.GetFileName(templateUri.LocalPath);
+                uriString = Path.GetFileName(uri.LocalPath);
             }
+
+            return uriString;
         }
     }
 

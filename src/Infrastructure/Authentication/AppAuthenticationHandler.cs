@@ -4,7 +4,6 @@
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Options;
     using Microsoft.Net.Http.Headers;
-    using Sqlbi.Bravo.Infrastructure.Security;
     using System;
     using System.Security.Claims;
     using System.Text.Encodings.Web;
@@ -22,17 +21,15 @@
             if (Request.Headers.TryGetValue(HeaderNames.Authorization, out var token))
             {
                 var authenticated = AppEnvironment.ApiAuthenticationToken.Equals(token);
+                if (authenticated == false)
                 {
-                    if (authenticated == false && AppEnvironment.TemplateDevelopmentEnabled)
+                    if (AppEnvironment.TemplateDevelopmentEnabled && AppEnvironment.ApiAuthenticationTokenTemplateDevelopment.Equals(token))
                     {
-                        if (AppEnvironment.ApiAuthenticationTokenTemplateDevelopment.Equals(token))
-                        {
-                            // TODO: allow only TemplateDevelopment controller actions 
-                            authenticated = true;
-                        }
+                        // TODO: allow only TemplateDevelopment controller actions 
+                        authenticated = true;
                     }
                 }
-
+                
                 if (authenticated)
                 {
                     var claims = new[] 

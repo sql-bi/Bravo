@@ -20,8 +20,8 @@
         /// Full path of the package to be applied
         /// </summary>
         [Required]
-        [JsonPropertyName("package")]
-        public string? Package { get; set; }
+        [JsonPropertyName("packageFile")]
+        public string? PackageFile { get; set; }
 
         /// <summary>
         /// Number of records generated as a preview of requested changes
