@@ -25,7 +25,9 @@
         public const string SqlbiTemplateTableAnnotationDateAutoTemplateValue = "DateAutoTemplate";
         public const string SqlbiTemplateTableAnnotationHolidaysValue = "Holidays";
         public const string SqlbiTemplateTableAnnotationHolidaysDefinitionValue = "HolidaysDefinition";
-        public const string SqlbiTemplateEmbeddedResourcePrefix = "Sqlbi.Bravo.Assets.ManageDates.Templates.";
+
+        private const string TemplateEmbeddedResourcePrefix = "Sqlbi.Bravo.Assets.ManageDates.Templates.";
+        private const string SchemaEmbeddedResourcePrefix = "Sqlbi.Bravo.Assets.TemplateDevelopment.Schemas.";
 
         private readonly string _cachePath = Path.Combine(AppEnvironment.ApplicationTempPath, @"ManageDates\Templates");
         private readonly string _userPath = Path.Combine(AppEnvironment.ApplicationDataPath, @"ManageDates\Templates");
@@ -154,6 +156,37 @@
             }
         }
 
+        public IEnumerable<(string Name, Stream Content)> GetSchemaFiles()
+        {
+            var files = GetResourceFiles(resourcePrefix: SchemaEmbeddedResourcePrefix);
+            return files;
+        }
+
+        public IEnumerable<(string Name, Stream Content)> GetTemplateFiles()
+        {
+            var files = GetResourceFiles(resourcePrefix: TemplateEmbeddedResourcePrefix);
+            return files;
+        }
+
+        private IEnumerable<(string Name, Stream Content)> GetResourceFiles(string resourcePrefix)
+        {
+            var assembly = typeof(Program).Assembly;
+            var resourceNames = assembly.GetManifestResourceNames();
+
+            foreach (var resourceName in resourceNames)
+            {
+                if (resourceName.StartsWith(resourcePrefix))
+                {
+                    var stream = assembly.GetManifestResourceStream(resourceName);
+                    if (stream is not null)
+                    {
+                        var name = resourceName.Remove(0, resourcePrefix.Length);
+                        yield return (Name: name, Content: stream);
+                    }
+                }
+            }
+        }
+
         private void InitializeCache()
         {
             if (CacheInitialized == false)
@@ -179,21 +212,14 @@
                         }
                         else
                         {
-                            var assembly = typeof(Program).Assembly;
-                            var resourceNames = assembly.GetManifestResourceNames();
-                            var templateNames = resourceNames.Where((name) => name.StartsWith(SqlbiTemplateEmbeddedResourcePrefix));
+                            var templateFiles = GetTemplateFiles();
 
-                            foreach (var templateName in templateNames)
+                            foreach (var templateFile in templateFiles)
                             {
-                                using var resourceStream = assembly.GetManifestResourceStream(templateName);
-                                if (resourceStream is not null)
-                                {
-                                    var cacheFileName = templateName.Remove(0, SqlbiTemplateEmbeddedResourcePrefix.Length);
-                                    var cacheFilePath = Path.Combine(_cachePath, cacheFileName);
+                                var templateFilePath = Path.Combine(_cachePath, templateFile.Name);
 
-                                    using var fileStream = File.Create(cacheFilePath);
-                                    resourceStream.CopyTo(fileStream);
-                                }
+                                using var fileStream = File.Create(templateFilePath);
+                                templateFile.Content.CopyTo(fileStream);
                             }
                         }
 

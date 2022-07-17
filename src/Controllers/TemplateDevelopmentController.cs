@@ -21,6 +21,8 @@
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ProblemDetails))]
     public class TemplateDevelopmentController : ControllerBase
     {
+        internal static string ControllerName = "TemplateDevelopment";
+
         private readonly ITemplateDevelopmentService _templateDevelopmentService;
         private readonly IAnalyzeModelService _analyzeModelService;
 

@@ -20,7 +20,7 @@
 
         protected override Task<AuthenticateResult> HandleAuthenticateAsync()
         {
-            // RemoteIpAddress is null when Kestrel is behind a reverse proxy or the connection is not a TPC connection (like a Unix domain socket)
+            // RemoteIpAddress is null when Kestrel is behind a reverse proxy or the connection is not a TCP connection (like a Unix domain socket)
             var isLoopbackRequest = Context.Connection.RemoteIpAddress is not null && IPAddress.IsLoopback(Context.Connection.RemoteIpAddress);
             
             if (isLoopbackRequest && Request.Headers.TryGetValue(HeaderNames.Authorization, out var token))
@@ -30,6 +30,7 @@
                 {
                     if (AppEnvironment.TemplateDevelopmentEnabled && AppEnvironment.ApiAuthenticationTokenTemplateDevelopment.Equals(token))
                     {
+                        // TODO: allow template development controller requests only
                         //if (Request.Path.StartsWithSegments(TemplateDevelopmentController.ControllerName))
                         authenticated = true;
                     }
@@ -43,11 +44,11 @@
                         new Claim(ClaimTypes.Name, Environment.UserName)
                     };
 
-                    var claimsIdentity = new ClaimsIdentity(claims, authenticationType: nameof(AppAuthenticationHandler));
-                    var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
-                    var authenticationTicket = new AuthenticationTicket(claimsPrincipal, Scheme.Name);
+                    var identity = new ClaimsIdentity(claims, authenticationType: nameof(AppAuthenticationHandler));
+                    var principal = new ClaimsPrincipal(identity);
+                    var ticket = new AuthenticationTicket(principal, authenticationScheme: Scheme.Name);
 
-                    return Task.FromResult(AuthenticateResult.Success(authenticationTicket));
+                    return Task.FromResult(AuthenticateResult.Success(ticket));
                 }
             }
 

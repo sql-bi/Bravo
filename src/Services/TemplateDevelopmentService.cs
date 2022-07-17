@@ -6,7 +6,6 @@
     using Microsoft.AspNetCore.Hosting.Server;
     using Sqlbi.Bravo.Infrastructure;
     using Sqlbi.Bravo.Infrastructure.Extensions;
-    using Sqlbi.Bravo.Infrastructure.Security;
     using Sqlbi.Bravo.Infrastructure.Services;
     using Sqlbi.Bravo.Infrastructure.Services.DaxTemplate;
     using Sqlbi.Bravo.Models;
@@ -36,6 +35,7 @@
 
     internal class TemplateDevelopmentService : ITemplateDevelopmentService
     {
+        private const string WorkspaceFolderName = "src";
         private const string WorkspaceGitignoreFileName = ".gitignore";
         private const string WorkspaceConfigFileName = "bravo-config.json";
         private const string VSCodeExtensionsFileName = "extensions.json";
@@ -71,55 +71,34 @@
         {
             var workspaceName = name.ReplaceInvalidFileNameChars();
             var workspacePath = Path.Combine(path, workspaceName);
-            var workspaceTemplatePath = Path.Combine(workspacePath, "src\\Templates");
-
-            Directory.CreateDirectory(workspacePath);
-            Directory.CreateDirectory(workspaceTemplatePath);
 
             var templateFiles = _templateManager.GetTemplateFiles(configuration);
             {
+                var templatePath = Path.Combine(workspacePath, WorkspaceFolderName);
+                Directory.CreateDirectory(templatePath);
+
                 templateFiles.ForEach((templateFilePath) =>
                 {
                     var templateFileName = Path.GetFileName(templateFilePath);
-                    var workspaceTemplateFilePath = Path.Combine(workspaceTemplatePath, templateFileName);
+                    var workspaceTemplateFilePath = Path.Combine(templatePath, templateFileName);
 
                     File.Copy(templateFilePath, workspaceTemplateFilePath, overwrite: false);
                 });
             }
 
-            ConfigureWorkspace(workspacePath);
-        }
+            //var schemaFiles = _templateManager.GetSchemaFiles();
+            //{
+            //    var schemaPath = Path.Combine(workspacePath, "src\\Schemas");
+            //    Directory.CreateDirectory(schemaPath);
 
-        public void ConfigureWorkspace(string path)
-        {
-            var workspacePath = path;
-            var workspaceName = Path.GetDirectoryName(path);
+            //    schemaFiles.ForEach((schemaFile) =>
+            //    {
+            //        var workspaceSchemaFilePath = Path.Combine(schemaPath, schemaFile.Name);
 
-            // bravo-config.json
-            var configFile = Path.Combine(workspacePath, WorkspaceConfigFileName);
-            {
-                var configContent = GetWorkspaceConfigContent();
-                File.WriteAllText(configFile, configContent);
-            }
-
-            // .gitignore
-            var gitignoreFile = Path.Combine(workspacePath, WorkspaceGitignoreFileName);
-            {
-                var gitignoreContent = GetWorkspaceGitignoreContent();
-
-                if (File.Exists(gitignoreFile))
-                {
-                    var gitignoreContainsConfigFile = File.ReadLines(gitignoreFile).Any((line) => line.EqualsTI(WorkspaceConfigFileName));
-                    if (gitignoreContainsConfigFile == false)
-                    {
-                        File.AppendAllText(gitignoreFile, gitignoreContent);
-                    }
-                }
-                else
-                {
-                    File.WriteAllText(gitignoreFile, gitignoreContent);
-                }
-            }
+            //        using var fileStream = File.Create(workspaceSchemaFilePath);
+            //        schemaFile.Content.CopyTo(fileStream);
+            //    });
+            //}
 
             // .vscode\extensions.json
             var vscodePath = Path.Combine(workspacePath, ".vscode");
@@ -143,6 +122,30 @@
                     var content = GetVSCodeCodeworkspaceContent();
                     File.WriteAllText(codeworkspaceFile, content);
                 }
+            }
+
+            // .gitignore
+            var gitignoreFile = Path.Combine(workspacePath, WorkspaceGitignoreFileName);
+            {
+                if (File.Exists(gitignoreFile) == false)
+                {
+                    var content = GetWorkspaceGitignoreContent();
+                    File.WriteAllText(gitignoreFile, content);
+                }
+            }
+
+            ConfigureWorkspace(workspacePath);
+        }
+
+        public void ConfigureWorkspace(string path)
+        {
+            var workspacePath = path;
+
+            // bravo-config.json
+            var configFile = Path.Combine(workspacePath, WorkspaceConfigFileName);
+            {
+                var configContent = GetWorkspaceConfigContent();
+                File.WriteAllText(configFile, configContent);
             }
         }
 
@@ -205,7 +208,10 @@
             {
                 Folders = new[]
                 {
-                    "."
+                    new 
+                    {
+                        Path = WorkspaceFolderName
+                    }
                 }
             };
 

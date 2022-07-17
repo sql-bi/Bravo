@@ -92,8 +92,6 @@
   <ItemGroup>
     <Content Remove="Scripts\*.json" />
     <None Include="Scripts\*.json" />
-    <Content Remove="Assets\ManageDates\Templates\*.json" />
-    <EmbeddedResource Include="Assets\ManageDates\Templates\*.json" />
     <Content Include="Assets\bravo.ico" />
     <Compile Update="Properties\Resources.Designer.cs">
       <DesignTime>True</DesignTime>
@@ -104,6 +102,11 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Assets\TemplateDevelopment\Schemas\*.schema.json" />
+    <EmbeddedResource Include="Assets\ManageDates\Templates\*.json" />
   </ItemGroup>
 
   <!-- 

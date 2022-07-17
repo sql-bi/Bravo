@@ -1,4 +1,5 @@
 {
+  "$schema": "https://raw.githubusercontent.com/sql-bi/Bravo/alberto/templateWorkspace/src/Assets/TemplateDevelopment/Schemas/date-template.schema.json",
   "_comment": "Reference Weekly Calendar + Holidays",
   "CalendarType": "Weekly",
   "FormatPrefixes": [ "Q", "FY", "FQ", "FM", "FW" ],

@@ -1,4 +1,5 @@
 {
+  "$schema": "https://raw.githubusercontent.com/sql-bi/Bravo/alberto/templateWorkspace/src/Assets/TemplateDevelopment/Schemas/engine-configuration.schema.json",
   "Description": "Monthly calendar",
   "Templates": [
     {
