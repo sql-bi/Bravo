@@ -22,8 +22,6 @@
     {
         bool Enabled { get; }
 
-        void UpdateStatus(bool enabled);
-
         IEnumerable<DateConfiguration> GetConfigurations();
 
         void CreateWorkspace(string path, string name, DateConfiguration configuration);
@@ -53,11 +51,6 @@
         }
 
         public bool Enabled => AppEnvironment.TemplateDevelopmentEnabled;
-
-        public void UpdateStatus(bool enabled)
-        {
-            AppEnvironment.TemplateDevelopmentEnabled = enabled;
-        }
 
         public IEnumerable<DateConfiguration> GetConfigurations()
         {

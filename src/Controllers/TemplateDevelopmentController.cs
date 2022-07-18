@@ -21,7 +21,7 @@
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ProblemDetails))]
     public class TemplateDevelopmentController : ControllerBase
     {
-        internal static string ControllerName = "TemplateDevelopment";
+        internal static string ControllerPathSegment = "/TemplateDevelopment";
 
         private readonly ITemplateDevelopmentService _templateDevelopmentService;
         private readonly IAnalyzeModelService _analyzeModelService;
@@ -30,21 +30,6 @@
         {
             _templateDevelopmentService = templateDevelopmentService;
             _analyzeModelService = analyzeModelService;
-        }
-
-        /// <summary>
-        /// Enable or disable the use of the template development APIs
-        /// </summary>
-        /// <response code="200">Status200OK - Success</response>
-        [HttpPost]
-        [ActionName("UpdateStatus")]
-        [Produces(MediaTypeNames.Application.Json)]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesDefaultResponseType]
-        public IActionResult UpdateStatus(bool enabled)
-        {
-            _templateDevelopmentService.UpdateStatus(enabled);
-            return Ok();
         }
 
         /// <summary>
@@ -134,14 +119,14 @@
         /// <response code="204">Status204NoContent - User canceled action (e.g. 'Cancel' button has been pressed on a dialog box)</response>
         /// <response code="403">Status403Forbidden - The path is invalid or not allowed</response>
         [HttpGet]
-        [ActionName("OpenReportFile")]
+        [ActionName("PBIDesktopOpenPBIX")]
         [Consumes(MediaTypeNames.Application.Json)]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(PBIDesktopReport))]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesDefaultResponseType]
-        public IActionResult OpenReportFile(string path, bool waitForStarted, CancellationToken cancellationToken)
+        public IActionResult PBIDesktopOpenPBIX(string path, bool waitForStarted, CancellationToken cancellationToken)
         {
             if (ProcessHelper.OpenShellExecute(path, waitForStarted, out var processId, cancellationToken))
             {

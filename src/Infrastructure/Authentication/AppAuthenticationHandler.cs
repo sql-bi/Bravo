@@ -28,11 +28,13 @@
                 var authenticated = AppEnvironment.ApiAuthenticationToken.Equals(token);
                 if (authenticated == false)
                 {
-                    if (AppEnvironment.TemplateDevelopmentEnabled && AppEnvironment.ApiAuthenticationTokenTemplateDevelopment.Equals(token))
+                    if (AppEnvironment.TemplateDevelopmentEnabled)
                     {
-                        // TODO: allow template development controller requests only
-                        //if (Request.Path.StartsWithSegments(TemplateDevelopmentController.ControllerName))
-                        authenticated = true;
+                        // TODO: enable
+                        // if (Request.Path.StartsWithSegments(TemplateDevelopmentController.ControllerPathSegment))
+                        {
+                            authenticated = AppEnvironment.ApiAuthenticationTokenTemplateDevelopment.Equals(token);
+                        }
                     }
                 }
                 
