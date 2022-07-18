@@ -17,11 +17,11 @@
     public class WorkspacePreviewChangesSettings
     {
         /// <summary>
-        /// Full path of the package to be applied
+        /// Full path of the custom package to be applied
         /// </summary>
         [Required]
-        [JsonPropertyName("packageFile")]
-        public string? PackageFile { get; set; }
+        [JsonPropertyName("customPackagePath")]
+        public string? CustomPackagePath { get; set; }
 
         /// <summary>
         /// Number of records generated as a preview of requested changes

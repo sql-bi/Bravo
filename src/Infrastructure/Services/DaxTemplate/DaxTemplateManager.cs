@@ -121,6 +121,24 @@
             }
         }
 
+        public ModelChanges GetPreviewChanges(CustomPackage customPackage, int previewRows, TabularConnectionWrapper connection, CancellationToken cancellationToken)
+        {
+            try
+            {
+                BravoUnexpectedException.ThrowIfNull(customPackage.Path);
+
+                var package = GetPackage(customPackage.Path);
+                var modelChanges = GetPreviewChanges(package, previewRows, connection, cancellationToken);
+
+                return modelChanges;
+            }
+            catch (Exception ex) when (ex is TemplateException || ex is AdomdException)
+            {
+                TelemetryHelper.TrackException(ex);
+                throw;
+            }
+        }
+
         public ModelChanges GetPreviewChanges(Package package, int previewRows, TabularConnectionWrapper connection, CancellationToken cancellationToken)
         {
             try
@@ -170,13 +188,32 @@
             }
         }
 
-        public IEnumerable<(string Name, Stream Content)> GetSchemaFiles()
+        public void ApplyTemplate(CustomPackage customPackage, TabularConnectionWrapper connection, CancellationToken cancellationToken)
+        {
+            try
+            {
+                BravoUnexpectedException.ThrowIfNull(customPackage.Path);
+
+                var package = GetPackage(customPackage.Path);
+                var engine = new Engine(package);
+
+                engine.ApplyTemplates(connection.Model, cancellationToken);
+                connection.Model.SaveChanges().ThrowOnError();
+            }
+            catch (TemplateException ex)
+            {
+                TelemetryHelper.TrackException(ex);
+                throw;
+            }
+        }
+
+        private IEnumerable<(string Name, Stream Content)> GetSchemaFiles()
         {
             var files = GetResourceFiles(resourcePrefix: SchemaEmbeddedResourcePrefix);
             return files;
         }
 
-        public IEnumerable<(string Name, Stream Content)> GetTemplateFiles()
+        private IEnumerable<(string Name, Stream Content)> GetTemplateFiles()
         {
             var files = GetResourceFiles(resourcePrefix: TemplateEmbeddedResourcePrefix);
             return files;

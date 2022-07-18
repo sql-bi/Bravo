@@ -11,7 +11,6 @@
         [JsonPropertyName("type")]
         public CustomPackageType? Type { get; set; }
 
-        [Required]
         [JsonPropertyName("folder")]
         public string? Folder { get; set; }
 

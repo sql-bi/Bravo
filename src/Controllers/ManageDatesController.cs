@@ -26,7 +26,7 @@
         }
 
         /// <summary>
-        /// Gets all the available <see cref="CustomPackage"/> from the user's or organization's package repository
+        /// Gets all the available <see cref="CustomPackage"/> from the user's and organization's package repositories
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
         [HttpPost]
@@ -45,7 +45,7 @@
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
         [HttpPost]
-        [ActionName("GetConfigurationsForReport")]
+        [ActionName("GetConfigurationsForReport")] // TODO: raname GetConfigurations
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<DateConfiguration>))]
         [ProducesDefaultResponseType]
@@ -60,7 +60,7 @@
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
         [HttpPost]
-        [ActionName("ValidateConfigurationForReport")]
+        [ActionName("ValidateConfigurationForReport")] // TODO: raname ValidateConfiguration
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(DateConfiguration))]
         [ProducesDefaultResponseType]
@@ -75,7 +75,7 @@
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
         [HttpPost]
-        [ActionName("GetPreviewChangesFromReport")]
+        [ActionName("GetPreviewChangesFromReport")] // TODO: rename to GetConfigurationPreviewChanges
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Dax.Template.Model.ModelChanges))]
         [ProducesDefaultResponseType]
@@ -86,17 +86,47 @@
         }
 
         /// <summary>
+        /// Applies the provided <see cref="CustomPackage"/> without commit changes and returns a preview of changes to objects and data
+        /// </summary>
+        /// <response code="200">Status200OK - Success</response>
+        [HttpPost]
+        [ActionName("GetCustomPackagePreviewChanges")]
+        [Produces(MediaTypeNames.Application.Json)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Dax.Template.Model.ModelChanges))]
+        [ProducesDefaultResponseType]
+        public IActionResult GetPreviewChanges(CustomPackagePreviewChangesRequest request, CancellationToken cancellationToken)
+        {
+            var modelChanges = _manageDatesService.GetPreviewChanges(request.Report!, request.Settings!, cancellationToken);
+            return Ok(modelChanges);
+        }
+
+        /// <summary>
         /// Update the <see cref="PBIDesktopReport"/> by appliying the provided <see cref="DateConfiguration"/>
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
         [HttpPost]
-        [ActionName("UpdateReport")]
+        [ActionName("UpdateReport")] // TODO: rename to ApplyConfiguration
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesDefaultResponseType]
-        public IActionResult Update(UpdatePBIDesktopReportRequest request, CancellationToken cancellationToken)
+        public IActionResult Apply(UpdatePBIDesktopReportRequest request, CancellationToken cancellationToken)
         {
-            _manageDatesService.Update(request.Report!, request.Configuration!, cancellationToken);
+            _manageDatesService.ApplyTemplate(request.Report!, request.Configuration!, cancellationToken);
+            return Ok();
+        }
+
+        /// <summary>
+        /// Update the <see cref="PBIDesktopReport"/> by appliying the provided <see cref="CustomPackage"/>
+        /// </summary>
+        /// <response code="200">Status200OK - Success</response>
+        [HttpPost]
+        [ActionName("ApplyCustomPackage")]
+        [Produces(MediaTypeNames.Application.Json)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesDefaultResponseType]
+        public IActionResult Apply(CustomPackageApplyRequest request, CancellationToken cancellationToken)
+        {
+            _manageDatesService.ApplyTemplate(request.Report!, request.CustomPackage!, cancellationToken);
             return Ok();
         }
     }

@@ -33,7 +33,7 @@
         }
 
         /// <summary>
-        /// Enable or disable the use of the tremplate development APIs
+        /// Enable or disable the use of the template development APIs
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
         [HttpPost]
@@ -53,16 +53,16 @@
         /// <response code="200">Status200OK - Success</response>
         /// <response code="403">Status403Forbidden -  Use of the tremplate development API is not enabled</response>
         [HttpPost]
-        [ActionName("GetTemplateConfigurations")]
+        [ActionName("GetConfigurations")]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<DateConfiguration>))]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesDefaultResponseType]
-        public IActionResult GetTemplateConfigurations()
+        public IActionResult GetConfigurations()
         {
             if (_templateDevelopmentService.Enabled)
             {
-                var configurations = _templateDevelopmentService.GetTemplateConfigurations();
+                var configurations = _templateDevelopmentService.GetConfigurations();
                 return Ok(configurations);
             }
 
@@ -134,14 +134,14 @@
         /// <response code="204">Status204NoContent - User canceled action (e.g. 'Cancel' button has been pressed on a dialog box)</response>
         /// <response code="403">Status403Forbidden - The path is invalid or not allowed</response>
         [HttpGet]
-        [ActionName("PBIDesktopOpenPBIX")]
+        [ActionName("OpenReportFile")]
         [Consumes(MediaTypeNames.Application.Json)]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(PBIDesktopReport))]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesDefaultResponseType]
-        public IActionResult PBIDesktopOpenPBIX(string path, bool waitForStarted, CancellationToken cancellationToken)
+        public IActionResult OpenReportFile(string path, bool waitForStarted, CancellationToken cancellationToken)
         {
             if (ProcessHelper.OpenShellExecute(path, waitForStarted, out var processId, cancellationToken))
             {
@@ -157,7 +157,7 @@
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
         [HttpGet]
-        [ActionName("ListReports")]
+        [ActionName("GetReports")]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<PBIDesktopReport>))]
         [ProducesDefaultResponseType]
@@ -177,7 +177,7 @@
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
         [HttpPost]
-        [ActionName("GetModelFromReport")]
+        [ActionName("GetModel")]
         [Consumes(MediaTypeNames.Application.Json)]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(TabularDatabase))]
@@ -194,7 +194,7 @@
         }
 
         /// <summary>
-        /// Applies the provided settings without commit changes and returns a preview of changes to objects and data
+        /// Applies the provided <see cref="CustomPackage"/> file without commit changes and returns a preview of changes to objects and data
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
         [HttpPost]

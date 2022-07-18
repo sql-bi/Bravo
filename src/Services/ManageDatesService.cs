@@ -28,7 +28,11 @@
 
         ModelChanges? GetPreviewChanges(PBIDesktopReport report, PreviewChangesSettings settings, CancellationToken cancellationToken);
 
-        void Update(PBIDesktopReport report, DateConfiguration configuration, CancellationToken cancellationToken);
+        ModelChanges? GetPreviewChanges(PBIDesktopReport report, CustomPackagePreviewChangesSettings settings, CancellationToken cancellationToken);
+
+        void ApplyTemplate(PBIDesktopReport report, DateConfiguration configuration, CancellationToken cancellationToken);
+
+        void ApplyTemplate(PBIDesktopReport report, CustomPackage customPackage, CancellationToken cancellationToken);
     }
 
     internal class ManageDatesService : IManageDatesService
@@ -131,7 +135,23 @@
             }
         }
 
-        public void Update(PBIDesktopReport report, DateConfiguration configuration, CancellationToken cancellationToken)
+        public ModelChanges? GetPreviewChanges(PBIDesktopReport report, CustomPackagePreviewChangesSettings settings, CancellationToken cancellationToken)
+        {
+            BravoUnexpectedException.ThrowIfNull(settings.CustomPackage);
+
+            using var connection = TabularConnectionWrapper.ConnectTo(report);
+            try
+            {
+                var modelChanges = _templateManager.GetPreviewChanges(settings.CustomPackage, settings.PreviewRows, connection, cancellationToken);
+                return modelChanges;
+            }
+            catch (Exception ex) when (ex is TemplateException || ex is AdomdException)
+            {
+                throw new BravoException(BravoProblem.ManageDateTemplateError, ex.Message, ex);
+            }
+        }
+
+        public void ApplyTemplate(PBIDesktopReport report, DateConfiguration configuration, CancellationToken cancellationToken)
         {
             Validate(report, configuration, assertValidation: true);
 
@@ -139,6 +159,19 @@
             try
             {
                 _templateManager.ApplyTemplate(configuration, connection, cancellationToken);
+            }
+            catch (TemplateException ex)
+            {
+                throw new BravoException(BravoProblem.ManageDateTemplateError, ex.Message, ex);
+            }
+        }
+
+        public void ApplyTemplate(PBIDesktopReport report, CustomPackage customPackage, CancellationToken cancellationToken)
+        {
+            using var connection = TabularConnectionWrapper.ConnectTo(report);
+            try
+            {
+                _templateManager.ApplyTemplate(customPackage, connection, cancellationToken);
             }
             catch (TemplateException ex)
             {

@@ -24,7 +24,7 @@
 
         void UpdateStatus(bool enabled);
 
-        IEnumerable<DateConfiguration> GetTemplateConfigurations();
+        IEnumerable<DateConfiguration> GetConfigurations();
 
         void CreateWorkspace(string path, string name, DateConfiguration configuration);
 
@@ -59,7 +59,7 @@
             AppEnvironment.TemplateDevelopmentEnabled = enabled;
         }
 
-        public IEnumerable<DateConfiguration> GetTemplateConfigurations()
+        public IEnumerable<DateConfiguration> GetConfigurations()
         {
             var packages = _templateManager.GetPackages();
             var configurations = packages.Select(DateConfiguration.CreateFrom).ToArray();
@@ -151,12 +151,12 @@
 
         public ModelChanges? GetPreviewChanges(PBIDesktopReport report, WorkspacePreviewChangesSettings settings, CancellationToken cancellationToken)
         {
-            BravoUnexpectedException.ThrowIfNull(settings.PackageFile);
+            BravoUnexpectedException.ThrowIfNull(settings.CustomPackagePath);
 
             using var connection = TabularConnectionWrapper.ConnectTo(report);
             try
             {
-                var package = Dax.Template.Package.LoadFromFile(settings.PackageFile);
+                var package = Dax.Template.Package.LoadFromFile(settings.CustomPackagePath);
                 var modelChanges = _templateManager.GetPreviewChanges(package, settings.PreviewRows, connection, cancellationToken);
 
                 return modelChanges;
