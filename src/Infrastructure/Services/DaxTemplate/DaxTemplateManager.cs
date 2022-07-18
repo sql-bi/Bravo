@@ -38,6 +38,20 @@
             InitializeCache();
         }
 
+        public Package GetPackage(string path)
+        {
+            try
+            {
+                var package = Package.LoadFromFile(path);
+                return package;
+            }
+            catch (TemplateException ex)
+            {
+                TelemetryHelper.TrackException(ex);
+                throw;
+            }
+        }
+
         public IEnumerable<Package> GetPackages()
         {
             try

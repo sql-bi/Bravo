@@ -24,6 +24,8 @@
 
         bool UseSystemBrowserForAuthentication { get; set; }
 
+        string? ManageDatesPackageRepository { get; set; }
+
         JsonElement? CustomOptions { get; set; }
     }
 
@@ -83,6 +85,9 @@
 
         [JsonPropertyName("useSystemBrowserForAuthentication")]
         public bool UseSystemBrowserForAuthentication { get; set; } = false;
+
+        [JsonPropertyName("manageDatesPackageRepository")]
+        public string? ManageDatesPackageRepository { get; set; }
 
         [JsonPropertyName("customOptions")]
         public JsonElement? CustomOptions { get; set; }

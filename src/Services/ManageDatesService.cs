@@ -5,6 +5,7 @@
     using Dax.Template.Model;
     using Microsoft.AnalysisServices.AdomdClient;
     using Sqlbi.Bravo.Infrastructure;
+    using Sqlbi.Bravo.Infrastructure.Configuration;
     using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Infrastructure.Helpers;
     using Sqlbi.Bravo.Infrastructure.Services;
@@ -13,11 +14,14 @@
     using Sqlbi.Bravo.Models.ManageDates;
     using System;
     using System.Collections.Generic;
+    using System.IO;
     using System.Linq;
     using System.Threading;
 
     public interface IManageDatesService
     {
+        IEnumerable<CustomPackage> GetCustomPackages(CancellationToken cancellationToken);
+
         IEnumerable<DateConfiguration> GetConfigurations(PBIDesktopReport report, CancellationToken cancellationToken);
 
         DateConfiguration ValidateConfiguration(PBIDesktopReport report, DateConfiguration configuration, CancellationToken cancellationToken);
@@ -34,6 +38,49 @@
         public ManageDatesService()
         {
             _templateManager = new DaxTemplateManager();
+        }
+
+        public IEnumerable<CustomPackage> GetCustomPackages(CancellationToken cancellationToken)
+        {
+            var userPackages = GetImpl(UserPreferences.Current.ManageDatesPackageRepository, CustomPackageType.User).ToArray();
+            //var organizationPackages = Get(???, CustomPackageType.User).ToArray();
+
+            return userPackages;
+
+            IEnumerable<CustomPackage> GetImpl(string? path, CustomPackageType type)
+            {
+                if (Directory.Exists(path))
+                {
+                    var packageFiles = Directory.EnumerateFiles(path, "*.package.json", new EnumerationOptions
+                    {
+                        IgnoreInaccessible = true,
+                        RecurseSubdirectories = true,
+                    });
+
+                    foreach (var packageFile in packageFiles)
+                    {
+                        var package = _templateManager.GetPackage(packageFile);
+                        var customPackage = new CustomPackage
+                        {
+                            Type = type,
+                            Folder = GetFileRelativePath(path, packageFile),
+                            Name = package.Configuration.Name,
+                            Description = package.Configuration.Description,
+                            Path = packageFile,
+                        };
+
+                        yield return customPackage;
+                    }
+                }
+            }
+
+            static string? GetFileRelativePath(string relativeTo, string filePath)
+            {
+                var relativePath = Path.GetRelativePath(relativeTo, filePath);
+                var directoryName = Path.GetDirectoryName(relativePath);
+
+                return directoryName;
+            }
         }
 
         public IEnumerable<DateConfiguration> GetConfigurations(PBIDesktopReport report, CancellationToken cancellationToken)

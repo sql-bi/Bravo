@@ -51,6 +51,9 @@
         [JsonPropertyName("useSystemBrowserForAuthentication")]
         public bool UseSystemBrowserForAuthentication { get; set; } = false;
 
+        [JsonPropertyName("manageDatesPackageRepository")]
+        public string? ManageDatesPackageRepository { get; set; }
+
         [JsonPropertyName("diagnosticLevel")]
         public DiagnosticLevelType DiagnosticLevel { get; set; } = DiagnosticLevelType.None;
 
