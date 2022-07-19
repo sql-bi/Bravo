@@ -26,21 +26,6 @@
         }
 
         /// <summary>
-        /// Gets all the available <see cref="CustomPackage"/> from the user's and organization's package repositories
-        /// </summary>
-        /// <response code="200">Status200OK - Success</response>
-        [HttpPost]
-        [ActionName("GetCustomPackages")]
-        [Produces(MediaTypeNames.Application.Json)]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<CustomPackage>))]
-        [ProducesDefaultResponseType]
-        public IActionResult GetCustomPackages(CancellationToken cancellationToken)
-        {
-            var customPackages = _manageDatesService.GetCustomPackages(cancellationToken);
-            return Ok(customPackages);
-        }
-
-        /// <summary>
         /// Gets all the available <see cref="DateConfiguration"/> from the embedded templates
         /// </summary>
         /// <response code="200">Status200OK - Success</response>

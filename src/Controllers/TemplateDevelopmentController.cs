@@ -33,6 +33,35 @@
         }
 
         /// <summary>
+        /// Displays a dialog box that prompts the user to select a '.package.json' file and returns the <see cref="CustomPackage"/>
+        /// </summary>
+        /// <response code="200">Status200OK - Success</response>
+        /// <response code="204">Status204NoContent - User canceled action (e.g. 'Cancel' button has been pressed on a dialog box)</response>
+        /// <response code="403">Status403Forbidden -  Use of the tremplate development API is not enabled</response>
+        [HttpPost]
+        [ActionName("GetCustomPackageFromFile")]
+        [Produces(MediaTypeNames.Application.Json)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(CustomPackage))]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesDefaultResponseType]
+        public IActionResult GetCustomPackageFromFile(CancellationToken cancellationToken)
+        {
+            if (_templateDevelopmentService.Enabled)
+            {
+                if (WindowDialogHelper.OpenFileDialog(defaultExt: "package.json", out var path, cancellationToken))
+                {
+                    var customPackage = _templateDevelopmentService.GetCustomPackage(path, CustomPackageType.User);
+                    return Ok(customPackage);
+                }
+
+                return NoContent();
+            }
+
+            return Forbid();
+        }
+
+        /// <summary>
         /// Gets all the available <see cref="DateConfiguration"/> from the embedded templates
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
@@ -67,11 +96,11 @@
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesDefaultResponseType]
-        public IActionResult CreateWorkspace(CreateWorkspaceRequest request)
+        public IActionResult CreateWorkspace(CreateWorkspaceRequest request, CancellationToken cancellationToken)
         {
             if (_templateDevelopmentService.Enabled)
             {
-                if (WindowDialogHelper.BrowseFolderDialog(out var path, CancellationToken.None))
+                if (WindowDialogHelper.BrowseFolderDialog(out var path, cancellationToken))
                 {
                     _templateDevelopmentService.CreateWorkspace(path, request.Name!, request.Configuration!, request.OpenCodeWorkspace);
                     return Ok();

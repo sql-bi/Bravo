@@ -83,6 +83,14 @@
             return uri.AbsoluteUri;
         }
 
+        public static string? GetFileRelativePath(string relativeTo, string filePath)
+        {
+            var relativePath = Path.GetRelativePath(relativeTo, filePath);
+            var directoryName = Path.GetDirectoryName(relativePath);
+
+            return directoryName;
+        }
+
         public async static Task<BravoUpdate> CheckForUpdateAsync(UpdateChannelType updateChannel, CancellationToken cancellationToken)
         {
             UserPreferences.Current.AssertUpdateCheckEnabledPolicy();

@@ -24,6 +24,8 @@
     {
         bool Enabled { get; }
 
+        CustomPackage GetCustomPackage(string path, CustomPackageType type);
+
         IEnumerable<DateConfiguration> GetConfigurations();
 
         void CreateWorkspace(string path, string name, DateConfiguration configuration, bool openCodeWorkspace);
@@ -53,6 +55,42 @@
         }
 
         public bool Enabled => UserPreferences.Current.TemplateDevelopmentEnabled;
+
+        public CustomPackage GetCustomPackage(string path, CustomPackageType type)
+        {
+            var package = _templateManager.GetPackage(path);
+            var customPackage = new CustomPackage
+            {
+                Type = type,
+                Path = path,
+                Name = package.Configuration.Name,
+                Description = package.Configuration.Description,
+                WorkspaceName = null,
+                WorkspacePath = null,
+            };
+
+            var packageFileInfo = new FileInfo(path);
+            if (packageFileInfo.Directory is not null)
+            {
+                var workspaceDirectoryInfo = packageFileInfo.Directory.Parent;
+                if (workspaceDirectoryInfo is not null)
+                {
+                    var workspaceName = workspaceDirectoryInfo.Name;
+                    var workspaceFolder = workspaceDirectoryInfo.FullName;
+
+                    var workspaceCodeworkspaceName = Path.ChangeExtension(workspaceName, ".code-workspace");
+                    var workspaceCodeworkspacePath = Path.Combine(workspaceFolder, workspaceCodeworkspaceName);
+
+                    if (File.Exists(workspaceCodeworkspacePath))
+                    {
+                        customPackage.WorkspaceName = workspaceName;
+                        customPackage.WorkspacePath = workspaceFolder;
+                    }
+                }
+            }
+
+            return customPackage;
+        }
 
         public IEnumerable<DateConfiguration> GetConfigurations()
         {
