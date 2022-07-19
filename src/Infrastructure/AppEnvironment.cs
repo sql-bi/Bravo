@@ -77,7 +77,6 @@
             MsalTokenCacheFilePath = Path.Combine(ApplicationDataPath, ".msalcache");
             WebView2VersionInfo = WebView2Helper.GetRuntimeVersionInfo();
             GroupPolicies = new GroupPolicyManager();
-            TemplateDevelopmentEnabled = false;
 
             Diagnostics = new ConcurrentDictionary<string, DiagnosticMessage>();
             DefaultJsonOptions = new(JsonSerializerDefaults.Web) { MaxDepth = 32 }; // see Microsoft.AspNetCore.Mvc.JsonOptions.JsonSerializerOptions
@@ -148,8 +147,6 @@
         public static string? WebView2VersionInfo { get; }
 
         public static GroupPolicyManager GroupPolicies { get; }
-
-        public static bool TemplateDevelopmentEnabled { get; set; }
 
         public static bool IsWebView2RuntimeInstalled => WebView2VersionInfo is not null;
 

@@ -89,21 +89,6 @@
         }
 
         /// <summary>
-        /// Enable or disable the use of the template development APIs
-        /// </summary>
-        /// <response code="200">Status200OK - Success</response>
-        [HttpPost]
-        [ActionName("ChangeTemplateDevelopmentStatus")]
-        [Produces(MediaTypeNames.Application.Json)]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesDefaultResponseType]
-        public IActionResult ChangeTemplateDevelopmentStatus(bool enabled)
-        {
-            AppEnvironment.TemplateDevelopmentEnabled = enabled;
-            return Ok();
-        }
-
-        /// <summary>
         /// Change the current window theme
         /// </summary>
         /// <response code="200">Status200OK - Success</response>

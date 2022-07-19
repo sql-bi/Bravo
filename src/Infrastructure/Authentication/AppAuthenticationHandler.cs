@@ -4,7 +4,7 @@
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Options;
     using Microsoft.Net.Http.Headers;
-    using Sqlbi.Bravo.Controllers;
+    using Sqlbi.Bravo.Infrastructure.Configuration;
     using System;
     using System.Net;
     using System.Security.Claims;
@@ -28,7 +28,7 @@
                 var authenticated = AppEnvironment.ApiAuthenticationToken.Equals(token);
                 if (authenticated == false)
                 {
-                    if (AppEnvironment.TemplateDevelopmentEnabled)
+                    if (UserPreferences.Current.TemplateDevelopmentEnabled)
                     {
                         // TODO: enable
                         // if (Request.Path.StartsWithSegments(TemplateDevelopmentController.ControllerPathSegment))

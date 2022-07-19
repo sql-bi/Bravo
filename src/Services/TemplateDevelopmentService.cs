@@ -5,6 +5,7 @@
     using Microsoft.AnalysisServices.AdomdClient;
     using Microsoft.AspNetCore.Hosting.Server;
     using Sqlbi.Bravo.Infrastructure;
+    using Sqlbi.Bravo.Infrastructure.Configuration;
     using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Infrastructure.Services;
     using Sqlbi.Bravo.Infrastructure.Services.DaxTemplate;
@@ -50,7 +51,7 @@
             _serializerOptions = new JsonSerializerOptions(AppEnvironment.DefaultJsonOptions) { WriteIndented = true };
         }
 
-        public bool Enabled => AppEnvironment.TemplateDevelopmentEnabled;
+        public bool Enabled => UserPreferences.Current.TemplateDevelopmentEnabled;
 
         public IEnumerable<DateConfiguration> GetConfigurations()
         {
