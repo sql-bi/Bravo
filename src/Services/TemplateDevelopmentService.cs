@@ -7,6 +7,7 @@
     using Sqlbi.Bravo.Infrastructure;
     using Sqlbi.Bravo.Infrastructure.Configuration;
     using Sqlbi.Bravo.Infrastructure.Extensions;
+    using Sqlbi.Bravo.Infrastructure.Helpers;
     using Sqlbi.Bravo.Infrastructure.Services;
     using Sqlbi.Bravo.Infrastructure.Services.DaxTemplate;
     using Sqlbi.Bravo.Models;
@@ -25,9 +26,9 @@
 
         IEnumerable<DateConfiguration> GetConfigurations();
 
-        void CreateWorkspace(string path, string name, DateConfiguration configuration);
+        void CreateWorkspace(string path, string name, DateConfiguration configuration, bool openCodeWorkspace);
 
-        void ConfigureWorkspace(string path);
+        bool ConfigureWorkspace(string path, bool openCodeWorkspace);
 
         ModelChanges? GetPreviewChanges(PBIDesktopReport report, WorkspacePreviewChangesSettings settings, CancellationToken cancellationToken);
     }
@@ -61,7 +62,7 @@
             return configurations;
         }
 
-        public void CreateWorkspace(string path, string name, DateConfiguration configuration)
+        public void CreateWorkspace(string path, string name, DateConfiguration configuration, bool openCodeWorkspace)
         {
             var workspaceName = name.ReplaceInvalidFileNameChars();
             var workspacePath = Path.Combine(path, workspaceName);
@@ -79,20 +80,6 @@
                     File.Copy(templateFilePath, workspaceTemplateFilePath, overwrite: false);
                 });
             }
-
-            //var schemaFiles = _templateManager.GetSchemaFiles();
-            //{
-            //    var schemaPath = Path.Combine(workspacePath, "src\\Schemas");
-            //    Directory.CreateDirectory(schemaPath);
-
-            //    schemaFiles.ForEach((schemaFile) =>
-            //    {
-            //        var workspaceSchemaFilePath = Path.Combine(schemaPath, schemaFile.Name);
-
-            //        using var fileStream = File.Create(workspaceSchemaFilePath);
-            //        schemaFile.Content.CopyTo(fileStream);
-            //    });
-            //}
 
             // .vscode\extensions.json
             var vscodePath = Path.Combine(workspacePath, ".vscode");
@@ -128,19 +115,42 @@
                 }
             }
 
-            ConfigureWorkspace(workspacePath);
+            var configured = ConfigureWorkspace(workspacePath, openCodeWorkspace);
+            BravoUnexpectedException.Assert(configured);
         }
 
-        public void ConfigureWorkspace(string path)
+        public bool ConfigureWorkspace(string path, bool openCodeWorkspace)
         {
             var workspacePath = path;
 
             // bravo-config.json
             var configFile = Path.Combine(workspacePath, WorkspaceConfigFileName);
             {
+                if (File.Exists(configFile) == false)
+                {
+                    return false; // Not a workspace folder
+                }
+
                 var configContent = GetWorkspaceConfigContent();
                 File.WriteAllText(configFile, configContent);
+
+                if (openCodeWorkspace)
+                {
+                    var codeworkspaceFiles = Directory.GetFiles(workspacePath, "*.code-workspace", new EnumerationOptions
+                    {
+                        IgnoreInaccessible = true,
+                        RecurseSubdirectories = false,
+                    });
+
+                    if (codeworkspaceFiles.Length == 1)
+                    {
+                        var codeworkspaceFile = codeworkspaceFiles.Single();
+                        _ = ProcessHelper.OpenShellExecute(codeworkspaceFile, waitForStarted: false, out var _);
+                    }
+                } 
             }
+
+            return true;
         }
 
         public ModelChanges? GetPreviewChanges(PBIDesktopReport report, WorkspacePreviewChangesSettings settings, CancellationToken cancellationToken)

@@ -73,7 +73,7 @@
             {
                 if (WindowDialogHelper.BrowseFolderDialog(out var path, CancellationToken.None))
                 {
-                    _templateDevelopmentService.CreateWorkspace(path, request.Name!, request.Configuration!);
+                    _templateDevelopmentService.CreateWorkspace(path, request.Name!, request.Configuration!, request.OpenCodeWorkspace);
                     return Ok();
                 }
 
@@ -88,22 +88,26 @@
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
         /// <response code="204">Status204NoContent - User canceled action (e.g. 'Cancel' button has been pressed on a dialog box)</response>
-        /// <response code="403">Status403Forbidden -  Use of the tremplate development API is not enabled</response>
+        /// <response code="403">Status403Forbidden - Use of the template development API is not enabled</response>
+        /// <response code="403">Status404NotFound - The selected folder does not contain the Bravo workspace configuration file</response>
         [HttpPost]
         [ActionName("ConfigureWorkspace")]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesDefaultResponseType]
-        public IActionResult ConfigureWorkspace()
+        public IActionResult ConfigureWorkspace(bool openCodeWorkspace, CancellationToken cancellationToken)
         {
             if (_templateDevelopmentService.Enabled)
             {
-                if (WindowDialogHelper.BrowseFolderDialog(out var path, CancellationToken.None))
+                if (WindowDialogHelper.BrowseFolderDialog(out var path, cancellationToken))
                 {
-                    _templateDevelopmentService.ConfigureWorkspace(path);
-                    return Ok();
+                    if (_templateDevelopmentService.ConfigureWorkspace(path, openCodeWorkspace))
+                        return Ok();
+
+                    return NotFound();
                 }
 
                 return NoContent();

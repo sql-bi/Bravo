@@ -11,6 +11,10 @@
         public string? Name { get; set; }
 
         [Required]
+        [JsonPropertyName("openCodeWorkspace")]
+        public bool OpenCodeWorkspace { get; set; }
+
+        [Required]
         [JsonPropertyName("configuration")]
         public DateConfiguration? Configuration { get; set; }
     }
