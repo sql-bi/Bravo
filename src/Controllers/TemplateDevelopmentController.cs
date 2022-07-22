@@ -161,10 +161,13 @@
         [ProducesDefaultResponseType]
         public IActionResult PBIDesktopOpenPBIX(string path, bool waitForStarted, CancellationToken cancellationToken)
         {
-            if (ProcessHelper.OpenShellExecute(path, waitForStarted, out var processId, cancellationToken))
+            if (_templateDevelopmentService.Enabled)
             {
-                var report = PBIDesktopReport.CreateFrom(processId.Value);
-                return Ok(report);
+                if (ProcessHelper.OpenShellExecute(path, waitForStarted, out var processId, cancellationToken))
+                {
+                    var report = PBIDesktopReport.CreateFrom(processId.Value);
+                    return Ok(report);
+                }
             }
 
             return Forbid();
@@ -222,8 +225,13 @@
         [ProducesDefaultResponseType]
         public IActionResult GetPreviewChanges(WorkspacePreviewChangesRequest request, CancellationToken cancellationToken)
         {
-            var modelChanges = _templateDevelopmentService.GetPreviewChanges(request.Report!, request.Settings!, cancellationToken);
-            return Ok(modelChanges);
+            if (_templateDevelopmentService.Enabled)
+            {
+                var modelChanges = _templateDevelopmentService.GetPreviewChanges(request.Report!, request.Settings!, cancellationToken);
+                return Ok(modelChanges);
+            }
+
+            return Forbid();
         }
     }
 }
