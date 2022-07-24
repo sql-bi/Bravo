@@ -116,30 +116,29 @@
         /// Configure an existing template development workspace by updating the bravo-config.json file/>
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
-        /// <response code="204">Status204NoContent - User canceled action (e.g. 'Cancel' button has been pressed on a dialog box)</response>
         /// <response code="403">Status403Forbidden - Use of the template development API is not enabled</response>
         /// <response code="403">Status404NotFound - The selected folder does not contain the Bravo workspace configuration file</response>
         [HttpPost]
         [ActionName("ConfigureWorkspace")]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        //[ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesDefaultResponseType]
-        public IActionResult ConfigureWorkspace(bool openCodeWorkspace, CancellationToken cancellationToken)
+        public IActionResult ConfigureWorkspace(string workspacePath, bool openCodeWorkspace, CancellationToken cancellationToken)
         {
             if (_templateDevelopmentService.Enabled)
             {
-                if (WindowDialogHelper.BrowseFolderDialog(out var path, cancellationToken))
-                {
-                    if (_templateDevelopmentService.ConfigureWorkspace(path, openCodeWorkspace))
+                //if (WindowDialogHelper.BrowseFolderDialog(out var path, cancellationToken))
+                //{
+                    if (_templateDevelopmentService.ConfigureWorkspace(workspacePath, openCodeWorkspace))
                         return Ok();
 
                     return NotFound();
-                }
+                //}
 
-                return NoContent();
+                //return NoContent();
             }
 
             return Forbid();
