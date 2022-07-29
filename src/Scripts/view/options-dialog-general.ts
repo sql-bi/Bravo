@@ -59,6 +59,7 @@ export class OptionsDialogGeneral {
                 }
             },
             {
+                id: "account",
                 icon: "powerbi",
                 name: i18n(strings.optionAccount),
                 description: i18n(strings.optionAccountDescription),
@@ -72,6 +73,13 @@ export class OptionsDialogGeneral {
                         }
                     </p>
                 `
+            },
+            {
+                option: "useSystemBrowserForAuthentication",
+                parent: "account",
+                name: i18n(strings.optionBrowserAuthentication),
+                description: i18n(strings.optionBrowserAuthenticationDescription),
+                type: OptionType.switch
             },
         ];
 

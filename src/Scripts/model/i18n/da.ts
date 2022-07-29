@@ -281,6 +281,8 @@ const locale: Locale = {
         [_.openWithDaxFormatterCtrlTitle]: "Formatter online med DAX Formatter",  
         [_.optionAccount]: "Power BI Konto",
         [_.optionAccountDescription]: "Angiv kontoen der skal anvendes for at tilgå Power BI online datasæt.",
+        [_.optionBrowserAuthentication]: "Autentificer i browser",
+        [_.optionBrowserAuthenticationDescription]: "Autentificer ved hjælp af standardbrowseren.Dette er en alternativ login-metode, der er nyttig til at løse problemer med to-faktor-godkendelse.",
         [_.optionCheckForUpdates]: "Kontroller automatisk for opdateringer",
         [_.optionDiagnostic]: "Diagnostikniveau",
         [_.optionDiagnosticDescription]: "Vis fejl og logs in et diagnostikpanel. Vælg <em>Grundlæggende</em> for kun at logge de vigtigste hændelser. <em>Udvidet</em> logger alle hændelser.",

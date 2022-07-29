@@ -283,6 +283,8 @@ const locale: Locale = {
         [_.openWithDaxFormatterCtrlTitle]: "Online formatieren mit DAX Formatter",
         [_.optionAccount]: "Power BI-Konto",
         [_.optionAccountDescription]: "Legen Sie das Konto für den Zugriff auf Power BI Online-Datensätze fest.",
+        [_.optionBrowserAuthentication]: "Im Browser authentifizieren",
+        [_.optionBrowserAuthenticationDescription]: "Authentifizieren Sie mit dem Standardbrowser.Dies ist eine alternative Anmeldemethode, die zur Lösung von Problemen mit der Zwei-Faktor-Authentifizierung nützlich ist.",
         [_.optionCheckForUpdates]: "Automatisch nach Aktualisierungen suchen",
         [_.optionDiagnostic]: "Diagnosestufe",
         [_.optionDiagnosticDescription]: "Fehler und Protokolle in einem Diagnosefenster anzeigen. Wählen Sie <em>Standard</em>, um nur einige Meldungen zu protokollieren. <em>Ausführlich </em> protokolliert alle Meldungen.",

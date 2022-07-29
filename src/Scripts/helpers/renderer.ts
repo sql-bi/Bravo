@@ -11,6 +11,7 @@ import { strings } from '../model/strings';
 import { ContextMenu } from './contextmenu';
 
 export interface OptionStruct {
+    id?: string
     option?: string
     icon?: string
     bold?: boolean
@@ -88,7 +89,7 @@ export module Renderer {
 
         export function render(struct: OptionStruct, element: HTMLElement, store: OptionsStore<any>) {
 
-            let id = Utils.Text.slugify(struct.option ? struct.option : struct.name); //Utils.DOM.uniqueId()
+            let id = Utils.Text.slugify(struct.id ? struct.id : (struct.option ? struct.option : struct.name)); //Utils.DOM.uniqueId()
             let value = (Utils.Obj.isSet(struct.value) ? struct.value : (struct.option ? store.getOption(struct.option) : ""));
             let valid = (struct.option ? store.isValid(struct.option) : true);
             let valueType = (struct.valueType ? struct.valueType : 
