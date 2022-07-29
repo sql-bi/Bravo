@@ -18,18 +18,21 @@
         private readonly string _pipeName;
         private readonly string _mutexName;
 
+        // GH ISSUE https://github.com/sql-bi/Bravo/issues/459
+        // https://stackoverflow.com/questions/32739224/c-sharp-unauthorizedaccessexception-when-enabling-messagemode-for-read-only-name
+        private const PipeDirection DefaultPipeDirection = PipeDirection.InOut;
+
         private NamedPipeServerStream? _pipeServer;
         private bool _disposed;
 
         public AppInstance()
         {
             var appId = "8D4D9F1D39F94C7789D84729480D8198"; // Do not change !!
-            var appName = AppEnvironment.DeploymentMode == AppDeploymentMode.Packaged ? AppEnvironment.ApplicationStoreAliasName : AppEnvironment.ApplicationName;            
+            var appName = AppEnvironment.DeploymentMode == AppDeploymentMode.Packaged ? AppEnvironment.ApplicationStoreAliasName : AppEnvironment.ApplicationName;
             var pipeNamePrefix = AppEnvironment.DeploymentMode == AppDeploymentMode.Packaged ? "LOCAL\\" : string.Empty; // Named pipes in packaged applications must use the syntax \\.\pipe\LOCAL\ for the pipe name
-            var mutexNamePrefix = "Local\\"; // 'Local\' named system mutex visible only in the windows session where it was created
 
             _pipeName = $"{pipeNamePrefix}{appName}.{appId}";
-            _mutexName = $"{mutexNamePrefix}{appName}{appId}";
+            _mutexName = $"{appName}{appId}";
             _mutex = new Mutex(initiallyOwned: true, name: _mutexName, createdNew: out _owned);
 
             if (_owned)
@@ -55,7 +58,7 @@
         /// </summary>
         public void NotifyOwner()
         {
-            using var client = new NamedPipeClientStream(serverName: ".", _pipeName, PipeDirection.Out, PipeOptions.CurrentUserOnly);
+            using var client = new NamedPipeClientStream(serverName: ".", _pipeName, DefaultPipeDirection, PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
 
             try
             {
@@ -88,7 +91,7 @@
 
         private void StartPipeServer()
         {
-            _pipeServer = new NamedPipeServerStream(_pipeName, PipeDirection.In, NamedPipeServerStream.MaxAllowedServerInstances, PipeTransmissionMode.Byte, PipeOptions.CurrentUserOnly);
+            _pipeServer = new NamedPipeServerStream(_pipeName, DefaultPipeDirection, NamedPipeServerStream.MaxAllowedServerInstances, PipeTransmissionMode.Byte, PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
             _pipeServer.BeginWaitForConnection(OnPipeConnection, state: _pipeServer);
         }
 
