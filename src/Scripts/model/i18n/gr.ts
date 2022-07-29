@@ -317,6 +317,7 @@ const locale: Locale = {
         [_.optionLanguage]: "Γλώσσα",
         [_.optionLanguageDescription]: "Επιλογή της γλώσσας στο Bravo. Απαιτείται επανεκκίνηση.",
         [_.optionLanguageResetConfirm]: "Θέλεις να επανεκκινήσεις το Bravo και να εφαρμόσεις την νέα επιλεγμένη γλώσσα;",
+        [_.optionPolicyNotice]: "Αυτή η επιλογή διαχειρίζεται ο οργανισμός σας.",
         [_.optionProxyAddress]: "Διεύθυνση διακομιστή μεσολάβησης",
         [_.optionProxyAddressDescription]: "Παρέχετε τη διεύθυνση του διακομιστή μεσολάβησης.",
         [_.optionProxyBypassList]: "Εξαιρέστε τη λίστα διευθύνσεων",

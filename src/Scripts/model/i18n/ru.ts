@@ -317,6 +317,7 @@ const locale: Locale = {
         [_.optionLanguage]: "Язык",
         [_.optionLanguageDescription]: "Выберите язык Bravo. Требуется перезагрузка.",
         [_.optionLanguageResetConfirm]: "Вы хотите перезагрузить Браво, чтобы применить новый язык?",
+        [_.optionPolicyNotice]: "Эта опция управляется вашей организацией.",
         [_.optionProxyAddress]: "Адрес прокси -сервера",
         [_.optionProxyAddressDescription]: "Предоставьте адрес вашего прокси -сервера.",
         [_.optionProxyBypassList]: "Исключить список адресов",

@@ -3,30 +3,26 @@
     using Microsoft.Win32;
     using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
     using Sqlbi.Bravo.Infrastructure.Extensions;
-    using System;
     using System.IO;
 
-    internal sealed class GroupPolicyManager
+    internal sealed class PolicyManager
     {
         private const string PolicySubKeyName = @"Software\Policies\SQLBI\Bravo";
         private const string OptionSettingsName = "OptionSettings";
+        private const int PolicyDisabledValue = 0;
+        private const int PolicyEnabledValue = 1;
 
-        private readonly Lazy<bool> _enabled;
+        public bool PoliciesEnabled => GetPoliciesEnabled();
 
-        public GroupPolicyManager()
-        {
-            _enabled = new(() => GetGroupPoliciesEnabled());
-        }
+        public (PolicyStatus Policy, bool Value) GetTelemetryEnabledPolicy() => GetBoolPolicy(valueName: "TelemetryEnabled", relativeSubkeyName: OptionSettingsName);
 
-        public bool Enabled => _enabled.Value;
+        public (PolicyStatus Policy, bool Value) GetUseSystemBrowserForAuthenticationPolicy() => GetBoolPolicy(valueName: "UseSystemBrowserForAuthentication", relativeSubkeyName: OptionSettingsName);
 
-        #region OptionSettings
-
-        public (PolicyStatus Policy, UpdateChannelType Value) GetPolicyForUpdateChannel()
+        public (PolicyStatus Policy, UpdateChannelType Value) GetUpdateChannelPolicy()
         {
             var policyValue = GetIntValue(valueName: "UpdateChannel", relativeSubkeyName: OptionSettingsName);
 
-            if (policyValue is null)
+            if (IsPolicyNotConfigured(policyValue))
             {
                 return (PolicyStatus.NotConfigured, Value: UpdateChannelType.Stable);
             }
@@ -37,33 +33,33 @@
                 if (updateChannel is null)
                     updateChannel = UpdateChannelType.Stable;
 
-                return (PolicyStatus.Forced, Value: updateChannel.Value);
+                return (PolicyStatus.Forced, updateChannel.Value);
             }
         }
 
-        public (PolicyStatus Policy, bool Value) GetPolicyForUpdateCheckEnabled()
-        {
-            var policyValue = GetIntValue(valueName: "UpdateCheckEnabled", relativeSubkeyName: OptionSettingsName);
+        public (PolicyStatus Policy, bool Value) GetUpdateCheckEnabledPolicy() => GetBoolPolicy(valueName: "UpdateCheckEnabled", relativeSubkeyName: OptionSettingsName);
 
-            if (policyValue.IsPolicyNotConfigured())
+        private static (PolicyStatus Policy, bool Value) GetBoolPolicy(string valueName, string relativeSubkeyName)
+        {
+            var policyValue = GetIntValue(valueName, relativeSubkeyName);
+
+            if (IsPolicyNotConfigured(policyValue))
             {
                 return (PolicyStatus.NotConfigured, Value: true);
             }
-            else if (policyValue.IsPolicyEnabled())
+            else if (IsPolicyEnabled(policyValue))
             {
                 return (PolicyStatus.Forced, Value: true);
             }
-            else if (policyValue.IsPolicyDisabled())
+            else if (IsPolicyDisabled(policyValue))
             {
                 return (PolicyStatus.Forced, Value: false);
             }
             else
             {
-                throw new BravoUnexpectedException($"Unexpected { nameof(PolicyStatus) } value ({ policyValue })");
+                throw new BravoUnexpectedException($"Unexpected {nameof(PolicyStatus)} value ({policyValue})");
             }
         }
-
-        #endregion
 
         private static int? GetIntValue(string valueName, string relativeSubkeyName)
         {
@@ -76,7 +72,7 @@
             return value;
         }
 
-        private static bool GetGroupPoliciesEnabled()
+        private static bool GetPoliciesEnabled()
         {
             var enabled = Registry.LocalMachine.SubKeyExists(PolicySubKeyName);
 
@@ -85,22 +81,8 @@
 
             return enabled;
         }
-    }
 
-    internal static class GroupPolicyManagerExtensions
-    {
-        private const int PolicyDisabledValue = 0;
-        private const int PolicyEnabledValue = 1;
-
-        public static bool IsPolicyNotConfigured(this int? policyValue)
-        {
-            if (policyValue is null)
-                return true;
-
-            return false;
-        }
-
-        public static bool IsPolicyEnabled(this int? policyValue)
+        private static bool IsPolicyEnabled(int? policyValue)
         {
             if (policyValue is null)
                 return false;
@@ -111,12 +93,20 @@
             return false;
         }
 
-        public static bool IsPolicyDisabled(this int? policyValue)
+        private static bool IsPolicyDisabled(int? policyValue)
         {
             if (policyValue is null)
                 return false;
 
             if (policyValue == PolicyDisabledValue)
+                return true;
+
+            return false;
+        }
+
+        private static bool IsPolicyNotConfigured(int? policyValue)
+        {
+            if (policyValue is null)
                 return true;
 
             return false;

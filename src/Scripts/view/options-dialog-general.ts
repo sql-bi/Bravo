@@ -28,6 +28,7 @@ export class OptionsDialogGeneral {
         let optionsStruct: OptionStruct[] = [
             {
                 option: "theme",
+                lockedByPolicy: optionsController.optionIsPolicyLocked("theme"),
                 icon: "theme-auto",
                 name: i18n(strings.optionTheme),
                 description: i18n(strings.optionThemeDescription),
@@ -40,6 +41,7 @@ export class OptionsDialogGeneral {
             },
             {
                 option: "customOptions.locale",
+                lockedByPolicy: optionsController.optionIsPolicyLocked("customOptions.locale"),
                 icon: "language",
                 name: i18n(strings.optionLanguage),
                 description: i18n(strings.optionLanguageDescription),
@@ -76,6 +78,7 @@ export class OptionsDialogGeneral {
             },
             {
                 option: "useSystemBrowserForAuthentication",
+                lockedByPolicy: optionsController.optionIsPolicyLocked("useSystemBrowserForAuthentication"),
                 parent: "account",
                 name: i18n(strings.optionBrowserAuthentication),
                 description: i18n(strings.optionBrowserAuthenticationDescription),

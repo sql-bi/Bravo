@@ -23,6 +23,11 @@ export interface Options {
     customOptions?: ClientOptions
 } 
 
+export enum PolicyStatus {
+    NotConfigured = "NotConfigured",
+    Forced = "Forced",
+}
+
 export interface ProxyOptions {
     type: ProxyType
     useDefaultCredentials: boolean
@@ -178,7 +183,6 @@ export class OptionsStore<T> extends Dispatchable {
 export class OptionsController extends OptionsStore<Options> {
 
     storageName = "Bravo";
-    mode: optionsMode;
 
     defaultOptions: Options = {
         theme: ThemeType.Auto,
@@ -223,10 +227,9 @@ export class OptionsController extends OptionsStore<Options> {
         }
     };
 
-    constructor(options?: Options, mode: optionsMode = "host") {
+    constructor(options?: Options, public policies?: Dic<PolicyStatus>, public mode: optionsMode = "host") {
         super(options);
 
-        this.mode = mode;
         if (options) {
             this.options = Utils.Obj.merge(this.defaultOptions, options);
         } else { 
@@ -297,5 +300,38 @@ export class OptionsController extends OptionsStore<Options> {
             }
             return Promise.resolve(true);
         }
+    }
+
+    /**
+     * Check if there is a policy for passed option path
+     * Note that this check policy also at group level. Child policy has priority over group policy.
+     * E.g.:
+     *  - updateChannelEnabledPolicy  -> policy for `updateChannel` option at root level
+     *  - customOptions.localePolicy  -> policy for `localeEnabled` option in the `customOptions` group
+     *  - proxyPolicy                 -> policy for every option inside the `proxy` group - children inhereit this policy
+     */
+    optionPolicy(optionPath: string) {
+        let obj = this.policies;
+        let path = optionPath.split(".");
+        let status = PolicyStatus.NotConfigured;
+    
+        for (let i = 0; i < path.length; i++) {
+            const prop = path[i];
+
+            // Check also if it is a group
+            const propPolicy = (<any>obj)[`${prop}Policy`];
+            if (propPolicy !== undefined)
+                status = propPolicy;
+
+            if (i <= path.length - 1) {
+                if ((prop in obj))
+                    obj = (<any>obj)[prop];
+            }
+        }
+        return status;
+    }
+
+    optionIsPolicyLocked(optionPath: string) {
+        return (this.optionPolicy(optionPath) != PolicyStatus.NotConfigured);
     }
 }

@@ -6,7 +6,6 @@
     using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Infrastructure.Helpers;
     using Sqlbi.Bravo.Infrastructure.Security;
-    using Sqlbi.Bravo.Infrastructure.Security.Policies;
     using Sqlbi.Bravo.Models;
     using Sqlbi.Bravo.Models.FormatDax;
     using System;
@@ -31,7 +30,6 @@
         public static readonly string ApplicationRegistryKeyName = $@"SOFTWARE\{ ApplicationManufacturer }\{ ApplicationName }";
         public static readonly string ApplicationRegistryApplicationTelemetryEnableValue = "applicationTelemetryEnabled";
         public static readonly string ApplicationRegistryApplicationInstallFolderValue = "installFolder";
-        public static readonly bool TelemetryEnabledDefault = true;
         public static readonly string TelemetryInstrumentationKey = "47a8970c-6293-408a-9cce-5b7b311574d3";
         public static readonly string PBIDesktopProcessName = "PBIDesktop";
         public static readonly string PBIDesktopSSASProcessImageName = "msmdsrv.exe";
@@ -75,7 +73,6 @@
             UserSettingsFilePath = Path.Combine(ApplicationDataPath, "usersettings.json");
             MsalTokenCacheFilePath = Path.Combine(ApplicationDataPath, ".msalcache");
             WebView2VersionInfo = WebView2Helper.GetRuntimeVersionInfo();
-            GroupPolicies = new GroupPolicyManager();
 
             Diagnostics = new ConcurrentDictionary<string, DiagnosticMessage>();
             DefaultJsonOptions = new(JsonSerializerDefaults.Web) { MaxDepth = 32 }; // see Microsoft.AspNetCore.Mvc.JsonOptions.JsonSerializerOptions
@@ -144,8 +141,6 @@
         public static FileVersionInfo VersionInfo { get; }
 
         public static string? WebView2VersionInfo { get; }
-
-        public static GroupPolicyManager GroupPolicies { get; }
 
         public static bool IsWebView2RuntimeInstalled => WebView2VersionInfo is not null;
 

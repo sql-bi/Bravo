@@ -308,6 +308,7 @@ export enum strings {
     optionLanguage,
     optionLanguageDescription,
     optionLanguageResetConfirm,
+    optionPolicyNotice,
     optionProxyAddress,
     optionProxyAddressDescription,
     optionProxyBypassList,

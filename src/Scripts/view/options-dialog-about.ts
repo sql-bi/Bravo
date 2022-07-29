@@ -17,9 +17,19 @@ export class OptionsDialogAbout {
 
     updateStatusDiv: HTMLElement;
 
+    get canChangeChannel() {
+        return !optionsController.optionIsPolicyLocked("updateChannel");
+    }
+
+    get canChangeCheckForUpdates() {
+        return !optionsController.optionIsPolicyLocked("updateCheckEnabled");
+    }
+
+    get canCheckForUpdates() {
+        return (this.canChangeCheckForUpdates || optionsController.options.updateCheckEnabled);
+    }
+
     render(element: HTMLElement) {
-     
-        const updateChannel = optionsController.options.updateChannel;
 
         let html = `
             <div class="cols">
@@ -29,18 +39,23 @@ export class OptionsDialogAbout {
                 <div class="col colr">
                     <h2>${i18n(strings.appName)}</h2>
                     <div class="version">
-                        <select id="option-updatechannel">
+                        <select id="option-updatechannel" ${!this.canChangeChannel ? "disabled" : ""}>
                             ${Object.keys(UpdateChannelType).map(key => `
-                                <option value="${(<any>UpdateChannelType)[key]}" ${(<any>UpdateChannelType)[key] == updateChannel ? "selected" : ""}>${i18n((<any>strings)[`updateChannel${key}`])}</option>
+                                <option value="${(<any>UpdateChannelType)[key]}" ${(<any>UpdateChannelType)[key] == optionsController.options.updateChannel ? "selected" : ""}>${i18n((<any>strings)[`updateChannel${key}`])}</option>
                             `).join("")}
                         </select> &nbsp;
                         <span class="display-version">${i18n(strings.appVersion, { version: app.currentVersion.info.build})}</span>
                         <span class="ctrl copy-version icon-copy" title="${i18n(strings.copy)}"></span>
                     </div>
-                    <div class="update-status list"></div>
+                    ${this.canCheckForUpdates ? `<div class="update-status list"></div>` : ""}
                     <div class="auto-check-option">
-                        <label><input type="checkbox" ${optionsController.options.updateCheckEnabled ? " checked" : ""}>  &nbsp;${i18n(strings.optionCheckForUpdates)}</label>
+                        <label><input type="checkbox" ${optionsController.options.updateCheckEnabled ? " checked" : ""} ${!this.canChangeCheckForUpdates ? "disabled" : ""}>  &nbsp;${i18n(strings.optionCheckForUpdates)}</label>
                     </div>
+                    ${!this.canChangeChannel || !this.canChangeCheckForUpdates ? `
+                        <div class="policy-notice">
+                            ${i18n(strings.optionPolicyNotice)}
+                        </div>
+                    ` : ""}
                 </div>
             </div>
             <div class="sqlbi">
@@ -59,6 +74,8 @@ export class OptionsDialogAbout {
         this.updateStatusDiv = _(".update-status", element);
 
         _("#option-updatechannel", element).addEventListener("change", e => {
+            if (!this.canChangeChannel) return;
+
             let el = <HTMLSelectElement>e.currentTarget;
             optionsController.update("updateChannel", el.value);
             this.checkForUpdates(true);
@@ -70,15 +87,19 @@ export class OptionsDialogAbout {
         });
 
         _(".auto-check-option input", element).addEventListener("change", e => {
+            if (!this.canChangeCheckForUpdates) return;
+
             let el = <HTMLInputElement>e.currentTarget;
             optionsController.update("updateCheckEnabled", el.checked);
         });
+
         this.checkForUpdates();
     }
 
     checkForUpdates(force = false) {
+        if (!this.canCheckForUpdates) return;
 
-        let statusHtml = (newVersion: AppVersion) => 
+        const statusHtml = (newVersion: AppVersion) => 
             newVersion ? `
                 <div>
                     <div class="pending-update">${i18n(strings.appUpdateAvailable, { version: newVersion.toString() })}</div>
