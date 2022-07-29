@@ -22,6 +22,7 @@ export class OptionsDialogProxy {
         let optionsStruct: OptionStruct[] = [
             {
                 option: "proxy.type",
+                lockedByPolicy: optionsController.optionIsPolicyLocked("proxy.type"),
                 icon: "proxy",
                 name: i18n(strings.optionProxyType),
                 description: i18n(strings.optionProxyTypeDescription),
@@ -34,6 +35,7 @@ export class OptionsDialogProxy {
             },
             {
                 option: "proxy.address",
+                lockedByPolicy: optionsController.optionIsPolicyLocked("proxy.address"),
                 parent: "proxy.type",
                 toggledBy: {
                     option: "proxy.type",
@@ -45,6 +47,7 @@ export class OptionsDialogProxy {
             },
             {
                 option: "proxy.bypassOnLocal",
+                lockedByPolicy: optionsController.optionIsPolicyLocked("proxy.bypassOnLocal"),
                 parent: "proxy.type",
                 toggledBy: {
                     option: "proxy.type",
@@ -56,6 +59,7 @@ export class OptionsDialogProxy {
             },
             {
                 option: "proxy.bypassList",
+                lockedByPolicy: optionsController.optionIsPolicyLocked("proxy.bypassList"),
                 parent: "proxy.type",
                 toggledBy: {
                     option: "proxy.type",
@@ -67,6 +71,7 @@ export class OptionsDialogProxy {
             },
             {
                 option: "proxy.useDefaultCredentials",
+                lockedByPolicy: optionsController.optionIsPolicyLocked("proxy.useDefaultCredentials"),
                 icon: "security",
                 parent: "proxy.type",
                 toggledBy: {

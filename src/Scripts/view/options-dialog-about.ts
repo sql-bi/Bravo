@@ -18,8 +18,6 @@ export class OptionsDialogAbout {
     updateStatusDiv: HTMLElement;
 
     render(element: HTMLElement) {
-     
-        const updateChannel = optionsController.options.updateChannel;
 
         let html = `
             <div class="cols">
@@ -29,18 +27,22 @@ export class OptionsDialogAbout {
                 <div class="col colr">
                     <h2>${i18n(strings.appName)}</h2>
                     <div class="version">
-                        <select id="option-updatechannel">
-                            ${Object.keys(UpdateChannelType).map(key => `
-                                <option value="${(<any>UpdateChannelType)[key]}" ${(<any>UpdateChannelType)[key] == updateChannel ? "selected" : ""}>${i18n((<any>strings)[`updateChannel${key}`])}</option>
-                            `).join("")}
-                        </select> &nbsp;
+                        ${!optionsController.optionIsPolicyLocked("updateChannel") ? `
+                            <select id="option-updatechannel">
+                                ${Object.keys(UpdateChannelType).map(key => `
+                                    <option value="${(<any>UpdateChannelType)[key]}" ${(<any>UpdateChannelType)[key] == optionsController.options.updateChannel ? "selected" : ""}>${i18n((<any>strings)[`updateChannel${key}`])}</option>
+                                `).join("")}
+                            </select> &nbsp;
+                        ` : ""}
                         <span class="display-version">${i18n(strings.appVersion, { version: app.currentVersion.info.build})}</span>
                         <span class="ctrl copy-version icon-copy" title="${i18n(strings.copy)}"></span>
                     </div>
                     <div class="update-status list"></div>
-                    <div class="auto-check-option">
-                        <label><input type="checkbox" ${optionsController.options.updateCheckEnabled ? " checked" : ""}>  &nbsp;${i18n(strings.optionCheckForUpdates)}</label>
-                    </div>
+                    ${!optionsController.optionIsPolicyLocked("updateCheckEnabled") ? `
+                        <div class="auto-check-option">
+                            <label><input type="checkbox" ${optionsController.options.updateCheckEnabled ? " checked" : ""}>  &nbsp;${i18n(strings.optionCheckForUpdates)}</label>
+                        </div>
+                    ` : ""}
                 </div>
             </div>
             <div class="sqlbi">
@@ -73,12 +75,13 @@ export class OptionsDialogAbout {
             let el = <HTMLInputElement>e.currentTarget;
             optionsController.update("updateCheckEnabled", el.checked);
         });
+
         this.checkForUpdates();
     }
 
     checkForUpdates(force = false) {
-
-        let statusHtml = (newVersion: AppVersion) => 
+        
+        const statusHtml = (newVersion: AppVersion) => 
             newVersion ? `
                 <div>
                     <div class="pending-update">${i18n(strings.appUpdateAvailable, { version: newVersion.toString() })}</div>
@@ -89,7 +92,10 @@ export class OptionsDialogAbout {
                 <div class="up-to-date">${i18n(strings.appUpToDate)}</div>
             `;
 
-        if (!app.newVersion || force) {
+        if (optionsController.optionIsPolicyLocked("updateCheckEnabled") && !optionsController.options.updateCheckEnabled) {
+            this.updateStatusDiv.innerHTML = statusHtml(null);
+
+        } else if (!app.newVersion || force) {
 
             this.updateStatusDiv.innerHTML = Loader.html(false, false, 5);
             

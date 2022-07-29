@@ -18,6 +18,7 @@ export class OptionsDialogTelemetry {
         let optionsStruct: OptionStruct[] = [
             {
                 option: "telemetryEnabled",
+                lockedByPolicy: optionsController.optionIsPolicyLocked("telemetryEnabled"),
                 icon: "telemetry",
                 name: i18n(strings.optionTelemetry),
                 description: i18n(strings.optionTelemetryDescription),
@@ -26,6 +27,7 @@ export class OptionsDialogTelemetry {
             },
             {
                 option: "diagnosticLevel",
+                lockedByPolicy: optionsController.optionIsPolicyLocked("diagnosticLevel"),
                 icon: "bug",
                 name: i18n(strings.optionDiagnostic),
                 description: i18n(strings.optionDiagnosticDescription),

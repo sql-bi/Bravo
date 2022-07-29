@@ -1,6 +1,7 @@
 import * as CodeMirror from 'codemirror';
-import { Options } from '../controllers/options';
+import { Options, PolicyStatus } from '../controllers/options';
 import { TelemetryConfig } from '../controllers/telemetry';
+import { Dic } from '../helpers/utils';
 
 declare global {
     var CONFIG: {
@@ -9,6 +10,7 @@ declare global {
         version: string,
         build: string
         options: Options,
+        policies?: Dic<PolicyStatus>,
         token?: string,
         telemetry?: TelemetryConfig
         culture: {

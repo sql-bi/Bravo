@@ -22,7 +22,7 @@ Tabulator.registerModule([ColumnCalcsModule, DataTreeModule, FilterModule, Forma
 // Init the app
 let debug = new Debug(!!CONFIG.debug);
 let host = new Host(CONFIG.address, CONFIG.token);
-let optionsController = new OptionsController(CONFIG.options);
+let optionsController = new OptionsController(CONFIG.options, CONFIG.policies);
 let themeController = new ThemeController();
 let logger = new Logger(CONFIG.options.diagnosticLevel !== DiagnosticLevelType.None);
 let telemetry = new Telemetry(CONFIG.telemetry);
