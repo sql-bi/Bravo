@@ -317,7 +317,7 @@ const locale: Locale = {
         [_.optionLanguage]: "语言",
         [_.optionLanguageDescription]: "选择Bravo的语言, 需要重新加载",
         [_.optionLanguageResetConfirm]: "您需要重新加载Bravo以应用新的语言设置吗?",
-        [_.optionPolicyNotice]: "此选项由系统管理员控制。",
+        [_.optionPolicyNotice]: "此选项由您的组织管理。",
         [_.optionProxyAddress]: "代理服务器地址",
         [_.optionProxyAddressDescription]: "提供代理服务器的地址。",
         [_.optionProxyBypassList]: "排除地址列表",

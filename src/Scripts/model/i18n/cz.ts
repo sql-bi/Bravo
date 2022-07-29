@@ -317,7 +317,7 @@ const locale: Locale = {
         [_.optionLanguage]: "Jazyk",
         [_.optionLanguageDescription]: "Vyberte jazyk Bravo. Je nutné znovu načíst.",
         [_.optionLanguageResetConfirm]: "Chcete znovu načíst Bravo, abyste jej měli se zvoleným jazykem?",
-        [_.optionPolicyNotice]: "Tato možnost je řízena správcem systému.",
+        [_.optionPolicyNotice]: "Tuto možnost spravuje vaše organizace.",
         [_.optionProxyAddress]: "Adresa serveru proxy",
         [_.optionProxyAddressDescription]: "Uveďte adresu serveru proxy.",
         [_.optionProxyBypassList]: "Vyloučit seznam adres",

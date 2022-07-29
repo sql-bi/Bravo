@@ -316,7 +316,7 @@ const locale: Locale = {
         [_.optionLanguage]: "Idioma",
         [_.optionLanguageDescription]: "Cambiar Idioma de Bravo. Es necesario reiniciar.",
         [_.optionLanguageResetConfirm]: "¿Quiere reiniciar Bravo para aplicar el nuevo idioma?",
-        [_.optionPolicyNotice]: "Esta opción es controlada por el administrador del sistema.",
+        [_.optionPolicyNotice]: "Esta opción es administrada por su organización.",
         [_.optionProxyAddress]: "Dirección del servidor proxy",
         [_.optionProxyAddressDescription]: "Proporcione la dirección de su servidor proxy.",
         [_.optionProxyBypassList]: "Excluir la lista de direcciones",
