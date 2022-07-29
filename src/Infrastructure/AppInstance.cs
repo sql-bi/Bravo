@@ -23,11 +23,13 @@
 
         public AppInstance()
         {
-            var appName = AppEnvironment.DeploymentMode == AppDeploymentMode.Packaged ? AppEnvironment.ApplicationStoreAliasName : AppEnvironment.ApplicationName;
-            var appGuid = "8D4D9F1D39F94C7789D84729480D8198"; // Do not change !!
+            var appId = "8D4D9F1D39F94C7789D84729480D8198"; // Do not change !!
+            var appName = AppEnvironment.DeploymentMode == AppDeploymentMode.Packaged ? AppEnvironment.ApplicationStoreAliasName : AppEnvironment.ApplicationName;            
+            var pipeNamePrefix = AppEnvironment.DeploymentMode == AppDeploymentMode.Packaged ? "LOCAL\\" : string.Empty; // Named pipes in packaged applications must use the syntax \\.\pipe\LOCAL\ for the pipe name
+            var mutexNamePrefix = "Local\\"; // 'Local\' named system mutex visible only in the windows session where it was created
 
-            _pipeName = $"Local\\Pipe{ appName }{ appGuid }";
-            _mutexName = $"Local\\Mutex{ appName }{ appGuid }";
+            _pipeName = $"{pipeNamePrefix}{appName}.{appId}";
+            _mutexName = $"{mutexNamePrefix}{appName}{appId}";
             _mutex = new Mutex(initiallyOwned: true, name: _mutexName, createdNew: out _owned);
 
             if (_owned)
@@ -47,29 +49,6 @@
         /// Occurs when a new (secondary) instance of the application is started and the notification is sent to the primary (owner) instance
         /// </summary>
         public event EventHandler<AppInstanceStartupEventArgs>? OnNewInstance;
-
-        ///// <summary>
-        ///// Sends a message to the primary instance owner notifying it of startup arguments for the current instance
-        ///// </summary>
-        //public void NotifyOwner()
-        //{
-        //    var startupSettings = StartupSettings.CreateFromCommandLineArguments();
-        //    var message = AppInstanceStartupMessage.CreateFrom(startupSettings);
-
-        //    var hWnd = User32.FindWindow(lpClassName: null, lpWindowName: AppEnvironment.ApplicationMainWindowTitle);
-        //    if (hWnd != IntPtr.Zero)
-        //    {
-        //        var json = JsonSerializer.Serialize(message);
-        //        var bytes = Encoding.Unicode.GetBytes(json);
-
-        //        User32.COPYDATASTRUCT copyData;
-        //        copyData.dwData = (IntPtr)100;
-        //        copyData.lpData = json;
-        //        copyData.cbData = bytes.Length + 1;
-
-        //        _ = User32.SendMessage(hWnd, WindowMessage.WM_COPYDATA, wParam: 0, ref copyData);
-        //    }
-        //}
 
         /// <summary>
         /// Sends a message to the primary instance owner notifying it of startup arguments for the current instance
