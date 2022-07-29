@@ -24,8 +24,8 @@ export interface Options {
 } 
 
 export enum PolicyStatus {
-    NotConfigured = 0,
-    Forced = 1,
+    NotConfigured = "NotConfigured",
+    Forced = "Forced",
 }
 
 export interface ProxyOptions {
@@ -306,12 +306,12 @@ export class OptionsController extends OptionsStore<Options> {
      * Check if there is a policy for passed option path
      * Note that this check policy also at group level. Child policy has priority over group policy.
      * E.g.:
-     *  - updateChannelEnabledPolicy            -> policy for `updateChannel` option at root level
-     *  - customOptions.localeEnabledPolicy     -> policy for `localeEnabled` option in the `customOptions` group
-     *  - proxyEnabledPolicy                    -> policy for every option inside the `proxy` group - children inhereit this policy
+     *  - updateChannelEnabledPolicy  -> policy for `updateChannel` option at root level
+     *  - customOptions.localePolicy  -> policy for `localeEnabled` option in the `customOptions` group
+     *  - proxyPolicy                 -> policy for every option inside the `proxy` group - children inhereit this policy
      */
     optionPolicy(optionPath: string) {
-        let obj = { a: { b: { helloOptionEnabledPolicy: 1}}}; 
+        let obj = this.policies;
         let path = optionPath.split(".");
         let status = PolicyStatus.NotConfigured;
     
@@ -319,7 +319,7 @@ export class OptionsController extends OptionsStore<Options> {
             const prop = path[i];
 
             // Check also if it is a group
-            const propPolicy = (<any>obj)[`${prop}EnabledPolicy`];
+            const propPolicy = (<any>obj)[`${prop}Policy`];
             if (propPolicy !== undefined)
                 status = propPolicy;
 
@@ -332,6 +332,6 @@ export class OptionsController extends OptionsStore<Options> {
     }
 
     optionIsPolicyLocked(optionPath: string) {
-        return (this.optionPolicy(optionPath) == PolicyStatus.Forced);
+        return (this.optionPolicy(optionPath) != PolicyStatus.NotConfigured);
     }
 }

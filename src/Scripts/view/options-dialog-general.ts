@@ -78,6 +78,7 @@ export class OptionsDialogGeneral {
             },
             {
                 option: "useSystemBrowserForAuthentication",
+                lockedByPolicy: optionsController.optionIsPolicyLocked("useSystemBrowserForAuthentication"),
                 parent: "account",
                 name: i18n(strings.optionBrowserAuthentication),
                 description: i18n(strings.optionBrowserAuthenticationDescription),

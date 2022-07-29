@@ -319,6 +319,7 @@ const locale: Locale = {
         [_.optionLanguage]: "Dil",
         [_.optionLanguageDescription]: "Bravo dilini seçin. Yeniden başlatma gerekli.",
         [_.optionLanguageResetConfirm]: "Yeni dili uygulamak için Bravo'yu yeniden başlatmak istiyor musunuz?",
+        [_.optionPolicyNotice]: "Bu seçenek sistem yöneticisi tarafından kontrol edilir.",
         [_.optionProxyAddress]: "Proxy sunucu adresi",
         [_.optionProxyAddressDescription]: "Proxy sunucunuzun adresini sağlayın.",
         [_.optionProxyBypassList]: "Adres Listesini Hariç Et",

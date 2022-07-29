@@ -317,6 +317,7 @@ const locale: Locale = {
         [_.optionLanguage]: "Sprog",
         [_.optionLanguageDescription]: "Vælg det sprog der skal anvendes i Bravo. Genstart nødvendig.",
         [_.optionLanguageResetConfirm]: "Vil du genstarte Bravo for at anvende det valgte sprog?",
+        [_.optionPolicyNotice]: "Denne mulighed styres af systemadministratoren.",
         [_.optionProxyAddress]: "Proxy -serveradresse",
         [_.optionProxyAddressDescription]: "Giv adressen på din proxyserver.",
         [_.optionProxyBypassList]: "Ekskluder adresselisten",
