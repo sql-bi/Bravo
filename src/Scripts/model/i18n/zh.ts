@@ -281,6 +281,8 @@ const locale: Locale = {
         [_.openWithDaxFormatterCtrlTitle]: "使用DAX Formatter在线标准格式化",
         [_.optionAccount]: "Power BI 账户",
         [_.optionAccountDescription]: "设置您的账户以访问Power BI 在线数据集",
+        [_.optionBrowserAuthentication]: "在浏览器中进行身份验证",
+        [_.optionBrowserAuthenticationDescription]: "使用默认浏览器进行身份验证。这是一种替代登录方法，可用于解决两因素身份验证的问题。",
         [_.optionCheckForUpdates]: "自动检查更新",
         [_.optionDiagnostic]: "诊断级别",
         [_.optionDiagnosticDescription]: "在诊断窗格中显示错误和日志. 选择 <em>基本</em> 记录部分信息 (这些信息将被匿名化). <em>详细</em> 记录所有信息(所有信息将完整保留)",

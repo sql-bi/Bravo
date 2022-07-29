@@ -281,6 +281,8 @@ const locale: Locale = {
         [_.openWithDaxFormatterCtrlTitle]: "Format online with DAX Formatter",  
         [_.optionAccount]: "Power BI Account",
         [_.optionAccountDescription]: "Set the account to access Power BI online datasets.",
+        [_.optionBrowserAuthentication]: "Authenticate in Browser",
+        [_.optionBrowserAuthenticationDescription]: "Autheticate using the default browser. This is an alternative login method that is useful for solving problems with two-factor authentication.",
         [_.optionCheckForUpdates]: "Automatically check for updates",
         [_.optionDiagnostic]: "Diagnostics Level",
         [_.optionDiagnosticDescription]: "Show errors and logs in a diagnostics pane. Choose <em>Basic</em> to log only a few messages. <em>Verbose</em> logs all messages.",

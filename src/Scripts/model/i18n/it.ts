@@ -281,6 +281,8 @@ const locale: Locale = {
         [_.openWithDaxFormatterCtrlTitle]: "Formatta online con DAX Formatter",  
         [_.optionAccount]: "Account Power BI",
         [_.optionAccountDescription]: "Imposta l'account per accedere ai dataset online di Power BI.",
+        [_.optionBrowserAuthentication]: "Autentica nel browser",
+        [_.optionBrowserAuthenticationDescription]: "Autenticati utilizzando il browser predefinito. Questo è un metodo di accesso alternativo utile per risolvere problemi con l'autenticazione a due fattori.",
         [_.optionCheckForUpdates]: "Controllare automaticamente aggiornamenti",
         [_.optionDiagnostic]: "Diagnostica",
         [_.optionDiagnosticDescription]: "Mostra errori e log in un pannello apposito. Scegli <em>Base</em> per registrare solo alcuni messaggi. <em>Integrale</em> registra invece tutti i messaggi.",

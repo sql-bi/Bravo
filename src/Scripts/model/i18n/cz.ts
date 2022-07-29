@@ -281,6 +281,8 @@ const locale: Locale = {
         [_.openWithDaxFormatterCtrlTitle]: "Formátujte online pomocí DAX Formatter",  
         [_.optionAccount]: "Power BI Účet",
         [_.optionAccountDescription]: "Nastavte účet pro přístup k online datovým sadám Power BI.",
+        [_.optionBrowserAuthentication]: "Autentizovat v prohlížeči",
+        [_.optionBrowserAuthenticationDescription]: "Autentizovat pomocí výchozího prohlížeče.Toto je alternativní metoda přihlášení, která je užitečná pro řešení problémů se dvoufaktorovou ověřováním.",
         [_.optionCheckForUpdates]: "Automaticky zkontrolujte aktualizace",
         [_.optionDiagnostic]: "Diagnostická úroveň",
         [_.optionDiagnosticDescription]: "Zobrazit chyby a protokoly v podokně diagnostiky. Zvolte <em>Základní</em>, chcete-li protokolovat pouze několik zpráv. <em>Úplný</em> protokoluje všechny zprávy.",

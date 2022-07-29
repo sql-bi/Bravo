@@ -283,6 +283,8 @@ const locale: Locale = {
         [_.openWithDaxFormatterCtrlTitle]: "DAX Formatter ile çevrimiçi biçimlendir",
         [_.optionAccount]: "Power BI Hesabı",
         [_.optionAccountDescription]: "Hesabı Power BI çevrimiçi veri setlerine erişmek için ayarlayın.",
+        [_.optionBrowserAuthentication]: "Tarayıcıda kimlik doğrulama",
+        [_.optionBrowserAuthenticationDescription]: "Varsayılan tarayıcıyı kullanarak kimlik doğrulaması yapın.Bu, iki faktörlü kimlik doğrulama ile problemleri çözmek için yararlı olan alternatif bir giriş yöntemidir.",
         [_.optionCheckForUpdates]: "Güncellemeleri otomatik olarak kontrol edin",
         [_.optionDiagnostic]: "Loglama Düzeyi",
         [_.optionDiagnosticDescription]: "Bir tanılama bölmesinde hataları ve günlükleri göster. Yalnızca birkaç iletiyi günlüğe kaydetmek için <em>Temel</em>'i seçin. <em>Ayrıntılı</em> tüm iletileri günlüğe kaydeder.",

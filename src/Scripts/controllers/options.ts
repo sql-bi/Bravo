@@ -17,6 +17,7 @@ export interface Options {
     telemetryEnabled: boolean
     updateChannel: UpdateChannelType
     updateCheckEnabled: boolean
+    useSystemBrowserForAuthentication: boolean
     diagnosticLevel: DiagnosticLevelType
     proxy: ProxyOptions
     customOptions?: ClientOptions
@@ -185,6 +186,7 @@ export class OptionsController extends OptionsStore<Options> {
         diagnosticLevel: DiagnosticLevelType.None,
         updateChannel: UpdateChannelType.Stable,
         updateCheckEnabled: true,
+        useSystemBrowserForAuthentication: false,
         proxy: {
             type: ProxyType.System,
             useDefaultCredentials: true,
