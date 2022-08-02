@@ -19,6 +19,7 @@ export class OptionsDialogFormatting {
         let optionsStruct: OptionStruct[] = [
             {
                 option: "customOptions.formatting.preview",
+                lockedByPolicy: optionsController.optionIsPolicyLocked("customOptions.formatting.preview"),
                 icon: "dax-formatter",
                 name: i18n(strings.optionFormattingPreview),
                 description: i18n(strings.optionFormattingPreviewDescription),
@@ -26,6 +27,7 @@ export class OptionsDialogFormatting {
             },
             {
                 option: "customOptions.formatting.region",
+                lockedByPolicy: optionsController.optionIsPolicyLocked("customOptions.formatting.region"),
                 icon: "separators",
                 name: i18n(strings.optionFormattingSeparators),
                 description: i18n(strings.optionFormattingSeparatorsDescription),
@@ -38,6 +40,7 @@ export class OptionsDialogFormatting {
             },
             {
                 option: "customOptions.formatting.daxFormatter.lineStyle",
+                lockedByPolicy: optionsController.optionIsPolicyLocked("customOptions.formatting.daxFormatter.lineStyle"),
                 icon: "lines",
                 name: i18n(strings.optionFormattingLines),
                 description: i18n(strings.optionFormattingLinesDescription),
@@ -50,6 +53,7 @@ export class OptionsDialogFormatting {
             },
             {
                 option: "customOptions.formatting.daxFormatter.spacingStyle",
+                lockedByPolicy: optionsController.optionIsPolicyLocked("customOptions.formatting.daxFormatter.spacingStyle"),
                 icon: "spaces",
                 name: i18n(strings.optionFormattingSpaces),
                 description: i18n(strings.optionFormattingSpacesDescription),
@@ -63,6 +67,7 @@ export class OptionsDialogFormatting {
             },
             {
                 option: "customOptions.formatting.daxFormatter.lineBreakStyle",
+                lockedByPolicy: optionsController.optionIsPolicyLocked("customOptions.formatting.daxFormatter.lineBreakStyle"),
                 icon: "breaks",
                 name: i18n(strings.optionFormattingBreaks),
                 description: i18n(strings.optionFormattingBreaksDescription),
@@ -77,6 +82,7 @@ export class OptionsDialogFormatting {
             },
             {
                 option: "customOptions.formatting.daxFormatter.includeTimeIntelligence",
+                lockedByPolicy: optionsController.optionIsPolicyLocked("customOptions.formatting.daxFormatter.includeTimeIntelligence"),
                 icon: "folder-fx",
                 name: i18n(strings.optionFormattingIncludeTimeIntelligence),
                 description: i18n(strings.optionFormattingIncludeTimeIntelligenceDescription),

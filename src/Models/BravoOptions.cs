@@ -3,7 +3,6 @@
     using Sqlbi.Bravo.Infrastructure;
     using Sqlbi.Bravo.Infrastructure.Configuration;
     using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
-    using Sqlbi.Bravo.Infrastructure.Security.Policies;
     using System.Text.Json;
     using System.Text.Json.Serialization;
 
@@ -18,9 +17,7 @@
             TelemetryEnabled = userSettings.TelemetryEnabled;
             DiagnosticLevel = userSettings.DiagnosticLevel;
             UpdateChannel = userSettings.UpdateChannel;
-            UpdateChannelPolicy = userSettings.UpdateChannelPolicy;
             UpdateCheckEnabled = userSettings.UpdateCheckEnabled;
-            UpdateCheckEnabledPolicy = userSettings.UpdateCheckEnabledPolicy;
             Theme = userSettings.Theme;
             Proxy = userSettings.Proxy;
             UseSystemBrowserForAuthentication = userSettings.UseSystemBrowserForAuthentication;
@@ -29,28 +26,25 @@
         }
 
         [JsonPropertyName("telemetryEnabled")]
-        public bool TelemetryEnabled { get; set; } = AppEnvironment.TelemetryEnabledDefault;
+        public bool TelemetryEnabled { get; set; } = UserSettings.DefaultTelemetryEnabled;
+
+        [JsonPropertyName("diagnosticLevel")]
+        public DiagnosticLevelType DiagnosticLevel { get; set; } = UserSettings.DefaultDiagnosticLevel;
 
         [JsonPropertyName("updateChannel")]
-        public UpdateChannelType UpdateChannel { get; set; } = UpdateChannelType.Stable;
-
-        [JsonPropertyName("updateChannelPolicy")]
-        public PolicyStatus UpdateChannelPolicy { get; set; } = PolicyStatus.NotConfigured;
+        public UpdateChannelType UpdateChannel { get; set; } = UserSettings.DefaultUpdateChannel;
 
         [JsonPropertyName("updateCheckEnabled")]
-        public bool UpdateCheckEnabled { get; set; } = true;
-
-        [JsonPropertyName("updateCheckEnabledPolicy")]
-        public PolicyStatus UpdateCheckEnabledPolicy { get; set; } = PolicyStatus.NotConfigured;
+        public bool UpdateCheckEnabled { get; set; } = UserSettings.DefaultUpdateCheckEnabled;
 
         [JsonPropertyName("theme")]
-        public ThemeType Theme { get; set; } = ThemeType.Auto;
+        public ThemeType Theme { get; set; } = UserSettings.DefaultTheme;
 
         [JsonPropertyName("proxy")]
         public ProxySettings? Proxy { get; set; }
 
         [JsonPropertyName("useSystemBrowserForAuthentication")]
-        public bool UseSystemBrowserForAuthentication { get; set; } = false;
+        public bool UseSystemBrowserForAuthentication { get; set; } = UserSettings.DefaultUseSystemBrowserForAuthentication;
 
         [JsonPropertyName("templateDevelopmentEnabled")]
         public bool TemplateDevelopmentEnabled { get; set; } = false;
@@ -76,9 +70,6 @@
 
             var settings = UserPreferences.Current;
             {
-                BravoUnexpectedException.Assert(settings.UpdateChannelPolicy == UpdateChannelPolicy);
-                BravoUnexpectedException.Assert(settings.UpdateCheckEnabledPolicy == UpdateCheckEnabledPolicy);
-
                 settings.TelemetryEnabled = TelemetryEnabled;
                 settings.DiagnosticLevel = DiagnosticLevel;
                 settings.UpdateChannel = UpdateChannel;

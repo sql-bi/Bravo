@@ -11,11 +11,13 @@ import { strings } from '../model/strings';
 import { ContextMenu } from './contextmenu';
 
 export interface OptionStruct {
+    id?: string
     option?: string
     icon?: string
     bold?: boolean
     placeholder?: string
     readonly?: boolean
+    lockedByPolicy?: boolean
     parent?: string
     name?: string
     description?: string
@@ -88,7 +90,7 @@ export module Renderer {
 
         export function render(struct: OptionStruct, element: HTMLElement, store: OptionsStore<any>) {
 
-            let id = Utils.Text.slugify(struct.option ? struct.option : struct.name); //Utils.DOM.uniqueId()
+            let id = Utils.Text.slugify(struct.id ? struct.id : (struct.option ? struct.option : struct.name)); //Utils.DOM.uniqueId()
             let value = (Utils.Obj.isSet(struct.value) ? struct.value : (struct.option ? store.getOption(struct.option) : ""));
             let valid = (struct.option ? store.isValid(struct.option) : true);
             let valueType = (struct.valueType ? struct.valueType : 
@@ -113,7 +115,7 @@ export module Renderer {
                 case OptionType.select:
 
                     ctrlHtml = `
-                        <select class="listener" ${struct.readonly ? "readonly" : ""} ${struct.attributes ? struct.attributes : ""}>
+                        <select class="listener" ${struct.readonly || struct.lockedByPolicy ? "disabled" : ""} ${struct.attributes ? struct.attributes : ""}>
                             ${struct.values.map(_value => `
                                 <option value="${_value[0]}" ${value == _value[0] ? "selected" : ""}>${_value[1]}</option>
                             `).join("")}
@@ -124,7 +126,7 @@ export module Renderer {
                 case OptionType.switch:
                     ctrlHtml = `
                         <div class="switch-container">
-                            <label class="switch"><input type="checkbox" class="listener" ${(value && !struct.reverse) || (!value && struct.reverse) ? "checked" : ""} ${struct.readonly ? "readonly" : ""} ${struct.attributes ? struct.attributes : ""}><span class="slider"></span></label> 
+                            <label class="switch"><input type="checkbox" class="listener" ${(value && !struct.reverse) || (!value && struct.reverse) ? "checked" : ""} ${struct.readonly || struct.lockedByPolicy ? "disabled" : ""} ${struct.attributes ? struct.attributes : ""}><span class="slider"></span></label> 
                         </div>
                     `;
                     break;
@@ -133,7 +135,7 @@ export module Renderer {
                     ctrlHtml = `
                         <div class="validation-container${!valid ? " invalid" : ""}">
                             <div class="validation-input">
-                                <input type="text" class="listener" value="${value}" ${struct.attributes ? struct.attributes : ""} ${struct.readonly ? "readonly" : ""} ${struct.placeholder ? ` placeholder="${struct.placeholder}"` : ""}>
+                                <input type="text" class="listener" value="${value}" ${struct.attributes ? struct.attributes : ""} ${struct.readonly || struct.lockedByPolicy ? "disabled" : ""} ${struct.placeholder ? ` placeholder="${struct.placeholder}"` : ""}>
                                 <div class="status icon"></div>
                             </div>
                             <div class="validation-desc">${!valid ? i18n(strings.optionInvalidValue) : ""}</div>
@@ -145,7 +147,7 @@ export module Renderer {
                     ctrlHtml = `
                         <div class="validation-container contains-textarea${!valid ? " invalid" : ""}">
                             <div class="validation-input">
-                                <textarea rows="3" class="listener" ${struct.attributes ? struct.attributes : ""} ${struct.readonly ? "readonly" : ""} ${struct.placeholder ? ` placeholder="${struct.placeholder}"` : ""}>${value}</textarea>
+                                <textarea rows="3" class="listener" ${struct.attributes ? struct.attributes : ""} ${struct.readonly || struct.lockedByPolicy ? "disabled" : ""} ${struct.placeholder ? ` placeholder="${struct.placeholder}"` : ""}>${value}</textarea>
                                 <div class="status icon"></div>
                             </div>
                             <div class="validation-desc">${!valid ? i18n(strings.optionInvalidValue) : ""}</div>
@@ -155,7 +157,7 @@ export module Renderer {
 
                 case OptionType.number:
                     ctrlHtml = `
-                        <input type="number" ${struct.range && struct.range.length ? `min="${struct.range[0]}"` : ""} ${struct.readonly ? "readonly" : ""} ${struct.range && struct.range.length > 1 ? `max="${struct.range[1]}"` : ""} class="listener" value="${value}" ${struct.attributes ? struct.attributes : ""} ${struct.placeholder ? ` placeholder="${struct.placeholder}"` : ""}>
+                        <input type="number" ${struct.range && struct.range.length ? `min="${struct.range[0]}"` : ""} ${struct.readonly || struct.lockedByPolicy ? "disabled" : ""} ${struct.range && struct.range.length > 1 ? `max="${struct.range[1]}"` : ""} class="listener" value="${value}" ${struct.attributes ? struct.attributes : ""} ${struct.placeholder ? ` placeholder="${struct.placeholder}"` : ""}>
                     `;
                     break;
 
@@ -202,9 +204,11 @@ export module Renderer {
 
             let html = `
                 <div id="${id}" class="option ${struct.parent ? "child": ""} ${toggledByClass} ${struct.cssClass ? struct.cssClass : ""}" ${isHidden ? "hidden" : ""}> 
-                    ${struct.type == OptionType.custom 
-                        ? (Utils.Obj.isSet(struct.customHtml) ? struct.customHtml() : "") 
-                        : ` 
+                    ${struct.type == OptionType.custom ? 
+                        (
+                            Utils.Obj.isSet(struct.customHtml) ? struct.customHtml() : ""
+                        ) : 
+                        ` 
                             ${struct.icon ? `<div class="option-icon icon icon-${struct.icon}"></div>` : (struct.parent ? `<div class="option-icon icon"></div>` : "")}
                             <div class="title">
                                 <div class="name ${struct.bold ? "bold" : ""}">${struct.name}</div>
@@ -212,6 +216,11 @@ export module Renderer {
                                     `<div class="desc">${struct.description /*Renderer.Text.renderExpandable(struct.description, 150, 170)*/}</div>` :
                                     ""
                                 }
+                                ${struct.lockedByPolicy ? `
+                                    <div class="policy-notice">
+                                        ${i18n(strings.optionPolicyNotice)}
+                                    </div>
+                                ` : ""}
                                 ${struct.type == OptionType.textarea ? ctrlHtml : ""}
                             </div>
                             ${struct.type == OptionType.textarea ? "": `
@@ -219,7 +228,9 @@ export module Renderer {
                                     ${ctrlHtml}
                                 </div>
                             `}
-                        `}
+                        `
+                    }
+                    
                 </div>
             `;
 
@@ -247,7 +258,7 @@ export module Renderer {
 
             const listener = _(`#${id} .listener`, element);
             
-            if (!struct.readonly) {
+            if (!struct.readonly && ! struct.lockedByPolicy) {
                 Options.validateOption(listener, struct, true);
 
                 if (struct.type == OptionType.switch || 
@@ -331,7 +342,7 @@ export module Renderer {
         }
 
         export function validateOption(element: HTMLElement, struct: OptionStruct, initial = false) {
-            if ((struct.type == OptionType.text || struct.type == OptionType.textarea) && !struct.readonly && Utils.Obj.isSet(struct.validation)) {
+            if ((struct.type == OptionType.text || struct.type == OptionType.textarea) && !struct.readonly && !struct.lockedByPolicy && Utils.Obj.isSet(struct.validation)) {
                 let validationContainer = element.closest(".validation-container");
                 validationContainer.classList.remove("valid", "invalid");
                 validationContainer.classList.add("validating");

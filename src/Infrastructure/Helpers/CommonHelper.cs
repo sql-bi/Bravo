@@ -93,9 +93,6 @@
 
         public async static Task<BravoUpdate> CheckForUpdateAsync(UpdateChannelType updateChannel, CancellationToken cancellationToken)
         {
-            UserPreferences.Current.AssertUpdateCheckEnabledPolicy();
-            UserPreferences.Current.AssertUpdateChannelPolicy(updateChannel);
-
             var channelPath = updateChannel switch
             {
                 UpdateChannelType.Stable => "bravo-public",

@@ -272,6 +272,8 @@ export enum strings {
     openWithDaxFormatterCtrlTitle,
     optionAccount,
     optionAccountDescription,
+    optionBrowserAuthentication,
+    optionBrowserAuthenticationDescription,
     optionCheckForUpdates,
     optionDiagnostic,
     optionDiagnosticDescription,
@@ -306,6 +308,7 @@ export enum strings {
     optionLanguage,
     optionLanguageDescription,
     optionLanguageResetConfirm,
+    optionPolicyNotice,
     optionProxyAddress,
     optionProxyAddressDescription,
     optionProxyBypassList,
@@ -402,5 +405,5 @@ export enum strings {
     welcomeHelpTitle,
     welcomeText,
     whitespacesTitle,
-    wrappingTitle
+    wrappingTitle,
 };

@@ -10,19 +10,37 @@
       <string id="OptionSettings_group">Application Options</string>
 
       <!-- OptionSettings -->
+
+      <string id="TelemetryEnabled">Configure how the application handles the interactive authentication, using an embedded web browser or the system default browser</string>
+      <string id="TelemetryEnabled_explanation">
+        If the status is set to Not Configured, this setting is configured based on user prefences.
       
-      <string id="UpdateChannel">Configures the release channel to be used when checking for updates</string>
+        If the status is set to Enabled, the application telemetry is forcibly enabled.
+      
+        If the status is set to Disabled, the application telemetry is forcibly disabled.
+      </string>
+
+      <string id="UseSystemBrowserForAuthentication">Configure how the application handles the interactive authentication, using an embedded web browser or the system default browser</string>
+      <string id="UseSystemBrowserForAuthentication_explanation">
+        If the status is set to Not Configured, this setting is configured based on user prefences.
+      
+        If the status is set to Enabled, the application uses the system default browser for for interactive authentication.
+      
+        If the status is set to Disabled, the application uses an embedded web browser for for interactive authentication.
+      </string>
+      
+      <string id="UpdateChannel">Configure the release channel to be used when checking for updates</string>
       <string id="UpdateChannel_Stable">STABLE - stable build release channel</string>
       <string id="UpdateChannel_Dev">DEV - internal development build release channel</string>
       <string id="UpdateChannel_explanation">
-        If the status is set to Not Configured or Disabled, the stable channel are used by default and this setting can be configured by the user.
+        If the status is set to Not Configured or Disabled, the stable channel are used by default and this setting is configured based on user prefences.
 
         If the status is set to Disabled, the selected update channel is forcibly used.
       </string>
       
       <string id="UpdateCheckEnabled">Configure update checking and update notifications</string>
       <string id="UpdateCheckEnabled_explanation">
-        If the status is set to Not Configured, update checking and update notifications are enabled by default and this setting can be configured by the user.
+        If the status is set to Not Configured, this setting is configured based on user prefences.
 
         If the status is set to Enabled, update checking and update notifications forcibly enabled.
 
