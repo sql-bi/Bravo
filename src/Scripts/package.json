@@ -30,15 +30,15 @@
   },
   "dependencies": {
     "@microsoft/applicationinsights-web": "^2.7.2",
-    "chart.js": "^3.6.2",
-    "chartjs-chart-treemap": "^2.0.1",
+    "chart.js": "^3.9.0",
+    "chartjs-chart-treemap": "^2.0.2",
     "codemirror": "^5.65.0",
     "draggabilly": "^2.4.1",
     "fast-equals": "^2.0.4",
     "json-formatter-js": "https://github.com/danieleperilli/json-formatter-js.git",
     "sanitize-html": "^2.6.1",
     "split.js": "^1.6.5",
-    "tabulator-tables": "^5.2.6",
+    "tabulator-tables": "^5.3.1",
     "ts-md5": "^1.2.10"
   }
 }

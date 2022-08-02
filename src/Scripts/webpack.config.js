@@ -40,6 +40,13 @@ module.exports = (env, argv) => {
           enforce: 'pre',
           use: ['source-map-loader'],
         },
+        {
+          test: /\.m?js$/,
+          resolve: {
+            fullySpecified: false,
+          },
+        },
+        
       ],
     },
     ignoreWarnings: [/Failed to parse source map/],
