@@ -52,9 +52,6 @@
         [JsonPropertyName("manageDatesPackageRepository")]
         public string? ManageDatesPackageRepository { get; set; }
 
-        [JsonPropertyName("diagnosticLevel")]
-        public DiagnosticLevelType DiagnosticLevel { get; set; } = DiagnosticLevelType.None;
-
         [JsonPropertyName("customOptions")]
         public JsonElement? CustomOptions { get; set; }
 
