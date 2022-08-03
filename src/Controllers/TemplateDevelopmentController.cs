@@ -33,6 +33,30 @@
         }
 
         /// <summary>
+        /// Returns all the <see cref="CustomPackage"/> of type <see cref="CustomPackageType.Organization"/> from the organization repository
+        /// </summary>
+        /// <response code="200">Status200OK - Success</response>
+        /// <response code="403">Status403Forbidden -  Use of the tremplate development API is not enabled</response>
+        [HttpPost]
+        [ActionName("GetOrganizationCustomPackages")]
+        [Produces(MediaTypeNames.Application.Json)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<CustomPackage>))]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesDefaultResponseType]
+        public IActionResult GetOrganizationCustomPackages(CancellationToken cancellationToken)
+        {
+            if (_templateDevelopmentService.Enabled)
+            {
+                // TODO: retreive CustomPackageType.Organization packages
+                var packages = System.Array.Empty<CustomPackage>();
+                return Ok(packages);
+            }
+
+            return Forbid();
+        }
+
+        /// <summary>
         /// Displays a dialog box that prompts the user to select a '.package.json' file and returns the <see cref="CustomPackage"/>
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
