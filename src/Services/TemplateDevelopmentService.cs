@@ -121,6 +121,7 @@
                     customPackage.Path = path;
                     customPackage.Name = package.Configuration.Name;
                     customPackage.Description = package.Configuration.Description;
+                    customPackage.HasPackage = true;
                 }
             }
 
@@ -131,13 +132,45 @@
                 {
                     customPackage.WorkspaceName = codeworkspaceFileInfo.Directory.Name;
                     customPackage.WorkspacePath = codeworkspaceFileInfo.Directory.FullName;
+                    customPackage.HasWorkspace = true;
                 }
             }
         }
 
         public CustomPackage ValidateCustomPackage(CustomPackage customPackage)
         {
-            //var p = GetCustomPackage()
+            customPackage.HasWorkspace = false;
+            customPackage.HasPackage = false;
+
+            if (customPackage.Path is not null)
+            {
+                var existingCustomPackage = GetCustomPackage(customPackage.Path, CustomPackageType.User);
+
+                if (customPackage.HasWorkspace == false && existingCustomPackage.HasWorkspace == true)
+                {
+                    customPackage.WorkspaceName = existingCustomPackage.WorkspaceName;
+                    customPackage.WorkspacePath = existingCustomPackage.WorkspacePath;
+                }
+
+                customPackage.HasWorkspace = existingCustomPackage.HasWorkspace;
+                customPackage.HasPackage = existingCustomPackage.HasPackage;
+            }
+            else if (customPackage.WorkspacePath is not null && customPackage.WorkspaceName is not null)
+            {
+                var workspaceCodeworkspaceName = Path.ChangeExtension(customPackage.WorkspaceName, ".code-workspace");
+                var workspaceCodeworkspacePath = Path.Combine(customPackage.WorkspacePath, workspaceCodeworkspaceName);
+                var existingCustomPackage = GetCustomPackage(workspaceCodeworkspacePath, CustomPackageType.User);
+
+                if (customPackage.HasPackage == false && existingCustomPackage.HasPackage == true)
+                {
+                    customPackage.Path = existingCustomPackage.Path;
+                    customPackage.Name = existingCustomPackage.Name;
+                    customPackage.Description = existingCustomPackage.Description;
+                }
+
+                customPackage.HasWorkspace = existingCustomPackage.HasWorkspace;
+                customPackage.HasPackage = existingCustomPackage.HasPackage;
+            }
 
             return customPackage;
         }
@@ -156,6 +189,7 @@
                 Description = null,
                 WorkspaceName = workspaceName,
                 WorkspacePath = workspacePath,
+                HasWorkspace = true,
             };
 
             var templateFiles = _templateManager.GetTemplateFiles(configuration);
@@ -183,6 +217,7 @@
                 customPackage.Path = packageFilePath;
                 customPackage.Name = package.Configuration.Name;
                 customPackage.Description = package.Configuration.Description;
+                customPackage.HasPackage = true;
             }
 
             // .vscode\extensions.json

@@ -4,14 +4,13 @@
     using System.Diagnostics;
     using System.Text.Json.Serialization;
 
-    [DebuggerDisplay("{Name} {IsCurrent}")]
+    [DebuggerDisplay("{Name}")]
     public class CustomPackage
     {
         [Required]
         [JsonPropertyName("type")]
         public CustomPackageType? Type { get; set; }
 
-        [Required]
         [JsonPropertyName("path")]
         public string? Path { get; set; }
 
@@ -27,11 +26,11 @@
         [JsonPropertyName("workspaceName")]
         public string? WorkspaceName { get; set; }
 
-        //[JsonPropertyName("hasWorkspace")]
-        //public bool HasWorkspace => WorkspacePath is not null && WorkspaceName is not null;
+        [JsonPropertyName("hasWorkspace")]
+        public bool HasWorkspace { get; set; }
 
-        //[JsonPropertyName("hasPackage")]
-        //public bool HasPackage => Path is not null;
+        [JsonPropertyName("hasPackage")]
+        public bool HasPackage { get; set; }
     }
 
     public enum CustomPackageType

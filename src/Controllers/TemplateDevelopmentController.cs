@@ -112,7 +112,7 @@
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
         /// <response code="403">Status403Forbidden -  Use of the tremplate development API is not enabled</response>
-        [HttpGet]
+        [HttpPost]
         [ActionName("ValidateCustomPackage")]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(CustomPackage))]
