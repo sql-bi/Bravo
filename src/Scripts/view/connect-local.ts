@@ -93,7 +93,6 @@ export class ConnectLocal extends ConnectMenuItem {
                 columns: [
                     { 
                         field: "reportName", 
-                        title: "Name",
                         formatter: (cell) => {
                             let report = <PBIDesktopReport>cell.getData();
                             return `<span class="icon-pbix">${report.reportName}</span>`;

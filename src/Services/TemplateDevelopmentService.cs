@@ -28,7 +28,7 @@
 
         IEnumerable<DateConfiguration> GetConfigurations();
 
-        void CreateWorkspace(string path, string name, DateConfiguration configuration, bool openCodeWorkspace);
+        CustomPackage CreateWorkspace(string path, string name, DateConfiguration configuration);
 
         bool ConfigureWorkspace(string path, bool openCodeWorkspace);
 
@@ -41,7 +41,7 @@
         private const string WorkspaceGitignoreFileName = ".gitignore";
         private const string WorkspaceConfigFileName = "bravo-config.json";
         private const string VSCodeExtensionsFileName = "extensions.json";
-        private const string VSCodeExtensionName = "sqlbi.bravo-date-template";
+        private const string VSCodeExtensionName = "sqlbi.bravo-template-editor";
 
         private readonly JsonSerializerOptions _serializerOptions;
         private readonly DaxTemplateManager _templateManager;
@@ -100,7 +100,7 @@
             return configurations;
         }
 
-        public void CreateWorkspace(string path, string name, DateConfiguration configuration, bool openCodeWorkspace)
+        public CustomPackage CreateWorkspace(string path, string name, DateConfiguration configuration)
         {
             var workspaceName = name.ReplaceInvalidFileNameChars();
             var workspacePath = Path.Combine(path, workspaceName);
@@ -153,8 +153,27 @@
                 }
             }
 
-            var configured = ConfigureWorkspace(workspacePath, openCodeWorkspace);
-            BravoUnexpectedException.Assert(configured);
+            // bravo-config.json
+            var configFile = Path.Combine(workspacePath, WorkspaceConfigFileName);
+            {
+                if (File.Exists(configFile) == false)
+                {
+                    File.WriteAllText(configFile, "");
+                    //var configContent = GetWorkspaceConfigContent();
+                    //File.WriteAllText(configFile, configContent);
+                }
+            }
+
+            var customPackage = new CustomPackage
+            {
+                Type = CustomPackageType.User,
+                Path = null,
+                Name = name,
+                WorkspaceName = workspaceName,
+                WorkspacePath = workspacePath,
+            };
+
+            return customPackage;
         }
 
         public bool ConfigureWorkspace(string path, bool openCodeWorkspace)
@@ -223,8 +242,7 @@
 
         private string GetWorkspaceGitignoreContent()
         {
-            var content = $@"
-# Bravo workspace config file
+            var content = $@"# Bravo workspace config file
 {WorkspaceConfigFileName}
 ";
             return content;
@@ -252,7 +270,7 @@
                 {
                     new 
                     {
-                        Path = WorkspaceFolderName
+                        Path = "."
                     }
                 }
             };

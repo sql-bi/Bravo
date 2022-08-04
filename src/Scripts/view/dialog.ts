@@ -5,6 +5,9 @@
 */
 
 import { _, __ } from '../helpers/utils';
+import { optionsController } from '../main';
+import { i18n } from '../model/i18n';
+import { strings } from '../model/strings';
 import { View } from './view';
 
 export interface DialogButton {
@@ -24,7 +27,7 @@ export class Dialog extends View {
     body;
     data = {};
 
-    constructor(id: string, container: HTMLElement, title: string, buttons: DialogButton[], iconClass = "") {
+    constructor(id: string, container: HTMLElement, title: string, buttons: DialogButton[], iconClass = "", neverShowAgain = false) {
         super(`dialog-${id}`, container);
 
         this.element.classList.add("dialog");
@@ -32,14 +35,19 @@ export class Dialog extends View {
         let html = `
             <div class="dialog-back"></div>
             <div class="dialog-front">
-                ${title ? `
+                ${title || iconClass ? `
                     <header>
-                        <h1${iconClass ? ` class="${iconClass}"` : ""}>${title}</h1>
+                        <h1${iconClass ? ` class="${iconClass}"` : ""}>${title ? title : ""}</h1>
                         <div class="ctrl-close ctrl icon-close solo"></div>
                     </header>
                 ` : "" }
                 <div class="content"></div>
                 <footer>
+                    ${neverShowAgain ? `
+                        <div class="never-show-again">
+                            <label><input type="checkbox" class="remember"> ${i18n(strings.dialogNeverShowAgain)}</label>
+                        </div>
+                    ` : ""} 
                     ${buttons.map((button: DialogButton) => `
                         <div class="button ${button.className ? button.className : ""}" data-action="${button.action}" ${button.disabled ? "disabled" : ""}>
                             ${button.name}
@@ -65,6 +73,14 @@ export class Dialog extends View {
         _(".ctrl-close", this.element).addEventListener("click", e => {
             e.preventDefault();
             this.trigger("action", "cancel");
+        });
+
+        _(".remember", this.element).addEventListener("change", e => {
+            e.preventDefault();
+            const dialogId = this.id.replace("-dialog", "");
+            const element = <HTMLInputElement>e.target;
+            optionsController.options.customOptions.alerts[dialogId] = !element.checked;
+            optionsController.save();
         });
         
         // Catch ESC key

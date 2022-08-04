@@ -7,6 +7,7 @@
 import { Dispatchable } from '../helpers/dispatchable';
 import { Dic, Utils } from '../helpers/utils';
 import { host, logger } from '../main';
+import { DateTemplatePackage } from '../model/dates';
 import { AppError } from '../model/exceptions';
 import { DaxLineBreakStyle } from '../model/tabular';
 import { MultiViewPaneMode } from '../view/multiview-pane';
@@ -15,6 +16,7 @@ import { ThemeType } from './theme';
 export interface Options {
     theme: ThemeType
     telemetryEnabled: boolean
+    templateDevelopmentEnabled: boolean
     updateChannel: UpdateChannelType
     updateCheckEnabled: boolean
     useSystemBrowserForAuthentication: boolean
@@ -48,6 +50,8 @@ export interface ClientOptions {
     formatting: ClientOptionsFormatting
     editor: ClientOptionsEditor
     sizes: Dic<number[]>
+    templates: DateTemplatePackage[]
+    alerts: Dic<boolean>
 }
 
 export interface ClientOptionsFormatting {
@@ -68,6 +72,7 @@ export enum ClientOptionsFormattingRegion {
     US = "US",
     EU = "EU"
 }
+
 export interface FormatDaxOptions {
     lineStyle: DaxFormatterLineStyle
     lineBreakStyle: DaxLineBreakStyle
@@ -187,6 +192,7 @@ export class OptionsController extends OptionsStore<Options> {
     defaultOptions: Options = {
         theme: ThemeType.Auto,
         telemetryEnabled: true,
+        templateDevelopmentEnabled: false,
         diagnosticLevel: DiagnosticLevelType.None,
         updateChannel: UpdateChannelType.Stable,
         updateCheckEnabled: true,
@@ -223,7 +229,9 @@ export class OptionsController extends OptionsStore<Options> {
                 formatDax: [50, 50],
                 manageDates: [75, 25],
                 manageDatesPreview: [20, 80]
-            }
+            },
+            templates: [],
+            alerts: {}
         }
     };
 

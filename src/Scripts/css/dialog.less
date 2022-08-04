@@ -86,6 +86,9 @@
 			.button {
 					margin:0 5px
 			}
+			.never-show-again {
+				margin-right: auto;
+			}
 		}
 	}
 
@@ -96,7 +99,7 @@
 			opacity: 0.8;
 		}
 		.dialog-front {
-			background-color: @window-back-color-dark;
+			background-color: @window-back-color-alt-dark;
 			.shadow(0, 0, 8px, 0, rgba(0,0,0,0.6));
 		}
 	}
@@ -424,6 +427,23 @@
 			.dark & { color: @notice-color-dark }
 		}
 	}
+
+	#body-dev {
+		.templates-table {
+			width: 100%;
+
+			.table {
+				width: 100%;
+				margin-bottom: 10px;
+			}
+
+			.create-template, .browse-templates {
+				//float: right;
+				margin: 0 10px 5px 0;
+			}
+		}
+		
+	}
 }
 
 #dialog-error {
@@ -431,6 +451,34 @@
 	.dialog-front {
 		width: 500px;
 		height: auto;
+	}
+
+	
+	.message {
+		font-size: 16px;
+		margin: 5px 0 20px 0;
+	}
+	p {
+		margin: 5px 0;
+		max-width: 700px;
+	}
+
+	.context {
+		font-size: 13px;
+		color: @notice-color;
+
+		.dark & { color: @notice-color-dark }
+	}
+
+	blockquote {
+		font-size: 13px;
+		word-break: break-word;
+		font-family: @code-font;
+		margin:0 0 20px 0;
+	}
+
+	input, select {
+
 	}
 }
 
@@ -440,6 +488,30 @@
 		width: 500px;
 		height: auto;
 	}
+}
+
+#dialog-create-template {
+
+	.dialog-front {
+		width: 500px;
+		height: auto !important;
+	}
+}
+
+#dialog-vscode {
+	.dialog-front {
+		width: 500px;
+		height: auto;
+		
+		img {
+			float: right;
+			width: 130px;
+			height: auto;
+			margin: 10px 0 10px 50px;
+		}
+	}
+
+	
 }
 
 .toast {

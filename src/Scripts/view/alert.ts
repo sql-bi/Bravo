@@ -11,10 +11,10 @@ import { Dialog } from './dialog';
 
 export class Alert extends Dialog {
 
-    constructor(id: string, title: string) {
+    constructor(id: string, title: string, neverShowAgain = false) {
         super(id, document.body, title, [
             { name: i18n(strings.dialogOK), action: "cancel", className: "button-alt" },
-        ]);
+        ], "", neverShowAgain);
     }
 
     show(message?: string) {

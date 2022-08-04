@@ -415,6 +415,27 @@ const locale: Locale = {
         [_.welcomeText]: "Bravo is a handy Power BI toolkit that you can use to analyze your models, format measures, create date tables, and export data.",
         [_.whitespacesTitle]: "Whitespaces",
         [_.wrappingTitle]: "Auto word-wrap",
+
+        [_.optionsDialogDevMenu]: "Development",
+        [_.optionDev]: "Enable Date Templates Development",
+        [_.optionDevDescription]: "",
+        [_.devTemplatesCreate]: "New Template",
+        [_.devTemplatesBrowse]: "Browse",
+        [_.devTemplatesColName]: "Template",
+        [_.devTemplatesColType]: "Type",
+        [_.devTemplatesColAction]: "Action",
+        [_.devTemplatesTypeUser]: "User",
+        [_.devTemplatesTypeOrganization]: "Org",
+        [_.devTemplatesEmpty]: "No custom templates found.",
+        [_.devCreateTemplateTitle]: "New Date Template",
+        [_.devCreateTemplateLabelName]: "Template Name",
+        [_.devCreateTemplateLabelModel]: "Based on",
+        [_.devCreateTemplateDialogOk]: "Create",
+        [_.devCreateTemplateNotes]: "Click <strong>Create</strong> to choose the folder where to save the Visual Studio Code project containing the new template.",
+        [_.devTemplatesVSCodeTitle]: "Open with Visual Studio Code",
+        [_.devTemplatesVSCodeMessage]: "<p>The date template project <strong>.vscode-workspace</strong> will be now opened with Visual Studio Code.</p><p>If not already available on your system, use the link below to download and install it:</p>",
+        [_.devTemplatesVSCodeDownload]: "Download Visual Studio Code",
+        [_.dialogNeverShowAgain]: "Don't show this again"
     }
 }
 export default locale;

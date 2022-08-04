@@ -37,7 +37,7 @@
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
         /// <response code="403">Status403Forbidden -  Use of the tremplate development API is not enabled</response>
-        [HttpPost]
+        [HttpGet]
         [ActionName("GetOrganizationCustomPackages")]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<CustomPackage>))]
@@ -62,7 +62,7 @@
         /// <response code="200">Status200OK - Success</response>
         /// <response code="204">Status204NoContent - User canceled action (e.g. 'Cancel' button has been pressed on a dialog box)</response>
         /// <response code="403">Status403Forbidden -  Use of the tremplate development API is not enabled</response>
-        [HttpPost]
+        [HttpGet]
         [ActionName("GetCustomPackageFromFile")]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(CustomPackage))]
@@ -90,7 +90,7 @@
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
         /// <response code="403">Status403Forbidden -  Use of the tremplate development API is not enabled</response>
-        [HttpPost]
+        [HttpGet]
         [ActionName("GetConfigurations")]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<DateConfiguration>))]
@@ -116,7 +116,7 @@
         [HttpPost]
         [ActionName("CreateWorkspace")]
         [Produces(MediaTypeNames.Application.Json)]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(CustomPackage))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesDefaultResponseType]
@@ -126,8 +126,8 @@
             {
                 if (WindowDialogHelper.BrowseFolderDialog(out var path, cancellationToken))
                 {
-                    _templateDevelopmentService.CreateWorkspace(path, request.Name!, request.Configuration!, request.OpenCodeWorkspace);
-                    return Ok();
+                    var customPackage = _templateDevelopmentService.CreateWorkspace(path, request.Name!, request.Configuration!);
+                    return Ok(customPackage);
                 }
 
                 return NoContent();
@@ -137,7 +137,7 @@
         }
 
         /// <summary>
-        /// Configure an existing template development workspace by updating the bravo-config.json file/>
+        /// Configure an existing template development workspace by updating the bravo-config.json file
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
         /// <response code="403">Status403Forbidden - Use of the template development API is not enabled</response>
@@ -150,13 +150,13 @@
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesDefaultResponseType]
-        public IActionResult ConfigureWorkspace(string workspacePath, bool openCodeWorkspace, CancellationToken cancellationToken)
+        public IActionResult ConfigureWorkspace(string workspacePath2, bool openCodeWorkspace, CancellationToken cancellationToken)
         {
             if (_templateDevelopmentService.Enabled)
             {
                 //if (WindowDialogHelper.BrowseFolderDialog(out var path, cancellationToken))
                 //{
-                    if (_templateDevelopmentService.ConfigureWorkspace(workspacePath, openCodeWorkspace))
+                    if (_templateDevelopmentService.ConfigureWorkspace(workspacePath2, openCodeWorkspace))
                         return Ok();
 
                     return NotFound();

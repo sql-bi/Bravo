@@ -49,6 +49,7 @@
             "microsoft.com",
             "daxformatter.com",
             "bravorelease.blob.core.windows.net",
+            "code.visualstudio.com"
         };
 
         static AppEnvironment()

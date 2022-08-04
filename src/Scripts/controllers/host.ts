@@ -19,7 +19,7 @@ import { ThemeType } from './theme';
 import { i18n } from '../model/i18n';
 import { strings } from '../model/strings';
 import { LogMessageObj } from './logger';
-import { DateConfiguration, TableValidation } from '../model/dates';
+import { DateConfiguration, DateTemplatePackage, TableValidation } from '../model/dates';
 import { ModelChanges } from '../model/model-changes';
 import { PBICloudEnvironment } from '../model/pbi-cloud';
 import { PowerBISignin } from '../view/powerbi-signin';
@@ -161,6 +161,11 @@ export interface ManageDatesPreviewChangesFromPBIDesktopReportRequest {
         previewRows: number
     }
     report: PBIDesktopReport
+}
+
+export interface CreateWorkspaceRequest {
+    name: string
+    configuration?: DateConfiguration
 }
 
 export interface BravoUpdate {
@@ -618,5 +623,29 @@ export class Host extends Dispatchable {
 
     openCredentialsManager() {
         this.apiCall("api/OpenControlPanelItem", { canonicalName: "/name Microsoft.CredentialManager /page ?SelectedVault=CredmanVault" });
+    }
+
+    /* Templates Development */
+
+    devGetConfigurations() {
+        return <Promise<DateConfiguration[]>>this.apiCall("TemplateDevelopment/GetConfigurations");
+    }
+
+    devGetOrganizationPackages() {
+        return <Promise<DateTemplatePackage[]>>this.apiCall("TemplateDevelopment/GetOrganizationCustomPackages");
+    }
+
+    devGetPackageFromFile() {
+        return <Promise<DateTemplatePackage>>this.apiCall("TemplateDevelopment/GetCustomPackageFromFile");
+    }
+
+    devCreateWorkspace(request: CreateWorkspaceRequest) {
+        return <Promise<DateTemplatePackage>>this.apiCall("TemplateDevelopment/CreateWorkspace", request, { method: "POST" });
+    }
+
+    devConfigureWorkspace(path: string, open: boolean) {
+        return this.apiCall("TemplateDevelopment/ConfigureWorkspace", { workspacePath2: path, openCodeWorkspace: open }, { method: "POST" })
+            .then(() => true)
+            .catch(ignore => false);
     }
 }

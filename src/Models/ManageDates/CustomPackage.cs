@@ -48,6 +48,9 @@
 
         [JsonPropertyName("hasWorkspace")]
         public bool HasWorkspace => WorkspacePath is not null && WorkspaceName is not null;
+
+        [JsonPropertyName("hasPackage")]
+        public bool HasPackage => Path is not null;
     }
 
     public enum CustomPackageType
