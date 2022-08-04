@@ -28,6 +28,8 @@
 
         CustomPackage GetCustomPackage(string path, CustomPackageType type);
 
+        CustomPackage ValidateCustomPackage(CustomPackage customPackage);
+
         CustomPackage CreateWorkspace(string path, string name, DateConfiguration configuration);
 
         bool ConfigureWorkspace(string path, bool openCodeWorkspace);
@@ -37,7 +39,8 @@
 
     internal class TemplateDevelopmentService : ITemplateDevelopmentService
     {
-        private const string WorkspaceFolderName = "src";
+        private const string WorkspaceSourceFolderName = "src";
+        private const string WorkspaceDistributionFolderName = "dist";
         private const string WorkspaceGitignoreFileName = ".gitignore";
         private const string WorkspaceConfigFileName = "bravo-config.json";
         private const string VSCodeExtensionsFileName = "extensions.json";
@@ -101,7 +104,7 @@
                 {
                     var workspaceName = codeworkspaceFileInfo.Directory.Name;
                     var pacakgeFileName = Path.ChangeExtension(workspaceName, ".package.json");
-                    var packageFilePath = Path.Combine(codeworkspaceFileInfo.Directory.FullName, "dist", pacakgeFileName);
+                    var packageFilePath = Path.Combine(codeworkspaceFileInfo.Directory.FullName, WorkspaceDistributionFolderName, pacakgeFileName);
 
                     SetPackageFileDetails(packageFilePath, customPackage);
                 }
@@ -132,16 +135,32 @@
             }
         }
 
+        public CustomPackage ValidateCustomPackage(CustomPackage customPackage)
+        {
+            //var p = GetCustomPackage()
+
+            return customPackage;
+        }
+
         public CustomPackage CreateWorkspace(string path, string name, DateConfiguration configuration)
         {
             var workspaceName = name.ReplaceInvalidFileNameChars();
             var workspacePath = Path.Combine(path, workspaceName);
+            var templatePath = Path.Combine(workspacePath, WorkspaceSourceFolderName);
+
+            var customPackage = new CustomPackage
+            {
+                Type = CustomPackageType.User,
+                Path = null,
+                Name = null,
+                Description = null,
+                WorkspaceName = workspaceName,
+                WorkspacePath = workspacePath,
+            };
 
             var templateFiles = _templateManager.GetTemplateFiles(configuration);
             {
-                var templatePath = Path.Combine(workspacePath, WorkspaceFolderName);
                 Directory.CreateDirectory(templatePath);
-
                 templateFiles.ForEach((templateFilePath) =>
                 {
                     var templateFileName = Path.GetFileName(templateFilePath);
@@ -149,6 +168,21 @@
 
                     File.Copy(templateFilePath, workspaceTemplateFilePath, overwrite: false);
                 });
+            }
+
+            // .package.json
+            var package = configuration.LoadPackage(templatePath);
+            {
+                var packageDistributionFolderPath = Path.Combine(workspacePath, WorkspaceDistributionFolderName);
+                var packageFileName = Path.ChangeExtension(workspaceName, ".package.json");
+                var packageFilePath = Path.Combine(packageDistributionFolderPath, packageFileName);
+
+                Directory.CreateDirectory(packageDistributionFolderPath);
+                package.SaveTo(packageFilePath);
+
+                customPackage.Path = packageFilePath;
+                customPackage.Name = package.Configuration.Name;
+                customPackage.Description = package.Configuration.Description;
             }
 
             // .vscode\extensions.json
@@ -165,7 +199,7 @@
             }
 
             // <workspace-name>.code-workspace file
-            var codeworkspaceName = $"{workspaceName}.code-workspace";
+            var codeworkspaceName = Path.ChangeExtension(workspaceName, ".code-workspace");
             var codeworkspaceFile = Path.Combine(workspacePath, codeworkspaceName);
             {
                 if (File.Exists(codeworkspaceFile) == false)
@@ -194,15 +228,6 @@
                 }
             }
 
-            var customPackage = new CustomPackage
-            {
-                Type = CustomPackageType.User,
-                Path = null,
-                Name = name,
-                WorkspaceName = workspaceName,
-                WorkspacePath = workspacePath,
-            };
-
             return customPackage;
         }
 
@@ -220,21 +245,20 @@
 
                 var configContent = GetWorkspaceConfigContent();
                 File.WriteAllText(configFile, configContent);
+            }
 
-                if (openCodeWorkspace)
+            if (openCodeWorkspace)
+            {
+                var codeworkspaceFiles = Directory.GetFiles(workspacePath, "*.code-workspace", new EnumerationOptions
                 {
-                    var codeworkspaceFiles = Directory.GetFiles(workspacePath, "*.code-workspace", new EnumerationOptions
-                    {
-                        IgnoreInaccessible = true,
-                        RecurseSubdirectories = false,
-                    });
+                    IgnoreInaccessible = true,
+                    RecurseSubdirectories = false,
+                });
 
-                    if (codeworkspaceFiles.Length == 1)
-                    {
-                        var codeworkspaceFile = codeworkspaceFiles.Single();
-                        _ = ProcessHelper.OpenShellExecute(codeworkspaceFile, waitForStarted: false, out var _);
-                    }
-                } 
+                if (codeworkspaceFiles.Length == 1)
+                {
+                    _ = ProcessHelper.OpenShellExecute(codeworkspaceFiles[0], waitForStarted: false, out var _);
+                }
             }
 
             return true;
