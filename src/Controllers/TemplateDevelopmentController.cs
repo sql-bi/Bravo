@@ -63,13 +63,13 @@
         /// <response code="204">Status204NoContent - User canceled action (e.g. 'Cancel' button has been pressed on a dialog box)</response>
         /// <response code="403">Status403Forbidden -  Use of the tremplate development API is not enabled</response>
         [HttpGet]
-        [ActionName("GetCustomPackageFromFile")]
+        [ActionName("BrowseCustomPackageFile")]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(CustomPackage))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesDefaultResponseType]
-        public IActionResult GetCustomPackageFromFile(CancellationToken cancellationToken)
+        public IActionResult BrowseCustomPackageFile(CancellationToken cancellationToken)
         {
             if (_templateDevelopmentService.Enabled)
             {

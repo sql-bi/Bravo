@@ -635,8 +635,8 @@ export class Host extends Dispatchable {
         return <Promise<DateTemplatePackage[]>>this.apiCall("TemplateDevelopment/GetOrganizationCustomPackages");
     }
 
-    devGetPackageFromFile() {
-        return <Promise<DateTemplatePackage>>this.apiCall("TemplateDevelopment/GetCustomPackageFromFile");
+    devBrowseCustomPackageFile() {
+        return <Promise<DateTemplatePackage>>this.apiCall("TemplateDevelopment/BrowseCustomPackageFile");
     }
 
     devCreateWorkspace(request: CreateWorkspaceRequest) {

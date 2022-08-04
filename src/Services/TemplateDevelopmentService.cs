@@ -159,8 +159,6 @@
                 if (File.Exists(configFile) == false)
                 {
                     File.WriteAllText(configFile, "");
-                    //var configContent = GetWorkspaceConfigContent();
-                    //File.WriteAllText(configFile, configContent);
                 }
             }
 

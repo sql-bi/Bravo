@@ -72,7 +72,7 @@ export class OptionsDialogDev {
 
         _(".browse-templates", element).addEventListener("click", e => {
             e.preventDefault();
-            host.devGetPackageFromFile()
+            host.devBrowseCustomPackageFile()
                 .then(datePackage => {
                     //if (customPackage) {
                     //    customPackage.
@@ -167,7 +167,7 @@ export class OptionsDialogDev {
         .then(datePackage => {
             if (datePackage) {
 
-                this.openWorkspace(datePackage.workspacePath);
+                this.openWorkspace(datePackage.path); //TODO use workspacePath
 
                 this.addUserTemplate(datePackage);
 
