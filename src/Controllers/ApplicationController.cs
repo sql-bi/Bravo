@@ -140,7 +140,7 @@
         [ProducesDefaultResponseType]
         public IActionResult PBIDesktopOpenPBIX(bool waitForStarted, CancellationToken cancellationToken)
         {
-            if (WindowDialogHelper.OpenFileDialog(defaultExt: "PBIX", out var path, cancellationToken))
+            if (WindowDialogHelper.OpenFileDialog(filter: "PBIX files (*.pbix)|*.pbix", out var path, cancellationToken))
             {
                 if (ProcessHelper.OpenShellExecute(path, waitForStarted, out var processId, cancellationToken))
                 {

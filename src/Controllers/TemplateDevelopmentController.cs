@@ -57,23 +57,23 @@
         }
 
         /// <summary>
-        /// Displays a dialog box that prompts the user to select a '.package.json' file and returns the <see cref="CustomPackage"/>
+        /// Displays a dialog box that prompts the user to select a '.package.json' file or 'code-workspace' file and returns the <see cref="CustomPackage"/>
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
         /// <response code="204">Status204NoContent - User canceled action (e.g. 'Cancel' button has been pressed on a dialog box)</response>
         /// <response code="403">Status403Forbidden -  Use of the tremplate development API is not enabled</response>
         [HttpGet]
-        [ActionName("BrowseCustomPackageFile")]
+        [ActionName("BrowseCustomPackage")]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(CustomPackage))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesDefaultResponseType]
-        public IActionResult BrowseCustomPackageFile(CancellationToken cancellationToken)
+        public IActionResult BrowseCustomPackage(CancellationToken cancellationToken)
         {
             if (_templateDevelopmentService.Enabled)
             {
-                if (WindowDialogHelper.OpenFileDialog(defaultExt: "package.json", out var path, cancellationToken))
+                if (WindowDialogHelper.OpenFileDialog(filter: "Bravo template files (*.package.json, *.code-workspace)|*.package.json;*.code-workspace", out var path, cancellationToken))
                 {
                     var customPackage = _templateDevelopmentService.GetCustomPackage(path, CustomPackageType.User);
                     return Ok(customPackage);
@@ -102,6 +102,28 @@
             {
                 var configurations = _templateDevelopmentService.GetConfigurations();
                 return Ok(configurations);
+            }
+
+            return Forbid();
+        }
+
+        /// <summary>
+        /// Validate the <see cref="CustomPackage"/> by verifying the existence of the .code-workspace and package.json files
+        /// </summary>
+        /// <response code="200">Status200OK - Success</response>
+        /// <response code="403">Status403Forbidden -  Use of the tremplate development API is not enabled</response>
+        [HttpGet]
+        [ActionName("ValidateCustomPackage")]
+        [Produces(MediaTypeNames.Application.Json)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(CustomPackage))]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesDefaultResponseType]
+        public IActionResult ValidateCustomPackage(CustomPackage customPackage, CancellationToken cancellationToken)
+        {
+            if (_templateDevelopmentService.Enabled)
+            {
+                var validatedCustomPackage = _templateDevelopmentService.ValidateCustomPackage(customPackage);
+                return Ok(validatedCustomPackage);
             }
 
             return Forbid();
@@ -154,15 +176,10 @@
         {
             if (_templateDevelopmentService.Enabled)
             {
-                //if (WindowDialogHelper.BrowseFolderDialog(out var path, cancellationToken))
-                //{
-                    if (_templateDevelopmentService.ConfigureWorkspace(workspacePath, openCodeWorkspace))
-                        return Ok();
+                if (_templateDevelopmentService.ConfigureWorkspace(workspacePath, openCodeWorkspace))
+                    return Ok();
 
-                    return NotFound();
-                //}
-
-                //return NoContent();
+                return NotFound();
             }
 
             return Forbid();

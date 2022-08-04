@@ -24,9 +24,9 @@
     {
         bool Enabled { get; }
 
-        CustomPackage GetCustomPackage(string path, CustomPackageType type);
-
         IEnumerable<DateConfiguration> GetConfigurations();
+
+        CustomPackage GetCustomPackage(string path, CustomPackageType type);
 
         CustomPackage CreateWorkspace(string path, string name, DateConfiguration configuration);
 
@@ -56,48 +56,80 @@
 
         public bool Enabled => UserPreferences.Current.TemplateDevelopmentEnabled;
 
-        public CustomPackage GetCustomPackage(string path, CustomPackageType type)
-        {
-            var package = _templateManager.GetPackage(path);
-            var customPackage = new CustomPackage
-            {
-                Type = type,
-                Path = path,
-                Name = package.Configuration.Name,
-                Description = package.Configuration.Description,
-                WorkspaceName = null,
-                WorkspacePath = null,
-            };
-
-            var packageFileInfo = new FileInfo(path);
-            if (packageFileInfo.Directory is not null)
-            {
-                var workspaceDirectoryInfo = packageFileInfo.Directory.Parent;
-                if (workspaceDirectoryInfo is not null)
-                {
-                    var workspaceName = workspaceDirectoryInfo.Name;
-                    var workspaceFolder = workspaceDirectoryInfo.FullName;
-
-                    var workspaceCodeworkspaceName = Path.ChangeExtension(workspaceName, ".code-workspace");
-                    var workspaceCodeworkspacePath = Path.Combine(workspaceFolder, workspaceCodeworkspaceName);
-
-                    if (File.Exists(workspaceCodeworkspacePath))
-                    {
-                        customPackage.WorkspaceName = workspaceName;
-                        customPackage.WorkspacePath = workspaceFolder;
-                    }
-                }
-            }
-
-            return customPackage;
-        }
-
         public IEnumerable<DateConfiguration> GetConfigurations()
         {
             var packages = _templateManager.GetPackages();
             var configurations = packages.Select(DateConfiguration.CreateFrom).ToArray();
 
             return configurations;
+        }
+
+        public CustomPackage GetCustomPackage(string path, CustomPackageType type)
+        {
+            var customPackage = new CustomPackage
+            {
+                Type = type,
+                Path = null,
+                Name = null,
+                Description = null,
+                WorkspaceName = null,
+                WorkspacePath = null,
+            };
+            var extension = Path.GetExtension(path);
+
+            if (extension.EqualsI(".json")) // .package.json file
+            {
+                SetPackageFileDetails(path, customPackage);
+
+                var packageFileInfo = new FileInfo(path);
+                if (packageFileInfo.Directory?.Parent is not null)
+                {
+                    var workspaceName = packageFileInfo.Directory.Parent.Name;
+                    var workspaceFolder = packageFileInfo.Directory.Parent.FullName;
+                    var workspaceCodeworkspaceName = Path.ChangeExtension(workspaceName, ".code-workspace");
+                    var workspaceCodeworkspacePath = Path.Combine(workspaceFolder, workspaceCodeworkspaceName);
+
+                    SetPackageWorkspaceDetails(workspaceCodeworkspacePath, customPackage);
+                }
+            }
+            else if (extension.EqualsI(".code-workspace"))
+            {
+                SetPackageWorkspaceDetails(path, customPackage);
+
+                var codeworkspaceFileInfo = new FileInfo(path);
+                if (codeworkspaceFileInfo.Directory is not null)
+                {
+                    var workspaceName = codeworkspaceFileInfo.Directory.Name;
+                    var pacakgeFileName = Path.ChangeExtension(workspaceName, ".package.json");
+                    var packageFilePath = Path.Combine(codeworkspaceFileInfo.Directory.FullName, "dist", pacakgeFileName);
+
+                    SetPackageFileDetails(packageFilePath, customPackage);
+                }
+            }
+
+            return customPackage;
+
+            void SetPackageFileDetails(string path, CustomPackage customPackage)
+            {
+                if (File.Exists(path))
+                {
+                    var package = _templateManager.GetPackage(path);
+
+                    customPackage.Path = path;
+                    customPackage.Name = package.Configuration.Name;
+                    customPackage.Description = package.Configuration.Description;
+                }
+            }
+
+            void SetPackageWorkspaceDetails(string path, CustomPackage customPackage)
+            {
+                var codeworkspaceFileInfo = new FileInfo(path);
+                if (codeworkspaceFileInfo.Exists && codeworkspaceFileInfo.Directory is not null)
+                {
+                    customPackage.WorkspaceName = codeworkspaceFileInfo.Directory.Name;
+                    customPackage.WorkspacePath = codeworkspaceFileInfo.Directory.FullName;
+                }
+            }
         }
 
         public CustomPackage CreateWorkspace(string path, string name, DateConfiguration configuration)
@@ -158,7 +190,7 @@
             {
                 if (File.Exists(configFile) == false)
                 {
-                    File.WriteAllText(configFile, "");
+                    File.WriteAllText(configFile, string.Empty);
                 }
             }
 

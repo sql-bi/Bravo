@@ -15,25 +15,6 @@
         [JsonPropertyName("path")]
         public string? Path { get; set; }
 
-        //[JsonPropertyName("displayFolder")]
-        //public string? DisplayFolder
-        //{
-        //    get
-        //    {
-        //        if (Path is not null)
-        //        {
-        //            var folder = System.IO.Path.GetDirectoryName(Path);
-        //            if (folder is not null)
-        //            {
-        //                var displayFolder = CommonHelper.GetFileRelativePath(folder, Path);
-        //                return displayFolder;
-        //            }
-        //        }
-
-        //        return null;
-        //    }
-        //}
-
         [JsonPropertyName("name")]
         public string? Name { get; set; }
 
@@ -46,11 +27,11 @@
         [JsonPropertyName("workspaceName")]
         public string? WorkspaceName { get; set; }
 
-        [JsonPropertyName("hasWorkspace")]
-        public bool HasWorkspace => WorkspacePath is not null && WorkspaceName is not null;
+        //[JsonPropertyName("hasWorkspace")]
+        //public bool HasWorkspace => WorkspacePath is not null && WorkspaceName is not null;
 
-        [JsonPropertyName("hasPackage")]
-        public bool HasPackage => Path is not null;
+        //[JsonPropertyName("hasPackage")]
+        //public bool HasPackage => Path is not null;
     }
 
     public enum CustomPackageType

@@ -7,20 +7,18 @@
 
     internal static class WindowDialogHelper
     {
-        public static bool OpenFileDialog(string defaultExt, [NotNullWhen(true)] out string? path, CancellationToken cancellationToken)
+        public static bool OpenFileDialog(string filter, [NotNullWhen(true)] out string? path, CancellationToken cancellationToken)
         {
             var dialogOwner = Win32WindowWrapper.CreateFrom(ProcessHelper.GetCurrentProcessMainWindowHandle());
             var dialogResult = System.Windows.Forms.DialogResult.None;
-            var defaultExtLowercase = defaultExt.ToLower();
 
             using var dialog = new System.Windows.Forms.OpenFileDialog()
             {
                 InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments, Environment.SpecialFolderOption.DoNotVerify),
-                Filter = $"{ defaultExt } files (*.{ defaultExtLowercase })|*.{ defaultExtLowercase }|All files (*.*)|*.*",
+                Filter = filter,
                 Title = "Open file",
                 ShowReadOnly = false,
-                CheckFileExists = true,
-                DefaultExt = defaultExtLowercase
+                CheckFileExists = true
             };
 
             if (!cancellationToken.IsCancellationRequested)
