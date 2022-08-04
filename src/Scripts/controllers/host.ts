@@ -644,7 +644,7 @@ export class Host extends Dispatchable {
     }
 
     devConfigureWorkspace(path: string, open: boolean) {
-        return this.apiCall("TemplateDevelopment/ConfigureWorkspace", { workspacePath2: path, openCodeWorkspace: open }, { method: "POST" })
+        return this.apiCall("TemplateDevelopment/ConfigureWorkspace", { workspacePath: path, openCodeWorkspace: open }, { method: "POST" })
             .then(() => true)
             .catch(ignore => false);
     }

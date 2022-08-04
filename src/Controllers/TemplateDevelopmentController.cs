@@ -150,13 +150,13 @@
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesDefaultResponseType]
-        public IActionResult ConfigureWorkspace(string workspacePath2, bool openCodeWorkspace, CancellationToken cancellationToken)
+        public IActionResult ConfigureWorkspace(string workspacePath, bool openCodeWorkspace, CancellationToken cancellationToken)
         {
             if (_templateDevelopmentService.Enabled)
             {
                 //if (WindowDialogHelper.BrowseFolderDialog(out var path, cancellationToken))
                 //{
-                    if (_templateDevelopmentService.ConfigureWorkspace(workspacePath2, openCodeWorkspace))
+                    if (_templateDevelopmentService.ConfigureWorkspace(workspacePath, openCodeWorkspace))
                         return Ok();
 
                     return NotFound();
