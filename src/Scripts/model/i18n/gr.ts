@@ -278,6 +278,7 @@ const locale: Locale = {
         [_.manageDatesTemplateNameConfig02]: "Μηνιαία",
         [_.manageDatesTemplateNameConfig03]: "Προσαρμογή",
         [_.manageDatesTemplateNameConfig04]: "Εβδομαδιαία",
+        [_.manageDatesTemplateNameCurrent]: "Ρεύμα",
         [_.manageDatesTemplateQuarterWeekType]: "Εβδομαδιαίο Σύστημα",
         [_.manageDatesTemplateQuarterWeekTypeDesc]: "",
         [_.manageDatesTemplateTypeStartFiscalYear]: "Ημερομηνία ορίζοντας τη χρήση",

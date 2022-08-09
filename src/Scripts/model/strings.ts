@@ -243,6 +243,7 @@ export enum strings {
     manageDatesTemplateNameConfig02,
     manageDatesTemplateNameConfig03,
     manageDatesTemplateNameConfig04,
+    manageDatesTemplateNameCurrent,
     manageDatesTemplateQuarterWeekType,
     manageDatesTemplateQuarterWeekTypeDesc,
     manageDatesTemplateTypeStartFiscalYear,

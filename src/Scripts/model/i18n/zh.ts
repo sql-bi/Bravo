@@ -278,6 +278,7 @@ const locale: Locale = {
         [_.manageDatesTemplateNameConfig02]: "月模板",
         [_.manageDatesTemplateNameConfig03]: "自定义",
         [_.manageDatesTemplateNameConfig04]: "周模板",
+        [_.manageDatesTemplateNameCurrent]: "当前的",
         [_.manageDatesTemplateQuarterWeekType]: "周历系统",
         [_.manageDatesTemplateQuarterWeekTypeDesc]: "",
         [_.manageDatesTemplateTypeStartFiscalYear]: "定义会计年度的日期",

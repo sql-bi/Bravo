@@ -278,6 +278,7 @@ const locale: Locale = {
         [_.manageDatesTemplateNameConfig02]: "Miesięczny",
         [_.manageDatesTemplateNameConfig03]: "Niestandardowy",
         [_.manageDatesTemplateNameConfig04]: "Tygodniowy",
+        [_.manageDatesTemplateNameCurrent]: "Aktualny",
         [_.manageDatesTemplateQuarterWeekType]: "Tygodniowy systemowy",
         [_.manageDatesTemplateQuarterWeekTypeDesc]: "",
         [_.manageDatesTemplateTypeStartFiscalYear]: "Data definiująca rok obrotowy",

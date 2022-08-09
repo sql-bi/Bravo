@@ -278,6 +278,7 @@ const locale: Locale = {
         [_.manageDatesTemplateNameConfig02]: "Měsíční",
         [_.manageDatesTemplateNameConfig03]: "Vlastní",
         [_.manageDatesTemplateNameConfig04]: "Týdenní",
+        [_.manageDatesTemplateNameCurrent]: "Proud",
         [_.manageDatesTemplateQuarterWeekType]: "Týdenní systém",
         [_.manageDatesTemplateQuarterWeekTypeDesc]: "",
         [_.manageDatesTemplateTypeStartFiscalYear]: "Datum definování fiskálního roku",

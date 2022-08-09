@@ -280,6 +280,7 @@ const locale: Locale = {
         [_.manageDatesTemplateNameConfig02]: "Mensuel",
         [_.manageDatesTemplateNameConfig03]: "Personnalisé",
         [_.manageDatesTemplateNameConfig04]: "Hebdomadaire",
+        [_.manageDatesTemplateNameCurrent]: "Courante",
         [_.manageDatesTemplateQuarterWeekType]: "Système Hebdomadaire",
         [_.manageDatesTemplateQuarterWeekTypeDesc]: "",
         [_.manageDatesTemplateTypeStartFiscalYear]: "Date de définition de l'exercice",

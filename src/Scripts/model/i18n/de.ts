@@ -280,6 +280,7 @@ const locale: Locale = {
         [_.manageDatesTemplateNameConfig02]: "Monatlich",
         [_.manageDatesTemplateNameConfig03]: "Benutzerdefiniert",
         [_.manageDatesTemplateNameConfig04]: "Wöchentlich",
+        [_.manageDatesTemplateNameCurrent]: "Aktuell",
         [_.manageDatesTemplateQuarterWeekType]: "Wochensystem",
         [_.manageDatesTemplateQuarterWeekTypeDesc]: "",
         [_.manageDatesTemplateTypeStartFiscalYear]: "Datum, das das Geschäftsjahr definiert",

@@ -278,6 +278,7 @@ const locale: Locale = {
         [_.manageDatesTemplateNameConfig02]: "Maandelijks",
         [_.manageDatesTemplateNameConfig03]: "Aangepast",
         [_.manageDatesTemplateNameConfig04]: "Wekelijks",
+        [_.manageDatesTemplateNameCurrent]: "Huidig",
         [_.manageDatesTemplateQuarterWeekType]: "Wekelijks Systeem",
         [_.manageDatesTemplateQuarterWeekTypeDesc]: "",
         [_.manageDatesTemplateTypeStartFiscalYear]: "Datum die het fiscale jaar definieert",

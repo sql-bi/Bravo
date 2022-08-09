@@ -278,6 +278,7 @@ const locale: Locale = {
         [_.manageDatesTemplateNameConfig02]: "Månedlig",
         [_.manageDatesTemplateNameConfig03]: "Brugerdefineret",
         [_.manageDatesTemplateNameConfig04]: "Ugentlig",
+        [_.manageDatesTemplateNameCurrent]: "Nuværende",
         [_.manageDatesTemplateQuarterWeekType]: "Ugesystem",
         [_.manageDatesTemplateQuarterWeekTypeDesc]: "",
         [_.manageDatesTemplateTypeStartFiscalYear]: "Dato definerer regnskabsåret",

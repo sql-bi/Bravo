@@ -280,6 +280,7 @@ const locale: Locale = {
         [_.manageDatesTemplateNameConfig02]: "Aylık",
         [_.manageDatesTemplateNameConfig03]: "Özel",
         [_.manageDatesTemplateNameConfig04]: "Haftalık",
+        [_.manageDatesTemplateNameCurrent]: "Akım",
         [_.manageDatesTemplateQuarterWeekType]: "Haftalık Sistem",
         [_.manageDatesTemplateQuarterWeekTypeDesc]: "",
         [_.manageDatesTemplateTypeStartFiscalYear]: "Mali yılı tanımlayan tarih",

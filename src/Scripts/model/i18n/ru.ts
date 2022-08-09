@@ -278,6 +278,7 @@ const locale: Locale = {
         [_.manageDatesTemplateNameConfig02]: "Ежемесячный",
         [_.manageDatesTemplateNameConfig03]: "Пользовательский",
         [_.manageDatesTemplateNameConfig04]: "Еженедельный",
+        [_.manageDatesTemplateNameCurrent]: "Текущий",
         [_.manageDatesTemplateQuarterWeekType]: "Еженедельная система", //???
         [_.manageDatesTemplateQuarterWeekTypeDesc]: "",
         [_.manageDatesTemplateTypeStartFiscalYear]: "Дата определения финансового года",
