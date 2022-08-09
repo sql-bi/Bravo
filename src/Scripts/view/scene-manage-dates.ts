@@ -512,3 +512,11 @@ export class ManageDatesScene extends DocScene {
         super.destroy();
     }
 }
+
+export function localizeTemplateName(name: string, localizedDescription?: string) {
+    const nameStr = `manageDatesTemplateName${Utils.Text.pascalCase(name)}`;
+    if (nameStr in strings)
+        return i18n((<any>strings)[nameStr]); 
+
+    return (localizedDescription ? localizedDescription : name);
+}

@@ -9,6 +9,7 @@ import { Utils, _ } from '../helpers/utils';
 import { DateConfiguration, QuarterWeekType, TypeStartFiscalYear, WeeklyType } from '../model/dates';
 import { I18n, i18n } from '../model/i18n';
 import { strings } from '../model/strings';
+import { localizeTemplateName } from './scene-manage-dates';
 import { ManageDatesScenePane } from './scene-manage-dates-pane';
 
 export class ManageDatesSceneCalendar extends ManageDatesScenePane {
@@ -20,7 +21,7 @@ export class ManageDatesSceneCalendar extends ManageDatesScenePane {
         this.templates
             .sort((a, b) => a.name.localeCompare(b.name))
             .forEach(template => {
-                values.push([template.name, `${this.localizeTemplateName(template.name, template.description)}${template.isCurrent ? ` (${i18n(strings.manageDatesTemplateNameCurrent)})` : ""}`]);
+                values.push([template.name, `${localizeTemplateName(template.name, template.description)}${template.isCurrent ? ` (${i18n(strings.manageDatesTemplateNameCurrent)})` : ""}`]);
                 
             });
 
@@ -198,12 +199,4 @@ export class ManageDatesSceneCalendar extends ManageDatesScenePane {
         return null;
     }
 
-    localizeTemplateName(name: string, localizedDescription?: string) {
-
-        const nameStr = `manageDatesTemplateName${Utils.Text.pascalCase(name)}`;
-        if (nameStr in strings)
-            return i18n((<any>strings)[nameStr]); 
-
-        return (localizedDescription ? localizedDescription : name);
-    }
 }

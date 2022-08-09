@@ -11,6 +11,7 @@ import { AppError } from '../model/exceptions';
 import { i18n } from '../model/i18n';
 import { strings } from '../model/strings';
 import { Dialog } from './dialog';
+import { localizeTemplateName } from './scene-manage-dates';
 
 export interface CreateTemplateResponse {
     action: string
@@ -89,7 +90,7 @@ export class CreateTemplate extends Dialog {
 
                     let optionElement = <HTMLOptionElement>document.createElement("option");
                     optionElement.value = dateConfiguration.name;
-                    optionElement.text = dateConfiguration.description;
+                    optionElement.text = localizeTemplateName(dateConfiguration.name, dateConfiguration.description);
                     this.templateModelElement.appendChild(optionElement);
 
                     if (index == 0) 

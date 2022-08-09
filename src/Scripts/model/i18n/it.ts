@@ -91,7 +91,7 @@ const locale: Locale = {
         [_.devCreateTemplateLabelModel]: "Basato su",
         [_.devCreateTemplateLabelName]: "Nome template",
         [_.devCreateTemplateNotes]: "Fai clic su <strong>Crea</strong> per scegliere la cartella dove salvare il progetto di Visual Studio Code contenente il nuovo template.",
-        [_.devCreateTemplateTitle]: "Nuovo template di data",
+        [_.devCreateTemplateTitle]: "Nuovo Template",
         [_.devDefaultTemplateName]: "Senza titolo",
         [_.devTemplateRemoveConfirmation]: "Il template <b>{template}</b> verrà rimosso da questo elenco, ma qualsiasi file esistente verrà mantenuto sul sistema.<br><br>Sei sicuro di procedere?",
         [_.devTemplatesBrowse]: "Sfoglia",
