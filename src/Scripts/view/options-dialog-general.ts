@@ -6,7 +6,7 @@
 
 import { ThemeType } from '../controllers/theme';
 import { OptionStruct, OptionType, Renderer } from '../helpers/renderer';
-import {  _, __ } from '../helpers/utils';
+import {  Utils, _, __ } from '../helpers/utils';
 import { app, auth, optionsController } from '../main';
 import { I18n, i18n } from '../model/i18n'; 
 import { strings } from '../model/strings';
@@ -58,6 +58,19 @@ export class OptionsDialogGeneral {
                                 }
                             });
                     }
+                }
+            },
+            {
+                id: "reset-alerts",
+                icon: "visible",
+                name: i18n(strings.optionResetAlerts),
+                description: i18n(strings.optionResetAlertsDescription),
+                type: OptionType.buttonAlt,
+                value: i18n(strings.optionResetAlertsButton),
+                attributes: (Utils.Obj.isEmpty(optionsController.options.customOptions.alerts) ? "disabled" : ""),
+                onClick: e => {
+                    optionsController.update("customOptions.alerts", {});
+                    (<HTMLElement>e.target).toggleAttr("disabled", true);
                 }
             },
             {

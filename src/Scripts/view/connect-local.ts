@@ -17,6 +17,7 @@ export class ConnectLocal extends ConnectMenuItem {
 
     table: Tabulator;
     tableId: string;
+    waitForReportOpenTimeout: number;
 
     render(element: HTMLElement) {
         super.render(element);
@@ -30,7 +31,7 @@ export class ConnectLocal extends ConnectMenuItem {
             </div>
         `;
         this.element.insertAdjacentHTML("beforeend", html);
-        
+
         // Browse
         _(".browse-reports", this.element).addEventListener("click", e => {
             e.preventDefault();
@@ -139,27 +140,32 @@ export class ConnectLocal extends ConnectMenuItem {
 
     waitForReportOpen() {
 
-        let overlay = document.createElement("div");
-        overlay.classList.add("observing");
-        overlay.innerHTML = `
-            <div class="notice">
-                <p>
-                    ${i18n(strings.powerBiObserving)} 
-                    <span class="cancel-observing link">${i18n(strings.powerBiObservingCancel)}</span>
-                </p>
-            </div>
-        `;
-        _(".list", this.element).append(overlay);
+        window.clearTimeout(this.waitForReportOpenTimeout);
+        this.waitForReportOpenTimeout = window.setTimeout(()=>{
 
-        _(".cancel-observing", overlay).addEventListener("click", e => {
-            e.preventDefault();
-            this.stopWaitingForReportOpen();
-        });
+            let overlay = document.createElement("div");
+            overlay.classList.add("observing");
+            overlay.innerHTML = `
+                <div class="notice">
+                    <div class="waiting-logo icon-powerbi"></div>
+                    <p>
+                        ${i18n(strings.powerBiObserving)} 
+                        <span class="cancel-observing link">${i18n(strings.powerBiObservingCancel)}</span>
+                    </p>
+                </div>
+            `;
+            _(".list", this.element).append(overlay);
 
+            _(".cancel-observing", overlay).addEventListener("click", e => {
+                e.preventDefault();
+                this.stopWaitingForReportOpen();
+            });
+        }, 3000);
     }
 
     stopWaitingForReportOpen() {
         host.abortOpenPBIX();
+        window.clearTimeout(this.waitForReportOpenTimeout);
         if (this.element)
             _(".observing", this.element).remove();
     }

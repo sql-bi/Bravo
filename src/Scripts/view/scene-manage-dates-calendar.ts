@@ -20,7 +20,7 @@ export class ManageDatesSceneCalendar extends ManageDatesScenePane {
         this.templates
             .sort((a, b) => a.name.localeCompare(b.name))
             .forEach(template => {
-                values.push([template.name, this.localizeTemplateName(template.name, template.description)]);
+                values.push([template.name, `${this.localizeTemplateName(template.name, template.description)}${template.isCurrent ? ` (${i18n(strings.manageDatesTemplateNameCurrent)})` : ""}`]);
                 
             });
 

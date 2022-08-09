@@ -164,7 +164,7 @@
         /// <response code="200">Status200OK - Success</response>
         /// <response code="403">Status403Forbidden - Use of the template development API is not enabled</response>
         /// <response code="403">Status404NotFound - The selected folder does not contain the Bravo workspace configuration file</response>
-        [HttpPost]
+        [HttpGet]
         [ActionName("ConfigureWorkspace")]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK)]

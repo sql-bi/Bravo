@@ -238,6 +238,9 @@ a, .link {
     .border-radius;
     .icon;
 
+    &.caption {
+        padding-right: 10px;
+    }
     &:active {
         opacity: .7;
         transform: translateY(1px);
@@ -497,6 +500,9 @@ a, .link {
     
     &.contains-tabular-browser {
         background: @back-color;
+        .border-radius();
+        border-top-left-radius: 0;
+        border-top-right-radius: 0;
         overflow: hidden;
 
         .dark & { background-color: @back-color-dark;}
@@ -864,4 +870,14 @@ label[for] {
     to {
       transform: rotate(359deg);
     }
-  }
+}
+
+@keyframes pulsing {
+    0% { transform: scale(0); } 
+    100% { transform: scale(1.0); opacity: 0; }
+}
+
+@keyframes appearing {
+    0% { opacity: 1; } 
+    100% { opacity: 0; }
+}

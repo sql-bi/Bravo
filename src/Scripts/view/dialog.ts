@@ -27,8 +27,14 @@ export class Dialog extends View {
     body;
     data = {};
 
+    get canShow() {
+        return (optionsController.options.customOptions.alerts[this.id] !== false);
+    }
+
     constructor(id: string, container: HTMLElement, title: string, buttons: DialogButton[], iconClass = "", neverShowAgain = false) {
+
         super(`dialog-${id}`, container);
+        if (!this.canShow) this.element.toggle(false);
 
         this.element.classList.add("dialog");
 
@@ -77,9 +83,8 @@ export class Dialog extends View {
 
         _(".remember", this.element).addEventListener("change", e => {
             e.preventDefault();
-            const dialogId = this.id.replace("-dialog", "");
             const element = <HTMLInputElement>e.target;
-            optionsController.options.customOptions.alerts[dialogId] = !element.checked;
+            optionsController.options.customOptions.alerts[this.id] = !element.checked;
             optionsController.save();
         });
         
@@ -93,9 +98,13 @@ export class Dialog extends View {
 
     show() {
         return new Promise((resolve, reject) => {
-            this.on("action", (action: string) => {
-                this.onAction(action, resolve, reject);
-            });
+            if (this.canShow) {
+                this.on("action", (action: string) => {
+                    this.onAction(action, resolve, reject);
+                });
+            } else {
+                this.onAction("ok", resolve, reject);
+            }
         });
     }
 

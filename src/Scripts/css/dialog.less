@@ -191,6 +191,21 @@
 
 				background-color: fade(@back-color, 80%);
 				.dark & { background-color: fade(@back-color-dark, 80%); }
+
+				.notice {
+					flex-direction: column;
+
+					.waiting-logo {
+						color: darken(@window-back-color-alt, 10%);
+						font-size: 130px;
+						line-height: 1;
+						animation: appearing 1.5s ease-in-out infinite reverse;
+
+						.dark & {
+							color: lighten(@window-back-color-alt-dark, 10%)
+						}
+					}
+				}
 			}
 			.browse-reports {
 				display: inline-block;
@@ -435,11 +450,42 @@
 			.table {
 				width: 100%;
 				margin-bottom: 10px;
+
+				
 			}
 
-			.create-template, .browse-templates {
-				//float: right;
-				margin: 0 10px 5px 0;
+			.actions-ctrl {
+				display: flex;
+				justify-content: flex-end;
+				align-items: center;
+
+				span {
+					margin-left: 10px;
+				}
+			}
+
+			.templates-ctrl {
+				margin-top: 5px;
+				display: flex;
+				align-items: center;
+
+				.browse-templates {
+					font-size: 14px;
+				}
+				.create-template {
+					margin-right: 20px;
+				}
+			}
+
+			.not-available {
+				/*color: @error-color;
+				font-style: italic;*/
+				text-decoration: line-through;
+				color: @disabled-color;
+
+				.dark & {
+					color: @disabled-color-dark;
+				}
 			}
 		}
 		

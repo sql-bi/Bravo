@@ -132,13 +132,13 @@ export let HolidaysCountries: string[][] = [
     ["US", "United States"],
 ];
 
-export enum DateTemplatePackageType {
+export enum DateTemplateType {
     User = 0,
     Organization = 1,
 }
 
-export interface DateTemplatePackage {
-    type: DateTemplatePackageType
+export interface DateTemplate {
+    type: DateTemplateType
     path: string
     name?: string
     description?: string

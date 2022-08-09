@@ -19,7 +19,7 @@ import { ThemeType } from './theme';
 import { i18n } from '../model/i18n';
 import { strings } from '../model/strings';
 import { LogMessageObj } from './logger';
-import { DateConfiguration, DateTemplatePackage, TableValidation } from '../model/dates';
+import { DateConfiguration, DateTemplate, TableValidation } from '../model/dates';
 import { ModelChanges } from '../model/model-changes';
 import { PBICloudEnvironment } from '../model/pbi-cloud';
 import { PowerBISignin } from '../view/powerbi-signin';
@@ -163,7 +163,7 @@ export interface ManageDatesPreviewChangesFromPBIDesktopReportRequest {
     report: PBIDesktopReport
 }
 
-export interface CreateWorkspaceRequest {
+export interface CreateDateTemplateRequest {
     name: string
     configuration?: DateConfiguration
 }
@@ -627,24 +627,28 @@ export class Host extends Dispatchable {
 
     /* Templates Development */
 
-    devGetConfigurations() {
+    getDateConfigurations() {
         return <Promise<DateConfiguration[]>>this.apiCall("TemplateDevelopment/GetConfigurations");
     }
 
-    devGetOrganizationPackages() {
-        return <Promise<DateTemplatePackage[]>>this.apiCall("TemplateDevelopment/GetOrganizationCustomPackages");
+    getOrganizationTemplates() {
+        return <Promise<DateTemplate[]>>this.apiCall("TemplateDevelopment/GetOrganizationCustomPackages");
     }
 
-    devBrowseCustomPackageFile() {
-        return <Promise<DateTemplatePackage>>this.apiCall("TemplateDevelopment/BrowseCustomPackageFile");
+    browseDateTemplate() {
+        return <Promise<DateTemplate>>this.apiCall("TemplateDevelopment/BrowseCustomPackage");
     }
 
-    devCreateWorkspace(request: CreateWorkspaceRequest) {
-        return <Promise<DateTemplatePackage>>this.apiCall("TemplateDevelopment/CreateWorkspace", request, { method: "POST" });
+    createDateTemplate(request: CreateDateTemplateRequest) {
+        return <Promise<DateTemplate>>this.apiCall("TemplateDevelopment/CreateWorkspace", request, { method: "POST" });
     }
 
-    devConfigureWorkspace(path: string, open: boolean) {
-        return this.apiCall("TemplateDevelopment/ConfigureWorkspace", { workspacePath: path, openCodeWorkspace: open }, { method: "POST" })
+    verifyDateTemplate(template: DateTemplate) {
+        return <Promise<DateTemplate>>this.apiCall("TemplateDevelopment/ValidateCustomPackage", template, { method: "POST" }); 
+    }
+
+    editDateTemplate(path: string) {
+        return this.apiCall("TemplateDevelopment/ConfigureWorkspace", { workspacePath: path, openCodeWorkspace: true })
             .then(() => true)
             .catch(ignore => false);
     }

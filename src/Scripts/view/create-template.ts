@@ -37,7 +37,7 @@ export class CreateTemplate extends Dialog {
     constructor() {
 
         super("create-template", document.body, i18n(strings.devCreateTemplateTitle), [
-            { name: i18n(strings.devCreateTemplateDialogOk), action: "ok" },
+            { name: i18n(strings.devCreateTemplateDialogOk), action: "ok", disabled: true },
             { name: i18n(strings.dialogCancel), action: "cancel", className: "button-alt" } 
         ]);
 
@@ -62,7 +62,10 @@ export class CreateTemplate extends Dialog {
         ["keyup", "paste"].forEach(event => {
             this.templateNameElement.addEventListener(event, e => {
                 this.data.name = (<HTMLInputElement>e.target).value;
-                this.checkOk();
+                if (this.checkOk()) {
+                    if ((<KeyboardEvent>e).key == "Enter")
+                        this.trigger("action", "ok");
+                }
             });
         });
 
@@ -78,7 +81,7 @@ export class CreateTemplate extends Dialog {
     }
 
     getModels() {
-        host.devGetConfigurations()
+        host.getDateConfigurations()
             .then(dateConfigurations => {
                 dateConfigurations.forEach((dateConfiguration, index) => {
 
@@ -101,6 +104,7 @@ export class CreateTemplate extends Dialog {
     checkOk() {
         const ok = (this.data.model !== null && this.data.name != "");
         this.okButton.toggleAttr("disabled", !ok);
+        return ok;
     }
 
 }

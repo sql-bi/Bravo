@@ -11,17 +11,18 @@ import { AppError } from '../model/exceptions';
 import { i18n } from '../model/i18n'; 
 import { strings } from '../model/strings';
 import { Tabulator } from 'tabulator-tables';
-import { DateConfiguration, DateTemplatePackage, DateTemplatePackageType } from '../model/dates';
+import { DateConfiguration, DateTemplate, DateTemplateType } from '../model/dates';
 import { Confirm } from './confirm';
 import { DialogResponse } from './dialog';
 import { CreateTemplate, CreateTemplateResponse } from './create-template';
 import { ErrorAlert } from './error-alert';
 import { Alert } from './alert';
+import * as sanitizeHtml from 'sanitize-html';
 
 export class OptionsDialogDev {
  
-    orgTemplates: DateTemplatePackage[] = [];
-    userTemplates: DateTemplatePackage[] = [];
+    orgTemplates: DateTemplate[] = [];
+    userTemplates: DateTemplate[] = [];
 
     table: Tabulator;
     tableId: string;
@@ -37,6 +38,10 @@ export class OptionsDialogDev {
                 name: i18n(strings.optionDev),
                 description: i18n(strings.optionDevDescription),
                 type: OptionType.switch,
+                onChange: (e, value) => {
+                    if (value)
+                        setTimeout(() => this.loadTemplates(), 300);
+                }
             },
             {
                 id: "dev-container",
@@ -50,8 +55,10 @@ export class OptionsDialogDev {
                 customHtml: ()=>`
                     <div class="templates-table">
                         <div id="${this.tableId}" class="table"></div>
-                        <div class="button create-template">${i18n(strings.devTemplatesCreate)}</div>
-                        <div class="button button-alt browse-templates">${i18n(strings.devTemplatesBrowse)}</div>
+                        <div class="templates-ctrl">
+                            <div class="button create-template">${i18n(strings.devTemplatesCreate)}</div>
+                            <div class="browse-templates link">${i18n(strings.devTemplatesBrowse)}...</div>
+                        </div>
                     </div>
                 `
             }
@@ -66,34 +73,91 @@ export class OptionsDialogDev {
             const dialog = new CreateTemplate();
             dialog.show().then((response: CreateTemplateResponse) => {
                 if (response.action == "ok")
-                    this.createWorkspace(response.data.name, response.data.model);
+                    this.createTemplate(response.data.name, response.data.model);
             });
         });
 
         _(".browse-templates", element).addEventListener("click", e => {
             e.preventDefault();
-            host.devBrowseCustomPackageFile()
-                .then(datePackage => {
-                    //if (customPackage) {
-                    //    customPackage.
-                
-
-                    if (this.table)
-                        this.table.redraw(true);
-
-                    
-                                    
-                    telemetry.track("Template Development: Browse");
-                });
+            this.browseTemplate();
         });
 
-        this.updateTable();
+        element.addLiveEventListener("click", `#${this.tableId} .remove-template`, (e, el)=>{
+            if (!this.table) return;
+            const rowElement = <HTMLElement>el.closest("[role=row]");
+            const row = this.table.getRow(rowElement);
+            const template = <DateTemplate>row.getData();
+            const dialog = new Confirm();
+            dialog.show(i18n(strings.devTemplateRemoveConfirmation, { template: template.name }))
+                .then((response: DialogResponse) => {
+                    if (response.action == "ok") {
+                        const index = (this.userTemplates.findIndex(t => t.workspacePath == template.workspacePath || t.path == template.path));
+                        if (index >= 0) {
+                            this.userTemplates.splice(index, 1);
+                            optionsController.update("customOptions.templates", this.userTemplates);
+                        }
+                        row.delete();
+                    }
+                });
+            
+        });
+
+        element.addLiveEventListener("click", `#${this.tableId} .edit-template`, async (e, el)=>{
+            if (!this.table) return;
+            const rowElement = <HTMLElement>el.closest("[role=row]");
+            const row = this.table.getRow(rowElement);
+            const template = <DateTemplate>row.getData();
+            el.toggleAttr("disabled", true);
+
+            if (await this.editTemplate(template)) {
+                setTimeout(()=>el.toggleAttr("disabled", false), 2000);
+            } else {
+                el.toggleAttr("disabled", false);
+            }
+        });
+
+        this.initTable();
+
+        this.loadTemplates();
     }
 
     /**
-     * Update/draw templates table
+     * Get user and org templates
      */ 
-    updateTable() {
+    async loadTemplates() {
+        if (!optionsController.options.templateDevelopmentEnabled) return;
+        
+        this.orgTemplates = [];
+        try {
+            let orgTemplates = await host.getOrganizationTemplates();
+            orgTemplates.forEach(template => this.orgTemplates.push(this.sanitizeTemplate(template)));
+
+        } catch(error) {
+            try { logger.logError(error); } catch(ignore) {}
+        }
+    
+        this.userTemplates = [];
+        for (let i = 0; i < optionsController.options.customOptions.templates.length; i++) {
+            try {
+                let template = await host.verifyDateTemplate(optionsController.options.customOptions.templates[i]);
+                this.userTemplates.push(this.sanitizeTemplate(template));
+            } catch(error) {
+                try { logger.logError(error); } catch(ignore) {}
+            }
+        }
+    
+        if (this.table) {
+            this.table.setData([...this.orgTemplates, ...this.userTemplates]);
+            this.table.redraw();
+        }
+            
+        optionsController.update("customOptions.templates", this.userTemplates);
+    }
+
+    /**
+     * Draw templates table
+     */ 
+    initTable() {
 
         this.table = new Tabulator(`#${this.tableId}`, {
         
@@ -103,75 +167,97 @@ export class OptionsDialogDev {
             columns: [
                 { 
                     field: "name", 
+                    resizable: true,
                     title: i18n(strings.devTemplatesColName),
-                    editor: "input",
-                    cellEdited: (cell) => {
-                        console.log("Cell edited", cell);
+                    formatter: (cell) => {
+                        const template = <DateTemplate>cell.getData();
+                        return `
+                            <span ${!template.hasPackage && !template.hasWorkspace ? `class="not-available"` : ""} title="${(template.hasWorkspace? template.workspacePath : ( template.hasPackage ? template.path : i18n(strings.devTemplatesNotAvailable)))}">
+                                ${template.name}
+                            </span>
+                        `;
                     }
                 },
                 { 
                     field: "type", 
+                    width: 100,
+                    resizable: true,
                     title: i18n(strings.devTemplatesColType),
                     formatter: (cell) => {
-                        const template = <DateTemplatePackage>cell.getData();
-                        return i18n(strings[`devTemplatesType${template.type == DateTemplatePackageType.User ? "User" : "Organization"}`]);
+                        const template = <DateTemplate>cell.getData();
+                        return i18n(strings[`devTemplatesType${template.type == DateTemplateType.User ? "User" : "Organization"}`]);
                     }
                 },
                 { 
                     title: i18n(strings.devTemplatesColAction),
+                    width: 150,
                     headerSort: false,
                     formatter: (cell) => {
-                       
-                        return ``;
+                        const template = <DateTemplate>cell.getData();
+                        return `
+                            <div class="actions-ctrl">
+                                ${template.hasWorkspace ? `
+                                    <span class="edit-template ctrl caption icon-edit" title="${i18n(strings.devTemplatesEditTitle)}">${i18n(strings.devTemplatesEdit)}</span>
+                                ` : ""}
+                                 <span class="remove-template ctrl icon-trash solo" title="${i18n(strings.devTemplatesRemove)}"></span>
+                            </div>
+                        `;
                     }
                 }
             ],
-            data: this.userTemplates,
+            data: [],
+            rowFormatter: row => {
+                const element = row.getElement();
+                element.classList.add("row-inactive");
+            },
         });
-
-        /*this.table.on("rowClick", (e, row) => {
-            this.deselectRows();
-
-            let report = <PBIDesktopReport>row.getData();
-            this.dialog.data.doc = new Doc(report.reportName, DocType.pbix, report);
-            
-            let rowElement = row.getElement();
-            rowElement.classList.add("row-active");
-            this.dialog.okButton.toggleAttr("disabled", false);
-        });*/
+        
     }
 
     /**
      * Add template to recent list and on-screen table
      */ 
-    addUserTemplate(datePackage: DateTemplatePackage) {
+    addUserTemplate(template: DateTemplate) {
 
-        let existingTemplate = (this.userTemplates.find(template => template.workspacePath == datePackage.workspacePath || template.path == datePackage.path));
+        const existingTemplate = (this.userTemplates.find(t => t.workspacePath == template.workspacePath || t.path == template.path));
         if (!existingTemplate) {
-            this.userTemplates.push(datePackage);
+            template = this.sanitizeTemplate(template);
+            
+            this.userTemplates.push(template);
             optionsController.update("customOptions.templates", this.userTemplates);
+
             if (this.table)
-                this.table.redraw(true);
+                this.table.updateOrAddData([template]);
         }
+    }
+
+    /**
+     * Fix custom template name
+     */ 
+    sanitizeTemplate(template: DateTemplate) {
+        if (!template.name) 
+            template.name = i18n(strings.devDefaultTemplateName);
+        else
+            template.name = sanitizeHtml(template.name, { allowedTags: [], allowedAttributes: {}});
+        return template;
     }
 
     /**
      * Create a template dev workspace
      */ 
-    createWorkspace(name: string, configuration: DateConfiguration) {
+    createTemplate(name: string, configuration: DateConfiguration) {
 
-        host.devCreateWorkspace({
+        host.createDateTemplate({
             name: name,
             configuration: configuration
         })
-        .then(datePackage => {
-            if (datePackage) {
+        .then(template => {
+            if (template) {
 
-                this.openWorkspace(datePackage.path); //TODO use workspacePath
+                this.editTemplate(template);
+                this.addUserTemplate(template);
 
-                this.addUserTemplate(datePackage);
-
-                telemetry.track("Template Development: Create New");
+                telemetry.track("Template Development: Create");
             }
         })
         .catch((error: AppError) => { 
@@ -183,20 +269,49 @@ export class OptionsDialogDev {
     }
 
     /**
-     * Open an existing workspace
+     * Edit an existing template
      */ 
-    openWorkspace(path: string) {
-        this.showVSCodeDialog(); //TODO then
+    async editTemplate(template: DateTemplate) {
+        let ok = false;
+        if (template && template.hasWorkspace){
 
-        host.devConfigureWorkspace(path, true)
+            const response = <DialogResponse>await this.showVSCodeDialog();
+            ok = (response.action == "ok");
+            if (ok)
+                host.editDateTemplate(template.workspacePath)
+                    .catch((error: AppError) => { 
+                        
+                        const alert = new ErrorAlert(error, i18n(strings.error));
+                        alert.show();
+                        try { logger.logError(error); } catch(ignore) {}
+                    })
+            
+            telemetry.track("Template Development: Edit");
+        }
+
+        return ok;
+    }
+
+    /**
+     * Load an existing template
+     */ 
+    browseTemplate() {
+        host.browseDateTemplate()
+            .then(template => {
+                if (template) {
+
+
+                    this.addUserTemplate(template);
+
+                    telemetry.track("Template Development: Load");
+                }
+            })
             .catch((error: AppError) => { 
-                
+                        
                 const alert = new ErrorAlert(error, i18n(strings.error));
                 alert.show();
                 try { logger.logError(error); } catch(ignore) {}
             });
-
-        telemetry.track("Template Development: Open");
     }
 
     /**
@@ -204,17 +319,16 @@ export class OptionsDialogDev {
      */ 
     showVSCodeDialog() {
 
-        const dialogId = "vscode";
-
-        if (optionsController.options.customOptions.alerts[dialogId] === false) return;
-
-        const dialog = new Alert(dialogId, i18n(strings.devTemplatesVSCodeTitle), true);
+        const dialog = new Alert("vscode", i18n(strings.devTemplatesVSCodeTitle), i18n(strings.dialogContinue), true);
         let html = `
-            <img src="images/vscode.png">
-            ${i18n(strings.devTemplatesVSCodeMessage)}
-            <p><span class="link" href="https://code.visualstudio.com/">${i18n(strings.devTemplatesVSCodeDownload)}</span></p>
+            <img src="images/vscode.svg">
+            ${i18n(strings.devTemplatesVSCodeMessage, { extension: i18n(strings.appExtensionName) })}
+            <ul>
+                <li><span class="link" href="https://code.visualstudio.com/">${i18n(strings.devTemplatesVSCodeDownload)}</span></li>
+                <li><span class="link" href="https://marketplace.visualstudio.com/items?itemName=sqlbi.bravo">${i18n(strings.devTemplatesVSCodeExtensionDownload, { extension: i18n(strings.appExtensionName) })}</span></li>
+            </ul>
         `;
-        dialog.show(html);
+        return dialog.show(html);
     }
 
 

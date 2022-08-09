@@ -206,6 +206,8 @@
 
             // .package.json
             var package = configuration.LoadPackage(templatePath);
+            package.Configuration.Name = name;
+            package.Configuration.Description = "";
             {
                 var packageDistributionFolderPath = Path.Combine(workspacePath, WorkspaceDistributionFolderName);
                 var packageFileName = Path.ChangeExtension(workspaceName, ".package.json");

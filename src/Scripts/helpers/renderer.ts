@@ -53,6 +53,7 @@ export interface OptionValidation {
 
 export enum OptionType {
     button,
+    buttonAlt,
     select,
     switch,
     text,
@@ -101,8 +102,9 @@ export module Renderer {
             let ctrlHtml = "";
             switch (struct.type) {
                 case OptionType.button: 
+                case OptionType.buttonAlt: 
                     ctrlHtml = `
-                        <div class="listener button" ${struct.attributes ? struct.attributes : ""}>${value}</div>
+                        <div class="listener button${ struct.type == OptionType.buttonAlt ? " button-alt" : ""}" ${struct.readonly || struct.lockedByPolicy ? "disabled" : ""} ${struct.attributes ? struct.attributes : ""}>${value}</div>
                     `;
                     break;
 
@@ -333,7 +335,7 @@ export module Renderer {
                     });
                 }
 
-                if (struct.type == OptionType.button && Utils.Obj.isSet(struct.onClick)) {
+                if ((struct.type == OptionType.button || struct.type == OptionType.buttonAlt )&& Utils.Obj.isSet(struct.onClick)) {
                     listener.addEventListener("click", e => {
                         struct.onClick(e);
                     });

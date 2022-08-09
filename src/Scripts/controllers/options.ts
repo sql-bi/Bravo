@@ -7,7 +7,7 @@
 import { Dispatchable } from '../helpers/dispatchable';
 import { Dic, Utils } from '../helpers/utils';
 import { host, logger } from '../main';
-import { DateTemplatePackage } from '../model/dates';
+import { DateTemplate } from '../model/dates';
 import { AppError } from '../model/exceptions';
 import { DaxLineBreakStyle } from '../model/tabular';
 import { MultiViewPaneMode } from '../view/multiview-pane';
@@ -50,7 +50,7 @@ export interface ClientOptions {
     formatting: ClientOptionsFormatting
     editor: ClientOptionsEditor
     sizes: Dic<number[]>
-    templates: DateTemplatePackage[]
+    templates: DateTemplate[]
     alerts: Dic<boolean>
 }
 

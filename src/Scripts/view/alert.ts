@@ -11,16 +11,14 @@ import { Dialog } from './dialog';
 
 export class Alert extends Dialog {
 
-    constructor(id: string, title: string, neverShowAgain = false) {
+    constructor(id: string, title: string, buttonTitle = i18n(strings.dialogOK), neverShowAgain = false) {
         super(id, document.body, title, [
-            { name: i18n(strings.dialogOK), action: "cancel", className: "button-alt" },
+            { name: buttonTitle, action: "ok", className: "button-alt" },
         ], "", neverShowAgain);
     }
 
     show(message?: string) {
-        let html = `
-            ${message}
-        `;
+        const html = `${message}`;
         this.body.insertAdjacentHTML("beforeend", html);
 
         return super.show();
