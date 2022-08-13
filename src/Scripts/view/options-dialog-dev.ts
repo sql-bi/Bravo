@@ -87,7 +87,7 @@ export class OptionsDialogDev {
             const rowElement = <HTMLElement>el.closest("[role=row]");
             const row = this.table.getRow(rowElement);
             const template = <DateTemplate>row.getData();
-            const dialog = new Confirm();
+            const dialog = new Confirm("remove-template");
             dialog.show(i18n(strings.devTemplateRemoveConfirmation, { template: template.name }))
                 .then((response: DialogResponse) => {
                     if (response.action == "ok") {
@@ -172,7 +172,7 @@ export class OptionsDialogDev {
                     formatter: (cell) => {
                         const template = <DateTemplate>cell.getData();
                         return `
-                            <span ${!template.hasPackage && !template.hasWorkspace ? `class="not-available"` : ""} title="${(template.hasWorkspace? template.workspacePath : ( template.hasPackage ? template.path : i18n(strings.devTemplatesNotAvailable)))}">
+                            <span class="${!template.hasPackage && !template.hasWorkspace ? "not-available" : (template.hasWorkspace ? "icon-calendar-project" : "icon-calendar")}" title="${(template.hasWorkspace? template.workspacePath : ( template.hasPackage ? template.path : i18n(strings.devTemplatesNotAvailable)))}">
                                 ${template.name}
                             </span>
                         `;
@@ -219,7 +219,7 @@ export class OptionsDialogDev {
      */ 
     addUserTemplate(template: DateTemplate) {
 
-        const existingTemplate = (this.userTemplates.find(t => t.workspacePath == template.workspacePath || t.path == template.path));
+        const existingTemplate = (this.userTemplates.find(t => (t.workspacePath == template.workspacePath || t.path == template.path) && t.name == template.name));
         if (!existingTemplate) {
             template = this.sanitizeTemplate(template);
             
@@ -280,11 +280,16 @@ export class OptionsDialogDev {
             if (ok)
                 host.editDateTemplate(template.workspacePath)
                     .catch((error: AppError) => { 
-                        
-                        const alert = new ErrorAlert(error, i18n(strings.error));
-                        alert.show();
-                        try { logger.logError(error); } catch(ignore) {}
-                    })
+                        if (error.code == Utils.ResponseStatusCode.NotFound) {
+                            template.hasPackage = false;
+                            template.hasWorkspace = false;
+                            this.table.redraw(true);
+                        } else {
+                            const alert = new ErrorAlert(error, i18n(strings.error));
+                            alert.show();
+                            try { logger.logError(error); } catch(ignore) {}
+                        }
+                    });
             
             telemetry.track("Template Development: Edit");
         }
@@ -299,7 +304,6 @@ export class OptionsDialogDev {
         host.browseDateTemplate()
             .then(template => {
                 if (template) {
-
 
                     this.addUserTemplate(template);
 

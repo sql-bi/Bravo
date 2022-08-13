@@ -19,7 +19,7 @@ const locale: Locale = {
         [_.AnalyzeModel]: "Analyseer Model",
         [_.analyzeModelSummary]: `Jouw dataset is <strong>{size:bytes}</strong> groot en bevat <strong>{count}</strong> kolom{{men}}`,
         [_.analyzeModelSummary2]: `, <span class="text-highlight"><strong>{count}</strong> van welke niet gerefereerd {{zijn|is}} in het model.</span>`,
-        [_.appExtensionName]: "Bravo Date Template Editor", // DO NOT TRANSLATE
+        [_.appExtensionName]: "Bravo Template Editor", // DO NOT TRANSLATE
         [_.appName]: "Bravo for Power BI", //DO NOT TRANSLATE
         [_.appUpdateAvailable]: "Nieuwe versie beschikbaar: {version}",
         [_.appUpdateChangelog]: "Wijzigingslog",
@@ -93,7 +93,7 @@ const locale: Locale = {
         [_.devCreateTemplateNotes]: "Klik op <strong>Creëren</strong> om de map te kiezen waar het Visual Studio Code met de nieuwe sjabloon op te slaan.",
         [_.devCreateTemplateTitle]: "Nieuwe datumsjabloon",
         [_.devDefaultTemplateName]: "Ongetiteld",
-        [_.devTemplateRemoveConfirmation]: "De sjabloon <b>{template}</b> wordt uit deze lijst verwijderd, maar bestaande bestanden worden op het systeem bewaard. <br><br>Bent u zeker door?",
+        [_.devTemplateRemoveConfirmation]: "De sjabloon <b>{template}</b> wordt uit deze lijst verwijderd, maar bestaande bestanden worden op het systeem bewaard.<br>Bent u zeker door?",
         [_.devTemplatesBrowse]: "Bladeren",
         [_.devTemplatesColAction]: "Acties",
         [_.devTemplatesColName]: "Sjabloon",
@@ -311,7 +311,7 @@ const locale: Locale = {
         [_.optionBrowserAuthentication]: "Authenticeren in browser",
         [_.optionBrowserAuthenticationDescription]: "Authenticeren met behulp van de standaardbrowser.Dit is een alternatieve inlogmethode die nuttig is voor het oplossen van problemen met tweefactor-authenticatie.",
         [_.optionCheckForUpdates]: "Controleer automatisch op updates",
-        [_.optionDev]: "Datumsjablonen inschakelen Ontwikkeling",
+        [_.optionDev]: "Datumsjablonen Ontwikkeling",
         [_.optionDevDescription]: "",
         [_.optionDiagnostic]: "Diagnostisch niveau",
         [_.optionDiagnosticDescription]: "Toon foutmeldingen en log gegevens in het diagnose paneel. Kies <em>Basis</em> voor beperkte logging. <em>Uitgebreid</em> voor alle logging.",

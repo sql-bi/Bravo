@@ -18,7 +18,7 @@ const locale: Locale = {
         [_.AnalyzeModel]: "Ανάλυσε το Μοντέλο",
         [_.analyzeModelSummary]: `Το σετ δεδομένων σου είναι <strong>{size:bytes}</strong> σε μέγεθος και περιέχει <strong>{count}</strong> κολώνα{{ες}}`,
         [_.analyzeModelSummary2]: `, <span class="text-highlight">όπου <strong>{count}</strong> από αυτ{{ές|ή}} δεν χρησιμοποιούνται σε αυτό το μοντέλο.</span>`,
-        [_.appExtensionName]: "Bravo Date Template Editor", // DO NOT TRANSLATE
+        [_.appExtensionName]: "Bravo Template Editor", // DO NOT TRANSLATE
         [_.appName]: "Bravo for Power BI", // DO NOT TRANSLATE
         [_.appUpdateAvailable]: "Νέα έκδοση είναι διαθέσιμη: {version}",
         [_.appUpdateChangelog]: "Αλλαγές",
@@ -93,7 +93,7 @@ const locale: Locale = {
         [_.devCreateTemplateNotes]: "Κάντε κλικ στο <strong>Δημιουργία</strong> για να επιλέξετε το φάκελο όπου μπορείτε να αποθηκεύσετε το έργο του Visual Studio Code που περιέχει το νέο πρότυπο.",
         [_.devCreateTemplateTitle]: "Νέο πρότυπο ημερομηνίας",
         [_.devDefaultTemplateName]: "Χωρίς τίτλο",
-        [_.devTemplateRemoveConfirmation]: "Το πρότυπο <b>{template}</b> θα αφαιρεθεί από αυτή τη λίστα, αλλά όλα τα υπάρχοντα αρχεία θα διατηρηθούν στο σύστημα. <br> <br> Σίγουρα θα προχωρήσετε;",
+        [_.devTemplateRemoveConfirmation]: "Το πρότυπο <b>{template}</b> θα αφαιρεθεί από αυτή τη λίστα, αλλά όλα τα υπάρχοντα αρχεία θα διατηρηθούν στο σύστημα.<br>Σίγουρα θα προχωρήσετε;",
         [_.devTemplatesBrowse]: "Ξεφυλλίζω",
         [_.devTemplatesColAction]: "Ενέργειες",
         [_.devTemplatesColName]: "Πρότυπο",
@@ -311,7 +311,7 @@ const locale: Locale = {
         [_.optionBrowserAuthentication]: "Πιστοποίηση ταυτότητας στο πρόγραμμα περιήγησης",
         [_.optionBrowserAuthenticationDescription]: "Πιστοποιήστε τον έλεγχο χρησιμοποιώντας το προεπιλεγμένο πρόγραμμα περιήγησης.Αυτή είναι μια εναλλακτική μέθοδος σύνδεσης που είναι χρήσιμη για την επίλυση προβλημάτων με τον έλεγχο ταυτότητας δύο παραγόντων.",
         [_.optionCheckForUpdates]: "Ελέγξτε αυτόματα για ενημερώσεις",
-        [_.optionDev]: "Ενεργοποίηση ανάπτυξης προτύπων ημερομηνίας",
+        [_.optionDev]: "Ανάπτυξης προτύπων ημερομηνίας",
         [_.optionDevDescription]: "",
         [_.optionDiagnostic]: "Επίπεδο Διαγνωστικών",
         [_.optionDiagnosticDescription]: "Προβολή σφαλμάτων και μηνυμάτων καταγραφής στο διαγνωστικό παράθυρο. Επέλεξε <em>Βασική</em> για την καταγραφή μερικών μηνυμάτων. <em>Αναλυτική</em> για την καταγραφή όλων των μηνυμάτων.",

@@ -18,7 +18,7 @@ const locale: Locale = {
         [_.AnalyzeModel]: "Analizar Modelo",
         [_.analyzeModelSummary]: `Su conjunto de datos tiene <strong>{size:bytes}</strong> de largo y contiene <strong>{count}</strong> columna{{s}}`,
         [_.analyzeModelSummary2]: `, <span class=text-highlight><strong>{count}</strong>  de los cuales no {{están|está}} referenciados en el modelo.</span>`,
-        [_.appExtensionName]: "Bravo Date Template Editor", // DO NOT TRANSLATE
+        [_.appExtensionName]: "Bravo Template Editor", // DO NOT TRANSLATE
         [_.appName]: "Bravo for Power BI", // DO NOT TRANSLATE
         [_.appUpdateAvailable]: "Nueva versión disponible: {version}",
         [_.appUpdateChangelog]: "Registro de cambios",
@@ -93,7 +93,7 @@ const locale: Locale = {
         [_.devCreateTemplateNotes]: "Haga clic en <strong>Crear</strong> para elegir la carpeta donde guardar el proyecto Visual Studio Code que contiene la nueva plantilla.",
         [_.devCreateTemplateTitle]: "Nueva plantilla de fecha",
         [_.devDefaultTemplateName]: "Intitulada",
-        [_.devTemplateRemoveConfirmation]: "La plantilla <b>{template}</b> se eliminará de esta lista, pero cualquier archivo existente se mantendrá en el sistema.<br><br>¿seguramente continuará?",
+        [_.devTemplateRemoveConfirmation]: "La plantilla <b>{template}</b> se eliminará de esta lista, pero cualquier archivo existente se mantendrá en el sistema.<br>¿seguramente continuará?",
         [_.devTemplatesBrowse]: "Navegar",
         [_.devTemplatesColAction]: "Comportamiento",
         [_.devTemplatesColName]: "Modelo",
@@ -310,7 +310,7 @@ const locale: Locale = {
         [_.optionBrowserAuthentication]: "Autenticarse en el navegador",
         [_.optionBrowserAuthenticationDescription]: "Autenticar usando el navegador predeterminado.Este es un método de inicio de sesión alternativo que es útil para resolver problemas con la autenticación de dos factores.",
         [_.optionCheckForUpdates]: "Verifique automáticamente las actualizaciones",
-        [_.optionDev]: "Habilitar el desarrollo de plantillas de fecha",
+        [_.optionDev]: "Desarrollo de plantillas de fecha",
         [_.optionDevDescription]: "",
         [_.optionDiagnostic]: "Nivel de diagnóstico",
         [_.optionDiagnosticDescription]: "Mostrar errores y registros en un panel de diagnóstico.  Seleccionar <em>Básico</em> para registrar solo algunos mensajes. O <em>Completo</em> para registrar todos los mensajes.",

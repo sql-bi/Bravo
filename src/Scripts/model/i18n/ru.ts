@@ -18,7 +18,7 @@ const locale: Locale = {
         [_.AnalyzeModel]: "Анализ модели",
         [_.analyzeModelSummary]: `Размер вашего источника данных <strong>{size:bytes}</strong> байт, включая <strong>{count}</strong> стобцов`,
         [_.analyzeModelSummary2]: `, <span class="text-highlight"><strong>{count}</strong> из которых не упоминаются в модели.</span>`,
-        [_.appExtensionName]: "Bravo Date Template Editor", // DO NOT TRANSLATE
+        [_.appExtensionName]: "Bravo Template Editor", // DO NOT TRANSLATE
         [_.appName]: "Bravo for Power BI", //DO NOT TRANSLATE
         [_.appUpdateAvailable]: "Доступна новая версия: {version}",
         [_.appUpdateChangelog]: "Журнал изменений",
@@ -93,7 +93,7 @@ const locale: Locale = {
         [_.devCreateTemplateNotes]: "Нажмите <strong>Плач</strong>, чтобы выбрать папку, где сохранить проект Visual Studio Code, который содержит новую модель.",
         [_.devCreateTemplateTitle]: "Новая модель даты",
         [_.devDefaultTemplateName]: "Без названия",
-        [_.devTemplateRemoveConfirmation]: "Модель <b>{template}</b> будет удалена из этого списка, но в системе будут храниться любые существующие файлы.<br><br>вы обязательно продолжите?",
+        [_.devTemplateRemoveConfirmation]: "Модель <b>{template}</b> будет удалена из этого списка, но в системе будут храниться любые существующие файлы.<br>вы обязательно продолжите?",
         [_.devTemplatesBrowse]: "Просматривать",
         [_.devTemplatesColAction]: "Действия",
         [_.devTemplatesColName]: "Модель",
@@ -311,7 +311,7 @@ const locale: Locale = {
         [_.optionBrowserAuthentication]: "Аутентификация в браузере",
         [_.optionBrowserAuthenticationDescription]: "Аутентификация с использованием браузера по умолчанию.Это альтернативный метод входа, который полезен для решения проблем с двухфакторной аутентификацией.",
         [_.optionCheckForUpdates]: "Автоматически проверяйте обновления",
-        [_.optionDev]: "Разработка моделей даты даты",
+        [_.optionDev]: "Разработка шаблонов дат",
         [_.optionDevDescription]: "",
         [_.optionDiagnostic]: "Уровень диагностики",
         [_.optionDiagnosticDescription]: "Показывать ошибки и журналы на панели диагностики. Выберите <em>Основной</em>, чтобы регистрировать только несколько сообщений. <em>Подробный</em> регистрирует все сообщения.",

@@ -18,7 +18,7 @@ const locale: Locale = {
         [_.AnalyzeModel]: "Analysér Model",
         [_.analyzeModelSummary]: `Dit datasæt er <strong>{size:bytes}</strong> stort og indeholder <strong>{count}</strong> kolonne{{r}}`,
         [_.analyzeModelSummary2]: `, <span class="text-highlight">hvoraf <strong>{count}</strong> ikke refereres noget sted i modellen.</span>`,
-        [_.appExtensionName]: "Bravo Date Template Editor", // DO NOT TRANSLATE
+        [_.appExtensionName]: "Bravo Template Editor", // DO NOT TRANSLATE
         [_.appName]: "Bravo for Power BI", // DO NOT TRANSLATE
         [_.appUpdateAvailable]: "Ny version tilgængelig: {version}",
         [_.appUpdateChangelog]: "Ændringslog",
@@ -93,7 +93,7 @@ const locale: Locale = {
         [_.devCreateTemplateNotes]: "Klik på <strong>Skab</strong> for at vælge den mappe, hvor du skal gemme Visual Studio Code -projektet, der indeholder den nye skabelon.",
         [_.devCreateTemplateTitle]: "Ny datoskabelon",
         [_.devDefaultTemplateName]: "Untitled",
-        [_.devTemplateRemoveConfirmation]: "Skabelonen <b>{template}</b> fjernes fra denne liste, men alle eksisterende filer opbevares på systemet.<br><br>Er du sikker på at fortsætte?",
+        [_.devTemplateRemoveConfirmation]: "Skabelonen <b>{template}</b> fjernes fra denne liste, men alle eksisterende filer opbevares på systemet.<br>Er du sikker på at fortsætte?",
         [_.devTemplatesBrowse]: "Gennemse",
         [_.devTemplatesColAction]: "Handlinger",
         [_.devTemplatesColName]: "Skabelon",
@@ -311,7 +311,7 @@ const locale: Locale = {
         [_.optionBrowserAuthentication]: "Autentificer i browser",
         [_.optionBrowserAuthenticationDescription]: "Autentificer ved hjælp af standardbrowseren.Dette er en alternativ login-metode, der er nyttig til at løse problemer med to-faktor-godkendelse.",
         [_.optionCheckForUpdates]: "Kontroller automatisk for opdateringer",
-        [_.optionDev]: "Aktivér dato -skabeloner udvikling",
+        [_.optionDev]: "Dato -skabeloner udvikling",
         [_.optionDevDescription]: "",
         [_.optionDiagnostic]: "Diagnostikniveau",
         [_.optionDiagnosticDescription]: "Vis fejl og logs in et diagnostikpanel. Vælg <em>Grundlæggende</em> for kun at logge de vigtigste hændelser. <em>Udvidet</em> logger alle hændelser.",

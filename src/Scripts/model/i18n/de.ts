@@ -20,7 +20,7 @@ const locale: Locale = {
         [_.AnalyzeModel]: "Modell analysieren",
         [_.analyzeModelSummary]: `Ihr Dataset ist <strong>{size:bytes}</strong> groß und enthält <strong>{count}</strong> Spalte{{n}}`,
         [_.analyzeModelSummary2]: `, <span class="text-highlight"><strong>{count}</strong> von denen {{sind|ist}} nicht innerhalb des Modells referenziert.</span>`,
-        [_.appExtensionName]: "Bravo Date Template Editor", // DO NOT TRANSLATE
+        [_.appExtensionName]: "Bravo Template Editor", // DO NOT TRANSLATE
         [_.appName]: "Bravo for Power BI", //DO NOT TRANSLATE
         [_.appUpdateAvailable]: "Neue Version verfügbar: {version}",
         [_.appUpdateChangelog]: "Änderungsprotokoll",
@@ -95,7 +95,7 @@ const locale: Locale = {
         [_.devCreateTemplateNotes]: "Klicken Sie auf <strong>Schaffen</strong>, um den Ordner auszuwählen, um das Visual Studio Code projekt zu speichern, das die neue Vorlage enthält.",
         [_.devCreateTemplateTitle]: "Neue Datumsvorlage",
         [_.devDefaultTemplateName]: "Ohne Titel",
-        [_.devTemplateRemoveConfirmation]: "Die Vorlage <b>{template}</b> wird aus dieser Liste entfernt, aber alle vorhandenen Dateien werden am System aufbewahrt.<br><br>Sind Sie mit Sicherheit fortfahren?",
+        [_.devTemplateRemoveConfirmation]: "Die Vorlage <b>{template}</b> wird aus dieser Liste entfernt, aber alle vorhandenen Dateien werden am System aufbewahrt.<br>Sind Sie mit Sicherheit fortfahren?",
         [_.devTemplatesBrowse]: "Durchsuche",
         [_.devTemplatesColAction]: "Aktionen",
         [_.devTemplatesColName]: "Schablone",
@@ -313,7 +313,7 @@ const locale: Locale = {
         [_.optionBrowserAuthentication]: "Im Browser authentifizieren",
         [_.optionBrowserAuthenticationDescription]: "Authentifizieren Sie mit dem Standardbrowser.Dies ist eine alternative Anmeldemethode, die zur Lösung von Problemen mit der Zwei-Faktor-Authentifizierung nützlich ist.",
         [_.optionCheckForUpdates]: "Automatisch nach Aktualisierungen suchen",
-        [_.optionDev]: "Developlated Date -Vorlagen aktivieren",
+        [_.optionDev]: "Developlated Date -Vorlagen",
         [_.optionDevDescription]: "",
         [_.optionDiagnostic]: "Diagnosestufe",
         [_.optionDiagnosticDescription]: "Fehler und Protokolle in einem Diagnosefenster anzeigen. Wählen Sie <em>Standard</em>, um nur einige Meldungen zu protokollieren. <em>Ausführlich </em> protokolliert alle Meldungen.",

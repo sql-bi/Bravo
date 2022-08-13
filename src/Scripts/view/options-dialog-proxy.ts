@@ -92,7 +92,7 @@ export class OptionsDialogProxy {
                             })
                             .catch(ignore => false);
                     } else {
-                        let dialog = new Confirm();
+                        let dialog = new Confirm("delete-proxy-cred", false);
                         return dialog.show(i18n(strings.optionProxyConfirmDeleteCredentials))
                             .then((response: DialogResponse) => {
                                 let ok = (response.action == "ok");

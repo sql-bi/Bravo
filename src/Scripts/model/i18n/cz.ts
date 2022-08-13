@@ -18,7 +18,7 @@ const locale: Locale = {
         [_.AnalyzeModel]: "Analyzovat model",
         [_.analyzeModelSummary]: `Vaše datová sada je <strong>{size:bytes}</strong> veliký a obsahuje <strong>{count}</strong> {{sloupce|sloupec}}`,
         [_.analyzeModelSummary2]: `, z toho <span class="text-highlight"><strong>{count}</strong> {{jsou|je}} bez reference v rámci modelu.</span>`,
-        [_.appExtensionName]: "Bravo Date Template Editor", // DO NOT TRANSLATE
+        [_.appExtensionName]: "Bravo Template Editor", // DO NOT TRANSLATE
         [_.appName]: "Bravo for Power BI", //DO NOT TRANSLATE
         [_.appUpdateAvailable]: "Nová verze je dostupná: {version}",
         [_.appUpdateChangelog]: "Seznam změn",
@@ -93,7 +93,7 @@ const locale: Locale = {
         [_.devCreateTemplateNotes]: "Klikněte na <strong>Vytvořit</strong> a vyberte složku, kde uložit projekt vizuálního studia obsahující novou šablonu.",
         [_.devCreateTemplateTitle]: "Nová šablona datum",
         [_.devDefaultTemplateName]: "Nepojmenovaná",
-        [_.devTemplateRemoveConfirmation]: "Šablona <b>{template}</b> bude z tohoto seznamu odstraněna, ale v systému budou uchovávány všechny existující soubory. <br><br>Určitě budete pokračovat?",
+        [_.devTemplateRemoveConfirmation]: "Šablona <b>{template}</b> bude z tohoto seznamu odstraněna, ale v systému budou uchovávány všechny existující soubory.<br>Určitě budete pokračovat?",
         [_.devTemplatesBrowse]: "Procházet",
         [_.devTemplatesColAction]: "Akce",
         [_.devTemplatesColName]: "Šablona",
@@ -311,7 +311,7 @@ const locale: Locale = {
         [_.optionBrowserAuthentication]: "Autentizovat v prohlížeči",
         [_.optionBrowserAuthenticationDescription]: "Autentizovat pomocí výchozího prohlížeče.Toto je alternativní metoda přihlášení, která je užitečná pro řešení problémů se dvoufaktorovou ověřováním.",
         [_.optionCheckForUpdates]: "Automaticky zkontrolujte aktualizace",
-        [_.optionDev]: "Povolit vývoj šablon datum",
+        [_.optionDev]: "Vývoj šablon datum",
         [_.optionDevDescription]: "",
         [_.optionDiagnostic]: "Diagnostická úroveň",
         [_.optionDiagnosticDescription]: "Zobrazit chyby a protokoly v podokně diagnostiky. Zvolte <em>Základní</em>, chcete-li protokolovat pouze několik zpráv. <em>Úplný</em> protokoluje všechny zprávy.",

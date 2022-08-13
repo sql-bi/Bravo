@@ -18,7 +18,7 @@ const locale: Locale = {
         [_.AnalyzeModel]: "Analyze Model",
         [_.analyzeModelSummary]: `Your dataset is <strong>{size:bytes}</strong> large and contains <strong>{count}</strong> column{{s}}`,
         [_.analyzeModelSummary2]: `, <span class="text-highlight"><strong>{count}</strong> of which {{are|is}} not referenced within the model.</span>`,
-        [_.appExtensionName]: "Bravo Date Template Editor", // DO NOT TRANSLATE
+        [_.appExtensionName]: "Bravo Template Editor", // DO NOT TRANSLATE
         [_.appName]: "Bravo for Power BI", // DO NOT TRANSLATE
         [_.appUpdateAvailable]: "New version available: {version}",
         [_.appUpdateChangelog]: "Changelog",
@@ -93,7 +93,7 @@ const locale: Locale = {
         [_.devCreateTemplateNotes]: "Click <strong>Create</strong> to choose the folder where to save the Visual Studio Code project containing the new template.",
         [_.devCreateTemplateTitle]: "New Date Template",
         [_.devDefaultTemplateName]: "Untitled",
-        [_.devTemplateRemoveConfirmation]: "The template <b>{template}</b> will be removed from this list, but any existing files will be kept on the system.<br><br>Are you sure to proceed?",
+        [_.devTemplateRemoveConfirmation]: "The template <b>{template}</b> will be removed from this list, but any existing files will be kept on the system.<br>Are you sure to proceed?",
         [_.devTemplatesBrowse]: "Browse",
         [_.devTemplatesColAction]: "Actions",
         [_.devTemplatesColName]: "Template",
@@ -311,7 +311,7 @@ const locale: Locale = {
         [_.optionBrowserAuthentication]: "Authenticate in Browser",
         [_.optionBrowserAuthenticationDescription]: "Authenticate using the default browser. This is an alternative login method that is useful for solving problems with two-factor authentication.",
         [_.optionCheckForUpdates]: "Automatically check for updates",
-        [_.optionDev]: "Enable Date Templates Development",
+        [_.optionDev]: "Date Templates Development",
         [_.optionDevDescription]: "",
         [_.optionDiagnostic]: "Diagnostics Level",
         [_.optionDiagnosticDescription]: "Show errors and logs in a diagnostics pane. Choose <em>Basic</em> to log only a few messages. <em>Verbose</em> logs all messages.",

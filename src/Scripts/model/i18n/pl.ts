@@ -18,7 +18,7 @@ const locale: Locale = {
         [_.AnalyzeModel]: "Analizuj model",
         [_.analyzeModelSummary]: `Twój zestaw danych waży <strong>{size:bytes}</strong> i zawiera <strong>{count}</strong> {{kolumn|kolumnę}}`,
         [_.analyzeModelSummary2]: `, <span class="text-highlight">do <strong>{count}</strong> z nich nie ma odniesienia w modelu.</span>`,
-        [_.appExtensionName]: "Bravo Date Template Editor", // DO NOT TRANSLATE
+        [_.appExtensionName]: "Bravo Template Editor", // DO NOT TRANSLATE
         [_.appName]: "Bravo for Power BI", //DO NOT TRANSLATE
         [_.appUpdateAvailable]: "Dostępna jest nowa wersja: {version}",
         [_.appUpdateChangelog]: "Changelog",
@@ -93,7 +93,7 @@ const locale: Locale = {
         [_.devCreateTemplateNotes]: "Kliknij <strong>Tworzyć</strong>, aby wybrać folder, gdzie zapisać projekt Visual Studio Code zawierający nowy szablon.",
         [_.devCreateTemplateTitle]: "Nowy szablon daty",
         [_.devDefaultTemplateName]: "Nieuprawny",
-        [_.devTemplateRemoveConfirmation]: "Szablon <b>{template}</b> zostanie usunięty z tej listy, ale wszelkie istniejące pliki będą przechowywane w systemie.<br><br>Czy na pewno przejdziesz?",
+        [_.devTemplateRemoveConfirmation]: "Szablon <b>{template}</b> zostanie usunięty z tej listy, ale wszelkie istniejące pliki będą przechowywane w systemie.<br>Czy na pewno przejdziesz?",
         [_.devTemplatesBrowse]: "Przeglądaj",
         [_.devTemplatesColAction]: "Działania",
         [_.devTemplatesColName]: "Szablon",
@@ -311,7 +311,7 @@ const locale: Locale = {
         [_.optionBrowserAuthentication]: "Uwierzytelnij się w przeglądarce",
         [_.optionBrowserAuthenticationDescription]: "Uwierzytelnienie za pomocą domyślnej przeglądarki.Jest to alternatywna metoda logowania, która jest przydatna do rozwiązywania problemów z uwierzytelnianiem dwuskładnikowym.",
         [_.optionCheckForUpdates]: "Automatycznie sprawdź aktualizacje",
-        [_.optionDev]: "Włącz rozwój szablonów dat",
+        [_.optionDev]: "Opracowanie szablonu daty",
         [_.optionDevDescription]: "",
         [_.optionDiagnostic]: "Poziom diagnostyki",
         [_.optionDiagnosticDescription]: "Pokaż błędy i dzienniki w okienku diagnostycznym. Wybierz <em>Podstawowy</em>, aby rejestrować tylko kilka komunikatów. <em>Szczegółowy</em> rejestruje wszystkie komunikaty",
@@ -353,7 +353,7 @@ const locale: Locale = {
         [_.optionProxyBypassListDescription]: "Użyj serwera proxy, z wyjątkiem adresów, które zaczynają się od wstawionych wpisów.Użyj półkolisów (;) do oddzielenia wpisów.",
         [_.optionProxyBypassOnLocal]: "Omijaj adresy lokalne",
         [_.optionProxyBypassOnLocalDescription]: "Nie używaj proxy z adresami lokalnymi (intranetowymi).",
-        [_.optionProxyConfirmDeleteCredentials]: "Are you sure to remove the custom credentials from the system?",
+        [_.optionProxyConfirmDeleteCredentials]: "Czy na pewno usuniesz niestandardowe poświadczenia z systemu?",
         [_.optionProxyCustomCredentials]: "Niestandardowe poświadczenia",
         [_.optionProxyCustomCredentialsDescription]: "Użyj niestandardowych poświadczeń, aby uwierzytelnić się na serwerze proxy.Zejdź, aby użyć poświadczeń systemowych.",
         [_.optionProxyCustomCredentialsEdit]: "Edytuj niestandardowe poświadczenia",

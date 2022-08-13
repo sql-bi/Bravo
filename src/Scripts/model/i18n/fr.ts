@@ -20,7 +20,7 @@ const locale: Locale = {
         [_.AnalyzeModel]: "Analyse Modèle",
         [_.analyzeModelSummary]: `Votre jeu de données est <strong>{size:bytes}</strong> volumineux et contient <strong>{count}</strong> colonne{{s}}`,
         [_.analyzeModelSummary2]: `, <span class="text-highlight"><strong>{count}</strong> d'entre eux {{sont|est}} non référencé{{s}} au sein du Modèle.</span>`,
-        [_.appExtensionName]: "Bravo Date Template Editor", // DO NOT TRANSLATE
+        [_.appExtensionName]: "Bravo Template Editor", // DO NOT TRANSLATE
         [_.appName]: "Bravo for Power BI", //DO NOT TRANSLATE
         [_.appUpdateAvailable]: "Nouvelle version disponible: {version}",
         [_.appUpdateChangelog]: "Journal des modifications",
@@ -95,7 +95,7 @@ const locale: Locale = {
         [_.devCreateTemplateNotes]: "Cliquez sur <strong>Créer</strong> pour choisir le dossier où enregistrer le projet Visual Studio Code contenant le nouveau modèle.",
         [_.devCreateTemplateTitle]: "Nouveau modèle de date",
         [_.devDefaultTemplateName]: "Sans titre",
-        [_.devTemplateRemoveConfirmation]: "Le modèle <b>{template}</b> sera supprimé de cette liste, mais tous les fichiers existants seront conservés sur le système.<br><br>Êtes-vous sûr de procéder?",
+        [_.devTemplateRemoveConfirmation]: "Le modèle <b>{template}</b> sera supprimé de cette liste, mais tous les fichiers existants seront conservés sur le système.<br>Êtes-vous sûr de procéder?",
         [_.devTemplatesBrowse]: "Parcourir",
         [_.devTemplatesColAction]: "actions",
         [_.devTemplatesColName]: "Modèle",
@@ -313,7 +313,7 @@ const locale: Locale = {
         [_.optionBrowserAuthentication]: "Authentifier dans le navigateur",
         [_.optionBrowserAuthenticationDescription]: "Authentifiez à l'aide du navigateur par défaut.Il s'agit d'une autre méthode de connexion utile pour résoudre des problèmes avec l'authentification à deux facteurs.",
         [_.optionCheckForUpdates]: "Vérifiez automatiquement les mises à jour",
-        [_.optionDev]: "Activer le développement des modèles de date",
+        [_.optionDev]: "Développement des modèles de date",
         [_.optionDevDescription]: "",
         [_.optionDiagnostic]: "Niveau de Diagnostique",
         [_.optionDiagnosticDescription]: "Afficher les erreurs et les journaux d'exécution dans le panneau de diagnostique. Choisir <em>Basic</em> de journaliser uniquement quelques messages. <em>Afficher</em> tous les messages des journaux d'exécution.",

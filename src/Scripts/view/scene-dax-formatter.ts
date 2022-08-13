@@ -717,7 +717,7 @@ export class DaxFormatterScene extends DocScene {
             e.preventDefault();
             if (element.hasAttribute("disabled")) return;
 
-            let alert = new Confirm();
+            let alert = new Confirm("analyze-measures");
             alert.show(i18n(strings.daxFormatterAnalyzeConfirm))
                 .then((response: DialogResponse) => {
                     if (response.action == "ok") {

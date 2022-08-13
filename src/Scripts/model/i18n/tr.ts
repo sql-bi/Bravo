@@ -20,7 +20,7 @@ const locale: Locale = {
         [_.AnalyzeModel]: "Modeli analiz et",
         [_.analyzeModelSummary]: `Veri setiniz <strong>{size:bytes}</strong> büyüklüğünde ve <strong>{count}</strong> adet kolon{{s}} içeriyor.`,
         [_.analyzeModelSummary2]: `, bunlardan <span class="text-highlight"><strong>{count}</strong> tanesi Modelde ilişkilendirilmemiş.</span>`,
-        [_.appExtensionName]: "Bravo Date Template Editor", // DO NOT TRANSLATE
+        [_.appExtensionName]: "Bravo Template Editor", // DO NOT TRANSLATE
         [_.appName]: "Bravo for Power BI", // DO NOT TRANSLATE
         [_.appUpdateAvailable]: "Yeni versiyon var: {version}",
         [_.appUpdateChangelog]: "Değişiklik Logu",
@@ -95,7 +95,7 @@ const locale: Locale = {
         [_.devCreateTemplateNotes]: "Yeni şablonu içeren Visual Studio Code projesini nereye kaydedeceğiniz klasörü seçmek için <strong>Oluşturmak</strong> tıklayın.",
         [_.devCreateTemplateTitle]: "Yeni Tarih Şablonu",
         [_.devDefaultTemplateName]: "Adsız",
-        [_.devTemplateRemoveConfirmation]: "Şablon <b>{template}</b> bu listeden kaldırılacak, ancak mevcut dosyalar sistemde tutulacak.<br><br>Devam edeceğinizden emin misiniz?",
+        [_.devTemplateRemoveConfirmation]: "Şablon <b>{template}</b> bu listeden kaldırılacak, ancak mevcut dosyalar sistemde tutulacak.<br>Devam edeceğinizden emin misiniz?",
         [_.devTemplatesBrowse]: "Araştır",
         [_.devTemplatesColAction]: "Hareketler",
         [_.devTemplatesColName]: "Şablon",
@@ -313,7 +313,7 @@ const locale: Locale = {
         [_.optionBrowserAuthentication]: "Tarayıcıda kimlik doğrulama",
         [_.optionBrowserAuthenticationDescription]: "Varsayılan tarayıcıyı kullanarak kimlik doğrulaması yapın.Bu, iki faktörlü kimlik doğrulama ile problemleri çözmek için yararlı olan alternatif bir giriş yöntemidir.",
         [_.optionCheckForUpdates]: "Güncellemeleri otomatik olarak kontrol edin",
-        [_.optionDev]: "Tarih Şablonlarını Etkinleştir Geliştirme",
+        [_.optionDev]: "Tarih Şablonları Geliştirme",
         [_.optionDevDescription]: "",
         [_.optionDiagnostic]: "Loglama Düzeyi",
         [_.optionDiagnosticDescription]: "Bir tanılama bölmesinde hataları ve günlükleri göster. Yalnızca birkaç iletiyi günlüğe kaydetmek için <em>Temel</em>'i seçin. <em>Ayrıntılı</em> tüm iletileri günlüğe kaydeder.",

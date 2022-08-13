@@ -18,7 +18,7 @@ const locale: Locale = {
         [_.AnalyzeModel]: "Analisar Modelo",
         [_.analyzeModelSummary]: `O seu conjunto de dados tem <strong>{size:bytes}</strong> e contém <strong>{count}</strong> coluna{{s}}`,
         [_.analyzeModelSummary2]: `, <span class="text-highlight"><strong>{count}</strong> dessa(s) não {{estão referenciadas|está referenciada}} no modelo.</span>`,
-        [_.appExtensionName]: "Bravo Date Template Editor", // DO NOT TRANSLATE
+        [_.appExtensionName]: "Bravo Template Editor", // DO NOT TRANSLATE
         [_.appName]: "Bravo for Power BI", // DO NOT TRANSLATE
         [_.appUpdateAvailable]: "Nova versão disponível: {version}",
         [_.appUpdateChangelog]: "Registo de alterações",
@@ -93,7 +93,7 @@ const locale: Locale = {
         [_.devCreateTemplateNotes]: "Clique em <strong>Crio</strong> para escolher a pasta onde salvar o projeto de Visual Studio Code que contém o novo modelo.",
         [_.devCreateTemplateTitle]: "Novo modelo de data",
         [_.devDefaultTemplateName]: "Sem título",
-        [_.devTemplateRemoveConfirmation]: "O modelo <b>{template}</b> será removido desta lista, mas quaisquer arquivos existentes serão mantidos no sistema.<br><br>Você certamente prosseguirá?",
+        [_.devTemplateRemoveConfirmation]: "O modelo <b>{template}</b> será removido desta lista, mas quaisquer arquivos existentes serão mantidos no sistema.<br>Você certamente prosseguirá?",
         [_.devTemplatesBrowse]: "Navegar",
         [_.devTemplatesColAction]: "Ações",
         [_.devTemplatesColName]: "Modelo",
@@ -310,7 +310,7 @@ const locale: Locale = {
         [_.optionBrowserAuthentication]: "Autenticar no navegador",
         [_.optionBrowserAuthenticationDescription]: "Autentique usando o navegador padrão.Este é um método de login alternativo que é útil para resolver problemas com a autenticação de dois fatores.",
         [_.optionCheckForUpdates]: "Verifique automaticamente as atualizações",
-        [_.optionDev]: "Desenvolvimento de modelos de data de data",
+        [_.optionDev]: "Desenvolvimento de modelos de data",
         [_.optionDevDescription]: "",
         [_.optionDiagnostic]: "Nível de Diagnósticos",
         [_.optionDiagnosticDescription]: "Mostra erros e registos num painel de diagnóstico. Escolha <em>Básico</em> para registar apenas algumas mensagens. <em>Verbose</em> para registar todas as mensagens.",

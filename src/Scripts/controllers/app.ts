@@ -224,7 +224,7 @@ export class App {
             if (data.id in this.sheets) {
                 if (this.sheets[data.id].doc.isDirty) {
 
-                    let dialog = new Confirm();
+                    let dialog = new Confirm("close-tab");
                     dialog.show(i18n(strings.confirmTabCloseMessage)).then((response: DialogResponse) => {
                         if (response.action == "ok")
                             this.tabs.closeTab(data.element);

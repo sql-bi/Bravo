@@ -50,7 +50,7 @@ export class OptionsDialogGeneral {
                 onChange: (e, value) => {
 
                     if (value != I18n.instance.language) {
-                        let alert = new Confirm();
+                        let alert = new Confirm("reload-window", false);
                         alert.show(i18n(strings.optionLanguageResetConfirm))
                             .then((response: DialogResponse) => {
                                 if (response.action == "ok") {

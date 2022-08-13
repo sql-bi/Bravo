@@ -18,7 +18,7 @@ const locale: Locale = {
         [_.AnalyzeModel]: "分析模型",
         [_.analyzeModelSummary]: `您的数据集大小是 <strong>{size:bytes}</strong> 并包含 <strong>{count}</strong> 列`,
         [_.analyzeModelSummary2]: `, 其中<span class="text-highlight"><strong>{count}</strong> 列在模型中未被引用</span>`,
-        [_.appExtensionName]: "Bravo Date Template Editor", // DO NOT TRANSLATE
+        [_.appExtensionName]: "Bravo Template Editor", // DO NOT TRANSLATE
         [_.appName]: "Bravo for Power BI", //DO NOT TRANSLATE
         [_.appUpdateAvailable]: "有可用的新版本: {version}",
         [_.appUpdateChangelog]: "更新日志",
@@ -311,7 +311,7 @@ const locale: Locale = {
         [_.optionBrowserAuthentication]: "在浏览器中进行身份验证",
         [_.optionBrowserAuthenticationDescription]: "使用默认浏览器进行身份验证。这是一种替代登录方法，可用于解决两因素身份验证的问题。",
         [_.optionCheckForUpdates]: "自动检查更新",
-        [_.optionDev]: "启用日期模板开发",
+        [_.optionDev]: "日期模板开发",
         [_.optionDevDescription]: "",
         [_.optionDiagnostic]: "诊断级别",
         [_.optionDiagnosticDescription]: "在诊断窗格中显示错误和日志. 选择 <em>基本</em> 记录部分信息 (这些信息将被匿名化). <em>详细</em> 记录所有信息(所有信息将完整保留)",

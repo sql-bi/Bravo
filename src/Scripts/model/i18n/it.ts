@@ -18,7 +18,7 @@ const locale: Locale = {
         [_.AnalyzeModel]: "Analizza Modello",
         [_.analyzeModelSummary]: `Il tuo dataset è grande <strong>{size:bytes}</strong> e contiene <strong>{count}</strong> {{colonne|colonna}}`,
         [_.analyzeModelSummary2]: `, di cui <span class="text-highlight"><strong>{count}</strong> non {{sono referenziate|è referenziata}} nel modello.</span>`,
-        [_.appExtensionName]: "Bravo Date Template Editor", // DO NOT TRANSLATE
+        [_.appExtensionName]: "Bravo Template Editor", // DO NOT TRANSLATE
         [_.appName]: "Bravo for Power BI", //DO NOT TRANSLATE
         [_.appUpdateAvailable]: "Nuova versione disponibile: {version}",
         [_.appUpdateChangelog]: "Changelog",
@@ -93,7 +93,7 @@ const locale: Locale = {
         [_.devCreateTemplateNotes]: "Fai clic su <strong>Crea</strong> per scegliere la cartella dove salvare il progetto di Visual Studio Code contenente il nuovo template.",
         [_.devCreateTemplateTitle]: "Nuovo Template",
         [_.devDefaultTemplateName]: "Senza titolo",
-        [_.devTemplateRemoveConfirmation]: "Il template <b>{template}</b> verrà rimosso da questo elenco, ma qualsiasi file esistente verrà mantenuto sul sistema.<br><br>Sei sicuro di procedere?",
+        [_.devTemplateRemoveConfirmation]: "Il template <b>{template}</b> verrà rimosso da questo elenco, ma qualsiasi file esistente verrà mantenuto sul sistema.<br>Sei sicuro di procedere?",
         [_.devTemplatesBrowse]: "Sfoglia",
         [_.devTemplatesColAction]: "Azioni",
         [_.devTemplatesColName]: "Template",
@@ -311,7 +311,7 @@ const locale: Locale = {
         [_.optionBrowserAuthentication]: "Autentica nel browser",
         [_.optionBrowserAuthenticationDescription]: "Autenticati utilizzando il browser predefinito. Questo è un metodo di accesso alternativo utile per risolvere problemi con l'autenticazione a due fattori.",
         [_.optionCheckForUpdates]: "Controllare automaticamente aggiornamenti",
-        [_.optionDev]: "Abilita sviluppo dei template date",
+        [_.optionDev]: "Sviluppo dei template date",
         [_.optionDevDescription]: "",
         [_.optionDiagnostic]: "Diagnostica",
         [_.optionDiagnosticDescription]: "Mostra errori e log in un pannello apposito. Scegli <em>Base</em> per registrare solo alcuni messaggi. <em>Integrale</em> registra invece tutti i messaggi.",
