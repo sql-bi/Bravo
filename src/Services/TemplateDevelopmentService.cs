@@ -26,6 +26,8 @@
 
         IEnumerable<DateConfiguration> GetConfigurations();
 
+        DateConfiguration? GetConfigurationFromPackage(string path);
+
         CustomPackage GetCustomPackage(string path, CustomPackageType type);
 
         CustomPackage ValidateCustomPackage(CustomPackage customPackage);
@@ -65,6 +67,18 @@
             var configurations = packages.Select(DateConfiguration.CreateFrom).ToArray();
 
             return configurations;
+        }
+
+        public DateConfiguration? GetConfigurationFromPackage(string path) {
+
+            if (path is not null && File.Exists(path))
+            {
+                var package = _templateManager.GetPackage(path);
+                var configuration = DateConfiguration.CreateFrom(package);
+
+                return configuration;
+            }
+            return null;
         }
 
         public CustomPackage GetCustomPackage(string path, CustomPackageType type)
@@ -204,10 +218,14 @@
                 });
             }
 
+            //.template.json
+            // TODO Change the name/description in Config01.template.json with the name passed here
+            // TODO Rename Config01.template.json as {name}.template.json
+
             // .package.json
             var package = configuration.LoadPackage(templatePath);
-            package.Configuration.Name = name;
-            package.Configuration.Description = "";
+            package.Configuration.Name = name;          // This is not required if we edit *.template.json
+            package.Configuration.Description = "";     // Idem
             {
                 var packageDistributionFolderPath = Path.Combine(workspacePath, WorkspaceDistributionFolderName);
                 var packageFileName = Path.ChangeExtension(workspaceName, ".package.json");

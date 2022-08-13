@@ -108,6 +108,28 @@
         }
 
         /// <summary>
+        /// Get the <see cref="DateConfiguration"/> of a package
+        /// </summary>
+        /// <response code="200">Status200OK - Success</response>
+        /// <response code="403">Status403Forbidden -  Use of the tremplate development API is not enabled</response>
+        [HttpGet]
+        [ActionName("GetConfigurationFromPackage")]
+        [Produces(MediaTypeNames.Application.Json)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(DateConfiguration))]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesDefaultResponseType]
+        public IActionResult GetConfigurationFromPackage(string path)
+        {
+            if (_templateDevelopmentService.Enabled)
+            {
+                var configuration = _templateDevelopmentService.GetConfigurationFromPackage(path);
+                return Ok(configuration);
+            }
+
+            return Forbid();
+        }
+
+        /// <summary>
         /// Validate the <see cref="CustomPackage"/> by verifying the existence of the .code-workspace and package.json files
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
