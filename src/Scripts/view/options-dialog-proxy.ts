@@ -85,12 +85,7 @@ export class OptionsDialogProxy {
                 onBeforeChange: (e, value) => {
                     let el = <HTMLInputElement>e.target;
                     if (value) {
-                        return host.updateProxyCredentials()
-                            .then(ok => {
-                                if (!ok) el.checked = false; 
-                                return ok;
-                            })
-                            .catch(ignore => false);
+                        return host.updateProxyCredentials();
                     } else {
                         let dialog = new Confirm("delete-proxy-cred", false);
                         return dialog.show(i18n(strings.optionProxyConfirmDeleteCredentials))

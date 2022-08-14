@@ -6,10 +6,13 @@
 
 import { OptionStruct, OptionToggler, OptionType, Renderer } from '../helpers/renderer';
 import { Utils, _ } from '../helpers/utils';
-import { DateConfiguration, QuarterWeekType, TypeStartFiscalYear, WeeklyType } from '../model/dates';
+import { host, logger, optionsController, telemetry } from '../main';
+import { DateConfiguration, QuarterWeekType, TypeStartFiscalYear, WeeklyType, dateConfigurationName } from '../model/dates';
+import { AppError } from '../model/exceptions';
 import { I18n, i18n } from '../model/i18n';
 import { strings } from '../model/strings';
-import { localizeTemplateName } from './scene-manage-dates';
+import { ErrorAlert } from './error-alert';
+import { OptionsDialog } from './options-dialog';
 import { ManageDatesScenePane } from './scene-manage-dates-pane';
 
 export class ManageDatesSceneCalendar extends ManageDatesScenePane {
@@ -17,29 +20,36 @@ export class ManageDatesSceneCalendar extends ManageDatesScenePane {
     render(element: HTMLElement) {
         super.render(element);
 
-        let values: string[][] = [];
-        this.templates
-            .sort((a, b) => a.name.localeCompare(b.name))
-            .forEach(template => {
-                values.push([template.name, `${localizeTemplateName(template.name, template.description)}${template.isCurrent ? ` (${i18n(strings.manageDatesTemplateNameCurrent)})` : ""}`]);
-                
-            });
-
         let optionsStruct: OptionStruct[] = [
             {
-                option: "name",
+                option: "templateUri",
                 icon: "calendar",
                 name: i18n(strings.manageDatesCalendarTemplateName),
-                description: i18n(strings.manageDatesCalendarTemplateNameDesc),
+                description: `${i18n(strings.manageDatesCalendarTemplateNameDesc)} <span class="link manage-templates">${i18n(strings.manageDatesManageTemplates)}</span>`,
                 bold: true,
                 type: OptionType.select,
-                values: values,
-                onChange: (e, value: string) => {
+                values: [],
+                onBeforeChange: (e, value) => {
+                    if (value == "{browse}") {
+                        return this.browseUserTemplate()
+                            .then((dateConfiguration: DateConfiguration) => {
+   
+                                if (dateConfiguration) {
+                                    this.changeDateConfiguration(dateConfiguration);
+                                    this.updateDateConfigurationsSelect();
 
-                    for (let i = 0; i < this.templates.length; i++) {
-                        let template = this.templates[i];
-                        if (template.name == value) {
-                            this.changeTemplate(template);
+                                    return true;
+                                }
+                                return false;
+                            })
+                    }
+                    return Promise.resolve(true);
+                },
+                onChange: (e, value: string) => {
+                    for (let i = 0; i < this.dateConfigurations.length; i++) {
+                        let dateConfiguration = this.dateConfigurations[i];
+                        if (dateConfiguration.templateUri == value) {
+                            this.changeDateConfiguration(dateConfiguration);
 
                             break;
                         }
@@ -63,21 +73,77 @@ export class ManageDatesSceneCalendar extends ManageDatesScenePane {
         optionsStruct.forEach(struct => {
             Renderer.Options.render(struct, _(".options", element), this.config);
         });
+        this.updateDateConfigurationsSelect();
+        
+        _(".manage-templates", this.element).addEventListener("click", e => {
+            e.preventDefault();
+            let optionsDialog = new OptionsDialog();
+            optionsDialog.show("dev");
+        });
+
     }
 
-    changeTemplate(template: DateConfiguration) {
+    updateDateConfigurationsSelect() {
 
-        this.config.options.name = template.name;
-        this.config.options.description = template.description
-        this.config.options.templateUri = template.templateUri;
+        const selectElement = _(`#templateuri .listener`, this.element);
+        if (!selectElement.empty) {
+            let values: string[][] = [];
+            this.dateConfigurations.forEach(dateConfiguration => {
+                if (optionsController.options.templateDevelopmentEnabled || !dateConfiguration.template)
+                    values.push([dateConfiguration.templateUri, dateConfigurationName(dateConfiguration)]);
+            });
+            if (optionsController.options.templateDevelopmentEnabled)
+                values.push(["{browse}", `(${i18n(strings.devTemplatesBrowse)}...)`]);
+
+            selectElement.innerHTML = `
+                ${values.map(value => `
+                    <option value="${value[0]}" ${this.config.options.templateUri == value[0] ? "selected" : ""}>${value[1]}</option>
+                `)}
+            `;
+            selectElement.dispatchEvent(new Event("change"));
+        }
+    }
+    
+    browseUserTemplate() {
+        return host.browseDateTemplate()
+            .then(template => {
+                if (template && template.hasPackage) {
+
+                    // Note that this template is not saved in settings
+                    return host.getDateConfigurationFromPackage(template.path)
+                        .then(dateConfiguration => {
+                            this.dateConfigurations.push(dateConfiguration);
+
+                            telemetry.track("Manage Dates: Load Custom Template");
+                            return dateConfiguration;
+                        })
+                        .catch(ignore => null);
+                }
+                return null;
+            })
+            .catch((error: AppError) => {
+                const alert = new ErrorAlert(error, i18n(strings.error));
+                alert.show();
+                try { logger.logError(error); } catch(ignore) {}
+
+                return null;
+            });
+    }
+
+    changeDateConfiguration(dateConfiguration: DateConfiguration) {
+
+        this.config.options.name = dateConfiguration.name;
+        this.config.options.description = dateConfiguration.description
+        this.config.options.templateUri = dateConfiguration.templateUri;
+        this.config.options.template = dateConfiguration.template;
         this.config.options.dateAvailable = true; // template.dateAvailable;
-        this.config.options.holidaysAvailable = template.holidaysAvailable;
-        this.config.options.timeIntelligenceAvailable = template.timeIntelligenceAvailable;
-        this.config.options.defaults = template.defaults;
+        this.config.options.holidaysAvailable = dateConfiguration.holidaysAvailable;
+        this.config.options.timeIntelligenceAvailable = dateConfiguration.timeIntelligenceAvailable;
+        this.config.options.defaults = dateConfiguration.defaults;
 
-        for (let option in template.defaults) {
+        for (let option in dateConfiguration.defaults) {
             let optionName = `defaults.${option}`;
-            let optionValue = (<any>template.defaults)[option];
+            let optionValue = (<any>dateConfiguration.defaults)[option];
 
             //TODO This works only with strings|numbers - for booleans specific conditions are needed
             (<HTMLInputElement|HTMLSelectElement>_(`#${Utils.Text.slugify(optionName)} .listener`, this.element)).value = optionValue;   
@@ -89,16 +155,16 @@ export class ManageDatesSceneCalendar extends ManageDatesScenePane {
    
     conditionalOption(option: string): OptionStruct {
         
-        let parentOption = "name";
+        let parentOption = "templateUri";
         let optionName = `defaults.${option}`;
         let toggledBy: OptionToggler = {
-            option: "name",
+            option: parentOption,
             value: []
         };
-        this.templates
-            .forEach(template => {
-                if (template.defaults && option in template.defaults)
-                    (<string[]>toggledBy.value).push(template.name);
+        this.dateConfigurations
+            .forEach(dateConfiguration => {
+                if (dateConfiguration.defaults && option in dateConfiguration.defaults)
+                    (<string[]>toggledBy.value).push(dateConfiguration.templateUri);
             });
 
         switch (option) {

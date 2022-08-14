@@ -6,12 +6,11 @@
 
 import { Dic, Utils, _ } from '../helpers/utils';
 import { host, logger } from '../main';
-import { DateConfiguration } from '../model/dates';
+import { DateConfiguration, dateConfigurationName } from '../model/dates';
 import { AppError } from '../model/exceptions';
 import { i18n } from '../model/i18n';
 import { strings } from '../model/strings';
 import { Dialog } from './dialog';
-import { localizeTemplateName } from './scene-manage-dates';
 
 export interface CreateTemplateResponse {
     action: string
@@ -90,7 +89,7 @@ export class CreateTemplate extends Dialog {
 
                     let optionElement = <HTMLOptionElement>document.createElement("option");
                     optionElement.value = dateConfiguration.name;
-                    optionElement.text = localizeTemplateName(dateConfiguration.name, dateConfiguration.description);
+                    optionElement.text = dateConfigurationName(dateConfiguration);
                     this.templateModelElement.appendChild(optionElement);
 
                     if (index == 0) 

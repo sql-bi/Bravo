@@ -182,7 +182,7 @@ export module Renderer {
                         isHidden = true;
 
                     let listener = _(".listener", toggler);
-                    if (listener) {
+                    if (!listener.empty) {
 
                         // TODO: This doesn't work with input text
                         let togglerValue = (listener.nodeName == "SELECT" ? 
@@ -238,7 +238,7 @@ export module Renderer {
 
             if (struct.parent) {
                 let container = _(`#${Utils.Text.slugify(struct.parent)}`, element);
-                if (container) 
+                if (!container.empty) 
                     container
                         .closest(".option-container")
                         .insertAdjacentHTML("beforeend", html);
@@ -269,7 +269,7 @@ export module Renderer {
                     struct.type == OptionType.textarea || 
                     struct.type == OptionType.number
                 ) {
-                
+                    listener.dataset["prev"] = (<HTMLSelectElement|HTMLInputElement>listener).value;
                     listener.addEventListener("change", e => {
                         
                         let el = <HTMLInputElement|HTMLSelectElement>e.target; 
@@ -301,13 +301,26 @@ export module Renderer {
 
                             if (Utils.Obj.isSet(struct.onChange))
                                 struct.onChange(e, newValue);
+
+                            el.dataset["prev"] = newValue;
+                        };
+
+                        const revertValue = ()=>{
+                            if (struct.type == OptionType.switch) {
+                                (<HTMLInputElement>el).checked = (el.dataset["prev"] == "true");
+                            } else {
+                                el.value = el.dataset["prev"];
+                            }
                         };
 
                         if (Utils.Obj.isSet(struct.onBeforeChange))
                             struct.onBeforeChange(e, getValue())
                                 .then(changed => {
-                                    if (changed) applyValue();
-                                 });
+                                    if (changed)
+                                        applyValue();
+                                    else
+                                        revertValue();
+                                });
                         else
                             applyValue();
                     });

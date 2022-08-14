@@ -11,10 +11,12 @@ import { Dialog } from './dialog';
 
 export class Alert extends Dialog {
 
-    constructor(id: string, title: string, buttonTitle = i18n(strings.dialogOK), neverShowAgain = false) {
+    constructor(id: string, title = "", buttonTitle = i18n(strings.dialogOK), neverShowAgain = false) {
         super(id, document.body, title, [
             { name: buttonTitle, action: "ok", className: "button-alt" },
         ], "", neverShowAgain);
+
+        this.element.classList.add("dialog-alert");
     }
 
     show(message?: string) {

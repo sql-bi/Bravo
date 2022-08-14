@@ -480,7 +480,7 @@
 
             if (Uri.TryCreate(uriString, UriKind.Absolute, out var uri) && uri.Scheme.Equals(Uri.UriSchemeFile))
             {
-                uriString = Path.GetFileName(uri.LocalPath);
+                uriString = Path.GetFullPath(uri.LocalPath);
             }
 
             return uriString;

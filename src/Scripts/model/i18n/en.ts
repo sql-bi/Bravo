@@ -222,7 +222,7 @@ const locale: Locale = {
         [_.manageDatesAutoScanSelectedTablesColumns]: "Choose Columns...",
         [_.manageDatesBrowserPlaceholder]: "No items to change",
         [_.manageDatesCalendarDesc]: "Choose a calendar template to apply to this model. Bravo will create the required tables or update them while keeping the existing relationships intact.", 
-        [_.manageDatesCalendarTemplateName]: "Calendar Template",
+        
         [_.manageDatesCalendarTemplateNameDesc]: "Select <em>Monthly</em> for calendar based on different number of months. Set <em>Weekly</em> for 445-454-544-ISO calendars. Use <em>Custom</em> for flexible calendars of variable length.",
         [_.manageDatesCreatingTables]: "Updating model...",
         [_.manageDatesDatesDesc]: "Configure the format and location of dates in your model.",
@@ -264,7 +264,7 @@ const locale: Locale = {
         [_.manageDatesSampleDataError]: "Unable to generate sample data.",
         [_.manageDatesStatusCompatible]: `<div class="hero">This model already contains some <b>date tables compatible</b> with Bravo.</div>If you change something here, these tables will be updated and their relationships will remain intact.`,
         [_.manageDatesStatusError]: `<div class="hero">The current settings cannot be applied.</div>{error}`,
-        [_.manageDatesStatusIncompatible]: `<div class="hero">This model contains some <b>date tables that are not compatible</b> with Bravo.</div>To make any changes here, you need to choose a different name for one or more tables that will be created by this tool.<br><br>Check <b>Dates</b> and <b>Holidays</b>.`,
+        
         [_.manageDatesStatusNotAvailable]: `<div class="hero">This model is no longer available.</div> Try to restart the application.`,
         [_.manageDatesStatusOk]: `<div class="hero">This model <b>is compatible with the Manage Dates feature</b>.</div>You can create new date tables without worrying about breaking measures or reports.`,
         [_.manageDatesSuccessSceneMessage]: "Congratulations, your model was updated successfully.",
@@ -311,7 +311,7 @@ const locale: Locale = {
         [_.optionBrowserAuthentication]: "Authenticate in Browser",
         [_.optionBrowserAuthenticationDescription]: "Authenticate using the default browser. This is an alternative login method that is useful for solving problems with two-factor authentication.",
         [_.optionCheckForUpdates]: "Automatically check for updates",
-        [_.optionDev]: "Date Templates Development",
+        
         [_.optionDevDescription]: "",
         [_.optionDiagnostic]: "Diagnostics Level",
         [_.optionDiagnosticDescription]: "Show errors and logs in a diagnostics pane. Choose <em>Basic</em> to log only a few messages. <em>Verbose</em> logs all messages.",
@@ -448,6 +448,12 @@ const locale: Locale = {
         [_.welcomeText]: "Bravo is a handy Power BI toolkit that you can use to analyze your models, format measures, create date tables, and export data.",
         [_.whitespacesTitle]: "Whitespaces",
         [_.wrappingTitle]: "Auto word-wrap",
+
+        [_.errorTemplateAlreadyExists]: "Another template with the same path already exists!",
+        [_.manageDatesManageTemplates]: "Manage Templates",
+        [_.optionDev]: "Enable Custom Date Templates",
+        [_.manageDatesCalendarTemplateName]: "Template",
+        [_.manageDatesStatusIncompatible]: `<div class="hero">This model contains some <b>date tables that are not compatible</b> with Bravo.</div>To make changes, you must choose a different name for <b>Dates</b> and/or <b>Holidays</b> tables.`,
     }
 }
 export default locale;

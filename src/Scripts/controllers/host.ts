@@ -19,7 +19,7 @@ import { ThemeType } from './theme';
 import { i18n } from '../model/i18n';
 import { strings } from '../model/strings';
 import { LogMessageObj } from './logger';
-import { DateConfiguration, DateTemplate, TableValidation } from '../model/dates';
+import { DateConfiguration, DateTemplate, sanitizeTemplates, TableValidation } from '../model/dates';
 import { ModelChanges } from '../model/model-changes';
 import { PBICloudEnvironment } from '../model/pbi-cloud';
 import { PowerBISignin } from '../view/powerbi-signin';
@@ -631,16 +631,23 @@ export class Host extends Dispatchable {
         return <Promise<DateConfiguration[]>>this.apiCall("TemplateDevelopment/GetConfigurations");
     }
 
+    getDateConfigurationFromPackage(path: string) {
+        return <Promise<DateConfiguration>>this.apiCall("TemplateDevelopment/GetConfigurationFromPackage", { path: path });
+    }
+
     getOrganizationTemplates() {
-        return <Promise<DateTemplate[]>>this.apiCall("TemplateDevelopment/GetOrganizationCustomPackages");
+        return this.apiCall("TemplateDevelopment/GetOrganizationCustomPackages")
+            .then((templates: DateTemplate[]) => templates && sanitizeTemplates(templates));
     }
 
     browseDateTemplate() {
-        return <Promise<DateTemplate>>this.apiCall("TemplateDevelopment/BrowseCustomPackage");
+        return this.apiCall("TemplateDevelopment/BrowseCustomPackage")
+            .then((template: DateTemplate) => template && sanitizeTemplates([template])[0]);
     }
 
     createDateTemplate(request: CreateDateTemplateRequest) {
-        return <Promise<DateTemplate>>this.apiCall("TemplateDevelopment/CreateWorkspace", request, { method: "POST" });
+        return this.apiCall("TemplateDevelopment/CreateWorkspace", request, { method: "POST" })
+            .then((template: DateTemplate) => template && sanitizeTemplates([template])[0]);
     }
 
     verifyDateTemplate(template: DateTemplate) {
@@ -648,8 +655,6 @@ export class Host extends Dispatchable {
     }
 
     editDateTemplate(path: string) {
-        return this.apiCall("TemplateDevelopment/ConfigureWorkspace", { workspacePath: path, openCodeWorkspace: true })
-            .then(() => true)
-            .catch(ignore => false);
+        return this.apiCall("TemplateDevelopment/ConfigureWorkspace", { workspacePath: path, openCodeWorkspace: true });
     }
 }

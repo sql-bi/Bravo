@@ -5,8 +5,8 @@
 */
 
 import { OptionStruct, OptionType, Renderer } from '../helpers/renderer';
-import {  Utils, _, __ } from '../helpers/utils';
-import { app, host, logger, optionsController, telemetry, themeController } from '../main';
+import { Utils, _, __ } from '../helpers/utils';
+import { host, logger, optionsController, telemetry } from '../main';
 import { AppError } from '../model/exceptions';
 import { i18n } from '../model/i18n'; 
 import { strings } from '../model/strings';
@@ -17,7 +17,6 @@ import { DialogResponse } from './dialog';
 import { CreateTemplate, CreateTemplateResponse } from './create-template';
 import { ErrorAlert } from './error-alert';
 import { Alert } from './alert';
-import * as sanitizeHtml from 'sanitize-html';
 
 export class OptionsDialogDev {
  
@@ -129,9 +128,7 @@ export class OptionsDialogDev {
         
         this.orgTemplates = [];
         try {
-            let orgTemplates = await host.getOrganizationTemplates();
-            orgTemplates.forEach(template => this.orgTemplates.push(this.sanitizeTemplate(template)));
-
+            this.orgTemplates = await host.getOrganizationTemplates();
         } catch(error) {
             try { logger.logError(error); } catch(ignore) {}
         }
@@ -140,7 +137,7 @@ export class OptionsDialogDev {
         for (let i = 0; i < optionsController.options.customOptions.templates.length; i++) {
             try {
                 let template = await host.verifyDateTemplate(optionsController.options.customOptions.templates[i]);
-                this.userTemplates.push(this.sanitizeTemplate(template));
+                this.userTemplates.push(template);
             } catch(error) {
                 try { logger.logError(error); } catch(ignore) {}
             }
@@ -221,25 +218,15 @@ export class OptionsDialogDev {
 
         const existingTemplate = (this.userTemplates.find(t => (t.workspacePath == template.workspacePath || t.path == template.path) && t.name == template.name));
         if (!existingTemplate) {
-            template = this.sanitizeTemplate(template);
-            
             this.userTemplates.push(template);
             optionsController.update("customOptions.templates", this.userTemplates);
 
             if (this.table)
                 this.table.updateOrAddData([template]);
+        } else {
+            const dialog = new Alert("generic");
+            dialog.show(i18n(strings.errorTemplateAlreadyExists));
         }
-    }
-
-    /**
-     * Fix custom template name
-     */ 
-    sanitizeTemplate(template: DateTemplate) {
-        if (!template.name) 
-            template.name = i18n(strings.devDefaultTemplateName);
-        else
-            template.name = sanitizeHtml(template.name, { allowedTags: [], allowedAttributes: {}});
-        return template;
     }
 
     /**
@@ -304,9 +291,7 @@ export class OptionsDialogDev {
         host.browseDateTemplate()
             .then(template => {
                 if (template) {
-
                     this.addUserTemplate(template);
-
                     telemetry.track("Template Development: Load");
                 }
             })
