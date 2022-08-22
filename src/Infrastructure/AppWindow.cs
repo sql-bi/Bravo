@@ -162,7 +162,9 @@ window.external = {
         {
             ThemeHelper.InitializeTheme(Handle, UserPreferences.Current.Theme);
 
-            Text = AppEnvironment.ApplicationMainWindowTitle.AppendApplicationVersion();
+            var titleVersionHidden = Microsoft.Win32.Registry.CurrentUser.GetBoolValue(subkeyName: AppEnvironment.ApplicationRegistryKeyName, valueName: AppEnvironment.ApplicationRegistryApplicationTitleVersionHiddenValue);
+
+            Text = titleVersionHidden ? AppEnvironment.ApplicationMainWindowTitle : AppEnvironment.ApplicationMainWindowTitle.AppendApplicationVersion();
             BackgroundImageLayout = ImageLayout.Center;
             BackColor = _startupThemeColor;
 
