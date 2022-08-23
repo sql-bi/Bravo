@@ -17,7 +17,7 @@ export class ErrorAlert extends Dialog {
     error: AppError;
     
     constructor(error: AppError, title?: string) {
-        super("error", document.body, title ? title : `${i18n(strings.errorTitle)}${error.code ? ` (${error.type != AppErrorType.Managed ? "HTTP/" : ""}${error.code})` : "" }`, [
+        super("error", document.body, title ? title : `${i18n(strings.errorTitle)}${error.code && error.type == AppErrorType.Managed ? ` (${error.code})` : "" }`, [
             { name: i18n(strings.dialogOK), action: "cancel", className: "button-alt" },
         ], "icon-alert");
 

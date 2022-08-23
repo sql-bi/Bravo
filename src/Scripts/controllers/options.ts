@@ -192,7 +192,7 @@ export class OptionsController extends OptionsStore<Options> {
     defaultOptions: Options = {
         theme: ThemeType.Auto,
         telemetryEnabled: true,
-        templateDevelopmentEnabled: false,
+        templateDevelopmentEnabled: true,
         diagnosticLevel: DiagnosticLevelType.None,
         updateChannel: UpdateChannelType.Stable,
         updateCheckEnabled: true,

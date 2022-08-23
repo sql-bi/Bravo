@@ -168,7 +168,6 @@ export class ManageDatesScene extends DocScene {
             this.update();
         });
         optionsController.on("templateDevelopmentEnabled.change", (changedOptions: any) => {
-console.log("OK?");
             this.update();
         });
 
@@ -187,33 +186,32 @@ console.log("OK?");
             try { logger.logError(error); } catch(ignore) {}
         }
 
-        if (optionsController.options.templateDevelopmentEnabled) {
-            // Custom templates
-            try {
-                let customTemplates = [
-                    ...await host.getOrganizationTemplates(), 
-                    ...optionsController.options.customOptions.templates
-                ];
-                for (let i = 0; i < customTemplates.length; i++) {
-                    const template = await host.verifyDateTemplate(customTemplates[i]);
-                    if (template.hasPackage) {
-                        
-                        try {
-                            let dateConfiguration = await host.getDateConfigurationFromPackage(template.path);
-                            dateConfiguration.template = template;
-                            dateConfigurations.push(dateConfiguration);
-                        } catch(error) {
-                            try { logger.logError(error); } catch(ignore) {}
-                        }
+        // User/Org templates
+        try {
+            let customTemplates = [
+                ...await host.getOrganizationTemplates(), 
+                ...(optionsController.options.templateDevelopmentEnabled ? optionsController.options.customOptions.templates : [])
+            ];
+
+            for (let i = 0; i < customTemplates.length; i++) {
+                const template = await host.verifyDateTemplate(customTemplates[i]);
+                if (template.hasPackage) {
+                    
+                    try {
+                        let dateConfiguration = await host.getDateConfigurationFromPackage(template.path);
+                        dateConfiguration.template = template;
+                        dateConfigurations.push(dateConfiguration);
+                    } catch(error) {
+                        try { logger.logError(error); } catch(ignore) {}
                     }
-                };
-            } catch(error) {
-                try { logger.logError(error); } catch(ignore) {}
-            }
+                }
+            };
+        } catch(error) {
+            try { logger.logError(error); } catch(ignore) {}
         }
 
         if (!dateConfigurations.length)
-            throw AppError.InitFromResponseStatus(Utils.ResponseStatusCode.InternalError);
+            throw AppError.InitFromString(i18n(strings.errorManageDateNoTemplates));
 
         // Remove templates duplicates and assign current
         let currentDateConfiguration: DateConfiguration;
@@ -243,6 +241,11 @@ console.log("OK?");
         let renderSampleDataError = ()=> {
             _(".sample-data .table", this.element).innerHTML = `<div class="error">${i18n(strings.manageDatesSampleDataError)}</div>`;
         };
+
+        if (this.doc.orphan) {
+            renderSampleDataError();
+            return;
+        }
         
         this.checkTableNames().then(tableNamesValidity => {
             if (tableNamesValidity == TableValidation.InvalidExists) {

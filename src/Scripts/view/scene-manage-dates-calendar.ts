@@ -89,8 +89,7 @@ export class ManageDatesSceneCalendar extends ManageDatesScenePane {
         if (!selectElement.empty) {
             let values: string[][] = [];
             this.dateConfigurations.forEach(dateConfiguration => {
-                if (optionsController.options.templateDevelopmentEnabled || !dateConfiguration.template)
-                    values.push([dateConfiguration.templateUri, dateConfigurationName(dateConfiguration)]);
+                values.push([dateConfiguration.templateUri, dateConfigurationName(dateConfiguration)]);
             });
             if (optionsController.options.templateDevelopmentEnabled)
                 values.push(["{browse}", `(${i18n(strings.devTemplatesBrowse)}...)`]);
@@ -105,7 +104,7 @@ export class ManageDatesSceneCalendar extends ManageDatesScenePane {
     }
     
     browseUserTemplate() {
-        return host.browseDateTemplate()
+        return host.browseDateTemplate(false)
             .then(template => {
                 if (template && template.hasPackage) {
 

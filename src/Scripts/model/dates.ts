@@ -145,7 +145,7 @@ export enum DateTemplateType {
 
 export interface DateTemplate {
     type: DateTemplateType
-    path: string
+    path?: string
     name?: string
     description?: string
     workspacePath?: string
@@ -173,10 +173,8 @@ export function dateConfigurationName(dateConfiguration: DateConfiguration) {
         name = i18n((<any>strings)[nameStr]); 
 
     if (dateConfiguration.template) {
-        // REM If we fix the name mess on the host we can remove it
         if (dateConfiguration.template.name)
             name = dateConfiguration.template.name;
-        // ENDREM
 
         name += ` (${i18n(strings[`devTemplatesType${dateConfiguration.template.type == DateTemplateType.User ? "User" : "Organization"}`])})`;
     }

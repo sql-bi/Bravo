@@ -84,6 +84,7 @@ export enum strings {
     devCreateTemplateNotes,
     devCreateTemplateTitle,
     devDefaultTemplateName,
+    devShowInFolder,
     devTemplateRemoveConfirmation,
     devTemplatesBrowse,
     devTemplatesColAction,
@@ -120,13 +121,16 @@ export enum strings {
     errorDatasetsEmptyListing,
     errorDatasetsListing,
     errorExportDataFileError,
+    
     errorGetEnvironments,
+    errorManageDateNoTemplates,
     errorManageDateTemplateError,
     errorNetworkError,
     errorNone,
     errorNotAuthorized,
     errorNotConnected,
     errorNotFound,
+    errorPathNotFound,
     errorReportConnectionUnknown,
     errorReportConnectionUnsupportedAnalysisServicesCompatibilityMode, 
     errorReportConnectionUnsupportedAnalysisServicesConnectionNotFound, 
@@ -441,4 +445,5 @@ export enum strings {
     welcomeText,
     whitespacesTitle,
     wrappingTitle,
+
 };

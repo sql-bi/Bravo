@@ -47,7 +47,7 @@
         public bool UseSystemBrowserForAuthentication { get; set; } = UserSettings.DefaultUseSystemBrowserForAuthentication;
 
         [JsonPropertyName("templateDevelopmentEnabled")]
-        public bool TemplateDevelopmentEnabled { get; set; } = false;
+        public bool TemplateDevelopmentEnabled { get; set; } = true;
 
         [JsonPropertyName("manageDatesPackageRepository")]
         public string? ManageDatesPackageRepository { get; set; }

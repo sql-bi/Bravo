@@ -640,8 +640,9 @@ export class Host extends Dispatchable {
             .then((templates: DateTemplate[]) => templates && sanitizeTemplates(templates));
     }
 
-    browseDateTemplate() {
-        return this.apiCall("TemplateDevelopment/BrowseCustomPackage")
+    browseDateTemplate(includeWorkspaces = true) {
+
+        return this.apiCall("TemplateDevelopment/BrowseCustomPackage", { includeWorkspaces: includeWorkspaces})
             .then((template: DateTemplate) => template && sanitizeTemplates([template])[0]);
     }
 

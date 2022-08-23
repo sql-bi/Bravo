@@ -478,7 +478,7 @@ a, .link {
         }
     }
 
-    &:not(.disabled):not(.contains-tabular-browser):hover {
+    &:not(.disabled):not(.contains-tabular-browser):not(.contains-tabulator):hover {
         .border-radius();
         background-color: darken(@window-back-color-alt, 2%);
         .shadow(0, .5px, 1px, 0, rgba(0,0,0,0.1));
@@ -496,7 +496,11 @@ a, .link {
         }
     }
 
-
+    &.contains-tabulator {
+        background: @back-color;
+        .border-radius();
+        .dark & { background-color: @back-color-dark;}
+    }
     
     &.contains-tabular-browser {
         background: @back-color;
