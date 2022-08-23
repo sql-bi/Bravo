@@ -7,6 +7,8 @@
     using System.Diagnostics;
     using System.IO;
     using System.IO.Pipes;
+    using System.Security.AccessControl;
+    using System.Security.Principal;
     using System.Text;
     using System.Text.Json;
     using System.Threading;
@@ -17,10 +19,6 @@
         private readonly Mutex _mutex;
         private readonly string _pipeName;
         private readonly string _mutexName;
-
-        // GH ISSUE https://github.com/sql-bi/Bravo/issues/459
-        // https://stackoverflow.com/questions/32739224/c-sharp-unauthorizedaccessexception-when-enabling-messagemode-for-read-only-name
-        private const PipeDirection DefaultPipeDirection = PipeDirection.InOut;
 
         private NamedPipeServerStream? _pipeServer;
         private bool _disposed;
@@ -58,17 +56,24 @@
         /// </summary>
         public void NotifyOwner()
         {
-            using var client = new NamedPipeClientStream(serverName: ".", _pipeName, DefaultPipeDirection, PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
-
+            using var pipeClient = new NamedPipeClientStream(serverName: ".", _pipeName, PipeDirection.InOut);
             try
             {
-                client.Connect(timeout: 3_000);
+                pipeClient.Connect(timeout: 5_000);
             }
             catch (Exception ex) when (ex is IOException || ex is TimeoutException)
             {
                 ExceptionHelper.WriteToEventLog(ex, EventLogEntryType.Warning);
                 TelemetryHelper.TrackException(ex);
                 return;
+            }
+
+            using var currentIdentity = WindowsIdentity.GetCurrent();
+            var remotePipeSecurity = pipeClient.GetAccessControl();
+            var remoteOwner = remotePipeSecurity.GetOwner(typeof(SecurityIdentifier));
+            if (remoteOwner != currentIdentity.Owner)
+            {
+                throw new UnauthorizedAccessException();
             }
 
             var startupSettings = StartupSettings.CreateFromCommandLineArguments();
@@ -78,8 +83,8 @@
 
             try
             {
-                client.Write(bytes);
-                client.Flush();
+                pipeClient.Write(bytes);
+                pipeClient.Flush();
             }
             catch (Exception ex) when (ex is ObjectDisposedException || ex is InvalidOperationException || ex is IOException)
             {
@@ -89,9 +94,24 @@
             }
         }
 
-        private void StartPipeServer()
+        private void StartPipeServer(PipeSecurity? pipeSecurity = null)
         {
-            _pipeServer = new NamedPipeServerStream(_pipeName, DefaultPipeDirection, NamedPipeServerStream.MaxAllowedServerInstances, PipeTransmissionMode.Byte, PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
+            if (pipeSecurity is null)
+            {
+                using var currentIdentity = WindowsIdentity.GetCurrent();
+                BravoUnexpectedException.ThrowIfNull(currentIdentity.Owner);
+
+                // In order to restrict access to just this account we do not use PipeOptions.CurrentUserOnly - see details here https://github.com/sql-bi/Bravo/issues/459
+                // Instead of using PipeOptions.CurrentUserOnly we set the owner specifically here, and on the pipe client side they will check the owner against this one - they must have identical SIDs or the client will reject this server.
+                var pipeAccessRule = new PipeAccessRule(currentIdentity.Owner, PipeAccessRights.ReadWrite | PipeAccessRights.CreateNewInstance, AccessControlType.Allow);
+                
+                pipeSecurity = new PipeSecurity();
+                pipeSecurity.AddAccessRule(pipeAccessRule);
+                pipeSecurity.SetOwner(currentIdentity.Owner);
+            }
+
+            _pipeServer?.Dispose();
+            _pipeServer = NamedPipeServerStreamAcl.Create(_pipeName, PipeDirection.InOut, maxNumberOfServerInstances: 1, PipeTransmissionMode.Byte, PipeOptions.None, inBufferSize: 0, outBufferSize: 0, pipeSecurity);
             _pipeServer.BeginWaitForConnection(OnPipeConnection, state: _pipeServer);
         }
 
@@ -99,10 +119,8 @@
         {
             BravoUnexpectedException.ThrowIfNull(asyncResult.AsyncState);
 
-            using var pipeServer = (NamedPipeServerStream)asyncResult.AsyncState;
+            var pipeServer = (NamedPipeServerStream)asyncResult.AsyncState;
             pipeServer.EndWaitForConnection(asyncResult);
-
-            StartPipeServer();
 
             using var reader = new StreamReader(pipeServer, Encoding.Unicode);
             var json = reader.ReadToEnd();
@@ -118,6 +136,9 @@
             }
 
             OnNewInstance?.Invoke(this, new AppInstanceStartupEventArgs(startupMessage));
+
+            var pipeSecurity = pipeServer.GetAccessControl();
+            StartPipeServer(pipeSecurity);
         }
 
         #region IDisposable
