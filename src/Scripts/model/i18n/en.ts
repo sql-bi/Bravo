@@ -166,6 +166,7 @@ const locale: Locale = {
         [_.exportDataStartExporting]: "Initializing...",
         [_.exportDataSuccessSceneMessage]: "<strong>{count}/{total} table{{s}}</strong> {{were|was}} exported successfully.",
         [_.exportDataSummary]: "Your dataset contains <strong>{count} table{{s}}</strong> that can be exported.",
+        [_.exportDataTruncated]: "This table has too many rows. Only the first million rows can be exported to Excel. Use CSV format to export all the rows in the table.",
         [_.exportDataTypeCSV]: "CSV (Comma-separated values)",
         [_.exportDataTypeXLSX]: "Excel Spreadsheet",
         [_.failed]: "Failed",

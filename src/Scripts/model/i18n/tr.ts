@@ -168,6 +168,7 @@ const locale: Locale = {
         [_.exportDataStartExporting]: "Başlatılıyor...",
         [_.exportDataSuccessSceneMessage]: "<strong>{count}/{total} adet tablo</strong> dışarı aktarıldı.",
         [_.exportDataSummary]: "Veri kümeniz dışa aktarılabilen <strong>{count} adet tablo</strong> içeriyor.",
+        [_.exportDataTruncated]: "Bu tabloda çok fazla satır var.Sadece ilk milyon satır Excel'e ihraç edilebilir.Tablodaki tüm satırları dışa aktarmak için CSV formatını kullanın.",
         [_.exportDataTypeCSV]: "CSV (Virgülle ayrılmış değerler)",
         [_.exportDataTypeXLSX]: "Excel Elektronik Tablosu",
         [_.failed]: "Başarısız",

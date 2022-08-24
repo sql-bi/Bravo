@@ -166,6 +166,7 @@ const locale: Locale = {
         [_.exportDataStartExporting]: "Inizializzazione...",
         [_.exportDataSuccessSceneMessage]: "<strong>{count}/{total} tabell{{e|a}}</strong> {{sono state esportate|è stata esportata}} correttamente.",
         [_.exportDataSummary]: "Il dataset contiene <strong>{count} tabell{{e|a}}</strong> che {{possono|può}} essere esportat{{e|a}}.",
+        [_.exportDataTruncated]: "Questa tabella ha troppe righe. Solo il primo milioni di righe può essere esportato in Excel. Utilizzare il formato CSV per esportare tutte le righe della tabella.",
         [_.exportDataTypeCSV]: "CSV (Valori separati da virgola)",
         [_.exportDataTypeXLSX]: "Foglio di calcolo Excel",
         [_.failed]: "Fallito",

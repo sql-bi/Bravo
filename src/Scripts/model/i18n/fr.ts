@@ -168,6 +168,7 @@ const locale: Locale = {
         [_.exportDataStartExporting]: "Initialisation...",
         [_.exportDataSuccessSceneMessage]: "<strong>{count}/{total} table{{s}}</strong> {{ont|a}} été exportée{{s}} avec succès.",
         [_.exportDataSummary]: "Votre jeu de données comporte <strong>{count} table{{s}}</strong> qui {{peuvent|peut}} être exportée{{s}}.",
+        [_.exportDataTruncated]: "Cette table a trop de lignes.Seules les premiers millions de lignes peuvent être exportés vers Excel.Utilisez le format CSV pour exporter toutes les lignes du tableau.",
         [_.exportDataTypeCSV]: "CSV (Comma-separated values)",
         [_.exportDataTypeXLSX]: "Fichier Excel",
         [_.failed]: "Echoué",

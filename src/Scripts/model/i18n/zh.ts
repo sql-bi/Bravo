@@ -166,6 +166,7 @@ const locale: Locale = {
         [_.exportDataStartExporting]: "初始化...",
         [_.exportDataSuccessSceneMessage]: "<strong>{count}/{total} </strong> 张表成功导出",
         [_.exportDataSummary]: "您的数据集包含 <strong>{count} </strong> 张可以导出的表",
+        [_.exportDataTruncated]: "该表有太多的行。只有第一行可以出口到Excel。使用CSV格式导出表中的所有行。",
         [_.exportDataTypeCSV]: "CSV (逗号分隔)",
         [_.exportDataTypeXLSX]: "Excel 工作簿",
         [_.failed]: "失败",

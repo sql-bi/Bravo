@@ -12,7 +12,7 @@ import { PageType } from '../controllers/page';
 import { ContextMenu } from '../helpers/contextmenu';
 import { OptionStruct, OptionType, Renderer } from '../helpers/renderer';
 import { Utils, _, __ } from '../helpers/utils';
-import { host, telemetry } from '../main';
+import { host, optionsController, telemetry } from '../main';
 import { Doc, DocType } from '../model/doc';
 import { AppError, AppProblem } from '../model/exceptions';
 import { I18n, i18n } from '../model/i18n';
@@ -116,7 +116,11 @@ export class ExportDataScene extends DocScene {
                 values: [
                     [ExportDataFormat.Xlsx, i18n(strings.exportDataTypeXLSX)],
                     [ExportDataFormat.Csv, i18n(strings.exportDataTypeCSV)]
-                ]
+                ],
+                onChange: (e, value) => {
+                    if (this.table)
+                        this.table.redraw(true);
+                }
             },
             {
                 option: "createExportSummary",
@@ -291,8 +295,20 @@ export class ExportDataScene extends DocScene {
                 cssClass: "column-icon",
                 formatter: (cell) => {
                     const table = <TabularTable>cell.getData();
-                    let icon = (this.isExportable(table) ? (table.isDateTable ? "type-date-table" : "type-table") : "alert");
-                    let tooltip = (this.isExportable(table) ? "" : this.notExportableReason(table));
+                    let icon = (this.isExportable(table) ? 
+                        (this.isTruncated(table) ? 
+                            "alert" :
+                            (table.isDateTable ? "type-date-table" : "type-table") 
+                        ) : 
+                        "alert"
+                    );
+                    let tooltip = (this.isExportable(table) ? 
+                        (this.isTruncated(table) ? 
+                            i18n(strings.exportDataTruncated) : 
+                            ""
+                        ) : 
+                        this.notExportableReason(table)
+                    );
 
                     return `<div class="icon-${icon}" title="${tooltip}"></div>`;
                 }, 
@@ -416,6 +432,10 @@ export class ExportDataScene extends DocScene {
         }
 
         return "";
+    }
+
+    isTruncated(table: TabularTable) {
+        return table.rowsCount > 1_000_00 && this.config.options.format == ExportDataFormat.Xlsx;
     }
 
     applyFilters() {

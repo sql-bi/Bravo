@@ -166,6 +166,7 @@ const locale: Locale = {
         [_.exportDataStartExporting]: "Αρχικοποίηση...",
         [_.exportDataSuccessSceneMessage]: "<strong>{count}/{total} πίνακας{{ες}}</strong> {{έγιναν|έγινε}} εξαγωγή με επιτυχία.",
         [_.exportDataSummary]: "Το σετ δεδομένων περιέχει <strong>{count} πίνακα{{ες}}</strong> για εξαγωγή.",
+        [_.exportDataTruncated]: "Αυτός ο πίνακας έχει πάρα πολλές σειρές.Μόνο οι πρώτες εκατομμύρια σειρές μπορούν να εξαχθούν στο Excel.Χρησιμοποιήστε τη μορφή CSV για να εξαγάγετε όλες τις σειρές στον πίνακα.",
         [_.exportDataTypeCSV]: "CSV (Comma-separated values)",
         [_.exportDataTypeXLSX]: "Φύλλο Excel",
         [_.failed]: "Αποτυχία",
