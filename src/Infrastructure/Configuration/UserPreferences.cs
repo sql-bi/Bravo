@@ -100,7 +100,7 @@
             var registryKey = AppEnvironment.ApplicationInstallerRegistryHKey;
             if (registryKey is not null)
             {
-                var valueString = registryKey.GetStringValue(subkeyName: AppEnvironment.ApplicationRegistryKeyName, valueName: AppEnvironment.ApplicationRegistryApplicationTelemetryEnableValue);
+                var valueString = registryKey.GetStringValue(subkeyName: AppEnvironment.ApplicationRegistryKeyName, valueName: AppEnvironment.ApplicationRegistryApplicationTelemetryEnabledValue);
                 if (valueString is not null)
                 {
                     if (int.TryParse(valueString, out var intValue))

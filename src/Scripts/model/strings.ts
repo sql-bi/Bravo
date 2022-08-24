@@ -188,6 +188,7 @@ export enum strings {
     exportDataStartExporting,
     exportDataSuccessSceneMessage,
     exportDataSummary,
+    exportDataTruncated,
     exportDataTypeCSV,
     exportDataTypeXLSX,
     failed,

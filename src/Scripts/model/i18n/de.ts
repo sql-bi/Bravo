@@ -198,6 +198,7 @@ const locale: Locale = {
         [_.exportDataStartExporting]: "Initialisiere...",
         [_.exportDataSuccessSceneMessage]: "<strong>{count}/{total} Tabelle{{n}}</strong> {{wurden|wurde}} erfolgreich exportiert.",
         [_.exportDataSummary]: "Ihr Dataset entält <strong>{count} Tabelle{{n}}</strong> die exportiert werden {{können|kann}}.",
+        [_.exportDataTruncated]: "Diese Tabelle hat zu viele Zeilen.Nur die ersten Millionen Zeilen können nach Excel exportiert werden.Verwenden Sie das CSV -Format, um alle Zeilen in der Tabelle zu exportieren.",
         [_.exportDataTypeCSV]: "CSV (Trennzeichen getrennt)",
         [_.exportDataTypeXLSX]: "Excel Arbeitsblatt",
         [_.failed]: "Fehlgeschlagen",

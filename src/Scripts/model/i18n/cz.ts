@@ -196,6 +196,7 @@ const locale: Locale = {
         [_.exportDataStartExporting]: "Inicializace...",
         [_.exportDataSuccessSceneMessage]: "<strong>{count}/{total} {{tabulek|tabulka}}</strong> bylo úspěšně exportováno.",
         [_.exportDataSummary]: "Vaše datová sada obsahuje <strong>{count} {{tabulek|tabulku}}</strong>, které mohou být exportovány.",
+        [_.exportDataTruncated]: "Tato tabulka má příliš mnoho řádků.Do Excelu lze exportovat pouze první milion řádků.Použijte formát CSV k exportu všech řádků v tabulce.",
         [_.exportDataTypeCSV]: "CSV (Hodnoty oddělené čárkami)",
         [_.exportDataTypeXLSX]: "Excelová tabulka",
         [_.failed]: "Nepodařilo se",

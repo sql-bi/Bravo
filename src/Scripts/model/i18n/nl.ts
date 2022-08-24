@@ -196,6 +196,7 @@ const locale: Locale = {
         [_.exportDataStartExporting]: "Initialiseren...",
         [_.exportDataSuccessSceneMessage]: "<strong>{count}/{total} tabel{{len}}</strong> {{zijn|is}} succesvol geëxporteerd.",
         [_.exportDataSummary]: "Jouw dataset bevat <strong>{count} tabel{{len}}</strong> welke geëxporteerd kunnen worden.",
+        [_.exportDataTruncated]: "Deze tabel heeft te veel rijen.Alleen de eerste miljoen rijen kunnen worden geëxporteerd om te excelleren.Gebruik CSV -indeling om alle rijen in de tabel te exporteren.",
         [_.exportDataTypeCSV]: "CSV (Comma-separated values)",
         [_.exportDataTypeXLSX]: "Excel Spreadsheet",
         [_.failed]: "Mislukt",

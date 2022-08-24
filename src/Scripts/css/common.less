@@ -399,7 +399,7 @@ a, .link {
         }
     }
 
-    &[disabled], &.disabled {
+    &[disabled], &.disabled, &:disabled {
         .noshadow;
         cursor: default !important;
         background: lighten(@disabled-color, 20%) !important;
@@ -693,6 +693,10 @@ a, .link {
 
         .dark & {
             border-color: @border-color-dark;
+        }
+
+        &:disabled {
+            .disabled;
         }
     }
 }
