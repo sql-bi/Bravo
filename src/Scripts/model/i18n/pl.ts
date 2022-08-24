@@ -166,6 +166,7 @@ const locale: Locale = {
         [_.exportDataStartExporting]: "Inicjalizuję...",
         [_.exportDataSuccessSceneMessage]: "Liczba tabel prawidłowo wyeksportowanych: <strong>{count}/{total}.",
         [_.exportDataSummary]: "Liczba tabel, których nie mogliśmy eksportować: <strong>{count} table{{s}}</strong>.",
+        [_.exportDataTruncated]: "Ta tabela ma zbyt wiele wierszy.Tylko pierwsze miliony wierszy można wyeksportować do programu Excel.Użyj formatu CSV, aby wyeksportować wszystkie wiersze w tabeli.",
         [_.exportDataTypeCSV]: "CSV (wartości rozdzielone przecinkami)",
         [_.exportDataTypeXLSX]: "Arkusz Excel",
         [_.failed]: "Niepowodzenie",

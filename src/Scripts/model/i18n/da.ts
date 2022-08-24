@@ -166,6 +166,7 @@ const locale: Locale = {
         [_.exportDataStartExporting]: "Initialiserer...",
         [_.exportDataSuccessSceneMessage]: "<strong>{count}/{total} tabel{{ler}}</strong> blev exporteret korrekt.",
         [_.exportDataSummary]: "Dit datasæt indeholder <strong>{count} tabel{{ler}}</strong> der kan eksporteres.",
+        [_.exportDataTruncated]: "Denne tabel har for mange rækker.Kun de første millioner rækker kan eksporteres til Excel.Brug CSV -format til at eksportere alle rækkerne i tabellen.",
         [_.exportDataTypeCSV]: "CSV (Kommasepareret format)",
         [_.exportDataTypeXLSX]: "Excel Regneark",
         [_.failed]: "Fejl",

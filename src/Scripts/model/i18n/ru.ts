@@ -166,6 +166,7 @@ const locale: Locale = {
         [_.exportDataStartExporting]: "Инициализация...",
         [_.exportDataSuccessSceneMessage]: "<strong>{count}/{total} таблицы</strong> успешно экспортированы.",
         [_.exportDataSummary]: "Ваш набор данных содержит <strong>{count} таблицы</strong> которые можно экспортировать.",
+        [_.exportDataTruncated]: "У этой таблицы слишком много рядов.Только первые миллион рядов могут быть экспортированы в Excel.Используйте формат CSV, чтобы экспортировать все строки в таблице.",
         [_.exportDataTypeCSV]: "CSV (Comma-separated values)",
         [_.exportDataTypeXLSX]: "Excel таблица",
         [_.failed]: "Ошибка",

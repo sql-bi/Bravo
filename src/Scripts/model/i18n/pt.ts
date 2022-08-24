@@ -165,6 +165,7 @@ const locale: Locale = {
         [_.exportDataStartExporting]: "A inicializar...",
         [_.exportDataSuccessSceneMessage]: "<strong>{count}/{total} tabela{{s}}</strong> {{exportadas|exportada}} com sucesso.",
         [_.exportDataSummary]: "O seu conjunto de dados contém <strong>{count} tabela{{s}}</strong> para exportação.",
+        [_.exportDataTruncated]: "Esta tabela tem muitas linhas.Somente os primeiros milhões de linhas podem ser exportadas para o Excel.Use o formato CSV para exportar todas as linhas da tabela.",
         [_.exportDataTypeCSV]: "CSV (valores separados por vírgulas)",
         [_.exportDataTypeXLSX]: "Folha de Cálculo Excel",
         [_.failed]: "Falhou",
