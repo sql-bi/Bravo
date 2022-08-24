@@ -133,8 +133,10 @@ export class ConnectLocal extends ConnectMenuItem {
         // Use timeout to avoid animation interfering with selection
         window.setTimeout(()=>{ 
             this.deselectRows(); 
-            if (this.table)
-                this.table.redraw(true);
+            pbiDesktop.poll().then(()=> {
+                if (this.table)
+                    this.table.redraw(true)
+            });
         }, 0);
     }
 
