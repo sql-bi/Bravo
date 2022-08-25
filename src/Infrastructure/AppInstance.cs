@@ -71,9 +71,9 @@
             using var currentIdentity = WindowsIdentity.GetCurrent();
             var remotePipeSecurity = pipeClient.GetAccessControl();
             var remoteOwner = remotePipeSecurity.GetOwner(typeof(SecurityIdentifier));
-            if (remoteOwner != currentIdentity.Owner)
+            if (remoteOwner != currentIdentity.User)
             {
-                throw new UnauthorizedAccessException();
+                throw new UnauthorizedAccessException("Bravo could not connect to the pipe because it was not owned by the current user.");
             }
 
             var startupSettings = StartupSettings.CreateFromCommandLineArguments();
@@ -99,15 +99,19 @@
             if (pipeSecurity is null)
             {
                 using var currentIdentity = WindowsIdentity.GetCurrent();
-                BravoUnexpectedException.ThrowIfNull(currentIdentity.Owner);
+                BravoUnexpectedException.ThrowIfNull(currentIdentity.User);
+                var currentUser = currentIdentity.User;
 
-                // In order to restrict access to just this account we do not use PipeOptions.CurrentUserOnly - see details here https://github.com/sql-bi/Bravo/issues/459
-                // Instead of using PipeOptions.CurrentUserOnly we set the owner specifically here, and on the pipe client side they will check the owner against this one - they must have identical SIDs or the client will reject this server.
-                var pipeAccessRule = new PipeAccessRule(currentIdentity.Owner, PipeAccessRights.ReadWrite | PipeAccessRights.CreateNewInstance, AccessControlType.Allow);
-                
+                // In order to restrict access to just this account we do not use PipeOptions.CurrentUserOnly but we use a custom ACL - see details here https://github.com/sql-bi/Bravo/issues/459
+                // We set the PipeAccessRule identity specifically here and on the pipe client side they will check the owner against this one - they must have identical SIDs or the client will reject this server.
+                var pipeAccessRule = new PipeAccessRule(currentUser, PipeAccessRights.ReadWrite | PipeAccessRights.CreateNewInstance, AccessControlType.Allow);
+
                 pipeSecurity = new PipeSecurity();
                 pipeSecurity.AddAccessRule(pipeAccessRule);
-                pipeSecurity.SetOwner(currentIdentity.Owner);
+
+                // Here we set the current user (WindowsIdentity.User) as owner for the security descriptor instead of using the token owner (WindowsIdentity.Owner) as PipeOptions.CurrentUserOnly would do.
+                // This allows the user to connect even with different elevation levels.
+                pipeSecurity.SetOwner(currentUser);
             }
 
             _pipeServer?.Dispose();
