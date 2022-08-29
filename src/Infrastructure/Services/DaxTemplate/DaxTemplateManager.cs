@@ -29,8 +29,9 @@
         private const string TemplateEmbeddedResourcePrefix = "Sqlbi.Bravo.Assets.ManageDates.Templates.";
         private const string SchemaEmbeddedResourcePrefix = "Sqlbi.Bravo.Assets.TemplateDevelopment.Schemas.";
 
-        private readonly string _cachePath = Path.Combine(AppEnvironment.ApplicationTempPath, @"ManageDates\Templates");
-        private readonly string _userPath = Path.Combine(AppEnvironment.ApplicationDataPath, @"ManageDates\Templates");
+        internal static readonly string CachePath = Path.Combine(AppEnvironment.ApplicationTempPath, @"ManageDates\Templates");
+        internal static readonly string UserPath = Path.Combine(AppEnvironment.ApplicationDataPath, @"ManageDates\Templates");
+
         private readonly object _cacheSyncLock = new();
 
         public DaxTemplateManager()
@@ -56,7 +57,7 @@
         {
             try
             {
-                var files = Package.FindTemplateFiles(_cachePath);
+                var files = Package.FindTemplateFiles(CachePath);
                 var packages = files.Select(Package.LoadFromFile).ToArray();
 
                 return packages;
@@ -68,48 +69,11 @@
             }
         }
 
-        public IEnumerable<string> GetTemplateFiles(DateConfiguration configuration)
-        {
-            var files = new List<string>();
-
-            var package = configuration.LoadPackage(_cachePath);
-            {
-                if (package.Configuration.TemplateUri is not null)
-                {
-                    var path = Path.Combine(_cachePath, package.Configuration.TemplateUri);
-                    files.Add(path);
-                }
-
-                if (package.Configuration?.Templates is not null)
-                {
-                    foreach (var template in package.Configuration.Templates)
-                    {
-                        if (template.Template is not null)
-                        {
-                            var path = Path.Combine(_cachePath, template.Template);
-                            files.Add(path);
-                        }
-                    }
-                }
-
-                if (package.Configuration?.LocalizationFiles is not null)
-                {
-                    foreach (var localizationFile in package.Configuration.LocalizationFiles)
-                    {
-                        var path = Path.Combine(_cachePath, localizationFile);
-                        files.Add(path);
-                    }
-                }
-            }
-
-            return files;
-        }
-
         public ModelChanges GetPreviewChanges(DateConfiguration configuration, int previewRows, TabularConnectionWrapper connection, CancellationToken cancellationToken)
         {
             try
             {
-                var package = configuration.GetPackage(_cachePath);
+                var package = configuration.GetPackage();
                 var modelChanges = GetPreviewChanges(package, previewRows, connection, cancellationToken);
 
                 return modelChanges;
@@ -174,7 +138,7 @@
         {
             try
             {
-                var package = configuration.GetPackage(_cachePath);
+                var package = configuration.GetPackage();
                 var engine = new Engine(package);
 
                 engine.ApplyTemplates(connection.Model, cancellationToken);
@@ -246,17 +210,17 @@
                 {
                     if (CacheInitialized == false)
                     {
-                        if (Directory.Exists(_cachePath))
-                            Directory.Delete(_cachePath, recursive: true);
+                        if (Directory.Exists(CachePath))
+                            Directory.Delete(CachePath, recursive: true);
 
-                        Directory.CreateDirectory(_cachePath);
+                        Directory.CreateDirectory(CachePath);
                         
-                        if (Directory.Exists(_userPath))
+                        if (Directory.Exists(UserPath))
                         {
-                            foreach (var assetFile in Directory.EnumerateFiles(_userPath))
+                            foreach (var assetFile in Directory.EnumerateFiles(UserPath))
                             {
                                 var assetFileName = Path.GetFileName(assetFile);
-                                var cacheFile = Path.Combine(_cachePath, assetFileName);
+                                var cacheFile = Path.Combine(CachePath, assetFileName);
 
                                 File.Copy(assetFile, cacheFile);
                             }
@@ -267,7 +231,7 @@
 
                             foreach (var templateFile in templateFiles)
                             {
-                                var templateFilePath = Path.Combine(_cachePath, templateFile.Name);
+                                var templateFilePath = Path.Combine(CachePath, templateFile.Name);
 
                                 using var fileStream = File.Create(templateFilePath);
                                 templateFile.Content.CopyTo(fileStream);

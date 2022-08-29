@@ -28,6 +28,7 @@
         public DateConfiguration()
         {
             IsCurrent = false;
+            IsCustom = false;
         }
 
         /// <summary>
@@ -37,8 +38,17 @@
         [JsonPropertyName("templateUri")]
         public string? TemplateUri { get; set; }
 
+        /// <summary>
+        /// Returns true if this <see cref="DateConfiguration"/> is the one currently applied to the model
+        /// </summary>
         [JsonPropertyName("isCurrent")]
         public bool IsCurrent { get; private set; } = false;
+
+        /// <summary>
+        /// Returns true if this <see cref="DateConfiguration"/> belongs to a custom date template (
+        /// </summary>
+        [JsonPropertyName("isCustom")]
+        public bool IsCustom { get; set; } = false;
 
         [JsonPropertyName("name")]
         public string? Name { get; set; }
@@ -194,7 +204,6 @@
 
         public void CopyTo(TemplateConfiguration templateConfiguration)
         {
-            templateConfiguration.TemplateUri = TemplateUri ?? templateConfiguration.TemplateUri;
             templateConfiguration.Name = Name ?? templateConfiguration.Name;
             templateConfiguration.Description = Description ?? templateConfiguration.Description;
             //
@@ -420,34 +429,40 @@
 
     internal static class DateConfigurationExtensions
     {
-        public static Dax.Template.Package LoadPackage(this DateConfiguration configuration, string path)
+        public static Dax.Template.Package LoadPackage(this DateConfiguration configuration)
         {
-            var templateUriFixed = FixTemplateUri(configuration.TemplateUri);
-            var templatePath = Path.Combine(path, templateUriFixed);
+            BravoUnexpectedException.ThrowIfNull(configuration.TemplateUri);
+            var templateUri = new Uri(configuration.TemplateUri);
+            var templatePath = templateUri.LocalPath;
+
+            if (configuration.IsCustom == false)
+            {
+                // Use the cache path of the current user
+                templatePath = Path.Combine(DaxTemplateManager.CachePath, Path.GetFileName(templatePath));
+            }
+
             var package = Dax.Template.Package.LoadFromFile(templatePath);
-
-            package.Configuration.TemplateUri = configuration.TemplateUri = templateUriFixed;
-
             return package;
         }
 
-        public static Dax.Template.Package GetPackage(this DateConfiguration configuration, string path)
+        public static Dax.Template.Package GetPackage(this DateConfiguration configuration)
         {
-            var package = LoadPackage(configuration, path);
+            var package = LoadPackage(configuration);
             configuration.CopyTo(package.Configuration);
             
-            var sourceTemplatePath = Path.Combine(path, configuration.TemplateUri!);
-            var templatePath = Path.ChangeExtension(sourceTemplatePath, $"{DateTime.Now:yyyyMMddHHmmss}-{Guid.NewGuid():N}.json");
-            package.SaveTo(templatePath);
+            BravoUnexpectedException.ThrowIfNull(package.Configuration.TemplateUri);
+            var templateUri = new Uri(package.Configuration.TemplateUri);
+            var templatePath = Path.GetFullPath(templateUri.LocalPath);
 
-            var updatedPackage = Dax.Template.Package.LoadFromFile(templatePath);
+            var path = Path.ChangeExtension(templatePath, $"{DateTime.Now:yyyyMMddHHmmss}-{Guid.NewGuid():N}.json");
+            package.SaveTo(path);
+
+            var updatedPackage = Dax.Template.Package.LoadFromFile(path);
             return updatedPackage;
         }
 
         public static void SerializeTo(this DateConfiguration configuration, TOM.Model model)
         {
-            configuration.TemplateUri = FixTemplateUri(configuration.TemplateUri);
-
             var configurationString = JsonSerializer.Serialize(configuration, DateConfiguration.ExtendedPropertyJsonOptions);
             var configurationProperty = model.ExtendedProperties.Find(DateConfiguration.ExtendedPropertyName);
 
@@ -470,20 +485,6 @@
                 if (jsonProperty.Value != configurationString)
                     jsonProperty.Value = configurationString;
             }
-        }
-
-        private static string FixTemplateUri(string? uriString)
-        {
-            BravoUnexpectedException.ThrowIfNull(uriString);
-
-            // HACK: to remove %LOCALAPPDATA% path from 'configuration.TemplateUri' - Bravo versions 0.9.0 to 0.9.3
-
-            if (Uri.TryCreate(uriString, UriKind.Absolute, out var uri) && uri.Scheme.Equals(Uri.UriSchemeFile))
-            {
-                uriString = Path.GetFullPath(uri.LocalPath);
-            }
-
-            return uriString;
         }
     }
 

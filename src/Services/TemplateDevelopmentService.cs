@@ -70,15 +70,17 @@
             return configurations;
         }
 
-        public DateConfiguration? GetConfigurationFromPackage(string path) {
-
-            if (path is not null && File.Exists(path))
+        public DateConfiguration? GetConfigurationFromPackage(string path)
+        {
+            if (File.Exists(path))
             {
                 var package = _templateManager.GetPackage(path);
                 var configuration = DateConfiguration.CreateFrom(package);
 
+                configuration.IsCustom = true;
                 return configuration;
             }
+
             return null;
         }
 
@@ -192,10 +194,10 @@
 
         public CustomPackage CreateWorkspace(string path, string name, DateConfiguration configuration)
         {
+            BravoUnexpectedException.Assert(configuration.IsCustom == false);
+
             var workspaceName = name.ReplaceInvalidFileNameChars();
             var workspacePath = Path.Combine(path, workspaceName);
-            var templatePath = Path.Combine(workspacePath, WorkspaceSourceFolderName);
-
             var customPackage = new CustomPackage
             {
                 Type = CustomPackageType.User,
@@ -207,44 +209,55 @@
                 HasWorkspace = true,
                 HasPackage = false,
             };
+            var package = configuration.LoadPackage();
 
             // src\*.json files
-            var templateFiles = _templateManager.GetTemplateFiles(configuration);
             {
+                var templatePath = Path.Combine(workspacePath, WorkspaceSourceFolderName);
                 Directory.CreateDirectory(templatePath);
 
-                templateFiles.ForEach((templateFilePath) =>
+                BravoUnexpectedException.ThrowIfNull(package.Configuration.TemplateUri);
                 {
-                    var templateFileName = Path.GetFileName(templateFilePath);
-                    var workspaceTemplateFilePath = Path.Combine(templatePath, templateFileName);
+                    package.Configuration.Name = customPackage.Name;
+                    package.Configuration.Description = customPackage.Description;
 
-                    File.Copy(templateFilePath, workspaceTemplateFilePath, overwrite: false);
+                    var configJson = JsonSerializer.Serialize(package.Configuration, new JsonSerializerOptions() { WriteIndented = true });
+                    var configPath = Path.Combine(templatePath, Path.GetFileName(package.Configuration.TemplateUri));
+                    File.WriteAllText(configPath, configJson);
+                }
 
-                    var isConfigTemplateFile = templateFileName == configuration.TemplateUri;
-                    if (isConfigTemplateFile)
+                if (package.Configuration.Templates is not null)
+                {
+                    foreach (var template in package.Configuration.Templates)
                     {
-                        var configJson = File.ReadAllText(workspaceTemplateFilePath);
-                        var config = JsonSerializer.Deserialize<TemplateConfiguration>(configJson);
-                        BravoUnexpectedException.ThrowIfNull(config);
-
-                        config.Name = customPackage.Name;
-                        config.Description = customPackage.Description;
-
-                        configJson = JsonSerializer.Serialize(config, new JsonSerializerOptions() { WriteIndented = true });
-                        File.WriteAllText(workspaceTemplateFilePath, configJson);
+                        if (template.Template is not null)
+                        {
+                            var sourcePath = Path.Combine(DaxTemplateManager.CachePath, template.Template);
+                            var destinationPath = Path.Combine(templatePath, template.Template);
+                            File.Copy(sourcePath, destinationPath, overwrite: false);
+                        }
                     }
-                });
+                }
+
+                if (package.Configuration.LocalizationFiles is not null)
+                {
+                    foreach (var localizationFile in package.Configuration.LocalizationFiles)
+                    {
+                        var sourcePath = Path.Combine(DaxTemplateManager.CachePath, localizationFile);
+                        var destinationPath = Path.Combine(templatePath, localizationFile);
+                        File.Copy(sourcePath, destinationPath, overwrite: false);
+                    }
+                }
             }
 
             // dist\[name].package.json
-            var distributionPackage = configuration.LoadPackage(templatePath);
             {
                 var packageDistributionFolderPath = Path.Combine(workspacePath, WorkspaceDistributionFolderName);
                 var packageFileName = Path.ChangeExtension(workspaceName, ".package.json");
                 var packageFilePath = Path.Combine(packageDistributionFolderPath, packageFileName);
 
                 Directory.CreateDirectory(packageDistributionFolderPath);
-                distributionPackage.SaveTo(packageFilePath);
+                package.SaveTo(packageFilePath);
 
                 customPackage.Path = packageFilePath;
                 customPackage.HasPackage = true;
