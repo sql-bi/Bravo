@@ -2,6 +2,7 @@
 {
     using Dax.Template.Exceptions;
     using Dax.Template.Model;
+    using Dax.Template.Tables;
     using Microsoft.AnalysisServices.AdomdClient;
     using Microsoft.AspNetCore.Hosting.Server;
     using Sqlbi.Bravo.Infrastructure;
@@ -199,44 +200,53 @@
             {
                 Type = CustomPackageType.User,
                 Path = null,
-                Name = null,
+                Name = name,
                 Description = null,
                 WorkspaceName = workspaceName,
                 WorkspacePath = workspacePath,
                 HasWorkspace = true,
+                HasPackage = false,
             };
 
+            // src\*.json files
             var templateFiles = _templateManager.GetTemplateFiles(configuration);
             {
                 Directory.CreateDirectory(templatePath);
+
                 templateFiles.ForEach((templateFilePath) =>
                 {
                     var templateFileName = Path.GetFileName(templateFilePath);
                     var workspaceTemplateFilePath = Path.Combine(templatePath, templateFileName);
 
                     File.Copy(templateFilePath, workspaceTemplateFilePath, overwrite: false);
+
+                    var isConfigTemplateFile = templateFileName == configuration.TemplateUri;
+                    if (isConfigTemplateFile)
+                    {
+                        var configJson = File.ReadAllText(workspaceTemplateFilePath);
+                        var config = JsonSerializer.Deserialize<TemplateConfiguration>(configJson);
+                        BravoUnexpectedException.ThrowIfNull(config);
+
+                        config.Name = customPackage.Name;
+                        config.Description = customPackage.Description;
+
+                        configJson = JsonSerializer.Serialize(config, new JsonSerializerOptions() { WriteIndented = true });
+                        File.WriteAllText(workspaceTemplateFilePath, configJson);
+                    }
                 });
             }
 
-            //.template.json
-            // TODO Change the name/description in Config01.template.json with the name passed here
-            // TODO Rename Config01.template.json as {name}.template.json
-
-            // .package.json
-            var package = configuration.LoadPackage(templatePath);
-            package.Configuration.Name = name;          // This is not required if we edit *.template.json
-            package.Configuration.Description = "";     // Idem
+            // dist\[name].package.json
+            var distributionPackage = configuration.LoadPackage(templatePath);
             {
                 var packageDistributionFolderPath = Path.Combine(workspacePath, WorkspaceDistributionFolderName);
                 var packageFileName = Path.ChangeExtension(workspaceName, ".package.json");
                 var packageFilePath = Path.Combine(packageDistributionFolderPath, packageFileName);
 
                 Directory.CreateDirectory(packageDistributionFolderPath);
-                package.SaveTo(packageFilePath);
+                distributionPackage.SaveTo(packageFilePath);
 
                 customPackage.Path = packageFilePath;
-                customPackage.Name = package.Configuration.Name;
-                customPackage.Description = package.Configuration.Description;
                 customPackage.HasPackage = true;
             }
 
@@ -253,7 +263,7 @@
                 }
             }
 
-            // <workspace-name>.code-workspace file
+            // <workspace-name>.code-workspace
             var codeworkspaceName = Path.ChangeExtension(workspaceName, ".code-workspace");
             var codeworkspaceFile = Path.Combine(workspacePath, codeworkspaceName);
             {
