@@ -4,7 +4,7 @@
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Options;
     using Microsoft.Net.Http.Headers;
-    using Sqlbi.Bravo.Infrastructure.Configuration;
+    using Sqlbi.Bravo.Controllers;
     using System;
     using System.Net;
     using System.Security.Claims;
@@ -27,15 +27,11 @@
             {
                 var authenticated = AppEnvironment.ApiAuthenticationToken.Equals(token);
                 if (authenticated == false)
-                {
-                    if (UserPreferences.Current.TemplateDevelopmentEnabled)
+                { 
+                    if (Request.Path.StartsWithSegments(TemplateDevelopmentController.ControllerPathSegment))
                     {
-                        // TODO: enable
-                        // if (Request.Path.StartsWithSegments(TemplateDevelopmentController.ControllerPathSegment))
-                        {
-                            authenticated = AppEnvironment.ApiAuthenticationTokenTemplateDevelopment.Equals(token);
-                        }
-                    }
+                        authenticated = AppEnvironment.ApiAuthenticationTokenTemplateDevelopment.Equals(token);
+                    } 
                 }
                 
                 if (authenticated)
