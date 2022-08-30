@@ -85,24 +85,6 @@
             }
         }
 
-        public ModelChanges GetPreviewChanges(CustomPackage customPackage, int previewRows, TabularConnectionWrapper connection, CancellationToken cancellationToken)
-        {
-            try
-            {
-                BravoUnexpectedException.ThrowIfNull(customPackage.Path);
-
-                var package = GetPackage(customPackage.Path);
-                var modelChanges = GetPreviewChanges(package, previewRows, connection, cancellationToken);
-
-                return modelChanges;
-            }
-            catch (Exception ex) when (ex is TemplateException || ex is AdomdException)
-            {
-                TelemetryHelper.TrackException(ex);
-                throw;
-            }
-        }
-
         public ModelChanges GetPreviewChanges(Package package, int previewRows, TabularConnectionWrapper connection, CancellationToken cancellationToken)
         {
             try
@@ -134,7 +116,7 @@
             }
         }
 
-        public void ApplyTemplate(DateConfiguration configuration, TabularConnectionWrapper connection, CancellationToken cancellationToken)
+        public void ApplyConfiguration(DateConfiguration configuration, TabularConnectionWrapper connection, CancellationToken cancellationToken)
         {
             try
             {
@@ -143,25 +125,6 @@
 
                 engine.ApplyTemplates(connection.Model, cancellationToken);
                 configuration.SerializeTo(connection.Model);
-                connection.Model.SaveChanges().ThrowOnError();
-            }
-            catch (TemplateException ex)
-            {
-                TelemetryHelper.TrackException(ex);
-                throw;
-            }
-        }
-
-        public void ApplyTemplate(CustomPackage customPackage, TabularConnectionWrapper connection, CancellationToken cancellationToken)
-        {
-            try
-            {
-                BravoUnexpectedException.ThrowIfNull(customPackage.Path);
-
-                var package = GetPackage(customPackage.Path);
-                var engine = new Engine(package);
-
-                engine.ApplyTemplates(connection.Model, cancellationToken);
                 connection.Model.SaveChanges().ThrowOnError();
             }
             catch (TemplateException ex)
@@ -217,6 +180,7 @@
                         
                         if (Directory.Exists(UserPath))
                         {
+                            // If the path exists then we use the templates from this folder instead of using the built-in default templates - this is for testing/debug purpose only
                             foreach (var assetFile in Directory.EnumerateFiles(UserPath))
                             {
                                 var assetFileName = Path.GetFileName(assetFile);

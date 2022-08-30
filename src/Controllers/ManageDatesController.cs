@@ -49,7 +49,7 @@
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(DateConfiguration))]
         [ProducesDefaultResponseType]
-        public IActionResult ValidateConfiguration(ValidatePBIDesktopReportConfigurationRequest request, CancellationToken cancellationToken)
+        public IActionResult ValidateConfiguration(ValidateConfigurationRequest request, CancellationToken cancellationToken)
         {
             var configuration = _manageDatesService.ValidateConfiguration(request.Report!, request.Configuration!, cancellationToken);
             return Ok(configuration);
@@ -60,26 +60,11 @@
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
         [HttpPost]
-        [ActionName("GetPreviewChangesFromReport")] // TODO: rename to GetConfigurationPreviewChanges
+        [ActionName("GetPreviewChangesFromReport")] // TODO: rename to GetPreviewChanges
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Dax.Template.Model.ModelChanges))]
         [ProducesDefaultResponseType]
-        public IActionResult GetPreviewChanges(PreviewChangesFromPBIDesktopReportRequest request, CancellationToken cancellationToken)
-        {
-            var modelChanges = _manageDatesService.GetPreviewChanges(request.Report!, request.Settings!, cancellationToken);
-            return Ok(modelChanges);
-        }
-
-        /// <summary>
-        /// Applies the provided <see cref="CustomPackage"/> without commit changes and returns a preview of changes to objects and data
-        /// </summary>
-        /// <response code="200">Status200OK - Success</response>
-        [HttpPost]
-        [ActionName("GetCustomPackagePreviewChanges")]
-        [Produces(MediaTypeNames.Application.Json)]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Dax.Template.Model.ModelChanges))]
-        [ProducesDefaultResponseType]
-        public IActionResult GetPreviewChanges(CustomPackagePreviewChangesRequest request, CancellationToken cancellationToken)
+        public IActionResult GetPreviewChanges(PreviewChangesRequest request, CancellationToken cancellationToken)
         {
             var modelChanges = _manageDatesService.GetPreviewChanges(request.Report!, request.Settings!, cancellationToken);
             return Ok(modelChanges);
@@ -94,24 +79,9 @@
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesDefaultResponseType]
-        public IActionResult Apply(UpdatePBIDesktopReportRequest request, CancellationToken cancellationToken)
+        public IActionResult ApplyConfiguration(ApplyConfigurationRequest request, CancellationToken cancellationToken)
         {
-            _manageDatesService.ApplyTemplate(request.Report!, request.Configuration!, cancellationToken);
-            return Ok();
-        }
-
-        /// <summary>
-        /// Update the <see cref="PBIDesktopReport"/> by appliying the provided <see cref="CustomPackage"/>
-        /// </summary>
-        /// <response code="200">Status200OK - Success</response>
-        [HttpPost]
-        [ActionName("ApplyCustomPackage")]
-        [Produces(MediaTypeNames.Application.Json)]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesDefaultResponseType]
-        public IActionResult Apply(CustomPackageApplyRequest request, CancellationToken cancellationToken)
-        {
-            _manageDatesService.ApplyTemplate(request.Report!, request.CustomPackage!, cancellationToken);
+            _manageDatesService.ApplyConfiguration(request.Report!, request.Configuration!, cancellationToken);
             return Ok();
         }
     }

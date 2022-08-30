@@ -111,9 +111,9 @@
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(CustomPackage))]
         [ProducesDefaultResponseType]
-        public IActionResult ValidateCustomPackage(CustomPackage customPackage, CancellationToken cancellationToken)
+        public IActionResult Validate(CustomPackage customPackage, CancellationToken cancellationToken)
         {
-            var validatedCustomPackage = _templateDevelopmentService.ValidateCustomPackage(customPackage);
+            var validatedCustomPackage = _templateDevelopmentService.Validate(customPackage);
             return Ok(validatedCustomPackage);
         }
 
@@ -148,7 +148,6 @@
         [ActionName("ConfigureWorkspace")]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        //[ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesDefaultResponseType]
         public IActionResult ConfigureWorkspace(string workspacePath, bool openCodeWorkspace, CancellationToken cancellationToken)

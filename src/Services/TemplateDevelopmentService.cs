@@ -30,7 +30,7 @@
 
         IEnumerable<CustomPackage> GetOrganizationCustomPackages();
 
-        CustomPackage ValidateCustomPackage(CustomPackage customPackage);
+        CustomPackage Validate(CustomPackage customPackage);
 
         CustomPackage CreateWorkspace(string path, string name, DateConfiguration configuration);
 
@@ -183,7 +183,7 @@
             return customPackages;
         }
 
-        public CustomPackage ValidateCustomPackage(CustomPackage customPackage)
+        public CustomPackage Validate(CustomPackage customPackage)
         {
             customPackage.HasWorkspace = false;
             customPackage.HasPackage = false;
