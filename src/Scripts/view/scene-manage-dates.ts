@@ -167,7 +167,7 @@ export class ManageDatesScene extends DocScene {
         optionsController.on("customOptions.templates.change", (changedOptions: any) => {
             this.update();
         });
-        optionsController.on("templateDevelopmentEnabled.change", (changedOptions: any) => {
+        optionsController.on("customTemplatesEnabled.change", (changedOptions: any) => {
             this.update();
         });
 
@@ -190,7 +190,7 @@ export class ManageDatesScene extends DocScene {
         try {
             let customTemplates = [
                 ...await host.getOrganizationTemplates(), 
-                ...(optionsController.options.templateDevelopmentEnabled ? optionsController.options.customOptions.templates : [])
+                ...(optionsController.options.customTemplatesEnabled ? optionsController.options.customOptions.templates : [])
             ];
 
             for (let i = 0; i < customTemplates.length; i++) {

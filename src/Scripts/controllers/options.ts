@@ -16,7 +16,7 @@ import { ThemeType } from './theme';
 export interface Options {
     theme: ThemeType
     telemetryEnabled: boolean
-    templateDevelopmentEnabled: boolean
+    customTemplatesEnabled: boolean
     updateChannel: UpdateChannelType
     updateCheckEnabled: boolean
     useSystemBrowserForAuthentication: boolean
@@ -192,7 +192,7 @@ export class OptionsController extends OptionsStore<Options> {
     defaultOptions: Options = {
         theme: ThemeType.Auto,
         telemetryEnabled: true,
-        templateDevelopmentEnabled: true,
+        customTemplatesEnabled: true,
         diagnosticLevel: DiagnosticLevelType.None,
         updateChannel: UpdateChannelType.Stable,
         updateCheckEnabled: true,

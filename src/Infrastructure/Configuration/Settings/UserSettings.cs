@@ -21,7 +21,7 @@
 
         bool UseSystemBrowserForAuthentication { get; set; }
 
-        bool TemplateDevelopmentEnabled { get; set; }
+        bool CustomTemplatesEnabled { get; set; }
 
         JsonElement? CustomOptions { get; set; }
     }
@@ -34,13 +34,13 @@
         public const bool DefaultUpdateCheckEnabled = true;
         public const ThemeType DefaultTheme = ThemeType.Auto;
         public const bool DefaultUseSystemBrowserForAuthentication = false;
-        public const bool DefaultTemplateDevelopmentEnabled = true;
+        public const bool DefaultCustomTemplatesEnabled = true;
 
         private bool _telemetryEnabled = DefaultTelemetryEnabled;
         private UpdateChannelType _updateChannel = DefaultUpdateChannel;
         private bool _updateCheckEnabled = DefaultUpdateCheckEnabled;
         private bool _useSystemBrowserForAuthentication = DefaultUseSystemBrowserForAuthentication;
-        private bool _templateDevelopmentEnabled = DefaultTemplateDevelopmentEnabled;
+        private bool _customTemplatesEnabled = DefaultCustomTemplatesEnabled;
 
         [JsonPropertyName("telemetryEnabled")]
         public bool TelemetryEnabled
@@ -79,11 +79,11 @@
             set => _useSystemBrowserForAuthentication = GetSetterValue(value, BravoPolicies.Current.UseSystemBrowserForAuthenticationPolicy, BravoPolicies.Current.UseSystemBrowserForAuthentication);
         }
 
-        [JsonPropertyName("templateDevelopmentEnabled")]
-        public bool TemplateDevelopmentEnabled
+        [JsonPropertyName("customTemplatesEnabled")]
+        public bool CustomTemplatesEnabled
         {
-            get => _templateDevelopmentEnabled;
-            set => _templateDevelopmentEnabled = GetSetterValue(value, BravoPolicies.Current.TemplateDevelopmentEnabledPolicy, BravoPolicies.Current.TemplateDevelopmentEnabled);
+            get => _customTemplatesEnabled;
+            set => _customTemplatesEnabled = GetSetterValue(value, BravoPolicies.Current.CustomTemplatesEnabledPolicy, BravoPolicies.Current.CustomTemplatesEnabled);
         }
 
         [JsonPropertyName("customOptions")]

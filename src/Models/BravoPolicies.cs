@@ -48,9 +48,9 @@
                     UseSystemBrowserForAuthenticationPolicy = policy;
                 }
                 {
-                    var (policy, value) = policyManager.GetTemplateDevelopmentEnabledPolicy();
-                    TemplateDevelopmentEnabled = value;
-                    TemplateDevelopmentEnabledPolicy = policy;
+                    var (policy, value) = policyManager.GetCustomTemplatesEnabledPolicy();
+                    CustomTemplatesEnabled = value;
+                    CustomTemplatesEnabledPolicy = policy;
                 }
             }
         }
@@ -80,9 +80,9 @@
         public PolicyStatus UseSystemBrowserForAuthenticationPolicy { get; } = PolicyStatus.NotConfigured;
 
         [JsonIgnore]
-        public bool TemplateDevelopmentEnabled { get; }
+        public bool CustomTemplatesEnabled { get; }
 
-        [JsonPropertyName("templateDevelopmentEnabledPolicy")]
-        public PolicyStatus TemplateDevelopmentEnabledPolicy { get; } = PolicyStatus.NotConfigured;
+        [JsonPropertyName("customTemplatesEnabledPolicy")]
+        public PolicyStatus CustomTemplatesEnabledPolicy { get; } = PolicyStatus.NotConfigured;
     }
 }

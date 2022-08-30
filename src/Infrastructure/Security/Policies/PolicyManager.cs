@@ -39,7 +39,7 @@
 
         public (PolicyStatus Policy, bool Value) GetUpdateCheckEnabledPolicy() => GetBoolPolicy(valueName: "UpdateCheckEnabled", relativeSubkeyName: OptionSettingsName);
 
-        public (PolicyStatus Policy, bool Value) GetTemplateDevelopmentEnabledPolicy() => GetBoolPolicy(valueName: "TemplateDevelopmentEnabled", relativeSubkeyName: OptionSettingsName);
+        public (PolicyStatus Policy, bool Value) GetCustomTemplatesEnabledPolicy() => GetBoolPolicy(valueName: "CustomTemplatesEnabled", relativeSubkeyName: OptionSettingsName);
 
         private static (PolicyStatus Policy, bool Value) GetBoolPolicy(string valueName, string relativeSubkeyName)
         {

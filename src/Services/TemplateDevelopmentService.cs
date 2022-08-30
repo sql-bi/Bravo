@@ -2,11 +2,9 @@
 {
     using Dax.Template.Exceptions;
     using Dax.Template.Model;
-    using Dax.Template.Tables;
     using Microsoft.AnalysisServices.AdomdClient;
     using Microsoft.AspNetCore.Hosting.Server;
     using Sqlbi.Bravo.Infrastructure;
-    using Sqlbi.Bravo.Infrastructure.Configuration;
     using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Infrastructure.Helpers;
     using Sqlbi.Bravo.Infrastructure.Services;
@@ -23,8 +21,6 @@
 
     public interface ITemplateDevelopmentService
     {
-        bool Enabled { get; }
-
         IEnumerable<DateConfiguration> GetConfigurations();
 
         DateConfiguration? GetConfigurationFromPackage(string path);
@@ -59,9 +55,6 @@
             _templateManager = new DaxTemplateManager();
             _serializerOptions = new JsonSerializerOptions(AppEnvironment.DefaultJsonOptions) { WriteIndented = true };
         }
-
-        public bool Enabled => UserPreferences.Current.TemplateDevelopmentEnabled;
-
         public IEnumerable<DateConfiguration> GetConfigurations()
         {
             var packages = _templateManager.GetPackages();

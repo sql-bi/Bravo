@@ -91,7 +91,7 @@ export class ManageDatesSceneCalendar extends ManageDatesScenePane {
             this.dateConfigurations.forEach(dateConfiguration => {
                 values.push([dateConfiguration.templateUri, dateConfigurationName(dateConfiguration)]);
             });
-            if (optionsController.options.templateDevelopmentEnabled)
+            if (optionsController.options.customTemplatesEnabled)
                 values.push(["{browse}", `(${i18n(strings.devTemplatesBrowse)}...)`]);
 
             selectElement.innerHTML = `

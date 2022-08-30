@@ -21,7 +21,7 @@
             Theme = userSettings.Theme;
             Proxy = userSettings.Proxy;
             UseSystemBrowserForAuthentication = userSettings.UseSystemBrowserForAuthentication;
-            TemplateDevelopmentEnabled = userSettings.TemplateDevelopmentEnabled;
+            CustomTemplatesEnabled = userSettings.CustomTemplatesEnabled;
             CustomOptions = userSettings.CustomOptions;
         }
 
@@ -46,8 +46,8 @@
         [JsonPropertyName("useSystemBrowserForAuthentication")]
         public bool UseSystemBrowserForAuthentication { get; set; } = UserSettings.DefaultUseSystemBrowserForAuthentication;
 
-        [JsonPropertyName("templateDevelopmentEnabled")]
-        public bool TemplateDevelopmentEnabled { get; set; } = true;
+        [JsonPropertyName("customTemplatesEnabled")]
+        public bool CustomTemplatesEnabled { get; set; } = UserSettings.DefaultCustomTemplatesEnabled;
 
         [JsonPropertyName("manageDatesPackageRepository")]
         public string? ManageDatesPackageRepository { get; set; }
@@ -74,7 +74,7 @@
                 settings.Theme = Theme;
                 settings.Proxy = Proxy;
                 settings.UseSystemBrowserForAuthentication = UseSystemBrowserForAuthentication;
-                settings.TemplateDevelopmentEnabled = TemplateDevelopmentEnabled;
+                settings.CustomTemplatesEnabled = CustomTemplatesEnabled;
                 settings.CustomOptions = CustomOptions;
             }
             UserPreferences.Save();
