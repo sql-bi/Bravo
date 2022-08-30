@@ -44,9 +44,8 @@
         [ProducesDefaultResponseType]
         public IActionResult GetOrganizationCustomPackages(CancellationToken cancellationToken)
         {
-            // TODO: retreive CustomPackageType.Organization packages
-            var packages = System.Array.Empty<CustomPackage>();
-            return Ok(packages);
+            var customPackages = _templateDevelopmentService.GetOrganizationCustomPackages();
+            return Ok(customPackages);
         }
 
         /// <summary>

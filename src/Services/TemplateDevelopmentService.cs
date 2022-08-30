@@ -7,6 +7,7 @@
     using Sqlbi.Bravo.Infrastructure;
     using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Infrastructure.Helpers;
+    using Sqlbi.Bravo.Infrastructure.Security.Policies;
     using Sqlbi.Bravo.Infrastructure.Services;
     using Sqlbi.Bravo.Infrastructure.Services.DaxTemplate;
     using Sqlbi.Bravo.Models;
@@ -26,6 +27,8 @@
         DateConfiguration? GetPackageConfiguration(string path);
 
         CustomPackage GetUserCustomPackage(string path);
+
+        IEnumerable<CustomPackage> GetOrganizationCustomPackages();
 
         CustomPackage ValidateCustomPackage(CustomPackage customPackage);
 
@@ -80,15 +83,7 @@
 
         public CustomPackage GetUserCustomPackage(string path)
         {
-            var customPackage = new CustomPackage
-            {
-                Type = CustomPackageType.User,
-                Path = null,
-                Name = null,
-                Description = null,
-                WorkspaceName = null,
-                WorkspacePath = null,
-            };
+            var customPackage = new CustomPackage { Type = CustomPackageType.User };
             var extension = Path.GetExtension(path);
 
             if (extension.EqualsI(".json") && path.EndsWithI(".package.json"))
@@ -146,6 +141,41 @@
                     customPackage.HasWorkspace = true;
                 }
             }
+        }
+
+        public IEnumerable<CustomPackage> GetOrganizationCustomPackages()
+        {
+            var customPackages = new List<CustomPackage>();
+
+            var repositoryEnabled = BravoPolicies.Current.CustomTemplatesOrganizationRepositoryPathPolicy == PolicyStatus.Forced;
+            if (repositoryEnabled)
+            {
+                var repositoryExists = Directory.Exists(BravoPolicies.Current.CustomTemplatesOrganizationRepositoryPath);
+                if (repositoryExists)
+                {
+                    var packagePaths = Directory.EnumerateFiles(BravoPolicies.Current.CustomTemplatesOrganizationRepositoryPath!, searchPattern: "*.package.json", new EnumerationOptions
+                    {
+                        IgnoreInaccessible = true,
+                        //RecurseSubdirectories = true,
+                    });
+
+                    foreach (var packagePath in packagePaths)
+                    {
+                        var package = _templateManager.GetPackage(packagePath);
+                        var customPackage = new CustomPackage
+                        {
+                            Type = CustomPackageType.Organization,
+                            Path = packagePath,
+                            Name = package.Configuration.Name,
+                            Description = package.Configuration.Description,
+                            HasPackage = true,
+                        };
+                        customPackages.Add(customPackage);
+                    }
+                }
+            }
+
+            return customPackages;
         }
 
         public CustomPackage ValidateCustomPackage(CustomPackage customPackage)

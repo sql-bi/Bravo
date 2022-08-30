@@ -52,6 +52,11 @@
                     CustomTemplatesEnabled = value;
                     CustomTemplatesEnabledPolicy = policy;
                 }
+                {
+                    var (policy, value) = policyManager.GetCustomTemplatesOrganizationRepositoryPathPolicy();
+                    CustomTemplatesOrganizationRepositoryPath = value;
+                    CustomTemplatesOrganizationRepositoryPathPolicy = policy;
+                }
             }
         }
 
@@ -84,5 +89,11 @@
 
         [JsonPropertyName("customTemplatesEnabledPolicy")]
         public PolicyStatus CustomTemplatesEnabledPolicy { get; } = PolicyStatus.NotConfigured;
+
+        [JsonIgnore]
+        public string? CustomTemplatesOrganizationRepositoryPath { get; }
+
+        [JsonPropertyName("customTemplatesOrganizationRepositoryPathPolicy")]
+        public PolicyStatus CustomTemplatesOrganizationRepositoryPathPolicy { get; } = PolicyStatus.NotConfigured;
     }
 }
