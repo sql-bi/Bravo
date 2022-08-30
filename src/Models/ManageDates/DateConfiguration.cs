@@ -45,7 +45,7 @@
         public bool IsCurrent { get; private set; } = false;
 
         /// <summary>
-        /// Returns true if this <see cref="DateConfiguration"/> belongs to a custom date template (
+        /// Returns true if this <see cref="DateConfiguration"/> belongs to a custom developed template and not a predefined Bravo template
         /// </summary>
         [JsonPropertyName("isCustom")]
         public bool IsCustom { get; set; } = false;
@@ -429,7 +429,7 @@
 
     internal static class DateConfigurationExtensions
     {
-        public static Dax.Template.Package LoadPackage(this DateConfiguration configuration)
+        public static Dax.Template.Package LoadPackage(this DateConfiguration configuration, bool configure = true)
         {
             BravoUnexpectedException.ThrowIfNull(configuration.TemplateUri);
             var templateUri = new Uri(configuration.TemplateUri);
@@ -442,23 +442,13 @@
             }
 
             var package = Dax.Template.Package.LoadFromFile(templatePath);
+
+            if (configure)
+            {
+                configuration.CopyTo(package.Configuration);
+            }
+
             return package;
-        }
-
-        public static Dax.Template.Package GetPackage(this DateConfiguration configuration)
-        {
-            var package = LoadPackage(configuration);
-            configuration.CopyTo(package.Configuration);
-            
-            BravoUnexpectedException.ThrowIfNull(package.Configuration.TemplateUri);
-            var templateUri = new Uri(package.Configuration.TemplateUri);
-            var templatePath = Path.GetFullPath(templateUri.LocalPath);
-
-            var path = Path.ChangeExtension(templatePath, $"{DateTime.Now:yyyyMMddHHmmss}-{Guid.NewGuid():N}.json");
-            package.SaveTo(path);
-
-            var updatedPackage = Dax.Template.Package.LoadFromFile(path);
-            return updatedPackage;
         }
 
         public static void SerializeTo(this DateConfiguration configuration, TOM.Model model)

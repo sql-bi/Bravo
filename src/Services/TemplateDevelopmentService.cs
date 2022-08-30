@@ -209,7 +209,7 @@
                 HasWorkspace = true,
                 HasPackage = false,
             };
-            var package = configuration.LoadPackage();
+            var package = configuration.LoadPackage(configure: false);
 
             // src\*.json files
             {

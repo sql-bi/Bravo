@@ -73,7 +73,7 @@
         {
             try
             {
-                var package = configuration.GetPackage();
+                var package = configuration.LoadPackage();
                 var modelChanges = GetPreviewChanges(package, previewRows, connection, cancellationToken);
 
                 return modelChanges;
@@ -138,7 +138,7 @@
         {
             try
             {
-                var package = configuration.GetPackage();
+                var package = configuration.LoadPackage();
                 var engine = new Engine(package);
 
                 engine.ApplyTemplates(connection.Model, cancellationToken);

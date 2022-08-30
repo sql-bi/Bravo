@@ -15,6 +15,7 @@ export interface DateConfiguration {
     templateUri?: string                            // Internal use only
     template?: DateTemplate                         // Internal use only - set by client
     isCurrent?: boolean                             // True if the template is currently applied to the model
+    isCustom?: boolean                              // True if the template is a custom developed template and not a predefined Bravo template
     name?: string                                   // Template name
     description?: string                            // English, not localized template description
     defaults?: DateDefaults                         // Specific options of selected template

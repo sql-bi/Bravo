@@ -139,6 +139,8 @@ export class ManageDatesSceneCalendar extends ManageDatesScenePane {
         this.config.options.holidaysAvailable = dateConfiguration.holidaysAvailable;
         this.config.options.timeIntelligenceAvailable = dateConfiguration.timeIntelligenceAvailable;
         this.config.options.defaults = dateConfiguration.defaults;
+        this.config.options.isCurrent = dateConfiguration.isCurrent;
+        this.config.options.isCustom = dateConfiguration.isCustom;
 
         for (let option in dateConfiguration.defaults) {
             let optionName = `defaults.${option}`;
