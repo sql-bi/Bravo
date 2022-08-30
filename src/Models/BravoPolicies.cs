@@ -47,6 +47,11 @@
                     UseSystemBrowserForAuthentication = value;
                     UseSystemBrowserForAuthenticationPolicy = policy;
                 }
+                {
+                    var (policy, value) = policyManager.GetTemplateDevelopmentEnabledPolicy();
+                    TemplateDevelopmentEnabled = value;
+                    TemplateDevelopmentEnabledPolicy = policy;
+                }
             }
         }
 
@@ -73,5 +78,11 @@
 
         [JsonPropertyName("useSystemBrowserForAuthenticationPolicy")]
         public PolicyStatus UseSystemBrowserForAuthenticationPolicy { get; } = PolicyStatus.NotConfigured;
+
+        [JsonIgnore]
+        public bool TemplateDevelopmentEnabled { get; }
+
+        [JsonPropertyName("templateDevelopmentEnabledPolicy")]
+        public PolicyStatus TemplateDevelopmentEnabledPolicy { get; } = PolicyStatus.NotConfigured;
     }
 }
