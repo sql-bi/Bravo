@@ -47,6 +47,8 @@
         private const string WorkspaceConfigFileName = "bravo-config.json";
         private const string VSCodeExtensionsFileName = "extensions.json";
         private const string VSCodeExtensionName = "sqlbi.bravo-template-editor";
+        private const string VSCodeWorkspaceFileExtension = ".code-workspace";
+        private const string CustomPackageFileExtension = ".package.json";
 
         private readonly JsonSerializerOptions _serializerOptions;
         private readonly DaxTemplateManager _templateManager;
@@ -83,10 +85,13 @@
 
         public CustomPackage GetUserCustomPackage(string path)
         {
-            var customPackage = new CustomPackage { Type = CustomPackageType.User };
+            var customPackage = new CustomPackage
+            { 
+                Type = CustomPackageType.User 
+            };
             var extension = Path.GetExtension(path);
 
-            if (extension.EqualsI(".json") && path.EndsWithI(".package.json"))
+            if (extension.EqualsI(".json") && path.EndsWithI(CustomPackageFileExtension))
             {
                 SetPackageFileDetails(path, customPackage);
 
@@ -95,13 +100,13 @@
                 {
                     var workspaceName = packageFileInfo.Directory.Parent.Name;
                     var workspaceFolder = packageFileInfo.Directory.Parent.FullName;
-                    var workspaceCodeworkspaceName = Path.ChangeExtension(workspaceName, ".code-workspace");
+                    var workspaceCodeworkspaceName = Path.ChangeExtension(workspaceName, VSCodeWorkspaceFileExtension);
                     var workspaceCodeworkspacePath = Path.Combine(workspaceFolder, workspaceCodeworkspaceName);
 
                     SetPackageWorkspaceDetails(workspaceCodeworkspacePath, customPackage);
                 }
             }
-            else if (extension.EqualsI(".code-workspace"))
+            else if (extension.EqualsI(VSCodeWorkspaceFileExtension))
             {
                 SetPackageWorkspaceDetails(path, customPackage);
 
@@ -109,7 +114,7 @@
                 if (codeworkspaceFileInfo.Directory is not null)
                 {
                     var workspaceName = codeworkspaceFileInfo.Directory.Name;
-                    var pacakgeFileName = Path.ChangeExtension(workspaceName, ".package.json");
+                    var pacakgeFileName = Path.ChangeExtension(workspaceName, CustomPackageFileExtension);
                     var packageFilePath = Path.Combine(codeworkspaceFileInfo.Directory.FullName, WorkspaceDistributionFolderName, pacakgeFileName);
 
                     SetPackageFileDetails(packageFilePath, customPackage);
@@ -153,7 +158,7 @@
                 var repositoryExists = Directory.Exists(BravoPolicies.Current.CustomTemplatesOrganizationRepositoryPath);
                 if (repositoryExists)
                 {
-                    var packagePaths = Directory.EnumerateFiles(BravoPolicies.Current.CustomTemplatesOrganizationRepositoryPath!, searchPattern: "*.package.json", new EnumerationOptions
+                    var packagePaths = Directory.EnumerateFiles(BravoPolicies.Current.CustomTemplatesOrganizationRepositoryPath!, searchPattern: $"*{CustomPackageFileExtension}", new EnumerationOptions
                     {
                         IgnoreInaccessible = true,
                         //RecurseSubdirectories = true,
@@ -198,7 +203,7 @@
             }
             else if (customPackage.WorkspacePath is not null && customPackage.WorkspaceName is not null)
             {
-                var workspaceCodeworkspaceName = Path.ChangeExtension(customPackage.WorkspaceName, ".code-workspace");
+                var workspaceCodeworkspaceName = Path.ChangeExtension(customPackage.WorkspaceName, VSCodeWorkspaceFileExtension);
                 var workspaceCodeworkspacePath = Path.Combine(customPackage.WorkspacePath, workspaceCodeworkspaceName);
                 var existingCustomPackage = GetUserCustomPackage(workspaceCodeworkspacePath);
 
@@ -277,7 +282,7 @@
             // dist\[name].package.json
             {
                 var packageDistributionFolderPath = Path.Combine(workspacePath, WorkspaceDistributionFolderName);
-                var packageFileName = Path.ChangeExtension(workspaceName, ".package.json");
+                var packageFileName = Path.ChangeExtension(workspaceName, CustomPackageFileExtension);
                 var packageFilePath = Path.Combine(packageDistributionFolderPath, packageFileName);
 
                 Directory.CreateDirectory(packageDistributionFolderPath);
@@ -301,7 +306,7 @@
             }
 
             // <workspace-name>.code-workspace
-            var codeworkspaceName = Path.ChangeExtension(workspaceName, ".code-workspace");
+            var codeworkspaceName = Path.ChangeExtension(workspaceName, VSCodeWorkspaceFileExtension);
             var codeworkspaceFile = Path.Combine(workspacePath, codeworkspaceName);
             {
                 if (File.Exists(codeworkspaceFile) == false)
@@ -351,7 +356,7 @@
 
             if (openCodeWorkspace)
             {
-                var codeworkspaceFiles = Directory.GetFiles(workspacePath, "*.code-workspace", new EnumerationOptions
+                var codeworkspaceFiles = Directory.GetFiles(workspacePath, $"*{VSCodeWorkspaceFileExtension}", new EnumerationOptions
                 {
                     IgnoreInaccessible = true,
                     RecurseSubdirectories = false,
