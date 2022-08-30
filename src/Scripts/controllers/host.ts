@@ -632,7 +632,7 @@ export class Host extends Dispatchable {
     }
 
     getDateConfigurationFromPackage(path: string) {
-        return <Promise<DateConfiguration>>this.apiCall("TemplateDevelopment/GetConfigurationFromPackage", { path: path });
+        return <Promise<DateConfiguration>>this.apiCall("TemplateDevelopment/GetPackageConfiguration", { path: path });
     }
 
     getOrganizationTemplates() {
@@ -642,7 +642,7 @@ export class Host extends Dispatchable {
 
     browseDateTemplate(includeWorkspaces = true) {
 
-        return this.apiCall("TemplateDevelopment/BrowseCustomPackage", { includeWorkspaces: includeWorkspaces})
+        return this.apiCall("TemplateDevelopment/BrowseUserCustomPackage", { includeWorkspaces: includeWorkspaces})
             .then((template: DateTemplate) => template && sanitizeTemplates([template])[0]);
     }
 

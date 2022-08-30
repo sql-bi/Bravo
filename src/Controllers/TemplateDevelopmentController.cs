@@ -55,12 +55,12 @@
         /// <response code="200">Status200OK - Success</response>
         /// <response code="204">Status204NoContent - User canceled action (e.g. 'Cancel' button has been pressed on a dialog box)</response>
         [HttpGet]
-        [ActionName("BrowseCustomPackage")]
+        [ActionName("BrowseUserCustomPackage")]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(CustomPackage))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesDefaultResponseType]
-        public IActionResult BrowseCustomPackage(bool includeWorkspaces, CancellationToken cancellationToken)
+        public IActionResult BrowseUserCustomPackage(bool includeWorkspaces, CancellationToken cancellationToken)
         {
             var filter = includeWorkspaces ? "Template package or workspace (*.package.json, *.code-workspace)|*.package.json;*.code-workspace" : "Template package (*.package.json)|*.package.json";
 
@@ -89,17 +89,17 @@
         }
 
         /// <summary>
-        /// Get the <see cref="DateConfiguration"/> of a package
+        /// Get the <see cref="DateConfiguration"/> from a custom template package file
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
         [HttpGet]
-        [ActionName("GetConfigurationFromPackage")]
+        [ActionName("GetPackageConfiguration")]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(DateConfiguration))]
         [ProducesDefaultResponseType]
-        public IActionResult GetConfigurationFromPackage(string path)
+        public IActionResult GetPackageConfiguration(string path)
         {
-            var configuration = _templateDevelopmentService.GetConfigurationFromPackage(path);
+            var configuration = _templateDevelopmentService.GetPackageConfiguration(path);
             return Ok(configuration);
         }
 

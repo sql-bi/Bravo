@@ -23,7 +23,7 @@
     {
         IEnumerable<DateConfiguration> GetConfigurations();
 
-        DateConfiguration? GetConfigurationFromPackage(string path);
+        DateConfiguration? GetPackageConfiguration(string path);
 
         CustomPackage GetUserCustomPackage(string path);
 
@@ -55,6 +55,7 @@
             _templateManager = new DaxTemplateManager();
             _serializerOptions = new JsonSerializerOptions(AppEnvironment.DefaultJsonOptions) { WriteIndented = true };
         }
+
         public IEnumerable<DateConfiguration> GetConfigurations()
         {
             var packages = _templateManager.GetPackages();
@@ -63,7 +64,7 @@
             return configurations;
         }
 
-        public DateConfiguration? GetConfigurationFromPackage(string path)
+        public DateConfiguration? GetPackageConfiguration(string path)
         {
             if (File.Exists(path))
             {
