@@ -29,7 +29,7 @@
 
         DateConfiguration? GetConfigurationFromPackage(string path);
 
-        CustomPackage GetCustomPackage(string path, CustomPackageType type);
+        CustomPackage GetUserCustomPackage(string path);
 
         CustomPackage ValidateCustomPackage(CustomPackage customPackage);
 
@@ -84,11 +84,11 @@
             return null;
         }
 
-        public CustomPackage GetCustomPackage(string path, CustomPackageType type)
+        public CustomPackage GetUserCustomPackage(string path)
         {
             var customPackage = new CustomPackage
             {
-                Type = type,
+                Type = CustomPackageType.User,
                 Path = null,
                 Name = null,
                 Description = null,
@@ -97,7 +97,7 @@
             };
             var extension = Path.GetExtension(path);
 
-            if (extension.EqualsI(".json")) // .package.json file
+            if (extension.EqualsI(".json") && path.EndsWithI(".package.json"))
             {
                 SetPackageFileDetails(path, customPackage);
 
@@ -161,7 +161,7 @@
 
             if (customPackage.Path is not null)
             {
-                var existingCustomPackage = GetCustomPackage(customPackage.Path, CustomPackageType.User);
+                var existingCustomPackage = GetUserCustomPackage(customPackage.Path);
 
                 if (customPackage.HasWorkspace == false && existingCustomPackage.HasWorkspace == true)
                 {
@@ -176,7 +176,7 @@
             {
                 var workspaceCodeworkspaceName = Path.ChangeExtension(customPackage.WorkspaceName, ".code-workspace");
                 var workspaceCodeworkspacePath = Path.Combine(customPackage.WorkspacePath, workspaceCodeworkspaceName);
-                var existingCustomPackage = GetCustomPackage(workspaceCodeworkspacePath, CustomPackageType.User);
+                var existingCustomPackage = GetUserCustomPackage(workspaceCodeworkspacePath);
 
                 if (customPackage.HasPackage == false && existingCustomPackage.HasPackage == true)
                 {

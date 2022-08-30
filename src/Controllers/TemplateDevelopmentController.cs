@@ -62,14 +62,11 @@
         [ProducesDefaultResponseType]
         public IActionResult BrowseCustomPackage(bool includeWorkspaces, CancellationToken cancellationToken)
         {
-            var filter = (includeWorkspaces ? 
-                "Bravo template files (*.package.json, *.code-workspace)|*.package.json;*.code-workspace" : 
-                "Bravo package files (*.package.json)|*.package.json"
-            );
+            var filter = includeWorkspaces ? "Template package or workspace (*.package.json, *.code-workspace)|*.package.json;*.code-workspace" : "Template package (*.package.json)|*.package.json";
 
-            if (WindowDialogHelper.OpenFileDialog(filter: filter, out var path, cancellationToken))
+            if (WindowDialogHelper.OpenFileDialog(filter, out var path, cancellationToken))
             {
-                var customPackage = _templateDevelopmentService.GetCustomPackage(path, CustomPackageType.User);
+                var customPackage = _templateDevelopmentService.GetUserCustomPackage(path);
                 return Ok(customPackage);
             }
 
