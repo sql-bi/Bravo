@@ -47,6 +47,15 @@
         If the status is set to Disabled, update checking and update notifications are forcibly disabled.
       </string>
       
+      <string id="CustomTemplatesEnabled">Configure the custom templates status</string>
+      <string id="CustomTemplatesEnabled_explanation">
+        If the status is set to Not Configured, this setting is configured according to user preferences.
+
+        If the status is set to Enabled, custom templates usage is forcibly enabled.
+
+        If the status is set to Disabled, custom templates usage is forcibly disabled.
+      </string>
+      
     </stringTable>
 
     <presentationTable>
