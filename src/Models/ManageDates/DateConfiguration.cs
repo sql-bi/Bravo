@@ -166,7 +166,6 @@
         [JsonPropertyName("holidaysEnabled")]
         public bool HolidaysEnabled { get; set; } = true;
 
-        [Required]
         [JsonPropertyName("holidaysTableName")]
         public string? HolidaysTableName { get; set; }
 
@@ -174,7 +173,6 @@
         [JsonPropertyName("holidaysTableValidation")]
         public TableValidation HolidaysTableValidation { get; set; } = TableValidation.Unknown;
 
-        [Required]
         [JsonPropertyName("holidaysDefinitionTableName")]
         public string? HolidaysDefinitionTableName { get; set; }
 
