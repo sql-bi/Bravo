@@ -87,37 +87,43 @@
         {
             var customPackage = new CustomPackage
             { 
-                Type = CustomPackageType.User 
+                Type = CustomPackageType.User,
             };
-            var extension = Path.GetExtension(path);
 
-            if (extension.EqualsI(".json") && path.EndsWithI(CustomPackageFileExtension))
+            var fileInfo = new FileInfo(path);
+            if (fileInfo.Exists == false)
+                return customPackage;
+
+            if (fileInfo.Name.EndsWithI(CustomPackageFileExtension))
             {
-                SetPackageFileDetails(path, customPackage);
-
-                var packageFileInfo = new FileInfo(path);
-                if (packageFileInfo.Directory?.Parent is not null)
+                if (fileInfo.Directory?.Parent is not null)
                 {
-                    var workspaceName = packageFileInfo.Directory.Parent.Name;
-                    var workspaceFolder = packageFileInfo.Directory.Parent.FullName;
-                    var workspaceCodeworkspaceName = Path.ChangeExtension(workspaceName, VSCodeWorkspaceFileExtension);
-                    var workspaceCodeworkspacePath = Path.Combine(workspaceFolder, workspaceCodeworkspaceName);
+                    SetPackageFileDetails(fileInfo.FullName, customPackage);
 
-                    SetPackageWorkspaceDetails(workspaceCodeworkspacePath, customPackage);
+                    var workspaceName = fileInfo.Directory.Parent.Name;
+                    if (workspaceName.EqualsI(customPackage.Name))
+                    {
+                        var workspacePath = fileInfo.Directory.Parent.FullName;
+                        var codeworkspaceFileName = Path.ChangeExtension(workspaceName, VSCodeWorkspaceFileExtension);
+                        var codeworkspaceFilePath = Path.Combine(workspacePath, codeworkspaceFileName);
+
+                        SetWorkspaceFileDetails(codeworkspaceFilePath, customPackage);
+                    }
                 }
             }
-            else if (extension.EqualsI(VSCodeWorkspaceFileExtension))
+            else if (fileInfo.Extension.EqualsI(VSCodeWorkspaceFileExtension))
             {
-                SetPackageWorkspaceDetails(path, customPackage);
-
-                var codeworkspaceFileInfo = new FileInfo(path);
-                if (codeworkspaceFileInfo.Directory is not null)
+                if (fileInfo.Directory is not null)
                 {
-                    var workspaceName = codeworkspaceFileInfo.Directory.Name;
-                    var pacakgeFileName = Path.ChangeExtension(workspaceName, CustomPackageFileExtension);
-                    var packageFilePath = Path.Combine(codeworkspaceFileInfo.Directory.FullName, WorkspaceDistributionFolderName, pacakgeFileName);
+                    SetWorkspaceFileDetails(fileInfo.FullName, customPackage);
 
-                    SetPackageFileDetails(packageFilePath, customPackage);
+                    if (customPackage.HasWorkspace)
+                    {
+                        var pacakgeFileName = Path.ChangeExtension(customPackage.WorkspaceName!, CustomPackageFileExtension);
+                        var packageFilePath = Path.Combine(customPackage.WorkspacePath!, WorkspaceDistributionFolderName, pacakgeFileName);
+
+                        SetPackageFileDetails(packageFilePath, customPackage);
+                    }
                 }
             }
 
@@ -136,14 +142,18 @@
                 }
             }
 
-            void SetPackageWorkspaceDetails(string path, CustomPackage customPackage)
+            void SetWorkspaceFileDetails(string path, CustomPackage customPackage)
             {
                 var codeworkspaceFileInfo = new FileInfo(path);
                 if (codeworkspaceFileInfo.Exists && codeworkspaceFileInfo.Directory is not null)
                 {
-                    customPackage.WorkspaceName = codeworkspaceFileInfo.Directory.Name;
-                    customPackage.WorkspacePath = codeworkspaceFileInfo.Directory.FullName;
-                    customPackage.HasWorkspace = true;
+                    var workspaceName = Path.GetFileNameWithoutExtension(codeworkspaceFileInfo.Name);
+                    if (workspaceName.EqualsI(codeworkspaceFileInfo.Directory.Name))
+                    {
+                        customPackage.WorkspaceName = workspaceName;
+                        customPackage.WorkspacePath = codeworkspaceFileInfo.Directory.FullName;
+                        customPackage.HasWorkspace = true;
+                    }
                 }
             }
         }

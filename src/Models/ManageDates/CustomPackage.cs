@@ -4,7 +4,6 @@
     using System.Diagnostics;
     using System.Text.Json.Serialization;
 
-    [DebuggerDisplay("{Name}")]
     public class CustomPackage
     {
         [Required]
