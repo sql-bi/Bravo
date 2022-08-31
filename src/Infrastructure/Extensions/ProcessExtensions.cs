@@ -120,7 +120,7 @@
 
             if (windowTitle.IsNullOrWhiteSpace())
             {
-                // PBIDesktop is opening or the SSAS instance/model is not yet ready
+                // PBIDesktop process is starting and/or the SSAS instance is not yet started and/or the model is not yet fully loaded
                 return null;
             }
             
