@@ -53,6 +53,11 @@
                     CustomTemplatesEnabledPolicy = policy;
                 }
                 {
+                    var (policy, value) = policyManager.GetBuiltInTemplatesEnabledPolicy();
+                    BuiltInTemplatesEnabled = value;
+                    BuiltInTemplatesEnabledPolicy = policy;
+                }
+                {
                     var (policy, value) = policyManager.GetCustomTemplatesOrganizationRepositoryPathPolicy();
                     CustomTemplatesOrganizationRepositoryPath = value;
                     CustomTemplatesOrganizationRepositoryPathPolicy = policy;
@@ -84,14 +89,22 @@
         [JsonPropertyName("useSystemBrowserForAuthenticationPolicy")]
         public PolicyStatus UseSystemBrowserForAuthenticationPolicy { get; } = PolicyStatus.NotConfigured;
 
+        /// <remarks>This property is not exposed in the <see cref="UserSettings"/> because it is not to be set by the user. It's serialized in <see cref="BravoPolicies"/> for the sole purpose of allowing the UI to read its value</remarks>
+        [JsonPropertyName("builtInTemplatesEnabled")]
+        public bool BuiltInTemplatesEnabled { get; } // TODO: Add policy to the ADMX template
+
+        [JsonPropertyName("builtInTemplatesEnabledPolicy")]
+        public PolicyStatus BuiltInTemplatesEnabledPolicy { get; } = PolicyStatus.NotConfigured;
+
         [JsonIgnore]
         public bool CustomTemplatesEnabled { get; }
 
         [JsonPropertyName("customTemplatesEnabledPolicy")]
         public PolicyStatus CustomTemplatesEnabledPolicy { get; } = PolicyStatus.NotConfigured;
 
-        [JsonIgnore]
-        public string? CustomTemplatesOrganizationRepositoryPath { get; }
+        /// <remarks>This property is not exposed in the <see cref="UserSettings"/> because it is not to be set by the user. It's serialized in <see cref="BravoPolicies"/> for the sole purpose of allowing the UI to read its value</remarks>
+        [JsonPropertyName("customTemplatesOrganizationRepositoryPath")]
+        public string? CustomTemplatesOrganizationRepositoryPath { get; } // TODO: Add policy to the ADMX template
 
         [JsonPropertyName("customTemplatesOrganizationRepositoryPathPolicy")]
         public PolicyStatus CustomTemplatesOrganizationRepositoryPathPolicy { get; } = PolicyStatus.NotConfigured;

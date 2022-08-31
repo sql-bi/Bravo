@@ -1,6 +1,5 @@
 ﻿namespace Sqlbi.Bravo.Models
 {
-    using Sqlbi.Bravo.Infrastructure;
     using Sqlbi.Bravo.Infrastructure.Configuration;
     using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
     using System.Text.Json;
@@ -48,9 +47,6 @@
 
         [JsonPropertyName("customTemplatesEnabled")]
         public bool CustomTemplatesEnabled { get; set; } = UserSettings.DefaultCustomTemplatesEnabled;
-
-        [JsonPropertyName("manageDatesPackageRepository")]
-        public string? ManageDatesPackageRepository { get; set; }
 
         [JsonPropertyName("customOptions")]
         public JsonElement? CustomOptions { get; set; }

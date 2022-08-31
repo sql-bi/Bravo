@@ -6,6 +6,8 @@
     using Microsoft.AnalysisServices.AdomdClient;
     using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Infrastructure.Helpers;
+    using Sqlbi.Bravo.Infrastructure.Security.Policies;
+    using Sqlbi.Bravo.Models;
     using Sqlbi.Bravo.Models.ManageDates;
     using System;
     using System.Collections.Generic;
@@ -55,6 +57,14 @@
 
         public IEnumerable<Package> GetPackages()
         {
+            if (BravoPolicies.Current.BuiltInTemplatesEnabledPolicy == PolicyStatus.Forced)
+            {
+                if (BravoPolicies.Current.BuiltInTemplatesEnabled == false)
+                {
+                    return Array.Empty<Package>();
+                }
+            }
+
             try
             {
                 var files = Package.FindTemplateFiles(CachePath);

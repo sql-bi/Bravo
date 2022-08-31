@@ -38,6 +38,8 @@
         }
 
         public (PolicyStatus Policy, bool Value) GetUpdateCheckEnabledPolicy() => GetBoolPolicy(valueName: "UpdateCheckEnabled", relativeSubkeyName: OptionSettingsName);
+        
+        public (PolicyStatus Policy, bool Value) GetBuiltInTemplatesEnabledPolicy() => GetBoolPolicy(valueName: "BuiltInTemplatesEnabled", relativeSubkeyName: OptionSettingsName);
 
         public (PolicyStatus Policy, bool Value) GetCustomTemplatesEnabledPolicy() => GetBoolPolicy(valueName: "CustomTemplatesEnabled", relativeSubkeyName: OptionSettingsName);
 
