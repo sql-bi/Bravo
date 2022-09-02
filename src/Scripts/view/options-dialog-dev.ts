@@ -319,7 +319,7 @@ export class OptionsDialogDev {
             ${i18n(strings.devTemplatesVSCodeMessage, { extension: i18n(strings.appExtensionName) })}
             <ol>
                 <li><span class="link" href="https://code.visualstudio.com/">${i18n(strings.devTemplatesVSCodeDownload)}</span></li>
-                <li><span class="link" href="https://marketplace.visualstudio.com/items?itemName=sqlbi.bravo">${i18n(strings.devTemplatesVSCodeExtensionDownload, { extension: i18n(strings.appExtensionName) })}</span></li>
+                <li><span class="link" href="https://marketplace.visualstudio.com/items?itemName=sqlbi.bravo-template-editor">${i18n(strings.devTemplatesVSCodeExtensionDownload, { extension: i18n(strings.appExtensionName) })}</span></li>
             </ol>
         `;
         return dialog.show(html);
