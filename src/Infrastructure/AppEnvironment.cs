@@ -34,7 +34,18 @@
         public static readonly string TelemetryInstrumentationKey = "47a8970c-6293-408a-9cce-5b7b311574d3";
         public static readonly string PBIDesktopProcessName = "PBIDesktop";
         public static readonly string PBIDesktopSSASProcessImageName = "msmdsrv.exe";
-        public static readonly string PBIDesktopMainWindowTitleSuffix = " - Power BI Desktop";
+        public static readonly string[] PBIDesktopMainWindowTitleSuffixes = new string[]
+        {
+            // Different characters are used as a separator in the PBIDesktop window title depending on the current UI culture/localization
+            // See https://github.com/sql-bi/Bravo/issues/476
+
+            " \u002D Power BI Desktop", // Dash Punctuation - minus hyphen
+            " \u2212 Power BI Desktop", // Math Symbol - minus sign
+            " \u2011 Power BI Desktop", // Dash Punctuation - non-breaking hyphen
+            " \u2013 Power BI Desktop", // Dash Punctuation - en dash
+            " \u2014 Power BI Desktop", // Dash Punctuation - em dash
+            " \u2015 Power BI Desktop", // Dash Punctuation - horizontal bar
+        };
         public static readonly TimeSpan MSALSignInTimeout = TimeSpan.FromMinutes(5);
         public static readonly Color ThemeColorDark = ColorTranslator.FromHtml("#202020");
         public static readonly Color ThemeColorLight = ColorTranslator.FromHtml("#F3F3F3");
