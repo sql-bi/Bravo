@@ -2,7 +2,6 @@
   "$schema": "https://raw.githubusercontent.com/sql-bi/Bravo/alberto/templateWorkspace/src/Assets/TemplateDevelopment/Schemas/measures-template.schema.json",
   "_comment": "Standard Time Intelligence",
   "_comment1": "NOTE: current version does not support filter safe filters (Day of Week, Working Days, Holidays)",
-  "_comment2": "NOTE: current version does not support fiscal calculations",
   "TargetTable": {
     "SQLBI_CalendarType": "Calendar"
   },
@@ -393,7 +392,7 @@
       ]
     },
     {
-      "Name": "QTDOPQ %",
+      "Name": "QDTOPQ %",
       "DisplayFolder": "Growth over full period",
       "FormatString": "0.00%",
       "MultiLineExpression": [

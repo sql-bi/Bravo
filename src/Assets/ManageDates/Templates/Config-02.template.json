@@ -1,7 +1,19 @@
 {
   "$schema": "https://raw.githubusercontent.com/sql-bi/Bravo/alberto/templateWorkspace/src/Assets/TemplateDevelopment/Schemas/engine-configuration.schema.json",
-  "Description": "Monthly calendar",
+  "Description": "Standard fiscal calendar",
   "Templates": [
+    {
+      "Class": "HolidaysDefinitionTable",
+      "Table": "HolidaysDefinition",
+      "Template": "HolidaysDefinition.json",
+      "IsHidden": true
+    },
+    {
+      "Class": "HolidaysTable",
+      "Table": "Holidays",
+      "Template": null,
+      "IsHidden": true
+    },
     {
       "Class": "CustomDateTable",
       "Table": "Date",
@@ -16,8 +28,10 @@
       "Template": "TimeIntelligence-02.json",
       "Properties": {
         "__DisplayFolderRule": "Time intelligence\\@_MEASURE_@\\@_TEMPLATEFOLDER_@",
-        "DisplayFolderRule": "Time intelligence\\@_TEMPLATEFOLDER_@\\@_TEMPLATE_@",
-        "_DisplayFolderRule": "Time intelligence\\@_TEMPLATEFOLDER_@\\@_MEASURE_@"
+        "_DisplayFolderRule": "Time intelligence\\@_TEMPLATEFOLDER_@\\@_TEMPLATE_@",
+        "___DisplayFolderRule": "Time intelligence\\@_TEMPLATEFOLDER_@\\@_MEASURE_@",
+        "DisplayFolderRule": "Time intelligence\\@_TEMPLATEFOLDER_@\\@_MEASUREFOLDER_@\\@_MEASURE_@",
+        "DisplayFolderRuleSingleInstanceMeasures": "Hidden Time Intelligence"
       },
       "_comment": "TargetMeasures can override the default setting"
     }
@@ -35,10 +49,20 @@
   "LastYearMax": null,
   "AutoScan": "Full",
   "DefaultVariables": {
-    "__FirstFiscalMonth": "4",
-    "__MonthsInYear": "12"
+    "__FirstFiscalMonth": "7",
+    "__FirstDayOfWeek": "0"
   },
   "IsoCountry": "US",
+  "InLieuOfPrefix": "(in lieu of ",
+  "InLieuOfSuffix": ")",
+  "WorkingDays": "{ 2, 3, 4, 5, 6 }",
+  "HolidaysDefinitionTable": "HolidaysDefinition",
+  "HolidaysReference": {
+    "TableName": "Holidays",
+    "DateColumnName": "Holiday Date",
+    "HolidayColumnName": "Holiday Name"
+  },
+  "TableSingleInstanceMeasures": null,
   "AutoNaming": "Prefix",
   "TargetMeasures": []
 }

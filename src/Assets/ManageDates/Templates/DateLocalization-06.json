@@ -9,29 +9,6 @@
       },
       "Hierarchies": [
         {
-          "OriginalName": "Calendar",
-          "Name": "Solare",
-          "Description": "",
-          "DisplayFolders": "",
-          "Levels": [
-            {
-              "OriginalName": "Year",
-              "Name": "Anno",
-              "Description": ""
-            },
-            {
-              "OriginalName": "Month",
-              "Name": "Mese",
-              "Description": ""
-            },
-            {
-              "OriginalName": "Date",
-              "Name": "Data",
-              "Description": ""
-            }
-          ]
-        },
-        {
           "OriginalName": "Fiscal",
           "Name": "Fiscale",
           "Description": "",
@@ -43,13 +20,13 @@
               "Description": ""
             },
             {
-              "OriginalName": "Month",
-              "Name": "Mese",
+              "OriginalName": "Quarter",
+              "Name": "Trimestre",
               "Description": ""
             },
             {
-              "OriginalName": "Date",
-              "Name": "Data",
+              "OriginalName": "Month",
+              "Name": "Mese",
               "Description": ""
             }
           ]
@@ -64,26 +41,14 @@
           "FormatString": null
         },
         {
-          "OriginalName": "Year",
-          "Name": "Anno",
+          "OriginalName": "DateKey",
+          "Name": "DateKey",
           "Description": "",
           "DisplayFolders": ""
         },
         {
-          "OriginalName": "Year Quarter Number",
-          "Name": "Anno Trimestre Numero",
-          "Description": "",
-          "DisplayFolders": ""
-        },
-        {
-          "OriginalName": "Year Quarter",
-          "Name": "Anno Trimestre",
-          "Description": "",
-          "DisplayFolders": ""
-        },
-        {
-          "OriginalName": "Quarter",
-          "Name": "Trimestre",
+          "OriginalName": "Sequential Day Number",
+          "Name": "Numero giorno sequenziale",
           "Description": "",
           "DisplayFolders": ""
         },
@@ -96,30 +61,6 @@
         {
           "OriginalName": "Year Month Number",
           "Name": "Anno Mese Numero",
-          "Description": "",
-          "DisplayFolders": ""
-        },
-        {
-          "OriginalName": "Month",
-          "Name": "Mese",
-          "Description": "",
-          "DisplayFolders": ""
-        },
-        {
-          "OriginalName": "Month Number",
-          "Name": "Mese Numero",
-          "Description": "",
-          "DisplayFolders": ""
-        },
-        {
-          "OriginalName": "Day of Week",
-          "Name": "Giorno Settimana",
-          "Description": "",
-          "DisplayFolders": ""
-        },
-        {
-          "OriginalName": "Day of Week Number",
-          "Name": "Giorno Settimana Numero",
           "Description": "",
           "DisplayFolders": ""
         },
@@ -150,6 +91,48 @@
         {
           "OriginalName": "Fiscal Quarter",
           "Name": "Trimestre Fiscale",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Month",
+          "Name": "Mese",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Fiscal Month Number",
+          "Name": "Mese Fiscale Numero",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Fiscal Month in Quarter Number",
+          "Name": "Mese Fiscale in Trimestre Numero",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Day of Week",
+          "Name": "Giorno Settimana",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Day of Week Number",
+          "Name": "Giorno Settimana Numero",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Day of Month Number",
+          "Name": "Giorno Mese Numero",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Day of Fiscal Year Number",
+          "Name": "Giorno Anno Fiscale Numero",
           "Description": "",
           "DisplayFolders": ""
         },
@@ -194,29 +177,6 @@
       },
       "Hierarchies": [
         {
-          "OriginalName": "Calendar",
-          "Name": "Solaire",
-          "Description": "",
-          "DisplayFolders": "",
-          "Levels": [
-            {
-              "OriginalName": "Year",
-              "Name": "An",
-              "Description": ""
-            },
-            {
-              "OriginalName": "Month",
-              "Name": "Mois",
-              "Description": ""
-            },
-            {
-              "OriginalName": "Date",
-              "Name": "Date",
-              "Description": ""
-            }
-          ]
-        },
-        {
           "OriginalName": "Fiscal",
           "Name": "Fiscal",
           "Description": "",
@@ -228,13 +188,13 @@
               "Description": ""
             },
             {
-              "OriginalName": "Month",
-              "Name": "Mois",
+              "OriginalName": "Quarter",
+              "Name": "Trimestre",
               "Description": ""
             },
             {
-              "OriginalName": "Date",
-              "Name": "Date",
+              "OriginalName": "Month",
+              "Name": "Mois",
               "Description": ""
             }
           ]
@@ -249,26 +209,14 @@
           "FormatString": null
         },
         {
-          "OriginalName": "Year",
-          "Name": "An",
+          "OriginalName": "DateKey",
+          "Name": "DateKey",
           "Description": "",
           "DisplayFolders": ""
         },
         {
-          "OriginalName": "Year Quarter Number",
-          "Name": "Année Trimestre Numéro",
-          "Description": "",
-          "DisplayFolders": ""
-        },
-        {
-          "OriginalName": "Year Quarter",
-          "Name": "Année Trimestre",
-          "Description": "",
-          "DisplayFolders": ""
-        },
-        {
-          "OriginalName": "Quarter",
-          "Name": "Trimestre",
+          "OriginalName": "Sequential Day Number",
+          "Name": "Numéro de jour séquentiel",
           "Description": "",
           "DisplayFolders": ""
         },
@@ -281,30 +229,6 @@
         {
           "OriginalName": "Year Month Number",
           "Name": "Année Mois Numéro",
-          "Description": "",
-          "DisplayFolders": ""
-        },
-        {
-          "OriginalName": "Month",
-          "Name": "Mois",
-          "Description": "",
-          "DisplayFolders": ""
-        },
-        {
-          "OriginalName": "Month Number",
-          "Name": "Mois Numéro",
-          "Description": "",
-          "DisplayFolders": ""
-        },
-        {
-          "OriginalName": "Day of Week",
-          "Name": "Jour de la Semaine",
-          "Description": "",
-          "DisplayFolders": ""
-        },
-        {
-          "OriginalName": "Day of Week Number",
-          "Name": "Jour de la Semaine Numéro",
           "Description": "",
           "DisplayFolders": ""
         },
@@ -335,6 +259,48 @@
         {
           "OriginalName": "Fiscal Quarter",
           "Name": "Trimestre Fiscal",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Month",
+          "Name": "Mois",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Fiscal Month Number",
+          "Name": "Mois Fiscal Numéro",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Fiscal Month in Quarter Number",
+          "Name": "Mois Fiscal en Trimestre Numéro",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Day of Week",
+          "Name": "Giorno Settimana",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Day of Week",
+          "Name": "Jour de la Semaine",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Day of Week Number",
+          "Name": "Jour de la Semaine Numéro",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Day of Fiscal Year Number",
+          "Name": "Jour de l'Année Fiscale Numéro",
           "Description": "",
           "DisplayFolders": ""
         },
@@ -379,29 +345,6 @@
       },
       "Hierarchies": [
         {
-          "OriginalName": "Calendar",
-          "Name": "Solar",
-          "Description": "",
-          "DisplayFolders": "",
-          "Levels": [
-            {
-              "OriginalName": "Year",
-              "Name": "Año",
-              "Description": ""
-            },
-            {
-              "OriginalName": "Month",
-              "Name": "Mes",
-              "Description": ""
-            },
-            {
-              "OriginalName": "Date",
-              "Name": "Fecha",
-              "Description": ""
-            }
-          ]
-        },
-        {
           "OriginalName": "Fiscal",
           "Name": "Fiscal",
           "Description": "",
@@ -413,13 +356,13 @@
               "Description": ""
             },
             {
-              "OriginalName": "Month",
-              "Name": "Mes",
+              "OriginalName": "Quarter",
+              "Name": "Trimestre",
               "Description": ""
             },
             {
-              "OriginalName": "Date",
-              "Name": "Fecha",
+              "OriginalName": "Month",
+              "Name": "Mes",
               "Description": ""
             }
           ]
@@ -434,26 +377,14 @@
           "FormatString": null
         },
         {
-          "OriginalName": "Year",
-          "Name": "Año",
+          "OriginalName": "DateKey",
+          "Name": "DateKey",
           "Description": "",
           "DisplayFolders": ""
         },
         {
-          "OriginalName": "Year Quarter Number",
-          "Name": "Año Trimestre Número",
-          "Description": "",
-          "DisplayFolders": ""
-        },
-        {
-          "OriginalName": "Year Quarter",
-          "Name": "Año Trimestre",
-          "Description": "",
-          "DisplayFolders": ""
-        },
-        {
-          "OriginalName": "Quarter",
-          "Name": "Trimestre",
+          "OriginalName": "Sequential Day Number",
+          "Name": "Número de día secuencial",
           "Description": "",
           "DisplayFolders": ""
         },
@@ -466,30 +397,6 @@
         {
           "OriginalName": "Year Month Number",
           "Name": "Año Mes Número",
-          "Description": "",
-          "DisplayFolders": ""
-        },
-        {
-          "OriginalName": "Month",
-          "Name": "Mes",
-          "Description": "",
-          "DisplayFolders": ""
-        },
-        {
-          "OriginalName": "Month Number",
-          "Name": "Mes Número",
-          "Description": "",
-          "DisplayFolders": ""
-        },
-        {
-          "OriginalName": "Day of Week",
-          "Name": "Día de la semana",
-          "Description": "",
-          "DisplayFolders": ""
-        },
-        {
-          "OriginalName": "Day of Week Number",
-          "Name": "Número de día de la semana",
           "Description": "",
           "DisplayFolders": ""
         },
@@ -520,6 +427,42 @@
         {
           "OriginalName": "Fiscal Quarter",
           "Name": "Trimestre Fiscal",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Month",
+          "Name": "Mes",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Fiscal Month Number",
+          "Name": "Mes Fiscal Número",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Fiscal Month in Quarter Number",
+          "Name": "Mes Fiscal en Trimestre Número",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Day of Week",
+          "Name": "Día de la semana",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Day of Week Number",
+          "Name": "Número de día de la semana",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Day of Fiscal Year Number",
+          "Name": "Día del Año Fiscal Número",
           "Description": "",
           "DisplayFolders": ""
         },
@@ -564,29 +507,6 @@
       },
       "Hierarchies": [
         {
-          "OriginalName": "Calendar",
-          "Name": "Solar",
-          "Description": "",
-          "DisplayFolders": "",
-          "Levels": [
-            {
-              "OriginalName": "Year",
-              "Name": "Ano",
-              "Description": ""
-            },
-            {
-              "OriginalName": "Month",
-              "Name": "Mês",
-              "Description": ""
-            },
-            {
-              "OriginalName": "Date",
-              "Name": "Data",
-              "Description": ""
-            }
-          ]
-        },
-        {
           "OriginalName": "Fiscal",
           "Name": "Fiscal",
           "Description": "",
@@ -598,13 +518,13 @@
               "Description": ""
             },
             {
-              "OriginalName": "Month",
-              "Name": "Mês",
+              "OriginalName": "Quarter",
+              "Name": "Trimestre",
               "Description": ""
             },
             {
-              "OriginalName": "Date",
-              "Name": "Data",
+              "OriginalName": "Month",
+              "Name": "Mês",
               "Description": ""
             }
           ]
@@ -619,26 +539,14 @@
           "FormatString": null
         },
         {
-          "OriginalName": "Year",
-          "Name": "Ano",
+          "OriginalName": "DateKey",
+          "Name": "DateKey",
           "Description": "",
           "DisplayFolders": ""
         },
         {
-          "OriginalName": "Year Quarter Number",
-          "Name": "Ano Trimestre Número",
-          "Description": "",
-          "DisplayFolders": ""
-        },
-        {
-          "OriginalName": "Year Quarter",
-          "Name": "Ano Trimestre",
-          "Description": "",
-          "DisplayFolders": ""
-        },
-        {
-          "OriginalName": "Quarter",
-          "Name": "Trimestre",
+          "OriginalName": "Sequential Day Number",
+          "Name": "Número do Dia Sequencial",
           "Description": "",
           "DisplayFolders": ""
         },
@@ -651,30 +559,6 @@
         {
           "OriginalName": "Year Month Number",
           "Name": "Ano Mês Número",
-          "Description": "",
-          "DisplayFolders": ""
-        },
-        {
-          "OriginalName": "Month",
-          "Name": "Mês",
-          "Description": "",
-          "DisplayFolders": ""
-        },
-        {
-          "OriginalName": "Month Number",
-          "Name": "Mês Número",
-          "Description": "",
-          "DisplayFolders": ""
-        },
-        {
-          "OriginalName": "Day of Week",
-          "Name": "Dia da Semana",
-          "Description": "",
-          "DisplayFolders": ""
-        },
-        {
-          "OriginalName": "Day of Week Number",
-          "Name": "Dia da Semana Número",
           "Description": "",
           "DisplayFolders": ""
         },
@@ -705,6 +589,48 @@
         {
           "OriginalName": "Fiscal Quarter",
           "Name": "Trimestre Fiscal",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Month",
+          "Name": "Mês",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Fiscal Month Number",
+          "Name": "Mês Fiscal Número",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Fiscal Month in Quarter Number",
+          "Name": "Mês Fiscal no Trimestre Número",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Day of Week",
+          "Name": "Dia da Semana",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Day of Week Number",
+          "Name": "Dia da Semana Número",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Day of Month Number",
+          "Name": "Dia do Mês Número",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Day of Fiscal Year Number",
+          "Name": "Dia do Ano Fiscal Número",
           "Description": "",
           "DisplayFolders": ""
         },
@@ -749,29 +675,6 @@
       },
       "Hierarchies": [
         {
-          "OriginalName": "Calendar",
-          "Name": "Kalender",
-          "Description": "",
-          "DisplayFolders": "",
-          "Levels": [
-            {
-              "OriginalName": "Year",
-              "Name": "Jahr",
-              "Description": ""
-            },
-            {
-              "OriginalName": "Month",
-              "Name": "Monat",
-              "Description": ""
-            },
-            {
-              "OriginalName": "Date",
-              "Name": "Datum",
-              "Description": ""
-            }
-          ]
-        },
-        {
           "OriginalName": "Fiscal",
           "Name": "Fiskalisch",
           "Description": "",
@@ -783,13 +686,13 @@
               "Description": ""
             },
             {
-              "OriginalName": "Month",
-              "Name": "Monat",
+              "OriginalName": "Quarter",
+              "Name": "Quartal",
               "Description": ""
             },
             {
-              "OriginalName": "Date",
-              "Name": "Datum",
+              "OriginalName": "Month",
+              "Name": "Monat",
               "Description": ""
             }
           ]
@@ -804,26 +707,14 @@
           "FormatString": null
         },
         {
-          "OriginalName": "Year",
-          "Name": "Jahr",
+          "OriginalName": "DateKey",
+          "Name": "DatumKey",
           "Description": "",
           "DisplayFolders": ""
         },
         {
-          "OriginalName": "Year Quarter Number",
-          "Name": "Jahr Quartal Nummer",
-          "Description": "",
-          "DisplayFolders": ""
-        },
-        {
-          "OriginalName": "Year Quarter",
-          "Name": "Jahr Quartal",
-          "Description": "",
-          "DisplayFolders": ""
-        },
-        {
-          "OriginalName": "Quarter",
-          "Name": "Quartal",
+          "OriginalName": "Sequential Day Number",
+          "Name": "Laufende Tagesnummer",
           "Description": "",
           "DisplayFolders": ""
         },
@@ -836,30 +727,6 @@
         {
           "OriginalName": "Year Month Number",
           "Name": "Jahr Monat Nummer",
-          "Description": "",
-          "DisplayFolders": ""
-        },
-        {
-          "OriginalName": "Month",
-          "Name": "Monat",
-          "Description": "",
-          "DisplayFolders": ""
-        },
-        {
-          "OriginalName": "Month Number",
-          "Name": "Monat Nummer",
-          "Description": "",
-          "DisplayFolders": ""
-        },
-        {
-          "OriginalName": "Day of Week",
-          "Name": "Wochentag",
-          "Description": "",
-          "DisplayFolders": ""
-        },
-        {
-          "OriginalName": "Day of Week Number",
-          "Name": "Wochentagnummer",
           "Description": "",
           "DisplayFolders": ""
         },
@@ -890,6 +757,48 @@
         {
           "OriginalName": "Fiscal Quarter",
           "Name": "Geschäftsquartal",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Month",
+          "Name": "Monat",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Fiscal Month Number",
+          "Name": "Geschäftsmonatsnummer",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Fiscal Month in Quarter Number",
+          "Name": "Geschäftsjahr im Quartal Nummer",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Day of Week",
+          "Name": "Wochentag",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Day of Week Number",
+          "Name": "Wochentagnummer",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Day of Month Number",
+          "Name": "Tag des Monats Nummer",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Day of Fiscal Year Number",
+          "Name": "Tag der Geschäftsjahresnummer",
           "Description": "",
           "DisplayFolders": ""
         },
@@ -934,29 +843,6 @@
       },
       "Hierarchies": [
         {
-          "OriginalName": "Calendar",
-          "Name": "日历",
-          "Description": "",
-          "DisplayFolders": "",
-          "Levels": [
-            {
-              "OriginalName": "Year",
-              "Name": "年份",
-              "Description": ""
-            },
-            {
-              "OriginalName": "Month",
-              "Name": "月份名称",
-              "Description": ""
-            },
-            {
-              "OriginalName": "Date",
-              "Name": "日期",
-              "Description": ""
-            }
-          ]
-        },
-        {
           "OriginalName": "Fiscal",
           "Name": "财政",
           "Description": "",
@@ -968,13 +854,13 @@
               "Description": ""
             },
             {
-              "OriginalName": "Month",
-              "Name": "月份名称",
+              "OriginalName": "Quarter",
+              "Name": "季度",
               "Description": ""
             },
             {
-              "OriginalName": "Date",
-              "Name": "日期",
+              "OriginalName": "Month",
+              "Name": "月份名称",
               "Description": ""
             }
           ]
@@ -989,26 +875,14 @@
           "FormatString": null
         },
         {
-          "OriginalName": "Year",
-          "Name": "年份",
+          "OriginalName": "DateKey",
+          "Name": "日期键",
           "Description": "",
           "DisplayFolders": ""
         },
         {
-          "OriginalName": "Year Quarter Number",
-          "Name": "年季数",
-          "Description": "",
-          "DisplayFolders": ""
-        },
-        {
-          "OriginalName": "Year Quarter",
-          "Name": "年季名称",
-          "Description": "",
-          "DisplayFolders": ""
-        },
-        {
-          "OriginalName": "Quarter",
-          "Name": "季度名称",
+          "OriginalName": "Sequential Day Number",
+          "Name": "全局日期序号",
           "Description": "",
           "DisplayFolders": ""
         },
@@ -1021,30 +895,6 @@
         {
           "OriginalName": "Year Month Number",
           "Name": "年月数",
-          "Description": "",
-          "DisplayFolders": ""
-        },
-        {
-          "OriginalName": "Month",
-          "Name": "月份名称",
-          "Description": "",
-          "DisplayFolders": ""
-        },
-        {
-          "OriginalName": "Month Number",
-          "Name": "月份数",
-          "Description": "",
-          "DisplayFolders": ""
-        },
-        {
-          "OriginalName": "Day of Week",
-          "Name": "周内日",
-          "Description": "",
-          "DisplayFolders": ""
-        },
-        {
-          "OriginalName": "Day of Week Number",
-          "Name": "周内日序号",
           "Description": "",
           "DisplayFolders": ""
         },
@@ -1075,6 +925,48 @@
         {
           "OriginalName": "Fiscal Quarter",
           "Name": "财政季度名称",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Month",
+          "Name": "月份名称",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Fiscal Month Number",
+          "Name": "财政月份数",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Fiscal Month in Quarter Number",
+          "Name": "当前财政季度中的财政月份数",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Day of Week",
+          "Name": "周内日",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Day of Week Number",
+          "Name": "周内日序号",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Day of Month Number",
+          "Name": "当前月份下日期序号",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Day of Fiscal Year Number",
+          "Name": "当前财政年度下日期序号",
           "Description": "",
           "DisplayFolders": ""
         },

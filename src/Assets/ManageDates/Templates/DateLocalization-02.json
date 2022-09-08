@@ -9,8 +9,8 @@
       },
       "Hierarchies": [
         {
-          "OriginalName": "Fiscal Year-Month",
-          "Name": "Anno-Mese Fiscale",
+          "OriginalName": "Calendar",
+          "Name": "Solare",
           "Description": "",
           "DisplayFolders": "",
           "Levels": [
@@ -22,36 +22,18 @@
             {
               "OriginalName": "Month",
               "Name": "Mese",
+              "Description": ""
+            },
+            {
+              "OriginalName": "Date",
+              "Name": "Data",
               "Description": ""
             }
           ]
         },
         {
-          "OriginalName": "Fiscal Year-Quarter",
-          "Name": "Anno-Trimestre Fiscale",
-          "Description": "",
-          "DisplayFolders": "",
-          "Levels": [
-            {
-              "OriginalName": "Year",
-              "Name": "Anno",
-              "Description": ""
-            },
-            {
-              "OriginalName": "Quarter",
-              "Name": "Trimestre",
-              "Description": ""
-            },
-            {
-              "OriginalName": "Month",
-              "Name": "Mese",
-              "Description": ""
-            }
-          ]
-        },
-        {
-          "OriginalName": "Year-Month",
-          "Name": "Anno-Mese",
+          "OriginalName": "Fiscal",
+          "Name": "Fiscale",
           "Description": "",
           "DisplayFolders": "",
           "Levels": [
@@ -64,28 +46,10 @@
               "OriginalName": "Month",
               "Name": "Mese",
               "Description": ""
-            }
-          ]
-        },
-        {
-          "OriginalName": "Year-Quarter",
-          "Name": "Anno-Trimestre",
-          "Description": "",
-          "DisplayFolders": "",
-          "Levels": [
-            {
-              "OriginalName": "Year",
-              "Name": "Anno",
-              "Description": ""
             },
             {
-              "OriginalName": "Quarter",
-              "Name": "Trimestre",
-              "Description": ""
-            },
-            {
-              "OriginalName": "Month",
-              "Name": "Mese",
+              "OriginalName": "Date",
+              "Name": "Data",
               "Description": ""
             }
           ]
@@ -114,12 +78,6 @@
         {
           "OriginalName": "Year Quarter",
           "Name": "Anno Trimestre",
-          "Description": "",
-          "DisplayFolders": ""
-        },
-        {
-          "OriginalName": "Quarter",
-          "Name": "Trimestre",
           "Description": "",
           "DisplayFolders": ""
         },
@@ -230,8 +188,8 @@
       },
       "Hierarchies": [
         {
-          "OriginalName": "Fiscal Year-Month",
-          "Name": "Année-Mois Fiscal",
+          "OriginalName": "Calendar",
+          "Name": "Solaire",
           "Description": "",
           "DisplayFolders": "",
           "Levels": [
@@ -243,36 +201,18 @@
             {
               "OriginalName": "Month",
               "Name": "Mois",
+              "Description": ""
+            },
+            {
+              "OriginalName": "Date",
+              "Name": "Date",
               "Description": ""
             }
           ]
         },
         {
-          "OriginalName": "Fiscal Year-Quarter",
-          "Name": "Année-Trimestre Fiscal",
-          "Description": "",
-          "DisplayFolders": "",
-          "Levels": [
-            {
-              "OriginalName": "Year",
-              "Name": "An",
-              "Description": ""
-            },
-            {
-              "OriginalName": "Quarter",
-              "Name": "Trimestre",
-              "Description": ""
-            },
-            {
-              "OriginalName": "Month",
-              "Name": "Mois",
-              "Description": ""
-            }
-          ]
-        },
-        {
-          "OriginalName": "Year-Month",
-          "Name": "Année-Mois",
+          "OriginalName": "Fiscal",
+          "Name": "Fiscal",
           "Description": "",
           "DisplayFolders": "",
           "Levels": [
@@ -285,28 +225,10 @@
               "OriginalName": "Month",
               "Name": "Mois",
               "Description": ""
-            }
-          ]
-        },
-        {
-          "OriginalName": "Year-Quarter",
-          "Name": "Année-Trimestre",
-          "Description": "",
-          "DisplayFolders": "",
-          "Levels": [
-            {
-              "OriginalName": "Year",
-              "Name": "An",
-              "Description": ""
             },
             {
-              "OriginalName": "Quarter",
-              "Name": "Trimestre",
-              "Description": ""
-            },
-            {
-              "OriginalName": "Month",
-              "Name": "Mois",
+              "OriginalName": "Date",
+              "Name": "Date",
               "Description": ""
             }
           ]
@@ -335,12 +257,6 @@
         {
           "OriginalName": "Year Quarter",
           "Name": "Année Trimestre",
-          "Description": "",
-          "DisplayFolders": ""
-        },
-        {
-          "OriginalName": "Quarter",
-          "Name": "Trimestre",
           "Description": "",
           "DisplayFolders": ""
         },
@@ -394,7 +310,7 @@
         },
         {
           "OriginalName": "Fiscal Year Quarter",
-          "Name": "Année Trimestre Fiscal",
+          "Name": "Anno Trimestre Fiscale",
           "Description": "",
           "DisplayFolders": ""
         },
@@ -407,12 +323,6 @@
         {
           "OriginalName": "Fiscal Quarter",
           "Name": "Trimestre Fiscal",
-          "Description": "",
-          "DisplayFolders": ""
-        },
-        {
-          "OriginalName": "Fiscal Month",
-          "Name": "Mois Fiscal",
           "Description": "",
           "DisplayFolders": ""
         },
@@ -457,8 +367,8 @@
       },
       "Hierarchies": [
         {
-          "OriginalName": "Fiscal Year-Month",
-          "Name": "Año-Mes Fiscal",
+          "OriginalName": "Calendar",
+          "Name": "Solar",
           "Description": "",
           "DisplayFolders": "",
           "Levels": [
@@ -470,36 +380,18 @@
             {
               "OriginalName": "Month",
               "Name": "Mes",
+              "Description": ""
+            },
+            {
+              "OriginalName": "Date",
+              "Name": "Fecha",
               "Description": ""
             }
           ]
         },
         {
-          "OriginalName": "Fiscal Year-Quarter",
-          "Name": "Año-Trimestre Fiscal",
-          "Description": "",
-          "DisplayFolders": "",
-          "Levels": [
-            {
-              "OriginalName": "Year",
-              "Name": "Año",
-              "Description": ""
-            },
-            {
-              "OriginalName": "Quarter",
-              "Name": "Trimestre",
-              "Description": ""
-            },
-            {
-              "OriginalName": "Month",
-              "Name": "Mes",
-              "Description": ""
-            }
-          ]
-        },
-        {
-          "OriginalName": "Year-Month",
-          "Name": "Año-Mes",
+          "OriginalName": "Fiscal",
+          "Name": "Fiscal",
           "Description": "",
           "DisplayFolders": "",
           "Levels": [
@@ -512,28 +404,10 @@
               "OriginalName": "Month",
               "Name": "Mes",
               "Description": ""
-            }
-          ]
-        },
-        {
-          "OriginalName": "Year-Quarter",
-          "Name": "Año-Trimestre",
-          "Description": "",
-          "DisplayFolders": "",
-          "Levels": [
-            {
-              "OriginalName": "Year",
-              "Name": "Año",
-              "Description": ""
             },
             {
-              "OriginalName": "Quarter",
-              "Name": "Trimestre",
-              "Description": ""
-            },
-            {
-              "OriginalName": "Month",
-              "Name": "Mes",
+              "OriginalName": "Date",
+              "Name": "Fecha",
               "Description": ""
             }
           ]
@@ -562,12 +436,6 @@
         {
           "OriginalName": "Year Quarter",
           "Name": "Año Trimestre",
-          "Description": "",
-          "DisplayFolders": ""
-        },
-        {
-          "OriginalName": "Quarter",
-          "Name": "Trimestre",
           "Description": "",
           "DisplayFolders": ""
         },
@@ -638,12 +506,6 @@
           "DisplayFolders": ""
         },
         {
-          "OriginalName": "Fiscal Month",
-          "Name": "Mes Fiscal",
-          "Description": "",
-          "DisplayFolders": ""
-        },
-        {
           "OriginalName": "Working Day",
           "Name": "Día de trabajo",
           "Description": "",
@@ -684,8 +546,8 @@
       },
       "Hierarchies": [
         {
-          "OriginalName": "Fiscal Year-Month",
-          "Name": "Ano-Mês Fiscal",
+          "OriginalName": "Calendar",
+          "Name": "Solar",
           "Description": "",
           "DisplayFolders": "",
           "Levels": [
@@ -697,36 +559,18 @@
             {
               "OriginalName": "Month",
               "Name": "Mês",
+              "Description": ""
+            },
+            {
+              "OriginalName": "Date",
+              "Name": "Data",
               "Description": ""
             }
           ]
         },
         {
-          "OriginalName": "Fiscal Year-Quarter",
-          "Name": "Ano-Trimestre Fiscal",
-          "Description": "",
-          "DisplayFolders": "",
-          "Levels": [
-            {
-              "OriginalName": "Year",
-              "Name": "Ano",
-              "Description": ""
-            },
-            {
-              "OriginalName": "Quarter",
-              "Name": "Trimestre",
-              "Description": ""
-            },
-            {
-              "OriginalName": "Month",
-              "Name": "Mês",
-              "Description": ""
-            }
-          ]
-        },
-        {
-          "OriginalName": "Year-Month",
-          "Name": "Ano-Mês",
+          "OriginalName": "Fiscal",
+          "Name": "Fiscal",
           "Description": "",
           "DisplayFolders": "",
           "Levels": [
@@ -739,28 +583,10 @@
               "OriginalName": "Month",
               "Name": "Mês",
               "Description": ""
-            }
-          ]
-        },
-        {
-          "OriginalName": "Year-Quarter",
-          "Name": "Ano-Trimestre",
-          "Description": "",
-          "DisplayFolders": "",
-          "Levels": [
-            {
-              "OriginalName": "Year",
-              "Name": "Ano",
-              "Description": ""
             },
             {
-              "OriginalName": "Quarter",
-              "Name": "Trimestre",
-              "Description": ""
-            },
-            {
-              "OriginalName": "Month",
-              "Name": "Mês",
+              "OriginalName": "Date",
+              "Name": "Data",
               "Description": ""
             }
           ]
@@ -789,12 +615,6 @@
         {
           "OriginalName": "Year Quarter",
           "Name": "Ano Trimestre",
-          "Description": "",
-          "DisplayFolders": ""
-        },
-        {
-          "OriginalName": "Quarter",
-          "Name": "Trimestre",
           "Description": "",
           "DisplayFolders": ""
         },
@@ -865,12 +685,6 @@
           "DisplayFolders": ""
         },
         {
-          "OriginalName": "Fiscal Month",
-          "Name": "Mês Fiscal",
-          "Description": "",
-          "DisplayFolders": ""
-        },
-        {
           "OriginalName": "Working Day",
           "Name": "Dia de Trabalho",
           "Description": "",
@@ -911,8 +725,8 @@
       },
       "Hierarchies": [
         {
-          "OriginalName": "Fiscal Year-Month",
-          "Name": "Fiskaljahr-Monat",
+          "OriginalName": "Calendar",
+          "Name": "Kalender",
           "Description": "",
           "DisplayFolders": "",
           "Levels": [
@@ -924,36 +738,18 @@
             {
               "OriginalName": "Month",
               "Name": "Monat",
+              "Description": ""
+            },
+            {
+              "OriginalName": "Date",
+              "Name": "Datum",
               "Description": ""
             }
           ]
         },
         {
-          "OriginalName": "Fiscal Year-Quarter",
-          "Name": "Fiskaljahr-Quartal",
-          "Description": "",
-          "DisplayFolders": "",
-          "Levels": [
-            {
-              "OriginalName": "Year",
-              "Name": "Jahr",
-              "Description": ""
-            },
-            {
-              "OriginalName": "Quarter",
-              "Name": "Quartal",
-              "Description": ""
-            },
-            {
-              "OriginalName": "Month",
-              "Name": "Monat",
-              "Description": ""
-            }
-          ]
-        },
-        {
-          "OriginalName": "Year-Month",
-          "Name": "Jahr-Monat",
+          "OriginalName": "Fiscal",
+          "Name": "Fiskalisch",
           "Description": "",
           "DisplayFolders": "",
           "Levels": [
@@ -966,28 +762,10 @@
               "OriginalName": "Month",
               "Name": "Monat",
               "Description": ""
-            }
-          ]
-        },
-        {
-          "OriginalName": "Year-Quarter",
-          "Name": "Jahr-Quartal",
-          "Description": "",
-          "DisplayFolders": "",
-          "Levels": [
-            {
-              "OriginalName": "Year",
-              "Name": "Jahr",
-              "Description": ""
             },
             {
-              "OriginalName": "Quarter",
-              "Name": "Quartal",
-              "Description": ""
-            },
-            {
-              "OriginalName": "Month",
-              "Name": "Monat",
+              "OriginalName": "Date",
+              "Name": "Datum",
               "Description": ""
             }
           ]
@@ -1016,12 +794,6 @@
         {
           "OriginalName": "Year Quarter",
           "Name": "Jahr Quartal",
-          "Description": "",
-          "DisplayFolders": ""
-        },
-        {
-          "OriginalName": "Quarter",
-          "Name": "Quartal",
           "Description": "",
           "DisplayFolders": ""
         },
@@ -1120,38 +892,6 @@
           "Name": "DatumMitTransaktionen",
           "Description": "",
           "DisplayFolders": ""
-        },
-        {
-          "OriginalName": "Year Month Key",
-          "Name": "Jahr Monat Schlüssel",
-          "Description": "",
-          "DisplayFolders": "",
-          "FormatString": null
-        },
-        {
-          "OriginalName": "Month in Quarter Number",
-          "Name": "Monat im Quartal Nummer",
-          "Description": "",
-          "DisplayFolders": "",
-          "FormatString": null
-        },
-        {
-          "OriginalName": "Fiscal Month",
-          "Name": "Geschäftsmonat",
-          "Description": "",
-          "DisplayFolders": ""
-        },
-        {
-          "OriginalName": "Fiscal Month Number",
-          "Name": "Geschäftsmonat Nummer",
-          "Description": "",
-          "DisplayFolders": ""
-        },
-        {
-          "OriginalName": "Fiscal Month in Quarter Number",
-          "Name": "Geschäftsmonat im Quartal Nummer",
-          "Description": "",
-          "DisplayFolders": ""
         }
       ]
     },
@@ -1164,83 +904,47 @@
       },
       "Hierarchies": [
         {
-          "OriginalName": "Fiscal Year-Month",
-          "Name": "财政年-月",
+          "OriginalName": "Calendar",
+          "Name": "日历",
           "Description": "",
           "DisplayFolders": "",
           "Levels": [
             {
               "OriginalName": "Year",
-              "Name": "年",
+              "Name": "年份",
               "Description": ""
             },
             {
               "OriginalName": "Month",
-              "Name": "月",
+              "Name": "月份名称",
+              "Description": ""
+            },
+            {
+              "OriginalName": "Date",
+              "Name": "日期",
               "Description": ""
             }
           ]
         },
         {
-          "OriginalName": "Fiscal Year-Quarter",
-          "Name": "财政年-季",
+          "OriginalName": "Fiscal",
+          "Name": "财政",
           "Description": "",
           "DisplayFolders": "",
           "Levels": [
             {
               "OriginalName": "Year",
-              "Name": "年",
-              "Description": ""
-            },
-            {
-              "OriginalName": "Quarter",
-              "Name": "季",
+              "Name": "年份",
               "Description": ""
             },
             {
               "OriginalName": "Month",
-              "Name": "月",
-              "Description": ""
-            }
-          ]
-        },
-        {
-          "OriginalName": "Year-Month",
-          "Name": "年-月",
-          "Description": "",
-          "DisplayFolders": "",
-          "Levels": [
-            {
-              "OriginalName": "Year",
-              "Name": "年",
+              "Name": "月份名称",
               "Description": ""
             },
             {
-              "OriginalName": "Month",
-              "Name": "月",
-              "Description": ""
-            }
-          ]
-        },
-        {
-          "OriginalName": "Year-Quarter",
-          "Name": "年-季",
-          "Description": "",
-          "DisplayFolders": "",
-          "Levels": [
-            {
-              "OriginalName": "Year",
-              "Name": "年",
-              "Description": ""
-            },
-            {
-              "OriginalName": "Quarter",
-              "Name": "季",
-              "Description": ""
-            },
-            {
-              "OriginalName": "Month",
-              "Name": "月",
+              "OriginalName": "Date",
+              "Name": "日期",
               "Description": ""
             }
           ]
@@ -1255,21 +959,20 @@
           "FormatString": null
         },
         {
-          "OriginalName": "Year Month Key",
-          "Name": "年份月份",
-          "Description": "",
-          "DisplayFolders": "",
-          "FormatString": null
-        },
-        {
-          "OriginalName": "Month",
-          "Name": "月份名称",
+          "OriginalName": "Year",
+          "Name": "年份",
           "Description": "",
           "DisplayFolders": ""
         },
         {
-          "OriginalName": "Month Number",
-          "Name": "月份数",
+          "OriginalName": "Year Quarter Number",
+          "Name": "年季数",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Year Quarter",
+          "Name": "年季名称",
           "Description": "",
           "DisplayFolders": ""
         },
@@ -1286,69 +989,26 @@
           "DisplayFolders": ""
         },
         {
-          "OriginalName": "Month in Quarter Number",
-          "Name": "本季度月份序号",
-          "Description": "",
-          "DisplayFolders": "",
-          "FormatString": null
-        },
-        {
-          "OriginalName": "Quarter",
-          "Name": "季度名称",
+          "OriginalName": "Month",
+          "Name": "月份名称",
           "Description": "",
           "DisplayFolders": ""
         },
         {
-          "OriginalName": "Year Quarter",
-          "Name": "年季名称",
+          "OriginalName": "Month Number",
+          "Name": "月份",
           "Description": "",
           "DisplayFolders": ""
         },
         {
-          "OriginalName": "Year Quarter Number",
-          "Name": "年季数",
+          "OriginalName": "Day of Week",
+          "Name": "周内日",
           "Description": "",
           "DisplayFolders": ""
         },
         {
-          "OriginalName": "Year",
-          "Name": "年份",
-          "Description": "",
-          "DisplayFolders": ""
-        },
-        {
-          "OriginalName": "Fiscal Month",
-          "Name": "财政月份名称",
-          "Description": "",
-          "DisplayFolders": ""
-        },
-        {
-          "OriginalName": "Fiscal Month Number",
-          "Name": "财政月份数",
-          "Description": "",
-          "DisplayFolders": ""
-        },
-        {
-          "OriginalName": "Fiscal Month in Quarter Number",
-          "Name": "本季度财政月份序号",
-          "Description": "",
-          "DisplayFolders": ""
-        },
-        {
-          "OriginalName": "Fiscal Quarter",
-          "Name": "财政季度名称",
-          "Description": "",
-          "DisplayFolders": ""
-        },
-        {
-          "OriginalName": "Fiscal Year Quarter",
-          "Name": "财政年季名称",
-          "Description": "",
-          "DisplayFolders": ""
-        },
-        {
-          "OriginalName": "Fiscal Year Quarter Number",
-          "Name": "财政年季数",
+          "OriginalName": "Day of Week Number",
+          "Name": "周内日序号",
           "Description": "",
           "DisplayFolders": ""
         },
@@ -1365,14 +1025,20 @@
           "DisplayFolders": ""
         },
         {
-          "OriginalName": "Day of Week",
-          "Name": "周内日",
+          "OriginalName": "Fiscal Year Quarter",
+          "Name": "财政年季名称",
           "Description": "",
           "DisplayFolders": ""
         },
         {
-          "OriginalName": "Day of Week Number",
-          "Name": "周内日序号",
+          "OriginalName": "Fiscal Year Quarter Number",
+          "Name": "财政年季数",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Fiscal Quarter",
+          "Name": "财政季度名称",
           "Description": "",
           "DisplayFolders": ""
         },

@@ -1,0 +1,831 @@
+{
+  "$schema": "https://raw.githubusercontent.com/sql-bi/Bravo/alberto/templateWorkspace/src/Assets/TemplateDevelopment/Schemas/measures-template.schema.json",
+  "_comment": "Custom Time Intelligence",
+  "TargetTable": {
+    "SQLBI_CalendarType": "Calendar"
+  },
+  "TemplateAnnotations": {
+    "SQLBI_Template": "TimeIntelligence",
+    "SQLBI_TimeIntelligence": "Monthly",
+    "SQLBI_CalendarType": "Calendar"
+  },
+  "MeasureTemplates": [
+    {
+      "Name": "_ShowValueForDates",
+      "IsHidden": true,
+      "IsSingleInstance": true,
+      "MultiLineComment": [
+        "Returns TRUE if the period selected is earlier",
+        "than the last period with data."
+      ],
+      "MultiLineExpression": [
+        "VAR __LastDateWithData =",
+        "    CALCULATE (",
+        "        @@GETMAXDATE(),",
+        "        REMOVEFILTERS ()",
+        "    )",
+        "VAR __FirstDateVisible =",
+        "    MIN ( @_C-SQLBI_AttributeTypes-Date_@ )",
+        "VAR __Result =",
+        "    __FirstDateVisible <= __LastDateWithData",
+        "RETURN",
+        "    __Result"
+      ]
+    },
+    {
+      "Name": "YTD",
+      "DisplayFolder": "To-date total",
+      "MultiLineExpression": [
+        "IF (",
+        "    [_ShowValueForDates],",
+        "    VAR __LastDayAvailable = MAX ( @_C-SQLBI_AttributeTypes-DayOfYear_@ )",
+        "    VAR __LastYearAvailable = MAX ( @_C-SQLBI_AttributeTypes-Years_@ )",
+        "    VAR __Result =",
+        "        CALCULATE (",
+        "            @@GETMEASURE(),",
+        "            ALLEXCEPT ( @_T-SQLBI_CalendarType-Calendar_@, @_CL-SQLBI_FilterSafe-True_@ ),",
+        "            @_C-SQLBI_AttributeTypes-DayOfYear_@ <= __LastDayAvailable,",
+        "            @_C-SQLBI_AttributeTypes-Years_@ = __LastYearAvailable",
+        "        )",
+        "    RETURN",
+        "        __Result",
+        ")"
+      ]
+    },
+    {
+      "Name": "QTD",
+      "DisplayFolder": "To-date total",
+      "MultiLineExpression": [
+        "IF (",
+        "    [_ShowValueForDates],",
+        "    VAR __LastDayAvailable = MAX ( @_C-SQLBI_AttributeTypes-DayOfYear_@ )",
+        "    VAR __LastYearQuarterAvailable = MAX ( @_C-SQLBI_AttributeTypes-Quarters_@ )",
+        "    VAR __Result =",
+        "        CALCULATE (",
+        "            @@GETMEASURE(),",
+        "            ALLEXCEPT ( @_T-SQLBI_CalendarType-Calendar_@, @_CL-SQLBI_FilterSafe-True_@ ),",
+        "            @_C-SQLBI_AttributeTypes-DayOfYear_@ <= __LastDayAvailable,",
+        "            @_C-SQLBI_AttributeTypes-Quarters_@ = __LastYearQuarterAvailable",
+        "        )",
+        "    RETURN",
+        "        __Result",
+        ")"
+      ]
+    },
+    {
+      "Name": "MTD",
+      "DisplayFolder": "To-date total",
+      "MultiLineExpression": [
+        "IF (",
+        "    [_ShowValueForDates],",
+        "    VAR __LastDayAvailable = MAX ( @_C-SQLBI_AttributeTypes-DayOfMonth_@ )",
+        "    VAR __LastYearMonthAvailable = MAX ( @_C-SQLBI_AttributeTypes-Months_@ )",
+        "    VAR __Result =",
+        "        CALCULATE (",
+        "            @@GETMEASURE(),",
+        "            ALLEXCEPT ( @_T-SQLBI_CalendarType-Calendar_@, @_CL-SQLBI_FilterSafe-True_@ ),",
+        "            @_C-SQLBI_AttributeTypes-DayOfMonth_@ <= __LastDayAvailable,",
+        "            @_C-SQLBI_AttributeTypes-Months_@ = __LastYearMonthAvailable",
+        "        )",
+        "    RETURN",
+        "        __Result",
+        ")"
+      ]
+    },
+    {
+      "Name": "PY",
+      "DisplayFolder": "Growth",
+      "MultiLineExpression": [
+        "VAR __MonthsOffset = 12",
+        "RETURN IF (",
+        "    [_ShowValueForDates],",
+        "    SUMX (",
+        "        SUMMARIZE ( @_T-SQLBI_CalendarType-Calendar_@, @_C-SQLBI_AttributeTypes-Months_@ ),",
+        "        VAR __CurrentYearMonthNumber = @_C-SQLBI_AttributeTypes-Months_@",
+        "        VAR __PreviousYearMonthNumber = __CurrentYearMonthNumber - __MonthsOffset",
+        "        VAR __DaysOnMonth =",
+        "            CALCULATE (",
+        "                COUNTROWS ( @_T-SQLBI_CalendarType-Calendar_@ ),",
+        "                ALLEXCEPT (",
+        "                    @_T-SQLBI_CalendarType-Calendar_@,",
+        "                    @_C-SQLBI_AttributeTypes-Months_@, -- Year Month granularity",
+        "                    @_CL-SQLBI_FilterSafe-True_@ -- Filter-safe columns",
+        "                )",
+        "            )",
+        "        VAR __DaysSelected =",
+        "            CALCULATE (",
+        "                COUNTROWS ( @_T-SQLBI_CalendarType-Calendar_@ ),",
+        "                @_C-SQLBI_AttributeTypes-DateDuration_@ = TRUE",
+        "            )",
+        "        RETURN IF (",
+        "            __DaysOnMonth = __DaysSelected,",
+        "",
+        "            -- Selection of all days in the month",
+        "            CALCULATE (",
+        "                @@GETMEASURE(),",
+        "                ALLEXCEPT ( @_T-SQLBI_CalendarType-Calendar_@, @_CL-SQLBI_FilterSafe-True_@ ),",
+        "                @_C-SQLBI_AttributeTypes-Months_@ = __PreviousYearMonthNumber",
+        "            ),",
+        "",
+        "            -- Partial selection of days in a month",
+        "            CALCULATE (",
+        "                @@GETMEASURE(),",
+        "                ALLEXCEPT ( @_T-SQLBI_CalendarType-Calendar_@, @_CL-SQLBI_FilterSafe-True_@ ),",
+        "                @_C-SQLBI_AttributeTypes-Months_@ = __PreviousYearMonthNumber,",
+        "                CALCULATETABLE (",
+        "                    VALUES ( @_C-SQLBI_AttributeTypes-DayOfMonth_@ ),",
+        "                    -- Removes filters from all the columns that do not have a day",
+        "                    -- granularity, keeping only Date and Day of Month Number",
+        "                    ALLEXCEPT (",
+        "                        @_T-SQLBI_CalendarType-Calendar_@,",
+        "                        @_C-SQLBI_AttributeTypes-DayOfMonth_@,",
+        "                        @_C-SQLBI_AttributeTypes-Date_@",
+        "                    ),",
+        "                    @_C-SQLBI_AttributeTypes-Months_@ = __CurrentYearMonthNumber,",
+        "                    @_C-SQLBI_AttributeTypes-DateDuration_@ = TRUE",
+        "                )",
+        "            )",
+        "        )",
+        "    )",
+        ")"
+      ]
+    },
+    {
+      "Name": "YOY",
+      "DisplayFolder": "Growth",
+      "MultiLineExpression": [
+        "VAR __ValueCurrentPeriod = @@GETMEASURE()",
+        "VAR __ValuePreviousPeriod = @@GETMEASURE( PY )",
+        "VAR __Result =",
+        "    IF (",
+        "        NOT ISBLANK ( __ValueCurrentPeriod ) && NOT ISBLANK ( __ValuePreviousPeriod ),",
+        "        __ValueCurrentPeriod - __ValuePreviousPeriod",
+        "    )",
+        "RETURN",
+        "    __Result"
+      ]
+    },
+    {
+      "Name": "YOY %",
+      "DisplayFolder": "Growth",
+      "FormatString": "0.00%",
+      "MultiLineExpression": [
+        "DIVIDE (",
+        "    @@GETMEASURE( YOY ),",
+        "    @@GETMEASURE( PY )",
+        ")"
+      ]
+    },
+    {
+      "Name": "PQ",
+      "DisplayFolder": "Growth",
+      "MultiLineExpression": [
+        "VAR __MonthsOffset = 3",
+        "RETURN IF (",
+        "    [_ShowValueForDates],",
+        "    SUMX (",
+        "        SUMMARIZE ( @_T-SQLBI_CalendarType-Calendar_@, @_C-SQLBI_AttributeTypes-Months_@ ),",
+        "        VAR __CurrentYearMonthNumber = @_C-SQLBI_AttributeTypes-Months_@",
+        "        VAR __PreviousYearMonthNumber = __CurrentYearMonthNumber - __MonthsOffset",
+        "        VAR __DaysOnMonth =",
+        "            CALCULATE (",
+        "                COUNTROWS ( @_T-SQLBI_CalendarType-Calendar_@ ),",
+        "                ALLEXCEPT (",
+        "                    @_T-SQLBI_CalendarType-Calendar_@,",
+        "                    @_C-SQLBI_AttributeTypes-Months_@, -- Year Month granularity",
+        "                    @_CL-SQLBI_FilterSafe-True_@ -- Filter-safe columns",
+        "                )",
+        "            )",
+        "        VAR __DaysSelected =",
+        "            CALCULATE (",
+        "                COUNTROWS ( @_T-SQLBI_CalendarType-Calendar_@ ),",
+        "                @_C-SQLBI_AttributeTypes-DateDuration_@ = TRUE",
+        "            )",
+        "        RETURN IF (",
+        "            __DaysOnMonth = __DaysSelected,",
+        "",
+        "            -- Selection of all days in the month",
+        "            CALCULATE (",
+        "                @@GETMEASURE(),",
+        "                ALLEXCEPT ( @_T-SQLBI_CalendarType-Calendar_@, @_CL-SQLBI_FilterSafe-True_@ ),",
+        "                @_C-SQLBI_AttributeTypes-Months_@ = __PreviousYearMonthNumber",
+        "            ),",
+        "",
+        "            -- Partial selection of days in a month",
+        "            CALCULATE (",
+        "                @@GETMEASURE(),",
+        "                ALLEXCEPT ( @_T-SQLBI_CalendarType-Calendar_@, @_CL-SQLBI_FilterSafe-True_@ ),",
+        "                @_C-SQLBI_AttributeTypes-Months_@ = __PreviousYearMonthNumber,",
+        "                CALCULATETABLE (",
+        "                    VALUES ( @_C-SQLBI_AttributeTypes-DayOfMonth_@ ),",
+        "                    -- Removes filters from all the columns that do not have a day",
+        "                    -- granularity, keeping only Date and Day of Month Number",
+        "                    ALLEXCEPT (",
+        "                        @_T-SQLBI_CalendarType-Calendar_@,",
+        "                        @_C-SQLBI_AttributeTypes-DayOfMonth_@,",
+        "                        @_C-SQLBI_AttributeTypes-Date_@",
+        "                    ),",
+        "                    @_C-SQLBI_AttributeTypes-Months_@ = __CurrentYearMonthNumber,",
+        "                    @_C-SQLBI_AttributeTypes-DateDuration_@ = TRUE",
+        "                )",
+        "            )",
+        "        )",
+        "    )",
+        ")"
+      ]
+    },
+    {
+      "Name": "QOQ",
+      "DisplayFolder": "Growth",
+      "MultiLineExpression": [
+        "VAR __ValueCurrentPeriod = @@GETMEASURE()",
+        "VAR __ValuePreviousPeriod = @@GETMEASURE( PQ )",
+        "VAR __Result =",
+        "    IF (",
+        "        NOT ISBLANK ( __ValueCurrentPeriod ) && NOT ISBLANK ( __ValuePreviousPeriod ),",
+        "        __ValueCurrentPeriod - __ValuePreviousPeriod",
+        "    )",
+        "RETURN",
+        "    __Result"
+      ]
+    },
+    {
+      "Name": "QOQ %",
+      "DisplayFolder": "Growth",
+      "FormatString": "0.00%",
+      "MultiLineExpression": [
+        "DIVIDE (",
+        "    @@GETMEASURE( QOQ ),",
+        "    @@GETMEASURE( PQ )",
+        ")"
+      ]
+    },
+    {
+      "Name": "PM",
+      "DisplayFolder": "Growth",
+      "MultiLineExpression": [
+        "VAR __MonthsOffset = 1",
+        "RETURN IF (",
+        "    [_ShowValueForDates],",
+        "    SUMX (",
+        "        SUMMARIZE ( @_T-SQLBI_CalendarType-Calendar_@, @_C-SQLBI_AttributeTypes-Months_@ ),",
+        "        VAR __CurrentYearMonthNumber = @_C-SQLBI_AttributeTypes-Months_@",
+        "        VAR __PreviousYearMonthNumber = __CurrentYearMonthNumber - __MonthsOffset",
+        "        VAR __DaysOnMonth =",
+        "            CALCULATE (",
+        "                COUNTROWS ( @_T-SQLBI_CalendarType-Calendar_@ ),",
+        "                ALLEXCEPT (",
+        "                    @_T-SQLBI_CalendarType-Calendar_@,",
+        "                    @_C-SQLBI_AttributeTypes-Months_@, -- Year Month granularity",
+        "                    @_CL-SQLBI_FilterSafe-True_@ -- Filter-safe columns",
+        "                )",
+        "            )",
+        "        VAR __DaysSelected =",
+        "            CALCULATE (",
+        "                COUNTROWS ( @_T-SQLBI_CalendarType-Calendar_@ ),",
+        "                @_C-SQLBI_AttributeTypes-DateDuration_@ = TRUE",
+        "            )",
+        "        RETURN IF (",
+        "            __DaysOnMonth = __DaysSelected,",
+        "",
+        "            -- Selection of all days in the month",
+        "            CALCULATE (",
+        "                @@GETMEASURE(),",
+        "                ALLEXCEPT ( @_T-SQLBI_CalendarType-Calendar_@, @_CL-SQLBI_FilterSafe-True_@ ),",
+        "                @_C-SQLBI_AttributeTypes-Months_@ = __PreviousYearMonthNumber",
+        "            ),",
+        "",
+        "            -- Partial selection of days in a month",
+        "            CALCULATE (",
+        "                @@GETMEASURE(),",
+        "                ALLEXCEPT ( @_T-SQLBI_CalendarType-Calendar_@, @_CL-SQLBI_FilterSafe-True_@ ),",
+        "                @_C-SQLBI_AttributeTypes-Months_@ = __PreviousYearMonthNumber,",
+        "                CALCULATETABLE (",
+        "                    VALUES ( @_C-SQLBI_AttributeTypes-DayOfMonth_@ ),",
+        "                    -- Removes filters from all the columns that do not have a day",
+        "                    -- granularity, keeping only Date and Day of Month Number",
+        "                    ALLEXCEPT (",
+        "                        @_T-SQLBI_CalendarType-Calendar_@,",
+        "                        @_C-SQLBI_AttributeTypes-DayOfMonth_@,",
+        "                        @_C-SQLBI_AttributeTypes-Date_@",
+        "                    ),",
+        "                    @_C-SQLBI_AttributeTypes-Months_@ = __CurrentYearMonthNumber,",
+        "                    @_C-SQLBI_AttributeTypes-DateDuration_@ = TRUE",
+        "                )",
+        "            )",
+        "        )",
+        "    )",
+        ")"
+      ]
+    },
+    {
+      "Name": "MOM",
+      "DisplayFolder": "Growth",
+      "MultiLineExpression": [
+        "VAR __ValueCurrentPeriod = @@GETMEASURE()",
+        "VAR __ValuePreviousPeriod = @@GETMEASURE( PM )",
+        "VAR __Result =",
+        "    IF (",
+        "        NOT ISBLANK ( __ValueCurrentPeriod ) && NOT ISBLANK ( __ValuePreviousPeriod ),",
+        "        __ValueCurrentPeriod - __ValuePreviousPeriod",
+        "    )",
+        "RETURN",
+        "    __Result"
+      ]
+    },
+    {
+      "Name": "MOM %",
+      "DisplayFolder": "Growth",
+      "FormatString": "0.00%",
+      "MultiLineExpression": [
+        "DIVIDE (",
+        "    @@GETMEASURE( MOM ),",
+        "    @@GETMEASURE( PM )",
+        ")"
+      ]
+    },
+    {
+      "Name": "PYTD",
+      "DisplayFolder": "To-date growth",
+      "MultiLineExpression": [
+        "IF (",
+        "    [_ShowValueForDates],",
+        "    VAR __PreviousYear = MAX ( @_C-SQLBI_AttributeTypes-Years_@ ) - 1",
+        "    VAR __LastDayOfYearAvailable =",
+        "        CALCULATE (",
+        "            MAX ( @_C-SQLBI_AttributeTypes-DayOfYear_@ ),",
+        "            -- Removes filters from filter-safe columns",
+        "            -- to get the last day with data selected in the report",
+        "            REMOVEFILTERS ( @_CL-SQLBI_FilterSafe-True_@ ),",
+        "            @_C-SQLBI_AttributeTypes-DateDuration_@ = TRUE",
+        "        )",
+        "    VAR __Result =",
+        "        CALCULATE (",
+        "            @@GETMEASURE(),",
+        "            ALLEXCEPT ( @_T-SQLBI_CalendarType-Calendar_@, @_CL-SQLBI_FilterSafe-True_@ ),",
+        "            @_C-SQLBI_AttributeTypes-Years_@ = __PreviousYear,",
+        "            @_C-SQLBI_AttributeTypes-DayOfYear_@ <= __LastDayOfYearAvailable,",
+        "            @_C-SQLBI_AttributeTypes-DateDuration_@ = TRUE",
+        "        )",
+        "    RETURN",
+        "        __Result",
+        ")"
+      ]
+    },
+    {
+      "Name": "YOYTD",
+      "DisplayFolder": "To-date growth",
+      "MultiLineExpression": [
+        "VAR __ValueCurrentPeriod = @@GETMEASURE( YTD )",
+        "VAR __ValuePreviousPeriod = @@GETMEASURE( PYTD )",
+        "VAR __Result =",
+        "    IF (",
+        "        NOT ISBLANK ( __ValueCurrentPeriod ) && NOT ISBLANK ( __ValuePreviousPeriod ),",
+        "        __ValueCurrentPeriod - __ValuePreviousPeriod",
+        "    )",
+        "RETURN",
+        "    __Result"
+      ]
+    },
+    {
+      "Name": "YOYTD %",
+      "DisplayFolder": "To-date growth",
+      "FormatString": "0.00%",
+      "MultiLineExpression": [
+        "DIVIDE (",
+        "    @@GETMEASURE( YOYTD ),",
+        "    @@GETMEASURE( PYTD )",
+        ")"
+      ]
+    },
+    {
+      "Name": "PQTD",
+      "DisplayFolder": "To-date growth",
+      "MultiLineExpression": [
+        "IF (",
+        "    [_ShowValueForDates],",
+        "    VAR __LastMonthSelected =",
+        "        MAX ( @_C-SQLBI_AttributeTypes-Months_@ )",
+        "    VAR __DaysOnLastMonth =",
+        "        CALCULATE (",
+        "            COUNTROWS ( @_T-SQLBI_CalendarType-Calendar_@ ),",
+        "            ALLEXCEPT ( @_T-SQLBI_CalendarType-Calendar_@, @_CL-SQLBI_FilterSafe-True_@ ),",
+        "            @_C-SQLBI_AttributeTypes-Months_@ = __LastMonthSelected",
+        "        )",
+        "    VAR __DaysLastMonthSelected =",
+        "        CALCULATE (",
+        "            COUNTROWS ( @_T-SQLBI_CalendarType-Calendar_@ ),",
+        "            @_C-SQLBI_AttributeTypes-DateDuration_@ = TRUE,",
+        "            @_C-SQLBI_AttributeTypes-Months_@ = __LastMonthSelected",
+        "        )",
+        "    VAR __LastDayOfMonthWithTransactions =",
+        "        MAX (",
+        "            -- End of month of any month",
+        "            31 * (__DaysOnLastMonth = __DaysLastMonthSelected),",
+        "            -- or last day selected with data",
+        "            CALCULATE (",
+        "                MAX ( @_C-SQLBI_AttributeTypes-DayOfMonth_@ ),",
+        "                -- Removes filters from all of the filter-safe columns",
+        "                -- to get the last day with data selected in the report",
+        "                REMOVEFILTERS ( @_CL-SQLBI_FilterSafe-True_@ ),",
+        "                @_C-SQLBI_AttributeTypes-Months_@ = __LastMonthSelected,",
+        "                @_C-SQLBI_AttributeTypes-DateDuration_@ = TRUE",
+        "            )",
+        "        )",
+        "    VAR __LastMonthInQuarterWithTransactions =",
+        "        CALCULATE (",
+        "            MAX ( @_C-SQLBI_AttributeTypes-MonthOfQuarter_@ ),",
+        "            -- Removes filters from all of the filter-safe columns",
+        "            -- to get the last day with data selected in the report",
+        "            REMOVEFILTERS ( @_CL-SQLBI_FilterSafe-True_@ ),",
+        "            @_C-SQLBI_AttributeTypes-DateDuration_@ = TRUE",
+        "        )",
+        "    VAR __PreviousYearQuarter =",
+        "        MAX ( @_C-SQLBI_AttributeTypes-Quarters_@ ) - 1",
+        "    VAR __FilterQTD =",
+        "        FILTER (",
+        "            ALL ( @_C-SQLBI_AttributeTypes-MonthOfQuarter_@, @_C-SQLBI_AttributeTypes-DayOfMonth_@ ),",
+        "            ISONORAFTER (",
+        "                @_C-SQLBI_AttributeTypes-MonthOfQuarter_@, __LastMonthInQuarterWithTransactions, DESC,",
+        "                @_C-SQLBI_AttributeTypes-DayOfMonth_@, __LastDayOfMonthWithTransactions, DESC",
+        "            )",
+        "        )",
+        "    VAR __Result =",
+        "        CALCULATE (",
+        "            @@GETMEASURE(),",
+        "            ALLEXCEPT ( @_T-SQLBI_CalendarType-Calendar_@, @_CL-SQLBI_FilterSafe-True_@ ),",
+        "            @_C-SQLBI_AttributeTypes-Quarters_@ = __PreviousYearQuarter,",
+        "            __FilterQTD",
+        "        )",
+        "    RETURN",
+        "        __Result",
+        ")"
+      ]
+    },
+    {
+      "Name": "QOQTD",
+      "DisplayFolder": "To-date growth",
+      "MultiLineExpression": [
+        "VAR __ValueCurrentPeriod = @@GETMEASURE( QTD )",
+        "VAR __ValuePreviousPeriod = @@GETMEASURE( PQTD )",
+        "VAR __Result =",
+        "    IF (",
+        "        NOT ISBLANK ( __ValueCurrentPeriod ) && NOT ISBLANK ( __ValuePreviousPeriod ),",
+        "        __ValueCurrentPeriod - __ValuePreviousPeriod",
+        "    )",
+        "RETURN",
+        "    __Result"
+      ]
+    },
+    {
+      "Name": "QOQTD %",
+      "DisplayFolder": "To-date growth",
+      "FormatString": "0.00%",
+      "MultiLineExpression": [
+        "DIVIDE (",
+        "    @@GETMEASURE( QOQTD ),",
+        "    @@GETMEASURE( PQTD )",
+        ")"
+      ]
+    },
+    {
+      "Name": "PMTD",
+      "DisplayFolder": "To-date growth",
+      "MultiLineExpression": [
+        "IF (",
+        "    [_ShowValueForDates],",
+        "    VAR __LastMonthSelected =",
+        "        MAX ( @_C-SQLBI_AttributeTypes-Months_@ )",
+        "    VAR __DaysOnLastMonth =",
+        "        CALCULATE (",
+        "            COUNTROWS ( @_T-SQLBI_CalendarType-Calendar_@ ),",
+        "            ALLEXCEPT ( @_T-SQLBI_CalendarType-Calendar_@, @_CL-SQLBI_FilterSafe-True_@ ),",
+        "            @_C-SQLBI_AttributeTypes-Months_@ = __LastMonthSelected",
+        "        )",
+        "    VAR __DaysLastMonthSelected =",
+        "        CALCULATE (",
+        "            COUNTROWS ( @_T-SQLBI_CalendarType-Calendar_@ ),",
+        "            @_C-SQLBI_AttributeTypes-DateDuration_@ = TRUE,",
+        "            @_C-SQLBI_AttributeTypes-Months_@ = __LastMonthSelected",
+        "        )",
+        "    VAR __LastDayOfMonthWithTransactions =",
+        "        MAX (",
+        "            -- End of month of any month",
+        "            31 * (__DaysOnLastMonth = __DaysLastMonthSelected),",
+        "            -- or last day selected with data",
+        "            CALCULATE (",
+        "                MAX ( @_C-SQLBI_AttributeTypes-DayOfMonth_@ ),",
+        "                -- Removes filters from all of the filter-safe columns",
+        "                -- to get the last day with data selected in the report",
+        "                REMOVEFILTERS ( @_CL-SQLBI_FilterSafe-True_@ ),",
+        "                @_C-SQLBI_AttributeTypes-Months_@ = __LastMonthSelected,",
+        "                @_C-SQLBI_AttributeTypes-DateDuration_@ = TRUE",
+        "            )",
+        "        )",
+        "    VAR __PreviousYearMonth = __LastMonthSelected - 1",
+        "    VAR __Result =",
+        "        CALCULATE (",
+        "            @@GETMEASURE(),",
+        "            ALLEXCEPT ( @_T-SQLBI_CalendarType-Calendar_@, @_CL-SQLBI_FilterSafe-True_@ ),",
+        "            @_C-SQLBI_AttributeTypes-Months_@ = __PreviousYearMonth,",
+        "            @_C-SQLBI_AttributeTypes-DayOfMonth_@ <= __LastDayOfMonthWithTransactions",
+        "        )",
+        "    RETURN",
+        "        __Result",
+        ")"
+      ]
+    },
+    {
+      "Name": "MOMTD",
+      "DisplayFolder": "To-date growth",
+      "MultiLineExpression": [
+        "VAR __ValueCurrentPeriod = @@GETMEASURE( MTD )",
+        "VAR __ValuePreviousPeriod = @@GETMEASURE( PMTD )",
+        "VAR __Result =",
+        "    IF (",
+        "        NOT ISBLANK ( __ValueCurrentPeriod ) && NOT ISBLANK ( __ValuePreviousPeriod ),",
+        "        __ValueCurrentPeriod - __ValuePreviousPeriod",
+        "    )",
+        "RETURN",
+        "    __Result"
+      ]
+    },
+    {
+      "Name": "MOMTD %",
+      "DisplayFolder": "To-date growth",
+      "FormatString": "0.00%",
+      "MultiLineExpression": [
+        "DIVIDE (",
+        "    @@GETMEASURE( MOMTD ),",
+        "    @@GETMEASURE( PMTD )",
+        ")"
+      ]
+    },
+    {
+      "Name": "PYC",
+      "DisplayFolder": "Growth over full period",
+      "MultiLineExpression": [
+        "IF (",
+        "    [_ShowValueForDates] && HASONEVALUE ( @_C-SQLBI_AttributeTypes-Years_@ ),",
+        "    VAR __PreviousYear = MAX ( @_C-SQLBI_AttributeTypes-Years_@ ) - 1",
+        "    VAR __Result =",
+        "        CALCULATE (",
+        "            @@GETMEASURE(),",
+        "            ALLEXCEPT ( @_T-SQLBI_CalendarType-Calendar_@, @_CL-SQLBI_FilterSafe-True_@ ),",
+        "            @_C-SQLBI_AttributeTypes-Years_@ = __PreviousYear",
+        "        )",
+        "    RETURN",
+        "        __Result",
+        ")"
+      ]
+    },
+    {
+      "Name": "YTDOPY",
+      "DisplayFolder": "Growth over full period",
+      "MultiLineExpression": [
+        "VAR __ValueCurrentPeriod = @@GETMEASURE( YTD )",
+        "VAR __ValuePreviousPeriod = @@GETMEASURE( PYC )",
+        "VAR __Result =",
+        "    IF (",
+        "        NOT ISBLANK ( __ValueCurrentPeriod ) && NOT ISBLANK ( __ValuePreviousPeriod ),",
+        "        __ValueCurrentPeriod - __ValuePreviousPeriod",
+        "    )",
+        "RETURN",
+        "    __Result"
+      ]
+    },
+    {
+      "Name": "YTDOPY %",
+      "DisplayFolder": "To-date growth",
+      "FormatString": "0.00%",
+      "MultiLineExpression": [
+        "DIVIDE (",
+        "    @@GETMEASURE( YTDOPY ),",
+        "    @@GETMEASURE( PYC )",
+        ")"
+      ]
+    },
+    {
+      "Name": "PQC",
+      "DisplayFolder": "Growth over full period",
+      "MultiLineExpression": [
+        "IF (",
+        "    [_ShowValueForDates] && HASONEVALUE ( @_C-SQLBI_AttributeTypes-Quarters_@ ),",
+        "    VAR __PreviousYearQuarter = MAX ( @_C-SQLBI_AttributeTypes-Quarters_@ ) - 1",
+        "    VAR __Result =",
+        "        CALCULATE (",
+        "            @@GETMEASURE(),",
+        "            ALLEXCEPT ( @_T-SQLBI_CalendarType-Calendar_@, @_CL-SQLBI_FilterSafe-True_@ ),",
+        "            @_C-SQLBI_AttributeTypes-Quarters_@ = __PreviousYearQuarter",
+        "        )",
+        "    RETURN",
+        "        __Result",
+        ")"
+      ]
+    },
+    {
+      "Name": "QTDOPQ",
+      "DisplayFolder": "Growth over full period",
+      "MultiLineExpression": [
+        "VAR __ValueCurrentPeriod = @@GETMEASURE( QTD )",
+        "VAR __ValuePreviousPeriod = @@GETMEASURE( PQC )",
+        "VAR __Result =",
+        "    IF (",
+        "        NOT ISBLANK ( __ValueCurrentPeriod ) && NOT ISBLANK ( __ValuePreviousPeriod ),",
+        "        __ValueCurrentPeriod - __ValuePreviousPeriod",
+        "    )",
+        "RETURN",
+        "    __Result"
+      ]
+    },
+    {
+      "Name": "QTDOPQ %",
+      "DisplayFolder": "To-date growth",
+      "FormatString": "0.00%",
+      "MultiLineExpression": [
+        "DIVIDE (",
+        "    @@GETMEASURE( QTDOPQ ),",
+        "    @@GETMEASURE( PQC )",
+        ")"
+      ]
+    },
+    {
+      "Name": "PMC",
+      "DisplayFolder": "Growth over full period",
+      "MultiLineExpression": [
+        "IF (",
+        "    [_ShowValueForDates] && HASONEVALUE ( @_C-SQLBI_AttributeTypes-Months_@ ),",
+        "    VAR __PreviousYearMonth = MAX ( @_C-SQLBI_AttributeTypes-Months_@ ) - 1",
+        "    VAR __Result =",
+        "        CALCULATE (",
+        "            @@GETMEASURE(),",
+        "            ALLEXCEPT ( @_T-SQLBI_CalendarType-Calendar_@, @_CL-SQLBI_FilterSafe-True_@ ),",
+        "            @_C-SQLBI_AttributeTypes-Months_@ = __PreviousYearMonth",
+        "        )",
+        "    RETURN",
+        "        __Result",
+        ")"
+      ]
+    },
+    {
+      "Name": "MTDOPM",
+      "DisplayFolder": "Growth over full period",
+      "MultiLineExpression": [
+        "VAR __ValueCurrentPeriod = @@GETMEASURE( MTD )",
+        "VAR __ValuePreviousPeriod = @@GETMEASURE( PMC )",
+        "VAR __Result =",
+        "    IF (",
+        "        NOT ISBLANK ( __ValueCurrentPeriod ) && NOT ISBLANK ( __ValuePreviousPeriod ),",
+        "        __ValueCurrentPeriod - __ValuePreviousPeriod",
+        "    )",
+        "RETURN",
+        "    __Result"
+      ]
+    },
+    {
+      "Name": "MTDOPM %",
+      "DisplayFolder": "To-date growth",
+      "FormatString": "0.00%",
+      "MultiLineExpression": [
+        "DIVIDE (",
+        "    @@GETMEASURE( MTDOPM ),",
+        "    @@GETMEASURE( PMC )",
+        ")"
+      ]
+    },
+    {
+      "Name": "MAT",
+      "DisplayFolder": "Moving annual growth",
+      "MultiLineExpression": [
+        "IF (",
+        "    [_ShowValueForDates],",
+        "    VAR __LastDayMAT = MAX ( @_C-SQLBI_AttributeTypes-ManufacturingDate_@ )",
+        "    VAR __FirstDayMAT = INT ( EDATE ( __LastDayMAT + 1, -12 ) )",
+        "    VAR Result =",
+        "        CALCULATE (",
+        "            @@GETMEASURE(),",
+        "            ALLEXCEPT ( @_T-SQLBI_CalendarType-Calendar_@, @_CL-SQLBI_FilterSafe-True_@ ),",
+        "            @_C-SQLBI_AttributeTypes-ManufacturingDate_@ >= __FirstDayMAT",
+        "                && @_C-SQLBI_AttributeTypes-ManufacturingDate_@ <= __LastDayMAT",
+        "        )",
+        "    RETURN",
+        "        Result",
+        ")"
+      ]
+    },
+    {
+      "Name": "MAT-364",
+      "DisplayFolder": "Moving annual growth",
+      "MultiLineExpression": [
+        "IF (",
+        "    [_ShowValueForDates],",
+        "    VAR __LastDayMAT = MAX ( @_C-SQLBI_AttributeTypes-ManufacturingDate_@ )",
+        "    VAR __FirstDayMAT = __LastDayMAT - 363",
+        "    VAR Result =",
+        "        CALCULATE (",
+        "            @@GETMEASURE(),",
+        "            ALLEXCEPT ( @_T-SQLBI_CalendarType-Calendar_@, @_CL-SQLBI_FilterSafe-True_@ ),",
+        "            @_C-SQLBI_AttributeTypes-ManufacturingDate_@ >= __FirstDayMAT",
+        "                && @_C-SQLBI_AttributeTypes-ManufacturingDate_@ <= __LastDayMAT",
+        "        )",
+        "    RETURN",
+        "        Result",
+        ")"
+      ]
+    },
+    {
+      "Name": "PYMAT",
+      "DisplayFolder": "Moving annual growth",
+      "MultiLineExpression": [
+        "IF (",
+        "    [_ShowValueForDates],",
+        "    VAR __LastDayAvailable = MAX ( @_C-SQLBI_AttributeTypes-ManufacturingDate_@ )",
+        "    VAR __LastDayMAT = INT ( EDATE ( __LastDayAvailable, -12 ) )",
+        "    VAR __FirstDayMAT = INT ( EDATE ( __LastDayAvailable + 1, -24 ) )",
+        "    VAR Result =",
+        "        CALCULATE (",
+        "            @@GETMEASURE(),",
+        "            ALLEXCEPT ( @_T-SQLBI_CalendarType-Calendar_@, @_CL-SQLBI_FilterSafe-True_@ ),",
+        "            @_C-SQLBI_AttributeTypes-ManufacturingDate_@ >= __FirstDayMAT",
+        "                && @_C-SQLBI_AttributeTypes-ManufacturingDate_@ <= __LastDayMAT",
+        "        )",
+        "    RETURN",
+        "        Result",
+        ")"
+      ]
+    },
+    {
+      "Name": "PYMAT-364",
+      "DisplayFolder": "Moving annual growth",
+      "MultiLineExpression": [
+        "IF (",
+        "    [_ShowValueForDates],",
+        "    VAR __LastDayAvailable = MAX ( @_C-SQLBI_AttributeTypes-ManufacturingDate_@ )",
+        "    VAR __LastDayMAT = __LastDayAvailable - 364",
+        "    VAR __FirstDayMAT = __LastDayMAT - 363",
+        "    VAR Result =",
+        "        CALCULATE (",
+        "            @@GETMEASURE(),",
+        "            ALLEXCEPT ( @_T-SQLBI_CalendarType-Calendar_@, @_CL-SQLBI_FilterSafe-True_@ ),",
+        "            @_C-SQLBI_AttributeTypes-ManufacturingDate_@ >= __FirstDayMAT",
+        "                && @_C-SQLBI_AttributeTypes-ManufacturingDate_@ <= __LastDayMAT",
+        "        )",
+        "    RETURN",
+        "        Result",
+        ")"
+      ]
+    },
+    {
+      "Name": "MATG",
+      "DisplayFolder": "Growth over full period",
+      "MultiLineExpression": [
+        "VAR __ValueCurrentPeriod = @@GETMEASURE( MAT )",
+        "VAR __ValuePreviousPeriod = @@GETMEASURE( PYMAT )",
+        "VAR __Result =",
+        "    IF (",
+        "        NOT ISBLANK ( __ValueCurrentPeriod ) && NOT ISBLANK ( __ValuePreviousPeriod ),",
+        "        __ValueCurrentPeriod - __ValuePreviousPeriod",
+        "    )",
+        "RETURN",
+        "    __Result"
+      ]
+    },
+    {
+      "Name": "MATG-364",
+      "DisplayFolder": "Growth over full period",
+      "MultiLineExpression": [
+        "VAR __ValueCurrentPeriod = @@GETMEASURE( MAT-364 )",
+        "VAR __ValuePreviousPeriod = @@GETMEASURE( PYMAT-364 )",
+        "VAR __Result =",
+        "    IF (",
+        "        NOT ISBLANK ( __ValueCurrentPeriod ) && NOT ISBLANK ( __ValuePreviousPeriod ),",
+        "        __ValueCurrentPeriod - __ValuePreviousPeriod",
+        "    )",
+        "RETURN",
+        "    __Result"
+      ]
+    },
+    {
+      "Name": "MATG %",
+      "DisplayFolder": "To-date growth",
+      "FormatString": "0.00%",
+      "MultiLineExpression": [
+        "DIVIDE (",
+        "    @@GETMEASURE( MATG ),",
+        "    @@GETMEASURE( PYMAT )",
+        ")"
+      ]
+    },
+    {
+      "Name": "MATG-364 %",
+      "DisplayFolder": "To-date growth",
+      "FormatString": "0.00%",
+      "MultiLineExpression": [
+        "DIVIDE (",
+        "    @@GETMEASURE( MATG-364 ),",
+        "    @@GETMEASURE( PYMAT-364 )",
+        ")"
+      ]
+    }
+  ]
+}
