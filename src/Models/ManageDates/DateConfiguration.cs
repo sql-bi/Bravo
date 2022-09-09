@@ -430,12 +430,26 @@
         public static Dax.Template.Package LoadPackage(this DateConfiguration configuration, bool configure = true)
         {
             BravoUnexpectedException.ThrowIfNull(configuration.TemplateUri);
-            var templateUri = new Uri(configuration.TemplateUri);
+
+            {
+                // >> HACK
+                // versions 0.9.0 to 0.9.3 - TemplateUri format is %LOCALAPPDATA%\[name].template.json
+                // versions 0.9.4 to 0.9.5 - TemplateUri format is                [name].template.json
+
+                if (Uri.TryCreate(configuration.TemplateUri, UriKind.Absolute, out _) == false)
+                {
+                    // If TemplateUri does not contain an absolute URI, we forcibly create one using a known valid local path
+                    configuration.TemplateUri = Path.Combine(DaxTemplateManager.CachePath, configuration.TemplateUri);
+                }
+                // << HACK
+            }
+
+            var templateUri = new Uri(configuration.TemplateUri, UriKind.Absolute);
             var templatePath = templateUri.LocalPath;
 
             if (configuration.IsCustom == false)
             {
-                // Use the cache path of the current user
+                // If it is a default/embedded template then we ignore the TemplateUri path and force the current user's local cache path.
                 templatePath = Path.Combine(DaxTemplateManager.CachePath, Path.GetFileName(templatePath));
             }
 
