@@ -61,7 +61,7 @@
     },
     {
       "Name": "__WeekDay",
-      "Expression": "FORMAT ( __Date, \"ddd\"@@GETISO() )"
+      "Expression": "FORMAT ( __Date, __DayFormatString@@GETISO() )"
     },
     {
       "Name": "__FiscalYearNumber",
@@ -90,6 +90,18 @@
     {
       "Name": "__LastTransactionDate",
       "Expression": "@@GETMAXDATE()"
+    },
+    {
+      "Name": "__IsStandardLocale",
+      "Expression": "IF ( FORMAT( DATE( 2000, 1, 1 ), \"oooo\"@@GETISO() ) = \"oooo\", TRUE, FALSE )"
+    },
+    {
+      "Name": "__DayFormatString",
+      "Expression": "IF( __IsStandardLocale, \"ddd\", \"aaa\" )"
+    },
+    {
+      "Name": "__MonthFormatString",
+      "Expression": "IF( __IsStandardLocale, \"mmm\", \"ooo\" )"
     }
   ],
   "Columns": [
@@ -106,7 +118,7 @@
     },
     {
       "Name": "Year Month",
-      "Expression": "FORMAT ( __Date, \"mmm yyyy\"@@GETISO() )",
+      "Expression": "FORMAT ( __Date, __MonthFormatString & \" yyyy\"@@GETISO() )",
       "DataType": "String",
       "SortByColumn": "Year Month Number",
       "DataCategory": "Months"
@@ -118,6 +130,20 @@
       "IsHidden": true,
       "AttributeType": "FiscalMonths",
       "DataCategory": "Months"
+    },
+    {
+      "Name": "Fiscal Month",
+      "Expression": "FORMAT ( __Date, __MonthFormatString@@GETISO() )",
+      "DataType": "String",
+      "SortByColumn": "Fiscal Month Number",
+      "DataCategory": "MonthOfYear"
+    },
+    {
+      "Name": "Fiscal Month Number",
+      "Expression": "__FiscalMonthNumber",
+      "DataType": "Int64",
+      "IsHidden": true,
+      "DataCategory": "MonthOfYear"
     },
     {
       "Name": "Day of Week Number",

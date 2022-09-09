@@ -104,6 +104,14 @@
     {
       "Name": "__YearQuarterNumber",
       "Expression": "__YearNumber * 4 + __QuarterNumber - 1"
+    },
+    {
+      "Name": "__IsStandardLocale",
+      "Expression": "IF ( FORMAT( DATE( 2000, 1, 1 ), \"oooo\"@@GETISO() ) = \"oooo\", TRUE, FALSE )"
+    },
+    {
+      "Name": "__MonthFormatString",
+      "Expression": "IF( __IsStandardLocale, \"mmm\", \"ooo\" )"
     }
   ],
   "Columns": [
@@ -130,7 +138,7 @@
         "IF (",
         "    __MonthNumber > 12,",
         "    FORMAT ( __MonthNumber, \"@_M_@00\"@@GETISO() ) & FORMAT ( __YearNumber, \" 0000\"@@GETISO() ),",
-        "    FORMAT ( __MonthDate, \"mmm yyyy\"@@GETISO() )",
+        "    FORMAT ( __MonthDate, __MonthFormatString & \" yyyy\"@@GETISO() )",
         ")"
       ],
       "DataType": "String",
@@ -154,7 +162,7 @@
         "IF (",
         "    __MonthNumber > 12,",
         "    FORMAT ( __MonthNumber, \"@_M_@00\"@@GETISO() ),",
-        "    FORMAT ( __MonthDate, \"mmm\"@@GETISO() )",
+        "    FORMAT ( __MonthDate, __MonthFormatString@@GETISO() )",
         ")"
       ],
       "DataType": "String",
