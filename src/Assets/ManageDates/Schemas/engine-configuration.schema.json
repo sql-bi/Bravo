@@ -1,0 +1,251 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "http://sqlbi.com/daxtemplate/schemas/engine-configuration.schema.json",
+  "type": "object",
+  "properties": {
+    "Name": {
+      "type": "string",
+      "description": "Name of the template configuration."
+    },
+    "Description": {
+      "type": "string",
+      "description": "Description of the template configuration."
+    },
+    "Templates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "Class": {
+            "type": "string",
+            "description": "Template class name: CustomDateTable, HolidaysDefinition, HolidaysTable, or MeasuresTemplate"
+          },
+          "Table": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Name of the table created by the template (used only by templates that create calculated tables)."
+          },
+          "Template": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Template configuration. It can be an external JSON file or a reference to a corresponding section (without the .JSON extension name) in the self-contained template file."
+          },
+          "ReferenceTable": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "If specified, creates a hidden table with the ReferenceTable name that contains the complete definition of the calculated table, whereas the table generated only has a reference to that hidden table."
+          },
+          "LocalizationFiles": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Array of strings with the files used for the localization."
+            },
+            "description": "Array of strings with the files used for the localization."
+          },
+          "TargetMeasures": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "Name": {
+                  "type": "string"
+                }
+              },
+              "description": "Array of criterias used to identify the measures to process. It is relevant only for measure templates."
+            },
+            "description": "Array of criterias used to identify the measures to process. It is relevant only for measure templates."
+          },
+          "IsHidden": {
+            "type": "boolean",
+            "description": "Flag true/false to specify whether the table created should be hidden. It is relevant only for table templates."
+          },
+          "IsEnabled": {
+            "type": "boolean",
+            "description": "Flag true/false to specify whether the template is enabled or not. If a template is not enabled, it is ignored. Usually, this flag is used internally to disable templates that are not required for other configuration settings."
+          },
+          "Properties": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "description": "List of properties that are used internally by specific templates. For example, the MeasureTemplate uses DisplayFolderRule and DisplayFolderRuleSingleInstanceMeasures."
+            },
+            "description": "List of properties that are used internally by specific templates. For example, the MeasureTemplate uses DisplayFolderRule and DisplayFolderRuleSingleInstanceMeasures."
+          }
+        },
+        "required": [
+          "Class"
+        ],
+        "description": "List of templates to execute in this configuration."
+      },
+      "description": "List of templates to execute in this configuration."
+    },
+    "IsoTranslation": {
+      "type": "string",
+      "description": "Specifies the ISO translation (like \u201Cen-US\u201D). If null, it does not apply a translation to the template."
+    },
+    "IsoFormat": {
+      "type": "string",
+      "description": "Specifies the ISO code for the international format applied to the DAX template placeholder @@GETISO."
+    },
+    "LocalizationFiles": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "description": "List of localization files. Each localization file corresponds to a TranslationDefinition object."
+      },
+      "description": "List of localization files. Each localization file corresponds to a TranslationDefinition object."
+    },
+    "OnlyTablesColumns": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "description": "List of tables and columns to include in the scan. If not specified, all the model columns are included by default if the SelectedTablesColumns AutoScan setting is active."
+      },
+      "description": "List of tables and columns to include in the scan. If not specified, all the model columns are included by default if the SelectedTablesColumns AutoScan setting is active."
+    },
+    "ExceptTablesColumns": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "description": "List of tables and columns to be excluded in the scan. This setting is used on when the SelectedTablesColumns AutoScan setting is active."
+      },
+      "description": "List of tables and columns to be excluded in the scan. This setting is used on when the SelectedTablesColumns AutoScan setting is active."
+    },
+    "AutoScan": {
+      "enum": [
+        "Disabled",
+        "SelectedTablesColumns",
+        "ScanActiveRelationships",
+        "ScanInactiveRelationships",
+        "Full"
+      ],
+      "description": "Defines the automatic scan to find the date range for a date table. Multiple settings can be active at the same time."
+    },
+    "FirstYearMin": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "description": "If defined, it is the minimum value for the first year generated in the Date table. If the year found by the automatic scan is less than FirstYearMin, then the Date table will start from the FirstYearMin year."
+    },
+    "FirstYearMax": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "description": "If defined, it is the maximum value for the first year generated in the Date table. If the year found by the automatic scan is greater than FirstYearMax, then the Date table will start from the FirstYearMax year."
+    },
+    "LastYearMin": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "description": "If defined, it is the minimum value for the last year generated in the Date table. If the year found by the automatic scan is less than LastYearMin, then the Date table will start from the LastYearMin year."
+    },
+    "LastYearMax": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "description": "If defined, it is the maximum value for the first year generated in the Date table. If the year found by the automatic scan is greater than LastYearMax, then the Date table will start from the LastYearMax year."
+    },
+    "FirstYear": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "description": "Used by Bravo simplified configuration and ignored by Dax Template. If defined it should be the value applied also to FirstYearMin and FirstYearMax."
+    },
+    "LastYear": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "description": "Used by Bravo simplified configuration and ignored by Dax Template. If defined it should be the value applied also to LastYearMin and LastYearMax."
+    },
+    "DefaultVariables": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string",
+        "description": "Specify a list of dictionary entries that define the default value assigned to global variable in the template. These values override the expression assigned to a global variable in the template."
+      },
+      "description": "Specify a list of dictionary entries that define the default value assigned to global variable in the template. These values override the expression assigned to a global variable in the template."
+    },
+    "IsoCountry": {
+      "type": "string",
+      "description": "Two-letter ISO code of the country to use. The holidays are retrieved for a single country from the HolidaysDefinition table."
+    },
+    "InLieuOfPrefix": {
+      "type": "string",
+      "description": "Prefix of holiday name generated by \u201Cin lieu of\u201D algorithm."
+    },
+    "InLieuOfSuffix": {
+      "type": "string",
+      "description": "Suffix of holiday name generated by \u201Cin lieu of\u201D algorithm."
+    },
+    "HolidaysDefinitionTable": {
+      "type": "string",
+      "description": "Name of the table generated by the HolidaysDefinition template containing the definition of the holidays for the supported countries."
+    },
+    "WorkingDays": {
+      "type": "string",
+      "description": "String expression that returns a DAX table with one column and as many rows as the number of working days. The weekdays are expressed by integer numbers where Sunday is 0. For example, to specify Monday to Friday as working days use the following table constructor: { 2, 3, 4, 5, 6 }"
+    },
+    "HolidaysReference": {
+      "type": "object",
+      "properties": {
+        "TableName": {
+          "type": "string",
+          "description": "Name of the Holidays table."
+        },
+        "DateColumnName": {
+          "type": "string",
+          "description": "Name of the column of Date data type in the Holidays table."
+        },
+        "HolidayColumnName": {
+          "type": "string",
+          "description": "Name of the column of type string containing the name of the holiday for each corresponding date in the Holidays table."
+        }
+      },
+      "description": "Configuration for holidays used to create working and non-working days in the Date table."
+    },
+    "AutoNaming": {
+      "enum": [
+        "Suffix",
+        "Prefix"
+      ],
+      "description": "Specifies how to create the name of measures generated by the template."
+    },
+    "AutoNamingSeparator": {
+      "type": "string",
+      "description": "Separator between prefix and measure name or measure name and suffix for the measures generated by the measure template."
+    },
+    "TargetMeasures": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "Name": {
+            "type": "string"
+          }
+        },
+        "description": "Array of objects where each item has the following properties."
+      },
+      "description": "Array of objects where each item has the following properties."
+    },
+    "TableSingleInstanceMeasures": {
+      "type": "string",
+      "description": "If defined, creates all the measures generated by the measure template into the table specified."
+    }
+  },
+  "required": [
+    "Templates"
+  ]
+}

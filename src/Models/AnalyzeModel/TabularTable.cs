@@ -2,7 +2,7 @@
 {
     using Dax.ViewModel;
     using Sqlbi.Bravo.Infrastructure.Extensions;
-    using Sqlbi.Bravo.Infrastructure.Services.ManageDates;
+    using Sqlbi.Bravo.Infrastructure.Services.DaxTemplate;
     using System;
     using System.Data;
     using System.Diagnostics;

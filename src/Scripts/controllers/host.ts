@@ -19,7 +19,7 @@ import { ThemeType } from './theme';
 import { i18n } from '../model/i18n';
 import { strings } from '../model/strings';
 import { LogMessageObj } from './logger';
-import { DateConfiguration, TableValidation } from '../model/dates';
+import { DateConfiguration, DateTemplate, sanitizeTemplates, TableValidation } from '../model/dates';
 import { ModelChanges } from '../model/model-changes';
 import { PBICloudEnvironment } from '../model/pbi-cloud';
 import { PowerBISignin } from '../view/powerbi-signin';
@@ -161,6 +161,11 @@ export interface ManageDatesPreviewChangesFromPBIDesktopReportRequest {
         previewRows: number
     }
     report: PBIDesktopReport
+}
+
+export interface CreateDateTemplateRequest {
+    name: string
+    configuration?: DateConfiguration
 }
 
 export interface BravoUpdate {
@@ -618,5 +623,39 @@ export class Host extends Dispatchable {
 
     openCredentialsManager() {
         this.apiCall("api/OpenControlPanelItem", { canonicalName: "/name Microsoft.CredentialManager /page ?SelectedVault=CredmanVault" });
+    }
+
+    /* Templates Development */
+
+    getDateConfigurations() {
+        return <Promise<DateConfiguration[]>>this.apiCall("TemplateDevelopment/GetConfigurations");
+    }
+
+    getDateConfigurationFromPackage(path: string) {
+        return <Promise<DateConfiguration>>this.apiCall("TemplateDevelopment/GetPackageConfiguration", { path: path });
+    }
+
+    getOrganizationTemplates() {
+        return this.apiCall("TemplateDevelopment/GetOrganizationCustomPackages")
+            .then((templates: DateTemplate[]) => templates && sanitizeTemplates(templates));
+    }
+
+    browseDateTemplate(includeWorkspaces = true) {
+
+        return this.apiCall("TemplateDevelopment/BrowseUserCustomPackage", { includeWorkspaces: includeWorkspaces})
+            .then((template: DateTemplate) => template && sanitizeTemplates([template])[0]);
+    }
+
+    createDateTemplate(request: CreateDateTemplateRequest) {
+        return this.apiCall("TemplateDevelopment/CreateWorkspace", request, { method: "POST" })
+            .then((template: DateTemplate) => template && sanitizeTemplates([template])[0]);
+    }
+
+    verifyDateTemplate(template: DateTemplate) {
+        return <Promise<DateTemplate>>this.apiCall("TemplateDevelopment/ValidateCustomPackage", template, { method: "POST" }); 
+    }
+
+    editDateTemplate(path: string) {
+        return this.apiCall("TemplateDevelopment/ConfigureWorkspace", { workspacePath: path, openCodeWorkspace: true });
     }
 }

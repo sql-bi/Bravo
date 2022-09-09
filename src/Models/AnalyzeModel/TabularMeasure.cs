@@ -1,7 +1,7 @@
 ﻿namespace Sqlbi.Bravo.Models.AnalyzeModel
 {
     using Sqlbi.Bravo.Infrastructure.Extensions;
-    using Sqlbi.Bravo.Infrastructure.Services.ManageDates;
+    using Sqlbi.Bravo.Infrastructure.Services.DaxTemplate;
     using Sqlbi.Bravo.Models.FormatDax;
     using System.Diagnostics;
     using System.Linq;

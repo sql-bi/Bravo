@@ -141,9 +141,10 @@
             {
                 const string Pbix = ".pbix";
                 const string Xlsx = ".xlsx";
+                const string CodeWorkspace = ".code-workspace";
 
                 var extension = Path.GetExtension(path);
-                var isAllowed = (new[] { Pbix, Xlsx }).Any((ext) => ext.EqualsI(extension));
+                var isAllowed = (new[] { Pbix, Xlsx, CodeWorkspace }).Any((ext) => ext.EqualsI(extension));
                 var isPbix = extension.EqualsI(Pbix);
 
                 if (isAllowed)
@@ -156,16 +157,15 @@
 
                     using var process = Process.Start(startInfo);
 
-                    if (process is not null)
+                    if (process is not null && !process.HasExited)
                     {
                         cancellationToken.ThrowIfCancellationRequested();
-                        processId = process.Id;
 
                         if (waitForStarted)
                         {
                             try
                             {
-                                process.WaitForInputIdle(5_000);
+                                _ = process.WaitForInputIdle(5_000);
                             }
                             catch (InvalidOperationException)
                             {
@@ -174,15 +174,19 @@
 
                             if (isPbix)
                             {
-                                for (var i = 0; i < 60; i++)
+                                for (var i = 0; i < 120; i++)
                                 {
                                     cancellationToken.ThrowIfCancellationRequested();
 
                                     if (process.HasExited)
-                                        break;
+                                    {
+                                        processId = null;
+                                        return false;
+                                    }
 
-                                    // If the result is null it means that the SSAS instance is not ready yet
-                                    if (process.GetPBIDesktopMainWindowTitle() is not null)
+                                    // If the window title is null it means that the SSAS instance is not yet started and/or the model is not yet fully loaded
+                                    var isAvailable = process.GetPBIDesktopMainWindowTitle() is not null;
+                                    if (isAvailable)
                                         break;
 
                                     Thread.Sleep(1_000);
@@ -190,6 +194,7 @@
                             }
                         }
 
+                        processId = process.Id;
                         return true;
                     }
                 }

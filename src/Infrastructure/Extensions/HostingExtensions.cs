@@ -277,23 +277,35 @@
         }
 
         /// <summary>
-        /// Get the listening addresses used by the Kesterl HTTP server
+        /// Get the listening address used by the Kesterl HTTP server
         /// </summary>
         /// <remarks>The port binding happens only when IWebHost.Run() is called and it is not accessible on Startup.Configure() because port has not been yet assigned on this stage.</remarks>
-        public static Uri[] GetListeningAddresses(this IHost host)
+        public static Uri GetListeningAddress(this IServer server)
+        {
+            var feature = server.Features.Get<IServerAddressesFeature>();
+            if (feature is not null)
+            {
+                var uris = feature.Addresses.Select((address) => new Uri(address, UriKind.Absolute)).ToArray();
+
+                if (uris.Length == 0) throw new BravoUnexpectedException("No server listening address found");
+                if (uris.Length != 1) throw new BravoUnexpectedException("Multiple server listening addresses found");
+
+                return uris.Single(); // a single address is expected here
+            }
+
+            throw new BravoUnexpectedException("Server listening address not found");
+        }
+
+        public static Uri GetListeningAddress(this IHost host)
         {
             var server = host.Services.GetService<IServer>();
             if (server is not null)
             {
-                var feature = server.Features.Get<IServerAddressesFeature>();
-                if (feature is not null)
-                {
-                    var uris = feature.Addresses.Select((address) => new Uri(address, UriKind.Absolute)).ToArray();
-                    return uris;
-                }
+                var uri = server.GetListeningAddress();
+                return uri;
             }
 
-            return Array.Empty<Uri>();
+            throw new BravoUnexpectedException("Host listening address not found");
         }
     }
 }

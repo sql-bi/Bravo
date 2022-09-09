@@ -11,6 +11,7 @@ import { host, logger } from '../main';
 import { AppError } from '../model/exceptions';
 import { I18n, i18n } from '../model/i18n'; 
 import { strings } from '../model/strings';
+import { ErrorAlert } from './error-alert';
 import { Scene } from './scene';
 
 export class ExportedScene extends Scene {
@@ -81,6 +82,8 @@ export class ExportedScene extends Scene {
             if (this.job.path) {
                 host.fileSystemOpen(this.job.path)
                     .catch(error => {
+                        const alert = new ErrorAlert(AppError.InitFromString(i18n(strings.errorPathNotFound)));
+                        alert.show();
                         try { logger.logError(AppError.InitFromError(error)); } catch(ignore) {}
                     });
             }

@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "http://sqlbi.com/daxtemplate/schemas/holidays-definition.schema.json",
+  "type": "object",
+  "properties": {
+    "Holidays": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "IsoCountry": {
+            "type": "string",
+            "description": "Two-letter ISO code of the country."
+          },
+          "MonthNumber": {
+            "type": "integer",
+            "description": "Number of month - use 99 for relative dates using Easter as a reference."
+          },
+          "DayNumber": {
+            "type": "integer",
+            "description": "Absolute day (ignore WeekDayNumber when other than 0)."
+          },
+          "WeekDayNumber": {
+            "type": "integer",
+            "description": "Day of the week, as a number: 0 = Sunday, 1 = Monday, ... , 6 = Saturday"
+          },
+          "OffsetWeek": {
+            "type": "integer",
+            "description": "Number of the week in the month, negative if the reference is the last one in the month: 1 first week, -1 last week"
+          },
+          "OffsetDays": {
+            "type": "integer",
+            "description": "Days to add after OffsetWeek and WeekDayNumber have been applied."
+          },
+          "HolidayName": {
+            "type": "string",
+            "description": "Name of the holiday."
+          },
+          "SubstituteHoliday": {
+            "enum": [
+              "NoSubstituteHoliday",
+              "SubstituteHolidayWithNextWorkingDay",
+              "SubstituteHolidayWithNextNextWorkingDay",
+              "FridayIfSaturdayOrMondayIfSunday"
+            ],
+            "description": "Define the logic to move an holiday to another day in case the date is already a non-working day (e.g. \u201Cin lieu of\u2026\u201D)"
+          },
+          "ConflictPriority": {
+            "type": "integer",
+            "description": "Priority in case of two or more holidays in the same date. A lower number corresponds to an higher priority."
+          },
+          "FirstYear": {
+            "type": "integer",
+            "description": "First year for the holiday, 0 if it is not defined."
+          },
+          "LastYear": {
+            "type": "integer",
+            "description": "Last year for the holiday, 0 if it is not defined."
+          }
+        },
+        "description": "Array of holidays, each defined as follows."
+      },
+      "description": "Array of holidays, each defined as follows."
+    }
+  }
+}

@@ -1,5 +1,6 @@
 {
-  "Description": "Standard calendar",
+  "$schema": "https://raw.githubusercontent.com/sql-bi/Bravo/main/src/Assets/ManageDates/Schemas/engine-configuration.schema.json",
+  "Description": "Standard gregorian calendar",
   "Templates": [
     {
       "Class": "HolidaysDefinitionTable",
@@ -48,7 +49,6 @@
   "LastYearMax": null,
   "AutoScan": "Full",
   "DefaultVariables": {
-    "__FirstFiscalMonth": "4",
     "__FirstDayOfWeek": "0"
   },
   "IsoCountry": "US",

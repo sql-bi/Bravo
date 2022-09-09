@@ -3,10 +3,21 @@
     using System.ComponentModel.DataAnnotations;
     using System.Text.Json.Serialization;
 
+    public class PreviewChangesRequest
+    {
+        [Required]
+        [JsonPropertyName("report")]
+        public PBIDesktopReport? Report { get; set; }
+
+        [Required]
+        [JsonPropertyName("settings")]
+        public PreviewChangesSettings? Settings { get; set; }
+    }
+
     public class PreviewChangesSettings
     {
         /// <summary>
-        /// Date template configuration to apply
+        /// <see cref="DateConfiguration"/> to be applied
         /// </summary>
         [Required]
         [JsonPropertyName("configuration")]

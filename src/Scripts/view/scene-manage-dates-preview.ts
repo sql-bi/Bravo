@@ -33,7 +33,7 @@ interface PreviewData {
 }
 export class ManageDatesPreviewScene extends DocScene {
 
-    dateConfig: DateConfiguration;
+    dateConfiguration: DateConfiguration;
 
     previews: Dic<PreviewData> = {};
     activeBranches: Dic<Branch> = {};
@@ -47,14 +47,13 @@ export class ManageDatesPreviewScene extends DocScene {
 
     applyButton: HTMLElement;
 
-    constructor(id: string, container: HTMLElement, path: string[], doc: Doc, type: PageType, dateConfig: DateConfiguration) {
+    constructor(id: string, container: HTMLElement, path: string[], doc: Doc, type: PageType, dateConfiguration: DateConfiguration) {
         super(id, container, [...path, i18n(strings.manageDatesPreview)], doc, type, false, ()=>{
             host.abortManageDatesPreviewChanges();
         }); 
 
         this.element.classList.add("manage-dates-preview");
-        this.dateConfig = dateConfig;
-        
+        this.dateConfiguration = dateConfiguration;
     }
 
     render() {
@@ -69,7 +68,7 @@ export class ManageDatesPreviewScene extends DocScene {
 
         let request: ManageDatesPreviewChangesFromPBIDesktopReportRequest = {
             settings: {
-                configuration: this.dateConfig,
+                configuration: this.dateConfiguration,
                 previewRows: 20
             },
             report: <PBIDesktopReport>this.doc.sourceData
@@ -452,11 +451,11 @@ export class ManageDatesPreviewScene extends DocScene {
 
     hasHolidays(changes: ModelChanges): boolean {
        
-        let available = (this.dateConfig.holidaysAvailable && this.dateConfig.holidaysEnabled);
+        let available = (this.dateConfiguration.holidaysAvailable && this.dateConfiguration.holidaysEnabled);
         ["modified", "removed"].forEach(group => {
             if (available) return;
             (<any>changes)[`${group}Objects`].forEach((table: TableChanges) => {
-                if (table.name == this.dateConfig.holidaysDefinitionTableName || table.name == this.dateConfig.holidaysTableName) {
+                if (table.name == this.dateConfiguration.holidaysDefinitionTableName || table.name == this.dateConfiguration.holidaysTableName) {
                     available = true;
                     return;
                 }
@@ -467,7 +466,7 @@ export class ManageDatesPreviewScene extends DocScene {
 
     hasTimeIntelligence(changes: ModelChanges): boolean {
 
-        let available = (this.dateConfig.timeIntelligenceAvailable && this.dateConfig.timeIntelligenceEnabled);
+        let available = (this.dateConfiguration.timeIntelligenceAvailable && this.dateConfiguration.timeIntelligenceEnabled);
         ["modified", "removed"].forEach(group => {
             if (available) return;
             (<any>changes)[`${group}Objects`].forEach((table: TableChanges) => {
@@ -489,7 +488,7 @@ export class ManageDatesPreviewScene extends DocScene {
 
 
         let request: ManageDatesPBIDesktopReportConfigurationRequest = {
-            configuration: this.dateConfig,
+            configuration: this.dateConfiguration,
             report: <PBIDesktopReport>this.doc.sourceData
         }
         

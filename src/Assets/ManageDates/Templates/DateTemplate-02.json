@@ -1,7 +1,8 @@
 {
-  "_comment": "Reference Monthly Calendar",
-  "CalendarTypes": [ "Calendar", "Fiscal" ],
-  "FormatPrefixes": [ "M", "Q", "FY", "FQ" ],
+  "$schema": "https://raw.githubusercontent.com/sql-bi/Bravo/main/src/Assets/ManageDates/Schemas/date-template.schema.json",
+  "_comment": "Reference FY prefix format in DAX expression using the syntax @_FY_@",
+  "CalendarType": "Fiscal",
+  "FormatPrefixes": [ "FY", "FQ" ],
   "Steps": [
     {
       "Name": "__Calendar",
@@ -11,41 +12,22 @@
   "GlobalVariables": [
     {
       "Name": "__FirstFiscalMonth",
-      "Expression": "3",
+      "Expression": "7",
       "IsConfigurable": true
     },
     {
-      "Name": "__MonthsInYear",
-      "Expression": "12",
+      "Name": "__FirstDayOfWeek",
+      "Expression": "0",
       "IsConfigurable": true
     },
     {
-      "Name": "__OffsetFiscalMonthNumber",
-      "Expression": "__MonthsInYear + 1 - (__MonthsInYear - 12)"
+      "Name": "__WeekDayCalculationType",
+      "Expression": "IF ( __FirstDayOfWeek = 0, 7, __FirstDayOfWeek ) + 10"
     },
     {
-      "Name": "__OffsetYears",
-      "Expression": "1",
-      "IsConfigurable": true,
-      "Comment": "Increase range of fiscal years before/after boundaries defined"
-    },
-    {
-      "Name": "__TypeStartFiscalYear",
-      "Expression": "1",
-      "IsConfigurable": true,
-      "MultiLineComment": [
-        "Fiscal year as Calendar Year of :",
-        "0 - First day of fiscal year",
-        "1 - Last day of fiscal year"
-      ]
-    },
-    {
-      "Name": "__IsStandardLocale",
-      "Expression": "IF ( FORMAT( DATE( 2000, 1, 1 ), \"oooo\"@@GETISO() ) = \"oooo\", TRUE, FALSE )"
-    },
-    {
-      "Name": "__MonthFormatString",
-      "Expression": "IF( __IsStandardLocale, \"mmm\", \"ooo\" )"
+      "Name": "__WorkingDays",
+      "Expression": "@@GETCONFIG( WorkingDays )",
+      "IsConfigurable": true
     }
   ],
   "RowVariables": [
@@ -54,67 +36,72 @@
       "Expression": "[Date]"
     },
     {
-      "Name": "__YearMonthNumber",
-      "Expression": "YEAR ( __Date ) * __MonthsInYear + MONTH ( __Date ) - 1"
-    },
-    {
-      "Name": "__FiscalMonthNumber",
-      "Expression": "MOD ( __YearMonthNumber + 1 * (__FirstFiscalMonth > 1) * (__MonthsInYear + 1 - __FirstFiscalMonth), __MonthsInYear ) + 1"
-    },
-    {
-      "Name": "__FiscalYearNumber",
-      "Expression": "QUOTIENT ( __YearMonthNumber + __TypeStartFiscalYear * (__FirstFiscalMonth > 1) * (__MonthsInYear + 1 - __FirstFiscalMonth), __MonthsInYear )"
+      "Name": "__YearNumber",
+      "Expression": "YEAR ( __Date )"
     },
     {
       "Name": "__MonthNumber",
-      "MultiLineExpression": [
-        "IF (",
-        "    __FiscalMonthNumber <= 12 && __FirstFiscalMonth > 1,",
-        "    __FiscalMonthNumber + __FirstFiscalMonth",
-        "        - IF (",
-        "            __FiscalMonthNumber > (__OffsetFiscalMonthNumber - __FirstFiscalMonth),",
-        "            __OffsetFiscalMonthNumber,",
-        "            1",
-        "        ),",
-        "    __FiscalMonthNumber",
-        ")"
-      ]
-    },
-    {
-      "Name": "__YearNumber",
-      "Expression": "__FiscalYearNumber - 1 * (__MonthNumber > __FiscalMonthNumber)"
-    },
-    {
-      "Name": "__YearMonthKey",
-      "Expression": "__YearNumber * 100 + __MonthNumber"
-    },
-    {
-      "Name": "__MonthDate",
-      "Expression": "DATE ( __YearNumber, __MonthNumber, 1 )"
-    },
-    {
-      "Name": "__FiscalQuarterNumber",
-      "Expression": "MIN ( ROUNDUP ( __FiscalMonthNumber / 3, 0 ), 4 )"
-    },
-    {
-      "Name": "__FiscalYearQuarterNumber",
-      "Expression": "__FiscalYearNumber * 4 + __FiscalQuarterNumber - 1"
-    },
-    {
-      "Name": "__FiscalMonthInQuarterNumber",
-      "Expression": "MOD ( __FiscalMonthNumber - 1, 3 ) + 1 + 3 * ( __MonthNumber > 12 )"
-    },
-    {
-      "Name": "__MonthInQuarterNumber",
-      "Expression": "MOD ( __MonthNumber - 1, 3 ) + 1 + 3 * ( __MonthNumber > 12 )"
+      "Expression": "MONTH ( __Date )"
     },
     {
       "Name": "__QuarterNumber",
-      "Expression": "MIN ( ROUNDUP ( __MonthNumber / 3, 0 ), 4 )"
+      "Expression": "QUARTER ( __Date )"
+    },
+    {
+      "Name": "__MonthNumberQ",
+      "Expression": "__MonthNumber - 3 * (__QuarterNumber - 1)"
     },
     {
       "Name": "__YearQuarterNumber",
-      "Expression": "__YearNumber * 4 + __QuarterNumber - 1"
+      "Expression": "CONVERT ( __YearNumber * 4 + __QuarterNumber - 1, INTEGER )"
+    },
+    {
+      "Name": "__WeekDayNumber",
+      "Expression": "WEEKDAY ( __Date, __WeekDayCalculationType )"
+    },
+    {
+      "Name": "__WeekDay",
+      "Expression": "FORMAT ( __Date, __DayFormatString@@GETISO() )"
+    },
+    {
+      "Name": "__FiscalYearNumber",
+      "Expression": "__YearNumber + 1 * ( __FirstFiscalMonth > 1 && __MonthNumber >= __FirstFiscalMonth )"
+    },
+    {
+      "Name": "__FiscalYearQuarterNumber",
+      "Expression": "CONVERT ( __FiscalYearNumber * 4 + __FiscalQuarterNumber - 1, INTEGER )"
+    },
+    {
+      "Name": "__FiscalMonthNumber",
+      "Expression": "__MonthNumber - __FirstFiscalMonth + 1 + 12 * (__MonthNumber < __FirstFiscalMonth)"
+    },
+    {
+      "Name": "__FiscalQuarterNumber",
+      "Expression": "ROUNDUP ( __FiscalMonthNumber / 3, 0 )"
+    },
+    {
+      "Name": "__HolidayName",
+      "Expression": "@@GETHOLIDAYNAME( __Date )"
+    },
+    {
+      "Name": "__IsWorkingDay",
+      "Expression": "WEEKDAY ( __Date, 1 ) IN __WorkingDays && ISBLANK ( __HolidayName )"
+    },
+    {
+      "Name": "__LastTransactionDate",
+      "Expression": "@@GETMAXDATE()"
+    },
+    {
+      "Name": "__IsStandardLocale",
+      "Expression": "IF ( FORMAT( DATE( 2000, 1, 1 ), \"oooo\"@@GETISO() ) = \"oooo\", TRUE, FALSE )"
+    },
+    {
+      "Name": "__DayFormatString",
+      "Expression": "IF( __IsStandardLocale, \"ddd\", \"aaa\" )"
+    },
+    {
+      "Name": "__MonthFormatString",
+      "Expression": "IF( __IsStandardLocale, \"mmm\", \"ooo\" )"
     }
   ],
   "Columns": [
@@ -130,101 +117,23 @@
       ]
     },
     {
-      "Name": "Year Month Key",
-      "Expression": "__YearNumber * 100 + __MonthNumber",
-      "DataType": "Int64",
-      "IsHidden": true
-    },
-    {
-      "Name": "Month",
-      "MultiLineExpression": [
-        "IF (",
-        "    __MonthNumber > 12,",
-        "    FORMAT ( __MonthNumber, \"@_M_@00\"@@GETISO() ),",
-        "    FORMAT ( __MonthDate, __MonthFormatString@@GETISO() )",
-        ")"
-      ],
-      "DataType": "String",
-      "SortByColumn": "Month Number",
-      "DataCategory": "MonthOfYear"
-    },
-    {
-      "Name": "Month Number",
-      "Expression": "__MonthNumber",
-      "DataType": "Int64",
-      "IsHidden": true,
-      "AttributeType": "MonthOfYear",
-      "DataCategory": "MonthOfYear"
-    },
-    {
       "Name": "Year Month",
-      "MultiLineExpression": [
-        "IF (",
-        "    __MonthNumber > 12,",
-        "    FORMAT ( __MonthNumber, \"@_M_@00\"@@GETISO() ) & FORMAT ( __YearNumber, \" 0000\"@@GETISO() ),",
-        "    FORMAT ( __MonthDate, __MonthFormatString & \" yyyy\"@@GETISO() )",
-        ")"
-      ],
+      "Expression": "FORMAT ( __Date, __MonthFormatString & \" yyyy\"@@GETISO() )",
       "DataType": "String",
       "SortByColumn": "Year Month Number",
-      "": "Months"
+      "DataCategory": "Months"
     },
     {
       "Name": "Year Month Number",
-      "Expression": "__YearMonthNumber",
+      "Expression": "__YearNumber * 12 + __MonthNumber - 1",
       "DataType": "Int64",
       "IsHidden": true,
-      "DataCategory": "Months",
-      "AttributeTypes": [
-        "Months",
-        "FiscalMonths"
-      ]
-    },
-    {
-      "Name": "Month In Quarter Number",
-      "Expression": "__MonthInQuarterNumber",
-      "DataType": "Int64",
-      "IsHidden": true,
-      "AttributeType": "MonthOfQuarter",
-      "DataCategory": "MonthOfQuarter"
-    },
-    {
-      "Name": "Quarter",
-      "Expression": "FORMAT( __Date, \"@_Q_@Q\"@@GETISO() )",
-      "DataType": "String",
-      "DataCategory": "QuarterOfYear"
-    },
-    {
-      "Name": "Year Quarter",
-      "Expression": "FORMAT ( __QuarterNumber, \"@_Q_@0\"@@GETISO() ) & \"-\" & FORMAT ( __YearNumber, \"0000\"@@GETISO() )",
-      "DataType": "String",
-      "SortByColumn": "Year Quarter Number",
-      "DataCategory": "Quarters"
-    },
-    {
-      "Name": "Year Quarter Number",
-      "Expression": "__YearQuarterNumber",
-      "DataType": "Int64",
-      "IsHidden": true,
-      "AttributeType": "Quarters",
-      "DataCategory": "Quarters"
-    },
-    {
-      "Name": "Year",
-      "Expression": "__YearNumber",
-      "DataType": "Int64",
-      "AttributeType": "Years",
-      "DataCategory": "Years"
+      "AttributeType": "FiscalMonths",
+      "DataCategory": "Months"
     },
     {
       "Name": "Fiscal Month",
-      "MultiLineExpression": [
-        "IF (",
-        "    __MonthNumber > 12,",
-        "    FORMAT ( __MonthNumber, \"@_M_@00\"@@GETISO() ),",
-        "    FORMAT ( __MonthDate, __MonthFormatString@@GETISO() )",
-        ")"
-      ],
+      "Expression": "FORMAT ( __Date, __MonthFormatString@@GETISO() )",
       "DataType": "String",
       "SortByColumn": "Fiscal Month Number",
       "DataCategory": "MonthOfYear"
@@ -234,22 +143,43 @@
       "Expression": "__FiscalMonthNumber",
       "DataType": "Int64",
       "IsHidden": true,
-      "AttributeType": "FiscalMonthOfYear",
       "DataCategory": "MonthOfYear"
     },
     {
-      "Name": "Fiscal Month In Quarter Number",
-      "Expression": "__FiscalMonthInQuarterNumber",
+      "Name": "Day of Week Number",
+      "Expression": "__WeekDayNumber",
       "DataType": "Int64",
       "IsHidden": true,
-      "AttributeType": "FiscalMonthOfQuarter",
-      "DataCategory": "MonthOfQuarter"
+      "AttributeType": "DayOfWeek",
+      "DataCategory": "DayOfWeek",
+      "Annotations": {
+        "SQLBI_FilterSafe": true
+      }
     },
     {
-      "Name": "Fiscal Quarter",
-      "Expression": "FORMAT( __FiscalQuarterNumber, \"@_FQ_@0\"@@GETISO() )",
+      "Name": "Day of Week",
+      "Expression": "__WeekDay",
       "DataType": "String",
-      "DataCategory": "QuarterOfYear"
+      "SortByColumn": "Day of Week Number",
+      "DataCategory": "DayOfWeek",
+      "Annotations": {
+        "SQLBI_FilterSafe": true
+      }
+    },
+    {
+      "Name": "Fiscal Year",
+      "Expression": "FORMAT ( __FiscalYearNumber, \"@_FY_@ 0000\"@@GETISO() )",
+      "DataType": "String",
+      "SortByColumn": "Fiscal Year Number",
+      "DataCategory": "Years"
+    },
+    {
+      "Name": "Fiscal Year Number",
+      "Expression": "__FiscalYearNumber",
+      "DataType": "Int64",
+      "IsHidden": true,
+      "AttributeType": "FiscalYears",
+      "DataCategory": "Years"
     },
     {
       "Name": "Fiscal Year Quarter",
@@ -267,41 +197,51 @@
       "DataCategory": "Quarters"
     },
     {
-      "Name": "Fiscal Year",
-      "Expression": "FORMAT ( __FiscalYearNumber, \"@_FY_@ 0000\"@@GETISO() )",
+      "Name": "Fiscal Quarter",
+      "Expression": "FORMAT( __FiscalQuarterNumber, \"@_FQ_@0\"@@GETISO() )",
       "DataType": "String",
-      "SortByColumn": "Fiscal Year Number",
-      "DataCategory": "Years"
+      "DataCategory": "QuarterOfYear"
     },
     {
-      "Name": "Fiscal Year Number",
-      "Expression": "__FiscalYearNumber",
+      "Name": "IsWorking",
+      "Expression": "__IsWorkingDay",
+      "DataType": "Boolean",
+      "IsHidden": true,
+      "RequiresHolidays": true,
+      "Annotations": {
+        "SQLBI_FilterSafe": true
+      }
+    },
+    {
+      "Name": "Working Day Value",
+      "Expression": "IF ( __IsWorkingDay, 1 )",
       "DataType": "Int64",
       "IsHidden": true,
-      "AttributeType": "FiscalYears",
-      "DataCategory": "Years"
+      "RequiresHolidays": true,
+      "Annotations": {
+        "SQLBI_FilterSafe": true
+      }
+    },
+    {
+      "Name": "Holiday Name",
+      "Expression": "__HolidayName",
+      "DataType": "String",
+      "RequiresHolidays": true,
+      "Annotations": {
+        "SQLBI_FilterSafe": true
+      }
+    },
+    {
+      "Name": "DateWithTransactions",
+      "Expression": "__Date <= __LastTransactionDate",
+      "DataType": "Boolean",
+      "IsHidden": true,
+      "AttributeType": "DateDuration"
     }
   ],
   "Hierarchies": [
     {
-      "Name": "Fiscal Year-Quarter",
-      "Levels": [
-        {
-          "Name": "Year",
-          "Column": "Fiscal Year"
-        },
-        {
-          "Name": "Quarter",
-          "Column": "Fiscal Year Quarter"
-        },
-        {
-          "Name": "Month",
-          "Column": "Year Month"
-        }
-      ]
-    },
-    {
-      "Name": "Fiscal Year-Month",
+      "Name": "Fiscal",
       "Levels": [
         {
           "Name": "Year",
@@ -310,36 +250,10 @@
         {
           "Name": "Month",
           "Column": "Year Month"
-        }
-      ]
-    },
-    {
-      "Name": "Year-Quarter",
-      "Levels": [
-        {
-          "Name": "Year",
-          "Column": "Year"
         },
         {
-          "Name": "Quarter",
-          "Column": "Year Quarter"
-        },
-        {
-          "Name": "Month",
-          "Column": "Year Month"
-        }
-      ]
-    },
-    {
-      "Name": "Year-Month",
-      "Levels": [
-        {
-          "Name": "Year",
-          "Column": "Year"
-        },
-        {
-          "Name": "Month",
-          "Column": "Year Month"
+          "Name": "Date",
+          "Column": "Date"
         }
       ]
     }

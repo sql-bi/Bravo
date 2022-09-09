@@ -4,9 +4,9 @@
  * https://www.sqlbi.com
 */
 
-import { _ } from '../helpers/utils';
+import { Utils, _ } from '../helpers/utils';
 import { app } from '../main';
-import { AppError } from '../model/exceptions';
+import { AppError, AppErrorType } from '../model/exceptions';
 import { i18n } from '../model/i18n'; 
 import { strings } from '../model/strings';
 import { Dialog } from './dialog';
@@ -17,7 +17,7 @@ export class ErrorAlert extends Dialog {
     error: AppError;
     
     constructor(error: AppError, title?: string) {
-        super("error", document.body, title ? title : `${i18n(strings.error)} ${error.code}`, [
+        super("error", document.body, title ? title : `${i18n(strings.errorTitle)}${error.code && error.type == AppErrorType.Managed ? ` (${error.code})` : "" }`, [
             { name: i18n(strings.dialogOK), action: "cancel", className: "button-alt" },
         ], "icon-alert");
 
@@ -26,12 +26,11 @@ export class ErrorAlert extends Dialog {
 
     show() {
         let html = `
-            <p class="message">${this.error.message}</p>
+            <p class="message">
+                ${this.error.message}
+                ${Utils.Obj.isString(this.error.details) ? `<br>${this.error.details}` : ""}
+            </p>
 
-            ${ this.error.details ? `
-                <blockquote>${this.error.details}</blockquote>
-            ` : "" }
-            
             <p class="context">
                 ${i18n(strings.version)}: ${app.currentVersion.toString()}
                 ${this.error.traceId ? `<br> ${i18n(strings.traceId)}: ${this.error.traceId}` : ""}

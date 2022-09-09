@@ -8,7 +8,7 @@ import { OptionsStore } from '../controllers/options';
 import { Loader } from '../helpers/loader';
 import { Dic, Utils, _ } from '../helpers/utils';
 import { host, logger, optionsController, telemetry } from '../main';
-import { AutoScanEnum, DateConfiguration, TableValidation } from '../model/dates';
+import { AutoScanEnum, DateConfiguration, DateTemplateType, TableValidation } from '../model/dates';
 import { Doc } from '../model/doc';
 import { AppError, AppErrorType } from '../model/exceptions';
 import { i18n } from '../model/i18n';
@@ -111,19 +111,19 @@ export class ManageDatesScene extends DocScene {
             }
         });
 
-        this.getDatesConfiguration()
-            .then(templates => {
+        this.loadDateConfigurations()
+            .then(dateConfigurations => {
                 loader.remove();
 
-                let calendarPane = new ManageDatesSceneCalendar(this.config, this.doc, templates);
+                let calendarPane = new ManageDatesSceneCalendar(this.config, this.doc, dateConfigurations);
                 this.panes.push(calendarPane);
-                let intervalPane = new ManageDatesSceneInterval(this.config, this.doc, templates);
+                let intervalPane = new ManageDatesSceneInterval(this.config, this.doc, dateConfigurations);
                 this.panes.push(intervalPane);
-                let datesPane = new ManageDatesSceneDates(this.config, this.doc, templates);
+                let datesPane = new ManageDatesSceneDates(this.config, this.doc, dateConfigurations);
                 this.panes.push(datesPane);
-                let holidaysPane = new ManageDatesSceneHolidays(this.config, this.doc, templates);
+                let holidaysPane = new ManageDatesSceneHolidays(this.config, this.doc, dateConfigurations);
                 this.panes.push(holidaysPane);
-                let timeIntelligencePane = new ManageDatesSceneTimeIntelligence(this.config, this.doc, templates);
+                let timeIntelligencePane = new ManageDatesSceneTimeIntelligence(this.config, this.doc, dateConfigurations);
                 this.panes.push(timeIntelligencePane);
 
                 this.menu = new Menu("date-config-menu", menuContainer, <Dic<MenuItem>>{
@@ -164,40 +164,76 @@ export class ManageDatesScene extends DocScene {
                 this.splice(errorScene);
             });
 
+        optionsController.on("customOptions.templates.change", (changedOptions: any) => {
+            this.update();
+        });
+        optionsController.on("customTemplatesEnabled.change", (changedOptions: any) => {
+            this.update();
+        });
+
         // Do not call this.update() because we already got date config - but we need to call any update functions in parents
         super.update();
     }
 
-    getDatesConfiguration() {
+    async loadDateConfigurations() {
 
-        return host.manageDatesGetConfigurations(<PBIDesktopReport>this.doc.sourceData)
-        .then(templates => {
-           
-            if (!templates.length)
-                throw AppError.InitFromResponseStatus(Utils.ResponseStatusCode.InternalError);
+        let dateConfigurations: DateConfiguration[] = [];
 
-            //Remove templates duplicates and assign current
-            let currentTemplate: DateConfiguration;
-            let uniqueTemplates:Dic<DateConfiguration> = {};
-            templates.forEach(template => {
+        // Builtin date configurations
+        try {
+            dateConfigurations = [...dateConfigurations, ...await host.manageDatesGetConfigurations(<PBIDesktopReport>this.doc.sourceData)];
+        } catch(error) {
+            try { logger.logError(error); } catch(ignore) {}
+        }
 
-                if (!currentTemplate || template.isCurrent)
-                    currentTemplate = template;
+        // User/Org templates
+        try {
+            let customTemplates = [
+                ...await host.getOrganizationTemplates(), 
+                ...(optionsController.options.customTemplatesEnabled ? optionsController.options.customOptions.templates : [])
+            ];
 
-                if (template.templateUri in uniqueTemplates) {
-                    if (template.isCurrent)
-                        uniqueTemplates[template.templateUri] = template;
-                } else {
-                    uniqueTemplates[template.templateUri] = template;
+            for (let i = 0; i < customTemplates.length; i++) {
+                const template = await host.verifyDateTemplate(customTemplates[i]);
+                if (template.hasPackage) {
+                    
+                    try {
+                        let dateConfiguration = await host.getDateConfigurationFromPackage(template.path);
+                        dateConfiguration.template = template;
+                        dateConfigurations.push(dateConfiguration);
+                    } catch(error) {
+                        try { logger.logError(error); } catch(ignore) {}
+                    }
                 }
-            });
+            };
+        } catch(error) {
+            try { logger.logError(error); } catch(ignore) {}
+        }
 
-            this.config.options = Utils.Obj.clone(currentTemplate);
-            this.config.options.dateEnabled = true;
-            this.config.save();
+        if (!dateConfigurations.length)
+            throw AppError.InitFromString(i18n(strings.errorManageDateNoTemplates));
 
-            return Object.values(uniqueTemplates);
+        // Remove templates duplicates and assign current
+        let currentDateConfiguration: DateConfiguration;
+        let uniqueDateConfigurations: Dic<DateConfiguration> = {};
+        dateConfigurations.forEach(dateConfiguration => {
+
+            if (!currentDateConfiguration || dateConfiguration.isCurrent)
+                currentDateConfiguration = dateConfiguration;
+
+            if (dateConfiguration.templateUri in uniqueDateConfigurations) {
+                if (dateConfiguration.isCurrent)
+                    uniqueDateConfigurations[dateConfiguration.templateUri] = dateConfiguration;
+            } else {
+                uniqueDateConfigurations[dateConfiguration.templateUri] = dateConfiguration;
+            }
         });
+
+        this.config.options = Utils.Obj.clone(currentDateConfiguration);
+        this.config.options.dateEnabled = true;
+        this.config.save();
+
+        return Object.values(uniqueDateConfigurations);
     }
 
     loadSampleData() {
@@ -205,6 +241,11 @@ export class ManageDatesScene extends DocScene {
         let renderSampleDataError = ()=> {
             _(".sample-data .table", this.element).innerHTML = `<div class="error">${i18n(strings.manageDatesSampleDataError)}</div>`;
         };
+
+        if (this.doc.orphan) {
+            renderSampleDataError();
+            return;
+        }
         
         this.checkTableNames().then(tableNamesValidity => {
             if (tableNamesValidity == TableValidation.InvalidExists) {
@@ -346,13 +387,13 @@ export class ManageDatesScene extends DocScene {
         if (!super.update()) return false;
         this.scheduleLoadSampleData();
 
-        this.getDatesConfiguration()
-            .then(templates => {
+        this.loadDateConfigurations()
+            .then(dateConfigurations => {
 
                 this.updateAvailableFeatures();
 
                 this.panes.forEach(pane => {
-                    pane.templates = templates;
+                    pane.dateConfigurations = dateConfigurations;
                     pane.update();
                 });
             })

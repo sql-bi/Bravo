@@ -38,6 +38,12 @@
         }
 
         public (PolicyStatus Policy, bool Value) GetUpdateCheckEnabledPolicy() => GetBoolPolicy(valueName: "UpdateCheckEnabled", relativeSubkeyName: OptionSettingsName);
+        
+        public (PolicyStatus Policy, bool Value) GetBuiltInTemplatesEnabledPolicy() => GetBoolPolicy(valueName: "BuiltInTemplatesEnabled", relativeSubkeyName: OptionSettingsName);
+
+        public (PolicyStatus Policy, bool Value) GetCustomTemplatesEnabledPolicy() => GetBoolPolicy(valueName: "CustomTemplatesEnabled", relativeSubkeyName: OptionSettingsName);
+
+        public (PolicyStatus Policy, string? Value) GetCustomTemplatesOrganizationRepositoryPathPolicy() => GetStringPolicy(valueName: "CustomTemplatesOrganizationRepositoryPath", relativeSubkeyName: OptionSettingsName);
 
         private static (PolicyStatus Policy, bool Value) GetBoolPolicy(string valueName, string relativeSubkeyName)
         {
@@ -59,6 +65,31 @@
             {
                 throw new BravoUnexpectedException($"Unexpected {nameof(PolicyStatus)} value ({policyValue})");
             }
+        }
+
+        private static (PolicyStatus Policy, string? Value) GetStringPolicy(string valueName, string relativeSubkeyName)
+        {
+            var policyValue = GetStringValue(valueName, relativeSubkeyName);
+
+            if (IsPolicyNotConfigured(policyValue))
+            {
+                return (PolicyStatus.NotConfigured, Value: null);
+            }
+            else
+            {
+                return (PolicyStatus.Forced, Value: policyValue);
+            }
+        }
+
+        private static string? GetStringValue(string valueName, string relativeSubkeyName)
+        {
+            var subkeyName = Path.Combine(PolicySubKeyName, relativeSubkeyName);
+            var value = Registry.LocalMachine.GetStringValue(subkeyName, valueName);
+
+            if (value is null)
+                value = Registry.CurrentUser.GetStringValue(subkeyName, valueName);
+
+            return value;
         }
 
         private static int? GetIntValue(string valueName, string relativeSubkeyName)
@@ -105,6 +136,14 @@
         }
 
         private static bool IsPolicyNotConfigured(int? policyValue)
+        {
+            if (policyValue is null)
+                return true;
+
+            return false;
+        }
+
+        private static bool IsPolicyNotConfigured(string? policyValue)
         {
             if (policyValue is null)
                 return true;

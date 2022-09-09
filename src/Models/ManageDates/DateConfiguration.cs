@@ -5,7 +5,7 @@
     using Dax.Template.Tables;
     using Sqlbi.Bravo.Infrastructure;
     using Sqlbi.Bravo.Infrastructure.Extensions;
-    using Sqlbi.Bravo.Infrastructure.Services.ManageDates;
+    using Sqlbi.Bravo.Infrastructure.Services.DaxTemplate;
     using System;
     using System.ComponentModel.DataAnnotations;
     using System.Diagnostics;
@@ -28,6 +28,7 @@
         public DateConfiguration()
         {
             IsCurrent = false;
+            IsCustom = false;
         }
 
         /// <summary>
@@ -37,8 +38,17 @@
         [JsonPropertyName("templateUri")]
         public string? TemplateUri { get; set; }
 
+        /// <summary>
+        /// Returns true if this <see cref="DateConfiguration"/> is the one currently applied to the model
+        /// </summary>
         [JsonPropertyName("isCurrent")]
         public bool IsCurrent { get; private set; } = false;
+
+        /// <summary>
+        /// Returns true if this <see cref="DateConfiguration"/> belongs to a custom developed template and not a predefined Bravo template
+        /// </summary>
+        [JsonPropertyName("isCustom")]
+        public bool IsCustom { get; set; } = false;
 
         [JsonPropertyName("name")]
         public string? Name { get; set; }
@@ -156,7 +166,6 @@
         [JsonPropertyName("holidaysEnabled")]
         public bool HolidaysEnabled { get; set; } = true;
 
-        [Required]
         [JsonPropertyName("holidaysTableName")]
         public string? HolidaysTableName { get; set; }
 
@@ -164,7 +173,6 @@
         [JsonPropertyName("holidaysTableValidation")]
         public TableValidation HolidaysTableValidation { get; set; } = TableValidation.Unknown;
 
-        [Required]
         [JsonPropertyName("holidaysDefinitionTableName")]
         public string? HolidaysDefinitionTableName { get; set; }
 
@@ -194,7 +202,6 @@
 
         public void CopyTo(TemplateConfiguration templateConfiguration)
         {
-            templateConfiguration.TemplateUri = TemplateUri ?? templateConfiguration.TemplateUri;
             templateConfiguration.Name = Name ?? templateConfiguration.Name;
             templateConfiguration.Description = Description ?? templateConfiguration.Description;
             //
@@ -420,27 +427,44 @@
 
     internal static class DateConfigurationExtensions
     {
-        public static Dax.Template.Package GetPackage(this DateConfiguration configuration, string cachePath)
+        public static Dax.Template.Package LoadPackage(this DateConfiguration configuration, bool configure = true)
         {
-            FixTemplateUri(configuration);
-
             BravoUnexpectedException.ThrowIfNull(configuration.TemplateUri);
 
-            var templatePath = Path.Combine(cachePath, configuration.TemplateUri);
-            var customTemplatePath = Path.ChangeExtension(templatePath, $"{DateTime.Now:yyyyMMddHHmmss}-{Guid.NewGuid():N}.json");
+            {
+                // >> HACK
+                // versions 0.9.0 to 0.9.3 - TemplateUri format is %LOCALAPPDATA%\[name].template.json
+                // versions 0.9.4 to 0.9.5 - TemplateUri format is                [name].template.json
+
+                if (Uri.TryCreate(configuration.TemplateUri, UriKind.Absolute, out _) == false)
+                {
+                    // If TemplateUri does not contain an absolute URI, we forcibly create one using a known valid local path
+                    configuration.TemplateUri = Path.Combine(DaxTemplateManager.CachePath, configuration.TemplateUri);
+                }
+                // << HACK
+            }
+
+            var templateUri = new Uri(configuration.TemplateUri, UriKind.Absolute);
+            var templatePath = templateUri.LocalPath;
+
+            if (configuration.IsCustom == false)
+            {
+                // If it is a default/embedded template then we ignore the TemplateUri path and force the current user's local cache path.
+                templatePath = Path.Combine(DaxTemplateManager.CachePath, Path.GetFileName(templatePath));
+            }
+
             var package = Dax.Template.Package.LoadFromFile(templatePath);
 
-            configuration.CopyTo(package.Configuration);
-            package.SaveTo(customTemplatePath);
+            if (configure)
+            {
+                configuration.CopyTo(package.Configuration);
+            }
 
-            var customPackage = Dax.Template.Package.LoadFromFile(customTemplatePath);
-            return customPackage;
+            return package;
         }
 
         public static void SerializeTo(this DateConfiguration configuration, TOM.Model model)
         {
-            FixTemplateUri(configuration);
-
             var configurationString = JsonSerializer.Serialize(configuration, DateConfiguration.ExtendedPropertyJsonOptions);
             var configurationProperty = model.ExtendedProperties.Find(DateConfiguration.ExtendedPropertyName);
 
@@ -462,18 +486,6 @@
 
                 if (jsonProperty.Value != configurationString)
                     jsonProperty.Value = configurationString;
-            }
-        }
-
-        private static void FixTemplateUri(DateConfiguration configuration)
-        {
-            BravoUnexpectedException.ThrowIfNull(configuration.TemplateUri);
-
-            // HACK: to remove %LOCALAPPDATA% path from 'configuration.TemplateUri' - versions 0.9.0 to 0.9.3
-
-            if (Uri.TryCreate(configuration.TemplateUri, UriKind.Absolute, out var templateUri) && templateUri.Scheme.Equals(Uri.UriSchemeFile))
-            {
-                configuration.TemplateUri = Path.GetFileName(templateUri.LocalPath);
             }
         }
     }

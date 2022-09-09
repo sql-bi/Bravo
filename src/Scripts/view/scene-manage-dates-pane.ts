@@ -17,14 +17,14 @@ import { ManageDatesConfig } from './scene-manage-dates';
 export class ManageDatesScenePane {
 
     doc: Doc;
-    templates: DateConfiguration[];
+    dateConfigurations: DateConfiguration[];
     element: HTMLElement;
     config: OptionsStore<ManageDatesConfig>;
 
-    constructor(config: OptionsStore<ManageDatesConfig>, doc: Doc, templates: DateConfiguration[]) {
+    constructor(config: OptionsStore<ManageDatesConfig>, doc: Doc, dateConfigurations: DateConfiguration[]) {
         this.config = config;
         this.doc = doc;
-        this.templates = templates;
+        this.dateConfigurations = dateConfigurations;
     }
 
     render(element: HTMLElement) {
@@ -39,17 +39,17 @@ export class ManageDatesScenePane {
     destroy() {
         this.config = null;
         this.doc = null;
-        this.templates = null;
+        this.dateConfigurations = null;
     }
 
     fieldReadonly(field: string) {
         let dateTablesReadonly = false;
         let holidaysTablesReadonly = false;
-        this.templates.forEach(template => {
-            if (template.isCurrent) {
+        this.dateConfigurations.forEach(dateConfiguration => {
+            if (dateConfiguration.isCurrent) {
                 dateTablesReadonly = true;
 
-                if (template.holidaysAvailable && template.holidaysEnabled)
+                if (dateConfiguration.holidaysAvailable && dateConfiguration.holidaysEnabled)
                     holidaysTablesReadonly = true;
             }
         });

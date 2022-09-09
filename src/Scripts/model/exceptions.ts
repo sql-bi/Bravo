@@ -142,4 +142,8 @@ export class AppError {
     static InitFromError(error: Error){
         return AppError.InitFromProblem({ status: Utils.ResponseStatusCode.InternalError, title: error.message });
     }
+
+    static InitFromString(message: string){
+        return AppError.InitFromProblem({ status: Utils.ResponseStatusCode.InternalError, title: message });
+    }
 }

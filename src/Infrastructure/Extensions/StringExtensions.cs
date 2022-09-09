@@ -147,6 +147,11 @@
             return EqualsI(current, value?.Trim());
         }
 
+        public static bool EndsWithI(this string? current, string value)
+        {
+            return current?.EndsWith(value, StringComparison.OrdinalIgnoreCase) ?? false;
+        }
+
         public static string? GetDaxName(this string? fullyQualifiedName)
         {
             if (fullyQualifiedName is not null)

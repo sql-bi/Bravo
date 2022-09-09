@@ -349,7 +349,7 @@ window.external = {
 
             string GetAddress()
             {
-                var address = _host.GetListeningAddresses().Single(); // single address expected here
+                var address = _host.GetListeningAddress(); 
                 var addressString = address.ToString();
 
                 return addressString;

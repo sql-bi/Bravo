@@ -1,6 +1,5 @@
 ﻿namespace Sqlbi.Bravo.Models
 {
-    using Sqlbi.Bravo.Infrastructure;
     using Sqlbi.Bravo.Infrastructure.Configuration;
     using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
     using System.Text.Json;
@@ -21,6 +20,7 @@
             Theme = userSettings.Theme;
             Proxy = userSettings.Proxy;
             UseSystemBrowserForAuthentication = userSettings.UseSystemBrowserForAuthentication;
+            CustomTemplatesEnabled = userSettings.CustomTemplatesEnabled;
             CustomOptions = userSettings.CustomOptions;
         }
 
@@ -45,6 +45,9 @@
         [JsonPropertyName("useSystemBrowserForAuthentication")]
         public bool UseSystemBrowserForAuthentication { get; set; } = UserSettings.DefaultUseSystemBrowserForAuthentication;
 
+        [JsonPropertyName("customTemplatesEnabled")]
+        public bool CustomTemplatesEnabled { get; set; } = UserSettings.DefaultCustomTemplatesEnabled;
+
         [JsonPropertyName("customOptions")]
         public JsonElement? CustomOptions { get; set; }
 
@@ -67,6 +70,7 @@
                 settings.Theme = Theme;
                 settings.Proxy = Proxy;
                 settings.UseSystemBrowserForAuthentication = UseSystemBrowserForAuthentication;
+                settings.CustomTemplatesEnabled = CustomTemplatesEnabled;
                 settings.CustomOptions = CustomOptions;
             }
             UserPreferences.Save();

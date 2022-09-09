@@ -717,7 +717,7 @@ export class DaxFormatterScene extends DocScene {
             e.preventDefault();
             if (element.hasAttribute("disabled")) return;
 
-            let alert = new Confirm();
+            let alert = new Confirm("analyze-measures");
             alert.show(i18n(strings.daxFormatterAnalyzeConfirm))
                 .then((response: DialogResponse) => {
                     if (response.action == "ok") {
@@ -813,7 +813,7 @@ export class DaxFormatterScene extends DocScene {
     }
 
     showDataUsageDialog() {
-        let dialog = new Alert("data-usage", i18n(strings.dataUsageTitle));
+        const dialog = new Alert("data-usage", i18n(strings.dataUsageTitle));
         let html = `
             <img src="images/dax-formatter${themeController.isDark ? "-dark" : ""}.svg">
             ${i18n(strings.dataUsageMessage)}

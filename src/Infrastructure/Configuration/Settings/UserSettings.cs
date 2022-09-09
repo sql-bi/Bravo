@@ -21,6 +21,8 @@
 
         bool UseSystemBrowserForAuthentication { get; set; }
 
+        bool CustomTemplatesEnabled { get; set; }
+
         JsonElement? CustomOptions { get; set; }
     }
 
@@ -32,11 +34,13 @@
         public const bool DefaultUpdateCheckEnabled = true;
         public const ThemeType DefaultTheme = ThemeType.Auto;
         public const bool DefaultUseSystemBrowserForAuthentication = false;
+        public const bool DefaultCustomTemplatesEnabled = true;
 
         private bool _telemetryEnabled = DefaultTelemetryEnabled;
         private UpdateChannelType _updateChannel = DefaultUpdateChannel;
         private bool _updateCheckEnabled = DefaultUpdateCheckEnabled;
         private bool _useSystemBrowserForAuthentication = DefaultUseSystemBrowserForAuthentication;
+        private bool _customTemplatesEnabled = DefaultCustomTemplatesEnabled;
 
         [JsonPropertyName("telemetryEnabled")]
         public bool TelemetryEnabled
@@ -73,6 +77,13 @@
         {
             get => _useSystemBrowserForAuthentication;
             set => _useSystemBrowserForAuthentication = GetSetterValue(value, BravoPolicies.Current.UseSystemBrowserForAuthenticationPolicy, BravoPolicies.Current.UseSystemBrowserForAuthentication);
+        }
+
+        [JsonPropertyName("customTemplatesEnabled")]
+        public bool CustomTemplatesEnabled
+        {
+            get => _customTemplatesEnabled;
+            set => _customTemplatesEnabled = GetSetterValue(value, BravoPolicies.Current.CustomTemplatesEnabledPolicy, BravoPolicies.Current.CustomTemplatesEnabled);
         }
 
         [JsonPropertyName("customOptions")]

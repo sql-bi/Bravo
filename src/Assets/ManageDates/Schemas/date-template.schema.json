@@ -1,0 +1,285 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "http://sqlbi.com/daxtemplate/schemas/date-template.schema.json",
+  "type": "object",
+  "properties": {
+    "FormatPrefixes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "description": "Array of strings used as prefix/suffix in formatted name of attribute values. The purpose of this definition is to create a list of names that can be translated in localized versions."
+      },
+      "description": "Array of strings used as prefix/suffix in formatted name of attribute values. The purpose of this definition is to create a list of names that can be translated in localized versions."
+    },
+    "Steps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "Name": {
+            "$ref": "#/$defs/string"
+          },
+          "Expression": {
+            "$ref": "#/$defs/string1"
+          },
+          "MultiLineExpression": {
+            "$ref": "#/$defs/array"
+          },
+          "Comment": {
+            "$ref": "#/$defs/string2"
+          },
+          "MultiLineComment": {
+            "$ref": "#/$defs/array1"
+          }
+        },
+        "description": "Array of DaxExpression objects defining explicit table steps required by other expressions. For example, the Date table usually creates a __Calendar step that defines the range of dates using the @@GETCALENDAR() placeholder."
+      },
+      "description": "Array of DaxExpression objects defining explicit table steps required by other expressions. For example, the Date table usually creates a __Calendar step that defines the range of dates using the @@GETCALENDAR() placeholder."
+    },
+    "GlobalVariables": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "Name": {
+            "$ref": "#/$defs/string"
+          },
+          "Expression": {
+            "$ref": "#/$defs/string1"
+          },
+          "MultiLineExpression": {
+            "$ref": "#/$defs/array"
+          },
+          "Comment": {
+            "$ref": "#/$defs/string2"
+          },
+          "MultiLineComment": {
+            "$ref": "#/$defs/array1"
+          },
+          "IsConfigurable": {
+            "type": "boolean",
+            "description": "This additional property extends the DaxExpression object for a global variable specifying whether the variable should be configurable (true) or not (false). The global variables with IsConfigurable set to true are included in an initial section of the table expression, so that they are easier to change by manually editing the DAX expression that defines the calculated table"
+          }
+        },
+        "description": "Array of objects derived from DaxExpression defining global variables that can be used by any following step. The global variables cannot have dependencies on other Steps of the template. Every global variable name must start with a double underscore prefix ( __ )."
+      },
+      "description": "Array of objects derived from DaxExpression defining global variables that can be used by any following step. The global variables cannot have dependencies on other Steps of the template. Every global variable name must start with a double underscore prefix ( __ )."
+    },
+    "RowVariables": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "Name": {
+            "type": "string",
+            "description": "Name of the DAX expression, corresponding to the name of the step/variable/column."
+          },
+          "Expression": {
+            "type": "string",
+            "description": "DAX expression defined in a single line. If defined, Expression has precedence over MultiLineExpression."
+          },
+          "MultiLineExpression": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Array of strings that define a comment in multiple lines. If Expression is defined, then MultiLineExpression is ignored."
+            },
+            "description": "Array of strings that define a comment in multiple lines. If Expression is defined, then MultiLineExpression is ignored."
+          },
+          "Comment": {
+            "type": "string",
+            "description": "Single line comment. If defined, Comment has precedence over MultiLineComment."
+          },
+          "MultiLineComment": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Array of strings that define a DAX expression in a multiple lines. If Comment is defined, then MultiLineComment is ignored."
+            },
+            "description": "Array of strings that define a DAX expression in a multiple lines. If Comment is defined, then MultiLineComment is ignored."
+          }
+        },
+        "description": "Array of DaxExpression objects that define local variables for each row of the generated table. The expression can reference other variables defined in RowVariables and GlobalVariables. The template engine automatically arrange the right definition order evaluating the dependencies. Every row variable name must start with a double underscore prefix ( __ )."
+      },
+      "description": "Array of DaxExpression objects that define local variables for each row of the generated table. The expression can reference other variables defined in RowVariables and GlobalVariables. The template engine automatically arrange the right definition order evaluating the dependencies. Every row variable name must start with a double underscore prefix ( __ )."
+    },
+    "Columns": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "Name": {
+            "$ref": "#/$defs/string"
+          },
+          "Expression": {
+            "$ref": "#/$defs/string1"
+          },
+          "MultiLineExpression": {
+            "$ref": "#/$defs/array"
+          },
+          "Comment": {
+            "$ref": "#/$defs/string2"
+          },
+          "MultiLineComment": {
+            "$ref": "#/$defs/array1"
+          },
+          "DataType": {
+            "type": "string",
+            "description": "Data type of the column: String, Int64, Double, DateTime, Decimal, Boolean"
+          },
+          "FormatString": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Format String of the column."
+          },
+          "IsHidden": {
+            "type": "boolean",
+            "description": "true if the column is hidden."
+          },
+          "IsTemporary": {
+            "type": "boolean",
+            "description": "true if the column is temporary. Temporary column should follow the naming convention starting with the @ symbol."
+          },
+          "RequiresHolidays": {
+            "type": "boolean",
+            "description": "true if the column requires an Holidays table. If the Holidays table is not enabled, the column is not included in the generated table."
+          },
+          "SortByColumn": {
+            "type": "string",
+            "description": "Name of the column to use in the Sort By property. For example, a Month column usually has MonthNumber in the SortByColumn property."
+          },
+          "DisplayFolder": {
+            "type": "string",
+            "description": "Name of the display folder."
+          },
+          "DataCategory": {
+            "type": "string",
+            "description": "Data category using standard definitions: Years, Quarters, QuarterOfYear, Months, MonthOfYear, MonthOfQuarter, Weeks, WeekOfQuarter, WeekOfYear, DayOfWeek, DayOfMonty, DayOfQuarter, DayOfYear, PaddedDateTableDates"
+          },
+          "Description": {
+            "type": "string",
+            "description": "Description of the expression. Can be used in comments for steps and variables."
+          },
+          "Step": {
+            "type": "string",
+            "description": "Specifies a column defined in the specified step."
+          },
+          "AttributeType": {
+            "type": "string",
+            "description": "Specify a single attribute type assigned to the column. When specified, it creates a list with a single attribute in AttributeTypes, ignoring the AttributeTypes definition."
+          },
+          "AttributeTypes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Specify a list of attribute types assigned to the column. It is ignored if AttributeType is defined."
+            },
+            "description": "Specify a list of attribute types assigned to the column. It is ignored if AttributeType is defined."
+          },
+          "Annotations": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "description": "List of annotations added to the column. The annotations might be required by measure templates to identify measures, columns, and tables referenced by the template."
+            },
+            "description": "List of annotations added to the column. The annotations might be required by measure templates to identify measures, columns, and tables referenced by the template."
+          }
+        },
+        "description": "Array of objects derived from DaxExpression defining the columns of the table generated by the template. As a naming convention, every column name should start with the @ prefix if the column is temporary to the calculation and must not be exposed in the final table."
+      },
+      "description": "Array of objects derived from DaxExpression defining the columns of the table generated by the template. As a naming convention, every column name should start with the @ prefix if the column is temporary to the calculation and must not be exposed in the final table."
+    },
+    "Hierarchies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "Name": {
+            "type": "string",
+            "description": "Name of the hierarchy."
+          },
+          "Description": {
+            "type": "string",
+            "description": "Description of the hierarchy."
+          },
+          "Levels": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "Name": {
+                  "type": "string",
+                  "description": "Name of the hierarchy level."
+                },
+                "Column": {
+                  "type": "string",
+                  "description": "Corresponding column name of the hierarchy level. The column name is the simple name, it is not a fully qualified name."
+                },
+                "Description": {
+                  "type": "string",
+                  "description": "Description of the hierarchy level."
+                }
+              },
+              "description": "Array of objects defining the levels of the hierarchy. Each level has the following properties."
+            },
+            "description": "Array of objects defining the levels of the hierarchy. Each level has the following properties."
+          }
+        },
+        "description": "Array of objects defining user hierarchies of the table. Each hierarchy has the following properties."
+      },
+      "description": "Array of objects defining user hierarchies of the table. Each hierarchy has the following properties."
+    },
+    "Annotations": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string",
+        "description": "List of annotations added to the table. The annotations might be required by measure templates to identify measures, columns, and tables referenced by the template."
+      },
+      "description": "List of annotations added to the table. The annotations might be required by measure templates to identify measures, columns, and tables referenced by the template."
+    },
+    "CalendarType": {
+      "type": "string",
+      "description": "Specify a single calendar type assigned to the Date table. When specified, it creates a list with a single item in CalendarTypes, ignoring the CalendarTypes definition."
+    },
+    "CalendarTypes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "description": "Specify a list of calendar types assigned to the Date table. It is ignored if CalendarType is defined."
+      },
+      "description": "Specify a list of calendar types assigned to the Date table. It is ignored if CalendarType is defined."
+    }
+  },
+  "$defs": {
+    "string": {
+      "type": "string",
+      "description": "Name of the DAX expression, corresponding to the name of the step/variable/column."
+    },
+    "string1": {
+      "type": "string",
+      "description": "DAX expression defined in a single line. If defined, Expression has precedence over MultiLineExpression."
+    },
+    "array": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "description": "Array of strings that define a comment in multiple lines. If Expression is defined, then MultiLineExpression is ignored."
+      },
+      "description": "Array of strings that define a comment in multiple lines. If Expression is defined, then MultiLineExpression is ignored."
+    },
+    "string2": {
+      "type": "string",
+      "description": "Single line comment. If defined, Comment has precedence over MultiLineComment."
+    },
+    "array1": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "description": "Array of strings that define a DAX expression in a multiple lines. If Comment is defined, then MultiLineComment is ignored."
+      },
+      "description": "Array of strings that define a DAX expression in a multiple lines. If Comment is defined, then MultiLineComment is ignored."
+    }
+  }
+}

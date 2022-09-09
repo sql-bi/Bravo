@@ -3,14 +3,18 @@
     using System.ComponentModel.DataAnnotations;
     using System.Text.Json.Serialization;
 
-    public class PreviewChangesFromPBIDesktopReportRequest
+    public class ApplyConfigurationRequest
     {
         [Required]
         [JsonPropertyName("report")]
         public PBIDesktopReport? Report { get; set; }
 
         [Required]
-        [JsonPropertyName("settings")]
-        public PreviewChangesSettings? Settings { get; set; }
+        [JsonPropertyName("configuration")]
+        public DateConfiguration? Configuration { get; set; }
+    }
+
+    public class ValidateConfigurationRequest : ApplyConfigurationRequest
+    {
     }
 }

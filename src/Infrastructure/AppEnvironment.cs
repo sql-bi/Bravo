@@ -21,6 +21,7 @@
 
         public static readonly string ApiAuthenticationSchema = "BravoAuth";
         public static readonly string ApiAuthenticationToken = Cryptography.GenerateSimpleToken();
+        public static readonly string ApiAuthenticationTokenTemplateDevelopment = Cryptography.GenerateSimpleToken();
         public static readonly string ApplicationManufacturer = "SQLBI";
         public static readonly string ApplicationWebsiteUrl = "https://bravo.bi";
         public static readonly string ApplicationName = "Bravo";
@@ -60,6 +61,8 @@
             "microsoft.com",
             "daxformatter.com",
             "bravorelease.blob.core.windows.net",
+            "code.visualstudio.com",
+            "marketplace.visualstudio.com"
         };
 
         static AppEnvironment()

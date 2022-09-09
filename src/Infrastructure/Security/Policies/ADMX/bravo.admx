@@ -74,6 +74,17 @@
         <decimal value="0" />
       </disabledValue>
     </policy>
+      
+    <policy name="CustomTemplatesEnabled" class="Both" displayName="$(string.CustomTemplatesEnabled)" explainText="$(string.CustomTemplatesEnabled_explanation)" key="Software\Policies\SQLBI\Bravo\OptionSettings" valueName="CustomTemplatesEnabled">
+      <parentCategory ref="OptionSettings"/>
+      <supportedOn ref="windows:SUPPORTED_Windows7" />
+      <enabledValue>
+        <decimal value="1" />
+      </enabledValue>
+      <disabledValue>
+        <decimal value="0" />
+      </disabledValue>
+    </policy>
     
   </policies>
 

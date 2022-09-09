@@ -5,6 +5,9 @@
 */
 
 import { _, __ } from '../helpers/utils';
+import { optionsController } from '../main';
+import { i18n } from '../model/i18n';
+import { strings } from '../model/strings';
 import { View } from './view';
 
 export interface DialogButton {
@@ -24,22 +27,33 @@ export class Dialog extends View {
     body;
     data = {};
 
-    constructor(id: string, container: HTMLElement, title: string, buttons: DialogButton[], iconClass = "") {
+    get canShow() {
+        return (optionsController.options.customOptions.alerts[this.id] !== false);
+    }
+
+    constructor(id: string, container: HTMLElement, title: string, buttons: DialogButton[], iconClass = "", neverShowAgain = false) {
+
         super(`dialog-${id}`, container);
+        if (!this.canShow) this.element.toggle(false);
 
         this.element.classList.add("dialog");
 
         let html = `
             <div class="dialog-back"></div>
             <div class="dialog-front">
-                ${title ? `
+                ${title || iconClass ? `
                     <header>
-                        <h1${iconClass ? ` class="${iconClass}"` : ""}>${title}</h1>
+                        <h1${iconClass ? ` class="${iconClass}"` : ""}>${title ? title : ""}</h1>
                         <div class="ctrl-close ctrl icon-close solo"></div>
                     </header>
                 ` : "" }
                 <div class="content"></div>
                 <footer>
+                    ${neverShowAgain ? `
+                        <div class="never-show-again">
+                            <label><input type="checkbox" class="remember"> ${i18n(strings.dialogNeverShowAgain)}</label>
+                        </div>
+                    ` : ""} 
                     ${buttons.map((button: DialogButton) => `
                         <div class="button ${button.className ? button.className : ""}" data-action="${button.action}" ${button.disabled ? "disabled" : ""}>
                             ${button.name}
@@ -66,6 +80,13 @@ export class Dialog extends View {
             e.preventDefault();
             this.trigger("action", "cancel");
         });
+
+        _(".remember", this.element).addEventListener("change", e => {
+            e.preventDefault();
+            const element = <HTMLInputElement>e.target;
+            optionsController.options.customOptions.alerts[this.id] = !element.checked;
+            optionsController.save();
+        });
         
         // Catch ESC key
         /*document.addEventListener("keydown", e => {
@@ -77,9 +98,13 @@ export class Dialog extends View {
 
     show() {
         return new Promise((resolve, reject) => {
-            this.on("action", (action: string) => {
-                this.onAction(action, resolve, reject);
-            });
+            if (this.canShow) {
+                this.on("action", (action: string) => {
+                    this.onAction(action, resolve, reject);
+                });
+            } else {
+                this.onAction("ok", resolve, reject);
+            }
         });
     }
 

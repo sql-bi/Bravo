@@ -1,0 +1,633 @@
+{
+  "$schema": "https://raw.githubusercontent.com/sql-bi/Bravo/main/src/Assets/ManageDates/Schemas/measures-template.schema.json",
+  "_comment": "Weekly Time Intelligence",
+  "TargetTable": {
+    "SQLBI_CalendarType": "Weekly"
+  },
+  "TemplateAnnotations": {
+    "SQLBI_Template": "TimeIntelligence",
+    "SQLBI_TimeIntelligence": "Weekly",
+    "SQLBI_CalendarType": "Weekly"
+  },
+  "MeasureTemplates": [
+    {
+      "Name": "_ShowValueForDates",
+      "IsHidden": true,
+      "IsSingleInstance": true,
+      "MultiLineComment": [
+        "Returns TRUE if the period selected is earlier",
+        "than the last period with data."
+      ],
+      "MultiLineExpression": [
+        "VAR __LastDateWithData =",
+        "    CALCULATE (",
+        "        @@GETMAXDATE(),",
+        "        REMOVEFILTERS ()",
+        "    )",
+        "VAR __FirstDateVisible =",
+        "    MIN ( @_C-SQLBI_AttributeTypes-FiscalDate_@ )",
+        "VAR __Result =",
+        "    __FirstDateVisible <= __LastDateWithData",
+        "RETURN",
+        "    __Result"
+      ]
+    },
+    {
+      "Name": "YTD",
+      "DisplayFolder": "To-date total",
+      "MultiLineExpression": [
+        "IF (",
+        "    [_ShowValueForDates],",
+        "    VAR __LastDayAvailable = MAX ( @_C-SQLBI_AttributeTypes-FiscalDayOfYear_@ )",
+        "    VAR __LastFiscalYearAvailable = MAX ( @_C-SQLBI_AttributeTypes-FiscalYears_@ )",
+        "    VAR __Result =",
+        "        CALCULATE (",
+        "            @@GETMEASURE(),",
+        "            ALLEXCEPT ( @_T-SQLBI_CalendarType-Weekly_@, @_CL-SQLBI_FilterSafe-True_@ ),",
+        "            @_C-SQLBI_AttributeTypes-FiscalDayOfYear_@ <= __LastDayAvailable,",
+        "            @_C-SQLBI_AttributeTypes-FiscalYears_@ = __LastFiscalYearAvailable",
+        "        )",
+        "    RETURN",
+        "        __Result",
+        ")"
+      ]
+    },
+    {
+      "Name": "QTD",
+      "DisplayFolder": "To-date total",
+      "MultiLineExpression": [
+        "IF (",
+        "    [_ShowValueForDates],",
+        "    VAR __LastDayAvailable = MAX ( @_C-SQLBI_AttributeTypes-FiscalDayOfQuarter_@ )",
+        "    VAR __LastFiscalYearQuarterAvailable = MAX ( @_C-SQLBI_AttributeTypes-FiscalQuarters_@ )",
+        "    VAR __Result =",
+        "        CALCULATE (",
+        "            @@GETMEASURE(),",
+        "            ALLEXCEPT ( @_T-SQLBI_CalendarType-Weekly_@, @_CL-SQLBI_FilterSafe-True_@ ),",
+        "            @_C-SQLBI_AttributeTypes-FiscalDayOfQuarter_@ <= __LastDayAvailable,",
+        "            @_C-SQLBI_AttributeTypes-FiscalQuarters_@ = __LastFiscalYearQuarterAvailable",
+        "        )",
+        "    RETURN",
+        "        __Result",
+        ")"
+      ]
+    },
+    {
+      "Name": "MTD",
+      "DisplayFolder": "To-date total",
+      "MultiLineExpression": [
+        "IF (",
+        "    [_ShowValueForDates],",
+        "    VAR __LastDayAvailable = MAX ( @_C-SQLBI_AttributeTypes-FiscalDayOfMonth_@ )",
+        "    VAR __LastFiscalYearMonthAvailable = MAX ( @_C-SQLBI_AttributeTypes-FiscalMonths_@ )",
+        "    VAR __Result =",
+        "        CALCULATE (",
+        "            @@GETMEASURE(),",
+        "            ALLEXCEPT ( @_T-SQLBI_CalendarType-Weekly_@, @_CL-SQLBI_FilterSafe-True_@ ),",
+        "            @_C-SQLBI_AttributeTypes-FiscalDayOfMonth_@ <= __LastDayAvailable,",
+        "            @_C-SQLBI_AttributeTypes-FiscalMonths_@ = __LastFiscalYearMonthAvailable",
+        "        )",
+        "    RETURN",
+        "        __Result",
+        ")"
+      ]
+    },
+    {
+      "Name": "WTD",
+      "DisplayFolder": "To-date total",
+      "MultiLineExpression": [
+        "IF (",
+        "    [_ShowValueForDates],",
+        "    VAR __LastDayAvailable = MAX ( @_C-SQLBI_AttributeTypes-DayOfWeek_@ )",
+        "    VAR __LastFiscalYearWeekAvailable = MAX ( @_C-SQLBI_AttributeTypes-FiscalWeeks_@ )",
+        "    VAR __Result =",
+        "        CALCULATE (",
+        "            @@GETMEASURE(),",
+        "            ALLEXCEPT ( @_T-SQLBI_CalendarType-Weekly_@, @_CL-SQLBI_FilterSafe-True_@ ),",
+        "            @_C-SQLBI_AttributeTypes-DayOfWeek_@ <= __LastDayAvailable,",
+        "            @_C-SQLBI_AttributeTypes-FiscalWeeks_@ = __LastFiscalYearWeekAvailable",
+        "        )",
+        "    RETURN",
+        "        __Result",
+        ")"
+      ]
+    },
+    {
+      "Name": "PY",
+      "DisplayFolder": "Growth",
+      "MultiLineExpression": [
+        "IF (",
+        "    [_ShowValueForDates],",
+        "    SUMX (",
+        "        VALUES ( @_C-SQLBI_AttributeTypes-FiscalYears_@ ),",
+        "        VAR __CurrentFiscalYearNumber = @_C-SQLBI_AttributeTypes-FiscalYears_@",
+        "        VAR __DaysSelected =",
+        "            CALCULATETABLE (",
+        "                VALUES ( @_C-SQLBI_AttributeTypes-FiscalDayOfYear_@ ),",
+        "                REMOVEFILTERS ( @_CL-SQLBI_FilterSafe-True_@ ),",
+        "                @_C-SQLBI_AttributeTypes-DateDuration_@ = TRUE",
+        "            )",
+        "        RETURN",
+        "            CALCULATE (",
+        "                @@GETMEASURE(),",
+        "                @_C-SQLBI_AttributeTypes-FiscalYears_@ = __CurrentFiscalYearNumber - 1,",
+        "                __DaysSelected,",
+        "                ALLEXCEPT ( @_T-SQLBI_CalendarType-Weekly_@, @_CL-SQLBI_FilterSafe-True_@ )",
+        "            )",
+        "    )",
+        ")"
+      ]
+    },
+    {
+      "Name": "YOY",
+      "DisplayFolder": "Growth",
+      "MultiLineExpression": [
+        "VAR __ValueCurrentPeriod = @@GETMEASURE()",
+        "VAR __ValuePreviousPeriod = @@GETMEASURE( PY )",
+        "VAR __Result =",
+        "    IF (",
+        "        NOT ISBLANK ( __ValueCurrentPeriod ) && NOT ISBLANK ( __ValuePreviousPeriod ),",
+        "        __ValueCurrentPeriod - __ValuePreviousPeriod",
+        "    )",
+        "RETURN",
+        "    __Result"
+      ]
+    },
+    {
+      "Name": "YOY %",
+      "DisplayFolder": "Growth",
+      "FormatString": "0.00%",
+      "MultiLineExpression": [
+        "DIVIDE (",
+        "    @@GETMEASURE( YOY ),",
+        "    @@GETMEASURE( PY )",
+        ")"
+      ]
+    },
+    {
+      "Name": "PQ",
+      "DisplayFolder": "Growth",
+      "MultiLineExpression": [
+        "IF (",
+        "    [_ShowValueForDates],",
+        "    SUMX (",
+        "        VALUES ( @_C-SQLBI_AttributeTypes-FiscalQuarters_@ ),",
+        "        VAR __CurrentFiscalYearQuarterNumber = @_C-SQLBI_AttributeTypes-FiscalQuarters_@",
+        "        VAR __DaysSelected =",
+        "            CALCULATETABLE (",
+        "                VALUES ( @_C-SQLBI_AttributeTypes-FiscalDayOfQuarter_@ ),",
+        "                REMOVEFILTERS ( @_CL-SQLBI_FilterSafe-True_@ ),",
+        "                @_C-SQLBI_AttributeTypes-DateDuration_@ = TRUE",
+        "            )",
+        "        RETURN",
+        "            CALCULATE (",
+        "                @@GETMEASURE(),",
+        "                @_C-SQLBI_AttributeTypes-FiscalQuarters_@ = __CurrentFiscalYearQuarterNumber - 1,",
+        "                __DaysSelected,",
+        "                ALLEXCEPT ( @_T-SQLBI_CalendarType-Weekly_@, @_CL-SQLBI_FilterSafe-True_@ )",
+        "            )",
+        "    )",
+        ")"
+      ]
+    },
+    {
+      "Name": "QOQ",
+      "DisplayFolder": "Growth",
+      "MultiLineExpression": [
+        "VAR __ValueCurrentPeriod = @@GETMEASURE()",
+        "VAR __ValuePreviousPeriod = @@GETMEASURE( PQ )",
+        "VAR __Result =",
+        "    IF (",
+        "        NOT ISBLANK ( __ValueCurrentPeriod ) && NOT ISBLANK ( __ValuePreviousPeriod ),",
+        "        __ValueCurrentPeriod - __ValuePreviousPeriod",
+        "    )",
+        "RETURN",
+        "    __Result"
+      ]
+    },
+    {
+      "Name": "QOQ %",
+      "DisplayFolder": "Growth",
+      "FormatString": "0.00%",
+      "MultiLineExpression": [
+        "DIVIDE (",
+        "    @@GETMEASURE( QOQ ),",
+        "    @@GETMEASURE( PQ )",
+        ")"
+      ]
+    },
+    {
+      "Name": "PW",
+      "DisplayFolder": "Growth",
+      "MultiLineExpression": [
+        "IF (",
+        "    [_ShowValueForDates],",
+        "    SUMX (",
+        "        VALUES ( @_C-SQLBI_AttributeTypes-FiscalWeeks_@ ),",
+        "        VAR __CurrentFiscalYearWeekNumber = @_C-SQLBI_AttributeTypes-FiscalWeeks_@",
+        "        VAR __DaysSelected =",
+        "            CALCULATETABLE (",
+        "                VALUES ( @_C-SQLBI_AttributeTypes-DayOfWeek_@ ),",
+        "                REMOVEFILTERS ( @_CL-SQLBI_FilterSafe-True_@ ),",
+        "                @_C-SQLBI_AttributeTypes-DateDuration_@ = TRUE",
+        "            )",
+        "        RETURN",
+        "            CALCULATE (",
+        "                @@GETMEASURE(),",
+        "                @_C-SQLBI_AttributeTypes-FiscalWeeks_@ = __CurrentFiscalYearWeekNumber - 1,",
+        "                __DaysSelected,",
+        "                ALLEXCEPT ( @_T-SQLBI_CalendarType-Weekly_@, @_CL-SQLBI_FilterSafe-True_@ )",
+        "            )",
+        "    )",
+        ")"
+      ]
+    },
+    {
+      "Name": "WOW",
+      "DisplayFolder": "Growth",
+      "MultiLineExpression": [
+        "VAR __ValueCurrentPeriod = @@GETMEASURE()",
+        "VAR __ValuePreviousPeriod = @@GETMEASURE( PW )",
+        "VAR __Result =",
+        "    IF (",
+        "        NOT ISBLANK ( __ValueCurrentPeriod ) && NOT ISBLANK ( __ValuePreviousPeriod ),",
+        "        __ValueCurrentPeriod - __ValuePreviousPeriod",
+        "    )",
+        "RETURN",
+        "    __Result"
+      ]
+    },
+    {
+      "Name": "WOW %",
+      "DisplayFolder": "Growth",
+      "FormatString": "0.00%",
+      "MultiLineExpression": [
+        "DIVIDE (",
+        "    @@GETMEASURE( WOW ),",
+        "    @@GETMEASURE( PW )",
+        ")"
+      ]
+    },
+    {
+      "Name": "PYTD",
+      "DisplayFolder": "To-date growth",
+      "MultiLineExpression": [
+        "IF (",
+        "    [_ShowValueForDates],",
+        "    VAR __PreviousFiscalYear = MAX ( @_C-SQLBI_AttributeTypes-FiscalYears_@ ) - 1",
+        "    VAR __LastDayOfFiscalYearAvailable =",
+        "        CALCULATE (",
+        "            MAX ( @_C-SQLBI_AttributeTypes-FiscalDayOfYear_@ ),",
+        "            -- Removes filters from filter-safe columns",
+        "            -- to get the last day with data selected in the report",
+        "            REMOVEFILTERS ( @_CL-SQLBI_FilterSafe-True_@ ),",
+        "            @_C-SQLBI_AttributeTypes-DateDuration_@ = TRUE",
+        "        )",
+        "    VAR __Result =",
+        "        CALCULATE (",
+        "            @@GETMEASURE(),",
+        "            ALLEXCEPT ( @_T-SQLBI_CalendarType-Weekly_@, @_CL-SQLBI_FilterSafe-True_@ ),",
+        "            @_C-SQLBI_AttributeTypes-FiscalYears_@ = __PreviousFiscalYear,",
+        "            @_C-SQLBI_AttributeTypes-FiscalDayOfYear_@ <= __LastDayOfFiscalYearAvailable,",
+        "            @_C-SQLBI_AttributeTypes-DateDuration_@ = TRUE",
+        "        )",
+        "    RETURN",
+        "        __Result",
+        ")"
+      ]
+    },
+    {
+      "Name": "YOYTD",
+      "DisplayFolder": "To-date growth",
+      "MultiLineExpression": [
+        "VAR __ValueCurrentPeriod = @@GETMEASURE( YTD )",
+        "VAR __ValuePreviousPeriod = @@GETMEASURE( PYTD )",
+        "VAR __Result =",
+        "    IF (",
+        "        NOT ISBLANK ( __ValueCurrentPeriod ) && NOT ISBLANK ( __ValuePreviousPeriod ),",
+        "        __ValueCurrentPeriod - __ValuePreviousPeriod",
+        "    )",
+        "RETURN",
+        "    __Result"
+      ]
+    },
+    {
+      "Name": "YOYTD %",
+      "DisplayFolder": "To-date growth",
+      "FormatString": "0.00%",
+      "MultiLineExpression": [
+        "DIVIDE (",
+        "    @@GETMEASURE( YOYTD ),",
+        "    @@GETMEASURE( PYTD )",
+        ")"
+      ]
+    },
+    {
+      "Name": "PQTD",
+      "DisplayFolder": "To-date growth",
+      "MultiLineExpression": [
+        "IF (",
+        "    [_ShowValueForDates],",
+        "    VAR __PreviousFiscalYearQuarter = MAX ( @_C-SQLBI_AttributeTypes-FiscalQuarters_@ ) - 1",
+        "    VAR __LastDayOfFiscalYearQuarterAvailable =",
+        "        CALCULATE (",
+        "            MAX ( @_C-SQLBI_AttributeTypes-FiscalDayOfQuarter_@ ),",
+        "            -- Removes filters from filter-safe columns",
+        "            -- to get the last day with data selected in the report",
+        "            REMOVEFILTERS ( @_CL-SQLBI_FilterSafe-True_@ ),",
+        "            @_C-SQLBI_AttributeTypes-DateDuration_@ = TRUE",
+        "        )",
+        "    VAR __Result =",
+        "        CALCULATE (",
+        "            @@GETMEASURE(),",
+        "            ALLEXCEPT ( @_T-SQLBI_CalendarType-Weekly_@, @_CL-SQLBI_FilterSafe-True_@ ),",
+        "            @_C-SQLBI_AttributeTypes-FiscalQuarters_@ = __PreviousFiscalYearQuarter,",
+        "            @_C-SQLBI_AttributeTypes-FiscalDayOfQuarter_@ <= __LastDayOfFiscalYearQuarterAvailable,",
+        "            @_C-SQLBI_AttributeTypes-DateDuration_@ = TRUE",
+        "        )",
+        "    RETURN",
+        "        __Result",
+        ")"
+      ]
+    },
+    {
+      "Name": "QOQTD",
+      "DisplayFolder": "To-date growth",
+      "MultiLineExpression": [
+        "VAR __ValueCurrentPeriod = @@GETMEASURE( QTD )",
+        "VAR __ValuePreviousPeriod = @@GETMEASURE( PQTD )",
+        "VAR __Result =",
+        "    IF (",
+        "        NOT ISBLANK ( __ValueCurrentPeriod ) && NOT ISBLANK ( __ValuePreviousPeriod ),",
+        "        __ValueCurrentPeriod - __ValuePreviousPeriod",
+        "    )",
+        "RETURN",
+        "    __Result"
+      ]
+    },
+    {
+      "Name": "QOQTD %",
+      "DisplayFolder": "To-date growth",
+      "FormatString": "0.00%",
+      "MultiLineExpression": [
+        "DIVIDE (",
+        "    @@GETMEASURE( QOQTD ),",
+        "    @@GETMEASURE( PQTD )",
+        ")"
+      ]
+    },
+    {
+      "Name": "PWTD",
+      "DisplayFolder": "To-date growth",
+      "MultiLineExpression": [
+        "IF (",
+        "    [_ShowValueForDates],",
+        "    VAR __PreviousFiscalYearWeek = MAX ( @_C-SQLBI_AttributeTypes-FiscalWeeks_@ ) - 1",
+        "    VAR __LastDayOfWeekAvailable =",
+        "        CALCULATE (",
+        "            MAX ( @_C-SQLBI_AttributeTypes-DayOfWeek_@ ),",
+        "            -- Removes filters from filter-safe columns",
+        "            -- to get the last day with data selected in the report",
+        "            REMOVEFILTERS ( @_CL-SQLBI_FilterSafe-True_@ ),",
+        "            @_C-SQLBI_AttributeTypes-DateDuration_@ = TRUE",
+        "        )",
+        "    VAR __Result =",
+        "        CALCULATE (",
+        "            @@GETMEASURE(),",
+        "            ALLEXCEPT ( @_T-SQLBI_CalendarType-Weekly_@, @_CL-SQLBI_FilterSafe-True_@ ),",
+        "            @_C-SQLBI_AttributeTypes-FiscalWeeks_@ = __PreviousFiscalYearWeek,",
+        "            @_C-SQLBI_AttributeTypes-DayOfWeek_@ <= __LastDayOfWeekAvailable,",
+        "            @_C-SQLBI_AttributeTypes-DateDuration_@ = TRUE",
+        "        )",
+        "    RETURN",
+        "        __Result",
+        ")"
+      ]
+    },
+    {
+      "Name": "WOWTD",
+      "DisplayFolder": "To-date growth",
+      "MultiLineExpression": [
+        "VAR __ValueCurrentPeriod = @@GETMEASURE( WTD )",
+        "VAR __ValuePreviousPeriod = @@GETMEASURE( PWTD )",
+        "VAR __Result =",
+        "    IF (",
+        "        NOT ISBLANK ( __ValueCurrentPeriod ) && NOT ISBLANK ( __ValuePreviousPeriod ),",
+        "        __ValueCurrentPeriod - __ValuePreviousPeriod",
+        "    )",
+        "RETURN",
+        "    __Result"
+      ]
+    },
+    {
+      "Name": "WOWTD %",
+      "DisplayFolder": "To-date growth",
+      "FormatString": "0.00%",
+      "MultiLineExpression": [
+        "DIVIDE (",
+        "    @@GETMEASURE( WOWTD ),",
+        "    @@GETMEASURE( PWTD )",
+        ")"
+      ]
+    },
+    {
+      "Name": "PYC",
+      "DisplayFolder": "Growth over full period",
+      "MultiLineExpression": [
+        "IF (",
+        "    [_ShowValueForDates] && HASONEVALUE ( @_C-SQLBI_AttributeTypes-FiscalYears_@ ),",
+        "    VAR __PreviousFiscalYear = MAX ( @_C-SQLBI_AttributeTypes-FiscalYears_@ ) - 1",
+        "    VAR __Result =",
+        "        CALCULATE (",
+        "            @@GETMEASURE(),",
+        "            ALLEXCEPT ( @_T-SQLBI_CalendarType-Weekly_@, @_CL-SQLBI_FilterSafe-True_@ ),",
+        "            @_C-SQLBI_AttributeTypes-FiscalYears_@ = __PreviousFiscalYear",
+        "        )",
+        "    RETURN",
+        "        __Result",
+        ")"
+      ]
+    },
+    {
+      "Name": "YTDOPY",
+      "DisplayFolder": "Growth over full period",
+      "MultiLineExpression": [
+        "VAR __ValueCurrentPeriod = @@GETMEASURE( YTD )",
+        "VAR __ValuePreviousPeriod = @@GETMEASURE( PYC )",
+        "VAR __Result =",
+        "    IF (",
+        "        NOT ISBLANK ( __ValueCurrentPeriod ) && NOT ISBLANK ( __ValuePreviousPeriod ),",
+        "        __ValueCurrentPeriod - __ValuePreviousPeriod",
+        "    )",
+        "RETURN",
+        "    __Result"
+      ]
+    },
+    {
+      "Name": "YTDOPY %",
+      "DisplayFolder": "To-date growth",
+      "FormatString": "0.00%",
+      "MultiLineExpression": [
+        "DIVIDE (",
+        "    @@GETMEASURE( YTDOPY ),",
+        "    @@GETMEASURE( PYC )",
+        ")"
+      ]
+    },
+    {
+      "Name": "PQC",
+      "DisplayFolder": "Growth over full period",
+      "MultiLineExpression": [
+        "IF (",
+        "    [_ShowValueForDates] && HASONEVALUE ( @_C-SQLBI_AttributeTypes-FiscalQuarters_@ ),",
+        "    VAR __PreviousFiscalYearQuarter = MAX ( @_C-SQLBI_AttributeTypes-FiscalQuarters_@ ) - 1",
+        "    VAR __Result =",
+        "        CALCULATE (",
+        "            @@GETMEASURE(),",
+        "            ALLEXCEPT ( @_T-SQLBI_CalendarType-Weekly_@, @_CL-SQLBI_FilterSafe-True_@ ),",
+        "            @_C-SQLBI_AttributeTypes-FiscalQuarters_@ = __PreviousFiscalYearQuarter",
+        "        )",
+        "    RETURN",
+        "        __Result",
+        ")"
+      ]
+    },
+    {
+      "Name": "QTDOPQ",
+      "DisplayFolder": "Growth over full period",
+      "MultiLineExpression": [
+        "VAR __ValueCurrentPeriod = @@GETMEASURE( QTD )",
+        "VAR __ValuePreviousPeriod = @@GETMEASURE( PQC )",
+        "VAR __Result =",
+        "    IF (",
+        "        NOT ISBLANK ( __ValueCurrentPeriod ) && NOT ISBLANK ( __ValuePreviousPeriod ),",
+        "        __ValueCurrentPeriod - __ValuePreviousPeriod",
+        "    )",
+        "RETURN",
+        "    __Result"
+      ]
+    },
+    {
+      "Name": "QTDOPQ %",
+      "DisplayFolder": "To-date growth",
+      "FormatString": "0.00%",
+      "MultiLineExpression": [
+        "DIVIDE (",
+        "    @@GETMEASURE( QTDOPQ ),",
+        "    @@GETMEASURE( PQC )",
+        ")"
+      ]
+    },
+    {
+      "Name": "PWC",
+      "DisplayFolder": "Growth over full period",
+      "MultiLineExpression": [
+        "IF (",
+        "    [_ShowValueForDates] && HASONEVALUE ( @_C-SQLBI_AttributeTypes-FiscalWeeks_@ ),",
+        "    VAR __PreviousFiscalYearWeek = MAX ( @_C-SQLBI_AttributeTypes-FiscalWeeks_@ ) - 1",
+        "    VAR __Result =",
+        "        CALCULATE (",
+        "            @@GETMEASURE(),",
+        "            ALLEXCEPT ( @_T-SQLBI_CalendarType-Weekly_@, @_CL-SQLBI_FilterSafe-True_@ ),",
+        "            @_C-SQLBI_AttributeTypes-FiscalWeeks_@ = __PreviousFiscalYearWeek",
+        "        )",
+        "    RETURN",
+        "        __Result",
+        ")"
+      ]
+    },
+    {
+      "Name": "QTDOPQ",
+      "DisplayFolder": "Growth over full period",
+      "MultiLineExpression": [
+        "VAR __ValueCurrentPeriod = @@GETMEASURE( QTD )",
+        "VAR __ValuePreviousPeriod = @@GETMEASURE( PQC )",
+        "VAR __Result =",
+        "    IF (",
+        "        NOT ISBLANK ( __ValueCurrentPeriod ) && NOT ISBLANK ( __ValuePreviousPeriod ),",
+        "        __ValueCurrentPeriod - __ValuePreviousPeriod",
+        "    )",
+        "RETURN",
+        "    __Result"
+      ]
+    },
+    {
+      "Name": "QTDOPQ %",
+      "DisplayFolder": "To-date growth",
+      "FormatString": "0.00%",
+      "MultiLineExpression": [
+        "DIVIDE (",
+        "    @@GETMEASURE( QTDOPQ ),",
+        "    @@GETMEASURE( PWC )",
+        ")"
+      ]
+    },
+    {
+      "Name": "MAT-364",
+      "DisplayFolder": "Moving annual growth",
+      "MultiLineExpression": [
+        "IF (",
+        "    [_ShowValueForDates],",
+        "    VAR __LastDayMAT = MAX ( @_C-SQLBI_AttributeTypes-ManufacturingDate_@ )",
+        "    VAR __FirstDayMAT = __LastDayMAT - 363",
+        "    VAR Result =",
+        "        CALCULATE (",
+        "            @@GETMEASURE(),",
+        "            ALLEXCEPT ( @_T-SQLBI_CalendarType-Weekly_@, @_CL-SQLBI_FilterSafe-True_@ ),",
+        "            @_C-SQLBI_AttributeTypes-ManufacturingDate_@ >= __FirstDayMAT",
+        "                && @_C-SQLBI_AttributeTypes-ManufacturingDate_@ <= __LastDayMAT",
+        "        )",
+        "    RETURN",
+        "        Result",
+        ")"
+      ]
+    },
+    {
+      "Name": "PYMAT-364",
+      "DisplayFolder": "Moving annual growth",
+      "MultiLineExpression": [
+        "IF (",
+        "    [_ShowValueForDates],",
+        "    VAR __LastDayAvailable = MAX ( @_C-SQLBI_AttributeTypes-ManufacturingDate_@ )",
+        "    VAR __LastDayMAT = __LastDayAvailable - 364",
+        "    VAR __FirstDayMAT = __LastDayMAT - 363",
+        "    VAR Result =",
+        "        CALCULATE (",
+        "            @@GETMEASURE(),",
+        "            ALLEXCEPT ( @_T-SQLBI_CalendarType-Weekly_@, @_CL-SQLBI_FilterSafe-True_@ ),",
+        "            @_C-SQLBI_AttributeTypes-ManufacturingDate_@ >= __FirstDayMAT",
+        "                && @_C-SQLBI_AttributeTypes-ManufacturingDate_@ <= __LastDayMAT",
+        "        )",
+        "    RETURN",
+        "        Result",
+        ")"
+      ]
+    },
+    {
+      "Name": "MATG-364",
+      "DisplayFolder": "Growth over full period",
+      "MultiLineExpression": [
+        "VAR __ValueCurrentPeriod = @@GETMEASURE( MAT-364 )",
+        "VAR __ValuePreviousPeriod = @@GETMEASURE( PYMAT-364 )",
+        "VAR __Result =",
+        "    IF (",
+        "        NOT ISBLANK ( __ValueCurrentPeriod ) && NOT ISBLANK ( __ValuePreviousPeriod ),",
+        "        __ValueCurrentPeriod - __ValuePreviousPeriod",
+        "    )",
+        "RETURN",
+        "    __Result"
+      ]
+    },
+    {
+      "Name": "MATG-364 %",
+      "DisplayFolder": "To-date growth",
+      "FormatString": "0.00%",
+      "MultiLineExpression": [
+        "DIVIDE (",
+        "    @@GETMEASURE( MATG-364 ),",
+        "    @@GETMEASURE( PYMAT-364 )",
+        ")"
+      ]
+    }
+  ]
+}

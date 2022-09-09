@@ -26,6 +26,7 @@ import { AppError } from '../model/exceptions';
 import { DiagnosticPane } from '../view/diagnostic-pane';
 import Split, { SplitObject } from "split.js";
 import { DiagnosticLevelType } from './options';
+import { DialogResponse } from '../view/dialog';
 
 export interface AppVersionInfo {
     version: string
@@ -207,7 +208,7 @@ export class App {
         host.on(WebMessageType[WebMessageType.Unknown], (data: UnknownWebMessage) => {
             
             let appError = AppError.InitFromResponseStatus(Utils.ResponseStatusCode.InternalError, `${data.exception ? data.exception : ""} ${data.message ? data.message : "" }` );
-            let alert = new ErrorAlert(appError, i18n(strings.unknownMessage));
+            const alert = new ErrorAlert(appError, i18n(strings.unknownMessage));
             alert.show();
 
             try { logger.logError(appError); } catch(ignore) {}
@@ -223,8 +224,8 @@ export class App {
             if (data.id in this.sheets) {
                 if (this.sheets[data.id].doc.isDirty) {
 
-                    let dialog = new Confirm();
-                    dialog.show(i18n(strings.confirmTabCloseMessage)).then((response: ConnectResponse) => {
+                    let dialog = new Confirm("close-tab");
+                    dialog.show(i18n(strings.confirmTabCloseMessage)).then((response: DialogResponse) => {
                         if (response.action == "ok")
                             this.tabs.closeTab(data.element);
                     });

@@ -4,11 +4,18 @@
  * https://www.sqlbi.com
 */
 
+import * as sanitizeHtml from 'sanitize-html'
+import { Utils } from '../helpers/utils'
+import { i18n } from './i18n'
+import { strings } from './strings'
+
 export interface DateConfiguration {
     
     // Template
     templateUri?: string                            // Internal use only
+    template?: DateTemplate                         // Internal use only - set by client
     isCurrent?: boolean                             // True if the template is currently applied to the model
+    isCustom?: boolean                              // True if the template is a custom developed template and not a predefined Bravo template
     name?: string                                   // Template name
     description?: string                            // English, not localized template description
     defaults?: DateDefaults                         // Specific options of selected template
@@ -131,3 +138,50 @@ export let HolidaysCountries: string[][] = [
     ["GB", "United Kingdom"],
     ["US", "United States"],
 ];
+
+export enum DateTemplateType {
+    User = 0,
+    Organization = 1,
+}
+
+export interface DateTemplate {
+    type: DateTemplateType
+    path?: string
+    name?: string
+    description?: string
+    workspacePath?: string
+    workspaceName?: string
+    hasWorkspace?: boolean
+    hasPackage?: boolean
+}
+
+export function sanitizeTemplates(templates: DateTemplate[]) {
+    let sanitized: DateTemplate[] = [];
+    templates.forEach(template => {
+        template.name = (template.name ?
+            sanitizeHtml(template.name, { allowedTags: [], allowedAttributes: {}}) :
+            i18n(strings.devDefaultTemplateName)
+        );
+        sanitized.push(template);
+    });
+    return sanitized;
+}
+
+export function dateConfigurationName(dateConfiguration: DateConfiguration) {
+    let name = dateConfiguration.name || i18n(strings.devDefaultTemplateName);
+    const nameStr = `manageDatesTemplateName${Utils.Text.pascalCase(name)}`;
+    if (nameStr in strings)
+        name = i18n((<any>strings)[nameStr]); 
+
+    if (dateConfiguration.template) {
+        if (dateConfiguration.template.name)
+            name = dateConfiguration.template.name;
+
+        name += ` (${i18n(strings[`devTemplatesType${dateConfiguration.template.type == DateTemplateType.User ? "User" : "Organization"}`])})`;
+    }
+
+    if (dateConfiguration.isCurrent)
+        name += ` (${i18n(strings.manageDatesTemplateNameCurrent)})`;
+
+    return name;
+}
