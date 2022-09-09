@@ -230,7 +230,7 @@ const locale: Locale = {
         [_.manageDatesBrowserPlaceholder]: "Değiştirilecek öğe yok",
         [_.manageDatesCalendarDesc]: "Bu modele uygulamak için bir takvim şablonu seçin. Bravo gerekli tabloları oluşturacak veya mevcut ilişkileri sağlam tutarken bunları güncelleyecektir.",
         [_.manageDatesCalendarTemplateName]: "Şablon",
-        [_.manageDatesCalendarTemplateNameDesc]: "Farklı ay sayısına göre takvim için <em>Aylık</em>'ı seçin. 445-454-544-ISO takvimleri için <em>Haftalık</em>'ı ayarlayın. <em>Özel<'i kullanın /em> değişken uzunluktaki esnek takvimler için.",
+        [_.manageDatesCalendarTemplateNameDesc]: "Farklı ay sayısına göre takvim için <em>Aylık</em>'ı seçin. 445-454-544-ISO takvimleri için <em>Haftalık</em>'ı ayarlayın. <em>Özel<'i kullanın </em> değişken uzunluktaki esnek takvimler için.",
         [_.manageDatesCreatingTables]: "Model güncelleniyor...",
         [_.manageDatesDatesDesc]: "Modelinizdeki tarihlerin biçimini ve konumunu yapılandırın.",
         [_.manageDatesDatesTableDesc]: "Bu, tarihler için raporlarda kullanılacak tablodur.",
