@@ -265,7 +265,7 @@
     },
     {
       "Name": "__FiscalQuarter",
-      "Expression": "FORMAT ( __FiscalYearNumber, \"@_FY_@ 0000\"@@GETISO() )"
+      "Expression": "\"FQ\" & __FiscalQuarterNumber"
     },
     {
       "Name": "__FiscalWeekInQuarterNumber",
