@@ -123,12 +123,15 @@
                 // PBIDesktop process is starting and/or the SSAS instance is not yet started and/or the model is not yet fully loaded
                 return null;
             }
-            
-            var index = windowTitle.LastIndexOf(AppEnvironment.PBIDesktopMainWindowTitleSuffix);
-            if (index >= 0)
+
+            foreach (var suffix in AppEnvironment.PBIDesktopMainWindowTitleSuffixes)
             {
-                windowTitle = windowTitle[..index];
-                return windowTitle;
+                var index = windowTitle.LastIndexOf(suffix);
+                if (index >= 0)
+                {
+                    windowTitle = windowTitle[..index];
+                    return windowTitle;
+                }
             }
 
             return null;

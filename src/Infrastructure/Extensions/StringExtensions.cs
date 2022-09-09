@@ -32,7 +32,15 @@
 
         public static bool IsPBIDesktopMainWindowTitle(this string windowTitle)
         {
-            return windowTitle.EndsWith(AppEnvironment.PBIDesktopMainWindowTitleSuffix);
+            foreach (var suffix in AppEnvironment.PBIDesktopMainWindowTitleSuffixes)
+            {
+                if (windowTitle.EndsWith(suffix))
+                {
+                    return true;
+                }
+            }
+
+            return  false;
         }
 
         /// <summary>
