@@ -1,5 +1,5 @@
 {
-  "$schema": "https://raw.githubusercontent.com/sql-bi/Bravo/alberto/templateWorkspace/src/Assets/TemplateDevelopment/Schemas/measures-template.schema.json",
+  "$schema": "https://raw.githubusercontent.com/sql-bi/Bravo/main/src/Assets/ManageDates/Schemas/measures-template.schema.json",
   "_comment": "Monthly Time Intelligence (Calendar)",
   "_comment1": "Create parameters to pass (and translate?) folder names (or part of folder names?)",
   "TargetTable": {

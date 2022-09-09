@@ -1,5 +1,5 @@
 {
-  "$schema": "https://raw.githubusercontent.com/sql-bi/Bravo/alberto/templateWorkspace/src/Assets/TemplateDevelopment/Schemas/engine-configuration.schema.json",
+  "$schema": "https://raw.githubusercontent.com/sql-bi/Bravo/main/src/Assets/ManageDates/Schemas/engine-configuration.schema.json",
   "Description": "Monthly fiscal calendar",
   "Templates": [
     {

@@ -1,5 +1,5 @@
 {
-  "$schema": "https://raw.githubusercontent.com/sql-bi/Bravo/alberto/templateWorkspace/src/Assets/TemplateDevelopment/Schemas/date-template.schema.json",
+  "$schema": "https://raw.githubusercontent.com/sql-bi/Bravo/main/src/Assets/ManageDates/Schemas/date-template.schema.json",
   "_comment": "Reference FY prefix format in DAX expression using the syntax @_FY_@",
   "CalendarType": "Fiscal",
   "FormatPrefixes": [ "FY", "FQ" ],
