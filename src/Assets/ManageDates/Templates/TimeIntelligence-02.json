@@ -41,7 +41,7 @@
         "    [_ShowValueForDates],",
         "    CALCULATE (",
         "        @@GETMEASURE(),",
-        "        DATESYTD ( @_C-SQLBI_AttributeTypes-Date_@,  @@GETYEARENDFROMFIRSTMONTHVARIABLE(__FirstFiscalMonth) )",
+        "        DATESYTD ( @_C-SQLBI_AttributeTypes-Date_@,  @@GETYEARENDFROMFIRSTMONTHVARIABLE( __FirstFiscalMonth ) )",
         "    )",
         ")"
       ]
@@ -332,7 +332,7 @@
         "    [_ShowValueForDates],",
         "    CALCULATE (",
         "        @@GETMEASURE(),",
-        "        PREVIOUSYEAR ( @_C-SQLBI_AttributeTypes-Date_@, @@GETDEFAULTVARIABLE(__FirstFiscalMonth) )",
+        "        PREVIOUSYEAR ( @_C-SQLBI_AttributeTypes-Date_@, @@GETYEARENDFROMFIRSTMONTHVARIABLE( __FirstFiscalMonth ) )",
         "    )",
         ")"
       ]
