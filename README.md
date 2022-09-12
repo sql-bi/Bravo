@@ -32,3 +32,8 @@ In case you are adding a translation for a new language then you must also to in
 #### Dates Template Translations
 You can [fork the Bravo repository](https://github.com/sql-bi/Bravo/fork) and create a pull request updating a file containing the strings used in the Dates templates.
 This folder contains the files used in the Dates templates: https://github.com/sql-bi/Bravo/tree/main/src/Assets/ManageDates/Templates.
+
+### Customize Date Templates
+You can clone an existing date template or create a new one from scratch by using the template management panel on the Bravo options page.
+- More information on custom date template options and settings is available here https://docs.sqlbi.com/bravo/options#templates.
+- More information on custom date template development is available here https://docs.sqlbi.com/bravo/customize-date-template.
