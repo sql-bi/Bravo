@@ -96,8 +96,9 @@
         [JsonPropertyName("builtInTemplatesEnabledPolicy")]
         public PolicyStatus BuiltInTemplatesEnabledPolicy { get; } = PolicyStatus.NotConfigured;
 
-        [JsonIgnore]
-        public bool CustomTemplatesEnabled { get; }
+        /// <remarks>This property is not exposed in the <see cref="UserSettings"/> because it is not to be set by the user. It's serialized in <see cref="BravoPolicies"/> for the sole purpose of allowing the UI to read its value</remarks>
+        [JsonPropertyName("customTemplatesEnabled")]
+        public bool CustomTemplatesEnabled { get; } // TODO: Add policy to the ADMX template
 
         [JsonPropertyName("customTemplatesEnabledPolicy")]
         public PolicyStatus CustomTemplatesEnabledPolicy { get; } = PolicyStatus.NotConfigured;
