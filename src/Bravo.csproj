@@ -63,7 +63,7 @@
     <PackageReference Include="CsvHelper" Version="28.0.1" />
     <PackageReference Include="Dax.Model.Extractor" Version="1.2.6" />
     <PackageReference Include="Dax.Template" Version="0.1.3" />
-    <PackageReference Include="Dax.Formatter" Version="1.1.1" />
+    <PackageReference Include="Dax.Formatter" Version="1.1.2-dev" />
     <PackageReference Include="Dax.ViewModel" Version="1.2.6" />
     <PackageReference Include="Dax.Vpax" Version="1.2.6" />
     <PackageReference Include="Hellang.Middleware.ProblemDetails" Version="6.5.1" />
