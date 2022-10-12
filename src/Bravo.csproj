@@ -37,11 +37,11 @@
       </PropertyGroup>
     </Otherwise>
   </Choose>
-
+<!--
   <PropertyGroup>
     <RestoreSources>$(RestoreSources);./Assets/nupkgs;https://api.nuget.org/v3/index.json</RestoreSources>
   </PropertyGroup>
-
+-->
   <PropertyGroup>
     <!-- Don't change version here -->
     <Version>0.0.0.999</Version>
