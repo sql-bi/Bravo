@@ -94,11 +94,12 @@
                 // - Users with UPNs in the same tenant (not B2B) can replace the tenant name with 'myorg'
                 // - B2B users must specify their organization UPN in tenant name
                 // var homeTenant = CurrentAuthentication?.Account.GetTenantProfiles().SingleOrDefault((t) => t.IsHomeTenant);
-                var tenantName = "myorg";
 
+                var tenantName = "myorg";
+                var workspaceName = Uri.EscapeDataString(dataset.WorkspaceName);
                 var serverNameBuilder = new UriBuilder(dataset.ExternalServerName)
                 {
-                    Path = $"/v1.0/{ tenantName }/{ dataset.WorkspaceName }"
+                    Path = $"/v1.0/{ tenantName }/{ workspaceName }"
                 };
                 var serverName = serverNameBuilder.Uri.AbsoluteUri;
                 var databaseName = dataset.ExternalDatabaseName;
