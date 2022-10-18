@@ -271,7 +271,6 @@ const locale: Locale = {
         [_.manageDatesStatusCompatible]: `<div class="hero">您的模型已经包含与Bravo<b>兼容的日期表</b>.</div>如果您在这里做了修改,您的日期表将随之更新,而已经建立的关系不会受到影响`,
         [_.manageDatesStatusError]: `<div class="hero">无法应用当前设置</div> 错误 {error}`,
         [_.manageDatesStatusIncompatible]: `<div class="hero">您的模型包含与Bravo <b>不兼容的日期表</b>.</div>如要修改, 请为Bravo将要自动生成的一张或多张表指定其他的名字.<br><br>查看 <b>日期</b> 和 <b>假期</b>.`,
-        [_.manageDatesStatusIncompatible]: `<div class="hero">该模型包含一些与Bravo不兼容的<b>日期表。</b>表。`,
         [_.manageDatesStatusNotAvailable]: `<div class="hero">您的模型不再有效.</div> 请尝试重新启动应用.`,
         [_.manageDatesStatusOk]: `<div class="hero">您的模型 <b>可以使用管理日期表功能</b>.</div>您可以创建新的日期表, 不会影响现有度量值和报告.`,
         [_.manageDatesSuccessSceneMessage]: "恭喜,您的模型已经更新成功",

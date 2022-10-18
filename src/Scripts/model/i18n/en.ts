@@ -151,6 +151,7 @@ const locale: Locale = {
         [_.errorRetry]: "Retry",
         [_.errorSignInMsalExceptionOccurred]: "Unexpected error in the sign-in request.",
         [_.errorSignInMsalTimeoutExpired]: "The sign-in request was canceled because the timeout period expired before the operation was completed.",
+        [_.errorTemplateAlreadyExists]: "Another template with the same path/name already exists: <br><b>{name}</b>",
         [_.errorTimeout]: "Request timeout.",
         [_.errorTitle]: "Whoops...",
         [_.errorTOMDatabaseDatabaseNotFound]: "The database does not exist in the collection or the user does not have administrator rights to access it.",
@@ -226,7 +227,7 @@ const locale: Locale = {
         [_.manageDatesAutoScanSelectedTablesColumns]: "Choose Columns...",
         [_.manageDatesBrowserPlaceholder]: "No items to change",
         [_.manageDatesCalendarDesc]: "Choose a calendar template to apply to this model. Bravo will create the required tables or update them while keeping the existing relationships intact.", 
-        
+        [_.manageDatesCalendarTemplateName]: "Template",
         [_.manageDatesCalendarTemplateNameDesc]: "Select <em>Monthly</em> for calendar based on different number of months. Set <em>Weekly</em> for 445-454-544-ISO calendars. Use <em>Custom</em> for flexible calendars of variable length.",
         [_.manageDatesCreatingTables]: "Updating model...",
         [_.manageDatesDatesDesc]: "Configure the format and location of dates in your model.",
@@ -250,6 +251,7 @@ const locale: Locale = {
         [_.manageDatesISOFormatName]: "Regional Format",
         [_.manageDatesISOFormatOther]: "Other...",
         [_.manageDatesISOFormatOtherPlaceholder]: "Region",
+        [_.manageDatesManageTemplates]: "Manage Templates",
         [_.manageDatesMenuCalendar]: "Calendar",
         [_.manageDatesMenuDates]: "Dates",
         [_.manageDatesMenuHolidays]: "Holidays",
@@ -268,7 +270,7 @@ const locale: Locale = {
         [_.manageDatesSampleDataError]: "Unable to generate sample data.",
         [_.manageDatesStatusCompatible]: `<div class="hero">This model already contains some <b>date tables compatible</b> with Bravo.</div>If you change something here, these tables will be updated and their relationships will remain intact.`,
         [_.manageDatesStatusError]: `<div class="hero">The current settings cannot be applied.</div>{error}`,
-        
+        [_.manageDatesStatusIncompatible]: `<div class="hero">This model contains some <b>date tables that are not compatible</b> with Bravo.</div>To make changes, you must choose a different name for <b>Dates</b> and/or <b>Holidays</b> tables.`,
         [_.manageDatesStatusNotAvailable]: `<div class="hero">This model is no longer available.</div> Try to restart the application.`,
         [_.manageDatesStatusOk]: `<div class="hero">This model <b>is compatible with the Manage Dates feature</b>.</div>You can create new date tables without worrying about breaking measures or reports.`,
         [_.manageDatesSuccessSceneMessage]: "Congratulations, your model was updated successfully.",
@@ -318,7 +320,7 @@ const locale: Locale = {
         [_.optionBrowserAuthentication]: "Authenticate in Browser",
         [_.optionBrowserAuthenticationDescription]: "Authenticate using the default browser. This is an alternative login method that is useful for solving problems with two-factor authentication.",
         [_.optionCheckForUpdates]: "Automatically check for updates",
-        
+        [_.optionDev]: "Enable User Date Templates",
         [_.optionDevDescription]: "",
         [_.optionDiagnostic]: "Diagnostics Level",
         [_.optionDiagnosticDescription]: "Show errors and logs in a diagnostics pane. Choose <em>Basic</em> to log only a few messages. <em>Verbose</em> logs all messages.",
@@ -455,12 +457,6 @@ const locale: Locale = {
         [_.welcomeText]: "Bravo is a handy Power BI toolkit that you can use to analyze your models, format measures, create date tables, and export data.",
         [_.whitespacesTitle]: "Whitespaces",
         [_.wrappingTitle]: "Auto word-wrap",
-
-        [_.errorTemplateAlreadyExists]: "Another template with the same path/name already exists: <br><b>{name}</b>",
-        [_.manageDatesManageTemplates]: "Manage Templates",
-        [_.optionDev]: "Enable User Date Templates",
-        [_.manageDatesCalendarTemplateName]: "Template",
-        [_.manageDatesStatusIncompatible]: `<div class="hero">This model contains some <b>date tables that are not compatible</b> with Bravo.</div>To make changes, you must choose a different name for <b>Dates</b> and/or <b>Holidays</b> tables.`,
     }
 }
 export default locale;

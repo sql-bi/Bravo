@@ -269,7 +269,6 @@ const locale: Locale = {
         [_.manageDatesSampleDataError]: "Não foi possível gerar dados de amostra.",
         [_.manageDatesStatusCompatible]: `<div class="hero">Este modelo já contém algumas <b>tabelas de datas compatíveis</b> com o Bravo.</div>Se alterar alguma coisa, estas tabelas serão atualizadas e as suas relações serão mantidas intactas.`,
         [_.manageDatesStatusError]: `<div class="hero">As atuais definições não podem ser aplicadas.</div>{error}`,
-        [_.manageDatesStatusIncompatible]: `<div class="hero">Este modelo contém algumas <b>tabelas de datas que não são compatíveis</b> com o Bravo.</div>Para fazer alterações, terá de selecionar um nome diferente para uma ou mais tabelas a serem criadas por esta ferramenta.<br><br>Verifique <b>Datas</b> e <b>Feriados</b>.`,
         [_.manageDatesStatusIncompatible]: `<div class="hero">Este modelo contém algumas tabelas <b> de data que não são compatíveis </b> com Bravo. </div> Para fazer alterações, você deve escolher um nome diferente para <b> datas </b> e/ou <b> feriados</b> tabelas.`,
         [_.manageDatesStatusNotAvailable]: `<div class="hero">Este modelo já não está disponível.</div> Tente reiniciar a aplicação.`,
         [_.manageDatesStatusOk]: `<div class="hero">Este modelo <b>é compatível com a funcionalidade Gerir Datas</b>.</div>Pode criar novas tabelas de datas sem receio de afetar medidas ou relatórios.`,

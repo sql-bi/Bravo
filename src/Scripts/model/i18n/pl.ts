@@ -271,7 +271,6 @@ const locale: Locale = {
         [_.manageDatesStatusCompatible]: `<div class="hero">Twój model zawiera już <b>tabele dat kompatybilne</b> z Bravo.</div>Jeżeli coś tu zmienisz, tabele zostaną zaktualizowane a ich relacje pozostaną działające.`,
         [_.manageDatesStatusError]: `<div class="hero">Nie możemy zastosować wybranych ustawień.</div>{error}`,
         [_.manageDatesStatusIncompatible]: `<div class="hero">Ten model zawiera niektóre tabele daty <b>, które nie są kompatybilne </b> z Bravo. </iv> Aby wprowadzić zmiany, musisz wybrać inną nazwę dla dat <b> </b> i/lub wakacje</b> Tabele.`,
-        [_.manageDatesStatusIncompatible]: `<div class="hero">Twój model zawiera <b>tabele dat niekompatybilne</b> z Bravo.</div>Aby dokonać tutaj zmian, musisz wybrać inną nazwę dla jednej lub więcej tabel które zostaną tutaj stworzone.<br><br>Sprawdź <b>Daty</b> i <b>Święta</b>.`,
         [_.manageDatesStatusNotAvailable]: `<div class="hero">Ten model nie jest już dostępny.</div> Spróbuj ponownie uruchomić aplikację.`,
         [_.manageDatesStatusOk]: `<div class="hero">Twój model <b>jest kompatybilny z funkcją zarządzania datami</b>.</div>Możesz stworzyć nowe tabele dat bez wpływu na działanie miar lub raportów.`,
         [_.manageDatesSuccessSceneMessage]: "Gratulacje! Twój model został zaktualizowany.",
