@@ -244,7 +244,7 @@ const locale: Locale = {
         [_.manageDatesHolidaysTableName]: "Таблиця свят",
         [_.manageDatesIntervalDesc]: "Виберіть інтервал дат для вашої моделі.",
         [_.manageDatesISOCountryDesc]: "",
-        [_.manageDatesISOCountryName]: "Країна свят",
+        [_.manageDatesISOCountryName]: "Святкові дні країни:",
         [_.manageDatesISOCustomFormatDesc]: "Введіть регіональний формат, використовуючи мовний тег IETF BCP 47. Наприклад en-US",
         [_.manageDatesISOCustomFormatName]: "Користувацький формат",
         [_.manageDatesISOFormatDesc]: "Оберіть регіональний формат дат.",
