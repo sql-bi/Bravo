@@ -271,7 +271,6 @@ const locale: Locale = {
         [_.manageDatesStatusCompatible]: `<div class="hero">Modellen indeholder allerede <b>datotabeller som er kompatible</b> med Bravo.</div>Hvis du laver ændringer her, bliver disse tabeller ændret mens tabelrelationer holdes intakt.`,
         [_.manageDatesStatusError]: `<div class="hero">Indstillingerne kan ikke anvendes.</div>{error}`,
         [_.manageDatesStatusIncompatible]: `<div class="hero">Denne model indeholder nogle <b>datatabeller, der ikke er kompatible</b> med Bravo.</div> For at foretage ændringer skal du vælge et andet navn på <b>datoer</b> og/eller <b> helligdage</b> tabeller.`,
-        [_.manageDatesStatusIncompatible]: `<div class="hero">Modellen indeholder én eller flere <b>datotabeller som ikke er kompatible</b> med Bravo.</div>For at lave ændringer skal du bruge et andet navn til de tabeller der oprettes af værktøjet.<br><br>Check <b>Datoer</b> og <b>Helligdage</b>.`,
         [_.manageDatesStatusNotAvailable]: `<div class="hero">Modellen er ikke længere tilgængelig.</div> Prøv at genstarte applikationen.`,
         [_.manageDatesStatusOk]: `<div class="hero">Denne model <b>er kompatibel med funktionen Datostyring</b>.</div>Der kan oprettes nye tabeller uden målinger eller rapporter påvirkes.`,
         [_.manageDatesSuccessSceneMessage]: "Tillykke, din model er blevet opdateret.",

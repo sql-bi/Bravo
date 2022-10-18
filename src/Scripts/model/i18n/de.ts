@@ -272,7 +272,6 @@ const locale: Locale = {
         [_.manageDatesSampleDataError]: "Es können keine Beispieldaten erzeugt werden.", 
         [_.manageDatesStatusCompatible]: `<div class="hero">Dieses Modell enthält bereits einige mit Bravo <b>kompatible Datumstabellen</b>.</div> Wenn Sie hier etwas ändern, werden diese Tabellen aktualisiert und ihre Beziehungen bleiben intakt.`, 
         [_.manageDatesStatusError]: `<div class="hero">Die aktuellen Einstellungen können nicht übernommen werden.</div>{error}`,
-        [_.manageDatesStatusIncompatible]: `<div class="hero">Dieses Modell enthält einige <b>Date -Tabellen, die nicht kompatibel</b> mit Bravo sind.</b> Tabellen.`,
         [_.manageDatesStatusIncompatible]: `<div class="hero">Dieses Modell enthält some einige mit Bravo <b>nicht kompatible Datumstabellen</b>.</div>Um hier Änderungen vorzunehmen, müssen Sie einen anderen Namen für eine oder mehrere Tabellen wählen, die mit diesem Tool erstellt werden sollen.<br><br><b>Datum</b> und <b>Feiertage</b> prüfen.`,
         [_.manageDatesStatusNotAvailable]: `<div class="hero">Dieses Modell ist nicht mehr verfügbar.</div> Versuchen Sie, die Anwendung neu zu starten.`, 
         [_.manageDatesStatusOk]: `<div class="hero">Dieses Modell <b>ist mit der Funktion Datum verwalten kompatibel</b>.</div>Sie können neue Datums-Tabellen erstellen, ohne sich Sorgen machen zu müssen, dass Measures oder Berichte beschädigt werden.`,

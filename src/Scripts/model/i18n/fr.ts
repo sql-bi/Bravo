@@ -272,7 +272,6 @@ const locale: Locale = {
         [_.manageDatesSampleDataError]: "Impossible de générer des données de test.",
         [_.manageDatesStatusCompatible]: `<div class="hero">Ce modèle contient déjà certaines <b>tables de dates compatibles</b> avec Bravo.</div>Si vous faites des modifications, ces tables seront mises à jour et leurs relations resteront inchangées.`,
         [_.manageDatesStatusError]: `<div class="hero">Les changements actuels ne peuvent pas être appliqués.</div>{error}`,
-        [_.manageDatesStatusIncompatible]: `<div class="hero">Ce modèle contient certaines <b>tables de dates non compatibles</b> avec Bravo.</div>Pour faire des modifications, il faudrait choisir un libellé différent pour une ou plusieurs tables qui seront créées par cet outil.<br><br>Vérifier les <b>Dates</b> et <b>Jours Fériés</b>.`,
         [_.manageDatesStatusIncompatible]: `<div class="hero">Ce modèle contient des tables de date <b>qui ne sont pas compatibles</b> avec bravo.</div> Pour apporter des modifications, vous devez choisir un nom différent pour <b>dates</b> et / ou <b>vacancesTables</b>.`,
         [_.manageDatesStatusNotAvailable]: `<div class="hero">Ce modèle n'est plus disponible.</div> Essayer de redémarrer l'application.`,
         [_.manageDatesStatusOk]: `<div class="hero">Ce modèle <b>est compatible avec la fonctionnalité de gestion des dates</b>.</div>Vous pouvez créer de nouvelles tables de dates sans risquer de casser des mesures ou des rapports.`,

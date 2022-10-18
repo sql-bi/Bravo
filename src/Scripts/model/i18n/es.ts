@@ -270,7 +270,6 @@ const locale: Locale = {
         [_.manageDatesStatusCompatible]: `<div class=hero>Este modelo ya contiene algunas <b>tablas de fechas compatibles </b> con Bravo.</div> Si cambia algo aquí, estas tablas se actualizarán y sus relaciones permanecerán intactas.`,
         [_.manageDatesStatusError]: `<div class=hero>No se puede aplicar la configuración actual.</div>{error}`,
         [_.manageDatesStatusIncompatible]: `<div class="hero">Este modelo contiene algunas tablas de fecha <b>que no son compatibles</b> con Bravo.</div> Para hacer cambios, debe elegir un nombre diferente para <b> echas</b> y/o <b>vacaciones</b> tablas.`,
-        [_.manageDatesStatusIncompatible]: `<div class=hero>Este modelo contiene algunas<b>tablas de fechas que no son compatibles</b> con Bravo.</div>Para realizar aquí cualquier cambio, debe elegir un nombre diferente para una o más tablas que serán creadas por esta herramienta.<br><br>Comprobar <b>Fechas</b> y <b<>Festivos</b>.`,
         [_.manageDatesStatusNotAvailable]: "<div class=hero>Este modelo ya no está disponible.</div> Intente reiniciar la aplicación.'",
         [_.manageDatesStatusOk]: "<div class=hero>Este modelo <b>es compatible con la función Administrar fechas</b>.</div> Puede crear nuevas tablas de fechas sin preocuparse por romper medidas o informes.'",
         [_.manageDatesSuccessSceneMessage]: "Felicidades, su modelo se actualizó con éxito.",
