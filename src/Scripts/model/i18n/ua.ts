@@ -151,6 +151,7 @@ const locale: Locale = {
         [_.errorRetry]: "Спробувати повторно",
         [_.errorSignInMsalExceptionOccurred]: "Неочікувана помилка в запиті на вхід.",
         [_.errorSignInMsalTimeoutExpired]: "Запит на вхід було скасовано, оскільки час очікування закінчився до завершення операції.",
+        [_.errorTemplateAlreadyExists]: "Інший шаблон з таким самим шляхом/назвою вже існує: <br><b>{name}</b>",
         [_.errorTimeout]: "Запросити перерву",
         [_.errorTitle]: "Упс...",
         [_.errorTOMDatabaseDatabaseNotFound]: "База даних не існує в колекції або користувач не має прав адміністратора для доступу до неї.",
@@ -226,7 +227,7 @@ const locale: Locale = {
         [_.manageDatesAutoScanSelectedTablesColumns]: "Виберіть стовпці...",
         [_.manageDatesBrowserPlaceholder]: "Немає елементів для зміни",
         [_.manageDatesCalendarDesc]: "Виберіть шаблон календаря для застосування до цієї моделі. Bravo створить необхідні таблиці або оновить їх, зберігаючи існуючі зв'язки.", 
-        
+        [_.manageDatesCalendarTemplateName]: "Шаблон",
         [_.manageDatesCalendarTemplateNameDesc]: "Виберіть <em>Помісячно</em> для календаря з різною кількістю місяців. Встановіть <em>Щотижнево</em> для 445-454-544-ISO календарів. Використовуйте <em>Користувацький</em> для гнучких календарів змінної довжини.",
         [_.manageDatesCreatingTables]: "Оновлення моделі...",
         [_.manageDatesDatesDesc]: "Налаштуйте формат і розташування дат у вашій моделі.",
@@ -250,6 +251,7 @@ const locale: Locale = {
         [_.manageDatesISOFormatName]: "Регіональний формат",
         [_.manageDatesISOFormatOther]: "Інше...",
         [_.manageDatesISOFormatOtherPlaceholder]: "Регіон",
+        [_.manageDatesManageTemplates]: "Керування шаблонами",
         [_.manageDatesMenuCalendar]: "Календар",
         [_.manageDatesMenuDates]: "Дати",
         [_.manageDatesMenuHolidays]: "Свята",
@@ -268,7 +270,7 @@ const locale: Locale = {
         [_.manageDatesSampleDataError]: "Неможливо згенерувати дані вибірки.",
         [_.manageDatesStatusCompatible]: `<div class="hero">Ця модель вже містить декілька <b>таблиць дат, сумісних</b> з Bravo.</div>Якщо ви щось тут зміните, то ці таблиці будуть оновлені, а їх зв'язки залишаться незмінними.`,
         [_.manageDatesStatusError]: `<div class="hero">The current settings cannot be applied.</div>{error}`,
-        
+        [_.manageDatesStatusIncompatible]: `<div class="hero">Ця модель містить деякі <b>таблиці дат</b>, які є несумісними </b> з Bravo.</div>Для внесення змін необхідно вибрати іншу назву для  <b>Дати</b> та/або <b>Свята</b> таблиці.`,
         [_.manageDatesStatusNotAvailable]: `<div class="hero">Ця модель більше не доступна.</div> Спробуйте перезапустити додаток.`,
         [_.manageDatesStatusOk]: `<div class="hero">Ця модель <b>умісна з функцією керування датами</b>.</div>Ви можете створювати нові таблиці дат, не турбуючись про порушення заходів або звітів.`,
         [_.manageDatesSuccessSceneMessage]: "Вітаємо, вашу модель успішно оновлено.",
@@ -318,7 +320,7 @@ const locale: Locale = {
         [_.optionBrowserAuthentication]: "Авторизація в браузері",
         [_.optionBrowserAuthenticationDescription]: "Авторизуйтесь за допомогою браузера за замовчуванням. Це альтернативний метод входу, який стане в нагоді для вирішення проблем з двофакторною автентифікацією.",
         [_.optionCheckForUpdates]: "Автоматична перевірка оновлень",
-        
+        [_.optionDev]: "Увімкнути шаблони дат користувачів",
         [_.optionDevDescription]: "",
         [_.optionDiagnostic]: "Рівень діагностики",
         [_.optionDiagnosticDescription]: "Відображення помилок і журналів на панелі діагностики. Оберіть <em>Базовий</em> щоб зареєструвати лише кілька повідомлень. <em>Докладний</em> реєструє всі повідомлення.",
@@ -449,15 +451,12 @@ const locale: Locale = {
         [_.updateChannelStable]: "Стабільний", 
         [_.updateMessage]: "Доступна нова версія Bravo: {version}",
         [_.validating]: "Перевірка...",
+        [_.version]: "Версія",
+        [_.welcomeHelpText]: "Перегляньте відео нижче, щоб дізнатися, як користуватися Bravo:",
+        [_.welcomeHelpTitle]: "Як користуватися Bravo?",
         [_.welcomeText]: "Bravo - це зручний інструментарій Power BI, який можна використовувати для аналізу моделей, форматування показників, створення таблиць дат та експорту даних.",
         [_.whitespacesTitle]: "Пробіли",
         [_.wrappingTitle]: "Автоматичне перенесення слів",
-
-        [_.errorTemplateAlreadyExists]: "Інший шаблон з таким самим шляхом/назвою вже існує: <br><b>{name}</b>",
-        [_.manageDatesManageTemplates]: "Керування шаблонами",
-        [_.optionDev]: "Увімкнути шаблони дат користувачів",
-        [_.manageDatesCalendarTemplateName]: "Шаблон",
-        [_.manageDatesStatusIncompatible]: `<div class="hero">Ця модель містить деякі <b>таблиці дат</b>, які є несумісними </b> з Bravo.</div>Для внесення змін необхідно вибрати іншу назву для  <b>Дати</b> та/або <b>Свята</b> таблиці.`,
     }
 }
 export default locale;
