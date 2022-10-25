@@ -6,12 +6,13 @@
 import { Utils, _, __ } from '../helpers/utils';
 import { Doc, DocType } from '../model/doc';
 import { strings } from '../model/strings';
-import { Scene } from './scene';
 import { i18n } from '../model/i18n'; 
-import { host, telemetry } from '../main';
-import { Page, PageType } from '../controllers/page';
+import { telemetry } from '../main';
+import { PageType } from '../controllers/page';
 import { UnsupportedScene } from './scene-unsupported';
 import { NavigatorScene } from './scene-navigator';
+import { HelpDialog } from './help-dialog';
+import { help } from '../model/help';
 
 export abstract class DocScene extends NavigatorScene {
     doc: Doc;
@@ -92,8 +93,7 @@ export abstract class DocScene extends NavigatorScene {
 
                 telemetry.track("Help");
 
-                //TODO Open the documentation website
-                host.navigateTo("https://bravo.bi");
+                new HelpDialog(help[this.type]);
             });
         }
     }

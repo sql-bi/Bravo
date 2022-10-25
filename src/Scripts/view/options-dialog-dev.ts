@@ -17,6 +17,8 @@ import { DialogResponse } from './dialog';
 import { CreateTemplate, CreateTemplateResponse } from './create-template';
 import { ErrorAlert } from './error-alert';
 import { Alert } from './alert';
+import { HelpDialog } from './help-dialog';
+import { help } from '../model/help';
 
 export class OptionsDialogDev {
  
@@ -48,6 +50,7 @@ export class OptionsDialogDev {
                         <div class="templates-ctrl">
                             <div class="button create-template">${i18n(strings.devTemplatesCreate)}</div>
                             <div class="browse-templates link">${i18n(strings.devTemplatesBrowse)}...</div>
+                            <div class="ctrl help-templates icon-help solo"></div>
                         </div>
                     </div>
                 `
@@ -70,6 +73,11 @@ export class OptionsDialogDev {
         _(".browse-templates", element).addEventListener("click", e => {
             e.preventDefault();
             this.browseTemplate();
+        });
+
+        _(".help-templates", element).addEventListener("click", e => {
+            e.preventDefault();
+            new HelpDialog(help["templates"]);
         });
 
         element.addLiveEventListener("click", `#${this.tableId} .remove-template`, (e, el)=>{
