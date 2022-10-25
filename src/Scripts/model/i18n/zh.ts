@@ -118,6 +118,7 @@ const locale: Locale = {
         [_.dialogOpen]: "打开",
         [_.docLimited]: "受限制的",
         [_.docLimitedTooltip]: "本文件部分功能不能完全使用。",
+        [_.documentation]: "文档",
         [_.doneCtrlTitle]: "完成",
         [_.emailAddress]: "电子邮件",
         [_.emailAddressPlaceholder]: "输入您的电子邮件",
@@ -207,6 +208,9 @@ const locale: Locale = {
         [_.groupByTableCtrlTitle]: "以表格名分组",
         [_.helpConnectVideo]: "如何连接",
         [_.helpCtrlTitle]: "帮助",
+        [_.helpOptions]: "选项",
+        [_.helpUserInterface]: "用户界面",
+        [_.helpTemplates]: "日期模板",
         [_.hideUnsupportedCtrlTitle]: "仅支持", // To Do: double check
         [_.less]: "更少",// To Do: double check
         [_.license]: "Released under MIT license.", // To Do: double check

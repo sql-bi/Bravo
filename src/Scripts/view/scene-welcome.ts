@@ -5,10 +5,11 @@
 */
 
 import { _, __ } from '../helpers/utils';
-import { host } from '../main';
+import { help } from '../model/help';
 import { i18n } from '../model/i18n'; 
 import { strings } from '../model/strings';
 import { Scene } from '../view/scene';
+import { HelpDialog } from './help-dialog';
 
 export class WelcomeScene extends Scene {
 
@@ -20,33 +21,6 @@ export class WelcomeScene extends Scene {
 
     render() {
         super.render();
-        
-        let helpVideos = [
-            {
-                name: i18n(strings.helpConnectVideo),
-                videoId: ""
-            },
-            {
-                name: i18n(strings.AnalyzeModel),
-                videoId: ""
-            },
-            {
-                name: i18n(strings.DaxFormatter),
-                videoId: ""
-            },
-            {
-                name: i18n(strings.ManageDates),
-                videoId: ""
-            },
-            {
-                name: i18n(strings.ExportData),
-                videoId: ""
-            },
-            /*{
-                name: i18n(strings.BestPractices),
-                videoId: ""
-            }*/
-        ];
 
         let html = `
             <div class="cols">
@@ -82,12 +56,14 @@ export class WelcomeScene extends Scene {
 
                         <div class="videos">
                             <ul>
-                                ${helpVideos.map(video => `
-                                    <li><span class="help-video ctrl icon-video" data-video="${video.videoId}">${video.name}</span></li>
+                                ${Object.keys(help).map(id => `
+                                    <li><span class="help-video ctrl icon-video" data-id="${id}">${i18n(help[id].title)}</span></li>
                                 `).join("")}
                             </ul>
                         </div>
 
+                        <p><span class="link" href="https://docs.sqlbi.com/bravo">${i18n(strings.documentation)}</span></p>
+                        
                         <p class="note">${i18n(strings.openSourcePayoff, { appName: i18n(strings.appName) })} <span class="link" href="https://github.com/sql-bi/bravo">github.com/sql-bi/bravo</span></p>
                     </div>
                 </div>
@@ -115,12 +91,11 @@ export class WelcomeScene extends Scene {
             this.trigger("quickAction", "open-vpax");
         });
 
-        __(".help-video", this.element).forEach(div => {
+        __(".help-video", this.element).forEach((div: HTMLElement) => {
             div.addEventListener("click", e => {
                 e.preventDefault();
-                
-                //TODO Open the documentation page/video
-                host.navigateTo("https://bravo.bi");
+
+                new HelpDialog(help[div.dataset.id]);
             });
         });
     } 

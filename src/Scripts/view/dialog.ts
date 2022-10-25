@@ -31,7 +31,7 @@ export class Dialog extends View {
         return (optionsController.options.customOptions.alerts[this.id] !== false);
     }
 
-    constructor(id: string, container: HTMLElement, title: string, buttons: DialogButton[], iconClass = "", neverShowAgain = false) {
+    constructor(id: string, container: HTMLElement, title: string, buttons: DialogButton[], iconClass = "", neverShowAgain = false, showX: "auto" | boolean = "auto") {
 
         super(`dialog-${id}`, container);
         if (!this.canShow) this.element.toggle(false);
@@ -41,7 +41,7 @@ export class Dialog extends View {
         let html = `
             <div class="dialog-back"></div>
             <div class="dialog-front">
-                ${title || iconClass ? `
+                ${title || iconClass || showX == true ? `
                     <header>
                         <h1${iconClass ? ` class="${iconClass}"` : ""}>${title ? title : ""}</h1>
                         <div class="ctrl-close ctrl icon-close solo"></div>
