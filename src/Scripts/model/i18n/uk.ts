@@ -8,7 +8,7 @@ import { strings as _ } from '../strings';
 
 const locale: Locale = {
 
-    locale: "ua", // DO NOT TRANSLATE
+    locale: "uk", // DO NOT TRANSLATE
     enName: "Ukrainian", // DO NOT TRANSLATE
     name: "українська",
 
