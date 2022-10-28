@@ -14,26 +14,29 @@ Bravo is free and open-source. The codebase is C# and TypeScript. However, you c
 [Terms and conditions](TERMS.md)  
 [License](LICENSE)
 
-### Public Preview
-Bravo is in public preview. We plan to write documentation and more instructions about the code before the final release (1.0).
+## Installation Requirements
 
-### Installation Requirements
 Bravo requires a 64-bit Windows operating system and can run on all OS versions supported by Power BI Desktop ([Windows 8.1 / Windows Server 2012 R2, or later](https://docs.microsoft.com/en-us/power-bi/fundamentals/desktop-get-the-desktop#minimum-requirements)). 
 Bravo could also run on Windows 7 SP1 and Windows Server 2012, even though it is not supported and not tested by the development team.
 
-### How to Help with Translations
+## How to Help with Translations
 
-#### User Interface Translations
+### User Interface Translations
+
 You can [fork the Bravo repository](https://github.com/sql-bi/Bravo/fork) and create a pull request adding or updating a localization file.
 This folder contains the localization files for the user interface: https://github.com/sql-bi/Bravo/tree/main/src/Scripts/model/i18n.
 You can copy the `en.ts` file into another language (use the ISO code) and translate the English strings to the corresponding language.
 In case you are adding a translation for a new language then you must also to include it among the existing languages in the https://github.com/sql-bi/Bravo/blob/main/src/Scripts/model/i18n/locales.ts file.
 
-#### Dates Template Translations
+### Dates Template Translations
+
 You can [fork the Bravo repository](https://github.com/sql-bi/Bravo/fork) and create a pull request updating a file containing the strings used in the Dates templates.
 This folder contains the files used in the Dates templates: https://github.com/sql-bi/Bravo/tree/main/src/Assets/ManageDates/Templates.
 
-### Customize Date Templates
-You can clone an existing date template or create a new one from scratch by using the template management panel on the Bravo options page.
-- More information on custom date template options and settings is available here https://docs.sqlbi.com/bravo/configuration/options#templates.
-- More information on template development and the DaxTemplate library is available here https://docs.sqlbi.com/dax-template.
+## Bravo Template Editor
+
+Bravo Template Editor is an extension for Visual Studio Code that you can use to edit and preview custom date templates for Power BI. Find more on the dedicated repository: https://github.com/sql-bi/BravoTemplateEditor
+
+## Documentation
+
+You can find the official documentation here: https://docs.sqlbi.com/bravo
