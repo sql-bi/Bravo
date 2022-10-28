@@ -35,5 +35,5 @@ This folder contains the files used in the Dates templates: https://github.com/s
 
 ### Customize Date Templates
 You can clone an existing date template or create a new one from scratch by using the template management panel on the Bravo options page.
-- More information on custom date template options and settings is available here https://docs.sqlbi.com/bravo/options#templates.
-- More information on custom date template development is available here https://docs.sqlbi.com/bravo/customize-date-template.
+- More information on custom date template options and settings is available here https://docs.sqlbi.com/bravo/configuration/options#templates.
+- More information on template development and the DaxTemplate library is available here https://docs.sqlbi.com/dax-template.
