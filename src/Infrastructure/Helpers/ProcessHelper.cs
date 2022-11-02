@@ -174,8 +174,12 @@
 
                             if (isPbix)
                             {
-                                for (var i = 0; i < 120; i++)
+                                // We force 5 minutes which is the default timeout of HTTP requests
+                                var waitTimeout = TimeSpan.FromMinutes(5).TotalSeconds;
+
+                                for (var i = 0; i < waitTimeout; i++)
                                 {
+                                    // Cancellation can be requested by the user via the "Cancel" button or when the HTTP request times out.
                                     cancellationToken.ThrowIfCancellationRequested();
 
                                     if (process.HasExited)
