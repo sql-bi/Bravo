@@ -435,7 +435,7 @@ export class ExportDataScene extends DocScene {
     }
 
     isTruncated(table: TabularTable) {
-        return table.rowsCount > 1_000_00 && this.config.options.format == ExportDataFormat.Xlsx;
+        return table.rowsCount > 1_000_000 && this.config.options.format == ExportDataFormat.Xlsx;
     }
 
     applyFilters() {
