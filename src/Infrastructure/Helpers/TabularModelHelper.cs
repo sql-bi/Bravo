@@ -26,6 +26,7 @@
             var etag = Cryptography.MD5Hash(buffers);
             return etag;
         }
+
         public static DatabaseUpdateResult Update(TOM.Database database, IEnumerable<FormattedMeasure> measures)
         {
             var databaseETag = database.GetETag(refresh: false);
@@ -47,7 +48,14 @@
 
             if (database.Model.HasLocalChanges)
             {
-                database.Model.SaveChanges().ThrowOnError();
+                try
+                {
+                    database.Model.SaveChanges().ThrowOnError();
+                }
+                catch (Microsoft.AnalysisServices.OperationException ex)
+                {
+                    throw new BravoException(BravoProblem.TOMDatabaseUpdateFailed, ex.Message, ex);
+                }
                 databaseETag = database.GetETag();
             }
 
