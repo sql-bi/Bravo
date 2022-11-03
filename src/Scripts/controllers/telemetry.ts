@@ -38,6 +38,7 @@ export class Telemetry {
          disableExceptionTracking: true,
          disablePageUnloadEvents: ["beforeunload", "unload", "visibilitychange", "pagehide"],
          disablePageShowEvents: ["pageshow", "visibilitychange"],
+         disableFetchTracking: true,
          disableAjaxTracking: true,
          //enableDebug: debug.enabled,
          autoTrackPageVisitTime: false,
