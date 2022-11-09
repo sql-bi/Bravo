@@ -189,7 +189,7 @@
             }
 
             using var command = connection.CreateAdomdCommand();
-            cancellationToken.Register(() => command.Cancel());
+            using var _ = cancellationToken.Register(() => command.Cancel());
 
             foreach (var tableName in settings.Tables)
             {
@@ -274,7 +274,7 @@
             Directory.CreateDirectory(xlsxFile.Directory.FullName);
 
             using var command = connection.CreateAdomdCommand();
-            cancellationToken.Register(() => command.Cancel());
+            using var _ = cancellationToken.Register(() => command.Cancel());
 
             using var fileStream = new FileStream(xlsxFile.FullName, FileMode.Create, FileAccess.Write);
             using var xlsxWriter = new XlsxWriter(fileStream);
