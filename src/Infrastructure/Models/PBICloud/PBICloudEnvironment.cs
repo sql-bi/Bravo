@@ -46,7 +46,13 @@
         [JsonIgnore]
         public bool IsMicrosoftInternal => Type == PBICloudEnvironmentType.Custom && Name.EqualsI(PBICloudEnvironmentTypeExtensions.PpeCloudName);
 
-        public static PBICloudEnvironment CreateFrom(GlobalServiceEnvironment globalServiceEnvironment)
+        public Uri GetServiceEndpointUri(string path)
+        {
+            var baseUri = new Uri(ServiceEndpoint!, UriKind.Absolute);
+            return new Uri(baseUri, relativeUri: path);
+        }
+
+        internal static PBICloudEnvironment CreateFrom(GlobalServiceEnvironment globalServiceEnvironment)
         {
             var authorityService = globalServiceEnvironment.Services?.SingleOrDefault((s) => "aad".EqualsI(s.Name));
             var powerbiService = globalServiceEnvironment.Services?.SingleOrDefault((s) => "powerbi-backend".EqualsI(s.Name));
@@ -154,5 +160,10 @@
         string? ClusterEndpoint { get; set; }
 
         bool IsValid { get; }
+
+        [JsonIgnore]
+        bool IsMicrosoftInternal { get; }
+
+        Uri GetServiceEndpointUri(string path);
     }
 }
