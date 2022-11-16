@@ -21,7 +21,7 @@
 
     public interface IPBICloudSettingsService
     {
-        Task<TenantCluster> GetTenantClusterAsync(string accessToken, CancellationToken cancellationToken);
+        Task<TenantCluster> GetTenantClusterAsync(IPBICloudEnvironment environment, string accessToken, CancellationToken cancellationToken);
 
         Task<IEnumerable<IPBICloudEnvironment>> GetEnvironmentsAsync(string userPrincipalName, CancellationToken cancellationToken);
     }
@@ -41,11 +41,11 @@
             _environmentDiscoverBaseUri = new(() => GetEnvironmentDiscoveryBaseUri());
         }
 
-        public async Task<TenantCluster> GetTenantClusterAsync(string accessToken, CancellationToken cancellationToken)
+        public async Task<TenantCluster> GetTenantClusterAsync(IPBICloudEnvironment environment, string accessToken, CancellationToken cancellationToken)
         {
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
-            var requestUri = new Uri(_environmentDiscoverBaseUri.Value, relativeUri: GlobalServiceGetOrInsertClusterUrisByTenantlocationUrl);
+            var requestUri = environment.GetServiceEndpointUri(GlobalServiceGetOrInsertClusterUrisByTenantlocationUrl);
             using var request = new HttpRequestMessage(HttpMethod.Put, requestUri);
             request.Content = new StringContent(string.Empty, Encoding.UTF8, MediaTypeNames.Application.Json);
 
