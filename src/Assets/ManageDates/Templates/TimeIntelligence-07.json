@@ -537,11 +537,11 @@
       ]
     },
     {
-      "Name": "QTDOPQ",
+      "Name": "WTDOPW",
       "DisplayFolder": "Growth over full period",
       "MultiLineExpression": [
-        "VAR __ValueCurrentPeriod = @@GETMEASURE( QTD )",
-        "VAR __ValuePreviousPeriod = @@GETMEASURE( PQC )",
+        "VAR __ValueCurrentPeriod = @@GETMEASURE( WTD )",
+        "VAR __ValuePreviousPeriod = @@GETMEASURE( PWC )",
         "VAR __Result =",
         "    IF (",
         "        NOT ISBLANK ( __ValueCurrentPeriod ) && NOT ISBLANK ( __ValuePreviousPeriod ),",
@@ -552,12 +552,12 @@
       ]
     },
     {
-      "Name": "QTDOPQ %",
+      "Name": "WTDOPW %",
       "DisplayFolder": "To-date growth",
       "FormatString": "0.00%",
       "MultiLineExpression": [
         "DIVIDE (",
-        "    @@GETMEASURE( QTDOPQ ),",
+        "    @@GETMEASURE( WTDOPW ),",
         "    @@GETMEASURE( PWC )",
         ")"
       ]
