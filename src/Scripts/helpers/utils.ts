@@ -532,7 +532,7 @@ export module Utils {
         export function merge<T>(source: T, target: T, acceptNull = false): T {
             let result = <T>{};
             for (let prop in source) {
-                if (prop in target && (target[prop] !== null || acceptNull)) {
+                if (/*prop in target*/target.hasOwnProperty(prop) && (target[prop] !== null || acceptNull)) {
                     if (Utils.Obj.isObject(source[prop]) && Utils.Obj.isObject(target[prop])) {
                         result[prop] = Utils.Obj.merge(source[prop], target[prop], acceptNull);
                     } else {
@@ -544,7 +544,7 @@ export module Utils {
             }
             
             for (let prop in target) {
-                if (!(prop in source) && (target[prop] !== null || acceptNull)) {
+                if (/*!(prop in source)*/!source.hasOwnProperty(prop) && (target[prop] !== null || acceptNull)) {
                     result[prop] = target[prop];
                 }
             }
@@ -558,7 +558,7 @@ export module Utils {
             for (let prop in target) {
                 if (Utils.Obj.isFunction(target[prop])) {
                     continue;
-                } else if (!(prop in source)) {
+                } else if (/*!(prop in source)*/!source.hasOwnProperty(prop)) {
                     result[prop] = target[prop]; //New branch
                 } else {
                     if (Utils.Obj.isObject(target[prop]) || Utils.Obj.isArray(target[prop])) {
