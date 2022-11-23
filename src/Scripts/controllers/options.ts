@@ -127,7 +127,7 @@ export class OptionsStore<T> extends Dispatchable {
             if (i == path.length - 1) {
                 return (<any>obj)[prop];
             } else { 
-                if (!(prop in obj))
+                if (/*!(prop in obj)*/!obj.hasOwnProperty(prop))
                     break;
                 obj = (<any>obj)[prop];
             }
@@ -154,7 +154,7 @@ export class OptionsStore<T> extends Dispatchable {
                 (<any>obj)[prop] = value;
                 (<any>changed)[prop] = value;
             } else { 
-                if (!(prop in obj))
+                if (/*!(prop in obj)*/!obj.hasOwnProperty(prop))
                     (<any>obj)[prop] = {};
                 obj = (<any>obj)[prop];
                 

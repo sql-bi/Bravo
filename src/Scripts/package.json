@@ -38,7 +38,7 @@
     "json-formatter-js": "https://github.com/danieleperilli/json-formatter-js.git",
     "sanitize-html": "^2.6.1",
     "split.js": "^1.6.5",
-    "tabulator-tables": "^5.3.2",
+    "tabulator-tables": "^5.4.2",
     "ts-md5": "1.2.11"
   }
 }
