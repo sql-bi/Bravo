@@ -465,7 +465,7 @@
     },
     {
       "Name": "YTDOPY %",
-      "DisplayFolder": "To-date growth",
+      "DisplayFolder": "Growth over full period",
       "FormatString": "0.00%",
       "MultiLineExpression": [
         "DIVIDE (",
@@ -509,7 +509,7 @@
     },
     {
       "Name": "QTDOPQ %",
-      "DisplayFolder": "To-date growth",
+      "DisplayFolder": "Growth over full period",
       "FormatString": "0.00%",
       "MultiLineExpression": [
         "DIVIDE (",
@@ -537,11 +537,11 @@
       ]
     },
     {
-      "Name": "QTDOPQ",
+      "Name": "WTDOPW",
       "DisplayFolder": "Growth over full period",
       "MultiLineExpression": [
-        "VAR __ValueCurrentPeriod = @@GETMEASURE( QTD )",
-        "VAR __ValuePreviousPeriod = @@GETMEASURE( PQC )",
+        "VAR __ValueCurrentPeriod = @@GETMEASURE( WTD )",
+        "VAR __ValuePreviousPeriod = @@GETMEASURE( PWC )",
         "VAR __Result =",
         "    IF (",
         "        NOT ISBLANK ( __ValueCurrentPeriod ) && NOT ISBLANK ( __ValuePreviousPeriod ),",
@@ -552,12 +552,12 @@
       ]
     },
     {
-      "Name": "QTDOPQ %",
-      "DisplayFolder": "To-date growth",
+      "Name": "WTDOPW %",
+      "DisplayFolder": "Growth over full period",
       "FormatString": "0.00%",
       "MultiLineExpression": [
         "DIVIDE (",
-        "    @@GETMEASURE( QTDOPQ ),",
+        "    @@GETMEASURE( WTDOPW ),",
         "    @@GETMEASURE( PWC )",
         ")"
       ]

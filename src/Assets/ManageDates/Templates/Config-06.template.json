@@ -26,9 +26,11 @@
       "Table": null,
       "Template": "TimeIntelligence-06.json",
       "Properties": {
-        "DisplayFolderRule": "Time intelligence\\@_MEASURE_@\\@_TEMPLATEFOLDER_@",
+        "__DisplayFolderRule": "Time intelligence\\@_MEASURE_@\\@_TEMPLATEFOLDER_@",
         "_DisplayFolderRule": "Time intelligence\\@_TEMPLATEFOLDER_@\\@_TEMPLATE_@",
-        "__DisplayFolderRule": "Time intelligence\\@_TEMPLATEFOLDER_@\\@_MEASURE_@"
+        "___DisplayFolderRule": "Time intelligence\\@_TEMPLATEFOLDER_@\\@_MEASURE_@",
+        "DisplayFolderRule": "Time intelligence\\@_TEMPLATEFOLDER_@\\@_MEASUREFOLDER_@\\@_MEASURE_@",
+        "DisplayFolderRuleSingleInstanceMeasures": "Hidden Time Intelligence"
       },
       "_comment": "TargetMeasures can override the default setting"
     }

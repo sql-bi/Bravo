@@ -596,7 +596,7 @@
     },
     {
       "Name": "YTDOPY %",
-      "DisplayFolder": "To-date growth",
+      "DisplayFolder": "Growth over full period",
       "FormatString": "0.00%",
       "MultiLineExpression": [
         "DIVIDE (",
@@ -640,7 +640,7 @@
     },
     {
       "Name": "QTDOPQ %",
-      "DisplayFolder": "To-date growth",
+      "DisplayFolder": "Growth over full period",
       "FormatString": "0.00%",
       "MultiLineExpression": [
         "DIVIDE (",
@@ -684,7 +684,7 @@
     },
     {
       "Name": "MTDOPM %",
-      "DisplayFolder": "To-date growth",
+      "DisplayFolder": "Growth over full period",
       "FormatString": "0.00%",
       "MultiLineExpression": [
         "DIVIDE (",
