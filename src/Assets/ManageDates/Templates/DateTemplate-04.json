@@ -178,7 +178,7 @@
       "DataCategory": "MonthOfYear"
     },
     {
-      "Name": "Fiscal Month In Quarter Number",
+      "Name": "Fiscal Month in Quarter Number",
       "Expression": "__FiscalMonthInQuarterNumber",
       "DataType": "Int64",
       "IsHidden": true,
