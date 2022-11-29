@@ -94,6 +94,12 @@
           "DisplayFolders": ""
         },
         {
+          "OriginalName": "Quarter",
+          "Name": "Trimestre",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
           "OriginalName": "Month",
           "Name": "Mese",
           "Description": "",
@@ -269,6 +275,12 @@
         {
           "OriginalName": "Year Month Number",
           "Name": "Année Mois Numéro",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Quarter",
+          "Name": "Trimestre",
           "Description": "",
           "DisplayFolders": ""
         },
@@ -452,6 +464,12 @@
           "DisplayFolders": ""
         },
         {
+          "OriginalName": "Quarter",
+          "Name": "Trimestre",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
           "OriginalName": "Month",
           "Name": "Mes",
           "Description": "",
@@ -627,6 +645,12 @@
         {
           "OriginalName": "Year Month Number",
           "Name": "Ano Mês Número",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Quarter",
+          "Name": "Trimestre",
           "Description": "",
           "DisplayFolders": ""
         },
@@ -810,6 +834,12 @@
           "DisplayFolders": ""
         },
         {
+          "OriginalName": "Quarter",
+          "Name": "Quartal",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
           "OriginalName": "Month",
           "Name": "Monat",
           "Description": "",
@@ -989,14 +1019,14 @@
           "DisplayFolders": ""
         },
         {
-          "OriginalName": "Month",
-          "Name": "月份名称",
+          "OriginalName": "Quarter",
+          "Name": "季度",
           "Description": "",
           "DisplayFolders": ""
         },
         {
-          "OriginalName": "Quarter",
-          "Name": "季度",
+          "OriginalName": "Month",
+          "Name": "月份名称",
           "Description": "",
           "DisplayFolders": ""
         },

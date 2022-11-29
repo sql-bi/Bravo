@@ -148,6 +148,18 @@
           "DisplayFolders": ""
         },
         {
+          "OriginalName": "Fiscal Month",
+          "Name": "Mese Fiscale",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Fiscal Month Number",
+          "Name": "Mese Fiscale Numero",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
           "OriginalName": "Working Day",
           "Name": "Giorno Lavorativo",
           "Description": "",
@@ -273,14 +285,14 @@
           "DisplayFolders": ""
         },
         {
-          "OriginalName": "Month",
-          "Name": "Mois",
+          "OriginalName": "Fiscal Month",
+          "Name": "Mois Fiscal",
           "Description": "",
           "DisplayFolders": ""
         },
         {
-          "OriginalName": "Month Number",
-          "Name": "Mois Numéro",
+          "OriginalName": "Fiscal Month Number",
+          "Name": "Mois Fiscal Numéro",
           "Description": "",
           "DisplayFolders": ""
         },
@@ -310,13 +322,13 @@
         },
         {
           "OriginalName": "Fiscal Year Quarter",
-          "Name": "Anno Trimestre Fiscale",
+          "Name": "Exercice Fiscal Trimestre",
           "Description": "",
           "DisplayFolders": ""
         },
         {
           "OriginalName": "Fiscal Year Quarter Number",
-          "Name": "Exercice Fiscal Trimestre",
+          "Name": "Exercice Fiscal Trimestre Numéro",
           "Description": "",
           "DisplayFolders": ""
         },
@@ -452,14 +464,14 @@
           "DisplayFolders": ""
         },
         {
-          "OriginalName": "Month",
-          "Name": "Mes",
+          "OriginalName": "Fiscal Month",
+          "Name": "Mes Fiscal",
           "Description": "",
           "DisplayFolders": ""
         },
         {
-          "OriginalName": "Month Number",
-          "Name": "Mes Número",
+          "OriginalName": "Fiscal Month Number",
+          "Name": "Mes Fiscal Número",
           "Description": "",
           "DisplayFolders": ""
         },
@@ -631,14 +643,14 @@
           "DisplayFolders": ""
         },
         {
-          "OriginalName": "Month",
-          "Name": "Mês",
+          "OriginalName": "Fiscal Month",
+          "Name": "Mês Fiscal",
           "Description": "",
           "DisplayFolders": ""
         },
         {
-          "OriginalName": "Month Number",
-          "Name": "Mês Número",
+          "OriginalName": "Fiscal Month Number",
+          "Name": "Mês Fiscal Número",
           "Description": "",
           "DisplayFolders": ""
         },
@@ -810,14 +822,14 @@
           "DisplayFolders": ""
         },
         {
-          "OriginalName": "Month",
-          "Name": "Monat",
+          "OriginalName": "Fiscal Month",
+          "Name": "Geschäftsmonat",
           "Description": "",
           "DisplayFolders": ""
         },
         {
-          "OriginalName": "Month Number",
-          "Name": "Monat Nummer",
+          "OriginalName": "Fiscal Month Number",
+          "Name": "Geschäftsmonat Nummer",
           "Description": "",
           "DisplayFolders": ""
         },
