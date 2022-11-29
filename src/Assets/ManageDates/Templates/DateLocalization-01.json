@@ -995,6 +995,12 @@
           "DisplayFolders": ""
         },
         {
+          "OriginalName": "Quarter",
+          "Name": "季度",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
           "OriginalName": "Month Number",
           "Name": "月份",
           "Description": "",

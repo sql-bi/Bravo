@@ -1043,6 +1043,18 @@
           "DisplayFolders": ""
         },
         {
+          "OriginalName": "Fiscal Month",
+          "Name": "财政月份名称",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Fiscal Month Number",
+          "Name": "财政月份数",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
           "OriginalName": "Working Day",
           "Name": "工作日",
           "Description": "",

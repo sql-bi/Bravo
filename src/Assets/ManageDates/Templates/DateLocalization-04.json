@@ -957,6 +957,47 @@
           ]
         },
         {
+          "OriginalName": "Fiscal Year-Month",
+          "Name": "财政年-月",
+          "Description": "",
+          "DisplayFolders": "",
+          "Levels": [
+            {
+              "OriginalName": "Year",
+              "Name": "年",
+              "Description": ""
+            },
+            {
+              "OriginalName": "Month",
+              "Name": "月",
+              "Description": ""
+            }
+          ]
+        },
+        {
+          "OriginalName": "Fiscal Year-Quarter",
+          "Name": "财政年-季",
+          "Description": "",
+          "DisplayFolders": "",
+          "Levels": [
+            {
+              "OriginalName": "Year",
+              "Name": "年",
+              "Description": ""
+            },
+            {
+              "OriginalName": "Quarter",
+              "Name": "季",
+              "Description": ""
+            },
+            {
+              "OriginalName": "Month",
+              "Name": "月",
+              "Description": ""
+            }            
+          ]
+        },
+        {
           "OriginalName": "Fiscal",
           "Name": "财政",
           "Description": "",
@@ -1075,6 +1116,30 @@
         {
           "OriginalName": "Fiscal Quarter",
           "Name": "财政季度名称",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Fiscal Month",
+          "Name": "财政月份名称",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Fiscal Month Number",
+          "Name": "财政月份数",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Year Month Key",
+          "Name": "年份月份",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Fiscal Month in Quarter Number",
+          "Name": "本季度财政月份序号",
           "Description": "",
           "DisplayFolders": ""
         },
