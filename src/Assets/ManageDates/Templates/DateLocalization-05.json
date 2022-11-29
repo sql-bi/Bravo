@@ -864,6 +864,29 @@
               "Description": ""
             }
           ]
+        },
+        {
+          "OriginalName": "Calendar",
+          "Name": "日历",
+          "Description": "",
+          "DisplayFolders": "",
+          "Levels": [
+            {
+              "OriginalName": "Year",
+              "Name": "年",
+              "Description": ""
+            },
+            {
+              "OriginalName": "Quarter",
+              "Name": "季",
+              "Description": ""
+            },
+            {
+              "OriginalName": "Month",
+              "Name": "月",
+              "Description": ""
+            }
+          ]
         }
       ],
       "Columns": [
@@ -961,6 +984,48 @@
         {
           "OriginalName": "Day of Month Number",
           "Name": "当前月份下日期序号",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Day of Year Number",
+          "Name": "当前年份下日期序号",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Month in Quarter Number",
+          "Name": "当前季度中的月份数",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Month Number",
+          "Name": "月份数",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Quarter",
+          "Name": "季度",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Year",
+          "Name": "年份",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Year Quarter",
+          "Name": "年份季度",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Year Quarter Number",
+          "Name": "年季数",
           "Description": "",
           "DisplayFolders": ""
         },

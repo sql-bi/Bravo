@@ -957,6 +957,47 @@
           ]
         },
         {
+          "OriginalName": "Year-Month",
+          "Name": "年-月",
+          "Description": "",
+          "DisplayFolders": "",
+          "Levels": [
+            {
+              "OriginalName": "Year",
+              "Name": "年份",
+              "Description": ""
+            },
+            {
+              "OriginalName": "Month",
+              "Name": "月份",
+              "Description": ""
+            }
+          ]
+        },
+        {
+          "OriginalName": "Year-Quarter",
+          "Name": "年-季",
+          "Description": "",
+          "DisplayFolders": "",
+          "Levels": [
+            {
+              "OriginalName": "Year",
+              "Name": "年份",
+              "Description": ""
+            },
+            {
+              "OriginalName": "Quarter",
+              "Name": "季度",
+              "Description": ""
+            },
+            {
+              "OriginalName": "Month",
+              "Name": "月份",
+              "Description": ""
+            }
+          ]
+        },
+        {
           "OriginalName": "Fiscal",
           "Name": "财政",
           "Description": "",
@@ -1021,6 +1062,12 @@
         {
           "OriginalName": "Year Month Number",
           "Name": "年月数",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Year Month Key",
+          "Name": "年份月份",
           "Description": "",
           "DisplayFolders": ""
         },
@@ -1099,6 +1146,12 @@
         {
           "OriginalName": "Holiday Name",
           "Name": "假期名称",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Month In Quarter Number",
+          "Name": "本季度内月份数",
           "Description": "",
           "DisplayFolders": ""
         },
