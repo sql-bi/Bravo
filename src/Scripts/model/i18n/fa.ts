@@ -13,7 +13,7 @@ const locale: Locale = {
 
     locale: "fa", // DO NOT TRANSLATE
     enName: "Persian", // DO NOT TRANSLATE
-    name: "Persian",
+    name: "فارسی",
 
     strings: {
         [_.addCtrlTitle]: "باز کردن",
@@ -107,11 +107,11 @@ const locale: Locale = {
         [_.devTemplatesEditTitle]: "ویرایش در کد ویژوال استودیو",
         [_.devTemplatesEmpty]: "هیچ الگوی سفارشی تاریخ یافت نشد.",
         [_.devTemplatesNotAvailable]: "این الگو دیگر در دسترس نیست.",
-		[_.devTemplatesRemove]: "حذف"،
-        [_.devTemplatesTypeOrganization]: "سازمان"،
-        [_.devTemplatesTypeUser]: "کاربر"،
-        [_.devTemplatesVSCodeDownload]: "دانلود کد ویژوال استودیو"،
-        [_.devTemplatesVSCodeExtensionDownload]: "دانلود پسوند {extension}"،
+	[_.devTemplatesRemove]: "حذف",
+        [_.devTemplatesTypeOrganization]: "سازمان",
+        [_.devTemplatesTypeUser]: "کاربر",
+        [_.devTemplatesVSCodeDownload]: "دانلود کد ویژوال استودیو",
+        [_.devTemplatesVSCodeExtensionDownload]: "دانلود پسوند {extension}",
         [_.devTemplatesVSCodeMessage]: "<p>پروژه الگوی تاریخ اکنون با کد ویژوال استودیو باز می شود و نیاز به کامپایل شدن <b>{extension}</b> دارد.</p><p>اگر روی سیستم شما موجود نیست، لطفاً آن را دانلود نمایید:</p>",
         [_.devTemplatesVSCodeTitle]: "باز کردن با Visual Studio Code",
         [_.dialogCancel]: "انصفرا",
@@ -183,8 +183,8 @@ const locale: Locale = {
         [_.exportDataCSVEncodingDesc]: "",
         [_.exportDataCSVFolder]: "ذخیره در زیرپوشه",
         [_.exportDataCSVFolderDesc]: "ذخیره اکسل خروجی گرفته شده در زیرپوشه.",
-        [_.exportDataCSVQuote]: "متن ها را در "" قرار بده",
-        [_.exportDataCSVQuoteDesc]: "اطمینان حاصل کن که کلیه متن ها در "" قرار دارند.",
+        [_.exportDataCSVQuote]: "رشته ها را در دو گیومه قرار دهید",
+        [_.exportDataCSVQuoteDesc]: "اطمینان حاصل کنید که هر رشته در گیومه های دوتایی محصور شده است.",
         [_.exportDataExcelCreateExportSummary]: "خلاصه خروجی گرفتن",
         [_.exportDataExcelCreateExportSummaryDesc]: "یک شیت در اکسل به عنوان خلاصه عملیات خروجی اضافه کن",
         [_.exportDataExport]: "خروجی انتخاب شده",
