@@ -33,6 +33,7 @@
         public static readonly string ApplicationRegistryApplicationTitleVersionHiddenValue = "applicationTitleVersionHidden";
         public static readonly string ApplicationRegistryApplicationInstallFolderValue = "installFolder";
         public static readonly string TelemetryInstrumentationKey = "47a8970c-6293-408a-9cce-5b7b311574d3";
+        public static readonly string TelemetryConnectionString = "InstrumentationKey=47a8970c-6293-408a-9cce-5b7b311574d3";
         public static readonly string PBIDesktopProcessName = "PBIDesktop";
         public static readonly string PBIDesktopSSASProcessImageName = "msmdsrv.exe";
         public static readonly string[] PBIDesktopMainWindowTitleSuffixes = new string[]

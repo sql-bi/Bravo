@@ -21,7 +21,7 @@
             //configuration.DefaultTelemetrySink.TelemetryProcessorChainBuilder.Use((next) => new AppTelemetryProcessor(next)).Build();
             configuration.TelemetryInitializers.Add(new OperationCorrelationTelemetryInitializer());
             configuration.TelemetryInitializers.Add(new AppTelemetryInitializer());
-            configuration.InstrumentationKey = AppEnvironment.TelemetryInstrumentationKey;
+            configuration.ConnectionString = AppEnvironment.TelemetryConnectionString;
             configuration.DisableTelemetry = UserPreferences.Current.TelemetryEnabled == false;
 #if DEBUG
             configuration.TelemetryChannel.DeveloperMode = Debugger.IsAttached;

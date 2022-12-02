@@ -330,6 +330,7 @@ window.external = {
                 telemetry = new
                 {
                     instrumentationKey = AppEnvironment.TelemetryInstrumentationKey,
+                    connectionString = AppEnvironment.TelemetryConnectionString,
                     contextDeviceOperatingSystem = AppTelemetryInitializer.DeviceOperatingSystem,
                     contextComponentVersion = AppTelemetryInitializer.ComponentVersion,
                     contextSessionId = AppTelemetryInitializer.SessionId,

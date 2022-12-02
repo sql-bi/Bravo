@@ -8,16 +8,16 @@ jobs:
   build-and-test:
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Setup .NET
-      uses: actions/setup-dotnet@v1
+      uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: 6.0.x
+        global-json-file: global.json
     - name: .NET info
       run: dotnet --info
     - name: .NET restore
       run: dotnet restore
     - name: .NET build
-      run: dotnet build './Bravo.sln' --configuration ${{ env.CONFIGURATION }} --no-restore
+      run: dotnet build Bravo.sln --configuration ${{ env.CONFIGURATION }} --no-restore
     - name: .NET test
-      run: dotnet test './Bravo.sln' --configuration ${{ env.CONFIGURATION }} --no-build --verbosity normal
+      run: dotnet test Bravo.sln --configuration ${{ env.CONFIGURATION }} --no-build --verbosity normal
