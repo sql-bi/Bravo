@@ -41,7 +41,7 @@
         {
             Formats = new[]
             {
-                string.Format("yyyy-MM-dd HH:mm:ss{0}fff", CultureInfo.CurrentCulture.NumberFormat.CurrencyDecimalSeparator)
+                "yyyy-MM-dd HH:mm:ss.fff" // We force the '.' as the preferred separator between the time element and its fraction - see https://github.com/sql-bi/Bravo/issues/549
             }
         };
 
