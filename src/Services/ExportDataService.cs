@@ -41,7 +41,7 @@
         {
             Formats = new[]
             {
-                string.Format("yyyy-MM-dd HH:mm:ss{0}000", CultureInfo.CurrentCulture.NumberFormat.CurrencyDecimalSeparator)
+                string.Format("yyyy-MM-dd HH:mm:ss{0}fff", CultureInfo.CurrentCulture.NumberFormat.CurrencyDecimalSeparator)
             }
         };
 
@@ -356,6 +356,8 @@
 
             static void WriteData(ExportDataTable table, XlsxWriter writer, IDataReader reader, CancellationToken cancellationToken)
             {
+                // TODO: improve the column format(XlsxStyle) by using the TOM.Column.FormatString property (see DaxStudio.UI.Utils.XlsxHelper.GetStyle)
+
                 var headerStyle = new XlsxStyle(
                     font: new XlsxFont(XlsxFont.Default.Name, XlsxFont.Default.Size, Color.White, bold: true),
                     fill: new XlsxFill(Color.FromArgb(0, 0x45, 0x86)),
