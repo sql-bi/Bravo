@@ -395,7 +395,7 @@
                             case int @int:
                                 writer.Write(@int);
                                 break;
-                            case double @double:
+                            case double @double when !double.IsNaN(@double) && !double.IsPositiveInfinity(@double) && !double.IsNegativeInfinity(@double):
                                 writer.Write(@double);
                                 break;
                             case decimal @decimal:
