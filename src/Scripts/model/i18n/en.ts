@@ -109,7 +109,7 @@ const locale: Locale = {
         [_.devTemplatesTypeUser]: "User",
         [_.devTemplatesVSCodeDownload]: "Download Visual Studio Code",
         [_.devTemplatesVSCodeExtensionDownload]: "Download {extension} extension",
-        [_.devTemplatesVSCodeMessage]: "<p>The date template project will be now opened with Visual Studio Code and requires the <b>{extension}</b> extension to be compiled.</p><p>If not already available on your system, use the link below to download and install them:</p>",
+        [_.devTemplatesVSCodeMessage]: "<p>The date template project will now be opened with Visual Studio Code and requires the <b>{extension}</b> extension to be compiled.</p><p>If not already available on your system, use the link below to download and install them:</p>",
         [_.devTemplatesVSCodeTitle]: "Open with Visual Studio Code",
         [_.dialogCancel]: "Cancel",
         [_.dialogContinue]: "Continue",
