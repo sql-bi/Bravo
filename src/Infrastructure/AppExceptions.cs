@@ -38,12 +38,12 @@
         /// Throws an <see cref="BravoUnexpectedInvalidOperationException"/> if <paramref name="condition"/> is false.
         /// </summary>
         /// <param name="condition">The Boolean condition to be evaluated.</param>
-        /// <param name="paramName">The name of the parameter with which <paramref name="condition"/> corresponds.</param>
-        public static void Assert([DoesNotReturnIf(false)] bool condition, [CallerArgumentExpression("condition")] string? paramName = null)
+        /// <param name="conditionExpression">The expression of the parameter with which <paramref name="condition"/> corresponds.</param>
+        public static void Assert([DoesNotReturnIf(false)] bool condition, [CallerArgumentExpression("condition")] string? conditionExpression = null)
         {
             if (condition == false)
             {
-                ThrowUnexpectedInvalidOperationException(paramName);
+                ThrowUnexpectedInvalidOperationException(conditionExpression);
             }
         }
 
@@ -51,7 +51,7 @@
         private static void ThrowUnexpectedArgumentNullException(string? paramName) => throw new BravoUnexpectedArgumentNullException(paramName);
 
         [DoesNotReturn]
-        private static void ThrowUnexpectedInvalidOperationException(string? condition) => throw new BravoUnexpectedInvalidOperationException($"Condition failed '{ condition }'");
+        private static void ThrowUnexpectedInvalidOperationException(string? conditionExpression) => throw new BravoUnexpectedInvalidOperationException($"Condition failed '{conditionExpression}'");
     }
 
     public class BravoUnexpectedPolicyViolationException : BravoUnexpectedException
