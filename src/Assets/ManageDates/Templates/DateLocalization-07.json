@@ -1565,6 +1565,267 @@
           "DisplayFolders": ""
         }
       ]
+    },
+    {
+      "Iso": "da",
+      "Table": {
+        "OriginalName": null,
+        "Name": "",
+        "Description": ""
+      },
+      "Hierarchies": [
+        {
+          "OriginalName": "Year-Month-Week",
+          "Name": "År-Måned-Uge",
+          "Description": "",
+          "DisplayFolders": "",
+          "Levels": [
+            {
+              "OriginalName": "Year",
+              "Name": "År",
+              "Description": ""
+            },
+            {
+              "OriginalName": "Month",
+              "Name": "Måned",
+              "Description": ""
+            },
+            {
+              "OriginalName": "Week",
+              "Name": "Uge",
+              "Description": ""
+            }
+          ]
+        },
+        {
+          "OriginalName": "Year-Quarter-Month-Week",
+          "Name": "År-Kvartal-Måned-Uge",
+          "Description": "",
+          "DisplayFolders": "",
+          "Levels": [
+            {
+              "OriginalName": "Year",
+              "Name": "År",
+              "Description": ""
+            },
+            {
+              "OriginalName": "Quarter",
+              "Name": "Kvartal",
+              "Description": ""
+            },
+            {
+              "OriginalName": "Month",
+              "Name": "Måned",
+              "Description": ""
+            },
+            {
+              "OriginalName": "Week",
+              "Name": "Uge",
+              "Description": ""
+            }
+          ]
+        },
+        {
+          "OriginalName": "Year-Quarter-Week",
+          "Name": "År-Kvartal-Uge",
+          "Description": "",
+          "DisplayFolders": "",
+          "Levels": [
+            {
+              "OriginalName": "Year",
+              "Name": "År",
+              "Description": ""
+            },
+            {
+              "OriginalName": "Quarter",
+              "Name": "Kvartal",
+              "Description": ""
+            },
+            {
+              "OriginalName": "Week",
+              "Name": "Uge",
+              "Description": ""
+            }
+          ]
+        },
+        {
+          "OriginalName": "Year-Week",
+          "Name": "År-Uge",
+          "Description": "",
+          "DisplayFolders": "",
+          "Levels": [
+            {
+              "OriginalName": "Year",
+              "Name": "År",
+              "Description": ""
+            },
+            {
+              "OriginalName": "Week",
+              "Name": "Uge",
+              "Description": ""
+            }
+          ]
+        }
+      ],
+      "Columns": [
+        {
+          "OriginalName": "Date",
+          "Name": "Dato",
+          "Description": "",
+          "DisplayFolders": "",
+          "FormatString": "dd/mm/yyyy"
+        },
+        {
+          "OriginalName": "Sequential Day Number",
+          "Name": "Løbende Dag nummer",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Fiscal Year",
+          "Name": "RegnskabsÅr",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Fiscal Year Number",
+          "Name": "RegnskabsÅr nummer",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Fiscal Year Quarter",
+          "Name": "RegnskabsÅr Kvartal",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Fiscal Year Quarter Number",
+          "Name": "RegnskabsÅr Kvartal nummer",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Fiscal Quarter",
+          "Name": "Regnskab Kvartal",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Fiscal Quarter Number",
+          "Name": "Regnskab Kvartal nummer",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Fiscal Year Month",
+          "Name": "RegnskabsÅr Måned",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Fiscal Year Month Number",
+          "Name": "RegnskabsÅr Måned nummer",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Fiscal Month",
+          "Name": "Regnskab Måned",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Fiscal Month Number",
+          "Name": "Regnskab Måned nummer",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Fiscal Week",
+          "Name": "Regnskab Uge",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Fiscal Week Number",
+          "Name": "Regnskab Uge nummer",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Fiscal Year Week",
+          "Name": "RegnskabsÅr Uge",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Fiscal Year Week Number",
+          "Name": "RegnskabsÅr Uge nummer",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Working Day",
+          "Name": "Arbejdsdag",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "IsWorking",
+          "Name": "ErArbejdsdag",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Working Day Value",
+          "Name": "Arbejdsdag Værdi",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Holiday Name",
+          "Name": "Ferienavn",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Day of Week",
+          "Name": "Ugedag",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Day of Week Number",
+          "Name": "Ugedag nummer",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Day of Fiscal Month Number",
+          "Name": "Regnskab Måned dag nummer",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Day of Fiscal Quarter Number",
+          "Name": "Regnskab Kvartal Dag nummer",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "Day of Fiscal Year Number",
+          "Name": "RegnskabsÅr Dag nummer",
+          "Description": "",
+          "DisplayFolders": ""
+        },
+        {
+          "OriginalName": "DateWithTransactions",
+          "Name": "DatoMedTransaktioner",
+          "Description": "",
+          "DisplayFolders": ""
+        }
+      ]
     }
   ]
 }
