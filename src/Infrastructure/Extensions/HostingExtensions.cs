@@ -131,21 +131,13 @@
             return services;
         }
 
-        public static IServiceCollection AddAndConfigureCors(this IServiceCollection services, string policyName, string origin)
+        public static IServiceCollection AddAndConfigureCors(this IServiceCollection services)
         {
             services.AddCors((options) =>
             {
-                options.AddPolicy(policyName, (policyBuilder) =>
+                options.AddDefaultPolicy((policy) =>
                 {
-                    // for security, default to only accepting calls from the local machine
-                    policyBuilder.AllowAnyMethod().AllowAnyHeader()
-                        //.AllowAnyOrigin();
-
-                        // TOFIX: CORS error
-                        // Microsoft.AspNetCore.Hosting.Diagnostics: Information: Request starting HTTP/1.1 POST http://localhost:5000/api/GetModelFromDataset application/json 237
-                        // Microsoft.AspNetCore.Cors.Infrastructure.CorsService: Information: CORS policy execution failed
-                        // Microsoft.AspNetCore.Cors.Infrastructure.CorsService: Information: Request origin http://localhost:5000 does not have permission to access the resource.
-                        .WithOrigins(origin);
+                    policy.AllowAnyMethod().AllowAnyHeader().AllowAnyOrigin();
                 });
             });
 

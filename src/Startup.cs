@@ -15,9 +15,6 @@
 
     internal class Startup
     {
-        private const string CorsLocalhostOnlyPolicy = "AllowLocalWebAPI";
-        private const string CorsLocalhostOrigin = "null";
-
         public IConfiguration Configuration { get; }
 
         public Startup(IConfiguration configuration)
@@ -28,7 +25,7 @@
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddAndConfigureControllers();
-            services.AddAndConfigureCors(CorsLocalhostOnlyPolicy, CorsLocalhostOrigin);
+            services.AddAndConfigureCors();
             services.AddAndConfigureAuthorization();
             services.AddAndConfigureAuthentication();
             services.AddAndConfigureProblemDetails();
@@ -60,7 +57,7 @@
 #endif
             application.UseProblemDetails();
             application.UseRouting();
-            application.UseCors(CorsLocalhostOnlyPolicy); // this call must appear after UseRouting(), but before UseAuthorization() and UseEndpoints() for the middleware to function correctly
+            application.UseCors(); // this call must appear after UseRouting(), but before UseAuthorization() and UseEndpoints() for the middleware to function correctly
             application.UseAuthentication();
             application.UseAuthorization(); // this call must appear after UseRouting(), but before UseEndpoints() for the middleware to function correctly
 
