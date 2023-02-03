@@ -7,7 +7,6 @@
     using System.Diagnostics;
     using System.IO;
     using System.IO.Pipes;
-    using System.Security.AccessControl;
     using System.Security.Principal;
     using System.Text;
     using System.Text.Json;
@@ -27,10 +26,19 @@
         {
             var appId = "8D4D9F1D39F94C7789D84729480D8198"; // Do not change !!
             var appName = AppEnvironment.DeploymentMode == AppDeploymentMode.Packaged ? AppEnvironment.ApplicationStoreAliasName : AppEnvironment.ApplicationName;
-            var pipeNamePrefix = AppEnvironment.DeploymentMode == AppDeploymentMode.Packaged ? "LOCAL\\" : string.Empty; // Named pipes in packaged applications must use the syntax \\.\pipe\LOCAL\ for the pipe name
+            // Named pipes in packaged applications must use the syntax \\.\pipe\LOCAL\ for the pipe name, however, for non-windows store applications there is no such directive yet.
+            // See https://learn.microsoft.com/en-gb/windows/win32/api/winbase/nf-winbase-createnamedpipea
+            var pipeNamePrefix = AppEnvironment.DeploymentMode == AppDeploymentMode.Packaged ? "LOCAL\\" : string.Empty;
 
-            _pipeName = $"{pipeNamePrefix}{appName}.{appId}";
-            _mutexName = $"{appName}{appId}";
+            using var identity = WindowsIdentity.GetCurrent();
+            BravoUnexpectedException.ThrowIfNull(identity.Owner); // A non-null Owner is expected since GetCurrent() ifImpersonating/threadOnly argument is false
+            var userSid = identity.Owner.Value; // Should we use TokenLogonSid instead of TokenInformationClass.TokenOwner ?
+            var sessionId = AppEnvironment.SessionId;
+
+            // 'sessionId' allows to run multiple instance - one per session - on multi-session environments such as Remote Desktop Services
+            // 'userSid' allows to run multiple instance under different user accounts (non-elevated)
+            _pipeName = $"{pipeNamePrefix}{appName}.{appId}.{sessionId}.{userSid}";
+            _mutexName = $"{appName}.{appId}.{userSid}";
             _mutex = new Mutex(initiallyOwned: true, name: _mutexName, createdNew: out _owned);
 
             if (_owned)
