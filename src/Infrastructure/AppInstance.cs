@@ -7,7 +7,6 @@
     using System.Diagnostics;
     using System.IO;
     using System.IO.Pipes;
-    using System.Security.AccessControl;
     using System.Security.Principal;
     using System.Text;
     using System.Text.Json;
@@ -27,10 +26,19 @@
         {
             var appId = "8D4D9F1D39F94C7789D84729480D8198"; // Do not change !!
             var appName = AppEnvironment.DeploymentMode == AppDeploymentMode.Packaged ? AppEnvironment.ApplicationStoreAliasName : AppEnvironment.ApplicationName;
-            var pipeNamePrefix = AppEnvironment.DeploymentMode == AppDeploymentMode.Packaged ? "LOCAL\\" : string.Empty; // Named pipes in packaged applications must use the syntax \\.\pipe\LOCAL\ for the pipe name
+            // Named pipes in packaged applications must use the syntax \\.\pipe\LOCAL\ for the pipe name, however, for non-windows store applications there is no such directive yet.
+            // See https://learn.microsoft.com/en-gb/windows/win32/api/winbase/nf-winbase-createnamedpipea
+            var pipeNamePrefix = AppEnvironment.DeploymentMode == AppDeploymentMode.Packaged ? "LOCAL\\" : string.Empty;
 
-            _pipeName = $"{pipeNamePrefix}{appName}.{appId}";
-            _mutexName = $"{appName}{appId}";
+            using var identity = WindowsIdentity.GetCurrent();
+            BravoUnexpectedException.ThrowIfNull(identity.Owner); // A non-null Owner is expected since GetCurrent() ifImpersonating/threadOnly argument is false
+            var userSid = identity.Owner.Value; // Should we use TokenLogonSid instead of TokenInformationClass.TokenOwner ?
+            var sessionId = AppEnvironment.SessionId;
+
+            // 'sessionId' allows to run multiple instance - one per session - on multi-session environments such as Remote Desktop Services
+            // 'userSid' allows to run multiple instance under different user accounts (non-elevated)
+            _pipeName = $"{pipeNamePrefix}{appName}.{appId}.{sessionId}.{userSid}";
+            _mutexName = $"{appName}.{appId}.{userSid}";
             _mutex = new Mutex(initiallyOwned: true, name: _mutexName, createdNew: out _owned);
 
             if (_owned)
@@ -56,7 +64,7 @@
         /// </summary>
         public void NotifyOwner()
         {
-            using var pipeClient = new NamedPipeClientStream(serverName: ".", _pipeName, PipeDirection.InOut);
+            using var pipeClient = new NamedPipeClientStream(serverName: ".", _pipeName, PipeDirection.Out);
             try
             {
                 pipeClient.Connect(timeout: 5_000);
@@ -66,14 +74,6 @@
                 ExceptionHelper.WriteToEventLog(ex, EventLogEntryType.Warning);
                 TelemetryHelper.TrackException(ex);
                 return;
-            }
-
-            using var currentIdentity = WindowsIdentity.GetCurrent();
-            var remotePipeSecurity = pipeClient.GetAccessControl();
-            var remoteOwner = remotePipeSecurity.GetOwner(typeof(SecurityIdentifier));
-            if (remoteOwner != currentIdentity.User)
-            {
-                throw new UnauthorizedAccessException("Bravo could not connect to the pipe because it was not owned by the current user.");
             }
 
             var startupSettings = StartupSettings.CreateFromCommandLineArguments();
@@ -94,28 +94,10 @@
             }
         }
 
-        private void StartPipeServer(PipeSecurity? pipeSecurity = null)
+        private void StartPipeServer()
         {
-            if (pipeSecurity is null)
-            {
-                using var currentIdentity = WindowsIdentity.GetCurrent();
-                BravoUnexpectedException.ThrowIfNull(currentIdentity.User);
-                var currentUser = currentIdentity.User;
-
-                // In order to restrict access to just this account we do not use PipeOptions.CurrentUserOnly but we use a custom ACL - see details here https://github.com/sql-bi/Bravo/issues/459
-                // We set the PipeAccessRule identity specifically here and on the pipe client side they will check the owner against this one - they must have identical SIDs or the client will reject this server.
-                var pipeAccessRule = new PipeAccessRule(currentUser, PipeAccessRights.ReadWrite | PipeAccessRights.CreateNewInstance, AccessControlType.Allow);
-
-                pipeSecurity = new PipeSecurity();
-                pipeSecurity.AddAccessRule(pipeAccessRule);
-
-                // Here we set the current user (WindowsIdentity.User) as owner for the security descriptor instead of using the token owner (WindowsIdentity.Owner) as PipeOptions.CurrentUserOnly would do.
-                // This allows the user to connect even with different elevation levels.
-                pipeSecurity.SetOwner(currentUser);
-            }
-
             _pipeServer?.Dispose();
-            _pipeServer = NamedPipeServerStreamAcl.Create(_pipeName, PipeDirection.InOut, maxNumberOfServerInstances: 1, PipeTransmissionMode.Byte, PipeOptions.None, inBufferSize: 0, outBufferSize: 0, pipeSecurity);
+            _pipeServer = new NamedPipeServerStream(_pipeName, PipeDirection.In, 1, PipeTransmissionMode.Byte, PipeOptions.CurrentUserOnly);
             _pipeServer.BeginWaitForConnection(OnPipeConnection, state: _pipeServer);
         }
 
@@ -140,9 +122,7 @@
             }
 
             OnNewInstance?.Invoke(this, new AppInstanceStartupEventArgs(startupMessage));
-
-            var pipeSecurity = pipeServer.GetAccessControl();
-            StartPipeServer(pipeSecurity);
+            StartPipeServer();
         }
 
         #region IDisposable
