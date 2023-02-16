@@ -65,7 +65,7 @@
     <PackageReference Include="Dax.Template" Version="0.1.6" />
     <PackageReference Include="Dax.Formatter" Version="1.1.1" />
     <PackageReference Include="Dax.ViewModel" Version="1.2.11" />
-    <PackageReference Include="Dax.Vpax" Version="1.2.10" />
+    <PackageReference Include="Dax.Vpax" Version="1.2.11" />
     <PackageReference Include="Hellang.Middleware.ProblemDetails" Version="6.5.1" />
     <PackageReference Include="LargeXlsx" Version="1.6.3" />
     <PackageReference Include="Macross.Json.Extensions" Version="3.0.0" />
