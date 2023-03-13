@@ -1,6 +1,7 @@
 ﻿namespace Sqlbi.Bravo.Infrastructure.Extensions
 {
     using Hellang.Middleware.ProblemDetails;
+    using Microsoft.AspNetCore.Authentication;
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.AspNetCore.Hosting.Server;
     using Microsoft.AspNetCore.Hosting.Server.Features;
@@ -8,6 +9,7 @@
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.DependencyInjection.Extensions;
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Options;
     using Microsoft.Identity.Client;
@@ -125,8 +127,28 @@
 
         public static IServiceCollection AddAndConfigureAuthentication(this IServiceCollection services)
         {
-            services.AddAuthentication(defaultScheme: AppEnvironment.ApiAuthenticationSchema)
-                .AddScheme<AppAuthenticationSchemeOptions, AppAuthenticationHandler>(AppEnvironment.ApiAuthenticationSchema, (options) => options.Validate());
+            // AspNetCore data protection errors (from telemetry)
+            // --
+            // System.Security.Cryptography.CryptographicException: An exception occurred while trying to decrypt the element.
+            // System.Security.Cryptography.CryptographicException: Key {KeyId:B} is ineligible to be the default key because its {MethodName} method failed.
+            // System.Security.Cryptography.CryptographicException: An exception occurred while processing the key element '{Element}'.
+            // ---
+
+            // We are using a custom authentication scheme that doesn't need data protection APIs.
+            // Currently it seems to be not possible to add authentication without adding data protection services
+            // This can be worked around by replicating the code from AddAuthentication() without the call to AddDataProtection()
+            // See https://github.com/dotnet/aspnetcore/issues/43624
+            
+            // var builder = services.AddAuthentication(defaultScheme: AppEnvironment.ApiAuthenticationSchema);
+
+            services.AddAuthenticationCore();
+            //services.AddDataProtection();
+            services.AddWebEncoders();
+            services.TryAddSingleton<ISystemClock, SystemClock>();
+
+            var builder = new AuthenticationBuilder(services);
+            services.Configure<AuthenticationOptions>((options) => options.DefaultScheme = AppEnvironment.ApiAuthenticationSchema);
+            builder.AddScheme<AppAuthenticationSchemeOptions, AppAuthenticationHandler>(AppEnvironment.ApiAuthenticationSchema, (options) => options.Validate());
 
             return services;
         }
