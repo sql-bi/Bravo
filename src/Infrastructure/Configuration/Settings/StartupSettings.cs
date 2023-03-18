@@ -78,7 +78,7 @@
                 IsRequired = true
             };
 
-            var parentProcessIdOption = new Option<string>(new[] { "--ppid" })
+            var parentProcessIdOption = new Option<int>(new[] { "--ppid" })
             {
                 Description = "Parent process ID",
                 IsRequired = false
@@ -98,15 +98,15 @@
 
             if (settings.CommandLineErrors.Count == 0)
             {
-                settings.ArgumentServerName = parseResult.ValueForOption(serverOption);
-                settings.ArgumentDatabaseName = parseResult.ValueForOption(databaseOption);
+                settings.ArgumentServerName = parseResult.GetValueForOption(serverOption);
+                settings.ArgumentDatabaseName = parseResult.GetValueForOption(databaseOption);
             }
 
             Process? parentProcess = null;
             {
                 if (AppEnvironment.DeploymentMode == AppDeploymentMode.Packaged && parseResult.HasOption(parentProcessIdOption))
                 {
-                    var parentProcessId = parseResult.ValueForOption<int>(parentProcessIdOption);
+                    var parentProcessId = parseResult.GetValueForOption(parentProcessIdOption);
                     parentProcess = ProcessHelper.SafeGetProcessById(parentProcessId);
                 }
                 else
