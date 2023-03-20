@@ -160,11 +160,11 @@
         public bool HolidaysAvailable { get; set; } = false;
 
         /// <summary>
-        /// Indicates whether the user has enabled this template for deploy
+        /// Indicates whether the user has enabled the creation of the holidays table
         /// </summary>
         [Required]
         [JsonPropertyName("holidaysEnabled")]
-        public bool HolidaysEnabled { get; set; } = true;
+        public bool HolidaysEnabled { get; set; } = false;
 
         [JsonPropertyName("holidaysTableName")]
         public string? HolidaysTableName { get; set; }
