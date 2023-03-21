@@ -29,6 +29,9 @@
         [JsonPropertyName("databaseName")]
         public string? ArgumentDatabaseName { get; set; }
 
+        [JsonPropertyName("commandLineErrors")]
+        public string[]? CommandLineErrors { get; set; }
+
         [JsonIgnore]
         public bool IsExternalTool => AppEnvironment.PBIDesktopProcessName.EqualsI(ParentProcessName);
 
@@ -42,6 +45,7 @@
                 ParentProcessMainWindowTitle = settings.ParentProcessMainWindowTitle,
                 ArgumentServerName = settings.ArgumentServerName,
                 ArgumentDatabaseName = settings.ArgumentDatabaseName,
+                CommandLineErrors = settings.CommandLineErrors,
             };
 
             if (AppEnvironment.IsDiagnosticLevelVerbose)
