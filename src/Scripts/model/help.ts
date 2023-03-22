@@ -28,17 +28,17 @@ export const help: Dic<HelpRes> = {
     AnalyzeModel: {
         title: strings.AnalyzeModel,
         videoId: "763673832",
-        link: "https://docs.sqlbi.com/bravo/analyze-model"
+        link: "https://docs.sqlbi.com/bravo/features/analyze-model"
     },
     DaxFormatter: {
         title: strings.DaxFormatter,
         videoId: "763677100",
-        link: "https://docs.sqlbi.com/bravo/format-dax"
+        link: "https://docs.sqlbi.com/bravo/features/format-dax"
     },
     ManageDates: {
         title: strings.ManageDates,
         videoId: "763679068",
-        link: "https://docs.sqlbi.com/bravo/manage-dates"
+        link: "https://docs.sqlbi.com/bravo/features/manage-dates"
     },
     templates: {
         title: strings.helpTemplates,
@@ -48,7 +48,7 @@ export const help: Dic<HelpRes> = {
     ExportData: {
         title: strings.ExportData,
         videoId: "763681111",
-        link: "https://docs.sqlbi.com/bravo/export-data"
+        link: "https://docs.sqlbi.com/bravo/features/export-data"
     },
     options: {
         title: strings.helpOptions,
