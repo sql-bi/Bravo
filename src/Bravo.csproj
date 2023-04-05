@@ -61,7 +61,7 @@
 
   <ItemGroup>
     <PackageReference Include="CsvHelper" Version="30.0.1" />
-    <PackageReference Include="Dax.Model.Extractor" Version="1.2.11" />
+    <PackageReference Include="Dax.Model.Extractor" Version="1.2.12" />
     <PackageReference Include="Dax.Template" Version="0.1.6" />
     <PackageReference Include="Dax.Formatter" Version="1.1.1" />
     <PackageReference Include="Dax.ViewModel" Version="1.2.11" />
