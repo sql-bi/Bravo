@@ -83,16 +83,16 @@
 
         public async Task<IEnumerable<PBICloudDataset>> GetDatasetsAsync(CancellationToken cancellationToken)
         {
-            var onlineWorkspaces = await GetWorkspacesAsync(cancellationToken);
-            var onlineDatasets = await GetSharedDatasetsAsync(cancellationToken);
+            var cloudWorkspaces = await GetCloudWorkspacesAsync(cancellationToken);
+            var cloudSharedModels = await GetCloudSharedModelsAsync(cancellationToken);
 
             if (AppEnvironment.IsDiagnosticLevelVerbose)
             {
-                AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{ nameof(PBICloudService) }.{ nameof(GetDatasetsAsync) }.{ nameof(onlineWorkspaces) }", content: JsonSerializer.Serialize(onlineWorkspaces));
-                AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{ nameof(PBICloudService) }.{ nameof(GetDatasetsAsync) }.{ nameof(onlineDatasets) }", content: JsonSerializer.Serialize(onlineDatasets));
+                AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{ nameof(PBICloudService) }.{ nameof(GetDatasetsAsync) }.{ nameof(cloudWorkspaces) }", content: JsonSerializer.Serialize(cloudWorkspaces));
+                AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{ nameof(PBICloudService) }.{ nameof(GetDatasetsAsync) }.{ nameof(cloudSharedModels) }", content: JsonSerializer.Serialize(cloudSharedModels));
             }
 
-            var datasets = onlineWorkspaces.Join(onlineDatasets, (w) => w.ObjectId?.ToLowerInvariant(), (d) => d.ObjectId?.ToLowerInvariant(), (w, d) => PBICloudDataset.CreateFrom(_authenticationService.PBICloudEnvironment, w, d)).ToArray();
+            var datasets = cloudWorkspaces.Join(cloudSharedModels, (w) => w.ObjectId?.ToLowerInvariant(), (d) => d.ObjectId?.ToLowerInvariant(), (w, d) => PBICloudDataset.CreateFrom(_authenticationService.PBICloudEnvironment, w, d)).ToArray();
 
             if (AppEnvironment.IsDiagnosticLevelVerbose)
                 AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{ nameof(PBICloudService) }.{ nameof(GetDatasetsAsync) }", content: JsonSerializer.Serialize(datasets));
@@ -100,7 +100,7 @@
             return datasets;
         }
 
-        private async Task<IEnumerable<CloudWorkspace>> GetWorkspacesAsync(CancellationToken cancellationToken)
+        private async Task<IEnumerable<CloudWorkspace>> GetCloudWorkspacesAsync(CancellationToken cancellationToken)
         {
             _httpClient.DefaultRequestHeaders.Accept.Clear();
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _authenticationService.PBICloudAuthentication.AccessToken);
@@ -113,13 +113,13 @@
             var content = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
             
             if (AppEnvironment.IsDiagnosticLevelVerbose)
-                AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{ nameof(PBICloudService) }.{ nameof(GetWorkspacesAsync) }", content);
+                AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{ nameof(PBICloudService) }.{ nameof(GetCloudWorkspacesAsync) }", content);
 
             var workspaces = JsonSerializer.Deserialize<CloudWorkspace[]>(content, _jsonOptions);
             return workspaces ?? Array.Empty<CloudWorkspace>();
         }
 
-        private async Task<IEnumerable<CloudSharedModel>> GetSharedDatasetsAsync(CancellationToken cancellationToken)
+        private async Task<IEnumerable<CloudSharedModel>> GetCloudSharedModelsAsync(CancellationToken cancellationToken)
         {
             _httpClient.DefaultRequestHeaders.Accept.Clear();
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _authenticationService.PBICloudAuthentication.AccessToken);
@@ -132,7 +132,7 @@
             var content = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
             
             if (AppEnvironment.IsDiagnosticLevelVerbose)
-                AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{ nameof(PBICloudService) }.{ nameof(GetSharedDatasetsAsync) }", content);
+                AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{ nameof(PBICloudService) }.{ nameof(GetCloudSharedModelsAsync) }", content);
 
             var datasets = JsonSerializer.Deserialize<CloudSharedModel[]>(content, _jsonOptions);
             return datasets ?? Array.Empty<CloudSharedModel>();
