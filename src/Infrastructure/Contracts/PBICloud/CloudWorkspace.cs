@@ -25,6 +25,9 @@
         [JsonPropertyName("capacityUri")]
         public string? CapacityUri { get; set; }
 
+        [JsonPropertyName("isSharedOnPremium")]
+        public bool IsSharedOnPremium { get; set; }
+
         [JsonPropertyName("__objectId")]
         public string? ObjectId
         {
@@ -50,6 +53,20 @@
                 if (string.IsNullOrEmpty(Name))
                 {
                     return WorkspaceType == CloudWorkspaceType.User;
+                }
+
+                return false;
+            }
+        }
+
+        [JsonPropertyName("__isPremiumCapacity")]
+        public bool IsPremiumCapacity
+        {
+            get
+            {
+                if (CapacitySkuType == CloudWorkspaceCapacitySkuType.Premium)
+                {
+                    return !IsSharedOnPremium;
                 }
 
                 return false;

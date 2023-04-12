@@ -71,19 +71,23 @@
         [JsonPropertyName("isOnPremModel")]
         public bool? IsOnPremModel { get; set; }
 
+        [JsonPropertyName("isPremiumCapacity")]
+        public bool? IsPremiumCapacity { get; set; }
+
         [JsonPropertyName("isXmlaEndPointSupported")]
         public bool IsXmlaEndPointSupported
         {
             get
             {
-                if (WorkspaceType == PBICloudDatasetWorkspaceType.PersonalGroup)
-                    return false;
-
-                if (CapacitySkuType != PBICloudDatasetCapacitySkuType.Premium)
+                if (IsPremiumCapacity is null || IsPremiumCapacity == false)
                     return false;
 
                 // Exclude unsupported datasets - a.k.a. datasets not accessible by the XMLA endpoint
                 // see https://docs.microsoft.com/en-us/power-bi/admin/service-premium-connect-tools#unsupported-datasets
+
+                // Datasets in 'My Workspace' are unsupported
+                if (WorkspaceType == PBICloudDatasetWorkspaceType.PersonalGroup)
+                    return false;
 
                 // Datasets based on a live connection to an Azure Analysis Services or SQL Server Analysis Services model are unsupported
                 if (IsOnPremModel ?? false)
@@ -154,6 +158,7 @@
                 Endorsement = cloudModel.GalleryItem?.Stage.TryParseTo<PBICloudDatasetEndorsement>(),
                 WorkspaceType = cloudModel.WorkspaceType.TryParseTo<PBICloudDatasetWorkspaceType>(),
                 CapacitySkuType = cloudWorkspace.CapacitySkuType.TryParseTo<PBICloudDatasetCapacitySkuType>(),
+                IsPremiumCapacity = cloudWorkspace.IsPremiumCapacity,
                 IsPushDataEnabled = model.IsPushDataEnabled,
                 IsExcelWorkbook = model.IsExcelWorkbook,
                 IsOnPremModel = model.IsOnPremModel,
