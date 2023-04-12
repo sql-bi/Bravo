@@ -71,19 +71,23 @@
         [JsonPropertyName("isOnPremModel")]
         public bool? IsOnPremModel { get; set; }
 
+        [JsonPropertyName("isPremiumCapacity")]
+        public bool? IsPremiumCapacity { get; set; }
+
         [JsonPropertyName("isXmlaEndPointSupported")]
         public bool IsXmlaEndPointSupported
         {
             get
             {
-                if (WorkspaceType == PBICloudDatasetWorkspaceType.PersonalGroup)
-                    return false;
-
-                if (CapacitySkuType != PBICloudDatasetCapacitySkuType.Premium)
+                if (IsPremiumCapacity is null || IsPremiumCapacity == false)
                     return false;
 
                 // Exclude unsupported datasets - a.k.a. datasets not accessible by the XMLA endpoint
                 // see https://docs.microsoft.com/en-us/power-bi/admin/service-premium-connect-tools#unsupported-datasets
+
+                // Datasets in 'My Workspace' are unsupported
+                if (WorkspaceType == PBICloudDatasetWorkspaceType.PersonalGroup)
+                    return false;
 
                 // Datasets based on a live connection to an Azure Analysis Services or SQL Server Analysis Services model are unsupported
                 if (IsOnPremModel ?? false)
@@ -128,55 +132,56 @@
             return hash.ToHashCode();
         }
 
-        internal static PBICloudDataset CreateFrom(IPBICloudEnvironment environment, CloudWorkspace cloudWorkspace, CloudSharedModel cloudModel)
+        internal static PBICloudDataset CreateFrom(IPBICloudEnvironment environment, CloudWorkspace cloudWorkspace, CloudSharedModel cloudSharedModel)
         {
             BravoUnexpectedException.ThrowIfNull(cloudWorkspace);
-            BravoUnexpectedException.ThrowIfNull(cloudModel);
-            BravoUnexpectedException.ThrowIfNull(cloudModel.Model);
+            BravoUnexpectedException.ThrowIfNull(cloudSharedModel);
+            BravoUnexpectedException.ThrowIfNull(cloudSharedModel.Model);
 
-            var model = cloudModel.Model;
+            var cloudModel = cloudSharedModel.Model;
 
-            var cloudDataset = new PBICloudDataset
+            var dataset = new PBICloudDataset
             {
                 WorkspaceId = cloudWorkspace.Id,
-                WorkspaceName = cloudWorkspace.Name.NullIfEmpty() ?? cloudModel.WorkspaceName,
+                WorkspaceName = cloudWorkspace.Name.NullIfEmpty() ?? cloudSharedModel.WorkspaceName,
                 WorkspaceObjectId = cloudWorkspace.ObjectId,
-                Id = model.Id,
+                Id = cloudModel.Id,
                 ServerName = CommonHelper.ChangeUriScheme(environment.ServiceEndpoint, PBICloudService.PBIDatasetProtocolScheme, ignorePort: true),
-                DatabaseName = model.DBName,
+                DatabaseName = cloudModel.DBName,
                 ExternalServerName = null,
                 ExternalDatabaseName = null,
-                DisplayName = model.DisplayName,
-                Description = model.Description,
-                Owner = $"{ model.CreatorUser?.GivenName } { model.CreatorUser?.FamilyName }",
-                Refreshed = model.LastRefreshTime,
-                OnPremModelConnectionString = model.OnPremModelConnectionString,
-                Endorsement = cloudModel.GalleryItem?.Stage.TryParseTo<PBICloudDatasetEndorsement>(),
-                WorkspaceType = cloudModel.WorkspaceType.TryParseTo<PBICloudDatasetWorkspaceType>(),
+                DisplayName = cloudModel.DisplayName,
+                Description = cloudModel.Description,
+                Owner = $"{ cloudModel.CreatorUser?.GivenName } { cloudModel.CreatorUser?.FamilyName }",
+                Refreshed = cloudModel.LastRefreshTime,
+                OnPremModelConnectionString = cloudModel.OnPremModelConnectionString,
+                Endorsement = cloudSharedModel.GalleryItem?.Stage.TryParseTo<PBICloudDatasetEndorsement>(),
+                WorkspaceType = cloudSharedModel.WorkspaceType.TryParseTo<PBICloudDatasetWorkspaceType>(),
                 CapacitySkuType = cloudWorkspace.CapacitySkuType.TryParseTo<PBICloudDatasetCapacitySkuType>(),
-                IsPushDataEnabled = model.IsPushDataEnabled,
-                IsExcelWorkbook = model.IsExcelWorkbook,
-                IsOnPremModel = model.IsOnPremModel,
+                IsPremiumCapacity = cloudWorkspace.IsPremiumCapacity,
+                IsPushDataEnabled = cloudModel.IsPushDataEnabled,
+                IsExcelWorkbook = cloudModel.IsExcelWorkbook,
+                IsOnPremModel = cloudModel.IsOnPremModel,
                 ConnectionMode = PBICloudDatasetConnectionMode.Supported,
             };
 
-            if (cloudDataset.IsXmlaEndPointSupported)
+            if (dataset.IsXmlaEndPointSupported)
             {
-                cloudDataset.ExternalServerName = CommonHelper.ChangeUriScheme(environment.ClusterEndpoint, PBICloudService.PBIPremiumXmlaEndpointProtocolScheme, ignorePort: true);
-                cloudDataset.ExternalDatabaseName = model.DisplayName;
+                dataset.ExternalServerName = CommonHelper.ChangeUriScheme(environment.ClusterEndpoint, PBICloudService.PBIPremiumXmlaEndpointProtocolScheme, ignorePort: true);
+                dataset.ExternalDatabaseName = cloudModel.DisplayName;
             }
-            else if (cloudDataset.IsOnPremModel == true)
+            else if (dataset.IsOnPremModel == true)
             {
-                cloudDataset.ExternalServerName = cloudDataset.ServerName = ConnectionStringHelper.FindServerName(cloudDataset.OnPremModelConnectionString);
-                cloudDataset.ExternalDatabaseName = cloudDataset.DatabaseName = ConnectionStringHelper.FindDatabaseName(cloudDataset.OnPremModelConnectionString);
+                dataset.ExternalServerName = dataset.ServerName = ConnectionStringHelper.FindServerName(dataset.OnPremModelConnectionString);
+                dataset.ExternalDatabaseName = dataset.DatabaseName = ConnectionStringHelper.FindDatabaseName(dataset.OnPremModelConnectionString);
             }
             else
             {
-                cloudDataset.ExternalServerName = cloudDataset.ServerName;
-                cloudDataset.ExternalDatabaseName = $"{ model.VSName }-{ model.DBName }";
+                dataset.ExternalServerName = dataset.ServerName;
+                dataset.ExternalDatabaseName = $"{ cloudModel.VSName }-{ cloudModel.DBName }";
             } 
 
-            return cloudDataset;
+            return dataset;
         }
     }
 
@@ -207,7 +212,7 @@
     }
 
     /// <summary>
-    /// Re-mapping <see cref="PBICloudDatasetCapacitySkuType"/>
+    /// Re-mapping <see cref="CloudWorkspaceCapacitySkuType"/>
     /// </summary>
     public enum PBICloudDatasetCapacitySkuType
     {
