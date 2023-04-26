@@ -67,7 +67,7 @@
     <PackageReference Include="Dax.ViewModel" Version="1.2.12" />
     <PackageReference Include="Dax.Vpax" Version="1.2.12" />
     <PackageReference Include="Hellang.Middleware.ProblemDetails" Version="6.5.1" />
-    <PackageReference Include="LargeXlsx" Version="1.7.3" />
+    <PackageReference Include="LargeXlsx" Version="1.7.4" />
     <PackageReference Include="Macross.Json.Extensions" Version="3.0.0" />
     <PackageReference Include="Microsoft.AnalysisServices.AdomdClient.NetCore.retail.amd64" Version="19.61.1.4" />
     <PackageReference Include="Microsoft.AnalysisServices.NetCore.retail.amd64" Version="19.61.1.4" />
