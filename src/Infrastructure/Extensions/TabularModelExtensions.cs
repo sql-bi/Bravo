@@ -5,6 +5,7 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Text.Json.Nodes;
     using TOM = Microsoft.AnalysisServices.Tabular;
 
     internal static class ModelOperationResultExtensions
@@ -183,6 +184,36 @@
             }
 
             return false;
+        }
+
+        public static JsonObject SerializeDiagnosticProperties(this TOM.Server server)
+        {
+            //var options = new TOM.SerializeOptions
+            //{
+            //    IgnoreChildren = true,
+            //    IgnoreTimestamps = true,
+            //    IgnoreInferredObjects = true,
+            //    IgnoreInferredProperties = true,
+            //};
+
+            var databases = new JsonObject();
+
+            foreach (TOM.Database database in server.Databases)
+            {
+                //var jsonString = TOM.JsonSerializer.SerializeDatabase(database, options);
+                //var jsonNode = JsonNode.Parse(jsonString);
+
+                var properties = new JsonObject(new[]
+                {
+                    KeyValuePair.Create<string, JsonNode?>(nameof(database.ID), database.ID),
+                    KeyValuePair.Create<string, JsonNode?>(nameof(database.Name), database.Name),
+                    KeyValuePair.Create<string, JsonNode?>(nameof(database.CompatibilityLevel), database.CompatibilityLevel),
+                });
+
+                databases.Add(database.ID, properties);
+            }
+
+            return databases;
         }
     }
 }
