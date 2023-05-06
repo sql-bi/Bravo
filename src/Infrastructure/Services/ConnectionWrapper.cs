@@ -1,10 +1,12 @@
 ﻿namespace Sqlbi.Bravo.Infrastructure.Services
 {
     using Microsoft.AnalysisServices.AdomdClient;
+    using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Infrastructure.Helpers;
     using Sqlbi.Bravo.Infrastructure.Security;
     using Sqlbi.Bravo.Models;
     using System;
+    using System.Text.Json.Nodes;
     using TOM = Microsoft.AnalysisServices.Tabular;
 
     internal class TabularConnectionWrapper : IDisposable
@@ -20,7 +22,21 @@
             Database = findById ? Server.Databases.Find(databaseIdOrName) : Server.Databases.FindByName(databaseIdOrName);
 
             if (Database is null)
+            {
+                if (AppEnvironment.IsDiagnosticLevelVerbose)
+                {
+                    var properties = Server.SerializeDiagnosticProperties();
+                    var content = new JsonObject
+                    {
+                        { nameof(databaseIdOrName), databaseIdOrName },
+                        { nameof(findById), findById },
+                        { nameof(properties), properties }
+                    };
+                    AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{nameof(TabularConnectionWrapper)}.ctor", content.ToJsonString());
+                }
+
                 throw new BravoException(BravoProblem.TOMDatabaseDatabaseNotFound, databaseIdOrName);
+            }
 
             Model = Database.Model;
         }
