@@ -70,22 +70,25 @@
             using var request = new HttpRequestMessage(HttpMethod.Post, requestUri);
             using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseContentRead, cancellationToken).ConfigureAwait(false);
 
-            if (response.StatusCode == HttpStatusCode.NotFound)
+            var environments = response.StatusCode switch
             {
-                return Array.Empty<PBICloudEnvironment>();
-            }
-            else
-            {
-                response.EnsureSuccessStatusCode();
+                HttpStatusCode.NotFound => Array.Empty<PBICloudEnvironment>(),
+                HttpStatusCode.OK => await GetImpl(response).ConfigureAwait(false),
+                _ => throw new BravoUnexpectedInvalidOperationException($"Unsupported response status code {response.StatusCode} ({response.ReasonPhrase})")
+            };
 
-                var content = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+            return environments;
+
+            static async Task<IEnumerable<IPBICloudEnvironment>> GetImpl(HttpResponseMessage response)
+            {
+                var content = await response.Content.ReadAsStringAsync(CancellationToken.None).ConfigureAwait(false);
 
                 if (AppEnvironment.IsDiagnosticLevelVerbose)
-                    AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{ nameof(PBICloudSettingsService) }.{ nameof(GetEnvironmentsAsync) }", content);
+                    AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{nameof(PBICloudSettingsService)}.{nameof(GetEnvironmentsAsync)}", content);
 
                 var globalService = JsonSerializer.Deserialize<GlobalService>(content, AppEnvironment.DefaultJsonOptions);
                 var environments = globalService?.Environments?.Select(PBICloudEnvironment.CreateFrom).Where((e) => !e.IsMicrosoftInternal).ToArray();
-                
+
                 return environments ?? Array.Empty<PBICloudEnvironment>();
             }
         }

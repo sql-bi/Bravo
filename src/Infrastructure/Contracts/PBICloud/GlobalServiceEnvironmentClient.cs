@@ -12,11 +12,5 @@
 
         [JsonPropertyName("redirectUri")]
         public string? RedirectUri { get; set; }
-
-        [JsonPropertyName("appInsightsId")]
-        public string? AppInsightsId { get; set; }
-
-        [JsonPropertyName("localyticsId")]
-        public string? LocalyticsId { get; set; }
     }
 }

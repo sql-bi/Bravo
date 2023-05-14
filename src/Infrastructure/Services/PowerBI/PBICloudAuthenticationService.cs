@@ -54,6 +54,9 @@
             await _authenticationSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
             try
             {
+                if (AppEnvironment.IsDiagnosticLevelVerbose)
+                    AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{nameof(PBICloudAuthenticationService)}.{nameof(SignInAsync)}", JsonSerializer.Serialize(environment));
+
                 using var cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
                 cancellationTokenSource.CancelAfter(AppEnvironment.MSALSignInTimeout);
 

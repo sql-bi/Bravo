@@ -16,11 +16,5 @@
 
         [JsonPropertyName("allowedDomains")]
         public IEnumerable<string>? AllowedDomains { get; set; }
-
-        [JsonPropertyName("appId")]
-        public string? AppId { get; set; }
-
-        [JsonPropertyName("redirectUri")]
-        public string? RedirectUri { get; set; }
     }
 }

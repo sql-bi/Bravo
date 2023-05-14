@@ -73,17 +73,17 @@
             return pbicloudAuthenticationResult;
         }
 
-        public static async Task<IAuthenticationResult> AcquireTokenByIntegratedWindowsAuthAsync(IPBICloudEnvironment environment, CancellationToken cancellationToken)
-        {
-            var publicClient = CreatePublicClientApplication(environment);
-            var msalAuthenticationResult = await publicClient.AcquireTokenByIntegratedWindowsAuth(environment.AzureADScopes).ExecuteAsync(cancellationToken).ConfigureAwait(false);
-            var pbicloudAuthenticationResult = new PBICloudAuthenticationResult(msalAuthenticationResult);
+        //public static async Task<IAuthenticationResult> AcquireTokenByIntegratedWindowsAuthAsync(IPBICloudEnvironment environment, CancellationToken cancellationToken)
+        //{
+        //    var publicClient = CreatePublicClientApplication(environment);
+        //    var msalAuthenticationResult = await publicClient.AcquireTokenByIntegratedWindowsAuth(environment.AzureADScopes).ExecuteAsync(cancellationToken).ConfigureAwait(false);
+        //    var pbicloudAuthenticationResult = new PBICloudAuthenticationResult(msalAuthenticationResult);
 
-            // TODO: Assert UPN from local windows account is equals to UPN from authentication result
-            // BravoUnexpectedException.Assert(authenticationResult.ClaimsPrincipal.Identity.Name == account.Username);
+        //    // TODO: Assert UPN from local windows account is equals to UPN from authentication result
+        //    // BravoUnexpectedException.Assert(authenticationResult.ClaimsPrincipal.Identity.Name == account.Username);
 
-            return pbicloudAuthenticationResult;
-        }
+        //    return pbicloudAuthenticationResult;
+        //}
 
         public static async Task ClearTokenCacheAsync(IPBICloudEnvironment environment)
         {
