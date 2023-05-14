@@ -38,6 +38,9 @@
         [JsonPropertyName("externalDatabaseName")]
         public string? ExternalDatabaseName { get; set; }
 
+        [JsonPropertyName("identityProvider")]
+        public string? IdentityProvider { get; set; }
+
         [JsonPropertyName("name")]
         public string? DisplayName { get; set; }
 
@@ -150,6 +153,7 @@
                 DatabaseName = cloudModel.DBName,
                 ExternalServerName = null,
                 ExternalDatabaseName = null,
+                IdentityProvider = environment.IdentityProvider,
                 DisplayName = cloudModel.DisplayName,
                 Description = cloudModel.Description,
                 Owner = $"{ cloudModel.CreatorUser?.GivenName } { cloudModel.CreatorUser?.FamilyName }",
