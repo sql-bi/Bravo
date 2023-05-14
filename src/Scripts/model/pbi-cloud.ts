@@ -5,8 +5,7 @@
 */
 
 export interface PBICloudEnvironment {
-
-    type?: PBICloudEnvironmentType
+    type: PBICloudEnvironmentType
     name?: string
     description?: string
     aadAuthority?: string
@@ -19,11 +18,12 @@ export interface PBICloudEnvironment {
 }
 
 export enum PBICloudEnvironmentType {
-    Public = 0,
-    Germany = 1,
-    USGov = 2,
-    China = 3,
-    USGovHigh = 4,
-    USGovMil = 5,
-    Custom = 6
+    Unknown = 0,
+    Custom = 1,
+    Public = 2,
+    Germany = 3,
+    China = 4,
+    USGov = 5,
+    USGovHigh = 6,
+    USGovMil = 7
 }

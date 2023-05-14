@@ -11,7 +11,7 @@
     public class PBICloudEnvironment: IPBICloudEnvironment
     {
         [JsonPropertyName("type")]
-        public PBICloudEnvironmentType? Type { get; set; }
+        public PBICloudEnvironmentType Type { get; set; }
 
         [JsonPropertyName("name")]
         public string? Name { get; set; }
@@ -40,9 +40,6 @@
         [JsonPropertyName("clusterEndpoint")]
         public string? ClusterEndpoint { get; set; }
 
-        [JsonPropertyName("isValid")]
-        public bool IsValid => Type is not null;
-
         [JsonIgnore]
         public bool IsMicrosoftInternal => Type == PBICloudEnvironmentType.Custom && Name.EqualsI(PBICloudEnvironmentTypeExtensions.PpeCloudName);
 
@@ -54,35 +51,24 @@
 
         internal static PBICloudEnvironment CreateFrom(GlobalServiceEnvironment globalServiceEnvironment)
         {
-            var authorityService = globalServiceEnvironment.Services?.SingleOrDefault((s) => "aad".EqualsI(s.Name));
-            var powerbiService = globalServiceEnvironment.Services?.SingleOrDefault((s) => "powerbi-backend".EqualsI(s.Name));
-            var powerbiClient = globalServiceEnvironment.Clients?.SingleOrDefault((c) => "powerbi-desktop".EqualsI(c.Name));
+            var azureActiveDirectoryService = globalServiceEnvironment.Services?.SingleOrDefault((s) => "aad".EqualsI(s.Name)); // AAD common
+            var powerbiBackendService = globalServiceEnvironment.Services?.SingleOrDefault((s) => "powerbi-backend".EqualsI(s.Name));
+            var powerbiDesktopClient = globalServiceEnvironment.Clients?.SingleOrDefault((c) => "powerbi-desktop".EqualsI(c.Name));
 
             var pbicloudEnvironment = new PBICloudEnvironment
             {
-                Type = globalServiceEnvironment.CloudName?.ToCloudEnvironmentType(),
+                Type = globalServiceEnvironment.CloudName.ToCloudEnvironmentType(),
                 Name = globalServiceEnvironment.CloudName,
-                Description = null,
-                AzureADAuthority = authorityService?.Endpoint,
-                AzureADClientId = powerbiClient?.AppId,
-                AzureADRedirectAddress = powerbiClient?.RedirectUri,
-                AzureADResource = powerbiService?.ResourceId,
+                Description = globalServiceEnvironment.CloudName.ToCloudEnvironmentDescription(),
+                AzureADAuthority = azureActiveDirectoryService?.Endpoint,
+                AzureADClientId = powerbiDesktopClient?.AppId,
+                AzureADRedirectAddress = powerbiDesktopClient?.RedirectUri,
+                AzureADResource = powerbiBackendService?.ResourceId,
                 AzureADScopes = null,
-                ServiceEndpoint = powerbiService?.Endpoint,
+                ServiceEndpoint = powerbiBackendService?.Endpoint,
                 ClusterEndpoint = null
             };
-
-            if (pbicloudEnvironment.Type is null && globalServiceEnvironment.CloudName is not null)
-                pbicloudEnvironment.Type = PBICloudEnvironmentType.Custom;
-
-            if (pbicloudEnvironment.Type is not null)
-            {
-                pbicloudEnvironment.Description = pbicloudEnvironment.Type.Value.ToCloudEnvironmentDescription();
-
-                if (pbicloudEnvironment.Type == PBICloudEnvironmentType.Custom)
-                    pbicloudEnvironment.Description += $" - { pbicloudEnvironment.Name }";
-            }
-
+          
             if (pbicloudEnvironment.AzureADResource is not null)
                 pbicloudEnvironment.AzureADScopes = new string[] { $"{ pbicloudEnvironment.AzureADResource }/.default" };
 
@@ -112,7 +98,7 @@
         /// <summary>
         /// Type of the PowerBI environment.
         /// </summary>
-        PBICloudEnvironmentType? Type { get; set; }
+        PBICloudEnvironmentType Type { get; set; }
         
         /// <summary>
         /// Cloud environment name.
@@ -158,8 +144,6 @@
         /// Fixed tenant cluster endpoint
         /// </summary>
         string? ClusterEndpoint { get; set; }
-
-        bool IsValid { get; }
 
         [JsonIgnore]
         bool IsMicrosoftInternal { get; }
