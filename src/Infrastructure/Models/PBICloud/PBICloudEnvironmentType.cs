@@ -74,7 +74,7 @@
             new Uri(USGovDoDL5CloudApiUri),
         };
 
-        public static string ToGlobalServiceCloudName(this PBICloudEnvironmentType environmentType)
+        public static string ToCloudName(this PBICloudEnvironmentType environmentType)
         {
             var cloudName = environmentType switch
             {
@@ -90,9 +90,9 @@
             return cloudName;
         }
 
-        public static PBICloudEnvironmentType ToCloudEnvironmentType(this string globalServiceCloudName)
+        public static PBICloudEnvironmentType ToCloudEnvironmentType(this string cloudName)
         {
-            var environmentType = globalServiceCloudName switch
+            var environmentType = cloudName switch
             {
                 var name when GlobalCloudName.EqualsI(name) => PBICloudEnvironmentType.Public,
                 var name when GermanyCloudName.EqualsI(name) => PBICloudEnvironmentType.Germany,
