@@ -25,7 +25,7 @@
         private const string ProviderMsolapValue = "MSOLAP";
         private const string IntegratedSecuritySspiValue = "SSPI";
         private const string IntegratedSecurityClaimsTokenValue = "ClaimsToken";
-        private const string PersistSecurityInfoValue = "False"; // 'False' here is used as a best practice in order to discard security-sensitive information after the connection has been opened
+        private const string PersistSecurityInfoValue = "True";
 
         public static string BuildFor(IPEndPoint endPoint)
         {
