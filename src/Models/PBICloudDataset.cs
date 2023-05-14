@@ -172,8 +172,9 @@
             }
             else if (dataset.IsOnPremModel == true)
             {
-                dataset.ExternalServerName = dataset.ServerName = ConnectionStringHelper.FindServerName(dataset.OnPremModelConnectionString);
-                dataset.ExternalDatabaseName = dataset.DatabaseName = ConnectionStringHelper.FindDatabaseName(dataset.OnPremModelConnectionString);
+                var properties = ConnectionStringHelper.GetConnectionStringProperties(dataset.OnPremModelConnectionString);
+                dataset.ExternalServerName = dataset.ServerName = properties.ServerName;
+                dataset.ExternalDatabaseName = dataset.DatabaseName = properties.DatabaseName;
             }
             else
             {

@@ -4,10 +4,7 @@
     using Sqlbi.Bravo.Models;
     using System;
     using System.Data.OleDb;
-    using System.Diagnostics.CodeAnalysis;
-    using System.Globalization;
     using System.Net;
-    using System.Threading;
 
     internal static class ConnectionStringHelper
     {
@@ -143,47 +140,15 @@
             }
         }
 
-        public static string? FindServerName(string? connectionString)
+        public static (string ServerName, string? DatabaseName) GetConnectionStringProperties(string? connectionString)
         {
-            if (TryGetValue(connectionString, DataSourceKey, out var serverName))
-            {
-                return serverName;
-            }
+            var builder = new OleDbConnectionStringBuilder(connectionString);
 
-            return null;
-        }
+            var serverName = builder.DataSource;
+            _ = builder.TryGetValue(InitialCatalogKey, out var initialCatalog);
+            var databaseName = (string?)initialCatalog;
 
-        public static string? FindDatabaseName(string? connectionString)
-        {
-            if (TryGetValue(connectionString, InitialCatalogKey, out var databaseName))
-            {
-                return databaseName;
-            }
-
-            return null;
-        }
-
-        private static bool TryGetValue(string? connectionString, string keyword, [NotNullWhen(true)] out string? value)
-        {
-            value = null;
-
-            OleDbConnectionStringBuilder builder;
-            try
-            {
-                builder = new OleDbConnectionStringBuilder(connectionString);
-            }
-            catch (ArgumentException)
-            {
-                return false;
-            }
-
-            if (builder.TryGetValue(keyword, out var objectValue) && objectValue is string stringValue)
-            {
-                value = stringValue;
-                return true;
-            }
-
-            return false;
+            return (serverName, databaseName);
         }
     }
 }
