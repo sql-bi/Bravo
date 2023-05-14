@@ -40,6 +40,9 @@
         [JsonPropertyName("clusterEndpoint")]
         public string? ClusterEndpoint { get; set; }
 
+        [JsonPropertyName("identityProvider")]
+        public string? IdentityProvider => $"{AzureADAuthority}, {AzureADResource}, {AzureADClientId}";
+
         [JsonIgnore]
         public bool IsMicrosoftInternal => Type == PBICloudEnvironmentType.Custom && Name.EqualsI(PBICloudEnvironmentTypeExtensions.PpeCloudName);
 
@@ -144,6 +147,11 @@
         /// Fixed tenant cluster endpoint
         /// </summary>
         string? ClusterEndpoint { get; set; }
+
+        /// <summary>
+        /// MSOLAP OLEDB provider 'Identity Provider'
+        /// </summary>
+        string? IdentityProvider { get; }
 
         [JsonIgnore]
         bool IsMicrosoftInternal { get; }

@@ -20,6 +20,7 @@
         //private const string UseEncryptionForDataKey = "Use Encryption for Data";
         private const string ApplicationNameKey = "Application Name";
         private const string ConnectTimeoutKey = "Connect Timeout";
+        private const string IdentityProviderKey = "Identity Provider";
 
         private const string ProviderMsolapValue = "MSOLAP";
         private const string IntegratedSecuritySspiValue = "SSPI";
@@ -83,6 +84,7 @@
                 // https://docs.microsoft.com/en-us/power-bi/admin/service-premium-connect-tools#duplicate-dataset-name
 
                 BravoUnexpectedException.ThrowIfNull(dataset.WorkspaceName);
+                BravoUnexpectedException.ThrowIfNull(dataset.IdentityProvider);
                 BravoUnexpectedException.ThrowIfNull(dataset.ExternalServerName);
                 BravoUnexpectedException.ThrowIfNull(dataset.ExternalDatabaseName);
                 BravoUnexpectedException.ThrowIfNull(accessToken);
@@ -100,7 +102,7 @@
                 };
                 var serverName = serverNameBuilder.Uri.AbsoluteUri;
                 var databaseName = dataset.ExternalDatabaseName;
-                var connectionString = Build(serverName, databaseName, accessToken);
+                var connectionString = Build(serverName, databaseName, accessToken, dataset.IdentityProvider);
 
                 return connectionString.ToProtectedString();
             }
@@ -112,18 +114,19 @@
             }
             else
             {
+                BravoUnexpectedException.ThrowIfNull(dataset.IdentityProvider);
                 BravoUnexpectedException.ThrowIfNull(dataset.ExternalServerName);
                 BravoUnexpectedException.ThrowIfNull(dataset.ExternalDatabaseName);
                 BravoUnexpectedException.ThrowIfNull(accessToken);
 
                 var serverName = dataset.ExternalServerName;
                 var databaseName = dataset.ExternalDatabaseName;
-                var connectionString = Build(serverName, databaseName, accessToken);
+                var connectionString = Build(serverName, databaseName, accessToken, dataset.IdentityProvider);
 
                 return connectionString.ToProtectedString();
             }
 
-            static string Build(string serverName, string databaseName, string accessToken)
+            static string Build(string serverName, string databaseName, string accessToken, string identityProvider)
             {
                 var builder = new OleDbConnectionStringBuilder()
                 {
@@ -132,6 +135,7 @@
                     { InitialCatalogKey, databaseName },
                     { IntegratedSecurityKey, IntegratedSecurityClaimsTokenValue },
                     { PersistSecurityInfoKey, PersistSecurityInfoValue },
+                    { IdentityProviderKey, identityProvider },
                     { PasswordKey, accessToken }, // The Analysis Services client libraries automatically add the auth-scheme value "Bearer" to the access token
                     { ApplicationNameKey, AppEnvironment.ApplicationInstanceUniqueName }
                 };
