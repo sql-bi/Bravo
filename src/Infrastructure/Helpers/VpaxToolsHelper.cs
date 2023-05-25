@@ -31,6 +31,13 @@
             try
             {
                 vpaxContent = VpaxTools.ImportVpax(stream);
+
+                if (vpaxContent.DaxModel is null)
+                {
+                    // If the DaxModel is null here it means that the archive may be corrupted or invalid (e.g. does not include the parts required by the ECMA/376 specification)
+                    // It could happen in case the System.IO.Packaging.Package was not properly closed/disposed due to an error while flushing the stream.
+                    throw new BravoException(BravoProblem.VpaxFileImportError, "The VPAX file may be invalid or corrupted.");
+                }
             }
             catch (FileFormatException ex)
             {
