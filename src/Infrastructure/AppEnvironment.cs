@@ -53,8 +53,9 @@
             "\u2212Power BI Desktop", // Math Symbol - minus sign
             "\u2011Power BI Desktop", // Dash Punctuation - non-breaking hyphen
             "\u2013Power BI Desktop", // Dash Punctuation - en dash
-            "\u2014Power BI Desktop", // Dash Punctuation - em dash
-            "\u2015Power BI Desktop", // Dash Punctuation - horizontal bar
+            
+            // NBSP char instead of whitespace - Latvian/lv
+            "\u00A0\u2014 Power BI Desktop",
         };
         public static readonly TimeSpan MSALSignInTimeout = TimeSpan.FromMinutes(5);
         public static readonly Color ThemeColorDark = ColorTranslator.FromHtml("#202020");
