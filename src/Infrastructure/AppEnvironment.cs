@@ -38,23 +38,20 @@
         public static readonly string PBIDesktopSSASProcessImageName = "msmdsrv.exe";
         public static readonly string[] PBIDesktopMainWindowTitleSuffixes = new string[]
         {
-            // Different characters are used as a separator in the PBIDesktop window title depending on the current UI culture/localization
+            // The PBIDesktop main window title is culture-specific
+
+            // Different dash characters are used as a separator
             // See https://github.com/sql-bi/Bravo/issues/476
             " \u002D Power BI Desktop", // Dash Punctuation - minus hyphen
-            " \u2212 Power BI Desktop", // Math Symbol - minus sign
-            " \u2011 Power BI Desktop", // Dash Punctuation - non-breaking hyphen
             " \u2013 Power BI Desktop", // Dash Punctuation - en dash
             " \u2014 Power BI Desktop", // Dash Punctuation - em dash
-            " \u2015 Power BI Desktop", // Dash Punctuation - horizontal bar
 
-            // The PBIDesktop window title does not always contain the spacing character before and after the separator character
+            // The whitespace character may not be present - Swedish/sv
             // See https://github.com/sql-bi/Bravo/issues/510
-            "\u002DPower BI Desktop", // Dash Punctuation - minus hyphen
-            "\u2212Power BI Desktop", // Math Symbol - minus sign
-            "\u2011Power BI Desktop", // Dash Punctuation - non-breaking hyphen
             "\u2013Power BI Desktop", // Dash Punctuation - en dash
-            "\u2014Power BI Desktop", // Dash Punctuation - em dash
-            "\u2015Power BI Desktop", // Dash Punctuation - horizontal bar
+            
+            // NBSP char instead of whitespace - Latvian/lv
+            "\u00A0\u2014 Power BI Desktop",
         };
         public static readonly TimeSpan MSALSignInTimeout = TimeSpan.FromMinutes(5);
         public static readonly Color ThemeColorDark = ColorTranslator.FromHtml("#202020");
@@ -100,6 +97,22 @@
 
             Diagnostics = new ConcurrentDictionary<string, DiagnosticMessage>();
             DefaultJsonOptions = new(JsonSerializerDefaults.Web) { MaxDepth = 32 }; // see Microsoft.AspNetCore.Mvc.JsonOptions.JsonSerializerOptions
+
+            var spaceChars = new[]
+            {
+                "",       // no space
+                "\u0020", // whitespace
+                "\u00A0"  // nbsp
+            };
+            var dashChars = new[]
+            {
+                "\u002D", // Dash Punctuation - minus hyphen
+                "\u2212", // Math Symbol - minus sign
+                "\u2011", // Dash Punctuation - non-breaking hyphen
+                "\u2013", // Dash Punctuation - en dash
+                "\u2014", // Dash Punctuation - em dash
+                "\u2015", // Dash Punctuation - horizontal bar
+            };
         }
 
         /// <summary>
