@@ -124,9 +124,9 @@
                         _output.WriteLine("\t{0} > {1}", unicodeValue, value);
 
                         var formattedTitle = string.Format(/*System.Globalization.CultureInfo.CurrentCulture,*/ value, "Contoso", "Power BI Desktop");
-                        var isValid = formattedTitle.IsPBIDesktopMainWindowTitle();
+                        var isSupported = formattedTitle.IsPBIDesktopMainWindowTitle();
 
-                        Assert.True(isValid, $"Invalid 'PowerBIWindowTitle' format string in resource file '{file}'");
+                        Assert.True(isSupported, $"Unsupported 'PowerBIWindowTitle' format string in resource file '{file}'");
 
                         found = true;
                         break;
