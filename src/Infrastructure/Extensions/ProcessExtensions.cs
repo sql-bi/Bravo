@@ -77,7 +77,7 @@
             }
         }
 
-        public static string GetMainWindowTitle(this Process process, Func<string, bool>? predicate = default)
+        public static string GetMainWindowTitle(this Process process)
         {
             if (process.MainWindowTitle.Length > 0)
                 return process.MainWindowTitle;
@@ -92,15 +92,9 @@
                     {
                         User32.SendMessage(hWnd, WindowMessage.WM_GETTEXT, builder.Capacity, builder);
 
-                        if (builder.Length > 0)
-                        {
-                            var windowTitle = builder.ToString();
-
-                            if (predicate?.Invoke(windowTitle) == true)
-                                return false;
-
-                            builder.Clear();
-                        }
+                        var windowTitle = builder.ToString();
+                        if (windowTitle.Length > 0)
+                            return false;
                     }
 
                     return true;
@@ -116,13 +110,10 @@
 
         public static string? GetPBIDesktopMainWindowTitle(this Process process)
         {
-            var windowTitle = process.GetMainWindowTitle((windowTitle) => windowTitle.IsPBIDesktopMainWindowTitle());
+            var windowTitle = process.GetMainWindowTitle();
 
             if (windowTitle.IsNullOrWhiteSpace())
-            {
-                // PBIDesktop process is starting and/or the SSAS instance is not yet started and/or the model is not yet fully loaded
-                return null;
-            }
+                return null; // PBIDesktop process is starting and/or the SSAS instance is not yet started and/or the model is not yet fully loaded
 
             foreach (var suffix in AppEnvironment.PBIDesktopMainWindowTitleSuffixes)
             {
@@ -130,11 +121,11 @@
                 if (index >= 0)
                 {
                     windowTitle = windowTitle[..index];
-                    return windowTitle;
+                    break;
                 }
             }
 
-            return null;
+            return windowTitle;
         }
     }
 }

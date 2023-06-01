@@ -1,5 +1,6 @@
 ﻿namespace Bravo.Tests.Infrastructure.Extensions
 {
+    using Sqlbi.Bravo.Infrastructure;
     using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Models.FormatDax;
     using System;
@@ -124,7 +125,7 @@
                         _output.WriteLine("\t{0} > {1}", unicodeValue, value);
 
                         var formattedTitle = string.Format(/*System.Globalization.CultureInfo.CurrentCulture,*/ value, "Contoso", "Power BI Desktop");
-                        var isSupported = formattedTitle.IsPBIDesktopMainWindowTitle();
+                        var isSupported = AppEnvironment.PBIDesktopMainWindowTitleSuffixes.Any(formattedTitle.EndsWith);
 
                         Assert.True(isSupported, $"Unsupported 'PowerBIWindowTitle' format string in resource file '{file}'");
 
