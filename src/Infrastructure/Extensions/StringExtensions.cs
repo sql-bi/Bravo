@@ -30,19 +30,6 @@
             return versionParts;
         }
 
-        public static bool IsPBIDesktopMainWindowTitle(this string windowTitle)
-        {
-            foreach (var suffix in AppEnvironment.PBIDesktopMainWindowTitleSuffixes)
-            {
-                if (windowTitle.EndsWith(suffix))
-                {
-                    return true;
-                }
-            }
-
-            return  false;
-        }
-
         /// <summary>
         /// Convert the old .NET JavaScriptSerializer/DataContractJsonSerializer date format "/Date(1617810719887)/" to <see cref="DateTimeOffset"/>
         /// </summary>

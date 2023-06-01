@@ -77,7 +77,7 @@
             }
         }
 
-        public static string GetMainWindowTitle(this Process process, Func<string, bool>? predicate = default)
+        public static string GetMainWindowTitle(this Process process)
         {
             if (process.MainWindowTitle.Length > 0)
                 return process.MainWindowTitle;
@@ -92,16 +92,10 @@
                     {
                         User32.SendMessage(hWnd, WindowMessage.WM_GETTEXT, builder.Capacity, builder);
 
-                        if (builder.Length > 0)
-                        {
                             var windowTitle = builder.ToString();
-
-                            if (predicate?.Invoke(windowTitle) == true)
+                        if (windowTitle.Length > 0)
                                 return false;
-
-                            builder.Clear();
                         }
-                    }
 
                     return true;
                 },
@@ -116,7 +110,7 @@
 
         public static string? GetPBIDesktopMainWindowTitle(this Process process)
         {
-            var windowTitle = process.GetMainWindowTitle((windowTitle) => windowTitle.IsPBIDesktopMainWindowTitle());
+            var windowTitle = process.GetMainWindowTitle();
 
             if (windowTitle.IsNullOrWhiteSpace())
             {
