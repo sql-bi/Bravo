@@ -38,7 +38,8 @@
         public static readonly string PBIDesktopSSASProcessImageName = "msmdsrv.exe";
         public static readonly string[] PBIDesktopMainWindowTitleSuffixes = new string[]
         {
-            // The PBIDesktop main window title is culture-specific
+            // The PBIDesktop main window title is culture-specific.
+            // The suffix is not always present, for example, it is not added when the save/share function in OneDrive/SharePoint is active.
 
             // Different dash characters are used as a separator
             // See https://github.com/sql-bi/Bravo/issues/476

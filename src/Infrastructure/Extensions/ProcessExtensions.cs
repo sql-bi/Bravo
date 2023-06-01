@@ -92,10 +92,10 @@
                     {
                         User32.SendMessage(hWnd, WindowMessage.WM_GETTEXT, builder.Capacity, builder);
 
-                            var windowTitle = builder.ToString();
+                        var windowTitle = builder.ToString();
                         if (windowTitle.Length > 0)
-                                return false;
-                        }
+                            return false;
+                    }
 
                     return true;
                 },
@@ -113,10 +113,7 @@
             var windowTitle = process.GetMainWindowTitle();
 
             if (windowTitle.IsNullOrWhiteSpace())
-            {
-                // PBIDesktop process is starting and/or the SSAS instance is not yet started and/or the model is not yet fully loaded
-                return null;
-            }
+                return null; // PBIDesktop process is starting and/or the SSAS instance is not yet started and/or the model is not yet fully loaded
 
             foreach (var suffix in AppEnvironment.PBIDesktopMainWindowTitleSuffixes)
             {
@@ -124,11 +121,11 @@
                 if (index >= 0)
                 {
                     windowTitle = windowTitle[..index];
-                    return windowTitle;
+                    break;
                 }
             }
 
-            return null;
+            return windowTitle;
         }
     }
 }
