@@ -2309,6 +2309,149 @@
       "HolidayName": "国庆节",
       "SubstituteHoliday": "NoSubstituteHoliday",
       "ConflictPriority": 100
+    },
+    {
+      "IsoCountry": "IS",
+      "MonthNumber": 1,
+      "DayNumber": 1,
+      "WeekDayNumber": 0,
+      "OffsetWeek": 0,
+      "OffsetDays": 0,
+      "HolidayName": "Nýársdagur",
+      "SubstituteHoliday": "NoSubstituteHoliday",
+      "ConflictPriority": 100
+    },
+    {
+      "IsoCountry": "IS",
+      "MonthNumber": 99,
+      "DayNumber": -3,
+      "WeekDayNumber": 0,
+      "OffsetWeek": 0,
+      "OffsetDays": 0,
+      "HolidayName": "Skírdagur",
+      "SubstituteHoliday": "NoSubstituteHoliday",
+      "ConflictPriority": 50
+    },
+    {
+      "IsoCountry": "IS",
+      "MonthNumber": 99,
+      "DayNumber": -2,
+      "WeekDayNumber": 0,
+      "OffsetWeek": 0,
+      "OffsetDays": 0,
+      "HolidayName": "Föstudagurinn langi",
+      "SubstituteHoliday": "NoSubstituteHoliday",
+      "ConflictPriority": 50
+    },
+    {
+      "IsoCountry": "IS",
+      "MonthNumber": 99,
+      "DayNumber": 1,
+      "WeekDayNumber": 0,
+      "OffsetWeek": 0,
+      "OffsetDays": 0,
+      "HolidayName": "Annar í páskum",
+      "SubstituteHoliday": "NoSubstituteHoliday",
+      "ConflictPriority": 50
+    },
+    {
+      "IsoCountry": "IS",
+      "MonthNumber": 99,
+      "DayNumber": 39,
+      "WeekDayNumber": 0,
+      "OffsetWeek": 0,
+      "OffsetDays": 0,
+      "HolidayName": "Uppstigningardagur",
+      "SubstituteHoliday": "NoSubstituteHoliday",
+      "ConflictPriority": 50
+    },
+    {
+      "IsoCountry": "IS",
+      "MonthNumber": 5,
+      "DayNumber": 1,
+      "WeekDayNumber": 0,
+      "OffsetWeek": 0,
+      "OffsetDays": 0,
+      "HolidayName": "Frídagur verkafólks",
+      "SubstituteHoliday": "NoSubstituteHoliday",
+      "ConflictPriority": 100
+    },
+    {
+      "IsoCountry": "IS",
+      "MonthNumber": 8,
+      "DayNumber": 0,
+      "WeekDayNumber": 1,
+      "OffsetWeek": 0,
+      "OffsetDays": 0,
+      "HolidayName": "Frídagur verslunarmanna",
+      "SubstituteHoliday": "NoSubstituteHoliday",
+      "ConflictPriority": 100
+    },
+    {
+      "IsoCountry": "IS",
+      "MonthNumber": 6,
+      "DayNumber": 17,
+      "WeekDayNumber": 0,
+      "OffsetWeek": 0,
+      "OffsetDays": 0,
+      "HolidayName": "Þjóðhátíðardagur Íslendinga",
+      "SubstituteHoliday": "NoSubstituteHoliday",
+      "ConflictPriority": 100
+    },
+    {
+      "IsoCountry": "IS",
+      "MonthNumber": 12,
+      "DayNumber": 25,
+      "WeekDayNumber": 0,
+      "OffsetWeek": 0,
+      "OffsetDays": 0,
+      "HolidayName": "Jóladagur",
+      "SubstituteHoliday": "NoSubstituteHoliday",
+      "ConflictPriority": 100
+    },
+    {
+      "IsoCountry": "IS",
+      "MonthNumber": 12,
+      "DayNumber": 26,
+      "WeekDayNumber": 0,
+      "OffsetWeek": 0,
+      "OffsetDays": 0,
+      "HolidayName": "Annar í jólum",
+      "SubstituteHoliday": "NoSubstituteHoliday",
+      "ConflictPriority": 100
+    },
+    {
+      "IsoCountry": "IS",
+      "MonthNumber": 12,
+      "DayNumber": 24,
+      "WeekDayNumber": 0,
+      "OffsetWeek": 0,
+      "OffsetDays": 0,
+      "HolidayName": "Aðfangadagur",
+      "SubstituteHoliday": "NoSubstituteHoliday",
+      "ConflictPriority": 50
+    },
+    {
+      "IsoCountry": "IS",
+      "MonthNumber": 12,
+      "DayNumber": 31,
+      "WeekDayNumber": 0,
+      "OffsetWeek": 0,
+      "OffsetDays": 0,
+      "HolidayName": "Gamlársdagur",
+      "SubstituteHoliday": "NoSubstituteHoliday",
+      "ConflictPriority": 50
+    },
+    {
+      "IsoCountry": "IS",
+      "MonthNumber": 98,
+      "DayNumber": 0,
+      "WeekDayNumber": 0,
+      "OffsetWeek": 0,
+      "OffsetDays": 0,
+      "HolidayName": "Sumardagurinn fyrsti",
+      "SubstituteHoliday": "NoSubstituteHoliday",
+      "ConflictPriority": 50
     }
   ]
 }
