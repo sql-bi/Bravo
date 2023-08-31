@@ -127,6 +127,7 @@ export let HolidaysCountries: string[][] = [
     ["DK", "Denmark"],
     ["FR", "France"],
     ["DE", "Germany"],
+    ["IS", "Iceland"],
     ["IT", "Italy"],
     ["JP", "Japan"],
     ["NL", "Netherlands"],
