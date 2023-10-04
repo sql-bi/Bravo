@@ -86,6 +86,7 @@ window.external = {
             //   create webview environment and pass the folder path in then 'browserExecutableFolder' arguments => .\microsoftedgestandaloneinstallerx64_<guid>\MicrosoftEdge_X64_<version>\MSEDGE\Chrome-bin\<version>
 
             WebView.Visible = false;
+            WebView.CoreWebView2InitializationCompleted += OnWebViewInitializationCompleted;
 
             var options = new CoreWebView2EnvironmentOptions(additionalBrowserArguments: null, language: null, targetCompatibleBrowserVersion: null, allowSingleSignOnUsingOSPrimaryAccount: false);
             {
@@ -132,6 +133,7 @@ window.external = {
             /* ICoreWebView2    */ WebView.CoreWebView2.PermissionRequested += OnWebViewPermissionRequested;
             /* ICoreWebView2_10 */ WebView2Helper.TryAndIgnoreUnsupportedError(() => WebView.CoreWebView2.BasicAuthenticationRequested += OnWebViewBasicAuthenticationRequested);
 
+
             /* ICoreWebView2 */ await WebView.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(WindowExternalWebMessageCallbackScript);
             /* ICoreWebView2 */ WebView.CoreWebView2.AddWebResourceRequestedFilter("*", CoreWebView2WebResourceContext.All);
             WebView.Source = new Uri(Path.Combine(Environment.CurrentDirectory, "wwwroot\\index.html"));
@@ -177,6 +179,21 @@ window.external = {
         {
             _instance.OnNewInstance -= OnNewInstanceRestoreFormWindowToForeground;
             _instance.OnNewInstance -= OnNewInstanceSendStartupWebMessage;
+        }
+
+        private void OnWebViewInitializationCompleted(object? sender, CoreWebView2InitializationCompletedEventArgs e)
+        {
+            // Remove handler as this event can fire twice (after reporting initialization success first) if the initialization is followed by navigation which fails.
+            if (e.IsSuccess)
+                WebView.CoreWebView2InitializationCompleted -= OnWebViewInitializationCompleted;
+
+            // TODO: See https://github.com/MicrosoftEdge/WebView2Feedback/issues/3008
+
+            if (!e.IsSuccess)
+            {
+                // TODO: display error message
+                throw e.InitializationException;
+            }
         }
 
         private void OnWebViewDOMContentLoaded(object? sender, CoreWebView2DOMContentLoadedEventArgs e)
