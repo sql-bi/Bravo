@@ -17,25 +17,29 @@
 
     internal static class AppEnvironment
     {
+        public const string ApplicationMainWindowTitle = "Bravo for Power BI";
+        public const string ApplicationManufacturer = "SQLBI";
+        public const string ApplicationName = "Bravo";
+        public const string ApplicationNameStoreAlias = "BravoStore";
+        public const string ApplicationRegistryApplicationTelemetryEnabledValue = "applicationTelemetryEnabled";
+        public const string ApplicationRegistryApplicationTitleVersionHiddenValue = "applicationTitleVersionHidden";
+        public const string ApplicationRegistryApplicationInstallFolderValue = "installFolder";
+        public const string ApplicationWebsiteUrl = "https://bravo.bi";
+        public const string ApiAuthenticationSchema = "BravoAuth";
+        public const string CredentialManagerProxyCredentialName = "Bravo for Power BI/proxy";
+        public const int MSALSignInTimeout = 5 * 60 * 1_000;
+        public const string PBIDesktopProcessName = "PBIDesktop";
+        public const string PBIDesktopSSASProcessImageName = "msmdsrv.exe";
+        public const string TelemetryInstrumentationKey = "47a8970c-6293-408a-9cce-5b7b311574d3";
+        public const string TelemetryConnectionString = "InstrumentationKey=47a8970c-6293-408a-9cce-5b7b311574d3";
+        public const DaxLineBreakStyle FormatDaxLineBreakDefault = DaxLineBreakStyle.InitialLineBreak;
+
         private static readonly Lazy<AppDeploymentMode> _deploymentMode;
 
-        public static readonly string ApiAuthenticationSchema = "BravoAuth";
         public static readonly string ApiAuthenticationToken = Cryptography.GenerateSimpleToken();
         public static readonly string ApiAuthenticationTokenTemplateDevelopment = Cryptography.GenerateSimpleToken();
-        public static readonly string ApplicationManufacturer = "SQLBI";
-        public static readonly string ApplicationWebsiteUrl = "https://bravo.bi";
-        public static readonly string ApplicationName = "Bravo";
-        public static readonly string ApplicationStoreAliasName = "BravoStore";
-        public static readonly string ApplicationMainWindowTitle = "Bravo for Power BI";
         public static readonly string ApplicationInstanceUniqueName = $"{ApplicationName}-{Guid.NewGuid():D}";
-        public static readonly string ApplicationRegistryKeyName = $@"SOFTWARE\{ ApplicationManufacturer }\{ ApplicationName }";
-        public static readonly string ApplicationRegistryApplicationTelemetryEnabledValue = "applicationTelemetryEnabled";
-        public static readonly string ApplicationRegistryApplicationTitleVersionHiddenValue = "applicationTitleVersionHidden";
-        public static readonly string ApplicationRegistryApplicationInstallFolderValue = "installFolder";
-        public static readonly string TelemetryInstrumentationKey = "47a8970c-6293-408a-9cce-5b7b311574d3";
-        public static readonly string TelemetryConnectionString = "InstrumentationKey=47a8970c-6293-408a-9cce-5b7b311574d3";
-        public static readonly string PBIDesktopProcessName = "PBIDesktop";
-        public static readonly string PBIDesktopSSASProcessImageName = "msmdsrv.exe";
+        public static readonly string ApplicationRegistryKeyName = $@"SOFTWARE\{ApplicationManufacturer}\{ApplicationName}";
         public static readonly string[] PBIDesktopMainWindowTitleSuffixes = new string[]
         {
             // The PBIDesktop main window title is culture-specific.
@@ -54,11 +58,8 @@
             // NBSP char instead of whitespace - Latvian/lv
             "\u00A0\u2014 Power BI Desktop",
         };
-        public static readonly TimeSpan MSALSignInTimeout = TimeSpan.FromMinutes(5);
         public static readonly Color ThemeColorDark = ColorTranslator.FromHtml("#202020");
         public static readonly Color ThemeColorLight = ColorTranslator.FromHtml("#F3F3F3");
-        public static readonly DaxLineBreakStyle FormatDaxLineBreakDefault = DaxLineBreakStyle.InitialLineBreak;
-        public static readonly string CredentialManagerProxyCredentialName = "Bravo for Power BI/proxy";
 
         public static readonly string[] TrustedUriHosts = new[]
         {

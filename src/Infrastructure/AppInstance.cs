@@ -25,7 +25,7 @@
         public AppInstance()
         {
             var appId = "8D4D9F1D39F94C7789D84729480D8198"; // Do not change !!
-            var appName = AppEnvironment.DeploymentMode == AppDeploymentMode.Packaged ? AppEnvironment.ApplicationStoreAliasName : AppEnvironment.ApplicationName;
+            var appName = AppEnvironment.DeploymentMode == AppDeploymentMode.Packaged ? AppEnvironment.ApplicationNameStoreAlias : AppEnvironment.ApplicationName;
             // Named pipes in packaged applications must use the syntax \\.\pipe\LOCAL\ for the pipe name, however, for non-windows store applications there is no such directive yet.
             // See https://learn.microsoft.com/en-gb/windows/win32/api/winbase/nf-winbase-createnamedpipea
             var pipeNamePrefix = AppEnvironment.DeploymentMode == AppDeploymentMode.Packaged ? "LOCAL\\" : string.Empty;
