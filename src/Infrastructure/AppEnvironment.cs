@@ -74,21 +74,15 @@
 
         static AppEnvironment()
         {
-            Debug.Assert(Environment.ProcessPath is not null);
-
             _deploymentMode = new(() => GetDeploymentMode());
             using var currentProcess = Process.GetCurrentProcess();
 
             ProcessId = Environment.ProcessId;
             SessionId = currentProcess.SessionId;
-            ProcessPath = Environment.ProcessPath!;
-            
+            ProcessPath = Environment.ProcessPath ?? throw new BravoUnexpectedArgumentNullException(nameof(Environment.ProcessPath));
             VersionInfo = FileVersionInfo.GetVersionInfo(ProcessPath);
-            BravoUnexpectedException.ThrowIfNull(VersionInfo.FileVersion);
-            ApplicationFileVersion = VersionInfo.FileVersion;
-            BravoUnexpectedException.ThrowIfNull(VersionInfo.ProductVersion);
-            ApplicationProductVersion = VersionInfo.ProductVersion;
-
+            ApplicationFileVersion = VersionInfo.FileVersion ?? throw new BravoUnexpectedArgumentNullException(nameof(VersionInfo.FileVersion));
+            ApplicationProductVersion = VersionInfo.ProductVersion ?? throw new BravoUnexpectedArgumentNullException(nameof(VersionInfo.ProductVersion));
             ApplicationDataPath = Path.Combine(Environment.GetFolderPath(DeploymentMode == AppDeploymentMode.Packaged ? Environment.SpecialFolder.UserProfile : Environment.SpecialFolder.LocalApplicationData, Environment.SpecialFolderOption.DoNotVerify), ApplicationName);
             ApplicationTempPath = Path.Combine(ApplicationDataPath, ".temp");
             ApplicationDiagnosticPath = Path.Combine(ApplicationDataPath, ".diagnostic");
