@@ -26,6 +26,10 @@
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(TF_BUILD)' == 'true'">
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+  </PropertyGroup>
+
   <Choose>
     <When Condition=" '$(Configuration)' == 'Debug_wwwroot' ">
       <PropertyGroup>
