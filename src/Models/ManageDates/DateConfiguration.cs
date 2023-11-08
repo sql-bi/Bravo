@@ -1,9 +1,11 @@
 ﻿namespace Sqlbi.Bravo.Models.ManageDates
 {
     using Dax.Template.Enums;
+    using Dax.Template.Exceptions;
     using Dax.Template.Interfaces;
     using Dax.Template.Tables;
     using Sqlbi.Bravo.Infrastructure;
+    using Sqlbi.Bravo.Infrastructure.Configuration;
     using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Infrastructure.Services.DaxTemplate;
     using System;
@@ -447,13 +449,43 @@
             var templateUri = new Uri(configuration.TemplateUri, UriKind.Absolute);
             var templatePath = templateUri.LocalPath;
 
-            if (configuration.IsCustom == false)
+            if (configuration.IsCustom)
             {
-                // If it is a default/embedded template then we ignore the TemplateUri path and force the current user's local cache path.
+                if (!File.Exists(templatePath) && UserPreferences.Current.CustomOptions is not null)
+                {
+                    var templatesOptionFound = UserPreferences.Current.CustomOptions.Value.TryGetProperty("templates", out var templatesOption);
+
+                    if (AppEnvironment.IsDiagnosticLevelVerbose)
+                        AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{nameof(DateConfigurationExtensions)}.{nameof(LoadPackage)}.CustomOptions.Templates[{templatesOption.ValueKind}]", content: templatesOption.ToString());
+
+                    if (templatesOptionFound)
+                    {
+                        var customPackages = templatesOption.Deserialize<CustomPackage[]>() ?? Array.Empty<CustomPackage>();
+                        var userPackages = customPackages.Where((p) => p.HasPackage && p.Type == CustomPackageType.User && p.Name == configuration.Name).ToList();
+                        if (userPackages.Count == 1)
+                        {
+                            var path = userPackages[0].Path;
+                            if (path is not null)
+                                templatePath = path;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                // Ignore the TemplateUri path and force the current user's local cache path
                 templatePath = Path.Combine(DaxTemplateManager.CachePath, Path.GetFileName(templatePath));
             }
 
-            var package = Dax.Template.Package.LoadFromFile(templatePath);
+            Dax.Template.Package package;
+            try
+            {
+                package = Dax.Template.Package.LoadFromFile(templatePath);
+            }
+            catch (Exception ex) when (ex is FileNotFoundException || ex is DirectoryNotFoundException)
+            {
+                throw new TemplateException($"The '{configuration.Name}' template file could not be found.", ex);
+            }
 
             if (configure)
             {
