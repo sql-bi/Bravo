@@ -23,7 +23,7 @@
         [JsonIgnore]
         public DateTime? ReadTimestamp { get; set; }
 
-        public static DiagnosticMessage Create(DiagnosticMessageType type, DiagnosticMessageSeverity severity, string name, string content)
+        internal static DiagnosticMessage Create(DiagnosticMessageType type, DiagnosticMessageSeverity severity, string name, string content)
         {
             var message = new DiagnosticMessage
             {

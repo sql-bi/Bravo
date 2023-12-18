@@ -96,7 +96,7 @@
             MsalTokenCacheFilePath = Path.Combine(ApplicationDataPath, ".msalcache");
             WebView2VersionInfo = WebView2Helper.GetRuntimeVersionInfo();
 
-            Diagnostics = new ConcurrentDictionary<string, DiagnosticMessage>();
+            Diagnostics = new ConcurrentDictionary<DiagnosticMessage, DiagnosticMessage>();
             DefaultJsonOptions = new(JsonSerializerDefaults.Web) { MaxDepth = 32 }; // see Microsoft.AspNetCore.Mvc.JsonOptions.JsonSerializerOptions
 
             var spaceChars = new[]
@@ -184,7 +184,7 @@
 
         public static bool IsDiagnosticLevelVerbose => UserPreferences.Current.DiagnosticLevel == DiagnosticLevelType.Verbose;
 
-        public static ConcurrentDictionary<string, DiagnosticMessage> Diagnostics { get; }
+        public static ConcurrentDictionary<DiagnosticMessage, DiagnosticMessage> Diagnostics { get; }
 
         public static void AddDiagnostics(string name, Exception exception, DiagnosticMessageSeverity severity = DiagnosticMessageSeverity.Error)
         {
@@ -195,8 +195,8 @@
         public static void AddDiagnostics(DiagnosticMessageType type, string name, string content, DiagnosticMessageSeverity severity = DiagnosticMessageSeverity.None, bool writeFile = false)
         {
             var message = DiagnosticMessage.Create(type, severity, name, content);
-
-            Diagnostics.AddOrUpdate(message.Name!, message, (key, value) => message);
+            
+            _= Diagnostics.TryAdd(message, message);
 
             if (writeFile)
             {
