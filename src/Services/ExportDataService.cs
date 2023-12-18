@@ -4,6 +4,7 @@
     using CsvHelper.Configuration;
     using CsvHelper.TypeConversion;
     using LargeXlsx;
+    using Microsoft.AnalysisServices.AdomdClient;
     using Sqlbi.Bravo.Infrastructure;
     using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Infrastructure.Helpers;
@@ -37,6 +38,9 @@
 
     internal class ExportDataService : IExportDataService
     {
+        private const int BatchSize = 10_000;
+        private const int ExcelMaxRows = 1_000_000; // Excel cannot exceed the limit of 1,048,576 rows and 16,384 columns
+
         private static readonly TypeConverterOptions _defaultDelimitedTextTypeConverterOptions = new()
         {
             Formats = new[]
@@ -196,51 +200,79 @@
                 cancellationToken.ThrowIfCancellationRequested();
 
                 var table = job.AddNew(tableName);
+                var fileTableName = tableName.ReplaceInvalidFileNameChars();
+                var fileName = Path.ChangeExtension(fileTableName, "csv");
+                var path = Path.Combine(settings.ExportPath, fileName);
+
+                Encoding encoding = settings.UnicodeEncoding
+                    ? new UnicodeEncoding()
+                    : new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
+
+                using var streamWriter = new StreamWriter(path, append: false, encoding);
+                using var csvWriter = new CsvWriter(streamWriter, config);
+
+                Export(command, table, csvWriter, settings.QuoteStringFields, rowBatchMode: connection.IsDaxFunctionTopNSkipSupported, cancellationToken);
+            }
+
+            static void Export(AdomdCommand command, ExportDataTable table, CsvWriter writer, bool quoteStringFields, bool rowBatchMode, CancellationToken cancellationToken)
+            {
+                var tableName = TabularModelHelper.GetDaxTableName(table.Name);
+
+                if (AppEnvironment.IsDiagnosticLevelVerbose)
+                    AppEnvironment.AddDiagnostics(DiagnosticMessageType.Text, name: $"{nameof(ExportDataService)}.{nameof(ExportDelimitedTextFileImpl)}.{nameof(Export)}", content: $"Export table {tableName} in {(rowBatchMode ? "row batch" : "full")} mode");
+
+                if (rowBatchMode)
                 {
-                    // TODO: if the SSAS instance supports TOPNSKIP then use that to query batches of rows
-                    command.CommandText = $"EVALUATE { TabularModelHelper.GetDaxTableName(tableName) }";
+                    var batchCount = 0;
+                    do
+                    {
+                        // Sort order based on RowNumber column. Order changes when the table is refreshed.
+                        command.CommandText = $"EVALUATE TOPNSKIP({BatchSize}, {batchCount++ * BatchSize}, {tableName})";
+                        using var dataReader = command.ExecuteReader(CommandBehavior.SingleResult);
 
-                    var fileTableName = tableName.ReplaceInvalidFileNameChars();
-                    var fileName = Path.ChangeExtension(fileTableName, "csv");
-                    var path = Path.Combine(settings.ExportPath, fileName);
-
-                    Encoding encoding = settings.UnicodeEncoding
-                        ? new UnicodeEncoding()
-                        : new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
-
-                    using var streamWriter = new StreamWriter(path, append: false, encoding);
-                    using var csvWriter = new CsvWriter(streamWriter, config);
-                    using var dataReader = command.ExecuteReader(CommandBehavior.SingleResult);
-                    //using var dataReader = CreateTestDataReader();
-
-                    WriteData(table, csvWriter, dataReader, settings.QuoteStringFields, cancellationToken);
+                        if (batchCount == 1) WriteHeader(table, writer, dataReader, quoteStringFields);
+                        var batchRows = WriteData(table, writer, dataReader, quoteStringFields, cancellationToken);
+                        if (batchRows == 0)
+                            break;
+                    }
+                    while (true);
                 }
+                else
+                {
+                    command.CommandText = $"EVALUATE {tableName}";
+                    using var dataReader = command.ExecuteReader(CommandBehavior.SingleResult);
+
+                    WriteHeader(table, writer, dataReader, quoteStringFields);
+                    WriteData(table, writer, dataReader, quoteStringFields, cancellationToken);
+                }
+
                 table.SetCompleted();
             }
 
-            static void WriteData(ExportDataTable table, CsvWriter writer, IDataReader reader, bool quoteStringFields, CancellationToken cancellationToken)
+            static void WriteHeader(ExportDataTable table, CsvWriter writer, IDataReader reader, bool quoteStringFields)
             {
                 // output dates using ISO 8601 format
                 writer.Context.TypeConverterOptionsCache.AddOptions(typeof(DateTime), options: _defaultDelimitedTextTypeConverterOptions);
+                table.Columns = reader.FieldCount;
 
-                // write header
-                for (int i = 0; i < reader.FieldCount; i++)
+                for (var i = 0; i < reader.FieldCount; i++)
                 {
-                    var stringField = GetDaxColumnName(reader, i);
+                    var columnName = GetDaxColumnName(reader, i);
 
                     if (quoteStringFields)
-                        writer.WriteField(stringField, shouldQuote: true);
+                        writer.WriteField(columnName, shouldQuote: true);
                     else
-                        writer.WriteField(stringField); // use default ConfigurationFunctions.ShouldQuote()
+                        writer.WriteField(columnName); // use default ConfigurationFunctions.ShouldQuote()
                 }
 
                 writer.NextRecord();
+            }
 
-                // write data
+            static int WriteData(ExportDataTable table, CsvWriter writer, IDataReader reader, bool quoteStringFields, CancellationToken cancellationToken)
+            {
+                var rows = 0;
                 while (reader.Read())
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
-
                     for (var i = 0; i < reader.FieldCount; i++)
                     {
                         var field = reader[i];
@@ -260,9 +292,14 @@
                         }
                     }
 
+                    rows++;
                     table.Rows++;
                     writer.NextRecord();
+
+                    if (table.Rows % 1_000 == 0)
+                        cancellationToken.ThrowIfCancellationRequested();
                 }
+                return rows;
             }
         }
 
@@ -284,20 +321,11 @@
                 cancellationToken.ThrowIfCancellationRequested();
 
                 var table = job.AddNew(tableName);
-                {
-                    // TODO: if the SSAS instance supports TOPNSKIP then use that to query batches of rows
-                    command.CommandText = $"EVALUATE { TabularModelHelper.GetDaxTableName(tableName) }";
-
-                    using var dataReader = command.ExecuteReader(CommandBehavior.SingleResult);
-                    //using var dataReader = CreateTestDataReader();
-                    var worksheetName = GetWorksheetName(tableName, tableIndex);
-
-                    xlsxWriter.BeginWorksheet(worksheetName, splitRow: 1);
-                    {
-                        WriteData(table, xlsxWriter, dataReader, cancellationToken);
-                    }
-                    xlsxWriter.SetAutoFilter(fromRow: 1, fromColumn: 1, rowCount: xlsxWriter.CurrentRowNumber, columnCount: dataReader.FieldCount);
-                }
+                var worksheetName = GetWorksheetName(tableName, tableIndex);
+                
+                xlsxWriter.BeginWorksheet(worksheetName, splitRow: 1);
+                Export(command, table, xlsxWriter, rowBatchMode: connection.IsDaxFunctionTopNSkipSupported, cancellationToken);
+                xlsxWriter.SetAutoFilter(fromRow: 1, fromColumn: 1, rowCount: table.Rows, columnCount: table.Columns);
             }
 
             WriteSummary(job, settings, xlsxWriter);
@@ -354,7 +382,43 @@
                 return worksheetName;
             }
 
-            static void WriteData(ExportDataTable table, XlsxWriter writer, IDataReader reader, CancellationToken cancellationToken)
+            static void Export(AdomdCommand command, ExportDataTable table, XlsxWriter writer, bool rowBatchMode, CancellationToken cancellationToken)
+            {
+                var tableName = TabularModelHelper.GetDaxTableName(table.Name);
+
+                if (AppEnvironment.IsDiagnosticLevelVerbose)
+                    AppEnvironment.AddDiagnostics(DiagnosticMessageType.Text, name: $"{nameof(ExportDataService)}.{nameof(ExportExcelFileImpl)}.{nameof(Export)}", content: $"Export table {tableName} in {(rowBatchMode ? "row batch" : "full")} mode");
+
+                if (rowBatchMode)
+                {
+                    var batchCount = 0;
+                    do
+                    {
+                        // Sort order based on RowNumber column. Order changes when the table is refreshed.
+                        command.CommandText = $"EVALUATE TOPNSKIP({BatchSize}, {batchCount++ * BatchSize}, {tableName})";
+                        using var reader = command.ExecuteReader(CommandBehavior.SingleResult);
+
+                        if (batchCount == 1) WriteHeader(table, writer, reader);
+                        var batchRows = WriteData(table, writer, reader, cancellationToken);
+                        if (batchRows == 0 || table.Status == ExportDataStatus.Truncated)
+                            break;
+                    }
+                    while (true);
+                }
+                else
+                {
+                    command.CommandText = $"EVALUATE {tableName}";
+                    using var reader = command.ExecuteReader(CommandBehavior.SingleResult);
+
+                    WriteHeader(table, writer, reader);
+                    WriteData(table, writer, reader, cancellationToken);
+                }
+
+                if (table.Status == ExportDataStatus.Running)
+                    table.SetCompleted();
+            }
+
+            static void WriteHeader(ExportDataTable table, XlsxWriter writer, IDataReader reader)
             {
                 // TODO: improve the column format(XlsxStyle) by using the TOM.Column.FormatString property (see DaxStudio.UI.Utils.XlsxHelper.GetStyle)
 
@@ -364,23 +428,27 @@
                     border: XlsxStyle.Default.Border,
                     numberFormat: XlsxStyle.Default.NumberFormat,
                     alignment: XlsxAlignment.Default);
-                var dateTimeStyle = XlsxStyle.Default.With(new XlsxNumberFormat($"yyyy-mm-dd hh:mm:ss"));
 
-                // write header
                 writer.SetDefaultStyle(headerStyle).BeginRow();
+                table.Columns = reader.FieldCount;
 
                 for (var i = 0; i < reader.FieldCount; i++)
                 {
-                    var daxColumnName = GetDaxColumnName(reader, i);
-                    writer.Write(daxColumnName);
+                    var columnName = GetDaxColumnName(reader, i);
+                    writer.Write(columnName);
                 }
 
-                // write data
+                // restore default style
                 writer.SetDefaultStyle(XlsxStyle.Default);
+            }
+
+            static int WriteData(ExportDataTable table, XlsxWriter writer, IDataReader reader, CancellationToken cancellationToken)
+            {
+                var dateTimeStyle = XlsxStyle.Default.With(new XlsxNumberFormat($"yyyy-mm-dd hh:mm:ss"));
+                var rows = 0;
 
                 while (reader.Read())
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
                     writer.BeginRow();
 
                     for (var i = 0; i < reader.FieldCount; i++)
@@ -419,15 +487,19 @@
                         }
                     }
 
-                    if (++table.Rows >= 1_000_000)
-                    {
-                        // Break and exit if we have reached the limit of an xlsx file
+                    rows++;
+
+                    if (++table.Rows >= ExcelMaxRows)
+                    { 
                         table.SetTruncated();
-                        return;
+                        return rows;
                     }
+
+                    if (table.Rows % 1_000 == 0)
+                        cancellationToken.ThrowIfCancellationRequested();
                 }
 
-                table.SetCompleted();
+                return rows;
             }
 
             static void WriteSummary(ExportDataJob job, ExportExcelSettings settings, XlsxWriter writer)

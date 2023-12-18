@@ -5,18 +5,8 @@
     using System.Data;
     using System.Linq;
 
-    internal static class LinqExtensions
+    internal static class EnumerableExtensions
     {
-        public static IEnumerable<T> Select<T>(this IDataReader reader, Func<IDataReader, T> selector)
-        {
-            while (reader.Read())
-            {
-                yield return selector(reader);
-            }
-
-            reader.Close();
-        }
-
         public static IEnumerable<(T item, int index)> WithIndex<T>(this IEnumerable<T> source)
         {
             return source.Select((item, index) => (item, index));
