@@ -13,7 +13,6 @@
     using Sqlbi.Bravo.Models;
     using Sqlbi.Bravo.Models.ExportData;
     using System;
-    using System.Collections.Generic;
     using System.Data;
     using System.Drawing;
     using System.Globalization;
@@ -219,6 +218,9 @@
             {
                 var tableName = TabularModelHelper.GetDaxTableName(table.Name);
 
+                if (AppEnvironment.IsDiagnosticLevelVerbose)
+                    AppEnvironment.AddDiagnostics(DiagnosticMessageType.Text, name: $"{nameof(ExportDataService)}.{nameof(ExportDelimitedTextFileImpl)}.{nameof(Export)}", content: $"Export table {tableName} in {(rowBatchMode ? "row batch" : "full")} mode");
+
                 if (rowBatchMode)
                 {
                     var batchCount = 0;
@@ -383,6 +385,9 @@
             static void Export(AdomdCommand command, ExportDataTable table, XlsxWriter writer, bool rowBatchMode, CancellationToken cancellationToken)
             {
                 var tableName = TabularModelHelper.GetDaxTableName(table.Name);
+
+                if (AppEnvironment.IsDiagnosticLevelVerbose)
+                    AppEnvironment.AddDiagnostics(DiagnosticMessageType.Text, name: $"{nameof(ExportDataService)}.{nameof(ExportExcelFileImpl)}.{nameof(Export)}", content: $"Export table {tableName} in {(rowBatchMode ? "row batch" : "full")} mode");
 
                 if (rowBatchMode)
                 {
