@@ -12,6 +12,7 @@ import fa from './fa';
 import fr from './fr';
 import gr from './gr';
 import it from './it';
+import jp from './jp';
 import nl from './nl';
 import pl from './pl';
 import pt from './pt';
@@ -29,6 +30,7 @@ const locales = {
     [fr.locale]: fr,
     [gr.locale]: gr,
     [it.locale]: it,
+    [jp.locale]: jp,
     [nl.locale]: nl,
     [pl.locale]: pl,
     [pt.locale]: pt,
