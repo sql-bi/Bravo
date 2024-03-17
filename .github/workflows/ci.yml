@@ -2,8 +2,6 @@ name: CI
 on:
   pull_request:
   workflow_dispatch:
-env:
-  CONFIGURATION: 'Release'
 jobs:
   build-and-test:
     runs-on: windows-latest
@@ -13,11 +11,9 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         global-json-file: global.json
-    - name: .NET info
-      run: dotnet --info
-    - name: .NET restore
-      run: dotnet restore
-    - name: .NET build
-      run: dotnet build Bravo.sln --configuration ${{ env.CONFIGURATION }} --no-restore
-    - name: .NET test
-      run: dotnet test Bravo.sln --configuration ${{ env.CONFIGURATION }} --no-build --verbosity normal
+    - name: dotnet restore
+      run:  dotnet restore
+    - name: dotnet build
+      run:  dotnet build Bravo.sln --configuration Release --no-restore
+    - name: dotnet test
+      run:  dotnet test Bravo.sln --configuration Release --no-build --verbosity normal
