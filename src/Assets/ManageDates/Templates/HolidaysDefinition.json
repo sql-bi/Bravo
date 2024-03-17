@@ -131,7 +131,7 @@
       "OffsetWeek": 0,
       "OffsetDays": 0,
       "HolidayName": "Christmas Day",
-      "SubstituteHoliday": "NoSubstituteHoliday",
+      "SubstituteHoliday": "FridayIfSaturdayOrMondayIfSunday",
       "ConflictPriority": 100
     },
 
