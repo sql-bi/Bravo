@@ -109,13 +109,13 @@
         public void ExportVpax(PBIDesktopReport report, string path, string? dictionaryPath, CancellationToken cancellationToken)
         {
             using var connection = TabularConnectionWrapper.ConnectTo(report);
-            VpaxToolsHelper.ExportVpax(connection, path, dictionaryPath, cancellationToken);
+            VpaxHelper.ExportVpax(connection, path, dictionaryPath, cancellationToken);
         }
 
         public void ExportVpax(PBICloudDataset dataset, string path, string? dictionaryPath, string accessToken, CancellationToken cancellationToken)
         {
             using var connection = TabularConnectionWrapper.ConnectTo(dataset, accessToken);
-            VpaxToolsHelper.ExportVpax(connection, path, dictionaryPath, cancellationToken);
+            VpaxHelper.ExportVpax(connection, path, dictionaryPath, cancellationToken);
         }
     }
 }

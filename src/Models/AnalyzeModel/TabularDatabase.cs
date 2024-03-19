@@ -30,7 +30,7 @@
 
         internal static TabularDatabase CreateFromVpax(Stream stream)
         {
-            var daxModel = VpaxToolsHelper.GetDaxModel(stream);
+            var daxModel = VpaxHelper.GetDaxModel(stream);
             var database = CreateFrom(daxModel);
             {
                 database.Features &= ~TabularDatabaseFeature.AnalyzeModelSynchronize;
@@ -48,7 +48,7 @@
 
         internal static TabularDatabase CreateFrom(TabularConnectionWrapper connection, CancellationToken cancellationToken)
         {
-            var daxModel = VpaxToolsHelper.GetDaxModel(connection, cancellationToken);
+            var daxModel = VpaxHelper.GetDaxModel(connection, cancellationToken);
             var database = CreateFrom(daxModel, connection);
 
             if (connection.Database.ReadWriteMode == SSAS.ReadWriteMode.ReadOnly)
