@@ -14,7 +14,7 @@
 
     public interface IAnalyzeModelService
     {
-        TabularDatabase GetDatabase(Stream stream);
+        TabularDatabase GetDatabase(Stream stream, Stream? dictionaryStream);
 
         TabularDatabase GetDatabase(PBIDesktopReport report, CancellationToken cancellationToken);
 
@@ -26,9 +26,9 @@
 
         IEnumerable<PBIDesktopReport> QueryReports(CancellationToken cancellationToken);
 
-        void ExportVpax(PBIDesktopReport report, string path, CancellationToken cancellationToken);
+        void ExportVpax(PBIDesktopReport report, string path, string? dictionaryPath, CancellationToken cancellationToken);
 
-        void ExportVpax(PBICloudDataset dataset, string path, string accessToken, CancellationToken cancellationToken);
+        void ExportVpax(PBICloudDataset dataset, string path, string? dictionaryPath, string accessToken, CancellationToken cancellationToken);
     }
 
     internal class AnalyzeModelService : IAnalyzeModelService
@@ -42,10 +42,9 @@
             _pbidesktopService = pbidesktopService;
         }
 
-        public TabularDatabase GetDatabase(Stream stream)
+        public TabularDatabase GetDatabase(Stream stream, Stream? dictionaryStream)
         {
-            var database = TabularDatabase.CreateFromVpax(stream);
-            return database;
+            return TabularDatabase.CreateFromVpax(stream, dictionaryStream);
         }
 
         public TabularDatabase GetDatabase(PBIDesktopReport report, CancellationToken cancellationToken)
@@ -106,16 +105,16 @@
             return reports;
         }
 
-        public void ExportVpax(PBIDesktopReport report, string path, CancellationToken cancellationToken)
+        public void ExportVpax(PBIDesktopReport report, string path, string? dictionaryPath, CancellationToken cancellationToken)
         {
             using var connection = TabularConnectionWrapper.ConnectTo(report);
-            VpaxToolsHelper.ExportVpax(connection, path, cancellationToken);
+            VpaxHelper.ExportVpax(connection, path, dictionaryPath, cancellationToken);
         }
 
-        public void ExportVpax(PBICloudDataset dataset, string path, string accessToken, CancellationToken cancellationToken)
+        public void ExportVpax(PBICloudDataset dataset, string path, string? dictionaryPath, string accessToken, CancellationToken cancellationToken)
         {
             using var connection = TabularConnectionWrapper.ConnectTo(dataset, accessToken);
-            VpaxToolsHelper.ExportVpax(connection, path, cancellationToken);
+            VpaxHelper.ExportVpax(connection, path, dictionaryPath, cancellationToken);
         }
     }
 }

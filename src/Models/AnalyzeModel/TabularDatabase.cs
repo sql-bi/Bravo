@@ -28,9 +28,9 @@
         [JsonPropertyName("measures")]
         public IEnumerable<TabularMeasure>? Measures { get; set; }
 
-        internal static TabularDatabase CreateFromVpax(Stream stream)
+        internal static TabularDatabase CreateFromVpax(Stream stream, Stream? dictionaryStream)
         {
-            var daxModel = VpaxToolsHelper.GetDaxModel(stream);
+            var daxModel = VpaxHelper.GetDaxModel(stream, dictionaryStream);
             var database = CreateFrom(daxModel);
             {
                 database.Features &= ~TabularDatabaseFeature.AnalyzeModelSynchronize;
@@ -42,13 +42,16 @@
 
                 database.FeatureUnsupportedReasons |= TabularDatabaseFeatureUnsupportedReason.MetadataOnly;
                 database.FeatureUnsupportedReasons |= TabularDatabaseFeatureUnsupportedReason.ReadOnly;
+
+                if (daxModel.ObfuscatorDictionaryId != null && dictionaryStream == null)
+                    database.Features |= TabularDatabaseFeature.AnalyzeModelDeobfuscateVpax;
             }
             return database;
         }
 
         internal static TabularDatabase CreateFrom(TabularConnectionWrapper connection, CancellationToken cancellationToken)
         {
-            var daxModel = VpaxToolsHelper.GetDaxModel(connection, cancellationToken);
+            var daxModel = VpaxHelper.GetDaxModel(connection, cancellationToken);
             var database = CreateFrom(daxModel, connection);
 
             if (connection.Database.ReadWriteMode == SSAS.ReadWriteMode.ReadOnly)
@@ -188,12 +191,15 @@
     [Flags]
     public enum TabularDatabaseFeature
     {
+        // TODO: rename 'All' to 'Default'
+
         None = 0,
 
         AnalyzeModelPage = 1 << 100,
         AnalyzeModelSynchronize = 1 << 101,
         AnalyzeModelExportVpax = 1 << 102,
-        AnalyzeModelAll = AnalyzeModelPage | AnalyzeModelSynchronize | AnalyzeModelExportVpax,
+        AnalyzeModelDeobfuscateVpax = 1 << 103,
+        AnalyzeModelAll = AnalyzeModelPage | AnalyzeModelSynchronize | AnalyzeModelExportVpax, // AnalyzeModelDeobfuscateVpax is not included in 'All'/'Default'
 
         FormatDaxPage = 1 << 200,
         FormatDaxSynchronize = 1 << 201,
