@@ -34,8 +34,8 @@
                 VpaxTools.ExportVpax(stream, daxModel);
                 try
                 {
-                var obfuscator = new VpaxObfuscator();
-                var dictionary = obfuscator.Obfuscate(stream);
+                    var obfuscator = new VpaxObfuscator();
+                    var dictionary = obfuscator.Obfuscate(stream);
                     dictionary.WriteTo(dictionaryPath, overwrite: false, indented: true); // Always deny overwriting the dictionary file
                 }
                 catch (Exception ex)
@@ -55,27 +55,41 @@
             }
         }
 
-        public static Dax.Metadata.Model GetDaxModel(Stream stream)
+        public static Dax.Metadata.Model GetDaxModel(Stream stream, Stream? dictionaryStream)
         {
-            VpaxTools.VpaxContent content;
+            Dax.Metadata.Model? model;
 
             try
             {
-                content = VpaxTools.ImportVpax(stream);
+                model = VpaxTools.ImportVpax(stream).DaxModel;
             }
             catch (FileFormatException ex)
             {
                 throw new BravoException(BravoProblem.VpaxFileImportError, ex.Message, ex);
             }
 
-            if (content.DaxModel is null)
+            if (model is null)
             {
                 // If the DaxModel is null here it means that the archive may be corrupted or invalid (e.g. does not include the parts required by the ECMA/376 specification)
                 // It could happen in case the System.IO.Packaging.Package was not properly closed/disposed due to an error while flushing the stream.
                 throw new BravoException(BravoProblem.VpaxFileImportError, "The VPAX file may be invalid or corrupted.");
             }
 
-            return content.DaxModel;
+            if (dictionaryStream != null)
+            {   
+                try
+                {
+                    var obfuscator = new VpaxObfuscator();
+                    var dictionary = ObfuscationDictionary.ReadFrom(dictionaryStream);
+                    obfuscator.Deobfuscate(model, dictionary);
+                }
+                catch (Exception ex)
+                {
+                    throw new BravoException(BravoProblem.VpaxDeobfuscationError, ex.Message, ex);
+                }
+            }
+
+            return model;
         }
 
         public static Dax.Metadata.Model GetDaxModel(TabularConnectionWrapper connectionWrapper, CancellationToken cancellationToken, bool includeStatistics = false, int sampleRows = 0)

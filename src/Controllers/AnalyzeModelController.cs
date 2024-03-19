@@ -7,6 +7,7 @@
     using Sqlbi.Bravo.Models.AnalyzeModel;
     using Sqlbi.Bravo.Services;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Net.Mime;
     using System.Threading;
     using System.Threading.Tasks;
@@ -33,15 +34,43 @@
         /// Returns a database model from the VPAX file stream
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
+        /// <response code="204">Status204NoContent - User canceled action (e.g. 'Cancel' button has been pressed on a dialog box)</response>
         [HttpPost]
         [ActionName("GetModelFromVpax")]
         [Consumes(MediaTypeNames.Application.Octet)]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(TabularDatabase))]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesDefaultResponseType]
-        public IActionResult GetDatabase()
+        public IActionResult GetDatabase(CancellationToken cancellationToken) // @daniele: remove the whole method
         {
-            var database = _analyzeModelService.GetDatabase(stream: Request.Body);
+            string? dictionaryPath = null;
+
+            var deobfuscate = CommonHelper.IsKeyDown(System.Windows.Forms.Keys.ShiftKey);
+            if (deobfuscate && !WindowDialogHelper.OpenFileDialog(filter: "DICT files (*.dict)|*.dict", out dictionaryPath, cancellationToken))
+                return NoContent();
+
+            using var dictionaryStream = dictionaryPath != null ? new System.IO.FileStream(dictionaryPath, System.IO.FileMode.Open, System.IO.FileAccess.Read) : null;
+            var database = _analyzeModelService.GetDatabase(stream: Request.Body, dictionaryStream);
+            return Ok(database);
+        }
+
+        /// <summary>
+        /// Returns a database model from the VPAX file stream. If an obfuscation dictionary is provided, the model will be deobfuscated.
+        /// </summary>
+        /// <response code="200">Status200OK - Success</response>
+        [HttpPost]
+        [ActionName("GetModelFromVpax_NEW")] // @daniele: rename removing the '_NEW' suffix
+        //[Consumes(MediaTypeNames.Application.Octet)]
+        [Produces(MediaTypeNames.Application.Json)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(TabularDatabase))]
+        [ProducesDefaultResponseType]
+        public IActionResult GetDatabase(IFormFile[] files)
+        {
+            using var stream = files[0].OpenReadStream();
+            using var dictionaryStream = files.ElementAtOrDefault(1)?.OpenReadStream();
+
+            var database = _analyzeModelService.GetDatabase(stream, dictionaryStream);
             return Ok(database);
         }
 
@@ -146,6 +175,8 @@
         [ProducesDefaultResponseType]
         public IActionResult ExportVpax(PBIDesktopReport report, bool obfuscate, CancellationToken cancellationToken)
         {
+            obfuscate = obfuscate || CommonHelper.IsKeyDown(System.Windows.Forms.Keys.ShiftKey); // @daniele: remove line
+
             if (!WindowDialogHelper.SaveFileDialog(fileName: report.ReportName, defaultExt: "VPAX", out var path, cancellationToken))
                 return NoContent();
             
@@ -174,6 +205,8 @@
         [ProducesDefaultResponseType]
         public async Task<IActionResult> ExportVpax(PBICloudDataset dataset, bool obfuscate, CancellationToken cancellationToken)
         {
+            obfuscate = obfuscate || CommonHelper.IsKeyDown(System.Windows.Forms.Keys.ShiftKey); // @daniele: remove line
+
             if (await _authenticationService.IsPBICloudSignInRequiredAsync(cancellationToken))
                 return Unauthorized();
 

@@ -14,7 +14,7 @@
 
     public interface IAnalyzeModelService
     {
-        TabularDatabase GetDatabase(Stream stream);
+        TabularDatabase GetDatabase(Stream stream, Stream? dictionaryStream);
 
         TabularDatabase GetDatabase(PBIDesktopReport report, CancellationToken cancellationToken);
 
@@ -42,10 +42,9 @@
             _pbidesktopService = pbidesktopService;
         }
 
-        public TabularDatabase GetDatabase(Stream stream)
+        public TabularDatabase GetDatabase(Stream stream, Stream? dictionaryStream)
         {
-            var database = TabularDatabase.CreateFromVpax(stream);
-            return database;
+            return TabularDatabase.CreateFromVpax(stream, dictionaryStream);
         }
 
         public TabularDatabase GetDatabase(PBIDesktopReport report, CancellationToken cancellationToken)
