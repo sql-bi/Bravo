@@ -42,6 +42,9 @@
 
                 database.FeatureUnsupportedReasons |= TabularDatabaseFeatureUnsupportedReason.MetadataOnly;
                 database.FeatureUnsupportedReasons |= TabularDatabaseFeatureUnsupportedReason.ReadOnly;
+
+                if (daxModel.ObfuscatorDictionaryId != null)
+                    database.Features |= TabularDatabaseFeature.AnalyzeModelDeobfuscateVpax;
             }
             return database;
         }
@@ -188,12 +191,15 @@
     [Flags]
     public enum TabularDatabaseFeature
     {
+        // TODO: rename 'All' to 'Default'
+
         None = 0,
 
         AnalyzeModelPage = 1 << 100,
         AnalyzeModelSynchronize = 1 << 101,
         AnalyzeModelExportVpax = 1 << 102,
-        AnalyzeModelAll = AnalyzeModelPage | AnalyzeModelSynchronize | AnalyzeModelExportVpax,
+        AnalyzeModelDeobfuscateVpax = 1 << 103,
+        AnalyzeModelAll = AnalyzeModelPage | AnalyzeModelSynchronize | AnalyzeModelExportVpax, // AnalyzeModelDeobfuscateVpax is not included in 'All'/'Default'
 
         FormatDaxPage = 1 << 200,
         FormatDaxSynchronize = 1 << 201,
