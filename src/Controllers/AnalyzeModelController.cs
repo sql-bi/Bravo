@@ -144,15 +144,18 @@
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesDefaultResponseType]
-        public IActionResult ExportVpax(PBIDesktopReport report, CancellationToken cancellationToken)
+        public IActionResult ExportVpax(PBIDesktopReport report, bool obfuscate, CancellationToken cancellationToken)
         {
-            if (WindowDialogHelper.SaveFileDialog(fileName: report.ReportName, defaultExt: "VPAX", out var path, cancellationToken))
-            {
-                _analyzeModelService.ExportVpax(report, path, cancellationToken);
-                return Ok();
-            }
+            if (!WindowDialogHelper.SaveFileDialog(fileName: report.ReportName, defaultExt: "VPAX", out var path, cancellationToken))
+                return NoContent();
+            
+            string? dictionaryPath = null;
 
-            return NoContent();
+            if (obfuscate && !WindowDialogHelper.SaveFileDialog(fileName: report.ReportName, defaultExt: "DICT", out dictionaryPath, cancellationToken))
+                return NoContent();
+
+            _analyzeModelService.ExportVpax(report, path, dictionaryPath, cancellationToken);
+            return Ok();
         }
 
         /// <summary>
@@ -169,18 +172,21 @@
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesDefaultResponseType]
-        public async Task<IActionResult> ExportVpax(PBICloudDataset dataset, CancellationToken cancellationToken)
+        public async Task<IActionResult> ExportVpax(PBICloudDataset dataset, bool obfuscate, CancellationToken cancellationToken)
         {
             if (await _authenticationService.IsPBICloudSignInRequiredAsync(cancellationToken))
                 return Unauthorized();
 
-            if (WindowDialogHelper.SaveFileDialog(fileName: dataset.DisplayName, defaultExt: "VPAX", out var path, cancellationToken))
-            {
-                _analyzeModelService.ExportVpax(dataset, path, _authenticationService.PBICloudAuthentication.AccessToken, cancellationToken);
-                return Ok();
-            }
+            if (!WindowDialogHelper.SaveFileDialog(fileName: dataset.DisplayName, defaultExt: "VPAX", out var path, cancellationToken))
+                return NoContent();
 
-            return NoContent();
+            string? dictionaryPath = null;
+
+            if (obfuscate && !WindowDialogHelper.SaveFileDialog(fileName: dataset.DisplayName, defaultExt: "DICT", out dictionaryPath, cancellationToken))
+                return NoContent();
+
+            _analyzeModelService.ExportVpax(dataset, path, dictionaryPath, _authenticationService.PBICloudAuthentication.AccessToken, cancellationToken);
+            return Ok();
         }
     }
 }

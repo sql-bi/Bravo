@@ -26,9 +26,9 @@
 
         IEnumerable<PBIDesktopReport> QueryReports(CancellationToken cancellationToken);
 
-        void ExportVpax(PBIDesktopReport report, string path, CancellationToken cancellationToken);
+        void ExportVpax(PBIDesktopReport report, string path, string? dictionaryPath, CancellationToken cancellationToken);
 
-        void ExportVpax(PBICloudDataset dataset, string path, string accessToken, CancellationToken cancellationToken);
+        void ExportVpax(PBICloudDataset dataset, string path, string? dictionaryPath, string accessToken, CancellationToken cancellationToken);
     }
 
     internal class AnalyzeModelService : IAnalyzeModelService
@@ -106,16 +106,16 @@
             return reports;
         }
 
-        public void ExportVpax(PBIDesktopReport report, string path, CancellationToken cancellationToken)
+        public void ExportVpax(PBIDesktopReport report, string path, string? dictionaryPath, CancellationToken cancellationToken)
         {
             using var connection = TabularConnectionWrapper.ConnectTo(report);
-            VpaxToolsHelper.ExportVpax(connection, path, cancellationToken);
+            VpaxToolsHelper.ExportVpax(connection, path, dictionaryPath, cancellationToken);
         }
 
-        public void ExportVpax(PBICloudDataset dataset, string path, string accessToken, CancellationToken cancellationToken)
+        public void ExportVpax(PBICloudDataset dataset, string path, string? dictionaryPath, string accessToken, CancellationToken cancellationToken)
         {
             using var connection = TabularConnectionWrapper.ConnectTo(dataset, accessToken);
-            VpaxToolsHelper.ExportVpax(connection, path, cancellationToken);
+            VpaxToolsHelper.ExportVpax(connection, path, dictionaryPath, cancellationToken);
         }
     }
 }
