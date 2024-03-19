@@ -2,8 +2,10 @@
 {
     using Dax.Metadata.Extractor;
     using Dax.Vpax.Obfuscator;
+    using Dax.Vpax.Obfuscator.Common;
     using Dax.Vpax.Tools;
     using Sqlbi.Bravo.Infrastructure.Services;
+    using System;
     using System.IO;
     using System.Threading;
 
@@ -13,7 +15,7 @@
         {
             var daxModel = GetDaxModel(connection, cancellationToken, includeStatistics: true);
 
-            if (dictionaryPath == null) // If dictionaryPath is null, then we are not obfuscating the VPAX file
+            if (dictionaryPath == null) // If null, no obfuscation is required
             {
                 var vpaModel = new Dax.ViewVpaExport.Model(daxModel);
                 var tomDatabase = connection.Database;
@@ -30,12 +32,18 @@
             {
                 using var stream = new MemoryStream();
                 VpaxTools.ExportVpax(stream, daxModel);
-                var obfuscator = new VpaxObfuscator();
-                var dictionary = obfuscator.Obfuscate(stream);
                 try
                 {
-                    var overwrite = false; // Always deny overwriting the dictionary file
-                    dictionary.WriteTo(dictionaryPath, overwrite, indented: true);
+                var obfuscator = new VpaxObfuscator();
+                var dictionary = obfuscator.Obfuscate(stream);
+                    dictionary.WriteTo(dictionaryPath, overwrite: false, indented: true); // Always deny overwriting the dictionary file
+                }
+                catch (Exception ex)
+                {
+                    throw new BravoException(BravoProblem.VpaxObfuscationError, ex.Message, ex);
+                }
+                try
+                {
                     using var fileStream = new FileStream(path, FileMode.Create, FileAccess.Write);
                     stream.Position = 0;
                     stream.CopyTo(fileStream);

@@ -213,5 +213,17 @@
         /// </summary> 
         [JsonPropertyName("TemplateDevelopmentError")]
         TemplateDevelopmentError = 900,
+
+        /// <summary>
+        /// An error occurred while obfuscating the VPAX file
+        /// </summary> 
+        [JsonPropertyName("VpaxObfuscationError")]
+        VpaxObfuscationError = 1000,
+
+        /// <summary>
+        /// An error occurred while deobfuscating the VPAX file
+        /// </summary> 
+        [JsonPropertyName("VpaxDeobfuscationError")]
+        VpaxDeobfuscationError = 1001,
     }
 }
