@@ -325,7 +325,9 @@
                 
                 xlsxWriter.BeginWorksheet(worksheetName, splitRow: 1);
                 Export(command, table, xlsxWriter, rowBatchMode: connection.IsDaxFunctionTopNSkipSupported, cancellationToken);
-                xlsxWriter.SetAutoFilter(fromRow: 1, fromColumn: 1, rowCount: table.Rows, columnCount: table.Columns);
+
+                if (table.Rows > 0 && table.Columns > 0)
+                    xlsxWriter.SetAutoFilter(fromRow: 1, fromColumn: 1, rowCount: table.Rows, columnCount: table.Columns);
             }
 
             WriteSummary(job, settings, xlsxWriter);
