@@ -11,7 +11,7 @@
 
     internal static class VpaxHelper
     {
-        public static void ExportVpax(TabularConnectionWrapper connection, string path, string? dictionaryPath, CancellationToken cancellationToken)
+        public static void ExportVpax(TabularConnectionWrapper connection, string path, string? dictionaryPath, string? inputDictionaryPath, CancellationToken cancellationToken)
         {
             var daxModel = GetDaxModel(connection, cancellationToken, includeStatistics: true);
 
@@ -34,9 +34,10 @@
                 VpaxTools.ExportVpax(stream, daxModel);
                 try
                 {
+                    var inputDictionary = inputDictionaryPath is not null ? ObfuscationDictionary.ReadFrom(inputDictionaryPath) : null;
                     var obfuscator = new VpaxObfuscator();
-                    var dictionary = obfuscator.Obfuscate(stream);
-                    dictionary.WriteTo(dictionaryPath, overwrite: false, indented: true); // Always deny overwriting the dictionary file
+                    var dictionary = obfuscator.Obfuscate(stream, inputDictionary);
+                    dictionary.WriteTo(dictionaryPath, overwrite: false, indented: true); // To prevent loss of the dictionary, always deny overwrite
                 }
                 catch (Exception ex)
                 {

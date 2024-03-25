@@ -23,7 +23,7 @@ export class ConnectFile extends ConnectMenuItem {
                     ${i18n(strings.connectBrowse)}
                 </div>
             </div>
-            <input type="file" class="file-browser" accept=".vpax">
+            <input type="file" class="file-browser" accept=".vpax,.ovpax">
         `;
         this.element.insertAdjacentHTML("beforeend", html);
 
@@ -70,7 +70,7 @@ export class ConnectFile extends ConnectMenuItem {
     }
 
     openFile(file: File) {
-        if (file && file.name.slice(-5) == ".vpax") {
+        if (file && (file.name.slice(-5) == ".vpax" || file.name.slice(-6) == ".ovpax")) {
             this.dialog.data.doc = new Doc(file.name, DocType.vpax, file);
             this.dialog.trigger("action", "ok");
         }
