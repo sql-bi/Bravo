@@ -26,9 +26,9 @@
 
         IEnumerable<PBIDesktopReport> QueryReports(CancellationToken cancellationToken);
 
-        void ExportVpax(PBIDesktopReport report, string path, string? dictionaryPath, CancellationToken cancellationToken);
+        void ExportVpax(PBIDesktopReport report, string path, string? dictionaryPath, string? inputDictionaryPath, CancellationToken cancellationToken);
 
-        void ExportVpax(PBICloudDataset dataset, string path, string? dictionaryPath, string accessToken, CancellationToken cancellationToken);
+        void ExportVpax(PBICloudDataset dataset, string path, string? dictionaryPath, string? inputDictionaryPath, string accessToken, CancellationToken cancellationToken);
     }
 
     internal class AnalyzeModelService : IAnalyzeModelService
@@ -105,16 +105,16 @@
             return reports;
         }
 
-        public void ExportVpax(PBIDesktopReport report, string path, string? dictionaryPath, CancellationToken cancellationToken)
+        public void ExportVpax(PBIDesktopReport report, string path, string? dictionaryPath, string? inputDictionaryPath, CancellationToken cancellationToken)
         {
             using var connection = TabularConnectionWrapper.ConnectTo(report);
-            VpaxHelper.ExportVpax(connection, path, dictionaryPath, cancellationToken);
+            VpaxHelper.ExportVpax(connection, path, dictionaryPath, inputDictionaryPath, cancellationToken);
         }
 
-        public void ExportVpax(PBICloudDataset dataset, string path, string? dictionaryPath, string accessToken, CancellationToken cancellationToken)
+        public void ExportVpax(PBICloudDataset dataset, string path, string? dictionaryPath, string? inputDictionaryPath, string accessToken, CancellationToken cancellationToken)
         {
             using var connection = TabularConnectionWrapper.ConnectTo(dataset, accessToken);
-            VpaxHelper.ExportVpax(connection, path, dictionaryPath, cancellationToken);
+            VpaxHelper.ExportVpax(connection, path, dictionaryPath, inputDictionaryPath, cancellationToken);
         }
     }
 }

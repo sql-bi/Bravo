@@ -7,6 +7,8 @@
     using Sqlbi.Bravo.Models.AnalyzeModel;
     using Sqlbi.Bravo.Services;
     using System.Collections.Generic;
+    using System.Data;
+    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Net.Mime;
     using System.Threading;
@@ -21,6 +23,10 @@
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ProblemDetails))]
     public class AnalyzeModelController : ControllerBase
     {
+        private const string VpaxObfuscationDictionaryFilter = "VPAX obfuscation dictionary (*.dict)|*.dict";
+        private const string VpaxObfuscatedFilter = "VPAX obfuscated file (*.ovpax)|*.ovpax";
+        private const string VpaxFilter = "VPAX file (*.vpax)|*.vpax";
+
         private readonly IAnalyzeModelService _analyzeModelService;
         private readonly IAuthenticationService _authenticationService;
 
@@ -47,7 +53,7 @@
             string? dictionaryPath = null;
 
             var deobfuscate = CommonHelper.IsKeyDown(System.Windows.Forms.Keys.ShiftKey);
-            if (deobfuscate && !WindowDialogHelper.OpenFileDialog(filter: "DICT files (*.dict)|*.dict", out dictionaryPath, cancellationToken))
+            if (deobfuscate && !WindowDialogHelper.OpenFileDialog(filter: VpaxObfuscationDictionaryFilter, out dictionaryPath, cancellationToken))
                 return NoContent();
 
             using var dictionaryStream = dictionaryPath != null ? new System.IO.FileStream(dictionaryPath, System.IO.FileMode.Open, System.IO.FileAccess.Read) : null;
@@ -173,19 +179,19 @@
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesDefaultResponseType]
-        public IActionResult ExportVpax(PBIDesktopReport report, bool obfuscate, CancellationToken cancellationToken)
+        public IActionResult ExportVpax(PBIDesktopReport report, ExportVpaxMode mode, CancellationToken cancellationToken)
         {
-            obfuscate = obfuscate || CommonHelper.IsKeyDown(System.Windows.Forms.Keys.ShiftKey); // @daniele: remove line
+            // @daniele: remove IF block
+            if (mode == ExportVpaxMode.Default)
+            {
+                if (CommonHelper.IsKeyDown(System.Windows.Forms.Keys.ShiftKey)) mode = ExportVpaxMode.Obfuscate; else
+                if (CommonHelper.IsKeyDown(System.Windows.Forms.Keys.ControlKey)) mode = ExportVpaxMode.ObfuscateIncremental;
+            }
 
-            if (!WindowDialogHelper.SaveFileDialog(fileName: report.ReportName, defaultExt: "VPAX", out var path, cancellationToken))
+            if (!TryGetExportPaths(report.ReportName, mode, out var path, out var dictionaryPath, out var inputDictionaryPath, cancellationToken))
                 return NoContent();
-            
-            string? dictionaryPath = null;
 
-            if (obfuscate && !WindowDialogHelper.SaveFileDialog(fileName: report.ReportName, defaultExt: "DICT", out dictionaryPath, cancellationToken))
-                return NoContent();
-
-            _analyzeModelService.ExportVpax(report, path, dictionaryPath, cancellationToken);
+            _analyzeModelService.ExportVpax(report, path, dictionaryPath, inputDictionaryPath, cancellationToken);
             return Ok();
         }
 
@@ -203,23 +209,40 @@
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesDefaultResponseType]
-        public async Task<IActionResult> ExportVpax(PBICloudDataset dataset, bool obfuscate, CancellationToken cancellationToken)
+        public async Task<IActionResult> ExportVpax(PBICloudDataset dataset, ExportVpaxMode mode, CancellationToken cancellationToken)
         {
-            obfuscate = obfuscate || CommonHelper.IsKeyDown(System.Windows.Forms.Keys.ShiftKey); // @daniele: remove line
+            if (mode == ExportVpaxMode.Default) // @daniele: remove IF block
+            {
+                if (CommonHelper.IsKeyDown(System.Windows.Forms.Keys.ShiftKey)) mode = ExportVpaxMode.Obfuscate; else
+                if (CommonHelper.IsKeyDown(System.Windows.Forms.Keys.ControlKey)) mode = ExportVpaxMode.ObfuscateIncremental;
+            }
 
             if (await _authenticationService.IsPBICloudSignInRequiredAsync(cancellationToken))
                 return Unauthorized();
 
-            if (!WindowDialogHelper.SaveFileDialog(fileName: dataset.DisplayName, defaultExt: "VPAX", out var path, cancellationToken))
+            if (!TryGetExportPaths(dataset.DisplayName, mode, out var path, out var dictionaryPath, out var inputDictionaryPath, cancellationToken))
                 return NoContent();
 
-            string? dictionaryPath = null;
-
-            if (obfuscate && !WindowDialogHelper.SaveFileDialog(fileName: dataset.DisplayName, defaultExt: "DICT", out dictionaryPath, cancellationToken))
-                return NoContent();
-
-            _analyzeModelService.ExportVpax(dataset, path, dictionaryPath, _authenticationService.PBICloudAuthentication.AccessToken, cancellationToken);
+            _analyzeModelService.ExportVpax(dataset, path, dictionaryPath, inputDictionaryPath, _authenticationService.PBICloudAuthentication.AccessToken, cancellationToken);
             return Ok();
+        }
+
+        private static bool TryGetExportPaths(string? fileName, ExportVpaxMode mode, [NotNullWhen(true)] out string? path, out string? dictionaryPath, out string? inputDictionaryPath, CancellationToken cancellationToken)
+        {
+            path = null;
+            dictionaryPath = null;
+            inputDictionaryPath = null;
+
+            if (mode == ExportVpaxMode.ObfuscateIncremental && !WindowDialogHelper.OpenFileDialog(filter: VpaxObfuscationDictionaryFilter, out inputDictionaryPath, cancellationToken))
+                return false;
+
+            if (!WindowDialogHelper.SaveFileDialog(fileName, filter: mode.IsObfuscate() ? VpaxObfuscatedFilter : VpaxFilter, defaultExt: mode.IsObfuscate() ? "OVPAX" : "VPAX", out path, cancellationToken))
+                return false;
+
+            if (mode.IsObfuscate() && !WindowDialogHelper.SaveFileDialog(fileName, filter: VpaxObfuscationDictionaryFilter, defaultExt: "DICT", out dictionaryPath, cancellationToken))
+                return false;
+
+            return true;
         }
     }
 }

@@ -384,7 +384,7 @@ export class App {
     }
 
     openFile(file: File) {
-        if (file.name.slice(-5) == ".vpax") {
+        if (file && (file.name.slice(-5) == ".vpax" || file.name.slice(-6) == ".ovpax")) {
             this.openDoc(new Doc(file.name, DocType.vpax, file));
         }
     }

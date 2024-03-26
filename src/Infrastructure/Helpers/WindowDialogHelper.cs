@@ -48,7 +48,7 @@
             }
         }
 
-        public static bool SaveFileDialog(string? fileName, string defaultExt, [NotNullWhen(true)] out string? path, CancellationToken cancellationToken)
+        public static bool SaveFileDialog(string? fileName, string? filter, string defaultExt, [NotNullWhen(true)] out string? path, CancellationToken cancellationToken)
         {
             var dialogOwner = Win32WindowWrapper.CreateFrom(ProcessHelper.GetCurrentProcessMainWindowHandle());
             var dialogResult = System.Windows.Forms.DialogResult.None;
@@ -57,7 +57,7 @@
             using var dialog = new System.Windows.Forms.SaveFileDialog()
             {
                 InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments, Environment.SpecialFolderOption.DoNotVerify),
-                Filter = $"{ defaultExt } files (*.{ defaultExtLowercase })|*.{ defaultExtLowercase }|All files (*.*)|*.*",
+                Filter = filter ?? $"{ defaultExt } files (*.{ defaultExtLowercase })|*.{ defaultExtLowercase }|All files (*.*)|*.*",
                 Title = "Save file",
                 DefaultExt = defaultExtLowercase,
                 FileName = fileName

@@ -106,7 +106,7 @@
         [ProducesDefaultResponseType]
         public IActionResult ExportExcelFile(ExportExcelFromPBIReportRequest request, CancellationToken cancellationToken)
         {
-            if (WindowDialogHelper.SaveFileDialog(fileName: request.Report!.ReportName, defaultExt: "XLSX", out var path, cancellationToken))
+            if (WindowDialogHelper.SaveFileDialog(fileName: request.Report!.ReportName, filter: null, defaultExt: "XLSX", out var path, cancellationToken))
             {
                 var job = _exportDataService.ExportExcelFile(request.Report, request.Settings!, path, cancellationToken);
                 return Ok(job);
@@ -133,7 +133,7 @@
             if (await _authenticationService.IsPBICloudSignInRequiredAsync(cancellationToken))
                 return Unauthorized();
 
-            if (WindowDialogHelper.SaveFileDialog(fileName: request.Dataset!.DisplayName, defaultExt: "XLSX", out var path, cancellationToken))
+            if (WindowDialogHelper.SaveFileDialog(fileName: request.Dataset!.DisplayName, filter: null, defaultExt: "XLSX", out var path, cancellationToken))
             {
                 var job = _exportDataService.ExportExcelFile(request.Dataset, request.Settings!, path, _authenticationService.PBICloudAuthentication.AccessToken, cancellationToken);
                 return Ok(job);
