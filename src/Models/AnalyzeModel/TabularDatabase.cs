@@ -51,7 +51,7 @@
 
         internal static TabularDatabase CreateFrom(TabularConnectionWrapper connection, CancellationToken cancellationToken)
         {
-            var daxModel = VpaxHelper.GetDaxModel(connection, cancellationToken);
+            var daxModel = VpaxHelper.GetDaxModel(connection, statisticsEnabled: false, cancellationToken);
             var database = CreateFrom(daxModel, connection);
 
             if (connection.Database.ReadWriteMode == SSAS.ReadWriteMode.ReadOnly)

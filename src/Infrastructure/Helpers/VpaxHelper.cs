@@ -1,6 +1,7 @@
 ﻿namespace Sqlbi.Bravo.Infrastructure.Helpers
 {
-    using Dax.Metadata.Extractor;
+    using Dax.Metadata;
+    using Dax.Model.Extractor;
     using Dax.Vpax.Obfuscator;
     using Dax.Vpax.Obfuscator.Common;
     using Dax.Vpax.Tools;
@@ -13,7 +14,7 @@
     {
         public static void ExportVpax(TabularConnectionWrapper connection, string path, string? dictionaryPath, string? inputDictionaryPath, CancellationToken cancellationToken)
         {
-            var daxModel = GetDaxModel(connection, cancellationToken, includeStatistics: true);
+            var daxModel = GetDaxModel(connection, statisticsEnabled: true, cancellationToken);
 
             if (dictionaryPath == null) // If null, no obfuscation is required
             {
@@ -56,9 +57,9 @@
             }
         }
 
-        public static Dax.Metadata.Model GetDaxModel(Stream stream, Stream? dictionaryStream)
+        public static Model GetDaxModel(Stream stream, Stream? dictionaryStream)
         {
-            Dax.Metadata.Model? model;
+            Model? model;
 
             try
             {
@@ -93,7 +94,7 @@
             return model;
         }
 
-        public static Dax.Metadata.Model GetDaxModel(TabularConnectionWrapper connectionWrapper, CancellationToken cancellationToken, bool includeStatistics = false, int sampleRows = 0)
+        public static Model GetDaxModel(TabularConnectionWrapper connectionWrapper, bool statisticsEnabled, CancellationToken cancellationToken)
         {
             var server = connectionWrapper.Server;
             var database = connectionWrapper.Database;
@@ -104,10 +105,21 @@
                 cancellationToken.ThrowIfCancellationRequested();
                 DmvExtractor.PopulateFromDmv(daxModel, connection, server.Name, database.Name, extractorApp: AppEnvironment.ApplicationName, extractorVersion: AppEnvironment.ApplicationProductVersion);
 
-                if (includeStatistics)
+                if (statisticsEnabled)
                 {
+                    // TODO: Currently, we are forcing a full stats collection from DirectQuery and DirectLake partitions. We might consider parameterizing this behavior in the future
+                    var analyzeDirectQuery = true;
+                    var analyzeDirectLake = DirectLakeExtractionMode.Full;
+                    var referentialIntegrityViolationSampleRows = 0; // RI violation sampling is not required for model analysis in Bravo nor for VPAX export.
+
                     cancellationToken.ThrowIfCancellationRequested();
-                    StatExtractor.UpdateStatisticsModel(daxModel, connection, sampleRows);
+                    StatExtractor.UpdateStatisticsModel(daxModel, connection, referentialIntegrityViolationSampleRows, analyzeDirectQuery, analyzeDirectLake); // TOFIX: remove deprecated (requires refactoring VertiPaqAnalyzer APIs)
+
+                    if (analyzeDirectLake > DirectLakeExtractionMode.ResidentOnly && daxModel.HasDirectLakePartitions())
+                    {
+                        cancellationToken.ThrowIfCancellationRequested();
+                        DmvExtractor.PopulateFromDmv(daxModel, connection, server.Name, database.Name, extractorApp: AppEnvironment.ApplicationName, extractorVersion: AppEnvironment.ApplicationProductVersion);
+                    }
                 }
             }
 
