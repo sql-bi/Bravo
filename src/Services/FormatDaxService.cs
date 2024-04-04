@@ -58,6 +58,11 @@
                         formattedMeasure.Expression = daxformatterResponse.Formatted;
                         formattedMeasure.LineBreakStyle = lineBreakStyle.Value;
                     }
+                    else if (/* options.IgnoreEmptyExpressionError && */ requestedMeasure.Expression.IsNullOrWhiteSpace()) // TODO: parameterize this behavior (i.e. options.IgnoreEmptyExpressionError)
+                    {
+                        formattedMeasure.Expression = requestedMeasure.Expression;
+                        formattedMeasure.LineBreakStyle = lineBreakStyle.Value;
+                    }
                     else
                     {
                         formattedMeasure.Expression = requestedMeasure.Expression; // in case of errors returns the original expression, as requested by Daniele
