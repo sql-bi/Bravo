@@ -44,7 +44,7 @@
                 ETag = databaseETag,
                 Name = daxMeasure.MeasureName.Name,
                 TableName = daxMeasure.Table.TableName.Name,
-                Expression = expression,
+                Expression = expression ?? string.Empty,
                 DisplayFolder = daxMeasure.DisplayFolder?.Note,
                 LineBreakStyle = lineBreakStyle,
                 IsHidden = null,
