@@ -31,7 +31,7 @@ REM  ***
 SET publishfolder=%~dp0src\bin\_publish
 CD /d "%~dp0src"
 IF EXIST %publishfolder% RMDIR /s /q %publishfolder%
-dotnet publish Bravo.csproj --configuration %configuration% --output %publishfolder% --self-contained %selfcontained% --verbosity %verbosity% --nologo /p:AdditionalConstants=%publishmode% || GOTO :error
+dotnet publish Bravo.csproj --configuration %configuration% --output %publishfolder% --runtime win-%arch% --self-contained %selfcontained% --verbosity %verbosity% --nologo /p:AdditionalConstants=%publishmode% || GOTO :error
 
 REM  ***
 ECHO *** BRAVO INSTALLER ***
