@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net6-windows10.0.17763.0</TargetFramework>
     <SupportedOSPlatformVersion>7.0</SupportedOSPlatformVersion>
+    <LangVersion>12.0</LangVersion>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
     <IsPublishable>false</IsPublishable>
