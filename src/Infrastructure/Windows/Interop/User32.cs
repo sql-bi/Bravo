@@ -96,6 +96,20 @@
             WCA_LAST = 27,
         };
 
+        public enum WindowMessage : uint
+        {
+            WM_NULL = 0,
+            WM_CREATE = 1,
+            WM_GETTEXT = 13,
+            WM_COPYDATA = 74,
+            WM_NCDESTROY = 130,
+            WM_NCACTIVATE = 134,
+            WM_HOTKEY = 786,
+            WM_THEMECHANGED = 794,
+            WM_DWMCOMPOSITIONCHANGED = 798,
+            WM_DWMCOLORIZATIONCOLORCHANGED = 800,
+        }
+
         public const int SW_HIDE = 0;
         public const int SW_NORMAL = 1;
         public const int SW_SHOWNORMAL = SW_NORMAL;

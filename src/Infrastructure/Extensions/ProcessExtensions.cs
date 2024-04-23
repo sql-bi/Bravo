@@ -90,7 +90,7 @@
                 {
                     if (User32.IsWindowVisible(hWnd))
                     {
-                        User32.SendMessage(hWnd, WindowMessage.WM_GETTEXT, builder.Capacity, builder);
+                        User32.SendMessage(hWnd, User32.WindowMessage.WM_GETTEXT, builder.Capacity, builder);
 
                         var windowTitle = builder.ToString();
                         if (windowTitle.Length > 0)

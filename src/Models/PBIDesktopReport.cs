@@ -48,10 +48,10 @@
 
         public bool Equals(PBIDesktopReport? other)
         {
-            return other != null &&
-                   ProcessId == other.ProcessId &&
-                   ServerName == other.ServerName &&
-                   DatabaseName == other.DatabaseName;
+            return other != null
+                && other.ProcessId == ProcessId
+                && other.ServerName == ServerName
+                && other.DatabaseName == DatabaseName;
         }
 
         public override int GetHashCode()

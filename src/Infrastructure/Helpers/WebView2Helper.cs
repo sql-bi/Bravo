@@ -37,11 +37,11 @@
             {
                 action?.Invoke();
             }
-            catch (NotImplementedException ex) when (ex.InnerException is InvalidCastException innerEx && innerEx.HResult == HRESULT.E_NOINTERFACE)
+            catch (NotImplementedException ex) when (ex.InnerException is InvalidCastException innerEx && innerEx.HResult == WIN32ERROR.E_NOINTERFACE)
             {
                 // Ignore unsupported feature
             }
-            catch (InvalidCastException ex) when (ex.HResult == HRESULT.E_NOINTERFACE)
+            catch (InvalidCastException ex) when (ex.HResult == WIN32ERROR.E_NOINTERFACE)
             {
                 // Ignore unsupported feature
             }

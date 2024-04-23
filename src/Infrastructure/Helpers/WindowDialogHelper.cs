@@ -1,121 +1,92 @@
-﻿namespace Sqlbi.Bravo.Infrastructure.Helpers
+﻿namespace Sqlbi.Bravo.Infrastructure.Helpers;
+
+using Sqlbi.Bravo.Infrastructure.Windows;
+using System;
+using System.Diagnostics.CodeAnalysis;
+using System.Threading;
+
+internal static class WindowDialogHelper
 {
-    using Sqlbi.Bravo.Infrastructure.Windows;
-    using System;
-    using System.Diagnostics.CodeAnalysis;
-    using System.Threading;
-
-    internal static class WindowDialogHelper
+    public static bool OpenFileDialog(string filter, [NotNullWhen(true)] out string? path, CancellationToken cancellationToken)
     {
-        public static bool OpenFileDialog(string filter, [NotNullWhen(true)] out string? path, CancellationToken cancellationToken)
+        using var dialog = new System.Windows.Forms.OpenFileDialog()
         {
-            var dialogOwner = Win32WindowWrapper.CreateFrom(ProcessHelper.GetCurrentProcessMainWindowHandle());
-            var dialogResult = System.Windows.Forms.DialogResult.None;
+            InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments, Environment.SpecialFolderOption.DoNotVerify),
+            Filter = filter,
+            Title = "Open file",
+            ShowReadOnly = false,
+            CheckFileExists = true
+        };
 
-            using var dialog = new System.Windows.Forms.OpenFileDialog()
-            {
-                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments, Environment.SpecialFolderOption.DoNotVerify),
-                Filter = filter,
-                Title = "Open file",
-                ShowReadOnly = false,
-                CheckFileExists = true
-            };
+        if (!cancellationToken.IsCancellationRequested)
+        {
+            var dialogResult = DialogResult.None;
 
-            if (!cancellationToken.IsCancellationRequested)
-            {
-                ProcessHelper.RunOnSTAThread(() => dialogResult = dialog.ShowDialog(dialogOwner));
+            ProcessHelper.RunOnSTAThread(() => dialogResult = dialog.ShowDialog(owner: new Win32WindowWrapper(ProcessHelper.GetCurrentProcessMainWindowHandle())));
 
-                //var dialog2 = new Bravo.Infrastructure.Windows.SaveFileDialog
-                //{
-                //    InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments, Environment.SpecialFolderOption.DoNotVerify),
-                //    Filter = "Vpax files (*.vpax)|*.vpax|All files (*.*)|*.*",
-                //    Title = "Export file",
-                //    DefaultExt = "vpax",
-                //    //FileName = fileName
-                //};
-                //var result = dialog2.ShowDialog(hWnd: Process.GetCurrentProcess().MainWindowHandle);
-            }
-
-            if (dialogResult == System.Windows.Forms.DialogResult.OK)
+            if (dialogResult == DialogResult.OK)
             {
                 path = dialog.FileName;
                 return true;
             }
-            else
-            {
-                path = null;
-                return false;
-            }
         }
 
-        public static bool SaveFileDialog(string? fileName, string? filter, string defaultExt, [NotNullWhen(true)] out string? path, CancellationToken cancellationToken)
+        path = null;
+        return false;
+    }
+
+    public static bool SaveFileDialog(string? fileName, string? filter, string defaultExt, [NotNullWhen(true)] out string? path, CancellationToken cancellationToken)
+    {
+        var defaultExtLowercase = defaultExt.ToLower();
+
+        using var dialog = new System.Windows.Forms.SaveFileDialog()
         {
-            var dialogOwner = Win32WindowWrapper.CreateFrom(ProcessHelper.GetCurrentProcessMainWindowHandle());
-            var dialogResult = System.Windows.Forms.DialogResult.None;
-            var defaultExtLowercase = defaultExt.ToLower();
+            InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments, Environment.SpecialFolderOption.DoNotVerify),
+            Filter = filter ?? $"{ defaultExt } files (*.{ defaultExtLowercase })|*.{ defaultExtLowercase }|All files (*.*)|*.*",
+            Title = "Save file",
+            DefaultExt = defaultExtLowercase,
+            FileName = fileName
+        };
 
-            using var dialog = new System.Windows.Forms.SaveFileDialog()
-            {
-                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments, Environment.SpecialFolderOption.DoNotVerify),
-                Filter = filter ?? $"{ defaultExt } files (*.{ defaultExtLowercase })|*.{ defaultExtLowercase }|All files (*.*)|*.*",
-                Title = "Save file",
-                DefaultExt = defaultExtLowercase,
-                FileName = fileName
-            };
+        if (!cancellationToken.IsCancellationRequested)
+        {
+            var dialogResult = DialogResult.None;
 
-            if (!cancellationToken.IsCancellationRequested)
-            {
-                ProcessHelper.RunOnSTAThread(() => dialogResult = dialog.ShowDialog(dialogOwner));
+            ProcessHelper.RunOnSTAThread(() => dialogResult = dialog.ShowDialog(owner: new Win32WindowWrapper(ProcessHelper.GetCurrentProcessMainWindowHandle())));
 
-                //var dialog2 = new Bravo.Infrastructure.Windows.SaveFileDialog
-                //{
-                //    InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments, Environment.SpecialFolderOption.DoNotVerify),
-                //    Filter = "Vpax files (*.vpax)|*.vpax|All files (*.*)|*.*",
-                //    Title = "Export file",
-                //    DefaultExt = "vpax",
-                //    //FileName = fileName
-                //};
-                //var result = dialog2.ShowDialog(hWnd: Process.GetCurrentProcess().MainWindowHandle);
-            }
-
-            if (dialogResult == System.Windows.Forms.DialogResult.OK)
+            if (dialogResult == DialogResult.OK)
             {
                 path = dialog.FileName!;
                 return true;
             }
-            else
-            {
-                path = null;
-                return false;
-            }
         }
 
-        public static bool BrowseFolderDialog([NotNullWhen(true)] out string? path, CancellationToken cancellationToken)
+        path = null;
+        return false;
+    }
+
+    public static bool BrowseFolderDialog([NotNullWhen(true)] out string? path, CancellationToken cancellationToken)
+    {
+        using var dialog = new FolderBrowserDialog()
         {
-            var dialogOwner = Win32WindowWrapper.CreateFrom(ProcessHelper.GetCurrentProcessMainWindowHandle());
-            var dialogResult = System.Windows.Forms.DialogResult.None;
+            RootFolder = Environment.SpecialFolder.MyDocuments,
+            ShowNewFolderButton = true,
+        };
+        
+        if (!cancellationToken.IsCancellationRequested)
+        {
+            var dialogResult = DialogResult.None;
 
-            using var dialog = new System.Windows.Forms.FolderBrowserDialog()
-            {
-                RootFolder = Environment.SpecialFolder.MyDocuments,
-                ShowNewFolderButton = true,
-            };
-            
-            if (!cancellationToken.IsCancellationRequested)
-            {
-                ProcessHelper.RunOnSTAThread(() => dialogResult = dialog.ShowDialog(dialogOwner));
-            }
+            ProcessHelper.RunOnSTAThread(() => dialogResult = dialog.ShowDialog(owner: new Win32WindowWrapper(ProcessHelper.GetCurrentProcessMainWindowHandle())));
 
-            if (dialogResult == System.Windows.Forms.DialogResult.OK)
+            if (dialogResult == DialogResult.OK)
             {
                 path = dialog.SelectedPath;
                 return true;
             }
-            else
-            {
-                path = null;
-                return false;
-            }
         }
+
+        path = null;
+        return false;
     }
 }

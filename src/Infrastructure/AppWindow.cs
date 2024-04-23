@@ -145,9 +145,9 @@ window.external = {
             {
                 // Form.StyleChanged event detects all theme change except for Aero color changes
                 // The Aero color change triggers the WM_DWMCOLORIZATIONCOLORCHANGED message
-                case (int)WindowMessage.WM_DWMCOLORIZATIONCOLORCHANGED:
-                case (int)WindowMessage.WM_DWMCOMPOSITIONCHANGED:
-                case (int)WindowMessage.WM_THEMECHANGED:
+                case (int)User32.WindowMessage.WM_DWMCOLORIZATIONCOLORCHANGED:
+                case (int)User32.WindowMessage.WM_DWMCOMPOSITIONCHANGED:
+                case (int)User32.WindowMessage.WM_THEMECHANGED:
                     if (UserPreferences.Current.Theme == ThemeType.Auto)
                     {
                         ThemeHelper.ChangeTheme(message.HWnd, ThemeType.Auto);
@@ -359,17 +359,13 @@ window.external = {
 
         private void SendAppStartupWebMessage()
         {
-            var startupSettingsOptions = _host.Services.GetService(typeof(IOptions<StartupSettings>)) as IOptions<StartupSettings>;
-            if (startupSettingsOptions is not null)
+            var options = _host.Services.GetService(typeof(IOptions<StartupSettings>)) as IOptions<StartupSettings>;
+            if (options is not null && !options.Value.IsEmpty)
             {
-                var startupSettings = startupSettingsOptions.Value;
-                if (startupSettings.IsEmpty == false)
-                {
-                    var startupMessage = AppInstanceStartupMessage.CreateFrom(startupSettingsOptions.Value);
-                    var startupMessageString = startupMessage.ToWebMessageString();
+                var message = AppInstanceStartupMessage.CreateFrom(options.Value);
+                var messageString = message.ToWebMessageString();
 
-                    WebView.CoreWebView2.PostWebMessageAsString(startupMessageString);
-                }
+                WebView.CoreWebView2.PostWebMessageAsString(messageString);
             }
         }
 

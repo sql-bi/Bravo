@@ -90,7 +90,9 @@
             return stringBuilder.ToString();
         }
 
-        public static bool ContainsInvalidPathChars(this string path)
+        public static bool DoesNotContainsInvalidPathChars(this string? path) => !ContainsInvalidPathChars(path);
+
+        public static bool ContainsInvalidPathChars(this string? path)
         {
             if (path is null)
                 return false;

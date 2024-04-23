@@ -12,7 +12,7 @@
         [InlineData("abcdefghiABCDEFGHI??=", "1bca6736f96f84e35fa921938f45ba981a6e3f6aa02bcf46763009d3614cf89d")]
         [InlineData("", "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")]
         [InlineData(null, null)]
-        public void ToSHA256Hash_SimpleTest(string value, string expected)
+        public void ToSHA256Hash_SimpleTest(string? value, string? expected)
         {
             var actual = value.ToSHA256Hash();
             Assert.Equal(expected, actual);

@@ -125,8 +125,8 @@
                     // >>   Win10 20H2 build 19042
                     var forceActive = new IntPtr(1); /* TRUE */
                     var forceInactive = IntPtr.Zero; /* FALSE */
-                    _ = User32.SendMessage(hWnd, WindowMessage.WM_NCACTIVATE, wParam: forceInactive, IntPtr.Zero);
-                    _ = User32.SendMessage(hWnd, WindowMessage.WM_NCACTIVATE, wParam: forceActive, IntPtr.Zero);
+                    _ = User32.SendMessage(hWnd, User32.WindowMessage.WM_NCACTIVATE, wParam: forceInactive, IntPtr.Zero);
+                    _ = User32.SendMessage(hWnd, User32.WindowMessage.WM_NCACTIVATE, wParam: forceActive, IntPtr.Zero);
                     // << HACK
                 }
                 finally

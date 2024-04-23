@@ -26,7 +26,7 @@
 
         protected virtual IntPtr WndProc(IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam, IntPtr uIdSubclass, IntPtr dwRefData)
         {
-            if (uMsg == (uint)WindowMessage.WM_NCDESTROY)
+            if (uMsg == (uint)User32.WindowMessage.WM_NCDESTROY)
             {
                 // The subclass must be removed before the window being subclassed is destroyed
                 // This is a permanent subclass so can call RemoveWindowSubclass inside the subclass procedure itself

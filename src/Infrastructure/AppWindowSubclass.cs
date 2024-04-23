@@ -31,7 +31,7 @@
                 //            return TRUE;
                 //    }
                 //    break;
-                case (uint)WindowMessage.WM_THEMECHANGED:
+                case (uint)User32.WindowMessage.WM_THEMECHANGED:
                     {
                         if (HandleMsgWmThemeChanged(hWnd))
                             return TRUE;

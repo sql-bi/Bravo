@@ -53,7 +53,7 @@
             return hash;
         }
 
-        public static string? SHA256Hash(string value)
+        public static string? SHA256Hash(string? value)
         {
             if (value is null)
                 return null;
@@ -83,7 +83,7 @@
 
     internal static class CriptographyExtensions
     {
-        public static string? ToSHA256Hash(this string value) => Cryptography.SHA256Hash(value);
+        public static string? ToSHA256Hash(this string? value) => Cryptography.SHA256Hash(value);
 
         public static string ToProtectedString(this string unprotectedString)
         {

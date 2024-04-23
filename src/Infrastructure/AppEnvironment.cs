@@ -36,12 +36,17 @@
         public static readonly string TelemetryConnectionString = "InstrumentationKey=47a8970c-6293-408a-9cce-5b7b311574d3";
         public static readonly string PBIDesktopProcessName = "PBIDesktop";
         public static readonly string PBIDesktopSSASProcessImageName = "msmdsrv.exe";
-        public static readonly string[] PBIDesktopMainWindowTitleSuffixes = new string[]
-        {
-            // The PBIDesktop main window title is culture-specific.
-            // The suffix is not always present, for example, it is not added when the save/share function in OneDrive/SharePoint is active.
+        public static readonly TimeSpan MSALSignInTimeout = TimeSpan.FromMinutes(5);
+        public static readonly Color ThemeColorDark = ColorTranslator.FromHtml("#202020");
+        public static readonly Color ThemeColorLight = ColorTranslator.FromHtml("#F3F3F3");
+        public static readonly DaxLineBreakStyle FormatDaxLineBreakDefault = DaxLineBreakStyle.InitialLineBreak;
+        public static readonly string CredentialManagerProxyCredentialName = "Bravo for Power BI/proxy";
+        public static readonly string[] PBIDesktopMainWindowTitleSuffixes =
+        [
+            // The title of the PBIDesktop main window is culture-specific.
+            // Notably, the `Power BI Desktop` suffix is not consistently present; for instance, it's omitted when the feature `Save to OneDrive and SharePoint` is active.
 
-            // Different dash characters are used as a separator
+            // Different dash characters may be used as a separator.
             // See https://github.com/sql-bi/Bravo/issues/476
             " \u002D Power BI Desktop", // Dash Punctuation - minus hyphen
             " \u2013 Power BI Desktop", // Dash Punctuation - en dash
@@ -53,15 +58,9 @@
             
             // NBSP char instead of whitespace - Latvian/lv
             "\u00A0\u2014 Power BI Desktop",
-        };
-        public static readonly TimeSpan MSALSignInTimeout = TimeSpan.FromMinutes(5);
-        public static readonly Color ThemeColorDark = ColorTranslator.FromHtml("#202020");
-        public static readonly Color ThemeColorLight = ColorTranslator.FromHtml("#F3F3F3");
-        public static readonly DaxLineBreakStyle FormatDaxLineBreakDefault = DaxLineBreakStyle.InitialLineBreak;
-        public static readonly string CredentialManagerProxyCredentialName = "Bravo for Power BI/proxy";
-
-        public static readonly string[] TrustedUriHosts = new[]
-        {
+        ];
+        public static readonly string[] TrustedUriHosts =
+        [
             "bravo.bi",
             "sqlbi.com",
             "github.com",
@@ -70,18 +69,16 @@
             "bravorelease.blob.core.windows.net",
             "code.visualstudio.com",
             "marketplace.visualstudio.com"
-        };
+        ];
 
         static AppEnvironment()
         {
-            Debug.Assert(Environment.ProcessPath is not null);
-
-            _deploymentMode = new(() => GetDeploymentMode());
+            _deploymentMode = new(GetDeploymentMode);
             using var currentProcess = Process.GetCurrentProcess();
 
             ProcessId = Environment.ProcessId;
             SessionId = currentProcess.SessionId;
-            ProcessPath = Environment.ProcessPath!;
+            ProcessPath = Environment.ProcessPath ?? throw new InvalidOperationException("Environment.ProcessPath is null");
             
             VersionInfo = FileVersionInfo.GetVersionInfo(ProcessPath);
             BravoUnexpectedException.ThrowIfNull(VersionInfo.FileVersion);
@@ -98,22 +95,6 @@
 
             Diagnostics = new ConcurrentDictionary<DiagnosticMessage, DiagnosticMessage>();
             DefaultJsonOptions = new(JsonSerializerDefaults.Web) { MaxDepth = 32 }; // see Microsoft.AspNetCore.Mvc.JsonOptions.JsonSerializerOptions
-
-            var spaceChars = new[]
-            {
-                "",       // no space
-                "\u0020", // whitespace
-                "\u00A0"  // nbsp
-            };
-            var dashChars = new[]
-            {
-                "\u002D", // Dash Punctuation - minus hyphen
-                "\u2212", // Math Symbol - minus sign
-                "\u2011", // Dash Punctuation - non-breaking hyphen
-                "\u2013", // Dash Punctuation - en dash
-                "\u2014", // Dash Punctuation - em dash
-                "\u2015", // Dash Punctuation - horizontal bar
-            };
         }
 
         /// <summary>
@@ -145,20 +126,12 @@
         /// <summary>
         /// Returns the HKEY registry key used to install the current application instance. Returns null if it is a packaged or portable app instance
         /// </summary>
-        public static RegistryKey? ApplicationInstallerRegistryHKey
-        {
-            get
+        public static RegistryKey? ApplicationInstallerRegistryHKey => DeploymentMode switch
             {
-                var registryKey = DeploymentMode switch
-                {
                     AppDeploymentMode.PerUser => Registry.CurrentUser,
                     AppDeploymentMode.PerMachine => Registry.LocalMachine,
                     _ => null,
                 };
-
-                return registryKey;
-            }
-        }
 
         public static string ApplicationFileVersion { get; }
 
@@ -195,19 +168,17 @@
         public static void AddDiagnostics(DiagnosticMessageType type, string name, string content, DiagnosticMessageSeverity severity = DiagnosticMessageSeverity.None, bool writeFile = false)
         {
             var message = DiagnosticMessage.Create(type, severity, name, content);
+            _ = Diagnostics.TryAdd(message, message);
             
-            _= Diagnostics.TryAdd(message, message);
-
             if (writeFile)
-            {
                 WriteDiagnosticFile(message);
             }
-        }
 
         private static void WriteDiagnosticFile(DiagnosticMessage message)
         {
-            if (IsDiagnosticLevelVerbose)
-            {
+            if (!IsDiagnosticLevelVerbose)
+                return;
+
                 try
                 {
                     Directory.CreateDirectory(ApplicationDiagnosticPath);
@@ -232,24 +203,23 @@
                     ExceptionHelper.WriteToEventLog(ex, EventLogEntryType.Warning, throwOnError: false);
                 }
             }
-        }
 
         private static AppDeploymentMode GetDeploymentMode()
         {
             if (DesktopBridgeHelper.IsRunningAsMsixPackage())
                 return AppDeploymentMode.Packaged;
 
-            var hklmValueString = Registry.LocalMachine.GetStringValue(subkeyName: ApplicationRegistryKeyName, valueName: ApplicationRegistryApplicationInstallFolderValue);
-            if (hklmValueString is not null)
+            var hklmValue = Registry.LocalMachine.GetStringValue(subkeyName: ApplicationRegistryKeyName, valueName: ApplicationRegistryApplicationInstallFolderValue);
+            if (hklmValue is not null)
             {
-                if (CommonHelper.AreDirectoryPathsEqual(AppContext.BaseDirectory, hklmValueString))
+                if (CommonHelper.AreDirectoryPathsEqual(AppContext.BaseDirectory, hklmValue))
                     return AppDeploymentMode.PerMachine;
             }
 
-            var hkcuValueString = Registry.CurrentUser.GetStringValue(subkeyName: ApplicationRegistryKeyName, valueName: ApplicationRegistryApplicationInstallFolderValue);
-            if (hkcuValueString is not null)
+            var hkcuValue = Registry.CurrentUser.GetStringValue(subkeyName: ApplicationRegistryKeyName, valueName: ApplicationRegistryApplicationInstallFolderValue);
+            if (hkcuValue is not null)
             {
-                if (CommonHelper.AreDirectoryPathsEqual(AppContext.BaseDirectory, hkcuValueString))
+                if (CommonHelper.AreDirectoryPathsEqual(AppContext.BaseDirectory, hkcuValue))
                     return AppDeploymentMode.PerUser;
             }
 

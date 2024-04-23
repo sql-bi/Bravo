@@ -2,9 +2,11 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <LangVersion>12.0</LangVersion>
     <TargetFramework>net6-windows10.0.17763.0</TargetFramework>
     <SupportedOSPlatformVersion>7.0</SupportedOSPlatformVersion>
+    <Nullable>enable</Nullable>
+    <LangVersion>12.0</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
     <UseWindowsForms>True</UseWindowsForms>
     <ApplicationIcon>Assets\bravo.ico</ApplicationIcon>
     <Company>SQLBI</Company>
@@ -12,7 +14,6 @@
     <Product>Bravo for Power BI</Product>
     <Copyright>SQLBI Corporation</Copyright>
     <RootNamespace>Sqlbi.$(MSBuildProjectName.Replace(" ", "_"))</RootNamespace>
-    <Nullable>enable</Nullable>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);1591</NoWarn>
     <TypeScriptCompileBlocked>true</TypeScriptCompileBlocked>

@@ -17,8 +17,8 @@
         [JsonPropertyName("parentProcessId")]
         public int? ParentProcessId { get; set; }
 
-        [JsonPropertyName("parentProcessName")]
-        public string? ParentProcessName { get; set; }
+        [JsonPropertyName("parentProcessImageName")]
+        public string? ParentProcessImageName { get; set; }
 
         [JsonPropertyName("parentProcessMainWindowTitle")]
         public string? ParentProcessMainWindowTitle { get; set; }
@@ -32,16 +32,13 @@
         [JsonPropertyName("commandLineErrors")]
         public string[]? CommandLineErrors { get; set; }
 
-        [JsonIgnore]
-        public bool IsExternalTool => AppEnvironment.PBIDesktopProcessName.EqualsI(ParentProcessName);
-
         public static AppInstanceStartupMessage CreateFrom(StartupSettings settings)
         {
             var message = new AppInstanceStartupMessage
             {
                 IsEmpty = settings.IsEmpty,
                 ParentProcessId = settings.ParentProcessId,
-                ParentProcessName = settings.ParentProcessName,
+                ParentProcessImageName = settings.ParentProcessImageName,
                 ParentProcessMainWindowTitle = settings.ParentProcessMainWindowTitle,
                 ArgumentServerName = settings.ArgumentServerName,
                 ArgumentDatabaseName = settings.ArgumentDatabaseName,
@@ -104,9 +101,9 @@
                     ConnectionMode = PBIDesktopReportConnectionMode.Supported
                 };
 
-                if (!startupMessage.IsExternalTool)
+                if (!startupMessage.ParentProcessImageName.EqualsI(AppEnvironment.PBIDesktopProcessImageName))
                 {
-                    if (report.ReportName?.ContainsInvalidPathChars() == false)
+                    if (report.ReportName.DoesNotContainsInvalidPathChars())
                         report.ReportName = Path.GetFileNameWithoutExtension(report.ReportName);
 
                     report.ReportName += $" ({ startupMessage.ParentProcessId })";

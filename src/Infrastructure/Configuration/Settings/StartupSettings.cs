@@ -1,13 +1,10 @@
-﻿namespace Sqlbi.Bravo.Infrastructure.Configuration.Settings
-{
+﻿namespace Sqlbi.Bravo.Infrastructure.Configuration.Settings;
+
     using Sqlbi.Bravo.Infrastructure;
     using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Infrastructure.Helpers;
-    using System;
     using System.CommandLine;
     using System.CommandLine.Parsing;
-    using System.Diagnostics;
-    using System.Linq;
     using System.Text.Json.Serialization;
 
     internal class StartupSettings
@@ -28,16 +25,10 @@
         public string[]? CommandLineErrors { get; set; }
 
         [JsonIgnore]
-        public bool IsPBIDesktopExternalTool => IsExternalTool && AppEnvironment.PBIDesktopProcessName.Equals(ParentProcessName, StringComparison.OrdinalIgnoreCase);
-
-        [JsonIgnore]
         public int? ParentProcessId { get; set; }
 
         [JsonIgnore]
-        public string? ParentProcessName { get; set; }
-
-        //[JsonIgnore]
-        //public IntPtr ParentProcessMainWindowHandle { get; set; }
+    public string? ParentProcessImageName { get; set; }
 
         [JsonIgnore]
         public string? ParentProcessMainWindowTitle { get; set; }
@@ -45,17 +36,14 @@
         public static StartupSettings CreateFromCommandLineArguments()
         {
             var settings = new StartupSettings();
-            {
-                settings.FromCommandLineArguments();
-            }
-
+        settings.UpdateFromCommandLineArguments();
             return settings;
         }
     }
 
     internal static class StartupSettingsExtensions
     {
-        public static void FromCommandLineArguments(this StartupSettings settings)
+    public static void UpdateFromCommandLineArguments(this StartupSettings settings)
         {
             // Skip the first command line arg as the first element in the array contains the file name of the executing program.
             // If the file name is not available, the first element is equal to String.Empty.

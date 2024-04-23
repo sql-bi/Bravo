@@ -92,12 +92,10 @@
         public void IsPBIDesktopMainWindowTitle_Test()
         {
             var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Microsoft Power BI Desktop", "bin");
-
             if (!Directory.Exists(path))
-            {
-                // Skip test if the BPIDesktop folder does not exist (i.e. build agent)
-                return;
-            }
+                path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Microsoft Power BI Desktop", "bin");
+            if (!Directory.Exists(path))
+                return; // Skip test if the BPIDesktop folder does not exist (i.e. build agent)
 
             foreach (var file in Directory.EnumerateFiles(path, "Microsoft.PowerBI.Client.Windows.Resources.dll", SearchOption.AllDirectories))
             {
