@@ -23,6 +23,11 @@
     <SatelliteResourceLanguages>en-US</SatelliteResourceLanguages>
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+    <!--
+    Since we are using the `no-restore` argument with `dotnet publish`, it is essential to ensure that deployments always roll forward to the latest runtime patch.
+    This also prevents issues with MSI installers in self-contained deployments where runtime files may not be copied during an upgrade in the event of a runtime patch downgrade.
+    -->
+    <TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
   </PropertyGroup>
 
   <Choose>
