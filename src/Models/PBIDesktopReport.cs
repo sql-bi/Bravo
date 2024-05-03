@@ -1,7 +1,6 @@
 ﻿namespace Sqlbi.Bravo.Models
 {
     using Sqlbi.Bravo.Infrastructure;
-    using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Infrastructure.Helpers;
     using Sqlbi.Bravo.Infrastructure.Models;
     using Sqlbi.Bravo.Infrastructure.Security;
@@ -59,25 +58,12 @@
             return HashCode.Combine(ProcessId, ServerName, DatabaseName);
         }
 
-        internal static PBIDesktopReport? CreateFrom(int processId, bool connectionModeEnabled = true)
-        {
-            using var process = ProcessHelper.SafeGetProcessById(processId);
-
-            if (process is not null)
-            {
-                var report = CreateFrom(process, connectionModeEnabled);
-                return report;
-            }
-
-            return null;
-        }
-
-        internal static PBIDesktopReport CreateFrom(Process process, bool connectionModeEnabled = true)
+        internal static PBIDesktopReport CreateFrom(int processId, bool connectionModeEnabled = true)
         {
             var report = new PBIDesktopReport
             {
-                ProcessId = process.Id,
-                ReportName = process.GetPBIDesktopMainWindowTitle(),
+                ProcessId = processId,
+                ReportName = ProcessHelper.GetMainWindowTitle(processId),
                 ServerName = null,
                 DatabaseName = null,
                 CompatibilityMode = SSAS.CompatibilityMode.Unknown,
@@ -108,16 +94,16 @@
                 databaseName = null;
                 compatibilityMode = SSAS.CompatibilityMode.Unknown;
 
-                var ssasPIDs = process.GetChildrenPIDs(childProcessImageName: AppEnvironment.PBIDesktopSSASProcessImageName).ToArray();
-                if (ssasPIDs.Length != 1)
+                var pids = ProcessHelper.GetProcessIdsByImageName(AppEnvironment.PBIDesktopSSASProcessImageName, parentProcessId: processId);
+                if (pids.Length != 1)
                 {
                     connectionMode = PBIDesktopReportConnectionMode.UnsupportedAnalysisServicesProcessNotFound;
                     return;
                 }
 
-                var ssasPID = ssasPIDs.Single();
+                var ssasProcessId = pids.Single();
 
-                var ssasConnection = NetworkHelper.GetTcpConnections((c) => c.ProcessId == ssasPID && c.State == TcpState.Listen && IPAddress.IsLoopback(c.EndPoint.Address)).FirstOrDefault();
+                var ssasConnection = NetworkHelper.GetTcpConnections((c) => c.ProcessId == ssasProcessId && c.State == TcpState.Listen && IPAddress.IsLoopback(c.EndPoint.Address)).FirstOrDefault();
                 if (ssasConnection == default)
                 {
                     connectionMode = PBIDesktopReportConnectionMode.UnsupportedAnalysisServicesConnectionNotFound;

@@ -95,7 +95,13 @@
             if (!Directory.Exists(path))
                 path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Microsoft Power BI Desktop", "bin");
             if (!Directory.Exists(path))
+            {
+                // TODO: search for windows store app
+                //path = Path.Combine(path, Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData, Environment.SpecialFolderOption.DoNotVerify), @"Microsoft\WindowsApps\PBIDesktopStore.exe");
+                //if (!File.Exists(path)) return;
+
                 return; // Skip test if the BPIDesktop folder does not exist (i.e. build agent)
+            }
 
             foreach (var file in Directory.EnumerateFiles(path, "Microsoft.PowerBI.Client.Windows.Resources.dll", SearchOption.AllDirectories))
             {

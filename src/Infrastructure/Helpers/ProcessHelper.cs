@@ -1,363 +1,361 @@
-﻿namespace Sqlbi.Bravo.Infrastructure.Helpers
+﻿namespace Sqlbi.Bravo.Infrastructure.Helpers;
+
+using Microsoft.Win32.SafeHandles;
+using Sqlbi.Bravo.Infrastructure.Extensions;
+using Sqlbi.Bravo.Infrastructure.Windows.Interop;
+using Sqlbi.Bravo.Models;
+using System;
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+internal static class ProcessHelper
 {
-    using Sqlbi.Bravo.Infrastructure.Extensions;
-    using System;
-    using System.Collections.Generic;
-    using System.ComponentModel;
-    using System.Diagnostics;
-    using System.Diagnostics.CodeAnalysis;
-    using System.Globalization;
-    using System.IO;
-    using System.Linq;
-    using System.Management;
-    using System.Security.Claims;
-    using System.Security.Principal;
-    using System.Threading;
-    using System.Threading.Tasks;
-    using System.Windows.Forms;
-
-    internal static class ProcessHelper
+    public static void RunOnSTAThread(Action action)
     {
-        public static void RunOnSTAThread(Action action)
+        var start = new ThreadStart(action);
+        var thread = new Thread(start);
+        thread.CurrentCulture = thread.CurrentUICulture = CultureInfo.CurrentCulture;
+        thread.SetApartmentState(ApartmentState.STA);
+        thread.Start();
+        thread.Join();
+    }
+
+    public static void InvokeOnUIThread(Control control, Action action) => InvokeOnUIThread(action, control);
+    
+    public static void InvokeOnUIThread(Action action, Control? control = null)
+    {
+        if (control is null)
         {
-            var threadStart = new ThreadStart(action);
-            var thread = new Thread(threadStart);
-            thread.CurrentCulture = thread.CurrentUICulture = CultureInfo.CurrentCulture;
-            thread.SetApartmentState(ApartmentState.STA);
-            thread.Start();
-            thread.Join();
+            var handle = GetCurrentProcessMainWindowHandle();
+            control = Control.FromHandle(handle);
         }
 
-        public static void InvokeOnUIThread(Control control, Action action) => InvokeOnUIThread(action, control);
-        
-        public static void InvokeOnUIThread(Action action, Control? control = null)
+        if (control.InvokeRequired)
+            control.Invoke(action);
+        else
+            action();
+    }
+
+    public static async Task<T> RunOnUISynchronizationContextContext<T>(Func<Task<T>> callback)
+    {
+        var previous = SynchronizationContext.Current;
+
+        SynchronizationContext.SetSynchronizationContext(AppWindow.UISynchronizationContext);
+        try
         {
-            if (control is null)
-            {
-                var mainWindowHandle = GetCurrentProcessMainWindowHandle();
-                control = Control.FromHandle(mainWindowHandle);
-            }
-
-            //if (!Application.MessageLoop)
-            //{
-            //}
-
-            if (control.InvokeRequired)
-            {
-                control.Invoke(action);
-            }
-            else
-            {
-                action();
-            }
+            return await callback().ConfigureAwait(false);
         }
-
-        public static async Task<T> RunOnUISynchronizationContextContext<T>(Func<Task<T>> callback)
+        finally
         {
-            var previousSynchronizationContext = SynchronizationContext.Current;
-
-            SynchronizationContext.SetSynchronizationContext(AppWindow.UISynchronizationContext);
-            try
-            {
-                var result = await callback();
-                return result;
-            }
-            finally
-            {
-                SynchronizationContext.SetSynchronizationContext(previousSynchronizationContext);
-            }
+            SynchronizationContext.SetSynchronizationContext(previous);
         }
+    }
 
-        public static void RunOnUISynchronizationContext(Action action)
+    public static void RunOnUISynchronizationContext(Action action)
+    {
+        var previous = SynchronizationContext.Current;
+
+        SynchronizationContext.SetSynchronizationContext(AppWindow.UISynchronizationContext);
+        try
         {
-            var previousSynchronizationContext = SynchronizationContext.Current;
-
-            SynchronizationContext.SetSynchronizationContext(AppWindow.UISynchronizationContext);
-            try
-            {
-                action();
-            }
-            finally
-            {
-                SynchronizationContext.SetSynchronizationContext(previousSynchronizationContext);
-            }
+            action();
         }
-
-        public static void OpenControlPanelItem(string canonicalName)
+        finally
         {
-            // https://docs.microsoft.com/en-us/windows/win32/shell/controlpanel-canonical-names
-             
-            var startInfo = new ProcessStartInfo
-            {
-                FileName = Environment.ExpandEnvironmentVariables("%WINDIR%\\System32\\control.exe"),
-                Arguments = canonicalName
-            };
-
-            using var process = Process.Start(startInfo); 
+            SynchronizationContext.SetSynchronizationContext(previous);
         }
+    }
 
-        public static bool OpenBrowser(Uri address)
+    public static void OpenControlPanelItem(string canonicalName)
+    {
+        // https://docs.microsoft.com/en-us/windows/win32/shell/controlpanel-canonical-names
+         
+        var startInfo = new ProcessStartInfo
         {
-            if (address.IsAbsoluteUri && !address.IsFile && !address.IsUnc && !address.IsLoopback)
+            FileName = Environment.ExpandEnvironmentVariables("%WINDIR%\\System32\\control.exe"),
+            Arguments = canonicalName
+        };
+
+        using var process = Process.Start(startInfo); 
+    }
+
+    public static bool OpenBrowser(Uri address)
+    {
+        if (address.IsAbsoluteUri && !address.IsFile && !address.IsUnc && !address.IsLoopback)
+        {
+            if (address.Scheme.EqualsI(Uri.UriSchemeHttps) || address.Scheme.EqualsI(Uri.UriSchemeHttp))
             {
-                if (address.Scheme.EqualsI(Uri.UriSchemeHttps) || address.Scheme.EqualsI(Uri.UriSchemeHttp))
+                if (AppEnvironment.TrustedUriHosts.Any((trustedHost) => address.Host.EqualsI(trustedHost) || address.Host.EndsWith($".{ trustedHost }", StringComparison.OrdinalIgnoreCase)))
                 {
-                    if (AppEnvironment.TrustedUriHosts.Any((trustedHost) => address.Host.EqualsI(trustedHost) || address.Host.EndsWith($".{ trustedHost }", StringComparison.OrdinalIgnoreCase)))
+                    using var process = Process.Start(new ProcessStartInfo
                     {
-                        using var process = Process.Start(new ProcessStartInfo
-                        {
-                            FileName = address.OriginalString,
-                            UseShellExecute = true,
-                        });
+                        FileName = address.OriginalString,
+                        UseShellExecute = true,
+                    });
 
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    public static bool OpenFileExplorer(string path)
+    {
+        if (Directory.Exists(path))
+        {
+            using var process = Process.Start(new ProcessStartInfo
+            {
+                FileName = Environment.ExpandEnvironmentVariables("%WINDIR%\\explorer.exe"),
+                Arguments = $"/root,\"{path}\""
+            });
+
+            return true;
+        }
+
+        return false;
+    }
+
+    public static bool OpenShellExecute(string path, bool waitForStarted, [NotNullWhen(true)] out int? processId, CancellationToken cancellationToken = default)
+    {
+        if (File.Exists(path))
+        {
+            var extension = Path.GetExtension(path);
+
+            var allowed = extension.EqualsI(".pbix") || extension.EqualsI(".xlsx") || extension.EqualsI(".code-workspace");
+            if (allowed)
+            {
+                using var process = Process.Start(new ProcessStartInfo
+                {
+                    FileName = path,
+                    UseShellExecute = true
+                });
+
+                if (process is not null)
+                {
+                    processId = process.Id;
+
+                    if (waitForStarted && WaitForStarted(process, cancellationToken))
                         return true;
-                    }
+                }
+            }
+        }
+
+        processId = null;
+        return false;
+
+        static bool WaitForStarted(Process process, CancellationToken cancellationToken)
+        {
+            try
+            {
+                _ = process.WaitForInputIdle(5_000);
+            }
+            catch (InvalidOperationException)
+            {
+                // ignore
+            }
+
+            if (process.IsPBIDesktop())
+            {
+                // We force 5 minutes which is the default timeout of HTTP requests
+                var waitTimeout = TimeSpan.FromMinutes(5).TotalSeconds;
+
+                for (var i = 0; i < waitTimeout; i++)
+                {
+                    // The HTTP request times out or user has cancelled the operation by using the "Cancel" button
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    // The PBIDesktop main window title is not null when the SSAS instance has started and the model is fully loaded
+                    if (process.GetMainWindowTitle() is not null)
+                        return true;
+
+                    if (process.HasExited)
+                        break;
+
+                    Thread.Sleep(1_000);
                 }
             }
 
-            return false;
+            return !process.HasExited;
+        }
+    }
+
+    public static bool Open(string path)
+    {
+        if (File.Exists(path))
+        {
+            return OpenShellExecute(path, waitForStarted: false, out _);
+        }
+        else if (Directory.Exists(path))
+        {
+            return OpenFileExplorer(path);
         }
 
-        public static bool OpenFileExplorer(string path)
-        {
-            if (Directory.Exists(path))
-            {
-                var startInfo = new ProcessStartInfo
-                {
-                    FileName = Environment.ExpandEnvironmentVariables("%WINDIR%\\explorer.exe"),
-                    Arguments = $"/root,\"{ path }\""
-                };
+        return false;
+    }
 
-                using var process = Process.Start(startInfo);
-                return true;
+    public static FileStream? GetPBIDesktopPBIXFile(int processId)
+    {
+        if (!Environment.Is64BitProcess || Environment.OSVersion.IsWindows7OrLower())
+        {
+            AppEnvironment.AddDiagnostics(DiagnosticMessageType.Text, name: $"{nameof(ProcessHelper)}.{nameof(GetPBIDesktopPBIXFile)}", content: "This method is only supported on 64-bit Windows OS version 8 or later.", DiagnosticMessageSeverity.Warning);
+            return null;
+        }
+
+        var isPbiDesktopProcess = Ntdll.NtQuerySystemInformationProcessInformation(AppEnvironment.SessionId, AppEnvironment.PBIDesktopProcessImageName).ContainsKey(processId);
+        if (isPbiDesktopProcess)
+        {
+            var path = GetPathFromCommandLineArgs(processId);
+            if (path is not null)
+                return new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+
+            return GetStreamFromFileHandles(processId);
+        }
+
+        return null;
+
+        static string? GetPathFromCommandLineArgs(int processId)
+        {
+            var cmdline = Ntdll.NtQueryInformationProcessCommandLineInformation(processId);
+            if (cmdline is not null)
+            {
+                // CommandLineToArgvW has slightly different behavior compared to the rules at https://learn.microsoft.com/en-us/cpp/cpp/main-function-command-line-args?view=msvc-170#parsing-c-command-line-arguments
+                // See also System.Environement.SegmentCommandLine at https://github.com/dotnet/runtime/blob/9892d46d0789329919d9a17f275fd1fff603b76f/src/libraries/System.Private.CoreLib/src/System/Environment.Windows.cs#L223
+                if (Shell32.CommandLineToArgs(cmdline) is { } args && args.Length > 0)
+                {
+                    var pbix = args.Where((arg) => arg.EndsWithI(".pbix") && File.Exists(arg)).ToArray();
+                    if (pbix.Length == 1)
+                        return pbix[0];
+                }
             }
-
-            return false;
+            return null;
         }
 
-        public static bool OpenShellExecute(string path, bool waitForStarted, [NotNullWhen(true)] out int? processId, CancellationToken cancellationToken = default)
+        static FileStream? GetStreamFromFileHandles(int processId)
         {
-            if (File.Exists(path))
+            var fileObjectTypeIndex = GetFileObjectTypeIndex();
+            var fileObjects = Ntdll.NtQueryInformationProcessHandleInformation(processId).Where((h) => h.ObjectTypeIndex == fileObjectTypeIndex).ToArray();
+
+            using var sourceProcessHandle = Ntdll.NtOpenProcess(processId, Ntdll.ProcessAccess.PROCESS_DUP_HANDLE);
+            using var targetProcess = Process.GetCurrentProcess();
+
+            foreach (var fileObject in fileObjects)
             {
-                const string Pbix = ".pbix";
-                const string Xlsx = ".xlsx";
-                const string CodeWorkspace = ".code-workspace";
+                using var sourceHandle = new SafeFileHandle(fileObject.HandleValue, ownsHandle: false);
 
-                var extension = Path.GetExtension(path);
-                var isAllowed = (new[] { Pbix, Xlsx, CodeWorkspace }).Any((ext) => ext.EqualsI(extension));
-                var isPbix = extension.EqualsI(Pbix);
+                if (!Kernel32.DuplicateHandle(sourceProcessHandle, sourceHandle, targetProcess.SafeHandle, out var lpTargetHandle))
+                    continue;
 
-                if (isAllowed)
+                using var targetHandle = new SafeFileHandle(lpTargetHandle, ownsHandle: true);
+
+                var deviceType = Ntdll.NtQueryVolumeInformationFileFsDeviceInformation(targetHandle);
+                if (deviceType == Ntdll.FILE_DEVICE_TYPE.FILE_DEVICE_DISK)
                 {
-                    var startInfo = new ProcessStartInfo
+                    var path = Kernel32.GetFinalPathNameByHandle(targetHandle);
+
+                    if (File.Exists(path) && Path.GetExtension(path) is { } ext && ext.EqualsI(".pbix"))
                     {
-                        FileName = path,
-                        UseShellExecute = true
-                    };
-
-                    using var process = Process.Start(startInfo);
-
-                    if (process is not null && !process.HasExited)
-                    {
-                        cancellationToken.ThrowIfCancellationRequested();
-
-                        if (waitForStarted)
+                        try
                         {
-                            try
-                            {
-                                _ = process.WaitForInputIdle(5_000);
-                            }
-                            catch (InvalidOperationException)
-                            {
-                                // ignore
-                            }
-
-                            if (isPbix)
-                            {
-                                // We force 5 minutes which is the default timeout of HTTP requests
-                                var waitTimeout = TimeSpan.FromMinutes(5).TotalSeconds;
-
-                                for (var i = 0; i < waitTimeout; i++)
-                                {
-                                    // Cancellation can be requested by the user via the "Cancel" button or when the HTTP request times out.
-                                    cancellationToken.ThrowIfCancellationRequested();
-
-                                    if (process.HasExited)
-                                    {
-                                        processId = null;
-                                        return false;
-                                    }
-
-                                    // If the window title is null it means that the SSAS instance is not yet started and/or the model is not yet fully loaded
-                                    var isAvailable = process.GetPBIDesktopMainWindowTitle() is not null;
-                                    if (isAvailable)
-                                        break;
-
-                                    Thread.Sleep(1_000);
-                                }
-                            }
+                            return File.OpenRead(path);
                         }
-
-                        processId = process.Id;
-                        return true;
+                        catch (IOException)
+                        {
+                            // skip "TempSaves" file which is locked by the PBIDesktop process
+                        }
                     }
                 }
             }
 
-            processId = null;
+            return null;
+        }
+
+        static int GetFileObjectTypeIndex()
+        {
+            // Get the TypeIndex of the OBJECT_TYPE "File" for the current OS version. See also https://medium.com/@ashabdalhalim/a-light-on-windows-10s-object-header-typeindex-value-e8f907e7073a
+            using var temp = new FileStream(Path.GetTempFileName(), FileMode.Open, FileAccess.ReadWrite, FileShare.None, bufferSize: 4096, FileOptions.DeleteOnClose);
+            var info = Ntdll.NtQueryObjectTypeInformation(temp.SafeFileHandle);
+            return info.TypeIndex;
+        }
+    }
+
+    public static string? GetMainWindowTitle(int processId)
+    {
+        using var process = SafeGetProcessById(processId);
+        return process?.GetMainWindowTitle();
+    }
+
+    public static int[] GetProcessIdsByImageName(string imageName, StringComparison comparison = StringComparison.Ordinal, int? parentProcessId = null)
+    {
+        var pids = Ntdll.NtQuerySystemInformationProcessInformation(AppEnvironment.SessionId, imageName, comparison).Keys.ToArray();
+        if (pids.Length > 0 && parentProcessId.HasValue)
+        {
+            var child = Kernel32.SnapshotProcess(parentProcessId.Value).Select((e) => e.th32ProcessID);
+            pids = pids.Intersect(child).ToArray();
+        }
+
+        return pids;
+    }
+
+    public static (int Id, string ImageName, string? MainWindowTitle)? GetParentProcess()
+    {
+        var snapshot = Kernel32.SnapshotProcess().ToArray();
+
+        var current = snapshot.Single((e) => e.th32ProcessID == Environment.ProcessId);
+        var parent = snapshot.SingleOrDefault((e) => e.th32ProcessID == current.th32ParentProcessID);
+        if (parent.th32ProcessID == default)
+            return null;
+
+        using var process = SafeGetProcessById(parent.th32ProcessID);
+        var title = process?.GetMainWindowTitle();
+
+        return (parent.th32ProcessID, parent.szExeFile, title);
+    }
+
+    public static IntPtr GetCurrentProcessMainWindowHandle()
+    {
+        using var process = Process.GetCurrentProcess();
+        return process.MainWindowHandle;
+    }
+
+    /// <summary>
+    /// Returns true if the app is running as an MSIX package on Windows 10, version 1709 (build 16299) or later
+    /// </summary>
+    public static bool IsRunningAsMsixPackage()
+    {
+        if (Environment.OSVersion.IsWindows7OrLower())
             return false;
-        }
 
-        public static bool Open(string path)
+        var name = Kernel32.GetCurrentPackageFullName();
+        return name != null;
+    }
+
+    public static Process? SafeGetProcessById(int processId)
+    {
+        try
         {
-            if (File.Exists(path))
-            {
-                if (OpenShellExecute(path, waitForStarted: false, out _))
-                    return true;
-            }
-            else if (Directory.Exists(path))
-            {
-                if (OpenFileExplorer(path))
-                    return true;
-            }
+            var process = Process.GetProcessById(processId); // Throws ArgumentException if the process specified by the processId parameter is not running.
 
-            return false;
-        }
-
-        public static IReadOnlyList<Process> GetProcessesByName(string processName)
-        {
-            var processes = Process.GetProcessesByName(processName).ToList();
-
-            for (var i = processes.Count - 1; i >= 0; i--)
-            {
-                if (processes[i].SessionId != AppEnvironment.SessionId)
-                {
-                    processes[i].Dispose();
-                    processes.RemoveAt(i);
-                }
-            }
-
-            return processes;
-        }
-
-        public static Process? GetParentProcess()
-        {
-            // ManagementObjectSearcher.Get() raises a System.InvalidCastException when executed on the current thread, this regardless of the apartment state of the current thread (which is STA)
-            //
-            // System.InvalidCastException "Specified cast is not valid."
-            //    at System.StubHelpers.InterfaceMarshaler.ConvertToNative(Object objSrc, IntPtr itfMT, IntPtr classMT, Int32 flags)
-            //    at System.Management.SecuredIWbemServicesHandler.ExecQuery_(String strQueryLanguage, String strQuery, Int32 lFlags, IWbemContext pCtx, IEnumWbemClassObject& ppEnum)
-            //    at System.Management.ManagementObjectSearcher.Get()
-
-            var parentProcessId = (int?)null;
-
-            RunOnSTAThread(GetImpl);
-
-            var parentProcess = SafeGetProcessById(parentProcessId);
-            return parentProcess;
-
-            void GetImpl()
-            {
-                var queryString = $"SELECT ParentProcessId FROM Win32_Process WHERE ProcessId = { AppEnvironment.ProcessId } AND SessionId = { AppEnvironment.SessionId }";
-
-                using var searcher = new ManagementObjectSearcher(queryString);
-                using var collection = searcher.Get();
-                using var @object = collection.OfType<ManagementObject>().SingleOrDefault();
-
-                if (@object is not null)
-                {
-                    parentProcessId = (int)(uint)@object["ParentProcessId"];
-                }
-            }
-        }
-
-        public static IntPtr GetCurrentProcessMainWindowHandle()
-        {
-            using var current = Process.GetCurrentProcess();
-
-            return current.MainWindowHandle;
-        }
-
-        public static IntPtr GetParentProcessMainWindowHandle()
-        {
-            using var parent = GetParentProcess();
-            
-            if (parent is not null)
-                return parent.MainWindowHandle;
-
-            return IntPtr.Zero;
-        }
-
-        public static Process? SafeGetProcessById(int? processId)
-        {
-            if (processId is null)
+            if (process.SessionId != AppEnvironment.SessionId)
                 return null;
 
-            try
-            {
-                var process = Process.GetProcessById(processId.Value); // Throws ArgumentException if the process specified by the processId parameter is not running.
-
-                if (process.SessionId != AppEnvironment.SessionId)
-                    return null;
-
-                if (process.HasExited)
-                    return null;
-
-                _ = process.ProcessName; // Throws InvalidOperationException if the process has exited, so the requested information is not available
-
-                return process;
-            }
-            catch (Exception ex) when (ex is ArgumentException || ex is InvalidOperationException)
-            {
+            if (process.HasExited)
                 return null;
-            }
+
+            _ = process.ProcessName; // Throws InvalidOperationException if the process has exited, so the requested information is not available
+
+            return process;
         }
-
-        public static bool IsUserAdministrator()
+        catch (Exception ex) when (ex is ArgumentException || ex is InvalidOperationException)
         {
-            // Move to Infrastructure.Security namespace
-
-            using var windowsIdentity = WindowsIdentity.GetCurrent();
-
-            if (windowsIdentity is not null)
-            {
-                var windowsPrincipal = new WindowsPrincipal(windowsIdentity);
-                var userClaims = new List<Claim>(windowsPrincipal.UserClaims);
-
-                var builtinAdministratorsSid = new SecurityIdentifier(WellKnownSidType.BuiltinAdministratorsSid, domainSid: null);
-                var isUserAdministrator = windowsPrincipal.UserClaims.Any((claim) => claim.Value.Contains(builtinAdministratorsSid.Value));
-
-                return isUserAdministrator;
-            }
-
-            return false;
-        }
-
-        public static bool IsRunningAsAdministrator()
-        {
-            // Move to Infrastructure.Security namespace
-
-            using var windowsIdentity = WindowsIdentity.GetCurrent();
-
-            if (windowsIdentity?.Owner is not null)
-            {
-                var isRunningAsAdministrator = windowsIdentity.Owner.IsWellKnown(WellKnownSidType.BuiltinAdministratorsSid);
-                return isRunningAsAdministrator;
-            }
-
-            return false;
-        }
-
-        public static bool SafePredicate(Func<bool> predicate)
-        {
-            try
-            {
-                return predicate();
-            }
-            catch (Exception ex) when (ex is InvalidOperationException || ex is Win32Exception)
-            {
-                return false;
-            }
+            return null;
         }
     }
 }

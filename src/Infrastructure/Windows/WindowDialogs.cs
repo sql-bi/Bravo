@@ -71,9 +71,9 @@
             ofn.lpstrDefExt = DefaultExt.NullIfWhiteSpace();
             ofn.lpstrFilter = Filter.ToFileDialogFilterString();
             ofn.lpstrInitialDir = InitialDirectory.NullIfWhiteSpace();
-            ofn.lpstrFile = new string(new char[Win32Constant.MAX_PATH]);
+            ofn.lpstrFile = new string(new char[Kernel32.MAX_PATH]);
             ofn.nMaxFile = ofn.lpstrFile.Length;
-            ofn.lpstrFileTitle = new string(new char[Win32Constant.MAX_PATH]);
+            ofn.lpstrFileTitle = new string(new char[Kernel32.MAX_PATH]);
             ofn.nMaxFileTitle = ofn.lpstrFileTitle.Length;
 
             if (!Comdlg32.GetSaveFileName(ofn))

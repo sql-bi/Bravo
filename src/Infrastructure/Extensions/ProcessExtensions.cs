@@ -1,90 +1,55 @@
-﻿namespace Sqlbi.Bravo.Infrastructure.Extensions
-{
-    using Sqlbi.Bravo.Infrastructure.Helpers;
-    using Sqlbi.Bravo.Infrastructure.Windows.Interop;
-    using System;
-    using System.Collections.Generic;
-    using System.ComponentModel;
-    using System.Diagnostics;
-    using System.Management;
-    using System.Runtime.InteropServices;
-    using System.Text;
+﻿namespace Sqlbi.Bravo.Infrastructure.Extensions;
 
-    internal static class ProcessExtensions
+using Sqlbi.Bravo.Infrastructure.Windows.Interop;
+using System.Diagnostics;
+using System.Text;
+
+internal static class ProcessExtensions
+{
+    public static bool IsPBIDesktop(this Process process)
     {
-        //[DebuggerStepThrough]
-        [Obsolete("Use WMI query")]
-        public static Process? InteropGetParent(this Process process)
+        try
         {
-            Ntdll.PROCESS_BASIC_INFORMATION processInformation;
-            int? retval;
+            return process.ProcessName.Equals(AppEnvironment.PBIDesktopProcessName, StringComparison.Ordinal);
+        }
+        catch (InvalidOperationException)
+        {
+            return false;
+        }
+    }
+
+    public static string? GetMainWindowTitle(this Process process)
+    {
+        if (process.HasExited)
+            return null;
+
+        process.Refresh(); // Ensure MainWindowTitle is up-to-date
+
+        var title = process.MainWindowTitle;
+
+        if (title.Length == 0)
+            title = GetFromThreads(process);
+
+        if (title.Length > 0 && process.IsPBIDesktop())
+            title = RemovePBIDesktopSuffix(title);
+
+        return title.Length > 0 ? title : null;
+
+        static string GetFromThreads(Process process)
+        {
+            ProcessThreadCollection threads;
             try
             {
-                retval = Ntdll.NtQueryInformationProcess(process.Handle, Ntdll.PROCESSINFOCLASS.ProcessBasicInformation, out processInformation, processInformationLength: (uint)Marshal.SizeOf(typeof(Ntdll.PROCESS_BASIC_INFORMATION)), returnLength: out _);
+                threads = process.Threads;
             }
-            catch (Win32Exception ex) when (ex.ErrorCode == -2147467259) // System.ComponentModel.Win32Exception {"Access is denied."}
+            catch (InvalidOperationException)
             {
-                return null;
-            }
-            
-            if (retval.Value == (int)Ntdll.NTSTATUS.STATUS_SUCCESS)
-            {
-                var parentProcessId = (int)(uint)processInformation.InheritedFromUniqueProcessId;
-                var parentProcess = ProcessHelper.SafeGetProcessById(parentProcessId);
-
-                return parentProcess;
+                return string.Empty;
             }
 
-            // TODO: How NTSTATUS codes are translated into Win32 errors ?
-            // throw new Win32Exception(retval);
+            var builder = new StringBuilder(capacity: 1_000);
 
-            return null;
-        }
-
-        public static IEnumerable<int> GetChildrenPIDs(this Process process, string? childProcessImageName = null)
-        {
-            // ManagementObjectSearcher.Get() raises a System.InvalidCastException when executed on the current thread, this regardless of the apartment state of the current thread (which is STA)
-            //
-            // System.InvalidCastException "Specified cast is not valid."
-            //    at System.StubHelpers.InterfaceMarshaler.ConvertToNative(Object objSrc, IntPtr itfMT, IntPtr classMT, Int32 flags)
-            //    at System.Management.SecuredIWbemServicesHandler.ExecQuery_(String strQueryLanguage, String strQuery, Int32 lFlags, IWbemContext pCtx, IEnumWbemClassObject& ppEnum)
-            //    at System.Management.ManagementObjectSearcher.Get()
-
-            var pids = new List<int>();
-            
-            ProcessHelper.RunOnSTAThread(GetImpl);
-            
-            return pids;
-
-            void GetImpl()
-            {
-                var queryString = $"SELECT ProcessId FROM Win32_Process WHERE ParentProcessId = { process.Id } AND SessionId = { AppEnvironment.SessionId }";
-
-                if (childProcessImageName is not null)
-                    queryString += $" AND Name = '{ childProcessImageName }'";
-
-                using var searcher = new ManagementObjectSearcher(queryString);
-                using var collection = searcher.Get();
-
-                foreach (var @object in collection)
-                {
-                    if (@object is not null)
-                    {
-                        var processId = (int)(uint)@object.GetPropertyValue("ProcessId");
-                        pids.Add(processId);
-                    }
-                }
-            }
-        }
-
-        public static string GetMainWindowTitle(this Process process)
-        {
-            if (process.MainWindowTitle.Length > 0)
-                return process.MainWindowTitle;
-            
-            var builder = new StringBuilder(capacity: 1000);
-
-            foreach (ProcessThread thread in process.Threads)
+            foreach (ProcessThread thread in threads)
             {
                 User32.EnumThreadWindows(thread.Id, (hWnd, lParam) =>
                 {
@@ -92,8 +57,8 @@
                     {
                         User32.SendMessage(hWnd, User32.WindowMessage.WM_GETTEXT, builder.Capacity, builder);
 
-                        var windowTitle = builder.ToString();
-                        if (windowTitle.Length > 0)
+                        var value = builder.ToString();
+                        if (value.Length > 0)
                             return false;
                     }
 
@@ -108,24 +73,19 @@
             return builder.ToString();
         }
 
-        public static string? GetPBIDesktopMainWindowTitle(this Process process)
+        static string RemovePBIDesktopSuffix(string title)
         {
-            var windowTitle = process.GetMainWindowTitle();
-
-            if (windowTitle.IsNullOrWhiteSpace())
-                return null; // PBIDesktop process is starting and/or the SSAS instance is not yet started and/or the model is not yet fully loaded
-
             foreach (var suffix in AppEnvironment.PBIDesktopMainWindowTitleSuffixes)
             {
-                var index = windowTitle.LastIndexOf(suffix);
+                var index = title.LastIndexOf(suffix);
                 if (index >= 0)
                 {
-                    windowTitle = windowTitle[..index];
+                    title = title[..index];
                     break;
                 }
             }
 
-            return windowTitle;
+            return title;
         }
     }
 }

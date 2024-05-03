@@ -1,6 +1,6 @@
 ﻿namespace Sqlbi.Bravo.Infrastructure.Windows.Interop;
 
-public struct WIN32ERROR
+internal struct WIN32ERROR
 {
     public const int ERROR_SUCCESS = 0;
     public const int ERROR_INSUFFICIENT_BUFFER = 122;

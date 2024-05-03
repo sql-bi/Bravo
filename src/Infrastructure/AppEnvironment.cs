@@ -35,6 +35,7 @@
         public static readonly string TelemetryInstrumentationKey = "47a8970c-6293-408a-9cce-5b7b311574d3";
         public static readonly string TelemetryConnectionString = "InstrumentationKey=47a8970c-6293-408a-9cce-5b7b311574d3";
         public static readonly string PBIDesktopProcessName = "PBIDesktop";
+        public static readonly string PBIDesktopProcessImageName = "PBIDesktop.exe";
         public static readonly string PBIDesktopSSASProcessImageName = "msmdsrv.exe";
         public static readonly TimeSpan MSALSignInTimeout = TimeSpan.FromMinutes(5);
         public static readonly Color ThemeColorDark = ColorTranslator.FromHtml("#202020");
@@ -76,10 +77,9 @@
             _deploymentMode = new(GetDeploymentMode);
             using var currentProcess = Process.GetCurrentProcess();
 
-            ProcessId = Environment.ProcessId;
             SessionId = currentProcess.SessionId;
             ProcessPath = Environment.ProcessPath ?? throw new InvalidOperationException("Environment.ProcessPath is null");
-            
+
             VersionInfo = FileVersionInfo.GetVersionInfo(ProcessPath);
             BravoUnexpectedException.ThrowIfNull(VersionInfo.FileVersion);
             ApplicationFileVersion = VersionInfo.FileVersion;
@@ -103,8 +103,6 @@
         /// </summary>
         public static int SessionId { get; }
 
-        public static int ProcessId { get; }
-
         public static string ProcessPath { get; }
 
         public static AppPublishMode PublishMode
@@ -127,11 +125,11 @@
         /// Returns the HKEY registry key used to install the current application instance. Returns null if it is a packaged or portable app instance
         /// </summary>
         public static RegistryKey? ApplicationInstallerRegistryHKey => DeploymentMode switch
-            {
-                    AppDeploymentMode.PerUser => Registry.CurrentUser,
-                    AppDeploymentMode.PerMachine => Registry.LocalMachine,
-                    _ => null,
-                };
+        {
+            AppDeploymentMode.PerUser => Registry.CurrentUser,
+            AppDeploymentMode.PerMachine => Registry.LocalMachine,
+            _ => null,
+        };
 
         public static string ApplicationFileVersion { get; }
 
@@ -169,44 +167,44 @@
         {
             var message = DiagnosticMessage.Create(type, severity, name, content);
             _ = Diagnostics.TryAdd(message, message);
-            
+
             if (writeFile)
                 WriteDiagnosticFile(message);
-            }
+        }
 
         private static void WriteDiagnosticFile(DiagnosticMessage message)
         {
             if (!IsDiagnosticLevelVerbose)
                 return;
 
-                try
+            try
+            {
+                Directory.CreateDirectory(ApplicationDiagnosticPath);
+
+                var extension = message.Type switch
                 {
-                    Directory.CreateDirectory(ApplicationDiagnosticPath);
+                    DiagnosticMessageType.Text => "txt",
+                    DiagnosticMessageType.Json => "json",
+                    _ => "bin",
+                };
 
-                    var extension = message.Type switch
-                    {
-                        DiagnosticMessageType.Text => "txt",
-                        DiagnosticMessageType.Json => "json",
-                        _ => "bin",
-                    };
+                BravoUnexpectedException.ThrowIfNull(message.Name);
 
-                    BravoUnexpectedException.ThrowIfNull(message.Name);
+                var name = Path.ChangeExtension(message.Name, extension);
+                var safeName = name.ReplaceInvalidFileNameChars();
+                var path = Path.Combine(ApplicationDiagnosticPath, safeName);
 
-                    var name = Path.ChangeExtension(message.Name, extension);
-                    var safeName = name.ReplaceInvalidFileNameChars();
-                    var path = Path.Combine(ApplicationDiagnosticPath, safeName);
-
-                    File.WriteAllText(path, message.Content);
-                }
-                catch (Exception ex)
-                {
-                    ExceptionHelper.WriteToEventLog(ex, EventLogEntryType.Warning, throwOnError: false);
-                }
+                File.WriteAllText(path, message.Content);
             }
+            catch (Exception ex)
+            {
+                ExceptionHelper.WriteToEventLog(ex, EventLogEntryType.Warning, throwOnError: false);
+            }
+        }
 
         private static AppDeploymentMode GetDeploymentMode()
         {
-            if (DesktopBridgeHelper.IsRunningAsMsixPackage())
+            if (ProcessHelper.IsRunningAsMsixPackage())
                 return AppDeploymentMode.Packaged;
 
             var hklmValue = Registry.LocalMachine.GetStringValue(subkeyName: ApplicationRegistryKeyName, valueName: ApplicationRegistryApplicationInstallFolderValue);

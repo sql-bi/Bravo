@@ -1,12 +1,13 @@
 ﻿namespace Sqlbi.Bravo.Infrastructure.Services.PowerBI
 {
     using Sqlbi.Bravo.Infrastructure;
-    using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Infrastructure.Helpers;
     using Sqlbi.Bravo.Models;
-    using System;
     using System.Collections.Concurrent;
     using System.Collections.Generic;
+    using System.IO.Compression;
+    using System.Text;
+    using System.Text.Json;
     using System.Threading;
     using System.Threading.Tasks;
 
@@ -15,52 +16,64 @@
         IEnumerable<PBIDesktopReport> QueryReports(CancellationToken cancellationToken);
 
         IEnumerable<PBIDesktopReport> GetReports(CancellationToken cancellationToken);
+
+        JsonElement? GetDiagram(PBIDesktopReport report);
     }
 
     internal class PBIDesktopService : IPBIDesktopService
     {
         public IEnumerable<PBIDesktopReport> QueryReports(CancellationToken cancellationToken)
         {
-            var processes = ProcessHelper.GetProcessesByName(AppEnvironment.PBIDesktopProcessName);
-            try
+            var reports = new List<PBIDesktopReport>();
+
+            foreach (var processId in ProcessHelper.GetProcessIdsByImageName(AppEnvironment.PBIDesktopProcessImageName))
             {
-                var reports = new ConcurrentBag<PBIDesktopReport>();
+                cancellationToken.ThrowIfCancellationRequested();
 
-                foreach (var process in processes)
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
-
-                    var report = PBIDesktopReport.CreateFrom(process, connectionModeEnabled: false);
+                var report = PBIDesktopReport.CreateFrom(processId, connectionModeEnabled: false);
+                if (report is not null)
                     reports.Add(report);
-                }
+            }
 
-                return reports;
-            }
-            finally
-            {
-                processes.ForEach((p) => p.Dispose());
-            }
+            return reports;
         }
 
         public IEnumerable<PBIDesktopReport> GetReports(CancellationToken cancellationToken)
         {
-            var processes = ProcessHelper.GetProcessesByName(AppEnvironment.PBIDesktopProcessName);
-            try
-            {
-                var reports = new ConcurrentBag<PBIDesktopReport>();
-                var parallelOptions = new ParallelOptions { CancellationToken = cancellationToken };
-                var parallelLoop = Parallel.ForEach(processes, parallelOptions, (process) =>
-                {
-                    var report = PBIDesktopReport.CreateFrom(process);
-                    reports.Add(report);
-                });
+            var pids = ProcessHelper.GetProcessIdsByImageName(AppEnvironment.PBIDesktopProcessImageName);
+            var options = new ParallelOptions { CancellationToken = cancellationToken };
+            var reports = new ConcurrentBag<PBIDesktopReport>();
 
-                return parallelLoop.IsCompleted ? reports : Array.Empty<PBIDesktopReport>();
-            }
-            finally
+            var loop = Parallel.ForEach(pids, options, (processId) =>
             {
-                processes.ForEach((p) => p.Dispose());
-            }
+                var report = PBIDesktopReport.CreateFrom(processId);
+                if (report is not null)
+                    reports.Add(report);
+            });
+
+            return loop.IsCompleted ? reports : [];
+
+        }
+
+        public JsonElement? GetDiagram(PBIDesktopReport report)
+        {
+            using var pbix = ProcessHelper.GetPBIDesktopPBIXFile(report.ProcessId!.Value);
+            if (pbix is null)
+                return null;
+
+            using var archive = new ZipArchive(pbix, ZipArchiveMode.Read);
+            var entry = archive.GetEntry("DiagramLayout");
+            if (entry is null)
+                return null;
+
+            using var reader = new StreamReader(entry.Open(), Encoding.Unicode, detectEncodingFromByteOrderMarks: true, leaveOpen: false);
+            var json = reader.ReadToEnd();
+            using var document = JsonDocument.Parse(json);
+
+            if (AppEnvironment.IsDiagnosticLevelVerbose)
+                AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{nameof(PBIDesktopService)}.{nameof(GetDiagram)}", json, DiagnosticMessageSeverity.None);
+
+            return document.RootElement.Clone();
         }
     }
 }
