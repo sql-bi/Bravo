@@ -134,7 +134,6 @@
       "SubstituteHoliday": "FridayIfSaturdayOrMondayIfSunday",
       "ConflictPriority": 100
     },
-
     {
       "IsoCountry": "AT",
       "MonthNumber": 1,
@@ -1971,7 +1970,8 @@
       "OffsetDays": 0,
       "HolidayName": "Greenery Day",
       "SubstituteHoliday": "SubstituteHolidayWithNextNextWorkingDay",
-      "ConflictPriority": 100
+      "ConflictPriority": 100,
+      "FirstYear": 2007
     },
     {
       "IsoCountry": "JP",
