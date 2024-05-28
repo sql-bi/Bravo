@@ -2381,7 +2381,7 @@
       "MonthNumber": 8,
       "DayNumber": 0,
       "WeekDayNumber": 1,
-      "OffsetWeek": 0,
+      "OffsetWeek": 1,
       "OffsetDays": 0,
       "HolidayName": "Frídagur verslunarmanna",
       "SubstituteHoliday": "NoSubstituteHoliday",
