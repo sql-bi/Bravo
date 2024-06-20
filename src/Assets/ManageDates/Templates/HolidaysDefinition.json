@@ -1595,7 +1595,7 @@
       "WeekDayNumber": 0,
       "OffsetWeek": 0,
       "OffsetDays": 0,
-      "HolidayName": "New Year's Day",
+      "HolidayName": "Nytårsdag",
       "SubstituteHoliday": "NoSubstituteHoliday",
       "ConflictPriority": 100
     },
@@ -1606,7 +1606,7 @@
       "WeekDayNumber": 0,
       "OffsetWeek": 0,
       "OffsetDays": 0,
-      "HolidayName": "Maundy Thursday",
+      "HolidayName": "Skærtorsdag",
       "SubstituteHoliday": "NoSubstituteHoliday",
       "ConflictPriority": 50
     },
@@ -1617,7 +1617,7 @@
       "WeekDayNumber": 0,
       "OffsetWeek": 0,
       "OffsetDays": 0,
-      "HolidayName": "Good Friday",
+      "HolidayName": "Langfredag",
       "SubstituteHoliday": "NoSubstituteHoliday",
       "ConflictPriority": 50
     },
@@ -1628,7 +1628,7 @@
       "WeekDayNumber": 0,
       "OffsetWeek": 0,
       "OffsetDays": 0,
-      "HolidayName": "Easter Monday",
+      "HolidayName": "Anden påskedag",
       "SubstituteHoliday": "NoSubstituteHoliday",
       "ConflictPriority": 50
     },
@@ -1639,7 +1639,7 @@
       "WeekDayNumber": 0,
       "OffsetWeek": 0,
       "OffsetDays": 0,
-      "HolidayName": "Prayer Day",
+      "HolidayName": "Store bededag",
       "SubstituteHoliday": "NoSubstituteHoliday",
       "ConflictPriority": 50
     },
@@ -1650,7 +1650,7 @@
       "WeekDayNumber": 0,
       "OffsetWeek": 0,
       "OffsetDays": 0,
-      "HolidayName": "Ascension Day",
+      "HolidayName": "Kristi himmelfartsdag",
       "SubstituteHoliday": "NoSubstituteHoliday",
       "ConflictPriority": 50
     },
@@ -1661,7 +1661,7 @@
       "WeekDayNumber": 0,
       "OffsetWeek": 0,
       "OffsetDays": 0,
-      "HolidayName": "Whit Monday",
+      "HolidayName": "Anden pinsedag",
       "SubstituteHoliday": "NoSubstituteHoliday",
       "ConflictPriority": 50
     },
@@ -1672,7 +1672,7 @@
       "WeekDayNumber": 0,
       "OffsetWeek": 0,
       "OffsetDays": 0,
-      "HolidayName": "Labour Day",
+      "HolidayName": "Arbejdernes dag",
       "SubstituteHoliday": "NoSubstituteHoliday",
       "ConflictPriority": 100
     },
@@ -1683,7 +1683,7 @@
       "WeekDayNumber": 0,
       "OffsetWeek": 0,
       "OffsetDays": 0,
-      "HolidayName": "Constitution Day",
+      "HolidayName": "Grundlovsdag",
       "SubstituteHoliday": "NoSubstituteHoliday",
       "ConflictPriority": 50
     },
@@ -1694,7 +1694,7 @@
       "WeekDayNumber": 0,
       "OffsetWeek": 0,
       "OffsetDays": 0,
-      "HolidayName": "Christmas Eve",
+      "HolidayName": "Juleaften",
       "SubstituteHoliday": "NoSubstituteHoliday",
       "ConflictPriority": 50
     },
@@ -1705,7 +1705,7 @@
       "WeekDayNumber": 0,
       "OffsetWeek": 0,
       "OffsetDays": 0,
-      "HolidayName": "Christmas Day",
+      "HolidayName": "Juleaftensdag",
       "SubstituteHoliday": "NoSubstituteHoliday",
       "ConflictPriority": 100
     },
@@ -1716,7 +1716,7 @@
       "WeekDayNumber": 0,
       "OffsetWeek": 0,
       "OffsetDays": 0,
-      "HolidayName": "Second Day of Christmas",
+      "HolidayName": "Anden juledag",
       "SubstituteHoliday": "NoSubstituteHoliday",
       "ConflictPriority": 100
     },
@@ -1727,11 +1727,10 @@
       "WeekDayNumber": 0,
       "OffsetWeek": 0,
       "OffsetDays": 0,
-      "HolidayName": "New Year's Eve",
+      "HolidayName": "Nytårsaftensdag",
       "SubstituteHoliday": "NoSubstituteHoliday",
       "ConflictPriority": 100
     },
-
     {
       "IsoCountry": "BR",
       "MonthNumber": 1,
