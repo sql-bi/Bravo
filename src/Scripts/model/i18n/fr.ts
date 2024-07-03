@@ -44,7 +44,7 @@ const locale: Locale = {
         [_.closeTab]: "Fermer",
         [_.collapseAllCtrlTitle]: "Réduire tout",
         [_.columnExportedCompleted]: "La table a été exportée avec succès.",
-        [_.columnExportedFailed]: "La table n'a pas exportée pour une raison inconnue.",
+        [_.columnExportedFailed]: "La table n'a pas été exportée pour une raison inconnue.",
         [_.columnExportedTruncated]: "Cette table a été tronquée parce que le nombre de lignes dépasse le maximum autorisé.",
         [_.columnMeasureFormatted]: "Cette mesure est déjà formatée.",
         [_.columnMeasureNotFormattedTooltip]: "Cette mesure n'est pas formatée.",
