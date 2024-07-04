@@ -18,7 +18,7 @@ const locale: Locale = {
         [_.addCtrlTitle]: "Ouvrir",
         [_.aggregatedTableName]: "Plusieurs tables",
         [_.AnalyzeModel]: "Analyse Modèle",
-        [_.analyzeModelSummary]: `Votre jeu de données est <strong>{size:bytes}</strong> volumineux et contient <strong>{count}</strong> colonne{{s}}`,
+        [_.analyzeModelSummary]: `Votre jeu de données pèse <strong>{size:bytes}</strong> et contient <strong>{count}</strong> colonne{{s}}`,
         [_.analyzeModelSummary2]: `, <span class="text-highlight"><strong>{count}</strong> d'entre elles {{sont|est}} non référencée{{s}} au sein du Modèle.</span>`,
         [_.appExtensionName]: "Bravo Template Editor", // DO NOT TRANSLATE
         [_.appName]: "Bravo for Power BI", //DO NOT TRANSLATE
