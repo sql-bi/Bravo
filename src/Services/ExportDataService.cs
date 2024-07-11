@@ -27,9 +27,9 @@
 
         ExportDataJob ExportDelimitedTextFile(PBICloudDataset dataset, ExportDelimitedTextSettings settings, string path, string accessToken, CancellationToken cancellationToken);
 
-        ExportDataJob ExportExcelFile(PBIDesktopReport report, ExportExcelSettings settings, string path, CancellationToken cancellationToken);
+        ExportDataJob ExportExcelFile(PBIDesktopReport report, ExportExcelSettings settings, string path, bool useZip64, CancellationToken cancellationToken);
 
-        ExportDataJob ExportExcelFile(PBICloudDataset dataset, ExportExcelSettings settings, string path, string accessToken, CancellationToken cancellationToken);
+        ExportDataJob ExportExcelFile(PBICloudDataset dataset, ExportExcelSettings settings, string path, string accessToken, bool useZip64, CancellationToken cancellationToken);
 
         ExportDataJob? QueryExportJob(PBIDesktopReport report);
 
@@ -110,7 +110,7 @@
             return job;
         }
 
-        public ExportDataJob ExportExcelFile(PBIDesktopReport report, ExportExcelSettings settings, string path, CancellationToken cancellationToken)
+        public ExportDataJob ExportExcelFile(PBIDesktopReport report, ExportExcelSettings settings, string path, bool useZip64, CancellationToken cancellationToken)
         {
             settings.ExportPath = path;
 
@@ -119,7 +119,7 @@
             {
                 using var connection = AdomdConnectionWrapper.ConnectTo(report);
 
-                ExportExcelFileImpl(job, settings, connection, cancellationToken);
+                ExportExcelFileImpl(job, settings, connection, useZip64, cancellationToken);
                 job.SetCompleted();
             }
             catch (OperationCanceledException)
@@ -139,7 +139,7 @@
             return job;
         }
 
-        public ExportDataJob ExportExcelFile(PBICloudDataset dataset, ExportExcelSettings settings, string path, string accessToken, CancellationToken cancellationToken)
+        public ExportDataJob ExportExcelFile(PBICloudDataset dataset, ExportExcelSettings settings, string path, string accessToken, bool useZip64, CancellationToken cancellationToken)
         {
             settings.ExportPath = path;
 
@@ -148,7 +148,7 @@
             {
                 using var connection = AdomdConnectionWrapper.ConnectTo(dataset, accessToken);
 
-                ExportExcelFileImpl(job, settings, connection, cancellationToken);
+                ExportExcelFileImpl(job, settings, connection, useZip64, cancellationToken);
                 job.SetCompleted();
             }
             catch (OperationCanceledException)
@@ -303,7 +303,7 @@
             }
         }
 
-        private static void ExportExcelFileImpl(ExportDataJob job, ExportExcelSettings settings, AdomdConnectionWrapper connection, CancellationToken cancellationToken)
+        private static void ExportExcelFileImpl(ExportDataJob job, ExportExcelSettings settings, AdomdConnectionWrapper connection, bool useZip64, CancellationToken cancellationToken)
         {
             var xlsxFile = new FileInfo(settings.ExportPath);
 
@@ -313,8 +313,15 @@
             using var command = connection.CreateAdomdCommand();
             using var _ = cancellationToken.Register(() => command.Cancel());
 
+            if (useZip64 && AppEnvironment.IsDiagnosticLevelVerbose)
+            {
+                // Zip64 is an experimental feature in Bravo that must be explicitly enabled by the user and is not enabled by default because it may create a file that Excel or LibreOffice reports as corrupt.
+                // See https://github.com/salvois/LargeXlsx/issues/3#issuecomment-867675374 and https://github.com/salvois/LargeXlsx/issues/5#issuecomment-981072044
+                AppEnvironment.AddDiagnostics(DiagnosticMessageType.Text, name: $"{nameof(ExportDataService)}.{nameof(ExportExcelFileImpl)}", content: $"Experimental feature: useZip64 is enabled");
+            }
+
             using var fileStream = new FileStream(xlsxFile.FullName, FileMode.Create, FileAccess.Write);
-            using var xlsxWriter = new XlsxWriter(fileStream);
+            using var xlsxWriter = new XlsxWriter(fileStream, useZip64: useZip64);
 
             foreach (var (tableName, tableIndex) in settings.Tables.WithIndex())
             {
