@@ -126,6 +126,9 @@
 
         public static string ProcessPath { get; }
 
+        // TODO: use custom defined constant to identify a stable release. See PublishMode property and "AdditionalConstants" in csproj
+        public static bool IsStableRelease => Version.TryParse(ApplicationProductVersion, out _);
+
         public static AppPublishMode PublishMode
         {
             get
