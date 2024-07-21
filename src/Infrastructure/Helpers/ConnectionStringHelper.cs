@@ -3,7 +3,7 @@
     using Sqlbi.Bravo.Infrastructure.Security;
     using Sqlbi.Bravo.Models;
     using System;
-    using System.Data.OleDb;
+    using System.Data.Common;
     using System.Net;
 
     internal static class ConnectionStringHelper
@@ -34,7 +34,7 @@
             var connectTimeout = 1;
             var dataSource = endPoint.ToString();
 
-            var builder = new OleDbConnectionStringBuilder()
+            var builder = new DbConnectionStringBuilder()
             {
                 { ProviderKey, ProviderMsolapValue },
                 { DataSourceKey, dataSource },
@@ -53,7 +53,7 @@
             BravoUnexpectedException.ThrowIfNull(report.ServerName);
             BravoUnexpectedException.ThrowIfNull(report.DatabaseName);
 
-            var builder = new OleDbConnectionStringBuilder()
+            var builder = new DbConnectionStringBuilder()
             {
                 { ProviderKey, ProviderMsolapValue },
                 { DataSourceKey, report.ServerName },
@@ -128,7 +128,7 @@
 
             static string Build(string serverName, string databaseName, string accessToken, string identityProvider)
             {
-                var builder = new OleDbConnectionStringBuilder()
+                var builder = new DbConnectionStringBuilder()
                 {
                     { ProviderKey, ProviderMsolapValue },
                     { DataSourceKey, serverName },
@@ -144,13 +144,19 @@
             }
         }
 
-        public static (string ServerName, string? DatabaseName) GetConnectionStringProperties(string? connectionString)
+        public static (string? ServerName, string? DatabaseName) GetConnectionStringProperties(string? connectionString)
         {
-            var builder = new OleDbConnectionStringBuilder(connectionString);
+            var builder = new DbConnectionStringBuilder(useOdbcRules: false);
+            builder.ConnectionString = connectionString;
 
-            var serverName = builder.DataSource;
-            _ = builder.TryGetValue(InitialCatalogKey, out var initialCatalog);
-            var databaseName = (string?)initialCatalog;
+            string? serverName = null;
+            string? databaseName = null;
+
+            if (builder.TryGetValue(DataSourceKey, out var dataSource))
+                serverName = (string)dataSource;
+
+            if (builder.TryGetValue(InitialCatalogKey, out var initialCatalog))
+                databaseName = (string)initialCatalog;
 
             return (serverName, databaseName);
         }
