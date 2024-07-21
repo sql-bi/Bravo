@@ -137,6 +137,10 @@ window.external = {
             WebView.Source = new Uri(Path.Combine(Environment.CurrentDirectory, "wwwroot\\index.html"));
             // /* ICoreWebView2_3 */ WebView.CoreWebView2.SetVirtualHostNameToFolderMapping("bravo.example", "wwwroot", CoreWebView2HostResourceAccessKind.Allow);
             //WebView.CoreWebView2.Navigate("https://bravo.example/index.html"); // For '.example' see rfc6761
+
+            // Allow users to open the DevTools for troubleshooting; this is only available in non-stable releases
+            if (!AppEnvironment.IsStableRelease && CommonHelper.IsKeyDown(System.Windows.Forms.Keys.ShiftKey))
+                WebView.CoreWebView2.OpenDevToolsWindow();
         }
 
         protected override void WndProc(ref Message message)
