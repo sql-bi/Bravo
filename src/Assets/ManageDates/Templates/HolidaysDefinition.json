@@ -1640,7 +1640,8 @@
       "OffsetDays": 0,
       "HolidayName": "Store bededag",
       "SubstituteHoliday": "NoSubstituteHoliday",
-      "ConflictPriority": 50
+      "ConflictPriority": 50,
+      "LastYear": 2023
     },
     {
       "IsoCountry": "DK",
