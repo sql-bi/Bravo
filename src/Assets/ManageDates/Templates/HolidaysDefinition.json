@@ -1587,7 +1587,6 @@
       "SubstituteHoliday": "NoSubstituteHoliday",
       "ConflictPriority": 50
     },
-
     {
       "IsoCountry": "DK",
       "MonthNumber": 1,
@@ -1672,7 +1671,7 @@
       "WeekDayNumber": 0,
       "OffsetWeek": 0,
       "OffsetDays": 0,
-      "HolidayName": "Arbejdernes dag",
+      "HolidayName": "Arbejdernes kampdag",
       "SubstituteHoliday": "NoSubstituteHoliday",
       "ConflictPriority": 100
     },
@@ -1694,7 +1693,7 @@
       "WeekDayNumber": 0,
       "OffsetWeek": 0,
       "OffsetDays": 0,
-      "HolidayName": "Juleaften",
+      "HolidayName": "Juleaftensdag",
       "SubstituteHoliday": "NoSubstituteHoliday",
       "ConflictPriority": 50
     },
@@ -1705,7 +1704,7 @@
       "WeekDayNumber": 0,
       "OffsetWeek": 0,
       "OffsetDays": 0,
-      "HolidayName": "Juleaftensdag",
+      "HolidayName": "Juledag",
       "SubstituteHoliday": "NoSubstituteHoliday",
       "ConflictPriority": 100
     },
