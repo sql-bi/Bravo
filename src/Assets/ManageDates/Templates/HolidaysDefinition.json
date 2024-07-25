@@ -1667,39 +1667,6 @@
     },
     {
       "IsoCountry": "DK",
-      "MonthNumber": 5,
-      "DayNumber": 1,
-      "WeekDayNumber": 0,
-      "OffsetWeek": 0,
-      "OffsetDays": 0,
-      "HolidayName": "Arbejdernes kampdag",
-      "SubstituteHoliday": "NoSubstituteHoliday",
-      "ConflictPriority": 100
-    },
-    {
-      "IsoCountry": "DK",
-      "MonthNumber": 6,
-      "DayNumber": 5,
-      "WeekDayNumber": 0,
-      "OffsetWeek": 0,
-      "OffsetDays": 0,
-      "HolidayName": "Grundlovsdag",
-      "SubstituteHoliday": "NoSubstituteHoliday",
-      "ConflictPriority": 50
-    },
-    {
-      "IsoCountry": "DK",
-      "MonthNumber": 12,
-      "DayNumber": 24,
-      "WeekDayNumber": 0,
-      "OffsetWeek": 0,
-      "OffsetDays": 0,
-      "HolidayName": "Juleaftensdag",
-      "SubstituteHoliday": "NoSubstituteHoliday",
-      "ConflictPriority": 50
-    },
-    {
-      "IsoCountry": "DK",
       "MonthNumber": 12,
       "DayNumber": 25,
       "WeekDayNumber": 0,
@@ -1717,17 +1684,6 @@
       "OffsetWeek": 0,
       "OffsetDays": 0,
       "HolidayName": "Anden juledag",
-      "SubstituteHoliday": "NoSubstituteHoliday",
-      "ConflictPriority": 100
-    },
-    {
-      "IsoCountry": "DK",
-      "MonthNumber": 12,
-      "DayNumber": 31,
-      "WeekDayNumber": 0,
-      "OffsetWeek": 0,
-      "OffsetDays": 0,
-      "HolidayName": "Nytårsaftensdag",
       "SubstituteHoliday": "NoSubstituteHoliday",
       "ConflictPriority": 100
     },
