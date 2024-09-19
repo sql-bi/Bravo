@@ -1,6 +1,7 @@
 ﻿namespace Sqlbi.Bravo.Infrastructure.Helpers
 {
     using Microsoft.Identity.Client;
+    using Microsoft.Identity.Client.Desktop;
     using Sqlbi.Bravo.Infrastructure.Configuration;
     using Sqlbi.Bravo.Infrastructure.Models;
     using Sqlbi.Bravo.Infrastructure.Models.PBICloud;
@@ -20,7 +21,13 @@
             var authorityUri = pbicloudEnvironment.AzureADAuthority;
 
             // TODO: should we add logging .WithLogging() ??
-            var publicClient = PublicClientApplicationBuilder.Create(pbicloudEnvironment.AzureADClientId).WithAuthority(authorityUri).WithRedirectUri(redirectUri).Build();
+            var builder = PublicClientApplicationBuilder.Create(pbicloudEnvironment.AzureADClientId).WithAuthority(authorityUri).WithRedirectUri(redirectUri);
+            {
+                if (useEmbeddedBrowser)
+                    builder.WithWindowsEmbeddedBrowserSupport();
+            }
+            var publicClient = builder.Build();
+
             TokenCacheHelper.RegisterCache(publicClient.UserTokenCache);
 
             return publicClient;
@@ -41,11 +48,6 @@
 
         public static async Task<IAuthenticationResult> AcquireTokenInteractiveAsync(string userPrincipalName, IPBICloudEnvironment environment, string claims, CancellationToken cancellationToken)
         {
-            // *** EmbeddedWebView requirements ***
-            // Requires VS project OutputType=WinExe and the 'windows10.0.17763.0' OS version in TargetFramework
-            // The TargetFramework OS 'windows10.0.17763.0' requires 'Microsoft.Windows.SDK.NET' as project dependency.
-            // The 'Microsoft.Windows.SDK.NET' includes all the WPF(PresentationFramework.dll) and WinForm(System.Windows.Forms.dll) assemblies to the project.
-
             var useEmbeddedBrowser = !UserPreferences.Current.UseSystemBrowserForAuthentication;
             var extraQueryParameters = MicrosoftAccountOnlyQueryParameter;
             var prompt = Prompt.SelectAccount; // Force a sign-in as the MSAL web browser might contain cookies for the current user and we don't necessarily want to re-sign-in the same user
