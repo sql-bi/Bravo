@@ -59,7 +59,7 @@
     <PackageReference Include="Dax.Template" Version="0.1.13" />
     <PackageReference Include="Dax.Formatter" Version="1.1.1" />
     <PackageReference Include="Dax.ViewModel" Version="1.6.0" />
-    <PackageReference Include="Dax.Vpax" Version="1.6.0" />
+    <PackageReference Include="Dax.Vpax" Version="1.7.2" />
     <PackageReference Include="Dax.Vpax.Obfuscator" Version="1.0.5" />
     <PackageReference Include="Hellang.Middleware.ProblemDetails" Version="6.5.1" />
     <PackageReference Include="LargeXlsx" Version="1.10.0" />
