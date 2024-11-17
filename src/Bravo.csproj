@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net6-windows</TargetFramework>
+    <TargetFrameworks>net6.0-windows;net8.0-windows</TargetFrameworks>
     <UseWindowsForms>True</UseWindowsForms>
     <ApplicationIcon>Assets\bravo.ico</ApplicationIcon>
     <Company>SQLBI</Company>
