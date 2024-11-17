@@ -23,19 +23,17 @@
   <xsl:template match="*[self::wix:Component or self::wix:ComponentRef][key('BravoExeToRemove', @Id)]" />
 
   <!--
-  >> HACK to force MSI installer to downgrade a library during upgrade
+  >> HACK to allow MSI installer to downgrade a library during upgrade
   >> https://stackoverflow.com/questions/52993587/file-not-copied-only-during-upgrade
   >> https://stackoverflow.com/questions/44765707/how-to-exclude-files-in-wix-toolset
   -->
 
   <!-- Tag files with the "*ToRemove" key -->
   <xsl:key name="IdentityClientToRemove" match="wix:Component[wix:File/@Source='$(var.PublishFolder)\Microsoft.Identity.Client.dll']" use="@Id" />
-  <xsl:key name="SystemTextJsonToRemove" match="wix:Component[wix:File/@Source='$(var.PublishFolder)\System.Text.Json.dll']" use="@Id" />
   <xsl:key name="NewtonsoftJsonToRemove" match="wix:Component[wix:File/@Source='$(var.PublishFolder)\Newtonsoft.Json.dll']" use="@Id" />
   <xsl:key name="WebView2ToRemove" match="wix:Component[contains(wix:File/@Source, '\WebView2Loader.dll') or wix:File/@Source='$(var.PublishFolder)\Microsoft.Web.WebView2.Core.dll' or wix:File/@Source='$(var.PublishFolder)\Microsoft.Web.WebView2.WinForms.dll' or wix:File/@Source='$(var.PublishFolder)\Microsoft.Web.WebView2.Wpf.dll']" use="@Id" />
   <!-- Don't render anything tagged with "*ToRemove" key -->
   <xsl:template match="*[self::wix:Component or self::wix:ComponentRef][key('IdentityClientToRemove', @Id)]" />
-  <xsl:template match="*[self::wix:Component or self::wix:ComponentRef][key('SystemTextJsonToRemove', @Id)]" />
   <xsl:template match="*[self::wix:Component or self::wix:ComponentRef][key('NewtonsoftJsonToRemove', @Id)]" />
   <xsl:template match="*[self::wix:Component or self::wix:ComponentRef][key('WebView2ToRemove', @Id)]" />
   <!-- Reinserts as new components all files previously tagged and removed from the output -->
@@ -58,7 +56,6 @@
       <xsl:apply-templates select="@*|node()" />
       <Component Id="cmpRemovedFilesBundle" Directory="INSTALLFOLDER" Guid="C95A6D04-CE29-449D-B54F-D4EB6AA49D79">
         <File Id="fileIdentityClient" KeyPath="no" Source="$(var.PublishFolder)\Microsoft.Identity.Client.dll" />
-        <File Id="fileSystemTextJson" KeyPath="no" Source="$(var.PublishFolder)\System.Text.Json.dll" />
         <File Id="fileNewtonsoftJson" KeyPath="no" Source="$(var.PublishFolder)\Newtonsoft.Json.dll" />
         <File Id="fileWebView2Loader" KeyPath="no" Source="$(var.PublishFolder)\WebView2Loader.dll" />
         <File Id="fileWebView2Core" KeyPath="no" Source="$(var.PublishFolder)\Microsoft.Web.WebView2.Core.dll" />
