@@ -3,25 +3,29 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFrameworks>net6.0-windows;net8.0-windows</TargetFrameworks>
-    <UseWindowsForms>True</UseWindowsForms>
+    <UseWindowsForms>true</UseWindowsForms>
+    <NoWarn>$(NoWarn);1591</NoWarn>
+    <Nullable>enable</Nullable>
+    <!--AnalysisMode>all</AnalysisMode-->
+    <AnalysisLevel>latest</AnalysisLevel>
+    <RootNamespace>Sqlbi.Bravo</RootNamespace>
+    <Configurations>$(Configurations);Debug_wwwroot</Configurations>
     <ApplicationIcon>Assets\bravo.ico</ApplicationIcon>
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+    <TypeScriptCompileBlocked>true</TypeScriptCompileBlocked>
+    <IncludeOpenAPIAnalyzers>true</IncludeOpenAPIAnalyzers>
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+    <NeutralLanguage>en-US</NeutralLanguage>
+    <SatelliteResourceLanguages>en-US</SatelliteResourceLanguages>
     <Company>SQLBI</Company>
-    <Authors>SQLBI</Authors>
     <Product>Bravo for Power BI</Product>
     <Copyright>SQLBI Corporation</Copyright>
-    <RootNamespace>Sqlbi.$(MSBuildProjectName.Replace(" ", "_"))</RootNamespace>
-    <Nullable>enable</Nullable>
-    <GenerateDocumentationFile>True</GenerateDocumentationFile>
-    <NoWarn>$(NoWarn);1591</NoWarn>
-    <TypeScriptCompileBlocked>true</TypeScriptCompileBlocked>
-    <Configurations>$(Configurations);Debug_wwwroot</Configurations>
-    <AnalysisLevel>latest</AnalysisLevel>
-    <IncludeOpenAPIAnalyzers>true</IncludeOpenAPIAnalyzers>
-    <IsPackable>false</IsPackable>
-    <IsPublishable>true</IsPublishable>
-    <SatelliteResourceLanguages>en-US</SatelliteResourceLanguages>
-    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
-    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' != 'Release'">
+    <Version>0.0.0.999</Version>
+    <InformationalVersion>0.0.0.999-DEV</InformationalVersion>
+    <GenerateDocumentationFile >true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <Choose>
@@ -36,16 +40,6 @@
       </PropertyGroup>
     </Otherwise>
   </Choose>
-<!--
-  <PropertyGroup>
-    <RestoreSources>$(RestoreSources);./Assets/nupkgs;https://api.nuget.org/v3/index.json</RestoreSources>
-  </PropertyGroup>
--->
-  <PropertyGroup>
-    <!-- Don't change version here -->
-    <Version>0.0.0.999</Version>
-    <InformationalVersion>0.0.0.999-DEV</InformationalVersion>
-  </PropertyGroup>
 
   <ItemGroup>
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
@@ -73,24 +67,20 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="wwwroot\**">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-
-  <ItemGroup>
     <Reference Include="Antlr4.Runtime">
       <HintPath>Assets\lib\Antlr4.Runtime.dll</HintPath>
     </Reference>
     <Reference Include="TOMWrapper">
       <HintPath>Assets\lib\TOMWrapper.dll</HintPath>
     </Reference>
+    <None Include="wwwroot\**">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <Content Remove="Scripts\**;Assets\**" />
+    <EmbeddedResource Include="Assets\ManageDates\Templates\*.json;Assets\ManageDates\Schemas\*.schema.json" />
   </ItemGroup>
 
   <ItemGroup>
-    <Content Remove="Scripts\*.json" />
-    <None Include="Scripts\*.json" />
-    <Content Include="Assets\bravo.ico" />
     <Compile Update="Properties\Resources.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -101,27 +91,6 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Include="Assets\ManageDates\Schemas\*.schema.json">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Assets\ManageDates\Templates\*.json">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </EmbeddedResource>
-  </ItemGroup>
-
-  <!--
-  ** The following custom MSBuild target removes the 'Assets' folder from output after the publish operation.
-  ** 'Assets' folder only contains resource files that have been embedded but are stil published due to a bug (see link below)
-  
-  ** Embedded Resources still copy to output directory even set `CopyToOutputDirectory` to Never
-  ** https://developercommunity.visualstudio.com/t/embedded-resources-still-copy-to-output-directory/1474603
-  -->
-  <Target Name="RemoveEmbeddedResourceDirectory" AfterTargets="AfterPublish" Condition=" '$(Configuration)' == 'Release' ">
-    <Message Importance="high" Text="::RemoveEmbeddedResourceDirectory - $(PublishUrl)Assets;$(PublishDir)Assets" />
-    <RemoveDir Directories="$(PublishUrl)Assets;$(PublishDir)Assets" />
-  </Target>
 
   <!-- 
   ** The following custom MSBuild targets add the static client web assets into the build process
@@ -144,16 +113,6 @@
   <ItemGroup>
     <ClientAssetsInputs Include="$(ClientAssetsDirectory)**" Exclude="$(DefaultItemExcludes)" />
   </ItemGroup>
-
-  <!--
-  Target Name="EnsureNodeJsInstalled" BeforeTargets="Build" Condition=" '$(Configuration)' == 'Debug' And !Exists('Scripts\dist') ">
-    <Message Importance="high" Text="::EnsureNodeJsInstalled - retreiving Node.js version ..." />
-    <Exec Command="node - - version" ContinueOnError="true">
-      <Output TaskParameter="ExitCode" PropertyName="ErrorCode" />
-    </Exec>
-    <Error Condition="'$(ErrorCode)' != '0'" Text="Node.js is required to build and run this project." />
-  </Target
-  -->
 
   <Target Name="ClientAssetsRestore" Condition="'$(ClientAssetsEnabled)' == 'true'" BeforeTargets="Build" Inputs="$(ClientAssetsRestoreInputs)" Outputs="$(ClientAssetsRestoreOutputs)">
     <Message Importance="high" Text="::ClientAssetsRestore - running 'npm install' ..." />
