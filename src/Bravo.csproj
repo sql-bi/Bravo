@@ -9,23 +9,14 @@
     <!--AnalysisMode>all</AnalysisMode-->
     <AnalysisLevel>latest</AnalysisLevel>
     <RootNamespace>Sqlbi.Bravo</RootNamespace>
+    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
     <Configurations>$(Configurations);Debug_wwwroot</Configurations>
     <ApplicationIcon>Assets\bravo.ico</ApplicationIcon>
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
     <TypeScriptCompileBlocked>true</TypeScriptCompileBlocked>
     <IncludeOpenAPIAnalyzers>true</IncludeOpenAPIAnalyzers>
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
-    <NeutralLanguage>en-US</NeutralLanguage>
     <SatelliteResourceLanguages>en-US</SatelliteResourceLanguages>
-    <Company>SQLBI</Company>
-    <Product>Bravo for Power BI</Product>
-    <Copyright>SQLBI Corporation</Copyright>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)' != 'Release'">
-    <Version>0.0.0.999</Version>
-    <InformationalVersion>0.0.0.999-DEV</InformationalVersion>
-    <GenerateDocumentationFile >true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <Choose>
@@ -40,12 +31,6 @@
       </PropertyGroup>
     </Otherwise>
   </Choose>
-
-  <ItemGroup>
-    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
-      <_Parameter1>$(AssemblyName).Tests</_Parameter1>
-    </AssemblyAttribute>
-  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="CsvHelper" Version="33.0.1" />
