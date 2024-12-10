@@ -5,15 +5,19 @@ on:
 jobs:
   build-and-test:
     runs-on: windows-latest
+    strategy:
+      matrix:
+        framework: [net6.0-windows, net8.0-windows]
     steps:
-    - uses: actions/checkout@v4
-    - name: Setup .NET
+    - name: checkout
+      uses: actions/checkout@v4
+    - name: setup dotnet
       uses: actions/setup-dotnet@v4
       with:
         global-json-file: global.json
     - name: dotnet restore
-      run:  dotnet restore
+      run:  dotnet restore Bravo.sln
     - name: dotnet build
-      run:  dotnet build Bravo.sln --configuration Release --no-restore
+      run:  dotnet build Bravo.sln --configuration Release --framework ${{ matrix.framework }} --no-restore
     - name: dotnet test
-      run:  dotnet test Bravo.sln --configuration Release --no-build --verbosity normal
+      run:  dotnet test Bravo.sln --configuration Release --framework ${{ matrix.framework }} --no-build --verbosity normal

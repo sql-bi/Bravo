@@ -144,8 +144,11 @@
             services.AddAuthenticationCore();
             //services.AddDataProtection();
             services.AddWebEncoders();
+#if NET8_0_OR_GREATER
+            services.TryAddSingleton(TimeProvider.System);
+#else
             services.TryAddSingleton<ISystemClock, SystemClock>();
-
+#endif
             var builder = new AuthenticationBuilder(services);
             services.Configure<AuthenticationOptions>((options) => options.DefaultScheme = AppEnvironment.ApiAuthenticationSchema);
             builder.AddScheme<AppAuthenticationSchemeOptions, AppAuthenticationHandler>(AppEnvironment.ApiAuthenticationSchema, (options) => options.Validate());
