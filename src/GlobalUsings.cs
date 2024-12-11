@@ -1,4 +1,12 @@
-﻿global using System.Collections.Generic;
+﻿global using Sqlbi.Bravo.Infrastructure;
+global using Sqlbi.Bravo.Infrastructure.Services;
+global using System;
+global using System.Collections.Generic;
+global using System.Data;
 global using System.IO;
+global using System.Linq;
+global using System.Text.Json.Serialization;
 global using System.Threading;
 global using System.Threading.Tasks;
+global using SSAS = Microsoft.AnalysisServices;
+global using TOM = Microsoft.AnalysisServices.Tabular;

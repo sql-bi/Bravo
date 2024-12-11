@@ -31,16 +31,18 @@
     {
         private readonly IPBICloudService _pbicloudService;
         private readonly IPBIDesktopService _pbidesktopService;
+        private readonly IVertiPaqAnalyzerService _vertipaqanalyzerService;
 
-        public AnalyzeModelService(IPBICloudService pbicloudService, IPBIDesktopService pbidesktopService)
+        public AnalyzeModelService(IPBICloudService pbicloudService, IPBIDesktopService pbidesktopService, IVertiPaqAnalyzerService vertipaqanalyzerService)
         {
             _pbicloudService = pbicloudService;
             _pbidesktopService = pbidesktopService;
+            _vertipaqanalyzerService = vertipaqanalyzerService;
         }
 
         public TabularDatabase GetDatabase(Stream stream, Stream? dictionaryStream)
         {
-            var daxModel = VpaxHelper.GetDaxModel(stream, dictionaryStream);
+            var daxModel = _vertipaqanalyzerService.Import(stream, dictionaryStream);
             var database = TabularDatabase.CreateFrom(daxModel);
             {
                 database.Features &= ~TabularDatabaseFeature.AnalyzeModelSynchronize;
@@ -61,7 +63,7 @@
         public TabularDatabase GetDatabase(PBIDesktopReport report, CancellationToken cancellationToken)
         {
             using var connection = TabularConnectionWrapper.ConnectTo(report);
-            var daxModel = VpaxHelper.GetDaxModel(connection, statisticsEnabled: false, cancellationToken);
+            var daxModel = _vertipaqanalyzerService.Extract(connection, updateStatistics: false, cancellationToken);
             return TabularDatabase.CreateFrom(daxModel, tomModel: connection.Model);
         }
 
@@ -70,7 +72,7 @@
             if (dataset.IsXmlaEndPointSupported || dataset.IsOnPremModel == true)
             {
                 using var connection = TabularConnectionWrapper.ConnectTo(dataset, accessToken);
-                var daxModel = VpaxHelper.GetDaxModel(connection, statisticsEnabled: false, cancellationToken);
+                var daxModel = _vertipaqanalyzerService.Extract(connection, updateStatistics: false, cancellationToken);
                 return TabularDatabase.CreateFrom(daxModel, tomModel: connection.Model);
             }
             else
@@ -101,13 +103,15 @@
         public void ExportVpax(PBIDesktopReport report, string path, string? dictionaryPath, string? inputDictionaryPath, CancellationToken cancellationToken)
         {
             using var connection = TabularConnectionWrapper.ConnectTo(report);
-            VpaxHelper.ExportVpax(connection, path, dictionaryPath, inputDictionaryPath, cancellationToken);
+            var daxModel = _vertipaqanalyzerService.Extract(connection, updateStatistics: true, cancellationToken);
+            _vertipaqanalyzerService.Export(daxModel, path, connection.Database, dictionaryPath, inputDictionaryPath);
         }
 
         public void ExportVpax(PBICloudDataset dataset, string path, string? dictionaryPath, string? inputDictionaryPath, string accessToken, CancellationToken cancellationToken)
         {
             using var connection = TabularConnectionWrapper.ConnectTo(dataset, accessToken);
-            VpaxHelper.ExportVpax(connection, path, dictionaryPath, inputDictionaryPath, cancellationToken);
+            var daxModel = _vertipaqanalyzerService.Extract(connection, updateStatistics: true, cancellationToken);
+            _vertipaqanalyzerService.Export(daxModel, path, connection.Database, dictionaryPath, inputDictionaryPath);
         }
     }
 }

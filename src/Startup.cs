@@ -47,6 +47,7 @@
             services.AddSingleton<IAuthenticationService, AuthenticationService>();
             services.AddSingleton<ITemplateDevelopmentService, TemplateDevelopmentService>();
             services.AddSingleton<IBestPracticeAnalyzerService, BestPracticeAnalyzerService>();
+            services.AddSingleton<IVertiPaqAnalyzerService, VertiPaqAnalyzerService>();
         }
 
         public void Configure(IApplicationBuilder application, IWebHostEnvironment environment)
