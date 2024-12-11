@@ -7,10 +7,6 @@
     using Sqlbi.Bravo.Infrastructure.Services.PowerBI;
     using Sqlbi.Bravo.Models;
     using Sqlbi.Bravo.Models.AnalyzeModel;
-    using System.Collections.Generic;
-    using System.IO;
-    using System.Threading;
-    using System.Threading.Tasks;
 
     public interface IAnalyzeModelService
     {
@@ -44,47 +40,44 @@
 
         public TabularDatabase GetDatabase(Stream stream, Stream? dictionaryStream)
         {
-            return TabularDatabase.CreateFromVpax(stream, dictionaryStream);
+            var daxModel = VpaxHelper.GetDaxModel(stream, dictionaryStream);
+            var database = TabularDatabase.CreateFrom(daxModel);
+            {
+                database.Features &= ~TabularDatabaseFeature.AnalyzeModelSynchronize;
+                database.Features &= ~TabularDatabaseFeature.AnalyzeModelExportVpax;
+                database.Features &= ~TabularDatabaseFeature.FormatDaxSynchronize;
+                database.Features &= ~TabularDatabaseFeature.FormatDaxUpdateModel;
+                database.Features &= ~TabularDatabaseFeature.ManageDatesAll;
+                database.Features &= ~TabularDatabaseFeature.ExportDataAll;
+
+                database.FeatureUnsupportedReasons |= TabularDatabaseFeatureUnsupportedReason.MetadataOnly;
+
+                if (daxModel.ObfuscatorDictionaryId != null && dictionaryStream == null)
+                    database.Features |= TabularDatabaseFeature.AnalyzeModelDeobfuscateVpax;
+            }
+            return database;
         }
 
         public TabularDatabase GetDatabase(PBIDesktopReport report, CancellationToken cancellationToken)
         {
             using var connection = TabularConnectionWrapper.ConnectTo(report);
-            var database = TabularDatabase.CreateFrom(connection, cancellationToken);
-            
-            if (connection.Server.IsPowerBIDesktop() == false)
-            {
-                database.Features &= ~TabularDatabaseFeature.ManageDatesAll;
-                database.FeatureUnsupportedReasons |= TabularDatabaseFeatureUnsupportedReason.ManageDatesPBIDesktopModelOnly;
-            }
-
-            return database;
+            var daxModel = VpaxHelper.GetDaxModel(connection, statisticsEnabled: false, cancellationToken);
+            return TabularDatabase.CreateFrom(daxModel, tomModel: connection.Model);
         }
 
         public TabularDatabase GetDatabase(PBICloudDataset dataset, string accessToken, CancellationToken cancellationToken)
         {
-            BravoUnexpectedException.ThrowIfNull(dataset.DisplayName);
-            TabularDatabase database;
-
             if (dataset.IsXmlaEndPointSupported || dataset.IsOnPremModel == true)
             {
                 using var connection = TabularConnectionWrapper.ConnectTo(dataset, accessToken);
-                database = TabularDatabase.CreateFrom(connection, cancellationToken);
+                var daxModel = VpaxHelper.GetDaxModel(connection, statisticsEnabled: false, cancellationToken);
+                return TabularDatabase.CreateFrom(daxModel, tomModel: connection.Model);
             }
             else
             {
                 using var connection = AdomdConnectionWrapper.ConnectTo(dataset, accessToken);
-                database = TabularDatabase.CreateFromDmvSchema(connection);
-
-                database.Features &= ~TabularDatabaseFeature.AnalyzeModelAll;
-                database.Features &= ~TabularDatabaseFeature.FormatDaxAll;
-                database.FeatureUnsupportedReasons |= TabularDatabaseFeatureUnsupportedReason.XmlaEndpointNotSupported;
+                return TabularDatabase.CreateFrom(connection);
             }
-
-            database.Features &= ~TabularDatabaseFeature.ManageDatesAll;
-            database.FeatureUnsupportedReasons |= TabularDatabaseFeatureUnsupportedReason.ManageDatesPBIDesktopModelOnly;
-
-            return database;
         }
 
         public async Task<IEnumerable<PBICloudDataset>> GetDatasetsAsync(CancellationToken cancellationToken)

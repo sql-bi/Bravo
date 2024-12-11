@@ -6,6 +6,7 @@
     using System.Collections.Generic;
     using System.Linq;
     using System.Text.Json.Nodes;
+    using SSAS = Microsoft.AnalysisServices;
     using TOM = Microsoft.AnalysisServices.Tabular;
 
     internal static class ModelOperationResultExtensions
@@ -126,7 +127,7 @@
 
     internal static class ServerExtension
     {
-        public static bool IsPowerBIDesktop(this TOM.Server server)
+        public static bool IsPowerBIDesktop(this SSAS.Core.Server server)
         {
             if (server.IsPowerBIOnPremis())
             {
@@ -136,7 +137,7 @@
             return false;
         }
 
-        public static bool IsPowerBIDesktopReportServer(this TOM.Server server)
+        public static bool IsPowerBIDesktopReportServer(this SSAS.Core.Server server)
         {
             if (server.IsPowerBIOnPremis())
             {
@@ -146,7 +147,7 @@
             return false;
         }
 
-        public static bool IsPowerBIService(this TOM.Server server)
+        public static bool IsPowerBIService(this SSAS.Core.Server server)
         {
             if (server.CompatibilityMode == CompatibilityMode.PowerBI)
             {
@@ -156,7 +157,7 @@
             return false;
         }
 
-        public static bool IsPowerBIOnPremis(this TOM.Server server)
+        public static bool IsPowerBIOnPremis(this SSAS.Core.Server server)
         {
             if (server.CompatibilityMode == CompatibilityMode.PowerBI)
             {
@@ -166,7 +167,7 @@
             return false;
         }
 
-        public static bool IsSQLServerAnalisysServices(this TOM.Server server)
+        public static bool IsSQLServerAnalisysServices(this SSAS.Core.Server server)
         {
             if (server.CompatibilityMode == CompatibilityMode.AnalysisServices)
             {
@@ -176,7 +177,7 @@
             return false;
         }
 
-        public static bool IsAzureAnalisysServices(this TOM.Server server)
+        public static bool IsAzureAnalisysServices(this SSAS.Core.Server server)
         {
             if (server.CompatibilityMode == CompatibilityMode.AnalysisServices)
             {

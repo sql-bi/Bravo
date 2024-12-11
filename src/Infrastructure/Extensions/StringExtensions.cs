@@ -208,7 +208,7 @@
             return (expression, lineBreakStyle);
         }
 
-        public static bool IsAutoDateTimePrivateTableName(this string? tableName)
+        public static bool IsAutoDateTimeTableName(this string? tableName)
         {
             if (tableName is not null)
             {

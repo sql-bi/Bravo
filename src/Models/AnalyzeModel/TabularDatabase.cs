@@ -13,6 +13,7 @@
     using System.Text.Json.Serialization;
     using System.Threading;
     using SSAS = Microsoft.AnalysisServices;
+    using Tom = Microsoft.AnalysisServices.Tabular;
 
     public class TabularDatabase
     {
@@ -28,46 +29,11 @@
         [JsonPropertyName("measures")]
         public IEnumerable<TabularMeasure>? Measures { get; set; }
 
-        internal static TabularDatabase CreateFromVpax(Stream stream, Stream? dictionaryStream)
-        {
-            var daxModel = VpaxHelper.GetDaxModel(stream, dictionaryStream);
-            var database = CreateFrom(daxModel);
-            {
-                database.Features &= ~TabularDatabaseFeature.AnalyzeModelSynchronize;
-                database.Features &= ~TabularDatabaseFeature.AnalyzeModelExportVpax;
-                database.Features &= ~TabularDatabaseFeature.FormatDaxSynchronize;
-                database.Features &= ~TabularDatabaseFeature.FormatDaxUpdateModel;
-                database.Features &= ~TabularDatabaseFeature.ManageDatesAll;
-                database.Features &= ~TabularDatabaseFeature.ExportDataAll;
-
-                database.FeatureUnsupportedReasons |= TabularDatabaseFeatureUnsupportedReason.MetadataOnly;
-                database.FeatureUnsupportedReasons |= TabularDatabaseFeatureUnsupportedReason.ReadOnly;
-
-                if (daxModel.ObfuscatorDictionaryId != null && dictionaryStream == null)
-                    database.Features |= TabularDatabaseFeature.AnalyzeModelDeobfuscateVpax;
-            }
-            return database;
-        }
-
-        internal static TabularDatabase CreateFrom(TabularConnectionWrapper connection, CancellationToken cancellationToken)
-        {
-            var daxModel = VpaxHelper.GetDaxModel(connection, statisticsEnabled: false, cancellationToken);
-            var database = CreateFrom(daxModel, connection);
-
-            if (connection.Database.ReadWriteMode == SSAS.ReadWriteMode.ReadOnly)
-            {
-                database.Features &= ~TabularDatabaseFeature.AllUpdateModel;
-                database.FeatureUnsupportedReasons |= TabularDatabaseFeatureUnsupportedReason.ReadOnly;
-            }
-
-            return database;
-        }
-
-        internal static TabularDatabase CreateFrom(Dax.Metadata.Model daxModel, TabularConnectionWrapper? connection = default)
+        internal static TabularDatabase CreateFrom(Dax.Metadata.Model daxModel, Tom.Model? tomModel = default)
         {
             var vpaModel = new VpaModel(daxModel);
 
-            var includedDaxTables = daxModel.Tables.Where(IsIncluded).ToArray();
+            var includedDaxTables = daxModel.Tables.Where((t) => !IsInternal(t)).ToArray();
             var includedDaxTableNames = includedDaxTables.Select((t) => t.TableName.Name).ToHashSet();
 
             var includedTables = vpaModel.Tables.Where((t) => includedDaxTableNames.Contains(t.TableName)).ToArray();
@@ -76,9 +42,9 @@
 
             var databaseETag = TabularModelHelper.GetDatabaseETag(vpaModel.Model.ModelName.Name, vpaModel.Model.Version, vpaModel.Model.LastUpdate);
             var databaseSize = includedColumns.Sum((c) => c.TotalSize);
-            var tables = includedTables.Select((t) => TabularTable.CreateFrom(t, connection?.Model)).ToArray();
+            var tables = includedTables.Select((t) => TabularTable.CreateFrom(t, tomModel)).ToArray();
             var columns = includedColumns.Select((c) => TabularColumn.CreateFrom(c, databaseSize)).ToArray();
-            var measures = includedMeasures.Select((m) => TabularMeasure.CreateFrom(m, databaseETag, connection?.Model)).ToArray();
+            var measures = includedMeasures.Select((m) => TabularMeasure.CreateFrom(m, databaseETag, tomModel)).ToArray();
             var autoLineBreakStyle = measures.GetAutoLineBreakStyle();
 
             var database = new TabularDatabase
@@ -87,16 +53,16 @@
                 {
                     ETag = databaseETag,
                     Name = daxModel.ModelName.Name,
-                    Culture = connection?.Model.Culture,
+                    Culture = tomModel?.Culture,
                     CompatibilityMode = daxModel.CompatibilityMode.TryParseTo<SSAS.CompatibilityMode>(),
                     CompatibilityLevel = daxModel.CompatibilityLevel,
                     DatabaseSize = databaseSize,
                     AutoLineBreakStyle = autoLineBreakStyle,
-                    ServerName = daxModel.ServerName?.Name ?? connection?.Server.Name,
-                    ServerVersion = connection?.Server.Version,
-                    ServerEdition = connection?.Server.Edition,
-                    ServerMode = connection?.Server.ServerMode,
-                    ServerLocation = connection?.Server.ServerLocation,
+                    ServerName = daxModel.ServerName?.Name ?? tomModel?.Server.Name,
+                    ServerVersion = tomModel?.Server.Version,
+                    ServerEdition = tomModel?.Server.Edition,
+                    ServerMode = tomModel?.Server.ServerMode,
+                    ServerLocation = tomModel?.Server.ServerLocation,
                     TablesMaxRowsCount = includedTables.Length == 0 ? 0L : includedTables.Max((t) => t.RowsCount),
                     TablesCount = includedTables.Length,
                     Tables = tables,
@@ -107,7 +73,7 @@
                 Measures = measures
             };
 
-            if (daxModel.Tables.Any(IsAutoDateTimeTable))
+            if (daxModel.Tables.Any(IsAutoDateTime))
             {
                 database.Features &= ~TabularDatabaseFeature.ManageDatesAll;
                 database.FeatureUnsupportedReasons |= TabularDatabaseFeatureUnsupportedReason.ManageDatesAutoDateTimeEnabled;
@@ -119,29 +85,26 @@
                 database.FeatureUnsupportedReasons |= TabularDatabaseFeatureUnsupportedReason.ManageDatesEmptyTableCollection;
             }
 
+            if (tomModel is null || !tomModel.Server.IsPowerBIDesktop())
+            {
+                database.Features &= ~TabularDatabaseFeature.ManageDatesAll;
+                database.FeatureUnsupportedReasons |= TabularDatabaseFeatureUnsupportedReason.ManageDatesPBIDesktopModelOnly;
+            }
+
+            if (tomModel is null || tomModel.Database.ReadWriteMode == SSAS.ReadWriteMode.ReadOnly)
+            {
+                database.Features &= ~TabularDatabaseFeature.AllUpdateModel;
+                database.FeatureUnsupportedReasons |= TabularDatabaseFeatureUnsupportedReason.ReadOnly;
+            }
+
             return database;
 
-            static bool IsAutoDateTimeTable(Dax.Metadata.Table daxTable)
-            {
-                if (daxTable.IsLocalDateTable || daxTable.IsTemplateDateTable)
-                    return true;
+            static bool IsInternal(Dax.Metadata.Table daxTable) => daxTable.IsPrivate || IsAutoDateTime(daxTable);
 
-                return false;
-            }
-
-            static bool IsIncluded(Dax.Metadata.Table daxTable)
-            {
-                if (daxTable.IsPrivate)
-                    return false;
-
-                if (IsAutoDateTimeTable(daxTable))
-                    return false;
-
-                return true;
-            }
+            static bool IsAutoDateTime(Dax.Metadata.Table daxTable) => daxTable.IsLocalDateTable || daxTable.IsTemplateDateTable;
         }
 
-        internal static TabularDatabase CreateFromDmvSchema(AdomdConnectionWrapper connection)
+        internal static TabularDatabase CreateFrom(AdomdConnectionWrapper connection)
         {
             using var tablesWithColumnsCommand = connection.CreateDmvTablesWithColumnsCommand();
             using var tablesWithColumnsReader = tablesWithColumnsCommand.ExecuteReader(CommandBehavior.SingleResult);
@@ -149,7 +112,7 @@
 
             using var tablesCommand = connection.CreateDmvTablesCommand();
             using var tablesReader = tablesCommand.ExecuteReader(CommandBehavior.SingleResult);
-            var tables = tablesReader.Select((reader) => TabularTable.CreateFromDmvTables(reader, tablesWithColumns)).Where(IsIncluded).ToArray();
+            var tables = tablesReader.Select((reader) => TabularTable.CreateFromDmvTables(reader, tablesWithColumns)).Where((t) => !IsInternal(t)).ToArray();
 
             var database = new TabularDatabase
             {
@@ -176,15 +139,13 @@
                 Measures = Array.Empty<TabularMeasure>(),
             };
 
+            database.Features &= ~TabularDatabaseFeature.AnalyzeModelAll;
+            database.Features &= ~TabularDatabaseFeature.FormatDaxAll;
+            database.FeatureUnsupportedReasons |= TabularDatabaseFeatureUnsupportedReason.XmlaEndpointNotSupported;
+
             return database;
 
-            static bool IsIncluded(TabularTable table)
-            {
-                if (table.Name.IsAutoDateTimePrivateTableName())
-                    return false;
-
-                return true;
-            }
+            static bool IsInternal(TabularTable table) => table.Name.IsAutoDateTimeTableName();
         }
     }
 
