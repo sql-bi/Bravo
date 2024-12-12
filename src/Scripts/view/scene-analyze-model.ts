@@ -21,6 +21,7 @@ import { AppError } from '../model/exceptions';
 import { ErrorScene } from './scene-error';
 import { PageType } from '../controllers/page';
 import { tabulatorTreeChildrenFilter, TabulatorTreeChildrenFilterParams } from '../model/extend-tabulator';
+import { VpaxObfuscationMode } from "../controllers/host";
 
 Chart.register(TreemapController, TreemapElement);
 interface ExtendedTabularColumn extends TabularColumn {
@@ -89,6 +90,8 @@ export class AnalyzeModelScene extends DocScene {
                         
 
                         <div class="save-vpax ctrl icon-save disable-on-syncing enable-if-exportable" ${!this.canExportVpax ? "hidden" : ""} title="${i18n(strings.saveVpaxCtrlTile)}"> VPAX </div>
+                        <div class="save-vpax-obfuscation-default ctrl icon-save disable-on-syncing enable-if-exportable" ${!this.canExportVpax ? "hidden" : ""} title="${i18n(strings.saveVpaxCtrlTile)}"> OBFUSCATED VPAX </div>
+                        <div class="save-vpax-obfuscation-incremental ctrl icon-save disable-on-syncing enable-if-exportable" ${!this.canExportVpax ? "hidden" : ""} title="${i18n(strings.saveVpaxCtrlTile)}"> INCREMENTAL OBFUSCATED VPAX </div>
 
                     </div>
 
@@ -772,22 +775,34 @@ export class AnalyzeModelScene extends DocScene {
             this.expandTree(false);
         });
 
-        _(".save-vpax", this.element).addEventListener("click", e => {
+        _(".save-vpax", this.element).addEventListener("click", this.saveVpax(VpaxObfuscationMode.None));
+        _(".save-vpax-obfuscation-default", this.element).addEventListener("click", this.saveVpax(VpaxObfuscationMode.Default));
+        _(".save-vpax-obfuscation-incremental", this.element).addEventListener("click", this.saveVpax(VpaxObfuscationMode.Incremental));
+
+        themeController.on("change", () => {
+            if (this.chart) {
+                this.chart.update("none");
+            }
+        });
+    }
+
+    saveVpax(mode: VpaxObfuscationMode) {
+        return (e: Event) => {
             e.preventDefault();
             let el = <HTMLElement>e.currentTarget;
             if (el.hasAttribute("disabled")) return;
 
-            telemetry.track("Save VPAX");
+            telemetry.track("Save VPAX", { "Obfuscation": mode });
 
             el.toggleAttr("disabled", true);
             if (this.canExportVpax) {
 
-                let exportingScene = new LoaderScene(Utils.DOM.uniqueId(), this.element.parentElement, i18n(strings.savingVpax), ()=>{
+                let exportingScene = new LoaderScene(Utils.DOM.uniqueId(), this.element.parentElement, i18n(strings.savingVpax), () => {
                     host.abortExportVpax(this.doc.type);
                 });
                 this.push(exportingScene);
 
-                host.exportVpax(<any>this.doc.sourceData, this.doc.type)
+                host.exportVpax(<any>this.doc.sourceData, this.doc.type, mode)
                     .then(ok => {
                         this.pop();
                     })
@@ -801,13 +816,6 @@ export class AnalyzeModelScene extends DocScene {
                         el.toggleAttr("disabled", false);
                     });
             }
-        });
-
-        themeController.on("change", () => {
-            if (this.chart) {
-                this.chart.update("none");
-            }
-        });
-    }
-
+        }
+    };
 }

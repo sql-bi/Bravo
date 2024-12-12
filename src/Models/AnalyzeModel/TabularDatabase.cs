@@ -77,12 +77,6 @@
                 database.FeatureUnsupportedReasons |= TabularDatabaseFeatureUnsupportedReason.ManageDatesEmptyTableCollection;
             }
 
-            if (tomModel is null || !tomModel.Server.IsPowerBIDesktop())
-            {
-                database.Features &= ~TabularDatabaseFeature.ManageDatesAll;
-                database.FeatureUnsupportedReasons |= TabularDatabaseFeatureUnsupportedReason.ManageDatesPBIDesktopModelOnly;
-            }
-
             if (tomModel is null || tomModel.Database.ReadWriteMode == SSAS.ReadWriteMode.ReadOnly)
             {
                 database.Features &= ~TabularDatabaseFeature.AllUpdateModel;

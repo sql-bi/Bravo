@@ -10,7 +10,8 @@
     {
         Model Extract(TabularConnectionWrapper connectionWrapper, bool updateStatistics, CancellationToken cancellationToken);
         Model Import(Stream stream);
-        void Export(Model daxModel, string path, TOM.Database tomDatabase, string? dictionaryPath, string? inputDictionaryPath);
+        void Export(string path, Model model, TOM.Database database);
+        Model Obfuscate(Model model, string dictionaryPath, string? incrementalObfuscationDictionaryPath);
         Model Deobfuscate(Model model, string dictionaryPath);
     }
 
@@ -70,45 +71,34 @@
             return content.DaxModel;
         }
 
-        public void Export(Model daxModel, string path, TOM.Database tomDatabase, string? dictionaryPath, string? inputDictionaryPath)
+        public void Export(string path, Model model, TOM.Database database)
         {
-            if (dictionaryPath == null) // If null, no obfuscation is required
+            var vpaModel = new Dax.ViewVpaExport.Model(model);
+            try
             {
-                var vpaModel = new Dax.ViewVpaExport.Model(daxModel);
-                try
-                {
-                    VpaxTools.ExportVpax(path, daxModel, vpaModel, tomDatabase);
-                }
-                catch (IOException ex)
-                {
-                    throw new BravoException(BravoProblem.VpaxFileExportError, ex.Message, ex);
-                }
+                VpaxTools.ExportVpax(path, model, vpaModel, database);
             }
-            else
+            catch (IOException ex)
             {
-                using var stream = new MemoryStream();
-                VpaxTools.ExportVpax(stream, daxModel);
-                try
-                {
-                    var inputDictionary = inputDictionaryPath is not null ? ObfuscationDictionary.ReadFrom(inputDictionaryPath) : null;
-                    var obfuscator = new VpaxObfuscator();
-                    var dictionary = obfuscator.Obfuscate(stream, inputDictionary);
-                    dictionary.WriteTo(dictionaryPath, overwrite: false, indented: true); // To prevent loss of the dictionary, always deny overwrite
-                }
-                catch (Exception ex)
-                {
-                    throw new BravoException(BravoProblem.VpaxObfuscationError, ex.Message, ex);
-                }
-                try
-                {
-                    using var fileStream = new FileStream(path, FileMode.Create, FileAccess.Write);
-                    stream.Position = 0;
-                    stream.CopyTo(fileStream);
-                }
-                catch (IOException ex)
-                {
-                    throw new BravoException(BravoProblem.VpaxFileExportError, ex.Message, ex);
-                }
+                throw new BravoException(BravoProblem.VpaxFileExportError, ex.Message, ex);
+            }
+        }
+
+        public Model Obfuscate(Model model, string dictionaryPath, string? incrementalObfuscationDictionaryPath)
+        {
+            try
+            {
+                var dictionary = incrementalObfuscationDictionaryPath is not null ? ObfuscationDictionary.ReadFrom(incrementalObfuscationDictionaryPath) : null;
+                var obfuscator = new VpaxObfuscator();
+
+                dictionary = obfuscator.Obfuscate(model, dictionary);
+                dictionary.WriteTo(dictionaryPath, overwrite: false, indented: true); // Always deny overwrite to prevent overwriting an existing dictionary
+
+                return model;
+            }
+            catch (Exception ex)
+            {
+                throw new BravoException(BravoProblem.VpaxObfuscationError, ex.Message, ex);
             }
         }
 
@@ -118,8 +108,8 @@
             {
                 var dictionary = ObfuscationDictionary.ReadFrom(dictionaryPath);
                 var obfuscator = new VpaxObfuscator();
-                obfuscator.Deobfuscate(model, dictionary);
 
+                obfuscator.Deobfuscate(model, dictionary);
                 return model;
             }
             catch (Exception ex)

@@ -94,6 +94,11 @@ export interface DiagnosticMessage {
     timestamp?: string
 }
 
+export enum VpaxObfuscationMode {
+    None = 0,
+    Default = 1,
+    Incremental = 2
+}
 
 export enum ExportDataFormat {
     Csv = "Csv",
@@ -510,8 +515,8 @@ export class Host extends Dispatchable {
         return <Promise<PBICloudDataset[]>>this.apiCall("api/ListDatasets", {}, {}, true, logSettings);
     }
 
-    exportVpax(datasource: PBIDesktopReport | PBICloudDataset, type: DocType) {
-        return <Promise<boolean>>this.apiCall(`api/ExportVpaxFrom${type == DocType.dataset ? "Dataset" : "Report"}`, datasource, { method: "POST" })
+    exportVpax(datasource: PBIDesktopReport | PBICloudDataset, type: DocType, mode: VpaxObfuscationMode) {
+        return <Promise<boolean>>this.apiCall(`api/ExportVpaxFrom${type == DocType.dataset ? "Dataset" : "Report"}?mode=${mode}`, datasource, { method: "POST" }, true, null, 0)
             .then(response => (response !== null));
     }
     abortExportVpax(type: DocType) {
