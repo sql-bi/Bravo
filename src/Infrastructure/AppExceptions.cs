@@ -217,13 +217,13 @@
         /// <summary>
         /// An error occurred while obfuscating the VPAX file
         /// </summary> 
-        [JsonPropertyName("VpaxObfuscationError")]
-        VpaxObfuscationError = 1000,
+        [JsonPropertyName("VpaxObfuscatorObfuscationError")]
+        VpaxObfuscatorObfuscationError = 1000,
 
         /// <summary>
         /// An error occurred while deobfuscating the VPAX file
         /// </summary> 
-        [JsonPropertyName("VpaxDeobfuscationError")]
-        VpaxDeobfuscationError = 1001,
+        [JsonPropertyName("VpaxObfuscatorDeobfuscationError")]
+        VpaxObfuscatorDeobfuscationError = 1001,
     }
 }

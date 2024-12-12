@@ -28,6 +28,9 @@ export enum AppProblem {
     NetworkError = 600,
     ExportDataFileError = 700,
     ManageDateTemplateError = 800,
+    TemplateDevelopmentError = 900,          // TODO: Add localized string for this error to avoid reporting strings.errorUnhandled
+    VpaxObfuscatorObfuscationError = 1000,   // TODO: Add localized string for this error to avoid reporting strings.errorUnhandled
+    VpaxObfuscatorDeobfuscationError = 1001, // TODO: Add localized string for this error to avoid reporting strings.errorUnhandled
 }
 
 export enum AppErrorType {

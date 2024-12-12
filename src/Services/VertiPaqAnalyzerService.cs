@@ -98,7 +98,7 @@
             }
             catch (Exception ex)
             {
-                throw new BravoException(BravoProblem.VpaxObfuscationError, ex.Message, ex);
+                throw new BravoException(BravoProblem.VpaxObfuscatorObfuscationError, ex.Message, ex);
             }
         }
 
@@ -114,7 +114,7 @@
             }
             catch (Exception ex)
             {
-                throw new BravoException(BravoProblem.VpaxDeobfuscationError, ex.Message, ex);
+                throw new BravoException(BravoProblem.VpaxObfuscatorDeobfuscationError, ex.Message, ex);
             }
         }
     }
