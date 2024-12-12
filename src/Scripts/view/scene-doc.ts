@@ -47,6 +47,10 @@ export abstract class DocScene extends NavigatorScene {
         return this.doc.featureSupported("UpdateModel", this.type)[0] && !this.doc.orphan;
     }
 
+    get canDeobfuscate(): boolean {
+        return this.doc.type == DocType.vpax && this.doc.model.isObfuscated;
+    }
+
     render() {
         
         // Show unsupported
@@ -67,9 +71,11 @@ export abstract class DocScene extends NavigatorScene {
     renderToolbar() {
         let toolbarHtml = `
             <div class="orphan badge show-if-orphan" ${this.doc.orphan ? "" : "hidden"} title="${i18n(this.doc.type == DocType.pbix ? strings.sheetOrphanPBIXTooltip : strings.sheetOrphanTooltip)}">${i18n(strings.sheetOrphan)}</div>
-                        
+
             <div class="readonly badge show-if-limited" ${this.limited ? "" : "hidden"} title="${i18n(strings.docLimitedTooltip)}">${i18n(strings.docLimited)}</div>
-            
+
+            <div class="ctrl-deobfuscate ctrl icon-save disable-on-syncing show-if-deobfuscable" ${!this.canDeobfuscate ? "hidden" : ""} title="DEOBFUSCATE"> DEOBFUSCATE </div>
+
             ${this.showToolbar ? `
                 <div class="ctrl-sync ctrl icon-sync show-if-syncable" ${this.canSync ? "" : "hidden"} title="${i18n(strings.syncCtrlTitle)}"></div>
 
@@ -77,6 +83,18 @@ export abstract class DocScene extends NavigatorScene {
             ` : ""}
         `;
         this.toolbar.insertAdjacentHTML("beforeend", toolbarHtml);
+
+        _(".ctrl-deobfuscate", this.toolbar).addEventListener("click", e => {
+            e.preventDefault();
+
+            if ((<HTMLElement>e.currentTarget).hasAttribute("disabled") || this.syncing) return;
+            if (!this.canDeobfuscate) return;
+
+            telemetry.track("Deobfuscate VPAX");
+
+            this.trigger("sync");
+            this.update();
+        });
 
         if (this.showToolbar) {
             _(".ctrl-sync", this.toolbar).addEventListener("click", e => {
@@ -108,6 +126,7 @@ export abstract class DocScene extends NavigatorScene {
 
         if (!this.supported[0] || !this.rendered) return false;
 
+        this.updateConditionalElements("deobfuscable", this.canDeobfuscate);
         this.updateConditionalElements("syncable", this.canSync);
         this.updateConditionalElements("editable", this.canEdit);
         this.updateConditionalElements("limited", this.limited);

@@ -6,13 +6,6 @@
     using Sqlbi.Bravo.Models;
     using Sqlbi.Bravo.Models.AnalyzeModel;
     using Sqlbi.Bravo.Services;
-    using System.Collections.Generic;
-    using System.Data;
-    using System.Diagnostics.CodeAnalysis;
-    using System.Linq;
-    using System.Net.Mime;
-    using System.Threading;
-    using System.Threading.Tasks;
 
     /// <summary>
     /// AnalyzeModel module controller
@@ -37,6 +30,28 @@
         }
 
         /// <summary>
+        /// Returns a deobfuscated database model from the OVPAX file stream
+        /// </summary>
+        /// <response code="200">Status200OK - Success</response>
+        /// <response code="204">Status204NoContent - User canceled action (e.g. 'Cancel' button has been pressed on a dialog box)</response>
+        [HttpPost]
+        [ActionName("GetModelFromOvpax")]
+        [Consumes(MediaTypeNames.Application.Octet)]
+        [Produces(MediaTypeNames.Application.Json)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(TabularDatabase))]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesDefaultResponseType]
+        public IActionResult GetDeobfuscatedDatabase(CancellationToken cancellationToken)
+        {
+            if (!WindowDialogHelper.OpenFileDialog(filter: VpaxObfuscationDictionaryFilter, out var dictionaryPath, cancellationToken))
+                return NoContent();
+
+            var file = new OvpaxFile(Request.Body, dictionaryPath);
+            var database = _analyzeModelService.GetDatabase(file);
+            return Ok(database);
+        }
+
+        /// <summary>
         /// Returns a database model from the VPAX file stream
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
@@ -48,35 +63,10 @@
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(TabularDatabase))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesDefaultResponseType]
-        public IActionResult GetDatabase(CancellationToken cancellationToken) // @daniele: remove the whole method
+        public IActionResult GetDatabase(CancellationToken cancellationToken)
         {
-            string? dictionaryPath = null;
-
-            var deobfuscate = CommonHelper.IsKeyDown(System.Windows.Forms.Keys.ShiftKey);
-            if (deobfuscate && !WindowDialogHelper.OpenFileDialog(filter: VpaxObfuscationDictionaryFilter, out dictionaryPath, cancellationToken))
-                return NoContent();
-
-            using var dictionaryStream = dictionaryPath != null ? new System.IO.FileStream(dictionaryPath, System.IO.FileMode.Open, System.IO.FileAccess.Read) : null;
-            var database = _analyzeModelService.GetDatabase(stream: Request.Body, dictionaryStream);
-            return Ok(database);
-        }
-
-        /// <summary>
-        /// Returns a database model from the VPAX file stream. If an obfuscation dictionary is provided, the model will be deobfuscated.
-        /// </summary>
-        /// <response code="200">Status200OK - Success</response>
-        [HttpPost]
-        [ActionName("GetModelFromVpax_NEW")] // @daniele: rename removing the '_NEW' suffix
-        //[Consumes(MediaTypeNames.Application.Octet)]
-        [Produces(MediaTypeNames.Application.Json)]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(TabularDatabase))]
-        [ProducesDefaultResponseType]
-        public IActionResult GetDatabase(IFormFile[] files)
-        {
-            using var stream = files[0].OpenReadStream();
-            using var dictionaryStream = files.ElementAtOrDefault(1)?.OpenReadStream();
-
-            var database = _analyzeModelService.GetDatabase(stream, dictionaryStream);
+            var file = new VpaxFile(Request.Body);
+            var database = _analyzeModelService.GetDatabase(file);
             return Ok(database);
         }
 

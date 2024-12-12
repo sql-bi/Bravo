@@ -32,6 +32,7 @@ export interface TabularDatabaseServer {
     serverLocation?: number
 }
 export interface TabularDatabaseInfo extends TabularDatabaseServer, TabularDatabaseModel {
+    isObfuscated: boolean
     etag?:	string
     name?: string
     culture?: string

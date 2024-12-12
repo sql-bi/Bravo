@@ -414,6 +414,12 @@ export class Host extends Dispatchable {
 
     /* Analyze Model */
 
+    getModelFromOvpax(file: File) {
+        const logSettings: ApiLogSettings = {};
+
+        return <Promise<TabularDatabase>>this.apiCall("api/GetModelFromOvpax", file, { method: "POST", headers: { /* IMPORTANT */ } }, true, logSettings);
+    }
+
     getModelFromVpax(file: File) {
         const logSettings: ApiLogSettings = {};
 

@@ -1,5 +1,6 @@
 ﻿namespace Sqlbi.Bravo.Services
 {
+    using SharpCompress.Compressors.Xz;
     using Sqlbi.Bravo.Infrastructure;
     using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Infrastructure.Helpers;
@@ -7,10 +8,11 @@
     using Sqlbi.Bravo.Infrastructure.Services.PowerBI;
     using Sqlbi.Bravo.Models;
     using Sqlbi.Bravo.Models.AnalyzeModel;
+    using System.IO;
 
     public interface IAnalyzeModelService
     {
-        TabularDatabase GetDatabase(Stream stream, Stream? dictionaryStream);
+        TabularDatabase GetDatabase(VpaxFile file);
 
         TabularDatabase GetDatabase(PBIDesktopReport report, CancellationToken cancellationToken);
 
@@ -40,9 +42,16 @@
             _vertipaqanalyzerService = vertipaqanalyzerService;
         }
 
-        public TabularDatabase GetDatabase(Stream stream, Stream? dictionaryStream)
+        public TabularDatabase GetDatabase(VpaxFile file)
         {
-            var daxModel = _vertipaqanalyzerService.Import(stream, dictionaryStream);
+            var daxModel = _vertipaqanalyzerService.Import(file.Stream);
+
+            if (file is OvpaxFile ovpaxFile)
+            {
+                daxModel = _vertipaqanalyzerService.Deobfuscate(daxModel, ovpaxFile.DictionaryPath);
+                daxModel.ObfuscatorDictionaryId = null;
+            }
+
             var database = TabularDatabase.CreateFrom(daxModel);
             {
                 database.Features &= ~TabularDatabaseFeature.AnalyzeModelSynchronize;
@@ -53,9 +62,6 @@
                 database.Features &= ~TabularDatabaseFeature.ExportDataAll;
 
                 database.FeatureUnsupportedReasons |= TabularDatabaseFeatureUnsupportedReason.MetadataOnly;
-
-                if (daxModel.ObfuscatorDictionaryId != null && dictionaryStream == null)
-                    database.Features |= TabularDatabaseFeature.AnalyzeModelDeobfuscateVpax;
             }
             return database;
         }

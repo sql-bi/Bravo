@@ -1,10 +1,13 @@
 ﻿global using Sqlbi.Bravo.Infrastructure;
 global using Sqlbi.Bravo.Infrastructure.Services;
+global using Sqlbi.Bravo.Models;
 global using System;
 global using System.Collections.Generic;
 global using System.Data;
+global using System.Diagnostics.CodeAnalysis;
 global using System.IO;
 global using System.Linq;
+global using System.Net.Mime;
 global using System.Text.Json.Serialization;
 global using System.Threading;
 global using System.Threading.Tasks;

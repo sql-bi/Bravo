@@ -106,9 +106,18 @@ export class Doc {
 
         if (this.sourceData) {
             if (this.type == DocType.vpax) {
-                return host.getModelFromVpax(<File>this.sourceData)
-                    .then(response => processResponse(response));
-                
+
+                if (this.loaded && this.model.isObfuscated) {
+
+                    // TOFIX: handle response 204 No Content
+                    return host.getModelFromOvpax(<File>this.sourceData)
+                        .then(response => processResponse(response));
+                } else {
+
+                    return host.getModelFromVpax(<File>this.sourceData)
+                        .then(response => processResponse(response));
+                }
+
             } else if (this.type == DocType.dataset) {
                 return host.getModelFromDataset(<PBICloudDataset>this.sourceData)
                     .then(response => {

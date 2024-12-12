@@ -9,8 +9,9 @@
     internal interface IVertiPaqAnalyzerService
     {
         Model Extract(TabularConnectionWrapper connectionWrapper, bool updateStatistics, CancellationToken cancellationToken);
-        Model Import(Stream stream, Stream? dictionaryStream);
+        Model Import(Stream stream);
         void Export(Model daxModel, string path, TOM.Database tomDatabase, string? dictionaryPath, string? inputDictionaryPath);
+        Model Deobfuscate(Model model, string dictionaryPath);
     }
 
     internal class VertiPaqAnalyzerService : IVertiPaqAnalyzerService
@@ -46,41 +47,27 @@
             return model;
         }
 
-        public Model Import(Stream stream, Stream? dictionaryStream)
+        public Model Import(Stream stream)
         {
-            Model? model;
+            VpaxTools.VpaxContent content;
 
             try
             {
-                model = VpaxTools.ImportVpax(stream).DaxModel;
+                content = VpaxTools.ImportVpax(stream);
             }
             catch (FileFormatException ex)
             {
                 throw new BravoException(BravoProblem.VpaxFileImportError, ex.Message, ex);
             }
 
-            if (model is null)
+            if (content.DaxModel is null)
             {
-                // If the DaxModel is null here it means that the archive may be corrupted or invalid (e.g. does not include the parts required by the ECMA/376 specification)
-                // It could happen in case the System.IO.Packaging.Package was not properly closed/disposed due to an error while flushing the stream.
-                throw new BravoException(BravoProblem.VpaxFileImportError, "The VPAX file may be invalid or corrupted.");
+                // If the DaxModel is null here, it indicates that the archive may be corrupted or invalid. For instance, it might lack the necessary parts required by the ECMA/376 specification.
+                // This situation could arise during the creation or writing of the archive if the System.IO.Packaging.Package was not properly closed or disposed of due to an error while flushing the stream.
+                throw new BravoException(BravoProblem.VpaxFileImportError, "The VPAX file appears to be invalid or corrupted. Please verify the file and try again.");
             }
 
-            if (dictionaryStream != null)
-            {
-                try
-                {
-                    var obfuscator = new VpaxObfuscator();
-                    var dictionary = ObfuscationDictionary.ReadFrom(dictionaryStream);
-                    obfuscator.Deobfuscate(model, dictionary);
-                }
-                catch (Exception ex)
-                {
-                    throw new BravoException(BravoProblem.VpaxDeobfuscationError, ex.Message, ex);
-                }
-            }
-
-            return model;
+            return content.DaxModel;
         }
 
         public void Export(Model daxModel, string path, TOM.Database tomDatabase, string? dictionaryPath, string? inputDictionaryPath)
@@ -122,6 +109,22 @@
                 {
                     throw new BravoException(BravoProblem.VpaxFileExportError, ex.Message, ex);
                 }
+            }
+        }
+
+        public Model Deobfuscate(Model model, string dictionaryPath)
+        {
+            try
+            {
+                var dictionary = ObfuscationDictionary.ReadFrom(dictionaryPath);
+                var obfuscator = new VpaxObfuscator();
+                obfuscator.Deobfuscate(model, dictionary);
+
+                return model;
+            }
+            catch (Exception ex)
+            {
+                throw new BravoException(BravoProblem.VpaxDeobfuscationError, ex.Message, ex);
             }
         }
     }

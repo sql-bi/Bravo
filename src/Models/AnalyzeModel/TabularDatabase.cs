@@ -5,15 +5,6 @@
     using Sqlbi.Bravo.Infrastructure.Helpers;
     using Sqlbi.Bravo.Infrastructure.Services;
     using Sqlbi.Bravo.Models.FormatDax;
-    using System;
-    using System.Collections.Generic;
-    using System.Data;
-    using System.IO;
-    using System.Linq;
-    using System.Text.Json.Serialization;
-    using System.Threading;
-    using SSAS = Microsoft.AnalysisServices;
-    using Tom = Microsoft.AnalysisServices.Tabular;
 
     public class TabularDatabase
     {
@@ -29,7 +20,7 @@
         [JsonPropertyName("measures")]
         public IEnumerable<TabularMeasure>? Measures { get; set; }
 
-        internal static TabularDatabase CreateFrom(Dax.Metadata.Model daxModel, Tom.Model? tomModel = default)
+        internal static TabularDatabase CreateFrom(Dax.Metadata.Model daxModel, TOM.Model? tomModel = default)
         {
             var vpaModel = new VpaModel(daxModel);
 
@@ -51,6 +42,7 @@
             {
                 Info = new TabularDatabaseInfo
                 {
+                    IsObfuscated = daxModel.ObfuscatorDictionaryId is not null,
                     ETag = databaseETag,
                     Name = daxModel.ModelName.Name,
                     Culture = tomModel?.Culture,
@@ -118,6 +110,7 @@
             {
                 Info = new TabularDatabaseInfo
                 {
+                    IsObfuscated = false,
                     ETag = null,
                     Name = connection.Connection.Database,
                     CompatibilityMode = null,
@@ -152,15 +145,12 @@
     [Flags]
     public enum TabularDatabaseFeature
     {
-        // TODO: rename 'All' to 'Default'
-
         None = 0,
 
         AnalyzeModelPage = 1 << 100,
         AnalyzeModelSynchronize = 1 << 101,
         AnalyzeModelExportVpax = 1 << 102,
-        AnalyzeModelDeobfuscateVpax = 1 << 103,
-        AnalyzeModelAll = AnalyzeModelPage | AnalyzeModelSynchronize | AnalyzeModelExportVpax, // AnalyzeModelDeobfuscateVpax is not included in 'All'/'Default'
+        AnalyzeModelAll = AnalyzeModelPage | AnalyzeModelSynchronize | AnalyzeModelExportVpax,
 
         FormatDaxPage = 1 << 200,
         FormatDaxSynchronize = 1 << 201,
@@ -227,6 +217,9 @@
 
     public class TabularDatabaseInfo
     {
+        [JsonPropertyName("isObfuscated")]
+        public bool IsObfuscated { get; set; }
+
         [JsonPropertyName("etag")]
         public string? ETag { get; set; }
 
