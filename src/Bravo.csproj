@@ -41,7 +41,7 @@
     <PackageReference Include="Microsoft.Identity.Client.Desktop" Version="4.66.2" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="7.1.0" PrivateAssets="all" />
     <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
-    <PackageReference Include="System.Management" Version="8.0.0" />
+    <PackageReference Include="System.Management" Version="9.0.1" />
   </ItemGroup>
 
   <ItemGroup>
