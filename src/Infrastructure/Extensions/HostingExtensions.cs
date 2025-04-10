@@ -192,6 +192,9 @@
 
                 options.Map<MsalException>((context, exception) =>
                 {
+                    if (AppEnvironment.IsDiagnosticLevelVerbose)
+                        AppEnvironment.AddDiagnostics(name: nameof(MsalException), exception);
+
                     var problemDetailsFactory = context.RequestServices.GetRequiredService<ProblemDetailsFactory>();
                     var problemDetails = problemDetailsFactory.CreateProblemDetails(context,
                         statusCode: StatusCodes.Status400BadRequest,
@@ -203,6 +206,9 @@
 
                 options.Map<AMO.AsClientException>((context, exception) => exception.IsOrHasInner<MsalException>(), mapping: (context, exception) =>
                 {
+                    if (AppEnvironment.IsDiagnosticLevelVerbose)
+                        AppEnvironment.AddDiagnostics(name: $"{nameof(AMO.AsClientException)}::{nameof(MsalException)}", exception);
+
                     var msalException = exception.Find<MsalException>(); BravoUnexpectedException.ThrowIfNull(msalException);
                     var problemDetailsFactory = context.RequestServices.GetRequiredService<ProblemDetailsFactory>();
                     var problemDetails = problemDetailsFactory.CreateProblemDetails(context,
@@ -215,6 +221,9 @@
 
                 options.Map<AMO.ConnectionException>((context, exception) =>
                 {
+                    if (AppEnvironment.IsDiagnosticLevelVerbose)
+                        AppEnvironment.AddDiagnostics(name: nameof(AMO.ConnectionException), exception);
+
                     var problemDetailsFactory = context.RequestServices.GetRequiredService<ProblemDetailsFactory>();
                     var problemDetails = problemDetailsFactory.CreateProblemDetails(context,
                         statusCode: StatusCodes.Status400BadRequest,
@@ -226,6 +235,9 @@
 
                 options.Map<OperationCanceledException>((context, exception) =>
                 {
+                    if (AppEnvironment.IsDiagnosticLevelVerbose)
+                        AppEnvironment.AddDiagnostics(name: nameof(OperationCanceledException), exception);
+
                     var problemDetailsFactory = context.RequestServices.GetRequiredService<ProblemDetailsFactory>();
                     var problemDetails = problemDetailsFactory.CreateProblemDetails(context,
                         statusCode: StatusCodes.Status400BadRequest,
@@ -239,6 +251,9 @@
                 // This can result in a misleading message like a AMO.ConnectionException reported as a SocketException (NetworkError instead of AnalysisServicesConnectionFailed)
                 options.Map<Exception>(predicate: (context, exception) => exception.IsOrHasInner<SocketException>(), mapping: (context, exception) =>
                 {
+                    if (AppEnvironment.IsDiagnosticLevelVerbose)
+                        AppEnvironment.AddDiagnostics(name: $"{nameof(Exception)}::{nameof(SocketException)}", exception);
+
                     var socketException = exception.Find<SocketException>(); BravoUnexpectedException.ThrowIfNull(socketException);
                     var problemDetailsFactory = context.RequestServices.GetRequiredService<ProblemDetailsFactory>();
                     var problemDetails = problemDetailsFactory.CreateProblemDetails(context,
