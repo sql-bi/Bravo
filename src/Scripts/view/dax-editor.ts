@@ -181,7 +181,7 @@ export class DaxEditor extends View {
                 { regex: /'(?:[^']|'')*'(?!')(?:\[[ \w\xA0-\uFFFF]+\])?|\w+\[[ \w\xA0-\uFFFF]+\]/gm, token: "column" },
                 { regex: /\[[ \w\xA0-\uFFFF]+\]/gm,  token: "measure" },
                 { regex: funcsPattern, token: "function" },
-                { regex: keywordsPattern, css: "keyword" },
+                { regex: keywordsPattern, token: "keyword" },
                 { regex: /:=|[-+*\/=^]|\b(?:IN|NOT)\b/i, token: "operator" },
                 { regex: /0x[a-f\d]+|[-+]?(?:\.\d+|\d+\.?\d*)(?:e[-+]?\d+)?/i, token: "number" },
                 { regex: /[\[\](){}`,]/gm, token: "parenthesis" },
