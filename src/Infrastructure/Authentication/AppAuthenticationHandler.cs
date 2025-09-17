@@ -13,17 +13,11 @@
 
     internal class AppAuthenticationHandler : AuthenticationHandler<AppAuthenticationSchemeOptions>
     {
-#if NET8_0_OR_GREATER
-        public AppAuthenticationHandler(IOptionsMonitor<AppAuthenticationSchemeOptions> options, ILoggerFactory logger, UrlEncoder encoder)
-            : base(options, logger, encoder)
-        {
-        }
-#else
         public AppAuthenticationHandler(IOptionsMonitor<AppAuthenticationSchemeOptions> options, ILoggerFactory logger, UrlEncoder encoder, ISystemClock clock) 
             : base(options, logger, encoder, clock)
         {
         }
-#endif
+
         protected override Task<AuthenticateResult> HandleAuthenticateAsync()
         {
             // RemoteIpAddress is null when Kestrel is behind a reverse proxy or the connection is not a TCP connection (like a Unix domain socket)

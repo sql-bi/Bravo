@@ -118,7 +118,6 @@
             bravoUpdate.IsNewerVersion = GetIsNewerVersion(bravoUpdate);
             bravoUpdate.DownloadUrl = GetDownloadUrl(bravoUpdate);
 
-            AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{nameof(CommonHelper)}.{nameof(CheckForUpdateAsync)}", content: JsonSerializer.Serialize(bravoUpdate));
             return bravoUpdate;
 
             static bool GetIsNewerVersion(BravoUpdate bravoUpdate)
@@ -157,9 +156,6 @@
                     downloadFileExtension = ".zip";
                 }
 
-#if NET8_0_OR_GREATER
-                downloadFileNameWithoutExtension += "-net8";
-#endif
                 var newFileName = $"{ downloadFileNameWithoutExtension }{ downloadFileExtension }";
                 var newPath = downloadUri.LocalPath.Replace(downloadFileName, newFileName);
                 var uriBuilder = new UriBuilder(downloadUri)
