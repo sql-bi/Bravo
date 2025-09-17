@@ -102,22 +102,6 @@
             Diagnostics = new ConcurrentDictionary<DiagnosticMessage, DiagnosticMessage>();
             DefaultJsonOptions = new(JsonSerializerDefaults.Web) { MaxDepth = 32 }; // see Microsoft.AspNetCore.Mvc.JsonOptions.JsonSerializerOptions
 
-            var spaceChars = new[]
-            {
-                "",       // no space
-                "\u0020", // whitespace
-                "\u00A0"  // nbsp
-            };
-            var dashChars = new[]
-            {
-                "\u002D", // Dash Punctuation - minus hyphen
-                "\u2212", // Math Symbol - minus sign
-                "\u2011", // Dash Punctuation - non-breaking hyphen
-                "\u2013", // Dash Punctuation - en dash
-                "\u2014", // Dash Punctuation - em dash
-                "\u2015", // Dash Punctuation - horizontal bar
-            };
-
             AddEnvironmentDiagnosticInfo();
         }
 
