@@ -2,28 +2,56 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFrameworks>net6.0-windows;net8.0-windows</TargetFrameworks>
-    <UseWindowsForms>true</UseWindowsForms>
+    <TargetFramework>net6-windows</TargetFramework>
+    <UseWindowsForms>True</UseWindowsForms>
     <ApplicationIcon>Assets\bravo.ico</ApplicationIcon>
-    <Company>SQLBI Corporation</Company>
+    <Company>SQLBI</Company>
+    <Authors>SQLBI</Authors>
     <Product>Bravo for Power BI</Product>
-    <Copyright>© SQLBI Corporation</Copyright>
-    <AssemblyTitle>Bravo for Power BI</AssemblyTitle>
-    <RootNamespace>Sqlbi.Bravo</RootNamespace>
+    <Copyright>SQLBI Corporation</Copyright>
+    <RootNamespace>Sqlbi.$(MSBuildProjectName.Replace(" ", "_"))</RootNamespace>
     <Nullable>enable</Nullable>
-    <GenerateDocumentationFile Condition=" '$(Configuration)' != 'Release' ">true</GenerateDocumentationFile>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);1591</NoWarn>
     <TypeScriptCompileBlocked>true</TypeScriptCompileBlocked>
     <Configurations>$(Configurations);Debug_wwwroot</Configurations>
-    <!--AnalysisMode>all</AnalysisMode-->
     <AnalysisLevel>latest</AnalysisLevel>
     <IncludeOpenAPIAnalyzers>true</IncludeOpenAPIAnalyzers>
+    <IsPackable>false</IsPackable>
+    <IsPublishable>true</IsPublishable>
     <SatelliteResourceLanguages>en-US</SatelliteResourceLanguages>
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
-    <NeutralLanguage>en-US</NeutralLanguage>
-    <DefineConstants>$(DefineConstants);$(AdditionalConstants)</DefineConstants>
   </PropertyGroup>
+
+  <Choose>
+    <When Condition=" '$(Configuration)' == 'Debug_wwwroot' ">
+      <PropertyGroup>
+        <DefineConstants>$(AdditionalConstants);DEBUG</DefineConstants>
+      </PropertyGroup>
+    </When>
+    <Otherwise>
+      <PropertyGroup>
+        <DefineConstants>$(AdditionalConstants)</DefineConstants>
+      </PropertyGroup>
+    </Otherwise>
+  </Choose>
+<!--
+  <PropertyGroup>
+    <RestoreSources>$(RestoreSources);./Assets/nupkgs;https://api.nuget.org/v3/index.json</RestoreSources>
+  </PropertyGroup>
+-->
+  <PropertyGroup>
+    <!-- Don't change version here -->
+    <Version>0.0.0.999</Version>
+    <InformationalVersion>0.0.0.999-DEV</InformationalVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>$(AssemblyName).Tests</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="CsvHelper" Version="33.0.1" />
@@ -39,26 +67,30 @@
     <PackageReference Include="Microsoft.Extensions.Logging.ApplicationInsights" Version="2.22.0" />
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2739.15" />
     <PackageReference Include="Microsoft.Identity.Client.Desktop" Version="4.66.2" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="7.1.0" PrivateAssets="all" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="7.0.0" PrivateAssets="all" />
     <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
-    <PackageReference Include="System.Management" Version="8.0.0" />
+    <PackageReference Include="System.Management" Version="[6.0.2, 7.0.0)" />
   </ItemGroup>
 
   <ItemGroup>
-    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
-      <_Parameter1>$(AssemblyName).Tests</_Parameter1>
-    </AssemblyAttribute>
+    <None Include="wwwroot\**">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
     <Reference Include="Antlr4.Runtime">
       <HintPath>Assets\lib\Antlr4.Runtime.dll</HintPath>
     </Reference>
     <Reference Include="TOMWrapper">
       <HintPath>Assets\lib\TOMWrapper.dll</HintPath>
     </Reference>
-    <None Include="wwwroot\**">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <Content Remove="Scripts\**;Assets\**" />
-    <EmbeddedResource Include="Assets\ManageDates\Templates\*.json;Assets\ManageDates\Schemas\*.schema.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Remove="Scripts\*.json" />
+    <None Include="Scripts\*.json" />
+    <Content Include="Assets\bravo.ico" />
     <Compile Update="Properties\Resources.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -70,42 +102,25 @@
     </EmbeddedResource>
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="Assets\ManageDates\Schemas\*.schema.json">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Assets\ManageDates\Templates\*.json">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
+  </ItemGroup>
+
   <!--
-  Remove unnecessary WPF assemblies from the output (net8 target only)
-  See GH issue https://github.com/dotnet/winforms/issues/2426 and https://github.com/dotnet/sdk/issues/4078
+  ** The following custom MSBuild target removes the 'Assets' folder from output after the publish operation.
+  ** 'Assets' folder only contains resource files that have been embedded but are stil published due to a bug (see link below)
+  
+  ** Embedded Resources still copy to output directory even set `CopyToOutputDirectory` to Never
+  ** https://developercommunity.visualstudio.com/t/embedded-resources-still-copy-to-output-directory/1474603
   -->
-  <Target Name="RemoveWpfAssemblies" AfterTargets="Build;Publish" Condition=" '$(TargetFramework)' == 'net8.0-windows' ">
-    <PropertyGroup>
-      <_OutputPath Condition=" '$(OutputPath)' != '' ">$(OutputPath)</_OutputPath>
-      <_OutputPath Condition=" '$(PublishDir)' != '' ">$(PublishDir)</_OutputPath>
-    </PropertyGroup>
-    <ItemGroup>
-      <FilesToDelete Include="$(_OutputPath)PresentationCore.dll" />
-      <FilesToDelete Include="$(_OutputPath)PresentationFramework.Aero.dll" />
-      <FilesToDelete Include="$(_OutputPath)PresentationFramework.Aero2.dll" />
-      <FilesToDelete Include="$(_OutputPath)PresentationFramework.AeroLite.dll" />
-      <FilesToDelete Include="$(_OutputPath)PresentationFramework.Classic.dll" />
-      <FilesToDelete Include="$(_OutputPath)PresentationFramework.dll" />
-      <FilesToDelete Include="$(_OutputPath)PresentationFramework.Luna.dll" />
-      <FilesToDelete Include="$(_OutputPath)PresentationFramework.Royale.dll" />
-      <FilesToDelete Include="$(_OutputPath)PresentationFramework-SystemCore.dll" />
-      <FilesToDelete Include="$(_OutputPath)PresentationFramework-SystemData.dll" />
-      <FilesToDelete Include="$(_OutputPath)PresentationFramework-SystemDrawing.dll" />
-      <FilesToDelete Include="$(_OutputPath)PresentationFramework-SystemXml.dll" />
-      <FilesToDelete Include="$(_OutputPath)PresentationFramework-SystemXmlLinq.dll" />
-      <FilesToDelete Include="$(_OutputPath)PresentationNative_cor3.dll" />
-      <FilesToDelete Include="$(_OutputPath)PresentationUI.dll" />
-      <FilesToDelete Include="$(_OutputPath)ReachFramework.dll" />
-      <FilesToDelete Include="$(_OutputPath)UIAutomationClient.dll" />
-      <FilesToDelete Include="$(_OutputPath)UIAutomationClientSideProviders.dll" />
-      <FilesToDelete Include="$(_OutputPath)UIAutomationProvider.dll" />
-      <FilesToDelete Include="$(_OutputPath)UIAutomationTypes.dll" />
-      <FilesToDelete Include="$(_OutputPath)WindowsBase.dll" />
-      <FilesToDelete Include="$(_OutputPath)WindowsFormsIntegration.dll" />
-      <FilesToDelete Include="$(_OutputPath)wpfgfx_cor3.dll" />
-    </ItemGroup>
-    <Message Importance="high" Text="::RemoveWpfAssemblies - @(FilesToDelete)" />
-    <Delete Files="@(FilesToDelete)" />
+  <Target Name="RemoveEmbeddedResourceDirectory" AfterTargets="AfterPublish" Condition=" '$(Configuration)' == 'Release' ">
+    <Message Importance="high" Text="::RemoveEmbeddedResourceDirectory - $(PublishUrl)Assets;$(PublishDir)Assets" />
+    <RemoveDir Directories="$(PublishUrl)Assets;$(PublishDir)Assets" />
   </Target>
 
   <!-- 
@@ -120,15 +135,25 @@
   -->
 
   <PropertyGroup>
-    <ClientAssetsEnabled Condition="'$(Configuration)' != 'Debug_wwwroot'">true</ClientAssetsEnabled>
     <ClientAssetsDirectory Condition="'$(ClientAssetsDirectory)' == ''">Scripts\</ClientAssetsDirectory>
     <ClientAssetsRestoreInputs Condition="'$(ClientAssetsRestoreInputs)' == ''">$(ClientAssetsDirectory)package-lock.json;$(ClientAssetsDirectory)package.json</ClientAssetsRestoreInputs>
     <ClientAssetsRestoreOutputs Condition="'$(ClientAssetsRestoreOutputs)' == ''">$(ClientAssetsDirectory)node_modules\.package-lock.json</ClientAssetsRestoreOutputs>
+    <ClientAssetsEnabled Condition="'$(Configuration)' != 'Debug_wwwroot'">true</ClientAssetsEnabled>
   </PropertyGroup>
 
   <ItemGroup>
     <ClientAssetsInputs Include="$(ClientAssetsDirectory)**" Exclude="$(DefaultItemExcludes)" />
   </ItemGroup>
+
+  <!--
+  Target Name="EnsureNodeJsInstalled" BeforeTargets="Build" Condition=" '$(Configuration)' == 'Debug' And !Exists('Scripts\dist') ">
+    <Message Importance="high" Text="::EnsureNodeJsInstalled - retreiving Node.js version ..." />
+    <Exec Command="node - - version" ContinueOnError="true">
+      <Output TaskParameter="ExitCode" PropertyName="ErrorCode" />
+    </Exec>
+    <Error Condition="'$(ErrorCode)' != '0'" Text="Node.js is required to build and run this project." />
+  </Target
+  -->
 
   <Target Name="ClientAssetsRestore" Condition="'$(ClientAssetsEnabled)' == 'true'" BeforeTargets="Build" Inputs="$(ClientAssetsRestoreInputs)" Outputs="$(ClientAssetsRestoreOutputs)">
     <Message Importance="high" Text="::ClientAssetsRestore - running 'npm install' ..." />

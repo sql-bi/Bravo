@@ -5,9 +5,6 @@ on:
 jobs:
   build-and-test:
     runs-on: windows-latest
-    strategy:
-      matrix:
-        framework: [net6.0-windows, net8.0-windows]
     steps:
     - name: checkout
       uses: actions/checkout@v4
@@ -20,8 +17,8 @@ jobs:
       with:
         dotnet-version: '6.0.x'
     - name: dotnet restore
-      run:  dotnet restore Bravo.sln
+      run:  dotnet restore
     - name: dotnet build
-      run:  dotnet build Bravo.sln --configuration Release --framework ${{ matrix.framework }} --no-restore
+      run:  dotnet build Bravo.sln --configuration Release --no-restore
     - name: dotnet test
-      run:  dotnet test Bravo.sln --configuration Release --framework ${{ matrix.framework }} --no-build --verbosity normal
+      run:  dotnet test Bravo.sln --configuration Release --no-build --verbosity normal

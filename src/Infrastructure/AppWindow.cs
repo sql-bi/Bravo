@@ -99,7 +99,7 @@ window.external = {
                 //environment.BrowserProcessExited
             }
             await WebView.EnsureCoreWebView2Async(environment);
-#if DEBUG || DEBUG_WWWROOT
+#if DEBUG
             var isDebug = true;
 #else
             var isDebug = false;

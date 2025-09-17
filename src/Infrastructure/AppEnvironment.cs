@@ -13,9 +13,6 @@
     using System.Diagnostics;
     using System.Drawing;
     using System.IO;
-    using System.Linq;
-    using System.Runtime.InteropServices;
-    using System.Runtime.Versioning;
     using System.Text.Json;
 
     internal static class AppEnvironment
@@ -117,8 +114,6 @@
                 "\u2014", // Dash Punctuation - em dash
                 "\u2015", // Dash Punctuation - horizontal bar
             };
-
-            AddEnvironmentDiagnostics();
         }
 
         /// <summary>
@@ -210,40 +205,6 @@
             {
                 WriteDiagnosticFile(message);
             }
-        }
-
-        private static void AddEnvironmentDiagnostics()
-        {
-            if (!IsDiagnosticLevelVerbose)
-                return;
-
-            var targetFramework = typeof(Program).Assembly.GetCustomAttributes(typeof(TargetFrameworkAttribute), inherit: false).OfType<TargetFrameworkAttribute>().FirstOrDefault();
-
-            var info = new
-            {
-                SystemOSVersion = Environment.OSVersion.VersionString,
-                SystemProcessorCount = Environment.ProcessorCount,
-                ProcessId,
-                ProcessPath,
-                ProcessSessionId = SessionId,
-                RuntimeFrameworkDescription = RuntimeInformation.FrameworkDescription,
-                RuntimeOSDescription = RuntimeInformation.OSDescription.ToString(),
-                RuntimeOSVersion = RuntimeInformation.RuntimeIdentifier,
-                TargetFrameworkName = targetFramework?.FrameworkName ?? "n/a",
-                WebView2VersionInfo,
-                //
-                ApplicationPublishMode = PublishMode.ToString(),
-                ApplicationDeploymentMode = DeploymentMode.ToString(),
-                ApplicationFileVersion,
-                ApplicationProductVersion,
-                ApplicationDataPath,
-                ApplicationTempPath,
-                ApplicationDiagnosticPath,
-                ApplicationUserSettingsFilePath = UserSettingsFilePath,
-                //ApplicationFileVersionInfo = VersionInfo,
-            };
-
-            AddDiagnostics(DiagnosticMessageType.Json, name: $"{nameof(AppEnvironment)}.EnvironmentInfo", content: JsonSerializer.Serialize(info));
         }
 
         private static void WriteDiagnosticFile(DiagnosticMessage message)
