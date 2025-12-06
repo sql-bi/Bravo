@@ -128,7 +128,7 @@
                 var connectionString = ConnectionStringHelper.BuildFor(ssasConnection.EndPoint);
                 try
                 {
-                    server.Connect(connectionString.ToUnprotectedString());
+                    server.Connect(connectionString);
                     compatibilityMode = server.CompatibilityMode;
                 }
                 catch (Exception ex)
