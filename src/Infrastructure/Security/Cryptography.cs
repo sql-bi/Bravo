@@ -85,24 +85,6 @@
     {
         public static string? ToSHA256Hash(this string value) => Cryptography.SHA256Hash(value);
 
-        public static string ToProtectedString(this string unprotectedString)
-        {
-            var unprotectedBytes = Encoding.Unicode.GetBytes(unprotectedString);
-            var protectedBytes = Cryptography.Protect(unprotectedBytes);
-            var protectedString = Convert.ToBase64String(protectedBytes);
-
-            return protectedString;
-        }
-
-        public static string ToUnprotectedString(this string protectedString)
-        {
-            var protectedBytes = Convert.FromBase64String(protectedString);
-            var unprotectedBytes = Cryptography.Unprotect(protectedBytes);
-            var unprotectedString = Encoding.Unicode.GetString(unprotectedBytes);
-
-            return unprotectedString;
-        }
-
         public static string ToProtectedString(this SecureString secureString)
         {
             var unsecuredChars = new char[secureString.Length];
