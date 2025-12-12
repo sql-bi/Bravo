@@ -41,13 +41,27 @@
 
         internal static TabularColumn CreateFrom(VpaColumn vpaColumn, long databaseSize)
         {
+            // Prevent division by zero or invalid floating-point results when the database size is zero. 
+            // NaN or Infinity values are invalid in JSON and cause serialization errors during API responses. 
+            // This may occur when VPA extracts zero values for column sizes, which has been observed 
+            // in models with Direct Lake partitions where the DMVs DISCOVER_STORAGE_TABLES, 
+            // DISCOVER_STORAGE_TABLE_COLUMNS, and DISCOVER_STORAGE_TABLE_COLUMN_SEGMENTS may return null/zero.
+            // See https://github.com/sql-bi/VertiPaq-Analyzer/pull/196 
+            // See https://github.com/sql-bi/VertiPaq-Analyzer/pull/209
+            // This check is retained for backward compatibility and to handle possible regressions, 
+            // as the issue was previously fixed in the PBI service but appears to have reoccurred, 
+            // resulting in the error reported in https://github.com/sql-bi/Bravo/issues/903.
+            double weight = 0;
+            if (databaseSize > 0)
+                weight = (double)vpaColumn.TotalSize / databaseSize;
+
             var column = new TabularColumn
             {
                 Name = vpaColumn.ColumnName,
                 TableName = vpaColumn.Table.TableName,
                 Cardinality = vpaColumn.ColumnCardinality,
                 Size = vpaColumn.TotalSize,
-                Weight = (double)vpaColumn.TotalSize / databaseSize,
+                Weight = weight,
                 IsReferenced = vpaColumn.IsReferenced,
                 DataType = vpaColumn.DataType,
                 IsHidden = vpaColumn.IsHidden,
