@@ -45,7 +45,7 @@ export class Doc {
     orphan: boolean;
 
     get empty(): boolean {
-        return (!this.model || !this.model.size || (!this.model.columns.length && !this.measures.length));
+        return (!this.model || (!this.model.columns.length && !this.measures.length));
     }
 
     constructor(name: string, type: DocType, sourceData: File | PBICloudDataset | PBIDesktopReport) {
