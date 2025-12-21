@@ -15,9 +15,9 @@ import { Logger } from './controllers/logger';
 import { Debug } from './controllers/debug';
 
 // Load Tabulator modules
-import { Tabulator, ColumnCalcsModule, DataTreeModule, FilterModule, FormatModule, InteractionModule, ResizeColumnsModule, ResizeTableModule, SelectRowModule, SortModule, TooltipModule  } from 'tabulator-tables';
+import { Tabulator, ColumnCalcsModule, DataTreeModule, EditModule, FilterModule, FormatModule, InteractionModule, MenuModule, ResizeColumnsModule, ResizeTableModule, SelectRowModule, SortModule, TooltipModule  } from 'tabulator-tables';
 
-Tabulator.registerModule([ColumnCalcsModule, DataTreeModule, FilterModule, FormatModule, InteractionModule, ResizeColumnsModule, ResizeTableModule, SelectRowModule, SortModule, TooltipModule]);
+Tabulator.registerModule([ColumnCalcsModule, DataTreeModule, EditModule, FilterModule, FormatModule, InteractionModule, MenuModule, ResizeColumnsModule, ResizeTableModule, SelectRowModule, SortModule, TooltipModule]);
 
 // Init the app
 let debug = new Debug(!!CONFIG.debug);

@@ -4,6 +4,18 @@
 
 This document describes the implementation plan for adding a "Manage Calendars" page to Bravo for Power BI. This feature allows users to create, edit, and delete **Calendar objects** (TOM metadata) that are associated with tables in the Power BI tabular model.
 
+### Recent UI Layout Updates
+
+**Changes implemented:**
+1. **Removed left calendar panel** - Calendar list sidebar has been eliminated to provide more space for the grid
+2. **Full-width column mapping grid** - The grid now takes the entire width of the window
+3. **Calendar header menu (⋯)** - Each calendar column has a three-dot menu button for:
+   - Rename calendar
+   - Delete calendar
+4. **Resizable columns** - All columns can be resized by dragging their borders
+5. **Horizontal scrollbar** - Appears when content width exceeds viewport, ensuring no truncation
+6. **Updated Delete button in header** - Removed the separate Delete Calendar button from the top header; deletion is now handled via column header menus
+
 ### What are TOM Calendar Objects?
 
 Calendar objects in Tabular Object Model (TOM) are **metadata annotations** on top of existing tables (not new tables themselves). They provide semantic information about which columns represent calendar-related data like years, quarters, months, days, etc.
@@ -89,19 +101,70 @@ Calendar objects in Tabular Object Model (TOM) are **metadata annotations** on t
 
 ## UI Design (Based on Provided Screenshot)
 
+### Updated Layout
+
+The UI has been redesigned for better usability:
+
+1. **Full-width Column Mapping Grid**: The grid takes the entire width of the window
+2. **Calendar Column Headers with Menu**: Each calendar column has a three-dot menu (⋯) button for:
+   - Rename calendar
+   - Delete calendar
+3. **Resizable Columns**: All columns can be resized by the user
+4. **Horizontal Scrollbar**: When Sample values or calendar columns extend beyond viewport width, a horizontal scrollbar appears at the bottom
+5. **No Truncation**: All content is fully visible with proper scrolling
+
 ```
-┌─────────────────┬────────────────────────────────────────────────────┬─────────────┬──────────────┬──────┐
-│ Column          │ Sample values                                      │ Gregorian   │ Fiscal 445   │ ...  │
-├─────────────────┼────────────────────────────────────────────────────┼─────────────┼──────────────┼──────┤
-│ Date            │ 12/31/2026, 10/1/2025, 7/1/2024, 4/2/2023, ...    │ Date        │ Date         │      │
-│ Year            │ 2026, 2025, 2024, 2023, 2022                       │ Year        │ Year         │      │
-│ Year Quarter    │ Q4-2026, Q4-2025, Q3-2024, Q2-2023, Q1-2022        │ Unassigned  │ Year         │      │
-│ Quarter         │ Q4, Q4, Q3, Q2, Q1                                 │ Quarter...  │ Quarter...   │      │
-│ Year Month      │ December 2026, October 2025, July 2024, ...        │ Month       │ Month        │      │
-│ Month           │ December, October, July, April, January            │             │              │      │
-│ Day of Week     │ Thursday, Wednesday, Monday, Sunday, Saturday      │             │              │      │
-└─────────────────┴────────────────────────────────────────────────────┴─────────────┴──────────────┴──────┘
+┌─────────────────┬────────────────────────────────────────────────────┬─────────────────┬──────────────────┬──────┐
+│ Column          │ Sample values                                      │ Gregorian ⋯     │ Fiscal 445 ⋯     │ ...  │
+├─────────────────┼────────────────────────────────────────────────────┼─────────────────┼──────────────────┼──────┤
+│ Date            │ 12/31/2026, 10/1/2025, 7/1/2024, 4/2/2023, ...    │ Date            │ Date             │      │
+│ Year            │ 2026, 2025, 2024, 2023, 2022                       │ Year            │ Year             │      │
+│ Year Quarter    │ Q4-2026, Q4-2025, Q3-2024, Q2-2023, Q1-2022        │ Unassigned      │ Year             │      │
+│ Quarter         │ Q4, Q4, Q3, Q2, Q1                                 │ Quarter...      │ Quarter...       │      │
+│ Year Month      │ December 2026, October 2025, July 2024, ...        │ Month           │ Month            │      │
+│ Month           │ December, October, July, April, January            │                 │                  │      │
+│ Day of Week     │ Thursday, Wednesday, Monday, Sunday, Saturday      │                 │                  │      │
+└─────────────────┴────────────────────────────────────────────────────┴─────────────────┴──────────────────┴──────┘
+                                                                                    [← Horizontal Scrollbar →]
 ```
+
+**Calendar Column Header Menu (⋯)**:
+When clicked, shows a dropdown menu:
+- **Rename**: Opens dialog to rename the calendar
+- **Delete**: Prompts confirmation and deletes the calendar
+
+### Layout Implementation Details
+
+**Key Changes from Original Design:**
+
+1. **Removed Left Calendar Panel**:
+   - The original design had a left sidebar listing all calendars with Delete buttons
+   - This has been removed to maximize grid space
+   - Calendar management is now done via header menu buttons
+
+2. **Full-Width Grid**:
+   - The `.mapping-grid` container now takes `width: 100%`
+   - Tabulator is configured with `layout: "fitData"` to allow horizontal scrolling
+   - `resizableColumns: true` enables user column resizing
+   - `autoResize: true` ensures grid adapts to container size
+
+3. **Column Header Menu Integration**:
+   - Each calendar column uses Tabulator's `headerMenu` feature
+   - `headerMenuIcon: "⋯"` displays the three-dot menu button
+   - Menu items trigger `renameCalendar()` and `deleteCalendar()` methods
+   - Menu positioned relative to the column header
+
+4. **Horizontal Scrolling**:
+   - Tabulator's `.tabulator-tableholder` has `overflow-x: auto`
+   - When total column width exceeds viewport, horizontal scrollbar appears
+   - Column resizing is preserved during scrolling
+   - No content truncation on the right edge
+
+5. **Responsive Column Widths**:
+   - Column: 200px (frozen, resizable)
+   - Sample values: 400px (resizable)
+   - Each calendar column: 180px (resizable)
+   - User can adjust any column width by dragging borders
 
 ### UI Column States and Visual Design
 
@@ -169,19 +232,28 @@ Each cell in the calendar columns can have different states that must be visuall
 
 ### Key UI Elements
 
-- **Multi-column grid** using Tabulator
+- **Multi-column grid** using Tabulator with:
+  - **Resizable columns**: Users can drag column borders to resize
+  - **Horizontal scrollbar**: Appears when content width exceeds viewport
+  - **Full-width layout**: Grid takes entire available width
+  - **No right-edge truncation**: Proper padding/margin to prevent clipping
 - **Dropdown selectors** in calendar columns to choose category mapping
+- **Calendar column header menu** (⋯ button):
+  - Positioned in the column header next to calendar name
+  - Opens dropdown menu with:
+    - **Rename**: Opens dialog to rename calendar
+    - **Delete**: Shows confirmation and deletes calendar
 - **Context menu** (right-click) on cells:
   - "Set as primary" (for associated columns)
   - "Mark as unassigned"
   - "View dependency" (for implicit associations)
-- **Add/Delete calendar** buttons in header
-- **Rename calendar** functionality (double-click column header)
+- **Add calendar** button in top header bar
 - **Icons** in cells:
   - ★ = Primary column
   - ☆ = Associated column
   - 🔗 = Implicit (from Sort By Column)
   - ⚠️ = Warning (e.g., missing primary when multiple columns map to category)
+  - ⋯ = Calendar menu (in column headers)
 - **Tooltips** on hover explaining state
 - **Cell styling**:
   - Bold = Primary
@@ -1066,7 +1138,6 @@ export class ManageCalendarsScene extends DocScene {
     tableInfo: TableCalendarInfo | null = null;
     mappingTable: Tabulator;
     addCalendarButton: HTMLElement;
-    deleteCalendarButton: HTMLElement;
 
     constructor(doc: Doc) {
         super(doc);
@@ -1094,17 +1165,14 @@ export class ManageCalendarsScene extends DocScene {
                 </div>
                 <div class="actions">
                     <button class="btn btn-primary btn-add-calendar">${i18n(strings.manageCalendarsAddCalendar)}</button>
-                    <button class="btn btn-danger btn-delete-calendar" disabled>${i18n(strings.manageCalendarsDeleteCalendar)}</button>
                 </div>
             </div>
             <div class="mapping-grid"></div>
         `;
 
         this.addCalendarButton = _(".btn-add-calendar", element);
-        this.deleteCalendarButton = _(".btn-delete-calendar", element);
 
         this.addCalendarButton.addEventListener("click", () => this.addCalendar());
-        this.deleteCalendarButton.addEventListener("click", () => this.deleteCalendar());
 
         return element;
     }
@@ -1133,12 +1201,14 @@ export class ManageCalendarsScene extends DocScene {
                 title: i18n(strings.manageCalendarsColumnName),
                 field: "columnName",
                 frozen: true,
-                width: 200
+                width: 200,
+                resizable: true
             },
             {
                 title: i18n(strings.manageCalendarsSampleValues),
                 field: "sampleValues",
                 width: 400,
+                resizable: true,
                 formatter: (cell: any) => {
                     const values = cell.getValue();
                     if (!values || values.length === 0) return "";
@@ -1147,12 +1217,28 @@ export class ManageCalendarsScene extends DocScene {
             }
         ];
 
-        // Add one column per calendar
+        // Add one column per calendar with header menu
         (this.tableInfo.calendars || []).forEach(calendar => {
             columns.push({
                 title: calendar.name,
                 field: `calendar_${calendar.name}`,
-                width: 150,
+                width: 180,
+                resizable: true,
+                headerMenu: [
+                    {
+                        label: i18n(strings.manageCalendarsRenameCalendar),
+                        action: (e: any, column: any) => {
+                            this.renameCalendar(calendar.name!);
+                        }
+                    },
+                    {
+                        label: i18n(strings.manageCalendarsDeleteCalendar),
+                        action: (e: any, column: any) => {
+                            this.deleteCalendar(calendar.name!);
+                        }
+                    }
+                ],
+                headerMenuIcon: "⋯",
                 editor: "list",
                 editorParams: {
                     values: {
@@ -1216,9 +1302,38 @@ export class ManageCalendarsScene extends DocScene {
         this.mappingTable = new Tabulator(container, {
             data: data,
             columns: columns,
-            layout: "fitDataFill",
-            height: "100%"
+            layout: "fitData",
+            height: "100%",
+            resizableColumns: true,
+            autoResize: true
         });
+    }
+
+    async renameCalendar(oldName: string) {
+        const newName = prompt(i18n(strings.manageCalendarsEnterNewName), oldName);
+        if (!newName || newName === oldName) return;
+
+        try {
+            const calendar = this.tableInfo?.calendars?.find(c => c.name === oldName);
+            if (!calendar) return;
+
+            // Update calendar name
+            calendar.name = newName;
+
+            await host.manageCalendarsUpdateCalendar({
+                report: this.doc.reportConnectionInfo!,
+                tableName: this.config.options.tableName!,
+                calendarName: oldName,
+                calendar: calendar
+            });
+
+            // Reload
+            await this.loadTableCalendars();
+            this.doc.app.notify(i18n(strings.manageCalendarsRenameSuccess), "success");
+        } catch (error) {
+            console.error("Failed to rename calendar:", error);
+            this.doc.app.notify(i18n(strings.manageCalendarsRenameError), "error");
+        }
     }
 
     getGroupTypeLabel(type: CalendarColumnGroupType): string {
@@ -1307,9 +1422,9 @@ export class ManageCalendarsScene extends DocScene {
         }
     }
 
-    async deleteCalendar() {
-        const name = prompt(i18n(strings.manageCalendarsEnterNameToDelete));
-        if (!name) return;
+    async deleteCalendar(name: string) {
+        const confirmed = confirm(i18n(strings.manageCalendarsConfirmDelete).replace("{0}", name));
+        if (!confirmed) return;
 
         try {
             await host.manageCalendarsDeleteCalendar({
@@ -1408,6 +1523,7 @@ Update the navigation/sidebar to include "Manage Calendars" below "Manage Dates"
     flex-direction: column;
     height: 100%;
     padding: 20px;
+    width: 100%;
 
     .header {
         display: flex;
@@ -1442,6 +1558,37 @@ Update the navigation/sidebar to include "Manage Calendars" below "Manage Dates"
         overflow: auto;
         border: 1px solid var(--border-color);
         border-radius: 4px;
+        width: 100%;
+
+        // Ensure proper scrolling and no truncation
+        .tabulator {
+            width: 100%;
+
+            .tabulator-tableholder {
+                overflow-x: auto;
+                overflow-y: auto;
+            }
+
+            // Calendar column header menu button
+            .tabulator-col-title {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 8px;
+            }
+
+            .tabulator-header-menu-button {
+                cursor: pointer;
+                padding: 4px 8px;
+                font-size: 18px;
+                line-height: 1;
+
+                &:hover {
+                    background-color: rgba(0, 0, 0, 0.1);
+                    border-radius: 4px;
+                }
+            }
+        }
     }
 }
 ```
@@ -1456,6 +1603,11 @@ manageCalendars: "manage-calendars",
 manageCalendarsTableLabel: "manage-calendars-table-label",
 manageCalendarsAddCalendar: "manage-calendars-add-calendar",
 manageCalendarsDeleteCalendar: "manage-calendars-delete-calendar",
+manageCalendarsRenameCalendar: "manage-calendars-rename-calendar",
+manageCalendarsConfirmDelete: "manage-calendars-confirm-delete",
+manageCalendarsEnterNewName: "manage-calendars-enter-new-name",
+manageCalendarsRenameSuccess: "manage-calendars-rename-success",
+manageCalendarsRenameError: "manage-calendars-rename-error",
 manageCalendarsColumnName: "manage-calendars-column-name",
 manageCalendarsSampleValues: "manage-calendars-sample-values",
 manageCalendarsUnassigned: "manage-calendars-unassigned",
@@ -1499,6 +1651,11 @@ manageCalendarsDeleteError: "manage-calendars-delete-error",
     "manage-calendars-table-label": "Table:",
     "manage-calendars-add-calendar": "Add Calendar",
     "manage-calendars-delete-calendar": "Delete Calendar",
+    "manage-calendars-rename-calendar": "Rename",
+    "manage-calendars-confirm-delete": "Are you sure you want to delete calendar '{0}'?",
+    "manage-calendars-enter-new-name": "Enter new calendar name:",
+    "manage-calendars-rename-success": "Calendar renamed successfully",
+    "manage-calendars-rename-error": "Failed to rename calendar",
     "manage-calendars-column-name": "Column",
     "manage-calendars-sample-values": "Sample values",
     "manage-calendars-unassigned": "Unassigned",
@@ -1550,12 +1707,20 @@ manageCalendarsDeleteError: "manage-calendars-delete-error",
 - [ ] Create TypeScript models in `calendars.ts`
 - [ ] Create main scene with Tabulator grid
 - [ ] Implement column mapping UI with dropdowns
+- [ ] Configure Tabulator for resizable columns and horizontal scrolling
+- [ ] Add calendar header menu (⋯) with Rename/Delete options
+- [ ] Implement `renameCalendar()` method
+- [ ] Update `deleteCalendar()` to accept calendar name parameter
+- [ ] Remove separate calendar list panel from layout
 - [ ] Add host controller methods
 - [ ] Add page type and routing
 - [ ] Add navigation menu item
-- [ ] Create stylesheet
-- [ ] Add localization strings
+- [ ] Create stylesheet with full-width layout
+- [ ] Add localization strings (including rename and confirm delete)
 - [ ] Test grid editing and calendar management
+- [ ] Test horizontal scrolling with many calendars
+- [ ] Test column resizing functionality
+- [ ] Verify no right-edge truncation
 
 ### Testing
 - [ ] Test with Date table that has no calendars

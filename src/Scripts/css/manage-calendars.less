@@ -6,6 +6,8 @@
 
     .scene-content {
         .flexbox(flex-start, stretch, column);
+        height: 100%;
+        width: 100%;
 
         .header {
             width: 100%;
@@ -61,253 +63,262 @@
             }
         }
 
-        .content {
-            height: calc(100% - 100px);
+        .mapping-grid {
+            flex: 1;
             width: 100%;
-            .flexbox(flex-start, stretch, row);
-            gap: 20px;
+            overflow: auto;
+            border: 1px solid @border-color;
+            .border-radius();
+            background: @window-back-color-alt;
 
-            .calendars-list {
-                width: 300px;
-                .flex(0 0 auto);
-                .flexbox(flex-start, flex-start, column);
+            .dark & {
+                background: @window-back-color-dark;
+                border-color: @border-color-dark;
+            }
 
-                .notice {
-                    font-size: 15px;
-                    font-weight: 600;
-                    margin-bottom: 15px;
-                    color: @notice-color;
+            // Tabulator overrides
+            .tabulator {
+                width: 100%;
+                height: 100%;
+                background: transparent;
+                border: none;
 
-                    .dark & {
-                        color: @notice-color-dark;
-                    }
-                }
-
-                .list {
-                    width: 100%;
-                    height: calc(100% - 50px);
-                    padding: 15px;
-                    background: @window-back-color-alt;
-                    border: 1px solid @border-color;
-                    overflow: auto;
-                    .border-radius();
+                .tabulator-header {
+                    background: @window-back-color;
+                    border-bottom: 2px solid @border-color;
 
                     .dark & {
-                        background: @window-back-color-dark;
+                        background: @back-color-dark;
                         border-color: @border-color-dark;
                     }
 
-                    .empty-state {
-                        text-align: center;
-                        padding: 40px 20px;
-                        color: @notice-color;
-                        font-size: 14px;
-                        line-height: 1.5;
+                    .tabulator-col {
+                        background: transparent;
+                        border-right: 1px solid @border-color;
 
                         .dark & {
-                            color: @notice-color-dark;
-                        }
-                    }
-
-                    .calendar-item {
-                        padding: 12px 15px;
-                        margin-bottom: 10px;
-                        background: @window-back-color;
-                        border: 1px solid @border-color;
-                        .border-radius();
-                        .flexbox(space-between, center);
-                        transition: all 0.2s;
-
-                        .dark & {
-                            background: @back-color-dark;
                             border-color: @border-color-dark;
                         }
 
-                        &:hover {
-                            background: darken(@window-back-color, 5%);
-                            border-color: @accent-back-color;
-
-                            .dark & {
-                                background: lighten(@back-color-dark, 5%);
-                            }
-                        }
-
-                        .calendar-name {
-                            font-size: 14px;
-                            font-weight: 500;
-                            color: @text-color;
-                            flex: 1;
-
-                            .dark & {
-                                color: @text-color-dark;
-                            }
-                        }
-
-                        .delete-calendar {
-                            padding: 4px 10px;
-                            font-size: 12px;
-                            margin-left: 10px;
-                            opacity: 0.7;
-                            transition: opacity 0.2s;
-
-                            &:hover {
-                                opacity: 1;
-                            }
-                        }
-                    }
-                }
-            }
-
-            .columns-mapping {
-                .flex(1 1 auto);
-                .flexbox(flex-start, flex-start, column);
-                overflow: hidden;
-
-                .notice {
-                    font-size: 15px;
-                    font-weight: 600;
-                    margin-bottom: 15px;
-                    color: @notice-color;
-
-                    .dark & {
-                        color: @notice-color-dark;
-                    }
-                }
-
-                .mapping {
-                    width: 100%;
-                    height: calc(100% - 50px);
-                    padding: 15px;
-                    background: @window-back-color-alt;
-                    border: 1px solid @border-color;
-                    overflow: auto;
-                    .border-radius();
-
-                    .dark & {
-                        background: @window-back-color-dark;
-                        border-color: @border-color-dark;
-                    }
-
-                    .mapping-table {
-                        width: 100%;
-                        border-collapse: collapse;
-                        font-size: 13px;
-
-                        thead {
+                        &.tabulator-frozen {
                             background: @window-back-color;
-                            position: sticky;
-                            top: 0;
-                            z-index: 10;
 
                             .dark & {
                                 background: @back-color-dark;
                             }
+                        }
 
-                            th {
-                                padding: 12px 10px;
-                                text-align: left;
+                        .tabulator-col-content {
+                            padding: 12px 10px;
+
+                            .tabulator-col-title {
+                                font-size: 13px;
                                 font-weight: 600;
                                 color: @text-color;
-                                border-bottom: 2px solid @border-color;
-                                white-space: nowrap;
 
                                 .dark & {
                                     color: @text-color-dark;
-                                    border-color: @border-color-dark;
                                 }
                             }
                         }
 
-                        tbody {
-                            tr {
-                                border-bottom: 1px solid @border-color;
+                        // Header menu button
+                        .tabulator-header-menu-button {
+                            cursor: pointer;
+                            padding: 4px 8px;
+                            margin-left: 8px;
+                            font-size: 16px;
+                            line-height: 1;
+                            color: @text-color;
+                            border-radius: 4px;
+                            transition: background-color 0.2s;
+
+                            .dark & {
+                                color: @text-color-dark;
+                            }
+
+                            &:hover {
+                                background-color: rgba(0, 0, 0, 0.1);
+
+                                .dark & {
+                                    background-color: rgba(255, 255, 255, 0.1);
+                                }
+                            }
+                        }
+                    }
+
+                    // Header menu popup
+                    .tabulator-menu {
+                        background: @window-back-color;
+                        border: 1px solid @border-color;
+                        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+                        .border-radius();
+
+                        .dark & {
+                            background: @back-color-dark;
+                            border-color: @border-color-dark;
+                            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+                        }
+
+                        .tabulator-menu-item {
+                            padding: 10px 15px;
+                            color: @text-color;
+                            font-size: 13px;
+                            cursor: pointer;
+                            transition: background-color 0.2s;
+
+                            .dark & {
+                                color: @text-color-dark;
+                            }
+
+                            &:hover {
+                                background: @accent-back-color;
+
+                                .dark & {
+                                    background: lighten(@back-color-dark, 10%);
+                                }
+                            }
+
+                            .header-menu-icon {
+                                margin-right: 8px;
+                                font-size: 14px;
+                            }
+                        }
+                    }
+                }
+
+                .tabulator-tableholder {
+                    overflow-x: auto;
+                    overflow-y: auto;
+                    background: transparent;
+
+                    .tabulator-table {
+                        background: transparent;
+                        color: @text-color;
+
+                        .dark & {
+                            color: @text-color-dark;
+                        }
+
+                        .tabulator-row {
+                            background: transparent;
+                            border-bottom: 1px solid @border-color;
+
+                            .dark & {
+                                border-color: @border-color-dark;
+                            }
+
+                            &:hover {
+                                background: darken(@window-back-color-alt, 3%);
+
+                                .dark & {
+                                    background: lighten(@window-back-color-dark, 3%);
+                                }
+                            }
+
+                            .tabulator-cell {
+                                padding: 10px;
+                                border-right: 1px solid @border-color;
+                                background: transparent;
 
                                 .dark & {
                                     border-color: @border-color-dark;
                                 }
 
-                                &:hover {
-                                    background: darken(@window-back-color-alt, 3%);
+                                &.tabulator-frozen {
+                                    background: @window-back-color-alt;
 
                                     .dark & {
-                                        background: lighten(@window-back-color-dark, 3%);
+                                        background: @window-back-color-dark;
                                     }
                                 }
 
-                                td {
-                                    padding: 10px;
+                                // Visual styles for different mapping types
+                                .blank-mapping {
+                                    display: inline-block;
+                                    width: 100%;
+                                    height: 20px;
+                                    background: lighten(@border-color, 10%);
+                                    .border-radius();
+
+                                    .dark & {
+                                        background: darken(@border-color-dark, 10%);
+                                    }
+                                }
+
+                                .primary-mapping {
+                                    font-weight: 600;
                                     color: @text-color;
-                                    vertical-align: middle;
 
                                     .dark & {
                                         color: @text-color-dark;
                                     }
+                                }
 
-                                    &:first-child {
-                                        font-weight: 500;
-                                        min-width: 150px;
+                                .implicit-mapping {
+                                    font-style: italic;
+                                    opacity: 0.6;
+                                }
+
+                                // Editor styling
+                                select {
+                                    width: 100%;
+                                    padding: 6px 10px;
+                                    border: 1px solid @border-color;
+                                    background: @window-back-color;
+                                    color: @text-color;
+                                    font-size: 13px;
+                                    .border-radius();
+
+                                    .dark & {
+                                        background: @back-color-dark;
+                                        border-color: @border-color-dark;
+                                        color: @text-color-dark;
                                     }
 
-                                    &:nth-child(2) {
-                                        color: @notice-color;
-                                        font-size: 12px;
-                                        min-width: 200px;
-                                        max-width: 300px;
-                                        overflow: hidden;
-                                        text-overflow: ellipsis;
-                                        white-space: nowrap;
-
-                                        .dark & {
-                                            color: @notice-color-dark;
-                                        }
-                                    }
-
-                                    &.primary-mapping {
-                                        font-weight: 600;
-
-                                        select {
-                                            font-weight: 600;
-                                        }
-                                    }
-
-                                    &.implicit-mapping {
-                                        opacity: 0.6;
-
-                                        select {
-                                            font-style: italic;
-                                            cursor: not-allowed;
-                                        }
-                                    }
-
-                                    .mapping-select {
-                                        width: 100%;
-                                        padding: 6px 10px;
-                                        border: 1px solid @border-color;
-                                        background: @window-back-color;
-                                        color: @text-color;
-                                        font-size: 13px;
-                                        .border-radius();
-
-                                        .dark & {
-                                            background: @back-color-dark;
-                                            border-color: @border-color-dark;
-                                            color: @text-color-dark;
-                                        }
-
-                                        &:focus {
-                                            outline: none;
-                                            border-color: @highlight-color;
-                                        }
-
-                                        &:disabled {
-                                            cursor: not-allowed;
-                                            opacity: 0.6;
-                                        }
+                                    &:focus {
+                                        outline: none;
+                                        border-color: @highlight-color;
                                     }
                                 }
                             }
                         }
                     }
+                }
+
+                // Resize handle
+                .tabulator-col-resize-handle {
+                    background: @border-color;
+
+                    .dark & {
+                        background: @border-color-dark;
+                    }
+
+                    &:hover {
+                        background: @highlight-color;
+                    }
+                }
+            }
+
+            // Empty state and error messages
+            .empty-state,
+            .error {
+                text-align: center;
+                padding: 40px 20px;
+                color: @notice-color;
+                font-size: 14px;
+                line-height: 1.5;
+
+                .dark & {
+                    color: @notice-color-dark;
+                }
+            }
+
+            .error {
+                color: @error-color;
+
+                .dark & {
+                    color: @error-color-dark;
                 }
             }
         }

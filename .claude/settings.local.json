@@ -6,7 +6,9 @@
       "Bash(npm run build:Debug:*)",
       "Bash(dotnet build:*)",
       "Bash(dotnet restore:*)",
-      "Bash(Select-String -Pattern \"error|warning\" -Context 0,1)"
+      "Bash(Select-String -Pattern \"error|warning\" -Context 0,1)",
+      "Bash(npm run build:*)",
+      "Bash(cat:*)"
     ]
   }
 }

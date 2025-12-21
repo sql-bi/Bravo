@@ -17,13 +17,14 @@ import { strings } from '../model/strings';
 import { ErrorScene } from './scene-error';
 import { DocScene } from './scene-doc';
 import { PageType } from '../controllers/page';
+import { Tabulator } from 'tabulator-tables';
 
 export class ManageCalendarsScene extends DocScene {
 
     config: OptionsStore<ManageCalendarsConfig>;
     tableInfo: TableCalendarInfo | null = null;
-    calendarsContainer: HTMLElement;
-    columnsContainer: HTMLElement;
+    mappingTable: Tabulator | null = null;
+    mappingContainer: HTMLElement;
     tableSelector: HTMLSelectElement;
 
     constructor(id: string, container: HTMLElement, doc: Doc, type: PageType) {
@@ -50,22 +51,12 @@ export class ManageCalendarsScene extends DocScene {
                     <button class="btn btn-primary btn-add-calendar disable-on-syncing enable-if-editable">${i18n(strings.manageCalendarsAddCalendar)}</button>
                 </div>
             </div>
-            <div class="content">
-                <div class="calendars-list">
-                    <div class="notice">${i18n(strings.manageCalendarsTitle)}</div>
-                    <div class="list">${Loader.html(true)}</div>
-                </div>
-                <div class="columns-mapping">
-                    <div class="notice">${i18n(strings.manageCalendarsColumnMapping)}</div>
-                    <div class="mapping">${Loader.html(true)}</div>
-                </div>
-            </div>
+            <div class="mapping-grid">${Loader.html(true)}</div>
         `;
         this.body.insertAdjacentHTML("beforeend", html);
 
         this.tableSelector = _(".table-select", this.body) as HTMLSelectElement;
-        this.calendarsContainer = _(".calendars-list .list", this.body);
-        this.columnsContainer = _(".columns-mapping .mapping", this.body);
+        this.mappingContainer = _(".mapping-grid", this.body);
 
         let addCalendarButton = _(".btn-add-calendar", this.body);
         addCalendarButton.addEventListener("click", () => this.addCalendar());
@@ -83,8 +74,7 @@ export class ManageCalendarsScene extends DocScene {
 
     async loadTableCalendars() {
         try {
-            let loader1 = new Loader(this.calendarsContainer, true, true);
-            let loader2 = new Loader(this.columnsContainer, true, true);
+            let loader = new Loader(this.mappingContainer, true, true);
 
             console.log("Loading table calendars for table:", this.config.options.tableName || "Date");
 
@@ -95,176 +85,235 @@ export class ManageCalendarsScene extends DocScene {
 
             console.log("Table calendars loaded:", this.tableInfo);
 
-            loader1.remove();
-            loader2.remove();
+            loader.remove();
 
-            this.renderCalendarsList();
-            this.renderColumnsMapping();
+            this.renderMappingGrid();
 
         } catch (error: any) {
             console.error("Error loading table calendars:", error);
             logger.logError(error);
 
             // Show error in UI
-            this.calendarsContainer.innerHTML = `<div class="error">Error loading calendars: ${error.message || error}</div>`;
-            this.columnsContainer.innerHTML = "";
+            this.mappingContainer.innerHTML = `<div class="error">Error loading calendars: ${error.message || error}</div>`;
         }
     }
 
-    renderCalendarsList() {
-        if (!this.tableInfo || !this.tableInfo.calendars) return;
+    renderMappingGrid() {
+        if (!this.tableInfo || !this.tableInfo.columns || !this.tableInfo.calendars) return;
 
-        this.calendarsContainer.innerHTML = "";
+        console.log("Rendering mapping grid with", this.tableInfo.calendars.length, "calendars");
 
-        if (this.tableInfo.calendars.length === 0) {
-            this.calendarsContainer.innerHTML = `<div class="empty-state">${i18n(strings.manageCalendarsNoCalendars)}</div>`;
+        this.mappingContainer.innerHTML = "";
+
+        // Build column definitions
+        const columns: Tabulator.ColumnDefinition[] = [
+            {
+                title: i18n(strings.manageCalendarsColumnName),
+                field: "columnName",
+                width: 200,
+                resizable: true,
+                headerSort: false
+            },
+            {
+                title: i18n(strings.manageCalendarsSampleValues),
+                field: "sampleValues",
+                width: 400,
+                resizable: true,
+                headerSort: false,
+                formatter: (cell: Tabulator.CellComponent) => {
+                    const values = cell.getValue();
+                    if (!values || values.length === 0) return "";
+                    return values.slice(0, 3).join(", ");
+                }
+            }
+        ];
+
+        // Add one column per calendar with header menu
+        for (let calendar of this.tableInfo.calendars) {
+            const calendarName = calendar.name || "";
+            console.log("Adding calendar column:", calendarName);
+
+            columns.push({
+                title: calendarName,
+                field: `calendar_${calendarName}`,
+                width: 180,
+                resizable: true,
+                headerSort: false,
+                headerMenu: this.createCalendarHeaderMenu(calendarName),
+                formatter: (cell: Tabulator.CellComponent) => {
+                    const value = cell.getValue();
+
+                    if (value === null || value === undefined || value === "") {
+                        return '<span class="blank-mapping"></span>';
+                    }
+
+                    // Convert string value back to number for display
+                    const groupType = typeof value === 'string' ? parseInt(value) : value;
+
+                    // Get the original mapping to check for metadata
+                    const rowData = cell.getRow().getData();
+                    const columnName = rowData.columnName;
+                    const calendar = this.tableInfo?.calendars?.find(c => c.name === calendarName);
+                    const mapping = calendar?.columnMappings?.find(m => m.columnName === columnName);
+
+                    let label = this.getGroupTypeLabel(groupType);
+                    let className = "";
+                    let icon = "";
+
+                    if (mapping?.isImplicitFromSortBy) {
+                        className = "implicit-mapping";
+                        icon = "🔗";
+                    } else if (mapping?.isPrimary && groupType !== CalendarColumnGroupType.TimeRelated) {
+                        className = "primary-mapping";
+                        icon = "★";
+                    } else if (mapping && !mapping.isPrimary && groupType !== CalendarColumnGroupType.TimeRelated) {
+                        icon = "☆";
+                    }
+
+                    return `<span class="${className}">${icon ? icon + ' ' : ''}${label}</span>`;
+                },
+                editor: "list" as any, // Type definition outdated, "list" is the new editor replacing deprecated "select"
+                editorParams: {
+                    values: this.getColumnGroupTypeValues(),
+                    defaultValue: ""
+                },
+                cellEdited: (cell: Tabulator.CellComponent) => {
+                    this.onCellEdited(calendarName, cell);
+                },
+                editable: (cell: Tabulator.CellComponent) => {
+                    // Check if this is an implicit mapping (not editable)
+                    const rowData = cell.getRow().getData();
+                    const columnName = rowData.columnName;
+                    const calendar = this.tableInfo?.calendars?.find(c => c.name === calendarName);
+                    const mapping = calendar?.columnMappings?.find(m => m.columnName === columnName);
+                    return !mapping?.isImplicitFromSortBy;
+                }
+            });
+        }
+
+        // Build row data
+        const data = this.tableInfo.columns.map(column => {
+            const row: any = {
+                columnName: column.name,
+                sampleValues: column.sampleValues
+            };
+
+            // Add mapping for each calendar - store just the groupType value for editing
+            // Convert to string so the select editor works properly
+            for (let calendar of this.tableInfo!.calendars!) {
+                const mapping = calendar.columnMappings?.find(m => m.columnName === column.name);
+                row[`calendar_${calendar.name}`] = mapping?.groupType !== undefined && mapping?.groupType !== null
+                    ? String(mapping.groupType)
+                    : null;
+            }
+
+            return row;
+        });
+
+        // Create Tabulator
+        if (this.mappingTable) {
+            this.mappingTable.destroy();
+        }
+
+        this.mappingTable = new Tabulator(`#${this.element.id} .mapping-grid`, {
+            data: data,
+            columns: columns,
+            layout: "fitData",
+            height: "100%"
+        });
+    }
+
+    createCalendarHeaderMenu(calendarName: string): any[] {
+        return [
+            {
+                label: `<span class="header-menu-icon">✏️</span> ${i18n(strings.manageCalendarsRenameCalendar)}`,
+                action: (e: any, column: any) => {
+                    this.renameCalendar(calendarName);
+                }
+            },
+            {
+                label: `<span class="header-menu-icon">🗑️</span> ${i18n(strings.manageCalendarsDeleteCalendar)}`,
+                action: (e: any, column: any) => {
+                    this.deleteCalendar(calendarName);
+                }
+            }
+        ];
+    }
+
+    getColumnGroupTypeValues(): {[key: string]: string} {
+        // Convert enum values to strings for the select editor
+        return {
+            "": i18n(strings.manageCalendarsBlank),
+            [String(CalendarColumnGroupType.Unassigned)]: i18n(strings.manageCalendarsUnassigned),
+            [String(CalendarColumnGroupType.Date)]: i18n(strings.manageCalendarsDate),
+            [String(CalendarColumnGroupType.Year)]: i18n(strings.manageCalendarsYear),
+            [String(CalendarColumnGroupType.Semester)]: i18n(strings.manageCalendarsSemester),
+            [String(CalendarColumnGroupType.SemesterOfYear)]: i18n(strings.manageCalendarsSemesterOfYear),
+            [String(CalendarColumnGroupType.Quarter)]: i18n(strings.manageCalendarsQuarter),
+            [String(CalendarColumnGroupType.QuarterOfYear)]: i18n(strings.manageCalendarsQuarterOfYear),
+            [String(CalendarColumnGroupType.QuarterOfSemester)]: i18n(strings.manageCalendarsQuarterOfSemester),
+            [String(CalendarColumnGroupType.Month)]: i18n(strings.manageCalendarsMonth),
+            [String(CalendarColumnGroupType.MonthOfYear)]: i18n(strings.manageCalendarsMonthOfYear),
+            [String(CalendarColumnGroupType.MonthOfSemester)]: i18n(strings.manageCalendarsMonthOfSemester),
+            [String(CalendarColumnGroupType.MonthOfQuarter)]: i18n(strings.manageCalendarsMonthOfQuarter),
+            [String(CalendarColumnGroupType.Week)]: i18n(strings.manageCalendarsWeek),
+            [String(CalendarColumnGroupType.WeekOfYear)]: i18n(strings.manageCalendarsWeekOfYear),
+            [String(CalendarColumnGroupType.WeekOfSemester)]: i18n(strings.manageCalendarsWeekOfSemester),
+            [String(CalendarColumnGroupType.WeekOfQuarter)]: i18n(strings.manageCalendarsWeekOfQuarter),
+            [String(CalendarColumnGroupType.WeekOfMonth)]: i18n(strings.manageCalendarsWeekOfMonth),
+            [String(CalendarColumnGroupType.DayOfYear)]: i18n(strings.manageCalendarsDayOfYear),
+            [String(CalendarColumnGroupType.DayOfSemester)]: i18n(strings.manageCalendarsDayOfSemester),
+            [String(CalendarColumnGroupType.DayOfQuarter)]: i18n(strings.manageCalendarsDayOfQuarter),
+            [String(CalendarColumnGroupType.DayOfMonth)]: i18n(strings.manageCalendarsDayOfMonth),
+            [String(CalendarColumnGroupType.DayOfWeek)]: i18n(strings.manageCalendarsDayOfWeek),
+            [String(CalendarColumnGroupType.TimeRelated)]: i18n(strings.manageCalendarsTimeRelated)
+        };
+    }
+
+    getGroupTypeLabel(type: CalendarColumnGroupType): string {
+        switch (type) {
+            case CalendarColumnGroupType.Unknown: return i18n(strings.manageCalendarsUnknown);
+            case CalendarColumnGroupType.Year: return i18n(strings.manageCalendarsYear);
+            case CalendarColumnGroupType.Semester: return i18n(strings.manageCalendarsSemester);
+            case CalendarColumnGroupType.SemesterOfYear: return i18n(strings.manageCalendarsSemesterOfYear);
+            case CalendarColumnGroupType.Quarter: return i18n(strings.manageCalendarsQuarter);
+            case CalendarColumnGroupType.QuarterOfYear: return i18n(strings.manageCalendarsQuarterOfYear);
+            case CalendarColumnGroupType.QuarterOfSemester: return i18n(strings.manageCalendarsQuarterOfSemester);
+            case CalendarColumnGroupType.Month: return i18n(strings.manageCalendarsMonth);
+            case CalendarColumnGroupType.MonthOfYear: return i18n(strings.manageCalendarsMonthOfYear);
+            case CalendarColumnGroupType.MonthOfSemester: return i18n(strings.manageCalendarsMonthOfSemester);
+            case CalendarColumnGroupType.MonthOfQuarter: return i18n(strings.manageCalendarsMonthOfQuarter);
+            case CalendarColumnGroupType.Week: return i18n(strings.manageCalendarsWeek);
+            case CalendarColumnGroupType.WeekOfYear: return i18n(strings.manageCalendarsWeekOfYear);
+            case CalendarColumnGroupType.WeekOfSemester: return i18n(strings.manageCalendarsWeekOfSemester);
+            case CalendarColumnGroupType.WeekOfQuarter: return i18n(strings.manageCalendarsWeekOfQuarter);
+            case CalendarColumnGroupType.WeekOfMonth: return i18n(strings.manageCalendarsWeekOfMonth);
+            case CalendarColumnGroupType.Date: return i18n(strings.manageCalendarsDate);
+            case CalendarColumnGroupType.DayOfYear: return i18n(strings.manageCalendarsDayOfYear);
+            case CalendarColumnGroupType.DayOfSemester: return i18n(strings.manageCalendarsDayOfSemester);
+            case CalendarColumnGroupType.DayOfQuarter: return i18n(strings.manageCalendarsDayOfQuarter);
+            case CalendarColumnGroupType.DayOfMonth: return i18n(strings.manageCalendarsDayOfMonth);
+            case CalendarColumnGroupType.DayOfWeek: return i18n(strings.manageCalendarsDayOfWeek);
+            case CalendarColumnGroupType.TimeRelated: return i18n(strings.manageCalendarsTimeRelated);
+            case CalendarColumnGroupType.Unassigned: return i18n(strings.manageCalendarsUnassigned);
+            default: return "";
+        }
+    }
+
+    async onCellEdited(calendarName: string, cell: Tabulator.CellComponent) {
+        const rowData = cell.getRow().getData();
+        const columnName = rowData.columnName;
+        const newValue = cell.getValue();
+        const oldValue = cell.getOldValue();
+
+        console.log("Cell edited:", columnName, "old value:", oldValue, "new value:", newValue, "type:", typeof newValue);
+
+        // Don't save if value hasn't changed
+        if (newValue === oldValue) {
+            console.log("Value unchanged, skipping save");
             return;
         }
 
-        for (let calendar of this.tableInfo.calendars) {
-            let calendarDiv = document.createElement("div");
-            calendarDiv.className = "calendar-item";
-
-            let nameSpan = document.createElement("span");
-            nameSpan.className = "calendar-name";
-            nameSpan.textContent = calendar.name || "";
-
-            let deleteButton = document.createElement("button");
-            deleteButton.className = "btn btn-sm btn-danger delete-calendar";
-            deleteButton.textContent = i18n(strings.manageCalendarsDeleteButton);
-            deleteButton.addEventListener("click", () => this.deleteCalendar(calendar.name!));
-
-            calendarDiv.appendChild(nameSpan);
-            calendarDiv.appendChild(deleteButton);
-
-            this.calendarsContainer.appendChild(calendarDiv);
-        }
-    }
-
-    renderColumnsMapping() {
-        if (!this.tableInfo || !this.tableInfo.columns || !this.tableInfo.calendars) return;
-
-        this.columnsContainer.innerHTML = "";
-
-        // Create table
-        let table = document.createElement("table");
-        table.className = "mapping-table";
-
-        // Create header
-        let thead = document.createElement("thead");
-        let headerRow = document.createElement("tr");
-
-        let thColumn = document.createElement("th");
-        thColumn.textContent = i18n(strings.manageCalendarsColumnName);
-        headerRow.appendChild(thColumn);
-
-        let thSample = document.createElement("th");
-        thSample.textContent = i18n(strings.manageCalendarsSampleValues);
-        headerRow.appendChild(thSample);
-
-        // Add calendar columns
-        for (let calendar of this.tableInfo.calendars) {
-            let thCal = document.createElement("th");
-            thCal.textContent = calendar.name || "";
-            headerRow.appendChild(thCal);
-        }
-
-        thead.appendChild(headerRow);
-        table.appendChild(thead);
-
-        // Create body
-        let tbody = document.createElement("tbody");
-
-        for (let column of this.tableInfo.columns) {
-            let row = document.createElement("tr");
-
-            // Column name
-            let tdName = document.createElement("td");
-            tdName.textContent = column.name || "";
-            row.appendChild(tdName);
-
-            // Sample values
-            let tdSample = document.createElement("td");
-            if (column.sampleValues && column.sampleValues.length > 0) {
-                tdSample.textContent = column.sampleValues.slice(0, 3).join(", ");
-            } else {
-                tdSample.textContent = "-";
-            }
-            row.appendChild(tdSample);
-
-            // Calendar mappings
-            for (let calendar of this.tableInfo.calendars) {
-                let tdMapping = document.createElement("td");
-
-                let select = document.createElement("select");
-                select.className = "mapping-select";
-
-                // Add options for all calendar column group types
-                select.innerHTML = this.getColumnGroupTypeOptions();
-
-                // Find current mapping for this column in this calendar
-                let mapping = calendar.columnMappings?.find(m => m.columnName === column.name);
-                if (mapping) {
-                    select.value = mapping.groupType?.toString() || "-1";
-
-                    // Add visual indicator for primary/associated/implicit
-                    if (mapping.isImplicitFromSortBy) {
-                        select.disabled = true;
-                        select.title = `Implicit via '${mapping.sortByParentColumn}' Sort By Column`;
-                        tdMapping.classList.add("implicit-mapping");
-                    } else if (mapping.isPrimary && mapping.groupType !== CalendarColumnGroupType.TimeRelated) {
-                        tdMapping.classList.add("primary-mapping");
-                    }
-                } else {
-                    select.value = "-1"; // Blank
-                }
-
-                // Handle change
-                select.addEventListener("change", async () => {
-                    await this.updateColumnMapping(calendar.name!, column.name!, parseInt(select.value));
-                });
-
-                tdMapping.appendChild(select);
-                row.appendChild(tdMapping);
-            }
-
-            tbody.appendChild(row);
-        }
-
-        table.appendChild(tbody);
-        this.columnsContainer.appendChild(table);
-    }
-
-    getColumnGroupTypeOptions(): string {
-        return `
-            <option value="-1">${i18n(strings.manageCalendarsBlank)}</option>
-            <option value="${CalendarColumnGroupType.Unassigned}">${i18n(strings.manageCalendarsUnassigned)}</option>
-            <option value="${CalendarColumnGroupType.Date}">${i18n(strings.manageCalendarsDate)}</option>
-            <option value="${CalendarColumnGroupType.Year}">${i18n(strings.manageCalendarsYear)}</option>
-            <option value="${CalendarColumnGroupType.Semester}">${i18n(strings.manageCalendarsSemester)}</option>
-            <option value="${CalendarColumnGroupType.SemesterOfYear}">${i18n(strings.manageCalendarsSemesterOfYear)}</option>
-            <option value="${CalendarColumnGroupType.Quarter}">${i18n(strings.manageCalendarsQuarter)}</option>
-            <option value="${CalendarColumnGroupType.QuarterOfYear}">${i18n(strings.manageCalendarsQuarterOfYear)}</option>
-            <option value="${CalendarColumnGroupType.QuarterOfSemester}">${i18n(strings.manageCalendarsQuarterOfSemester)}</option>
-            <option value="${CalendarColumnGroupType.Month}">${i18n(strings.manageCalendarsMonth)}</option>
-            <option value="${CalendarColumnGroupType.MonthOfYear}">${i18n(strings.manageCalendarsMonthOfYear)}</option>
-            <option value="${CalendarColumnGroupType.MonthOfSemester}">${i18n(strings.manageCalendarsMonthOfSemester)}</option>
-            <option value="${CalendarColumnGroupType.MonthOfQuarter}">${i18n(strings.manageCalendarsMonthOfQuarter)}</option>
-            <option value="${CalendarColumnGroupType.Week}">${i18n(strings.manageCalendarsWeek)}</option>
-            <option value="${CalendarColumnGroupType.WeekOfYear}">${i18n(strings.manageCalendarsWeekOfYear)}</option>
-            <option value="${CalendarColumnGroupType.WeekOfSemester}">${i18n(strings.manageCalendarsWeekOfSemester)}</option>
-            <option value="${CalendarColumnGroupType.WeekOfQuarter}">${i18n(strings.manageCalendarsWeekOfQuarter)}</option>
-            <option value="${CalendarColumnGroupType.WeekOfMonth}">${i18n(strings.manageCalendarsWeekOfMonth)}</option>
-            <option value="${CalendarColumnGroupType.DayOfYear}">${i18n(strings.manageCalendarsDayOfYear)}</option>
-            <option value="${CalendarColumnGroupType.DayOfSemester}">${i18n(strings.manageCalendarsDayOfSemester)}</option>
-            <option value="${CalendarColumnGroupType.DayOfQuarter}">${i18n(strings.manageCalendarsDayOfQuarter)}</option>
-            <option value="${CalendarColumnGroupType.DayOfMonth}">${i18n(strings.manageCalendarsDayOfMonth)}</option>
-            <option value="${CalendarColumnGroupType.DayOfWeek}">${i18n(strings.manageCalendarsDayOfWeek)}</option>
-            <option value="${CalendarColumnGroupType.TimeRelated}">${i18n(strings.manageCalendarsTimeRelated)}</option>
-        `;
-    }
-
-    async updateColumnMapping(calendarName: string, columnName: string, groupType: number) {
         if (!this.tableInfo) return;
 
         try {
@@ -272,17 +321,47 @@ export class ManageCalendarsScene extends DocScene {
             let calendar = this.tableInfo.calendars?.find(c => c.name === calendarName);
             if (!calendar) return;
 
-            // Update or add the mapping
-            let mapping = calendar.columnMappings?.find(m => m.columnName === columnName);
-            if (mapping) {
-                mapping.groupType = groupType;
+            // The editor returns the selected groupType as a string (or number)
+            let groupType: number | null = null;
+
+            if (newValue === null || newValue === undefined || newValue === "") {
+                // Blank/null selection - remove the mapping
+                if (calendar.columnMappings) {
+                    calendar.columnMappings = calendar.columnMappings.filter(m => m.columnName !== columnName);
+                }
             } else {
-                calendar.columnMappings = calendar.columnMappings || [];
-                calendar.columnMappings.push({
-                    columnName: columnName,
-                    groupType: groupType,
-                    isPrimary: true
-                });
+                // Parse the group type
+                groupType = typeof newValue === 'number' ? newValue : parseInt(newValue as string);
+
+                // Update or add the mapping
+                let mapping = calendar.columnMappings?.find(m => m.columnName === columnName);
+                if (mapping) {
+                    // Update existing mapping
+                    mapping.groupType = groupType;
+                    // Check if this category already has a primary column
+                    const hasPrimary = calendar.columnMappings?.some(m =>
+                        m.columnName !== columnName &&
+                        m.groupType === groupType &&
+                        m.isPrimary
+                    );
+                    mapping.isPrimary = !hasPrimary;
+                } else {
+                    // Adding new mapping
+                    calendar.columnMappings = calendar.columnMappings || [];
+
+                    // Check if this category already has a primary column
+                    const existingPrimaryForCategory = calendar.columnMappings?.find(m =>
+                        m.groupType === groupType &&
+                        m.isPrimary
+                    );
+
+                    calendar.columnMappings.push({
+                        columnName: columnName,
+                        groupType: groupType,
+                        // This is primary only if no other column has this category as primary
+                        isPrimary: !existingPrimaryForCategory
+                    });
+                }
             }
 
             // Save to backend
@@ -297,6 +376,33 @@ export class ManageCalendarsScene extends DocScene {
             await this.loadTableCalendars();
 
         } catch (error: any) {
+            logger.logError(error);
+        }
+    }
+
+    async renameCalendar(oldName: string) {
+        const newName = prompt(i18n(strings.manageCalendarsEnterNewName), oldName);
+        if (!newName || newName === oldName) return;
+
+        try {
+            const calendar = this.tableInfo?.calendars?.find(c => c.name === oldName);
+            if (!calendar) return;
+
+            // Update calendar name
+            calendar.name = newName;
+
+            await host.manageCalendarsUpdateCalendar({
+                report: <PBIDesktopReport>this.doc.sourceData,
+                tableName: this.config.options.tableName || "Date",
+                calendarName: oldName,
+                calendar: calendar
+            });
+
+            // Reload
+            await this.loadTableCalendars();
+
+        } catch (error: any) {
+            console.error("Failed to rename calendar:", error);
             logger.logError(error);
         }
     }
@@ -344,6 +450,9 @@ export class ManageCalendarsScene extends DocScene {
     }
 
     destroy() {
+        if (this.mappingTable) {
+            this.mappingTable.destroy();
+        }
         this.config = null;
         super.destroy();
     }
