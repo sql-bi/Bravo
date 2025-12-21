@@ -222,8 +222,32 @@
 
         /// <summary>
         /// An error occurred while deobfuscating the VPAX file
-        /// </summary> 
+        /// </summary>
         [JsonPropertyName("VpaxDeobfuscationError")]
         VpaxDeobfuscationError = 1001,
+
+        /// <summary>
+        /// TOM table does not exist in the model
+        /// </summary>
+        [JsonPropertyName("TOMDatabaseTableNotFound")]
+        TOMDatabaseTableNotFound = 1100,
+
+        /// <summary>
+        /// Calendar already exists on the table
+        /// </summary>
+        [JsonPropertyName("ManageCalendarsCalendarAlreadyExists")]
+        ManageCalendarsCalendarAlreadyExists = 1200,
+
+        /// <summary>
+        /// Calendar not found on the table
+        /// </summary>
+        [JsonPropertyName("ManageCalendarsCalendarNotFound")]
+        ManageCalendarsCalendarNotFound = 1201,
+
+        /// <summary>
+        /// Database compatibility level is not high enough to support Calendars (requires 1701+)
+        /// </summary>
+        [JsonPropertyName("ManageCalendarsIncompatibleDatabaseVersion")]
+        ManageCalendarsIncompatibleDatabaseVersion = 1202,
     }
 }

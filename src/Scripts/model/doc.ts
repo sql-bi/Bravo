@@ -169,6 +169,7 @@ export class Doc {
             [PageType.AnalyzeModel]: "AnalyzeModel",
             [PageType.DaxFormatter]: "FormatDax",
             [PageType.ManageDates]: "ManageDates",
+            [PageType.ManageCalendars]: "ManageCalendars",
             [PageType.ExportData]: "ExportData",
             //[PageType.BestPractices]: "BestPractices",
         };

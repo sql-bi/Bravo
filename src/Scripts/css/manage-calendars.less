@@ -1,0 +1,315 @@
+// main: main.less
+.manage-calendars {
+    h1 {
+        .icon-manage-calendars;
+    }
+
+    .scene-content {
+        .flexbox(flex-start, stretch, column);
+
+        .header {
+            width: 100%;
+            .flexbox(space-between, center);
+            margin-top: 25px;
+            margin-bottom: 20px;
+            padding: 0 0 15px 0;
+            border-bottom: 1px solid @border-color;
+
+            .dark & {
+                border-color: @border-color-dark;
+            }
+
+            .table-selector {
+                .flexbox(flex-start, center);
+
+                label {
+                    font-size: 15px;
+                    font-weight: 600;
+                    margin-right: 10px;
+                    color: @text-color;
+
+                    .dark & {
+                        color: @text-color-dark;
+                    }
+                }
+
+                .table-select {
+                    padding: 8px 12px;
+                    border: 1px solid @border-color;
+                    background: @window-back-color;
+                    color: @text-color;
+                    font-size: 14px;
+                    .border-radius();
+                    min-width: 150px;
+
+                    .dark & {
+                        background: @window-back-color-dark;
+                        border-color: @border-color-dark;
+                        color: @text-color-dark;
+                    }
+
+                    &:focus {
+                        outline: none;
+                        border-color: @highlight-color;
+                    }
+                }
+            }
+
+            .actions {
+                .flexbox(flex-end, center);
+                gap: 10px;
+            }
+        }
+
+        .content {
+            height: calc(100% - 100px);
+            width: 100%;
+            .flexbox(flex-start, stretch, row);
+            gap: 20px;
+
+            .calendars-list {
+                width: 300px;
+                .flex(0 0 auto);
+                .flexbox(flex-start, flex-start, column);
+
+                .notice {
+                    font-size: 15px;
+                    font-weight: 600;
+                    margin-bottom: 15px;
+                    color: @notice-color;
+
+                    .dark & {
+                        color: @notice-color-dark;
+                    }
+                }
+
+                .list {
+                    width: 100%;
+                    height: calc(100% - 50px);
+                    padding: 15px;
+                    background: @window-back-color-alt;
+                    border: 1px solid @border-color;
+                    overflow: auto;
+                    .border-radius();
+
+                    .dark & {
+                        background: @window-back-color-dark;
+                        border-color: @border-color-dark;
+                    }
+
+                    .empty-state {
+                        text-align: center;
+                        padding: 40px 20px;
+                        color: @notice-color;
+                        font-size: 14px;
+                        line-height: 1.5;
+
+                        .dark & {
+                            color: @notice-color-dark;
+                        }
+                    }
+
+                    .calendar-item {
+                        padding: 12px 15px;
+                        margin-bottom: 10px;
+                        background: @window-back-color;
+                        border: 1px solid @border-color;
+                        .border-radius();
+                        .flexbox(space-between, center);
+                        transition: all 0.2s;
+
+                        .dark & {
+                            background: @back-color-dark;
+                            border-color: @border-color-dark;
+                        }
+
+                        &:hover {
+                            background: darken(@window-back-color, 5%);
+                            border-color: @accent-back-color;
+
+                            .dark & {
+                                background: lighten(@back-color-dark, 5%);
+                            }
+                        }
+
+                        .calendar-name {
+                            font-size: 14px;
+                            font-weight: 500;
+                            color: @text-color;
+                            flex: 1;
+
+                            .dark & {
+                                color: @text-color-dark;
+                            }
+                        }
+
+                        .delete-calendar {
+                            padding: 4px 10px;
+                            font-size: 12px;
+                            margin-left: 10px;
+                            opacity: 0.7;
+                            transition: opacity 0.2s;
+
+                            &:hover {
+                                opacity: 1;
+                            }
+                        }
+                    }
+                }
+            }
+
+            .columns-mapping {
+                .flex(1 1 auto);
+                .flexbox(flex-start, flex-start, column);
+                overflow: hidden;
+
+                .notice {
+                    font-size: 15px;
+                    font-weight: 600;
+                    margin-bottom: 15px;
+                    color: @notice-color;
+
+                    .dark & {
+                        color: @notice-color-dark;
+                    }
+                }
+
+                .mapping {
+                    width: 100%;
+                    height: calc(100% - 50px);
+                    padding: 15px;
+                    background: @window-back-color-alt;
+                    border: 1px solid @border-color;
+                    overflow: auto;
+                    .border-radius();
+
+                    .dark & {
+                        background: @window-back-color-dark;
+                        border-color: @border-color-dark;
+                    }
+
+                    .mapping-table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        font-size: 13px;
+
+                        thead {
+                            background: @window-back-color;
+                            position: sticky;
+                            top: 0;
+                            z-index: 10;
+
+                            .dark & {
+                                background: @back-color-dark;
+                            }
+
+                            th {
+                                padding: 12px 10px;
+                                text-align: left;
+                                font-weight: 600;
+                                color: @text-color;
+                                border-bottom: 2px solid @border-color;
+                                white-space: nowrap;
+
+                                .dark & {
+                                    color: @text-color-dark;
+                                    border-color: @border-color-dark;
+                                }
+                            }
+                        }
+
+                        tbody {
+                            tr {
+                                border-bottom: 1px solid @border-color;
+
+                                .dark & {
+                                    border-color: @border-color-dark;
+                                }
+
+                                &:hover {
+                                    background: darken(@window-back-color-alt, 3%);
+
+                                    .dark & {
+                                        background: lighten(@window-back-color-dark, 3%);
+                                    }
+                                }
+
+                                td {
+                                    padding: 10px;
+                                    color: @text-color;
+                                    vertical-align: middle;
+
+                                    .dark & {
+                                        color: @text-color-dark;
+                                    }
+
+                                    &:first-child {
+                                        font-weight: 500;
+                                        min-width: 150px;
+                                    }
+
+                                    &:nth-child(2) {
+                                        color: @notice-color;
+                                        font-size: 12px;
+                                        min-width: 200px;
+                                        max-width: 300px;
+                                        overflow: hidden;
+                                        text-overflow: ellipsis;
+                                        white-space: nowrap;
+
+                                        .dark & {
+                                            color: @notice-color-dark;
+                                        }
+                                    }
+
+                                    &.primary-mapping {
+                                        font-weight: 600;
+
+                                        select {
+                                            font-weight: 600;
+                                        }
+                                    }
+
+                                    &.implicit-mapping {
+                                        opacity: 0.6;
+
+                                        select {
+                                            font-style: italic;
+                                            cursor: not-allowed;
+                                        }
+                                    }
+
+                                    .mapping-select {
+                                        width: 100%;
+                                        padding: 6px 10px;
+                                        border: 1px solid @border-color;
+                                        background: @window-back-color;
+                                        color: @text-color;
+                                        font-size: 13px;
+                                        .border-radius();
+
+                                        .dark & {
+                                            background: @back-color-dark;
+                                            border-color: @border-color-dark;
+                                            color: @text-color-dark;
+                                        }
+
+                                        &:focus {
+                                            outline: none;
+                                            border-color: @highlight-color;
+                                        }
+
+                                        &:disabled {
+                                            cursor: not-allowed;
+                                            opacity: 0.6;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

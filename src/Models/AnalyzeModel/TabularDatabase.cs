@@ -119,6 +119,13 @@
                 database.FeatureUnsupportedReasons |= TabularDatabaseFeatureUnsupportedReason.ManageDatesEmptyTableCollection;
             }
 
+            // ManageCalendars feature checks
+            if (daxModel.CompatibilityLevel < 1701)
+            {
+                database.Features &= ~TabularDatabaseFeature.ManageCalendarsAll;
+                database.FeatureUnsupportedReasons |= TabularDatabaseFeatureUnsupportedReason.ManageCalendarsIncompatibleDatabaseVersion;
+            }
+
             return database;
 
             static bool IsAutoDateTimeTable(Dax.Metadata.Table daxTable)
@@ -211,13 +218,18 @@
         ManageDatesUpdateModel = 1 << 302,
         ManageDatesAll = ManageDatesPage | ManageDatesSynchronize | ManageDatesUpdateModel,
 
+        ManageCalendarsPage = 1 << 350,
+        ManageCalendarsSynchronize = 1 << 351,
+        ManageCalendarsUpdateModel = 1 << 352,
+        ManageCalendarsAll = ManageCalendarsPage | ManageCalendarsSynchronize | ManageCalendarsUpdateModel,
+
         ExportDataPage = 1 << 400,
         ExportDataSynchronize = 1 << 401,
         ExportDataAll = ExportDataPage | ExportDataSynchronize,
 
-        AllSynchronize = AnalyzeModelSynchronize | FormatDaxSynchronize | ManageDatesSynchronize | ExportDataSynchronize,
-        AllUpdateModel = FormatDaxUpdateModel | ManageDatesUpdateModel,
-        All = AnalyzeModelAll | FormatDaxAll | ManageDatesAll | ExportDataAll,
+        AllSynchronize = AnalyzeModelSynchronize | FormatDaxSynchronize | ManageDatesSynchronize | ManageCalendarsSynchronize | ExportDataSynchronize,
+        AllUpdateModel = FormatDaxUpdateModel | ManageDatesUpdateModel | ManageCalendarsUpdateModel,
+        All = AnalyzeModelAll | FormatDaxAll | ManageDatesAll | ManageCalendarsAll | ExportDataAll,
     }
 
     [Flags]
@@ -260,6 +272,18 @@
         /// Feature supported only by databases that have at least one table
         /// </summary>
         ManageDatesEmptyTableCollection = 1 << 302,
+
+        // ManageCalendars range << 350,
+
+        /// <summary>
+        /// Feature requires compatibility level 1701 or above
+        /// </summary>
+        ManageCalendarsIncompatibleDatabaseVersion = 1 << 350,
+
+        /// <summary>
+        /// Feature supported only for models in Power BI Desktop mode
+        /// </summary>
+        ManageCalendarsPBIDesktopModelOnly = 1 << 351,
 
         // ExportData range << 400,
     }

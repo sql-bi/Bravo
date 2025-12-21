@@ -56,6 +56,9 @@
             {
                 database.Features &= ~TabularDatabaseFeature.ManageDatesAll;
                 database.FeatureUnsupportedReasons |= TabularDatabaseFeatureUnsupportedReason.ManageDatesPBIDesktopModelOnly;
+
+                database.Features &= ~TabularDatabaseFeature.ManageCalendarsAll;
+                database.FeatureUnsupportedReasons |= TabularDatabaseFeatureUnsupportedReason.ManageCalendarsPBIDesktopModelOnly;
             }
 
             return database;
@@ -83,6 +86,9 @@
 
             database.Features &= ~TabularDatabaseFeature.ManageDatesAll;
             database.FeatureUnsupportedReasons |= TabularDatabaseFeatureUnsupportedReason.ManageDatesPBIDesktopModelOnly;
+
+            database.Features &= ~TabularDatabaseFeature.ManageCalendarsAll;
+            database.FeatureUnsupportedReasons |= TabularDatabaseFeatureUnsupportedReason.ManageCalendarsPBIDesktopModelOnly;
 
             return database;
         }

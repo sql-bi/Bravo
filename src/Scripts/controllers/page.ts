@@ -14,12 +14,14 @@ import { BestPracticesScene } from '../view/scene-best-practices';
 import { DaxFormatterScene } from '../view/scene-dax-formatter';
 import { ExportDataScene } from '../view/scene-export-data';
 import { ManageDatesScene } from '../view/scene-manage-dates';
+import { ManageCalendarsScene } from '../view/scene-manage-calendars';
 import { View } from '../view/view';
 
 export enum PageType {
     AnalyzeModel = "AnalyzeModel",
     DaxFormatter = "DaxFormatter",
     ManageDates = "ManageDates",
+    ManageCalendars = "ManageCalendars",
     ExportData = "ExportData",
     //BestPractices = "BestPractices"
 }
@@ -48,6 +50,7 @@ export class Page extends View {
             [PageType.AnalyzeModel]: AnalyzeModelScene,
             [PageType.DaxFormatter]: DaxFormatterScene,
             [PageType.ManageDates]: ManageDatesScene,
+            [PageType.ManageCalendars]: ManageCalendarsScene,
             [PageType.ExportData]: ExportDataScene,
             //[PageType.BestPractices]: BestPracticesScene,
         }

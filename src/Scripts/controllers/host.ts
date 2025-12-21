@@ -573,6 +573,23 @@ export class Host extends Dispatchable {
         this.apiAbortByAction("ManageDates/UpdateReport");
     }
 
+    /* Manage Calendars */
+    manageCalendarsGetTableCalendars(request: { report: PBIDesktopReport, tableName: string }) {
+        return <Promise<any>>this.apiCall("ManageCalendars/GetTableCalendarsForReport", request, { method: "POST" });
+    }
+
+    manageCalendarsCreateCalendar(request: { report: PBIDesktopReport, tableName: string, calendar: any }) {
+        return this.apiCall("ManageCalendars/CreateCalendarForReport", request, { method: "POST" });
+    }
+
+    manageCalendarsUpdateCalendar(request: { report: PBIDesktopReport, tableName: string, calendarName: string, calendar: any }) {
+        return this.apiCall("ManageCalendars/UpdateCalendarForReport", request, { method: "POST" });
+    }
+
+    manageCalendarsDeleteCalendar(request: { report: PBIDesktopReport, tableName: string, calendarName: string }) {
+        return this.apiCall("ManageCalendars/DeleteCalendarFromReport", request, { method: "POST" });
+    }
+
     /* Application */
 
     changeTheme(theme: ThemeType) {

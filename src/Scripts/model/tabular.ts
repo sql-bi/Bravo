@@ -127,13 +127,18 @@ export enum TabularDatabaseFeature {
     ManageDatesUpdateModel = 1 << 302,
     ManageDatesAll = ManageDatesPage | ManageDatesSynchronize | ManageDatesUpdateModel,
 
+    ManageCalendarsPage = 1 << 350,
+    ManageCalendarsSynchronize = 1 << 351,
+    ManageCalendarsUpdateModel = 1 << 352,
+    ManageCalendarsAll = ManageCalendarsPage | ManageCalendarsSynchronize | ManageCalendarsUpdateModel,
+
     ExportDataPage = 1 << 400,
     ExportDataSynchronize = 1 << 401,
     ExportDataAll = ExportDataPage | ExportDataSynchronize,
 
-    AllUpdateModel = FormatDaxUpdateModel | ManageDatesUpdateModel,
-    AllSynchronize = AnalyzeModelSynchronize | FormatDaxSynchronize | ManageDatesSynchronize | ExportDataSynchronize,
-    All = AnalyzeModelAll | FormatDaxAll | ManageDatesAll | ExportDataAll,
+    AllUpdateModel = FormatDaxUpdateModel | ManageDatesUpdateModel | ManageCalendarsUpdateModel,
+    AllSynchronize = AnalyzeModelSynchronize | FormatDaxSynchronize | ManageDatesSynchronize | ManageCalendarsSynchronize | ExportDataSynchronize,
+    All = AnalyzeModelAll | FormatDaxAll | ManageDatesAll | ManageCalendarsAll | ExportDataAll,
 }
 
 export enum TabularDatabaseFeatureUnsupportedReason {
@@ -144,4 +149,6 @@ export enum TabularDatabaseFeatureUnsupportedReason {
     ManageDatesAutoDateTimeEnabled = 1 << 300,
     ManageDatesPBIDesktopModelOnly = 1 << 301,
     ManageDatesEmptyTableCollection = 1 << 302,
+    ManageCalendarsIncompatibleDatabaseVersion = 1 << 350,
+    ManageCalendarsPBIDesktopModelOnly = 1 << 351,
 }

@@ -43,6 +43,7 @@
             services.AddSingleton<IExportDataService, ExportDataService>();
             services.AddSingleton<IDaxFormatterClient, DaxFormatterClient>();
             services.AddSingleton<IManageDatesService, ManageDatesService>();
+            services.AddSingleton<IManageCalendarsService, ManageCalendarsService>();
             services.AddSingleton<IAnalyzeModelService, AnalyzeModelService>();
             services.AddSingleton<IAuthenticationService, AuthenticationService>();
             services.AddSingleton<ITemplateDevelopmentService, TemplateDevelopmentService>();
