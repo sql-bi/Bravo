@@ -64,7 +64,7 @@
     <PackageReference Include="Hellang.Middleware.ProblemDetails" Version="6.5.1" />
     <PackageReference Include="LargeXlsx" Version="1.10.0" />
     <PackageReference Include="Macross.Json.Extensions" Version="3.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging.ApplicationInsights" Version="2.22.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.ApplicationInsights" Version="2.23.0" />
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2739.15" />
     <PackageReference Include="Microsoft.Identity.Client.Desktop" Version="4.66.2" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="7.0.0" PrivateAssets="all" />
