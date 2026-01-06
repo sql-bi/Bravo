@@ -14,6 +14,7 @@ export interface ColumnInfo {
     name?: string;
     dataType?: string;
     sampleValues?: any[];
+    uniqueValueCount?: number;
 }
 
 export interface CalendarMetadata {

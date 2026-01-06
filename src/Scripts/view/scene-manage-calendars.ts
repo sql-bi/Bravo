@@ -26,6 +26,7 @@ export class ManageCalendarsScene extends DocScene {
     mappingTable: Tabulator | null = null;
     mappingContainer: HTMLElement;
     tableSelector: HTMLSelectElement;
+    hideUnassignedCheckbox: HTMLInputElement;
 
     constructor(id: string, container: HTMLElement, doc: Doc, type: PageType) {
         super(id, container, [doc.name, i18n(strings.ManageCalendars)], doc, type, true);
@@ -49,6 +50,15 @@ export class ManageCalendarsScene extends DocScene {
                 </div>
                 <div class="actions">
                     <button class="btn btn-primary btn-add-calendar disable-on-syncing enable-if-editable">${i18n(strings.manageCalendarsAddCalendar)}</button>
+                    <label class="hide-unassigned-control">
+                        <input type="checkbox" class="hide-unassigned-checkbox">
+                        <span>Hide unassigned columns</span>
+                    </label>
+                </div>
+                <div class="legend">
+                    <div class="legend-item"><span class="legend-icon">★</span> Primary</div>
+                    <div class="legend-item"><span class="legend-icon">☆</span> Associated</div>
+                    <div class="legend-item"><span class="legend-icon">🔗</span> Linked</div>
                 </div>
             </div>
             <div class="mapping-grid">${Loader.html(true)}</div>
@@ -57,6 +67,7 @@ export class ManageCalendarsScene extends DocScene {
 
         this.tableSelector = _(".table-select", this.body) as HTMLSelectElement;
         this.mappingContainer = _(".mapping-grid", this.body);
+        this.hideUnassignedCheckbox = _(".hide-unassigned-checkbox", this.body) as HTMLInputElement;
 
         let addCalendarButton = _(".btn-add-calendar", this.body);
         addCalendarButton.addEventListener("click", () => this.addCalendar());
@@ -65,6 +76,10 @@ export class ManageCalendarsScene extends DocScene {
             this.config.options.tableName = this.tableSelector.value;
             this.config.save();
             this.loadTableCalendars();
+        });
+
+        this.hideUnassignedCheckbox.addEventListener("change", () => {
+            this.filterTableRows();
         });
 
         this.loadTableCalendars();
@@ -113,6 +128,19 @@ export class ManageCalendarsScene extends DocScene {
                 width: 200,
                 resizable: true,
                 headerSort: false
+            },
+            {
+                title: "# VALUES",
+                field: "uniqueValueCount",
+                width: 80,
+                resizable: true,
+                headerSort: false,
+                hozAlign: "right",
+                formatter: (cell: Tabulator.CellComponent) => {
+                    const count = cell.getValue();
+                    if (count === null || count === undefined) return "";
+                    return `<span style="margin-right: 15px;">${count.toLocaleString()}</span>`;
+                }
             },
             {
                 title: i18n(strings.manageCalendarsSampleValues),
@@ -234,7 +262,8 @@ export class ManageCalendarsScene extends DocScene {
         const data = this.tableInfo.columns.map(column => {
             const row: any = {
                 columnName: column.name,
-                sampleValues: column.sampleValues
+                sampleValues: column.sampleValues,
+                uniqueValueCount: column.uniqueValueCount
             };
 
             // Add mapping for each calendar - store just the groupType value for editing
@@ -588,6 +617,39 @@ export class ManageCalendarsScene extends DocScene {
         } catch (error: any) {
             logger.logError(error);
         }
+    }
+
+    filterTableRows() {
+        if (!this.mappingTable || !this.tableInfo) return;
+
+        const hideUnassigned = this.hideUnassignedCheckbox.checked;
+
+        if (!hideUnassigned) {
+            // Show all rows
+            this.mappingTable.clearFilter();
+            return;
+        }
+
+        // Filter out rows where ALL calendars have this column as Unassigned
+        this.mappingTable.setFilter((data: any) => {
+            const columnName = data.columnName;
+
+            // Check if this column is unassigned in ALL calendars
+            let isUnassignedInAllCalendars = true;
+
+            for (let calendar of this.tableInfo!.calendars!) {
+                const mapping = calendar.columnMappings?.find(m => m.columnName === columnName);
+
+                // If there's no mapping OR the mapping is not Unassigned, keep the column visible
+                if (!mapping || mapping.groupType !== CalendarColumnGroupType.Unassigned) {
+                    isUnassignedInAllCalendars = false;
+                    break;
+                }
+            }
+
+            // Return true to show the row, false to hide it
+            return !isUnassignedInAllCalendars;
+        });
     }
 
     destroy() {

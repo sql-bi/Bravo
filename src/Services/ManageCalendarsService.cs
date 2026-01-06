@@ -45,7 +45,7 @@ namespace Sqlbi.Bravo.Services
                 .ToList();
 
             var columnNames = columnsToQuery.Select(c => c.Name).ToList();
-            var allSampleValues = GetAllSampleValues(connection, tableName, columnNames, 5);
+            var (allSampleValues, uniqueValueCounts) = GetAllSampleValuesAndDistinctCounts(connection, tableName, columnNames, 5);
 
             foreach (var column in columnsToQuery)
             {
@@ -53,11 +53,16 @@ namespace Sqlbi.Bravo.Services
                     ? allSampleValues[column.Name]
                     : new List<object>();
 
+                var uniqueCount = uniqueValueCounts.ContainsKey(column.Name)
+                    ? uniqueValueCounts[column.Name]
+                    : 0;
+
                 columns.Add(new ColumnInfo
                 {
                     Name = column.Name,
                     DataType = column.DataType.ToString(),
-                    SampleValues = sampleValues
+                    SampleValues = sampleValues,
+                    UniqueValueCount = uniqueCount
                 });
             }
 
@@ -675,11 +680,13 @@ namespace Sqlbi.Bravo.Services
         }
 
         /// <summary>
-        /// Gets sample values for all columns in a table using a single DAX query
+        /// Gets sample values and distinct counts for all columns in a table using a single DAX query
         /// </summary>
-        private Dictionary<string, List<object>> GetAllSampleValues(TabularConnectionWrapper connection, string tableName, List<string> columnNames, int count)
+        private (Dictionary<string, List<object>> sampleValues, Dictionary<string, long> distinctCounts)
+            GetAllSampleValuesAndDistinctCounts(TabularConnectionWrapper connection, string tableName, List<string> columnNames, int count)
         {
-            var result = new Dictionary<string, List<object>>();
+            var sampleValues = new Dictionary<string, List<object>>();
+            var distinctCounts = new Dictionary<string, long>();
 
             try
             {
@@ -688,19 +695,23 @@ namespace Sqlbi.Bravo.Services
                 // Escape table name for DAX
                 var escapedTableName = tableName.Replace("'", "''");
 
-                // Build DAX query: ROW("col1", CONCATENATEX(...), "col2", CONCATENATEX(...), ...)
+                // Build DAX query: ROW("col1", CONCATENATEX(...), "col1_Count", DISTINCTCOUNT(...), ...)
                 var rowExpressions = new List<string>();
                 foreach (var columnName in columnNames)
                 {
                     // Escape column name for DAX
                     var escapedColumnName = columnName.Replace("]", "]]");
-                    // SAMPLE requires 3 arguments: count, table, orderBy
+
+                    // Add sample values expression
                     rowExpressions.Add($"\"{columnName}\", CONCATENATEX(SAMPLE({count}, ALL('{escapedTableName}'[{escapedColumnName}]), '{escapedTableName}'[{escapedColumnName}]), '{escapedTableName}'[{escapedColumnName}], \", \")");
+
+                    // Add distinct count expression
+                    rowExpressions.Add($"\"{columnName}_Count\", DISTINCTCOUNT('{escapedTableName}'[{escapedColumnName}])");
                 }
 
                 var dax = $"EVALUATE ROW({string.Join(", ", rowExpressions)})";
 
-                System.Diagnostics.Debug.WriteLine($"[ManageCalendars] Executing DAX query for sample values: {dax}");
+                System.Diagnostics.Debug.WriteLine($"[ManageCalendars] Executing DAX query for sample values and distinct counts: {dax}");
 
                 using var command = adomdConnection.CreateCommand();
                 command.CommandText = dax;
@@ -718,27 +729,42 @@ namespace Sqlbi.Bravo.Services
                         // Strip brackets from column name (DAX returns "[ColumnName]", we need "ColumnName")
                         var cleanColumnName = columnName.Trim('[', ']');
 
-                        var concatenatedValue = reader.GetValue(i);
+                        var value = reader.GetValue(i);
 
-                        System.Diagnostics.Debug.WriteLine($"[ManageCalendars] Column '{columnName}' (clean: '{cleanColumnName}'): value = '{concatenatedValue}'");
+                        System.Diagnostics.Debug.WriteLine($"[ManageCalendars] Column '{columnName}' (clean: '{cleanColumnName}'): value = '{value}'");
 
-                        var sampleValues = new List<object>();
-                        if (concatenatedValue != null && concatenatedValue != DBNull.Value)
+                        // Check if this is a distinct count column (ends with "_Count")
+                        if (cleanColumnName.EndsWith("_Count"))
                         {
-                            // Split the concatenated string back into individual values
-                            var stringValue = concatenatedValue.ToString();
-                            if (!string.IsNullOrEmpty(stringValue))
+                            // This is a distinct count
+                            var baseColumnName = cleanColumnName.Substring(0, cleanColumnName.Length - "_Count".Length);
+                            if (value != null && value != DBNull.Value && long.TryParse(value.ToString(), out var distinctCount))
                             {
-                                var values = stringValue.Split(new[] { ", " }, StringSplitOptions.None);
-                                foreach (var value in values.Take(count))
-                                {
-                                    sampleValues.Add(value);
-                                }
-                                System.Diagnostics.Debug.WriteLine($"[ManageCalendars] Split into {sampleValues.Count} sample values");
+                                distinctCounts[baseColumnName] = distinctCount;
+                                System.Diagnostics.Debug.WriteLine($"[ManageCalendars] Distinct count for '{baseColumnName}': {distinctCount}");
                             }
                         }
+                        else
+                        {
+                            // This is a sample values column
+                            var columnSampleValues = new List<object>();
+                            if (value != null && value != DBNull.Value)
+                            {
+                                // Split the concatenated string back into individual values
+                                var stringValue = value.ToString();
+                                if (!string.IsNullOrEmpty(stringValue))
+                                {
+                                    var values = stringValue.Split(new[] { ", " }, StringSplitOptions.None);
+                                    foreach (var val in values.Take(count))
+                                    {
+                                        columnSampleValues.Add(val);
+                                    }
+                                    System.Diagnostics.Debug.WriteLine($"[ManageCalendars] Split into {columnSampleValues.Count} sample values");
+                                }
+                            }
 
-                        result[cleanColumnName] = sampleValues;
+                            sampleValues[cleanColumnName] = columnSampleValues;
+                        }
                     }
                 }
                 else
@@ -755,11 +781,12 @@ namespace Sqlbi.Bravo.Services
                 // This can happen if columns have incompatible data types
                 foreach (var columnName in columnNames)
                 {
-                    result[columnName] = new List<object>();
+                    sampleValues[columnName] = new List<object>();
+                    distinctCounts[columnName] = 0;
                 }
             }
 
-            return result;
+            return (sampleValues, distinctCounts);
         }
 
         #endregion

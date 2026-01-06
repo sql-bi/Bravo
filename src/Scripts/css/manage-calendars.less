@@ -58,8 +58,61 @@
             }
 
             .actions {
-                .flexbox(flex-end, center);
-                gap: 10px;
+                .flexbox(flex-start, center);
+                gap: 20px;
+
+                .hide-unassigned-control {
+                    .flexbox(flex-start, center);
+                    gap: 8px;
+                    cursor: pointer;
+                    font-size: 13px;
+                    color: @text-color;
+                    user-select: none;
+
+                    .dark & {
+                        color: @text-color-dark;
+                    }
+
+                    .hide-unassigned-checkbox {
+                        cursor: pointer;
+                        width: 16px;
+                        height: 16px;
+                    }
+
+                    &:hover span {
+                        text-decoration: underline;
+                    }
+                }
+            }
+
+            .legend {
+                .flexbox(flex-start, center);
+                gap: 15px;
+                padding: 8px 15px;
+                background: @window-back-color-alt;
+                border: 1px solid @border-color;
+                .border-radius();
+                font-size: 13px;
+
+                .dark & {
+                    background: @back-color-dark;
+                    border-color: @border-color-dark;
+                }
+
+                .legend-item {
+                    .flexbox(flex-start, center);
+                    gap: 5px;
+                    color: @text-color;
+
+                    .dark & {
+                        color: @text-color-dark;
+                    }
+
+                    .legend-icon {
+                        font-size: 14px;
+                        line-height: 1;
+                    }
+                }
             }
         }
 

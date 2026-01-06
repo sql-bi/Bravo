@@ -21,5 +21,10 @@ namespace Sqlbi.Bravo.Models.ManageCalendars
         /// Sample values from the column (limited to a few rows)
         /// </summary>
         public List<object>? SampleValues { get; set; }
+
+        /// <summary>
+        /// Number of unique/distinct values in the column
+        /// </summary>
+        public long UniqueValueCount { get; set; }
     }
 }
