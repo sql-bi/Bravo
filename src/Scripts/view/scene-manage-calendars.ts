@@ -293,7 +293,7 @@ export class ManageCalendarsScene extends DocScene {
         this.mappingTable = new Tabulator(`#${this.element.id} .mapping-grid`, {
             data: data,
             columns: columns,
-            layout: "fitData",
+            layout: "fitDataStretch",
             height: "100%"
         });
     }

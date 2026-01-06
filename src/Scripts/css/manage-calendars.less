@@ -4,12 +4,17 @@
         .icon-manage-calendars;
     }
 
+    // Override parent scene overflow for this specific feature
+    overflow: hidden;
+
     .scene-content {
         .flexbox(flex-start, stretch, column);
         height: 100%;
         width: 100%;
+        overflow: hidden;
 
         .header {
+            .flex(0 0 auto);
             width: 100%;
             .flexbox(space-between, center);
             margin-top: 25px;
@@ -117,12 +122,13 @@
         }
 
         .mapping-grid {
-            flex: 1;
+            .flex(1 1 auto);
             width: 100%;
-            overflow: auto;
+            overflow: hidden;
             border: 1px solid @border-color;
             .border-radius();
             background: @window-back-color-alt;
+            margin-bottom: 25px;
 
             .dark & {
                 background: @window-back-color-dark;
@@ -135,6 +141,7 @@
                 height: 100%;
                 background: transparent;
                 border: none;
+                overflow: hidden;
 
                 .tabulator-header {
                     background: @window-back-color;
