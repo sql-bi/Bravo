@@ -111,7 +111,213 @@ Store explicit unassignment in `Table.Annotations["SQLBI_BRAVO_CalendarAnnotatio
 
 ---
 
-## Features to Implement
+## Implementation Status
+
+### ✅ Phase 1: Table Sorting (COMPLETED)
+
+**Status:** Fully implemented and working
+
+**Implementation Details:**
+- Sort indicators display in column headers (↑/↓ arrows)
+- Default aggregate sort mode across all calendars
+- Single-calendar sort mode when clicking individual calendar headers
+- Sort stability maintained during edits (no auto-re-sorting)
+- Column-specific behavior:
+  - COLUMN: alphabetical sort
+  - # VALUES: cardinality sort (descending default)
+  - SAMPLE VALUES: no sorting
+  - Calendar columns: category enum value sort with secondary role/name sorting
+
+**Files Modified:**
+- `src/Scripts/helpers/calendar-sorting.ts` (new file with sorting logic)
+- `src/Scripts/view/scene-manage-calendars.ts` (sort state and header click handlers)
+
+### ✅ Phase 2: Cardinality Warnings & Smart Completion (COMPLETED)
+
+**Status:** Fully implemented and working
+
+**Implementation Details:**
+
+**Cardinality Warnings:**
+- Warning icons (⚠️) display in cells with cardinality mismatches
+- Tooltips show expected vs actual cardinality
+- Backend validates based on Year cardinality
+- Supports exact values, ranges, and Year-dependent formulas
+
+**Smart Completion:**
+- "Smart completion" button enables when Year is assigned
+- Button highlights (pulsing animation) when Year + blank cells exist
+- Suggestions appear with yellow background (#FFFACD)
+- Individual cell click to accept single suggestion
+- "Accept all suggestions" button for bulk acceptance
+- Linked icons (🔗) correctly display in yellow cells for SortByColumn relationships
+
+**Files Modified:**
+- Backend:
+  - `src/Models/ManageCalendars/CardinalityWarning.cs` (new model)
+  - `src/Models/ManageCalendars/SmartCompletionSuggestion.cs` (new model)
+  - `src/Models/ManageCalendars/ColumnInfo.cs` (added SortByColumnName property)
+  - `src/Services/ManageCalendarsService.cs` (validation + suggestion logic + SortByColumn data)
+- Frontend:
+  - `src/Scripts/view/scene-manage-calendars.ts` (warning display + suggestion workflow + implicit linked detection)
+  - `src/Scripts/model/calendars.ts` (added sortByColumnName to ColumnInfo interface)
+  - `src/Scripts/css/manage-calendars.less` (warning icons + yellow highlighting + button animations)
+
+**Key Technical Solutions:**
+- Yellow background uses inline styles (`backgroundColor = '#FFFACD'`) because CSS classes didn't take effect
+- Implicit mappings filtered before sending to backend (backend regenerates based on SortByColumn)
+- `isColumnImplicitLinkedInSuggestions()` helper determines 🔗 icon display during suggestion phase
+
+---
+
+## Testing Plan
+
+### Critical Test Scenarios
+
+Before finalizing the implementation, the following scenarios must be tested thoroughly:
+
+### 1. Sorting Tests
+
+#### 1.1 Basic Sorting
+- [ ] Click COLUMN header: verify alphabetical sort (A→Z then Z→A toggle)
+- [ ] Click # VALUES header: verify cardinality sort (high→low default, then low→high)
+- [ ] Click SAMPLE VALUES header: verify no sorting occurs
+- [ ] Verify default aggregate sort on initial load
+
+#### 1.2 Calendar Column Sorting
+- [ ] Click single calendar header: verify sort by category enum values
+- [ ] Verify Unassigned (-1) always appears at bottom regardless of direction
+- [ ] Verify secondary sort by role: Primary (★) → Associated (☆) → Linked (🔗)
+- [ ] Verify tertiary sort by column name (alphabetical within same category+role)
+- [ ] Toggle same calendar header: verify ascending ↔ descending toggle
+
+#### 1.3 Sort Stability
+- [ ] Assign category to column → verify sort order doesn't change
+- [ ] Remove category assignment → verify sort order doesn't change
+- [ ] Add new calendar → verify sort order doesn't change
+- [ ] Delete calendar → verify sort order doesn't change
+- [ ] Promote associated to primary → verify sort order doesn't change
+- [ ] Click icon to change role → verify sort order doesn't change
+
+#### 1.4 Multi-Calendar Aggregate Sort
+- [ ] Create 3+ calendars with different category assignments
+- [ ] Verify aggregate sort uses lowest/highest enum value (ignoring -1 and 100)
+- [ ] Verify aggregate sort indicator displays differently from single-calendar sort
+- [ ] Click different calendar headers → verify switch between aggregate and single-calendar modes
+
+### 2. Cardinality Warning Tests
+
+#### 2.1 Warning Display
+- [ ] Assign Year category → assign Month category → verify no warning if cardinality = 12 × Year
+- [ ] Assign incorrect cardinality → verify ⚠️ icon appears
+- [ ] Hover over warning icon → verify tooltip shows actual vs expected
+- [ ] Verify warning disappears when category changed to correct cardinality
+
+#### 2.2 Year-Dependent Validation
+- [ ] Test exact values: Semester (2×Year), Quarter (4×Year), Month (12×Year)
+- [ ] Test ranges: Week [52×Year, 53×Year], WeekOfYear [52,53], etc.
+- [ ] Test without Year assigned: verify only non-Year-dependent categories validated
+- [ ] Test SemesterOfYear (exact 2), QuarterOfYear (exact 4), MonthOfYear (exact 12)
+
+#### 2.3 Edge Cases
+- [ ] Assign Date category → verify no warning (Date has no expected cardinality)
+- [ ] Assign TimeRelated → verify no warning
+- [ ] Assign Unassigned → verify no warning
+- [ ] Multiple calendars: verify warning only appears in calendar where mismatch occurs
+
+### 3. Smart Completion Tests
+
+#### 3.1 Button State
+- [ ] No calendars → verify button disabled
+- [ ] Calendar without Year → verify button disabled
+- [ ] Calendar with Year but no blank cells → verify button enabled but not highlighted
+- [ ] Calendar with Year + blank cells → verify button enabled AND highlighted (pulsing)
+- [ ] Multiple calendars: some with Year, some without → verify button highlights if ANY has Year + blanks
+
+#### 3.2 Suggestion Generation
+- [ ] Click "Smart completion" → verify yellow cells appear only in calendars with Year
+- [ ] Verify "Accept all suggestions" button appears when suggestions exist
+- [ ] Verify suggestions skip cells that already have assignments
+- [ ] Verify ambiguous cardinality (matches 2+ categories) → no suggestion for that column
+- [ ] Verify no match → no suggestion for that column
+
+#### 3.3 Icon Display in Suggestions
+- [ ] Suggested primary column → verify ★ icon
+- [ ] Suggested associated column → verify ☆ icon
+- [ ] **Suggested linked column (SortByColumn)** → verify 🔗 icon
+  - Example: "Year Quarter" suggested as primary → "Year Quarter Number" (its SortByColumn) should show 🔗
+  - Test multiple display columns using same sort column
+  - Test sort column with suggestion + display column already assigned (not suggested)
+  - Test sort column with suggestion + display column also suggested
+
+#### 3.4 Accept Individual Suggestion
+- [ ] Click yellow cell → verify assignment saved, yellow removed, correct icon appears
+- [ ] Click yellow cell → manually change category → verify yellow removed, new category saved
+- [ ] Click yellow cell with 🔗 icon → verify after acceptance, linked icon persists
+- [ ] Accept one suggestion → verify other suggestions remain yellow
+
+#### 3.5 Accept All Suggestions
+- [ ] Click "Accept all suggestions" → verify all yellow cells confirmed simultaneously
+- [ ] Verify "Accept all suggestions" button disappears after acceptance
+- [ ] Verify all assignments saved correctly with proper primary/associated/linked roles
+- [ ] Verify linked icons (🔗) appear correctly after bulk acceptance
+
+#### 3.6 Suggestion Combinations
+- [ ] Accept some suggestions individually, then "Accept all" → verify both sets applied
+- [ ] Smart completion → manually edit cell → Smart completion again → verify edited cell not re-suggested
+- [ ] Smart completion → Accept all → Smart completion again → verify no new suggestions
+- [ ] Smart completion → reload page → verify suggestions cleared (session-only)
+
+### 4. Integration & Combination Tests
+
+#### 4.1 Sorting + Smart Completion
+- [ ] Smart completion (yellow cells appear) → click sort header → verify yellow highlighting preserved
+- [ ] Sort by calendar column → Smart completion → verify suggestions appear correctly in sorted order
+- [ ] Accept suggestions → verify sort order doesn't change
+
+#### 4.2 Warnings + Smart Completion
+- [ ] Smart completion suggests wrong cardinality → verify warning appears in yellow cell
+- [ ] Accept suggestion with warning → verify warning persists after yellow removed
+- [ ] Smart completion → manually change to correct cardinality → verify warning disappears
+
+#### 4.3 Manual Editing + Smart Completion
+- [ ] Assign Year manually → Smart completion → verify suggestions appear
+- [ ] Assign some categories manually → Smart completion → verify only blank cells get suggestions
+- [ ] Smart completion → manually promote associated to primary → verify yellow removed from that cell
+- [ ] Smart completion → manually remove primary (★ click) → verify entire category removed, yellow cleared
+
+#### 4.4 Multi-Calendar Scenarios
+- [ ] 3 calendars: Calendar1 (Year assigned), Calendar2 (Year assigned), Calendar3 (no Year)
+  - Smart completion → verify suggestions only in Calendar1 and Calendar2
+  - Verify warning message lists Calendar3 as ignored
+- [ ] Calendar1: assign Year + some categories manually
+  - Calendar2: assign Year only
+  - Smart completion → verify Calendar1 gets partial suggestions, Calendar2 gets full suggestions
+
+#### 4.5 SortByColumn Relationships
+- [ ] Display column "Year Quarter" + sort column "Year Quarter Number"
+  - Assign "Year Quarter" as Month primary manually → verify "Year Quarter Number" shows 🔗
+  - Smart completion suggests "Year Quarter" → verify "Year Quarter Number" shows 🔗 in yellow
+  - Accept "Year Quarter" suggestion → verify "Year Quarter Number" still shows 🔗 (no longer yellow)
+- [ ] Multiple display columns using same sort column
+  - Smart completion suggests all display columns → verify sort column shows 🔗
+- [ ] Sort column suggested but display column not suggested → verify ☆ icon (not 🔗)
+
+#### 4.6 Edge Cases
+- [ ] Empty calendar (no assignments) → Smart completion → verify works correctly
+- [ ] All cells assigned → Smart completion → verify no suggestions, button not highlighted
+- [ ] Remove Year assignment → verify Smart completion button disables, existing suggestions cleared
+- [ ] Add new calendar → assign Year → Smart completion → verify new calendar gets suggestions
+
+---
+
+## Known Issues / Limitations
+
+**None currently identified.** All Phase 1 and Phase 2 features implemented and working.
+
+---
+
+## Features to Implement (ARCHIVE - for reference only)
 
 ### 1. Table Sorting
 
