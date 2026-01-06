@@ -62,7 +62,8 @@ namespace Sqlbi.Bravo.Services
                     Name = column.Name,
                     DataType = column.DataType.ToString(),
                     SampleValues = sampleValues,
-                    UniqueValueCount = uniqueCount
+                    UniqueValueCount = uniqueCount,
+                    SortByColumnName = column.SortByColumn?.Name
                 });
             }
 
@@ -188,11 +189,19 @@ namespace Sqlbi.Bravo.Services
                 });
             }
 
+            // 6. Validate cardinality for all calendar mappings
+            var warnings = ValidateCardinality(calendars, uniqueValueCounts);
+
+            // 7. Generate smart completion suggestions
+            var suggestions = GenerateSmartCompletionSuggestions(calendars, columns, uniqueValueCounts, sortByMap);
+
             return new TableCalendarInfo
             {
                 TableName = tableName,
                 Columns = columns,
-                Calendars = calendars
+                Calendars = calendars,
+                CardinalityWarnings = warnings,
+                SmartCompletionSuggestions = suggestions
             };
         }
 
@@ -794,6 +803,303 @@ namespace Sqlbi.Bravo.Services
 
             return (sampleValues, distinctCounts);
         }
+
+        #region Cardinality Validation
+
+        /// <summary>
+        /// Validates cardinality for all calendar mappings and returns warnings
+        /// </summary>
+        private List<CardinalityWarning> ValidateCardinality(
+            List<CalendarMetadata> calendars,
+            Dictionary<string, long> columnCardinalities)
+        {
+            var warnings = new List<CardinalityWarning>();
+
+            foreach (var calendar in calendars)
+            {
+                // Find Year cardinality for this calendar
+                var yearMapping = calendar.ColumnMappings?
+                    .FirstOrDefault(m => m.GroupType == CalendarColumnGroupType.Year && m.IsPrimary);
+
+                long? yearCardinality = null;
+                if (yearMapping != null && yearMapping.ColumnName != null &&
+                    columnCardinalities.TryGetValue(yearMapping.ColumnName, out var yearCard))
+                {
+                    yearCardinality = yearCard;
+                }
+
+                // Validate each mapping
+                if (calendar.ColumnMappings != null)
+                {
+                    foreach (var mapping in calendar.ColumnMappings)
+                    {
+                        // Only validate primary columns (associated columns use same cardinality)
+                        if (!mapping.IsPrimary || mapping.ColumnName == null)
+                            continue;
+
+                        // Skip categories that don't have expected cardinality
+                        if (mapping.GroupType == CalendarColumnGroupType.Date ||
+                            mapping.GroupType == CalendarColumnGroupType.TimeRelated ||
+                            mapping.GroupType == CalendarColumnGroupType.Unassigned ||
+                            mapping.GroupType == CalendarColumnGroupType.Unknown)
+                            continue;
+
+                        if (!columnCardinalities.TryGetValue(mapping.ColumnName, out var actualCardinality))
+                            continue;
+
+                        var (hasExpectation, expectedMin, expectedMax, description) =
+                            GetExpectedCardinality(mapping.GroupType, yearCardinality);
+
+                        if (!hasExpectation)
+                            continue;
+
+                        // Check if cardinality matches expectation
+                        bool isValid = expectedMax.HasValue
+                            ? actualCardinality >= expectedMin && actualCardinality <= expectedMax.Value
+                            : actualCardinality == expectedMin;
+
+                        if (!isValid && calendar.Name != null)
+                        {
+                            warnings.Add(new CardinalityWarning
+                            {
+                                CalendarName = calendar.Name,
+                                ColumnName = mapping.ColumnName,
+                                Category = mapping.GroupType,
+                                ActualCardinality = actualCardinality,
+                                ExpectedMin = expectedMin,
+                                ExpectedMax = expectedMax,
+                                ExpectedDescription = description
+                            });
+                        }
+                    }
+                }
+            }
+
+            return warnings;
+        }
+
+        /// <summary>
+        /// Gets expected cardinality for a category type
+        /// Returns: (hasExpectation, min, max, description)
+        /// </summary>
+        private (bool hasExpectation, long min, long? max, string description) GetExpectedCardinality(
+            CalendarColumnGroupType category,
+            long? yearCardinality)
+        {
+            switch (category)
+            {
+                // Exact values (not Year-dependent)
+                case CalendarColumnGroupType.SemesterOfYear:
+                    return (true, 2, null, "2");
+                case CalendarColumnGroupType.QuarterOfYear:
+                    return (true, 4, null, "4");
+                case CalendarColumnGroupType.QuarterOfSemester:
+                    return (true, 2, null, "2");
+                case CalendarColumnGroupType.MonthOfYear:
+                    return (true, 12, null, "12");
+                case CalendarColumnGroupType.MonthOfSemester:
+                    return (true, 6, null, "6");
+                case CalendarColumnGroupType.MonthOfQuarter:
+                    return (true, 3, null, "3");
+
+                // Year-dependent exact values
+                case CalendarColumnGroupType.Semester when yearCardinality.HasValue:
+                    return (true, 2 * yearCardinality.Value, null, $"2 × {yearCardinality.Value}");
+                case CalendarColumnGroupType.Quarter when yearCardinality.HasValue:
+                    return (true, 4 * yearCardinality.Value, null, $"4 × {yearCardinality.Value}");
+                case CalendarColumnGroupType.Month when yearCardinality.HasValue:
+                    return (true, 12 * yearCardinality.Value, null, $"12 × {yearCardinality.Value}");
+
+                // Year-dependent ranges
+                case CalendarColumnGroupType.Week when yearCardinality.HasValue:
+                    return (true, 52 * yearCardinality.Value, 53 * yearCardinality.Value,
+                        $"52-53 × {yearCardinality.Value}");
+
+                // Fixed ranges
+                case CalendarColumnGroupType.WeekOfYear:
+                    return (true, 52, 53, "52-53");
+                case CalendarColumnGroupType.WeekOfSemester:
+                    return (true, 26, 27, "26-27");
+                case CalendarColumnGroupType.WeekOfQuarter:
+                    return (true, 13, 14, "13-14");
+                case CalendarColumnGroupType.WeekOfMonth:
+                    return (true, 4, 6, "4-6");
+                case CalendarColumnGroupType.DayOfYear:
+                    return (true, 360, 370, "360-370");
+                case CalendarColumnGroupType.DayOfSemester:
+                    return (true, 170, 190, "170-190");
+                case CalendarColumnGroupType.DayOfQuarter:
+                    return (true, 80, 100, "80-100");
+                case CalendarColumnGroupType.DayOfMonth:
+                    return (true, 25, 40, "25-40");
+                case CalendarColumnGroupType.DayOfWeek:
+                    return (true, 5, 10, "5-10");
+
+                default:
+                    return (false, 0, null, string.Empty);
+            }
+        }
+
+        #endregion
+
+        #region Smart Completion
+
+        /// <summary>
+        /// Generates smart completion suggestions for blank cells based on cardinality matching
+        /// </summary>
+        private List<SmartCompletionSuggestion> GenerateSmartCompletionSuggestions(
+            List<CalendarMetadata> calendars,
+            List<ColumnInfo> columns,
+            Dictionary<string, long> columnCardinalities,
+            Dictionary<string, List<string>> sortByMap)
+        {
+            var suggestions = new List<SmartCompletionSuggestion>();
+
+            foreach (var calendar in calendars)
+            {
+                if (calendar.Name == null || calendar.ColumnMappings == null)
+                    continue;
+
+                // Find Year cardinality for this calendar
+                var yearMapping = calendar.ColumnMappings
+                    .FirstOrDefault(m => m.GroupType == CalendarColumnGroupType.Year && m.IsPrimary);
+
+                if (yearMapping == null || yearMapping.ColumnName == null ||
+                    !columnCardinalities.TryGetValue(yearMapping.ColumnName, out var yearCardinality))
+                {
+                    // Skip calendars without Year assigned
+                    continue;
+                }
+
+                // Get list of already assigned column names for this calendar
+                var assignedColumns = new HashSet<string>(
+                    calendar.ColumnMappings
+                        .Where(m => m.ColumnName != null && !m.IsImplicitFromSortBy)
+                        .Select(m => m.ColumnName!)
+                );
+
+                // Get existing category assignments for determining primary vs associated
+                var categoriesWithMappings = new HashSet<CalendarColumnGroupType>(
+                    calendar.ColumnMappings
+                        .Where(m => !m.IsImplicitFromSortBy)
+                        .Select(m => m.GroupType)
+                );
+
+                // Try to match each unassigned column
+                foreach (var column in columns)
+                {
+                    if (column.Name == null || assignedColumns.Contains(column.Name))
+                        continue;
+
+                    if (!columnCardinalities.TryGetValue(column.Name, out var columnCardinality))
+                        continue;
+
+                    // Find all matching categories for this cardinality
+                    var matchingCategories = FindMatchingCategories(columnCardinality, yearCardinality);
+
+                    // Only suggest if exactly one category matches (no ambiguity)
+                    if (matchingCategories.Count == 1)
+                    {
+                        var suggestedCategory = matchingCategories[0];
+                        bool isPrimary = false;
+
+                        // Determine if this should be primary or associated
+                        if (categoriesWithMappings.Contains(suggestedCategory))
+                        {
+                            // Category already has mappings, assign as associated
+                            isPrimary = false;
+                        }
+                        else
+                        {
+                            // Category has no mappings yet
+                            // Check if this column is used as SortByColumn for other columns
+                            if (sortByMap.ContainsKey(column.Name))
+                            {
+                                // This column is used to sort other columns, make it primary
+                                isPrimary = true;
+                            }
+                            else
+                            {
+                                // Not a sort column, assign as primary (first one wins)
+                                isPrimary = true;
+                            }
+                        }
+
+                        suggestions.Add(new SmartCompletionSuggestion
+                        {
+                            CalendarName = calendar.Name,
+                            ColumnName = column.Name,
+                            SuggestedCategory = suggestedCategory,
+                            IsPrimary = isPrimary,
+                            ColumnCardinality = columnCardinality,
+                            YearCardinality = yearCardinality
+                        });
+
+                        // Mark this category as having a mapping for subsequent columns
+                        if (isPrimary)
+                        {
+                            categoriesWithMappings.Add(suggestedCategory);
+                        }
+                    }
+                }
+            }
+
+            return suggestions;
+        }
+
+        /// <summary>
+        /// Finds all categories that match the given cardinality
+        /// </summary>
+        private List<CalendarColumnGroupType> FindMatchingCategories(long columnCardinality, long yearCardinality)
+        {
+            var matches = new List<CalendarColumnGroupType>();
+
+            // Define all categories to check (exclude Date, TimeRelated, Unassigned, Unknown)
+            var categoriesToCheck = new[]
+            {
+                CalendarColumnGroupType.SemesterOfYear,
+                CalendarColumnGroupType.QuarterOfYear,
+                CalendarColumnGroupType.QuarterOfSemester,
+                CalendarColumnGroupType.MonthOfYear,
+                CalendarColumnGroupType.MonthOfSemester,
+                CalendarColumnGroupType.MonthOfQuarter,
+                CalendarColumnGroupType.Semester,
+                CalendarColumnGroupType.Quarter,
+                CalendarColumnGroupType.Month,
+                CalendarColumnGroupType.Week,
+                CalendarColumnGroupType.WeekOfYear,
+                CalendarColumnGroupType.WeekOfSemester,
+                CalendarColumnGroupType.WeekOfQuarter,
+                CalendarColumnGroupType.WeekOfMonth,
+                CalendarColumnGroupType.DayOfYear,
+                CalendarColumnGroupType.DayOfSemester,
+                CalendarColumnGroupType.DayOfQuarter,
+                CalendarColumnGroupType.DayOfMonth,
+                CalendarColumnGroupType.DayOfWeek
+            };
+
+            foreach (var category in categoriesToCheck)
+            {
+                var (hasExpectation, expectedMin, expectedMax, _) =
+                    GetExpectedCardinality(category, yearCardinality);
+
+                if (!hasExpectation)
+                    continue;
+
+                bool isMatch = expectedMax.HasValue
+                    ? columnCardinality >= expectedMin && columnCardinality <= expectedMax.Value
+                    : columnCardinality == expectedMin;
+
+                if (isMatch)
+                {
+                    matches.Add(category);
+                }
+            }
+
+            return matches;
+        }
+
+        #endregion
 
         #endregion
     }

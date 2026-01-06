@@ -21,5 +21,15 @@ namespace Sqlbi.Bravo.Models.ManageCalendars
         /// List of all calendars defined on this table
         /// </summary>
         public List<CalendarMetadata>? Calendars { get; set; }
+
+        /// <summary>
+        /// Cardinality validation warnings for calendar mappings
+        /// </summary>
+        public List<CardinalityWarning>? CardinalityWarnings { get; set; }
+
+        /// <summary>
+        /// Smart completion suggestions for blank cells
+        /// </summary>
+        public List<SmartCompletionSuggestion>? SmartCompletionSuggestions { get; set; }
     }
 }

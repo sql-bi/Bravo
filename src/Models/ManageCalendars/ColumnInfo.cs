@@ -26,5 +26,10 @@ namespace Sqlbi.Bravo.Models.ManageCalendars
         /// Number of unique/distinct values in the column
         /// </summary>
         public long UniqueValueCount { get; set; }
+
+        /// <summary>
+        /// Name of the column used to sort this column (if this column has a SortByColumn set)
+        /// </summary>
+        public string? SortByColumnName { get; set; }
     }
 }

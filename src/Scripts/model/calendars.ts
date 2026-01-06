@@ -8,6 +8,8 @@ export interface TableCalendarInfo {
     tableName?: string;
     columns?: ColumnInfo[];
     calendars?: CalendarMetadata[];
+    cardinalityWarnings?: CardinalityWarning[];
+    smartCompletionSuggestions?: SmartCompletionSuggestion[];
 }
 
 export interface ColumnInfo {
@@ -15,6 +17,7 @@ export interface ColumnInfo {
     dataType?: string;
     sampleValues?: any[];
     uniqueValueCount?: number;
+    sortByColumnName?: string;
 }
 
 export interface CalendarMetadata {
@@ -56,6 +59,25 @@ export enum CalendarColumnGroupType {
     DayOfMonth = 20,
     DayOfWeek = 21,
     TimeRelated = 100
+}
+
+export interface CardinalityWarning {
+    calendarName?: string;
+    columnName?: string;
+    category?: CalendarColumnGroupType;
+    actualCardinality?: number;
+    expectedMin?: number;
+    expectedMax?: number;
+    expectedDescription?: string;
+}
+
+export interface SmartCompletionSuggestion {
+    calendarName?: string;
+    columnName?: string;
+    suggestedCategory?: CalendarColumnGroupType;
+    isPrimary?: boolean;
+    columnCardinality?: number;
+    yearCardinality?: number;
 }
 
 export interface ManageCalendarsConfig {

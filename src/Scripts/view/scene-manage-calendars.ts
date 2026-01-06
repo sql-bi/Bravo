@@ -18,6 +18,7 @@ import { ErrorScene } from './scene-error';
 import { DocScene } from './scene-doc';
 import { PageType } from '../controllers/page';
 import { Tabulator } from 'tabulator-tables';
+import { CalendarSorting, SortState } from '../helpers/calendar-sorting';
 
 export class ManageCalendarsScene extends DocScene {
 
@@ -27,6 +28,15 @@ export class ManageCalendarsScene extends DocScene {
     mappingContainer: HTMLElement;
     tableSelector: HTMLSelectElement;
     hideUnassignedCheckbox: HTMLInputElement;
+    smartCompletionButton: HTMLButtonElement;
+    acceptSuggestionsButton: HTMLButtonElement;
+    sortState: SortState = {
+        field: null,
+        direction: null,
+        mode: 'aggregate'
+    };
+    tableData: any[] = [];
+    activeSuggestions: Set<string> = new Set(); // Tracks "calendarName:columnName" for yellow highlighted cells
 
     constructor(id: string, container: HTMLElement, doc: Doc, type: PageType) {
         super(id, container, [doc.name, i18n(strings.ManageCalendars)], doc, type, true);
@@ -50,6 +60,8 @@ export class ManageCalendarsScene extends DocScene {
                 </div>
                 <div class="actions">
                     <button class="btn btn-primary btn-add-calendar disable-on-syncing enable-if-editable">${i18n(strings.manageCalendarsAddCalendar)}</button>
+                    <button class="btn btn-smart-completion disable-on-syncing enable-if-editable" title="Assign calendar category to each column that is not assigned based on the cardinality of the Year column. Assign Year manually before starting.">Smart completion</button>
+                    <button class="btn btn-accept-suggestions disable-on-syncing enable-if-editable" style="display: none;">Accept all suggestions</button>
                     <label class="hide-unassigned-control">
                         <input type="checkbox" class="hide-unassigned-checkbox">
                         <span>Hide unassigned columns</span>
@@ -68,9 +80,14 @@ export class ManageCalendarsScene extends DocScene {
         this.tableSelector = _(".table-select", this.body) as HTMLSelectElement;
         this.mappingContainer = _(".mapping-grid", this.body);
         this.hideUnassignedCheckbox = _(".hide-unassigned-checkbox", this.body) as HTMLInputElement;
+        this.smartCompletionButton = _(".btn-smart-completion", this.body) as HTMLButtonElement;
+        this.acceptSuggestionsButton = _(".btn-accept-suggestions", this.body) as HTMLButtonElement;
 
         let addCalendarButton = _(".btn-add-calendar", this.body);
         addCalendarButton.addEventListener("click", () => this.addCalendar());
+
+        this.smartCompletionButton.addEventListener("click", () => this.runSmartCompletion());
+        this.acceptSuggestionsButton.addEventListener("click", () => this.acceptAllSuggestions());
 
         this.tableSelector.addEventListener("change", () => {
             this.config.options.tableName = this.tableSelector.value;
@@ -91,14 +108,10 @@ export class ManageCalendarsScene extends DocScene {
         try {
             let loader = new Loader(this.mappingContainer, true, true);
 
-            console.log("Loading table calendars for table:", this.config.options.tableName || "Date");
-
             this.tableInfo = await host.manageCalendarsGetTableCalendars({
                 report: <PBIDesktopReport>this.doc.sourceData,
                 tableName: this.config.options.tableName || "Date"
             });
-
-            console.log("Table calendars loaded:", this.tableInfo);
 
             loader.remove();
 
@@ -116,8 +129,6 @@ export class ManageCalendarsScene extends DocScene {
     renderMappingGrid() {
         if (!this.tableInfo || !this.tableInfo.columns || !this.tableInfo.calendars) return;
 
-        console.log("Rendering mapping grid with", this.tableInfo.calendars.length, "calendars");
-
         this.mappingContainer.innerHTML = "";
 
         // Build column definitions
@@ -127,7 +138,9 @@ export class ManageCalendarsScene extends DocScene {
                 field: "columnName",
                 width: 200,
                 resizable: true,
-                headerSort: false
+                headerSort: false,
+                titleFormatter: () => this.renderSortableHeader(i18n(strings.manageCalendarsColumnName), "columnName"),
+                headerClick: () => this.handleHeaderClick("columnName", 'single')
             },
             {
                 title: "# VALUES",
@@ -136,6 +149,8 @@ export class ManageCalendarsScene extends DocScene {
                 resizable: true,
                 headerSort: false,
                 hozAlign: "right",
+                titleFormatter: () => this.renderSortableHeader("# VALUES", "uniqueValueCount"),
+                headerClick: () => this.handleHeaderClick("uniqueValueCount", 'single'),
                 formatter: (cell: Tabulator.CellComponent) => {
                     const count = cell.getValue();
                     if (count === null || count === undefined) return "";
@@ -159,7 +174,6 @@ export class ManageCalendarsScene extends DocScene {
         // Add one column per calendar with header menu
         for (let calendar of this.tableInfo.calendars) {
             const calendarName = calendar.name || "";
-            console.log("Adding calendar column:", calendarName);
 
             const columnDef: any = {
                 title: calendarName,
@@ -168,10 +182,43 @@ export class ManageCalendarsScene extends DocScene {
                 resizable: true,
                 headerSort: false,
                 headerMenu: this.createCalendarHeaderMenu(calendarName),
+                titleFormatter: () => this.renderSortableHeader(calendarName, `calendar_${calendarName}`),
+                headerClick: (e: any, column: any) => {
+                    // Check if click was on header menu button
+                    if (!(e.target as HTMLElement).closest('.tabulator-header-menu-button')) {
+                        this.handleHeaderClick(`calendar_${calendarName}`, 'single');
+                    }
+                },
                 formatter: (cell: Tabulator.CellComponent) => {
                     const value = cell.getValue();
+                    const rowData = cell.getRow().getData();
+                    const columnName = rowData.columnName;
+                    const suggestionKey = `${calendarName}:${columnName}`;
+
+                    // Check if this cell has an active suggestion
+                    const isSuggested = this.activeSuggestions.has(suggestionKey);
 
                     if (value === null || value === undefined || value === "") {
+                        // Check if there's a suggestion for this blank cell
+                        if (isSuggested) {
+                            const suggestion = this.tableInfo?.smartCompletionSuggestions?.find(s =>
+                                s.calendarName === calendarName && s.columnName === columnName
+                            );
+                            if (suggestion && suggestion.suggestedCategory !== undefined) {
+                                const label = this.getGroupTypeLabel(suggestion.suggestedCategory);
+
+                                // Check if this would be an implicit linked column based on suggestions
+                                const isImplicitLinked = this.isColumnImplicitLinkedInSuggestions(columnName, calendarName, suggestion.suggestedCategory);
+
+                                let icon: string;
+                                if (isImplicitLinked) {
+                                    icon = '🔗';
+                                } else {
+                                    icon = suggestion.isPrimary ? '★' : '☆';
+                                }
+                                return `<span class="suggested-mapping">${icon} ${label}</span>`;
+                            }
+                        }
                         return '<span class="blank-mapping"></span>';
                     }
 
@@ -179,8 +226,6 @@ export class ManageCalendarsScene extends DocScene {
                     const groupType = typeof value === 'string' ? parseInt(value) : value;
 
                     // Get the original mapping to check for metadata
-                    const rowData = cell.getRow().getData();
-                    const columnName = rowData.columnName;
                     const calendar = this.tableInfo?.calendars?.find(c => c.name === calendarName);
                     const mapping = calendar?.columnMappings?.find(m => m.columnName === columnName);
 
@@ -195,11 +240,11 @@ export class ManageCalendarsScene extends DocScene {
                     if (!isIndependentCategory) {
                         // Regular categories show icons based on role
                         if (mapping?.isImplicitFromSortBy) {
-                            className = "implicit-mapping";
+                            if (!isSuggested) className = "implicit-mapping";
                             // Make link icon clickable to promote to primary
                             iconHtml = `<span class="promote-icon" data-column="${columnName}" data-calendar="${calendarName}" data-category="${groupType}" title="Click to make this the primary column">🔗</span> `;
                         } else if (mapping?.isPrimary) {
-                            className = "primary-mapping";
+                            if (!isSuggested) className = "primary-mapping";
                             // Make star icon clickable to remove assignment
                             iconHtml = `<span class="primary-icon" data-column="${columnName}" data-calendar="${calendarName}" title="Click to remove assignment">★</span> `;
                         } else if (mapping && !mapping.isPrimary) {
@@ -208,10 +253,26 @@ export class ManageCalendarsScene extends DocScene {
                         }
                     }
 
+                    // Check for cardinality warning
+                    const warning = this.tableInfo?.cardinalityWarnings?.find(w =>
+                        w.calendarName === calendarName &&
+                        w.columnName === columnName &&
+                        w.category === groupType
+                    );
+
+                    let warningHtml = "";
+                    if (warning) {
+                        const expectedDesc = warning.expectedMax !== null && warning.expectedMax !== undefined
+                            ? `${warning.expectedMin}-${warning.expectedMax}`
+                            : `${warning.expectedMin}`;
+                        const tooltipText = `The cardinality of ${warning.actualCardinality} does not match the expected cardinality of ${expectedDesc}`;
+                        warningHtml = ` <span class="cardinality-warning-icon" title="${tooltipText}">⚠️</span>`;
+                    }
+
                     // Wrap label in clickable span that opens editor
                     const labelHtml = `<span class="category-label">${label}</span>`;
 
-                    return `<span class="${className}">${iconHtml}${labelHtml}</span>`;
+                    return `<span class="${className}">${iconHtml}${labelHtml}${warningHtml}</span>`;
                 },
                 editor: "list" as any, // Type definition outdated, "list" is the new editor replacing deprecated "select"
                 editorParams: {
@@ -221,16 +282,26 @@ export class ManageCalendarsScene extends DocScene {
                 cellClick: (e: any, cell: Tabulator.CellComponent) => {
                     const target = e.target as HTMLElement;
 
-                    console.log("Cell clicked, target:", target, "classes:", target.className);
+                    // Check if this is a suggested cell
+                    const rowData = cell.getRow().getData();
+                    const columnName = rowData.columnName;
+                    const suggestionKey = `${calendarName}:${columnName}`;
+                    const isSuggested = this.activeSuggestions.has(suggestionKey);
+
+                    if (isSuggested && (target.classList.contains('suggested-mapping') ||
+                        target.parentElement?.classList.contains('suggested-mapping') ||
+                        (cell.getElement() as HTMLElement).classList.contains('suggested-cell'))) {
+                        e.stopPropagation();
+                        this.acceptIndividualSuggestion(calendarName, columnName);
+                        return;
+                    }
 
                     // Priority 1: Icon clicks (promote/remove)
                     if (target.classList.contains('promote-icon')) {
-                        console.log("Promote icon clicked!");
                         e.stopPropagation();
                         this.handlePromoteIconClick(target, calendarName);
                         return;
                     } else if (target.classList.contains('primary-icon')) {
-                        console.log("Primary icon clicked!");
                         e.stopPropagation();
                         this.handlePrimaryIconClick(target, calendarName);
                         return;
@@ -238,21 +309,17 @@ export class ManageCalendarsScene extends DocScene {
 
                     // Priority 2: Label clicks (open editor manually)
                     if (target.classList.contains('category-label')) {
-                        console.log("Label clicked, opening editor manually");
                         (cell as any).edit(true);
                         return;
                     }
 
                     // Priority 3: Blank cell or any other click (open editor)
                     // Check if this cell has a mapping (to avoid opening editor on implicit cells)
-                    const rowData = cell.getRow().getData();
-                    const columnName = rowData.columnName;
                     const calendar = this.tableInfo?.calendars?.find(c => c.name === calendarName);
                     const mapping = calendar?.columnMappings?.find(m => m.columnName === columnName);
 
                     // Allow editing if: blank cell OR has explicit mapping (not implicit)
                     if (!mapping || !mapping.isImplicitFromSortBy) {
-                        console.log("Cell/blank clicked, opening editor manually");
                         (cell as any).edit(true);
                     }
                 },
@@ -266,7 +333,7 @@ export class ManageCalendarsScene extends DocScene {
         }
 
         // Build row data
-        const data = this.tableInfo.columns.map(column => {
+        this.tableData = this.tableInfo.columns.map(column => {
             const row: any = {
                 columnName: column.name,
                 sampleValues: column.sampleValues,
@@ -285,17 +352,67 @@ export class ManageCalendarsScene extends DocScene {
             return row;
         });
 
+        // Apply sorting if sort state exists
+        const sortedData = CalendarSorting.sortData(
+            this.tableData,
+            this.sortState,
+            this.tableInfo.calendars
+        );
+
         // Create Tabulator
         if (this.mappingTable) {
             this.mappingTable.destroy();
         }
 
         this.mappingTable = new Tabulator(`#${this.element.id} .mapping-grid`, {
-            data: data,
+            data: sortedData,
             columns: columns,
             layout: "fitDataStretch",
-            height: "100%"
+            height: "100%",
+            rowFormatter: (row: Tabulator.RowComponent) => {
+                const rowData = row.getData();
+                const columnName = rowData.columnName;
+
+                // Apply suggested-cell class to cells that have suggestions
+                for (const calendar of this.tableInfo!.calendars!) {
+                    const calendarName = calendar.name || "";
+                    const suggestionKey = `${calendarName}:${columnName}`;
+                    const isSuggested = this.activeSuggestions.has(suggestionKey);
+
+                    try {
+                        const cell = row.getCell(`calendar_${calendarName}`);
+                        if (cell) {
+                            const cellElement = cell.getElement();
+                            if (isSuggested) {
+                                cellElement.classList.add('suggested-cell');
+                                // Also apply inline style as a fallback to ensure visibility
+                                cellElement.style.backgroundColor = '#FFFACD';
+                            } else {
+                                cellElement.classList.remove('suggested-cell');
+                                // Remove inline style
+                                cellElement.style.backgroundColor = '';
+                            }
+                        }
+                    } catch (error) {
+                        // Silently handle errors
+                    }
+                }
+            }
         });
+
+        // Update smart completion button state
+        this.updateSmartCompletionButtonState();
+
+        // Update accept suggestions button visibility
+        this.updateAcceptSuggestionsButtonVisibility();
+    }
+
+    updateAcceptSuggestionsButtonVisibility() {
+        if (this.activeSuggestions.size > 0) {
+            this.acceptSuggestionsButton.style.display = '';
+        } else {
+            this.acceptSuggestionsButton.style.display = 'none';
+        }
     }
 
     async handlePromoteIconClick(target: HTMLElement, calendarName: string) {
@@ -309,11 +426,8 @@ export class ManageCalendarsScene extends DocScene {
         // Independent categories (TimeRelated, Unassigned) cannot be promoted
         if (category === CalendarColumnGroupType.TimeRelated ||
             category === CalendarColumnGroupType.Unassigned) {
-            console.log("Cannot promote independent category:", category);
             return;
         }
-
-        console.log(`Promoting column "${columnName}" to primary for category ${category} in calendar "${calendarName}"`);
 
         // Find the calendar
         let calendar = this.tableInfo?.calendars?.find(c => c.name === calendarName);
@@ -340,7 +454,11 @@ export class ManageCalendarsScene extends DocScene {
             isImplicitFromSortBy: false
         });
 
-        console.log("Updated calendar mappings:", calendar.columnMappings);
+        // Filter out implicit mappings before sending to backend
+        const calendarToSend = {
+            ...calendar,
+            columnMappings: calendar.columnMappings?.filter(m => !m.isImplicitFromSortBy)
+        };
 
         // Save to backend
         try {
@@ -348,7 +466,7 @@ export class ManageCalendarsScene extends DocScene {
                 report: <PBIDesktopReport>this.doc.sourceData,
                 tableName: this.config.options.tableName || "Date",
                 calendarName: calendarName,
-                calendar: calendar
+                calendar: calendarToSend
             });
 
             // Reload to reflect changes
@@ -364,8 +482,6 @@ export class ManageCalendarsScene extends DocScene {
 
         if (!columnName) return;
 
-        console.log(`Removing assignment for column "${columnName}" in calendar "${calendarName}"`);
-
         // Find the calendar
         let calendar = this.tableInfo?.calendars?.find(c => c.name === calendarName);
         if (!calendar) return;
@@ -377,7 +493,11 @@ export class ManageCalendarsScene extends DocScene {
             );
         }
 
-        console.log("Updated calendar mappings after removal:", calendar.columnMappings);
+        // Filter out implicit mappings before sending to backend
+        const calendarToSend = {
+            ...calendar,
+            columnMappings: calendar.columnMappings?.filter(m => !m.isImplicitFromSortBy)
+        };
 
         // Save to backend
         try {
@@ -385,7 +505,7 @@ export class ManageCalendarsScene extends DocScene {
                 report: <PBIDesktopReport>this.doc.sourceData,
                 tableName: this.config.options.tableName || "Date",
                 calendarName: calendarName,
-                calendar: calendar
+                calendar: calendarToSend
             });
 
             // Reload to reflect changes
@@ -479,11 +599,8 @@ export class ManageCalendarsScene extends DocScene {
         const newValue = cell.getValue();
         const oldValue = cell.getOldValue();
 
-        console.log("Cell edited:", columnName, "old value:", oldValue, "new value:", newValue, "type:", typeof newValue);
-
         // Don't save if value hasn't changed
         if (newValue === oldValue) {
-            console.log("Value unchanged, skipping save");
             return;
         }
 
@@ -512,13 +629,11 @@ export class ManageCalendarsScene extends DocScene {
                         calendar.columnMappings = calendar.columnMappings.filter(m =>
                             m.columnName !== columnName || m.isImplicitFromSortBy
                         );
-                        console.log(`Removed mapping for column ${columnName} from independent category ${categoryToRemove}`);
                     } else {
                         // Regular category: remove all related columns (primary + associated)
                         calendar.columnMappings = calendar.columnMappings.filter(m =>
                             !m.isImplicitFromSortBy && m.groupType !== categoryToRemove
                         );
-                        console.log(`Removed all mappings for regular category ${categoryToRemove}`);
                     }
                 }
             } else {
@@ -574,12 +689,19 @@ export class ManageCalendarsScene extends DocScene {
                 }
             }
 
+            // Filter out implicit mappings before sending to backend
+            // The backend will regenerate them based on SortByColumn relationships
+            const calendarToSend = {
+                ...calendar,
+                columnMappings: calendar.columnMappings?.filter(m => !m.isImplicitFromSortBy)
+            };
+
             // Save to backend
             await host.manageCalendarsUpdateCalendar({
                 report: <PBIDesktopReport>this.doc.sourceData,
                 tableName: this.config.options.tableName || "Date",
                 calendarName: calendarName,
-                calendar: calendar
+                calendar: calendarToSend
             });
 
             // Reload to reflect changes
@@ -690,6 +812,298 @@ export class ManageCalendarsScene extends DocScene {
             // Return true to show the row, false to hide it
             return !isUnassignedInAllCalendars;
         });
+    }
+
+    renderSortableHeader(title: string, field: string): string {
+        let indicator = '';
+
+        if (this.sortState.field === field) {
+            // Single calendar sort
+            if (this.sortState.mode === 'single') {
+                indicator = this.sortState.direction === 'asc' ? ' ↑' : ' ↓';
+            }
+        } else if (field.startsWith('calendar_') && this.sortState.mode === 'aggregate') {
+            // Multi-calendar aggregate sort indicator (only show if any calendar is being sorted in aggregate mode)
+            indicator = ' ⊕';  // Aggregate indicator
+        }
+
+        return `<span class="sortable-header">${title}${indicator}</span>`;
+    }
+
+    handleHeaderClick(field: string, mode: 'single' | 'aggregate') {
+        if (!this.tableInfo || !this.tableInfo.calendars) return;
+
+        // Toggle sort direction
+        if (this.sortState.field === field && this.sortState.mode === mode) {
+            // Same field clicked - toggle direction
+            if (this.sortState.direction === 'asc') {
+                this.sortState.direction = 'desc';
+            } else if (this.sortState.direction === 'desc') {
+                // Third click - clear sort
+                this.sortState.field = null;
+                this.sortState.direction = null;
+                this.sortState.mode = 'aggregate';
+            }
+        } else {
+            // Different field clicked - set new sort
+            this.sortState.field = field;
+            this.sortState.mode = mode;
+
+            // Default direction based on field type
+            if (field === 'uniqueValueCount') {
+                this.sortState.direction = 'desc';  // Descending for cardinality
+            } else {
+                this.sortState.direction = 'asc';  // Ascending for everything else
+            }
+        }
+
+        // Re-render the grid with new sort
+        this.renderMappingGrid();
+    }
+
+    runSmartCompletion() {
+        if (!this.tableInfo?.smartCompletionSuggestions) {
+            return;
+        }
+
+        // Check if any calendars have Year assigned
+        const calendarsWithYear = this.tableInfo.calendars?.filter(cal =>
+            cal.columnMappings?.some(m => m.groupType === CalendarColumnGroupType.Year && m.isPrimary)
+        ) || [];
+
+        if (calendarsWithYear.length === 0) {
+            alert('Please assign Year category to at least one calendar before running smart completion.');
+            return;
+        }
+
+        // Check if there are calendars without Year
+        const calendarsWithoutYear = this.tableInfo.calendars?.filter(cal =>
+            !cal.columnMappings?.some(m => m.groupType === CalendarColumnGroupType.Year && m.isPrimary)
+        ) || [];
+
+        if (calendarsWithoutYear.length > 0) {
+            const calendarNames = calendarsWithoutYear.map(c => c.name).join(', ');
+            const message = `Smart completion will only process calendars with Year assigned. The following calendars will be ignored: ${calendarNames}`;
+            if (!confirm(message + '\n\nContinue?')) {
+                return;
+            }
+        }
+
+        // Apply all suggestions
+        this.activeSuggestions.clear();
+        for (const suggestion of this.tableInfo.smartCompletionSuggestions) {
+            if (suggestion.calendarName && suggestion.columnName) {
+                const key = `${suggestion.calendarName}:${suggestion.columnName}`;
+                this.activeSuggestions.add(key);
+            }
+        }
+
+        // Re-render to show yellow highlights (this will also update button visibility)
+        this.renderMappingGrid();
+    }
+
+    async acceptIndividualSuggestion(calendarName: string, columnName: string) {
+        const suggestionKey = `${calendarName}:${columnName}`;
+        if (!this.activeSuggestions.has(suggestionKey)) return;
+
+        const suggestion = this.tableInfo?.smartCompletionSuggestions?.find(s =>
+            s.calendarName === calendarName && s.columnName === columnName
+        );
+
+        if (!suggestion || suggestion.suggestedCategory === undefined) return;
+
+        try {
+            const calendar = this.tableInfo?.calendars?.find(c => c.name === calendarName);
+            if (!calendar) return;
+
+            // Add or update mapping
+            const existingMapping = calendar.columnMappings?.find(m => m.columnName === columnName);
+            if (existingMapping) {
+                existingMapping.groupType = suggestion.suggestedCategory;
+                existingMapping.isPrimary = suggestion.isPrimary || false;
+                existingMapping.isImplicitFromSortBy = false;
+            } else {
+                calendar.columnMappings = calendar.columnMappings || [];
+                calendar.columnMappings.push({
+                    columnName: columnName,
+                    groupType: suggestion.suggestedCategory,
+                    isPrimary: suggestion.isPrimary || false,
+                    isImplicitFromSortBy: false
+                });
+            }
+
+            // Filter out implicit mappings before sending to backend
+            const calendarToSend = {
+                ...calendar,
+                columnMappings: calendar.columnMappings?.filter(m => !m.isImplicitFromSortBy)
+            };
+
+            // Save calendar
+            await host.manageCalendarsUpdateCalendar({
+                report: <PBIDesktopReport>this.doc.sourceData,
+                tableName: this.config.options.tableName || "Date",
+                calendarName: calendarName,
+                calendar: calendarToSend
+            });
+
+            // Remove this suggestion
+            this.activeSuggestions.delete(suggestionKey);
+
+            // Reload to reflect changes (this will also update button visibility)
+            await this.loadTableCalendars();
+
+        } catch (error: any) {
+            logger.logError(error);
+            alert(`Error accepting suggestion: ${error.message || error}`);
+        }
+    }
+
+    async acceptAllSuggestions() {
+        if (!this.tableInfo?.smartCompletionSuggestions || this.activeSuggestions.size === 0) {
+            return;
+        }
+
+        try {
+            // Group suggestions by calendar
+            const suggestionsByCalendar = new Map<string, typeof this.tableInfo.smartCompletionSuggestions>();
+
+            for (const suggestion of this.tableInfo.smartCompletionSuggestions) {
+                const key = `${suggestion.calendarName}:${suggestion.columnName}`;
+                if (this.activeSuggestions.has(key) && suggestion.calendarName) {
+                    if (!suggestionsByCalendar.has(suggestion.calendarName)) {
+                        suggestionsByCalendar.set(suggestion.calendarName, []);
+                    }
+                    suggestionsByCalendar.get(suggestion.calendarName)!.push(suggestion);
+                }
+            }
+
+            // Apply suggestions to each calendar
+            for (const [calendarName, suggestions] of suggestionsByCalendar) {
+                const calendar = this.tableInfo.calendars?.find(c => c.name === calendarName);
+                if (!calendar) continue;
+
+                // Add new mappings from suggestions
+                for (const suggestion of suggestions) {
+                    if (!suggestion.columnName || suggestion.suggestedCategory === undefined) continue;
+
+                    // Check if mapping already exists
+                    const existingMapping = calendar.columnMappings?.find(m => m.columnName === suggestion.columnName);
+                    if (existingMapping) {
+                        // Update existing mapping
+                        existingMapping.groupType = suggestion.suggestedCategory;
+                        existingMapping.isPrimary = suggestion.isPrimary || false;
+                        existingMapping.isImplicitFromSortBy = false;
+                    } else {
+                        // Add new mapping
+                        calendar.columnMappings = calendar.columnMappings || [];
+                        calendar.columnMappings.push({
+                            columnName: suggestion.columnName,
+                            groupType: suggestion.suggestedCategory,
+                            isPrimary: suggestion.isPrimary || false,
+                            isImplicitFromSortBy: false
+                        });
+                    }
+                }
+
+                // Filter out implicit mappings before sending to backend
+                const calendarToSend = {
+                    ...calendar,
+                    columnMappings: calendar.columnMappings?.filter(m => !m.isImplicitFromSortBy)
+                };
+
+                // Save calendar
+                await host.manageCalendarsUpdateCalendar({
+                    report: <PBIDesktopReport>this.doc.sourceData,
+                    tableName: this.config.options.tableName || "Date",
+                    calendarName: calendarName,
+                    calendar: calendarToSend
+                });
+            }
+
+            // Clear suggestions
+            this.activeSuggestions.clear();
+
+            // Reload to reflect changes (this will also update button visibility)
+            await this.loadTableCalendars();
+
+        } catch (error: any) {
+            logger.logError(error);
+            alert(`Error accepting suggestions: ${error.message || error}`);
+        }
+    }
+
+    /**
+     * Determines if a column would be implicitly linked via SortByColumn when suggestions are applied.
+     * A column is implicitly linked if:
+     * 1. It's used as SortByColumn by another column (display column)
+     * 2. The display column is suggested/assigned to the given category
+     * 3. This column (sort column) would be implicitly included in that category
+     */
+    isColumnImplicitLinkedInSuggestions(sortColumnName: string, calendarName: string, categoryForSortColumn: CalendarColumnGroupType): boolean {
+        if (!this.tableInfo?.columns) return false;
+
+        // Find all columns that use this column as their SortByColumn
+        const displayColumns = this.tableInfo.columns.filter(col => col.sortByColumnName === sortColumnName);
+
+        if (displayColumns.length === 0) return false;
+
+        // Check if any of these display columns are suggested or assigned to the same category
+        for (const displayCol of displayColumns) {
+            if (!displayCol.name) continue;
+
+            // Check suggestions first
+            const displaySuggestionKey = `${calendarName}:${displayCol.name}`;
+            const displaySuggestion = this.tableInfo.smartCompletionSuggestions?.find(s =>
+                s.calendarName === calendarName && s.columnName === displayCol.name
+            );
+
+            // If display column has an active suggestion
+            if (this.activeSuggestions.has(displaySuggestionKey) && displaySuggestion) {
+                if (displaySuggestion.suggestedCategory === categoryForSortColumn) {
+                    return true; // This sort column would be implicitly linked
+                }
+            }
+
+            // Also check existing mappings (in case some columns are already assigned)
+            const calendar = this.tableInfo.calendars?.find(c => c.name === calendarName);
+            const displayMapping = calendar?.columnMappings?.find(m => m.columnName === displayCol.name);
+            if (displayMapping && displayMapping.groupType === categoryForSortColumn) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    updateSmartCompletionButtonState() {
+        if (!this.tableInfo) return;
+
+        // Check if any calendar has Year assigned
+        const hasYearAssigned = this.tableInfo.calendars?.some(cal =>
+            cal.columnMappings?.some(m => m.groupType === CalendarColumnGroupType.Year && m.isPrimary)
+        ) || false;
+
+        // Check if there are blank cells in calendars with Year
+        const hasBlankCells = this.tableInfo.calendars?.some(cal => {
+            const calHasYear = cal.columnMappings?.some(m => m.groupType === CalendarColumnGroupType.Year && m.isPrimary);
+            if (!calHasYear) return false;
+
+            // Check if there are columns without assignments in this calendar
+            const assignedColumns = new Set(
+                cal.columnMappings?.filter(m => !m.isImplicitFromSortBy).map(m => m.columnName) || []
+            );
+            return this.tableInfo!.columns!.some(col => !assignedColumns.has(col.name));
+        }) || false;
+
+        // Enable button if Year is assigned
+        this.smartCompletionButton.disabled = !hasYearAssigned;
+
+        // Highlight button if Year is assigned AND there are blank cells
+        if (hasYearAssigned && hasBlankCells) {
+            this.smartCompletionButton.classList.add('highlighted');
+        } else {
+            this.smartCompletionButton.classList.remove('highlighted');
+        }
     }
 
     destroy() {
