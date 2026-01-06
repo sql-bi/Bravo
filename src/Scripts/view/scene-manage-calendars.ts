@@ -56,9 +56,9 @@ export class ManageCalendarsScene extends DocScene {
                     </label>
                 </div>
                 <div class="legend">
-                    <div class="legend-item"><span class="legend-icon">★</span> Primary</div>
-                    <div class="legend-item"><span class="legend-icon">☆</span> Associated</div>
-                    <div class="legend-item"><span class="legend-icon">🔗</span> Linked</div>
+                    <div class="legend-item"><span class="legend-icon">★</span> Primary (groups only)</div>
+                    <div class="legend-item"><span class="legend-icon">☆</span> Associated (groups only)</div>
+                    <div class="legend-item"><span class="legend-icon">🔗</span> Linked (groups only)</div>
                 </div>
             </div>
             <div class="mapping-grid">${Loader.html(true)}</div>
@@ -188,17 +188,24 @@ export class ManageCalendarsScene extends DocScene {
                     let className = "";
                     let iconHtml = "";
 
-                    if (mapping?.isImplicitFromSortBy) {
-                        className = "implicit-mapping";
-                        // Make link icon clickable to promote to primary
-                        iconHtml = `<span class="promote-icon" data-column="${columnName}" data-calendar="${calendarName}" data-category="${groupType}" title="Click to make this the primary column">🔗</span> `;
-                    } else if (mapping?.isPrimary && groupType !== CalendarColumnGroupType.TimeRelated) {
-                        className = "primary-mapping";
-                        // Make star icon clickable to remove assignment
-                        iconHtml = `<span class="primary-icon" data-column="${columnName}" data-calendar="${calendarName}" title="Click to remove assignment">★</span> `;
-                    } else if (mapping && !mapping.isPrimary && groupType !== CalendarColumnGroupType.TimeRelated) {
-                        // Make associated star icon clickable to promote to primary
-                        iconHtml = `<span class="promote-icon" data-column="${columnName}" data-calendar="${calendarName}" data-category="${groupType}" title="Click to make this the primary column">☆</span> `;
+                    // Independent categories (TimeRelated, Unassigned) have no icons
+                    const isIndependentCategory = groupType === CalendarColumnGroupType.TimeRelated ||
+                                                  groupType === CalendarColumnGroupType.Unassigned;
+
+                    if (!isIndependentCategory) {
+                        // Regular categories show icons based on role
+                        if (mapping?.isImplicitFromSortBy) {
+                            className = "implicit-mapping";
+                            // Make link icon clickable to promote to primary
+                            iconHtml = `<span class="promote-icon" data-column="${columnName}" data-calendar="${calendarName}" data-category="${groupType}" title="Click to make this the primary column">🔗</span> `;
+                        } else if (mapping?.isPrimary) {
+                            className = "primary-mapping";
+                            // Make star icon clickable to remove assignment
+                            iconHtml = `<span class="primary-icon" data-column="${columnName}" data-calendar="${calendarName}" title="Click to remove assignment">★</span> `;
+                        } else if (mapping && !mapping.isPrimary) {
+                            // Make associated star icon clickable to promote to primary
+                            iconHtml = `<span class="promote-icon" data-column="${columnName}" data-calendar="${calendarName}" data-category="${groupType}" title="Click to make this the primary column">☆</span> `;
+                        }
                     }
 
                     // Wrap label in clickable span that opens editor
@@ -298,6 +305,13 @@ export class ManageCalendarsScene extends DocScene {
         if (!columnName || !categoryStr) return;
 
         const category = parseInt(categoryStr);
+
+        // Independent categories (TimeRelated, Unassigned) cannot be promoted
+        if (category === CalendarColumnGroupType.TimeRelated ||
+            category === CalendarColumnGroupType.Unassigned) {
+            console.log("Cannot promote independent category:", category);
+            return;
+        }
 
         console.log(`Promoting column "${columnName}" to primary for category ${category} in calendar "${calendarName}"`);
 
@@ -484,53 +498,79 @@ export class ManageCalendarsScene extends DocScene {
             let groupType: number | null = null;
 
             if (newValue === null || newValue === undefined || newValue === "") {
-                // Blank/null selection - remove the entire category assignment
-                // Find the current category for this column
+                // Blank/null selection - remove the assignment for this column
                 const currentMapping = calendar.columnMappings?.find(m => m.columnName === columnName);
 
                 if (currentMapping && calendar.columnMappings) {
                     const categoryToRemove = currentMapping.groupType;
 
-                    // Remove ALL mappings for this category (all related columns)
-                    // Filter out implicit mappings first, then remove all explicit mappings for this category
-                    calendar.columnMappings = calendar.columnMappings.filter(m =>
-                        !m.isImplicitFromSortBy && m.groupType !== categoryToRemove
-                    );
-
-                    console.log(`Removed all mappings for category ${categoryToRemove}`);
+                    // For independent categories (TimeRelated, Unassigned), remove ONLY this column
+                    // For regular categories, remove ALL columns in the group
+                    if (categoryToRemove === CalendarColumnGroupType.TimeRelated ||
+                        categoryToRemove === CalendarColumnGroupType.Unassigned) {
+                        // Independent category: remove only this column
+                        calendar.columnMappings = calendar.columnMappings.filter(m =>
+                            m.columnName !== columnName || m.isImplicitFromSortBy
+                        );
+                        console.log(`Removed mapping for column ${columnName} from independent category ${categoryToRemove}`);
+                    } else {
+                        // Regular category: remove all related columns (primary + associated)
+                        calendar.columnMappings = calendar.columnMappings.filter(m =>
+                            !m.isImplicitFromSortBy && m.groupType !== categoryToRemove
+                        );
+                        console.log(`Removed all mappings for regular category ${categoryToRemove}`);
+                    }
                 }
             } else {
                 // Parse the group type
                 groupType = typeof newValue === 'number' ? newValue : parseInt(newValue as string);
+
+                // Check if this is an independent category
+                const isIndependentCategory = groupType === CalendarColumnGroupType.TimeRelated ||
+                                              groupType === CalendarColumnGroupType.Unassigned;
 
                 // Update or add the mapping
                 let mapping = calendar.columnMappings?.find(m => m.columnName === columnName);
                 if (mapping) {
                     // Update existing mapping
                     mapping.groupType = groupType;
-                    // Check if this category already has a primary column
-                    const hasPrimary = calendar.columnMappings?.some(m =>
-                        m.columnName !== columnName &&
-                        m.groupType === groupType &&
-                        m.isPrimary
-                    );
-                    mapping.isPrimary = !hasPrimary;
+                    // Independent categories have no primary/associated distinction
+                    if (isIndependentCategory) {
+                        mapping.isPrimary = false;
+                    } else {
+                        // Check if this category already has a primary column
+                        const hasPrimary = calendar.columnMappings?.some(m =>
+                            m.columnName !== columnName &&
+                            m.groupType === groupType &&
+                            m.isPrimary
+                        );
+                        mapping.isPrimary = !hasPrimary;
+                    }
                 } else {
                     // Adding new mapping
                     calendar.columnMappings = calendar.columnMappings || [];
 
-                    // Check if this category already has a primary column
-                    const existingPrimaryForCategory = calendar.columnMappings?.find(m =>
-                        m.groupType === groupType &&
-                        m.isPrimary
-                    );
+                    if (isIndependentCategory) {
+                        // Independent category: no primary/associated
+                        calendar.columnMappings.push({
+                            columnName: columnName,
+                            groupType: groupType,
+                            isPrimary: false
+                        });
+                    } else {
+                        // Regular category: check for existing primary
+                        const existingPrimaryForCategory = calendar.columnMappings?.find(m =>
+                            m.groupType === groupType &&
+                            m.isPrimary
+                        );
 
-                    calendar.columnMappings.push({
-                        columnName: columnName,
-                        groupType: groupType,
-                        // This is primary only if no other column has this category as primary
-                        isPrimary: !existingPrimaryForCategory
-                    });
+                        calendar.columnMappings.push({
+                            columnName: columnName,
+                            groupType: groupType,
+                            // This is primary only if no other column has this category as primary
+                            isPrimary: !existingPrimaryForCategory
+                        });
+                    }
                 }
             }
 

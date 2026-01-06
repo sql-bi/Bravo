@@ -222,14 +222,17 @@ namespace Sqlbi.Bravo.Services
             // Build Sort By Column map for bidirectional assignment
             var sortByMap = BuildSortByColumnMap(table);
 
-            // Group mappings by type to handle TimeRelated specially
+            // Separate mappings by type:
+            // - Regular categories (TimeUnit): use primary/associated grouping with Sort By Column logic
+            // - TimeRelated: independent columns (no primary/associated)
+            // - Unassigned: independent columns (no primary/associated), stored in annotations only
             var regularMappings = calendar.ColumnMappings?.Where(m =>
                 m.GroupType != CalendarColumnGroupType.Unassigned &&
                 m.GroupType != CalendarColumnGroupType.TimeRelated).ToList();
             var timeRelatedMappings = calendar.ColumnMappings?.Where(m =>
                 m.GroupType == CalendarColumnGroupType.TimeRelated).ToList();
 
-            // Apply bidirectional Sort By Column assignments
+            // Apply bidirectional Sort By Column assignments ONLY for regular categories
             regularMappings = ApplyBidirectionalSortByAssignments(regularMappings, sortByMap, table);
 
             // Add regular column group mappings (TimeUnitColumnAssociation)
@@ -317,7 +320,10 @@ namespace Sqlbi.Bravo.Services
             // Build Sort By Column map for bidirectional assignment
             var sortByMap = BuildSortByColumnMap(table);
 
-            // Group mappings by type to handle TimeRelated specially
+            // Separate mappings by type:
+            // - Regular categories (TimeUnit): use primary/associated grouping with Sort By Column logic
+            // - TimeRelated: independent columns (no primary/associated)
+            // - Unassigned: independent columns (no primary/associated), stored in annotations only
             var regularMappings = calendar.ColumnMappings?.Where(m =>
                 m.GroupType != CalendarColumnGroupType.Unassigned &&
                 m.GroupType != CalendarColumnGroupType.TimeRelated &&
@@ -325,7 +331,7 @@ namespace Sqlbi.Bravo.Services
             var timeRelatedMappings = calendar.ColumnMappings?.Where(m =>
                 m.GroupType == CalendarColumnGroupType.TimeRelated).ToList();
 
-            // Apply bidirectional Sort By Column assignments
+            // Apply bidirectional Sort By Column assignments ONLY for regular categories
             regularMappings = ApplyBidirectionalSortByAssignments(regularMappings, sortByMap, table);
 
             // Add regular column group mappings (TimeUnitColumnAssociation)
