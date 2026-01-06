@@ -26,7 +26,6 @@ export class ManageCalendarsScene extends DocScene {
     mappingTable: Tabulator | null = null;
     mappingContainer: HTMLElement;
     tableSelector: HTMLSelectElement;
-    lastClickedElement: HTMLElement | null = null;
 
     constructor(id: string, container: HTMLElement, doc: Doc, type: PageType) {
         super(id, container, [doc.name, i18n(strings.ManageCalendars)], doc, type, true);
@@ -185,52 +184,47 @@ export class ManageCalendarsScene extends DocScene {
                     defaultValue: ""
                 },
                 cellClick: (e: any, cell: Tabulator.CellComponent) => {
-                    // Store clicked element for editorCheck
                     const target = e.target as HTMLElement;
-                    this.lastClickedElement = target;
 
                     console.log("Cell clicked, target:", target, "classes:", target.className);
 
-                    // Handle icon clicks immediately
+                    // Priority 1: Icon clicks (promote/remove)
                     if (target.classList.contains('promote-icon')) {
                         console.log("Promote icon clicked!");
+                        e.stopPropagation();
                         this.handlePromoteIconClick(target, calendarName);
+                        return;
                     } else if (target.classList.contains('primary-icon')) {
                         console.log("Primary icon clicked!");
+                        e.stopPropagation();
                         this.handlePrimaryIconClick(target, calendarName);
+                        return;
+                    }
+
+                    // Priority 2: Label clicks (open editor manually)
+                    if (target.classList.contains('category-label')) {
+                        console.log("Label clicked, opening editor manually");
+                        (cell as any).edit(true);
+                        return;
+                    }
+
+                    // Priority 3: Blank cell or any other click (open editor)
+                    // Check if this cell has a mapping (to avoid opening editor on implicit cells)
+                    const rowData = cell.getRow().getData();
+                    const columnName = rowData.columnName;
+                    const calendar = this.tableInfo?.calendars?.find(c => c.name === calendarName);
+                    const mapping = calendar?.columnMappings?.find(m => m.columnName === columnName);
+
+                    // Allow editing if: blank cell OR has explicit mapping (not implicit)
+                    if (!mapping || !mapping.isImplicitFromSortBy) {
+                        console.log("Cell/blank clicked, opening editor manually");
+                        (cell as any).edit(true);
                     }
                 },
                 cellEdited: (cell: Tabulator.CellComponent) => {
                     this.onCellEdited(calendarName, cell);
                 },
-                editable: (cell: Tabulator.CellComponent) => {
-                    // Check if this is an implicit mapping (not editable)
-                    const rowData = cell.getRow().getData();
-                    const columnName = rowData.columnName;
-                    const calendar = this.tableInfo?.calendars?.find(c => c.name === calendarName);
-                    const mapping = calendar?.columnMappings?.find(m => m.columnName === columnName);
-                    return !mapping?.isImplicitFromSortBy;
-                }
-            };
-
-            // Add editorCheck callback (not in TypeScript definitions, hence using 'any' type)
-            columnDef.editorCheck = (cell: Tabulator.CellComponent) => {
-                // Prevent editor from opening if an icon was clicked
-                if (this.lastClickedElement) {
-                    console.log("editorCheck, target:", this.lastClickedElement.className);
-
-                    // Don't open editor for icon clicks
-                    if (this.lastClickedElement.classList.contains('promote-icon') ||
-                        this.lastClickedElement.classList.contains('primary-icon')) {
-                        console.log("Preventing editor for icon click");
-                        this.lastClickedElement = null; // Clear for next click
-                        return false;
-                    }
-                }
-
-                // Allow editor for everything else
-                this.lastClickedElement = null; // Clear for next click
-                return true;
+                editable: false  // Disable automatic click-to-edit
             };
 
             columns.push(columnDef);
@@ -461,9 +455,20 @@ export class ManageCalendarsScene extends DocScene {
             let groupType: number | null = null;
 
             if (newValue === null || newValue === undefined || newValue === "") {
-                // Blank/null selection - remove the mapping
-                if (calendar.columnMappings) {
-                    calendar.columnMappings = calendar.columnMappings.filter(m => m.columnName !== columnName);
+                // Blank/null selection - remove the entire category assignment
+                // Find the current category for this column
+                const currentMapping = calendar.columnMappings?.find(m => m.columnName === columnName);
+
+                if (currentMapping && calendar.columnMappings) {
+                    const categoryToRemove = currentMapping.groupType;
+
+                    // Remove ALL mappings for this category (all related columns)
+                    // Filter out implicit mappings first, then remove all explicit mappings for this category
+                    calendar.columnMappings = calendar.columnMappings.filter(m =>
+                        !m.isImplicitFromSortBy && m.groupType !== categoryToRemove
+                    );
+
+                    console.log(`Removed all mappings for category ${categoryToRemove}`);
                 }
             } else {
                 // Parse the group type
