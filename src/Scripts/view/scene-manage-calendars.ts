@@ -56,9 +56,9 @@ export class ManageCalendarsScene extends DocScene {
                     </label>
                 </div>
                 <div class="legend">
-                    <div class="legend-item"><span class="legend-icon">★</span> Primary</div>
-                    <div class="legend-item"><span class="legend-icon">☆</span> Associated</div>
-                    <div class="legend-item"><span class="legend-icon">🔗</span> Linked</div>
+                    <div class="legend-item" title="Primary column for the related category"><span class="legend-icon">★</span> Primary</div>
+                    <div class="legend-item" title="Associated column for the related category"><span class="legend-icon">☆</span> Associated</div>
+                    <div class="legend-item" title="Implicitly associated column for the related category because it used to sort a primary or associated column"><span class="legend-icon">🔗</span> Linked</div>
                 </div>
             </div>
             <div class="mapping-grid">${Loader.html(true)}</div>
