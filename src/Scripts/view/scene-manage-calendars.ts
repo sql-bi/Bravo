@@ -56,9 +56,9 @@ export class ManageCalendarsScene extends DocScene {
                     </label>
                 </div>
                 <div class="legend">
-                    <div class="legend-item"><span class="legend-icon">★</span> Primary (groups only)</div>
-                    <div class="legend-item"><span class="legend-icon">☆</span> Associated (groups only)</div>
-                    <div class="legend-item"><span class="legend-icon">🔗</span> Linked (groups only)</div>
+                    <div class="legend-item"><span class="legend-icon">★</span> Primary</div>
+                    <div class="legend-item"><span class="legend-icon">☆</span> Associated</div>
+                    <div class="legend-item"><span class="legend-icon">🔗</span> Linked</div>
                 </div>
             </div>
             <div class="mapping-grid">${Loader.html(true)}</div>
