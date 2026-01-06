@@ -125,18 +125,31 @@ namespace Sqlbi.Bravo.Services
                     }
                 }
 
-                // Add implicit mappings from Sort By Column relationships
+                // Add implicit mappings ONLY for columns NOT already stored in TOM
+                // (i.e., sort columns when a display column is primary)
                 foreach (var mapping in columnMappings.ToList())
                 {
-                    if (mapping.ColumnName != null && sortByMap.TryGetValue(mapping.ColumnName, out var parentColumns))
+                    if (mapping.ColumnName == null || mapping.IsImplicitFromSortBy)
+                        continue;
+
+                    // Only check if this is a display column (has SortByColumn)
+                    var column = table.Columns.Find(mapping.ColumnName);
+                    if (column?.SortByColumn != null)
                     {
-                        // This column is used as a sort column by other columns
-                        foreach (var parentColumn in parentColumns)
+                        var sortColumnName = column.SortByColumn.Name;
+
+                        // Check if the sort column is already explicitly stored for this category
+                        var existingSortMapping = columnMappings.FirstOrDefault(m =>
+                            m.ColumnName == sortColumnName &&
+                            m.GroupType == mapping.GroupType &&
+                            !m.IsImplicitFromSortBy);
+
+                        if (existingSortMapping == null)
                         {
-                            // Add implicit mapping for the column that sorts by this column
+                            // Sort column not stored - add as implicit
                             columnMappings.Add(new ColumnMapping
                             {
-                                ColumnName = parentColumn,
+                                ColumnName = sortColumnName,
                                 GroupType = mapping.GroupType,
                                 IsPrimary = false,
                                 IsImplicitFromSortBy = true,
@@ -201,12 +214,18 @@ namespace Sqlbi.Bravo.Services
                 Description = calendar.Description
             };
 
+            // Build Sort By Column map for bidirectional assignment
+            var sortByMap = BuildSortByColumnMap(table);
+
             // Group mappings by type to handle TimeRelated specially
             var regularMappings = calendar.ColumnMappings?.Where(m =>
                 m.GroupType != CalendarColumnGroupType.Unassigned &&
                 m.GroupType != CalendarColumnGroupType.TimeRelated).ToList();
             var timeRelatedMappings = calendar.ColumnMappings?.Where(m =>
                 m.GroupType == CalendarColumnGroupType.TimeRelated).ToList();
+
+            // Apply bidirectional Sort By Column assignments
+            regularMappings = ApplyBidirectionalSortByAssignments(regularMappings, sortByMap, table);
 
             // Add regular column group mappings (TimeUnitColumnAssociation)
             // Group by TimeUnit to maintain primary/associated order
@@ -290,6 +309,9 @@ namespace Sqlbi.Bravo.Services
             // Clear and rebuild column groups
             existingCalendar.CalendarColumnGroups.Clear();
 
+            // Build Sort By Column map for bidirectional assignment
+            var sortByMap = BuildSortByColumnMap(table);
+
             // Group mappings by type to handle TimeRelated specially
             var regularMappings = calendar.ColumnMappings?.Where(m =>
                 m.GroupType != CalendarColumnGroupType.Unassigned &&
@@ -297,6 +319,9 @@ namespace Sqlbi.Bravo.Services
                 !m.IsImplicitFromSortBy).ToList(); // Don't include implicit mappings
             var timeRelatedMappings = calendar.ColumnMappings?.Where(m =>
                 m.GroupType == CalendarColumnGroupType.TimeRelated).ToList();
+
+            // Apply bidirectional Sort By Column assignments
+            regularMappings = ApplyBidirectionalSortByAssignments(regularMappings, sortByMap, table);
 
             // Add regular column group mappings (TimeUnitColumnAssociation)
             var groupedByCategory = regularMappings?
@@ -405,6 +430,113 @@ namespace Sqlbi.Bravo.Services
             }
 
             return map;
+        }
+
+        /// <summary>
+        /// Prepares column mappings for TOM storage
+        /// Stores primary + associated columns based on Sort By Column relationships
+        /// </summary>
+        private List<ColumnMapping> ApplyBidirectionalSortByAssignments(
+            List<ColumnMapping>? mappings,
+            Dictionary<string, List<string>> sortByMap,
+            TOM.Table table)
+        {
+            if (mappings == null || !mappings.Any())
+                return new List<ColumnMapping>();
+
+            var result = new List<ColumnMapping>();
+            var processedCategories = new HashSet<CalendarColumnGroupType>();
+
+            // Build reverse map: display column → sort column
+            var displayToSortMap = new Dictionary<string, string>();
+            foreach (var column in table.Columns)
+            {
+                if (column.SortByColumn != null)
+                {
+                    displayToSortMap[column.Name] = column.SortByColumn.Name;
+                }
+            }
+
+            foreach (var mapping in mappings)
+            {
+                if (mapping.ColumnName == null || processedCategories.Contains(mapping.GroupType))
+                    continue;
+
+                processedCategories.Add(mapping.GroupType);
+
+                var userChosenColumn = mapping.ColumnName;
+
+                // Check if user chose a sort column (used by display columns)
+                if (sortByMap.TryGetValue(userChosenColumn, out var displayColumns))
+                {
+                    // User chose a sort column (e.g., "Year Month Number")
+                    // Store: sort column (primary) + all display columns (associated)
+                    result.Add(new ColumnMapping
+                    {
+                        ColumnName = userChosenColumn,
+                        GroupType = mapping.GroupType,
+                        IsPrimary = true,
+                        IsImplicitFromSortBy = false
+                    });
+
+                    foreach (var displayCol in displayColumns)
+                    {
+                        result.Add(new ColumnMapping
+                        {
+                            ColumnName = displayCol,
+                            GroupType = mapping.GroupType,
+                            IsPrimary = false,
+                            IsImplicitFromSortBy = false
+                        });
+                    }
+                }
+                // Check if user chose a display column (has SortByColumn)
+                else if (displayToSortMap.TryGetValue(userChosenColumn, out var sortCol))
+                {
+                    // User chose a display column (e.g., "Year Month")
+                    // Store: display column (primary) + other display columns (associated)
+                    // Don't store: sort column (implicit via SortByColumn relationship)
+                    result.Add(new ColumnMapping
+                    {
+                        ColumnName = userChosenColumn,
+                        GroupType = mapping.GroupType,
+                        IsPrimary = true,
+                        IsImplicitFromSortBy = false
+                    });
+
+                    // Find other display columns that use the same sort column
+                    if (sortByMap.TryGetValue(sortCol, out var otherDisplayColumns))
+                    {
+                        foreach (var displayCol in otherDisplayColumns)
+                        {
+                            // Skip the primary column itself
+                            if (displayCol != userChosenColumn)
+                            {
+                                result.Add(new ColumnMapping
+                                {
+                                    ColumnName = displayCol,
+                                    GroupType = mapping.GroupType,
+                                    IsPrimary = false,
+                                    IsImplicitFromSortBy = false
+                                });
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    // No Sort By Column relationship - store as-is
+                    result.Add(new ColumnMapping
+                    {
+                        ColumnName = userChosenColumn,
+                        GroupType = mapping.GroupType,
+                        IsPrimary = true,
+                        IsImplicitFromSortBy = false
+                    });
+                }
+            }
+
+            return result;
         }
 
         /// <summary>

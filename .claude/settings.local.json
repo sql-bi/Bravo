@@ -8,7 +8,8 @@
       "Bash(dotnet restore:*)",
       "Bash(Select-String -Pattern \"error|warning\" -Context 0,1)",
       "Bash(npm run build:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(powershell.exe -Command \"dotnet build ''C:\\\\Users\\\\MarcoRusso\\\\source\\\\repos\\\\sql-bi\\\\Bravo\\\\src\\\\Bravo.csproj'' --configuration Debug\")"
     ]
   }
 }

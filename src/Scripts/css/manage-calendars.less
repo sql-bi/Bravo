@@ -260,6 +260,45 @@
                                     opacity: 0.6;
                                 }
 
+                                // Clickable icons for promote and primary
+                                .promote-icon,
+                                .primary-icon {
+                                    cursor: pointer !important;
+                                    transition: opacity 0.2s ease, transform 0.15s ease !important;
+                                    display: inline-block !important;
+                                    user-select: none !important;
+                                    padding: 2px !important;
+                                    margin-right: 4px !important;
+                                    pointer-events: auto !important;
+
+                                    &:hover {
+                                        opacity: 0.6 !important;
+                                        transform: scale(1.2) !important;
+                                    }
+
+                                    &:active {
+                                        transform: scale(0.9) !important;
+                                        opacity: 0.4 !important;
+                                    }
+                                }
+
+                                // Clickable category label (opens editor)
+                                .category-label {
+                                    cursor: pointer !important;
+                                    display: inline-block !important;
+                                    padding: 2px 4px !important;
+                                    border-radius: 3px !important;
+                                    transition: background-color 0.2s ease !important;
+
+                                    &:hover {
+                                        background-color: rgba(0, 0, 0, 0.05) !important;
+
+                                        .dark & {
+                                            background-color: rgba(255, 255, 255, 0.05) !important;
+                                        }
+                                    }
+                                }
+
                                 // Editor styling
                                 select {
                                     width: 100%;

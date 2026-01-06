@@ -26,6 +26,7 @@ export class ManageCalendarsScene extends DocScene {
     mappingTable: Tabulator | null = null;
     mappingContainer: HTMLElement;
     tableSelector: HTMLSelectElement;
+    lastClickedElement: HTMLElement | null = null;
 
     constructor(id: string, container: HTMLElement, doc: Doc, type: PageType) {
         super(id, container, [doc.name, i18n(strings.ManageCalendars)], doc, type, true);
@@ -133,7 +134,7 @@ export class ManageCalendarsScene extends DocScene {
             const calendarName = calendar.name || "";
             console.log("Adding calendar column:", calendarName);
 
-            columns.push({
+            const columnDef: any = {
                 title: calendarName,
                 field: `calendar_${calendarName}`,
                 width: 180,
@@ -158,24 +159,46 @@ export class ManageCalendarsScene extends DocScene {
 
                     let label = this.getGroupTypeLabel(groupType);
                     let className = "";
-                    let icon = "";
+                    let iconHtml = "";
 
                     if (mapping?.isImplicitFromSortBy) {
                         className = "implicit-mapping";
-                        icon = "🔗";
+                        // Make link icon clickable to promote to primary
+                        iconHtml = `<span class="promote-icon" data-column="${columnName}" data-calendar="${calendarName}" data-category="${groupType}" title="Click to make this the primary column">🔗</span> `;
                     } else if (mapping?.isPrimary && groupType !== CalendarColumnGroupType.TimeRelated) {
                         className = "primary-mapping";
-                        icon = "★";
+                        // Make star icon clickable to remove assignment
+                        iconHtml = `<span class="primary-icon" data-column="${columnName}" data-calendar="${calendarName}" title="Click to remove assignment">★</span> `;
                     } else if (mapping && !mapping.isPrimary && groupType !== CalendarColumnGroupType.TimeRelated) {
-                        icon = "☆";
+                        // Make associated star icon clickable to promote to primary
+                        iconHtml = `<span class="promote-icon" data-column="${columnName}" data-calendar="${calendarName}" data-category="${groupType}" title="Click to make this the primary column">☆</span> `;
                     }
 
-                    return `<span class="${className}">${icon ? icon + ' ' : ''}${label}</span>`;
+                    // Wrap label in clickable span that opens editor
+                    const labelHtml = `<span class="category-label">${label}</span>`;
+
+                    return `<span class="${className}">${iconHtml}${labelHtml}</span>`;
                 },
                 editor: "list" as any, // Type definition outdated, "list" is the new editor replacing deprecated "select"
                 editorParams: {
                     values: this.getColumnGroupTypeValues(),
                     defaultValue: ""
+                },
+                cellClick: (e: any, cell: Tabulator.CellComponent) => {
+                    // Store clicked element for editorCheck
+                    const target = e.target as HTMLElement;
+                    this.lastClickedElement = target;
+
+                    console.log("Cell clicked, target:", target, "classes:", target.className);
+
+                    // Handle icon clicks immediately
+                    if (target.classList.contains('promote-icon')) {
+                        console.log("Promote icon clicked!");
+                        this.handlePromoteIconClick(target, calendarName);
+                    } else if (target.classList.contains('primary-icon')) {
+                        console.log("Primary icon clicked!");
+                        this.handlePrimaryIconClick(target, calendarName);
+                    }
                 },
                 cellEdited: (cell: Tabulator.CellComponent) => {
                     this.onCellEdited(calendarName, cell);
@@ -188,7 +211,29 @@ export class ManageCalendarsScene extends DocScene {
                     const mapping = calendar?.columnMappings?.find(m => m.columnName === columnName);
                     return !mapping?.isImplicitFromSortBy;
                 }
-            });
+            };
+
+            // Add editorCheck callback (not in TypeScript definitions, hence using 'any' type)
+            columnDef.editorCheck = (cell: Tabulator.CellComponent) => {
+                // Prevent editor from opening if an icon was clicked
+                if (this.lastClickedElement) {
+                    console.log("editorCheck, target:", this.lastClickedElement.className);
+
+                    // Don't open editor for icon clicks
+                    if (this.lastClickedElement.classList.contains('promote-icon') ||
+                        this.lastClickedElement.classList.contains('primary-icon')) {
+                        console.log("Preventing editor for icon click");
+                        this.lastClickedElement = null; // Clear for next click
+                        return false;
+                    }
+                }
+
+                // Allow editor for everything else
+                this.lastClickedElement = null; // Clear for next click
+                return true;
+            };
+
+            columns.push(columnDef);
         }
 
         // Build row data
@@ -221,6 +266,97 @@ export class ManageCalendarsScene extends DocScene {
             layout: "fitData",
             height: "100%"
         });
+    }
+
+    async handlePromoteIconClick(target: HTMLElement, calendarName: string) {
+        const columnName = target.dataset.column;
+        const categoryStr = target.dataset.category;
+
+        if (!columnName || !categoryStr) return;
+
+        const category = parseInt(categoryStr);
+
+        console.log(`Promoting column "${columnName}" to primary for category ${category} in calendar "${calendarName}"`);
+
+        // Find the calendar
+        let calendar = this.tableInfo?.calendars?.find(c => c.name === calendarName);
+        if (!calendar) return;
+
+        // IMPORTANT: Implicit mappings are derived/computed, not stored
+        // We need to:
+        // 1. Remove all implicit mappings (they're not real)
+        // 2. Remove any existing explicit mapping for this category
+        // 3. Add a new explicit mapping for the clicked column
+
+        calendar.columnMappings = calendar.columnMappings || [];
+
+        // Filter out implicit mappings (not stored) and existing mappings for this category
+        calendar.columnMappings = calendar.columnMappings.filter(m =>
+            !m.isImplicitFromSortBy && m.groupType !== category
+        );
+
+        // Add new mapping for the clicked column as primary
+        calendar.columnMappings.push({
+            columnName: columnName,
+            groupType: category,
+            isPrimary: true,
+            isImplicitFromSortBy: false
+        });
+
+        console.log("Updated calendar mappings:", calendar.columnMappings);
+
+        // Save to backend
+        try {
+            await host.manageCalendarsUpdateCalendar({
+                report: <PBIDesktopReport>this.doc.sourceData,
+                tableName: this.config.options.tableName || "Date",
+                calendarName: calendarName,
+                calendar: calendar
+            });
+
+            // Reload to reflect changes
+            await this.loadTableCalendars();
+        } catch (error: any) {
+            logger.logError(error);
+            alert(`Error promoting column: ${error.message || error}`);
+        }
+    }
+
+    async handlePrimaryIconClick(target: HTMLElement, calendarName: string) {
+        const columnName = target.dataset.column;
+
+        if (!columnName) return;
+
+        console.log(`Removing assignment for column "${columnName}" in calendar "${calendarName}"`);
+
+        // Find the calendar
+        let calendar = this.tableInfo?.calendars?.find(c => c.name === calendarName);
+        if (!calendar) return;
+
+        // Remove the mapping (filter out implicit mappings first, then remove this column)
+        if (calendar.columnMappings) {
+            calendar.columnMappings = calendar.columnMappings.filter(m =>
+                !m.isImplicitFromSortBy && m.columnName !== columnName
+            );
+        }
+
+        console.log("Updated calendar mappings after removal:", calendar.columnMappings);
+
+        // Save to backend
+        try {
+            await host.manageCalendarsUpdateCalendar({
+                report: <PBIDesktopReport>this.doc.sourceData,
+                tableName: this.config.options.tableName || "Date",
+                calendarName: calendarName,
+                calendar: calendar
+            });
+
+            // Reload to reflect changes
+            await this.loadTableCalendars();
+        } catch (error: any) {
+            logger.logError(error);
+            alert(`Error removing assignment: ${error.message || error}`);
+        }
     }
 
     createCalendarHeaderMenu(calendarName: string): any[] {
