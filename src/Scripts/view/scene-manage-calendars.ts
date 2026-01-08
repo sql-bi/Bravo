@@ -129,6 +129,21 @@ export class ManageCalendarsScene extends DocScene {
     renderMappingGrid() {
         if (!this.tableInfo || !this.tableInfo.columns || !this.tableInfo.calendars) return;
 
+        // Clean up activeSuggestions: remove any that now have explicit assignments
+        // This handles the case where we auto-added columns (like auto-adding primary when accepting associated)
+        const suggestionsToRemove: string[] = [];
+        this.activeSuggestions.forEach(suggestionKey => {
+            const [calendarName, columnName] = suggestionKey.split(':');
+            const calendar = this.tableInfo?.calendars?.find(c => c.name === calendarName);
+            const hasExplicitAssignment = calendar?.columnMappings?.some(m =>
+                m.columnName === columnName && !m.isImplicitFromSortBy
+            );
+            if (hasExplicitAssignment) {
+                suggestionsToRemove.push(suggestionKey);
+            }
+        });
+        suggestionsToRemove.forEach(key => this.activeSuggestions.delete(key));
+
         this.mappingContainer.innerHTML = "";
 
         // Build column definitions
@@ -288,11 +303,39 @@ export class ManageCalendarsScene extends DocScene {
                     const suggestionKey = `${calendarName}:${columnName}`;
                     const isSuggested = this.activeSuggestions.has(suggestionKey);
 
-                    if (isSuggested && (target.classList.contains('suggested-mapping') ||
-                        target.parentElement?.classList.contains('suggested-mapping') ||
-                        (cell.getElement() as HTMLElement).classList.contains('suggested-cell'))) {
+                    // If this is a suggested cell, accept it with special handling based on what was clicked
+                    if (isSuggested) {
                         e.stopPropagation();
-                        this.acceptIndividualSuggestion(calendarName, columnName);
+
+                        // Check what part of the suggested cell was clicked
+                        // The suggestion is rendered as: <span class="suggested-mapping">IconChar CategoryName</span>
+                        // If user clicked on the icon part, accept with suggestion's isPrimary value
+                        // If user clicked elsewhere (text), accept as associated (forceAssociated = true)
+
+                        // Check if the click target or its parent is the suggested-mapping span
+                        let clickTarget = target;
+                        let clickedOnSuggestionSpan = clickTarget.classList.contains('suggested-mapping');
+                        if (!clickedOnSuggestionSpan && clickTarget.parentElement) {
+                            clickedOnSuggestionSpan = clickTarget.parentElement.classList.contains('suggested-mapping');
+                            if (clickedOnSuggestionSpan) {
+                                clickTarget = clickTarget.parentElement;
+                            }
+                        }
+
+                        // If we clicked on the suggested-mapping span, check the X position to determine icon vs text
+                        // Icon characters (★☆🔗) are at the start, roughly first 20 pixels
+                        let forceAssociated = true; // Default: accept as associated
+
+                        if (clickedOnSuggestionSpan) {
+                            const rect = clickTarget.getBoundingClientRect();
+                            const clickX = e.clientX - rect.left;
+                            // If clicked within first 20px, assume icon click
+                            if (clickX < 20) {
+                                forceAssociated = false; // Accept with suggestion's isPrimary value
+                            }
+                        }
+
+                        this.acceptIndividualSuggestion(calendarName, columnName, forceAssociated);
                         return;
                     }
 
@@ -593,6 +636,35 @@ export class ManageCalendarsScene extends DocScene {
         }
     }
 
+    /**
+     * Gets all columns that are linked to the given column via SortByColumn relationships.
+     * Returns an array of column names that should be updated together.
+     */
+    getLinkedColumnGroup(columnName: string): string[] {
+        if (!this.tableInfo?.columns) return [columnName];
+
+        const linkedColumns = new Set<string>([columnName]);
+        const column = this.tableInfo.columns.find(c => c.name === columnName);
+        if (!column) return [columnName];
+
+        // If this column is used as SortByColumn by others, include those display columns
+        const displayColumns = this.tableInfo.columns.filter(c => c.sortByColumnName === columnName);
+        displayColumns.forEach(dc => {
+            if (dc.name) linkedColumns.add(dc.name);
+        });
+
+        // If this column uses another column as SortByColumn, include that sort column and its other display columns
+        if (column.sortByColumnName) {
+            linkedColumns.add(column.sortByColumnName);
+            const otherDisplayColumns = this.tableInfo.columns.filter(c => c.sortByColumnName === column.sortByColumnName);
+            otherDisplayColumns.forEach(dc => {
+                if (dc.name) linkedColumns.add(dc.name);
+            });
+        }
+
+        return Array.from(linkedColumns);
+    }
+
     async onCellEdited(calendarName: string, cell: Tabulator.CellComponent) {
         const rowData = cell.getRow().getData();
         const columnName = rowData.columnName;
@@ -644,7 +716,29 @@ export class ManageCalendarsScene extends DocScene {
                 const isIndependentCategory = groupType === CalendarColumnGroupType.TimeRelated ||
                                               groupType === CalendarColumnGroupType.Unassigned;
 
-                // Update or add the mapping
+                // Get all linked columns (via SortByColumn relationships)
+                const linkedColumns = this.getLinkedColumnGroup(columnName);
+
+                // Remove old mappings for ALL linked columns if they had assignments
+                if (!isIndependentCategory) {
+                    // For regular categories, when changing one column in a linked group,
+                    // we need to remove old mappings for all linked columns
+                    const oldCategories = new Set<CalendarColumnGroupType>();
+                    linkedColumns.forEach(colName => {
+                        const oldMapping = calendar.columnMappings?.find(m => m.columnName === colName && !m.isImplicitFromSortBy);
+                        if (oldMapping?.groupType !== undefined) {
+                            oldCategories.add(oldMapping.groupType);
+                        }
+                    });
+
+                    // Remove all old category mappings for these linked columns
+                    calendar.columnMappings = calendar.columnMappings?.filter(m =>
+                        m.isImplicitFromSortBy ||
+                        (!linkedColumns.includes(m.columnName || '') || !oldCategories.has(m.groupType!))
+                    ) || [];
+                }
+
+                // Update or add the mapping for the clicked column
                 let mapping = calendar.columnMappings?.find(m => m.columnName === columnName);
                 if (mapping) {
                     // Update existing mapping
@@ -889,12 +983,21 @@ export class ManageCalendarsScene extends DocScene {
             }
         }
 
-        // Apply all suggestions
+        // Apply all suggestions, but only for cells that don't already have explicit assignments
         this.activeSuggestions.clear();
         for (const suggestion of this.tableInfo.smartCompletionSuggestions) {
             if (suggestion.calendarName && suggestion.columnName) {
-                const key = `${suggestion.calendarName}:${suggestion.columnName}`;
-                this.activeSuggestions.add(key);
+                // Check if this cell already has an explicit assignment
+                const calendar = this.tableInfo.calendars?.find(c => c.name === suggestion.calendarName);
+                const hasExplicitAssignment = calendar?.columnMappings?.some(m =>
+                    m.columnName === suggestion.columnName && !m.isImplicitFromSortBy
+                );
+
+                // Only add to active suggestions if there's no explicit assignment
+                if (!hasExplicitAssignment) {
+                    const key = `${suggestion.calendarName}:${suggestion.columnName}`;
+                    this.activeSuggestions.add(key);
+                }
             }
         }
 
@@ -902,7 +1005,7 @@ export class ManageCalendarsScene extends DocScene {
         this.renderMappingGrid();
     }
 
-    async acceptIndividualSuggestion(calendarName: string, columnName: string) {
+    async acceptIndividualSuggestion(calendarName: string, columnName: string, forceAssociated: boolean = false) {
         const suggestionKey = `${calendarName}:${columnName}`;
         if (!this.activeSuggestions.has(suggestionKey)) return;
 
@@ -916,20 +1019,98 @@ export class ManageCalendarsScene extends DocScene {
             const calendar = this.tableInfo?.calendars?.find(c => c.name === calendarName);
             if (!calendar) return;
 
+            // Determine if this should be primary
+            // If forceAssociated is true (clicked on text), make it associated (isPrimary = false)
+            // Otherwise use the suggestion's isPrimary value
+            let shouldBePrimary = forceAssociated ? false : (suggestion.isPrimary || false);
+
+            // IMPORTANT: If we're trying to add an associated column (shouldBePrimary = false),
+            // we MUST ensure there's already a primary column for this category.
+            // TOM doesn't allow associated columns without a primary.
+            if (!shouldBePrimary && suggestion.suggestedCategory !== CalendarColumnGroupType.TimeRelated) {
+                const categoryToCheck = suggestion.suggestedCategory;
+                const hasPrimaryForCategory = calendar.columnMappings?.some(m =>
+                    m.groupType === categoryToCheck && m.isPrimary && !m.isImplicitFromSortBy
+                );
+
+                if (!hasPrimaryForCategory) {
+                    // No primary exists for this category yet.
+                    // We need to auto-accept the primary suggestion for this category first.
+                    const primarySuggestion = this.tableInfo?.smartCompletionSuggestions?.find(s =>
+                        s.calendarName === calendarName &&
+                        s.suggestedCategory === categoryToCheck &&
+                        s.isPrimary === true
+                    );
+
+                    if (primarySuggestion && primarySuggestion.columnName) {
+                        // Add the primary column first
+                        calendar.columnMappings = calendar.columnMappings || [];
+                        calendar.columnMappings.push({
+                            columnName: primarySuggestion.columnName,
+                            groupType: categoryToCheck,
+                            isPrimary: true,
+                            isImplicitFromSortBy: false
+                        });
+                        // Remove the primary suggestion from activeSuggestions so it won't show yellow anymore
+                        const primarySuggestionKey = `${calendarName}:${primarySuggestion.columnName}`;
+                        this.activeSuggestions.delete(primarySuggestionKey);
+                    } else {
+                        // No primary suggestion found, so we must accept this as primary instead
+                        shouldBePrimary = true;
+                    }
+                }
+            }
+
             // Add or update mapping
             const existingMapping = calendar.columnMappings?.find(m => m.columnName === columnName);
             if (existingMapping) {
                 existingMapping.groupType = suggestion.suggestedCategory;
-                existingMapping.isPrimary = suggestion.isPrimary || false;
+                existingMapping.isPrimary = shouldBePrimary;
                 existingMapping.isImplicitFromSortBy = false;
             } else {
                 calendar.columnMappings = calendar.columnMappings || [];
                 calendar.columnMappings.push({
                     columnName: columnName,
                     groupType: suggestion.suggestedCategory,
-                    isPrimary: suggestion.isPrimary || false,
+                    isPrimary: shouldBePrimary,
                     isImplicitFromSortBy: false
                 });
+            }
+
+            // Auto-confirm linked columns (via SortByColumn relationships)
+            // If this column uses another column as SortByColumn, or if other columns use this as SortByColumn,
+            // we should auto-confirm those linked columns too
+            const linkedColumns = this.getLinkedColumnGroup(columnName);
+            for (const linkedColumnName of linkedColumns) {
+                if (linkedColumnName === columnName) continue; // Skip the column we just added
+
+                // Check if this linked column has a suggestion
+                const linkedSuggestionKey = `${calendarName}:${linkedColumnName}`;
+                const linkedSuggestion = this.tableInfo?.smartCompletionSuggestions?.find(s =>
+                    s.calendarName === calendarName && s.columnName === linkedColumnName
+                );
+
+                if (linkedSuggestion && linkedSuggestion.suggestedCategory !== undefined &&
+                    this.activeSuggestions.has(linkedSuggestionKey)) {
+                    // Auto-confirm this linked column with the same category
+                    const existingLinkedMapping = calendar.columnMappings?.find(m => m.columnName === linkedColumnName);
+                    if (existingLinkedMapping) {
+                        existingLinkedMapping.groupType = linkedSuggestion.suggestedCategory;
+                        existingLinkedMapping.isPrimary = linkedSuggestion.isPrimary || false;
+                        existingLinkedMapping.isImplicitFromSortBy = false;
+                    } else {
+                        calendar.columnMappings = calendar.columnMappings || [];
+                        calendar.columnMappings.push({
+                            columnName: linkedColumnName,
+                            groupType: linkedSuggestion.suggestedCategory,
+                            isPrimary: linkedSuggestion.isPrimary || false,
+                            isImplicitFromSortBy: false
+                        });
+                    }
+
+                    // Remove from activeSuggestions so yellow background disappears
+                    this.activeSuggestions.delete(linkedSuggestionKey);
+                }
             }
 
             // Filter out implicit mappings before sending to backend

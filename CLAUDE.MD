@@ -311,9 +311,72 @@ Before finalizing the implementation, the following scenarios must be tested tho
 
 ---
 
+### ✅ Phase 3: Smart Completion UX Refinements (COMPLETED)
+
+**Status:** Fully implemented and working
+
+**Implementation Details:**
+
+**Bug Fixes:**
+1. **Suggested cell click responsiveness**: Fixed issue where suggested cells with associated column icon (☆) were not responding to clicks
+   - Root cause: `activeSuggestions` Set included cells with explicit assignments
+   - Solution: Filter suggestions on `runSmartCompletion()` and clean up in `renderMappingGrid()`
+
+2. **Category change with SortByColumn relationships**: Fixed issue where changing category required manually blanking all linked columns first
+   - Added `getLinkedColumnGroup()` helper to find all columns linked via SortByColumn
+   - Modified `onCellEdited()` to remove old mappings for ALL linked columns together
+   - Backend regenerates implicit relationships automatically
+
+3. **Icon vs text click behavior**:
+   - Icon click (first 20px): Accepts suggestion with backend's `isPrimary` recommendation
+   - Text click: Forces `isPrimary = false` (accepts as associated)
+   - Auto-adds primary column when accepting associated without existing primary
+   - Clean up logic removes suggestions from `activeSuggestions` after assignment
+
+4. **Auto-confirm linked columns**: When confirming a suggested column, automatically confirm all linked columns (via SortByColumn) and remove yellow background from all
+
+**Files Modified:**
+- `src/Scripts/view/scene-manage-calendars.ts`:
+  - Lines 129-145: Added cleanup logic in `renderMappingGrid()` to remove suggestions with explicit assignments
+  - Lines 291-339: Enhanced click detection to differentiate icon vs text clicks (20px threshold)
+  - Lines 596-623: Added `getLinkedColumnGroup()` helper method
+  - Lines 647-667: Modified `onCellEdited()` to handle linked column group updates
+  - Lines 892-911: Filter suggestions to exclude columns with explicit assignments
+  - Lines 914-1037: Enhanced `acceptIndividualSuggestion()` with:
+    - Auto-add primary when accepting associated
+    - Auto-confirm linked columns via SortByColumn
+    - Remove suggestions from `activeSuggestions` for confirmed columns
+
+**Key Behavioral Improvements:**
+- Clicking on suggested cell text preserves existing primary assignments
+- Clicking on suggested cell icon accepts backend recommendation (may change primary)
+- SortByColumn relationships handled automatically (no manual blanking required)
+- Linked columns confirmed together (yellow background removed from entire group)
+
+---
+
 ## Known Issues / Limitations
 
-**None currently identified.** All Phase 1 and Phase 2 features implemented and working.
+### ⚠️ Issue: Category Reassignment Inconsistency
+
+**Status:** Under investigation for next session
+
+**Description:**
+When a column already assigned to a category is reassigned to a different category, the feature does not work correctly all the time. Need to investigate whether this is:
+1. Specific to the smart completion/suggestion workflow
+2. A general problem that occurs regardless of how the initial assignment was made
+
+**Investigation needed:**
+- Test category reassignment after manual assignment (no suggestions)
+- Test category reassignment after suggestion acceptance
+- Test category reassignment with and without SortByColumn relationships
+- Check if the issue is in frontend logic (`onCellEdited()`) or backend processing
+- Verify behavior with independent categories (TimeRelated, Unassigned) vs regular categories
+
+**Related Code:**
+- `src/Scripts/view/scene-manage-calendars.ts:625-763` (`onCellEdited()` method)
+- `src/Scripts/view/scene-manage-calendars.ts:596-623` (`getLinkedColumnGroup()` helper)
+- Backend: `src/Services/ManageCalendarsService.cs` (category update logic)
 
 ---
 
