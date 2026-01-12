@@ -210,3 +210,98 @@ When a column already assigned to a category is reassigned to a different catego
 **Related Code:**
 - `src/Scripts/view/scene-manage-calendars.ts` - `onCellEdited()` method, `getLinkedColumnGroup()` helper
 - `src/Services/ManageCalendarsService.cs` - category update logic
+
+---
+
+## Refactoring Plan
+
+A comprehensive refactoring plan has been created to improve code quality, architecture alignment, and maintainability of the Manage Calendars feature.
+
+**Master Plan:** See [REFACTORING-PLAN.md](REFACTORING-PLAN.md) for overview and implementation phases.
+
+**Individual Action Plans:** See `docs/refactoring/` for detailed implementation steps:
+
+### High Priority (Production Readiness)
+
+1. **[R1 - Complete Localization](docs/refactoring/R1-complete-localization.md)**
+   - Add missing i18n strings for tooltips and UI labels
+   - Fix hardcoded English text in 6 locations
+   - Time: ~30 minutes
+
+2. **[R2 - Standardize Color Definitions](docs/refactoring/R2-standardize-colors.md)**
+   - Replace hardcoded hex colors with design system variables
+   - Use `@warning-back-color` and `@good-color` from colors.less
+   - Time: ~15 minutes
+
+3. **[R3 - Add CancellationToken Support](docs/refactoring/R3-cancellation-token.md)**
+   - Add cancellation support to controller and service methods
+   - Align with ManageDates pattern
+   - Time: ~45 minutes
+
+### Medium Priority (Architecture & Maintainability)
+
+4. **[R4 - Refactor Monolithic Scene](docs/refactoring/R4-refactor-scene.md)**
+   - Break 900+ line scene into modular components
+   - Create header, grid, and suggestion components
+   - Extract edit and icon handlers
+   - Time: ~4 hours
+
+5. **[R5 - Resolve CSS Nesting Technical Debt](docs/refactoring/R5-css-nesting.md)**
+   - Implement BEM methodology for icon styles
+   - Remove shallow nesting workaround (lines 520-541)
+   - Time: ~1 hour
+
+6. **[R6 - Standardize Controller Routing](docs/refactoring/R6-controller-routing.md)**
+   - Document routing convention decision
+   - Create ADR for feature-specific routing pattern
+   - Time: ~15 minutes
+
+### Low Priority (Code Quality)
+
+7. **[R7 - Extract Business Logic from Scene](docs/refactoring/R7-extract-business-logic.md)**
+   - Create validation, suggestions, and mappings helper modules
+   - Improve testability and reusability
+   - Time: ~2 hours
+
+8. **[R8 - Add Unit Tests](docs/refactoring/R8-unit-tests.md)**
+   - Create 40+ unit tests for helpers
+   - Establish 80% code coverage target
+   - Time: ~3 hours
+
+9. **[R9 - Improve Type Safety](docs/refactoring/R9-type-safety.md)**
+   - Add discriminated unions for mapping states
+   - Enable TypeScript strict mode
+   - Add type guards for safe narrowing
+   - Time: ~1.5 hours
+
+### Optional (Nice-to-Have)
+
+10. **[R10 - Performance Optimization](docs/refactoring/R10-performance.md)**
+    - Add memoization for sort and suggestions
+    - Implement incremental grid updates
+    - Enable virtual scrolling for large tables
+    - Time: ~2 hours
+
+11. **[R11 - Accessibility Improvements](docs/refactoring/R11-accessibility.md)**
+    - Add ARIA labels and keyboard navigation
+    - Implement WCAG 2.1 Level AA compliance
+    - Add screen reader support
+    - Time: ~2 hours
+
+12. **[R12 - Documentation Improvements](docs/refactoring/R12-documentation.md)**
+    - Add JSDoc comments to all public methods
+    - Create ADRs for key architectural decisions
+    - Write developer guides for common tasks
+    - Time: ~1.5 hours
+
+**Total Estimated Time:**
+- Phase 1 (High Priority): ~1.5 hours
+- Phase 2 (Medium Priority): ~5 hours
+- Phase 3 (Low Priority): ~6.5 hours
+- Phase 4 (Optional): ~5.5 hours
+
+**Implementation Strategy:**
+- Each action can be implemented independently (except where dependencies noted)
+- Review and approve each action plan before implementation
+- Commit changes with action ID reference (e.g., "R1: Complete localization")
+- Run tests after each action to ensure no regression
