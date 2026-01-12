@@ -380,28 +380,6 @@
                                     opacity: 0.6;
                                 }
 
-                                // Clickable icons for promote and primary
-                                .promote-icon,
-                                .primary-icon {
-                                    cursor: pointer !important;
-                                    transition: opacity 0.2s ease, transform 0.15s ease !important;
-                                    display: inline-block !important;
-                                    user-select: none !important;
-                                    padding: 2px !important;
-                                    margin-right: 4px !important;
-                                    pointer-events: auto !important;
-
-                                    &:hover {
-                                        opacity: 0.6 !important;
-                                        transform: scale(1.2) !important;
-                                    }
-
-                                    &:active {
-                                        transform: scale(0.9) !important;
-                                        opacity: 0.4 !important;
-                                    }
-                                }
-
                                 // Clickable category label (opens editor)
                                 .category-label {
                                     cursor: pointer !important;
@@ -511,6 +489,51 @@
 
                 .dark & {
                     color: @error-color-dark;
+                }
+            }
+        }
+    }
+}
+
+// Clickable icons for promote and primary - defined at top level to avoid deep nesting issues
+.manage-calendars {
+    .tabulator-cell {
+        position: relative;
+
+        // Clickable icons for promote and primary
+        .promote-icon,
+        .primary-icon {
+            cursor: pointer !important;
+            // Slower transition when returning to normal size for smoother effect
+            transition: opacity 0.2s ease, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+            display: inline-block !important;
+            user-select: none !important;
+            // Expanded padding creates larger hover area around the icon
+            padding: 6px !important;
+            margin-right: 4px !important;
+            pointer-events: auto !important;
+            transform-origin: center center !important;
+
+            &:hover {
+                opacity: 0.7 !important;
+                transform: scale(2.0) !important;
+            }
+
+            &:active {
+                transform: scale(0.85) !important;
+                opacity: 0.3 !important;
+                transition: opacity 0.1s ease, transform 0.1s ease !important;
+            }
+        }
+
+        // Reset opacity for icons inside implicit-mapping to prevent inheritance
+        .implicit-mapping {
+            .promote-icon,
+            .primary-icon {
+                opacity: 1 !important;
+
+                &:hover {
+                    opacity: 0.7 !important;
                 }
             }
         }

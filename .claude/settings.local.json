@@ -10,7 +10,11 @@
       "Bash(npm run build:*)",
       "Bash(cat:*)",
       "Bash(powershell.exe -Command \"dotnet build ''C:\\\\Users\\\\MarcoRusso\\\\source\\\\repos\\\\sql-bi\\\\Bravo\\\\src\\\\Bravo.csproj'' --configuration Debug\")",
-      "Bash(Select-String -Pattern \"error|warning|succeeded\" -Context 0,1)"
+      "Bash(Select-String -Pattern \"error|warning|succeeded\" -Context 0,1)",
+      "Bash(dir:*)",
+      "Bash(awk:*)",
+      "Bash(tr:*)",
+      "Bash(powershell.exe -Command \"dotnet build ''src\\\\Bravo.csproj'' --configuration Release\")"
     ]
   }
 }
