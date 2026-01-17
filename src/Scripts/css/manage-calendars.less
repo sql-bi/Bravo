@@ -334,6 +334,8 @@
                                 padding: 10px;
                                 border-right: 1px solid @border-color;
                                 background: transparent;
+                                line-height: 1.4; // Fixed line height to prevent row expansion
+                                vertical-align: middle;
 
                                 .dark & {
                                     border-color: @border-color-dark;
@@ -381,6 +383,7 @@
                                 .primary-mapping {
                                     font-weight: 600;
                                     color: @text-color;
+                                    line-height: 1.4;
 
                                     .dark & {
                                         color: @text-color-dark;
@@ -390,6 +393,7 @@
                                 .implicit-mapping {
                                     font-style: italic;
                                     opacity: 0.6;
+                                    line-height: 1.4;
                                 }
 
                                 // Clickable category label (opens editor)
@@ -399,6 +403,8 @@
                                     padding: 2px 4px !important;
                                     border-radius: 3px !important;
                                     transition: background-color 0.2s ease !important;
+                                    line-height: 1.4 !important;
+                                    vertical-align: middle !important;
 
                                     &:hover {
                                         background-color: rgba(0, 0, 0, 0.05) !important;
@@ -427,6 +433,8 @@
                                     cursor: pointer !important;
                                     transition: background-color 0.2s ease !important;
                                     font-weight: 500 !important;
+                                    line-height: 1.4 !important;
+                                    vertical-align: middle !important;
 
                                     .dark & {
                                         background-color: @warning-back-color-dark !important;
@@ -521,11 +529,12 @@
             transition: opacity 0.2s ease, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
             display: inline-block !important;
             user-select: none !important;
-            // Expanded padding creates larger hover area around the icon
-            padding: 6px !important;
+            // No padding to prevent row height expansion - hover area handled by transform
             margin-right: 4px !important;
             pointer-events: auto !important;
             transform-origin: center center !important;
+            line-height: 1 !important;
+            vertical-align: middle !important;
 
             &:hover {
                 opacity: 0.7 !important;
