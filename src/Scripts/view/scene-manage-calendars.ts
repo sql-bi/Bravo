@@ -267,7 +267,7 @@ export class ManageCalendarsScene extends DocScene {
                         if (mapping?.isImplicitFromSortBy) {
                             if (!isSuggested) className = "implicit-mapping";
                             // Make link icon clickable to promote to primary
-                            iconHtml = `<span class="promote-icon" data-column="${columnName}" data-calendar="${calendarName}" data-category="${groupType}" title="${i18n(strings.manageCalendarsPromoteTooltip)}">🔗</span> `;
+                            iconHtml = `<span class="promote-icon" data-column="${columnName}" data-calendar="${calendarName}" data-category="${groupType}" title="${i18n(strings.manageCalendarsImplicitColumnTooltip)}">🔗</span> `;
                         } else if (mapping?.isPrimary) {
                             if (!isSuggested) className = "primary-mapping";
                             // Make star icon clickable to remove assignment

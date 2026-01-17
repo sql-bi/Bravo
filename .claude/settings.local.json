@@ -22,7 +22,10 @@
       "Bash(npm run build:UI:*)",
       "Bash(dotnet clean:*)",
       "Bash(npm run build-css:*)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(for key in manageCalendarsSmartCompletionTooltip manageCalendarsColumnHeaderValues manageCalendarsPromoteTooltip manageCalendarsRemoveAssignmentTooltip manageCalendarsImplicitColumnTooltip manageCalendarsCardinalityWarningTooltip)",
+      "Bash(do grep -q \"$key\" \"C:\\\\Users\\\\MarcoRusso\\\\source\\\\repos\\\\sql-bi\\\\Bravo\\\\src\\\\Scripts\\\\model\\\\strings.ts\")",
+      "Bash(echo:*)"
     ]
   }
 }
