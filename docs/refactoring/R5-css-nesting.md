@@ -1,9 +1,10 @@
-# R5 - Resolve CSS Nesting Technical Debt
+# R5 - Resolve CSS Nesting Technical Debt ✅ COMPLETED
 
 **Priority:** Medium (Architecture & Maintainability)
 **Complexity:** Medium
 **Estimated Time:** 1 hour
 **Dependencies:** R2 (Standardize color definitions)
+**Status:** Completed on 2026-01-17
 
 ---
 
@@ -460,3 +461,27 @@ If issues arise:
 ✅ No visual regression
 ✅ Code is more maintainable
 ✅ Workaround removed (lines 520-541 deleted)
+
+---
+
+## Implementation Summary (Completed 2026-01-17)
+
+### Changes Made
+
+**CSS (`manage-calendars.less`):**
+- Added BEM classes: `.manage-calendars__cell-icon`, `.manage-calendars__cell-label`, `.manage-calendars__warning-icon`, `.manage-calendars__suggested-mapping`
+- Added modifiers: `--primary`, `--associated`, `--linked`, `--implicit`
+- Removed old deeply nested styles (`.primary-mapping`, `.implicit-mapping`, `.category-label`, etc.)
+- Fixed row height regression by using `display: inline` and `padding: 0 4px`
+- Removed bold styling from primary labels (icon ★ is sufficient indicator)
+
+**TypeScript (`scene-manage-calendars.ts`):**
+- Updated HTML generation to use BEM class names
+- Updated click detection selectors for icons and labels
+- Fixed suggestion filtering to exclude both explicit AND implicit assignments
+- Added italic styling class for suggested linked columns
+
+### Key Decisions
+- No bold for primary labels - the ★ icon is sufficient
+- Linked columns always display in italic (both suggested and confirmed)
+- Smart completion excludes already-assigned columns (explicit or implicit)

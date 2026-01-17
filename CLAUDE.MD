@@ -116,8 +116,38 @@ Store explicit unassignment in `Table.Annotations["SQLBI_BRAVO_CalendarAnnotatio
   - Includes sortByColumnName in ColumnInfo interface
 - Sorting: `src/Scripts/helpers/calendar-sorting.ts`
 - Styles: `src/Scripts/css/manage-calendars.less`
-  - Icon hover effects defined at shallow nesting level (lines 520-541)
-  - To avoid CSS nesting depth issues, icon styles use only 3 levels: `.manage-calendars → .tabulator-cell → .promote-icon`
+  - Uses BEM methodology for flat CSS selectors (see "CSS BEM Classes" section)
+  - Icon styles use flat `.manage-calendars__cell-icon` classes to avoid nesting depth issues
+
+## Controller Routing Standard
+
+All feature controllers in Bravo follow a standardized routing pattern for consistency and traceability.
+
+**Standard Pattern:**
+```csharp
+[Route("{FeatureName}/[action]")]
+public class {FeatureName}Controller : ControllerBase
+{
+    [HttpPost]
+    [ActionName("{ActionName}")]
+    public IActionResult {ActionName}([FromBody] Request request, CancellationToken cancellationToken)
+    {
+        // Implementation
+    }
+}
+```
+
+**Examples:**
+- ManageCalendars: `POST /ManageCalendars/GetTableCalendarsForReport`
+- ManageDates: `POST /ManageDates/GetConfigurationsForReport`
+
+**Benefits:**
+- Feature ownership visible in URL
+- Easy to trace in logs and monitoring
+- Prevents action name collisions across features
+- Self-documenting API structure
+
+**See:** [ADR-001: Controller Routing Pattern](docs/architecture/ADR-001-controller-routing.md) for full decision rationale and compliance guidelines.
 
 **UI Components:**
 - Tabulator grid with column name, sample values, and one column per calendar
@@ -162,28 +192,31 @@ Store explicit unassignment in `Table.Annotations["SQLBI_BRAVO_CalendarAnnotatio
 
 ## Implementation Notes
 
-### CSS Nesting Depth Issue
-**Problem**: Deep CSS nesting (9+ levels) caused icon hover styles to be dropped during compilation.
+### CSS BEM Classes
+Icon and label styles use BEM (Block Element Modifier) methodology for flat CSS selectors, avoiding deep nesting issues:
 
-**Solution**: Icon styles moved to shallow nesting level at end of file:
 ```less
-.manage-calendars {
-    .tabulator-cell {
-        .promote-icon,
-        .primary-icon {
-            // Hover effects here
-        }
-    }
-}
+// Block: .manage-calendars (existing)
+// Elements with flat selectors:
+.manage-calendars__cell-icon          // Base icon (★☆🔗)
+.manage-calendars__cell-icon--primary // Primary modifier
+.manage-calendars__cell-icon--associated // Associated modifier
+.manage-calendars__cell-icon--linked  // Linked modifier
+.manage-calendars__cell-label         // Category label
+.manage-calendars__cell-label--primary // Primary label (no special styling)
+.manage-calendars__cell-label--implicit // Italic implicit label
+.manage-calendars__warning-icon       // Cardinality warning ⚠️
+.manage-calendars__suggested-mapping  // Yellow suggestion span
 ```
 
-This reduces nesting from 9 levels to 3 levels, ensuring styles compile correctly.
+**Benefits**: Flat selectors avoid CSS compilation depth limits, are easier to debug, and follow BEM naming conventions.
 
 ### Smart Completion Technical Details
-- Yellow background uses inline styles (`backgroundColor = '#FFFACD'`) as fallback
+- Yellow background applied via `.manage-calendars__suggested-mapping` class
 - Implicit mappings filtered before sending to backend (backend regenerates based on SortByColumn)
 - `isColumnImplicitLinkedInSuggestions()` helper determines 🔗 icon display during suggestion phase
-- Suggestions exclude columns with explicit assignments (filtered in `renderMappingGrid()` and `runSmartCompletion()`)
+- Suggestions exclude columns with any assignments (explicit or implicit) - filtered in `renderMappingGrid()` and `runSmartCompletion()`
+- Suggested linked columns display in italic (same as confirmed linked columns)
 
 ### Expected Cardinality Formulas
 
@@ -246,12 +279,12 @@ A comprehensive refactoring plan has been created to improve code quality, archi
    - Extract edit and icon handlers
    - Time: ~4 hours
 
-5. **[R5 - Resolve CSS Nesting Technical Debt](docs/refactoring/R5-css-nesting.md)**
-   - Implement BEM methodology for icon styles
-   - Remove shallow nesting workaround (lines 520-541)
+5. **✅ [R5 - Resolve CSS Nesting Technical Debt](docs/refactoring/R5-css-nesting.md)** - COMPLETED
+   - Implemented BEM methodology for icon styles
+   - Removed old shallow nesting workaround
    - Time: ~1 hour
 
-6. **[R6 - Standardize Controller Routing](docs/refactoring/R6-controller-routing.md)**
+6. **✅ [R6 - Standardize Controller Routing](docs/refactoring/R6-controller-routing.md)** - COMPLETED
    - Document routing convention decision
    - Create ADR for feature-specific routing pattern
    - Time: ~15 minutes

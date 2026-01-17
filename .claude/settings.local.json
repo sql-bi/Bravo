@@ -25,7 +25,8 @@
       "Bash(npm run:*)",
       "Bash(for key in manageCalendarsSmartCompletionTooltip manageCalendarsColumnHeaderValues manageCalendarsPromoteTooltip manageCalendarsRemoveAssignmentTooltip manageCalendarsImplicitColumnTooltip manageCalendarsCardinalityWarningTooltip)",
       "Bash(do grep -q \"$key\" \"C:\\\\Users\\\\MarcoRusso\\\\source\\\\repos\\\\sql-bi\\\\Bravo\\\\src\\\\Scripts\\\\model\\\\strings.ts\")",
-      "Bash(echo:*)"
+      "Bash(echo:*)",
+      "Bash(npx tsc:*)"
     ]
   }
 }

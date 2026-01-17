@@ -137,16 +137,16 @@ export class ManageCalendarsScene extends DocScene {
     renderMappingGrid() {
         if (!this.tableInfo || !this.tableInfo.columns || !this.tableInfo.calendars) return;
 
-        // Clean up activeSuggestions: remove any that now have explicit assignments
+        // Clean up activeSuggestions: remove any that now have any assignments (explicit or implicit)
         // This handles the case where we auto-added columns (like auto-adding primary when accepting associated)
         const suggestionsToRemove: string[] = [];
         this.activeSuggestions.forEach(suggestionKey => {
             const [calendarName, columnName] = suggestionKey.split(':');
             const calendar = this.tableInfo?.calendars?.find(c => c.name === calendarName);
-            const hasExplicitAssignment = calendar?.columnMappings?.some(m =>
-                m.columnName === columnName && !m.isImplicitFromSortBy
+            const hasAnyAssignment = calendar?.columnMappings?.some(m =>
+                m.columnName === columnName
             );
-            if (hasExplicitAssignment) {
+            if (hasAnyAssignment) {
                 suggestionsToRemove.push(suggestionKey);
             }
         });
@@ -234,14 +234,16 @@ export class ManageCalendarsScene extends DocScene {
                                 const isImplicitLinked = this.isColumnImplicitLinkedInSuggestions(columnName, calendarName, suggestion.suggestedCategory);
 
                                 let iconHtml: string;
+                                let labelClass = "";
                                 if (isImplicitLinked) {
-                                    iconHtml = '<span class="promote-icon">🔗</span>';
+                                    iconHtml = '<span class="manage-calendars__cell-icon manage-calendars__cell-icon--linked">🔗</span>';
+                                    labelClass = " manage-calendars__cell-label--implicit";
                                 } else if (suggestion.isPrimary) {
-                                    iconHtml = '<span class="primary-icon">★</span>';
+                                    iconHtml = '<span class="manage-calendars__cell-icon manage-calendars__cell-icon--primary">★</span>';
                                 } else {
-                                    iconHtml = '<span class="promote-icon">☆</span>';
+                                    iconHtml = '<span class="manage-calendars__cell-icon manage-calendars__cell-icon--associated">☆</span>';
                                 }
-                                return `<span class="suggested-mapping">${iconHtml} ${label}</span>`;
+                                return `<span class="manage-calendars__suggested-mapping${labelClass}">${iconHtml} ${label}</span>`;
                             }
                         }
                         return '<span class="blank-mapping"></span>';
@@ -255,7 +257,7 @@ export class ManageCalendarsScene extends DocScene {
                     const mapping = calendar?.columnMappings?.find(m => m.columnName === columnName);
 
                     let label = this.getGroupTypeLabel(groupType);
-                    let className = "";
+                    let labelClass = "manage-calendars__cell-label";
                     let iconHtml = "";
 
                     // Independent categories (TimeRelated, Unassigned) have no icons
@@ -265,16 +267,16 @@ export class ManageCalendarsScene extends DocScene {
                     if (!isIndependentCategory) {
                         // Regular categories show icons based on role
                         if (mapping?.isImplicitFromSortBy) {
-                            if (!isSuggested) className = "implicit-mapping";
+                            if (!isSuggested) labelClass += " manage-calendars__cell-label--implicit";
                             // Make link icon clickable to promote to primary
-                            iconHtml = `<span class="promote-icon" data-column="${columnName}" data-calendar="${calendarName}" data-category="${groupType}" title="${i18n(strings.manageCalendarsImplicitColumnTooltip)}">🔗</span> `;
+                            iconHtml = `<span class="manage-calendars__cell-icon manage-calendars__cell-icon--linked" data-column="${columnName}" data-calendar="${calendarName}" data-category="${groupType}" title="${i18n(strings.manageCalendarsImplicitColumnTooltip)}">🔗</span> `;
                         } else if (mapping?.isPrimary) {
-                            if (!isSuggested) className = "primary-mapping";
+                            if (!isSuggested) labelClass += " manage-calendars__cell-label--primary";
                             // Make star icon clickable to remove assignment
-                            iconHtml = `<span class="primary-icon" data-column="${columnName}" data-calendar="${calendarName}" title="${i18n(strings.manageCalendarsRemoveAssignmentTooltip)}">★</span> `;
+                            iconHtml = `<span class="manage-calendars__cell-icon manage-calendars__cell-icon--primary" data-column="${columnName}" data-calendar="${calendarName}" title="${i18n(strings.manageCalendarsRemoveAssignmentTooltip)}">★</span> `;
                         } else if (mapping && !mapping.isPrimary) {
                             // Make associated star icon clickable to promote to primary
-                            iconHtml = `<span class="promote-icon" data-column="${columnName}" data-calendar="${calendarName}" data-category="${groupType}" title="${i18n(strings.manageCalendarsPromoteTooltip)}">☆</span> `;
+                            iconHtml = `<span class="manage-calendars__cell-icon manage-calendars__cell-icon--associated" data-column="${columnName}" data-calendar="${calendarName}" data-category="${groupType}" title="${i18n(strings.manageCalendarsPromoteTooltip)}">☆</span> `;
                         }
                     }
 
@@ -294,13 +296,13 @@ export class ManageCalendarsScene extends DocScene {
                             .replace('{actualCardinality}', warning.actualCardinality.toString())
                             .replace('{expectedCardinality}', expectedDesc)
                             .replace('{categoryName}', this.getGroupTypeLabel(warning.category));
-                        warningHtml = ` <span class="cardinality-warning-icon" title="${tooltipText}">⚠️</span>`;
+                        warningHtml = ` <span class="manage-calendars__warning-icon" title="${tooltipText}">⚠️</span>`;
                     }
 
                     // Wrap label in clickable span that opens editor
-                    const labelHtml = `<span class="category-label">${label}</span>`;
+                    const labelHtml = `<span class="${labelClass}">${label}</span>`;
 
-                    return `<span class="${className}">${iconHtml}${labelHtml}${warningHtml}</span>`;
+                    return `${iconHtml}${labelHtml}${warningHtml}`;
                 },
                 editor: "list" as any, // Type definition outdated, "list" is the new editor replacing deprecated "select"
                 editorParams: {
@@ -321,15 +323,15 @@ export class ManageCalendarsScene extends DocScene {
                         e.stopPropagation();
 
                         // Check what part of the suggested cell was clicked
-                        // The suggestion is rendered as: <span class="suggested-mapping">IconChar CategoryName</span>
+                        // The suggestion is rendered as: <span class="manage-calendars__suggested-mapping">IconChar CategoryName</span>
                         // If user clicked on the icon part, accept with suggestion's isPrimary value
                         // If user clicked elsewhere (text), accept as associated (forceAssociated = true)
 
                         // Check if the click target or its parent is the suggested-mapping span
                         let clickTarget = target;
-                        let clickedOnSuggestionSpan = clickTarget.classList.contains('suggested-mapping');
+                        let clickedOnSuggestionSpan = clickTarget.classList.contains('manage-calendars__suggested-mapping');
                         if (!clickedOnSuggestionSpan && clickTarget.parentElement) {
-                            clickedOnSuggestionSpan = clickTarget.parentElement.classList.contains('suggested-mapping');
+                            clickedOnSuggestionSpan = clickTarget.parentElement.classList.contains('manage-calendars__suggested-mapping');
                             if (clickedOnSuggestionSpan) {
                                 clickTarget = clickTarget.parentElement;
                             }
@@ -353,18 +355,22 @@ export class ManageCalendarsScene extends DocScene {
                     }
 
                     // Priority 1: Icon clicks (promote/remove)
-                    if (target.classList.contains('promote-icon')) {
+                    // Linked and associated icons trigger promote action
+                    if (target.classList.contains('manage-calendars__cell-icon--linked') ||
+                        target.classList.contains('manage-calendars__cell-icon--associated')) {
                         e.stopPropagation();
                         this.handlePromoteIconClick(target, calendarName);
                         return;
-                    } else if (target.classList.contains('primary-icon')) {
+                    }
+                    // Primary icon triggers remove action
+                    if (target.classList.contains('manage-calendars__cell-icon--primary')) {
                         e.stopPropagation();
                         this.handlePrimaryIconClick(target, calendarName);
                         return;
                     }
 
                     // Priority 2: Label clicks (open editor manually)
-                    if (target.classList.contains('category-label')) {
+                    if (target.classList.contains('manage-calendars__cell-label')) {
                         (cell as any).edit(true);
                         return;
                     }
@@ -1001,18 +1007,18 @@ export class ManageCalendarsScene extends DocScene {
             }
         }
 
-        // Apply all suggestions, but only for cells that don't already have explicit assignments
+        // Apply all suggestions, but only for cells that don't already have any assignment (explicit or implicit)
         this.activeSuggestions.clear();
         for (const suggestion of this.tableInfo.smartCompletionSuggestions) {
             if (suggestion.calendarName && suggestion.columnName) {
-                // Check if this cell already has an explicit assignment
+                // Check if this cell already has any assignment (explicit or implicit)
                 const calendar = this.tableInfo.calendars?.find(c => c.name === suggestion.calendarName);
-                const hasExplicitAssignment = calendar?.columnMappings?.some(m =>
-                    m.columnName === suggestion.columnName && !m.isImplicitFromSortBy
+                const hasAnyAssignment = calendar?.columnMappings?.some(m =>
+                    m.columnName === suggestion.columnName
                 );
 
-                // Only add to active suggestions if there's no explicit assignment
-                if (!hasExplicitAssignment) {
+                // Only add to active suggestions if there's no assignment at all
+                if (!hasAnyAssignment) {
                     const key = `${suggestion.calendarName}:${suggestion.columnName}`;
                     this.activeSuggestions.add(key);
                 }

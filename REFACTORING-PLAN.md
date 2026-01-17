@@ -4,8 +4,8 @@
 
 This document organizes 12 refactoring actions for the Manage Calendars feature. Each action has a dedicated plan file in `/docs/refactoring/` for detailed implementation steps.
 
-**Status:** Phase 1 Complete ✅ | Phase 2-4 Ready for implementation
-**Total Actions:** 12 (3 completed, 9 remaining)
+**Status:** Phase 1 Complete ✅ | R6 Complete ✅ | Phase 2-4 In Progress
+**Total Actions:** 12 (4 completed, 8 remaining)
 **Estimated Implementation Order:** Sequential (dependencies noted)
 
 ---
@@ -22,11 +22,11 @@ This document organizes 12 refactoring actions for the Manage Calendars feature.
 
 ### Medium Priority (Architecture & Maintainability)
 
-| ID | Action | Complexity | Dependencies | Files Affected | Estimated Lines |
-|----|--------|------------|--------------|----------------|-----------------|
-| **R4** | Refactor monolithic scene | High | R1 | 5 files | ~1000 |
-| **R5** | Resolve CSS nesting technical debt | Medium | R2 | 1 file | ~100 |
-| **R6** | Standardize controller routing | Low | None | 1 file | ~10 |
+| ID | Action | Complexity | Dependencies | Files Affected | Estimated Lines | Status |
+|----|--------|------------|--------------|----------------|-----------------|--------|
+| **R4** | Refactor monolithic scene | High | R1 | 5 files | ~1000 | 🔨 TODO |
+| **R5** | Resolve CSS nesting technical debt | Medium | R2 | 1 file | ~100 | 🔨 TODO |
+| **R6** | Standardize controller routing | Low | None | 3 files | ~10 | ✅ DONE |
 
 ### Low Priority (Code Quality)
 
@@ -57,14 +57,14 @@ This document organizes 12 refactoring actions for the Manage Calendars feature.
 
 **Total Phase 1:** ~~1.5 hours~~ ✅ COMPLETED
 
-### Phase 2: Architecture Improvements (Recommended)
+### Phase 2: Architecture Improvements (In Progress)
 **Goal:** Improve maintainability and code organization
 
-- 🔨 **R4 - Refactor monolithic scene** (4 hours)
-- 🔨 **R5 - Resolve CSS nesting technical debt** (1 hour)
-- 🔨 **R6 - Standardize controller routing** (15 min)
+- 🔨 **R4 - Refactor monolithic scene** (4 hours) - TODO
+- 🔨 **R5 - Resolve CSS nesting technical debt** (1 hour) - TODO
+- ✅ **R6 - Standardize controller routing** (15 min) - DONE
 
-**Total Phase 2:** ~5 hours
+**Total Phase 2:** ~~5 hours~~ | 15 min complete, ~4h 45min remaining
 
 ### Phase 3: Code Quality (Recommended)
 **Goal:** Establish testability and type safety

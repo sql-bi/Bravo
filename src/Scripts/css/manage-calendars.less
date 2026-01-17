@@ -380,77 +380,6 @@
                                     }
                                 }
 
-                                .primary-mapping {
-                                    font-weight: 600;
-                                    color: @text-color;
-                                    line-height: 1.4;
-
-                                    .dark & {
-                                        color: @text-color-dark;
-                                    }
-                                }
-
-                                .implicit-mapping {
-                                    font-style: italic;
-                                    opacity: 0.6;
-                                    line-height: 1.4;
-                                }
-
-                                // Clickable category label (opens editor)
-                                .category-label {
-                                    cursor: pointer !important;
-                                    display: inline-block !important;
-                                    padding: 2px 4px !important;
-                                    border-radius: 3px !important;
-                                    transition: background-color 0.2s ease !important;
-                                    line-height: 1.4 !important;
-                                    vertical-align: middle !important;
-
-                                    &:hover {
-                                        background-color: rgba(0, 0, 0, 0.05) !important;
-
-                                        .dark & {
-                                            background-color: rgba(255, 255, 255, 0.05) !important;
-                                        }
-                                    }
-                                }
-
-                                // Cardinality warning icon
-                                .cardinality-warning-icon {
-                                    display: inline-block !important;
-                                    margin-left: 4px !important;
-                                    font-size: 14px !important;
-                                    cursor: help !important;
-                                    vertical-align: middle !important;
-                                }
-
-                                // Suggested mapping (yellow background)
-                                .suggested-mapping {
-                                    display: inline-block !important;
-                                    padding: 4px 8px !important;
-                                    background-color: @warning-back-color !important;
-                                    border-radius: 3px !important;
-                                    cursor: pointer !important;
-                                    transition: background-color 0.2s ease !important;
-                                    font-weight: 500 !important;
-                                    line-height: 1.4 !important;
-                                    vertical-align: middle !important;
-
-                                    .dark & {
-                                        background-color: @warning-back-color-dark !important;
-                                        color: @warning-color-dark !important;
-                                    }
-
-                                    &:hover {
-                                        background-color: darken(@warning-back-color, 5%) !important;
-
-                                        .dark & {
-                                            background-color: lighten(@warning-back-color-dark, 10%) !important;
-                                            color: @warning-color-dark !important;
-                                        }
-                                    }
-                                }
-
                                 // Editor styling
                                 select {
                                     width: 100%;
@@ -516,62 +445,128 @@
     }
 }
 
-// Clickable icons for promote and primary - defined at top level to avoid deep nesting issues
-.manage-calendars {
-    .tabulator-cell {
-        position: relative;
+// =============================================================================
+// BEM COMPONENT CLASSES - Flat structure to avoid CSS nesting depth issues
+// =============================================================================
 
-        // Clickable icons for promote and primary
-        .promote-icon,
-        .primary-icon {
-            cursor: pointer !important;
-            // Slower transition when returning to normal size for smoother effect
-            transition: opacity 0.2s ease, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
-            display: inline-block !important;
-            user-select: none !important;
-            // No padding to prevent row height expansion - hover area handled by transform
-            margin-right: 4px !important;
-            pointer-events: auto !important;
-            transform-origin: center center !important;
-            line-height: 1 !important;
-            vertical-align: middle !important;
+// Cell icon base styles (★☆🔗)
+.manage-calendars__cell-icon {
+    cursor: pointer !important;
+    display: inline-block !important;
+    user-select: none !important;
+    margin-right: 4px !important;
+    pointer-events: auto !important;
+    transform-origin: center center !important;
+    line-height: 1 !important;
+    vertical-align: middle !important;
+    // Slower transition when returning to normal size for smoother bounce-back effect
+    transition: opacity 0.2s ease, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
 
-            &:hover {
-                opacity: 0.7 !important;
-                transform: scale(2.0) !important;
-            }
+    &:hover {
+        opacity: 0.7 !important;
+        transform: scale(2.0) !important;
+    }
 
-            &:active {
-                transform: scale(0.85) !important;
-                opacity: 0.3 !important;
-                transition: opacity 0.1s ease, transform 0.1s ease !important;
-            }
+    &:active {
+        transform: scale(0.85) !important;
+        opacity: 0.3 !important;
+        transition: opacity 0.1s ease, transform 0.1s ease !important;
+    }
+}
+
+// Primary icon modifier (★) - bold weight
+.manage-calendars__cell-icon--primary {
+    // Inherits from base
+}
+
+// Associated icon modifier (☆)
+.manage-calendars__cell-icon--associated {
+    // Inherits from base
+}
+
+// Linked icon modifier (🔗)
+.manage-calendars__cell-icon--linked {
+    // Inherits from base
+}
+
+// Category label
+.manage-calendars__cell-label {
+    cursor: pointer !important;
+    display: inline !important;
+    padding: 0 4px !important;
+    border-radius: 3px !important;
+    transition: background-color 0.2s ease !important;
+
+    &:hover {
+        background-color: rgba(0, 0, 0, 0.05) !important;
+
+        .dark & {
+            background-color: rgba(255, 255, 255, 0.05) !important;
         }
+    }
+}
 
-        // Reset opacity for icons inside implicit-mapping to prevent inheritance
-        .implicit-mapping {
-            .promote-icon,
-            .primary-icon {
-                opacity: 1 !important;
+// Primary label modifier
+.manage-calendars__cell-label--primary {
+    // No special styling - icon (★) indicates primary status
+}
 
-                &:hover {
-                    opacity: 0.7 !important;
-                }
-            }
+// Implicit/linked label modifier
+.manage-calendars__cell-label--implicit {
+    font-style: italic;
+    opacity: 0.6;
+}
+
+// Cardinality warning icon
+.manage-calendars__warning-icon {
+    display: inline-block !important;
+    margin-left: 4px !important;
+    font-size: 14px !important;
+    cursor: help !important;
+    vertical-align: middle !important;
+}
+
+// Suggested mapping cell (yellow background)
+.manage-calendars__suggested-mapping {
+    display: inline !important;
+    padding: 0 4px !important;
+    background-color: @warning-back-color !important;
+    border-radius: 3px !important;
+    cursor: pointer !important;
+    transition: background-color 0.2s ease !important;
+
+    .dark & {
+        background-color: @warning-back-color-dark !important;
+        color: @warning-color-dark !important;
+    }
+
+    &:hover {
+        background-color: darken(@warning-back-color, 5%) !important;
+
+        .dark & {
+            background-color: lighten(@warning-back-color-dark, 10%) !important;
+            color: @warning-color-dark !important;
         }
+    }
 
-        // Icons inside suggested-mapping spans need proper styling
-        .suggested-mapping {
-            .promote-icon,
-            .primary-icon {
-                opacity: 1 !important;
-                color: inherit !important;
-                vertical-align: middle !important;
+    // Icons inside suggested mapping need proper styling
+    .manage-calendars__cell-icon {
+        opacity: 1 !important;
+        color: inherit !important;
 
-                &:hover {
-                    opacity: 0.7 !important;
-                }
-            }
+        &:hover {
+            opacity: 0.7 !important;
+        }
+    }
+}
+
+// Icons inside implicit labels need opacity reset
+.manage-calendars__cell-label--implicit {
+    .manage-calendars__cell-icon {
+        opacity: 1 !important;
+
+        &:hover {
+            opacity: 0.7 !important;
         }
     }
 }
