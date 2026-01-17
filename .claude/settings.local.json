@@ -14,7 +14,15 @@
       "Bash(dir:*)",
       "Bash(awk:*)",
       "Bash(tr:*)",
-      "Bash(powershell.exe -Command \"dotnet build ''src\\\\Bravo.csproj'' --configuration Release\")"
+      "Bash(powershell.exe -Command \"dotnet build ''src\\\\Bravo.csproj'' --configuration Release\")",
+      "Bash(for file in pl.ts tr.ts cz.ts ru.ts uk.ts da.ts fa.ts gr.ts zh.ts)",
+      "Bash(do grep -n \"menuCtrlTitle\" \"$file\")",
+      "Bash(done)",
+      "Bash(grep:*)",
+      "Bash(npm run build:UI:*)",
+      "Bash(dotnet clean:*)",
+      "Bash(npm run build-css:*)",
+      "Bash(npm run:*)"
     ]
   }
 }

@@ -773,3 +773,8 @@ export function onReady(callback: any) {
         document.addEventListener("DOMContentLoaded", callback);
     }
 }
+
+// CSS Custom Properties helper
+export function getCSSVariable(variableName: string, element: HTMLElement = document.body): string {
+    return getComputedStyle(element).getPropertyValue(variableName).trim();
+}

@@ -5,6 +5,7 @@ namespace Sqlbi.Bravo.Controllers
     using Sqlbi.Bravo.Models.ManageCalendars;
     using Sqlbi.Bravo.Services;
     using System.Net.Mime;
+    using System.Threading;
 
     /// <summary>
     /// ManageCalendars module controller
@@ -31,9 +32,9 @@ namespace Sqlbi.Bravo.Controllers
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(TableCalendarInfo))]
         [ProducesDefaultResponseType]
-        public IActionResult GetTableCalendars(GetTableCalendarsRequest request)
+        public IActionResult GetTableCalendars(GetTableCalendarsRequest request, CancellationToken cancellationToken)
         {
-            var info = _manageCalendarsService.GetTableCalendars(request.Report!, request.TableName ?? "Date");
+            var info = _manageCalendarsService.GetTableCalendars(request.Report!, request.TableName ?? "Date", cancellationToken);
             return Ok(info);
         }
 
@@ -46,9 +47,9 @@ namespace Sqlbi.Bravo.Controllers
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesDefaultResponseType]
-        public IActionResult CreateCalendar(CreateCalendarRequest request)
+        public IActionResult CreateCalendar(CreateCalendarRequest request, CancellationToken cancellationToken)
         {
-            _manageCalendarsService.CreateCalendar(request.Report!, request.TableName!, request.Calendar!);
+            _manageCalendarsService.CreateCalendar(request.Report!, request.TableName!, request.Calendar!, cancellationToken);
             return Ok();
         }
 
@@ -61,9 +62,9 @@ namespace Sqlbi.Bravo.Controllers
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesDefaultResponseType]
-        public IActionResult UpdateCalendar(UpdateCalendarRequest request)
+        public IActionResult UpdateCalendar(UpdateCalendarRequest request, CancellationToken cancellationToken)
         {
-            _manageCalendarsService.UpdateCalendar(request.Report!, request.TableName!, request.CalendarName!, request.Calendar!);
+            _manageCalendarsService.UpdateCalendar(request.Report!, request.TableName!, request.CalendarName!, request.Calendar!, cancellationToken);
             return Ok();
         }
 
@@ -76,9 +77,9 @@ namespace Sqlbi.Bravo.Controllers
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesDefaultResponseType]
-        public IActionResult DeleteCalendar(DeleteCalendarRequest request)
+        public IActionResult DeleteCalendar(DeleteCalendarRequest request, CancellationToken cancellationToken)
         {
-            _manageCalendarsService.DeleteCalendar(request.Report!, request.TableName!, request.CalendarName!);
+            _manageCalendarsService.DeleteCalendar(request.Report!, request.TableName!, request.CalendarName!, cancellationToken);
             return Ok();
         }
     }

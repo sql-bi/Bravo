@@ -154,3 +154,15 @@
     @context-menu-back-color-dark: #222;
 @context-menu-color: #222;
     @context-menu-color-dark: #fff;
+
+// CSS Custom Properties for runtime access in TypeScript
+// These are exported as CSS variables that can be read via getComputedStyle()
+body {
+    --warning-back-color: @warning-back-color;
+    --warning-color: @warning-color;
+
+    &.dark {
+        --warning-back-color: @warning-back-color-dark;
+        --warning-color: @warning-color-dark;
+    }
+}

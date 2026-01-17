@@ -6,8 +6,8 @@
 
 import { OptionsStore } from '../controllers/options';
 import { Loader } from '../helpers/loader';
-import { Dic, Utils, _ } from '../helpers/utils';
-import { host, logger, optionsController, telemetry } from '../main';
+import { Dic, Utils, _, getCSSVariable } from '../helpers/utils';
+import { host, logger, optionsController, telemetry, themeController } from '../main';
 import { ManageCalendarsConfig, TableCalendarInfo, CalendarMetadata, ColumnMapping, CalendarColumnGroupType } from '../model/calendars';
 import { Doc } from '../model/doc';
 import { AppError, AppErrorType } from '../model/exceptions';
@@ -97,6 +97,14 @@ export class ManageCalendarsScene extends DocScene {
 
         this.hideUnassignedCheckbox.addEventListener("change", () => {
             this.filterTableRows();
+        });
+
+        // Listen for theme changes and update suggested cell colors
+        themeController.on("change", () => {
+            // Small delay to ensure CSS classes are updated before reading CSS variables
+            setTimeout(() => {
+                this.updateSuggestedCellColors();
+            }, 0);
         });
 
         this.loadTableCalendars();
@@ -225,13 +233,15 @@ export class ManageCalendarsScene extends DocScene {
                                 // Check if this would be an implicit linked column based on suggestions
                                 const isImplicitLinked = this.isColumnImplicitLinkedInSuggestions(columnName, calendarName, suggestion.suggestedCategory);
 
-                                let icon: string;
+                                let iconHtml: string;
                                 if (isImplicitLinked) {
-                                    icon = '🔗';
+                                    iconHtml = '<span class="promote-icon">🔗</span>';
+                                } else if (suggestion.isPrimary) {
+                                    iconHtml = '<span class="primary-icon">★</span>';
                                 } else {
-                                    icon = suggestion.isPrimary ? '★' : '☆';
+                                    iconHtml = '<span class="promote-icon">☆</span>';
                                 }
-                                return `<span class="suggested-mapping">${icon} ${label}</span>`;
+                                return `<span class="suggested-mapping">${iconHtml} ${label}</span>`;
                             }
                         }
                         return '<span class="blank-mapping"></span>';
@@ -420,6 +430,8 @@ export class ManageCalendarsScene extends DocScene {
                 const columnName = rowData.columnName;
 
                 // Apply suggested-cell class to cells that have suggestions
+                const colors = this.getSuggestionColors();
+
                 for (const calendar of this.tableInfo!.calendars!) {
                     const calendarName = calendar.name || "";
                     const suggestionKey = `${calendarName}:${columnName}`;
@@ -430,17 +442,20 @@ export class ManageCalendarsScene extends DocScene {
                         if (cell) {
                             const cellElement = cell.getElement();
                             if (isSuggested) {
+                                console.log(`Adding suggested-cell class to ${suggestionKey}`);
                                 cellElement.classList.add('suggested-cell');
-                                // Also apply inline style as a fallback to ensure visibility
-                                cellElement.style.backgroundColor = '#FFFACD';
+                                // Apply inline styles from CSS custom properties to ensure visibility
+                                (cellElement as HTMLElement).style.backgroundColor = colors.backgroundColor;
+                                (cellElement as HTMLElement).style.color = colors.textColor;
                             } else {
                                 cellElement.classList.remove('suggested-cell');
-                                // Remove inline style
-                                cellElement.style.backgroundColor = '';
+                                // Remove inline styles
+                                (cellElement as HTMLElement).style.backgroundColor = '';
+                                (cellElement as HTMLElement).style.color = '';
                             }
                         }
                     } catch (error) {
-                        // Silently handle errors
+                        console.error(`Error applying suggested-cell class for ${suggestionKey}:`, error);
                     }
                 }
             }
@@ -1006,6 +1021,49 @@ export class ManageCalendarsScene extends DocScene {
 
         // Re-render to show yellow highlights (this will also update button visibility)
         this.renderMappingGrid();
+    }
+
+    /**
+     * Get suggestion cell colors from CSS custom properties
+     * These values are defined in colors.less and automatically switch based on theme
+     */
+    getSuggestionColors(): { backgroundColor: string, textColor: string } {
+        const backgroundColor = getCSSVariable('--warning-back-color');
+        const textColor = getCSSVariable('--warning-color');
+        return { backgroundColor, textColor };
+    }
+
+    updateSuggestedCellColors() {
+        // Update colors for all active suggested cells based on current theme
+        if (!this.mappingTable) return;
+
+        const colors = this.getSuggestionColors();
+        const rows = this.mappingTable.getRows();
+
+        for (const row of rows) {
+            const rowData = row.getData();
+            const columnName = rowData.columnName;
+
+            for (const calendar of this.tableInfo?.calendars || []) {
+                const calendarName = calendar.name || "";
+                const suggestionKey = `${calendarName}:${columnName}`;
+                const isSuggested = this.activeSuggestions.has(suggestionKey);
+
+                if (isSuggested) {
+                    try {
+                        const cell = row.getCell(`calendar_${calendarName}`);
+                        if (cell) {
+                            const cellElement = cell.getElement() as HTMLElement;
+                            // Apply theme-appropriate colors from CSS variables
+                            cellElement.style.backgroundColor = colors.backgroundColor;
+                            cellElement.style.color = colors.textColor;
+                        }
+                    } catch (error) {
+                        console.error(`Error updating color for ${suggestionKey}:`, error);
+                    }
+                }
+            }
+        }
     }
 
     async acceptIndividualSuggestion(calendarName: string, columnName: string, forceAssociated: boolean = false) {

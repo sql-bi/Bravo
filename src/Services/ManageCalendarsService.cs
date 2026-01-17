@@ -9,19 +9,20 @@ namespace Sqlbi.Bravo.Services
     using System.Collections.Generic;
     using System.Linq;
     using System.Text.Json;
+    using System.Threading;
     using TOM = Microsoft.AnalysisServices.Tabular;
 
     public interface IManageCalendarsService
     {
-        TableCalendarInfo GetTableCalendars(PBIDesktopReport report, string tableName);
-        void CreateCalendar(PBIDesktopReport report, string tableName, CalendarMetadata calendar);
-        void UpdateCalendar(PBIDesktopReport report, string tableName, string calendarName, CalendarMetadata calendar);
-        void DeleteCalendar(PBIDesktopReport report, string tableName, string calendarName);
+        TableCalendarInfo GetTableCalendars(PBIDesktopReport report, string tableName, CancellationToken cancellationToken);
+        void CreateCalendar(PBIDesktopReport report, string tableName, CalendarMetadata calendar, CancellationToken cancellationToken);
+        void UpdateCalendar(PBIDesktopReport report, string tableName, string calendarName, CalendarMetadata calendar, CancellationToken cancellationToken);
+        void DeleteCalendar(PBIDesktopReport report, string tableName, string calendarName, CancellationToken cancellationToken);
     }
 
     internal class ManageCalendarsService : IManageCalendarsService
     {
-        public TableCalendarInfo GetTableCalendars(PBIDesktopReport report, string tableName)
+        public TableCalendarInfo GetTableCalendars(PBIDesktopReport report, string tableName, CancellationToken cancellationToken)
         {
             // 1. Connect to tabular model
             using var connection = TabularConnectionWrapper.ConnectTo(report);
@@ -29,6 +30,8 @@ namespace Sqlbi.Bravo.Services
 
             if (table == null)
                 throw new BravoException(BravoProblem.TOMDatabaseTableNotFound, tableName);
+
+            cancellationToken.ThrowIfCancellationRequested();
 
             // 2. Load Bravo annotations for explicit unassigned columns
             var annotations = LoadAnnotations(table);
@@ -44,11 +47,15 @@ namespace Sqlbi.Bravo.Services
                 .Where(c => !c.Name.StartsWith("RowNumber-", StringComparison.OrdinalIgnoreCase))
                 .ToList();
 
+            cancellationToken.ThrowIfCancellationRequested();
+
             var columnNames = columnsToQuery.Select(c => c.Name).ToList();
             var (allSampleValues, uniqueValueCounts) = GetAllSampleValuesAndDistinctCounts(connection, tableName, columnNames, 5);
 
             foreach (var column in columnsToQuery)
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 var sampleValues = allSampleValues.ContainsKey(column.Name)
                     ? allSampleValues[column.Name]
                     : new List<object>();
@@ -66,6 +73,8 @@ namespace Sqlbi.Bravo.Services
                     SortByColumnName = column.SortByColumn?.Name
                 });
             }
+
+            cancellationToken.ThrowIfCancellationRequested();
 
             // 5. Load existing calendars and their column mappings
             var calendars = new List<CalendarMetadata>();
@@ -189,8 +198,12 @@ namespace Sqlbi.Bravo.Services
                 });
             }
 
+            cancellationToken.ThrowIfCancellationRequested();
+
             // 6. Validate cardinality for all calendar mappings
             var warnings = ValidateCardinality(calendars, uniqueValueCounts);
+
+            cancellationToken.ThrowIfCancellationRequested();
 
             // 7. Generate smart completion suggestions
             var suggestions = GenerateSmartCompletionSuggestions(calendars, columns, uniqueValueCounts, sortByMap);
@@ -205,13 +218,15 @@ namespace Sqlbi.Bravo.Services
             };
         }
 
-        public void CreateCalendar(PBIDesktopReport report, string tableName, CalendarMetadata calendar)
+        public void CreateCalendar(PBIDesktopReport report, string tableName, CalendarMetadata calendar, CancellationToken cancellationToken)
         {
             using var connection = TabularConnectionWrapper.ConnectTo(report);
             var table = connection.Model.Tables.Find(tableName);
 
             if (table == null)
                 throw new BravoException(BravoProblem.TOMDatabaseTableNotFound, tableName);
+
+            cancellationToken.ThrowIfCancellationRequested();
 
             // Check if calendar with same name exists
             if (table.Calendars.Contains(calendar.Name))
@@ -220,6 +235,8 @@ namespace Sqlbi.Bravo.Services
             // Check compatibility level (requires 1701+)
             if (connection.Database.CompatibilityLevel < 1701)
                 throw new BravoException(BravoProblem.ManageCalendarsIncompatibleDatabaseVersion, connection.Database.CompatibilityLevel.ToString());
+
+            cancellationToken.ThrowIfCancellationRequested();
 
             // Create new Calendar object
             var newCalendar = new TOM.Calendar
@@ -299,21 +316,27 @@ namespace Sqlbi.Bravo.Services
                 newCalendar.CalendarColumnGroups.Add(timeRelatedGroup);
             }
 
+            cancellationToken.ThrowIfCancellationRequested();
+
             // Handle explicit unassigned columns in annotations
             var annotations = LoadAnnotations(table);
             UpdateAnnotationsForCalendar(table, annotations, calendar);
+
+            cancellationToken.ThrowIfCancellationRequested();
 
             table.Calendars.Add(newCalendar);
             connection.Model.SaveChanges();
         }
 
-        public void UpdateCalendar(PBIDesktopReport report, string tableName, string calendarName, CalendarMetadata calendar)
+        public void UpdateCalendar(PBIDesktopReport report, string tableName, string calendarName, CalendarMetadata calendar, CancellationToken cancellationToken)
         {
             using var connection = TabularConnectionWrapper.ConnectTo(report);
             var table = connection.Model.Tables.Find(tableName);
 
             if (table == null)
                 throw new BravoException(BravoProblem.TOMDatabaseTableNotFound, tableName);
+
+            cancellationToken.ThrowIfCancellationRequested();
 
             var existingCalendar = table.Calendars.Find(calendarName);
             if (existingCalendar == null)
@@ -322,6 +345,8 @@ namespace Sqlbi.Bravo.Services
             // Update properties
             existingCalendar.Name = calendar.Name;
             existingCalendar.Description = calendar.Description;
+
+            cancellationToken.ThrowIfCancellationRequested();
 
             // Clear and rebuild column groups
             existingCalendar.CalendarColumnGroups.Clear();
@@ -397,20 +422,26 @@ namespace Sqlbi.Bravo.Services
                 existingCalendar.CalendarColumnGroups.Add(timeRelatedGroup);
             }
 
+            cancellationToken.ThrowIfCancellationRequested();
+
             // Handle explicit unassigned columns in annotations
             var annotations = LoadAnnotations(table);
             UpdateAnnotationsForCalendar(table, annotations, calendar);
 
+            cancellationToken.ThrowIfCancellationRequested();
+
             connection.Model.SaveChanges();
         }
 
-        public void DeleteCalendar(PBIDesktopReport report, string tableName, string calendarName)
+        public void DeleteCalendar(PBIDesktopReport report, string tableName, string calendarName, CancellationToken cancellationToken)
         {
             using var connection = TabularConnectionWrapper.ConnectTo(report);
             var table = connection.Model.Tables.Find(tableName);
 
             if (table == null)
                 throw new BravoException(BravoProblem.TOMDatabaseTableNotFound, tableName);
+
+            cancellationToken.ThrowIfCancellationRequested();
 
             var calendar = table.Calendars.Find(calendarName);
             if (calendar == null)
@@ -422,6 +453,8 @@ namespace Sqlbi.Bravo.Services
             var annotations = LoadAnnotations(table);
             annotations.ExplicitlyUnassignedColumns?.Remove(calendarName);
             SaveAnnotations(table, annotations);
+
+            cancellationToken.ThrowIfCancellationRequested();
 
             connection.Model.SaveChanges();
         }

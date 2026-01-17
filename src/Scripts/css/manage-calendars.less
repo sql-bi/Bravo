@@ -69,6 +69,11 @@
                 margin-right: auto;
 
                 .btn-smart-completion {
+                    // Ensure text is visible in dark mode
+                    .dark & {
+                        color: @control-color-dark !important;
+                    }
+
                     &:disabled {
                         opacity: 0.5;
                         cursor: not-allowed;
@@ -77,18 +82,23 @@
                     &.highlighted {
                         background: @highlight-color;
                         border-color: @highlight-color;
+                        color: white !important;
                         animation: pulse 2s infinite;
+
+                        .dark & {
+                            color: white !important;
+                        }
                     }
                 }
 
                 .btn-accept-suggestions {
-                    background: #28a745;
-                    border-color: #28a745;
+                    background: @good-color;
+                    border-color: @good-color;
                     color: white;
 
                     &:hover {
-                        background: #218838;
-                        border-color: #1e7e34;
+                        background: darken(@good-color, 10%);
+                        border-color: darken(@good-color, 15%);
                     }
                 }
 
@@ -338,17 +348,19 @@
                                 }
 
                                 &.suggested-cell {
-                                    background-color: #FFFACD !important;
+                                    background-color: @warning-back-color !important;
 
                                     .dark & {
-                                        background-color: #5a5a2a !important;
+                                        background-color: @warning-back-color-dark !important;
+                                        color: @warning-color-dark !important;
                                     }
 
                                     &:hover {
-                                        background-color: #FFF59D !important;
+                                        background-color: darken(@warning-back-color, 5%) !important;
 
                                         .dark & {
-                                            background-color: #6a6a3a !important;
+                                            background-color: lighten(@warning-back-color-dark, 10%) !important;
+                                            color: @warning-color-dark !important;
                                         }
                                     }
                                 }
@@ -410,22 +422,23 @@
                                 .suggested-mapping {
                                     display: inline-block !important;
                                     padding: 4px 8px !important;
-                                    background-color: #FFFACD !important;
+                                    background-color: @warning-back-color !important;
                                     border-radius: 3px !important;
                                     cursor: pointer !important;
                                     transition: background-color 0.2s ease !important;
                                     font-weight: 500 !important;
 
                                     .dark & {
-                                        background-color: #5a5a2a !important;
-                                        color: #fff !important;
+                                        background-color: @warning-back-color-dark !important;
+                                        color: @warning-color-dark !important;
                                     }
 
                                     &:hover {
-                                        background-color: #FFF59D !important;
+                                        background-color: darken(@warning-back-color, 5%) !important;
 
                                         .dark & {
-                                            background-color: #6a6a3a !important;
+                                            background-color: lighten(@warning-back-color-dark, 10%) !important;
+                                            color: @warning-color-dark !important;
                                         }
                                     }
                                 }
@@ -531,6 +544,20 @@
             .promote-icon,
             .primary-icon {
                 opacity: 1 !important;
+
+                &:hover {
+                    opacity: 0.7 !important;
+                }
+            }
+        }
+
+        // Icons inside suggested-mapping spans need proper styling
+        .suggested-mapping {
+            .promote-icon,
+            .primary-icon {
+                opacity: 1 !important;
+                color: inherit !important;
+                vertical-align: middle !important;
 
                 &:hover {
                     opacity: 0.7 !important;
