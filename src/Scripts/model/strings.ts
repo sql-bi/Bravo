@@ -351,6 +351,13 @@ export enum strings {
     manageCalendarsRenameError,
     manageCalendarsUnknown,
     manageCalendarsDeleteCalendar,
+    // Manage Calendars - Tooltips and UI labels
+    manageCalendarsSmartCompletionTooltip,
+    manageCalendarsColumnHeaderValues,
+    manageCalendarsPromoteTooltip,
+    manageCalendarsRemoveAssignmentTooltip,
+    manageCalendarsImplicitColumnTooltip,
+    manageCalendarsCardinalityWarningTooltip,
     menuCtrlTitle,
     minimizeCtrlTitle,
     modelLanguage,

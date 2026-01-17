@@ -60,7 +60,7 @@ export class ManageCalendarsScene extends DocScene {
                 </div>
                 <div class="actions">
                     <button class="btn btn-primary btn-add-calendar disable-on-syncing enable-if-editable">${i18n(strings.manageCalendarsAddCalendar)}</button>
-                    <button class="btn btn-smart-completion disable-on-syncing enable-if-editable" title="Assign calendar category to each column that is not assigned based on the cardinality of the Year column. Assign Year manually before starting.">Smart completion</button>
+                    <button class="btn btn-smart-completion disable-on-syncing enable-if-editable" title="${i18n(strings.manageCalendarsSmartCompletionTooltip)}">Smart completion</button>
                     <button class="btn btn-accept-suggestions disable-on-syncing enable-if-editable" style="display: none;">Accept all suggestions</button>
                     <label class="hide-unassigned-control">
                         <input type="checkbox" class="hide-unassigned-checkbox">
@@ -158,13 +158,13 @@ export class ManageCalendarsScene extends DocScene {
                 headerClick: () => this.handleHeaderClick("columnName", 'single')
             },
             {
-                title: "# VALUES",
+                title: i18n(strings.manageCalendarsColumnHeaderValues),
                 field: "uniqueValueCount",
                 width: 80,
                 resizable: true,
                 headerSort: false,
                 hozAlign: "right",
-                titleFormatter: () => this.renderSortableHeader("# VALUES", "uniqueValueCount"),
+                titleFormatter: () => this.renderSortableHeader(i18n(strings.manageCalendarsColumnHeaderValues), "uniqueValueCount"),
                 headerClick: () => this.handleHeaderClick("uniqueValueCount", 'single'),
                 formatter: (cell: Tabulator.CellComponent) => {
                     const count = cell.getValue();
@@ -257,14 +257,14 @@ export class ManageCalendarsScene extends DocScene {
                         if (mapping?.isImplicitFromSortBy) {
                             if (!isSuggested) className = "implicit-mapping";
                             // Make link icon clickable to promote to primary
-                            iconHtml = `<span class="promote-icon" data-column="${columnName}" data-calendar="${calendarName}" data-category="${groupType}" title="Click to make this the primary column">🔗</span> `;
+                            iconHtml = `<span class="promote-icon" data-column="${columnName}" data-calendar="${calendarName}" data-category="${groupType}" title="${i18n(strings.manageCalendarsPromoteTooltip)}">🔗</span> `;
                         } else if (mapping?.isPrimary) {
                             if (!isSuggested) className = "primary-mapping";
                             // Make star icon clickable to remove assignment
-                            iconHtml = `<span class="primary-icon" data-column="${columnName}" data-calendar="${calendarName}" title="Click to remove assignment">★</span> `;
+                            iconHtml = `<span class="primary-icon" data-column="${columnName}" data-calendar="${calendarName}" title="${i18n(strings.manageCalendarsRemoveAssignmentTooltip)}">★</span> `;
                         } else if (mapping && !mapping.isPrimary) {
                             // Make associated star icon clickable to promote to primary
-                            iconHtml = `<span class="promote-icon" data-column="${columnName}" data-calendar="${calendarName}" data-category="${groupType}" title="Click to make this the primary column">☆</span> `;
+                            iconHtml = `<span class="promote-icon" data-column="${columnName}" data-calendar="${calendarName}" data-category="${groupType}" title="${i18n(strings.manageCalendarsPromoteTooltip)}">☆</span> `;
                         }
                     }
 
@@ -280,7 +280,10 @@ export class ManageCalendarsScene extends DocScene {
                         const expectedDesc = warning.expectedMax !== null && warning.expectedMax !== undefined
                             ? `${warning.expectedMin}-${warning.expectedMax}`
                             : `${warning.expectedMin}`;
-                        const tooltipText = `The cardinality of ${warning.actualCardinality} does not match the expected cardinality of ${expectedDesc}`;
+                        const tooltipText = i18n(strings.manageCalendarsCardinalityWarningTooltip)
+                            .replace('{actualCardinality}', warning.actualCardinality.toString())
+                            .replace('{expectedCardinality}', expectedDesc)
+                            .replace('{categoryName}', this.getGroupTypeLabel(warning.category));
                         warningHtml = ` <span class="cardinality-warning-icon" title="${tooltipText}">⚠️</span>`;
                     }
 
