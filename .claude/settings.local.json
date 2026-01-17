@@ -26,7 +26,10 @@
       "Bash(for key in manageCalendarsSmartCompletionTooltip manageCalendarsColumnHeaderValues manageCalendarsPromoteTooltip manageCalendarsRemoveAssignmentTooltip manageCalendarsImplicitColumnTooltip manageCalendarsCardinalityWarningTooltip)",
       "Bash(do grep -q \"$key\" \"C:\\\\Users\\\\MarcoRusso\\\\source\\\\repos\\\\sql-bi\\\\Bravo\\\\src\\\\Scripts\\\\model\\\\strings.ts\")",
       "Bash(echo:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nR4: Refactor monolithic scene into component architecture\n\nRefactored scene-manage-calendars.ts from 1,365 lines to 620 lines by\nextracting functionality into focused components following the ManageDates\npattern established in the codebase.\n\nComponents created:\n- scene-manage-calendars-header.ts \\(135 lines\\): Header controls, buttons,\n  legend\n- scene-manage-calendars-grid.ts \\(535 lines\\): Tabulator grid with all cell\n  formatting, icons, and interactions\n\nMain scene now focuses on:\n- State management \\(tableInfo, sortState, activeSuggestions\\)\n- Component orchestration\n- API calls \\(CRUD operations\\)\n- Event delegation to components\n\nBenefits:\n- Clear separation of concerns \\(UI vs orchestration\\)\n- Components follow ManageDates lifecycle pattern \\(render, update, destroy\\)\n- Easier to maintain and test individual components\n- Follows established Bravo architectural patterns\n\nHelper modules \\(calendar-mappings.ts, calendar-suggestions.ts\\) were\npreviously committed.\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git commit:*)"
     ]
   }
 }

@@ -47,11 +47,7 @@ export class ManageCalendarsScene extends DocScene {
     render() {
         if (!super.render()) return false;
 
-        // Create header container
-        this.body.insertAdjacentHTML("beforeend", `<div class="mapping-grid">${Loader.html(true)}</div>`);
-        this.mappingContainer = this.body.querySelector(".mapping-grid") as HTMLElement;
-
-        // Create header component
+        // Create header component first
         this.header = new ManageCalendarsHeader(
             this.body,
             this.config,
@@ -65,6 +61,10 @@ export class ManageCalendarsScene extends DocScene {
             }
         );
         this.header.render();
+
+        // Create grid container after header
+        this.body.insertAdjacentHTML("beforeend", `<div class="mapping-grid">${Loader.html(true)}</div>`);
+        this.mappingContainer = this.body.querySelector(".mapping-grid") as HTMLElement;
 
         // Listen for theme changes
         themeController.on("change", () => {
