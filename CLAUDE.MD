@@ -271,12 +271,13 @@ A comprehensive refactoring plan has been created to improve code quality, archi
    - Align with ManageDates pattern
    - Time: ~45 minutes
 
-### Medium Priority (Architecture & Maintainability)
+### Medium Priority (Architecture & Maintainability) ✅ COMPLETED
 
-4. **[R4 - Refactor Monolithic Scene](docs/refactoring/R4-refactor-scene.md)**
-   - Break 900+ line scene into modular components
-   - Create header, grid, and suggestion components
-   - Extract edit and icon handlers
+4. **✅ [R4 - Refactor Monolithic Scene](docs/refactoring/R4-refactor-scene.md)** - COMPLETED
+   - Reduced scene from 1,365 to 620 lines
+   - Created 2 helper modules (calendar-mappings.ts, calendar-suggestions.ts)
+   - Created 2 component classes (scene-manage-calendars-header.ts, scene-manage-calendars-grid.ts)
+   - Follows ManageDates component lifecycle pattern
    - Time: ~4 hours
 
 5. **✅ [R5 - Resolve CSS Nesting Technical Debt](docs/refactoring/R5-css-nesting.md)** - COMPLETED
@@ -329,7 +330,7 @@ A comprehensive refactoring plan has been created to improve code quality, archi
 
 **Total Estimated Time:**
 - Phase 1 (High Priority): ~~1.5 hours~~ ✅ COMPLETED
-- Phase 2 (Medium Priority): ~5 hours
+- Phase 2 (Medium Priority): ~~5 hours~~ ✅ COMPLETED
 - Phase 3 (Low Priority): ~6.5 hours
 - Phase 4 (Optional): ~5.5 hours
 
