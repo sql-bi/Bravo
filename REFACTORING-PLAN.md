@@ -4,8 +4,8 @@
 
 This document organizes 12 refactoring actions for the Manage Calendars feature. Each action has a dedicated plan file in `/docs/refactoring/` for detailed implementation steps.
 
-**Status:** Phase 1 Complete ✅ | Phase 2 Complete ✅ | Phase 3 In Progress
-**Total Actions:** 12 (8 completed, 4 remaining)
+**Status:** Phase 1 Complete ✅ | Phase 2 Complete ✅ | Phase 3 Complete ✅
+**Total Actions:** 12 (8 completed, 1 skipped, 3 optional remaining)
 **Estimated Implementation Order:** Sequential (dependencies noted)
 
 ---
@@ -28,12 +28,12 @@ This document organizes 12 refactoring actions for the Manage Calendars feature.
 | **R5** | Resolve CSS nesting technical debt | Medium | R2 | 1 file | ~100 | ✅ DONE |
 | **R6** | Standardize controller routing | Low | None | 3 files | ~10 | ✅ DONE |
 
-### Low Priority (Code Quality)
+### Low Priority (Code Quality) ✅ COMPLETED
 
 | ID | Action | Complexity | Dependencies | Files Affected | Estimated Lines | Status |
 |----|--------|------------|--------------|----------------|-----------------|--------|
 | **R7** | Extract business logic from scene | Medium | R4 | 3 files | ~300 | ✅ DONE |
-| **R8** | Add unit tests | Medium | R7 | 6 files | ~500 | |
+| **R8** | Add unit tests | Medium | R7 | 6 files | ~500 | ⊘ SKIPPED |
 | **R9** | Improve type safety | Medium | R4 | 2 files | ~150 | ✅ DONE |
 
 ### Optional (Nice-to-Have)
@@ -66,14 +66,14 @@ This document organizes 12 refactoring actions for the Manage Calendars feature.
 
 **Total Phase 2:** ~~5 hours~~ ✅ COMPLETED
 
-### Phase 3: Code Quality (Recommended)
+### Phase 3: Code Quality (Recommended) ✅ COMPLETED
 **Goal:** Establish testability and type safety
 
 - ✅ **R7 - Extract business logic from scene** (Already complete - helpers exist from R4)
-- 🧪 **R8 - Add unit tests** (3 hours)
+- ⊘ **R8 - Add unit tests** (Skipped - no existing test infrastructure)
 - ✅ **R9 - Improve type safety** (1.5 hours) - DONE
 
-**Total Phase 3:** ~~6.5 hours~~ - R7 & R9 Complete ✅, R8 Optional
+**Total Phase 3:** ✅ COMPLETED (R7 & R9 done, R8 skipped)
 
 ### Phase 4: Polish (Optional)
 **Goal:** Enhance user experience and developer experience
