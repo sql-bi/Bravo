@@ -6,10 +6,13 @@
 
 import { CalendarColumnGroupType, CalendarMetadata, ColumnInfo, ColumnMapping } from '../model/calendars';
 
+export type SortDirection = 'asc' | 'desc';
+export type SortMode = 'single' | 'aggregate';
+
 export interface SortState {
     field: string | null;
-    direction: 'asc' | 'desc' | null;
-    mode: 'single' | 'aggregate';  // single calendar or multi-calendar aggregate
+    direction: SortDirection | null;
+    mode: SortMode;
 }
 
 export class CalendarSorting {
@@ -21,7 +24,7 @@ export class CalendarSorting {
     static getAggregateCategoryValue(
         columnName: string,
         calendars: CalendarMetadata[],
-        direction: 'asc' | 'desc'
+        direction: SortDirection
     ): number {
         const validCategories: number[] = [];
 
@@ -49,7 +52,7 @@ export class CalendarSorting {
     /**
      * Get category value with Unassigned always at bottom
      */
-    static getCategorySortValue(category: CalendarColumnGroupType | undefined, direction: 'asc' | 'desc'): number {
+    static getCategorySortValue(category: CalendarColumnGroupType | undefined, direction: SortDirection): number {
         if (category === undefined || category === null) {
             // Blank cells come after everything
             return Number.MAX_SAFE_INTEGER;

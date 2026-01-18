@@ -6,22 +6,25 @@
 
 import { OptionsStore } from '../controllers/options';
 import { CalendarMappings } from '../helpers/calendar-mappings';
-import { CalendarSorting, SortState } from '../helpers/calendar-sorting';
+import { CalendarSorting, SortState, SortMode } from '../helpers/calendar-sorting';
 import { CalendarSuggestions } from '../helpers/calendar-suggestions';
 import { getCSSVariable } from '../helpers/utils';
-import { CalendarColumnGroupType, CalendarMetadata, ColumnMapping, ManageCalendarsConfig, TableCalendarInfo } from '../model/calendars';
+import { CalendarColumnGroupType, CalendarMetadata, ColumnMapping, ManageCalendarsConfig, TableCalendarInfo, CalendarCellMapping, CalendarMappingRow, isAssignedMapping, isSuggestedMapping, isBlankMapping, isUnassignedMapping } from '../model/calendars';
 import { Doc } from '../model/doc';
 import { i18n } from '../model/i18n';
 import { strings } from '../model/strings';
 import { Tabulator } from 'tabulator-tables';
 
+/**
+ * Callbacks for grid component interactions
+ */
 export interface ManageCalendarsGridCallbacks {
     onCellEdited: (calendarName: string, columnName: string, newValue: string, oldValue: string) => Promise<void>;
-    onPromoteIconClick: (calendarName: string, columnName: string, category: number) => Promise<void>;
+    onPromoteIconClick: (calendarName: string, columnName: string, category: CalendarColumnGroupType) => Promise<void>;
     onPrimaryIconClick: (calendarName: string, columnName: string) => Promise<void>;
     onCalendarRename: (oldName: string) => Promise<void>;
     onCalendarDelete: (calendarName: string) => Promise<void>;
-    onHeaderClick: (field: string, mode: 'single' | 'aggregate') => void;
+    onHeaderClick: (field: string, mode: SortMode) => void;
     onSuggestionAccepted: (calendarName: string, columnName: string, forceAssociated: boolean) => Promise<void>;
 }
 
@@ -39,7 +42,7 @@ export class ManageCalendarsGrid {
     private callbacks: ManageCalendarsGridCallbacks;
 
     private mappingTable: Tabulator | null = null;
-    private tableData: any[] = [];
+    private tableData: CalendarMappingRow[] = [];
 
     constructor(
         container: HTMLElement,
@@ -268,44 +271,36 @@ export class ManageCalendarsGrid {
     }
 
     private formatCalendarCell(cell: Tabulator.CellComponent, calendarName: string): string {
-        const value = cell.getValue();
-        const rowData = cell.getRow().getData();
+        const cellMapping = cell.getValue() as CalendarCellMapping;
+        const rowData = cell.getRow().getData() as CalendarMappingRow;
         const columnName = rowData.columnName;
-        const suggestionKey = `${calendarName}:${columnName}`;
 
-        // Check if this cell has an active suggestion
-        const isSuggested = this.activeSuggestions.has(suggestionKey);
-
-        if (value === null || value === undefined || value === "") {
-            // Check if there's a suggestion for this blank cell
-            if (isSuggested) {
-                return this.formatSuggestedCell(calendarName, columnName);
-            }
+        // Use type guards for safe type narrowing
+        if (isSuggestedMapping(cellMapping)) {
+            return this.formatSuggestedCellTyped(cellMapping, columnName, calendarName);
+        } else if (isAssignedMapping(cellMapping)) {
+            return this.formatAssignedCellTyped(cellMapping, columnName, calendarName);
+        } else if (isUnassignedMapping(cellMapping)) {
+            return i18n(strings.manageCalendarsUnassigned);
+        } else if (isBlankMapping(cellMapping)) {
             return '<span class="blank-mapping"></span>';
         }
 
-        // Convert string value back to number for display
-        const groupType = typeof value === 'string' ? parseInt(value) : value;
-
-        // Get the original mapping to check for metadata
-        const calendar = this.tableInfo?.calendars?.find(c => c.name === calendarName);
-        const mapping = calendar?.columnMappings?.find(m => m.columnName === columnName);
-
-        return this.formatAssignedCell(groupType, mapping, columnName, calendarName, isSuggested);
+        // Fallback (should not reach here)
+        return '<span class="blank-mapping"></span>';
     }
 
-    private formatSuggestedCell(calendarName: string, columnName: string): string {
-        const suggestion = this.tableInfo?.smartCompletionSuggestions?.find(s =>
-            s.calendarName === calendarName && s.columnName === columnName
-        );
-
-        if (!suggestion || suggestion.suggestedCategory === undefined) {
-            return '<span class="blank-mapping"></span>';
-        }
-
-        const label = CalendarMappings.getCategoryLabel(suggestion.suggestedCategory);
+    /**
+     * Format a suggested mapping cell using typed CalendarCellMapping
+     */
+    private formatSuggestedCellTyped(
+        mapping: Extract<CalendarCellMapping, { type: 'suggested' }>,
+        columnName: string,
+        calendarName: string
+    ): string {
+        const label = CalendarMappings.getCategoryLabel(mapping.categoryType);
         const isImplicitLinked = CalendarSuggestions.isColumnImplicitLinked(
-            columnName, calendarName, suggestion.suggestedCategory, this.tableInfo, this.activeSuggestions
+            columnName, calendarName, mapping.categoryType, this.tableInfo, this.activeSuggestions
         );
 
         let iconHtml: string;
@@ -313,7 +308,7 @@ export class ManageCalendarsGrid {
         if (isImplicitLinked) {
             iconHtml = '<span class="manage-calendars__cell-icon manage-calendars__cell-icon--linked">🔗</span>';
             labelClass = " manage-calendars__cell-label--implicit";
-        } else if (suggestion.isPrimary) {
+        } else if (mapping.isPrimary) {
             iconHtml = '<span class="manage-calendars__cell-icon manage-calendars__cell-icon--primary">★</span>';
         } else {
             iconHtml = '<span class="manage-calendars__cell-icon manage-calendars__cell-icon--associated">☆</span>';
@@ -322,14 +317,16 @@ export class ManageCalendarsGrid {
         return `<span class="manage-calendars__suggested-mapping${labelClass}">${iconHtml} ${label}</span>`;
     }
 
-    private formatAssignedCell(
-        groupType: number,
-        mapping: ColumnMapping | undefined,
+    /**
+     * Format an assigned mapping cell using typed CalendarCellMapping
+     */
+    private formatAssignedCellTyped(
+        mapping: Extract<CalendarCellMapping, { type: 'assigned' }>,
         columnName: string,
-        calendarName: string,
-        isSuggested: boolean
+        calendarName: string
     ): string {
-        let label = CalendarMappings.getCategoryLabel(groupType);
+        const groupType = mapping.categoryType;
+        const label = CalendarMappings.getCategoryLabel(groupType);
         let labelClass = "manage-calendars__cell-label";
         let iconHtml = "";
 
@@ -338,13 +335,13 @@ export class ManageCalendarsGrid {
 
         if (!isIndependentCategory) {
             // Regular categories show icons based on role
-            if (mapping?.isImplicitFromSortBy) {
-                if (!isSuggested) labelClass += " manage-calendars__cell-label--implicit";
+            if (mapping.isLinked) {
+                labelClass += " manage-calendars__cell-label--implicit";
                 iconHtml = `<span class="manage-calendars__cell-icon manage-calendars__cell-icon--linked" data-column="${columnName}" data-calendar="${calendarName}" data-category="${groupType}" title="${i18n(strings.manageCalendarsImplicitColumnTooltip)}">🔗</span> `;
-            } else if (mapping?.isPrimary) {
-                if (!isSuggested) labelClass += " manage-calendars__cell-label--primary";
+            } else if (mapping.isPrimary) {
+                labelClass += " manage-calendars__cell-label--primary";
                 iconHtml = `<span class="manage-calendars__cell-icon manage-calendars__cell-icon--primary" data-column="${columnName}" data-calendar="${calendarName}" title="${i18n(strings.manageCalendarsRemoveAssignmentTooltip)}">★</span> `;
-            } else if (mapping && !mapping.isPrimary) {
+            } else {
                 iconHtml = `<span class="manage-calendars__cell-icon manage-calendars__cell-icon--associated" data-column="${columnName}" data-calendar="${calendarName}" data-category="${groupType}" title="${i18n(strings.manageCalendarsPromoteTooltip)}">☆</span> `;
             }
         }
@@ -357,14 +354,14 @@ export class ManageCalendarsGrid {
         );
 
         let warningHtml = "";
-        if (warning) {
+        if (warning && warning.actualCardinality !== undefined) {
             const expectedDesc = warning.expectedMax !== null && warning.expectedMax !== undefined
                 ? `${warning.expectedMin}-${warning.expectedMax}`
                 : `${warning.expectedMin}`;
             const tooltipText = i18n(strings.manageCalendarsCardinalityWarningTooltip)
                 .replace('{actualCardinality}', warning.actualCardinality.toString())
                 .replace('{expectedCardinality}', expectedDesc)
-                .replace('{categoryName}', CalendarMappings.getCategoryLabel(warning.category));
+                .replace('{categoryName}', CalendarMappings.getCategoryLabel(groupType));
             warningHtml = ` <span class="manage-calendars__warning-icon" title="${tooltipText}">⚠️</span>`;
         }
 
@@ -444,23 +441,57 @@ export class ManageCalendarsGrid {
         return forceAssociated;
     }
 
-    private buildRowData(): any[] {
+    private buildRowData(): CalendarMappingRow[] {
         return this.tableInfo.columns.map(column => {
             const row: any = {
-                columnName: column.name,
-                sampleValues: column.sampleValues,
-                uniqueValueCount: column.uniqueValueCount
+                columnName: column.name || '',
+                dataType: column.dataType || '',
+                sampleValues: column.sampleValues || [],
+                uniqueValueCount: column.uniqueValueCount || 0,
+                sortByColumnName: column.sortByColumnName
             };
 
-            // Add mapping for each calendar
+            // Add mapping for each calendar as CalendarCellMapping discriminated union
             for (let calendar of this.tableInfo.calendars!) {
+                const calendarName = calendar.name || '';
+                const suggestionKey = `${calendarName}:${column.name}`;
+                const isSuggested = this.activeSuggestions.has(suggestionKey);
+
+                if (isSuggested) {
+                    // Cell has an active suggestion
+                    const suggestion = this.tableInfo?.smartCompletionSuggestions?.find(s =>
+                        s.calendarName === calendarName && s.columnName === column.name
+                    );
+                    if (suggestion && suggestion.suggestedCategory !== undefined) {
+                        row[`calendar_${calendarName}`] = {
+                            type: 'suggested',
+                            categoryType: suggestion.suggestedCategory,
+                            isPrimary: suggestion.isPrimary || false
+                        } as CalendarCellMapping;
+                        continue;
+                    }
+                }
+
+                // Check for existing mapping
                 const mapping = calendar.columnMappings?.find(m => m.columnName === column.name);
-                row[`calendar_${calendar.name}`] = mapping?.groupType !== undefined && mapping?.groupType !== null
-                    ? String(mapping.groupType)
-                    : null;
+
+                if (mapping?.groupType !== undefined && mapping?.groupType !== null) {
+                    // Cell has an assignment
+                    row[`calendar_${calendarName}`] = {
+                        type: 'assigned',
+                        categoryType: mapping.groupType,
+                        isPrimary: mapping.isPrimary || false,
+                        isLinked: mapping.isImplicitFromSortBy || false
+                    } as CalendarCellMapping;
+                } else {
+                    // Cell is blank (no assignment, no suggestion)
+                    row[`calendar_${calendarName}`] = {
+                        type: 'blank'
+                    } as CalendarCellMapping;
+                }
             }
 
-            return row;
+            return row as CalendarMappingRow;
         });
     }
 

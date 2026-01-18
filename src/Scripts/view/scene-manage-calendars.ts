@@ -80,7 +80,7 @@ export class ManageCalendarsScene extends DocScene {
         return true;
     }
 
-    async loadTableCalendars() {
+    async loadTableCalendars(): Promise<void> {
         try {
             let loader = new Loader(this.mappingContainer, true, true);
 
@@ -183,7 +183,7 @@ export class ManageCalendarsScene extends DocScene {
         this.renderMappingGrid();
     }
 
-    private async handlePromoteIconClick(calendarName: string, columnName: string, category: number) {
+    private async handlePromoteIconClick(calendarName: string, columnName: string, category: CalendarColumnGroupType) {
         // Independent categories cannot be promoted
         if (CalendarMappings.isIndependentCategory(category)) {
             return;
@@ -224,14 +224,14 @@ export class ManageCalendarsScene extends DocScene {
         await this.saveCalendar(calendarName, calendar);
     }
 
-    private async onCellEdited(calendarName: string, columnName: string, newValue: string, oldValue: string) {
+    private async onCellEdited(calendarName: string, columnName: string, newValue: string, oldValue: string): Promise<void> {
         if (newValue === oldValue || !this.tableInfo) return;
 
         try {
             let calendar = this.tableInfo.calendars?.find(c => c.name === calendarName);
             if (!calendar) return;
 
-            let groupType: number | null = null;
+            let groupType: CalendarColumnGroupType | null = null;
 
             if (newValue === null || newValue === undefined || newValue === "") {
                 // Blank selection - remove the assignment
@@ -325,7 +325,7 @@ export class ManageCalendarsScene extends DocScene {
         }
     }
 
-    runSmartCompletion() {
+    runSmartCompletion(): void {
         if (!this.tableInfo?.smartCompletionSuggestions) {
             return;
         }
@@ -357,7 +357,7 @@ export class ManageCalendarsScene extends DocScene {
         this.renderMappingGrid();
     }
 
-    async acceptIndividualSuggestion(calendarName: string, columnName: string, forceAssociated: boolean = false) {
+    async acceptIndividualSuggestion(calendarName: string, columnName: string, forceAssociated: boolean = false): Promise<void> {
         const suggestionKey = `${calendarName}:${columnName}`;
         if (!this.activeSuggestions.has(suggestionKey)) return;
 
@@ -464,7 +464,7 @@ export class ManageCalendarsScene extends DocScene {
         }
     }
 
-    async acceptAllSuggestions() {
+    async acceptAllSuggestions(): Promise<void> {
         if (!this.tableInfo?.smartCompletionSuggestions || this.activeSuggestions.size === 0) {
             return;
         }
@@ -519,7 +519,7 @@ export class ManageCalendarsScene extends DocScene {
         }
     }
 
-    async renameCalendar(oldName: string) {
+    async renameCalendar(oldName: string): Promise<void> {
         const newName = prompt(i18n(strings.manageCalendarsEnterNewName), oldName);
         if (!newName || newName === oldName) return;
 
@@ -544,7 +544,7 @@ export class ManageCalendarsScene extends DocScene {
         }
     }
 
-    async addCalendar() {
+    async addCalendar(): Promise<void> {
         let name = prompt(i18n(strings.manageCalendarsEnterName));
         if (!name) return;
 
@@ -565,7 +565,7 @@ export class ManageCalendarsScene extends DocScene {
         }
     }
 
-    async deleteCalendar(calendarName: string) {
+    async deleteCalendar(calendarName: string): Promise<void> {
         if (!confirm(i18n(strings.manageCalendarsConfirmDelete).replace("{0}", calendarName))) {
             return;
         }

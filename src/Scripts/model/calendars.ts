@@ -84,3 +84,56 @@ export interface ManageCalendarsConfig {
     tableName?: string;
     selectedCalendar?: string;
 }
+
+/**
+ * Discriminated union representing different states of a calendar cell mapping
+ */
+export type CalendarCellMapping =
+    | { type: 'blank' }
+    | { type: 'unassigned' }
+    | { type: 'assigned'; categoryType: CalendarColumnGroupType; isPrimary: boolean; isLinked: boolean }
+    | { type: 'suggested'; categoryType: CalendarColumnGroupType; isPrimary: boolean };
+
+/**
+ * Type guard for assigned mapping
+ */
+export function isAssignedMapping(mapping: CalendarCellMapping): mapping is Extract<CalendarCellMapping, { type: 'assigned' }> {
+    return mapping.type === 'assigned';
+}
+
+/**
+ * Type guard for suggested mapping
+ */
+export function isSuggestedMapping(mapping: CalendarCellMapping): mapping is Extract<CalendarCellMapping, { type: 'suggested' }> {
+    return mapping.type === 'suggested';
+}
+
+/**
+ * Type guard for blank mapping
+ */
+export function isBlankMapping(mapping: CalendarCellMapping): mapping is Extract<CalendarCellMapping, { type: 'blank' }> {
+    return mapping.type === 'blank';
+}
+
+/**
+ * Type guard for unassigned mapping
+ */
+export function isUnassignedMapping(mapping: CalendarCellMapping): mapping is Extract<CalendarCellMapping, { type: 'unassigned' }> {
+    return mapping.type === 'unassigned';
+}
+
+/**
+ * Represents a row in the calendar mapping grid (Tabulator row data)
+ */
+export interface CalendarMappingRow {
+    // Core column info
+    columnName: string;
+    dataType: string;
+    sampleValues: any[];
+    uniqueValueCount: number;
+    sortByColumnName?: string;
+
+    // Dynamic calendar mappings (one property per calendar)
+    // Key is calendar name, value is the mapping state for that column in that calendar
+    [calendarName: string]: CalendarCellMapping | any;
+}
