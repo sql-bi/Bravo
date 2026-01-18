@@ -290,42 +290,42 @@ A comprehensive refactoring plan has been created to improve code quality, archi
    - Create ADR for feature-specific routing pattern
    - Time: ~15 minutes
 
-### Low Priority (Code Quality)
+### Low Priority (Code Quality) ✅ COMPLETED
 
-7. **[R7 - Extract Business Logic from Scene](docs/refactoring/R7-extract-business-logic.md)**
-   - Create validation, suggestions, and mappings helper modules
-   - Improve testability and reusability
-   - Time: ~2 hours
+7. **✅ [R7 - Extract Business Logic from Scene](docs/refactoring/R7-extract-business-logic.md)** - COMPLETED
+   - Created helper modules: calendar-sorting.ts, calendar-mappings.ts, calendar-suggestions.ts
+   - Completed during R4 refactoring
+   - Improved testability and reusability
 
-8. **[R8 - Add Unit Tests](docs/refactoring/R8-unit-tests.md)**
-   - Create 40+ unit tests for helpers
-   - Establish 80% code coverage target
-   - Time: ~3 hours
+8. **⊘ [R8 - Add Unit Tests](docs/refactoring/R8-unit-tests.md)** - SKIPPED
+   - No existing test infrastructure in project
+   - Would require significant setup effort
+   - Skipped in favor of other priorities
 
-9. **[R9 - Improve Type Safety](docs/refactoring/R9-type-safety.md)**
-   - Add discriminated unions for mapping states
-   - Enable TypeScript strict mode
-   - Add type guards for safe narrowing
+9. **✅ [R9 - Improve Type Safety](docs/refactoring/R9-type-safety.md)** - COMPLETED
+   - Added discriminated unions for mapping states
+   - Improved type guards for safe narrowing
+   - Enhanced TypeScript strict type checking
    - Time: ~1.5 hours
 
 ### Optional (Nice-to-Have)
 
-10. **[R10 - Performance Optimization](docs/refactoring/R10-performance.md)**
-    - Add memoization for sort and suggestions
-    - Implement incremental grid updates
-    - Enable virtual scrolling for large tables
-    - Time: ~2 hours
+10. **⊘ [R10 - Performance Optimization](docs/refactoring/R10-performance.md)** - SKIPPED
+    - Low data volume (typical models have <100 date columns)
+    - Current performance acceptable
+    - Optimization not needed at this time
 
-11. **[R11 - Accessibility Improvements](docs/refactoring/R11-accessibility.md)**
-    - Add ARIA labels and keyboard navigation
-    - Implement WCAG 2.1 Level AA compliance
-    - Add screen reader support
-    - Time: ~2 hours
+11. **✅ [R11 - Accessibility Improvements](docs/refactoring/R11-accessibility.md)** - COMPLETED
+    - Added ARIA labels and keyboard navigation
+    - Implemented WCAG 2.1 Level AA compliance features
+    - Added screen reader support with live regions
+    - Full i18n coverage (17 locales)
+    - Time: ~2.5 hours
 
-12. **[R12 - Documentation Improvements](docs/refactoring/R12-documentation.md)**
-    - Add JSDoc comments to all public methods
-    - Create ADRs for key architectural decisions
-    - Write developer guides for common tasks
+12. **✅ [R12 - Documentation Improvements](docs/refactoring/R12-documentation.md)** - COMPLETED
+    - Added comprehensive JSDoc to all helper modules
+    - Created ADR-002 for BEM CSS methodology
+    - Updated CLAUDE.md with documentation references
     - Time: ~1.5 hours
 
 **Total Estimated Time:**
