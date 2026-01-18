@@ -4,8 +4,8 @@
 
 This document organizes 12 refactoring actions for the Manage Calendars feature. Each action has a dedicated plan file in `/docs/refactoring/` for detailed implementation steps.
 
-**Status:** Phase 1 Complete ✅ | Phase 2 Complete ✅ | Phase 3-4 In Progress
-**Total Actions:** 12 (6 completed, 6 remaining)
+**Status:** Phase 1 Complete ✅ | Phase 2 Complete ✅ | Phase 3 In Progress
+**Total Actions:** 12 (8 completed, 4 remaining)
 **Estimated Implementation Order:** Sequential (dependencies noted)
 
 ---
@@ -30,11 +30,11 @@ This document organizes 12 refactoring actions for the Manage Calendars feature.
 
 ### Low Priority (Code Quality)
 
-| ID | Action | Complexity | Dependencies | Files Affected | Estimated Lines |
-|----|--------|------------|--------------|----------------|-----------------|
-| **R7** | Extract business logic from scene | Medium | R4 | 3 files | ~300 |
-| **R8** | Add unit tests | Medium | R7 | 6 files | ~500 |
-| **R9** | Improve type safety | Medium | R4 | 2 files | ~150 |
+| ID | Action | Complexity | Dependencies | Files Affected | Estimated Lines | Status |
+|----|--------|------------|--------------|----------------|-----------------|--------|
+| **R7** | Extract business logic from scene | Medium | R4 | 3 files | ~300 | ✅ DONE |
+| **R8** | Add unit tests | Medium | R7 | 6 files | ~500 | |
+| **R9** | Improve type safety | Medium | R4 | 2 files | ~150 | ✅ DONE |
 
 ### Optional (Nice-to-Have)
 
@@ -69,11 +69,11 @@ This document organizes 12 refactoring actions for the Manage Calendars feature.
 ### Phase 3: Code Quality (Recommended)
 **Goal:** Establish testability and type safety
 
-- 🧪 **R7 - Extract business logic from scene** (2 hours)
+- ✅ **R7 - Extract business logic from scene** (Already complete - helpers exist from R4)
 - 🧪 **R8 - Add unit tests** (3 hours)
-- 🧪 **R9 - Improve type safety** (1.5 hours)
+- ✅ **R9 - Improve type safety** (1.5 hours) - DONE
 
-**Total Phase 3:** ~6.5 hours
+**Total Phase 3:** ~~6.5 hours~~ - R7 & R9 Complete ✅, R8 Optional
 
 ### Phase 4: Polish (Optional)
 **Goal:** Enhance user experience and developer experience
