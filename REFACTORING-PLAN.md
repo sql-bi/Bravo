@@ -4,8 +4,8 @@
 
 This document organizes 12 refactoring actions for the Manage Calendars feature. Each action has a dedicated plan file in `/docs/refactoring/` for detailed implementation steps.
 
-**Status:** Phase 1 Complete ✅ | Phase 2 Complete ✅ | Phase 3 Complete ✅
-**Total Actions:** 12 (8 completed, 2 skipped, 2 optional remaining)
+**Status:** Phase 1 Complete ✅ | Phase 2 Complete ✅ | Phase 3 Complete ✅ | Phase 4 In Progress 🔄
+**Total Actions:** 12 (9 completed, 2 skipped, 1 optional remaining)
 **Estimated Implementation Order:** Sequential (dependencies noted)
 
 ---
@@ -41,7 +41,7 @@ This document organizes 12 refactoring actions for the Manage Calendars feature.
 | ID | Action | Complexity | Dependencies | Files Affected | Estimated Lines | Status |
 |----|--------|------------|--------------|----------------|-----------------|--------|
 | **R10** | Performance optimization | Medium | R4, R7 | 3 files | ~200 | ⊘ SKIPPED |
-| **R11** | Accessibility improvements | Medium | R4 | 2 files | ~150 | |
+| **R11** | Accessibility improvements | Medium | R4 | 7 files | ~120 | ✅ DONE |
 | **R12** | Documentation improvements | Low | All | 5 files | ~300 | |
 
 ---
@@ -79,10 +79,10 @@ This document organizes 12 refactoring actions for the Manage Calendars feature.
 **Goal:** Enhance user experience and developer experience
 
 - ⊘ **R10 - Performance optimization** (Skipped - low row/column volume)
-- 🎨 **R11 - Accessibility improvements** (2 hours)
+- ✅ **R11 - Accessibility improvements** (DONE - core WCAG 2.1 Level AA features implemented)
 - 📝 **R12 - Documentation improvements** (1.5 hours)
 
-**Total Phase 4:** ~5.5 hours
+**Total Phase 4:** ✅ R11 complete, R12 remaining
 
 ---
 
