@@ -6,20 +6,57 @@
 
 import { CalendarColumnGroupType, CalendarMetadata, ColumnInfo, ColumnMapping } from '../model/calendars';
 
+/** Sort direction for calendar grid */
 export type SortDirection = 'asc' | 'desc';
+
+/** Sort mode: single calendar or aggregate across all calendars */
 export type SortMode = 'single' | 'aggregate';
 
+/**
+ * Represents the current sort state of the calendar mapping grid
+ */
 export interface SortState {
+    /** Field being sorted (columnName, uniqueValueCount, or calendar_<name>) */
     field: string | null;
+    /** Sort direction */
     direction: SortDirection | null;
+    /** Sort mode: single calendar or aggregate */
     mode: SortMode;
 }
 
+/**
+ * Provides sorting functionality for the Manage Calendars grid.
+ *
+ * Supports two sort modes:
+ * - **Aggregate mode:** Sorts by combined category values across all calendars
+ * - **Single mode:** Sorts by category value within a specific calendar
+ *
+ * Key sorting rules:
+ * 1. Unassigned category always appears at the bottom (regardless of direction)
+ * 2. Within a category, primary columns (★) appear before associated columns (☆)
+ * 3. Associated columns appear before linked/implicit columns (🔗)
+ * 4. Alphabetical sorting as final tie-breaker
+ *
+ * @example
+ * ```typescript
+ * const sortState: SortState = { field: 'Calendar1', direction: 'asc', mode: 'single' };
+ * const sortedData = CalendarSorting.sortData(data, sortState, calendars);
+ * ```
+ */
 export class CalendarSorting {
 
     /**
-     * Get aggregate category value for a column across all calendars
-     * Ignores Unassigned and TimeRelated
+     * Gets the aggregate category value for a column across all calendars.
+     * Ignores Unassigned and TimeRelated categories.
+     *
+     * @param columnName - Name of the column to check
+     * @param calendars - Array of calendar metadata
+     * @param direction - Sort direction
+     * @returns Aggregate sort value (MIN for asc, MAX for desc, or extreme value if no valid categories)
+     *
+     * @remarks
+     * Returns Number.MAX_SAFE_INTEGER for asc (or MIN for desc) when no valid categories exist,
+     * forcing unassigned columns to the bottom.
      */
     static getAggregateCategoryValue(
         columnName: string,
@@ -50,7 +87,17 @@ export class CalendarSorting {
     }
 
     /**
-     * Get category value with Unassigned always at bottom
+     * Gets the sort value for a calendar category, with Unassigned always at the bottom.
+     *
+     * @param category - The category type (or undefined for blank cells)
+     * @param direction - Sort direction (unused, kept for API consistency)
+     * @returns Sort value (enum value for normal categories, MAX for blank/unassigned)
+     *
+     * @remarks
+     * Special handling:
+     * - Blank cells (undefined): Number.MAX_SAFE_INTEGER (bottom)
+     * - Unassigned: Number.MAX_SAFE_INTEGER - 1 (second to bottom)
+     * - All other categories: Return their enum value (1-100)
      */
     static getCategorySortValue(category: CalendarColumnGroupType | undefined, direction: SortDirection): number {
         if (category === undefined || category === null) {
@@ -67,7 +114,21 @@ export class CalendarSorting {
     }
 
     /**
-     * Get role priority for sorting (Primary > Associated > Linked)
+     * Gets the priority of a mapping role for sorting.
+     *
+     * Role priority (highest to lowest):
+     * - Primary (★): 0
+     * - Associated (☆): 1
+     * - Linked/Implicit (🔗): 2
+     * - No mapping: 3
+     *
+     * @param mapping - The column mapping (or undefined if no mapping)
+     * @returns Priority value (0-3, lower is higher priority)
+     *
+     * @remarks
+     * Within a category group, mappings are sorted by role priority.
+     * This ensures primary columns appear first, followed by associated,
+     * then linked columns.
      */
     static getRolePriority(mapping: ColumnMapping | undefined): number {
         if (!mapping) return 3;  // No mapping comes last
@@ -158,7 +219,33 @@ export class CalendarSorting {
     }
 
     /**
-     * Sort table data based on sort state
+     * Sorts table data based on the current sort state.
+     *
+     * Sorting algorithm:
+     * 1. Primary sort: By the specified field (column name, cardinality, or category)
+     * 2. Secondary sort: By role priority (primary > associated > linked)
+     * 3. Tertiary sort: Alphabetically by column name
+     *
+     * @param data - Array of row data to sort
+     * @param sortState - The current sort state
+     * @param calendars - Array of calendar metadata
+     * @returns Sorted array (creates a new array, does not mutate input)
+     *
+     * @remarks
+     * Special behaviors:
+     * - Unassigned category always sorts to the bottom
+     * - Aggregate mode considers all calendars
+     * - Single mode considers only the specified calendar
+     * - Returns original data if no sort field or direction specified
+     *
+     * @example
+     * ```typescript
+     * const sortedData = CalendarSorting.sortData(
+     *     rowData,
+     *     { field: 'calendar_Date', direction: 'asc', mode: 'single' },
+     *     calendars
+     * );
+     * ```
      */
     static sortData(
         data: any[],

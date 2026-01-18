@@ -9,13 +9,56 @@ import { i18n } from '../model/i18n';
 import { strings } from '../model/strings';
 
 /**
- * Helper utilities for calendar column mappings
+ * Helper utilities for calendar column mappings.
+ *
+ * Provides functions for:
+ * - Managing SortByColumn relationships and linked column groups
+ * - Filtering implicit vs explicit mappings
+ * - Localization of category labels
+ * - Category type classification (independent vs regular)
+ *
+ * @remarks
+ * Calendar mappings represent assignments of table columns to calendar categories (Year, Month, etc.).
+ * Mappings can be:
+ * - **Explicit:** User-assigned, stored in TOM
+ * - **Implicit:** Derived from SortByColumn relationships, not stored in TOM
+ *
+ * @example
+ * ```typescript
+ * // Get linked column group
+ * const linked = CalendarMappings.getLinkedColumnGroup('MonthName', columns);
+ * // Returns: ['MonthName', 'MonthNumber'] if MonthName.SortByColumn = MonthNumber
+ *
+ * // Get localized label
+ * const label = CalendarMappings.getCategoryLabel(CalendarColumnGroupType.Year);
+ * // Returns: "Year" (localized)
+ * ```
  */
 export class CalendarMappings {
 
     /**
      * Gets all columns that are linked to the given column via SortByColumn relationships.
-     * Returns an array of column names that should be updated together.
+     *
+     * @param columnName - The column to find linked columns for
+     * @param columns - Array of all columns in the table
+     * @returns Array of column names that should be updated together (includes the input column)
+     *
+     * @remarks
+     * This implements bidirectional SortByColumn relationship tracking:
+     * 1. If this column is used as SortByColumn by others (display columns), include those
+     * 2. If this column uses another as SortByColumn (sort column), include that + its other display columns
+     *
+     * Example: If MonthName.SortByColumn = MonthNumber
+     * - getLinkedColumnGroup('MonthName') returns ['MonthName', 'MonthNumber']
+     * - getLinkedColumnGroup('MonthNumber') returns ['MonthNumber', 'MonthName']
+     *
+     * @example
+     * ```typescript
+     * // MonthName.SortByColumn = MonthNumber
+     * // MonthNameShort.SortByColumn = MonthNumber
+     * const linked = CalendarMappings.getLinkedColumnGroup('MonthNumber', columns);
+     * // Returns: ['MonthNumber', 'MonthName', 'MonthNameShort']
+     * ```
      */
     static getLinkedColumnGroup(columnName: string, columns: ColumnInfo[]): string[] {
         if (!columns) return [columnName];

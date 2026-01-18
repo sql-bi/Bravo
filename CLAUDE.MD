@@ -339,3 +339,81 @@ A comprehensive refactoring plan has been created to improve code quality, archi
 - Review and approve each action plan before implementation
 - Commit changes with action ID reference (e.g., "R1: Complete localization")
 - Run tests after each action to ensure no regression
+
+---
+
+## Documentation
+
+### Architecture Decision Records (ADRs)
+
+ADRs document key architectural decisions made during development. Located in `docs/architecture/`:
+
+- **[ADR-001: Controller Routing Pattern](docs/architecture/ADR-001-controller-routing.md)** - Feature-specific routing convention for controller actions
+- **[ADR-002: BEM CSS Methodology](docs/architecture/ADR-002-bem-css-methodology.md)** - Flat CSS selectors using BEM naming to avoid nesting depth issues
+
+### Code Documentation
+
+#### TypeScript (JSDoc)
+
+Helper modules include comprehensive JSDoc comments:
+
+- **`src/Scripts/helpers/calendar-sorting.ts`** - Sorting algorithms for calendar grid (aggregate vs single mode, category priorities)
+- **`src/Scripts/helpers/calendar-mappings.ts`** - SortByColumn relationship management, mapping CRUD operations
+- **`src/Scripts/helpers/calendar-suggestions.ts`** - Smart completion logic, suggestion filtering
+
+#### C# (XML Documentation)
+
+Backend services use XML documentation comments:
+
+- **`src/Services/ManageCalendarsService.cs`** - TOM interaction, calendar CRUD, smart completion generation
+- **`src/Controllers/ManageCalendarsController.cs`** - HTTP endpoints, request/response handling
+
+### Developer Resources
+
+#### Quick Start
+
+```bash
+# Build frontend
+cd src/Scripts
+npm run build
+
+# Run backend
+dotnet build src/Bravo.sln
+```
+
+#### Key Files
+
+- **Feature Entry Point:** `src/Scripts/view/scene-manage-calendars.ts`
+- **Grid Component:** `src/Scripts/view/scene-manage-calendars-grid.ts`
+- **Header Component:** `src/Scripts/view/scene-manage-calendars-header.ts`
+- **Data Models:** `src/Scripts/model/calendars.ts`
+- **Backend Service:** `src/Services/ManageCalendarsService.cs`
+
+#### Testing
+
+```bash
+# Manual testing
+1. Open Bravo for Power BI
+2. Connect to a model with a date table
+3. Navigate to Manage Calendars
+4. Test:
+   - Adding/deleting calendars
+   - Assigning categories
+   - Smart completion
+   - SortByColumn relationships
+   - Cardinality validation
+
+# Accessibility testing (R11)
+- Use screen reader (NVDA, JAWS, VoiceOver)
+- Test keyboard navigation (Tab, Enter, Space)
+- Verify ARIA labels announce correctly
+```
+
+### Refactoring Documentation
+
+See [REFACTORING-PLAN.md](REFACTORING-PLAN.md) for:
+- 12 refactoring actions (9 completed, 2 skipped, 1 completed in R12)
+- Implementation phases
+- Detailed action plans in `docs/refactoring/`
+
+**Status:** 10/12 actions complete (R1-R7, R9, R11-R12)

@@ -7,14 +7,56 @@
 import { CalendarColumnGroupType, CalendarMetadata, ColumnInfo, SmartCompletionSuggestion, TableCalendarInfo } from '../model/calendars';
 
 /**
- * Helper utilities for smart completion suggestions
+ * Helper utilities for smart completion suggestions.
+ *
+ * Smart completion automatically suggests calendar category assignments based on:
+ * - Year cardinality (used as reference for expected cardinalities)
+ * - Column distinct value counts
+ * - SortByColumn relationships
+ *
+ * @remarks
+ * Smart completion is only available when:
+ * 1. At least one calendar has a Year column assigned
+ * 2. The Year column has a valid cardinality (distinct count)
+ *
+ * Suggestions are displayed with yellow background and can be accepted individually or in bulk.
+ *
+ * @example
+ * ```typescript
+ * // Filter suggestions for display
+ * const active = CalendarSuggestions.filterSuggestionsForDisplay(suggestions, tableInfo);
+ * // Returns: Set<"Calendar1:MonthName", "Calendar1:QuarterNumber">
+ *
+ * // Check if smart completion button should highlight
+ * const shouldHighlight = CalendarSuggestions.shouldHighlightSmartCompletionButton(tableInfo);
+ * ```
  */
 export class CalendarSuggestions {
 
     /**
      * Filters smart completion suggestions to return only those that should be displayed.
      * Excludes columns that already have any assignment (explicit or implicit).
-     * Returns a Set of suggestion keys in format "calendarName:columnName".
+     *
+     * @param suggestions - Array of smart completion suggestions from backend
+     * @param tableInfo - Table calendar information with current mappings
+     * @returns Set of suggestion keys in format "calendarName:columnName"
+     *
+     * @remarks
+     * A suggestion is filtered out (not displayed) if the cell already has:
+     * - An explicit assignment (user-assigned category)
+     * - An implicit assignment (linked via SortByColumn)
+     *
+     * This prevents showing suggestions for columns that are already categorized.
+     *
+     * @example
+     * ```typescript
+     * const suggestions = [
+     *     { calendarName: 'Date', columnName: 'Year', suggestedCategory: CalendarColumnGroupType.Year },
+     *     { calendarName: 'Date', columnName: 'Month', suggestedCategory: CalendarColumnGroupType.Month }
+     * ];
+     * const active = CalendarSuggestions.filterSuggestionsForDisplay(suggestions, tableInfo);
+     * // Returns: Set<"Date:Month"> (if Year is already assigned)
+     * ```
      */
     static filterSuggestionsForDisplay(
         suggestions: SmartCompletionSuggestion[],
