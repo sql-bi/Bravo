@@ -320,6 +320,12 @@ export class ManageCalendarsScene extends DocScene {
 
             await this.saveCalendar(calendarName, calendar);
 
+            // Announce the update to screen readers
+            if (this.grid && groupType !== null) {
+                const categoryLabel = CalendarMappings.getCategoryLabel(groupType);
+                this.grid.announceUpdate(columnName, categoryLabel);
+            }
+
         } catch (error: any) {
             logger.logError(error);
         }

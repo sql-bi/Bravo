@@ -43,6 +43,7 @@ export class ManageCalendarsGrid {
 
     private mappingTable: Tabulator | null = null;
     private tableData: CalendarMappingRow[] = [];
+    private liveRegion: HTMLElement;
 
     constructor(
         container: HTMLElement,
@@ -60,6 +61,14 @@ export class ManageCalendarsGrid {
         this.sortState = sortState;
         this.activeSuggestions = activeSuggestions;
         this.callbacks = callbacks;
+
+        // Create ARIA live region for announcements
+        this.liveRegion = document.createElement('div');
+        this.liveRegion.setAttribute('role', 'status');
+        this.liveRegion.setAttribute('aria-live', 'polite');
+        this.liveRegion.setAttribute('aria-atomic', 'true');
+        this.liveRegion.className = 'sr-only';
+        document.body.appendChild(this.liveRegion);
     }
 
     render(): void {
@@ -87,6 +96,10 @@ export class ManageCalendarsGrid {
         if (this.mappingTable) {
             this.mappingTable.destroy();
         }
+
+        // Add ARIA label to container for accessibility
+        this.container.setAttribute('aria-label', i18n(strings.manageCalendarsGridAriaLabel));
+        this.container.setAttribute('role', 'region');
 
         this.mappingTable = new Tabulator(this.container, {
             data: sortedData,
@@ -166,6 +179,11 @@ export class ManageCalendarsGrid {
     }
 
     destroy(): void {
+        // Cleanup live region
+        if (this.liveRegion && this.liveRegion.parentElement) {
+            this.liveRegion.parentElement.removeChild(this.liveRegion);
+        }
+        // Cleanup Tabulator
         if (this.mappingTable) {
             this.mappingTable.destroy();
             this.mappingTable = null;
@@ -306,12 +324,15 @@ export class ManageCalendarsGrid {
         let iconHtml: string;
         let labelClass = "";
         if (isImplicitLinked) {
-            iconHtml = '<span class="manage-calendars__cell-icon manage-calendars__cell-icon--linked">🔗</span>';
+            const ariaLabel = i18n(strings.manageCalendarsLinkedColumnAriaLabel).replace('{categoryName}', label);
+            iconHtml = `<button type="button" class="manage-calendars__cell-icon manage-calendars__cell-icon--linked" aria-label="${ariaLabel}" title="${i18n(strings.manageCalendarsImplicitColumnTooltip)}"><span aria-hidden="true">🔗</span></button>`;
             labelClass = " manage-calendars__cell-label--implicit";
         } else if (mapping.isPrimary) {
-            iconHtml = '<span class="manage-calendars__cell-icon manage-calendars__cell-icon--primary">★</span>';
+            const ariaLabel = i18n(strings.manageCalendarsRemovePrimaryAriaLabel).replace('{categoryName}', label);
+            iconHtml = `<button type="button" class="manage-calendars__cell-icon manage-calendars__cell-icon--primary" aria-label="${ariaLabel}" title="${i18n(strings.manageCalendarsRemoveAssignmentTooltip)}"><span aria-hidden="true">★</span></button>`;
         } else {
-            iconHtml = '<span class="manage-calendars__cell-icon manage-calendars__cell-icon--associated">☆</span>';
+            const ariaLabel = i18n(strings.manageCalendarsPromoteToPrimaryAriaLabel).replace('{categoryName}', label);
+            iconHtml = `<button type="button" class="manage-calendars__cell-icon manage-calendars__cell-icon--associated" aria-label="${ariaLabel}" title="${i18n(strings.manageCalendarsPromoteTooltip)}"><span aria-hidden="true">☆</span></button>`;
         }
 
         return `<span class="manage-calendars__suggested-mapping${labelClass}">${iconHtml} ${label}</span>`;
@@ -337,12 +358,15 @@ export class ManageCalendarsGrid {
             // Regular categories show icons based on role
             if (mapping.isLinked) {
                 labelClass += " manage-calendars__cell-label--implicit";
-                iconHtml = `<span class="manage-calendars__cell-icon manage-calendars__cell-icon--linked" data-column="${columnName}" data-calendar="${calendarName}" data-category="${groupType}" title="${i18n(strings.manageCalendarsImplicitColumnTooltip)}">🔗</span> `;
+                const ariaLabel = i18n(strings.manageCalendarsLinkedColumnAriaLabel).replace('{categoryName}', label);
+                iconHtml = `<button type="button" class="manage-calendars__cell-icon manage-calendars__cell-icon--linked" data-column="${columnName}" data-calendar="${calendarName}" data-category="${groupType}" aria-label="${ariaLabel}" title="${i18n(strings.manageCalendarsImplicitColumnTooltip)}"><span aria-hidden="true">🔗</span></button> `;
             } else if (mapping.isPrimary) {
                 labelClass += " manage-calendars__cell-label--primary";
-                iconHtml = `<span class="manage-calendars__cell-icon manage-calendars__cell-icon--primary" data-column="${columnName}" data-calendar="${calendarName}" title="${i18n(strings.manageCalendarsRemoveAssignmentTooltip)}">★</span> `;
+                const ariaLabel = i18n(strings.manageCalendarsRemovePrimaryAriaLabel).replace('{categoryName}', label);
+                iconHtml = `<button type="button" class="manage-calendars__cell-icon manage-calendars__cell-icon--primary" data-column="${columnName}" data-calendar="${calendarName}" aria-label="${ariaLabel}" title="${i18n(strings.manageCalendarsRemoveAssignmentTooltip)}"><span aria-hidden="true">★</span></button> `;
             } else {
-                iconHtml = `<span class="manage-calendars__cell-icon manage-calendars__cell-icon--associated" data-column="${columnName}" data-calendar="${calendarName}" data-category="${groupType}" title="${i18n(strings.manageCalendarsPromoteTooltip)}">☆</span> `;
+                const ariaLabel = i18n(strings.manageCalendarsPromoteToPrimaryAriaLabel).replace('{categoryName}', label);
+                iconHtml = `<button type="button" class="manage-calendars__cell-icon manage-calendars__cell-icon--associated" data-column="${columnName}" data-calendar="${calendarName}" data-category="${groupType}" aria-label="${ariaLabel}" title="${i18n(strings.manageCalendarsPromoteTooltip)}"><span aria-hidden="true">☆</span></button> `;
             }
         }
 
@@ -362,7 +386,10 @@ export class ManageCalendarsGrid {
                 .replace('{actualCardinality}', warning.actualCardinality.toString())
                 .replace('{expectedCardinality}', expectedDesc)
                 .replace('{categoryName}', CalendarMappings.getCategoryLabel(groupType));
-            warningHtml = ` <span class="manage-calendars__warning-icon" title="${tooltipText}">⚠️</span>`;
+            const ariaLabel = i18n(strings.manageCalendarsCardinalityWarningAriaLabel)
+                .replace('{actualCardinality}', warning.actualCardinality.toString())
+                .replace('{expectedCardinality}', expectedDesc);
+            warningHtml = ` <button type="button" class="manage-calendars__warning-icon" aria-label="${ariaLabel}" title="${tooltipText}"><span aria-hidden="true">⚠️</span></button>`;
         }
 
         const labelHtml = `<span class="${labelClass}">${label}</span>`;
@@ -370,7 +397,12 @@ export class ManageCalendarsGrid {
     }
 
     private handleCellClick(e: any, cell: Tabulator.CellComponent, calendarName: string): void {
-        const target = e.target as HTMLElement;
+        let target = e.target as HTMLElement;
+        // If click target is the aria-hidden span inside a button, use the button as target
+        if (target.parentElement && target.parentElement.tagName === 'BUTTON') {
+            target = target.parentElement;
+        }
+
         const rowData = cell.getRow().getData();
         const columnName = rowData.columnName;
         const suggestionKey = `${calendarName}:${columnName}`;
@@ -562,5 +594,22 @@ export class ManageCalendarsGrid {
         const backgroundColor = getCSSVariable('--warning-back-color');
         const textColor = getCSSVariable('--warning-color');
         return { backgroundColor, textColor };
+    }
+
+    /**
+     * Announce an update to screen readers via the live region
+     */
+    announceUpdate(columnName: string, categoryName: string): void {
+        if (!this.liveRegion) return;
+
+        const message = i18n(strings.manageCalendarsUpdateAnnouncement)
+            .replace('{columnName}', columnName)
+            .replace('{categoryName}', categoryName);
+
+        // Clear first to ensure screen reader announces the change
+        this.liveRegion.textContent = '';
+        setTimeout(() => {
+            this.liveRegion.textContent = message;
+        }, 100);
     }
 }

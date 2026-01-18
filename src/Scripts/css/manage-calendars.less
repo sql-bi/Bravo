@@ -1,4 +1,18 @@
 // main: main.less
+
+// Screen reader only class for accessibility
+.sr-only {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+}
+
 .manage-calendars {
     h1 {
         .icon-manage-calendars;
@@ -461,6 +475,13 @@
     vertical-align: middle !important;
     // Slower transition when returning to normal size for smoother bounce-back effect
     transition: opacity 0.2s ease, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+    // Button reset styles
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    font-size: inherit !important;
+    font-family: inherit !important;
+    color: inherit !important;
 
     &:hover {
         opacity: 0.7 !important;
@@ -471,6 +492,11 @@
         transform: scale(0.85) !important;
         opacity: 0.3 !important;
         transition: opacity 0.1s ease, transform 0.1s ease !important;
+    }
+
+    &:focus {
+        outline: 2px solid @highlight-color !important;
+        outline-offset: 2px !important;
     }
 }
 
@@ -524,6 +550,17 @@
     font-size: 14px !important;
     cursor: help !important;
     vertical-align: middle !important;
+    // Button reset styles
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    font-family: inherit !important;
+    color: inherit !important;
+
+    &:focus {
+        outline: 2px solid @highlight-color !important;
+        outline-offset: 2px !important;
+    }
 }
 
 // Suggested mapping cell (yellow background)
