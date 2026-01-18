@@ -57,17 +57,17 @@ export class ManageCalendarsHeader {
                 </div>
                 <div class="actions">
                     <button class="btn btn-primary btn-add-calendar disable-on-syncing enable-if-editable">${i18n(strings.manageCalendarsAddCalendar)}</button>
-                    <button class="btn btn-smart-completion disable-on-syncing enable-if-editable" title="${i18n(strings.manageCalendarsSmartCompletionTooltip)}">Smart completion</button>
-                    <button class="btn btn-accept-suggestions disable-on-syncing enable-if-editable" style="display: none;">Accept all suggestions</button>
+                    <button class="btn btn-smart-completion disable-on-syncing enable-if-editable" title="${i18n(strings.manageCalendarsSmartCompletionTooltip)}">${i18n(strings.manageCalendarsSmartCompletion)}</button>
+                    <button class="btn btn-accept-suggestions disable-on-syncing enable-if-editable" style="display: none;">${i18n(strings.manageCalendarsAcceptAllSuggestions)}</button>
                     <label class="hide-unassigned-control">
                         <input type="checkbox" class="hide-unassigned-checkbox">
-                        <span>Hide unassigned columns</span>
+                        <span>${i18n(strings.manageCalendarsHideUnassignedColumns)}</span>
                     </label>
                 </div>
                 <div class="legend">
-                    <div class="legend-item" title="Primary column for the related category"><span class="legend-icon">★</span> Primary</div>
-                    <div class="legend-item" title="Associated column for the related category"><span class="legend-icon">☆</span> Associated</div>
-                    <div class="legend-item" title="Implicitly associated column for the related category because it used to sort a primary or associated column"><span class="legend-icon">🔗</span> Linked</div>
+                    <div class="legend-item" title="${i18n(strings.manageCalendarsLegendPrimaryTooltip)}"><span class="legend-icon">★</span> ${i18n(strings.manageCalendarsLegendPrimary)}</div>
+                    <div class="legend-item" title="${i18n(strings.manageCalendarsLegendAssociatedTooltip)}"><span class="legend-icon">☆</span> ${i18n(strings.manageCalendarsLegendAssociated)}</div>
+                    <div class="legend-item" title="${i18n(strings.manageCalendarsLegendLinkedTooltip)}"><span class="legend-icon">🔗</span> ${i18n(strings.manageCalendarsLegendLinked)}</div>
                 </div>
             </div>
         `;
