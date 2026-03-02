@@ -91,11 +91,11 @@
       },
       "Microsoft.Extensions.Logging.ApplicationInsights": {
         "type": "Direct",
-        "requested": "[2.22.0, )",
-        "resolved": "2.22.0",
-        "contentHash": "5OmXub+9MyX8FbqgO+hBJRHk1iJ+UZUU20oIU3wo+RbmH6Jtsja79rriHLlzlrkMzWbpCkCzF6f4Yb6iGbsDag==",
+        "requested": "[2.23.0, )",
+        "resolved": "2.23.0",
+        "contentHash": "JLEabPz445i1yRB0hKZVzJJE35QatRIzWlrMOiBQXr9kBJod0jkpkrBf94ln6kXu+jlEGohnXtuXacPPhybJDw==",
         "dependencies": {
-          "Microsoft.ApplicationInsights": "2.22.0",
+          "Microsoft.ApplicationInsights": "2.23.0",
           "Microsoft.Extensions.Logging": "2.1.1"
         }
       },
@@ -193,8 +193,8 @@
       },
       "Microsoft.ApplicationInsights": {
         "type": "Transitive",
-        "resolved": "2.22.0",
-        "contentHash": "3AOM9bZtku7RQwHyMEY3tQMrHIgjcfRDa6YQpd/QG2LDGvMydSlL9Di+8LLMt7J2RDdfJ7/2jdYv6yHcMJAnNw==",
+        "resolved": "2.23.0",
+        "contentHash": "nWArUZTdU7iqZLycLKWe0TDms48KKGE6pONH2terYNa8REXiqixrMOkf1sk5DHGMaUTqONU2YkS4SAXBhLStgw==",
         "dependencies": {
           "System.Diagnostics.DiagnosticSource": "5.0.0"
         }
