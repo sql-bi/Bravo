@@ -106,11 +106,9 @@
         [ProducesDefaultResponseType]
         public IActionResult ExportExcelFile(ExportExcelFromPBIReportRequest request, CancellationToken cancellationToken)
         {
-            var useZip64 = CommonHelper.IsKeyDown(System.Windows.Forms.Keys.ControlKey);
-
             if (WindowDialogHelper.SaveFileDialog(fileName: request.Report!.ReportName, filter: null, defaultExt: "XLSX", out var path, cancellationToken))
             {
-                var job = _exportDataService.ExportExcelFile(request.Report, request.Settings!, path, useZip64, cancellationToken);
+                var job = _exportDataService.ExportExcelFile(request.Report, request.Settings!, path, cancellationToken);
                 return Ok(job);
             }
 
@@ -132,14 +130,12 @@
         [ProducesDefaultResponseType]
         public async Task<IActionResult> ExportExcelFile(ExportExcelFromPBICloudDatasetRequest request, CancellationToken cancellationToken)
         {
-            var useZip64 = CommonHelper.IsKeyDown(System.Windows.Forms.Keys.ControlKey);
-
             if (await _authenticationService.IsPBICloudSignInRequiredAsync(cancellationToken))
                 return Unauthorized();
 
             if (WindowDialogHelper.SaveFileDialog(fileName: request.Dataset!.DisplayName, filter: null, defaultExt: "XLSX", out var path, cancellationToken))
             {
-                var job = _exportDataService.ExportExcelFile(request.Dataset, request.Settings!, path, _authenticationService.PBICloudAuthentication.AccessToken, useZip64, cancellationToken);
+                var job = _exportDataService.ExportExcelFile(request.Dataset, request.Settings!, path, _authenticationService.PBICloudAuthentication.AccessToken, cancellationToken);
                 return Ok(job);
             }
 
