@@ -79,15 +79,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="Antlr4.Runtime">
-      <HintPath>Assets\lib\Antlr4.Runtime.dll</HintPath>
-    </Reference>
-    <Reference Include="TOMWrapper">
-      <HintPath>Assets\lib\TOMWrapper.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-
-  <ItemGroup>
     <Content Remove="Scripts\*.json" />
     <None Include="Scripts\*.json" />
     <Content Include="Assets\bravo.ico" />
