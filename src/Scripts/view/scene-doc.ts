@@ -12,6 +12,8 @@ import { PageType } from '../controllers/page';
 import { UnsupportedScene } from './scene-unsupported';
 import { NavigatorScene } from './scene-navigator';
 import { HelpDialog } from './help-dialog';
+import { DeobfuscateDialog } from './deobfuscate-dialog';
+import { DialogResponse } from './dialog';
 import { help } from '../model/help';
 
 export abstract class DocScene extends NavigatorScene {
@@ -120,7 +122,13 @@ export abstract class DocScene extends NavigatorScene {
 
     deobfuscate() {
         telemetry.track("Deobfuscate");
-        this.trigger("deobfuscate");
+
+        let dialog = new DeobfuscateDialog();
+        dialog.show().then((response: DialogResponse) => {
+            if (response.action == "deobfuscate" && response.data.dictionaryFile) {
+                this.trigger("deobfuscate", response.data.dictionaryFile);
+            }
+        });
     }
 
     update() {

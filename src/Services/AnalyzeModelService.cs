@@ -10,7 +10,7 @@
 
     public interface IAnalyzeModelService
     {
-        TabularDatabase GetDatabase(Stream stream);
+        TabularDatabase GetDatabase(Stream stream, Stream? dictionaryStream = null);
 
         TabularDatabase GetDatabase(PBIDesktopReport report, CancellationToken cancellationToken);
 
@@ -38,9 +38,9 @@
             _pbidesktopService = pbidesktopService;
         }
 
-        public TabularDatabase GetDatabase(Stream stream)
+        public TabularDatabase GetDatabase(Stream vpaxStream, Stream? obfuscatorDictionaryStream = null)
         {
-            return TabularDatabase.CreateFrom(stream);
+            return TabularDatabase.CreateFrom(vpaxStream, obfuscatorDictionaryStream);
         }
 
         public TabularDatabase GetDatabase(PBIDesktopReport report, CancellationToken cancellationToken)

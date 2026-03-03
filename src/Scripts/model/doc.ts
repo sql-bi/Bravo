@@ -143,6 +143,26 @@ export class Doc {
         });
     }
 
+    deobfuscate(dictionaryFile: File) {
+
+        if (this.type != DocType.vpax)
+            return Promise.reject(AppError.InitFromResponseStatus(Utils.ResponseStatusCode.InternalError));
+
+        return host.getModelFromVpax(<File>this.sourceData, dictionaryFile)
+            .then(response => {
+                if (response && response.model) {
+                    this.formattedMeasures = {};
+                    this.model = response.model;
+                    this.measures = response.measures;
+                    this.features = [response.features, response.featureUnsupportedReasons];
+                    this.loaded = true;
+                    this.lastSync = Date.now();
+                } else {
+                    return Promise.reject();
+                }
+            });
+    }
+
     analizeMeasure(measure: TabularMeasure): MeasureStatus  {
 
         let key = daxName(measure.tableName, measure.name);

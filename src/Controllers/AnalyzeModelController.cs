@@ -30,18 +30,21 @@
         }
 
         /// <summary>
-        /// Returns a database model from the VPAX file stream provided in the request body.
+        /// Returns a database model from the VPAX file provided as multipart form data.
+        /// An optional obfuscation dictionary file can be included to deobfuscate the model.
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
         [HttpPost]
         [ActionName("GetModelFromVpax")]
-        [Consumes(MediaTypeNames.Application.Octet)]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(TabularDatabase))]
         [ProducesDefaultResponseType]
-        public IActionResult GetDatabase(CancellationToken cancellationToken)
+        public IActionResult GetDatabase(IFormFile[] files, CancellationToken cancellationToken)
         {
-            var database = _analyzeModelService.GetDatabase(stream: Request.Body);
+            using var vpaxStream = files[0].OpenReadStream();
+            using var obfuscatorDictionaryStream = files.ElementAtOrDefault(1)?.OpenReadStream();
+
+            var database = _analyzeModelService.GetDatabase(vpaxStream, obfuscatorDictionaryStream);
             return Ok(database);
         }
 

@@ -28,9 +28,15 @@
         [JsonPropertyName("measures")]
         public IEnumerable<TabularMeasure>? Measures { get; set; }
 
-        internal static TabularDatabase CreateFrom(Stream stream)
+        internal static TabularDatabase CreateFrom(Stream vpaxStream, Stream? obfuscationDictionaryStream = null)
         {
-            var daxModel = VpaxHelper.GetDaxModel(stream);
+            var daxModel = VpaxHelper.GetDaxModel(vpaxStream);
+
+            if (obfuscationDictionaryStream is not null)
+            {
+                VpaxObfuscatorHelper.DeobfuscateModel(daxModel, obfuscationDictionaryStream);
+            }
+
             var database = CreateFrom(daxModel);
             {
                 database.Features &= ~TabularDatabaseFeature.AnalyzeModelSynchronize;
@@ -43,10 +49,9 @@
                 database.FeatureUnsupportedReasons |= TabularDatabaseFeatureUnsupportedReason.MetadataOnly;
                 database.FeatureUnsupportedReasons |= TabularDatabaseFeatureUnsupportedReason.ReadOnly;
 
-                if (daxModel.ObfuscatorDictionaryId is not null)
+                if (daxModel.ObfuscatorDictionaryId is not null && obfuscationDictionaryStream is null)
                 {
-                    // The obfuscation dictionary ID in the VPAX file indicates that the model
-                    // is obfuscated, therefore we can enable the deobfuscation features.
+                    // Model is obfuscated and no dictionary provided, enable deobfuscation features
                     database.Features |= TabularDatabaseFeature.AnalyzeModelDeobfuscateVpax;
                     database.Features |= TabularDatabaseFeature.FormatDaxDeobfuscateVpax;
                 }

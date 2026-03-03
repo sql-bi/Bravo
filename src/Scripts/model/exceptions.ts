@@ -28,6 +28,8 @@ export enum AppProblem {
     NetworkError = 600,
     ExportDataFileError = 700,
     ManageDateTemplateError = 800,
+    VpaxObfuscationError = 1000,
+    VpaxDeobfuscationError = 1001
 }
 
 export enum AppErrorType {
