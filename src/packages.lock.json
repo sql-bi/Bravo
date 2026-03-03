@@ -83,12 +83,6 @@
         "resolved": "2.0.1",
         "contentHash": "P0Vlas50Sn0IewU+yK5F1vsFK3gl9OcF1W+0I3okynrudScGu+MHooClWBx3RMbzdhKQyZm4sEYsVjnjTbFzPg=="
       },
-      "Macross.Json.Extensions": {
-        "type": "Direct",
-        "requested": "[3.0.0, )",
-        "resolved": "3.0.0",
-        "contentHash": "AkNshs6dopj8FXsmkkJxvLivN2SyDJQDbjcds5lo9+Y6L4zpcoXdmzXQ3VVN+AIWQr0CTD5A7vkuHGAr2aypZg=="
-      },
       "Microsoft.Extensions.Logging.ApplicationInsights": {
         "type": "Direct",
         "requested": "[2.23.0, )",
