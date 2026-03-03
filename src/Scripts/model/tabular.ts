@@ -121,6 +121,7 @@ export enum TabularDatabaseFeature {
     FormatDaxPage = 1 << 200,
     FormatDaxSynchronize = 1 << 201,
     FormatDaxUpdateModel = 1 << 202,
+    FormatDaxDeobfuscateVpax = 1 << 203,
     FormatDaxAll = FormatDaxPage | FormatDaxSynchronize | FormatDaxUpdateModel,
 
     ManageDatesPage = 1 << 300,

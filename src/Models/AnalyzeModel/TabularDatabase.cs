@@ -44,7 +44,12 @@
                 database.FeatureUnsupportedReasons |= TabularDatabaseFeatureUnsupportedReason.ReadOnly;
 
                 if (daxModel.ObfuscatorDictionaryId is not null)
+                {
+                    // The obfuscation dictionary ID in the VPAX file indicates that the model
+                    // is obfuscated, therefore we can enable the deobfuscation features.
                     database.Features |= TabularDatabaseFeature.AnalyzeModelDeobfuscateVpax;
+                    database.Features |= TabularDatabaseFeature.FormatDaxDeobfuscateVpax;
+                }
             }
             return database;
         }
@@ -199,11 +204,12 @@
         AnalyzeModelSynchronize = 1 << 101,
         AnalyzeModelExportVpax = 1 << 102,
         AnalyzeModelDeobfuscateVpax = 1 << 103,
-        AnalyzeModelAll = AnalyzeModelPage | AnalyzeModelSynchronize | AnalyzeModelExportVpax, // AnalyzeModelDeobfuscateVpax is not included in 'All'/'Default'
+        AnalyzeModelAll = AnalyzeModelPage | AnalyzeModelSynchronize | AnalyzeModelExportVpax,
 
         FormatDaxPage = 1 << 200,
         FormatDaxSynchronize = 1 << 201,
         FormatDaxUpdateModel = 1 << 202,
+        FormatDaxDeobfuscateVpax = 1 << 203,
         FormatDaxAll = FormatDaxPage | FormatDaxSynchronize | FormatDaxUpdateModel,
 
         ManageDatesPage = 1 << 300,
