@@ -28,9 +28,9 @@
         [JsonPropertyName("measures")]
         public IEnumerable<TabularMeasure>? Measures { get; set; }
 
-        internal static TabularDatabase CreateFromVpax(Stream stream, Stream? dictionaryStream)
+        internal static TabularDatabase CreateFrom(Stream stream)
         {
-            var daxModel = VpaxHelper.GetDaxModel(stream, dictionaryStream);
+            var daxModel = VpaxHelper.GetDaxModel(stream);
             var database = CreateFrom(daxModel);
             {
                 database.Features &= ~TabularDatabaseFeature.AnalyzeModelSynchronize;
@@ -43,7 +43,7 @@
                 database.FeatureUnsupportedReasons |= TabularDatabaseFeatureUnsupportedReason.MetadataOnly;
                 database.FeatureUnsupportedReasons |= TabularDatabaseFeatureUnsupportedReason.ReadOnly;
 
-                if (daxModel.ObfuscatorDictionaryId != null && dictionaryStream == null)
+                if (daxModel.ObfuscatorDictionaryId is not null)
                     database.Features |= TabularDatabaseFeature.AnalyzeModelDeobfuscateVpax;
             }
             return database;

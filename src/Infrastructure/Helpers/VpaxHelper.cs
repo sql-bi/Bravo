@@ -6,9 +6,6 @@
     using Dax.Vpax.Obfuscator.Common;
     using Dax.Vpax.Tools;
     using Sqlbi.Bravo.Infrastructure.Services;
-    using System;
-    using System.IO;
-    using System.Threading;
 
     internal static class VpaxHelper
     {
@@ -57,7 +54,7 @@
             }
         }
 
-        public static Model GetDaxModel(Stream stream, Stream? dictionaryStream)
+        public static Model GetDaxModel(Stream stream)
         {
             Model? model;
 
@@ -72,23 +69,13 @@
 
             if (model is null)
             {
-                // If the DaxModel is null here it means that the archive may be corrupted or invalid (e.g. does not include the parts required by the ECMA/376 specification)
-                // It could happen in case the System.IO.Packaging.Package was not properly closed/disposed due to an error while flushing the stream.
+                // If DaxModel is null at this stage, the archive must be considered invalid
+                // or corrupted, for example if it does not contain the parts required by the
+                // ECMA-376 specification. This may also occur if the underlying
+                // System.IO.Packaging.Package was not properly finalized during creation
+                // (i.e., not correctly closed or disposed), such as when an error happened
+                // while flushing the stream.
                 throw new BravoException(BravoProblem.VpaxFileImportError, "The VPAX file may be invalid or corrupted.");
-            }
-
-            if (dictionaryStream != null)
-            {   
-                try
-                {
-                    var obfuscator = new VpaxObfuscator();
-                    var dictionary = ObfuscationDictionary.ReadFrom(dictionaryStream);
-                    obfuscator.Deobfuscate(model, dictionary);
-                }
-                catch (Exception ex)
-                {
-                    throw new BravoException(BravoProblem.VpaxDeobfuscationError, ex.Message, ex);
-                }
             }
 
             return model;

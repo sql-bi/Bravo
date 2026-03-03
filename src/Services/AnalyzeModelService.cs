@@ -7,14 +7,10 @@
     using Sqlbi.Bravo.Infrastructure.Services.PowerBI;
     using Sqlbi.Bravo.Models;
     using Sqlbi.Bravo.Models.AnalyzeModel;
-    using System.Collections.Generic;
-    using System.IO;
-    using System.Threading;
-    using System.Threading.Tasks;
 
     public interface IAnalyzeModelService
     {
-        TabularDatabase GetDatabase(Stream stream, Stream? dictionaryStream);
+        TabularDatabase GetDatabase(Stream stream);
 
         TabularDatabase GetDatabase(PBIDesktopReport report, CancellationToken cancellationToken);
 
@@ -31,7 +27,7 @@
         void ExportVpax(PBICloudDataset dataset, string path, string? dictionaryPath, string? inputDictionaryPath, string accessToken, CancellationToken cancellationToken);
     }
 
-    internal class AnalyzeModelService : IAnalyzeModelService
+    internal sealed class AnalyzeModelService : IAnalyzeModelService
     {
         private readonly IPBICloudService _pbicloudService;
         private readonly IPBIDesktopService _pbidesktopService;
@@ -42,9 +38,9 @@
             _pbidesktopService = pbidesktopService;
         }
 
-        public TabularDatabase GetDatabase(Stream stream, Stream? dictionaryStream)
+        public TabularDatabase GetDatabase(Stream stream)
         {
-            return TabularDatabase.CreateFromVpax(stream, dictionaryStream);
+            return TabularDatabase.CreateFrom(stream);
         }
 
         public TabularDatabase GetDatabase(PBIDesktopReport report, CancellationToken cancellationToken)
