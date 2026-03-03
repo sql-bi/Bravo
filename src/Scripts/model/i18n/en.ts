@@ -118,6 +118,8 @@ const locale: Locale = {
         [_.dialogOpen]: "Open",
         [_.docLimited]: "Limited",
         [_.docLimitedTooltip]: "Not all the features are available for this document.",
+        [_.deobfuscateCtrlTitle]: "VPAX is obfuscated",
+        [_.obfuscatedLabel]: "Obfuscated",
         [_.documentation]: "Documentation",
         [_.doneCtrlTitle]: "Done",
         [_.emailAddress]: "Email address",

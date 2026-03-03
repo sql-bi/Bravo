@@ -115,6 +115,7 @@ export enum TabularDatabaseFeature {
     AnalyzeModelPage = 1 << 100,
     AnalyzeModelSynchronize = 1 << 101,
     AnalyzeModelExportVpax = 1 << 102,
+    AnalyzeModelDeobfuscateVpax = 1 << 103,
     AnalyzeModelAll = AnalyzeModelPage | AnalyzeModelSynchronize | AnalyzeModelExportVpax,
 
     FormatDaxPage = 1 << 200,

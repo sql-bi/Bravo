@@ -39,6 +39,10 @@ export abstract class DocScene extends NavigatorScene {
         return !this.doc.featureSupported("All", this.type)[0];
     }
 
+    get canDeobfuscate(): boolean {
+        return this.doc.featureSupported("DeobfuscateVpax", this.type)[0];
+    }
+
     get canSync(): boolean {
         return this.doc.featureSupported("Synchronize", this.type)[0] && !this.doc.orphan;
     }
@@ -71,6 +75,8 @@ export abstract class DocScene extends NavigatorScene {
             <div class="readonly badge show-if-limited" ${this.limited ? "" : "hidden"} title="${i18n(strings.docLimitedTooltip)}">${i18n(strings.docLimited)}</div>
             
             ${this.showToolbar ? `
+                <div class="ctrl-deobfuscate obfuscated badge icon-lock show-if-deobfuscable" ${this.canDeobfuscate ? "" : "hidden"} title="${i18n(strings.deobfuscateCtrlTitle)}">${i18n(strings.obfuscatedLabel)}</div>
+
                 <div class="ctrl-sync ctrl icon-sync show-if-syncable" ${this.canSync ? "" : "hidden"} title="${i18n(strings.syncCtrlTitle)}"></div>
 
                 <div class="ctrl-help ctrl icon-help" title="${i18n(strings.helpCtrlTitle)}"></div>
@@ -79,6 +85,15 @@ export abstract class DocScene extends NavigatorScene {
         this.toolbar.insertAdjacentHTML("beforeend", toolbarHtml);
 
         if (this.showToolbar) {
+            _(".ctrl-deobfuscate", this.toolbar).addEventListener("click", e => {
+                e.preventDefault();
+
+                if ((<HTMLElement>e.currentTarget).hasAttribute("disabled")) return;
+                if (!this.canDeobfuscate) return;
+
+                this.deobfuscate();
+            });
+
             _(".ctrl-sync", this.toolbar).addEventListener("click", e => {
                 e.preventDefault();
 
@@ -103,6 +118,11 @@ export abstract class DocScene extends NavigatorScene {
         this.trigger("sync");
     }
 
+    deobfuscate() {
+        telemetry.track("Deobfuscate");
+        this.trigger("deobfuscate");
+    }
+
     update() {
         super.update();
 
@@ -113,6 +133,7 @@ export abstract class DocScene extends NavigatorScene {
         this.updateConditionalElements("limited", this.limited);
         this.updateConditionalElements("orphan", this.doc.orphan);
         this.updateConditionalElements("empty", this.doc.empty);
+        this.updateConditionalElements("deobfuscable", this.canDeobfuscate);
 
         return true;
     }

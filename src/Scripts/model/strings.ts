@@ -109,6 +109,8 @@ export enum strings {
     dialogOpen,
     docLimited,
     docLimitedTooltip,
+    deobfuscateCtrlTitle,
+    obfuscatedLabel,
     documentation,
     doneCtrlTitle,
     emailAddress,
