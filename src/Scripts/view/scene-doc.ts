@@ -77,7 +77,7 @@ export abstract class DocScene extends NavigatorScene {
             <div class="readonly badge show-if-limited" ${this.limited ? "" : "hidden"} title="${i18n(strings.docLimitedTooltip)}">${i18n(strings.docLimited)}</div>
             
             ${this.showToolbar ? `
-                <div class="ctrl-deobfuscate obfuscated badge icon-lock show-if-deobfuscable" ${this.canDeobfuscate ? "" : "hidden"} title="${i18n(strings.deobfuscateCtrlTitle)}">${i18n(strings.obfuscatedLabel)}</div>
+                <div class="ctrl-deobfuscate obfuscated badge icon-lock show-if-deobfuscable" ${this.canDeobfuscate ? "" : "hidden"} title="${i18n(strings.docObfuscatedTooltip)}">${i18n(strings.docObfuscated)}</div>
 
                 <div class="ctrl-sync ctrl icon-sync show-if-syncable" ${this.canSync ? "" : "hidden"} title="${i18n(strings.syncCtrlTitle)}"></div>
 
