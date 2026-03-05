@@ -3,14 +3,9 @@
 public enum ExportVpaxMode
 {
     Default = 0,
-    Obfuscate = 1,
-    ObfuscateIncremental = 2
-}
 
-internal static class ExportVpaxModeExtensions
-{
-    public static bool IsObfuscate(this ExportVpaxMode mode)
-    {
-        return mode == ExportVpaxMode.Obfuscate || mode == ExportVpaxMode.ObfuscateIncremental;
-    }
+    Obfuscated = 1,
+
+    // Incremental obfuscation is not yet supported in Bravo
+    // ObfuscateIncremental = 2
 }

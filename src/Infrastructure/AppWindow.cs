@@ -343,11 +343,7 @@ window.external = {
                 },
             };
 
-            // TODO: use AppEnvironment.DefaultJsonOptions instead - see AddJsonOptions in HostingExtensions.AddAndConfigureControllers
-            var jsonOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web) { MaxDepth = 32 };
-            jsonOptions.Converters.Add(new JsonStringEnumMemberConverter()); // https://github.com/dotnet/runtime/issues/31081#issuecomment-578459083
-
-            var script = $@"var CONFIG = { JsonSerializer.Serialize(config, jsonOptions) };";
+            var script = $@"var CONFIG = { JsonSerializer.Serialize(config) };";
             var stream = new MemoryStream(Encoding.UTF8.GetBytes(script));
 
             return stream;

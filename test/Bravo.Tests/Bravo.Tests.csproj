@@ -2,7 +2,6 @@
 
   <PropertyGroup>
     <TargetFramework>net6-windows</TargetFramework>
-    <SupportedOSPlatformVersion>7.0</SupportedOSPlatformVersion>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
     <IsPublishable>false</IsPublishable>
@@ -21,28 +20,9 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
   </ItemGroup>
-<!--
-  <PropertyGroup>
-    <RestoreSources>$(RestoreSources);../../src/Assets/nupkgs;https://api.nuget.org/v3/index.json</RestoreSources>
-  </PropertyGroup>
--->
+
   <ItemGroup>
     <ProjectReference Include="..\..\src\Bravo.csproj" />
-  </ItemGroup>
-  
-  <ItemGroup>
-    <Reference Include="Antlr4.Runtime">
-      <HintPath>..\..\src\Assets\lib\Antlr4.Runtime.dll</HintPath>
-    </Reference>
-    <Reference Include="TOMWrapper">
-      <HintPath>..\..\src\Assets\lib\TOMWrapper.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-  
-  <ItemGroup>
-    <None Update="_data\**">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
 
 </Project>

@@ -220,6 +220,28 @@
         color: @orphan-badge-color;
         border-color: darken(@orphan-badge-back-color, 10%);
     }
+    &.obfuscated {
+        background-color: @obfuscated-badge-back-color;
+        color: @obfuscated-badge-color;
+        border-color: darken(@obfuscated-badge-back-color, 10%);
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        margin-left: 5px;
+
+        &:before {
+            font-size: 13px;
+            margin-right: 4px;
+        }
+        &:hover {
+            background-color: darken(@obfuscated-badge-back-color, 5%);
+            border-color: darken(@obfuscated-badge-back-color, 15%);
+        }
+        &:active {
+            opacity: .7;
+            transform: translateY(1px);
+        }
+    }
 
 
 }
@@ -309,8 +331,8 @@
 
 .expandable {
     .expander {
-        .icon;
-        .icon-collapsed;
+        .icon();
+        .icon-collapsed();
         cursor: pointer;
         margin-left: 4px;
         color: @accent-back-color !important;
