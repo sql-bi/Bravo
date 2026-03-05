@@ -106,9 +106,9 @@
       },
       "Microsoft.Web.WebView2": {
         "type": "Direct",
-        "requested": "[1.0.2739.15, )",
-        "resolved": "1.0.2739.15",
-        "contentHash": "hZg7vHWBg4RIiK3rhkNqX3hcBqqoVXVrrO2BVrVOiSmEgfLa7lY64G1tWh2VY84MfHIFLCAQNwn3Rwvu+ICHyw=="
+        "requested": "[1.0.3800.47, )",
+        "resolved": "1.0.3800.47",
+        "contentHash": "vluoF9sqb72AB02yYs1UXW/2/VsxOMl2idiFJNvG993sOw3bHJvjHXmd3tqevTd9s3Md/9FgEzkOXoUl2Nb/ww=="
       },
       "Swashbuckle.AspNetCore": {
         "type": "Direct",
@@ -357,9 +357,9 @@
     "net6.0-windows7.0/win-x64": {
       "Microsoft.Web.WebView2": {
         "type": "Direct",
-        "requested": "[1.0.2739.15, )",
-        "resolved": "1.0.2739.15",
-        "contentHash": "hZg7vHWBg4RIiK3rhkNqX3hcBqqoVXVrrO2BVrVOiSmEgfLa7lY64G1tWh2VY84MfHIFLCAQNwn3Rwvu+ICHyw=="
+        "requested": "[1.0.3800.47, )",
+        "resolved": "1.0.3800.47",
+        "contentHash": "vluoF9sqb72AB02yYs1UXW/2/VsxOMl2idiFJNvG993sOw3bHJvjHXmd3tqevTd9s3Md/9FgEzkOXoUl2Nb/ww=="
       },
       "System.Management": {
         "type": "Direct",
