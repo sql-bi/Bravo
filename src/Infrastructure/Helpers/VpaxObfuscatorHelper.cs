@@ -6,7 +6,22 @@ using Dax.Vpax.Obfuscator.Common;
 
 internal static class VpaxObfuscatorHelper
 {
-    public static void DeobfuscateModel(Model model, Stream obfuscationDictionaryStream)
+    public static void ObfuscateAndExportDictionary(Stream vpaxStream, string path)
+    {
+        try
+        {
+            var obfuscator = new VpaxObfuscator();
+
+            var dictionary = obfuscator.Obfuscate(vpaxStream, dictionary: null);
+            dictionary.WriteTo(path, overwrite: false, indented: true);
+        }
+        catch (Exception ex)
+        {
+            throw new BravoException(BravoProblem.VpaxObfuscationError, ex.Message, ex);
+        }
+    }
+
+    public static void Deobfuscate(Model model, Stream obfuscationDictionaryStream)
     {
         try
         {

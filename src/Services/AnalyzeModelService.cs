@@ -22,9 +22,9 @@
 
         IEnumerable<PBIDesktopReport> QueryReports(CancellationToken cancellationToken);
 
-        void ExportVpax(PBIDesktopReport report, string path, string? dictionaryPath, string? inputDictionaryPath, CancellationToken cancellationToken);
+        void ExportVpax(PBIDesktopReport report, ExportVpaxMode mode, string path, CancellationToken cancellationToken);
 
-        void ExportVpax(PBICloudDataset dataset, string path, string? dictionaryPath, string? inputDictionaryPath, string accessToken, CancellationToken cancellationToken);
+        void ExportVpax(PBICloudDataset dataset, string accessToken, ExportVpaxMode mode, string path, CancellationToken cancellationToken);
     }
 
     internal sealed class AnalyzeModelService : IAnalyzeModelService
@@ -101,16 +101,30 @@
             return reports;
         }
 
-        public void ExportVpax(PBIDesktopReport report, string path, string? dictionaryPath, string? inputDictionaryPath, CancellationToken cancellationToken)
+        public void ExportVpax(PBIDesktopReport report, ExportVpaxMode mode, string path, CancellationToken cancellationToken)
         {
             using var connection = TabularConnectionWrapper.ConnectTo(report);
-            VpaxHelper.ExportVpax(connection, path, dictionaryPath, inputDictionaryPath, cancellationToken);
+            ExportVpaxImpl(connection, mode, path, cancellationToken);
         }
 
-        public void ExportVpax(PBICloudDataset dataset, string path, string? dictionaryPath, string? inputDictionaryPath, string accessToken, CancellationToken cancellationToken)
+        public void ExportVpax(PBICloudDataset dataset, string accessToken, ExportVpaxMode mode, string path, CancellationToken cancellationToken)
         {
             using var connection = TabularConnectionWrapper.ConnectTo(dataset, accessToken);
-            VpaxHelper.ExportVpax(connection, path, dictionaryPath, inputDictionaryPath, cancellationToken);
+            ExportVpaxImpl(connection, mode, path, cancellationToken);
+        }
+
+        public static void ExportVpaxImpl(TabularConnectionWrapper connection, ExportVpaxMode mode, string path, CancellationToken cancellationToken)
+        {
+            using var stream = new MemoryStream();
+            VpaxHelper.ExportVpax(stream, connection, cancellationToken);
+
+            if (mode == ExportVpaxMode.Obfuscated)
+            {
+                VpaxObfuscatorHelper.ObfuscateAndExportDictionary(stream, path: $"{path}.dict");
+            }
+
+            using var fileStream = new FileStream(path, FileMode.Create, FileAccess.Write);
+            stream.CopyTo(fileStream);
         }
     }
 }

@@ -34,7 +34,7 @@
 
             if (obfuscationDictionaryStream is not null)
             {
-                VpaxObfuscatorHelper.DeobfuscateModel(daxModel, obfuscationDictionaryStream);
+                VpaxObfuscatorHelper.Deobfuscate(daxModel, obfuscationDictionaryStream);
             }
 
             var database = CreateFrom(daxModel);
