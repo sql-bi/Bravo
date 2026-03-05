@@ -2,62 +2,30 @@
 {
     using Dax.Metadata;
     using Dax.Model.Extractor;
-    using Dax.Vpax.Obfuscator;
-    using Dax.Vpax.Obfuscator.Common;
     using Dax.Vpax.Tools;
     using Sqlbi.Bravo.Infrastructure.Services;
-    using System;
-    using System.IO;
-    using System.Threading;
 
     internal static class VpaxHelper
     {
-        public static void ExportVpax(TabularConnectionWrapper connection, string path, string? dictionaryPath, string? inputDictionaryPath, CancellationToken cancellationToken)
+        public static void ExportVpax(Stream stream, TabularConnectionWrapper connection, CancellationToken cancellationToken)
         {
             var daxModel = GetDaxModel(connection, statisticsEnabled: true, cancellationToken);
 
-            if (dictionaryPath == null) // If null, no obfuscation is required
+            // Bravo always includes the DaxVpaView.json and Model.bim in the VPAX file.
+            var vpaModel = new Dax.ViewVpaExport.Model(daxModel);
+            var tomDatabase = connection.Database;
+
+            try
             {
-                var vpaModel = new Dax.ViewVpaExport.Model(daxModel);
-                var tomDatabase = connection.Database;
-                try
-                {
-                    VpaxTools.ExportVpax(path, daxModel, vpaModel, tomDatabase);
-                }
-                catch (IOException ex)
-                {
-                    throw new BravoException(BravoProblem.VpaxFileExportError, ex.Message, ex);
-                }
+                VpaxTools.ExportVpax(stream, daxModel, vpaModel, tomDatabase);
             }
-            else
+            catch (IOException ex)
             {
-                using var stream = new MemoryStream();
-                VpaxTools.ExportVpax(stream, daxModel);
-                try
-                {
-                    var inputDictionary = inputDictionaryPath is not null ? ObfuscationDictionary.ReadFrom(inputDictionaryPath) : null;
-                    var obfuscator = new VpaxObfuscator();
-                    var dictionary = obfuscator.Obfuscate(stream, inputDictionary);
-                    dictionary.WriteTo(dictionaryPath, overwrite: false, indented: true); // To prevent loss of the dictionary, always deny overwrite
-                }
-                catch (Exception ex)
-                {
-                    throw new BravoException(BravoProblem.VpaxObfuscationError, ex.Message, ex);
-                }
-                try
-                {
-                    using var fileStream = new FileStream(path, FileMode.Create, FileAccess.Write);
-                    stream.Position = 0;
-                    stream.CopyTo(fileStream);
-                }
-                catch (IOException ex)
-                {
-                    throw new BravoException(BravoProblem.VpaxFileExportError, ex.Message, ex);
-                }
+                throw new BravoException(BravoProblem.VpaxFileExportError, ex.Message, ex);
             }
         }
 
-        public static Model GetDaxModel(Stream stream, Stream? dictionaryStream)
+        public static Model GetDaxModel(Stream stream)
         {
             Model? model;
 
@@ -72,23 +40,13 @@
 
             if (model is null)
             {
-                // If the DaxModel is null here it means that the archive may be corrupted or invalid (e.g. does not include the parts required by the ECMA/376 specification)
-                // It could happen in case the System.IO.Packaging.Package was not properly closed/disposed due to an error while flushing the stream.
+                // If DaxModel is null at this stage, the archive must be considered invalid
+                // or corrupted, for example if it does not contain the parts required by the
+                // ECMA-376 specification. This may also occur if the underlying
+                // System.IO.Packaging.Package was not properly finalized during creation
+                // (i.e., not correctly closed or disposed), such as when an error happened
+                // while flushing the stream.
                 throw new BravoException(BravoProblem.VpaxFileImportError, "The VPAX file may be invalid or corrupted.");
-            }
-
-            if (dictionaryStream != null)
-            {   
-                try
-                {
-                    var obfuscator = new VpaxObfuscator();
-                    var dictionary = ObfuscationDictionary.ReadFrom(dictionaryStream);
-                    obfuscator.Deobfuscate(model, dictionary);
-                }
-                catch (Exception ex)
-                {
-                    throw new BravoException(BravoProblem.VpaxDeobfuscationError, ex.Message, ex);
-                }
             }
 
             return model;
