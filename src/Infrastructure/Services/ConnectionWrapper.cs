@@ -18,7 +18,7 @@
             _connectionString = connectionString;
 
             Server = new TOM.Server();
-            ProcessHelper.RunOnUISynchronizationContext(() => Server.Connect(connectionString.ToUnprotectedString()));
+            ProcessHelper.RunOnUISynchronizationContext(() => Server.Connect(connectionString));
             Database = findById ? Server.Databases.Find(databaseIdOrName) : Server.Databases.FindByName(databaseIdOrName);
 
             if (Database is null)
@@ -49,7 +49,7 @@
 
         public AdomdConnection CreateAdomdConnection(bool open = true)
         {
-            var connection = new AdomdConnection(_connectionString.ToUnprotectedString());
+            var connection = new AdomdConnection(_connectionString);
 
             if (open)
             {
@@ -91,7 +91,7 @@
     {
         private AdomdConnectionWrapper(string connectionString, string databaseName)
         {
-            Connection = new AdomdConnection(connectionString.ToUnprotectedString());
+            Connection = new AdomdConnection(connectionString);
             ProcessHelper.RunOnUISynchronizationContext(() => Connection.Open());
             Connection.ChangeDatabase(databaseName);
 

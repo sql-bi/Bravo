@@ -45,7 +45,7 @@ export class Doc {
     orphan: boolean;
 
     get empty(): boolean {
-        return (!this.model || !this.model.size || (!this.model.columns.length && !this.measures.length));
+        return (!this.model || (!this.model.columns.length && !this.measures.length));
     }
 
     constructor(name: string, type: DocType, sourceData: File | PBICloudDataset | PBIDesktopReport) {
@@ -141,6 +141,26 @@ export class Doc {
         return new Promise((resolve, reject) => { 
             reject(AppError.InitFromResponseStatus(Utils.ResponseStatusCode.InternalError)); 
         });
+    }
+
+    deobfuscate(dictionaryFile: File) {
+
+        if (this.type != DocType.vpax)
+            return Promise.reject(AppError.InitFromResponseStatus(Utils.ResponseStatusCode.InternalError));
+
+        return host.getModelFromVpax(<File>this.sourceData, dictionaryFile)
+            .then(response => {
+                if (response && response.model) {
+                    this.formattedMeasures = {};
+                    this.model = response.model;
+                    this.measures = response.measures;
+                    this.features = [response.features, response.featureUnsupportedReasons];
+                    this.loaded = true;
+                    this.lastSync = Date.now();
+                } else {
+                    return Promise.reject();
+                }
+            });
     }
 
     analizeMeasure(measure: TabularMeasure): MeasureStatus  {

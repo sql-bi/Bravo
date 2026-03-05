@@ -13,6 +13,9 @@
     using System.Diagnostics;
     using System.Drawing;
     using System.IO;
+    using System.Linq;
+    using System.Runtime.InteropServices;
+    using System.Runtime.Versioning;
     using System.Text.Json;
 
     internal static class AppEnvironment
@@ -99,21 +102,7 @@
             Diagnostics = new ConcurrentDictionary<DiagnosticMessage, DiagnosticMessage>();
             DefaultJsonOptions = new(JsonSerializerDefaults.Web) { MaxDepth = 32 }; // see Microsoft.AspNetCore.Mvc.JsonOptions.JsonSerializerOptions
 
-            var spaceChars = new[]
-            {
-                "",       // no space
-                "\u0020", // whitespace
-                "\u00A0"  // nbsp
-            };
-            var dashChars = new[]
-            {
-                "\u002D", // Dash Punctuation - minus hyphen
-                "\u2212", // Math Symbol - minus sign
-                "\u2011", // Dash Punctuation - non-breaking hyphen
-                "\u2013", // Dash Punctuation - en dash
-                "\u2014", // Dash Punctuation - em dash
-                "\u2015", // Dash Punctuation - horizontal bar
-            };
+            AddEnvironmentDiagnosticInfo();
         }
 
         /// <summary>
@@ -205,6 +194,40 @@
             {
                 WriteDiagnosticFile(message);
             }
+        }
+
+        private static void AddEnvironmentDiagnosticInfo()
+        {
+            if (!IsDiagnosticLevelVerbose)
+                return;
+
+            var targetFramework = typeof(Program).Assembly.GetCustomAttributes(typeof(TargetFrameworkAttribute), inherit: false).OfType<TargetFrameworkAttribute>().FirstOrDefault();
+
+            var info = new
+            {
+                SystemOSVersion = Environment.OSVersion.VersionString,
+                SystemProcessorCount = Environment.ProcessorCount,
+                ProcessId,
+                ProcessPath,
+                ProcessSessionId = SessionId,
+                RuntimeOSDescription = RuntimeInformation.OSDescription.ToString(),
+                RuntimeOSVersion = RuntimeInformation.RuntimeIdentifier,
+                RuntimeFrameworkDescription = RuntimeInformation.FrameworkDescription,
+                TargetFrameworkName = targetFramework?.FrameworkName ?? "n/a",
+                WebView2VersionInfo,
+                //
+                ApplicationPublishMode = PublishMode.ToString(),
+                ApplicationDeploymentMode = DeploymentMode.ToString(),
+                ApplicationFileVersion,
+                ApplicationProductVersion,
+                ApplicationDataPath,
+                ApplicationTempPath,
+                ApplicationDiagnosticPath,
+                ApplicationUserSettingsFilePath = UserSettingsFilePath,
+                //ApplicationFileVersionInfo = VersionInfo,
+            };
+
+            AddDiagnostics(DiagnosticMessageType.Json, name: $"{nameof(AppEnvironment)}.EnvironmentInfo", content: JsonSerializer.Serialize(info));
         }
 
         private static void WriteDiagnosticFile(DiagnosticMessage message)

@@ -70,7 +70,11 @@ export class ConnectFile extends ConnectMenuItem {
     }
 
     openFile(file: File) {
-        if (file && (file.name.slice(-5) == ".vpax" || file.name.slice(-6) == ".ovpax")) {
+        if (!file) return;
+
+        const fileName = file.name.toLowerCase();
+
+        if (fileName.endsWith(".vpax") || fileName.endsWith(".ovpax")) {
             this.dialog.data.doc = new Doc(file.name, DocType.vpax, file);
             this.dialog.trigger("action", "ok");
         }

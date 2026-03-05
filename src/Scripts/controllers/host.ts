@@ -414,10 +414,15 @@ export class Host extends Dispatchable {
 
     /* Analyze Model */
 
-    getModelFromVpax(file: File) {
+    getModelFromVpax(file: File, dictionaryFile?: File) {
         const logSettings: ApiLogSettings = {};
 
-        return <Promise<TabularDatabase>>this.apiCall("api/GetModelFromVpax", file, { method: "POST", headers: { /* IMPORTANT */ } }, true, logSettings); 
+        const formData = new FormData();
+        formData.append("files", file, file.name);
+        if (dictionaryFile)
+            formData.append("files", dictionaryFile, dictionaryFile.name);
+
+        return <Promise<TabularDatabase>>this.apiCall("api/GetModelFromVpax", {}, { method: "POST", body: formData, headers: { /* IMPORTANT: empty so browser sets multipart boundary */ } }, true, logSettings);
     }
 
     getModelFromReport(report: PBIDesktopReport)  {

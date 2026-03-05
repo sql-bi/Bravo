@@ -134,8 +134,11 @@ export class Page extends View {
     listen(scene?: Scene) {
         let scenes = (scene ? [scene] : this.scenes); 
         scenes.forEach(scene => {
-            scene.on("sync", ()=>{ 
+            scene.on("sync", ()=>{
                 this.trigger("sync"); //Pass the sync event to the parent
+            });
+            scene.on("deobfuscate", (dictionaryFile: File)=>{
+                this.trigger("deobfuscate", dictionaryFile);
             });
             scene.on("push", (scene: Scene)=>{
                 this.pushScene(scene);

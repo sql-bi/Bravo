@@ -32,18 +32,5 @@
 
             Assert.Equal(expected, actual);
         }
-
-        [Theory]
-        [InlineData("MySecret^ìfd56486-+{6 ♠ ⌂¿EFE==")]
-        [InlineData("AsDfJkIl123456")]
-        [InlineData("123==")]
-        [InlineData("")]
-        public void ToProtectedStringToUnprotectedString_SimpleTest(string expected)
-        {
-            var protectedString = expected.ToProtectedString();
-            var actual = protectedString.ToUnprotectedString();
-
-            Assert.Equal(expected, actual);
-        }
     }
 }

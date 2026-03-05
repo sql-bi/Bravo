@@ -45,7 +45,7 @@
                 { ApplicationNameKey, AppEnvironment.ApplicationInstanceUniqueName }
             };
 
-            return builder.ConnectionString.ToProtectedString();
+            return builder.ConnectionString;
         }
 
         public static string BuildFor(PBIDesktopReport report)
@@ -63,7 +63,7 @@
                 { ApplicationNameKey, AppEnvironment.ApplicationInstanceUniqueName }
             };
 
-            return builder.ConnectionString.ToProtectedString();
+            return builder.ConnectionString;
         }
 
         public static string BuildFor(PBICloudDataset dataset, string accessToken)
@@ -102,15 +102,14 @@
                 };
                 var serverName = serverNameBuilder.Uri.AbsoluteUri;
                 var databaseName = dataset.ExternalDatabaseName;
-                var connectionString = Build(serverName, databaseName, accessToken, dataset.IdentityProvider);
 
-                return connectionString.ToProtectedString();
+                return Build(serverName, databaseName, accessToken, dataset.IdentityProvider);
             }
             else if (dataset.IsOnPremModel == true)
             {
                 BravoUnexpectedException.ThrowIfNull(dataset.OnPremModelConnectionString);
 
-                return dataset.OnPremModelConnectionString.ToProtectedString();
+                return dataset.OnPremModelConnectionString;
             }
             else
             {
@@ -121,9 +120,8 @@
 
                 var serverName = dataset.ExternalServerName;
                 var databaseName = dataset.ExternalDatabaseName;
-                var connectionString = Build(serverName, databaseName, accessToken, dataset.IdentityProvider);
 
-                return connectionString.ToProtectedString();
+                return Build(serverName, databaseName, accessToken, dataset.IdentityProvider);
             }
 
             static string Build(string serverName, string databaseName, string accessToken, string identityProvider)
