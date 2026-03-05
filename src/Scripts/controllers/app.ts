@@ -384,7 +384,11 @@ export class App {
     }
 
     openFile(file: File) {
-        if (file && (file.name.slice(-5) == ".vpax" || file.name.slice(-6) == ".ovpax")) {
+        if (!file) return;
+
+        const fileName = file.name.toLowerCase();
+
+        if (fileName.endsWith(".vpax") || fileName.endsWith(".ovpax")) {
             this.openDoc(new Doc(file.name, DocType.vpax, file));
         }
     }

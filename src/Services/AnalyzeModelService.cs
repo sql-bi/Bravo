@@ -7,14 +7,10 @@
     using Sqlbi.Bravo.Infrastructure.Services.PowerBI;
     using Sqlbi.Bravo.Models;
     using Sqlbi.Bravo.Models.AnalyzeModel;
-    using System.Collections.Generic;
-    using System.IO;
-    using System.Threading;
-    using System.Threading.Tasks;
 
     public interface IAnalyzeModelService
     {
-        TabularDatabase GetDatabase(Stream stream, Stream? dictionaryStream);
+        TabularDatabase GetDatabase(Stream stream, Stream? dictionaryStream = null);
 
         TabularDatabase GetDatabase(PBIDesktopReport report, CancellationToken cancellationToken);
 
@@ -26,12 +22,12 @@
 
         IEnumerable<PBIDesktopReport> QueryReports(CancellationToken cancellationToken);
 
-        void ExportVpax(PBIDesktopReport report, string path, string? dictionaryPath, string? inputDictionaryPath, CancellationToken cancellationToken);
+        void ExportVpax(PBIDesktopReport report, ExportVpaxMode mode, string path, CancellationToken cancellationToken);
 
-        void ExportVpax(PBICloudDataset dataset, string path, string? dictionaryPath, string? inputDictionaryPath, string accessToken, CancellationToken cancellationToken);
+        void ExportVpax(PBICloudDataset dataset, string accessToken, ExportVpaxMode mode, string path, CancellationToken cancellationToken);
     }
 
-    internal class AnalyzeModelService : IAnalyzeModelService
+    internal sealed class AnalyzeModelService : IAnalyzeModelService
     {
         private readonly IPBICloudService _pbicloudService;
         private readonly IPBIDesktopService _pbidesktopService;
@@ -42,9 +38,9 @@
             _pbidesktopService = pbidesktopService;
         }
 
-        public TabularDatabase GetDatabase(Stream stream, Stream? dictionaryStream)
+        public TabularDatabase GetDatabase(Stream vpaxStream, Stream? obfuscatorDictionaryStream = null)
         {
-            return TabularDatabase.CreateFromVpax(stream, dictionaryStream);
+            return TabularDatabase.CreateFrom(vpaxStream, obfuscatorDictionaryStream);
         }
 
         public TabularDatabase GetDatabase(PBIDesktopReport report, CancellationToken cancellationToken)
@@ -105,16 +101,30 @@
             return reports;
         }
 
-        public void ExportVpax(PBIDesktopReport report, string path, string? dictionaryPath, string? inputDictionaryPath, CancellationToken cancellationToken)
+        public void ExportVpax(PBIDesktopReport report, ExportVpaxMode mode, string path, CancellationToken cancellationToken)
         {
             using var connection = TabularConnectionWrapper.ConnectTo(report);
-            VpaxHelper.ExportVpax(connection, path, dictionaryPath, inputDictionaryPath, cancellationToken);
+            ExportVpaxImpl(connection, mode, path, cancellationToken);
         }
 
-        public void ExportVpax(PBICloudDataset dataset, string path, string? dictionaryPath, string? inputDictionaryPath, string accessToken, CancellationToken cancellationToken)
+        public void ExportVpax(PBICloudDataset dataset, string accessToken, ExportVpaxMode mode, string path, CancellationToken cancellationToken)
         {
             using var connection = TabularConnectionWrapper.ConnectTo(dataset, accessToken);
-            VpaxHelper.ExportVpax(connection, path, dictionaryPath, inputDictionaryPath, cancellationToken);
+            ExportVpaxImpl(connection, mode, path, cancellationToken);
+        }
+
+        public static void ExportVpaxImpl(TabularConnectionWrapper connection, ExportVpaxMode mode, string path, CancellationToken cancellationToken)
+        {
+            using var stream = new MemoryStream();
+            VpaxHelper.ExportVpax(stream, connection, cancellationToken);
+
+            if (mode == ExportVpaxMode.Obfuscated)
+            {
+                VpaxObfuscatorHelper.ObfuscateAndExportDictionary(stream, path: $"{path}.dict");
+            }
+
+            using var fileStream = new FileStream(path, FileMode.Create, FileAccess.Write);
+            stream.CopyTo(fileStream);
         }
     }
 }

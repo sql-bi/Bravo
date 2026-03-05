@@ -28,9 +28,15 @@
         [JsonPropertyName("measures")]
         public IEnumerable<TabularMeasure>? Measures { get; set; }
 
-        internal static TabularDatabase CreateFromVpax(Stream stream, Stream? dictionaryStream)
+        internal static TabularDatabase CreateFrom(Stream vpaxStream, Stream? obfuscationDictionaryStream = null)
         {
-            var daxModel = VpaxHelper.GetDaxModel(stream, dictionaryStream);
+            var daxModel = VpaxHelper.GetDaxModel(vpaxStream);
+
+            if (obfuscationDictionaryStream is not null)
+            {
+                VpaxObfuscatorHelper.Deobfuscate(daxModel, obfuscationDictionaryStream);
+            }
+
             var database = CreateFrom(daxModel);
             {
                 database.Features &= ~TabularDatabaseFeature.AnalyzeModelSynchronize;
@@ -43,8 +49,12 @@
                 database.FeatureUnsupportedReasons |= TabularDatabaseFeatureUnsupportedReason.MetadataOnly;
                 database.FeatureUnsupportedReasons |= TabularDatabaseFeatureUnsupportedReason.ReadOnly;
 
-                if (daxModel.ObfuscatorDictionaryId != null && dictionaryStream == null)
+                if (daxModel.ObfuscatorDictionaryId is not null && obfuscationDictionaryStream is null)
+                {
+                    // Model is obfuscated and no dictionary provided, enable deobfuscation features
                     database.Features |= TabularDatabaseFeature.AnalyzeModelDeobfuscateVpax;
+                    database.Features |= TabularDatabaseFeature.FormatDaxDeobfuscateVpax;
+                }
             }
             return database;
         }
@@ -199,11 +209,12 @@
         AnalyzeModelSynchronize = 1 << 101,
         AnalyzeModelExportVpax = 1 << 102,
         AnalyzeModelDeobfuscateVpax = 1 << 103,
-        AnalyzeModelAll = AnalyzeModelPage | AnalyzeModelSynchronize | AnalyzeModelExportVpax, // AnalyzeModelDeobfuscateVpax is not included in 'All'/'Default'
+        AnalyzeModelAll = AnalyzeModelPage | AnalyzeModelSynchronize | AnalyzeModelExportVpax,
 
         FormatDaxPage = 1 << 200,
         FormatDaxSynchronize = 1 << 201,
         FormatDaxUpdateModel = 1 << 202,
+        FormatDaxDeobfuscateVpax = 1 << 203,
         FormatDaxAll = FormatDaxPage | FormatDaxSynchronize | FormatDaxUpdateModel,
 
         ManageDatesPage = 1 << 300,
