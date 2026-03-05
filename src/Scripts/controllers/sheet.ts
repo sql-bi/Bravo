@@ -56,6 +56,9 @@ export class Sheet extends View {
             page.on("sync", ()=> {
                 this.sync(false);
             });
+            page.on("deobfuscate", (dictionaryFile: File)=> {
+                this.deobfuscate(dictionaryFile);
+            });
         }
 
         if (this.doc.type == DocType.pbix) {
@@ -155,6 +158,38 @@ export class Sheet extends View {
             .finally(() => {
                 this.syncing = false;
                 this.loading = false;
+                this.element.classList.remove(action);
+                __(`.disable-on-${action}`, this.element).forEach((div: HTMLElement) => {
+                    let disabledBeforeAction = div.dataset[`disabledBefore${Utils.Text.ucfirst(action)}`];
+                    div.toggleAttr("disabled", disabledBeforeAction == "true");
+                });
+            });
+    }
+
+    deobfuscate(dictionaryFile: File) {
+        if (this.syncing || this.loading) return;
+
+        this.syncing = true;
+        const action = "syncing";
+
+        this.element.classList.add(action);
+        __(`.disable-on-${action}`, this.element).forEach((div: HTMLElement) => {
+            div.dataset[`disabledBefore${Utils.Text.ucfirst(action)}`] = String(div.hasAttribute("disabled"));
+            div.toggleAttr("disabled", true);
+        });
+
+        this.doc.deobfuscate(dictionaryFile)
+            .then(() => {
+                this.update();
+            })
+            .catch((error: AppError) => {
+                if (error.type != AppErrorType.Abort) {
+                    const errorSceneId = `${this.id}_error-${error.type}`;
+                    this.showBlockingScene(new ErrorScene(errorSceneId, this.element, error));
+                }
+            })
+            .finally(() => {
+                this.syncing = false;
                 this.element.classList.remove(action);
                 __(`.disable-on-${action}`, this.element).forEach((div: HTMLElement) => {
                     let disabledBeforeAction = div.dataset[`disabledBefore${Utils.Text.ucfirst(action)}`];

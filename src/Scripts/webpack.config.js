@@ -59,6 +59,9 @@ module.exports = (env, argv) => {
     watchOptions: {
       poll: true
     },
+    performance: {
+      hints: false
+    },
     plugins:[
       new webpack.DefinePlugin({
         'process.env.MODE': JSON.stringify(mode)

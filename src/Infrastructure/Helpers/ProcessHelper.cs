@@ -10,6 +10,7 @@
     using System.IO;
     using System.Linq;
     using System.Management;
+    using System.Runtime.ExceptionServices;
     using System.Security.Claims;
     using System.Security.Principal;
     using System.Threading;
@@ -18,14 +19,47 @@
 
     internal static class ProcessHelper
     {
+        public static T RunOnSTAThread<T>(Func<T> func)
+        {
+            T result = default!;
+
+            RunOnSTAThread(() =>
+            {
+                result = func();
+            });
+
+            return result;
+        }
+
         public static void RunOnSTAThread(Action action)
         {
-            var threadStart = new ThreadStart(action);
-            var thread = new Thread(threadStart);
-            thread.CurrentCulture = thread.CurrentUICulture = CultureInfo.CurrentCulture;
+            Exception? exception = null;
+
+            var thread = new Thread(() =>
+            {
+                try
+                {
+                    action();
+                }
+                catch (Exception ex)
+                {
+                    exception = ex;
+                }
+            });
+
             thread.SetApartmentState(ApartmentState.STA);
+            thread.CurrentCulture = CultureInfo.CurrentCulture;
+            thread.CurrentUICulture = CultureInfo.CurrentUICulture;
+            // Set as background to ensure that it does not prevent the process from exiting
+            thread.IsBackground = true;
             thread.Start();
             thread.Join();
+
+            if (exception is not null)
+            {
+                // Re-throw the exception on the calling thread to preserve the original stack trace
+                ExceptionDispatchInfo.Capture(exception).Throw();
+            }
         }
 
         public static void InvokeOnUIThread(Control control, Action action) => InvokeOnUIThread(action, control);

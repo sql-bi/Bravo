@@ -193,15 +193,13 @@
     /// <summary>
     /// Re-mapping <see cref="CloudPromotionalStage"/>
     /// </summary>
+    // The JsonStringEnumConverter is required because the enum is represented as strings on the UI (TypeScript) side,
+    // not as integers. Remove this converter once the TypeScript enum is redefined to use integer values.
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum PBICloudDatasetEndorsement
     {
-        [JsonPropertyName("None")]
         None = 0,
-
-        [JsonPropertyName("Promoted")]
         Promoted = 1,
-
-        [JsonPropertyName("Certified")]
         Certified = 2,
     }
 
