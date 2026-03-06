@@ -306,7 +306,7 @@ export class AnalyzeModelScene extends DocScene {
                     field: "weight", 
                     title: i18n(strings.tableColWeight), 
                     hozAlign: "right", 
-                    width: 80,
+                    width: 100,
                     bottomCalc: "sum",
                     sorter: "number", 
                     formatter: (cell)=>Utils.Format.percentage(cell.getValue(), I18n.instance.locale.locale, 0),
