@@ -95,13 +95,12 @@
             ProcessHelper.RunOnUISynchronizationContext(() => Connection.Open());
             Connection.ChangeDatabase(databaseName);
 
-            // TOPNSKIP is supported since Analysis Services 2016 version 13 despite being an undocumented feature (not included in MDSCHEMA_FUNCTIONS) 
-            IsDaxFunctionTopNSkipSupported = Version.TryParse(Connection.ServerVersion, out var version) && version >= new Version(13, 0);
+            IsServerVersion13OrGreater = Version.TryParse(Connection.ServerVersion, out var version) && version >= new Version(13, 0);
         }
 
         public AdomdConnection Connection { get; }
 
-        public bool IsDaxFunctionTopNSkipSupported { get; }
+        public bool IsServerVersion13OrGreater { get; }
 
         public AdomdCommand CreateAdomdCommand()
         {
