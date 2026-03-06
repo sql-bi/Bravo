@@ -160,6 +160,14 @@ export class AnalyzeModelScene extends DocScene {
 
     nestData(data: ExtendedTabularColumn[]): ExtendedTabularColumn[] {
 
+        // Build a lookup for table rowsCount
+        let tableRowsCount: Dic<number> = {};
+        if (this.doc.model.tables) {
+            this.doc.model.tables.forEach(t => {
+                tableRowsCount[t.name] = t.rowsCount ?? 0;
+            });
+        }
+
         let nestedData: Dic<ExtendedTabularColumn> = {};
         data.forEach(column => {
             if (column._aggregated) {
@@ -173,7 +181,7 @@ export class AnalyzeModelScene extends DocScene {
                         tableName: table,
                         columnName: table,
                         dataType: "table",
-                        columnCardinality: 0,
+                        columnCardinality: tableRowsCount[table] ?? 0,
                         size: 0,
                         weight: 0,
                         _containsUnreferenced: false,
@@ -181,7 +189,6 @@ export class AnalyzeModelScene extends DocScene {
                     };
                 }
                 nestedData[table]._children.push(column);
-                nestedData[table].columnCardinality += column.columnCardinality;
                 nestedData[table].size += column.size;
                 nestedData[table].weight += column.weight;
                 if (column.isReferenced === false) nestedData[table]._containsUnreferenced = true;
