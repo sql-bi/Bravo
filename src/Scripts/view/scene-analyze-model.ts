@@ -505,6 +505,17 @@ export class AnalyzeModelScene extends DocScene {
         return true;
     }
 
+    chartActiveItem(activeElements: any[]): any {
+        if (activeElements.length > 0) {
+            let el = activeElements[activeElements.length - 1];
+            let dataPoint = <any>this.chart.data.datasets[el.datasetIndex].data[el.index];
+            if (dataPoint) {
+                return this.chartItem(<any>{ raw: dataPoint });
+            }
+        }
+        return false;
+    }
+
     chartItem(context: TreemapScriptableContext) {
         if (!context.raw) return false;
 
@@ -585,26 +596,7 @@ export class AnalyzeModelScene extends DocScene {
                     color: (context: TreemapScriptableContext) => this.chartColors(context, "color"),
                     backgroundColor: (context: TreemapScriptableContext) => this.chartColors(context, "backColor"), 
                     hoverColor: (context: TreemapScriptableContext) => this.chartColors(context, "hoverColor"),
-                    hoverBackgroundColor: (context: TreemapScriptableContext) => {
-                       
-                        // Highlight table
-                        /*if (this.table) {
-                            this.restoreTableRowsActiveStatus();
-
-                            let item = this.chartItem(context);
-                            if (item) {
-                                // Note that Tabulator doesn't return children rows when data is grouped, so it's easy to find the row
-                                let rows = this.table.searchRows("name", "=", item.name);
-                                
-                                if (rows.length) {
-                                    let rowElement = rows[0].getElement();
-                                    rowElement.classList.add("active");
-                                }
-                            }
-                        }*/
-
-                        return this.chartColors(context, "hoverBackColor");
-                    },
+                    hoverBackgroundColor: (context: TreemapScriptableContext) => this.chartColors(context, "hoverBackColor"),
                     labels: {
                         align: 'center',
                         position: 'middle',
@@ -631,7 +623,17 @@ export class AnalyzeModelScene extends DocScene {
             options: {
                 animation: false,
                 maintainAspectRatio: false,
-
+                onClick: (event: any, activeElements: any[]) => {
+                    let item = this.chartActiveItem(activeElements);
+                    if (item) this.scrollToTableRow(item);
+                },
+                onHover: (event: any, activeElements: any[]) => {
+                    let item = this.chartActiveItem(activeElements);
+                    if (item)
+                        this.highlightTableRow(item);
+                    else
+                        this.restoreTableRowsActiveStatus();
+                },
                 plugins: {
                     legend: { display: false },
                     tooltip: {
@@ -667,23 +669,78 @@ export class AnalyzeModelScene extends DocScene {
                     } 
                 }
             },
-            /*plugins: [{
+            plugins: [{
               id: 'outCatcher',
-              beforeEvent: (chart, args, pluginOptions) => {
-                const event = args.event;
-                if (event.type === 'mouseout') {
+              beforeEvent: (chart: any, args: any) => {
+                if (args.event.type === 'mouseout') {
                     this.restoreTableRowsActiveStatus();
                 }
               }
-            }]*/
+            }]
         });
     }
 
-    /*restoreTableRowsActiveStatus() {
+    restoreTableRowsActiveStatus() {
         __(".tabulator-row", this.element).forEach((div: HTMLElement) => {
             div.classList.remove("active");
         });
-    }*/
+    }
+
+    findTableRow(item: any, expand: boolean): Tabulator.RowComponent {
+        if (!this.table || !item) return null;
+
+        let rows = this.table.getRows();
+        for (let row of rows) {
+            let rowData = <ExtendedTabularColumn>row.getData();
+
+            if (this.groupByTable) {
+                if (rowData.dataType === "table" && rowData.tableName === item.tableName) {
+                    if (item.columnName) {
+                        let isExpanded = row.isTreeExpanded();
+                        if (expand && !isExpanded) {
+                            row.treeExpand();
+                            isExpanded = true;
+                        }
+                        if (isExpanded) {
+                            try {
+                                let children = row.getTreeChildren();
+                                for (let child of children) {
+                                    let childData = <ExtendedTabularColumn>child.getData();
+                                    if (childData.tableName === item.tableName && childData.columnName === item.columnName) {
+                                        return child;
+                                    }
+                                }
+                            } catch (ignore) {}
+                        }
+                    }
+                    // Table-level, or node is collapsed - return the table row
+                    return row;
+                }
+            } else {
+                if (rowData.tableName === item.tableName && rowData.columnName === item.columnName) {
+                    return row;
+                }
+            }
+        }
+        return null;
+    }
+
+    highlightTableRow(item: any) {
+        this.restoreTableRowsActiveStatus();
+        let row = this.findTableRow(item, false);
+        if (row) {
+            row.getElement().classList.add("active");
+        }
+    }
+
+    scrollToTableRow(item: any) {
+        this.restoreTableRowsActiveStatus();
+        let row = this.findTableRow(item, true);
+        if (row) {
+            row.getElement().classList.add("active");
+            this.table.scrollToRow(row, "center", false);
+        }
+    }
 
     updateToolbar() {
         __(".show-if-group", this.element).forEach((div: HTMLElement) => {
