@@ -11,7 +11,7 @@ import { DocType } from '../model/doc';
 import { AppError, AppErrorType, AppProblem } from '../model/exceptions';
 import { /*TokenUpdateWebMessage,*/ WebMessage, WebMessageType } from '../model/message';
 import { PBICloudDataset, PBICloudDatasetConnectionMode } from '../model/pbi-dataset';
-import { FormattedMeasure, TabularDatabase, TabularDatabaseServer, TabularMeasure } from '../model/tabular';
+import { FormattedMeasure, TabularDatabase, TabularDatabaseServer, TabularMeasure, TabularTable } from '../model/tabular';
 import { Account, SignInRequest } from './auth';
 import { DiagnosticLevelType, FormatDaxOptions, Options, UpdateChannelType } from './options';
 import { PBIDesktopReport, PBIDesktopReportConnectionMode } from '../model/pbi-report';
@@ -120,8 +120,8 @@ export interface ExportDataJob {
     path?: string
 }
 
-export interface ExportDelimitedTextSettings { 
-    tables: string[]
+export interface ExportDelimitedTextSettings {
+    tables: TabularTable[]
     unicodeEncoding: boolean
     delimiter?: string
     quoteStringFields: boolean
@@ -129,7 +129,7 @@ export interface ExportDelimitedTextSettings {
 }
 
 export interface ExportExcelSettings {
-    tables: string[]
+    tables: TabularTable[]
     createExportSummary: boolean
 }
 export interface ExportDelimitedTextFromPBIReportRequest{

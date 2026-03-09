@@ -48,6 +48,7 @@ export interface TabularTable {
     size?: number
     isDateTable?: boolean
     isManageDates?: boolean
+    isDirectQuery?: boolean
     isHidden?: boolean
     features?: TabularTableFeature
     featureUnsupportedReasons?: TabularTableFeatureUnsupportedReason

@@ -453,13 +453,12 @@ export class ExportDataScene extends DocScene {
         let tables = this.getSelectedData();
         if (!tables.length) return;
 
-        let tableNames: string[] = tables.map(table => table.name);
         let rowsCount = 0;
         tables.forEach((table: TabularTable) => {
             rowsCount += table.rowsCount;
         });
 
-        telemetry.track("Export", { "Count": tableNames.length, "Type": this.config.options.format });
+        telemetry.track("Export", { "Count": tables.length, "Type": this.config.options.format });
         
         this.exportButton.toggleAttr("disabled", true);
 
@@ -471,7 +470,7 @@ export class ExportDataScene extends DocScene {
             if (delimiter == "{custom}") delimiter = this.config.options.customDelimiter;
 
             const settings = <ExportDelimitedTextSettings>{
-                tables: tableNames,
+                tables: tables,
                 unicodeEncoding: (this.config.options.encoding == "utf16"),
                 delimiter: delimiter,
                 quoteStringFields: this.config.options.quoteStringFields,
@@ -492,7 +491,7 @@ export class ExportDataScene extends DocScene {
         } else if (this.config.options.format == ExportDataFormat.Xlsx) {
 
             const settings = <ExportExcelSettings>{
-                tables: tableNames,
+                tables: tables,
                 createExportSummary: this.config.options.createExportSummary
             };
             if (this.doc.type == DocType.dataset) {

@@ -1,6 +1,7 @@
 ﻿namespace Sqlbi.Bravo.Models.ExportData
 {
     using Sqlbi.Bravo.Infrastructure.Models;
+    using Sqlbi.Bravo.Models.AnalyzeModel;
     using System;
     using System.Collections.Generic;
     using System.ComponentModel.DataAnnotations;
@@ -11,11 +12,11 @@
     public abstract class ExportDataSettings
     {
         /// <summary>
-        /// Names of tables to export
+        /// Tables to export
         /// </summary>
         [Required]
         [JsonPropertyName("tables")]
-        public IEnumerable<string> Tables { get; set; } = Array.Empty<string>();
+        public ICollection<TabularTable> Tables { get; set; } = Array.Empty<TabularTable>();
 
         /// <summary>
         /// Full local path where the files will be created

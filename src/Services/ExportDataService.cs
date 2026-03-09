@@ -199,10 +199,12 @@
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var table = job.AddNew(tableName);
-                var fileTableName = tableName.ReplaceInvalidFileNameChars();
+                var table = job.AddNew(tableName.Name);
+                var fileTableName = tableName.Name.ReplaceInvalidFileNameChars();
                 var fileName = Path.ChangeExtension(fileTableName, "csv");
                 var path = Path.Combine(settings.ExportPath, fileName);
+                // Enable row batch mode only if TOPNSKIP is supported
+                var rowBatchMode = connection.IsServerVersion13OrGreater && tableName.IsDirectQuery == false;
 
                 Encoding encoding = settings.UnicodeEncoding
                     ? new UnicodeEncoding()
@@ -211,7 +213,7 @@
                 using var streamWriter = new StreamWriter(path, append: false, encoding);
                 using var csvWriter = new CsvWriter(streamWriter, config);
 
-                Export(command, table, csvWriter, settings.QuoteStringFields, rowBatchMode: connection.IsDaxFunctionTopNSkipSupported, cancellationToken);
+                Export(command, table, csvWriter, settings.QuoteStringFields, rowBatchMode, cancellationToken);
             }
 
             static void Export(AdomdCommand command, ExportDataTable table, CsvWriter writer, bool quoteStringFields, bool rowBatchMode, CancellationToken cancellationToken)
@@ -320,11 +322,13 @@
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var table = job.AddNew(tableName);
-                var worksheetName = GetWorksheetName(tableName, tableIndex);
+                var table = job.AddNew(tableName.Name);
+                var worksheetName = GetWorksheetName(tableName.Name, tableIndex);
+                // Enable row batch mode only if TOPNSKIP is supported
+                var rowBatchMode = connection.IsServerVersion13OrGreater && tableName.IsDirectQuery == false;
                 
                 xlsxWriter.BeginWorksheet(worksheetName, splitRow: 1);
-                Export(command, table, xlsxWriter, rowBatchMode: connection.IsDaxFunctionTopNSkipSupported, cancellationToken);
+                Export(command, table, xlsxWriter, rowBatchMode, cancellationToken);
 
                 if (table.Rows > 0 && table.Columns > 0)
                     xlsxWriter.SetAutoFilter(fromRow: 1, fromColumn: 1, rowCount: table.Rows, columnCount: table.Columns);
@@ -527,12 +531,12 @@
 
                 foreach (var (tableName, tableIndex) in settings.Tables.WithIndex())
                 {
-                    var table = job.Tables.Single((t) => t.Name.Equals(tableName));
+                    var table = job.Tables.Single((t) => t.Name.Equals(tableName.Name));
                     var statusStyle = table.Status == ExportDataStatus.Truncated ? warningStyle : XlsxStyle.Default;
-                    var worksheetName = GetWorksheetName(tableName, tableIndex);
+                    var worksheetName = GetWorksheetName(tableName.Name, tableIndex);
 
                     writer.BeginRow();
-                    writer.Write(worksheetName).Write(tableName).Write(table.Rows).Write(table.Status.ToString(), statusStyle);
+                    writer.Write(worksheetName).Write(tableName.Name).Write(table.Rows).Write(table.Status.ToString(), statusStyle);
                 }
 
                 writer.SetAutoFilter(fromRow: 4, fromColumn: 1, rowCount: writer.CurrentRowNumber, columnCount: 4);

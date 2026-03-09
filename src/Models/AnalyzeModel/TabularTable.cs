@@ -40,6 +40,9 @@
         [JsonPropertyName("isManageDates")]
         public bool? IsManageDates { get; set; }
 
+        [JsonPropertyName("isDirectQuery")]
+        public bool? IsDirectQuery { get; set; }
+
         internal static TabularTable CreateFromDmvTables(IDataReader reader, string[] tablesWithColumns)
         {
             var table = new TabularTable
@@ -71,7 +74,8 @@
                 IsDateTable = vpaTable.IsDateTable,
                 IsHidden = null,
                 IsQueryable = null,
-                IsManageDates = null
+                IsManageDates = null,
+                IsDirectQuery = vpaTable.HasDirectQueryPartitions,
             };
 
             var tomTable = tomModel?.Tables.Find(table.Name);
