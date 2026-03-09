@@ -95,20 +95,20 @@
       },
       "Microsoft.Identity.Client.Desktop": {
         "type": "Direct",
-        "requested": "[4.73.1, )",
-        "resolved": "4.73.1",
-        "contentHash": "9icFisK5u6eb+MYwPFTyilue+5gU/kiyTLj8M5tpUokGAmxK7ByYh9v6z//k0JKg3dZ+l7IQaHKdGFNwCgk18A==",
+        "requested": "[4.83.0, )",
+        "resolved": "4.83.0",
+        "contentHash": "clncvwbxYMvM80wn2enpU2b2f5ND33gBJULK1BDjDXFOcDprdMpENQz14Wqls0MmyNR8NROd3UPcsvM4uU1afQ==",
         "dependencies": {
-          "Microsoft.Identity.Client": "4.73.1",
-          "Microsoft.Identity.Client.Broker": "4.73.1",
-          "Microsoft.Web.WebView2": "1.0.864.35"
+          "Microsoft.Identity.Client": "4.83.0",
+          "Microsoft.Identity.Client.Broker": "4.83.0",
+          "Microsoft.Web.WebView2": "1.0.2903.40"
         }
       },
       "Microsoft.Web.WebView2": {
         "type": "Direct",
-        "requested": "[1.0.2739.15, )",
-        "resolved": "1.0.2739.15",
-        "contentHash": "hZg7vHWBg4RIiK3rhkNqX3hcBqqoVXVrrO2BVrVOiSmEgfLa7lY64G1tWh2VY84MfHIFLCAQNwn3Rwvu+ICHyw=="
+        "requested": "[1.0.2903.40, )",
+        "resolved": "1.0.2903.40",
+        "contentHash": "THrzYAnJgE3+cNH+9Epr44XjoZoRELdVpXlWGPs6K9C9G6TqyDfVCeVAR/Er8ljLitIUX5gaSkPsy9wRhD1sgQ=="
       },
       "Swashbuckle.AspNetCore": {
         "type": "Direct",
@@ -263,31 +263,34 @@
       },
       "Microsoft.Identity.Client": {
         "type": "Transitive",
-        "resolved": "4.73.1",
-        "contentHash": "NnDLS8QwYqO5ZZecL2oioi1LUqjh5Ewk4bMLzbgiXJbQmZhDLtKwLxL3DpGMlQAJ2G4KgEnvGPKa+OOgffeJbw==",
+        "resolved": "4.83.0",
+        "contentHash": "eiirunq8tuQW1KKqi7BcD+jR6/Ge/wDt11HW6K9dTGdqS6TUuA81PtPIy1gijarEOaMBeHEPWuAiRyLUO4M87Q==",
         "dependencies": {
-          "Microsoft.IdentityModel.Abstractions": "6.35.0",
-          "System.Diagnostics.DiagnosticSource": "6.0.1"
+          "Microsoft.IdentityModel.Abstractions": "8.14.0",
+          "System.Diagnostics.DiagnosticSource": "6.0.1",
+          "System.Formats.Asn1": "8.0.1",
+          "System.Security.Cryptography.Cng": "5.0.0",
+          "System.ValueTuple": "4.5.0"
         }
       },
       "Microsoft.Identity.Client.Broker": {
         "type": "Transitive",
-        "resolved": "4.73.1",
-        "contentHash": "gCtm9dYAwKohMXcVXFRv8/7IIJQTkCNu6S9mSmxvJ8geNGRhQ3F/PDOMlloCulEgpkIhKwclOLV+aUlIWrEWxA==",
+        "resolved": "4.83.0",
+        "contentHash": "PomtRCZGcwVeM2pJGDrZivFiSSy54jLRKlnhioh5GJiB28Y7XZsztavzLLJAGhxoipXAJMUbbu8CDZnI6S6gHg==",
         "dependencies": {
-          "Microsoft.Identity.Client": "4.73.1",
-          "Microsoft.Identity.Client.NativeInterop": "0.19.2"
+          "Microsoft.Identity.Client": "4.83.0",
+          "Microsoft.Identity.Client.NativeInterop": "0.19.4"
         }
       },
       "Microsoft.Identity.Client.NativeInterop": {
         "type": "Transitive",
-        "resolved": "0.19.2",
-        "contentHash": "qXNtYJxZ15yKV5pnI+V0sRzIH++vNzmMOU3K8kyNGsMD8/q7+ZejQjm7gJI9MMEGDPQkGg3QaiMvrIgbH2ym2g=="
+        "resolved": "0.19.4",
+        "contentHash": "Em+6R/uAO2qWBBnsV3zP0+15mbDIw9C3qDvGYoEiLaFgHM1zqaJZVpxgA49+WgXwUN0edKzR1hhKr+z7Nw5jcw=="
       },
       "Microsoft.IdentityModel.Abstractions": {
         "type": "Transitive",
-        "resolved": "6.35.0",
-        "contentHash": "xuR8E4Rd96M41CnUSCiOJ2DBh+z+zQSmyrYHdYhD6K4fXBcQGVnRCFQ0efROUYpP+p0zC1BLKr0JRpVuujTZSg=="
+        "resolved": "8.14.0",
+        "contentHash": "iwbCpSjD3ehfTwBhtSNEtKPK0ICun6ov7Ibx6ISNA9bfwIyzI2Siwyi9eJFCJBwxowK9xcA1mj+jBWiigeqgcQ=="
       },
       "Microsoft.OpenApi": {
         "type": "Transitive",
@@ -333,6 +336,11 @@
           "System.Runtime.CompilerServices.Unsafe": "6.0.0"
         }
       },
+      "System.Formats.Asn1": {
+        "type": "Transitive",
+        "resolved": "8.0.1",
+        "contentHash": "XqKba7Mm/koKSjKMfW82olQdmfbI5yqeoLV/tidRp7fbh5rmHAQ5raDI/7SU0swTzv+jgqtUGkzmFxuUg0it1A=="
+      },
       "System.IO.Packaging": {
         "type": "Transitive",
         "resolved": "8.0.1",
@@ -352,14 +360,27 @@
         "type": "Transitive",
         "resolved": "6.0.0",
         "contentHash": "/iUeP3tq1S0XdNNoMz5C9twLSrM/TH+qElHkXWaPvuNOt+99G75NrV0OS2EqHx5wMN7popYjpc8oTjC1y16DLg=="
+      },
+      "System.Security.Cryptography.Cng": {
+        "type": "Transitive",
+        "resolved": "5.0.0",
+        "contentHash": "jIMXsKn94T9JY7PvPq/tMfqa6GAaHpElRDpmG+SuL+D3+sTw2M8VhnibKnN8Tq+4JqbPJ/f+BwtLeDMEnzAvRg==",
+        "dependencies": {
+          "System.Formats.Asn1": "5.0.0"
+        }
+      },
+      "System.ValueTuple": {
+        "type": "Transitive",
+        "resolved": "4.5.0",
+        "contentHash": "okurQJO6NRE/apDIP23ajJ0hpiNmJ+f0BwOlB/cSqTLQlw5upkf+5+96+iG2Jw40G1fCVCyPz/FhIABUjMR+RQ=="
       }
     },
     "net6.0-windows7.0/win-x64": {
       "Microsoft.Web.WebView2": {
         "type": "Direct",
-        "requested": "[1.0.2739.15, )",
-        "resolved": "1.0.2739.15",
-        "contentHash": "hZg7vHWBg4RIiK3rhkNqX3hcBqqoVXVrrO2BVrVOiSmEgfLa7lY64G1tWh2VY84MfHIFLCAQNwn3Rwvu+ICHyw=="
+        "requested": "[1.0.2903.40, )",
+        "resolved": "1.0.2903.40",
+        "contentHash": "THrzYAnJgE3+cNH+9Epr44XjoZoRELdVpXlWGPs6K9C9G6TqyDfVCeVAR/Er8ljLitIUX5gaSkPsy9wRhD1sgQ=="
       },
       "System.Management": {
         "type": "Direct",
@@ -381,8 +402,16 @@
       },
       "Microsoft.Identity.Client.NativeInterop": {
         "type": "Transitive",
-        "resolved": "0.19.2",
-        "contentHash": "qXNtYJxZ15yKV5pnI+V0sRzIH++vNzmMOU3K8kyNGsMD8/q7+ZejQjm7gJI9MMEGDPQkGg3QaiMvrIgbH2ym2g=="
+        "resolved": "0.19.4",
+        "contentHash": "Em+6R/uAO2qWBBnsV3zP0+15mbDIw9C3qDvGYoEiLaFgHM1zqaJZVpxgA49+WgXwUN0edKzR1hhKr+z7Nw5jcw=="
+      },
+      "System.Security.Cryptography.Cng": {
+        "type": "Transitive",
+        "resolved": "5.0.0",
+        "contentHash": "jIMXsKn94T9JY7PvPq/tMfqa6GAaHpElRDpmG+SuL+D3+sTw2M8VhnibKnN8Tq+4JqbPJ/f+BwtLeDMEnzAvRg==",
+        "dependencies": {
+          "System.Formats.Asn1": "5.0.0"
+        }
       }
     }
   }
