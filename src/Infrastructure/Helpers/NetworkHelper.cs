@@ -55,24 +55,6 @@
             return false;
         }
 
-        public static IPAddress GetLoopbackAddress()
-        {
-            if (Socket.OSSupportsIPv6)
-            {
-                var networkInterfaces = NetworkInterface.GetAllNetworkInterfaces();
-                var loopbackInterface = networkInterfaces.SingleOrDefault((i) => i.NetworkInterfaceType == NetworkInterfaceType.Loopback);
-
-                if (loopbackInterface?.OperationalStatus == OperationalStatus.Up)
-                {
-                    if (loopbackInterface.Supports(NetworkInterfaceComponent.IPv6))
-                        return IPAddress.IPv6Loopback;
-                }
-            }
-
-            // Fallback to IPv4
-            return IPAddress.Loopback;
-        }
-
         public static Process? FindEndPointProcess(IPEndPoint endpoint)
         {
             switch (endpoint.AddressFamily)
