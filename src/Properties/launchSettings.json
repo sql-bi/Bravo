@@ -2,6 +2,7 @@
   "profiles": {
     "Bravo": {
       "commandName": "Project",
+      "commandLineArgs": "",
       "launchBrowser": false,
       "launchUrl": "swagger",
       "applicationUrl": "http://localhost:5000"

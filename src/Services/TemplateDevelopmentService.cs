@@ -52,11 +52,11 @@
 
         private readonly JsonSerializerOptions _serializerOptions;
         private readonly DaxTemplateManager _templateManager;
-        private readonly IServer _hostingServer;
+        private readonly IServerAddressProvider _serverAddressProvider;
 
-        public TemplateDevelopmentService(IServer hostingServer)
+        public TemplateDevelopmentService(IServerAddressProvider serverAddressProvider)
         {
-            _hostingServer = hostingServer;
+            _serverAddressProvider = serverAddressProvider;
             _templateManager = new DaxTemplateManager();
             _serializerOptions = new JsonSerializerOptions(AppEnvironment.DefaultJsonOptions) { WriteIndented = true };
         }
@@ -403,7 +403,7 @@
         {
             var config = new
             {
-                Address = _hostingServer.GetListeningAddress(),
+                Address = _serverAddressProvider.GetListeningAddress(),
                 Token = AppEnvironment.ApiAuthenticationTokenTemplateDevelopment,
             };
 

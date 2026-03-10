@@ -3,24 +3,17 @@
     using Hellang.Middleware.ProblemDetails;
     using Microsoft.AspNetCore.Authentication;
     using Microsoft.AspNetCore.Hosting;
-    using Microsoft.AspNetCore.Hosting.Server;
-    using Microsoft.AspNetCore.Hosting.Server.Features;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.DependencyInjection.Extensions;
-    using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Options;
     using Microsoft.Identity.Client;
     using Sqlbi.Bravo.Infrastructure.Authentication;
     using Sqlbi.Bravo.Infrastructure.Configuration.Options;
     using Sqlbi.Bravo.Infrastructure.Helpers;
     using Sqlbi.Bravo.Models;
-    using System;
-    using System.Diagnostics;
-    using System.IO;
-    using System.Linq;
     using System.Net.Sockets;
     using System.Reflection;
     using System.Text.Json;
@@ -264,38 +257,6 @@
 
                 return new WritableOptions<T>(environment, configuration, options, section.Key, file);
             });
-        }
-
-        /// <summary>
-        /// Get the listening address used by the Kesterl HTTP server
-        /// </summary>
-        /// <remarks>The port binding happens only when IWebHost.Run() is called and it is not accessible on Startup.Configure() because port has not been yet assigned on this stage.</remarks>
-        public static Uri GetListeningAddress(this IServer server)
-        {
-            var feature = server.Features.Get<IServerAddressesFeature>();
-            if (feature is not null)
-            {
-                var uris = feature.Addresses.Select((address) => new Uri(address, UriKind.Absolute)).ToArray();
-
-                if (uris.Length == 0) throw new BravoUnexpectedException("No server listening address found");
-                if (uris.Length != 1) throw new BravoUnexpectedException("Multiple server listening addresses found");
-
-                return uris.Single(); // a single address is expected here
-            }
-
-            throw new BravoUnexpectedException("Server listening address not found");
-        }
-
-        public static Uri GetListeningAddress(this IHost host)
-        {
-            var server = host.Services.GetService<IServer>();
-            if (server is not null)
-            {
-                var uri = server.GetListeningAddress();
-                return uri;
-            }
-
-            throw new BravoUnexpectedException("Host listening address not found");
         }
     }
 }
