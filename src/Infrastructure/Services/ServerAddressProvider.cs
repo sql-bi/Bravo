@@ -33,12 +33,6 @@ internal sealed class ServerAddressProvider : IServerAddressProvider
         if (feature.Addresses.Count != 1)
             throw new InvalidOperationException($"Expected one address, but found {feature.Addresses.Count}.");
 
-        var address = feature.Addresses.First();
-
-        // Ensure the address ends with a slash
-        if (!address.EndsWith('/'))
-            address += "/";
-
-        return address;
+        return feature.Addresses.First();
     }
 }

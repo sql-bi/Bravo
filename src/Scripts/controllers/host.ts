@@ -250,7 +250,7 @@ export class Host extends Dispatchable {
 
         let logMessageId = (logSettings ? this.apiLog(action, data, logSettings) : null);
 
-        return Utils.Request.ajax(`${this.address}${action}`, data, options, this.token)
+        return Utils.Request.ajax(`${this.address}/${action}`, data, options, this.token)
             .then(response => {
                 if (logSettings) {
                     logSettings.dataLevel = DiagnosticLevelType.Verbose; //Response data is visible only if Verbose
