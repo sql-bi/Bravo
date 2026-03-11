@@ -54,19 +54,12 @@
                 webBuilder.UseKestrel((serverOptions) =>
                 {
 #if DEBUG
-                    var listenEndpoint = new IPEndPoint(IPAddress.Loopback, port: 5000);
+                    const int port = 5000;
 #else
-                    var listenEndpoint = new IPEndPoint(Infrastructure.Helpers.NetworkHelper.GetLoopbackAddress(), port: 0);
+                    const int port = 0; // Use dynamic port assignment
 #endif
-                    // Allow sync IO - required by ImportVpax
-                    serverOptions.AllowSynchronousIO = true;
-                    serverOptions.Listen(listenEndpoint, (listenOptions) =>
-                    {
-#if DEBUG
-                        listenOptions.UseConnectionLogging();
-#endif
-                        //listenOptions.UseHttps(); // TODO: do we need https ?
-                    });
+                    serverOptions.Listen(new IPEndPoint(IPAddress.Loopback, port));
+                    serverOptions.AllowSynchronousIO = true; // required by ImportVpax
                 });
 
                 webBuilder.UseStartup<Startup>();

@@ -10,6 +10,7 @@
     using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
     using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Infrastructure.Helpers;
+    using Sqlbi.Bravo.Infrastructure.Services;
     using Sqlbi.Bravo.Infrastructure.Services.PowerBI;
     using Sqlbi.Bravo.Services;
 
@@ -35,6 +36,7 @@
             services.AddHttpClient();
             services.AddOptions<StartupSettings>().Configure((settings) => settings.FromCommandLineArguments()); //.ValidateDataAnnotations();
             services.AddOptions<TelemetryConfiguration>().Configure((configuration) => TelemetryHelper.Configure(configuration));
+            services.AddSingleton<IServerAddressProvider, ServerAddressProvider>();
             services.AddSingleton<IPBICloudAuthenticationService, PBICloudAuthenticationService>();
             services.AddSingleton<IPBICloudSettingsService, PBICloudSettingsService>();
             services.AddSingleton<IPBIDesktopService, PBIDesktopService>();

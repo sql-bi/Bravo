@@ -1,7 +1,7 @@
 ﻿namespace Sqlbi.Bravo.Infrastructure
 {
     using Microsoft.AspNetCore.Http;
-    using Microsoft.Extensions.Hosting;
+    using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Options;
     using Microsoft.Web.WebView2.Core;
     using Microsoft.Web.WebView2.WinForms;
@@ -14,16 +14,7 @@
     using Sqlbi.Bravo.Infrastructure.Services;
     using Sqlbi.Bravo.Infrastructure.Windows.Interop;
     using Sqlbi.Bravo.Models;
-    using System;
-    using System.Diagnostics;
     using System.Drawing;
-    using System.Globalization;
-    using System.IO;
-    using System.Linq;
-    using System.Text;
-    using System.Text.Json;
-    using System.Text.Json.Serialization;
-    using System.Threading;
     using System.Windows.Forms;
 
     internal partial class AppWindow : Form
@@ -41,14 +32,16 @@ window.external = {
 };";
         public static SynchronizationContext? UISynchronizationContext { get; set; }
 
-        private readonly IHost _host;
         private readonly AppInstance _instance;
+        private readonly IServerAddressProvider _serverAddressProvider;
+        private readonly IOptions<StartupSettings> _startupSettingsOptionsAccessor;
         private readonly Color _startupThemeColor;
 
-        public AppWindow(IHost host, AppInstance instance)
+        public AppWindow(IServiceProvider services, AppInstance instance)
         {
-            _host = host;
             _instance = instance;
+            _serverAddressProvider = services.GetRequiredService<IServerAddressProvider>();
+            _startupSettingsOptionsAccessor = services.GetRequiredService<IOptions<StartupSettings>>();
             _startupThemeColor = ThemeHelper.ShouldUseDarkMode(UserPreferences.Current.Theme) ? AppEnvironment.ThemeColorDark : AppEnvironment.ThemeColorLight;
 
             UISynchronizationContext = new WindowsFormsSynchronizationContext();
@@ -313,14 +306,14 @@ window.external = {
             }
         }
 
-        private Stream GetConfigJs()
+        private MemoryStream GetConfigJs()
         {
             var config = new
             {
 #if DEBUG
                 debug = true,
 #endif
-                address = GetAddress(),
+                address = _serverAddressProvider.GetListeningAddress(),
                 token = AppEnvironment.ApiAuthenticationToken,
                 version = AppEnvironment.ApplicationProductVersion,
                 build = AppEnvironment.ApplicationFileVersion,
@@ -344,32 +337,19 @@ window.external = {
             };
 
             var script = $@"var CONFIG = { JsonSerializer.Serialize(config) };";
-            var stream = new MemoryStream(Encoding.UTF8.GetBytes(script));
 
-            return stream;
-
-            string GetAddress()
-            {
-                var address = _host.GetListeningAddress(); 
-                var addressString = address.ToString();
-
-                return addressString;
-            }
+            return new MemoryStream(Encoding.UTF8.GetBytes(script));
         }
 
         private void SendAppStartupWebMessage()
         {
-            var startupSettingsOptions = _host.Services.GetService(typeof(IOptions<StartupSettings>)) as IOptions<StartupSettings>;
-            if (startupSettingsOptions is not null)
+            var startupSettings = _startupSettingsOptionsAccessor.Value;
+            if (!startupSettings.IsEmpty)
             {
-                var startupSettings = startupSettingsOptions.Value;
-                if (startupSettings.IsEmpty == false)
-                {
-                    var startupMessage = AppInstanceStartupMessage.CreateFrom(startupSettingsOptions.Value);
-                    var startupMessageString = startupMessage.ToWebMessageString();
+                var startupMessage = AppInstanceStartupMessage.CreateFrom(startupSettings);
+                var startupMessageString = startupMessage.ToWebMessageString();
 
-                    WebView.CoreWebView2.PostWebMessageAsString(startupMessageString);
-                }
+                WebView.CoreWebView2.PostWebMessageAsString(startupMessageString);
             }
         }
 
