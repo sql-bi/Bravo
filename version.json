@@ -8,11 +8,11 @@
     "^refs/heads/main$"
   ],
   "cloudBuild": {
-    "setAllVariables": true,
     "buildNumber": {
       "enabled": true,
       "includeCommitId": {
-        "when": "never"
+        "when": "always",
+        "where": "buildMetadata"
       }
     }
   }

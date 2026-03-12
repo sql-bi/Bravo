@@ -15,8 +15,8 @@
         public static readonly IReadOnlyDictionary<string, string> GlobalProperties = new Dictionary<string, string>
         {
             { "ProductName", AppEnvironment.ApplicationName },
-            { "Version", AppVersionInfo.BuildVersion }, // Using AppVersionInfo.Version for backward compatibility with existing telemetry data
-            { "Build", AppVersionInfo.InformationalVersion },
+            { "Version", AppVersionInfo.DisplayVersion }, // Using DisplayVersion for backward compatibility with existing telemetry data
+            { "Build", AppVersionInfo.BuildVersion },
             { "PublishMode", AppEnvironment.PublishMode.ToString() },
             { "InstallScope", AppEnvironment.DeploymentMode.ToString() },
             { "WebView2Version", AppEnvironment.WebView2VersionInfo ?? string.Empty },
