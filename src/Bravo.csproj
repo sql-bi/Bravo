@@ -22,7 +22,6 @@
     <IsPublishable>true</IsPublishable>
     <SatelliteResourceLanguages>en-US</SatelliteResourceLanguages>
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
-    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
   </PropertyGroup>
 
@@ -44,11 +43,6 @@
     </Otherwise>
   </Choose>
 
-  <PropertyGroup>
-    <!-- Don't change version here -->
-    <Version>0.0.0.999</Version>
-    <InformationalVersion>0.0.0.999-DEV</InformationalVersion>
-  </PropertyGroup>
 
   <ItemGroup>
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
@@ -69,6 +63,7 @@
     <PackageReference Include="Microsoft.Extensions.Logging.ApplicationInsights" Version="2.23.0" />
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2739.15" />
     <PackageReference Include="Microsoft.Identity.Client.Desktop" Version="4.73.1" />
+    <PackageReference Include="Nerdbank.GitVersioning" Version="3.7.115" PrivateAssets="all" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="7.0.0" PrivateAssets="all" />
     <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
     <PackageReference Include="System.Management" Version="7.0.0" />

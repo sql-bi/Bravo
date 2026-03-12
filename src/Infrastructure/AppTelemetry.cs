@@ -9,14 +9,14 @@
     internal class AppTelemetryInitializer : ITelemetryInitializer
     {
         public static readonly string DeviceOperatingSystem = Environment.OSVersion.ToString();
-        public static readonly string ComponentVersion = AppEnvironment.ApplicationProductVersion;
+        public static readonly string ComponentVersion = AppVersionInfo.InformationalVersion;
         public static readonly string SessionId = Guid.NewGuid().ToString();
         public static readonly string? UserId = $"{ Environment.MachineName }\\{ Environment.UserName }".ToSHA256Hash();
         public static readonly IReadOnlyDictionary<string, string> GlobalProperties = new Dictionary<string, string>
         {
             { "ProductName", AppEnvironment.ApplicationName },
-            { "Version", AppEnvironment.ApplicationProductVersion },
-            { "Build", AppEnvironment.ApplicationFileVersion },
+            { "Version", AppVersionInfo.BuildVersion }, // Using AppVersionInfo.Version for backward compatibility with existing telemetry data
+            { "Build", AppVersionInfo.InformationalVersion },
             { "PublishMode", AppEnvironment.PublishMode.ToString() },
             { "InstallScope", AppEnvironment.DeploymentMode.ToString() },
             { "WebView2Version", AppEnvironment.WebView2VersionInfo ?? string.Empty },

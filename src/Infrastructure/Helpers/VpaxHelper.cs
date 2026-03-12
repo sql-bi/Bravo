@@ -56,12 +56,14 @@
         {
             var server = connectionWrapper.Server;
             var database = connectionWrapper.Database;
-            var daxModel = TomExtractor.GetDaxModel(database.Model, extractorApp: AppEnvironment.ApplicationName, extractorVersion: AppEnvironment.ApplicationProductVersion);
+            var extractorApp = AppEnvironment.ApplicationName;
+            var extractorVersion = AppVersionInfo.BuildVersion;
+            var daxModel = TomExtractor.GetDaxModel(database.Model, extractorApp, extractorVersion);
 
             using var connection = connectionWrapper.CreateAdomdConnection(open: false);
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                DmvExtractor.PopulateFromDmv(daxModel, connection, server.Name, database.Name, extractorApp: AppEnvironment.ApplicationName, extractorVersion: AppEnvironment.ApplicationProductVersion);
+                DmvExtractor.PopulateFromDmv(daxModel, connection, server.Name, database.Name, extractorApp, extractorVersion);
 
                 if (statisticsEnabled)
                 {
@@ -76,7 +78,7 @@
                     if (analyzeDirectLake > DirectLakeExtractionMode.ResidentOnly && daxModel.HasDirectLakePartitions())
                     {
                         cancellationToken.ThrowIfCancellationRequested();
-                        DmvExtractor.PopulateFromDmv(daxModel, connection, server.Name, database.Name, extractorApp: AppEnvironment.ApplicationName, extractorVersion: AppEnvironment.ApplicationProductVersion);
+                        DmvExtractor.PopulateFromDmv(daxModel, connection, server.Name, database.Name, extractorApp, extractorVersion);
                     }
                 }
             }

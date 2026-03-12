@@ -15,21 +15,6 @@
         private static Regex? _invalidFileNameCharsRegex;
         private static Regex? _invalidPathCharsRegex;
 
-        public static string AppendApplicationVersion(this string value)
-        {
-            var valueAndVersion = $"{value} - v{GetVersionParts(AppEnvironment.ApplicationProductVersion, parts: 4)}";
-            return valueAndVersion;
-        }
-
-        public static string GetVersionParts(this string? version, int parts)
-        {
-            if  (version.IsNullOrWhiteSpace())
-                return string.Empty;
-
-            var versionParts = string.Join('-', version.Split('-').Take(parts));
-            return versionParts;
-        }
-
         /// <summary>
         /// Convert the old .NET JavaScriptSerializer/DataContractJsonSerializer date format "/Date(1617810719887)/" to <see cref="DateTimeOffset"/>
         /// </summary>

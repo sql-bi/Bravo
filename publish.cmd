@@ -18,7 +18,8 @@ SET arch=x64
 SET selfcontained=true
 SET publishmode=SELFCONTAINED
 SET configuration=Release
-SET version="0.0.0.999-DEV"& :: Do not change, see also <InformationalVersion> on Bravo.csproj 
+REM Parse version from version.json
+FOR /F "tokens=2 delims=:, " %%v IN ('findstr /C:"\"version\"" %~dp0version.json') DO SET version=%%~v
 SET verbosity="Minimal"& :: Minimal,Normal,Diagnostic,Detailed
 SET wixheat="%WIX%bin\heat.exe"
 SET wixlight="%WIX%bin\light.exe"

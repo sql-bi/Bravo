@@ -109,7 +109,7 @@
             var bravoUpdate = new BravoUpdate
             {
                 UpdateChannel = updateChannel,
-                InstalledVersion = AppEnvironment.ApplicationFileVersion,
+                InstalledVersion = AppVersionInfo.BuildVersion,
                 CurrentVersion = document.RootElement.GetProperty("version").GetString(),
                 DownloadUrl = document.RootElement.GetProperty("download").GetString(),
                 ChangelogUrl = document.RootElement.GetProperty("changelog").GetString(),

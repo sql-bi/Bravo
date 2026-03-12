@@ -113,7 +113,7 @@
                 ListSeparator = options.ListSeparator ?? ',', // TODO: Dax.Formatter declare ListSeparator nullable
                 DecimalSeparator = options.DecimalSeparator ?? '.', // TODO: Dax.Formatter declare DecimalSeparator nullable
                 CallerApp = AppEnvironment.ApplicationName,
-                CallerVersion = AppEnvironment.ApplicationProductVersion,
+                CallerVersion = AppVersionInfo.BuildVersion,
             };
 
             foreach (var measure in measures)
