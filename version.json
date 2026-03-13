@@ -11,7 +11,7 @@
     "buildNumber": {
       "enabled": true,
       "includeCommitId": {
-        "when": "always",
+        "when": "nonPublicReleaseOnly",
         "where": "buildMetadata"
       }
     }
