@@ -11,7 +11,7 @@ import { optionsController, debug } from '../main';
 import { ProblemDetails } from './host';
 
 export interface TelemetryConfig {
-   instrumentationKey: string,
+   connectionString: string,
    contextDeviceOperatingSystem?: string,
    contextComponentVersion?: string,
    contextSessionId?: string,
@@ -33,7 +33,7 @@ export class Telemetry {
 
       // Configuration options at https://docs.microsoft.com/en-us/azure/azure-monitor/app/javascript
       this.appInsights = new ApplicationInsights({ config: {
-         instrumentationKey: config.instrumentationKey,
+         connectionString: config.connectionString,
          disableCookiesUsage: true,
          disableExceptionTracking: true,
          disablePageUnloadEvents: ["beforeunload", "unload", "visibilitychange", "pagehide"],

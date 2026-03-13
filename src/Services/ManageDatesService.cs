@@ -29,12 +29,7 @@
 
     internal class ManageDatesService : IManageDatesService
     {
-        private readonly DaxTemplateManager _templateManager;
-
-        public ManageDatesService()
-        {
-            _templateManager = new DaxTemplateManager();
-        }
+        private readonly DaxTemplateManager _templateManager = new();
 
         public IEnumerable<DateConfiguration> GetConfigurations(PBIDesktopReport report, CancellationToken cancellationToken)
         {

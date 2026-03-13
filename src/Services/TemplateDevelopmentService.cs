@@ -8,6 +8,7 @@
     using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Infrastructure.Helpers;
     using Sqlbi.Bravo.Infrastructure.Security.Policies;
+    using Sqlbi.Bravo.Infrastructure.Telemetry;
     using Sqlbi.Bravo.Infrastructure.Services;
     using Sqlbi.Bravo.Infrastructure.Services.DaxTemplate;
     using Sqlbi.Bravo.Models;

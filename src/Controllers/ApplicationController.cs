@@ -1,16 +1,15 @@
 ﻿namespace Sqlbi.Bravo.Controllers
 {
     using Hellang.Middleware.ProblemDetails;
-    using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
-    using Microsoft.Extensions.Options;
     using Sqlbi.Bravo.Infrastructure;
     using Sqlbi.Bravo.Infrastructure.Configuration;
     using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
     using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Infrastructure.Helpers;
     using Sqlbi.Bravo.Infrastructure.Security;
+    using Sqlbi.Bravo.Infrastructure.Telemetry;
     using Sqlbi.Bravo.Models;
     using System;
     using System.Collections.Generic;
@@ -27,11 +26,11 @@
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ProblemDetails))]
     public class ApplicationController : ControllerBase
     {
-        private readonly TelemetryConfiguration _telemetryConfiguration;
+        private readonly ITelemetryService _telemetryService;
 
-        public ApplicationController(IOptions<TelemetryConfiguration> telemetryOptions)
+        public ApplicationController(ITelemetryService telemetryService)
         {
-            _telemetryConfiguration = telemetryOptions.Value;
+            _telemetryService = telemetryService;
         }
 
         /// <summary>
@@ -83,7 +82,7 @@
                 return BadRequest(problem);
             }
 
-            _telemetryConfiguration.DisableTelemetry = UserPreferences.Current.TelemetryEnabled == false;
+            _telemetryService.TelemetryEnabled = UserPreferences.Current.TelemetryEnabled;
 
             return Ok();
         }

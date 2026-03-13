@@ -1,10 +1,10 @@
 ﻿namespace Sqlbi.Bravo
 {
-    using Microsoft.ApplicationInsights;
     using Microsoft.Extensions.Hosting;
     using Sqlbi.Bravo.Infrastructure;
     using Sqlbi.Bravo.Infrastructure.Configuration;
     using Sqlbi.Bravo.Infrastructure.Helpers;
+    using Sqlbi.Bravo.Infrastructure.Telemetry;
     using System;
     using System.Windows.Forms;
 
@@ -35,7 +35,7 @@
             }
             catch (Exception ex)
             {
-                TelemetryHelper.TrackException(ex);
+                TelemetryService.TrackFatalException(ex);
                 ExceptionHelper.ShowDialog(ex);
                 throw;
             }

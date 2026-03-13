@@ -5,9 +5,7 @@
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging;
-    using Microsoft.Extensions.Logging.ApplicationInsights;
     using Microsoft.Extensions.Logging.EventLog;
-    using System;
     using System.Net;
 
     internal partial class Program
@@ -25,9 +23,7 @@
 
             hostBuilder.ConfigureLogging((context, logging) =>
             {
-                logging.AddFilter<ApplicationInsightsLoggerProvider>((level) => level >= LogLevel.Warning);
                 logging.AddFilter<EventLogLoggerProvider>((level) => level >= LogLevel.Warning);
-                logging.AddApplicationInsights();
                 logging.AddEventSourceLogger();
                 logging.AddEventLog();
 #if DEBUG

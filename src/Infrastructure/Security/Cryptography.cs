@@ -53,10 +53,9 @@
             return hash;
         }
 
-        public static string? SHA256Hash(string value)
+        public static string SHA256Hash(string value)
         {
-            if (value is null)
-                return null;
+            ArgumentNullException.ThrowIfNull(value);
 
             using var algorithm = SHA256.Create();
             var stringBuilder = new StringBuilder();
@@ -83,7 +82,7 @@
 
     internal static class CriptographyExtensions
     {
-        public static string? ToSHA256Hash(this string value) => Cryptography.SHA256Hash(value);
+        public static string ToSHA256Hash(this string value) => Cryptography.SHA256Hash(value);
 
         public static string ToProtectedString(this SecureString secureString)
         {
