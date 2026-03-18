@@ -1,19 +1,11 @@
 ﻿namespace Sqlbi.Bravo.Infrastructure.Services.DaxTemplate
 {
     using Dax.Template;
-    using Dax.Template.Exceptions;
     using Dax.Template.Model;
-    using Microsoft.AnalysisServices.AdomdClient;
     using Sqlbi.Bravo.Infrastructure.Extensions;
-    using Sqlbi.Bravo.Infrastructure.Helpers;
     using Sqlbi.Bravo.Infrastructure.Security.Policies;
     using Sqlbi.Bravo.Models;
     using Sqlbi.Bravo.Models.ManageDates;
-    using System;
-    using System.Collections.Generic;
-    using System.IO;
-    using System.Linq;
-    using System.Threading;
 
     internal class DaxTemplateManager
     {
@@ -43,16 +35,7 @@
 
         public Package GetPackage(string path)
         {
-            try
-            {
-                var package = Package.LoadFromFile(path);
-                return package;
-            }
-            catch (TemplateException ex)
-            {
-                TelemetryHelper.TrackException(ex);
-                throw;
-            }
+            return Package.LoadFromFile(path);
         }
 
         public IEnumerable<Package> GetPackages()
@@ -65,83 +48,47 @@
                 }
             }
 
-            try
-            {
-                var files = Package.FindTemplateFiles(CachePath);
-                var packages = files.Select(Package.LoadFromFile).ToArray();
-
-                return packages;
-            }
-            catch (TemplateException ex)
-            {
-                TelemetryHelper.TrackException(ex);
-                throw;
-            }
+            var files = Package.FindTemplateFiles(CachePath);
+            return files.Select(Package.LoadFromFile).ToArray();
         }
 
         public ModelChanges GetPreviewChanges(DateConfiguration configuration, int previewRows, TabularConnectionWrapper connection, CancellationToken cancellationToken)
         {
-            try
-            {
-                var package = configuration.LoadPackage();
-                var modelChanges = GetPreviewChanges(package, previewRows, connection, cancellationToken);
-
-                return modelChanges;
-            }
-            catch (Exception ex) when (ex is TemplateException || ex is AdomdException)
-            {
-                TelemetryHelper.TrackException(ex);
-                throw;
-            }
+            var package = configuration.LoadPackage();
+            return GetPreviewChanges(package, previewRows, connection, cancellationToken);
         }
 
         public ModelChanges GetPreviewChanges(Package package, int previewRows, TabularConnectionWrapper connection, CancellationToken cancellationToken)
         {
+            var engine = new Engine(package);
+
+            engine.ApplyTemplates(connection.Model, cancellationToken);
             try
             {
-                var engine = new Engine(package);
+                var modelChanges = Engine.GetModelChanges(connection.Model, cancellationToken);
 
-                engine.ApplyTemplates(connection.Model, cancellationToken);
-                try
+                if (previewRows > 0)
                 {
-                    var modelChanges = Engine.GetModelChanges(connection.Model, cancellationToken);
-
-                    if (previewRows > 0)
-                    {
-                        using var adomdConnection = connection.CreateAdomdConnection();
-                        modelChanges.PopulatePreview(adomdConnection, connection.Model, previewRows, cancellationToken);
-                    }
-
-                    return modelChanges;
+                    using var adomdConnection = connection.CreateAdomdConnection();
+                    modelChanges.PopulatePreview(adomdConnection, connection.Model, previewRows, cancellationToken);
                 }
-                finally
-                {
-                    connection.Model.UndoLocalChanges();
-                }
+
+                return modelChanges;
             }
-            catch (Exception ex) when (ex is TemplateException || ex is AdomdException)
+            finally
             {
-                TelemetryHelper.TrackException(ex);
-                throw;
+                connection.Model.UndoLocalChanges();
             }
         }
 
         public void ApplyConfiguration(DateConfiguration configuration, TabularConnectionWrapper connection, CancellationToken cancellationToken)
         {
-            try
-            {
-                var package = configuration.LoadPackage();
-                var engine = new Engine(package);
+            var package = configuration.LoadPackage();
+            var engine = new Engine(package);
 
-                engine.ApplyTemplates(connection.Model, cancellationToken);
-                configuration.SerializeTo(connection.Model);
-                connection.Model.SaveChanges().ThrowOnError();
-            }
-            catch (TemplateException ex)
-            {
-                TelemetryHelper.TrackException(ex);
-                throw;
-            }
+            engine.ApplyTemplates(connection.Model, cancellationToken);
+            configuration.SerializeTo(connection.Model);
+            connection.Model.SaveChanges().ThrowOnError();
         }
 
         private IEnumerable<(string Name, Stream Content)> GetSchemaFiles()

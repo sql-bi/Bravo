@@ -45,7 +45,7 @@ export class Debug {
                     ietfLanguageTag: navigator.language
                 },
                 telemetry: {
-                    instrumentationKey: ""
+                    connectionString: ""
                 }
             }
         }

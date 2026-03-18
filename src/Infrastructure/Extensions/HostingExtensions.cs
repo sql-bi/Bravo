@@ -13,6 +13,7 @@
     using Sqlbi.Bravo.Infrastructure.Authentication;
     using Sqlbi.Bravo.Infrastructure.Configuration.Options;
     using Sqlbi.Bravo.Infrastructure.Helpers;
+    using Sqlbi.Bravo.Infrastructure.Telemetry;
     using Sqlbi.Bravo.Models;
     using System.Net.Sockets;
     using System.Reflection;
@@ -132,6 +133,8 @@
                     if (AppEnvironment.IsDiagnosticLevelVerbose)
                         AppEnvironment.AddDiagnostics(name: nameof(BravoException), exception);
 
+                    context.RequestServices.GetRequiredService<ITelemetryService>().TrackException(exception);
+
                     var problemDetailsFactory = context.RequestServices.GetRequiredService<ProblemDetailsFactory>();
                     var problemDetails = problemDetailsFactory.CreateProblemDetails(context,
                         statusCode: StatusCodes.Status400BadRequest,
@@ -146,6 +149,8 @@
                     if (AppEnvironment.IsDiagnosticLevelVerbose)
                         AppEnvironment.AddDiagnostics(name: nameof(MsalException), exception);
 
+                    context.RequestServices.GetRequiredService<ITelemetryService>().TrackException(exception);
+
                     var problemDetailsFactory = context.RequestServices.GetRequiredService<ProblemDetailsFactory>();
                     var problemDetails = problemDetailsFactory.CreateProblemDetails(context,
                         statusCode: StatusCodes.Status400BadRequest,
@@ -159,6 +164,8 @@
                 {
                     if (AppEnvironment.IsDiagnosticLevelVerbose)
                         AppEnvironment.AddDiagnostics(name: $"{nameof(AMO.AsClientException)}::{nameof(MsalException)}", exception);
+
+                    context.RequestServices.GetRequiredService<ITelemetryService>().TrackException(exception);
 
                     var msalException = exception.Find<MsalException>(); BravoUnexpectedException.ThrowIfNull(msalException);
                     var problemDetailsFactory = context.RequestServices.GetRequiredService<ProblemDetailsFactory>();
@@ -175,6 +182,8 @@
                     if (AppEnvironment.IsDiagnosticLevelVerbose)
                         AppEnvironment.AddDiagnostics(name: nameof(AMO.ConnectionException), exception);
 
+                    context.RequestServices.GetRequiredService<ITelemetryService>().TrackException(exception);
+
                     var problemDetailsFactory = context.RequestServices.GetRequiredService<ProblemDetailsFactory>();
                     var problemDetails = problemDetailsFactory.CreateProblemDetails(context,
                         statusCode: StatusCodes.Status400BadRequest,
@@ -188,6 +197,8 @@
                 {
                     if (AppEnvironment.IsDiagnosticLevelVerbose)
                         AppEnvironment.AddDiagnostics(name: nameof(OperationCanceledException), exception);
+
+                    context.RequestServices.GetRequiredService<ITelemetryService>().TrackException(exception);
 
                     var problemDetailsFactory = context.RequestServices.GetRequiredService<ProblemDetailsFactory>();
                     var problemDetails = problemDetailsFactory.CreateProblemDetails(context,
@@ -205,6 +216,8 @@
                     if (AppEnvironment.IsDiagnosticLevelVerbose)
                         AppEnvironment.AddDiagnostics(name: $"{nameof(Exception)}::{nameof(SocketException)}", exception);
 
+                    context.RequestServices.GetRequiredService<ITelemetryService>().TrackException(exception);
+
                     var socketException = exception.Find<SocketException>(); BravoUnexpectedException.ThrowIfNull(socketException);
                     var problemDetailsFactory = context.RequestServices.GetRequiredService<ProblemDetailsFactory>();
                     var problemDetails = problemDetailsFactory.CreateProblemDetails(context,
@@ -220,8 +233,9 @@
                 {
                     AppEnvironment.AddDiagnostics(name: "UnhandledException", exception);
 
-                    var problemDetails = StatusCodeProblemDetails.Create(StatusCodes.Status500InternalServerError);
-                    return problemDetails;
+                    context.RequestServices.GetRequiredService<ITelemetryService>().TrackException(exception);
+
+                    return StatusCodeProblemDetails.Create(StatusCodes.Status500InternalServerError);
                 });
             });
 

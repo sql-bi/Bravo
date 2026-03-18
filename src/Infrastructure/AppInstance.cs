@@ -3,6 +3,7 @@
     using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
     using Sqlbi.Bravo.Infrastructure.Helpers;
     using Sqlbi.Bravo.Infrastructure.Messages;
+    using Sqlbi.Bravo.Infrastructure.Telemetry;
     using System;
     using System.Diagnostics;
     using System.IO;
@@ -72,7 +73,7 @@
             catch (Exception ex) when (ex is IOException || ex is TimeoutException)
             {
                 ExceptionHelper.WriteToEventLog(ex, EventLogEntryType.Warning);
-                TelemetryHelper.TrackException(ex);
+                TelemetryService.TrackFatalException(ex);
                 return;
             }
 
@@ -89,7 +90,7 @@
             catch (Exception ex) when (ex is ObjectDisposedException || ex is InvalidOperationException || ex is IOException)
             {
                 ExceptionHelper.WriteToEventLog(ex, EventLogEntryType.Warning);
-                TelemetryHelper.TrackException(ex);
+                TelemetryService.TrackFatalException(ex);
                 return;
             }
         }

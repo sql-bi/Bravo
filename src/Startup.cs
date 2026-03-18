@@ -2,16 +2,15 @@
 {
     using Dax.Formatter;
     using Hellang.Middleware.ProblemDetails;
-    using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
     using Sqlbi.Bravo.Infrastructure.Extensions;
-    using Sqlbi.Bravo.Infrastructure.Helpers;
     using Sqlbi.Bravo.Infrastructure.Services;
     using Sqlbi.Bravo.Infrastructure.Services.PowerBI;
+    using Sqlbi.Bravo.Infrastructure.Telemetry;
     using Sqlbi.Bravo.Services;
 
     internal class Startup
@@ -35,7 +34,7 @@
 #endif
             services.AddHttpClient();
             services.AddOptions<StartupSettings>().Configure((settings) => settings.FromCommandLineArguments()); //.ValidateDataAnnotations();
-            services.AddOptions<TelemetryConfiguration>().Configure((configuration) => TelemetryHelper.Configure(configuration));
+            services.AddSingleton<ITelemetryService, TelemetryService>();
             services.AddSingleton<IServerAddressProvider, ServerAddressProvider>();
             services.AddSingleton<IPBICloudAuthenticationService, PBICloudAuthenticationService>();
             services.AddSingleton<IPBICloudSettingsService, PBICloudSettingsService>();

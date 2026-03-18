@@ -12,6 +12,7 @@
     using Sqlbi.Bravo.Infrastructure.Messages;
     using Sqlbi.Bravo.Infrastructure.Security;
     using Sqlbi.Bravo.Infrastructure.Services;
+    using Sqlbi.Bravo.Infrastructure.Telemetry;
     using Sqlbi.Bravo.Infrastructure.Windows.Interop;
     using Sqlbi.Bravo.Models;
     using System.Drawing;
@@ -203,7 +204,7 @@ window.external = {
             var proxy = UserPreferences.Current.Proxy;
             if (proxy?.Type != ProxyType.None && proxy?.UseDefaultCredentials == false)
             {
-                if (TelemetryHelper.IsTelemetryUri(e.Uri))
+                if (TelemetrySessionInfo.IsTelemetryUri(e.Uri))
                 {
                     if (CredentialManager.TryGetCredential(targetName: AppEnvironment.CredentialManagerProxyCredentialName, out var genericCredential))
                     {
@@ -326,13 +327,11 @@ window.external = {
                 },
                 telemetry = new
                 {
-                    instrumentationKey = AppEnvironment.TelemetryInstrumentationKey,
-                    connectionString = AppEnvironment.TelemetryConnectionString,
-                    contextDeviceOperatingSystem = AppTelemetryInitializer.DeviceOperatingSystem,
-                    contextComponentVersion = AppTelemetryInitializer.ComponentVersion,
-                    contextSessionId = AppTelemetryInitializer.SessionId,
-                    contextUserId = AppTelemetryInitializer.UserId,
-                    globalProperties = AppTelemetryInitializer.GlobalProperties
+                    connectionString = TelemetrySessionInfo.ConnectionString,
+                    contextComponentVersion = TelemetrySessionInfo.ComponentVersion,
+                    contextSessionId = TelemetrySessionInfo.SessionId,
+                    contextUserId = TelemetrySessionInfo.UserId,
+                    globalProperties = TelemetrySessionInfo.GlobalProperties
                 },
             };
 
