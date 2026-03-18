@@ -328,7 +328,6 @@ window.external = {
                 telemetry = new
                 {
                     connectionString = TelemetrySessionInfo.ConnectionString,
-                    contextDeviceOperatingSystem = TelemetrySessionInfo.DeviceOperatingSystem,
                     contextComponentVersion = TelemetrySessionInfo.ComponentVersion,
                     contextSessionId = TelemetrySessionInfo.SessionId,
                     contextUserId = TelemetrySessionInfo.UserId,

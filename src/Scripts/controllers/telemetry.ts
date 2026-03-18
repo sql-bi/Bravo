@@ -12,7 +12,6 @@ import { ProblemDetails } from './host';
 
 export interface TelemetryConfig {
    connectionString: string,
-   contextDeviceOperatingSystem?: string,
    contextComponentVersion?: string,
    contextSessionId?: string,
    contextUserId?: string,
