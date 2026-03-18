@@ -10,7 +10,6 @@
     using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Infrastructure.Helpers;
     using Sqlbi.Bravo.Infrastructure.Messages;
-    using Sqlbi.Bravo.Infrastructure.Security;
     using Sqlbi.Bravo.Infrastructure.Services;
     using Sqlbi.Bravo.Infrastructure.Telemetry;
     using Sqlbi.Bravo.Infrastructure.Windows.Interop;
@@ -36,6 +35,7 @@ window.external = {
         private readonly AppInstance _instance;
         private readonly IServerAddressProvider _serverAddressProvider;
         private readonly IOptions<StartupSettings> _startupSettingsOptionsAccessor;
+        private readonly WebView2ProxyAuthHandler _proxyAuthHandler;
         private readonly Color _startupThemeColor;
 
         public AppWindow(IServiceProvider services, AppInstance instance)
@@ -43,6 +43,7 @@ window.external = {
             _instance = instance;
             _serverAddressProvider = services.GetRequiredService<IServerAddressProvider>();
             _startupSettingsOptionsAccessor = services.GetRequiredService<IOptions<StartupSettings>>();
+            _proxyAuthHandler = new WebView2ProxyAuthHandler(WebProxyWrapper.Current);
             _startupThemeColor = ThemeHelper.ShouldUseDarkMode(UserPreferences.Current.Theme) ? AppEnvironment.ThemeColorDark : AppEnvironment.ThemeColorLight;
 
             UISynchronizationContext = new WindowsFormsSynchronizationContext();
@@ -201,23 +202,12 @@ window.external = {
 
         private void OnWebViewBasicAuthenticationRequested(object? sender, CoreWebView2BasicAuthenticationRequestedEventArgs e)
         {
-            var proxy = UserPreferences.Current.Proxy;
-            if (proxy?.Type != ProxyType.None && proxy?.UseDefaultCredentials == false)
-            {
-                if (TelemetrySessionInfo.IsTelemetryUri(e.Uri))
-                {
-                    if (CredentialManager.TryGetCredential(targetName: AppEnvironment.CredentialManagerProxyCredentialName, out var genericCredential))
-                    {
-                        var credential = genericCredential.ToNetworkCredential();
-                        if (credential is not null)
-                        {
-                            e.Response.UserName = credential.UserName;
-                            e.Response.Password = credential.Password;
-                            return;
-                        }
-                    }
-                }
-            }
+            if (_proxyAuthHandler.TryHandle(e))
+                return;
+
+            // Proxy authentication not handled (untrusted proxy or credentials unavailable).
+            // Do not cancel the request — allow WebView's native auth dialog so the user can provide or deny credentials.
+            e.Cancel = false;
 
             //var deferral = e.GetDeferral();
 
