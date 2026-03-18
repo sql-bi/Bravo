@@ -10,8 +10,9 @@ internal sealed class DefaultTelemetryInitializer : ITelemetryInitializer
         // Remark: Keep telemetry context configuration synchronized
         // with Sqlbi.Bravo.Installer.Wix.Helpers.GetTelemetryClient()
 
-        telemetry.Context.Component.Version = TelemetrySessionInfo.ComponentVersion;
         telemetry.Context.Device.OperatingSystem = TelemetrySessionInfo.DeviceOperatingSystem;
+        telemetry.Context.Cloud.RoleInstance = TelemetrySessionInfo.CloudRoleInstance;
+        telemetry.Context.Component.Version = TelemetrySessionInfo.ComponentVersion;
         telemetry.Context.Session.Id = TelemetrySessionInfo.SessionId;
         telemetry.Context.User.Id = TelemetrySessionInfo.UserId;
 

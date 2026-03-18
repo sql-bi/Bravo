@@ -11,6 +11,7 @@ internal static class TelemetrySessionInfo
     public static string DeviceOperatingSystem { get; } = Environment.OSVersion.ToString();
     public static string SessionId { get; } = Guid.NewGuid().ToString();
     public static string UserId { get; } = $"{Environment.MachineName}\\{Environment.UserName}".ToSHA256Hash();
+    public static string CloudRoleInstance { get; } = Environment.MachineName.ToSHA256Hash();
     public static IReadOnlyDictionary<string, string> GlobalProperties { get; } = new Dictionary<string, string>
     {
         { "ProductName", AppEnvironment.ApplicationName },
