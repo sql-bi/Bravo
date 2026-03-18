@@ -127,11 +127,12 @@ window.external = {
             /* ICoreWebView2    */ WebView.CoreWebView2.PermissionRequested += OnWebViewPermissionRequested;
             /* ICoreWebView2_10 */ WebView2Helper.TryAndIgnoreUnsupportedError(() => WebView.CoreWebView2.BasicAuthenticationRequested += OnWebViewBasicAuthenticationRequested);
 
-            /* ICoreWebView2 */ await WebView.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(WindowExternalWebMessageCallbackScript);
-            /* ICoreWebView2 */ WebView.CoreWebView2.AddWebResourceRequestedFilter("*", CoreWebView2WebResourceContext.All);
-            WebView.Source = new Uri(Path.Combine(Environment.CurrentDirectory, "wwwroot\\index.html"));
-            // /* ICoreWebView2_3 */ WebView.CoreWebView2.SetVirtualHostNameToFolderMapping("bravo.example", "wwwroot", CoreWebView2HostResourceAccessKind.Allow);
-            //WebView.CoreWebView2.Navigate("https://bravo.example/index.html"); // For '.example' see rfc6761
+            /* ICoreWebView2    */ await WebView.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(WindowExternalWebMessageCallbackScript);
+            /* ICoreWebView2    */ WebView.CoreWebView2.AddWebResourceRequestedFilter("*", CoreWebView2WebResourceContext.All);
+            // Use a virtual host name to serve local content over HTTPS, avoiding 'file:' URL security origin restrictions.
+            // The '.example' TLD is reserved by RFC 6761 and guaranteed never to be registered, preventing domain collisions.
+            /* ICoreWebView2_3  */ WebView.CoreWebView2.SetVirtualHostNameToFolderMapping("bravo.example", "wwwroot", CoreWebView2HostResourceAccessKind.Allow);
+            /* ICoreWebView2    */ WebView.CoreWebView2.Navigate("https://bravo.example/index.html");
 
             // Allow users to open the DevTools for troubleshooting; this is only available in non-stable releases
             if (!AppEnvironment.IsStableRelease && CommonHelper.IsKeyDown(System.Windows.Forms.Keys.ShiftKey))
