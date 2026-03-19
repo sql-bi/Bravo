@@ -4,9 +4,9 @@
  * https://www.sqlbi.com
 */
 export enum PBICloudDatasetEndorsement {
-    None = "None",
-    Promoted = "Promoted", 
-    Certified = "Certified"
+    None = 0,
+    Promoted = 1,
+    Certified = 2,
 }
 
 export enum PBICloudDatasetConnectionMode {
