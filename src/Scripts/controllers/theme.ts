@@ -8,9 +8,9 @@ import { Dispatchable } from '../helpers/dispatchable';
 import { host, optionsController, telemetry } from '../main';
 
 export enum ThemeType {
-    Auto = "Auto",
-    Dark = "Dark",
-    Light = "Light",
+    Auto = 0,
+    Light = 1,
+    Dark = 2,
 }
 
 export interface ThemeChangeArg {
@@ -76,7 +76,7 @@ export class ThemeController extends Dispatchable {
 
     apply(theme?: ThemeType) {
 
-        if (theme)
+        if (theme !== undefined)
             this.theme = theme;
 
         this.trigger("change", <ThemeChangeArg>{ theme: this.theme, appliedTheme: this.appliedTheme });

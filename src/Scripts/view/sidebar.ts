@@ -45,7 +45,7 @@ export class Sidebar extends View {
             <footer>
                 <div id="ctrl-options" class="ctrl icon-options solo" title="${i18n(strings.settingsCtrlTitle)}"></div>
 
-                <div id="ctrl-theme" class="ctrl icon-theme-${optionsController.options.theme.toLowerCase()} solo hide-if-collapsed" title="${i18n(strings.themeCtrlTitle)}" data-theme="${optionsController.options.theme}"></div> 
+                <div id="ctrl-theme" class="ctrl icon-theme-${ThemeType[optionsController.options.theme].toLowerCase()} solo hide-if-collapsed" title="${i18n(strings.themeCtrlTitle)}" data-theme="${optionsController.options.theme}"></div>
 
                 <img id="ctrl-user" class="ctrl hide-if-collapsed" title="${i18n(strings.signInCtrlTitle)}" src="${ Sidebar.DEFAULT_USER_PICTURE }">
 
@@ -133,7 +133,7 @@ export class Sidebar extends View {
             e.preventDefault();
             let el = (<HTMLElement>e.currentTarget);
 
-            let newTheme = <ThemeType>el.dataset.theme;
+            let newTheme = Number(el.dataset.theme) as ThemeType;
             if (newTheme == ThemeType.Light) {
                 newTheme = ThemeType.Dark;
             } else if (newTheme == ThemeType.Dark) {
@@ -148,14 +148,15 @@ export class Sidebar extends View {
         themeController.on("change", (arg: ThemeChangeArg) => {
 
             let el = _("#ctrl-theme");
-            el.dataset.theme = arg.theme;
+            el.dataset.theme = String(arg.theme);
 
             Object.values(ThemeType).forEach((value) => {
-                if (isNaN(Number(value))) {
+                if (typeof value === "number") {
+                    const name = ThemeType[value].toLowerCase();
                     if (value == arg.theme)
-                        el.classList.add(`icon-theme-${value.toLowerCase()}`);
+                        el.classList.add(`icon-theme-${name}`);
                     else
-                        el.classList.remove(`icon-theme-${value.toLowerCase()}`);    
+                        el.classList.remove(`icon-theme-${name}`);
                 }
             });
         });
