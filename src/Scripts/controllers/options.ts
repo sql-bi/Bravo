@@ -26,8 +26,8 @@ export interface Options {
 } 
 
 export enum PolicyStatus {
-    NotConfigured = "NotConfigured",
-    Forced = "Forced",
+    NotConfigured = 0,
+    Forced = 1,
 }
 
 export interface ProxyOptions {
