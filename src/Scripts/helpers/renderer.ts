@@ -26,7 +26,7 @@ export interface OptionStruct {
     cssClass?: string
     type: OptionType
     valueType?: "string"|"number"|"boolean"
-    values?: string[][]
+    values?: (string | number)[][]
     range?: number[]
     value?: any
     toggledBy?: OptionToggler
@@ -43,7 +43,7 @@ export interface OptionStruct {
 }
 export interface OptionToggler {
     option: string
-    value: string[] | string | boolean | number
+    value: (string | number)[] | string | boolean | number
 }
 
 export interface OptionValidation {
@@ -192,12 +192,12 @@ export module Renderer {
 
                         isHidden = true;
                         toggledByClass = ` toggled-by-${Utils.Text.slugify(struct.toggledBy.option)}`;
-                        let _values = <string[]>(Utils.Obj.isArray(struct.toggledBy.value) ? 
-                            struct.toggledBy.value : 
+                        let _values = <string[]>(Utils.Obj.isArray(struct.toggledBy.value) ?
+                            struct.toggledBy.value :
                             [struct.toggledBy.value.toString()]
                         );
                         _values.forEach(_value => {
-                            toggledByClass += ` toggle-if-${Utils.Text.slugify(_value)}`;
+                            toggledByClass += ` toggle-if-${Utils.Text.slugify(_value.toString())}`;
                             if (togglerValue == _value) isHidden = false;
                         });
                     }

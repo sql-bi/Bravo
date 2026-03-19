@@ -39,9 +39,9 @@ export interface ProxyOptions {
 }
 
 export enum ProxyType {
-    None = "None",
-    System = "System",
-    Custom = "Custom"
+    None = 0,
+    System = 1,
+    Custom = 2
 }
 
 export interface ClientOptions {

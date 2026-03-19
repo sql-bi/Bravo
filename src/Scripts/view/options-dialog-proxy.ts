@@ -27,6 +27,7 @@ export class OptionsDialogProxy {
                 name: i18n(strings.optionProxyType),
                 description: i18n(strings.optionProxyTypeDescription),
                 type: OptionType.select,
+                valueType: "number",
                 values: [
                     [ProxyType.None, i18n(strings.optionProxyTypeNone)],
                     [ProxyType.System, i18n(strings.optionProxyTypeSystem)],
