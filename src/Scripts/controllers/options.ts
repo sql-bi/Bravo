@@ -106,8 +106,6 @@ export enum DiagnosticLevelType {
     Verbose = "Verbose"
 }
 
-type optionsMode = "host" | "browser"
-
 export class OptionsStore<T> extends Dispatchable {
 
     options: T;
@@ -187,8 +185,6 @@ export class OptionsStore<T> extends Dispatchable {
 }
 export class OptionsController extends OptionsStore<Options> {
 
-    storageName = "Bravo";
-
     defaultOptions: Options = {
         theme: ThemeType.Auto,
         telemetryEnabled: true,
@@ -235,79 +231,39 @@ export class OptionsController extends OptionsStore<Options> {
         }
     };
 
-    constructor(options?: Options, public policies?: Dic<PolicyStatus>, public mode: optionsMode = "host") {
+    constructor(options?: Options, public policies?: Dic<PolicyStatus>) {
         super(options);
 
         if (options) {
             this.options = Utils.Obj.merge(this.defaultOptions, options);
-        } else { 
+        } else {
             this.options = this.defaultOptions;
             this.load();
-        }
-        this.listen();
-    }
-
-    // Listen for events
-    listen() {
-        if (this.mode == "browser") {
-            window.addEventListener("storage", e => {
-
-                if (e.isTrusted && e.key == this.storageName) {
-                    const oldData = JSON.parse(e.oldValue);
-                    if (!oldData) return;
-        
-                    const newData = JSON.parse(e.newValue);
-                    if (newData) {
-                        this.trigger("change", Utils.Obj.diff(oldData, newData));
-                    }
-                }
-            });
         }
     }
 
     // Load data
     load() {
-        if (this.mode == "host") {
-            host.getOptions()
-                .then(options => {
-                    if (options) {
+        host.getOptions()
+            .then(options => {
+                if (options) {
 
-                        if (options.customOptions && typeof options.customOptions === "string")
-                            options.customOptions = JSON.parse(options.customOptions);
+                    if (options.customOptions && typeof options.customOptions === "string")
+                        options.customOptions = JSON.parse(options.customOptions);
 
-                        this.options = Utils.Obj.merge(this.defaultOptions, options);
+                    this.options = Utils.Obj.merge(this.defaultOptions, options);
 
-                        this.trigger("change", Utils.Obj.diff(this.defaultOptions, this.options));
-                    }
-                })
-                .catch((error: AppError) => {
-                    try { logger.logError(error); } catch(ignore) {}
-                });
-        } else {
-            try {
-                const rawData = localStorage.getItem(this.storageName);
-                const data = <Options>JSON.parse(rawData);
-                if (data)
-                    this.options = Utils.Obj.merge(this.defaultOptions, data);
-            } catch(error){
-                try { logger.logError(AppError.InitFromError(error)); } catch(ignore) {}
-            }
-        }
+                    this.trigger("change", Utils.Obj.diff(this.defaultOptions, this.options));
+                }
+            })
+            .catch((error: AppError) => {
+                try { logger.logError(error); } catch(ignore) {}
+            });
     }
 
     // Save data
     save() {
-        if (this.mode == "host") {
-            return host.updateOptions(this.options);
-
-        } else {
-            try {
-                localStorage.setItem(this.storageName, JSON.stringify(this.options));
-            } catch(error){
-                try { logger.logError(AppError.InitFromError(error)); } catch(ignore) {}
-            }
-            return Promise.resolve(true);
-        }
+        return host.updateOptions(this.options);
     }
 
     /**
