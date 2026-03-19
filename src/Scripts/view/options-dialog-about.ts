@@ -40,7 +40,7 @@ export class OptionsDialogAbout {
                     <h2>${i18n(strings.appName)}</h2>
                     <div class="version">
                         <select id="option-updatechannel" ${!this.canChangeChannel ? "disabled" : ""}>
-                            ${Object.keys(UpdateChannelType).map(key => `
+                            ${Object.keys(UpdateChannelType).filter(key => isNaN(Number(key))).map(key => `
                                 <option value="${(<any>UpdateChannelType)[key]}" ${(<any>UpdateChannelType)[key] == optionsController.options.updateChannel ? "selected" : ""}>${i18n((<any>strings)[`updateChannel${key}`])}</option>
                             `).join("")}
                         </select> &nbsp;
@@ -77,7 +77,7 @@ export class OptionsDialogAbout {
             if (!this.canChangeChannel) return;
 
             let el = <HTMLSelectElement>e.currentTarget;
-            optionsController.update("updateChannel", el.value);
+            optionsController.update("updateChannel", Number(el.value));
             this.checkForUpdates(true);
         });
 

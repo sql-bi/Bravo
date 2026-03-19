@@ -94,10 +94,10 @@ export enum DaxFormatterSpacingStyle {
 }
 
 export enum UpdateChannelType {
-    Stable = "Stable",
-    //Beta = "Beta",
-    Dev = "Dev",
-    //Canary = "Canary",
+    Stable = 0,
+    //Beta = 1,
+    Dev = 2,
+    //Canary = 3,
 }
 
 export enum DiagnosticLevelType {

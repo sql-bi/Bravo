@@ -117,9 +117,6 @@
         Dark = 2
     }
 
-    // The JsonStringEnumConverter is required because the enum is represented as strings on the UI (TypeScript) side,
-    // not as integers. Remove this converter once the TypeScript enum is redefined to use integer values.
-    [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum UpdateChannelType
     {
         /// <summary>
