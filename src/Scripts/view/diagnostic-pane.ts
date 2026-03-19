@@ -83,7 +83,7 @@ export class DiagnosticPane extends View {
         });
         this.diagnosticLevelElement.addEventListener("click", e => {
             e.preventDefault();
-            optionsController.update("diagnosticLevel", this.diagnosticLevelElement.value);
+            optionsController.update("diagnosticLevel", Number(this.diagnosticLevelElement.value));
         });
         _(".close-pane", this.element).addEventListener("click", e => {
             e.preventDefault();
@@ -101,7 +101,7 @@ export class DiagnosticPane extends View {
         });
 
         optionsController.on("diagnosticLevel.change", ()=>{
-            this.diagnosticLevelElement.value = optionsController.options.diagnosticLevel;
+            this.diagnosticLevelElement.value = String(optionsController.options.diagnosticLevel);
         });
 
         logger.on("log", (message: LogMessage) => {

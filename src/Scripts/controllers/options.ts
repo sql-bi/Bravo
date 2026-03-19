@@ -101,9 +101,9 @@ export enum UpdateChannelType {
 }
 
 export enum DiagnosticLevelType {
-    None = "None", 
-    Basic = "Basic", 
-    Verbose = "Verbose"
+    None = 0,
+    Basic = 1,
+    Verbose = 2,
 }
 
 export class OptionsStore<T> extends Dispatchable {
