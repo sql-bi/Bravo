@@ -11,7 +11,6 @@
     using Microsoft.Extensions.Options;
     using Microsoft.Identity.Client;
     using Sqlbi.Bravo.Infrastructure.Authentication;
-    using Sqlbi.Bravo.Infrastructure.Configuration.Options;
     using Sqlbi.Bravo.Infrastructure.Helpers;
     using Sqlbi.Bravo.Infrastructure.Telemetry;
     using Sqlbi.Bravo.Models;
@@ -258,19 +257,6 @@
             });
 
             return services;
-        }
-
-        public static void AddWritableOptions<T>(this IServiceCollection services, IConfigurationSection section, string file) where T : class, new()
-        {
-            services.Configure<T>(section);
-            services.AddTransient<IWritableOptions<T>>((provider) =>
-            {
-                var configuration = (IConfigurationRoot)provider.GetRequiredService<IConfiguration>();
-                var environment = provider.GetRequiredService<IWebHostEnvironment>();
-                var options = provider.GetRequiredService<IOptionsMonitor<T>>();
-
-                return new WritableOptions<T>(environment, configuration, options, section.Key, file);
-            });
         }
     }
 }
