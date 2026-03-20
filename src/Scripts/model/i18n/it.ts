@@ -144,6 +144,7 @@ const locale: Locale = {
         [_.errorNotAuthorized]: "Non sei autorizzato ad accedere alla risorsa.",
         [_.errorNotConnected]: "Non sei connesso a Power BI - Accedi per continuare.",
         [_.errorNotFound]: "Impossibile connettersi alla risorsa.",
+        [_.errorOperationFailedDetails]: "Si è verificato un errore. Vedere il pannello diagnostica per i dettagli.",
         [_.errorPathNotFound]: "Percorso non trovato o non hai i diritti per aprirlo.",
         [_.errorReportConnectionUnknown]: "Connessione invalida.",
         [_.errorReportConnectionUnsupportedAnalysisServicesCompatibilityMode]: "La compatibilità dell'istanza di Power BI Desktop Analysis Services non è PowerBI.",

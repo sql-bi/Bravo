@@ -144,6 +144,7 @@ const locale: Locale = {
         [_.errorNotAuthorized]: "No está autorizado a visualizar el recurso especificado.",
         [_.errorNotConnected]: "No está conectado a Power Bi - Por favor, regístrese para proceder.",
         [_.errorNotFound]: "No es posible conectarse al recurso especificado.",
+        [_.errorOperationFailedDetails]: "Se ha producido un error. Consulte el panel de diagnóstico para más detalles.",
         [_.errorPathNotFound]: "Camino no encontrado o no tiene los derechos para abrirlo.",
         [_.errorReportConnectionUnknown]: "Conexión no válida.",
         [_.errorReportConnectionUnsupportedAnalysisServicesCompatibilityMode]: "El modo de compatibilidad de la instancia de Power BI Desktop Analysis Services no es PowerBI.",

@@ -144,6 +144,7 @@ const locale: Locale = {
         [_.errorNotAuthorized]: "Du har ikke adgang til den angivne ressource.",
         [_.errorNotConnected]: "Du er ikke forbundet til Power BI - log ind for at fortsætte.",
         [_.errorNotFound]: "Kan ikke forbinde til den angivne ressource.",
+        [_.errorOperationFailedDetails]: "Der opstod en fejl. Se panelet diagnostik for detaljer.",
         [_.errorPathNotFound]: "Sti ikke findes, eller du har ikke rettighederne til at åbne den.",
         [_.errorReportConnectionUnknown]: "Ugyldig forbindelse.",
         [_.errorReportConnectionUnsupportedAnalysisServicesCompatibilityMode]: "Power BI Desktop Analysis Services instansens kompatibilitetstilstand er ikke 'PowerBI'.",

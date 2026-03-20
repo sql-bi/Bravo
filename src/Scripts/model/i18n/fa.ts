@@ -147,6 +147,7 @@ const locale: Locale = {
         [_.errorNotAuthorized]: "شما مجاز به مشاهده این منبع نیستید.",
         [_.errorNotConnected]: "شما به Power BI متصل نیستید - لطفاً برای ادامه وارد شوید.",
         [_.errorNotFound]: "نمی توان به منبع مشخص شده متصل شد.",
+        [_.errorOperationFailedDetails]: "خطایی رخ داده است. برای جزئیات بیشتر پنل تشخیص را ببینید.",
         [_.errorPathNotFound]: "مسیر پیدا نشد یا دسترسی باز کردن آن را ندارید.",
         [_.errorReportConnectionUnknown]: "اتصال نامعتبر.",
         [_.errorReportConnectionUnsupportedAnalysisServicesCompatibilityMode]: "حالت سازگاری Power BI Desktop Analysis Services  روی PowerBI تنظیم نشده است.",

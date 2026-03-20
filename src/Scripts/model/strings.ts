@@ -136,6 +136,7 @@ export enum strings {
     errorNotAuthorized,
     errorNotConnected,
     errorNotFound,
+    errorOperationFailedDetails,
     errorPathNotFound,
     errorReportConnectionUnknown,
     errorReportConnectionUnsupportedAnalysisServicesCompatibilityMode, 

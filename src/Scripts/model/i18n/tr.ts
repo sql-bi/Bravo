@@ -146,6 +146,7 @@ const locale: Locale = {
         [_.errorNotAuthorized]: "Belirtilen kaynağı görüntüleme yetkiniz yok.",
         [_.errorNotConnected]: "Power BI'a bağlı değilsiniz - lütfen devam etmek için oturum açın.",
         [_.errorNotFound]: "Belirtilen kaynağa bağlanılamadı.",
+        [_.errorOperationFailedDetails]: "Bir hata oluştu. Ayrıntılar için tanılama paneline bakın.",
         [_.errorPathNotFound]: "Yol bulunamadı veya açma haklarınız yok.",
         [_.errorReportConnectionUnknown]: "Geçersiz bağlantı.",
         [_.errorReportConnectionUnsupportedAnalysisServicesCompatibilityMode]: "Power BI Desktop Analysis Services'inin uyumluluk modu PowerBI değil.",

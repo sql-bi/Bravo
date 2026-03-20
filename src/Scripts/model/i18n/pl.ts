@@ -144,6 +144,7 @@ const locale: Locale = {
         [_.errorNotAuthorized]: "Nie masz uprawnień do wglądu w wybrane zasoby.",
         [_.errorNotConnected]: "Nie jesteś połączony z Power BI - zaloguj się aby kontynuować.",
         [_.errorNotFound]: "Nie możemy połączyć się z wybranym zasobem.",
+        [_.errorOperationFailedDetails]: "Wystąpił błąd. Szczegóły znajdziesz w panelu diagnostyka.",
         [_.errorPathNotFound]: "Ścieżka nie znaleziono lub nie masz praw do jej otwarcia.",
         [_.errorReportConnectionUnknown]: "Nieprawidłowe połączenie.",
         [_.errorReportConnectionUnsupportedAnalysisServicesCompatibilityMode]: "Instancja Power BI Desktop Analysis Services nie jest PowerBI.",

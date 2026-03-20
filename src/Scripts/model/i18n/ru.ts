@@ -144,6 +144,7 @@ const locale: Locale = {
         [_.errorNotAuthorized]: "У вас нет прав для просмотра указанного ресурса.",
         [_.errorNotConnected]: "Вы не подключены к Power BI — пожалуйста, войдите в систему, чтобы продолжить.",
         [_.errorNotFound]: "Невозможно подключиться к указанному ресурсу.",
+        [_.errorOperationFailedDetails]: "Произошла ошибка. Подробности смотрите в панели диагностика.",
         [_.errorPathNotFound]: "Путь не найден, или у вас нет права открыть его.",
         [_.errorReportConnectionUnknown]: "Недопустимое соединение.",
         [_.errorReportConnectionUnsupportedAnalysisServicesCompatibilityMode]: "Режим совместимости экземпляра Power BI Desktop Analysis Services не является PowerBI.",

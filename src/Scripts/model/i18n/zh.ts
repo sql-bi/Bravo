@@ -144,6 +144,7 @@ const locale: Locale = {
         [_.errorNotAuthorized]: "您没有权限查看指定的资源",
         [_.errorNotConnected]: "您没有连接到Power BI, 请登录后再试",
         [_.errorNotFound]: "不能连接到指定资源",
+        [_.errorOperationFailedDetails]: "发生错误。请查看诊断面板了解详情。",
         [_.errorPathNotFound]: "找不到路径，或者您没有打开它的权利。",
         [_.errorReportConnectionUnknown]: "无效连接",
         [_.errorReportConnectionUnsupportedAnalysisServicesCompatibilityMode]: "Power BI Desktop Analysis Services 实例的兼容模式不是 PowerBI.",

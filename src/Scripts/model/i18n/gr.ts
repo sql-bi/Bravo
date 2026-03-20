@@ -144,6 +144,7 @@ const locale: Locale = {
         [_.errorNotAuthorized]: "Δεν έχεις την εξουσιοδότηση για να δείτε τη συγκεκριμένο πηγή.",
         [_.errorNotConnected]: "Δεν είσαι συνδεδεμένος στο Power BI - Συνδέσου για να συνεχίσεις.",
         [_.errorNotFound]: "Αδυναμία σύνδεσης στην συγκεκριμένη πηγή.",
+        [_.errorOperationFailedDetails]: "Παρουσιάστηκε σφάλμα. Δείτε τον πίνακα διαγνωστικών για λεπτομέρειες.",
         [_.errorPathNotFound]: "Το μονοπάτι δεν βρέθηκε ή δεν έχετε τα δικαιώματα να το ανοίξετε.",
         [_.errorReportConnectionUnknown]: "Μη έγκυρη σύνδεση.",
         [_.errorReportConnectionUnsupportedAnalysisServicesCompatibilityMode]: "Η συμβατότητα του Power BI Desktop Analysis Services instance δεν είναι PowerBI.",

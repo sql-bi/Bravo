@@ -144,6 +144,7 @@ const locale: Locale = {
         [_.errorNotAuthorized]: "Je bent niet gemachtigd om deze resource te bekijken.",
         [_.errorNotConnected]: "Je bent niet verbonden met Power BI - Log in om door te gaan.",
         [_.errorNotFound]: "Kan geen verbinding maken met de opgegeven bron.",
+        [_.errorOperationFailedDetails]: "Er is een fout opgetreden. Zie het diagnostiekpaneel voor details.",
         [_.errorPathNotFound]: "Pad niet gevonden of u hebt niet de rechten om het te openen.",
         [_.errorReportConnectionUnknown]: "Ongeldige bron.",
         [_.errorReportConnectionUnsupportedAnalysisServicesCompatibilityMode]: "Power BI Desktop Analysis Services instance compatibility mode is niet PowerBI.",
