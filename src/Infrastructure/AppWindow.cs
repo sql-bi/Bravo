@@ -113,15 +113,15 @@ window.external = {
             /* ICoreWebView2Settings4   */ WebView2Helper.TryAndIgnoreUnsupportedError(() => WebView.CoreWebView2.Settings.IsGeneralAutofillEnabled = false);
             /* ICoreWebView2Settings5   */ WebView2Helper.TryAndIgnoreUnsupportedError(() => WebView.CoreWebView2.Settings.IsPinchZoomEnabled = false);
             /* ICoreWebView2Settings6   */ WebView2Helper.TryAndIgnoreUnsupportedError(() => WebView.CoreWebView2.Settings.IsSwipeNavigationEnabled = false);
-#if DEBUG_WWWROOT
-            WebView.CoreWebView2.OpenDevToolsWindow();
+
+            //WebView.CoreWebView2.OpenDevToolsWindow();
             //WebView.CoreWebView2.OpenTaskManagerWindow();
             //WebView.CoreWebView2.NavigationStarting += OnWebViewNavigationStarting;
             //WebView.CoreWebView2.NavigationCompleted += OnWebViewNavigationCompleted;
             //WebView.CoreWebView2.ContentLoading += OnWebViewContentLoading;
             //WebView.CoreWebView2.WebMessageReceived += OnWebViewWebWebMessageReceived;
             //WebView.CoreWebView2.WebResourceResponseReceived += OnWebViewWebResourceResponseReceived;
-#endif
+
             /* ICoreWebView2_2  */ WebView.CoreWebView2.DOMContentLoaded += OnWebViewDOMContentLoaded;
             /* ICoreWebView2    */ WebView.CoreWebView2.WebResourceRequested += OnWebViewWebResourceRequested;
             /* ICoreWebView2    */ WebView.CoreWebView2.PermissionRequested += OnWebViewPermissionRequested;

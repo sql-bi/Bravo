@@ -1,11 +1,10 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net6-windows</TargetFramework>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
     <IsPublishable>false</IsPublishable>
-    <Configurations>$(Configurations);Debug_wwwroot</Configurations>
   </PropertyGroup>
 
   <ItemGroup>

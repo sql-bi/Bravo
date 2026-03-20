@@ -15,7 +15,6 @@
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);1591</NoWarn>
     <TypeScriptCompileBlocked>true</TypeScriptCompileBlocked>
-    <Configurations>$(Configurations);Debug_wwwroot</Configurations>
     <AnalysisLevel>latest</AnalysisLevel>
     <IncludeOpenAPIAnalyzers>true</IncludeOpenAPIAnalyzers>
     <IsPackable>false</IsPackable>
@@ -31,18 +30,9 @@
     <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
   </PropertyGroup>
 
-  <Choose>
-    <When Condition=" '$(Configuration)' == 'Debug_wwwroot' ">
-      <PropertyGroup>
-        <DefineConstants>$(AdditionalConstants);DEBUG</DefineConstants>
-      </PropertyGroup>
-    </When>
-    <Otherwise>
-      <PropertyGroup>
-        <DefineConstants>$(AdditionalConstants)</DefineConstants>
-      </PropertyGroup>
-    </Otherwise>
-  </Choose>
+  <PropertyGroup Condition="'$(SelfContained)' == 'true'">
+    <DefineConstants>$(DefineConstants);PUBLISHMODE_SELFCONTAINED</DefineConstants>
+  </PropertyGroup>
 
   <PropertyGroup>
     <!-- Don't change version here -->
@@ -131,7 +121,7 @@
     <ClientAssetsDirectory Condition="'$(ClientAssetsDirectory)' == ''">Scripts\</ClientAssetsDirectory>
     <ClientAssetsRestoreInputs Condition="'$(ClientAssetsRestoreInputs)' == ''">$(ClientAssetsDirectory)package-lock.json;$(ClientAssetsDirectory)package.json</ClientAssetsRestoreInputs>
     <ClientAssetsRestoreOutputs Condition="'$(ClientAssetsRestoreOutputs)' == ''">$(ClientAssetsDirectory)node_modules\.package-lock.json</ClientAssetsRestoreOutputs>
-    <ClientAssetsEnabled Condition="'$(Configuration)' != 'Debug_wwwroot'">true</ClientAssetsEnabled>
+    <ClientAssetsEnabled>true</ClientAssetsEnabled>
   </PropertyGroup>
 
   <ItemGroup>

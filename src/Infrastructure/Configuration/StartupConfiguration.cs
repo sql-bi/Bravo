@@ -34,9 +34,7 @@
 
         private static void ConfigureDirectories()
         {
-#if !DEBUG_WWWROOT
-            Directory.SetCurrentDirectory(System.AppContext.BaseDirectory);
-#endif
+            Directory.SetCurrentDirectory(AppContext.BaseDirectory);
             Directory.CreateDirectory(AppEnvironment.ApplicationDataPath);
             Directory.CreateDirectory(AppEnvironment.ApplicationTempPath);
         }
