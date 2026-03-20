@@ -137,7 +137,6 @@ const locale: Locale = {
         [_.errorDatasetsListing]: "Nie możemy pobrać listy zestawów danych z Usługi Power BI.",
         [_.errorExportDataFileError]: "Nie udało się wyeksportować danych. Spróbuj ponownie.",
         [_.errorGetEnvironments]: "Wprowadź ważne konto Power BI.",
-        [_.errorManageDateTemplateError]: "Wyjątek wystąpił podczas wykonywania silnika szablonu DAX.",
         [_.errorManageDateTemplateError]: "Wystąpił wyjątek podczas wykonywania silnika szablonów DAX.",
         [_.errorNetworkError]: "Nie masz połączenia z internetem.",
         [_.errorNone]: "Nieokreślony błąd.",

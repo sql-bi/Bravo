@@ -139,7 +139,6 @@ const locale: Locale = {
         [_.errorDatasetsListing]: "Die Liste der Datasets von Power BI Service kann nicht abgerufen werden.",
         [_.errorExportDataFileError]: "Beim Exportieren der Daten ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.",
         [_.errorGetEnvironments]: "Bitte geben Sie ein gültiges Power BI -Konto ein.",
-        [_.errorManageDateTemplateError]: "Beim Ausführen der DAX-Template-Engine ist eine Ausnahme aufgetreten.",
         [_.errorManageDateTemplateError]: "Eine Ausnahme trat beim Ausführen der DAX -Template -Engine auf.",
         [_.errorNetworkError]: "Sie sind nicht mit dem Internet verbunden.",
         [_.errorNone]: "Nicht spezifizierter Fehler.",

@@ -139,7 +139,6 @@ const locale: Locale = {
         [_.errorDatasetsListing]: "Impossible de récupérer la liste des jeux de données à partir de Power BI Service.",
         [_.errorExportDataFileError]: "Une erreur s'est produite lors de l'export des données. Merci d'essayer à nouveau.",
         [_.errorGetEnvironments]: "Veuillez saisir un compte Power BI valide.",
-        [_.errorManageDateTemplateError]: "Une exception s'est produite durant l'exécution du moteur de modèle DAX.",
         [_.errorManageDateTemplateError]: "Une exception s'est produite lors de l'exécution du moteur de modèle DAX.",
         [_.errorNetworkError]: "Vous n'êtes pas connecté à Internet.",
         [_.errorNone]: "Erreur non spécifiée.",

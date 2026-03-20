@@ -137,7 +137,6 @@ const locale: Locale = {
         [_.errorDatasetsListing]: "Αδυναμία ανάκτησης της λίστας συνόλου δεδομένων από την υπηρεσία του Power BI.",
         [_.errorExportDataFileError]: "Κάτι πήγε λάθος κατά την εξαγωγή των δεδομένων. Παρακαλώ δοκίμασε ξανά.",
         [_.errorGetEnvironments]: "Εισαγάγετε έναν έγκυρο λογαριασμό Power BI.",
-        [_.errorManageDateTemplateError]: "Παρουσιάστηκε εξαίρεση κατά την εκτέλεση του κινητήρα προτύπου DAX.",
         [_.errorManageDateTemplateError]: "Παρουσιάστηκε σφάλμα κατά την εκτέλεση του DAX template engine.",
         [_.errorNetworkError]: "Δεν είσαι συνδεδεμένος στο Internet.",
         [_.errorNone]: "Απροσδιόριστο σφάλμα.",

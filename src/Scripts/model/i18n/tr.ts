@@ -139,7 +139,6 @@ const locale: Locale = {
         [_.errorDatasetsListing]: "Power BI Hizmetinin veri setlerinin listesi alınamadı.",
         [_.errorExportDataFileError]: "Veriler dışa aktarılırken bir sorun oluştu. Lütfen tekrar deneyin.",
         [_.errorGetEnvironments]: "Lütfen geçerli bir Power BI hesabı girin.",
-        [_.errorManageDateTemplateError]: "Dax şablon motoru yürütülürken bir istisna meydana geldi.",
         [_.errorManageDateTemplateError]: "DAX şablonu yürütülürken bir istisna oluştu.",
         [_.errorNetworkError]: "İnternet'e bağlı değilsiniz.",
         [_.errorNone]: "Belirtilmemiş hata.",

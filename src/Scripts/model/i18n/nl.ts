@@ -137,7 +137,6 @@ const locale: Locale = {
         [_.errorDatasetsListing]: "Kan geen lijst van datasets ophalen uit de Power BI Service.",
         [_.errorExportDataFileError]: "Er is iets fout gegaan tijdens het exporteren van data. Probeer het alstublieft nog een keer.",
         [_.errorGetEnvironments]: "Voer een geldige Power BI -account in.",
-        [_.errorManageDateTemplateError]: "Er is een uitzondering opgetreden bij het uitvoeren van de DAX -sjabloonmotor.",
         [_.errorManageDateTemplateError]: "Er is iets fout gegaan bij het uitvoeren van de DAX template.",
         [_.errorNetworkError]: "Je hebt geen actieve internetverbinding.",
         [_.errorNone]: "Niet gespecificeerde foutmelding.",

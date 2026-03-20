@@ -137,7 +137,6 @@ const locale: Locale = {
         [_.errorDatasetsListing]: "Não foi possível recolher a lista de conjuntos de dados do Power BI Service.",
         [_.errorExportDataFileError]: "Algo correu mal na exportação de dados. Por favor, tente de novo.",
         [_.errorGetEnvironments]: "Por favor, insira uma conta válida do Power BI.",
-        [_.errorManageDateTemplateError]: "Ocorreu uma exceção na execução do motor de modelos DAX.",
         [_.errorManageDateTemplateError]: "Ocorreu uma exceção ao executar o mecanismo de modelo DAX.",
         [_.errorNetworkError]: "Não está ligado à Internet.",
         [_.errorNone]: "Erro não especificado.",

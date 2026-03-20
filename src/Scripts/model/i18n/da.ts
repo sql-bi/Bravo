@@ -137,7 +137,6 @@ const locale: Locale = {
         [_.errorDatasetsListing]: "Kan ikke hente listen af datasæt i Power BI-tjenesten.",
         [_.errorExportDataFileError]: "Der opstod en fejl under eksport af data. Prøv igen.",
         [_.errorGetEnvironments]: "Indtast en gyldig Power BI -konto.",
-        [_.errorManageDateTemplateError]: "Der opstod en fejl under afvikling af DAX skabelonsmekanismen.",
         [_.errorManageDateTemplateError]: "Der opstod en undtagelse under udførelsen af DAX -skabelonmotoren.",
         [_.errorNetworkError]: "Du er ikke forbundet til Internettet.",
         [_.errorNone]: "Ukendt fejl.",

@@ -137,7 +137,6 @@ const locale: Locale = {
         [_.errorDatasetsListing]: "Не удалось получить список наборов данных службы Power BI.",
         [_.errorExportDataFileError]: "При экспорте данных произошла ошибка. Повторите попытку.",
         [_.errorGetEnvironments]: "Пожалуйста, введите действительную учетную запись Power BI.",
-        [_.errorManageDateTemplateError]: "Исключение произошло при выполнении механизма шаблона DAX.",
         [_.errorManageDateTemplateError]: "Произошло ошибка при выполнении механизма шаблонов DAX.",
         [_.errorNetworkError]: "Вы не подключены к сети Интернет.",
         [_.errorNone]: "Неизвестная ошибка.",

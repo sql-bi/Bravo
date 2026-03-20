@@ -137,7 +137,6 @@ const locale: Locale = {
         [_.errorDatasetsListing]: "No se puede recuperar la lista de conjuntos de datos del servicio Power BI.",
         [_.errorExportDataFileError]: "Se produjo un error durante la exportación de datos. Por favor, inténtelo de nuevo.",
         [_.errorGetEnvironments]: "Ingrese una cuenta válida de Power BI.",
-        [_.errorManageDateTemplateError]: "Ocurrió una excepción al ejecutar el motor de plantillas DAX.",
         [_.errorManageDateTemplateError]: "Se produjo una excepción al ejecutar el motor de plantilla DAX.",
         [_.errorNetworkError]: "No está conectado a Internet.",
         [_.errorNone]: "Error no especificado",

@@ -137,7 +137,6 @@ const locale: Locale = {
         [_.errorDatasetsListing]: "无法获取Power BI Service的数据集列表",
         [_.errorExportDataFileError]: "导出数据时出现错误。请稍后再试。",
         [_.errorGetEnvironments]: "请输入有效的Power BI帐户。",
-        [_.errorManageDateTemplateError]: "DAX模板引擎启动异常",
         [_.errorManageDateTemplateError]: "执行DAX模板引擎时发生了例外。",
         [_.errorNetworkError]: "您没有连接到网络",
         [_.errorNone]: "未知错误",

@@ -137,7 +137,6 @@ const locale: Locale = {
         [_.errorDatasetsListing]: "Impossibile recuperare la lista dei tuoi dataset su Power BI Service.",
         [_.errorExportDataFileError]: "Si è verificato un problema durante l'esportazione. Riprova.",
         [_.errorGetEnvironments]: "Inserisci un account Power BI valido.",
-        [_.errorManageDateTemplateError]: "Si è verificata un'eccezione durante l'esecuzione del motore del modello DAX.",
         [_.errorManageDateTemplateError]: "Si è verificato un problema durante l'esecuzione del processo DAX template.",
         [_.errorNetworkError]: "Non sei connesso a Internet.",
         [_.errorNone]: "Errore non specificato.",

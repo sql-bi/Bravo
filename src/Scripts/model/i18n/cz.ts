@@ -137,7 +137,6 @@ const locale: Locale = {
         [_.errorDatasetsListing]: "Nelze načíst seznam datových sad služby Power BI.",
         [_.errorExportDataFileError]: "Při exportu dat se něco pokazilo. Prosím zkuste to znovu.",
         [_.errorGetEnvironments]: "Zadejte platný účet Power BI.",
-        [_.errorManageDateTemplateError]: "Při provádění šablony DAX došlo k výjimce.",
         [_.errorManageDateTemplateError]: "Výjimka došlo při provádění motoru DAX šablony.",
         [_.errorNetworkError]: "Nejste připojeni k internetu.",
         [_.errorNone]: "Nespecifikovaná chyba.",
