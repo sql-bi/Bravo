@@ -5,13 +5,14 @@
 */
 
 import { _ } from '../helpers/utils';
-import { auth, host, optionsController } from '../main';
+import { auth, host, logger, optionsController } from '../main';
 import { strings } from '../model/strings';
 import { Dialog, DialogResponse } from './dialog';
-import { i18n } from '../model/i18n'; 
+import { i18n } from '../model/i18n';
 import { Loader } from '../helpers/loader';
 import { PBICloudEnvironment } from '../model/pbi-cloud';
 import { SignInRequest } from '../controllers/auth';
+import { AppError } from '../model/exceptions';
 
 
 export class PowerBISignin extends Dialog {
@@ -75,6 +76,7 @@ export class PowerBISignin extends Dialog {
         this.element.addLiveEventListener("change", ".signin-env", (e, element: HTMLSelectElement)=> {
             this.data.environmentName = element.value;
         });
+
     }
 
     getEnvironments(email: string) {
@@ -104,11 +106,12 @@ export class PowerBISignin extends Dialog {
                                 this.signInButton.toggleAttr("disabled", false);
 
                             } else {
-                                this.renderEnvironmentsError();
+                                this.renderEnvironmentsError(i18n(strings.errorGetEnvironments));
                             }
                         })
-                        .catch(ignore => {
-                            this.renderEnvironmentsError();
+                        .catch((error: AppError) => {
+                            this.renderEnvironmentsError(i18n(strings.errorOperationFailedDetails));
+                            try { logger.logError(error); } catch(ignore) {}
                         });
 
                 }, 1000);
@@ -133,10 +136,10 @@ export class PowerBISignin extends Dialog {
         this.envListContainer.innerHTML = html;
     }
 
-    renderEnvironmentsError() {
+    renderEnvironmentsError(message: string) {
         this.envListContainer.innerHTML = `
             <span class="status">
-                ${i18n(strings.errorGetEnvironments)}
+                ${message}
             </span>
         `;
     }
