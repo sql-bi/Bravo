@@ -119,12 +119,10 @@
         {
             get
             {
-#if SELFCONTAINED
+#if PUBLISHMODE_SELFCONTAINED
                 return AppPublishMode.SelfContained;
-#elif FRAMEWORKDEPENDENT
-                return AppPublishMode.FrameworkDependent;
 #else
-                return AppPublishMode.None;
+                return AppPublishMode.FrameworkDependent;
 #endif
             }
         }
@@ -269,8 +267,18 @@
 
     public enum AppPublishMode
     {
-        None = 0,
+        /// <summary>
+        /// Published as a framework-dependent application that relies on a shared system-wide
+        /// version of the .NET runtime. The application will not include the .NET runtime and
+        /// will require it to be installed on the host machine to run.
+        /// </summary>
+        FrameworkDependent = 0,
+
+        /// <summary>
+        /// Published as a self-contained application that includes a private copy of the .NET runtime.
+        /// The application will not rely on a shared system-wide version of the .NET runtime and
+        /// can run on a host machine even if the .NET runtime is not installed.
+        /// </summary>
         SelfContained = 1,
-        FrameworkDependent = 2,
     }
 }

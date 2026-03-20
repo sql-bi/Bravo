@@ -30,18 +30,9 @@
     <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
   </PropertyGroup>
 
-  <Choose>
-    <When Condition=" '$(Configuration)' == 'Debug_wwwroot' ">
-      <PropertyGroup>
-        <DefineConstants>$(AdditionalConstants);DEBUG</DefineConstants>
-      </PropertyGroup>
-    </When>
-    <Otherwise>
-      <PropertyGroup>
-        <DefineConstants>$(AdditionalConstants)</DefineConstants>
-      </PropertyGroup>
-    </Otherwise>
-  </Choose>
+  <PropertyGroup Condition="'$(SelfContained)' == 'true'">
+    <DefineConstants>$(DefineConstants);PUBLISHMODE_SELFCONTAINED</DefineConstants>
+  </PropertyGroup>
 
   <PropertyGroup>
     <!-- Don't change version here -->
