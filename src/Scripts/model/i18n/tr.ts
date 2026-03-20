@@ -132,7 +132,7 @@ const locale: Locale = {
         [_.error]: "Hata",
         [_.errorAborted]: "İşlem iptal edildi.",
         [_.errorAnalysisServicesConnectionFailed]: "Sunucu ile Bravo arasında bir bağlantı sorunu ortaya çıktı.",
-        [_.errorCheckForUpdates]: "Güncellemeler kontrol edilemiyor - uzak sunucuya erişilemiyor.",
+        [_.errorCheckForUpdates]: "Güncellemeler kontrol edilemiyor - ayrıntılar için tanılama paneline bakın.",
         [_.errorConnectionUnsupported]: "İstenen veri kaynağına bağlantı desteklenmiyor.",
         [_.errorDatasetConnectionUnknown]: "Belirtilmemiş bağlantı.",
         [_.errorDatasetsEmptyListing]: "Kullanılabilir açık rapor yok.",

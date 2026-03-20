@@ -130,7 +130,7 @@ const locale: Locale = {
         [_.error]: "Fejl",
         [_.errorAborted]: "Handling afbrudt.",
         [_.errorAnalysisServicesConnectionFailed]: "Der opstod et problem i forbindelsen mellem serveren og Bravo.",
-        [_.errorCheckForUpdates]: "Kan ikke tjekke for opdateringer - der kan ikke forbindes til serveren.",
+        [_.errorCheckForUpdates]: "Kan ikke tjekke for opdateringer - se panelet diagnostik for detaljer.",
         [_.errorConnectionUnsupported]: "En forbindelse til den efterspurgte ressource understøttes ikke.",
         [_.errorDatasetConnectionUnknown]: "Ukendt forbindelsestype.",
         [_.errorDatasetsEmptyListing]: "Ingen åbne rapporter tilgængelige.",

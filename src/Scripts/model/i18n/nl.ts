@@ -130,7 +130,7 @@ const locale: Locale = {
         [_.error]: "Fout",
         [_.errorAborted]: "Operatie afgebroken.",
         [_.errorAnalysisServicesConnectionFailed]: "Een connectie probleem heeft zich voorgedaan tussen de server en Bravo.",
-        [_.errorCheckForUpdates]: "Niet mogelijk om op wijzigingen te controleren - De server is niet bereikbaar.",
+        [_.errorCheckForUpdates]: "Niet mogelijk om op wijzigingen te controleren - zie het diagnostiekpaneel voor details.",
         [_.errorConnectionUnsupported]: "De verbinding naar de bron is niet ondersteund.",
         [_.errorDatasetConnectionUnknown]: "Niet gespecificeerde connectie.",
         [_.errorDatasetsEmptyListing]: "Geen open rapporten beschikbaar.",

@@ -130,7 +130,7 @@ const locale: Locale = {
         [_.error]: "Помилка",
         [_.errorAborted]: "Операцію скасовано.",
         [_.errorAnalysisServicesConnectionFailed]: "Виникає проблема з'єднання між сервером і Bravo.",
-        [_.errorCheckForUpdates]: "Неможливо перевірити наявність оновлень - віддалений сервер недоступний.",
+        [_.errorCheckForUpdates]: "Неможливо перевірити наявність оновлень - подробиці дивіться в панелі діагностика.",
         [_.errorConnectionUnsupported]: "З'єднання із запитуваним ресурсом не підтримується.",
         [_.errorDatasetConnectionUnknown]: "Невизначений зв'язок.",
         [_.errorDatasetsEmptyListing]: "Відкритих звітів немає.",

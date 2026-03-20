@@ -130,7 +130,7 @@ const locale: Locale = {
         [_.error]: "错误",
         [_.errorAborted]: "操作中止",
         [_.errorAnalysisServicesConnectionFailed]: "数据库与Bravo连接错误",
-        [_.errorCheckForUpdates]: "不能查看更新 - 无法连接远程数据库",
+        [_.errorCheckForUpdates]: "不能查看更新 - 请查看诊断面板了解详情",
         [_.errorConnectionUnsupported]: "不支持目标资源的连接",
         [_.errorDatasetConnectionUnknown]: "未指定连接",
         [_.errorDatasetsEmptyListing]: "未找到打开的报告",

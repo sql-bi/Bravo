@@ -133,7 +133,7 @@ const locale: Locale = {
         [_.error]: "خطا",
         [_.errorAborted]: "عملیات متوقف شد.",
         [_.errorAnalysisServicesConnectionFailed]: "مشکل اتصال با سرور رخ داده است.",
-        [_.errorCheckForUpdates]: "نمی توان برای به روز رسانی ها بررسی کرد - سرور راه دور قابل دسترسی نیست.",
+        [_.errorCheckForUpdates]: "نمی توان برای به روز رسانی ها بررسی کرد - برای جزئیات بیشتر پنل تشخیص را ببینید.",
         [_.errorConnectionUnsupported]: "اتصال به منبع درخواستی پشتیبانی نمی شود.",
         [_.errorDatasetConnectionUnknown]: "اتصال نامشخص.",
         [_.errorDatasetsEmptyListing]: "گزارش های باز موجود نیست.",

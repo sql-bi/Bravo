@@ -130,7 +130,7 @@ const locale: Locale = {
         [_.error]: "Σφάλμα",
         [_.errorAborted]: "Η λειτουργία ματαιώθηκε.",
         [_.errorAnalysisServicesConnectionFailed]: "Υπάρχει πρόβλημα στην σύνδεση μεταξύ του σέρβερ και του Bravo.",
-        [_.errorCheckForUpdates]: "Δεν μπορεί να γίνει έλεγχος για ενημερώσεις - ο απομακρυσμένος σέρβερ δεν μπορεί να βρεθεί.",
+        [_.errorCheckForUpdates]: "Δεν μπορεί να γίνει έλεγχος για ενημερώσεις - δείτε τον πίνακα διαγνωστικών για λεπτομέρειες.",
         [_.errorConnectionUnsupported]: "Δεν υποστηρίζεται η σύνδεση σε αυτή την αιτούμενη πηγή.",
         [_.errorDatasetConnectionUnknown]: "Υπάρχει αοριστία στην σύνδεση.",
         [_.errorDatasetsEmptyListing]: "Δεν υπάρχουν ανοικτές αναφορές.",

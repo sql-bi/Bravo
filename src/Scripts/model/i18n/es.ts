@@ -130,7 +130,7 @@ const locale: Locale = {
         [_.error]: "Error",
         [_.errorAborted]: "Operación cancelada.",
         [_.errorAnalysisServicesConnectionFailed]: "Hay un problema de conexión entre el servidor y Bravo.",
-        [_.errorCheckForUpdates]: "No se pueden buscar actualizaciones - el servidor remoto no está disponible.",
+        [_.errorCheckForUpdates]: "No se pueden buscar actualizaciones - consulte el panel de diagnóstico para más detalles.",
         [_.errorConnectionUnsupported]: "La conexión con el recurso solicitado no está soportada.",
         [_.errorDatasetConnectionUnknown]: "Conexión no especificada.",
         [_.errorDatasetsEmptyListing]: "No existen informes abiertos disponibles.",

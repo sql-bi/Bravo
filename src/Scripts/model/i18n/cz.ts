@@ -130,7 +130,7 @@ const locale: Locale = {
         [_.error]: "Chyba",
         [_.errorAborted]: "Operace přerušena.",
         [_.errorAnalysisServicesConnectionFailed]: "Mezi serverem a Bravo vznikl problém s připojením.",
-        [_.errorCheckForUpdates]: "Nelze zkontrolovat aktualizace – vzdálený server je nedostupný.",
+        [_.errorCheckForUpdates]: "Nelze zkontrolovat aktualizace – podrobnosti najdete v panelu diagnostika.",
         [_.errorConnectionUnsupported]: "Připojení k požadovanému zdroji není podporováno.",
         [_.errorDatasetConnectionUnknown]: "Nespecifikované spojení.",
         [_.errorDatasetsEmptyListing]: "Nejsou k dispozici žádné otevřené sestavy.",
