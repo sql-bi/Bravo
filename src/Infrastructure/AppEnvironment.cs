@@ -92,7 +92,6 @@
 
             ApplicationDataPath = Path.Combine(Environment.GetFolderPath(DeploymentMode == AppDeploymentMode.Packaged ? Environment.SpecialFolder.UserProfile : Environment.SpecialFolder.LocalApplicationData, Environment.SpecialFolderOption.DoNotVerify), ApplicationName);
             ApplicationTempPath = Path.Combine(ApplicationDataPath, ".temp");
-            ApplicationDiagnosticPath = Path.Combine(ApplicationDataPath, ".diagnostic");
             UserSettingsFilePath = Path.Combine(ApplicationDataPath, "usersettings.json");
             MsalTokenCacheFilePath = Path.Combine(ApplicationDataPath, ".msalcache");
             WebView2VersionInfo = WebView2Helper.GetRuntimeVersionInfo();
@@ -160,8 +159,6 @@
 
         public static string ApplicationTempPath { get; }
 
-        public static string ApplicationDiagnosticPath { get; }
-
         public static string UserSettingsFilePath { get; }
 
         public static string MsalTokenCacheFilePath { get; }
@@ -182,16 +179,11 @@
             AddDiagnostics(DiagnosticMessageType.Text, name, content, severity);
         }
 
-        public static void AddDiagnostics(DiagnosticMessageType type, string name, string content, DiagnosticMessageSeverity severity = DiagnosticMessageSeverity.None, bool writeFile = false)
+        public static void AddDiagnostics(DiagnosticMessageType type, string name, string content, DiagnosticMessageSeverity severity = DiagnosticMessageSeverity.None)
         {
             var message = DiagnosticMessage.Create(type, severity, name, content);
             
             _= Diagnostics.TryAdd(message, message);
-
-            if (writeFile)
-            {
-                WriteDiagnosticFile(message);
-            }
         }
 
         private static void AddEnvironmentDiagnosticInfo()
@@ -220,42 +212,11 @@
                 ApplicationProductVersion,
                 ApplicationDataPath,
                 ApplicationTempPath,
-                ApplicationDiagnosticPath,
                 ApplicationUserSettingsFilePath = UserSettingsFilePath,
                 //ApplicationFileVersionInfo = VersionInfo,
             };
 
             AddDiagnostics(DiagnosticMessageType.Json, name: $"{nameof(AppEnvironment)}.EnvironmentInfo", content: JsonSerializer.Serialize(info));
-        }
-
-        private static void WriteDiagnosticFile(DiagnosticMessage message)
-        {
-            if (IsDiagnosticLevelVerbose)
-            {
-                try
-                {
-                    Directory.CreateDirectory(ApplicationDiagnosticPath);
-
-                    var extension = message.Type switch
-                    {
-                        DiagnosticMessageType.Text => "txt",
-                        DiagnosticMessageType.Json => "json",
-                        _ => "bin",
-                    };
-
-                    BravoUnexpectedException.ThrowIfNull(message.Name);
-
-                    var name = Path.ChangeExtension(message.Name, extension);
-                    var safeName = name.ReplaceInvalidFileNameChars();
-                    var path = Path.Combine(ApplicationDiagnosticPath, safeName);
-
-                    File.WriteAllText(path, message.Content);
-                }
-                catch (Exception ex)
-                {
-                    ExceptionHelper.WriteToEventLog(ex, EventLogEntryType.Warning, throwOnError: false);
-                }
-            }
         }
 
         private static AppDeploymentMode GetDeploymentMode()
