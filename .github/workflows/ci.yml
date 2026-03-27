@@ -9,11 +9,11 @@ jobs:
     - name: checkout
       uses: actions/checkout@v4
     - name: setup dotnet SDK
-      uses: actions/setup-dotnet@v4
+      uses: actions/setup-dotnet@v5
       with:
         global-json-file: global.json
     - name: setup dotnet 6.0 runtime
-      uses: actions/setup-dotnet@v4
+      uses: actions/setup-dotnet@v5
       with:
         dotnet-version: '6.0.x'
     - name: dotnet restore
