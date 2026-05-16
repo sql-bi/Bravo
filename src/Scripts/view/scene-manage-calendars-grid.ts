@@ -271,11 +271,11 @@ export class ManageCalendarsGrid {
                 }
             },
             formatter: (cell: Tabulator.CellComponent) => this.formatCalendarCell(cell, calendarName),
-            editor: "list" as any,
+            editor: "select",
             editorParams: {
                 values: CalendarMappings.getCategoryValues(),
                 defaultValue: ""
-            },
+            } as Tabulator.SelectParams,
             cellClick: (e: any, cell: Tabulator.CellComponent) => this.handleCellClick(e, cell, calendarName),
             cellEdited: (cell: Tabulator.CellComponent) => {
                 const rowData = cell.getRow().getData();
