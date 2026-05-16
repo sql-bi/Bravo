@@ -280,8 +280,12 @@ export class ManageCalendarsScene extends DocScene {
                     ) || [];
                 }
 
-                // Update or add the mapping
-                let mapping = calendar.columnMappings?.find(m => m.columnName === columnName);
+                // Update or add the mapping.
+                // Exclude implicit mappings: an implicit entry for this column must never be
+                // reused — it would be stripped by saveCalendar and the assignment lost.
+                // When the column is currently implicit (linked), we fall through to the else
+                // branch and push a new explicit mapping, which is what the backend expects.
+                let mapping = calendar.columnMappings?.find(m => m.columnName === columnName && !m.isImplicitFromSortBy);
                 if (mapping) {
                     mapping.groupType = groupType;
                     if (isIndependentCategory) {
