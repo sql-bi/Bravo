@@ -9,7 +9,7 @@ import { CalendarMappings } from '../helpers/calendar-mappings';
 import { CalendarSorting, SortState, SortMode } from '../helpers/calendar-sorting';
 import { CalendarSuggestions } from '../helpers/calendar-suggestions';
 import { getCSSVariable } from '../helpers/utils';
-import { CalendarColumnGroupType, CalendarMetadata, ColumnMapping, ManageCalendarsConfig, TableCalendarInfo, CalendarCellMapping, CalendarMappingRow, isAssignedMapping, isSuggestedMapping, isBlankMapping, isUnassignedMapping } from '../model/calendars';
+import { CalendarColumnGroupType, ManageCalendarsConfig, TableCalendarInfo, CalendarCellMapping, CalendarMappingRow } from '../model/calendars';
 import { Doc } from '../model/doc';
 import { i18n } from '../model/i18n';
 import { strings } from '../model/strings';
@@ -273,15 +273,15 @@ export class ManageCalendarsGrid {
             formatter: (cell: Tabulator.CellComponent) => this.formatCalendarCell(cell, calendarName),
             editor: "select",
             editorParams: {
-                values: CalendarMappings.getCategoryValues(),
-                defaultValue: ""
+                values: CalendarMappings.getCategoryValues()
             } as Tabulator.SelectParams,
             cellClick: (e: any, cell: Tabulator.CellComponent) => this.handleCellClick(e, cell, calendarName),
             cellEdited: (cell: Tabulator.CellComponent) => {
                 const rowData = cell.getRow().getData();
                 const columnName = rowData.columnName;
-                const newValue = cell.getValue();
-                const oldValue = cell.getOldValue();
+                const newValue = String(cell.getValue() ?? "");
+                const oldValue = String(cell.getOldValue() ?? "");
+                if (newValue === oldValue) return;
                 this.callbacks.onCellEdited(calendarName, columnName, newValue, oldValue);
             },
             editable: false  // Disable automatic click-to-edit
@@ -289,22 +289,40 @@ export class ManageCalendarsGrid {
     }
 
     private formatCalendarCell(cell: Tabulator.CellComponent, calendarName: string): string {
-        const cellMapping = cell.getValue() as CalendarCellMapping;
         const rowData = cell.getRow().getData() as CalendarMappingRow;
         const columnName = rowData.columnName;
 
-        // Use type guards for safe type narrowing
-        if (isSuggestedMapping(cellMapping)) {
-            return this.formatSuggestedCellTyped(cellMapping, columnName, calendarName);
-        } else if (isAssignedMapping(cellMapping)) {
-            return this.formatAssignedCellTyped(cellMapping, columnName, calendarName);
-        } else if (isUnassignedMapping(cellMapping)) {
-            return i18n(strings.manageCalendarsUnassigned);
-        } else if (isBlankMapping(cellMapping)) {
-            return '<span class="blank-mapping"></span>';
+        // Active suggestion takes priority over any stored value
+        const suggestionKey = `${calendarName}:${columnName}`;
+        if (this.activeSuggestions.has(suggestionKey)) {
+            const suggestion = this.tableInfo?.smartCompletionSuggestions?.find(s =>
+                s.calendarName === calendarName && s.columnName === columnName
+            );
+            if (suggestion?.suggestedCategory !== undefined) {
+                return this.formatSuggestedCellTyped(
+                    { type: 'suggested', categoryType: suggestion.suggestedCategory, isPrimary: suggestion.isPrimary || false },
+                    columnName, calendarName
+                );
+            }
         }
 
-        // Fallback (should not reach here)
+        // Look up mapping from tableInfo — this is the source of truth and covers
+        // both explicit assignments and implicit linked columns.
+        const calendar = this.tableInfo?.calendars?.find(c => c.name === calendarName);
+        const mapping = calendar?.columnMappings?.find(m => m.columnName === columnName);
+
+        if (mapping?.groupType !== undefined && mapping?.groupType !== null) {
+            return this.formatAssignedCellTyped(
+                {
+                    type: 'assigned',
+                    categoryType: mapping.groupType,
+                    isPrimary: mapping.isPrimary || false,
+                    isLinked: mapping.isImplicitFromSortBy || false
+                },
+                columnName, calendarName
+            );
+        }
+
         return '<span class="blank-mapping"></span>';
     }
 
@@ -483,44 +501,17 @@ export class ManageCalendarsGrid {
                 sortByColumnName: column.sortByColumnName
             };
 
-            // Add mapping for each calendar as CalendarCellMapping discriminated union
+            // Store only explicit (non-implicit) mapping as a plain string category value.
+            // Implicit linked columns are not stored here — the formatter reads them
+            // directly from tableInfo so those cells are non-editable display-only.
             for (let calendar of this.tableInfo.calendars!) {
                 const calendarName = calendar.name || '';
-                const suggestionKey = `${calendarName}:${column.name}`;
-                const isSuggested = this.activeSuggestions.has(suggestionKey);
-
-                if (isSuggested) {
-                    // Cell has an active suggestion
-                    const suggestion = this.tableInfo?.smartCompletionSuggestions?.find(s =>
-                        s.calendarName === calendarName && s.columnName === column.name
-                    );
-                    if (suggestion && suggestion.suggestedCategory !== undefined) {
-                        row[`calendar_${calendarName}`] = {
-                            type: 'suggested',
-                            categoryType: suggestion.suggestedCategory,
-                            isPrimary: suggestion.isPrimary || false
-                        } as CalendarCellMapping;
-                        continue;
-                    }
-                }
-
-                // Check for existing mapping
-                const mapping = calendar.columnMappings?.find(m => m.columnName === column.name);
-
-                if (mapping?.groupType !== undefined && mapping?.groupType !== null) {
-                    // Cell has an assignment
-                    row[`calendar_${calendarName}`] = {
-                        type: 'assigned',
-                        categoryType: mapping.groupType,
-                        isPrimary: mapping.isPrimary || false,
-                        isLinked: mapping.isImplicitFromSortBy || false
-                    } as CalendarCellMapping;
-                } else {
-                    // Cell is blank (no assignment, no suggestion)
-                    row[`calendar_${calendarName}`] = {
-                        type: 'blank'
-                    } as CalendarCellMapping;
-                }
+                const mapping = calendar.columnMappings?.find(
+                    m => m.columnName === column.name && !m.isImplicitFromSortBy
+                );
+                row[`calendar_${calendarName}`] = (mapping?.groupType !== undefined && mapping?.groupType !== null)
+                    ? String(mapping.groupType)
+                    : "";
             }
 
             return row as CalendarMappingRow;
