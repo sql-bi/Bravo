@@ -170,12 +170,11 @@ export interface CreateDateTemplateRequest {
 
 export interface BravoUpdate {
     updateChannel: UpdateChannelType
-    currentVersion?: string
-    installedVersion?: string
+    version?: string
     downloadUrl?: string
     changelogUrl?: string
     isNewerVersion: boolean
-} 
+}
 
 export interface ApiLogSettings {
     messageLevel?: DiagnosticLevelType // Minimum diagnostic level required to log the message

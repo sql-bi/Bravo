@@ -17,17 +17,7 @@
 
         public static string AppendApplicationVersion(this string value)
         {
-            var valueAndVersion = $"{value} - v{GetVersionParts(AppEnvironment.ApplicationProductVersion, parts: 4)}";
-            return valueAndVersion;
-        }
-
-        public static string GetVersionParts(this string? version, int parts)
-        {
-            if  (version.IsNullOrWhiteSpace())
-                return string.Empty;
-
-            var versionParts = string.Join('-', version.Split('-').Take(parts));
-            return versionParts;
+            return $"{value} - v{AppEnvironment.VersionInfo.Version}";
         }
 
         /// <summary>

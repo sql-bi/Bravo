@@ -44,7 +44,7 @@ export class OptionsDialogAbout {
                                 <option value="${(<any>UpdateChannelType)[key]}" ${(<any>UpdateChannelType)[key] == optionsController.options.updateChannel ? "selected" : ""}>${i18n((<any>strings)[`updateChannel${key}`])}</option>
                             `).join("")}
                         </select> &nbsp;
-                        <span class="display-version">${i18n(strings.appVersion, { version: app.currentVersion.info.build})}</span>
+                        <span class="display-version">${i18n(strings.appVersion, { version: app.currentVersion.info.version})}</span>
                         <span class="ctrl copy-version icon-copy" title="${i18n(strings.copy)}"></span>
                     </div>
                     ${this.canCheckForUpdates ? `<div class="update-status list"></div>` : ""}

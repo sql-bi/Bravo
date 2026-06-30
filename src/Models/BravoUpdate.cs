@@ -9,9 +9,7 @@
 
         bool IsNewerVersion { get; set; }
 
-        string? CurrentVersion { get; set; }
-
-        string? InstalledVersion { get; set; }
+        string? Version { get; set; }
 
         string? DownloadUrl { get; set; }
 
@@ -26,11 +24,8 @@
         [JsonPropertyName("isNewerVersion")]
         public bool IsNewerVersion { get; set; } = false;
 
-        [JsonPropertyName("currentVersion")]
-        public string? CurrentVersion { get; set; }
-
-        [JsonPropertyName("installedVersion")]
-        public string? InstalledVersion { get; set; }
+        [JsonPropertyName("version")]
+        public string? Version { get; set; }
 
         [JsonPropertyName("downloadUrl")]
         public string? DownloadUrl { get; set; }

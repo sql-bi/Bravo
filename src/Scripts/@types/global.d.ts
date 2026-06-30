@@ -8,7 +8,6 @@ declare global {
         debug?: boolean,
         address: string
         version: string,
-        build: string
         options: Options,
         policies?: Dic<PolicyStatus>,
         token?: string,
