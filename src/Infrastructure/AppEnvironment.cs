@@ -83,13 +83,8 @@
             ProcessId = Environment.ProcessId;
             SessionId = currentProcess.SessionId;
             ProcessPath = Environment.ProcessPath!;
-            
-            VersionInfo = FileVersionInfo.GetVersionInfo(ProcessPath);
-            BravoUnexpectedException.ThrowIfNull(VersionInfo.FileVersion);
-            ApplicationFileVersion = VersionInfo.FileVersion;
-            BravoUnexpectedException.ThrowIfNull(VersionInfo.ProductVersion);
-            ApplicationProductVersion = VersionInfo.ProductVersion;
 
+            VersionInfo = new AppVersionInfo();
             ApplicationDataPath = Path.Combine(Environment.GetFolderPath(DeploymentMode == AppDeploymentMode.Packaged ? Environment.SpecialFolder.UserProfile : Environment.SpecialFolder.LocalApplicationData, Environment.SpecialFolderOption.DoNotVerify), ApplicationName);
             ApplicationTempPath = Path.Combine(ApplicationDataPath, ".temp");
             UserSettingsFilePath = Path.Combine(ApplicationDataPath, "usersettings.json");
@@ -111,9 +106,6 @@
         public static int ProcessId { get; }
 
         public static string ProcessPath { get; }
-
-        // TODO: use custom defined constant to identify a stable release. See PublishMode property and "AdditionalConstants" in csproj
-        public static bool IsStableRelease => Version.TryParse(ApplicationProductVersion, out _);
 
         public static AppPublishMode PublishMode
         {
@@ -147,9 +139,7 @@
             }
         }
 
-        public static string ApplicationFileVersion { get; }
-
-        public static string ApplicationProductVersion { get; }
+        public static AppVersionInfo VersionInfo { get; }
 
         public static JsonSerializerOptions DefaultJsonOptions { get; }
 
@@ -160,8 +150,6 @@
         public static string UserSettingsFilePath { get; }
 
         public static string MsalTokenCacheFilePath { get; }
-
-        public static FileVersionInfo VersionInfo { get; }
 
         public static string? WebView2VersionInfo { get; }
 
@@ -206,12 +194,10 @@
                 //
                 ApplicationPublishMode = PublishMode.ToString(),
                 ApplicationDeploymentMode = DeploymentMode.ToString(),
-                ApplicationFileVersion,
-                ApplicationProductVersion,
+                ApplicationVersion = VersionInfo.InformationalVersion,
                 ApplicationDataPath,
                 ApplicationTempPath,
                 ApplicationUserSettingsFilePath = UserSettingsFilePath,
-                //ApplicationFileVersionInfo = VersionInfo,
             };
 
             AddDiagnostics(DiagnosticMessageType.Json, name: $"{nameof(AppEnvironment)}.EnvironmentInfo", content: JsonSerializer.Serialize(info));

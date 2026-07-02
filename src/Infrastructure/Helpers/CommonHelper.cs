@@ -1,6 +1,5 @@
 ﻿namespace Sqlbi.Bravo.Infrastructure.Helpers
 {
-    using Sqlbi.Bravo.Infrastructure.Configuration;
     using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
     using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Infrastructure.Windows.Interop;
@@ -104,36 +103,31 @@
             var requestUri = $"https://bravorelease.blob.core.windows.net/{ channelPath }/currentversion.json?nocache={ DateTimeOffset.Now.ToUnixTimeSeconds() }";
             var json = await httpClient.GetStringAsync(requestUri, cancellationToken).ConfigureAwait(false);
 
-            using var document = JsonDocument.Parse(json);
+            AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{nameof(CommonHelper)}.{nameof(CheckForUpdateAsync)}", content: json);
 
-            var bravoUpdate = new BravoUpdate
+            using var document = JsonDocument.Parse(json);
+            var rootElement = document.RootElement;
+
+            var version = Version.Parse(rootElement.GetProperty("version").GetString()!)
+                .ToString(3); // Versioning is SemVer-based: discard a 4th (build) digit if present
+            var isNewerVersion = Version.Parse(version) > Version.Parse(AppEnvironment.VersionInfo.Version);
+            var downloadUrl = GetDownloadUrl(rootElement.GetProperty("download").GetString()!);
+            var changelogUrl = rootElement.GetProperty("changelog").GetString()!;
+
+            return new BravoUpdate
             {
                 UpdateChannel = updateChannel,
-                InstalledVersion = AppEnvironment.ApplicationFileVersion,
-                CurrentVersion = document.RootElement.GetProperty("version").GetString(),
-                DownloadUrl = document.RootElement.GetProperty("download").GetString(),
-                ChangelogUrl = document.RootElement.GetProperty("changelog").GetString(),
+                IsNewerVersion = isNewerVersion,
+                Version = version,
+                DownloadUrl = downloadUrl,
+                ChangelogUrl = changelogUrl,
             };
 
-            bravoUpdate.IsNewerVersion = GetIsNewerVersion(bravoUpdate);
-            bravoUpdate.DownloadUrl = GetDownloadUrl(bravoUpdate);
-
-            AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{nameof(CommonHelper)}.{nameof(CheckForUpdateAsync)}", content: JsonSerializer.Serialize(bravoUpdate));
-            return bravoUpdate;
-
-            static bool GetIsNewerVersion(BravoUpdate bravoUpdate)
-            {
-                var installedVersion = Version.Parse(bravoUpdate.InstalledVersion!);
-                var currentVersion = Version.Parse(bravoUpdate.CurrentVersion!);
-
-                return currentVersion > installedVersion;
-            }
-
-            static string GetDownloadUrl(BravoUpdate bravoUpdate)
+            static string GetDownloadUrl(string downloadUrl)
             {
                 BravoUnexpectedException.Assert(AppEnvironment.DeploymentMode != AppDeploymentMode.Packaged);
 
-                var downloadUri = new Uri(bravoUpdate.DownloadUrl!, UriKind.Absolute);
+                var downloadUri = new Uri(downloadUrl, UriKind.Absolute);
                 var downloadFileNameWithoutExtension = Path.GetFileNameWithoutExtension(downloadUri.LocalPath);
                 var downloadFileExtension = Path.GetExtension(downloadUri.LocalPath);
                 var downloadFileName = Path.GetFileName(downloadUri.LocalPath);

@@ -37,8 +37,7 @@ export class Debug {
             globalThis.CONFIG = {
                 debug: true,
                 address: "http://localhost",
-                version: "0.0.0-0.1",
-                build: "0.1",
+                version: "0.0.0",
                 options: null,
                 token: "",
                 culture: {

@@ -134,9 +134,7 @@ window.external = {
             /* ICoreWebView2_3  */ WebView.CoreWebView2.SetVirtualHostNameToFolderMapping("bravo.example", "wwwroot", CoreWebView2HostResourceAccessKind.Allow);
             /* ICoreWebView2    */ WebView.CoreWebView2.Navigate("https://bravo.example/index.html");
 
-            // Allow users to open the DevTools for troubleshooting; this is only available in non-stable releases
-            if (!AppEnvironment.IsStableRelease && CommonHelper.IsKeyDown(System.Windows.Forms.Keys.ShiftKey))
-                WebView.CoreWebView2.OpenDevToolsWindow();
+            // TODO: Consider allowing users to open DevTools for troubleshooting (e.g. by pressing F12 or via a context menu)
         }
 
         protected override void WndProc(ref Message message)
@@ -307,8 +305,7 @@ window.external = {
 #endif
                 address = _serverAddressProvider.GetListeningAddress(),
                 token = AppEnvironment.ApiAuthenticationToken,
-                version = AppEnvironment.ApplicationProductVersion,
-                build = AppEnvironment.ApplicationFileVersion,
+                version = AppEnvironment.VersionInfo.Version,
                 options = BravoOptions.CreateFromUserPreferences(),
                 policies = BravoPolicies.Current,
                 culture = new

@@ -524,7 +524,7 @@
 
                 writer.BeginWorksheet("Bravo Export Summary");
                 writer.BeginRow().Write($"Exported with { AppEnvironment.ApplicationMainWindowTitle }", style: infoStyle);
-                writer.BeginRow().Write($"Version { AppEnvironment.ApplicationProductVersion } (build { AppEnvironment.ApplicationFileVersion })", style: infoStyle);
+                writer.BeginRow().Write($"Version { AppEnvironment.VersionInfo.Version } (build { AppEnvironment.VersionInfo.Build })", style: infoStyle);
                 writer.SkipRows(1);
                 writer.SetDefaultStyle(headerStyle).BeginRow().Write("Worksheet").Write("Table").Write("Rows").Write("Status");
                 writer.SetDefaultStyle(XlsxStyle.Default);

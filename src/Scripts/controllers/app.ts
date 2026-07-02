@@ -30,7 +30,6 @@ import { DialogResponse } from '../view/dialog';
 
 export interface AppVersionInfo {
     version: string
-    build?: string
     downloadUrl?: string
     changelogUrl?: string
 }
@@ -42,7 +41,7 @@ export class AppVersion {
     }
 
     toString() {
-        return `${this.info.version}${this.info.build ? ` (${this.info.build})` : ""}`;
+        return this.info.version;
     }
 }
 export class App {
@@ -429,7 +428,7 @@ export class App {
                 let newVersion = null;
                 if (data.updateChannel == optionsController.options.updateChannel && data.isNewerVersion) {
                     newVersion = new AppVersion({
-                        version: data.currentVersion,
+                        version: data.version,
                         downloadUrl: data.downloadUrl,
                         changelogUrl: data.changelogUrl
                     });
