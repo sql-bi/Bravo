@@ -10,7 +10,6 @@ import { strings } from '../model/strings';
 import { Dialog, DialogResponse } from './dialog';
 import { i18n } from '../model/i18n';
 import { Loader } from '../helpers/loader';
-import { PBICloudEnvironment } from '../model/pbi-cloud';
 import { SignInRequest } from '../controllers/auth';
 import { AppError } from '../model/exceptions';
 
@@ -35,7 +34,7 @@ export class PowerBISignin extends Dialog {
 
         let html = `
             <p>${i18n(strings.powerBiSigninDescription)}</p>
-            <input class="signin-email" type="email" placeholder="${i18n(strings.emailAddressPlaceholder)}" value="${cachedAccount ? cachedAccount.userPrincipalName : ""}">
+            <input class="signin-email" type="email" placeholder="${i18n(strings.emailAddressPlaceholder)}" value="${cachedAccount ? cachedAccount.email : ""}">
             <div class="env-list"></div>
         `;
         this.body.insertAdjacentHTML("beforeend", html);
@@ -48,7 +47,7 @@ export class PowerBISignin extends Dialog {
 
         if (cachedAccount) {
             this.data = {
-                userPrincipalName:  cachedAccount.userPrincipalName,
+                email: cachedAccount.email,
                 environments: cachedAccount.environments,
                 environmentName: cachedAccount.environmentName
             };
@@ -96,7 +95,7 @@ export class PowerBISignin extends Dialog {
                             if (environments && environments.length) {
 
                                 this.data = {
-                                    userPrincipalName: email,
+                                    email: email,
                                     environments: environments,
                                     environmentName: environments[0].name
                                 };

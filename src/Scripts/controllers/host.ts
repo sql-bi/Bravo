@@ -21,7 +21,7 @@ import { strings } from '../model/strings';
 import { LogMessageObj } from './logger';
 import { DateConfiguration, DateTemplate, sanitizeTemplates, TableValidation } from '../model/dates';
 import { ModelChanges } from '../model/model-changes';
-import { PBICloudEnvironment } from '../model/pbi-cloud';
+import { CloudEnvironment } from '../model/pbi-cloud';
 import { PowerBISignin } from '../view/powerbi-signin';
 import { DialogResponse } from '../view/dialog';
 
@@ -49,9 +49,15 @@ export interface ProblemDetails {
     traceId?: string
 }
 
-export interface PBICloudAutenthicationRequest {
-    userPrincipalName: string
-    environment: PBICloudEnvironment
+export interface HostSignInRequest {
+    email: string
+    environment: CloudEnvironment
+}
+export interface HostGetEnvironmentsResponse {
+    environments: CloudEnvironment[]
+}
+export interface HostSignInResponse {
+    account: Account
 }
 export interface FormatDaxRequest {
     options: FormatDaxRequestOptions
@@ -289,10 +295,10 @@ export class Host extends Dispatchable {
 
                     if (auth.account) {
                         // Try automatic sign-in with saved account (if any)
-                        const signinRequest: SignInRequest = { 
-                            userPrincipalName: auth.account.userPrincipalName, 
-                            environmentName: auth.account.environmentName, 
-                            environments: auth.account.environments 
+                        const signinRequest: SignInRequest = {
+                            email: auth.account.email,
+                            environmentName: auth.account.environmentName,
+                            environments: auth.account.environments
                         };
                         return auth.signIn(signinRequest)
                             .then(()=>{
@@ -383,26 +389,28 @@ export class Host extends Dispatchable {
     /**** APIs ****/
 
     /* Authentication */
-    getEnvironments(userPrincipalName: string) {
-        return <Promise<PBICloudEnvironment[]>>this.apiCall("auth/powerbi/GetEnvironments", { userPrincipalName: userPrincipalName }, {}, false);
+    getEnvironments(email: string) {
+        return (<Promise<HostGetEnvironmentsResponse>>this.apiCall("auth/GetEnvironments", { email: email }, {}, false))
+            .then(response => response.environments);
     }
 
-    signIn(request?: PBICloudAutenthicationRequest) {
+    signIn(request?: HostSignInRequest) {
         const logSettings: ApiLogSettings = {};
 
-        return <Promise<Account>>this.apiCall("auth/powerbi/SignIn", request || {}, { method: "POST" }, false, logSettings);
+        return (<Promise<HostSignInResponse>>this.apiCall("auth/SignIn", request || {}, { method: "POST" }, false, logSettings))
+            .then(response => response.account);
     }
 
-    /*signIn(userPrincipalName?: string) {
+    /*signIn(email?: string) {
         const logSettings: ApiLogSettings = {};
 
-        return <Promise<Account>>this.apiCall("auth/powerbi/SignIn", userPrincipalName ? { userPrincipalName: userPrincipalName } : {}, {}, false, logSettings);
+        return <Promise<Account>>this.apiCall("auth/SignIn", email ? { email: email } : {}, {}, false, logSettings);
     }*/
 
     signOut() {
         const logSettings: ApiLogSettings = {};
 
-        return this.apiCall("auth/powerbi/SignOut", {}, {}, false, logSettings);
+        return this.apiCall("auth/SignOut", {}, {}, false, logSettings);
     }
 
     getUserAvatar() {

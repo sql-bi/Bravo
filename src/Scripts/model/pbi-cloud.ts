@@ -4,26 +4,13 @@
  * https://www.sqlbi.com
 */
 
-export interface PBICloudEnvironment {
-    type: PBICloudEnvironmentType
-    name?: string
-    description?: string
-    aadAuthority?: string
-    aadClientId?: string
-    aadRedirectAddress?: string
-    aadResource?: string
-    aadScopes?: string
-    serviceEndpoint?: string
-    clusterEndpoint?: string
-}
-
-export enum PBICloudEnvironmentType {
-    Unknown = 0,
-    Custom = 1,
-    Public = 2,
-    Germany = 3,
-    China = 4,
-    USGov = 5,
-    USGovHigh = 6,
-    USGovMil = 7
+export interface CloudEnvironment {
+    name: string
+    description: string
+    authorityUri: string
+    clientId: string
+    redirectUri: string
+    resourceId: string
+    backendUri: string
+    clusterUri: string
 }

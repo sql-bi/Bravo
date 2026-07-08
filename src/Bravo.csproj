@@ -12,6 +12,7 @@
     <Copyright>SQLBI Corporation</Copyright>
     <RootNamespace>Sqlbi.$(MSBuildProjectName.Replace(" ", "_"))</RootNamespace>
     <Nullable>enable</Nullable>
+    <LangVersion>14.0</LangVersion>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);1591</NoWarn>
     <TypeScriptCompileBlocked>true</TypeScriptCompileBlocked>

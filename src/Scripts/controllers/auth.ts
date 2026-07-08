@@ -8,26 +8,25 @@ import { Dispatchable } from '../helpers/dispatchable';
 import { Utils } from '../helpers/utils';
 import { host, telemetry } from '../main';
 import { AppError } from '../model/exceptions';
-import { PBICloudEnvironment } from '../model/pbi-cloud';
+import { CloudEnvironment } from '../model/pbi-cloud';
 import { CacheHelper } from './cache';
-import { PBICloudAutenthicationRequest } from './host';
 
 export interface Account {
     id?: string
-    userPrincipalName?: string
+    email?: string
     username?: string
     avatar?: string
 }
 
 export interface ExtendedAccount extends Account {
-    environments?: PBICloudEnvironment[]
+    environments?: CloudEnvironment[]
     environmentName?: string
 }
 
 export interface SignInRequest {
-    userPrincipalName: string
+    email: string
     environmentName: string
-    environments: PBICloudEnvironment[]
+    environments: CloudEnvironment[]
 }
 
 export class Auth extends Dispatchable {
@@ -47,7 +46,7 @@ export class Auth extends Dispatchable {
         let cachedAccount = this.getCachedAccount();
         if (cachedAccount)
             this.signIn({
-                userPrincipalName:  cachedAccount.userPrincipalName,
+                email: cachedAccount.email,
                 environments: cachedAccount.environments,
                 environmentName: cachedAccount.environmentName
             }).catch(ignore => {});
@@ -70,7 +69,7 @@ export class Auth extends Dispatchable {
 
         let environment = request && request.environments && request.environments.find(env => env.name == request.environmentName);
 
-        return host.signIn(request ? { userPrincipalName: request.userPrincipalName, environment: environment } : null)
+        return host.signIn(request ? { email: request.email, environment: environment } : null)
             .then(account => {
                 if (account) {
                     this.account = account;

@@ -135,7 +135,7 @@
             return hash.ToHashCode();
         }
 
-        internal static PBICloudDataset CreateFrom(IPBICloudEnvironment environment, CloudWorkspace cloudWorkspace, CloudSharedModel cloudSharedModel)
+        internal static PBICloudDataset CreateFrom(CloudEnvironment environment, CloudWorkspace cloudWorkspace, CloudSharedModel cloudSharedModel)
         {
             BravoUnexpectedException.ThrowIfNull(cloudWorkspace);
             BravoUnexpectedException.ThrowIfNull(cloudSharedModel);
@@ -149,11 +149,11 @@
                 WorkspaceName = cloudWorkspace.Name.NullIfEmpty() ?? cloudSharedModel.WorkspaceName,
                 WorkspaceObjectId = cloudWorkspace.ObjectId,
                 Id = cloudModel.Id,
-                ServerName = CommonHelper.ChangeUriScheme(environment.ServiceEndpoint, PBICloudService.PBIDatasetProtocolScheme, ignorePort: true),
+                ServerName = CommonHelper.ChangeUriScheme(environment.BackendUri, PBICloudService.PBIDatasetProtocolScheme, ignorePort: true),
                 DatabaseName = cloudModel.DBName,
                 ExternalServerName = null,
                 ExternalDatabaseName = null,
-                IdentityProvider = environment.IdentityProvider,
+                IdentityProvider = environment.GetIdentityProvider(),
                 DisplayName = cloudModel.DisplayName,
                 Description = cloudModel.Description,
                 Owner = $"{ cloudModel.CreatorUser?.GivenName } { cloudModel.CreatorUser?.FamilyName }",
@@ -171,7 +171,7 @@
 
             if (dataset.IsXmlaEndPointSupported)
             {
-                dataset.ExternalServerName = CommonHelper.ChangeUriScheme(environment.ClusterEndpoint, PBICloudService.PBIPremiumXmlaEndpointProtocolScheme, ignorePort: true);
+                dataset.ExternalServerName = CommonHelper.ChangeUriScheme(environment.ClusterUri, PBICloudService.PBIPremiumXmlaEndpointProtocolScheme, ignorePort: true);
                 dataset.ExternalDatabaseName = cloudModel.DisplayName;
             }
             else if (dataset.IsOnPremModel == true)
