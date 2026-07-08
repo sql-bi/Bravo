@@ -55,7 +55,6 @@
             // NBSP char instead of whitespace - Latvian/lv
             "\u00A0\u2014 Power BI Desktop",
         };
-        public static readonly TimeSpan MSALSignInTimeout = TimeSpan.FromMinutes(5);
         public static readonly Color ThemeColorDark = ColorTranslator.FromHtml("#202020");
         public static readonly Color ThemeColorLight = ColorTranslator.FromHtml("#F3F3F3");
         public static readonly DaxLineBreakStyle FormatDaxLineBreakDefault = DaxLineBreakStyle.InitialLineBreak;

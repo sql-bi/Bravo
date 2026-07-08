@@ -2,10 +2,10 @@
 {
     using System.Text.Json.Serialization;
 
-    public class TenantCluster
+    internal sealed class TenantClusterContract
     {
         [JsonPropertyName("FixedClusterUri")]
-        public string? FixedClusterUri { get; set; }
+        public string FixedClusterUri { get; set; } = null!;
 
         //public string? PrivateLinkFixedClusterUri { get; set; }
 
@@ -17,4 +17,4 @@
 
         //public string? TenantId { get; set; }
     }
-}
+}   

@@ -36,10 +36,7 @@
             services.AddOptions<StartupSettings>().Configure((settings) => settings.FromCommandLineArguments()); //.ValidateDataAnnotations();
             services.AddSingleton<ITelemetryService, TelemetryService>();
             services.AddSingleton<IServerAddressProvider, ServerAddressProvider>();
-            services.AddSingleton<IPBICloudAuthenticationService, PBICloudAuthenticationService>();
-            services.AddSingleton<IPBICloudSettingsService, PBICloudSettingsService>();
             services.AddSingleton<IPBIDesktopService, PBIDesktopService>();
-            services.AddSingleton<IPBICloudService, PBICloudService>();
             services.AddSingleton<IFormatDaxService, FormatDaxService>();
             services.AddSingleton<IExportDataService, ExportDataService>();
             services.AddSingleton<IDaxFormatterClient, DaxFormatterClient>();
@@ -48,6 +45,7 @@
             services.AddSingleton<IAuthenticationService, AuthenticationService>();
             services.AddSingleton<ITemplateDevelopmentService, TemplateDevelopmentService>();
             services.AddSingleton<IBestPracticeAnalyzerService, BestPracticeAnalyzerService>();
+            services.AddPBICloudServices();
         }
 
         public void Configure(IApplicationBuilder application, IWebHostEnvironment environment)
