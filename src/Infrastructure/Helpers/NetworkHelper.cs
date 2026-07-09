@@ -1,7 +1,7 @@
 ﻿namespace Sqlbi.Bravo.Infrastructure.Helpers
 {
     using Sqlbi.Bravo.Infrastructure.Extensions;
-    using Sqlbi.Bravo.Infrastructure.Services.PowerBI;
+    using Sqlbi.Bravo.Infrastructure.PowerBI.Cloud;
     using Sqlbi.Bravo.Infrastructure.Windows.Interop;
     using System;
     using System.Collections.Generic;
@@ -26,13 +26,13 @@
         public static readonly string LoopbackProxyBypassRule = "<-loopback>";
 
         /// <summary>
-        /// Returns true if the protocol schema for the provided <paramref name="address"/> URI is <see cref="PBICloudService.ASAzureProtocolScheme"/>
+        /// Returns true if the protocol schema for the provided <paramref name="address"/> URI is <see cref="CloudApiClient.ASAzureProtocolScheme"/>
         /// </summary>
         public static bool IsASAzureServer(string address)
         {
             if (address.Contains(Uri.SchemeDelimiter) && Uri.TryCreate(address, UriKind.Absolute, out var addressUri))
             {
-                if (addressUri.Scheme.EqualsI(PBICloudService.ASAzureProtocolScheme))
+                if (addressUri.Scheme.EqualsI(CloudApiClient.ASAzureProtocolScheme))
                     return true;
             }
 
@@ -40,14 +40,14 @@
         }
 
         /// <summary>
-        /// Returns true if the protocol schema for the provided <paramref name="address"/> URI is <see cref="PBICloudService.PBIDatasetProtocolScheme"/> or <see cref="PBICloudService.PBIPremiumXmlaEndpointProtocolScheme"/>
+        /// Returns true if the protocol schema for the provided <paramref name="address"/> URI is <see cref="CloudApiClient.PBIDatasetProtocolScheme"/> or <see cref="CloudApiClient.PBIPremiumXmlaEndpointProtocolScheme"/>
         /// </summary>
         public static bool IsPBICloudDatasetServer(string address)
         {
             if (address.Contains(Uri.SchemeDelimiter) && Uri.TryCreate(address, UriKind.Absolute, out var addressUri))
             {
-                var isGenericDataset = addressUri.Scheme.EqualsI(PBICloudService.PBIDatasetProtocolScheme);
-                var isPremiumDataset = addressUri.Scheme.EqualsI(PBICloudService.PBIPremiumXmlaEndpointProtocolScheme); // <-- can be removed ??
+                var isGenericDataset = addressUri.Scheme.EqualsI(CloudApiClient.PBIDatasetProtocolScheme);
+                var isPremiumDataset = addressUri.Scheme.EqualsI(CloudApiClient.PBIPremiumXmlaEndpointProtocolScheme); // <-- can be removed ??
 
                 return isPremiumDataset || isGenericDataset;
             }

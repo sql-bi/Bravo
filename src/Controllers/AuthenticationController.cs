@@ -2,7 +2,9 @@
 {
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
-    using Sqlbi.Bravo.Infrastructure.Services.PowerBI;
+    using Sqlbi.Bravo.Infrastructure;
+    using Sqlbi.Bravo.Infrastructure.PowerBI.Cloud;
+    using Sqlbi.Bravo.Models;
     using Sqlbi.Bravo.Models.Authentication;
     using Sqlbi.Bravo.Services;
 
@@ -14,13 +16,11 @@
     [ApiController]
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ProblemDetails))]
     public sealed class AuthenticationController(
-        IPBICloudAuthenticationService pbicloudAuthenticationService,
-        IPBICloudService pbicloudService,
+        ICloudApiClient cloudApiClient,
         IAuthenticationService authenticationService) : ControllerBase
     {
         private readonly IAuthenticationService _authenticationService = authenticationService;
-        private readonly IPBICloudAuthenticationService _pbicloudAuthenticationService = pbicloudAuthenticationService;
-        private readonly IPBICloudService _pbicloudService = pbicloudService;
+        private readonly ICloudApiClient _cloudApiClient = cloudApiClient;
 
         /// <summary>
         /// Returns the list of available PowerBI cloud environments for the specified email account.
@@ -35,9 +35,12 @@
             [FromQuery] GetEnvironmentsRequest request,
             CancellationToken cancellationToken)
         {
-            var environments = await _pbicloudAuthenticationService.GetEnvironmentsAsync(
+            var environments = await _authenticationService.GetEnvironmentsAsync(
                 request.Email,
                 cancellationToken);
+
+            if (AppEnvironment.IsDiagnosticLevelVerbose)
+                AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{nameof(AuthenticationController)}.{nameof(GetEnvironmentsAsync)}", JsonSerializer.Serialize(environments));
 
             var response = new GetEnvironmentsResponse(environments);
             return Ok(response);
@@ -56,12 +59,12 @@
             SignInRequest request,
             CancellationToken cancellationToken)
         {
-            await _authenticationService.PBICloudSignInAsync(
+            var session = await _authenticationService.SignInAsync(
                 request.Email,
                 request.Environment.ToModel(),
                 cancellationToken);
 
-            var response = new SignInResponse(_authenticationService.PBICloudAuthentication.Account);
+            var response = new SignInResponse(session.AuthenticationResult);
             return Ok(response);
         }
 
@@ -75,7 +78,7 @@
         [ProducesDefaultResponseType]
         public async Task<IActionResult> SignOutAsync(CancellationToken cancellationToken)
         {
-            await _authenticationService.PBICloudSignOutAsync(cancellationToken);
+            await _authenticationService.SignOutAsync(cancellationToken);
             return Ok();
         }
 
@@ -94,10 +97,11 @@
         [ProducesDefaultResponseType]
         public async Task<IActionResult> GetUserAvatarAsync(CancellationToken cancellationToken)
         {
-            if (await _authenticationService.IsPBICloudSignInRequiredAsync(cancellationToken))
+            var session = await _authenticationService.EnsureSignedInAsync(cancellationToken);
+            if (session is null)
                 return Unauthorized();
 
-            var avatar = await _pbicloudService.GetAccountAvatarAsync();
+            var avatar = await _cloudApiClient.GetUserPhotoAsync(session, cancellationToken);
             if (avatar is null)
                 return NotFound();
 

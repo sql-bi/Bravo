@@ -1,75 +1,38 @@
-﻿namespace Sqlbi.Bravo.Services
+namespace Sqlbi.Bravo.Services
 {
     using Sqlbi.Bravo.Infrastructure;
-    using Sqlbi.Bravo.Infrastructure.Models.PBICloud;
-    using Sqlbi.Bravo.Infrastructure.Services.PowerBI;
+    using Sqlbi.Bravo.Infrastructure.PowerBI.Cloud;
+    using Sqlbi.Bravo.Infrastructure.PowerBI.Cloud.Authentication;
+    using Sqlbi.Bravo.Infrastructure.PowerBI.Cloud.Configuration;
 
     public interface IAuthenticationService
     {
-        CloudEnvironment PBICloudEnvironment { get; }
+        Task<IReadOnlyList<CloudEnvironment>> GetEnvironmentsAsync(string email, CancellationToken cancellationToken);
 
-        PBICloudAuthenticationResult PBICloudAuthentication { get; }
+        Task<AuthenticatedSession?> EnsureSignedInAsync(CancellationToken cancellationToken);
 
-        Task<bool> IsPBICloudSignInRequiredAsync(CancellationToken cancellationToken);
+        Task<AuthenticatedSession> SignInAsync(string email, CloudEnvironment environment, CancellationToken cancellationToken);
 
-        Task PBICloudSignInAsync(string email, CloudEnvironment environment, CancellationToken cancellationToken);
-
-        Task PBICloudSignOutAsync(CancellationToken cancellationToken);
+        Task SignOutAsync(CancellationToken cancellationToken);
     }
 
-    internal class AuthenticationService : IAuthenticationService
+    internal class AuthenticationService(
+        ICloudAuthenticationService cloudAuthenticationService,
+        ICloudConfigurationService cloudConfigurationService) : IAuthenticationService
     {
-        private readonly IPBICloudAuthenticationService _pbicloudAuthenticationService;
+        private readonly ICloudAuthenticationService _cloudAuthenticationService = cloudAuthenticationService;
+        private readonly ICloudConfigurationService _cloudConfigurationService = cloudConfigurationService;
 
-        public AuthenticationService(IPBICloudAuthenticationService pbicloudAuthenticationService)
+        public async Task<IReadOnlyList<CloudEnvironment>> GetEnvironmentsAsync(string email, CancellationToken cancellationToken)
         {
-            _pbicloudAuthenticationService = pbicloudAuthenticationService;
+            return await _cloudConfigurationService.DiscoverEnvironmentsAsync(email, cancellationToken);
         }
 
-        public CloudEnvironment PBICloudEnvironment
-        {
-            get
-            {
-                BravoUnexpectedException.ThrowIfNull(_pbicloudAuthenticationService.CurrentEnvironment);
-                return _pbicloudAuthenticationService.CurrentEnvironment;
-            }
-        }
-
-        public PBICloudAuthenticationResult PBICloudAuthentication
-        {
-            get
-            {
-                BravoUnexpectedException.ThrowIfNull(_pbicloudAuthenticationService.CurrentAuthentication);
-                return _pbicloudAuthenticationService.CurrentAuthentication;
-            }
-        }
-
-        public async Task<bool> IsPBICloudSignInRequiredAsync(CancellationToken cancellationToken)
-        {
-            var authentication = _pbicloudAuthenticationService.CurrentAuthentication;
-            var environment = _pbicloudAuthenticationService.CurrentEnvironment;
-
-            if (authentication is null || environment is null)
-            {
-                return true;
-            }
-
-            if (authentication.IsExpired)
-            {
-                await PBICloudSignInAsync(authentication.Account.Email, environment, cancellationToken).ConfigureAwait(false);
-            }
-
-            return false;
-        }
-
-        public async Task PBICloudSignInAsync(string email, CloudEnvironment environment, CancellationToken cancellationToken)
+        public async Task<AuthenticatedSession?> EnsureSignedInAsync(CancellationToken cancellationToken)
         {
             try
             {
-                await _pbicloudAuthenticationService.SignInAsync(email, environment, cancellationToken);
-
-                BravoUnexpectedException.Assert(_pbicloudAuthenticationService.CurrentAuthentication is not null);
-                BravoUnexpectedException.Assert(_pbicloudAuthenticationService.CurrentEnvironment is not null);
+                return await _cloudAuthenticationService.EnsureSignedInAsync(cancellationToken);
             }
             catch (OperationCanceledException)
             {
@@ -77,12 +40,21 @@
             }
         }
 
-        public async Task PBICloudSignOutAsync(CancellationToken cancellationToken)
+        public async Task<AuthenticatedSession> SignInAsync(string email, CloudEnvironment environment, CancellationToken cancellationToken)
         {
-            await _pbicloudAuthenticationService.SignOutAsync(cancellationToken).ConfigureAwait(false);
-            
-            BravoUnexpectedException.Assert(_pbicloudAuthenticationService.CurrentAuthentication is null);
-            BravoUnexpectedException.Assert(_pbicloudAuthenticationService.CurrentEnvironment is null);
+            try
+            {
+                return await _cloudAuthenticationService.SignInAsync(email, environment, cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                throw new BravoException(BravoProblem.SignInMsalTimeoutExpired);
+            }
+        }
+
+        public async Task SignOutAsync(CancellationToken cancellationToken)
+        {
+            await _cloudAuthenticationService.SignOutAsync(cancellationToken);
         }
     }
 }

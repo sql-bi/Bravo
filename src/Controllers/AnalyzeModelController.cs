@@ -15,10 +15,12 @@
     [Route("api/[action]")]
     [ApiController]
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ProblemDetails))]
-    public class AnalyzeModelController : ControllerBase
+    public class AnalyzeModelController(
+        IAnalyzeModelService analyzeModelService,
+        IAuthenticationService authenticationService) : ControllerBase
     {
-        private readonly IAnalyzeModelService _analyzeModelService;
-        private readonly IAuthenticationService _authenticationService;
+        private readonly IAnalyzeModelService _analyzeModelService = analyzeModelService;
+        private readonly IAuthenticationService _authenticationService = authenticationService;
         private readonly SaveFileDialog _exportVpaxDialog = new()
         {
             Title = "Save VPAX",
@@ -29,12 +31,6 @@
             CheckPathExists = true,
             ValidateNames = true
         };
-
-        public AnalyzeModelController(IAnalyzeModelService analyzeModelService, IAuthenticationService authenticationService)
-        {
-            _analyzeModelService = analyzeModelService;
-            _authenticationService = authenticationService;
-        }
 
         /// <summary>
         /// Returns a database model from the VPAX file provided as multipart form data.
@@ -85,10 +81,11 @@
         [ProducesDefaultResponseType]
         public async Task<IActionResult> GetDatabase(PBICloudDataset dataset, CancellationToken cancellationToken)
         {
-            if (await _authenticationService.IsPBICloudSignInRequiredAsync(cancellationToken))
+            var session = await _authenticationService.EnsureSignedInAsync(cancellationToken);
+            if (session is null)
                 return Unauthorized();
 
-            var database = _analyzeModelService.GetDatabase(dataset, _authenticationService.PBICloudAuthentication.AccessToken, cancellationToken);
+            var database = _analyzeModelService.GetDatabase(dataset, session.AuthenticationResult.AccessToken, cancellationToken);
             return Ok(database);
         }
 
@@ -105,10 +102,11 @@
         [ProducesDefaultResponseType]
         public async Task<IActionResult> GetDatasets(CancellationToken cancellationToken)
         {
-            if (await _authenticationService.IsPBICloudSignInRequiredAsync(cancellationToken))
+            var session = await _authenticationService.EnsureSignedInAsync(cancellationToken);
+            if (session is null)
                 return Unauthorized();
 
-            var datasets = await _analyzeModelService.GetDatasetsAsync(cancellationToken);
+            var datasets = await _analyzeModelService.GetDatasetsAsync(session, cancellationToken);
             return Ok(datasets);
         }
 
@@ -202,12 +200,13 @@
             if (dialogResult != DialogResult.OK)
                 return NoContent();
 
-            if (await _authenticationService.IsPBICloudSignInRequiredAsync(cancellationToken))
+            var session = await _authenticationService.EnsureSignedInAsync(cancellationToken);
+            if (session is null)
                 return Unauthorized();
 
             var path = _exportVpaxDialog.FileName!;
             var mode = _exportVpaxDialog.FilterIndex == 1 ? ExportVpaxMode.Default : ExportVpaxMode.Obfuscated;
-            var accessToken = _authenticationService.PBICloudAuthentication.AccessToken;
+            var accessToken = session.AuthenticationResult.AccessToken;
 
             _analyzeModelService.ExportVpax(dataset, accessToken, mode, path, cancellationToken);
             return Ok();

@@ -1,7 +1,9 @@
 namespace Sqlbi.Bravo.Models.Authentication
 {
-    public sealed class SignInResponse(AppAccount account)
+    using Sqlbi.Bravo.Infrastructure.PowerBI.Cloud.Authentication;
+
+    public sealed class SignInResponse(AuthenticationResult authenticationResult)
     {
-        public AppAccountDto Account { get; } = account.ToDto();
+        public AccountDto Account { get; } = authenticationResult.ToDto();
     }
 }
