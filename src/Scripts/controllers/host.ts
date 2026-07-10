@@ -507,7 +507,8 @@ export class Host extends Dispatchable {
     }
 
     listReports() {
-        return <Promise<PBIDesktopReport[]>>this.apiCall("api/ListReports");
+        return (<Promise<PBIDesktopReport[]>>this.apiCall("api/ListReports"))
+            .then(response => response ?? []);
     }
 
     listDatasets() {
