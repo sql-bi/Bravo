@@ -3,6 +3,7 @@ namespace Sqlbi.Bravo.Infrastructure.PowerBI.Cloud.Authentication
     using Microsoft.Identity.Client;
     using Microsoft.Identity.Client.Desktop;
     using Sqlbi.Bravo.Infrastructure.Configuration;
+    using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Infrastructure.Helpers;
     using Sqlbi.Bravo.Infrastructure.PowerBI.Cloud;
     using Msal = Microsoft.Identity.Client;
@@ -89,13 +90,30 @@ namespace Sqlbi.Bravo.Infrastructure.PowerBI.Cloud.Authentication
                 .WithPrompt(prompt)
                 .WithClaims(claims);
 
+            using var cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+
             if (useEmbeddedBrowser)
             {
                 var windowHandle = ProcessHelper.GetCurrentProcessMainWindowHandle();
                 builder.WithParentActivityOrWindow(windowHandle);
             }
+            else // use system browser
+            {
+                // The system browser is a separate, untracked OS process: there is no way to detect the user closing
+                // it, so a hard ceiling is the only safeguard against an indefinitely pending sign-in.
+                cancellationTokenSource.CancelAfter(TimeSpan.FromMinutes(2));
+            }
 
-            return await builder.ExecuteAsync(cancellationToken).ConfigureAwait(false);
+            try
+            {
+                return await builder.ExecuteAsync(cancellationTokenSource.Token).ConfigureAwait(false);
+            }
+            catch (MsalException ex) when (ex.IsAuthenticationCanceled())
+            {
+                // The user canceled the sign-in prompt, either by closing the embedded browser or the system browser.
+                // Normalize the exception to OperationCanceledException, like the other cancellation paths
+                throw new OperationCanceledException("Authentication was canceled by the user.", ex);
+            }
         }
 
         private static IPublicClientApplication CreatePublicClient(CloudEnvironment environment)

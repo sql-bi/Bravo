@@ -115,8 +115,8 @@
         None = 0,
 
         /// <summary>
-        /// A <see cref="OperationCanceledException"/> or <see cref="TaskCanceledException"/> was thrown, an HTTP request was aborted or the user  cancelled a long-running operation.
-        /// This BravoProblem is a placehoder since the response message is never sent back to the user/UI due to the aborted request.
+        /// An <see cref="OperationCanceledException"/> was thrown (request aborted or user-cancelled operation).
+        /// Response message is not sent to the user/UI due to the aborted request.
         /// </summary>
         [JsonPropertyName("OperationCancelled")]
         OperationCancelled = 1,
@@ -173,14 +173,8 @@
         SignInMsalExceptionOccurred = 400,
 
         /// <summary>
-        /// Sign-in request was canceled because the configured timeout period elapsed prior to completion of the operation
-        /// </summary> 
-        [JsonPropertyName("SignInMsalTimeoutExpired")]
-        SignInMsalTimeoutExpired = 401,
-
-        /// <summary>
         /// An error occurred while importing the VPAX file
-        /// </summary> 
+        /// </summary>
         [JsonPropertyName("VpaxFileImportError")]
         VpaxFileImportError = 500,
 

@@ -398,7 +398,7 @@ export class Host extends Dispatchable {
         const logSettings: ApiLogSettings = {};
 
         return (<Promise<HostSignInResponse>>this.apiCall("auth/SignIn", request || {}, { method: "POST" }, false, logSettings))
-            .then(response => response.account);
+            .then(response => response?.account);
     }
 
     /*signIn(email?: string) {

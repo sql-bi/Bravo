@@ -1,6 +1,5 @@
 namespace Sqlbi.Bravo.Services
 {
-    using Sqlbi.Bravo.Infrastructure;
     using Sqlbi.Bravo.Infrastructure.PowerBI.Cloud;
     using Sqlbi.Bravo.Infrastructure.PowerBI.Cloud.Authentication;
     using Sqlbi.Bravo.Infrastructure.PowerBI.Cloud.Configuration;
@@ -30,26 +29,12 @@ namespace Sqlbi.Bravo.Services
 
         public async Task<AuthenticatedSession?> EnsureSignedInAsync(CancellationToken cancellationToken)
         {
-            try
-            {
-                return await _cloudAuthenticationService.EnsureSignedInAsync(cancellationToken);
-            }
-            catch (OperationCanceledException)
-            {
-                throw new BravoException(BravoProblem.SignInMsalTimeoutExpired);
-            }
+            return await _cloudAuthenticationService.EnsureSignedInAsync(cancellationToken);
         }
 
         public async Task<AuthenticatedSession> SignInAsync(string email, CloudEnvironment environment, CancellationToken cancellationToken)
         {
-            try
-            {
-                return await _cloudAuthenticationService.SignInAsync(email, environment, cancellationToken);
-            }
-            catch (OperationCanceledException)
-            {
-                throw new BravoException(BravoProblem.SignInMsalTimeoutExpired);
-            }
+            return await _cloudAuthenticationService.SignInAsync(email, environment, cancellationToken);
         }
 
         public async Task SignOutAsync(CancellationToken cancellationToken)

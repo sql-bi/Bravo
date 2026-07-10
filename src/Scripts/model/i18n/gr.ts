@@ -156,7 +156,6 @@ const locale: Locale = {
         [_.errorReportsEmptyListing]: "Δεν υπάρχουν διαθέσιμες ανοικτές αναφορές.",
         [_.errorRetry]: "Εκ νέου προσπάθεια",
         [_.errorSignInMsalExceptionOccurred]: "Αναπάντεχο σφάλμα κατά την προσπάθεια σύνδεσης.",
-        [_.errorSignInMsalTimeoutExpired]: "Η προσπάθεια σύνδεσης διακόπηκε επειδή πέρασε ο χρόνος εξαιτίας λήξης του χρόνου που έχει οριστεί για την ολοκλήρωση της(timeout).",
         [_.errorTemplateAlreadyExists]: "Ένα άλλο πρότυπο με το ίδιο μονοπάτι υπάρχει ήδη: <br><b>{name}</b>",
         [_.errorTimeout]: "Λήξη χρόνου(timeout).",
         [_.errorTitle]: "Όυπςςς",

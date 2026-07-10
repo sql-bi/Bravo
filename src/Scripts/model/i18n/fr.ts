@@ -158,7 +158,6 @@ const locale: Locale = {
         [_.errorReportsEmptyListing]: "Aucun rapport disponible.",
         [_.errorRetry]: "Réessayer",
         [_.errorSignInMsalExceptionOccurred]: "Erreur inattendue lors de l'authentification.",
-        [_.errorSignInMsalTimeoutExpired]: "La demande d'authentification a été annulée suite à l'expiration du timeout.",
         [_.errorTemplateAlreadyExists]: "Un autre modèle avec le même chemin existe déjà: <br><b>{name}</b>",
         [_.errorTimeout]: "Timeout sur la demande.",
         [_.errorTitle]: "Oops...",

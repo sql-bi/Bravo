@@ -158,7 +158,6 @@ const locale: Locale = {
         [_.errorReportsEmptyListing]: "Keine ungeöffneten Berichte verfügbar.",
         [_.errorRetry]: "Wiederholen",
         [_.errorSignInMsalExceptionOccurred]: "Unerwarteter Fehler in der Anmeldeanforderung.",
-        [_.errorSignInMsalTimeoutExpired]: "Die Anmeldeanforderung wurde abgebrochen, weil die Zeitüberschreitung abgelaufen ist, bevor der Vorgang abgeschlossen werden konnte.",
         [_.errorTemplateAlreadyExists]: "Eine weitere Vorlage mit dem gleichen Weg gibt es bereits: <br><b>{name}</b>",
         [_.errorTimeout]: "Zeitüberschreitung der Anfrage.",
         [_.errorTitle]: "Ups...",

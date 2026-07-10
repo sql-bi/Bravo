@@ -156,7 +156,6 @@ const locale: Locale = {
         [_.errorReportsEmptyListing]: "Geen ongeopende rapporten beschikbaar.",
         [_.errorRetry]: "Opnieuw proberen",
         [_.errorSignInMsalExceptionOccurred]: "Onverwachte fout in het inlogverzoek.",
-        [_.errorSignInMsalTimeoutExpired]: "Het inlogverzoek is geannuleerd vanwege een onderbreking die optrad voordat het verzoek voltooid kon worden.",
         [_.errorTemplateAlreadyExists]: "Er bestaat al een ander sjabloon met hetzelfde pad: <br><b>{name}</b>",
         [_.errorTimeout]: "Verzoek onderbroken.",
         [_.errorTitle]: "Oeps...",

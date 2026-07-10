@@ -50,22 +50,31 @@
         /// Attempts to authenticate and acquire an access token for the account to access the PowerBI cloud services
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
+        /// <response code="204">Status204NoContent - Sign-in was canceled by the user</response>
         [HttpPost]
         [ActionName("SignIn")]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(SignInResponse))]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesDefaultResponseType]
         public async Task<IActionResult> SignInAsync(
             SignInRequest request,
             CancellationToken cancellationToken)
         {
-            var session = await _authenticationService.SignInAsync(
-                request.Email,
-                request.Environment.ToModel(),
-                cancellationToken);
+            try
+            {
+                var session = await _authenticationService.SignInAsync(
+                    request.Email,
+                    request.Environment.ToModel(),
+                    cancellationToken);
 
-            var response = new SignInResponse(session.AuthenticationResult);
-            return Ok(response);
+                var response = new SignInResponse(session.AuthenticationResult);
+                return Ok(response);
+            }
+            catch (OperationCanceledException)
+            {
+                return NoContent();
+            }
         }
 
         /// <summary>

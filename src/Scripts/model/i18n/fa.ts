@@ -160,7 +160,6 @@ const locale: Locale = {
         [_.errorReportsEmptyListing]: "هیچ گزارش باز نشده ای موجود نیست.",
         [_.errorRetry]: "تلاش مجدد",
         [_.errorSignInMsalExceptionOccurred]: "خطای غیرمنتظره در درخواست ورود به سیستم.",
-        [_.errorSignInMsalTimeoutExpired]: "درخواست ورود به سیستم لغو شد زیرا دوره وقفه قبل از تکمیل عملیات منقضی شده بود.",
         [_.errorTemplateAlreadyExists]: "الگوی دیگری با همان مسیر/نام از قبل وجود دارد: <br><b>{name}</b>",
         [_.errorTimeout]: "زمان پایان درخواست.",
         [_.errorTitle]: "اوه...",

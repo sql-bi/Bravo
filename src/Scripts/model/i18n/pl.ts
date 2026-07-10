@@ -156,7 +156,6 @@ const locale: Locale = {
         [_.errorReportsEmptyListing]: "Brak dostępnych, nieotwartych raportów.",
         [_.errorRetry]: "Spróbuj ponownie",
         [_.errorSignInMsalExceptionOccurred]: "Nieoczekiwany błąd w trakcie logowania.",
-        [_.errorSignInMsalTimeoutExpired]: "Logowanie zostało anulowane ponieważ czas opracji przekroczył dozwolony.",
         [_.errorTemplateAlreadyExists]: "Kolejny szablon z tą samą ścieżką już istnieje: <br><b>{name}</b>",
         [_.errorTimeout]: "Limit czasu żądania.",
         [_.errorTitle]: "Whoops...",
