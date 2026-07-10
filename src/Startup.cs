@@ -8,6 +8,7 @@
     using Microsoft.Extensions.DependencyInjection;
     using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
     using Sqlbi.Bravo.Infrastructure.Extensions;
+    using Sqlbi.Bravo.Infrastructure.PowerBI;
     using Sqlbi.Bravo.Infrastructure.Services;
     using Sqlbi.Bravo.Infrastructure.Services.PowerBI;
     using Sqlbi.Bravo.Infrastructure.Telemetry;
@@ -45,7 +46,7 @@
             services.AddSingleton<IAuthenticationService, AuthenticationService>();
             services.AddSingleton<ITemplateDevelopmentService, TemplateDevelopmentService>();
             services.AddSingleton<IBestPracticeAnalyzerService, BestPracticeAnalyzerService>();
-            services.AddPBICloudServices();
+            services.AddPowerBIServices();
         }
 
         public void Configure(IApplicationBuilder application, IWebHostEnvironment environment)

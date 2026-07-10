@@ -3,6 +3,8 @@
     using Sqlbi.Bravo.Infrastructure;
     using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Infrastructure.Helpers;
+    using Sqlbi.Bravo.Infrastructure.PowerBI.Cloud;
+    using Sqlbi.Bravo.Infrastructure.PowerBI.Cloud.Authentication;
     using Sqlbi.Bravo.Infrastructure.Services;
     using Sqlbi.Bravo.Infrastructure.Services.PowerBI;
     using Sqlbi.Bravo.Models;
@@ -16,7 +18,7 @@
 
         TabularDatabase GetDatabase(PBICloudDataset dataset, string accessToken, CancellationToken cancellationToken);
 
-        Task<IEnumerable<PBICloudDataset>> GetDatasetsAsync(CancellationToken cancellationToken);
+        Task<IEnumerable<PBICloudDataset>> GetDatasetsAsync(AuthenticatedSession session, CancellationToken cancellationToken);
 
         IEnumerable<PBIDesktopReport> GetReports(CancellationToken cancellationToken);
 
@@ -29,12 +31,12 @@
 
     internal sealed class AnalyzeModelService : IAnalyzeModelService
     {
-        private readonly IPBICloudService _pbicloudService;
+        private readonly ICloudApiClient _cloudApiClient;
         private readonly IPBIDesktopService _pbidesktopService;
 
-        public AnalyzeModelService(IPBICloudService pbicloudService, IPBIDesktopService pbidesktopService)
+        public AnalyzeModelService(ICloudApiClient cloudApiClient, IPBIDesktopService pbidesktopService)
         {
-            _pbicloudService = pbicloudService;
+            _cloudApiClient = cloudApiClient;
             _pbidesktopService = pbidesktopService;
         }
 
@@ -83,9 +85,9 @@
             return database;
         }
 
-        public async Task<IEnumerable<PBICloudDataset>> GetDatasetsAsync(CancellationToken cancellationToken)
+        public async Task<IEnumerable<PBICloudDataset>> GetDatasetsAsync(AuthenticatedSession session, CancellationToken cancellationToken)
         {
-            var datasets = await _pbicloudService.GetDatasetsAsync(cancellationToken);
+            var datasets = await _cloudApiClient.GetDatasetsAsync(session, cancellationToken);
             return datasets;
         }
 

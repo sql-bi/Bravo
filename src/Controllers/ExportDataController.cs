@@ -75,7 +75,8 @@
         [ProducesDefaultResponseType]
         public async Task<IActionResult> ExportDelimitedTextFile(ExportDelimitedTextFromPBICloudDatasetRequest request, CancellationToken cancellationToken)
         {
-            if (await _authenticationService.IsPBICloudSignInRequiredAsync(cancellationToken))
+            var session = await _authenticationService.EnsureSignedInAsync(cancellationToken);
+            if (session is null)
                 return Unauthorized();
 
             if (WindowDialogHelper.BrowseFolderDialog(out var path, cancellationToken))
@@ -86,7 +87,7 @@
                         return NoContent();
                 }
 
-                var job = _exportDataService.ExportDelimitedTextFile(request.Dataset!, request.Settings!, path, _authenticationService.PBICloudAuthentication.AccessToken, cancellationToken);
+                var job = _exportDataService.ExportDelimitedTextFile(request.Dataset!, request.Settings!, path, session.AuthenticationResult.AccessToken, cancellationToken);
                 return Ok(job);
             }
 
@@ -130,12 +131,13 @@
         [ProducesDefaultResponseType]
         public async Task<IActionResult> ExportExcelFile(ExportExcelFromPBICloudDatasetRequest request, CancellationToken cancellationToken)
         {
-            if (await _authenticationService.IsPBICloudSignInRequiredAsync(cancellationToken))
+            var session = await _authenticationService.EnsureSignedInAsync(cancellationToken);
+            if (session is null)
                 return Unauthorized();
 
             if (WindowDialogHelper.SaveFileDialog(fileName: request.Dataset!.DisplayName, filter: null, defaultExt: "XLSX", out var path, cancellationToken))
             {
-                var job = _exportDataService.ExportExcelFile(request.Dataset, request.Settings!, path, _authenticationService.PBICloudAuthentication.AccessToken, cancellationToken);
+                var job = _exportDataService.ExportExcelFile(request.Dataset, request.Settings!, path, session.AuthenticationResult.AccessToken, cancellationToken);
                 return Ok(job);
             }
 

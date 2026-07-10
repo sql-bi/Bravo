@@ -86,15 +86,20 @@
             }
         }
 
-        public static async Task<T> RunOnUISynchronizationContextContext<T>(Func<Task<T>> callback)
+        /// <summary>
+        /// Makes <see cref="AppWindow.UISynchronizationContext"/> the ambient <see cref="SynchronizationContext.Current"/>
+        /// while <paramref name="callback"/> runs - it does not itself run anything on the UI thread, it only lets code
+        /// that reads the ambient context capture the right one. Keep <paramref name="callback"/> synchronous - any
+        /// <see langword="await"/> inside it would resume after this method has already restored the previous context.
+        /// </summary>
+        public static T RunWithUISynchronizationContext<T>(Func<T> callback)
         {
             var previousSynchronizationContext = SynchronizationContext.Current;
 
             SynchronizationContext.SetSynchronizationContext(AppWindow.UISynchronizationContext);
             try
             {
-                var result = await callback();
-                return result;
+                return callback();
             }
             finally
             {

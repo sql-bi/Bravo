@@ -1,4 +1,4 @@
-﻿using Sqlbi.Bravo.Infrastructure.Models.PBICloud;
+﻿using Sqlbi.Bravo.Infrastructure.PowerBI.Cloud;
 using System.ComponentModel.DataAnnotations;
 
 namespace Sqlbi.Bravo.Models.Authentication

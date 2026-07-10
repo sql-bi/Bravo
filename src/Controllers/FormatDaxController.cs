@@ -81,10 +81,11 @@
         [ProducesDefaultResponseType]
         public async Task<IActionResult> Update(UpdatePBICloudDatasetRequest request, CancellationToken cancellationToken)
         {
-            if (await _authenticationService.IsPBICloudSignInRequiredAsync(cancellationToken))
+            var session = await _authenticationService.EnsureSignedInAsync(cancellationToken);
+            if (session is null)
                 return Unauthorized();
 
-            var updateResult = _formatDaxService.Update(request.Dataset!, request.Measures!, _authenticationService.PBICloudAuthentication.AccessToken);
+            var updateResult = _formatDaxService.Update(request.Dataset!, request.Measures!, session.AuthenticationResult.AccessToken);
             return Ok(updateResult);
         }
     }
