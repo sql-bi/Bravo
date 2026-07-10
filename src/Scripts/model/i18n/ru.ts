@@ -156,7 +156,6 @@ const locale: Locale = {
         [_.errorReportsEmptyListing]: "No unopened reports available.",
         [_.errorRetry]: "Повторить",
         [_.errorSignInMsalExceptionOccurred]: "Непредвиденная ошибка в запросе на вход.",
-        [_.errorSignInMsalTimeoutExpired]: "Запрос на вход был отменен, так как время ожидания истекло до завершения операции",
         [_.errorTemplateAlreadyExists]: "Еще один шаблон с тем же путем уже существует: <br><b>{name}</b>",
         [_.errorTimeout]: "Истекло время ожидания запроса",
         [_.errorTitle]: "Ой...",

@@ -35,11 +35,8 @@ namespace Sqlbi.Bravo.Infrastructure.PowerBI.Cloud.Authentication
                 if (AppEnvironment.IsDiagnosticLevelVerbose)
                     AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{nameof(CloudAuthenticationService)}.{nameof(SignInAsync)}", JsonSerializer.Serialize(environment));
 
-                using var cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-                cancellationTokenSource.CancelAfter(TimeSpan.FromMinutes(2));
-
-                var authenticationResult = await _cloudAuthenticationClient.AcquireTokenAsync(environment, email, cancellationTokenSource.Token);
-                var clusterUri = await _cloudConfigurationService.ResolveTenantClusterUriAsync(environment, authenticationResult.AccessToken, cancellationTokenSource.Token);
+                var authenticationResult = await _cloudAuthenticationClient.AcquireTokenAsync(environment, email, cancellationToken);
+                var clusterUri = await _cloudConfigurationService.ResolveTenantClusterUriAsync(environment, authenticationResult.AccessToken, cancellationToken);
 
                 var newEnvironment = environment with { ClusterUri = clusterUri };
                 var newSession = new AuthenticatedSession(authenticationResult, newEnvironment);

@@ -156,7 +156,6 @@ const locale: Locale = {
         [_.errorReportsEmptyListing]: "No hay informes sin abrir disponibles.",
         [_.errorRetry]: "Reintentar",
         [_.errorSignInMsalExceptionOccurred]: "Error inesperado en la solicitud de inicio de sesión.",
-        [_.errorSignInMsalTimeoutExpired]: "La solicitud de inicio de sesión se canceló porque el tiempo de espera expiró antes de que se completara la operación.",
         [_.errorTemplateAlreadyExists]: "¡Ya existe otra plantilla con el mismo camino: <br><b>{name}</b>",
         [_.errorTimeout]: "Su solicitud ha expirado",
         [_.errorTitle]: "Ups…",

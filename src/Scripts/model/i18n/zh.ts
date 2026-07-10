@@ -156,7 +156,6 @@ const locale: Locale = {
         [_.errorReportsEmptyListing]: "没找到未打开的报告",
         [_.errorRetry]: "再试一次",
         [_.errorSignInMsalExceptionOccurred]: "登录请求出现异常",
-        [_.errorSignInMsalTimeoutExpired]: "操作超时, 登录请求被取消",
         [_.errorTemplateAlreadyExists]: "另一个具有相同路径的模板已经存在: <br><b>{name}</b>",
         [_.errorTimeout]: "请求超时",
         [_.errorTitle]: "Whoops...",

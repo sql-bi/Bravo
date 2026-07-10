@@ -156,7 +156,6 @@ const locale: Locale = {
         [_.errorReportsEmptyListing]: "Ingen uåbnede rapporter tilgængelige.",
         [_.errorRetry]: "Forsøg igen",
         [_.errorSignInMsalExceptionOccurred]: "Ukendt fejl opstod i forbindelse med lo- ind.",
-        [_.errorSignInMsalTimeoutExpired]: "Log-ind blev afbrudt fordi timeout perioden udløb inden processen blev gennemført.",
         [_.errorTemplateAlreadyExists]: "En anden skabelon med den samme sti findes allerede: <br><b>{name}</b>",
         [_.errorTimeout]: "Forespørgselstimeout.",
         [_.errorTitle]: "Ups...",

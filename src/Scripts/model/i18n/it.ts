@@ -156,7 +156,6 @@ const locale: Locale = {
         [_.errorReportsEmptyListing]: "Nessun altro report aperto.",
         [_.errorRetry]: "Riprova",
         [_.errorSignInMsalExceptionOccurred]: "Errore inaspettato durante l'accesso.",
-        [_.errorSignInMsalTimeoutExpired]: "La richiesta di accesso è stata annullata perché è passato troppo tempo prima che l'operazione venisse completata.",
         [_.errorTemplateAlreadyExists]: "Un altro template con lo stesso percorso/nome esiste già: <br><b>{name}</b>",
         [_.errorTimeout]: "Timeout.",
         [_.errorTitle]: "Oops...",

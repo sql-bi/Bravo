@@ -146,7 +146,7 @@ export class PowerBISignin extends Dialog {
     onAction(action: string, resolve: any, reject: any) {
         if (action == "signin") {
             auth.signIn(this.data)
-                .then(() => { 
+                .then(() => {
                     super.onAction(action, resolve, reject);
                 })
                 .catch(ignore => {
@@ -154,6 +154,9 @@ export class PowerBISignin extends Dialog {
                     this.element.classList.remove("wait");
                 });
         } else {
+            if (action == "cancel" && this.element.classList.contains("wait"))
+                host.apiAbortByAction("auth/SignIn");
+
             super.onAction(action, resolve, reject);
         }
     }

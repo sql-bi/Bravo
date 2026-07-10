@@ -156,7 +156,6 @@ const locale: Locale = {
         [_.errorReportsEmptyListing]: "Nejsou k dispozici žádné neotevřené chyby.",
         [_.errorRetry]: "Opakovat",
         [_.errorSignInMsalExceptionOccurred]: "Neočekávaná chyba v rámci přihlášení.",
-        [_.errorSignInMsalTimeoutExpired]: "Požadavek na přihlášení byl zrušen, protože časový limit vypršel před dokončením operace.",
         [_.errorTemplateAlreadyExists]: "Další šablona se stejnou cestou již existuje: <br><b>{name}</b>",
         [_.errorTimeout]: "Časový limit požadavku vypršel.",
         [_.errorTitle]: "Whoops...",

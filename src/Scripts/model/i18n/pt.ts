@@ -156,7 +156,6 @@ const locale: Locale = {
         [_.errorReportsEmptyListing]: "Nenhum relatório por abrir disponível.",
         [_.errorRetry]: "Tente novamente",
         [_.errorSignInMsalExceptionOccurred]: "Erro inesperado no pedido de início de sessão.",
-        [_.errorSignInMsalTimeoutExpired]: "O pedido de início de sessão foi cancelado porque o tempo limite foi excedido antes da operação estar terminada.",
         [_.errorTemplateAlreadyExists]: "Outro modelo com o mesmo caminho já existe: <br><b>{name}</b>",
         [_.errorTimeout]: "Tempo limite excedido.",
         [_.errorTitle]: "Opa...",

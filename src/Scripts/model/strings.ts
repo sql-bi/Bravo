@@ -149,7 +149,6 @@ export enum strings {
     errorReportsEmptyListing,
     errorRetry,
     errorSignInMsalExceptionOccurred,
-    errorSignInMsalTimeoutExpired,
     errorTemplateAlreadyExists,
     errorTimeout,
     errorTitle,

@@ -157,7 +157,6 @@ const locale: Locale = {
         [_.errorReportsEmptyListing]: "No unopened reports available.",
         [_.errorRetry]: "Retry",
         [_.errorSignInMsalExceptionOccurred]: "Unexpected error in the sign-in request.",
-        [_.errorSignInMsalTimeoutExpired]: "The sign-in request was canceled because the timeout period expired before the operation was completed.",
         [_.errorTemplateAlreadyExists]: "Another template with the same path/name already exists: <br><b>{name}</b>",
         [_.errorTimeout]: "Request timeout.",
         [_.errorTitle]: "Whoops...",

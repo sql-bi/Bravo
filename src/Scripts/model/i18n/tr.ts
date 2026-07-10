@@ -158,7 +158,6 @@ const locale: Locale = {
         [_.errorReportsEmptyListing]: "Açılmamış rapor yok.",
         [_.errorRetry]: "Yeniden Dene",
         [_.errorSignInMsalExceptionOccurred]: "Oturum açma isteğinde beklenmeyen hata.",
-        [_.errorSignInMsalTimeoutExpired]: "İşlem tamamlanmadan önce zaman aşımı süresi sona erdiği için oturum açma isteği iptal edildi.",
         [_.errorTemplateAlreadyExists]: "Aynı yola sahip başka bir şablon zaten var: <br><b>{name}</b>",
         [_.errorTimeout]: "İstek zaman aşımı.",
         [_.errorTitle]: "Hata...",
