@@ -184,15 +184,24 @@
         /// Returns a list of all open <see cref="PBIDesktopReport"/>
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
+        /// <response code="204">Status204NoContent - User canceled the operation</response>
         [HttpGet]
         [ActionName("GetReports")]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<PBIDesktopReport>))]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesDefaultResponseType]
         public IActionResult GetReports(CancellationToken cancellationToken)
         {
-            var reports = _analyzeModelService.GetReports(cancellationToken);
-            return Ok(reports);
+            try
+            {
+                var reports = _analyzeModelService.GetReports(cancellationToken);
+                return Ok(reports);
+            }
+            catch (OperationCanceledException)
+            {
+                return NoContent();
+            }
         }
 
         /// <summary>

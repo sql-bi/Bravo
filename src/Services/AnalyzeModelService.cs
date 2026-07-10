@@ -22,8 +22,6 @@
 
         IEnumerable<PBIDesktopReport> GetReports(CancellationToken cancellationToken);
 
-        IEnumerable<PBIDesktopReport> QueryReports(CancellationToken cancellationToken);
-
         void ExportVpax(PBIDesktopReport report, ExportVpaxMode mode, string path, CancellationToken cancellationToken);
 
         void ExportVpax(PBICloudDataset dataset, string accessToken, ExportVpaxMode mode, string path, CancellationToken cancellationToken);
@@ -94,12 +92,6 @@
         public IEnumerable<PBIDesktopReport> GetReports(CancellationToken cancellationToken)
         {
             var reports = _pbidesktopService.GetReports(cancellationToken);
-            return reports;
-        }
-
-        public IEnumerable<PBIDesktopReport> QueryReports(CancellationToken cancellationToken)
-        {
-            var reports = _pbidesktopService.QueryReports(cancellationToken);
             return reports;
         }
 

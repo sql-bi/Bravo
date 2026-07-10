@@ -114,30 +114,24 @@
         /// Returns a list of all open <see cref="PBIDesktopReport"/>
         /// </summary>
         /// <response code="200">Status200OK - Success</response>
+        /// <response code="204">Status204NoContent - User canceled the operation</response>
         [HttpGet]
         [ActionName("ListReports")]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<PBIDesktopReport>))]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesDefaultResponseType]
         public IActionResult GetReports(CancellationToken cancellationToken)
         {
-            var reports = _analyzeModelService.GetReports(cancellationToken);
-            return Ok(reports);
-        }
-
-        /// <summary>
-        /// Returns a list of all open <see cref="PBIDesktopReport"/> reports as fast as possible, providing only process information and without attempting to establish a database connection
-        /// </summary>
-        /// <response code="200">Status200OK - Success</response>
-        [HttpGet]
-        [ActionName("QueryReports")]
-        [Produces(MediaTypeNames.Application.Json)]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<PBIDesktopReport>))]
-        [ProducesDefaultResponseType]
-        public IActionResult QueryReports(CancellationToken cancellationToken)
-        {
-            var reports = _analyzeModelService.QueryReports(cancellationToken);
-            return Ok(reports);
+            try
+            {
+                var reports = _analyzeModelService.GetReports(cancellationToken);
+                return Ok(reports);
+            }
+            catch (OperationCanceledException)
+            {
+                return NoContent();
+            }
         }
 
         /// <summary>

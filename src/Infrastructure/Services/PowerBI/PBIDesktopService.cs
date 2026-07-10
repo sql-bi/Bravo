@@ -12,36 +12,11 @@
 
     public interface IPBIDesktopService
     {
-        IEnumerable<PBIDesktopReport> QueryReports(CancellationToken cancellationToken);
-
         IEnumerable<PBIDesktopReport> GetReports(CancellationToken cancellationToken);
     }
 
     internal class PBIDesktopService : IPBIDesktopService
     {
-        public IEnumerable<PBIDesktopReport> QueryReports(CancellationToken cancellationToken)
-        {
-            var processes = ProcessHelper.GetProcessesByName(AppEnvironment.PBIDesktopProcessName);
-            try
-            {
-                var reports = new ConcurrentBag<PBIDesktopReport>();
-
-                foreach (var process in processes)
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
-
-                    var report = PBIDesktopReport.CreateFrom(process, connectionModeEnabled: false);
-                    reports.Add(report);
-                }
-
-                return reports;
-            }
-            finally
-            {
-                processes.ForEach((p) => p.Dispose());
-            }
-        }
-
         public IEnumerable<PBIDesktopReport> GetReports(CancellationToken cancellationToken)
         {
             var processes = ProcessHelper.GetProcessesByName(AppEnvironment.PBIDesktopProcessName);
