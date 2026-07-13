@@ -26,7 +26,7 @@ export class OptionsDialogAbout {
     }
 
     get canCheckForUpdates() {
-        return (this.canChangeCheckForUpdates || optionsController.options.updateCheckEnabled);
+        return (this.canChangeCheckForUpdates || optionsController.getOption("updateCheckEnabled"));
     }
 
     render(element: HTMLElement) {
@@ -41,7 +41,7 @@ export class OptionsDialogAbout {
                     <div class="version">
                         <select id="option-updatechannel" ${!this.canChangeChannel ? "disabled" : ""}>
                             ${Object.keys(UpdateChannelType).filter(key => isNaN(Number(key))).map(key => `
-                                <option value="${(<any>UpdateChannelType)[key]}" ${(<any>UpdateChannelType)[key] == optionsController.options.updateChannel ? "selected" : ""}>${i18n((<any>strings)[`updateChannel${key}`])}</option>
+                                <option value="${(<any>UpdateChannelType)[key]}" ${(<any>UpdateChannelType)[key] == optionsController.getOption("updateChannel") ? "selected" : ""}>${i18n((<any>strings)[`updateChannel${key}`])}</option>
                             `).join("")}
                         </select> &nbsp;
                         <span class="display-version">${i18n(strings.appVersion, { version: app.currentVersion.info.version})}</span>
@@ -49,7 +49,7 @@ export class OptionsDialogAbout {
                     </div>
                     ${this.canCheckForUpdates ? `<div class="update-status list"></div>` : ""}
                     <div class="auto-check-option">
-                        <label><input type="checkbox" ${optionsController.options.updateCheckEnabled ? " checked" : ""} ${!this.canChangeCheckForUpdates ? "disabled" : ""}>  &nbsp;${i18n(strings.optionCheckForUpdates)}</label>
+                        <label><input type="checkbox" ${optionsController.getOption("updateCheckEnabled") ? " checked" : ""} ${!this.canChangeCheckForUpdates ? "disabled" : ""}>  &nbsp;${i18n(strings.optionCheckForUpdates)}</label>
                     </div>
                     ${!this.canChangeChannel || !this.canChangeCheckForUpdates ? `
                         <div class="policy-notice">

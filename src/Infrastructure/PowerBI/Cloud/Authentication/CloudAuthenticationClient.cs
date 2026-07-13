@@ -5,6 +5,7 @@ namespace Sqlbi.Bravo.Infrastructure.PowerBI.Cloud.Authentication
     using Sqlbi.Bravo.Infrastructure.Configuration;
     using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Infrastructure.Helpers;
+    using Sqlbi.Bravo.Infrastructure.Policies;
     using Sqlbi.Bravo.Infrastructure.PowerBI.Cloud;
     using Msal = Microsoft.Identity.Client;
 
@@ -18,10 +19,12 @@ namespace Sqlbi.Bravo.Infrastructure.PowerBI.Cloud.Authentication
     /// <summary>
     /// Handles authentication with Microsoft Entra ID (Azure AD) using MSAL.NET, including token acquisition and cache management.
     /// </summary>
-    internal sealed class CloudAuthenticationClient : ICloudAuthenticationClient
+    internal sealed class CloudAuthenticationClient(IPolicies policies) : ICloudAuthenticationClient
     {
         private const string SystemBrowserRedirectUri = "http://localhost";
         private const string OrganizationalAccountsOnlyQueryParameter = "msafed=0"; // no Microsoft accounts (MSA) allowed
+
+        private readonly IPolicies _policies = policies;
 
         public async Task<AuthenticationResult> AcquireTokenAsync(
             CloudEnvironment environment, string email, CancellationToken cancellationToken)
@@ -68,10 +71,11 @@ namespace Sqlbi.Bravo.Infrastructure.PowerBI.Cloud.Authentication
             return await builder.ExecuteAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        private static async Task<Msal.AuthenticationResult> AcquireTokenInteractiveAsync(
+        private async Task<Msal.AuthenticationResult> AcquireTokenInteractiveAsync(
             IPublicClientApplication client, string[] scopes, string email, string claims, CancellationToken cancellationToken)
         {
-            var useEmbeddedBrowser = !UserPreferences.Current.UseSystemBrowserForAuthentication;
+            var useSystemBrowser = _policies.UseSystemBrowserForAuthentication ?? UserPreferences.Current.UseSystemBrowserForAuthentication;
+            var useEmbeddedBrowser = !useSystemBrowser;
             var extraQueryParameters = OrganizationalAccountsOnlyQueryParameter;
             var prompt = Prompt.SelectAccount;
             var loginHint = email;
@@ -116,9 +120,10 @@ namespace Sqlbi.Bravo.Infrastructure.PowerBI.Cloud.Authentication
             }
         }
 
-        private static IPublicClientApplication CreatePublicClient(CloudEnvironment environment)
+        private IPublicClientApplication CreatePublicClient(CloudEnvironment environment)
         {
-            var useEmbeddedBrowser = !UserPreferences.Current.UseSystemBrowserForAuthentication;
+            var useSystemBrowser = _policies.UseSystemBrowserForAuthentication ?? UserPreferences.Current.UseSystemBrowserForAuthentication;
+            var useEmbeddedBrowser = !useSystemBrowser;
             var redirectUri = (useEmbeddedBrowser ? environment.RedirectUri : SystemBrowserRedirectUri);
 
             var builder = PublicClientApplicationBuilder.Create(environment.ClientId)

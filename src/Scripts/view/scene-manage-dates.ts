@@ -188,9 +188,10 @@ export class ManageDatesScene extends DocScene {
 
         // User/Org templates
         try {
+            const customTemplatesEnabled = optionsController.getOption("customTemplatesEnabled");
             let customTemplates = [
-                ...await host.getOrganizationTemplates(), 
-                ...(optionsController.options.customTemplatesEnabled ? optionsController.options.customOptions.templates : [])
+                ...(customTemplatesEnabled ? await host.getOrganizationTemplates() : []),
+                ...(customTemplatesEnabled ? optionsController.options.customOptions.templates : [])
             ];
 
             for (let i = 0; i < customTemplates.length; i++) {

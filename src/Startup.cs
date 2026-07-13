@@ -8,6 +8,7 @@
     using Microsoft.Extensions.DependencyInjection;
     using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
     using Sqlbi.Bravo.Infrastructure.Extensions;
+    using Sqlbi.Bravo.Infrastructure.Policies;
     using Sqlbi.Bravo.Infrastructure.PowerBI;
     using Sqlbi.Bravo.Infrastructure.Services;
     using Sqlbi.Bravo.Infrastructure.Services.PowerBI;
@@ -35,7 +36,11 @@
 #endif
             services.AddHttpClient();
             services.AddOptions<StartupSettings>().Configure((settings) => settings.FromCommandLineArguments()); //.ValidateDataAnnotations();
-            services.AddSingleton<ITelemetryService, TelemetryService>();
+
+            services.AddGroupPolicies();
+            services.AddSingleton<ITelemetryService>(_ => TelemetryService.Instance);
+            services.AddPowerBI();
+
             services.AddSingleton<IServerAddressProvider, ServerAddressProvider>();
             services.AddSingleton<IPBIDesktopService, PBIDesktopService>();
             services.AddSingleton<IFormatDaxService, FormatDaxService>();
@@ -46,7 +51,6 @@
             services.AddSingleton<IAuthenticationService, AuthenticationService>();
             services.AddSingleton<ITemplateDevelopmentService, TemplateDevelopmentService>();
             services.AddSingleton<IBestPracticeAnalyzerService, BestPracticeAnalyzerService>();
-            services.AddPowerBIServices();
         }
 
         public void Configure(IApplicationBuilder application, IWebHostEnvironment environment)

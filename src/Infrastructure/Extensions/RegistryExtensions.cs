@@ -4,12 +4,6 @@
 
     internal static class RegistryExtensions
     {
-        public static bool SubKeyExists(this RegistryKey registryKey, string subkeyName)
-        {
-            using var registrySubKey = registryKey.OpenSubKey(subkeyName);
-            return registrySubKey != null;
-        }
-
         public static bool GetBoolValue(this RegistryKey registryKey, string subkeyName, string valueName)
         {
             var valueInt = GetIntValue(registryKey, subkeyName, valueName);

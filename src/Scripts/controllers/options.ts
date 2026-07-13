@@ -25,9 +25,14 @@ export interface Options {
     customOptions?: ClientOptions
 } 
 
-export enum PolicyStatus {
-    NotConfigured = 0,
-    Forced = 1,
+export interface Policies {
+    telemetryEnabled?: boolean | null
+    updateChannel?: UpdateChannelType | null
+    updateCheckEnabled?: boolean | null
+    useSystemBrowserForAuthentication?: boolean | null
+    builtInTemplatesEnabled?: boolean | null
+    customTemplatesEnabled?: boolean | null
+    customTemplatesOrganizationRepositoryPath?: string | null
 }
 
 export interface ProxyOptions {
@@ -231,7 +236,7 @@ export class OptionsController extends OptionsStore<Options> {
         }
     };
 
-    constructor(options?: Options, public policies?: Dic<PolicyStatus>) {
+    constructor(options?: Options, public policies: Policies = {}) {
         super(options);
 
         if (options) {
@@ -267,35 +272,44 @@ export class OptionsController extends OptionsStore<Options> {
     }
 
     /**
-     * Check if there is a policy for passed option path
-     * Note that this check policy also at group level. Child policy has priority over group policy.
-     * E.g.:
-     *  - updateChannelEnabledPolicy  -> policy for `updateChannel` option at root level
-     *  - customOptions.localePolicy  -> policy for `localeEnabled` option in the `customOptions` group
-     *  - proxyPolicy                 -> policy for every option inside the `proxy` group - children inhereit this policy
+     * Get the effective policy value for the passed option path, or `undefined`/`null` if not configured.
+     * A policy applies at group level only when the value found along the path is itself a scalar
+     * (not a plain object) - in that case every option under that group inherits it. If the value found
+     * is a plain object, it is a dictionary of per-child overrides: an exact-leaf match is required,
+     * siblings that aren't explicitly configured are NOT locked by the rest of the group.
+     * E.g. (with policies = { updateChannel: 2, customOptions: { formatting: { preview: true } }, proxy: true }):
+     *  - updateChannel                 -> 2 (scalar leaf match)
+     *  - customOptions.formatting.preview -> true (scalar leaf match)
+     *  - customOptions.formatting.region  -> undefined (sibling not configured - NOT locked)
+     *  - proxy.address                 -> true (proxy itself is a scalar - cascades to every child)
      */
-    optionPolicy(optionPath: string) {
-        let obj = this.policies;
-        let path = optionPath.split(".");
-        let status = PolicyStatus.NotConfigured;
-    
-        for (let i = 0; i < path.length; i++) {
-            const prop = path[i];
+    optionPolicy(optionPath: string): any {
+        let obj: any = this.policies;
 
-            // Check also if it is a group
-            const propPolicy = (<any>obj)[`${prop}Policy`];
-            if (propPolicy !== undefined)
-                status = propPolicy;
+        // Invariant: obj is a plain object at the start of every iteration (the loop returns
+        // as soon as it isn't), so there is no need to guard against a non-object obj here.
+        for (const prop of optionPath.split(".")) {
+            obj = obj[prop];
 
-            if (i <= path.length - 1) {
-                if ((prop in obj))
-                    obj = (<any>obj)[prop];
-            }
+            if (obj === null || obj === undefined || typeof obj !== "object")
+                return obj; // leaf value, or a scalar found mid-path (group-level cascade)
         }
-        return status;
+
+        return undefined; // path resolved to a plain object, not a usable scalar policy value
     }
 
     optionIsPolicyLocked(optionPath: string) {
-        return (this.optionPolicy(optionPath) != PolicyStatus.NotConfigured);
+        return (this.optionPolicy(optionPath) != null);
+    }
+
+    /**
+     * Get the effective value for the passed option path: the policy value when one is
+     * configured (matching `optionIsPolicyLocked`), otherwise the user-configured option value.
+     * Overridden so every consumer of `getOption` - including the generic dialog renderer -
+     * automatically reflects policy overrides instead of the raw (possibly locked-but-stale) setting.
+     */
+    getOption(optionPath: string): any {
+        const policyValue = this.optionPolicy(optionPath);
+        return (policyValue != null ? policyValue : super.getOption(optionPath));
     }
 }

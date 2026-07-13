@@ -10,6 +10,7 @@
     using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Infrastructure.Helpers;
     using Sqlbi.Bravo.Infrastructure.Messages;
+    using Sqlbi.Bravo.Infrastructure.Policies;
     using Sqlbi.Bravo.Infrastructure.Services;
     using Sqlbi.Bravo.Infrastructure.Telemetry;
     using Sqlbi.Bravo.Infrastructure.Windows.Interop;
@@ -37,12 +38,14 @@ window.external = {
         private readonly IOptions<StartupSettings> _startupSettingsOptionsAccessor;
         private readonly WebView2ProxyAuthHandler _proxyAuthHandler;
         private readonly Color _startupThemeColor;
+        private readonly IPolicies _policies;
 
         public AppWindow(IServiceProvider services, AppInstance instance)
         {
             _instance = instance;
             _serverAddressProvider = services.GetRequiredService<IServerAddressProvider>();
             _startupSettingsOptionsAccessor = services.GetRequiredService<IOptions<StartupSettings>>();
+            _policies = services.GetRequiredService<IPolicies>();
             _proxyAuthHandler = new WebView2ProxyAuthHandler(WebProxyWrapper.Current);
             _startupThemeColor = ThemeHelper.ShouldUseDarkMode(UserPreferences.Current.Theme) ? AppEnvironment.ThemeColorDark : AppEnvironment.ThemeColorLight;
 
@@ -307,7 +310,7 @@ window.external = {
                 token = AppEnvironment.ApiAuthenticationToken,
                 version = AppEnvironment.VersionInfo.Version,
                 options = BravoOptions.CreateFromUserPreferences(),
-                policies = BravoPolicies.Current,
+                policies = _policies,
                 culture = new
                 {
                     ietfLanguageTag = CultureInfo.CurrentCulture.IetfLanguageTag,
@@ -323,7 +326,7 @@ window.external = {
                 },
             };
 
-            var script = $@"var CONFIG = { JsonSerializer.Serialize(config) };";
+            var script = $@"var CONFIG = { JsonSerializer.Serialize(config, options: new JsonSerializerOptions(JsonSerializerDefaults.Web)) };";
 
             return new MemoryStream(Encoding.UTF8.GetBytes(script));
         }

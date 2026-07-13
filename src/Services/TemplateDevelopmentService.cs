@@ -7,7 +7,6 @@
     using Sqlbi.Bravo.Infrastructure;
     using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Infrastructure.Helpers;
-    using Sqlbi.Bravo.Infrastructure.Security.Policies;
     using Sqlbi.Bravo.Infrastructure.Telemetry;
     using Sqlbi.Bravo.Infrastructure.Services;
     using Sqlbi.Bravo.Infrastructure.Services.DaxTemplate;
@@ -20,6 +19,7 @@
     using System.Linq;
     using System.Text.Json;
     using System.Threading;
+    using Sqlbi.Bravo.Infrastructure.Policies;
 
     public interface ITemplateDevelopmentService
     {
@@ -54,11 +54,13 @@
         private readonly JsonSerializerOptions _serializerOptions;
         private readonly DaxTemplateManager _templateManager;
         private readonly IServerAddressProvider _serverAddressProvider;
+        private readonly IPolicies _policies;
 
-        public TemplateDevelopmentService(IServerAddressProvider serverAddressProvider)
+        public TemplateDevelopmentService(IServerAddressProvider serverAddressProvider, IPolicies policies)
         {
             _serverAddressProvider = serverAddressProvider;
-            _templateManager = new DaxTemplateManager();
+            _policies = policies;
+            _templateManager = new DaxTemplateManager(policies);
             _serializerOptions = new JsonSerializerOptions(AppEnvironment.DefaultJsonOptions) { WriteIndented = true };
         }
 
@@ -163,32 +165,28 @@
         {
             var customPackages = new List<CustomPackage>();
 
-            var repositoryEnabled = BravoPolicies.Current.CustomTemplatesOrganizationRepositoryPathPolicy == PolicyStatus.Forced;
-            if (repositoryEnabled)
+            var repositoryPath = _policies.CustomTemplatesOrganizationRepositoryPath;
+            if (repositoryPath is not null && Directory.Exists(repositoryPath))
             {
-                var repositoryExists = Directory.Exists(BravoPolicies.Current.CustomTemplatesOrganizationRepositoryPath);
-                if (repositoryExists)
+                var packagePaths = Directory.EnumerateFiles(repositoryPath, searchPattern: $"*{CustomPackageFileExtension}", new EnumerationOptions
                 {
-                    var packagePaths = Directory.EnumerateFiles(BravoPolicies.Current.CustomTemplatesOrganizationRepositoryPath!, searchPattern: $"*{CustomPackageFileExtension}", new EnumerationOptions
-                    {
-                        IgnoreInaccessible = true,
-                        //RecurseSubdirectories = true,
-                    });
+                    IgnoreInaccessible = true,
+                    //RecurseSubdirectories = true,
+                });
 
-                    foreach (var packagePath in packagePaths)
+                foreach (var packagePath in packagePaths)
+                {
+                    var package = _templateManager.GetPackage(packagePath);
+                    var customPackage = new CustomPackage
                     {
-                        var package = _templateManager.GetPackage(packagePath);
-                        var customPackage = new CustomPackage
-                        {
-                            Type = CustomPackageType.Organization,
-                            Path = packagePath,
-                            Name = package.Configuration.Name,
-                            Description = package.Configuration.Description,
-                            HasPackage = true,
-                        };
-                        customPackages.Add(customPackage);
-                    }
-                }
+                        Type = CustomPackageType.Organization,
+                        Path = packagePath,
+                        Name = package.Configuration.Name,
+                        Description = package.Configuration.Description,
+                        HasPackage = true,
+                    };
+                    customPackages.Add(customPackage);
+                } 
             }
 
             return customPackages;

@@ -73,7 +73,7 @@
             catch (Exception ex) when (ex is IOException || ex is TimeoutException)
             {
                 ExceptionHelper.WriteToEventLog(ex, EventLogEntryType.Warning);
-                TelemetryService.TrackFatalException(ex);
+                TelemetryService.Instance.TrackException(ex);
                 return;
             }
 
@@ -90,7 +90,7 @@
             catch (Exception ex) when (ex is ObjectDisposedException || ex is InvalidOperationException || ex is IOException)
             {
                 ExceptionHelper.WriteToEventLog(ex, EventLogEntryType.Warning);
-                TelemetryService.TrackFatalException(ex);
+                TelemetryService.Instance.TrackException(ex);
                 return;
             }
         }
