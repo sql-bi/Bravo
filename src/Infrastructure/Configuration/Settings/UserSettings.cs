@@ -1,7 +1,5 @@
 ﻿namespace Sqlbi.Bravo.Infrastructure.Configuration.Settings
 {
-    using Sqlbi.Bravo.Infrastructure.Security.Policies;
-    using Sqlbi.Bravo.Models;
     using System.Text.Json;
     using System.Text.Json.Serialization;
 
@@ -36,35 +34,17 @@
         public const bool DefaultUseSystemBrowserForAuthentication = false;
         public const bool DefaultCustomTemplatesEnabled = true;
 
-        private bool _telemetryEnabled = DefaultTelemetryEnabled;
-        private UpdateChannelType _updateChannel = DefaultUpdateChannel;
-        private bool _updateCheckEnabled = DefaultUpdateCheckEnabled;
-        private bool _useSystemBrowserForAuthentication = DefaultUseSystemBrowserForAuthentication;
-        private bool _customTemplatesEnabled = DefaultCustomTemplatesEnabled;
-
         [JsonPropertyName("telemetryEnabled")]
-        public bool TelemetryEnabled
-        {
-            get => _telemetryEnabled;
-            set => _telemetryEnabled = GetSetterValue(value, BravoPolicies.Current.TelemetryEnabledPolicy, BravoPolicies.Current.TelemetryEnabled);
-        }
+        public bool TelemetryEnabled { get; set; } = DefaultTelemetryEnabled;
 
         [JsonPropertyName("diagnosticLevel")]
         public DiagnosticLevelType DiagnosticLevel { get; set; } = DefaultDiagnosticLevel;
 
         [JsonPropertyName("updateChannel")]
-        public UpdateChannelType UpdateChannel
-        {
-            get => _updateChannel;
-            set => _updateChannel = GetSetterValue(value, BravoPolicies.Current.UpdateChannelPolicy, BravoPolicies.Current.UpdateChannel);
-        }
+        public UpdateChannelType UpdateChannel { get; set; } = DefaultUpdateChannel;
 
         [JsonPropertyName("updateCheckEnabled")]
-        public bool UpdateCheckEnabled
-        { 
-            get => _updateCheckEnabled;
-            set => _updateCheckEnabled = GetSetterValue(value, BravoPolicies.Current.UpdateCheckEnabledPolicy, BravoPolicies.Current.UpdateCheckEnabled);
-        }
+        public bool UpdateCheckEnabled { get; set; } = DefaultUpdateCheckEnabled;
 
         [JsonPropertyName("theme")]
         public ThemeType Theme { get; set; } = DefaultTheme;
@@ -73,38 +53,13 @@
         public ProxySettings? Proxy { get; set; }
 
         [JsonPropertyName("useSystemBrowserForAuthentication")]
-        public bool UseSystemBrowserForAuthentication
-        {
-            get => _useSystemBrowserForAuthentication;
-            set => _useSystemBrowserForAuthentication = GetSetterValue(value, BravoPolicies.Current.UseSystemBrowserForAuthenticationPolicy, BravoPolicies.Current.UseSystemBrowserForAuthentication);
-        }
+        public bool UseSystemBrowserForAuthentication { get; set; } = DefaultUseSystemBrowserForAuthentication;
 
         [JsonPropertyName("customTemplatesEnabled")]
-        public bool CustomTemplatesEnabled
-        {
-            get => _customTemplatesEnabled;
-            set => _customTemplatesEnabled = GetSetterValue(value, BravoPolicies.Current.CustomTemplatesEnabledPolicy, BravoPolicies.Current.CustomTemplatesEnabled);
-        }
+        public bool CustomTemplatesEnabled { get; set; } = DefaultCustomTemplatesEnabled;
 
         [JsonPropertyName("customOptions")]
         public JsonElement? CustomOptions { get; set; }
-
-        //[JsonPropertyName("experimental")]
-        //public ExperimentalSettings? Experimental { get; set; }
-
-        private T GetSetterValue<T>(T setterValue, PolicyStatus policyStatus, T policyValue)
-        {
-            if (policyStatus == PolicyStatus.Forced)
-            {
-                return policyValue;
-            }
-            else if (policyStatus == PolicyStatus.NotConfigured)
-            {
-                return setterValue;
-            }
-
-            throw new BravoUnexpectedException($"Unexpected { nameof(PolicyStatus) } value ({ policyStatus })");
-        }
     }
 
     public enum ThemeType

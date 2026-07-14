@@ -5,7 +5,6 @@
     using Sqlbi.Bravo.Infrastructure.Configuration;
     using Sqlbi.Bravo.Infrastructure.Helpers;
     using Sqlbi.Bravo.Infrastructure.Telemetry;
-    using System;
     using System.Windows.Forms;
 
     internal partial class Program
@@ -35,7 +34,7 @@
             }
             catch (Exception ex)
             {
-                TelemetryService.TrackFatalException(ex);
+                TelemetryService.Instance.TrackException(ex);
                 ExceptionHelper.ShowDialog(ex);
                 throw;
             }

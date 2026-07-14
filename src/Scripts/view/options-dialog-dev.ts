@@ -35,6 +35,7 @@ export class OptionsDialogDev {
         let optionsStruct: OptionStruct[] = [
             {
                 option: "customTemplatesEnabled",
+                lockedByPolicy: optionsController.optionIsPolicyLocked("customTemplatesEnabled"),
                 icon: "template-dev",
                 name: i18n(strings.optionDev),
                 description: i18n(strings.optionDevDescription),

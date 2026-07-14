@@ -2,9 +2,9 @@
 {
     using Dax.Template;
     using Dax.Template.Model;
+    using Sqlbi.Bravo.Infrastructure;
     using Sqlbi.Bravo.Infrastructure.Extensions;
-    using Sqlbi.Bravo.Infrastructure.Security.Policies;
-    using Sqlbi.Bravo.Models;
+    using Sqlbi.Bravo.Infrastructure.Policies;
     using Sqlbi.Bravo.Models.ManageDates;
 
     internal class DaxTemplateManager
@@ -27,9 +27,11 @@
         internal static readonly string UserPath = Path.Combine(AppEnvironment.ApplicationDataPath, @"ManageDates\Templates");
 
         private readonly object _cacheSyncLock = new();
+        private readonly IPolicies _policies;
 
-        public DaxTemplateManager()
+        public DaxTemplateManager(IPolicies policies)
         {
+            _policies = policies;
             InitializeCache();
         }
 
@@ -40,12 +42,9 @@
 
         public IEnumerable<Package> GetPackages()
         {
-            if (BravoPolicies.Current.BuiltInTemplatesEnabledPolicy == PolicyStatus.Forced)
+            if (_policies.BuiltInTemplatesEnabled is false)
             {
-                if (BravoPolicies.Current.BuiltInTemplatesEnabled == false)
-                {
-                    return Array.Empty<Package>();
-                }
+                return Array.Empty<Package>();
             }
 
             var files = Package.FindTemplateFiles(CachePath);

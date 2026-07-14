@@ -9,7 +9,7 @@ namespace Sqlbi.Bravo.Infrastructure.PowerBI
     {
         internal const string PowerBIApiHttpClientName = "PowerBIApi";
 
-        public static IServiceCollection AddPowerBIServices(this IServiceCollection services)
+        public static IServiceCollection AddPowerBI(this IServiceCollection services)
         {
             services.AddHttpClient(PowerBIApiHttpClientName, (client) =>
             {

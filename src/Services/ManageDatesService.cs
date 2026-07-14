@@ -7,6 +7,7 @@
     using Sqlbi.Bravo.Infrastructure;
     using Sqlbi.Bravo.Infrastructure.Extensions;
     using Sqlbi.Bravo.Infrastructure.Helpers;
+    using Sqlbi.Bravo.Infrastructure.Policies;
     using Sqlbi.Bravo.Infrastructure.Services;
     using Sqlbi.Bravo.Infrastructure.Services.DaxTemplate;
     using Sqlbi.Bravo.Models;
@@ -29,7 +30,12 @@
 
     internal class ManageDatesService : IManageDatesService
     {
-        private readonly DaxTemplateManager _templateManager = new();
+        private readonly DaxTemplateManager _templateManager;
+
+        public ManageDatesService(IPolicies policies)
+        {
+            _templateManager = new DaxTemplateManager(policies);
+        }
 
         public IEnumerable<DateConfiguration> GetConfigurations(PBIDesktopReport report, CancellationToken cancellationToken)
         {

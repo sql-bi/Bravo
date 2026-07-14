@@ -1,8 +1,9 @@
-namespace Sqlbi.Bravo.Infrastructure.Telemetry;
+﻿namespace Sqlbi.Bravo.Infrastructure.Telemetry;
 
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.Extensibility;
 using Sqlbi.Bravo.Infrastructure.Configuration;
+using Sqlbi.Bravo.Infrastructure.Policies;
 
 public interface ITelemetryService : IDisposable
 {
@@ -14,55 +15,13 @@ internal sealed class TelemetryService : ITelemetryService
 {
     private readonly TelemetryConfiguration _configuration;
     private readonly TelemetryClient _client;
+    private readonly IPolicies _policies;
 
-    public TelemetryService()
-    {
-        _configuration = CreateConfiguration();
-        _client = new TelemetryClient(_configuration);
-    }
+    private static readonly Lazy<TelemetryService> _instance = new(CreateInstance, isThreadSafe: true);
 
-    public bool TelemetryEnabled
-    {
-        get => _configuration.DisableTelemetry == false;
-        set => _configuration.DisableTelemetry = !value;
-    }
+    public static TelemetryService Instance => _instance.Value;
 
-    public void TrackException(Exception exception)
-    {
-        if (exception is AggregateException aex)
-            exception = aex.GetBaseException();
-
-        _client.TrackException(exception);
-    }
-
-    public void Dispose()
-    {
-        _client.Flush();
-        _configuration.Dispose();
-    }
-
-    /// <summary>
-    /// Tracks a fatal exception in scenarios where the DI container is unavailable.
-    /// </summary>
-    public static void TrackFatalException(Exception exception)
-    {
-        if (exception is AggregateException aex)
-            exception = aex.GetBaseException();
-
-        try
-        {
-            using var configuration = CreateConfiguration();
-            var client = new TelemetryClient(configuration);
-            client.TrackException(exception);
-            client.Flush(); // Blocking flush is acceptable — app is terminating
-        }
-        catch
-        {
-            // Telemetry failure must not mask the original exception
-        }
-    }
-
-    private static TelemetryConfiguration CreateConfiguration()
+    private static TelemetryService CreateInstance()
     {
         // Use parameterless constructor to avoid default processors (e.g. adaptive sampling)
         // that TelemetryConfiguration.CreateDefault() would register.
@@ -75,10 +34,46 @@ internal sealed class TelemetryService : ITelemetryService
 
         configuration.TelemetryInitializers.Add(new DefaultTelemetryInitializer());
         configuration.ConnectionString = TelemetrySessionInfo.ConnectionString;
-        configuration.DisableTelemetry = UserPreferences.Current.TelemetryEnabled == false;
+
+        var policies = PoliciesFactory.Create();
+
+        // Determine whether telemetry is enabled based on policies and user settings.
+        var telemetryEnabled = policies.TelemetryEnabled ?? UserPreferences.Current.TelemetryEnabled;
+        configuration.DisableTelemetry = !telemetryEnabled;
 #if DEBUG
         configuration.TelemetryChannel.DeveloperMode = Debugger.IsAttached;
 #endif
-        return configuration;
+        return new TelemetryService(configuration, policies);
+    }
+
+    private TelemetryService(TelemetryConfiguration configuration, IPolicies policies)
+    {
+        _configuration = configuration;
+        _client = new TelemetryClient(configuration);
+        _policies = policies;
+    }
+
+    public bool TelemetryEnabled
+    {
+        get => !_configuration.DisableTelemetry;
+        set
+        {
+            var telemetryEnabled = _policies.TelemetryEnabled ?? value;
+             _configuration.DisableTelemetry = !telemetryEnabled;
+        }
+    }
+
+    public void TrackException(Exception exception)
+    {
+        if (exception is AggregateException aex)
+            exception = aex.GetBaseException();
+
+        _client.TrackException(exception);
+        _client.Flush();
+    }
+
+    public void Dispose()
+    {
+        _configuration.Dispose();
     }
 }

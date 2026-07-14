@@ -28,7 +28,7 @@ export class Telemetry {
 
    constructor(config: TelemetryConfig) {
 
-      this.enabled = optionsController.options.telemetryEnabled;
+      this.enabled = optionsController.getOption("telemetryEnabled");
 
       // Configuration options at https://docs.microsoft.com/en-us/azure/azure-monitor/app/javascript
       this.appInsights = new ApplicationInsights({ config: {
@@ -68,7 +68,7 @@ export class Telemetry {
       // Detect telemetry option change
       optionsController.on("telemetryEnabled.change", (changedOptions: any) => {
 
-         this.enabled = optionsController.options.telemetryEnabled;
+         this.enabled = optionsController.getOption("telemetryEnabled");
 
          this.appInsights.updateSnippetDefinitions({
             config: {
