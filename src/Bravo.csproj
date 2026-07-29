@@ -2,8 +2,9 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net6-windows</TargetFramework>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>false</SelfContained>
     <UseWindowsForms>True</UseWindowsForms>
     <ApplicationIcon>Assets\bravo.ico</ApplicationIcon>
     <Company>SQLBI</Company>
@@ -17,7 +18,6 @@
     <NoWarn>$(NoWarn);1591</NoWarn>
     <TypeScriptCompileBlocked>true</TypeScriptCompileBlocked>
     <AnalysisLevel>latest</AnalysisLevel>
-    <IncludeOpenAPIAnalyzers>true</IncludeOpenAPIAnalyzers>
     <IsPackable>false</IsPackable>
     <IsPublishable>true</IsPublishable>
     <SatelliteResourceLanguages>en-US</SatelliteResourceLanguages>

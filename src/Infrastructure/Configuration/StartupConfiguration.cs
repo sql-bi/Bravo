@@ -3,7 +3,6 @@
     using Sqlbi.Bravo.Infrastructure.Helpers;
     using Sqlbi.Bravo.Infrastructure.Services;
     using System.IO;
-    using System.Net;
     using System.Net.Http;
     using System.Runtime;
 
@@ -22,7 +21,6 @@
             ConfigureProxy();
             ConfigureDirectories();
             ConfigureMulticoreJit();
-            ConfigureSecurityProtocols();
 
             WebView2Helper.EnsureRuntimeIsInstalled();
         }
@@ -37,17 +35,6 @@
             Directory.SetCurrentDirectory(AppContext.BaseDirectory);
             Directory.CreateDirectory(AppEnvironment.ApplicationDataPath);
             Directory.CreateDirectory(AppEnvironment.ApplicationTempPath);
-        }
-
-        private static void ConfigureSecurityProtocols()
-        {
-            var includeTls = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
-
-#pragma warning disable CS0618 // Type or member is obsolete - Justification is that we are removing SecurityProtocolType.Ssl3
-            var excludeSsl = ServicePointManager.SecurityProtocol & ~SecurityProtocolType.Ssl3;
-#pragma warning restore CS0618 // Type or member is obsolete
-
-            ServicePointManager.SecurityProtocol = excludeSsl | includeTls;
         }
 
         //private static void ConfigureProcessDpiAwareness()

@@ -76,7 +76,9 @@
             //{
             //}
 
-            if (control.InvokeRequired)
+            // Control.FromHandle returns null when the handle does not belong to a control of this
+            // process: there is no UI thread to marshal to, so the action runs on the calling thread.
+            if (control is not null && control.InvokeRequired)
             {
                 control.Invoke(action);
             }

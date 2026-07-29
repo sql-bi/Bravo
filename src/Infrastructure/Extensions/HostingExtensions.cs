@@ -92,13 +92,13 @@
             // Currently it seems to be not possible to add authentication without adding data protection services
             // This can be worked around by replicating the code from AddAuthentication() without the call to AddDataProtection()
             // See https://github.com/dotnet/aspnetcore/issues/43624
-            
+
             // var builder = services.AddAuthentication(defaultScheme: AppEnvironment.ApiAuthenticationSchema);
 
             services.AddAuthenticationCore();
             //services.AddDataProtection();
             services.AddWebEncoders();
-            services.TryAddSingleton<ISystemClock, SystemClock>();
+            services.TryAddSingleton(TimeProvider.System);
 
             var builder = new AuthenticationBuilder(services);
             services.Configure<AuthenticationOptions>((options) => options.DefaultScheme = AppEnvironment.ApiAuthenticationSchema);
