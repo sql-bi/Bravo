@@ -13,8 +13,8 @@
 
     internal class AppAuthenticationHandler : AuthenticationHandler<AppAuthenticationSchemeOptions>
     {
-        public AppAuthenticationHandler(IOptionsMonitor<AppAuthenticationSchemeOptions> options, ILoggerFactory logger, UrlEncoder encoder, ISystemClock clock) 
-            : base(options, logger, encoder, clock)
+        public AppAuthenticationHandler(IOptionsMonitor<AppAuthenticationSchemeOptions> options, ILoggerFactory logger, UrlEncoder encoder)
+            : base(options, logger, encoder)
         {
         }
 
