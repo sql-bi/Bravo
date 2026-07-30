@@ -1,9 +1,9 @@
-namespace Sqlbi.Bravo.Infrastructure.Telemetry;
-
+﻿using System.Text.RegularExpressions;
 using Microsoft.ApplicationInsights.Channel;
 using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.ApplicationInsights.Extensibility;
-using System.Text.RegularExpressions;
+
+namespace Sqlbi.Bravo.Infrastructure.Telemetry;
 
 internal sealed class DefaultTelemetryProcessor : ITelemetryProcessor
 {

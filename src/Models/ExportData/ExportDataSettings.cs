@@ -1,63 +1,62 @@
-﻿namespace Sqlbi.Bravo.Models.ExportData
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Globalization;
+using System.IO;
+using System.Text.Json.Serialization;
+using Sqlbi.Bravo.Infrastructure.Models;
+using Sqlbi.Bravo.Models.AnalyzeModel;
+
+namespace Sqlbi.Bravo.Models.ExportData;
+
+public abstract class ExportDataSettings
 {
-    using Sqlbi.Bravo.Infrastructure.Models;
-    using Sqlbi.Bravo.Models.AnalyzeModel;
-    using System;
-    using System.Collections.Generic;
-    using System.ComponentModel.DataAnnotations;
-    using System.Globalization;
-    using System.IO;
-    using System.Text.Json.Serialization;
+    /// <summary>
+    /// Tables to export
+    /// </summary>
+    [Required]
+    [JsonPropertyName("tables")]
+    public ICollection<TabularTable> Tables { get; set; } = Array.Empty<TabularTable>();
 
-    public abstract class ExportDataSettings
-    {
-        /// <summary>
-        /// Tables to export
-        /// </summary>
-        [Required]
-        [JsonPropertyName("tables")]
-        public ICollection<TabularTable> Tables { get; set; } = Array.Empty<TabularTable>();
+    /// <summary>
+    /// Full local path where the files will be created
+    /// </summary>
+    [JsonIgnore]
+    public string ExportPath { get; set; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments, Environment.SpecialFolderOption.DoNotVerify), $"BravoExportData-{DateTime.Now:yyyyMMddHHmmss}");
+}
 
-        /// <summary>
-        /// Full local path where the files will be created
-        /// </summary>
-        [JsonIgnore]
-        public string ExportPath { get; set; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments, Environment.SpecialFolderOption.DoNotVerify), $"BravoExportData-{DateTime.Now:yyyyMMddHHmmss}");
-    }
+public class ExportDelimitedTextSettings : ExportDataSettings
+{
+    /// <summary>
+    /// Specifies whether UTF-16 should be used as the character encoding for the file, otherwise UTF-8 is used as default
+    /// </summary>
+    [JsonPropertyName("unicodeEncoding")]
+    public bool UnicodeEncoding { get; set; } = false;
 
-    public class ExportDelimitedTextSettings : ExportDataSettings
-    {
-        /// <summary>
-        /// Specifies whether UTF-16 should be used as the character encoding for the file, otherwise UTF-8 is used as default
-        /// </summary>
-        [JsonPropertyName("unicodeEncoding")]
-        public bool UnicodeEncoding { get; set; } = false;
+    /// <summary>
+    /// Specifies the delimiter used to separate fields. If not provided <see cref="TextInfo.ListSeparator"/> is used as default
+    /// </summary>
+    [JsonPropertyName("delimiter")]
+    public string? Delimiter { get; set; }
 
-        /// <summary>
-        /// Specifies the delimiter used to separate fields. If not provided <see cref="TextInfo.ListSeparator"/> is used as default
-        /// </summary>
-        [JsonPropertyName("delimiter")]
-        public string? Delimiter { get; set; }
+    /// <summary>
+    /// Specifies if all string fields should be quoted. Default is false
+    /// </summary>
+    [JsonPropertyName("quoteStringFields")]
+    public bool QuoteStringFields { get; set; } = false;
 
-        /// <summary>
-        /// Specifies if all string fields should be quoted. Default is false
-        /// </summary>
-        [JsonPropertyName("quoteStringFields")]
-        public bool QuoteStringFields { get; set; } = false;
+    /// <summary>
+    /// Specifies whether to export the data to a subfolder with the same name as the source <see cref="IDataModel{T}"/>
+    /// </summary>
+    [JsonPropertyName("createSubfolder")]
+    public bool CreateSubfolder { get; set; } = false;
+}
 
-        /// <summary>
-        /// Specifies whether to export the data to a subfolder with the same name as the source <see cref="IDataModel{T}"/>
-        /// </summary>
-        [JsonPropertyName("createSubfolder")]
-        public bool CreateSubfolder { get; set; } = false;
-    }
-
-    public class ExportExcelSettings : ExportDataSettings
-    {
-        /// <summary>
-        /// Specifies whether an export summary worksheet should be created
-        /// </summary>
-        [JsonPropertyName("createExportSummary")]
-        public bool CreateExportSummary { get; set; } = true;
-    }
+public class ExportExcelSettings : ExportDataSettings
+{
+    /// <summary>
+    /// Specifies whether an export summary worksheet should be created
+    /// </summary>
+    [JsonPropertyName("createExportSummary")]
+    public bool CreateExportSummary { get; set; } = true;
 }

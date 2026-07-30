@@ -1,14 +1,13 @@
-﻿namespace Sqlbi.Bravo.Infrastructure.Policies
+﻿using Microsoft.Extensions.DependencyInjection;
+
+namespace Sqlbi.Bravo.Infrastructure.Policies;
+
+internal static class ServiceCollectionExtensions
 {
-    using Microsoft.Extensions.DependencyInjection;
-
-    internal static class ServiceCollectionExtensions
+    public static IServiceCollection AddGroupPolicies(this IServiceCollection services)
     {
-        public static IServiceCollection AddGroupPolicies(this IServiceCollection services)
-        {
-            services.AddSingleton<IPolicies>(_ => PoliciesFactory.Create());
+        services.AddSingleton<IPolicies>(_ => PoliciesFactory.Create());
 
-            return services;
-        }
+        return services;
     }
 }

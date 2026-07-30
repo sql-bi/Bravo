@@ -1,53 +1,52 @@
-﻿namespace Sqlbi.Bravo.Models
+﻿using System;
+using System.Text.Json.Serialization;
+
+namespace Sqlbi.Bravo.Models;
+
+public class DiagnosticMessage
 {
-    using System;
-    using System.Text.Json.Serialization;
+    [JsonPropertyName("type")]
+    public DiagnosticMessageType Type { get; set; } = DiagnosticMessageType.Text;
 
-    public class DiagnosticMessage
+    [JsonPropertyName("severity")]
+    public DiagnosticMessageSeverity Severity { get; set; } = DiagnosticMessageSeverity.None;
+
+    [JsonPropertyName("name")]
+    public string? Name { get; set; }
+
+    [JsonPropertyName("content")]
+    public string? Content { get; set; }
+
+    [JsonPropertyName("timestamp")]
+    public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+
+    [JsonIgnore]
+    public DateTime? ReadTimestamp { get; set; }
+
+    internal static DiagnosticMessage Create(DiagnosticMessageType type, DiagnosticMessageSeverity severity, string name, string content)
     {
-        [JsonPropertyName("type")]
-        public DiagnosticMessageType Type { get; set; } = DiagnosticMessageType.Text;
-
-        [JsonPropertyName("severity")]
-        public DiagnosticMessageSeverity Severity { get; set; } = DiagnosticMessageSeverity.None;
-
-        [JsonPropertyName("name")]
-        public string? Name { get; set; }
-
-        [JsonPropertyName("content")]
-        public string? Content { get; set; }
-
-        [JsonPropertyName("timestamp")]
-        public DateTime Timestamp { get; set; } = DateTime.UtcNow;
-
-        [JsonIgnore]
-        public DateTime? ReadTimestamp { get; set; }
-
-        internal static DiagnosticMessage Create(DiagnosticMessageType type, DiagnosticMessageSeverity severity, string name, string content)
+        var message = new DiagnosticMessage
         {
-            var message = new DiagnosticMessage
-            {
-                Type = type,
-                Severity = severity,
-                Name = $"[HOST] { name }",
-                Content = content,
-                ReadTimestamp = null
-            };
+            Type = type,
+            Severity = severity,
+            Name = $"[HOST] {name}",
+            Content = content,
+            ReadTimestamp = null
+        };
 
-            return message;
-        }
+        return message;
     }
+}
 
-    public enum DiagnosticMessageType
-    {
-        Text = 0,
-        Json = 1,
-    }
+public enum DiagnosticMessageType
+{
+    Text = 0,
+    Json = 1,
+}
 
-    public enum DiagnosticMessageSeverity
-    {
-        None = 0,
-        Warning = 1,
-        Error = 2,
-    }
+public enum DiagnosticMessageSeverity
+{
+    None = 0,
+    Warning = 1,
+    Error = 2,
 }

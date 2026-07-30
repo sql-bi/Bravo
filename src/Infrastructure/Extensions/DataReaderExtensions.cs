@@ -1,19 +1,18 @@
-﻿namespace Sqlbi.Bravo.Infrastructure.Extensions
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+
+namespace Sqlbi.Bravo.Infrastructure.Extensions;
+
+internal static class DataReaderExtensions
 {
-    using System.Collections.Generic;
-    using System;
-    using System.Data;
-
-    internal static class DataReaderExtensions
+    public static IEnumerable<T> Select<T>(this IDataReader reader, Func<IDataReader, T> selector)
     {
-        public static IEnumerable<T> Select<T>(this IDataReader reader, Func<IDataReader, T> selector)
+        while (reader.Read())
         {
-            while (reader.Read())
-            {
-                yield return selector(reader);
-            }
-
-            reader.Close();
+            yield return selector(reader);
         }
+
+        reader.Close();
     }
 }

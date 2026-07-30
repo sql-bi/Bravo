@@ -1,165 +1,168 @@
-﻿namespace Sqlbi.Bravo.Infrastructure.Services.DaxTemplate
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading;
+using Dax.Template;
+using Dax.Template.Model;
+using Sqlbi.Bravo.Infrastructure.Extensions;
+using Sqlbi.Bravo.Infrastructure.Policies;
+using Sqlbi.Bravo.Models.ManageDates;
+
+namespace Sqlbi.Bravo.Infrastructure.Services.DaxTemplate;
+
+internal class DaxTemplateManager
 {
-    using Dax.Template;
-    using Dax.Template.Model;
-    using Sqlbi.Bravo.Infrastructure;
-    using Sqlbi.Bravo.Infrastructure.Extensions;
-    using Sqlbi.Bravo.Infrastructure.Policies;
-    using Sqlbi.Bravo.Models.ManageDates;
+    private static bool CacheInitialized = false;
 
-    internal class DaxTemplateManager
+    public const string SqlbiTemplateAnnotation = "SQLBI_Template";
+    public const string SqlbiTemplateAnnotationDatesValue = "Dates";
+    public const string SqlbiTemplateAnnotationHolidaysValue = "Holidays";
+    public const string SqlbiTemplateTableAnnotation = "SQLBI_TemplateTable";
+    public const string SqlbiTemplateTableAnnotationDateValue = "Date";
+    public const string SqlbiTemplateTableAnnotationDateAutoTemplateValue = "DateAutoTemplate";
+    public const string SqlbiTemplateTableAnnotationHolidaysValue = "Holidays";
+    public const string SqlbiTemplateTableAnnotationHolidaysDefinitionValue = "HolidaysDefinition";
+
+    private const string TemplateEmbeddedResourcePrefix = "Sqlbi.Bravo.Assets.ManageDates.Templates.";
+    private const string SchemaEmbeddedResourcePrefix = "Sqlbi.Bravo.Assets.TemplateDevelopment.Schemas.";
+
+    internal static readonly string CachePath = Path.Combine(AppEnvironment.ApplicationTempPath, @"ManageDates\Templates");
+    internal static readonly string UserPath = Path.Combine(AppEnvironment.ApplicationDataPath, @"ManageDates\Templates");
+
+    private readonly object _cacheSyncLock = new();
+    private readonly IPolicies _policies;
+
+    public DaxTemplateManager(IPolicies policies)
     {
-        private static bool CacheInitialized = false;
+        _policies = policies;
+        InitializeCache();
+    }
 
-        public const string SqlbiTemplateAnnotation = "SQLBI_Template";
-        public const string SqlbiTemplateAnnotationDatesValue = "Dates";
-        public const string SqlbiTemplateAnnotationHolidaysValue = "Holidays";
-        public const string SqlbiTemplateTableAnnotation = "SQLBI_TemplateTable";
-        public const string SqlbiTemplateTableAnnotationDateValue = "Date";
-        public const string SqlbiTemplateTableAnnotationDateAutoTemplateValue = "DateAutoTemplate";
-        public const string SqlbiTemplateTableAnnotationHolidaysValue = "Holidays";
-        public const string SqlbiTemplateTableAnnotationHolidaysDefinitionValue = "HolidaysDefinition";
+    public Package GetPackage(string path)
+    {
+        return Package.LoadFromFile(path);
+    }
 
-        private const string TemplateEmbeddedResourcePrefix = "Sqlbi.Bravo.Assets.ManageDates.Templates.";
-        private const string SchemaEmbeddedResourcePrefix = "Sqlbi.Bravo.Assets.TemplateDevelopment.Schemas.";
-
-        internal static readonly string CachePath = Path.Combine(AppEnvironment.ApplicationTempPath, @"ManageDates\Templates");
-        internal static readonly string UserPath = Path.Combine(AppEnvironment.ApplicationDataPath, @"ManageDates\Templates");
-
-        private readonly object _cacheSyncLock = new();
-        private readonly IPolicies _policies;
-
-        public DaxTemplateManager(IPolicies policies)
+    public IEnumerable<Package> GetPackages()
+    {
+        if (_policies.BuiltInTemplatesEnabled is false)
         {
-            _policies = policies;
-            InitializeCache();
+            return Array.Empty<Package>();
         }
 
-        public Package GetPackage(string path)
-        {
-            return Package.LoadFromFile(path);
-        }
+        var files = Package.FindTemplateFiles(CachePath);
+        return files.Select(Package.LoadFromFile).ToArray();
+    }
 
-        public IEnumerable<Package> GetPackages()
+    public ModelChanges GetPreviewChanges(DateConfiguration configuration, int previewRows, TabularConnectionWrapper connection, CancellationToken cancellationToken)
+    {
+        var package = configuration.LoadPackage();
+        return GetPreviewChanges(package, previewRows, connection, cancellationToken);
+    }
+
+    public ModelChanges GetPreviewChanges(Package package, int previewRows, TabularConnectionWrapper connection, CancellationToken cancellationToken)
+    {
+        var engine = new Engine(package);
+
+        engine.ApplyTemplates(connection.Model, cancellationToken);
+        try
         {
-            if (_policies.BuiltInTemplatesEnabled is false)
+            var modelChanges = Engine.GetModelChanges(connection.Model, cancellationToken);
+
+            if (previewRows > 0)
             {
-                return Array.Empty<Package>();
+                using var adomdConnection = connection.CreateAdomdConnection();
+                modelChanges.PopulatePreview(adomdConnection, connection.Model, previewRows, cancellationToken);
             }
 
-            var files = Package.FindTemplateFiles(CachePath);
-            return files.Select(Package.LoadFromFile).ToArray();
+            return modelChanges;
         }
-
-        public ModelChanges GetPreviewChanges(DateConfiguration configuration, int previewRows, TabularConnectionWrapper connection, CancellationToken cancellationToken)
+        finally
         {
-            var package = configuration.LoadPackage();
-            return GetPreviewChanges(package, previewRows, connection, cancellationToken);
+            connection.Model.UndoLocalChanges();
         }
+    }
 
-        public ModelChanges GetPreviewChanges(Package package, int previewRows, TabularConnectionWrapper connection, CancellationToken cancellationToken)
+    public void ApplyConfiguration(DateConfiguration configuration, TabularConnectionWrapper connection, CancellationToken cancellationToken)
+    {
+        var package = configuration.LoadPackage();
+        var engine = new Engine(package);
+
+        engine.ApplyTemplates(connection.Model, cancellationToken);
+        configuration.SerializeTo(connection.Model);
+        connection.Model.SaveChanges().ThrowOnError();
+    }
+
+    private IEnumerable<(string Name, Stream Content)> GetSchemaFiles()
+    {
+        var files = GetResourceFiles(resourcePrefix: SchemaEmbeddedResourcePrefix);
+        return files;
+    }
+
+    private IEnumerable<(string Name, Stream Content)> GetTemplateFiles()
+    {
+        var files = GetResourceFiles(resourcePrefix: TemplateEmbeddedResourcePrefix);
+        return files;
+    }
+
+    private IEnumerable<(string Name, Stream Content)> GetResourceFiles(string resourcePrefix)
+    {
+        var assembly = typeof(Program).Assembly;
+        var resourceNames = assembly.GetManifestResourceNames();
+
+        foreach (var resourceName in resourceNames)
         {
-            var engine = new Engine(package);
-
-            engine.ApplyTemplates(connection.Model, cancellationToken);
-            try
+            if (resourceName.StartsWith(resourcePrefix))
             {
-                var modelChanges = Engine.GetModelChanges(connection.Model, cancellationToken);
-
-                if (previewRows > 0)
+                var stream = assembly.GetManifestResourceStream(resourceName);
+                if (stream is not null)
                 {
-                    using var adomdConnection = connection.CreateAdomdConnection();
-                    modelChanges.PopulatePreview(adomdConnection, connection.Model, previewRows, cancellationToken);
-                }
-
-                return modelChanges;
-            }
-            finally
-            {
-                connection.Model.UndoLocalChanges();
-            }
-        }
-
-        public void ApplyConfiguration(DateConfiguration configuration, TabularConnectionWrapper connection, CancellationToken cancellationToken)
-        {
-            var package = configuration.LoadPackage();
-            var engine = new Engine(package);
-
-            engine.ApplyTemplates(connection.Model, cancellationToken);
-            configuration.SerializeTo(connection.Model);
-            connection.Model.SaveChanges().ThrowOnError();
-        }
-
-        private IEnumerable<(string Name, Stream Content)> GetSchemaFiles()
-        {
-            var files = GetResourceFiles(resourcePrefix: SchemaEmbeddedResourcePrefix);
-            return files;
-        }
-
-        private IEnumerable<(string Name, Stream Content)> GetTemplateFiles()
-        {
-            var files = GetResourceFiles(resourcePrefix: TemplateEmbeddedResourcePrefix);
-            return files;
-        }
-
-        private IEnumerable<(string Name, Stream Content)> GetResourceFiles(string resourcePrefix)
-        {
-            var assembly = typeof(Program).Assembly;
-            var resourceNames = assembly.GetManifestResourceNames();
-
-            foreach (var resourceName in resourceNames)
-            {
-                if (resourceName.StartsWith(resourcePrefix))
-                {
-                    var stream = assembly.GetManifestResourceStream(resourceName);
-                    if (stream is not null)
-                    {
-                        var name = resourceName.Remove(0, resourcePrefix.Length);
-                        yield return (Name: name, Content: stream);
-                    }
+                    var name = resourceName.Remove(0, resourcePrefix.Length);
+                    yield return (Name: name, Content: stream);
                 }
             }
         }
+    }
 
-        private void InitializeCache()
+    private void InitializeCache()
+    {
+        if (CacheInitialized == false)
         {
-            if (CacheInitialized == false)
+            lock (_cacheSyncLock)
             {
-                lock (_cacheSyncLock)
+                if (CacheInitialized == false)
                 {
-                    if (CacheInitialized == false)
+                    if (Directory.Exists(CachePath))
+                        Directory.Delete(CachePath, recursive: true);
+
+                    Directory.CreateDirectory(CachePath);
+
+                    if (Directory.Exists(UserPath))
                     {
-                        if (Directory.Exists(CachePath))
-                            Directory.Delete(CachePath, recursive: true);
-
-                        Directory.CreateDirectory(CachePath);
-                        
-                        if (Directory.Exists(UserPath))
+                        // If the path exists then we use the templates from this folder instead of using the built-in default templates - this is for testing/debug purpose only
+                        foreach (var assetFile in Directory.EnumerateFiles(UserPath))
                         {
-                            // If the path exists then we use the templates from this folder instead of using the built-in default templates - this is for testing/debug purpose only
-                            foreach (var assetFile in Directory.EnumerateFiles(UserPath))
-                            {
-                                var assetFileName = Path.GetFileName(assetFile);
-                                var cacheFile = Path.Combine(CachePath, assetFileName);
+                            var assetFileName = Path.GetFileName(assetFile);
+                            var cacheFile = Path.Combine(CachePath, assetFileName);
 
-                                File.Copy(assetFile, cacheFile);
-                            }
+                            File.Copy(assetFile, cacheFile);
                         }
-                        else
-                        {
-                            var templateFiles = GetTemplateFiles();
-
-                            foreach (var templateFile in templateFiles)
-                            {
-                                var templateFilePath = Path.Combine(CachePath, templateFile.Name);
-
-                                using var fileStream = File.Create(templateFilePath);
-                                templateFile.Content.CopyTo(fileStream);
-                            }
-                        }
-
-                        CacheInitialized = true;
                     }
+                    else
+                    {
+                        var templateFiles = GetTemplateFiles();
+
+                        foreach (var templateFile in templateFiles)
+                        {
+                            var templateFilePath = Path.Combine(CachePath, templateFile.Name);
+
+                            using var fileStream = File.Create(templateFilePath);
+                            templateFile.Content.CopyTo(fileStream);
+                        }
+                    }
+
+                    CacheInitialized = true;
                 }
             }
         }

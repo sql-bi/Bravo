@@ -1,4 +1,5 @@
 ﻿namespace Sqlbi.Bravo.Infrastructure
+
 {
     partial class AppWindow
     {

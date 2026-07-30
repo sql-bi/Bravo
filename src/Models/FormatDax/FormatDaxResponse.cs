@@ -1,57 +1,56 @@
-﻿namespace Sqlbi.Bravo.Models.FormatDax
+﻿using System.Collections.Generic;
+using System.Text.Json.Serialization;
+using Dax.Formatter.Models;
+using Sqlbi.Bravo.Infrastructure;
+
+namespace Sqlbi.Bravo.Models.FormatDax;
+
+public class FormatDaxResponse : List<FormattedMeasure>
 {
-    using Dax.Formatter.Models;
-    using Sqlbi.Bravo.Infrastructure;
-    using System.Collections.Generic;
-    using System.Text.Json.Serialization;
+    // TODO: do not inherit from Generic.List<T>, add instead a 'Measures' property 
+    //[JsonPropertyName("measures")]
+    //public IEnumerable<FormattedMeasure>? Measures { get; set; }
+}
 
-    public class FormatDaxResponse : List<FormattedMeasure>
+public class FormattedMeasure
+{
+    [JsonPropertyName("etag")]
+    public string? ETag { get; set; }
+
+    [JsonPropertyName("name")]
+    public string? Name { get; set; }
+
+    [JsonPropertyName("tableName")]
+    public string? TableName { get; set; }
+
+    [JsonPropertyName("expression")]
+    public string? Expression { get; set; }
+
+    [JsonPropertyName("lineBreakStyle")]
+    public DaxLineBreakStyle LineBreakStyle { get; set; } = AppEnvironment.FormatDaxLineBreakDefault;
+
+    [JsonPropertyName("errors")]
+    public IEnumerable<FormatterError>? Errors { get; set; }
+}
+
+public class FormatterError
+{
+    [JsonPropertyName("line")]
+    public int? Line { get; set; }
+
+    [JsonPropertyName("column")]
+    public int? Column { get; set; }
+
+    [JsonPropertyName("message")]
+    public string? Message { get; set; }
+
+    public static FormatterError CreateFrom(DaxFormatterError error)
     {
-        // TODO: do not inherit from Generic.List<T>, add instead a 'Measures' property 
-        //[JsonPropertyName("measures")]
-        //public IEnumerable<FormattedMeasure>? Measures { get; set; }
-    }
-
-    public class FormattedMeasure
-    {
-        [JsonPropertyName("etag")]
-        public string? ETag { get; set; }
-
-        [JsonPropertyName("name")]
-        public string? Name { get; set; }
-
-        [JsonPropertyName("tableName")]
-        public string? TableName { get; set; }
-
-        [JsonPropertyName("expression")]
-        public string? Expression { get; set; }
-
-        [JsonPropertyName("lineBreakStyle")]
-        public DaxLineBreakStyle LineBreakStyle { get; set; } = AppEnvironment.FormatDaxLineBreakDefault;
-
-        [JsonPropertyName("errors")]
-        public IEnumerable<FormatterError>? Errors { get; set; }
-    }
-
-    public class FormatterError
-    {
-        [JsonPropertyName("line")]
-        public int? Line { get; set; }
-
-        [JsonPropertyName("column")]
-        public int? Column { get; set; }
-
-        [JsonPropertyName("message")]
-        public string? Message { get; set; }
-
-        public static FormatterError CreateFrom(DaxFormatterError error)
+        return new FormatterError
         {
-            return new FormatterError
-            {
-                Line = error.Line,
-                Column = error.Column,
-                Message = error.Message
-            };
-        }
+            Line = error.Line,
+            Column = error.Column,
+            Message = error.Message
+        };
     }
 }

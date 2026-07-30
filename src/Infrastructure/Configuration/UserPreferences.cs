@@ -1,116 +1,115 @@
-﻿namespace Sqlbi.Bravo.Infrastructure.Configuration
+﻿using System;
+using System.Diagnostics;
+using System.IO;
+using System.Text.Json;
+using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
+using Sqlbi.Bravo.Infrastructure.Extensions;
+using Sqlbi.Bravo.Infrastructure.Helpers;
+
+namespace Sqlbi.Bravo.Infrastructure.Configuration;
+
+internal static class UserPreferences
 {
-    using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
-    using Sqlbi.Bravo.Infrastructure.Extensions;
-    using Sqlbi.Bravo.Infrastructure.Helpers;
-    using System;
-    using System.Diagnostics;
-    using System.IO;
-    using System.Text.Json;
+    private static readonly JsonSerializerOptions _serializationOptions;
+    private static readonly Lazy<UserSettings> _settings;
 
-    internal static class UserPreferences
+    static UserPreferences()
     {
-        private static readonly JsonSerializerOptions _serializationOptions;
-        private static readonly Lazy<UserSettings> _settings;
-
-        static UserPreferences()
+        _settings = new Lazy<UserSettings>(CreateInstance, isThreadSafe: true);
+        _serializationOptions = new()
         {
-            _settings = new Lazy<UserSettings>(CreateInstance, isThreadSafe: true);
-            _serializationOptions = new()
-            {
-                ReadCommentHandling = JsonCommentHandling.Skip,
-                AllowTrailingCommas = true,
-                WriteIndented = true,
-            };
+            ReadCommentHandling = JsonCommentHandling.Skip,
+            AllowTrailingCommas = true,
+            WriteIndented = true,
+        };
+    }
+
+    public static UserSettings Current => _settings.Value;
+
+    public static void Save()
+    {
+        try
+        {
+            var settingsString = JsonSerializer.Serialize(Current, _serializationOptions);
+            File.WriteAllText(AppEnvironment.UserSettingsFilePath, settingsString);
+        }
+        catch (Exception ex)
+        {
+            throw new BravoException(BravoProblem.UserSettingsSaveError, ex.Message, ex);
+        }
+    }
+
+    private static UserSettings CreateInstance()
+    {
+        try
+        {
+            var settings = CreateInstanceFromFile();
+            if (settings is not null)
+                return settings;
+        }
+        catch (Exception ex)
+        {
+            ExceptionHelper.WriteToEventLog(ex, EventLogEntryType.Warning, throwOnError: false);
         }
 
-        public static UserSettings Current => _settings.Value;
-
-        public static void Save()
+        // Creation from file failed, the file is corrupted, does not exists or it's empty.
+        var defaultSettings = new UserSettings();
         {
             try
             {
-                var settingsString = JsonSerializer.Serialize(Current, _serializationOptions);
-                File.WriteAllText(AppEnvironment.UserSettingsFilePath, settingsString);
-            }
-            catch (Exception ex)
-            {
-                throw new BravoException(BravoProblem.UserSettingsSaveError, ex.Message, ex);
-            }
-        }
-
-        private static UserSettings CreateInstance()
-        {
-            try
-            {
-                var settings = CreateInstanceFromFile();
-                if (settings is not null)
-                    return settings;
+                UpdateFromRegistry(defaultSettings);
             }
             catch (Exception ex)
             {
                 ExceptionHelper.WriteToEventLog(ex, EventLogEntryType.Warning, throwOnError: false);
             }
+        }
+        return defaultSettings;
+    }
 
-            // Creation from file failed, the file is corrupted, does not exists or it's empty.
-            var defaultSettings = new UserSettings();
+    private static UserSettings? CreateInstanceFromFile()
+    {
+        if (File.Exists(AppEnvironment.UserSettingsFilePath))
+        {
+            var settingsString = File.ReadAllText(AppEnvironment.UserSettingsFilePath);
+            var settings = JsonSerializer.Deserialize<UserSettings>(settingsString, _serializationOptions);
+
+            // Validation
+            if (settings is not null)
             {
-                try
+                var validProxy = settings.Proxy?.Validate(throwOnError: false);
+                if (validProxy == false)
                 {
-                    UpdateFromRegistry(defaultSettings);
+                    settings.Proxy = null;
                 }
-                catch (Exception ex)
+
+                if (!Enum.IsDefined(typeof(ThemeType), (int)settings.Theme))
                 {
-                    ExceptionHelper.WriteToEventLog(ex, EventLogEntryType.Warning, throwOnError: false);
+                    settings.Theme = ThemeType.Auto;
                 }
             }
-            return defaultSettings;
+
+            return settings;
         }
 
-        private static UserSettings? CreateInstanceFromFile()
+        return null;
+    }
+
+    private static void UpdateFromRegistry(UserSettings settings)
+    {
+        var registryKey = AppEnvironment.ApplicationInstallerRegistryHKey;
+        if (registryKey is not null)
         {
-            if (File.Exists(AppEnvironment.UserSettingsFilePath))
+            var valueString = registryKey.GetStringValue(subkeyName: AppEnvironment.ApplicationRegistryKeyName, valueName: AppEnvironment.ApplicationRegistryApplicationTelemetryEnabledValue);
+            if (valueString is not null)
             {
-                var settingsString = File.ReadAllText(AppEnvironment.UserSettingsFilePath);
-                var settings = JsonSerializer.Deserialize<UserSettings>(settingsString, _serializationOptions);
-
-                // Validation
-                if (settings is not null)
+                if (int.TryParse(valueString, out var intValue))
                 {
-                    var validProxy = settings.Proxy?.Validate(throwOnError: false);
-                    if (validProxy == false)
-                    {
-                        settings.Proxy = null;
-                    }
-
-                    if (!Enum.IsDefined(typeof(ThemeType), (int)settings.Theme))
-                    {
-                        settings.Theme = ThemeType.Auto;
-                    }
+                    settings.TelemetryEnabled = Convert.ToBoolean(intValue);
                 }
-
-                return settings;
-            }
-
-            return null;
-        }
-
-        private static void UpdateFromRegistry(UserSettings settings)
-        {
-            var registryKey = AppEnvironment.ApplicationInstallerRegistryHKey;
-            if (registryKey is not null)
-            {
-                var valueString = registryKey.GetStringValue(subkeyName: AppEnvironment.ApplicationRegistryKeyName, valueName: AppEnvironment.ApplicationRegistryApplicationTelemetryEnabledValue);
-                if (valueString is not null)
+                else
                 {
-                    if (int.TryParse(valueString, out var intValue))
-                    {
-                        settings.TelemetryEnabled = Convert.ToBoolean(intValue);
-                    }
-                    else
-                    {
-                        settings.TelemetryEnabled = false;
-                    }
+                    settings.TelemetryEnabled = false;
                 }
             }
         }

@@ -1,71 +1,70 @@
-﻿namespace Bravo.Tests.Infrastructure.Security
+﻿using System;
+using System.Text;
+using Sqlbi.Bravo.Infrastructure.Security;
+using Xunit;
+
+namespace Bravo.Tests.Infrastructure.Security;
+
+public class CryptographyTests
 {
-    using Sqlbi.Bravo.Infrastructure.Security;
-    using System;
-    using System.Text;
-    using Xunit;
-
-    public class CryptographyTests
+    [Fact]
+    public void ProtectUnprotect_SimpleTest()
     {
-        [Fact]
-        public void ProtectUnprotect_SimpleTest()
+        var expected = "MySecret^ìfd56486-+{6 ♠ ⌂¿EFE==";
+
+        var userData = Encoding.Unicode.GetBytes(expected);
+        var encryptedData = Cryptography.Protect(userData);
+        var unprotectedData = Cryptography.Unprotect(encryptedData);
+
+        var actual = Encoding.Unicode.GetString(unprotectedData);
+
+        Assert.Equal(expected, actual);
+    }
+
+    [Fact]
+    public void MD5Hash_SimpleTest()
+    {
+        var buffer = Encoding.UTF8.GetBytes("Bravo");
+
+        var actual = Cryptography.MD5Hash(buffer);
+        var expected = "01A2DA07BF36766155F48FC670D53FE8";
+
+        Assert.Equal(expected, actual);
+    }
+
+    [Fact]
+    public void MD5Hash_Simple2DTest()
+    {
+        var buffers = new byte[][]
         {
-            var expected = "MySecret^ìfd56486-+{6 ♠ ⌂¿EFE==";
+            Encoding.UTF8.GetBytes("Bravo"),
+            BitConverter.GetBytes(255),
+        };
 
-            var userData = Encoding.Unicode.GetBytes(expected);
-            var encryptedData = Cryptography.Protect(userData);
-            var unprotectedData = Cryptography.Unprotect(encryptedData);
+        var actual = Cryptography.MD5Hash(buffers);
+        var expected = "E9F057A4A3A7B760F6D0C588DF6DAC91";
 
-            var actual = Encoding.Unicode.GetString(unprotectedData);
+        Assert.Equal(expected, actual);
+    }
 
-            Assert.Equal(expected, actual);
-        }
+    [Theory]
+    [InlineData("", "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")]
+    [InlineData("Bravo", "8123f58e72483f148509ae2da7feda62076dbe2ae3a045323bea4458a62d0952")]
+    [InlineData("LAPTOP-12C9A7VU\\SYSTEM", "e4f87d099028e128ea2b413f4fa6fc741426bef314de588b0920e89f22015bd0")]
+    public void SHA256Hash_SimpleTest(string input, string expected)
+    {
+        var actual = Cryptography.SHA256Hash(input);
+        Assert.Equal(expected, actual);
+    }
 
-        [Fact]
-        public void MD5Hash_SimpleTest()
-        {
-            var buffer = Encoding.UTF8.GetBytes("Bravo");
+    [Fact]
+    public void GenerateSimpleToken_SimpleTest()
+    {
+        var actual = Cryptography.GenerateSimpleToken();
 
-            var actual = Cryptography.MD5Hash(buffer);
-            var expected = "01A2DA07BF36766155F48FC670D53FE8";
-
-            Assert.Equal(expected, actual);
-        }
-
-        [Fact]
-        public void MD5Hash_Simple2DTest()
-        {
-            var buffers = new byte[][]
-            {
-                Encoding.UTF8.GetBytes("Bravo"),
-                BitConverter.GetBytes(255),
-            };
-
-            var actual = Cryptography.MD5Hash(buffers);
-            var expected = "E9F057A4A3A7B760F6D0C588DF6DAC91";
-
-            Assert.Equal(expected, actual);
-        }
-
-        [Theory]
-        [InlineData("", "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")]
-        [InlineData("Bravo", "8123f58e72483f148509ae2da7feda62076dbe2ae3a045323bea4458a62d0952")]
-        [InlineData("LAPTOP-12C9A7VU\\SYSTEM", "e4f87d099028e128ea2b413f4fa6fc741426bef314de588b0920e89f22015bd0")]
-        public void SHA256Hash_SimpleTest(string input, string expected)
-        {
-            var actual = Cryptography.SHA256Hash(input);
-            Assert.Equal(expected, actual);
-        }
-
-        [Fact]
-        public void GenerateSimpleToken_SimpleTest()
-        {
-            var actual = Cryptography.GenerateSimpleToken();
-
-            Assert.NotNull(actual);
-            Assert.NotEmpty(actual);
-            Assert.Equal(100, actual.Length);
-            Assert.EndsWith("==", actual);
-        }
+        Assert.NotNull(actual);
+        Assert.NotEmpty(actual);
+        Assert.Equal(100, actual.Length);
+        Assert.EndsWith("==", actual);
     }
 }

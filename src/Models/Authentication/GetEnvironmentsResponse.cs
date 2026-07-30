@@ -1,9 +1,10 @@
-﻿using Sqlbi.Bravo.Infrastructure.PowerBI.Cloud;
+﻿using System.Collections.Generic;
+using System.Linq;
+using Sqlbi.Bravo.Infrastructure.PowerBI.Cloud;
 
-namespace Sqlbi.Bravo.Models.Authentication
+namespace Sqlbi.Bravo.Models.Authentication;
+
+public sealed class GetEnvironmentsResponse(IEnumerable<CloudEnvironment> environments)
 {
-    public sealed class GetEnvironmentsResponse(IEnumerable<CloudEnvironment> environments)
-    {
-        public IReadOnlyList<CloudEnvironmentDto> Environments { get; } = [.. environments.Select(e => e.ToDto())];
-    }
+    public IReadOnlyList<CloudEnvironmentDto> Environments { get; } = [.. environments.Select(e => e.ToDto())];
 }

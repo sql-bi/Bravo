@@ -1,17 +1,16 @@
-﻿namespace Sqlbi.Bravo.Infrastructure.PowerBI.Cloud.Contracts
+﻿namespace Sqlbi.Bravo.Infrastructure.PowerBI.Cloud.Contracts;
+
+public enum CloudWorkspaceCapacitySkuType
 {
-    public enum CloudWorkspaceCapacitySkuType
-    {
-        Unknown = 0,
+    Unknown = 0,
 
-        /// <summary>
-        /// PremiumCapacitySku
-        /// </summary>
-        Premium,
+    /// <summary>
+    /// PremiumCapacitySku
+    /// </summary>
+    Premium,
 
-        /// <summary>
-        /// SharedCapacitySku
-        /// </summary>
-        Shared,
-    }
+    /// <summary>
+    /// SharedCapacitySku
+    /// </summary>
+    Shared,
 }

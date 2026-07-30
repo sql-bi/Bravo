@@ -1,15 +1,12 @@
-namespace Sqlbi.Bravo.Infrastructure.PowerBI.Cloud.Authentication
+﻿namespace Sqlbi.Bravo.Infrastructure.PowerBI.Cloud.Authentication;
+
+/// <summary>
+/// Represents an authenticated session with the Power BI cloud service,
+/// containing the authentication result and the associated cloud environment.
+/// </summary>
+public sealed class AuthenticatedSession(AuthenticationResult authenticationResult, CloudEnvironment environment)
 {
-    using Sqlbi.Bravo.Infrastructure.PowerBI.Cloud;
+    public AuthenticationResult AuthenticationResult { get; } = authenticationResult;
 
-    /// <summary>
-    /// Represents an authenticated session with the Power BI cloud service,
-    /// containing the authentication result and the associated cloud environment.
-    /// </summary>
-    public sealed class AuthenticatedSession(AuthenticationResult authenticationResult, CloudEnvironment environment)
-    {
-        public AuthenticationResult AuthenticationResult { get; } = authenticationResult;
-
-        public CloudEnvironment Environment { get; } = environment;
-    }
+    public CloudEnvironment Environment { get; } = environment;
 }

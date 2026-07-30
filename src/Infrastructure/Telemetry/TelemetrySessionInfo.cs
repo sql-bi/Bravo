@@ -1,6 +1,8 @@
-namespace Sqlbi.Bravo.Infrastructure.Telemetry;
-
+﻿using System;
+using System.Collections.Generic;
 using Sqlbi.Bravo.Infrastructure.Security;
+
+namespace Sqlbi.Bravo.Infrastructure.Telemetry;
 
 internal static class TelemetrySessionInfo
 {

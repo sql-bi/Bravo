@@ -1,17 +1,16 @@
 ﻿using System;
 using System.Windows.Forms;
 
-namespace Sqlbi.Bravo.Infrastructure.Windows
+namespace Sqlbi.Bravo.Infrastructure.Windows;
+
+internal class Win32WindowWrapper : IWin32Window
 {
-    internal class Win32WindowWrapper : IWin32Window
+    private Win32WindowWrapper(IntPtr handle)
     {
-        private Win32WindowWrapper(IntPtr handle)
-        {
-            Handle = handle;
-        }
-
-        public IntPtr Handle { get; private set; }
-
-        public static Win32WindowWrapper CreateFrom(IntPtr handle) => new(handle);
+        Handle = handle;
     }
+
+    public IntPtr Handle { get; private set; }
+
+    public static Win32WindowWrapper CreateFrom(IntPtr handle) => new(handle);
 }

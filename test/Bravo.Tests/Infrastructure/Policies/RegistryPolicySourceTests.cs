@@ -1,9 +1,9 @@
-﻿namespace Bravo.Tests.Infrastructure.Policies;
-
+﻿using System;
 using Microsoft.Win32;
 using Sqlbi.Bravo.Infrastructure.Policies;
-using System;
 using Xunit;
+
+namespace Bravo.Tests.Infrastructure.Policies;
 
 /// <summary>
 /// Covers only the thin RegistryKey-to-IPolicySource bridging contract (missing key, missing

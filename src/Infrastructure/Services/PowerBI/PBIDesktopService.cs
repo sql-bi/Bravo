@@ -1,41 +1,39 @@
-﻿namespace Sqlbi.Bravo.Infrastructure.Services.PowerBI
+﻿using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using Sqlbi.Bravo.Infrastructure.Extensions;
+using Sqlbi.Bravo.Infrastructure.Helpers;
+using Sqlbi.Bravo.Models;
+
+namespace Sqlbi.Bravo.Infrastructure.Services.PowerBI;
+
+public interface IPBIDesktopService
 {
-    using Sqlbi.Bravo.Infrastructure;
-    using Sqlbi.Bravo.Infrastructure.Extensions;
-    using Sqlbi.Bravo.Infrastructure.Helpers;
-    using Sqlbi.Bravo.Models;
-    using System;
-    using System.Collections.Concurrent;
-    using System.Collections.Generic;
-    using System.Threading;
-    using System.Threading.Tasks;
+    IEnumerable<PBIDesktopReport> GetReports(CancellationToken cancellationToken);
+}
 
-    public interface IPBIDesktopService
+internal class PBIDesktopService : IPBIDesktopService
+{
+    public IEnumerable<PBIDesktopReport> GetReports(CancellationToken cancellationToken)
     {
-        IEnumerable<PBIDesktopReport> GetReports(CancellationToken cancellationToken);
-    }
-
-    internal class PBIDesktopService : IPBIDesktopService
-    {
-        public IEnumerable<PBIDesktopReport> GetReports(CancellationToken cancellationToken)
+        var processes = ProcessHelper.GetProcessesByName(AppEnvironment.PBIDesktopProcessName);
+        try
         {
-            var processes = ProcessHelper.GetProcessesByName(AppEnvironment.PBIDesktopProcessName);
-            try
+            var reports = new ConcurrentBag<PBIDesktopReport>();
+            var parallelOptions = new ParallelOptions { CancellationToken = cancellationToken };
+            var parallelLoop = Parallel.ForEach(processes, parallelOptions, (process) =>
             {
-                var reports = new ConcurrentBag<PBIDesktopReport>();
-                var parallelOptions = new ParallelOptions { CancellationToken = cancellationToken };
-                var parallelLoop = Parallel.ForEach(processes, parallelOptions, (process) =>
-                {
-                    var report = PBIDesktopReport.CreateFrom(process);
-                    reports.Add(report);
-                });
+                var report = PBIDesktopReport.CreateFrom(process);
+                reports.Add(report);
+            });
 
-                return parallelLoop.IsCompleted ? reports : Array.Empty<PBIDesktopReport>();
-            }
-            finally
-            {
-                processes.ForEach((p) => p.Dispose());
-            }
+            return parallelLoop.IsCompleted ? reports : Array.Empty<PBIDesktopReport>();
+        }
+        finally
+        {
+            processes.ForEach((p) => p.Dispose());
         }
     }
 }

@@ -1,40 +1,42 @@
-﻿namespace Sqlbi.Bravo.Infrastructure.PowerBI.Cloud
+﻿using System;
+using System.Diagnostics;
+using System.Linq;
+using Sqlbi.Bravo.Infrastructure.Extensions;
+using Sqlbi.Bravo.Infrastructure.PowerBI.Cloud.Contracts;
+
+namespace Sqlbi.Bravo.Infrastructure.PowerBI.Cloud;
+
+[DebuggerDisplay("{Name}")]
+public sealed record CloudEnvironment(
+    string Name,
+    string Description,
+    string AuthorityUri,
+    string ClientId,
+    string RedirectUri,
+    string ResourceId,
+    string BackendUri,
+    string ClusterUri)
 {
-    using Sqlbi.Bravo.Infrastructure.Extensions;
-    using Sqlbi.Bravo.Infrastructure.PowerBI.Cloud.Contracts;
+    public Uri GetBackendRequestUri(string relativeUri)
+        => new(new Uri(BackendUri), relativeUri);
 
-    [DebuggerDisplay("{Name}")]
-    public sealed record CloudEnvironment(
-        string Name,
-        string Description,
-        string AuthorityUri,
-        string ClientId,
-        string RedirectUri,
-        string ResourceId,
-        string BackendUri,
-        string ClusterUri)
+    public string GetIdentityProvider()
+        => $"{AuthorityUri}, {ResourceId}, {ClientId}";
+
+    internal static CloudEnvironment FromContract(CloudEnvironmentContract contract)
     {
-        public Uri GetBackendRequestUri(string relativeUri)
-            => new(new Uri(BackendUri), relativeUri);
+        var aadService = contract.Services.Single((s) => s.IsAad());
+        var powerbiBackendService = contract.Services.Single((s) => s.IsPowerBIBackend());
+        var powerbiDesktopClient = contract.Clients.Single((c) => c.IsPowerBIDesktop());
 
-        public string GetIdentityProvider()
-            => $"{AuthorityUri}, {ResourceId}, {ClientId}";
-
-        internal static CloudEnvironment FromContract(CloudEnvironmentContract contract)
-        {
-            var aadService = contract.Services.Single((s) => s.IsAad());
-            var powerbiBackendService = contract.Services.Single((s) => s.IsPowerBIBackend());
-            var powerbiDesktopClient = contract.Clients.Single((c) => c.IsPowerBIDesktop());
-
-            return new CloudEnvironment(
-                Name: contract.CloudName,
-                Description: contract.GetDescription(),
-                AuthorityUri: aadService.Endpoint,
-                ClientId: powerbiDesktopClient.AppId,
-                RedirectUri: powerbiDesktopClient.RedirectUri,
-                ResourceId: powerbiBackendService.ResourceId,
-                BackendUri: powerbiBackendService.Endpoint,
-                ClusterUri: string.Empty);
-        }
+        return new CloudEnvironment(
+            Name: contract.CloudName,
+            Description: contract.GetDescription(),
+            AuthorityUri: aadService.Endpoint,
+            ClientId: powerbiDesktopClient.AppId,
+            RedirectUri: powerbiDesktopClient.RedirectUri,
+            ResourceId: powerbiBackendService.ResourceId,
+            BackendUri: powerbiBackendService.Endpoint,
+            ClusterUri: string.Empty);
     }
 }

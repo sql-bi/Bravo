@@ -1,26 +1,25 @@
-﻿namespace Sqlbi.Bravo.Models.ExportData
+﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
+
+namespace Sqlbi.Bravo.Models.ExportData;
+
+public abstract class ExportExcelRequest
 {
-    using System.ComponentModel.DataAnnotations;
-    using System.Text.Json.Serialization;
+    [Required]
+    [JsonPropertyName("settings")]
+    public ExportExcelSettings? Settings { get; set; }
+}
 
-    public abstract class ExportExcelRequest
-    {
-        [Required]
-        [JsonPropertyName("settings")]
-        public ExportExcelSettings? Settings { get; set; }
-    }
+public class ExportExcelFromPBIReportRequest : ExportExcelRequest
+{
+    [Required]
+    [JsonPropertyName("report")]
+    public PBIDesktopReport? Report { get; set; }
+}
 
-    public class ExportExcelFromPBIReportRequest : ExportExcelRequest
-    {
-        [Required]
-        [JsonPropertyName("report")]
-        public PBIDesktopReport? Report { get; set; }
-    }
-
-    public class ExportExcelFromPBICloudDatasetRequest : ExportExcelRequest
-    {
-        [Required]
-        [JsonPropertyName("dataset")]
-        public PBICloudDataset? Dataset { get; set; }
-    }
+public class ExportExcelFromPBICloudDatasetRequest : ExportExcelRequest
+{
+    [Required]
+    [JsonPropertyName("dataset")]
+    public PBICloudDataset? Dataset { get; set; }
 }

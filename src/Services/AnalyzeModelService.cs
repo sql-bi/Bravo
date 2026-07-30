@@ -1,124 +1,127 @@
-﻿namespace Sqlbi.Bravo.Services
+﻿using System.Collections.Generic;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
+using Sqlbi.Bravo.Infrastructure;
+using Sqlbi.Bravo.Infrastructure.Extensions;
+using Sqlbi.Bravo.Infrastructure.Helpers;
+using Sqlbi.Bravo.Infrastructure.PowerBI.Cloud;
+using Sqlbi.Bravo.Infrastructure.PowerBI.Cloud.Authentication;
+using Sqlbi.Bravo.Infrastructure.Services;
+using Sqlbi.Bravo.Infrastructure.Services.PowerBI;
+using Sqlbi.Bravo.Models;
+using Sqlbi.Bravo.Models.AnalyzeModel;
+
+namespace Sqlbi.Bravo.Services;
+
+public interface IAnalyzeModelService
 {
-    using Sqlbi.Bravo.Infrastructure;
-    using Sqlbi.Bravo.Infrastructure.Extensions;
-    using Sqlbi.Bravo.Infrastructure.Helpers;
-    using Sqlbi.Bravo.Infrastructure.PowerBI.Cloud;
-    using Sqlbi.Bravo.Infrastructure.PowerBI.Cloud.Authentication;
-    using Sqlbi.Bravo.Infrastructure.Services;
-    using Sqlbi.Bravo.Infrastructure.Services.PowerBI;
-    using Sqlbi.Bravo.Models;
-    using Sqlbi.Bravo.Models.AnalyzeModel;
+    TabularDatabase GetDatabase(Stream stream, Stream? dictionaryStream = null);
 
-    public interface IAnalyzeModelService
+    TabularDatabase GetDatabase(PBIDesktopReport report, CancellationToken cancellationToken);
+
+    TabularDatabase GetDatabase(PBICloudDataset dataset, string accessToken, CancellationToken cancellationToken);
+
+    Task<IEnumerable<PBICloudDataset>> GetDatasetsAsync(AuthenticatedSession session, CancellationToken cancellationToken);
+
+    IEnumerable<PBIDesktopReport> GetReports(CancellationToken cancellationToken);
+
+    void ExportVpax(PBIDesktopReport report, ExportVpaxMode mode, string path, CancellationToken cancellationToken);
+
+    void ExportVpax(PBICloudDataset dataset, string accessToken, ExportVpaxMode mode, string path, CancellationToken cancellationToken);
+}
+
+internal sealed class AnalyzeModelService : IAnalyzeModelService
+{
+    private readonly ICloudApiClient _cloudApiClient;
+    private readonly IPBIDesktopService _pbidesktopService;
+
+    public AnalyzeModelService(ICloudApiClient cloudApiClient, IPBIDesktopService pbidesktopService)
     {
-        TabularDatabase GetDatabase(Stream stream, Stream? dictionaryStream = null);
-
-        TabularDatabase GetDatabase(PBIDesktopReport report, CancellationToken cancellationToken);
-
-        TabularDatabase GetDatabase(PBICloudDataset dataset, string accessToken, CancellationToken cancellationToken);
-
-        Task<IEnumerable<PBICloudDataset>> GetDatasetsAsync(AuthenticatedSession session, CancellationToken cancellationToken);
-
-        IEnumerable<PBIDesktopReport> GetReports(CancellationToken cancellationToken);
-
-        void ExportVpax(PBIDesktopReport report, ExportVpaxMode mode, string path, CancellationToken cancellationToken);
-
-        void ExportVpax(PBICloudDataset dataset, string accessToken, ExportVpaxMode mode, string path, CancellationToken cancellationToken);
+        _cloudApiClient = cloudApiClient;
+        _pbidesktopService = pbidesktopService;
     }
 
-    internal sealed class AnalyzeModelService : IAnalyzeModelService
+    public TabularDatabase GetDatabase(Stream vpaxStream, Stream? obfuscatorDictionaryStream = null)
     {
-        private readonly ICloudApiClient _cloudApiClient;
-        private readonly IPBIDesktopService _pbidesktopService;
+        return TabularDatabase.CreateFrom(vpaxStream, obfuscatorDictionaryStream);
+    }
 
-        public AnalyzeModelService(ICloudApiClient cloudApiClient, IPBIDesktopService pbidesktopService)
+    public TabularDatabase GetDatabase(PBIDesktopReport report, CancellationToken cancellationToken)
+    {
+        using var connection = TabularConnectionWrapper.ConnectTo(report);
+        var database = TabularDatabase.CreateFrom(connection, cancellationToken);
+
+        if (connection.Server.IsPowerBIDesktop() == false)
         {
-            _cloudApiClient = cloudApiClient;
-            _pbidesktopService = pbidesktopService;
-        }
-
-        public TabularDatabase GetDatabase(Stream vpaxStream, Stream? obfuscatorDictionaryStream = null)
-        {
-            return TabularDatabase.CreateFrom(vpaxStream, obfuscatorDictionaryStream);
-        }
-
-        public TabularDatabase GetDatabase(PBIDesktopReport report, CancellationToken cancellationToken)
-        {
-            using var connection = TabularConnectionWrapper.ConnectTo(report);
-            var database = TabularDatabase.CreateFrom(connection, cancellationToken);
-            
-            if (connection.Server.IsPowerBIDesktop() == false)
-            {
-                database.Features &= ~TabularDatabaseFeature.ManageDatesAll;
-                database.FeatureUnsupportedReasons |= TabularDatabaseFeatureUnsupportedReason.ManageDatesPBIDesktopModelOnly;
-            }
-
-            return database;
-        }
-
-        public TabularDatabase GetDatabase(PBICloudDataset dataset, string accessToken, CancellationToken cancellationToken)
-        {
-            BravoUnexpectedException.ThrowIfNull(dataset.DisplayName);
-            TabularDatabase database;
-
-            if (dataset.IsXmlaEndPointSupported || dataset.IsOnPremModel == true)
-            {
-                using var connection = TabularConnectionWrapper.ConnectTo(dataset, accessToken);
-                database = TabularDatabase.CreateFrom(connection, cancellationToken);
-            }
-            else
-            {
-                using var connection = AdomdConnectionWrapper.ConnectTo(dataset, accessToken);
-                database = TabularDatabase.CreateFromDmvSchema(connection);
-
-                database.Features &= ~TabularDatabaseFeature.AnalyzeModelAll;
-                database.Features &= ~TabularDatabaseFeature.FormatDaxAll;
-                database.FeatureUnsupportedReasons |= TabularDatabaseFeatureUnsupportedReason.XmlaEndpointNotSupported;
-            }
-
             database.Features &= ~TabularDatabaseFeature.ManageDatesAll;
             database.FeatureUnsupportedReasons |= TabularDatabaseFeatureUnsupportedReason.ManageDatesPBIDesktopModelOnly;
-
-            return database;
         }
 
-        public async Task<IEnumerable<PBICloudDataset>> GetDatasetsAsync(AuthenticatedSession session, CancellationToken cancellationToken)
-        {
-            var datasets = await _cloudApiClient.GetDatasetsAsync(session, cancellationToken);
-            return datasets;
-        }
+        return database;
+    }
 
-        public IEnumerable<PBIDesktopReport> GetReports(CancellationToken cancellationToken)
-        {
-            var reports = _pbidesktopService.GetReports(cancellationToken);
-            return reports;
-        }
+    public TabularDatabase GetDatabase(PBICloudDataset dataset, string accessToken, CancellationToken cancellationToken)
+    {
+        BravoUnexpectedException.ThrowIfNull(dataset.DisplayName);
+        TabularDatabase database;
 
-        public void ExportVpax(PBIDesktopReport report, ExportVpaxMode mode, string path, CancellationToken cancellationToken)
-        {
-            using var connection = TabularConnectionWrapper.ConnectTo(report);
-            ExportVpaxImpl(connection, mode, path, cancellationToken);
-        }
-
-        public void ExportVpax(PBICloudDataset dataset, string accessToken, ExportVpaxMode mode, string path, CancellationToken cancellationToken)
+        if (dataset.IsXmlaEndPointSupported || dataset.IsOnPremModel == true)
         {
             using var connection = TabularConnectionWrapper.ConnectTo(dataset, accessToken);
-            ExportVpaxImpl(connection, mode, path, cancellationToken);
+            database = TabularDatabase.CreateFrom(connection, cancellationToken);
         }
-
-        public static void ExportVpaxImpl(TabularConnectionWrapper connection, ExportVpaxMode mode, string path, CancellationToken cancellationToken)
+        else
         {
-            using var stream = new MemoryStream();
-            VpaxHelper.ExportVpax(stream, connection, cancellationToken);
+            using var connection = AdomdConnectionWrapper.ConnectTo(dataset, accessToken);
+            database = TabularDatabase.CreateFromDmvSchema(connection);
 
-            if (mode == ExportVpaxMode.Obfuscated)
-            {
-                VpaxObfuscatorHelper.ObfuscateAndExportDictionary(stream, path: $"{path}.dict");
-            }
-
-            using var fileStream = new FileStream(path, FileMode.Create, FileAccess.Write);
-            stream.CopyTo(fileStream);
+            database.Features &= ~TabularDatabaseFeature.AnalyzeModelAll;
+            database.Features &= ~TabularDatabaseFeature.FormatDaxAll;
+            database.FeatureUnsupportedReasons |= TabularDatabaseFeatureUnsupportedReason.XmlaEndpointNotSupported;
         }
+
+        database.Features &= ~TabularDatabaseFeature.ManageDatesAll;
+        database.FeatureUnsupportedReasons |= TabularDatabaseFeatureUnsupportedReason.ManageDatesPBIDesktopModelOnly;
+
+        return database;
+    }
+
+    public async Task<IEnumerable<PBICloudDataset>> GetDatasetsAsync(AuthenticatedSession session, CancellationToken cancellationToken)
+    {
+        var datasets = await _cloudApiClient.GetDatasetsAsync(session, cancellationToken);
+        return datasets;
+    }
+
+    public IEnumerable<PBIDesktopReport> GetReports(CancellationToken cancellationToken)
+    {
+        var reports = _pbidesktopService.GetReports(cancellationToken);
+        return reports;
+    }
+
+    public void ExportVpax(PBIDesktopReport report, ExportVpaxMode mode, string path, CancellationToken cancellationToken)
+    {
+        using var connection = TabularConnectionWrapper.ConnectTo(report);
+        ExportVpaxImpl(connection, mode, path, cancellationToken);
+    }
+
+    public void ExportVpax(PBICloudDataset dataset, string accessToken, ExportVpaxMode mode, string path, CancellationToken cancellationToken)
+    {
+        using var connection = TabularConnectionWrapper.ConnectTo(dataset, accessToken);
+        ExportVpaxImpl(connection, mode, path, cancellationToken);
+    }
+
+    public static void ExportVpaxImpl(TabularConnectionWrapper connection, ExportVpaxMode mode, string path, CancellationToken cancellationToken)
+    {
+        using var stream = new MemoryStream();
+        VpaxHelper.ExportVpax(stream, connection, cancellationToken);
+
+        if (mode == ExportVpaxMode.Obfuscated)
+        {
+            VpaxObfuscatorHelper.ObfuscateAndExportDictionary(stream, path: $"{path}.dict");
+        }
+
+        using var fileStream = new FileStream(path, FileMode.Create, FileAccess.Write);
+        stream.CopyTo(fileStream);
     }
 }

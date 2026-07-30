@@ -1,14 +1,13 @@
-﻿namespace Sqlbi.Bravo.Infrastructure.PowerBI.Cloud.Contracts
-{
-    using System;
+﻿using System;
 
-    [Flags]
-    public enum CloudPermissions
-    {
-        None = 0,
-        Read = 1,
-        Write = 2,
-        ReShared = 4,
-        Explore = 8
-    }
+namespace Sqlbi.Bravo.Infrastructure.PowerBI.Cloud.Contracts;
+
+[Flags]
+public enum CloudPermissions
+{
+    None = 0,
+    Read = 1,
+    Write = 2,
+    ReShared = 4,
+    Explore = 8
 }

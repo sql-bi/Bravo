@@ -1,9 +1,11 @@
-﻿namespace Sqlbi.Bravo.Infrastructure.Telemetry;
-
+﻿using System;
+using System.Diagnostics;
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.Extensibility;
 using Sqlbi.Bravo.Infrastructure.Configuration;
 using Sqlbi.Bravo.Infrastructure.Policies;
+
+namespace Sqlbi.Bravo.Infrastructure.Telemetry;
 
 public interface ITelemetryService : IDisposable
 {
@@ -59,7 +61,7 @@ internal sealed class TelemetryService : ITelemetryService
         set
         {
             var telemetryEnabled = _policies.TelemetryEnabled ?? value;
-             _configuration.DisableTelemetry = !telemetryEnabled;
+            _configuration.DisableTelemetry = !telemetryEnabled;
         }
     }
 

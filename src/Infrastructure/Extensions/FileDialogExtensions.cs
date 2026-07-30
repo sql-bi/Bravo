@@ -1,7 +1,7 @@
-﻿namespace Sqlbi.Bravo.Infrastructure.Extensions;
-
+﻿using System.Windows.Forms;
 using Sqlbi.Bravo.Infrastructure.Helpers;
-using System.Windows.Forms;
+
+namespace Sqlbi.Bravo.Infrastructure.Extensions;
 
 internal static class FileDialogExtensions
 {

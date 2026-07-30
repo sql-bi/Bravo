@@ -1,122 +1,120 @@
-﻿namespace Sqlbi.Bravo.Infrastructure.Messages
+﻿using System;
+using System.ComponentModel.DataAnnotations;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using Sqlbi.Bravo.Models;
+
+namespace Sqlbi.Bravo.Infrastructure.Messages;
+
+internal interface IWebMessage
 {
-    using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
-    using Sqlbi.Bravo.Models;
-    using System;
-    using System.ComponentModel.DataAnnotations;
-    using System.Text.Json;
-    using System.Text.Json.Serialization;
+    /// <summary>
+    /// Message type identifier
+    /// </summary>
+    WebMessageType MessageType { get; }
+}
 
-    internal interface IWebMessage
+internal class UnknownWebMessage : IWebMessage
+{
+    [Required]
+    [JsonPropertyName("type")]
+    public WebMessageType MessageType => WebMessageType.Unknown;
+
+    [JsonPropertyName("message")]
+    public JsonElement? Message { get; set; }
+
+    [JsonPropertyName("exception")]
+    public JsonElement? Exception { get; set; }
+
+    [JsonIgnore]
+    public string AsString => JsonSerializer.Serialize(this, AppEnvironment.DefaultJsonOptions);
+
+    public static UnknownWebMessage CreateFrom(JsonElement message)
     {
-        /// <summary>
-        /// Message type identifier
-        /// </summary>
-        WebMessageType MessageType { get; }
-    }
-
-    internal class UnknownWebMessage : IWebMessage
-    {
-        [Required]
-        [JsonPropertyName("type")]
-        public WebMessageType MessageType => WebMessageType.Unknown;
-
-        [JsonPropertyName("message")]
-        public JsonElement? Message { get; set; }
-
-        [JsonPropertyName("exception")]
-        public JsonElement? Exception { get; set; }
-
-        [JsonIgnore]
-        public string AsString => JsonSerializer.Serialize(this, AppEnvironment.DefaultJsonOptions);
-
-        public static UnknownWebMessage CreateFrom(JsonElement message)
+        var webMessage = new UnknownWebMessage
         {
-            var webMessage = new UnknownWebMessage
-            {
-                Message = message,
-                Exception = null,
-            };
+            Message = message,
+            Exception = null,
+        };
 
-            return webMessage;
-        }
+        return webMessage;
+    }
 
-        public static UnknownWebMessage CreateFrom(Exception exception)
+    public static UnknownWebMessage CreateFrom(Exception exception)
+    {
+        if (exception is AggregateException aggregateException)
+            exception = aggregateException.GetBaseException();
+
+        var exceptionObject = new
         {
-            if (exception is AggregateException aggregateException)
-                exception = aggregateException.GetBaseException();
+            Message = exception.Message,
+            Details = exception.ToString(),
+        };
 
-            var exceptionObject = new
-            {
-                Message = exception.Message,
-                Details = exception.ToString(),
-            };
+        var exceptionObjectString = JsonSerializer.Serialize(exceptionObject, AppEnvironment.DefaultJsonOptions);
+        var exceptionObjectJson = JsonSerializer.Deserialize<JsonElement>(exceptionObjectString);
 
-            var exceptionObjectString = JsonSerializer.Serialize(exceptionObject, AppEnvironment.DefaultJsonOptions);
-            var exceptionObjectJson = JsonSerializer.Deserialize<JsonElement>(exceptionObjectString);
-
-            var webMessage = new UnknownWebMessage
-            {
-                Message = null,
-                Exception = exceptionObjectJson,
-            };
-
-            return webMessage;
-        }
-    }
-
-    internal class PBIDesktopReportOpenWebMessage : IWebMessage
-    {
-        [Required]
-        [JsonPropertyName("type")]
-        public WebMessageType MessageType => WebMessageType.ReportOpen;
-
-        [JsonPropertyName("report")]
-        public PBIDesktopReport? Report { get; set; }
-
-        [JsonIgnore]
-        public string AsString => JsonSerializer.Serialize(this, AppEnvironment.DefaultJsonOptions);
-
-        public static PBIDesktopReportOpenWebMessage CreateFrom(PBIDesktopReport report)
+        var webMessage = new UnknownWebMessage
         {
-            var webMessage = new PBIDesktopReportOpenWebMessage
-            {
-                Report = report,
-            };
+            Message = null,
+            Exception = exceptionObjectJson,
+        };
 
-            return webMessage;
-        }
+        return webMessage;
     }
+}
 
-    internal class PBICloudDatasetOpenWebMessage : IWebMessage
+internal class PBIDesktopReportOpenWebMessage : IWebMessage
+{
+    [Required]
+    [JsonPropertyName("type")]
+    public WebMessageType MessageType => WebMessageType.ReportOpen;
+
+    [JsonPropertyName("report")]
+    public PBIDesktopReport? Report { get; set; }
+
+    [JsonIgnore]
+    public string AsString => JsonSerializer.Serialize(this, AppEnvironment.DefaultJsonOptions);
+
+    public static PBIDesktopReportOpenWebMessage CreateFrom(PBIDesktopReport report)
     {
-        [Required]
-        [JsonPropertyName("type")]
-        public WebMessageType MessageType => WebMessageType.DatasetOpen;
+        var webMessage = new PBIDesktopReportOpenWebMessage
+        {
+            Report = report,
+        };
 
-        [JsonPropertyName("dataset")]
-        public PBICloudDataset? Dataset { get; set; }
-
-        [JsonIgnore]
-        public string AsString => JsonSerializer.Serialize(this, AppEnvironment.DefaultJsonOptions);
+        return webMessage;
     }
+}
 
-    internal class VpaxFileOpenWebMessage : IWebMessage
-    {
-        [Required]
-        [JsonPropertyName("type")]
-        public WebMessageType MessageType => WebMessageType.VpaxOpen;
+internal class PBICloudDatasetOpenWebMessage : IWebMessage
+{
+    [Required]
+    [JsonPropertyName("type")]
+    public WebMessageType MessageType => WebMessageType.DatasetOpen;
 
-        [JsonPropertyName("name")]
-        public string? Name { get; set; }
+    [JsonPropertyName("dataset")]
+    public PBICloudDataset? Dataset { get; set; }
 
-        [JsonPropertyName("blob")]
-        public byte[]? Content { get; set; }
+    [JsonIgnore]
+    public string AsString => JsonSerializer.Serialize(this, AppEnvironment.DefaultJsonOptions);
+}
 
-        [JsonPropertyName("lastModified")]
-        public long? LastModified { get; set; }
+internal class VpaxFileOpenWebMessage : IWebMessage
+{
+    [Required]
+    [JsonPropertyName("type")]
+    public WebMessageType MessageType => WebMessageType.VpaxOpen;
 
-        [JsonIgnore]
-        public string AsString => JsonSerializer.Serialize(this, AppEnvironment.DefaultJsonOptions);
-    }
+    [JsonPropertyName("name")]
+    public string? Name { get; set; }
+
+    [JsonPropertyName("blob")]
+    public byte[]? Content { get; set; }
+
+    [JsonPropertyName("lastModified")]
+    public long? LastModified { get; set; }
+
+    [JsonIgnore]
+    public string AsString => JsonSerializer.Serialize(this, AppEnvironment.DefaultJsonOptions);
 }
