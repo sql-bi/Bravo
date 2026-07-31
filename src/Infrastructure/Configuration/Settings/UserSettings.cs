@@ -1,101 +1,100 @@
-﻿namespace Sqlbi.Bravo.Infrastructure.Configuration.Settings
+﻿using System.Text.Json;
+using System.Text.Json.Serialization;
+
+namespace Sqlbi.Bravo.Infrastructure.Configuration.Settings;
+
+public interface IUserSettings
 {
-    using System.Text.Json;
-    using System.Text.Json.Serialization;
+    bool TelemetryEnabled { get; set; }
 
-    public interface IUserSettings
-    {
-        bool TelemetryEnabled { get; set; }
+    DiagnosticLevelType DiagnosticLevel { get; set; }
 
-        DiagnosticLevelType DiagnosticLevel { get; set; }
+    UpdateChannelType UpdateChannel { get; set; }
 
-        UpdateChannelType UpdateChannel { get; set; }
+    bool UpdateCheckEnabled { get; set; }
 
-        bool UpdateCheckEnabled { get; set; }
+    ThemeType Theme { get; set; }
 
-        ThemeType Theme { get; set; }
+    ProxySettings? Proxy { get; set; }
 
-        ProxySettings? Proxy { get; set; }
+    bool UseSystemBrowserForAuthentication { get; set; }
 
-        bool UseSystemBrowserForAuthentication { get; set; }
+    bool CustomTemplatesEnabled { get; set; }
 
-        bool CustomTemplatesEnabled { get; set; }
+    JsonElement? CustomOptions { get; set; }
+}
 
-        JsonElement? CustomOptions { get; set; }
-    }
+public class UserSettings : IUserSettings
+{
+    public const bool DefaultTelemetryEnabled = true;
+    public const DiagnosticLevelType DefaultDiagnosticLevel = DiagnosticLevelType.None;
+    public const UpdateChannelType DefaultUpdateChannel = UpdateChannelType.Stable;
+    public const bool DefaultUpdateCheckEnabled = true;
+    public const ThemeType DefaultTheme = ThemeType.Auto;
+    public const bool DefaultUseSystemBrowserForAuthentication = false;
+    public const bool DefaultCustomTemplatesEnabled = true;
 
-    public class UserSettings : IUserSettings
-    {
-        public const bool DefaultTelemetryEnabled = true;
-        public const DiagnosticLevelType DefaultDiagnosticLevel = DiagnosticLevelType.None;
-        public const UpdateChannelType DefaultUpdateChannel = UpdateChannelType.Stable;
-        public const bool DefaultUpdateCheckEnabled = true;
-        public const ThemeType DefaultTheme = ThemeType.Auto;
-        public const bool DefaultUseSystemBrowserForAuthentication = false;
-        public const bool DefaultCustomTemplatesEnabled = true;
+    [JsonPropertyName("telemetryEnabled")]
+    public bool TelemetryEnabled { get; set; } = DefaultTelemetryEnabled;
 
-        [JsonPropertyName("telemetryEnabled")]
-        public bool TelemetryEnabled { get; set; } = DefaultTelemetryEnabled;
+    [JsonPropertyName("diagnosticLevel")]
+    public DiagnosticLevelType DiagnosticLevel { get; set; } = DefaultDiagnosticLevel;
 
-        [JsonPropertyName("diagnosticLevel")]
-        public DiagnosticLevelType DiagnosticLevel { get; set; } = DefaultDiagnosticLevel;
+    [JsonPropertyName("updateChannel")]
+    public UpdateChannelType UpdateChannel { get; set; } = DefaultUpdateChannel;
 
-        [JsonPropertyName("updateChannel")]
-        public UpdateChannelType UpdateChannel { get; set; } = DefaultUpdateChannel;
+    [JsonPropertyName("updateCheckEnabled")]
+    public bool UpdateCheckEnabled { get; set; } = DefaultUpdateCheckEnabled;
 
-        [JsonPropertyName("updateCheckEnabled")]
-        public bool UpdateCheckEnabled { get; set; } = DefaultUpdateCheckEnabled;
+    [JsonPropertyName("theme")]
+    public ThemeType Theme { get; set; } = DefaultTheme;
 
-        [JsonPropertyName("theme")]
-        public ThemeType Theme { get; set; } = DefaultTheme;
+    [JsonPropertyName("proxy")]
+    public ProxySettings? Proxy { get; set; }
 
-        [JsonPropertyName("proxy")]
-        public ProxySettings? Proxy { get; set; }
+    [JsonPropertyName("useSystemBrowserForAuthentication")]
+    public bool UseSystemBrowserForAuthentication { get; set; } = DefaultUseSystemBrowserForAuthentication;
 
-        [JsonPropertyName("useSystemBrowserForAuthentication")]
-        public bool UseSystemBrowserForAuthentication { get; set; } = DefaultUseSystemBrowserForAuthentication;
+    [JsonPropertyName("customTemplatesEnabled")]
+    public bool CustomTemplatesEnabled { get; set; } = DefaultCustomTemplatesEnabled;
 
-        [JsonPropertyName("customTemplatesEnabled")]
-        public bool CustomTemplatesEnabled { get; set; } = DefaultCustomTemplatesEnabled;
+    [JsonPropertyName("customOptions")]
+    public JsonElement? CustomOptions { get; set; }
+}
 
-        [JsonPropertyName("customOptions")]
-        public JsonElement? CustomOptions { get; set; }
-    }
+public enum ThemeType
+{
+    Auto = 0,
+    Light = 1,
+    Dark = 2
+}
 
-    public enum ThemeType
-    {
-        Auto = 0,
-        Light = 1,
-        Dark = 2
-    }
+public enum UpdateChannelType
+{
+    /// <summary>
+    /// (Default) Stable builds are the best ones to use, they are a result of the code being built in Canary, tested in Dev and bug fixed in Beta
+    /// </summary>
+    Stable = 0,
 
-    public enum UpdateChannelType
-    {
-        /// <summary>
-        /// (Default) Stable builds are the best ones to use, they are a result of the code being built in Canary, tested in Dev and bug fixed in Beta
-        /// </summary>
-        Stable = 0,
+    ///// <summary>
+    ///// Beta channel is the best build to get if you’re interested in being the first one to know about upcoming features 
+    ///// </summary>
+    //Beta = 1,
 
-        ///// <summary>
-        ///// Beta channel is the best build to get if you’re interested in being the first one to know about upcoming features 
-        ///// </summary>
-        //Beta = 1,
+    /// <summary>
+    /// Dev build will carry the improvements made to the application and tested by the developers, it’s still not recommended to use it because it can have bugs
+    /// </summary>
+    Dev = 2,
 
-        /// <summary>
-        /// Dev build will carry the improvements made to the application and tested by the developers, it’s still not recommended to use it because it can have bugs
-        /// </summary>
-        Dev = 2,
+    ///// <summary>
+    ///// Canary build carries features that are released as soon as they’re built and are not tested or used
+    ///// </summary>
+    //Canary = 3,
+}
 
-        ///// <summary>
-        ///// Canary build carries features that are released as soon as they’re built and are not tested or used
-        ///// </summary>
-        //Canary = 3,
-    }
-
-    public enum DiagnosticLevelType
-    {
-        None = 0,
-        Basic = 1,
-        Verbose = 2
-    }
+public enum DiagnosticLevelType
+{
+    None = 0,
+    Basic = 1,
+    Verbose = 2
 }

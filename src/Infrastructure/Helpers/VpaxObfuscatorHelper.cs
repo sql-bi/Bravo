@@ -1,8 +1,10 @@
-﻿namespace Sqlbi.Bravo.Infrastructure.Helpers;
-
+﻿using System;
+using System.IO;
 using Dax.Metadata;
 using Dax.Vpax.Obfuscator;
 using Dax.Vpax.Obfuscator.Common;
+
+namespace Sqlbi.Bravo.Infrastructure.Helpers;
 
 internal static class VpaxObfuscatorHelper
 {

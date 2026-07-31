@@ -1,14 +1,11 @@
-﻿namespace Sqlbi.Bravo.Services
+﻿namespace Sqlbi.Bravo.Services;
+
+public interface IBestPracticeAnalyzerService
 {
-    using System;
 
-    public interface IBestPracticeAnalyzerService
-    {
+}
 
-    }
+internal class BestPracticeAnalyzerService : IBestPracticeAnalyzerService
+{
 
-    internal class BestPracticeAnalyzerService : IBestPracticeAnalyzerService
-    {
-
-    }
 }

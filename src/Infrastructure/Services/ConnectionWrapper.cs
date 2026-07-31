@@ -1,156 +1,154 @@
-﻿namespace Sqlbi.Bravo.Infrastructure.Services
+﻿using System;
+using System.Text.Json.Nodes;
+using Microsoft.AnalysisServices.AdomdClient;
+using Sqlbi.Bravo.Infrastructure.Extensions;
+using Sqlbi.Bravo.Infrastructure.Helpers;
+using Sqlbi.Bravo.Models;
+using TOM = Microsoft.AnalysisServices.Tabular;
+
+namespace Sqlbi.Bravo.Infrastructure.Services;
+
+internal class TabularConnectionWrapper : IDisposable
 {
-    using Microsoft.AnalysisServices.AdomdClient;
-    using Sqlbi.Bravo.Infrastructure.Extensions;
-    using Sqlbi.Bravo.Infrastructure.Helpers;
-    using Sqlbi.Bravo.Infrastructure.Security;
-    using Sqlbi.Bravo.Models;
-    using System;
-    using System.Text.Json.Nodes;
-    using TOM = Microsoft.AnalysisServices.Tabular;
+    private readonly string _connectionString;
 
-    internal class TabularConnectionWrapper : IDisposable
+    private TabularConnectionWrapper(string connectionString, string databaseIdOrName, bool findById)
     {
-        private readonly string _connectionString;
+        _connectionString = connectionString;
 
-        private TabularConnectionWrapper(string connectionString, string databaseIdOrName, bool findById)
+        Server = new TOM.Server();
+        ProcessHelper.RunOnUISynchronizationContext(() => Server.Connect(connectionString));
+        Database = findById ? Server.Databases.Find(databaseIdOrName) : Server.Databases.FindByName(databaseIdOrName);
+
+        if (Database is null)
         {
-            _connectionString = connectionString;
-
-            Server = new TOM.Server();
-            ProcessHelper.RunOnUISynchronizationContext(() => Server.Connect(connectionString));
-            Database = findById ? Server.Databases.Find(databaseIdOrName) : Server.Databases.FindByName(databaseIdOrName);
-
-            if (Database is null)
+            if (AppEnvironment.IsDiagnosticLevelVerbose)
             {
-                if (AppEnvironment.IsDiagnosticLevelVerbose)
+                var properties = Server.SerializeDiagnosticProperties();
+                var content = new JsonObject
                 {
-                    var properties = Server.SerializeDiagnosticProperties();
-                    var content = new JsonObject
-                    {
-                        { nameof(databaseIdOrName), databaseIdOrName },
-                        { nameof(findById), findById },
-                        { nameof(properties), properties }
-                    };
-                    AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{nameof(TabularConnectionWrapper)}.ctor", content.ToJsonString());
-                }
-
-                throw new BravoException(BravoProblem.TOMDatabaseDatabaseNotFound, databaseIdOrName);
+                    { nameof(databaseIdOrName), databaseIdOrName },
+                    { nameof(findById), findById },
+                    { nameof(properties), properties }
+                };
+                AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{nameof(TabularConnectionWrapper)}.ctor", content.ToJsonString());
             }
 
-            Model = Database.Model;
+            throw new BravoException(BravoProblem.TOMDatabaseDatabaseNotFound, databaseIdOrName);
         }
 
-        public TOM.Server Server { get; }
-
-        public TOM.Database Database { get; }
-
-        public TOM.Model Model { get; }
-
-        public AdomdConnection CreateAdomdConnection(bool open = true)
-        {
-            var connection = new AdomdConnection(_connectionString);
-
-            if (open)
-            {
-                connection.Open();
-                connection.ChangeDatabase(Database.Name);
-            }
-
-            return connection;
-        }
-
-        public void Dispose()
-        {
-            Database?.Dispose();
-            Server?.Dispose();
-        }
-
-        public static TabularConnectionWrapper ConnectTo(PBICloudDataset dataset, string accessToken)
-        {
-            BravoUnexpectedException.ThrowIfNull(dataset.DatabaseName);
-
-            var connectionString = ConnectionStringHelper.BuildFor(dataset, accessToken);
-            var connection = new TabularConnectionWrapper(connectionString, dataset.DatabaseName, findById: true);
-
-            return connection;
-        }
-
-        public static TabularConnectionWrapper ConnectTo(PBIDesktopReport report)
-        {
-            BravoUnexpectedException.ThrowIfNull(report.DatabaseName);
-
-            var connectionString = ConnectionStringHelper.BuildFor(report);
-            var connection = new TabularConnectionWrapper(connectionString, report.DatabaseName, findById: false);
-
-            return connection;
-        }
+        Model = Database.Model;
     }
 
-    internal class AdomdConnectionWrapper : IDisposable
+    public TOM.Server Server { get; }
+
+    public TOM.Database Database { get; }
+
+    public TOM.Model Model { get; }
+
+    public AdomdConnection CreateAdomdConnection(bool open = true)
     {
-        private AdomdConnectionWrapper(string connectionString, string databaseName)
-        {
-            Connection = new AdomdConnection(connectionString);
-            ProcessHelper.RunOnUISynchronizationContext(() => Connection.Open());
-            Connection.ChangeDatabase(databaseName);
+        var connection = new AdomdConnection(_connectionString);
 
-            IsServerVersion13OrGreater = Version.TryParse(Connection.ServerVersion, out var version) && version >= new Version(13, 0);
+        if (open)
+        {
+            connection.Open();
+            connection.ChangeDatabase(Database.Name);
         }
 
-        public AdomdConnection Connection { get; }
+        return connection;
+    }
 
-        public bool IsServerVersion13OrGreater { get; }
+    public void Dispose()
+    {
+        Database?.Dispose();
+        Server?.Dispose();
+    }
 
-        public AdomdCommand CreateAdomdCommand()
+    public static TabularConnectionWrapper ConnectTo(PBICloudDataset dataset, string accessToken)
+    {
+        BravoUnexpectedException.ThrowIfNull(dataset.DatabaseName);
+
+        var connectionString = ConnectionStringHelper.BuildFor(dataset, accessToken);
+        var connection = new TabularConnectionWrapper(connectionString, dataset.DatabaseName, findById: true);
+
+        return connection;
+    }
+
+    public static TabularConnectionWrapper ConnectTo(PBIDesktopReport report)
+    {
+        BravoUnexpectedException.ThrowIfNull(report.DatabaseName);
+
+        var connectionString = ConnectionStringHelper.BuildFor(report);
+        var connection = new TabularConnectionWrapper(connectionString, report.DatabaseName, findById: false);
+
+        return connection;
+    }
+}
+
+internal class AdomdConnectionWrapper : IDisposable
+{
+    private AdomdConnectionWrapper(string connectionString, string databaseName)
+    {
+        Connection = new AdomdConnection(connectionString);
+        ProcessHelper.RunOnUISynchronizationContext(() => Connection.Open());
+        Connection.ChangeDatabase(databaseName);
+
+        IsServerVersion13OrGreater = Version.TryParse(Connection.ServerVersion, out var version) && version >= new Version(13, 0);
+    }
+
+    public AdomdConnection Connection { get; }
+
+    public bool IsServerVersion13OrGreater { get; }
+
+    public AdomdCommand CreateAdomdCommand()
+    {
+        var command = Connection.CreateCommand();
+        return command;
+    }
+
+    public AdomdCommand CreateDmvTablesCommand()
+    {
+        var command = Connection.CreateCommand();
         {
-            var command = Connection.CreateCommand();
-            return command;
+            command.CommandText = "SELECT [DIMENSION_UNIQUE_NAME], [DIMENSION_TYPE], [DIMENSION_CARDINALITY] FROM $SYSTEM.MDSCHEMA_DIMENSIONS WHERE [CATALOG_NAME] = @catalogName AND [DIMENSION_TYPE] <> 2"; // MD_DIMTYPE_MEASURE = 2
+            command.Parameters.Add(new AdomdParameter(parameterName: "catalogName", value: Connection.Database));
         }
+        return command;
+    }
 
-        public AdomdCommand CreateDmvTablesCommand()
+    public AdomdCommand CreateDmvTablesWithColumnsCommand()
+    {
+        var command = Connection.CreateCommand();
         {
-            var command = Connection.CreateCommand();
-            {
-                command.CommandText = "SELECT [DIMENSION_UNIQUE_NAME], [DIMENSION_TYPE], [DIMENSION_CARDINALITY] FROM $SYSTEM.MDSCHEMA_DIMENSIONS WHERE [CATALOG_NAME] = @catalogName AND [DIMENSION_TYPE] <> 2"; // MD_DIMTYPE_MEASURE = 2
-                command.Parameters.Add(new AdomdParameter(parameterName: "catalogName", value: Connection.Database));
-            }
-            return command;
+            command.CommandText = "SELECT DISTINCT [DIMENSION_UNIQUE_NAME] FROM $SYSTEM.MDSCHEMA_HIERARCHIES WHERE [CATALOG_NAME] = @catalogName AND [DIMENSION_TYPE] <> 2"; // MD_DIMTYPE_MEASURE = 2
+            command.Parameters.Add(new AdomdParameter(parameterName: "catalogName", value: Connection.Database));
         }
+        return command;
+    }
 
-        public AdomdCommand CreateDmvTablesWithColumnsCommand()
-        {
-            var command = Connection.CreateCommand();
-            {
-                command.CommandText = "SELECT DISTINCT [DIMENSION_UNIQUE_NAME] FROM $SYSTEM.MDSCHEMA_HIERARCHIES WHERE [CATALOG_NAME] = @catalogName AND [DIMENSION_TYPE] <> 2"; // MD_DIMTYPE_MEASURE = 2
-                command.Parameters.Add(new AdomdParameter(parameterName: "catalogName", value: Connection.Database));
-            }
-            return command;
-        }
+    public void Dispose()
+    {
+        Connection.Dispose();
+    }
 
-        public void Dispose()
-        {
-            Connection.Dispose();
-        }
+    public static AdomdConnectionWrapper ConnectTo(PBICloudDataset dataset, string accessToken)
+    {
+        BravoUnexpectedException.ThrowIfNull(dataset.ExternalDatabaseName);
 
-        public static AdomdConnectionWrapper ConnectTo(PBICloudDataset dataset, string accessToken)
-        {
-            BravoUnexpectedException.ThrowIfNull(dataset.ExternalDatabaseName);
+        var connectionString = ConnectionStringHelper.BuildFor(dataset, accessToken);
+        var connection = new AdomdConnectionWrapper(connectionString, dataset.ExternalDatabaseName);
 
-            var connectionString = ConnectionStringHelper.BuildFor(dataset, accessToken);
-            var connection = new AdomdConnectionWrapper(connectionString, dataset.ExternalDatabaseName);
+        return connection;
+    }
 
-            return connection;
-        }
+    public static AdomdConnectionWrapper ConnectTo(PBIDesktopReport report)
+    {
+        BravoUnexpectedException.ThrowIfNull(report.DatabaseName);
 
-        public static AdomdConnectionWrapper ConnectTo(PBIDesktopReport report)
-        {
-            BravoUnexpectedException.ThrowIfNull(report.DatabaseName);
+        var connectionString = ConnectionStringHelper.BuildFor(report);
+        var connection = new AdomdConnectionWrapper(connectionString, report.DatabaseName);
 
-            var connectionString = ConnectionStringHelper.BuildFor(report);
-            var connection = new AdomdConnectionWrapper(connectionString, report.DatabaseName);
-
-            return connection;
-        }
+        return connection;
     }
 }

@@ -1,171 +1,170 @@
-﻿namespace Sqlbi.Bravo.Services
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using Dax.Template;
+using Dax.Template.Exceptions;
+using Dax.Template.Model;
+using Microsoft.AnalysisServices.AdomdClient;
+using Sqlbi.Bravo.Infrastructure;
+using Sqlbi.Bravo.Infrastructure.Extensions;
+using Sqlbi.Bravo.Infrastructure.Helpers;
+using Sqlbi.Bravo.Infrastructure.Policies;
+using Sqlbi.Bravo.Infrastructure.Services;
+using Sqlbi.Bravo.Infrastructure.Services.DaxTemplate;
+using Sqlbi.Bravo.Models;
+using Sqlbi.Bravo.Models.ManageDates;
+
+namespace Sqlbi.Bravo.Services;
+
+public interface IManageDatesService
 {
-    using Dax.Template;
-    using Dax.Template.Exceptions;
-    using Dax.Template.Model;
-    using Microsoft.AnalysisServices.AdomdClient;
-    using Sqlbi.Bravo.Infrastructure;
-    using Sqlbi.Bravo.Infrastructure.Extensions;
-    using Sqlbi.Bravo.Infrastructure.Helpers;
-    using Sqlbi.Bravo.Infrastructure.Policies;
-    using Sqlbi.Bravo.Infrastructure.Services;
-    using Sqlbi.Bravo.Infrastructure.Services.DaxTemplate;
-    using Sqlbi.Bravo.Models;
-    using Sqlbi.Bravo.Models.ManageDates;
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Threading;
+    IEnumerable<DateConfiguration> GetConfigurations(PBIDesktopReport report, CancellationToken cancellationToken);
 
-    public interface IManageDatesService
+    DateConfiguration ValidateConfiguration(PBIDesktopReport report, DateConfiguration configuration, CancellationToken cancellationToken);
+
+    ModelChanges? GetPreviewChanges(PBIDesktopReport report, PreviewChangesSettings settings, CancellationToken cancellationToken);
+
+    void ApplyConfiguration(PBIDesktopReport report, DateConfiguration configuration, CancellationToken cancellationToken);
+}
+
+internal class ManageDatesService : IManageDatesService
+{
+    private readonly DaxTemplateManager _templateManager;
+
+    public ManageDatesService(IPolicies policies)
     {
-        IEnumerable<DateConfiguration> GetConfigurations(PBIDesktopReport report, CancellationToken cancellationToken);
-
-        DateConfiguration ValidateConfiguration(PBIDesktopReport report, DateConfiguration configuration, CancellationToken cancellationToken);
-
-        ModelChanges? GetPreviewChanges(PBIDesktopReport report, PreviewChangesSettings settings, CancellationToken cancellationToken);
-
-        void ApplyConfiguration(PBIDesktopReport report, DateConfiguration configuration, CancellationToken cancellationToken);
+        _templateManager = new DaxTemplateManager(policies);
     }
 
-    internal class ManageDatesService : IManageDatesService
+    public IEnumerable<DateConfiguration> GetConfigurations(PBIDesktopReport report, CancellationToken cancellationToken)
     {
-        private readonly DaxTemplateManager _templateManager;
-
-        public ManageDatesService(IPolicies policies)
+        IEnumerable<Package> packages;
+        try
         {
-            _templateManager = new DaxTemplateManager(policies);
+            packages = _templateManager.GetPackages();
+        }
+        catch (TemplateException ex)
+        {
+            throw new BravoException(BravoProblem.ManageDateTemplateError, ex.Message, ex);
         }
 
-        public IEnumerable<DateConfiguration> GetConfigurations(PBIDesktopReport report, CancellationToken cancellationToken)
+        var configurations = packages.Select(DateConfiguration.CreateFrom).ToList();
+        using var connection = TabularConnectionWrapper.ConnectTo(report);
+        var currentConfiguration = DateConfiguration.GetCurrentFrom(connection.Model);
+
+        if (currentConfiguration is not null)
+            configurations.Insert(0, currentConfiguration);
+
+        Validate(report, configurations, assertValidation: false);
+
+        return configurations;
+    }
+
+    public DateConfiguration ValidateConfiguration(PBIDesktopReport report, DateConfiguration configuration, CancellationToken cancellationToken)
+    {
+        Validate(report, configuration, assertValidation: false);
+
+        return configuration;
+    }
+
+    public ModelChanges? GetPreviewChanges(PBIDesktopReport report, PreviewChangesSettings settings, CancellationToken cancellationToken)
+    {
+        BravoUnexpectedException.ThrowIfNull(settings.Configuration);
+        Validate(report, settings.Configuration, assertValidation: true);
+
+        using var connection = TabularConnectionWrapper.ConnectTo(report);
+        try
         {
-            IEnumerable<Package> packages;
-            try
-            {
-                packages = _templateManager.GetPackages();
-            }
-            catch (TemplateException ex)
-            {
-                throw new BravoException(BravoProblem.ManageDateTemplateError, ex.Message, ex);
-            }
-
-            var configurations = packages.Select(DateConfiguration.CreateFrom).ToList();
-            using var connection = TabularConnectionWrapper.ConnectTo(report);
-            var currentConfiguration = DateConfiguration.GetCurrentFrom(connection.Model);
-
-            if (currentConfiguration is not null)
-                configurations.Insert(0, currentConfiguration);
-
-            Validate(report, configurations, assertValidation: false);
-
-            return configurations;
+            var modelChanges = _templateManager.GetPreviewChanges(settings.Configuration, settings.PreviewRows, connection, cancellationToken);
+            return modelChanges;
         }
-
-        public DateConfiguration ValidateConfiguration(PBIDesktopReport report, DateConfiguration configuration, CancellationToken cancellationToken)
+        catch (Exception ex) when (ex is TemplateException || ex is AdomdException)
         {
-            Validate(report, configuration, assertValidation: false);
-
-            return configuration;
+            throw new BravoException(BravoProblem.ManageDateTemplateError, ex.Message, ex);
         }
+    }
 
-        public ModelChanges? GetPreviewChanges(PBIDesktopReport report, PreviewChangesSettings settings, CancellationToken cancellationToken)
+    public void ApplyConfiguration(PBIDesktopReport report, DateConfiguration configuration, CancellationToken cancellationToken)
+    {
+        Validate(report, configuration, assertValidation: true);
+
+        using var connection = TabularConnectionWrapper.ConnectTo(report);
+        try
         {
-            BravoUnexpectedException.ThrowIfNull(settings.Configuration);
-            Validate(report, settings.Configuration, assertValidation: true);
-
-            using var connection = TabularConnectionWrapper.ConnectTo(report);
-            try
-            {
-                var modelChanges = _templateManager.GetPreviewChanges(settings.Configuration, settings.PreviewRows, connection, cancellationToken);
-                return modelChanges;
-            }
-            catch (Exception ex) when (ex is TemplateException || ex is AdomdException)
-            {
-                throw new BravoException(BravoProblem.ManageDateTemplateError, ex.Message, ex);
-            }
+            _templateManager.ApplyConfiguration(configuration, connection, cancellationToken);
         }
-
-        public void ApplyConfiguration(PBIDesktopReport report, DateConfiguration configuration, CancellationToken cancellationToken)
+        catch (TemplateException ex)
         {
-            Validate(report, configuration, assertValidation: true);
-
-            using var connection = TabularConnectionWrapper.ConnectTo(report);
-            try
-            {
-                _templateManager.ApplyConfiguration(configuration, connection, cancellationToken);
-            }
-            catch (TemplateException ex)
-            {
-                throw new BravoException(BravoProblem.ManageDateTemplateError, ex.Message, ex);
-            }
+            throw new BravoException(BravoProblem.ManageDateTemplateError, ex.Message, ex);
         }
+    }
 
-        private static void Validate(PBIDesktopReport report, DateConfiguration configuration, bool assertValidation) => Validate(report, new[] { configuration }, assertValidation);
+    private static void Validate(PBIDesktopReport report, DateConfiguration configuration, bool assertValidation) => Validate(report, new[] { configuration }, assertValidation);
 
-        private static void Validate(PBIDesktopReport report, IEnumerable<DateConfiguration> configurations, bool assertValidation)
+    private static void Validate(PBIDesktopReport report, IEnumerable<DateConfiguration> configurations, bool assertValidation)
+    {
+        using var connection = TabularConnectionWrapper.ConnectTo(report);
+
+        foreach (var configuration in configurations)
         {
-            using var connection = TabularConnectionWrapper.ConnectTo(report);
-
-            foreach (var configuration in configurations)
+            if (configuration.DateEnabled)
             {
-                if (configuration.DateEnabled)
+                configuration.DateTableValidation = Validate(configuration.DateTableName);
+                configuration.DateReferenceTableValidation = Validate(configuration.DateReferenceTableName);
+
+                if (assertValidation)
                 {
-                    configuration.DateTableValidation = Validate(configuration.DateTableName);
-                    configuration.DateReferenceTableValidation = Validate(configuration.DateReferenceTableName);
-
-                    if (assertValidation)
-                    {
-                        configuration.DateTableValidation.Assert();
-                        configuration.DateReferenceTableValidation.Assert();
-                    }
-                }
-
-                if (configuration.HolidaysEnabled)
-                {
-                    configuration.HolidaysTableValidation = Validate(configuration.HolidaysTableName);
-                    configuration.HolidaysDefinitionTableValidation = Validate(configuration.HolidaysDefinitionTableName);
-
-                    if (assertValidation)
-                    {
-                        configuration.HolidaysTableValidation.Assert();
-                        configuration.HolidaysDefinitionTableValidation.Assert();
-                    }
-                }
-
-                if (configuration.TimeIntelligenceEnabled)
-                {
-                    // nothing todo
+                    configuration.DateTableValidation.Assert();
+                    configuration.DateReferenceTableValidation.Assert();
                 }
             }
 
-            TableValidation Validate(string? tableName)
+            if (configuration.HolidaysEnabled)
             {
-                var validation = TableValidation.Unknown;
+                configuration.HolidaysTableValidation = Validate(configuration.HolidaysTableName);
+                configuration.HolidaysDefinitionTableValidation = Validate(configuration.HolidaysDefinitionTableName);
 
-                if (!TabularModelHelper.IsValidTableName(tableName))
+                if (assertValidation)
                 {
-                    validation = TableValidation.InvalidNamingRequirements;
+                    configuration.HolidaysTableValidation.Assert();
+                    configuration.HolidaysDefinitionTableValidation.Assert();
+                }
+            }
+
+            if (configuration.TimeIntelligenceEnabled)
+            {
+                // nothing todo
+            }
+        }
+
+        TableValidation Validate(string? tableName)
+        {
+            var validation = TableValidation.Unknown;
+
+            if (!TabularModelHelper.IsValidTableName(tableName))
+            {
+                validation = TableValidation.InvalidNamingRequirements;
+            }
+            else
+            {
+                var table = connection.Model.Tables.Find(tableName);
+
+                if (table is null)
+                {
+                    validation = TableValidation.ValidNotExists;
+                }
+                else if (table.IsCalculated())
+                {
+                    validation = TableValidation.ValidAlterable;
                 }
                 else
                 {
-                    var table = connection.Model.Tables.Find(tableName);
-
-                    if (table is null)
-                    {
-                        validation = TableValidation.ValidNotExists;
-                    }
-                    else if (table.IsCalculated())
-                    {
-                        validation = TableValidation.ValidAlterable;
-                    }
-                    else
-                    {
-                        validation = TableValidation.InvalidExists;
-                    }
+                    validation = TableValidation.InvalidExists;
                 }
-
-                return validation;
             }
+
+            return validation;
         }
     }
 }

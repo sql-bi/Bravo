@@ -1,22 +1,21 @@
-﻿namespace Sqlbi.Bravo.Infrastructure.PowerBI.Cloud.Contracts
+﻿namespace Sqlbi.Bravo.Infrastructure.PowerBI.Cloud.Contracts;
+
+public enum CloudWorkspaceType
 {
-    public enum CloudWorkspaceType
-    {
-        Unknown = 0,
+    Unknown = 0,
 
-        /// <summary>
-        /// PersonalWorkspaceType
-        /// </summary>
-        User,
+    /// <summary>
+    /// PersonalWorkspaceType
+    /// </summary>
+    User,
 
-        /// <summary>
-        /// GroupWorkspaceType
-        /// </summary>
-        Group,
+    /// <summary>
+    /// GroupWorkspaceType
+    /// </summary>
+    Group,
 
-        /// <summary>
-        /// FolderWorkspaceType
-        /// </summary>
-        Folder,
-    }
+    /// <summary>
+    /// FolderWorkspaceType
+    /// </summary>
+    Folder,
 }

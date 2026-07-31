@@ -1,9 +1,9 @@
-﻿namespace Bravo.Tests.Infrastructure.Policies;
-
+﻿using System.Collections.Generic;
 using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
 using Sqlbi.Bravo.Infrastructure.Policies;
-using System.Collections.Generic;
 using Xunit;
+
+namespace Bravo.Tests.Infrastructure.Policies;
 
 /// <summary>
 /// Exercises PoliciesFactory's parsing/precedence logic using an in-memory fake instead of the
@@ -38,8 +38,8 @@ public class PoliciesFactoryTests
         new object[] { nameof(IPolicies.CustomTemplatesEnabled) },
     };
 
-    private static bool? GetBoolProperty(Policies policies, string propertyName)
-        => (bool?)typeof(Policies).GetProperty(propertyName)!.GetValue(policies);
+    private static bool? GetBoolProperty(Sqlbi.Bravo.Infrastructure.Policies.Policies policies, string propertyName)
+        => (bool?)typeof(Sqlbi.Bravo.Infrastructure.Policies.Policies).GetProperty(propertyName)!.GetValue(policies);
 
     [Fact]
     public void FromSource_EmptySource_AllPropertiesAreNull()
@@ -171,7 +171,7 @@ public class PoliciesFactoryTests
         Assert.NotNull(policies);
     }
 
-    private static readonly Policies AllNull = new(
+    private static readonly Sqlbi.Bravo.Infrastructure.Policies.Policies AllNull = new(
         TelemetryEnabled: null,
         UpdateChannel: null,
         UpdateCheckEnabled: null,
@@ -229,7 +229,7 @@ public class PoliciesFactoryTests
         // Guards against a copy-paste wiring mistake in Merge() (e.g. reading the wrong
         // property from machine/user) by exercising all 7 properties in a single assertion,
         // each with a distinct machine/user combination.
-        var machine = new Policies(
+        var machine = new Sqlbi.Bravo.Infrastructure.Policies.Policies(
             TelemetryEnabled: true,
             UpdateChannel: null,
             UpdateCheckEnabled: null,
@@ -238,7 +238,7 @@ public class PoliciesFactoryTests
             CustomTemplatesEnabled: null,
             CustomTemplatesOrganizationRepositoryPath: null);
 
-        var user = new Policies(
+        var user = new Sqlbi.Bravo.Infrastructure.Policies.Policies(
             TelemetryEnabled: false, // machine wins
             UpdateChannel: UpdateChannelType.Dev, // machine unset -> user wins
             UpdateCheckEnabled: true, // machine unset -> user wins

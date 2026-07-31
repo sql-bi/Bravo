@@ -1,7 +1,9 @@
-namespace Sqlbi.Bravo.Infrastructure.Services;
-
+﻿using System;
+using System.Linq;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
+
+namespace Sqlbi.Bravo.Infrastructure.Services;
 
 /// <summary>
 /// Provides the listening address used by the Kestrel HTTP server

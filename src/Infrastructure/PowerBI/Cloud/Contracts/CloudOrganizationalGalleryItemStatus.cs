@@ -1,8 +1,7 @@
-﻿namespace Sqlbi.Bravo.Infrastructure.PowerBI.Cloud.Contracts
+﻿namespace Sqlbi.Bravo.Infrastructure.PowerBI.Cloud.Contracts;
+
+public enum CloudOrganizationalGalleryItemStatus
 {
-    public enum CloudOrganizationalGalleryItemStatus
-    {
-        Enabled,
-        Disabled
-    }
+    Enabled,
+    Disabled
 }

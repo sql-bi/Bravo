@@ -1,10 +1,12 @@
-namespace Sqlbi.Bravo.Infrastructure.Services;
-
+﻿using System;
+using System.Net;
 using Microsoft.Web.WebView2.Core;
 using Sqlbi.Bravo.Infrastructure.Configuration;
 using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
 using Sqlbi.Bravo.Infrastructure.Security;
 using Sqlbi.Bravo.Infrastructure.Telemetry;
+
+namespace Sqlbi.Bravo.Infrastructure.Services;
 
 /// <summary>
 /// Handles WebView2 proxy authentication challenges (HTTP 407).

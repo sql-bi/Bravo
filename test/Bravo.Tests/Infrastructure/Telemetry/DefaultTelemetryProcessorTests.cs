@@ -1,12 +1,12 @@
-namespace Bravo.Tests.Infrastructure.Telemetry;
-
+using System;
+using System.Linq;
 using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.ApplicationInsights.Extensibility;
 using NSubstitute;
 using Sqlbi.Bravo.Infrastructure.Telemetry;
-using System;
-using System.Linq;
 using Xunit;
+
+namespace Bravo.Tests.Infrastructure.Telemetry;
 
 public class DefaultTelemetryProcessorTests
 {

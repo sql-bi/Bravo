@@ -1,228 +1,227 @@
-﻿namespace Sqlbi.Bravo.Models
+﻿using System;
+using System.Diagnostics;
+using System.Text.Json.Serialization;
+using Sqlbi.Bravo.Infrastructure;
+using Sqlbi.Bravo.Infrastructure.Extensions;
+using Sqlbi.Bravo.Infrastructure.Helpers;
+using Sqlbi.Bravo.Infrastructure.Models;
+using Sqlbi.Bravo.Infrastructure.PowerBI.Cloud;
+using Sqlbi.Bravo.Infrastructure.PowerBI.Cloud.Contracts;
+
+namespace Sqlbi.Bravo.Models;
+
+[DebuggerDisplay("{WorkspaceName} - {DisplayName} - {ConnectionMode}")]
+public class PBICloudDataset : IDataModel<PBICloudDataset>
 {
-    using Sqlbi.Bravo.Infrastructure;
-    using Sqlbi.Bravo.Infrastructure.Extensions;
-    using Sqlbi.Bravo.Infrastructure.Helpers;
-    using Sqlbi.Bravo.Infrastructure.Models;
-    using Sqlbi.Bravo.Infrastructure.PowerBI.Cloud;
-    using Sqlbi.Bravo.Infrastructure.PowerBI.Cloud.Contracts;
-    using System;
-    using System.Diagnostics;
-    using System.Text.Json.Serialization;
+    [JsonPropertyName("workspaceId")]
+    public string? WorkspaceId { get; set; }
 
-    [DebuggerDisplay("{WorkspaceName} - {DisplayName} - {ConnectionMode}")]
-    public class PBICloudDataset : IDataModel<PBICloudDataset>
+    [JsonPropertyName("workspaceName")]
+    public string? WorkspaceName { get; set; }
+
+    [JsonPropertyName("workspaceObjectId")]
+    public string? WorkspaceObjectId { get; set; }
+
+    [JsonPropertyName("id")]
+    public long? Id { get; set; }
+
+    [JsonPropertyName("serverName")]
+    public string? ServerName { get; set; }
+
+    [JsonPropertyName("databaseName")]
+    public string? DatabaseName { get; set; }
+
+    [JsonPropertyName("externalServerName")]
+    public string? ExternalServerName { get; set; }
+
+    [JsonPropertyName("externalDatabaseName")]
+    public string? ExternalDatabaseName { get; set; }
+
+    [JsonPropertyName("identityProvider")]
+    public string? IdentityProvider { get; set; }
+
+    [JsonPropertyName("name")]
+    public string? DisplayName { get; set; }
+
+    [JsonPropertyName("description")]
+    public string? Description { get; set; }
+
+    [JsonPropertyName("owner")]
+    public string? Owner { get; set; }
+
+    [JsonPropertyName("refreshed")]
+    public DateTime? Refreshed { get; set; }
+
+    [JsonPropertyName("onPremModelConnectionString")]
+    public string? OnPremModelConnectionString { get; set; }
+
+    [JsonPropertyName("endorsement")]
+    public PBICloudDatasetEndorsement? Endorsement { get; set; }
+
+    [JsonPropertyName("workspaceType")]
+    public PBICloudDatasetWorkspaceType? WorkspaceType { get; set; }
+
+    [JsonPropertyName("capacitySkuType")]
+    public PBICloudDatasetCapacitySkuType? CapacitySkuType { get; set; }
+
+    [JsonPropertyName("isPushDataEnabled")]
+    public bool? IsPushDataEnabled { get; set; }
+
+    [JsonPropertyName("isExcelWorkbook")]
+    public bool? IsExcelWorkbook { get; set; }
+
+    [JsonPropertyName("isOnPremModel")]
+    public bool? IsOnPremModel { get; set; }
+
+    [JsonPropertyName("isPremiumCapacity")]
+    public bool? IsPremiumCapacity { get; set; }
+
+    [JsonPropertyName("isXmlaEndPointSupported")]
+    public bool IsXmlaEndPointSupported
     {
-        [JsonPropertyName("workspaceId")]
-        public string? WorkspaceId { get; set; }
-
-        [JsonPropertyName("workspaceName")]
-        public string? WorkspaceName { get; set; }
-
-        [JsonPropertyName("workspaceObjectId")]
-        public string? WorkspaceObjectId { get; set; }
-
-        [JsonPropertyName("id")]
-        public long? Id { get; set; }
-
-        [JsonPropertyName("serverName")]
-        public string? ServerName { get; set; }
-
-        [JsonPropertyName("databaseName")]
-        public string? DatabaseName { get; set; }
-
-        [JsonPropertyName("externalServerName")]
-        public string? ExternalServerName { get; set; }
-
-        [JsonPropertyName("externalDatabaseName")]
-        public string? ExternalDatabaseName { get; set; }
-
-        [JsonPropertyName("identityProvider")]
-        public string? IdentityProvider { get; set; }
-
-        [JsonPropertyName("name")]
-        public string? DisplayName { get; set; }
-
-        [JsonPropertyName("description")]
-        public string? Description { get; set; }
-
-        [JsonPropertyName("owner")]
-        public string? Owner { get; set; }
-
-        [JsonPropertyName("refreshed")]
-        public DateTime? Refreshed { get; set; }
-
-        [JsonPropertyName("onPremModelConnectionString")]
-        public string? OnPremModelConnectionString { get; set; }
-
-        [JsonPropertyName("endorsement")]
-        public PBICloudDatasetEndorsement? Endorsement { get; set; }
-
-        [JsonPropertyName("workspaceType")]
-        public PBICloudDatasetWorkspaceType? WorkspaceType { get; set; }
-
-        [JsonPropertyName("capacitySkuType")]
-        public PBICloudDatasetCapacitySkuType? CapacitySkuType { get; set; }
-
-        [JsonPropertyName("isPushDataEnabled")]
-        public bool? IsPushDataEnabled { get; set; }
-
-        [JsonPropertyName("isExcelWorkbook")]
-        public bool? IsExcelWorkbook { get; set; }
-
-        [JsonPropertyName("isOnPremModel")]
-        public bool? IsOnPremModel { get; set; }
-
-        [JsonPropertyName("isPremiumCapacity")]
-        public bool? IsPremiumCapacity { get; set; }
-
-        [JsonPropertyName("isXmlaEndPointSupported")]
-        public bool IsXmlaEndPointSupported
+        get
         {
-            get
-            {
-                if (IsPremiumCapacity is null || IsPremiumCapacity == false)
-                    return false;
+            if (IsPremiumCapacity is null || IsPremiumCapacity == false)
+                return false;
 
-                // Exclude unsupported datasets - a.k.a. datasets not accessible by the XMLA endpoint
-                // see https://docs.microsoft.com/en-us/power-bi/admin/service-premium-connect-tools#unsupported-datasets
+            // Exclude unsupported datasets - a.k.a. datasets not accessible by the XMLA endpoint
+            // see https://docs.microsoft.com/en-us/power-bi/admin/service-premium-connect-tools#unsupported-datasets
 
-                // Datasets in 'My Workspace' are unsupported
-                if (WorkspaceType == PBICloudDatasetWorkspaceType.PersonalGroup)
-                    return false;
+            // Datasets in 'My Workspace' are unsupported
+            if (WorkspaceType == PBICloudDatasetWorkspaceType.PersonalGroup)
+                return false;
 
-                // Datasets based on a live connection to an Azure Analysis Services or SQL Server Analysis Services model are unsupported
-                if (IsOnPremModel ?? false)
-                    return false;
+            // Datasets based on a live connection to an Azure Analysis Services or SQL Server Analysis Services model are unsupported
+            if (IsOnPremModel ?? false)
+                return false;
 
-                // TODO: Exclude datasets based on a live connection to a Power BI dataset in another workspace
-                // if ( ... )
-                //    return false;
+            // TODO: Exclude datasets based on a live connection to a Power BI dataset in another workspace
+            // if ( ... )
+            //    return false;
 
-                // Datasets with Push data by using the REST API are unsupported
-                if (IsPushDataEnabled ?? false)
-                    return false;
+            // Datasets with Push data by using the REST API are unsupported
+            if (IsPushDataEnabled ?? false)
+                return false;
 
-                // Excel workbook datasets are unsupported
-                if (IsExcelWorkbook ?? false)
-                    return false;
+            // Excel workbook datasets are unsupported
+            if (IsExcelWorkbook ?? false)
+                return false;
 
-                return true;
-            }
-        }
-
-        [JsonPropertyName("connectionMode")]
-        public PBICloudDatasetConnectionMode ConnectionMode { get; set; } = PBICloudDatasetConnectionMode.Unknown;
-
-        public override bool Equals(object? obj)
-        {
-            return Equals(obj as PBICloudDataset);
-        }
-
-        public bool Equals(PBICloudDataset? other)
-        {
-            return other != null &&
-                   WorkspaceId == other.WorkspaceId &&
-                   Id == other.Id;
-        }
-
-        public override int GetHashCode()
-        {
-            HashCode hash = new();
-            hash.Add(WorkspaceId);
-            hash.Add(Id);
-            return hash.ToHashCode();
-        }
-
-        internal static PBICloudDataset CreateFrom(CloudEnvironment environment, CloudWorkspace cloudWorkspace, CloudSharedModel cloudSharedModel)
-        {
-            BravoUnexpectedException.ThrowIfNull(cloudWorkspace);
-            BravoUnexpectedException.ThrowIfNull(cloudSharedModel);
-            BravoUnexpectedException.ThrowIfNull(cloudSharedModel.Model);
-
-            var cloudModel = cloudSharedModel.Model;
-
-            var dataset = new PBICloudDataset
-            {
-                WorkspaceId = cloudWorkspace.Id,
-                WorkspaceName = cloudWorkspace.Name.NullIfEmpty() ?? cloudSharedModel.WorkspaceName,
-                WorkspaceObjectId = cloudWorkspace.ObjectId,
-                Id = cloudModel.Id,
-                ServerName = CommonHelper.ChangeUriScheme(environment.BackendUri, CloudApiClient.PBIDatasetProtocolScheme, ignorePort: true),
-                DatabaseName = cloudModel.DBName,
-                ExternalServerName = null,
-                ExternalDatabaseName = null,
-                IdentityProvider = environment.GetIdentityProvider(),
-                DisplayName = cloudModel.DisplayName,
-                Description = cloudModel.Description,
-                Owner = $"{ cloudModel.CreatorUser?.GivenName } { cloudModel.CreatorUser?.FamilyName }",
-                Refreshed = cloudModel.LastRefreshTime,
-                OnPremModelConnectionString = cloudModel.OnPremModelConnectionString,
-                Endorsement = cloudSharedModel.GalleryItem?.Stage.TryParseTo<PBICloudDatasetEndorsement>(),
-                WorkspaceType = cloudSharedModel.WorkspaceType.TryParseTo<PBICloudDatasetWorkspaceType>(),
-                CapacitySkuType = cloudWorkspace.CapacitySkuType.TryParseTo<PBICloudDatasetCapacitySkuType>(),
-                IsPremiumCapacity = cloudWorkspace.IsPremiumCapacity,
-                IsPushDataEnabled = cloudModel.IsPushDataEnabled,
-                IsExcelWorkbook = cloudModel.IsExcelWorkbook,
-                IsOnPremModel = cloudModel.IsOnPremModel,
-                ConnectionMode = PBICloudDatasetConnectionMode.Supported,
-            };
-
-            if (dataset.IsXmlaEndPointSupported)
-            {
-                dataset.ExternalServerName = CommonHelper.ChangeUriScheme(environment.ClusterUri, CloudApiClient.PBIPremiumXmlaEndpointProtocolScheme, ignorePort: true);
-                dataset.ExternalDatabaseName = cloudModel.DisplayName;
-            }
-            else if (dataset.IsOnPremModel == true)
-            {
-                var properties = ConnectionStringHelper.GetConnectionStringProperties(dataset.OnPremModelConnectionString);
-                dataset.ExternalServerName = dataset.ServerName = properties.ServerName;
-                dataset.ExternalDatabaseName = dataset.DatabaseName = properties.DatabaseName;
-            }
-            else
-            {
-                dataset.ExternalServerName = dataset.ServerName;
-                dataset.ExternalDatabaseName = $"{ cloudModel.VSName }-{ cloudModel.DBName }";
-            } 
-
-            return dataset;
+            return true;
         }
     }
 
-    /// <summary>
-    /// Re-mapping <see cref="CloudPromotionalStage"/>
-    /// </summary>
-    public enum PBICloudDatasetEndorsement
+    [JsonPropertyName("connectionMode")]
+    public PBICloudDatasetConnectionMode ConnectionMode { get; set; } = PBICloudDatasetConnectionMode.Unknown;
+
+    public override bool Equals(object? obj)
     {
-        None = 0,
-        Promoted = 1,
-        Certified = 2,
+        return Equals(obj as PBICloudDataset);
     }
 
-    /// <summary>
-    /// Re-mapping <see cref="CloudSharedModelWorkspaceType"/>
-    /// </summary>
-    public enum PBICloudDatasetWorkspaceType
+    public bool Equals(PBICloudDataset? other)
     {
-        Personal = 0,
-        Workspace = 1,
-        Group = 2,
-        PersonalGroup = 3
+        return other != null &&
+               WorkspaceId == other.WorkspaceId &&
+               Id == other.Id;
     }
 
-    /// <summary>
-    /// Re-mapping <see cref="CloudWorkspaceCapacitySkuType"/>
-    /// </summary>
-    public enum PBICloudDatasetCapacitySkuType
+    public override int GetHashCode()
     {
-        Unknown = 0,
-        Premium,
-        Shared,
+        HashCode hash = new();
+        hash.Add(WorkspaceId);
+        hash.Add(Id);
+        return hash.ToHashCode();
     }
 
-    public enum PBICloudDatasetConnectionMode
+    internal static PBICloudDataset CreateFrom(CloudEnvironment environment, CloudWorkspace cloudWorkspace, CloudSharedModel cloudSharedModel)
     {
-        Unknown = 0,
-        Supported = 1,
+        BravoUnexpectedException.ThrowIfNull(cloudWorkspace);
+        BravoUnexpectedException.ThrowIfNull(cloudSharedModel);
+        BravoUnexpectedException.ThrowIfNull(cloudSharedModel.Model);
+
+        var cloudModel = cloudSharedModel.Model;
+
+        var dataset = new PBICloudDataset
+        {
+            WorkspaceId = cloudWorkspace.Id,
+            WorkspaceName = cloudWorkspace.Name.NullIfEmpty() ?? cloudSharedModel.WorkspaceName,
+            WorkspaceObjectId = cloudWorkspace.ObjectId,
+            Id = cloudModel.Id,
+            ServerName = CommonHelper.ChangeUriScheme(environment.BackendUri, CloudApiClient.PBIDatasetProtocolScheme, ignorePort: true),
+            DatabaseName = cloudModel.DBName,
+            ExternalServerName = null,
+            ExternalDatabaseName = null,
+            IdentityProvider = environment.GetIdentityProvider(),
+            DisplayName = cloudModel.DisplayName,
+            Description = cloudModel.Description,
+            Owner = $"{cloudModel.CreatorUser?.GivenName} {cloudModel.CreatorUser?.FamilyName}",
+            Refreshed = cloudModel.LastRefreshTime,
+            OnPremModelConnectionString = cloudModel.OnPremModelConnectionString,
+            Endorsement = cloudSharedModel.GalleryItem?.Stage.TryParseTo<PBICloudDatasetEndorsement>(),
+            WorkspaceType = cloudSharedModel.WorkspaceType.TryParseTo<PBICloudDatasetWorkspaceType>(),
+            CapacitySkuType = cloudWorkspace.CapacitySkuType.TryParseTo<PBICloudDatasetCapacitySkuType>(),
+            IsPremiumCapacity = cloudWorkspace.IsPremiumCapacity,
+            IsPushDataEnabled = cloudModel.IsPushDataEnabled,
+            IsExcelWorkbook = cloudModel.IsExcelWorkbook,
+            IsOnPremModel = cloudModel.IsOnPremModel,
+            ConnectionMode = PBICloudDatasetConnectionMode.Supported,
+        };
+
+        if (dataset.IsXmlaEndPointSupported)
+        {
+            dataset.ExternalServerName = CommonHelper.ChangeUriScheme(environment.ClusterUri, CloudApiClient.PBIPremiumXmlaEndpointProtocolScheme, ignorePort: true);
+            dataset.ExternalDatabaseName = cloudModel.DisplayName;
+        }
+        else if (dataset.IsOnPremModel == true)
+        {
+            var properties = ConnectionStringHelper.GetConnectionStringProperties(dataset.OnPremModelConnectionString);
+            dataset.ExternalServerName = dataset.ServerName = properties.ServerName;
+            dataset.ExternalDatabaseName = dataset.DatabaseName = properties.DatabaseName;
+        }
+        else
+        {
+            dataset.ExternalServerName = dataset.ServerName;
+            dataset.ExternalDatabaseName = $"{cloudModel.VSName}-{cloudModel.DBName}";
+        }
+
+        return dataset;
     }
+}
+
+/// <summary>
+/// Re-mapping <see cref="CloudPromotionalStage"/>
+/// </summary>
+public enum PBICloudDatasetEndorsement
+{
+    None = 0,
+    Promoted = 1,
+    Certified = 2,
+}
+
+/// <summary>
+/// Re-mapping <see cref="CloudSharedModelWorkspaceType"/>
+/// </summary>
+public enum PBICloudDatasetWorkspaceType
+{
+    Personal = 0,
+    Workspace = 1,
+    Group = 2,
+    PersonalGroup = 3
+}
+
+/// <summary>
+/// Re-mapping <see cref="CloudWorkspaceCapacitySkuType"/>
+/// </summary>
+public enum PBICloudDatasetCapacitySkuType
+{
+    Unknown = 0,
+    Premium,
+    Shared,
+}
+
+public enum PBICloudDatasetConnectionMode
+{
+    Unknown = 0,
+    Supported = 1,
 }

@@ -1,8 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authentication;
 
-namespace Sqlbi.Bravo.Infrastructure.Authentication
+namespace Sqlbi.Bravo.Infrastructure.Authentication;
+
+internal class AppAuthenticationSchemeOptions : AuthenticationSchemeOptions
 {
-    internal class AppAuthenticationSchemeOptions : AuthenticationSchemeOptions
-    {
-    }
 }

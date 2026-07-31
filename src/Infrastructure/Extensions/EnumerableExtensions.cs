@@ -1,31 +1,30 @@
-﻿namespace Sqlbi.Bravo.Infrastructure.Extensions
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+
+namespace Sqlbi.Bravo.Infrastructure.Extensions;
+
+internal static class EnumerableExtensions
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Data;
-    using System.Linq;
-
-    internal static class EnumerableExtensions
+    public static IEnumerable<(T item, int index)> WithIndex<T>(this IEnumerable<T> source)
     {
-        public static IEnumerable<(T item, int index)> WithIndex<T>(this IEnumerable<T> source)
-        {
-            return source.Select((item, index) => (item, index));
-        }
+        return source.Select((item, index) => (item, index));
+    }
 
-        public static bool IsEmpty<T>(this IEnumerable<T>? source)
-        {
-            if (source is null)
-                return true;
+    public static bool IsEmpty<T>(this IEnumerable<T>? source)
+    {
+        if (source is null)
+            return true;
 
-            return !source.Any();
-        }
+        return !source.Any();
+    }
 
-        public static void ForEach<T>(this IEnumerable<T> source, Action<T> action)
+    public static void ForEach<T>(this IEnumerable<T> source, Action<T> action)
+    {
+        foreach (T item in source)
         {
-            foreach (T item in source)
-            {
-                action(item);
-            }
+            action(item);
         }
     }
 }

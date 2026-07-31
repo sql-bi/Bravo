@@ -1,11 +1,10 @@
-﻿namespace Sqlbi.Bravo.Infrastructure.PowerBI.Cloud.Contracts
+﻿namespace Sqlbi.Bravo.Infrastructure.PowerBI.Cloud.Contracts;
+
+public enum CloudPromotionalStage
 {
-    public enum CloudPromotionalStage
-    {
-        None,
-        Promoted,
-        Certified,
-        Master,
-        Recommended
-    }
+    None,
+    Promoted,
+    Certified,
+    Master,
+    Recommended
 }

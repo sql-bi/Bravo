@@ -1,43 +1,43 @@
-﻿namespace Sqlbi.Bravo
+﻿using System;
+using System.Windows.Forms;
+using Microsoft.Extensions.Hosting;
+using Sqlbi.Bravo.Infrastructure;
+using Sqlbi.Bravo.Infrastructure.Configuration;
+using Sqlbi.Bravo.Infrastructure.Helpers;
+using Sqlbi.Bravo.Infrastructure.Telemetry;
+
+namespace Sqlbi.Bravo;
+
+internal partial class Program
 {
-    using Microsoft.Extensions.Hosting;
-    using Sqlbi.Bravo.Infrastructure;
-    using Sqlbi.Bravo.Infrastructure.Configuration;
-    using Sqlbi.Bravo.Infrastructure.Helpers;
-    using Sqlbi.Bravo.Infrastructure.Telemetry;
-    using System.Windows.Forms;
-
-    internal partial class Program
+    [STAThread]
+    public static void Main()
     {
-        [STAThread]
-        public static void Main()
+        try
         {
-            try
-            {
-                StartupConfiguration.Configure();
+            StartupConfiguration.Configure();
 
-                using var instance = new AppInstance();
-                if (instance.IsOwned)
-                {
-                    using var host = CreateHost();
-                    host.Start();
-                    {
-                        var window = new AppWindow(host.Services, instance);
-                        Application.Run(window);
-                    }
-                    host.StopAsync().GetAwaiter().GetResult();
-                }
-                else
-                {
-                    instance.NotifyOwner();
-                }
-            }
-            catch (Exception ex)
+            using var instance = new AppInstance();
+            if (instance.IsOwned)
             {
-                TelemetryService.Instance.TrackException(ex);
-                ExceptionHelper.ShowDialog(ex);
-                throw;
+                using var host = CreateHost();
+                host.Start();
+                {
+                    var window = new AppWindow(host.Services, instance);
+                    Application.Run(window);
+                }
+                host.StopAsync().GetAwaiter().GetResult();
             }
+            else
+            {
+                instance.NotifyOwner();
+            }
+        }
+        catch (Exception ex)
+        {
+            TelemetryService.Instance.TrackException(ex);
+            ExceptionHelper.ShowDialog(ex);
+            throw;
         }
     }
 }

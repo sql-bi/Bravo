@@ -1,20 +1,19 @@
-﻿namespace Sqlbi.Bravo.Models.ManageDates
+﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
+
+namespace Sqlbi.Bravo.Models.ManageDates;
+
+public class ApplyConfigurationRequest
 {
-    using System.ComponentModel.DataAnnotations;
-    using System.Text.Json.Serialization;
+    [Required]
+    [JsonPropertyName("report")]
+    public PBIDesktopReport? Report { get; set; }
 
-    public class ApplyConfigurationRequest
-    {
-        [Required]
-        [JsonPropertyName("report")]
-        public PBIDesktopReport? Report { get; set; }
+    [Required]
+    [JsonPropertyName("configuration")]
+    public DateConfiguration? Configuration { get; set; }
+}
 
-        [Required]
-        [JsonPropertyName("configuration")]
-        public DateConfiguration? Configuration { get; set; }
-    }
-
-    public class ValidateConfigurationRequest : ApplyConfigurationRequest
-    {
-    }
+public class ValidateConfigurationRequest : ApplyConfigurationRequest
+{
 }

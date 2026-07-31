@@ -1,165 +1,164 @@
-﻿namespace Sqlbi.Bravo.Infrastructure.Helpers
+﻿using System;
+using System.IO;
+using System.Net.Http;
+using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
+using Sqlbi.Bravo.Infrastructure.Extensions;
+using Sqlbi.Bravo.Infrastructure.Windows.Interop;
+using Sqlbi.Bravo.Models;
+
+namespace Sqlbi.Bravo.Infrastructure.Helpers;
+
+internal static class CommonHelper
 {
-    using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
-    using Sqlbi.Bravo.Infrastructure.Extensions;
-    using Sqlbi.Bravo.Infrastructure.Windows.Interop;
-    using Sqlbi.Bravo.Models;
-    using System;
-    using System.IO;
-    using System.Net.Http;
-    using System.Text.Json;
-    using System.Threading;
-    using System.Threading.Tasks;
-    using System.Windows.Forms;
-
-    internal static class CommonHelper
+    public static string? ChangeUriScheme(string? uriString, string scheme, bool ignorePort = false)
     {
-        public static string? ChangeUriScheme(string? uriString, string scheme, bool ignorePort = false)
+        if (Uri.TryCreate(uriString, UriKind.Absolute, out var uri))
         {
-            if (Uri.TryCreate(uriString, UriKind.Absolute, out var uri))
+            var uriBuilder = new UriBuilder(uri)
             {
-                var uriBuilder = new UriBuilder(uri)
-                {
-                    Scheme = scheme
-                };
-
-                if (ignorePort)
-                {
-                    uriBuilder.Port = -1;
-                }
-                
-                return uriBuilder.Uri.AbsoluteUri;
-            }
-
-            return null;
-        }
-
-        public static User32.KeyState GetKeyState(Keys key)
-        {
-            var state = User32.KeyState.None;
-            {
-                var retval = User32.GetKeyState((int)key);
-
-                if ((retval & 0x8000) == 0x8000)
-                    state |= User32.KeyState.Down;
-
-                if ((retval & 1) == 1)
-                    state |= User32.KeyState.Toggled;
-            }
-            return state;
-        }
-
-        public static bool IsKeyDown(Keys key)
-        {
-            var state = GetKeyState(key);
-
-            return state.HasFlag(User32.KeyState.Down);
-        }
-
-        public static bool AreDirectoryPathsEqual(string path1, string path2)
-        {
-            var normalizedPath1 = NormalizeDirectoryPath(path1);
-            var normalizedPath2 = NormalizeDirectoryPath(path2);
-
-            var equals =  normalizedPath1.EqualsI(normalizedPath2);
-            return equals;
-        }
-
-        public static string NormalizeDirectoryPath(string path)
-        {
-            var normalizedPath = path;
-
-            normalizedPath = normalizedPath.Trim();
-            normalizedPath = Path.TrimEndingDirectorySeparator(normalizedPath);
-            normalizedPath = new DirectoryInfo(normalizedPath).FullName;
-
-            return normalizedPath;
-        }
-
-        public static string NormalizeUriString(string uriString)
-        {
-            var uri = new Uri(uriString, UriKind.Absolute);
-            return uri.AbsoluteUri;
-        }
-
-        public static string? GetFileRelativePath(string relativeTo, string filePath)
-        {
-            var relativePath = Path.GetRelativePath(relativeTo, filePath);
-            var directoryName = Path.GetDirectoryName(relativePath);
-
-            return directoryName;
-        }
-
-        public async static Task<BravoUpdate> CheckForUpdateAsync(UpdateChannelType updateChannel, CancellationToken cancellationToken)
-        {
-            var channelPath = updateChannel switch
-            {
-                UpdateChannelType.Stable => "bravo-public",
-                UpdateChannelType.Dev => "bravo-internal", 
-                _ => throw new BravoUnexpectedInvalidOperationException($"Unhandled { nameof(UpdateChannelType) } value ({ updateChannel })")
+                Scheme = scheme
             };
 
-            using var httpClient = new HttpClient();
-            var requestUri = $"https://bravorelease.blob.core.windows.net/{ channelPath }/currentversion.json?nocache={ DateTimeOffset.Now.ToUnixTimeSeconds() }";
-            var json = await httpClient.GetStringAsync(requestUri, cancellationToken).ConfigureAwait(false);
-
-            AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{nameof(CommonHelper)}.{nameof(CheckForUpdateAsync)}", content: json);
-
-            using var document = JsonDocument.Parse(json);
-            var rootElement = document.RootElement;
-
-            var version = Version.Parse(rootElement.GetProperty("version").GetString()!)
-                .ToString(3); // Versioning is SemVer-based: discard a 4th (build) digit if present
-            var isNewerVersion = Version.Parse(version) > Version.Parse(AppEnvironment.VersionInfo.Version);
-            var downloadUrl = GetDownloadUrl(rootElement.GetProperty("download").GetString()!);
-            var changelogUrl = rootElement.GetProperty("changelog").GetString()!;
-
-            return new BravoUpdate
+            if (ignorePort)
             {
-                UpdateChannel = updateChannel,
-                IsNewerVersion = isNewerVersion,
-                Version = version,
-                DownloadUrl = downloadUrl,
-                ChangelogUrl = changelogUrl,
+                uriBuilder.Port = -1;
+            }
+
+            return uriBuilder.Uri.AbsoluteUri;
+        }
+
+        return null;
+    }
+
+    public static User32.KeyState GetKeyState(Keys key)
+    {
+        var state = User32.KeyState.None;
+        {
+            var retval = User32.GetKeyState((int)key);
+
+            if ((retval & 0x8000) == 0x8000)
+                state |= User32.KeyState.Down;
+
+            if ((retval & 1) == 1)
+                state |= User32.KeyState.Toggled;
+        }
+        return state;
+    }
+
+    public static bool IsKeyDown(Keys key)
+    {
+        var state = GetKeyState(key);
+
+        return state.HasFlag(User32.KeyState.Down);
+    }
+
+    public static bool AreDirectoryPathsEqual(string path1, string path2)
+    {
+        var normalizedPath1 = NormalizeDirectoryPath(path1);
+        var normalizedPath2 = NormalizeDirectoryPath(path2);
+
+        var equals = normalizedPath1.EqualsI(normalizedPath2);
+        return equals;
+    }
+
+    public static string NormalizeDirectoryPath(string path)
+    {
+        var normalizedPath = path;
+
+        normalizedPath = normalizedPath.Trim();
+        normalizedPath = Path.TrimEndingDirectorySeparator(normalizedPath);
+        normalizedPath = new DirectoryInfo(normalizedPath).FullName;
+
+        return normalizedPath;
+    }
+
+    public static string NormalizeUriString(string uriString)
+    {
+        var uri = new Uri(uriString, UriKind.Absolute);
+        return uri.AbsoluteUri;
+    }
+
+    public static string? GetFileRelativePath(string relativeTo, string filePath)
+    {
+        var relativePath = Path.GetRelativePath(relativeTo, filePath);
+        var directoryName = Path.GetDirectoryName(relativePath);
+
+        return directoryName;
+    }
+
+    public async static Task<BravoUpdate> CheckForUpdateAsync(UpdateChannelType updateChannel, CancellationToken cancellationToken)
+    {
+        var channelPath = updateChannel switch
+        {
+            UpdateChannelType.Stable => "bravo-public",
+            UpdateChannelType.Dev => "bravo-internal",
+            _ => throw new BravoUnexpectedInvalidOperationException($"Unhandled {nameof(UpdateChannelType)} value ({updateChannel})")
+        };
+
+        using var httpClient = new HttpClient();
+        var requestUri = $"https://bravorelease.blob.core.windows.net/{channelPath}/currentversion.json?nocache={DateTimeOffset.Now.ToUnixTimeSeconds()}";
+        var json = await httpClient.GetStringAsync(requestUri, cancellationToken).ConfigureAwait(false);
+
+        AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{nameof(CommonHelper)}.{nameof(CheckForUpdateAsync)}", content: json);
+
+        using var document = JsonDocument.Parse(json);
+        var rootElement = document.RootElement;
+
+        var version = Version.Parse(rootElement.GetProperty("version").GetString()!)
+            .ToString(3); // Versioning is SemVer-based: discard a 4th (build) digit if present
+        var isNewerVersion = Version.Parse(version) > Version.Parse(AppEnvironment.VersionInfo.Version);
+        var downloadUrl = GetDownloadUrl(rootElement.GetProperty("download").GetString()!);
+        var changelogUrl = rootElement.GetProperty("changelog").GetString()!;
+
+        return new BravoUpdate
+        {
+            UpdateChannel = updateChannel,
+            IsNewerVersion = isNewerVersion,
+            Version = version,
+            DownloadUrl = downloadUrl,
+            ChangelogUrl = changelogUrl,
+        };
+
+        static string GetDownloadUrl(string downloadUrl)
+        {
+            BravoUnexpectedException.Assert(AppEnvironment.DeploymentMode != AppDeploymentMode.Packaged);
+
+            var downloadUri = new Uri(downloadUrl, UriKind.Absolute);
+            var downloadFileNameWithoutExtension = Path.GetFileNameWithoutExtension(downloadUri.LocalPath);
+            var downloadFileExtension = Path.GetExtension(downloadUri.LocalPath);
+            var downloadFileName = Path.GetFileName(downloadUri.LocalPath);
+
+            if (AppEnvironment.PublishMode == AppPublishMode.FrameworkDependent)
+            {
+                downloadFileNameWithoutExtension += "-frameworkdependent";
+            }
+
+            if (AppEnvironment.DeploymentMode == AppDeploymentMode.PerMachine)
+            {
+                // keep current value
+            }
+            else if (AppEnvironment.DeploymentMode == AppDeploymentMode.PerUser)
+            {
+                downloadFileNameWithoutExtension += "-userinstaller";
+            }
+            else if (AppEnvironment.DeploymentMode == AppDeploymentMode.Portable)
+            {
+                downloadFileNameWithoutExtension += "-portable";
+                downloadFileExtension = ".zip";
+            }
+
+            var newFileName = $"{downloadFileNameWithoutExtension}{downloadFileExtension}";
+            var newPath = downloadUri.LocalPath.Replace(downloadFileName, newFileName);
+            var uriBuilder = new UriBuilder(downloadUri)
+            {
+                Path = newPath
             };
 
-            static string GetDownloadUrl(string downloadUrl)
-            {
-                BravoUnexpectedException.Assert(AppEnvironment.DeploymentMode != AppDeploymentMode.Packaged);
-
-                var downloadUri = new Uri(downloadUrl, UriKind.Absolute);
-                var downloadFileNameWithoutExtension = Path.GetFileNameWithoutExtension(downloadUri.LocalPath);
-                var downloadFileExtension = Path.GetExtension(downloadUri.LocalPath);
-                var downloadFileName = Path.GetFileName(downloadUri.LocalPath);
-
-                if (AppEnvironment.PublishMode == AppPublishMode.FrameworkDependent)
-                {
-                    downloadFileNameWithoutExtension += "-frameworkdependent";
-                }
-
-                if (AppEnvironment.DeploymentMode == AppDeploymentMode.PerMachine)
-                {
-                    // keep current value
-                }
-                else if (AppEnvironment.DeploymentMode == AppDeploymentMode.PerUser)
-                {
-                    downloadFileNameWithoutExtension += "-userinstaller";
-                }
-                else if (AppEnvironment.DeploymentMode == AppDeploymentMode.Portable)
-                {
-                    downloadFileNameWithoutExtension += "-portable";
-                    downloadFileExtension = ".zip";
-                }
-
-                var newFileName = $"{ downloadFileNameWithoutExtension }{ downloadFileExtension }";
-                var newPath = downloadUri.LocalPath.Replace(downloadFileName, newFileName);
-                var uriBuilder = new UriBuilder(downloadUri)
-                {
-                    Path = newPath
-                };
-
-                return uriBuilder.Uri.AbsoluteUri;
-            }
+            return uriBuilder.Uri.AbsoluteUri;
         }
     }
 }

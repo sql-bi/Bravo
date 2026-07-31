@@ -1,7 +1,7 @@
-namespace Sqlbi.Bravo.Infrastructure.Telemetry;
-
-using Microsoft.ApplicationInsights.Channel;
+﻿using Microsoft.ApplicationInsights.Channel;
 using Microsoft.ApplicationInsights.Extensibility;
+
+namespace Sqlbi.Bravo.Infrastructure.Telemetry;
 
 internal sealed class DefaultTelemetryInitializer : ITelemetryInitializer
 {

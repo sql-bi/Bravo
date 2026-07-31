@@ -1,26 +1,33 @@
-﻿namespace Sqlbi.Bravo.Infrastructure
-{
-    using Microsoft.AspNetCore.Http;
-    using Microsoft.Extensions.DependencyInjection;
-    using Microsoft.Extensions.Options;
-    using Microsoft.Web.WebView2.Core;
-    using Microsoft.Web.WebView2.WinForms;
-    using Sqlbi.Bravo.Infrastructure.Configuration;
-    using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
-    using Sqlbi.Bravo.Infrastructure.Extensions;
-    using Sqlbi.Bravo.Infrastructure.Helpers;
-    using Sqlbi.Bravo.Infrastructure.Messages;
-    using Sqlbi.Bravo.Infrastructure.Policies;
-    using Sqlbi.Bravo.Infrastructure.Services;
-    using Sqlbi.Bravo.Infrastructure.Telemetry;
-    using Sqlbi.Bravo.Infrastructure.Windows.Interop;
-    using Sqlbi.Bravo.Models;
-    using System.Drawing;
-    using System.Windows.Forms;
+﻿using System;
+using System.Diagnostics;
+using System.Drawing;
+using System.Globalization;
+using System.IO;
+using System.Text;
+using System.Text.Json;
+using System.Threading;
+using System.Windows.Forms;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+using Microsoft.Web.WebView2.Core;
+using Microsoft.Web.WebView2.WinForms;
+using Sqlbi.Bravo.Infrastructure.Configuration;
+using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
+using Sqlbi.Bravo.Infrastructure.Extensions;
+using Sqlbi.Bravo.Infrastructure.Helpers;
+using Sqlbi.Bravo.Infrastructure.Messages;
+using Sqlbi.Bravo.Infrastructure.Policies;
+using Sqlbi.Bravo.Infrastructure.Services;
+using Sqlbi.Bravo.Infrastructure.Telemetry;
+using Sqlbi.Bravo.Infrastructure.Windows.Interop;
+using Sqlbi.Bravo.Models;
 
-    internal partial class AppWindow : Form
-    {
-        private const string WindowExternalWebMessageCallbackScript = @"
+namespace Sqlbi.Bravo.Infrastructure;
+
+internal partial class AppWindow : Form
+{
+    private const string WindowExternalWebMessageCallbackScript = @"
 window.external = {
     sendMessage: function(message) {
         window.chrome.webview.postMessage(message);
@@ -31,325 +38,324 @@ window.external = {
         });
     }
 };";
-        public static SynchronizationContext? UISynchronizationContext { get; set; }
+    public static SynchronizationContext? UISynchronizationContext { get; set; }
 
-        private readonly AppInstance _instance;
-        private readonly IServerAddressProvider _serverAddressProvider;
-        private readonly IOptions<StartupSettings> _startupSettingsOptionsAccessor;
-        private readonly WebView2ProxyAuthHandler _proxyAuthHandler;
-        private readonly Color _startupThemeColor;
-        private readonly IPolicies _policies;
+    private readonly AppInstance _instance;
+    private readonly IServerAddressProvider _serverAddressProvider;
+    private readonly IOptions<StartupSettings> _startupSettingsOptionsAccessor;
+    private readonly WebView2ProxyAuthHandler _proxyAuthHandler;
+    private readonly Color _startupThemeColor;
+    private readonly IPolicies _policies;
 
-        public AppWindow(IServiceProvider services, AppInstance instance)
+    public AppWindow(IServiceProvider services, AppInstance instance)
+    {
+        _instance = instance;
+        _serverAddressProvider = services.GetRequiredService<IServerAddressProvider>();
+        _startupSettingsOptionsAccessor = services.GetRequiredService<IOptions<StartupSettings>>();
+        _policies = services.GetRequiredService<IPolicies>();
+        _proxyAuthHandler = new WebView2ProxyAuthHandler(WebProxyWrapper.Current);
+        _startupThemeColor = ThemeHelper.ShouldUseDarkMode(UserPreferences.Current.Theme) ? AppEnvironment.ThemeColorDark : AppEnvironment.ThemeColorLight;
+
+        UISynchronizationContext = new WindowsFormsSynchronizationContext();
+        InitializeComponent();
+        InitializeWebViewAsync();
+
+        // How does the window manager decide where to place a newly-created window ? https://devblogs.microsoft.com/oldnewthing/20121126-00/?p=5993
+        StartPosition = FormStartPosition.WindowsDefaultBounds;
+    }
+
+    private WebView2 WebView => webView;
+
+    private async void InitializeWebViewAsync()
+    {
+        //
+        // Feature-detecting to test whether the installed Runtime supports recently added APIs
+        // https://docs.microsoft.com/en-us/microsoft-edge/webview2/concepts/versioning#feature-detecting-to-test-whether-the-installed-runtime-supports-recently-added-apis
+        //
+        // ICoreWebView2_2          - SDK >= 1.0.705.50  - Runtime >= 86.0.616.0
+        // ICoreWebView2_10         - SDK >= 1.0.1150.38 - Runtime >= 99.0.1150.38
+        // ICoreWebView2Settings3   - SDK >= 1.0.864.35  - Runtime >= 91.0.864.35
+        // ICoreWebView2Settings4   - SDK >= 1.0.902.49  - Runtime >= 92.0.902.49
+        // ICoreWebView2Settings5   - SDK >= 1.0.902.49  - Runtime >= 92.0.902.49
+        // ICoreWebView2Settings6   - SDK >= 1.0.992.28  - Runtime >= 94.0.992.31
+        // ICoreWebView2Controller2 - SDK >= 1.0.774.44  - Runtime >= 89.0.774.44
+        //
+        // How to test a specific runtime version:
+        //
+        // - winget (not all versions are available)
+        //   winget show --id=Microsoft.EdgeWebView2Runtime --versions
+        //   winget install --id=Microsoft.EdgeWebView2Runtime --version 95.0.1020.53 --architecture x64
+        // - Download installer from https://www.catalog.update.microsoft.com/Search.aspx?q=WebView2
+        //   uncompress microsoftedgestandaloneinstallerx64_<guid>.exe
+        //   uncompress MicrosoftEdge_X64_<version>.exe.{<guid>}
+        //   create webview environment and pass the folder path in then 'browserExecutableFolder' arguments => .\microsoftedgestandaloneinstallerx64_<guid>\MicrosoftEdge_X64_<version>\MSEDGE\Chrome-bin\<version>
+
+        WebView.Visible = false;
+
+        var options = new CoreWebView2EnvironmentOptions(additionalBrowserArguments: null, language: null, targetCompatibleBrowserVersion: null, allowSingleSignOnUsingOSPrimaryAccount: false);
         {
-            _instance = instance;
-            _serverAddressProvider = services.GetRequiredService<IServerAddressProvider>();
-            _startupSettingsOptionsAccessor = services.GetRequiredService<IOptions<StartupSettings>>();
-            _policies = services.GetRequiredService<IPolicies>();
-            _proxyAuthHandler = new WebView2ProxyAuthHandler(WebProxyWrapper.Current);
-            _startupThemeColor = ThemeHelper.ShouldUseDarkMode(UserPreferences.Current.Theme) ? AppEnvironment.ThemeColorDark : AppEnvironment.ThemeColorLight;
+            /* ICoreWebView2EnvironmentOptions */ options.AdditionalBrowserArguments = WebView2Helper.GetProxyArguments(UserPreferences.Current.Proxy, WebProxyWrapper.Current.DefaultSystemProxy);
 
-            UISynchronizationContext = new WindowsFormsSynchronizationContext();
-            InitializeComponent();
-            InitializeWebViewAsync();
-
-            // How does the window manager decide where to place a newly-created window ? https://devblogs.microsoft.com/oldnewthing/20121126-00/?p=5993
-            StartPosition = FormStartPosition.WindowsDefaultBounds;
+            if (AppEnvironment.IsDiagnosticLevelVerbose)
+                AppEnvironment.AddDiagnostics(DiagnosticMessageType.Text, name: $"{nameof(AppWindow)}.{nameof(InitializeWebViewAsync)}.{nameof(options.AdditionalBrowserArguments)}", content: options.AdditionalBrowserArguments);
         }
-
-        private WebView2 WebView => webView;
-
-        private async void InitializeWebViewAsync()
+        var environment = await CoreWebView2Environment.CreateAsync(browserExecutableFolder: null, userDataFolder: AppEnvironment.ApplicationTempPath, options);
         {
-            //
-            // Feature-detecting to test whether the installed Runtime supports recently added APIs
-            // https://docs.microsoft.com/en-us/microsoft-edge/webview2/concepts/versioning#feature-detecting-to-test-whether-the-installed-runtime-supports-recently-added-apis
-            //
-            // ICoreWebView2_2          - SDK >= 1.0.705.50  - Runtime >= 86.0.616.0
-            // ICoreWebView2_10         - SDK >= 1.0.1150.38 - Runtime >= 99.0.1150.38
-            // ICoreWebView2Settings3   - SDK >= 1.0.864.35  - Runtime >= 91.0.864.35
-            // ICoreWebView2Settings4   - SDK >= 1.0.902.49  - Runtime >= 92.0.902.49
-            // ICoreWebView2Settings5   - SDK >= 1.0.902.49  - Runtime >= 92.0.902.49
-            // ICoreWebView2Settings6   - SDK >= 1.0.992.28  - Runtime >= 94.0.992.31
-            // ICoreWebView2Controller2 - SDK >= 1.0.774.44  - Runtime >= 89.0.774.44
-            //
-            // How to test a specific runtime version:
-            //
-            // - winget (not all versions are available)
-            //   winget show --id=Microsoft.EdgeWebView2Runtime --versions
-            //   winget install --id=Microsoft.EdgeWebView2Runtime --version 95.0.1020.53 --architecture x64
-            // - Download installer from https://www.catalog.update.microsoft.com/Search.aspx?q=WebView2
-            //   uncompress microsoftedgestandaloneinstallerx64_<guid>.exe
-            //   uncompress MicrosoftEdge_X64_<version>.exe.{<guid>}
-            //   create webview environment and pass the folder path in then 'browserExecutableFolder' arguments => .\microsoftedgestandaloneinstallerx64_<guid>\MicrosoftEdge_X64_<version>\MSEDGE\Chrome-bin\<version>
-
-            WebView.Visible = false;
-
-            var options = new CoreWebView2EnvironmentOptions(additionalBrowserArguments: null, language: null, targetCompatibleBrowserVersion: null, allowSingleSignOnUsingOSPrimaryAccount: false);
-            {
-                /* ICoreWebView2EnvironmentOptions */ options.AdditionalBrowserArguments = WebView2Helper.GetProxyArguments(UserPreferences.Current.Proxy, WebProxyWrapper.Current.DefaultSystemProxy);
-                
-                if (AppEnvironment.IsDiagnosticLevelVerbose)
-                    AppEnvironment.AddDiagnostics(DiagnosticMessageType.Text, name: $"{ nameof(AppWindow) }.{ nameof(InitializeWebViewAsync) }.{ nameof(options.AdditionalBrowserArguments) }", content: options.AdditionalBrowserArguments);
-            }
-            var environment = await CoreWebView2Environment.CreateAsync(browserExecutableFolder: null, userDataFolder: AppEnvironment.ApplicationTempPath, options);
-            {
-                //environment.BrowserProcessExited
-            }
-            await WebView.EnsureCoreWebView2Async(environment);
+            //environment.BrowserProcessExited
+        }
+        await WebView.EnsureCoreWebView2Async(environment);
 #if DEBUG
-            var isDebug = true;
+        var isDebug = true;
 #else
-            var isDebug = false;
+        var isDebug = false;
 #endif
-            /* ICoreWebView2Controller2 */ WebView2Helper.TryAndIgnoreUnsupportedError(() => WebView.DefaultBackgroundColor = _startupThemeColor);
-            /* ICoreWebView2Controller4 */ // WebView2Helper.TryAndIgnoreUnsupportedError(() => WebView.AllowExternalDrop = true); // Commented out because the default value is true
-            /* ICoreWebView2Settings3   */ WebView2Helper.TryAndIgnoreUnsupportedError(() => WebView.CoreWebView2.Settings.AreBrowserAcceleratorKeysEnabled = isDebug);
-            /* ICoreWebView2Settings    */ WebView.CoreWebView2.Settings.AreDefaultScriptDialogsEnabled = isDebug;
-            /* ICoreWebView2Settings    */ WebView.CoreWebView2.Settings.AreDefaultContextMenusEnabled = isDebug;
-            /* ICoreWebView2Settings    */ WebView.CoreWebView2.Settings.AreDevToolsEnabled = isDebug;
-            /* ICoreWebView2Settings    */ WebView.CoreWebView2.Settings.AreHostObjectsAllowed = false;
-            /* ICoreWebView2Settings    */ WebView.CoreWebView2.Settings.IsWebMessageEnabled = true;
-            /* ICoreWebView2Settings    */ WebView.CoreWebView2.Settings.IsScriptEnabled = true;
-            /* ICoreWebView2Settings    */ WebView.CoreWebView2.Settings.IsStatusBarEnabled = false;
-            /* ICoreWebView2Settings4   */ WebView2Helper.TryAndIgnoreUnsupportedError(() => WebView.CoreWebView2.Settings.IsPasswordAutosaveEnabled = false);
-            /* ICoreWebView2Settings4   */ WebView2Helper.TryAndIgnoreUnsupportedError(() => WebView.CoreWebView2.Settings.IsGeneralAutofillEnabled = false);
-            /* ICoreWebView2Settings5   */ WebView2Helper.TryAndIgnoreUnsupportedError(() => WebView.CoreWebView2.Settings.IsPinchZoomEnabled = false);
-            /* ICoreWebView2Settings6   */ WebView2Helper.TryAndIgnoreUnsupportedError(() => WebView.CoreWebView2.Settings.IsSwipeNavigationEnabled = false);
+        /* ICoreWebView2Controller2 */ WebView2Helper.TryAndIgnoreUnsupportedError(() => WebView.DefaultBackgroundColor = _startupThemeColor);
+        /* ICoreWebView2Controller4 */ // WebView2Helper.TryAndIgnoreUnsupportedError(() => WebView.AllowExternalDrop = true); // Commented out because the default value is true
+        /* ICoreWebView2Settings3   */ WebView2Helper.TryAndIgnoreUnsupportedError(() => WebView.CoreWebView2.Settings.AreBrowserAcceleratorKeysEnabled = isDebug);
+        /* ICoreWebView2Settings    */ WebView.CoreWebView2.Settings.AreDefaultScriptDialogsEnabled = isDebug;
+        /* ICoreWebView2Settings    */ WebView.CoreWebView2.Settings.AreDefaultContextMenusEnabled = isDebug;
+        /* ICoreWebView2Settings    */ WebView.CoreWebView2.Settings.AreDevToolsEnabled = isDebug;
+        /* ICoreWebView2Settings    */ WebView.CoreWebView2.Settings.AreHostObjectsAllowed = false;
+        /* ICoreWebView2Settings    */ WebView.CoreWebView2.Settings.IsWebMessageEnabled = true;
+        /* ICoreWebView2Settings    */ WebView.CoreWebView2.Settings.IsScriptEnabled = true;
+        /* ICoreWebView2Settings    */ WebView.CoreWebView2.Settings.IsStatusBarEnabled = false;
+        /* ICoreWebView2Settings4   */ WebView2Helper.TryAndIgnoreUnsupportedError(() => WebView.CoreWebView2.Settings.IsPasswordAutosaveEnabled = false);
+        /* ICoreWebView2Settings4   */ WebView2Helper.TryAndIgnoreUnsupportedError(() => WebView.CoreWebView2.Settings.IsGeneralAutofillEnabled = false);
+        /* ICoreWebView2Settings5   */ WebView2Helper.TryAndIgnoreUnsupportedError(() => WebView.CoreWebView2.Settings.IsPinchZoomEnabled = false);
+        /* ICoreWebView2Settings6   */ WebView2Helper.TryAndIgnoreUnsupportedError(() => WebView.CoreWebView2.Settings.IsSwipeNavigationEnabled = false);
 
-            //WebView.CoreWebView2.OpenDevToolsWindow();
-            //WebView.CoreWebView2.OpenTaskManagerWindow();
-            //WebView.CoreWebView2.NavigationStarting += OnWebViewNavigationStarting;
-            //WebView.CoreWebView2.NavigationCompleted += OnWebViewNavigationCompleted;
-            //WebView.CoreWebView2.ContentLoading += OnWebViewContentLoading;
-            //WebView.CoreWebView2.WebMessageReceived += OnWebViewWebWebMessageReceived;
-            //WebView.CoreWebView2.WebResourceResponseReceived += OnWebViewWebResourceResponseReceived;
+        //WebView.CoreWebView2.OpenDevToolsWindow();
+        //WebView.CoreWebView2.OpenTaskManagerWindow();
+        //WebView.CoreWebView2.NavigationStarting += OnWebViewNavigationStarting;
+        //WebView.CoreWebView2.NavigationCompleted += OnWebViewNavigationCompleted;
+        //WebView.CoreWebView2.ContentLoading += OnWebViewContentLoading;
+        //WebView.CoreWebView2.WebMessageReceived += OnWebViewWebWebMessageReceived;
+        //WebView.CoreWebView2.WebResourceResponseReceived += OnWebViewWebResourceResponseReceived;
 
-            /* ICoreWebView2_2  */ WebView.CoreWebView2.DOMContentLoaded += OnWebViewDOMContentLoaded;
-            /* ICoreWebView2    */ WebView.CoreWebView2.WebResourceRequested += OnWebViewWebResourceRequested;
-            /* ICoreWebView2    */ WebView.CoreWebView2.PermissionRequested += OnWebViewPermissionRequested;
-            /* ICoreWebView2_10 */ WebView2Helper.TryAndIgnoreUnsupportedError(() => WebView.CoreWebView2.BasicAuthenticationRequested += OnWebViewBasicAuthenticationRequested);
+        /* ICoreWebView2_2  */ WebView.CoreWebView2.DOMContentLoaded += OnWebViewDOMContentLoaded;
+        /* ICoreWebView2    */ WebView.CoreWebView2.WebResourceRequested += OnWebViewWebResourceRequested;
+        /* ICoreWebView2    */ WebView.CoreWebView2.PermissionRequested += OnWebViewPermissionRequested;
+        /* ICoreWebView2_10 */ WebView2Helper.TryAndIgnoreUnsupportedError(() => WebView.CoreWebView2.BasicAuthenticationRequested += OnWebViewBasicAuthenticationRequested);
 
-            /* ICoreWebView2    */ await WebView.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(WindowExternalWebMessageCallbackScript);
-            /* ICoreWebView2    */ WebView.CoreWebView2.AddWebResourceRequestedFilter("*", CoreWebView2WebResourceContext.All);
-            // Use a virtual host name to serve local content over HTTPS, avoiding 'file:' URL security origin restrictions.
-            // The '.example' TLD is reserved by RFC 6761 and guaranteed never to be registered, preventing domain collisions.
-            /* ICoreWebView2_3  */ WebView.CoreWebView2.SetVirtualHostNameToFolderMapping("bravo.example", "wwwroot", CoreWebView2HostResourceAccessKind.Allow);
-            /* ICoreWebView2    */ WebView.CoreWebView2.Navigate("https://bravo.example/index.html");
+        /* ICoreWebView2    */ await WebView.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(WindowExternalWebMessageCallbackScript);
+        /* ICoreWebView2    */ WebView.CoreWebView2.AddWebResourceRequestedFilter("*", CoreWebView2WebResourceContext.All);
+        // Use a virtual host name to serve local content over HTTPS, avoiding 'file:' URL security origin restrictions.
+        // The '.example' TLD is reserved by RFC 6761 and guaranteed never to be registered, preventing domain collisions.
+        /* ICoreWebView2_3  */ WebView.CoreWebView2.SetVirtualHostNameToFolderMapping("bravo.example", "wwwroot", CoreWebView2HostResourceAccessKind.Allow);
+        /* ICoreWebView2    */ WebView.CoreWebView2.Navigate("https://bravo.example/index.html");
 
-            // TODO: Consider allowing users to open DevTools for troubleshooting (e.g. by pressing F12 or via a context menu)
+        // TODO: Consider allowing users to open DevTools for troubleshooting (e.g. by pressing F12 or via a context menu)
+    }
+
+    protected override void WndProc(ref Message message)
+    {
+        switch (message.Msg)
+        {
+            // Form.StyleChanged event detects all theme change except for Aero color changes
+            // The Aero color change triggers the WM_DWMCOLORIZATIONCOLORCHANGED message
+            case (int)WindowMessage.WM_DWMCOLORIZATIONCOLORCHANGED:
+            case (int)WindowMessage.WM_DWMCOMPOSITIONCHANGED:
+            case (int)WindowMessage.WM_THEMECHANGED:
+                if (UserPreferences.Current.Theme == ThemeType.Auto)
+                {
+                    ThemeHelper.ChangeTheme(message.HWnd, ThemeType.Auto);
+                }
+                break;
         }
 
-        protected override void WndProc(ref Message message)
+        base.WndProc(ref message);
+    }
+
+    private void OnFormLoad(object? sender, EventArgs e)
+    {
+        ThemeHelper.InitializeTheme(Handle, UserPreferences.Current.Theme);
+
+        var titleVersionHidden = Microsoft.Win32.Registry.CurrentUser.GetBoolValue(subkeyName: AppEnvironment.ApplicationRegistryKeyName, valueName: AppEnvironment.ApplicationRegistryApplicationTitleVersionHiddenValue);
+
+        Text = titleVersionHidden ? AppEnvironment.ApplicationMainWindowTitle : AppEnvironment.ApplicationMainWindowTitle.AppendApplicationVersion();
+        BackgroundImageLayout = ImageLayout.Center;
+        BackColor = _startupThemeColor;
+
+        CenterToScreen();
+
+        _instance.OnNewInstance += OnNewInstanceRestoreFormWindowToForeground;
+    }
+
+    private void OnFormClosed(object? sender, FormClosedEventArgs e)
+    {
+        _instance.OnNewInstance -= OnNewInstanceRestoreFormWindowToForeground;
+        _instance.OnNewInstance -= OnNewInstanceSendStartupWebMessage;
+    }
+
+    private void OnWebViewDOMContentLoaded(object? sender, CoreWebView2DOMContentLoadedEventArgs e)
+    {
+        WebViewLog(message: $"::OnWebViewDOMContentLoaded({e.NavigationId})");
+
+        if (WebView.Visible == false)
         {
-            switch (message.Msg)
+            WebView.Visible = true;
+            BackgroundImage = null;
+            SendAppStartupWebMessage();
+
+            _instance.OnNewInstance += OnNewInstanceSendStartupWebMessage;
+        }
+    }
+
+    private void OnWebViewPermissionRequested(object? sender, CoreWebView2PermissionRequestedEventArgs e)
+    {
+        WebViewLog(message: $"::OnWebViewPermissionRequested({e.PermissionKind}|{e.State})");
+
+        if (e.PermissionKind == CoreWebView2PermissionKind.ClipboardRead)
+            e.State = CoreWebView2PermissionState.Allow;
+    }
+
+    private void OnWebViewBasicAuthenticationRequested(object? sender, CoreWebView2BasicAuthenticationRequestedEventArgs e)
+    {
+        if (_proxyAuthHandler.TryHandle(e))
+            return;
+
+        // Proxy authentication not handled (untrusted proxy or credentials unavailable).
+        // Do not cancel the request — allow WebView's native auth dialog so the user can provide or deny credentials.
+        e.Cancel = false;
+
+        //var deferral = e.GetDeferral();
+
+        //SynchronizationContext.Current?.Post((_) =>
+        //{
+        //    using (deferral)
+        //    {
+        //        var credentialOptions = new CredentialDialogOptions(caption: "Authentication request", message: $"Authentication request from { e.Uri }\r\nChallenge: { e.Challenge }")
+        //        {
+        //            HwndParent = Handle
+        //        };
+
+        //        var credential = CredentialDialog.PromptForCredentials(credentialOptions);
+        //        if (credential is not null)
+        //        {
+        //            e.Response.UserName = credential.UserName;
+        //            e.Response.Password = credential.Password;
+        //        }
+        //        else
+        //        {
+        //            e.Cancel = true;
+        //        }
+        //    }
+        //}, state: null);
+    }
+
+    private void OnWebViewNavigationStarting(object? sender, CoreWebView2NavigationStartingEventArgs e)
+    {
+        WebViewLog(message: $"::OnWebViewNavigationStarting({e.NavigationId}|{e.Uri})");
+    }
+
+    private void OnWebViewNavigationCompleted(object? sender, CoreWebView2NavigationCompletedEventArgs e)
+    {
+        WebViewLog(message: $"::OnWebViewNavigationCompleted({e.NavigationId}|{e.IsSuccess}|{e.WebErrorStatus})");
+    }
+
+    private void OnWebViewContentLoading(object? sender, CoreWebView2ContentLoadingEventArgs e)
+    {
+        WebViewLog(message: $"::OnWebViewContentLoading({e.NavigationId}|{e.IsErrorPage})");
+    }
+
+    private void OnWebViewWebResourceRequested(object? sender, CoreWebView2WebResourceRequestedEventArgs e)
+    {
+        //WebViewLog(message: $"::OnWebViewWebResourceRequested({ e.ResourceContext }|{ e.Request.Uri })");
+
+        if (e.ResourceContext == CoreWebView2WebResourceContext.Script && e.Request.Uri.EqualsI("app://config.js"))
+        {
+            var content = GetConfigJs();
+            e.Response = WebView.CoreWebView2.Environment.CreateWebResourceResponse(content, StatusCodes.Status200OK, "OK", "Content-Type: text/javascript");
+        }
+    }
+
+    private void OnWebViewWebWebMessageReceived(object? sender, CoreWebView2WebMessageReceivedEventArgs e)
+    {
+        var messageString = e.TryGetWebMessageAsString();
+
+        WebViewLog(message: $"::OnWebViewWebWebMessageReceived({e.Source}|{messageString})");
+    }
+
+    private void OnWebViewWebResourceResponseReceived(object? sender, CoreWebView2WebResourceResponseReceivedEventArgs e)
+    {
+        WebViewLog(message: $"::OnWebViewWebResourceResponseReceived({e.Response.StatusCode}{e.Response.ReasonPhrase}|{e.Request.Uri})");
+    }
+
+    private void OnNewInstanceRestoreFormWindowToForeground(object? sender, AppInstanceStartupEventArgs _)
+    {
+        ProcessHelper.InvokeOnUIThread(this, () =>
+        {
+            if (WindowState == FormWindowState.Minimized)
             {
-                // Form.StyleChanged event detects all theme change except for Aero color changes
-                // The Aero color change triggers the WM_DWMCOLORIZATIONCOLORCHANGED message
-                case (int)WindowMessage.WM_DWMCOLORIZATIONCOLORCHANGED:
-                case (int)WindowMessage.WM_DWMCOMPOSITIONCHANGED:
-                case (int)WindowMessage.WM_THEMECHANGED:
-                    if (UserPreferences.Current.Theme == ThemeType.Auto)
-                    {
-                        ThemeHelper.ChangeTheme(message.HWnd, ThemeType.Auto);
-                    }
-                    break;
+                User32.ShowWindow(Handle, User32.SW_RESTORE);
             }
 
-            base.WndProc(ref message);
-        }
+            User32.SetForegroundWindow(Handle);
+        });
+    }
 
-        private void OnFormLoad(object? sender, EventArgs e)
-        {
-            ThemeHelper.InitializeTheme(Handle, UserPreferences.Current.Theme);
-
-            var titleVersionHidden = Microsoft.Win32.Registry.CurrentUser.GetBoolValue(subkeyName: AppEnvironment.ApplicationRegistryKeyName, valueName: AppEnvironment.ApplicationRegistryApplicationTitleVersionHiddenValue);
-
-            Text = titleVersionHidden ? AppEnvironment.ApplicationMainWindowTitle : AppEnvironment.ApplicationMainWindowTitle.AppendApplicationVersion();
-            BackgroundImageLayout = ImageLayout.Center;
-            BackColor = _startupThemeColor;
-
-            CenterToScreen();
-
-            _instance.OnNewInstance += OnNewInstanceRestoreFormWindowToForeground;
-        }
-
-        private void OnFormClosed(object? sender, FormClosedEventArgs e)
-        {
-            _instance.OnNewInstance -= OnNewInstanceRestoreFormWindowToForeground;
-            _instance.OnNewInstance -= OnNewInstanceSendStartupWebMessage;
-        }
-
-        private void OnWebViewDOMContentLoaded(object? sender, CoreWebView2DOMContentLoadedEventArgs e)
-        {
-            WebViewLog(message: $"::OnWebViewDOMContentLoaded({ e.NavigationId })");
-
-            if (WebView.Visible == false)
-            {
-                WebView.Visible = true;
-                BackgroundImage = null;
-                SendAppStartupWebMessage();
-
-                _instance.OnNewInstance += OnNewInstanceSendStartupWebMessage;
-            }
-        }
-
-        private void OnWebViewPermissionRequested(object? sender, CoreWebView2PermissionRequestedEventArgs e)
-        {
-            WebViewLog(message: $"::OnWebViewPermissionRequested({ e.PermissionKind }|{ e.State })");
-
-            if (e.PermissionKind == CoreWebView2PermissionKind.ClipboardRead)
-                e.State = CoreWebView2PermissionState.Allow;
-        }
-
-        private void OnWebViewBasicAuthenticationRequested(object? sender, CoreWebView2BasicAuthenticationRequestedEventArgs e)
-        {
-            if (_proxyAuthHandler.TryHandle(e))
-                return;
-
-            // Proxy authentication not handled (untrusted proxy or credentials unavailable).
-            // Do not cancel the request — allow WebView's native auth dialog so the user can provide or deny credentials.
-            e.Cancel = false;
-
-            //var deferral = e.GetDeferral();
-
-            //SynchronizationContext.Current?.Post((_) =>
-            //{
-            //    using (deferral)
-            //    {
-            //        var credentialOptions = new CredentialDialogOptions(caption: "Authentication request", message: $"Authentication request from { e.Uri }\r\nChallenge: { e.Challenge }")
-            //        {
-            //            HwndParent = Handle
-            //        };
-
-            //        var credential = CredentialDialog.PromptForCredentials(credentialOptions);
-            //        if (credential is not null)
-            //        {
-            //            e.Response.UserName = credential.UserName;
-            //            e.Response.Password = credential.Password;
-            //        }
-            //        else
-            //        {
-            //            e.Cancel = true;
-            //        }
-            //    }
-            //}, state: null);
-        }
-
-        private void OnWebViewNavigationStarting(object? sender, CoreWebView2NavigationStartingEventArgs e)
-        {
-            WebViewLog(message: $"::OnWebViewNavigationStarting({ e.NavigationId }|{ e.Uri })");
-        }
-
-        private void OnWebViewNavigationCompleted(object? sender, CoreWebView2NavigationCompletedEventArgs e)
-        {
-            WebViewLog(message: $"::OnWebViewNavigationCompleted({ e.NavigationId }|{ e.IsSuccess }|{ e.WebErrorStatus })");
-        }
-
-        private void OnWebViewContentLoading(object? sender, CoreWebView2ContentLoadingEventArgs e)
-        {
-            WebViewLog(message: $"::OnWebViewContentLoading({ e.NavigationId }|{ e.IsErrorPage })");
-        }
-
-        private void OnWebViewWebResourceRequested(object? sender, CoreWebView2WebResourceRequestedEventArgs e)
-        {
-            //WebViewLog(message: $"::OnWebViewWebResourceRequested({ e.ResourceContext }|{ e.Request.Uri })");
-
-            if (e.ResourceContext == CoreWebView2WebResourceContext.Script && e.Request.Uri.EqualsI("app://config.js"))
-            {
-                var content = GetConfigJs();
-                e.Response = WebView.CoreWebView2.Environment.CreateWebResourceResponse(content, StatusCodes.Status200OK, "OK", "Content-Type: text/javascript");
-            }
-        }
-
-        private void OnWebViewWebWebMessageReceived(object? sender, CoreWebView2WebMessageReceivedEventArgs e)
-        {
-            var messageString = e.TryGetWebMessageAsString();
-
-            WebViewLog(message: $"::OnWebViewWebWebMessageReceived({ e.Source }|{ messageString })");
-        }
-
-        private void OnWebViewWebResourceResponseReceived(object? sender, CoreWebView2WebResourceResponseReceivedEventArgs e)
-        {
-            WebViewLog(message: $"::OnWebViewWebResourceResponseReceived({ e.Response.StatusCode }{ e.Response.ReasonPhrase }|{ e.Request.Uri })");
-        }
-
-        private void OnNewInstanceRestoreFormWindowToForeground(object? sender, AppInstanceStartupEventArgs _)
+    private void OnNewInstanceSendStartupWebMessage(object? sender, AppInstanceStartupEventArgs e)
+    {
+        if (e.Message?.IsEmpty == false)
         {
             ProcessHelper.InvokeOnUIThread(this, () =>
             {
-                if (WindowState == FormWindowState.Minimized)
-                {
-                    User32.ShowWindow(Handle, User32.SW_RESTORE);
-                }
-
-                User32.SetForegroundWindow(Handle);
+                var webMessageString = e.Message.ToWebMessageString();
+                WebView.CoreWebView2.PostWebMessageAsString(webMessageString);
             });
         }
+    }
 
-        private void OnNewInstanceSendStartupWebMessage(object? sender, AppInstanceStartupEventArgs e)
+    private MemoryStream GetConfigJs()
+    {
+        var config = new
         {
-            if (e.Message?.IsEmpty == false)
-            {
-                ProcessHelper.InvokeOnUIThread(this, () =>
-                {
-                    var webMessageString = e.Message.ToWebMessageString();
-                    WebView.CoreWebView2.PostWebMessageAsString(webMessageString);
-                });
-            }
-        }
-
-        private MemoryStream GetConfigJs()
-        {
-            var config = new
-            {
 #if DEBUG
-                debug = true,
+            debug = true,
 #endif
-                address = _serverAddressProvider.GetListeningAddress(),
-                token = AppEnvironment.ApiAuthenticationToken,
-                version = AppEnvironment.VersionInfo.Version,
-                options = BravoOptions.CreateFromUserPreferences(),
-                policies = _policies,
-                culture = new
-                {
-                    ietfLanguageTag = CultureInfo.CurrentCulture.IetfLanguageTag,
-                    twoLetterISOLanguageName = CultureInfo.CurrentCulture.TwoLetterISOLanguageName
-                },
-                telemetry = new
-                {
-                    connectionString = TelemetrySessionInfo.ConnectionString,
-                    contextComponentVersion = TelemetrySessionInfo.ComponentVersion,
-                    contextSessionId = TelemetrySessionInfo.SessionId,
-                    contextUserId = TelemetrySessionInfo.UserId,
-                    globalProperties = TelemetrySessionInfo.GlobalProperties
-                },
-            };
-
-            var script = $@"var CONFIG = { JsonSerializer.Serialize(config, options: new JsonSerializerOptions(JsonSerializerDefaults.Web)) };";
-
-            return new MemoryStream(Encoding.UTF8.GetBytes(script));
-        }
-
-        private void SendAppStartupWebMessage()
-        {
-            var startupSettings = _startupSettingsOptionsAccessor.Value;
-            if (!startupSettings.IsEmpty)
+            address = _serverAddressProvider.GetListeningAddress(),
+            token = AppEnvironment.ApiAuthenticationToken,
+            version = AppEnvironment.VersionInfo.Version,
+            options = BravoOptions.CreateFromUserPreferences(),
+            policies = _policies,
+            culture = new
             {
-                var startupMessage = AppInstanceStartupMessage.CreateFrom(startupSettings);
-                var startupMessageString = startupMessage.ToWebMessageString();
+                ietfLanguageTag = CultureInfo.CurrentCulture.IetfLanguageTag,
+                twoLetterISOLanguageName = CultureInfo.CurrentCulture.TwoLetterISOLanguageName
+            },
+            telemetry = new
+            {
+                connectionString = TelemetrySessionInfo.ConnectionString,
+                contextComponentVersion = TelemetrySessionInfo.ComponentVersion,
+                contextSessionId = TelemetrySessionInfo.SessionId,
+                contextUserId = TelemetrySessionInfo.UserId,
+                globalProperties = TelemetrySessionInfo.GlobalProperties
+            },
+        };
 
-                WebView.CoreWebView2.PostWebMessageAsString(startupMessageString);
-            }
-        }
+        var script = $@"var CONFIG = {JsonSerializer.Serialize(config, options: new JsonSerializerOptions(JsonSerializerDefaults.Web))};";
 
-        [Conditional("DEBUG")]
-        private void WebViewLog(string message)
+        return new MemoryStream(Encoding.UTF8.GetBytes(script));
+    }
+
+    private void SendAppStartupWebMessage()
+    {
+        var startupSettings = _startupSettingsOptionsAccessor.Value;
+        if (!startupSettings.IsEmpty)
         {
-            WebView.CoreWebView2.ExecuteScriptAsync($"console.log('[WEBVIEW]{ message }');");
+            var startupMessage = AppInstanceStartupMessage.CreateFrom(startupSettings);
+            var startupMessageString = startupMessage.ToWebMessageString();
 
-            //if (AppEnvironment.IsDiagnosticLevelVerbose)
-            //    AppEnvironment.AddDiagnostics(DiagnosticMessageType.Text, name: $"{ nameof(AppWindow) }.{ nameof(WebView2) }", content: message);
+            WebView.CoreWebView2.PostWebMessageAsString(startupMessageString);
         }
+    }
+
+    [Conditional("DEBUG")]
+    private void WebViewLog(string message)
+    {
+        WebView.CoreWebView2.ExecuteScriptAsync($"console.log('[WEBVIEW]{message}');");
+
+        //if (AppEnvironment.IsDiagnosticLevelVerbose)
+        //    AppEnvironment.AddDiagnostics(DiagnosticMessageType.Text, name: $"{ nameof(AppWindow) }.{ nameof(WebView2) }", content: message);
     }
 }
