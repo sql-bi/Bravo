@@ -12,6 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.WinForms;
+using Sqlbi.Bravo.Host;
 using Sqlbi.Bravo.Infrastructure.Configuration;
 using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
 using Sqlbi.Bravo.Infrastructure.Extensions;
@@ -40,14 +41,14 @@ window.external = {
 };";
     public static SynchronizationContext? UISynchronizationContext { get; set; }
 
-    private readonly AppInstance _instance;
+    private readonly BravoApplicationInstance _instance;
     private readonly IServerAddressProvider _serverAddressProvider;
     private readonly IOptions<StartupSettings> _startupSettingsOptionsAccessor;
     private readonly WebView2ProxyAuthHandler _proxyAuthHandler;
     private readonly Color _startupThemeColor;
     private readonly IPolicies _policies;
 
-    public AppWindow(IServiceProvider services, AppInstance instance)
+    public AppWindow(IServiceProvider services, BravoApplicationInstance instance)
     {
         _instance = instance;
         _serverAddressProvider = services.GetRequiredService<IServerAddressProvider>();
@@ -178,13 +179,13 @@ window.external = {
 
         CenterToScreen();
 
-        _instance.OnNewInstance += OnNewInstanceRestoreFormWindowToForeground;
+        _instance.ActivationRequested += OnActivationRequestedRestoreWindowToForeground;
     }
 
     private void OnFormClosed(object? sender, FormClosedEventArgs e)
     {
-        _instance.OnNewInstance -= OnNewInstanceRestoreFormWindowToForeground;
-        _instance.OnNewInstance -= OnNewInstanceSendStartupWebMessage;
+        _instance.ActivationRequested -= OnActivationRequestedRestoreWindowToForeground;
+        _instance.ActivationRequested -= OnActivationRequestedSendStartupWebMessage;
     }
 
     private void OnWebViewDOMContentLoaded(object? sender, CoreWebView2DOMContentLoadedEventArgs e)
@@ -197,7 +198,7 @@ window.external = {
             BackgroundImage = null;
             SendAppStartupWebMessage();
 
-            _instance.OnNewInstance += OnNewInstanceSendStartupWebMessage;
+            _instance.ActivationRequested += OnActivationRequestedSendStartupWebMessage;
         }
     }
 
@@ -281,7 +282,7 @@ window.external = {
         WebViewLog(message: $"::OnWebViewWebResourceResponseReceived({e.Response.StatusCode}{e.Response.ReasonPhrase}|{e.Request.Uri})");
     }
 
-    private void OnNewInstanceRestoreFormWindowToForeground(object? sender, AppInstanceStartupEventArgs _)
+    private void OnActivationRequestedRestoreWindowToForeground(object? sender, ActivationRequestedEventArgs _)
     {
         ProcessHelper.InvokeOnUIThread(this, () =>
         {
@@ -294,13 +295,13 @@ window.external = {
         });
     }
 
-    private void OnNewInstanceSendStartupWebMessage(object? sender, AppInstanceStartupEventArgs e)
+    private void OnActivationRequestedSendStartupWebMessage(object? sender, ActivationRequestedEventArgs e)
     {
-        if (e.Message?.IsEmpty == false)
+        if (e.StartupMessage?.IsEmpty == false)
         {
             ProcessHelper.InvokeOnUIThread(this, () =>
             {
-                var webMessageString = e.Message.ToWebMessageString();
+                var webMessageString = e.StartupMessage.ToWebMessageString();
                 WebView.CoreWebView2.PostWebMessageAsString(webMessageString);
             });
         }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Windows.Forms;
 using Microsoft.Extensions.Hosting;
+using Sqlbi.Bravo.Host;
 using Sqlbi.Bravo.Infrastructure;
 using Sqlbi.Bravo.Infrastructure.Configuration;
 using Sqlbi.Bravo.Infrastructure.Helpers;
@@ -17,21 +18,20 @@ internal partial class Program
         {
             StartupConfiguration.Configure();
 
-            using var instance = new AppInstance();
-            if (instance.IsOwned)
+            using var instance = BravoApplicationInstance.Create();
+            if (!instance.IsPrimary)
             {
-                using var host = CreateHost();
-                host.Start();
-                {
-                    var window = new AppWindow(host.Services, instance);
-                    Application.Run(window);
-                }
-                host.StopAsync().GetAwaiter().GetResult();
+                instance.RequestActivation();
+                return;
             }
-            else
+
+            using var host = CreateHost();
+            host.Start();
             {
-                instance.NotifyOwner();
+                var window = new AppWindow(host.Services, instance);
+                Application.Run(window);
             }
+            host.StopAsync().GetAwaiter().GetResult();
         }
         catch (Exception ex)
         {
