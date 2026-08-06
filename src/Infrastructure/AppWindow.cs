@@ -8,7 +8,6 @@ using System.Text.Json;
 using System.Threading;
 using System.Windows.Forms;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.WinForms;
@@ -41,19 +40,23 @@ window.external = {
 };";
     public static SynchronizationContext? UISynchronizationContext { get; set; }
 
-    private readonly BravoApplicationInstance _instance;
+    private readonly IInstanceActivationEvents _instanceActivationEvents;
     private readonly IServerAddressProvider _serverAddressProvider;
     private readonly IOptions<StartupSettings> _startupSettingsOptionsAccessor;
     private readonly WebView2ProxyAuthHandler _proxyAuthHandler;
     private readonly Color _startupThemeColor;
     private readonly IPolicies _policies;
 
-    public AppWindow(IServiceProvider services, BravoApplicationInstance instance)
+    public AppWindow(
+        IInstanceActivationEvents instanceActivationEvents,
+        IServerAddressProvider serverAddressProvider,
+        IOptions<StartupSettings> startupSettingsOptionsAccessor,
+        IPolicies policies)
     {
-        _instance = instance;
-        _serverAddressProvider = services.GetRequiredService<IServerAddressProvider>();
-        _startupSettingsOptionsAccessor = services.GetRequiredService<IOptions<StartupSettings>>();
-        _policies = services.GetRequiredService<IPolicies>();
+        _instanceActivationEvents = instanceActivationEvents;
+        _serverAddressProvider = serverAddressProvider;
+        _startupSettingsOptionsAccessor = startupSettingsOptionsAccessor;
+        _policies = policies;
         _proxyAuthHandler = new WebView2ProxyAuthHandler(WebProxyWrapper.Current);
         _startupThemeColor = ThemeHelper.ShouldUseDarkMode(UserPreferences.Current.Theme) ? AppEnvironment.ThemeColorDark : AppEnvironment.ThemeColorLight;
 
@@ -179,13 +182,13 @@ window.external = {
 
         CenterToScreen();
 
-        _instance.ActivationRequested += OnActivationRequestedRestoreWindowToForeground;
+        _instanceActivationEvents.ActivationRequested += OnActivationRequestedRestoreWindowToForeground;
     }
 
     private void OnFormClosed(object? sender, FormClosedEventArgs e)
     {
-        _instance.ActivationRequested -= OnActivationRequestedRestoreWindowToForeground;
-        _instance.ActivationRequested -= OnActivationRequestedSendStartupWebMessage;
+        _instanceActivationEvents.ActivationRequested -= OnActivationRequestedRestoreWindowToForeground;
+        _instanceActivationEvents.ActivationRequested -= OnActivationRequestedSendStartupWebMessage;
     }
 
     private void OnWebViewDOMContentLoaded(object? sender, CoreWebView2DOMContentLoadedEventArgs e)
@@ -198,7 +201,7 @@ window.external = {
             BackgroundImage = null;
             SendAppStartupWebMessage();
 
-            _instance.ActivationRequested += OnActivationRequestedSendStartupWebMessage;
+            _instanceActivationEvents.ActivationRequested += OnActivationRequestedSendStartupWebMessage;
         }
     }
 
@@ -282,7 +285,7 @@ window.external = {
         WebViewLog(message: $"::OnWebViewWebResourceResponseReceived({e.Response.StatusCode}{e.Response.ReasonPhrase}|{e.Request.Uri})");
     }
 
-    private void OnActivationRequestedRestoreWindowToForeground(object? sender, ActivationRequestedEventArgs _)
+    private void OnActivationRequestedRestoreWindowToForeground(object? sender, InstanceActivationRequestedEventArgs _)
     {
         ProcessHelper.InvokeOnUIThread(this, () =>
         {
@@ -295,7 +298,7 @@ window.external = {
         });
     }
 
-    private void OnActivationRequestedSendStartupWebMessage(object? sender, ActivationRequestedEventArgs e)
+    private void OnActivationRequestedSendStartupWebMessage(object? sender, InstanceActivationRequestedEventArgs e)
     {
         if (e.StartupMessage?.IsEmpty == false)
         {

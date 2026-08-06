@@ -1,37 +1,31 @@
 ﻿using System;
-using System.Windows.Forms;
-using Microsoft.Extensions.Hosting;
 using Sqlbi.Bravo.Host;
-using Sqlbi.Bravo.Infrastructure;
-using Sqlbi.Bravo.Infrastructure.Configuration;
 using Sqlbi.Bravo.Infrastructure.Helpers;
 using Sqlbi.Bravo.Infrastructure.Telemetry;
 
 namespace Sqlbi.Bravo;
 
-internal partial class Program
+internal static class Program
 {
     [STAThread]
-    public static void Main()
+    private static void Main()
     {
+        ApplicationConfiguration.Initialize();
         try
         {
-            StartupConfiguration.Configure();
+            using var context = BravoApplicationInitializer.Initialize();
 
-            using var instance = BravoApplicationInstance.Create();
-            if (!instance.IsPrimary)
+            if (!context.Instance.IsPrimary)
             {
-                instance.RequestActivation();
+                context.Instance.RedirectActivationToPrimary();
                 return;
             }
 
-            using var host = CreateHost();
-            host.Start();
-            {
-                var window = new AppWindow(host.Services, instance);
-                Application.Run(window);
-            }
-            host.StopAsync().GetAwaiter().GetResult();
+            using var application = BravoApplication
+                .CreateBuilder(context)
+                .Build();
+
+            application.Run();
         }
         catch (Exception ex)
         {
