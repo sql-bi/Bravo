@@ -65,8 +65,6 @@ using System.Diagnostics.CodeAnalysis;
 
 #endregion
 
-[assembly: SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "<Pending>", Scope = "member", Target = "~M:Sqlbi.Bravo.Startup.ConfigureServices(Microsoft.Extensions.DependencyInjection.IServiceCollection)")]
-[assembly: SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "<Pending>", Scope = "member", Target = "~M:Sqlbi.Bravo.Startup.Configure(Microsoft.AspNetCore.Builder.IApplicationBuilder,Microsoft.AspNetCore.Hosting.IWebHostEnvironment)")]
 [assembly: SuppressMessage("Style", "IDE0037:Use inferred member name", Justification = "<Pending>", Scope = "member", Target = "~M:Sqlbi.Bravo.Infrastructure.Messages.UnknownWebMessage.CreateFrom(System.Exception)~Sqlbi.Bravo.Infrastructure.Messages.UnknownWebMessage")]
 [assembly: SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "<Pending>", Scope = "member", Target = "~M:Sqlbi.Bravo.Infrastructure.Services.ExportData.ExportDataJobMap`1.Remove(`0)")]
 [assembly: SuppressMessage("Style", "IDE0042:Deconstruct variable declaration", Justification = "<Pending>", Scope = "member", Target = "~M:Sqlbi.Bravo.Models.ManageDates.DateConfiguration.CreateFrom(Dax.Template.Package)~Sqlbi.Bravo.Models.ManageDates.DateConfiguration")]
