@@ -83,7 +83,7 @@ export class OptionsDialogAbout {
 
         _(".copy-version", element).addEventListener("click", e => {
             e.preventDefault();
-            navigator.clipboard.writeText(app.currentVersion.toString());
+            navigator.clipboard.writeText(app.currentVersion.info.informationalVersion ?? app.currentVersion.toString());
         });
 
         _(".auto-check-option input", element).addEventListener("change", e => {
