@@ -22,18 +22,18 @@ Do not set `Version`, `FileVersion` or `InformationalVersion` in `Bravo.csproj`:
 | `AssemblyFileVersion` | `X.Y.Z.{height}` | ordering two builds; MSI `ProductVersion` |
 | `AssemblyInformationalVersion` | `X.Y.Z.{height}[-tag]+{commit}` | diagnostics |
 | `AssemblyVersion` | `X.Y.0.0` | assembly identity (`assemblyVersion.precision: minor`) |
-| `NBGV_SimpleVersion` | `X.Y.Z` | WiX `-dVersion` |
-| `NBGV_SemVer2` | `X.Y.Z[-tag]` | artifact names, git tag, `AppVersion.SemanticVersion` |
+| `NBGV_SemVer2` | `X.Y.Z[-tag]` | artifact names, git tag, `AppVersion.SemanticVersion`, WiX `-dVersion` |
 
 `{height}` is the number of commits since the numeric `X.Y.Z` last changed. It is a build counter: it makes
 every build uniquely identifiable and orders builds that share the same `X.Y.Z`.
 
 ## Rules
 
-- **The prerelease tag never reaches a numeric field.** `AssemblyFileVersion` and `NBGV_SimpleVersion` stay
-numeric in every state, so Windows Installer and `System.Version` keep working unchanged.
+- **The prerelease tag never reaches a numeric field.** `AssemblyFileVersion` stays numeric in every state, so
+Windows Installer and `System.Version` keep working unchanged. WiX `-dVersion` carries the tag but feeds the
+installer telemetry only: the MSI `ProductVersion` is bound to the file version of `Bravo.exe`.
 
-- **`SemVer2` is the version that the application and the artifacts report.** The
+- **`SemVer2` is the version that the application, the installer and the artifacts report.** The
 application reads it as `ThisAssembly.NuGetPackageVersion`, which equals `SemVer2` only while
 `nuGetPackageVersion.semVer` is `2` in `version.json` and `NBGV_ThisAssemblyIncludesPackageVersion` is set in
 `Bravo.csproj`. Without the first, the application reports the SemVer1 form `X.Y.Z-tag-0001-g{commit}`; without
