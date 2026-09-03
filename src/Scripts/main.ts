@@ -31,8 +31,7 @@ let pbiDesktop = new PBIDesktop();
 let notificationCenter = new NotifyCenter();
 
 let app = new App(new AppVersion({
-    version: CONFIG.version,
-    informationalVersion: CONFIG.informationalVersion
+    version: CONFIG.version
 }));
 
 export { debug, host, optionsController, themeController, auth, telemetry, pbiDesktop, notificationCenter, logger, app };

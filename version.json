@@ -4,6 +4,10 @@
   "assemblyVersion": {
     "precision": "minor"
   },
+  "nuGetPackageVersion": {
+    "semVer": 2,
+    "precision": "build"
+  },
   "pathFilters": [
     ":/"
   ],

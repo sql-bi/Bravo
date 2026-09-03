@@ -5,19 +5,6 @@ namespace Bravo.Tests.Infrastructure;
 
 public class AppVersionTests
 {
-    [Theory]
-    [InlineData("1.1.0.11+ed89094be9", "")]
-    [InlineData("1.1.0.13-beta.1+57e453666e", "-beta.1")]
-    [InlineData("1.1.0.13-beta.1", "-beta.1")]
-    [InlineData("1.1.0.0-build.99+74e5ed577e", "-build.99")]
-    [InlineData("1.1.0.13", "")]
-    public void GetPrereleaseTag_ReadsTheTag(string informationalVersion, string expected)
-    {
-        var actual = AppVersion.GetPrereleaseTag(informationalVersion);
-
-        Assert.Equal(expected, actual);
-    }
-
     [Fact]
     public void FileVersion_IsNumericWithFourFields()
     {
@@ -35,6 +22,36 @@ public class AppVersionTests
         var releaseVersion = System.Version.Parse(AppVersion.FileVersion).ToString(3);
 
         Assert.StartsWith(releaseVersion, AppVersion.SemanticVersion);
+    }
+
+    [Fact]
+    public void SemanticVersion_HasNoBuildMetadata()
+    {
+        Assert.DoesNotContain("+", AppVersion.SemanticVersion);
+    }
+
+    [Fact]
+    public void SemanticVersion_CarriesTheCommitIdOnlyOutsideAPublicRelease()
+    {
+        // SemanticVersion must be NBGV SemVer2, the value used for artifact names and installer telemetry: outside
+        // publicReleaseRefSpec it ends with 'g{commit}', where the commit is the build metadata of the informational
+        // version.
+        var metadataIndex = AppVersion.InformationalVersion.IndexOf('+');
+        Assert.True(metadataIndex >= 0, $"'{AppVersion.InformationalVersion}' has no build metadata.");
+
+        var commitId = AppVersion.InformationalVersion[(metadataIndex + 1)..];
+        var isPublicRelease = ThisAssembly.IsPublicRelease;
+        var isPrerelease = ThisAssembly.IsPrerelease;
+
+        if (isPublicRelease)
+        {
+            Assert.DoesNotContain(commitId, AppVersion.SemanticVersion);
+        }
+        else
+        {
+            var separator = isPrerelease ? '.' : '-';
+            Assert.EndsWith($"{separator}g{commitId}", AppVersion.SemanticVersion);
+        }
     }
 
     [Fact]

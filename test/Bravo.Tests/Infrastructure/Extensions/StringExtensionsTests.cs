@@ -64,8 +64,7 @@ public class StringExtensionsTests
     {
         var actual = "Bravo for Power BI".AppendApplicationVersion();
 
-        Assert.NotNull(actual);
-        Assert.StartsWith("Bravo for Power BI", actual);
+        Assert.Equal($"Bravo for Power BI - v{AppVersion.SemanticVersion}", actual);
     }
 
     [Fact]

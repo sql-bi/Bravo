@@ -16,14 +16,7 @@ internal static class StringExtensions
 
     public static string AppendApplicationVersion(this string value)
     {
-        var result = $"{value} - v{AppVersion.SemanticVersion}";
-
-        if (AppVersion.IsPrerelease || !AppVersion.IsPublicRelease)
-        {
-            result += $" ({AppVersion.InformationalVersion})";
-        }
-
-        return result;
+        return $"{value} - v{AppVersion.SemanticVersion}";
     }
 
     /// <summary>
