@@ -319,7 +319,8 @@ window.external = {
 #endif
             address = _serverAddressProvider.GetListeningAddress(),
             token = AppEnvironment.ApiAuthenticationToken,
-            version = AppEnvironment.VersionInfo.Version,
+            version = AppVersion.SemanticVersion,
+            informationalVersion = AppVersion.InformationalVersion,
             options = BravoOptions.CreateFromUserPreferences(),
             policies = _policies,
             culture = new

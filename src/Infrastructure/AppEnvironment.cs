@@ -83,7 +83,6 @@ internal static class AppEnvironment
         SessionId = currentProcess.SessionId;
         ProcessPath = Environment.ProcessPath!;
 
-        VersionInfo = new AppVersionInfo();
         ApplicationDataPath = Path.Combine(Environment.GetFolderPath(DeploymentMode == AppDeploymentMode.Packaged ? Environment.SpecialFolder.UserProfile : Environment.SpecialFolder.LocalApplicationData, Environment.SpecialFolderOption.DoNotVerify), ApplicationName);
         ApplicationTempPath = Path.Combine(ApplicationDataPath, ".temp");
         UserSettingsFilePath = Path.Combine(ApplicationDataPath, "usersettings.json");
@@ -138,8 +137,6 @@ internal static class AppEnvironment
         }
     }
 
-    public static AppVersionInfo VersionInfo { get; }
-
     public static JsonSerializerOptions DefaultJsonOptions { get; }
 
     public static string ApplicationDataPath { get; }
@@ -193,7 +190,7 @@ internal static class AppEnvironment
             //
             ApplicationPublishMode = PublishMode.ToString(),
             ApplicationDeploymentMode = DeploymentMode.ToString(),
-            ApplicationVersion = VersionInfo.InformationalVersion,
+            ApplicationVersion = AppVersion.InformationalVersion,
             ApplicationDataPath,
             ApplicationTempPath,
             ApplicationUserSettingsFilePath = UserSettingsFilePath,

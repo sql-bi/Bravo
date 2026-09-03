@@ -90,7 +90,7 @@ internal static class CommonHelper
         return directoryName;
     }
 
-    public async static Task<BravoUpdate> CheckForUpdateAsync(UpdateChannelType updateChannel, CancellationToken cancellationToken)
+    public static async Task<BravoUpdate> CheckForUpdateAsync(UpdateChannelType updateChannel, CancellationToken cancellationToken)
     {
         var channelPath = updateChannel switch
         {
@@ -108,19 +108,16 @@ internal static class CommonHelper
         using var document = JsonDocument.Parse(json);
         var rootElement = document.RootElement;
 
-        var version = Version.Parse(rootElement.GetProperty("version").GetString()!)
-            .ToString(3); // Versioning is SemVer-based: discard a 4th (build) digit if present
-        var isNewerVersion = Version.Parse(version) > Version.Parse(AppEnvironment.VersionInfo.Version);
-        var downloadUrl = GetDownloadUrl(rootElement.GetProperty("download").GetString()!);
-        var changelogUrl = rootElement.GetProperty("changelog").GetString()!;
+        var availableVersion = Version.Parse(rootElement.GetProperty("version").GetString()!);
+        var installedVersion = Version.Parse(AppVersion.FileVersion);
 
         return new BravoUpdate
         {
             UpdateChannel = updateChannel,
-            IsNewerVersion = isNewerVersion,
-            Version = version,
-            DownloadUrl = downloadUrl,
-            ChangelogUrl = changelogUrl,
+            IsNewerVersion = availableVersion > installedVersion,
+            Version = availableVersion.ToString(3),
+            DownloadUrl = GetDownloadUrl(rootElement.GetProperty("download").GetString()!),
+            ChangelogUrl = rootElement.GetProperty("changelog").GetString()!,
         };
 
         static string GetDownloadUrl(string downloadUrl)

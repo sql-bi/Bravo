@@ -58,12 +58,12 @@ internal static class VpaxHelper
     {
         var server = connectionWrapper.Server;
         var database = connectionWrapper.Database;
-        var daxModel = TomExtractor.GetDaxModel(database.Model, extractorApp: AppEnvironment.ApplicationName, extractorVersion: AppEnvironment.VersionInfo.Version);
+        var daxModel = TomExtractor.GetDaxModel(database.Model, extractorApp: AppEnvironment.ApplicationName, extractorVersion: AppVersion.SemanticVersion);
 
         using var connection = connectionWrapper.CreateAdomdConnection(open: false);
         {
             cancellationToken.ThrowIfCancellationRequested();
-            DmvExtractor.PopulateFromDmv(daxModel, connection, server.Name, database.Name, extractorApp: AppEnvironment.ApplicationName, extractorVersion: AppEnvironment.VersionInfo.Version);
+            DmvExtractor.PopulateFromDmv(daxModel, connection, server.Name, database.Name, extractorApp: AppEnvironment.ApplicationName, extractorVersion: AppVersion.SemanticVersion);
 
             if (statisticsEnabled)
             {
@@ -78,7 +78,7 @@ internal static class VpaxHelper
                 if (analyzeDirectLake > DirectLakeExtractionMode.ResidentOnly && daxModel.HasDirectLakePartitions())
                 {
                     cancellationToken.ThrowIfCancellationRequested();
-                    DmvExtractor.PopulateFromDmv(daxModel, connection, server.Name, database.Name, extractorApp: AppEnvironment.ApplicationName, extractorVersion: AppEnvironment.VersionInfo.Version);
+                    DmvExtractor.PopulateFromDmv(daxModel, connection, server.Name, database.Name, extractorApp: AppEnvironment.ApplicationName, extractorVersion: AppVersion.SemanticVersion);
                 }
             }
         }

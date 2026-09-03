@@ -113,7 +113,7 @@ internal class FormatDaxService : IFormatDaxService
             ListSeparator = options.ListSeparator ?? ',', // TODO: Dax.Formatter declare ListSeparator nullable
             DecimalSeparator = options.DecimalSeparator ?? '.', // TODO: Dax.Formatter declare DecimalSeparator nullable
             CallerApp = AppEnvironment.ApplicationName,
-            CallerVersion = AppEnvironment.VersionInfo.Version,
+            CallerVersion = AppVersion.SemanticVersion,
         };
 
         foreach (var measure in measures)

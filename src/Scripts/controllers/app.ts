@@ -30,6 +30,7 @@ import { DialogResponse } from '../view/dialog';
 
 export interface AppVersionInfo {
     version: string
+    informationalVersion?: string
     downloadUrl?: string
     changelogUrl?: string
 }
