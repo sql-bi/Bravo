@@ -15,6 +15,7 @@ namespace Sqlbi.Bravo.Installer.Wix
         internal const string PropertyProductName = "PRODUCTNAME";
         internal const string PropertyProductVersion = "PRODUCTVERSION";
         internal const string PropertyProductBuild = "PRODUCTBUILD";
+        internal const string PropertySelfContained = "SELFCONTAINED";
         internal const string PropertyProductExecutablePath = "PRODUCTEXECUTABLEPATH";
         internal const string PropertyInstallerTelemetryEnabled = "INSTALLERTELEMETRYENABLED";
         internal const string PropertyTelemetryUserId = "TELEMETRYUSERID";
@@ -68,24 +69,60 @@ namespace Sqlbi.Bravo.Installer.Wix
             var productVersion = session.CustomActionData[PropertyProductVersion];
             var productBuild = session.CustomActionData[PropertyProductBuild];
             var userId = session.CustomActionData[PropertyTelemetryUserId];
-            var installScope = session.CustomActionData[PropertyInstallScope];
+            var installScope = GetInstallScope(session.CustomActionData[PropertyInstallScope]);
+            var publishMode = GetPublishMode(session.CustomActionData[PropertySelfContained]);
 
             var telemetryConfiguration = TelemetryConfiguration.CreateDefault();
             telemetryConfiguration.InstrumentationKey = "47a8970c-6293-408a-9cce-5b7b311574d3";
             telemetryConfiguration.DisableTelemetry = false;
 
-            // Keep telemetry context configuration synchronized with Sqlbi.Bravo.Infrastructure.Helpers.ContextTelemetryInitializer
+            // Keep telemetry context configuration synchronized with Sqlbi.Bravo.Infrastructure.Telemetry.TelemetrySessionInfo
             var telemetryClient = new TelemetryClient(telemetryConfiguration);
             telemetryClient.Context.Device.OperatingSystem = Environment.OSVersion.ToString();
             telemetryClient.Context.Component.Version = productVersion;
             telemetryClient.Context.Session.Id = Guid.NewGuid().ToString();
             telemetryClient.Context.User.Id = userId;
+            telemetryClient.Context.GlobalProperties.Add("PublishMode", publishMode);
             telemetryClient.Context.GlobalProperties.Add("InstallScope", installScope);
             telemetryClient.Context.GlobalProperties.Add("ProductName", productName);
             telemetryClient.Context.GlobalProperties.Add("Version", productVersion);
             telemetryClient.Context.GlobalProperties.Add("Build", productBuild);
 
             return telemetryClient;
+        }
+
+        /// <summary>
+        /// Maps the self-contained build flag to the publish mode reported by the application.
+        /// </summary>
+        internal static string GetPublishMode(string selfContained)
+        {
+            // This method must not throw because it can be called while reporting exceptions from
+            // custom actions. An exception here would fail the custom action and roll back the installation.
+            if (bool.TryParse(selfContained, out var value))
+                return value ? "SelfContained" : "FrameworkDependent";
+
+            // Unexpected values are reported as received, so that the telemetry shows what the build passed in
+            return selfContained;
+        }
+
+        /// <summary>
+        /// Maps the WiX Package/@InstallScope value to the deployment mode reported by the application.
+        /// </summary>
+        internal static string GetInstallScope(string installScope)
+        {
+            // The installer telemetry used to send the raw WiX values 'perMachine' and 'perUser'. The values are now
+            // mapped to 'PerMachine' and 'PerUser', the AppDeploymentMode names sent by the application telemetry,
+            // so that the InstallScope property has the same set of values for both sources.
+            //
+            // See GetPublishMode for why this method must not throw.
+            if (string.Equals(installScope, "perMachine", StringComparison.OrdinalIgnoreCase))
+                return "PerMachine";
+
+            if (string.Equals(installScope, "perUser", StringComparison.OrdinalIgnoreCase))
+                return "PerUser";
+
+            // Unexpected values are reported as received, so that the telemetry shows what the build passed in
+            return installScope;
         }
 
         internal static bool IsTelemetryEnabled(Session session)

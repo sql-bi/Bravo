@@ -11,6 +11,10 @@
   <?define AppName = "Bravo" ?>
   <?define InstallScope = "perUser" ?>
 
+  <?if $(var.SelfContained) != "true" and $(var.SelfContained) != "false" ?>
+    <?error SelfContained must be "true" or "false", got "$(var.SelfContained)" ?>
+  <?endif ?>
+
   <?if $(sys.BUILDARCH) = x64 ?>
     <?define ProductName = "!(loc.ProductName) (User)" ?>
     <?define Win64 = "yes" ?>
@@ -108,11 +112,11 @@
     <SetProperty Action="UndefineAPPLICATIONTELEMETRYENABLED" Id="APPLICATIONTELEMETRYENABLED" Value="{}" After="AppSearch" Sequence="first"><![CDATA[APPLICATIONTELEMETRYENABLED AND APPLICATIONTELEMETRYENABLED <> "1"]]></SetProperty>
 
     <CustomAction Id="SetPropertyTelemetryUserId" BinaryKey="CustomActionBinary" DllEntry="SetPropertyTelemetryUserId" Execute="immediate" Impersonate="yes" />
-    <CustomAction Id="SetPropertyValuesAfterInstall" Property="AfterInstall" Value="INSTALLSCOPE=$(var.InstallScope);PRODUCTNAME=$(var.AppName);PRODUCTVERSION=$(var.ProductVersion);PRODUCTBUILD=$(var.ProductBuild);INSTALLERTELEMETRYENABLED=[INSTALLERTELEMETRYENABLED];TELEMETRYUSERID=[TELEMETRYUSERID]" />
+    <CustomAction Id="SetPropertyValuesAfterInstall" Property="AfterInstall" Value="INSTALLSCOPE=$(var.InstallScope);PRODUCTNAME=$(var.AppName);PRODUCTVERSION=$(var.ProductVersion);PRODUCTBUILD=$(var.ProductBuild);INSTALLERTELEMETRYENABLED=[INSTALLERTELEMETRYENABLED];TELEMETRYUSERID=[TELEMETRYUSERID];SELFCONTAINED=$(var.SelfContained)" />
     <CustomAction Id="AfterInstall" BinaryKey="CustomActionBinary" DllEntry="AfterInstall" Execute="deferred" Impersonate="yes" />
-    <CustomAction Id="SetPropertyValuesDeleteUserAppLocalFolder" Property="DeleteUserAppLocalFolder" Value="INSTALLSCOPE=$(var.InstallScope);PRODUCTNAME=$(var.AppName);PRODUCTVERSION=$(var.ProductVersion);PRODUCTBUILD=$(var.ProductBuild);INSTALLERTELEMETRYENABLED=[INSTALLERTELEMETRYENABLED];TELEMETRYUSERID=[TELEMETRYUSERID];LOCALAPPDATASUBFOLDER=$(var.AppInstallSubfolder)" />
+    <CustomAction Id="SetPropertyValuesDeleteUserAppLocalFolder" Property="DeleteUserAppLocalFolder" Value="INSTALLSCOPE=$(var.InstallScope);PRODUCTNAME=$(var.AppName);PRODUCTVERSION=$(var.ProductVersion);PRODUCTBUILD=$(var.ProductBuild);INSTALLERTELEMETRYENABLED=[INSTALLERTELEMETRYENABLED];TELEMETRYUSERID=[TELEMETRYUSERID];LOCALAPPDATASUBFOLDER=$(var.AppInstallSubfolder);SELFCONTAINED=$(var.SelfContained)" />
     <CustomAction Id="DeleteUserAppLocalFolder" BinaryKey="CustomActionBinary" DllEntry="DeleteUserAppLocalFolder" Execute="deferred" Impersonate="yes" />
-    <CustomAction Id="SetPropertyValuesAfterUninstall" Property="AfterUninstall" Value="INSTALLSCOPE=$(var.InstallScope);PRODUCTNAME=$(var.AppName);PRODUCTVERSION=$(var.ProductVersion);PRODUCTBUILD=$(var.ProductBuild);INSTALLERTELEMETRYENABLED=[INSTALLERTELEMETRYENABLED];TELEMETRYUSERID=[TELEMETRYUSERID]" />
+    <CustomAction Id="SetPropertyValuesAfterUninstall" Property="AfterUninstall" Value="INSTALLSCOPE=$(var.InstallScope);PRODUCTNAME=$(var.AppName);PRODUCTVERSION=$(var.ProductVersion);PRODUCTBUILD=$(var.ProductBuild);INSTALLERTELEMETRYENABLED=[INSTALLERTELEMETRYENABLED];TELEMETRYUSERID=[TELEMETRYUSERID];SELFCONTAINED=$(var.SelfContained)" />
     <CustomAction Id="AfterUninstall" BinaryKey="CustomActionBinary" DllEntry="AfterUninstall" Execute="deferred" Impersonate="yes" />
     <CustomAction Id="LaunchApplication" BinaryKey="WixCA" DllEntry="WixShellExec" />
     
