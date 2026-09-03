@@ -7,7 +7,6 @@ declare global {
         debug?: boolean,
         address: string
         version: string,
-        informationalVersion: string,
         options: Options,
         policies?: Policies,
         token?: string,
