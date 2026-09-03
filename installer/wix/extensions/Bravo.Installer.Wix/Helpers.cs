@@ -3,9 +3,9 @@ using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.Deployment.WindowsInstaller;
 using System;
+using System.Net;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading;
 
 namespace Sqlbi.Bravo.Installer.Wix
 {
@@ -32,20 +32,38 @@ namespace Sqlbi.Bravo.Installer.Wix
             var telemetryClient = GetTelemetryClient(session);
             var telemetryEvent = new EventTelemetry(name);
             telemetryClient.TrackEvent(telemetryEvent);
-            telemetryClient.Flush();
-            Thread.Sleep(1000);
+            telemetryClient.Flush(); // Synchronous with InMemoryChannel
         }
 
         internal static void TrackException(Session session, Exception exception)
         {
             var telemetryClient = GetTelemetryClient(session);
             telemetryClient.TrackException(exception);
-            telemetryClient.Flush();
-            Thread.Sleep(1000);
+            telemetryClient.Flush(); // Synchronous with InMemoryChannel
+        }
+
+        /// <summary>
+        /// Enables TLS 1.2, the only protocol accepted by the Application Insights ingestion endpoint.
+        /// </summary>
+        internal static void EnableTls12()
+        {
+            // The custom action runs inside the native SfxCA host, with no managed entry assembly: the CLR applies the
+            // .NET Framework 4.0 compatibility quirks regardless of the target framework of this assembly, and the
+            // default SecurityProtocol is SSL 3.0 and TLS 1.0 only. A failed handshake is swallowed by the SDK.
+            //
+            // SecurityProtocolType.SystemDefault is deliberately not used. It requires .NET Framework 4.7: on 4.5-4.6.2
+            // the setter throws NotSupportedException, and this method is also reached from TrackException inside a
+            // catch block, so the exception would fail the custom action. It also delegates to the Schannel defaults,
+            // which on Windows 7 SP1 and Windows Server 2012 are TLS 1.0 unless KB3140245 and its registry key are
+            // applied, so it would negotiate TLS 1.0 again on the very systems the launch condition still admits.
+            // Tls12 is available since .NET Framework 4.5, is additive, and is what the endpoint requires.
+            ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
         }
 
         internal static TelemetryClient GetTelemetryClient(Session session)
         {
+            EnableTls12();
+
             var productName = session.CustomActionData[PropertyProductName];
             var productVersion = session.CustomActionData[PropertyProductVersion];
             var productBuild = session.CustomActionData[PropertyProductBuild];
