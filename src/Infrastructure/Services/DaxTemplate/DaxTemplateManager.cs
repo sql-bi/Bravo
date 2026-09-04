@@ -31,11 +31,11 @@ internal class DaxTemplateManager
     internal static readonly string UserPath = Path.Combine(AppEnvironment.ApplicationDataPath, @"ManageDates\Templates");
 
     private readonly object _cacheSyncLock = new();
-    private readonly IPolicies _policies;
+    private readonly IPolicyService _policyService;
 
-    public DaxTemplateManager(IPolicies policies)
+    public DaxTemplateManager(IPolicyService policyService)
     {
-        _policies = policies;
+        _policyService = policyService;
         InitializeCache();
     }
 
@@ -46,7 +46,7 @@ internal class DaxTemplateManager
 
     public IEnumerable<Package> GetPackages()
     {
-        if (_policies.BuiltInTemplatesEnabled is false)
+        if (_policyService.Current.BuiltInTemplatesEnabled is false)
         {
             return Array.Empty<Package>();
         }

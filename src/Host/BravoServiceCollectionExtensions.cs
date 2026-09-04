@@ -1,9 +1,11 @@
 ﻿using Dax.Formatter;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
 using Sqlbi.Bravo.Infrastructure.Extensions;
-using Sqlbi.Bravo.Infrastructure.Policies;
 using Sqlbi.Bravo.Infrastructure.PowerBI;
 using Sqlbi.Bravo.Infrastructure.Services.PowerBI;
+using Sqlbi.Bravo.Infrastructure.SingleInstance;
 using Sqlbi.Bravo.Infrastructure.Telemetry;
 using Sqlbi.Bravo.Services;
 
@@ -15,24 +17,7 @@ namespace Sqlbi.Bravo.Host;
 internal static class BravoServiceCollectionExtensions
 {
     /// <summary>
-    /// Publishes what <see cref="BravoApplicationInitializer"/> produced. These are instance
-    /// registrations: the container resolves them but never disposes them — their owner is the
-    /// initialization context.
-    /// </summary>
-    public static IServiceCollection AddBravoInitializationServices(this IServiceCollection services, BravoApplicationInitializationContext context)
-    {
-        // The single instance goes in as its activation events only: IsPrimary and the activation
-        // redirection belong to the entry point and stay out of the container.
-        services.AddSingleton<IInstanceActivationEvents>(context.Instance);
-
-        services.AddSingleton<IPolicies>(PoliciesFactory.Create());
-        services.AddSingleton<ITelemetryService>(TelemetryService.Instance);
-
-        return services;
-    }
-
-    /// <summary>
-    /// Registers the REST API surface.
+    /// Registers and configures the services required for the Bravo REST API.
     /// </summary>
     public static IServiceCollection AddBravoRestApi(this IServiceCollection services)
     {
@@ -48,10 +33,12 @@ internal static class BravoServiceCollectionExtensions
     }
 
     /// <summary>
-    /// Registers the core services that implement the application's functionality.
+    /// Registers and configures the services required for the Bravo application.
     /// </summary>
-    public static IServiceCollection AddBravoServices(this IServiceCollection services)
+    public static IServiceCollection AddBravoServices(this IServiceCollection services, BootstrapContext bootstrap)
     {
+        services.AddBootstrapServices(bootstrap);
+        services.AddBravoApplicationInstance();
         services.AddHttpClient();
         services.AddPowerBI();
         services.AddSingleton<IPBIDesktopService, PBIDesktopService>();
@@ -64,6 +51,38 @@ internal static class BravoServiceCollectionExtensions
         services.AddSingleton<IAuthenticationService, AuthenticationService>();
         services.AddSingleton<ITemplateDevelopmentService, TemplateDevelopmentService>();
         services.AddSingleton<IBestPracticeAnalyzerService, BestPracticeAnalyzerService>();
+
+        return services;
+    }
+
+    private static IServiceCollection AddBravoApplicationInstance(this IServiceCollection services)
+    {
+        services.AddSingleton<IBravoApplicationInstance>((provider) =>
+        {
+            var telemetry = provider.GetRequiredService<ITelemetryService>();
+            var loggerFactory = provider.GetRequiredService<ILoggerFactory>();
+            var options = new SingleInstanceOptions
+            {
+                PipeName = InstancePipeName.Create(),
+            };
+            _ = SingleInstanceServer.TryStart(options, out var server);
+
+            return new BravoApplicationInstance(options, server, telemetry, loggerFactory);
+        });
+
+        return services;
+    }
+
+    private static IServiceCollection AddBootstrapServices(this IServiceCollection services, BootstrapContext bootstrap)
+    {
+        // Instance registrations: the container resolves them without creating or disposing them.
+
+        // Replace the default ILoggerFactory registered by the WebApplicationBuilder
+        services.Replace(ServiceDescriptor.Singleton(bootstrap.LoggerFactory));
+
+        services.AddSingleton(bootstrap.PolicyService);
+        services.AddSingleton(bootstrap.Settings);
+        services.AddSingleton(bootstrap.Telemetry);
 
         return services;
     }

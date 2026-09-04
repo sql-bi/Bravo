@@ -102,6 +102,16 @@ public sealed class TaskDialogBuilder
     }
 
     /// <summary>
+    /// Enables clickable links in the dialog text and footnote, and invokes the specified callback, with the page the link belongs to, when a link is clicked.
+    /// </summary>
+    public TaskDialogBuilder WithEnableLinks(Action<TaskDialogPage, string> linkClicked)
+    {
+        _page.EnableLinks = true;
+        _page.LinkClicked += (_, e) => linkClicked(_page, e.LinkHref);
+        return this;
+    }
+
+    /// <summary>
     /// Sets the dialog to automatically size to its content. If false, the dialog will have a fixed size.
     /// </summary>
     public TaskDialogBuilder WithSizeToContent(bool sizeToContent = true)
@@ -168,12 +178,7 @@ public sealed class TaskDialogBuilder
     /// </summary>
     public TaskDialogButton Show()
     {
-        if (_ownerHandle != IntPtr.Zero)
-        {
-            return TaskDialog.ShowDialog(_ownerHandle, _page, _startupLocation);
-        }
-
-        return TaskDialog.ShowDialog(_page, _startupLocation);
+        return TaskDialog.ShowDialog(_ownerHandle, _page, _startupLocation);
     }
 
     private static TaskDialogIcon? LoadCurrentProcessIcon()
