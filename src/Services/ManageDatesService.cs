@@ -32,9 +32,9 @@ internal class ManageDatesService : IManageDatesService
 {
     private readonly DaxTemplateManager _templateManager;
 
-    public ManageDatesService(IPolicies policies)
+    public ManageDatesService(IPolicyService policyService)
     {
-        _templateManager = new DaxTemplateManager(policies);
+        _templateManager = new DaxTemplateManager(policyService);
     }
 
     public IEnumerable<DateConfiguration> GetConfigurations(PBIDesktopReport report, CancellationToken cancellationToken)

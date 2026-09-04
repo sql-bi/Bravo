@@ -5,29 +5,22 @@ using System.Runtime;
 using Sqlbi.Bravo.Infrastructure;
 using Sqlbi.Bravo.Infrastructure.Helpers;
 using Sqlbi.Bravo.Infrastructure.Services;
+using Sqlbi.Bravo.Infrastructure.Telemetry;
 
 namespace Sqlbi.Bravo.Host;
 
 /// <summary>
-/// Initializes the application process, applying process-wide settings
-/// and composing the necessary components before the host is created.
+/// Configures the application environment before the application starts.
 /// </summary>
-internal static class BravoApplicationInitializer
+internal static class BravoApplicationConfiguration
 {
-    /// <summary>
-    /// Initializes the application process, applying process-wide settings
-    /// </summary>
-    public static BravoApplicationInitializationContext Initialize()
+    public static void Initialize()
     {
-        ConfigureWebProxy();
         ConfigureDirectories();
+        ConfigureWebProxy();
         ConfigureRuntimeOptimization();
 
         WebView2Helper.EnsureRuntimeIsInstalled();
-
-        var instance = BravoApplicationInstance.Create();
-
-        return new BravoApplicationInitializationContext(instance);
     }
 
     private static void ConfigureWebProxy()
@@ -40,11 +33,12 @@ internal static class BravoApplicationInitializer
         Directory.SetCurrentDirectory(AppContext.BaseDirectory);
         Directory.CreateDirectory(AppEnvironment.ApplicationDataPath);
         Directory.CreateDirectory(AppEnvironment.ApplicationTempPath);
+        Directory.CreateDirectory(TelemetryService.DefaultStorageFolder);
     }
 
     private static void ConfigureRuntimeOptimization()
     {
-        ProfileOptimization.SetProfileRoot(AppEnvironment.ApplicationDataPath);
+        ProfileOptimization.SetProfileRoot(AppEnvironment.ApplicationCachePath);
         ProfileOptimization.StartProfile(".jitprofile");
     }
 }

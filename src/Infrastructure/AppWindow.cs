@@ -41,23 +41,23 @@ window.external = {
 };";
     public static SynchronizationContext? UISynchronizationContext { get; set; }
 
-    private readonly IInstanceActivationEvents _instanceActivationEvents;
+    private readonly IInstanceEvents _applicationInstance;
     private readonly IServerAddressProvider _serverAddressProvider;
     private readonly IOptions<StartupSettings> _startupSettingsOptionsAccessor;
     private readonly WebView2ProxyAuthHandler _proxyAuthHandler;
     private readonly Color _startupThemeColor;
-    private readonly IPolicies _policies;
+    private readonly IPolicyService _policyService;
 
     public AppWindow(
-        IInstanceActivationEvents instanceActivationEvents,
+        IBravoApplicationInstance applicationInstance,
         IServerAddressProvider serverAddressProvider,
         IOptions<StartupSettings> startupSettingsOptionsAccessor,
-        IPolicies policies)
+        IPolicyService policyService)
     {
-        _instanceActivationEvents = instanceActivationEvents;
+        _applicationInstance = applicationInstance;
         _serverAddressProvider = serverAddressProvider;
         _startupSettingsOptionsAccessor = startupSettingsOptionsAccessor;
-        _policies = policies;
+        _policyService = policyService;
         _proxyAuthHandler = new WebView2ProxyAuthHandler(WebProxyWrapper.Current);
         _startupThemeColor = ThemeHelper.ShouldUseDarkMode(UserPreferences.Current.Theme) ? AppEnvironment.ThemeColorDark : AppEnvironment.ThemeColorLight;
 
@@ -183,19 +183,19 @@ window.external = {
 
         CenterToScreen();
 
-        _instanceActivationEvents.ActivationRequested += OnActivationRequestedRestoreWindowToForeground;
+        _applicationInstance.ActivationRequested += OnActivationRequestedRestoreWindowToForeground;
 
         if (AppEnvironment.IsDiagnosticLevelVerbose)
         {
-            var content = EnvironmentInfo.Collect().ToDictionary();
-            AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{nameof(AppWindow)}.{nameof(EnvironmentInfo)}", content: JsonSerializer.Serialize(content));
+            var content = EnvironmentDiagnosticsCollector.Collect();
+            AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{nameof(AppWindow)}.{nameof(EnvironmentDiagnostics)}", content: JsonSerializer.Serialize(content));
         }
     }
 
     private void OnFormClosed(object? sender, FormClosedEventArgs e)
     {
-        _instanceActivationEvents.ActivationRequested -= OnActivationRequestedRestoreWindowToForeground;
-        _instanceActivationEvents.ActivationRequested -= OnActivationRequestedSendStartupWebMessage;
+        _applicationInstance.ActivationRequested -= OnActivationRequestedRestoreWindowToForeground;
+        _applicationInstance.ActivationRequested -= OnActivationRequestedSendStartupWebMessage;
     }
 
     private void OnWebViewDOMContentLoaded(object? sender, CoreWebView2DOMContentLoadedEventArgs e)
@@ -208,7 +208,7 @@ window.external = {
             BackgroundImage = null;
             SendAppStartupWebMessage();
 
-            _instanceActivationEvents.ActivationRequested += OnActivationRequestedSendStartupWebMessage;
+            _applicationInstance.ActivationRequested += OnActivationRequestedSendStartupWebMessage;
         }
     }
 
@@ -328,7 +328,7 @@ window.external = {
             token = AppEnvironment.ApiAuthenticationToken,
             version = AppVersion.SemanticVersion,
             options = BravoOptions.CreateFromUserPreferences(),
-            policies = _policies,
+            policies = _policyService.Current,
             culture = new
             {
                 ietfLanguageTag = CultureInfo.CurrentCulture.IetfLanguageTag,

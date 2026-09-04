@@ -82,6 +82,7 @@ internal static class AppEnvironment
 
         ApplicationDataPath = Path.Combine(Environment.GetFolderPath(DeploymentMode == AppDeploymentMode.Packaged ? Environment.SpecialFolder.UserProfile : Environment.SpecialFolder.LocalApplicationData, Environment.SpecialFolderOption.DoNotVerify), ApplicationName);
         ApplicationTempPath = Path.Combine(ApplicationDataPath, ".temp");
+        ApplicationCachePath = Path.Combine(ApplicationDataPath, ".cache");
         UserSettingsFilePath = Path.Combine(ApplicationDataPath, "usersettings.json");
         MsalTokenCacheFilePath = Path.Combine(ApplicationDataPath, ".msalcache");
         WebView2VersionInfo = WebView2Helper.GetRuntimeVersionInfo();
@@ -135,6 +136,10 @@ internal static class AppEnvironment
     public static string ApplicationDataPath { get; }
 
     public static string ApplicationTempPath { get; }
+
+    public static string ApplicationCachePath { get; }
+
+    public static string ApplicationDiagnosticsPath { get; }
 
     public static string UserSettingsFilePath { get; }
 

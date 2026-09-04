@@ -23,7 +23,9 @@ the adjacent document, or does not exist yet.
 ## Form
 
 - Schematic: short sections, tables for enumerable facts, one idea per paragraph.
-- Direct, professional language. Short sentences. No filler, no narration.
+- Plain prose: state the fact, do not perform it. Short sentences. No filler, no narration, no first person,
+  no intensifiers or reassurance, no metaphors, no rhetorical questions. The same rule, with examples, applies
+  to code comments: [code-conventions.md](design/code-conventions.md#comments).
 - English.
 - A rule states what holds and what breaks when it is violated.
 - Motivation is a clause attached to the rule it justifies, never a section of its own.

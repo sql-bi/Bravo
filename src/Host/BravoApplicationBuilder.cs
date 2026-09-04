@@ -5,8 +5,6 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.EventLog;
 using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
 using Sqlbi.Bravo.Infrastructure.Services;
 
@@ -15,21 +13,15 @@ namespace Sqlbi.Bravo.Host;
 /// <summary>
 /// Provides a builder for creating and configuring a <see cref="BravoApplication"/> instance.
 /// </summary>
-/// <remarks>
-/// Everything is configured by the time the builder is returned, and <see cref="Build"/> is the only
-/// method: the registrations are composed through <see cref="BravoServiceCollectionExtensions"/>, not
-/// by mutating the builder from outside. Should a caller — a test, typically — ever need to override
-/// a registration, expose <see cref="WebApplicationBuilder.Services"/> as a pass-through property
-/// then; it is deliberately not exposed while nothing needs it.
-/// </remarks>
 internal sealed class BravoApplicationBuilder
 {
     private readonly WebApplicationBuilder _innerBuilder;
 
-    internal BravoApplicationBuilder(BravoApplicationInitializationContext context)
+    internal BravoApplicationBuilder(BootstrapContext bootstrap)
     {
         // CreateEmptyBuilder, not CreateBuilder: no configuration sources, no environment variables and
-        // no implicit logging providers. Everything the host needs is declared explicitly below.
+        // no implicit logging providers. The logging pipeline comes from the bootstrap context, everything
+        // else the host needs is declared explicitly below.
         _innerBuilder = WebApplication.CreateEmptyBuilder(new WebApplicationOptions
         {
             EnvironmentName = Environments.Production,
@@ -37,9 +29,10 @@ internal sealed class BravoApplicationBuilder
         });
 
         ConfigureHosting(_innerBuilder);
-        ConfigureLogging(_innerBuilder);
-        ConfigureServices(_innerBuilder, context);
+        ConfigureServices(_innerBuilder, bootstrap);
     }
+
+    internal IServiceCollection Services => _innerBuilder.Services;
 
     /// <summary>
     /// Builds the host, configures its request pipeline, and returns the <see cref="BravoApplication"/>.
@@ -76,26 +69,14 @@ internal sealed class BravoApplicationBuilder
 #endif
     }
 
-    private static void ConfigureLogging(WebApplicationBuilder builder)
-    {
-        builder.Logging.AddEventSourceLogger();
-        builder.Logging.AddEventLog();
-        builder.Logging.AddFilter<EventLogLoggerProvider>((level) => level >= LogLevel.Warning);
-#if DEBUG
-        builder.Logging.AddConsole();
-        builder.Logging.AddDebug();
-#endif
-    }
-
-    private static void ConfigureServices(WebApplicationBuilder builder, BravoApplicationInitializationContext context)
+    private static void ConfigureServices(WebApplicationBuilder builder, BootstrapContext bootstrap)
     {
         builder.Services.AddOptions<StartupSettings>()
             .Configure((settings) => settings.FromCommandLineArguments()); //.ValidateDataAnnotations();
         builder.Services.AddSingleton<IServerAddressProvider, ServerAddressProvider>();
 
-        builder.Services.AddBravoInitializationServices(context);
         builder.Services.AddBravoRestApi();
-        builder.Services.AddBravoServices();
+        builder.Services.AddBravoServices(bootstrap);
     }
 
     private static void ConfigurePipeline(WebApplication application)

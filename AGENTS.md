@@ -32,4 +32,5 @@ or a CI checkout must be complete: with a shallow clone the build fails or produ
 | --- | --- |
 | [docs/design/code-conventions.md](docs/design/code-conventions.md) | creating or editing any `.cs` file. Encoding and design rules apply from its first line, and a wrong encoding rewrites the whole file. |
 | [docs/design/versioning.md](docs/design/versioning.md) | touching `version.json`, the build number, or any code that compares versions. |
+| [docs/design/diagnostics.md](docs/design/diagnostics.md) | catching, logging, or reporting an exception, or touching the crash dialog, the diagnostics pane, or telemetry. |
 | [docs/documentation-guidelines.md](docs/documentation-guidelines.md) | writing or updating anything under `docs/`. |
