@@ -1,6 +1,6 @@
 ﻿using System;
 using Sqlbi.Bravo.Host;
-using Sqlbi.Bravo.Infrastructure.Helpers;
+using Sqlbi.Bravo.Infrastructure.Diagnostics;
 using Sqlbi.Bravo.Infrastructure.Telemetry;
 
 namespace Sqlbi.Bravo;
@@ -30,7 +30,11 @@ internal static class Program
         catch (Exception ex)
         {
             TelemetryService.Instance.TrackException(ex);
-            ExceptionHelper.ShowDialog(ex);
+
+            var report = ErrorReport.Create(ex);
+            report.TrySave();
+            ErrorReportDialog.Show(report);
+
             throw;
         }
     }

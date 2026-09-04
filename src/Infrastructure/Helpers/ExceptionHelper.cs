@@ -3,7 +3,6 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Security;
 using System.Threading;
-using System.Windows.Forms;
 
 namespace Sqlbi.Bravo.Infrastructure.Helpers;
 
@@ -61,48 +60,5 @@ internal static class ExceptionHelper
         }
 
         return false;
-    }
-
-    public static void ShowDialog(Exception exception)
-    {
-        var page = new TaskDialogPage()
-        {
-            Caption = AppEnvironment.ApplicationMainWindowTitle,
-            Heading = @$"Unhandled exception has occurred. The application will be shut down and the error details will be logged in the Windows Event Log.
-
-[{exception.GetType().Name}] {exception.Message}",
-            Icon = TaskDialogIcon.Error,
-            AllowCancel = false,
-            Buttons =
-            {
-                new TaskDialogCommandLinkButton("&Copy details", "Copy error details to clipboard and close")
-                {
-                    Tag = 10
-                },
-                new TaskDialogCommandLinkButton("&Close", "Terminate the application")
-                {
-                    Tag = 20
-                },
-            },
-            Expander = new TaskDialogExpander()
-            {
-                Expanded = false,
-                Text = $"{exception}",
-                Position = TaskDialogExpanderPosition.AfterFootnote,
-            }
-        };
-
-        var dialogButton = TaskDialog.ShowDialog(page, TaskDialogStartupLocation.CenterScreen);
-
-        switch (dialogButton.Tag)
-        {
-            case 10:
-                Clipboard.SetText(page.Expander.Text, TextDataFormat.Text);
-                break;
-            case 20:
-                break;
-            default:
-                throw new BravoUnexpectedInvalidOperationException($"Unhandled {nameof(TaskDialogButton)} result ({dialogButton.Tag})");
-        }
     }
 }
