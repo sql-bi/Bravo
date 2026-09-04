@@ -1,13 +1,9 @@
-﻿using System.IO;
-using System.Net.Mime;
+﻿using System.Net.Mime;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Sqlbi.Bravo.Infrastructure.Extensions;
 using Sqlbi.Bravo.Infrastructure.Helpers;
-using Sqlbi.Bravo.Infrastructure.Windows;
 using Sqlbi.Bravo.Models;
 using Sqlbi.Bravo.Models.ExportData;
 using Sqlbi.Bravo.Services;
@@ -47,12 +43,6 @@ public class ExportDataController : ControllerBase
     {
         if (WindowDialogHelper.BrowseFolderDialog(out var path, cancellationToken))
         {
-            if (request.Settings!.CreateSubfolder)
-            {
-                if (!GetExportSubfolderPath(ref path, name: request.Report!.ReportName))
-                    return NoContent();
-            }
-
             var job = _exportDataService.ExportDelimitedTextFile(request.Report!, request.Settings!, path, cancellationToken);
             return Ok(job);
         }
@@ -81,12 +71,6 @@ public class ExportDataController : ControllerBase
 
         if (WindowDialogHelper.BrowseFolderDialog(out var path, cancellationToken))
         {
-            if (request.Settings!.CreateSubfolder)
-            {
-                if (!GetExportSubfolderPath(ref path, name: request.Dataset!.DisplayName))
-                    return NoContent();
-            }
-
             var job = _exportDataService.ExportDelimitedTextFile(request.Dataset!, request.Settings!, path, session.AuthenticationResult.AccessToken, cancellationToken);
             return Ok(job);
         }
@@ -184,53 +168,5 @@ public class ExportDataController : ControllerBase
             return NoContent();
 
         return Ok(job);
-    }
-
-    private static bool GetExportSubfolderPath(ref string path, string? name)
-    {
-        if (name.IsNullOrWhiteSpace())
-        {
-            name = "New Folder";
-        }
-
-        var subfolderName = name.ReplaceInvalidPathChars();
-        var subfolderPath = Path.Combine(path, subfolderName);
-
-        if (Directory.Exists(subfolderPath))
-        {
-            var overwriteButton = new TaskDialogCommandLinkButton("&Overwrite", "Overwrite and replace files in the destination folder");
-            var keepbothButton = new TaskDialogCommandLinkButton("&Keep Both", "Files will be exported to a new folder");
-            var cancelButton = new TaskDialogCommandLinkButton("&Cancel", "Cancel export");
-            var heading = $"The destination folder you chose already contains a subfolder named '{subfolderName}'";
-            var text = "Choose an option to proceed";
-
-            var clickedButton = MessageDialog.ShowDialog(heading, text, footnoteText: null, allowCancel: true, overwriteButton, keepbothButton, cancelButton);
-
-            if (clickedButton == overwriteButton)
-            {
-                //
-            }
-            else if (clickedButton == keepbothButton)
-            {
-                for (var i = 1; /**/ ; i++)
-                {
-                    var uniquePath = Path.Combine(path, $"{subfolderName} - {i}");
-
-                    if (!Directory.Exists(uniquePath))
-                    {
-                        subfolderPath = uniquePath;
-                        break;
-                    }
-                }
-            }
-            else
-            {
-                path = string.Empty;
-                return false;
-            }
-        }
-
-        path = subfolderPath;
-        return true;
     }
 }

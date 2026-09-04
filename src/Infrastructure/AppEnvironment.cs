@@ -3,13 +3,11 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Runtime.Versioning;
 using System.Text.Json;
 using Microsoft.Win32;
 using Sqlbi.Bravo.Infrastructure.Configuration;
 using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
+using Sqlbi.Bravo.Infrastructure.Diagnostics;
 using Sqlbi.Bravo.Infrastructure.Extensions;
 using Sqlbi.Bravo.Infrastructure.Helpers;
 using Sqlbi.Bravo.Infrastructure.Security;
@@ -81,7 +79,6 @@ internal static class AppEnvironment
 
         ProcessId = Environment.ProcessId;
         SessionId = currentProcess.SessionId;
-        ProcessPath = Environment.ProcessPath!;
 
         ApplicationDataPath = Path.Combine(Environment.GetFolderPath(DeploymentMode == AppDeploymentMode.Packaged ? Environment.SpecialFolder.UserProfile : Environment.SpecialFolder.LocalApplicationData, Environment.SpecialFolderOption.DoNotVerify), ApplicationName);
         ApplicationTempPath = Path.Combine(ApplicationDataPath, ".temp");
@@ -91,8 +88,6 @@ internal static class AppEnvironment
 
         Diagnostics = new ConcurrentDictionary<DiagnosticMessage, DiagnosticMessage>();
         DefaultJsonOptions = new(JsonSerializerDefaults.Web) { MaxDepth = 32 }; // see Microsoft.AspNetCore.Mvc.JsonOptions.JsonSerializerOptions
-
-        AddEnvironmentDiagnosticInfo();
     }
 
     /// <summary>
@@ -102,8 +97,6 @@ internal static class AppEnvironment
     public static int SessionId { get; }
 
     public static int ProcessId { get; }
-
-    public static string ProcessPath { get; }
 
     public static AppPublishMode PublishMode
     {
@@ -166,37 +159,6 @@ internal static class AppEnvironment
         var message = DiagnosticMessage.Create(type, severity, name, content);
 
         _ = Diagnostics.TryAdd(message, message);
-    }
-
-    private static void AddEnvironmentDiagnosticInfo()
-    {
-        if (!IsDiagnosticLevelVerbose)
-            return;
-
-        var targetFramework = typeof(Program).Assembly.GetCustomAttributes(typeof(TargetFrameworkAttribute), inherit: false).OfType<TargetFrameworkAttribute>().FirstOrDefault();
-
-        var info = new
-        {
-            SystemOSVersion = Environment.OSVersion.VersionString,
-            SystemProcessorCount = Environment.ProcessorCount,
-            ProcessId,
-            ProcessPath,
-            ProcessSessionId = SessionId,
-            RuntimeOSDescription = RuntimeInformation.OSDescription.ToString(),
-            RuntimeOSVersion = RuntimeInformation.RuntimeIdentifier,
-            RuntimeFrameworkDescription = RuntimeInformation.FrameworkDescription,
-            TargetFrameworkName = targetFramework?.FrameworkName ?? "n/a",
-            WebView2VersionInfo,
-            //
-            ApplicationPublishMode = PublishMode.ToString(),
-            ApplicationDeploymentMode = DeploymentMode.ToString(),
-            ApplicationVersion = AppVersion.InformationalVersion,
-            ApplicationDataPath,
-            ApplicationTempPath,
-            ApplicationUserSettingsFilePath = UserSettingsFilePath,
-        };
-
-        AddDiagnostics(DiagnosticMessageType.Json, name: $"{nameof(AppEnvironment)}.EnvironmentInfo", content: JsonSerializer.Serialize(info));
     }
 
     private static AppDeploymentMode GetDeploymentMode()

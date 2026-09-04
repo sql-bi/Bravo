@@ -14,6 +14,7 @@ using Microsoft.Web.WebView2.WinForms;
 using Sqlbi.Bravo.Host;
 using Sqlbi.Bravo.Infrastructure.Configuration;
 using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
+using Sqlbi.Bravo.Infrastructure.Diagnostics;
 using Sqlbi.Bravo.Infrastructure.Extensions;
 using Sqlbi.Bravo.Infrastructure.Helpers;
 using Sqlbi.Bravo.Infrastructure.Messages;
@@ -183,6 +184,12 @@ window.external = {
         CenterToScreen();
 
         _instanceActivationEvents.ActivationRequested += OnActivationRequestedRestoreWindowToForeground;
+
+        if (AppEnvironment.IsDiagnosticLevelVerbose)
+        {
+            var content = EnvironmentInfo.Collect().ToDictionary();
+            AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{nameof(AppWindow)}.{nameof(EnvironmentInfo)}", content: JsonSerializer.Serialize(content));
+        }
     }
 
     private void OnFormClosed(object? sender, FormClosedEventArgs e)

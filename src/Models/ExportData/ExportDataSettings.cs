@@ -44,12 +44,6 @@ public class ExportDelimitedTextSettings : ExportDataSettings
     /// </summary>
     [JsonPropertyName("quoteStringFields")]
     public bool QuoteStringFields { get; set; } = false;
-
-    /// <summary>
-    /// Specifies whether to export the data to a subfolder with the same name as the source <see cref="IDataModel{T}"/>
-    /// </summary>
-    [JsonPropertyName("createSubfolder")]
-    public bool CreateSubfolder { get; set; } = false;
 }
 
 public class ExportExcelSettings : ExportDataSettings

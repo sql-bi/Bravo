@@ -182,8 +182,6 @@ const locale: Locale = {
         [_.exportDataCSVDelimiterTab]: "Tab",
         [_.exportDataCSVEncoding]: "Kódování",
         [_.exportDataCSVEncodingDesc]: "",
-        [_.exportDataCSVFolder]: "Ušetřete v podsložce",
-        [_.exportDataCSVFolderDesc]: "Uložte generované soubory CSV v podsložce.",
         [_.exportDataCSVQuote]: "Uzavřete textový řetězec do uvozovek",
         [_.exportDataCSVQuoteDesc]: "Ujistěte se, že každý řetězec je uzavřen do dvojitých uvozovek.",
         [_.exportDataExcelCreateExportSummary]: "Exportovat souhrn",

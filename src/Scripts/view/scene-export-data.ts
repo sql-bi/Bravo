@@ -30,7 +30,6 @@ interface ExportSettings {
     delimiter: string
     customDelimiter: string
     quoteStringFields: boolean
-    createSubfolder: boolean
 }
 
 export class ExportDataScene extends DocScene {
@@ -55,8 +54,7 @@ export class ExportDataScene extends DocScene {
             encoding: "utf8",
             delimiter: "",
             customDelimiter: "",
-            quoteStringFields: false,
-            createSubfolder: false
+            quoteStringFields: false
         });
     }
 
@@ -189,17 +187,6 @@ export class ExportDataScene extends DocScene {
                 parent: "format",
                 name: i18n(strings.exportDataCSVQuote),
                 description: i18n(strings.exportDataCSVQuoteDesc),
-                type: OptionType.switch,
-                toggledBy: {
-                    option: "format",
-                    value: ExportDataFormat.Csv
-                }
-            },
-            {
-                option: "createSubfolder",
-                parent: "format",
-                name: i18n(strings.exportDataCSVFolder),
-                description: i18n(strings.exportDataCSVFolderDesc),
                 type: OptionType.switch,
                 toggledBy: {
                     option: "format",
@@ -473,8 +460,7 @@ export class ExportDataScene extends DocScene {
                 tables: tables,
                 unicodeEncoding: (this.config.options.encoding == "utf16"),
                 delimiter: delimiter,
-                quoteStringFields: this.config.options.quoteStringFields,
-                createSubfolder: this.config.options.createSubfolder
+                quoteStringFields: this.config.options.quoteStringFields
             };
 
             if (this.doc.type == DocType.dataset) {

@@ -3,7 +3,6 @@ using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using Sqlbi.Bravo.Infrastructure.Extensions;
-using Sqlbi.Bravo.Infrastructure.Helpers;
 using Sqlbi.Bravo.Infrastructure.Windows.Interop;
 
 namespace Sqlbi.Bravo.Infrastructure.Windows;
@@ -127,58 +126,5 @@ internal class ColorPickerDialog
         {
             Marshal.FreeCoTaskMem(lpCustColors);
         }
-    }
-}
-
-internal class MessageDialog
-{
-    public static void Show(string heading, string text)
-    {
-        var appIcon = Icon.ExtractAssociatedIcon(AppEnvironment.ProcessPath);
-        var icon = new TaskDialogIcon(appIcon!);
-
-        var page = new TaskDialogPage()
-        {
-            Caption = AppEnvironment.ApplicationMainWindowTitle,
-            Heading = heading,
-            Text = text,
-            Icon = icon,
-            AllowCancel = true
-        };
-
-        var hwndOwner = ProcessHelper.GetCurrentProcessMainWindowHandle();
-        _ = TaskDialog.ShowDialog(hwndOwner, page, TaskDialogStartupLocation.CenterScreen);
-    }
-
-    public static TaskDialogButton ShowDialog(string heading, string? text, string? footnoteText, bool allowCancel, params TaskDialogButton[] buttons)
-    {
-        var appIcon = Icon.ExtractAssociatedIcon(AppEnvironment.ProcessPath);
-        var icon = new TaskDialogIcon(appIcon!);
-
-        var page = new TaskDialogPage()
-        {
-            Caption = AppEnvironment.ApplicationMainWindowTitle,
-            Heading = heading,
-            Text = text,
-            Icon = icon,
-            AllowCancel = allowCancel, // || buttons.Any((button) => button == TaskDialogButton.Cancel),
-            AllowMinimize = false
-        };
-
-        if (footnoteText is not null)
-        {
-            page.Footnote = new TaskDialogFootnote()
-            {
-                Text = footnoteText,
-            };
-        }
-
-        foreach (var button in buttons)
-            page.Buttons.Add(button);
-
-        var hwndOwner = ProcessHelper.GetCurrentProcessMainWindowHandle();
-        var clickedButton = TaskDialog.ShowDialog(hwndOwner, page, TaskDialogStartupLocation.CenterScreen);
-
-        return clickedButton;
     }
 }

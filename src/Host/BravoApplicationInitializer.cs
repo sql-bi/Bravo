@@ -9,15 +9,13 @@ using Sqlbi.Bravo.Infrastructure.Services;
 namespace Sqlbi.Bravo.Host;
 
 /// <summary>
-/// Provides the initialization phase that precedes the application.
+/// Initializes the application process, applying process-wide settings
+/// and composing the necessary components before the host is created.
 /// </summary>
 internal static class BravoApplicationInitializer
 {
     /// <summary>
-    /// Initializes the process: applies the process-wide settings and composes what the process owns
-    /// before a host exists — as explicit objects in dependency order, no container — returning them
-    /// in the context. <see cref="BravoApplicationBuilder"/> later publishes them to the one real
-    /// service provider.
+    /// Initializes the application process, applying process-wide settings
     /// </summary>
     public static BravoApplicationInitializationContext Initialize()
     {

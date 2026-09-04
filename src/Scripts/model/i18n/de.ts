@@ -184,8 +184,6 @@ const locale: Locale = {
         [_.exportDataCSVDelimiterTab]: "Tab",
         [_.exportDataCSVEncoding]: "Kodierung",
         [_.exportDataCSVEncodingDesc]: "",
-        [_.exportDataCSVFolder]: "In einem Unterordner sparen",
-        [_.exportDataCSVFolderDesc]: "Speichern Sie generierte CSV -Dateien in einem Unterordner.",
         [_.exportDataCSVQuote]: "Zeichenketten in Anführungszeichen einschließen",
         [_.exportDataCSVQuoteDesc]: "Stellt sicher, dass jede Zeichenkette in doppelte Anführungszeichen gesetzt wird.",
         [_.exportDataExcelCreateExportSummary]: "Export Zusammenfassung",

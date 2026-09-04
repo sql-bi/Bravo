@@ -179,12 +179,13 @@ internal static class ProcessHelper
     {
         if (File.Exists(path))
         {
+            const string Txt = ".txt";
             const string Pbix = ".pbix";
             const string Xlsx = ".xlsx";
             const string CodeWorkspace = ".code-workspace";
 
             var extension = Path.GetExtension(path);
-            var isAllowed = (new[] { Pbix, Xlsx, CodeWorkspace }).Any((ext) => ext.EqualsI(extension));
+            var isAllowed = (new[] { Txt, Pbix, Xlsx, CodeWorkspace }).Any((ext) => ext.EqualsI(extension));
             var isPbix = extension.EqualsI(Pbix);
 
             if (isAllowed)

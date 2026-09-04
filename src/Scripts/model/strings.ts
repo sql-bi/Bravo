@@ -177,8 +177,6 @@ export enum strings {
     exportDataCSVDelimiterTab,
     exportDataCSVEncoding,
     exportDataCSVEncodingDesc,
-    exportDataCSVFolder,
-    exportDataCSVFolderDesc,
     exportDataCSVQuote,
     exportDataCSVQuoteDesc,
     exportDataExcelCreateExportSummary,

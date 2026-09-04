@@ -186,8 +186,6 @@ const locale: Locale = {
         [_.exportDataCSVDelimiterTab]: "Tab",
         [_.exportDataCSVEncoding]: "رمزگذاری",
         [_.exportDataCSVEncodingDesc]: "",
-        [_.exportDataCSVFolder]: "ذخیره در زیرپوشه",
-        [_.exportDataCSVFolderDesc]: "ذخیره اکسل خروجی گرفته شده در زیرپوشه.",
         [_.exportDataCSVQuote]: "رشته ها را در دو گیومه قرار دهید",
         [_.exportDataCSVQuoteDesc]: "اطمینان حاصل کنید که هر رشته در گیومه های دوتایی محصور شده است.",
         [_.exportDataExcelCreateExportSummary]: "خلاصه خروجی گرفتن",

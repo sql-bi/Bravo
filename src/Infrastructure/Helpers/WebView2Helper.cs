@@ -1,16 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using Microsoft.Web.WebView2.Core;
 using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
 using Sqlbi.Bravo.Infrastructure.Extensions;
-using Sqlbi.Bravo.Infrastructure.Windows;
+using Sqlbi.Bravo.Infrastructure.Windows.Dialogs;
 using Sqlbi.Bravo.Infrastructure.Windows.Interop;
 
 namespace Sqlbi.Bravo.Infrastructure.Helpers;
@@ -21,11 +19,14 @@ internal static class WebView2Helper
     //internal static extern int GetAvailableCoreWebView2BrowserVersionString([In][MarshalAs(UnmanagedType.LPWStr)] string? browserExecutableFolder, [MarshalAs(UnmanagedType.LPWStr)] ref string versionInfo);
 
     /// <summary>
-    /// The Bootstrapper is a tiny installer that downloads the Evergreen Runtime matching device architecture and installs it locally.
-    /// https://developer.microsoft.com/en-us/microsoft-edge/webview2/#download-section
+    /// The bootstrapper URL Microsoft provides to download the Evergreen WebView2 Runtime.
     /// </summary>
-    public static string EvergreenRuntimeBootstrapperUrl = "https://go.microsoft.com/fwlink/p/?LinkId=2124703";
-    public static string MicrosoftReferenceUrl = "https://developer.microsoft.com/en-us/microsoft-edge/webview2";
+    private const string BootstrapperDownloadUrl = "https://go.microsoft.com/fwlink/p/?LinkId=2124703";
+
+    /// <summary>
+    /// The page Microsoft addresses to end users who need to install the runtime themselves.
+    /// </summary>
+    private const string ConsumerDownloadPageUrl = "https://developer.microsoft.com/microsoft-edge/webview2/consumer/";
 
     public static void TryAndIgnoreUnsupportedError(Action action)
     {
@@ -74,53 +75,51 @@ internal static class WebView2Helper
         */
     }
 
+    /// <summary>
+    /// Ensures that the WebView2 Runtime is installed. If not, prompts the user to download and install it.
+    /// </summary>
     public static void EnsureRuntimeIsInstalled()
     {
         if (AppEnvironment.IsWebView2RuntimeInstalled)
             return;
 
-        var heading = $"{AppEnvironment.ApplicationMainWindowTitle} requires the Microsoft Edge WebView2 runtime which is not currently installed.\r\n\r\nChoose an option to proceed with the installation:";
-        var footnoteText = $"For more details please refer to the following address:\r\n\r\n - {AppEnvironment.ApplicationWebsiteUrl}\r\n - {MicrosoftReferenceUrl}";
-        var automaticButton = new TaskDialogCommandLinkButton("&Automatic", "Download and install Microsoft Edge WebView2 runtime now");
-        var manualButton = new TaskDialogCommandLinkButton("&Manual", "Open the browser on the download page");
-        var cancelButton = new TaskDialogCommandLinkButton("&Cancel", "Close the application without installing");
+        var downloadButton = new TaskDialogCommandLinkButton("&Download it now", "You will need to run the downloaded installer, then start Bravo again.");
 
-        var dialogButton = MessageDialog.ShowDialog(heading, text: null, footnoteText, allowCancel: false, automaticButton, manualButton, cancelButton);
+        var clickedButton = TaskDialogBuilder.Create()
+            .WithCaption(AppEnvironment.ApplicationMainWindowTitle)
+            .WithCurrentProcessIcon()
+            .WithStartupLocation(TaskDialogStartupLocation.CenterScreen)
+            .WithAllowCancel()
+            .WithSizeToContent()
+            .WithEnableLinks(OpenBrowser)
+            .WithHeading("You must install WebView2 Runtime to run this application.")
+            .WithText("Bravo needs Microsoft Edge WebView2 Runtime to display its user interface.")
+            .WithExpander(GetDetails(), expanded: false, TaskDialogExpanderPosition.AfterText, expandedButtonText: "Hide details", collapsedButtonText: "Show details")
+            .AddButtons(downloadButton, TaskDialogButton.Close)
+            .WithDefaultButton(downloadButton)
+            .Show();
 
-        if (dialogButton == automaticButton)
-        {
-            DownloadAndInstallRuntime();
-        }
-        else if (dialogButton == manualButton)
-        {
-            var address = new Uri(MicrosoftReferenceUrl, uriKind: UriKind.Absolute);
-            _ = ProcessHelper.OpenBrowser(address);
-        }
-        else if (dialogButton == cancelButton)
-        {
-            //
-        }
+        if (clickedButton == downloadButton)
+            OpenBrowser(BootstrapperDownloadUrl);
 
-        Environment.Exit(NativeMethods.ERROR_SUCCESS);
-    }
+        // The application cannot run without WebView2 Runtime, so exit with a specific error code
+        Environment.Exit(NativeMethods.ERROR_CANCELLED);
 
-    private static void DownloadAndInstallRuntime()
-    {
-        // TODO: use http client from pool, add proxy support
-        using var httpClient = new HttpClient();
+        static string GetDetails()
+            => $"""
+               Architecture: {RuntimeInformation.OSArchitecture.ToString().ToLowerInvariant()}
+               Windows version: {Environment.OSVersion.Version}
+               Bravo version: {AppVersion.SemanticVersion}
 
-        var fileBytes = httpClient.GetByteArrayAsync(EvergreenRuntimeBootstrapperUrl).GetAwaiter().GetResult();
-        var filePath = Path.Combine(AppEnvironment.ApplicationTempPath, $"MicrosoftEdgeWebview2Setup-{DateTime.Now:yyyyMMddHHmmss}.exe");
+               Learn more:
+               <a href="{ConsumerDownloadPageUrl}">{ConsumerDownloadPageUrl}</a>
 
-        File.WriteAllBytes(filePath, fileBytes);
+               Download link:
+               <a href="{BootstrapperDownloadUrl}">{BootstrapperDownloadUrl}</a>
+               """;
 
-        using var process = Process.Start(filePath); // add switches ? i.e. /silent /install
-        process.WaitForExit();
-
-        if (process.ExitCode != NativeMethods.ERROR_SUCCESS)
-        {
-            ExceptionHelper.WriteToEventLog($"WebView2 bootstrapper exit code '{process.ExitCode}'", EventLogEntryType.Warning);
-        }
+        static void OpenBrowser(string url)
+            => ProcessHelper.OpenBrowser(new Uri(url, UriKind.Absolute));
     }
 
     public static string GetProxyArguments(ProxySettings? proxySettings, IWebProxy systemProxy)

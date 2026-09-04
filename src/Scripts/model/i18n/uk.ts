@@ -183,8 +183,6 @@ const locale: Locale = {
         [_.exportDataCSVDelimiterTab]: "Табуляція",
         [_.exportDataCSVEncoding]: "Кодування",
         [_.exportDataCSVEncodingDesc]: "",
-        [_.exportDataCSVFolder]: "Зберегти в підпапці",
-        [_.exportDataCSVFolderDesc]: "Збережіть сформовані CSV-файли в підпапці.",
         [_.exportDataCSVQuote]: "Взяти рядки в лапки",
         [_.exportDataCSVQuoteDesc]: "Переконайтеся, що кожен рядок укладений у подвійні лапки.",
         [_.exportDataExcelCreateExportSummary]: "Експортувати звіт",
