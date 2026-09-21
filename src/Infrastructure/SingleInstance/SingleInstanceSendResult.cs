@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Sqlbi.Bravo.Infrastructure.SingleInstance;
 
@@ -13,8 +14,7 @@ internal enum SingleInstanceSendStatus
     Delivered = 0,
 
     /// <summary>
-    /// No owner accepted the connection within the configured timeout. Either the owner is gone, or
-    /// it is alive but not listening — which the caller may want to surface rather than ignore.
+    /// No owner accepted the connection within the configured timeout, or the owner refused it.
     /// </summary>
     OwnerUnavailable = 1,
 
@@ -25,15 +25,29 @@ internal enum SingleInstanceSendStatus
 }
 
 /// <summary>
-/// Result of a <see cref="SingleInstanceClient"/> send. Failing to reach the owner is an expected
-/// runtime condition, not an exceptional one, so it is returned rather than thrown.
+/// Result of a <see cref="SingleInstanceClient"/> send.
 /// </summary>
-internal readonly record struct SingleInstanceSendResult(SingleInstanceSendStatus Status, Exception? Exception)
+/// <remarks>
+/// Failing to reach the owner is an expected runtime condition, so it is returned rather than
+/// thrown. A failed result always carries the exception that caused it.
+/// </remarks>
+internal readonly record struct SingleInstanceSendResult
 {
+    private SingleInstanceSendResult(SingleInstanceSendStatus status, Exception? exception)
+    {
+        Status = status;
+        Exception = exception;
+    }
+
+    public SingleInstanceSendStatus Status { get; }
+
+    public Exception? Exception { get; }
+
+    [MemberNotNullWhen(false, nameof(Exception))]
     public bool IsDelivered => Status == SingleInstanceSendStatus.Delivered;
 
     public static SingleInstanceSendResult Delivered()
-        => new(SingleInstanceSendStatus.Delivered, Exception: null);
+        => new(SingleInstanceSendStatus.Delivered, exception: null);
 
     public static SingleInstanceSendResult OwnerUnavailable(Exception exception)
         => new(SingleInstanceSendStatus.OwnerUnavailable, exception);

@@ -5,46 +5,24 @@ using Xunit;
 
 namespace Bravo.Tests.Infrastructure.Policies;
 
-/// <summary>
-/// Exercises PoliciesFactory's parsing/precedence logic using an in-memory fake instead of the
-/// real registry. Registry-adapter behavior itself is covered separately by
-/// <see cref="RegistryPolicySourceTests"/>.
-/// </summary>
-public class PoliciesFactoryTests
+public class RegistryPolicyReaderTests
 {
-    private sealed class FakePolicySource : IPolicySource
-    {
-        private readonly Dictionary<string, object> _values = new();
-
-        public void Set(string name, object value) => _values[name] = value;
-
-        public int? GetInt(string name)
-            => _values.TryGetValue(name, out var value) && value is int intValue ? intValue : null;
-
-        public string? GetString(string name)
-            => _values.TryGetValue(name, out var value) ? value as string : null;
-    }
-
-    // MemberData deliberately carries only the (public) property name rather than a
-    // Func<Policies, bool?> selector: Policies/IPolicies are internal, and a public test
-    // method cannot declare a parameter of a less-accessible type (CS0051), even with
-    // InternalsVisibleTo. The property is read via reflection inside the test body instead.
     public static IEnumerable<object[]> BoolPolicyNames() => new[]
     {
-        new object[] { nameof(IPolicies.TelemetryEnabled) },
-        new object[] { nameof(IPolicies.UpdateCheckEnabled) },
-        new object[] { nameof(IPolicies.UseSystemBrowserForAuthentication) },
-        new object[] { nameof(IPolicies.BuiltInTemplatesEnabled) },
-        new object[] { nameof(IPolicies.CustomTemplatesEnabled) },
+        new object[] { nameof(PolicySnapshot.TelemetryEnabled) },
+        new object[] { nameof(PolicySnapshot.UpdateCheckEnabled) },
+        new object[] { nameof(PolicySnapshot.UseSystemBrowserForAuthentication) },
+        new object[] { nameof(PolicySnapshot.BuiltInTemplatesEnabled) },
+        new object[] { nameof(PolicySnapshot.CustomTemplatesEnabled) },
     };
 
-    private static bool? GetBoolProperty(Sqlbi.Bravo.Infrastructure.Policies.Policies policies, string propertyName)
-        => (bool?)typeof(Sqlbi.Bravo.Infrastructure.Policies.Policies).GetProperty(propertyName)!.GetValue(policies);
+    private static bool? GetBoolProperty(PolicySnapshot policies, string propertyName)
+        => (bool?)typeof(PolicySnapshot).GetProperty(propertyName)!.GetValue(policies);
 
     [Fact]
     public void FromSource_EmptySource_AllPropertiesAreNull()
     {
-        var policies = PoliciesFactory.FromSource(new FakePolicySource());
+        var policies = RegistryPolicyReader.FromSource(new FakePolicySource());
 
         Assert.Null(policies.TelemetryEnabled);
         Assert.Null(policies.UpdateChannel);
@@ -62,7 +40,7 @@ public class PoliciesFactoryTests
         var source = new FakePolicySource();
         source.Set(propertyName, 1);
 
-        var policies = PoliciesFactory.FromSource(source);
+        var policies = RegistryPolicyReader.FromSource(source);
 
         Assert.True(GetBoolProperty(policies, propertyName));
     }
@@ -74,7 +52,7 @@ public class PoliciesFactoryTests
         var source = new FakePolicySource();
         source.Set(propertyName, 0);
 
-        var policies = PoliciesFactory.FromSource(source);
+        var policies = RegistryPolicyReader.FromSource(source);
 
         Assert.False(GetBoolProperty(policies, propertyName));
     }
@@ -86,7 +64,7 @@ public class PoliciesFactoryTests
         var source = new FakePolicySource();
         source.Set(propertyName, 42);
 
-        var policies = PoliciesFactory.FromSource(source);
+        var policies = RegistryPolicyReader.FromSource(source);
 
         Assert.Null(GetBoolProperty(policies, propertyName));
     }
@@ -98,7 +76,7 @@ public class PoliciesFactoryTests
         var source = new FakePolicySource();
         source.Set(propertyName, "not-a-number");
 
-        var policies = PoliciesFactory.FromSource(source);
+        var policies = RegistryPolicyReader.FromSource(source);
 
         Assert.Null(GetBoolProperty(policies, propertyName));
     }
@@ -109,7 +87,7 @@ public class PoliciesFactoryTests
         var source = new FakePolicySource();
         source.Set("UpdateChannel", (int)UpdateChannelType.Dev);
 
-        var policies = PoliciesFactory.FromSource(source);
+        var policies = RegistryPolicyReader.FromSource(source);
 
         Assert.Equal(UpdateChannelType.Dev, policies.UpdateChannel);
     }
@@ -121,7 +99,7 @@ public class PoliciesFactoryTests
         var source = new FakePolicySource();
         source.Set("UpdateChannel", 1);
 
-        var policies = PoliciesFactory.FromSource(source);
+        var policies = RegistryPolicyReader.FromSource(source);
 
         Assert.Null(policies.UpdateChannel);
     }
@@ -132,7 +110,7 @@ public class PoliciesFactoryTests
         var source = new FakePolicySource();
         source.Set("UpdateChannel", "Dev");
 
-        var policies = PoliciesFactory.FromSource(source);
+        var policies = RegistryPolicyReader.FromSource(source);
 
         Assert.Null(policies.UpdateChannel);
     }
@@ -143,7 +121,7 @@ public class PoliciesFactoryTests
         var source = new FakePolicySource();
         source.Set("CustomTemplatesOrganizationRepositoryPath", @"C:\Templates\Org");
 
-        var policies = PoliciesFactory.FromSource(source);
+        var policies = RegistryPolicyReader.FromSource(source);
 
         Assert.Equal(@"C:\Templates\Org", policies.CustomTemplatesOrganizationRepositoryPath);
     }
@@ -154,24 +132,12 @@ public class PoliciesFactoryTests
         var source = new FakePolicySource();
         source.Set("CustomTemplatesOrganizationRepositoryPath", 123);
 
-        var policies = PoliciesFactory.FromSource(source);
+        var policies = RegistryPolicyReader.FromSource(source);
 
         Assert.Null(policies.CustomTemplatesOrganizationRepositoryPath);
     }
 
-    [Fact]
-    public void Create_DoesNotThrow_AndReturnsAnInstance()
-    {
-        // Create() reads from the real HKLM/HKCU policy path, so its output depends on the
-        // machine's actual group-policy configuration and cannot be asserted deterministically here.
-        // This is a smoke test for the composition wiring (LocalMachine + CurrentUser -> Merge);
-        // the precedence rule itself is covered deterministically by the Merge tests below.
-        var policies = PoliciesFactory.Create();
-
-        Assert.NotNull(policies);
-    }
-
-    private static readonly Sqlbi.Bravo.Infrastructure.Policies.Policies AllNull = new(
+    private static readonly PolicySnapshot AllNull = new(
         TelemetryEnabled: null,
         UpdateChannel: null,
         UpdateCheckEnabled: null,
@@ -186,7 +152,7 @@ public class PoliciesFactoryTests
         var machine = AllNull with { TelemetryEnabled = true };
         var user = AllNull;
 
-        var merged = PoliciesFactory.Merge(machine, user);
+        var merged = RegistryPolicyReader.Merge(machine, user);
 
         Assert.True(merged.TelemetryEnabled);
     }
@@ -197,7 +163,7 @@ public class PoliciesFactoryTests
         var machine = AllNull;
         var user = AllNull with { TelemetryEnabled = false };
 
-        var merged = PoliciesFactory.Merge(machine, user);
+        var merged = RegistryPolicyReader.Merge(machine, user);
 
         Assert.False(merged.TelemetryEnabled);
     }
@@ -208,7 +174,7 @@ public class PoliciesFactoryTests
         var machine = AllNull with { TelemetryEnabled = true, UpdateChannel = UpdateChannelType.Stable, UpdateCheckEnabled = false };
         var user = AllNull with { TelemetryEnabled = false, UpdateChannel = UpdateChannelType.Dev, UpdateCheckEnabled = true };
 
-        var merged = PoliciesFactory.Merge(machine, user);
+        var merged = RegistryPolicyReader.Merge(machine, user);
 
         Assert.True(merged.TelemetryEnabled);
         Assert.Equal(UpdateChannelType.Stable, merged.UpdateChannel);
@@ -218,7 +184,7 @@ public class PoliciesFactoryTests
     [Fact]
     public void Merge_NeitherSet_ReturnsNull()
     {
-        var merged = PoliciesFactory.Merge(AllNull, AllNull);
+        var merged = RegistryPolicyReader.Merge(AllNull, AllNull);
 
         Assert.Null(merged.TelemetryEnabled);
     }
@@ -229,7 +195,7 @@ public class PoliciesFactoryTests
         // Guards against a copy-paste wiring mistake in Merge() (e.g. reading the wrong
         // property from machine/user) by exercising all 7 properties in a single assertion,
         // each with a distinct machine/user combination.
-        var machine = new Sqlbi.Bravo.Infrastructure.Policies.Policies(
+        var machine = new PolicySnapshot(
             TelemetryEnabled: true,
             UpdateChannel: null,
             UpdateCheckEnabled: null,
@@ -238,7 +204,7 @@ public class PoliciesFactoryTests
             CustomTemplatesEnabled: null,
             CustomTemplatesOrganizationRepositoryPath: null);
 
-        var user = new Sqlbi.Bravo.Infrastructure.Policies.Policies(
+        var user = new PolicySnapshot(
             TelemetryEnabled: false, // machine wins
             UpdateChannel: UpdateChannelType.Dev, // machine unset -> user wins
             UpdateCheckEnabled: true, // machine unset -> user wins
@@ -247,7 +213,7 @@ public class PoliciesFactoryTests
             CustomTemplatesEnabled: null, // neither set
             CustomTemplatesOrganizationRepositoryPath: @"C:\User\Path"); // machine unset -> user wins
 
-        var merged = PoliciesFactory.Merge(machine, user);
+        var merged = RegistryPolicyReader.Merge(machine, user);
 
         Assert.True(merged.TelemetryEnabled);
         Assert.Equal(UpdateChannelType.Dev, merged.UpdateChannel);

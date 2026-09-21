@@ -1,7 +1,5 @@
 ﻿using System;
 using Sqlbi.Bravo.Host;
-using Sqlbi.Bravo.Infrastructure.Diagnostics;
-using Sqlbi.Bravo.Infrastructure.Telemetry;
 
 namespace Sqlbi.Bravo;
 
@@ -11,31 +9,17 @@ internal static class Program
     private static void Main()
     {
         ApplicationConfiguration.Initialize();
-        try
-        {
-            using var context = BravoApplicationInitializer.Initialize();
 
-            if (!context.Instance.IsPrimary)
-            {
-                context.Instance.RedirectActivationToPrimary();
-                return;
-            }
+        BravoApplicationConfiguration.Initialize();
 
-            using var application = BravoApplication
-                .CreateBuilder(context)
-                .Build();
+        using var context = BootstrapContextFactory.CreateDefault();
 
-            application.Run();
-        }
-        catch (Exception ex)
-        {
-            TelemetryService.Instance.TrackException(ex);
+        BravoGlobalExceptionHandling.Configure(context);
 
-            var report = ErrorReport.Create(ex);
-            report.TrySave();
-            ErrorReportDialog.Show(report);
+        using var app = BravoApplication
+            .CreateBuilder(context)
+            .Build();
 
-            throw;
-        }
+        app.Run();
     }
 }

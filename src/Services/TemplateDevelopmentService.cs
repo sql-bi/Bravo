@@ -52,13 +52,13 @@ internal class TemplateDevelopmentService : ITemplateDevelopmentService
     private readonly JsonSerializerOptions _serializerOptions;
     private readonly DaxTemplateManager _templateManager;
     private readonly IServerAddressProvider _serverAddressProvider;
-    private readonly IPolicies _policies;
+    private readonly IPolicyService _policyService;
 
-    public TemplateDevelopmentService(IServerAddressProvider serverAddressProvider, IPolicies policies)
+    public TemplateDevelopmentService(IServerAddressProvider serverAddressProvider, IPolicyService policyService)
     {
         _serverAddressProvider = serverAddressProvider;
-        _policies = policies;
-        _templateManager = new DaxTemplateManager(policies);
+        _policyService = policyService;
+        _templateManager = new DaxTemplateManager(policyService);
         _serializerOptions = new JsonSerializerOptions(AppEnvironment.DefaultJsonOptions) { WriteIndented = true };
     }
 
@@ -163,7 +163,7 @@ internal class TemplateDevelopmentService : ITemplateDevelopmentService
     {
         var customPackages = new List<CustomPackage>();
 
-        var repositoryPath = _policies.CustomTemplatesOrganizationRepositoryPath;
+        var repositoryPath = _policyService.Current.CustomTemplatesOrganizationRepositoryPath;
         if (repositoryPath is not null && Directory.Exists(repositoryPath))
         {
             var packagePaths = Directory.EnumerateFiles(repositoryPath, searchPattern: $"*{CustomPackageFileExtension}", new EnumerationOptions

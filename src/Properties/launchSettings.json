@@ -5,7 +5,10 @@
       "commandLineArgs": "",
       "launchBrowser": false,
       "launchUrl": "swagger",
-      "applicationUrl": "http://localhost:5000"
+      "applicationUrl": "http://localhost:5000",
+      "environmentVariables": {
+        "BRAVO_CrashTest": "startup|ui|thread|unobserved"
+      }
     }
   }
 }

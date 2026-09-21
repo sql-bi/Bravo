@@ -14,11 +14,14 @@ internal static class SingleInstanceClient
     /// Sends <paramref name="payload"/> to the owning instance.
     /// </summary>
     /// <remarks>
-    /// The connection is opened with <see cref="PipeOptions.CurrentUserOnly"/>, which makes the
-    /// client verify that the pipe is owned by the current user before writing to it.
+    /// <see cref="PipeOptions.CurrentUserOnly"/> makes the client verify that the pipe is owned by
+    /// the current user before writing to it. The write completes when the owner has read the
+    /// payload, so a delivered payload has reached the owner; an owner that is alive but not
+    /// reading blocks the caller, with no timeout.
     /// </remarks>
     public static SingleInstanceSendResult Send(SingleInstanceOptions options, byte[] payload)
     {
+        ArgumentOutOfRangeException.ThrowIfZero(payload.Length);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(payload.Length, options.MaxPayloadBytes);
 
         using var pipeClient = new NamedPipeClientStream(
@@ -39,9 +42,8 @@ internal static class SingleInstanceClient
         try
         {
             pipeClient.Write(payload, offset: 0, payload.Length);
-            pipeClient.Flush();
         }
-        catch (Exception ex) when (ex is IOException or ObjectDisposedException or InvalidOperationException)
+        catch (IOException ex)
         {
             return SingleInstanceSendResult.Failed(ex);
         }
