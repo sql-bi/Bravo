@@ -6,10 +6,7 @@ using Xunit;
 namespace Bravo.Tests.Infrastructure.Policies;
 
 /// <summary>
-/// Covers only the thin RegistryKey-to-IPolicySource bridging contract (missing key, missing
-/// value, type mismatches). Uses a real, isolated key under HKEY_CURRENT_USER (writable without
-/// admin rights) since RegistryKey is a sealed BCL type that cannot be faked. The
-/// parsing/precedence logic that matters is covered by PoliciesTests against a fake source instead.
+/// Verifies registry value types and handle ownership with an isolated key under HKEY_CURRENT_USER.
 /// </summary>
 public class RegistryPolicySourceTests : IDisposable
 {
@@ -30,7 +27,7 @@ public class RegistryPolicySourceTests : IDisposable
     [Fact]
     public void GetInt_NullKey_ReturnsNull()
     {
-        var source = new RegistryPolicySource(key: null);
+        using var source = new RegistryPolicySource(key: null);
 
         Assert.Null(source.GetInt("AnyValue"));
     }
@@ -38,7 +35,7 @@ public class RegistryPolicySourceTests : IDisposable
     [Fact]
     public void GetInt_ValueNotSet_ReturnsNull()
     {
-        var source = new RegistryPolicySource(_testKey);
+        using var source = new RegistryPolicySource(_testKey);
 
         Assert.Null(source.GetInt("Missing"));
     }
@@ -47,7 +44,7 @@ public class RegistryPolicySourceTests : IDisposable
     public void GetInt_DWordValue_ReturnsInt()
     {
         _testKey.SetValue("TelemetryEnabled", 1, RegistryValueKind.DWord);
-        var source = new RegistryPolicySource(_testKey);
+        using var source = new RegistryPolicySource(_testKey);
 
         Assert.Equal(1, source.GetInt("TelemetryEnabled"));
     }
@@ -56,7 +53,7 @@ public class RegistryPolicySourceTests : IDisposable
     public void GetInt_StringValue_ReturnsNull()
     {
         _testKey.SetValue("TelemetryEnabled", "1", RegistryValueKind.String);
-        var source = new RegistryPolicySource(_testKey);
+        using var source = new RegistryPolicySource(_testKey);
 
         Assert.Null(source.GetInt("TelemetryEnabled"));
     }
@@ -64,7 +61,7 @@ public class RegistryPolicySourceTests : IDisposable
     [Fact]
     public void GetString_NullKey_ReturnsNull()
     {
-        var source = new RegistryPolicySource(key: null);
+        using var source = new RegistryPolicySource(key: null);
 
         Assert.Null(source.GetString("AnyValue"));
     }
@@ -73,7 +70,7 @@ public class RegistryPolicySourceTests : IDisposable
     public void GetString_StringValue_ReturnsString()
     {
         _testKey.SetValue("CustomTemplatesOrganizationRepositoryPath", @"C:\Templates\Org", RegistryValueKind.String);
-        var source = new RegistryPolicySource(_testKey);
+        using var source = new RegistryPolicySource(_testKey);
 
         Assert.Equal(@"C:\Templates\Org", source.GetString("CustomTemplatesOrganizationRepositoryPath"));
     }
@@ -82,8 +79,18 @@ public class RegistryPolicySourceTests : IDisposable
     public void GetString_DWordValue_ReturnsNull()
     {
         _testKey.SetValue("CustomTemplatesOrganizationRepositoryPath", 123, RegistryValueKind.DWord);
-        var source = new RegistryPolicySource(_testKey);
+        using var source = new RegistryPolicySource(_testKey);
 
         Assert.Null(source.GetString("CustomTemplatesOrganizationRepositoryPath"));
+    }
+
+    [Fact]
+    public void Dispose_ClosesTheOwnedRegistryKey()
+    {
+        var source = new RegistryPolicySource(_testKey);
+
+        source.Dispose();
+
+        Assert.Throws<ObjectDisposedException>(() => _testKey.GetValue("AnyValue"));
     }
 }

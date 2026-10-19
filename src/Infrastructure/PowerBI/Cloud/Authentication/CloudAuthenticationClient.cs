@@ -22,12 +22,12 @@ public interface ICloudAuthenticationClient
 /// <summary>
 /// Handles authentication with Microsoft Entra ID (Azure AD) using MSAL.NET, including token acquisition and cache management.
 /// </summary>
-internal sealed class CloudAuthenticationClient(IPolicies policies) : ICloudAuthenticationClient
+internal sealed class CloudAuthenticationClient(IPolicyService policyService) : ICloudAuthenticationClient
 {
     private const string SystemBrowserRedirectUri = "http://localhost";
     private const string OrganizationalAccountsOnlyQueryParameter = "msafed=0"; // no Microsoft accounts (MSA) allowed
 
-    private readonly IPolicies _policies = policies;
+    private readonly IPolicyService _policyService = policyService;
 
     public async Task<AuthenticationResult> AcquireTokenAsync(
         CloudEnvironment environment, string email, CancellationToken cancellationToken)
@@ -77,7 +77,7 @@ internal sealed class CloudAuthenticationClient(IPolicies policies) : ICloudAuth
     private async Task<Msal.AuthenticationResult> AcquireTokenInteractiveAsync(
         IPublicClientApplication client, string[] scopes, string email, string claims, CancellationToken cancellationToken)
     {
-        var useSystemBrowser = _policies.UseSystemBrowserForAuthentication ?? UserPreferences.Current.UseSystemBrowserForAuthentication;
+        var useSystemBrowser = _policyService.Current.UseSystemBrowserForAuthentication ?? UserPreferences.Current.UseSystemBrowserForAuthentication;
         var useEmbeddedBrowser = !useSystemBrowser;
         var extraQueryParameters = OrganizationalAccountsOnlyQueryParameter;
         var prompt = Prompt.SelectAccount;
@@ -125,7 +125,7 @@ internal sealed class CloudAuthenticationClient(IPolicies policies) : ICloudAuth
 
     private IPublicClientApplication CreatePublicClient(CloudEnvironment environment)
     {
-        var useSystemBrowser = _policies.UseSystemBrowserForAuthentication ?? UserPreferences.Current.UseSystemBrowserForAuthentication;
+        var useSystemBrowser = _policyService.Current.UseSystemBrowserForAuthentication ?? UserPreferences.Current.UseSystemBrowserForAuthentication;
         var useEmbeddedBrowser = !useSystemBrowser;
         var redirectUri = (useEmbeddedBrowser ? environment.RedirectUri : SystemBrowserRedirectUri);
 

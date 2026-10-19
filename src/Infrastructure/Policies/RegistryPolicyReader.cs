@@ -1,28 +1,23 @@
-﻿using Microsoft.Win32;
-using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
+﻿using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
 
 namespace Sqlbi.Bravo.Infrastructure.Policies;
 
-/// <summary>
-/// Builds <see cref="Policies"/> instances: parses a single <see cref="IPolicySource"/>,
-/// and composes the effective policy set from LocalMachine + CurrentUser with precedence.
-/// </summary>
-internal static class PoliciesFactory
+internal sealed class RegistryPolicyReader(IPolicySourceFactory sourceFactory) : IPolicyReader
 {
-    private const string OptionSettingsSubKeyName = @"SOFTWARE\Policies\SQLBI\Bravo\OptionSettings";
+    private readonly IPolicySourceFactory _sourceFactory = sourceFactory;
 
-    public static Policies Create()
+    public PolicySnapshot Read()
     {
-        using var machineKey = Registry.LocalMachine.OpenSubKey(OptionSettingsSubKeyName);
-        var machinePolicies = FromSource(new RegistryPolicySource(machineKey));
+        using var machineSource = _sourceFactory.Open(PolicyScope.Computer);
+        var machinePolicies = FromSource(machineSource);
 
-        using var userKey = Registry.CurrentUser.OpenSubKey(OptionSettingsSubKeyName);
-        var userPolicies = FromSource(new RegistryPolicySource(userKey));
+        using var userSource = _sourceFactory.Open(PolicyScope.User);
+        var userPolicies = FromSource(userSource);
 
         return Merge(machinePolicies, userPolicies);
     }
 
-    internal static Policies FromSource(IPolicySource source) => new(
+    internal static PolicySnapshot FromSource(IPolicySource source) => new(
         TelemetryEnabled: source.GetBool("TelemetryEnabled"),
         UpdateChannel: source.GetEnum<UpdateChannelType>("UpdateChannel"),
         UpdateCheckEnabled: source.GetBool("UpdateCheckEnabled"),
@@ -31,10 +26,10 @@ internal static class PoliciesFactory
         CustomTemplatesEnabled: source.GetBool("CustomTemplatesEnabled"),
         CustomTemplatesOrganizationRepositoryPath: source.GetString("CustomTemplatesOrganizationRepositoryPath"));
 
-    internal static Policies Merge(Policies machinePolicies, Policies userPolicies)
+    internal static PolicySnapshot Merge(PolicySnapshot machinePolicies, PolicySnapshot userPolicies)
     {
         // LocalMachine takes precedence over CurrentUser when both are configured
-        return new Policies(
+        return new PolicySnapshot(
             TelemetryEnabled: machinePolicies.TelemetryEnabled ?? userPolicies.TelemetryEnabled,
             UpdateChannel: machinePolicies.UpdateChannel ?? userPolicies.UpdateChannel,
             UpdateCheckEnabled: machinePolicies.UpdateCheckEnabled ?? userPolicies.UpdateCheckEnabled,
