@@ -4,7 +4,7 @@ using Sqlbi.Bravo.Infrastructure.Messages;
 namespace Sqlbi.Bravo.Host;
 
 /// <summary>
-/// Provides data for the <see cref="IInstanceActivationEvents.ActivationRequested"/> event.
+/// Provides data for the <see cref="IInstanceEvents.ActivationRequested"/> event.
 /// </summary>
 internal class InstanceActivationRequestedEventArgs(AppInstanceStartupMessage? startupMessage) : EventArgs
 {

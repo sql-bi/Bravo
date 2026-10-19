@@ -23,7 +23,7 @@ internal static class BravoServiceCollectionExtensions
     {
         // The single instance goes in as its activation events only: IsPrimary and the activation
         // redirection belong to the entry point and stay out of the container.
-        services.AddSingleton<IInstanceActivationEvents>(context.Instance);
+        services.AddSingleton<IInstanceEvents>(context.Instance);
 
         services.AddSingleton<IPolicyService>(new PolicyServiceFactory().Create());
         services.AddSingleton<ITelemetryService>(TelemetryService.Instance);
