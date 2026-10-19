@@ -17,7 +17,7 @@ internal sealed class TelemetryService : ITelemetryService
 {
     private readonly TelemetryConfiguration _configuration;
     private readonly TelemetryClient _client;
-    private readonly IPolicies _policies;
+    private readonly PolicySnapshot _policies;
 
     private static readonly Lazy<TelemetryService> _instance = new(CreateInstance, isThreadSafe: true);
 
@@ -37,7 +37,7 @@ internal sealed class TelemetryService : ITelemetryService
         configuration.TelemetryInitializers.Add(new DefaultTelemetryInitializer());
         configuration.ConnectionString = TelemetrySessionInfo.ConnectionString;
 
-        var policies = PoliciesFactory.Create();
+        var policies = new PolicyServiceFactory().Create().Current;
 
         // Determine whether telemetry is enabled based on policies and user settings.
         var telemetryEnabled = policies.TelemetryEnabled ?? UserPreferences.Current.TelemetryEnabled;
@@ -48,7 +48,7 @@ internal sealed class TelemetryService : ITelemetryService
         return new TelemetryService(configuration, policies);
     }
 
-    private TelemetryService(TelemetryConfiguration configuration, IPolicies policies)
+    private TelemetryService(TelemetryConfiguration configuration, PolicySnapshot policies)
     {
         _configuration = configuration;
         _client = new TelemetryClient(configuration);

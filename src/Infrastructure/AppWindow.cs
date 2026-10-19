@@ -46,18 +46,18 @@ window.external = {
     private readonly IOptions<StartupSettings> _startupSettingsOptionsAccessor;
     private readonly WebView2ProxyAuthHandler _proxyAuthHandler;
     private readonly Color _startupThemeColor;
-    private readonly IPolicies _policies;
+    private readonly IPolicyService _policyService;
 
     public AppWindow(
         IInstanceActivationEvents instanceActivationEvents,
         IServerAddressProvider serverAddressProvider,
         IOptions<StartupSettings> startupSettingsOptionsAccessor,
-        IPolicies policies)
+        IPolicyService policyService)
     {
         _instanceActivationEvents = instanceActivationEvents;
         _serverAddressProvider = serverAddressProvider;
         _startupSettingsOptionsAccessor = startupSettingsOptionsAccessor;
-        _policies = policies;
+        _policyService = policyService;
         _proxyAuthHandler = new WebView2ProxyAuthHandler(WebProxyWrapper.Current);
         _startupThemeColor = ThemeHelper.ShouldUseDarkMode(UserPreferences.Current.Theme) ? AppEnvironment.ThemeColorDark : AppEnvironment.ThemeColorLight;
 
@@ -328,7 +328,7 @@ window.external = {
             token = AppEnvironment.ApiAuthenticationToken,
             version = AppVersion.SemanticVersion,
             options = BravoOptions.CreateFromUserPreferences(),
-            policies = _policies,
+            policies = _policyService.Current,
             culture = new
             {
                 ietfLanguageTag = CultureInfo.CurrentCulture.IetfLanguageTag,

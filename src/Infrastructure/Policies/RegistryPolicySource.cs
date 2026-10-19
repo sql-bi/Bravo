@@ -3,8 +3,7 @@
 namespace Sqlbi.Bravo.Infrastructure.Policies;
 
 /// <summary>
-/// Adapter that bridges <see cref="IPolicySource"/> to a real <see cref="RegistryKey"/>.
-/// Intentionally a thin pass-through with no logic of its own.
+/// Owns a read-only registry key containing raw policy values.
 /// </summary>
 internal sealed class RegistryPolicySource(RegistryKey? key) : IPolicySource
 {
@@ -15,4 +14,6 @@ internal sealed class RegistryPolicySource(RegistryKey? key) : IPolicySource
 
     public string? GetString(string name)
         => _key?.GetValue(name) as string;
+
+    public void Dispose() => _key?.Dispose();
 }

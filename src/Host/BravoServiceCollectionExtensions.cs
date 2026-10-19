@@ -25,7 +25,7 @@ internal static class BravoServiceCollectionExtensions
         // redirection belong to the entry point and stay out of the container.
         services.AddSingleton<IInstanceActivationEvents>(context.Instance);
 
-        services.AddSingleton<IPolicies>(PoliciesFactory.Create());
+        services.AddSingleton<IPolicyService>(new PolicyServiceFactory().Create());
         services.AddSingleton<ITelemetryService>(TelemetryService.Instance);
 
         return services;
