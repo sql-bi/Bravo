@@ -41,7 +41,7 @@ window.external = {
 };";
     public static SynchronizationContext? UISynchronizationContext { get; set; }
 
-    private readonly IInstanceActivationEvents _instanceActivationEvents;
+    private readonly IInstanceEvents _instanceEvents;
     private readonly IServerAddressProvider _serverAddressProvider;
     private readonly IOptions<StartupSettings> _startupSettingsOptionsAccessor;
     private readonly WebView2ProxyAuthHandler _proxyAuthHandler;
@@ -49,12 +49,12 @@ window.external = {
     private readonly IPolicyService _policyService;
 
     public AppWindow(
-        IInstanceActivationEvents instanceActivationEvents,
+        IInstanceEvents instanceEvents,
         IServerAddressProvider serverAddressProvider,
         IOptions<StartupSettings> startupSettingsOptionsAccessor,
         IPolicyService policyService)
     {
-        _instanceActivationEvents = instanceActivationEvents;
+        _instanceEvents = instanceEvents;
         _serverAddressProvider = serverAddressProvider;
         _startupSettingsOptionsAccessor = startupSettingsOptionsAccessor;
         _policyService = policyService;
@@ -183,7 +183,7 @@ window.external = {
 
         CenterToScreen();
 
-        _instanceActivationEvents.ActivationRequested += OnActivationRequestedRestoreWindowToForeground;
+        _instanceEvents.ActivationRequested += OnActivationRequestedRestoreWindowToForeground;
 
         if (AppEnvironment.IsDiagnosticLevelVerbose)
         {
@@ -194,8 +194,8 @@ window.external = {
 
     private void OnFormClosed(object? sender, FormClosedEventArgs e)
     {
-        _instanceActivationEvents.ActivationRequested -= OnActivationRequestedRestoreWindowToForeground;
-        _instanceActivationEvents.ActivationRequested -= OnActivationRequestedSendStartupWebMessage;
+        _instanceEvents.ActivationRequested -= OnActivationRequestedRestoreWindowToForeground;
+        _instanceEvents.ActivationRequested -= OnActivationRequestedSendStartupWebMessage;
     }
 
     private void OnWebViewDOMContentLoaded(object? sender, CoreWebView2DOMContentLoadedEventArgs e)
@@ -208,7 +208,7 @@ window.external = {
             BackgroundImage = null;
             SendAppStartupWebMessage();
 
-            _instanceActivationEvents.ActivationRequested += OnActivationRequestedSendStartupWebMessage;
+            _instanceEvents.ActivationRequested += OnActivationRequestedSendStartupWebMessage;
         }
     }
 

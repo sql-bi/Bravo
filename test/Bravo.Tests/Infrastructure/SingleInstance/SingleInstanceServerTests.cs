@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.IO.Pipes;
 using System.Text;
 using System.Threading;
@@ -159,14 +160,20 @@ public class SingleInstanceServerTests
         using (server)
         {
             using var errorRaised = new ManualResetEventSlim();
-            server.Error += (_, _) => errorRaised.Set();
+            Exception? error = null;
+            server.Error += (_, e) =>
+            {
+                error = e.GetException();
+                errorRaised.Set();
+            };
 
             using (var stalledClient = new NamedPipeClientStream(
                 ".", options.PipeName, PipeDirection.Out, PipeOptions.CurrentUserOnly))
             {
                 stalledClient.Connect((int)s_timeout.TotalMilliseconds);
-                // Connected, but deliberately never writes: stands in for a stuck or hostile client.
+                // Connected, but never writes: stands in for a stuck or hostile client.
                 Assert.True(errorRaised.Wait(s_timeout));
+                Assert.IsType<TimeoutException>(error);
             }
 
             // The stalled connection released the pipe: a real client is served next.
@@ -220,18 +227,26 @@ public class SingleInstanceServerTests
             using var received = new ManualResetEventSlim();
             using var rejected = new ManualResetEventSlim();
             byte[]? payload = null;
+            Exception? error = null;
 
             server.Activated += (_, e) =>
             {
                 payload = e.Payload;
                 received.Set();
             };
-            // An oversized payload is a reported rejection, not a silent drop: without this the owner
-            // would discard it with nothing recorded anywhere.
-            server.Error += (_, _) => rejected.Set();
+            // An oversized payload is a reported rejection, not a silent drop.
+            server.Error += (_, e) =>
+            {
+                error = e.GetException();
+                rejected.Set();
+            };
 
-            Assert.True(SingleInstanceClient.Send(clientOptions, Payload(new string('x', 256))).IsDelivered);
+            // The owner stops reading past the limit and disconnects, so the client's write of the
+            // remaining bytes fails: a client with a larger limit learns that its payload was refused.
+            var result = SingleInstanceClient.Send(clientOptions, Payload(new string('x', 256)));
+            Assert.Equal(SingleInstanceSendStatus.Failed, result.Status);
             Assert.True(rejected.Wait(s_timeout));
+            Assert.IsType<InvalidDataException>(error);
             Assert.False(received.Wait(TimeSpan.FromSeconds(1)));
 
             Assert.True(SingleInstanceClient.Send(clientOptions, Payload("small")).IsDelivered);
@@ -246,6 +261,53 @@ public class SingleInstanceServerTests
         var options = new SingleInstanceOptions { PipeName = $"Bravo.Tests.{Guid.NewGuid():N}", MaxPayloadBytes = 8 };
 
         Assert.Throws<ArgumentOutOfRangeException>(() => SingleInstanceClient.Send(options, Payload("far too long")));
+    }
+
+    [Fact]
+    public void Send_EmptyPayload_Throws()
+    {
+        var options = CreateOptions();
+
+        Assert.Throws<ArgumentOutOfRangeException>(() => SingleInstanceClient.Send(options, Payload("")));
+    }
+
+    /// <summary>
+    /// A client that connects and closes without writing is reported, like an oversized payload,
+    /// and the owner keeps listening.
+    /// </summary>
+    [Fact]
+    public void Activated_ClientClosesWithoutWriting_IsReportedAndTheOwnerKeepsListening()
+    {
+        var options = CreateOptions();
+        Assert.True(SingleInstanceServer.TryStart(options, out var server));
+
+        using (server)
+        {
+            using var errorRaised = new ManualResetEventSlim();
+            Exception? error = null;
+            server.Error += (_, e) =>
+            {
+                error = e.GetException();
+                errorRaised.Set();
+            };
+
+            using (var silentClient = new NamedPipeClientStream(
+                ".", options.PipeName, PipeDirection.Out, PipeOptions.CurrentUserOnly))
+            {
+                silentClient.Connect((int)s_timeout.TotalMilliseconds);
+            }
+
+            Assert.True(errorRaised.Wait(s_timeout));
+            // Empty payload when the owner accepted before the close; otherwise the accept itself
+            // fails with ERROR_NO_DATA.
+            Assert.True(error is InvalidDataException or IOException, error?.ToString());
+
+            using var received = new ManualResetEventSlim();
+            server.Activated += (_, _) => received.Set();
+
+            Assert.True(SingleInstanceClient.Send(options, Payload("hello")).IsDelivered);
+            Assert.True(received.Wait(s_timeout));
+        }
     }
 
     [Fact]

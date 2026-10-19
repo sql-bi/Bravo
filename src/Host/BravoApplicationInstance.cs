@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Text;
+using System.IO;
 using System.Text.Json;
 using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
 using Sqlbi.Bravo.Infrastructure.Helpers;
@@ -13,7 +13,7 @@ namespace Sqlbi.Bravo.Host;
 /// <summary>
 /// Defines the contract for a single-instance application.
 /// </summary>
-internal interface IBravoApplicationInstance : IInstanceActivationEvents, IDisposable
+internal interface IBravoApplicationInstance : IInstanceEvents, IDisposable
 {
     /// <summary>
     /// Gets a value indicating whether this process is the primary instance, the one that runs the application.
@@ -71,45 +71,41 @@ internal sealed class BravoApplicationInstance : IBravoApplicationInstance
         var startupMessage = default(AppInstanceStartupMessage?);
         try
         {
-            var json = Encoding.UTF8.GetString(e.Payload);
-            startupMessage = JsonSerializer.Deserialize<AppInstanceStartupMessage>(json);
+            startupMessage = JsonSerializer.Deserialize<AppInstanceStartupMessage>(e.Payload);
         }
         catch (JsonException)
         {
             // An unreadable payload still activates the window, with no document to open.
         }
 
-        // ACCEPTED LIMITATION — requests arriving while this instance is still starting up are
-        // dropped here, on purpose. The pipe answers from the moment the process starts, but the
-        // subscribers appear later: AppWindow attaches the bring-to-front handler in OnLoad, and the
-        // one that forwards the startup message only in OnWebViewDOMContentLoaded, seconds later.
-        // So a request that lands before the window exists is lost entirely, and one that lands
-        // between the window and a loaded WebView brings Bravo to the front but does not open what
-        // was asked for. The secondary instance is told the payload was delivered either way, so
-        // nothing records the loss.
+        // Known limitation: requests arriving while this instance is still starting up are dropped
+        // here. The pipe answers from the moment the process starts, but the subscribers appear
+        // later: AppWindow attaches the bring-to-front handler in OnLoad, and the one that forwards
+        // the startup message only in OnWebViewDOMContentLoaded, seconds later. A request that lands
+        // before the window exists is lost, and one that lands between the window and a loaded
+        // WebView brings Bravo to the front but does not open what was asked for. The secondary
+        // instance is told the payload was delivered either way.
         // TODO: Consider buffering the requests and replaying them once the UI is ready.
         ActivationRequested?.Invoke(this, new InstanceActivationRequestedEventArgs(startupMessage));
     }
 
-    private void OnError(object? sender, SingleInstanceErrorEventArgs e) => Report(e.Exception);
+    private void OnError(object? sender, ErrorEventArgs e) => Report(e.GetException());
 
     /// <inheritdoc/>
     public void RedirectActivationToPrimary()
     {
         var startupSettings = StartupSettings.CreateFromCommandLineArguments();
         var startupMessage = AppInstanceStartupMessage.CreateFrom(startupSettings);
-        var json = JsonSerializer.Serialize(startupMessage);
-        var payload = Encoding.UTF8.GetBytes(json);
+        var payload = JsonSerializer.SerializeToUtf8Bytes(startupMessage);
 
         var result = SingleInstanceClient.Send(_options, payload);
-        if (!result.IsDelivered && result.Exception is not null)
+        if (!result.IsDelivered)
         {
-            // The primary instance cannot be reached (for example, an elevated "Run as administrator"
-            // launch against a non-elevated instance), activation fails silently. This can happen because
-            // PipeOptions.CurrentUserOnly compares WindowsIdentity.Owner, which differs when elevation changes
-            // the identity to BUILTIN\Administrators. The failure is recorded in telemetry and the event log
-            // (BravoApplicationInstance.RedirectActivationToPrimary), but no user-facing error is shown.
-
+            // The primary instance cannot be reached and activation fails silently. One known cause is
+            // a launch whose elevation differs from the primary's: PipeOptions.CurrentUserOnly builds
+            // and checks the pipe ACL on WindowsIdentity.Owner, which elevation changes to
+            // BUILTIN\Administrators, while the pipe name is keyed on WindowsIdentity.User
+            // (https://github.com/dotnet/runtime/issues/123903, open, milestone .NET 12).
             // TODO: Consider surfacing activation failures to the user.
             Report(result.Exception);
         }
