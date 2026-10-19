@@ -35,7 +35,14 @@ internal static class Program
             report.TrySave();
             ErrorReportDialog.Show(report);
 
+            // An unhandled rethrow can end the process before the finally block below runs.
+            _ = TelemetryService.Instance.TryFlushBeforeShutdown(10_000);
+
             throw;
+        }
+        finally
+        {
+            TelemetryService.DisposeInstance();
         }
     }
 }

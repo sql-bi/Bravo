@@ -11,6 +11,7 @@ using Sqlbi.Bravo.Infrastructure.Configuration;
 using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
 using Sqlbi.Bravo.Infrastructure.Extensions;
 using Sqlbi.Bravo.Infrastructure.Helpers;
+using Sqlbi.Bravo.Infrastructure.Policies;
 using Sqlbi.Bravo.Infrastructure.Security;
 using Sqlbi.Bravo.Infrastructure.Telemetry;
 using Sqlbi.Bravo.Models;
@@ -27,10 +28,12 @@ namespace Sqlbi.Bravo.Controllers;
 public class ApplicationController : ControllerBase
 {
     private readonly ITelemetryService _telemetryService;
+    private readonly IPolicyService _policyService;
 
-    public ApplicationController(ITelemetryService telemetryService)
+    public ApplicationController(ITelemetryService telemetryService, IPolicyService policyService)
     {
         _telemetryService = telemetryService;
+        _policyService = policyService;
     }
 
     /// <summary>
@@ -82,7 +85,7 @@ public class ApplicationController : ControllerBase
             return BadRequest(problem);
         }
 
-        _telemetryService.TelemetryEnabled = UserPreferences.Current.TelemetryEnabled;
+        _telemetryService.TelemetryEnabled = TelemetryConsent.Resolve(_policyService.Current, UserPreferences.Current).IsEnabled;
 
         return Ok();
     }
