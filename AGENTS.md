@@ -56,6 +56,8 @@ asked for it.
 
 | Document | Read it before |
 | --- | --- |
+| [docs/design/architecture.md](docs/design/architecture.md) | changing startup, service ownership, UI threading, frontend/host contracts, API authentication, single-instance activation, or policy composition. |
+| [docs/design/diagnostics.md](docs/design/diagnostics.md) | catching, logging, or reporting an exception, or touching the crash dialog, the diagnostics pane, or telemetry. |
 | [docs/design/versioning.md](docs/design/versioning.md) | touching `version.json`, the build number, or any code that compares versions. |
 | [ADR 0001](docs/adr/0001-releases-without-update-channels.md) | touching the update check, the update feed, or the release of a version. |
 | [ADR 0002](docs/adr/0002-shared-msi-upgrade-code.md) | changing `UpgradeCode`, `MajorUpgrade` or the product version in `installer/wix`. |

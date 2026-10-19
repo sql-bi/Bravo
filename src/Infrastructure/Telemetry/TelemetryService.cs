@@ -8,8 +8,6 @@ using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.Channel;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.ApplicationInsights.WindowsServer.TelemetryChannel;
-using Sqlbi.Bravo.Infrastructure.Configuration;
-using Sqlbi.Bravo.Infrastructure.Policies;
 
 namespace Sqlbi.Bravo.Infrastructure.Telemetry;
 
@@ -26,8 +24,6 @@ internal sealed class TelemetryService : ITelemetryService
     public static readonly string DefaultStorageFolder =
         Path.Combine(AppEnvironment.ApplicationCachePath, ".telemetry");
 
-    private static readonly Lazy<TelemetryService> s_instance = new(CreateInstance, isThreadSafe: true);
-
     private readonly TelemetryConfiguration _configuration;
     private readonly ITelemetryChannel _channel;
     private readonly TelemetryClient _client;
@@ -38,21 +34,6 @@ internal sealed class TelemetryService : ITelemetryService
         _configuration = configuration;
         _channel = configuration.TelemetryChannel;
         _client = new TelemetryClient(configuration);
-    }
-
-    /// <summary>
-    /// Gets the process-wide instance, created on first use with the consent resolved from policies
-    /// and user settings.
-    /// </summary>
-    public static TelemetryService Instance => s_instance.Value;
-
-    /// <summary>
-    /// Disposes the process-wide instance, if it was created.
-    /// </summary>
-    public static void DisposeInstance()
-    {
-        if (s_instance.IsValueCreated)
-            s_instance.Value.Dispose();
     }
 
     public bool TelemetryEnabled
@@ -143,13 +124,5 @@ internal sealed class TelemetryService : ITelemetryService
         channel.Initialize(configuration);
 
         return new TelemetryService(configuration);
-    }
-
-    private static TelemetryService CreateInstance()
-    {
-        var policies = new PolicyServiceFactory().Create().Current;
-        var consent = TelemetryConsent.Resolve(policies, UserPreferences.Current);
-
-        return Create(TelemetrySessionInfo.ConnectionString, consent.IsEnabled, DefaultStorageFolder);
     }
 }

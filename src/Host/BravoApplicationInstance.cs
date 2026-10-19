@@ -1,9 +1,8 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
+using Microsoft.Extensions.Logging;
 using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
-using Sqlbi.Bravo.Infrastructure.Helpers;
 using Sqlbi.Bravo.Infrastructure.Messages;
 using Sqlbi.Bravo.Infrastructure.SingleInstance;
 using Sqlbi.Bravo.Infrastructure.Telemetry;
@@ -26,32 +25,25 @@ internal interface IBravoApplicationInstance : IInstanceEvents, IDisposable
     void RedirectActivationToPrimary();
 }
 
-internal sealed class BravoApplicationInstance : IBravoApplicationInstance
+internal sealed partial class BravoApplicationInstance : IBravoApplicationInstance
 {
     private readonly SingleInstanceOptions _options;
     private readonly SingleInstanceServer? _server;
+    private readonly ITelemetryService _telemetry;
+    private readonly ILogger _logger;
 
     private bool _disposed;
 
-    /// <summary>
-    /// Creates a <see cref="BravoApplicationInstance"/>, claiming the primary role if no other process holds it.
-    /// </summary>
-    public static BravoApplicationInstance Create()
-    {
-        var options = new SingleInstanceOptions
-        {
-            PipeName = InstancePipeName.Create(),
-        };
-
-        _ = SingleInstanceServer.TryStart(options, out var server);
-
-        return new BravoApplicationInstance(options, server);
-    }
-
-    private BravoApplicationInstance(SingleInstanceOptions options, SingleInstanceServer? server)
+    public BravoApplicationInstance(
+        SingleInstanceOptions options,
+        SingleInstanceServer? server,
+        ITelemetryService telemetry,
+        ILoggerFactory loggerFactory)
     {
         _options = options;
         _server = server;
+        _telemetry = telemetry;
+        _logger = loggerFactory.CreateLogger<BravoApplicationInstance>();
 
         if (_server is not null)
         {
@@ -73,9 +65,11 @@ internal sealed class BravoApplicationInstance : IBravoApplicationInstance
         {
             startupMessage = JsonSerializer.Deserialize<AppInstanceStartupMessage>(e.Payload);
         }
-        catch (JsonException)
+        catch (JsonException ex)
         {
             // An unreadable payload still activates the window, with no document to open.
+            LogActivationPayloadUnreadable(ex);
+            _telemetry.TrackException(ex);
         }
 
         // Known limitation: requests arriving while this instance is still starting up are dropped
@@ -89,7 +83,13 @@ internal sealed class BravoApplicationInstance : IBravoApplicationInstance
         ActivationRequested?.Invoke(this, new InstanceActivationRequestedEventArgs(startupMessage));
     }
 
-    private void OnError(object? sender, ErrorEventArgs e) => Report(e.GetException());
+    private void OnError(object? sender, ErrorEventArgs e)
+    {
+        var exception = e.GetException();
+
+        LogListenerFailed(exception);
+        _telemetry.TrackException(exception);
+    }
 
     /// <inheritdoc/>
     public void RedirectActivationToPrimary()
@@ -107,14 +107,9 @@ internal sealed class BravoApplicationInstance : IBravoApplicationInstance
             // BUILTIN\Administrators, while the pipe name is keyed on WindowsIdentity.User
             // (https://github.com/dotnet/runtime/issues/123903, open, milestone .NET 12).
             // TODO: Consider surfacing activation failures to the user.
-            Report(result.Exception);
+            LogActivationRedirectFailed(result.Exception, result.Status);
+            _telemetry.TrackException(result.Exception);
         }
-    }
-
-    private static void Report(Exception exception)
-    {
-        ExceptionHelper.WriteToEventLog(exception, EventLogEntryType.Warning);
-        TelemetryService.Instance.TrackException(exception);
     }
 
     /// <inheritdoc/>

@@ -41,7 +41,7 @@ window.external = {
 };";
     public static SynchronizationContext? UISynchronizationContext { get; set; }
 
-    private readonly IInstanceEvents _instanceEvents;
+    private readonly IInstanceEvents _applicationInstance;
     private readonly IServerAddressProvider _serverAddressProvider;
     private readonly IOptions<StartupSettings> _startupSettingsOptionsAccessor;
     private readonly WebView2ProxyAuthHandler _proxyAuthHandler;
@@ -49,12 +49,12 @@ window.external = {
     private readonly IPolicyService _policyService;
 
     public AppWindow(
-        IInstanceEvents instanceEvents,
+        IBravoApplicationInstance applicationInstance,
         IServerAddressProvider serverAddressProvider,
         IOptions<StartupSettings> startupSettingsOptionsAccessor,
         IPolicyService policyService)
     {
-        _instanceEvents = instanceEvents;
+        _applicationInstance = applicationInstance;
         _serverAddressProvider = serverAddressProvider;
         _startupSettingsOptionsAccessor = startupSettingsOptionsAccessor;
         _policyService = policyService;
@@ -183,19 +183,19 @@ window.external = {
 
         CenterToScreen();
 
-        _instanceEvents.ActivationRequested += OnActivationRequestedRestoreWindowToForeground;
+        _applicationInstance.ActivationRequested += OnActivationRequestedRestoreWindowToForeground;
 
         if (AppEnvironment.IsDiagnosticLevelVerbose)
         {
-            var content = EnvironmentInfo.Collect().ToDictionary();
-            AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{nameof(AppWindow)}.{nameof(EnvironmentInfo)}", content: JsonSerializer.Serialize(content));
+            var content = EnvironmentDiagnosticsCollector.Collect();
+            AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{nameof(AppWindow)}.{nameof(EnvironmentDiagnostics)}", content: JsonSerializer.Serialize(content));
         }
     }
 
     private void OnFormClosed(object? sender, FormClosedEventArgs e)
     {
-        _instanceEvents.ActivationRequested -= OnActivationRequestedRestoreWindowToForeground;
-        _instanceEvents.ActivationRequested -= OnActivationRequestedSendStartupWebMessage;
+        _applicationInstance.ActivationRequested -= OnActivationRequestedRestoreWindowToForeground;
+        _applicationInstance.ActivationRequested -= OnActivationRequestedSendStartupWebMessage;
     }
 
     private void OnWebViewDOMContentLoaded(object? sender, CoreWebView2DOMContentLoadedEventArgs e)
@@ -208,7 +208,7 @@ window.external = {
             BackgroundImage = null;
             SendAppStartupWebMessage();
 
-            _instanceEvents.ActivationRequested += OnActivationRequestedSendStartupWebMessage;
+            _applicationInstance.ActivationRequested += OnActivationRequestedSendStartupWebMessage;
         }
     }
 
