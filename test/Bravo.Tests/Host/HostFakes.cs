@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net;
+using System.Threading;
+using System.Threading.Tasks;
 using Sqlbi.Bravo.Host;
 using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
 using Sqlbi.Bravo.Infrastructure.Policies;
@@ -38,9 +41,13 @@ internal sealed class FakeTelemetry : ITelemetryService
 
     public bool TelemetryEnabled { get; set; }
 
-    public void TrackException(Exception exception)
+    public void TrackException(Exception exception, IDictionary<string, string>? properties = null)
     {
     }
+
+    public Task<bool> FlushAsync(CancellationToken cancellationToken = default) => Task.FromResult(true);
+
+    public bool TryFlushBeforeShutdown(int timeoutMilliseconds) => true;
 
     public void Dispose() => Disposed = true;
 }
