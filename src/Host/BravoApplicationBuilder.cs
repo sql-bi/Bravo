@@ -8,6 +8,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.EventLog;
 using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
+using Sqlbi.Bravo.Infrastructure.Diagnostics;
 using Sqlbi.Bravo.Infrastructure.Services;
 
 namespace Sqlbi.Bravo.Host;
@@ -81,6 +82,8 @@ internal sealed class BravoApplicationBuilder
         builder.Logging.AddEventSourceLogger();
         builder.Logging.AddEventLog();
         builder.Logging.AddFilter<EventLogLoggerProvider>((level) => level >= LogLevel.Warning);
+        builder.Logging.AddDiagnosticMessages();
+        builder.Logging.AddFilter<DiagnosticMessageLoggerProvider>((level) => level >= LogLevel.Warning);
 #if DEBUG
         builder.Logging.AddConsole();
         builder.Logging.AddDebug();
