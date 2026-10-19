@@ -25,6 +25,11 @@ generated_code = true
 
 # C# files
 [*.cs]
+# Encoding (*)
+# No end_of_line: the repository stores most .cs files with LF and relies on core.autocrlf; declaring crlf
+# makes editors rewrite every line of a file checked out with LF.
+charset = utf-8-bom
+
 # New line preferences
 csharp_new_line_before_open_brace = all
 csharp_new_line_before_else = true
