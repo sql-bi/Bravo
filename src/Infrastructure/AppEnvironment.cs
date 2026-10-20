@@ -33,8 +33,6 @@ internal static class AppEnvironment
     public static readonly string ApplicationRegistryApplicationTelemetryEnabledValue = "applicationTelemetryEnabled";
     public static readonly string ApplicationRegistryApplicationTitleVersionHiddenValue = "applicationTitleVersionHidden";
     public static readonly string ApplicationRegistryApplicationInstallFolderValue = "installFolder";
-    public static readonly string PBIDesktopProcessName = "PBIDesktop";
-    public static readonly string PBIDesktopSSASProcessImageName = "msmdsrv.exe";
     public static readonly string[] PBIDesktopMainWindowTitleSuffixes = new string[]
     {
         // The PBIDesktop main window title is culture-specific.

@@ -4,6 +4,7 @@ using System.Text.Json.Serialization;
 using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
 using Sqlbi.Bravo.Infrastructure.Extensions;
 using Sqlbi.Bravo.Infrastructure.Helpers;
+using Sqlbi.Bravo.Infrastructure.Services.PowerBI;
 using Sqlbi.Bravo.Models;
 using SSAS = Microsoft.AnalysisServices;
 
@@ -33,7 +34,7 @@ internal class AppInstanceStartupMessage
     public string[]? CommandLineErrors { get; set; }
 
     [JsonIgnore]
-    public bool IsExternalTool => AppEnvironment.PBIDesktopProcessName.EqualsI(ParentProcessName);
+    public bool IsExternalTool => PowerBIDesktop.ProcessName.EqualsI(ParentProcessName);
 
     // Reads no user settings: a secondary instance builds its activation payload before the bootstrap.
     public static AppInstanceStartupMessage CreateFrom(StartupSettings settings)

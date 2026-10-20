@@ -9,6 +9,7 @@ using Sqlbi.Bravo.Infrastructure;
 using Sqlbi.Bravo.Infrastructure.Extensions;
 using Sqlbi.Bravo.Infrastructure.Helpers;
 using Sqlbi.Bravo.Infrastructure.Models;
+using Sqlbi.Bravo.Infrastructure.Services.PowerBI;
 using SSAS = Microsoft.AnalysisServices;
 using TOM = Microsoft.AnalysisServices.Tabular;
 
@@ -107,7 +108,7 @@ public class PBIDesktopReport : IDataModel<PBIDesktopReport>
             databaseName = null;
             compatibilityMode = SSAS.CompatibilityMode.Unknown;
 
-            var ssasPIDs = process.GetChildrenPIDs(childProcessImageName: AppEnvironment.PBIDesktopSSASProcessImageName).ToArray();
+            var ssasPIDs = process.GetChildrenPIDs(childProcessImageName: PowerBIDesktop.AnalysisServicesImageName).ToArray();
             if (ssasPIDs.Length != 1)
             {
                 connectionMode = PBIDesktopReportConnectionMode.UnsupportedAnalysisServicesProcessNotFound;

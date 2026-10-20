@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text.Json.Serialization;
 using Sqlbi.Bravo.Infrastructure.Extensions;
 using Sqlbi.Bravo.Infrastructure.Helpers;
+using Sqlbi.Bravo.Infrastructure.Services.PowerBI;
 
 namespace Sqlbi.Bravo.Infrastructure.Configuration.Settings;
 
@@ -27,7 +28,7 @@ internal class StartupSettings
     public string[]? CommandLineErrors { get; set; }
 
     [JsonIgnore]
-    public bool IsPBIDesktopExternalTool => IsExternalTool && AppEnvironment.PBIDesktopProcessName.Equals(ParentProcessName, StringComparison.OrdinalIgnoreCase);
+    public bool IsPBIDesktopExternalTool => IsExternalTool && PowerBIDesktop.ProcessName.Equals(ParentProcessName, StringComparison.OrdinalIgnoreCase);
 
     [JsonIgnore]
     public int? ParentProcessId { get; set; }

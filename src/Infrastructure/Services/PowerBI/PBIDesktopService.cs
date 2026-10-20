@@ -18,7 +18,7 @@ internal class PBIDesktopService : IPBIDesktopService
 {
     public IEnumerable<PBIDesktopReport> GetReports(CancellationToken cancellationToken)
     {
-        var processes = ProcessHelper.GetProcessesByName(AppEnvironment.PBIDesktopProcessName);
+        var processes = ProcessHelper.GetProcessesByName(PowerBIDesktop.ProcessName);
         try
         {
             var reports = new ConcurrentBag<PBIDesktopReport>();
