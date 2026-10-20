@@ -52,7 +52,12 @@ internal static class ProcessExtensions
             if (!Process.TryGetById(childProcessId, sessionId, out var childProcess))
                 continue;
 
+            var isChild = IsStartedBefore(process, childProcess);
             childProcess.Dispose();
+
+            if (!isChild)
+                continue;
+
             childProcessIds.Add(childProcessId);
         }
 
@@ -116,7 +121,32 @@ internal static class ProcessExtensions
             if (!Process.TryGetById(parentProcessId.Value, sessionId, out var parentProcess))
                 return null;
 
+            if (!IsStartedBefore(parentProcess, process))
+            {
+                parentProcess.Dispose();
+                return null;
+            }
+
             return parentProcess;
+        }
+    }
+
+    // A process identifier is reused once its process exits, so the recorded parent or child can be an unrelated
+    // process: a real parent always started before its child.
+    private static bool IsStartedBefore(Process earlier, Process later)
+    {
+        try
+        {
+            // StartTime is local time, which repeats an hour when daylight saving time ends: only UTC keeps the order.
+            var earlierStartTime = earlier.StartTime.ToUniversalTime();
+            var laterStartTime = later.StartTime.ToUniversalTime();
+
+            return earlierStartTime <= laterStartTime;
+        }
+        catch (Exception ex) when (ex is Win32Exception or InvalidOperationException)
+        {
+            // The start time of a process that has exited, or that cannot be opened, is unknown.
+            return false;
         }
     }
 
