@@ -57,7 +57,6 @@ internal static class AppEnvironment
         _deploymentMode = new(() => GetDeploymentMode());
         using var currentProcess = Process.GetCurrentProcess();
 
-        ProcessId = Environment.ProcessId;
         SessionId = currentProcess.SessionId;
 
         ApplicationDataPath = Path.Combine(Environment.GetFolderPath(DeploymentMode == AppDeploymentMode.Packaged ? Environment.SpecialFolder.UserProfile : Environment.SpecialFolder.LocalApplicationData, Environment.SpecialFolderOption.DoNotVerify), ApplicationName);
@@ -76,8 +75,6 @@ internal static class AppEnvironment
     /// It allows us to correctly identify the ownership of the process in case multiple sessions are active or in multi-session environments such as Remote Desktop Services (a.k.a Terminal Services).
     /// </summary>
     public static int SessionId { get; }
-
-    public static int ProcessId { get; }
 
     public static AppPublishMode PublishMode
     {

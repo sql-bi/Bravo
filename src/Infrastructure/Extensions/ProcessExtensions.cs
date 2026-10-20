@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Runtime.InteropServices;
 using System.Text;
-using Sqlbi.Bravo.Infrastructure.Helpers;
 using Sqlbi.Bravo.Infrastructure.Windows;
 using Sqlbi.Bravo.Infrastructure.Windows.Interop;
 
@@ -13,35 +11,6 @@ namespace Sqlbi.Bravo.Infrastructure.Extensions;
 
 internal static class ProcessExtensions
 {
-    //[DebuggerStepThrough]
-    [Obsolete("Use GetParentProcess")]
-    public static Process? InteropGetParent(this Process process)
-    {
-        Ntdll.PROCESS_BASIC_INFORMATION processInformation;
-        int? retval;
-        try
-        {
-            retval = Ntdll.NtQueryInformationProcess(process.Handle, Ntdll.PROCESSINFOCLASS.ProcessBasicInformation, out processInformation, processInformationLength: (uint)Marshal.SizeOf(typeof(Ntdll.PROCESS_BASIC_INFORMATION)), returnLength: out _);
-        }
-        catch (Win32Exception ex) when (ex.ErrorCode == -2147467259) // System.ComponentModel.Win32Exception {"Access is denied."}
-        {
-            return null;
-        }
-
-        if (retval.Value == (int)Ntdll.NTSTATUS.STATUS_SUCCESS)
-        {
-            var parentProcessId = (int)(uint)processInformation.InheritedFromUniqueProcessId;
-            var parentProcess = ProcessHelper.SafeGetProcessById(parentProcessId);
-
-            return parentProcess;
-        }
-
-        // TODO: How NTSTATUS codes are translated into Win32 errors ?
-        // throw new Win32Exception(retval);
-
-        return null;
-    }
-
     public static IReadOnlyList<int> GetChildProcessIds(this Process process, ProcessTree processTree, string? childProcessImageName = null)
     {
         var sessionId = process.SessionId;

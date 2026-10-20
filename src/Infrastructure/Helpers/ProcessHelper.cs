@@ -280,28 +280,11 @@ internal static class ProcessHelper
         return processes;
     }
 
-    public static Process? GetParentProcess()
-    {
-        using var currentProcess = Process.GetCurrentProcess();
-
-        return currentProcess.GetParentProcess();
-    }
-
     public static IntPtr GetCurrentProcessMainWindowHandle()
     {
         using var current = Process.GetCurrentProcess();
 
         return current.MainWindowHandle;
-    }
-
-    public static IntPtr GetParentProcessMainWindowHandle()
-    {
-        using var parent = GetParentProcess();
-
-        if (parent is not null)
-            return parent.MainWindowHandle;
-
-        return IntPtr.Zero;
     }
 
     public static Process? SafeGetProcessById(int? processId)
