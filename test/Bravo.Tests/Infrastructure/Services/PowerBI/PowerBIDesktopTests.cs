@@ -55,30 +55,34 @@ public class PowerBIDesktopTests
     [Fact]
     public void GetReportName_InstalledTitleFormats_ReturnsTheReportName()
     {
-        var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Microsoft Power BI Desktop", "bin");
+        var files = PowerBIDesktopInstallation.GetBinFolders()
+            .SelectMany((folder) => Directory.EnumerateFiles(folder, "Microsoft.PowerBI.Client.Windows.Resources.dll", SearchOption.AllDirectories))
+            .ToArray();
 
-        if (!Directory.Exists(path))
+        if (files.Length == 0)
         {
-            // Skip test if the BPIDesktop folder does not exist (i.e. build agent)
+            // Skip test if Power BI Desktop is not installed (i.e. build agent)
             return;
         }
 
-        foreach (var file in Directory.EnumerateFiles(path, "Microsoft.PowerBI.Client.Windows.Resources.dll", SearchOption.AllDirectories))
+        foreach (var file in files)
         {
             _output.WriteLine("Resource file '{0}'", file);
 
-            var assembly = Assembly.LoadFrom(file);
-            var name = assembly.GetManifestResourceNames().SingleOrDefault((name) => name.StartsWith($"Microsoft.PowerBI.Client.Windows.PowerBIStringResources."));
+            // From bytes: the Store package folder can be read but its files cannot be loaded as images. Each load also gets
+            // its own context, so the MSI installation and the Store package can contain the same assembly identity.
+            var assembly = Assembly.Load(File.ReadAllBytes(file));
+            var name = assembly.GetManifestResourceNames().SingleOrDefault((name) => name.StartsWith("Microsoft.PowerBI.Client.Windows.PowerBIStringResources."));
 
             if (name is null)
                 Assert.Fail($"Resource name not found in file '{file}'");
 
             using var stream = assembly.GetManifestResourceStream(name);
 
-            if (name is null)
+            if (stream is null)
                 Assert.Fail($"Resource stream not found in file '{file}'");
 
-            using var reader = new ResourceReader(stream!);
+            using var reader = new ResourceReader(stream);
 
             var found = false;
             foreach (DictionaryEntry entry in reader)
