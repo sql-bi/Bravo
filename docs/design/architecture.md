@@ -17,6 +17,8 @@ after the bootstrap services and the host are built, so a secondary process stil
 services as existing instances, which the container does not dispose. Replacing them with container-owned factories
 moves disposal to the container and must keep the order above. Global exception handling uses the bootstrap
 services, not the container; its coverage is in [diagnostics](diagnostics.md#startup-coverage-and-fatal-reporting).
+Why the bootstrap services live outside the container:
+[ADR 0004](../adr/0004-bootstrap-services-outside-the-container.md).
 
 ## UI and server threads
 
