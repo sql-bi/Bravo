@@ -14,18 +14,21 @@ namespace Sqlbi.Bravo.Host;
 /// </remarks>
 internal sealed class BootstrapContext : IDisposable
 {
+    private readonly IDisposable? _exceptionHandlerAttachment;
     private bool _disposed;
 
     internal BootstrapContext(
         ILoggerFactory loggerFactory,
         IPolicyService policyService,
         IUserSettings settings,
-        ITelemetryService telemetry)
+        ITelemetryService telemetry,
+        IDisposable? exceptionHandlerAttachment = null)
     {
         LoggerFactory = loggerFactory;
         PolicyService = policyService;
         Settings = settings;
         Telemetry = telemetry;
+        _exceptionHandlerAttachment = exceptionHandlerAttachment;
     }
 
     public ILoggerFactory LoggerFactory { get; }
@@ -40,6 +43,8 @@ internal sealed class BootstrapContext : IDisposable
 
         _disposed = true;
 
+        // Detached first, so that an exception raised while the services are disposed is not reported through them.
+        _exceptionHandlerAttachment?.Dispose();
         Telemetry.Dispose();
         // LoggerFactory is disposed last so all other services can safely log during their disposal.
         LoggerFactory.Dispose();

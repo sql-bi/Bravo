@@ -13,14 +13,16 @@ internal sealed partial class BootstrapContextFactory(
     ILoggerFactory loggerFactory,
     IPolicyServiceFactory policyFactory,
     IUserSettingsServiceFactory settingsFactory,
-    ITelemetryServiceFactory telemetryFactory)
+    ITelemetryServiceFactory telemetryFactory,
+    UnhandledExceptionHandler exceptionHandler)
 {
     private readonly ILoggerFactory _loggerFactory = loggerFactory;
     private readonly IPolicyServiceFactory _policyFactory = policyFactory;
     private readonly IUserSettingsServiceFactory _settingsFactory = settingsFactory;
     private readonly ITelemetryServiceFactory _telemetryFactory = telemetryFactory;
+    private readonly UnhandledExceptionHandler _exceptionHandler = exceptionHandler;
 
-    public static BootstrapContext CreateDefault()
+    public static BootstrapContext CreateDefault(UnhandledExceptionHandler exceptionHandler)
     {
         var loggerFactory = CreateLoggerFactory();
         try
@@ -29,7 +31,8 @@ internal sealed partial class BootstrapContextFactory(
                 loggerFactory,
                 new PolicyServiceFactory(),
                 new UserSettingsServiceFactory(),
-                new TelemetryServiceFactory());
+                new TelemetryServiceFactory(),
+                exceptionHandler);
 
             return factory.Create();
         }
@@ -40,6 +43,10 @@ internal sealed partial class BootstrapContextFactory(
         }
     }
 
+    /// <summary>
+    /// Creates the bootstrap services and attaches them to the exception handler, which reports through them until
+    /// the context is disposed.
+    /// </summary>
     public BootstrapContext Create()
     {
         var policies = CreatePolicies();
@@ -47,8 +54,9 @@ internal sealed partial class BootstrapContextFactory(
 
         var consent = TelemetryConsent.Resolve(policies.Current, settings);
         var telemetry = CreateTelemetry(consent.IsEnabled);
+        var exceptionHandlerAttachment = _exceptionHandler.AttachServices(_loggerFactory, telemetry);
 
-        return new BootstrapContext(_loggerFactory, policies, settings, telemetry);
+        return new BootstrapContext(_loggerFactory, policies, settings, telemetry, exceptionHandlerAttachment);
     }
 
     private static ILoggerFactory CreateLoggerFactory()

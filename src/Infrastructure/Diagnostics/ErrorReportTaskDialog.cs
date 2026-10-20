@@ -26,7 +26,41 @@ internal sealed class ErrorReportTaskDialog : IErrorReportDialog
     {
         // Always run on a dedicated STA thread: TaskDialog and Clipboard require STA,
         // while the caller could be executing on any arbitrary background thread.
-        ProcessHelper.RunOnSTAThread(() => ShowImpl(report, telemetry));
+        ProcessHelper.RunOnSTAThread(() =>
+        {
+            try
+            {
+                ShowImpl(report, telemetry);
+            }
+            catch
+            {
+                // The task dialog uses application types that can be the cause of the crash.
+                ShowFallback(report);
+                throw;
+            }
+        });
+    }
+
+    private static void ShowFallback(ErrorReport report)
+    {
+        try
+        {
+            var text = new StringBuilder();
+            text.AppendLine("Bravo encountered an unexpected error and will close.");
+
+            if (report.FilePath is not null)
+            {
+                text.AppendLine();
+                text.AppendLine("A crash report has been saved:");
+                text.AppendLine(report.FilePath);
+            }
+
+            text.AppendLine();
+            text.Append(report.Exception.GetType().Name).Append(": ").Append(report.Exception.Message);
+
+            MessageBox.Show(text.ToString(), "Bravo for Power BI", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+        catch { /* Ignore failures */ }
     }
 
     private static void ShowImpl(ErrorReport report, ITelemetryService? telemetry)

@@ -101,7 +101,7 @@ public class GlobalExceptionHandlingTests : IDisposable
     {
         var dialog = new RecordingDialog();
         var telemetry = Substitute.For<ITelemetryService>();
-        var handler = new UnhandledExceptionHandler(dialog);
+        var handler = new UnhandledExceptionHandler(dialog, () => throw new InvalidOperationException("No report is saved for an unobserved task."));
         handler.AttachServices(NullLoggerFactory.Instance, telemetry);
         var args = new UnobservedTaskExceptionEventArgs(new AggregateException("unobserved"));
         SetHandler(handler.Handle);

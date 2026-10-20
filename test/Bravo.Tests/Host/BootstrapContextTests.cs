@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using Bravo.Tests.Infrastructure.Diagnostics;
 using Bravo.Tests.Infrastructure.Policies;
 using Microsoft.Extensions.Logging;
 using Sqlbi.Bravo.Host;
 using Sqlbi.Bravo.Infrastructure.Configuration;
 using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
+using Sqlbi.Bravo.Infrastructure.Diagnostics;
 using Sqlbi.Bravo.Infrastructure.Policies;
 using Sqlbi.Bravo.Infrastructure.Telemetry;
 using Xunit;
@@ -28,6 +30,23 @@ public class BootstrapContextTests
         Assert.Equal(1, loggerFactory.DisposeCount);
     }
 
+    [Fact]
+    public void Create_AttachesTheServicesToTheExceptionHandlerUntilDisposed()
+    {
+        var exceptionHandler = CreateExceptionHandler();
+        var policyFactory = new FakePolicyFactory(() => new PolicyService(new FakePolicyReader()));
+        var settingsFactory = new FakeSettingsFactory(() => new UserSettings());
+        var factory = new BootstrapContextFactory(new FakeLoggerFactory(), policyFactory, settingsFactory, new FakeTelemetryFactory(), exceptionHandler);
+
+        var context = factory.Create();
+        var telemetry = Assert.IsType<FakeTelemetry>(context.Telemetry);
+        exceptionHandler.Handle(new InvalidOperationException("attached"), ExceptionOrigin.UnobservedTask);
+        context.Dispose();
+        exceptionHandler.Handle(new InvalidOperationException("detached"), ExceptionOrigin.UnobservedTask);
+
+        Assert.Equal("attached", Assert.Single(telemetry.Exceptions).Message);
+    }
+
     [Theory]
     [InlineData(null, true, true)]
     [InlineData(null, false, false)]
@@ -43,7 +62,7 @@ public class BootstrapContextTests
         var policyFactory = new FakePolicyFactory(() => policyService);
         var settingsFactory = new FakeSettingsFactory(() => settings);
         var telemetryFactory = new FakeTelemetryFactory();
-        var factory = new BootstrapContextFactory(loggerFactory, policyFactory, settingsFactory, telemetryFactory);
+        var factory = new BootstrapContextFactory(loggerFactory, policyFactory, settingsFactory, telemetryFactory, CreateExceptionHandler());
 
         Assert.Equal(0, reader.ReadCount);
         Assert.Equal(0, policyFactory.CreateCount);
@@ -73,7 +92,7 @@ public class BootstrapContextTests
         var policyFactory = new FakePolicyFactory(() => new PolicyService(reader));
         var settingsFactory = new FakeSettingsFactory(() => new UserSettings());
         var telemetryFactory = new FakeTelemetryFactory();
-        var factory = new BootstrapContextFactory(loggerFactory, policyFactory, settingsFactory, telemetryFactory);
+        var factory = new BootstrapContextFactory(loggerFactory, policyFactory, settingsFactory, telemetryFactory, CreateExceptionHandler());
 
         Assert.Same(failure, Assert.Throws<IOException>(() => factory.Create()));
         Assert.Equal(0, settingsFactory.CreateCount);
@@ -89,7 +108,7 @@ public class BootstrapContextTests
         var policyFactory = new FakePolicyFactory(() => throw failure);
         var settingsFactory = new FakeSettingsFactory(() => new UserSettings());
         var telemetryFactory = new FakeTelemetryFactory();
-        var factory = new BootstrapContextFactory(loggerFactory, policyFactory, settingsFactory, telemetryFactory);
+        var factory = new BootstrapContextFactory(loggerFactory, policyFactory, settingsFactory, telemetryFactory, CreateExceptionHandler());
 
         Assert.Same(failure, Assert.Throws<InvalidOperationException>(() => factory.Create()));
         Assert.Equal(0, settingsFactory.CreateCount);
@@ -105,7 +124,7 @@ public class BootstrapContextTests
         var policyFactory = new FakePolicyFactory(() => new PolicyService(new FakePolicyReader()));
         var settingsFactory = new FakeSettingsFactory(() => throw failure);
         var telemetryFactory = new FakeTelemetryFactory();
-        var factory = new BootstrapContextFactory(loggerFactory, policyFactory, settingsFactory, telemetryFactory);
+        var factory = new BootstrapContextFactory(loggerFactory, policyFactory, settingsFactory, telemetryFactory, CreateExceptionHandler());
 
         using var context = factory.Create();
 
@@ -127,7 +146,7 @@ public class BootstrapContextTests
         var policyFactory = new FakePolicyFactory(() => new PolicyService(new FakePolicyReader()));
         var settingsFactory = new FakeSettingsFactory(() => new UserSettings());
         var telemetryFactory = new FakeTelemetryFactory { Failure = failure };
-        var factory = new BootstrapContextFactory(loggerFactory, policyFactory, settingsFactory, telemetryFactory);
+        var factory = new BootstrapContextFactory(loggerFactory, policyFactory, settingsFactory, telemetryFactory, CreateExceptionHandler());
 
         using var context = factory.Create();
 
@@ -174,4 +193,7 @@ public class BootstrapContextTests
             return new FakeTelemetry { TelemetryEnabled = enabled };
         }
     }
+
+    private static UnhandledExceptionHandler CreateExceptionHandler()
+        => new(new RecordingDialog(), () => throw new InvalidOperationException("No report is saved in these tests."));
 }

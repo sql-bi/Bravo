@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Sqlbi.Bravo.Infrastructure.Telemetry;
@@ -10,14 +11,25 @@ namespace Sqlbi.Bravo.Infrastructure.Diagnostics;
 /// Handles unhandled exceptions in the application, providing a mechanism
 /// to report and display error information to the user.
 /// </summary>
-internal sealed partial class UnhandledExceptionHandler(IErrorReportDialog dialog)
+internal sealed partial class UnhandledExceptionHandler(IErrorReportDialog dialog, Func<string> reportDirectoryPath)
 {
-    private readonly IErrorReportDialog _dialog = dialog;
-    private volatile ReportingServices _services = new(NullLogger.Instance, Telemetry: null);
+    private static readonly ReportingServices s_noServices = new(NullLogger.Instance, Telemetry: null);
 
-    public void AttachServices(ILoggerFactory loggerFactory, ITelemetryService telemetry)
+    private readonly IErrorReportDialog _dialog = dialog;
+    private readonly Func<string> _reportDirectoryPath = reportDirectoryPath;
+    private volatile ReportingServices _services = s_noServices;
+
+    /// <summary>
+    /// Reports through the given services until the returned object is disposed.
+    /// </summary>
+    public IDisposable AttachServices(ILoggerFactory loggerFactory, ITelemetryService telemetry)
     {
-        _services = new ReportingServices(loggerFactory.CreateLogger<UnhandledExceptionHandler>(), telemetry);
+        // NullTelemetryService cannot deliver anything, so the dialog must not offer to send through it.
+        var deliverableTelemetry = telemetry is NullTelemetryService ? null : telemetry;
+
+        var services = new ReportingServices(loggerFactory.CreateLogger<UnhandledExceptionHandler>(), deliverableTelemetry);
+        _services = services;
+        return new ServicesAttachment(this, services);
     }
 
     public void Handle(Exception exception, ExceptionOrigin origin)
@@ -36,10 +48,19 @@ internal sealed partial class UnhandledExceptionHandler(IErrorReportDialog dialo
             return;
 
         var report = ErrorReport.Create(exception);
-        _ = report.TrySave();
+        SaveReport(report);
         ShowDialog(services, report);
 
         _ = services.Telemetry?.TryFlushBeforeShutdown(10_000);
+    }
+
+    private void SaveReport(ErrorReport report)
+    {
+        try
+        {
+            _ = report.TrySave(_reportDirectoryPath());
+        }
+        catch { /* The dialog shows the report without a file */ }
     }
 
     private void ShowDialog(ReportingServices services, ErrorReport report)
@@ -98,4 +119,13 @@ internal sealed partial class UnhandledExceptionHandler(IErrorReportDialog dialo
     }
 
     private sealed record ReportingServices(ILogger Logger, ITelemetryService? Telemetry);
+
+    private sealed class ServicesAttachment(UnhandledExceptionHandler owner, ReportingServices services) : IDisposable
+    {
+        private readonly UnhandledExceptionHandler _owner = owner;
+        private readonly ReportingServices _services = services;
+
+        // Detaches only its own services, which a later attachment may have replaced.
+        public void Dispose() => Interlocked.CompareExchange(ref _owner._services, s_noServices, _services);
+    }
 }
