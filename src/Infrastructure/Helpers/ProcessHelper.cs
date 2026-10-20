@@ -13,6 +13,7 @@ using System.Security.Principal;
 using System.Threading;
 using System.Windows.Forms;
 using Sqlbi.Bravo.Infrastructure.Extensions;
+using Sqlbi.Bravo.Infrastructure.Services.PowerBI;
 
 namespace Sqlbi.Bravo.Infrastructure.Helpers;
 
@@ -228,8 +229,8 @@ internal static class ProcessHelper
                                     return false;
                                 }
 
-                                // If the window title is null it means that the SSAS instance is not yet started and/or the model is not yet fully loaded
-                                var isAvailable = process.GetPBIDesktopMainWindowTitle() is not null;
+                                // If the report name is null it means that the SSAS instance is not yet started and/or the model is not yet fully loaded
+                                var isAvailable = PowerBIDesktop.GetReportName(process.GetMainWindowTitle()) is not null;
                                 if (isAvailable)
                                     break;
 

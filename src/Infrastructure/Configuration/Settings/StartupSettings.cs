@@ -122,7 +122,8 @@ internal static class StartupSettingsExtensions
                 settings.ParentProcessId = parentProcess.Id;
                 settings.ParentProcessName = parentProcess.ProcessName;
                 //settings.ParentProcessMainWindowHandle = parentProcess.MainWindowHandle;
-                settings.ParentProcessMainWindowTitle = settings.IsPBIDesktopExternalTool ? parentProcess.GetPBIDesktopMainWindowTitle() : parentProcess.GetMainWindowTitle();
+                var windowTitle = parentProcess.GetMainWindowTitle();
+                settings.ParentProcessMainWindowTitle = settings.IsPBIDesktopExternalTool ? PowerBIDesktop.GetReportName(windowTitle) : windowTitle;
             }
         }
         parentProcess?.Dispose();

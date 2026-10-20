@@ -107,24 +107,4 @@ internal static class ProcessExtensions
 
         return builder.ToString();
     }
-
-    public static string? GetPBIDesktopMainWindowTitle(this Process process)
-    {
-        var windowTitle = process.GetMainWindowTitle();
-
-        if (windowTitle.IsNullOrWhiteSpace())
-            return null; // PBIDesktop process is starting and/or the SSAS instance is not yet started and/or the model is not yet fully loaded
-
-        foreach (var suffix in AppEnvironment.PBIDesktopMainWindowTitleSuffixes)
-        {
-            var index = windowTitle.LastIndexOf(suffix);
-            if (index >= 0)
-            {
-                windowTitle = windowTitle[..index];
-                break;
-            }
-        }
-
-        return windowTitle;
-    }
 }

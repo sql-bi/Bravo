@@ -33,24 +33,6 @@ internal static class AppEnvironment
     public static readonly string ApplicationRegistryApplicationTelemetryEnabledValue = "applicationTelemetryEnabled";
     public static readonly string ApplicationRegistryApplicationTitleVersionHiddenValue = "applicationTitleVersionHidden";
     public static readonly string ApplicationRegistryApplicationInstallFolderValue = "installFolder";
-    public static readonly string[] PBIDesktopMainWindowTitleSuffixes = new string[]
-    {
-        // The PBIDesktop main window title is culture-specific.
-        // The suffix is not always present, for example, it is not added when the save/share function in OneDrive/SharePoint is active.
-
-        // Different dash characters are used as a separator
-        // See https://github.com/sql-bi/Bravo/issues/476
-        " \u002D Power BI Desktop", // Dash Punctuation - minus hyphen
-        " \u2013 Power BI Desktop", // Dash Punctuation - en dash
-        " \u2014 Power BI Desktop", // Dash Punctuation - em dash
-
-        // The whitespace character may not be present - Swedish/sv
-        // See https://github.com/sql-bi/Bravo/issues/510
-        "\u2013Power BI Desktop", // Dash Punctuation - en dash
-        
-        // NBSP char instead of whitespace - Latvian/lv
-        "\u00A0\u2014 Power BI Desktop",
-    };
     public static readonly Color ThemeColorDark = ColorTranslator.FromHtml("#202020");
     public static readonly Color ThemeColorLight = ColorTranslator.FromHtml("#F3F3F3");
     public static readonly DaxLineBreakStyle FormatDaxLineBreakDefault = DaxLineBreakStyle.InitialLineBreak;

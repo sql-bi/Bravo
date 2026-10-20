@@ -77,7 +77,7 @@ public class PBIDesktopReport : IDataModel<PBIDesktopReport>
         var report = new PBIDesktopReport
         {
             ProcessId = process.Id,
-            ReportName = process.GetPBIDesktopMainWindowTitle(),
+            ReportName = PowerBIDesktop.GetReportName(process.GetMainWindowTitle()),
             ServerName = null,
             DatabaseName = null,
             CompatibilityMode = SSAS.CompatibilityMode.Unknown,
