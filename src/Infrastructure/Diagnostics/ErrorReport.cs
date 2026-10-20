@@ -1,8 +1,6 @@
 ﻿using System;
 using System.IO;
-using System.Runtime.InteropServices;
 using System.Text;
-using System.Windows.Forms;
 
 namespace Sqlbi.Bravo.Infrastructure.Diagnostics;
 
@@ -11,47 +9,33 @@ namespace Sqlbi.Bravo.Infrastructure.Diagnostics;
 /// </summary>
 internal sealed class ErrorReport
 {
-    private const string FileName = "ErrorReport.txt";
-
-    private readonly EnvironmentInfo _environment;
+    private readonly EnvironmentDiagnostics _diagnostics;
     private readonly Lazy<string> _text;
 
-    /// <summary>
-    /// Creates an <see cref="ErrorReport"/> instance for the given exception.
-    /// </summary>
     public static ErrorReport Create(Exception exception)
     {
-        var environment = EnvironmentInfo.Collect();
-        return new ErrorReport(exception, environment);
+        var diagnostics = EnvironmentDiagnosticsCollector.Collect();
+        return new ErrorReport(exception, diagnostics);
     }
 
-    internal ErrorReport(Exception exception, EnvironmentInfo environment)
+    private ErrorReport(Exception exception, EnvironmentDiagnostics diagnostics)
     {
         Exception = exception;
-        _environment = environment;
+        _diagnostics = diagnostics;
         _text = new Lazy<string>(GenerateText);
     }
 
     public Exception Exception { get; }
-
-    /// <summary>
-    /// The text representation of the error report.
-    /// </summary>
     public string Text => _text.Value;
-
-    /// <summary>
-    /// The file path where the error report was saved, or null if saving failed.
-    /// </summary>
     public string? FilePath { get; private set; }
 
-    /// <summary>
-    /// Attempts to save the error report to a file in the application data folder.
-    /// </summary>
     public bool TrySave()
     {
         try
         {
-            var filePath = Path.Combine(AppEnvironment.ApplicationDataPath, FileName);
+            var directory = Directory.CreateDirectory(AppEnvironment.ApplicationDataPath);
+            var filePath = Path.Combine(directory.FullName, "ErrorReport.txt");
+
             File.WriteAllText(filePath, Text, Encoding.UTF8);
 
             FilePath = filePath;
@@ -59,41 +43,29 @@ internal sealed class ErrorReport
         }
         catch (Exception)
         {
+            FilePath = null;
             return false;
         }
     }
-
-    /// <summary>
-    /// Attempts to copy the report to the clipboard.
-    /// </summary>
-    public bool TryCopyToClipboard()
-    {
-        try
-        {
-            Clipboard.SetDataObject(
-                data: new DataObject(DataFormats.UnicodeText, Text),
-                copy: true,
-                retryTimes: 10,
-                retryDelay: 100);
-
-            return true;
-        }
-        catch (ExternalException)
-        {
-            return false;
-        }
-    }
-
-    public override string ToString() => Text;
 
     private string GenerateText()
     {
         var builder = new StringBuilder();
 
-        builder.AppendLine(_environment.ToText());
+        builder.AppendLine("# Bravo for Power BI — Error Report");
 
-        builder.AppendLine("# Error Details");
         builder.AppendLine();
+        builder.AppendLine("## Environment information");
+        builder.AppendLine();
+
+        builder.AppendLine("```json");
+        builder.AppendLine(_diagnostics.ToJsonString());
+        builder.AppendLine("```");
+
+        builder.AppendLine();
+        builder.AppendLine("## Exception details");
+        builder.AppendLine();
+
         builder.AppendLine("```");
         builder.AppendLine(Exception.ToString());
         builder.AppendLine("```");
