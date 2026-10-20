@@ -4,6 +4,8 @@ using System.Text;
 using System.Threading;
 using Microsoft.Extensions.Logging;
 using Sqlbi.Bravo.Host;
+using Sqlbi.Bravo.Infrastructure;
+using Sqlbi.Bravo.Infrastructure.Messages;
 using Sqlbi.Bravo.Infrastructure.SingleInstance;
 using Xunit;
 
@@ -74,5 +76,29 @@ public class BravoSingleInstanceTests
         Assert.NotNull(entry.Exception);
         Assert.Contains(nameof(SingleInstanceSendStatus.OwnerUnavailable), entry.Message);
         Assert.Equal(1, loggerFactory.DisposeCount);
+    }
+
+    [Fact]
+    public void ClaimOrRedirect_DoesNotReferenceAppEnvironment()
+    {
+        // A secondary runs this path before it exits: the AppEnvironment static constructor probes the WebView2
+        // runtime, the deployment mode and the registry, which a process that only forwards its arguments must not do.
+        var claimOrRedirect = typeof(BravoSingleInstance).GetMethod(nameof(BravoSingleInstance.ClaimOrRedirect), Type.EmptyTypes);
+        Assert.NotNull(claimOrRedirect);
+
+        var referencedTypes = CallGraph.GetReferencedTypes(claimOrRedirect);
+
+        Assert.DoesNotContain(typeof(AppEnvironment), referencedTypes);
+    }
+
+    [Fact]
+    public void CallGraph_MethodThatReadsAppEnvironment_ReferencesIt()
+    {
+        var toJsonElement = typeof(AppInstanceStartupMessageExtensions).GetMethod(nameof(AppInstanceStartupMessageExtensions.ToJsonElement));
+        Assert.NotNull(toJsonElement);
+
+        var referencedTypes = CallGraph.GetReferencedTypes(toJsonElement);
+
+        Assert.Contains(typeof(AppEnvironment), referencedTypes);
     }
 }

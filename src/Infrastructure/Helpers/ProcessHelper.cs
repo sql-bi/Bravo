@@ -6,13 +6,13 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Management;
 using System.Runtime.ExceptionServices;
 using System.Security.Claims;
 using System.Security.Principal;
 using System.Threading;
 using System.Windows.Forms;
 using Sqlbi.Bravo.Infrastructure.Extensions;
+using Sqlbi.Bravo.Infrastructure.Services.PowerBI;
 
 namespace Sqlbi.Bravo.Infrastructure.Helpers;
 
@@ -228,8 +228,8 @@ internal static class ProcessHelper
                                     return false;
                                 }
 
-                                // If the window title is null it means that the SSAS instance is not yet started and/or the model is not yet fully loaded
-                                var isAvailable = process.GetPBIDesktopMainWindowTitle() is not null;
+                                // If the report name is null it means that the SSAS instance is not yet started and/or the model is not yet fully loaded
+                                var isAvailable = PowerBIDesktop.GetReportName(process.GetMainWindowTitle()) is not null;
                                 if (isAvailable)
                                     break;
 
@@ -280,37 +280,6 @@ internal static class ProcessHelper
         return processes;
     }
 
-    public static Process? GetParentProcess()
-    {
-        // ManagementObjectSearcher.Get() raises a System.InvalidCastException when executed on the current thread, this regardless of the apartment state of the current thread (which is STA)
-        //
-        // System.InvalidCastException "Specified cast is not valid."
-        //    at System.StubHelpers.InterfaceMarshaler.ConvertToNative(Object objSrc, IntPtr itfMT, IntPtr classMT, Int32 flags)
-        //    at System.Management.SecuredIWbemServicesHandler.ExecQuery_(String strQueryLanguage, String strQuery, Int32 lFlags, IWbemContext pCtx, IEnumWbemClassObject& ppEnum)
-        //    at System.Management.ManagementObjectSearcher.Get()
-
-        var parentProcessId = (int?)null;
-
-        RunOnSTAThread(GetImpl);
-
-        var parentProcess = SafeGetProcessById(parentProcessId);
-        return parentProcess;
-
-        void GetImpl()
-        {
-            var queryString = $"SELECT ParentProcessId FROM Win32_Process WHERE ProcessId = {AppEnvironment.ProcessId} AND SessionId = {AppEnvironment.SessionId}";
-
-            using var searcher = new ManagementObjectSearcher(queryString);
-            using var collection = searcher.Get();
-            using var @object = collection.OfType<ManagementObject>().SingleOrDefault();
-
-            if (@object is not null)
-            {
-                parentProcessId = (int)(uint)@object["ParentProcessId"];
-            }
-        }
-    }
-
     public static IntPtr GetCurrentProcessMainWindowHandle()
     {
         using var current = Process.GetCurrentProcess();
@@ -318,39 +287,15 @@ internal static class ProcessHelper
         return current.MainWindowHandle;
     }
 
-    public static IntPtr GetParentProcessMainWindowHandle()
-    {
-        using var parent = GetParentProcess();
-
-        if (parent is not null)
-            return parent.MainWindowHandle;
-
-        return IntPtr.Zero;
-    }
-
     public static Process? SafeGetProcessById(int? processId)
     {
         if (processId is null)
             return null;
 
-        try
-        {
-            var process = Process.GetProcessById(processId.Value); // Throws ArgumentException if the process specified by the processId parameter is not running.
-
-            if (process.SessionId != AppEnvironment.SessionId)
-                return null;
-
-            if (process.HasExited)
-                return null;
-
-            _ = process.ProcessName; // Throws InvalidOperationException if the process has exited, so the requested information is not available
-
-            return process;
-        }
-        catch (Exception ex) when (ex is ArgumentException || ex is InvalidOperationException)
-        {
+        if (!Process.TryGetById(processId.Value, AppEnvironment.SessionId, out var process))
             return null;
-        }
+
+        return process;
     }
 
     public static bool IsUserAdministrator()

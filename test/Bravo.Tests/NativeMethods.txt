@@ -1,0 +1,3 @@
+// Windows.Win32.Storage.Packaging.Appx
+GetPackagePathByFullName
+GetPackagesByPackageFamily

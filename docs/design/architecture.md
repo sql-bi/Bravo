@@ -74,9 +74,12 @@ through a named pipe with one server instance. It disconnects between clients wi
 not replace that with disposal and recreation between requests: another process could claim ownership in the gap.
 
 `BravoSingleInstance.ClaimOrRedirect` claims the pipe before the bootstrap: a secondary process forwards its startup
-arguments and exits without creating directories, bootstrap services, a host or a window, and without reading the
-user settings file. Keep the arbitration and the activation payload free of those steps: a secondary that builds
-bootstrap services can transmit stored telemetry and reads files that the primary writes.
+arguments and exits without creating directories, bootstrap services, a host or a window, without reading the user
+settings file, and without running the `AppEnvironment` static constructor. Keep the arbitration and the activation
+payload free of those steps: a secondary that builds bootstrap services can transmit stored telemetry and reads files
+that the primary writes, and the `AppEnvironment` static constructor probes the WebView2 runtime, the deployment mode
+and the registry. The payload code does not reference `AppEnvironment` and takes the Windows session from the
+current process.
 
 Current activation limits:
 

@@ -1,11 +1,10 @@
 ﻿using System;
-using System.CommandLine;
-using System.CommandLine.Parsing;
 using System.Diagnostics;
 using System.Linq;
 using System.Text.Json.Serialization;
 using Sqlbi.Bravo.Infrastructure.Extensions;
 using Sqlbi.Bravo.Infrastructure.Helpers;
+using Sqlbi.Bravo.Infrastructure.Services.PowerBI;
 
 namespace Sqlbi.Bravo.Infrastructure.Configuration.Settings;
 
@@ -27,7 +26,7 @@ internal class StartupSettings
     public string[]? CommandLineErrors { get; set; }
 
     [JsonIgnore]
-    public bool IsPBIDesktopExternalTool => IsExternalTool && AppEnvironment.PBIDesktopProcessName.Equals(ParentProcessName, StringComparison.OrdinalIgnoreCase);
+    public bool IsPBIDesktopExternalTool => IsExternalTool && PowerBIDesktop.ProcessName.Equals(ParentProcessName, StringComparison.OrdinalIgnoreCase);
 
     [JsonIgnore]
     public int? ParentProcessId { get; set; }
@@ -60,70 +59,47 @@ internal static class StartupSettingsExtensions
         // If the file name is not available, the first element is equal to String.Empty.
         // In.NET 5 and later versions, for single-file publishing, the first element is the name of the host executable.
         var args = Environment.GetCommandLineArgs().Skip(1).ToArray();
-        if (args.Length == 0)
+        var commandLine = StartupCommandLine.Parse(args);
+
+        using var currentProcess = Process.GetCurrentProcess();
+
+        settings.FromCommandLine(commandLine, currentProcess);
+    }
+
+    // Does not run the AppEnvironment static constructor: a secondary instance builds its activation payload from these
+    // settings before it exits.
+    public static void FromCommandLine(this StartupSettings settings, StartupCommandLine commandLine, Process currentProcess)
+    {
+        if (commandLine.IsEmpty)
         {
-            // No args provided
             settings.IsEmpty = true;
             return;
         }
 
-        var serverOption = new Option<string>("--server");
-        serverOption.AddAlias("-s");
-        serverOption.IsRequired = true;
-        serverOption.Description = "Server name";
-        serverOption.Arity = ArgumentArity.ExactlyOne;
+        settings.ArgumentServerName = commandLine.ServerName;
+        settings.ArgumentDatabaseName = commandLine.DatabaseName;
+        settings.IsExternalTool = commandLine.HasConnectionArguments;
+        settings.CommandLineErrors = commandLine.Errors.ToArray();
 
-        var databaseOption = new Option<string>("--database");
-        databaseOption.AddAlias("-d");
-        databaseOption.IsRequired = true;
-        databaseOption.Description = "Database name";
-        databaseOption.Arity = ArgumentArity.ExactlyOne;
-
-        var parentProcessIdOption = new Option<int>("--ppid");
-        parentProcessIdOption.IsRequired = false;
-        parentProcessIdOption.Description = "Parent process ID";
-        parentProcessIdOption.Arity = ArgumentArity.ExactlyOne;
-
-        var command = new RootCommand
+        using var parentProcess = GetParentProcess(commandLine, currentProcess);
+        if (parentProcess is not null)
         {
-            serverOption,
-            databaseOption,
-            parentProcessIdOption
-        };
-
-        var parseResult = command.Parse(args);
-
-        var serverOptionResult = parseResult.FindResultFor(serverOption);
-        if (serverOptionResult is not null && serverOptionResult.ErrorMessage is null)
-            settings.ArgumentServerName = parseResult.GetValueForOption(serverOption);
-
-        var databaseOptionResult = parseResult.FindResultFor(databaseOption);
-        if (databaseOptionResult is not null && databaseOptionResult.ErrorMessage is null)
-            settings.ArgumentDatabaseName = parseResult.GetValueForOption(databaseOption);
-
-        settings.IsExternalTool = parseResult.HasOption(serverOption) || parseResult.HasOption(databaseOption);
-        settings.CommandLineErrors = parseResult.Errors.Select((e) => e.Message).ToArray();
-
-        Process? parentProcess = null;
-        {
-            if (AppEnvironment.DeploymentMode == AppDeploymentMode.Packaged && parseResult.HasOption(parentProcessIdOption))
-            {
-                var parentProcessId = parseResult.GetValueForOption(parentProcessIdOption);
-                parentProcess = ProcessHelper.SafeGetProcessById(parentProcessId);
-            }
-            else
-            {
-                parentProcess = ProcessHelper.GetParentProcess();
-            }
-
-            if (parentProcess is not null)
-            {
-                settings.ParentProcessId = parentProcess.Id;
-                settings.ParentProcessName = parentProcess.ProcessName;
-                //settings.ParentProcessMainWindowHandle = parentProcess.MainWindowHandle;
-                settings.ParentProcessMainWindowTitle = settings.IsPBIDesktopExternalTool ? parentProcess.GetPBIDesktopMainWindowTitle() : parentProcess.GetMainWindowTitle();
-            }
+            settings.ParentProcessId = parentProcess.Id;
+            settings.ParentProcessName = parentProcess.ProcessName;
+            //settings.ParentProcessMainWindowHandle = parentProcess.MainWindowHandle;
+            var windowTitle = parentProcess.GetMainWindowTitle();
+            settings.ParentProcessMainWindowTitle = settings.IsPBIDesktopExternalTool ? PowerBIDesktop.GetReportName(windowTitle) : windowTitle;
         }
-        parentProcess?.Dispose();
+    }
+
+    private static Process? GetParentProcess(StartupCommandLine commandLine, Process currentProcess)
+    {
+        if (commandLine.ParentProcessId is not int parentProcessId || !DesktopBridgeHelper.IsRunningAsMsixPackage())
+            return currentProcess.GetParentProcess();
+
+        if (!Process.TryGetById(parentProcessId, currentProcess.SessionId, out var parentProcess))
+            return null;
+
+        return parentProcess;
     }
 }

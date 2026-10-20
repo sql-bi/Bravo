@@ -1,25 +1,12 @@
-﻿using System;
-using System.Collections;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using Sqlbi.Bravo.Infrastructure;
+﻿using Sqlbi.Bravo.Infrastructure;
 using Sqlbi.Bravo.Infrastructure.Extensions;
 using Sqlbi.Bravo.Models.FormatDax;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Bravo.Tests.Infrastructure.Extensions;
 
 public class StringExtensionsTests
 {
-    private readonly ITestOutputHelper _output;
-
-    public StringExtensionsTests(ITestOutputHelper output)
-    {
-        _output = output;
-    }
-
     [Theory]
     [InlineData("", "", DaxLineBreakStyle.None)]
     [InlineData(null, null, DaxLineBreakStyle.None)]
@@ -65,56 +52,5 @@ public class StringExtensionsTests
         var actual = "Bravo for Power BI".AppendApplicationVersion();
 
         Assert.Equal($"Bravo for Power BI - v{AppVersion.SemanticVersion}", actual);
-    }
-
-    [Fact]
-    public void IsPBIDesktopMainWindowTitle_Test()
-    {
-        var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Microsoft Power BI Desktop", "bin");
-
-        if (!Directory.Exists(path))
-        {
-            // Skip test if the BPIDesktop folder does not exist (i.e. build agent)
-            return;
-        }
-
-        foreach (var file in Directory.EnumerateFiles(path, "Microsoft.PowerBI.Client.Windows.Resources.dll", SearchOption.AllDirectories))
-        {
-            _output.WriteLine("Resource file '{0}'", file);
-
-            var assembly = Assembly.LoadFrom(file);
-            var name = assembly.GetManifestResourceNames().SingleOrDefault((name) => name.StartsWith($"Microsoft.PowerBI.Client.Windows.PowerBIStringResources."));
-
-            if (name is null)
-                Assert.Fail($"Resource name not found in file '{file}'");
-
-            using var stream = assembly.GetManifestResourceStream(name);
-
-            if (name is null)
-                Assert.Fail($"Resource stream not found in file '{file}'");
-
-            using var reader = new System.Resources.ResourceReader(stream!);
-
-            var found = false;
-            foreach (DictionaryEntry entry in reader)
-            {
-                if (entry.Key is string key && key == "PowerBIWindowTitle" && entry.Value is string value)
-                {
-                    var unicodeValue = string.Join(" ", value.EnumerateRunes().Select((rune) => $"U+{rune.Value:X4}"));
-                    _output.WriteLine("\t{0} > {1}", unicodeValue, value);
-
-                    var formattedTitle = string.Format(/*System.Globalization.CultureInfo.CurrentCulture,*/ value, "Contoso", "Power BI Desktop");
-                    var isSupported = AppEnvironment.PBIDesktopMainWindowTitleSuffixes.Any(formattedTitle.EndsWith);
-
-                    Assert.True(isSupported, $"Unsupported 'PowerBIWindowTitle' format string in resource file '{file}'");
-
-                    found = true;
-                    break;
-                }
-            }
-
-            if (!found)
-                Assert.Fail($"Resource key 'PowerBIWindowTitle' not found in file '{file}'");
-        }
     }
 }

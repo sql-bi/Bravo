@@ -33,26 +33,6 @@ internal static class AppEnvironment
     public static readonly string ApplicationRegistryApplicationTelemetryEnabledValue = "applicationTelemetryEnabled";
     public static readonly string ApplicationRegistryApplicationTitleVersionHiddenValue = "applicationTitleVersionHidden";
     public static readonly string ApplicationRegistryApplicationInstallFolderValue = "installFolder";
-    public static readonly string PBIDesktopProcessName = "PBIDesktop";
-    public static readonly string PBIDesktopSSASProcessImageName = "msmdsrv.exe";
-    public static readonly string[] PBIDesktopMainWindowTitleSuffixes = new string[]
-    {
-        // The PBIDesktop main window title is culture-specific.
-        // The suffix is not always present, for example, it is not added when the save/share function in OneDrive/SharePoint is active.
-
-        // Different dash characters are used as a separator
-        // See https://github.com/sql-bi/Bravo/issues/476
-        " \u002D Power BI Desktop", // Dash Punctuation - minus hyphen
-        " \u2013 Power BI Desktop", // Dash Punctuation - en dash
-        " \u2014 Power BI Desktop", // Dash Punctuation - em dash
-
-        // The whitespace character may not be present - Swedish/sv
-        // See https://github.com/sql-bi/Bravo/issues/510
-        "\u2013Power BI Desktop", // Dash Punctuation - en dash
-        
-        // NBSP char instead of whitespace - Latvian/lv
-        "\u00A0\u2014 Power BI Desktop",
-    };
     public static readonly Color ThemeColorDark = ColorTranslator.FromHtml("#202020");
     public static readonly Color ThemeColorLight = ColorTranslator.FromHtml("#F3F3F3");
     public static readonly DaxLineBreakStyle FormatDaxLineBreakDefault = DaxLineBreakStyle.InitialLineBreak;
@@ -77,7 +57,6 @@ internal static class AppEnvironment
         _deploymentMode = new(() => GetDeploymentMode());
         using var currentProcess = Process.GetCurrentProcess();
 
-        ProcessId = Environment.ProcessId;
         SessionId = currentProcess.SessionId;
 
         ApplicationDataPath = Path.Combine(Environment.GetFolderPath(DeploymentMode == AppDeploymentMode.Packaged ? Environment.SpecialFolder.UserProfile : Environment.SpecialFolder.LocalApplicationData, Environment.SpecialFolderOption.DoNotVerify), ApplicationName);
@@ -96,8 +75,6 @@ internal static class AppEnvironment
     /// It allows us to correctly identify the ownership of the process in case multiple sessions are active or in multi-session environments such as Remote Desktop Services (a.k.a Terminal Services).
     /// </summary>
     public static int SessionId { get; }
-
-    public static int ProcessId { get; }
 
     public static AppPublishMode PublishMode
     {

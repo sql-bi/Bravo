@@ -9,6 +9,8 @@ using Sqlbi.Bravo.Infrastructure;
 using Sqlbi.Bravo.Infrastructure.Extensions;
 using Sqlbi.Bravo.Infrastructure.Helpers;
 using Sqlbi.Bravo.Infrastructure.Models;
+using Sqlbi.Bravo.Infrastructure.Services.PowerBI;
+using Sqlbi.Bravo.Infrastructure.Windows;
 using SSAS = Microsoft.AnalysisServices;
 using TOM = Microsoft.AnalysisServices.Tabular;
 
@@ -64,19 +66,24 @@ public class PBIDesktopReport : IDataModel<PBIDesktopReport>
 
         if (process is not null)
         {
-            var report = CreateFrom(process, connectionModeEnabled);
+            var report = CreateFrom(process, processTree: null, connectionModeEnabled);
             return report;
         }
 
         return null;
     }
 
-    internal static PBIDesktopReport CreateFrom(Process process, bool connectionModeEnabled = true)
+    /// <param name="process">The Power BI Desktop process.</param>
+    /// <param name="processTree">
+    /// A snapshot shared by the reports created together; <see langword="null"/> takes one when it is needed.
+    /// </param>
+    /// <param name="connectionModeEnabled">Whether to connect to the model to find its connection mode.</param>
+    internal static PBIDesktopReport CreateFrom(Process process, ProcessTree? processTree = null, bool connectionModeEnabled = true)
     {
         var report = new PBIDesktopReport
         {
             ProcessId = process.Id,
-            ReportName = process.GetPBIDesktopMainWindowTitle(),
+            ReportName = PowerBIDesktop.GetReportName(process.GetMainWindowTitle()),
             ServerName = null,
             DatabaseName = null,
             CompatibilityMode = SSAS.CompatibilityMode.Unknown,
@@ -107,8 +114,9 @@ public class PBIDesktopReport : IDataModel<PBIDesktopReport>
             databaseName = null;
             compatibilityMode = SSAS.CompatibilityMode.Unknown;
 
-            var ssasPIDs = process.GetChildrenPIDs(childProcessImageName: AppEnvironment.PBIDesktopSSASProcessImageName).ToArray();
-            if (ssasPIDs.Length != 1)
+            var tree = processTree ?? ProcessTree.Capture();
+            var ssasPIDs = process.GetChildProcessIds(tree, childProcessImageName: PowerBIDesktop.AnalysisServicesImageName);
+            if (ssasPIDs.Count != 1)
             {
                 connectionMode = PBIDesktopReportConnectionMode.UnsupportedAnalysisServicesProcessNotFound;
                 return;

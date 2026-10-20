@@ -2,78 +2,120 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Management;
-using System.Runtime.InteropServices;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
-using Sqlbi.Bravo.Infrastructure.Helpers;
+using Sqlbi.Bravo.Infrastructure.Windows;
 using Sqlbi.Bravo.Infrastructure.Windows.Interop;
 
 namespace Sqlbi.Bravo.Infrastructure.Extensions;
 
 internal static class ProcessExtensions
 {
-    //[DebuggerStepThrough]
-    [Obsolete("Use WMI query")]
-    public static Process? InteropGetParent(this Process process)
+    public static IReadOnlyList<int> GetChildProcessIds(this Process process, ProcessTree processTree, string? childProcessImageName = null)
     {
-        Ntdll.PROCESS_BASIC_INFORMATION processInformation;
-        int? retval;
-        try
+        var sessionId = process.SessionId;
+
+        var childProcessIds = new List<int>();
+        foreach (var childProcessId in processTree.GetChildIds(process.Id, childProcessImageName))
         {
-            retval = Ntdll.NtQueryInformationProcess(process.Handle, Ntdll.PROCESSINFOCLASS.ProcessBasicInformation, out processInformation, processInformationLength: (uint)Marshal.SizeOf(typeof(Ntdll.PROCESS_BASIC_INFORMATION)), returnLength: out _);
-        }
-        catch (Win32Exception ex) when (ex.ErrorCode == -2147467259) // System.ComponentModel.Win32Exception {"Access is denied."}
-        {
-            return null;
+            if (!Process.TryGetById(childProcessId, sessionId, out var childProcess))
+                continue;
+
+            var isChild = IsStartedBefore(process, childProcess);
+            childProcess.Dispose();
+
+            if (!isChild)
+                continue;
+
+            childProcessIds.Add(childProcessId);
         }
 
-        if (retval.Value == (int)Ntdll.NTSTATUS.STATUS_SUCCESS)
+        return childProcessIds;
+    }
+
+    extension(Process)
+    {
+        /// <summary>
+        /// Gets the running process with the given identifier in the given Windows session.
+        /// </summary>
+        /// <returns>
+        /// <see langword="false"/> when the process is not running, has exited, runs in another session or cannot be
+        /// opened.
+        /// </returns>
+        public static bool TryGetById(int processId, int sessionId, [NotNullWhen(true)] out Process? process)
         {
-            var parentProcessId = (int)(uint)processInformation.InheritedFromUniqueProcessId;
-            var parentProcess = ProcessHelper.SafeGetProcessById(parentProcessId);
+            process = null;
+            Process? candidate = null;
+            try
+            {
+                candidate = Process.GetProcessById(processId); // Throws ArgumentException if the process is not running
+
+                if (candidate.SessionId != sessionId)
+                    return false;
+
+                if (candidate.HasExited) // Throws Win32Exception if the process cannot be opened, for example another user's
+                    return false;
+
+                _ = candidate.ProcessName; // Throws InvalidOperationException if the process has exited in the meantime
+
+                process = candidate;
+                candidate = null; // Owned by the caller from here on, so the finally block must not dispose it
+                return true;
+            }
+            catch (Exception ex) when (ex is ArgumentException or InvalidOperationException or Win32Exception)
+            {
+                return false;
+            }
+            finally
+            {
+                candidate?.Dispose();
+            }
+        }
+    }
+
+    extension(Process process)
+    {
+        /// <summary>
+        /// Gets the parent of the process when it runs in the same Windows session; otherwise, <see langword="null"/>.
+        /// </summary>
+        public Process? GetParentProcess()
+        {
+            var sessionId = process.SessionId;
+            var processTree = ProcessTree.Capture();
+
+            var parentProcessId = processTree.GetParentId(process.Id);
+            if (parentProcessId is null)
+                return null;
+
+            if (!Process.TryGetById(parentProcessId.Value, sessionId, out var parentProcess))
+                return null;
+
+            if (!IsStartedBefore(parentProcess, process))
+            {
+                parentProcess.Dispose();
+                return null;
+            }
 
             return parentProcess;
         }
-
-        // TODO: How NTSTATUS codes are translated into Win32 errors ?
-        // throw new Win32Exception(retval);
-
-        return null;
     }
 
-    public static IEnumerable<int> GetChildrenPIDs(this Process process, string? childProcessImageName = null)
+    // A process identifier is reused once its process exits, so the recorded parent or child can be an unrelated
+    // process: a real parent always started before its child.
+    private static bool IsStartedBefore(Process earlier, Process later)
     {
-        // ManagementObjectSearcher.Get() raises a System.InvalidCastException when executed on the current thread, this regardless of the apartment state of the current thread (which is STA)
-        //
-        // System.InvalidCastException "Specified cast is not valid."
-        //    at System.StubHelpers.InterfaceMarshaler.ConvertToNative(Object objSrc, IntPtr itfMT, IntPtr classMT, Int32 flags)
-        //    at System.Management.SecuredIWbemServicesHandler.ExecQuery_(String strQueryLanguage, String strQuery, Int32 lFlags, IWbemContext pCtx, IEnumWbemClassObject& ppEnum)
-        //    at System.Management.ManagementObjectSearcher.Get()
-
-        var pids = new List<int>();
-
-        ProcessHelper.RunOnSTAThread(GetImpl);
-
-        return pids;
-
-        void GetImpl()
+        try
         {
-            var queryString = $"SELECT ProcessId FROM Win32_Process WHERE ParentProcessId = {process.Id} AND SessionId = {AppEnvironment.SessionId}";
+            // StartTime is local time, which repeats an hour when daylight saving time ends: only UTC keeps the order.
+            var earlierStartTime = earlier.StartTime.ToUniversalTime();
+            var laterStartTime = later.StartTime.ToUniversalTime();
 
-            if (childProcessImageName is not null)
-                queryString += $" AND Name = '{childProcessImageName}'";
-
-            using var searcher = new ManagementObjectSearcher(queryString);
-            using var collection = searcher.Get();
-
-            foreach (var @object in collection)
-            {
-                if (@object is not null)
-                {
-                    var processId = (int)(uint)@object.GetPropertyValue("ProcessId");
-                    pids.Add(processId);
-                }
-            }
+            return earlierStartTime <= laterStartTime;
+        }
+        catch (Exception ex) when (ex is Win32Exception or InvalidOperationException)
+        {
+            // The start time of a process that has exited, or that cannot be opened, is unknown.
+            return false;
         }
     }
 
@@ -106,25 +148,5 @@ internal static class ProcessExtensions
         }
 
         return builder.ToString();
-    }
-
-    public static string? GetPBIDesktopMainWindowTitle(this Process process)
-    {
-        var windowTitle = process.GetMainWindowTitle();
-
-        if (windowTitle.IsNullOrWhiteSpace())
-            return null; // PBIDesktop process is starting and/or the SSAS instance is not yet started and/or the model is not yet fully loaded
-
-        foreach (var suffix in AppEnvironment.PBIDesktopMainWindowTitleSuffixes)
-        {
-            var index = windowTitle.LastIndexOf(suffix);
-            if (index >= 0)
-            {
-                windowTitle = windowTitle[..index];
-                break;
-            }
-        }
-
-        return windowTitle;
     }
 }
