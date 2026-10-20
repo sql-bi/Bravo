@@ -4,31 +4,19 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using Sqlbi.Bravo.Host;
+using Sqlbi.Bravo.Infrastructure.SingleInstance;
 using Sqlbi.Bravo.Infrastructure.Telemetry;
 
 namespace Bravo.Tests.Host;
 
-// Avoid claiming the production named pipe in tests.
-internal sealed class FakeInstance : IBravoApplicationInstance
+internal static class TestInstanceOptions
 {
-    public bool IsPrimary { get; init; }
-    public int DisposeCount { get; private set; }
-    public Action? OnDispose { get; init; }
-
-    public event EventHandler<InstanceActivationRequestedEventArgs>? ActivationRequested
+    // A unique pipe name per test: tests run in parallel and never claim the production one.
+    public static SingleInstanceOptions Create() => new()
     {
-        add { }
-        remove { }
-    }
-
-    public void RedirectActivationToPrimary() { }
-
-    public void Dispose()
-    {
-        DisposeCount++;
-        OnDispose?.Invoke();
-    }
+        PipeName = $"Bravo.Tests.{Guid.NewGuid():N}",
+        ConnectTimeout = TimeSpan.FromSeconds(1),
+    };
 }
 
 internal sealed class FakeTelemetry : ITelemetryService
@@ -36,7 +24,6 @@ internal sealed class FakeTelemetry : ITelemetryService
     private readonly List<Exception> _exceptions = [];
 
     public int DisposeCount { get; private set; }
-    public Action? OnDispose { get; init; }
     public bool TelemetryEnabled { get; set; }
 
     public IReadOnlyList<Exception> Exceptions
@@ -53,11 +40,7 @@ internal sealed class FakeTelemetry : ITelemetryService
 
     public bool TryFlushBeforeShutdown(int timeoutMilliseconds) => false;
 
-    public void Dispose()
-    {
-        DisposeCount++;
-        OnDispose?.Invoke();
-    }
+    public void Dispose() => DisposeCount++;
 }
 
 internal sealed record FakeLogEntry(LogLevel Level, EventId EventId, Exception? Exception, string Message);

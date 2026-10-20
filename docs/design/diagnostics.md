@@ -22,10 +22,12 @@ ends the process: [ADR 0003](../adr/0003-fatal-exceptions-end-the-process.md).
 enables the visual styles the task dialog needs, and before every other startup step. Logging and telemetry do not
 exist yet: until `BootstrapContextFactory` attaches them to the handler, a fatal exception is
 saved to the report and shown in the dialog, without a log entry from Bravo, without telemetry and without the Send
-button. The runtime still writes its own Event Log entry when it ends the process. This covers directory and proxy
-setup, the WebView2 runtime check and bootstrap creation. `BootstrapContext` detaches the handler before it disposes
-the services, so an exception raised during that disposal is reported the same way and never through disposed
-services.
+button. The runtime still writes its own Event Log entry when it ends the process. This covers single-instance
+arbitration, directory and proxy setup, the WebView2 runtime check and bootstrap creation. A secondary instance exits
+after the arbitration, so the whole process is covered this way
+([single-instance contract](architecture.md#single-instance-contract)). `BootstrapContext` detaches the handler
+before it disposes the services, so an exception raised during that disposal is reported the same way and never
+through disposed services.
 [BootstrapContextFactory](../../src/Host/BootstrapContextFactory.cs) degrades to default settings and disabled
 telemetry when they cannot be created, but a policy read failure propagates on purpose, so that administrative
 restrictions are never bypassed: a policy registry key that cannot be read ends the process through this path

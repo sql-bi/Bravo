@@ -12,59 +12,32 @@ using Xunit;
 namespace Bravo.Tests.Host;
 
 /// <summary>
-/// Exercises the reporting paths against a real pipe. Each test uses a unique pipe name so they
-/// can run in parallel and never claim the production one.
+/// Exercises the reporting paths against a real pipe.
 /// </summary>
 public class BravoApplicationInstanceTests
 {
     private static readonly TimeSpan s_timeout = TimeSpan.FromSeconds(5);
 
-    private static SingleInstanceOptions CreateOptions() => new()
-    {
-        PipeName = $"Bravo.Tests.{Guid.NewGuid():N}",
-        ConnectTimeout = TimeSpan.FromSeconds(1),
-    };
-
-    [Fact]
-    public void RedirectActivationToPrimary_NoPrimary_LogsAnErrorAndTracksTheException()
-    {
-        var options = CreateOptions();
-        var telemetry = new FakeTelemetry();
-        var loggerFactory = new FakeLoggerFactory();
-
-        using var instance = new BravoApplicationInstance(options, server: null, telemetry, loggerFactory);
-
-        Assert.False(instance.IsPrimary);
-
-        instance.RedirectActivationToPrimary();
-
-        var exception = Assert.Single(telemetry.Exceptions);
-        var entry = Assert.Single(loggerFactory.Entries);
-        Assert.Equal(LogLevel.Error, entry.Level);
-        Assert.Equal(2, entry.EventId.Id);
-        Assert.Same(exception, entry.Exception);
-        Assert.Contains(nameof(SingleInstanceSendStatus.OwnerUnavailable), entry.Message);
-    }
-
     [Fact]
     public void Activated_ListenerReportsAFailure_LogsAWarningAndTracksTheException()
     {
-        var options = CreateOptions();
+        var options = TestInstanceOptions.Create();
         var telemetry = new FakeTelemetry();
         var loggerFactory = new FakeLoggerFactory();
 
         Assert.True(SingleInstanceServer.TryStart(options, out var server));
-        using var instance = new BravoApplicationInstance(options, server, telemetry, loggerFactory);
 
-        Assert.True(instance.IsPrimary);
-
-        // Connects and closes without writing: the listener reports an empty payload.
-        using (var silentClient = new NamedPipeClientStream(".", options.PipeName, PipeDirection.Out, PipeOptions.CurrentUserOnly))
+        using (server)
+        using (new BravoApplicationInstance(server, telemetry, loggerFactory))
         {
-            silentClient.Connect((int)s_timeout.TotalMilliseconds);
-        }
+            // Connects and closes without writing: the listener reports an empty payload.
+            using (var silentClient = new NamedPipeClientStream(".", options.PipeName, PipeDirection.Out, PipeOptions.CurrentUserOnly))
+            {
+                silentClient.Connect((int)s_timeout.TotalMilliseconds);
+            }
 
-        Assert.True(SpinWait.SpinUntil(() => telemetry.Exceptions.Count > 0, s_timeout));
+            Assert.True(SpinWait.SpinUntil(() => telemetry.Exceptions.Count > 0, s_timeout));
+        }
 
         // Empty payload when the owner accepted before the close; otherwise the accept itself
         // fails with ERROR_NO_DATA.
@@ -79,23 +52,26 @@ public class BravoApplicationInstanceTests
     [Fact]
     public void Activated_UnreadablePayload_ActivatesWithoutADocumentAndReports()
     {
-        var options = CreateOptions();
+        var options = TestInstanceOptions.Create();
         var telemetry = new FakeTelemetry();
         var loggerFactory = new FakeLoggerFactory();
+        InstanceActivationRequestedEventArgs? activation = null;
 
         Assert.True(SingleInstanceServer.TryStart(options, out var server));
-        using var instance = new BravoApplicationInstance(options, server, telemetry, loggerFactory);
 
-        using var activated = new ManualResetEventSlim();
-        InstanceActivationRequestedEventArgs? activation = null;
-        instance.ActivationRequested += (_, e) =>
+        using (server)
+        using (var instance = new BravoApplicationInstance(server, telemetry, loggerFactory))
+        using (var activated = new ManualResetEventSlim())
         {
-            activation = e;
-            activated.Set();
-        };
+            instance.ActivationRequested += (sender, e) =>
+            {
+                activation = e;
+                activated.Set();
+            };
 
-        Assert.True(SingleInstanceClient.Send(options, Encoding.UTF8.GetBytes("not json")).IsDelivered);
-        Assert.True(activated.Wait(s_timeout));
+            Assert.True(SingleInstanceClient.Send(options, Encoding.UTF8.GetBytes("not json")).IsDelivered);
+            Assert.True(activated.Wait(s_timeout));
+        }
 
         Assert.NotNull(activation);
         Assert.Null(activation.StartupMessage);
@@ -105,5 +81,32 @@ public class BravoApplicationInstanceTests
         Assert.Equal(LogLevel.Warning, entry.Level);
         Assert.Equal(3, entry.EventId.Id);
         Assert.Same(exception, entry.Exception);
+    }
+
+    [Fact]
+    public void Dispose_StopsTheActivationsAndKeepsThePipe()
+    {
+        var options = TestInstanceOptions.Create();
+        var activations = 0;
+
+        Assert.True(SingleInstanceServer.TryStart(options, out var server));
+
+        using (server)
+        using (var dispatched = new ManualResetEventSlim())
+        {
+            var instance = new BravoApplicationInstance(server, new FakeTelemetry(), new FakeLoggerFactory());
+            instance.ActivationRequested += (sender, e) => Interlocked.Increment(ref activations);
+            instance.Dispose();
+
+            Assert.False(SingleInstanceServer.TryStart(options, out _));
+
+            // The server invokes all its handlers in one call: when the probe runs, a handler left by the instance would have run.
+            server.Activated += (sender, e) => dispatched.Set();
+
+            Assert.True(SingleInstanceClient.Send(options, Encoding.UTF8.GetBytes("{}")).IsDelivered);
+            Assert.True(dispatched.Wait(s_timeout));
+        }
+
+        Assert.Equal(0, Volatile.Read(ref activations));
     }
 }

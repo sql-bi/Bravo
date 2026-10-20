@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Sqlbi.Bravo.Infrastructure;
+using Sqlbi.Bravo.Infrastructure.SingleInstance;
 
 namespace Sqlbi.Bravo.Host;
 
@@ -14,9 +15,9 @@ internal sealed class BravoApplication : IDisposable
 {
     private readonly WebApplication _innerApplication;
 
-    public static BravoApplicationBuilder CreateBuilder(BootstrapContext bootstrap)
+    public static BravoApplicationBuilder CreateBuilder(BootstrapContext bootstrap, SingleInstanceServer instanceServer)
     {
-        return new BravoApplicationBuilder(bootstrap);
+        return new BravoApplicationBuilder(bootstrap, instanceServer);
     }
 
     internal BravoApplication(WebApplication innerApplication)
@@ -31,13 +32,6 @@ internal sealed class BravoApplication : IDisposable
     /// </summary>
     public void Run()
     {
-        var instance = Services.GetRequiredService<IBravoApplicationInstance>();
-        if (!instance.IsPrimary)
-        {
-            instance.RedirectActivationToPrimary();
-            return;
-        }
-
         _innerApplication.Start();
         try
         {

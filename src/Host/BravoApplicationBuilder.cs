@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
 using Sqlbi.Bravo.Infrastructure.Services;
+using Sqlbi.Bravo.Infrastructure.SingleInstance;
 
 namespace Sqlbi.Bravo.Host;
 
@@ -17,7 +18,7 @@ internal sealed class BravoApplicationBuilder
 {
     private readonly WebApplicationBuilder _innerBuilder;
 
-    internal BravoApplicationBuilder(BootstrapContext bootstrap)
+    internal BravoApplicationBuilder(BootstrapContext bootstrap, SingleInstanceServer instanceServer)
     {
         // CreateEmptyBuilder, not CreateBuilder: no configuration sources, no environment variables and
         // no implicit logging providers. The logging pipeline comes from the bootstrap context, everything
@@ -29,7 +30,7 @@ internal sealed class BravoApplicationBuilder
         });
 
         ConfigureHosting(_innerBuilder);
-        ConfigureServices(_innerBuilder, bootstrap);
+        ConfigureServices(_innerBuilder, bootstrap, instanceServer);
     }
 
     internal IServiceCollection Services => _innerBuilder.Services;
@@ -69,14 +70,14 @@ internal sealed class BravoApplicationBuilder
 #endif
     }
 
-    private static void ConfigureServices(WebApplicationBuilder builder, BootstrapContext bootstrap)
+    private static void ConfigureServices(WebApplicationBuilder builder, BootstrapContext bootstrap, SingleInstanceServer instanceServer)
     {
         builder.Services.AddOptions<StartupSettings>()
             .Configure((settings) => settings.FromCommandLineArguments()); //.ValidateDataAnnotations();
         builder.Services.AddSingleton<IServerAddressProvider, ServerAddressProvider>();
 
         builder.Services.AddBravoRestApi();
-        builder.Services.AddBravoServices(bootstrap);
+        builder.Services.AddBravoServices(bootstrap, instanceServer);
     }
 
     private static void ConfigurePipeline(WebApplication application)

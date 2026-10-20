@@ -49,7 +49,7 @@ window.external = {
     private readonly IPolicyService _policyService;
 
     public AppWindow(
-        IBravoApplicationInstance applicationInstance,
+        IInstanceEvents applicationInstance,
         IServerAddressProvider serverAddressProvider,
         IOptions<StartupSettings> startupSettingsOptionsAccessor,
         IPolicyService policyService)
@@ -355,6 +355,10 @@ window.external = {
         if (!startupSettings.IsEmpty)
         {
             var startupMessage = AppInstanceStartupMessage.CreateFrom(startupSettings);
+
+            if (AppEnvironment.IsDiagnosticLevelVerbose)
+                AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{nameof(AppInstanceStartupMessage)}.{nameof(AppInstanceStartupMessage.CreateFrom)}", content: JsonSerializer.Serialize(startupMessage));
+
             var startupMessageString = startupMessage.ToWebMessageString();
 
             WebView.CoreWebView2.PostWebMessageAsString(startupMessageString);
