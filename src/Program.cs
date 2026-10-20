@@ -12,12 +12,16 @@ internal static class Program
 
         var exceptionHandler = BravoGlobalExceptionHandling.Configure();
 
+        using var instanceServer = BravoSingleInstance.ClaimOrRedirect();
+        if (instanceServer is null)
+            return;
+
         BravoApplicationConfiguration.Initialize();
 
         using var context = BootstrapContextFactory.CreateDefault(exceptionHandler);
 
         using var app = BravoApplication
-            .CreateBuilder(context)
+            .CreateBuilder(context, instanceServer)
             .Build();
 
         app.Run();

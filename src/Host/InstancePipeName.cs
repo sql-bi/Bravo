@@ -1,6 +1,6 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Security.Principal;
-using Sqlbi.Bravo.Infrastructure;
 
 namespace Sqlbi.Bravo.Host;
 
@@ -35,7 +35,9 @@ internal static class InstancePipeName
         var userSid = identity.User?.Value
             ?? throw new InvalidOperationException("The current Windows identity has no user SID.");
 
-        return Create(AppEnvironment.SessionId, userSid);
+        using var process = Process.GetCurrentProcess();
+
+        return Create(process.SessionId, userSid);
     }
 
     /// <summary>

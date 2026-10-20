@@ -49,7 +49,7 @@ window.external = {
     private readonly IPolicyService _policyService;
 
     public AppWindow(
-        IBravoApplicationInstance applicationInstance,
+        IInstanceEvents applicationInstance,
         IServerAddressProvider serverAddressProvider,
         IOptions<StartupSettings> startupSettingsOptionsAccessor,
         IPolicyService policyService)

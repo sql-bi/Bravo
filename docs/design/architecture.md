@@ -2,21 +2,22 @@
 
 ## Composition and resource ownership
 
-[BravoApplication.Run](../../src/Host/BravoApplication.cs) resolves the single-instance role before starting
-Kestrel: a secondary process redirects its activation and exits without starting a server or a window. It does so
-after the bootstrap services and the host are built, so a secondary process still pays for both.
+[Program.Main](../../src/Program.cs) resolves the single-instance role right after installing the exception handler,
+before every other startup step; see the [single-instance contract](#single-instance-contract).
 
 | Resource | Lifetime owner | Constraint for changes |
 | --- | --- | --- |
+| Pipe server that holds the application instance | `Program.Main`, which claims it through [BravoSingleInstance](../../src/Host/BravoSingleInstance.cs) and disposes it last; the container receives it as an existing instance | Releasing the pipe ends ownership of the application instance and lets the next process become the primary. Releasing it before the bootstrap services are disposed lets two processes write the same user data |
+| Activation events | The host container owns [BravoApplicationInstance](../../src/Host/BravoApplicationInstance.cs), registered as `IInstanceEvents` | Its disposal only unsubscribes from the pipe server; it must not release the pipe |
 | Bootstrap telemetry and logger factory | [BootstrapContext](../../src/Host/BootstrapContext.cs) | Keep them available until host disposal completes; the exception handler is detached first, then telemetry is disposed before the logger factory |
 | Bootstrap policy service and user settings | Bootstrap creates or obtains them; the container receives those instances | Preserve the shared instances so consumers do not silently use different configuration snapshots |
-| Application instance and its pipe server | The host container owns `IBravoApplicationInstance`; that instance owns the pipe server | Releasing the pipe ends ownership of the application instance |
 | Main window | `BravoApplication.Run` | The window is created through DI but is not registered as a container-owned service |
 
 [BravoServiceCollectionExtensions](../../src/Host/BravoServiceCollectionExtensions.cs) registers the bootstrap
-services as existing instances, which the container does not dispose. Replacing them with container-owned factories
-moves disposal to the container and must keep the order above. Global exception handling uses the bootstrap
-services, not the container; its coverage is in [diagnostics](diagnostics.md#startup-coverage-and-fatal-reporting).
+services and the pipe server as existing instances, which the container does not dispose. Replacing them with
+container-owned factories moves disposal to the container and must keep the order above. Global exception handling
+uses the bootstrap services, not the container; its coverage is in
+[diagnostics](diagnostics.md#startup-coverage-and-fatal-reporting).
 Why the bootstrap services live outside the container:
 [ADR 0004](../adr/0004-bootstrap-services-outside-the-container.md).
 
@@ -72,13 +73,22 @@ stable across releases: changing them allows versions that share user data to ru
 through a named pipe with one server instance. It disconnects between clients without releasing the pipe name. Do
 not replace that with disposal and recreation between requests: another process could claim ownership in the gap.
 
-Current activation limits in [BravoApplicationInstance](../../src/Host/BravoApplicationInstance.cs):
+`BravoSingleInstance.ClaimOrRedirect` claims the pipe before the bootstrap: a secondary process forwards its startup
+arguments and exits without creating directories, bootstrap services, a host or a window, and without reading the
+user settings file. Keep the arbitration and the activation payload free of those steps: a secondary that builds
+bootstrap services can transmit stored telemetry and reads files that the primary writes.
 
-- A delivered payload does not guarantee that the requested document opened. Requests arriving before the window
-  or WebView subscriptions are ready are not buffered.
+Current activation limits:
+
+- A delivered payload does not guarantee that the requested document opened. Requests are not buffered: the pipe
+  server drops those that arrive before the host creates the `BravoApplicationInstance` that subscribes to it, and
+  the window drops those that arrive before its subscriptions are ready. A request that arrives while the primary
+  shuts down is lost as well, because the pipe is held until the bootstrap services are disposed.
 - Activation callbacks can run concurrently and in a different order from arrival.
-- Different elevation levels still share an instance name, but pipe access can prevent activation redirection. A
-  redirect failure is logged and tracked without a user-facing dialog.
+- Different elevation levels still share an instance name, but pipe access can prevent activation redirection. The
+  secondary logs a redirect failure to the Event Log through a logger factory that has only that provider, and exits
+  without a user-facing dialog. It tracks no telemetry: consent needs the policies and settings that the secondary
+  does not create.
 
 ## Configuration boundaries
 

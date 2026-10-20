@@ -1,6 +1,5 @@
 ﻿using System;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.EventLog;
 using Sqlbi.Bravo.Infrastructure.Configuration;
 using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
 using Sqlbi.Bravo.Infrastructure.Diagnostics;
@@ -64,8 +63,7 @@ internal sealed partial class BootstrapContextFactory(
         return LoggerFactory.Create((builder) =>
         {
             builder.AddEventSourceLogger();
-            builder.AddEventLog();
-            builder.AddFilter<EventLogLoggerProvider>((level) => level >= LogLevel.Warning);
+            builder.AddBravoEventLog();
             builder.AddDiagnosticMessages();
             builder.AddFilter<DiagnosticMessageLoggerProvider>((level) => level >= LogLevel.Warning);
 #if DEBUG

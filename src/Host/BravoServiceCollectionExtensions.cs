@@ -1,12 +1,10 @@
 ﻿using Dax.Formatter;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Logging;
 using Sqlbi.Bravo.Infrastructure.Extensions;
 using Sqlbi.Bravo.Infrastructure.PowerBI;
 using Sqlbi.Bravo.Infrastructure.Services.PowerBI;
 using Sqlbi.Bravo.Infrastructure.SingleInstance;
-using Sqlbi.Bravo.Infrastructure.Telemetry;
 using Sqlbi.Bravo.Services;
 
 namespace Sqlbi.Bravo.Host;
@@ -35,10 +33,10 @@ internal static class BravoServiceCollectionExtensions
     /// <summary>
     /// Registers and configures the services required for the Bravo application.
     /// </summary>
-    public static IServiceCollection AddBravoServices(this IServiceCollection services, BootstrapContext bootstrap)
+    public static IServiceCollection AddBravoServices(this IServiceCollection services, BootstrapContext bootstrap, SingleInstanceServer instanceServer)
     {
         services.AddBootstrapServices(bootstrap);
-        services.AddBravoApplicationInstance();
+        services.AddBravoApplicationInstance(instanceServer);
         services.AddHttpClient();
         services.AddPowerBI();
         services.AddSingleton<IPBIDesktopService, PBIDesktopService>();
@@ -55,20 +53,10 @@ internal static class BravoServiceCollectionExtensions
         return services;
     }
 
-    private static IServiceCollection AddBravoApplicationInstance(this IServiceCollection services)
+    private static IServiceCollection AddBravoApplicationInstance(this IServiceCollection services, SingleInstanceServer instanceServer)
     {
-        services.AddSingleton<IBravoApplicationInstance>((provider) =>
-        {
-            var telemetry = provider.GetRequiredService<ITelemetryService>();
-            var loggerFactory = provider.GetRequiredService<ILoggerFactory>();
-            var options = new SingleInstanceOptions
-            {
-                PipeName = InstancePipeName.Create(),
-            };
-            _ = SingleInstanceServer.TryStart(options, out var server);
-
-            return new BravoApplicationInstance(options, server, telemetry, loggerFactory);
-        });
+        services.AddSingleton(instanceServer);
+        services.AddSingleton<IInstanceEvents, BravoApplicationInstance>();
 
         return services;
     }
