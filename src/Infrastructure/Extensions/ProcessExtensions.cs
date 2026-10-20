@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Management;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -72,6 +74,90 @@ internal static class ProcessExtensions
                 {
                     var processId = (int)(uint)@object.GetPropertyValue("ProcessId");
                     pids.Add(processId);
+                }
+            }
+        }
+    }
+
+    extension(Process)
+    {
+        /// <summary>
+        /// Gets the running process with the given identifier in the given Windows session.
+        /// </summary>
+        /// <returns>
+        /// <see langword="false"/> when the process is not running, has exited, runs in another session or cannot be
+        /// opened.
+        /// </returns>
+        public static bool TryGetById(int processId, int sessionId, [NotNullWhen(true)] out Process? process)
+        {
+            process = null;
+            Process? candidate = null;
+            try
+            {
+                candidate = Process.GetProcessById(processId); // Throws ArgumentException if the process is not running
+
+                if (candidate.SessionId != sessionId)
+                    return false;
+
+                if (candidate.HasExited) // Throws Win32Exception if the process cannot be opened, for example another user's
+                    return false;
+
+                _ = candidate.ProcessName; // Throws InvalidOperationException if the process has exited in the meantime
+
+                process = candidate;
+                candidate = null; // Owned by the caller from here on, so the finally block must not dispose it
+                return true;
+            }
+            catch (Exception ex) when (ex is ArgumentException or InvalidOperationException or Win32Exception)
+            {
+                return false;
+            }
+            finally
+            {
+                candidate?.Dispose();
+            }
+        }
+    }
+
+    extension(Process process)
+    {
+        /// <summary>
+        /// Gets the parent of the process when it runs in the same Windows session; otherwise, <see langword="null"/>.
+        /// </summary>
+        public Process? GetParentProcess()
+        {
+            // ManagementObjectSearcher.Get() raises a System.InvalidCastException when executed on the current thread, this regardless of the apartment state of the current thread (which is STA)
+            //
+            // System.InvalidCastException "Specified cast is not valid."
+            //    at System.StubHelpers.InterfaceMarshaler.ConvertToNative(Object objSrc, IntPtr itfMT, IntPtr classMT, Int32 flags)
+            //    at System.Management.SecuredIWbemServicesHandler.ExecQuery_(String strQueryLanguage, String strQuery, Int32 lFlags, IWbemContext pCtx, IEnumWbemClassObject& ppEnum)
+            //    at System.Management.ManagementObjectSearcher.Get()
+
+            var processId = process.Id;
+            var sessionId = process.SessionId;
+            var parentProcessId = (int?)null;
+
+            ProcessHelper.RunOnSTAThread(GetImpl);
+
+            if (parentProcessId is not int id)
+                return null;
+
+            if (!Process.TryGetById(id, sessionId, out var parentProcess))
+                return null;
+
+            return parentProcess;
+
+            void GetImpl()
+            {
+                var queryString = $"SELECT ParentProcessId FROM Win32_Process WHERE ProcessId = {processId} AND SessionId = {sessionId}";
+
+                using var searcher = new ManagementObjectSearcher(queryString);
+                using var collection = searcher.Get();
+                using var @object = collection.OfType<ManagementObject>().SingleOrDefault();
+
+                if (@object is not null)
+                {
+                    parentProcessId = (int)(uint)@object["ParentProcessId"];
                 }
             }
         }
