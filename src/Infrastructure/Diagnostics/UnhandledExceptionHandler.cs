@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Sqlbi.Bravo.Infrastructure.Telemetry;
 
 namespace Sqlbi.Bravo.Infrastructure.Diagnostics;
@@ -9,15 +10,21 @@ namespace Sqlbi.Bravo.Infrastructure.Diagnostics;
 /// Handles unhandled exceptions in the application, providing a mechanism
 /// to report and display error information to the user.
 /// </summary>
-internal sealed class UnhandledExceptionHandler(IErrorReportDialog dialog, ITelemetryService telemetry, ILoggerFactory loggerFactory)
+internal sealed partial class UnhandledExceptionHandler(IErrorReportDialog dialog)
 {
     private readonly IErrorReportDialog _dialog = dialog;
-    private readonly ITelemetryService _telemetry = telemetry;
-    private readonly ILogger _logger = loggerFactory.CreateLogger<UnhandledExceptionHandler>();
+    private volatile ReportingServices _services = new(NullLogger.Instance, Telemetry: null);
+
+    public void AttachServices(ILoggerFactory loggerFactory, ITelemetryService telemetry)
+    {
+        _services = new ReportingServices(loggerFactory.CreateLogger<UnhandledExceptionHandler>(), telemetry);
+    }
 
     public void Handle(Exception exception, ExceptionOrigin origin)
     {
-        Report(exception, origin);
+        var services = _services;
+
+        Report(services, exception, origin);
 
         // Do not show UI for unobserved task exceptions (finalizer threads are runtime-critical).
         // The process keeps running, so the channel sends the telemetry on its own flush interval.
@@ -30,22 +37,39 @@ internal sealed class UnhandledExceptionHandler(IErrorReportDialog dialog, ITele
 
         var report = ErrorReport.Create(exception);
         _ = report.TrySave();
-        _dialog.Show(report);
+        ShowDialog(services, report);
 
-        _ = _telemetry.TryFlushBeforeShutdown(10_000);
+        _ = services.Telemetry?.TryFlushBeforeShutdown(10_000);
     }
 
-    private void Report(Exception exception, ExceptionOrigin origin)
+    private void ShowDialog(ReportingServices services, ErrorReport report)
     {
         try
         {
-            _logger.LogError(exception, "An unhandled exception occurred. Origin: {Origin}", origin);
+            _dialog.Show(report, services.Telemetry);
+        }
+        catch (Exception ex)
+        {
+            // The report is already saved; a failing dialog must not turn the crash into a FailFast.
+            try
+            {
+                LogDialogFailed(services.Logger, ex);
+            }
+            catch { /* Ignore failures */ }
+        }
+    }
+
+    private static void Report(ReportingServices services, Exception exception, ExceptionOrigin origin)
+    {
+        try
+        {
+            LogUnhandledException(services.Logger, exception, origin);
         }
         catch { /* Ignore failures */ }
 
         try
         {
-            _telemetry.TrackException(exception, properties: new Dictionary<string, string>
+            services.Telemetry?.TrackException(exception, properties: new Dictionary<string, string>
             {
                 ["ExceptionOrigin"] = origin.ToString(),
                 ["ExceptionKind"] = "Unhandled"
@@ -72,4 +96,6 @@ internal sealed class UnhandledExceptionHandler(IErrorReportDialog dialog, ITele
             return true;
         }
     }
+
+    private sealed record ReportingServices(ILogger Logger, ITelemetryService? Telemetry);
 }

@@ -101,7 +101,8 @@ public class GlobalExceptionHandlingTests : IDisposable
     {
         var dialog = new RecordingDialog();
         var telemetry = Substitute.For<ITelemetryService>();
-        var handler = new UnhandledExceptionHandler(dialog, telemetry, NullLoggerFactory.Instance);
+        var handler = new UnhandledExceptionHandler(dialog);
+        handler.AttachServices(NullLoggerFactory.Instance, telemetry);
         var args = new UnobservedTaskExceptionEventArgs(new AggregateException("unobserved"));
         SetHandler(handler.Handle);
 
@@ -129,11 +130,4 @@ public class GlobalExceptionHandlingTests : IDisposable
         => typeof(GlobalExceptionHandling)
             .GetMethod("OnUnobservedTaskException", BindingFlags.NonPublic | BindingFlags.Static)!
             .Invoke(null, [null, args]);
-
-    private sealed class RecordingDialog : IErrorReportDialog
-    {
-        public int ShowCount { get; private set; }
-
-        public void Show(ErrorReport report) => ShowCount++;
-    }
 }

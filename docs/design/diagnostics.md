@@ -7,7 +7,7 @@ Exception reporting in the .NET host. The frontend has a separate
 
 | Origin | Process outcome | Current reporting |
 | --- | --- | --- |
-| `AppDomain.UnhandledException`, including WinForms exceptions routed through `ThrowException` | Runtime terminates after the handler returns | Error log; telemetry subject to consent; saved report and crash dialog |
+| `AppDomain.UnhandledException`, including WinForms exceptions routed through `ThrowException` | Runtime terminates after the handler returns | Saved report and crash dialog; after the bootstrap, also error log and telemetry subject to consent |
 | `TaskScheduler.UnobservedTaskException` | Continues | Error log and telemetry subject to consent; no dialog or shutdown flush |
 | Exception caught by an operation that can recover or return an error | Continues | Reporting belongs to the operation or its API boundary; see [handled exceptions](#handled-exceptions) |
 
@@ -18,13 +18,15 @@ ends the process: [ADR 0003](../adr/0003-fatal-exceptions-end-the-process.md).
 
 ## Startup coverage and fatal reporting
 
-[Program](../../src/Program.cs) installs global handling after `BravoApplicationConfiguration.Initialize` and the
-bootstrap, before building the host. Host construction and everything after it are covered. Directory and proxy
-setup, the WebView2 runtime check and bootstrap creation are not: an exception there ends the process with only the
-runtime's own Event Log entry, without a report or a dialog.
+[Program](../../src/Program.cs) installs global handling right after `ApplicationConfiguration.Initialize`, which
+enables the visual styles the task dialog needs, and before every other startup step. Logging and telemetry do not
+exist yet: until the bootstrap context hands them to the handler through `AttachServices`, a fatal exception is
+saved to the report and shown in the dialog, without a log entry from Bravo, without telemetry and without the Send
+button. The runtime still writes its own Event Log entry when it ends the process. This covers directory and proxy
+setup, the WebView2 runtime check and bootstrap creation.
 [BootstrapContextFactory](../../src/Host/BootstrapContextFactory.cs) degrades to default settings and disabled
 telemetry when they cannot be created, but a policy read failure propagates on purpose, so that administrative
-restrictions are never bypassed: a policy registry key that cannot be read ends the process this way
+restrictions are never bypassed: a policy registry key that cannot be read ends the process through this path
 ([ADR 0005](../adr/0005-policy-failures-stop-startup.md)).
 
 [UnhandledExceptionHandler](../../src/Infrastructure/Diagnostics/UnhandledExceptionHandler.cs) logs and tracks each
@@ -33,7 +35,8 @@ other. For a fatal exception, a marker in `Exception.Data` suppresses a repeated
 suppress the earlier log and telemetry calls.
 
 [ErrorReport](../../src/Infrastructure/Diagnostics/ErrorReport.cs) saves environment diagnostics and the exception to
-`ErrorReport.txt` under the application data folder. A failed save does not prevent the dialog.
+`ErrorReport.txt` under the application data folder. A failed save does not prevent the dialog, and a dialog that
+cannot be shown is logged and does not prevent the shutdown flush.
 [ErrorReportTaskDialog](../../src/Infrastructure/Diagnostics/ErrorReportTaskDialog.cs) runs on a dedicated STA thread
 and offers copying, closing and, when host telemetry is disabled, sending the exception through telemetry. Automatic
 tracking is an attempt, not confirmation of delivery.
