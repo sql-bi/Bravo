@@ -1,20 +1,21 @@
-﻿using Sqlbi.Bravo.Infrastructure.Diagnostics;
+﻿using Sqlbi.Bravo.Infrastructure;
+using Sqlbi.Bravo.Infrastructure.Diagnostics;
 
 namespace Sqlbi.Bravo.Host;
 
 internal static class BravoGlobalExceptionHandling
 {
-    public static void Configure(BootstrapContext context)
+    public static UnhandledExceptionHandler Configure()
     {
-        var dialog = new ErrorReportTaskDialog(context.Telemetry);
-
-        var handler = new UnhandledExceptionHandler(
-            dialog, context.Telemetry, context.LoggerFactory);
+        // The path is read on a crash: AppEnvironment initialization can itself be the failure being reported.
+        var handler = new UnhandledExceptionHandler(new ErrorReportTaskDialog(), () => AppEnvironment.ApplicationDataPath);
 
         GlobalExceptionHandling.Configure(handler.Handle);
 
 #if DEBUG
         CrashTest.RunIfRequested();
 #endif
+
+        return handler;
     }
 }

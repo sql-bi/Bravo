@@ -25,8 +25,9 @@ key that cannot be read.
 
 ## Consequences
 
-- A policy registry key that cannot be read ends the process before the global exception handler exists: there is
-  no report and no dialog, only the runtime's Event Log entry. See
+- A policy registry key that cannot be read ends the process through the global exception handler: the user sees
+  the crash dialog and the report is saved, but nothing is logged or tracked, because the bootstrap services are
+  not attached to the handler yet. See
   [diagnostics](../design/diagnostics.md#startup-coverage-and-fatal-reporting).
 - Defaults replace user settings only for the current session; how a corrupt settings file is kept and reported to
   the user is outside this decision.

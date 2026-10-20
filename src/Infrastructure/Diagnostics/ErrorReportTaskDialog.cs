@@ -14,35 +14,68 @@ namespace Sqlbi.Bravo.Infrastructure.Diagnostics;
 
 internal interface IErrorReportDialog
 {
-    void Show(ErrorReport report);
+    void Show(ErrorReport report, ITelemetryService? telemetry);
 }
 
 /// <summary>
 /// Implements an error report dialog to display error information to the user.
 /// </summary>
-internal sealed class ErrorReportTaskDialog(ITelemetryService telemetry) : IErrorReportDialog
+internal sealed class ErrorReportTaskDialog : IErrorReportDialog
 {
-    private readonly ITelemetryService _telemetry = telemetry;
-
-    public void Show(ErrorReport report)
+    public void Show(ErrorReport report, ITelemetryService? telemetry)
     {
         // Always run on a dedicated STA thread: TaskDialog and Clipboard require STA,
         // while the caller could be executing on any arbitrary background thread.
-        ProcessHelper.RunOnSTAThread(() => ShowImpl(report));
+        ProcessHelper.RunOnSTAThread(() =>
+        {
+            try
+            {
+                ShowImpl(report, telemetry);
+            }
+            catch
+            {
+                // The task dialog uses application types that can be the cause of the crash.
+                ShowFallback(report);
+                throw;
+            }
+        });
     }
 
-    private void ShowImpl(ErrorReport report)
+    private static void ShowFallback(ErrorReport report)
+    {
+        try
+        {
+            var text = new StringBuilder();
+            text.AppendLine("Bravo encountered an unexpected error and will close.");
+
+            if (report.FilePath is not null)
+            {
+                text.AppendLine();
+                text.AppendLine("A crash report has been saved:");
+                text.AppendLine(report.FilePath);
+            }
+
+            text.AppendLine();
+            text.Append(report.Exception.GetType().Name).Append(": ").Append(report.Exception.Message);
+
+            MessageBox.Show(text.ToString(), "Bravo for Power BI", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+        catch { /* Ignore failures */ }
+    }
+
+    private static void ShowImpl(ErrorReport report, ITelemetryService? telemetry)
     {
         // Ensure a WindowsFormsSynchronizationContext exists on this STA thread so that async continuations
         // post back to this thread's message loop, where the modal dialog can safely process UI updates.
         if (SynchronizationContext.Current is not WindowsFormsSynchronizationContext)
             SynchronizationContext.SetSynchronizationContext(new WindowsFormsSynchronizationContext());
 
+        // When telemetry is enabled, reports are automatically submitted; offer Send only when it is disabled.
+        var sendTelemetry = telemetry is { TelemetryEnabled: false } ? telemetry : null;
         var sendButton = new TaskDialogCommandLinkButton("&Send report", "Sends the crash report to help diagnose the problem.")
         {
             AllowCloseDialog = false,
-            // When telemetry is enabled, reports are automatically submitted; hide this redundant button.
-            Visible = !_telemetry.TelemetryEnabled,
+            Visible = sendTelemetry is not null,
         };
         var copyButton = new TaskDialogCommandLinkButton("&Copy to clipboard", "Copies the crash report details to the clipboard.")
         {
@@ -66,27 +99,28 @@ internal sealed class ErrorReportTaskDialog(ITelemetryService telemetry) : IErro
         var page = builder.Build();
 
         copyButton.Click += (_, _) => CopyToClipboard(page, text, report);
-        sendButton.Click += async (_, _) => await SendAsync(page, sendButton, text, report);
+        if (sendTelemetry is not null)
+            sendButton.Click += async (_, _) => await SendAsync(sendTelemetry, page, sendButton, text, report);
 
         builder.Show();
     }
 
-    private async Task SendAsync(TaskDialogPage page, TaskDialogButton sendButton, string text, ErrorReport report)
+    private static async Task SendAsync(ITelemetryService telemetry, TaskDialogPage page, TaskDialogButton sendButton, string text, ErrorReport report)
     {
-        var previousTelemetryEnabled = _telemetry.TelemetryEnabled;
+        var previousTelemetryEnabled = telemetry.TelemetryEnabled;
         try
         {
             sendButton.Enabled = false;
             SetStatus(page, text, "Sending the report...");
 
-            _telemetry.TelemetryEnabled = true;
-            _telemetry.TrackException(report.Exception, properties: new Dictionary<string, string>
+            telemetry.TelemetryEnabled = true;
+            telemetry.TrackException(report.Exception, properties: new Dictionary<string, string>
             {
                 ["ExceptionKind"] = "Unhandled"
             });
 
             using var timeout = new CancellationTokenSource(30_000);
-            var submitted = await _telemetry.FlushAsync(timeout.Token);
+            var submitted = await telemetry.FlushAsync(timeout.Token);
 
             SetStatus(page, text, submitted
                 ? "The report has been submitted. Thank you."
@@ -98,7 +132,7 @@ internal sealed class ErrorReportTaskDialog(ITelemetryService telemetry) : IErro
         }
         finally
         {
-            _telemetry.TelemetryEnabled = previousTelemetryEnabled;
+            telemetry.TelemetryEnabled = previousTelemetryEnabled;
         }
     }
 

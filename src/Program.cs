@@ -10,11 +10,11 @@ internal static class Program
     {
         ApplicationConfiguration.Initialize();
 
+        var exceptionHandler = BravoGlobalExceptionHandling.Configure();
+
         BravoApplicationConfiguration.Initialize();
 
-        using var context = BootstrapContextFactory.CreateDefault();
-
-        BravoGlobalExceptionHandling.Configure(context);
+        using var context = BootstrapContextFactory.CreateDefault(exceptionHandler);
 
         using var app = BravoApplication
             .CreateBuilder(context)

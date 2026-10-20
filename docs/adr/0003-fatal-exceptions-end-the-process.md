@@ -34,6 +34,7 @@ that the application failed and need something they can pass to support.
 
 - No work survives a fatal exception; a crash is visible, never silent.
 - The report file is overwritten by the next crash: it serves the dialog that shows it, not as a history.
-- Exceptions raised before the handler is installed are not covered; see
+- The handler is installed before logging and telemetry exist: a fatal exception during startup gets the report and
+  the dialog, but no log entry or telemetry; see
   [diagnostics](../design/diagnostics.md#startup-coverage-and-fatal-reporting).
 - Code on the finalizer thread, where unobserved task exceptions arrive, must never show UI or wait.

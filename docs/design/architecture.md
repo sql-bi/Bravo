@@ -8,7 +8,7 @@ after the bootstrap services and the host are built, so a secondary process stil
 
 | Resource | Lifetime owner | Constraint for changes |
 | --- | --- | --- |
-| Bootstrap telemetry and logger factory | [BootstrapContext](../../src/Host/BootstrapContext.cs) | Keep them available until host disposal completes; telemetry is disposed before the logger factory |
+| Bootstrap telemetry and logger factory | [BootstrapContext](../../src/Host/BootstrapContext.cs) | Keep them available until host disposal completes; the exception handler is detached first, then telemetry is disposed before the logger factory |
 | Bootstrap policy service and user settings | Bootstrap creates or obtains them; the container receives those instances | Preserve the shared instances so consumers do not silently use different configuration snapshots |
 | Application instance and its pipe server | The host container owns `IBravoApplicationInstance`; that instance owns the pipe server | Releasing the pipe ends ownership of the application instance |
 | Main window | `BravoApplication.Run` | The window is created through DI but is not registered as a container-owned service |

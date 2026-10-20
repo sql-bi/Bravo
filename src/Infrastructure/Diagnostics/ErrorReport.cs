@@ -29,11 +29,11 @@ internal sealed class ErrorReport
     public string Text => _text.Value;
     public string? FilePath { get; private set; }
 
-    public bool TrySave()
+    public bool TrySave(string directoryPath)
     {
         try
         {
-            var directory = Directory.CreateDirectory(AppEnvironment.ApplicationDataPath);
+            var directory = Directory.CreateDirectory(directoryPath);
             var filePath = Path.Combine(directory.FullName, "ErrorReport.txt");
 
             File.WriteAllText(filePath, Text, Encoding.UTF8);
