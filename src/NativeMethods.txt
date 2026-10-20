@@ -1,2 +1,10 @@
+// Windows.Win32.Foundation
+WIN32_ERROR
+
+// Windows.Win32.System.Diagnostics.ToolHelp
+CreateToolhelp32Snapshot
+Process32FirstW
+Process32NextW
+
 // Windows.Win32.System.Pipes
 DisconnectNamedPipe

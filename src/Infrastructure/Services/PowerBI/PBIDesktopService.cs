@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Sqlbi.Bravo.Infrastructure.Extensions;
 using Sqlbi.Bravo.Infrastructure.Helpers;
+using Sqlbi.Bravo.Infrastructure.Windows;
 using Sqlbi.Bravo.Models;
 
 namespace Sqlbi.Bravo.Infrastructure.Services.PowerBI;
@@ -21,11 +22,12 @@ internal class PBIDesktopService : IPBIDesktopService
         var processes = ProcessHelper.GetProcessesByName(PowerBIDesktop.ProcessName);
         try
         {
+            var processTree = ProcessTree.Capture();
             var reports = new ConcurrentBag<PBIDesktopReport>();
             var parallelOptions = new ParallelOptions { CancellationToken = cancellationToken };
             var parallelLoop = Parallel.ForEach(processes, parallelOptions, (process) =>
             {
-                var report = PBIDesktopReport.CreateFrom(process);
+                var report = PBIDesktopReport.CreateFrom(process, processTree);
                 reports.Add(report);
             });
 

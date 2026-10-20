@@ -3,11 +3,10 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Management;
 using System.Runtime.InteropServices;
 using System.Text;
 using Sqlbi.Bravo.Infrastructure.Helpers;
+using Sqlbi.Bravo.Infrastructure.Windows;
 using Sqlbi.Bravo.Infrastructure.Windows.Interop;
 
 namespace Sqlbi.Bravo.Infrastructure.Extensions;
@@ -15,7 +14,7 @@ namespace Sqlbi.Bravo.Infrastructure.Extensions;
 internal static class ProcessExtensions
 {
     //[DebuggerStepThrough]
-    [Obsolete("Use WMI query")]
+    [Obsolete("Use GetParentProcess")]
     public static Process? InteropGetParent(this Process process)
     {
         Ntdll.PROCESS_BASIC_INFORMATION processInformation;
@@ -43,40 +42,21 @@ internal static class ProcessExtensions
         return null;
     }
 
-    public static IEnumerable<int> GetChildrenPIDs(this Process process, string? childProcessImageName = null)
+    public static IReadOnlyList<int> GetChildrenPIDs(this Process process, ProcessTree processTree, string? childProcessImageName = null)
     {
-        // ManagementObjectSearcher.Get() raises a System.InvalidCastException when executed on the current thread, this regardless of the apartment state of the current thread (which is STA)
-        //
-        // System.InvalidCastException "Specified cast is not valid."
-        //    at System.StubHelpers.InterfaceMarshaler.ConvertToNative(Object objSrc, IntPtr itfMT, IntPtr classMT, Int32 flags)
-        //    at System.Management.SecuredIWbemServicesHandler.ExecQuery_(String strQueryLanguage, String strQuery, Int32 lFlags, IWbemContext pCtx, IEnumWbemClassObject& ppEnum)
-        //    at System.Management.ManagementObjectSearcher.Get()
+        var sessionId = process.SessionId;
 
-        var pids = new List<int>();
-
-        ProcessHelper.RunOnSTAThread(GetImpl);
-
-        return pids;
-
-        void GetImpl()
+        var childProcessIds = new List<int>();
+        foreach (var childProcessId in processTree.GetChildIds(process.Id, childProcessImageName))
         {
-            var queryString = $"SELECT ProcessId FROM Win32_Process WHERE ParentProcessId = {process.Id} AND SessionId = {AppEnvironment.SessionId}";
+            if (!Process.TryGetById(childProcessId, sessionId, out var childProcess))
+                continue;
 
-            if (childProcessImageName is not null)
-                queryString += $" AND Name = '{childProcessImageName}'";
-
-            using var searcher = new ManagementObjectSearcher(queryString);
-            using var collection = searcher.Get();
-
-            foreach (var @object in collection)
-            {
-                if (@object is not null)
-                {
-                    var processId = (int)(uint)@object.GetPropertyValue("ProcessId");
-                    pids.Add(processId);
-                }
-            }
+            childProcess.Dispose();
+            childProcessIds.Add(childProcessId);
         }
+
+        return childProcessIds;
     }
 
     extension(Process)
@@ -126,40 +106,17 @@ internal static class ProcessExtensions
         /// </summary>
         public Process? GetParentProcess()
         {
-            // ManagementObjectSearcher.Get() raises a System.InvalidCastException when executed on the current thread, this regardless of the apartment state of the current thread (which is STA)
-            //
-            // System.InvalidCastException "Specified cast is not valid."
-            //    at System.StubHelpers.InterfaceMarshaler.ConvertToNative(Object objSrc, IntPtr itfMT, IntPtr classMT, Int32 flags)
-            //    at System.Management.SecuredIWbemServicesHandler.ExecQuery_(String strQueryLanguage, String strQuery, Int32 lFlags, IWbemContext pCtx, IEnumWbemClassObject& ppEnum)
-            //    at System.Management.ManagementObjectSearcher.Get()
-
-            var processId = process.Id;
             var sessionId = process.SessionId;
-            var parentProcessId = (int?)null;
+            var processTree = ProcessTree.Capture();
 
-            ProcessHelper.RunOnSTAThread(GetImpl);
-
-            if (parentProcessId is not int id)
+            var parentProcessId = processTree.GetParentId(process.Id);
+            if (parentProcessId is null)
                 return null;
 
-            if (!Process.TryGetById(id, sessionId, out var parentProcess))
+            if (!Process.TryGetById(parentProcessId.Value, sessionId, out var parentProcess))
                 return null;
 
             return parentProcess;
-
-            void GetImpl()
-            {
-                var queryString = $"SELECT ParentProcessId FROM Win32_Process WHERE ProcessId = {processId} AND SessionId = {sessionId}";
-
-                using var searcher = new ManagementObjectSearcher(queryString);
-                using var collection = searcher.Get();
-                using var @object = collection.OfType<ManagementObject>().SingleOrDefault();
-
-                if (@object is not null)
-                {
-                    parentProcessId = (int)(uint)@object["ParentProcessId"];
-                }
-            }
         }
     }
 
