@@ -115,7 +115,7 @@ public class PBIDesktopReport : IDataModel<PBIDesktopReport>
             compatibilityMode = SSAS.CompatibilityMode.Unknown;
 
             var tree = processTree ?? ProcessTree.Capture();
-            var ssasPIDs = process.GetChildrenPIDs(tree, childProcessImageName: PowerBIDesktop.AnalysisServicesImageName);
+            var ssasPIDs = process.GetChildProcessIds(tree, childProcessImageName: PowerBIDesktop.AnalysisServicesImageName);
             if (ssasPIDs.Count != 1)
             {
                 connectionMode = PBIDesktopReportConnectionMode.UnsupportedAnalysisServicesProcessNotFound;

@@ -42,7 +42,7 @@ internal static class ProcessExtensions
         return null;
     }
 
-    public static IReadOnlyList<int> GetChildrenPIDs(this Process process, ProcessTree processTree, string? childProcessImageName = null)
+    public static IReadOnlyList<int> GetChildProcessIds(this Process process, ProcessTree processTree, string? childProcessImageName = null)
     {
         var sessionId = process.SessionId;
 
