@@ -35,9 +35,10 @@ internal class AppInstanceStartupMessage
     [JsonIgnore]
     public bool IsExternalTool => AppEnvironment.PBIDesktopProcessName.EqualsI(ParentProcessName);
 
+    // Reads no user settings: a secondary instance builds its activation payload before the bootstrap.
     public static AppInstanceStartupMessage CreateFrom(StartupSettings settings)
     {
-        var message = new AppInstanceStartupMessage
+        return new AppInstanceStartupMessage
         {
             IsEmpty = settings.IsEmpty,
             ParentProcessId = settings.ParentProcessId,
@@ -47,11 +48,6 @@ internal class AppInstanceStartupMessage
             ArgumentDatabaseName = settings.ArgumentDatabaseName,
             CommandLineErrors = settings.CommandLineErrors,
         };
-
-        if (AppEnvironment.IsDiagnosticLevelVerbose)
-            AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{nameof(AppInstanceStartupMessage)}.{nameof(CreateFrom)}", content: JsonSerializer.Serialize(message));
-
-        return message;
     }
 }
 
