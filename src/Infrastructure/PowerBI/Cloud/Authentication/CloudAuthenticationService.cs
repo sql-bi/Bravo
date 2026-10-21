@@ -2,6 +2,7 @@
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Sqlbi.Bravo.Infrastructure.PowerBI.Cloud.Configuration;
 using Sqlbi.Bravo.Models;
 
@@ -19,12 +20,14 @@ public interface ICloudAuthenticationService
 /// <summary>
 /// Orchestrates PBI Cloud sign-in/out and holds session state, delegating all MSAL work to <see cref="ICloudAuthenticationClient"/>.
 /// </summary>
-internal class CloudAuthenticationService(
+internal partial class CloudAuthenticationService(
     ICloudAuthenticationClient cloudAuthenticationClient,
-    ICloudConfigurationService cloudConfigurationService) : ICloudAuthenticationService, IDisposable
+    ICloudConfigurationService cloudConfigurationService,
+    ILogger<CloudAuthenticationService> logger) : ICloudAuthenticationService, IDisposable
 {
     private readonly ICloudAuthenticationClient _cloudAuthenticationClient = cloudAuthenticationClient;
     private readonly ICloudConfigurationService _cloudConfigurationService = cloudConfigurationService;
+    private readonly ILogger<CloudAuthenticationService> _logger = logger;
     private readonly SemaphoreSlim _authenticationSemaphore = new(1, 1);
 
     private AuthenticatedSession? _currentSession;
@@ -34,8 +37,10 @@ internal class CloudAuthenticationService(
         await _authenticationSemaphore.WaitAsync(cancellationToken);
         try
         {
-            if (AppEnvironment.IsDiagnosticLevelVerbose)
-                AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{nameof(CloudAuthenticationService)}.{nameof(SignInAsync)}", JsonSerializer.Serialize(environment));
+            if (_logger.IsEnabled(LogLevel.Information))
+            {
+                LogSigningIn(JsonSerializer.Serialize(environment));
+            }
 
             var authenticationResult = await _cloudAuthenticationClient.AcquireTokenAsync(environment, email, cancellationToken);
             var clusterUri = await _cloudConfigurationService.ResolveTenantClusterUriAsync(environment, authenticationResult.AccessToken, cancellationToken);

@@ -10,12 +10,16 @@ namespace Sqlbi.Bravo.Host;
 
 internal sealed partial class BootstrapContextFactory(
     ILoggerFactory loggerFactory,
+    DiagnosticLevelSwitch diagnosticLevel,
+    DiagnosticLogStore diagnosticLog,
     IPolicyServiceFactory policyFactory,
     IUserSettingsServiceFactory settingsFactory,
     ITelemetryServiceFactory telemetryFactory,
     UnhandledExceptionHandler exceptionHandler)
 {
     private readonly ILoggerFactory _loggerFactory = loggerFactory;
+    private readonly DiagnosticLevelSwitch _diagnosticLevel = diagnosticLevel;
+    private readonly DiagnosticLogStore _diagnosticLog = diagnosticLog;
     private readonly IPolicyServiceFactory _policyFactory = policyFactory;
     private readonly IUserSettingsServiceFactory _settingsFactory = settingsFactory;
     private readonly ITelemetryServiceFactory _telemetryFactory = telemetryFactory;
@@ -23,11 +27,15 @@ internal sealed partial class BootstrapContextFactory(
 
     public static BootstrapContext CreateDefault(UnhandledExceptionHandler exceptionHandler)
     {
-        var loggerFactory = CreateLoggerFactory();
+        var diagnosticLevel = new DiagnosticLevelSwitch();
+        var diagnosticLog = new DiagnosticLogStore();
+        var loggerFactory = CreateLoggerFactory(diagnosticLevel, diagnosticLog);
         try
         {
             var factory = new BootstrapContextFactory(
                 loggerFactory,
+                diagnosticLevel,
+                diagnosticLog,
                 new PolicyServiceFactory(),
                 new UserSettingsServiceFactory(),
                 new TelemetryServiceFactory(),
@@ -50,22 +58,22 @@ internal sealed partial class BootstrapContextFactory(
     {
         var policies = CreatePolicies();
         var settings = CreateSettings();
+        _diagnosticLevel.Level = settings.DiagnosticLevel;
 
         var consent = TelemetryConsent.Resolve(policies.Current, settings);
         var telemetry = CreateTelemetry(consent.IsEnabled);
         var exceptionHandlerAttachment = _exceptionHandler.AttachServices(_loggerFactory, telemetry);
 
-        return new BootstrapContext(_loggerFactory, policies, settings, telemetry, exceptionHandlerAttachment);
+        return new BootstrapContext(_loggerFactory, _diagnosticLevel, _diagnosticLog, policies, settings, telemetry, exceptionHandlerAttachment);
     }
 
-    private static ILoggerFactory CreateLoggerFactory()
+    private static ILoggerFactory CreateLoggerFactory(DiagnosticLevelSwitch diagnosticLevel, DiagnosticLogStore diagnosticLog)
     {
         return LoggerFactory.Create((builder) =>
         {
             builder.AddEventSourceLogger();
             builder.AddBravoEventLog();
-            builder.AddDiagnosticMessages();
-            builder.AddFilter<DiagnosticMessageLoggerProvider>((level) => level >= LogLevel.Warning);
+            builder.AddBravoDiagnosticLog(diagnosticLog, diagnosticLevel, TimeProvider.System);
 #if DEBUG
             builder.AddConsole();
             builder.AddDebug();

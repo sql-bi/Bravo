@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
 using Microsoft.Identity.Client;
 using Sqlbi.Bravo.Infrastructure.Authentication;
 using Sqlbi.Bravo.Infrastructure.Helpers;
@@ -20,7 +21,7 @@ using AMO = Microsoft.AnalysisServices;
 
 namespace Sqlbi.Bravo.Infrastructure.Extensions;
 
-internal static class HostingExtensions
+internal static partial class HostingExtensions
 {
     public static IMvcBuilder AddAndConfigureControllers(this IServiceCollection services)
     {
@@ -38,7 +39,7 @@ internal static class HostingExtensions
             apiOptions.InvalidModelStateResponseFactory = (context) =>
             {
                 var content = JsonSerializer.Serialize(new ValidationProblemDetails(context.ModelState));
-                AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{nameof(MvcCoreMvcBuilderExtensions.ConfigureApiBehaviorOptions)}.{nameof(apiOptions.InvalidModelStateResponseFactory)}", content, DiagnosticMessageSeverity.Error);
+                LogRequestModelInvalid(GetLogger(context.HttpContext), content);
 
                 // Invoke the defaultFactory delegate to preserve the default behavior
                 return defaultFactory(context);
@@ -129,10 +130,7 @@ internal static class HostingExtensions
 
             options.Map<BravoException>((context, exception) =>
             {
-                if (AppEnvironment.IsDiagnosticLevelVerbose)
-                    AppEnvironment.AddDiagnostics(name: nameof(BravoException), exception);
-
-                context.RequestServices.GetRequiredService<ITelemetryService>().TrackException(exception);
+                ReportMappedException(context, exception);
 
                 var problemDetailsFactory = context.RequestServices.GetRequiredService<ProblemDetailsFactory>();
                 var problemDetails = problemDetailsFactory.CreateProblemDetails(context,
@@ -145,10 +143,7 @@ internal static class HostingExtensions
 
             options.Map<MsalException>((context, exception) =>
             {
-                if (AppEnvironment.IsDiagnosticLevelVerbose)
-                    AppEnvironment.AddDiagnostics(name: nameof(MsalException), exception);
-
-                context.RequestServices.GetRequiredService<ITelemetryService>().TrackException(exception);
+                ReportMappedException(context, exception);
 
                 var problemDetailsFactory = context.RequestServices.GetRequiredService<ProblemDetailsFactory>();
                 var problemDetails = problemDetailsFactory.CreateProblemDetails(context,
@@ -161,10 +156,7 @@ internal static class HostingExtensions
 
             options.Map<AMO.AsClientException>((context, exception) => exception.IsOrHasInner<MsalException>(), mapping: (context, exception) =>
             {
-                if (AppEnvironment.IsDiagnosticLevelVerbose)
-                    AppEnvironment.AddDiagnostics(name: $"{nameof(AMO.AsClientException)}::{nameof(MsalException)}", exception);
-
-                context.RequestServices.GetRequiredService<ITelemetryService>().TrackException(exception);
+                ReportMappedException(context, exception);
 
                 var msalException = exception.Find<MsalException>(); BravoUnexpectedException.ThrowIfNull(msalException);
                 var problemDetailsFactory = context.RequestServices.GetRequiredService<ProblemDetailsFactory>();
@@ -178,10 +170,7 @@ internal static class HostingExtensions
 
             options.Map<AMO.ConnectionException>((context, exception) =>
             {
-                if (AppEnvironment.IsDiagnosticLevelVerbose)
-                    AppEnvironment.AddDiagnostics(name: nameof(AMO.ConnectionException), exception);
-
-                context.RequestServices.GetRequiredService<ITelemetryService>().TrackException(exception);
+                ReportMappedException(context, exception);
 
                 var problemDetailsFactory = context.RequestServices.GetRequiredService<ProblemDetailsFactory>();
                 var problemDetails = problemDetailsFactory.CreateProblemDetails(context,
@@ -194,10 +183,7 @@ internal static class HostingExtensions
 
             options.Map<OperationCanceledException>((context, exception) =>
             {
-                if (AppEnvironment.IsDiagnosticLevelVerbose)
-                    AppEnvironment.AddDiagnostics(name: nameof(OperationCanceledException), exception);
-
-                context.RequestServices.GetRequiredService<ITelemetryService>().TrackException(exception);
+                ReportMappedException(context, exception);
 
                 var problemDetailsFactory = context.RequestServices.GetRequiredService<ProblemDetailsFactory>();
                 var problemDetails = problemDetailsFactory.CreateProblemDetails(context,
@@ -212,10 +198,7 @@ internal static class HostingExtensions
             // This can result in a misleading message like a AMO.ConnectionException reported as a SocketException (NetworkError instead of AnalysisServicesConnectionFailed)
             options.Map<Exception>(predicate: (context, exception) => exception.IsOrHasInner<SocketException>(), mapping: (context, exception) =>
             {
-                if (AppEnvironment.IsDiagnosticLevelVerbose)
-                    AppEnvironment.AddDiagnostics(name: $"{nameof(Exception)}::{nameof(SocketException)}", exception);
-
-                context.RequestServices.GetRequiredService<ITelemetryService>().TrackException(exception);
+                ReportMappedException(context, exception);
 
                 var socketException = exception.Find<SocketException>(); BravoUnexpectedException.ThrowIfNull(socketException);
                 var problemDetailsFactory = context.RequestServices.GetRequiredService<ProblemDetailsFactory>();
@@ -230,8 +213,8 @@ internal static class HostingExtensions
             // Because exceptions are handled polymorphically, this will act as a "catch all" mapping, which is why it's added last
             options.Map<Exception>(mapping: (context, exception) =>
             {
-                AppEnvironment.AddDiagnostics(name: "UnhandledException", exception);
-
+                // No log here: this mapping returns 500, and the problem details middleware logs every 500 response at Error,
+                // so a log here would record the exception twice. The 400 mappings above log because the middleware does not.
                 context.RequestServices.GetRequiredService<ITelemetryService>().TrackException(exception);
 
                 return StatusCodeProblemDetails.Create(StatusCodes.Status500InternalServerError);
@@ -257,5 +240,17 @@ internal static class HostingExtensions
         });
 
         return services;
+    }
+
+    private static ILogger GetLogger(HttpContext context)
+    {
+        var loggerFactory = context.RequestServices.GetRequiredService<ILoggerFactory>();
+        return loggerFactory.CreateLogger(typeof(HostingExtensions));
+    }
+
+    internal static void ReportMappedException(HttpContext context, Exception exception)
+    {
+        LogExceptionMapped(GetLogger(context), exception);
+        context.RequestServices.GetRequiredService<ITelemetryService>().TrackException(exception);
     }
 }

@@ -7,6 +7,7 @@ using System.Threading;
 using Dax.Template.Exceptions;
 using Dax.Template.Model;
 using Microsoft.AnalysisServices.AdomdClient;
+using Microsoft.Extensions.Logging;
 using Sqlbi.Bravo.Infrastructure;
 using Sqlbi.Bravo.Infrastructure.Extensions;
 using Sqlbi.Bravo.Infrastructure.Helpers;
@@ -53,12 +54,14 @@ internal class TemplateDevelopmentService : ITemplateDevelopmentService
     private readonly DaxTemplateManager _templateManager;
     private readonly IServerAddressProvider _serverAddressProvider;
     private readonly IPolicyService _policyService;
+    private readonly ILogger<TemplateDevelopmentService> _logger;
 
-    public TemplateDevelopmentService(IServerAddressProvider serverAddressProvider, IPolicyService policyService)
+    public TemplateDevelopmentService(IServerAddressProvider serverAddressProvider, IPolicyService policyService, ILogger<TemplateDevelopmentService> logger)
     {
         _serverAddressProvider = serverAddressProvider;
         _policyService = policyService;
-        _templateManager = new DaxTemplateManager(policyService);
+        _logger = logger;
+        _templateManager = new DaxTemplateManager(policyService, logger);
         _serializerOptions = new JsonSerializerOptions(AppEnvironment.DefaultJsonOptions) { WriteIndented = true };
     }
 
@@ -245,7 +248,7 @@ internal class TemplateDevelopmentService : ITemplateDevelopmentService
             HasWorkspace = true,
             HasPackage = false,
         };
-        var package = configuration.LoadPackage(configure: false);
+        var package = configuration.LoadPackage(_logger, configure: false);
 
         // src\*.json files
         {
@@ -382,7 +385,7 @@ internal class TemplateDevelopmentService : ITemplateDevelopmentService
     {
         BravoUnexpectedException.ThrowIfNull(settings.CustomPackagePath);
 
-        using var connection = TabularConnectionWrapper.ConnectTo(report);
+        using var connection = TabularConnectionWrapper.ConnectTo(report, _logger);
         try
         {
             var package = Dax.Template.Package.LoadFromFile(settings.CustomPackagePath);

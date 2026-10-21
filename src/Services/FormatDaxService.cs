@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Dax.Formatter;
 using Dax.Formatter.Models;
+using Microsoft.Extensions.Logging;
 using Sqlbi.Bravo.Infrastructure;
 using Sqlbi.Bravo.Infrastructure.Extensions;
 using Sqlbi.Bravo.Infrastructure.Helpers;
@@ -25,10 +26,12 @@ public interface IFormatDaxService
 internal class FormatDaxService : IFormatDaxService
 {
     private readonly IDaxFormatterClient _daxformatterClient;
+    private readonly ILogger<FormatDaxService> _logger;
 
-    public FormatDaxService(IDaxFormatterClient daxformatterClient)
+    public FormatDaxService(IDaxFormatterClient daxformatterClient, ILogger<FormatDaxService> logger)
     {
         _daxformatterClient = daxformatterClient;
+        _logger = logger;
     }
 
     public async Task<IEnumerable<FormattedMeasure>> FormatAsync(IEnumerable<TabularMeasure> measures, FormatDaxOptions options)
@@ -78,7 +81,7 @@ internal class FormatDaxService : IFormatDaxService
 
     public DatabaseUpdateResult Update(PBIDesktopReport report, IEnumerable<FormattedMeasure> measures)
     {
-        using var connection = TabularConnectionWrapper.ConnectTo(report);
+        using var connection = TabularConnectionWrapper.ConnectTo(report, _logger);
         var updateResult = TabularModelHelper.Update(connection.Database, measures);
 
         return updateResult;
@@ -86,7 +89,7 @@ internal class FormatDaxService : IFormatDaxService
 
     public DatabaseUpdateResult Update(PBICloudDataset dataset, IEnumerable<FormattedMeasure> measures, string accessToken)
     {
-        using var connection = TabularConnectionWrapper.ConnectTo(dataset, accessToken);
+        using var connection = TabularConnectionWrapper.ConnectTo(dataset, accessToken, _logger);
         var updateResult = TabularModelHelper.Update(connection.Database, measures);
 
         return updateResult;

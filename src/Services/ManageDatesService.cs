@@ -6,6 +6,7 @@ using Dax.Template;
 using Dax.Template.Exceptions;
 using Dax.Template.Model;
 using Microsoft.AnalysisServices.AdomdClient;
+using Microsoft.Extensions.Logging;
 using Sqlbi.Bravo.Infrastructure;
 using Sqlbi.Bravo.Infrastructure.Extensions;
 using Sqlbi.Bravo.Infrastructure.Helpers;
@@ -31,10 +32,12 @@ public interface IManageDatesService
 internal class ManageDatesService : IManageDatesService
 {
     private readonly DaxTemplateManager _templateManager;
+    private readonly ILogger<ManageDatesService> _logger;
 
-    public ManageDatesService(IPolicyService policyService)
+    public ManageDatesService(IPolicyService policyService, ILogger<ManageDatesService> logger)
     {
-        _templateManager = new DaxTemplateManager(policyService);
+        _logger = logger;
+        _templateManager = new DaxTemplateManager(policyService, logger);
     }
 
     public IEnumerable<DateConfiguration> GetConfigurations(PBIDesktopReport report, CancellationToken cancellationToken)
@@ -50,7 +53,7 @@ internal class ManageDatesService : IManageDatesService
         }
 
         var configurations = packages.Select(DateConfiguration.CreateFrom).ToList();
-        using var connection = TabularConnectionWrapper.ConnectTo(report);
+        using var connection = TabularConnectionWrapper.ConnectTo(report, _logger);
         var currentConfiguration = DateConfiguration.GetCurrentFrom(connection.Model);
 
         if (currentConfiguration is not null)
@@ -73,7 +76,7 @@ internal class ManageDatesService : IManageDatesService
         BravoUnexpectedException.ThrowIfNull(settings.Configuration);
         Validate(report, settings.Configuration, assertValidation: true);
 
-        using var connection = TabularConnectionWrapper.ConnectTo(report);
+        using var connection = TabularConnectionWrapper.ConnectTo(report, _logger);
         try
         {
             var modelChanges = _templateManager.GetPreviewChanges(settings.Configuration, settings.PreviewRows, connection, cancellationToken);
@@ -89,7 +92,7 @@ internal class ManageDatesService : IManageDatesService
     {
         Validate(report, configuration, assertValidation: true);
 
-        using var connection = TabularConnectionWrapper.ConnectTo(report);
+        using var connection = TabularConnectionWrapper.ConnectTo(report, _logger);
         try
         {
             _templateManager.ApplyConfiguration(configuration, connection, cancellationToken);
@@ -100,11 +103,11 @@ internal class ManageDatesService : IManageDatesService
         }
     }
 
-    private static void Validate(PBIDesktopReport report, DateConfiguration configuration, bool assertValidation) => Validate(report, new[] { configuration }, assertValidation);
+    private void Validate(PBIDesktopReport report, DateConfiguration configuration, bool assertValidation) => Validate(report, new[] { configuration }, assertValidation);
 
-    private static void Validate(PBIDesktopReport report, IEnumerable<DateConfiguration> configurations, bool assertValidation)
+    private void Validate(PBIDesktopReport report, IEnumerable<DateConfiguration> configurations, bool assertValidation)
     {
-        using var connection = TabularConnectionWrapper.ConnectTo(report);
+        using var connection = TabularConnectionWrapper.ConnectTo(report, _logger);
 
         foreach (var configuration in configurations)
         {

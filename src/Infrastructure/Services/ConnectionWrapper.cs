@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Text.Json.Nodes;
 using Microsoft.AnalysisServices.AdomdClient;
+using Microsoft.Extensions.Logging;
 using Sqlbi.Bravo.Infrastructure.Extensions;
 using Sqlbi.Bravo.Infrastructure.Helpers;
 using Sqlbi.Bravo.Models;
@@ -8,11 +8,11 @@ using TOM = Microsoft.AnalysisServices.Tabular;
 
 namespace Sqlbi.Bravo.Infrastructure.Services;
 
-internal class TabularConnectionWrapper : IDisposable
+internal partial class TabularConnectionWrapper : IDisposable
 {
     private readonly string _connectionString;
 
-    private TabularConnectionWrapper(string connectionString, string databaseIdOrName, bool findById)
+    private TabularConnectionWrapper(string connectionString, string databaseIdOrName, bool findById, ILogger logger)
     {
         _connectionString = connectionString;
 
@@ -22,16 +22,10 @@ internal class TabularConnectionWrapper : IDisposable
 
         if (Database is null)
         {
-            if (AppEnvironment.IsDiagnosticLevelVerbose)
+            if (logger.IsEnabled(LogLevel.Information))
             {
                 var properties = Server.SerializeDiagnosticProperties();
-                var content = new JsonObject
-                {
-                    { nameof(databaseIdOrName), databaseIdOrName },
-                    { nameof(findById), findById },
-                    { nameof(properties), properties }
-                };
-                AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{nameof(TabularConnectionWrapper)}.ctor", content.ToJsonString());
+                LogDatabaseNotFound(logger, databaseIdOrName, findById, properties.ToJsonString());
             }
 
             throw new BravoException(BravoProblem.TOMDatabaseDatabaseNotFound, databaseIdOrName);
@@ -64,22 +58,22 @@ internal class TabularConnectionWrapper : IDisposable
         Server?.Dispose();
     }
 
-    public static TabularConnectionWrapper ConnectTo(PBICloudDataset dataset, string accessToken)
+    public static TabularConnectionWrapper ConnectTo(PBICloudDataset dataset, string accessToken, ILogger logger)
     {
         BravoUnexpectedException.ThrowIfNull(dataset.DatabaseName);
 
         var connectionString = ConnectionStringHelper.BuildFor(dataset, accessToken);
-        var connection = new TabularConnectionWrapper(connectionString, dataset.DatabaseName, findById: true);
+        var connection = new TabularConnectionWrapper(connectionString, dataset.DatabaseName, findById: true, logger);
 
         return connection;
     }
 
-    public static TabularConnectionWrapper ConnectTo(PBIDesktopReport report)
+    public static TabularConnectionWrapper ConnectTo(PBIDesktopReport report, ILogger logger)
     {
         BravoUnexpectedException.ThrowIfNull(report.DatabaseName);
 
         var connectionString = ConnectionStringHelper.BuildFor(report);
-        var connection = new TabularConnectionWrapper(connectionString, report.DatabaseName, findById: false);
+        var connection = new TabularConnectionWrapper(connectionString, report.DatabaseName, findById: false, logger);
 
         return connection;
     }

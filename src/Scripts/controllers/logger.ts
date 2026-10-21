@@ -11,7 +11,7 @@ import { AppError, AppErrorType } from '../model/exceptions';
 import { i18n } from '../model/i18n';
 import { pii } from '../model/pii';
 import { strings } from '../model/strings';
-import { DiagnosticMessage, DiagnosticMessageSeverity } from './host';
+import { DiagnosticLogEntry, DiagnosticLogPage, HostLogLevel } from './host';
 import { DiagnosticLevelType } from './options';
 
 export interface LogMessage {
@@ -33,9 +33,12 @@ export interface LogMessageObj {
 export class Logger extends Dispatchable {
 
     static MaxMessages = 50;
+    static HostPrefix = "[HOST]";
 
     static CheckSeconds = 5;
     checkTimeout = 0;
+    hostCursor = 0;
+    checking = false;
     logs: Dic<LogMessage> = {};
     _enabled = false;
 
@@ -44,6 +47,8 @@ export class Logger extends Dispatchable {
     }
 
     set enabled(enabled: boolean) {
+        if (enabled == this._enabled) return;
+
         if (enabled) {
             this.checkTimeout = window.setInterval(() => {
                 this.check();
@@ -60,24 +65,57 @@ export class Logger extends Dispatchable {
         this.enabled = enabled;
 
         if (enabled)
-            this.check(true);
+            this.check();
 
         optionsController.on("diagnosticLevel.change", () => {
             this.enabled = (optionsController.options.diagnosticLevel !== DiagnosticLevelType.None);
         });
     }
 
-    check(initial = false) {
-        if (!this.enabled) return;
-        if (!Logger.LevelMatch(DiagnosticLevelType.Verbose)) return;
+    check() {
+        if (!this.enabled || this.checking) return;
 
-        host.getDiagnostics(initial)
-            .then((messages: DiagnosticMessage[]) => {
-                messages.forEach(message => {
-                    this.log(message.name, { content: message.content }, DiagnosticLevelType.Verbose, Date.parse(message.timestamp), message.severity > DiagnosticMessageSeverity.None ? "errorMessage" : "");
-                });
+        // The host keeps its records, so the cursor alone decides what is new: a reload reads the newest ones again.
+        this.checking = true;
+        host.getDiagnostics(this.hostCursor, Logger.MaxMessages)
+            .then((page: DiagnosticLogPage) => {
+                if (page.droppedCount > 0)
+                    this.log(`${ Logger.HostPrefix } ${ page.droppedCount } earlier messages are not shown`, null, DiagnosticLevelType.Basic);
+
+                page.entries.forEach(entry => this.logHostEntry(entry));
+                this.hostCursor = page.lastSequence;
             })
-            .catch(ignore=>{});
+            .catch(ignore=>{})
+            .finally(() => this.checking = false);
+    }
+
+    logHostEntry(entry: DiagnosticLogEntry) {
+        const isProblem = (entry.level >= HostLogLevel.Warning || !!entry.exception);
+        const level = (entry.level >= HostLogLevel.Warning ? DiagnosticLevelType.Basic : DiagnosticLevelType.Verbose);
+        // Generic arguments are dropped first: they contain dots of their own.
+        const category = entry.category.replace(/<.*$/, "").split(".").pop();
+        const name = `${ Logger.HostPrefix } ${ category }${ entry.eventName ? `.${ entry.eventName }` : "" }`;
+
+        let content: Dic<any> = { Message: entry.template ?? entry.message };
+        if (entry.properties) {
+            for (const key in entry.properties)
+                content[key] = Logger.ParseJsonContainer(entry.properties[key]);
+        }
+        if (entry.exception)
+            content.Exception = entry.exception;
+
+        this.log(name, { content: content }, level, Date.parse(entry.timestamp), isProblem ? "errorMessage" : "");
+    }
+
+    // Only objects and arrays are parsed: a plain value such as an identifier stays the text the host logged.
+    static ParseJsonContainer(value: string) {
+        const text = value?.trim();
+        if (text && (text.startsWith("{") || text.startsWith("["))) {
+            try {
+                return JSON.parse(text);
+            } catch (ignore) {}
+        }
+        return value;
     }
 
     log(name: string, obj?: LogMessageObj, level: DiagnosticLevelType = DiagnosticLevelType.Basic, time?: number, className?: string, forceLogging = false): string {

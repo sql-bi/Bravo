@@ -4,6 +4,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Sqlbi.Bravo.Host;
 using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
+using Sqlbi.Bravo.Infrastructure.Diagnostics;
 using Sqlbi.Bravo.Infrastructure.Policies;
 using Sqlbi.Bravo.Infrastructure.SingleInstance;
 using Sqlbi.Bravo.Infrastructure.Telemetry;
@@ -20,16 +21,20 @@ public class BravoApplicationBuilderTests
         var telemetry = new FakeTelemetry();
         var policies = new PolicyService(new FakePolicyReader());
         var settings = new UserSettings();
+        var diagnosticLevel = new DiagnosticLevelSwitch();
+        var diagnosticLog = new DiagnosticLogStore();
         var options = TestInstanceOptions.Create();
 
         Assert.True(SingleInstanceServer.TryStart(options, out var instanceServer));
 
         using (instanceServer)
-        using (var bootstrap = new BootstrapContext(loggerFactory, policies, settings, telemetry))
+        using (var bootstrap = new BootstrapContext(loggerFactory, diagnosticLevel, diagnosticLog, policies, settings, telemetry))
         {
             using (var application = BravoApplication.CreateBuilder(bootstrap, instanceServer).Build())
             {
                 Assert.Same(loggerFactory, application.Services.GetRequiredService<ILoggerFactory>());
+                Assert.Same(diagnosticLevel, application.Services.GetRequiredService<DiagnosticLevelSwitch>());
+                Assert.Same(diagnosticLog, application.Services.GetRequiredService<DiagnosticLogStore>());
                 Assert.Same(telemetry, application.Services.GetRequiredService<ITelemetryService>());
                 Assert.Same(policies, application.Services.GetRequiredService<IPolicyService>());
                 Assert.Same(settings, application.Services.GetRequiredService<IUserSettings>());

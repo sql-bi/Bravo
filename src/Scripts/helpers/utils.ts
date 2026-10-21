@@ -620,8 +620,9 @@ export module Utils {
                 return prop;
             };
         
+            // The same tags as SensitiveTags.cs in the host, which redacts them in telemetry; a test there checks both lists.
             const removePii = (value: string) => {
-                return value.replace(/<pii>(.|\n)+?<\/pii>/gi, anonChar + anonChar + anonChar);
+                return value.replace(/<(pii|oii|euii|eupi|conn)>[\s\S]*?<\/\1>/gi, anonChar + anonChar + anonChar);
             };
         
             const process = (source: any) => {

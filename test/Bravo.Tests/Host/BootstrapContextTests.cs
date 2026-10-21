@@ -21,7 +21,7 @@ public class BootstrapContextTests
     {
         var loggerFactory = new FakeLoggerFactory();
         var telemetry = new FakeTelemetry();
-        var context = new BootstrapContext(loggerFactory, new PolicyService(new FakePolicyReader()), new UserSettings(), telemetry);
+        var context = new BootstrapContext(loggerFactory, new DiagnosticLevelSwitch(), new DiagnosticLogStore(), new PolicyService(new FakePolicyReader()), new UserSettings(), telemetry);
 
         context.Dispose();
         context.Dispose();
@@ -36,7 +36,7 @@ public class BootstrapContextTests
         var exceptionHandler = CreateExceptionHandler();
         var policyFactory = new FakePolicyFactory(() => new PolicyService(new FakePolicyReader()));
         var settingsFactory = new FakeSettingsFactory(() => new UserSettings());
-        var factory = new BootstrapContextFactory(new FakeLoggerFactory(), policyFactory, settingsFactory, new FakeTelemetryFactory(), exceptionHandler);
+        var factory = new BootstrapContextFactory(new FakeLoggerFactory(), new DiagnosticLevelSwitch(), new DiagnosticLogStore(), policyFactory, settingsFactory, new FakeTelemetryFactory(), exceptionHandler);
 
         var context = factory.Create();
         var telemetry = Assert.IsType<FakeTelemetry>(context.Telemetry);
@@ -62,7 +62,7 @@ public class BootstrapContextTests
         var policyFactory = new FakePolicyFactory(() => policyService);
         var settingsFactory = new FakeSettingsFactory(() => settings);
         var telemetryFactory = new FakeTelemetryFactory();
-        var factory = new BootstrapContextFactory(loggerFactory, policyFactory, settingsFactory, telemetryFactory, CreateExceptionHandler());
+        var factory = new BootstrapContextFactory(loggerFactory, new DiagnosticLevelSwitch(), new DiagnosticLogStore(), policyFactory, settingsFactory, telemetryFactory, CreateExceptionHandler());
 
         Assert.Equal(0, reader.ReadCount);
         Assert.Equal(0, policyFactory.CreateCount);
@@ -84,6 +84,22 @@ public class BootstrapContextTests
     }
 
     [Fact]
+    public void Create_AppliesTheDiagnosticLevelAndKeepsTheDiagnosticLog()
+    {
+        var diagnosticLevel = new DiagnosticLevelSwitch();
+        var diagnosticLog = new DiagnosticLogStore();
+        var policyFactory = new FakePolicyFactory(() => new PolicyService(new FakePolicyReader()));
+        var settingsFactory = new FakeSettingsFactory(() => new UserSettings { DiagnosticLevel = DiagnosticLevelType.Verbose });
+        var factory = new BootstrapContextFactory(new FakeLoggerFactory(), diagnosticLevel, diagnosticLog, policyFactory, settingsFactory, new FakeTelemetryFactory(), CreateExceptionHandler());
+
+        using var context = factory.Create();
+
+        Assert.Same(diagnosticLevel, context.DiagnosticLevel);
+        Assert.Same(diagnosticLog, context.DiagnosticLog);
+        Assert.Equal(DiagnosticLevelType.Verbose, diagnosticLevel.Level);
+    }
+
+    [Fact]
     public void Create_ReadFailurePropagatesBeforeTelemetryIsCreated()
     {
         var failure = new IOException("Registry unavailable");
@@ -92,7 +108,7 @@ public class BootstrapContextTests
         var policyFactory = new FakePolicyFactory(() => new PolicyService(reader));
         var settingsFactory = new FakeSettingsFactory(() => new UserSettings());
         var telemetryFactory = new FakeTelemetryFactory();
-        var factory = new BootstrapContextFactory(loggerFactory, policyFactory, settingsFactory, telemetryFactory, CreateExceptionHandler());
+        var factory = new BootstrapContextFactory(loggerFactory, new DiagnosticLevelSwitch(), new DiagnosticLogStore(), policyFactory, settingsFactory, telemetryFactory, CreateExceptionHandler());
 
         Assert.Same(failure, Assert.Throws<IOException>(() => factory.Create()));
         Assert.Equal(0, settingsFactory.CreateCount);
@@ -108,7 +124,7 @@ public class BootstrapContextTests
         var policyFactory = new FakePolicyFactory(() => throw failure);
         var settingsFactory = new FakeSettingsFactory(() => new UserSettings());
         var telemetryFactory = new FakeTelemetryFactory();
-        var factory = new BootstrapContextFactory(loggerFactory, policyFactory, settingsFactory, telemetryFactory, CreateExceptionHandler());
+        var factory = new BootstrapContextFactory(loggerFactory, new DiagnosticLevelSwitch(), new DiagnosticLogStore(), policyFactory, settingsFactory, telemetryFactory, CreateExceptionHandler());
 
         Assert.Same(failure, Assert.Throws<InvalidOperationException>(() => factory.Create()));
         Assert.Equal(0, settingsFactory.CreateCount);
@@ -124,7 +140,7 @@ public class BootstrapContextTests
         var policyFactory = new FakePolicyFactory(() => new PolicyService(new FakePolicyReader()));
         var settingsFactory = new FakeSettingsFactory(() => throw failure);
         var telemetryFactory = new FakeTelemetryFactory();
-        var factory = new BootstrapContextFactory(loggerFactory, policyFactory, settingsFactory, telemetryFactory, CreateExceptionHandler());
+        var factory = new BootstrapContextFactory(loggerFactory, new DiagnosticLevelSwitch(), new DiagnosticLogStore(), policyFactory, settingsFactory, telemetryFactory, CreateExceptionHandler());
 
         using var context = factory.Create();
 
@@ -146,7 +162,7 @@ public class BootstrapContextTests
         var policyFactory = new FakePolicyFactory(() => new PolicyService(new FakePolicyReader()));
         var settingsFactory = new FakeSettingsFactory(() => new UserSettings());
         var telemetryFactory = new FakeTelemetryFactory { Failure = failure };
-        var factory = new BootstrapContextFactory(loggerFactory, policyFactory, settingsFactory, telemetryFactory, CreateExceptionHandler());
+        var factory = new BootstrapContextFactory(loggerFactory, new DiagnosticLevelSwitch(), new DiagnosticLogStore(), policyFactory, settingsFactory, telemetryFactory, CreateExceptionHandler());
 
         using var context = factory.Create();
 

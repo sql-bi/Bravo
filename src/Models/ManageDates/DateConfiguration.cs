@@ -9,6 +9,7 @@ using Dax.Template.Enums;
 using Dax.Template.Exceptions;
 using Dax.Template.Interfaces;
 using Dax.Template.Tables;
+using Microsoft.Extensions.Logging;
 using Sqlbi.Bravo.Infrastructure;
 using Sqlbi.Bravo.Infrastructure.Configuration;
 using Sqlbi.Bravo.Infrastructure.Extensions;
@@ -427,9 +428,9 @@ public class DateConfiguration
     }
 }
 
-internal static class DateConfigurationExtensions
+internal static partial class DateConfigurationExtensions
 {
-    public static Dax.Template.Package LoadPackage(this DateConfiguration configuration, bool configure = true)
+    public static Dax.Template.Package LoadPackage(this DateConfiguration configuration, ILogger logger, bool configure = true)
     {
         BravoUnexpectedException.ThrowIfNull(configuration.TemplateUri);
 
@@ -455,8 +456,7 @@ internal static class DateConfigurationExtensions
             {
                 var templatesOptionFound = UserPreferences.Current.CustomOptions.Value.TryGetProperty("templates", out var templatesOption);
 
-                if (AppEnvironment.IsDiagnosticLevelVerbose)
-                    AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{nameof(DateConfigurationExtensions)}.{nameof(LoadPackage)}.CustomOptions.Templates[{templatesOption.ValueKind}]", content: templatesOption.ToString());
+                LogCustomTemplatesOptionRead(logger, templatesOption.ValueKind, templatesOption);
 
                 if (templatesOptionFound)
                 {

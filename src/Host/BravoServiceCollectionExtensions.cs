@@ -67,6 +67,8 @@ internal static class BravoServiceCollectionExtensions
 
         // Replace the default ILoggerFactory registered by the WebApplicationBuilder
         services.Replace(ServiceDescriptor.Singleton(bootstrap.LoggerFactory));
+        services.AddSingleton(bootstrap.DiagnosticLevel);
+        services.AddSingleton(bootstrap.DiagnosticLog);
 
         services.AddSingleton(bootstrap.PolicyService);
         services.AddSingleton(bootstrap.Settings);

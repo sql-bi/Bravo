@@ -62,24 +62,62 @@ For an operation with initialized logging and telemetry, report a caught failure
 `ITelemetryService.TrackException`: consent can disable the remote record, while the local log remains. Use the
 reporting type's logger and add telemetry properties only for a specific diagnostic query. A failure that propagates
 to the API boundary or to the global handler is reported there; reporting it again in a lower layer records it
-twice. These are rules for changes; existing catch sites do not all follow them yet.
+twice. An expected condition that the code repairs, such as a token cache that
+cannot be decrypted and is rebuilt at the next sign-in, is logged only: tracking it would count it among the failures.
+These are rules for changes; existing catch sites do not all follow them yet.
 
 ### API boundary
 
 [HostingExtensions.AddAndConfigureProblemDetails](../../src/Infrastructure/Extensions/HostingExtensions.cs) owns
-reporting for exceptions mapped to API responses. Its mappings track exceptions. Specific mappings add host
-diagnostics at `Verbose`; the catch-all mapping adds diagnostics regardless of that setting. Exception details are
-enabled for the UI to display and copy. Do not add duplicate tracking in each controller for exceptions that
-propagate to these mappings.
+reporting for exceptions mapped to API responses. Its mappings track exceptions. Specific mappings log the exception at
+`Information`, which reaches the diagnostics pane only at diagnostic level `Verbose`, highlighted because it carries the
+exception; the catch-all mapping does not log, because the problem details middleware already logs every response
+with status 500 or higher as an error.
+Exception details are enabled for the UI to display and copy. Do not add duplicate tracking in each controller for
+exceptions that propagate to these mappings.
 
 ## Local logging and the diagnostics pane
 
+There is no log file: users are asked to copy errors from the diagnostics pane, and IT support reads the Event Log.
 The host logger factory, created by [BootstrapContextFactory](../../src/Host/BootstrapContextFactory.cs), writes
-`Warning` and above of every category, ASP.NET Core and Kestrel included, to the Windows Event Log and to
-[AppEnvironment.Diagnostics](../../src/Infrastructure/AppEnvironment.cs). That store also receives explicit
-`AddDiagnostics` calls, lives in memory for the whole process and has no eviction. The
-[frontend logger](../../src/Scripts/controllers/logger.ts) polls `GetDiagnostics` only at diagnostic level
-`Verbose`: a message can be stored without ever appearing in the pane.
+`Warning` and above of every category, ASP.NET Core and Kestrel included, to the Windows Event Log and to the
+[DiagnosticLogStore](../../src/Infrastructure/Diagnostics/DiagnosticLogStore.cs) read by the pane. At diagnostic level
+`Verbose` the store also receives `Information` records, except from the `Microsoft` and `System` categories, whose
+records below `Warning` describe every request, the pane's own polling included.
+[DiagnosticLevelSwitch](../../src/Infrastructure/Diagnostics/DiagnosticLevelSwitch.cs) carries the level: the
+logger factory exists before the user settings are read, so the bootstrap applies the saved level and `UpdateOptions`
+applies a changed one. Code that writes to the pane logs through `ILogger`, and guards an expensive argument, such as
+a serialized payload, with `IsEnabled(LogLevel.Information)`. Never log tokens or connection strings with passwords:
+the pane shows them, and redaction removes only the text inside sensitive tags.
+
+| Store property | Consequence |
+| --- | --- |
+| Created with the logger factory and registered in the container as an instance | Records written before the host exists, during the bootstrap, reach the pane |
+| Holds the last 1000 records and at most 8M characters of text, oldest evicted first | Memory is bounded even when records carry large payloads; a read reports how many records after its cursor it does not return |
+| Each record has a sequence number; reading does not change the store | The pane keeps the cursor, so a reload reads every record held again and two readers do not take records from each other |
+| A read takes a maximum count and returns the newest records | The pane asks only for as many records as it keeps |
+| A record keeps the template, the placeholder values and the exception chain apart from the formatted message | The pane shows a JSON value as a tree; the formatted message is the plain text of the record |
+| The exception chain holds every inner exception, those of an aggregate included, and the public properties each exception type adds, such as an error or status code | What a type writes in its `ToString` override is kept without the unstructured text; a property that exposes a secret reaches the pane, so such a type must not be logged as it is |
+
+The [frontend logger](../../src/Scripts/controllers/logger.ts) polls `GetDiagnostics` at every diagnostic level except
+`None`. At `Basic` it shows host records of level `Warning` and above; `Verbose` adds the `Information` records.
+A record of level `Warning` and above, or one that carries an exception, is highlighted.
+The app's own messages, those without the `[HOST]` prefix, live only in the page, so a reload loses them. Clear
+empties the view only: after a reload the pane reads the host records again from the store.
+
+The store keeps the original text and the pane shows it, because the user who reads it owns the data and needs the
+names of the server, database or account that failed. Redaction happens where the text leaves the machine:
+
+| Way out | Redaction |
+| --- | --- |
+| A copied message; Report issue | `Utils.Obj.anonymize`: the same five tags as [SensitiveTags](../../src/Infrastructure/Telemetry/SensitiveTags.cs), plus the values of personal keys such as `email` and `serverName` |
+| Host telemetry | `DefaultTelemetryProcessor`, through `SensitiveTags` |
+| Crash report: saved file and the dialog's Copy | None yet: the exception text is written as `ToString()` returns it, until the crash report redesign |
+| Event Log | None: it stays on the machine and IT support reads it |
+
+Text that leaves the machine, from the store or from an exception, applies `SensitiveTags` or the same tags. The
+two tag lists, in C# and in TypeScript, change together; `SensitiveTagsTests` fails when they differ. Redaction
+removes only tagged text, so copied text can still include report, server and database names.
 
 ## Telemetry consent
 

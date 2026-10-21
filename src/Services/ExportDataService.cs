@@ -11,6 +11,7 @@ using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
 using LargeXlsx;
 using Microsoft.AnalysisServices.AdomdClient;
+using Microsoft.Extensions.Logging;
 using Sqlbi.Bravo.Infrastructure;
 using Sqlbi.Bravo.Infrastructure.Extensions;
 using Sqlbi.Bravo.Infrastructure.Helpers;
@@ -36,7 +37,7 @@ public interface IExportDataService
     ExportDataJob? QueryExportJob(PBICloudDataset dataset);
 }
 
-internal class ExportDataService : IExportDataService
+internal partial class ExportDataService(ILogger<ExportDataService> logger) : IExportDataService
 {
     private const int BatchSize = 10_000;
     private const int ExcelMaxRows = 1_000_000; // Excel cannot exceed the limit of 1,048,576 rows and 16,384 columns
@@ -51,6 +52,7 @@ internal class ExportDataService : IExportDataService
 
     private readonly ExportDataJobMap<PBICloudDataset> _datasetJobs = new();
     private readonly ExportDataJobMap<PBIDesktopReport> _reportJobs = new();
+    private readonly ILogger<ExportDataService> _logger = logger;
 
     public ExportDataJob ExportDelimitedTextFile(PBIDesktopReport report, ExportDelimitedTextSettings settings, string path, CancellationToken cancellationToken)
     {
@@ -182,7 +184,7 @@ internal class ExportDataService : IExportDataService
         return job;
     }
 
-    private static void ExportDelimitedTextFileImpl(ExportDataJob job, ExportDelimitedTextSettings settings, AdomdConnectionWrapper connection, CancellationToken cancellationToken)
+    private void ExportDelimitedTextFileImpl(ExportDataJob job, ExportDelimitedTextSettings settings, AdomdConnectionWrapper connection, CancellationToken cancellationToken)
     {
         Directory.CreateDirectory(settings.ExportPath);
 
@@ -205,6 +207,7 @@ internal class ExportDataService : IExportDataService
             var path = Path.Combine(settings.ExportPath, fileName);
             // Enable row batch mode only if TOPNSKIP is supported
             var rowBatchMode = connection.IsServerVersion13OrGreater && tableName.IsDirectQuery == false;
+            LogTableExporting(tableName.Name, "CSV", rowBatchMode);
 
             Encoding encoding = settings.UnicodeEncoding
                 ? new UnicodeEncoding()
@@ -219,9 +222,6 @@ internal class ExportDataService : IExportDataService
         static void Export(AdomdCommand command, ExportDataTable table, CsvWriter writer, bool quoteStringFields, bool rowBatchMode, CancellationToken cancellationToken)
         {
             var tableName = TabularModelHelper.GetDaxTableName(table.Name);
-
-            if (AppEnvironment.IsDiagnosticLevelVerbose)
-                AppEnvironment.AddDiagnostics(DiagnosticMessageType.Text, name: $"{nameof(ExportDataService)}.{nameof(ExportDelimitedTextFileImpl)}.{nameof(Export)}", content: $"Export table {tableName} in {(rowBatchMode ? "row batch" : "full")} mode");
 
             if (rowBatchMode)
             {
@@ -305,7 +305,7 @@ internal class ExportDataService : IExportDataService
         }
     }
 
-    private static void ExportExcelFileImpl(ExportDataJob job, ExportExcelSettings settings, AdomdConnectionWrapper connection, CancellationToken cancellationToken)
+    private void ExportExcelFileImpl(ExportDataJob job, ExportExcelSettings settings, AdomdConnectionWrapper connection, CancellationToken cancellationToken)
     {
         var xlsxFile = new FileInfo(settings.ExportPath);
 
@@ -326,6 +326,7 @@ internal class ExportDataService : IExportDataService
             var worksheetName = GetWorksheetName(tableName.Name, tableIndex);
             // Enable row batch mode only if TOPNSKIP is supported
             var rowBatchMode = connection.IsServerVersion13OrGreater && tableName.IsDirectQuery == false;
+            LogTableExporting(tableName.Name, "Excel", rowBatchMode);
 
             xlsxWriter.BeginWorksheet(worksheetName, splitRow: 1);
             Export(command, table, xlsxWriter, rowBatchMode, cancellationToken);
@@ -391,9 +392,6 @@ internal class ExportDataService : IExportDataService
         static void Export(AdomdCommand command, ExportDataTable table, XlsxWriter writer, bool rowBatchMode, CancellationToken cancellationToken)
         {
             var tableName = TabularModelHelper.GetDaxTableName(table.Name);
-
-            if (AppEnvironment.IsDiagnosticLevelVerbose)
-                AppEnvironment.AddDiagnostics(DiagnosticMessageType.Text, name: $"{nameof(ExportDataService)}.{nameof(ExportExcelFileImpl)}.{nameof(Export)}", content: $"Export table {tableName} in {(rowBatchMode ? "row batch" : "full")} mode");
 
             if (rowBatchMode)
             {

@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Net.Mime;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Sqlbi.Bravo.Infrastructure;
 using Sqlbi.Bravo.Infrastructure.PowerBI.Cloud;
-using Sqlbi.Bravo.Models;
 using Sqlbi.Bravo.Models.Authentication;
 using Sqlbi.Bravo.Services;
 
@@ -43,9 +40,6 @@ public sealed class AuthenticationController(
         var environments = await _authenticationService.GetEnvironmentsAsync(
             request.Email,
             cancellationToken);
-
-        if (AppEnvironment.IsDiagnosticLevelVerbose)
-            AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{nameof(AuthenticationController)}.{nameof(GetEnvironmentsAsync)}", JsonSerializer.Serialize(environments));
 
         var response = new GetEnvironmentsResponse(environments);
         return Ok(response);

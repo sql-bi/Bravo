@@ -5,7 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Text.Json.Serialization;
-using Sqlbi.Bravo.Infrastructure;
+using Microsoft.Extensions.Logging;
 using Sqlbi.Bravo.Infrastructure.Extensions;
 using Sqlbi.Bravo.Infrastructure.Helpers;
 using Sqlbi.Bravo.Infrastructure.Models;
@@ -17,7 +17,7 @@ using TOM = Microsoft.AnalysisServices.Tabular;
 namespace Sqlbi.Bravo.Models;
 
 [DebuggerDisplay("{ServerName} - {ReportName} - {ConnectionMode}")]
-public class PBIDesktopReport : IDataModel<PBIDesktopReport>
+public partial class PBIDesktopReport : IDataModel<PBIDesktopReport>
 {
     public PBIDesktopReport()
     {
@@ -60,13 +60,13 @@ public class PBIDesktopReport : IDataModel<PBIDesktopReport>
         return HashCode.Combine(ProcessId, ServerName, DatabaseName);
     }
 
-    internal static PBIDesktopReport? CreateFrom(int processId, bool connectionModeEnabled = true)
+    internal static PBIDesktopReport? CreateFrom(int processId, ILogger logger, bool connectionModeEnabled = true)
     {
         using var process = ProcessHelper.SafeGetProcessById(processId);
 
         if (process is not null)
         {
-            var report = CreateFrom(process, processTree: null, connectionModeEnabled);
+            var report = CreateFrom(process, logger, processTree: null, connectionModeEnabled);
             return report;
         }
 
@@ -74,11 +74,12 @@ public class PBIDesktopReport : IDataModel<PBIDesktopReport>
     }
 
     /// <param name="process">The Power BI Desktop process.</param>
+    /// <param name="logger">Records why the connection to the model failed.</param>
     /// <param name="processTree">
     /// A snapshot shared by the reports created together; <see langword="null"/> takes one when it is needed.
     /// </param>
     /// <param name="connectionModeEnabled">Whether to connect to the model to find its connection mode.</param>
-    internal static PBIDesktopReport CreateFrom(Process process, ProcessTree? processTree = null, bool connectionModeEnabled = true)
+    internal static PBIDesktopReport CreateFrom(Process process, ILogger logger, ProcessTree? processTree = null, bool connectionModeEnabled = true)
     {
         var report = new PBIDesktopReport
         {
@@ -140,8 +141,7 @@ public class PBIDesktopReport : IDataModel<PBIDesktopReport>
             }
             catch (Exception ex)
             {
-                if (AppEnvironment.IsDiagnosticLevelVerbose)
-                    AppEnvironment.AddDiagnostics(name: $"{nameof(PBIDesktopReport)}.{nameof(CreateFrom)}.{nameof(GetConnectionMode)}", ex, DiagnosticMessageSeverity.Warning);
+                LogConnectionModeUnavailable(logger, report.ProcessId, ex);
 
                 connectionMode = PBIDesktopReportConnectionMode.UnsupportedConnectionException;
                 return;

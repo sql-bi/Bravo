@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Sqlbi.Bravo.Infrastructure.Extensions;
 using Sqlbi.Bravo.Infrastructure.Helpers;
 using Sqlbi.Bravo.Infrastructure.Windows;
@@ -15,8 +16,10 @@ public interface IPBIDesktopService
     IEnumerable<PBIDesktopReport> GetReports(CancellationToken cancellationToken);
 }
 
-internal class PBIDesktopService : IPBIDesktopService
+internal class PBIDesktopService(ILogger<PBIDesktopService> logger) : IPBIDesktopService
 {
+    private readonly ILogger<PBIDesktopService> _logger = logger;
+
     public IEnumerable<PBIDesktopReport> GetReports(CancellationToken cancellationToken)
     {
         var processes = ProcessHelper.GetProcessesByName(PowerBIDesktop.ProcessName);
@@ -27,7 +30,7 @@ internal class PBIDesktopService : IPBIDesktopService
             var parallelOptions = new ParallelOptions { CancellationToken = cancellationToken };
             var parallelLoop = Parallel.ForEach(processes, parallelOptions, (process) =>
             {
-                var report = PBIDesktopReport.CreateFrom(process, processTree);
+                var report = PBIDesktopReport.CreateFrom(process, _logger, processTree);
                 reports.Add(report);
             });
 

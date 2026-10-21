@@ -5,6 +5,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Microsoft.Extensions.Logging;
 using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
 using Sqlbi.Bravo.Infrastructure.Extensions;
 using Sqlbi.Bravo.Infrastructure.Windows.Interop;
@@ -12,7 +13,7 @@ using Sqlbi.Bravo.Models;
 
 namespace Sqlbi.Bravo.Infrastructure.Helpers;
 
-internal static class CommonHelper
+internal static partial class CommonHelper
 {
     public static string? ChangeUriScheme(string? uriString, string scheme, bool ignorePort = false)
     {
@@ -90,7 +91,7 @@ internal static class CommonHelper
         return directoryName;
     }
 
-    public static async Task<BravoUpdate> CheckForUpdateAsync(UpdateChannelType updateChannel, CancellationToken cancellationToken)
+    public static async Task<BravoUpdate> CheckForUpdateAsync(UpdateChannelType updateChannel, ILogger logger, CancellationToken cancellationToken)
     {
         var channelPath = updateChannel switch
         {
@@ -102,8 +103,7 @@ internal static class CommonHelper
         using var httpClient = new HttpClient();
         var requestUri = $"https://bravorelease.blob.core.windows.net/{channelPath}/currentversion.json?nocache={DateTimeOffset.Now.ToUnixTimeSeconds()}";
         var json = await httpClient.GetStringAsync(requestUri, cancellationToken).ConfigureAwait(false);
-
-        AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{nameof(CommonHelper)}.{nameof(CheckForUpdateAsync)}", content: json);
+        LogUpdateFeedReceived(logger, json);
 
         using var document = JsonDocument.Parse(json);
         var rootElement = document.RootElement;

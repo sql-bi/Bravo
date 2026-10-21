@@ -1,6 +1,7 @@
 ﻿using System;
 using Microsoft.Extensions.Logging;
 using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
+using Sqlbi.Bravo.Infrastructure.Diagnostics;
 using Sqlbi.Bravo.Infrastructure.Policies;
 using Sqlbi.Bravo.Infrastructure.Telemetry;
 
@@ -19,12 +20,16 @@ internal sealed class BootstrapContext : IDisposable
 
     internal BootstrapContext(
         ILoggerFactory loggerFactory,
+        DiagnosticLevelSwitch diagnosticLevel,
+        DiagnosticLogStore diagnosticLog,
         IPolicyService policyService,
         IUserSettings settings,
         ITelemetryService telemetry,
         IDisposable? exceptionHandlerAttachment = null)
     {
         LoggerFactory = loggerFactory;
+        DiagnosticLevel = diagnosticLevel;
+        DiagnosticLog = diagnosticLog;
         PolicyService = policyService;
         Settings = settings;
         Telemetry = telemetry;
@@ -32,6 +37,8 @@ internal sealed class BootstrapContext : IDisposable
     }
 
     public ILoggerFactory LoggerFactory { get; }
+    public DiagnosticLevelSwitch DiagnosticLevel { get; }
+    public DiagnosticLogStore DiagnosticLog { get; }
     public IPolicyService PolicyService { get; }
     public IUserSettings Settings { get; }
     public ITelemetryService Telemetry { get; }

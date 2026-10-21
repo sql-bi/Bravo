@@ -6,13 +6,14 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Mime;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
+using Microsoft.Extensions.Logging;
 using Sqlbi.Bravo.Infrastructure.Extensions;
 using Sqlbi.Bravo.Infrastructure.PowerBI.Cloud.Contracts;
 using Sqlbi.Bravo.Infrastructure.PowerBI.Cloud.Serialization;
-using Sqlbi.Bravo.Models;
 
 namespace Sqlbi.Bravo.Infrastructure.PowerBI.Cloud.Configuration;
 
@@ -23,20 +24,25 @@ internal interface ICloudConfigurationService
     Task<string> ResolveTenantClusterUriAsync(CloudEnvironment environment, string accessToken, CancellationToken cancellationToken);
 }
 
-internal sealed class CloudConfigurationService : ICloudConfigurationService
+internal sealed partial class CloudConfigurationService : ICloudConfigurationService
 {
     // The Global Cloud is the default discovery base URI for Power BI service discovery.
     private static readonly Uri s_defaultDiscoveryBaseUri = new("https://api.powerbi.com", UriKind.Absolute);
 
     private readonly HttpClient _httpClient;
     private readonly Uri _discoveryBaseUri;
+    private readonly ILogger<CloudConfigurationService> _logger;
 
-    public CloudConfigurationService(IHttpClientFactory httpClientFactory, ILocalConfigurationReader localConfigurationReader)
+    public CloudConfigurationService(
+        IHttpClientFactory httpClientFactory,
+        ILocalConfigurationReader localConfigurationReader,
+        ILogger<CloudConfigurationService> logger)
     {
         _httpClient = httpClientFactory.CreateClient(ServiceCollectionExtensions.PowerBIApiHttpClientName);
 
         _discoveryBaseUri = localConfigurationReader.GetPowerBIServiceDiscoveryBaseUri()
             ?? s_defaultDiscoveryBaseUri;
+        _logger = logger;
     }
 
     public async Task<IReadOnlyList<CloudEnvironment>> DiscoverEnvironmentsAsync(string email, CancellationToken cancellationToken)
@@ -47,9 +53,16 @@ internal sealed class CloudConfigurationService : ICloudConfigurationService
 
         var environments = response?.Environments ?? [];
 
-        return [.. environments
+        CloudEnvironment[] discovered = [.. environments
             .Where((e) => !e.IsMicrosoftInternalCloud()) // Filter out Microsoft internal environments
             .Select(CloudEnvironment.FromContract)];
+
+        if (_logger.IsEnabled(LogLevel.Information))
+        {
+            LogEnvironmentsDiscovered(JsonSerializer.Serialize(discovered));
+        }
+
+        return discovered;
     }
 
     public async Task<string> ResolveTenantClusterUriAsync(CloudEnvironment environment, string accessToken, CancellationToken cancellationToken)
@@ -66,8 +79,7 @@ internal sealed class CloudConfigurationService : ICloudConfigurationService
 
         var json = await httpResponse.Content.ReadAsStringAsync(cancellationToken);
 
-        if (AppEnvironment.IsDiagnosticLevelVerbose)
-            AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{nameof(CloudConfigurationService)}.{nameof(ResolveTenantClusterUriAsync)}", json);
+        LogTenantClusterReceived(json);
 
         var tenantCluster = CloudContractJsonSerializer.Deserialize<TenantClusterContract>(json);
         return tenantCluster.FixedClusterUri;
@@ -85,8 +97,7 @@ internal sealed class CloudConfigurationService : ICloudConfigurationService
         {
             var json = await httpResponse.Content.ReadAsStringAsync(cancellationToken);
 
-            if (AppEnvironment.IsDiagnosticLevelVerbose)
-                AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{nameof(CloudConfigurationService)}.{nameof(DiscoverEnvironmentsAsync)}()", content: json);
+            LogEnvironmentsReceived(apiVersion, json);
 
             return CloudContractJsonSerializer.Deserialize<CloudEnvironmentResponseContract>(json);
         }
