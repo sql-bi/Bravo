@@ -31,7 +31,7 @@
   <!-- Tag files with the "*ToRemove" key -->
   <xsl:key name="IdentityClientToRemove" match="wix:Component[wix:File/@Source='$(var.PublishFolder)\Microsoft.Identity.Client.dll']" use="@Id" />
   <xsl:key name="NewtonsoftJsonToRemove" match="wix:Component[wix:File/@Source='$(var.PublishFolder)\Newtonsoft.Json.dll']" use="@Id" />
-  <xsl:key name="WebView2ToRemove" match="wix:Component[contains(wix:File/@Source, '\WebView2Loader.dll') or wix:File/@Source='$(var.PublishFolder)\Microsoft.Web.WebView2.Core.dll' or wix:File/@Source='$(var.PublishFolder)\Microsoft.Web.WebView2.WinForms.dll' or wix:File/@Source='$(var.PublishFolder)\Microsoft.Web.WebView2.Wpf.dll']" use="@Id" />
+  <xsl:key name="WebView2ToRemove" match="wix:Component[contains(wix:File/@Source, '\WebView2Loader.dll') or wix:File/@Source='$(var.PublishFolder)\Microsoft.Web.WebView2.Core.dll' or wix:File/@Source='$(var.PublishFolder)\Microsoft.Web.WebView2.WinForms.dll']" use="@Id" />
   <!-- Don't render anything tagged with "*ToRemove" key -->
   <xsl:template match="*[self::wix:Component or self::wix:ComponentRef][key('IdentityClientToRemove', @Id)]" />
   <xsl:template match="*[self::wix:Component or self::wix:ComponentRef][key('NewtonsoftJsonToRemove', @Id)]" />
@@ -60,7 +60,6 @@
         <File Id="fileWebView2Loader" KeyPath="no" Source="$(var.PublishFolder)\WebView2Loader.dll" />
         <File Id="fileWebView2Core" KeyPath="no" Source="$(var.PublishFolder)\Microsoft.Web.WebView2.Core.dll" />
         <File Id="fileWebView2WinForms" KeyPath="no" Source="$(var.PublishFolder)\Microsoft.Web.WebView2.WinForms.dll" />
-        <File Id="fileWebView2Wpf" KeyPath="no" Source="$(var.PublishFolder)\Microsoft.Web.WebView2.Wpf.dll" />
       </Component>
       <ComponentRef Id="cmpWebView2LoaderNative" />
     </xsl:copy>
