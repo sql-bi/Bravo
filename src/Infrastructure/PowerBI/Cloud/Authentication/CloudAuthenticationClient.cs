@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -25,7 +27,11 @@ public interface ICloudAuthenticationClient
 internal sealed class CloudAuthenticationClient(IPolicyService policyService) : ICloudAuthenticationClient
 {
     private const string SystemBrowserRedirectUri = "http://localhost";
-    private const string OrganizationalAccountsOnlyQueryParameter = "msafed=0"; // no Microsoft accounts (MSA) allowed
+
+    // msafed=0 allows organizational accounts only (no Microsoft accounts). It filters the accounts offered at
+    // sign-in and does not change the token, so it stays out of the cache key.
+    private static readonly ReadOnlyDictionary<string, (string Value, bool IncludeInCacheKey)> ExtraQueryParameters = new(
+        new Dictionary<string, (string Value, bool IncludeInCacheKey)> { ["msafed"] = ("0", false) });
 
     private readonly IPolicyService _policyService = policyService;
 
@@ -65,7 +71,7 @@ internal sealed class CloudAuthenticationClient(IPolicyService policyService) : 
     private static async Task<Msal.AuthenticationResult> AcquireTokenSilentAsync(
         IPublicClientApplication client, string[] scopes, string email, CancellationToken cancellationToken)
     {
-        var extraQueryParameters = OrganizationalAccountsOnlyQueryParameter;
+        var extraQueryParameters = ExtraQueryParameters;
         var loginHint = email;
 
         var builder = client.AcquireTokenSilent(scopes, loginHint)
@@ -79,7 +85,7 @@ internal sealed class CloudAuthenticationClient(IPolicyService policyService) : 
     {
         var useSystemBrowser = _policyService.Current.UseSystemBrowserForAuthentication ?? UserPreferences.Current.UseSystemBrowserForAuthentication;
         var useEmbeddedBrowser = !useSystemBrowser;
-        var extraQueryParameters = OrganizationalAccountsOnlyQueryParameter;
+        var extraQueryParameters = ExtraQueryParameters;
         var prompt = Prompt.SelectAccount;
         var loginHint = email;
 

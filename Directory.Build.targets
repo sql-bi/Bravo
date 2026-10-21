@@ -1,0 +1,16 @@
+﻿<Project>
+
+  <!--
+  ** The WebView2 package references its WPF control in every .NET project, including those that get the package
+  ** transitively. Bravo hosts the WinForms control only, and the WPF assembly built for net5.0 references WindowsBase 5.0,
+  ** which conflicts with the framework's WindowsBase (MSB3277).
+  ** See https://github.com/MicrosoftEdge/WebView2Feedback/issues/4959
+  ** The condition limits the target to SDK-style projects: the legacy WiX projects under installer/wix import this file too.
+  -->
+  <Target Name="RemoveWebView2WpfReference" BeforeTargets="ResolveAssemblyReferences" Condition="'$(UsingMicrosoftNETSdk)' == 'true'">
+    <ItemGroup>
+      <Reference Remove="@(Reference)" Condition="'%(Filename)' == 'Microsoft.Web.WebView2.Wpf'" />
+    </ItemGroup>
+  </Target>
+
+</Project>
