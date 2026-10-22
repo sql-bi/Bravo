@@ -15,6 +15,12 @@ namespace Sqlbi.Bravo.Infrastructure.Telemetry;
 public interface ITelemetryService : IDisposable
 {
     bool TelemetryEnabled { get; set; }
+
+    /// <summary>
+    /// The session that tracked items belong to, or <see langword="null"/> when nothing can be tracked.
+    /// </summary>
+    string? SessionId { get; }
+
     void TrackException(Exception exception, IDictionary<string, string>? properties = null);
     void TrackException(ExceptionTelemetry telemetry);
     Task<bool> FlushAsync(CancellationToken cancellationToken = default);
@@ -43,6 +49,9 @@ internal sealed class TelemetryService : ITelemetryService
         get => _configuration.DisableTelemetry == false;
         set => _configuration.DisableTelemetry = !value;
     }
+
+    // Read once, when the service is created: a crash must not be the first to read it.
+    public string? SessionId { get; } = TelemetrySessionInfo.SessionId;
 
     public void TrackException(Exception exception, IDictionary<string, string>? properties = null)
     {

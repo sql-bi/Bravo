@@ -20,12 +20,7 @@ internal static class CrashReportTelemetry
             stack: report.ExceptionText,
             parsedStack: []);
 
-        var properties = new Dictionary<string, string>
-        {
-            ["ExceptionOrigin"] = nameof(ExceptionOrigin.AppDomain),
-            ["ExceptionKind"] = "Unhandled",
-        };
-
+        var properties = UnhandledExceptionHandler.CreateTelemetryProperties(ExceptionOrigin.AppDomain);
         var telemetry = new ExceptionTelemetry([details], severityLevel: null, problemId: report.ExceptionType, properties, new Dictionary<string, double>())
         {
             Timestamp = report.Timestamp,

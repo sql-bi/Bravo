@@ -48,11 +48,13 @@ the shutdown flush.
 and offers copying, closing and, when host telemetry is disabled, sending the exception through telemetry. Automatic
 tracking is an attempt, not confirmation of delivery.
 
-The fatal-handler guard suppresses another fatal arrival while a fatal handler runs. It does not coordinate
-simultaneous crashes or guarantee that the first dialog remains open until the user responds. Unobserved task
-reporting does not acquire that guard, so it cannot suppress a fatal report.
+Only the first fatal exception is handled, and the guard never opens again because the process ends after it. A
+fatal exception on another thread blocks that thread until the process ends: returning would let the runtime end the
+process while the first report is still being written or shown. A fatal exception raised on the thread that is
+already handling one returns at once, and the runtime ends the process. Unobserved task reporting does not acquire
+that guard, so it cannot suppress a fatal report.
 
-If the global handler throws, `GlobalExceptionHandling` calls `Environment.FailFast`. Reporting failures must
+If the global handler throws, `GlobalExceptionDispatcher` calls `Environment.FailFast`. Reporting failures must
 therefore be contained where recovery is possible. Never show UI or wait for a shutdown flush on the unobserved-task
 callback: it runs on the finalizer thread.
 

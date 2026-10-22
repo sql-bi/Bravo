@@ -1,30 +1,21 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using Sqlbi.Bravo.Infrastructure.Diagnostics;
+using Sqlbi.Bravo.Infrastructure.Diagnostics.CrashReporting;
 using Sqlbi.Bravo.Infrastructure.Telemetry;
 using Xunit;
 
 namespace Bravo.Tests.Infrastructure.Diagnostics;
 
-[CollectionDefinition(nameof(GlobalExceptionHandlingCollection), DisableParallelization = true)]
-public sealed class GlobalExceptionHandlingCollection
-{
-}
-
-[Collection(nameof(GlobalExceptionHandlingCollection))]
-public class GlobalExceptionHandlingTests : IDisposable
+// The callbacks are called directly, so that no fatal exception hook is installed in the test process.
+public class GlobalExceptionDispatcherTests
 {
     private static readonly TimeSpan s_timeout = TimeSpan.FromSeconds(10);
-    private static readonly FieldInfo s_handlerField = typeof(GlobalExceptionHandling)
-        .GetField("s_handler", BindingFlags.NonPublic | BindingFlags.Static)!;
-
-    private readonly object? _previousHandler = s_handlerField.GetValue(null);
 
     [Theory]
     [InlineData(true)]
@@ -38,7 +29,7 @@ public class GlobalExceptionHandlingTests : IDisposable
         var unobserved = new UnobservedTaskExceptionEventArgs(new AggregateException("unobserved"));
         var firstOrigin = unobservedFirst ? ExceptionOrigin.UnobservedTask : ExceptionOrigin.AppDomain;
 
-        SetHandler((exception, origin) =>
+        var dispatcher = new GlobalExceptionDispatcher((exception, origin) =>
         {
             reported.Enqueue(exception);
             if (origin == firstOrigin)
@@ -72,9 +63,9 @@ public class GlobalExceptionHandlingTests : IDisposable
         void Raise(bool isUnobserved)
         {
             if (isUnobserved)
-                RaiseUnobserved(unobserved);
+                dispatcher.OnUnobservedTaskException(null, unobserved);
             else
-                RaiseFatal(fatal);
+                RaiseFatal(dispatcher, fatal);
         }
     }
 
@@ -84,50 +75,67 @@ public class GlobalExceptionHandlingTests : IDisposable
         var reported = new List<Exception>();
         var first = new InvalidOperationException("first");
         var nested = new InvalidOperationException("nested");
-        SetHandler((exception, _) =>
+        GlobalExceptionDispatcher? dispatcher = null;
+        dispatcher = new GlobalExceptionDispatcher((exception, _) =>
         {
             reported.Add(exception);
             if (ReferenceEquals(exception, first))
-                RaiseFatal(nested);
+                RaiseFatal(dispatcher!, nested);
         });
 
-        RaiseFatal(first);
+        RaiseFatal(dispatcher, first);
 
         Assert.Same(first, Assert.Single(reported));
     }
 
     [Fact]
-    public void RuntimeCallbacks_UnobservedTask_ReportsWithoutDialogOrFlush()
+    public async Task RuntimeCallbacks_ConcurrentFatalExceptions_ReportsTheFirstAndBlocksTheOther()
     {
-        var dialog = new RecordingDialog();
-        var telemetry = Substitute.For<ITelemetryService>();
-        var handler = new UnhandledExceptionHandler(dialog, () => throw new InvalidOperationException("No report is saved for an unobserved task."));
-        handler.AttachServices(NullLoggerFactory.Instance, telemetry);
-        var args = new UnobservedTaskExceptionEventArgs(new AggregateException("unobserved"));
-        SetHandler(handler.Handle);
+        using var releaseFirst = new ManualResetEventSlim();
+        var firstEntered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var reported = new ConcurrentQueue<Exception>();
+        var first = new InvalidOperationException("first");
+        var dispatcher = new GlobalExceptionDispatcher((exception, _) =>
+        {
+            reported.Enqueue(exception);
+            firstEntered.TrySetResult();
+            releaseFirst.Wait(s_timeout);
+        });
 
-        RaiseUnobserved(args);
+        var firstTask = Task.Run(() => RaiseFatal(dispatcher, first));
+        await firstEntered.Task.WaitAsync(s_timeout);
+
+        // A background thread, because it stays blocked for the rest of the test run.
+        var second = new Thread(() => RaiseFatal(dispatcher, new InvalidOperationException("second"))) { IsBackground = true };
+        second.Start();
+        var secondReturned = second.Join(TimeSpan.FromMilliseconds(500));
+        releaseFirst.Set();
+        await firstTask.WaitAsync(s_timeout);
+
+        Assert.False(secondReturned);
+        Assert.Same(first, Assert.Single(reported));
+    }
+
+    [Fact]
+    public void RuntimeCallbacks_UnobservedTask_ReportsWithoutACrashReportOrFlush()
+    {
+        var telemetry = Substitute.For<ITelemetryService>();
+        var handler = new UnhandledExceptionHandler(new CrashReportStore("crashes"), Substitute.For<ICrashReporterLauncher>(), TimeProvider.System, (_) => { });
+        handler.AttachServices(NullLoggerFactory.Instance, telemetry, new TelemetryConsent(IsEnabled: true, TelemetryConsentSource.UserSettings));
+        var args = new UnobservedTaskExceptionEventArgs(new AggregateException("unobserved"));
+        var dispatcher = new GlobalExceptionDispatcher(handler.Handle);
+
+        dispatcher.OnUnobservedTaskException(null, args);
 
         Assert.True(args.Observed);
-        Assert.Equal(0, dialog.ShowCount);
         telemetry.Received(1).TrackException(args.Exception, Arg.Is<IDictionary<string, string>>(
             properties => properties["ExceptionOrigin"] == nameof(ExceptionOrigin.UnobservedTask)));
         telemetry.DidNotReceive().TryFlushBeforeShutdown(Arg.Any<int>());
         telemetry.DidNotReceive().FlushAsync(Arg.Any<CancellationToken>());
     }
 
-    public void Dispose() => s_handlerField.SetValue(null, _previousHandler);
-
-    private static void SetHandler(GlobalExceptionHandler handler) => s_handlerField.SetValue(null, handler);
-
-    // Calling the callbacks directly avoids installing fatal exception hooks in the test process.
-    private static void RaiseFatal(Exception exception)
-        => typeof(GlobalExceptionHandling)
-            .GetMethod("OnUnhandledException", BindingFlags.NonPublic | BindingFlags.Static)!
-            .Invoke(null, [null, new UnhandledExceptionEventArgs(exception, isTerminating: true)]);
-
-    private static void RaiseUnobserved(UnobservedTaskExceptionEventArgs args)
-        => typeof(GlobalExceptionHandling)
-            .GetMethod("OnUnobservedTaskException", BindingFlags.NonPublic | BindingFlags.Static)!
-            .Invoke(null, [null, args]);
+    private static void RaiseFatal(GlobalExceptionDispatcher dispatcher, Exception exception)
+    {
+        dispatcher.OnUnhandledException(null, new UnhandledExceptionEventArgs(exception, isTerminating: true));
+    }
 }

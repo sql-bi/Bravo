@@ -26,6 +26,7 @@ internal sealed class FakeTelemetry : ITelemetryService
 
     public int DisposeCount { get; private set; }
     public bool TelemetryEnabled { get; set; }
+    public string? SessionId { get; init; }
 
     public IReadOnlyList<Exception> Exceptions
     {

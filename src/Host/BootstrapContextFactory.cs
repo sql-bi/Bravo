@@ -62,7 +62,7 @@ internal sealed partial class BootstrapContextFactory(
 
         var consent = TelemetryConsent.Resolve(policies.Current, settings);
         var telemetry = CreateTelemetry(consent.IsEnabled);
-        var exceptionHandlerAttachment = _exceptionHandler.AttachServices(_loggerFactory, telemetry);
+        var exceptionHandlerAttachment = _exceptionHandler.AttachServices(_loggerFactory, telemetry, consent);
 
         return new BootstrapContext(_loggerFactory, _diagnosticLevel, _diagnosticLog, policies, settings, telemetry, exceptionHandlerAttachment);
     }

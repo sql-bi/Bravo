@@ -4,10 +4,12 @@ using System.IO;
 using Bravo.Tests.Infrastructure.Diagnostics;
 using Bravo.Tests.Infrastructure.Policies;
 using Microsoft.Extensions.Logging;
+using NSubstitute;
 using Sqlbi.Bravo.Host;
 using Sqlbi.Bravo.Infrastructure.Configuration;
 using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
 using Sqlbi.Bravo.Infrastructure.Diagnostics;
+using Sqlbi.Bravo.Infrastructure.Diagnostics.CrashReporting;
 using Sqlbi.Bravo.Infrastructure.Policies;
 using Sqlbi.Bravo.Infrastructure.Telemetry;
 using Xunit;
@@ -210,6 +212,7 @@ public class BootstrapContextTests
         }
     }
 
+    // Only unobserved task exceptions are handled in these tests, so no report is ever saved.
     private static UnhandledExceptionHandler CreateExceptionHandler()
-        => new(new RecordingDialog(), () => throw new InvalidOperationException("No report is saved in these tests."));
+        => new(new CrashReportStore("crashes"), Substitute.For<ICrashReporterLauncher>(), TimeProvider.System, (_) => { });
 }
