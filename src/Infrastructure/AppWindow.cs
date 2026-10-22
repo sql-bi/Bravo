@@ -8,6 +8,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Windows.Forms;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.WinForms;
@@ -47,17 +48,20 @@ window.external = {
     private readonly WebView2ProxyAuthHandler _proxyAuthHandler;
     private readonly Color _startupThemeColor;
     private readonly IPolicyService _policyService;
+    private readonly ILogger<AppWindow> _logger;
 
     public AppWindow(
         IInstanceEvents applicationInstance,
         IServerAddressProvider serverAddressProvider,
         IOptions<StartupSettings> startupSettingsOptionsAccessor,
-        IPolicyService policyService)
+        IPolicyService policyService,
+        ILogger<AppWindow> logger)
     {
         _applicationInstance = applicationInstance;
         _serverAddressProvider = serverAddressProvider;
         _startupSettingsOptionsAccessor = startupSettingsOptionsAccessor;
         _policyService = policyService;
+        _logger = logger;
         _proxyAuthHandler = new WebView2ProxyAuthHandler(WebProxyWrapper.Current);
         _startupThemeColor = ThemeHelper.ShouldUseDarkMode(UserPreferences.Current.Theme) ? AppEnvironment.ThemeColorDark : AppEnvironment.ThemeColorLight;
 
@@ -101,8 +105,7 @@ window.external = {
         {
             /* ICoreWebView2EnvironmentOptions */ options.AdditionalBrowserArguments = WebView2Helper.GetProxyArguments(UserPreferences.Current.Proxy, WebProxyWrapper.Current.DefaultSystemProxy);
 
-            if (AppEnvironment.IsDiagnosticLevelVerbose)
-                AppEnvironment.AddDiagnostics(DiagnosticMessageType.Text, name: $"{nameof(AppWindow)}.{nameof(InitializeWebViewAsync)}.{nameof(options.AdditionalBrowserArguments)}", content: options.AdditionalBrowserArguments);
+            LogBrowserArguments(options.AdditionalBrowserArguments);
         }
         var environment = await CoreWebView2Environment.CreateAsync(browserExecutableFolder: null, userDataFolder: AppEnvironment.ApplicationTempPath, options);
         {
@@ -185,10 +188,10 @@ window.external = {
 
         _applicationInstance.ActivationRequested += OnActivationRequestedRestoreWindowToForeground;
 
-        if (AppEnvironment.IsDiagnosticLevelVerbose)
+        if (_logger.IsEnabled(LogLevel.Information))
         {
             var content = EnvironmentDiagnosticsCollector.Collect();
-            AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{nameof(AppWindow)}.{nameof(EnvironmentDiagnostics)}", content: JsonSerializer.Serialize(content));
+            LogEnvironmentDiagnostics(JsonSerializer.Serialize(content));
         }
     }
 
@@ -312,6 +315,7 @@ window.external = {
             ProcessHelper.InvokeOnUIThread(this, () =>
             {
                 var webMessageString = e.StartupMessage.ToWebMessageString();
+                LogWebMessagePosting(webMessageString);
                 WebView.CoreWebView2.PostWebMessageAsString(webMessageString);
             });
         }
@@ -356,10 +360,13 @@ window.external = {
         {
             var startupMessage = AppInstanceStartupMessage.CreateFrom(startupSettings);
 
-            if (AppEnvironment.IsDiagnosticLevelVerbose)
-                AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{nameof(AppInstanceStartupMessage)}.{nameof(AppInstanceStartupMessage.CreateFrom)}", content: JsonSerializer.Serialize(startupMessage));
+            if (_logger.IsEnabled(LogLevel.Information))
+            {
+                LogStartupMessageCreated(JsonSerializer.Serialize(startupMessage));
+            }
 
             var startupMessageString = startupMessage.ToWebMessageString();
+            LogWebMessagePosting(startupMessageString);
 
             WebView.CoreWebView2.PostWebMessageAsString(startupMessageString);
         }
@@ -369,8 +376,5 @@ window.external = {
     private void WebViewLog(string message)
     {
         WebView.CoreWebView2.ExecuteScriptAsync($"console.log('[WEBVIEW]{message}');");
-
-        //if (AppEnvironment.IsDiagnosticLevelVerbose)
-        //    AppEnvironment.AddDiagnostics(DiagnosticMessageType.Text, name: $"{ nameof(AppWindow) }.{ nameof(WebView2) }", content: message);
     }
 }

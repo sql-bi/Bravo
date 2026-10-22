@@ -1,17 +1,17 @@
 ﻿using System;
 using System.IO;
 using System.Security.Cryptography;
+using Microsoft.Extensions.Logging;
 using Microsoft.Identity.Client;
 using Sqlbi.Bravo.Infrastructure.Security;
-using Sqlbi.Bravo.Models;
 
 namespace Sqlbi.Bravo.Infrastructure.Helpers;
 
-internal static class TokenCacheHelper
+internal static partial class TokenCacheHelper
 {
     private static readonly object _tokenCacheLock = new();
 
-    private static void BeforeAccessCallback(TokenCacheNotificationArgs args)
+    private static void BeforeAccessCallback(TokenCacheNotificationArgs args, ILogger logger)
     {
         lock (_tokenCacheLock)
         {
@@ -28,7 +28,7 @@ internal static class TokenCacheHelper
                     }
                     catch (CryptographicException ex)
                     {
-                        AppEnvironment.AddDiagnostics(name: $"{nameof(TokenCacheHelper)}.{nameof(BeforeAccessCallback)}", ex, DiagnosticMessageSeverity.Warning);
+                        LogTokenCacheUnreadable(logger, ex);
 
                         // Delete the file in order to force a new authentication
                         File.Delete(AppEnvironment.MsalTokenCacheFilePath);
@@ -58,12 +58,14 @@ internal static class TokenCacheHelper
     /// Registers a token cache to synchronize with the persistent storage.
     /// </summary>
     /// <param name="tokenCache">The application token cache, typically referenced as <see cref="IClientApplicationBase.UserTokenCache"/></param>
+    /// <param name="logger">Records a cache file that cannot be decrypted.</param>
     /// <remarks>Call <see cref="UnregisterCache(ITokenCache)"/> to have the given token cache stop syncronizing.</remarks>
-    public static void RegisterCache(ITokenCache tokenCache)
+    public static void RegisterCache(ITokenCache tokenCache, ILogger logger)
     {
         ArgumentNullException.ThrowIfNull(tokenCache);
+        ArgumentNullException.ThrowIfNull(logger);
 
-        tokenCache.SetBeforeAccess(BeforeAccessCallback);
+        tokenCache.SetBeforeAccess((args) => BeforeAccessCallback(args, logger));
         tokenCache.SetAfterAccess(AfterAccessCallback);
     }
 

@@ -2,6 +2,7 @@
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Sqlbi.Bravo.Infrastructure;
 using Sqlbi.Bravo.Infrastructure.Extensions;
 using Sqlbi.Bravo.Infrastructure.Helpers;
@@ -35,11 +36,13 @@ internal sealed class AnalyzeModelService : IAnalyzeModelService
 {
     private readonly ICloudApiClient _cloudApiClient;
     private readonly IPBIDesktopService _pbidesktopService;
+    private readonly ILogger<AnalyzeModelService> _logger;
 
-    public AnalyzeModelService(ICloudApiClient cloudApiClient, IPBIDesktopService pbidesktopService)
+    public AnalyzeModelService(ICloudApiClient cloudApiClient, IPBIDesktopService pbidesktopService, ILogger<AnalyzeModelService> logger)
     {
         _cloudApiClient = cloudApiClient;
         _pbidesktopService = pbidesktopService;
+        _logger = logger;
     }
 
     public TabularDatabase GetDatabase(Stream vpaxStream, Stream? obfuscatorDictionaryStream = null)
@@ -49,7 +52,7 @@ internal sealed class AnalyzeModelService : IAnalyzeModelService
 
     public TabularDatabase GetDatabase(PBIDesktopReport report, CancellationToken cancellationToken)
     {
-        using var connection = TabularConnectionWrapper.ConnectTo(report);
+        using var connection = TabularConnectionWrapper.ConnectTo(report, _logger);
         var database = TabularDatabase.CreateFrom(connection, cancellationToken);
 
         if (connection.Server.IsPowerBIDesktop() == false)
@@ -68,7 +71,7 @@ internal sealed class AnalyzeModelService : IAnalyzeModelService
 
         if (dataset.IsXmlaEndPointSupported || dataset.IsOnPremModel == true)
         {
-            using var connection = TabularConnectionWrapper.ConnectTo(dataset, accessToken);
+            using var connection = TabularConnectionWrapper.ConnectTo(dataset, accessToken, _logger);
             database = TabularDatabase.CreateFrom(connection, cancellationToken);
         }
         else
@@ -101,13 +104,13 @@ internal sealed class AnalyzeModelService : IAnalyzeModelService
 
     public void ExportVpax(PBIDesktopReport report, ExportVpaxMode mode, string path, CancellationToken cancellationToken)
     {
-        using var connection = TabularConnectionWrapper.ConnectTo(report);
+        using var connection = TabularConnectionWrapper.ConnectTo(report, _logger);
         ExportVpaxImpl(connection, mode, path, cancellationToken);
     }
 
     public void ExportVpax(PBICloudDataset dataset, string accessToken, ExportVpaxMode mode, string path, CancellationToken cancellationToken)
     {
-        using var connection = TabularConnectionWrapper.ConnectTo(dataset, accessToken);
+        using var connection = TabularConnectionWrapper.ConnectTo(dataset, accessToken, _logger);
         ExportVpaxImpl(connection, mode, path, cancellationToken);
     }
 

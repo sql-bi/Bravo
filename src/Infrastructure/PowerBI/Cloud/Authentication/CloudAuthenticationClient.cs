@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Microsoft.Identity.Client;
 using Microsoft.Identity.Client.Desktop;
 using Sqlbi.Bravo.Infrastructure.Configuration;
@@ -24,7 +25,7 @@ public interface ICloudAuthenticationClient
 /// <summary>
 /// Handles authentication with Microsoft Entra ID (Azure AD) using MSAL.NET, including token acquisition and cache management.
 /// </summary>
-internal sealed class CloudAuthenticationClient(IPolicyService policyService) : ICloudAuthenticationClient
+internal sealed class CloudAuthenticationClient(IPolicyService policyService, ILogger<CloudAuthenticationClient> logger) : ICloudAuthenticationClient
 {
     private const string SystemBrowserRedirectUri = "http://localhost";
 
@@ -34,6 +35,7 @@ internal sealed class CloudAuthenticationClient(IPolicyService policyService) : 
         new Dictionary<string, (string Value, bool IncludeInCacheKey)> { ["msafed"] = ("0", false) });
 
     private readonly IPolicyService _policyService = policyService;
+    private readonly ILogger<CloudAuthenticationClient> _logger = logger;
 
     public async Task<AuthenticationResult> AcquireTokenAsync(
         CloudEnvironment environment, string email, CancellationToken cancellationToken)
@@ -144,7 +146,7 @@ internal sealed class CloudAuthenticationClient(IPolicyService policyService) : 
 
         var client = builder.Build();
 
-        TokenCacheHelper.RegisterCache(client.UserTokenCache);
+        TokenCacheHelper.RegisterCache(client.UserTokenCache, _logger);
 
         return client;
     }

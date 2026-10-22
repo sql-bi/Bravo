@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using Dax.Template;
 using Dax.Template.Model;
+using Microsoft.Extensions.Logging;
 using Sqlbi.Bravo.Infrastructure.Extensions;
 using Sqlbi.Bravo.Infrastructure.Policies;
 using Sqlbi.Bravo.Models.ManageDates;
@@ -32,10 +33,12 @@ internal class DaxTemplateManager
 
     private readonly object _cacheSyncLock = new();
     private readonly IPolicyService _policyService;
+    private readonly ILogger _logger;
 
-    public DaxTemplateManager(IPolicyService policyService)
+    public DaxTemplateManager(IPolicyService policyService, ILogger logger)
     {
         _policyService = policyService;
+        _logger = logger;
         InitializeCache();
     }
 
@@ -57,7 +60,7 @@ internal class DaxTemplateManager
 
     public ModelChanges GetPreviewChanges(DateConfiguration configuration, int previewRows, TabularConnectionWrapper connection, CancellationToken cancellationToken)
     {
-        var package = configuration.LoadPackage();
+        var package = configuration.LoadPackage(_logger);
         return GetPreviewChanges(package, previewRows, connection, cancellationToken);
     }
 
@@ -86,7 +89,7 @@ internal class DaxTemplateManager
 
     public void ApplyConfiguration(DateConfiguration configuration, TabularConnectionWrapper connection, CancellationToken cancellationToken)
     {
-        var package = configuration.LoadPackage();
+        var package = configuration.LoadPackage(_logger);
         var engine = new Engine(package);
 
         engine.ApplyTemplates(connection.Model, cancellationToken);

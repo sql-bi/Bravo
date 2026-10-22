@@ -113,9 +113,6 @@ internal static class AppInstanceStartupMessageExtensions
             webMessageString = webMessage.AsString;
         }
 
-        if (AppEnvironment.IsDiagnosticLevelVerbose)
-            AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{nameof(AppInstanceStartupMessage)}.{nameof(ToWebMessageString)}", content: webMessageString);
-
         return webMessageString;
     }
 }

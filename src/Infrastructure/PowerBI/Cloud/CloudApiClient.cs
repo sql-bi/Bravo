@@ -10,6 +10,7 @@ using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Sqlbi.Bravo.Infrastructure.Extensions;
 using Sqlbi.Bravo.Infrastructure.PowerBI.Cloud.Authentication;
 using Sqlbi.Bravo.Infrastructure.PowerBI.Cloud.Contracts;
@@ -24,9 +25,10 @@ public interface ICloudApiClient
     Task<IEnumerable<PBICloudDataset>> GetDatasetsAsync(AuthenticatedSession session, CancellationToken cancellationToken);
 }
 
-internal class CloudApiClient : ICloudApiClient
+internal partial class CloudApiClient : ICloudApiClient
 {
     private readonly HttpClient _httpClient;
+    private readonly ILogger<CloudApiClient> _logger;
     private readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web)
     {
         PropertyNameCaseInsensitive = false, // required by SharedDatasetModel LastRefreshTime/lastRefreshTime properties
@@ -38,9 +40,10 @@ internal class CloudApiClient : ICloudApiClient
     public const string ASAzureProtocolScheme = "asazure";
     //public const string ASAzureLinkProtocolScheme = "link";
 
-    public CloudApiClient(IHttpClientFactory httpClientFactory)
+    public CloudApiClient(IHttpClientFactory httpClientFactory, ILogger<CloudApiClient> logger)
     {
         _httpClient = httpClientFactory.CreateClient(ServiceCollectionExtensions.PowerBIApiHttpClientName);
+        _logger = logger;
     }
 
     public async Task<string?> GetUserPhotoAsync(AuthenticatedSession session, CancellationToken cancellationToken)
@@ -98,16 +101,18 @@ internal class CloudApiClient : ICloudApiClient
         var cloudWorkspaces = await GetCloudWorkspacesAsync(session, cancellationToken);
         var cloudSharedModels = await GetCloudSharedModelsAsync(session, cancellationToken);
 
-        if (AppEnvironment.IsDiagnosticLevelVerbose)
+        if (_logger.IsEnabled(LogLevel.Information))
         {
-            AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{nameof(CloudApiClient)}.{nameof(GetDatasetsAsync)}.{nameof(cloudWorkspaces)}", content: JsonSerializer.Serialize(cloudWorkspaces));
-            AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{nameof(CloudApiClient)}.{nameof(GetDatasetsAsync)}.{nameof(cloudSharedModels)}", content: JsonSerializer.Serialize(cloudSharedModels));
+            LogWorkspacesRead(JsonSerializer.Serialize(cloudWorkspaces));
+            LogSharedModelsRead(JsonSerializer.Serialize(cloudSharedModels));
         }
 
         var datasets = cloudWorkspaces.Join(cloudSharedModels, (w) => w.ObjectId?.ToLowerInvariant(), (d) => d.ObjectId?.ToLowerInvariant(), (w, d) => PBICloudDataset.CreateFrom(session.Environment, w, d)).ToArray();
 
-        if (AppEnvironment.IsDiagnosticLevelVerbose)
-            AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{nameof(CloudApiClient)}.{nameof(GetDatasetsAsync)}", content: JsonSerializer.Serialize(datasets));
+        if (_logger.IsEnabled(LogLevel.Information))
+        {
+            LogDatasetsJoined(JsonSerializer.Serialize(datasets));
+        }
 
         return datasets;
     }
@@ -126,8 +131,7 @@ internal class CloudApiClient : ICloudApiClient
 
         var json = await httpResponse.Content.ReadAsStringAsync(cancellationToken);
 
-        if (AppEnvironment.IsDiagnosticLevelVerbose)
-            AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{nameof(CloudApiClient)}.{nameof(GetCloudWorkspacesAsync)}", json);
+        LogWorkspacesReceived(json);
 
         return JsonSerializer.Deserialize<CloudWorkspace[]>(json, _jsonOptions) ?? [];
     }
@@ -146,8 +150,7 @@ internal class CloudApiClient : ICloudApiClient
 
         var json = await httpResponse.Content.ReadAsStringAsync(cancellationToken);
 
-        if (AppEnvironment.IsDiagnosticLevelVerbose)
-            AppEnvironment.AddDiagnostics(DiagnosticMessageType.Json, name: $"{nameof(CloudApiClient)}.{nameof(GetCloudSharedModelsAsync)}", json);
+        LogSharedModelsReceived(json);
 
         return JsonSerializer.Deserialize<CloudSharedModel[]>(json, _jsonOptions) ?? [];
     }

@@ -4,6 +4,7 @@ using System.Net.Mime;
 using System.Threading;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Sqlbi.Bravo.Infrastructure.Helpers;
 using Sqlbi.Bravo.Models;
 using Sqlbi.Bravo.Models.AnalyzeModel;
@@ -26,11 +27,13 @@ public class TemplateDevelopmentController : ControllerBase
 
     private readonly ITemplateDevelopmentService _templateDevelopmentService;
     private readonly IAnalyzeModelService _analyzeModelService;
+    private readonly ILogger<TemplateDevelopmentController> _logger;
 
-    public TemplateDevelopmentController(ITemplateDevelopmentService templateDevelopmentService, IAnalyzeModelService analyzeModelService)
+    public TemplateDevelopmentController(ITemplateDevelopmentService templateDevelopmentService, IAnalyzeModelService analyzeModelService, ILogger<TemplateDevelopmentController> logger)
     {
         _templateDevelopmentService = templateDevelopmentService;
         _analyzeModelService = analyzeModelService;
+        _logger = logger;
     }
 
     /// <summary>
@@ -175,7 +178,7 @@ public class TemplateDevelopmentController : ControllerBase
     {
         if (ProcessHelper.OpenShellExecute(path, waitForStarted, out var processId, cancellationToken))
         {
-            var report = PBIDesktopReport.CreateFrom(processId.Value);
+            var report = PBIDesktopReport.CreateFrom(processId.Value, _logger);
             return Ok(report);
         }
         return Forbid();

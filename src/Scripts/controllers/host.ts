@@ -82,22 +82,38 @@ export interface DatabaseUpdateResult {
     etag?: string
 }
 
-export enum DiagnosticMessageSeverity {
-    None = 0,
-    Warning = 1,
-    Error = 2,
+export enum HostLogLevel {
+    Trace = 0,
+    Debug = 1,
+    Information = 2,
+    Warning = 3,
+    Error = 4,
+    Critical = 5,
 }
 
-export enum DiagnosticMessageType {
-    Text = 0,
-    Json = 1,
+export interface DiagnosticLogException {
+    type: string
+    message: string
+    stackTrace?: string
+    details?: Dic<string>
 }
-export interface DiagnosticMessage {
-    type: DiagnosticMessageType
-    severity: DiagnosticMessageSeverity
-    name?: string
-    content?: string
-    timestamp?: string
+
+export interface DiagnosticLogEntry {
+    timestamp: string
+    level: HostLogLevel
+    category: string
+    eventId: number
+    eventName?: string
+    message: string
+    template?: string
+    properties?: Dic<string>
+    exception?: DiagnosticLogException[]
+}
+
+export interface DiagnosticLogPage {
+    entries: DiagnosticLogEntry[]
+    lastSequence: number
+    droppedCount: number
 }
 
 
@@ -605,9 +621,9 @@ export class Host extends Dispatchable {
         return this.apiCall("api/NavigateTo", { address: url });
     }
 
-    getDiagnostics(all = false) {
-        return <Promise<DiagnosticMessage[]>>this.apiCall("api/GetDiagnostics", { all: all });
-    } 
+    getDiagnostics(after: number, max: number) {
+        return <Promise<DiagnosticLogPage>>this.apiCall("api/GetDiagnostics", { after: after, max: max });
+    }
 
     getCurrentVersion(updateChannel: UpdateChannelType) {
         return <Promise<BravoUpdate>>this.apiCall("api/GetCurrentVersion", { updateChannel: updateChannel });

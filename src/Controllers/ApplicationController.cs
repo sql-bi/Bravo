@@ -1,14 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Net.Mime;
 using System.Threading;
 using System.Threading.Tasks;
 using Hellang.Middleware.ProblemDetails;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Sqlbi.Bravo.Infrastructure;
 using Sqlbi.Bravo.Infrastructure.Configuration;
 using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
+using Sqlbi.Bravo.Infrastructure.Diagnostics;
 using Sqlbi.Bravo.Infrastructure.Extensions;
 using Sqlbi.Bravo.Infrastructure.Helpers;
 using Sqlbi.Bravo.Infrastructure.Policies;
@@ -29,11 +30,22 @@ public class ApplicationController : ControllerBase
 {
     private readonly ITelemetryService _telemetryService;
     private readonly IPolicyService _policyService;
+    private readonly DiagnosticLevelSwitch _diagnosticLevel;
+    private readonly DiagnosticLogStore _diagnosticLog;
+    private readonly ILogger<ApplicationController> _logger;
 
-    public ApplicationController(ITelemetryService telemetryService, IPolicyService policyService)
+    public ApplicationController(
+        ITelemetryService telemetryService,
+        IPolicyService policyService,
+        DiagnosticLevelSwitch diagnosticLevel,
+        DiagnosticLogStore diagnosticLog,
+        ILogger<ApplicationController> logger)
     {
         _telemetryService = telemetryService;
         _policyService = policyService;
+        _diagnosticLevel = diagnosticLevel;
+        _diagnosticLog = diagnosticLog;
+        _logger = logger;
     }
 
     /// <summary>
@@ -84,8 +96,13 @@ public class ApplicationController : ControllerBase
 
             return BadRequest(problem);
         }
-
-        _telemetryService.TelemetryEnabled = TelemetryConsent.Resolve(_policyService.Current, UserPreferences.Current).IsEnabled;
+        finally
+        {
+            // A failed save can leave the settings changed in memory: the runtime follows what they hold.
+            var settings = UserPreferences.Current;
+            _diagnosticLevel.Level = settings.DiagnosticLevel;
+            _telemetryService.TelemetryEnabled = TelemetryConsent.Resolve(_policyService.Current, settings).IsEnabled;
+        }
 
         return Ok();
     }
@@ -146,7 +163,7 @@ public class ApplicationController : ControllerBase
         {
             if (ProcessHelper.OpenShellExecute(path, waitForStarted, out var processId, cancellationToken))
             {
-                var report = PBIDesktopReport.CreateFrom(processId.Value);
+                var report = PBIDesktopReport.CreateFrom(processId.Value, _logger);
                 return Ok(report);
             }
 
@@ -177,29 +194,21 @@ public class ApplicationController : ControllerBase
     }
 
     /// <summary>
-    /// Gets all the <see cref="DiagnosticMessage"/> for the application
+    /// Gets the host log records added after the specified sequence number
     /// </summary>
+    /// <param name="after">The <see cref="DiagnosticLogPage.LastSequence"/> of the previous read, 0 to read every record held</param>
+    /// <param name="max">The maximum number of records to return, the newest ones</param>
     /// <response code="200">Status200OK - Success</response>
     [HttpGet]
     [ActionName("GetDiagnostics")]
     [Consumes(MediaTypeNames.Application.Json)]
     [Produces(MediaTypeNames.Application.Json)]
-    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<DiagnosticMessage>))]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(DiagnosticLogPage))]
     [ProducesDefaultResponseType]
-    public IActionResult GetDiagnostics(bool? all = null)
+    public IActionResult GetDiagnostics(long after = 0, int max = DiagnosticLogStore.DefaultCapacity)
     {
-        var messages = new SortedList<DateTime, DiagnosticMessage>();
-
-        foreach (var message in AppEnvironment.Diagnostics.Values)
-        {
-            if (all == true || message.ReadTimestamp is null)
-            {
-                message.ReadTimestamp = DateTime.UtcNow;
-                messages.Add(message.Timestamp, message);
-            }
-        }
-
-        return Ok(messages.Values);
+        var page = _diagnosticLog.Read(after, max);
+        return Ok(page);
     }
 
     /// <summary>
@@ -214,7 +223,7 @@ public class ApplicationController : ControllerBase
     [ProducesDefaultResponseType]
     public async Task<IActionResult> GetCurrentVersion(UpdateChannelType updateChannel, CancellationToken cancellationToken)
     {
-        var bravoUpdate = await CommonHelper.CheckForUpdateAsync(updateChannel, cancellationToken);
+        var bravoUpdate = await CommonHelper.CheckForUpdateAsync(updateChannel, _logger, cancellationToken);
         if (bravoUpdate.IsNewerVersion)
             System.Media.SystemSounds.Beep.Play();
 
