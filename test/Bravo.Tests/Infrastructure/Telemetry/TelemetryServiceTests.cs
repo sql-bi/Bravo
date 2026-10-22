@@ -4,6 +4,8 @@ using System.IO;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using Bravo.Tests.Infrastructure.Diagnostics.CrashReporting;
+using Sqlbi.Bravo.Infrastructure.Diagnostics.CrashReporting;
 using Sqlbi.Bravo.Infrastructure.Telemetry;
 using Xunit;
 
@@ -61,6 +63,38 @@ public class TelemetryServiceTests
         // still in flight at this point is lost.
         Assert.True(received.IsSet, "The request had not reached the endpoint when Dispose returned.");
         Assert.Contains("/track", path);
+    }
+
+    /// <summary>
+    /// Regression: the crash reporter tracks telemetry rebuilt from a saved report, which a processor rejected, so
+    /// nothing was sent.
+    /// </summary>
+    [Fact]
+    public async Task FlushAsync_TelemetryOfACrashReport_ReachesTheEndpoint()
+    {
+        var port = GetFreePort();
+        using var listener = new HttpListener();
+        listener.Prefixes.Add($"http://127.0.0.1:{port}/");
+        listener.Start();
+
+        using var received = new ManualResetEventSlim();
+        _ = Task.Run(() =>
+        {
+            var context = listener.GetContext();
+            received.Set();
+            context.Response.StatusCode = 200;
+            context.Response.Close();
+        });
+
+        using var storage = new TemporaryFolder();
+        using var service = TelemetryService.Create(CreateConnectionString(port), telemetryEnabled: true, storage.Path);
+        service.TrackException(CrashReportTelemetry.Create(TestCrashReports.Create(DateTimeOffset.UtcNow)));
+
+        using var timeout = new CancellationTokenSource(s_timeout);
+        var sent = await service.FlushAsync(timeout.Token);
+
+        Assert.True(sent);
+        Assert.True(received.Wait(s_timeout), "The request did not reach the endpoint.");
     }
 
     /// <summary>

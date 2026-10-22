@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.Channel;
+using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.ApplicationInsights.WindowsServer.TelemetryChannel;
 
@@ -15,6 +16,7 @@ public interface ITelemetryService : IDisposable
 {
     bool TelemetryEnabled { get; set; }
     void TrackException(Exception exception, IDictionary<string, string>? properties = null);
+    void TrackException(ExceptionTelemetry telemetry);
     Task<bool> FlushAsync(CancellationToken cancellationToken = default);
     bool TryFlushBeforeShutdown(int timeoutMilliseconds);
 }
@@ -53,6 +55,12 @@ internal sealed class TelemetryService : ITelemetryService
         // after TrackException improves the chances of preserving the exception if the process
         // terminates before the next scheduled flush, while keeping this path non-blocking.
         // It does not guarantee that the telemetry has been sent or persisted to local storage.
+        _client.Flush();
+    }
+
+    public void TrackException(ExceptionTelemetry telemetry)
+    {
+        _client.TrackException(telemetry);
         _client.Flush();
     }
 
@@ -95,10 +103,12 @@ internal sealed class TelemetryService : ITelemetryService
 
     public static TelemetryService Create(string connectionString, bool telemetryEnabled, string storageFolder)
     {
+        // The channel does not create its folder, and without one it loses unsent telemetry; created here because the
+        // crash reporter process does not run the startup that creates the other folders.
+        Directory.CreateDirectory(storageFolder);
+
         var channel = new ServerTelemetryChannel
         {
-            // Remark: folder must exist beforehand as the channel does not auto-create it.
-            // If missing, local storage remains disabled and unsent telemetry is lost.
             StorageFolder = storageFolder
         };
 

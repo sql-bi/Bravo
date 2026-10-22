@@ -1,4 +1,5 @@
-using System;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.ApplicationInsights.Extensibility;
@@ -162,6 +163,22 @@ public class DefaultTelemetryProcessorTests
         _processor.Process(telemetry);
 
         Assert.Equal("TestEvent", telemetry.Name);
+        _next.Received(1).Process(telemetry);
+    }
+
+    /// <summary>
+    /// Regression: setting Message on telemetry built from ExceptionDetailsInfo throws, so the crash reporter could
+    /// not send any report.
+    /// </summary>
+    [Fact]
+    public void Process_TelemetryBuiltFromDetails_RedactsTheDetailsWithoutSettingTheMessage()
+    {
+        var details = new ExceptionDetailsInfo(1, 0, "System.Exception", "User '<pii>john@contoso.com</pii>' failed", true, "", []);
+        var telemetry = new ExceptionTelemetry([details], null, "System.Exception", new Dictionary<string, string>(), new Dictionary<string, double>());
+
+        _processor.Process(telemetry);
+
+        Assert.Equal("User '<pii>[REDACTED]</pii>' failed", telemetry.ExceptionDetailsInfoList.Single().Message);
         _next.Received(1).Process(telemetry);
     }
 

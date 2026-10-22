@@ -25,12 +25,17 @@ internal sealed class DefaultTelemetryProcessor : ITelemetryProcessor
 
     private static void RedactExceptionTelemetry(ExceptionTelemetry telemetry)
     {
-        // Redact Message first since it overwrites ExceptionDetailsInfoList[0].Message
-        if (!string.IsNullOrEmpty(telemetry.Message))
-            telemetry.Message = SensitiveTags.Redact(telemetry.Message);
-
         // Redact the serialized exception details — these are what AI actually transmits
         foreach (var info in telemetry.ExceptionDetailsInfoList)
             info.Message = SensitiveTags.Redact(info.Message);
+
+        // Set only when redaction changes it: built from ExceptionDetailsInfo, as the crash reporter builds it, the
+        // telemetry reads Message from the details redacted above and throws when Message is set.
+        if (!string.IsNullOrEmpty(telemetry.Message))
+        {
+            var message = SensitiveTags.Redact(telemetry.Message);
+            if (message != telemetry.Message)
+                telemetry.Message = message;
+        }
     }
 }

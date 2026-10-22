@@ -10,6 +10,9 @@ internal static class Program
     {
         ApplicationConfiguration.Initialize();
 
+        if (BravoCrashReporter.RunIfRequested(args))
+            return;
+
         var exceptionHandler = BravoGlobalExceptionHandling.Configure();
 
 #if DEBUG
