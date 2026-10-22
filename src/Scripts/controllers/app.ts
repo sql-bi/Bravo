@@ -422,11 +422,11 @@ export class App {
 
         if (automatic && !optionsController.getOption("updateCheckEnabled")) return;
 
-        return host.getCurrentVersion(optionsController.getOption("updateChannel"))
+        return host.getCurrentVersion()
             .then(data => {
 
                 let newVersion = null;
-                if (data.updateChannel == optionsController.getOption("updateChannel") && data.isNewerVersion) {
+                if (data.isNewerVersion) {
                     newVersion = new AppVersion({
                         version: data.version,
                         downloadUrl: data.downloadUrl,

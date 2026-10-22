@@ -19,7 +19,7 @@ Do not set `Version`, `FileVersion` or `InformationalVersion` in `Bravo.csproj`:
 
 | Value | Shape | Authoritative for |
 | --- | --- | --- |
-| `AssemblyFileVersion` | `X.Y.Z.{height}` | ordering two builds; MSI `ProductVersion` |
+| `AssemblyFileVersion` | `X.Y.Z.{height}` | ordering two builds; MSI `ProductVersion`; the update feed `version` |
 | `AssemblyInformationalVersion` | `X.Y.Z.{height}[-tag]+{commit}` | diagnostics |
 | `AssemblyVersion` | `X.Y.0.0` | assembly identity (`assemblyVersion.precision: minor`) |
 | `NBGV_SemVer2` | `X.Y.Z[-tag]` | artifact names, git tag, `AppVersion.SemanticVersion`, WiX `-dVersion` |
@@ -29,9 +29,15 @@ every build uniquely identifiable and orders builds that share the same `X.Y.Z`.
 
 ## Rules
 
+- **The update feed `version` is the four-field `AssemblyFileVersion` of the release.** Installed clients compare it
+with their own file version through `Version.Parse`. A three-field value compares lower than every build of the same
+`X.Y.Z`, so a preview user is never told about the release that follows it; a non-numeric value makes the check fail
+in every installed client ([ADR 0001](../adr/0001-releases-without-update-channels.md)).
+
 - **The prerelease tag never reaches a numeric field.** `AssemblyFileVersion` stays numeric in every state, so
 Windows Installer and `System.Version` keep working unchanged. WiX `-dVersion` carries the tag but feeds the
-installer telemetry only: the MSI `ProductVersion` is bound to the file version of `Bravo.exe`.
+installer telemetry only: the MSI `ProductVersion` is bound to the file version of `Bravo.exe`. Local builds made with
+`publish.cmd` pass `0.0.0`, so their installer telemetry is not mistaken for a release.
 
 - **`SemVer2` is the version that the application, the installer and the artifacts report.** The
 application reads it as `ThisAssembly.NuGetPackageVersion`, which equals `SemVer2` only while

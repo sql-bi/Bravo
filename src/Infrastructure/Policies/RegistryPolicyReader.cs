@@ -1,6 +1,4 @@
-﻿using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
-
-namespace Sqlbi.Bravo.Infrastructure.Policies;
+﻿namespace Sqlbi.Bravo.Infrastructure.Policies;
 
 internal sealed class RegistryPolicyReader(IPolicySourceFactory sourceFactory) : IPolicyReader
 {
@@ -19,7 +17,6 @@ internal sealed class RegistryPolicyReader(IPolicySourceFactory sourceFactory) :
 
     internal static PolicySnapshot FromSource(IPolicySource source) => new(
         TelemetryEnabled: source.GetBool("TelemetryEnabled"),
-        UpdateChannel: source.GetEnum<UpdateChannelType>("UpdateChannel"),
         UpdateCheckEnabled: source.GetBool("UpdateCheckEnabled"),
         UseSystemBrowserForAuthentication: source.GetBool("UseSystemBrowserForAuthentication"),
         BuiltInTemplatesEnabled: source.GetBool("BuiltInTemplatesEnabled"),
@@ -31,7 +28,6 @@ internal sealed class RegistryPolicyReader(IPolicySourceFactory sourceFactory) :
         // LocalMachine takes precedence over CurrentUser when both are configured
         return new PolicySnapshot(
             TelemetryEnabled: machinePolicies.TelemetryEnabled ?? userPolicies.TelemetryEnabled,
-            UpdateChannel: machinePolicies.UpdateChannel ?? userPolicies.UpdateChannel,
             UpdateCheckEnabled: machinePolicies.UpdateCheckEnabled ?? userPolicies.UpdateCheckEnabled,
             UseSystemBrowserForAuthentication: machinePolicies.UseSystemBrowserForAuthentication ?? userPolicies.UseSystemBrowserForAuthentication,
             BuiltInTemplatesEnabled: machinePolicies.BuiltInTemplatesEnabled ?? userPolicies.BuiltInTemplatesEnabled,

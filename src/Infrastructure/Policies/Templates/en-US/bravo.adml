@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--  (c) SQLBI Corporation  -->
-<policyDefinitionResources revision="1.0" schemaVersion="1.0">
+<policyDefinitionResources revision="1.1" schemaVersion="1.0">
   <displayName></displayName>
   <description></description>
   <resources>
@@ -29,15 +29,6 @@
         If the status is set to Disabled, the application uses an embedded web browser for for interactive authentication.
       </string>
       
-      <string id="UpdateChannel">Configure the release channel to be used when checking for updates</string>
-      <string id="UpdateChannel_Stable">STABLE - stable build release channel</string>
-      <string id="UpdateChannel_Dev">DEV - internal development build release channel</string>
-      <string id="UpdateChannel_explanation">
-        If the status is set to Not Configured or Disabled, the stable channel are used by default and this setting is configured according to user preferences.
-
-        If the status is set to Enabled, the selected update channel is forcibly used.
-      </string>
-      
       <string id="UpdateCheckEnabled">Configure update checking and update notifications</string>
       <string id="UpdateCheckEnabled_explanation">
         If the status is set to Not Configured, this setting is configured according to user preferences.
@@ -57,14 +48,6 @@
       </string>
       
     </stringTable>
-
-    <presentationTable>
-
-      <presentation id="UpdateChannel">
-        <dropdownList refId="UpdateChannel" noSort="true">Channels</dropdownList>
-      </presentation>
-      
-    </presentationTable>
 
   </resources>
 </policyDefinitionResources>
