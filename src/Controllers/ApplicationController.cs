@@ -212,7 +212,7 @@ public class ApplicationController : ControllerBase
     }
 
     /// <summary>
-    /// Gets the current application version for the specified <see cref="UpdateChannelType"/>
+    /// Gets the latest released version of the application
     /// </summary>
     /// <response code="200">Status200OK - Success</response>
     [HttpGet]
@@ -221,9 +221,9 @@ public class ApplicationController : ControllerBase
     [Produces(MediaTypeNames.Application.Json)]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(BravoUpdate))]
     [ProducesDefaultResponseType]
-    public async Task<IActionResult> GetCurrentVersion(UpdateChannelType updateChannel, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetCurrentVersion(CancellationToken cancellationToken)
     {
-        var bravoUpdate = await CommonHelper.CheckForUpdateAsync(updateChannel, _logger, cancellationToken);
+        var bravoUpdate = await CommonHelper.CheckForUpdateAsync(_logger, cancellationToken);
         if (bravoUpdate.IsNewerVersion)
             System.Media.SystemSounds.Beep.Play();
 

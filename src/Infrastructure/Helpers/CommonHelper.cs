@@ -6,7 +6,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.Extensions.Logging;
-using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
 using Sqlbi.Bravo.Infrastructure.Extensions;
 using Sqlbi.Bravo.Infrastructure.Windows.Interop;
 using Sqlbi.Bravo.Models;
@@ -91,17 +90,10 @@ internal static partial class CommonHelper
         return directoryName;
     }
 
-    public static async Task<BravoUpdate> CheckForUpdateAsync(UpdateChannelType updateChannel, ILogger logger, CancellationToken cancellationToken)
+    public static async Task<BravoUpdate> CheckForUpdateAsync(ILogger logger, CancellationToken cancellationToken)
     {
-        var channelPath = updateChannel switch
-        {
-            UpdateChannelType.Stable => "bravo-public",
-            UpdateChannelType.Dev => "bravo-internal",
-            _ => throw new BravoUnexpectedInvalidOperationException($"Unhandled {nameof(UpdateChannelType)} value ({updateChannel})")
-        };
-
         using var httpClient = new HttpClient();
-        var requestUri = $"https://bravorelease.blob.core.windows.net/{channelPath}/currentversion.json?nocache={DateTimeOffset.Now.ToUnixTimeSeconds()}";
+        var requestUri = $"https://bravorelease.blob.core.windows.net/bravo-public/currentversion.json?nocache={DateTimeOffset.Now.ToUnixTimeSeconds()}";
         var json = await httpClient.GetStringAsync(requestUri, cancellationToken).ConfigureAwait(false);
         LogUpdateFeedReceived(logger, json);
 
@@ -113,7 +105,6 @@ internal static partial class CommonHelper
 
         return new BravoUpdate
         {
-            UpdateChannel = updateChannel,
             IsNewerVersion = availableVersion > installedVersion,
             Version = availableVersion.ToString(3),
             DownloadUrl = GetDownloadUrl(rootElement.GetProperty("download").GetString()!),
