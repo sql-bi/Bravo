@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Windows.Forms;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,9 +16,9 @@ internal sealed class BravoApplication : IDisposable
 {
     private readonly WebApplication _innerApplication;
 
-    public static BravoApplicationBuilder CreateBuilder(BootstrapContext bootstrap, SingleInstanceServer instanceServer)
+    public static BravoApplicationBuilder CreateBuilder(BootstrapContext bootstrap, SingleInstanceServer instanceServer, IReadOnlyList<string> args)
     {
-        return new BravoApplicationBuilder(bootstrap, instanceServer);
+        return new BravoApplicationBuilder(bootstrap, instanceServer, args);
     }
 
     internal BravoApplication(WebApplication innerApplication)

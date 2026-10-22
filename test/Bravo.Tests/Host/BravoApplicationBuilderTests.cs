@@ -30,7 +30,7 @@ public class BravoApplicationBuilderTests
         using (instanceServer)
         using (var bootstrap = new BootstrapContext(loggerFactory, diagnosticLevel, diagnosticLog, policies, settings, telemetry))
         {
-            using (var application = BravoApplication.CreateBuilder(bootstrap, instanceServer).Build())
+            using (var application = BravoApplication.CreateBuilder(bootstrap, instanceServer, []).Build())
             {
                 Assert.Same(loggerFactory, application.Services.GetRequiredService<ILoggerFactory>());
                 Assert.Same(diagnosticLevel, application.Services.GetRequiredService<DiagnosticLevelSwitch>());

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO.Pipes;
 using System.Text;
 using System.Threading;
@@ -83,7 +84,7 @@ public class BravoSingleInstanceTests
     {
         // A secondary runs this path before it exits: the AppEnvironment static constructor probes the WebView2
         // runtime, the deployment mode and the registry, which a process that only forwards its arguments must not do.
-        var claimOrRedirect = typeof(BravoSingleInstance).GetMethod(nameof(BravoSingleInstance.ClaimOrRedirect), Type.EmptyTypes);
+        var claimOrRedirect = typeof(BravoSingleInstance).GetMethod(nameof(BravoSingleInstance.ClaimOrRedirect), [typeof(IReadOnlyList<string>)]);
         Assert.NotNull(claimOrRedirect);
 
         var referencedTypes = CallGraph.GetReferencedTypes(claimOrRedirect);

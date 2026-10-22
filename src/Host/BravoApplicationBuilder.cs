@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net;
 using Hellang.Middleware.ProblemDetails;
 using Microsoft.AspNetCore.Builder;
@@ -18,7 +19,7 @@ internal sealed class BravoApplicationBuilder
 {
     private readonly WebApplicationBuilder _innerBuilder;
 
-    internal BravoApplicationBuilder(BootstrapContext bootstrap, SingleInstanceServer instanceServer)
+    internal BravoApplicationBuilder(BootstrapContext bootstrap, SingleInstanceServer instanceServer, IReadOnlyList<string> args)
     {
         // CreateEmptyBuilder, not CreateBuilder: no configuration sources, no environment variables and
         // no implicit logging providers. The logging pipeline comes from the bootstrap context, everything
@@ -30,7 +31,7 @@ internal sealed class BravoApplicationBuilder
         });
 
         ConfigureHosting(_innerBuilder);
-        ConfigureServices(_innerBuilder, bootstrap, instanceServer);
+        ConfigureServices(_innerBuilder, bootstrap, instanceServer, args);
     }
 
     internal IServiceCollection Services => _innerBuilder.Services;
@@ -70,10 +71,10 @@ internal sealed class BravoApplicationBuilder
 #endif
     }
 
-    private static void ConfigureServices(WebApplicationBuilder builder, BootstrapContext bootstrap, SingleInstanceServer instanceServer)
+    private static void ConfigureServices(WebApplicationBuilder builder, BootstrapContext bootstrap, SingleInstanceServer instanceServer, IReadOnlyList<string> args)
     {
         builder.Services.AddOptions<StartupSettings>()
-            .Configure((settings) => settings.FromCommandLineArguments()); //.ValidateDataAnnotations();
+            .Configure((settings) => settings.FromCommandLineArguments(args)); //.ValidateDataAnnotations();
         builder.Services.AddSingleton<IServerAddressProvider, ServerAddressProvider>();
 
         builder.Services.AddBravoRestApi();

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
@@ -16,14 +17,15 @@ internal static partial class BravoSingleInstance
     /// The server that holds the application instance, owned by the caller; <see langword="null"/> when this process
     /// is a secondary instance and must exit.
     /// </returns>
-    public static SingleInstanceServer? ClaimOrRedirect()
+    /// <param name="args">The arguments without the program name, which a secondary instance forwards.</param>
+    public static SingleInstanceServer? ClaimOrRedirect(IReadOnlyList<string> args)
     {
         var options = new SingleInstanceOptions
         {
             PipeName = InstancePipeName.Create(),
         };
 
-        return ClaimOrRedirect(options, CreateActivationPayload, CreateFailureLoggerFactory);
+        return ClaimOrRedirect(options, () => CreateActivationPayload(args), CreateFailureLoggerFactory);
     }
 
     internal static SingleInstanceServer? ClaimOrRedirect(
@@ -48,9 +50,9 @@ internal static partial class BravoSingleInstance
         return null;
     }
 
-    private static byte[] CreateActivationPayload()
+    private static byte[] CreateActivationPayload(IReadOnlyList<string> args)
     {
-        var startupSettings = StartupSettings.CreateFromCommandLineArguments();
+        var startupSettings = StartupSettings.CreateFromCommandLineArguments(args);
         var startupMessage = AppInstanceStartupMessage.CreateFrom(startupSettings);
 
         return JsonSerializer.SerializeToUtf8Bytes(startupMessage);

@@ -12,10 +12,6 @@ internal static class BravoGlobalExceptionHandling
 
         GlobalExceptionHandling.Configure(handler.Handle);
 
-#if DEBUG
-        CrashTest.RunIfRequested();
-#endif
-
         return handler;
     }
 }

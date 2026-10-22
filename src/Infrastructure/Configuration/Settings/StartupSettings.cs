@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text.Json.Serialization;
@@ -40,11 +41,12 @@ internal class StartupSettings
     [JsonIgnore]
     public string? ParentProcessMainWindowTitle { get; set; }
 
-    public static StartupSettings CreateFromCommandLineArguments()
+    /// <param name="args">The arguments without the program name.</param>
+    public static StartupSettings CreateFromCommandLineArguments(IReadOnlyList<string> args)
     {
         var settings = new StartupSettings();
         {
-            settings.FromCommandLineArguments();
+            settings.FromCommandLineArguments(args);
         }
 
         return settings;
@@ -53,12 +55,8 @@ internal class StartupSettings
 
 internal static class StartupSettingsExtensions
 {
-    public static void FromCommandLineArguments(this StartupSettings settings)
+    public static void FromCommandLineArguments(this StartupSettings settings, IReadOnlyList<string> args)
     {
-        // Skip the first command line arg as the first element in the array contains the file name of the executing program.
-        // If the file name is not available, the first element is equal to String.Empty.
-        // In.NET 5 and later versions, for single-file publishing, the first element is the name of the host executable.
-        var args = Environment.GetCommandLineArgs().Skip(1).ToArray();
         var commandLine = StartupCommandLine.Parse(args);
 
         using var currentProcess = Process.GetCurrentProcess();
