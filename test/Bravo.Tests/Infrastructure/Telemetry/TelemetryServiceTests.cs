@@ -80,21 +80,4 @@ public class TelemetryServiceTests
         Assert.True(stopwatch.Elapsed < s_timeout, $"Dispose took {stopwatch.Elapsed}");
         Assert.NotEmpty(Directory.GetFiles(storage.Path, "*.trn"));
     }
-
-    private sealed class TemporaryFolder : IDisposable
-    {
-        public string Path { get; } = Directory.CreateDirectory(System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"Bravo.Tests.{Guid.NewGuid():N}")).FullName;
-
-        public void Dispose()
-        {
-            try
-            {
-                Directory.Delete(Path, recursive: true);
-            }
-            catch (IOException)
-            {
-                // A file still held by the channel is left behind.
-            }
-        }
-    }
 }
