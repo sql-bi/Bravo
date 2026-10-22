@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using Sqlbi.Bravo.Infrastructure.Configuration.Settings;
 using Sqlbi.Bravo.Infrastructure.Policies;
 using Xunit;
 
@@ -25,7 +24,6 @@ public class RegistryPolicyReaderTests
         var policies = RegistryPolicyReader.FromSource(new FakePolicySource());
 
         Assert.Null(policies.TelemetryEnabled);
-        Assert.Null(policies.UpdateChannel);
         Assert.Null(policies.UpdateCheckEnabled);
         Assert.Null(policies.UseSystemBrowserForAuthentication);
         Assert.Null(policies.BuiltInTemplatesEnabled);
@@ -82,40 +80,6 @@ public class RegistryPolicyReaderTests
     }
 
     [Fact]
-    public void FromSource_UpdateChannelDefinedEnumValue_ReturnsParsedValue()
-    {
-        var source = new FakePolicySource();
-        source.Set("UpdateChannel", (int)UpdateChannelType.Dev);
-
-        var policies = RegistryPolicyReader.FromSource(source);
-
-        Assert.Equal(UpdateChannelType.Dev, policies.UpdateChannel);
-    }
-
-    [Fact]
-    public void FromSource_UpdateChannelUndefinedEnumValue_ReturnsNull()
-    {
-        // 1 is not a defined UpdateChannelType member (Beta is reserved/commented out) - must not be misparsed
-        var source = new FakePolicySource();
-        source.Set("UpdateChannel", 1);
-
-        var policies = RegistryPolicyReader.FromSource(source);
-
-        Assert.Null(policies.UpdateChannel);
-    }
-
-    [Fact]
-    public void FromSource_UpdateChannelNonIntValue_ReturnsNull()
-    {
-        var source = new FakePolicySource();
-        source.Set("UpdateChannel", "Dev");
-
-        var policies = RegistryPolicyReader.FromSource(source);
-
-        Assert.Null(policies.UpdateChannel);
-    }
-
-    [Fact]
     public void FromSource_CustomTemplatesOrganizationRepositoryPathStringValueSet_ReturnsValue()
     {
         var source = new FakePolicySource();
@@ -139,7 +103,6 @@ public class RegistryPolicyReaderTests
 
     private static readonly PolicySnapshot AllNull = new(
         TelemetryEnabled: null,
-        UpdateChannel: null,
         UpdateCheckEnabled: null,
         UseSystemBrowserForAuthentication: null,
         BuiltInTemplatesEnabled: null,
@@ -171,13 +134,12 @@ public class RegistryPolicyReaderTests
     [Fact]
     public void Merge_BothSet_MachineTakesPrecedenceOverUser()
     {
-        var machine = AllNull with { TelemetryEnabled = true, UpdateChannel = UpdateChannelType.Stable, UpdateCheckEnabled = false };
-        var user = AllNull with { TelemetryEnabled = false, UpdateChannel = UpdateChannelType.Dev, UpdateCheckEnabled = true };
+        var machine = AllNull with { TelemetryEnabled = true, UpdateCheckEnabled = false };
+        var user = AllNull with { TelemetryEnabled = false, UpdateCheckEnabled = true };
 
         var merged = RegistryPolicyReader.Merge(machine, user);
 
         Assert.True(merged.TelemetryEnabled);
-        Assert.Equal(UpdateChannelType.Stable, merged.UpdateChannel);
         Assert.False(merged.UpdateCheckEnabled);
     }
 
@@ -193,11 +155,10 @@ public class RegistryPolicyReaderTests
     public void Merge_EachPropertyResolvedIndependently()
     {
         // Guards against a copy-paste wiring mistake in Merge() (e.g. reading the wrong
-        // property from machine/user) by exercising all 7 properties in a single assertion,
+        // property from machine/user) by exercising all 6 properties in a single assertion,
         // each with a distinct machine/user combination.
         var machine = new PolicySnapshot(
             TelemetryEnabled: true,
-            UpdateChannel: null,
             UpdateCheckEnabled: null,
             UseSystemBrowserForAuthentication: true,
             BuiltInTemplatesEnabled: null,
@@ -206,7 +167,6 @@ public class RegistryPolicyReaderTests
 
         var user = new PolicySnapshot(
             TelemetryEnabled: false, // machine wins
-            UpdateChannel: UpdateChannelType.Dev, // machine unset -> user wins
             UpdateCheckEnabled: true, // machine unset -> user wins
             UseSystemBrowserForAuthentication: false, // machine wins
             BuiltInTemplatesEnabled: false, // machine unset -> user wins
@@ -216,7 +176,6 @@ public class RegistryPolicyReaderTests
         var merged = RegistryPolicyReader.Merge(machine, user);
 
         Assert.True(merged.TelemetryEnabled);
-        Assert.Equal(UpdateChannelType.Dev, merged.UpdateChannel);
         Assert.True(merged.UpdateCheckEnabled);
         Assert.True(merged.UseSystemBrowserForAuthentication);
         Assert.False(merged.BuiltInTemplatesEnabled);

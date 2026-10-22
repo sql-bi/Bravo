@@ -13,7 +13,7 @@ import { /*TokenUpdateWebMessage,*/ WebMessage, WebMessageType } from '../model/
 import { PBICloudDataset, PBICloudDatasetConnectionMode } from '../model/pbi-dataset';
 import { FormattedMeasure, TabularDatabase, TabularDatabaseServer, TabularMeasure, TabularTable } from '../model/tabular';
 import { Account, SignInRequest } from './auth';
-import { DiagnosticLevelType, FormatDaxOptions, Options, UpdateChannelType } from './options';
+import { DiagnosticLevelType, FormatDaxOptions, Options } from './options';
 import { PBIDesktopReport, PBIDesktopReportConnectionMode } from '../model/pbi-report';
 import { ThemeType } from './theme';
 import { i18n } from '../model/i18n';
@@ -190,7 +190,6 @@ export interface CreateDateTemplateRequest {
 }
 
 export interface BravoUpdate {
-    updateChannel: UpdateChannelType
     version?: string
     downloadUrl?: string
     changelogUrl?: string
@@ -625,8 +624,8 @@ export class Host extends Dispatchable {
         return <Promise<DiagnosticLogPage>>this.apiCall("api/GetDiagnostics", { after: after, max: max });
     }
 
-    getCurrentVersion(updateChannel: UpdateChannelType) {
-        return <Promise<BravoUpdate>>this.apiCall("api/GetCurrentVersion", { updateChannel: updateChannel });
+    getCurrentVersion() {
+        return <Promise<BravoUpdate>>this.apiCall("api/GetCurrentVersion");
     }
 
     fileSystemOpen(path: string) {

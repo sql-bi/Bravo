@@ -15,7 +15,6 @@ public class BravoOptions : IUserSettings
     {
         TelemetryEnabled = userSettings.TelemetryEnabled;
         DiagnosticLevel = userSettings.DiagnosticLevel;
-        UpdateChannel = userSettings.UpdateChannel;
         UpdateCheckEnabled = userSettings.UpdateCheckEnabled;
         Theme = userSettings.Theme;
         Proxy = userSettings.Proxy;
@@ -29,9 +28,6 @@ public class BravoOptions : IUserSettings
 
     [JsonPropertyName("diagnosticLevel")]
     public DiagnosticLevelType DiagnosticLevel { get; set; } = UserSettings.DefaultDiagnosticLevel;
-
-    [JsonPropertyName("updateChannel")]
-    public UpdateChannelType UpdateChannel { get; set; } = UserSettings.DefaultUpdateChannel;
 
     [JsonPropertyName("updateCheckEnabled")]
     public bool UpdateCheckEnabled { get; set; } = UserSettings.DefaultUpdateCheckEnabled;
@@ -65,7 +61,6 @@ public class BravoOptions : IUserSettings
         {
             settings.TelemetryEnabled = TelemetryEnabled;
             settings.DiagnosticLevel = DiagnosticLevel;
-            settings.UpdateChannel = UpdateChannel;
             settings.UpdateCheckEnabled = UpdateCheckEnabled;
             settings.Theme = Theme;
             settings.Proxy = Proxy;

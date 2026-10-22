@@ -17,7 +17,7 @@ IF %ERRORLEVEL% NEQ 0 (
 SET arch=x64
 SET selfcontained=true
 SET configuration=Release
-SET version="0.0.0.999-DEV"& :: Do not change, see also <InformationalVersion> on Bravo.csproj 
+SET version="0.0.0"& :: 0.0.0 keeps local builds apart from releases
 SET verbosity="Minimal"& :: Minimal,Normal,Diagnostic,Detailed
 SET wixheat="%WIX%bin\heat.exe"
 SET wixlight="%WIX%bin\light.exe"

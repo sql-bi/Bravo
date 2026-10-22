@@ -17,7 +17,6 @@ export interface Options {
     theme: ThemeType
     telemetryEnabled: boolean
     customTemplatesEnabled: boolean
-    updateChannel: UpdateChannelType
     updateCheckEnabled: boolean
     useSystemBrowserForAuthentication: boolean
     diagnosticLevel: DiagnosticLevelType
@@ -27,7 +26,6 @@ export interface Options {
 
 export interface Policies {
     telemetryEnabled?: boolean | null
-    updateChannel?: UpdateChannelType | null
     updateCheckEnabled?: boolean | null
     useSystemBrowserForAuthentication?: boolean | null
     builtInTemplatesEnabled?: boolean | null
@@ -96,13 +94,6 @@ export enum DaxFormatterLineStyle {
 export enum DaxFormatterSpacingStyle {
     SpaceAfterFunction = 0, 
     NoSpaceAfterFunction = 1
-}
-
-export enum UpdateChannelType {
-    Stable = 0,
-    //Beta = 1,
-    Dev = 2,
-    //Canary = 3,
 }
 
 export enum DiagnosticLevelType {
@@ -195,7 +186,6 @@ export class OptionsController extends OptionsStore<Options> {
         telemetryEnabled: true,
         customTemplatesEnabled: true,
         diagnosticLevel: DiagnosticLevelType.None,
-        updateChannel: UpdateChannelType.Stable,
         updateCheckEnabled: true,
         useSystemBrowserForAuthentication: false,
         proxy: {
@@ -277,8 +267,8 @@ export class OptionsController extends OptionsStore<Options> {
      * (not a plain object) - in that case every option under that group inherits it. If the value found
      * is a plain object, it is a dictionary of per-child overrides: an exact-leaf match is required,
      * siblings that aren't explicitly configured are NOT locked by the rest of the group.
-     * E.g. (with policies = { updateChannel: 2, customOptions: { formatting: { preview: true } }, proxy: true }):
-     *  - updateChannel                 -> 2 (scalar leaf match)
+     * E.g. (with policies = { telemetryEnabled: false, customOptions: { formatting: { preview: true } }, proxy: true }):
+     *  - telemetryEnabled              -> false (scalar leaf match)
      *  - customOptions.formatting.preview -> true (scalar leaf match)
      *  - customOptions.formatting.region  -> undefined (sibling not configured - NOT locked)
      *  - proxy.address                 -> true (proxy itself is a scalar - cascades to every child)

@@ -9,8 +9,8 @@ public class CommonExtensionsTests
     [Fact]
     public void TryParseTo_IntTest()
     {
-        var expected = UpdateChannelType.Dev;
-        var actual = EnumExtensions.TryParseTo<UpdateChannelType>((int)expected);
+        var expected = DiagnosticLevelType.Verbose;
+        var actual = EnumExtensions.TryParseTo<DiagnosticLevelType>((int)expected);
 
         Assert.Equal(expected, actual);
     }
@@ -18,14 +18,14 @@ public class CommonExtensionsTests
     [Fact]
     public void TryParseTo_IntNullTest1()
     {
-        var @enum = EnumExtensions.TryParseTo<UpdateChannelType>((int?)null);
+        var @enum = EnumExtensions.TryParseTo<DiagnosticLevelType>((int?)null);
         Assert.Null(@enum);
     }
 
     [Fact]
     public void TryParseTo_IntNullTest2()
     {
-        var @enum = EnumExtensions.TryParseTo<UpdateChannelType>(int.MaxValue);
+        var @enum = EnumExtensions.TryParseTo<DiagnosticLevelType>(int.MaxValue);
         Assert.Null(@enum);
     }
 }

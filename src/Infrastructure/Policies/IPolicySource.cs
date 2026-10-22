@@ -25,16 +25,5 @@ internal static class PolicySourceExtensions
                 _ => null, // Invalid policy value
             };
         }
-
-        /// <remarks>
-        /// TEnum must have int as its underlying type.
-        /// </remarks>
-        public TEnum? GetEnum<TEnum>(string name) where TEnum : struct, Enum
-        {
-            if (source.GetInt(name) is { } value && Enum.IsDefined(typeof(TEnum), value))
-                return (TEnum)(object)value;
-
-            return null; // Policy not set or invalid
-        }
     }
 }
