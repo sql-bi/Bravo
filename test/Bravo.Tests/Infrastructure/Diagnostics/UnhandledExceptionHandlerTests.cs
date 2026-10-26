@@ -1,8 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using Bravo.Tests.Host;
+using Bravo.Tests.Infrastructure.Diagnostics.CrashReporting;
 using Microsoft.Extensions.Logging;
+using NSubstitute;
 using Sqlbi.Bravo.Infrastructure.Diagnostics;
+using Sqlbi.Bravo.Infrastructure.Diagnostics.CrashReporting;
 using Sqlbi.Bravo.Infrastructure.Telemetry;
 using Xunit;
 
@@ -10,129 +15,164 @@ namespace Bravo.Tests.Infrastructure.Diagnostics;
 
 public sealed class UnhandledExceptionHandlerTests : IDisposable
 {
-    private readonly string _reportDirectory = Path.Combine(Path.GetTempPath(), $"Bravo.Tests.{Guid.NewGuid():N}");
+    private static readonly DateTimeOffset s_now = new(2026, 10, 22, 8, 30, 15, TimeSpan.Zero);
+
+    private readonly TemporaryFolder _folder = new();
+    private readonly string _directoryPath;
+    private readonly ICrashReporterLauncher _launcher = Substitute.For<ICrashReporterLauncher>();
+    private readonly List<Exception> _fallbacks = [];
+
+    public UnhandledExceptionHandlerTests()
+    {
+        _directoryPath = Path.Combine(_folder.Path, "crashes");
+    }
+
+    public void Dispose() => _folder.Dispose();
 
     [Fact]
-    public void Handle_FatalBeforeAttachServices_SavesReportAndShowsDialogWithoutTelemetry()
+    public void Handle_FatalBeforeAttachServices_SavesAReportNotSentAndStartsTheReporter()
     {
-        var dialog = new RecordingDialog();
-        var handler = CreateHandler(dialog);
+        CreateHandler().Handle(new InvalidOperationException("fatal"), ExceptionOrigin.AppDomain);
 
-        handler.Handle(new InvalidOperationException("fatal"), ExceptionOrigin.AppDomain);
-
-        Assert.Equal(1, dialog.ShowCount);
-        Assert.Null(dialog.LastTelemetry);
-        Assert.True(File.Exists(dialog.LastReport?.FilePath));
+        var report = LoadSingleReport(out var reportPath);
+        _launcher.Received(1).Launch(reportPath);
+        Assert.False(report.TelemetryAllowed);
+        Assert.Null(report.SessionId);
     }
 
     [Fact]
-    public void Handle_FatalAfterAttachServices_LogsTracksAndPassesTelemetryToDialog()
+    public void Handle_FatalAfterAttachServices_RecordsTheTelemetryConsentAndTheSessionAndLogs()
     {
         var loggerFactory = new FakeLoggerFactory();
-        var telemetry = new FakeTelemetry();
-        var dialog = new RecordingDialog();
-        var handler = CreateHandler(dialog);
         var exception = new InvalidOperationException("fatal");
+        var handler = CreateHandler();
+        var telemetry = new FakeTelemetry { TelemetryEnabled = true, SessionId = TestCrashReports.SessionId };
 
-        using var _ = handler.AttachServices(loggerFactory, telemetry);
+        using var attachment = handler.AttachServices(loggerFactory, telemetry);
         handler.Handle(exception, ExceptionOrigin.AppDomain);
 
+        var report = LoadSingleReport(out _);
+        Assert.True(report.TelemetryAllowed);
+        Assert.Equal(TestCrashReports.SessionId, report.SessionId);
         Assert.Same(exception, Assert.Single(loggerFactory.Entries).Exception);
-        Assert.Same(exception, Assert.Single(telemetry.Exceptions));
-        Assert.Same(telemetry, dialog.LastTelemetry);
     }
 
     [Fact]
-    public void Handle_DialogThrows_LogsTheFailureWithoutThrowing()
+    public void Handle_FatalAfterTheUserTurnedTelemetryOff_RecordsTheConsentOfTheMomentOfTheCrash()
     {
-        var loggerFactory = new FakeLoggerFactory();
-        var dialogFailure = new InvalidOperationException("dialog");
-        var handler = CreateHandler(new RecordingDialog { ExceptionToThrow = dialogFailure });
+        var telemetry = new FakeTelemetry { TelemetryEnabled = true };
+        var handler = CreateHandler();
 
-        using var _ = handler.AttachServices(loggerFactory, new FakeTelemetry());
+        using var attachment = handler.AttachServices(new FakeLoggerFactory(), telemetry);
+        telemetry.TelemetryEnabled = false;
         handler.Handle(new InvalidOperationException("fatal"), ExceptionOrigin.AppDomain);
 
-        Assert.Contains(loggerFactory.Entries, entry => ReferenceEquals(entry.Exception, dialogFailure));
+        Assert.False(LoadSingleReport(out _).TelemetryAllowed);
     }
 
     [Fact]
-    public void Handle_FatalAfterAttachmentDisposed_DoesNotUseTheServices()
+    public void Handle_Fatal_SendsNothingFromTheProcessThatCrashed()
+    {
+        var telemetry = new FakeTelemetry { TelemetryEnabled = true };
+        var handler = CreateHandler();
+
+        using var attachment = handler.AttachServices(new FakeLoggerFactory(), telemetry);
+        handler.Handle(new InvalidOperationException("fatal"), ExceptionOrigin.AppDomain);
+
+        Assert.Empty(telemetry.Exceptions);
+    }
+
+    [Fact]
+    public void Handle_FatalWhenTheReporterFailsToStart_ShowsTheFallbackWithoutSending()
     {
         var loggerFactory = new FakeLoggerFactory();
-        var telemetry = new FakeTelemetry();
-        var dialog = new RecordingDialog();
-        var handler = CreateHandler(dialog);
+        var telemetry = new FakeTelemetry { TelemetryEnabled = true };
+        var exception = new InvalidOperationException("fatal");
+        _launcher.When((launcher) => launcher.Launch(Arg.Any<string>())).Throw(new InvalidOperationException("cannot start"));
+        var handler = CreateHandler();
 
-        handler.AttachServices(loggerFactory, telemetry).Dispose();
+        using var attachment = handler.AttachServices(loggerFactory, telemetry);
+        handler.Handle(exception, ExceptionOrigin.AppDomain);
+
+        Assert.Empty(telemetry.Exceptions);
+        Assert.Same(exception, Assert.Single(_fallbacks));
+        Assert.Contains(loggerFactory.Entries, (entry) => entry.Exception?.Message == "cannot start");
+    }
+
+    [Fact]
+    public void Handle_FatalWhenTheReporterFailsToStart_LogsTheCrashBeforeTheFallbackWaitsForTheUser()
+    {
+        var loggerFactory = new FakeLoggerFactory();
+        var exception = new InvalidOperationException("fatal");
+        _launcher.When((launcher) => launcher.Launch(Arg.Any<string>())).Throw(new InvalidOperationException("cannot start"));
+        IReadOnlyList<FakeLogEntry> entriesWhenShown = [];
+        var handler = new UnhandledExceptionHandler(
+            new CrashReportStore(_directoryPath),
+            _launcher,
+            new FixedTimeProvider(s_now),
+            (_) => entriesWhenShown = loggerFactory.Entries);
+
+        using var attachment = handler.AttachServices(loggerFactory, new FakeTelemetry());
+        handler.Handle(exception, ExceptionOrigin.AppDomain);
+
+        Assert.Contains(entriesWhenShown, (entry) => entry.Exception == exception);
+    }
+
+    [Fact]
+    public void Handle_UnobservedTask_LogsAndTracksWithoutACrashReportOrFlush()
+    {
+        var loggerFactory = new FakeLoggerFactory();
+        var telemetry = Substitute.For<ITelemetryService>();
+        var exception = new InvalidOperationException("unobserved");
+        var handler = CreateHandler();
+
+        using var attachment = handler.AttachServices(loggerFactory, telemetry);
+        handler.Handle(exception, ExceptionOrigin.UnobservedTask);
+
+        Assert.Equal(LogLevel.Error, Assert.Single(loggerFactory.Entries).Level);
+        telemetry.Received(1).TrackException(exception, Arg.Is<IDictionary<string, string>>(
+            (properties) => properties["ExceptionOrigin"] == nameof(ExceptionOrigin.UnobservedTask)));
+        telemetry.DidNotReceive().FlushAsync(Arg.Any<CancellationToken>());
+        Assert.False(Directory.Exists(_directoryPath));
+    }
+
+    [Fact]
+    public void Handle_AfterTheAttachmentIsDisposed_DoesNotUseTheServices()
+    {
+        var loggerFactory = new FakeLoggerFactory();
+        var handler = CreateHandler();
+
+        handler.AttachServices(loggerFactory, new FakeTelemetry { TelemetryEnabled = true }).Dispose();
         handler.Handle(new InvalidOperationException("fatal"), ExceptionOrigin.AppDomain);
 
         Assert.Empty(loggerFactory.Entries);
-        Assert.Empty(telemetry.Exceptions);
-        Assert.Null(dialog.LastTelemetry);
+        Assert.False(LoadSingleReport(out _).TelemetryAllowed);
     }
 
     [Fact]
-    public void Handle_EarlierAttachmentDisposed_KeepsTheLaterServices()
+    public void Handle_AfterAnEarlierAttachmentIsDisposed_KeepsTheLaterServices()
     {
-        var telemetry = new FakeTelemetry();
-        var dialog = new RecordingDialog();
-        var handler = CreateHandler(dialog);
+        var loggerFactory = new FakeLoggerFactory();
+        var handler = CreateHandler();
         var earlier = handler.AttachServices(new FakeLoggerFactory(), new FakeTelemetry());
 
-        using var _ = handler.AttachServices(new FakeLoggerFactory(), telemetry);
+        using var attachment = handler.AttachServices(loggerFactory, new FakeTelemetry());
         earlier.Dispose();
         handler.Handle(new InvalidOperationException("fatal"), ExceptionOrigin.AppDomain);
 
-        Assert.Same(telemetry, dialog.LastTelemetry);
+        Assert.Single(loggerFactory.Entries);
     }
 
-    [Fact]
-    public void Handle_AttachedNullTelemetryService_PassesNoTelemetryToDialog()
+    private UnhandledExceptionHandler CreateHandler()
     {
-        var dialog = new RecordingDialog();
-        var handler = CreateHandler(dialog);
-
-        using var _ = handler.AttachServices(new FakeLoggerFactory(), new NullTelemetryService());
-        handler.Handle(new InvalidOperationException("fatal"), ExceptionOrigin.AppDomain);
-
-        Assert.Null(dialog.LastTelemetry);
+        return new UnhandledExceptionHandler(new CrashReportStore(_directoryPath), _launcher, new FixedTimeProvider(s_now), _fallbacks.Add);
     }
 
-    [Fact]
-    public void Handle_ReportDirectoryUnavailable_ShowsDialogWithoutFile()
+    private CrashReport LoadSingleReport(out string reportPath)
     {
-        var dialog = new RecordingDialog();
-        var handler = new UnhandledExceptionHandler(dialog, () => throw new TypeInitializationException("AppEnvironment", null));
+        reportPath = Assert.Single(Directory.GetFiles(_directoryPath));
+        Assert.True(new CrashReportStore(_directoryPath).TryLoad(reportPath, out var report));
 
-        handler.Handle(new InvalidOperationException("fatal"), ExceptionOrigin.AppDomain);
-
-        Assert.Equal(1, dialog.ShowCount);
-        Assert.Null(dialog.LastReport?.FilePath);
+        return report;
     }
-
-    [Fact]
-    public void Handle_UnobservedTaskAfterAttachServices_LogsAndTracksWithoutDialog()
-    {
-        var loggerFactory = new FakeLoggerFactory();
-        var telemetry = new FakeTelemetry();
-        var dialog = new RecordingDialog();
-        var handler = CreateHandler(dialog);
-        var exception = new InvalidOperationException("unobserved");
-
-        using var _ = handler.AttachServices(loggerFactory, telemetry);
-        handler.Handle(exception, ExceptionOrigin.UnobservedTask);
-
-        var entry = Assert.Single(loggerFactory.Entries);
-        Assert.Equal(LogLevel.Error, entry.Level);
-        Assert.Same(exception, Assert.Single(telemetry.Exceptions));
-        Assert.Equal(0, dialog.ShowCount);
-    }
-
-    public void Dispose()
-    {
-        if (Directory.Exists(_reportDirectory))
-            Directory.Delete(_reportDirectory, recursive: true);
-    }
-
-    private UnhandledExceptionHandler CreateHandler(IErrorReportDialog dialog) => new(dialog, () => _reportDirectory);
 }

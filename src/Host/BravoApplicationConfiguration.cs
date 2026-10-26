@@ -5,7 +5,6 @@ using System.Runtime;
 using Sqlbi.Bravo.Infrastructure;
 using Sqlbi.Bravo.Infrastructure.Helpers;
 using Sqlbi.Bravo.Infrastructure.Services;
-using Sqlbi.Bravo.Infrastructure.Telemetry;
 
 namespace Sqlbi.Bravo.Host;
 
@@ -33,7 +32,6 @@ internal static class BravoApplicationConfiguration
         Directory.SetCurrentDirectory(AppContext.BaseDirectory);
         Directory.CreateDirectory(AppEnvironment.ApplicationDataPath);
         Directory.CreateDirectory(AppEnvironment.ApplicationTempPath);
-        Directory.CreateDirectory(TelemetryService.DefaultStorageFolder);
     }
 
     private static void ConfigureRuntimeOptimization()

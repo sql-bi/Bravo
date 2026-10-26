@@ -3,32 +3,47 @@ using System.Collections.Generic;
 using System.Threading;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using Sqlbi.Bravo.Infrastructure.Diagnostics.CrashReporting;
 using Sqlbi.Bravo.Infrastructure.Telemetry;
 
 namespace Sqlbi.Bravo.Infrastructure.Diagnostics;
 
 /// <summary>
-/// Handles unhandled exceptions in the application, providing a mechanism
-/// to report and display error information to the user.
+/// Reports the exceptions that reach the global handlers.
 /// </summary>
-internal sealed partial class UnhandledExceptionHandler(IErrorReportDialog dialog, Func<string> reportDirectoryPath)
+/// <remarks>
+/// A fatal exception is saved as a crash report, which a reporter process shows and sends: the process that crashed
+/// sends nothing, and shows a message box only when the report cannot be saved or the reporter cannot start. An
+/// unobserved task exception is logged and tracked, and the process keeps running.
+/// </remarks>
+internal sealed partial class UnhandledExceptionHandler(
+    CrashReportStore store,
+    ICrashReporterLauncher reporterLauncher,
+    TimeProvider timeProvider,
+    Action<Exception> showFallback)
 {
-    private static readonly ReportingServices s_noServices = new(NullLogger.Instance, Telemetry: null);
+    // Before the bootstrap, consent is unknown, so telemetry is not allowed and the report cannot be sent.
+    private static readonly ReportingServices s_noServices = new(NullLogger.Instance, new NullTelemetryService());
 
-    private readonly IErrorReportDialog _dialog = dialog;
-    private readonly Func<string> _reportDirectoryPath = reportDirectoryPath;
+    private readonly CrashReportStore _store = store;
+    private readonly ICrashReporterLauncher _reporterLauncher = reporterLauncher;
+    private readonly TimeProvider _timeProvider = timeProvider;
+    private readonly Action<Exception> _showFallback = showFallback;
     private volatile ReportingServices _services = s_noServices;
 
     /// <summary>
     /// Reports through the given services until the returned object is disposed.
     /// </summary>
+    /// <param name="loggerFactory">Creates the logger of the handler.</param>
+    /// <param name="telemetry">
+    /// Tracks unobserved task exceptions, and tells the session and whether telemetry is allowed when a crash occurs.
+    /// </param>
     public IDisposable AttachServices(ILoggerFactory loggerFactory, ITelemetryService telemetry)
     {
-        // NullTelemetryService cannot deliver anything, so the dialog must not offer to send through it.
-        var deliverableTelemetry = telemetry is NullTelemetryService ? null : telemetry;
-
-        var services = new ReportingServices(loggerFactory.CreateLogger<UnhandledExceptionHandler>(), deliverableTelemetry);
+        var logger = loggerFactory.CreateLogger<UnhandledExceptionHandler>();
+        var services = new ReportingServices(logger, telemetry);
         _services = services;
+
         return new ServicesAttachment(this, services);
     }
 
@@ -36,89 +51,90 @@ internal sealed partial class UnhandledExceptionHandler(IErrorReportDialog dialo
     {
         var services = _services;
 
-        Report(services, exception, origin);
-
-        // Do not show UI for unobserved task exceptions (finalizer threads are runtime-critical).
-        // The process keeps running, so the channel sends the telemetry on its own flush interval.
         if (origin == ExceptionOrigin.UnobservedTask)
+        {
+            Log(services, exception, origin);
+            Track(services, exception, origin);
             return;
+        }
 
-        // Prevent multiple handling of the same exception
-        if (!TryMarkHandled(exception))
-            return;
+        // The report first: logging can fail for the same reason the process crashed. The fallback last: it waits for
+        // the user.
+        var reported = TryReportCrash(services, exception);
+        Log(services, exception, origin);
 
-        var report = ErrorReport.Create(exception);
-        SaveReport(report);
-        ShowDialog(services, report);
-
-        _ = services.Telemetry?.TryFlushBeforeShutdown(10_000);
+        if (!reported)
+        {
+            ShowFallback(exception);
+        }
     }
 
-    private void SaveReport(ErrorReport report)
+    private bool TryReportCrash(ReportingServices services, Exception exception)
     {
         try
         {
-            _ = report.TrySave(_reportDirectoryPath());
-        }
-        catch { /* The dialog shows the report without a file */ }
-    }
+            // TelemetryEnabled follows the consent: the options change it, and a policy fixes it.
+            var telemetry = services.Telemetry;
+            var redactor = SensitiveTextRedactor.CreateForCurrentUser();
+            var report = CrashReport.Create(exception, telemetry.SessionId, telemetry.TelemetryEnabled, _timeProvider.GetUtcNow(), redactor);
 
-    private void ShowDialog(ReportingServices services, ErrorReport report)
-    {
-        try
-        {
-            _dialog.Show(report, services.Telemetry);
+            var reportPath = _store.Save(report);
+            _reporterLauncher.Launch(reportPath);
+
+            return true;
         }
-        catch (Exception ex)
+        catch (Exception reportException)
         {
-            // The report is already saved; a failing dialog must not turn the crash into a FailFast.
             try
             {
-                LogDialogFailed(services.Logger, ex);
+                LogCrashReportFailed(services.Logger, reportException);
             }
             catch { /* Ignore failures */ }
+
+            return false;
         }
     }
 
-    private static void Report(ReportingServices services, Exception exception, ExceptionOrigin origin)
+    private void ShowFallback(Exception exception)
+    {
+        try
+        {
+            _showFallback(exception);
+        }
+        catch { /* Ignore failures */ }
+    }
+
+    private static void Log(ReportingServices services, Exception exception, ExceptionOrigin origin)
     {
         try
         {
             LogUnhandledException(services.Logger, exception, origin);
         }
         catch { /* Ignore failures */ }
+    }
 
+    private static void Track(ReportingServices services, Exception exception, ExceptionOrigin origin)
+    {
         try
         {
-            services.Telemetry?.TrackException(exception, properties: new Dictionary<string, string>
-            {
-                ["ExceptionOrigin"] = origin.ToString(),
-                ["ExceptionKind"] = "Unhandled"
-            });
+            services.Telemetry.TrackException(exception, CreateTelemetryProperties(origin));
         }
         catch { /* Ignore failures */ }
     }
 
-    private static bool TryMarkHandled(Exception exception)
+    /// <summary>
+    /// The properties of an unhandled exception in telemetry, which queries filter on.
+    /// </summary>
+    internal static Dictionary<string, string> CreateTelemetryProperties(ExceptionOrigin origin)
     {
-        const string HandledMarker = "Bravo.UnhandledExceptionHandler.Handled";
-
-        try
+        return new Dictionary<string, string>
         {
-            if (exception.Data.Contains(HandledMarker))
-                return false;
-
-            exception.Data[HandledMarker] = true;
-            return true;
-        }
-        catch (Exception ex) when (ex is ArgumentException or NotSupportedException)
-        {
-            // Data is read-only or rejects the key: report the exception anyway
-            return true;
-        }
+            ["ExceptionOrigin"] = origin.ToString(),
+            ["ExceptionKind"] = "Unhandled",
+        };
     }
 
-    private sealed record ReportingServices(ILogger Logger, ITelemetryService? Telemetry);
+    private sealed record ReportingServices(ILogger Logger, ITelemetryService Telemetry);
 
     private sealed class ServicesAttachment(UnhandledExceptionHandler owner, ReportingServices services) : IDisposable
     {

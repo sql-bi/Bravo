@@ -13,7 +13,8 @@ internal sealed class DefaultTelemetryInitializer : ITelemetryInitializer
         telemetry.Context.Device.OperatingSystem = TelemetrySessionInfo.DeviceOperatingSystem;
         telemetry.Context.Cloud.RoleInstance = TelemetrySessionInfo.CloudRoleInstance;
         telemetry.Context.Component.Version = TelemetrySessionInfo.ComponentVersion;
-        telemetry.Context.Session.Id = TelemetrySessionInfo.SessionId;
+        // Kept when set: a crash report is sent in the session of the process that crashed.
+        telemetry.Context.Session.Id ??= TelemetrySessionInfo.SessionId;
         telemetry.Context.User.Id = TelemetrySessionInfo.UserId;
 
         foreach (var property in TelemetrySessionInfo.GlobalProperties)

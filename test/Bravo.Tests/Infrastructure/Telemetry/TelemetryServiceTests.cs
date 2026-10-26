@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using Bravo.Tests.Infrastructure.Diagnostics.CrashReporting;
+using Sqlbi.Bravo.Infrastructure.Diagnostics.CrashReporting;
 using Sqlbi.Bravo.Infrastructure.Telemetry;
 using Xunit;
 
@@ -25,6 +28,19 @@ public class TelemetryServiceTests
         using var socket = new System.Net.Sockets.TcpListener(IPAddress.Loopback, port: 0);
         socket.Start();
         return ((IPEndPoint)socket.LocalEndpoint).Port;
+    }
+
+    // The channel compresses what it sends.
+    private static string ReadBody(HttpListenerRequest request)
+    {
+        var body = request.InputStream;
+        if (string.Equals(request.Headers["Content-Encoding"], "gzip", StringComparison.OrdinalIgnoreCase))
+        {
+            body = new GZipStream(body, CompressionMode.Decompress);
+        }
+
+        using var reader = new StreamReader(body);
+        return reader.ReadToEnd();
     }
 
     /// <summary>
@@ -64,6 +80,66 @@ public class TelemetryServiceTests
     }
 
     /// <summary>
+    /// Regression: the crash reporter tracks telemetry rebuilt from a saved report, which a processor rejected, so
+    /// nothing was sent.
+    /// </summary>
+    [Fact]
+    public async Task FlushAsync_TelemetryOfACrashReport_ReachesTheEndpoint()
+    {
+        var port = GetFreePort();
+        using var listener = new HttpListener();
+        listener.Prefixes.Add($"http://127.0.0.1:{port}/");
+        listener.Start();
+
+        using var received = new ManualResetEventSlim();
+        _ = Task.Run(() =>
+        {
+            var context = listener.GetContext();
+            received.Set();
+            context.Response.StatusCode = 200;
+            context.Response.Close();
+        });
+
+        using var storage = new TemporaryFolder();
+        using var service = TelemetryService.Create(CreateConnectionString(port), telemetryEnabled: true, storage.Path);
+        service.TrackException(CrashReportTelemetry.Create(TestCrashReports.Create(DateTimeOffset.UtcNow)));
+
+        using var timeout = new CancellationTokenSource(s_timeout);
+        var sent = await service.FlushAsync(timeout.Token);
+
+        Assert.True(sent);
+        Assert.True(received.Wait(s_timeout), "The request did not reach the endpoint.");
+    }
+
+    [Fact]
+    public async Task FlushAsync_ExceptionWithAUserProfileFolder_SendsTheFolderRedacted()
+    {
+        var port = GetFreePort();
+        using var listener = new HttpListener();
+        listener.Prefixes.Add($"http://127.0.0.1:{port}/");
+        listener.Start();
+
+        var body = Task.Run(() =>
+        {
+            var context = listener.GetContext();
+            var text = ReadBody(context.Request);
+            context.Response.StatusCode = 200;
+            context.Response.Close();
+            return text;
+        });
+
+        using var storage = new TemporaryFolder();
+        using var service = TelemetryService.Create(CreateConnectionString(port), telemetryEnabled: true, storage.Path);
+        var folder = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        service.TrackException(new InvalidOperationException($@"Cannot read '{folder}\Bravo\settings.json'."));
+
+        using var timeout = new CancellationTokenSource(s_timeout);
+        await service.FlushAsync(timeout.Token);
+
+        Assert.Contains(@"%LOCALAPPDATA%\\Bravo\\settings.json", await body.WaitAsync(s_timeout));
+    }
+
+    /// <summary>
     /// With no endpoint the flush must fail fast and store the transmission for the next start,
     /// instead of holding the shutdown for the whole TCP timeout.
     /// </summary>
@@ -79,22 +155,5 @@ public class TelemetryServiceTests
 
         Assert.True(stopwatch.Elapsed < s_timeout, $"Dispose took {stopwatch.Elapsed}");
         Assert.NotEmpty(Directory.GetFiles(storage.Path, "*.trn"));
-    }
-
-    private sealed class TemporaryFolder : IDisposable
-    {
-        public string Path { get; } = Directory.CreateDirectory(System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"Bravo.Tests.{Guid.NewGuid():N}")).FullName;
-
-        public void Dispose()
-        {
-            try
-            {
-                Directory.Delete(Path, recursive: true);
-            }
-            catch (IOException)
-            {
-                // A file still held by the channel is left behind.
-            }
-        }
     }
 }

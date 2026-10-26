@@ -7,7 +7,7 @@ Exception reporting in the .NET host. The frontend has a separate
 
 | Origin | Process outcome | Current reporting |
 | --- | --- | --- |
-| `AppDomain.UnhandledException`, including WinForms exceptions routed through `ThrowException` | Runtime terminates after the handler returns | Saved report and crash dialog; after the bootstrap, also error log and telemetry subject to consent |
+| `AppDomain.UnhandledException`, including WinForms exceptions routed through `ThrowException` | Runtime terminates after the handler returns | Crash report saved and shown by a reporter process, which sends it only when the user clicks Send and consent allowed telemetry at the crash; after the bootstrap, also error log |
 | `TaskScheduler.UnobservedTaskException` | Continues | Error log and telemetry subject to consent; no dialog or shutdown flush |
 | Exception caught by an operation that can recover or return an error | Continues | Reporting belongs to the operation or its API boundary; see [handled exceptions](#handled-exceptions) |
 
@@ -18,11 +18,12 @@ ends the process: [ADR 0003](../adr/0003-fatal-exceptions-end-the-process.md).
 
 ## Startup coverage and fatal reporting
 
-[Program](../../src/Program.cs) installs global handling right after `ApplicationConfiguration.Initialize`, which
-enables the visual styles the task dialog needs, and before every other startup step. Logging and telemetry do not
-exist yet: until `BootstrapContextFactory` attaches them to the handler, a fatal exception is
-saved to the report and shown in the dialog, without a log entry from Bravo, without telemetry and without the Send
-button. The runtime still writes its own Event Log entry when it ends the process. This covers single-instance
+[Program](../../src/Program.cs) installs global handling before every other startup step, right after
+`ApplicationConfiguration.Initialize`, which enables the visual styles of the reporter's task dialog, and the check
+that runs the process as a crash reporter. Logging and telemetry do not exist yet: until `BootstrapContextFactory`
+attaches them to the handler, a fatal exception is reported without a log entry from Bravo, and its report cannot be
+sent, because consent is not known yet. The runtime still writes its own Event Log entry when it ends the process.
+This covers single-instance
 arbitration, directory and proxy setup, the WebView2 runtime check and bootstrap creation. A secondary instance exits
 after the arbitration, so the whole process is covered this way
 ([single-instance contract](architecture.md#single-instance-contract)). `BootstrapContext` detaches the handler
@@ -33,26 +34,26 @@ telemetry when they cannot be created, but a policy read failure propagates on p
 restrictions are never bypassed: a policy registry key that cannot be read ends the process through this path
 ([ADR 0005](../adr/0005-policy-failures-stop-startup.md)).
 
-[UnhandledExceptionHandler](../../src/Infrastructure/Diagnostics/UnhandledExceptionHandler.cs) logs and tracks each
-callback before attempting a fatal report. Logging and tracking failures are isolated so one does not prevent the
-other. For a fatal exception, a marker in `Exception.Data` suppresses a repeated dialog and report; it does not
-suppress the earlier log and telemetry calls.
+[UnhandledExceptionHandler](../../src/Infrastructure/Diagnostics/UnhandledExceptionHandler.cs) saves a fatal exception
+as a crash report and starts the [reporter](../../src/Host/BravoCrashReporter.cs), then logs it: logging can fail for
+the same reason the process crashed. The process that crashed sends nothing: a crash leaves the machine only when the
+user clicks Send in the reporter, once, for a report saved while telemetry was allowed. If the report cannot be saved
+or the reporter cannot start, a message box shows the error instead. An unobserved task exception is logged and
+tracked; the two failures are isolated so one does not prevent the other.
 
-[ErrorReport](../../src/Infrastructure/Diagnostics/ErrorReport.cs) saves environment diagnostics and the exception to
-`ErrorReport.txt` under the application data folder; the folder is resolved only when a report is saved, because
-`AppEnvironment` initialization can be the failure being reported. A failed save does not prevent the dialog. If the
-task dialog fails, for example because a type it reads failed to initialize, a plain message box shows the error and
-the report path instead. The dialog failure is logged once the bootstrap services are attached, and it never prevents
-the shutdown flush.
-[ErrorReportTaskDialog](../../src/Infrastructure/Diagnostics/ErrorReportTaskDialog.cs) runs on a dedicated STA thread
-and offers copying, closing and, when host telemetry is disabled, sending the exception through telemetry. Automatic
-tracking is an attempt, not confirmation of delivery.
+The folder of the reports is computed without `AppEnvironment`, whose initialization can be the failure being
+reported. The reporter is the same executable started with `--crash-report <file>`: it never claims the application
+instance, so Bravo can start again while it is open, and it never reports its own crashes, which would otherwise
+start another reporter. If its task dialog fails, a message box shows the error and the report path. It waits for a
+send in progress, and for the telemetry to dispose, before it exits: exiting earlier loses the report.
 
-The fatal-handler guard suppresses another fatal arrival while a fatal handler runs. It does not coordinate
-simultaneous crashes or guarantee that the first dialog remains open until the user responds. Unobserved task
-reporting does not acquire that guard, so it cannot suppress a fatal report.
+Only the first fatal exception is handled, and the guard never opens again because the process ends after it. A
+fatal exception on another thread blocks that thread until the process ends: returning would let the runtime end the
+process while the first report is still being written or shown. A fatal exception raised on the thread that is
+already handling one returns at once, and the runtime ends the process. Unobserved task reporting does not acquire
+that guard, so it cannot suppress a fatal report.
 
-If the global handler throws, `GlobalExceptionHandling` calls `Environment.FailFast`. Reporting failures must
+If the global handler throws, `GlobalExceptionDispatcher` calls `Environment.FailFast`. Reporting failures must
 therefore be contained where recovery is possible. Never show UI or wait for a shutdown flush on the unobserved-task
 callback: it runs on the finalizer thread.
 
@@ -111,13 +112,13 @@ names of the server, database or account that failed. Redaction happens where th
 | Way out | Redaction |
 | --- | --- |
 | A copied message; Report issue | `Utils.Obj.anonymize`: the same five tags as [SensitiveTags](../../src/Infrastructure/Telemetry/SensitiveTags.cs), plus the values of personal keys such as `email` and `serverName` |
-| Host telemetry | `DefaultTelemetryProcessor`, through `SensitiveTags` |
-| Crash report: saved file and the dialog's Copy | None yet: the exception text is written as `ToString()` returns it, until the crash report redesign |
+| Host telemetry | `DefaultTelemetryProcessor`, in exception messages, through [SensitiveTextRedactor](../../src/Infrastructure/Telemetry/SensitiveTextRedactor.cs): `SensitiveTags`, then the user profile folders |
+| Crash report: saved file, the dialog's Copy and Send | `SensitiveTextRedactor`, in the message and in the whole exception text, when the report is created |
 | Event Log | None: it stays on the machine and IT support reads it |
 
-Text that leaves the machine, from the store or from an exception, applies `SensitiveTags` or the same tags. The
-two tag lists, in C# and in TypeScript, change together; `SensitiveTagsTests` fails when they differ. Redaction
-removes only tagged text, so copied text can still include report, server and database names.
+The two tag lists, in C# and in TypeScript, change together; `SensitiveTagsTests` fails when they differ.
+`Utils.Obj.anonymize` removes only tagged text and personal keys, so copied text can still include report, server
+and database names, and the user profile folders.
 
 ## Telemetry consent
 
@@ -128,29 +129,29 @@ The `TelemetryEnabled` setter assigns the value it receives, so every caller res
 | --- | --- |
 | Bootstrap | [TelemetryConsent.Resolve](../../src/Infrastructure/Telemetry/TelemetryConsent.cs) gives a configured policy precedence over the user preference |
 | Preferences saved through `UpdateOptions` | [ApplicationController](../../src/Controllers/ApplicationController.cs) resolves the consent the same way before assigning it |
-| Crash dialog Send | Temporarily enables host telemetry, tracks the exception and awaits one flush, then restores the previous value |
+| Crash report | The report records `TelemetryEnabled` at the crash: false before the bootstrap and with `NullTelemetryService`. The reporter creates its own enabled service only to send a report that recorded true |
 
-A disabled service drops new tracked exceptions. If bootstrap supplied `NullTelemetryService`, enabling it or
-requesting a flush still cannot send a report, so the crash handler treats it as no telemetry and the dialog does not
-offer Send.
+A disabled service drops new tracked exceptions.
 
 Never add personal data to telemetry messages or properties. The single-instance pipe name includes the user SID and
 must not be recorded. [DefaultTelemetryProcessor](../../src/Infrastructure/Telemetry/DefaultTelemetryProcessor.cs)
-redacts supported sensitive tags in exception messages; it is not a general sanitizer for arbitrary properties or
-untagged data.
+redacts only the tagged text and the user profile folders of exception messages: it is not a general sanitizer.
 
 ### Flush and shutdown
 
 Why the channel persists telemetry: [ADR 0006](../adr/0006-persistent-telemetry-channel.md).
-`TelemetryService.TrackException` calls the synchronous `Flush`, which moves telemetry into the channel's
-transmission pipeline and returns without waiting for delivery. In the
+`TelemetryService.TrackException` for an exception calls the synchronous `Flush`, which moves telemetry into the
+channel's transmission pipeline and returns without waiting for delivery. The overload for a prepared
+`ExceptionTelemetry`, which the reporter uses, does not: the reporter awaits `FlushAsync`, which then carries the
+report, and a `Flush` before it would block the dialog. In the
 [ServerTelemetryChannel 2.23.0 contract](https://raw.githubusercontent.com/microsoft/ApplicationInsights-dotnet/2.23.0/BASE/src/ServerTelemetryChannel/ServerTelemetryChannel.cs),
 `FlushAsync` succeeds once the data has left the process, sent or persisted locally; success does not prove
-ingestion. Every path that ends the process or confirms a report awaits `FlushAsync` with a bounded timeout:
-`TelemetryService.Dispose`, the fatal handler after the dialog closes, and the crash dialog's Send. Do not replace
-that wait with the synchronous `Flush`.
+ingestion, so the dialog says the report has been sent or will be sent at the next start. Every path that ends the
+process or confirms a report awaits `FlushAsync` with a bounded timeout: `TelemetryService.Dispose` and the
+reporter's Send. Do not replace that wait with the synchronous `Flush`.
 
-`TryFlushBeforeShutdown` blocks the caller and returns `false` only on cancellation; other exceptions propagate.
+`TelemetryService.Dispose` blocks the caller for at most 5 seconds; a flush failure other than cancellation
+propagates.
 
 The channel stores unsent transmissions under `.cache\.telemetry` in the application data folder when it can persist
 them; data still in memory at termination is lost. The

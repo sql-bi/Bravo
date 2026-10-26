@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.Channel;
+using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.ApplicationInsights.WindowsServer.TelemetryChannel;
 
@@ -14,9 +15,15 @@ namespace Sqlbi.Bravo.Infrastructure.Telemetry;
 public interface ITelemetryService : IDisposable
 {
     bool TelemetryEnabled { get; set; }
+
+    /// <summary>
+    /// The session that tracked items belong to, or <see langword="null"/> when nothing can be tracked.
+    /// </summary>
+    string? SessionId { get; }
+
     void TrackException(Exception exception, IDictionary<string, string>? properties = null);
+    void TrackException(ExceptionTelemetry telemetry);
     Task<bool> FlushAsync(CancellationToken cancellationToken = default);
-    bool TryFlushBeforeShutdown(int timeoutMilliseconds);
 }
 
 internal sealed class TelemetryService : ITelemetryService
@@ -42,6 +49,9 @@ internal sealed class TelemetryService : ITelemetryService
         set => _configuration.DisableTelemetry = !value;
     }
 
+    // Read once, when the service is created: a crash must not be the first to read it.
+    public string? SessionId { get; } = TelemetrySessionInfo.SessionId;
+
     public void TrackException(Exception exception, IDictionary<string, string>? properties = null)
     {
         if (exception is AggregateException aggregateException)
@@ -56,12 +66,18 @@ internal sealed class TelemetryService : ITelemetryService
         _client.Flush();
     }
 
+    // Not flushed: the caller awaits FlushAsync, which sends it without blocking and tells whether it was sent.
+    public void TrackException(ExceptionTelemetry telemetry)
+    {
+        _client.TrackException(telemetry);
+    }
+
     public Task<bool> FlushAsync(CancellationToken cancellationToken = default)
     {
         return _client.FlushAsync(cancellationToken);
     }
 
-    public bool TryFlushBeforeShutdown(int timeoutMilliseconds)
+    private void FlushBeforeShutdown(int timeoutMilliseconds)
     {
         // At shutdown, wait for ServerTelemetryChannel to flush telemetry that could
         // otherwise be lost when the process exits. FlushAsync completes once pending
@@ -70,11 +86,11 @@ internal sealed class TelemetryService : ITelemetryService
         using var cts = new CancellationTokenSource(timeoutMilliseconds);
         try
         {
-            return _client.FlushAsync(cts.Token).GetAwaiter().GetResult();
+            _client.FlushAsync(cts.Token).GetAwaiter().GetResult();
         }
         catch (OperationCanceledException)
         {
-            return false;
+            // The bound elapsed: what is still pending is lost.
         }
     }
 
@@ -85,7 +101,7 @@ internal sealed class TelemetryService : ITelemetryService
 
         _disposed = true;
 
-        _ = TryFlushBeforeShutdown(5_000);
+        FlushBeforeShutdown(5_000);
 
         _configuration.Dispose();
 
@@ -95,10 +111,12 @@ internal sealed class TelemetryService : ITelemetryService
 
     public static TelemetryService Create(string connectionString, bool telemetryEnabled, string storageFolder)
     {
+        // The channel does not create its folder, and without one it loses unsent telemetry; created here because the
+        // crash reporter process does not run the startup that creates the other folders.
+        Directory.CreateDirectory(storageFolder);
+
         var channel = new ServerTelemetryChannel
         {
-            // Remark: folder must exist beforehand as the channel does not auto-create it.
-            // If missing, local storage remains disabled and unsent telemetry is lost.
             StorageFolder = storageFolder
         };
 
@@ -118,7 +136,7 @@ internal sealed class TelemetryService : ITelemetryService
 
         // Build clean processor chain with DefaultTelemetryProcessor (disables sampling/filtering).
         var processorChain = configuration.DefaultTelemetrySink.TelemetryProcessorChainBuilder;
-        processorChain.Use(next => new DefaultTelemetryProcessor(next));
+        processorChain.Use(next => new DefaultTelemetryProcessor(next, SensitiveTextRedactor.CreateForCurrentUser()));
         processorChain.Build();
 
         channel.Initialize(configuration);

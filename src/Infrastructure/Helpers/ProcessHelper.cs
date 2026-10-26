@@ -162,17 +162,27 @@ internal static class ProcessHelper
     {
         if (Directory.Exists(path))
         {
-            var startInfo = new ProcessStartInfo
-            {
-                FileName = Environment.ExpandEnvironmentVariables("%WINDIR%\\explorer.exe"),
-                Arguments = $"/root,\"{path}\""
-            };
-
-            using var process = Process.Start(startInfo);
+            StartFileExplorer($"/root,\"{path}\"");
             return true;
         }
 
         return false;
+    }
+
+    /// <summary>
+    /// Opens the folder of a file in File Explorer, with the file selected.
+    /// </summary>
+    public static void SelectInFileExplorer(string filePath) => StartFileExplorer($"/select,\"{filePath}\"");
+
+    private static void StartFileExplorer(string arguments)
+    {
+        var startInfo = new ProcessStartInfo
+        {
+            FileName = Environment.ExpandEnvironmentVariables("%WINDIR%\\explorer.exe"),
+            Arguments = arguments
+        };
+
+        using var process = Process.Start(startInfo);
     }
 
     public static bool OpenShellExecute(string path, bool waitForStarted, [NotNullWhen(true)] out int? processId, CancellationToken cancellationToken = default)

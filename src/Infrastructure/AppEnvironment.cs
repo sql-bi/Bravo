@@ -26,7 +26,7 @@ internal static class AppEnvironment
     public static readonly string ApplicationWebsiteUrl = "https://bravo.bi";
     public static readonly string ApplicationName = "Bravo";
     public static readonly string ApplicationStoreAliasName = "BravoStore";
-    public static readonly string ApplicationMainWindowTitle = "Bravo for Power BI";
+    public const string ApplicationMainWindowTitle = "Bravo for Power BI";
     public static readonly string ApplicationInstanceUniqueName = $"{ApplicationName}-{Guid.NewGuid():D}";
     public static readonly string ApplicationRegistryKeyName = $@"SOFTWARE\{ApplicationManufacturer}\{ApplicationName}";
     public static readonly string ApplicationRegistryApplicationTelemetryEnabledValue = "applicationTelemetryEnabled";

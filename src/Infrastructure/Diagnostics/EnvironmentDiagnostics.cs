@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Runtime.InteropServices;
-using System.Text.Json;
 using System.Text.Json.Serialization;
 using Sqlbi.Bravo.Infrastructure.Telemetry;
 
@@ -13,16 +12,7 @@ internal sealed record EnvironmentDiagnostics(
     [property: JsonPropertyName("process")] ProcessDiagnostics Process,
     [property: JsonPropertyName("os")] OperatingSystemDiagnostics OS,
     [property: JsonPropertyName("runtime")] RuntimeDiagnostics Runtime,
-    [property: JsonPropertyName("components")] ComponentDiagnostics Components)
-{
-    private static readonly JsonSerializerOptions? s_options = new()
-    {
-        WriteIndented = true
-    };
-
-    public string ToJsonString()
-        => JsonSerializer.Serialize(this, s_options);
-}
+    [property: JsonPropertyName("components")] ComponentDiagnostics Components);
 
 internal sealed record ApplicationDiagnostics(
     [property: JsonPropertyName("sessionId")] string SessionId,

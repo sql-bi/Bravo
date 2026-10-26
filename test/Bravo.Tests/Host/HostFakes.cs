@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Sqlbi.Bravo.Infrastructure.SingleInstance;
@@ -25,6 +26,7 @@ internal sealed class FakeTelemetry : ITelemetryService
 
     public int DisposeCount { get; private set; }
     public bool TelemetryEnabled { get; set; }
+    public string? SessionId { get; init; }
 
     public IReadOnlyList<Exception> Exceptions
     {
@@ -36,9 +38,11 @@ internal sealed class FakeTelemetry : ITelemetryService
         lock (_exceptions) _exceptions.Add(exception);
     }
 
-    public Task<bool> FlushAsync(CancellationToken cancellationToken = default) => Task.FromResult(false);
+    public void TrackException(ExceptionTelemetry telemetry)
+    {
+    }
 
-    public bool TryFlushBeforeShutdown(int timeoutMilliseconds) => false;
+    public Task<bool> FlushAsync(CancellationToken cancellationToken = default) => Task.FromResult(false);
 
     public void Dispose() => DisposeCount++;
 }

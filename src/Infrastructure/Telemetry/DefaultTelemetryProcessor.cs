@@ -4,14 +4,10 @@ using Microsoft.ApplicationInsights.Extensibility;
 
 namespace Sqlbi.Bravo.Infrastructure.Telemetry;
 
-internal sealed class DefaultTelemetryProcessor : ITelemetryProcessor
+internal sealed class DefaultTelemetryProcessor(ITelemetryProcessor next, SensitiveTextRedactor redactor) : ITelemetryProcessor
 {
-    private readonly ITelemetryProcessor _next;
-
-    public DefaultTelemetryProcessor(ITelemetryProcessor next)
-    {
-        _next = next;
-    }
+    private readonly ITelemetryProcessor _next = next;
+    private readonly SensitiveTextRedactor _redactor = redactor;
 
     public void Process(ITelemetry item)
     {
@@ -23,14 +19,10 @@ internal sealed class DefaultTelemetryProcessor : ITelemetryProcessor
         _next.Process(item);
     }
 
-    private static void RedactExceptionTelemetry(ExceptionTelemetry telemetry)
+    // Only the details are sent: the message of the telemetry is the message of its first details.
+    private void RedactExceptionTelemetry(ExceptionTelemetry telemetry)
     {
-        // Redact Message first since it overwrites ExceptionDetailsInfoList[0].Message
-        if (!string.IsNullOrEmpty(telemetry.Message))
-            telemetry.Message = SensitiveTags.Redact(telemetry.Message);
-
-        // Redact the serialized exception details — these are what AI actually transmits
         foreach (var info in telemetry.ExceptionDetailsInfoList)
-            info.Message = SensitiveTags.Redact(info.Message);
+            info.Message = _redactor.Redact(info.Message);
     }
 }
