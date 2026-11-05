@@ -86,15 +86,68 @@ internal static class NetworkHelper
         return null;
     }
 
-    public static IEnumerable<(IPEndPoint EndPoint, TcpState State, int ProcessId)> GetTcpConnections(Func<(IPEndPoint EndPoint, TcpState State, int ProcessId), bool> predicate)
+    /// <summary>
+    /// Returns the loopback endpoint on which the process listens for TCP connections, or <see langword="null"/> if there is none
+    /// </summary>
+    public static IPEndPoint? GetLoopbackListenerEndPoint(int processId)
     {
-        var ipv4Connections = GetTcpConnections<Iphlpapi.MIB_TCPROW_OWNER_PID, Iphlpapi.MIB_TCPTABLE_OWNER_PID>(AddressFamily.InterNetwork).Select((r) => (r.LocalEndPoint, r.TcpState, r.ProcessId));
-        foreach (var connection in ipv4Connections.Where(predicate))
-            yield return connection;
+        return SelectLoopbackListener(GetTcpConnections(), processId);
+    }
 
-        var ipv6Connections = GetTcpConnections<Iphlpapi.MIB_TCP6ROW_OWNER_PID, Iphlpapi.MIB_TCP6TABLE_OWNER_PID>(AddressFamily.InterNetworkV6).Select((r) => (r.LocalEndPoint, r.TcpState, r.ProcessId));
-        foreach (var connection in ipv6Connections.Where(predicate))
-            yield return connection;
+    internal static IPEndPoint? SelectLoopbackListener(IEnumerable<TcpConnection> connections, int processId)
+    {
+        // The first LISTEN row wins and ends the search; without one, the first unconnected row in table order is taken,
+        // because some Windows builds do not report LISTEN for a listening socket (see IsUnconnected)
+        IPEndPoint? firstUnconnectedEndPoint = null;
+
+        foreach (var connection in connections)
+        {
+            if (connection.ProcessId != processId || !IPAddress.IsLoopback(connection.LocalEndPoint.Address))
+            {
+                continue;
+            }
+
+            if (connection.State == TcpState.Listen)
+            {
+                return connection.LocalEndPoint;
+            }
+
+            if (IsUnconnected(connection.RemoteEndPoint))
+            {
+                firstUnconnectedEndPoint ??= connection.LocalEndPoint;
+            }
+        }
+
+        return firstUnconnectedEndPoint;
+
+        // Windows 11 with KB5127936 (builds 26200.9818 and 26300.9818) lists a listening socket in the TCP table with
+        // state 0 or CLOSED instead of LISTEN, and in the TCP_TABLE_OWNER_PID_LISTENER table with FIN_WAIT_1, although
+        // it still accepts connections; netstat leaves the row out and Get-NetTCPConnection shows an empty State. The
+        // remote endpoint is still the unspecified address with port 0, which a connected socket never has, so it
+        // identifies a listener whatever the state. Microsoft has not acknowledged the regression yet:
+        // - https://github.com/dotnet/runtime/issues/136672, reproduced by the .NET team below the managed API
+        // - https://github.com/DaxStudio/DaxStudio/pull/1507, the same fix in DAX Studio
+        static bool IsUnconnected(IPEndPoint remoteEndPoint)
+        {
+            var isAnyAddress = remoteEndPoint.Address.Equals(IPAddress.Any) || remoteEndPoint.Address.Equals(IPAddress.IPv6Any);
+            return isAnyAddress && remoteEndPoint.Port == 0;
+        }
+    }
+
+    // Lazy, so that the IPv6 table is read only when the IPv4 table has no LISTEN row for the process
+    private static IEnumerable<TcpConnection> GetTcpConnections()
+    {
+        var ipv4Connections = GetTcpConnections<Iphlpapi.MIB_TCPROW_OWNER_PID, Iphlpapi.MIB_TCPTABLE_OWNER_PID>(AddressFamily.InterNetwork);
+        foreach (var row in ipv4Connections)
+        {
+            yield return new TcpConnection(row.LocalEndPoint, row.RemoteEndPoint, row.TcpState, row.ProcessId);
+        }
+
+        var ipv6Connections = GetTcpConnections<Iphlpapi.MIB_TCP6ROW_OWNER_PID, Iphlpapi.MIB_TCP6TABLE_OWNER_PID>(AddressFamily.InterNetworkV6);
+        foreach (var row in ipv6Connections)
+        {
+            yield return new TcpConnection(row.LocalEndPoint, row.RemoteEndPoint, row.TcpState, row.ProcessId);
+        }
     }
 
     private static TRow[] GetTcpConnections<TRow, TTable>(AddressFamily addressFamily)
@@ -159,4 +212,6 @@ internal static class NetworkHelper
 
         throw new NetworkInformationException(errorCode: (int)retval);
     }
+
+    internal readonly record struct TcpConnection(IPEndPoint LocalEndPoint, IPEndPoint RemoteEndPoint, TcpState State, int ProcessId);
 }
