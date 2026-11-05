@@ -54,7 +54,6 @@
             if (open)
             {
                 connection.Open();
-                connection.ChangeDatabase(Database.Name);
             }
 
             return connection;
@@ -89,11 +88,10 @@
 
     internal class AdomdConnectionWrapper : IDisposable
     {
-        private AdomdConnectionWrapper(string connectionString, string databaseName)
+        private AdomdConnectionWrapper(string connectionString)
         {
             Connection = new AdomdConnection(connectionString);
             ProcessHelper.RunOnUISynchronizationContext(() => Connection.Open());
-            Connection.ChangeDatabase(databaseName);
 
             // TOPNSKIP is supported since Analysis Services 2016 version 13 despite being an undocumented feature (not included in MDSCHEMA_FUNCTIONS) 
             IsDaxFunctionTopNSkipSupported = Version.TryParse(Connection.ServerVersion, out var version) && version >= new Version(13, 0);
@@ -136,20 +134,16 @@
 
         public static AdomdConnectionWrapper ConnectTo(PBICloudDataset dataset, string accessToken)
         {
-            BravoUnexpectedException.ThrowIfNull(dataset.ExternalDatabaseName);
-
             var connectionString = ConnectionStringHelper.BuildFor(dataset, accessToken);
-            var connection = new AdomdConnectionWrapper(connectionString, dataset.ExternalDatabaseName);
+            var connection = new AdomdConnectionWrapper(connectionString);
 
             return connection;
         }
 
         public static AdomdConnectionWrapper ConnectTo(PBIDesktopReport report)
         {
-            BravoUnexpectedException.ThrowIfNull(report.DatabaseName);
-
             var connectionString = ConnectionStringHelper.BuildFor(report);
-            var connection = new AdomdConnectionWrapper(connectionString, report.DatabaseName);
+            var connection = new AdomdConnectionWrapper(connectionString);
 
             return connection;
         }
