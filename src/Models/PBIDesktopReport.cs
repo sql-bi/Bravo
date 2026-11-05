@@ -9,8 +9,6 @@
     using System.ComponentModel.DataAnnotations;
     using System.Diagnostics;
     using System.Linq;
-    using System.Net;
-    using System.Net.NetworkInformation;
     using System.Text.Json.Serialization;
     using SSAS = Microsoft.AnalysisServices;
     using TOM = Microsoft.AnalysisServices.Tabular;
@@ -117,15 +115,15 @@
 
                 var ssasPID = ssasPIDs.Single();
 
-                var ssasConnection = NetworkHelper.GetTcpConnections((c) => c.ProcessId == ssasPID && c.State == TcpState.Listen && IPAddress.IsLoopback(c.EndPoint.Address)).FirstOrDefault();
-                if (ssasConnection == default)
+                var ssasEndPoint = NetworkHelper.GetLoopbackListenerEndPoint(ssasPID);
+                if (ssasEndPoint is null)
                 {
                     connectionMode = PBIDesktopReportConnectionMode.UnsupportedAnalysisServicesConnectionNotFound;
                     return;
                 }
 
                 using var server = new TOM.Server();
-                var connectionString = ConnectionStringHelper.BuildFor(ssasConnection.EndPoint);
+                var connectionString = ConnectionStringHelper.BuildFor(ssasEndPoint);
                 try
                 {
                     server.Connect(connectionString);
@@ -163,7 +161,7 @@
                 // Do we need this check ?? (e.g UnsupportedDatabaseNotYetReadyOrUnloaded)
                 // if (database.IsLoaded == false) { }
 
-                serverName = $"{ NetworkHelper.Localhost }:{ ssasConnection.EndPoint.Port }"; // we're using 'localhost:<port>' instead of '<ipaddress>:<port>' in order to allow both ipv4 and ipv6 connections 
+                serverName = $"{ NetworkHelper.Localhost }:{ ssasEndPoint.Port }"; // we're using 'localhost:<port>' instead of '<ipaddress>:<port>' in order to allow both ipv4 and ipv6 connections 
                 databaseName = database.Name;
                 connectionMode = PBIDesktopReportConnectionMode.Supported;
             }
