@@ -88,7 +88,8 @@ not exist yet: the table names the backlog item that creates them.
 ## User interface
 
 `web/` holds the user interface of the previous implementation, moved unchanged: TypeScript and LESS, bundled by
-webpack. Its commands run in `web/` and need Node.js with npm.
+webpack. Its commands run in `web/` and need Node.js 26 with npm: `package.json` pins that line in `devEngines`,
+and npm stops with an error on another one.
 
 | Task | Command |
 | --- | --- |

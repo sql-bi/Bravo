@@ -4,6 +4,13 @@
   "author": "SQLBI",
   "license": "MIT",
   "private": true,
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "version": "26.x",
+      "onFail": "error"
+    }
+  },
   "scripts": {
     "build": "npm run build:Release",
     "build:Release": "webpack --mode production --env production --env configuration=Release",
