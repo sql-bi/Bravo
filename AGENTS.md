@@ -23,8 +23,22 @@ its structure as a model.
 
 ## How the work is done on this branch
 
-- Commit to `develop-vnext` and push it. No pull request and no feature branch. Never commit to `main`, never
-  force-push.
+- The implementation of a component is written on a work branch, reviewed there by the maintainer, and only
+  then brought to `develop-vnext`:
+  1. One work branch is open at a time. It is named `vnext/<backlog id>-<slug>`, for example
+     `vnext/r-02-build-rules`, starts from the tip of `develop-vnext` and lives in a worktree of its own: the
+     main folder stays on `develop-vnext`.
+  2. The work branch never tracks `develop-vnext`. Publish it with `git push -u origin <branch>` and check its
+     upstream before any other push.
+  3. The maintainer reviews `develop-vnext...<branch>`. The fixes of the review are further commits on the
+     same branch.
+  4. After the maintainer has accepted the branch, `develop-vnext` is fast-forwarded to its tip
+     (`git merge --ff-only`) and pushed; the work branch is deleted, locally and on the remote, with its
+     worktree. A rejected branch is deleted as well, not kept.
+- A change without implementation, such as a backlog update, goes to `develop-vnext` directly, and not while a
+  work branch is open: a fast-forward needs `develop-vnext` to stand still. If it moved all the same, the
+  commits of the work branch are cherry-picked in order.
+- No pull request. Never commit to `main`, never force-push.
 - One logical change per commit, message in English, Conventional Commits.
 - Build and tests pass before a push. This branch has no CI workflow yet (backlog R-03): until one runs on
   every push, the local build and tests are the gate. Once it does, a red CI is fixed before anything else.
@@ -32,9 +46,10 @@ its structure as a model.
   1. requirements, from the behavior on `main` and the open issues;
   2. how well-known, well-engineered projects and the official documentation solve the problem;
   3. two or three options with a recommendation;
-  4. the maintainer's decision, as an ADR of at most 400 words;
+  4. the maintainer's decision, as an ADR of at most 400 words, the first commit of the work branch;
   5. the implementation with its tests;
-  6. a report of what was proven and what must be checked by hand.
+  6. a report of what was proven and what must be checked by hand;
+  7. the maintainer's review of the work branch, then its integration.
 - One component is in progress at a time. The features do not change: an idea for a new one goes to the end of
   the backlog.
 - Nothing stays only on a local machine at the end of a session.
