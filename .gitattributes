@@ -1,0 +1,7 @@
+# Text files are stored with LF line endings, whatever the settings of the machine that commits them. Git decides
+# what is text from the content; every file tracked when this rule was added was already stored that way.
+* text=auto
+
+# C# sources are checked out with CRLF on every system, as .editorconfig declares: a build on Linux reads the
+# same bytes as a build on Windows.
+*.cs text eol=crlf
