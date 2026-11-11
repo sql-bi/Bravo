@@ -24,7 +24,7 @@ internal static class AppEnvironment
     public static readonly string ApiAuthenticationTokenTemplateDevelopment = Cryptography.GenerateSimpleToken();
     public static readonly string ApplicationManufacturer = "SQLBI";
     public static readonly string ApplicationWebsiteUrl = "https://bravo.bi";
-    public static readonly string ApplicationName = "Bravo";
+    public const string ApplicationName = "Bravo";
     public static readonly string ApplicationStoreAliasName = "BravoStore";
     public const string ApplicationMainWindowTitle = "Bravo for Power BI";
     public static readonly string ApplicationInstanceUniqueName = $"{ApplicationName}-{Guid.NewGuid():D}";
@@ -58,7 +58,7 @@ internal static class AppEnvironment
 
         SessionId = currentProcess.SessionId;
 
-        ApplicationDataPath = Path.Combine(Environment.GetFolderPath(DeploymentMode == AppDeploymentMode.Packaged ? Environment.SpecialFolder.UserProfile : Environment.SpecialFolder.LocalApplicationData, Environment.SpecialFolderOption.DoNotVerify), ApplicationName);
+        ApplicationDataPath = ApplicationDataFolder.GetPath();
         ApplicationTempPath = Path.Combine(ApplicationDataPath, ".temp");
         ApplicationCachePath = Path.Combine(ApplicationDataPath, ".cache");
         UserSettingsFilePath = Path.Combine(ApplicationDataPath, "usersettings.json");

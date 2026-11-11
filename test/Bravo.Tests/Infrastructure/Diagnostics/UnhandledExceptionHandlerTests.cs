@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Threading;
 using Bravo.Tests.Host;
 using Bravo.Tests.Infrastructure.Diagnostics.CrashReporting;
 using Microsoft.Extensions.Logging;
@@ -15,8 +14,6 @@ namespace Bravo.Tests.Infrastructure.Diagnostics;
 
 public sealed class UnhandledExceptionHandlerTests : IDisposable
 {
-    private static readonly DateTimeOffset s_now = new(2026, 10, 22, 8, 30, 15, TimeSpan.Zero);
-
     private readonly TemporaryFolder _folder = new();
     private readonly string _directoryPath;
     private readonly ICrashReporterLauncher _launcher = Substitute.For<ICrashReporterLauncher>();
@@ -41,7 +38,7 @@ public sealed class UnhandledExceptionHandlerTests : IDisposable
     }
 
     [Fact]
-    public void Handle_FatalAfterAttachServices_RecordsTheTelemetryConsentAndTheSessionAndLogs()
+    public void Handle_FatalAfterAttachServices_RecordsTheTelemetryConsentTheSessionAndTheTimeAndLogs()
     {
         var loggerFactory = new FakeLoggerFactory();
         var exception = new InvalidOperationException("fatal");
@@ -54,6 +51,7 @@ public sealed class UnhandledExceptionHandlerTests : IDisposable
         var report = LoadSingleReport(out _);
         Assert.True(report.TelemetryAllowed);
         Assert.Equal(TestCrashReports.SessionId, report.SessionId);
+        Assert.Equal(TestCrashReports.Timestamp, report.Timestamp);
         Assert.Same(exception, Assert.Single(loggerFactory.Entries).Exception);
     }
 
@@ -88,7 +86,7 @@ public sealed class UnhandledExceptionHandlerTests : IDisposable
         var loggerFactory = new FakeLoggerFactory();
         var telemetry = new FakeTelemetry { TelemetryEnabled = true };
         var exception = new InvalidOperationException("fatal");
-        _launcher.When((launcher) => launcher.Launch(Arg.Any<string>())).Throw(new InvalidOperationException("cannot start"));
+        MakeTheLauncherFail();
         var handler = CreateHandler();
 
         using var attachment = handler.AttachServices(loggerFactory, telemetry);
@@ -104,13 +102,9 @@ public sealed class UnhandledExceptionHandlerTests : IDisposable
     {
         var loggerFactory = new FakeLoggerFactory();
         var exception = new InvalidOperationException("fatal");
-        _launcher.When((launcher) => launcher.Launch(Arg.Any<string>())).Throw(new InvalidOperationException("cannot start"));
+        MakeTheLauncherFail();
         IReadOnlyList<FakeLogEntry> entriesWhenShown = [];
-        var handler = new UnhandledExceptionHandler(
-            new CrashReportStore(_directoryPath),
-            _launcher,
-            new FixedTimeProvider(s_now),
-            (_) => entriesWhenShown = loggerFactory.Entries);
+        var handler = CreateHandler(showFallback: (_) => entriesWhenShown = loggerFactory.Entries);
 
         using var attachment = handler.AttachServices(loggerFactory, new FakeTelemetry());
         handler.Handle(exception, ExceptionOrigin.AppDomain);
@@ -132,7 +126,7 @@ public sealed class UnhandledExceptionHandlerTests : IDisposable
         Assert.Equal(LogLevel.Error, Assert.Single(loggerFactory.Entries).Level);
         telemetry.Received(1).TrackException(exception, Arg.Is<IDictionary<string, string>>(
             (properties) => properties["ExceptionOrigin"] == nameof(ExceptionOrigin.UnobservedTask)));
-        telemetry.DidNotReceive().FlushAsync(Arg.Any<CancellationToken>());
+        telemetry.DidNotReceive().FlushAsync(Arg.Any<TimeSpan>());
         Assert.False(Directory.Exists(_directoryPath));
     }
 
@@ -163,9 +157,16 @@ public sealed class UnhandledExceptionHandlerTests : IDisposable
         Assert.Single(loggerFactory.Entries);
     }
 
-    private UnhandledExceptionHandler CreateHandler()
+    private UnhandledExceptionHandler CreateHandler(Action<Exception>? showFallback = null)
     {
-        return new UnhandledExceptionHandler(new CrashReportStore(_directoryPath), _launcher, new FixedTimeProvider(s_now), _fallbacks.Add);
+        var timeProvider = new FixedTimeProvider(TestCrashReports.Timestamp);
+
+        return new UnhandledExceptionHandler(new CrashReportStore(_directoryPath), _launcher, timeProvider, showFallback ?? _fallbacks.Add);
+    }
+
+    private void MakeTheLauncherFail()
+    {
+        _launcher.When((launcher) => launcher.Launch(Arg.Any<string>())).Throw(new InvalidOperationException("cannot start"));
     }
 
     private CrashReport LoadSingleReport(out string reportPath)

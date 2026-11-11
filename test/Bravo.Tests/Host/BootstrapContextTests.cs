@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using Bravo.Tests.Infrastructure.Diagnostics;
 using Bravo.Tests.Infrastructure.Policies;
 using Microsoft.Extensions.Logging;
 using NSubstitute;

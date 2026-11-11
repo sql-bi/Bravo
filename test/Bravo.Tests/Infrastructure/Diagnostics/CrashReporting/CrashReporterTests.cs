@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.ApplicationInsights.DataContracts;
 using NSubstitute;
@@ -14,8 +13,6 @@ namespace Bravo.Tests.Infrastructure.Diagnostics.CrashReporting;
 
 public sealed class CrashReporterTests : IDisposable
 {
-    private static readonly DateTimeOffset s_now = new(2026, 10, 22, 8, 30, 15, TimeSpan.Zero);
-
     private readonly TemporaryFolder _folder = new();
     private readonly CrashReportStore _store;
     private readonly ITelemetryService _telemetry = Substitute.For<ITelemetryService>();
@@ -26,7 +23,7 @@ public sealed class CrashReporterTests : IDisposable
     {
         _store = new CrashReportStore(Path.Combine(_folder.Path, "crashes"));
         _telemetryFactory.Create(Arg.Any<bool>()).Returns(_telemetry);
-        _telemetry.FlushAsync(Arg.Any<CancellationToken>()).Returns(true);
+        _telemetry.FlushAsync(Arg.Any<TimeSpan>()).Returns(true);
     }
 
     public void Dispose() => _folder.Dispose();
@@ -34,7 +31,7 @@ public sealed class CrashReporterTests : IDisposable
     [Fact]
     public void Run_WithConsent_SendsNothingUntilTheUserAsks()
     {
-        var reportPath = _store.Save(TestCrashReports.Create(s_now));
+        var reportPath = _store.Save(TestCrashReports.Create());
 
         CreateReporter().Run(reportPath);
 
@@ -45,7 +42,7 @@ public sealed class CrashReporterTests : IDisposable
     [Fact]
     public async Task Run_WithConsent_SendsTheReportWhenTheUserAsks()
     {
-        var reportPath = _store.Save(TestCrashReports.Create(s_now));
+        var reportPath = _store.Save(TestCrashReports.Create());
         CreateReporter().Run(reportPath);
 
         var sent = await _dialog.Presentation!.Send!();
@@ -58,7 +55,7 @@ public sealed class CrashReporterTests : IDisposable
     [Fact]
     public void Run_WithConsent_SendsOnceWhenAskedAgain()
     {
-        var reportPath = _store.Save(TestCrashReports.Create(s_now));
+        var reportPath = _store.Save(TestCrashReports.Create());
         CreateReporter().Run(reportPath);
         var send = _dialog.Presentation!.Send!;
 
@@ -72,7 +69,7 @@ public sealed class CrashReporterTests : IDisposable
     [Fact]
     public async Task Run_WithConsentWhenTelemetryCannotBeCreated_FailsTheSend()
     {
-        var reportPath = _store.Save(TestCrashReports.Create(s_now));
+        var reportPath = _store.Save(TestCrashReports.Create());
         _telemetryFactory.Create(Arg.Any<bool>()).Throws(new InvalidOperationException("No telemetry."));
         CreateReporter().Run(reportPath);
 
@@ -82,7 +79,7 @@ public sealed class CrashReporterTests : IDisposable
     [Fact]
     public void Run_WithoutConsent_OffersNoWayToSend()
     {
-        var reportPath = _store.Save(TestCrashReports.Create(s_now) with { TelemetryAllowed = false });
+        var reportPath = _store.Save(TestCrashReports.Create() with { TelemetryAllowed = false });
 
         CreateReporter().Run(reportPath);
 
@@ -92,7 +89,7 @@ public sealed class CrashReporterTests : IDisposable
     [Fact]
     public void Run_UnreadableReport_ShowsItWithNothingToSend()
     {
-        var reportPath = _store.Save(TestCrashReports.Create(s_now));
+        var reportPath = _store.Save(TestCrashReports.Create());
         File.WriteAllText(reportPath, "{ not json");
 
         CreateReporter().Run(reportPath);
@@ -105,7 +102,7 @@ public sealed class CrashReporterTests : IDisposable
     public void Run_PrunesTheStoreAfterTheDialogCloses()
     {
         var reportPaths = Enumerable.Range(1, CrashReportStore.RetainedCount + 1)
-            .Select((minute) => _store.Save(TestCrashReports.Create(s_now.AddMinutes(minute))))
+            .Select((minute) => _store.Save(TestCrashReports.Create(TestCrashReports.Timestamp.AddMinutes(minute))))
             .ToArray();
 
         CreateReporter().Run(reportPaths[^1]);
@@ -116,9 +113,9 @@ public sealed class CrashReporterTests : IDisposable
     [Fact]
     public void Run_SendInProgressWhenTheDialogCloses_WaitsForItBeforeDisposingTheTelemetry()
     {
-        var reportPath = _store.Save(TestCrashReports.Create(s_now));
+        var reportPath = _store.Save(TestCrashReports.Create());
         var flush = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-        _telemetry.FlushAsync(Arg.Any<CancellationToken>()).Returns(flush.Task);
+        _telemetry.FlushAsync(Arg.Any<TimeSpan>()).Returns(flush.Task);
         bool? flushedWhenDisposed = null;
         _telemetry.When((telemetry) => telemetry.Dispose()).Do((_) => flushedWhenDisposed = flush.Task.IsCompleted);
 
@@ -135,8 +132,8 @@ public sealed class CrashReporterTests : IDisposable
     [Fact]
     public void Run_SendThatFailed_EndsNormallyAndDisposesTheTelemetry()
     {
-        var reportPath = _store.Save(TestCrashReports.Create(s_now));
-        _telemetry.FlushAsync(Arg.Any<CancellationToken>()).Returns(Task.FromException<bool>(new InvalidOperationException("Send failed.")));
+        var reportPath = _store.Save(TestCrashReports.Create());
+        _telemetry.FlushAsync(Arg.Any<TimeSpan>()).Returns(Task.FromException<bool>(new InvalidOperationException("Send failed.")));
         var dialog = new SendingDialog();
 
         CreateReporter(dialog).Run(reportPath);

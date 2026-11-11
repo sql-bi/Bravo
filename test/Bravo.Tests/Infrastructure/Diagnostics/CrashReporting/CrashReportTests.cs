@@ -9,7 +9,6 @@ namespace Bravo.Tests.Infrastructure.Diagnostics.CrashReporting;
 
 public class CrashReportTests
 {
-    private static readonly DateTimeOffset s_now = new(2026, 10, 22, 8, 30, 15, TimeSpan.Zero);
     private static readonly SensitiveTextRedactor s_redactor = TestRedactors.Create();
 
     [Fact]
@@ -31,7 +30,7 @@ public class CrashReportTests
 
         Assert.Equal(TestCrashReports.SessionId, report.SessionId);
         Assert.True(report.TelemetryAllowed);
-        Assert.Equal(s_now, report.Timestamp);
+        Assert.Equal(TestCrashReports.Timestamp, report.Timestamp);
     }
 
     [Fact]
@@ -58,6 +57,6 @@ public class CrashReportTests
 
     private static CrashReport Create(Exception exception)
     {
-        return CrashReport.Create(exception, TestCrashReports.SessionId, telemetryAllowed: true, s_now, s_redactor);
+        return CrashReport.Create(exception, TestCrashReports.SessionId, telemetryAllowed: true, TestCrashReports.Timestamp, s_redactor);
     }
 }

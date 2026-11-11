@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.Extensions.Logging;
@@ -42,7 +41,7 @@ internal sealed class FakeTelemetry : ITelemetryService
     {
     }
 
-    public Task<bool> FlushAsync(CancellationToken cancellationToken = default) => Task.FromResult(false);
+    public Task<bool> FlushAsync(TimeSpan timeout) => Task.FromResult(false);
 
     public void Dispose() => DisposeCount++;
 }

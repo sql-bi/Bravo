@@ -1,5 +1,5 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
+using Sqlbi.Bravo.Infrastructure;
 using Sqlbi.Bravo.Infrastructure.Diagnostics;
 using Sqlbi.Bravo.Infrastructure.Diagnostics.CrashReporting;
 using Sqlbi.Bravo.Infrastructure.Telemetry;
@@ -18,10 +18,7 @@ internal static class BravoCrashReporter
     /// <summary>
     /// The folder of the crash reports, computed without AppEnvironment, whose initialization can be the crash.
     /// </summary>
-    public static string DirectoryPath { get; } = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData, Environment.SpecialFolderOption.DoNotVerify),
-        "Bravo",
-        "crashes");
+    public static string DirectoryPath { get; } = Path.Combine(ApplicationDataFolder.GetPath(), "crashes");
 
     /// <returns>
     /// <see langword="true"/> when the arguments asked for the reporter, which has run and the process must exit.

@@ -8,8 +8,6 @@ namespace Bravo.Tests.Infrastructure.Diagnostics.CrashReporting;
 
 public sealed class CrashReportStoreTests : IDisposable
 {
-    private static readonly DateTimeOffset s_now = new(2026, 10, 22, 8, 30, 15, TimeSpan.Zero);
-
     private readonly TemporaryFolder _folder = new();
     private readonly string _directoryPath;
     private readonly CrashReportStore _store;
@@ -37,7 +35,7 @@ public sealed class CrashReportStoreTests : IDisposable
     [Fact]
     public void TryLoad_ReadsTheReportThatWasSaved()
     {
-        var saved = TestCrashReports.Create(s_now);
+        var saved = TestCrashReports.Create();
 
         Assert.True(_store.TryLoad(_store.Save(saved), out var loaded));
 
@@ -47,7 +45,7 @@ public sealed class CrashReportStoreTests : IDisposable
     [Fact]
     public void Save_WritesTheTextAsItIs()
     {
-        var text = File.ReadAllText(_store.Save(TestCrashReports.Create(s_now)));
+        var text = File.ReadAllText(_store.Save(TestCrashReports.Create()));
 
         Assert.Contains("\"version\": \"1.1.0+abcdef\"", text);
     }
@@ -67,7 +65,7 @@ public sealed class CrashReportStoreTests : IDisposable
     [Fact]
     public void TryLoad_ReturnsFalseForANullMember()
     {
-        var filePath = _store.Save(TestCrashReports.Create(s_now));
+        var filePath = _store.Save(TestCrashReports.Create());
         File.WriteAllText(filePath, File.ReadAllText(filePath).Replace("\"exceptionMessage\": \"outer\"", "\"exceptionMessage\": null"));
 
         Assert.False(_store.TryLoad(filePath, out _));
@@ -89,7 +87,7 @@ public sealed class CrashReportStoreTests : IDisposable
     public void Prune_KeepsTheNewestReports()
     {
         var paths = Enumerable.Range(1, CrashReportStore.RetainedCount + 2)
-            .Select((minute) => _store.Save(TestCrashReports.Create(s_now.AddMinutes(minute))))
+            .Select((minute) => _store.Save(TestCrashReports.Create(TestCrashReports.Timestamp.AddMinutes(minute))))
             .ToArray();
 
         _store.Prune();

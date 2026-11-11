@@ -7,6 +7,10 @@ internal static class TestCrashReports
 {
     public const string SessionId = "8f9e0c1a-1111-2222-3333-444455556666";
 
+    public static readonly DateTimeOffset Timestamp = new(2026, 10, 22, 8, 30, 15, TimeSpan.Zero);
+
+    public static CrashReport Create() => Create(Timestamp);
+
     public static CrashReport Create(DateTimeOffset timestamp)
     {
         return new CrashReport(

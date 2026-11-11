@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Threading;
 using System.Threading.Tasks;
 using Sqlbi.Bravo.Infrastructure.Telemetry;
 
@@ -57,15 +56,7 @@ internal sealed class CrashReporter(CrashReportStore store, ITelemetryServiceFac
         _telemetry = telemetry;
         telemetry.TrackException(CrashReportTelemetry.Create(report));
 
-        try
-        {
-            using var timeout = new CancellationTokenSource(s_sendTimeout);
-            return await telemetry.FlushAsync(timeout.Token).ConfigureAwait(false);
-        }
-        catch (OperationCanceledException)
-        {
-            return false;
-        }
+        return await telemetry.FlushAsync(s_sendTimeout).ConfigureAwait(false);
     }
 
     // The dialog can close before the send completes; the process must not end while it is in progress. The telemetry

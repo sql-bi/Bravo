@@ -23,13 +23,20 @@ public interface ITelemetryService : IDisposable
 
     void TrackException(Exception exception, IDictionary<string, string>? properties = null);
     void TrackException(ExceptionTelemetry telemetry);
-    Task<bool> FlushAsync(CancellationToken cancellationToken = default);
+
+    /// <returns>
+    /// <see langword="true"/> when what was tracked has been sent or stored to be sent later; <see langword="false"/>
+    /// when it has not, or the timeout elapsed first.
+    /// </returns>
+    Task<bool> FlushAsync(TimeSpan timeout);
 }
 
 internal sealed class TelemetryService : ITelemetryService
 {
     public static readonly string DefaultStorageFolder =
         Path.Combine(AppEnvironment.ApplicationCachePath, ".telemetry");
+
+    private static readonly TimeSpan s_shutdownFlushTimeout = TimeSpan.FromSeconds(5);
 
     private readonly TelemetryConfiguration _configuration;
     private readonly ITelemetryChannel _channel;
@@ -72,25 +79,16 @@ internal sealed class TelemetryService : ITelemetryService
         _client.TrackException(telemetry);
     }
 
-    public Task<bool> FlushAsync(CancellationToken cancellationToken = default)
+    public async Task<bool> FlushAsync(TimeSpan timeout)
     {
-        return _client.FlushAsync(cancellationToken);
-    }
-
-    private void FlushBeforeShutdown(int timeoutMilliseconds)
-    {
-        // At shutdown, wait for ServerTelemetryChannel to flush telemetry that could
-        // otherwise be lost when the process exits. FlushAsync completes once pending
-        // telemetry has been sent or persisted to local storage. The wait is bounded
-        // because telemetry must never prevent the application from terminating.
-        using var cts = new CancellationTokenSource(timeoutMilliseconds);
+        using var cancellation = new CancellationTokenSource(timeout);
         try
         {
-            _client.FlushAsync(cts.Token).GetAwaiter().GetResult();
+            return await _client.FlushAsync(cancellation.Token).ConfigureAwait(false);
         }
         catch (OperationCanceledException)
         {
-            // The bound elapsed: what is still pending is lost.
+            return false;
         }
     }
 
@@ -101,7 +99,11 @@ internal sealed class TelemetryService : ITelemetryService
 
         _disposed = true;
 
-        FlushBeforeShutdown(5_000);
+        // At shutdown, wait for ServerTelemetryChannel to flush telemetry that could
+        // otherwise be lost when the process exits. FlushAsync completes once pending
+        // telemetry has been sent or persisted to local storage. The wait is bounded
+        // because telemetry must never prevent the application from terminating.
+        _ = FlushAsync(s_shutdownFlushTimeout).GetAwaiter().GetResult();
 
         _configuration.Dispose();
 

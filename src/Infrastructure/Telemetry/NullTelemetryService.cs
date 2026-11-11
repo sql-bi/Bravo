@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.ApplicationInsights.DataContracts;
 
@@ -15,6 +14,6 @@ internal sealed class NullTelemetryService : ITelemetryService
     public string? SessionId => null;
     public void TrackException(Exception exception, IDictionary<string, string>? properties = null) { }
     public void TrackException(ExceptionTelemetry telemetry) { }
-    public Task<bool> FlushAsync(CancellationToken cancellationToken = default) => Task.FromResult(false);
+    public Task<bool> FlushAsync(TimeSpan timeout) => Task.FromResult(false);
     public void Dispose() { }
 }

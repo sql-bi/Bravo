@@ -5,6 +5,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Sqlbi.Bravo.Infrastructure.Extensions;
 
 namespace Sqlbi.Bravo.Host;
 
@@ -40,7 +41,7 @@ internal static class CrashTest
 
     internal static CrashTestScenario? Extract(IReadOnlyList<string> args, out string[] remainingArgs)
     {
-        var index = args.ToList().FindIndex((argument) => string.Equals(argument, Option, StringComparison.OrdinalIgnoreCase));
+        var index = args.ToList().FindIndex((argument) => argument.EqualsI(Option));
         if (index < 0)
         {
             remainingArgs = [.. args];

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Drawing;
 using System.Windows.Forms;
 
@@ -13,7 +12,6 @@ public sealed class TaskDialogBuilder
     private static readonly Lazy<TaskDialogIcon?> s_currentProcessIcon = new(LoadCurrentProcessIcon);
 
     private readonly TaskDialogPage _page;
-    private IntPtr _ownerHandle = IntPtr.Zero;
     private TaskDialogStartupLocation _startupLocation = TaskDialogStartupLocation.CenterOwner;
 
     /// <summary>
@@ -102,16 +100,6 @@ public sealed class TaskDialogBuilder
     }
 
     /// <summary>
-    /// Enables clickable links in the dialog text and footnote, and invokes the specified callback, with the page the link belongs to, when a link is clicked.
-    /// </summary>
-    public TaskDialogBuilder WithEnableLinks(Action<TaskDialogPage, string> linkClicked)
-    {
-        _page.EnableLinks = true;
-        _page.LinkClicked += (_, e) => linkClicked(_page, e.LinkHref);
-        return this;
-    }
-
-    /// <summary>
     /// Sets the dialog to automatically size to its content. If false, the dialog will have a fixed size.
     /// </summary>
     public TaskDialogBuilder WithSizeToContent(bool sizeToContent = true)
@@ -126,25 +114,6 @@ public sealed class TaskDialogBuilder
     public TaskDialogBuilder WithDefaultButton(TaskDialogButton button)
     {
         _page.DefaultButton = button;
-        return this;
-    }
-
-    /// <summary>
-    /// Sets the window that owns the dialog to the main window of the current process.
-    /// </summary>
-    public TaskDialogBuilder WithCurrentProcessMainWindowOwner()
-    {
-        using var process = Process.GetCurrentProcess();
-
-        return WithOwner(process.MainWindowHandle);
-    }
-
-    /// <summary>
-    /// Sets the window that owns the dialog. Without an owner the dialog is top-level.
-    /// </summary>
-    public TaskDialogBuilder WithOwner(IntPtr ownerHandle)
-    {
-        _ownerHandle = ownerHandle;
         return this;
     }
 
@@ -178,7 +147,7 @@ public sealed class TaskDialogBuilder
     /// </summary>
     public TaskDialogButton Show()
     {
-        return TaskDialog.ShowDialog(_ownerHandle, _page, _startupLocation);
+        return TaskDialog.ShowDialog(_page, _startupLocation);
     }
 
     private static TaskDialogIcon? LoadCurrentProcessIcon()

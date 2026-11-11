@@ -41,8 +41,11 @@ user clicks Send in the reporter, once, for a report saved while telemetry was a
 or the reporter cannot start, a message box shows the error instead. An unobserved task exception is logged and
 tracked; the two failures are isolated so one does not prevent the other.
 
-The folder of the reports is computed without `AppEnvironment`, whose initialization can be the failure being
-reported. The reporter is the same executable started with `--crash-report <file>`: it never claims the application
+The crash path, from saving the report to starting the reporter or showing the message box, never uses
+`AppEnvironment`, and a test checks it: when its initialization is the failure, or blocks on the thread that crashed,
+using it would leave no report. The reports are kept in `crashes` under the application data folder, which
+[ApplicationDataFolder](../../src/Infrastructure/ApplicationDataFolder.cs) computes for `AppEnvironment` too. The
+reporter is the same executable started with `--crash-report <file>`: it never claims the application
 instance, so Bravo can start again while it is open, and it never reports its own crashes, which would otherwise
 start another reporter. If its task dialog fails, a message box shows the error and the report path. It waits for a
 send in progress, and for the telemetry to dispose, before it exits: exiting earlier loses the report.
