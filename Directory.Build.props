@@ -49,6 +49,14 @@
     <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
   </PropertyGroup>
 
+  <!--
+    The analyzer options of every project. The file is passed by name: one called .globalconfig is also read from
+    every folder above a project, so a worktree inside another checkout would get two of them.
+  -->
+  <ItemGroup>
+    <GlobalAnalyzerConfigFiles Include="$(MSBuildThisFileDirectory)CodeAnalysis.globalconfig" />
+  </ItemGroup>
+
   <!-- The symbols that no project may use, read by the analyzer that Directory.Packages.props adds everywhere. -->
   <ItemGroup>
     <AdditionalFiles Include="$(MSBuildThisFileDirectory)BannedSymbols.txt" Link="BannedSymbols.txt" />

@@ -84,7 +84,7 @@ not exist yet: the table names the backlog item that creates them.
 | `artifacts/` | Build and publish output of every project and the release bundle of the user interface, ignored by git | Written by the builds |
 | `Bravo.slnx`, `Directory.Build.props`, `Directory.Packages.props` | The solution and the build rules of every .NET project | Exist |
 | `global.json`, `nuget.config`, `version.json`, `.editorconfig` | The .NET SDK and the mode of `dotnet test`, the package source, the version, the code style | Exist |
-| `BannedSymbols.txt`, `.globalconfig`, `.gitattributes` | The symbols no project may use, the analyzer options, the line endings | Exist |
+| `BannedSymbols.txt`, `CodeAnalysis.globalconfig`, `.gitattributes` | The symbols no project may use, the analyzer options, the line endings | Exist |
 
 ## Build and tests
 

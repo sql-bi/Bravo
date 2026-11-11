@@ -1,4 +1,5 @@
-# Analyzer options of every project. A file with this name applies to the projects of this folder and below.
+# Analyzer options of every project. Directory.Build.props passes this file to the compiler: a file named
+# .globalconfig would also be read from every folder above a project, such as the checkout around a worktree.
 is_global = true
 
 # The banned symbols (BannedSymbols.txt) are searched in hand-written code only: source generators such as
