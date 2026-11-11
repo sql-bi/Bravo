@@ -1,5 +1,7 @@
 # Versioning
 
+> This document describes the implementation on `main`; the paths it names exist there.
+
 Bravo has a single Semantic Version, declared in `version.json` and computed by Nerdbank.GitVersioning (NBGV).
 
 ## Source of truth

@@ -1,5 +1,7 @@
 # 0002. One UpgradeCode for the per-user and the per-machine MSI
 
+> This ADR describes the implementation on `main`; the paths it names exist there.
+
 - Status: Accepted
 - Date: 2026-10-19
 

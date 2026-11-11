@@ -1,5 +1,7 @@
 # Architecture and runtime boundaries
 
+> This document describes the implementation on `main`; the paths it names exist there.
+
 ## Composition and resource ownership
 
 [Program.Main](../../src/Program.cs) resolves the single-instance role right after installing the exception handler,

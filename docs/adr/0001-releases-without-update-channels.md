@@ -1,5 +1,7 @@
 # 0001. Releases without update channels
 
+> This ADR describes the implementation on `main`; the paths it names exist there.
+
 - Status: Accepted
 - Date: 2026-10-19
 

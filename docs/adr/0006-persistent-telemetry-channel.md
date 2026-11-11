@@ -1,5 +1,7 @@
 # 0006. Telemetry is sent through a persistent channel
 
+> This ADR describes the implementation on `main`; the paths it names exist there.
+
 - Status: Accepted
 - Date: 2026-10-20
 

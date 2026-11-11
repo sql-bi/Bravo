@@ -1,5 +1,7 @@
 # 0005. A policy read failure stops the startup
 
+> This ADR describes the implementation on `main`; the paths it names exist there.
+
 - Status: Accepted
 - Date: 2026-10-20
 

@@ -1,5 +1,7 @@
 # 0004. Bootstrap services are created outside the container
 
+> This ADR describes the implementation on `main`; the paths it names exist there.
+
 - Status: Accepted
 - Date: 2026-10-20
 

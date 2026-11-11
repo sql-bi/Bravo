@@ -1,5 +1,7 @@
 # 0003. Fatal exceptions end the process after a report
 
+> This ADR describes the implementation on `main`; the paths it names exist there.
+
 - Status: Accepted
 - Date: 2026-10-20
 

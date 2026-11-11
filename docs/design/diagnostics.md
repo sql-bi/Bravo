@@ -1,5 +1,7 @@
 # Diagnostics
 
+> This document describes the implementation on `main`; the paths it names exist there.
+
 Exception reporting in the .NET host. The frontend has a separate
 [telemetry client](../../src/Scripts/controllers/telemetry.ts); host flush and crash handling do not control it.
 
