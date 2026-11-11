@@ -13,9 +13,12 @@ Exit: the layout is decided and applied and the previous implementation has left
 in its own folder, builds the same bundle as before; a violation planted on purpose fails CI.
 
 - [ ] R-02 Build rules and guardrails. Hypothesis: strict `Directory.Build.props`, central package management,
-  architecture tests with no exceptions. Explore: analyzer sets; libraries for architecture tests.
+  architecture tests with no exceptions. Explore: analyzer sets; libraries for architecture tests. Also to
+  settle: the Node.js version of the user interface build, which nothing pins; where the release bundle is
+  written, since the default `web/dist` is not ignored by git.
 - [ ] R-03 Continuous integration. Hypothesis: GitHub Actions on every push, Windows for everything and Linux
-  for the portable projects. Explore: workflows of open-source .NET desktop projects.
+  for the portable projects. Explore: workflows of open-source .NET desktop projects. Also to settle: whether
+  CI audits the dependencies of the user interface; the `.azure/` line left in `.github/CODEOWNERS`.
 
 ## T2 Skeleton
 
@@ -81,7 +84,8 @@ Exit, for each feature: the same results as `main` on the sample models; its row
 - [ ] F-01 Analyze Model.
 - [ ] F-02 Format DAX.
 - [ ] F-03 Export Data.
-- [ ] F-04 Manage Dates.
+- [ ] F-04 Manage Dates. To settle: where the date templates live; `README.md` links them at their path on
+  `main`.
 - [ ] F-05 Template Development. Explore: the contract with the Visual Studio Code extension.
 
 ## T7 Replacement of `main`
