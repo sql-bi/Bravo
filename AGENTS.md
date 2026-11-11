@@ -83,7 +83,7 @@ not exist yet: the table names the backlog item that creates them.
 | `docs/` | Specification, backlog, ADRs, and the design of the previous implementation | Exists |
 | `artifacts/` | Build and publish output of every project and the release bundle of the user interface, ignored by git | Written by the builds |
 | `Bravo.slnx`, `Directory.Build.props`, `Directory.Packages.props` | The solution and the build rules of every .NET project | Exist |
-| `global.json`, `nuget.config`, `version.json`, `.editorconfig` | The .NET SDK, the package source, the version, the code style | Exist |
+| `global.json`, `nuget.config`, `version.json`, `.editorconfig` | The .NET SDK and the mode of `dotnet test`, the package source, the version, the code style | Exist |
 | `BannedSymbols.txt`, `.globalconfig`, `.gitattributes` | The symbols no project may use, the analyzer options, the line endings | Exist |
 
 ## Build and tests
@@ -94,8 +94,14 @@ The commands run at the root of the repository and need the .NET SDK that `globa
 | --- | --- |
 | Restore the packages exactly as the lock files record them | `dotnet restore Bravo.slnx --locked-mode` |
 | Build | `dotnet build Bravo.slnx -c Release` |
-| Test | `dotnet test Bravo.slnx -c Release` |
+| Test | `dotnet test --solution Bravo.slnx -c Release` |
+| Test one class | `dotnet test --solution Bravo.slnx -c Release --filter-class <namespace>.<class>` |
+| Test one method | `dotnet test --solution Bravo.slnx -c Release --filter-method <namespace>.<class>.<method>` |
 | Update the lock files after a package change | `dotnet restore Bravo.slnx`, then commit each changed `packages.lock.json` |
+
+The tests are xUnit v3 on Microsoft.Testing.Platform, the mode of `dotnet test` that `global.json` selects. Its
+options are not those of VSTest: the solution is passed with `--solution`, and a run in which no test ran, such
+as a filter that matches nothing, fails with exit code 8.
 
 A warning fails the build ([ADR 0009](docs/adr/0009-rules-enforced-by-the-build.md)). Where the rules live:
 

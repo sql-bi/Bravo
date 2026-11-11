@@ -12,16 +12,14 @@
   </ItemGroup>
 
   <!--
-    Tests. dotnet test runs them through VSTest, so xUnit is the variant without Microsoft.Testing.Platform:
-    on the .NET 10 SDK the plain xunit.v3 4.x package runs only in the Microsoft.Testing.Platform mode of dotnet test.
+    Tests: xUnit v3 on Microsoft.Testing.Platform, the mode of dotnet test that global.json selects. In that
+    mode no project needs the Visual Studio runner or Microsoft.NET.Test.Sdk.
   -->
   <ItemGroup>
     <PackageVersion Include="Microsoft.Extensions.TimeProvider.Testing" Version="11.0.0" />
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.12.0" />
     <PackageVersion Include="NSubstitute" Version="6.2.0" />
     <PackageVersion Include="NSubstitute.Analyzers.CSharp" Version="1.0.17" />
-    <PackageVersion Include="xunit.runner.visualstudio" Version="4.0.1" />
-    <PackageVersion Include="xunit.v3.mtp-off" Version="4.0.3" />
+    <PackageVersion Include="xunit.v3" Version="4.0.3" />
   </ItemGroup>
 
   <!-- The logging generator, for a fixture of the architecture tests. Aligned with the .NET 10 runtime. -->

@@ -14,8 +14,9 @@ in its own folder, builds the same bundle as before; a violation planted on purp
 
 - [ ] R-03 Continuous integration. Hypothesis: GitHub Actions on every push, Windows for everything and Linux
   for the portable projects; restore in locked mode, MSBuild warnings as errors, a check that fails on NuGet
-  audit warnings. Explore: workflows of open-source .NET desktop projects. Also to settle: whether CI audits
-  the dependencies of the user interface; the `.azure/` line left in `.github/CODEOWNERS`.
+  audit warnings; test filters and coverage with the options of the Microsoft.Testing.Platform mode of
+  `dotnet test`, not the VSTest ones. Explore: workflows of open-source .NET desktop projects. Also to settle:
+  whether CI audits the dependencies of the user interface; the `.azure/` line left in `.github/CODEOWNERS`.
 
 ## T2 Skeleton
 
