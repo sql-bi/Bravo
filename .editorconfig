@@ -25,10 +25,11 @@ generated_code = true
 
 # C# files
 [*.cs]
-# Encoding (*)
-# No end_of_line: the repository stores most .cs files with LF and relies on core.autocrlf; declaring crlf
-# makes editors rewrite every line of a file checked out with LF.
+# (*) Encoding, line ending and the line length that editors draw. .gitattributes checks .cs files out with
+# CRLF on every system, so the line ending is the same in every working tree.
 charset = utf-8-bom
+end_of_line = crlf
+max_line_length = 120
 
 # New line preferences
 csharp_new_line_before_open_brace = all
@@ -48,23 +49,23 @@ csharp_indent_switch_labels = true
 csharp_indent_labels = one_less_than_current
 
 # Modifier preferences
-csharp_preferred_modifier_order = public,private,protected,internal,file,static,extern,new,virtual,abstract,sealed,override,readonly,unsafe,required,volatile,async:suggestion
+csharp_preferred_modifier_order = public,private,protected,internal,file,static,extern,new,virtual,abstract,sealed,override,readonly,unsafe,required,volatile,async:warning # (*) warning
 
 # avoid this. unless absolutely necessary
-dotnet_style_qualification_for_field = false:suggestion
-dotnet_style_qualification_for_property = false:suggestion
-dotnet_style_qualification_for_method = false:suggestion
-dotnet_style_qualification_for_event = false:suggestion
+dotnet_style_qualification_for_field = false:warning    # (*) warning
+dotnet_style_qualification_for_property = false:warning # (*) warning
+dotnet_style_qualification_for_method = false:warning   # (*) warning
+dotnet_style_qualification_for_event = false:warning    # (*) warning
 
 # Types: use keywords instead of BCL types, and permit var only when the type is clear
-csharp_style_var_for_built_in_types = true:suggestion # (*) upstream: false
-csharp_style_var_when_type_is_apparent = true:none    # (*) upstream: false
-csharp_style_var_elsewhere = true:suggestion          # (*) upstream: false
-dotnet_style_predefined_type_for_locals_parameters_members = true:suggestion
-dotnet_style_predefined_type_for_member_access = true:suggestion
+csharp_style_var_for_built_in_types = true:warning    # (*) upstream: false; warning
+csharp_style_var_when_type_is_apparent = true:warning # (*) upstream: false; warning
+csharp_style_var_elsewhere = true:warning             # (*) upstream: false; warning
+dotnet_style_predefined_type_for_locals_parameters_members = true:warning # (*) warning
+dotnet_style_predefined_type_for_member_access = true:warning             # (*) warning
 
 # name all constant fields using PascalCase
-dotnet_naming_rule.constant_fields_should_be_pascal_case.severity = suggestion
+dotnet_naming_rule.constant_fields_should_be_pascal_case.severity = warning # (*) warning
 dotnet_naming_rule.constant_fields_should_be_pascal_case.symbols  = constant_fields
 dotnet_naming_rule.constant_fields_should_be_pascal_case.style    = pascal_case_style
 dotnet_naming_symbols.constant_fields.applicable_kinds   = field
@@ -72,7 +73,7 @@ dotnet_naming_symbols.constant_fields.required_modifiers = const
 dotnet_naming_style.pascal_case_style.capitalization = pascal_case
 
 # static fields should have s_ prefix
-dotnet_naming_rule.static_fields_should_have_prefix.severity = suggestion
+dotnet_naming_rule.static_fields_should_have_prefix.severity = warning # (*) warning
 dotnet_naming_rule.static_fields_should_have_prefix.symbols  = static_fields
 dotnet_naming_rule.static_fields_should_have_prefix.style    = static_prefix_style
 dotnet_naming_symbols.static_fields.applicable_kinds   = field
@@ -82,7 +83,7 @@ dotnet_naming_style.static_prefix_style.required_prefix = s_
 dotnet_naming_style.static_prefix_style.capitalization = camel_case
 
 # internal and private fields should be _camelCase
-dotnet_naming_rule.camel_case_for_private_internal_fields.severity = suggestion
+dotnet_naming_rule.camel_case_for_private_internal_fields.severity = warning # (*) warning
 dotnet_naming_rule.camel_case_for_private_internal_fields.symbols  = private_internal_fields
 dotnet_naming_rule.camel_case_for_private_internal_fields.style    = camel_case_underscore_style
 dotnet_naming_symbols.private_internal_fields.applicable_kinds = field
@@ -91,50 +92,50 @@ dotnet_naming_style.camel_case_underscore_style.required_prefix = _
 dotnet_naming_style.camel_case_underscore_style.capitalization = camel_case
 
 # Code style defaults
-csharp_using_directive_placement = outside_namespace:suggestion
+csharp_using_directive_placement = outside_namespace:warning # (*) warning
 dotnet_sort_system_directives_first = true
-csharp_prefer_braces = true:silent
+csharp_prefer_braces = true:warning # (*) warning: braces on every block
 csharp_preserve_single_line_blocks = true:none
 csharp_preserve_single_line_statements = false:none
-csharp_prefer_static_local_function = true:suggestion
+csharp_prefer_static_local_function = true:warning # (*) warning
 csharp_prefer_simple_using_statement = false:none
 csharp_style_prefer_switch_expression = true:suggestion
-dotnet_style_readonly_field = true:suggestion
-csharp_style_namespace_declarations = file_scoped:suggestion  # (*) added
+dotnet_style_readonly_field = true:warning # (*) warning
+csharp_style_namespace_declarations = file_scoped:warning # (*) added; warning
 
 # Expression-level preferences
-dotnet_style_object_initializer = true:suggestion
-dotnet_style_collection_initializer = true:suggestion
+dotnet_style_object_initializer = true:warning     # (*) warning
+dotnet_style_collection_initializer = true:warning # (*) warning
 dotnet_style_prefer_collection_expression = true # (*) upstream: when_types_exactly_match
-dotnet_style_explicit_tuple_names = true:suggestion
+dotnet_style_explicit_tuple_names = true:warning   # (*) warning
 dotnet_style_coalesce_expression = true:suggestion
 dotnet_style_null_propagation = true:suggestion # (*) upstream: true
-dotnet_style_prefer_is_null_check_over_reference_equality_method = true:suggestion
+dotnet_style_prefer_is_null_check_over_reference_equality_method = true:warning # (*) warning
 dotnet_style_prefer_inferred_tuple_names = true:suggestion
 dotnet_style_prefer_inferred_anonymous_type_member_names = true:suggestion
 dotnet_style_prefer_auto_properties = true:suggestion
-dotnet_style_prefer_conditional_expression_over_assignment = true:silent
-dotnet_style_prefer_conditional_expression_over_return = true:silent
+dotnet_style_prefer_conditional_expression_over_assignment = false:silent # (*) upstream: true; readable before short
+dotnet_style_prefer_conditional_expression_over_return = false:silent     # (*) upstream: true; readable before short
 csharp_prefer_simple_default_expression = true:suggestion
 
-# Expression-bodied members
-csharp_style_expression_bodied_methods = true:silent
-csharp_style_expression_bodied_constructors = true:silent
-csharp_style_expression_bodied_operators = true:silent
-csharp_style_expression_bodied_properties = true:silent
-csharp_style_expression_bodied_indexers = true:silent
-csharp_style_expression_bodied_accessors = true:silent
+# Expression-bodied members (*) block bodies for methods, one-line expression bodies for the rest
+csharp_style_expression_bodied_methods = false:warning
+csharp_style_expression_bodied_constructors = false:warning
+csharp_style_expression_bodied_local_functions = false:warning
+csharp_style_expression_bodied_operators = when_on_single_line:warning
+csharp_style_expression_bodied_properties = when_on_single_line:warning
+csharp_style_expression_bodied_indexers = when_on_single_line:warning
+csharp_style_expression_bodied_accessors = when_on_single_line:warning
 csharp_style_expression_bodied_lambdas = true:silent
-csharp_style_expression_bodied_local_functions = true:silent
 
 # Pattern matching
-csharp_style_pattern_matching_over_is_with_cast_check = true:suggestion
-csharp_style_pattern_matching_over_as_with_null_check = true:suggestion
-csharp_style_inlined_variable_declaration = true:suggestion
+csharp_style_pattern_matching_over_is_with_cast_check = true:warning # (*) warning
+csharp_style_pattern_matching_over_as_with_null_check = true:warning # (*) warning
+csharp_style_inlined_variable_declaration = true:warning             # (*) warning
 
 # Null checking preferences
 csharp_style_throw_expression = true:suggestion
-csharp_style_conditional_delegate_call = true:suggestion
+csharp_style_conditional_delegate_call = true:warning # (*) warning
 
 # Other features
 csharp_style_prefer_index_operator = false:none
@@ -176,6 +177,29 @@ dotnet_code_quality.api_surface = all # (*) added
 
 # License header
 #file_header_template = (*) removed
+
+# (*) Rules that are silent or off by default, raised so that the build fails on them
+# IDE0005: unused using directives. The build reports it only with GenerateDocumentationFile (Directory.Build.props).
+dotnet_diagnostic.IDE0005.severity = warning
+# IDE0055: formatting
+dotnet_diagnostic.IDE0055.severity = warning
+# IDE1006: naming. The severity of the naming rules above is honored by editors only.
+dotnet_diagnostic.IDE1006.severity = warning
+# CA1852: seal internal types. By default the rule is off in an assembly that has InternalsVisibleTo.
+dotnet_diagnostic.CA1852.severity = warning
+dotnet_code_quality.CA1852.ignore_internalsvisibleto = true
+# CA1416: a Windows-only API called from code that also runs on other systems
+dotnet_diagnostic.CA1416.severity = warning
+# CA1848, CA2254, CA1727: logging through [LoggerMessage], constant templates, PascalCase placeholders
+dotnet_diagnostic.CA1848.severity = warning
+dotnet_diagnostic.CA2254.severity = warning
+dotnet_diagnostic.CA1727.severity = warning
+# CA2016: pass the CancellationToken on
+dotnet_diagnostic.CA2016.severity = warning
+
+# (*) Test code: method names with underscores (Method_Scenario_Expected)
+[tests/**.cs]
+dotnet_diagnostic.CA1707.severity = none
 
 # C++ Files
 [*.{cpp,h,in}]
