@@ -77,7 +77,7 @@ The top-level folders separate content by kind ([ADR 0008](adr/0008-repository-l
 | `installer/` | The installer, outside the product source |
 | `policies/` | The group policy templates, which the installer ships in a subfolder of the installation |
 | `docs/` | This specification, the backlog and the ADRs |
-| `artifacts/` | Build and publish output of every project, not versioned |
+| `artifacts/` | Build and publish output of every project and the release bundle of the user interface, not versioned |
 
 One solution, `Bravo.slnx`, sits at the root with the build files shared by every project. A component with
 its own toolchain gets its own top-level folder; a .NET one goes into `src/` and `tests/`.

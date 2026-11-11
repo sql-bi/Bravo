@@ -54,6 +54,8 @@ module.exports = (env, argv) => {
       extensions: ['.tsx', '.ts', '.js'],
     },
     output: {
+      // Without --output-path the bundle goes to artifacts/web at the repository root, which git ignores.
+      path: path.resolve(__dirname, "..", "artifacts", "web"),
       filename: "./js/main.js"
     },
     watchOptions: {

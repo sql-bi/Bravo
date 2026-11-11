@@ -81,7 +81,7 @@ not exist yet: the table names the backlog item that creates them.
 | `installer/` | The installer | Created by backlog D-01 |
 | `policies/` | The group policy templates: `bravo.admx`, `sqlbi.admx`, `en-US/` | Exists |
 | `docs/` | Specification, backlog, ADRs, and the design of the previous implementation | Exists |
-| `artifacts/` | Build and publish output of every project, ignored by git | Written by the build once backlog R-02 sets the output layout |
+| `artifacts/` | Build and publish output of every project and the release bundle of the user interface, ignored by git | Written by the builds |
 | `Bravo.slnx`, `Directory.Build.props`, `Directory.Packages.props` | The solution and the build rules of every .NET project | Created by backlog R-02 |
 | `global.json`, `nuget.config`, `version.json`, `.editorconfig` | The .NET SDK, the package source, the version, the code style | Exist |
 
@@ -94,13 +94,14 @@ and npm stops with an error on another one.
 | Task | Command |
 | --- | --- |
 | Install the dependencies of the lockfile | `npm ci` |
-| Release bundle into a folder | `npm run build:Release -- --output-path <folder>` |
+| Release bundle into `artifacts/web` | `npm run build:Release` |
+| Release bundle into another folder | `npm run build:Release -- --output-path <folder>` |
 | Development bundle into `web/wwwroot` | `npm run build:UI` |
 | Development bundle, rebuilt at every change | `npm run watch:UI` |
 
 A bundle is `js/main.js` and `css/main.css`; the release build adds `js/main.js.LICENSE.txt`. Every build type
 checks the TypeScript code. `web/wwwroot` holds the static files that go with the bundle (`index.html`, icons,
 fonts, images); git ignores the `js` and `css` folders that the development build adds there. Without
-`--output-path` webpack writes to `web/dist`, which git does not ignore.
+`--output-path` webpack writes to `artifacts/web` at the root of the repository, which git ignores.
 
 Until the first .NET project exists this is the only build in the tree, and the user interface has no tests.
