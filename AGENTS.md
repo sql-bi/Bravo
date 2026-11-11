@@ -8,9 +8,9 @@ Bravo for Power BI is being redesigned on this branch, `develop-vnext`, toward v
 ([ADR 0007](docs/adr/0007-redesign-on-a-development-branch.md)). Take the next item from
 [docs/backlog.md](docs/backlog.md).
 
-The code under `src/`, `test/` and `installer/` is the previous implementation. It is the reference for today's
-behavior and leaves this tree when the repository layout is applied (backlog R-01). Do not extend it and do not
-take its structure as a model.
+The previous implementation, the .NET host with its tests and its installer, is not in the tree of this branch.
+It is the reference for today's behavior and stays on `main`: read it with `git show main:<path>`. Do not take
+its structure as a model.
 
 ## Read first
 
@@ -26,8 +26,8 @@ take its structure as a model.
 - Commit to `develop-vnext` and push it. No pull request and no feature branch. Never commit to `main`, never
   force-push.
 - One logical change per commit, message in English, Conventional Commits.
-- Build and tests pass before a push. CI does not run on pushes to this branch yet (backlog R-03): until it
-  does, the local build and tests are the gate. Once it does, a red CI is fixed before anything else.
+- Build and tests pass before a push. This branch has no CI workflow yet (backlog R-03): until one runs on
+  every push, the local build and tests are the gate. Once it does, a red CI is fixed before anything else.
 - A component is not written before the maintainer has accepted its design. The cycle:
   1. requirements, from the behavior on `main` and the open issues;
   2. how well-known, well-engineered projects and the official documentation solve the problem;
@@ -53,22 +53,38 @@ Which rule applies to new code, in order of precedence:
 3. The Microsoft [.NET design guidelines](https://learn.microsoft.com/dotnet/standard/design-guidelines/) for
    names and API design.
 
-## The previous implementation
+## Repository layout
 
-A WinForms shell hosts a WebView2 view for the UI and an in-process ASP.NET Core server on loopback for the API
-that view calls. The .NET host lives in `src/`, the TypeScript frontend in `src/Scripts` and is built into
-`src/wwwroot`. It still builds on this branch until backlog R-01 removes it; the same code is on `main`.
+The top-level folders separate content by kind ([ADR 0008](docs/adr/0008-repository-layout-by-kind.md)). Some do
+not exist yet: the table names the backlog item that creates them.
+
+| Path | Content | State |
+| --- | --- | --- |
+| `src/` | The .NET projects of the host, and nothing else | Created with the first .NET project (backlog R-02 or H-01) |
+| `tests/` | One test project per project of `src/`, at the mirrored path | Created with the first .NET project (backlog R-02 or H-01) |
+| `web/` | The TypeScript user interface, with its own `package.json` and lockfile | Exists |
+| `installer/` | The installer | Created by backlog D-01 |
+| `policies/` | The group policy templates: `bravo.admx`, `sqlbi.admx`, `en-US/` | Exists |
+| `docs/` | Specification, backlog, ADRs, and the design of the previous implementation | Exists |
+| `artifacts/` | Build and publish output of every project, ignored by git | Written by the build once backlog R-02 sets the output layout |
+| `Bravo.slnx`, `Directory.Build.props`, `Directory.Packages.props` | The solution and the build rules of every .NET project | Created by backlog R-02 |
+| `global.json`, `nuget.config`, `version.json`, `.editorconfig` | The .NET SDK, the package source, the version, the code style | Exist |
+
+## User interface
+
+`web/` holds the user interface of the previous implementation, moved unchanged: TypeScript and LESS, bundled by
+webpack. Its commands run in `web/` and need Node.js with npm.
 
 | Task | Command |
 | --- | --- |
-| Build and test | `build.cmd` |
-| Build | `dotnet build Bravo.sln` |
-| Test | `dotnet test test/Bravo.Tests/Bravo.Tests.csproj` |
-| One test | `dotnet test test/Bravo.Tests/Bravo.Tests.csproj --filter "FullyQualifiedName~<Name>"` |
+| Install the dependencies of the lockfile | `npm ci` |
+| Release bundle into a folder | `npm run build:Release -- --output-path <folder>` |
+| Development bundle into `web/wwwroot` | `npm run build:UI` |
+| Development bundle, rebuilt at every change | `npm run watch:UI` |
 
-The .NET build runs `npm install` and webpack for the frontend. Add `-p:ClientAssetsEnabled=false` to skip
-that step: it needs no Node.js and is considerably faster, but it also skips type checking of the frontend.
+A bundle is `js/main.js` and `css/main.css`; the release build adds `js/main.js.LICENSE.txt`. Every build type
+checks the TypeScript code. `web/wwwroot` holds the static files that go with the bundle (`index.html`, icons,
+fonts, images); git ignores the `js` and `css` folders that the development build adds there. Without
+`--output-path` webpack writes to `web/dist`, which git does not ignore.
 
-`global.json` pins the SDK. The project targets `net10.0-windows`, `win-x64`. The build stamps the version from
-git history, so a clone or a CI checkout must be complete: with a shallow clone the build fails or produces a
-wrong version.
+Until the first .NET project exists this is the only build in the tree, and the user interface has no tests.

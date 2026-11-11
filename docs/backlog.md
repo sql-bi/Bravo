@@ -12,9 +12,6 @@ criterion can be checked on `develop-vnext`.
 Exit: the layout is decided and applied and the previous implementation has left the tree; the user interface,
 in its own folder, builds the same bundle as before; a violation planted on purpose fails CI.
 
-- [~] R-01 Repository layout. Hypothesis: `src/` and `tests/` for .NET, one folder for each other component
-  (user interface, installer, policy templates, later a Visual Studio Code extension), build output in
-  `artifacts/`. Explore: well-known monorepos with .NET, TypeScript and an installer; npm workspaces.
 - [ ] R-02 Build rules and guardrails. Hypothesis: strict `Directory.Build.props`, central package management,
   architecture tests with no exceptions. Explore: analyzer sets; libraries for architecture tests.
 - [ ] R-03 Continuous integration. Hypothesis: GitHub Actions on every push, Windows for everything and Linux

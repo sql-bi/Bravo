@@ -1,4 +1,4 @@
-# <img style="display:inline-block; height:35px; width:45px" src="./src/wwwroot/images/bravo.svg"> Bravo for Power BI
+# <img style="display:inline-block; height:35px; width:45px" src="./web/wwwroot/images/bravo.svg"> Bravo for Power BI
 
 Bravo is your trusted mate who helps you create a Power BI model!
 
@@ -24,9 +24,9 @@ Bravo could also run on Windows 7 SP1 and Windows Server 2012, even though it is
 ### User Interface Translations
 
 You can [fork the Bravo repository](https://github.com/sql-bi/Bravo/fork) and create a pull request adding or updating a localization file.
-This folder contains the localization files for the user interface: https://github.com/sql-bi/Bravo/tree/main/src/Scripts/model/i18n.
+This folder contains the localization files for the user interface: [web/model/i18n](web/model/i18n).
 You can copy the `en.ts` file into another language (use the ISO code) and translate the English strings to the corresponding language.
-In case you are adding a translation for a new language then you must also to include it among the existing languages in the https://github.com/sql-bi/Bravo/blob/main/src/Scripts/model/i18n/locales.ts file.
+In case you are adding a translation for a new language then you must also to include it among the existing languages in the [web/model/i18n/locales.ts](web/model/i18n/locales.ts) file.
 
 ### Dates Template Translations
 

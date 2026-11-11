@@ -63,7 +63,24 @@ files, the name of the single-instance pipe, the arguments of the external tool 
 
 ## Architecture decided so far
 
-Nothing beyond ADR 0007. Each component adds its part here when its ADR is accepted.
+Each component adds its part here when its ADR is accepted.
+
+### Repository layout
+
+The top-level folders separate content by kind ([ADR 0008](adr/0008-repository-layout-by-kind.md)):
+
+| Path | Content |
+| --- | --- |
+| `src/` | The .NET projects of the host, and nothing else |
+| `tests/` | One test project per project of `src/`, at the mirrored path, with its own build rules |
+| `web/` | The TypeScript user interface, self-contained, with its own `package.json` and lockfile |
+| `installer/` | The installer, outside the product source |
+| `policies/` | The group policy templates, which the installer ships in a subfolder of the installation |
+| `docs/` | This specification, the backlog and the ADRs |
+| `artifacts/` | Build and publish output of every project, not versioned |
+
+One solution, `Bravo.slnx`, sits at the root with the build files shared by every project. A component with
+its own toolchain gets its own top-level folder; a .NET one goes into `src/` and `tests/`.
 
 ## Open questions
 
