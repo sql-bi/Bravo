@@ -75,15 +75,41 @@ not exist yet: the table names the backlog item that creates them.
 
 | Path | Content | State |
 | --- | --- | --- |
-| `src/` | The .NET projects of the host, and nothing else | Created with the first .NET project (backlog R-02 or H-01) |
-| `tests/` | One test project per project of `src/`, at the mirrored path | Created with the first .NET project (backlog R-02 or H-01) |
+| `src/` | The .NET projects of the host, and nothing else | Created with the first project of the host (backlog H-01) |
+| `tests/` | One test project per project of `src/`, at the mirrored path, and the architecture tests | Exists |
 | `web/` | The TypeScript user interface, with its own `package.json` and lockfile | Exists |
 | `installer/` | The installer | Created by backlog D-01 |
 | `policies/` | The group policy templates: `bravo.admx`, `sqlbi.admx`, `en-US/` | Exists |
 | `docs/` | Specification, backlog, ADRs, and the design of the previous implementation | Exists |
 | `artifacts/` | Build and publish output of every project and the release bundle of the user interface, ignored by git | Written by the builds |
-| `Bravo.slnx`, `Directory.Build.props`, `Directory.Packages.props` | The solution and the build rules of every .NET project | Created by backlog R-02 |
+| `Bravo.slnx`, `Directory.Build.props`, `Directory.Packages.props` | The solution and the build rules of every .NET project | Exist |
 | `global.json`, `nuget.config`, `version.json`, `.editorconfig` | The .NET SDK, the package source, the version, the code style | Exist |
+| `BannedSymbols.txt`, `.globalconfig`, `.gitattributes` | The symbols no project may use, the analyzer options, the line endings | Exist |
+
+## Build and tests
+
+The commands run at the root of the repository and need the .NET SDK that `global.json` names.
+
+| Task | Command |
+| --- | --- |
+| Restore the packages exactly as the lock files record them | `dotnet restore Bravo.slnx --locked-mode` |
+| Build | `dotnet build Bravo.slnx -c Release` |
+| Test | `dotnet test Bravo.slnx -c Release` |
+| Update the lock files after a package change | `dotnet restore Bravo.slnx`, then commit each changed `packages.lock.json` |
+
+A warning fails the build ([ADR 0009](docs/adr/0009-rules-enforced-by-the-build.md)). Where the rules live:
+
+| Rule | File |
+| --- | --- |
+| Compiler and analyzer settings, output folders, lock files | `Directory.Build.props`; `tests/Directory.Build.props` adds what every test project needs |
+| The version of every package | `Directory.Packages.props` |
+| Code style and the severity of each diagnostic | `.editorconfig` |
+| The symbols no project may use | `BannedSymbols.txt` |
+| Allowed project references, catch-all names, static mutable state | `tests/Bravo.Architecture.Tests` |
+
+A project under `src/` sets its own target framework, is listed in `Bravo.slnx` and has an entry in
+`tests/Bravo.Architecture.Tests/ProductionProjects.cs`, the table of the projects it may reference: without the
+entry the architecture tests fail.
 
 ## User interface
 
@@ -104,4 +130,4 @@ checks the TypeScript code. `web/wwwroot` holds the static files that go with th
 fonts, images); git ignores the `js` and `css` folders that the development build adds there. Without
 `--output-path` webpack writes to `artifacts/web` at the root of the repository, which git ignores.
 
-Until the first .NET project exists this is the only build in the tree, and the user interface has no tests.
+The user interface has no tests.

@@ -1,0 +1,5 @@
+<Solution>
+  <Folder Name="/tests/">
+    <Project Path="tests/Bravo.Architecture.Tests/Bravo.Architecture.Tests.csproj" />
+  </Folder>
+</Solution>
