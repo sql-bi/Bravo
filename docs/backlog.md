@@ -16,7 +16,9 @@ in its own folder, builds the same bundle as before; a violation planted on purp
   for the portable projects; restore in locked mode, MSBuild warnings as errors, a check that fails on NuGet
   audit warnings; test filters and coverage with the options of the Microsoft.Testing.Platform mode of
   `dotnet test`, not the VSTest ones. Explore: workflows of open-source .NET desktop projects. Also to settle:
-  whether CI audits the dependencies of the user interface; the `.azure/` line left in `.github/CODEOWNERS`.
+  whether CI audits the dependencies of the user interface; whether CI opts out of the usage telemetry that
+  Microsoft.Testing.Platform sends (`TESTINGPLATFORM_TELEMETRY_OPTOUT`); the `.azure/` line left in
+  `.github/CODEOWNERS`.
 
 ## T2 Skeleton
 
