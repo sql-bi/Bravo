@@ -12,13 +12,10 @@ criterion can be checked on `develop-vnext`.
 Exit: the layout is decided and applied and the previous implementation has left the tree; the user interface,
 in its own folder, builds the same bundle as before; a violation planted on purpose fails CI.
 
-- [ ] R-02 Build rules and guardrails. Hypothesis: strict `Directory.Build.props`, central package management,
-  architecture tests with no exceptions. Explore: analyzer sets; libraries for architecture tests. Also to
-  settle: the Node.js version of the user interface build, which nothing pins; where the release bundle is
-  written, since the default `web/dist` is not ignored by git.
 - [ ] R-03 Continuous integration. Hypothesis: GitHub Actions on every push, Windows for everything and Linux
-  for the portable projects. Explore: workflows of open-source .NET desktop projects. Also to settle: whether
-  CI audits the dependencies of the user interface; the `.azure/` line left in `.github/CODEOWNERS`.
+  for the portable projects; restore in locked mode, MSBuild warnings as errors, a check that fails on NuGet
+  audit warnings. Explore: workflows of open-source .NET desktop projects. Also to settle: whether CI audits
+  the dependencies of the user interface; the `.azure/` line left in `.github/CODEOWNERS`.
 
 ## T2 Skeleton
 
@@ -27,7 +24,8 @@ opens the options through the new API and the generated client.
 
 - [ ] H-01 Host architecture. Hypothesis: portable core and API projects, Windows adapters, a shell; the
   compiler keeps Windows out of the core. Explore: .NET applications with a web user interface; HTTP on loopback
-  or the message channel of the webview.
+  or the message channel of the webview. Also: fills the table of allowed project references; decides how the
+  architecture tests load Windows-only assemblies.
 - [ ] H-02 Startup, lifetime and single instance. Hypothesis: today's order, from the exception handler to the
   window. Explore: the generic host in desktop applications; single instance in well-known desktop applications.
 - [ ] H-03 API and the contract with the user interface. Hypothesis: minimal APIs, routes by resource, standard
