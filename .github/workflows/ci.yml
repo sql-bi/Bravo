@@ -45,7 +45,7 @@ jobs:
           cache-dependency-path: '**/packages.lock.json'
       - name: Restore
         run: dotnet restore Bravo.slnx --locked-mode
-      # TreatWarningsAsErrors does not reach the warnings of the MSBuild tasks: -warnaserror does.
+      # A warning in a project is an error already: -warnaserror adds the ones raised outside the projects.
       - name: Build
         run: dotnet build Bravo.slnx -c Release --no-restore -warnaserror
       - name: Test

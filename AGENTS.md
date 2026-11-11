@@ -132,7 +132,8 @@ push cancels the run in progress of the same branch, except on `develop-vnext`.
 
 What a run checks beyond the commands of the table above:
 
-- The build has `-warnaserror`: a warning of an MSBuild task, which a local build only prints, fails the job.
+- The build has `-warnaserror`. A warning in a project fails a local build as well; the switch adds the
+  warnings raised outside the projects, at the level of the solution.
 - `audit` restores with `-p:AuditPipeline=true`, which turns the NuGet audit warnings into errors.
 - The `npm audit` step looks at the dependencies that ship with the user interface. It reports and does not
   fail the job until they are updated (backlog H-04): its error annotation on a green run is expected.

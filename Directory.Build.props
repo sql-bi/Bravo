@@ -1,10 +1,14 @@
 <Project>
 
-  <!-- The language and the analyzers: every warning fails the build. -->
+  <!--
+    The language and the analyzers: every warning fails the build. TreatWarningsAsErrors covers the compiler, the
+    analyzers and NuGet; MSBuildTreatWarningsAsErrors adds the warnings that the tasks of a build raise.
+  -->
   <PropertyGroup>
     <Nullable>enable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <MSBuildTreatWarningsAsErrors>true</MSBuildTreatWarningsAsErrors>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <AnalysisLevel>latest-recommended</AnalysisLevel>
   </PropertyGroup>
