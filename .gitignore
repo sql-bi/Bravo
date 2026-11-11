@@ -358,5 +358,5 @@ MigrationBackup/
 Thumbs.db
 
 # Debug wwwroot
-src/wwwroot/js
-src/wwwroot/css
+web/wwwroot/js
+web/wwwroot/css
