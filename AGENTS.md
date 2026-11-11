@@ -40,8 +40,8 @@ its structure as a model.
   commits of the work branch are cherry-picked in order.
 - No pull request. Never commit to `main`, never force-push.
 - One logical change per commit, message in English, Conventional Commits.
-- Build and tests pass before a push. This branch has no CI workflow yet (backlog R-03): until one runs on
-  every push, the local build and tests are the gate. Once it does, a red CI is fixed before anything else.
+- Build and tests pass before a push. CI runs on every push to `develop-vnext` and to a work branch, and a red
+  CI is fixed before anything else.
 - A component is not written before the maintainer has accepted its design. The cycle:
   1. requirements, from the behavior on `main` and the open issues;
   2. how well-known, well-engineered projects and the official documentation solve the problem;
@@ -116,6 +116,38 @@ A warning fails the build ([ADR 0009](docs/adr/0009-rules-enforced-by-the-build.
 A project under `src/` sets its own target framework, is listed in `Bravo.slnx` and has an entry in
 `tests/Bravo.Architecture.Tests/ProductionProjects.cs`, the table of the projects it may reference: without the
 entry the architecture tests fail.
+
+## Continuous integration
+
+`.github/workflows/ci.yml` runs on every push to `develop-vnext` and to a work branch (`vnext/**`), on the pull
+requests to `main` and on request ([ADR 0010](docs/adr/0010-continuous-integration-in-one-workflow.md)). A new
+push cancels the run in progress of the same branch, except on `develop-vnext`.
+
+| Job | What it runs |
+| --- | --- |
+| `build-and-test` | On Windows: the restore in locked mode, the build, the tests |
+| `build-and-test-linux` | The same on Linux |
+| `build-web` | In `web/`: `npm ci`, then `npm run build:Release` |
+| `audit` | A restore that fails on a NuGet package with a known vulnerability, then `npm audit` |
+
+What a run checks beyond the commands of the table above:
+
+- The build has `-warnaserror`: a warning of an MSBuild task, which a local build only prints, fails the job.
+- `audit` restores with `-p:AuditPipeline=true`, which turns the NuGet audit warnings into errors.
+- The `npm audit` step looks at the dependencies that ship with the user interface. It reports and does not
+  fail the job until they are updated (backlog H-04): its error annotation on a green run is expected.
+
+`build-and-test` is the status check that `main` requires: do not rename the job and do not give it a matrix.
+Every action is pinned to the commit of a release, with the version in a comment on the same line.
+
+| Task | Command |
+| --- | --- |
+| List the runs of a branch | `gh run list --branch <branch>` |
+| Wait for a run to end | `gh run watch <run id> --exit-status` |
+| Read the log of the failed steps | `gh run view <run id> --log-failed` |
+| Check the NuGet packages as `audit` does | `dotnet restore Bravo.slnx -p:AuditPipeline=true` |
+
+The runs are also public, at <https://github.com/sql-bi/Bravo/actions>.
 
 ## User interface
 

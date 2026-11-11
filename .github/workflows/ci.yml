@@ -1,0 +1,123 @@
+name: CI
+
+# A push runs the workflow file of the pushed commit, so this works on a branch that is not the default one.
+# A manual run needs the file on the default branch.
+on:
+  push:
+    branches:
+      - develop-vnext
+      - 'vnext/**'
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+# One run at a time for each branch or pull request. A new push cancels the run in progress, except on
+# develop-vnext.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/develop-vnext' }}
+
+permissions:
+  contents: read
+
+# No usage data is sent by the .NET CLI or by Microsoft.Testing.Platform.
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: 1
+  TESTINGPLATFORM_TELEMETRY_OPTOUT: 1
+
+# Every action is pinned to the commit of a release, with the version in a comment on the same line.
+jobs:
+
+  # The required status check of main carries this name: the job keeps its id, gets no name and no matrix.
+  build-and-test:
+    runs-on: windows-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up the .NET SDK
+        uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
+        with:
+          global-json-file: global.json
+          cache: true
+          cache-dependency-path: '**/packages.lock.json'
+      - name: Restore
+        run: dotnet restore Bravo.slnx --locked-mode
+      # TreatWarningsAsErrors does not reach the warnings of the MSBuild tasks: -warnaserror does.
+      - name: Build
+        run: dotnet build Bravo.slnx -c Release --no-restore -warnaserror
+      - name: Test
+        run: dotnet test --solution Bravo.slnx -c Release --no-build
+
+  # The same steps on Linux, on the whole solution until it has a Windows-only project (backlog H-01).
+  build-and-test-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up the .NET SDK
+        uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
+        with:
+          global-json-file: global.json
+          cache: true
+          cache-dependency-path: '**/packages.lock.json'
+      - name: Restore
+        run: dotnet restore Bravo.slnx --locked-mode
+      - name: Build
+        run: dotnet build Bravo.slnx -c Release --no-restore -warnaserror
+      - name: Test
+        run: dotnet test --solution Bravo.slnx -c Release --no-build
+
+  build-web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # The Node.js line is the one of devEngines in package.json. The cache names the lockfile because the
+      # action looks for it at the root of the repository.
+      - name: Set up Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: web/package.json
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Install the dependencies
+        run: npm ci
+      # The release build also checks the types.
+      - name: Build the release bundle
+        run: npm run build:Release
+
+  # Packages with a known vulnerability. On Windows, where a restore reaches every project of the solution.
+  audit:
+    runs-on: windows-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up the .NET SDK
+        uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
+        with:
+          global-json-file: global.json
+      # AuditPipeline turns the audit warnings of NuGet into errors: see Directory.Build.props.
+      - name: Audit the NuGet packages
+        run: dotnet restore Bravo.slnx --locked-mode -p:AuditPipeline=true
+      - name: Set up Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: web/package.json
+      # Not blocking yet: the dependencies that ship with the user interface have known advisories, and they
+      # can be updated only when the user interface can be run and checked (backlog H-04).
+      - name: Audit the npm packages that ship with the user interface
+        working-directory: web
+        continue-on-error: true
+        run: npm audit --omit=dev --audit-level=high

@@ -100,13 +100,32 @@ A rule that a tool can check fails the build or a test, and no rule has an allow
 | Text is stored with LF line endings; C# sources are checked out with CRLF on every system | `.gitattributes` |
 
 A package with a known vulnerability is a warning and not an error, so that an advisory published later does
-not break the build of an unchanged commit. No project sets the C# version: it follows the target framework.
-Each project sets its own target framework.
+not break the build of an unchanged commit; it is an error only in the `audit` job of continuous integration.
+No project sets the C# version: it follows the target framework. Each project sets its own target framework.
 
 The architecture tests use reflection and read the project files, with no library. Each rule is a function from
 its input to the violations, tested twice: on a fixture that breaks it, which proves that the rule can fail, and
 on the repository. `ProductionProjects.cs` holds the table of allowed project references, which is also the list
 of the production assemblies that the rules inspect; it is empty until the host has projects.
+
+### Continuous integration
+
+One GitHub Actions workflow, `.github/workflows/ci.yml`, runs on every push to `develop-vnext` and to a work
+branch, on the pull requests to `main` and on request
+([ADR 0010](adr/0010-continuous-integration-in-one-workflow.md)). A new push cancels the run in progress of
+the same branch or pull request, except on `develop-vnext`.
+
+| Job | Runs on | What fails it |
+| --- | --- | --- |
+| `build-and-test` | Windows | A lock file out of date; a warning of the compiler, of an analyzer or of MSBuild; a failed test |
+| `build-and-test-linux` | Linux | The same, on the whole solution until it has a Windows-only project |
+| `build-web` | Linux | `npm ci` or the release build of the user interface, which also checks the types |
+| `audit` | Windows | A NuGet package with a known vulnerability of any severity, referenced directly or not |
+
+`build-and-test` is the status check that `main` requires: its name does not change. `audit` also runs
+`npm audit` on the dependencies that ship with the user interface; that step reports and does not fail the job
+until they are updated. The token of a run can only read the repository, the checkout keeps no credentials,
+every action is pinned to a full commit SHA, and neither the .NET CLI nor the test platform sends usage data.
 
 ## Open questions
 
