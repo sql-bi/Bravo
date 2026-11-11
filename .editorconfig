@@ -91,6 +91,50 @@ dotnet_naming_symbols.private_internal_fields.applicable_accessibilities = priva
 dotnet_naming_style.camel_case_underscore_style.required_prefix = _
 dotnet_naming_style.camel_case_underscore_style.capitalization = camel_case
 
+# (*) added: the names that the field rules above leave free, as the .NET design guidelines write them.
+# Each symbol group below has kinds of its own, so no rule here hides another one or a field rule: the order
+# of naming rules follows how specific they are, not their position in this file. There is no rule for locals.
+
+# types are PascalCase
+dotnet_naming_rule.types_should_be_pascal_case.severity = warning
+dotnet_naming_rule.types_should_be_pascal_case.symbols  = types
+dotnet_naming_rule.types_should_be_pascal_case.style    = pascal_case_style
+dotnet_naming_symbols.types.applicable_kinds = class, struct, enum, delegate
+dotnet_naming_symbols.types.applicable_accessibilities = *
+
+# interfaces are PascalCase after the I prefix
+dotnet_naming_rule.interfaces_should_begin_with_i.severity = warning
+dotnet_naming_rule.interfaces_should_begin_with_i.symbols  = interfaces
+dotnet_naming_rule.interfaces_should_begin_with_i.style    = interface_prefix_style
+dotnet_naming_symbols.interfaces.applicable_kinds = interface
+dotnet_naming_symbols.interfaces.applicable_accessibilities = *
+dotnet_naming_style.interface_prefix_style.required_prefix = I
+dotnet_naming_style.interface_prefix_style.capitalization = pascal_case
+
+# type parameters are PascalCase after the T prefix
+dotnet_naming_rule.type_parameters_should_begin_with_t.severity = warning
+dotnet_naming_rule.type_parameters_should_begin_with_t.symbols  = type_parameters
+dotnet_naming_rule.type_parameters_should_begin_with_t.style    = type_parameter_prefix_style
+dotnet_naming_symbols.type_parameters.applicable_kinds = type_parameter
+dotnet_naming_symbols.type_parameters.applicable_accessibilities = *
+dotnet_naming_style.type_parameter_prefix_style.required_prefix = T
+dotnet_naming_style.type_parameter_prefix_style.capitalization = pascal_case
+
+# methods, properties and events are PascalCase
+dotnet_naming_rule.non_field_members_should_be_pascal_case.severity = warning
+dotnet_naming_rule.non_field_members_should_be_pascal_case.symbols  = non_field_members
+dotnet_naming_rule.non_field_members_should_be_pascal_case.style    = pascal_case_style
+dotnet_naming_symbols.non_field_members.applicable_kinds = method, property, event
+dotnet_naming_symbols.non_field_members.applicable_accessibilities = *
+
+# parameters are camelCase
+dotnet_naming_rule.parameters_should_be_camel_case.severity = warning
+dotnet_naming_rule.parameters_should_be_camel_case.symbols  = parameters
+dotnet_naming_rule.parameters_should_be_camel_case.style    = camel_case_style
+dotnet_naming_symbols.parameters.applicable_kinds = parameter
+dotnet_naming_symbols.parameters.applicable_accessibilities = *
+dotnet_naming_style.camel_case_style.capitalization = camel_case
+
 # Code style defaults
 csharp_using_directive_placement = outside_namespace:warning # (*) warning
 dotnet_sort_system_directives_first = true
