@@ -82,6 +82,22 @@ The top-level folders separate content by kind ([ADR 0008](adr/0008-repository-l
 One solution, `Bravo.slnx`, sits at the root with the build files shared by every project. A component with
 its own toolchain gets its own top-level folder; a .NET one goes into `src/` and `tests/`.
 
+### Build rules and guardrails
+
+A rule that a tool can check fails the build or a test, and no rule has an allow-list
+([ADR 0009](adr/0009-rules-enforced-by-the-build.md)).
+
+| Rule | Where it is |
+| --- | --- |
+| Nullable reference types, no implicit usings, every warning an error, the analyzers at `latest-recommended` | `Directory.Build.props` |
+| A project sees only the projects it references itself | `Directory.Build.props` |
+| One version for each package, also where it arrives as a dependency; a lock file in each project | `Directory.Packages.props`, `packages.lock.json` |
+| The feature band of the .NET SDK | `global.json` |
+
+A package with a known vulnerability is a warning and not an error, so that an advisory published later does
+not break the build of an unchanged commit. No project sets the C# version: it follows the target framework.
+Each project sets its own target framework.
+
 ## Open questions
 
 Each is answered by the component named in brackets.

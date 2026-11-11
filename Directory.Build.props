@@ -1,0 +1,49 @@
+<Project>
+
+  <!-- The language and the analyzers: every warning fails the build. -->
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+  </PropertyGroup>
+
+  <!--
+    The build reports an unused using (IDE0005) only when the compiler writes the documentation file. That file
+    brings CS1591, a warning for every public member without a comment, which is not a rule here.
+  -->
+  <PropertyGroup>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+
+  <!-- A project sees only the projects it references itself, so the references in the project files are the graph. -->
+  <PropertyGroup>
+    <DisableTransitiveProjectReferences>true</DisableTransitiveProjectReferences>
+  </PropertyGroup>
+
+  <!--
+    Build and publish output of every project goes to artifacts/, beside this file. The path is set here because
+    UseArtifactsOutput alone follows the nearest Directory.Build.props: tests would write to tests/artifacts.
+  -->
+  <PropertyGroup>
+    <ArtifactsPath>$(MSBuildThisFileDirectory)artifacts</ArtifactsPath>
+  </PropertyGroup>
+
+  <!--
+    Packages: each project commits a lock file. A package with a known vulnerability stays a warning, so that an
+    advisory published later does not break the build of an unchanged commit.
+  -->
+  <PropertyGroup>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <WarningsNotAsErrors>$(WarningsNotAsErrors);NU1901;NU1902;NU1903;NU1904</WarningsNotAsErrors>
+  </PropertyGroup>
+
+  <!-- On GitHub Actions the restore fails when a lock file is out of date, and the build is deterministic. -->
+  <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
+    <RestoreLockedMode>true</RestoreLockedMode>
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+  </PropertyGroup>
+
+</Project>
