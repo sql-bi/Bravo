@@ -1,0 +1,6 @@
+# Analyzer options of every project. A file with this name applies to the projects of this folder and below.
+is_global = true
+
+# The banned symbols (BannedSymbols.txt) are searched in hand-written code only: source generators such as
+# CsWin32 emit the DllImport declarations that the list forbids to write by hand.
+dotnet_banned_api_analyzer.exclude_generated_code = true
