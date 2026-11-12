@@ -128,7 +128,8 @@ A project of `src/` gets its test project with its first test: a run in which no
 | The command line, and the consumer of the activations | `src/Bravo.Desktop/Activation/` |
 | The activation request, and the channel that every activation goes through | `src/Bravo.Core/Activation/` |
 | The single instance: ownership by mutex, hand-over by pipe, arbitration | `src/Bravo.Platform.Windows/SingleInstance/` |
-| The names of the instance, the listener as a service of the host, the message of a failed hand-over | `src/Bravo.Desktop/SingleInstance/` |
+| The identity of the build: release or development, with its instance identifier, data folder and window title | `src/Bravo.Desktop/BuildIdentity.cs` |
+| The listener as a service of the host, the message of a failed hand-over, the end of a second process | `src/Bravo.Desktop/SingleInstance/` |
 | The settings of the user and their store, in memory until backlog S-01 | `src/Bravo.Core/Settings/`, registered in `src/Bravo.Desktop/Settings/` |
 | The Windows functions of a project, listed in its `NativeMethods.txt` and wrapped by capability | `Interop/` in `Bravo.Desktop` and in `Bravo.Platform.Windows` |
 
@@ -143,9 +144,14 @@ A project of `src/` gets its test project with its first test: a run in which no
   `OwnedInstance`, on a thread of its own.
 - `DesktopHostApiTests` starts the host as the application builds it, without a window, and calls the API on a
   real socket.
+- `Main` reads the identity of the build once, from the metadata of the assembly, and passes it on: no code
+  asks again which build it is. A build is a development build unless it was built with
+  `-p:BravoReleaseBuild=true`, which only the release pipeline does (backlog D-02). The property is not the
+  configuration: `-c Release` on a developer's machine is a development build. A development build is
+  another instance than the installed application, so both can run at once.
 - The tests of the single instance use real mutexes and pipes, each test under names of its own.
-  `BravoProcessTests` starts `Bravo.exe` with the names of the application: it shows a window for a moment,
-  and it is skipped when an instance of this version already runs for the user.
+  `BravoProcessTests` starts the `Bravo.exe` that the build wrote, a development build: it shows a window for
+  a moment, and it is skipped when a development build already runs for the user.
 
 | Task | Command |
 | --- | --- |

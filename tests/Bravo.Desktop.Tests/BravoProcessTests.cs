@@ -8,7 +8,8 @@ using Xunit;
 namespace Bravo.Desktop.Tests;
 
 /// <summary>
-/// The executable as a user starts it: real processes, the real names of the instance, a real window.
+/// The executable as the build of the tests wrote it, a development build: real processes, the names of the
+/// instance of a development build, a real window.
 /// </summary>
 public sealed class BravoProcessTests
 {
@@ -67,9 +68,9 @@ public sealed class BravoProcessTests
         {
             if (process.HasExited)
             {
-                // A start that ends at once with success handed itself over: these are the names of the
-                // application, and an instance of this user already runs on this machine.
-                Assert.SkipWhen(process.ExitCode == 0, "Another instance of Bravo is running.");
+                // A start that ends at once with success handed itself over: these are the names of every
+                // development build, and one of this user already runs on this machine.
+                Assert.SkipWhen(process.ExitCode == 0, "A development build of Bravo is running.");
                 Assert.Fail($"Bravo ended with exit code {process.ExitCode} before it showed its window.");
             }
 

@@ -197,6 +197,20 @@ its services in an extension method of `IServiceCollection`, which only `Bravo.D
   each other. Later versions keep the identifier; a change of the messages is a new version of the protocol,
   which an owner of another version refuses.
 
+**Build identity.** A build that the release pipeline did not produce is a development build
+([ADR 0015](adr/0015-page-under-a-reserved-host-name-api-connection-in-an-object.md)). The release pipeline
+sets a build property, which reaches the application as metadata of its assembly; `Main` reads it once,
+before the arbitration.
+
+| | Release build | Development build |
+| --- | --- | --- |
+| Instance | The identifier of 1.1.0 | An identifier of its own: it runs beside the installed application |
+| Data folder, under the local application data of the user | `Bravo` | `Bravo.Development` |
+| Window title | `Bravo for Power BI - v<version>` | The same, followed by `[development build]` |
+
+The version is the informational version of the assembly without the metadata of the build. How it is
+computed is open (backlog D-02).
+
 **Activations.** Every start is an activation request, the first one included. The requests go through one
 bounded channel of 16 with a single consumer, which starts when the main window is shown: a request that
 arrives earlier waits. A second process is answered busy when the channel is full, and shutting down after the

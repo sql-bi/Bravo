@@ -18,6 +18,8 @@ namespace Bravo.Desktop.Tests.Hosting;
 // Each test stays on one thread: the ownership is released by the thread that acquired it.
 public sealed class DesktopHostTests : IDisposable
 {
+    private static readonly BuildIdentity s_identity = BuildIdentity.Development("1.1.0");
+
     private readonly IFatalExceptionHandler _fatalExceptionHandler = Substitute.For<IFatalExceptionHandler>();
     private readonly InstanceOwnership _ownership;
     private readonly IHost _host;
@@ -29,7 +31,7 @@ public sealed class DesktopHostTests : IDisposable
         _ownership = InstanceOwnership.TryAcquire(names, TimeSpan.Zero)
             ?? throw new InvalidOperationException("The instance of the test already has an owner.");
 
-        _host = DesktopHost.Build(_ownership, new SingleInstanceOptions(), _fatalExceptionHandler);
+        _host = DesktopHost.Build(s_identity, _ownership, new SingleInstanceOptions(), _fatalExceptionHandler);
     }
 
     public void Dispose()
@@ -87,6 +89,7 @@ public sealed class DesktopHostTests : IDisposable
     {
         var services = _host.Services;
 
+        Assert.Same(s_identity, services.GetRequiredService<BuildIdentity>());
         Assert.Same(_fatalExceptionHandler, services.GetRequiredService<IFatalExceptionHandler>());
         Assert.Same(_ownership, services.GetRequiredService<InstanceOwnership>());
     }

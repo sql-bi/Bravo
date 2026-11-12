@@ -35,7 +35,8 @@ public sealed class DesktopHostApiTests : IAsyncLifetime
     public DesktopHostApiTests()
     {
         var fatalExceptionHandler = Substitute.For<IFatalExceptionHandler>();
-        _host = DesktopHost.Build(_instance.Ownership, new SingleInstanceOptions(), fatalExceptionHandler);
+        var identity = BuildIdentity.Development("1.1.0");
+        _host = DesktopHost.Build(identity, _instance.Ownership, new SingleInstanceOptions(), fatalExceptionHandler);
     }
 
     public async ValueTask InitializeAsync()

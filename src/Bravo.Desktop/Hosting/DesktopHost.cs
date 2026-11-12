@@ -21,6 +21,7 @@ namespace Bravo.Desktop.Hosting;
 internal static class DesktopHost
 {
     public static WebApplication Build(
+        BuildIdentity identity,
         InstanceOwnership ownership,
         SingleInstanceOptions singleInstanceOptions,
         IFatalExceptionHandler fatalExceptionHandler)
@@ -40,7 +41,7 @@ internal static class DesktopHost
         builder.WebHost.UseLoopbackServer();
 
         builder.Services.AddDesktopLifetime();
-        builder.Services.AddShell(fatalExceptionHandler);
+        builder.Services.AddShell(identity, fatalExceptionHandler);
         builder.Services.AddActivation();
         builder.Services.AddSingleInstance(ownership, singleInstanceOptions);
         builder.Services.AddUserSettings();

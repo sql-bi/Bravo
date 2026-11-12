@@ -8,9 +8,9 @@ internal sealed class MainWindow : Form, IMainWindow
 {
     private volatile bool _closeRequested;
 
-    public MainWindow()
+    public MainWindow(BuildIdentity identity)
     {
-        Text = Product.Name;
+        Text = identity.WindowTitle;
     }
 
     public void RunMessageLoop()

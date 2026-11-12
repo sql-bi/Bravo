@@ -13,6 +13,15 @@
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
   </PropertyGroup>
 
+  <!--
+    A build is a development build unless the release pipeline builds it, with -p:BravoReleaseBuild=true. The
+    property is not the configuration: a Release configuration built on a developer's machine is a development
+    build. The application reads what was built from this metadata: see BuildIdentity.cs.
+  -->
+  <ItemGroup>
+    <AssemblyMetadata Include="BravoReleaseBuild" Value="$(BravoReleaseBuild)" Condition="'$(BravoReleaseBuild)' == 'true'" />
+  </ItemGroup>
+
   <!-- The declarations that CsWin32 generates from NativeMethods.txt use pointers. -->
   <PropertyGroup>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
