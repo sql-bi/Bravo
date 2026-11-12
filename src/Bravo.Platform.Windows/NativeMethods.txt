@@ -1,0 +1,5 @@
+// Windows.Win32.System.Pipes
+GetNamedPipeServerProcessId
+
+// Windows.Win32.UI.WindowsAndMessaging
+AllowSetForegroundWindow

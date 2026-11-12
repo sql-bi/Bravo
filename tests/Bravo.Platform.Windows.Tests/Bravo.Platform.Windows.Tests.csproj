@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Bravo.Core\Bravo.Core.csproj" />
+    <ProjectReference Include="..\..\src\Bravo.Platform.Windows\Bravo.Platform.Windows.csproj" />
+  </ItemGroup>
+
+</Project>

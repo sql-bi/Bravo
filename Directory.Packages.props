@@ -23,12 +23,17 @@
   </ItemGroup>
 
   <!--
-    For the architecture tests: the logging generator of a fixture, and the reader of assemblies as metadata.
-    Aligned with the .NET 10 runtime.
+    Packages of the .NET release train, in the version of the .NET 10 runtime: logging, and the reader of
+    assemblies as metadata of the architecture tests.
   -->
   <ItemGroup>
     <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.15" />
     <PackageVersion Include="System.Reflection.MetadataLoadContext" Version="10.0.15" />
+  </ItemGroup>
+
+  <!-- Generates the declarations of the Windows functions that the NativeMethods.txt of a project lists. -->
+  <ItemGroup>
+    <PackageVersion Include="Microsoft.Windows.CsWin32" Version="0.3.371" />
   </ItemGroup>
 
 </Project>
