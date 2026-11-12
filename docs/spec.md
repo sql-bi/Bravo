@@ -308,11 +308,25 @@ other, and what it asked for the browser has no effect.
 **Local Network Access.** The page and the API have different origins, so the checks that Chromium makes on a
 page that calls the loopback address apply to it. WebView2 does not make them today
 ([announcement 126](https://github.com/MicrosoftEdge/WebView2Announcements/issues/126)), and the application
-passes no flag. Measured on runtime 157.0.4341.46 with
-`--enable-features=LocalNetworkAccessChecks,msWebViewAllowLocalNetworkAccessChecks`: the permission of the
-page is `prompt`, the engine asks the user with a prompt of its own and raises no permission request to the
-application, and the first request of the page waits: nothing reaches the host. The second flag alone has the
-same effect, the first alone has none (backlog S-03).
+passes no flag. What happens when they are made was measured on a development build, with version 1.0.4314.35
+of the SDK and runtime 157.0.4341.46, the checks turned on by setting the environment variable
+`WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS` to
+`--enable-features=LocalNetworkAccessChecks,msWebViewAllowLocalNetworkAccessChecks`:
+
+- The permission of the page reads `prompt`, and the engine raises no permission request to the application.
+  The first request of the page waits, and nothing reaches the host.
+- The engine asks the user with a prompt of its own: "bravo.invalid wants to: Access other apps and services
+  on this device", with the buttons Block and Allow. Until the user answers, the window shows its background
+  and no page.
+- After Allow the page starts. At the next start with the same flags and the same data folder there is no
+  prompt and the page starts: the answer is kept in the profile.
+- With `msWebViewAllowLocalNetworkAccessChecks` alone the result depended on the data folder. On a new one the
+  request waited and the prompt showed. On the one that the build had already used there was no prompt and
+  the page called the API, while the permission still read `prompt`. The reason is not known.
+- A probe outside the application, on a new data folder at every run, gave the same result with both flags and
+  with the second one alone, and no effect with `LocalNetworkAccessChecks` alone.
+
+What follows from this is backlog S-03.
 
 ### User interface and host
 
