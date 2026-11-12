@@ -81,11 +81,12 @@ crash produces a report, telemetry runs on a supported SDK.
   which nothing reads yet; the webview is given no browser argument, where 1.0.x passed it the proxy. Also,
   Local Network Access ([announcement 126](https://github.com/MicrosoftEdge/WebView2Announcements/issues/126)):
   when WebView2 offers the permission, the application grants it to the origin of the page; until then a
-  permission that its version of the SDK cannot name is left to the prompt of the engine. Measured with the
-  checks turned on by feature flags ([specification](spec.md#window-and-webview)): the request of the page
-  waits, without reaching the host, for a prompt of the engine with Block and Allow; the application gets no
-  permission request; the answer of the user is kept in the profile. In a probe outside the application, a
-  grant through the DevTools protocol (`Browser.grantPermissions`) made the same request succeed.
+  permission that the application does not know, from a later runtime or from a later SDK, is left to the
+  prompt of the engine. Measured with the checks turned on by feature flags
+  ([specification](spec.md#window-and-webview)): the request of the page waits, without reaching the host,
+  for a prompt of the engine with Block and Allow; the application gets no permission request; the answer of
+  the user is kept in the profile. In a probe outside the application, a grant through the DevTools protocol
+  (`Browser.grantPermissions`) made the same request succeed.
 - [ ] S-04 Diagnostics and logging. Hypothesis: in-memory log shown in the user interface, plus the event log.
   Also: the host has no logging provider yet, so the warning of an owner of the instance that cannot create
   its pipe reaches no log, and neither does a request of the API that failed: the `traceId` of a problem

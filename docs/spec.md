@@ -269,11 +269,15 @@ browser.
   blank document.
 - No window opens, and no download starts (backlog D-03).
 - A permission that a document of another origin asks for is denied. For the origin of the page, reading the
-  clipboard is allowed, and every other permission that the version of the WebView2 SDK in use can name is
-  denied. None of these answers is kept in the profile.
-- A permission that this version cannot name, as a later runtime may ask for, is not answered by the
-  application: the engine asks the user, and keeps the answer. Denying it could stop the page after an update
-  of the runtime, with nothing that the user could do.
+  clipboard is allowed, and the permissions that the application knows and the page does not use are denied,
+  each one by its name: microphone, camera, geolocation, notifications, other sensors, multiple automatic
+  downloads, reading and writing files, autoplay, local fonts, MIDI system exclusive messages, window
+  management, persistent storage, and the one that the engine calls unknown. None of these answers is kept
+  in the profile.
+- A permission that the application does not know, from a later runtime or from a later version of the
+  WebView2 SDK, is not answered by the application: the engine asks the user, and keeps the answer. Denying it
+  could stop the page after an update, with nothing that the user could do. A test fails when the SDK names
+  a permission that the application has no answer for.
 
 **Failures.** One type holds the rules, with no knowledge of the engine:
 

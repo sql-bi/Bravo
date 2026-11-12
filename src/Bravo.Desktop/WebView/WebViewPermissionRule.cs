@@ -1,10 +1,10 @@
-﻿using System;
-using Microsoft.Web.WebView2.Core;
+﻿using Microsoft.Web.WebView2.Core;
 
 namespace Bravo.Desktop.WebView;
 
 /// <summary>
-/// What the application answers when a document asks the engine for a permission.
+/// What the application answers when a document asks the engine for a permission. The rule names every kind
+/// that it answers: what it allows and what it denies does not change with the version of the SDK.
 /// </summary>
 internal static class WebViewPermissionRule
 {
@@ -24,19 +24,29 @@ internal static class WebViewPermissionRule
             return CoreWebView2PermissionState.Deny;
         }
 
-        // The page reads the clipboard when the user pastes.
-        if (kind == CoreWebView2PermissionKind.ClipboardRead)
+        return kind switch
         {
-            return CoreWebView2PermissionState.Allow;
-        }
+            // The page reads the clipboard when the user pastes.
+            CoreWebView2PermissionKind.ClipboardRead => CoreWebView2PermissionState.Allow,
 
-        if (Enum.IsDefined(kind))
-        {
-            return CoreWebView2PermissionState.Deny;
-        }
+            // What the application knows, and the page does not use.
+            CoreWebView2PermissionKind.UnknownPermission
+                or CoreWebView2PermissionKind.Microphone
+                or CoreWebView2PermissionKind.Camera
+                or CoreWebView2PermissionKind.Geolocation
+                or CoreWebView2PermissionKind.Notifications
+                or CoreWebView2PermissionKind.OtherSensors
+                or CoreWebView2PermissionKind.MultipleAutomaticDownloads
+                or CoreWebView2PermissionKind.FileReadWrite
+                or CoreWebView2PermissionKind.Autoplay
+                or CoreWebView2PermissionKind.LocalFonts
+                or CoreWebView2PermissionKind.MidiSystemExclusiveMessages
+                or CoreWebView2PermissionKind.WindowManagement
+                or CoreWebView2PermissionKind.PersistentStorage => CoreWebView2PermissionState.Deny,
 
-        // A kind that this version cannot name is one that a later runtime added. Denying it could stop
-        // the page after an update of the runtime, with nothing that the user could do.
-        return null;
+            // A kind that the application does not know, from a later runtime or a later SDK. Denying it
+            // could stop the page after an update, with nothing that the user could do.
+            _ => null,
+        };
     }
 }
