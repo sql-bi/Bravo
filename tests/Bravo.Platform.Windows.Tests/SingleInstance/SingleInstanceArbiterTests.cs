@@ -83,7 +83,12 @@ public sealed class SingleInstanceArbiterTests
         using var receiver = new RecordingReceiver(HandOverReply.ShuttingDown);
         var listener = new RunningListener(names, s_options, receiver);
 
-        var arbitration = ArbitrateAsync(names, s_options);
+        // An owner that ends while the arbiter waits for its pipe is noticed when that wait is over: a short
+        // one here, so that the test does not last as long as a limit made for failures.
+        var options = s_options with { ConnectTimeout = TimeSpan.FromMilliseconds(200) };
+
+        var arbitration = ArbitrateAsync(names, options);
+        await receiver.FirstRequest.WaitAsync(s_options.ArbitrationTimeout, TestContext.Current.CancellationToken);
         await listener.DisposeAsync();
         var outcome = await arbitration;
 

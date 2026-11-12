@@ -73,7 +73,8 @@ public sealed class SingleInstanceArbiter
                 return ArbitrationResult.Failed(HandOverFailure.NotResponding);
             }
 
-            // The next attempt waits on the mutex: an owner that ends is noticed at once.
+            // The pause before the next attempt is a wait on the mutex, which an owner that ends releases. An
+            // owner that ends during an attempt is noticed when the attempt gives up: see the connect timeout.
             wait = _options.RetryInterval;
         }
     }

@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Bravo.Platform.Windows.SingleInstance;
 
 namespace Bravo.Platform.Windows.Tests.SingleInstance;
@@ -16,9 +17,15 @@ internal sealed class RecordingReceiver(params HandOverReply[] replies) : IHandO
     private readonly HandOverReply[] _replies = replies;
     private readonly ConcurrentQueue<byte[]> _payloads = new();
     private readonly ManualResetEventSlim _unblocked = new(initialState: true);
+    private readonly TaskCompletionSource _firstRequest = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private int _received;
 
     public IReadOnlyList<byte[]> Payloads => [.. _payloads];
+
+    /// <summary>
+    /// Completes when the first request has arrived, before it is answered.
+    /// </summary>
+    public Task FirstRequest => _firstRequest.Task;
 
     /// <summary>
     /// From now on a request is not answered until <see cref="Unblock"/> is called.
@@ -36,6 +43,7 @@ internal sealed class RecordingReceiver(params HandOverReply[] replies) : IHandO
     public HandOverReply Receive(ReadOnlyMemory<byte> payload)
     {
         _payloads.Enqueue(payload.ToArray());
+        _firstRequest.TrySetResult();
         _unblocked.Wait();
 
         var index = Math.Min(Interlocked.Increment(ref _received), _replies.Length) - 1;

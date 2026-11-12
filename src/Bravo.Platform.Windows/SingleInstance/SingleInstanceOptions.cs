@@ -13,7 +13,8 @@ public sealed record SingleInstanceOptions
     public int MaxPayloadBytes { get; init; } = 1024 * 1024;
 
     /// <summary>
-    /// How long one attempt waits for the pipe of the owner.
+    /// How long one attempt waits for the pipe of the owner. An owner that ends during this wait is noticed
+    /// when the wait is over: only then the process tries again to become the owner.
     /// </summary>
     public TimeSpan ConnectTimeout { get; init; } = TimeSpan.FromSeconds(1);
 
