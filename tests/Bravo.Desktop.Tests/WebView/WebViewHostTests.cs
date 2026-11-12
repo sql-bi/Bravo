@@ -165,6 +165,26 @@ public sealed class WebViewHostTests : IAsyncLifetime
         Assert.Equal("\"null\"", opened);
     }
 
+    // The page asks to show notifications, which it never does, and says in the title of its document what
+    // it was answered and what the permission reads afterwards. Without the answer of the application the
+    // engine would ask the user, and the page would wait.
+    [Fact]
+    public async Task Page_ThatAsksForAPermissionItDoesNotUse_IsDeniedAndTheAnswerIsNotKept()
+    {
+        await StartAndReadReportAsync();
+
+        var permission = await RunInPageAsync("permission:", """
+            (async () => {
+              const answer = await Notification.requestPermission();
+              const after = (await navigator.permissions.query({ name: "notifications" })).state;
+              document.title = "permission:" + JSON.stringify({ answer, after });
+            })();
+            """);
+
+        Assert.Equal("denied", permission.GetProperty("answer").GetString());
+        Assert.Equal("prompt", permission.GetProperty("after").GetString());
+    }
+
     [Fact]
     public async Task RenderProcessThatExits_IsFollowedByAReloadOfThePage()
     {
@@ -243,6 +263,38 @@ public sealed class WebViewHostTests : IAsyncLifetime
         var report = WaitForReportAsync((_, _) => true);
         await _window.InvokeAsync(form => _webView.Start(form, Color.White));
         return await report;
+    }
+
+    // Runs a script in the page and waits for what the script writes, as JSON after a prefix, in the title
+    // of the document when it has finished.
+    private Task<JsonElement> RunInPageAsync(string prefix, string script)
+    {
+        return _window.InvokeAsync(async form =>
+        {
+            var engine = _webView.Engine!;
+            var completion = new TaskCompletionSource<JsonElement>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+            void OnTitleChanged(object? sender, object e)
+            {
+                var title = engine.DocumentTitle;
+                if (title.StartsWith(prefix, StringComparison.Ordinal))
+                {
+                    using var document = JsonDocument.Parse(title[prefix.Length..]);
+                    completion.TrySetResult(document.RootElement.Clone());
+                }
+            }
+
+            engine.DocumentTitleChanged += OnTitleChanged;
+            try
+            {
+                _ = await engine.ExecuteScriptAsync(script);
+                return await completion.Task.WaitAsync(s_timeout, TestContext.Current.CancellationToken);
+            }
+            finally
+            {
+                engine.DocumentTitleChanged -= OnTitleChanged;
+            }
+        });
     }
 
     // Waits for a report of the page that the test is looking for. The page writes its report in the title
