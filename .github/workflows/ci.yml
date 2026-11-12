@@ -5,6 +5,7 @@ name: CI
 on:
   push:
     branches:
+      - main
       - develop-vnext
       - 'vnext/**'
   pull_request:
@@ -12,11 +13,11 @@ on:
       - main
   workflow_dispatch:
 
-# One run at a time for each branch or pull request. A new push cancels the run in progress, except on
-# develop-vnext.
+# One run at a time for each work branch or pull request: a new push cancels the run in progress. On main and
+# on develop-vnext each run is a group of its own, so every pushed commit is built and none is cancelled.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.ref != 'refs/heads/develop-vnext' }}
+  group: ${{ github.workflow }}-${{ (github.ref_name == 'main' || github.ref_name == 'develop-vnext') && github.run_id || github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read

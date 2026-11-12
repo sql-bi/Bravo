@@ -110,10 +110,10 @@ of the production assemblies that the rules inspect; it is empty until the host 
 
 ### Continuous integration
 
-One GitHub Actions workflow, `.github/workflows/ci.yml`, runs on every push to `develop-vnext` and to a work
-branch, on the pull requests to `main` and on request
+One GitHub Actions workflow, `.github/workflows/ci.yml`, runs on every push to `main`, to `develop-vnext` and
+to a work branch, on the pull requests to `main` and on request
 ([ADR 0010](adr/0010-continuous-integration-in-one-workflow.md)). A new push cancels the run in progress of
-the same branch or pull request, except on `develop-vnext`.
+the same work branch or pull request; on `main` and on `develop-vnext` every pushed commit is built.
 
 | Job | Runs on | What fails it |
 | --- | --- | --- |

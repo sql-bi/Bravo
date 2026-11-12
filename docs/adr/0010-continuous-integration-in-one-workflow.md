@@ -11,13 +11,14 @@ branch holds one portable test project and the user interface.
 
 ## Decision
 
-One workflow, `.github/workflows/ci.yml`, runs on every push to `develop-vnext` and to a work branch, on pull
-requests to `main` and on request. A new push cancels the run in progress, except on `develop-vnext`. Four jobs:
+One workflow, `.github/workflows/ci.yml`, runs on every push to `main`, `develop-vnext` and a work
+branch, on pull requests to `main` and on request. A new push cancels the run in progress of a work branch or
+pull request. Four jobs:
 
 - `build-and-test`, on Windows: restore in locked mode, build with `-warnaserror`, test. Its name is the one
   `main` requires, so the final pull request changes no repository rule.
 - `build-and-test-linux`: the same on Linux, on the whole solution until a Windows-only project exists.
-- `build-web`: `npm ci` and the release bundle of the user interface, which also checks the types.
+- `build-web`: `npm ci` and the release bundle of the user interface, which checks the types.
 - `audit`: a restore that turns the NuGet audit warnings into errors, in this job only, and `npm audit` of the
   shipped dependencies, which only reports until they can be updated.
 
