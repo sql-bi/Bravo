@@ -136,7 +136,7 @@ A warning fails the build ([ADR 0009](docs/adr/0009-rules-enforced-by-the-build.
 | The version of every package | `Directory.Packages.props` |
 | Code style and the severity of each diagnostic | `.editorconfig` |
 | The symbols no project may use | `BannedSymbols.txt` |
-| Allowed project references, catch-all names, static mutable state | `tests/Bravo.Architecture.Tests` |
+| Allowed project references, catch-all names, static mutable state, the projects that the solution and its filter list | `tests/Bravo.Architecture.Tests` |
 
 A project under `src/` sets its own target framework and is named in four places:
 
@@ -146,8 +146,9 @@ A project under `src/` sets its own target framework and is named in four places
 - `tests/Bravo.Architecture.Tests/Bravo.Architecture.Tests.csproj`, which builds it before the tests, among the
   portable projects or among the ones that target Windows.
 
-Without one of the last two the architecture tests fail. A test project is named in the first two, by the same
-condition.
+A test project is named in the first two, by the same condition. The architecture tests fail when a project
+of `src/` or `tests/` is missing from one of these places, and when the filter lists a project that targets
+Windows: a project that no solution lists would never be built or tested.
 
 The architecture tests read the assemblies of `src/` as metadata and never load them, because their project is
 portable and cannot reference a project that targets Windows. On Windows they inspect the four assemblies; on
