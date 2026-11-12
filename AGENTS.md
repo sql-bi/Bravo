@@ -350,8 +350,9 @@ The runs are also public, at <https://github.com/sql-bi/Bravo/actions>.
 `web/` holds the user interface of the previous implementation: TypeScript and LESS, bundled by webpack. It
 reads what the application is, the options and the events of the host through the client generated from the
 OpenAPI document; its other calls are as they were, and each one moves with its feature. Until then they
-fail before they are sent: `Utils.Request.ajax` adds a request header that the API does not allow. Its commands run in `web/` and need Node.js 26 with npm:
-`package.json` pins that line in `devEngines`, and npm stops with an error on another one.
+fail before they are sent: `Utils.Request.ajax` adds a request header that the API does not allow. Its
+commands run in `web/` and need Node.js 26 with npm: `package.json` pins that line in `devEngines`, and npm
+stops with an error on another one.
 
 | Task | Command |
 | --- | --- |

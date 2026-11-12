@@ -240,10 +240,11 @@ The main window shows the user interface in a webview, WebView2
 ([ADR 0015](adr/0015-page-under-a-reserved-host-name-api-connection-in-an-object.md)). Everything that knows
 the engine is in one folder of `Bravo.Desktop`: a shell on another engine rewrites that folder.
 
-**Window.** The icon of the application, the title of the [build identity](#startup-lifetime-and-single-instance),
-the size that Windows gives a new window, in the middle of the screen. Its background follows the color mode
-of the system, and the webview stays hidden until the first document has loaded, so nothing flashes white.
-Nothing of the window is kept from one start to the next (backlog S-01).
+**Window.** The icon of the application, the title of the
+[build identity](#startup-lifetime-and-single-instance), the size that Windows gives a new window, in the
+middle of the screen. Its background follows the color mode of the system, and the webview stays hidden until
+the first document has loaded, so nothing flashes white. Nothing of the window is kept from one start to the
+next (backlog S-01).
 
 **Page.** The webview serves the folder `wwwroot`, beside the executable, under the host name `bravo.invalid`,
 reserved for names that are no site ([RFC 6761](https://www.rfc-editor.org/rfc/rfc6761.html#section-6.4)). No

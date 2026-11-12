@@ -45,8 +45,9 @@ the four guarantees of [the specification](spec.md#guarantees-for-users-of-10x).
   - `wwwroot` beside the executable: a release build copies nothing there. The folder is the static files of
     `web/wwwroot` with the release bundle of `artifacts/web` (`js/main.js`, `css/main.css` and the licence
     text of the bundle). Without `wwwroot\index.html` the application ends with exit code 2.
-  - The assemblies of the WebView2 package and its loader, `runtimes\win-<architecture>\native\WebView2Loader.dll`
-    for three architectures, in the output of the build.
+  - The assemblies of the WebView2 package and its loader,
+    `runtimes\win-<architecture>\native\WebView2Loader.dll` for three architectures, in the output of the
+    build.
   - The profile of the webview of 1.0.x, `%LOCALAPPDATA%\Bravo\.temp`: 1.1.0 keeps its own in
     `%LOCALAPPDATA%\Bravo\WebView2` and neither reads nor removes the old folder. What the page stored there
     is not carried over: the origin of the page changed as well.
