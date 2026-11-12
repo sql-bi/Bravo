@@ -5,3 +5,7 @@
 # C# sources are checked out with CRLF on every system, as .editorconfig declares: a build on Linux reads the
 # same bytes as a build on Windows.
 *.cs text eol=crlf
+
+# The OpenAPI document is written by a test, with LF on every system: it is checked out the same way, so that
+# writing it again when the API has not changed leaves the working tree clean.
+src/Bravo.Api/openapi.json text eol=lf
