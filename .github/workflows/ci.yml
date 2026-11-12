@@ -27,7 +27,6 @@ env:
   DOTNET_CLI_TELEMETRY_OPTOUT: 1
   TESTINGPLATFORM_TELEMETRY_OPTOUT: 1
 
-# Every action is pinned to the commit of a release, with the version in a comment on the same line.
 jobs:
 
   # The required status check of main carries this name: the job keeps its id, gets no name and no matrix.

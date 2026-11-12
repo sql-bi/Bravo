@@ -1,5 +1,4 @@
-# Analyzer options of every project. Directory.Build.props passes this file to the compiler: a file named
-# .globalconfig would also be read from every folder above a project, such as the checkout around a worktree.
+# Analyzer options of every project, passed to the compiler by Directory.Build.props.
 is_global = true
 
 # Above 100, the level of a file named .globalconfig: one found in a folder above the repository does not
