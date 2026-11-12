@@ -36,9 +36,7 @@ internal static class Program
         using (arbitration.Ownership)
         {
             using var host = DesktopHost.Build(identity, arbitration.Ownership, options, fatalExceptionHandler);
-            DesktopHost.Run(host, request);
+            return DesktopHost.Run(host, request);
         }
-
-        return ExitCode.Success;
     }
 }

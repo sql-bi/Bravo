@@ -5,6 +5,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.TimeProvider.Testing" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\src\Bravo.Api\Bravo.Api.csproj" />
     <ProjectReference Include="..\..\src\Bravo.Core\Bravo.Core.csproj" />
     <ProjectReference Include="..\..\src\Bravo.Desktop\Bravo.Desktop.csproj" />

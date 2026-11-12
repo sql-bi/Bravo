@@ -1,0 +1,16 @@
+<Project>
+
+  <!--
+    The WebView2 package adds a reference to its WPF control in every .NET project, also where the package
+    arrives through a project reference. The application hosts the Windows Forms control only, and the WPF
+    assembly asks for a WindowsBase that is not the one of the framework (MSB3277, an error here). The reference
+    is removed, so the assembly is neither referenced nor copied to the output.
+    See https://github.com/MicrosoftEdge/WebView2Feedback/issues/4959
+  -->
+  <Target Name="RemoveWebView2WpfReference" BeforeTargets="ResolveAssemblyReferences">
+    <ItemGroup>
+      <Reference Remove="@(Reference)" Condition="'%(Filename)' == 'Microsoft.Web.WebView2.Wpf'" />
+    </ItemGroup>
+  </Target>
+
+</Project>

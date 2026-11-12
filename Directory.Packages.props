@@ -36,6 +36,11 @@
     <PackageVersion Include="System.Reflection.MetadataLoadContext" Version="10.0.15" />
   </ItemGroup>
 
+  <!-- The webview of the main window: the control for Windows Forms and the loader of the WebView2 runtime. -->
+  <ItemGroup>
+    <PackageVersion Include="Microsoft.Web.WebView2" Version="1.0.4314.35" />
+  </ItemGroup>
+
   <!-- Generates the declarations of the Windows functions that the NativeMethods.txt of a project lists. -->
   <ItemGroup>
     <PackageVersion Include="Microsoft.Windows.CsWin32" Version="0.3.371" />

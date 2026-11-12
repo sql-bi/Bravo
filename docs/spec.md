@@ -154,8 +154,7 @@ is the only composition root, on the .NET Generic Host. `Bravo.Core` and `Bravo.
 dialogs, the window and the UI thread are interfaces of `Bravo.Core` that the shell implements. No state is
 static or ambient: every service is injected.
 
-The entry point, the host, the API and an empty main window exist; the content of the window is open work
-(backlog H-04).
+The entry point, the host, the API and the main window with its webview exist.
 
 ### Startup, lifetime and single instance
 
@@ -223,8 +222,77 @@ foreground; the user interface that reads the event is backlog H-04.
 start: it travels with the request. The request carries what the command line gives; the parent process and
 the report name are backlog M-01.
 
-**Exit codes.** 0 when the application ran and was closed, and when a start was handed over; 1 when a
-hand-over failed. An exception that escapes ends the process with the code of the runtime.
+**Exit codes.** An exception that escapes ends the process with the code of the runtime. The application
+itself ends with one of these:
+
+| Code | When |
+| --- | --- |
+| 0 | The application ran and was closed, or a start was handed over |
+| 1 | A hand-over failed |
+| 2 | The files of the user interface are not beside the executable |
+| 3 | The WebView2 runtime is installed and the webview could not be created with it |
+| 4 | The processes of the webview ended more times in a row than the application recovers from |
+| 1223 | The WebView2 runtime is not installed: the code that 1.0.x ends with |
+
+### Window and webview
+
+The main window shows the user interface in a webview, WebView2
+([ADR 0015](adr/0015-page-under-a-reserved-host-name-api-connection-in-an-object.md)). Everything that knows
+the engine is in one folder of `Bravo.Desktop`: a shell on another engine rewrites that folder.
+
+**Window.** The icon of the application, the title of the [build identity](#startup-lifetime-and-single-instance),
+the size that Windows gives a new window, in the middle of the screen. Its background follows the color mode
+of the system, and the webview stays hidden until the first document has loaded, so nothing flashes white.
+Nothing of the window is kept from one start to the next (backlog S-01).
+
+**Page.** The webview serves the folder `wwwroot`, beside the executable, under the host name `bravo.invalid`,
+reserved for names that are no site ([RFC 6761](https://www.rfc-editor.org/rfc/rfc6761.html#section-6.4)). No
+other origin can read those files. The window opens `https://bravo.invalid/index.html`: the origin is the same
+at every start, so what the page stores is found again. The engine keeps its data in the folder `WebView2` of
+the data folder of the build, under the local application data of the user, and is given no browser argument.
+The folder that 1.0.x used, `Bravo\.temp`, is neither read nor written (backlog D-01).
+
+**Connection.** Before any script of a document runs, the webview runs a script that defines the object
+`window.bravoHost`, with the members `address` and `token`: where the API listens, with no slash at its end,
+and the token of the process. The script defines it only in a document whose origin is the origin of the page,
+and the page can neither replace it nor change it. In the released application the token is never in an
+address, a cookie or a file.
+
+**What the page cannot do.** Everything that the page does not use is off: host objects, the messages of the
+webview, the script dialogs and the context menus of the engine, the keys of a browser, the developer tools,
+the status bar, the saving of passwords and of form data, pinch zoom, swipe navigation, and the reputation
+check of addresses, which has nothing to check. A development build has the developer tools and the keys of a
+browser.
+
+- A navigation outside the origin of the page is cancelled, in the window and in a frame; a frame may hold a
+  blank document.
+- No window opens, and no download starts (backlog D-03).
+- A permission is denied, except reading the clipboard for the origin of the page. No answer is kept in the
+  profile.
+
+**Failures.** One type holds the rules, with no knowledge of the engine:
+
+| Failure | What happens |
+| --- | --- |
+| The render process ends | The page is loaded again |
+| The browser process ends | The control is disposed and a new one is created, when the engine says that the process has gone |
+| Another process of the engine ends, or the page does not answer | Nothing: the engine recovers by itself, or the page may answer again |
+| A fourth recovery within 5 minutes | A message, and exit code 4 |
+| `wwwroot\index.html` is missing | A message, and exit code 2 |
+| The runtime is not installed | A message with the address of the installer of the Evergreen runtime, and exit code 1223 |
+| The engine or its control cannot be created, also because the runtime is too old for what the application uses | A message with what the engine reported, and exit code 3 |
+
+An exception of an asynchronous step that is not a failure of the engine leaves the message loop, and ends the
+application like any other. Until backlog S-05 the messages are dialogs of their own.
+
+**Local Network Access.** The page and the API have different origins, so the checks that Chromium makes on a
+page that calls the loopback address apply to it. WebView2 does not make them today
+([announcement 126](https://github.com/MicrosoftEdge/WebView2Announcements/issues/126)), and the application
+passes no flag. Measured on runtime 157.0.4341.46 with
+`--enable-features=LocalNetworkAccessChecks,msWebViewAllowLocalNetworkAccessChecks`: the permission of the
+page is `prompt`, the engine asks the user with a prompt of its own and raises no permission request to the
+application, and the first request of the page waits: nothing reaches the host. The second flag alone has the
+same effect, the first alone has none (backlog S-03).
 
 ### User interface and host
 
@@ -246,9 +314,12 @@ other request has the 5 seconds of the stop to end.
   route added later is protected with nothing to remember.
 - A request names `127.0.0.1` as its host, or the answer is 400: a page that reaches the port through a name of
   its own gets nothing.
-- A browser lets a page read an answer only when the page comes from an origin that the application allows. No
-  origin is allowed yet: the one of the user interface is decided by backlog H-04. An allowed origin may send
-  `GET`, `POST`, `PUT` and `DELETE` with the `Authorization` and `Content-Type` headers, without credentials.
+- A browser lets a page read an answer only when the page comes from an origin that the application allows.
+  The application allows the origin of its page, `https://bravo.invalid`
+  ([window and webview](#window-and-webview)). An allowed origin may send `GET`, `POST`, `PUT` and `DELETE`
+  with the `Authorization` and `Content-Type` headers, without credentials. The answer to the request that a
+  browser sends first, to ask what is allowed, may be kept for two hours, the longest that Chromium keeps it:
+  without a value it is kept for 5 seconds.
 - A second token is a second authentication scheme, accepted only by the routes whose policy names it: the one
   of the Visual Studio Code extension is backlog F-05.
 

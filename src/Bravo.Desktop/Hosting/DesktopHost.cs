@@ -8,6 +8,7 @@ using Bravo.Desktop.Diagnostics;
 using Bravo.Desktop.Settings;
 using Bravo.Desktop.Shell;
 using Bravo.Desktop.SingleInstance;
+using Bravo.Desktop.WebView;
 using Bravo.Platform.Windows.SingleInstance;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
@@ -43,6 +44,7 @@ internal static class DesktopHost
         builder.Services.AddDesktopLifetime();
         builder.Services.AddApplicationInfo(identity);
         builder.Services.AddShell(identity, fatalExceptionHandler);
+        builder.Services.AddWebView(identity);
         builder.Services.AddActivation();
         builder.Services.AddSingleInstance(ownership, singleInstanceOptions);
         builder.Services.AddUserSettings();
@@ -59,7 +61,8 @@ internal static class DesktopHost
     /// </summary>
     /// <param name="host">The host, which the caller disposes.</param>
     /// <param name="firstRequest">What the start of this process asked for.</param>
-    public static void Run(WebApplication host, ActivationRequest firstRequest)
+    /// <returns>The exit code of the process.</returns>
+    public static int Run(WebApplication host, ActivationRequest firstRequest)
     {
         // The first start is an activation like the others, and the first of the queue.
         _ = host.Services.GetRequiredService<IActivationChannel>().Post(firstRequest);
@@ -76,5 +79,7 @@ internal static class DesktopHost
             // message loop any longer.
             Task.Run(() => host.StopAsync()).GetAwaiter().GetResult();
         }
+
+        return host.Services.GetRequiredService<ShellExit>().Code;
     }
 }

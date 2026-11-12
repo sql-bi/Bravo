@@ -21,6 +21,7 @@ internal static class ShellServiceCollectionExtensions
     {
         services.AddSingleton(identity);
         services.AddSingleton(fatalExceptionHandler);
+        services.AddSingleton<ShellExit>();
         services.AddSingleton<IMainWindow, MainWindow>();
         services.AddSingleton<MainWindowRunner>();
 

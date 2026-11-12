@@ -8,6 +8,12 @@
         "resolved": "5.6.0",
         "contentHash": "Kcobt3pnOdO0A+6CKiMHZdTEluJpsfxiV20axtZdmfBQnDmiWTKPJADlgAfdTuKNAnVarrkJa0UEGwuOo91muw=="
       },
+      "Microsoft.Extensions.TimeProvider.Testing": {
+        "type": "Direct",
+        "requested": "[11.0.0, )",
+        "resolved": "11.0.0",
+        "contentHash": "GMXLbXAPI1GrcNQJQCHr0jgH/5fdPAGI4easP0KwMeJ6neSeWFeZcd8PhxDlII8TVXO1UctHl/4OC0sYZS4iuA=="
+      },
       "NSubstitute": {
         "type": "Direct",
         "requested": "[6.2.0, )",
@@ -174,6 +180,7 @@
           "Bravo.Api": "[1.0.0, )",
           "Bravo.Core": "[1.0.0, )",
           "Bravo.Platform.Windows": "[1.0.0, )",
+          "Microsoft.Web.WebView2": "[1.0.4314.35, )",
           "System.CommandLine": "[2.0.15, )"
         }
       },
@@ -201,6 +208,12 @@
         "dependencies": {
           "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.15"
         }
+      },
+      "Microsoft.Web.WebView2": {
+        "type": "CentralTransitive",
+        "requested": "[1.0.4314.35, )",
+        "resolved": "1.0.4314.35",
+        "contentHash": "x5MFf2W03xueU1mMNvivXfHSsQ+ODo7vJ36qw/dLtU5Gs+8d7+7N7zzmNNDoT3ffosmcvZNBtUnlzyiDUuBkSQ=="
       },
       "System.CommandLine": {
         "type": "CentralTransitive",

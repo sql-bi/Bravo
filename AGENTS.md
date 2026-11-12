@@ -85,6 +85,7 @@ not exist yet: the table names the backlog item that creates them.
 | `artifacts/` | Build and publish output of every project and the release bundle of the user interface, ignored by git | Written by the builds |
 | `Bravo.slnx`, `Directory.Build.props`, `Directory.Packages.props` | The solution and the build rules of every .NET project | Exist |
 | `Bravo.Portable.slnf` | The projects of the solution that do not target Windows, which continuous integration builds and tests on Linux | Exists |
+| `Directory.Build.targets` | What is done to every .NET project after its packages: the reference that the WebView2 package adds to its WPF control is removed | Exists |
 | `global.json`, `nuget.config`, `version.json`, `.editorconfig` | The .NET SDK and the mode of `dotnet test`, the package source, the version, the code style | Exist |
 | `BannedSymbols.txt`, `CodeAnalysis.globalconfig`, `.gitattributes` | The symbols no project may use, the analyzer options, the line endings | Exist |
 
@@ -108,8 +109,8 @@ The host is four projects, with Windows at the edge
 - The user interface reaches the host through an HTTP API served on loopback
   ([ADR 0012](docs/adr/0012-http-on-loopback-between-user-interface-and-host.md)), which `Bravo.Api` holds
   ([API](#api)).
-- Today `Bravo.Desktop` starts, keeps one instance, serves the API and shows an empty main window. The content
-  of the window is backlog H-04.
+- `Bravo.Desktop` starts, keeps one instance, serves the API and shows the user interface in the webview of
+  its main window ([Window and webview](#window-and-webview)).
 
 A project of `src/` gets its test project with its first test: a run in which no test ran fails.
 
@@ -123,7 +124,9 @@ A project of `src/` gets its test project with its first test: a run in which no
 | --- | --- |
 | The order of the startup | `src/Bravo.Desktop/Program.cs` |
 | The host: what it is built with, its lifetime, its stop | `src/Bravo.Desktop/Hosting/` |
-| The main window, and what ties it to the host | `src/Bravo.Desktop/Shell/` |
+| The main window, what ties it to the host, and the exit code that the window ends with | `src/Bravo.Desktop/Shell/` |
+| The webview, and everything that knows its engine | `src/Bravo.Desktop/WebView/` ([Window and webview](#window-and-webview)) |
+| The exit codes of the process | `src/Bravo.Desktop/ExitCode.cs` |
 | What is done with an exception that escapes | `src/Bravo.Desktop/Diagnostics/` |
 | The command line, and the consumer of the activations | `src/Bravo.Desktop/Activation/` |
 | The activation request, and the channel that every activation goes through | `src/Bravo.Core/Activation/` |
@@ -158,6 +161,41 @@ A project of `src/` gets its test project with its first test: a run in which no
 | Run the application | `dotnet run --project src/Bravo.Desktop -c Release` |
 | Run it as the external tool registration does | `dotnet run --project src/Bravo.Desktop -c Release -- --server=localhost:12345 --database=db` |
 | Start the executable that the build wrote | `artifacts/bin/Bravo.Desktop/release/Bravo.exe` |
+
+## Window and webview
+
+The main window shows the user interface in WebView2
+([ADR 0015](docs/adr/0015-page-under-a-reserved-host-name-api-connection-in-an-object.md));
+[docs/spec.md](docs/spec.md#window-and-webview) describes what the page gets and what it cannot do. Only
+`src/Bravo.Desktop/WebView/` uses the types of the engine:
+
+| Part | File |
+| --- | --- |
+| The host name and the origin of the page, and the check that an address belongs to it | `PageAddress.cs` |
+| The script that gives the page `window.bravoHost`, the address and the token of the API | `PageConnectionScript.cs` |
+| The control: its environment, its settings, what it cancels and denies, its recoveries | `WebViewHost.cs` |
+| The rules for the failures and their limits, with no type of the engine | `WebViewFailurePolicy.cs`, `WebViewFailure.cs`, `WebViewRecovery.cs`, `WebViewDecision.cs` |
+| What the user reads when a failure ends the application | `WebViewFailureMessage.cs`, `WebViewFailureDialog.cs` |
+| The folders, and whether the developer tools are on: decided by the application, not by the webview | `WebViewOptions.cs`, `WebViewServiceCollectionExtensions.cs` |
+
+- The name of the origin is in `PageAddress` and nowhere else: `AddWebView` adds it to the origins that the
+  API allows.
+- Everything of the control runs on the thread of the window. A step that nobody awaits goes through
+  `WebViewHost.Observe`: a failure of the engine becomes a decision of the rules, and any other exception
+  leaves the message loop and ends the application. Nothing calls the engine, or shows a dialog, from inside
+  an event of the engine: it is posted to the window.
+- A setting that the page does not need stays off. Turning one on is a change of
+  [docs/spec.md](docs/spec.md#window-and-webview) in the same commit.
+- The page is `wwwroot` beside the executable. The .NET build never runs npm: a development build copies
+  `web/wwwroot` as it is, so the window shows the user interface only after `npm run build:UI` in `web/` and
+  a build of `Bravo.Desktop`; without the bundle the window stays empty. A release build copies nothing
+  (backlog D-01).
+- `WebViewHostTests` uses the real engine: a window outside every screen, on a thread with a message loop, on
+  a page of the test that reports through the title of its document. It needs the WebView2 runtime, which
+  Windows 11 and the Windows runner of continuous integration have. A test waits for an event of the engine,
+  never for a time.
+- The WebView2 package adds a reference to its WPF control in every project: `Directory.Build.targets` removes
+  it, or the build fails with MSB3277.
 
 ## API
 
@@ -239,6 +277,7 @@ A warning fails the build ([ADR 0009](docs/adr/0009-rules-enforced-by-the-build.
 | Rule | File |
 | --- | --- |
 | Compiler and analyzer settings, output folders, lock files | `Directory.Build.props`; `tests/Directory.Build.props` adds what every test project needs |
+| What is changed in a project after its packages | `Directory.Build.targets` |
 | The version of every package | `Directory.Packages.props` |
 | Code style and the severity of each diagnostic | `.editorconfig` |
 | The symbols no project may use | `BannedSymbols.txt` |

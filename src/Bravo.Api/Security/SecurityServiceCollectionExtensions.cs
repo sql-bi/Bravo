@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
@@ -17,6 +18,11 @@ internal static class SecurityServiceCollectionExtensions
     /// that reaches the port through another name, as after a DNS rebinding, is refused.
     /// </summary>
     public const string AllowedHost = "127.0.0.1";
+
+    // How long a browser may keep the answer to a preflight request, which it sends before every request
+    // with the token. Without a value it keeps the answer 5 seconds; no Chromium browser keeps it longer
+    // than two hours, whatever the value.
+    private static readonly TimeSpan s_preflightMaxAge = TimeSpan.FromHours(2);
 
     /// <summary>
     /// Adds what protects an API that any program and any page of this machine can reach: the token, the
@@ -59,6 +65,7 @@ internal static class SecurityServiceCollectionExtensions
         cors.AddDefaultPolicy(policy => policy
             .WithOrigins(origins)
             .WithMethods(HttpMethods.Get, HttpMethods.Post, HttpMethods.Put, HttpMethods.Delete)
-            .WithHeaders(HeaderNames.Authorization, HeaderNames.ContentType));
+            .WithHeaders(HeaderNames.Authorization, HeaderNames.ContentType)
+            .SetPreflightMaxAge(s_preflightMaxAge));
     }
 }

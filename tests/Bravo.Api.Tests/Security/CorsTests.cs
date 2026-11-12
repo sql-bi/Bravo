@@ -29,6 +29,19 @@ public sealed class CorsTests
         Assert.Equal("Authorization,Content-Type", response.Headers.GetValues("Access-Control-Allow-Headers").Single());
     }
 
+    // Two hours, the longest that a Chromium browser keeps the answer: without a value, 5 seconds.
+    [Fact]
+    public async Task Preflight_FromAnAllowedOrigin_MayBeKeptForTwoHours()
+    {
+        await using var api = await TestApi.StartAsync();
+        using var client = api.CreateAnonymousClient();
+        using var request = CreatePreflight(TestApi.AllowedOrigin, HttpMethod.Get, "authorization");
+
+        using var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
+
+        Assert.Equal("7200", response.Headers.GetValues("Access-Control-Max-Age").Single());
+    }
+
     [Fact]
     public async Task Preflight_FromAnUnknownOrigin_AllowsNothing()
     {
