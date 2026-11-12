@@ -7,5 +7,6 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Bravo.Architecture.Tests/Bravo.Architecture.Tests.csproj" />
+    <Project Path="tests/Bravo.Core.Tests/Bravo.Core.Tests.csproj" />
   </Folder>
 </Solution>
