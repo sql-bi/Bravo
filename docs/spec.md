@@ -120,7 +120,7 @@ the same branch or pull request, except on `develop-vnext`.
 | `build-and-test` | Windows | A lock file out of date; a warning of the compiler, of an analyzer or of MSBuild; a failed test |
 | `build-and-test-linux` | Linux | The same, on the whole solution until it has a Windows-only project |
 | `build-web` | Linux | `npm ci` or the release build of the user interface, which also checks the types |
-| `audit` | Windows | A NuGet package with a known vulnerability of any severity, referenced directly or not |
+| `audit` | Windows | A NuGet package with a known vulnerability of any severity, referenced directly or not; vulnerability data that cannot be read |
 
 `build-and-test` is the status check that `main` requires: its name does not change. `audit` also runs
 `npm audit` on the dependencies that ship with the user interface; that step reports and does not fail the job

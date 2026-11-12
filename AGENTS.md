@@ -134,7 +134,9 @@ What a run checks beyond the commands of the table above:
 
 - The build has `-warnaserror`. A warning in a project fails a local build as well; the switch adds the
   warnings raised outside the projects, at the level of the solution.
-- `audit` restores with `-p:AuditPipeline=true`, which turns the NuGet audit warnings into errors.
+- `audit` restores with `-p:AuditPipeline=true`, which turns the NuGet audit warnings into errors: a package
+  with a known vulnerability, and also vulnerability data that cannot be read. On a local machine the
+  restore needs `--force`: without it NuGet skips a restore that is up to date, and the audit with it.
 - The `npm audit` step looks at the dependencies that ship with the user interface. It reports and does not
   fail the job until they are updated (backlog H-04): its error annotation on a green run is expected.
 
@@ -146,7 +148,7 @@ Every action is pinned to the commit of a release, with the version in a comment
 | List the runs of a branch | `gh run list --branch <branch>` |
 | Wait for a run to end | `gh run watch <run id> --exit-status` |
 | Read the log of the failed steps | `gh run view <run id> --log-failed` |
-| Check the NuGet packages as `audit` does | `dotnet restore Bravo.slnx -p:AuditPipeline=true` |
+| Check the NuGet packages as `audit` does | `dotnet restore Bravo.slnx --force -p:AuditPipeline=true` |
 
 The runs are also public, at <https://github.com/sql-bi/Bravo/actions>.
 
