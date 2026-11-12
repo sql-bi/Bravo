@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading;
+using Bravo.Api.Events;
 using Bravo.Core.Activation;
 using Bravo.Desktop.Activation;
 using Bravo.Desktop.Shell;
@@ -21,7 +22,8 @@ public sealed class MainWindowRunnerTests : IDisposable
         var lifetime = Substitute.For<IHostApplicationLifetime>();
         lifetime.ApplicationStopping.Returns(_hostStopping.Token);
 
-        _runner = new MainWindowRunner(lifetime, _activations, new ActivationPump(_activations));
+        var pump = new ActivationPump(_activations, Substitute.For<IHostEventPublisher>());
+        _runner = new MainWindowRunner(lifetime, _activations, pump);
     }
 
     public void Dispose()

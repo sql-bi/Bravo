@@ -108,8 +108,8 @@ The host is four projects, with Windows at the edge
 - The user interface reaches the host through an HTTP API served on loopback
   ([ADR 0012](docs/adr/0012-http-on-loopback-between-user-interface-and-host.md)), which `Bravo.Api` holds
   ([API](#api)).
-- Today `Bravo.Desktop` starts, keeps one instance and shows an empty main window, and does not serve the API
-  yet. The content of the window is backlog H-04.
+- Today `Bravo.Desktop` starts, keeps one instance, serves the API and shows an empty main window. The content
+  of the window is backlog H-04.
 
 A project of `src/` gets its test project with its first test: a run in which no test ran fails.
 
@@ -129,12 +129,20 @@ A project of `src/` gets its test project with its first test: a run in which no
 | The activation request, and the channel that every activation goes through | `src/Bravo.Core/Activation/` |
 | The single instance: ownership by mutex, hand-over by pipe, arbitration | `src/Bravo.Platform.Windows/SingleInstance/` |
 | The names of the instance, the listener as a service of the host, the message of a failed hand-over | `src/Bravo.Desktop/SingleInstance/` |
+| The settings of the user and their store, in memory until backlog S-01 | `src/Bravo.Core/Settings/`, registered in `src/Bravo.Desktop/Settings/` |
 | The Windows functions of a project, listed in its `NativeMethods.txt` and wrapped by capability | `Interop/` in `Bravo.Desktop` and in `Bravo.Platform.Windows` |
 
 - A component registers its services in an extension method of `IServiceCollection` beside its code, and
   `DesktopHost.Build` calls it.
+- `DesktopHost.Build` is the one place that names the builder, `WebApplication.CreateEmptyBuilder`: what a web
+  application has by default, such as configuration files, environment variables, logging providers and a
+  server, is in the host only when `Build` adds it. The API is added with `UseLoopbackServer`, `AddApi` and
+  `UseApi` ([API](#api)).
 - The ownership of the instance is a mutex, which only the thread that acquired it can release: `Main` acquires
-  it and releases it, and a test that acquires one stays on one thread.
+  it and releases it, and a test that acquires one stays on one thread. A test that awaits holds it through
+  `OwnedInstance`, on a thread of its own.
+- `DesktopHostApiTests` starts the host as the application builds it, without a window, and calls the API on a
+  real socket.
 - The tests of the single instance use real mutexes and pipes, each test under names of its own.
   `BravoProcessTests` starts `Bravo.exe` with the names of the application: it shows a window for a moment,
   and it is skipped when an instance of this version already runs for the user.
