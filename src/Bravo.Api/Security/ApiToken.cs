@@ -6,8 +6,8 @@ using System.Text;
 namespace Bravo.Api.Security;
 
 /// <summary>
-/// The secret that a client of the API shows with every request. It is created for this process, lives in
-/// memory only, and must never be written to a file or to a log.
+/// The secret that a client of the API shows with every request. It is created for this process and lives
+/// in memory only: it is never written to a log, and to a file only by a development build that was asked to.
 /// </summary>
 public sealed class ApiToken
 {

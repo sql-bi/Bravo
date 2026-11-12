@@ -22,11 +22,11 @@ internal static class Program
         var identity = BuildIdentity.FromAssembly(typeof(Program).Assembly);
 
         // Before the application reads or writes anything of its own: a second process ends in the arbitration.
-        var request = ActivationCommandLine.Parse(args);
+        var start = ActivationCommandLine.Parse(args, identity);
         var names = InstanceNames.ForCurrentUserSession(identity.ApplicationId);
         var options = new SingleInstanceOptions();
         var arbiter = new SingleInstanceArbiter(names, options, TimeProvider.System);
-        var arbitration = arbiter.Arbitrate(ActivationPayload.Encode(request));
+        var arbitration = arbiter.Arbitrate(ActivationPayload.Encode(start.Request));
         if (!arbitration.IsOwner)
         {
             return SecondInstance.End(arbitration);
@@ -35,8 +35,8 @@ internal static class Program
         // Released last, after the host is disposed: until then no other process becomes the owner.
         using (arbitration.Ownership)
         {
-            using var host = DesktopHost.Build(identity, arbitration.Ownership, options, fatalExceptionHandler);
-            return DesktopHost.Run(host, request);
+            using var host = DesktopHost.Build(identity, start.Development, arbitration.Ownership, options, fatalExceptionHandler);
+            return DesktopHost.Run(host, start.Request);
         }
     }
 }

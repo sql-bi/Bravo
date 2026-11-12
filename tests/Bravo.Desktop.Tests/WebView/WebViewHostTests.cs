@@ -5,6 +5,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Bravo.Api.Security;
 using Bravo.Api.Server;
+using Bravo.Desktop.Development;
 using Bravo.Desktop.Diagnostics;
 using Bravo.Desktop.Hosting;
 using Bravo.Desktop.Tests.Hosting;
@@ -38,7 +39,7 @@ public sealed class WebViewHostTests : IAsyncLifetime
     {
         var identity = BuildIdentity.Development("1.1.0");
         var fatalExceptionHandler = Substitute.For<IFatalExceptionHandler>();
-        _host = DesktopHost.Build(identity, _instance.Ownership, new SingleInstanceOptions(), fatalExceptionHandler);
+        _host = DesktopHost.Build(identity, DevelopmentOptions.None, _instance.Ownership, new SingleInstanceOptions(), fatalExceptionHandler);
         _requests = new RequestLog(_host.Services.GetRequiredService<DiagnosticListener>());
 
         // The webview of the application, with the folders of the test in place of the ones of the installation.

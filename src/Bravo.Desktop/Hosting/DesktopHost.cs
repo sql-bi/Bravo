@@ -4,6 +4,7 @@ using Bravo.Api;
 using Bravo.Api.Server;
 using Bravo.Core.Activation;
 using Bravo.Desktop.Activation;
+using Bravo.Desktop.Development;
 using Bravo.Desktop.Diagnostics;
 using Bravo.Desktop.Settings;
 using Bravo.Desktop.Shell;
@@ -21,8 +22,14 @@ namespace Bravo.Desktop.Hosting;
 /// </summary>
 internal static class DesktopHost
 {
+    /// <param name="identity">The build that was started.</param>
+    /// <param name="development">What the command line of a development build asked its host for.</param>
+    /// <param name="ownership">The ownership of the instance, which the caller releases after the host.</param>
+    /// <param name="singleInstanceOptions">The limits that the arbitration of this process used.</param>
+    /// <param name="fatalExceptionHandler">What was installed for an exception that escapes.</param>
     public static WebApplication Build(
         BuildIdentity identity,
+        DevelopmentOptions development,
         InstanceOwnership ownership,
         SingleInstanceOptions singleInstanceOptions,
         IFatalExceptionHandler fatalExceptionHandler)
@@ -45,6 +52,7 @@ internal static class DesktopHost
         builder.Services.AddApplicationInfo(identity);
         builder.Services.AddShell(identity, fatalExceptionHandler);
         builder.Services.AddWebView(identity);
+        builder.Services.AddDevelopmentOptions(development);
         builder.Services.AddActivation();
         builder.Services.AddSingleInstance(ownership, singleInstanceOptions);
         builder.Services.AddUserSettings();

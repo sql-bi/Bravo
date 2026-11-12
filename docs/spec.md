@@ -285,6 +285,22 @@ browser.
 An exception of an asynchronous step that is not a failure of the engine leaves the message loop, and ends the
 application like any other. Until backlog S-05 the messages are dialogs of their own.
 
+**In a browser.** For development and tests the same page runs in an ordinary browser, against a development
+build of the host. Only a development build knows two more arguments of the command line; to a release build
+they are arguments that it does not know, and so errors of the request.
+
+| Argument | What the host does |
+| --- | --- |
+| `--dev-origin=<origin>` | Allows one more origin to call the API: the one of the development server |
+| `--dev-connection-file=<path>` | Once it has started, writes the address and the token of the API to the file, a JSON object with the members `address` and `token`; deletes the file when it stops |
+
+A development server serves the development bundle and the static files of the page, on the loopback address
+only, rebuilds the bundle at every change, and gives the page the same object before any other script, with
+the content of that file. The limit is plain: there the token is in a file and in a page that the server gives
+to whoever asks for it, so whoever on the machine can read that file or reach that server can call the API of
+that development host. A start that finds a development build already running is handed over to it like any
+other, and what it asked for the browser has no effect.
+
 **Local Network Access.** The page and the API have different origins, so the checks that Chromium makes on a
 page that calls the loopback address apply to it. WebView2 does not make them today
 ([announcement 126](https://github.com/MicrosoftEdge/WebView2Announcements/issues/126)), and the application

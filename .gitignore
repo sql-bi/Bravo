@@ -362,3 +362,5 @@ web/wwwroot/js
 web/wwwroot/css
 # The client of the host API, generated from src/Bravo.Api/openapi.json by every build of web/
 web/generated/
+# Where a development host writes the address and the token of its API for the development server
+web/.dev/

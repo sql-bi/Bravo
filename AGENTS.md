@@ -129,6 +129,7 @@ A project of `src/` gets its test project with its first test: a run in which no
 | The exit codes of the process | `src/Bravo.Desktop/ExitCode.cs` |
 | What is done with an exception that escapes | `src/Bravo.Desktop/Diagnostics/` |
 | The command line, and the consumer of the activations | `src/Bravo.Desktop/Activation/` |
+| What a development build is asked for a browser: one more allowed origin, the file with the address and the token | `src/Bravo.Desktop/Development/` |
 | The activation request, and the channel that every activation goes through | `src/Bravo.Core/Activation/` |
 | The single instance: ownership by mutex, hand-over by pipe, arbitration | `src/Bravo.Platform.Windows/SingleInstance/` |
 | The identity of the build: release or development, with its instance identifier, data folder and window title | `src/Bravo.Desktop/BuildIdentity.cs` |
@@ -356,6 +357,8 @@ fail before they are sent: `Utils.Request.ajax` adds a request header that the A
 | Release bundle into another folder | `npm run build:Release -- --output-path <folder>` |
 | Development bundle into `web/wwwroot` | `npm run build:UI` |
 | Development bundle, rebuilt at every change | `npm run watch:UI` |
+| Start a development host for a page in a browser | `npm run serve:host` |
+| Serve the page to a browser, rebuilt at every change | `npm run serve:UI` |
 | Generate the client of the host API alone | `npm run generate:api` |
 
 A bundle is `js/main.js` and `css/main.css`; the release build adds `js/main.js.LICENSE.txt`. Every build type
@@ -373,6 +376,30 @@ The page starts in `web/main.ts`, the same in the window and in a browser:
   when it is called, does not exist yet.
 - `HostEvents` (`web/controllers/host-events.ts`) reads the events of the host and is where a new kind of
   event is handled. The page has no message channel with the window.
+
+To see the user interface in a browser, against a real host
+([docs/spec.md](docs/spec.md#window-and-webview)):
+
+1. In `web/`, `npm ci` once, then `npm run serve:host`. It builds `Bravo.Desktop` and starts it as
+   `dotnet run --project ../src/Bravo.Desktop -c Release -- --dev-origin=http://127.0.0.1:8098
+   --dev-connection-file=<web>/.dev/host.json` would. The window of Bravo opens, and the command prints
+   "The host is ready". Closing the window ends the host.
+2. In a second terminal, in `web/`, `npm run serve:UI`: webpack-dev-server, on `127.0.0.1` only.
+3. Open `http://127.0.0.1:8098` in Chrome or Edge. The page is loaded again at every change of the sources.
+
+- `web/dev.config.mjs` holds the port, the origin and the path of the file; `dev-host.mjs` and
+  `dev-server.mjs` are the two commands. The server starts webpack through its API, not through
+  `webpack serve`: the webpack-cli of the repository is older than the one that the server asks for.
+- The server gives `index.html` the object `window.bravoHost` before its first script, from the file that the
+  host wrote, read at every request: after the host is started again, load the page again. Without the file
+  the page is a 503 that says how to start the host.
+- A development build that already runs takes the start of `serve:host` like any other start, and writes no
+  file: the command says so and ends with 1. Close the running window first. The installed application does
+  not matter: it is another instance.
+- `web/.dev/host.json` holds the token of that host while it runs. Git ignores the folder; the host deletes
+  the file when it stops.
+- The two arguments exist only in a development build
+  ([Startup and single instance](#startup-and-single-instance)).
 
 The client of the host API is generated, not written:
 
