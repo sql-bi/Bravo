@@ -36,4 +36,23 @@ public sealed class ProjectFileTests
 
         Assert.Empty(project.References);
     }
+
+    [Theory]
+    [InlineData("net10.0", false)]
+    [InlineData("net10.0-windows", true)]
+    [InlineData("net10.0-windows10.0.19041.0", true)]
+    public void Parse_TargetFramework_TellsWhetherTheProjectTargetsWindows(string targetFramework, bool expected)
+    {
+        var xml = $"""
+            <Project Sdk="Microsoft.NET.Sdk">
+              <PropertyGroup>
+                <TargetFramework>{targetFramework}</TargetFramework>
+              </PropertyGroup>
+            </Project>
+            """;
+
+        var project = ProjectFile.Parse("Bravo.Sample", xml);
+
+        Assert.Equal(expected, project.TargetsWindows);
+    }
 }

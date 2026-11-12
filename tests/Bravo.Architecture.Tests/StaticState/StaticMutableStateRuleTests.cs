@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Reflection;
 using Bravo.Architecture.Tests.StaticState.Fixtures;
 using Xunit;
@@ -54,10 +55,25 @@ public sealed class StaticMutableStateRuleTests
         Assert.Empty(violations);
     }
 
+    [Theory]
+    [InlineData(typeof(MutableStatics))]
+    [InlineData(typeof(ImmutableStatics))]
+    [InlineData(typeof(ModelCounter))]
+    public void FindViolations_TypeReadAsMetadata_ReportsWhatTheLoadedTypeReports(Type type)
+    {
+        using var assemblies = MetadataAssemblies.Read([type.Assembly.Location]);
+
+        var violations = StaticMutableStateRule.FindViolations([assemblies.GetType(type)]);
+
+        Assert.Equal(StaticMutableStateRule.FindViolations([type]).Order(), violations.Order());
+    }
+
     [Fact]
     public void FindViolations_ProductionAssemblies_ReturnsNone()
     {
-        var violations = StaticMutableStateRule.FindViolations(ProductionAssemblies.Types());
+        using var assemblies = ProductionAssemblies.Read();
+
+        var violations = StaticMutableStateRule.FindViolations(assemblies.Types);
 
         RuleAssert.NoViolations(violations);
     }

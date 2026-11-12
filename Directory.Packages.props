@@ -22,9 +22,13 @@
     <PackageVersion Include="xunit.v3" Version="4.0.3" />
   </ItemGroup>
 
-  <!-- The logging generator, for a fixture of the architecture tests. Aligned with the .NET 10 runtime. -->
+  <!--
+    For the architecture tests: the logging generator of a fixture, and the reader of assemblies as metadata.
+    Aligned with the .NET 10 runtime.
+  -->
   <ItemGroup>
     <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.15" />
+    <PackageVersion Include="System.Reflection.MetadataLoadContext" Version="10.0.15" />
   </ItemGroup>
 
 </Project>

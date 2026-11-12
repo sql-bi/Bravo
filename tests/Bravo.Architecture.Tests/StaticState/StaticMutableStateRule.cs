@@ -79,7 +79,7 @@ internal static class StaticMutableStateRule
 
         var isSystemCollection = typeNamespace == "System.Collections"
             || typeNamespace.StartsWith("System.Collections.", StringComparison.Ordinal);
-        if (!isSystemCollection || !typeof(IEnumerable).IsAssignableFrom(type))
+        if (!isSystemCollection || !IsEnumerable(type))
         {
             return false;
         }
@@ -89,5 +89,11 @@ internal static class StaticMutableStateRule
         return !name.StartsWith("IEnumerable", StringComparison.Ordinal)
             && !name.StartsWith("IReadOnly", StringComparison.Ordinal)
             && !name.StartsWith("ReadOnly", StringComparison.Ordinal);
+    }
+
+    // By name: a type read as metadata is not assignable to the IEnumerable of this process.
+    private static bool IsEnumerable(Type type)
+    {
+        return type.GetInterfaces().Append(type).Any(candidate => candidate.FullName == typeof(IEnumerable).FullName);
     }
 }

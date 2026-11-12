@@ -47,9 +47,21 @@ public sealed class CatchAllNameRuleTests
     }
 
     [Fact]
+    public void FindViolations_TypeReadAsMetadata_ReportsWhatTheLoadedTypeReports()
+    {
+        using var assemblies = MetadataAssemblies.Read([typeof(TextHelper).Assembly.Location]);
+
+        var violations = CatchAllNameRule.FindViolations([assemblies.GetType(typeof(TextHelper))]);
+
+        Assert.Equal(CatchAllNameRule.FindViolations([typeof(TextHelper)]), violations);
+    }
+
+    [Fact]
     public void FindViolations_ProductionAssemblies_ReturnsNone()
     {
-        var violations = CatchAllNameRule.FindViolations(ProductionAssemblies.Types());
+        using var assemblies = ProductionAssemblies.Read();
+
+        var violations = CatchAllNameRule.FindViolations(assemblies.Types);
 
         RuleAssert.NoViolations(violations);
     }

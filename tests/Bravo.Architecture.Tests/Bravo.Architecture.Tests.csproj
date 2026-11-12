@@ -4,9 +4,20 @@
     <TargetFramework>net10.0</TargetFramework>
   </PropertyGroup>
 
-  <!-- For the fixture with a [LoggerMessage] method, which the rule on static state must not report. -->
   <ItemGroup>
+    <!-- For the fixture with a [LoggerMessage] method, which the rule on static state must not report. -->
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+    <!-- Reads the assemblies of src/ as metadata, without loading them. -->
+    <PackageReference Include="System.Reflection.MetadataLoadContext" />
   </ItemGroup>
+
+  <!-- The tests find the assemblies of src/ through this file: see ProductionAssemblies.cs. -->
+  <Target Name="WriteProductionAssemblies" AfterTargets="ResolveAssemblyReferences">
+    <ItemGroup>
+      <ProductionAssembly Include="@(ReferencePath)" Condition="'%(ReferencePath.ReferenceSourceTarget)' == 'ProjectReference'" />
+      <FileWrites Include="$(OutDir)ProductionAssemblies.txt" />
+    </ItemGroup>
+    <WriteLinesToFile File="$(OutDir)ProductionAssemblies.txt" Lines="@(ProductionAssembly->'%(MSBuildSourceProjectFile)|%(FullPath)')" Overwrite="true" WriteOnlyWhenDifferent="true" />
+  </Target>
 
 </Project>
