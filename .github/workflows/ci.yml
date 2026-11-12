@@ -119,8 +119,8 @@ jobs:
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: web/package.json
-      # Not blocking yet: the dependencies that ship with the user interface have known advisories, and they
-      # can be updated only when the user interface can be run and checked (backlog H-04).
+      # Not blocking yet: the dependencies that ship with the user interface have known advisories. Updating
+      # them, and making this step fail the job, is backlog H-05.
       - name: Audit the npm packages that ship with the user interface
         working-directory: web
         continue-on-error: true

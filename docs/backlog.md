@@ -12,30 +12,22 @@ criterion can be checked on `develop-vnext`.
 Exit: the new executable starts, a second start activates the first, it shows the current user interface and
 opens the options through the new API and the generated client.
 
-- [ ] H-04 Window and webview. Decided by the maintainer; the ADR is the first commit of the work branch:
-  - The code of the webview is written for WebView2 and stays in one place: an interface neutral to the engine
-    is not a goal of 1.1.0.
-  - The webview serves the page from the installation folder under a reserved host name, so the origin of the
-    page is the same at every start. The host sets the address and the token of the API in an object of the
-    page before the scripts of the page run: in the released application the token of the user interface is
-    never in an address, a cookie or a file.
-  - Requests and events stay on HTTP, the same in the webview and in a browser. The API allows the origin of
-    the page, and sets a maximum age for the answer that a browser asks for before a request from another
-    origin: today the browser keeps it for a few seconds.
-  - In a browser, for development and tests, a development server serves the same bundle and sets the same
-    object, against a development build of the host that allows the origin of that server.
-  - A build that the release pipeline did not produce is a development build: an instance of its own beside
-    the installed application, with its own data folder. Today they are one instance, and the process test is
-    skipped while an instance runs.
-
-  Also: webview process failures and a missing WebView2 runtime; the page reads the events of the host, and a
-  page that is loaded again does not read again the events it has read; the page takes its first options from
-  the API, not from its configuration; the checks of Chromium on the requests of a page to the loopback
-  address (Local Network Access), which WebView2 does not apply today.
 - [ ] H-05 User interface on the new contract. The user interface reads the `code` of a problem: today it
   reads the status and the `instance` member that the previous host wrote. It numbers the values of an enum
   that the host names, converted today for the options alone. Also: updates the user interface dependencies
-  that `npm audit` reports and makes the npm step of CI blocking.
+  that `npm audit` reports and makes the npm step of CI blocking. Also, left by the window and the webview:
+  - The calls that are not on the generated client never leave the page: `Utils.Request.ajax` adds the request
+    header `Access-Control-Allow-Origin`, which the API does not allow, so the browser engine stops them. Sent
+    without that header, their token has no scheme: the API answers 401, which the page takes for a missing
+    sign-in and answers with the sign-in dialog.
+  - At every start one of them fails, the update check (`api/GetCurrentVersion`), and leaves a rejected
+    promise that nothing handles. The page also replaces the options once at every start, right after it has
+    read them.
+  - `host.changeTheme` told the window the theme of the user, for its title bar: the window follows the color
+    mode of the system until the page can tell it.
+  - A page that cannot start says so in one line of English text.
+  - The development server is started through the API of webpack-dev-server, because the webpack-cli of the
+    repository is older than the one that the server asks for.
 
 ## T3 Distribution
 
@@ -47,12 +39,26 @@ the four guarantees of [the specification](spec.md#guarantees-for-users-of-10x).
   enterprise deployment, external tool registration, signing, WinGet, licence. Also: a running instance during
   an upgrade, because 1.0.x and 1.1.0 do not recognize each other; the resource folders of System.CommandLine,
   one for each language, in the output of the build; the ASP.NET Core runtime, which the application needs
-  beside the Windows Desktop one.
+  beside the Windows Desktop one. Also, for the webview:
+  - The WebView2 runtime: the application does not install it, and without it ends with a message and exit
+    code 1223. Windows 11 has it; the installer checks or installs it elsewhere.
+  - `wwwroot` beside the executable: a release build copies nothing there. The folder is the static files of
+    `web/wwwroot` with the release bundle of `artifacts/web` (`js/main.js`, `css/main.css` and the licence
+    text of the bundle). Without `wwwroot\index.html` the application ends with exit code 2.
+  - The assemblies of the WebView2 package and its loader, `runtimes\win-<architecture>\native\WebView2Loader.dll`
+    for three architectures, in the output of the build.
+  - The profile of the webview of 1.0.x, `%LOCALAPPDATA%\Bravo\.temp`: 1.1.0 keeps its own in
+    `%LOCALAPPDATA%\Bravo\WebView2` and neither reads nor removes the old folder. What the page stored there
+    is not carried over: the origin of the page changed as well.
 - [ ] D-02 Release. Hypothesis: GitHub Actions builds, signs, publishes a GitHub release with generated notes
   and changelog, and updates the feed. Explore: signing with a federated identity; changelog tools; how the
-  version is computed.
+  version is computed. Also: the release builds with `-p:BravoReleaseBuild=true`, or what it publishes is a
+  development build, with another instance, another data folder and the arguments for a browser; the title of
+  the window and `GET /application` show the informational version of the assembly, which nothing sets yet.
 - [ ] D-03 Updates. Hypothesis: a notification, as today. Explore: automatic update, if the installer
-  technology offers it.
+  technology offers it. Also: the page started the download of an update in a frame of its own, and the webview
+  cancels a frame navigation outside the origin of the page and starts no download; the update check has no
+  route, and fails at every start of the page.
 
 ## T4 Cross-cutting services
 
@@ -61,14 +67,23 @@ crash produces a report, telemetry runs on a supported SDK.
 
 - [ ] S-01 User settings. Hypothesis: read once, immutable snapshot, atomic save, migration from 1.0.x. Also:
   the store behind `GET` and `PUT /options` is in memory, so the options start from their defaults at every
-  start; a save that fails is an error with a code of its own.
+  start; a save that fails is an error with a code of its own; the registry value of 1.0.x that hides the
+  version in the title of the window (`applicationTitleVersionHidden`), which 1.1.0 does not read; the size
+  and the position of the window, which are not kept.
 - [ ] S-02 Policies. Hypothesis: the same keys; the templates shipped in a subfolder of the installation. Also:
-  `/options` knows no policy, so an option that a policy sets is returned and replaced like any other.
+  `/options` knows no policy, so an option that a policy sets is returned and replaced like any other; the
+  page starts with no policy, so its options dialog locks nothing.
 - [ ] S-03 Network and proxy. Hypothesis: system proxy and auto-configuration detected without settings,
   integrated credentials first, a prompt as the last resort, a connectivity check with clear messages. Explore:
   the proxy in .NET, in the webview, in the sign-in library and in the Analysis Services client libraries.
   Also: the proxy options that `/options` accepts today, an address and a bypass list of regular expressions,
-  which nothing reads yet.
+  which nothing reads yet; the webview is given no browser argument, where 1.0.x passed it the proxy. Also,
+  Local Network Access ([announcement 126](https://github.com/MicrosoftEdge/WebView2Announcements/issues/126)):
+  when WebView2 offers the permission, the application grants it to the origin of the page. Measured on
+  runtime 157.0.4341.46 with the checks turned on by `msWebViewAllowLocalNetworkAccessChecks`: the permission
+  is `prompt`, the engine shows a prompt of its own, raises no permission request to the application, and the
+  request of the page waits without reaching the host; after a grant through the DevTools protocol
+  (`Browser.grantPermissions`) the same request is answered.
 - [ ] S-04 Diagnostics and logging. Hypothesis: in-memory log shown in the user interface, plus the event log.
   Also: the host has no logging provider yet, so the warning of an owner of the instance that cannot create
   its pipe reaches no log, and neither does a request of the API that failed: the `traceId` of a problem
@@ -77,19 +92,27 @@ crash produces a report, telemetry runs on a supported SDK.
   as an application of its own or as a mode of the main executable. Also: replaces the minimal last-chance
   exception handling; a service of the host that fails stops the host, which closes the window with no
   message; the exceptions of tasks that nobody observed; a server of the API that cannot open its port, which
-  fails the start of the host.
+  fails the start of the host; the failures of the webview, which end the application with dialogs of their
+  own and the exit codes 2, 3, 4 and 1223, and whose recoveries, a page loaded again or a new control, leave
+  no trace.
 - [ ] S-06 Telemetry. Hypothesis: a supported SDK; the classic Application Insights SDK is retired on
-  2027-03-31. Explore: Application Insights 3 or OpenTelemetry; consent.
+  2027-03-31. Explore: Application Insights 3 or OpenTelemetry; consent. Also: the page gets no telemetry
+  settings, creates no telemetry client and sends nothing.
 
 ## T5 Access to models
 
 Exit: sign-in, the lists of reports and datasets, a model opened from Power BI Desktop and from the service.
 
 - [ ] M-01 Local Power BI Desktop. Hypothesis: isolated components for the instances, their ports and the
-  report name. Also: the report name from the parent process, and `--ppid`.
+  report name. Also: the report name from the parent process, and `--ppid`; an activation with a server opens
+  a report: the page gets `serverName` and `databaseName` in the `Activation` event and has `App.openReport`,
+  which takes a report as the list of the local reports gives it. Today the page logs such an activation and
+  opens nothing.
 - [ ] M-02 Model connections. Hypothesis: a tabular session behind a port, with an in-memory model for tests.
 - [ ] M-03 Sign-in and the Power BI service. Hypothesis: interaction behind a port. Explore: the guidance for
-  desktop applications; the Windows authentication broker (#879).
+  desktop applications; the Windows authentication broker (#879). Also: the account that the page remembers
+  stays in the storage of the page, and is lost once at the upgrade from 1.0.x; an activation whose server is
+  of the Power BI service opened a dataset (`App.openDataset`).
 
 ## T6 Features
 

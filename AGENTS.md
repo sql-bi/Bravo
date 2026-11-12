@@ -328,7 +328,9 @@ What a run checks beyond the commands of the table above:
   with a known vulnerability, and also vulnerability data that cannot be read. On a local machine the
   restore needs `--force`: without it NuGet skips a restore that is up to date, and the audit with it.
 - The `npm audit` step looks at the dependencies that ship with the user interface. It reports and does not
-  fail the job until they are updated (backlog H-04): its error annotation on a green run is expected.
+  fail the job until they are updated (backlog H-05): its error annotation on a green run is expected.
+- The tests of the Windows job start `Bravo.exe` and use the real WebView2 engine. The runtime is not in the
+  list of the software of the runner image: it comes with the Windows image that the runner is built on.
 
 `build-and-test` is the status check that `main` requires: do not rename the job and do not give it a matrix.
 Every action is pinned to the commit of a release, with the version in a comment on the same line.
