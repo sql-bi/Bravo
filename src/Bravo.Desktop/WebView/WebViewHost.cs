@@ -202,14 +202,16 @@ internal sealed class WebViewHost(
         e.Handled = true;
     }
 
-    // The page reads the clipboard when the user pastes. The answer is given at every request and is not
-    // kept in the profile, so a later version decides again.
+    // An answer of the application is given at every request and is not kept in the profile, so a later
+    // version decides again. Where the application does not decide, the request is left as it arrived:
+    // the engine asks the user.
     private void OnPermissionRequested(object? sender, CoreWebView2PermissionRequestedEventArgs e)
     {
-        var isClipboardOfThePage = e.PermissionKind == CoreWebView2PermissionKind.ClipboardRead
-            && PageAddress.Contains(e.Uri);
-        e.State = isClipboardOfThePage ? CoreWebView2PermissionState.Allow : CoreWebView2PermissionState.Deny;
-        e.SavesInProfile = false;
+        if (WebViewPermissionRule.Decide(e.PermissionKind, e.Uri) is { } state)
+        {
+            e.State = state;
+            e.SavesInProfile = false;
+        }
     }
 
     private void OnDownloadStarting(object? sender, CoreWebView2DownloadStartingEventArgs e)

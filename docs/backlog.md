@@ -79,7 +79,8 @@ crash produces a report, telemetry runs on a supported SDK.
   Also: the proxy options that `/options` accepts today, an address and a bypass list of regular expressions,
   which nothing reads yet; the webview is given no browser argument, where 1.0.x passed it the proxy. Also,
   Local Network Access ([announcement 126](https://github.com/MicrosoftEdge/WebView2Announcements/issues/126)):
-  when WebView2 offers the permission, the application grants it to the origin of the page. Measured on
+  when WebView2 offers the permission, the application grants it to the origin of the page; until then a
+  permission that its version of the SDK cannot name is left to the prompt of the engine. Measured on
   runtime 157.0.4341.46 with the checks turned on by `msWebViewAllowLocalNetworkAccessChecks`: the permission
   is `prompt`, the engine shows a prompt of its own, raises no permission request to the application, and the
   request of the page waits without reaching the host; after a grant through the DevTools protocol

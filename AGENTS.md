@@ -174,7 +174,8 @@ The main window shows the user interface in WebView2
 | --- | --- |
 | The host name and the origin of the page, and the check that an address belongs to it | `PageAddress.cs` |
 | The script that gives the page `window.bravoHost`, the address and the token of the API | `PageConnectionScript.cs` |
-| The control: its environment, its settings, what it cancels and denies, its recoveries | `WebViewHost.cs` |
+| The control: its environment, its settings, what it cancels, its recoveries | `WebViewHost.cs` |
+| The answer to a permission that a document asks for | `WebViewPermissionRule.cs` |
 | The rules for the failures and their limits, with no type of the engine | `WebViewFailurePolicy.cs`, `WebViewFailure.cs`, `WebViewRecovery.cs`, `WebViewDecision.cs` |
 | What the user reads when a failure ends the application | `WebViewFailureMessage.cs`, `WebViewFailureDialog.cs` |
 | The folders, and whether the developer tools are on: decided by the application, not by the webview | `WebViewOptions.cs`, `WebViewServiceCollectionExtensions.cs` |

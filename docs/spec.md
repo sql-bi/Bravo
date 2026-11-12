@@ -267,8 +267,12 @@ browser.
 - A navigation outside the origin of the page is cancelled, in the window and in a frame; a frame may hold a
   blank document.
 - No window opens, and no download starts (backlog D-03).
-- A permission is denied, except reading the clipboard for the origin of the page. No answer is kept in the
-  profile.
+- A permission that a document of another origin asks for is denied. For the origin of the page, reading the
+  clipboard is allowed, and every other permission that the version of the WebView2 SDK in use can name is
+  denied. None of these answers is kept in the profile.
+- A permission that this version cannot name, as a later runtime may ask for, is not answered by the
+  application: the engine asks the user, and keeps the answer. Denying it could stop the page after an update
+  of the runtime, with nothing that the user could do.
 
 **Failures.** One type holds the rules, with no knowledge of the engine:
 
