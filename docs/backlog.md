@@ -19,9 +19,13 @@ opens the options through the new API and the generated client.
   first Windows-only project.
 - [ ] H-02 Startup, lifetime and single instance. Hypothesis: today's order, from the exception handler to the
   window. Explore: the generic host in desktop applications; single instance in well-known desktop applications.
-- [ ] H-03 API and the contract with the user interface. Hypothesis: minimal APIs, routes by resource, standard
-  errors with stable codes, a versioned OpenAPI document, a generated TypeScript client behind the single module
-  that calls the host today. Explore: REST guidelines; client generators; long operations by polling or events.
+- [ ] H-03 API and the contract with the user interface. Decided
+  ([ADR 0012](adr/0012-http-on-loopback-between-user-interface-and-host.md)): HTTP with minimal APIs, served on
+  loopback with a token for each process, host filtering and CORS restricted to the origin of the user
+  interface; an OpenAPI document; a generated TypeScript client. Hypothesis for what is open: routes by
+  resource, standard errors with stable codes, a versioned OpenAPI document, the generated client behind the
+  single module that calls the host today. Explore: REST guidelines; client generators; long operations by
+  polling or events.
 - [ ] H-04 Window and webview. Hypothesis: one component isolates the webview and stays neutral to its engine.
   Explore: the native webview of Avalonia; webview process failures; running the user interface in a plain
   browser for development and tests. Also: updates the user interface dependencies that `npm audit` reports
@@ -76,7 +80,20 @@ Exit, for each feature: the same results as `main` on the sample models; its row
 - [ ] F-03 Export Data.
 - [ ] F-04 Manage Dates. To settle: where the date templates live; `README.md` links them at their path on
   `main`.
-- [ ] F-05 Template Development. Explore: the contract with the Visual Studio Code extension.
+- [ ] F-05 Template Development. The Visual Studio Code extension as published (`sql-bi/BravoTemplateEditor`
+  1.0.1, commit `31e4793`) must keep working unchanged
+  ([ADR 0012](adr/0012-http-on-loopback-between-user-interface-and-host.md)). What it expects from the host:
+  - It finds the host only through `bravo-config.json` at the root of the workspace folder: a JSON object with
+    `address`, an absolute `http://` URL with no trailing slash, and `token`, both names in lower case. Bravo
+    writes the two values when the user presses "Edit" on a template workspace.
+  - Every request carries the token alone as the value of the `Authorization` header, with no scheme, and
+    `Content-Type: application/json`, also on a GET. The host must listen on TCP on loopback.
+  - It calls four routes: `GET /TemplateDevelopment/GetReports`, `POST /TemplateDevelopment/GetModel`,
+    `POST /TemplateDevelopment/GetPreviewChanges` and
+    `GET /TemplateDevelopment/PBIDesktopOpenPBIX?path=<pbix>&waitForStarted=true`. The other seven routes of
+    the group are called only by the user interface of Bravo.
+  - It waits 60 seconds for an answer, which is JSON. An error is a ProblemDetails body; the statuses 401, 403,
+    404 and 408 tell the extension that it is not connected.
 
 ## T7 Replacement of `main`
 

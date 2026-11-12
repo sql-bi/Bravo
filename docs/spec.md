@@ -60,6 +60,10 @@ files, the name of the single-instance pipe, the arguments of the external tool 
 - **Networks.** Bravo is used in enterprises by people who are not technicians. Every connection it makes must
   work at the first attempt behind proxy servers, firewalls and proxy auto-configuration scripts, with no
   complex configuration.
+- **The user interface in a browser.** The user interface must run in an ordinary browser against a real host:
+  a coding agent develops it and checks it there.
+- **The published extension.** The Visual Studio Code extension for templates, as published
+  (`sql-bi/BravoTemplateEditor` 1.0.1), must keep working with 1.1.0 unchanged.
 
 ## Architecture decided so far
 
@@ -151,6 +155,15 @@ static or ambient: every service is injected.
 The four projects exist as a skeleton, with an empty entry point: startup, the API and the window are open work
 (backlog H-02, H-03, H-04).
 
+### User interface and host
+
+For 1.1.0 the user interface reaches the host through an HTTP API
+([ADR 0012](adr/0012-http-on-loopback-between-user-interface-and-host.md)): ASP.NET Core minimal APIs with an
+OpenAPI document. The application serves it on loopback: a random port on `127.0.0.1`, a token created for each
+process, host filtering, and cross-origin requests allowed only from the origin of the user interface.
+Development and production use the same path, so a browser reaches the API that the webview reaches. The
+Visual Studio Code extension keeps the routes of Template Development that it calls today.
+
 ## Open questions
 
 Each is answered by the component named in brackets.
@@ -158,10 +171,6 @@ Each is answered by the component named in brackets.
 - Which technology builds the installer, and how many variants are released? [installer]
 - Does a per-user installation register Bravo in Power BI Desktop? Today only the per-machine one does.
   [installer]
-- Does the user interface keep calling the host over HTTP on loopback, or through the message channel of the
-  webview? [host architecture]
 - Is the crash reporter a mode of the main executable or an application of its own? [errors and crash
   reporting]
-- Does Template Development keep its current routes for the Visual Studio Code extension, or does the
-  extension change with the API? [features]
 - How is the version computed and how are release notes and the changelog produced? [release]
