@@ -83,6 +83,7 @@ not exist yet: the table names the backlog item that creates them.
 | `docs/` | Specification, backlog, ADRs, and the design of the previous implementation | Exists |
 | `artifacts/` | Build and publish output of every project and the release bundle of the user interface, ignored by git | Written by the builds |
 | `Bravo.slnx`, `Directory.Build.props`, `Directory.Packages.props` | The solution and the build rules of every .NET project | Exist |
+| `Bravo.Portable.slnf` | The projects of the solution that do not target Windows, which continuous integration builds and tests on Linux | Exists |
 | `global.json`, `nuget.config`, `version.json`, `.editorconfig` | The .NET SDK and the mode of `dotnet test`, the package source, the version, the code style | Exist |
 | `BannedSymbols.txt`, `CodeAnalysis.globalconfig`, `.gitattributes` | The symbols no project may use, the analyzer options, the line endings | Exist |
 
@@ -137,14 +138,16 @@ A warning fails the build ([ADR 0009](docs/adr/0009-rules-enforced-by-the-build.
 | The symbols no project may use | `BannedSymbols.txt` |
 | Allowed project references, catch-all names, static mutable state | `tests/Bravo.Architecture.Tests` |
 
-A project under `src/` sets its own target framework and is named in three places:
+A project under `src/` sets its own target framework and is named in four places:
 
 - `Bravo.slnx`;
+- `Bravo.Portable.slnf`, when it does not target Windows;
 - `tests/Bravo.Architecture.Tests/ProductionProjects.cs`, the table of the projects it may reference;
 - `tests/Bravo.Architecture.Tests/Bravo.Architecture.Tests.csproj`, which builds it before the tests, among the
   portable projects or among the ones that target Windows.
 
-Without one of the last two the architecture tests fail.
+Without one of the last two the architecture tests fail. A test project is named in the first two, by the same
+condition.
 
 The architecture tests read the assemblies of `src/` as metadata and never load them, because their project is
 portable and cannot reference a project that targets Windows. On Windows they inspect the four assemblies; on
@@ -161,7 +164,7 @@ stops after 15 minutes.
 | Job | What it runs |
 | --- | --- |
 | `build-and-test` | On Windows: the restore in locked mode, the build, the tests |
-| `build-and-test-linux` | The same on Linux |
+| `build-and-test-linux` | The same on Linux, on `Bravo.Portable.slnf`: the projects that do not target Windows |
 | `build-web` | In `web/`: `npm ci`, then `npm run build:Release` |
 | `audit` | A restore that fails on a NuGet package with a known vulnerability, then `npm audit` |
 

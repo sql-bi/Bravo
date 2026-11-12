@@ -52,7 +52,7 @@ jobs:
       - name: Test
         run: dotnet test --solution Bravo.slnx -c Release --no-build
 
-  # The same steps on Linux, on the whole solution until it has a Windows-only project (backlog H-01).
+  # The same steps on Linux, on the projects of the solution filter: the ones that do not target Windows.
   build-and-test-linux:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -68,11 +68,11 @@ jobs:
           cache: true
           cache-dependency-path: '**/packages.lock.json'
       - name: Restore
-        run: dotnet restore Bravo.slnx --locked-mode
+        run: dotnet restore Bravo.Portable.slnf --locked-mode
       - name: Build
-        run: dotnet build Bravo.slnx -c Release --no-restore -warnaserror
+        run: dotnet build Bravo.Portable.slnf -c Release --no-restore -warnaserror
       - name: Test
-        run: dotnet test --solution Bravo.slnx -c Release --no-build
+        run: dotnet test --solution Bravo.Portable.slnf -c Release --no-build
 
   build-web:
     runs-on: ubuntu-latest

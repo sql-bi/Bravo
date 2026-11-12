@@ -122,7 +122,7 @@ to a work branch, on the pull requests to `main` and on request
 | Job | Runs on | What fails it |
 | --- | --- | --- |
 | `build-and-test` | Windows | A lock file out of date; a warning of the compiler, of an analyzer or of MSBuild; a failed test |
-| `build-and-test-linux` | Linux | The same, on the whole solution until it has a Windows-only project |
+| `build-and-test-linux` | Linux | The same, on the projects of `Bravo.Portable.slnf`: the ones that do not target Windows |
 | `build-web` | Linux | `npm ci` or the release build of the user interface, which also checks the types |
 | `audit` | Windows | A NuGet package with a known vulnerability of any severity, referenced directly or not; vulnerability data that cannot be read |
 
