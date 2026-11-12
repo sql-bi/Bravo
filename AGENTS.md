@@ -396,7 +396,8 @@ To see the user interface in a browser, against a real host
   `webpack serve`: the webpack-cli of the repository is older than the one that the server asks for.
 - The server gives `index.html` the object `window.bravoHost` before its first script, from the file that the
   host wrote, read at every request: after the host is started again, load the page again. Without the file
-  the page is a 503 that says how to start the host.
+  the page is a 503 that says how to start the host. The page is given after the checks of the server on the
+  host that a request names: a request for another host name gets a 403, not the token.
 - A development build that already runs takes the start of `serve:host` like any other start, and writes no
   file: the command says so and ends with 1. Close the running window first. The installed application does
   not matter: it is another instance.

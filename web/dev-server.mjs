@@ -72,7 +72,16 @@ const server = new WebpackDevServer({
     // Only what stops the build covers the page: an error of the page itself is in the console of the browser
     client: { overlay: { errors: true, warnings: false, runtimeErrors: false } },
     setupMiddlewares: middlewares => {
-        middlewares.unshift({ name: 'bravo-page', middleware: servePage });
+        // After the checks of the server on the Host and Origin headers of a request, and before what serves
+        // files: the page with the token is given only to a request that passed those checks. Without them
+        // the server does not start, rather than give the page out unchecked.
+        const checks = ['host-header-check', 'cross-origin-header-check'];
+        const positions = checks.map(name => middlewares.findIndex(middleware => middleware.name === name));
+        const missing = checks.filter(name => !middlewares.some(middleware => middleware.name === name));
+        if (missing.length)
+            throw new Error(`webpack-dev-server has no middleware named ${missing.join(', ')}: the page would be served before its checks.`);
+
+        middlewares.splice(Math.max(...positions) + 1, 0, { name: 'bravo-page', middleware: servePage });
         return middlewares;
     }
 }, compiler);
