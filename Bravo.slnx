@@ -1,4 +1,10 @@
 <Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Bravo.Api/Bravo.Api.csproj" />
+    <Project Path="src/Bravo.Core/Bravo.Core.csproj" />
+    <Project Path="src/Bravo.Desktop/Bravo.Desktop.csproj" />
+    <Project Path="src/Bravo.Platform.Windows/Bravo.Platform.Windows.csproj" />
+  </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Bravo.Architecture.Tests/Bravo.Architecture.Tests.csproj" />
   </Folder>

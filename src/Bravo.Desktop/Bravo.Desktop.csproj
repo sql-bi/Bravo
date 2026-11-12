@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- The executable is Bravo.exe, the name that users and the external tool registration of 1.0.x know. -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <AssemblyName>Bravo</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Bravo.Api\Bravo.Api.csproj" />
+    <ProjectReference Include="..\Bravo.Core\Bravo.Core.csproj" />
+    <ProjectReference Include="..\Bravo.Platform.Windows\Bravo.Platform.Windows.csproj" />
+  </ItemGroup>
+
+</Project>

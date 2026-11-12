@@ -11,6 +11,22 @@
     <PackageReference Include="System.Reflection.MetadataLoadContext" />
   </ItemGroup>
 
+  <!-- The portable projects of src/. -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Bravo.Api\Bravo.Api.csproj" />
+    <ProjectReference Include="..\..\src\Bravo.Core\Bravo.Core.csproj" />
+  </ItemGroup>
+
+  <!--
+    The projects of src/ that target Windows. A portable project cannot reference them: on Windows they are only
+    built before this one. They are not dependencies for NuGet, so the lock file is the same on every system.
+  -->
+  <ItemGroup Condition="$([MSBuild]::IsOSPlatform('Windows'))">
+    <WindowsProject Include="..\..\src\Bravo.Desktop\Bravo.Desktop.csproj" />
+    <WindowsProject Include="..\..\src\Bravo.Platform.Windows\Bravo.Platform.Windows.csproj" />
+    <ProjectReference Include="@(WindowsProject)" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" OutputItemType="ProductionAssembly" />
+  </ItemGroup>
+
   <!-- The tests find the assemblies of src/ through this file: see ProductionAssemblies.cs. -->
   <Target Name="WriteProductionAssemblies" AfterTargets="ResolveAssemblyReferences">
     <ItemGroup>

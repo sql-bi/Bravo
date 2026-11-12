@@ -75,8 +75,8 @@ not exist yet: the table names the backlog item that creates them.
 
 | Path | Content | State |
 | --- | --- | --- |
-| `src/` | The .NET projects of the host, and nothing else | Created with the first project of the host (backlog H-01) |
-| `tests/` | One test project per project of `src/`, at the mirrored path, and the architecture tests | Exists |
+| `src/` | The .NET projects of the host, and nothing else | Exists |
+| `tests/` | One test project per project of `src/`, at the mirrored path, created with the first test of that project, and the architecture tests | Exists |
 | `web/` | The TypeScript user interface, with its own `package.json` and lockfile | Exists |
 | `installer/` | The installer | Created by backlog D-01 |
 | `policies/` | The group policy templates: `bravo.admx`, `sqlbi.admx`, `en-US/` | Exists |
@@ -85,6 +85,30 @@ not exist yet: the table names the backlog item that creates them.
 | `Bravo.slnx`, `Directory.Build.props`, `Directory.Packages.props` | The solution and the build rules of every .NET project | Exist |
 | `global.json`, `nuget.config`, `version.json`, `.editorconfig` | The .NET SDK and the mode of `dotnet test`, the package source, the version, the code style | Exist |
 | `BannedSymbols.txt`, `CodeAnalysis.globalconfig`, `.gitattributes` | The symbols no project may use, the analyzer options, the line endings | Exist |
+
+## Projects of the host
+
+The host is four projects, with Windows at the edge
+([ADR 0011](docs/adr/0011-host-in-four-projects-with-windows-at-the-edge.md)):
+
+| Project | Target | What goes there | May reference |
+| --- | --- | --- | --- |
+| `Bravo.Core` | `net10.0` | Use cases, model, and the interfaces toward everything outside | Nothing |
+| `Bravo.Api` | `net10.0` | The contract exposed to the user interface and to the Visual Studio Code extension | `Bravo.Core` |
+| `Bravo.Platform.Windows` | `net10.0-windows` | Adapters with no window: policies, credentials, the local Power BI Desktop | `Bravo.Core` |
+| `Bravo.Desktop` | `net10.0-windows` | Window, webview, dialogs, composition; its executable is `Bravo.exe` | The other three |
+
+- `Bravo.Core` and `Bravo.Api` use no Windows API: the build reports one as CA1416. Code that needs Windows gets
+  an interface in `Bravo.Core` and its implementation in `Bravo.Platform.Windows`, or in `Bravo.Desktop` when it
+  needs the window or the UI thread.
+- No state is static or ambient: a service is injected, and `Bravo.Desktop` is the only place where services are
+  registered.
+- The user interface reaches the host through an HTTP API served on loopback
+  ([ADR 0012](docs/adr/0012-http-on-loopback-between-user-interface-and-host.md)).
+- Today the projects are a skeleton: `Bravo.Desktop` has an empty entry point, and the other three have no code.
+  Startup, the API and the window are backlog H-02, H-03 and H-04.
+
+A project of `src/` gets its test project with its first test: a run in which no test ran fails.
 
 ## Build and tests
 
@@ -113,9 +137,18 @@ A warning fails the build ([ADR 0009](docs/adr/0009-rules-enforced-by-the-build.
 | The symbols no project may use | `BannedSymbols.txt` |
 | Allowed project references, catch-all names, static mutable state | `tests/Bravo.Architecture.Tests` |
 
-A project under `src/` sets its own target framework, is listed in `Bravo.slnx` and has an entry in
-`tests/Bravo.Architecture.Tests/ProductionProjects.cs`, the table of the projects it may reference: without the
-entry the architecture tests fail.
+A project under `src/` sets its own target framework and is named in three places:
+
+- `Bravo.slnx`;
+- `tests/Bravo.Architecture.Tests/ProductionProjects.cs`, the table of the projects it may reference;
+- `tests/Bravo.Architecture.Tests/Bravo.Architecture.Tests.csproj`, which builds it before the tests, among the
+  portable projects or among the ones that target Windows.
+
+Without one of the last two the architecture tests fail.
+
+The architecture tests read the assemblies of `src/` as metadata and never load them, because their project is
+portable and cannot reference a project that targets Windows. On Windows they inspect the four assemblies; on
+another system, the portable ones.
 
 ## Continuous integration
 

@@ -72,7 +72,7 @@ The top-level folders separate content by kind ([ADR 0008](adr/0008-repository-l
 | Path | Content |
 | --- | --- |
 | `src/` | The .NET projects of the host, and nothing else |
-| `tests/` | One test project per project of `src/`, at the mirrored path, with its own build rules |
+| `tests/` | One test project per project of `src/` that has tests, at the mirrored path, with its own build rules |
 | `web/` | The TypeScript user interface, self-contained, with its own `package.json` and lockfile |
 | `installer/` | The installer, outside the product source |
 | `policies/` | The group policy templates, which the installer ships in a subfolder of the installation |
@@ -105,14 +105,13 @@ No project sets the C# version: it follows the target framework. Each project se
 
 The architecture tests use reflection and read the project files. Each rule is a function from its input to
 the violations, tested twice: on a fixture that breaks it, which proves that the rule can fail, and on the
-repository. `ProductionProjects.cs` holds the table of allowed project references; it is empty until the host
-has projects.
+repository. `ProductionProjects.cs` holds the table of allowed project references.
 
 The tests read the assemblies of `src/` as metadata, with `System.Reflection.MetadataLoadContext`, and never
 load them. Their project is portable, so that it also runs on Linux, and a portable project cannot reference
 one that targets Windows: its build only builds those projects first, on Windows, and gives the tests the path
-of every assembly. On Windows the rules inspect every assembly of the host; on another system, the portable
-ones.
+of every assembly. On Windows the rules inspect the four assemblies of the host; on another system, the
+portable ones.
 
 ### Continuous integration
 
@@ -131,6 +130,26 @@ to a work branch, on the pull requests to `main` and on request
 `npm audit` on the dependencies that ship with the user interface; that step reports and does not fail the job
 until they are updated. The token of a run can only read the repository, the checkout keeps no credentials,
 every action is pinned to a full commit SHA, and neither the .NET CLI nor the test platform sends usage data.
+
+### Host
+
+The host is four projects, with Windows at the edge
+([ADR 0011](adr/0011-host-in-four-projects-with-windows-at-the-edge.md)):
+
+| Project | Target | Content |
+| --- | --- | --- |
+| `Bravo.Core` | `net10.0` | Use cases, model, and the interfaces toward everything outside |
+| `Bravo.Api` | `net10.0` | The contract exposed to the user interface and to the Visual Studio Code extension |
+| `Bravo.Platform.Windows` | `net10.0-windows` | Adapters with no window: policies, credentials, the local Power BI Desktop |
+| `Bravo.Desktop` | `net10.0-windows` | Window, webview, dialogs, composition; its executable is `Bravo.exe` |
+
+`Bravo.Api` and `Bravo.Platform.Windows` reference only `Bravo.Core`; `Bravo.Desktop` references all three and
+is the only composition root, on the .NET Generic Host. `Bravo.Core` and `Bravo.Api` use no Windows API:
+dialogs, the window and the UI thread are interfaces of `Bravo.Core` that the shell implements. No state is
+static or ambient: every service is injected.
+
+The four projects exist as a skeleton, with an empty entry point: startup, the API and the window are open work
+(backlog H-02, H-03, H-04).
 
 ## Open questions
 

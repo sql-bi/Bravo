@@ -12,5 +12,11 @@ namespace Bravo.Architecture.Tests;
 internal static class ProductionProjects
 {
     public static FrozenDictionary<string, ImmutableArray<string>> AllowedReferences { get; } =
-        new Dictionary<string, ImmutableArray<string>>().ToFrozenDictionary(StringComparer.Ordinal);
+        new Dictionary<string, ImmutableArray<string>>
+        {
+            ["Bravo.Core"] = [],
+            ["Bravo.Api"] = ["Bravo.Core"],
+            ["Bravo.Platform.Windows"] = ["Bravo.Core"],
+            ["Bravo.Desktop"] = ["Bravo.Api", "Bravo.Core", "Bravo.Platform.Windows"],
+        }.ToFrozenDictionary(StringComparer.Ordinal);
 }
