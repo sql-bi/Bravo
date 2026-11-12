@@ -213,8 +213,8 @@ computed is open (backlog D-02).
 **Activations.** Every start is an activation request, the first one included. The requests go through one
 bounded channel of 16 with a single consumer, which starts when the main window is shown: a request that
 arrives earlier waits. A second process is answered busy when the channel is full, and shutting down after the
-window was closed. The consumer publishes each request as an event of the API and brings the window to the
-foreground; the user interface that reads the event is backlog H-04.
+window was closed. The consumer publishes each request as an event of the API, which the page reads
+([events](#user-interface-and-host)), and brings the window to the foreground.
 
 **Command line.** `--server` or `-s`, `--database` or `-d`, and `--ppid`, with the value after a space, `=` or
 `:`. The arguments of the external tool registration are unchanged:
@@ -373,7 +373,7 @@ being 1. The page asks for the events after the last number it has read; the ans
 - When there are events after the number, the answer is immediate. Otherwise the request waits: an event that
   arrives answers it at once, and after 30 seconds it is answered with no event.
 - The host keeps the last 64 events. A request without a number gets all of them, so a page reads what
-  happened before it was ready; a reload of the page reads them again (backlog H-04).
+  happened before it was ready.
 - Numbers have no gaps: when the first event of an answer does not follow the number of the request, the
   events between the two are no longer kept. A number beyond the last one is answered at once, and `next`
   brings the page back.
@@ -397,8 +397,27 @@ Every build of the user interface generates its TypeScript client from that file
 [Orval](https://orval.dev), into a folder that git ignores: a function for each route, named as the route is
 named in the document, and the types that travel. The build then checks the user interface against them. Each
 function calls the host through one function of the user interface, which adds the address and the token and
-lets the caller abort the request. Today the options go through the client; the other calls of the user
-interface are as they were, and each one moves with its feature.
+lets the caller abort the request. Today the application data, the options and the events go through the
+client; the other calls of the user interface are as they were, and each one moves with its feature. Until
+then they fail: the browser engine stops them before they are sent, because they carry a request header that
+the API does not allow.
+
+**Start of the page.** The page is the same in the window and in a browser, with no branch for either: it
+reads the address and the token of the API from `window.bravoHost`
+([window and webview](#window-and-webview)), whoever set it, and stops with one line of text when the object
+is missing or the host does not answer.
+
+- Before any of its parts exists, the page asks the API what the application is and for the options of the
+  user. Until those answers arrive it follows the color mode of the system, as the window does.
+- It starts with no policy (backlog S-02) and no telemetry settings (backlog S-06): until then no option is
+  locked, and telemetry sends nothing.
+- It has no message channel with the window: what the host tells it arrives as events.
+- It reads the events one request after the other. The number to ask next is kept in the session storage of
+  the page, with the address of the host it belongs to: a page that is loaded again goes on from there, and
+  a page of another host starts from the beginning. A page that goes away aborts its request. After an error
+  the page waits before it asks again: one second, then twice as long each time, up to 30 seconds.
+- An activation without a server does nothing in the page. The errors of a command line go to the diagnostic
+  log. An activation with a server is logged, and opens no report until the host can find it (backlog M-01).
 
 ## Open questions
 

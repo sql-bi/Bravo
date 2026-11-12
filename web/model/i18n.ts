@@ -5,7 +5,7 @@
 */
 
 import * as sanitizeHtml from 'sanitize-html';
-import { optionsController } from '../main';
+import { application, optionsController } from '../main';
 import { strings } from './strings';
 import locales from "./i18n/locales";
 import { Dic, Utils } from '../helpers/utils';
@@ -55,7 +55,7 @@ export class I18n {
     }
     private static _instance: I18n;
     public static get instance(): I18n {
-        return this._instance || (this._instance = new this(optionsController ? optionsController.options.customOptions.locale : CONFIG.culture.ietfLanguageTag /*navigator.language*/));
+        return this._instance || (this._instance = new this(optionsController ? optionsController.options.customOptions.locale : application.culture.ietfLanguageTag /*navigator.language*/));
     }
 
     get locale(): Locale {

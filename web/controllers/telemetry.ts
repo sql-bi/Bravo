@@ -26,7 +26,15 @@ export class Telemetry {
    history: string[] = [];
    idle: Idle;
 
-   constructor(config: TelemetryConfig) {
+   /**
+    * @param config Where the telemetry goes and what goes with it. Without it nothing is ever sent, whatever
+    * the option of the user says: the host has no telemetry settings for the page yet.
+    */
+   constructor(config?: TelemetryConfig) {
+
+      this.idle = new Idle();
+      this.enabled = false;
+      if (!config) return;
 
       this.enabled = optionsController.getOption("telemetryEnabled");
 
@@ -82,8 +90,6 @@ export class Telemetry {
       window.addEventListener('beforeunload', e => {
          this.destroy();
       });
-
-      this.idle = new Idle();
    }
 
    trackAppOpen() {

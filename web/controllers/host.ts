@@ -9,7 +9,6 @@ import { Dic, Utils } from '../helpers/utils';
 import { auth, debug, logger } from '../main';
 import { DocType } from '../model/doc';
 import { AppError, AppErrorType, AppProblem } from '../model/exceptions';
-import { /*TokenUpdateWebMessage,*/ WebMessage, WebMessageType } from '../model/message';
 import { PBICloudDataset, PBICloudDatasetConnectionMode } from '../model/pbi-dataset';
 import { FormattedMeasure, TabularDatabase, TabularDatabaseServer, TabularMeasure, TabularTable } from '../model/tabular';
 import { Account, SignInRequest } from './auth';
@@ -26,14 +25,6 @@ import { ModelChanges } from '../model/model-changes';
 import { CloudEnvironment } from '../model/pbi-cloud';
 import { PowerBISignin } from '../view/powerbi-signin';
 import { DialogResponse } from '../view/dialog';
-
-declare global {
-    
-    interface External {
-        receiveMessage(callback: { (message: any): void }): void
-        sendMessage(message: any): void
-    }
-}
 
 interface ApiRequest {
     action: string
@@ -206,7 +197,7 @@ export interface ApiLogSettings {
 // The host names the value of an enum, and the user interface numbers it: the two functions below are where a
 // name becomes a number and a number a name. A member that the host left out stays out, so that the defaults
 // of the user interface apply to it.
-function toOptions(userOptions: hostApi.UserOptions): Options {
+export function toOptions(userOptions: hostApi.UserOptions): Options {
     return <Options>{
         ...userOptions,
         theme: ThemeType[userOptions.theme],
@@ -247,37 +238,10 @@ export class Host extends Dispatchable {
 
     constructor(address: string, token: string) {
         super();
-        this.listen();
         this.requests = {};
         this.address = address;
         this.token = token;
         connectHost({ address: address, token: token });
-    }
-
-    // Listen for events
-    listen() {
-        try {
-            window.external.receiveMessage(message => {
-
-                const webMessage = <WebMessage>JSON.parse(message);
-                if (!webMessage || !("type" in webMessage)) return;
-
-                try { logger.log("Message", { content: webMessage }); } catch (ignore) {}
-
-                this.trigger(WebMessageType[webMessage.type], webMessage);
-            });
-        } catch (ignore) {
-            // Ignore error
-        }
-    }
-
-    // Send message to host
-    send(message: any) {
-        try {
-            window.external.sendMessage(message);
-        } catch (e) {
-            // Ignore error
-        }
     }
 
     // Functions

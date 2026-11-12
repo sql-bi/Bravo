@@ -344,8 +344,9 @@ The runs are also public, at <https://github.com/sql-bi/Bravo/actions>.
 ## User interface
 
 `web/` holds the user interface of the previous implementation: TypeScript and LESS, bundled by webpack. It
-calls the options of the host through the client generated from the OpenAPI document; its other calls are as
-they were, and each one moves with its feature. Its commands run in `web/` and need Node.js 26 with npm:
+reads what the application is, the options and the events of the host through the client generated from the
+OpenAPI document; its other calls are as they were, and each one moves with its feature. Until then they
+fail before they are sent: `Utils.Request.ajax` adds a request header that the API does not allow. Its commands run in `web/` and need Node.js 26 with npm:
 `package.json` pins that line in `devEngines`, and npm stops with an error on another one.
 
 | Task | Command |
@@ -361,6 +362,17 @@ A bundle is `js/main.js` and `css/main.css`; the release build adds `js/main.js.
 checks the TypeScript code. `web/wwwroot` holds the static files that go with the bundle (`index.html`, icons,
 fonts, images); git ignores the `js` and `css` folders that the development build adds there. Without
 `--output-path` webpack writes to `artifacts/web` at the root of the repository, which git ignores.
+
+The page starts in `web/main.ts`, the same in the window and in a browser:
+
+- It reads the address and the token of the API from `window.bravoHost`, which whoever serves the page has
+  set before any script: the webview ([Window and webview](#window-and-webview)) or the development server.
+  It has no global configuration object and no branch for where it runs.
+- `start` asks the API for the application data and the options, then creates the controllers in their
+  order. The modules import them from `main.ts`: a value that a module needs when it is loaded, and not
+  when it is called, does not exist yet.
+- `HostEvents` (`web/controllers/host-events.ts`) reads the events of the host and is where a new kind of
+  event is handled. The page has no message channel with the window.
 
 The client of the host API is generated, not written:
 

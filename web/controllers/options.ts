@@ -6,7 +6,7 @@
 
 import { Dispatchable } from '../helpers/dispatchable';
 import { Dic, Utils } from '../helpers/utils';
-import { host, logger } from '../main';
+import { application, host, logger } from '../main';
 import { DateTemplate } from '../model/dates';
 import { AppError } from '../model/exceptions';
 import { DaxLineBreakStyle } from '../model/tabular';
@@ -197,7 +197,7 @@ export class OptionsController extends OptionsStore<Options> {
         },
         customOptions: {
             sidebarCollapsed: false,
-            locale: CONFIG.culture.ietfLanguageTag, //navigator.language,
+            locale: application.culture.ietfLanguageTag, //navigator.language,
             formatting: {
                 preview: false,
                 previewLayout: MultiViewPaneMode.Tabs,

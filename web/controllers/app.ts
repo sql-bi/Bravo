@@ -16,7 +16,6 @@ import { Sheet } from './sheet';
 import { PageType } from './page';
 import { host, logger, notificationCenter, optionsController, telemetry } from '../main';
 import { i18n } from '../model/i18n'; 
-import { PBICloudDatasetOpenWebMessage, PBIDesktopReportOpenWebMessage, UnknownWebMessage, VpaxFileOpenWebMessage, WebMessageType } from '../model/message';
 import { Notify } from './notifications';
 import { NotificationSidebar } from '../view/notification-sidebar';
 import { PBIDesktopReport } from '../model/pbi-report';
@@ -189,28 +188,6 @@ export class App {
                 element.innerText = element.dataset.more;
                 container.classList.remove("expanded");
             }
-        });
-
-        // Catch host messages
-        host.on(WebMessageType[WebMessageType.ReportOpen], (data: PBIDesktopReportOpenWebMessage) => {
-            this.openReport(data.report);
-        });
-
-        host.on(WebMessageType[WebMessageType.DatasetOpen], (data: PBICloudDatasetOpenWebMessage) => {
-            this.openDataset(data.dataset);
-        });
-
-        host.on(WebMessageType[WebMessageType.VpaxOpen], (data: VpaxFileOpenWebMessage) => {
-            this.openFile(new File(data.blob, data.name, { lastModified: data.lastModified }));
-        });
-
-        host.on(WebMessageType[WebMessageType.Unknown], (data: UnknownWebMessage) => {
-            
-            let appError = AppError.InitFromResponseStatus(Utils.ResponseStatusCode.InternalError, `${data.exception ? data.exception : ""} ${data.message ? data.message : "" }` );
-            const alert = new ErrorAlert(appError, i18n(strings.unknownMessage));
-            alert.show();
-
-            try { logger.logError(appError); } catch(ignore) {}
         });
 
         // UI events
