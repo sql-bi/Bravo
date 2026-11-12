@@ -12,21 +12,30 @@ criterion can be checked on `develop-vnext`.
 Exit: the new executable starts, a second start activates the first, it shows the current user interface and
 opens the options through the new API and the generated client.
 
-- [ ] H-04 Window and webview. Hypothesis: one component isolates the webview and stays neutral to its engine.
-  Explore: the native webview of Avalonia; webview process failures; running the user interface in a plain
-  browser for development and tests. Also:
-  - Gives the page the address and the token of the API, which the host knows only after its start, and
-    decides the origin of the page: the API allows no origin until then. A browser asks before each request
-    from another origin and keeps the answer for a few seconds, because the API sets no maximum age for it.
-  - The page reads the events of the host and acts on an activation. A page that is loaded again reads the
-    events that the host still keeps, an activation already served included.
-  - The user interface reads the `code` of a problem: today it reads the status and the `instance` member that
-    the previous host wrote. It numbers the values of an enum that the host names, converted today for the
-    options alone. It takes its first options and the policies from the configuration of the page, not from
-    the API.
-  - To decide, whether a development build is an instance of its own beside the installed application: today
-    they are one instance, and the process test is skipped while an instance runs.
-  - Updates the user interface dependencies that `npm audit` reports and makes the npm step of CI blocking.
+- [ ] H-04 Window and webview. Decided by the maintainer; the ADR is the first commit of the work branch:
+  - The code of the webview is written for WebView2 and stays in one place: an interface neutral to the engine
+    is not a goal of 1.1.0.
+  - The webview serves the page from the installation folder under a reserved host name, so the origin of the
+    page is the same at every start. The host sets the address and the token of the API in an object of the
+    page before the scripts of the page run: in the released application the token of the user interface is
+    never in an address, a cookie or a file.
+  - Requests and events stay on HTTP, the same in the webview and in a browser. The API allows the origin of
+    the page, and sets a maximum age for the answer that a browser asks for before a request from another
+    origin: today the browser keeps it for a few seconds.
+  - In a browser, for development and tests, a development server serves the same bundle and sets the same
+    object, against a development build of the host that allows the origin of that server.
+  - A build that the release pipeline did not produce is a development build: an instance of its own beside
+    the installed application, with its own data folder. Today they are one instance, and the process test is
+    skipped while an instance runs.
+
+  Also: webview process failures and a missing WebView2 runtime; the page reads the events of the host, and a
+  page that is loaded again does not read again the events it has read; the page takes its first options from
+  the API, not from its configuration; the checks of Chromium on the requests of a page to the loopback
+  address (Local Network Access), which WebView2 does not apply today.
+- [ ] H-05 User interface on the new contract. The user interface reads the `code` of a problem: today it
+  reads the status and the `instance` member that the previous host wrote. It numbers the values of an enum
+  that the host names, converted today for the options alone. Also: updates the user interface dependencies
+  that `npm audit` reports and makes the npm step of CI blocking.
 
 ## T3 Distribution
 
