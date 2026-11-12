@@ -2,6 +2,10 @@
 # .globalconfig would also be read from every folder above a project, such as the checkout around a worktree.
 is_global = true
 
+# Above 100, the level of a file named .globalconfig: one found in a folder above the repository does not
+# replace the options set here.
+global_level = 101
+
 # The banned symbols (BannedSymbols.txt) are searched in hand-written code only: source generators such as
 # CsWin32 emit the DllImport declarations that the list forbids to write by hand.
 dotnet_banned_api_analyzer.exclude_generated_code = true
