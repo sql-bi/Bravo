@@ -22,8 +22,10 @@ opens the options through the new API and the generated client.
 - [ ] H-04 Window and webview. Hypothesis: one component isolates the webview and stays neutral to its engine.
   Explore: the native webview of Avalonia; webview process failures; running the user interface in a plain
   browser for development and tests. Also: consumes the activation queue and passes the request to the user
-  interface; updates the user interface dependencies that `npm audit` reports and makes the npm step of CI
-  blocking.
+  interface, with a consumer that starts when the webview is ready; to decide, whether a development build is
+  an instance of its own beside the installed application (today they are one instance, and the process test
+  is skipped while an instance runs); updates the user interface dependencies that `npm audit` reports and
+  makes the npm step of CI blocking.
 
 ## T3 Distribution
 
@@ -33,7 +35,8 @@ the four guarantees of [the specification](spec.md#guarantees-for-users-of-10x).
 - [ ] D-01 Installer. No hypothesis: the technology is open. Explore: MSI, MSIX, Velopack, Inno Setup and what
   well-known desktop applications choose. Criteria: the four guarantees, per-user and per-machine installation,
   enterprise deployment, external tool registration, signing, WinGet, licence. Also: a running instance during
-  an upgrade, because 1.0.x and 1.1.0 do not recognize each other.
+  an upgrade, because 1.0.x and 1.1.0 do not recognize each other; the resource folders of System.CommandLine,
+  one for each language, in the output of the build.
 - [ ] D-02 Release. Hypothesis: GitHub Actions builds, signs, publishes a GitHub release with generated notes
   and changelog, and updates the feed. Explore: signing with a federated identity; changelog tools; how the
   version is computed.
@@ -51,9 +54,12 @@ crash produces a report, telemetry runs on a supported SDK.
   integrated credentials first, a prompt as the last resort, a connectivity check with clear messages. Explore:
   the proxy in .NET, in the webview, in the sign-in library and in the Analysis Services client libraries.
 - [ ] S-04 Diagnostics and logging. Hypothesis: in-memory log shown in the user interface, plus the event log.
+  Also: the host has no logging provider yet, so the warning of an owner of the instance that cannot create
+  its pipe reaches no log.
 - [ ] S-05 Errors and crash reporting. Material: the branch `feat/crash-reporter-process`. Explore: a reporter
   as an application of its own or as a mode of the main executable. Also: replaces the minimal last-chance
-  exception handling.
+  exception handling; a service of the host that fails stops the host, which closes the window with no
+  message; the exceptions of tasks that nobody observed.
 - [ ] S-06 Telemetry. Hypothesis: a supported SDK; the classic Application Insights SDK is retired on
   2027-03-31. Explore: Application Insights 3 or OpenTelemetry; consent.
 
