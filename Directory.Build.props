@@ -38,10 +38,12 @@
   <!--
     Packages: each project commits a lock file. A package with a known vulnerability stays a warning, so that an
     advisory published later does not break the build of an unchanged commit. Only a restore that sets
-    AuditPipeline, as the audit job of continuous integration does, turns the audit warnings into errors.
+    AuditPipeline, as the audit job of continuous integration does, turns the audit warnings into errors. The
+    audit covers the packages that arrive as dependencies too, whatever the target framework of the project.
   -->
   <PropertyGroup>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <NuGetAuditMode>all</NuGetAuditMode>
     <NuGetAuditCodes>NU1900;NU1901;NU1902;NU1903;NU1904;NU1905</NuGetAuditCodes>
     <WarningsAsErrors Condition="'$(AuditPipeline)' == 'true'">$(WarningsAsErrors);$(NuGetAuditCodes)</WarningsAsErrors>
     <WarningsNotAsErrors Condition="'$(AuditPipeline)' != 'true'">$(WarningsNotAsErrors);$(NuGetAuditCodes)</WarningsNotAsErrors>
