@@ -264,7 +264,7 @@ stops after 15 minutes.
 | --- | --- |
 | `build-and-test` | On Windows: the restore in locked mode, the build, the tests |
 | `build-and-test-linux` | The same on Linux, on `Bravo.Portable.slnf`: the projects that do not target Windows |
-| `build-web` | In `web/`: `npm ci`, then `npm run build:Release` |
+| `build-web` | In `web/`: `npm ci`, then `npm run build:Release`, which generates the client of the host API first |
 | `audit` | A restore that fails on a NuGet package with a known vulnerability, then `npm audit` |
 
 What a run checks beyond the commands of the table above:
@@ -291,9 +291,10 @@ The runs are also public, at <https://github.com/sql-bi/Bravo/actions>.
 
 ## User interface
 
-`web/` holds the user interface of the previous implementation, moved unchanged: TypeScript and LESS, bundled by
-webpack. Its commands run in `web/` and need Node.js 26 with npm: `package.json` pins that line in `devEngines`,
-and npm stops with an error on another one.
+`web/` holds the user interface of the previous implementation: TypeScript and LESS, bundled by webpack. It
+calls the options of the host through the client generated from the OpenAPI document; its other calls are as
+they were, and each one moves with its feature. Its commands run in `web/` and need Node.js 26 with npm:
+`package.json` pins that line in `devEngines`, and npm stops with an error on another one.
 
 | Task | Command |
 | --- | --- |
@@ -302,10 +303,27 @@ and npm stops with an error on another one.
 | Release bundle into another folder | `npm run build:Release -- --output-path <folder>` |
 | Development bundle into `web/wwwroot` | `npm run build:UI` |
 | Development bundle, rebuilt at every change | `npm run watch:UI` |
+| Generate the client of the host API alone | `npm run generate:api` |
 
 A bundle is `js/main.js` and `css/main.css`; the release build adds `js/main.js.LICENSE.txt`. Every build type
 checks the TypeScript code. `web/wwwroot` holds the static files that go with the bundle (`index.html`, icons,
 fonts, images); git ignores the `js` and `css` folders that the development build adds there. Without
 `--output-path` webpack writes to `artifacts/web` at the root of the repository, which git ignores.
+
+The client of the host API is generated, not written:
+
+- Every build script first runs [Orval](https://orval.dev) (`orval.config.mjs`), which reads
+  `src/Bravo.Api/openapi.json` and writes `web/generated/bravo.ts`: a function for each route, named after its
+  operation id, and the types that travel. Git ignores the folder, and a build on a clean clone needs no other
+  step. `watch:UI` generates once, when it starts.
+- A change of the API reaches the user interface through the document: write the document again
+  ([API](#api)), build, and the type check shows every call that no longer fits.
+- Every generated function calls the host through `hostFetch` (`web/controllers/host-fetch.ts`), which adds
+  the address and the token, passes on the `AbortSignal` of the caller, and throws a `HostProblem` for an
+  error answer.
+- `Host` (`web/controllers/host.ts`) stays the one module that the user interface calls. A method that moves
+  to the client goes through `apiClientCall`; where the host names an enum value and the user interface
+  numbers it, the method converts in both directions.
+- Orval is pinned to an exact version in `package.json`: another version can write another client.
 
 The user interface has no tests.

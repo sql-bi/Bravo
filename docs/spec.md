@@ -129,7 +129,7 @@ to a work branch, on the pull requests to `main` and on request
 | --- | --- | --- |
 | `build-and-test` | Windows | A lock file out of date; a warning of the compiler, of an analyzer or of MSBuild; a failed test |
 | `build-and-test-linux` | Linux | The same, on the projects of `Bravo.Portable.slnf`: the ones that do not target Windows |
-| `build-web` | Linux | `npm ci` or the release build of the user interface, which also checks the types |
+| `build-web` | Linux | `npm ci`, or the release build of the user interface, which generates the client of the host API and checks the types: a call that no longer fits the OpenAPI document fails it |
 | `audit` | Windows | A NuGet package with a known vulnerability of any severity, referenced directly or not; vulnerability data that cannot be read |
 
 `build-and-test` is the status check that `main` requires: its name does not change. `audit` also runs
@@ -303,8 +303,14 @@ start: keeping them is backlog S-01, and the policies that override them backlog
 
 **Contract.** `src/Bravo.Api/openapi.json` is the OpenAPI 3.1 document of the API. A test produces it from the
 routes and fails when the file differs, so a change of the API is a change of the file in the same commit; the
-application does not serve the document. The name of a route in the document becomes the name of a function of
-the TypeScript client.
+application does not serve the document.
+
+Every build of the user interface generates its TypeScript client from that file, with
+[Orval](https://orval.dev), into a folder that git ignores: a function for each route, named as the route is
+named in the document, and the types that travel. The build then checks the user interface against them. Each
+function calls the host through one function of the user interface, which adds the address and the token and
+lets the caller abort the request. Today the options go through the client; the other calls of the user
+interface are as they were, and each one moves with its feature.
 
 ## Open questions
 

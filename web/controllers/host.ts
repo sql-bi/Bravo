@@ -13,7 +13,9 @@ import { /*TokenUpdateWebMessage,*/ WebMessage, WebMessageType } from '../model/
 import { PBICloudDataset, PBICloudDatasetConnectionMode } from '../model/pbi-dataset';
 import { FormattedMeasure, TabularDatabase, TabularDatabaseServer, TabularMeasure, TabularTable } from '../model/tabular';
 import { Account, SignInRequest } from './auth';
-import { DiagnosticLevelType, FormatDaxOptions, Options } from './options';
+import * as hostApi from '../generated/bravo';
+import { connectHost, HostProblem } from './host-fetch';
+import { DiagnosticLevelType, FormatDaxOptions, Options, ProxyType } from './options';
 import { PBIDesktopReport, PBIDesktopReportConnectionMode } from '../model/pbi-report';
 import { ThemeType } from './theme';
 import { i18n } from '../model/i18n';
@@ -201,6 +203,40 @@ export interface ApiLogSettings {
     dataLevel?: DiagnosticLevelType // Minimum diagnostic level required to log the obj data
 }
 
+// The host names the value of an enum, and the user interface numbers it: the two functions below are where a
+// name becomes a number and a number a name. A member that the host left out stays out, so that the defaults
+// of the user interface apply to it.
+function toOptions(userOptions: hostApi.UserOptions): Options {
+    return <Options>{
+        ...userOptions,
+        theme: ThemeType[userOptions.theme],
+        diagnosticLevel: DiagnosticLevelType[userOptions.diagnosticLevel],
+        proxy: {
+            ...userOptions.proxy,
+            type: ProxyType[userOptions.proxy.type]
+        }
+    };
+}
+
+function toUserOptions(options: Options): hostApi.UserOptions {
+    return {
+        theme: <hostApi.Theme>ThemeType[options.theme],
+        telemetryEnabled: options.telemetryEnabled,
+        customTemplatesEnabled: options.customTemplatesEnabled,
+        updateCheckEnabled: options.updateCheckEnabled,
+        useSystemBrowserForAuthentication: options.useSystemBrowserForAuthentication,
+        diagnosticLevel: <hostApi.DiagnosticLevel>DiagnosticLevelType[options.diagnosticLevel],
+        proxy: {
+            type: <hostApi.ProxyType>ProxyType[options.proxy.type],
+            useDefaultCredentials: options.proxy.useDefaultCredentials,
+            address: options.proxy.address,
+            bypassOnLocal: options.proxy.bypassOnLocal,
+            bypassList: options.proxy.bypassList
+        },
+        customOptions: options.customOptions
+    };
+}
+
 export class Host extends Dispatchable {
 
     static DEFAULT_TIMEOUT = 0;
@@ -215,6 +251,7 @@ export class Host extends Dispatchable {
         this.requests = {};
         this.address = address;
         this.token = token;
+        connectHost({ address: address, token: token });
     }
 
     // Listen for events
@@ -343,6 +380,39 @@ export class Host extends Dispatchable {
                 }
             })
             .finally(()=>{
+                this.apiCallCompleted(requestId);
+            });
+    }
+
+    /**
+     * Calls a route of the host through the generated client. As with apiCall, the request can be aborted
+     * by the name of its operation, and a failure is an AppError.
+     */
+    apiClientCall<T>(operation: string, call: (init: RequestInit) => Promise<T>): Promise<T> {
+
+        let requestId = Utils.Text.uuid();
+        let abortController = new AbortController();
+        this.requests[requestId] = {
+            action: operation,
+            controller: abortController
+        };
+
+        return call({ signal: abortController.signal })
+            .catch((error: Error) => {
+
+                let problem: ProblemDetails;
+                if (error instanceof HostProblem) {
+                    problem = { ...error.problem, status: error.status };
+                } else {
+                    problem = {
+                        status: (Utils.Request.isAbort(error) ? Utils.ResponseStatusCode.Aborted : Utils.ResponseStatusCode.InternalError),
+                        title: error.message
+                    };
+                }
+
+                throw AppError.InitFromProblem(problem);
+            })
+            .finally(() => {
                 this.apiCallCompleted(requestId);
             });
     }
@@ -607,11 +677,12 @@ export class Host extends Dispatchable {
     }
 
     getOptions() {
-        return <Promise<Options>>this.apiCall("api/GetOptions");
+        return this.apiClientCall("GetOptions", init => hostApi.getOptions(init))
+            .then(userOptions => toOptions(userOptions));
     }
 
     updateOptions(options: Options) {
-        return this.apiCall("api/UpdateOptions", options, { method: "POST" })
+        return this.apiClientCall("UpdateOptions", init => hostApi.updateOptions(toUserOptions(options), init))
             .then(() => true)
             .catch(ignore => false);
     }
