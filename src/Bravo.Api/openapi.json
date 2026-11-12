@@ -6,6 +6,47 @@
     "version": "unversioned"
   },
   "paths": {
+    "/application": {
+      "get": {
+        "tags": [
+          "Application"
+        ],
+        "summary": "Reads what the application is: its version, the culture of the user and the kind of its build.",
+        "operationId": "GetApplication",
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/options": {
       "get": {
         "tags": [
@@ -195,6 +236,46 @@
           }
         },
         "description": "What a start of the application asked for on its command line."
+      },
+      "ApplicationCulture": {
+        "required": [
+          "ietfLanguageTag",
+          "twoLetterISOLanguageName"
+        ],
+        "type": "object",
+        "properties": {
+          "ietfLanguageTag": {
+            "type": "string",
+            "description": "The language tag of the culture, such as `en-US`."
+          },
+          "twoLetterISOLanguageName": {
+            "type": "string",
+            "description": "The two letters of the language of the culture, such as `en`."
+          }
+        },
+        "description": "The culture of the user, by which the user interface chooses its language and its formats."
+      },
+      "ApplicationDetails": {
+        "required": [
+          "version",
+          "culture",
+          "isDevelopmentBuild"
+        ],
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string",
+            "description": "The version of the application as a user reads it, such as `1.1.0` or `1.1.0-beta.1`."
+          },
+          "culture": {
+            "$ref": "#/components/schemas/ApplicationCulture"
+          },
+          "isDevelopmentBuild": {
+            "type": "boolean",
+            "description": "Whether the build is a development build, and not one of the release pipeline."
+          }
+        },
+        "description": "What the running application is. The values do not change while the application runs."
       },
       "DiagnosticLevel": {
         "enum": [
@@ -413,6 +494,9 @@
     }
   },
   "tags": [
+    {
+      "name": "Application"
+    },
     {
       "name": "Options"
     },

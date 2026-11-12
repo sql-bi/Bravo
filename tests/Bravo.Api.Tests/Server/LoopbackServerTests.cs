@@ -70,6 +70,7 @@ public sealed class LoopbackServerTests
     {
         var builder = WebApplication.CreateEmptyBuilder(new WebApplicationOptions());
         builder.WebHost.UseLoopbackServer();
+        builder.Services.AddSingleton(TestApi.Application);
         builder.Services.AddSingleton<IUserSettingsStore, InMemoryUserSettingsStore>();
         builder.Services.AddApi();
 

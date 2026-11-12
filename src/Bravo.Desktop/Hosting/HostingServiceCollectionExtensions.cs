@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Globalization;
+using Bravo.Core.Application;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
@@ -18,6 +20,23 @@ internal static class HostingServiceCollectionExtensions
         // The host uses the last lifetime registered: this one replaces the console lifetime of the builder.
         services.AddSingleton<IHostLifetime, DesktopHostLifetime>();
         services.Configure<HostOptions>(options => options.ShutdownTimeout = s_shutdownTimeout);
+
+        return services;
+    }
+
+    /// <summary>
+    /// Adds what the application is, as the API tells it: the version and the kind of its build, and the
+    /// culture of the thread that starts the application, which is the culture of the user.
+    /// </summary>
+    public static IServiceCollection AddApplicationInfo(this IServiceCollection services, BuildIdentity identity)
+    {
+        var application = new ApplicationInfo
+        {
+            Version = identity.Version,
+            Culture = CultureInfo.CurrentCulture,
+            IsDevelopmentBuild = identity.IsDevelopmentBuild,
+        };
+        services.AddSingleton(application);
 
         return services;
     }

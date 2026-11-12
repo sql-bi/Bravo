@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Globalization;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using Bravo.Api.Events;
 using Bravo.Api.Security;
+using Bravo.Core.Application;
 using Bravo.Core.Settings;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
@@ -20,6 +22,16 @@ namespace Bravo.Api.Tests;
 internal sealed class TestApi : IAsyncDisposable
 {
     public const string AllowedOrigin = "https://ui.bravo.test";
+
+    /// <summary>
+    /// What the application of the tests says it is.
+    /// </summary>
+    public static ApplicationInfo Application { get; } = new()
+    {
+        Version = "1.2.3-test.4",
+        Culture = CultureInfo.GetCultureInfo("it-IT"),
+        IsDevelopmentBuild = true,
+    };
 
     private readonly WebApplication _app;
 
@@ -54,6 +66,7 @@ internal sealed class TestApi : IAsyncDisposable
         var builder = WebApplication.CreateEmptyBuilder(new WebApplicationOptions());
         builder.WebHost.UseTestServer();
         builder.Services.AddSingleton<TimeProvider>(time);
+        builder.Services.AddSingleton(Application);
         builder.Services.AddSingleton<IUserSettingsStore, InMemoryUserSettingsStore>();
         builder.Services.AddApi();
         builder.Services.Configure<ApiOptions>(options => options.AllowedOrigins.Add(AllowedOrigin));

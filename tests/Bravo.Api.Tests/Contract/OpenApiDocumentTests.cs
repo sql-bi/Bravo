@@ -114,6 +114,7 @@ public sealed class OpenApiDocumentTests
     {
         var builder = WebApplication.CreateEmptyBuilder(new WebApplicationOptions());
         builder.WebHost.UseTestServer();
+        builder.Services.AddSingleton(TestApi.Application);
         builder.Services.AddSingleton<IUserSettingsStore, InMemoryUserSettingsStore>();
         builder.Services.AddApi();
         builder.Services.AddApiContract();

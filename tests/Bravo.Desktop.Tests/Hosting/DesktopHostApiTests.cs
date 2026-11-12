@@ -76,6 +76,16 @@ public sealed class DesktopHostApiTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Start_Host_TellsTheVersionAndTheKindOfTheBuildItWasBuiltWith()
+    {
+        using var response = await _client.GetAsync("/application", TestContext.Current.CancellationToken);
+
+        var application = await response.Content.ReadFromJsonAsync<JsonElement>(TestContext.Current.CancellationToken);
+        Assert.Equal("1.1.0", application.GetProperty("version").GetString());
+        Assert.True(application.GetProperty("isDevelopmentBuild").GetBoolean());
+    }
+
+    [Fact]
     public async Task Activation_PostedWhileAPageWaits_ReachesThePageAsAnEvent()
     {
         using var window = new FakeMainWindow();

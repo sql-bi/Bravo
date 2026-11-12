@@ -41,6 +41,7 @@ internal static class DesktopHost
         builder.WebHost.UseLoopbackServer();
 
         builder.Services.AddDesktopLifetime();
+        builder.Services.AddApplicationInfo(identity);
         builder.Services.AddShell(identity, fatalExceptionHandler);
         builder.Services.AddActivation();
         builder.Services.AddSingleInstance(ownership, singleInstanceOptions);

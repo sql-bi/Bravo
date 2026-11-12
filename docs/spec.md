@@ -256,6 +256,7 @@ other request has the 5 seconds of the stop to end.
 
 | Route | What it does |
 | --- | --- |
+| `GET /application` | Reads what the application is: its version, the culture of the user and whether the build is a development build |
 | `GET /options` | Reads the options of the user |
 | `PUT /options` | Replaces the options of the user, and returns them as they were kept |
 | `GET /events?after={number}` | Reads the events of the host after a number, waiting for the next one when there is none |

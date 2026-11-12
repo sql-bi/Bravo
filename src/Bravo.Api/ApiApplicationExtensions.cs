@@ -1,4 +1,5 @@
 ﻿using System;
+using Bravo.Api.Application;
 using Bravo.Api.Events;
 using Bravo.Api.Options;
 using Microsoft.AspNetCore.Builder;
@@ -40,6 +41,7 @@ public static class ApiApplicationExtensions
             .ProducesProblem(StatusCodes.Status401Unauthorized)
             .ProducesProblem(StatusCodes.Status500InternalServerError);
 
+        routes.MapApplication();
         routes.MapOptions();
         routes.MapEvents();
     }
