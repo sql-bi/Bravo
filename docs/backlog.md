@@ -7,11 +7,6 @@ An item is a component. Its line gives the starting hypothesis and what to explo
 proposed; neither is a decision. One component is in progress at a time. A stage is closed when its exit
 criterion can be checked on `develop-vnext`.
 
-## T1 Repository and guardrails
-
-Exit: the layout is decided and applied and the previous implementation has left the tree; the user interface,
-in its own folder, builds the same bundle as before; a violation planted on purpose fails CI.
-
 ## T2 Skeleton
 
 Exit: the new executable starts, a second start activates the first, it shows the current user interface and
