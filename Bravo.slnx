@@ -6,6 +6,7 @@
     <Project Path="src/Bravo.Platform.Windows/Bravo.Platform.Windows.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/Bravo.Api.Tests/Bravo.Api.Tests.csproj" />
     <Project Path="tests/Bravo.Architecture.Tests/Bravo.Architecture.Tests.csproj" />
     <Project Path="tests/Bravo.Core.Tests/Bravo.Core.Tests.csproj" />
     <Project Path="tests/Bravo.Desktop.Tests/Bravo.Desktop.Tests.csproj" />

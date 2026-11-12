@@ -4,6 +4,19 @@
     <TargetFramework>net10.0</TargetFramework>
   </PropertyGroup>
 
+  <!-- ASP.NET Core is a shared framework of the runtime, not a set of packages. -->
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Bravo.Api.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\Bravo.Core\Bravo.Core.csproj" />
   </ItemGroup>

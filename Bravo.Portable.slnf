@@ -4,6 +4,7 @@
     "projects": [
       "src/Bravo.Api/Bravo.Api.csproj",
       "src/Bravo.Core/Bravo.Core.csproj",
+      "tests/Bravo.Api.Tests/Bravo.Api.Tests.csproj",
       "tests/Bravo.Architecture.Tests/Bravo.Architecture.Tests.csproj",
       "tests/Bravo.Core.Tests/Bravo.Core.Tests.csproj"
     ]

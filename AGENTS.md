@@ -76,6 +76,7 @@ not exist yet: the table names the backlog item that creates them.
 | Path | Content | State |
 | --- | --- | --- |
 | `src/` | The .NET projects of the host, and nothing else | Exists |
+| `src/Bravo.Api/openapi.json` | The OpenAPI document of the API: a test compares it with the routes | Exists |
 | `tests/` | One test project per project of `src/`, at the mirrored path, created with the first test of that project, and the architecture tests | Exists |
 | `web/` | The TypeScript user interface, with its own `package.json` and lockfile | Exists |
 | `installer/` | The installer | Created by backlog D-01 |
@@ -105,9 +106,10 @@ The host is four projects, with Windows at the edge
 - No state is static or ambient: a service is injected, and `Bravo.Desktop` is the only place where services are
   registered.
 - The user interface reaches the host through an HTTP API served on loopback
-  ([ADR 0012](docs/adr/0012-http-on-loopback-between-user-interface-and-host.md)).
-- Today `Bravo.Desktop` starts, keeps one instance and shows an empty main window; `Bravo.Api` has no code. The
-  API and the content of the window are backlog H-03 and H-04.
+  ([ADR 0012](docs/adr/0012-http-on-loopback-between-user-interface-and-host.md)), which `Bravo.Api` holds
+  ([API](#api)).
+- Today `Bravo.Desktop` starts, keeps one instance and shows an empty main window, and does not serve the API
+  yet. The content of the window is backlog H-04.
 
 A project of `src/` gets its test project with its first test: a run in which no test ran fails.
 
@@ -143,6 +145,57 @@ A project of `src/` gets its test project with its first test: a run in which no
 | Run it as the external tool registration does | `dotnet run --project src/Bravo.Desktop -c Release -- --server=localhost:12345 --database=db` |
 | Start the executable that the build wrote | `artifacts/bin/Bravo.Desktop/release/Bravo.exe` |
 
+## API
+
+`Bravo.Api` holds everything of the HTTP API that the user interface calls. Its conventions are
+[ADR 0014](docs/adr/0014-api-conventions-and-a-contract-kept-as-a-file.md), and
+[docs/spec.md](docs/spec.md#user-interface-and-host) describes them as they are built. Where each part lives:
+
+| Part | Path |
+| --- | --- |
+| What the application calls: `AddApi`, `UseApi`, `ApiOptions` | `src/Bravo.Api/` |
+| Kestrel on the loopback address, and the address it was given | `src/Bravo.Api/Server/` |
+| The token and its authentication scheme, the fallback policy, host filtering, CORS | `src/Bravo.Api/Security/` |
+| Problem details and their codes, and the answer to a `BravoException` | `src/Bravo.Api/Problems/` |
+| How JSON is read and written | `src/Bravo.Api/Json/` |
+| The events for the user interface: their log, their publisher, their route | `src/Bravo.Api/Events/` |
+| The routes of a resource, with the types that travel | A folder for each resource, such as `src/Bravo.Api/Options/` |
+| The OpenAPI document, and the rules applied to it when it is produced | `src/Bravo.Api/openapi.json`, `src/Bravo.Api/Contract/` |
+
+To add a route:
+
+1. Map it in the endpoints class of its resource, such as `OptionsEndpoints`. A new resource gets a folder, a
+   class with a `Map...` method, and a call in `ApiApplicationExtensions.MapRoutes`: a route mapped there asks
+   for the token and declares the answers 401 and 500 without naming them.
+2. Give it `WithName`, `WithTags` and `WithSummary`. The name is the operation id, which becomes the name of the
+   TypeScript function and never changes. The handler is a named static method that returns typed results;
+   `ProducesValidationProblem` and `ProducesProblem` declare the error answers that the results do not show.
+3. The types that travel are records in the folder of the resource: `required` on a member that always has a
+   value, a nullable type on a member that may be absent. A type that a request carries is public, because the
+   validation is generated for public types only. The `<summary>` of a type and of its members goes into the
+   document: write it for a reader of the API, with the names of the JSON.
+4. Validate with data annotations or `IValidatableObject` on the types and with attributes on the parameters,
+   and test each rule through the route: nothing reports a type that the validation does not see.
+5. A use case reports an error that the user interface must tell apart by throwing `BravoException`
+   (`Bravo.Core.Errors`) with a new PascalCase code: the answer is 409 with that code. An error of the route
+   itself is a typed problem result with its status and the member `code`.
+6. Test it in `tests/Bravo.Api.Tests` on `TestApi`: the API as the application composes it, on a server in
+   memory, with a clock that the test moves.
+7. Write the document again and commit `src/Bravo.Api/openapi.json` with the change: until the file matches the
+   routes, `OpenApiDocumentTests` fails and says so.
+
+- An event for the user interface is a new value of `HostEventKind`, an optional member of `HostEvent` with
+  its data, and a method of `IHostEventPublisher`. The kinds are not derived types: the document that .NET 10
+  produces for a list of derived types is wrong.
+- `AddApi` registers the services of the API and `UseLoopbackServer` its server. A use case that a route calls
+  is registered by `Bravo.Desktop`, and by `TestApi` for the tests.
+- `OpenApiDocumentTests.WriteTheFileOfTheRepository` is not a test: it writes the document, runs only when
+  asked for, and shows as skipped in every other run.
+
+| Task | Command |
+| --- | --- |
+| Write the OpenAPI document again after a change of the API | `dotnet test --project tests/Bravo.Api.Tests -c Release --explicit only` |
+
 ## Build and tests
 
 The commands run at the root of the repository and need the .NET SDK that `global.json` names.
@@ -169,6 +222,11 @@ A warning fails the build ([ADR 0009](docs/adr/0009-rules-enforced-by-the-build.
 | Code style and the severity of each diagnostic | `.editorconfig` |
 | The symbols no project may use | `BannedSymbols.txt` |
 | Allowed project references, catch-all names, static mutable state, the projects that the solution and its filter list | `tests/Bravo.Architecture.Tests` |
+| The OpenAPI document equal to its file; no schema that allows null; a name, a tag and the common error answers on every route | `tests/Bravo.Api.Tests` (`OpenApiDocumentTests`) |
+
+ASP.NET Core is a shared framework of the runtime: a project that uses it has a `FrameworkReference` to
+`Microsoft.AspNetCore.App`, and no package reference for what the framework holds, such as
+`Microsoft.Extensions.Hosting`. NuGet reports such a package (NU1510), which fails the build.
 
 A project under `src/` sets its own target framework and is named in four places:
 

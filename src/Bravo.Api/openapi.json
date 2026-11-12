@@ -1,0 +1,423 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "Bravo for Power BI",
+    "description": "The API of the host, which the user interface calls on the loopback address.",
+    "version": "unversioned"
+  },
+  "paths": {
+    "/options": {
+      "get": {
+        "tags": [
+          "Options"
+        ],
+        "summary": "Reads the options of the user.",
+        "operationId": "GetOptions",
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserOptions"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Options"
+        ],
+        "summary": "Replaces the options of the user, and returns them as they were kept.",
+        "operationId": "UpdateOptions",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserOptions"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserOptions"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/events": {
+      "get": {
+        "tags": [
+          "Events"
+        ],
+        "summary": "Reads the events of the host after a number, waiting for the next one when there is none.",
+        "operationId": "GetEvents",
+        "parameters": [
+          {
+            "name": "after",
+            "in": "query",
+            "description": "The number of the last event already read. Without it, the answer has every event still kept.",
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 0,
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventBatch"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ActivationEvent": {
+        "required": [
+          "errors"
+        ],
+        "type": "object",
+        "properties": {
+          "serverName": {
+            "type": "string"
+          },
+          "databaseName": {
+            "type": "string"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "What was wrong in the command line, in English. Empty for a start with no error."
+          }
+        },
+        "description": "What a start of the application asked for on its command line."
+      },
+      "DiagnosticLevel": {
+        "enum": [
+          "None",
+          "Basic",
+          "Verbose"
+        ],
+        "type": "string",
+        "description": "How much the diagnostics pane of the user interface shows."
+      },
+      "EventBatch": {
+        "required": [
+          "events",
+          "next"
+        ],
+        "type": "object",
+        "properties": {
+          "events": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HostEvent"
+            },
+            "description": "The events after the number of the request, oldest first. Empty when none arrived within the limit. When the first number is not the one that follows the number of the request, the events between the two are no longer kept."
+          },
+          "next": {
+            "type": "integer",
+            "description": "The number to send with the next request: the one of the last event of the host.",
+            "format": "int32"
+          }
+        },
+        "description": "The answer to a request for the events after a number."
+      },
+      "HostEvent": {
+        "required": [
+          "number",
+          "kind"
+        ],
+        "type": "object",
+        "properties": {
+          "number": {
+            "type": "integer",
+            "description": "The position of the event among the events of this process: the first is 1, and none is skipped.",
+            "format": "int32"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/HostEventKind"
+          },
+          "activation": {
+            "description": "Present when `kind` is `Activation`.",
+            "$ref": "#/components/schemas/ActivationEvent"
+          }
+        },
+        "description": "Something that happened in the host and that the user interface is told about. One type for every kind of event: `kind` names the kind, and the member with the data of that kind is the one present."
+      },
+      "HostEventKind": {
+        "enum": [
+          "Activation"
+        ],
+        "type": "string"
+      },
+      "HttpValidationProblemDetails": {
+        "required": [
+          "code"
+        ],
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "detail": {
+            "type": "string"
+          },
+          "instance": {
+            "type": "string"
+          },
+          "errors": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "code": {
+            "type": "string",
+            "description": "What went wrong, as a name that never changes meaning."
+          },
+          "traceId": {
+            "type": "string",
+            "description": "The identifier of the request in the log of the host."
+          }
+        }
+      },
+      "ProblemDetails": {
+        "required": [
+          "code"
+        ],
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "detail": {
+            "type": "string"
+          },
+          "instance": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string",
+            "description": "What went wrong, as a name that never changes meaning."
+          },
+          "traceId": {
+            "type": "string",
+            "description": "The identifier of the request in the log of the host."
+          }
+        }
+      },
+      "ProxyOptions": {
+        "required": [
+          "type",
+          "useDefaultCredentials",
+          "bypassOnLocal"
+        ],
+        "type": "object",
+        "properties": {
+          "type": {
+            "$ref": "#/components/schemas/ProxyType"
+          },
+          "useDefaultCredentials": {
+            "type": "boolean"
+          },
+          "address": {
+            "type": "string",
+            "description": "The address of the proxy server, with or without `http://`. Empty means none."
+          },
+          "bypassOnLocal": {
+            "type": "boolean"
+          },
+          "bypassList": {
+            "type": "string",
+            "description": "The addresses that do not go through the proxy server: regular expressions separated by semicolons. Empty means none."
+          }
+        }
+      },
+      "ProxyType": {
+        "enum": [
+          "None",
+          "System",
+          "Custom"
+        ],
+        "type": "string"
+      },
+      "Theme": {
+        "enum": [
+          "Auto",
+          "Light",
+          "Dark"
+        ],
+        "type": "string"
+      },
+      "UserOptions": {
+        "required": [
+          "theme",
+          "telemetryEnabled",
+          "customTemplatesEnabled",
+          "updateCheckEnabled",
+          "useSystemBrowserForAuthentication",
+          "diagnosticLevel",
+          "proxy"
+        ],
+        "type": "object",
+        "properties": {
+          "theme": {
+            "$ref": "#/components/schemas/Theme"
+          },
+          "telemetryEnabled": {
+            "type": "boolean"
+          },
+          "customTemplatesEnabled": {
+            "type": "boolean"
+          },
+          "updateCheckEnabled": {
+            "type": "boolean"
+          },
+          "useSystemBrowserForAuthentication": {
+            "type": "boolean"
+          },
+          "diagnosticLevel": {
+            "$ref": "#/components/schemas/DiagnosticLevel"
+          },
+          "proxy": {
+            "$ref": "#/components/schemas/ProxyOptions"
+          },
+          "customOptions": {
+            "description": "The options that only the user interface reads: any JSON value, returned as it was sent."
+          }
+        },
+        "description": "The options of the user, as the user interface reads them and replaces them."
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Options"
+    },
+    {
+      "name": "Events"
+    }
+  ]
+}

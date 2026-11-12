@@ -23,11 +23,14 @@
   </ItemGroup>
 
   <!--
-    Packages of the .NET release train, in the version of the .NET 10 runtime: the host and its logging, the
-    command line, and the reader of assemblies as metadata of the architecture tests.
+    Packages of the .NET release train, in the version of the .NET 10 runtime: the OpenAPI document of the API,
+    the server that its tests run on, logging, the command line, and the reader of assemblies as metadata of the
+    architecture tests. ASP.NET Core and the host are not here: they are a shared framework, which a project
+    references.
   -->
   <ItemGroup>
-    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.15" />
+    <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.15" />
+    <PackageVersion Include="Microsoft.AspNetCore.TestHost" Version="10.0.15" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.15" />
     <PackageVersion Include="System.CommandLine" Version="2.0.15" />
     <PackageVersion Include="System.Reflection.MetadataLoadContext" Version="10.0.15" />
