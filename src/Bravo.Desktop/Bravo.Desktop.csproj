@@ -7,6 +7,29 @@
     <AssemblyName>Bravo</AssemblyName>
   </PropertyGroup>
 
+  <!-- Windows Forms. ApplicationConfiguration.Initialize is generated from these properties. -->
+  <PropertyGroup>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+  </PropertyGroup>
+
+  <!-- The declarations that CsWin32 generates from NativeMethods.txt use pointers. -->
+  <PropertyGroup>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <!-- The second name is the assembly where NSubstitute generates the substitutes of internal interfaces. -->
+  <ItemGroup>
+    <InternalsVisibleTo Include="Bravo.Desktop.Tests" />
+    <InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Hosting" />
+    <PackageReference Include="Microsoft.Windows.CsWin32" PrivateAssets="all" />
+    <PackageReference Include="System.CommandLine" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\Bravo.Api\Bravo.Api.csproj" />
     <ProjectReference Include="..\Bravo.Core\Bravo.Core.csproj" />

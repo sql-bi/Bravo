@@ -41,7 +41,8 @@ Whatever a component decides, these four hold:
 4. The policies that administrators have already deployed keep their effect.
 
 Everything else is open to redesign: the technology of the installer, the routes of the API, the format of
-files, the name of the single-instance pipe, the arguments of the external tool registration.
+files. Two points are already decided: the single instance has new names, and the arguments of the external
+tool registration stay as they are ([startup](#startup-lifetime-and-single-instance)).
 
 ## Rules for every component
 
@@ -152,8 +153,62 @@ is the only composition root, on the .NET Generic Host. `Bravo.Core` and `Bravo.
 dialogs, the window and the UI thread are interfaces of `Bravo.Core` that the shell implements. No state is
 static or ambient: every service is injected.
 
-The four projects exist as a skeleton, with an empty entry point: startup, the API and the window are open work
-(backlog H-02, H-03, H-04).
+The entry point, the host and an empty main window exist; the API and the content of the window are open work
+(backlog H-03, H-04).
+
+### Startup, lifetime and single instance
+
+`Main` runs six steps in a fixed order, on one STA thread, and returns an exit code
+([ADR 0013](adr/0013-startup-in-a-fixed-order-one-instance-by-mutex-and-pipe.md)):
+
+| Step | What happens |
+| --- | --- |
+| 1 | Windows Forms is configured; the DPI mode, per monitor, is a property of the project |
+| 2 | An exception that escapes, on any thread, reaches one handler, and the runtime ends the process. Until backlog S-05 the handler shows a message |
+| 3 | The command line becomes an activation request. The process becomes the owner of the instance, or hands the request over to the owner and ends |
+| 4 | The host is built and started. It gets as instances the handler of step 2 and the ownership of step 3 |
+| 5 | The main window, a service of the host, runs the message loop |
+| 6 | The host is stopped and disposed, then the ownership is released |
+
+Up to step 3 the application reads and writes nothing of its own, on the disk or in the registry, and a second
+process creates no host and no window.
+
+**Host.** It is built empty: no configuration file, no environment variable and no logging provider arrives
+with the builder, and every registration is validated when the host is built. Its lifetime is the main window,
+not a console: closing the window stops the host, and a host that stops on its own closes the window. A stop
+takes at most 5 seconds, the time Windows gives an application when a session ends. A component registers its
+services in an extension method of `IServiceCollection`, which only `Bravo.Desktop` calls.
+
+**Single instance.** One instance for each user in each Windows session, at every privilege level.
+
+- Ownership is a named mutex, scoped to the user and to the session. A process is the owner only when it has
+  acquired the mutex; a mutex left by an owner that ended without releasing it is acquired.
+- Hand-over is a named pipe in the same scope. A request is the version of the protocol, the length of the
+  payload and the payload, a JSON object of at most 1 MiB. The owner answers with one byte: accepted, busy,
+  shutting down, or a refusal. The connection and the exchange have a time limit.
+- A second process that cannot deliver tells the user why and exits with code 1; it never becomes an owner. It
+  tries again for 10 seconds while the owner may be starting, busy or ending. It gives up at once when access
+  is denied, as between two privilege levels, and when the owner refuses the request.
+- The owner starts even when it cannot create the pipe, and logs a warning.
+- Before it sends, the second process grants the owner the right to come to the foreground.
+- The names begin with an identifier that is new in 1.1.0: a 1.0.x instance and a 1.1.0 one do not recognize
+  each other. Later versions keep the identifier; a change of the messages is a new version of the protocol,
+  which an owner of another version refuses.
+
+**Activations.** Every start is an activation request, the first one included. The requests go through one
+bounded channel of 16 with a single consumer, which starts when the main window is shown: a request that
+arrives earlier waits. A second process is answered busy when the channel is full, and shutting down after the
+window was closed. Today the consumer brings the window to the foreground; passing the request to the user
+interface is backlog H-04.
+
+**Command line.** `--server` or `-s`, `--database` or `-d`, and `--ppid`, with the value after a space, `=` or
+`:`. The arguments of the external tool registration are unchanged:
+`--server="%server%" --database="%database%"`. A start with no arguments is valid. An error never stops the
+start: it travels with the request. The request carries what the command line gives; the parent process and
+the report name are backlog M-01.
+
+**Exit codes.** 0 when the application ran and was closed, and when a start was handed over; 1 when a
+hand-over failed. An exception that escapes ends the process with the code of the runtime.
 
 ### User interface and host
 

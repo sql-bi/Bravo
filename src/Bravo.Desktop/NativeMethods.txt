@@ -1,0 +1,4 @@
+// Windows.Win32.UI.WindowsAndMessaging
+IsIconic
+SetForegroundWindow
+ShowWindow

@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Bravo.Core\Bravo.Core.csproj" />
+    <ProjectReference Include="..\..\src\Bravo.Desktop\Bravo.Desktop.csproj" />
+    <ProjectReference Include="..\..\src\Bravo.Platform.Windows\Bravo.Platform.Windows.csproj" />
+  </ItemGroup>
+
+  <!--
+    The process tests start the executable in the output folder of its own project, where all that it loads is
+    beside it: the folder of the tests holds only what the tests reference. They find it through this file.
+  -->
+  <Target Name="WriteExecutablePath" AfterTargets="ResolveAssemblyReferences">
+    <ItemGroup>
+      <DesktopAssembly Include="@(ReferencePath)" Condition="'%(ReferencePath.ReferenceSourceTarget)' == 'ProjectReference' and '%(ReferencePath.Filename)' == 'Bravo'" />
+      <FileWrites Include="$(OutDir)BravoExecutable.txt" />
+    </ItemGroup>
+    <WriteLinesToFile File="$(OutDir)BravoExecutable.txt" Lines="@(DesktopAssembly->'%(RootDir)%(Directory)Bravo.exe')" Overwrite="true" WriteOnlyWhenDifferent="true" />
+  </Target>
+
+</Project>

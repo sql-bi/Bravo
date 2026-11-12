@@ -106,10 +106,42 @@ The host is four projects, with Windows at the edge
   registered.
 - The user interface reaches the host through an HTTP API served on loopback
   ([ADR 0012](docs/adr/0012-http-on-loopback-between-user-interface-and-host.md)).
-- Today the projects are a skeleton: `Bravo.Desktop` has an empty entry point, and the other three have no code.
-  Startup, the API and the window are backlog H-02, H-03 and H-04.
+- Today `Bravo.Desktop` starts, keeps one instance and shows an empty main window; `Bravo.Api` has no code. The
+  API and the content of the window are backlog H-03 and H-04.
 
 A project of `src/` gets its test project with its first test: a run in which no test ran fails.
+
+## Startup and single instance
+
+`Program.Main` of `Bravo.Desktop` runs six steps in a fixed order
+([ADR 0013](docs/adr/0013-startup-in-a-fixed-order-one-instance-by-mutex-and-pipe.md)), which
+[docs/spec.md](docs/spec.md#startup-lifetime-and-single-instance) describes. Where each part lives:
+
+| Part | Path |
+| --- | --- |
+| The order of the startup | `src/Bravo.Desktop/Program.cs` |
+| The host: what it is built with, its lifetime, its stop | `src/Bravo.Desktop/Hosting/` |
+| The main window, and what ties it to the host | `src/Bravo.Desktop/Shell/` |
+| What is done with an exception that escapes | `src/Bravo.Desktop/Diagnostics/` |
+| The command line, and the consumer of the activations | `src/Bravo.Desktop/Activation/` |
+| The activation request, and the channel that every activation goes through | `src/Bravo.Core/Activation/` |
+| The single instance: ownership by mutex, hand-over by pipe, arbitration | `src/Bravo.Platform.Windows/SingleInstance/` |
+| The names of the instance, the listener as a service of the host, the message of a failed hand-over | `src/Bravo.Desktop/SingleInstance/` |
+| The Windows functions of a project, listed in its `NativeMethods.txt` and wrapped by capability | `Interop/` in `Bravo.Desktop` and in `Bravo.Platform.Windows` |
+
+- A component registers its services in an extension method of `IServiceCollection` beside its code, and
+  `DesktopHost.Build` calls it.
+- The ownership of the instance is a mutex, which only the thread that acquired it can release: `Main` acquires
+  it and releases it, and a test that acquires one stays on one thread.
+- The tests of the single instance use real mutexes and pipes, each test under names of its own.
+  `BravoProcessTests` starts `Bravo.exe` with the names of the application: it shows a window for a moment,
+  and it is skipped when an instance of this version already runs for the user.
+
+| Task | Command |
+| --- | --- |
+| Run the application | `dotnet run --project src/Bravo.Desktop -c Release` |
+| Run it as the external tool registration does | `dotnet run --project src/Bravo.Desktop -c Release -- --server=localhost:12345 --database=db` |
+| Start the executable that the build wrote | `artifacts/bin/Bravo.Desktop/release/Bravo.exe` |
 
 ## Build and tests
 

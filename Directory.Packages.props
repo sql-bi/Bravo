@@ -23,11 +23,13 @@
   </ItemGroup>
 
   <!--
-    Packages of the .NET release train, in the version of the .NET 10 runtime: logging, and the reader of
-    assemblies as metadata of the architecture tests.
+    Packages of the .NET release train, in the version of the .NET 10 runtime: the host and its logging, the
+    command line, and the reader of assemblies as metadata of the architecture tests.
   -->
   <ItemGroup>
+    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.15" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.15" />
+    <PackageVersion Include="System.CommandLine" Version="2.0.15" />
     <PackageVersion Include="System.Reflection.MetadataLoadContext" Version="10.0.15" />
   </ItemGroup>
 
