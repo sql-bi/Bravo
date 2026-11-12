@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.OpenApi;
 using Microsoft.OpenApi;
 
-namespace Bravo.Api.Contract;
+namespace Bravo.Api.Tests.Contract;
 
 /// <summary>
 /// What is set on the document as a whole, after its routes and its schemas were generated.

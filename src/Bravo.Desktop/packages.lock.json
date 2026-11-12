@@ -25,11 +25,6 @@
         "resolved": "2.0.15",
         "contentHash": "zsnY7Ex2dPmbS/Nrg5RUKJFCEMbHeP9TdzmTJrsNh59mgr8ulba1SHmE1SVgmVqivvr79kV1GAlInC44F4ggEg=="
       },
-      "Microsoft.OpenApi": {
-        "type": "Transitive",
-        "resolved": "2.13.0",
-        "contentHash": "wavlgBYnn7uU/ZGhFHNl0UlDOlwz+6KRduKkqdCCbfxxANaQ1rmBpETVGdwXanAM6twQOxsvI3CBEGF4OScbeQ=="
-      },
       "Microsoft.Windows.SDK.Win32Docs": {
         "type": "Transitive",
         "resolved": "0.1.42-alpha",
@@ -51,8 +46,7 @@
       "bravo.api": {
         "type": "Project",
         "dependencies": {
-          "Bravo.Core": "[1.0.0, )",
-          "Microsoft.AspNetCore.OpenApi": "[10.0.15, )"
+          "Bravo.Core": "[1.0.0, )"
         }
       },
       "bravo.core": {
@@ -62,15 +56,6 @@
         "type": "Project",
         "dependencies": {
           "Bravo.Core": "[1.0.0, )"
-        }
-      },
-      "Microsoft.AspNetCore.OpenApi": {
-        "type": "CentralTransitive",
-        "requested": "[10.0.15, )",
-        "resolved": "10.0.15",
-        "contentHash": "pptFDPMWyPDDtt68s/HsvLYeHJ0WQtntjyve6ztp/5MrLOEzdZvafYIyWSeErtexIGaB8XGYCnnUK8T/Vn4MwQ==",
-        "dependencies": {
-          "Microsoft.OpenApi": "[2.13.0, 3.0.0)"
         }
       }
     }

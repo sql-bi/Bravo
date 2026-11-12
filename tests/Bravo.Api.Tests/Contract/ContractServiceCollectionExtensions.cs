@@ -5,15 +5,16 @@ using Microsoft.AspNetCore.OpenApi;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi;
 
-namespace Bravo.Api.Contract;
+namespace Bravo.Api.Tests.Contract;
 
 internal static class ContractServiceCollectionExtensions
 {
     public const string DocumentName = "bravo";
 
     /// <summary>
-    /// Adds what produces the OpenAPI document of the API. The application does not call it, because it
-    /// does not serve the document: a test produces it and compares it with the file of the repository.
+    /// Adds what produces the OpenAPI document of the API. It is here, among the tests, because the
+    /// application does not serve the document: a test produces it and compares it with the file of the
+    /// repository.
     /// </summary>
     public static IServiceCollection AddApiContract(this IServiceCollection services)
     {

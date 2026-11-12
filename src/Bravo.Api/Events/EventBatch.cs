@@ -5,7 +5,7 @@ namespace Bravo.Api.Events;
 /// <summary>
 /// The answer to a request for the events after a number.
 /// </summary>
-internal sealed record EventBatch
+public sealed record EventBatch
 {
     /// <summary>
     /// The events after the number of the request, oldest first. Empty when none arrived within the limit.

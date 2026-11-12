@@ -6,7 +6,7 @@ namespace Bravo.Api.Events;
 /// <summary>
 /// What a start of the application asked for on its command line.
 /// </summary>
-internal sealed record ActivationEvent
+public sealed record ActivationEvent
 {
     public string? ServerName { get; init; }
 
@@ -17,7 +17,7 @@ internal sealed record ActivationEvent
     /// </summary>
     public required IReadOnlyList<string> Errors { get; init; }
 
-    public static ActivationEvent FromRequest(ActivationRequest request)
+    internal static ActivationEvent FromRequest(ActivationRequest request)
     {
         return new ActivationEvent
         {

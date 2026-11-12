@@ -8,7 +8,13 @@
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 
+  <!--
+    The OpenAPI package is here and not in Bravo.Api: only a test produces the document, so the application
+    ships nothing of what produces it. The package reads the comments of the referenced projects, which become
+    the descriptions of the document.
+  -->
   <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
     <PackageReference Include="Microsoft.AspNetCore.TestHost" />
     <PackageReference Include="Microsoft.Extensions.TimeProvider.Testing" />
   </ItemGroup>

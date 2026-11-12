@@ -3,7 +3,8 @@ using Bravo.Core.Settings;
 
 namespace Bravo.Api.Options;
 
-// Public, as every type that a request carries: the validation is generated for public types only.
+// Public, as every type that travels: the validation and the descriptions of the document are generated
+// for public types only.
 /// <summary>
 /// The options of the user, as the user interface reads them and replaces them.
 /// </summary>

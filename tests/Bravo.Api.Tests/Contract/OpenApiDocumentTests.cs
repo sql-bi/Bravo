@@ -5,7 +5,6 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Bravo.Api.Contract;
 using Bravo.Core.Settings;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.OpenApi;
@@ -82,6 +81,21 @@ public sealed class OpenApiDocumentTests
             Assert.NotEqual(0, operation.GetProperty("tags").GetArrayLength());
             Assert.True(HasProblemAnswer(operation, "401") && HasProblemAnswer(operation, "500"), operation.GetRawText());
         });
+    }
+
+    // The validation and the descriptions of the document are generated for public types only, and neither
+    // says anything about a type that is not public.
+    [Fact]
+    public async Task Document_EveryTypeOfTheApiThatTravels_IsPublic()
+    {
+        using var document = JsonDocument.Parse(await ProduceDocumentAsync());
+        var schemas = document.RootElement.GetProperty("components").GetProperty("schemas");
+        var schemaNames = schemas.EnumerateObject().Select(schema => schema.Name).ToHashSet();
+
+        var travelling = typeof(ApiOptions).Assembly.GetTypes().Where(type => schemaNames.Contains(type.Name)).ToList();
+
+        Assert.NotEmpty(travelling);
+        Assert.All(travelling, type => Assert.True(type.IsPublic, $"{type.FullName} travels and is not public."));
     }
 
     /// <summary>

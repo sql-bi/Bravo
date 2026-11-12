@@ -168,7 +168,8 @@ A project of `src/` gets its test project with its first test: a run in which no
 | How JSON is read and written | `src/Bravo.Api/Json/` |
 | The events for the user interface: their log, their publisher, their route | `src/Bravo.Api/Events/` |
 | The routes of a resource, with the types that travel | A folder for each resource, such as `src/Bravo.Api/Options/` |
-| The OpenAPI document, and the rules applied to it when it is produced | `src/Bravo.Api/openapi.json`, `src/Bravo.Api/Contract/` |
+| The OpenAPI document | `src/Bravo.Api/openapi.json` |
+| What produces the document, with the rules applied to it, and the test that compares it with the file | `tests/Bravo.Api.Tests/Contract/` |
 
 To add a route:
 
@@ -179,9 +180,12 @@ To add a route:
    TypeScript function and never changes. The handler is a named static method that returns typed results;
    `ProducesValidationProblem` and `ProducesProblem` declare the error answers that the results do not show.
 3. The types that travel are records in the folder of the resource: `required` on a member that always has a
-   value, a nullable type on a member that may be absent. A type that a request carries is public, because the
-   validation is generated for public types only. The `<summary>` of a type and of its members goes into the
-   document: write it for a reader of the API, with the names of the JSON.
+   value, a nullable type on a member that may be absent. Every type that travels is public, in a request and
+   in an answer alike, and nothing else becomes public for it. There are two reasons: the validation is
+   generated for public types only, and the descriptions of the document, which are the `<summary>` of a type
+   and of its members, are read for public types only. Neither says anything about a type that is not public:
+   a test of the document fails for it. Write a `<summary>` for a reader of the API, with the names of the
+   JSON.
 4. Validate with data annotations or `IValidatableObject` on the types and with attributes on the parameters,
    and test each rule through the route: nothing reports a type that the validation does not see.
 5. A use case reports an error that the user interface must tell apart by throwing `BravoException`
@@ -197,6 +201,9 @@ To add a route:
   produces for a list of derived types is wrong.
 - `AddApi` registers the services of the API and `UseLoopbackServer` its server. A use case that a route calls
   is registered by `Bravo.Desktop`, and by `TestApi` for the tests.
+- Only a test produces the document, so what produces it is in the test project: `Bravo.Api` has no package
+  reference, and the application ships nothing of the OpenAPI package. A rule on how the document describes
+  the JSON goes in `ContractSchema` or `ContractDocument`.
 - `OpenApiDocumentTests.WriteTheFileOfTheRepository` is not a test: it writes the document, runs only when
   asked for, and shows as skipped in every other run.
 
@@ -230,7 +237,7 @@ A warning fails the build ([ADR 0009](docs/adr/0009-rules-enforced-by-the-build.
 | Code style and the severity of each diagnostic | `.editorconfig` |
 | The symbols no project may use | `BannedSymbols.txt` |
 | Allowed project references, catch-all names, static mutable state, the projects that the solution and its filter list | `tests/Bravo.Architecture.Tests` |
-| The OpenAPI document equal to its file; no schema that allows null; a name, a tag and the common error answers on every route | `tests/Bravo.Api.Tests` (`OpenApiDocumentTests`) |
+| The OpenAPI document equal to its file; no schema that allows null; a name, a tag and the common error answers on every route; every type of the API that travels public | `tests/Bravo.Api.Tests/Contract/` (`OpenApiDocumentTests`) |
 
 ASP.NET Core is a shared framework of the runtime: a project that uses it has a `FrameworkReference` to
 `Microsoft.AspNetCore.App`, and no package reference for what the framework holds, such as

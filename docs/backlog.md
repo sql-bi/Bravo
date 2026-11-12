@@ -38,8 +38,7 @@ the four guarantees of [the specification](spec.md#guarantees-for-users-of-10x).
   enterprise deployment, external tool registration, signing, WinGet, licence. Also: a running instance during
   an upgrade, because 1.0.x and 1.1.0 do not recognize each other; the resource folders of System.CommandLine,
   one for each language, in the output of the build; the ASP.NET Core runtime, which the application needs
-  beside the Windows Desktop one; the assemblies that only produce the OpenAPI document, which ship with the
-  application.
+  beside the Windows Desktop one.
 - [ ] D-02 Release. Hypothesis: GitHub Actions builds, signs, publishes a GitHub release with generated notes
   and changelog, and updates the feed. Explore: signing with a federated identity; changelog tools; how the
   version is computed.

@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OpenApi;
 using Microsoft.OpenApi;
 
-namespace Bravo.Api.Contract;
+namespace Bravo.Api.Tests.Contract;
 
 /// <summary>
 /// Makes each schema of the document say what the JSON of the API does, where the generated schema says
