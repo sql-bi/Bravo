@@ -12,11 +12,6 @@ criterion can be checked on `develop-vnext`.
 Exit: the new executable starts, a second start activates the first, it shows the current user interface and
 opens the options through the new API and the generated client.
 
-- [ ] H-01 Host architecture. Hypothesis: portable core and API projects, Windows adapters, a shell; the
-  compiler keeps Windows out of the core. Explore: .NET applications with a web user interface; HTTP on loopback
-  or the message channel of the webview. Also: fills the table of allowed project references; decides how the
-  architecture tests load Windows-only assemblies; adds the solution filter of the Linux job of CI with the
-  first Windows-only project.
 - [ ] H-02 Startup, lifetime and single instance. Hypothesis: today's order, from the exception handler to the
   window. Explore: the generic host in desktop applications; single instance in well-known desktop applications.
 - [ ] H-03 API and the contract with the user interface. Decided
