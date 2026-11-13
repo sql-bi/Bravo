@@ -7,12 +7,7 @@
 // Utils
 export module Utils {
 
-    export type RequestAbortReason = "user" | "timeout";
-
     export enum ResponseStatusCode {
-        Ok = 200,
-        NoContent = 204,
-        MultipleChoice = 300,
         BadRequest = 400,
         NotAuthorized = 401,
         NotFound = 404,
@@ -31,88 +26,6 @@ export module Utils {
                 s.onload=callback;
             }
             document.body.appendChild(s);
-        }
-
-        // Send ajax call
-        export function ajax(url: string, data = {}, options: RequestInit = {}, authorization = "") {
-
-            let defaultOptions: RequestInit = {
-                method: "GET", // *GET, POST, PUT, DELETE, etc.
-                mode: "cors", // no-cors, *cors, same-origin
-                cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
-                credentials: "omit", // include, *same-origin, omit
-                headers: {
-                    "Content-Type": "application/json",
-                    "Access-Control-Allow-Origin": "*"
-                },
-                redirect: "follow", // manual, *follow, error
-                referrerPolicy: "unsafe-url", // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
-            };
-
-            let mergedOptions = {...defaultOptions, ...options};
-
-            if (data && !Utils.Obj.isEmpty(data)) {
-                if (mergedOptions.method == "POST") {
-                    if ((<any>mergedOptions.headers)["Content-Type"] == "application/json") {
-                        mergedOptions.body = JSON.stringify(data);
-                    } else {
-                        mergedOptions.body = <BodyInit>data;
-                    }
-
-                } else if (mergedOptions.method == "GET") {
-
-                    // Append data args to the URL
-                    try {
-                        let _url = new URL(url);
-                        _url.search = new URLSearchParams(data).toString();
-                        url = _url.href;
-
-                    } catch(e) {}
-                }
-            }
-
-            if (authorization)
-                (<any>mergedOptions.headers)["Authorization"] = authorization; 
-
-            const ajaxHandleResponseStatus = (response: Response) => {
-                return (response.status >= ResponseStatusCode.Ok && response.status < ResponseStatusCode.MultipleChoice) ? 
-                    Promise.resolve(response) :
-                    Promise.reject(response);
-            };
-            
-            const ajaxHandleContentType = (response: Response) => {
-                if (response.status == ResponseStatusCode.NoContent) {
-                    return Promise.resolve(null);
-                } else {
-                    const contentType = response.headers.get('content-type');
-                    return contentType && contentType.startsWith('application/json;') ?
-                        response.json() :
-                        response.text();
-                }
-            }
-
-            return fetch(url, mergedOptions)
-    	        .then(response => ajaxHandleResponseStatus(response))
-                .then(response => ajaxHandleContentType(response));
-        }
-
-        // Convenience func for GET ajax
-        export function get(url: string, data = {}, signal?: AbortSignal) {
-            return Utils.Request.ajax(url, data, { method: "GET", signal: signal });
-        }
-
-        // Convenience func for POST ajax
-        export function post(url: string, data = {}, signal?: AbortSignal) {
-           return Utils.Request.ajax(url, data, { method: "POST", signal: signal });
-        }
-
-        export function upload(url: string, file: File, signal?: AbortSignal) {
-            return Utils.Request.ajax(url, {}, { 
-                method: "POST",  
-                body: file, 
-                signal: signal,
-                headers: { }, //Set emtpy - this way the browser will automatically add the Content type header including the Form Boundary
-            });
         }
 
         export function isAbort(error: Error) {

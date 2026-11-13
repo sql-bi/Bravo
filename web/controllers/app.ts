@@ -399,7 +399,7 @@ export class App {
 
         if (automatic && !optionsController.getOption("updateCheckEnabled")) return;
 
-        return host.getCurrentVersion()
+        const check = host.getCurrentVersion()
             .then(data => {
 
                 let newVersion = null;
@@ -418,9 +418,10 @@ export class App {
 
                 return newVersion;
             });
-            /*.catch(ignore => {
-                return null;
-            });*/
+
+        // The check that the page starts by itself tells nothing when it fails. The one that the user asks
+        // for, in the options, shows the failure there.
+        return (automatic ? check.catch(ignore => <AppVersion>null) : check);
     }
 
     reload() {

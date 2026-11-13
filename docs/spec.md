@@ -455,9 +455,9 @@ Every build of the user interface generates its TypeScript client from that file
 named in the document, and the types that travel. The build then checks the user interface against them. Each
 function calls the host through one function of the user interface, which adds the address and the token and
 lets the caller abort the request. Today the application data, the options and the events go through the
-client; the other calls of the user interface are as they were, and each one moves with its feature. Until
-then they fail: the browser engine stops them before they are sent, because they carry a request header that
-the API does not allow.
+client. Every other call of the user interface belongs to a feature that has not moved: nothing is sent, and
+the call fails at once with an error that says that the feature is not available yet. Each one moves to the
+client with its feature.
 
 **Start of the page.** The page is the same in the window and in a browser, with no branch for either: it
 reads the address and the token of the API from `window.bravoHost`
@@ -476,6 +476,10 @@ is missing or the host does not answer.
   the page waits before it asks again: one second, then twice as long each time, up to 30 seconds.
 - An activation without a server does nothing in the page. The errors of a command line go to the diagnostic
   log. An activation with a server is logged, and opens no report until the host can find it (backlog M-01).
+- Four calls that the page starts by itself have no route yet: the sign-in with the account that the page
+  remembers, the update check, the reading of the diagnostics of the host, and the list of the reports that
+  are open in Power BI Desktop. They fail like every call without a route, and the page shows nothing and
+  writes nothing in its console for them.
 
 ## Open questions
 

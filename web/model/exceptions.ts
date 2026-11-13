@@ -123,6 +123,11 @@ export class AppError {
         return new AppError(errorType, errorMessage, errorCode, traceId, errorDetails);
     }
 
+    // A feature whose calls have no route in the host yet
+    static InitFromNotAvailable() {
+        return new AppError(AppErrorType.Generic, i18n(strings.errorNotAvailable));
+    }
+
     static InitFromProblemCode(code: number, message?: string, details?: string) {
         return AppError.InitFromProblem({ status: Utils.ResponseStatusCode.BadRequest, instance: String(code), detail: details }, message);
     }

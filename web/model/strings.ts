@@ -134,6 +134,7 @@ export enum strings {
     errorNetworkError,
     errorNone,
     errorNotAuthorized,
+    errorNotAvailable,
     errorNotConnected,
     errorNotFound,
     errorOperationFailedDetails,

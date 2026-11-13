@@ -363,8 +363,8 @@ The runs are also public, at <https://github.com/sql-bi/Bravo/actions>.
 
 `web/` holds the user interface of the previous implementation: TypeScript and LESS, bundled by webpack. It
 reads what the application is, the options and the events of the host through the client generated from the
-OpenAPI document; its other calls are as they were, and each one moves with its feature. Until then they
-fail before they are sent: `Utils.Request.ajax` adds a request header that the API does not allow. Its
+OpenAPI document. Its other calls belong to features that have not moved: they go through `Host.apiCall`,
+which sends nothing and fails at once with an error that says that the feature is not available yet. Its
 commands run in `web/` and need Node.js 26 with npm: `package.json` pins that line in `devEngines`, and npm
 stops with an error on another one.
 
@@ -442,10 +442,11 @@ The unit tests of the user interface are in `web/tests`, each at the path of the
 run on [Vitest](https://vitest.dev) in a simulated browser, jsdom
 ([ADR 0016](docs/adr/0016-closed-error-codes-generated-types-and-tests-in-the-user-interface.md)):
 
-- They test the modules that read the contract: `host-fetch` and `host-events`. Nothing tests a view, and
-  nothing runs in a real browser (backlog H-07).
-- `main.ts` starts the whole page when it is loaded. A test replaces it, with `vi.mock`, by what the module
-  under test reads from it, and replaces the generated client where the test answers in place of the host.
+- They test the modules that read the contract: `host-fetch`, `host-events` and `host`. Nothing tests a
+  view, and nothing runs in a real browser (backlog H-07).
+- `main.ts` starts the whole page when it is loaded. A test replaces it, with `vi.mock`, by the parts of
+  `tests/main-mock.ts`, which do nothing, and replaces the generated client where the test answers in place
+  of the host.
 - A test moves the clock itself (`vi.useFakeTimers`) and waits for no time.
 - Vite reads the sources for the tests, and transforms the namespaces of TypeScript only in part: one that
   exports a variable (`export var`, `export let`) is reported as a warning at every run, and the variable

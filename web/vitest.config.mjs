@@ -7,6 +7,10 @@ export default defineConfig({
         include: ['tests/**/*.test.ts'],
         environment: 'jsdom',
 
+        // A module that leads to the views loads the chart of the model analysis, whose package imports a
+        // folder of chart.js: Node refuses that, Vite resolves it as webpack does
+        server: { deps: { inline: ['chartjs-chart-treemap'] } },
+
         // Nothing that a test replaced is left for the next one
         restoreMocks: true,
         unstubGlobals: true

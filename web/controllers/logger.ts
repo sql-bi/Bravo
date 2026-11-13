@@ -162,14 +162,14 @@ export class Logger extends Dispatchable {
     logError(error: AppError) {
         console.error(error);
 
-        const errorCode = `${error.type != AppErrorType.Managed ? "HTTP/" : "" }${ error.code }`;
+        const errorCode = (error.code ? `${error.type != AppErrorType.Managed ? "HTTP/" : "" }${ error.code }` : "");
         
         let errorDetails = error.details;
         try {
             errorDetails = JSON.parse(error.details);
         } catch(ignore){}
 
-        const name = `${ i18n(strings.error) } ${ errorCode }: ${ error.message }`;
+        const name = `${ i18n(strings.error) }${ errorCode ? ` ${ errorCode }` : "" }: ${ error.message }`;
 
         const content = {
             Code: errorCode,

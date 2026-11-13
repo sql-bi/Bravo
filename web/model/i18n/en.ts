@@ -142,6 +142,7 @@ const locale: Locale = {
         [_.errorNetworkError]: "You are not connected to the Internet.",
         [_.errorNone]: "Unspecified error.",
         [_.errorNotAuthorized]: "You are not authorized to view the specified resource.",
+        [_.errorNotAvailable]: "This feature is not available yet.",
         [_.errorNotConnected]: "You are not connected to Power BI - please sign in to proceed.",
         [_.errorNotFound]: "Unable to connect to the specified resource.",
         [_.errorOperationFailedDetails]: "An error occurred. See the diagnostics pane for details.",

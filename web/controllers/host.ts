@@ -6,12 +6,12 @@
 
 import { Dispatchable } from '../helpers/dispatchable';
 import { Dic, Utils } from '../helpers/utils';
-import { auth, debug, logger } from '../main';
+import { debug, logger } from '../main';
 import { DocType } from '../model/doc';
-import { AppError, AppErrorType, AppProblem } from '../model/exceptions';
+import { AppError, AppProblem } from '../model/exceptions';
 import { PBICloudDataset, PBICloudDatasetConnectionMode } from '../model/pbi-dataset';
 import { FormattedMeasure, TabularDatabase, TabularDatabaseServer, TabularMeasure, TabularTable } from '../model/tabular';
-import { Account, SignInRequest } from './auth';
+import { Account } from './auth';
 import * as hostApi from '../generated/bravo';
 import { connectHost, HostProblem } from './host-fetch';
 import { DiagnosticLevelType, FormatDaxOptions, Options, ProxyType } from './options';
@@ -23,14 +23,10 @@ import { LogMessageObj } from './logger';
 import { DateConfiguration, DateTemplate, sanitizeTemplates, TableValidation } from '../model/dates';
 import { ModelChanges } from '../model/model-changes';
 import { CloudEnvironment } from '../model/pbi-cloud';
-import { PowerBISignin } from '../view/powerbi-signin';
-import { DialogResponse } from '../view/dialog';
 
 interface ApiRequest {
     action: string
     controller: AbortController
-    timeout?: number
-    aborted?: Utils.RequestAbortReason
 }
 
 export interface ProblemDetails {
@@ -245,107 +241,18 @@ export class Host extends Dispatchable {
     }
 
     // Functions
+
+    /**
+     * A call of the previous host, which the new one has no route for yet. Nothing is sent: the call fails
+     * at once with an error that says so. Each call moves to apiClientCall with its feature, and until then
+     * the parameters stay as its callers pass them.
+     */
     apiCall(action: string, data = {}, options: RequestInit = {}, signinIfRequired = true, logSettings: ApiLogSettings = null, timeout = Host.DEFAULT_TIMEOUT): Promise<any> {
 
         let debugResponse = debug.catchApiCall(action, data);
         if (debugResponse !== null) return debugResponse;
 
-        let requestId = Utils.Text.uuid();
-        let abortController = new AbortController();
-        this.requests[requestId] = {
-            action: action,
-            controller: abortController
-        };
-
-        if (!("method" in options))
-            options["method"] = "GET";
-        
-        options["signal"] = abortController.signal;
-
-        if (timeout) {
-            this.requests[requestId].timeout = window.setTimeout(()=> {
-                this.apiAbortById(requestId, "timeout");
-            }, timeout);
-        }
-
-        let logMessageId = (logSettings ? this.apiLog(action, data, logSettings) : null);
-
-        return Utils.Request.ajax(`${this.address}/${action}`, data, options, this.token)
-            .then(response => {
-                if (logSettings) {
-                    logSettings.dataLevel = DiagnosticLevelType.Verbose; //Response data is visible only if Verbose
-                    this.apiLog(action, response, logSettings, logMessageId);
-                }
-                return response;
-            })
-            .catch(async (response: Response | Error) => {
-
-                let problem;
-
-                //Catch unhandled errors, like an aborted request
-                if (response instanceof Error) {
-
-                    let status = Utils.ResponseStatusCode.InternalError;
-                    if (Utils.Request.isAbort(response)) {
-                        if (requestId in this.requests && this.requests[requestId].aborted == "timeout")
-                            status = Utils.ResponseStatusCode.Timeout;
-                        else 
-                            status = Utils.ResponseStatusCode.Aborted;
-                    }
-
-                    problem = {
-                        status: status,
-                        title: response.message
-                    }
-                } else {
-                    problem = await response.json(); 
-                }
-
-                let error = AppError.InitFromProblem(problem);
-
-                if (error.type == AppErrorType.Auth && signinIfRequired) {
-
-                    //Remove the timeout because the call will be re-executed
-                    this.apiCallCompleted(requestId); 
-
-                    if (auth.account) {
-                        // Try automatic sign-in with saved account (if any)
-                        const signinRequest: SignInRequest = {
-                            email: auth.account.email,
-                            environmentName: auth.account.environmentName,
-                            environments: auth.account.environments
-                        };
-                        return auth.signIn(signinRequest)
-                            .then(()=>{
-                                return this.apiCall(action, data, options, false, null, timeout);
-                            })
-                            .catch(error => {
-                                throw error;
-                            });
-
-                    } else {
-
-                        // Show the sign-in dialog
-                        let signinDialog = new PowerBISignin();
-                        return signinDialog.show()
-                            .then((response: DialogResponse) => {
-                                if (response.action == "signin")
-                                    return this.apiCall(action, data, options, false, null, timeout);
-                                
-                                throw error;
-                            })
-                            .catch(error => {
-                                throw error;
-                            });
-                    }
-
-                } else {
-                    throw error;
-                }
-            })
-            .finally(()=>{
-                this.apiCallCompleted(requestId);
-            });
+        return Promise.reject(AppError.InitFromNotAvailable());
     }
 
     /**
@@ -382,29 +289,23 @@ export class Host extends Dispatchable {
     }
 
     apiCallCompleted(requestId: string) {
-        if (requestId in this.requests) {
-            if ("timeout" in this.requests[requestId])
-                window.clearTimeout(this.requests[requestId].timeout);
-                
-            delete this.requests[requestId];
-        }
+        delete this.requests[requestId];
     }
 
-    apiAbortById(requestId: string, reason: Utils.RequestAbortReason = "user") {
+    apiAbortById(requestId: string) {
         if (requestId in this.requests) {
             try {
-                this.requests[requestId].aborted = reason;
                 this.requests[requestId].controller.abort();
             } catch (ignore) {}
 
-            try { logger.log(`${this.requests[requestId].action} ${reason == "user" ? "aborted" : "timeout"}`); } catch (ignore) {}
+            try { logger.log(`${this.requests[requestId].action} aborted`); } catch (ignore) {}
         }
     }
 
-    apiAbortByAction(actions: string | string[], reason: Utils.RequestAbortReason = "user") {
+    apiAbortByAction(actions: string | string[]) {
         for (let requestId in this.requests) {
             if (Utils.Obj.isArray(actions) ? actions.indexOf(this.requests[requestId].action) >= 0 : actions == this.requests[requestId].action) {
-                this.apiAbortById(requestId, reason);
+                this.apiAbortById(requestId);
             }
         }
     }
