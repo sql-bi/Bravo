@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using Bravo.Api.Security;
 using Bravo.Api.Server;
+using Bravo.Core.Settings;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.WinForms;
 
@@ -29,7 +30,8 @@ internal sealed class WebViewHost(
     private readonly WebViewFailurePolicy _policy = policy;
 
     private Control? _parent;
-    private Color _backgroundColor;
+    private Theme _theme = Theme.Auto;
+    private Color _backgroundColor = Color.White;
     private CoreWebView2Environment? _environment;
     private WebView2? _view;
     private bool _hasEnded;
@@ -55,14 +57,42 @@ internal sealed class WebViewHost(
     /// until the first document has loaded: until then the parent shows through.
     /// </summary>
     /// <param name="parent">The control that the webview fills. Its handle exists.</param>
-    /// <param name="backgroundColor">What the webview shows where the page draws nothing.</param>
-    public void Start(Control parent, Color backgroundColor)
+    public void Start(Control parent)
     {
         ObjectDisposedException.ThrowIf(_isDisposed, this);
 
         _parent = parent;
-        _backgroundColor = backgroundColor;
         Observe(CreateViewAsync());
+    }
+
+    /// <summary>
+    /// Sets the color scheme that the page is told, the one that it reads as <c>prefers-color-scheme</c>, and
+    /// what the webview shows where the page draws nothing. Before the control exists the two are kept for
+    /// it; after, the page is told at once.
+    /// </summary>
+    /// <param name="theme">The theme of the user. With Auto the page is told the color mode of Windows.</param>
+    /// <param name="backgroundColor">What the webview shows where the page draws nothing.</param>
+    public void ApplyTheme(Theme theme, Color backgroundColor)
+    {
+        _theme = theme;
+        _backgroundColor = backgroundColor;
+        if (_isDisposed || _view is not { } view)
+        {
+            return;
+        }
+
+        try
+        {
+            view.DefaultBackgroundColor = backgroundColor;
+            if (view.CoreWebView2 is { } engine)
+            {
+                engine.Profile.PreferredColorScheme = ToColorScheme(theme);
+            }
+        }
+        catch (Exception exception) when (IsEngineFailure(exception))
+        {
+            // A control that a failure left unusable: the one that replaces it gets the theme when it is created.
+        }
     }
 
     public void Dispose()
@@ -140,6 +170,7 @@ internal sealed class WebViewHost(
 
         var engine = view.CoreWebView2;
         Restrict(engine.Settings);
+        engine.Profile.PreferredColorScheme = ToColorScheme(_theme);
         engine.NavigationStarting += OnNavigationStarting;
         engine.FrameNavigationStarting += OnFrameNavigationStarting;
         engine.NewWindowRequested += OnNewWindowRequested;
@@ -162,6 +193,17 @@ internal sealed class WebViewHost(
             _options.ContentFolder,
             CoreWebView2HostResourceAccessKind.Deny);
         engine.Navigate(PageAddress.Start);
+    }
+
+    private static CoreWebView2PreferredColorScheme ToColorScheme(Theme theme)
+    {
+        return theme switch
+        {
+            Theme.Auto => CoreWebView2PreferredColorScheme.Auto,
+            Theme.Light => CoreWebView2PreferredColorScheme.Light,
+            Theme.Dark => CoreWebView2PreferredColorScheme.Dark,
+            _ => throw new ArgumentOutOfRangeException(nameof(theme), theme, "No color scheme for the theme."),
+        };
     }
 
     // Everything that the page does not use is off.

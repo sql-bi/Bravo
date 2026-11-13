@@ -9,6 +9,8 @@ public sealed class InMemoryUserSettingsStore : IUserSettingsStore
 {
     private volatile UserSettings _current = UserSettings.Default;
 
+    public event EventHandler? Changed;
+
     public UserSettings Current => _current;
 
     public void Replace(UserSettings settings)
@@ -16,5 +18,6 @@ public sealed class InMemoryUserSettingsStore : IUserSettingsStore
         ArgumentNullException.ThrowIfNull(settings);
 
         _current = settings;
+        Changed?.Invoke(this, EventArgs.Empty);
     }
 }

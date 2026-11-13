@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
+using Bravo.Core.Settings;
 using Bravo.Desktop.Interop;
 using Bravo.Desktop.WebView;
 
@@ -10,29 +11,30 @@ internal sealed class MainWindow : Form, IMainWindow
 {
     private const string IconResourceName = "Bravo.ico";
 
-    // What the window shows until the page has loaded: the background of the user interface in the color
-    // mode of the system, so that nothing flashes white.
-    private static readonly Color s_darkBackground = Color.FromArgb(0x20, 0x20, 0x20);
-    private static readonly Color s_lightBackground = Color.FromArgb(0xF3, 0xF3, 0xF3);
-
     private readonly WebViewHost _webView;
     private readonly ShellExit _exit;
+    private readonly IUserSettingsStore _settings;
+    private (Theme Theme, WindowColors Colors)? _appliedTheme;
     private volatile bool _closeRequested;
 
-    public MainWindow(BuildIdentity identity, WebViewHost webView, ShellExit exit)
+    public MainWindow(BuildIdentity identity, WebViewHost webView, ShellExit exit, IUserSettingsStore settings)
     {
         _webView = webView;
         _exit = exit;
+        _settings = settings;
 
         Text = identity.WindowTitle;
         Icon = LoadIcon();
-        BackColor = Application.SystemColorMode == SystemColorMode.Dark ? s_darkBackground : s_lightBackground;
 
         // The size that Windows gives a new window, in the middle of the screen. Nothing of the window is
         // kept from one start to the next.
         StartPosition = FormStartPosition.WindowsDefaultBounds;
 
+        // Before the window is shown: nothing is drawn in the colors of another theme first.
+        ApplyTheme();
+
         _webView.Ended += OnWebViewEnded;
+        _settings.Changed += OnSettingsChanged;
     }
 
     public void RunMessageLoop()
@@ -52,6 +54,15 @@ internal sealed class MainWindow : Form, IMainWindow
         PostToWindow(() => _ = WindowActivationInterop.RestoreAndActivate(Handle));
     }
 
+    protected override void OnHandleCreated(EventArgs e)
+    {
+        base.OnHandleCreated(e);
+
+        // The frame belongs to the handle: a new handle gets the frame of the theme again.
+        _appliedTheme = null;
+        ApplyTheme();
+    }
+
     protected override void OnLoad(EventArgs e)
     {
         base.OnLoad(e);
@@ -67,15 +78,29 @@ internal sealed class MainWindow : Form, IMainWindow
         }
 
         base.OnShown(e);
-        _webView.Start(this, BackColor);
+        _webView.Start(this);
     }
 
     protected override void OnFormClosed(FormClosedEventArgs e)
     {
         // Before the window is destroyed: the control closes the engine while its window still exists.
+        _settings.Changed -= OnSettingsChanged;
         _webView.Ended -= OnWebViewEnded;
         _webView.Dispose();
         base.OnFormClosed(e);
+    }
+
+    // Windows tells every window that a setting of the system changed. When it is the color mode, a theme
+    // that follows the system changes with it.
+    protected override void WndProc(ref Message m)
+    {
+        base.WndProc(ref m);
+
+        if (ColorModeInterop.IsSettingChange(m.Msg))
+        {
+            // Posted: the engine cannot be called while a message that another process sent is handled.
+            PostToWindow(ApplyTheme);
+        }
     }
 
     private static Icon LoadIcon()
@@ -83,6 +108,34 @@ internal sealed class MainWindow : Form, IMainWindow
         using var stream = typeof(MainWindow).Assembly.GetManifestResourceStream(IconResourceName)
             ?? throw new InvalidOperationException($"The assembly has no resource named {IconResourceName}.");
         return new Icon(stream);
+    }
+
+    // Raised on the thread that replaced the settings, which is one of the API.
+    private void OnSettingsChanged(object? sender, EventArgs e)
+    {
+        PostToWindow(ApplyTheme);
+    }
+
+    // The theme of the user on everything of the window: its background, its frame and its webview. It runs
+    // on the thread of the window, and does nothing when what it would apply is already there.
+    private void ApplyTheme()
+    {
+        var theme = _settings.Current.Theme;
+        var isSystemDark = Application.SystemColorMode == SystemColorMode.Dark;
+        var colors = WindowColors.For(theme, isSystemDark);
+        if (_appliedTheme == (theme, colors))
+        {
+            return;
+        }
+
+        _appliedTheme = (theme, colors);
+        BackColor = colors.Background;
+        _webView.ApplyTheme(theme, colors.Background);
+        if (IsHandleCreated)
+        {
+            // Where Windows does not know the request, the frame stays as it is.
+            _ = ColorModeInterop.TryUseDarkFrame(Handle, colors.IsDark);
+        }
     }
 
     private void OnWebViewEnded(object? sender, WebViewEndedEventArgs e)

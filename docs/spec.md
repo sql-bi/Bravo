@@ -242,9 +242,19 @@ the engine is in one folder of `Bravo.Desktop`: a shell on another engine rewrit
 
 **Window.** The icon of the application, the title of the
 [build identity](#startup-lifetime-and-single-instance), the size that Windows gives a new window, in the
-middle of the screen. Its background follows the color mode of the system, and the webview stays hidden until
-the first document has loaded, so nothing flashes white. Nothing of the window is kept from one start to the
-next (backlog S-01).
+middle of the screen. The webview stays hidden until the first document has loaded: until then the window
+shows the background of the user interface, so nothing flashes white. Nothing of the window is kept from one
+start to the next (backlog S-01).
+
+**Theme.** The window has the theme of the user, at the start and whenever the options change: the settings
+tell that they were replaced, and the window reads them again on its own thread. With `Auto` it has the color
+mode of Windows, and follows it when it changes. The page tells the window nothing: it changes the options.
+
+| Part | What the theme sets |
+| --- | --- |
+| The frame of the window, with its title bar | Dark or light, by a request that Windows documents from Windows 11 on (build 22000). Where Windows does not know the request, the frame stays as it is |
+| The background of the window and of the webview | The background of the user interface in that mode |
+| The webview | The color scheme of its profile, which a page reads as `prefers-color-scheme`: the page has the theme of the user before it has read the options |
 
 **Page.** The webview serves the folder `wwwroot`, beside the executable, under the host name `bravo.invalid`,
 reserved for names that are no site ([RFC 6761](https://www.rfc-editor.org/rfc/rfc6761.html#section-6.4)). No
@@ -453,7 +463,8 @@ reads the address and the token of the API from `window.bravoHost`
 is missing or the host does not answer.
 
 - Before any of its parts exists, the page asks the API what the application is and for the options of the
-  user. Until those answers arrive it follows the color mode of the system, as the window does.
+  user. Until those answers arrive it follows the color scheme that it is told: in the window the theme of the
+  user ([window and webview](#window-and-webview)), in a browser the color mode of the system.
 - It starts with no policy (backlog S-02) and no telemetry settings (backlog S-06): until then no option is
   locked, and telemetry sends nothing.
 - It has no message channel with the window: what the host tells it arrives as events.

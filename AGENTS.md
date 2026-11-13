@@ -124,7 +124,7 @@ A project of `src/` gets its test project with its first test: a run in which no
 | --- | --- |
 | The order of the startup | `src/Bravo.Desktop/Program.cs` |
 | The host: what it is built with, its lifetime, its stop | `src/Bravo.Desktop/Hosting/` |
-| The main window, what ties it to the host, and the exit code that the window ends with | `src/Bravo.Desktop/Shell/` |
+| The main window, its colors for a theme, what ties it to the host, and the exit code that the window ends with | `src/Bravo.Desktop/Shell/` |
 | The webview, and everything that knows its engine | `src/Bravo.Desktop/WebView/` ([Window and webview](#window-and-webview)) |
 | The exit codes of the process | `src/Bravo.Desktop/ExitCode.cs` |
 | What is done with an exception that escapes | `src/Bravo.Desktop/Diagnostics/` |
@@ -188,6 +188,11 @@ The main window shows the user interface in WebView2
   an event of the engine: it is posted to the window.
 - A setting that the page does not need stays off. Turning one on is a change of
   [docs/spec.md](docs/spec.md#window-and-webview) in the same commit.
+- The theme of the user is applied by `MainWindow.ApplyTheme`, on the thread of the window: at the start,
+  when `IUserSettingsStore.Changed` says that the settings were replaced, and when Windows says that a
+  setting of the system changed. `WindowColors` decides the colors, `ColorModeInterop` asks Windows for
+  the frame, and `WebViewHost.ApplyTheme` sets the color scheme of the profile and the background of the
+  control. The tests prove the color scheme with the real engine; the frame is checked by hand.
 - The page is `wwwroot` beside the executable. The .NET build never runs npm: a development build copies
   `web/wwwroot` as it is, so the window shows the user interface only after `npm run build:UI` in `web/` and
   a build of `Bravo.Desktop`; without the bundle the window stays empty. A release build copies nothing

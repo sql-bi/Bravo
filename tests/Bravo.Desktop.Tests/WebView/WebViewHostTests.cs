@@ -5,6 +5,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Bravo.Api.Security;
 using Bravo.Api.Server;
+using Bravo.Core.Settings;
 using Bravo.Desktop.Development;
 using Bravo.Desktop.Diagnostics;
 using Bravo.Desktop.Hosting;
@@ -26,6 +27,8 @@ namespace Bravo.Desktop.Tests.WebView;
 /// </summary>
 public sealed class WebViewHostTests : IAsyncLifetime
 {
+    private const string PrefersDarkScript = "matchMedia('(prefers-color-scheme: dark)').matches";
+
     private static readonly TimeSpan s_timeout = TimeSpan.FromSeconds(60);
 
     private readonly OwnedInstance _instance = new();
@@ -185,6 +188,41 @@ public sealed class WebViewHostTests : IAsyncLifetime
         Assert.Equal("prompt", permission.GetProperty("after").GetString());
     }
 
+    // The machine that runs the tests is in one of the two color modes: with both themes, one of the two
+    // runs asks the engine for the scheme that the system does not have.
+    [Theory]
+    [InlineData(Theme.Dark, "true")]
+    [InlineData(Theme.Light, "false")]
+    public async Task Start_ThemeOfTheUser_IsTheColorSchemeThatThePageIsTold(Theme theme, string prefersDark)
+    {
+        await _window.InvokeAsync(_ => _webView.ApplyTheme(theme, Color.Black));
+
+        await StartAndReadReportAsync();
+
+        var answer = await _window.InvokeAsync(_ => _webView.Engine!.ExecuteScriptAsync(PrefersDarkScript));
+        Assert.Equal(prefersDark, answer);
+    }
+
+    // The page listens to the change of the color scheme, as the user interface does, and says in the title
+    // of its document what it was told.
+    [Fact]
+    public async Task ApplyTheme_AfterThePageHasLoaded_TellsThePageTheNewColorScheme()
+    {
+        await _window.InvokeAsync(_ => _webView.ApplyTheme(Theme.Light, Color.White));
+        await StartAndReadReportAsync();
+
+        var change = await RunInPageAsync(
+            "scheme:",
+            """
+            matchMedia("(prefers-color-scheme: dark)").addEventListener("change", event => {
+              document.title = "scheme:" + JSON.stringify({ dark: event.matches });
+            });
+            """,
+            () => _webView.ApplyTheme(Theme.Dark, Color.Black));
+
+        Assert.True(change.GetProperty("dark").GetBoolean());
+    }
+
     [Fact]
     public async Task RenderProcessThatExits_IsFollowedByAReloadOfThePage()
     {
@@ -230,7 +268,7 @@ public sealed class WebViewHostTests : IAsyncLifetime
         {
             var completion = new TaskCompletionSource<WebViewEndedEventArgs>();
             webView.Ended += (_, e) => completion.TrySetResult(e);
-            webView.Start(form, Color.White);
+            webView.Start(form);
             var result = await completion.Task.WaitAsync(s_timeout);
             webView.Dispose();
             return result;
@@ -261,13 +299,13 @@ public sealed class WebViewHostTests : IAsyncLifetime
     private async Task<JsonElement> StartAndReadReportAsync()
     {
         var report = WaitForReportAsync((_, _) => true);
-        await _window.InvokeAsync(form => _webView.Start(form, Color.White));
+        await _window.InvokeAsync(form => _webView.Start(form));
         return await report;
     }
 
     // Runs a script in the page and waits for what the script writes, as JSON after a prefix, in the title
-    // of the document when it has finished.
-    private Task<JsonElement> RunInPageAsync(string prefix, string script)
+    // of the document when it has finished. What the script waits for can be done once it has run.
+    private Task<JsonElement> RunInPageAsync(string prefix, string script, Action? afterScript = null)
     {
         return _window.InvokeAsync(async form =>
         {
@@ -288,6 +326,7 @@ public sealed class WebViewHostTests : IAsyncLifetime
             try
             {
                 _ = await engine.ExecuteScriptAsync(script);
+                afterScript?.Invoke();
                 return await completion.Task.WaitAsync(s_timeout, TestContext.Current.CancellationToken);
             }
             finally

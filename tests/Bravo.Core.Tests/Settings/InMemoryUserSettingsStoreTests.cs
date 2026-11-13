@@ -26,11 +26,39 @@ public sealed class InMemoryUserSettingsStoreTests
     }
 
     [Fact]
-    public void Replace_Null_Throws()
+    public void Replace_NewSettings_TellsThatTheyChangedOnceTheyAreTheCurrentOnes()
     {
         var store = new InMemoryUserSettingsStore();
+        var settings = UserSettings.Default with { Theme = Theme.Dark };
+        UserSettings? currentWhenTold = null;
+        store.Changed += (sender, _) => currentWhenTold = ((IUserSettingsStore)sender!).Current;
+
+        store.Replace(settings);
+
+        Assert.Same(settings, currentWhenTold);
+    }
+
+    [Fact]
+    public void Replace_EqualSettings_TellsThatTheyChangedAllTheSame()
+    {
+        var store = new InMemoryUserSettingsStore();
+        var told = 0;
+        store.Changed += (_, _) => told++;
+
+        store.Replace(UserSettings.Default with { });
+
+        Assert.Equal(1, told);
+    }
+
+    [Fact]
+    public void Replace_Null_ThrowsAndTellsNothing()
+    {
+        var store = new InMemoryUserSettingsStore();
+        var told = 0;
+        store.Changed += (_, _) => told++;
 
         Assert.Throws<ArgumentNullException>(() => store.Replace(null!));
+        Assert.Equal(0, told);
     }
 
     [Fact]

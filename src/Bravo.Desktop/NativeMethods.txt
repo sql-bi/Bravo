@@ -1,4 +1,8 @@
+// Windows.Win32.Graphics.Dwm
+DwmSetWindowAttribute
+
 // Windows.Win32.UI.WindowsAndMessaging
 IsIconic
 SetForegroundWindow
 ShowWindow
+WM_SETTINGCHANGE
