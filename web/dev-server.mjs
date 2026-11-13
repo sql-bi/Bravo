@@ -1,14 +1,11 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
-import webpack from 'webpack';
-import WebpackDevServer from 'webpack-dev-server';
-import createConfig from './webpack.config.js';
 import { connectionFile, contentFolder, origin, port } from './dev.config.mjs';
 
-// Serves the user interface to a browser: the development bundle, rebuilt at every change, with the static
-// files of wwwroot, against a development build of the host (dev-host.mjs). The page is the one that the
-// window of Bravo shows, and it is given the same object, window.bravoHost, before any of its scripts: the
-// user interface has no branch for the browser.
+// What "webpack serve" is told, through webpack.config.js, to serve the user interface to a browser: the
+// development bundle, rebuilt at every change, with the static files of wwwroot, against a development build
+// of the host (dev-host.mjs). The page is the one that the window of Bravo shows, and it is given the same
+// object, window.bravoHost, before any of its scripts: the user interface has no branch for the browser.
 
 const index = path.join(contentFolder, 'index.html');
 
@@ -60,8 +57,8 @@ function servePage(request, response, next) {
     response.end(createPage(connection));
 }
 
-const compiler = webpack(createConfig({}, { mode: 'development' }));
-const server = new WebpackDevServer({
+/** The options of webpack-dev-server. */
+export default {
     // The loopback address only: the page that this server gives out carries the token of the host
     host: '127.0.0.1',
     port: port,
@@ -84,7 +81,4 @@ const server = new WebpackDevServer({
         middlewares.splice(Math.max(...positions) + 1, 0, { name: 'bravo-page', middleware: servePage });
         return middlewares;
     }
-}, compiler);
-
-await server.start();
-console.log(`The user interface is at ${origin}`);
+};

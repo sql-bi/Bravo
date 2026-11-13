@@ -405,9 +405,9 @@ To see the user interface in a browser, against a real host
 2. In a second terminal, in `web/`, `npm run serve:UI`: webpack-dev-server, on `127.0.0.1` only.
 3. Open `http://127.0.0.1:8098` in Chrome or Edge. The page is loaded again at every change of the sources.
 
-- `web/dev.config.mjs` holds the port, the origin and the path of the file; `dev-host.mjs` and
-  `dev-server.mjs` are the two commands. The server starts webpack through its API, not through
-  `webpack serve`: the webpack-cli of the repository is older than the one that the server asks for.
+- `web/dev.config.mjs` holds the port, the origin and the path of the file. `dev-host.mjs` is the command
+  that starts the host. `dev-server.mjs` holds the options of the development server, which
+  `webpack.config.js` gives to `webpack serve` and to no other command.
 - The server gives `index.html` the object `window.bravoHost` before its first script, from the file that the
   host wrote, read at every request: after the host is started again, load the page again. Without the file
   the page is a 503 that says how to start the host. The page is given after the checks of the server on the

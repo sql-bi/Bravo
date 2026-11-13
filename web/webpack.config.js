@@ -6,12 +6,16 @@ const CssMinimizerPlugin = require("css-minimizer-webpack-plugin");
 module.exports = (env, argv) => {
   const mode = argv.mode || "development";
 
+  // Only "webpack serve" has a development server: a build does not load what configures it.
+  const devServer = env.WEBPACK_SERVE ? require("./dev-server.mjs").default : undefined;
+
   return {
     entry: [
       "./main.ts",
       "./css/main.less"
     ],
     mode: mode,
+    devServer: devServer,
     module: {
       rules: [
         {
