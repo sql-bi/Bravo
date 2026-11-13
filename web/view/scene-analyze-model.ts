@@ -9,7 +9,7 @@ import { Dic, Utils, _, __ } from '../helpers/utils';
 import { Doc, DocType } from '../model/doc';
 import { strings } from '../model/strings';
 import { TabularColumn } from '../model/tabular';
-import { ThemeType } from '../controllers/theme';
+import { Theme } from '../generated/bravo';
 import { Tabulator } from 'tabulator-tables';
 import Chart from "chart.js/auto";
 import { TreemapController, TreemapElement, TreemapScriptableContext } from 'chartjs-chart-treemap';
@@ -543,12 +543,12 @@ export class AnalyzeModelScene extends DocScene {
     chartColors(context: TreemapScriptableContext, type: string) {
 
         const colors: any = {
-            [ThemeType.Light] : {
+            [Theme.Light] : {
                 color: "#D7DCE0",
                 colorHighlight: "#FFF4A2",
                 colorHover: "#F42727",
             },
-            [ThemeType.Dark]: {
+            [Theme.Dark]: {
                 color: "#222",
                 colorHighlight: "#645500",
                 colorHover: "#F42727",

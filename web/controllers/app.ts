@@ -24,7 +24,7 @@ import { ErrorAlert } from '../view/error-alert';
 import { AppError } from '../model/exceptions';
 import { DiagnosticPane } from '../view/diagnostic-pane';
 import Split, { SplitObject } from "split.js";
-import { DiagnosticLevelType } from './options';
+import { DiagnosticLevel } from '../generated/bravo';
 import { DialogResponse } from '../view/dialog';
 
 export interface AppVersionInfo {
@@ -92,7 +92,7 @@ export class App {
 
     updatePanels() {
 
-        if (optionsController.options.diagnosticLevel != DiagnosticLevelType.None) {
+        if (optionsController.options.diagnosticLevel != DiagnosticLevel.None) {
             if (!this.diagnosticSplit) {
                 this.diagnosticSplit = Split(["#main-pane", "#bottom-pane"], {
                     sizes: optionsController.options.customOptions.sizes.main, 
@@ -388,8 +388,8 @@ export class App {
     toggleDiagnostics(toggle: boolean) {
         const sizes = (toggle ? [70, 30] : [100, 0]);
         
-        if (toggle && optionsController.options.diagnosticLevel == DiagnosticLevelType.None) 
-            optionsController.options.diagnosticLevel = DiagnosticLevelType.Basic;
+        if (toggle && optionsController.options.diagnosticLevel == DiagnosticLevel.None)
+            optionsController.options.diagnosticLevel = DiagnosticLevel.Basic;
 
         optionsController.update("customOptions.sizes.main", sizes);
         this.updatePanels();

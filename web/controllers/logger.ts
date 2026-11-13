@@ -12,7 +12,7 @@ import { i18n } from '../model/i18n';
 import { pii } from '../model/pii';
 import { strings } from '../model/strings';
 import { DiagnosticLogEntry, DiagnosticLogPage, HostLogLevel } from './host';
-import { DiagnosticLevelType } from './options';
+import { DiagnosticLevel } from '../generated/bravo';
 
 export interface LogMessage {
     id: string
@@ -28,7 +28,7 @@ export interface LogMessageUpdate {
 }
 export interface LogMessageObj {
     content: any
-    level?: DiagnosticLevelType
+    level?: DiagnosticLevel
 }
 export class Logger extends Dispatchable {
 
@@ -68,7 +68,7 @@ export class Logger extends Dispatchable {
             this.check();
 
         optionsController.on("diagnosticLevel.change", () => {
-            this.enabled = (optionsController.options.diagnosticLevel !== DiagnosticLevelType.None);
+            this.enabled = (optionsController.options.diagnosticLevel !== DiagnosticLevel.None);
         });
     }
 
@@ -80,7 +80,7 @@ export class Logger extends Dispatchable {
         host.getDiagnostics(this.hostCursor, Logger.MaxMessages)
             .then((page: DiagnosticLogPage) => {
                 if (page.droppedCount > 0)
-                    this.log(`${ Logger.HostPrefix } ${ page.droppedCount } earlier messages are not shown`, null, DiagnosticLevelType.Basic);
+                    this.log(`${ Logger.HostPrefix } ${ page.droppedCount } earlier messages are not shown`, null, DiagnosticLevel.Basic);
 
                 page.entries.forEach(entry => this.logHostEntry(entry));
                 this.hostCursor = page.lastSequence;
@@ -91,7 +91,7 @@ export class Logger extends Dispatchable {
 
     logHostEntry(entry: DiagnosticLogEntry) {
         const isProblem = (entry.level >= HostLogLevel.Warning || !!entry.exception);
-        const level = (entry.level >= HostLogLevel.Warning ? DiagnosticLevelType.Basic : DiagnosticLevelType.Verbose);
+        const level = (entry.level >= HostLogLevel.Warning ? DiagnosticLevel.Basic : DiagnosticLevel.Verbose);
         // Generic arguments are dropped first: they contain dots of their own.
         const category = entry.category.replace(/<.*$/, "").split(".").pop();
         const name = `${ Logger.HostPrefix } ${ category }${ entry.eventName ? `.${ entry.eventName }` : "" }`;
@@ -118,7 +118,7 @@ export class Logger extends Dispatchable {
         return value;
     }
 
-    log(name: string, obj?: LogMessageObj, level: DiagnosticLevelType = DiagnosticLevelType.Basic, time?: number, className?: string, forceLogging = false): string {
+    log(name: string, obj?: LogMessageObj, level: DiagnosticLevel = DiagnosticLevel.Basic, time?: number, className?: string, forceLogging = false): string {
 
         if (!forceLogging) {
             if (!this.enabled) return null;
@@ -178,7 +178,7 @@ export class Logger extends Dispatchable {
             Details: errorDetails,
         }; 
 
-        this.log(name, { content: content }, DiagnosticLevelType.Basic, 0, "errorMessage", true);
+        this.log(name, { content: content }, DiagnosticLevel.Basic, 0, "errorMessage", true);
     }
 
     sanitizeLogContent(content: LogMessageObj) {
@@ -234,11 +234,11 @@ export class Logger extends Dispatchable {
         return null;
     }
 
-    static LevelMatch(level: DiagnosticLevelType) {
+    static LevelMatch(level: DiagnosticLevel) {
         
         if (level == optionsController.options.diagnosticLevel) {
             return true;
-        } else if (level == DiagnosticLevelType.Basic && optionsController.options.diagnosticLevel == DiagnosticLevelType.Verbose) {
+        } else if (level == DiagnosticLevel.Basic && optionsController.options.diagnosticLevel == DiagnosticLevel.Verbose) {
             return true;
         } else {
             return false;

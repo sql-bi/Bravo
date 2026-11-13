@@ -11,18 +11,15 @@ import { DateTemplate } from '../model/dates';
 import { AppError } from '../model/exceptions';
 import { DaxLineBreakStyle } from '../model/tabular';
 import { MultiViewPaneMode } from '../view/multiview-pane';
-import { ThemeType } from './theme';
+import { DiagnosticLevel, ProxyType, Theme, UserOptions } from '../generated/bravo';
 
-export interface Options {
-    theme: ThemeType
-    telemetryEnabled: boolean
-    customTemplatesEnabled: boolean
-    updateCheckEnabled: boolean
-    useSystemBrowserForAuthentication: boolean
-    diagnosticLevel: DiagnosticLevelType
-    proxy: ProxyOptions
+/**
+ * The options of the user as the host keeps them, with the names of the host. The host keeps as any value
+ * the ones that only the user interface reads, which here have their type.
+ */
+export interface Options extends UserOptions {
     customOptions?: ClientOptions
-} 
+}
 
 export interface Policies {
     telemetryEnabled?: boolean | null
@@ -31,20 +28,6 @@ export interface Policies {
     builtInTemplatesEnabled?: boolean | null
     customTemplatesEnabled?: boolean | null
     customTemplatesOrganizationRepositoryPath?: string | null
-}
-
-export interface ProxyOptions {
-    type: ProxyType
-    useDefaultCredentials: boolean
-    address: string
-    bypassOnLocal: boolean
-    bypassList: string
-}
-
-export enum ProxyType {
-    None = 0,
-    System = 1,
-    Custom = 2
 }
 
 export interface ClientOptions {
@@ -94,12 +77,6 @@ export enum DaxFormatterLineStyle {
 export enum DaxFormatterSpacingStyle {
     SpaceAfterFunction = 0, 
     NoSpaceAfterFunction = 1
-}
-
-export enum DiagnosticLevelType {
-    None = 0,
-    Basic = 1,
-    Verbose = 2,
 }
 
 export class OptionsStore<T> extends Dispatchable {
@@ -182,10 +159,10 @@ export class OptionsStore<T> extends Dispatchable {
 export class OptionsController extends OptionsStore<Options> {
 
     defaultOptions: Options = {
-        theme: ThemeType.Auto,
+        theme: Theme.Auto,
         telemetryEnabled: true,
         customTemplatesEnabled: true,
-        diagnosticLevel: DiagnosticLevelType.None,
+        diagnosticLevel: DiagnosticLevel.None,
         updateCheckEnabled: true,
         useSystemBrowserForAuthentication: false,
         proxy: {

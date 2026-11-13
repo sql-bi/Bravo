@@ -4,8 +4,7 @@
  * https://www.sqlbi.com
 */
 
-import { ProxyType } from '../controllers/options';
-import { ThemeType } from '../controllers/theme';
+import { ProxyType } from '../generated/bravo';
 import { OptionStruct, OptionType, Renderer } from '../helpers/renderer';
 import {  _, __ } from '../helpers/utils';
 import { app, auth, host, optionsController } from '../main';
@@ -27,7 +26,6 @@ export class OptionsDialogProxy {
                 name: i18n(strings.optionProxyType),
                 description: i18n(strings.optionProxyTypeDescription),
                 type: OptionType.select,
-                valueType: "number",
                 values: [
                     [ProxyType.None, i18n(strings.optionProxyTypeNone)],
                     [ProxyType.System, i18n(strings.optionProxyTypeSystem)],

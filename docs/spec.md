@@ -460,6 +460,10 @@ named in the document, and the types that travel. The build then checks the user
 - The codes of the errors are one of those types. The user interface has one table from code to text, and
   the build fails for a code that has no text there. For a value outside the list, which only something that
   is not this host can send, it has the text of an error that nothing describes.
+- A value that travels has in the user interface its generated type, with the names of the host, and nothing
+  converts a name into a number: today the theme, the diagnostic level and the type of the proxy, later the
+  others, each with its feature. A number in the options that only the user interface reads stays a number:
+  1.0.x saved it.
 - Today the application data, the options and the events go through the client. Every other call of the user
   interface belongs to a feature that has not moved: nothing is sent, and the call fails at once with an
   error that says that the feature is not available yet. Each one moves to the client with its feature.

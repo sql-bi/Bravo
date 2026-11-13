@@ -4,9 +4,8 @@
  * https://www.sqlbi.com
 */
 
-import { ActivationEvent, getEvents, HostEvent } from '../generated/bravo';
+import { ActivationEvent, DiagnosticLevel, getEvents, HostEvent } from '../generated/bravo';
 import { logger } from '../main';
-import { DiagnosticLevelType } from './options';
 
 interface EventCursor {
     address: string
@@ -96,7 +95,7 @@ export class HostEvents {
     activated(activation: ActivationEvent) {
 
         if (activation.errors.length) {
-            logger.log("Activation: the command line has errors", { content: activation }, DiagnosticLevelType.Basic, 0, "errorMessage", true);
+            logger.log("Activation: the command line has errors", { content: activation }, DiagnosticLevel.Basic, 0, "errorMessage", true);
         } else if (activation.serverName) {
             logger.log("Activation", { content: activation });
         }

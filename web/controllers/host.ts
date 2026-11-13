@@ -14,9 +14,8 @@ import { FormattedMeasure, TabularDatabase, TabularDatabaseServer, TabularMeasur
 import { Account } from './auth';
 import * as hostApi from '../generated/bravo';
 import { connectHost } from './host-fetch';
-import { DiagnosticLevelType, FormatDaxOptions, Options, ProxyType } from './options';
+import { FormatDaxOptions, Options } from './options';
 import { PBIDesktopReport, PBIDesktopReportConnectionMode } from '../model/pbi-report';
-import { ThemeType } from './theme';
 import { i18n } from '../model/i18n';
 import { strings } from '../model/strings';
 import { LogMessageObj } from './logger';
@@ -177,42 +176,8 @@ export interface BravoUpdate {
 }
 
 export interface ApiLogSettings {
-    messageLevel?: DiagnosticLevelType // Minimum diagnostic level required to log the message
-    dataLevel?: DiagnosticLevelType // Minimum diagnostic level required to log the obj data
-}
-
-// The host names the value of an enum, and the user interface numbers it: the two functions below are where a
-// name becomes a number and a number a name. A member that the host left out stays out, so that the defaults
-// of the user interface apply to it.
-export function toOptions(userOptions: hostApi.UserOptions): Options {
-    return <Options>{
-        ...userOptions,
-        theme: ThemeType[userOptions.theme],
-        diagnosticLevel: DiagnosticLevelType[userOptions.diagnosticLevel],
-        proxy: {
-            ...userOptions.proxy,
-            type: ProxyType[userOptions.proxy.type]
-        }
-    };
-}
-
-function toUserOptions(options: Options): hostApi.UserOptions {
-    return {
-        theme: <hostApi.Theme>ThemeType[options.theme],
-        telemetryEnabled: options.telemetryEnabled,
-        customTemplatesEnabled: options.customTemplatesEnabled,
-        updateCheckEnabled: options.updateCheckEnabled,
-        useSystemBrowserForAuthentication: options.useSystemBrowserForAuthentication,
-        diagnosticLevel: <hostApi.DiagnosticLevel>DiagnosticLevelType[options.diagnosticLevel],
-        proxy: {
-            type: <hostApi.ProxyType>ProxyType[options.proxy.type],
-            useDefaultCredentials: options.proxy.useDefaultCredentials,
-            address: options.proxy.address,
-            bypassOnLocal: options.proxy.bypassOnLocal,
-            bypassList: options.proxy.bypassList
-        },
-        customOptions: options.customOptions
-    };
+    messageLevel?: hostApi.DiagnosticLevel // Minimum diagnostic level required to log the message
+    dataLevel?: hostApi.DiagnosticLevel // Minimum diagnostic level required to log the obj data
 }
 
 export class Host extends Dispatchable {
@@ -307,7 +272,7 @@ export class Host extends Dispatchable {
             if (messageId) {
                 logger.updateLog(messageId, obj);
             } else {
-                let messageLevel = (settings && settings.messageLevel ? settings.messageLevel : DiagnosticLevelType.Basic);
+                let messageLevel = (settings && settings.messageLevel ? settings.messageLevel : hostApi.DiagnosticLevel.Basic);
                 id = logger.log(action, obj, messageLevel); 
             }
         } catch (ignore) {}
@@ -517,17 +482,17 @@ export class Host extends Dispatchable {
 
     /* Application */
 
-    changeTheme(theme: ThemeType) {
+    changeTheme(theme: hostApi.Theme) {
         return this.apiCall("api/ChangeTheme", { theme: theme });
     }
 
     getOptions() {
         return this.apiClientCall("GetOptions", init => hostApi.getOptions(init))
-            .then(userOptions => toOptions(userOptions));
+            .then(userOptions => <Options>userOptions);
     }
 
     updateOptions(options: Options) {
-        return this.apiClientCall("UpdateOptions", init => hostApi.updateOptions(toUserOptions(options), init))
+        return this.apiClientCall("UpdateOptions", init => hostApi.updateOptions(options, init))
             .then(() => true)
             .catch(ignore => false);
     }

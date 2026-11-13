@@ -4,7 +4,7 @@
  * https://www.sqlbi.com
 */
 
-import { ThemeType } from '../controllers/theme';
+import { Theme } from '../generated/bravo';
 import { OptionStruct, OptionType, Renderer } from '../helpers/renderer';
 import {  Utils, _, __ } from '../helpers/utils';
 import { app, auth, optionsController } from '../main';
@@ -34,9 +34,9 @@ export class OptionsDialogGeneral {
                 description: i18n(strings.optionThemeDescription),
                 type: OptionType.select,
                 values: [
-                    [ThemeType.Auto, i18n(strings.optionThemeValueAuto)],
-                    [ThemeType.Light, i18n(strings.optionThemeValueLight)],
-                    [ThemeType.Dark, i18n(strings.optionThemeValueDark)],
+                    [Theme.Auto, i18n(strings.optionThemeValueAuto)],
+                    [Theme.Light, i18n(strings.optionThemeValueLight)],
+                    [Theme.Dark, i18n(strings.optionThemeValueDark)],
                 ]
             },
             {

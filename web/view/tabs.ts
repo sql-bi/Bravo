@@ -4,7 +4,6 @@
  * https://www.sqlbi.com
 */
 
-import { ThemeChangeArg, ThemeType } from '../controllers/theme';
 import { ContextMenu } from '../helpers/contextmenu';
 import { Dic, Utils, _, __ } from '../helpers/utils';
 import { optionsController, themeController } from '../main';

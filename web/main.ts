@@ -5,17 +5,17 @@
 */
 import { App, AppVersion } from './controllers/app';
 import { Auth } from './controllers/auth';
-import { Host, toOptions } from './controllers/host';
+import { Host } from './controllers/host';
 import { connectHost } from './controllers/host-fetch';
 import { HostEvents } from './controllers/host-events';
-import { DiagnosticLevelType, OptionsController } from './controllers/options';
+import { Options, OptionsController } from './controllers/options';
 import { ThemeController } from './controllers/theme';
 import { Telemetry } from './controllers/telemetry';
 import { PBIDesktop } from './controllers/pbi-desktop';
 import { NotifyCenter } from './controllers/notifications';
 import { Logger } from './controllers/logger';
 import { Debug } from './controllers/debug';
-import { ApplicationDetails, getApplication, getOptions } from './generated/bravo';
+import { ApplicationDetails, DiagnosticLevel, getApplication, getOptions } from './generated/bravo';
 
 // Load Tabulator modules
 import { Tabulator, ColumnCalcsModule, DataTreeModule, FilterModule, FormatModule, InteractionModule, ResizeColumnsModule, ResizeTableModule, SelectRowModule, SortModule, TooltipModule  } from 'tabulator-tables';
@@ -60,9 +60,9 @@ async function start() {
     host = new Host(connection.address, connection.token);
 
     // No policies and no telemetry settings yet: the host has no route for them
-    optionsController = new OptionsController(toOptions(userOptions), {});
+    optionsController = new OptionsController(<Options>userOptions, {});
     themeController = new ThemeController();
-    logger = new Logger(optionsController.options.diagnosticLevel !== DiagnosticLevelType.None);
+    logger = new Logger(optionsController.options.diagnosticLevel !== DiagnosticLevel.None);
     telemetry = new Telemetry();
     auth = new Auth();
     pbiDesktop = new PBIDesktop();

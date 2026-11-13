@@ -12,7 +12,7 @@ import { I18n, i18n } from '../model/i18n';
 import { strings } from '../model/strings';
 import { View } from './view';
 import JSONFormatter from 'json-formatter-js';
-import { DiagnosticLevelType } from '../controllers/options';
+import { DiagnosticLevel } from '../generated/bravo';
 
 export class DiagnosticPane extends View {
 
@@ -28,8 +28,8 @@ export class DiagnosticPane extends View {
                 <div class="title">${title}</div>
                 <div class="controls"> 
                     <select class="diagnostic-level">
-                        <option value="${DiagnosticLevelType.Basic}">${i18n(strings.optionDiagnosticLevelBasic)}</option>
-                        <option value="${DiagnosticLevelType.Verbose}" ${optionsController.options.diagnosticLevel == DiagnosticLevelType.Verbose ? "selected" : ""}>${i18n(strings.optionDiagnosticLevelVerbose)}</option>
+                        <option value="${DiagnosticLevel.Basic}">${i18n(strings.optionDiagnosticLevelBasic)}</option>
+                        <option value="${DiagnosticLevel.Verbose}" ${optionsController.options.diagnosticLevel == DiagnosticLevel.Verbose ? "selected" : ""}>${i18n(strings.optionDiagnosticLevelVerbose)}</option>
                     </select>
 
                     <div class="clear ctrl icon-clear solo" title="${i18n(strings.clearCtrlTitle)}"></div>
@@ -83,11 +83,11 @@ export class DiagnosticPane extends View {
         });
         this.diagnosticLevelElement.addEventListener("click", e => {
             e.preventDefault();
-            optionsController.update("diagnosticLevel", Number(this.diagnosticLevelElement.value));
+            optionsController.update("diagnosticLevel", <DiagnosticLevel>this.diagnosticLevelElement.value);
         });
         _(".close-pane", this.element).addEventListener("click", e => {
             e.preventDefault();
-            optionsController.update("diagnosticLevel", DiagnosticLevelType.None);
+            optionsController.update("diagnosticLevel", DiagnosticLevel.None);
             this.trigger("close");
             //this.clear();
         });
@@ -101,7 +101,7 @@ export class DiagnosticPane extends View {
         });
 
         optionsController.on("diagnosticLevel.change", ()=>{
-            this.diagnosticLevelElement.value = String(optionsController.options.diagnosticLevel);
+            this.diagnosticLevelElement.value = optionsController.options.diagnosticLevel;
         });
 
         logger.on("log", (message: LogMessage) => {

@@ -6,7 +6,8 @@
 
 import { auth, optionsController, telemetry, themeController } from "../main";
 import { i18n } from '../model/i18n'; 
-import { ThemeChangeArg, ThemeType } from '../controllers/theme';
+import { ThemeChangeArg } from '../controllers/theme';
+import { Theme } from '../generated/bravo';
 import { __, _, Dic } from '../helpers/utils';
 import { strings } from '../model/strings';
 import { View } from './view';
@@ -45,7 +46,7 @@ export class Sidebar extends View {
             <footer>
                 <div id="ctrl-options" class="ctrl icon-options solo" title="${i18n(strings.settingsCtrlTitle)}"></div>
 
-                <div id="ctrl-theme" class="ctrl icon-theme-${ThemeType[optionsController.options.theme].toLowerCase()} solo hide-if-collapsed" title="${i18n(strings.themeCtrlTitle)}" data-theme="${optionsController.options.theme}"></div>
+                <div id="ctrl-theme" class="ctrl icon-theme-${optionsController.options.theme.toLowerCase()} solo hide-if-collapsed" title="${i18n(strings.themeCtrlTitle)}" data-theme="${optionsController.options.theme}"></div>
 
                 <img id="ctrl-user" class="ctrl hide-if-collapsed" title="${i18n(strings.signInCtrlTitle)}" src="${ Sidebar.DEFAULT_USER_PICTURE }">
 
@@ -133,13 +134,13 @@ export class Sidebar extends View {
             e.preventDefault();
             let el = (<HTMLElement>e.currentTarget);
 
-            let newTheme = Number(el.dataset.theme) as ThemeType;
-            if (newTheme == ThemeType.Light) {
-                newTheme = ThemeType.Dark;
-            } else if (newTheme == ThemeType.Dark) {
-                newTheme = ThemeType.Auto;
+            let newTheme = <Theme>el.dataset.theme;
+            if (newTheme == Theme.Light) {
+                newTheme = Theme.Dark;
+            } else if (newTheme == Theme.Dark) {
+                newTheme = Theme.Auto;
             } else {
-                newTheme = ThemeType.Light;
+                newTheme = Theme.Light;
             }
 
             themeController.change(newTheme);
@@ -148,16 +149,14 @@ export class Sidebar extends View {
         themeController.on("change", (arg: ThemeChangeArg) => {
 
             let el = _("#ctrl-theme");
-            el.dataset.theme = String(arg.theme);
+            el.dataset.theme = arg.theme;
 
-            Object.values(ThemeType).forEach((value) => {
-                if (typeof value === "number") {
-                    const name = ThemeType[value].toLowerCase();
-                    if (value == arg.theme)
-                        el.classList.add(`icon-theme-${name}`);
-                    else
-                        el.classList.remove(`icon-theme-${name}`);
-                }
+            Object.values(Theme).forEach(theme => {
+                const name = theme.toLowerCase();
+                if (theme == arg.theme)
+                    el.classList.add(`icon-theme-${name}`);
+                else
+                    el.classList.remove(`icon-theme-${name}`);
             });
         });
     }

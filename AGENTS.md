@@ -439,8 +439,9 @@ The client of the host API is generated, not written:
   table is typed by the codes of the generated client. An answer with status 409, an error that a use case
   foresaw, is shown by its code; any other one by its status.
 - `Host` (`web/controllers/host.ts`) stays the one module that the user interface calls. A method that moves
-  to the client goes through `apiClientCall`; where the host names an enum value and the user interface
-  numbers it, the method converts in both directions.
+  to the client goes through `apiClientCall` and returns what the client returns: a value that travels keeps
+  its generated type and the names of the host, and nothing converts a name into a number. An enum of the
+  user interface that the host also has is replaced by the generated one when its feature moves.
 - Orval is pinned to an exact version in `package.json`: another version can write another client.
 
 The unit tests of the user interface are in `web/tests`, each at the path of the module that it tests, and

@@ -4,7 +4,7 @@
  * https://www.sqlbi.com
 */
 
-import { DiagnosticLevelType } from '../controllers/options';
+import { DiagnosticLevel } from '../generated/bravo';
 import { OptionStruct, OptionType, Renderer } from '../helpers/renderer';
 import {  _, __ } from '../helpers/utils';
 import { optionsController } from '../main';
@@ -33,11 +33,10 @@ export class OptionsDialogTelemetry {
                 description: i18n(strings.optionDiagnosticDescription),
                 additionalNotes: `${i18n(strings.optionDiagnosticMore)} <span class="link" href="https://github.com/sql-bi/bravo/issues">github.com/sql-bi/bravo/issues</span>`,
                 type: OptionType.select,
-                valueType: "number",
                 values: [
-                    [DiagnosticLevelType.None, i18n(strings.optionDiagnosticLevelNone)],
-                    [DiagnosticLevelType.Basic, i18n(strings.optionDiagnosticLevelBasic)],
-                    [DiagnosticLevelType.Verbose, i18n(strings.optionDiagnosticLevelVerbose)],
+                    [DiagnosticLevel.None, i18n(strings.optionDiagnosticLevelNone)],
+                    [DiagnosticLevel.Basic, i18n(strings.optionDiagnosticLevelBasic)],
+                    [DiagnosticLevel.Verbose, i18n(strings.optionDiagnosticLevelVerbose)],
                 ]
             }
         ];

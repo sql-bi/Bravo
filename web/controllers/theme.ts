@@ -5,25 +5,23 @@
 */
 
 import { Dispatchable } from '../helpers/dispatchable';
+import { Theme } from '../generated/bravo';
 import { host, optionsController, telemetry } from '../main';
 
-export enum ThemeType {
-    Auto = 0,
-    Light = 1,
-    Dark = 2,
-}
+/** The theme that the page shows: the one of the user, or the one of the device for a user who chose none. */
+export type AppliedTheme = typeof Theme.Dark | typeof Theme.Light;
 
 export interface ThemeChangeArg {
-    theme: ThemeType,
-    appliedTheme: ThemeType.Dark | ThemeType.Light
+    theme: Theme,
+    appliedTheme: AppliedTheme
 }
 export class ThemeController extends Dispatchable {
-    
-    theme;
-    deviceTheme;
-    
-    get appliedTheme() {
-        if (this.theme == ThemeType.Auto) {
+
+    theme: Theme;
+    deviceTheme: AppliedTheme;
+
+    get appliedTheme(): AppliedTheme {
+        if (this.theme == Theme.Auto) {
             return this.deviceTheme;
         } else {
             return this.theme;
@@ -31,10 +29,10 @@ export class ThemeController extends Dispatchable {
     }
 
     get isDark() {
-        return this.appliedTheme == ThemeType.Dark;
+        return this.appliedTheme == Theme.Dark;
     }
     get isLight() {
-        return this.appliedTheme == ThemeType.Light;
+        return this.appliedTheme == Theme.Light;
     }
     
     constructor() {
@@ -45,14 +43,14 @@ export class ThemeController extends Dispatchable {
         if (window.matchMedia) {
             const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
 
-            this.deviceTheme = (mediaQuery.matches ? ThemeType.Dark : ThemeType.Light);
+            this.deviceTheme = (mediaQuery.matches ? Theme.Dark : Theme.Light);
 
             mediaQuery.addEventListener("change", e => {
-                this.deviceTheme = (e.matches ? ThemeType.Dark : ThemeType.Light);
+                this.deviceTheme = (e.matches ? Theme.Dark : Theme.Light);
                 this.apply();
             });
         } else {
-            this.deviceTheme = ThemeType.Light;
+            this.deviceTheme = Theme.Light;
         }
 
         optionsController.on("theme.change", (changedOptions: any) => {
@@ -66,7 +64,7 @@ export class ThemeController extends Dispatchable {
         this.apply(this.theme);
     }
 
-    change(theme: ThemeType) {
+    change(theme: Theme) {
         optionsController.update("theme", theme);
         host.changeTheme(theme);
         this.apply(theme);
@@ -74,7 +72,7 @@ export class ThemeController extends Dispatchable {
         telemetry.track("Theme", { theme: theme });
     }
 
-    apply(theme?: ThemeType) {
+    apply(theme?: Theme) {
 
         if (theme !== undefined)
             this.theme = theme;
@@ -83,7 +81,7 @@ export class ThemeController extends Dispatchable {
 
         if (document.body.classList.contains("no-theme")) return;
 
-        if (this.appliedTheme == ThemeType.Dark) {
+        if (this.appliedTheme == Theme.Dark) {
             document.body.classList.add("dark");
         } else {
             document.body.classList.remove("dark");
