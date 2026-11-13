@@ -136,6 +136,24 @@ describe("Host", () => {
             expect(error.message).toBe("This feature is not available yet.");
         });
 
+        // A view may use what it built only after the task in which it asked: so it could with a request
+        it("fails in a later task, as the answer to a request arrives", async () => {
+            vi.useFakeTimers();
+            try {
+                let failed = false;
+                host.listReports().catch(() => { failed = true; });
+
+                await Promise.resolve();
+                await Promise.resolve();
+                expect(failed).toBe(false);
+
+                await vi.advanceTimersByTimeAsync(0);
+                expect(failed).toBe(true);
+            } finally {
+                vi.useRealTimers();
+            }
+        });
+
         it("is not taken for a request that was aborted", async () => {
             const error = await failureOf(host.getDateConfigurations());
 

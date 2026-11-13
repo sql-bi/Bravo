@@ -208,7 +208,10 @@ export class Host extends Dispatchable {
         let debugResponse = debug.catchApiCall(action, data);
         if (debugResponse !== null) return debugResponse;
 
-        return Promise.reject(AppError.InitFromNotAvailable());
+        // In a later task, as the answer to a request arrives: a caller may count on having gone on first
+        return new Promise((resolve, reject) => {
+            window.setTimeout(() => reject(AppError.InitFromNotAvailable()), 0);
+        });
     }
 
     /**
