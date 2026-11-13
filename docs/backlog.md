@@ -12,44 +12,13 @@ criterion can be checked on `develop-vnext`.
 Exit: the new executable starts, a second start activates the first, it shows the current user interface and
 opens the options through the new API and the generated client.
 
-- [ ] H-05 User interface on the new contract. Decided by the maintainer; the ADR is the first commit of the
-  work branch:
-  - The error codes are a closed list of the contract: the OpenAPI document lists them, the generated client
-    carries them to the user interface, and the build fails for a code that the user interface has no text
-    for. In the host a use case can report only a code of the list, and an answer whose status has no code of
-    its own carries one code, not one for each status. Today the user interface reads the status and the
-    `instance` member that the previous host wrote, and recognizes no error of the new one.
-  - The user interface uses the generated types for every value that travels, with the names of the host,
-    and converts nothing between names and numbers. This component does it for the three enums of the
-    options; the others follow, each with its feature. An enum that does not travel stays as it is, and so
-    does a number kept in the options that only the user interface reads, which 1.0.x saved.
-  - The user interface gets its first tests: unit tests of the modules that read the contract, run by
-    continuous integration.
-  - `npm audit` reports nothing: the 13 advisories of today are fixed with no change of a major version.
-    Continuous integration fails on an advisory in a package that ships with the user interface, and reports
-    the others without failing. webpack-cli is updated, and the development server starts with
-    `webpack serve`: today it is started through the API of webpack-dev-server, because the webpack-cli of
-    the repository is older than the one that the server asks for.
-
-  Also:
-  - A call that is not on the generated client is not sent: it fails at once with an error that says the
-    feature is not available yet, until its feature moves. Today `Utils.Request.ajax` adds the request header
-    `Access-Control-Allow-Origin`, which the API does not allow, so the browser engine stops the call; sent
-    without that header, its token has no scheme, and the page takes the 401 for a missing sign-in and
-    answers with the sign-in dialog.
-  - The host applies the theme of the user to the title bar of the window and to the color scheme of the
-    webview, whenever the options change. The page no longer tells the window (`host.changeTheme`): today
-    the window follows the color mode of the system.
-  - The start of the page. It does not replace the options that it has just read. The update check
-    (`api/GetCurrentVersion`) leaves no rejected promise. A page that cannot start says so in the language
-    of the user, with a way to try again: today it writes one line of English text.
-  - The select of the theme keeps its value as text, and works only because the conversion looks the name
-    up by that text.
 - [ ] H-06 TypeScript 6.0 and the loaders. The user interface compiles with TypeScript 4.9. The 6.0 line is
   the newest that ts-loader 9 can use: 7.0, the native compiler, has no API yet. Known work: the 11
   namespaces written with the `module` keyword, an error in 6.0; `tsconfig.json`, whose `moduleResolution`
   6.0 deprecates and which sets neither `strict` nor `types`, whose defaults changed; whatever the newer
-  checker reports. Also: the major versions of css-loader, style-loader, less-loader and source-map-loader.
+  checker reports. Also: the major versions of css-loader, style-loader, less-loader and source-map-loader;
+  the unit tests of the user interface, which no build type checks, because the declarations that arrive
+  with Vitest do not compile with TypeScript 4.9.
 - [ ] H-07 Browser tests of the user interface. Hypothesis: Playwright, against a development build of the
   host and the development server, in continuous integration on Windows. Explore: the same tests against
   the window of the application, through the DevTools protocol of the webview.
@@ -84,7 +53,8 @@ the four guarantees of [the specification](spec.md#guarantees-for-users-of-10x).
 - [ ] D-03 Updates. Hypothesis: a notification, as today. Explore: automatic update, if the installer
   technology offers it. Also: the page started the download of an update in a frame of its own, and the webview
   cancels a frame navigation outside the origin of the page and starts no download; the update check has no
-  route, and fails at every start of the page.
+  route, so the page asks the host for nothing: at its start it tells no new version, and in the options it
+  says that the check failed.
 
 ## T4 Cross-cutting services
 
@@ -115,7 +85,8 @@ crash produces a report, telemetry runs on a supported SDK.
 - [ ] S-04 Diagnostics and logging. Hypothesis: in-memory log shown in the user interface, plus the event log.
   Also: the host has no logging provider yet, so the warning of an owner of the instance that cannot create
   its pipe reaches no log, and neither does a request of the API that failed: the `traceId` of a problem
-  matches no log entry, and an error that a use case foresaw is answered and leaves no trace.
+  matches no log entry, and an error that a use case foresaw is answered and leaves no trace. The diagnostics
+  pane of the page asks for the log of the host every 5 seconds, a call that has no route.
 - [ ] S-05 Errors and crash reporting. Material: the branch `feat/crash-reporter-process`. Explore: a reporter
   as an application of its own or as a mode of the main executable. Also: replaces the minimal last-chance
   exception handling; a service of the host that fails stops the host, which closes the window with no
@@ -135,12 +106,15 @@ Exit: sign-in, the lists of reports and datasets, a model opened from Power BI D
   report name. Also: the report name from the parent process, and `--ppid`; an activation with a server opens
   a report: the page gets `serverName` and `databaseName` in the `Activation` event and has `App.openReport`,
   which takes a report as the list of the local reports gives it. Today the page logs such an activation and
-  opens nothing.
+  opens nothing. The list of the local reports has no route, and the page asks for it every 10 seconds; the
+  dialog that shows it asks twice when it opens, and uses its table at the second answer, built or not.
 - [ ] M-02 Model connections. Hypothesis: a tabular session behind a port, with an in-memory model for tests.
 - [ ] M-03 Sign-in and the Power BI service. Hypothesis: interaction behind a port. Explore: the guidance for
   desktop applications; the Windows authentication broker (#879). Also: the account that the page remembers
   stays in the storage of the page, and is lost once at the upgrade from 1.0.x; an activation whose server is
-  of the Power BI service opened a dataset (`App.openDataset`).
+  of the Power BI service opened a dataset (`App.openDataset`); a missing sign-in is an error with a code of
+  its own, which the page answers with the sign-in dialog: it no longer takes a 401 for one, and at its start
+  it still tries the sign-in with the account that it remembers, a call that has no route.
 
 ## T6 Features
 
