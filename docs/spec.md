@@ -102,6 +102,7 @@ A rule that a tool can check fails the build or a test, and no rule has an allow
 | A project references only the projects that one table allows; no type or namespace is called Helper, Utils or Common; no static state can change; every project is listed in the solution, and in the filter built on Linux exactly when it does not target Windows | `tests/Bravo.Architecture.Tests` |
 | The OpenAPI document of the API is its file in the repository; no schema allows null; every route has a name, a tag and the error answers that any route can give; every type of the API that travels is public; the codes of an error answer are the ones that the host can write | `tests/Bravo.Api.Tests` |
 | The feature band of the .NET SDK; `dotnet test` in its Microsoft.Testing.Platform mode, where the tests run on xUnit v3 | `global.json` |
+| The user interface has a text for every code of an error answer | `web/model/problem-texts.ts`, checked by every build of `web/` |
 | The Node.js line of the user interface build, the Active LTS one | `web/package.json` |
 | Text is stored with LF line endings; C# sources are checked out with CRLF on every system | `.gitattributes` |
 
@@ -452,12 +453,16 @@ public: the validation and the descriptions are generated for public types only.
 
 Every build of the user interface generates its TypeScript client from that file, with
 [Orval](https://orval.dev), into a folder that git ignores: a function for each route, named as the route is
-named in the document, and the types that travel. The build then checks the user interface against them. Each
-function calls the host through one function of the user interface, which adds the address and the token and
-lets the caller abort the request. Today the application data, the options and the events go through the
-client. Every other call of the user interface belongs to a feature that has not moved: nothing is sent, and
-the call fails at once with an error that says that the feature is not available yet. Each one moves to the
-client with its feature.
+named in the document, and the types that travel. The build then checks the user interface against them.
+
+- Each function calls the host through one function of the user interface, which adds the address and the
+  token and lets the caller abort the request.
+- The codes of the errors are one of those types. The user interface has one table from code to text, and
+  the build fails for a code that has no text there. For a value outside the list, which only something that
+  is not this host can send, it has the text of an error that nothing describes.
+- Today the application data, the options and the events go through the client. Every other call of the user
+  interface belongs to a feature that has not moved: nothing is sent, and the call fails at once with an
+  error that says that the feature is not available yet. Each one moves to the client with its feature.
 
 **Start of the page.** The page is the same in the window and in a browser, with no branch for either: it
 reads the address and the token of the API from `window.bravoHost`

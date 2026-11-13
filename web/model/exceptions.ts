@@ -4,11 +4,12 @@
  * https://www.sqlbi.com
 */
 
-import { ProblemDetails } from '../controllers/host';
+import { HostProblem } from '../controllers/host-fetch';
 import { Utils } from '../helpers/utils';
-import { app, logger, telemetry } from '../main';
-import { i18n } from '../model/i18n'; 
+import { app, telemetry } from '../main';
+import { i18n } from '../model/i18n';
 import { pii } from './pii';
+import { isProblemCode, problemText } from './problem-texts';
 import { strings } from './strings';
 
 export enum AppProblem {
@@ -42,14 +43,14 @@ export enum AppErrorType {
 export class AppError {
 
     type: AppErrorType;
-    code: number;
+    code: number | string;
     message: string;
     details: string;
     traceId: string;
     readonly requestAborted: boolean;
     readonly requestTimedout: boolean;
 
-    private constructor(type: AppErrorType, message?: string, code?: number, traceId?: string, details?: string) {
+    private constructor(type: AppErrorType, message?: string, code?: number | string, traceId?: string, details?: string) {
         if (!message)
             message = i18n(strings.errorUnspecified);
 
@@ -72,55 +73,37 @@ export class AppError {
         return `${ i18n(strings.error) }${ this.code ? ` ${this.type != AppErrorType.Managed ? "HTTP/" : "" }${ this.code }` : "" }: ${ message }${ details ? `\n${details}` : "" }${ includeTraceId && this.traceId ? `\n${ i18n(strings.traceId) }: ${this.traceId}` : ""}${ includeVersion ? `\n${i18n(strings.version)}: ${app.currentVersion.toString()}` : ""}`;
     }
 
-    static InitFromProblem(problem: ProblemDetails, message?: string) {
+    /**
+     * An error answer of the host. The code of the answer chooses the text that the user reads, and the
+     * detail, which the host writes in English, goes with it. An error that a use case foresaw, answered
+     * 409, is shown by its code; any other one by its status.
+     */
+    static InitFromHostProblem(error: HostProblem) {
 
-        let errorType;
-        let errorCode;
-        let errorMessage;
-        let errorDetails;
+        const problem = error.problem;
+        const foreseen = (error.status == Utils.ResponseStatusCode.Conflict && isProblemCode(problem?.code));
 
-        let traceId = problem.traceId;
+        return new AppError(
+            foreseen ? AppErrorType.Managed : AppErrorType.Response,
+            i18n(problemText(problem?.code)),
+            foreseen ? problem.code : error.status,
+            problem?.traceId,
+            problem?.detail
+        );
+    }
 
-        // 400 (Handled)
-        if (problem.status == Utils.ResponseStatusCode.BadRequest) { 
-            errorType = AppErrorType.Managed;
-            errorCode = Number(problem.instance);
-            const key = `error${AppProblem[errorCode]}`;
-            errorMessage = i18n(key in strings ? (<any>strings)[key] : strings.errorUnhandled);
-            errorDetails = problem.detail;
+    /**
+     * What a call of the host failed with: an error answer, a request that was aborted, or no answer at all.
+     */
+    static InitFromCallError(error: Error) {
 
-        } else {
-            errorCode = problem.status;
+        if (error instanceof HostProblem)
+            return AppError.InitFromHostProblem(error);
 
-            // Not authorized
-            if (problem.status == Utils.ResponseStatusCode.NotAuthorized) {
-                errorType = AppErrorType.Auth;
-                errorMessage = i18n(strings.errorNotAuthorized);
-            
-            // Aborted
-            } else if (problem.status == Utils.ResponseStatusCode.Aborted) {
-                errorType = AppErrorType.Abort;
-                errorMessage = i18n(strings.errorAborted);
+        if (Utils.Request.isAbort(error))
+            return AppError.InitFromStatus(Utils.ResponseStatusCode.Aborted);
 
-            // Timeout
-            } else if (problem.status == Utils.ResponseStatusCode.Timeout) {
-                errorType = AppErrorType.Abort;
-                errorMessage = i18n(strings.errorTimeout);
-
-            // HTTP error (unhandled)
-            } else {
-                errorType = AppErrorType.Response;
-                errorMessage = problem.title ? problem.title : i18n(strings.errorUnspecified);
-                if (errorMessage.trim().slice(-1) != ".") errorMessage += "."; 
-                
-                errorDetails = problem.detail;
-                
-            }
-        }
-
-        if (message) errorMessage = message;
-
-        return new AppError(errorType, errorMessage, errorCode, traceId, errorDetails);
+        return AppError.InitFromError(error);
     }
 
     // A feature whose calls have no route in the host yet
@@ -128,28 +111,63 @@ export class AppError {
         return new AppError(AppErrorType.Generic, i18n(strings.errorNotAvailable));
     }
 
-    static InitFromProblemCode(code: number, message?: string, details?: string) {
-        return AppError.InitFromProblem({ status: Utils.ResponseStatusCode.BadRequest, instance: String(code), detail: details }, message);
+    // An error that the user interface raises itself, with the text of its code
+    static InitFromProblemCode(code: AppProblem, message?: string, details?: string) {
+
+        const key = `error${AppProblem[code]}`;
+        const text = i18n(key in strings ? (<any>strings)[key] : strings.errorUnhandled);
+
+        return new AppError(AppErrorType.Managed, message ? message : text, code, null, details);
     }
 
     //This error is not generated by the host, so it should be tracked if >= 500
     static InitFromResponseStatus(code: number, message?: string, track = true) {
 
-        let problem: ProblemDetails = { status: code };
-        if (message) problem.title = message;
-
+        let traceId: string;
         if (track && code >= 500 && telemetry.enabled) {
-            problem.traceId = Utils.Text.uuid();
-            telemetry.trackError(problem);
+            traceId = Utils.Text.uuid();
+            telemetry.trackError({ status: code, title: message, traceId: traceId });
         }
-        return AppError.InitFromProblem(problem, message);
+        return AppError.InitFromStatus(code, message, traceId, message);
     }
 
     static InitFromError(error: Error){
-        return AppError.InitFromProblem({ status: Utils.ResponseStatusCode.InternalError, title: error.message });
+        return AppError.InitFromStatus(Utils.ResponseStatusCode.InternalError, error.message);
     }
 
     static InitFromString(message: string){
-        return AppError.InitFromProblem({ status: Utils.ResponseStatusCode.InternalError, title: message });
+        return AppError.InitFromStatus(Utils.ResponseStatusCode.InternalError, message);
+    }
+
+    // An error that a status alone describes: the user interface raised it, or a call got no answer
+    private static InitFromStatus(status: number, title?: string, traceId?: string, message?: string) {
+
+        let errorType;
+        let errorMessage;
+
+        // Not authorized
+        if (status == Utils.ResponseStatusCode.NotAuthorized) {
+            errorType = AppErrorType.Auth;
+            errorMessage = i18n(strings.errorNotAuthorized);
+
+        // Aborted
+        } else if (status == Utils.ResponseStatusCode.Aborted) {
+            errorType = AppErrorType.Abort;
+            errorMessage = i18n(strings.errorAborted);
+
+        // Timeout
+        } else if (status == Utils.ResponseStatusCode.Timeout) {
+            errorType = AppErrorType.Abort;
+            errorMessage = i18n(strings.errorTimeout);
+
+        } else {
+            errorType = AppErrorType.Response;
+            errorMessage = title ? title : i18n(strings.errorUnspecified);
+            if (errorMessage.trim().slice(-1) != ".") errorMessage += ".";
+        }
+
+        if (message) errorMessage = message;
+
+        return new AppError(errorType, errorMessage, status, traceId);
     }
 }

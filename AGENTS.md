@@ -250,6 +250,7 @@ To add a route:
    memory, with a clock that the test moves.
 7. Write the document again and commit `src/Bravo.Api/openapi.json` with the change: until the file matches the
    routes, `OpenApiDocumentTests` fails and says so.
+8. Give a new error code its text in `web/model/problem-texts.ts`: until then no build of `web/` succeeds.
 
 - An event for the user interface is a new value of `HostEventKind`, an optional member of `HostEvent` with
   its data, and a method of `IHostEventPublisher`. The kinds are not derived types: the document that .NET 10
@@ -433,6 +434,10 @@ The client of the host API is generated, not written:
 - Every generated function calls the host through `hostFetch` (`web/controllers/host-fetch.ts`), which adds
   the address and the token, passes on the `AbortSignal` of the caller, and throws a `HostProblem` for an
   error answer.
+- A call that fails is an `AppError` (`web/model/exceptions.ts`), built by `AppError.InitFromCallError`: for
+  an error answer its text is the one that `web/model/problem-texts.ts` has for the code of the answer. The
+  table is typed by the codes of the generated client. An answer with status 409, an error that a use case
+  foresaw, is shown by its code; any other one by its status.
 - `Host` (`web/controllers/host.ts`) stays the one module that the user interface calls. A method that moves
   to the client goes through `apiClientCall`; where the host names an enum value and the user interface
   numbers it, the method converts in both directions.
@@ -442,8 +447,8 @@ The unit tests of the user interface are in `web/tests`, each at the path of the
 run on [Vitest](https://vitest.dev) in a simulated browser, jsdom
 ([ADR 0016](docs/adr/0016-closed-error-codes-generated-types-and-tests-in-the-user-interface.md)):
 
-- They test the modules that read the contract: `host-fetch`, `host-events` and `host`. Nothing tests a
-  view, and nothing runs in a real browser (backlog H-07).
+- They test the modules that read the contract: `host-fetch`, `host-events`, `host`, and the errors, with
+  the table of their texts. Nothing tests a view, and nothing runs in a real browser (backlog H-07).
 - `main.ts` starts the whole page when it is loaded. A test replaces it, with `vi.mock`, by the parts of
   `tests/main-mock.ts`, which do nothing, and replaces the generated client where the test answers in place
   of the host.

@@ -8,10 +8,10 @@
 export module Utils {
 
     export enum ResponseStatusCode {
-        BadRequest = 400,
         NotAuthorized = 401,
         NotFound = 404,
         Timeout = 408,
+        Conflict = 409,
         Aborted = 418, // Actual meaning is "I'm a teapot" (April Fool joke)
         InternalError = 500
     }

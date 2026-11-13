@@ -8,7 +8,6 @@ import { ApplicationInsights, ICustomProperties, IEventTelemetry, IExceptionTele
 import { Idle } from '../helpers/idle';
 import { Utils } from '../helpers/utils';
 import { optionsController, debug } from '../main';
-import { ProblemDetails } from './host';
 
 export interface TelemetryConfig {
    connectionString: string,
@@ -16,6 +15,13 @@ export interface TelemetryConfig {
    contextSessionId?: string,
    contextUserId?: string,
    globalProperties?: any
+}
+
+/** What is told of an error that the page raises itself. */
+export interface TrackedProblem {
+   status?: number
+   title?: string
+   traceId?: string
 }
 
 export class Telemetry {
@@ -105,7 +111,7 @@ export class Telemetry {
       this.track("End");
    }
 
-   trackError(problem: ProblemDetails, props?: ICustomProperties) {
+   trackError(problem: TrackedProblem, props?: ICustomProperties) {
       if (!this.enabled) return;
 
       const traceId = (problem.traceId ? problem.traceId : Utils.Text.uuid());

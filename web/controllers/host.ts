@@ -13,7 +13,7 @@ import { PBICloudDataset, PBICloudDatasetConnectionMode } from '../model/pbi-dat
 import { FormattedMeasure, TabularDatabase, TabularDatabaseServer, TabularMeasure, TabularTable } from '../model/tabular';
 import { Account } from './auth';
 import * as hostApi from '../generated/bravo';
-import { connectHost, HostProblem } from './host-fetch';
+import { connectHost } from './host-fetch';
 import { DiagnosticLevelType, FormatDaxOptions, Options, ProxyType } from './options';
 import { PBIDesktopReport, PBIDesktopReportConnectionMode } from '../model/pbi-report';
 import { ThemeType } from './theme';
@@ -27,15 +27,6 @@ import { CloudEnvironment } from '../model/pbi-cloud';
 interface ApiRequest {
     action: string
     controller: AbortController
-}
-
-export interface ProblemDetails {
-    type?: string
-    title?:	string
-    status?: number
-    detail?: string
-    instance?: string
-    traceId?: string
 }
 
 export interface HostSignInRequest {
@@ -270,18 +261,7 @@ export class Host extends Dispatchable {
 
         return call({ signal: abortController.signal })
             .catch((error: Error) => {
-
-                let problem: ProblemDetails;
-                if (error instanceof HostProblem) {
-                    problem = { ...error.problem, status: error.status };
-                } else {
-                    problem = {
-                        status: (Utils.Request.isAbort(error) ? Utils.ResponseStatusCode.Aborted : Utils.ResponseStatusCode.InternalError),
-                        title: error.message
-                    };
-                }
-
-                throw AppError.InitFromProblem(problem);
+                throw AppError.InitFromCallError(error);
             })
             .finally(() => {
                 this.apiCallCompleted(requestId);
