@@ -1,74 +1,58 @@
-﻿using System.Globalization;
+﻿using System;
+using System.Collections.Immutable;
+using Bravo.Core.Errors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Bravo.Api.Problems;
 
 /// <summary>
-/// The codes that the API itself gives to an error answer, in the member <c>code</c> of the problem details.
-/// A code is a PascalCase name that never changes meaning; an error that a use case foresees has its own.
+/// The member <c>code</c> of the problem details: a PascalCase name that never changes meaning. The codes are
+/// a closed list, which the document of the API gives to the user interface: no answer carries another one.
 /// </summary>
 internal static class ProblemCodes
 {
     public const string MemberName = "code";
 
     /// <summary>
-    /// The request cannot be read: a body that is not what the route expects, a parameter of the wrong type.
+    /// Every code that an error answer can carry: the ones of the API, then the ones of the use cases.
     /// </summary>
-    public const string InvalidRequest = "InvalidRequest";
+    public static ImmutableArray<string> All { get; } =
+        [.. Enum.GetNames<ApiProblemCode>(), .. Enum.GetNames<ErrorCode>()];
 
     /// <summary>
-    /// The request was read, and a value in it is not allowed: the member <c>errors</c> says which.
-    /// </summary>
-    public const string ValidationFailed = "ValidationFailed";
-
-    /// <summary>
-    /// The token of the API is missing or wrong.
-    /// </summary>
-    public const string Unauthorized = "Unauthorized";
-
-    public const string NotFound = "NotFound";
-
-    public const string MethodNotAllowed = "MethodNotAllowed";
-
-    public const string UnsupportedMediaType = "UnsupportedMediaType";
-
-    /// <summary>
-    /// The host failed in a way that nobody foresaw.
-    /// </summary>
-    public const string Unexpected = "Unexpected";
-
-    /// <summary>
-    /// Gives a code to a problem that has none, so that every error answer has one.
+    /// Gives every problem a code of the list. A problem that has none, or one that the list does not have,
+    /// gets the code of its status.
     /// </summary>
     public static void Apply(ProblemDetailsContext context)
     {
         var problem = context.ProblemDetails;
-        if (problem.Extensions.ContainsKey(MemberName))
+        if (problem.Extensions.TryGetValue(MemberName, out var code) && code is string name && All.Contains(name))
         {
             return;
         }
 
-        problem.Extensions[MemberName] = Select(problem, context.HttpContext.Response.StatusCode);
+        var selected = Select(problem, context.HttpContext.Response.StatusCode);
+        problem.Extensions[MemberName] = selected.ToString();
     }
 
-    private static string Select(ProblemDetails problem, int responseStatus)
+    private static ApiProblemCode Select(ProblemDetails problem, int responseStatus)
     {
         if (problem is HttpValidationProblemDetails)
         {
-            return ValidationFailed;
+            return ApiProblemCode.ValidationFailed;
         }
 
         var status = problem.Status ?? responseStatus;
         return status switch
         {
-            StatusCodes.Status400BadRequest => InvalidRequest,
-            StatusCodes.Status401Unauthorized => Unauthorized,
-            StatusCodes.Status404NotFound => NotFound,
-            StatusCodes.Status405MethodNotAllowed => MethodNotAllowed,
-            StatusCodes.Status415UnsupportedMediaType => UnsupportedMediaType,
-            StatusCodes.Status500InternalServerError => Unexpected,
-            _ => string.Create(CultureInfo.InvariantCulture, $"Http{status}"),
+            StatusCodes.Status400BadRequest => ApiProblemCode.InvalidRequest,
+            StatusCodes.Status401Unauthorized => ApiProblemCode.Unauthorized,
+            StatusCodes.Status404NotFound => ApiProblemCode.NotFound,
+            StatusCodes.Status405MethodNotAllowed => ApiProblemCode.MethodNotAllowed,
+            StatusCodes.Status415UnsupportedMediaType => ApiProblemCode.UnsupportedMediaType,
+            StatusCodes.Status500InternalServerError => ApiProblemCode.Unexpected,
+            _ => ApiProblemCode.HttpError,
         };
     }
 }

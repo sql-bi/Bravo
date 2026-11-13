@@ -211,6 +211,7 @@ The main window shows the user interface in WebView2
 | Kestrel on the loopback address, and the address it was given | `src/Bravo.Api/Server/` |
 | The token and its authentication scheme, the fallback policy, host filtering, CORS | `src/Bravo.Api/Security/` |
 | Problem details and their codes, and the answer to a `BravoException` | `src/Bravo.Api/Problems/` |
+| The error of a use case, and the codes that it can carry | `src/Bravo.Core/Errors/` |
 | How JSON is read and written | `src/Bravo.Api/Json/` |
 | The events for the user interface: their log, their publisher, their route | `src/Bravo.Api/Events/` |
 | The routes of a resource, with the types that travel | A folder for each resource, such as `src/Bravo.Api/Options/` |
@@ -235,8 +236,11 @@ To add a route:
 4. Validate with data annotations or `IValidatableObject` on the types and with attributes on the parameters,
    and test each rule through the route: nothing reports a type that the validation does not see.
 5. A use case reports an error that the user interface must tell apart by throwing `BravoException`
-   (`Bravo.Core.Errors`) with a new PascalCase code: the answer is 409 with that code. An error of the route
-   itself is a typed problem result with its status and the member `code`.
+   (`Bravo.Core.Errors`) with a member of `ErrorCode`, a new one when none says what happened: the answer
+   is 409 with the name of the member as its code. The first member has the value 1. An error of the route
+   itself is a typed problem result with its status and, as the member `code`, the name of a member of
+   `ApiProblemCode`. The two lists are the codes of the contract: a problem with any other code is answered
+   with the code of its status.
 6. Test it in `tests/Bravo.Api.Tests` on `TestApi`: the API as the application composes it, on a server in
    memory, with a clock that the test moves.
 7. Write the document again and commit `src/Bravo.Api/openapi.json` with the change: until the file matches the
@@ -252,6 +256,9 @@ To add a route:
   the JSON goes in `ContractSchema` or `ContractDocument`.
 - `OpenApiDocumentTests.WriteTheFileOfTheRepository` is not a test: it writes the document, runs only when
   asked for, and shows as skipped in every other run.
+- `ErrorCode` has no member yet, so no test can throw a `BravoException`. The two tests of an error that a
+  use case foresaw, in `ProblemDetailsTests` and in `BravoExceptionTests`, take every member as their data:
+  they show as skipped until the first member exists, and run for it without a change.
 
 | Task | Command |
 | --- | --- |
@@ -284,7 +291,7 @@ A warning fails the build ([ADR 0009](docs/adr/0009-rules-enforced-by-the-build.
 | Code style and the severity of each diagnostic | `.editorconfig` |
 | The symbols no project may use | `BannedSymbols.txt` |
 | Allowed project references, catch-all names, static mutable state, the projects that the solution and its filter list | `tests/Bravo.Architecture.Tests` |
-| The OpenAPI document equal to its file; no schema that allows null; a name, a tag and the common error answers on every route; every type of the API that travels public | `tests/Bravo.Api.Tests/Contract/` (`OpenApiDocumentTests`) |
+| The OpenAPI document equal to its file; no schema that allows null; a name, a tag and the common error answers on every route; every type of the API that travels public; the codes of a problem equal to the ones that the host can write | `tests/Bravo.Api.Tests/Contract/` (`OpenApiDocumentTests`) |
 
 ASP.NET Core is a shared framework of the runtime: a project that uses it has a `FrameworkReference` to
 `Microsoft.AspNetCore.App`, and no package reference for what the framework holds, such as

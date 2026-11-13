@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -7,29 +8,38 @@ using System.Threading.Tasks;
 using Bravo.Api.Problems;
 using Bravo.Core.Errors;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
 using Xunit;
 
 namespace Bravo.Api.Tests.Problems;
 
 /// <summary>
-/// Every error answer is a problem details body with a code, whatever produced it.
+/// Every error answer is a problem details body with a code of the list, whatever produced it.
 /// </summary>
 public sealed class ProblemDetailsTests
 {
     private const string KnownErrorMessage = "The model was changed by another program.";
     private const string UnexpectedMessage = "The secret detail of a defect.";
 
-    [Fact]
-    public async Task ErrorThatAUseCaseForesaw_IsAnswered409WithItsCodeAndItsMessage()
+    /// <summary>
+    /// Every code that a use case can report.
+    /// </summary>
+    public static TheoryData<ErrorCode> ErrorCodes => [.. Enum.GetValues<ErrorCode>()];
+
+    // Without data while no use case reports an error: the test runs for the first code that is added.
+    [Theory(SkipTestWithoutData = true)]
+    [MemberData(nameof(ErrorCodes))]
+    public async Task ErrorThatAUseCaseForesaw_IsAnswered409WithItsCodeAndItsMessage(ErrorCode code)
     {
         await using var api = await TestApi.StartAsync(MapFailingRoutes);
 
-        using var response = await api.Client.GetAsync("/test/known", TestContext.Current.CancellationToken);
+        using var response = await api.Client.GetAsync($"/test/known/{code}", TestContext.Current.CancellationToken);
 
         var problem = await response.ReadJsonAsync();
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
-        Assert.Equal("ModelChanged", problem.GetProperty("code").GetString());
+        Assert.Equal(code.ToString(), problem.GetProperty("code").GetString());
         Assert.Equal(KnownErrorMessage, problem.GetProperty("detail").GetString());
     }
 
@@ -41,7 +51,7 @@ public sealed class ProblemDetailsTests
         using var response = await api.Client.GetAsync("/test/unexpected", TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
-        Assert.Equal(ProblemCodes.Unexpected, await response.ReadProblemCodeAsync());
+        Assert.Equal(nameof(ApiProblemCode.Unexpected), await response.ReadProblemCodeAsync());
     }
 
     [Fact]
@@ -65,7 +75,7 @@ public sealed class ProblemDetailsTests
 
         var problem = await response.ReadJsonAsync();
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        Assert.Equal(ProblemCodes.ValidationFailed, problem.GetProperty("code").GetString());
+        Assert.Equal(nameof(ApiProblemCode.ValidationFailed), problem.GetProperty("code").GetString());
         Assert.Equal(JsonValueKind.Array, problem.GetProperty("errors").GetProperty("after").ValueKind);
     }
 
@@ -79,7 +89,7 @@ public sealed class ProblemDetailsTests
         using var response = await api.Client.GetAsync(route, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        Assert.Equal(ProblemCodes.InvalidRequest, await response.ReadProblemCodeAsync());
+        Assert.Equal(nameof(ApiProblemCode.InvalidRequest), await response.ReadProblemCodeAsync());
     }
 
     [Theory]
@@ -94,7 +104,7 @@ public sealed class ProblemDetailsTests
         using var response = await api.Client.PutAsync("/options", content, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        Assert.Equal(ProblemCodes.InvalidRequest, await response.ReadProblemCodeAsync());
+        Assert.Equal(nameof(ApiProblemCode.InvalidRequest), await response.ReadProblemCodeAsync());
     }
 
     [Fact]
@@ -106,7 +116,7 @@ public sealed class ProblemDetailsTests
         using var response = await api.Client.PutAsync("/options", content, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.UnsupportedMediaType, response.StatusCode);
-        Assert.Equal(ProblemCodes.UnsupportedMediaType, await response.ReadProblemCodeAsync());
+        Assert.Equal(nameof(ApiProblemCode.UnsupportedMediaType), await response.ReadProblemCodeAsync());
     }
 
     [Fact]
@@ -117,7 +127,7 @@ public sealed class ProblemDetailsTests
         using var response = await api.Client.GetAsync("/no-such-route", TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
-        Assert.Equal(ProblemCodes.NotFound, await response.ReadProblemCodeAsync());
+        Assert.Equal(nameof(ApiProblemCode.NotFound), await response.ReadProblemCodeAsync());
     }
 
     [Fact]
@@ -128,17 +138,40 @@ public sealed class ProblemDetailsTests
         using var response = await api.Client.DeleteAsync("/options", TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.MethodNotAllowed, response.StatusCode);
-        Assert.Equal(ProblemCodes.MethodNotAllowed, await response.ReadProblemCodeAsync());
+        Assert.Equal(nameof(ApiProblemCode.MethodNotAllowed), await response.ReadProblemCodeAsync());
     }
 
     [Fact]
-    public async Task StatusWithoutACodeOfItsOwn_GetsACodeFromItsNumber()
+    public async Task StatusWithoutACodeOfItsOwn_GetsTheCodeOfEveryOtherStatus()
     {
         await using var api = await TestApi.StartAsync(MapFailingRoutes);
 
         using var response = await api.Client.GetAsync("/test/teapot", TestContext.Current.CancellationToken);
 
-        Assert.Equal("Http418", await response.ReadProblemCodeAsync());
+        Assert.Equal(nameof(ApiProblemCode.HttpError), await response.ReadProblemCodeAsync());
+    }
+
+    [Fact]
+    public async Task ProblemOfARouteWithACodeOfTheList_KeepsIt()
+    {
+        await using var api = await TestApi.StartAsync(MapFailingRoutes);
+
+        using var response = await api.Client.GetAsync("/test/listed", TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        Assert.Equal(nameof(ApiProblemCode.NotFound), await response.ReadProblemCodeAsync());
+    }
+
+    // The list is closed: the user interface has a text for each of its codes, and for no other.
+    [Fact]
+    public async Task ProblemOfARouteWithACodeThatTheListDoesNotHave_GetsTheCodeOfItsStatus()
+    {
+        await using var api = await TestApi.StartAsync(MapFailingRoutes);
+
+        using var response = await api.Client.GetAsync("/test/unlisted", TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        Assert.Equal(nameof(ApiProblemCode.HttpError), await response.ReadProblemCodeAsync());
     }
 
     [Fact]
@@ -156,14 +189,23 @@ public sealed class ProblemDetailsTests
 
     private static void MapFailingRoutes(IEndpointRouteBuilder routes)
     {
-        routes.MapGet("/test/known", ThrowKnown);
+        routes.MapGet("/test/known/{code}", ThrowKnown);
         routes.MapGet("/test/unexpected", ThrowUnexpected);
-        routes.MapGet("/test/teapot", () => Microsoft.AspNetCore.Http.TypedResults.StatusCode(418));
+        routes.MapGet("/test/teapot", () => TypedResults.StatusCode(418));
+        routes.MapGet("/test/listed", () => ConflictWithCode(nameof(ApiProblemCode.NotFound)));
+        routes.MapGet("/test/unlisted", () => ConflictWithCode("NoSuchCode"));
     }
 
-    private static string ThrowKnown()
+    private static string ThrowKnown(ErrorCode code)
     {
-        throw new BravoException("ModelChanged", KnownErrorMessage);
+        throw new BravoException(code, KnownErrorMessage);
+    }
+
+    private static ProblemHttpResult ConflictWithCode(string code)
+    {
+        var extensions = new Dictionary<string, object?> { [ProblemCodes.MemberName] = code };
+
+        return TypedResults.Problem(statusCode: StatusCodes.Status409Conflict, extensions: extensions);
     }
 
     private static string ThrowUnexpected()

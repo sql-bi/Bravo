@@ -31,7 +31,7 @@ internal sealed class BravoExceptionHandler(IProblemDetailsService problemDetail
         }
 
         var problem = new ProblemDetails { Status = StatusCode, Detail = known.Message };
-        problem.Extensions[ProblemCodes.MemberName] = known.Code;
+        problem.Extensions[ProblemCodes.MemberName] = known.Code.ToString();
         var context = new ProblemDetailsContext
         {
             HttpContext = httpContext,

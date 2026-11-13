@@ -39,6 +39,6 @@ public sealed class HostFilteringTests
         using var response = await api.Client.SendAsync(request, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        Assert.Equal(ProblemCodes.InvalidRequest, await response.ReadProblemCodeAsync());
+        Assert.Equal(nameof(ApiProblemCode.InvalidRequest), await response.ReadProblemCodeAsync());
     }
 }

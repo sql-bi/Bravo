@@ -368,14 +368,27 @@
             }
           },
           "code": {
-            "type": "string",
-            "description": "What went wrong, as a name that never changes meaning."
+            "$ref": "#/components/schemas/ProblemCode"
           },
           "traceId": {
             "type": "string",
             "description": "The identifier of the request in the log of the host."
           }
         }
+      },
+      "ProblemCode": {
+        "enum": [
+          "InvalidRequest",
+          "ValidationFailed",
+          "Unauthorized",
+          "NotFound",
+          "MethodNotAllowed",
+          "UnsupportedMediaType",
+          "Unexpected",
+          "HttpError"
+        ],
+        "type": "string",
+        "description": "What went wrong, as a name that never changes meaning. No error answer has a code outside this list."
       },
       "ProblemDetails": {
         "required": [
@@ -400,8 +413,7 @@
             "type": "string"
           },
           "code": {
-            "type": "string",
-            "description": "What went wrong, as a name that never changes meaning."
+            "$ref": "#/components/schemas/ProblemCode"
           },
           "traceId": {
             "type": "string",

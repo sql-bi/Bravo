@@ -5,6 +5,8 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Bravo.Api.Problems;
+using Bravo.Core.Errors;
 using Bravo.Core.Settings;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.OpenApi;
@@ -81,6 +83,23 @@ public sealed class OpenApiDocumentTests
             Assert.NotEqual(0, operation.GetProperty("tags").GetArrayLength());
             Assert.True(HasProblemAnswer(operation, "401") && HasProblemAnswer(operation, "500"), operation.GetRawText());
         });
+    }
+
+    // The codes are a closed list of the contract: the client that is generated from the document knows
+    // every code that the host can write, and the user interface must have a text for each one.
+    [Fact]
+    public async Task Document_TheCodeOfAProblem_IsOneOfTheCodesThatTheHostCanWrite()
+    {
+        using var document = JsonDocument.Parse(await ProduceDocumentAsync());
+        var schemas = document.RootElement.GetProperty("components").GetProperty("schemas");
+        string[] writable = [.. Enum.GetNames<ApiProblemCode>(), .. Enum.GetNames<ErrorCode>()];
+
+        var listed = schemas.GetProperty("ProblemCode").GetProperty("enum").EnumerateArray().Select(code => code.GetString());
+        var problems = schemas.EnumerateObject().Where(HasCode).ToList();
+
+        Assert.Equal(writable, listed);
+        Assert.Equal(["HttpValidationProblemDetails", "ProblemDetails"], problems.Select(problem => problem.Name).Order());
+        Assert.All(problems, problem => Assert.Equal("#/components/schemas/ProblemCode", CodeReference(problem.Value)));
     }
 
     // The validation and the descriptions of the document are generated for public types only, and neither
@@ -168,6 +187,17 @@ public sealed class OpenApiDocumentTests
     {
         return schema.TryGetProperty("type", out var type)
             && type.GetRawText().Contains("null", StringComparison.Ordinal);
+    }
+
+    private static bool HasCode(JsonProperty schema)
+    {
+        return schema.Value.TryGetProperty("properties", out var properties)
+            && properties.TryGetProperty(ProblemCodes.MemberName, out _);
+    }
+
+    private static string? CodeReference(JsonElement problem)
+    {
+        return problem.GetProperty("properties").GetProperty(ProblemCodes.MemberName).GetProperty("$ref").GetString();
     }
 
     private static bool HasProblemAnswer(JsonElement operation, string status)

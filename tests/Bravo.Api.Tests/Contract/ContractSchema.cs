@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Bravo.Api.Problems;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OpenApi;
 using Microsoft.OpenApi;
 
@@ -24,7 +21,6 @@ internal static class ContractSchema
 
         DescribeEnumAsString(schema, type);
         RemoveNull(schema);
-        AddProblemMembers(schema, type);
         WriteDescriptionOnOneLine(schema);
 
         return Task.CompletedTask;
@@ -47,31 +43,6 @@ internal static class ContractSchema
         {
             schema.Type = type & ~JsonSchemaType.Null;
         }
-    }
-
-    // Every problem has a code, and the identifier of its request, which the .NET type keeps among its
-    // extension members.
-    private static void AddProblemMembers(OpenApiSchema schema, Type type)
-    {
-        if (!typeof(ProblemDetails).IsAssignableFrom(type))
-        {
-            return;
-        }
-
-        schema.Properties ??= new Dictionary<string, IOpenApiSchema>(StringComparer.Ordinal);
-        schema.Properties[ProblemCodes.MemberName] = new OpenApiSchema
-        {
-            Type = JsonSchemaType.String,
-            Description = "What went wrong, as a name that never changes meaning.",
-        };
-        schema.Properties["traceId"] = new OpenApiSchema
-        {
-            Type = JsonSchemaType.String,
-            Description = "The identifier of the request in the log of the host.",
-        };
-
-        schema.Required ??= new HashSet<string>(StringComparer.Ordinal);
-        schema.Required.Add(ProblemCodes.MemberName);
     }
 
     // A description comes from a comment of the code, with its line breaks and its indentation.

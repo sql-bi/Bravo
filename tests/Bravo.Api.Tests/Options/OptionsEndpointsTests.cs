@@ -120,7 +120,7 @@ public sealed class OptionsEndpointsTests
 
         var problem = await response.ReadJsonAsync();
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        Assert.Equal(ProblemCodes.ValidationFailed, problem.GetProperty("code").GetString());
+        Assert.Equal(nameof(ApiProblemCode.ValidationFailed), problem.GetProperty("code").GetString());
         Assert.True(problem.GetProperty("errors").TryGetProperty($"proxy.{member}", out _), problem.GetRawText());
     }
 
@@ -147,7 +147,7 @@ public sealed class OptionsEndpointsTests
         using var response = await PutAsync(api, body);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        Assert.Equal(ProblemCodes.InvalidRequest, await response.ReadProblemCodeAsync());
+        Assert.Equal(nameof(ApiProblemCode.InvalidRequest), await response.ReadProblemCodeAsync());
     }
 
     [Fact]
@@ -175,7 +175,7 @@ public sealed class OptionsEndpointsTests
         using var response = await PutAsync(api, body);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        Assert.Equal(ProblemCodes.InvalidRequest, await response.ReadProblemCodeAsync());
+        Assert.Equal(nameof(ApiProblemCode.InvalidRequest), await response.ReadProblemCodeAsync());
     }
 
     [Fact]

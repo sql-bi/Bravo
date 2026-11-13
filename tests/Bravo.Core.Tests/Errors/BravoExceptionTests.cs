@@ -6,30 +6,37 @@ namespace Bravo.Core.Tests.Errors;
 
 public sealed class BravoExceptionTests
 {
-    [Fact]
-    public void Constructor_CodeAndMessage_KeepsBoth()
-    {
-        var exception = new BravoException("ModelChanged", "The model was changed by another program.");
+    private const string Message = "The model was changed by another program.";
 
-        Assert.Equal("ModelChanged", exception.Code);
-        Assert.Equal("The model was changed by another program.", exception.Message);
-    }
+    /// <summary>
+    /// Every code that a use case can report.
+    /// </summary>
+    public static TheoryData<ErrorCode> ErrorCodes => [.. Enum.GetValues<ErrorCode>()];
 
-    [Fact]
-    public void Constructor_InnerException_KeepsIt()
+    // Without data while no use case reports an error: the test runs for the first code that is added.
+    [Theory(SkipTestWithoutData = true)]
+    [MemberData(nameof(ErrorCodes))]
+    public void Constructor_CodeOfTheList_KeepsItWithTheMessageAndTheCause(ErrorCode code)
     {
         var cause = new InvalidOperationException("The cause.");
 
-        var exception = new BravoException("ModelChanged", "The model was changed by another program.", cause);
+        var exception = new BravoException(code, Message, cause);
 
+        Assert.Equal(code, exception.Code);
+        Assert.Equal(Message, exception.Message);
         Assert.Same(cause, exception.InnerException);
     }
 
     [Theory]
-    [InlineData("")]
-    [InlineData("  ")]
-    public void Constructor_CodeThatIsBlank_Throws(string code)
+    [InlineData(0)]
+    [InlineData(-1)]
+    [InlineData(int.MaxValue)]
+    public void Constructor_NumberThatIsNoCodeOfTheList_Throws(int number)
     {
-        Assert.Throws<ArgumentException>(() => new BravoException(code, "A message."));
+        var code = (ErrorCode)number;
+        var cause = new InvalidOperationException("The cause.");
+
+        Assert.Throws<ArgumentOutOfRangeException>(() => new BravoException(code, Message));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new BravoException(code, Message, cause));
     }
 }

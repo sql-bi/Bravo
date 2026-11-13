@@ -33,7 +33,7 @@ public sealed class ApiTokenAuthenticationHandlerTests
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
         Assert.Equal("Bearer", response.Headers.WwwAuthenticate.ToString());
-        Assert.Equal(ProblemCodes.Unauthorized, await response.ReadProblemCodeAsync());
+        Assert.Equal(nameof(ApiProblemCode.Unauthorized), await response.ReadProblemCodeAsync());
     }
 
     [Fact]
@@ -86,7 +86,7 @@ public sealed class ApiTokenAuthenticationHandlerTests
         using var response = await client.GetAsync("/no-such-route", TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-        Assert.Equal(ProblemCodes.Unauthorized, await response.ReadProblemCodeAsync());
+        Assert.Equal(nameof(ApiProblemCode.Unauthorized), await response.ReadProblemCodeAsync());
     }
 
     [Fact]
