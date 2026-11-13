@@ -186,13 +186,13 @@ export module Utils {
             whiteSpace?: string;
         }
 
-        export var measureCanvas: HTMLCanvasElement;
+        let measureCanvas: HTMLCanvasElement;
         export function measureWidth(text: string, font: FontInfo): number {
 
-            if (!Utils.DOM.measureCanvas)
-                Utils.DOM.measureCanvas = document.createElement('canvas');
+            if (!measureCanvas)
+                measureCanvas = document.createElement('canvas');
             
-            let context = Utils.DOM.measureCanvas.getContext("2d");
+            let context = measureCanvas.getContext("2d");
             context.font = `${font.fontStyle || ""} ${font.fontVariant || ""} ${font.fontWeight || ""} ${font.fontSize} ${font.fontFamily}`;
             let size = context.measureText(text);
             return Math.ceil(size.width * 1.2);

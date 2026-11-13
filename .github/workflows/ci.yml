@@ -95,6 +95,9 @@ jobs:
           cache-dependency-path: web/package-lock.json
       - name: Install the dependencies
         run: npm ci
+      # The unit tests of the user interface. The script generates the client of the host API first.
+      - name: Test
+        run: npm test
       # The release build also checks the types.
       - name: Build the release bundle
         run: npm run build:Release

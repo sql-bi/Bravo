@@ -330,7 +330,7 @@ stops after 15 minutes.
 | --- | --- |
 | `build-and-test` | On Windows: the restore in locked mode, the build, the tests |
 | `build-and-test-linux` | The same on Linux, on `Bravo.Portable.slnf`: the projects that do not target Windows |
-| `build-web` | In `web/`: `npm ci`, then `npm run build:Release`, which generates the client of the host API first |
+| `build-web` | In `web/`: `npm ci`, then `npm test` and `npm run build:Release`, each of which generates the client of the host API first |
 | `audit` | A restore that fails on a NuGet package with a known vulnerability, then `npm audit` on the packages that ship with the user interface, which fails on an advisory, and on all of them, which reports |
 
 What a run checks beyond the commands of the table above:
@@ -378,6 +378,8 @@ stops with an error on another one.
 | Start a development host for a page in a browser | `npm run serve:host` |
 | Serve the page to a browser, rebuilt at every change | `npm run serve:UI` |
 | Generate the client of the host API alone | `npm run generate:api` |
+| Run the unit tests | `npm test` |
+| Run the tests of one file | `npx vitest run tests/controllers/host-fetch.test.ts`, after `npm run generate:api` |
 
 A bundle is `js/main.js` and `css/main.css`; the release build adds `js/main.js.LICENSE.txt`. Every build type
 checks the TypeScript code. `web/wwwroot` holds the static files that go with the bundle (`index.html`, icons,
@@ -436,4 +438,17 @@ The client of the host API is generated, not written:
   numbers it, the method converts in both directions.
 - Orval is pinned to an exact version in `package.json`: another version can write another client.
 
-The user interface has no tests.
+The unit tests of the user interface are in `web/tests`, each at the path of the module that it tests, and
+run on [Vitest](https://vitest.dev) in a simulated browser, jsdom
+([ADR 0016](docs/adr/0016-closed-error-codes-generated-types-and-tests-in-the-user-interface.md)):
+
+- They test the modules that read the contract: `host-fetch` and `host-events`. Nothing tests a view, and
+  nothing runs in a real browser (backlog H-07).
+- `main.ts` starts the whole page when it is loaded. A test replaces it, with `vi.mock`, by what the module
+  under test reads from it, and replaces the generated client where the test answers in place of the host.
+- A test moves the clock itself (`vi.useFakeTimers`) and waits for no time.
+- Vite reads the sources for the tests, and transforms the namespaces of TypeScript only in part: one that
+  exports a variable (`export var`, `export let`) is reported as a warning at every run, and the variable
+  is not exported. The other namespaces and the enums of this code are read as webpack reads them.
+- The tests are outside `tsconfig.json`, so no build checks their types: the declarations that arrive with
+  Vitest need a newer TypeScript than the 4.9 of the build (backlog H-06).
