@@ -6,7 +6,7 @@
 
 import { Dispatchable } from '../helpers/dispatchable';
 import { Theme } from '../generated/bravo';
-import { host, optionsController, telemetry } from '../main';
+import { optionsController, telemetry } from '../main';
 
 /** The theme that the page shows: the one of the user, or the one of the device for a user who chose none. */
 export type AppliedTheme = typeof Theme.Dark | typeof Theme.Light;
@@ -53,9 +53,9 @@ export class ThemeController extends Dispatchable {
             this.deviceTheme = Theme.Light;
         }
 
+        // The window is not told: the host gives it the theme of the options that it keeps
         optionsController.on("theme.change", (changedOptions: any) => {
 
-            host.changeTheme(changedOptions.theme);
             this.apply(changedOptions.theme);
 
             telemetry.track("Theme", { theme: changedOptions.theme });
@@ -66,7 +66,6 @@ export class ThemeController extends Dispatchable {
 
     change(theme: Theme) {
         optionsController.update("theme", theme);
-        host.changeTheme(theme);
         this.apply(theme);
 
         telemetry.track("Theme", { theme: theme });

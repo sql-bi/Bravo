@@ -470,12 +470,15 @@ named in the document, and the types that travel. The build then checks the user
 
 **Start of the page.** The page is the same in the window and in a browser, with no branch for either: it
 reads the address and the token of the API from `window.bravoHost`
-([window and webview](#window-and-webview)), whoever set it, and stops with one line of text when the object
-is missing or the host does not answer.
+([window and webview](#window-and-webview)), whoever set it. A page that cannot start, because the object is
+missing, the host does not answer or one of its parts fails, says so in place of the user interface: in the
+language of the browser, in English where it has no text in that language, with what went wrong below and a
+button that loads the page again.
 
 - Before any of its parts exists, the page asks the API what the application is and for the options of the
   user. Until those answers arrive it follows the color scheme that it is told: in the window the theme of the
   user ([window and webview](#window-and-webview)), in a browser the color mode of the system.
+- It saves no option when it starts: what it shows is what the options that it has just read say.
 - It starts with no policy (backlog S-02) and no telemetry settings (backlog S-06): until then no option is
   locked, and telemetry sends nothing.
 - It has no message channel with the window: what the host tells it arrives as events.

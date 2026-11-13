@@ -395,6 +395,9 @@ The page starts in `web/main.ts`, the same in the window and in a browser:
 - `start` asks the API for the application data and the options, then creates the controllers in their
   order. The modules import them from `main.ts`: a value that a module needs when it is loaded, and not
   when it is called, does not exist yet.
+- A start that fails, at any point, shows `showStartFailure` (`web/view/start-failure.ts`) in place of the
+  page. It has no options to read the language from: it takes the one of the browser, and the two texts it
+  needs from the locale that `findLocale` gives for it.
 - `HostEvents` (`web/controllers/host-events.ts`) reads the events of the host and is where a new kind of
   event is handled. The page has no message channel with the window.
 
@@ -448,8 +451,9 @@ The unit tests of the user interface are in `web/tests`, each at the path of the
 run on [Vitest](https://vitest.dev) in a simulated browser, jsdom
 ([ADR 0016](docs/adr/0016-closed-error-codes-generated-types-and-tests-in-the-user-interface.md)):
 
-- They test the modules that read the contract: `host-fetch`, `host-events`, `host`, and the errors, with
-  the table of their texts. Nothing tests a view, and nothing runs in a real browser (backlog H-07).
+- They test the modules that read the contract, which are `host-fetch`, `host-events`, `host` and the
+  errors with the table of their texts, and what the page does at its start: the sidebar, the theme, the
+  page of a start that failed. No other view has a test, and nothing runs in a real browser (backlog H-07).
 - `main.ts` starts the whole page when it is loaded. A test replaces it, with `vi.mock`, by the parts of
   `tests/main-mock.ts`, which do nothing, and replaces the generated client where the test answers in place
   of the host.

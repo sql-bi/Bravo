@@ -150,6 +150,7 @@ export enum strings {
     errorReportsEmptyListing,
     errorRetry,
     errorSignInMsalExceptionOccurred,
+    errorStart,
     errorTemplateAlreadyExists,
     errorTimeout,
     errorTitle,

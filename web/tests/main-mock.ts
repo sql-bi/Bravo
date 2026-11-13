@@ -16,14 +16,19 @@ import { vi } from 'vitest';
 export function createMainMock(parts: Record<string, unknown> = {}) {
     return {
         application: { version: "1.2.3", isDevelopmentBuild: true, culture: { ietfLanguageTag: "en-US", twoLetterISOLanguageName: "en" } },
-        optionsController: { options: { customOptions: { locale: "en" } }, on: vi.fn(), getOption: vi.fn(), update: vi.fn() },
+        optionsController: {
+            options: { theme: "Auto", diagnosticLevel: "None", customOptions: { locale: "en", sidebarCollapsed: false } },
+            on: vi.fn(),
+            getOption: vi.fn(),
+            update: vi.fn()
+        },
         app: { currentVersion: { toString: () => "1.2.3" } },
         debug: { enabled: false, catchApiCall: (): null => null, catchTelemetryTracking: () => false },
         logger: { log: vi.fn(), updateLog: vi.fn(), logError: vi.fn() },
         telemetry: { enabled: false, track: vi.fn(), trackError: vi.fn() },
-        auth: {},
+        auth: { signedIn: false, on: vi.fn() },
         host: {},
-        themeController: {},
+        themeController: { on: vi.fn() },
         pbiDesktop: {},
         notificationCenter: {},
         hostEvents: {},

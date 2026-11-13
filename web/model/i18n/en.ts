@@ -158,6 +158,7 @@ const locale: Locale = {
         [_.errorReportsEmptyListing]: "No unopened reports available.",
         [_.errorRetry]: "Retry",
         [_.errorSignInMsalExceptionOccurred]: "Unexpected error in the sign-in request.",
+        [_.errorStart]: "Bravo could not start.",
         [_.errorTemplateAlreadyExists]: "Another template with the same path/name already exists: <br><b>{name}</b>",
         [_.errorTimeout]: "Request timeout.",
         [_.errorTitle]: "Whoops...",

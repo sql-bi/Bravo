@@ -482,10 +482,6 @@ export class Host extends Dispatchable {
 
     /* Application */
 
-    changeTheme(theme: hostApi.Theme) {
-        return this.apiCall("api/ChangeTheme", { theme: theme });
-    }
-
     getOptions() {
         return this.apiClientCall("GetOptions", init => hostApi.getOptions(init))
             .then(userOptions => <Options>userOptions);

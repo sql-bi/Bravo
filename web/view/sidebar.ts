@@ -62,7 +62,8 @@ export class Sidebar extends View {
             }
         }
         
-        this.toggle(optionsController.options.customOptions.sidebarCollapsed);
+        // As the options say, and without saving them: the page has just read them
+        this.applyCollapsed(optionsController.options.customOptions.sidebarCollapsed);
 
         this.listen();
     }
@@ -224,17 +225,23 @@ export class Sidebar extends View {
 
     toggle(collapse = !this.collapsed) {
 
+        this.applyCollapsed(collapse);
+        if (collapse)
+            telemetry.track("Collapse Sidebar");
+
+        optionsController.update("customOptions.sidebarCollapsed", collapse);
+    }
+
+    applyCollapsed(collapse: boolean) {
+
         let root = _("#main-pane");
         if (collapse) {
             this.element.classList.add("collapsed");
             root.classList.remove("has-sidebar");
-
-            telemetry.track("Collapse Sidebar");
         } else {
             this.element.classList.remove("collapsed");
             root.classList.add("has-sidebar");
         }
-        optionsController.update("customOptions.sidebarCollapsed", collapse);
         this.collapsed = collapse;
     }
     

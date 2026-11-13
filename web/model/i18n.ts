@@ -23,6 +23,19 @@ export interface LocaleFormatter {
 }
 
 /**
+ * The locale for a language tag, such as the one of a browser: the locale of the tag, or the one of its
+ * language, or English.
+ */
+export function findLocale(languageTag: string): Locale {
+
+    const tag = (languageTag || "").toLowerCase();
+    const candidates = [tag, tag.split(/-|_/)[0], "en"];
+    const key = candidates.find(candidate => Object.prototype.hasOwnProperty.call(locales, candidate));
+
+    return (<Dic<Locale>>locales)[key];
+}
+
+/**
  * I18N
  * 
  * Strings special syntax:

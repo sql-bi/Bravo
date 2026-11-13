@@ -15,6 +15,7 @@ import { PBIDesktop } from './controllers/pbi-desktop';
 import { NotifyCenter } from './controllers/notifications';
 import { Logger } from './controllers/logger';
 import { Debug } from './controllers/debug';
+import { showStartFailure } from './view/start-failure';
 import { ApplicationDetails, DiagnosticLevel, getApplication, getOptions } from './generated/bravo';
 
 // Load Tabulator modules
@@ -22,8 +23,9 @@ import { Tabulator, ColumnCalcsModule, DataTreeModule, FilterModule, FormatModul
 
 Tabulator.registerModule([ColumnCalcsModule, DataTreeModule, FilterModule, FormatModule, InteractionModule, ResizeColumnsModule, ResizeTableModule, SelectRowModule, SortModule, TooltipModule]);
 
-// Until the options are known the page follows the color mode of the system, as the window around it does:
-// nothing flashes in the other mode while the host answers.
+// Until the options are known the page follows the color scheme that it is told: in the window of Bravo the
+// theme of the user, which the host knows already, in a browser the color mode of the system. Nothing flashes
+// in the other mode while the host answers.
 if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches)
     document.body.classList.add("dark");
 
@@ -77,9 +79,9 @@ async function start() {
 }
 
 start().catch(error => {
-    // Nothing of the app exists: the page can only say so
+    // Nothing of the app exists, or not all of it: the page says so in place of the app
     console.error(error);
-    document.querySelector(".root").textContent = `Bravo for Power BI could not start: ${error?.message ?? error}`;
+    showStartFailure(document.querySelector(".root"), error);
 });
 
 export { application, debug, host, optionsController, themeController, auth, telemetry, pbiDesktop, notificationCenter, logger, hostEvents, app };
