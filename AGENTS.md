@@ -242,16 +242,16 @@ To add a route:
    and test each rule through the route: nothing reports a type that the validation does not see.
 5. A use case reports an error that the user interface must tell apart by throwing `BravoException`
    (`Bravo.Core.Errors`) with a member of `ErrorCode`, a new one when none says what happened: the answer
-   is 409 with the name of the member as its code. The first member has the value 1. An error of the route
-   itself is a typed problem result with its status and, as the member `code`, the name of a member of
-   `ApiProblemCode`. The two lists are the codes of the contract: a problem with any other code is answered
-   with the code of its status.
+   is 409 with the name of the member as its code. An error of the route itself is a typed problem result
+   with its status and, as the member `code`, the name of a member of `ApiProblemCode`. The two lists are
+   the codes of the contract: a problem with any other code is answered with the code of its status.
 6. Test it in `tests/Bravo.Api.Tests` on `TestApi`: the API as the application composes it, on a server in
    memory, with a clock that the test moves.
 7. Write the document again and commit `src/Bravo.Api/openapi.json` with the change: until the file matches the
    routes, `OpenApiDocumentTests` fails and says so.
-8. Give a new error code its text in `web/model/problem-texts.ts`: until then no build of `web/` succeeds.
 
+- A new error code has no text in the user interface, and no build of `web/` succeeds until
+  `web/model/problem-texts.ts` has one.
 - An event for the user interface is a new value of `HostEventKind`, an optional member of `HostEvent` with
   its data, and a method of `IHostEventPublisher`. The kinds are not derived types: the document that .NET 10
   produces for a list of derived types is wrong.
@@ -457,7 +457,8 @@ run on [Vitest](https://vitest.dev) in a simulated browser, jsdom
 - `main.ts` starts the whole page when it is loaded. A test replaces it, with `vi.mock`, by the parts of
   `tests/main-mock.ts`, which do nothing, and replaces the generated client where the test answers in place
   of the host.
-- A test moves the clock itself (`vi.useFakeTimers`) and waits for no time.
+- The tests of what happens after a time, such as the waits of `host-events`, move the clock themselves
+  (`vi.useFakeTimers`).
 - Vite reads the sources for the tests, and transforms the namespaces of TypeScript only in part: one that
   exports a variable (`export var`, `export let`) is reported as a warning at every run, and the variable
   is not exported. The other namespaces and the enums of this code are read as webpack reads them.
