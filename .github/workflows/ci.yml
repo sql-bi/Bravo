@@ -119,9 +119,14 @@ jobs:
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: web/package.json
-      # Not blocking yet: the dependencies that ship with the user interface have known advisories. Updating
-      # them, and making this step fail the job, is backlog H-05.
+      # An advisory of any severity in a package that ships with the user interface fails the job.
       - name: Audit the npm packages that ship with the user interface
         working-directory: web
+        run: npm audit --omit=dev
+      # The packages of the build never leave the machine that builds: their advisories are reported, also
+      # when the step above failed, and do not fail the job.
+      - name: Report the advisories of every npm package
+        if: ${{ !cancelled() }}
+        working-directory: web
         continue-on-error: true
-        run: npm audit --omit=dev --audit-level=high
+        run: npm audit
