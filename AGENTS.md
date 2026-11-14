@@ -505,6 +505,14 @@ The tests of the window are in `web/window-tests`, one file `*.spec.ts` for each
   `dotnet test` runs: `BravoProcessTests` starts the same executable. A development build that already runs
   takes the start of a test, which fails and says to close it. The installed application does not matter.
 - A test reads the requests of the page without their headers, and never the token of the host.
+- The tests: the start of the page (`start.spec.ts`), the theme and the diagnostic level in the options
+  (`options.spec.ts`, through the dialog of `options.ts`), a feature that has no route yet
+  (`features.spec.ts`), a second start with the arguments of Power BI Desktop (`activation.spec.ts`).
+- A test waits for an event or a state of the page, never for a time. Only the test of the start waits, 12
+  seconds, to say that nothing else happens: longer than the 10 seconds after which the page asks for the
+  list of the local reports. Its first start is over before the test can attach, so the test loads the page
+  again and watches that start.
+- A test that reads a text of the page reads the English one, which the page shows on an English Windows.
 - No retry: a test that fails only sometimes is a defect. A test that fails keeps its trace and a
   screenshot in `artifacts/window-tests/results`. The fixture traces the page itself: Playwright Test traces
   only the contexts that it creates, and not one that it attached to. A trace holds the headers of the requests, and so the token
