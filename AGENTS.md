@@ -498,10 +498,12 @@ The tests of the window are in `web/window-tests`, one file `*.spec.ts` for each
 - `window-tests/bravo.ts` is the fixture. For each test it starts the application with a new profile of the
   webview, in a temporary folder, and with the DevTools protocol on a port that the engine chooses: the
   application has no option for it. It waits until the engine lists the page, then attaches with
-  `connectOverCDP`, because a page that appears later is not announced to Playwright. It gives the page the
-  size 1280×800, removes the light color scheme that Playwright gives a page by default, so that the page has
-  the one of the window, and waits for its start. At the end it closes the window as a user does, expects
-  exit code 0, waits for the end of the processes of the webview of that profile and removes the folder.
+  `connectOverCDP`, because a page that appears later is not announced to Playwright, and waits until
+  Playwright tells the page at its address: the engine lists the address before the page commits it. It
+  gives the page the size 1280×800, removes the light color scheme that Playwright gives a page by default,
+  so that the page has the one of the window, and waits for its start. At the end it closes the window as a
+  user does, expects exit code 0, waits for the end of the processes of the webview of that profile and
+  removes the folder.
 - `window-tests/webview-settings.ts` gives the webview the two values, and the run says in its log where
   they come from. A process that is not elevated gives them in the environment variables of the WebView2
   runtime, `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS` and `WEBVIEW2_USER_DATA_FOLDER`. An elevated process, whose

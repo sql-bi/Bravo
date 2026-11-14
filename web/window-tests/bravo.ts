@@ -267,9 +267,12 @@ export const test = base.extend<{ bravo: Bravo }, { webView: WebViewSettings }>(
 
             browser = await chromium.connectOverCDP(`http://127.0.0.1:${port}`);
             const context = browser.contexts()[0];
-            const page = context.pages().find(candidate => candidate.url().startsWith(pageOrigin));
-            if (!page)
-                throw new Error('Playwright was not told of the page of the application.');
+
+            // The engine lists the address that the first navigation goes to before the page commits it, and
+            // Playwright tells the address that the page committed: on a slow first start they differ for a while
+            const page = await waitFor('its page to Playwright', started,
+                async () => context.pages().find(candidate => candidate.url().startsWith(pageOrigin)),
+                async () => `Playwright tells the pages ${context.pages().map(candidate => candidate.url()).join(', ') || 'none'}.`);
 
             // Playwright Test traces only the contexts that it creates: this one is traced here, and the trace
             // is kept for a test that fails. It holds the headers of the requests, and so the token of the host.
