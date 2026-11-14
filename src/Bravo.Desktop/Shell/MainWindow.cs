@@ -14,14 +14,21 @@ internal sealed class MainWindow : Form, IMainWindow
     private readonly WebViewHost _webView;
     private readonly ShellExit _exit;
     private readonly IUserSettingsStore _settings;
+    private readonly ISystemAppMode _systemAppMode;
     private (Theme Theme, WindowColors Colors)? _appliedTheme;
     private volatile bool _closeRequested;
 
-    public MainWindow(BuildIdentity identity, WebViewHost webView, ShellExit exit, IUserSettingsStore settings)
+    public MainWindow(
+        BuildIdentity identity,
+        WebViewHost webView,
+        ShellExit exit,
+        IUserSettingsStore settings,
+        ISystemAppMode systemAppMode)
     {
         _webView = webView;
         _exit = exit;
         _settings = settings;
+        _systemAppMode = systemAppMode;
 
         Text = identity.WindowTitle;
         Icon = LoadIcon();
@@ -121,8 +128,7 @@ internal sealed class MainWindow : Form, IMainWindow
     private void ApplyTheme()
     {
         var theme = _settings.Current.Theme;
-        var isSystemDark = Application.SystemColorMode == SystemColorMode.Dark;
-        var colors = WindowColors.For(theme, isSystemDark);
+        var colors = WindowColors.For(theme, _systemAppMode.IsDark);
         if (_appliedTheme == (theme, colors))
         {
             return;

@@ -250,8 +250,15 @@ shows the background of the user interface, so nothing flashes white. Nothing of
 start to the next (backlog S-01).
 
 **Theme.** The window has the theme of the user, at the start and whenever the options change: the settings
-tell that they were replaced, and the window reads them again on its own thread. With `Auto` it has the color
-mode of Windows, and follows it when it changes. The page tells the window nothing: it changes the options.
+tell that they were replaced, and the window reads them again on its own thread. The page tells the window
+nothing: it changes the options.
+
+With `Auto` the window has the color mode that Windows gives to applications, the "default app mode" of its
+color settings, and follows it when it changes. It is not the mode of Windows itself, which colors the
+taskbar and the Start menu: a user can have that one dark and the applications light. The application reads
+the app mode where Windows keeps it for the user, the value that the engine of the webview reads to tell the
+page its color scheme, so the frame and the page agree. It does not ask Windows Forms, which answers light
+on every Windows before 11.
 
 | Part | What the theme sets |
 | --- | --- |

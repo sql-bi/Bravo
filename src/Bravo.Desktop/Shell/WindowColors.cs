@@ -20,7 +20,7 @@ internal sealed record WindowColors
     public required Color Background { get; init; }
 
     /// <param name="theme">The theme that the user chose.</param>
-    /// <param name="isSystemDark">Whether the color mode of Windows is the dark one, which Auto follows.</param>
+    /// <param name="isSystemDark">Whether Windows asks applications to be dark, which Auto follows.</param>
     public static WindowColors For(Theme theme, bool isSystemDark)
     {
         return theme switch
