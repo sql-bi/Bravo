@@ -99,39 +99,39 @@ export function daxName(tableName: string, columnName: string) {
 
 export enum TabularTableFeature {
     None = 0,
-    ExportData = 1 << 400,
+    ExportData = 1 << 16,
     All = ExportData,
 }
 
 export enum TabularTableFeatureUnsupportedReason {
     None = 0,
-    ExportDataNoColumns = 1 << 400,
-    ExportDataNotQueryable = 1 << 401,
+    ExportDataNoColumns = 1 << 16,
+    ExportDataNotQueryable = 1 << 17,
 }
 
 
 export enum TabularDatabaseFeature {
     None = 0,
 
-    AnalyzeModelPage = 1 << 100,
-    AnalyzeModelSynchronize = 1 << 101,
-    AnalyzeModelExportVpax = 1 << 102,
-    AnalyzeModelDeobfuscateVpax = 1 << 103,
+    AnalyzeModelPage = 1 << 4,
+    AnalyzeModelSynchronize = 1 << 5,
+    AnalyzeModelExportVpax = 1 << 6,
+    AnalyzeModelDeobfuscateVpax = 1 << 7,
     AnalyzeModelAll = AnalyzeModelPage | AnalyzeModelSynchronize | AnalyzeModelExportVpax,
 
-    FormatDaxPage = 1 << 200,
-    FormatDaxSynchronize = 1 << 201,
-    FormatDaxUpdateModel = 1 << 202,
-    FormatDaxDeobfuscateVpax = 1 << 203,
+    FormatDaxPage = 1 << 8,
+    FormatDaxSynchronize = 1 << 9,
+    FormatDaxUpdateModel = 1 << 10,
+    FormatDaxDeobfuscateVpax = 1 << 11,
     FormatDaxAll = FormatDaxPage | FormatDaxSynchronize | FormatDaxUpdateModel,
 
-    ManageDatesPage = 1 << 300,
-    ManageDatesSynchronize = 1 << 301,
-    ManageDatesUpdateModel = 1 << 302,
+    ManageDatesPage = 1 << 12,
+    ManageDatesSynchronize = 1 << 13,
+    ManageDatesUpdateModel = 1 << 14,
     ManageDatesAll = ManageDatesPage | ManageDatesSynchronize | ManageDatesUpdateModel,
 
-    ExportDataPage = 1 << 400,
-    ExportDataSynchronize = 1 << 401,
+    ExportDataPage = 1 << 16,
+    ExportDataSynchronize = 1 << 17,
     ExportDataAll = ExportDataPage | ExportDataSynchronize,
 
     AllUpdateModel = FormatDaxUpdateModel | ManageDatesUpdateModel,
@@ -144,7 +144,7 @@ export enum TabularDatabaseFeatureUnsupportedReason {
     ReadOnly = 1 << 1,
     MetadataOnly = 1 << 2,
     XmlaEndpointNotSupported = 1 << 3,
-    ManageDatesAutoDateTimeEnabled = 1 << 300,
-    ManageDatesPBIDesktopModelOnly = 1 << 301,
-    ManageDatesEmptyTableCollection = 1 << 302,
+    ManageDatesAutoDateTimeEnabled = 1 << 12,
+    ManageDatesPBIDesktopModelOnly = 1 << 13,
+    ManageDatesEmptyTableCollection = 1 << 14,
 }
