@@ -36,7 +36,7 @@ opens the options through the new API and the generated client.
 - [ ] H-07 Browser tests of the user interface. Hypothesis: Playwright, against a development build of the
   host and the development server, in continuous integration on Windows. Explore: the same tests against
   the window of the application, through the DevTools protocol of the webview.
-- [ ] H-08 The stylesheet through the CSS support of webpack. css-loader, style-loader,
+- [ ] H-08 The stylesheet through the CSS support of webpack. css-loader,
   mini-css-extract-plugin, css-minimizer-webpack-plugin and source-map-loader are deprecated by their own
   documentation: from version 5.109 webpack parses, extracts and minifies CSS itself, with less-loader
   alone, and `Rule.extractSourceMap` replaces source-map-loader. A prototype built the page that way, and
