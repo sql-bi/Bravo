@@ -497,7 +497,8 @@ The tests of the window are in `web/window-tests`, one file `*.spec.ts` for each
   through environment variables of the WebView2 runtime (`WEBVIEW2_USER_DATA_FOLDER`,
   `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS`): the application has no option for it. It waits until the engine
   lists the page, then attaches with `connectOverCDP`, because a page that appears later is not announced to
-  Playwright. It gives the page the size 1280×800 and waits for its start. At the end it closes the window
+  Playwright. It gives the page the size 1280×800, removes the light color scheme that Playwright gives a
+  page by default, so that the page has the one of the window, and waits for its start. At the end it closes the window
   as a user does, expects exit code 0, waits for the end of the processes of the webview of that profile and
   removes the folder.
 - The application has one instance, so one test runs at a time (`workers: 1`), and never while

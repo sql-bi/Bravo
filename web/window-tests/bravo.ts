@@ -1,6 +1,6 @@
 import { type ChildProcess, execFile, spawn } from 'node:child_process';
-import { existsSync } from 'node:fs';
-import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { existsSync, realpathSync } from 'node:fs';
+import { mkdtemp, readdir, readFile, rm } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
@@ -145,7 +145,7 @@ function checkBuild() {
 }
 
 /** Waits for a value, asking again every tenth of a second, while the application runs. */
-async function waitFor<T>(what: string, application: BravoProcess, probe: () => Promise<T | undefined>): Promise<T> {
+async function waitFor<T>(what: string, application: BravoProcess, probe: () => Promise<T | undefined>, explain = async () => ''): Promise<T> {
     const limit = Date.now() + startSeconds * 1000;
     for (; ;) {
         const value = await probe();
@@ -158,10 +158,16 @@ async function waitFor<T>(what: string, application: BravoProcess, probe: () => 
             throw new Error(`Bravo.exe ended with code ${application.exitCode} before ${what} was there.`);
         }
         if (Date.now() > limit)
-            throw new Error(`Bravo.exe did not show ${what} within ${startSeconds} seconds.`);
+            throw new Error(`Bravo.exe did not show ${what} within ${startSeconds} seconds. ${await explain()}`.trimEnd());
 
         await delay(100);
     }
+}
+
+/** What the folder of the profile holds, to tell why the engine did not answer: the names, never the content. */
+async function describeProfile(profile: string): Promise<string> {
+    const names = async (folder: string) => (await readdir(folder).catch((): string[] => [])).sort().join(', ') || 'nothing';
+    return `${(await webViewProcesses(profile)).length} processes of the webview run with the profile. Its folder holds ${await names(profile)}; its folder EBWebView holds ${await names(path.join(profile, 'EBWebView'))}.`;
 }
 
 /** The port of the DevTools protocol, which the engine writes in its folder of the profile once it listens. */
@@ -225,7 +231,8 @@ export const test = base.extend<{ bravo: Bravo }>({
     bravo: async ({ }, use, testInfo) => {
         checkBuild();
 
-        const profile = await mkdtemp(path.join(os.tmpdir(), 'bravo-window-test-'));
+        // The long path: the temporary folder of a runner of continuous integration is a short 8.3 path
+        const profile = await mkdtemp(path.join(realpathSync.native(os.tmpdir()), 'bravo-window-test-'));
         const application = new BravoProcess([], {
             WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS: '--remote-debugging-port=0',
             WEBVIEW2_USER_DATA_FOLDER: profile
@@ -234,7 +241,7 @@ export const test = base.extend<{ bravo: Bravo }>({
         let browser: Browser | undefined;
         let code: number;
         try {
-            const port = await waitFor('the DevTools protocol', application, () => readDevToolsPort(profile));
+            const port = await waitFor('the DevTools protocol', application, () => readDevToolsPort(profile), () => describeProfile(profile));
             await waitFor('its page', application, () => hasPage(port));
 
             browser = await chromium.connectOverCDP(`http://127.0.0.1:${port}`);
@@ -243,6 +250,10 @@ export const test = base.extend<{ bravo: Bravo }>({
                 throw new Error('Playwright was not told of the page of the application.');
 
             await page.setViewportSize(pageSize);
+
+            // Playwright gives a page the light color scheme unless told otherwise: the page has the one that
+            // the window gives it, from the theme of the user
+            await page.emulateMedia({ colorScheme: null });
 
             // The address only: no test reads the token of the host
             const address = await page.evaluate(() => (<PageWithHost><unknown>window).bravoHost.address);
