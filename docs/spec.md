@@ -130,7 +130,7 @@ to a work branch, on the pull requests to `main` and on request
 | --- | --- | --- |
 | `build-and-test` | Windows | A lock file out of date; a warning of the compiler, of an analyzer or of MSBuild; a failed test |
 | `build-and-test-linux` | Linux | The same, on the projects of `Bravo.Portable.slnf`: the ones that do not target Windows |
-| `build-web` | Linux | `npm ci`; a failed unit test of the user interface; the release build of the user interface, which generates the client of the host API and checks the types: a call that no longer fits the OpenAPI document fails it |
+| `build-web` | Linux | `npm ci`; a failed unit test of the user interface; the release build of the user interface, which generates the client of the host API and checks the types of the sources and of the unit tests before it bundles: a call that no longer fits the OpenAPI document fails it, and so does a type error in a test |
 | `audit` | Windows | A NuGet package with a known vulnerability of any severity, referenced directly or not; vulnerability data that cannot be read; an npm package that ships with the user interface and has a known advisory |
 
 `build-and-test` is the status check that `main` requires: its name does not change. `audit` runs

@@ -98,7 +98,7 @@ jobs:
       # The unit tests of the user interface. The script generates the client of the host API first.
       - name: Test
         run: npm test
-      # The release build also checks the types.
+      # The release build first checks the types of the sources and of the unit tests, then bundles.
       - name: Build the release bundle
         run: npm run build:Release
 

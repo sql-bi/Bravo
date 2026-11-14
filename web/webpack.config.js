@@ -20,7 +20,11 @@ module.exports = (env, argv) => {
       rules: [
         {
           test: /\.tsx?$/,
-          use: 'ts-loader'
+          // tsc checks the types before webpack runs: ts-loader only translates
+          loader: 'ts-loader',
+          options: {
+            transpileOnly: true
+          }
         },
         {
           test: /\.less$/i,

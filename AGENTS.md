@@ -335,7 +335,7 @@ stops after 15 minutes.
 | --- | --- |
 | `build-and-test` | On Windows: the restore in locked mode, the build, the tests |
 | `build-and-test-linux` | The same on Linux, on `Bravo.Portable.slnf`: the projects that do not target Windows |
-| `build-web` | In `web/`: `npm ci`, then `npm test` and `npm run build:Release`, each of which generates the client of the host API first |
+| `build-web` | In `web/`: `npm ci`, then `npm test` and `npm run build:Release`, each of which generates the client of the host API first; the build checks the types of the sources and of the unit tests before webpack runs |
 | `audit` | A restore that fails on a NuGet package with a known vulnerability, then `npm audit` on the packages that ship with the user interface, which fails on an advisory, and on all of them, which reports |
 
 What a run checks beyond the commands of the table above:
@@ -383,13 +383,18 @@ stops with an error on another one.
 | Start a development host for a page in a browser | `npm run serve:host` |
 | Serve the page to a browser, rebuilt at every change | `npm run serve:UI` |
 | Generate the client of the host API alone | `npm run generate:api` |
+| Check the types of the sources and of the unit tests | `npm run check` |
 | Run the unit tests | `npm test` |
 | Run the tests of one file | `npx vitest run tests/controllers/host-fetch.test.ts`, after `npm run generate:api` |
 
-A bundle is `js/main.js` and `css/main.css`; the release build adds `js/main.js.LICENSE.txt`. Every build type
-checks the TypeScript code. `web/wwwroot` holds the static files that go with the bundle (`index.html`, icons,
-fonts, images); git ignores the `js` and `css` folders that the development build adds there. Without
-`--output-path` webpack writes to `artifacts/web` at the root of the repository, which git ignores.
+A bundle is `js/main.js` and `css/main.css`; the release build adds `js/main.js.LICENSE.txt`. Every build script
+first runs `npm run check`, which generates the client of the host API and checks the types with `tsc`, on the
+sources and the unit tests; webpack only translates, with ts-loader in `transpileOnly`
+([ADR 0017](docs/adr/0017-typescript-6-with-the-types-checked-apart-from-the-bundle.md)). `watch:UI` and
+`serve:UI` check once, when they start, and not at each change. `web/wwwroot` holds the static files that go
+with the bundle (`index.html`, icons, fonts, images); git ignores the `js` and `css` folders that the
+development build adds there. Without `--output-path` webpack writes to `artifacts/web` at the root of the
+repository, which git ignores.
 
 The page starts in `web/main.ts`, the same in the window and in a browser:
 
@@ -467,4 +472,5 @@ run on [Vitest](https://vitest.dev) in a simulated browser, jsdom
 - Vite reads the sources for the tests, and transforms the namespaces of TypeScript only in part: one that
   exports a variable (`export var`, `export let`) is reported as a warning at every run, and the variable
   is not exported. The other namespaces and the enums of this code are read as webpack reads them.
-- The tests are in the program of `tsconfig.json`, with the sources: the build checks their types.
+- The tests are in the program of `tsconfig.json`, with the sources: `npm run check`, and so every build,
+  checks their types.

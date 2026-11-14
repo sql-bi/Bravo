@@ -4,6 +4,7 @@
     "target": "es2020",
     "moduleResolution": "bundler",
     "isolatedModules": true,
+    "noEmit": true,
     "skipLibCheck": true,
     "strict": false,
     "noImplicitAny": true,

@@ -14,13 +14,14 @@
   "scripts": {
     "build": "npm run build:Release",
     "generate:api": "orval --config orval.config.mjs",
+    "check": "npm run generate:api && tsc",
     "test": "npm run generate:api && vitest run",
-    "build:Release": "npm run generate:api && webpack --mode production --env production --env configuration=Release",
-    "build:Debug": "npm run generate:api && webpack --mode development --env configuration=Debug",
-    "build:UI": "npm run generate:api && webpack --mode development --output-path wwwroot",
-    "watch:UI": "npm run generate:api && webpack --watch --mode development --output-path wwwroot",
+    "build:Release": "npm run check && webpack --mode production --env production --env configuration=Release",
+    "build:Debug": "npm run check && webpack --mode development --env configuration=Debug",
+    "build:UI": "npm run check && webpack --mode development --output-path wwwroot",
+    "watch:UI": "npm run check && webpack --watch --mode development --output-path wwwroot",
     "serve:host": "node dev-host.mjs",
-    "serve:UI": "npm run generate:api && webpack serve --mode development",
+    "serve:UI": "npm run check && webpack serve --mode development",
     "update:UI": "npm update"
   },
   "devDependencies": {
