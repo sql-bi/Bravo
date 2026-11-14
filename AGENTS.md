@@ -192,7 +192,9 @@ The main window shows the user interface in WebView2
   when `IUserSettingsStore.Changed` says that the settings were replaced, and when Windows says that a
   setting of the system changed. `WindowColors` decides the colors, `ColorModeInterop` asks Windows for
   the frame, and `WebViewHost.ApplyTheme` sets the color scheme of the profile and the background of the
-  control. The tests prove the color scheme with the real engine; the frame is checked by hand.
+  control. The tests prove the color scheme with the real engine; the frame is checked by hand, and on
+  Windows 10 apart: there `MainWindow.ApplyFrame` also asks for the frame to be drawn again
+  (`ColorModeInterop.RedrawFrame`), which no test and no Windows 11 machine runs.
 - The page is `wwwroot` beside the executable. The .NET build never runs npm: a development build copies
   `web/wwwroot` as it is, so the window shows the user interface only after `npm run build:UI` in `web/` and
   a build of `Bravo.Desktop`; without the bundle the window stays empty. A release build copies nothing

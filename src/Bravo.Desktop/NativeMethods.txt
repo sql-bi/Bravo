@@ -3,6 +3,8 @@ DwmSetWindowAttribute
 
 // Windows.Win32.UI.WindowsAndMessaging
 IsIconic
+SendMessage
 SetForegroundWindow
 ShowWindow
+WM_NCACTIVATE
 WM_SETTINGCHANGE

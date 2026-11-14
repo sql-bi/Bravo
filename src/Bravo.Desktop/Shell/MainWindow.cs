@@ -133,8 +133,18 @@ internal sealed class MainWindow : Form, IMainWindow
         _webView.ApplyTheme(theme, colors.Background);
         if (IsHandleCreated)
         {
-            // Where Windows does not know the request, the frame stays as it is.
-            _ = ColorModeInterop.TryUseDarkFrame(Handle, colors.IsDark);
+            ApplyFrame(colors);
+        }
+    }
+
+    // Where Windows does not know the request, the frame stays as it is. A window that is not shown yet
+    // is drawn with its frame when it is shown; one that is shown is drawn again, where Windows does not.
+    private void ApplyFrame(WindowColors colors)
+    {
+        var isApplied = ColorModeInterop.TryUseDarkFrame(Handle, colors.IsDark);
+        if (isApplied && Visible && !ColorModeInterop.RedrawsFrameItself)
+        {
+            ColorModeInterop.RedrawFrame(Handle, isActive: ActiveForm == this);
         }
     }
 

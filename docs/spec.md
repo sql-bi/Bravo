@@ -255,9 +255,21 @@ mode of Windows, and follows it when it changes. The page tells the window nothi
 
 | Part | What the theme sets |
 | --- | --- |
-| The frame of the window, with its title bar | Dark or light, by a request that Windows documents from Windows 11 on (build 22000). Where Windows does not know the request, the frame stays as it is |
+| The frame of the window, with its title bar | Dark or light, by a request to the window manager that Windows documents from Windows 11 on (build 22000). Where Windows does not know the request, the frame stays as it is |
 | The background of the window and of the webview | The background of the user interface in that mode |
 | The webview | The color scheme of its profile, which a page reads as `prefers-color-scheme`: the page has the theme of the user before it has read the options |
+
+On Windows 10 the frame needs two more things, neither of them documented by Windows:
+
+- The request has the same number from version 2004 on, and the number before it from version 1809: the
+  application tries the first and, when Windows refuses it, the second, as
+  [Qt](https://github.com/qt/qtbase/blob/dev/src/plugins/platforms/windows/qwindowswindow.cpp) does.
+- Windows 10 goes on drawing the frame that the window had until the window gains or loses the activation.
+  After a change, a window that is shown is told that its activation changed, and then its real state, as
+  [Electron](https://github.com/electron/electron/blob/main/shell/browser/ui/win/electron_desktop_window_tree_host_win.cc)
+  does. Windows 11 draws the new frame by itself and is told nothing.
+
+The application calls no function that Windows exports by number alone.
 
 **Page.** The webview serves the folder `wwwroot`, beside the executable, under the host name `bravo.invalid`,
 reserved for names that are no site ([RFC 6761](https://www.rfc-editor.org/rfc/rfc6761.html#section-6.4)). No
