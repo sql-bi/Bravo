@@ -165,17 +165,18 @@ async function waitFor<T>(what: string, application: BravoProcess, probe: () => 
 }
 
 /**
- * What tells why the engine did not answer: the title of the window of the application, the data folders of
- * the webviews that run on the machine, and the names of what the folder of the profile holds.
+ * What tells why the engine did not answer: the title of the window of the application, the command lines of
+ * the browser processes of the webviews of Bravo.exe that run on the machine, and the names of what the folder
+ * of the profile holds.
  */
 async function describeStart(application: BravoProcess, profile: string): Promise<string> {
     const names = async (folder: string) => (await readdir(folder).catch((): string[] => [])).sort().join(', ') || 'nothing';
     const script = `
         $title = (Get-Process -Id $env:BRAVO_TEST_PID).MainWindowTitle
-        $folders = Get-CimInstance Win32_Process -Filter "Name = 'msedgewebview2.exe'" |
-            ForEach-Object { if ($_.CommandLine -match '--user-data-dir=("[^"]+"|\\S+)') { $Matches[1].Trim('"') } } |
-            Sort-Object -Unique
-        "The main window of Bravo.exe is titled '$title'. The webviews of the machine run with the data folders: $($folders -join ', ')."`;
+        $browsers = Get-CimInstance Win32_Process -Filter "Name = 'msedgewebview2.exe'" |
+            Where-Object { $_.CommandLine -match 'webview-exe-name=Bravo.exe' -and $_.CommandLine -notmatch ' --type=' } |
+            ForEach-Object { $_.CommandLine }
+        "The main window of Bravo.exe is titled '$title'. The browser processes of the webviews of Bravo.exe run as: $($browsers -join ' | ')."`;
     const { stdout } = await execFileAsync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', script],
         { env: { ...process.env, BRAVO_TEST_PID: String(application.child.pid) } }).catch(error => ({ stdout: String(error) }));
     return `${stdout.trim().replace(/\r?\n/g, ' ')} The folder of the profile holds ${await names(profile)}; its folder EBWebView holds ${await names(path.join(profile, 'EBWebView'))}.`;
