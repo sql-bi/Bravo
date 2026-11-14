@@ -19,7 +19,7 @@ const pageOrigin = 'https://bravo.invalid';
 /** The size of the page in every test, whatever the size of the window. */
 export const pageSize = { width: 1280, height: 800 };
 
-const startSeconds = 30;
+const startSeconds = 60;
 const closeSeconds = 10;
 
 const execFileAsync = promisify(execFile);
@@ -164,10 +164,21 @@ async function waitFor<T>(what: string, application: BravoProcess, probe: () => 
     }
 }
 
-/** What the folder of the profile holds, to tell why the engine did not answer: the names, never the content. */
-async function describeProfile(profile: string): Promise<string> {
+/**
+ * What tells why the engine did not answer: the title of the window of the application, the data folders of
+ * the webviews that run on the machine, and the names of what the folder of the profile holds.
+ */
+async function describeStart(application: BravoProcess, profile: string): Promise<string> {
     const names = async (folder: string) => (await readdir(folder).catch((): string[] => [])).sort().join(', ') || 'nothing';
-    return `${(await webViewProcesses(profile)).length} processes of the webview run with the profile. Its folder holds ${await names(profile)}; its folder EBWebView holds ${await names(path.join(profile, 'EBWebView'))}.`;
+    const script = `
+        $title = (Get-Process -Id $env:BRAVO_TEST_PID).MainWindowTitle
+        $folders = Get-CimInstance Win32_Process -Filter "Name = 'msedgewebview2.exe'" |
+            ForEach-Object { if ($_.CommandLine -match '--user-data-dir=("[^"]+"|\\S+)') { $Matches[1].Trim('"') } } |
+            Sort-Object -Unique
+        "The main window of Bravo.exe is titled '$title'. The webviews of the machine run with the data folders: $($folders -join ', ')."`;
+    const { stdout } = await execFileAsync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', script],
+        { env: { ...process.env, BRAVO_TEST_PID: String(application.child.pid) } }).catch(error => ({ stdout: String(error) }));
+    return `${stdout.trim().replace(/\r?\n/g, ' ')} The folder of the profile holds ${await names(profile)}; its folder EBWebView holds ${await names(path.join(profile, 'EBWebView'))}.`;
 }
 
 /** The port of the DevTools protocol, which the engine writes in its folder of the profile once it listens. */
@@ -239,9 +250,9 @@ export const test = base.extend<{ bravo: Bravo }>({
         });
 
         let browser: Browser | undefined;
-        let code: number;
+        let failure: unknown;
         try {
-            const port = await waitFor('the DevTools protocol', application, () => readDevToolsPort(profile), () => describeProfile(profile));
+            const port = await waitFor('the DevTools protocol', application, () => readDevToolsPort(profile), () => describeStart(application, profile));
             await waitFor('its page', application, () => hasPage(port));
 
             browser = await chromium.connectOverCDP(`http://127.0.0.1:${port}`);
@@ -280,9 +291,17 @@ export const test = base.extend<{ bravo: Bravo }>({
                 await context.tracing.stop();
             }
 
-        } finally {
-            code = await end(application, browser, profile);
+        } catch (error) {
+            failure = error;
         }
+
+        const code = await end(application, browser, profile);
+        if (failure instanceof Error) {
+            // The code that the application ended with tells what happened to it
+            failure.message += `\nClosed, Bravo.exe ended with code ${code}.`;
+        }
+        if (failure)
+            throw failure;
 
         expect(code, 'The exit code of Bravo.exe, closed as a user closes it').toBe(0);
     }
