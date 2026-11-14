@@ -457,7 +457,8 @@ run on [Vitest](https://vitest.dev) in a simulated browser, jsdom
 
 - They test the modules that read the contract, which are `host-fetch`, `host-events`, `host` and the
   errors with the table of their texts, and what the page does at its start: the sidebar, the theme, the
-  page of a start that failed. No other view has a test, and nothing runs in a real browser (backlog H-07).
+  page of a start that failed. They also keep the values of the feature flags of `model/tabular.ts`, which
+  travel with the host. No other view has a test, and nothing runs in a real browser (backlog H-07).
 - `main.ts` starts the whole page when it is loaded. A test replaces it, with `vi.mock`, by the parts of
   `tests/main-mock.ts`, which do nothing, and replaces the generated client where the test answers in place
   of the host.
