@@ -399,11 +399,11 @@ stops with an error on another one.
 
 A bundle is `js/main.js` and `css/main.css`; the release build adds `js/main.js.LICENSE.txt`. Every build script
 first runs `npm run check`, which generates the client of the host API and checks the types with `tsc`, on the
-sources and the unit tests, then on the tests of the window; webpack only translates, with ts-loader in `transpileOnly`
-([ADR 0017](docs/adr/0017-typescript-6-with-the-types-checked-apart-from-the-bundle.md)). `watch:UI` and
-`serve:UI` check once, when they start, and not at each change. `web/wwwroot` holds the static files that go
-with the bundle (`index.html`, icons, fonts, images); git ignores the `js` and `css` folders that the
-development build adds there. Without `--output-path` webpack writes to `artifacts/web` at the root of the
+sources and the unit tests, then on the tests of the window; webpack only translates, with ts-loader in
+`transpileOnly` ([ADR 0017](docs/adr/0017-typescript-6-with-the-types-checked-apart-from-the-bundle.md)).
+`watch:UI` and `serve:UI` check once, when they start, and not at each change. `web/wwwroot` holds the static
+files that go with the bundle (`index.html`, icons, fonts, images); git ignores the `js` and `css` folders that
+the development build adds there. Without `--output-path` webpack writes to `artifacts/web` at the root of the
 repository, which git ignores.
 
 The page starts in `web/main.ts`, the same in the window and in a browser:
