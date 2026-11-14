@@ -64,9 +64,9 @@ export enum OptionType {
     custom
 }
 
-export module Renderer {
+export namespace Renderer {
 
-    export module Text {
+    export namespace Text {
 
         export function renderExpandable(text: string, maxLength: number, thresholdLength?: number, more?: string, less?: string) {
             if (!thresholdLength) thresholdLength = maxLength;
@@ -87,7 +87,7 @@ export module Renderer {
         }
     }
     
-    export module Options {
+    export namespace Options {
 
         export function render(struct: OptionStruct, element: HTMLElement, store: OptionsStore<any>) {
 

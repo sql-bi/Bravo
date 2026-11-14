@@ -5,7 +5,7 @@
 */
 
 // Utils
-export module Utils {
+export namespace Utils {
 
     export enum ResponseStatusCode {
         NotAuthorized = 401,
@@ -16,7 +16,7 @@ export module Utils {
         InternalError = 500
     }
 
-    export module Request {
+    export namespace Request {
 
         // Load local scripts
         export function loadScript(src: string, callback: any) {
@@ -33,7 +33,7 @@ export module Utils {
         }
     }
 
-    export module Text {
+    export namespace Text {
 
         export function slugify(text: string): string {
             return text.toLowerCase().replace(/\s|\.|\/|\\|_/g, '-').replace(/'|"/g, '').replace(/\[|\]/g, '-');
@@ -89,7 +89,7 @@ export module Utils {
         }
     }
 
-    export module DOM {
+    export namespace DOM {
         export interface FontInfo {
             fontFamily: string;
             fontSize: number;
@@ -121,7 +121,7 @@ export module Utils {
         }
     }
 
-    export module Format {
+    export namespace Format {
 
         export function bytes(value: number, locale = "en", decimals = 2, base = 0): string {
   
@@ -185,7 +185,7 @@ export module Utils {
         }
     }
 
-    export module Color {
+    export namespace Color {
 
         export interface rgbColor {
             r: number,
@@ -396,7 +396,7 @@ export module Utils {
         }
     }
 
-    export module Obj {
+    export namespace Obj {
 
         // Clone object - memory eager!
         export function clone(obj: any) {
@@ -572,7 +572,7 @@ export module Utils {
 
     }
 
-    export module Platform {
+    export namespace Platform {
         export const isMac = (navigator.userAgent.toLowerCase().indexOf('mac') > -1);
 
         export function saveAs(blob: Blob, fileName: string) {
