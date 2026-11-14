@@ -116,11 +116,11 @@ export class ManageDatesSceneCalendar extends ManageDatesScenePane {
                             telemetry.track("Manage Dates: Load Custom Template");
                             return dateConfiguration;
                         })
-                        .catch(ignore => null);
+                        .catch((ignore): null => null);
                 }
                 return null;
             })
-            .catch((error: AppError) => {
+            .catch((error: AppError): null => {
                 const alert = new ErrorAlert(error, i18n(strings.error));
                 alert.show();
                 try { logger.logError(error); } catch(ignore) {}

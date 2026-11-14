@@ -99,7 +99,7 @@ export class ManageDatesPreviewScene extends DocScene {
 
             (<any>changes)[`${group}Objects`].forEach((table: TableChanges) => {
 
-                let tableAttribute = groupAttribute;
+                let tableAttribute: ChangeType = groupAttribute;
 
                 if ((table.columns && table.columns.length) || (table.hierarchies && table.hierarchies.length)) {
                     if (!(table.name in branches)) {
@@ -129,7 +129,7 @@ export class ManageDatesPreviewScene extends DocScene {
 
                             let id = daxName(table.name, column.name);
 
-                            let columnAttribute = tableAttribute;
+                            let columnAttribute: ChangeType = tableAttribute;
                             if (columnAttribute == ChangeType.Modified) {
                                 if (this.doc.model.columns.findIndex(c => c.name === id) < 0)
                                     columnAttribute = ChangeType.Added;
@@ -236,7 +236,7 @@ export class ManageDatesPreviewScene extends DocScene {
 
                             if (folder.trim() == "" || !b) return;
                             
-                            let folderAttributes = groupAttribute;
+                            let folderAttributes: ChangeType = groupAttribute;
                             let pathExistsInOtherMeasures = (this.doc.measures.findIndex(m => m.tableName === table.name && m.displayFolder.startsWith(path)) >= 0);
                             if (pathExistsInOtherMeasures) {
                                 if (folderAttributes == ChangeType.Deleted)
@@ -265,7 +265,7 @@ export class ManageDatesPreviewScene extends DocScene {
                             
                         });
 
-                        let measureAttributes = groupAttribute;
+                        let measureAttributes: ChangeType = groupAttribute;
                         if (measureAttributes == ChangeType.Modified) {
                             if (this.doc.measures.findIndex(m => m.tableName === table.name && m.name === measure.name) < 0)
                                 measureAttributes = ChangeType.Added;
