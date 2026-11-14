@@ -25,8 +25,9 @@ export default defineConfig({
         ? [['list'], ['html', { outputFolder: path.join(output, 'report'), open: 'never' }]]
         : [['list']],
 
+    // The fixture traces the page of a test and keeps the trace when the test fails: Playwright Test traces
+    // only the contexts that it creates
     use: {
-        // A trace holds the headers of the requests, and so the token of the host of that test
-        trace: 'retain-on-failure'
+        trace: 'off'
     }
 });

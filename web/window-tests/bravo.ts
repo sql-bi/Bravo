@@ -245,9 +245,14 @@ export const test = base.extend<{ bravo: Bravo }>({
             await waitFor('its page', application, () => hasPage(port));
 
             browser = await chromium.connectOverCDP(`http://127.0.0.1:${port}`);
-            const page = browser.contexts()[0].pages().find(candidate => candidate.url().startsWith(pageOrigin));
+            const context = browser.contexts()[0];
+            const page = context.pages().find(candidate => candidate.url().startsWith(pageOrigin));
             if (!page)
                 throw new Error('Playwright was not told of the page of the application.');
+
+            // Playwright Test traces only the contexts that it creates: this one is traced here, and the trace
+            // is kept for a test that fails. It holds the headers of the requests, and so the token of the host.
+            await context.tracing.start({ title: testInfo.title, screenshots: true, snapshots: true });
 
             await page.setViewportSize(pageSize);
 
@@ -263,8 +268,17 @@ export const test = base.extend<{ bravo: Bravo }>({
 
             await use(bravo);
 
-            if (testInfo.status !== testInfo.expectedStatus)
-                await testInfo.attach('screenshot', { body: await page.screenshot(), contentType: 'image/png' });
+            if (testInfo.status !== testInfo.expectedStatus) {
+                const screenshot = testInfo.outputPath('screenshot.png');
+                await page.screenshot({ path: screenshot });
+                const trace = testInfo.outputPath('trace.zip');
+                await context.tracing.stop({ path: trace });
+                testInfo.attachments.push(
+                    { name: 'screenshot', path: screenshot, contentType: 'image/png' },
+                    { name: 'trace', path: trace, contentType: 'application/zip' });
+            } else {
+                await context.tracing.stop();
+            }
 
         } finally {
             code = await end(application, browser, profile);

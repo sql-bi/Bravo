@@ -506,7 +506,8 @@ The tests of the window are in `web/window-tests`, one file `*.spec.ts` for each
   takes the start of a test, which fails and says to close it. The installed application does not matter.
 - A test reads the requests of the page without their headers, and never the token of the host.
 - No retry: a test that fails only sometimes is a defect. A test that fails keeps its trace and a
-  screenshot in `artifacts/window-tests/results`. A trace holds the headers of the requests, and so the token
+  screenshot in `artifacts/window-tests/results`. The fixture traces the page itself: Playwright Test traces
+  only the contexts that it creates, and not one that it attached to. A trace holds the headers of the requests, and so the token
   of the host of that test, whose process has ended.
 - `playwright.config.ts` takes the files `*.spec.ts` of `window-tests` only, and Vitest the files `*.test.ts`
   of `tests` only. The tests of the window run in Node.js: they and the configuration are a program of their
