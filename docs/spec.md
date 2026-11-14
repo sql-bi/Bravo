@@ -82,7 +82,7 @@ The top-level folders separate content by kind ([ADR 0008](adr/0008-repository-l
 | `installer/` | The installer, outside the product source |
 | `policies/` | The group policy templates, which the installer ships in a subfolder of the installation |
 | `docs/` | This specification, the backlog and the ADRs |
-| `artifacts/` | Build and publish output of every project and the release bundle of the user interface, not versioned |
+| `artifacts/` | Build and publish output of every project, the release bundle of the user interface and the results of the tests of the window, not versioned |
 
 One solution, `Bravo.slnx`, sits at the root with the build files shared by every project. A component with
 its own toolchain gets its own top-level folder; a .NET one goes into `src/` and `tests/`.
@@ -511,6 +511,33 @@ button that loads the page again.
   remembers, the update check, the reading of the diagnostics of the host, and the list of the reports that
   are open in Power BI Desktop. They fail like every call without a route, and the page shows nothing and
   writes nothing in its console for them.
+
+### Tests of the user interface
+
+Two kinds of tests prove the user interface
+([ADR 0016](adr/0016-closed-error-codes-generated-types-and-tests-in-the-user-interface.md),
+[ADR 0018](adr/0018-tests-of-the-user-interface-in-the-window-with-playwright.md)):
+
+| Kind | Where they run | What they prove |
+| --- | --- | --- |
+| Unit tests, on Vitest | In Node.js, in a simulated browser | The modules that read the contract, and the start of the page, with the host replaced |
+| Tests of the window, on Playwright Test | In the window of `Bravo.exe`, on Windows | The page that ships, inside the shell that ships, against its own host |
+
+A test of the window starts the executable that the build wrote, with the development bundle beside it, and
+drives its webview through the DevTools protocol. The test opens the protocol, on a port that the engine
+chooses, and gives the webview a new profile, through two environment variables of the WebView2 runtime: the
+application never opens the port by itself and has no option for it. Each test has an application of its
+own, which it closes as a user closes it and which must end with exit code 0; no process of the application
+or of its webview outlives the test, and neither does the profile.
+
+- The page has a fixed size in every test, 1280×800, whatever the size of the window, and a test can take a
+  screenshot of it. The repository keeps no reference image: the rendering changes with the machine. A
+  visual comparison is made between two builds in one run (backlog H-08).
+- The application has one instance: one test runs at a time, and the tests do not run together with the
+  tests of the host, which start the same executable. A development build that already runs takes the start
+  of a test: the test fails and says so.
+- A test never reads the token of the host. A trace of a failed test holds the headers of its requests, and
+  so the token of the host of that test, whose process has ended.
 
 ## Open questions
 

@@ -1,0 +1,15 @@
+{
+  // The tests of the window and their configuration run in Node.js, and the functions that they give to the
+  // page run in the page: the types of Node.js are here, and not in the program of the sources
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "types": [
+      "node"
+    ]
+  },
+  "include": [
+    "**/*.ts",
+    "../playwright.config.ts"
+  ],
+  "exclude": []
+}

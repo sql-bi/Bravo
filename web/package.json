@@ -14,8 +14,9 @@
   "scripts": {
     "build": "npm run build:Release",
     "generate:api": "orval --config orval.config.mjs",
-    "check": "npm run generate:api && tsc",
+    "check": "npm run generate:api && tsc && tsc -p window-tests",
     "test": "npm run generate:api && vitest run",
+    "test:window": "playwright test",
     "build:Release": "npm run check && webpack --mode production --env production --env configuration=Release",
     "build:Debug": "npm run check && webpack --mode development --env configuration=Debug",
     "build:UI": "npm run check && webpack --mode development --output-path wwwroot",
@@ -25,8 +26,10 @@
     "update:UI": "npm update"
   },
   "devDependencies": {
+    "@playwright/test": "^1.65.1",
     "@types/codemirror": "^5.60.17",
     "@types/draggabilly": "^2.1.6",
+    "@types/node": "^26.6.6",
     "@types/sanitize-html": "^2.16.0",
     "css-loader": "^6.11.0",
     "css-minimizer-webpack-plugin": "^8.0.0",

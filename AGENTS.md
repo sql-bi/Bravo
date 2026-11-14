@@ -82,7 +82,7 @@ not exist yet: the table names the backlog item that creates them.
 | `installer/` | The installer | Created by backlog D-01 |
 | `policies/` | The group policy templates: `bravo.admx`, `sqlbi.admx`, `en-US/` | Exists |
 | `docs/` | Specification, backlog, ADRs, and the design of the previous implementation | Exists |
-| `artifacts/` | Build and publish output of every project and the release bundle of the user interface, ignored by git | Written by the builds |
+| `artifacts/` | Build and publish output of every project, the release bundle of the user interface and the results of the tests of the window, ignored by git | Written by the builds and the tests |
 | `Bravo.slnx`, `Directory.Build.props`, `Directory.Packages.props` | The solution and the build rules of every .NET project | Exist |
 | `Bravo.Portable.slnf` | The projects of the solution that do not target Windows, which continuous integration builds and tests on Linux | Exists |
 | `Directory.Build.targets` | What is done to every .NET project after its packages: the reference that the WebView2 package adds to its WPF control is removed | Exists |
@@ -383,13 +383,15 @@ stops with an error on another one.
 | Start a development host for a page in a browser | `npm run serve:host` |
 | Serve the page to a browser, rebuilt at every change | `npm run serve:UI` |
 | Generate the client of the host API alone | `npm run generate:api` |
-| Check the types of the sources and of the unit tests | `npm run check` |
+| Check the types of the sources and of the tests | `npm run check` |
 | Run the unit tests | `npm test` |
 | Run the tests of one file | `npx vitest run tests/controllers/host-fetch.test.ts`, after `npm run generate:api` |
+| Run the tests of the window, after the two builds that they need | `npm run test:window` |
+| Run the tests of the window of one file | `npx playwright test window-tests/start.spec.ts` |
 
 A bundle is `js/main.js` and `css/main.css`; the release build adds `js/main.js.LICENSE.txt`. Every build script
 first runs `npm run check`, which generates the client of the host API and checks the types with `tsc`, on the
-sources and the unit tests; webpack only translates, with ts-loader in `transpileOnly`
+sources and the unit tests, then on the tests of the window; webpack only translates, with ts-loader in `transpileOnly`
 ([ADR 0017](docs/adr/0017-typescript-6-with-the-types-checked-apart-from-the-bundle.md)). `watch:UI` and
 `serve:UI` check once, when they start, and not at each change. `web/wwwroot` holds the static files that go
 with the bundle (`index.html`, icons, fonts, images); git ignores the `js` and `css` folders that the
@@ -463,8 +465,8 @@ run on [Vitest](https://vitest.dev) in a simulated browser, jsdom
 - They test the modules that read the contract, which are `host-fetch`, `host-events`, `host` and the
   errors with the table of their texts, and what the page does at its start: the sidebar, the theme, the
   page of a start that failed. They also keep the values of the feature flags of `model/tabular.ts`, which
-  travel with the host, and the text that `sanitize-html` leaves of a name. No other view has a test, and
-  nothing runs in a real browser (backlog H-07).
+  travel with the host, and the text that `sanitize-html` leaves of a name. No other view has a unit test:
+  what the page does in a real engine is the matter of the tests of the window.
 - `main.ts` starts the whole page when it is loaded. A test replaces it, with `vi.mock`, by the parts of
   `tests/main-mock.ts`, which do nothing, and replaces the generated client where the test answers in place
   of the host.
@@ -475,3 +477,31 @@ run on [Vitest](https://vitest.dev) in a simulated browser, jsdom
   is not exported. The other namespaces and the enums of this code are read as webpack reads them.
 - The tests are in the program of `tsconfig.json`, with the sources: `npm run check`, and so every build,
   checks their types.
+
+The tests of the window are in `web/window-tests`, one file `*.spec.ts` for each part of the page, and run on
+[Playwright Test](https://playwright.dev) against the window of the application
+([ADR 0018](docs/adr/0018-tests-of-the-user-interface-in-the-window-with-playwright.md)):
+
+- They start the `Bravo.exe` that the build wrote, `artifacts/bin/Bravo.Desktop/release/Bravo.exe`, which
+  shows the development bundle that its build copied beside it. Before them: in `web/`, `npm run build:UI`;
+  then, at the root, `dotnet build src/Bravo.Desktop -c Release`. Without the executable or the bundle a test
+  fails with these two commands. They need Windows and the WebView2 runtime, and no browser of Playwright:
+  `npx playwright install` is not needed.
+- `window-tests/bravo.ts` is the fixture. For each test it starts the application with a new profile of the
+  webview, in a temporary folder, and with the DevTools protocol on a port that the engine chooses, both
+  through environment variables of the WebView2 runtime (`WEBVIEW2_USER_DATA_FOLDER`,
+  `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS`): the application has no option for it. It waits until the engine
+  lists the page, then attaches with `connectOverCDP`, because a page that appears later is not announced to
+  Playwright. It gives the page the size 1280×800 and waits for its start. At the end it closes the window
+  as a user does, expects exit code 0, waits for the end of the processes of the webview of that profile and
+  removes the folder.
+- The application has one instance, so one test runs at a time (`workers: 1`), and never while
+  `dotnet test` runs: `BravoProcessTests` starts the same executable. A development build that already runs
+  takes the start of a test, which fails and says to close it. The installed application does not matter.
+- A test reads the requests of the page without their headers, and never the token of the host.
+- No retry: a test that fails only sometimes is a defect. A test that fails keeps its trace and a
+  screenshot in `artifacts/window-tests/results`. A trace holds the headers of the requests, and so the token
+  of the host of that test, whose process has ended.
+- `playwright.config.ts` takes the files `*.spec.ts` of `window-tests` only, and Vitest the files `*.test.ts`
+  of `tests` only. The tests of the window run in Node.js: they and the configuration are a program of their
+  own, `window-tests/tsconfig.json`, with the types of Node.js, which the sources do not get.

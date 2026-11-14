@@ -14,5 +14,11 @@
   },
   "include": [
     "**/*.ts"
+  ],
+  // The tests of the window run in Node.js, not in the page: window-tests/tsconfig.json checks them
+  "exclude": [
+    "node_modules",
+    "window-tests",
+    "playwright.config.ts"
   ]
 }
