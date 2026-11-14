@@ -12,17 +12,40 @@ criterion can be checked on `develop-vnext`.
 Exit: the new executable starts, a second start activates the first, it shows the current user interface and
 opens the options through the new API and the generated client.
 
-- [ ] H-07 Browser tests of the user interface. Hypothesis: Playwright, against a development build of the
-  host and the development server, in continuous integration on Windows. Explore: the same tests against
-  the window of the application, through the DevTools protocol of the webview.
+- [ ] H-07 Tests of the user interface in the window of the application. Decided by the maintainer; the ADR
+  is the first commit of the work branch:
+  - The tests drive the window of `Bravo.exe`, through the DevTools protocol of its webview: the page that
+    ships, inside the shell that ships, against its own host. They do not drive the page in a browser: from
+    the development server it needs three processes, and it is not what ships.
+  - The runner is Playwright Test, which attaches to the webview and downloads no browser.
+  - The repository keeps no reference image: the rendering changes with the machine. A visual comparison is
+    made between two builds, in one run on one machine; H-08 is the first to make one.
+  - Continuous integration runs the tests in a job of its own, on Windows, which builds the bundle and the
+    application first.
+
+  Also:
+  - A prototype proved the way on a development machine. The page is there 1.3 seconds after the start of
+    the application. A test sets the size of the page, whatever the size of the window. A click, a select,
+    the answers of the host, the console and a screenshot work over the DevTools protocol. Playwright
+    attaches after the page exists: a page that appears later is not announced to it.
+  - First tests: the start, with a clean console and no option saved; the options, with a change of the
+    theme and of the diagnostic level; the error of a feature that is not available yet; a second start
+    with arguments, which reaches the page as an activation.
+  - A new application for each test, with a webview profile of its own. The tests are part of the program
+    that `npm run check` checks.
+  - A development build that already runs takes the start of the tests, as it takes the one of
+    `serve:host`: the tests stop and say so.
+  - No official source says that a webview can be driven on a hosted Windows runner: it is the first thing
+    to prove, on continuous integration.
 - [ ] H-08 The stylesheet through the CSS support of webpack. css-loader,
   mini-css-extract-plugin, css-minimizer-webpack-plugin and source-map-loader are deprecated by their own
   documentation: from version 5.109 webpack parses, extracts and minifies CSS itself, with less-loader
   alone, and `Rule.extractSourceMap` replaces source-map-loader. A prototype built the page that way, and
   the stylesheet was not the same text: the minimizer of webpack wrote a declaration differently in 229
   selectors of 1734, removing and adding vendor prefixes and rewriting colors and shorthands; 5 selectors
-  with a vendor prefix were gone; the license comments moved to a file of their own. After H-07: the browser
-  tests compare the page before and after. Also: the files of the bundle change, and D-01 lists them.
+  with a vendor prefix were gone; the license comments moved to a file of their own. After H-07: its tests
+  take the same screens from a build with the stylesheet of today and from one with the new one, in one
+  run, and compare them. Also: the files of the bundle change, and D-01 lists them.
 - [ ] H-09 TypeScript 7, the native compiler. Not before TypeScript 7.1 and ts-loader 10 are released: 7.0
   has no API, 7.1 has a new one, and ts-loader 10 requires it. Hypothesis: the check of the types moves to
   the native `tsc`, and ts-loader 10 translates.
@@ -69,7 +92,8 @@ crash produces a report, telemetry runs on a supported SDK.
   the store behind `GET` and `PUT /options` is in memory, so the options start from their defaults at every
   start; a save that fails is an error with a code of its own; the registry value of 1.0.x that hides the
   version in the title of the window (`applicationTitleVersionHidden`), which 1.1.0 does not read; the size
-  and the position of the window, which are not kept.
+  and the position of the window, which are not kept; the tests of the user interface (H-07), which start
+  the application: once the settings are kept on disk they need a data folder of their own.
 - [ ] S-02 Policies. Hypothesis: the same keys; the templates shipped in a subfolder of the installation. Also:
   `/options` knows no policy, so an option that a policy sets is returned and replaced like any other; the
   page starts with no policy, so its options dialog locks nothing.
