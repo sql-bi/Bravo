@@ -12,31 +12,6 @@ criterion can be checked on `develop-vnext`.
 Exit: the new executable starts, a second start activates the first, it shows the current user interface and
 opens the options through the new API and the generated client.
 
-- [ ] H-07 Tests of the user interface in the window of the application. Decided by the maintainer; the ADR
-  is the first commit of the work branch:
-  - The tests drive the window of `Bravo.exe`, through the DevTools protocol of its webview: the page that
-    ships, inside the shell that ships, against its own host. They do not drive the page in a browser: from
-    the development server it needs three processes, and it is not what ships.
-  - The runner is Playwright Test, which attaches to the webview and downloads no browser.
-  - The repository keeps no reference image: the rendering changes with the machine. A visual comparison is
-    made between two builds, in one run on one machine; H-08 is the first to make one.
-  - Continuous integration runs the tests in a job of its own, on Windows, which builds the bundle and the
-    application first.
-
-  Also:
-  - A prototype proved the way on a development machine. The page is there 1.3 seconds after the start of
-    the application. A test sets the size of the page, whatever the size of the window. A click, a select,
-    the answers of the host, the console and a screenshot work over the DevTools protocol. Playwright
-    attaches after the page exists: a page that appears later is not announced to it.
-  - First tests: the start, with a clean console and no option saved; the options, with a change of the
-    theme and of the diagnostic level; the error of a feature that is not available yet; a second start
-    with arguments, which reaches the page as an activation.
-  - A new application for each test, with a webview profile of its own. The tests are part of the program
-    that `npm run check` checks.
-  - A development build that already runs takes the start of the tests, as it takes the one of
-    `serve:host`: the tests stop and say so.
-  - No official source says that a webview can be driven on a hosted Windows runner: it is the first thing
-    to prove, on continuous integration.
 - [ ] H-08 The stylesheet through the CSS support of webpack. css-loader,
   mini-css-extract-plugin, css-minimizer-webpack-plugin and source-map-loader are deprecated by their own
   documentation: from version 5.109 webpack parses, extracts and minifies CSS itself, with less-loader
