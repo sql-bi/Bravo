@@ -239,7 +239,8 @@ interface PageWithHost {
 
 export const test = base.extend<{ bravo: Bravo }>({
 
-    bravo: async ({ }, use, testInfo) => {
+    // The start and the end of the application have a time of their own, which the test does not share
+    bravo: [async ({ }, use, testInfo) => {
         checkBuild();
 
         // The long path: the temporary folder of a runner of continuous integration is a short 8.3 path
@@ -298,13 +299,13 @@ export const test = base.extend<{ bravo: Bravo }>({
         const code = await end(application, browser, profile);
         if (failure instanceof Error) {
             // The code that the application ended with tells what happened to it
-            failure.message += `\nClosed, Bravo.exe ended with code ${code}.`;
+            failure.message += `\nBravo.exe ended with code ${code}.`;
         }
         if (failure)
             throw failure;
 
         expect(code, 'The exit code of Bravo.exe, closed as a user closes it').toBe(0);
-    }
+    }, { timeout: (2 * startSeconds + 3 * closeSeconds) * 1000 }]
 });
 
 export { expect };
