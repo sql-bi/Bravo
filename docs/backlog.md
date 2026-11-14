@@ -12,27 +12,6 @@ criterion can be checked on `develop-vnext`.
 Exit: the new executable starts, a second start activates the first, it shows the current user interface and
 opens the options through the new API and the generated client.
 
-- [ ] H-06 TypeScript 6.0. Decided by the maintainer; the ADR is the first commit of the work branch:
-  - The types are checked by a command of its own, `tsc --noEmit`, on the sources and the unit tests
-    together, and webpack only translates: ts-loader with `transpileOnly`. Every build script runs the check
-    first, as it runs the generation of the client; `watch:UI` and `serve:UI` run it once, when they start.
-    Today ts-loader checks and translates, and no build checks the tests.
-  - TypeScript 6.0 with the strictness of today, written out: `strict` off, `noImplicitAny` on, and the
-    three options of `strict` that report nothing today, `strictBindCallApply`, `noImplicitThis` and
-    `alwaysStrict`.
-  - Of the tools of the stylesheet, only what an exact comparison of the stylesheet proves: style-loader,
-    which no rule of the build uses, is removed, and less-loader is updated. The others wait for H-08.
-
-  Also:
-  - TypeScript 6.0.3 reports 47 errors in the sources with `strict` off, and none in the tests: the 11
-    namespaces written with the `module` keyword; 11 calls of a namespace import (`import * as`), each of
-    which becomes a default import; 19 shifts by more than 31 bits in `model/tabular.ts`, each written as
-    the value that it has already, with a test that keeps the values; 4 variables that 6.0 infers more
-    narrowly and 2 functions that return only `null`, which get their type written out.
-  - `tsconfig.json`: `moduleResolution` `bundler`, `isolatedModules`, `skipLibCheck`, the sources and the
-    tests named in `include`; no `allowJs`, `jsx` or `outDir`, which nothing uses. With `allowJs` the
-    configuration files of the build are part of the program today.
-  - ts-loader 9.6: its version 9.5.7 fixed an error with TypeScript 6.0.
 - [ ] H-07 Browser tests of the user interface. Hypothesis: Playwright, against a development build of the
   host and the development server, in continuous integration on Windows. Explore: the same tests against
   the window of the application, through the DevTools protocol of the webview.
