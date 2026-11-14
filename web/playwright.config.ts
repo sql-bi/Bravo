@@ -20,6 +20,10 @@ export default defineConfig({
     retries: 0,
 
     timeout: 60_000,
+
+    // On a runner of GitHub Actions, the policies that a test gives the webview are taken back once more here
+    globalTeardown: './window-tests/global-teardown.ts',
+
     outputDir: path.join(output, 'results'),
     reporter: process.env.CI
         ? [['list'], ['html', { outputFolder: path.join(output, 'report'), open: 'never' }]]

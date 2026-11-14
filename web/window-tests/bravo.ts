@@ -6,11 +6,12 @@ import path from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import { promisify } from 'node:util';
 import { type Browser, chromium, expect, type Page, test as base } from '@playwright/test';
+import { chooseWebViewSettings, profilePrefix, type WebViewSettings } from './webview-settings';
 
 // The fixture of the tests of the window: it starts the Bravo.exe that the build wrote, with a new profile of
 // the webview and the DevTools protocol on a port that the engine chooses, attaches Playwright to the page, and
-// closes the application as a user does. Nothing of the application changes for a test: the two environment
-// variables are read by the WebView2 runtime, and the application passes no browser argument of its own.
+// closes the application as a user does. Nothing of the application changes for a test: the two values are read
+// by the WebView2 runtime (webview-settings.ts), and the application passes no browser argument of its own.
 
 const executable = path.join(__dirname, '..', '..', 'artifacts', 'bin', 'Bravo.Desktop', 'release', 'Bravo.exe');
 const bundle = path.join(path.dirname(executable), 'wwwroot', 'js', 'main.js');
@@ -220,9 +221,9 @@ async function waitForWebViewEnd(profile: string) {
 }
 
 /** Closes the application, waits for the end of its webview and removes its profile; returns the exit code. */
-async function end(application: BravoProcess, browser: Browser | undefined, profile: string): Promise<number> {
+async function end(application: BravoProcess | undefined, browser: Browser | undefined, profile: string): Promise<number | undefined> {
     try {
-        return await application.close();
+        return await application?.close();
     } finally {
         // Only now: closing a browser of the DevTools protocol would end the processes of the webview
         await browser?.close().catch(() => { });
@@ -238,24 +239,31 @@ interface PageWithHost {
     bravoHost: { address: string }
 }
 
-export const test = base.extend<{ bravo: Bravo }>({
+export const test = base.extend<{ bravo: Bravo }, { webView: WebViewSettings }>({
+
+    // Decided once for the tests of a worker, and said in the log of the run
+    webView: [async ({ }, use) => {
+        const webView = await chooseWebViewSettings();
+        console.log(`The webview of Bravo.exe gets the DevTools port and the profile from ${webView.source}.`);
+        await use(webView);
+    }, { scope: 'worker' }],
 
     // The start and the end of the application have a time of their own, which the test does not share
-    bravo: [async ({ }, use, testInfo) => {
+    bravo: [async ({ webView }, use, testInfo) => {
         checkBuild();
 
         // The long path: the temporary folder of a runner of continuous integration is a short 8.3 path
-        const profile = await mkdtemp(path.join(realpathSync.native(os.tmpdir()), 'bravo-window-test-'));
-        const application = new BravoProcess([], {
-            WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS: '--remote-debugging-port=0',
-            WEBVIEW2_USER_DATA_FOLDER: profile
-        });
+        const profile = await mkdtemp(path.join(realpathSync.native(os.tmpdir()), profilePrefix));
 
+        let application: BravoProcess | undefined;
         let browser: Browser | undefined;
         let failure: unknown;
         try {
-            const port = await waitFor('the DevTools protocol', application, () => readDevToolsPort(profile), () => describeStart(application, profile));
-            await waitFor('its page', application, () => hasPage(port));
+            const started = new BravoProcess([], await webView.give(profile));
+            application = started;
+
+            const port = await waitFor('the DevTools protocol', started, () => readDevToolsPort(profile), () => describeStart(started, profile));
+            await waitFor('its page', started, () => hasPage(port));
 
             browser = await chromium.connectOverCDP(`http://127.0.0.1:${port}`);
             const context = browser.contexts()[0];
@@ -297,8 +305,14 @@ export const test = base.extend<{ bravo: Bravo }>({
             failure = error;
         }
 
-        const code = await end(application, browser, profile);
-        if (failure instanceof Error) {
+        let code: number | undefined;
+        try {
+            code = await end(application, browser, profile);
+        } finally {
+            await webView.takeBack();
+        }
+
+        if (failure instanceof Error && code !== undefined) {
             // The code that the application ended with tells what happened to it
             failure.message += `\nBravo.exe ended with code ${code}.`;
         }

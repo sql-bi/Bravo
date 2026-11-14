@@ -336,7 +336,7 @@ stops after 15 minutes.
 | `build-and-test` | On Windows: the restore in locked mode, the build, the tests |
 | `build-and-test-linux` | The same on Linux, on `Bravo.Portable.slnf`: the projects that do not target Windows |
 | `build-web` | In `web/`: `npm ci`, then `npm test` and `npm run build:Release`, each of which generates the client of the host API first; the build checks the types of the sources and of the unit tests before webpack runs |
-| `test-window` | On Windows: `npm ci` and `npm run build:UI` in `web/`, the restore in locked mode and the build of `Bravo.Desktop`, then `npm run test:window`; when a test fails, its report |
+| `test-window` | On Windows: `npm ci` and `npm run build:UI` in `web/`, the restore in locked mode and the build of `Bravo.Desktop`, then `npm run test:window`; when a test fails, its report; at the end, whatever happened, a step that fails if a policy of the webview is left |
 | `audit` | A restore that fails on a NuGet package with a known vulnerability, then `npm audit` on the packages that ship with the user interface, which fails on an advisory, and on all of them, which reports |
 
 What a run checks beyond the commands of the table above:
@@ -352,6 +352,9 @@ What a run checks beyond the commands of the table above:
 - The tests of `build-and-test` and of `test-window` start `Bravo.exe` and use the real WebView2 engine. The
   runtime is not in the list of the software of the runner image: it comes with the Windows image that the
   runner is built on.
+- The runner runs every process elevated, and an elevated webview ignores the environment variables of the
+  WebView2 runtime: `test-window` gives the webview its two values as policies of the machine, which its
+  last step shows to be gone ([User interface](#user-interface)).
 - When a test of the window fails, `test-window` keeps the folder `artifacts/window-tests` as the artifact
   `window-tests-report` for 3 days: the HTML report, with the trace and a screenshot of each failed test. A
   trace holds the token of the host of its test, whose process has ended.
@@ -493,14 +496,20 @@ The tests of the window are in `web/window-tests`, one file `*.spec.ts` for each
   fails with these two commands. They need Windows and the WebView2 runtime, and no browser of Playwright:
   `npx playwright install` is not needed.
 - `window-tests/bravo.ts` is the fixture. For each test it starts the application with a new profile of the
-  webview, in a temporary folder, and with the DevTools protocol on a port that the engine chooses, both
-  through environment variables of the WebView2 runtime (`WEBVIEW2_USER_DATA_FOLDER`,
-  `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS`): the application has no option for it. It waits until the engine
-  lists the page, then attaches with `connectOverCDP`, because a page that appears later is not announced to
-  Playwright. It gives the page the size 1280×800, removes the light color scheme that Playwright gives a
-  page by default, so that the page has the one of the window, and waits for its start. At the end it closes the window
-  as a user does, expects exit code 0, waits for the end of the processes of the webview of that profile and
-  removes the folder.
+  webview, in a temporary folder, and with the DevTools protocol on a port that the engine chooses: the
+  application has no option for it. It waits until the engine lists the page, then attaches with
+  `connectOverCDP`, because a page that appears later is not announced to Playwright. It gives the page the
+  size 1280×800, removes the light color scheme that Playwright gives a page by default, so that the page has
+  the one of the window, and waits for its start. At the end it closes the window as a user does, expects
+  exit code 0, waits for the end of the processes of the webview of that profile and removes the folder.
+- `window-tests/webview-settings.ts` gives the webview the two values, and the run says in its log where
+  they come from. A process that is not elevated gives them in the environment variables of the WebView2
+  runtime, `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS` and `WEBVIEW2_USER_DATA_FOLDER`. An elevated process, whose
+  integrity level is High (`S-1-16-12288` in `whoami /groups`), has its webview ignore them: the hosted runner
+  of GitHub Actions is elevated, and there, when `GITHUB_ACTIONS` is `true`, the fixture writes the same two
+  values as policies of the machine for `Bravo.exe`, under `HKLM\SOFTWARE\Policies\Microsoft\Edge\WebView2`,
+  and removes them after each test and in `window-tests/global-teardown.ts`. It fails, and replaces nothing,
+  when a value `Bravo.exe` is already there. In an elevated terminal elsewhere it writes nothing and fails.
 - The application has one instance, so one test runs at a time (`workers: 1`), and never while
   `dotnet test` runs: `BravoProcessTests` starts the same executable. A development build that already runs
   takes the start of a test, which fails and says to close it. The installed application does not matter.
@@ -515,8 +524,8 @@ The tests of the window are in `web/window-tests`, one file `*.spec.ts` for each
 - A test that reads a text of the page reads the English one, which the page shows on an English Windows.
 - No retry: a test that fails only sometimes is a defect. A test that fails keeps its trace and a
   screenshot in `artifacts/window-tests/results`. The fixture traces the page itself: Playwright Test traces
-  only the contexts that it creates, and not one that it attached to. A trace holds the headers of the requests, and so the token
-  of the host of that test, whose process has ended.
+  only the contexts that it creates, and not one that it attached to. A trace holds the headers of the
+  requests, and so the token of the host of that test, whose process has ended.
 - `playwright.config.ts` takes the files `*.spec.ts` of `window-tests` only, and Vitest the files `*.test.ts`
   of `tests` only. The tests of the window run in Node.js: they and the configuration are a program of their
   own, `window-tests/tsconfig.json`, with the types of Node.js, which the sources do not get.

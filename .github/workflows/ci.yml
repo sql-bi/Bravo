@@ -148,6 +148,24 @@ jobs:
           path: artifacts/window-tests/
           retention-days: 3
           if-no-files-found: ignore
+      # The tests run elevated on the runner, where the webview takes its two values from the policies of the
+      # machine for Bravo.exe, which the tests write and take back: none is left, whatever the tests did.
+      - name: Show that no policy of the webview is left
+        if: ${{ always() }}
+        shell: pwsh
+        run: |
+          $left = 0
+          foreach ($name in 'AdditionalBrowserArguments', 'UserDataFolder') {
+            $key = "HKLM:\SOFTWARE\Policies\Microsoft\Edge\WebView2\$name"
+            $value = Get-ItemProperty -Path $key -Name 'Bravo.exe' -ErrorAction SilentlyContinue
+            if ($value) {
+              "$key has the value Bravo.exe: $($value.'Bravo.exe')"
+              $left++
+            } else {
+              "$key has no value Bravo.exe"
+            }
+          }
+          exit $left
 
   # Packages with a known vulnerability. On Windows, where a restore reaches every project of the solution.
   audit:

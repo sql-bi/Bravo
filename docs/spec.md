@@ -131,7 +131,7 @@ to a work branch, on the pull requests to `main` and on request
 | `build-and-test` | Windows | A lock file out of date; a warning of the compiler, of an analyzer or of MSBuild; a failed test |
 | `build-and-test-linux` | Linux | The same, on the projects of `Bravo.Portable.slnf`: the ones that do not target Windows |
 | `build-web` | Linux | `npm ci`; a failed unit test of the user interface; the release build of the user interface, which generates the client of the host API and checks the types of the sources and of the unit tests before it bundles: a call that no longer fits the OpenAPI document fails it, and so does a type error in a test |
-| `test-window` | Windows | The development bundle, the build of `Bravo.Desktop`, a failed test of the window: it keeps the report of a failed run for 3 days |
+| `test-window` | Windows | The development bundle, the build of `Bravo.Desktop`, a failed test of the window, a policy of the webview that the tests left on the runner: it keeps the report of a failed run for 3 days |
 | `audit` | Windows | A NuGet package with a known vulnerability of any severity, referenced directly or not; vulnerability data that cannot be read; an npm package that ships with the user interface and has a known advisory |
 
 `build-and-test` is the status check that `main` requires: its name does not change. `audit` runs
@@ -140,9 +140,10 @@ without the development dependencies, where an advisory of any severity fails th
 where the advisories of the build tools are reported and fail nothing. `test-window` runs the tests of the
 window ([tests of the user interface](#tests-of-the-user-interface)) in a job of its own, so that the required
 check stays as it is; the traces in the report of a failed run hold the token of a host whose process has
-ended, and the report is kept for 3 days only. The token of a run can only read the
-repository, the checkout keeps no credentials, every action is pinned to a full commit SHA, and neither the
-.NET CLI nor the test platform sends usage data.
+ended, and the report is kept for 3 days only. Its last step runs whatever the tests did, and shows that no
+policy of the webview is left on the runner. The token of a run can only read the repository, the checkout
+keeps no credentials, every action is pinned to a full commit SHA, and neither the .NET CLI nor the test
+platform sends usage data.
 
 ### Host
 
@@ -529,10 +530,21 @@ Two kinds of tests prove the user interface
 
 A test of the window starts the executable that the build wrote, with the development bundle beside it, and
 drives its webview through the DevTools protocol. The test opens the protocol, on a port that the engine
-chooses, and gives the webview a new profile, through two environment variables of the WebView2 runtime: the
-application never opens the port by itself and has no option for it. Each test has an application of its
-own, which it closes as a user closes it and which must end with exit code 0; no process of the application
-or of its webview outlives the test, and neither does the profile.
+chooses, and gives the webview a new profile: the application never opens the port by itself and has no
+option for it. Each test has an application of its own, which it closes as a user closes it and which must
+end with exit code 0; no process of the application or of its webview outlives the test, and neither does
+the profile.
+
+The WebView2 runtime reads the two values from its environment variables,
+`WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS` and `WEBVIEW2_USER_DATA_FOLDER`, unless the process is elevated: an
+elevated process ignores them and honors the policies of the machine
+([Microsoft](https://learn.microsoft.com/microsoft-edge/webview2/concepts/security#for-an-elevated-host-app-use-appropriate-override-flags)).
+The hosted Windows runner of GitHub Actions runs every process elevated. There, and only there, the test
+gives the same two values as policies of the machine for `Bravo.exe`, the values `Bravo.exe` of the keys
+`AdditionalBrowserArguments` and `UserDataFolder` under `HKLM\SOFTWARE\Policies\Microsoft\Edge\WebView2`,
+and removes them after the test and once more at the end of the run. A value that is already there is not
+replaced: the test fails. Elsewhere the tests never write in the registry: in an elevated terminal they fail,
+and say to run them from a terminal that is not elevated.
 
 - The page has a fixed size in every test, 1280×800, whatever the size of the window, and a test can take a
   screenshot of it. The repository keeps no reference image: the rendering changes with the machine. A
