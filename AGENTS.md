@@ -336,6 +336,7 @@ stops after 15 minutes.
 | `build-and-test` | On Windows: the restore in locked mode, the build, the tests |
 | `build-and-test-linux` | The same on Linux, on `Bravo.Portable.slnf`: the projects that do not target Windows |
 | `build-web` | In `web/`: `npm ci`, then `npm test` and `npm run build:Release`, each of which generates the client of the host API first; the build checks the types of the sources and of the unit tests before webpack runs |
+| `test-window` | On Windows: `npm ci` and `npm run build:UI` in `web/`, the restore in locked mode and the build of `Bravo.Desktop`, then `npm run test:window`; when a test fails, its report |
 | `audit` | A restore that fails on a NuGet package with a known vulnerability, then `npm audit` on the packages that ship with the user interface, which fails on an advisory, and on all of them, which reports |
 
 What a run checks beyond the commands of the table above:
@@ -348,8 +349,12 @@ What a run checks beyond the commands of the table above:
 - `npm audit --omit=dev` looks at the dependencies that ship with the user interface, and an advisory of any
   severity fails the job. A second step runs `npm audit` on every package, the build tools included: it
   reports and does not fail the job, so its error annotation on a green run is expected.
-- The tests of the Windows job start `Bravo.exe` and use the real WebView2 engine. The runtime is not in the
-  list of the software of the runner image: it comes with the Windows image that the runner is built on.
+- The tests of `build-and-test` and of `test-window` start `Bravo.exe` and use the real WebView2 engine. The
+  runtime is not in the list of the software of the runner image: it comes with the Windows image that the
+  runner is built on.
+- When a test of the window fails, `test-window` keeps the folder `artifacts/window-tests` as the artifact
+  `window-tests-report` for 3 days: the HTML report, with the trace and a screenshot of each failed test. A
+  trace holds the token of the host of its test, whose process has ended.
 
 `build-and-test` is the status check that `main` requires: do not rename the job and do not give it a matrix.
 Every action is pinned to the commit of a release, with the version in a comment on the same line.

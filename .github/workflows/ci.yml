@@ -102,6 +102,53 @@ jobs:
       - name: Build the release bundle
         run: npm run build:Release
 
+  # The tests of the user interface in the window of the application: they start the Bravo.exe that the build
+  # wrote, with the development bundle beside it, and drive its webview through the DevTools protocol.
+  test-window:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up the .NET SDK
+        uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
+        with:
+          global-json-file: global.json
+          cache: true
+          cache-dependency-path: '**/packages.lock.json'
+      - name: Set up Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: web/package.json
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Install the dependencies of the user interface
+        working-directory: web
+        run: npm ci
+      # The bundle first: the build of the application copies web/wwwroot beside the executable.
+      - name: Build the development bundle
+        working-directory: web
+        run: npm run build:UI
+      - name: Restore the application
+        run: dotnet restore src/Bravo.Desktop --locked-mode
+      - name: Build the application
+        run: dotnet build src/Bravo.Desktop -c Release --no-restore -warnaserror
+      - name: Test the user interface in the window
+        working-directory: web
+        run: npm run test:window
+      # The report of a failed run, with the traces of the failed tests. A trace holds the headers of the
+      # requests of its test, and so the token of a host whose process has ended.
+      - name: Keep the report of the failed tests
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: window-tests-report
+          path: artifacts/window-tests/
+          retention-days: 3
+          if-no-files-found: ignore
+
   # Packages with a known vulnerability. On Windows, where a restore reaches every project of the solution.
   audit:
     runs-on: windows-latest

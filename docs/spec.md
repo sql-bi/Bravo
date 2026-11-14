@@ -131,12 +131,16 @@ to a work branch, on the pull requests to `main` and on request
 | `build-and-test` | Windows | A lock file out of date; a warning of the compiler, of an analyzer or of MSBuild; a failed test |
 | `build-and-test-linux` | Linux | The same, on the projects of `Bravo.Portable.slnf`: the ones that do not target Windows |
 | `build-web` | Linux | `npm ci`; a failed unit test of the user interface; the release build of the user interface, which generates the client of the host API and checks the types of the sources and of the unit tests before it bundles: a call that no longer fits the OpenAPI document fails it, and so does a type error in a test |
+| `test-window` | Windows | The development bundle, the build of `Bravo.Desktop`, a failed test of the window: it keeps the report of a failed run for 3 days |
 | `audit` | Windows | A NuGet package with a known vulnerability of any severity, referenced directly or not; vulnerability data that cannot be read; an npm package that ships with the user interface and has a known advisory |
 
 `build-and-test` is the status check that `main` requires: its name does not change. `audit` runs
 `npm audit` twice ([ADR 0016](adr/0016-closed-error-codes-generated-types-and-tests-in-the-user-interface.md)):
 without the development dependencies, where an advisory of any severity fails the job, and on every package,
-where the advisories of the build tools are reported and fail nothing. The token of a run can only read the
+where the advisories of the build tools are reported and fail nothing. `test-window` runs the tests of the
+window ([tests of the user interface](#tests-of-the-user-interface)) in a job of its own, so that the required
+check stays as it is; the traces in the report of a failed run hold the token of a host whose process has
+ended, and the report is kept for 3 days only. The token of a run can only read the
 repository, the checkout keeps no credentials, every action is pinned to a full commit SHA, and neither the
 .NET CLI nor the test platform sends usage data.
 
