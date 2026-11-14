@@ -14,7 +14,7 @@ import { Tabulator } from 'tabulator-tables';
 import { Loader } from '../helpers/loader';
 import { ContextMenu } from '../helpers/contextmenu';
 import { ConnectMenuItem } from './connect-item';
-import * as sanitizeHtml from 'sanitize-html';
+import sanitizeHtml from 'sanitize-html';
 import { AppError } from '../model/exceptions';
 import { PowerBISignin } from './powerbi-signin';
 import { DialogResponse } from './dialog';

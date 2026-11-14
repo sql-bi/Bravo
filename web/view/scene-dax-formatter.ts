@@ -13,7 +13,7 @@ import { Alert } from './alert';
 import { FormattedMeasure, TabularMeasure, daxName } from '../model/tabular';
 import { ContextMenu } from '../helpers/contextmenu';
 import { Loader } from '../helpers/loader';
-import * as sanitizeHtml from 'sanitize-html';
+import sanitizeHtml from 'sanitize-html';
 import { DocScene } from './scene-doc';
 import { LoaderScene } from './scene-loader';
 import { ErrorScene } from './scene-error';

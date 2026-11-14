@@ -5,7 +5,7 @@
 */
 
 import { View } from './view';
-import * as CodeMirror from 'codemirror';
+import CodeMirror from 'codemirror';
 import 'codemirror/addon/mode/simple';
 import { ContextMenu } from '../helpers/contextmenu';
 import { _, __ } from '../helpers/utils';

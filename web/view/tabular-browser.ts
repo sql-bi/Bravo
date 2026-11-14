@@ -6,7 +6,7 @@
 
 import { Tabulator } from 'tabulator-tables';
 import { View } from './view';
-import * as sanitizeHtml from 'sanitize-html';
+import sanitizeHtml from 'sanitize-html';
 import { TabularDatabaseModel } from '../model/tabular';
 import { Dic, Utils, _, __ } from '../helpers/utils';
 import { strings } from '../model/strings';

@@ -4,7 +4,7 @@
  * https://www.sqlbi.com
 */
 
-import * as sanitizeHtml from 'sanitize-html';
+import sanitizeHtml from 'sanitize-html';
 import { application, optionsController } from '../main';
 import { strings } from './strings';
 import locales from "./i18n/locales";

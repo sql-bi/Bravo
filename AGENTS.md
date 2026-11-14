@@ -458,7 +458,7 @@ run on [Vitest](https://vitest.dev) in a simulated browser, jsdom
 - They test the modules that read the contract, which are `host-fetch`, `host-events`, `host` and the
   errors with the table of their texts, and what the page does at its start: the sidebar, the theme, the
   page of a start that failed. They also keep the values of the feature flags of `model/tabular.ts`, which
-  travel with the host. No other view has a test, and nothing runs in a real browser (backlog H-07).
+  travel with the host, and the text that `sanitize-html` leaves of a name. No other view has a test, and nothing runs in a real browser (backlog H-07).
 - `main.ts` starts the whole page when it is loaded. A test replaces it, with `vi.mock`, by the parts of
   `tests/main-mock.ts`, which do nothing, and replaces the generated client where the test answers in place
   of the host.
@@ -467,5 +467,4 @@ run on [Vitest](https://vitest.dev) in a simulated browser, jsdom
 - Vite reads the sources for the tests, and transforms the namespaces of TypeScript only in part: one that
   exports a variable (`export var`, `export let`) is reported as a warning at every run, and the variable
   is not exported. The other namespaces and the enums of this code are read as webpack reads them.
-- The tests are outside `tsconfig.json`, so no build checks their types: the declarations that arrive with
-  Vitest need a newer TypeScript than the 4.9 of the build (backlog H-06).
+- The tests are in the program of `tsconfig.json`, with the sources: the build checks their types.

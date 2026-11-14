@@ -1,16 +1,17 @@
 {
   "compilerOptions": {
-    "noImplicitAny": true,
     "module": "es2020",
     "target": "es2020",
-    "jsx": "react",
-    "allowJs": true,
-    "moduleResolution": "node",
-    "outDir": "./dist"
+    "moduleResolution": "bundler",
+    "isolatedModules": true,
+    "skipLibCheck": true,
+    "strict": false,
+    "noImplicitAny": true,
+    "strictBindCallApply": true,
+    "noImplicitThis": true,
+    "alwaysStrict": true
   },
-  "exclude": [
-    "node_modules",
-    "dist",
-    "tests"
+  "include": [
+    "**/*.ts"
   ]
 }

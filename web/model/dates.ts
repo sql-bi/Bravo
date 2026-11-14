@@ -4,7 +4,7 @@
  * https://www.sqlbi.com
 */
 
-import * as sanitizeHtml from 'sanitize-html'
+import sanitizeHtml from 'sanitize-html'
 import { Utils } from '../helpers/utils'
 import { i18n } from './i18n'
 import { strings } from './strings'

@@ -13,7 +13,7 @@ import { Theme } from '../generated/bravo';
 import { Tabulator } from 'tabulator-tables';
 import Chart from "chart.js/auto";
 import { TreemapController, TreemapElement, TreemapScriptableContext } from 'chartjs-chart-treemap';
-import * as sanitizeHtml from 'sanitize-html';
+import sanitizeHtml from 'sanitize-html';
 import { ContextMenu } from '../helpers/contextmenu';
 import { DocScene } from './scene-doc';
 import { LoaderScene } from './scene-loader';

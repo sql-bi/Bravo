@@ -11,7 +11,7 @@ import { deepEqual } from 'fast-equals';
 import { PBICloudDataset } from './pbi-dataset';
 import { PBIDesktopReport } from './pbi-report';
 import { AppError } from '../model/exceptions';
-import * as sanitizeHtml from 'sanitize-html';
+import sanitizeHtml from 'sanitize-html';
 import { Md5 } from 'ts-md5/dist/md5';
 import { i18n } from './i18n';
 import { strings } from './strings';
