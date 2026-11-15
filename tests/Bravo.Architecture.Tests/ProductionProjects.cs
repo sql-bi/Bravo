@@ -18,5 +18,6 @@ internal static class ProductionProjects
             ["Bravo.Api"] = ["Bravo.Core"],
             ["Bravo.Platform.Windows"] = ["Bravo.Core"],
             ["Bravo.Desktop"] = ["Bravo.Api", "Bravo.Core", "Bravo.Platform.Windows"],
+            ["Bravo.Setup"] = [],
         }.ToFrozenDictionary(StringComparer.Ordinal);
 }

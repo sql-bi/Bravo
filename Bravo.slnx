@@ -4,6 +4,7 @@
     <Project Path="src/Bravo.Core/Bravo.Core.csproj" />
     <Project Path="src/Bravo.Desktop/Bravo.Desktop.csproj" />
     <Project Path="src/Bravo.Platform.Windows/Bravo.Platform.Windows.csproj" />
+    <Project Path="src/Bravo.Setup/Bravo.Setup.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Bravo.Api.Tests/Bravo.Api.Tests.csproj" />
@@ -11,5 +12,6 @@
     <Project Path="tests/Bravo.Core.Tests/Bravo.Core.Tests.csproj" />
     <Project Path="tests/Bravo.Desktop.Tests/Bravo.Desktop.Tests.csproj" />
     <Project Path="tests/Bravo.Platform.Windows.Tests/Bravo.Platform.Windows.Tests.csproj" />
+    <Project Path="tests/Bravo.Setup.Tests/Bravo.Setup.Tests.csproj" />
   </Folder>
 </Solution>

@@ -91,15 +91,17 @@ not exist yet: the table names the backlog item that creates them.
 
 ## Projects of the host
 
-The host is four projects, with Windows at the edge
-([ADR 0011](docs/adr/0011-host-in-four-projects-with-windows-at-the-edge.md)):
+The host is five projects, with Windows at the edge
+([ADR 0011](docs/adr/0011-host-in-four-projects-with-windows-at-the-edge.md),
+[ADR 0020](docs/adr/0020-windows-installer-packages-built-with-wix-which-run-a-program-of-the-host.md)):
 
 | Project | Target | What goes there | May reference |
 | --- | --- | --- | --- |
 | `Bravo.Core` | `net10.0` | Use cases, model, and the interfaces toward everything outside | Nothing |
 | `Bravo.Api` | `net10.0` | The contract exposed to the user interface and to the Visual Studio Code extension | `Bravo.Core` |
 | `Bravo.Platform.Windows` | `net10.0-windows` | Adapters with no window: policies, credentials, the local Power BI Desktop | `Bravo.Core` |
-| `Bravo.Desktop` | `net10.0-windows` | Window, webview, dialogs, composition; its executable is `Bravo.exe` | The other three |
+| `Bravo.Desktop` | `net10.0-windows` | Window, webview, dialogs, composition; its executable is `Bravo.exe` | The first three |
+| `Bravo.Setup` | `net10.0-windows` | What the installer packages run ([Installer](#installer)); its executable is `Bravo.Setup.exe` | Nothing |
 
 - `Bravo.Core` and `Bravo.Api` use no Windows API: the build reports one as CA1416. Code that needs Windows gets
   an interface in `Bravo.Core` and its implementation in `Bravo.Platform.Windows`, or in `Bravo.Desktop` when it
@@ -274,6 +276,33 @@ To add a route:
 | --- | --- |
 | Write the OpenAPI document again after a change of the API | `dotnet test --project tests/Bravo.Api.Tests -c Release --explicit only` |
 
+## Installer
+
+Windows Installer packages install the application
+([ADR 0020](docs/adr/0020-windows-installer-packages-built-with-wix-which-run-a-program-of-the-host.md));
+[docs/spec.md](docs/spec.md#installer) describes them. What a package cannot do with its tables it asks of
+`Bravo.Setup.exe`, the program of `src/Bravo.Setup`:
+
+| Part | Path |
+| --- | --- |
+| The composition of the program, its exit codes, and what carries out a command | `Program.cs`, `ExitCode.cs`, `SetupApplication.cs` |
+| The command line: the commands, their options, and the reader of the options | `CommandLine/` |
+| The file that registers the application as an external tool of Power BI Desktop, and its icon | `ExternalTools/` |
+| The events of an installation and of a removal, the identifier of who installs, where the events go | `Telemetry/` |
+| The removal of the data folder of a user | `UserData/` |
+
+- The program finds no folder by itself: every path is an option of its command line. A test gives it a
+  folder of its own, under the temporary folder of the user, and nothing else to write in.
+- What touches the disk or the network is behind an interface: `IExternalToolRegistration`,
+  `IUserDataFolder`, `IInstallationEventSink`. The sink that `Program` composes sends nothing (backlog
+  S-06).
+- The program has no package reference and uses no reflection: the packages carry it compiled ahead of
+  time. A new command is a record derived from `SetupCommand`, a name and a reader in `SetupCommandLine`,
+  and a case in `SetupApplication.Execute`.
+- A command never throws for a file that cannot be written: `SetupApplication.Run` answers with an exit
+  code, which the packages ignore.
+- `SetupProcessTests` starts the `Bravo.Setup.exe` that the build wrote, as a package does.
+
 ## Build and tests
 
 The commands run at the root of the repository and need the .NET SDK that `global.json` names.
@@ -320,7 +349,7 @@ of `src/` or `tests/` is missing from one of these places, and when the filter l
 Windows: a project that no solution lists would never be built or tested.
 
 The architecture tests read the assemblies of `src/` as metadata and never load them, because their project is
-portable and cannot reference a project that targets Windows. On Windows they inspect the four assemblies; on
+portable and cannot reference a project that targets Windows. On Windows they inspect the five assemblies; on
 another system, the portable ones.
 
 ## Continuous integration

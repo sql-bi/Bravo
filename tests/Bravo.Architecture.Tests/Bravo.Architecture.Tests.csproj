@@ -24,6 +24,7 @@
   <ItemGroup Condition="$([MSBuild]::IsOSPlatform('Windows'))">
     <WindowsProject Include="..\..\src\Bravo.Desktop\Bravo.Desktop.csproj" />
     <WindowsProject Include="..\..\src\Bravo.Platform.Windows\Bravo.Platform.Windows.csproj" />
+    <WindowsProject Include="..\..\src\Bravo.Setup\Bravo.Setup.csproj" />
     <ProjectReference Include="@(WindowsProject)" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" OutputItemType="ProductionAssembly" />
   </ItemGroup>
 

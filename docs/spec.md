@@ -122,7 +122,7 @@ repository. `ProductionProjects.cs` holds the table of allowed project reference
 The tests read the assemblies of `src/` as metadata, with `System.Reflection.MetadataLoadContext`, and never
 load them. Their project is portable, so that it also runs on Linux, and a portable project cannot reference
 one that targets Windows: its build only builds those projects first, on Windows, and gives the tests the path
-of every assembly. On Windows the rules inspect the four assemblies of the host; on another system, the
+of every assembly. On Windows the rules inspect the five assemblies of the host; on another system, the
 portable ones.
 
 ### Continuous integration
@@ -152,8 +152,9 @@ platform sends usage data.
 
 ### Host
 
-The host is four projects, with Windows at the edge
-([ADR 0011](adr/0011-host-in-four-projects-with-windows-at-the-edge.md)):
+The host is five projects, with Windows at the edge
+([ADR 0011](adr/0011-host-in-four-projects-with-windows-at-the-edge.md),
+[ADR 0020](adr/0020-windows-installer-packages-built-with-wix-which-run-a-program-of-the-host.md)):
 
 | Project | Target | Content |
 | --- | --- | --- |
@@ -161,11 +162,13 @@ The host is four projects, with Windows at the edge
 | `Bravo.Api` | `net10.0` | The contract exposed to the user interface and to the Visual Studio Code extension |
 | `Bravo.Platform.Windows` | `net10.0-windows` | Adapters with no window: policies, credentials, the local Power BI Desktop |
 | `Bravo.Desktop` | `net10.0-windows` | Window, webview, dialogs, composition; its executable is `Bravo.exe` |
+| `Bravo.Setup` | `net10.0-windows` | What the installer packages run; its executable is `Bravo.Setup.exe` |
 
 `Bravo.Api` and `Bravo.Platform.Windows` reference only `Bravo.Core`; `Bravo.Desktop` references all three and
 is the only composition root, on the .NET Generic Host. `Bravo.Core` and `Bravo.Api` use no Windows API:
 dialogs, the window and the UI thread are interfaces of `Bravo.Core` that the shell implements. No state is
-static or ambient: every service is injected.
+static or ambient: every service is injected. `Bravo.Setup` references no project and none references it: it
+is a program of its own, which the [installer](#installer) carries.
 
 The entry point, the host, the API and the main window with its webview exist.
 
@@ -567,6 +570,37 @@ screens of the bundle beside the executable, in the themes Dark and Light: the w
 the options dialog, the page of a feature that has no route yet, and the same page with the diagnostics pane
 open, whose times are written as one fixed time. It compares two sets file by file, byte for byte, names the
 screens that differ or that one set alone has, and fails when there is one. The sets stay in `artifacts/`.
+
+### Installer
+
+Windows Installer packages install the application
+([ADR 0020](adr/0020-windows-installer-packages-built-with-wix-which-run-a-program-of-the-host.md)). The
+packages are backlog D-01; the program that they run exists.
+
+**What a package runs.** A package has no code of its own. What its tables cannot do, it asks of
+`Bravo.Setup.exe`, a program of the host installed beside `Bravo.exe`: a command line, no window, and no
+need of the .NET runtime, so that it runs where the application could not start.
+
+| Command | Options | What it does |
+| --- | --- | --- |
+| `register-external-tool` | `--tool-file`, `--executable` | Writes the file that registers the application as an external tool of Power BI Desktop, with its folder when it is missing. A file that is there is replaced |
+| `unregister-external-tool` | `--tool-file` | Removes that file. The folder stays: other tools register in it |
+| `report-install`, `report-uninstall` | `--scope`, `--product-name`, `--product-version`, `--product-build`, `--telemetry-enabled` | Reports the event `Install` or `Uninstall`, when the value of `--telemetry-enabled` is `1` |
+| `remove-user-data` | `--folder` | Removes a folder with everything in it. It refuses the root of a drive |
+
+- An option is `--name value`. A command gets each of its options once, and no other; a path is a full path.
+- The program finds no folder by itself and reads nothing from the registry: the package passes every
+  path, and a test passes folders of its own.
+- The registration is the one of 1.0.x: the name `Bravo`, the arguments
+  `--server="%server%" --database="%database%"`, the same icon, and the full path of the executable. Its
+  description is `Bravo for Power BI`.
+- An event carries what 1.0.x sends with it: its name, the scope, the name, the version and the build of the
+  product, the operating system, and an identifier of who installs, the SHA-256 of the names of the machine
+  and of the account that the program runs as. It names nobody, and is computed as 1.0.x computes it, so
+  that the counts of the two versions can be compared. Nothing sends the events yet (backlog S-06).
+- The exit code is 0 when the command was carried out, also when it found nothing to do; 1 when a file or
+  a folder could not be written or removed; 2 when the command line is not valid. A package ignores it: no
+  command fails an installation.
 
 ## Open questions
 

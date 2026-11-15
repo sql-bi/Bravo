@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    What the installer packages run. A Windows program with a command line and no window: a console program
+    would show one for a moment while a package installs with its dialogs.
+  -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+  </PropertyGroup>
+
+  <!-- No culture data: the program formats nothing for a reader, and is smaller without it. -->
+  <PropertyGroup>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <!--
+    The packages carry this program compiled ahead of time, so that it needs no .NET runtime: the build of the
+    installer publishes it with PublishAot. These choices make that executable smaller, and apply to it alone.
+  -->
+  <PropertyGroup Condition="'$(PublishAot)' == 'true'">
+    <OptimizationPreference>Size</OptimizationPreference>
+    <StackTraceSupport>false</StackTraceSupport>
+    <UseSystemResourceKeys>true</UseSystemResourceKeys>
+    <DebuggerSupport>false</DebuggerSupport>
+  </PropertyGroup>
+
+  <!-- The icon of the external tool registration, the image that 1.0.x registers. -->
+  <ItemGroup>
+    <EmbeddedResource Include="ExternalTools\ExternalToolIcon.ico" LogicalName="Bravo.Setup.ExternalToolIcon.ico" />
+  </ItemGroup>
+
+  <!-- The second name is the assembly where NSubstitute generates the substitutes of internal interfaces. -->
+  <ItemGroup>
+    <InternalsVisibleTo Include="Bravo.Setup.Tests" />
+    <InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
+  </ItemGroup>
+
+</Project>

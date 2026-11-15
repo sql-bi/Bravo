@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Bravo.Setup\Bravo.Setup.csproj" />
+  </ItemGroup>
+
+  <!--
+    The process tests start the executable in the output folder of its own project, where its runtime
+    configuration is beside it. They find it through this file.
+  -->
+  <Target Name="WriteExecutablePath" AfterTargets="ResolveAssemblyReferences">
+    <ItemGroup>
+      <SetupAssembly Include="@(ReferencePath)" Condition="'%(ReferencePath.ReferenceSourceTarget)' == 'ProjectReference' and '%(ReferencePath.Filename)' == 'Bravo.Setup'" />
+      <FileWrites Include="$(OutDir)SetupExecutable.txt" />
+    </ItemGroup>
+    <WriteLinesToFile File="$(OutDir)SetupExecutable.txt" Lines="@(SetupAssembly->'%(RootDir)%(Directory)Bravo.Setup.exe')" Overwrite="true" WriteOnlyWhenDifferent="true" />
+  </Target>
+
+</Project>
