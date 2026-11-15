@@ -110,6 +110,11 @@ A package with a known vulnerability is a warning and not an error, so that an a
 not break the build of an unchanged commit; it is an error only in the `audit` job of continuous integration.
 No project sets the C# version: it follows the target framework. Each project sets its own target framework.
 
+webpack bundles the user interface. The stylesheet is what Less writes, read by the CSS support of webpack
+and not minified: the minimizer of webpack drops the space between a color and an image, and the engine then
+drops the declaration ([ADR 0019](adr/0019-the-stylesheet-through-the-css-support-of-webpack-not-minified.md)).
+The JavaScript is minified.
+
 The architecture tests use reflection and read the project and solution files. Each rule is a function from its input to
 the violations, tested twice: on a fixture that breaks it, which proves that the rule can fail, and on the
 repository. `ProductionProjects.cs` holds the table of allowed project references.

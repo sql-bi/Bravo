@@ -397,10 +397,14 @@ stops with an error on another one.
 | Run the tests of the window, after the two builds that they need | `npm run test:window` |
 | Run the tests of the window of one file | `npx playwright test window-tests/start.spec.ts` |
 
-A bundle is `js/main.js` and `css/main.css`; the release build adds `js/main.js.LICENSE.txt`. Every build script
-first runs `npm run check`, which generates the client of the host API and checks the types with `tsc`, on the
-sources and the unit tests, then on the tests of the window; webpack only translates, with ts-loader in
-`transpileOnly` ([ADR 0017](docs/adr/0017-typescript-6-with-the-types-checked-apart-from-the-bundle.md)).
+A bundle is `js/main.js` and `css/main.css`; the release build adds `js/main.js.LICENSE.txt`, the development
+build `css/main.css.map`. Every build script first runs `npm run check`, which generates the client of the host
+API and checks the types with `tsc`, on the sources and the unit tests, then on the tests of the window; webpack
+only translates, with ts-loader in `transpileOnly`
+([ADR 0017](docs/adr/0017-typescript-6-with-the-types-checked-apart-from-the-bundle.md)). The stylesheet goes
+through less-loader alone and the CSS support of webpack, with `url()` left as written; the JavaScript is
+minified, the stylesheet is not
+([ADR 0019](docs/adr/0019-the-stylesheet-through-the-css-support-of-webpack-not-minified.md)).
 `watch:UI` and `serve:UI` check once, when they start, and not at each change. `web/wwwroot` holds the static
 files that go with the bundle (`index.html`, icons, fonts, images); git ignores the `js` and `css` folders that
 the development build adds there. Without `--output-path` webpack writes to `artifacts/web` at the root of the

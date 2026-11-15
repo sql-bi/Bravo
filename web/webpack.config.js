@@ -1,7 +1,5 @@
 const webpack = require("webpack");
 const path = require("path");
-const MiniCssExtractPlugin = require("mini-css-extract-plugin");
-const CssMinimizerPlugin = require("css-minimizer-webpack-plugin");
 
 module.exports = (env, argv) => {
   const mode = argv.mode || "development";
@@ -27,26 +25,17 @@ module.exports = (env, argv) => {
           }
         },
         {
+          // webpack reads what Less writes as CSS, and leaves url() as written
           test: /\.less$/i,
-          use: [
-            MiniCssExtractPlugin.loader,
-            {
-              loader: 'css-loader',
-              options: {
-                  url: false,
-              },
-            },
-            {
-              loader: "less-loader",
-              options: {
-              }
-            }
-          ],
+          use: ["less-loader"],
+          type: "css/auto",
+          parser: {
+            url: false
+          }
         },
         {
           test: /\.js$/,
-          enforce: 'pre',
-          use: ['source-map-loader'],
+          extractSourceMap: true
         },
         {
           test: /\.m?js$/,
@@ -57,14 +46,14 @@ module.exports = (env, argv) => {
         
       ],
     },
-    ignoreWarnings: [/Failed to parse source map/],
     resolve: {
       extensions: ['.tsx', '.ts', '.js'],
     },
     output: {
       // Without --output-path the bundle goes to artifacts/web at the repository root, which git ignores.
       path: path.resolve(__dirname, "..", "artifacts", "web"),
-      filename: "./js/main.js"
+      filename: "./js/main.js",
+      cssFilename: "./css/[name].css"
     },
     watchOptions: {
       poll: true
@@ -76,16 +65,13 @@ module.exports = (env, argv) => {
       new webpack.DefinePlugin({
         'process.env.MODE': JSON.stringify(mode)
       }),
-      new MiniCssExtractPlugin({
-          filename: "./css/[name].css"
-      }),
     ],
     optimization: {
-      minimizer: [
-        '...',
-        new CssMinimizerPlugin(),
-      ],
-      minimize: true,
+      // The JavaScript is minified, the stylesheet is not: the minimizer of webpack drops the space between a
+      // color and an image in a background, and the engine drops the declaration (ADR 0019)
+      minimize: {
+        css: false
+      }
     }
   }
 };
