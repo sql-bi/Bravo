@@ -122,6 +122,13 @@ function Invoke-WindowsInstaller([string] $Arguments, [string] $Name) {
     $watch = [Diagnostics.Stopwatch]::StartNew()
     $process = Start-Process -FilePath 'msiexec.exe' -ArgumentList "$Arguments /qn /norestart /l*v `"$log`"" -Wait -PassThru
     Write-Host ("    msiexec {0} -> exit code {1} in {2:N0} s" -f $Arguments, $process.ExitCode, $watch.Elapsed.TotalSeconds)
+
+    # A package ignores the exit code of what it runs, so a command that failed shows in the log alone.
+    $failed = @(Select-String -Path $log -Pattern 'returned actual error code' | ForEach-Object { $_.Line })
+    if ($failed.Count -gt 0) {
+        throw "An action of the package failed:`n  $($failed -join "`n  ")"
+    }
+
     return $process.ExitCode
 }
 
@@ -130,9 +137,14 @@ function Install-Package([string] $Path, [string] $Name, [string] $Properties = 
     return Invoke-WindowsInstaller $arguments $Name
 }
 
-function Uninstall-Product([string] $ProductCode, [string] $Name) {
-    return Invoke-WindowsInstaller "/x $ProductCode" $Name
+function Uninstall-Product([string] $ProductCode, [string] $Name, [string] $Properties = '') {
+    $arguments = "/x $ProductCode $Properties".TrimEnd()
+    return Invoke-WindowsInstaller $arguments $Name
 }
+
+# 1.0.14 sends the events of its installer for real, at a removal whatever was chosen at the installation.
+# On the runner every run of its packages is told not to.
+$NoTelemetry = 'INSTALLERTELEMETRYENABLED=0'
 
 $script:Installer = New-Object -ComObject WindowsInstaller.Installer
 
@@ -196,9 +208,20 @@ function Get-ShortcutTarget([string] $Folder, [string] $Scope) {
     return (New-Object -ComObject WScript.Shell).CreateShortcut($path).TargetPath
 }
 
+# What Installed apps shows of a product of Windows Installer: the properties that the installer keeps under
+# the account that owns the installation, which is the system for an installation per machine. The key is
+# named by the product code with the digits of each of its parts in reverse order.
 function Get-EntryInInstalledApps([string] $Scope, [string] $ProductCode) {
-    $root = if ($Scope -eq 'perMachine') { 'HKLM:' } else { 'HKCU:' }
-    return Get-ItemProperty -Path "$root\Software\Microsoft\Windows\CurrentVersion\Uninstall\$ProductCode" -ErrorAction SilentlyContinue
+    $owner = if ($Scope -eq 'perMachine') { 'S-1-5-18' } else { [Security.Principal.WindowsIdentity]::GetCurrent().User.Value }
+    $digits = $ProductCode.Trim('{', '}').Replace('-', '')
+    $packed = ''
+    foreach ($length in 8, 4, 4, 2, 2, 2, 2, 2, 2, 2, 2) {
+        $part = $digits.Substring($packed.Length, $length).ToCharArray()
+        [array]::Reverse($part)
+        $packed += -join $part
+    }
+    $key = "HKLM:\Software\Microsoft\Windows\CurrentVersion\Installer\UserData\$owner\Products\$packed\InstallProperties"
+    return Get-ItemProperty -Path $key -ErrorAction SilentlyContinue
 }
 
 function Read-ExternalTool {
@@ -349,6 +372,7 @@ function Test-InstallUpgradeRemove([string] $Scope) {
         if (-not $running.HasExited) { $running.Kill() }
     }
     Wait-WebViewEnd
+    Assert-True (@(Get-Process Bravo -ErrorAction SilentlyContinue).Count -eq 0) 'the application is not started again'
     $product = Assert-Installed $Scope $NextVersion $folder $AllOn $false
     Assert-True (Test-UserData) 'the data of the user is as it was'
 
@@ -368,7 +392,7 @@ function Test-InstallUpgradeRemove([string] $Scope) {
 # choices, shortcuts and folder.
 function Test-PublicProperties {
     $folder = 'C:\Bravo Custom\'
-    $properties = "INSTALLFOLDER=`"$($folder.TrimEnd('\'))`" DESKTOPSHORTCUTENABLED=0 PROGRAMMENUSHORTCUTENABLED=1 INSTALLERTELEMETRYENABLED=0 APPLICATIONTELEMETRYENABLED=no TELEMETRYUSERID=someone"
+    $properties = "INSTALLFOLDER=`"$($folder.TrimEnd('\'))`" DESKTOPSHORTCUTENABLED=0 PROGRAMMENUSHORTCUTENABLED=1 $NoTelemetry APPLICATIONTELEMETRYENABLED=no TELEMETRYUSERID=someone"
     $expected = [ordered]@{ desktopShortcutEnabled = ''; programMenuShortcutEnabled = '1'; installerTelemetryEnabled = ''; applicationTelemetryEnabled = '' }
 
     Write-Step 'perMachine: the public properties, given to 1.0.14'
@@ -379,7 +403,7 @@ function Test-PublicProperties {
     $previousDesktop = $null -ne (Get-ShortcutTarget $Scopes.perMachine.Desktop 'perMachine')
     $previousProgramMenu = $null -ne (Get-ShortcutTarget $Scopes.perMachine.ProgramMenu 'perMachine')
     Write-Host "    1.0.14: folder='$previousFolder' $previousChoices desktop=$previousDesktop programMenu=$previousProgramMenu"
-    Assert-Equal 0 (Uninstall-Product $previous.Code 'properties-1.0.14-remove') 'the exit code of the removal of 1.0.14'
+    Assert-Equal 0 (Uninstall-Product $previous.Code 'properties-1.0.14-remove' $NoTelemetry) 'the exit code of the removal of 1.0.14'
     Assert-NoProduct
 
     Write-Step 'perMachine: the same public properties, given to this version'
@@ -428,10 +452,10 @@ function Test-UpgradeFromPrevious([string] $Scope, [string] $Properties, $Expect
 function Show-PreviousRemoval([string] $Scope) {
     Write-Step "$Scope`: what the removal of 1.0.14 leaves of the data of the user"
     Remove-UserData
-    Assert-Equal 0 (Install-Package (Get-PreviousPackagePath $Scope) "$Scope-1.0.14-install-for-removal") 'the exit code of the installation of 1.0.14'
+    Assert-Equal 0 (Install-Package (Get-PreviousPackagePath $Scope) "$Scope-1.0.14-install-for-removal" $NoTelemetry) 'the exit code of the installation of 1.0.14'
     $previous = (Get-Products)[0]
     Write-UserData
-    Assert-Equal 0 (Uninstall-Product $previous.Code "$Scope-1.0.14-remove") 'the exit code of the removal of 1.0.14'
+    Assert-Equal 0 (Uninstall-Product $previous.Code "$Scope-1.0.14-remove" $NoTelemetry) 'the exit code of the removal of 1.0.14'
     Assert-NoProduct
     Write-Host "    OBSERVED: after the removal of 1.0.14 $Scope, the data folder exists: $(Test-Path $DataFolder); the data is as it was: $(Test-UserData)"
     Remove-UserData
@@ -440,7 +464,7 @@ function Show-PreviousRemoval([string] $Scope) {
 # A package never upgrades an installation of the other context: both stay installed.
 function Test-OtherContext([string] $InstalledScope, [string] $NewScope) {
     Write-Step "1.0.14 $InstalledScope is installed, then this version $NewScope"
-    Assert-Equal 0 (Install-Package (Get-PreviousPackagePath $InstalledScope) "context-1.0.14-$InstalledScope-install") 'the exit code of the installation of 1.0.14'
+    Assert-Equal 0 (Install-Package (Get-PreviousPackagePath $InstalledScope) "context-1.0.14-$InstalledScope-install" $NoTelemetry) 'the exit code of the installation of 1.0.14'
     $previous = (Get-Products)[0]
     $exitCode = Install-Package (Get-PackagePath $NewScope $false) "context-$NewScope-install"
     Write-Host "    OBSERVED: the installation of this version $NewScope beside 1.0.14 $InstalledScope ends with exit code $exitCode"
@@ -451,8 +475,9 @@ function Test-OtherContext([string] $InstalledScope, [string] $NewScope) {
     Assert-Equal $Scopes[$InstalledScope].InstallFolder (Get-RegistryValue $InstalledScope 'installFolder') "the folder of 1.0.14 $InstalledScope"
     Assert-Equal $Scopes[$NewScope].InstallFolder (Get-RegistryValue $NewScope 'installFolder') "the folder of this version $NewScope"
 
+    Write-Host "    OBSERVED: the choices of this version $NewScope beside 1.0.14: $(Format-Choices (Get-Choices $NewScope))"
     foreach ($product in $products) {
-        Assert-Equal 0 (Uninstall-Product $product.Code "context-remove-$($product.Version)") "the exit code of the removal of $($product.Name) $($product.Version)"
+        Assert-Equal 0 (Uninstall-Product $product.Code "context-remove-$($product.Version)" $NoTelemetry) "the exit code of the removal of $($product.Name) $($product.Version)"
     }
     Assert-NoProduct
     Remove-UserData
@@ -478,8 +503,8 @@ $watch = [Diagnostics.Stopwatch]::StartNew()
 Test-InstallUpgradeRemove 'perMachine'
 Test-InstallUpgradeRemove 'perUser'
 Test-PublicProperties
-Test-UpgradeFromPrevious 'perMachine' 'DESKTOPSHORTCUTENABLED=0 APPLICATIONTELEMETRYENABLED=0' ([ordered]@{ desktopShortcutEnabled = ''; programMenuShortcutEnabled = '1'; installerTelemetryEnabled = '1'; applicationTelemetryEnabled = '' })
-Test-UpgradeFromPrevious 'perUser' 'PROGRAMMENUSHORTCUTENABLED=0 INSTALLERTELEMETRYENABLED=0' ([ordered]@{ desktopShortcutEnabled = '1'; programMenuShortcutEnabled = ''; installerTelemetryEnabled = ''; applicationTelemetryEnabled = '1' })
+Test-UpgradeFromPrevious 'perMachine' "DESKTOPSHORTCUTENABLED=0 APPLICATIONTELEMETRYENABLED=0 $NoTelemetry" ([ordered]@{ desktopShortcutEnabled = ''; programMenuShortcutEnabled = '1'; installerTelemetryEnabled = ''; applicationTelemetryEnabled = '' })
+Test-UpgradeFromPrevious 'perUser' "PROGRAMMENUSHORTCUTENABLED=0 $NoTelemetry" ([ordered]@{ desktopShortcutEnabled = '1'; programMenuShortcutEnabled = ''; installerTelemetryEnabled = ''; applicationTelemetryEnabled = '1' })
 Show-PreviousRemoval 'perMachine'
 Show-PreviousRemoval 'perUser'
 Test-OtherContext 'perUser' 'perMachine'
