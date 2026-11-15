@@ -21,14 +21,49 @@ opens the options through the new API and the generated client.
 Exit: GitHub Actions produces a signed, installable preview with release notes; installed over 1.0.14 it keeps
 the four guarantees of [the specification](spec.md#guarantees-for-users-of-10x).
 
-- [ ] D-01 Installer. No hypothesis: the technology is open. Explore: MSI, MSIX, Velopack, Inno Setup and what
-  well-known desktop applications choose. Criteria: the four guarantees, per-user and per-machine installation,
-  enterprise deployment, external tool registration, signing, WinGet, licence. Also: a running instance during
-  an upgrade, because 1.0.x and 1.1.0 do not recognize each other; the resource folders of System.CommandLine,
-  one for each language, in the output of the build; the ASP.NET Core runtime, which the application needs
-  beside the Windows Desktop one. Also, for the webview:
-  - The WebView2 runtime: the application does not install it, and without it ends with a message and exit
-    code 1223. Windows 11 has it; the installer checks or installs it elsewhere.
+- [ ] D-01 Installer. Decided by the maintainer; the ADR is the first commit of the work branch:
+  - Windows Installer packages built with WiX, with the UpgradeCode of 1.0.x and two packages, per-user and
+    per-machine, as 1.0.x has. Only a major upgrade replaces 1.0.x without a manual uninstall and keeps the
+    data of the user: the removal of 1.0.x outside an upgrade deletes `%LOCALAPPDATA%\Bravo`. Windows
+    Installer does not upgrade across installation contexts, so each package upgrades the one of its
+    context.
+  - WiX 5.0.2 for now: version 7 asks for a maintenance fee. The installer is written so that the move to
+    version 7 costs little: no extension that is not needed, no custom action library.
+  - Both variants of each package, as 1.0.x: one that carries the .NET runtime and one that uses the
+    installed one. The installed 1.0.x asks for the file of its own variant.
+  - The telemetry of the installer stays: the events of an installation and of a removal, raised by the
+    package, and the two choices on telemetry in its dialogs.
+  - What the package runs is an executable of its own, with a command line and no window, which does not
+    depend on the .NET runtime. It writes and removes the registration as an external tool of Power BI
+    Desktop, and reports the installation and the removal. It is a fifth project of the host:
+    [ADR 0011](adr/0011-host-in-four-projects-with-windows-at-the-edge.md) is amended.
+  - Enterprise deployment is a criterion of every choice: Intune, Configuration Manager, Group Policy, a
+    silent installation.
+  - The Microsoft Store is not part of 1.1.0.
+
+  Also:
+  - Every name that a deployment relies on stays accepted: the public properties of the package
+    (`DESKTOPSHORTCUTENABLED`, `PROGRAMMENUSHORTCUTENABLED`, `INSTALLERTELEMETRYENABLED`,
+    `APPLICATIONTELEMETRYENABLED`, `TELEMETRYUSERID`), the values under `Software\SQLBI\Bravo`, the install
+    folders, the names of the product. A better name is proposed with the old one still read: now, where
+    nobody has to act, otherwise for a later version.
+  - Power BI Desktop reads the registration of an external tool, a `*.pbitool.json` file with the full path
+    of the executable, from one folder under the 32-bit Common Files, which needs administrator rights
+    ([documentation](https://learn.microsoft.com/power-bi/transform-model/desktop-external-tools-register)).
+    Only the per-machine package registers, as in 1.0.x.
+  - A running instance during an upgrade: 1.0.x and 1.1.0 do not recognize each other, and a silent
+    installation closes the applications that hold the files. The application answers the request to close.
+  - x64 only, as 1.0.x.
+  - Published for x64, the application of today is 11 MB when it uses the installed runtime and 155 MB when
+    it carries it. It needs the ASP.NET Core runtime beside the Windows Desktop one. Its output has the
+    resource folders of System.CommandLine, one for each language.
+  - An upgrade asks for the package of 1.0.x where Windows no longer has its cached copy (#705): a new
+    package cannot avoid it.
+  - What sends the two events is S-06.
+
+  For the webview:
+  - The WebView2 runtime: neither the package nor the application installs it, and without it the
+    application ends with a message and exit code 1223. Windows 11 has it.
   - `wwwroot` beside the executable: a release build copies nothing there. The folder is the static files of
     `web/wwwroot` with the release bundle of `artifacts/web` (`js/main.js`, `css/main.css` and the licence
     text of the bundle). Without `wwwroot\index.html` the application ends with exit code 2.
@@ -43,6 +78,10 @@ the four guarantees of [the specification](spec.md#guarantees-for-users-of-10x).
   version is computed. Also: the release builds with `-p:BravoReleaseBuild=true`, or what it publishes is a
   development build, with another instance, another data folder and the arguments for a browser; the title of
   the window and `GET /application` show the informational version of the assembly, which nothing sets yet.
+  Also, from the design of D-01: the signature is the one of 1.0.x, the certificate of the publisher through
+  AzureSignTool; the installed 1.0.x asks for a file whose name it builds itself, adding
+  `-frameworkdependent`, `-userinstaller` or `-portable` (a `.zip`) to the name in the feed, so those files
+  exist; a publish for one runtime changes the lock files, which a restore in locked mode refuses.
 - [ ] D-03 Updates. Hypothesis: a notification, as today. Explore: automatic update, if the installer
   technology offers it. Also: the page started the download of an update in a frame of its own, and the webview
   cancels a frame navigation outside the origin of the page and starts no download; the update check has no
@@ -90,7 +129,9 @@ crash produces a report, telemetry runs on a supported SDK.
   no trace.
 - [ ] S-06 Telemetry. Hypothesis: a supported SDK; the classic Application Insights SDK is retired on
   2027-03-31. Explore: Application Insights 3 or OpenTelemetry; consent. Also: the page gets no telemetry
-  settings, creates no telemetry client and sends nothing.
+  settings, creates no telemetry client and sends nothing; the events of an installation and of a removal,
+  which the package of D-01 raises through its own executable, are sent by nothing yet, and their numbers
+  stay comparable with the ones of 1.0.x.
 
 ## T5 Access to models
 
@@ -157,3 +198,7 @@ removed; the Azure DevOps project retired; dependency updates configured again.
 - The Visual Studio Code extension for templates joins this repository.
 - A cross-platform shell.
 - WinGet (#898).
+- The Microsoft Store, which also takes a signed package of Windows Installer that installs silently.
+- WiX 7, when its maintenance fee is settled.
+- An action of the application that registers it as an external tool of Power BI Desktop for a per-user
+  installation, asking for administrator rights.
