@@ -182,14 +182,15 @@
       <CustomAction Id="RegisterExternalTool" FileRef="SetupExe" ExeCommand="register-external-tool --tool-file &quot;$(ExternalToolFile)&quot; --executable &quot;[#BravoExe]&quot;" Execute="deferred" Impersonate="no" Return="ignore" />
       <CustomAction Id="RollbackExternalTool" FileRef="SetupExe" ExeCommand="unregister-external-tool --tool-file &quot;$(ExternalToolFile)&quot;" Execute="rollback" Impersonate="no" Return="ignore" />
       <CustomAction Id="UnregisterExternalTool" FileRef="SetupExe" ExeCommand="unregister-external-tool --tool-file &quot;$(ExternalToolFile)&quot;" Execute="deferred" Impersonate="no" Return="ignore" />
-    <?else?>
-      <!-- The removal of the package per user removes the data of the user as well, as in 1.0.x. -->
-      <CustomAction Id="RemoveUserData" FileRef="SetupExe" ExeCommand="remove-user-data --folder &quot;[LocalAppDataFolder]$(ApplicationDataFolderName)&quot;" Execute="deferred" Impersonate="yes" Return="ignore" />
     <?endif?>
+
+    <!-- A removal also removes the data of who removes, as in 1.0.x: as that user, whose folder it is. -->
+    <CustomAction Id="RemoveUserData" FileRef="SetupExe" ExeCommand="remove-user-data --folder &quot;[LocalAppDataFolder]$(ApplicationDataFolderName)&quot;" Execute="deferred" Impersonate="yes" Return="ignore" />
 
     <!--
       An installation, also over an earlier version, registers and reports. A removal that is not part of an
-      upgrade takes the registration back and reports, while the program is still installed.
+      upgrade takes the registration back, removes the data of the user and reports, while the program is
+      still installed.
     -->
     <?define WhenInstalling = NOT Installed AND NOT REMOVE ?>
     <?define WhenRemoving = (NOT UPGRADINGPRODUCTCODE) AND (REMOVE="ALL") ?>
@@ -201,12 +202,11 @@
         <Custom Action="RegisterExternalTool" After="RollbackExternalTool" Condition="$(WhenInstalling)" />
         <Custom Action="ReportInstall" After="RegisterExternalTool" Condition="$(WhenInstalling)" />
 
-        <Custom Action="UnregisterExternalTool" Before="ReportUninstall" Condition="$(WhenRemoving)" />
+        <Custom Action="UnregisterExternalTool" Before="RemoveUserData" Condition="$(WhenRemoving)" />
       <?else?>
         <Custom Action="ReportInstall" After="InstallFiles" Condition="$(WhenInstalling)" />
-
-        <Custom Action="RemoveUserData" Before="ReportUninstall" Condition="$(WhenRemoving)" />
       <?endif?>
+      <Custom Action="RemoveUserData" Before="ReportUninstall" Condition="$(WhenRemoving)" />
       <Custom Action="ReportUninstall" Before="RemoveFiles" Condition="$(WhenRemoving)" />
     </InstallExecuteSequence>
 

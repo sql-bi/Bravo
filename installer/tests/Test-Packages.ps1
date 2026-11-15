@@ -379,13 +379,7 @@ function Test-InstallUpgradeRemove([string] $Scope) {
     Write-Step "$Scope`: the removal"
     Assert-Equal 0 (Uninstall-Product $product.Code "$Scope-remove") 'the exit code of the removal'
     Assert-Removed $Scope $folder
-    if ($Scope -eq 'perUser') {
-        Assert-True (-not (Test-Path $DataFolder)) 'the removal of the package per user removes the data folder of the user'
-    }
-    else {
-        Assert-True (Test-UserData) 'the removal of the package per machine leaves the data of the user'
-    }
-    Remove-UserData
+    Assert-True (-not (Test-Path $DataFolder)) 'the removal removes the data folder of who removes, as the removal of 1.0.14 does'
 }
 
 # The public properties of 1.0.x on the command line: the same line gives 1.0.14 and this version the same

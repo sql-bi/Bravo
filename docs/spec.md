@@ -668,7 +668,7 @@ need of the .NET runtime, so that it runs where the application could not start.
 | When | Per machine | Per user |
 | --- | --- | --- |
 | An installation, also over an earlier version | `register-external-tool`, `report-install` | `report-install` |
-| A removal that is not part of an upgrade | `unregister-external-tool`, `report-uninstall` | `remove-user-data`, `report-uninstall` |
+| A removal that is not part of an upgrade | `unregister-external-tool`, `remove-user-data`, `report-uninstall` | `remove-user-data`, `report-uninstall` |
 | A first installation that fails and is undone | `unregister-external-tool` | |
 
 - An option is `--name value`. A command gets each of its options once, and no other; a path is a full path.
@@ -682,17 +682,17 @@ need of the .NET runtime, so that it runs where the application could not start.
 - An event carries what 1.0.x sends with it: its name, the scope, the name, the version and the build of the
   product, the operating system, and an identifier of who installs, the SHA-256 of the names of the machine
   and of the account that the program runs as. It names nobody, and is computed as 1.0.x computes it, so
-  that the counts of the two versions can be compared. A package reports as who installs, not as the
-  system. Nothing sends the events yet (backlog S-06).
+  that the counts of the two versions can be compared. A package reports, and removes the data of the
+  user, as who installs or removes, not as the system. Nothing sends the events yet (backlog S-06).
 - The exit code is 0 when the command was carried out, also when it found nothing to do; 1 when a file or
   a folder could not be written or removed; 2 when the command line is not valid. A package ignores it: no
   command fails an installation, and Windows Installer writes the code in its log.
 
 **Removal.** A removal takes away the files of the package, the shortcuts, the registry values, the entry
 among the installed applications and, per machine, the registration as an external tool; the folder of the
-external tools stays. The removal of a package per user also removes the data folder of the user,
-`%LOCALAPPDATA%\Bravo`, with the settings. The removal of a package per machine leaves the data folders of
-the users.
+external tools stays. A removal that is not part of an upgrade also removes the data folder of who removes,
+`%LOCALAPPDATA%\Bravo`, with the settings, as the removal of 1.0.x does, per machine and per user. The data
+folders of the other users of the machine stay.
 
 **A running application.** A silent installation closes, through Restart Manager, the applications that
 hold the files it replaces, and the application ends when asked to
@@ -701,8 +701,8 @@ restart of Windows. The application is not started again.
 
 **How the packages are built.** One WiX project makes the four, from one source for the two contexts. It
 first lays the application out in a folder, as a package installs it: two publishes of the host for
-`win-x64` and the files of the page. The program is compiled ahead of time, to one file, which needs the C++
-build tools of Visual Studio on the machine that builds. The build validates each
+`win-x64` and the files of the page. The program is compiled ahead of time, to one file of about 1 MB, which
+needs the C++ build tools of Visual Studio on the machine that builds. The build validates each
 package against the rules of Windows Installer, and a warning fails it.
 
 **Tests.** Continuous integration builds the packages and then installs them for real, each time in
