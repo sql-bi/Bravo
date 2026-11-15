@@ -692,8 +692,10 @@ need of the .NET runtime, so that it runs where the application could not start.
   that the counts of the two versions can be compared. A package reports, and removes the data of the
   user, as who installs or removes, not as the system. Nothing sends the events yet (backlog S-06).
 - The exit code is 0 when the command was carried out, also when it found nothing to do; 1 when a file or
-  a folder could not be written or removed; 2 when the command line is not valid. A package ignores it: no
-  command fails an installation, and Windows Installer writes the code in its log.
+  a folder could not be written or removed; 2 when the command line is not valid; 3 for an exception that
+  nothing expected, which is written as one line on the standard error and never ends the process with an
+  error report of Windows. A package ignores the code: no command fails an installation, and Windows
+  Installer writes the code in its log.
 
 **Removal.** A removal takes away the files of the package, the shortcuts, the registry values, the entry
 among the installed applications and, per machine, the registration as an external tool; the folder of the

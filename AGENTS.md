@@ -288,7 +288,7 @@ Windows Installer packages install the application
 
 | Part | Path |
 | --- | --- |
-| The composition of the program, its exit codes, and what carries out a command | `Program.cs`, `ExitCode.cs`, `SetupApplication.cs` |
+| The composition of the program, its last defense against an exception, its exit codes, and what carries out a command | `Program.cs`, `ProcessBoundary.cs`, `ExitCode.cs`, `SetupApplication.cs` |
 | The command line: the commands, their options, and the reader of the options | `CommandLine/` |
 | The file that registers the application as an external tool of Power BI Desktop, and its icon | `ExternalTools/` |
 | The events of an installation and of a removal, the identifier of who installs, where the events go | `Telemetry/` |
@@ -305,7 +305,8 @@ Windows Installer packages install the application
   time. A new command is a record derived from `SetupCommand`, a name and a reader in `SetupCommandLine`,
   and a case in `SetupApplication.Execute`.
 - A command never throws for a file that cannot be written: `SetupApplication.Run` answers with an exit
-  code, which the packages ignore.
+  code, which the packages ignore. Any other exception, of the composition as well, stops at
+  `ProcessBoundary.Run`, the one place that catches every exception: it becomes exit code 3.
 - `SetupProcessTests` starts the `Bravo.Setup.exe` that the build wrote, as a package does.
 
 The packages are one WiX project, `installer/Bravo.Installer.wixproj`, on the WiX SDK 5.0.2 that its first

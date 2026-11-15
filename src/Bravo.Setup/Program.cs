@@ -9,13 +9,12 @@ internal static class Program
 {
     private static int Main(string[] args)
     {
-        var reporter = new InstallationEventReporter(new NullInstallationEventSink(), SetupEnvironment.Read());
-        var application = new SetupApplication(
-            new ExternalToolRegistration(),
-            reporter,
-            new UserDataFolder(),
-            Console.Error);
+        return ProcessBoundary.Run(() => Compose().Run(args), Console.Error);
+    }
 
-        return application.Run(args);
+    private static SetupApplication Compose()
+    {
+        var reporter = new InstallationEventReporter(new NullInstallationEventSink(), SetupEnvironment.Read());
+        return new SetupApplication(new ExternalToolRegistration(), reporter, new UserDataFolder(), Console.Error);
     }
 }

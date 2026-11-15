@@ -20,4 +20,9 @@ internal static class ExitCode
     /// The command line names no command, an unknown one, or lacks one of its options.
     /// </summary>
     public const int InvalidCommandLine = 2;
+
+    /// <summary>
+    /// An exception that nothing expected: a defect of the program.
+    /// </summary>
+    public const int Unexpected = 3;
 }
