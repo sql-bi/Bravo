@@ -3,6 +3,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using Windows.Win32;
+using Windows.Win32.Foundation;
 using Xunit;
 
 namespace Bravo.Desktop.Tests;
@@ -17,6 +19,12 @@ public sealed class BravoProcessTests
 
     // The time the host has to stop: a closed window is an ended process within it.
     private static readonly TimeSpan s_shutdownTimeout = TimeSpan.FromSeconds(5);
+
+    // WM_QUERYENDSESSION and WM_ENDSESSION, with ENDSESSION_CLOSEAPP: the application is asked to end so
+    // that its files can be replaced, and not because the session of the user ends.
+    private const uint QueryEndSession = 0x0011;
+    private const uint EndSession = 0x0016;
+    private const int CloseApplication = 0x1;
 
     [Fact]
     public async Task Start_WhileAnInstanceRuns_HandsOverAndExitsAndTheInstanceGoesOnUntilItIsClosed()
@@ -43,6 +51,31 @@ public sealed class BravoProcessTests
         {
             Kill(second);
             Kill(first);
+        }
+    }
+
+    // What Restart Manager sends to the window of an application that holds the files that an installation
+    // replaces: the question, then the order. An application that answers yes and ends is replaced with no
+    // restart of Windows.
+    [Fact]
+    public async Task EndSession_AskedAsRestartManagerAsks_IsAllowedAndEndsTheProcessWithSuccess()
+    {
+        using var bravo = StartBravo();
+        try
+        {
+            await WaitForMainWindowAsync(bravo);
+            var window = (HWND)bravo.MainWindowHandle;
+
+            var answer = PInvoke.SendMessage(window, QueryEndSession, default, new LPARAM(CloseApplication));
+            _ = PInvoke.SendMessage(window, EndSession, new WPARAM(1), new LPARAM(CloseApplication));
+            var exitCode = await WaitForExitAsync(bravo, s_shutdownTimeout);
+
+            Assert.Equal(1, answer.Value);
+            Assert.Equal(0, exitCode);
+        }
+        finally
+        {
+            Kill(bravo);
         }
     }
 

@@ -158,6 +158,9 @@ A project of `src/` gets its test project with its first test: a run in which no
 - The tests of the single instance use real mutexes and pipes, each test under names of its own.
   `BravoProcessTests` starts the `Bravo.exe` that the build wrote, a development build: it shows a window for
   a moment, and it is skipped when a development build already runs for the user.
+- No code of the application handles a request to end: Windows Forms answers the two messages, and closes
+  the main window at the second one. `BravoProcessTests` sends them as Restart Manager does, and fails when
+  the application no longer answers yes or no longer ends with exit code 0.
 
 | Task | Command |
 | --- | --- |

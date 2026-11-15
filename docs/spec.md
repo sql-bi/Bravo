@@ -196,6 +196,13 @@ window, not a console: closing the window stops the host, and a host that stops 
 stop takes at most 5 seconds, the time Windows gives an application when a session ends. A component registers
 its services in an extension method of `IServiceCollection`, which only `Bravo.Desktop` calls.
 
+**A request to end.** Windows asks an application to end when the session of the user ends, and Restart
+Manager asks it when an installation must replace its files
+([guidelines](https://learn.microsoft.com/windows/win32/rstmgr/guidelines-for-applications)): the window is asked
+whether it can end, then told to. The application always answers yes, closes its window as when the user
+closes it, and ends with exit code 0 within the time of a stop. It does not ask Restart Manager to start it
+again.
+
 **Single instance.** One instance for each user in each Windows session, at every privilege level.
 
 - Ownership is a named mutex, scoped to the user and to the session. A process is the owner only when it has
