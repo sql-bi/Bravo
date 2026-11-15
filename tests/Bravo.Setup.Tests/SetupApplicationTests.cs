@@ -68,13 +68,13 @@ public sealed class SetupApplicationTests : IDisposable
     }
 
     [Fact]
-    public void Run_RemoveUserData_RemovesTheFolder()
+    public void Run_RemoveUserData_RemovesTheDataFolderOfTheApplication()
     {
         var dataFolder = _folder.Combine("Bravo");
         Directory.CreateDirectory(dataFolder);
         File.WriteAllText(Path.Combine(dataFolder, "usersettings.json"), "{}");
 
-        var exitCode = _application.Run(["remove-user-data", "--folder", dataFolder]);
+        var exitCode = _application.Run(["remove-user-data", "--local-application-data", _folder.Path]);
 
         Assert.Equal(ExitCode.Success, exitCode);
         Assert.False(Directory.Exists(dataFolder));

@@ -51,6 +51,24 @@ public sealed class SetupProcessTests : IDisposable
         Assert.Equal((0, ""), result);
     }
 
+    // The command line as the package writes it: the folder of Windows Installer ends with a backslash,
+    // and a second one keeps it from hiding the quote that follows.
+    [Fact]
+    public async Task Start_RemoveUserDataWithTheCommandLineOfThePackage_RemovesTheDataFolderAlone()
+    {
+        Directory.CreateDirectory(_folder.Combine("Local App Data", "Bravo", "WebView2"));
+        Directory.CreateDirectory(_folder.Combine("Local App Data", "Another"));
+        var localApplicationData = _folder.Combine("Local App Data") + @"\";
+
+        var result = await RunAsync(new ProcessStartInfo
+        {
+            Arguments = $"remove-user-data --local-application-data \"{localApplicationData}\\\"",
+        });
+
+        Assert.Equal((0, ""), result);
+        Assert.Equal([_folder.Combine("Local App Data", "Another")], Directory.GetDirectories(_folder.Combine("Local App Data")));
+    }
+
     [Fact]
     public async Task Start_NoCommand_EndsWithTheCodeOfACommandLineThatIsNotValid()
     {
@@ -61,16 +79,18 @@ public sealed class SetupProcessTests : IDisposable
     }
 
     // The build of the tests writes where the project of the executable built it.
-    private static async Task<(int ExitCode, string Error)> RunAsync(params string[] arguments)
+    private static Task<(int ExitCode, string Error)> RunAsync(params string[] arguments)
+    {
+        return RunAsync(new ProcessStartInfo("", arguments));
+    }
+
+    private static async Task<(int ExitCode, string Error)> RunAsync(ProcessStartInfo startInfo)
     {
         var cancellationToken = TestContext.Current.CancellationToken;
         var pathFile = Path.Combine(AppContext.BaseDirectory, "SetupExecutable.txt");
-        var path = (await File.ReadAllTextAsync(pathFile, cancellationToken)).Trim();
-        var startInfo = new ProcessStartInfo(path, arguments)
-        {
-            UseShellExecute = false,
-            RedirectStandardError = true,
-        };
+        startInfo.FileName = (await File.ReadAllTextAsync(pathFile, cancellationToken)).Trim();
+        startInfo.UseShellExecute = false;
+        startInfo.RedirectStandardError = true;
 
         using var process = Process.Start(startInfo) ?? throw new InvalidOperationException("The program did not start.");
         using var timeoutSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);

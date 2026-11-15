@@ -665,7 +665,7 @@ need of the .NET runtime, so that it runs where the application could not start.
 | `register-external-tool` | `--tool-file`, `--executable` | Writes the file that registers the application as an external tool of Power BI Desktop, with its folder when it is missing. A file that is there is replaced |
 | `unregister-external-tool` | `--tool-file` | Removes that file. The folder stays: other tools register in it |
 | `report-install`, `report-uninstall` | `--scope`, `--product-name`, `--product-version`, `--product-build`, `--telemetry-enabled` | Reports the event `Install` or `Uninstall`, when the value of `--telemetry-enabled` is `1` |
-| `remove-user-data` | `--folder` | Removes a folder with everything in it. It refuses the root of a drive |
+| `remove-user-data` | `--local-application-data` | Removes the data folder of the application, `Bravo`, with everything in it, from the folder of local application data that it is given, and nothing else of that folder |
 
 | When | Per machine | Per user |
 | --- | --- | --- |
@@ -675,7 +675,8 @@ need of the .NET runtime, so that it runs where the application could not start.
 
 - An option is `--name value`. A command gets each of its options once, and no other; a path is a full path.
 - The program finds no folder by itself and reads nothing from the registry: the package passes every
-  path, and a test passes folders of its own.
+  path, and a test passes folders of its own. One name is in the program and not in the package, the one
+  of the data folder: no command line makes the program remove another folder.
 - The registration is the one of 1.0.x: the name `Bravo`, the arguments
   `--server="%server%" --database="%database%"`, the same icon, and the full path of the executable. Its
   description is `Bravo for Power BI`. The file is `bravo.pbitool.json`, in the folder that Power BI

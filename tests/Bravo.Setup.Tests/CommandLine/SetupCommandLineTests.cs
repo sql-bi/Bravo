@@ -61,11 +61,11 @@ public sealed class SetupCommandLineTests
     }
 
     [Fact]
-    public void TryParse_RemoveUserData_ReturnsTheFolder()
+    public void TryParse_RemoveUserData_ReturnsTheFolderOfTheLocalApplicationData()
     {
-        var command = Parse("remove-user-data", "--folder", @"C:\Users\someone\AppData\Local\Bravo");
+        var command = Parse("remove-user-data", "--local-application-data", @"C:\Users\someone\AppData\Local\");
 
-        Assert.Equal(new RemoveUserDataCommand(@"C:\Users\someone\AppData\Local\Bravo"), command);
+        Assert.Equal(new RemoveUserDataCommand(@"C:\Users\someone\AppData\Local\"), command);
     }
 
     [Theory]
@@ -91,6 +91,7 @@ public sealed class SetupCommandLineTests
     [InlineData("unregister-external-tool")]
     [InlineData("report-install", "--scope", "perUser", "--product-name", "Bravo", "--product-version", "1.1.0")]
     [InlineData("remove-user-data")]
+    [InlineData("remove-user-data", "--folder", @"C:\Users\someone\AppData\Local\Bravo")]
     public void TryParse_OptionsThatAreNotTheOnesOfTheCommand_ReturnsAnError(params string[] arguments)
     {
         var isParsed = SetupCommandLine.TryParse(arguments, out var command, out var error);
@@ -106,8 +107,8 @@ public sealed class SetupCommandLineTests
     [InlineData("register-external-tool", "--tool-file", ToolFile, "--executable", "Bravo.exe")]
     [InlineData("unregister-external-tool", "--tool-file", @"External Tools\bravo.pbitool.json")]
     [InlineData("unregister-external-tool", "--tool-file", "")]
-    [InlineData("remove-user-data", "--folder", "Bravo")]
-    [InlineData("remove-user-data", "--folder", @"\Bravo")]
+    [InlineData("remove-user-data", "--local-application-data", "Local")]
+    [InlineData("remove-user-data", "--local-application-data", @"\AppData\Local")]
     public void TryParse_APathThatIsNotFull_ReturnsAnError(params string[] arguments)
     {
         var isParsed = SetupCommandLine.TryParse(arguments, out _, out var error);
@@ -116,17 +117,7 @@ public sealed class SetupCommandLineTests
         Assert.Contains("full path", error);
     }
 
-    [Theory]
-    [InlineData(@"C:\")]
-    [InlineData(@"\\server\share")]
-    [InlineData(@"\\server\share\")]
-    public void TryParse_RemoveUserDataOfTheRootOfADrive_ReturnsAnError(string folder)
-    {
-        var isParsed = SetupCommandLine.TryParse(["remove-user-data", "--folder", folder], out _, out var error);
 
-        Assert.False(isParsed);
-        Assert.Contains("root", error);
-    }
 
     private static string[] ReportOptions(string telemetryEnabled)
     {

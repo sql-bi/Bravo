@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.IO;
 using Bravo.Setup.Telemetry;
 
 namespace Bravo.Setup.CommandLine;
@@ -25,7 +24,7 @@ internal static class SetupCommandLine
     public const string ProductVersionOption = "--product-version";
     public const string ProductBuildOption = "--product-build";
     public const string TelemetryEnabledOption = "--telemetry-enabled";
-    public const string FolderOption = "--folder";
+    public const string LocalApplicationDataOption = "--local-application-data";
 
     // The value of the telemetry option when who installs chose to send: anything else is a no.
     private const string Enabled = "1";
@@ -112,19 +111,7 @@ internal static class SetupCommandLine
 
     private static RemoveUserDataCommand? ReadRemoveUserData(SetupOptions options)
     {
-        var folder = options.ReadFullPath(FolderOption);
-        if (folder is null)
-        {
-            return null;
-        }
-
-        // A drive or a share, which has no folder above it, is never the data folder of the application.
-        if (Path.GetDirectoryName(Path.TrimEndingDirectorySeparator(folder)) is null)
-        {
-            options.Reject($"The option {FolderOption} names the root of a drive: '{folder}'.");
-            return null;
-        }
-
-        return new RemoveUserDataCommand(folder);
+        var localApplicationData = options.ReadFullPath(LocalApplicationDataOption);
+        return localApplicationData is null ? null : new RemoveUserDataCommand(localApplicationData);
     }
 }

@@ -295,7 +295,9 @@ Windows Installer packages install the application
 | The removal of the data folder of a user | `UserData/` |
 
 - The program finds no folder by itself: every path is an option of its command line. A test gives it a
-  folder of its own, under the temporary folder of the user, and nothing else to write in.
+  folder of its own, under the temporary folder of the user, and nothing else to write in. The one name
+  that the program holds is the one of the data folder (`UserDataFolder.Name`): `remove-user-data` is
+  given the folder of local application data, and removes that subfolder alone.
 - What touches the disk or the network is behind an interface: `IExternalToolRegistration`,
   `IUserDataFolder`, `IInstallationEventSink`. The sink that `Program` composes sends nothing (backlog
   S-06).

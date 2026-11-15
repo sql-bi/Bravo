@@ -6,7 +6,7 @@
     properties, the registry values, the folders, the names of the product.
   -->
   <?define RegistryKey = "Software\SQLBI\Bravo" ?>
-  <?define ApplicationDataFolderName = "Bravo" ?>
+
   <?define ExternalToolFileName = "bravo.pbitool.json" ?>
 
   <?if $(Scope) = perMachine ?>
@@ -189,8 +189,12 @@
       <CustomAction Id="UnregisterExternalTool" BinaryRef="SetupProgram" ExeCommand="unregister-external-tool --tool-file &quot;$(ExternalToolFile)&quot;" Execute="deferred" Impersonate="no" Return="ignore" />
     <?endif?>
 
-    <!-- A removal also removes the data of who removes, as in 1.0.x: as that user, whose folder it is. -->
-    <CustomAction Id="RemoveUserData" FileRef="SetupExe" ExeCommand="remove-user-data --folder &quot;[LocalAppDataFolder]$(ApplicationDataFolderName)&quot;" Execute="deferred" Impersonate="yes" Return="ignore" />
+    <!--
+      A removal also removes the data of who removes, as in 1.0.x: as that user, whose folder it is. The
+      program knows the name of the data folder. The folder of Windows ends with a backslash, which the one
+      before the quote keeps from hiding it.
+    -->
+    <CustomAction Id="RemoveUserData" FileRef="SetupExe" ExeCommand="remove-user-data --local-application-data &quot;[LocalAppDataFolder]\&quot;" Execute="deferred" Impersonate="yes" Return="ignore" />
 
     <!--
       An installation, also over an earlier version, registers and reports. A removal that is not part of an

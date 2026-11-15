@@ -56,7 +56,7 @@ internal sealed class SetupApplication(
                 _reporter.Report(report.Kind, report.Product, report.IsTelemetryEnabled);
                 break;
             case RemoveUserDataCommand remove:
-                _userData.Remove(remove.Folder);
+                _userData.Remove(remove.LocalApplicationData);
                 break;
             default:
                 throw new InvalidOperationException($"No code carries out the command {command.GetType().Name}.");

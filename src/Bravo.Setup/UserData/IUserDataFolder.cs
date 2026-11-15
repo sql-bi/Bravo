@@ -2,12 +2,13 @@
 
 /// <summary>
 /// The folder where the application keeps the data of a user: settings, the profile of the webview, logs.
-/// The caller says where it is.
+/// Its name is fixed, and the caller says which folder of local application data it is in.
 /// </summary>
 internal interface IUserDataFolder
 {
     /// <summary>
-    /// Removes the folder with everything in it. A folder that is not there is not an error.
+    /// Removes the data folder of the application with everything in it, and nothing else of the folder
+    /// that it is in. A folder that is not there is not an error.
     /// </summary>
-    void Remove(string folder);
+    void Remove(string localApplicationData);
 }
