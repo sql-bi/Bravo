@@ -1,0 +1,15 @@
+<Project>
+
+  <!-- MSBuild stops at the first Directory.Build.props it finds: the rules of the root file are imported here. -->
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+
+  <!--
+    The WiX SDK does not know the artifacts layout of the .NET SDK: without these the installer project would
+    write obj and bin beside its sources.
+  -->
+  <PropertyGroup>
+    <BaseIntermediateOutputPath>$(ArtifactsPath)\obj\$(MSBuildProjectName)\</BaseIntermediateOutputPath>
+    <BaseOutputPath>$(ArtifactsPath)\bin\$(MSBuildProjectName)\</BaseOutputPath>
+  </PropertyGroup>
+
+</Project>

@@ -1,0 +1,20 @@
+<WixLocalization Culture="en-US" Codepage="1252" xmlns="http://wixtoolset.org/schemas/v4/wxl">
+
+  <!-- The texts of 1.0.x. The package per user adds " (User)" to the name of the product. -->
+  <String Id="ProductName" Value="Bravo for Power BI" />
+  <String Id="PackageDescription" Value="Bravo for Power BI" />
+  <String Id="MajorUpgradeDowngradeErrorMessage" Value="A newer version of this application is already installed on this computer" />
+  <String Id="DesktopShortcutCheckBoxText" Value="Create Desktop Shortcut" />
+  <String Id="ProgramMenuShortcutCheckBoxText" Value="Create Program Menu Shortcut" />
+  <String Id="TelemetryInstallTitleText" Value="Telemetry and error reports:" />
+  <String Id="TelemetryInstallDescriptionText" Value="Bravo for Power BI collects anonymous telemetry, which helps us improve the product. You can opt-out at any time by launching Bravo and navigating to Settings &gt; Telemetry." />
+  <String Id="InstallerTelemetryCheckBoxText" Value="Enable Installer Telemetry" />
+  <String Id="ApplicationTelemetryCheckBoxText" Value="Enable Application Telemetry" />
+  <String Id="LaunchApplicationCheckBoxText" Value="Launch" />
+
+  <String Id="SupportedWindowsVersionConditionMessage" Value="This application requires Windows 10 version 1607, Windows Server 2016, or a later version of Windows." />
+
+  <!-- A text of the dialogs of WiX, replaced. -->
+  <String Id="InstallDirDlgDescription" Value="Click next to install to the default location or change it below" />
+
+</WixLocalization>

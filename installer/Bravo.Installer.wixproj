@@ -1,0 +1,92 @@
+<Project Sdk="WixToolset.Sdk/5.0.2">
+
+  <!--
+    One build makes one of the four packages. BravoScope is perMachine or perUser; BravoSelfContained says
+    whether the package carries the .NET runtime. The target BuildPackages makes the four of them.
+  -->
+  <PropertyGroup>
+    <BravoScope Condition="'$(BravoScope)' == ''">perMachine</BravoScope>
+    <BravoSelfContained Condition="'$(BravoSelfContained)' == ''">true</BravoSelfContained>
+  </PropertyGroup>
+
+  <!--
+    The version of the application and of the product. How a release computes it is backlog D-02: until then a
+    build passes it, and it is 1.1.0 otherwise. Windows Installer compares the first three numbers, which must
+    stay above the ones of 1.0.x for a package to replace it.
+  -->
+  <PropertyGroup>
+    <BravoVersion Condition="'$(BravoVersion)' == ''">1.1.0</BravoVersion>
+  </PropertyGroup>
+
+  <!--
+    The program that the packages run is compiled ahead of time, which needs the C++ build tools of Visual
+    Studio. On a machine without them, BravoSetupNativeAot=false makes a package to look at, with that program
+    as one file that carries the .NET runtime: ten times the size, and not what a release ships.
+  -->
+  <PropertyGroup>
+    <BravoSetupNativeAot Condition="'$(BravoSetupNativeAot)' == ''">true</BravoSetupNativeAot>
+  </PropertyGroup>
+
+  <!-- The file names are the ones of 1.0.x, which an installed 1.0.x builds by itself to ask for its update. -->
+  <PropertyGroup>
+    <RuntimeName Condition="'$(BravoSelfContained)' == 'true'">selfcontained</RuntimeName>
+    <RuntimeName Condition="'$(BravoSelfContained)' != 'true'">frameworkdependent</RuntimeName>
+    <RuntimeSuffix Condition="'$(BravoSelfContained)' != 'true'">-frameworkdependent</RuntimeSuffix>
+    <ScopeSuffix Condition="'$(BravoScope)' == 'perUser'">-userinstaller</ScopeSuffix>
+    <OutputName>Bravo.$(BravoVersion).x64$(RuntimeSuffix)$(ScopeSuffix)</OutputName>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <InstallerPlatform>x64</InstallerPlatform>
+    <Cultures>en-US</Cultures>
+    <SuppressPdbOutput>true</SuppressPdbOutput>
+    <DefineConstants>Scope=$(BravoScope);ProductVersion=$(BravoVersion)</DefineConstants>
+    <OutputPath>$(ArtifactsPath)\installer\</OutputPath>
+    <IntermediateOutputPath>$(BaseIntermediateOutputPath)$(Configuration)\$(BravoVersion)-$(RuntimeName)-$(BravoScope)\</IntermediateOutputPath>
+  </PropertyGroup>
+
+  <!--
+    ICE60: the font of the user interface is a file with a version and no language. It is a file of the page,
+    which Windows never registers as a font.
+    ICE61: a package also replaces an installed one of its own version, so that a preview is replaced by its
+    release (AllowSameVersionUpgrades).
+    ICE80, per user only: the folder is the one of 1.0.x, which Windows Installer calls a 32-bit one. In an
+    installation per user it is the same folder for 32-bit and 64-bit components.
+  -->
+  <PropertyGroup>
+    <SuppressIces>ICE60;ICE61</SuppressIces>
+    <SuppressIces Condition="'$(BravoScope)' == 'perUser'">$(SuppressIces);ICE80</SuppressIces>
+  </PropertyGroup>
+
+  <!-- The dialogs of WiX. No other extension, and no custom action library. -->
+  <ItemGroup>
+    <PackageReference Include="WixToolset.UI.wixext" />
+  </ItemGroup>
+
+  <!-- Where the application is laid out as a package installs it, for each version and each of the two runtimes. -->
+  <PropertyGroup>
+    <RepositoryRoot>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..'))</RepositoryRoot>
+    <StageRoot>$(ArtifactsPath)\installer-stage\$(BravoVersion)\</StageRoot>
+    <StageDir>$(StageRoot)$(RuntimeName)\</StageDir>
+    <WebBundleDir>$(ArtifactsPath)\web\</WebBundleDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <BindPath Include="$(StageDir)" BindName="Application" />
+    <BindPath Include="$(RepositoryRoot)src\Bravo.Desktop\Assets" BindName="ApplicationAssets" />
+  </ItemGroup>
+
+  <Import Project="Stage.targets" />
+
+  <!-- The four packages, in artifacts/installer. -->
+  <Target Name="BuildPackages">
+    <ItemGroup>
+      <PackageVariant Include="perMachine-selfcontained" Properties="BravoScope=perMachine;BravoSelfContained=true" />
+      <PackageVariant Include="perMachine-frameworkdependent" Properties="BravoScope=perMachine;BravoSelfContained=false" />
+      <PackageVariant Include="perUser-selfcontained" Properties="BravoScope=perUser;BravoSelfContained=true" />
+      <PackageVariant Include="perUser-frameworkdependent" Properties="BravoScope=perUser;BravoSelfContained=false" />
+    </ItemGroup>
+    <MSBuild Projects="$(MSBuildProjectFullPath)" Targets="Build" Properties="%(PackageVariant.Properties)" />
+  </Target>
+
+</Project>

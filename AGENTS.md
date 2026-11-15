@@ -79,10 +79,10 @@ not exist yet: the table names the backlog item that creates them.
 | `src/Bravo.Api/openapi.json` | The OpenAPI document of the API: a test compares it with the routes | Exists |
 | `tests/` | One test project per project of `src/`, at the mirrored path, created with the first test of that project, and the architecture tests | Exists |
 | `web/` | The TypeScript user interface, with its own `package.json` and lockfile | Exists |
-| `installer/` | The installer | Created by backlog D-01 |
+| `installer/` | The WiX project of the installer packages, and the tests that install them ([Installer](#installer)) | Exists |
 | `policies/` | The group policy templates: `bravo.admx`, `sqlbi.admx`, `en-US/` | Exists |
 | `docs/` | Specification, backlog, ADRs, and the design of the previous implementation | Exists |
-| `artifacts/` | Build and publish output of every project, the release bundle of the user interface, the results of the tests of the window and the screens of the window, ignored by git | Written by the builds, the tests and the command of the screens |
+| `artifacts/` | Build and publish output of every project, the release bundle of the user interface, the installer packages with the folders they are made from, the results of the tests of the window and the screens of the window, ignored by git | Written by the builds, the tests and the command of the screens |
 | `Bravo.slnx`, `Directory.Build.props`, `Directory.Packages.props` | The solution and the build rules of every .NET project | Exist |
 | `Bravo.Portable.slnf` | The projects of the solution that do not target Windows, which continuous integration builds and tests on Linux | Exists |
 | `Directory.Build.targets` | What is done to every .NET project after its packages: the reference that the WebView2 package adds to its WPF control is removed | Exists |
@@ -152,7 +152,7 @@ A project of `src/` gets its test project with its first test: a run in which no
   real socket.
 - `Main` reads the identity of the build once, from the metadata of the assembly, and passes it on: no code
   asks again which build it is. A build is a development build unless it was built with
-  `-p:BravoReleaseBuild=true`, which only the release pipeline does (backlog D-02). The property is not the
+  `-p:BravoReleaseBuild=true`, which only the build of the installer packages does. The property is not the
   configuration: `-c Release` on a developer's machine is a development build. A development build is
   another instance than the installed application, so both can run at once.
 - The tests of the single instance use real mutexes and pipes, each test under names of its own.
@@ -204,8 +204,8 @@ The main window shows the user interface in WebView2
   no test and no Windows 11 machine runs.
 - The page is `wwwroot` beside the executable. The .NET build never runs npm: a development build copies
   `web/wwwroot` as it is, so the window shows the user interface only after `npm run build:UI` in `web/` and
-  a build of `Bravo.Desktop`; without the bundle the window stays empty. A release build copies nothing
-  (backlog D-01).
+  a build of `Bravo.Desktop`; without the bundle the window stays empty. A release build copies nothing:
+  the build of the installer lays the folder out, with the release bundle ([Installer](#installer)).
 - `WebViewHostTests` uses the real engine: a window outside every screen, on a thread with a message loop, on
   a page of the test that reports through the title of its document. It needs the WebView2 runtime, which
   Windows 11 and the Windows runner of continuous integration have. A test waits for an event of the engine,
@@ -305,6 +305,48 @@ Windows Installer packages install the application
 - A command never throws for a file that cannot be written: `SetupApplication.Run` answers with an exit
   code, which the packages ignore.
 - `SetupProcessTests` starts the `Bravo.Setup.exe` that the build wrote, as a package does.
+
+The packages are one WiX project, `installer/Bravo.Installer.wixproj`, on the WiX SDK 5.0.2 that its first
+line names. It is not a project of the solution: a build of the solution makes no package.
+
+| Part | File of `installer/` |
+| --- | --- |
+| Which package a build makes, its file name, the validation rules that are turned off and why | `Bravo.Installer.wixproj` |
+| The folder of the application as a package installs it: the two publishes and the files of the page | `Stage.targets` |
+| The package: identity, upgrade, choices, folders, files, registry values, shortcuts, what it runs and when | `Package.wxs` |
+| The dialog set, which is the one of WiX with two dialogs replaced | `Dialogs.wxs` |
+| The texts | `Package.en-us.wxl` |
+| The licence and the two images of the dialogs | `assets/` |
+| The real installations that continuous integration runs | `tests/Test-Packages.ps1` |
+
+| Task | Command |
+| --- | --- |
+| Build the four packages into `artifacts/installer/en-US` | `dotnet build installer/Bravo.Installer.wixproj -c Release -t:BuildPackages` |
+| Build one package | `dotnet build installer/Bravo.Installer.wixproj -c Release -p:BravoScope=perUser -p:BravoSelfContained=false` |
+| Build the packages of another version | add `-p:BravoVersion=1.1.1` |
+| Build on a machine without the C++ build tools | add `-p:BravoSetupNativeAot=false` |
+
+- Before a package is built, `web/` has made the release bundle: `npm ci`, then `npm run build:Release`. The
+  build of the installer never runs npm, and stops with these two commands when the bundle is missing.
+- `Package.wxs` is one source for the two contexts: the build defines `Scope`, and what differs is inside
+  `<?if?>`. Its public properties, registry values, folders and product names are the ones of 1.0.x, which
+  [docs/spec.md](docs/spec.md#installer) lists.
+- `Stage.targets` publishes `Bravo.Desktop` and `Bravo.Setup` with `dotnet publish` for `win-x64`, into
+  `artifacts/installer-stage/<version>/`. Those publishes restore another graph of packages than the lock
+  files hold, and read and write no lock file: the committed ones do not change (backlog D-02). A layout is
+  made again when a file of `src/`, of the page or of the build rules is newer than it.
+- `Bravo.Setup.exe` is published with `PublishAot`, which needs the "Desktop development with C++" workload
+  of Visual Studio: the runner has it. Without it the publish fails with "Platform linker not found";
+  `-p:BravoSetupNativeAot=false` then makes packages to look at, with the program as one file that carries
+  the .NET runtime, about 11 MB. Those are not the packages of a release.
+- A package is the release build of the application: `Stage.targets` passes `-p:BravoReleaseBuild=true`.
+  The `Bravo.exe` of a layout is therefore the same instance as an installed Bravo, with the same data
+  folder.
+- The build validates a package against the rules of Windows Installer (ICE), also on a developer's
+  machine, and a warning fails it. `Bravo.Installer.wixproj` says why each rule that is turned off is.
+- `Dialogs.wxs` is derived from three files of WiX, under their licence: what differs from them is marked.
+- `tests/Test-Packages.ps1` installs and removes Bravo on the machine that runs it, so it refuses to run
+  outside GitHub Actions: a package is installed on a runner, or on a machine that can be thrown away.
 
 ## Build and tests
 

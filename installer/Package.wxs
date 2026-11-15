@@ -1,0 +1,230 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+
+  <!--
+    One source for the two packages: the build defines Scope as perMachine or perUser. Every name here that an
+    installation or a deployment of 1.0.x relies on is the one of 1.0.x: the UpgradeCode, the public
+    properties, the registry values, the folders, the names of the product.
+  -->
+  <?define RegistryKey = "Software\SQLBI\Bravo" ?>
+  <?define ApplicationDataFolderName = "Bravo" ?>
+  <?define ExternalToolFileName = "bravo.pbitool.json" ?>
+
+  <?if $(Scope) = perMachine ?>
+    <?define ProductName = "!(loc.ProductName)" ?>
+    <?define RegistryRoot = "HKLM" ?>
+    <?define ProgramFilesDirectory = "ProgramFiles64Folder" ?>
+  <?elseif $(Scope) = perUser ?>
+    <?define ProductName = "!(loc.ProductName) (User)" ?>
+    <?define RegistryRoot = "HKCU" ?>
+    <?define ProgramFilesDirectory = "ProgramFilesFolder" ?>
+  <?else?>
+    <?error Scope is perMachine or perUser ?>
+  <?endif?>
+
+  <!-- The version of the product is the version of the file of the application, as in 1.0.x. -->
+  <Package Name="$(ProductName)"
+           Manufacturer="SQLBI"
+           Version="!(bind.fileVersion.BravoExe)"
+           UpgradeCode="{888BDB48-B16A-4D9A-8FE6-0206897B1162}"
+           Scope="$(Scope)"
+           Language="1033"
+           Codepage="1252"
+           InstallerVersion="500"
+           Compressed="yes">
+
+    <SummaryInformation Description="!(loc.PackageDescription)" Manufacturer="SQLBI" />
+
+    <!--
+      A package replaces an installed one of its installation context, of a lower version or of its own: a
+      preview is replaced by its release. The installed one is removed before the new files are copied.
+    -->
+    <MajorUpgrade AllowSameVersionUpgrades="yes"
+                  IgnoreLanguage="yes"
+                  DowngradeErrorMessage="!(loc.MajorUpgradeDowngradeErrorMessage)"
+                  Schedule="afterInstallValidate" />
+
+    <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
+
+    <?if $(Scope) = perUser ?>
+      <!-- Per user by default and with no elevation, as 1.0.x: its files go under the Programs folder of the user. -->
+      <Property Id="ALLUSERS" Value="2" />
+      <Property Id="MSIINSTALLPERUSER" Value="1" />
+    <?endif?>
+
+    <!--
+      The oldest Windows that both .NET 10 and the WebView2 runtime support: Windows 10 version 1607 and
+      Windows Server 2016, build 14393. VersionNT does not tell Windows 10 from Windows 8.1.
+    -->
+    <Property Id="WINDOWSBUILDNUMBER" Secure="yes">
+      <RegistrySearch Id="BuildNumberSearch" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion" Name="CurrentBuildNumber" Type="raw" Bitness="always64" />
+    </Property>
+    <Launch Condition="Installed OR WINDOWSBUILDNUMBER &gt;= 14393" Message="!(loc.SupportedWindowsVersionConditionMessage)" />
+
+    <Icon Id="app.ico" SourceFile="!(bindpath.ApplicationAssets)\bravo.ico" />
+    <Property Id="ARPPRODUCTICON" Value="app.ico" />
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/sql-bi/bravo" />
+    <Property Id="ARPNOREPAIR" Value="yes" />
+
+    <!--
+      The choices of who installs. A value of 1 on the command line turns a choice on and any other value turns
+      it off. With no value, a first installation turns it on, and an upgrade or a removal reads what the
+      installed package wrote in the registry.
+    -->
+    <Property Id="DESKTOPSHORTCUTENABLED" Secure="yes" />
+    <Property Id="PROGRAMMENUSHORTCUTENABLED" Secure="yes" />
+    <Property Id="INSTALLERTELEMETRYENABLED" Secure="yes" />
+    <Property Id="APPLICATIONTELEMETRYENABLED" Secure="yes" />
+
+    <!-- Accepted and not read, as in 1.0.x: the identifier is always computed from who installs. -->
+    <Property Id="TELEMETRYUSERID" Secure="yes" />
+
+    <Property Id="DESKTOPSHORTCUTENABLEDREMEMBER">
+      <RegistrySearch Id="searchDesktopShortcutEnabledRemember" Root="$(RegistryRoot)" Key="$(RegistryKey)" Name="desktopShortcutEnabled" Type="raw" Bitness="always64" />
+    </Property>
+    <Property Id="PROGRAMMENUSHORTCUTENABLEDREMEMBER">
+      <RegistrySearch Id="searchProgramMenuShortcutEnabledRemember" Root="$(RegistryRoot)" Key="$(RegistryKey)" Name="programMenuShortcutEnabled" Type="raw" Bitness="always64" />
+    </Property>
+    <Property Id="INSTALLERTELEMETRYENABLEDREMEMBER">
+      <RegistrySearch Id="searchInstallerTelemetryEnabledRemember" Root="$(RegistryRoot)" Key="$(RegistryKey)" Name="installerTelemetryEnabled" Type="raw" Bitness="always64" />
+    </Property>
+    <Property Id="APPLICATIONTELEMETRYENABLEDREMEMBER">
+      <RegistrySearch Id="searchApplicationTelemetryEnabledRemember" Root="$(RegistryRoot)" Key="$(RegistryKey)" Name="applicationTelemetryEnabled" Type="raw" Bitness="always64" />
+    </Property>
+
+    <?foreach Choice in DESKTOPSHORTCUTENABLED;PROGRAMMENUSHORTCUTENABLED;INSTALLERTELEMETRYENABLED;APPLICATIONTELEMETRYENABLED ?>
+      <SetProperty Action="Default$(Choice)" Id="$(Choice)" Value="1" After="AppSearch" Sequence="first"
+                   Condition="NOT $(Choice) AND ((NOT Installed AND NOT WIX_UPGRADE_DETECTED) OR $(Choice)REMEMBER = &quot;1&quot;)" />
+      <!-- A property without a value is a check box that is not checked. -->
+      <SetProperty Action="Undefine$(Choice)" Id="$(Choice)" Value="{}" After="Default$(Choice)" Sequence="first"
+                   Condition="$(Choice) AND $(Choice) &lt;&gt; &quot;1&quot;" />
+    <?endforeach?>
+
+    <StandardDirectory Id="$(ProgramFilesDirectory)">
+      <Directory Id="AppManufacturer" Name="SQLBI">
+        <Directory Id="INSTALLFOLDER" Name="Bravo" />
+      </Directory>
+    </StandardDirectory>
+
+    <?if $(Scope) = perMachine ?>
+      <!--
+        Where Power BI Desktop reads the external tools: under the 32-bit Common Files, which needs
+        administrator rights. The package installs nothing there: the program writes the file and removes it.
+      -->
+      <StandardDirectory Id="CommonFilesFolder">
+        <Directory Id="MicrosoftShared" Name="Microsoft Shared">
+          <Directory Id="PowerBIDesktop" Name="Power BI Desktop">
+            <Directory Id="POWERBIEXTERNALTOOLSFOLDER" Name="External Tools" />
+          </Directory>
+        </Directory>
+      </StandardDirectory>
+    <?endif?>
+
+    <Feature Id="Complete" Title="$(ProductName)" Level="1">
+      <ComponentGroupRef Id="Application" />
+      <ComponentRef Id="DesktopShortcut" />
+      <ComponentRef Id="ProgramMenuShortcut" />
+    </Feature>
+
+    <!-- The folder of the publish, laid out by Stage.targets. The two executables are named: actions refer to them. -->
+    <ComponentGroup Id="Application" Directory="INSTALLFOLDER">
+      <Component Id="BravoExe">
+        <File Id="BravoExe" Source="!(bindpath.Application)\Bravo.exe" KeyPath="yes" />
+      </Component>
+      <Component Id="SetupExe">
+        <File Id="SetupExe" Source="!(bindpath.Application)\Bravo.Setup.exe" KeyPath="yes" />
+      </Component>
+      <Files Include="!(bindpath.Application)\**">
+        <Exclude Files="!(bindpath.Application)\Bravo.exe" />
+        <Exclude Files="!(bindpath.Application)\Bravo.Setup.exe" />
+      </Files>
+
+      <!--
+        What the application and a later package read: where the application is, which tells the application
+        how it was installed, and the choices of who installed it.
+      -->
+      <Component Id="InstallationRegistry">
+        <RegistryValue Root="$(RegistryRoot)" Key="$(RegistryKey)" Name="installFolder" Value="[INSTALLFOLDER]" Type="string" KeyPath="yes" />
+        <RegistryValue Root="$(RegistryRoot)" Key="$(RegistryKey)" Name="desktopShortcutEnabled" Value="[DESKTOPSHORTCUTENABLED]" Type="string" />
+        <RegistryValue Root="$(RegistryRoot)" Key="$(RegistryKey)" Name="programMenuShortcutEnabled" Value="[PROGRAMMENUSHORTCUTENABLED]" Type="string" />
+        <RegistryValue Root="$(RegistryRoot)" Key="$(RegistryKey)" Name="installerTelemetryEnabled" Value="[INSTALLERTELEMETRYENABLED]" Type="string" />
+        <RegistryValue Root="$(RegistryRoot)" Key="$(RegistryKey)" Name="applicationTelemetryEnabled" Value="[APPLICATIONTELEMETRYENABLED]" Type="string" />
+      </Component>
+    </ComponentGroup>
+
+    <!-- The two shortcuts are the components of 1.0.x, with their identifiers. -->
+    <StandardDirectory Id="DesktopFolder">
+      <Component Id="DesktopShortcut" Guid="{8C035041-08C9-44CB-B254-D66DA096C53D}" Condition="DESKTOPSHORTCUTENABLED = &quot;1&quot;">
+        <Shortcut Id="DesktopShortcut" Name="$(ProductName)" Target="[INSTALLFOLDER]Bravo.exe" WorkingDirectory="INSTALLFOLDER" />
+        <RegistryValue Root="HKCU" Key="$(RegistryKey)" Name="desktopShortcutInstalled" Value="1" Type="integer" KeyPath="yes" />
+      </Component>
+    </StandardDirectory>
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Component Id="ProgramMenuShortcut" Guid="{B6EB02B3-E16E-4661-89E4-A46C50815577}" Condition="PROGRAMMENUSHORTCUTENABLED = &quot;1&quot;">
+        <Shortcut Id="ProgramMenuShortcut" Name="$(ProductName)" Target="[INSTALLFOLDER]Bravo.exe" WorkingDirectory="INSTALLFOLDER" />
+        <RegistryValue Root="HKCU" Key="$(RegistryKey)" Name="programMenuShortcutInstalled" Value="1" Type="integer" KeyPath="yes" />
+      </Component>
+    </StandardDirectory>
+
+    <!--
+      What the package asks of Bravo.Setup.exe, the installed program. No action fails an installation: the
+      exit code is ignored, and Windows Installer writes it in its log.
+    -->
+    <?define ReportOptions = "--scope $(Scope) --product-name Bravo --product-version $(ProductVersion) --product-build !(bind.fileVersion.BravoExe)" ?>
+
+    <!-- As who installs, also in the package per machine: the identifier of the event is computed from the account. -->
+    <CustomAction Id="ReportInstall" FileRef="SetupExe" ExeCommand="report-install $(ReportOptions) --telemetry-enabled &quot;[INSTALLERTELEMETRYENABLED]&quot;" Execute="deferred" Impersonate="yes" Return="ignore" />
+    <CustomAction Id="ReportUninstall" FileRef="SetupExe" ExeCommand="report-uninstall $(ReportOptions) --telemetry-enabled &quot;[INSTALLERTELEMETRYENABLED]&quot;" Execute="deferred" Impersonate="yes" Return="ignore" />
+
+    <?if $(Scope) = perMachine ?>
+      <?define ExternalToolFile = "[POWERBIEXTERNALTOOLSFOLDER]$(ExternalToolFileName)" ?>
+
+      <!-- With the rights of the installation: the folder of the external tools is not writable by a user. -->
+      <CustomAction Id="RegisterExternalTool" FileRef="SetupExe" ExeCommand="register-external-tool --tool-file &quot;$(ExternalToolFile)&quot; --executable &quot;[#BravoExe]&quot;" Execute="deferred" Impersonate="no" Return="ignore" />
+      <CustomAction Id="RollbackExternalTool" FileRef="SetupExe" ExeCommand="unregister-external-tool --tool-file &quot;$(ExternalToolFile)&quot;" Execute="rollback" Impersonate="no" Return="ignore" />
+      <CustomAction Id="UnregisterExternalTool" FileRef="SetupExe" ExeCommand="unregister-external-tool --tool-file &quot;$(ExternalToolFile)&quot;" Execute="deferred" Impersonate="no" Return="ignore" />
+    <?else?>
+      <!-- The removal of the package per user removes the data of the user as well, as in 1.0.x. -->
+      <CustomAction Id="RemoveUserData" FileRef="SetupExe" ExeCommand="remove-user-data --folder &quot;[LocalAppDataFolder]$(ApplicationDataFolderName)&quot;" Execute="deferred" Impersonate="yes" Return="ignore" />
+    <?endif?>
+
+    <!--
+      An installation, also over an earlier version, registers and reports. A removal that is not part of an
+      upgrade takes the registration back and reports, while the program is still installed.
+    -->
+    <?define WhenInstalling = NOT Installed AND NOT REMOVE ?>
+    <?define WhenRemoving = (NOT UPGRADINGPRODUCTCODE) AND (REMOVE="ALL") ?>
+
+    <InstallExecuteSequence>
+      <?if $(Scope) = perMachine ?>
+        <!-- A failed upgrade leaves the registration of the installed version, which names the same file. -->
+        <Custom Action="RollbackExternalTool" After="InstallFiles" Condition="$(WhenInstalling) AND NOT WIX_UPGRADE_DETECTED" />
+        <Custom Action="RegisterExternalTool" After="RollbackExternalTool" Condition="$(WhenInstalling)" />
+        <Custom Action="ReportInstall" After="RegisterExternalTool" Condition="$(WhenInstalling)" />
+
+        <Custom Action="UnregisterExternalTool" Before="ReportUninstall" Condition="$(WhenRemoving)" />
+      <?else?>
+        <Custom Action="ReportInstall" After="InstallFiles" Condition="$(WhenInstalling)" />
+
+        <Custom Action="RemoveUserData" Before="ReportUninstall" Condition="$(WhenRemoving)" />
+      <?endif?>
+      <Custom Action="ReportUninstall" Before="RemoveFiles" Condition="$(WhenRemoving)" />
+    </InstallExecuteSequence>
+
+    <!-- The dialogs: the installation folder set of WiX, with the choices of the shortcuts and of telemetry. -->
+    <ui:WixUI Id="BravoUI_InstallDir" InstallDirectory="INSTALLFOLDER" />
+    <UIRef Id="WixUI_ErrorProgressText" />
+    <WixVariable Id="WixUIDialogBmp" Value="assets\background.png" />
+    <WixVariable Id="WixUIBannerBmp" Value="assets\banner.png" />
+    <WixVariable Id="WixUILicenseRtf" Value="assets\license.rtf" />
+
+    <!-- The last dialog offers to start the application, as who installs and without waiting for it. -->
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOX" Value="1" />
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="!(loc.LaunchApplicationCheckBoxText) $(ProductName)" />
+    <CustomAction Id="LaunchApplication" FileRef="BravoExe" ExeCommand="" Return="asyncNoWait" Impersonate="yes" />
+    <UI>
+      <Publish Dialog="ExitDialog" Control="Finish" Event="DoAction" Value="LaunchApplication" Condition="WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 AND NOT Installed" />
+    </UI>
+
+  </Package>
+
+</Wix>

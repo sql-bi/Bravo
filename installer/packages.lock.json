@@ -1,0 +1,19 @@
+{
+  "version": 2,
+  "dependencies": {
+    "native,Version=v0.0": {
+      "Microsoft.CodeAnalysis.BannedApiAnalyzers": {
+        "type": "Direct",
+        "requested": "[5.6.0, )",
+        "resolved": "5.6.0",
+        "contentHash": "Kcobt3pnOdO0A+6CKiMHZdTEluJpsfxiV20axtZdmfBQnDmiWTKPJADlgAfdTuKNAnVarrkJa0UEGwuOo91muw=="
+      },
+      "WixToolset.UI.wixext": {
+        "type": "Direct",
+        "requested": "[5.0.2, )",
+        "resolved": "5.0.2",
+        "contentHash": "BP2IonPN5/0csF1esRb1A834aknY+wO421hXOP+Ix730YxQvSXgk6kV9uFnVHlrVMXxunXpuqEf2qqOQuvWoQw=="
+      }
+    }
+  }
+}
