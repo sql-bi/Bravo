@@ -82,7 +82,7 @@ The top-level folders separate content by kind ([ADR 0008](adr/0008-repository-l
 | `installer/` | The installer, outside the product source |
 | `policies/` | The group policy templates, which the installer ships in a subfolder of the installation |
 | `docs/` | This specification, the backlog and the ADRs |
-| `artifacts/` | Build and publish output of every project, the release bundle of the user interface and the results of the tests of the window, not versioned |
+| `artifacts/` | Build and publish output of every project, the release bundle of the user interface, the results of the tests of the window and the screens of the window, not versioned |
 
 One solution, `Bravo.slnx`, sits at the root with the build files shared by every project. A component with
 its own toolchain gets its own top-level folder; a .NET one goes into `src/` and `tests/`.
@@ -553,12 +553,20 @@ and say to run them from a terminal that is not elevated.
 
 - The page has a fixed size in every test, 1280×800, whatever the size of the window, and a test can take a
   screenshot of it. The repository keeps no reference image: the rendering changes with the machine. A
-  visual comparison is made between two builds in one run (backlog H-08).
+  visual comparison is made between two builds, on one machine, one after the other.
 - The application has one instance: one test runs at a time, and the tests do not run together with the
   tests of the host, which start the same executable. A development build that already runs takes the start
   of a test: the test fails and says so.
 - A test never reads the token of the host. A trace of a failed test holds the headers of its requests, and
   so the token of the host of that test, whose process has ended.
+
+A change of the tools of the bundle is compared on the screens of the window
+([ADR 0019](adr/0019-the-stylesheet-through-the-css-support-of-webpack-not-minified.md)), with a command that
+runs on request, and not with the tests of the window or in continuous integration. It takes a fixed set of
+screens of the bundle beside the executable, in the themes Dark and Light: the welcome page, every section of
+the options dialog, the page of a feature that has no route yet, and the same page with the diagnostics pane
+open, whose times are written as one fixed time. It compares two sets file by file, byte for byte, names the
+screens that differ or that one set alone has, and fails when there is one. The sets stay in `artifacts/`.
 
 ## Open questions
 

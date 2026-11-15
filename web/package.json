@@ -17,6 +17,7 @@
     "check": "npm run generate:api && tsc && tsc -p window-tests",
     "test": "npm run generate:api && vitest run",
     "test:window": "playwright test",
+    "screens": "node window-tests/screens.mts",
     "build:Release": "npm run check && webpack --mode production --env production --env configuration=Release",
     "build:Debug": "npm run check && webpack --mode development --env configuration=Debug",
     "build:UI": "npm run check && webpack --mode development --output-path wwwroot",

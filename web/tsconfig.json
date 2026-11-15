@@ -19,6 +19,7 @@
   "exclude": [
     "node_modules",
     "window-tests",
-    "playwright.config.ts"
+    "playwright.config.ts",
+    "playwright.screens.config.ts"
   ]
 }

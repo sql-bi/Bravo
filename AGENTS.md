@@ -82,7 +82,7 @@ not exist yet: the table names the backlog item that creates them.
 | `installer/` | The installer | Created by backlog D-01 |
 | `policies/` | The group policy templates: `bravo.admx`, `sqlbi.admx`, `en-US/` | Exists |
 | `docs/` | Specification, backlog, ADRs, and the design of the previous implementation | Exists |
-| `artifacts/` | Build and publish output of every project, the release bundle of the user interface and the results of the tests of the window, ignored by git | Written by the builds and the tests |
+| `artifacts/` | Build and publish output of every project, the release bundle of the user interface, the results of the tests of the window and the screens of the window, ignored by git | Written by the builds, the tests and the command of the screens |
 | `Bravo.slnx`, `Directory.Build.props`, `Directory.Packages.props` | The solution and the build rules of every .NET project | Exist |
 | `Bravo.Portable.slnf` | The projects of the solution that do not target Windows, which continuous integration builds and tests on Linux | Exists |
 | `Directory.Build.targets` | What is done to every .NET project after its packages: the reference that the WebView2 package adds to its WPF control is removed | Exists |
@@ -396,6 +396,8 @@ stops with an error on another one.
 | Run the tests of one file | `npx vitest run tests/controllers/host-fetch.test.ts`, after `npm run generate:api` |
 | Run the tests of the window, after the two builds that they need | `npm run test:window` |
 | Run the tests of the window of one file | `npx playwright test window-tests/start.spec.ts` |
+| Take the screens of the window into `artifacts/screens/<name>`, after the same two builds | `npm run screens -- take <name>` |
+| Compare two sets of screens, byte for byte | `npm run screens -- compare <name> <name>` |
 
 A bundle is `js/main.js` and `css/main.css`; the release build adds `js/main.js.LICENSE.txt`, the development
 build `css/main.css.map`. Every build script first runs `npm run check`, which generates the client of the host
@@ -535,3 +537,29 @@ The tests of the window are in `web/window-tests`, one file `*.spec.ts` for each
 - `playwright.config.ts` takes the files `*.spec.ts` of `window-tests` only, and Vitest the files `*.test.ts`
   of `tests` only. The tests of the window run in Node.js: they and the configuration are a program of their
   own, `window-tests/tsconfig.json`, with the types of Node.js, which the sources do not get.
+
+The screens of the window compare two builds of the bundle, byte for byte
+([ADR 0019](docs/adr/0019-the-stylesheet-through-the-css-support-of-webpack-not-minified.md)). The command that
+takes and compares them is not a test of the window: neither `npm run test:window` nor continuous integration
+runs it.
+
+- `window-tests/take-screens.ts` takes the screens with the fixture of the tests, one application for each
+  theme, Dark and Light: the welcome page, each section of the options dialog, the page of a feature that has
+  no route yet, and the same page with the diagnostics pane open, whose times it writes as `00:00:00`. Before
+  each screen it waits for the fonts and for two frames of the engine.
+- `playwright.screens.config.ts` is the configuration of the tests of the window with that file alone; a failed
+  run keeps its trace in `artifacts/window-tests/screens-results`. `window-tests/screens.mts`, which Node.js
+  runs as it is, is the command: `take` replaces the folder `artifacts/screens/<name>` and runs Playwright Test
+  on that configuration; `compare` names each screen that differs or that one set alone has, and ends with 1
+  when there is one, with 2 when it cannot compare.
+- Rendering changes with the machine: two sets are compared only when one machine took both, one after the
+  other. No screen enters the repository.
+
+To compare two builds of the bundle:
+
+1. Put the first bundle beside `Bravo.exe`: in `web/`, `npm run build:UI`, then, at the root,
+   `dotnet build src/Bravo.Desktop -c Release`. A release bundle goes there by hand: its `js` and `css`
+   folders in place of the ones of `artifacts/bin/Bravo.Desktop/release/wwwroot`.
+2. `npm run screens -- take before`.
+3. The same for the second bundle, then `npm run screens -- take after`.
+4. `npm run screens -- compare before after`.

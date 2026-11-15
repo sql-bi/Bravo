@@ -9,7 +9,9 @@
   },
   "include": [
     "**/*.ts",
-    "../playwright.config.ts"
+    "**/*.mts",
+    "../playwright.config.ts",
+    "../playwright.screens.config.ts"
   ],
   "exclude": []
 }
