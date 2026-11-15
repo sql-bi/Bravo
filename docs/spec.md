@@ -603,6 +603,8 @@ Four Windows Installer packages, built with WiX, install the application
 - A package installs on Windows 10 version 1607, on Windows Server 2016 and on what came after them, build
   14393: the oldest Windows that both .NET 10 and the WebView2 runtime support. It is its one condition: no
   package looks for the .NET runtime or for the WebView2 runtime, and none installs them.
+- A package that uses the installed runtime needs the .NET Desktop Runtime and the ASP.NET Core Runtime,
+  version 10: without them the application does not start.
 - The packages are for x64 only.
 
 **What a package installs.**

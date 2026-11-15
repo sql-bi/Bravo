@@ -21,72 +21,32 @@ opens the options through the new API and the generated client.
 Exit: GitHub Actions produces a signed, installable preview with release notes; installed over 1.0.14 it keeps
 the four guarantees of [the specification](spec.md#guarantees-for-users-of-10x).
 
-- [ ] D-01 Installer. Decided by the maintainer; the ADR is the first commit of the work branch:
-  - Windows Installer packages built with WiX, with the UpgradeCode of 1.0.x and two packages, per-user and
-    per-machine, as 1.0.x has. Only a major upgrade replaces 1.0.x without a manual uninstall and keeps the
-    data of the user: the removal of 1.0.x outside an upgrade deletes `%LOCALAPPDATA%\Bravo`. Windows
-    Installer does not upgrade across installation contexts, so each package upgrades the one of its
-    context.
-  - WiX 5.0.2 for now: version 7 asks for a maintenance fee. The installer is written so that the move to
-    version 7 costs little: no extension that is not needed, no custom action library.
-  - Both variants of each package, as 1.0.x: one that carries the .NET runtime and one that uses the
-    installed one. The installed 1.0.x asks for the file of its own variant.
-  - The telemetry of the installer stays: the events of an installation and of a removal, raised by the
-    package, and the two choices on telemetry in its dialogs.
-  - What the package runs is an executable of its own, with a command line and no window, which does not
-    depend on the .NET runtime. It writes and removes the registration as an external tool of Power BI
-    Desktop, and reports the installation and the removal. It is a fifth project of the host:
-    [ADR 0011](adr/0011-host-in-four-projects-with-windows-at-the-edge.md) is amended.
-  - Enterprise deployment is a criterion of every choice: Intune, Configuration Manager, Group Policy, a
-    silent installation.
-  - The Microsoft Store is not part of 1.1.0.
-
-  Also:
-  - Every name that a deployment relies on stays accepted: the public properties of the package
-    (`DESKTOPSHORTCUTENABLED`, `PROGRAMMENUSHORTCUTENABLED`, `INSTALLERTELEMETRYENABLED`,
-    `APPLICATIONTELEMETRYENABLED`, `TELEMETRYUSERID`), the values under `Software\SQLBI\Bravo`, the install
-    folders, the names of the product. A better name is proposed with the old one still read: now, where
-    nobody has to act, otherwise for a later version.
-  - Power BI Desktop reads the registration of an external tool, a `*.pbitool.json` file with the full path
-    of the executable, from one folder under the 32-bit Common Files, which needs administrator rights
-    ([documentation](https://learn.microsoft.com/power-bi/transform-model/desktop-external-tools-register)).
-    Only the per-machine package registers, as in 1.0.x.
-  - A running instance during an upgrade: 1.0.x and 1.1.0 do not recognize each other, and a silent
-    installation closes the applications that hold the files. The application answers the request to close.
-  - x64 only, as 1.0.x.
-  - Published for x64, the application of today is 11 MB when it uses the installed runtime and 155 MB when
-    it carries it. It needs the ASP.NET Core runtime beside the Windows Desktop one. Its output has the
-    resource folders of System.CommandLine, one for each language.
-  - An upgrade asks for the package of 1.0.x where Windows no longer has its cached copy (#705): a new
-    package cannot avoid it.
-  - What sends the two events is S-06.
-
-  For the webview:
-  - The WebView2 runtime: neither the package nor the application installs it, and without it the
-    application ends with a message and exit code 1223. Windows 11 has it.
-  - `wwwroot` beside the executable: a release build copies nothing there. The folder is the static files of
-    `web/wwwroot` with the release bundle of `artifacts/web` (`js/main.js`, `css/main.css` and the licence
-    text of the bundle). Without `wwwroot\index.html` the application ends with exit code 2.
-  - The assemblies of the WebView2 package and its loader,
-    `runtimes\win-<architecture>\native\WebView2Loader.dll` for three architectures, in the output of the
-    build.
-  - The profile of the webview of 1.0.x, `%LOCALAPPDATA%\Bravo\.temp`: 1.1.0 keeps its own in
-    `%LOCALAPPDATA%\Bravo\WebView2` and neither reads nor removes the old folder. What the page stored there
-    is not carried over: the origin of the page changed as well.
 - [ ] D-02 Release. Hypothesis: GitHub Actions builds, signs, publishes a GitHub release with generated notes
   and changelog, and updates the feed. Explore: signing with a federated identity; changelog tools; how the
-  version is computed. Also: the release builds with `-p:BravoReleaseBuild=true`, or what it publishes is a
-  development build, with another instance, another data folder and the arguments for a browser; the title of
-  the window and `GET /application` show the informational version of the assembly, which nothing sets yet.
-  Also, from the design of D-01: the signature is the one of 1.0.x, the certificate of the publisher through
-  AzureSignTool; the installed 1.0.x asks for a file whose name it builds itself, adding
-  `-frameworkdependent`, `-userinstaller` or `-portable` (a `.zip`) to the name in the feed, so those files
-  exist; a publish for one runtime changes the lock files, which a restore in locked mode refuses.
+  version is computed. Also: the title of the window and `GET /application` show the informational version of
+  the assembly, which only the build of the installer sets, to the version that it is given.
+  Also, from D-01:
+  - The build of the installer makes the four packages, unsigned, in `artifacts/installer/en-US`, with the
+    file names of 1.0.x. It takes the version as `-p:BravoVersion`, which is 1.1.0 when none is given: the
+    release computes it and passes it. Windows Installer compares the first three numbers of a version.
+  - The signature is the one of 1.0.x, the certificate of the publisher through AzureSignTool: on
+    `Bravo.exe`, the assemblies of the host and `Bravo.Setup.exe` in the folder that a package is made from,
+    `artifacts/installer-stage/<version>/<runtime>`, before the package is built, and then on each package.
+    The build has no step between the two yet.
+  - The installed 1.0.x asks for a file whose name it builds itself, adding `-frameworkdependent`,
+    `-userinstaller` or `-portable` (a `.zip`) to the name in the feed, so those files exist. The portable
+    one is the folder that a package is made from, where `Bravo.Setup.exe` has no use.
+  - The publishes of that build restore the packages of `win-x64` and read and write no lock file, so that
+    the committed ones do not change: the release decides whether that graph is locked.
+  - The packages of a run of continuous integration are its artifact `installer-packages`, kept for 3 days.
 - [ ] D-03 Updates. Hypothesis: a notification, as today. Explore: automatic update, if the installer
   technology offers it. Also: the page started the download of an update in a frame of its own, and the webview
   cancels a frame navigation outside the origin of the page and starts no download; the update check has no
   route, so the page asks the host for nothing: at its start it tells no new version, and in the options it
-  says that the check failed.
+  says that the check failed. Also, from D-01: the registry value `installFolder`, under `HKLM` for a package
+  per machine and under `HKCU` for one per user, tells the application which package installed it, and so
+  which of the four files is its update; a silent installation closes a running application and does not
+  start it again.
 
 ## T4 Cross-cutting services
 
@@ -98,10 +58,14 @@ crash produces a report, telemetry runs on a supported SDK.
   start; a save that fails is an error with a code of its own; the registry value of 1.0.x that hides the
   version in the title of the window (`applicationTitleVersionHidden`), which 1.1.0 does not read; the size
   and the position of the window, which are not kept; the tests of the user interface (H-07), which start
-  the application: once the settings are kept on disk they need a data folder of their own.
+  the application: once the settings are kept on disk they need a data folder of their own. Also, from D-01:
+  the removal of a package removes the data folder of who removes it, with the settings, as in 1.0.x; the
+  profile of the webview of 1.0.x, `%LOCALAPPDATA%\Bravo\.temp`, stays on the disk after an upgrade, where
+  nothing reads it or removes it.
 - [ ] S-02 Policies. Hypothesis: the same keys; the templates shipped in a subfolder of the installation. Also:
   `/options` knows no policy, so an option that a policy sets is returned and replaced like any other; the
-  page starts with no policy, so its options dialog locks nothing.
+  page starts with no policy, so its options dialog locks nothing; the packages of D-01 do not carry the
+  templates of `policies/` yet.
 - [ ] S-03 Network and proxy. Hypothesis: system proxy and auto-configuration detected without settings,
   integrated credentials first, a prompt as the last resort, a connectivity check with clear messages. Explore:
   the proxy in .NET, in the webview, in the sign-in library and in the Analysis Services client libraries.
@@ -126,12 +90,23 @@ crash produces a report, telemetry runs on a supported SDK.
   message; the exceptions of tasks that nobody observed; a server of the API that cannot open its port, which
   fails the start of the host; the failures of the webview, which end the application with dialogs of their
   own and the exit codes 2, 3, 4 and 1223, and whose recoveries, a page loaded again or a new control, leave
-  no trace.
+  no trace. Also, from D-01: the packages install the symbols of the four assemblies of the host, so that a
+  trace names its lines; `Bravo.Setup.exe` is compiled ahead of time and has none.
 - [ ] S-06 Telemetry. Hypothesis: a supported SDK; the classic Application Insights SDK is retired on
   2027-03-31. Explore: Application Insights 3 or OpenTelemetry; consent. Also: the page gets no telemetry
-  settings, creates no telemetry client and sends nothing; the events of an installation and of a removal,
-  which the package of D-01 raises through its own executable, are sent by nothing yet, and their numbers
-  stay comparable with the ones of 1.0.x.
+  settings, creates no telemetry client and sends nothing. Also, from D-01:
+  - The packages raise the events `Install` and `Uninstall` through `Bravo.Setup.exe`, which builds each
+    event with the data of 1.0.x and passes it to `IInstallationEventSink`. The only implementation sends
+    nothing: S-06 writes the one that sends. An installation waits for the program, so the sink returns
+    within a few seconds and never fails for the network; the program has no package reference, and is
+    compiled ahead of time.
+  - The identifier of who installs is computed in `Bravo.Setup`, as 1.0.x computes it; the application
+    needs the same one for its own events.
+  - A removal reports only when who installed chose the telemetry of the installer: the package reads the
+    choice from the registry. To compare the counts of the removals with the ones of 1.0.x, take this into
+    account.
+  - The registry value `applicationTelemetryEnabled` is the choice of who installs for the telemetry of the
+    application: nothing reads it yet.
 
 ## T5 Access to models
 
@@ -197,8 +172,13 @@ removed; the Azure DevOps project retired; dependency updates configured again.
 - Manage Calendars.
 - The Visual Studio Code extension for templates joins this repository.
 - A cross-platform shell.
-- WinGet (#898).
+- WinGet (#898). A manifest names the four packages by their installation context; their product code
+  changes at every build, and their UpgradeCode never does.
 - The Microsoft Store, which also takes a signed package of Windows Installer that installs silently.
 - WiX 7, when its maintenance fee is settled.
 - An action of the application that registers it as an external tool of Power BI Desktop for a per-user
-  installation, asking for administrator rights.
+  installation, asking for administrator rights: `Bravo.Setup.exe register-external-tool` writes the file.
+- An upgrade that stays in the folder of the installed version: today a package installs in its default
+  folder unless `INSTALLFOLDER` is given, as 1.0.x does.
+- A PNG image as the icon of the external tool registration: today it is the image of 1.0.x, an icon file
+  under the media type `image/png`. To check in Power BI Desktop.
