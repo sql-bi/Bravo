@@ -137,7 +137,9 @@ to a work branch, on the pull requests to `main` and on request
 | `build-and-test-linux` | Linux | The same, on the projects of `Bravo.Portable.slnf`: the ones that do not target Windows |
 | `build-web` | Linux | `npm ci`; a failed unit test of the user interface; the release build of the user interface, which generates the client of the host API and checks the types of the sources and of the unit tests before it bundles: a call that no longer fits the OpenAPI document fails it, and so does a type error in a test |
 | `test-window` | Windows | The development bundle, the build of `Bravo.Desktop`, a failed test of the window, a policy of the webview that the tests left on the runner: it keeps the report of a failed run for 3 days |
-| `audit` | Windows | A NuGet package with a known vulnerability of any severity, referenced directly or not; vulnerability data that cannot be read; an npm package that ships with the user interface and has a known advisory |
+| `build-installer` | Windows | The release bundle; the restore of the installer in locked mode; a publish of the host; a warning of WiX; a rule of Windows Installer that a package breaks: it keeps the packages for 3 days |
+| `test-installer` | Windows | A real installation, upgrade or removal of a package that ends with another exit code, or leaves something else, than the [installer](#installer) says: it keeps the logs of a failed run for 3 days |
+| `audit` | Windows | A NuGet package with a known vulnerability of any severity, referenced directly or not, of the solution or of the installer; vulnerability data that cannot be read; an npm package that ships with the user interface and has a known advisory |
 
 `build-and-test` is the status check that `main` requires: its name does not change. `audit` runs
 `npm audit` twice ([ADR 0016](adr/0016-closed-error-codes-generated-types-and-tests-in-the-user-interface.md)):

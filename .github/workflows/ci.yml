@@ -167,6 +167,106 @@ jobs:
           }
           exit $left
 
+  # The four installer packages, and two of the next version for the upgrades that the next job tries. The
+  # program that the packages run is compiled ahead of time with the C++ build tools of the runner.
+  build-installer:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up the .NET SDK
+        uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
+        with:
+          global-json-file: global.json
+          cache: true
+          cache-dependency-path: '**/packages.lock.json'
+      - name: Set up Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: web/package.json
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Install the dependencies of the user interface
+        working-directory: web
+        run: npm ci
+      # The packages carry the release bundle, which the build of the installer does not make.
+      - name: Build the release bundle
+        working-directory: web
+        run: npm run build:Release
+      - name: Restore the installer
+        run: dotnet restore installer/Bravo.Installer.wixproj --locked-mode
+      # The build validates each package against the rules of Windows Installer, and a warning fails it.
+      - name: Build the four packages
+        run: dotnet build installer/Bravo.Installer.wixproj -c Release --no-restore -t:BuildPackages -warnaserror
+      - name: Build the packages of the next version that the tests upgrade to
+        shell: pwsh
+        run: |
+          foreach ($scope in 'perMachine', 'perUser') {
+            dotnet build installer/Bravo.Installer.wixproj -c Release --no-restore -warnaserror -p:BravoVersion=1.1.1 -p:BravoScope=$scope -p:BravoSelfContained=false
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
+      - name: Show the size of the packages and of the program that they run
+        shell: pwsh
+        run: |
+          Get-ChildItem artifacts/installer/en-US/*.msi, artifacts/installer-stage/1.1.0/setup-aot/Bravo.Setup.exe |
+            ForEach-Object { '{0,12:N0} bytes  {1}' -f $_.Length, $_.Name }
+      # Kept for the next job, and for a look at the dialogs on a machine that can be thrown away.
+      - name: Keep the packages
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: installer-packages
+          path: artifacts/installer/en-US/*.msi
+          retention-days: 3
+          if-no-files-found: error
+
+  # Real installations on the runner, each one silent: a first installation, the upgrade from 1.0.14 and
+  # from this version, the public properties, the removal, per machine and per user.
+  test-installer:
+    needs: build-installer
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # The packages that use the installed runtime need it: the SDK brings the three runtimes.
+      - name: Set up the .NET SDK
+        uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
+        with:
+          global-json-file: global.json
+      - name: Get the packages
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: installer-packages
+          path: artifacts/installer-packages
+      # The packages of the released version, from its public release: the ones that use the installed runtime.
+      - name: Get the packages of 1.0.14
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release download v1.0.14 --repo sql-bi/Bravo --pattern "Bravo.1.0.14.x64-frameworkdependent*.msi" --dir artifacts/installer-previous
+      - name: Install, upgrade and remove
+        shell: pwsh
+        run: >
+          installer/tests/Test-Packages.ps1
+          -PackagesFolder artifacts/installer-packages
+          -PreviousFolder artifacts/installer-previous
+          -Version 1.1.0
+          -NextVersion 1.1.1
+          -LogFolder artifacts/installer-logs
+      # The log of every run of Windows Installer, when a step failed.
+      - name: Keep the logs of Windows Installer
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: installer-logs
+          path: artifacts/installer-logs/
+          retention-days: 3
+          if-no-files-found: ignore
+
   # Packages with a known vulnerability. On Windows, where a restore reaches every project of the solution.
   audit:
     runs-on: windows-latest
@@ -183,6 +283,9 @@ jobs:
       # AuditPipeline turns the audit warnings of NuGet into errors: see Directory.Build.props.
       - name: Audit the NuGet packages
         run: dotnet restore Bravo.slnx --locked-mode -p:AuditPipeline=true
+      # The installer is not a project of the solution: its packages are the WiX SDK and the dialogs of WiX.
+      - name: Audit the NuGet packages of the installer
+        run: dotnet restore installer/Bravo.Installer.wixproj --locked-mode -p:AuditPipeline=true
       - name: Set up Node.js
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
