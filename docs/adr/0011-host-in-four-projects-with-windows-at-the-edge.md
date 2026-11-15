@@ -1,6 +1,7 @@
 # 0011. The host is four projects, with Windows at the edge
 
-> [ADR 0020](0020-windows-installer-packages-built-with-wix-which-run-a-program-of-the-host.md) adds a fifth project, `Bravo.Setup`.
+> [ADR 0020](0020-windows-installer-packages-built-with-wix-which-run-a-program-of-the-host.md) adds a fifth
+> project, `Bravo.Setup`.
 
 - Status: Accepted
 - Date: 2026-11-12
