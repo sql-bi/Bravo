@@ -681,6 +681,10 @@ need of the .NET runtime, so that it runs where the application could not start.
   description is `Bravo for Power BI`. The file is `bravo.pbitool.json`, in the folder that Power BI
   Desktop reads, under the 32-bit Common Files: the package writes there with the rights of the
   installation.
+- What runs with the rights of the installation starts a copy of the program that the package per machine
+  holds in itself, and never the installed one: where the application is installed in a folder that users
+  can write in, nothing that a user could have replaced runs with those rights. What runs as who installs
+  starts the installed program.
 - An event carries what 1.0.x sends with it: its name, the scope, the name, the version and the build of the
   product, the operating system, and an identifier of who installs, the SHA-256 of the names of the machine
   and of the account that the program runs as. It names nobody, and is computed as 1.0.x computes it, so

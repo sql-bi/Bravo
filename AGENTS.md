@@ -328,6 +328,9 @@ line names. It is not a project of the solution: a build of the solution makes n
 
 - Before a package is built, `web/` has made the release bundle: `npm ci`, then `npm run build:Release`. The
   build of the installer never runs npm, and stops with these two commands when the bundle is missing.
+- An action of `Package.wxs` that runs with the rights of the installation (`Impersonate="no"`) starts the
+  program from the `Binary` table of the package, where no user can replace it; an action that runs as who
+  installs starts the installed file.
 - `Package.wxs` is one source for the two contexts: the build defines `Scope`, and what differs is inside
   `<?if?>`. Its public properties, registry values, folders and product names are the ones of 1.0.x, which
   [docs/spec.md](docs/spec.md#installer) lists.

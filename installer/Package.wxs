@@ -166,8 +166,8 @@
     </StandardDirectory>
 
     <!--
-      What the package asks of Bravo.Setup.exe, the installed program. No action fails an installation: the
-      exit code is ignored, and Windows Installer writes it in its log.
+      What the package asks of Bravo.Setup.exe. No action fails an installation: the exit code is ignored, and
+      Windows Installer writes it in its log. What runs as who installs starts the installed program.
     -->
     <?define ReportOptions = "--scope $(Scope) --product-name Bravo --product-version $(ProductVersion) --product-build !(bind.fileVersion.BravoExe)" ?>
 
@@ -178,10 +178,15 @@
     <?if $(Scope) = perMachine ?>
       <?define ExternalToolFile = "[POWERBIEXTERNALTOOLSFOLDER]$(ExternalToolFileName)" ?>
 
-      <!-- With the rights of the installation: the folder of the external tools is not writable by a user. -->
-      <CustomAction Id="RegisterExternalTool" FileRef="SetupExe" ExeCommand="register-external-tool --tool-file &quot;$(ExternalToolFile)&quot; --executable &quot;[#BravoExe]&quot;" Execute="deferred" Impersonate="no" Return="ignore" />
-      <CustomAction Id="RollbackExternalTool" FileRef="SetupExe" ExeCommand="unregister-external-tool --tool-file &quot;$(ExternalToolFile)&quot;" Execute="rollback" Impersonate="no" Return="ignore" />
-      <CustomAction Id="UnregisterExternalTool" FileRef="SetupExe" ExeCommand="unregister-external-tool --tool-file &quot;$(ExternalToolFile)&quot;" Execute="deferred" Impersonate="no" Return="ignore" />
+      <!--
+        With the rights of the installation: the folder of the external tools is not writable by a user. These
+        actions start the copy of the program that the package holds in itself, never the installed one: in
+        a folder that users can write in, the installed one could have been replaced.
+      -->
+      <Binary Id="SetupProgram" SourceFile="!(bindpath.Application)\Bravo.Setup.exe" />
+      <CustomAction Id="RegisterExternalTool" BinaryRef="SetupProgram" ExeCommand="register-external-tool --tool-file &quot;$(ExternalToolFile)&quot; --executable &quot;[#BravoExe]&quot;" Execute="deferred" Impersonate="no" Return="ignore" />
+      <CustomAction Id="RollbackExternalTool" BinaryRef="SetupProgram" ExeCommand="unregister-external-tool --tool-file &quot;$(ExternalToolFile)&quot;" Execute="rollback" Impersonate="no" Return="ignore" />
+      <CustomAction Id="UnregisterExternalTool" BinaryRef="SetupProgram" ExeCommand="unregister-external-tool --tool-file &quot;$(ExternalToolFile)&quot;" Execute="deferred" Impersonate="no" Return="ignore" />
     <?endif?>
 
     <!-- A removal also removes the data of who removes, as in 1.0.x: as that user, whose folder it is. -->
