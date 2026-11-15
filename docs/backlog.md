@@ -12,30 +12,6 @@ criterion can be checked on `develop-vnext`.
 Exit: the new executable starts, a second start activates the first, it shows the current user interface and
 opens the options through the new API and the generated client.
 
-- [ ] H-08 The stylesheet through the CSS support of webpack. css-loader, mini-css-extract-plugin,
-  css-minimizer-webpack-plugin and source-map-loader are deprecated by their own documentation: from
-  version 5.109 webpack parses and extracts CSS itself, with less-loader alone. Decided by the maintainer;
-  the ADR is the first commit of the work branch:
-  - The stylesheet is not minified: it is what Less writes. Measured with webpack 5.112.2: the minimizer of
-    webpack writes `background:#fffurl(...)`, without the space, in a rule of the selects, also with every
-    rewrite turned off, and the engine drops the declaration: in the light theme a select loses its arrow.
-  - Two exact proofs. The stylesheet says the same things in the same order as the one of today before it
-    is minified: every at-rule, selector list and declaration. And the screens of the window with the
-    bundle of today and with the new one are the same bytes, in one run on one machine.
-  - What takes the screens and compares two sets of them stays in the repository, as a command run on
-    request and not by continuous integration. No image enters the repository.
-
-  Also:
-  - A prototype measured it: without minification the two stylesheets have the same 6955 items in the same
-    order, and one comment more; 12 screens of 12 are the same bytes, the welcome page and the sections of
-    the options in both themes; with the minimizer of webpack 8 of 12 differ. The stylesheet is 175 KB in
-    place of 142 KB. The release bundle keeps its three files.
-  - webpack 5.112: the CSS support needs 5.109. The update changes the JavaScript of the bundle, which the
-    comparison of the screens covers; the move of the stylesheet does not change it.
-  - `Rule.extractSourceMap` replaces the rule of source-map-loader. A development build also writes
-    `css/main.css.map`.
-  - The comment `sourceMappingURL=tabulator.css.map` stays in the stylesheet and names a file that is not
-    there: only the developer tools ask for it.
 - [ ] H-09 TypeScript 7, the native compiler. Not before TypeScript 7.1 and ts-loader 10 are released: 7.0
   has no API, 7.1 has a new one, and ts-loader 10 requires it. Hypothesis: the check of the types moves to
   the native `tsc`, and ts-loader 10 translates.
