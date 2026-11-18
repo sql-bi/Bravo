@@ -21,7 +21,7 @@ container-owned factories moves disposal to the container and must keep the orde
 uses the bootstrap services, not the container; its coverage is in
 [diagnostics](diagnostics.md#startup-coverage-and-fatal-reporting).
 Why the bootstrap services live outside the container:
-[ADR 0004](../adr/0004-bootstrap-services-outside-the-container.md).
+[ADR 0004](../../adr/0004-bootstrap-services-outside-the-container.md).
 
 ## UI and server threads
 

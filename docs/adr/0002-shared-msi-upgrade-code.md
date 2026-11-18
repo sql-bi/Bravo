@@ -10,7 +10,7 @@
 Bravo ships two MSI packages from the same build: [Bravo.wxs](../../installer/wix/src/Bravo/Bravo.wxs),
 installed per machine, and [Bravo-perUser.wxs](../../installer/wix/src/Bravo/Bravo-perUser.wxs), installed
 per user. Both declare the same `UpgradeCode`, take the MSI `ProductVersion` from the file version
-([versioning](../design/versioning.md)), and author `MajorUpgrade` with `AllowSameVersionUpgrades="yes"` and
+([versioning](../design/previous/versioning.md)), and author `MajorUpgrade` with `AllowSameVersionUpgrades="yes"` and
 `AllowDowngrades="no"`.
 
 Windows Installer behavior that constrains the choice, from the Microsoft documentation:

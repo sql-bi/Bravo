@@ -13,7 +13,7 @@ The update check reads one of two feeds, selected by the user or by the `UpdateC
 builds, and the channel spreads over settings, policy templates, the API, the frontend and every translation.
 
 Releases are published on GitHub, and a preview carries its prerelease tag in `version.json`
-([versioning](../design/versioning.md)). A preview and the release that follows it share `Major.Minor.Patch`
+([versioning](../design/previous/versioning.md)). A preview and the release that follows it share `Major.Minor.Patch`
 and differ only in the fourth field of the file version.
 
 ## Decision

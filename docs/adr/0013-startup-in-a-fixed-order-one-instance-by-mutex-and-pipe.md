@@ -7,7 +7,7 @@
 
 Kept from `main` ([ADR 0003](0003-fatal-exceptions-end-the-process.md),
 [ADR 0004](0004-bootstrap-services-outside-the-container.md),
-[design](../design/architecture.md#single-instance-contract)): the order of `Main`, exceptions that end the
+[design](../design/previous/architecture.md#single-instance-contract)): the order of `Main`, exceptions that end the
 process, objects created before the host, a second process that creates nothing, one instance for each user
 and session.
 

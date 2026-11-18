@@ -30,7 +30,7 @@ key that cannot be read.
 - A policy registry key that cannot be read ends the process through the global exception handler: the user sees
   the crash dialog and the report is saved, but nothing is logged or tracked, because the bootstrap services are
   not attached to the handler yet. See
-  [diagnostics](../design/diagnostics.md#startup-coverage-and-fatal-reporting).
+  [diagnostics](../design/previous/diagnostics.md#startup-coverage-and-fatal-reporting).
 - Defaults replace user settings only for the current session; how a corrupt settings file is kept and reported to
   the user is outside this decision.
 - A new policy that restricts behavior is safe by construction: it cannot be bypassed by a read failure.

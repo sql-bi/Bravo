@@ -34,11 +34,11 @@ The host has its own dependency injection container.
 
 - A registration in `BravoServiceCollectionExtensions` that turns one of these instances into a container-created
   service changes who disposes it and when; see
-  [architecture](../design/architecture.md#composition-and-resource-ownership).
+  [architecture](../design/previous/architecture.md#composition-and-resource-ownership).
 - The bootstrap order is explicit code, and each step can degrade independently; see
   [ADR 0005](0005-policy-failures-stop-startup.md).
 - Tests build a `BootstrapContext` from fakes without starting the host.
 - Single-instance arbitration runs before the bootstrap, so a secondary process creates none of these services. The
   pipe server it claims is not a bootstrap service: `Program.Main` owns it and the host container receives it as an
   existing instance, like the bootstrap services; see
-  [architecture](../design/architecture.md#single-instance-contract).
+  [architecture](../design/previous/architecture.md#single-instance-contract).
