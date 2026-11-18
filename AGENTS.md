@@ -32,15 +32,14 @@ there, not here. Which kind of fact lives in which document: [docs/README.md](do
 - The implementation of a component is written on a work branch, reviewed there by the maintainer, and only
   then brought to `develop-vnext`:
   1. One work branch is open at a time. It is named `vnext/<backlog id>-<slug>`, for example
-     `vnext/b-2-release`, starts from the tip of `develop-vnext` and lives in a worktree of its own: the
-     main folder stays on `develop-vnext`.
+     `vnext/b-2-release`, and starts from the tip of `develop-vnext`.
   2. The work branch never tracks `develop-vnext`. Publish it with `git push -u origin <branch>` and check its
      upstream before any other push.
   3. The maintainer reviews `develop-vnext...<branch>`. The fixes of the review are further commits on the
      same branch.
   4. After the maintainer has accepted the branch, `develop-vnext` is fast-forwarded to its tip
-     (`git merge --ff-only`) and pushed; the work branch is deleted, locally and on the remote, with its
-     worktree. A rejected branch is deleted as well, not kept.
+     (`git merge --ff-only`) and pushed; the work branch is deleted, locally and on the remote. A rejected
+     branch is deleted as well, not kept.
 - A change without implementation, such as a backlog update, goes to `develop-vnext` directly, and not while a
   work branch is open: a fast-forward needs `develop-vnext` to stand still. If it moved all the same, the
   commits of the work branch are cherry-picked in order.
