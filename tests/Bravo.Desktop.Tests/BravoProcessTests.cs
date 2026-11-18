@@ -66,16 +66,33 @@ public sealed class BravoProcessTests
             await WaitForMainWindowAsync(bravo);
             var window = (HWND)bravo.MainWindowHandle;
 
-            var answer = PInvoke.SendMessage(window, QueryEndSession, default, new LPARAM(CloseApplication));
-            _ = PInvoke.SendMessage(window, EndSession, new WPARAM(1), new LPARAM(CloseApplication));
+            var answer = await SendAsync(window, QueryEndSession, default);
+            await SendAsync(window, EndSession, new WPARAM(1));
             var exitCode = await WaitForExitAsync(bravo, s_shutdownTimeout);
 
-            Assert.Equal(1, answer.Value);
+            Assert.Equal(1, answer);
             Assert.Equal(0, exitCode);
         }
         finally
         {
             Kill(bravo);
+        }
+    }
+
+    // SendMessage returns when the window has answered, and a window that hangs never does. The wait has an
+    // end: the test then fails, and the end of the process, which the test asks for, ends the call as well.
+    private static async Task<nint> SendAsync(HWND window, uint message, WPARAM wParam)
+    {
+        var cancellationToken = TestContext.Current.CancellationToken;
+        var answer = Task.Run(() => PInvoke.SendMessage(window, message, wParam, new LPARAM(CloseApplication)).Value, cancellationToken);
+        try
+        {
+            return await answer.WaitAsync(s_shutdownTimeout, cancellationToken);
+        }
+        catch (TimeoutException)
+        {
+            Assert.Fail($"The window did not answer the message 0x{message:X4} within {s_shutdownTimeout}.");
+            throw;
         }
     }
 
