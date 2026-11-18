@@ -343,8 +343,9 @@ line names. It is not a project of the solution: a build of the solution makes n
   `artifacts/installer-stage/<version>/`: the application into the layout of its runtime, the program into
   a folder of its own. Those publishes restore another graph of packages than the lock files hold, and read
   and write no lock file: the committed ones do not change (backlog D-02). A layout is made again when a
-  file of `src/`, of the page or of the build rules is newer than it. The two packages of one runtime hold
-  the same files: the second one takes the cabinet that the first one compressed, kept beside the layout.
+  file of `src/`, of the page or of the build rules is newer than it, and when one was added or deleted:
+  the names of those files are kept beside the layout. The two packages of one runtime hold the same files:
+  the second one takes the cabinet that the first one compressed, kept beside the layout.
 - `Bravo.Setup.exe` is published with `PublishAot`, which needs the "Desktop development with C++" workload
   of Visual Studio: the runner has it. Without it the publish fails with "Platform linker not found";
   `-p:BravoSetupNativeAot=false` then makes packages to look at, with the program as one file that carries

@@ -45,7 +45,9 @@
     <DotNetHost Condition="'$(DotNetHost)' == ''">dotnet</DotNetHost>
     <SetupPublishDir>$(StageRoot)setup-$(SetupKind)\</SetupPublishDir>
     <SetupStamp>$(StageRoot)setup-$(SetupKind).published</SetupStamp>
+    <SetupInputList>$(StageRoot)setup-$(SetupKind).inputs</SetupInputList>
     <StageStamp>$(StageRoot)$(RuntimeName).staged</StageStamp>
+    <StageInputList>$(StageRoot)$(RuntimeName).inputs</StageInputList>
   </PropertyGroup>
 
   <!--
@@ -68,13 +70,23 @@
     <StageInput Include="@(BuildRuleFile);@(WebStaticFile);@(WebBundleFile)" />
   </ItemGroup>
 
-  <Target Name="PublishSetupProgram" BeforeTargets="BeforeBuild" Inputs="@(SetupInput)" Outputs="$(SetupStamp)">
+  <!--
+    A file that was deleted is newer than nothing. The names of the inputs are kept in a file, written again
+    only when they change, which is an input as well: a file that left, or one that came with an old date,
+    publishes the program, or lays the application out, again.
+  -->
+  <Target Name="WriteStageInputLists" BeforeTargets="PublishSetupProgram;StageApplication">
+    <WriteLinesToFile File="$(SetupInputList)" Lines="@(SetupInput)" Overwrite="true" WriteOnlyWhenDifferent="true" />
+    <WriteLinesToFile File="$(StageInputList)" Lines="@(StageInput)" Overwrite="true" WriteOnlyWhenDifferent="true" />
+  </Target>
+
+  <Target Name="PublishSetupProgram" BeforeTargets="BeforeBuild" Inputs="@(SetupInput);$(SetupInputList)" Outputs="$(SetupStamp)">
     <RemoveDir Directories="$(SetupPublishDir)" />
     <Exec Command="&quot;$(DotNetHost)&quot; publish &quot;$(RepositoryRoot)src\Bravo.Setup\Bravo.Setup.csproj&quot; $(StagePublishArguments) $(SetupPublishArguments) -o &quot;$(SetupPublishDir.TrimEnd('\'))&quot;" />
     <Touch Files="$(SetupStamp)" AlwaysCreate="true" />
   </Target>
 
-  <Target Name="StageApplication" BeforeTargets="BeforeBuild" Inputs="@(StageInput)" Outputs="$(StageStamp)">
+  <Target Name="StageApplication" BeforeTargets="BeforeBuild" Inputs="@(StageInput);$(StageInputList)" Outputs="$(StageStamp)">
     <Error Condition="!Exists('$(WebBundleDir)js\main.js') Or !Exists('$(WebBundleDir)css\main.css')"
            Text="The release bundle of the user interface is not in $(WebBundleDir). In web/, run &quot;npm ci&quot; and &quot;npm run build:Release&quot;." />
 
