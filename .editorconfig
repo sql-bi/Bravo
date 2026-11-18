@@ -16,7 +16,7 @@ indent_size = 4
 trim_trailing_whitespace = true
 
 # Specify UTF-8 without byte-order mark
-[*.{csproj,locproj,nativeproj,proj,resx,slnx,vbproj}]
+[*.{csproj,locproj,nativeproj,proj,resx,slnx,vbproj,wixproj}]
 charset = utf-8
 
 # Generated code
@@ -257,7 +257,7 @@ curly_bracket_next_line = true
 indent_brace_style = Allman
 
 # Xml project files
-[*.{csproj,vbproj,vcxproj,vcxproj.filters,proj,nativeproj,locproj}]
+[*.{csproj,vbproj,vcxproj,vcxproj.filters,proj,nativeproj,locproj,wixproj}]
 indent_size = 2
 
 # Xml build files
@@ -265,7 +265,7 @@ indent_size = 2
 indent_size = 2
 
 # Xml files
-[*.{resx,ruleset,slnx,stylecop,xml}]
+[*.{resx,ruleset,slnx,stylecop,wxl,wxs,xml}]
 indent_size = 2
 
 # Xml resource files
