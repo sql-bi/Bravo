@@ -7,7 +7,7 @@
   -->
   <?define RegistryKey = "Software\SQLBI\Bravo" ?>
 
-  <?define ExternalToolFileName = "bravo.pbitool.json" ?>
+
 
   <?if $(Scope) = perMachine ?>
     <?define ProductName = "!(loc.ProductName)" ?>
@@ -176,7 +176,7 @@
     <CustomAction Id="ReportUninstall" FileRef="SetupExe" ExeCommand="report-uninstall $(ReportOptions) --telemetry-enabled &quot;[INSTALLERTELEMETRYENABLED]&quot;" Execute="deferred" Impersonate="yes" Return="ignore" />
 
     <?if $(Scope) = perMachine ?>
-      <?define ExternalToolFile = "[POWERBIEXTERNALTOOLSFOLDER]$(ExternalToolFileName)" ?>
+      <?define ExternalToolFile = "[POWERBIEXTERNALTOOLSFOLDER]bravo.pbitool.json" ?>
 
       <!--
         With the rights of the installation: the folder of the external tools is not writable by a user. These
@@ -207,14 +207,12 @@
     <InstallExecuteSequence>
       <?if $(Scope) = perMachine ?>
         <!-- A failed upgrade leaves the registration of the installed version, which names the same file. -->
-        <Custom Action="RollbackExternalTool" After="InstallFiles" Condition="$(WhenInstalling) AND NOT WIX_UPGRADE_DETECTED" />
-        <Custom Action="RegisterExternalTool" After="RollbackExternalTool" Condition="$(WhenInstalling)" />
-        <Custom Action="ReportInstall" After="RegisterExternalTool" Condition="$(WhenInstalling)" />
+        <Custom Action="RollbackExternalTool" Before="RegisterExternalTool" Condition="$(WhenInstalling) AND NOT WIX_UPGRADE_DETECTED" />
+        <Custom Action="RegisterExternalTool" Before="ReportInstall" Condition="$(WhenInstalling)" />
 
         <Custom Action="UnregisterExternalTool" Before="RemoveUserData" Condition="$(WhenRemoving)" />
-      <?else?>
-        <Custom Action="ReportInstall" After="InstallFiles" Condition="$(WhenInstalling)" />
       <?endif?>
+      <Custom Action="ReportInstall" After="InstallFiles" Condition="$(WhenInstalling)" />
       <Custom Action="RemoveUserData" Before="ReportUninstall" Condition="$(WhenRemoving)" />
       <Custom Action="ReportUninstall" Before="RemoveFiles" Condition="$(WhenRemoving)" />
     </InstallExecuteSequence>

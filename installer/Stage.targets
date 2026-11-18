@@ -46,6 +46,14 @@
     <StageStamp>$(StageRoot)$(RuntimeName)-$(SetupKind).staged</StageStamp>
   </PropertyGroup>
 
+  <!--
+    The two packages of one runtime, per machine and per user, hold the same files: the cabinet that the first
+    one compresses is kept here, and the second one takes it as it is.
+  -->
+  <PropertyGroup>
+    <CabinetCachePath>$(StageRoot)$(RuntimeName)-$(SetupKind)-cabinets\</CabinetCachePath>
+  </PropertyGroup>
+
   <!-- A change of any of these publishes the program, or lays the application out, again. -->
   <ItemGroup>
     <BuildRuleFile Include="$(RepositoryRoot)Directory.Build.props;$(RepositoryRoot)Directory.Build.targets;$(RepositoryRoot)Directory.Packages.props" />
