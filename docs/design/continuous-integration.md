@@ -2,7 +2,7 @@
 
 One GitHub Actions workflow, `.github/workflows/ci.yml`, runs on every push to `main`, to `develop-vnext` and
 to a work branch, on the pull requests to `main` and on request
-([ADR 0010](../adr/0010-continuous-integration-in-one-workflow.md)).
+([ADR 0010](../decisions/0010-continuous-integration-in-one-workflow.md)).
 
 | Job | Runs on | What fails it |
 | --- | --- | --- |
@@ -15,7 +15,7 @@ to a work branch, on the pull requests to `main` and on request
 | `audit` | Windows | A NuGet package with a known vulnerability of any severity, referenced directly or not, of the solution or of the installer; vulnerability data that cannot be read; an npm package that ships with the user interface and has a known advisory |
 
 `build-and-test` is the status check that `main` requires: its name does not change. `audit` runs
-`npm audit` twice ([ADR 0016](../adr/0016-closed-error-codes-generated-types-and-tests-in-the-user-interface.md)):
+`npm audit` twice ([ADR 0016](../decisions/0016-closed-error-codes-generated-types-and-tests-in-the-user-interface.md)):
 without the development dependencies, where an advisory of any severity fails the job, and on every package,
 where the advisories of the build tools are reported and fail nothing. `test-window` runs the tests of the
 window ([tests of the user interface](user-interface-tests.md)) in a job of its own, so that the required
@@ -29,7 +29,7 @@ platform sends usage data.
 
 `.github/workflows/ci.yml` runs on every push to `main`, to `develop-vnext` and to a work branch (`vnext/**`),
 on the pull requests to `main` and on request
-([ADR 0010](../adr/0010-continuous-integration-in-one-workflow.md)). A new push cancels the run in progress
+([ADR 0010](../decisions/0010-continuous-integration-in-one-workflow.md)). A new push cancels the run in progress
 of the same work branch or pull request; on `main` and on `develop-vnext` every pushed commit is built. A job
 stops after 15 minutes.
 

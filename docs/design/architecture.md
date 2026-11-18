@@ -5,7 +5,7 @@ one part of the system.
 
 ## Repository layout
 
-The top-level folders separate content by kind ([ADR 0008](../adr/0008-repository-layout-by-kind.md)):
+The top-level folders separate content by kind ([ADR 0008](../decisions/0008-repository-layout-by-kind.md)):
 
 | Path | Content |
 | --- | --- |
@@ -22,7 +22,7 @@ its own toolchain gets its own top-level folder; a .NET one goes into `src/` and
 
 ### In the code
 
-The top-level folders separate content by kind ([ADR 0008](../adr/0008-repository-layout-by-kind.md)). Some do
+The top-level folders separate content by kind ([ADR 0008](../decisions/0008-repository-layout-by-kind.md)). Some do
 not exist yet: the table names the backlog item that creates them.
 
 | Path | Content | State |
@@ -44,8 +44,8 @@ not exist yet: the table names the backlog item that creates them.
 ## Projects of the host
 
 The host is five projects, with Windows at the edge
-([ADR 0011](../adr/0011-host-in-four-projects-with-windows-at-the-edge.md),
-[ADR 0020](../adr/0020-windows-installer-packages-built-with-wix-which-run-a-program-of-the-host.md)):
+([ADR 0011](../decisions/0011-host-in-four-projects-with-windows-at-the-edge.md),
+[ADR 0020](../decisions/0020-windows-installer-packages-built-with-wix-which-run-a-program-of-the-host.md)):
 
 | Project | Target | Content |
 | --- | --- | --- |
@@ -66,8 +66,8 @@ The entry point, the host, the API and the main window with its webview exist.
 ### In the code
 
 The host is five projects, with Windows at the edge
-([ADR 0011](../adr/0011-host-in-four-projects-with-windows-at-the-edge.md),
-[ADR 0020](../adr/0020-windows-installer-packages-built-with-wix-which-run-a-program-of-the-host.md)):
+([ADR 0011](../decisions/0011-host-in-four-projects-with-windows-at-the-edge.md),
+[ADR 0020](../decisions/0020-windows-installer-packages-built-with-wix-which-run-a-program-of-the-host.md)):
 
 | Project | Target | What goes there | May reference |
 | --- | --- | --- | --- |
@@ -83,7 +83,7 @@ The host is five projects, with Windows at the edge
 - No state is static or ambient: a service is injected, and `Bravo.Desktop` is the only place where services are
   registered.
 - The user interface reaches the host through an HTTP API served on loopback
-  ([ADR 0012](../adr/0012-http-on-loopback-between-user-interface-and-host.md)), which `Bravo.Api` holds
+  ([ADR 0012](../decisions/0012-http-on-loopback-between-user-interface-and-host.md)), which `Bravo.Api` holds
   ([API](api.md)).
 - `Bravo.Desktop` starts, keeps one instance, serves the API and shows the user interface in the webview of
   its main window ([Window and webview](window-and-webview.md)).

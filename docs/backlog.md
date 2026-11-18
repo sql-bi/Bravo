@@ -2,7 +2,7 @@
 
 Next ID: B-31
 
-The open work toward 1.1.0, in the order to take it ([ADR 0007](adr/0007-redesign-on-a-development-branch.md)).
+The open work toward 1.1.0, in the order to take it ([ADR 0007](decisions/0007-redesign-on-a-development-branch.md)).
 Status: `[ ]` to do, `[~]` in progress, `[-]` dropped (say why); a done item leaves the backlog.
 
 Every entry has a code, `B-` and a number from one counter. A new entry takes the `Next ID`, which then moves
@@ -151,12 +151,12 @@ Exit, for each feature: the same results as `main` on the sample models; its row
 - [ ] B-14 (was F-02) Format DAX.
 - [ ] B-15 (was F-03) Export Data. The export is the first operation that reports progress: a resource of its
   own, created, read and cancelled through its routes
-  ([ADR 0014](adr/0014-api-conventions-and-a-contract-kept-as-a-file.md)).
+  ([ADR 0014](decisions/0014-api-conventions-and-a-contract-kept-as-a-file.md)).
 - [ ] B-16 (was F-04) Manage Dates. To settle: where the date templates live; `README.md` links them at their
   path on `main`.
 - [ ] B-17 (was F-05) Template Development. The Visual Studio Code extension as published
   (`sql-bi/BravoTemplateEditor` 1.0.1, commit `31e4793`) must keep working unchanged
-  ([ADR 0012](adr/0012-http-on-loopback-between-user-interface-and-host.md)). What it expects from the host:
+  ([ADR 0012](decisions/0012-http-on-loopback-between-user-interface-and-host.md)). What it expects from the host:
   - It finds the host only through `bravo-config.json` at the root of the workspace folder: a JSON object with
     `address`, an absolute `http://` URL with no trailing slash, and `token`, both names in lower case. Bravo
     writes the two values when the user presses "Edit" on a template workspace.
@@ -169,7 +169,7 @@ Exit, for each feature: the same results as `main` on the sample models; its row
   - It waits 60 seconds for an answer, which is JSON. An error is a ProblemDetails body; the statuses 401, 403,
     404 and 408 tell the extension that it is not connected.
   - In the API its routes are a group that does not change
-    ([ADR 0014](adr/0014-api-conventions-and-a-contract-kept-as-a-file.md)). Its token is a second
+    ([ADR 0014](decisions/0014-api-conventions-and-a-contract-kept-as-a-file.md)). Its token is a second
     authentication scheme, read from a header without a scheme name and accepted by that group alone: the
     fallback policy of the API names only the scheme of the user interface. To decide, which token the routes
     that the user interface also calls accept, and the status of an error that a use case foresaw, 409

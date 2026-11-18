@@ -1,8 +1,8 @@
 # Tests of the user interface
 
 Two kinds of tests prove the user interface
-([ADR 0016](../adr/0016-closed-error-codes-generated-types-and-tests-in-the-user-interface.md),
-[ADR 0018](../adr/0018-tests-of-the-user-interface-in-the-window-with-playwright.md)):
+([ADR 0016](../decisions/0016-closed-error-codes-generated-types-and-tests-in-the-user-interface.md),
+[ADR 0018](../decisions/0018-tests-of-the-user-interface-in-the-window-with-playwright.md)):
 
 | Kind | Where they run | What they prove |
 | --- | --- | --- |
@@ -37,7 +37,7 @@ and say to run them from a terminal that is not elevated.
   so the token of the host of that test, whose process has ended.
 
 A change of the tools of the bundle is compared on the screens of the window
-([ADR 0019](../adr/0019-the-stylesheet-through-the-css-support-of-webpack-not-minified.md)), with a command that
+([ADR 0019](../decisions/0019-the-stylesheet-through-the-css-support-of-webpack-not-minified.md)), with a command that
 runs on request, and not with the tests of the window or in continuous integration. It takes a fixed set of
 screens of the bundle beside the executable, in the themes Dark and Light: the welcome page, every section of
 the options dialog, the page of a feature that has no route yet, and the same page with the diagnostics pane

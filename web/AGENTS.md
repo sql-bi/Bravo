@@ -32,10 +32,10 @@ A bundle is `js/main.js` and `css/main.css`; the release build adds `js/main.js.
 build `css/main.css.map`. Every build script first runs `npm run check`, which generates the client of the host
 API and checks the types with `tsc`, on the sources and the unit tests, then on the tests of the window; webpack
 only translates, with ts-loader in `transpileOnly`
-([ADR 0017](../docs/adr/0017-typescript-6-with-the-types-checked-apart-from-the-bundle.md)). The stylesheet goes
+([ADR 0017](../docs/decisions/0017-typescript-6-with-the-types-checked-apart-from-the-bundle.md)). The stylesheet goes
 through less-loader alone and the CSS support of webpack, with `url()` left as written; the JavaScript is
 minified, the stylesheet is not
-([ADR 0019](../docs/adr/0019-the-stylesheet-through-the-css-support-of-webpack-not-minified.md)).
+([ADR 0019](../docs/decisions/0019-the-stylesheet-through-the-css-support-of-webpack-not-minified.md)).
 `watch:UI` and `serve:UI` check once, when they start, and not at each change. `web/wwwroot` holds the static
 files that go with the bundle (`index.html`, icons, fonts, images); git ignores the `js` and `css` folders that
 the development build adds there. Without `--output-path` webpack writes to `artifacts/web` at the root of the
@@ -78,7 +78,7 @@ The client of the host API is generated, not written:
 
 The unit tests of the user interface are in `web/tests`, each at the path of the module that it tests, and
 run on [Vitest](https://vitest.dev) in a simulated browser, jsdom
-([ADR 0016](../docs/adr/0016-closed-error-codes-generated-types-and-tests-in-the-user-interface.md)):
+([ADR 0016](../docs/decisions/0016-closed-error-codes-generated-types-and-tests-in-the-user-interface.md)):
 
 - They test the modules that read the contract, which are `host-fetch`, `host-events`, `host` and the
   errors with the table of their texts, and what the page does at its start: the sidebar, the theme, the
@@ -98,7 +98,7 @@ run on [Vitest](https://vitest.dev) in a simulated browser, jsdom
 
 The tests of the window are in `web/window-tests`, one file `*.spec.ts` for each part of the page, and run on
 [Playwright Test](https://playwright.dev) against the window of the application
-([ADR 0018](../docs/adr/0018-tests-of-the-user-interface-in-the-window-with-playwright.md)):
+([ADR 0018](../docs/decisions/0018-tests-of-the-user-interface-in-the-window-with-playwright.md)):
 
 - They start the `Bravo.exe` that the build wrote, `artifacts/bin/Bravo.Desktop/release/Bravo.exe`, which
   shows the development bundle that its build copied beside it. Before them: in `web/`, `npm run build:UI`;
@@ -143,7 +143,7 @@ The tests of the window are in `web/window-tests`, one file `*.spec.ts` for each
   own, `window-tests/tsconfig.json`, with the types of Node.js, which the sources do not get.
 
 The screens of the window compare two builds of the bundle, byte for byte
-([ADR 0019](../docs/adr/0019-the-stylesheet-through-the-css-support-of-webpack-not-minified.md)). The command that
+([ADR 0019](../docs/decisions/0019-the-stylesheet-through-the-css-support-of-webpack-not-minified.md)). The command that
 takes and compares them is not a test of the window: neither `npm run test:window` nor continuous integration
 runs it.
 

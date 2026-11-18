@@ -1,7 +1,7 @@
 # Startup, lifetime and single instance
 
 `Main` runs six steps in a fixed order, on one STA thread, and returns an exit code
-([ADR 0013](../adr/0013-startup-in-a-fixed-order-one-instance-by-mutex-and-pipe.md)):
+([ADR 0013](../decisions/0013-startup-in-a-fixed-order-one-instance-by-mutex-and-pipe.md)):
 
 | Step | What happens |
 | --- | --- |
@@ -46,7 +46,7 @@ again.
   which an owner of another version refuses.
 
 **Build identity.** A build that is not made for an installer package is a development build
-([ADR 0015](../adr/0015-page-under-a-reserved-host-name-api-connection-in-an-object.md)). The build of the packages
+([ADR 0015](../decisions/0015-page-under-a-reserved-host-name-api-connection-in-an-object.md)). The build of the packages
 sets a build property, which reaches the application as metadata of its assembly; `Main` reads it once,
 before the arbitration.
 
@@ -86,7 +86,7 @@ itself ends with one of these:
 ## In the code
 
 `Program.Main` of `Bravo.Desktop` runs six steps in a fixed order
-([ADR 0013](../adr/0013-startup-in-a-fixed-order-one-instance-by-mutex-and-pipe.md)), which
+([ADR 0013](../decisions/0013-startup-in-a-fixed-order-one-instance-by-mutex-and-pipe.md)), which
 this document describes above. Where each part lives:
 
 | Part | Path |

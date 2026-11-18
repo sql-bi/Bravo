@@ -1,8 +1,8 @@
 # User interface and host
 
 For 1.1.0 the user interface reaches the host through an HTTP API
-([ADR 0012](../adr/0012-http-on-loopback-between-user-interface-and-host.md)): ASP.NET Core minimal APIs, with the
-conventions of [ADR 0014](../adr/0014-api-conventions-and-a-contract-kept-as-a-file.md). Development and production
+([ADR 0012](../decisions/0012-http-on-loopback-between-user-interface-and-host.md)): ASP.NET Core minimal APIs, with the
+conventions of [ADR 0014](../decisions/0014-api-conventions-and-a-contract-kept-as-a-file.md). Development and production
 use the same path, so a browser reaches the API that the webview reaches. The Visual Studio Code extension keeps
 the routes of Template Development that it calls today (backlog B-17).
 
@@ -57,7 +57,7 @@ other request has the 5 seconds of the stop to end.
 **Errors.** Every error answer is a problem details body ([RFC 9457](https://www.rfc-editor.org/rfc/rfc9457),
 `application/problem+json`) with the member `code`: a name that never changes meaning, by which the user
 interface chooses what to do. The codes are a closed list
-([ADR 0016](../adr/0016-closed-error-codes-generated-types-and-tests-in-the-user-interface.md)): the document
+([ADR 0016](../decisions/0016-closed-error-codes-generated-types-and-tests-in-the-user-interface.md)): the document
 of the API lists them in the schema `ProblemCode`, and no answer carries another one.
 
 | Status | When | `code` |
@@ -148,7 +148,7 @@ button that loads the page again.
 ## In the code
 
 `Bravo.Api` holds everything of the HTTP API that the user interface calls. Its conventions are
-[ADR 0014](../adr/0014-api-conventions-and-a-contract-kept-as-a-file.md), and
+[ADR 0014](../decisions/0014-api-conventions-and-a-contract-kept-as-a-file.md), and
 this document describes them above as they are built. Where each part lives:
 
 | Part | Path |

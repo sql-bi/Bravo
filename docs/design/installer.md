@@ -1,7 +1,7 @@
 # Installer
 
 Four Windows Installer packages, built with WiX, install the application
-([ADR 0020](../adr/0020-windows-installer-packages-built-with-wix-which-run-a-program-of-the-host.md)).
+([ADR 0020](../decisions/0020-windows-installer-packages-built-with-wix-which-run-a-program-of-the-host.md)).
 
 **Packages.**
 
@@ -155,7 +155,7 @@ package: no package has anything that exists for a test. The dialogs are checked
 ## In the code
 
 Windows Installer packages install the application
-([ADR 0020](../adr/0020-windows-installer-packages-built-with-wix-which-run-a-program-of-the-host.md));
+([ADR 0020](../decisions/0020-windows-installer-packages-built-with-wix-which-run-a-program-of-the-host.md));
 this document describes them above. What a package cannot do with its tables it asks of
 `Bravo.Setup.exe`, the program of `src/Bravo.Setup`:
 

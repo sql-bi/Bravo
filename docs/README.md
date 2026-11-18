@@ -6,7 +6,7 @@ Each fact has one home; other documents link to it.
 | --- | --- |
 | [`spec.md`](spec.md) | What 1.1.0 must be: the product, the guarantees for users of 1.0.x, the rules for every component |
 | [`design/`](design/README.md) | How the redesigned system works, one document for each part; `previous/` holds the design of the previous implementation, the one on `main` |
-| [`adr/`](adr/) | Why: one decision per file, with its reasons and rejected alternatives |
+| [`decisions/`](decisions/README.md) | Why: one decision per file, with its reasons and rejected alternatives |
 | [`backlog.md`](backlog.md) | What comes next: the open work in the order to take it, what comes after 1.1.0, the open decisions |
 | [`guides/`](guides/) | How to do a task: add a route, see the user interface in a browser, compare the screens of two builds |
 

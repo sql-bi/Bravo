@@ -16,7 +16,7 @@ Exception reporting in the .NET host. The frontend has a separate
 The two runtime callbacks use
 [GlobalExceptionHandling](../../src/Infrastructure/Diagnostics/GlobalExceptionHandling.cs). An unobserved task
 exception is not a fatal crash, even though its telemetry has `ExceptionKind = Unhandled`. Why a fatal exception
-ends the process: [ADR 0003](../../adr/0003-fatal-exceptions-end-the-process.md).
+ends the process: [ADR 0003](../../decisions/0003-fatal-exceptions-end-the-process.md).
 
 ## Startup coverage and fatal reporting
 
@@ -33,7 +33,7 @@ through disposed services.
 [BootstrapContextFactory](../../src/Host/BootstrapContextFactory.cs) degrades to default settings and disabled
 telemetry when they cannot be created, but a policy read failure propagates on purpose, so that administrative
 restrictions are never bypassed: a policy registry key that cannot be read ends the process through this path
-([ADR 0005](../../adr/0005-policy-failures-stop-startup.md)).
+([ADR 0005](../../decisions/0005-policy-failures-stop-startup.md)).
 
 [UnhandledExceptionHandler](../../src/Infrastructure/Diagnostics/UnhandledExceptionHandler.cs) logs and tracks each
 callback before attempting a fatal report. Logging and tracking failures are isolated so one does not prevent the
@@ -143,7 +143,7 @@ untagged data.
 
 ### Flush and shutdown
 
-Why the channel persists telemetry: [ADR 0006](../../adr/0006-persistent-telemetry-channel.md).
+Why the channel persists telemetry: [ADR 0006](../../decisions/0006-persistent-telemetry-channel.md).
 `TelemetryService.TrackException` calls the synchronous `Flush`, which moves telemetry into the channel's
 transmission pipeline and returns without waiting for delivery. In the
 [ServerTelemetryChannel 2.23.0 contract](https://raw.githubusercontent.com/microsoft/ApplicationInsights-dotnet/2.23.0/BASE/src/ServerTelemetryChannel/ServerTelemetryChannel.cs),

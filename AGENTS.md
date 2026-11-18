@@ -5,7 +5,7 @@ Operating instructions for agents working on this repository.
 ## Status
 
 Bravo for Power BI is being redesigned on this branch, `develop-vnext`, toward version 1.1.0
-([ADR 0007](docs/adr/0007-redesign-on-a-development-branch.md)). Take the next item from
+([ADR 0007](docs/decisions/0007-redesign-on-a-development-branch.md)). Take the next item from
 [docs/backlog.md](docs/backlog.md).
 
 The previous implementation, the .NET host with its tests and its installer, is not in the tree of this branch.
@@ -18,7 +18,7 @@ its structure as a model.
 | --- | --- |
 | [docs/backlog.md](docs/backlog.md) | The open work, in the order to take it; what comes after 1.1.0; the open decisions |
 | [docs/spec.md](docs/spec.md) | What 1.1.0 must be, the guarantees for users of 1.0.x, the rules for every component |
-| [docs/adr/](docs/adr/) | One decision per file, with its reasons and rejected alternatives |
+| [docs/decisions/](docs/decisions/) | One decision per file, with its reasons and rejected alternatives |
 | [docs/design/](docs/design/README.md) | How the redesigned system works, one document for each part: what was decided, where it lives in the code, the rules for changing it |
 | [docs/design/previous/](docs/design/previous/) | The behavior of the previous implementation: requirements and prior art for the component that replaces it |
 | [docs/guides/](docs/guides/) | How to do a task: add a route, see the user interface in a browser, compare the screens of two builds |
@@ -61,7 +61,8 @@ there, not here. Which kind of fact lives in which document: [docs/README.md](do
 - Nothing stays only on a local machine at the end of a session.
 - Update `docs/backlog.md`, `docs/spec.md` and the documents of `docs/design/` in the commit that changes what
   they describe, and delete statements that no longer hold.
-- Do not add or change a rule in this file, or a decision in `docs/adr/`, unless the maintainer asked for it.
+- Do not add or change a rule in this file, or a decision in `docs/decisions/`, unless the maintainer asked
+  for it.
 
 ## Code
 

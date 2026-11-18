@@ -1,7 +1,7 @@
 # Window and webview
 
 The main window shows the user interface in a webview, WebView2
-([ADR 0015](../adr/0015-page-under-a-reserved-host-name-api-connection-in-an-object.md)). Everything that knows
+([ADR 0015](../decisions/0015-page-under-a-reserved-host-name-api-connection-in-an-object.md)). Everything that knows
 the engine is in one folder of `Bravo.Desktop`: a shell on another engine rewrites that folder.
 
 **Window.** The icon of the application, the title of the
@@ -129,7 +129,7 @@ What follows from this is backlog B-6.
 ## In the code
 
 The main window shows the user interface in WebView2
-([ADR 0015](../adr/0015-page-under-a-reserved-host-name-api-connection-in-an-object.md));
+([ADR 0015](../decisions/0015-page-under-a-reserved-host-name-api-connection-in-an-object.md));
 what the page gets and what it cannot do is described above. Only
 `src/Bravo.Desktop/WebView/` uses the types of the engine:
 

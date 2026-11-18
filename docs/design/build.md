@@ -1,7 +1,7 @@
 # Build rules and guardrails
 
 A rule that a tool can check fails the build or a test, and no rule has an allow-list
-([ADR 0009](../adr/0009-rules-enforced-by-the-build.md)).
+([ADR 0009](../decisions/0009-rules-enforced-by-the-build.md)).
 
 | Rule | Where it is |
 | --- | --- |
@@ -23,7 +23,7 @@ No project sets the C# version: it follows the target framework. Each project se
 
 webpack bundles the user interface. The stylesheet is what Less writes, read by the CSS support of webpack
 and not minified: the minimizer of webpack drops the space between a color and an image, and the engine then
-drops the declaration ([ADR 0019](../adr/0019-the-stylesheet-through-the-css-support-of-webpack-not-minified.md)).
+drops the declaration ([ADR 0019](../decisions/0019-the-stylesheet-through-the-css-support-of-webpack-not-minified.md)).
 The JavaScript is minified.
 
 The architecture tests use reflection and read the project and solution files. Each rule is a function from its input to
@@ -38,7 +38,7 @@ portable ones.
 
 ## In the code
 
-A warning fails the build ([ADR 0009](../adr/0009-rules-enforced-by-the-build.md)). Where the rules live:
+A warning fails the build ([ADR 0009](../decisions/0009-rules-enforced-by-the-build.md)). Where the rules live:
 
 | Rule | File |
 | --- | --- |

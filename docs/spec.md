@@ -1,7 +1,7 @@
 # Bravo: specification
 
 What Bravo is and what version 1.1.0 must be. What has been decided so far is in
-[docs/design/](design/README.md), the reasons are in [docs/adr/](adr/), the open work is in
+[docs/design/](design/README.md), the reasons are in [docs/decisions/](decisions/), the open work is in
 [backlog.md](backlog.md).
 
 ## The product
@@ -22,7 +22,7 @@ version exists, and the registration as an external tool of Power BI Desktop.
 
 ## Version 1.1.0
 
-Version 1.1.0 is a redesign, not a feature release ([ADR 0007](adr/0007-redesign-on-a-development-branch.md)).
+Version 1.1.0 is a redesign, not a feature release ([ADR 0007](decisions/0007-redesign-on-a-development-branch.md)).
 
 | In scope | Out of scope |
 | --- | --- |
