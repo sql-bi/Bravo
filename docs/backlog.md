@@ -90,7 +90,7 @@ crash produces a report, telemetry runs on a supported SDK.
   126](https://github.com/MicrosoftEdge/WebView2Announcements/issues/126)): when WebView2 offers the permission,
   the application grants it to the origin of the page; until then a permission that the application does not
   know, from a later runtime or from a later SDK, is left to the prompt of the engine. Measured with the checks
-  turned on by feature flags ([specification](spec.md#window-and-webview)): the request of the page waits,
+  turned on by feature flags ([specification](design/window-and-webview.md)): the request of the page waits,
   without reaching the host, for a prompt of the engine with Block and Allow; the application gets no permission
   request; the answer of the user is kept in the profile. In a probe outside the application, a grant through
   the DevTools protocol (`Browser.grantPermissions`) made the same request succeed.

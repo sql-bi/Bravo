@@ -19,9 +19,13 @@ its structure as a model.
 | [docs/backlog.md](docs/backlog.md) | The open work, in the order to take it; what comes after 1.1.0; the open decisions |
 | [docs/spec.md](docs/spec.md) | What 1.1.0 must be, the guarantees for users of 1.0.x, the rules for every component |
 | [docs/adr/](docs/adr/) | One decision per file, with its reasons and rejected alternatives |
-| [docs/design/](docs/design/README.md) | The behavior of the previous implementation: requirements and prior art for the component that replaces it |
+| [docs/design/](docs/design/README.md) | How the redesigned system works, one document for each part: what was decided, where it lives in the code, the rules for changing it |
+| [docs/design/previous/](docs/design/previous/) | The behavior of the previous implementation: requirements and prior art for the component that replaces it |
+| [docs/guides/](docs/guides/) | How to do a task: add a route, see the user interface in a browser, compare the screens of two builds |
+| [web/AGENTS.md](web/AGENTS.md) | The user interface: its commands, its rules, its tests |
 
-Which kind of fact lives in which document: [docs/README.md](docs/README.md).
+Before changing a part of the system, read its document in `docs/design/`: the rules for changing it are
+there, not here. Which kind of fact lives in which document: [docs/README.md](docs/README.md).
 
 ## How the work is done on this branch
 
@@ -55,8 +59,8 @@ Which kind of fact lives in which document: [docs/README.md](docs/README.md).
 - One component is in progress at a time. The features do not change: an idea for a new one goes to `Later` in
   the backlog.
 - Nothing stays only on a local machine at the end of a session.
-- Update `docs/backlog.md` and `docs/spec.md` in the commit that changes what they describe, and delete
-  statements that no longer hold.
+- Update `docs/backlog.md`, `docs/spec.md` and the documents of `docs/design/` in the commit that changes what
+  they describe, and delete statements that no longer hold.
 - Do not add or change a rule in this file, or a decision in `docs/adr/`, unless the maintainer asked for it.
 
 ## Code
@@ -70,300 +74,7 @@ Which rule applies to new code, in order of precedence:
 3. The Microsoft [.NET design guidelines](https://learn.microsoft.com/dotnet/standard/design-guidelines/) for
    names and API design.
 
-## Repository layout
-
-The top-level folders separate content by kind ([ADR 0008](docs/adr/0008-repository-layout-by-kind.md)). Some do
-not exist yet: the table names the backlog item that creates them.
-
-| Path | Content | State |
-| --- | --- | --- |
-| `src/` | The .NET projects of the host, and nothing else | Exists |
-| `src/Bravo.Api/openapi.json` | The OpenAPI document of the API: a test compares it with the routes | Exists |
-| `tests/` | One test project per project of `src/`, at the mirrored path, created with the first test of that project, and the architecture tests | Exists |
-| `web/` | The TypeScript user interface, with its own `package.json` and lockfile | Exists |
-| `installer/` | The WiX project of the installer packages, and the tests that install them ([Installer](#installer)) | Exists |
-| `policies/` | The group policy templates: `bravo.admx`, `sqlbi.admx`, `en-US/` | Exists |
-| `docs/` | Specification, backlog, ADRs, and the design of the previous implementation | Exists |
-| `artifacts/` | Build and publish output of every project, the release bundle of the user interface, the installer packages with the folders they are made from, the results of the tests of the window and the screens of the window, ignored by git | Written by the builds, the tests and the command of the screens |
-| `Bravo.slnx`, `Directory.Build.props`, `Directory.Packages.props` | The solution and the build rules of every .NET project | Exist |
-| `Bravo.Portable.slnf` | The projects of the solution that do not target Windows, which continuous integration builds and tests on Linux | Exists |
-| `Directory.Build.targets` | What is done to every .NET project after its packages: the reference that the WebView2 package adds to its WPF control is removed | Exists |
-| `global.json`, `nuget.config`, `version.json`, `.editorconfig` | The .NET SDK and the mode of `dotnet test`, the package source, the version, the code style | Exist |
-| `BannedSymbols.txt`, `CodeAnalysis.globalconfig`, `.gitattributes` | The symbols no project may use, the analyzer options, the line endings | Exist |
-
-## Projects of the host
-
-The host is five projects, with Windows at the edge
-([ADR 0011](docs/adr/0011-host-in-four-projects-with-windows-at-the-edge.md),
-[ADR 0020](docs/adr/0020-windows-installer-packages-built-with-wix-which-run-a-program-of-the-host.md)):
-
-| Project | Target | What goes there | May reference |
-| --- | --- | --- | --- |
-| `Bravo.Core` | `net10.0` | Use cases, model, and the interfaces toward everything outside | Nothing |
-| `Bravo.Api` | `net10.0` | The contract exposed to the user interface and to the Visual Studio Code extension | `Bravo.Core` |
-| `Bravo.Platform.Windows` | `net10.0-windows` | Adapters with no window: policies, credentials, the local Power BI Desktop | `Bravo.Core` |
-| `Bravo.Desktop` | `net10.0-windows` | Window, webview, dialogs, composition; its executable is `Bravo.exe` | The first three |
-| `Bravo.Setup` | `net10.0-windows` | What the installer packages run ([Installer](#installer)); its executable is `Bravo.Setup.exe` | Nothing |
-
-- `Bravo.Core` and `Bravo.Api` use no Windows API: the build reports one as CA1416. Code that needs Windows gets
-  an interface in `Bravo.Core` and its implementation in `Bravo.Platform.Windows`, or in `Bravo.Desktop` when it
-  needs the window or the UI thread.
-- No state is static or ambient: a service is injected, and `Bravo.Desktop` is the only place where services are
-  registered.
-- The user interface reaches the host through an HTTP API served on loopback
-  ([ADR 0012](docs/adr/0012-http-on-loopback-between-user-interface-and-host.md)), which `Bravo.Api` holds
-  ([API](#api)).
-- `Bravo.Desktop` starts, keeps one instance, serves the API and shows the user interface in the webview of
-  its main window ([Window and webview](#window-and-webview)).
-
-A project of `src/` gets its test project with its first test: a run in which no test ran fails.
-
-## Startup and single instance
-
-`Program.Main` of `Bravo.Desktop` runs six steps in a fixed order
-([ADR 0013](docs/adr/0013-startup-in-a-fixed-order-one-instance-by-mutex-and-pipe.md)), which
-[docs/spec.md](docs/spec.md#startup-lifetime-and-single-instance) describes. Where each part lives:
-
-| Part | Path |
-| --- | --- |
-| The order of the startup | `src/Bravo.Desktop/Program.cs` |
-| The host: what it is built with, its lifetime, its stop | `src/Bravo.Desktop/Hosting/` |
-| The main window, its colors for a theme, what ties it to the host, and the exit code that the window ends with | `src/Bravo.Desktop/Shell/` |
-| The webview, and everything that knows its engine | `src/Bravo.Desktop/WebView/` ([Window and webview](#window-and-webview)) |
-| The exit codes of the process | `src/Bravo.Desktop/ExitCode.cs` |
-| What is done with an exception that escapes | `src/Bravo.Desktop/Diagnostics/` |
-| The command line, and the consumer of the activations | `src/Bravo.Desktop/Activation/` |
-| What a development build is asked for a browser: one more allowed origin, the file with the address and the token | `src/Bravo.Desktop/Development/` |
-| The activation request, and the channel that every activation goes through | `src/Bravo.Core/Activation/` |
-| The single instance: ownership by mutex, hand-over by pipe, arbitration | `src/Bravo.Platform.Windows/SingleInstance/` |
-| The identity of the build: release or development, with its instance identifier, data folder and window title | `src/Bravo.Desktop/BuildIdentity.cs` |
-| The listener as a service of the host, the message of a failed hand-over, the end of a second process | `src/Bravo.Desktop/SingleInstance/` |
-| The settings of the user and their store, in memory until backlog B-4 | `src/Bravo.Core/Settings/`, registered in `src/Bravo.Desktop/Settings/` |
-| The Windows functions of a project, listed in its `NativeMethods.txt` and wrapped by capability | `Interop/` in `Bravo.Desktop` and in `Bravo.Platform.Windows` |
-
-- A component registers its services in an extension method of `IServiceCollection` beside its code, and
-  `DesktopHost.Build` calls it.
-- `DesktopHost.Build` is the one place that names the builder, `WebApplication.CreateEmptyBuilder`: what a web
-  application has by default, such as configuration files, environment variables, logging providers and a
-  server, is in the host only when `Build` adds it. The API is added with `UseLoopbackServer`, `AddApi` and
-  `UseApi` ([API](#api)).
-- The ownership of the instance is a mutex, which only the thread that acquired it can release: `Main` acquires
-  it and releases it, and a test that acquires one stays on one thread. A test that awaits holds it through
-  `OwnedInstance`, on a thread of its own.
-- `DesktopHostApiTests` starts the host as the application builds it, without a window, and calls the API on a
-  real socket.
-- `Main` reads the identity of the build once, from the metadata of the assembly, and passes it on: no code
-  asks again which build it is. A build is a development build unless it was built with
-  `-p:BravoReleaseBuild=true`, which only the build of the installer packages does. The property is not the
-  configuration: `-c Release` on a developer's machine is a development build. A development build is
-  another instance than the installed application, so both can run at once.
-- The tests of the single instance use real mutexes and pipes, each test under names of its own.
-  `BravoProcessTests` starts the `Bravo.exe` that the build wrote, a development build: it shows a window for
-  a moment, and it is skipped when a development build already runs for the user.
-- No code of the application handles a request to end: Windows Forms answers the two messages, and closes
-  the main window at the second one. `BravoProcessTests` sends them as Restart Manager does, and fails when
-  the application no longer answers yes or no longer ends with exit code 0.
-
-| Task | Command |
-| --- | --- |
-| Run the application | `dotnet run --project src/Bravo.Desktop -c Release` |
-| Run it as the external tool registration does | `dotnet run --project src/Bravo.Desktop -c Release -- --server=localhost:12345 --database=db` |
-| Start the executable that the build wrote | `artifacts/bin/Bravo.Desktop/release/Bravo.exe` |
-
-## Window and webview
-
-The main window shows the user interface in WebView2
-([ADR 0015](docs/adr/0015-page-under-a-reserved-host-name-api-connection-in-an-object.md));
-[docs/spec.md](docs/spec.md#window-and-webview) describes what the page gets and what it cannot do. Only
-`src/Bravo.Desktop/WebView/` uses the types of the engine:
-
-| Part | File |
-| --- | --- |
-| The host name and the origin of the page, and the check that an address belongs to it | `PageAddress.cs` |
-| The script that gives the page `window.bravoHost`, the address and the token of the API | `PageConnectionScript.cs` |
-| The control: its environment, its settings, what it cancels, its recoveries | `WebViewHost.cs` |
-| The answer to a permission that a document asks for | `WebViewPermissionRule.cs` |
-| The rules for the failures and their limits, with no type of the engine | `WebViewFailurePolicy.cs`, `WebViewFailure.cs`, `WebViewRecovery.cs`, `WebViewDecision.cs` |
-| What the user reads when a failure ends the application | `WebViewFailureMessage.cs`, `WebViewFailureDialog.cs` |
-| The folders, and whether the developer tools are on: decided by the application, not by the webview | `WebViewOptions.cs`, `WebViewServiceCollectionExtensions.cs` |
-
-- The name of the origin is in `PageAddress` and nowhere else: `AddWebView` adds it to the origins that the
-  API allows.
-- Everything of the control runs on the thread of the window. A step that nobody awaits goes through
-  `WebViewHost.Observe`: a failure of the engine becomes a decision of the rules, and any other exception
-  leaves the message loop and ends the application. Nothing calls the engine, or shows a dialog, from inside
-  an event of the engine: it is posted to the window.
-- A setting that the page does not need stays off. Turning one on is a change of
-  [docs/spec.md](docs/spec.md#window-and-webview) in the same commit.
-- The theme of the user is applied by `MainWindow.ApplyTheme`, on the thread of the window: at the start,
-  when `IUserSettingsStore.Changed` says that the settings were replaced, and when Windows says that a
-  setting of the system changed. `ISystemAppMode` says whether Windows asks applications to be dark, read
-  from the registry and not from `Application.SystemColorMode`, which says light before Windows 11.
-  `WindowColors` decides the colors, `ColorModeInterop` asks Windows for the frame, and
-  `WebViewHost.ApplyTheme` sets the color scheme of the profile and the background of the control. The tests
-  prove the color scheme with the real engine; the frame is checked by hand, and on Windows 10 apart: there
-  `MainWindow.ApplyFrame` also asks for the frame to be drawn again (`ColorModeInterop.RedrawFrame`), which
-  no test and no Windows 11 machine runs.
-- The page is `wwwroot` beside the executable. The .NET build never runs npm: a development build copies
-  `web/wwwroot` as it is, so the window shows the user interface only after `npm run build:UI` in `web/` and
-  a build of `Bravo.Desktop`; without the bundle the window stays empty. A release build copies nothing:
-  the build of the installer lays the folder out, with the release bundle ([Installer](#installer)).
-- `WebViewHostTests` uses the real engine: a window outside every screen, on a thread with a message loop, on
-  a page of the test that reports through the title of its document. It needs the WebView2 runtime, which
-  Windows 11 and the Windows runner of continuous integration have. A test waits for an event of the engine,
-  never for a time.
-- The WebView2 package adds a reference to its WPF control in every project: `Directory.Build.targets` removes
-  it, or the build fails with MSB3277.
-
-## API
-
-`Bravo.Api` holds everything of the HTTP API that the user interface calls. Its conventions are
-[ADR 0014](docs/adr/0014-api-conventions-and-a-contract-kept-as-a-file.md), and
-[docs/spec.md](docs/spec.md#user-interface-and-host) describes them as they are built. Where each part lives:
-
-| Part | Path |
-| --- | --- |
-| What the application calls: `AddApi`, `UseApi`, `ApiOptions` | `src/Bravo.Api/` |
-| Kestrel on the loopback address, and the address it was given | `src/Bravo.Api/Server/` |
-| The token and its authentication scheme, the fallback policy, host filtering, CORS | `src/Bravo.Api/Security/` |
-| Problem details and their codes, and the answer to a `BravoException` | `src/Bravo.Api/Problems/` |
-| The error of a use case, and the codes that it can carry | `src/Bravo.Core/Errors/` |
-| How JSON is read and written | `src/Bravo.Api/Json/` |
-| The events for the user interface: their log, their publisher, their route | `src/Bravo.Api/Events/` |
-| The routes of a resource, with the types that travel | A folder for each resource, such as `src/Bravo.Api/Options/` |
-| The OpenAPI document | `src/Bravo.Api/openapi.json` |
-| What produces the document, with the rules applied to it, and the test that compares it with the file | `tests/Bravo.Api.Tests/Contract/` |
-
-To add a route:
-
-1. Map it in the endpoints class of its resource, such as `OptionsEndpoints`. A new resource gets a folder, a
-   class with a `Map...` method, and a call in `ApiApplicationExtensions.MapRoutes`: a route mapped there asks
-   for the token and declares the answers 401 and 500 without naming them.
-2. Give it `WithName`, `WithTags` and `WithSummary`. The name is the operation id, which becomes the name of the
-   TypeScript function and never changes. The handler is a named static method that returns typed results;
-   `ProducesValidationProblem` and `ProducesProblem` declare the error answers that the results do not show.
-3. The types that travel are records in the folder of the resource: `required` on a member that always has a
-   value, a nullable type on a member that may be absent. Every type that travels is public, in a request and
-   in an answer alike, and nothing else becomes public for it. There are two reasons: the validation is
-   generated for public types only, and the descriptions of the document, which are the `<summary>` of a type
-   and of its members, are read for public types only. Neither says anything about a type that is not public:
-   a test of the document fails for it. Write a `<summary>` for a reader of the API, with the names of the
-   JSON.
-4. Validate with data annotations or `IValidatableObject` on the types and with attributes on the parameters,
-   and test each rule through the route: nothing reports a type that the validation does not see.
-5. A use case reports an error that the user interface must tell apart by throwing `BravoException`
-   (`Bravo.Core.Errors`) with a member of `ErrorCode`, a new one when none says what happened: the answer
-   is 409 with the name of the member as its code. An error of the route itself is a typed problem result
-   with its status and, as the member `code`, the name of a member of `ApiProblemCode`. The two lists are
-   the codes of the contract: a problem with any other code is answered with the code of its status.
-6. Test it in `tests/Bravo.Api.Tests` on `TestApi`: the API as the application composes it, on a server in
-   memory, with a clock that the test moves.
-7. Write the document again and commit `src/Bravo.Api/openapi.json` with the change: until the file matches the
-   routes, `OpenApiDocumentTests` fails and says so.
-
-- A new error code has no text in the user interface, and no build of `web/` succeeds until
-  `web/model/problem-texts.ts` has one.
-- An event for the user interface is a new value of `HostEventKind`, an optional member of `HostEvent` with
-  its data, and a method of `IHostEventPublisher`. The kinds are not derived types: the document that .NET 10
-  produces for a list of derived types is wrong.
-- `AddApi` registers the services of the API and `UseLoopbackServer` its server. A use case that a route calls
-  is registered by `Bravo.Desktop`, and by `TestApi` for the tests.
-- Only a test produces the document, so what produces it is in the test project: `Bravo.Api` has no package
-  reference, and the application ships nothing of the OpenAPI package. A rule on how the document describes
-  the JSON goes in `ContractSchema` or `ContractDocument`.
-- `OpenApiDocumentTests.WriteTheFileOfTheRepository` is not a test: it writes the document, runs only when
-  asked for, and shows as skipped in every other run.
-- `ErrorCode` has no member yet, so no test can throw a `BravoException`. The two tests of an error that a
-  use case foresaw, in `ProblemDetailsTests` and in `BravoExceptionTests`, take every member as their data:
-  they show as skipped until the first member exists, and run for it without a change.
-
-| Task | Command |
-| --- | --- |
-| Write the OpenAPI document again after a change of the API | `dotnet test --project tests/Bravo.Api.Tests -c Release --explicit only` |
-
-## Installer
-
-Windows Installer packages install the application
-([ADR 0020](docs/adr/0020-windows-installer-packages-built-with-wix-which-run-a-program-of-the-host.md));
-[docs/spec.md](docs/spec.md#installer) describes them. What a package cannot do with its tables it asks of
-`Bravo.Setup.exe`, the program of `src/Bravo.Setup`:
-
-| Part | Path |
-| --- | --- |
-| The composition of the program, its last defense against an exception, its exit codes, and what carries out a command | `Program.cs`, `ProcessBoundary.cs`, `ExitCode.cs`, `SetupApplication.cs` |
-| The command line: the commands, their options, and the reader of the options | `CommandLine/` |
-| The file that registers the application as an external tool of Power BI Desktop, and its icon | `ExternalTools/` |
-| The events of an installation and of a removal, the identifier of who installs, where the events go | `Telemetry/` |
-| The removal of the data folder of a user | `UserData/` |
-
-- The program finds no folder by itself: every path is an option of its command line. A test gives it a
-  folder of its own, under the temporary folder of the user, and nothing else to write in. The one name
-  that the program holds is the one of the data folder (`UserDataFolder.Name`): `remove-user-data` is
-  given the folder of local application data, and removes that subfolder alone.
-- What touches the disk or the network is behind an interface: `IExternalToolRegistration`,
-  `IUserDataFolder`, `IInstallationEventSink`. The sink that `Program` composes sends nothing (backlog
-  B-9).
-- The program has no package reference and uses no reflection: the packages carry it compiled ahead of
-  time. A new command is a record derived from `SetupCommand`, a name and a reader in `SetupCommandLine`,
-  and a case in `SetupApplication.Execute`.
-- A command never throws for a file that cannot be written: `SetupApplication.Run` answers with an exit
-  code, which the packages ignore. Any other exception, of the composition as well, stops at
-  `ProcessBoundary.Run`, the one place that catches every exception: it becomes exit code 3.
-- `SetupProcessTests` starts the `Bravo.Setup.exe` that the build wrote, as a package does.
-
-The packages are one WiX project, `installer/Bravo.Installer.wixproj`, on the WiX SDK 5.0.2 that its first
-line names. It is not a project of the solution: a build of the solution makes no package.
-
-| Part | File of `installer/` |
-| --- | --- |
-| Which package a build makes, its file name, the validation rules that are turned off and why | `Bravo.Installer.wixproj` |
-| The folder of the application as a package installs it, which is its publish and the files of the page, and the publish of the program | `Stage.targets` |
-| The package: identity, upgrade, choices, folders, files, registry values, shortcuts, what it runs and when | `Package.wxs` |
-| The dialog set, which is the one of WiX with two dialogs replaced | `Dialogs.wxs` |
-| The texts | `Package.en-us.wxl` |
-| The licence and the two images of the dialogs | `assets/` |
-| The real installations that continuous integration runs | `tests/Test-Packages.ps1` |
-
-| Task | Command |
-| --- | --- |
-| Build the four packages into `artifacts/installer/en-US` | `dotnet build installer/Bravo.Installer.wixproj -c Release -t:BuildPackages` |
-| Build one package | `dotnet build installer/Bravo.Installer.wixproj -c Release -p:BravoScope=perUser -p:BravoSelfContained=false` |
-| Build the packages of another version | add `-p:BravoVersion=1.1.1` |
-| Build on a machine without the C++ build tools | add `-p:BravoSetupNativeAot=false` |
-
-- Before a package is built, `web/` has made the release bundle: `npm ci`, then `npm run build:Release`. The
-  build of the installer never runs npm, and stops with these two commands when the bundle is missing.
-- Every action of `Package.wxs` that runs the program starts it from the `Binary` table of the package: the
-  program is not installed. What an action does that cannot be taken back is a commit action
-  (`Execute="commit"`), under the condition `NOT RollbackDisabled`, with a deferred twin under
-  `RollbackDisabled` before `InstallFinalize`: Windows Installer runs no commit action when rollback is
-  disabled.
-- `Package.wxs` is one source for the two contexts: the build defines `Scope`, and what differs is inside
-  `<?if?>`. Its public properties, registry values, folders and product names are the ones of 1.0.x, which
-  [docs/spec.md](docs/spec.md#installer) lists.
-- `Stage.targets` publishes `Bravo.Desktop` and `Bravo.Setup` with `dotnet publish` for `win-x64`, into
-  `artifacts/installer-stage/<version>/`: the application into the layout of its runtime, the program into
-  a folder of its own. Those publishes restore another graph of packages than the lock files hold, and read
-  and write no lock file: the committed ones do not change (backlog B-2). A layout is made again when a
-  file of `src/`, of the page or of the build rules is newer than it, and when one was added or deleted:
-  the names of those files are kept beside the layout. The two packages of one runtime hold the same files:
-  the second one takes the cabinet that the first one compressed, kept beside the layout.
-- `Bravo.Setup.exe` is published with `PublishAot`, which needs the "Desktop development with C++" workload
-  of Visual Studio: the runner has it. Without it the publish fails with "Platform linker not found";
-  `-p:BravoSetupNativeAot=false` then makes packages to look at, with the program as one file that carries
-  the .NET runtime, about 11 MB. Those are not the packages of a release.
-- A package is the release build of the application: `Stage.targets` passes `-p:BravoReleaseBuild=true`.
-  The `Bravo.exe` of a layout is therefore the same instance as an installed Bravo, with the same data
-  folder.
-- The build validates a package against the rules of Windows Installer (ICE), also on a developer's
-  machine, and a warning fails it. `Bravo.Installer.wixproj` says why each rule that is turned off is.
-- `Dialogs.wxs` is derived from three files of WiX, under their licence: what differs from them is marked.
-- `tests/Test-Packages.ps1` installs and removes Bravo on the machine that runs it, so it refuses to run
-  outside GitHub Actions: a package is installed on a runner, or on a machine that can be thrown away. What
-  a test needs of a package that the package does not have, such as a removal that fails, it adds to a copy
-  of the package (`New-PackageWithFailingRemoval`): nothing in `Package.wxs` exists for a test.
-
-## Build and tests
+## Commands
 
 The commands run at the root of the repository and need the .NET SDK that `global.json` names.
 
@@ -380,89 +91,30 @@ The tests are xUnit v3 on Microsoft.Testing.Platform, the mode of `dotnet test` 
 options are not those of VSTest: the solution is passed with `--solution`, and a run in which no test ran, such
 as a filter that matches nothing, fails with exit code 8.
 
-A warning fails the build ([ADR 0009](docs/adr/0009-rules-enforced-by-the-build.md)). Where the rules live:
+### Run the application
 
-| Rule | File |
+| Task | Command |
 | --- | --- |
-| Compiler and analyzer settings, output folders, lock files | `Directory.Build.props`; `tests/Directory.Build.props` adds what every test project needs |
-| What is changed in a project after its packages | `Directory.Build.targets` |
-| The version of every package | `Directory.Packages.props` |
-| Code style and the severity of each diagnostic | `.editorconfig` |
-| The symbols no project may use | `BannedSymbols.txt` |
-| Allowed project references, catch-all names, static mutable state, the projects that the solution and its filter list | `tests/Bravo.Architecture.Tests` |
-| The OpenAPI document equal to its file; no schema that allows null; a name, a tag and the common error answers on every route; every type of the API that travels public; the codes of a problem equal to the ones that the host can write | `tests/Bravo.Api.Tests/Contract/` (`OpenApiDocumentTests`) |
+| Run the application | `dotnet run --project src/Bravo.Desktop -c Release` |
+| Run it as the external tool registration does | `dotnet run --project src/Bravo.Desktop -c Release -- --server=localhost:12345 --database=db` |
+| Start the executable that the build wrote | `artifacts/bin/Bravo.Desktop/release/Bravo.exe` |
 
-ASP.NET Core is a shared framework of the runtime: a project that uses it has a `FrameworkReference` to
-`Microsoft.AspNetCore.App`, and no package reference for what the framework holds, such as
-`Microsoft.Extensions.Hosting`. NuGet reports such a package (NU1510), which fails the build.
+### API
 
-A project under `src/` sets its own target framework and is named in four places:
-
-- `Bravo.slnx`;
-- `Bravo.Portable.slnf`, when it does not target Windows;
-- `tests/Bravo.Architecture.Tests/ProductionProjects.cs`, the table of the projects it may reference;
-- `tests/Bravo.Architecture.Tests/Bravo.Architecture.Tests.csproj`, which builds it before the tests, among the
-  portable projects or among the ones that target Windows.
-
-A test project is named in the first two, by the same condition. The architecture tests fail when a project
-of `src/` or `tests/` is missing from one of these places, and when the filter lists a project that targets
-Windows: a project that no solution lists would never be built or tested.
-
-The architecture tests read the assemblies of `src/` as metadata and never load them, because their project is
-portable and cannot reference a project that targets Windows. On Windows they inspect the five assemblies; on
-another system, the portable ones.
-
-## Continuous integration
-
-`.github/workflows/ci.yml` runs on every push to `main`, to `develop-vnext` and to a work branch (`vnext/**`),
-on the pull requests to `main` and on request
-([ADR 0010](docs/adr/0010-continuous-integration-in-one-workflow.md)). A new push cancels the run in progress
-of the same work branch or pull request; on `main` and on `develop-vnext` every pushed commit is built. A job
-stops after 15 minutes.
-
-| Job | What it runs |
+| Task | Command |
 | --- | --- |
-| `build-and-test` | On Windows: the restore in locked mode, the build, the tests |
-| `build-and-test-linux` | The same on Linux, on `Bravo.Portable.slnf`: the projects that do not target Windows |
-| `build-web` | In `web/`: `npm ci`, then `npm test` and `npm run build:Release`, each of which generates the client of the host API first; the build checks the types of the sources and of the unit tests before webpack runs |
-| `test-window` | On Windows: `npm ci` and `npm run build:UI` in `web/`, the restore in locked mode and the build of `Bravo.Desktop`, then `npm run test:window`; when a test fails, its report; at the end, whatever happened, a step that fails if a policy of the webview is left |
-| `build-installer` | On Windows: `npm ci` and `npm run build:Release` in `web/`, the restore of the installer in locked mode, the four packages, and the two that use the installed runtime once more as the next version; the packages are kept as the artifact `installer-packages` |
-| `test-installer` | On Windows, after `build-installer`: its packages and the ones of 1.0.14 from the public release, then `installer/tests/Test-Packages.ps1`; when a step fails, the logs of Windows Installer as the artifact `installer-logs` |
-| `audit` | A restore of the solution and one of the installer that fail on a NuGet package with a known vulnerability, then `npm audit` on the packages that ship with the user interface, which fails on an advisory, and on all of them, which reports |
+| Write the OpenAPI document again after a change of the API | `dotnet test --project tests/Bravo.Api.Tests -c Release --explicit only` |
 
-What a run checks beyond the commands of the table above:
+### Installer
 
-- The build has `-warnaserror`. A warning in a project fails a local build as well; the switch adds the
-  warnings raised outside the projects, at the level of the solution.
-- `audit` restores with `-p:AuditPipeline=true`, which turns the NuGet audit warnings into errors: a package
-  with a known vulnerability, and also vulnerability data that cannot be read. On a local machine the
-  restore needs `--force`: without it NuGet skips a restore that is up to date, and the audit with it.
-- `npm audit --omit=dev` looks at the dependencies that ship with the user interface, and an advisory of any
-  severity fails the job. A second step runs `npm audit` on every package, the build tools included: it
-  reports and does not fail the job, so its error annotation on a green run is expected.
-- The tests of `build-and-test` and of `test-window` start `Bravo.exe` and use the real WebView2 engine. The
-  runtime is not in the list of the software of the runner image: it comes with the Windows image that the
-  runner is built on.
-- The runner runs every process elevated, and an elevated webview ignores the environment variables of the
-  WebView2 runtime: `test-window` gives the webview its two values as policies of the machine, which its
-  last step shows to be gone ([User interface](#user-interface)).
-- When a test of the window fails, `test-window` keeps the folder `artifacts/window-tests` as the artifact
-  `window-tests-report` for 3 days: the HTML report, with the trace and a screenshot of each failed test. A
-  trace holds the token of the host of its test, whose process has ended.
+| Task | Command |
+| --- | --- |
+| Build the four packages into `artifacts/installer/en-US` | `dotnet build installer/Bravo.Installer.wixproj -c Release -t:BuildPackages` |
+| Build one package | `dotnet build installer/Bravo.Installer.wixproj -c Release -p:BravoScope=perUser -p:BravoSelfContained=false` |
+| Build the packages of another version | add `-p:BravoVersion=1.1.1` |
+| Build on a machine without the C++ build tools | add `-p:BravoSetupNativeAot=false` |
 
-- `build-installer` compiles `Bravo.Setup.exe` ahead of time with the C++ build tools of the runner image,
-  and its build validates the packages against the rules of Windows Installer. The artifact
-  `installer-packages` is kept for 3 days: the packages of a run, to look at their dialogs on a machine that
-  can be thrown away. They are not signed (backlog B-2).
-- `test-installer` installs for real, on the runner alone: every run of Windows Installer is silent, and its
-  log is in `artifacts/installer-logs`, kept for 3 days as `installer-logs` when a step failed. The test
-  prints each check, and what it observes of 1.0.14: its removal, and a package of the other context. The
-  packages that use the installed runtime run on the .NET 10 runtimes of the runner image: a step fails,
-  and names the runtime, when the image has none. `ci.yml` names the two versions once, as `BRAVO_VERSION`
-  and `BRAVO_NEXT_VERSION`.
-
-`build-and-test` is the status check that `main` requires: do not rename the job and do not give it a matrix.
-Every action is pinned to the commit of a release, with the version in a comment on the same line.
+### Continuous integration
 
 | Task | Command |
 | --- | --- |
@@ -474,194 +126,4 @@ Every action is pinned to the commit of a release, with the version in a comment
 
 The runs are also public, at <https://github.com/sql-bi/Bravo/actions>.
 
-## User interface
-
-`web/` holds the user interface of the previous implementation: TypeScript and LESS, bundled by webpack. It
-reads what the application is, the options and the events of the host through the client generated from the
-OpenAPI document. Its other calls belong to features that have not moved: they go through `Host.apiCall`,
-which sends nothing and fails at once with an error that says that the feature is not available yet. Its
-commands run in `web/` and need Node.js 26 with npm: `package.json` pins that line in `devEngines`, and npm
-stops with an error on another one.
-
-| Task | Command |
-| --- | --- |
-| Install the dependencies of the lockfile | `npm ci` |
-| Release bundle into `artifacts/web` | `npm run build:Release` |
-| Release bundle into another folder | `npm run build:Release -- --output-path <folder>` |
-| Development bundle into `web/wwwroot` | `npm run build:UI` |
-| Development bundle, rebuilt at every change | `npm run watch:UI` |
-| Start a development host for a page in a browser | `npm run serve:host` |
-| Serve the page to a browser, rebuilt at every change | `npm run serve:UI` |
-| Generate the client of the host API alone | `npm run generate:api` |
-| Check the types of the sources and of the tests | `npm run check` |
-| Run the unit tests | `npm test` |
-| Run the tests of one file | `npx vitest run tests/controllers/host-fetch.test.ts`, after `npm run generate:api` |
-| Run the tests of the window, after the two builds that they need | `npm run test:window` |
-| Run the tests of the window of one file | `npx playwright test window-tests/start.spec.ts` |
-| Take the screens of the window into `artifacts/screens/<name>`, after the same two builds | `npm run screens -- take <name>` |
-| Compare two sets of screens, byte for byte | `npm run screens -- compare <name> <name>` |
-
-A bundle is `js/main.js` and `css/main.css`; the release build adds `js/main.js.LICENSE.txt`, the development
-build `css/main.css.map`. Every build script first runs `npm run check`, which generates the client of the host
-API and checks the types with `tsc`, on the sources and the unit tests, then on the tests of the window; webpack
-only translates, with ts-loader in `transpileOnly`
-([ADR 0017](docs/adr/0017-typescript-6-with-the-types-checked-apart-from-the-bundle.md)). The stylesheet goes
-through less-loader alone and the CSS support of webpack, with `url()` left as written; the JavaScript is
-minified, the stylesheet is not
-([ADR 0019](docs/adr/0019-the-stylesheet-through-the-css-support-of-webpack-not-minified.md)).
-`watch:UI` and `serve:UI` check once, when they start, and not at each change. `web/wwwroot` holds the static
-files that go with the bundle (`index.html`, icons, fonts, images); git ignores the `js` and `css` folders that
-the development build adds there. Without `--output-path` webpack writes to `artifacts/web` at the root of the
-repository, which git ignores.
-
-The page starts in `web/main.ts`, the same in the window and in a browser:
-
-- It reads the address and the token of the API from `window.bravoHost`, which whoever serves the page has
-  set before any script: the webview ([Window and webview](#window-and-webview)) or the development server.
-  It has no global configuration object and no branch for where it runs.
-- `start` asks the API for the application data and the options, then creates the controllers in their
-  order. The modules import them from `main.ts`: a value that a module needs when it is loaded, and not
-  when it is called, does not exist yet.
-- A start that fails, at any point, shows `showStartFailure` (`web/view/start-failure.ts`) in place of the
-  page. It has no options to read the language from: it takes the one of the browser, and the two texts it
-  needs from the locale that `findLocale` gives for it.
-- `HostEvents` (`web/controllers/host-events.ts`) reads the events of the host and is where a new kind of
-  event is handled. The page has no message channel with the window.
-
-To see the user interface in a browser, against a real host
-([docs/spec.md](docs/spec.md#window-and-webview)):
-
-1. In `web/`, `npm ci` once, then `npm run serve:host`. It builds `Bravo.Desktop` and starts it as
-   `dotnet run --project ../src/Bravo.Desktop -c Release -- --dev-origin=http://127.0.0.1:8098
-   --dev-connection-file=<web>/.dev/host.json` would. The window of Bravo opens, and the command prints
-   "The host is ready". Closing the window ends the host.
-2. In a second terminal, in `web/`, `npm run serve:UI`: webpack-dev-server, on `127.0.0.1` only.
-3. Open `http://127.0.0.1:8098` in Chrome or Edge. The page is loaded again at every change of the sources.
-
-- `web/dev.config.mjs` holds the port, the origin and the path of the file. `dev-host.mjs` is the command
-  that starts the host. `dev-server.mjs` holds the options of the development server, which
-  `webpack.config.js` gives to `webpack serve` and to no other command.
-- The server gives `index.html` the object `window.bravoHost` before its first script, from the file that the
-  host wrote, read at every request: after the host is started again, load the page again. Without the file
-  the page is a 503 that says how to start the host. The page is given after the checks of the server on the
-  host that a request names: a request for another host name gets a 403, not the token.
-- A development build that already runs takes the start of `serve:host` like any other start, and writes no
-  file: the command says so and ends with 1. Close the running window first. The installed application does
-  not matter: it is another instance.
-- `web/.dev/host.json` holds the token of that host while it runs. Git ignores the folder; the host deletes
-  the file when it stops.
-- The two arguments exist only in a development build
-  ([Startup and single instance](#startup-and-single-instance)).
-
-The client of the host API is generated, not written:
-
-- Every build script first runs [Orval](https://orval.dev) (`orval.config.mjs`), which reads
-  `src/Bravo.Api/openapi.json` and writes `web/generated/bravo.ts`: a function for each route, named after its
-  operation id, and the types that travel. Git ignores the folder, and a build on a clean clone needs no other
-  step. `watch:UI` generates once, when it starts.
-- A change of the API reaches the user interface through the document: write the document again
-  ([API](#api)), build, and the type check shows every call that no longer fits.
-- Every generated function calls the host through `hostFetch` (`web/controllers/host-fetch.ts`), which adds
-  the address and the token, passes on the `AbortSignal` of the caller, and throws a `HostProblem` for an
-  error answer.
-- A call that fails is an `AppError` (`web/model/exceptions.ts`), built by `AppError.InitFromCallError`: for
-  an error answer its text is the one that `web/model/problem-texts.ts` has for the code of the answer. The
-  table is typed by the codes of the generated client. An answer with status 409, an error that a use case
-  foresaw, is shown by its code; any other one by its status.
-- `Host` (`web/controllers/host.ts`) stays the one module that the user interface calls. A method that moves
-  to the client goes through `apiClientCall` and returns what the client returns: a value that travels keeps
-  its generated type and the names of the host, and nothing converts a name into a number. An enum of the
-  user interface that the host also has is replaced by the generated one when its feature moves.
-- Orval is pinned to an exact version in `package.json`: another version can write another client.
-
-The unit tests of the user interface are in `web/tests`, each at the path of the module that it tests, and
-run on [Vitest](https://vitest.dev) in a simulated browser, jsdom
-([ADR 0016](docs/adr/0016-closed-error-codes-generated-types-and-tests-in-the-user-interface.md)):
-
-- They test the modules that read the contract, which are `host-fetch`, `host-events`, `host` and the
-  errors with the table of their texts, and what the page does at its start: the sidebar, the theme, the
-  page of a start that failed. They also keep the values of the feature flags of `model/tabular.ts`, which
-  travel with the host, and the text that `sanitize-html` leaves of a name. No other view has a unit test:
-  what the page does in a real engine is the matter of the tests of the window.
-- `main.ts` starts the whole page when it is loaded. A test replaces it, with `vi.mock`, by the parts of
-  `tests/main-mock.ts`, which do nothing, and replaces the generated client where the test answers in place
-  of the host.
-- The tests of what happens after a time, such as the waits of `host-events`, move the clock themselves
-  (`vi.useFakeTimers`).
-- Vite reads the sources for the tests, and transforms the namespaces of TypeScript only in part: one that
-  exports a variable (`export var`, `export let`) is reported as a warning at every run, and the variable
-  is not exported. The other namespaces and the enums of this code are read as webpack reads them.
-- The tests are in the program of `tsconfig.json`, with the sources: `npm run check`, and so every build,
-  checks their types.
-
-The tests of the window are in `web/window-tests`, one file `*.spec.ts` for each part of the page, and run on
-[Playwright Test](https://playwright.dev) against the window of the application
-([ADR 0018](docs/adr/0018-tests-of-the-user-interface-in-the-window-with-playwright.md)):
-
-- They start the `Bravo.exe` that the build wrote, `artifacts/bin/Bravo.Desktop/release/Bravo.exe`, which
-  shows the development bundle that its build copied beside it. Before them: in `web/`, `npm run build:UI`;
-  then, at the root, `dotnet build src/Bravo.Desktop -c Release`. Without the executable or the bundle a test
-  fails with these two commands. They need Windows and the WebView2 runtime, and no browser of Playwright:
-  `npx playwright install` is not needed.
-- `window-tests/bravo.ts` is the fixture. For each test it starts the application with a new profile of the
-  webview, in a temporary folder, and with the DevTools protocol on a port that the engine chooses: the
-  application has no option for it. It waits until the engine lists the page, then attaches with
-  `connectOverCDP`, because a page that appears later is not announced to Playwright, and waits until
-  Playwright tells the page at its address: the engine lists the address before the page commits it. It
-  gives the page the size 1280×800, removes the light color scheme that Playwright gives a page by default,
-  so that the page has the one of the window, and waits for its start. At the end it closes the window as a
-  user does, expects exit code 0, waits for the end of the processes of the webview of that profile and
-  removes the folder.
-- `window-tests/webview-settings.ts` gives the webview the two values, and the run says in its log where
-  they come from. A process that is not elevated gives them in the environment variables of the WebView2
-  runtime, `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS` and `WEBVIEW2_USER_DATA_FOLDER`. An elevated process, whose
-  integrity level is High (`S-1-16-12288` in `whoami /groups`), has its webview ignore them: the hosted runner
-  of GitHub Actions is elevated, and there, when `GITHUB_ACTIONS` is `true`, the fixture writes the same two
-  values as policies of the machine for `Bravo.exe`, under `HKLM\SOFTWARE\Policies\Microsoft\Edge\WebView2`,
-  and removes them after each test and in `window-tests/global-teardown.ts`. It fails, and replaces nothing,
-  when a value `Bravo.exe` is already there. In an elevated terminal elsewhere it writes nothing and fails.
-- The application has one instance, so one test runs at a time (`workers: 1`), and never while
-  `dotnet test` runs: `BravoProcessTests` starts the same executable. A development build that already runs
-  takes the start of a test, which fails and says to close it. The installed application does not matter.
-- A test reads the requests of the page without their headers, and never the token of the host.
-- The tests: the start of the page (`start.spec.ts`), the theme and the diagnostic level in the options
-  (`options.spec.ts`, through the dialog of `options.ts`), a feature that has no route yet
-  (`features.spec.ts`), a second start with the arguments of Power BI Desktop (`activation.spec.ts`).
-- A test waits for an event or a state of the page, never for a time. Only the test of the start waits, 12
-  seconds, to say that nothing else happens: longer than the 10 seconds after which the page asks for the
-  list of the local reports. Its first start is over before the test can attach, so the test loads the page
-  again and watches that start.
-- A test that reads a text of the page reads the English one, which the page shows on an English Windows.
-- No retry: a test that fails only sometimes is a defect. A test that fails keeps its trace and a
-  screenshot in `artifacts/window-tests/results`. The fixture traces the page itself: Playwright Test traces
-  only the contexts that it creates, and not one that it attached to. A trace holds the headers of the
-  requests, and so the token of the host of that test, whose process has ended.
-- `playwright.config.ts` takes the files `*.spec.ts` of `window-tests` only, and Vitest the files `*.test.ts`
-  of `tests` only. The tests of the window run in Node.js: they and the configuration are a program of their
-  own, `window-tests/tsconfig.json`, with the types of Node.js, which the sources do not get.
-
-The screens of the window compare two builds of the bundle, byte for byte
-([ADR 0019](docs/adr/0019-the-stylesheet-through-the-css-support-of-webpack-not-minified.md)). The command that
-takes and compares them is not a test of the window: neither `npm run test:window` nor continuous integration
-runs it.
-
-- `window-tests/take-screens.ts` takes the screens with the fixture of the tests, one application for each
-  theme, Dark and Light: the welcome page, each section of the options dialog, the page of a feature that has
-  no route yet, and the same page with the diagnostics pane open, whose times it writes as `00:00:00`. Before
-  each screen it waits for the fonts and for two frames of the engine.
-- `playwright.screens.config.ts` is the configuration of the tests of the window with that file alone; a failed
-  run keeps its trace in `artifacts/window-tests/screens-results`. `window-tests/screens.mts`, which Node.js
-  runs as it is, is the command: `take` replaces the folder `artifacts/screens/<name>` and runs Playwright Test
-  on that configuration; `compare` names each screen that differs or that one set alone has, and ends with 1
-  when there is one, with 2 when it cannot compare.
-- Rendering changes with the machine: two sets are compared only when one machine took both, one after the
-  other. No screen enters the repository.
-
-To compare two builds of the bundle:
-
-1. Put the first bundle beside `Bravo.exe`: in `web/`, `npm run build:UI`, then, at the root,
-   `dotnet build src/Bravo.Desktop -c Release`. A release bundle goes there by hand: its `js` and `css`
-   folders in place of the ones of `artifacts/bin/Bravo.Desktop/release/wwwroot`.
-2. `npm run screens -- take before`.
-3. The same for the second bundle, then `npm run screens -- take after`.
-4. `npm run screens -- compare before after`.
+The commands of the user interface are in [web/AGENTS.md](web/AGENTS.md).
