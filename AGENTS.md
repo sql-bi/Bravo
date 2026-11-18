@@ -19,7 +19,9 @@ its structure as a model.
 | [docs/backlog.md](docs/backlog.md) | The open work, in the order to take it; what comes after 1.1.0; the open decisions |
 | [docs/spec.md](docs/spec.md) | What 1.1.0 must be, the guarantees for users of 1.0.x, the rules for every component |
 | [docs/adr/](docs/adr/) | One decision per file, with its reasons and rejected alternatives |
-| [docs/design/](docs/design/) | The behavior of the previous implementation: requirements and prior art for the component that replaces it |
+| [docs/design/](docs/design/README.md) | The behavior of the previous implementation: requirements and prior art for the component that replaces it |
+
+Which kind of fact lives in which document: [docs/README.md](docs/README.md).
 
 ## How the work is done on this branch
 
