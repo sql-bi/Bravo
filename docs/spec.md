@@ -733,11 +733,3 @@ that carry the runtime, and every removal. Two removals more: one that fails aft
 which leaves the installation, the data of the user and the registration as they were, and one with
 rollback disabled, which removes them. The removal fails by an action that the test adds to a copy of a
 package: no package has anything that exists for a test. The dialogs are checked by hand.
-
-## Open questions
-
-Each is answered by the component named in brackets.
-
-- Is the crash reporter a mode of the main executable or an application of its own? [errors and crash
-  reporting]
-- How is the version computed and how are release notes and the changelog produced? [release]

@@ -7,7 +7,14 @@ An item is a component. Its line gives the starting hypothesis and what to explo
 proposed; neither is a decision. One component is in progress at a time. A stage is closed when its exit
 criterion can be checked on `develop-vnext`.
 
-## T2 Skeleton
+## Now
+
+As of 2026-11-18: the redesign is at stage T3 Distribution. H-09, left in T2, waits for the release of
+TypeScript 7.1 and ts-loader 10; nothing blocks the next item.
+
+## Next
+
+### T2 Skeleton
 
 Exit: the new executable starts, a second start activates the first, it shows the current user interface and
 opens the options through the new API and the generated client.
@@ -16,7 +23,7 @@ opens the options through the new API and the generated client.
   has no API, 7.1 has a new one, and ts-loader 10 requires it. Hypothesis: the check of the types moves to
   the native `tsc`, and ts-loader 10 translates.
 
-## T3 Distribution
+### T3 Distribution
 
 Exit: GitHub Actions produces a signed, installable preview with release notes; installed over 1.0.14 it keeps
 the four guarantees of [the specification](spec.md#guarantees-for-users-of-10x).
@@ -49,7 +56,7 @@ the four guarantees of [the specification](spec.md#guarantees-for-users-of-10x).
   which of the four files is its update; a silent installation closes a running application and does not
   start it again.
 
-## T4 Cross-cutting services
+### T4 Cross-cutting services
 
 Exit: in the installed preview the settings are migrated, the policies are honored, the logs are visible, a
 crash produces a report, telemetry runs on a supported SDK.
@@ -109,7 +116,7 @@ crash produces a report, telemetry runs on a supported SDK.
   - The registry value `applicationTelemetryEnabled` is the choice of who installs for the telemetry of the
     application: nothing reads it yet.
 
-## T5 Access to models
+### T5 Access to models
 
 Exit: sign-in, the lists of reports and datasets, a model opened from Power BI Desktop and from the service.
 
@@ -127,7 +134,7 @@ Exit: sign-in, the lists of reports and datasets, a model opened from Power BI D
   its own, which the page answers with the sign-in dialog: it no longer takes a 401 for one, and at its start
   it still tries the sign-in with the account that it remembers, a call that has no route.
 
-## T6 Features
+### T6 Features
 
 Exit, for each feature: the same results as `main` on the sample models; its row of the manual checks ticked.
 
@@ -159,13 +166,15 @@ Exit, for each feature: the same results as `main` on the sample models; its row
     that the user interface also calls accept, and the status of an error that a use case foresaw, 409
     elsewhere.
 
-## T7 Replacement of `main`
+### T7 Replacement of `main`
 
 Exit: manual checks complete and a preview tried in the field; the final pull request merged with a merge
 commit; `v1.1.0` released from GitHub Actions and announced by the feed; old branches and pull requests
 removed; the Azure DevOps project retired; dependency updates configured again.
 
-## After 1.1.0
+## Later
+
+After 1.1.0.
 
 - Rewrite of the TypeScript user interface.
 - Strict type checking of the user interface, if the rewrite does not come first: with TypeScript 6.0.3
@@ -184,3 +193,10 @@ removed; the Azure DevOps project retired; dependency updates configured again.
   folder unless `INSTALLFOLDER` is given, as 1.0.x does.
 - A PNG image as the icon of the external tool registration: today it is the image of 1.0.x, an icon file
   under the media type `image/png`. To check in Power BI Desktop.
+
+## Open decisions
+
+Each is answered by the design of the component that it names.
+
+- Is the crash reporter a mode of the main executable or an application of its own? S-05.
+- How is the version computed and how are release notes and the changelog produced? D-02.

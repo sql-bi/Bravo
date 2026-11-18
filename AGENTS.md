@@ -16,8 +16,8 @@ its structure as a model.
 
 | Document | Content |
 | --- | --- |
-| [docs/backlog.md](docs/backlog.md) | The open work, in the order to take it |
-| [docs/spec.md](docs/spec.md) | What 1.1.0 must be, the guarantees for users of 1.0.x, the rules for every component, the open questions |
+| [docs/backlog.md](docs/backlog.md) | The open work, in the order to take it; what comes after 1.1.0; the open decisions |
+| [docs/spec.md](docs/spec.md) | What 1.1.0 must be, the guarantees for users of 1.0.x, the rules for every component |
 | [docs/adr/](docs/adr/) | One decision per file, with its reasons and rejected alternatives |
 | [docs/design/](docs/design/) | The behavior of the previous implementation: requirements and prior art for the component that replaces it |
 
@@ -50,7 +50,7 @@ its structure as a model.
   5. the implementation with its tests;
   6. a report of what was proven and what must be checked by hand;
   7. the maintainer's review of the work branch, then its integration.
-- One component is in progress at a time. The features do not change: an idea for a new one goes to the end of
+- One component is in progress at a time. The features do not change: an idea for a new one goes to `Later` in
   the backlog.
 - Nothing stays only on a local machine at the end of a session.
 - Update `docs/backlog.md` and `docs/spec.md` in the commit that changes what they describe, and delete
