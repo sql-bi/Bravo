@@ -115,16 +115,28 @@ function Get-PreviousPackagePath([string] $Scope) {
     return $path
 }
 
-# Runs Windows Installer with no dialog and no restart, and returns its exit code.
-function Invoke-WindowsInstaller([string] $Arguments, [string] $Name) {
+# Runs Windows Installer with no dialog and no restart, and returns its exit code. ExpectedFailure names an
+# action that the test itself makes fail.
+function Invoke-WindowsInstaller([string] $Arguments, [string] $Name, [string] $ExpectedFailure = '') {
     $script:LogNumber++
     $log = Join-Path $LogFolder ('{0:00}-{1}.log' -f $script:LogNumber, $Name)
     $watch = [Diagnostics.Stopwatch]::StartNew()
     $process = Start-Process -FilePath 'msiexec.exe' -ArgumentList "$Arguments /qn /norestart /l*v `"$log`"" -Wait -PassThru
     Write-Host ("    msiexec {0} -> exit code {1} in {2:N0} s" -f $Arguments, $process.ExitCode, $watch.Elapsed.TotalSeconds)
 
+    # What the log says of the actions that run a program: written into the script, run at the commit, run to
+    # take a step back.
+    $actions = @(Select-String -Path $log -Pattern 'Executing op: CustomAction(Schedule|Commit|Rollback)\(Action=([^,]+),' |
+        ForEach-Object { '{0} ({1})' -f $_.Matches[0].Groups[2].Value, $_.Matches[0].Groups[1].Value.ToLowerInvariant() })
+    if ($actions.Count -gt 0) { Write-Host "    actions: $($actions -join ', ')" }
+
     # A package ignores the exit code of what it runs, so a command that failed shows in the log alone.
     $failed = @(Select-String -Path $log -Pattern 'returned actual error code' | ForEach-Object { $_.Line })
+    if ($ExpectedFailure -ne '') {
+        $expected = "*CustomAction $ExpectedFailure returned actual error code*"
+        Assert-True (@($failed -like $expected).Count -eq 1) "the action $ExpectedFailure failed, once"
+        $failed = @($failed -notlike $expected)
+    }
     if ($failed.Count -gt 0) {
         throw "An action of the package failed:`n  $($failed -join "`n  ")"
     }
@@ -137,9 +149,9 @@ function Install-Package([string] $Path, [string] $Name, [string] $Properties = 
     return Invoke-WindowsInstaller $arguments $Name
 }
 
-function Uninstall-Product([string] $ProductCode, [string] $Name, [string] $Properties = '') {
+function Uninstall-Product([string] $ProductCode, [string] $Name, [string] $Properties = '', [string] $ExpectedFailure = '') {
     $arguments = "/x $ProductCode $Properties".TrimEnd()
-    return Invoke-WindowsInstaller $arguments $Name
+    return Invoke-WindowsInstaller $arguments $Name $ExpectedFailure
 }
 
 # 1.0.14 sends the events of its installer for real, at a removal whatever was chosen at the installation.
@@ -162,6 +174,57 @@ $script:Installer = New-Object -ComObject WindowsInstaller.Installer
 
 function Get-InstallerProperty([string] $Name, [object[]] $Arguments) {
     return $script:Installer.GetType().InvokeMember($Name, 'GetProperty', $null, $script:Installer, $Arguments)
+}
+
+function Invoke-ComMethod($Object, [string] $Name, [object[]] $Arguments = @()) {
+    return $Object.GetType().InvokeMember($Name, 'InvokeMethod', $null, $Object, $Arguments)
+}
+
+# Runs a statement on the tables of a package and returns the first number of its first row, when it has one.
+function Invoke-PackageStatement($Database, [string] $Sql) {
+    $view = Invoke-ComMethod $Database 'OpenView' @($Sql)
+    try {
+        Invoke-ComMethod $view 'Execute' | Out-Null
+        if ($Sql -notlike 'SELECT *') { return }
+        $record = Invoke-ComMethod $view 'Fetch'
+        return $record.GetType().InvokeMember('IntegerData', 'GetProperty', $null, $record, @([int] 1))
+    }
+    finally {
+        Invoke-ComMethod $view 'Close' | Out-Null
+        [Runtime.InteropServices.Marshal]::FinalReleaseComObject($view) | Out-Null
+    }
+}
+
+# The action that the test adds to a copy of a package, and the property that turns it on.
+$FailingAction = 'FailRemoval'
+$FailRemoval = 'FAILREMOVAL=1'
+
+# A copy of a package whose removal fails when FAILREMOVAL=1 is on its command line: a program that ends with
+# an error, in the script, as the last step before the end, when the files are removed already. The action
+# is added here, to the copy: no package that the build makes has it.
+function New-PackageWithFailingRemoval([string] $Package) {
+    $copy = Join-Path ([IO.Path]::GetTempPath()) "failing-removal-$([IO.Path]::GetFileName($Package))"
+    Copy-Item $Package $copy -Force
+
+    # 1: the tables are changed in a transaction.
+    $database = Invoke-ComMethod $script:Installer 'OpenDatabase' @([string] $copy, [int] 1)
+    try {
+        $end = Invoke-PackageStatement $database 'SELECT `Sequence` FROM `InstallExecuteSequence` WHERE `Action` = ''InstallFinalize'''
+
+        # 1074: a program that a property names (50), run in the script (1024) as who removes. Its exit code
+        # is not ignored. An action of the package with the same number is one of the last of the script too.
+        Invoke-PackageStatement $database ('INSERT INTO `Property` (`Property`, `Value`) VALUES (''FailRemovalProgram'', ''{0}'')' -f $env:ComSpec)
+        Invoke-PackageStatement $database ('INSERT INTO `CustomAction` (`Action`, `Type`, `Source`, `Target`) VALUES (''{0}'', 1074, ''FailRemovalProgram'', ''/c exit 1'')' -f $FailingAction)
+        Invoke-PackageStatement $database ('INSERT INTO `InstallExecuteSequence` (`Action`, `Condition`, `Sequence`) VALUES (''{0}'', ''REMOVE="ALL" AND FAILREMOVAL="1"'', {1})' -f $FailingAction, ($end - 1))
+        Invoke-ComMethod $database 'Commit' | Out-Null
+    }
+    finally {
+        # Windows Installer opens the file only after this process has let it go.
+        [Runtime.InteropServices.Marshal]::FinalReleaseComObject($database) | Out-Null
+        [GC]::Collect()
+        [GC]::WaitForPendingFinalizers()
+    }
+    return $copy
 }
 
 # The installed products of the UpgradeCode, of both installation contexts.
@@ -501,6 +564,29 @@ function Test-SelfContained([string] $Scope) {
     Remove-UserData
 }
 
+# What a removal cannot take back is done when the removal has succeeded, and all the same where Windows
+# Installer takes nothing back.
+function Test-RemovalThatFails([string] $Scope) {
+    $folder = $Scopes[$Scope].InstallFolder
+
+    Write-Step "$Scope`: a removal that fails after the files are removed"
+    Remove-UserData
+    $package = New-PackageWithFailingRemoval (Get-PackagePath $Scope $false)
+    Assert-Equal 0 (Install-Package $package "$Scope-install-for-failing-removal") 'the exit code of the installation'
+    $product = Assert-Installed $Scope $Version $folder $AllOn $false
+    Write-UserData
+    $exitCode = Uninstall-Product $product.Code "$Scope-remove-and-fail" $FailRemoval $FailingAction
+    Assert-Equal 1603 $exitCode 'the exit code of the removal that fails'
+    Assert-Installed $Scope $Version $folder $AllOn $false | Out-Null
+    Assert-True (Test-UserData) 'the data of the user is as it was'
+
+    Write-Step "$Scope`: a removal with rollback disabled"
+    Assert-Equal 0 (Uninstall-Product $product.Code "$Scope-remove-without-rollback" 'DISABLEROLLBACK=1') 'the exit code of the removal'
+    Assert-Removed $Scope $folder
+    Assert-True (-not (Test-Path $DataFolder)) 'the removal removes the data folder of who removes'
+    Remove-Item $package
+}
+
 # --- Run ----------------------------------------------------------------------------------------------------
 
 $watch = [Diagnostics.Stopwatch]::StartNew()
@@ -516,6 +602,8 @@ Test-OtherContext 'perUser' 'perMachine'
 Test-OtherContext 'perMachine' 'perUser'
 Test-SelfContained 'perMachine'
 Test-SelfContained 'perUser'
+Test-RemovalThatFails 'perMachine'
+Test-RemovalThatFails 'perUser'
 
 Write-Step 'Nothing is left'
 Assert-NoProduct

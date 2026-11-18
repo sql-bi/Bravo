@@ -726,7 +726,10 @@ validates each package against the rules of Windows Installer, and a warning fai
 silence, on a machine of its own that is thrown away: a first installation per machine and per user, the
 installed application, an upgrade while the application runs, the public properties given to 1.0.14 and to
 this version, the upgrade from 1.0.14 with the data of a user, a package of the other context, the packages
-that carry the runtime, and every removal. The dialogs are checked by hand.
+that carry the runtime, and every removal. Two removals more: one that fails after its files are removed,
+which leaves the installation, the data of the user and the registration as they were, and one with
+rollback disabled, which removes them. The removal fails by an action that the test adds to a copy of a
+package: no package has anything that exists for a test. The dialogs are checked by hand.
 
 ## Open questions
 

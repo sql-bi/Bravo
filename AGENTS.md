@@ -356,7 +356,9 @@ line names. It is not a project of the solution: a build of the solution makes n
   machine, and a warning fails it. `Bravo.Installer.wixproj` says why each rule that is turned off is.
 - `Dialogs.wxs` is derived from three files of WiX, under their licence: what differs from them is marked.
 - `tests/Test-Packages.ps1` installs and removes Bravo on the machine that runs it, so it refuses to run
-  outside GitHub Actions: a package is installed on a runner, or on a machine that can be thrown away.
+  outside GitHub Actions: a package is installed on a runner, or on a machine that can be thrown away. What
+  a test needs of a package that the package does not have, such as a removal that fails, it adds to a copy
+  of the package (`New-PackageWithFailingRemoval`): nothing in `Package.wxs` exists for a test.
 
 ## Build and tests
 
