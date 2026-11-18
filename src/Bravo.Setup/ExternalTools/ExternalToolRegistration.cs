@@ -11,20 +11,12 @@ namespace Bravo.Setup.ExternalTools;
 /// </summary>
 internal sealed class ExternalToolRegistration : IExternalToolRegistration
 {
-    /// <summary>
-    /// The caption of the button in the ribbon of Power BI Desktop.
-    /// </summary>
-    public const string ToolName = "Bravo";
+    // In the ribbon of Power BI Desktop: the caption of the button, and its tooltip.
+    private const string ToolName = "Bravo";
+    private const string ToolDescription = "Bravo for Power BI";
 
-    /// <summary>
-    /// The tooltip of the button.
-    /// </summary>
-    public const string ToolDescription = "Bravo for Power BI";
-
-    /// <summary>
-    /// What Power BI Desktop starts the executable with: the server and the database of the open report.
-    /// </summary>
-    public const string ToolArguments = "--server=\"%server%\" --database=\"%database%\"";
+    // What Power BI Desktop starts the executable with: the server and the database of the open report.
+    private const string ToolArguments = "--server=\"%server%\" --database=\"%database%\"";
 
     private const string FormatVersion = "1.0";
     private const string IconResourceName = "Bravo.Setup.ExternalToolIcon.ico";

@@ -101,19 +101,17 @@ internal sealed class SetupOptions
     }
 
     /// <summary>
-    /// Records an error, unless one was recorded before.
-    /// </summary>
-    public void Reject(string error)
-    {
-        Error ??= error;
-    }
-
-    /// <summary>
     /// Says which option nobody read, or <see langword="null"/> when every option was read.
     /// </summary>
     public string? DescribeUnread()
     {
         var unread = _values.Keys.FirstOrDefault(name => !_read.Contains(name));
         return unread is null ? null : $"{unread} is not an option of the command.";
+    }
+
+    // Only the first error is kept: the ones after it are often its consequences.
+    private void Reject(string error)
+    {
+        Error ??= error;
     }
 }

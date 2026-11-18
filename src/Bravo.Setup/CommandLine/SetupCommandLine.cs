@@ -11,20 +11,20 @@ namespace Bravo.Setup.CommandLine;
 /// </summary>
 internal static class SetupCommandLine
 {
-    public const string RegisterExternalTool = "register-external-tool";
-    public const string UnregisterExternalTool = "unregister-external-tool";
-    public const string ReportInstall = "report-install";
-    public const string ReportUninstall = "report-uninstall";
-    public const string RemoveUserData = "remove-user-data";
+    private const string RegisterExternalTool = "register-external-tool";
+    private const string UnregisterExternalTool = "unregister-external-tool";
+    private const string ReportInstall = "report-install";
+    private const string ReportUninstall = "report-uninstall";
+    private const string RemoveUserData = "remove-user-data";
 
-    public const string ToolFileOption = "--tool-file";
-    public const string ExecutableOption = "--executable";
-    public const string ScopeOption = "--scope";
-    public const string ProductNameOption = "--product-name";
-    public const string ProductVersionOption = "--product-version";
-    public const string ProductBuildOption = "--product-build";
-    public const string TelemetryEnabledOption = "--telemetry-enabled";
-    public const string LocalApplicationDataOption = "--local-application-data";
+    private const string ToolFileOption = "--tool-file";
+    private const string ExecutableOption = "--executable";
+    private const string ScopeOption = "--scope";
+    private const string ProductNameOption = "--product-name";
+    private const string ProductVersionOption = "--product-version";
+    private const string ProductBuildOption = "--product-build";
+    private const string TelemetryEnabledOption = "--telemetry-enabled";
+    private const string LocalApplicationDataOption = "--local-application-data";
 
     // The value of the telemetry option when who installs chose to send: anything else is a no.
     private const string Enabled = "1";
@@ -58,20 +58,21 @@ internal static class SetupCommandLine
             _ => null,
         };
 
+        // A reader that returns no command has said why, unless no reader knows the command.
         if (command is null)
         {
             error = options.Error ?? $"'{arguments[0]}' is not a command.";
             return false;
         }
 
-        error = options.Error ?? options.DescribeUnread();
-        if (error is not null)
+        error = options.DescribeUnread();
+        if (error is null)
         {
-            command = null;
-            return false;
+            return true;
         }
 
-        return true;
+        command = null;
+        return false;
     }
 
     private static RegisterExternalToolCommand? ReadRegisterExternalTool(SetupOptions options)

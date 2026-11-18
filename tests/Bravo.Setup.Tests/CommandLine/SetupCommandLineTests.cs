@@ -117,8 +117,6 @@ public sealed class SetupCommandLineTests
         Assert.Contains("full path", error);
     }
 
-
-
     private static string[] ReportOptions(string telemetryEnabled)
     {
         return

@@ -22,38 +22,29 @@ public sealed class ExternalToolRegistrationTests : IDisposable
     [Fact]
     public void Register_WritesTheToolAsPowerBIDesktopReadsIt()
     {
-        var toolFile = _folder.Combine("bravo.pbitool.json");
+        var tool = RegisterAndRead(_folder.Combine("bravo.pbitool.json"));
 
-        _registration.Register(toolFile, Executable);
-
-        using var tool = JsonDocument.Parse(File.ReadAllBytes(toolFile));
-        Assert.Equal("Bravo", tool.RootElement.GetProperty("name").GetString());
-        Assert.Equal(Executable, tool.RootElement.GetProperty("path").GetString());
-        Assert.Equal("--server=\"%server%\" --database=\"%database%\"", tool.RootElement.GetProperty("arguments").GetString());
+        Assert.Equal("Bravo", tool.GetProperty("name").GetString());
+        Assert.Equal(Executable, tool.GetProperty("path").GetString());
+        Assert.Equal("--server=\"%server%\" --database=\"%database%\"", tool.GetProperty("arguments").GetString());
     }
 
     [Fact]
     public void Register_WritesADescriptionAndTheVersionOfTheFormat()
     {
-        var toolFile = _folder.Combine("bravo.pbitool.json");
+        var tool = RegisterAndRead(_folder.Combine("bravo.pbitool.json"));
 
-        _registration.Register(toolFile, Executable);
-
-        using var tool = JsonDocument.Parse(File.ReadAllBytes(toolFile));
-        Assert.Equal("1.0", tool.RootElement.GetProperty("version").GetString());
-        Assert.Equal("Bravo for Power BI", tool.RootElement.GetProperty("description").GetString());
+        Assert.Equal("1.0", tool.GetProperty("version").GetString());
+        Assert.Equal("Bravo for Power BI", tool.GetProperty("description").GetString());
     }
 
     // The image that 1.0.x registers, under the media type that it registers it with.
     [Fact]
     public void Register_WritesTheIconAsADataUriWithoutItsPrefix()
     {
-        var toolFile = _folder.Combine("bravo.pbitool.json");
+        var tool = RegisterAndRead(_folder.Combine("bravo.pbitool.json"));
 
-        _registration.Register(toolFile, Executable);
-
-        using var tool = JsonDocument.Parse(File.ReadAllBytes(toolFile));
-        var iconData = tool.RootElement.GetProperty("iconData").GetString()!;
+        var iconData = tool.GetProperty("iconData").GetString()!;
         Assert.StartsWith("image/png;base64,", iconData, StringComparison.Ordinal);
         Assert.Equal(51262, Convert.FromBase64String(iconData["image/png;base64,".Length..]).Length);
     }
@@ -89,11 +80,18 @@ public sealed class ExternalToolRegistrationTests : IDisposable
         var toolFile = _folder.Combine("bravo.pbitool.json");
         File.WriteAllText(toolFile, """{ "name": "Bravo", "path": "C:\\Old\\Bravo.exe" }""");
 
+        var tool = RegisterAndRead(toolFile);
+
+        Assert.Equal(Executable, tool.GetProperty("path").GetString());
+        Assert.Equal([toolFile], Directory.GetFiles(_folder.Path));
+    }
+
+    private JsonElement RegisterAndRead(string toolFile)
+    {
         _registration.Register(toolFile, Executable);
 
         using var tool = JsonDocument.Parse(File.ReadAllBytes(toolFile));
-        Assert.Equal(Executable, tool.RootElement.GetProperty("path").GetString());
-        Assert.Equal([toolFile], Directory.GetFiles(_folder.Path));
+        return tool.RootElement.Clone();
     }
 
     [Fact]
