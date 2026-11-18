@@ -15,7 +15,7 @@
   <!--
     A publish for one runtime restores another graph of packages than the one in the lock files, and would
     write it there. These restores read and write no lock file: the committed ones stay as they are. How a
-    release locks that graph is backlog D-02.
+    release locks that graph is backlog B-2.
   -->
   <PropertyGroup>
     <StageRestoreArguments>-p:RestorePackagesWithLockFile=false -p:RestoreLockedMode=false "-p:NuGetLockFilePath=$(StageRoot)none.lock.json"</StageRestoreArguments>

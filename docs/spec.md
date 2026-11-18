@@ -182,7 +182,7 @@ The entry point, the host, the API and the main window with its webview exist.
 | Step | What happens |
 | --- | --- |
 | 1 | Windows Forms is configured; the DPI mode, per monitor, is a property of the project |
-| 2 | An exception that escapes, on any thread, reaches one handler, and the runtime ends the process. Until backlog S-05 the handler shows a message |
+| 2 | An exception that escapes, on any thread, reaches one handler, and the runtime ends the process. Until backlog B-8 the handler shows a message |
 | 3 | The command line becomes an activation request. The process becomes the owner of the instance, or hands the request over to the owner and ends |
 | 4 | The host is built and started. It gets as instances the handler of step 2 and the ownership of step 3 |
 | 5 | The main window, a service of the host, runs the message loop |
@@ -233,7 +233,7 @@ before the arbitration.
 | Window title | `Bravo for Power BI - v<version>` | The same, followed by `[development build]` |
 
 The version is the informational version of the assembly without the metadata of the build. How it is
-computed is open (backlog D-02).
+computed is open (backlog B-2).
 
 **Activations.** Every start is an activation request, the first one included. The requests go through one
 bounded channel of 16 with a single consumer, which starts when the main window is shown: a request that
@@ -245,7 +245,7 @@ window was closed. The consumer publishes each request as an event of the API, w
 `:`. The arguments of the external tool registration are unchanged:
 `--server="%server%" --database="%database%"`. A start with no arguments is valid. An error never stops the
 start: it travels with the request. The request carries what the command line gives; the parent process and
-the report name are backlog M-01.
+the report name are backlog B-10.
 
 **Exit codes.** An exception that escapes ends the process with the code of the runtime. The application
 itself ends with one of these:
@@ -269,7 +269,7 @@ the engine is in one folder of `Bravo.Desktop`: a shell on another engine rewrit
 [build identity](#startup-lifetime-and-single-instance), the size that Windows gives a new window, in the
 middle of the screen. The webview stays hidden until the first document has loaded: until then the window
 shows the background of the user interface, so nothing flashes white. Nothing of the window is kept from one
-start to the next (backlog S-01).
+start to the next (backlog B-4).
 
 **Theme.** The window has the theme of the user, at the start and whenever the options change: the settings
 tell that they were replaced, and the window reads them again on its own thread. The page tells the window
@@ -321,7 +321,7 @@ browser.
 
 - A navigation outside the origin of the page is cancelled, in the window and in a frame; a frame may hold a
   blank document.
-- No window opens, and no download starts (backlog D-03).
+- No window opens, and no download starts (backlog B-3).
 - A permission that a document of another origin asks for is denied. For the origin of the page, reading the
   clipboard is allowed, and the permissions that the application knows and the page does not use are denied,
   each one by its name: microphone, camera, geolocation, notifications, other sensors, multiple automatic
@@ -346,7 +346,7 @@ browser.
 | The engine or its control cannot be created, also because the runtime is too old for what the application uses | A message with what the engine reported, and exit code 3 |
 
 An exception of an asynchronous step that is not a failure of the engine leaves the message loop, and ends the
-application like any other. Until backlog S-05 the messages are dialogs of their own.
+application like any other. Until backlog B-8 the messages are dialogs of their own.
 
 **In a browser.** For development and tests the same page runs in an ordinary browser, against a development
 build of the host. Only a development build knows two more arguments of the command line; to a release build
@@ -385,7 +385,7 @@ of the SDK and runtime 157.0.4341.46, the checks turned on by setting the enviro
 - A probe outside the application, on a new data folder at every run, gave the same result with both flags and
   with the second one alone, and no effect with `LocalNetworkAccessChecks` alone.
 
-What follows from this is backlog S-03.
+What follows from this is backlog B-6.
 
 ### User interface and host
 
@@ -393,7 +393,7 @@ For 1.1.0 the user interface reaches the host through an HTTP API
 ([ADR 0012](adr/0012-http-on-loopback-between-user-interface-and-host.md)): ASP.NET Core minimal APIs, with the
 conventions of [ADR 0014](adr/0014-api-conventions-and-a-contract-kept-as-a-file.md). Development and production
 use the same path, so a browser reaches the API that the webview reaches. The Visual Studio Code extension keeps
-the routes of Template Development that it calls today (backlog F-05).
+the routes of Template Development that it calls today (backlog B-17).
 
 **Server.** The host serves the API with Kestrel, on plain HTTP, on the loopback address `127.0.0.1` and on a
 port that the system chooses at every start. A service of the host gives the address once the host has started.
@@ -414,7 +414,7 @@ other request has the 5 seconds of the stop to end.
   browser sends first, to ask what is allowed, may be kept for two hours, the longest that Chromium keeps it:
   without a value it is kept for 5 seconds.
 - A second token is a second authentication scheme, accepted only by the routes whose policy names it: the one
-  of the Visual Studio Code extension is backlog F-05.
+  of the Visual Studio Code extension is backlog B-17.
 
 **Routes.**
 
@@ -428,7 +428,7 @@ other request has the 5 seconds of the stop to end.
 - A route names a resource. An operation that is not create, read, update or delete is a `POST` on the
   resource with a verb as last segment. A `GET` changes no state, opens no dialog and starts no process.
 - An operation runs inside its request, and the user interface cancels it by aborting the request. Only an
-  operation that reports progress will be a resource of its own (backlog F-03).
+  operation that reports progress will be a resource of its own (backlog B-15).
 - No route opens a dialog as a side effect: choosing a file or a folder is a request of its own, and the
   operation receives the path.
 - The routes have no version: host and user interface ship together.
@@ -484,7 +484,7 @@ being 1. The page asks for the events after the last number it has read; the ans
 sign-in with the system browser, diagnostic level, proxy, and the options that only the user interface reads,
 which the host keeps as any JSON value. A proxy address must be the address of a server, and each entry of the
 bypass list a regular expression; blank text is no value. Today the settings start from their defaults at every
-start: keeping them is backlog S-01, and the policies that override them backlog S-02.
+start: keeping them is backlog B-4, and the policies that override them backlog B-5.
 
 **Contract.** `src/Bravo.Api/openapi.json` is the OpenAPI 3.1 document of the API. A test produces it from the
 routes and fails when the file differs, so a change of the API is a change of the file in the same commit.
@@ -520,7 +520,7 @@ button that loads the page again.
   user. Until those answers arrive it follows the color scheme that it is told: in the window the theme of the
   user ([window and webview](#window-and-webview)), in a browser the color mode of the system.
 - It saves no option when it starts: what it shows is what the options that it has just read say.
-- It starts with no policy (backlog S-02) and no telemetry settings (backlog S-06): until then no option is
+- It starts with no policy (backlog B-5) and no telemetry settings (backlog B-9): until then no option is
   locked, and telemetry sends nothing.
 - It has no message channel with the window: what the host tells it arrives as events.
 - It reads the events one request after the other. The number to ask next is kept in the session storage of
@@ -528,7 +528,7 @@ button that loads the page again.
   a page of another host starts from the beginning. A page that goes away aborts its request. After an error
   the page waits before it asks again: one second, then twice as long each time, up to 30 seconds.
 - An activation without a server does nothing in the page. The errors of a command line go to the diagnostic
-  log. An activation with a server is logged, and opens no report until the host can find it (backlog M-01).
+  log. An activation with a server is logged, and opens no report until the host can find it (backlog B-10).
 - Four calls that the page starts by itself have no route yet: the sign-in with the account that the page
   remembers, the update check, the reading of the diagnostics of the host, and the list of the reports that
   are open in Power BI Desktop. They fail like every call without a route, and the page shows nothing and
@@ -700,7 +700,7 @@ line, no window, and no need of the .NET runtime, so that it runs where the appl
   that the counts of the two versions can be compared. A package reports, and removes the data of the
   user, as the account that installs or removes. Where a deployment tool installs in the system context,
   that account is the system: the identifier of an event is then one for the machine. Nothing sends the
-  events yet (backlog S-06).
+  events yet (backlog B-9).
 - The exit code is 0 when the command was carried out, also when it found nothing to do; 1 when a file or
   a folder could not be written or removed; 2 when the command line is not valid; 3 for an exception that
   nothing expected, which is written as one line on the standard error and never ends the process with an

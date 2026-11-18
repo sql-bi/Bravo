@@ -15,7 +15,7 @@ client generation open.
   state, opens a dialog or starts a process.
 - **Long operations.** An operation runs inside its request and is cancelled by aborting it. Only one
   reporting progress is a resource, created, read and cancelled through its routes: first the export (backlog
-  F-03).
+  B-15).
 - **Events.** One route, long-polled as in [Syncthing](https://docs.syncthing.net/rest/events-get.html): the
   page asks for events after a number; the host answers at once when it has any, or holds the request up
   to a limit, then answers none. An activation reaches a waiting page with no host-side delay.
@@ -30,7 +30,7 @@ client generation open.
   and compared with it. [Orval](https://orval.dev/docs/guides/fetch) generates the uncommitted TypeScript
   client from it at every build of `web/`.
 - **Versions.** User interface routes have no version: they ship with the host. The four extension routes
-  are a fixed group (backlog F-05).
+  are a fixed group (backlog B-17).
 
 ## Rejected alternatives
 

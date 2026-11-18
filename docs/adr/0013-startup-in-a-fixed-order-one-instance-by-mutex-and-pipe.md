@@ -14,7 +14,7 @@ and session.
 ## Decision
 
 - `Main` is synchronous, on an STA thread, with an exit code. Order: Windows Forms configuration;
-  last-chance exception handling, behind an interface until backlog S-05; instance arbitration, before disk
+  last-chance exception handling, behind an interface until backlog B-8; instance arbitration, before disk
   and registry; host; window and message loop; host stopped and disposed; ownership released.
 - The host follows the
   [pattern for Windows Forms](https://learn.microsoft.com/dotnet/desktop/winforms/advanced/how-to-use-host-builder).

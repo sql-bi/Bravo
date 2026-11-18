@@ -29,7 +29,7 @@ data folder.
   [external tool](https://learn.microsoft.com/power-bi/transform-model/desktop-external-tools-register) of
   Power BI Desktop and reports installations and removals. A fifth project:
   [ADR 0011](0011-host-in-four-projects-with-windows-at-the-edge.md) is amended.
-- **The telemetry of the installer stays**: two events, two choices in the dialogs. Sending is backlog S-06.
+- **The telemetry of the installer stays**: two events, two choices in the dialogs. Sending is backlog B-9.
 - **Enterprise deployment is a criterion of every choice**: Intune
   ([line-of-business apps](https://learn.microsoft.com/intune/intune-service/apps/lob-apps-windows)),
   Configuration Manager, Group Policy, silent installation. Every name that a deployment relies on stays.

@@ -26,7 +26,7 @@ its structure as a model.
 - The implementation of a component is written on a work branch, reviewed there by the maintainer, and only
   then brought to `develop-vnext`:
   1. One work branch is open at a time. It is named `vnext/<backlog id>-<slug>`, for example
-     `vnext/r-02-build-rules`, starts from the tip of `develop-vnext` and lives in a worktree of its own: the
+     `vnext/b-2-release`, starts from the tip of `develop-vnext` and lives in a worktree of its own: the
      main folder stays on `develop-vnext`.
   2. The work branch never tracks `develop-vnext`. Publish it with `git push -u origin <branch>` and check its
      upstream before any other push.
@@ -136,7 +136,7 @@ A project of `src/` gets its test project with its first test: a run in which no
 | The single instance: ownership by mutex, hand-over by pipe, arbitration | `src/Bravo.Platform.Windows/SingleInstance/` |
 | The identity of the build: release or development, with its instance identifier, data folder and window title | `src/Bravo.Desktop/BuildIdentity.cs` |
 | The listener as a service of the host, the message of a failed hand-over, the end of a second process | `src/Bravo.Desktop/SingleInstance/` |
-| The settings of the user and their store, in memory until backlog S-01 | `src/Bravo.Core/Settings/`, registered in `src/Bravo.Desktop/Settings/` |
+| The settings of the user and their store, in memory until backlog B-4 | `src/Bravo.Core/Settings/`, registered in `src/Bravo.Desktop/Settings/` |
 | The Windows functions of a project, listed in its `NativeMethods.txt` and wrapped by capability | `Interop/` in `Bravo.Desktop` and in `Bravo.Platform.Windows` |
 
 - A component registers its services in an extension method of `IServiceCollection` beside its code, and
@@ -300,7 +300,7 @@ Windows Installer packages install the application
   given the folder of local application data, and removes that subfolder alone.
 - What touches the disk or the network is behind an interface: `IExternalToolRegistration`,
   `IUserDataFolder`, `IInstallationEventSink`. The sink that `Program` composes sends nothing (backlog
-  S-06).
+  B-9).
 - The program has no package reference and uses no reflection: the packages carry it compiled ahead of
   time. A new command is a record derived from `SetupCommand`, a name and a reader in `SetupCommandLine`,
   and a case in `SetupApplication.Execute`.
@@ -342,7 +342,7 @@ line names. It is not a project of the solution: a build of the solution makes n
 - `Stage.targets` publishes `Bravo.Desktop` and `Bravo.Setup` with `dotnet publish` for `win-x64`, into
   `artifacts/installer-stage/<version>/`: the application into the layout of its runtime, the program into
   a folder of its own. Those publishes restore another graph of packages than the lock files hold, and read
-  and write no lock file: the committed ones do not change (backlog D-02). A layout is made again when a
+  and write no lock file: the committed ones do not change (backlog B-2). A layout is made again when a
   file of `src/`, of the page or of the build rules is newer than it, and when one was added or deleted:
   the names of those files are kept beside the layout. The two packages of one runtime hold the same files:
   the second one takes the cabinet that the first one compressed, kept beside the layout.
@@ -451,7 +451,7 @@ What a run checks beyond the commands of the table above:
 - `build-installer` compiles `Bravo.Setup.exe` ahead of time with the C++ build tools of the runner image,
   and its build validates the packages against the rules of Windows Installer. The artifact
   `installer-packages` is kept for 3 days: the packages of a run, to look at their dialogs on a machine that
-  can be thrown away. They are not signed (backlog D-02).
+  can be thrown away. They are not signed (backlog B-2).
 - `test-installer` installs for real, on the runner alone: every run of Windows Installer is silent, and its
   log is in `artifacts/installer-logs`, kept for 3 days as `installer-logs` when a step failed. The test
   prints each check, and what it observes of 1.0.14: its removal, and a package of the other context. The

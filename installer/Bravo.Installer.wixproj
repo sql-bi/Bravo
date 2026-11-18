@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <!--
-    The version of the application and of the product. How a release computes it is backlog D-02: until then a
+    The version of the application and of the product. How a release computes it is backlog B-2: until then a
     build passes it, and it is 1.1.0 otherwise. Windows Installer compares the first three numbers, which must
     stay above the ones of 1.0.x for a package to replace it.
   -->

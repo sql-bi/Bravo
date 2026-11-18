@@ -44,4 +44,4 @@ beta, requires it ([ts-loader](https://github.com/TypeStrong/ts-loader)).
 - A type error in a unit test fails the build.
 - `watch:UI` and `serve:UI` do not report a type error at each change: the editor and the next build do.
 - The errors of 6.0 are fixed without a change of behavior.
-- TypeScript 7 (backlog H-09) changes the check and ts-loader.
+- TypeScript 7 (backlog B-1) changes the check and ts-loader.
