@@ -355,10 +355,13 @@ function Write-UserData {
     foreach ($name in $UserDataFiles.Keys) { Set-Content -Path (Join-Path $DataFolder $name) -Value $UserDataFiles[$name] }
 }
 
+# A file that was emptied has no text to read: it is not as it was.
 function Test-UserData {
     foreach ($name in $UserDataFiles.Keys) {
         $path = Join-Path $DataFolder $name
-        if (-not (Test-Path $path) -or (Get-Content $path -Raw).Trim() -cne $UserDataFiles[$name]) { return $false }
+        if (-not (Test-Path $path)) { return $false }
+        $text = Get-Content $path -Raw
+        if ($null -eq $text -or $text.Trim() -cne $UserDataFiles[$name]) { return $false }
     }
     return $true
 }
