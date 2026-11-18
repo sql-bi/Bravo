@@ -698,7 +698,9 @@ line, no window, and no need of the .NET runtime, so that it runs where the appl
   product, the operating system, and an identifier of who installs, the SHA-256 of the names of the machine
   and of the account that the program runs as. It names nobody, and is computed as 1.0.x computes it, so
   that the counts of the two versions can be compared. A package reports, and removes the data of the
-  user, as who installs or removes, not as the system. Nothing sends the events yet (backlog S-06).
+  user, as the account that installs or removes. Where a deployment tool installs in the system context,
+  that account is the system: the identifier of an event is then one for the machine. Nothing sends the
+  events yet (backlog S-06).
 - The exit code is 0 when the command was carried out, also when it found nothing to do; 1 when a file or
   a folder could not be written or removed; 2 when the command line is not valid; 3 for an exception that
   nothing expected, which is written as one line on the standard error and never ends the process with an
@@ -709,7 +711,8 @@ line, no window, and no need of the .NET runtime, so that it runs where the appl
 among the installed applications and, per machine, the registration as an external tool; the folder of the
 external tools stays. A removal that is not part of an upgrade also removes the data folder of who removes,
 `%LOCALAPPDATA%\Bravo`, with the settings, as the removal of 1.0.x does, per machine and per user. The data
-folders of the other users of the machine stay.
+folders of the other users of the machine stay. A removal that a deployment tool runs in the system context
+is the removal of the system, which has no such folder: it leaves the data folder of every user.
 
 **A running application.** A silent installation closes, through Restart Manager, the applications that
 hold the files it replaces, and the application ends when asked to
