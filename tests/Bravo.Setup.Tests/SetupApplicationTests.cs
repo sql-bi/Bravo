@@ -42,7 +42,7 @@ public sealed class SetupApplicationTests : IDisposable
 
         var registered = _application.Run(["register-external-tool", "--tool-file", toolFile, "--executable", @"C:\Bravo\Bravo.exe"]);
         var wasWritten = File.Exists(toolFile);
-        var unregistered = _application.Run(["unregister-external-tool", "--tool-file", toolFile]);
+        var unregistered = _application.Run(["unregister-external-tool", "--tool-file", toolFile, "--executable", @"C:\Bravo\Bravo.exe"]);
 
         Assert.Equal((ExitCode.Success, ExitCode.Success), (registered, unregistered));
         Assert.True(wasWritten);

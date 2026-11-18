@@ -90,7 +90,13 @@ internal static class SetupCommandLine
     private static UnregisterExternalToolCommand? ReadUnregisterExternalTool(SetupOptions options)
     {
         var toolFile = options.ReadFullPath(ToolFileOption);
-        return toolFile is null ? null : new UnregisterExternalToolCommand(toolFile);
+        var executable = options.ReadFullPath(ExecutableOption);
+        if (toolFile is null || executable is null)
+        {
+            return null;
+        }
+
+        return new UnregisterExternalToolCommand(toolFile, executable);
     }
 
     private static ReportInstallationEventCommand? ReadReport(InstallationEventKind kind, SetupOptions options)

@@ -50,7 +50,7 @@ internal sealed class SetupApplication(
                 _externalTools.Register(register.ToolFile, register.Executable);
                 break;
             case UnregisterExternalToolCommand unregister:
-                _externalTools.Unregister(unregister.ToolFile);
+                _externalTools.Unregister(unregister.ToolFile, unregister.Executable);
                 break;
             case ReportInstallationEventCommand report:
                 _reporter.Report(report.Kind, report.Product, report.IsTelemetryEnabled);

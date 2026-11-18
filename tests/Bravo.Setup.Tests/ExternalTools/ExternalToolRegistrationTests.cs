@@ -95,16 +95,63 @@ public sealed class ExternalToolRegistrationTests : IDisposable
     }
 
     [Fact]
-    public void Unregister_RemovesTheFileAndLeavesTheFolderWithTheToolsOfOthers()
+    public void Unregister_TheRegistrationOfTheExecutable_RemovesTheFileAndLeavesTheToolsOfOthers()
     {
         var toolFile = _folder.Combine("bravo.pbitool.json");
         var otherToolFile = _folder.Combine("other.pbitool.json");
         _registration.Register(toolFile, Executable);
         File.WriteAllText(otherToolFile, "{}");
 
-        _registration.Unregister(toolFile);
+        _registration.Unregister(toolFile, Executable);
 
         Assert.Equal([otherToolFile], Directory.GetFiles(_folder.Path));
+    }
+
+    // Windows names one file in many ways: the case of the letters and a doubled separator do not matter.
+    [Theory]
+    [InlineData(@"c:\program files\sqlbi\bravo\BRAVO.EXE")]
+    [InlineData(@"C:\Program Files\SQLBI\\Bravo\Bravo.exe")]
+    [InlineData(@"C:\Program Files\SQLBI\Bravo\.\Bravo.exe")]
+    public void Unregister_TheExecutableWrittenInAnotherWay_RemovesTheFile(string executable)
+    {
+        var toolFile = _folder.Combine("bravo.pbitool.json");
+        _registration.Register(toolFile, Executable);
+
+        _registration.Unregister(toolFile, executable);
+
+        Assert.False(File.Exists(toolFile));
+    }
+
+    // The registration of another installation, such as one made by hand for an installation per user.
+    [Fact]
+    public void Unregister_ARegistrationOfAnotherExecutable_LeavesTheFile()
+    {
+        var toolFile = _folder.Combine("bravo.pbitool.json");
+        _registration.Register(toolFile, @"C:\Users\someone\AppData\Local\Programs\SQLBI\Bravo\Bravo.exe");
+        var registered = File.ReadAllBytes(toolFile);
+
+        _registration.Unregister(toolFile, Executable);
+
+        Assert.Equal(registered, File.ReadAllBytes(toolFile));
+    }
+
+    [Theory]
+    [InlineData("not json")]
+    [InlineData("")]
+    [InlineData("[]")]
+    [InlineData("{}")]
+    [InlineData("""{ "path": 1 }""")]
+    [InlineData("""{ "path": "" }""")]
+    [InlineData("""{ "path": "Bravo.exe" }""")]
+    [InlineData("""{ "path": "<#!PATH!#>" }""")]
+    public void Unregister_AFileThatIsNotARegistrationOfTheExecutable_LeavesTheFile(string content)
+    {
+        var toolFile = _folder.Combine("bravo.pbitool.json");
+        File.WriteAllText(toolFile, content);
+
+        _registration.Unregister(toolFile, Executable);
+
+        Assert.Equal(content, File.ReadAllText(toolFile));
     }
 
     [Theory]
@@ -114,7 +161,7 @@ public sealed class ExternalToolRegistrationTests : IDisposable
     {
         var toolFile = _folder.Combine(relativePath);
 
-        _registration.Unregister(toolFile);
+        _registration.Unregister(toolFile, Executable);
 
         Assert.Empty(Directory.GetFileSystemEntries(_folder.Path));
     }

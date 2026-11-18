@@ -663,7 +663,7 @@ need of the .NET runtime, so that it runs where the application could not start.
 | Command | Options | What it does |
 | --- | --- | --- |
 | `register-external-tool` | `--tool-file`, `--executable` | Writes the file that registers the application as an external tool of Power BI Desktop, with its folder when it is missing. A file that is there is replaced |
-| `unregister-external-tool` | `--tool-file` | Removes that file. The folder stays: other tools register in it |
+| `unregister-external-tool` | `--tool-file`, `--executable` | Removes that file when it registers the executable. A file that registers another executable, such as one written by hand for another installation, or that is not a registration, stays. The folder stays: other tools register in it |
 | `report-install`, `report-uninstall` | `--scope`, `--product-name`, `--product-version`, `--product-build`, `--telemetry-enabled` | Reports the event `Install` or `Uninstall`, when the value of `--telemetry-enabled` is `1` |
 | `remove-user-data` | `--local-application-data` | Removes the data folder of the application, `Bravo`, with everything in it, from the folder of local application data that it is given, and nothing else of that folder |
 

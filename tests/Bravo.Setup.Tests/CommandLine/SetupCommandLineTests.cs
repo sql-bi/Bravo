@@ -27,11 +27,11 @@ public sealed class SetupCommandLineTests
     }
 
     [Fact]
-    public void TryParse_UnregisterExternalTool_ReturnsTheFile()
+    public void TryParse_UnregisterExternalTool_ReturnsTheFileAndTheExecutable()
     {
-        var command = Parse("unregister-external-tool", "--tool-file", ToolFile);
+        var command = Parse("unregister-external-tool", "--tool-file", ToolFile, "--executable", Executable);
 
-        Assert.Equal(new UnregisterExternalToolCommand(ToolFile), command);
+        Assert.Equal(new UnregisterExternalToolCommand(ToolFile, Executable), command);
     }
 
     [Theory]
@@ -89,6 +89,7 @@ public sealed class SetupCommandLineTests
     [InlineData("register-external-tool", "--tool-file", ToolFile, "--tool-file", ToolFile, "--executable", Executable)]
     [InlineData("register-external-tool", ToolFile, Executable)]
     [InlineData("unregister-external-tool")]
+    [InlineData("unregister-external-tool", "--tool-file", ToolFile)]
     [InlineData("report-install", "--scope", "perUser", "--product-name", "Bravo", "--product-version", "1.1.0")]
     [InlineData("remove-user-data")]
     [InlineData("remove-user-data", "--folder", @"C:\Users\someone\AppData\Local\Bravo")]
@@ -105,8 +106,9 @@ public sealed class SetupCommandLineTests
     [Theory]
     [InlineData("register-external-tool", "--tool-file", "bravo.pbitool.json", "--executable", Executable)]
     [InlineData("register-external-tool", "--tool-file", ToolFile, "--executable", "Bravo.exe")]
-    [InlineData("unregister-external-tool", "--tool-file", @"External Tools\bravo.pbitool.json")]
-    [InlineData("unregister-external-tool", "--tool-file", "")]
+    [InlineData("unregister-external-tool", "--tool-file", @"External Tools\bravo.pbitool.json", "--executable", Executable)]
+    [InlineData("unregister-external-tool", "--tool-file", "", "--executable", Executable)]
+    [InlineData("unregister-external-tool", "--tool-file", ToolFile, "--executable", "Bravo.exe")]
     [InlineData("remove-user-data", "--local-application-data", "Local")]
     [InlineData("remove-user-data", "--local-application-data", @"\AppData\Local")]
     public void TryParse_APathThatIsNotFull_ReturnsAnError(params string[] arguments)

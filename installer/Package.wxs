@@ -183,8 +183,8 @@
       -->
       <Binary Id="SetupProgram" SourceFile="!(bindpath.Application)\Bravo.Setup.exe" />
       <CustomAction Id="RegisterExternalTool" BinaryRef="SetupProgram" ExeCommand="register-external-tool --tool-file &quot;$(ExternalToolFile)&quot; --executable &quot;[#BravoExe]&quot;" Execute="deferred" Impersonate="no" Return="ignore" />
-      <CustomAction Id="RollbackExternalTool" BinaryRef="SetupProgram" ExeCommand="unregister-external-tool --tool-file &quot;$(ExternalToolFile)&quot;" Execute="rollback" Impersonate="no" Return="ignore" />
-      <CustomAction Id="UnregisterExternalTool" BinaryRef="SetupProgram" ExeCommand="unregister-external-tool --tool-file &quot;$(ExternalToolFile)&quot;" Execute="deferred" Impersonate="no" Return="ignore" />
+      <CustomAction Id="RollbackExternalTool" BinaryRef="SetupProgram" ExeCommand="unregister-external-tool --tool-file &quot;$(ExternalToolFile)&quot; --executable &quot;[#BravoExe]&quot;" Execute="rollback" Impersonate="no" Return="ignore" />
+      <CustomAction Id="UnregisterExternalTool" BinaryRef="SetupProgram" ExeCommand="unregister-external-tool --tool-file &quot;$(ExternalToolFile)&quot; --executable &quot;[#BravoExe]&quot;" Execute="deferred" Impersonate="no" Return="ignore" />
     <?endif?>
 
     <!--

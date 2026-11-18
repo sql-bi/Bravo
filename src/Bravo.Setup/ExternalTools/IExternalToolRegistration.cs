@@ -14,8 +14,9 @@ internal interface IExternalToolRegistration
     void Register(string toolFile, string executable);
 
     /// <summary>
-    /// Removes the registration file. A file that is not there is not an error, and the folder stays: other
-    /// tools register in it.
+    /// Removes the registration file when it registers the executable. A file that is not there, that
+    /// registers another executable or that cannot be read as a registration stays as it is, and is not an
+    /// error. The folder stays: other tools register in it.
     /// </summary>
-    void Unregister(string toolFile);
+    void Unregister(string toolFile, string executable);
 }

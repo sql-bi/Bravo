@@ -57,14 +57,48 @@ internal sealed class ExternalToolRegistration : IExternalToolRegistration
         }
     }
 
-    public void Unregister(string toolFile)
+    public void Unregister(string toolFile, string executable)
     {
         ArgumentException.ThrowIfNullOrEmpty(toolFile);
+        ArgumentException.ThrowIfNullOrEmpty(executable);
 
-        if (File.Exists(toolFile))
+        if (File.Exists(toolFile) && Registers(toolFile, executable))
         {
             File.Delete(toolFile);
         }
+    }
+
+    // Whether a file registers an executable. A file that is not a registration registers none.
+    private static bool Registers(string toolFile, string executable)
+    {
+        try
+        {
+            using var stream = File.OpenRead(toolFile);
+            using var tool = JsonDocument.Parse(stream);
+            var root = tool.RootElement;
+            if (root.ValueKind != JsonValueKind.Object || !root.TryGetProperty("path", out var path))
+            {
+                return false;
+            }
+
+            return path.ValueKind == JsonValueKind.String && IsSameFile(path.GetString(), executable);
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
+    }
+
+    // As Windows compares the paths of two files: whatever the case of their letters and the way they are
+    // written, such as a doubled separator.
+    private static bool IsSameFile(string? registered, string executable)
+    {
+        if (string.IsNullOrEmpty(registered) || !Path.IsPathFullyQualified(registered))
+        {
+            return false;
+        }
+
+        return string.Equals(Path.GetFullPath(registered), Path.GetFullPath(executable), StringComparison.OrdinalIgnoreCase);
     }
 
     private static void Write(Stream stream, string executable)
