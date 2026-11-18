@@ -214,7 +214,7 @@ jobs:
       - name: Show the size of the packages and of the program that they run
         shell: pwsh
         run: |
-          Get-ChildItem artifacts/installer/en-US/*.msi, artifacts/installer-stage/${{ env.BRAVO_VERSION }}/frameworkdependent/Bravo.Setup.exe |
+          Get-ChildItem artifacts/installer/en-US/*.msi, artifacts/installer-stage/${{ env.BRAVO_VERSION }}/setup-aot/Bravo.Setup.exe |
             ForEach-Object { '{0,12:N0} bytes  {1}' -f $_.Length, $_.Name }
       # Kept for the next job, and for a look at the dialogs on a machine that can be thrown away.
       - name: Keep the packages

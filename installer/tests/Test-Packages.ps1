@@ -241,10 +241,10 @@ function Assert-Installed([string] $Scope, [string] $ExpectedVersion, [string] $
     $executable = Join-Path $InstallFolder 'Bravo.exe'
 
     Assert-Equal "$ExpectedVersion.0" (Get-Item $executable).VersionInfo.FileVersion 'the version of the file of Bravo.exe'
-    foreach ($file in 'Bravo.dll', 'Bravo.Setup.exe', 'WebView2Loader.dll', 'wwwroot\index.html', 'wwwroot\js\main.js', 'wwwroot\css\main.css') {
+    foreach ($file in 'Bravo.dll', 'WebView2Loader.dll', 'wwwroot\index.html', 'wwwroot\js\main.js', 'wwwroot\css\main.css') {
         Assert-True (Test-Path (Join-Path $InstallFolder $file)) "$file is installed"
     }
-    foreach ($entry in 'Bravo.xml', 'runtimes', 'it') {
+    foreach ($entry in 'Bravo.Setup.exe', 'Bravo.xml', 'runtimes', 'it') {
         Assert-True (-not (Test-Path (Join-Path $InstallFolder $entry))) "$entry is not installed"
     }
     Assert-Equal $SelfContained (Test-Path (Join-Path $InstallFolder 'coreclr.dll')) 'the package carries the .NET runtime'

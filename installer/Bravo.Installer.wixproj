@@ -73,6 +73,7 @@
 
   <ItemGroup>
     <BindPath Include="$(StageDir)" BindName="Application" />
+    <BindPath Include="$(SetupPublishDir)" BindName="Setup" />
     <BindPath Include="$(RepositoryRoot)src\Bravo.Desktop\Assets" BindName="ApplicationAssets" />
   </ItemGroup>
 

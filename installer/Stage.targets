@@ -4,8 +4,10 @@
     The application as a package installs it, laid out in one folder for each runtime:
 
     - the application published for win-x64, with the identity of a release;
-    - Bravo.Setup.exe, the program that the package runs;
     - wwwroot: the static files of web/wwwroot and the release bundle of artifacts/web.
+
+    Bravo.Setup.exe, the program that a package runs, is published in a folder of its own: a package carries
+    it in itself and does not install it.
 
     The build never runs npm: the bundle is there after "npm ci" and "npm run build:Release" in web/.
   -->
@@ -43,7 +45,7 @@
     <DotNetHost Condition="'$(DotNetHost)' == ''">dotnet</DotNetHost>
     <SetupPublishDir>$(StageRoot)setup-$(SetupKind)\</SetupPublishDir>
     <SetupStamp>$(StageRoot)setup-$(SetupKind).published</SetupStamp>
-    <StageStamp>$(StageRoot)$(RuntimeName)-$(SetupKind).staged</StageStamp>
+    <StageStamp>$(StageRoot)$(RuntimeName).staged</StageStamp>
   </PropertyGroup>
 
   <!--
@@ -51,7 +53,7 @@
     one compresses is kept here, and the second one takes it as it is.
   -->
   <PropertyGroup>
-    <CabinetCachePath>$(StageRoot)$(RuntimeName)-$(SetupKind)-cabinets\</CabinetCachePath>
+    <CabinetCachePath>$(StageRoot)$(RuntimeName)-cabinets\</CabinetCachePath>
   </PropertyGroup>
 
   <!-- A change of any of these publishes the program, or lays the application out, again. -->
@@ -66,21 +68,18 @@
     <StageInput Include="@(BuildRuleFile);@(WebStaticFile);@(WebBundleFile)" />
   </ItemGroup>
 
-  <Target Name="PublishSetupProgram" Inputs="@(SetupInput)" Outputs="$(SetupStamp)">
+  <Target Name="PublishSetupProgram" BeforeTargets="BeforeBuild" Inputs="@(SetupInput)" Outputs="$(SetupStamp)">
     <RemoveDir Directories="$(SetupPublishDir)" />
     <Exec Command="&quot;$(DotNetHost)&quot; publish &quot;$(RepositoryRoot)src\Bravo.Setup\Bravo.Setup.csproj&quot; $(StagePublishArguments) $(SetupPublishArguments) -o &quot;$(SetupPublishDir.TrimEnd('\'))&quot;" />
     <Touch Files="$(SetupStamp)" AlwaysCreate="true" />
   </Target>
 
-  <Target Name="StageApplication" DependsOnTargets="PublishSetupProgram" BeforeTargets="BeforeBuild" Inputs="@(StageInput);$(SetupStamp)" Outputs="$(StageStamp)">
+  <Target Name="StageApplication" BeforeTargets="BeforeBuild" Inputs="@(StageInput)" Outputs="$(StageStamp)">
     <Error Condition="!Exists('$(WebBundleDir)js\main.js') Or !Exists('$(WebBundleDir)css\main.css')"
            Text="The release bundle of the user interface is not in $(WebBundleDir). In web/, run &quot;npm ci&quot; and &quot;npm run build:Release&quot;." />
 
     <RemoveDir Directories="$(StageDir)" />
     <Exec Command="&quot;$(DotNetHost)&quot; publish &quot;$(RepositoryRoot)src\Bravo.Desktop\Bravo.Desktop.csproj&quot; $(StagePublishArguments) $(ApplicationPublishArguments) -o &quot;$(StageDir.TrimEnd('\'))&quot;" />
-
-    <!-- Of what the program is published with, the package takes the executable alone. -->
-    <Copy SourceFiles="$(SetupPublishDir)Bravo.Setup.exe" DestinationFolder="$(StageDir)" />
 
     <Copy SourceFiles="@(WebStaticFile)" DestinationFiles="@(WebStaticFile->'$(StageDir)wwwroot\%(RecursiveDir)%(Filename)%(Extension)')" />
     <Copy SourceFiles="@(WebBundleFile)" DestinationFiles="@(WebBundleFile->'$(StageDir)wwwroot\%(RecursiveDir)%(Filename)%(Extension)')" />

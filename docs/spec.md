@@ -617,8 +617,8 @@ Four Windows Installer packages, built with WiX, install the application
 | External tool of Power BI Desktop | Registered | Not registered: the folder needs administrator rights |
 | Rights that the installation asks for | Administrator | None |
 
-- The files are the application published for `win-x64` with the identity of a release build, the program
-  `Bravo.Setup.exe`, and `wwwroot`: the static files of the page with the release bundle.
+- The files are the application published for `win-x64` with the identity of a release build, and
+  `wwwroot`: the static files of the page with the release bundle.
 - Three things of a publish are left out, because nothing reads them when the application runs: the
   documentation files of the assemblies, the texts of System.CommandLine in other languages, so that an
   error of the command line is in English, and the second copy of the loader of WebView2, under `runtimes`:
@@ -657,8 +657,8 @@ user is not touched.
   ([issue 705](https://github.com/sql-bi/Bravo/issues/705)).
 
 **What a package runs.** A package has no code of its own. What its tables cannot do, it asks of
-`Bravo.Setup.exe`, a program of the host installed beside `Bravo.exe`: a command line, no window, and no
-need of the .NET runtime, so that it runs where the application could not start.
+`Bravo.Setup.exe`, a program of the host that the package carries in itself and does not install: a command
+line, no window, and no need of the .NET runtime, so that it runs where the application could not start.
 
 | Command | Options | What it does |
 | --- | --- | --- |
@@ -669,9 +669,10 @@ need of the .NET runtime, so that it runs where the application could not start.
 
 | When | Per machine | Per user |
 | --- | --- | --- |
-| An installation, also over an earlier version | `register-external-tool`, `report-install` | `report-install` |
-| A removal that is not part of an upgrade | `unregister-external-tool`, `remove-user-data`, `report-uninstall` | `remove-user-data`, `report-uninstall` |
+| An installation, also over an earlier version, after its files are copied | `register-external-tool` | |
 | A first installation that fails and is undone | `unregister-external-tool` | |
+| An installation, also over an earlier version, that has succeeded | `report-install` | `report-install` |
+| A removal that is not part of an upgrade and has succeeded | `unregister-external-tool`, `remove-user-data`, `report-uninstall` | `remove-user-data`, `report-uninstall` |
 
 - An option is `--name value`. A command gets each of its options once, and no other; a path is a full path.
 - The program finds no folder by itself and reads nothing from the registry: the package passes every
@@ -682,10 +683,17 @@ need of the .NET runtime, so that it runs where the application could not start.
   description is `Bravo for Power BI`. The file is `bravo.pbitool.json`, in the folder that Power BI
   Desktop reads, under the 32-bit Common Files: the package writes there with the rights of the
   installation.
-- What runs with the rights of the installation starts a copy of the program that the package per machine
-  holds in itself, and never the installed one: where the application is installed in a folder that users
-  can write in, nothing that a user could have replaced runs with those rights. What runs as who installs
-  starts the installed program.
+- Every command starts the copy of the program that the package holds in itself, whoever it runs as:
+  nothing that an installation or a removal runs is a file of a folder that somebody could have written in.
+  Only the registration and its removal run with the rights of the installation.
+- What cannot be taken back is done when nothing can fail any more: the removal of the registration, the
+  removal of the data of the user and the two events are
+  [commit actions](https://learn.microsoft.com/windows/win32/msi/commit-custom-actions), which Windows
+  Installer runs after the installation or the removal has succeeded. A removal that fails and is undone
+  leaves the data of the user and the registration as they were.
+- Where rollback is disabled, by the property `DISABLEROLLBACK` or by the policy, Windows Installer undoes
+  nothing and runs no commit action: the package then runs the same commands as the last steps of the
+  installation or of the removal.
 - An event carries what 1.0.x sends with it: its name, the scope, the name, the version and the build of the
   product, the operating system, and an identifier of who installs, the SHA-256 of the names of the machine
   and of the account that the program runs as. It names nobody, and is computed as 1.0.x computes it, so
@@ -709,10 +717,10 @@ hold the files it replaces, and the application ends when asked to
 restart of Windows. The application is not started again.
 
 **How the packages are built.** One WiX project makes the four, from one source for the two contexts. It
-first lays the application out in a folder, as a package installs it: two publishes of the host for
-`win-x64` and the files of the page. The program is compiled ahead of time, to one file of about 1 MB, which
-needs the C++ build tools of Visual Studio on the machine that builds. The build validates each
-package against the rules of Windows Installer, and a warning fails it.
+first lays the application out in a folder, as a package installs it: the application published for
+`win-x64` and the files of the page. The program is published apart and compiled ahead of time, to one file
+of about 1 MB, which needs the C++ build tools of Visual Studio on the machine that builds. The build
+validates each package against the rules of Windows Installer, and a warning fails it.
 
 **Tests.** Continuous integration builds the packages and then installs them for real, each time in
 silence, on a machine of its own that is thrown away: a first installation per machine and per user, the

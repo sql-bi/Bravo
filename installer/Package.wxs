@@ -123,17 +123,13 @@
       <ComponentRef Id="ProgramMenuShortcut" />
     </Feature>
 
-    <!-- The folder of the publish, laid out by Stage.targets. The two executables are named: actions refer to them. -->
+    <!-- The folder of the publish, laid out by Stage.targets. The executable is named: actions refer to it. -->
     <ComponentGroup Id="Application" Directory="INSTALLFOLDER">
       <Component Id="BravoExe">
         <File Id="BravoExe" Source="!(bindpath.Application)\Bravo.exe" KeyPath="yes" />
       </Component>
-      <Component Id="SetupExe">
-        <File Id="SetupExe" Source="!(bindpath.Application)\Bravo.Setup.exe" KeyPath="yes" />
-      </Component>
       <Files Include="!(bindpath.Application)\**">
         <Exclude Files="!(bindpath.Application)\Bravo.exe" />
-        <Exclude Files="!(bindpath.Application)\Bravo.Setup.exe" />
       </Files>
 
       <!--
@@ -164,55 +160,67 @@
     </StandardDirectory>
 
     <!--
-      What the package asks of Bravo.Setup.exe. No action fails an installation: the exit code is ignored, and
-      Windows Installer writes it in its log. What runs as who installs starts the installed program.
+      What the package asks of Bravo.Setup.exe. Every action starts the copy of the program that the package
+      holds in itself: the program is not installed, and no action starts a file of a folder that somebody
+      could have written in. No action fails an installation: the exit code is ignored, and Windows Installer
+      writes it in its log.
     -->
-    <?define ReportOptions = "--scope $(Scope) --product-name Bravo --product-version $(ProductVersion) --product-build !(bind.fileVersion.BravoExe)" ?>
-
-    <!-- As who installs, also in the package per machine: the identifier of the event is computed from the account. -->
-    <CustomAction Id="ReportInstall" FileRef="SetupExe" ExeCommand="report-install $(ReportOptions) --telemetry-enabled &quot;[INSTALLERTELEMETRYENABLED]&quot;" Execute="deferred" Impersonate="yes" Return="ignore" />
-    <CustomAction Id="ReportUninstall" FileRef="SetupExe" ExeCommand="report-uninstall $(ReportOptions) --telemetry-enabled &quot;[INSTALLERTELEMETRYENABLED]&quot;" Execute="deferred" Impersonate="yes" Return="ignore" />
+    <Binary Id="SetupProgram" SourceFile="!(bindpath.Setup)\Bravo.Setup.exe" />
 
     <?if $(Scope) = perMachine ?>
       <?define ExternalToolFile = "[POWERBIEXTERNALTOOLSFOLDER]bravo.pbitool.json" ?>
 
       <!--
-        With the rights of the installation: the folder of the external tools is not writable by a user. These
-        actions start the copy of the program that the package holds in itself, never the installed one: in
-        a folder that users can write in, the installed one could have been replaced.
+        With the rights of the installation: the folder of the external tools is not writable by a user. A
+        failed installation takes the registration back; a failed upgrade leaves the one of the installed
+        version, which names the same file.
       -->
-      <Binary Id="SetupProgram" SourceFile="!(bindpath.Application)\Bravo.Setup.exe" />
       <CustomAction Id="RegisterExternalTool" BinaryRef="SetupProgram" ExeCommand="register-external-tool --tool-file &quot;$(ExternalToolFile)&quot; --executable &quot;[#BravoExe]&quot;" Execute="deferred" Impersonate="no" Return="ignore" />
       <CustomAction Id="RollbackExternalTool" BinaryRef="SetupProgram" ExeCommand="unregister-external-tool --tool-file &quot;$(ExternalToolFile)&quot; --executable &quot;[#BravoExe]&quot;" Execute="rollback" Impersonate="no" Return="ignore" />
-      <CustomAction Id="UnregisterExternalTool" BinaryRef="SetupProgram" ExeCommand="unregister-external-tool --tool-file &quot;$(ExternalToolFile)&quot; --executable &quot;[#BravoExe]&quot;" Execute="deferred" Impersonate="no" Return="ignore" />
     <?endif?>
 
     <!--
-      A removal also removes the data of who removes, as in 1.0.x: as that user, whose folder it is. The
+      What cannot be taken back is done when the installation or the removal has succeeded: a commit action.
+      Windows Installer runs no commit action when rollback is disabled, so each one has a deferred twin for
+      that case, at the end of the script.
+
+      The events and the removal of the data run as who installs or removes, also in the package per machine:
+      the identifier of an event is computed from the account, and the data folder is the one of that user. The
       program knows the name of the data folder. The folder of Windows ends with a backslash, which the one
       before the quote keeps from hiding it.
     -->
-    <CustomAction Id="RemoveUserData" FileRef="SetupExe" ExeCommand="remove-user-data --local-application-data &quot;[LocalAppDataFolder]\&quot;" Execute="deferred" Impersonate="yes" Return="ignore" />
+    <?define ReportOptions = "--scope $(Scope) --product-name Bravo --product-version $(ProductVersion) --product-build !(bind.fileVersion.BravoExe)" ?>
+
+    <?foreach Execute in commit;deferred ?>
+      <CustomAction Id="ReportInstall.$(Execute)" BinaryRef="SetupProgram" ExeCommand="report-install $(ReportOptions) --telemetry-enabled &quot;[INSTALLERTELEMETRYENABLED]&quot;" Execute="$(Execute)" Impersonate="yes" Return="ignore" />
+      <?if $(Scope) = perMachine ?>
+        <CustomAction Id="UnregisterExternalTool.$(Execute)" BinaryRef="SetupProgram" ExeCommand="unregister-external-tool --tool-file &quot;$(ExternalToolFile)&quot; --executable &quot;[#BravoExe]&quot;" Execute="$(Execute)" Impersonate="no" Return="ignore" />
+      <?endif?>
+      <CustomAction Id="RemoveUserData.$(Execute)" BinaryRef="SetupProgram" ExeCommand="remove-user-data --local-application-data &quot;[LocalAppDataFolder]\&quot;" Execute="$(Execute)" Impersonate="yes" Return="ignore" />
+      <CustomAction Id="ReportUninstall.$(Execute)" BinaryRef="SetupProgram" ExeCommand="report-uninstall $(ReportOptions) --telemetry-enabled &quot;[INSTALLERTELEMETRYENABLED]&quot;" Execute="$(Execute)" Impersonate="yes" Return="ignore" />
+    <?endforeach?>
 
     <!--
       An installation, also over an earlier version, registers and reports. A removal that is not part of an
-      upgrade takes the registration back, removes the data of the user and reports, while the program is
-      still installed.
+      upgrade takes the registration back, removes the data of the user and reports.
     -->
     <?define WhenInstalling = NOT Installed AND NOT REMOVE ?>
     <?define WhenRemoving = (NOT UPGRADINGPRODUCTCODE) AND (REMOVE="ALL") ?>
 
     <InstallExecuteSequence>
       <?if $(Scope) = perMachine ?>
-        <!-- A failed upgrade leaves the registration of the installed version, which names the same file. -->
         <Custom Action="RollbackExternalTool" Before="RegisterExternalTool" Condition="$(WhenInstalling) AND NOT WIX_UPGRADE_DETECTED" />
-        <Custom Action="RegisterExternalTool" Before="ReportInstall" Condition="$(WhenInstalling)" />
+        <Custom Action="RegisterExternalTool" After="InstallFiles" Condition="$(WhenInstalling)" />
 
-        <Custom Action="UnregisterExternalTool" Before="RemoveUserData" Condition="$(WhenRemoving)" />
+        <Custom Action="UnregisterExternalTool.commit" Before="UnregisterExternalTool.deferred" Condition="$(WhenRemoving) AND NOT RollbackDisabled" />
+        <Custom Action="UnregisterExternalTool.deferred" Before="RemoveUserData.commit" Condition="$(WhenRemoving) AND RollbackDisabled" />
       <?endif?>
-      <Custom Action="ReportInstall" After="InstallFiles" Condition="$(WhenInstalling)" />
-      <Custom Action="RemoveUserData" Before="ReportUninstall" Condition="$(WhenRemoving)" />
-      <Custom Action="ReportUninstall" Before="RemoveFiles" Condition="$(WhenRemoving)" />
+      <Custom Action="RemoveUserData.commit" Before="RemoveUserData.deferred" Condition="$(WhenRemoving) AND NOT RollbackDisabled" />
+      <Custom Action="RemoveUserData.deferred" Before="ReportUninstall.commit" Condition="$(WhenRemoving) AND RollbackDisabled" />
+      <Custom Action="ReportUninstall.commit" Before="ReportUninstall.deferred" Condition="$(WhenRemoving) AND NOT RollbackDisabled" />
+      <Custom Action="ReportUninstall.deferred" Before="ReportInstall.commit" Condition="$(WhenRemoving) AND RollbackDisabled" />
+      <Custom Action="ReportInstall.commit" Before="ReportInstall.deferred" Condition="$(WhenInstalling) AND NOT RollbackDisabled" />
+      <Custom Action="ReportInstall.deferred" Before="InstallFinalize" Condition="$(WhenInstalling) AND RollbackDisabled" />
     </InstallExecuteSequence>
 
     <!-- The dialogs: the installation folder set of WiX, with the choices of the shortcuts and of telemetry. -->

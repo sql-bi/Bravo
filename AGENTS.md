@@ -315,7 +315,7 @@ line names. It is not a project of the solution: a build of the solution makes n
 | Part | File of `installer/` |
 | --- | --- |
 | Which package a build makes, its file name, the validation rules that are turned off and why | `Bravo.Installer.wixproj` |
-| The folder of the application as a package installs it: the two publishes and the files of the page | `Stage.targets` |
+| The folder of the application as a package installs it, which is its publish and the files of the page, and the publish of the program | `Stage.targets` |
 | The package: identity, upgrade, choices, folders, files, registry values, shortcuts, what it runs and when | `Package.wxs` |
 | The dialog set, which is the one of WiX with two dialogs replaced | `Dialogs.wxs` |
 | The texts | `Package.en-us.wxl` |
@@ -331,18 +331,20 @@ line names. It is not a project of the solution: a build of the solution makes n
 
 - Before a package is built, `web/` has made the release bundle: `npm ci`, then `npm run build:Release`. The
   build of the installer never runs npm, and stops with these two commands when the bundle is missing.
-- An action of `Package.wxs` that runs with the rights of the installation (`Impersonate="no"`) starts the
-  program from the `Binary` table of the package, where no user can replace it; an action that runs as who
-  installs starts the installed file.
+- Every action of `Package.wxs` that runs the program starts it from the `Binary` table of the package: the
+  program is not installed. What an action does that cannot be taken back is a commit action
+  (`Execute="commit"`), under the condition `NOT RollbackDisabled`, with a deferred twin under
+  `RollbackDisabled` before `InstallFinalize`: Windows Installer runs no commit action when rollback is
+  disabled.
 - `Package.wxs` is one source for the two contexts: the build defines `Scope`, and what differs is inside
   `<?if?>`. Its public properties, registry values, folders and product names are the ones of 1.0.x, which
   [docs/spec.md](docs/spec.md#installer) lists.
 - `Stage.targets` publishes `Bravo.Desktop` and `Bravo.Setup` with `dotnet publish` for `win-x64`, into
-  `artifacts/installer-stage/<version>/`. Those publishes restore another graph of packages than the lock
-  files hold, and read and write no lock file: the committed ones do not change (backlog D-02). A layout is
-  made again when a file of `src/`, of the page or of the build rules is newer than it. The two packages of
-  one runtime hold the same files: the second one takes the cabinet that the first one compressed, kept
-  beside the layout.
+  `artifacts/installer-stage/<version>/`: the application into the layout of its runtime, the program into
+  a folder of its own. Those publishes restore another graph of packages than the lock files hold, and read
+  and write no lock file: the committed ones do not change (backlog D-02). A layout is made again when a
+  file of `src/`, of the page or of the build rules is newer than it. The two packages of one runtime hold
+  the same files: the second one takes the cabinet that the first one compressed, kept beside the layout.
 - `Bravo.Setup.exe` is published with `PublishAot`, which needs the "Desktop development with C++" workload
   of Visual Studio: the runner has it. Without it the publish fails with "Platform linker not found";
   `-p:BravoSetupNativeAot=false` then makes packages to look at, with the program as one file that carries

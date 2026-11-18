@@ -30,12 +30,13 @@ the four guarantees of [the specification](spec.md#guarantees-for-users-of-10x).
     file names of 1.0.x. It takes the version as `-p:BravoVersion`, which is 1.1.0 when none is given: the
     release computes it and passes it. Windows Installer compares the first three numbers of a version.
   - The signature is the one of 1.0.x, the certificate of the publisher through AzureSignTool: on
-    `Bravo.exe`, the assemblies of the host and `Bravo.Setup.exe` in the folder that a package is made from,
-    `artifacts/installer-stage/<version>/<runtime>`, before the package is built, and then on each package.
-    The build has no step between the two yet.
+    `Bravo.exe` and the assemblies of the host in the folder that a package is made from,
+    `artifacts/installer-stage/<version>/<runtime>`, and on `Bravo.Setup.exe` in the folder of its publish
+    beside it, before the package is built, and then on each package. The build has no step between the two
+    yet.
   - The installed 1.0.x asks for a file whose name it builds itself, adding `-frameworkdependent`,
     `-userinstaller` or `-portable` (a `.zip`) to the name in the feed, so those files exist. The portable
-    one is the folder that a package is made from, where `Bravo.Setup.exe` has no use.
+    one is the folder that a package is made from.
   - The publishes of that build restore the packages of `win-x64` and read and write no lock file, so that
     the committed ones do not change: the release decides whether that graph is locked.
   - The packages of a run of continuous integration are its artifact `installer-packages`, kept for 3 days.
@@ -177,7 +178,8 @@ removed; the Azure DevOps project retired; dependency updates configured again.
 - The Microsoft Store, which also takes a signed package of Windows Installer that installs silently.
 - WiX 7, when its maintenance fee is settled.
 - An action of the application that registers it as an external tool of Power BI Desktop for a per-user
-  installation, asking for administrator rights: `Bravo.Setup.exe register-external-tool` writes the file.
+  installation, asking for administrator rights. `Bravo.Setup.exe register-external-tool` writes the file,
+  and no package installs that program: what the application starts is part of the item.
 - An upgrade that stays in the folder of the installed version: today a package installs in its default
   folder unless `INSTALLFOLDER` is given, as 1.0.x does.
 - A PNG image as the icon of the external tool registration: today it is the image of 1.0.x, an icon file
