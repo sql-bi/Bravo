@@ -124,11 +124,11 @@ function Invoke-WindowsInstaller([string] $Arguments, [string] $Name, [string] $
     $process = Start-Process -FilePath 'msiexec.exe' -ArgumentList "$Arguments /qn /norestart /l*v `"$log`"" -Wait -PassThru
     Write-Host ("    msiexec {0} -> exit code {1} in {2:N0} s" -f $Arguments, $process.ExitCode, $watch.Elapsed.TotalSeconds)
 
-    # What the log says of the actions that run a program: written into the script, run at the commit, run to
-    # take a step back.
-    $actions = @(Select-String -Path $log -Pattern 'Executing op: CustomAction(Schedule|Commit|Rollback)\(Action=([^,]+),' |
-        ForEach-Object { '{0} ({1})' -f $_.Matches[0].Groups[2].Value, $_.Matches[0].Groups[1].Value.ToLowerInvariant() })
-    if ($actions.Count -gt 0) { Write-Host "    actions: $($actions -join ', ')" }
+    # The actions that run a program, in the order in which the log says that they went into the script. The
+    # log has no such line for the moment a commit action or a rollback action runs.
+    $actions = @(Select-String -Path $log -Pattern 'Executing op: CustomActionSchedule\(Action=([^,]+),' |
+        ForEach-Object { $_.Matches[0].Groups[1].Value })
+    if ($actions.Count -gt 0) { Write-Host "    actions in the script: $($actions -join ', ')" }
 
     # A package ignores the exit code of what it runs, so a command that failed shows in the log alone.
     $failed = @(Select-String -Path $log -Pattern 'returned actual error code' | ForEach-Object { $_.Line })
