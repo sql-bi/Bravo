@@ -168,7 +168,8 @@ function Get-InstallerProperty([string] $Name, [object[]] $Arguments) {
 function Get-Products {
     $products = @()
     foreach ($code in @(Get-InstallerProperty 'RelatedProducts' @($UpgradeCode))) {
-        # InstalledProductName and VersionString are what Installed apps shows of the product.
+        # InstalledProductName and VersionString: what Windows Installer registered for the installed product,
+        # from the properties that it also writes for Installed apps.
         $product = [pscustomobject]@{
             Code          = $code
             Name          = Get-InstallerProperty 'ProductInfo' @($code, 'ProductName')
@@ -229,8 +230,6 @@ function Get-ShortcutTarget([string] $Folder, [string] $Scope) {
     return (New-Object -ComObject WScript.Shell).CreateShortcut($path).TargetPath
 }
 
-
-
 function Read-ExternalTool {
     if (-not (Test-Path $ExternalToolFile)) { return $null }
     return Get-Content $ExternalToolFile -Raw | ConvertFrom-Json
@@ -257,8 +256,6 @@ function Assert-Installed([string] $Scope, [string] $ExpectedVersion, [string] $
     $programMenuTarget = if ($ExpectedChoices.programMenuShortcutEnabled -eq '1') { $executable } else { $null }
     Assert-Equal $desktopTarget (Get-ShortcutTarget $Scopes[$Scope].Desktop $Scope) 'the target of the desktop shortcut'
     Assert-Equal $programMenuTarget (Get-ShortcutTarget $Scopes[$Scope].ProgramMenu $Scope) 'the target of the Start menu shortcut'
-
-
 
     $tool = Read-ExternalTool
     if ($Scope -eq 'perMachine') {

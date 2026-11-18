@@ -7,8 +7,6 @@
   -->
   <?define RegistryKey = "Software\SQLBI\Bravo" ?>
 
-
-
   <?if $(Scope) = perMachine ?>
     <?define ProductName = "!(loc.ProductName)" ?>
     <?define RegistryRoot = "HKLM" ?>
