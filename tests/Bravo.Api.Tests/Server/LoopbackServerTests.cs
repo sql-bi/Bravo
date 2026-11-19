@@ -5,7 +5,6 @@ using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using Bravo.Api.Security;
 using Bravo.Api.Server;
-using Bravo.Core.Settings;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
@@ -70,8 +69,7 @@ public sealed class LoopbackServerTests
     {
         var builder = WebApplication.CreateEmptyBuilder(new WebApplicationOptions());
         builder.WebHost.UseLoopbackServer();
-        builder.Services.AddSingleton(TestApi.Application);
-        builder.Services.AddSingleton<IUserSettingsStore, InMemoryUserSettingsStore>();
+        builder.Services.AddUseCasesOfTheTests();
         builder.Services.AddApi();
 
         var app = builder.Build();

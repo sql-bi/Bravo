@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Bravo.Api.Events;
 using Bravo.Api.Security;
 using Bravo.Core.Application;
-using Bravo.Core.Settings;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.TestHost;
@@ -66,8 +65,7 @@ internal sealed class TestApi : IAsyncDisposable
         var builder = WebApplication.CreateEmptyBuilder(new WebApplicationOptions());
         builder.WebHost.UseTestServer();
         builder.Services.AddSingleton<TimeProvider>(time);
-        builder.Services.AddSingleton(Application);
-        builder.Services.AddSingleton<IUserSettingsStore, InMemoryUserSettingsStore>();
+        builder.Services.AddUseCasesOfTheTests();
         builder.Services.AddApi();
         builder.Services.Configure<ApiOptions>(options => options.AllowedOrigins.Add(AllowedOrigin));
 

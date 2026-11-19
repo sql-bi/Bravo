@@ -170,7 +170,7 @@ this document describes them above as they are built. Where each part lives:
   its data, and a method of `IHostEventPublisher`. The kinds are not derived types: the document that .NET 10
   produces for a list of derived types is wrong.
 - `AddApi` registers the services of the API and `UseLoopbackServer` its server. A use case that a route calls
-  is registered by `Bravo.Desktop`, and by `TestApi` for the tests.
+  is registered by `Bravo.Desktop`, and for the tests by `AddUseCasesOfTheTests`.
 - Only a test produces the document, so what produces it is in the test project: `Bravo.Api` has no package
   reference, and the application ships nothing of the OpenAPI package. A rule on how the document describes
   the JSON goes in `ContractSchema` or `ContractDocument`.

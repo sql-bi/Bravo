@@ -7,7 +7,6 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Bravo.Api.Problems;
 using Bravo.Core.Errors;
-using Bravo.Core.Settings;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.OpenApi;
 using Microsoft.AspNetCore.TestHost;
@@ -133,8 +132,7 @@ public sealed class OpenApiDocumentTests
     {
         var builder = WebApplication.CreateEmptyBuilder(new WebApplicationOptions());
         builder.WebHost.UseTestServer();
-        builder.Services.AddSingleton(TestApi.Application);
-        builder.Services.AddSingleton<IUserSettingsStore, InMemoryUserSettingsStore>();
+        builder.Services.AddUseCasesOfTheTests();
         builder.Services.AddApi();
         builder.Services.AddApiContract();
 
