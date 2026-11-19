@@ -26,7 +26,7 @@ public sealed class DevelopmentHostTests : IAsyncLifetime
 {
     private const string DevelopmentOrigin = "http://127.0.0.1:8098";
 
-    private readonly string _folder = Path.Combine(Path.GetTempPath(), "Bravo.Tests." + Guid.NewGuid().ToString("N"));
+    private readonly TemporaryFolder _folder = new();
     private readonly OwnedInstance _instance = new();
     private readonly WebApplication _host;
 
@@ -39,11 +39,11 @@ public sealed class DevelopmentHostTests : IAsyncLifetime
         };
         var identity = BuildIdentity.Development("1.1.0");
         var fatalExceptionHandler = Substitute.For<IFatalExceptionHandler>();
-        _host = DesktopHost.Build(identity, new DataFolder(_folder), development, _instance.Ownership, new SingleInstanceOptions(), fatalExceptionHandler);
+        _host = DesktopHost.Build(identity, _folder.AsDataFolder(), development, _instance.Ownership, new SingleInstanceOptions(), fatalExceptionHandler);
     }
 
     // In a folder that does not exist yet: the host creates it.
-    private string ConnectionFilePath => Path.Combine(_folder, "dev", "host.json");
+    private string ConnectionFilePath => _folder.Combine("dev", "host.json");
 
     public async ValueTask InitializeAsync()
     {
@@ -54,10 +54,7 @@ public sealed class DevelopmentHostTests : IAsyncLifetime
     {
         await _host.DisposeAsync();
         _instance.Dispose();
-        if (Directory.Exists(_folder))
-        {
-            Directory.Delete(_folder, recursive: true);
-        }
+        _folder.Dispose();
     }
 
     [Fact]
