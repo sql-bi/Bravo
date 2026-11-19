@@ -3,3 +3,4 @@ GetNamedPipeServerProcessId
 
 // Windows.Win32.UI.WindowsAndMessaging
 AllowSetForegroundWindow
+MessageBeep

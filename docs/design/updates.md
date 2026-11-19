@@ -82,7 +82,8 @@ turns it off is not read yet (backlog B-5).
 | The kind of the copy, from the registry | `src/Bravo.Platform.Windows/Updates/RegistryInstallationReader.cs` |
 | The default browser | `src/Bravo.Platform.Windows/Browser/DefaultBrowserLauncher.cs` |
 | The routes | `src/Bravo.Api/Releases/`, `src/Bravo.Api/Browser/` |
-| The address of the feed, its HTTP client, the beep: what `Bravo.Desktop` registers | `src/Bravo.Desktop/Updates/` |
+| The beep | `src/Bravo.Platform.Windows/Updates/SystemBeep.cs` |
+| What `Bravo.Desktop` registers: the address of the feed, its HTTP client | `src/Bravo.Desktop/Updates/` |
 | The file version of the build, and whether it carries the runtime | `src/Bravo.Desktop/BuildIdentity.cs`, `src/Bravo.Desktop/Bravo.Desktop.csproj` |
 | The page | `checkForUpdates` in `web/controllers/app.ts`, `web/view/options-dialog-about.ts` |
 
