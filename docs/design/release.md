@@ -137,6 +137,9 @@ the trust of the signature, or the creation of the draft.
   package ignores a value that it did not compute.
 - `version.json` is read from the commit, not from the working copy. An edit counts from the commit that
   holds it: until then a build has the committed version, with the height 0.
+- `Get-BuildVersion.ps1` restores the packages of the installer project before it reads the version: the
+  target that computes it comes with the package, and that project is not in the solution, so a restore or a
+  build of the solution leaves it without the target.
 - `cloudBuild` is turned off in `version.json`: on a runner of GitHub Actions the package would otherwise
   write the version in the variables of the run at every build, and nothing reads them.
 - `pathFilters` stays `:/`, the root: every commit raises the height. With a narrower filter, the commit that

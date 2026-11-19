@@ -9,7 +9,8 @@
         Version       the semantic version, which names the files and is in the title of the window
         FileVersion   the version of the files of the application, which is the version of the product
 
-    It builds nothing.
+    It builds nothing. That target comes with a package, so the script restores the packages of the installer
+    project first: the project is not in the solution, and a restore or a build of the solution leaves it out.
 
 .PARAMETER PublicRelease
     Whether the build is a public release, which has the semantic version alone, or not, and then has the
@@ -22,7 +23,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 $project = Join-Path $PSScriptRoot 'Bravo.Installer.wixproj'
-$arguments = @($project, '-t:ReadBuildVersion', '-getProperty:BravoVersion', '-getProperty:BravoFileVersion')
+$arguments = @($project, '-restore', '-t:ReadBuildVersion', '-getProperty:BravoVersion', '-getProperty:BravoFileVersion')
 if ($PSBoundParameters.ContainsKey('PublicRelease')) {
     $arguments += "-p:PublicRelease=$($PublicRelease.ToString().ToLowerInvariant())"
 }
