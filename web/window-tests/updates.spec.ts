@@ -18,22 +18,13 @@ test.describe('a newer release in the update feed', () => {
     });
 
     test('is told in the options, and the browser downloads its file', async ({ bravo }) => {
-        const { page } = bravo;
-
-        // The host would open the default browser of the machine: the request is answered here
-        let opened: unknown;
-        await page.route(`${bravo.address}/browser/open`, async route => {
-            opened = route.request().postDataJSON();
-            await route.fulfill({ status: 204 });
-        });
-
         await openOptions(bravo, 'about');
-        const status = page.locator('#dialog-options .update-status');
+        const status = bravo.page.locator('#dialog-options .update-status');
         await expect(status.locator('.pending-update')).toHaveText('New version available: 99.0.0');
 
         await status.locator('.button').click();
 
-        await expect.poll(() => opened).toEqual({ address: downloadOfThisCopy });
+        await expect.poll(() => bravo.openedInBrowser).toEqual([downloadOfThisCopy]);
     });
 });
 

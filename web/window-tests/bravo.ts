@@ -13,7 +13,8 @@ import { chooseWebViewSettings, profilePrefix, type WebViewSettings } from './we
 // the webview and the DevTools protocol on a port that the engine chooses, attaches Playwright to the page, and
 // closes the application as a user does. Nothing of the application changes for a test: the two values are read
 // by the WebView2 runtime (webview-settings.ts), and the application passes no browser argument of its own. Its
-// one argument names the update feed of the test, which a server of the test serves (update-feed.ts).
+// one argument names the update feed of the test, which a server of the test serves (update-feed.ts). The page
+// never opens the default browser of the machine: the fixture answers the request in place of the host.
 
 const executable = path.join(__dirname, '..', '..', 'artifacts', 'bin', 'Bravo.Desktop', 'release', 'Bravo.exe');
 const bundle = path.join(path.dirname(executable), 'wwwroot', 'js', 'main.js');
@@ -44,6 +45,8 @@ export class Bravo {
     readonly requests: PageRequest[] = [];
     readonly console: ConsoleEntry[] = [];
     readonly pageErrors: string[] = [];
+    /** The addresses that the page asked the host to open in the default browser. */
+    readonly openedInBrowser: string[] = [];
 
     constructor(readonly page: Page, readonly address: string) {
         page.on('request', request => this.requests.push({ method: request.method(), url: request.url() }));
@@ -63,6 +66,7 @@ export class Bravo {
         this.requests.length = 0;
         this.console.length = 0;
         this.pageErrors.length = 0;
+        this.openedInBrowser.length = 0;
     }
 
     /** Starts Bravo.exe once more, as a user or Power BI Desktop does, and returns the code that it ends with. */
@@ -296,6 +300,11 @@ export const test = base.extend<{ bravo: Bravo, updateFeed: string | null }, { w
             // The address only: no test reads the token of the host
             const address = await page.evaluate(() => (<PageWithHost><unknown>window).bravoHost.address);
             const bravo = new Bravo(page, address);
+
+            await page.route(`${address}/browser/open`, async route => {
+                bravo.openedInBrowser.push((<{ address: string }>route.request().postDataJSON()).address);
+                await route.fulfill({ status: 204, headers: { 'Access-Control-Allow-Origin': pageOrigin } });
+            });
 
             await expect(page.locator('#ctrl-theme'), 'The page did not start').toBeVisible({ timeout: startSeconds * 1000 });
 

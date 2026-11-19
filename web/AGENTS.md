@@ -132,8 +132,8 @@ The tests of the window are in `web/window-tests`, one file `*.spec.ts` for each
   (`options.spec.ts`, through the dialog of `options.ts`), a feature that has no route yet
   (`features.spec.ts`), a second start with the arguments of Power BI Desktop (`activation.spec.ts`), a newer
   release in the update feed and its download (`updates.spec.ts`).
-- A test never opens the browser of the machine: one that clicks a link answers `POST /browser/open` itself,
-  with `page.route`.
+- A test never opens the browser of the machine: the fixture answers `POST /browser/open` with `page.route`, and
+  `bravo.openedInBrowser` keeps the addresses that the page asked for.
 - A test waits for an event or a state of the page, never for a time. Only the test of the start waits, 12
   seconds, to say that nothing else happens: longer than the 10 seconds after which the page asks for the
   list of the local reports. Its first start is over before the test can attach, so the test loads the page
