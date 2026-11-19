@@ -26,9 +26,6 @@ permissions:
 env:
   DOTNET_CLI_TELEMETRY_OPTOUT: 1
   TESTINGPLATFORM_TELEMETRY_OPTOUT: 1
-  # The version of the installer packages that are built and installed, and the one that they are upgraded to.
-  BRAVO_VERSION: 1.1.0
-  BRAVO_NEXT_VERSION: 1.1.1
 
 jobs:
 
@@ -175,11 +172,14 @@ jobs:
           }
           exit $left
 
-  # The four installer packages, and two of the next version for the upgrades that the next job tries. The
-  # program that the packages run is compiled ahead of time with the C++ build tools of the runner.
+  # The four installer packages, and another build of two of them, which the next job installs one over the
+  # other. The program that the packages run is compiled ahead of time with the C++ build tools of the runner.
   build-installer:
     runs-on: windows-latest
     timeout-minutes: 15
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      file-version: ${{ steps.version.outputs.file-version }}
     steps:
       - name: Check out
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -207,34 +207,42 @@ jobs:
         run: npm run build:Release
       - name: Restore the installer
         run: dotnet restore installer/Bravo.Installer.wixproj --locked-mode
-      # The build validates each package against the rules of Windows Installer, and a warning fails it.
-      - name: Build the four packages
-        run: dotnet build installer/Bravo.Installer.wixproj -c Release --no-restore -t:BuildPackages -warnaserror -p:BravoVersion=${{ env.BRAVO_VERSION }}
-      - name: Build the packages of the next version that the tests upgrade to
+      # The version of the build names the packages and is the version of their product: the next job is
+      # told both.
+      - name: Read the version of the build
+        id: version
         shell: pwsh
         run: |
-          foreach ($scope in 'perMachine', 'perUser') {
-            dotnet build installer/Bravo.Installer.wixproj -c Release --no-restore -warnaserror -p:BravoVersion=${{ env.BRAVO_NEXT_VERSION }} -p:BravoScope=$scope -p:BravoSelfContained=false
-            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          }
+          $build = installer/Get-BuildVersion.ps1
+          "version=$($build.Version)" >> $env:GITHUB_OUTPUT
+          "file-version=$($build.FileVersion)" >> $env:GITHUB_OUTPUT
+      # First, because the build of the four packages that follows makes these two again.
+      - name: Make another build of the two packages that the tests install one over the other
+        shell: pwsh
+        run: installer/tests/New-OtherBuild.ps1 -Folder artifacts/installer-other -BuildArguments '--no-restore'
+      # The build validates each package against the rules of Windows Installer, and a warning fails it.
+      - name: Build the four packages
+        run: dotnet build installer/Bravo.Installer.wixproj -c Release --no-restore -t:BuildPackages -warnaserror
       - name: Show the size of the packages and of the program that they run
         shell: pwsh
         run: |
-          Get-ChildItem artifacts/installer/en-US/*.msi, artifacts/installer-stage/${{ env.BRAVO_VERSION }}/setup-aot/Bravo.Setup.exe |
+          Get-ChildItem artifacts/installer/en-US/*.msi, artifacts/installer-stage/setup-aot/Bravo.Setup.exe |
             ForEach-Object { '{0,12:N0} bytes  {1}' -f $_.Length, $_.Name }
       # Kept for the next job, and for a look at the dialogs on a machine that can be thrown away.
       - name: Keep the packages
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: installer-packages
-          path: artifacts/installer/en-US/*.msi
+          path: |
+            artifacts/installer/en-US/*.msi
+            artifacts/installer-other/*.msi
           retention-days: 3
           if-no-files-found: error
           # The packages are compressed already.
           compression-level: 0
 
   # Real installations on the runner, each one silent: a first installation, the upgrade from 1.0.14 and
-  # from this version, the public properties, the removal, per machine and per user.
+  # from another build of this version, the public properties, the removal, per machine and per user.
   test-installer:
     needs: build-installer
     runs-on: windows-latest
@@ -244,16 +252,6 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      # The packages that use the installed runtime need the three runtimes of .NET 10, which the image of
-      # the runner has: nothing is installed for them, and the step says so when one is missing.
-      - name: Check the .NET runtimes of the runner
-        shell: pwsh
-        run: |
-          $runtimes = dotnet --list-runtimes
-          $runtimes
-          foreach ($name in 'Microsoft.NETCore.App', 'Microsoft.AspNetCore.App', 'Microsoft.WindowsDesktop.App') {
-            if (-not ($runtimes -match "^$name 10\.")) { throw "The runner has no $name 10." }
-          }
       - name: Get the packages
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
@@ -268,10 +266,11 @@ jobs:
         shell: pwsh
         run: >
           installer/tests/Test-Packages.ps1
-          -PackagesFolder artifacts/installer-packages
+          -PackagesFolder artifacts/installer-packages/installer/en-US
+          -OtherBuildFolder artifacts/installer-packages/installer-other
           -PreviousFolder artifacts/installer-previous
-          -Version ${{ env.BRAVO_VERSION }}
-          -NextVersion ${{ env.BRAVO_NEXT_VERSION }}
+          -Version ${{ needs.build-installer.outputs.version }}
+          -FileVersion ${{ needs.build-installer.outputs.file-version }}
           -LogFolder artifacts/installer-logs
       # The log of every run of Windows Installer, when a step failed.
       - name: Keep the logs of Windows Installer

@@ -2,20 +2,12 @@
 
   <!--
     One build makes one of the four packages. BravoScope is perMachine or perUser; BravoSelfContained says
-    whether the package carries the .NET runtime. The target BuildPackages makes the four of them.
+    whether the package carries the .NET runtime. The targets at the end of this file are what a build is
+    asked for: they give it its version.
   -->
   <PropertyGroup>
     <BravoScope Condition="'$(BravoScope)' == ''">perMachine</BravoScope>
     <BravoSelfContained Condition="'$(BravoSelfContained)' == ''">true</BravoSelfContained>
-  </PropertyGroup>
-
-  <!--
-    The version of the application and of the product. How a release computes it is backlog B-2: until then a
-    build passes it, and it is 1.1.0 otherwise. Windows Installer compares the first three numbers, which must
-    stay above the ones of 1.0.x for a package to replace it.
-  -->
-  <PropertyGroup>
-    <BravoVersion Condition="'$(BravoVersion)' == ''">1.1.0</BravoVersion>
   </PropertyGroup>
 
   <!--
@@ -27,13 +19,17 @@
     <BravoSetupNativeAot Condition="'$(BravoSetupNativeAot)' == ''">true</BravoSetupNativeAot>
   </PropertyGroup>
 
-  <!-- The file names are the ones of 1.0.x, which an installed 1.0.x builds by itself to ask for its update. -->
+  <!--
+    The file names are the ones of 1.0.x, which an installed 1.0.x builds by itself to ask for its update.
+    BravoVersion is the semantic version of the build, which the targets at the end of this file read.
+  -->
   <PropertyGroup>
     <RuntimeName Condition="'$(BravoSelfContained)' == 'true'">selfcontained</RuntimeName>
     <RuntimeName Condition="'$(BravoSelfContained)' != 'true'">frameworkdependent</RuntimeName>
     <RuntimeSuffix Condition="'$(BravoSelfContained)' != 'true'">-frameworkdependent</RuntimeSuffix>
     <ScopeSuffix Condition="'$(BravoScope)' == 'perUser'">-userinstaller</ScopeSuffix>
-    <OutputName>Bravo.$(BravoVersion).x64$(RuntimeSuffix)$(ScopeSuffix)</OutputName>
+    <ReleaseFileName>Bravo.$(BravoVersion).x64$(RuntimeSuffix)</ReleaseFileName>
+    <OutputName>$(ReleaseFileName)$(ScopeSuffix)</OutputName>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -42,7 +38,13 @@
     <SuppressPdbOutput>true</SuppressPdbOutput>
     <DefineConstants>Scope=$(BravoScope);ProductVersion=$(BravoVersion)</DefineConstants>
     <OutputPath>$(ArtifactsPath)\installer\</OutputPath>
-    <IntermediateOutputPath>$(BaseIntermediateOutputPath)$(Configuration)\$(BravoVersion)-$(RuntimeName)-$(BravoScope)\</IntermediateOutputPath>
+    <IntermediateOutputPath>$(BaseIntermediateOutputPath)$(Configuration)\$(RuntimeName)-$(BravoScope)\</IntermediateOutputPath>
+  </PropertyGroup>
+
+  <!-- Where the packages go, and the archive of the application beside them. -->
+  <PropertyGroup>
+    <PackageOutputDir>$(OutputPath)$(Cultures)\</PackageOutputDir>
+    <ArchivePath>$(PackageOutputDir)$(ReleaseFileName)-portable.zip</ArchivePath>
   </PropertyGroup>
 
   <!--
@@ -63,10 +65,10 @@
     <PackageReference Include="WixToolset.UI.wixext" />
   </ItemGroup>
 
-  <!-- Where the application is laid out as a package installs it, for each version and each of the two runtimes. -->
+  <!-- Where the application is laid out as a package installs it, for each of the two runtimes. -->
   <PropertyGroup>
     <RepositoryRoot>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..'))</RepositoryRoot>
-    <StageRoot>$(ArtifactsPath)\installer-stage\$(BravoVersion)\</StageRoot>
+    <StageRoot>$(ArtifactsPath)\installer-stage\</StageRoot>
     <StageDir>$(StageRoot)$(RuntimeName)\</StageDir>
     <WebBundleDir>$(ArtifactsPath)\web\</WebBundleDir>
   </PropertyGroup>
@@ -77,17 +79,61 @@
     <BindPath Include="$(RepositoryRoot)src\Bravo.Desktop\Assets" BindName="ApplicationAssets" />
   </ItemGroup>
 
+  <!-- A build that was not given its version has no name for its files: it stops before it lays anything out. -->
+  <Target Name="RequireVersion" BeforeTargets="WriteStageInputLists" Condition="'$(BravoVersion)' == '' Or '$(BravoFileVersion)' == ''">
+    <Error Text="Build with one of the targets BuildPackage, BuildPackages, BuildArchives or BuildRelease: they give the build its version." />
+  </Target>
+
   <Import Project="Stage.targets" />
 
-  <!-- The four packages, in artifacts/installer. -->
-  <Target Name="BuildPackages">
+  <!--
+    A package is signed after it is built and validated, before it is copied beside the others. Its cabinets
+    are inside it, so the signature of the package covers them.
+  -->
+  <PropertyGroup Condition="'$(BravoSigning)' != ''">
+    <SignOutput>true</SignOutput>
+  </PropertyGroup>
+  <Target Name="SignMsi">
+    <Exec Command="$(SignCommand) @(SignMsi->'&quot;%(FullPath)&quot;', ' ')" />
+  </Target>
+
+  <!--
+    What a build is asked for. The version is computed in a target, GetBuildVersion, after the names of the
+    files are fixed: each target below reads it, then builds this project again with it.
+
+    - BuildPackage: one package, the one that BravoScope and BravoSelfContained name.
+    - BuildPackages: the four packages.
+    - BuildArchives: the two archives of the application, one for each runtime.
+    - BuildRelease: the six files of a release.
+  -->
+  <Target Name="ReadBuildVersion" DependsOnTargets="GetBuildVersion">
+    <PropertyGroup>
+      <VersionProperties>BravoVersion=$(NuGetPackageVersion);BravoFileVersion=$(BuildVersion)</VersionProperties>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="BuildPackage" DependsOnTargets="ReadBuildVersion">
+    <MSBuild Projects="$(MSBuildProjectFullPath)" Targets="Build" Properties="$(VersionProperties)" />
+  </Target>
+
+  <Target Name="BuildPackages" DependsOnTargets="ReadBuildVersion">
     <ItemGroup>
       <PackageVariant Include="perMachine-selfcontained" Properties="BravoScope=perMachine;BravoSelfContained=true" />
       <PackageVariant Include="perMachine-frameworkdependent" Properties="BravoScope=perMachine;BravoSelfContained=false" />
       <PackageVariant Include="perUser-selfcontained" Properties="BravoScope=perUser;BravoSelfContained=true" />
       <PackageVariant Include="perUser-frameworkdependent" Properties="BravoScope=perUser;BravoSelfContained=false" />
     </ItemGroup>
-    <MSBuild Projects="$(MSBuildProjectFullPath)" Targets="Build" Properties="%(PackageVariant.Properties)" />
+    <MSBuild Projects="$(MSBuildProjectFullPath)" Targets="Build" Properties="%(PackageVariant.Properties);$(VersionProperties)" />
   </Target>
+
+  <Target Name="BuildArchives" DependsOnTargets="ReadBuildVersion">
+    <ItemGroup>
+      <ArchiveVariant Include="selfcontained" Properties="BravoSelfContained=true" />
+      <ArchiveVariant Include="frameworkdependent" Properties="BravoSelfContained=false" />
+    </ItemGroup>
+    <MSBuild Projects="$(MSBuildProjectFullPath)" Targets="ArchiveApplication" Properties="%(ArchiveVariant.Properties);$(VersionProperties)" />
+  </Target>
+
+  <Target Name="BuildRelease" DependsOnTargets="BuildPackages;BuildArchives" />
 
 </Project>

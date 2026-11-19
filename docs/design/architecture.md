@@ -15,7 +15,7 @@ The top-level folders separate content by kind ([ADR 0008](../decisions/0008-rep
 | `installer/` | The installer, outside the product source |
 | `policies/` | The group policy templates, which the installer ships in a subfolder of the installation |
 | `docs/` | This specification, the backlog and the ADRs |
-| `artifacts/` | Build and publish output of every project, the release bundle of the user interface, the installer packages, the results of the tests of the window and the screens of the window, not versioned |
+| `artifacts/` | Build and publish output of every project, the release bundle of the user interface, the files of a release, the results of the tests of the window and the screens of the window, not versioned |
 
 One solution, `Bravo.slnx`, sits at the root with the build files shared by every project. A component with
 its own toolchain gets its own top-level folder; a .NET one goes into `src/` and `tests/`.
@@ -31,14 +31,15 @@ not exist yet: the table names the backlog item that creates them.
 | `src/Bravo.Api/openapi.json` | The OpenAPI document of the API: a test compares it with the routes | Exists |
 | `tests/` | One test project per project of `src/`, at the mirrored path, created with the first test of that project, and the architecture tests | Exists |
 | `web/` | The TypeScript user interface, with its own `package.json` and lockfile | Exists |
-| `installer/` | The WiX project of the installer packages, and the tests that install them ([Installer](installer.md)) | Exists |
+| `installer/` | The WiX project of the installer packages and of the archives of a release, what signs them, and the tests that install them ([Installer](installer.md)) | Exists |
 | `policies/` | The group policy templates: `bravo.admx`, `sqlbi.admx`, `en-US/` | Exists |
 | `docs/` | Specification, backlog, ADRs, and the design of the previous implementation | Exists |
-| `artifacts/` | Build and publish output of every project, the release bundle of the user interface, the installer packages with the folders they are made from, the results of the tests of the window and the screens of the window, ignored by git | Written by the builds, the tests and the command of the screens |
+| `artifacts/` | Build and publish output of every project, the release bundle of the user interface, the installer packages and the archives with the folders they are made from, the results of the tests of the window and the screens of the window, ignored by git | Written by the builds, the tests and the command of the screens |
 | `Bravo.slnx`, `Directory.Build.props`, `Directory.Packages.props` | The solution and the build rules of every .NET project | Exist |
 | `Bravo.Portable.slnf` | The projects of the solution that do not target Windows, which continuous integration builds and tests on Linux | Exists |
 | `Directory.Build.targets` | What is done to every .NET project after its packages: the reference that the WebView2 package adds to its WPF control is removed | Exists |
 | `global.json`, `nuget.config`, `version.json`, `.editorconfig` | The .NET SDK and the mode of `dotnet test`, the package source, the version, the code style | Exist |
+| `.config/dotnet-tools.json` | The .NET tools of the repository, each in one version: AzureSignTool, which signs a release | Exists |
 | `BannedSymbols.txt`, `CodeAnalysis.globalconfig`, `.gitattributes` | The symbols no project may use, the analyzer options, the line endings | Exist |
 
 ## Projects of the host

@@ -12,23 +12,30 @@
     The build never runs npm: the bundle is there after "npm ci" and "npm run build:Release" in web/.
   -->
 
-  <!--
-    A publish for one runtime restores another graph of packages than the one in the lock files, and would
-    write it there. These restores read and write no lock file: the committed ones stay as they are. How a
-    release locks that graph is backlog B-2.
-  -->
   <PropertyGroup>
-    <StageRestoreArguments>-p:RestorePackagesWithLockFile=false -p:RestoreLockedMode=false "-p:NuGetLockFilePath=$(StageRoot)none.lock.json"</StageRestoreArguments>
-    <StagePublishArguments>-c Release -r win-x64 -p:Version=$(BravoVersion) -warnaserror $(StageRestoreArguments)</StagePublishArguments>
+    <StagePublishArguments>-c Release -r win-x64 -warnaserror</StagePublishArguments>
+    <StagePublishArguments Condition="'$(PublicRelease)' != ''">$(StagePublishArguments) -p:PublicRelease=$(PublicRelease)</StagePublishArguments>
   </PropertyGroup>
 
   <!--
+    The application is restored once, as its lock file says, and published without another restore:
+    Bravo.Desktop declares the runtime, so the lock file holds the packages of these publishes.
+
     What the publish leaves out of the folder, because nothing reads it at run time: the documentation files
     of the assemblies, the texts of System.CommandLine in other languages, and the second copy of the loader
     of WebView2, which the process finds beside the executable. Each runtime is built in folders of its own.
   -->
   <PropertyGroup>
-    <ApplicationPublishArguments>--self-contained $(BravoSelfContained) -p:ArtifactsPivots=package_$(RuntimeName) -p:BravoReleaseBuild=true -p:PublishDocumentationFiles=false -p:SatelliteResourceLanguages=en -p:WebView2NeverCopyLoaderDllToOutputDirectory=true</ApplicationPublishArguments>
+    <ApplicationPublishArguments>--no-restore --self-contained $(BravoSelfContained) -p:ArtifactsPivots=package_$(RuntimeName) -p:BravoReleaseBuild=true -p:PublishDocumentationFiles=false -p:SatelliteResourceLanguages=en -p:WebView2NeverCopyLoaderDllToOutputDirectory=true</ApplicationPublishArguments>
+  </PropertyGroup>
+
+  <!--
+    The program is compiled ahead of time by packages that the .NET SDK adds in its own version, which a lock
+    file would hold for one patch of the SDK alone: its restore reads and writes no lock file. The program
+    has no other package.
+  -->
+  <PropertyGroup>
+    <SetupRestoreArguments>-p:RestorePackagesWithLockFile=false -p:RestoreLockedMode=false "-p:NuGetLockFilePath=$(StageRoot)none.lock.json"</SetupRestoreArguments>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(BravoSetupNativeAot)' == 'true'">
@@ -58,10 +65,22 @@
     <CabinetCachePath>$(StageRoot)$(RuntimeName)-cabinets\</CabinetCachePath>
   </PropertyGroup>
 
+  <!--
+    A release signs the files of the host before a package holds them, and each package after it is built:
+    BravoSigning says with which certificate, and Sign-Files.ps1 what each value needs. Without it nothing is
+    signed.
+  -->
+  <PropertyGroup>
+    <SignCommand>pwsh -NoProfile -NonInteractive -File &quot;$(MSBuildThisFileDirectory)Sign-Files.ps1&quot; -Signing $(BravoSigning)</SignCommand>
+  </PropertyGroup>
+  <ItemGroup>
+    <ApplicationFileToSign Include="$(StageDir)Bravo.exe;$(StageDir)Bravo.dll;$(StageDir)Bravo.Api.dll;$(StageDir)Bravo.Core.dll;$(StageDir)Bravo.Platform.Windows.dll" />
+  </ItemGroup>
+
   <!-- A change of any of these publishes the program, or lays the application out, again. -->
   <ItemGroup>
     <BuildRuleFile Include="$(RepositoryRoot)Directory.Build.props;$(RepositoryRoot)Directory.Build.targets;$(RepositoryRoot)Directory.Packages.props" />
-    <BuildRuleFile Include="$(MSBuildThisFileFullPath);$(MSBuildProjectFullPath)" />
+    <BuildRuleFile Include="$(MSBuildThisFileFullPath);$(MSBuildProjectFullPath);$(MSBuildThisFileDirectory)Sign-Files.ps1" />
     <SetupInput Include="$(RepositoryRoot)src\Bravo.Setup\**" />
     <SetupInput Include="@(BuildRuleFile)" />
     <WebStaticFile Include="$(RepositoryRoot)web\wwwroot\**" Exclude="$(RepositoryRoot)web\wwwroot\js\**;$(RepositoryRoot)web\wwwroot\css\**" />
@@ -71,18 +90,23 @@
   </ItemGroup>
 
   <!--
-    A file that was deleted is newer than nothing. The names of the inputs are kept in a file, written again
-    only when they change, which is an input as well: a file that left, or one that came with an old date,
-    publishes the program, or lays the application out, again.
+    A file that was deleted is newer than nothing, and the version of a build changes with every commit. The
+    names of the inputs are kept in a file with the version and the signature that were asked for, written
+    again only when it changes, which is an input as well: a file that left, one that came with an old date,
+    another commit or another signature publishes the program, or lays the application out, again.
   -->
+  <PropertyGroup>
+    <StageRequest>version=$(BravoVersion);fileVersion=$(BravoFileVersion);publicRelease=$(PublicRelease);signing=$(BravoSigning)</StageRequest>
+  </PropertyGroup>
   <Target Name="WriteStageInputLists" BeforeTargets="PublishSetupProgram;StageApplication">
-    <WriteLinesToFile File="$(SetupInputList)" Lines="@(SetupInput)" Overwrite="true" WriteOnlyWhenDifferent="true" />
-    <WriteLinesToFile File="$(StageInputList)" Lines="@(StageInput)" Overwrite="true" WriteOnlyWhenDifferent="true" />
+    <WriteLinesToFile File="$(SetupInputList)" Lines="$(StageRequest);@(SetupInput)" Overwrite="true" WriteOnlyWhenDifferent="true" />
+    <WriteLinesToFile File="$(StageInputList)" Lines="$(StageRequest);@(StageInput)" Overwrite="true" WriteOnlyWhenDifferent="true" />
   </Target>
 
   <Target Name="PublishSetupProgram" BeforeTargets="BeforeBuild" Inputs="@(SetupInput);$(SetupInputList)" Outputs="$(SetupStamp)">
     <RemoveDir Directories="$(SetupPublishDir)" />
-    <Exec Command="&quot;$(DotNetHost)&quot; publish &quot;$(RepositoryRoot)src\Bravo.Setup\Bravo.Setup.csproj&quot; $(StagePublishArguments) $(SetupPublishArguments) -o &quot;$(SetupPublishDir.TrimEnd('\'))&quot;" />
+    <Exec Command="&quot;$(DotNetHost)&quot; publish &quot;$(RepositoryRoot)src\Bravo.Setup\Bravo.Setup.csproj&quot; $(StagePublishArguments) $(SetupRestoreArguments) $(SetupPublishArguments) -o &quot;$(SetupPublishDir.TrimEnd('\'))&quot;" />
+    <Exec Condition="'$(BravoSigning)' != ''" Command="$(SignCommand) &quot;$(SetupPublishDir)Bravo.Setup.exe&quot;" />
     <Touch Files="$(SetupStamp)" AlwaysCreate="true" />
   </Target>
 
@@ -90,13 +114,22 @@
     <Error Condition="!Exists('$(WebBundleDir)js\main.js') Or !Exists('$(WebBundleDir)css\main.css')"
            Text="The release bundle of the user interface is not in $(WebBundleDir). In web/, run &quot;npm ci&quot; and &quot;npm run build:Release&quot;." />
 
-    <RemoveDir Directories="$(StageDir)" />
+    <RemoveDir Directories="$(StageDir);$(CabinetCachePath)" />
+    <Exec Command="&quot;$(DotNetHost)&quot; restore &quot;$(RepositoryRoot)src\Bravo.Desktop\Bravo.Desktop.csproj&quot;" />
     <Exec Command="&quot;$(DotNetHost)&quot; publish &quot;$(RepositoryRoot)src\Bravo.Desktop\Bravo.Desktop.csproj&quot; $(StagePublishArguments) $(ApplicationPublishArguments) -o &quot;$(StageDir.TrimEnd('\'))&quot;" />
 
     <Copy SourceFiles="@(WebStaticFile)" DestinationFiles="@(WebStaticFile->'$(StageDir)wwwroot\%(RecursiveDir)%(Filename)%(Extension)')" />
     <Copy SourceFiles="@(WebBundleFile)" DestinationFiles="@(WebBundleFile->'$(StageDir)wwwroot\%(RecursiveDir)%(Filename)%(Extension)')" />
 
+    <Exec Condition="'$(BravoSigning)' != ''" Command="$(SignCommand) @(ApplicationFileToSign->'&quot;%(Identity)&quot;', ' ')" />
+
     <Touch Files="$(StageStamp)" AlwaysCreate="true" />
+  </Target>
+
+  <!-- The folder of the application as an archive: what an installed 1.0.x that was unpacked from one asks for. -->
+  <Target Name="ArchiveApplication" DependsOnTargets="StageApplication" Inputs="$(StageStamp)" Outputs="$(ArchivePath)">
+    <MakeDir Directories="$(PackageOutputDir)" />
+    <ZipDirectory SourceDirectory="$(StageDir)" DestinationFile="$(ArchivePath)" Overwrite="true" />
   </Target>
 
 </Project>

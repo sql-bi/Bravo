@@ -10,16 +10,26 @@
     Installer is kept in the log folder.
 
 .PARAMETER PackagesFolder
-    The folder with the four packages of the version under test and the package of the next version.
+    The folder with the four packages under test.
+
+.PARAMETER OtherBuildFolder
+    The folder with another build of the two packages that use the installed runtime, per machine and per
+    user: the same version and the same files, another product code. One is installed over the other, as the
+    release of a version is installed over a preview of it.
 
 .PARAMETER PreviousFolder
     The folder with the packages of 1.0.14 that use the installed runtime, per machine and per user.
 
 .PARAMETER Version
-    The version of the packages under test.
+    The semantic version of the packages under test, which names their files and is in the title of the
+    window, such as 1.1.0 or 1.1.0-beta.1.
 
-.PARAMETER NextVersion
-    The version of the package that upgrades them.
+.PARAMETER FileVersion
+    The version of the files of the application, which is the version of the product, such as 1.1.0.185.
+
+.PARAMETER SignerThumbprint
+    The thumbprint of the certificate that signed the packages and the files of the host. When it is given,
+    the test checks those signatures.
 
 .PARAMETER LogFolder
     Where the logs of Windows Installer go.
@@ -27,9 +37,11 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)] [string] $PackagesFolder,
+    [Parameter(Mandatory)] [string] $OtherBuildFolder,
     [Parameter(Mandatory)] [string] $PreviousFolder,
     [Parameter(Mandatory)] [string] $Version,
-    [Parameter(Mandatory)] [string] $NextVersion,
+    [Parameter(Mandatory)] [string] $FileVersion,
+    [string] $SignerThumbprint = '',
     [Parameter(Mandatory)] [string] $LogFolder
 )
 
@@ -38,6 +50,13 @@ $ErrorActionPreference = 'Stop'
 
 if ($env:GITHUB_ACTIONS -ne 'true') {
     throw 'This script installs and removes Bravo. It runs on a runner of GitHub Actions only.'
+}
+
+# The packages that use the installed runtime need the three runtimes of .NET 10, which the image of the
+# runner has: nothing is installed for them.
+$installedRuntimes = dotnet --list-runtimes
+foreach ($runtime in 'Microsoft.NETCore.App', 'Microsoft.AspNetCore.App', 'Microsoft.WindowsDesktop.App') {
+    if (-not ($installedRuntimes -match "^$runtime 10\.")) { throw "The runner has no $runtime 10." }
 }
 
 $UpgradeCode = '{888BDB48-B16A-4D9A-8FE6-0206897B1162}'
@@ -72,6 +91,7 @@ New-Item -ItemType Directory -Force $LogFolder | Out-Null
 
 # Windows Installer is given full paths.
 $PackagesFolder = (Resolve-Path $PackagesFolder).Path
+$OtherBuildFolder = (Resolve-Path $OtherBuildFolder).Path
 $PreviousFolder = (Resolve-Path $PreviousFolder).Path
 $LogFolder = (Resolve-Path $LogFolder).Path
 $script:Checks = 0
@@ -102,11 +122,20 @@ function Write-Step([string] $Text) {
 
 # --- Windows Installer --------------------------------------------------------------------------------------
 
-function Get-PackagePath([string] $Scope, [bool] $SelfContained, [string] $PackageVersion = $Version) {
+function Get-PackagePath([string] $Scope, [bool] $SelfContained, [string] $Folder = $PackagesFolder) {
     $runtime = if ($SelfContained) { '' } else { '-frameworkdependent' }
-    $path = Join-Path $PackagesFolder "Bravo.$PackageVersion.x64$runtime$($Scopes[$Scope].Suffix).msi"
+    $path = Join-Path $Folder "Bravo.$Version.x64$runtime$($Scopes[$Scope].Suffix).msi"
     if (-not (Test-Path $path)) { throw "The package is missing: $path" }
     return $path
+}
+
+# The file carries the signature of the certificate that the build signed with, and is as it was signed. A
+# certificate that the machine does not trust, as the one of a run that publishes nothing, is not an error.
+function Assert-SignedByTheBuild([string] $Path, [string] $What) {
+    $signature = Get-AuthenticodeSignature -LiteralPath $Path
+    $signer = if ($null -ne $signature.SignerCertificate) { $signature.SignerCertificate.Thumbprint } else { '' }
+    Assert-Equal $SignerThumbprint $signer "the certificate that signed $What"
+    Assert-True ($signature.Status -notin 'NotSigned', 'HashMismatch') "$What is as it was signed ($($signature.Status))"
 }
 
 function Get-PreviousPackagePath([string] $Scope) {
@@ -251,12 +280,12 @@ function Assert-NoProduct {
     Assert-Equal 0 $products.Count 'the number of installed products'
 }
 
-function Assert-SingleProduct([string] $Scope, [string] $ExpectedVersion) {
+function Assert-SingleProduct([string] $Scope) {
     $products = Get-Products
     Assert-Equal 1 $products.Count 'the number of installed products'
     Assert-Equal $Scopes[$Scope].ProductName $products[0].Name 'the name of the product'
     Assert-Equal $Scopes[$Scope].ProductName $products[0].InstalledName 'the name in Installed apps'
-    Assert-Equal "$ExpectedVersion.0" $products[0].Version 'the version of the product, the one in Installed apps'
+    Assert-Equal $FileVersion $products[0].Version 'the version of the product, the one in Installed apps'
     Assert-Equal $Scopes[$Scope].Assignment $products[0].Assignment 'the installation context (1 is per machine)'
     return $products[0]
 }
@@ -299,13 +328,18 @@ function Read-ExternalTool {
 }
 
 # Everything that a package of this version installs, with the choices given.
-function Assert-Installed([string] $Scope, [string] $ExpectedVersion, [string] $InstallFolder, $ExpectedChoices, [bool] $SelfContained) {
-    $product = Assert-SingleProduct $Scope $ExpectedVersion
+function Assert-Installed([string] $Scope, [string] $InstallFolder, $ExpectedChoices, [bool] $SelfContained) {
+    $product = Assert-SingleProduct $Scope
     $executable = Join-Path $InstallFolder 'Bravo.exe'
 
-    Assert-Equal "$ExpectedVersion.0" (Get-Item $executable).VersionInfo.FileVersion 'the version of the file of Bravo.exe'
+    Assert-Equal $FileVersion (Get-Item $executable).VersionInfo.FileVersion 'the version of the file of Bravo.exe'
     foreach ($file in 'Bravo.dll', 'WebView2Loader.dll', 'wwwroot\index.html', 'wwwroot\js\main.js', 'wwwroot\css\main.css') {
         Assert-True (Test-Path (Join-Path $InstallFolder $file)) "$file is installed"
+    }
+    if ($SignerThumbprint -ne '') {
+        foreach ($file in 'Bravo.exe', 'Bravo.dll', 'Bravo.Api.dll', 'Bravo.Core.dll', 'Bravo.Platform.Windows.dll') {
+            Assert-SignedByTheBuild (Join-Path $InstallFolder $file) "the installed $file"
+        }
     }
     foreach ($entry in 'Bravo.Setup.exe', 'Bravo.xml', 'runtimes', 'it') {
         Assert-True (-not (Test-Path (Join-Path $InstallFolder $entry))) "$entry is not installed"
@@ -396,10 +430,10 @@ function Wait-WebViewEnd {
 }
 
 # Starts the installed application, checks which build and which runtime it is, and closes its window.
-function Assert-ApplicationRuns([string] $InstallFolder, [string] $ExpectedVersion, [bool] $SelfContained) {
+function Assert-ApplicationRuns([string] $InstallFolder, [bool] $SelfContained) {
     $process = Start-Application $InstallFolder
     try {
-        Assert-Equal "Bravo for Power BI - v$ExpectedVersion" $process.MainWindowTitle 'the title of the window, the one of a release build'
+        Assert-Equal "Bravo for Power BI - v$Version" $process.MainWindowTitle 'the title of the window, the one of a release build'
         $runtime = ($process.Modules | Where-Object { $_.ModuleName -eq 'coreclr.dll' }).FileName
         $carried = $runtime.StartsWith($InstallFolder, [StringComparison]::OrdinalIgnoreCase)
         Assert-Equal $SelfContained $carried "the .NET runtime is the one of the package ($runtime)"
@@ -436,16 +470,18 @@ function Test-InstallUpgradeRemove([string] $Scope) {
     Remove-UserData
     Assert-NoProduct
     Assert-Equal 0 (Install-Package (Get-PackagePath $Scope $false) "$Scope-install") 'the exit code of the installation'
-    Assert-Installed $Scope $Version $folder $AllOn $false | Out-Null
+    $first = Assert-Installed $Scope $folder $AllOn $false
 
     Write-Step "$Scope`: the installed application starts and ends"
-    Assert-ApplicationRuns $folder $Version $false
+    Assert-ApplicationRuns $folder $false
 
-    Write-Step "$Scope`: an upgrade while the application runs"
+    # The other build has the version of the installed one: Windows Installer compares three numbers, and
+    # the package replaces a product of its own version, as a release replaces a preview of it.
+    Write-Step "$Scope`: another build of this version is installed while the application runs"
     Write-UserData
     $running = Start-Application $folder
     try {
-        $exitCode = Install-Package (Get-PackagePath $Scope $false $NextVersion) "$Scope-upgrade-while-running"
+        $exitCode = Install-Package (Get-PackagePath $Scope $false $OtherBuildFolder) "$Scope-upgrade-while-running"
         Assert-Equal 0 $exitCode 'the exit code of the upgrade: no restart of Windows is asked for'
     }
     catch {
@@ -454,7 +490,8 @@ function Test-InstallUpgradeRemove([string] $Scope) {
     }
     Assert-ApplicationEnds $running 'the running application was closed'
     Assert-True (@(Get-Process Bravo -ErrorAction SilentlyContinue).Count -eq 0) 'the application is not started again'
-    $product = Assert-Installed $Scope $NextVersion $folder $AllOn $false
+    $product = Assert-Installed $Scope $folder $AllOn $false
+    Assert-True ($product.Code -ne $first.Code) 'the other build replaced the first one: it is another product'
     Assert-True (Test-UserData) 'the data of the user is as it was'
 
     Write-Step "$Scope`: the removal"
@@ -482,7 +519,7 @@ function Test-PublicProperties {
 
     Write-Step 'perMachine: the same public properties, given to this version'
     Assert-Equal 0 (Install-Package (Get-PackagePath 'perMachine' $false) 'properties-install' $properties) 'the exit code of the installation'
-    $product = Assert-Installed 'perMachine' $Version $folder $expected $false
+    $product = Assert-Installed 'perMachine' $folder $expected $false
     Assert-Equal $previousChoices (Format-Choices (Get-Choices 'perMachine')) 'the choices, as 1.0.14 wrote them'
     Assert-Equal $previousFolder (Get-RegistryValue 'perMachine' 'installFolder') 'the folder, as 1.0.14 wrote it'
     Assert-Equal $previousDesktop ($null -ne (Get-ShortcutTarget $Scopes.perMachine.Desktop 'perMachine')) 'a desktop shortcut, as with 1.0.14'
@@ -507,13 +544,13 @@ function Test-UpgradeFromPrevious([string] $Scope, [string] $Properties, $Expect
 
     Write-Step "$Scope`: this version is installed over 1.0.14"
     Assert-Equal 0 (Install-Package (Get-PackagePath $Scope $false) "$Scope-upgrade-from-1.0.14") 'the exit code of the upgrade'
-    $product = Assert-Installed $Scope $Version $folder $ExpectedChoices $false
+    $product = Assert-Installed $Scope $folder $ExpectedChoices $false
     Assert-True ($product.Code -ne $previous.Code) '1.0.14 is no longer installed'
     Assert-Equal $previousChoices (Format-Choices (Get-Choices $Scope)) 'the choices, as 1.0.14 wrote them'
     Assert-True (Test-UserData) 'the data of the user is as it was'
 
     Write-Step "$Scope`: the upgraded application starts and ends"
-    Assert-ApplicationRuns $folder $Version $false
+    Assert-ApplicationRuns $folder$false
     Assert-True (Test-UserData) 'the data of the user is as it was'
 
     Assert-Equal 0 (Uninstall-Product $product.Code "$Scope-remove-after-upgrade") 'the exit code of the removal'
@@ -560,8 +597,8 @@ function Test-SelfContained([string] $Scope) {
 
     Write-Step "$Scope`: the package that carries the .NET runtime"
     Assert-Equal 0 (Install-Package (Get-PackagePath $Scope $true) "$Scope-selfcontained-install") 'the exit code of the installation'
-    $product = Assert-Installed $Scope $Version $folder $AllOn $true
-    Assert-ApplicationRuns $folder $Version $true
+    $product = Assert-Installed $Scope $folder $AllOn $true
+    Assert-ApplicationRuns $folder$true
     Assert-Equal 0 (Uninstall-Product $product.Code "$Scope-selfcontained-remove") 'the exit code of the removal'
     Assert-Removed $Scope $folder
     Remove-UserData
@@ -576,11 +613,11 @@ function Test-RemovalThatFails([string] $Scope) {
     Remove-UserData
     $package = New-PackageWithFailingRemoval (Get-PackagePath $Scope $false)
     Assert-Equal 0 (Install-Package $package "$Scope-install-for-failing-removal") 'the exit code of the installation'
-    $product = Assert-Installed $Scope $Version $folder $AllOn $false
+    $product = Assert-Installed $Scope $folder $AllOn $false
     Write-UserData
     $exitCode = Uninstall-Product $product.Code "$Scope-remove-and-fail" $FailRemoval $FailingAction
     Assert-Equal 1603 $exitCode 'the exit code of the removal that fails'
-    Assert-Installed $Scope $Version $folder $AllOn $false | Out-Null
+    Assert-Installed $Scope $folder $AllOn $false | Out-Null
     Assert-True (Test-UserData) 'the data of the user is as it was'
 
     Write-Step "$Scope`: a removal with rollback disabled"
@@ -593,6 +630,18 @@ function Test-RemovalThatFails([string] $Scope) {
 # --- Run ----------------------------------------------------------------------------------------------------
 
 $watch = [Diagnostics.Stopwatch]::StartNew()
+
+if ($SignerThumbprint -ne '') {
+    Write-Step 'The packages carry the signature of the build'
+    foreach ($scope in 'perMachine', 'perUser') {
+        foreach ($selfContained in $true, $false) {
+            $package = Get-PackagePath $scope $selfContained
+            Assert-SignedByTheBuild $package "the package $(Split-Path $package -Leaf)"
+        }
+        $other = Get-PackagePath $scope $false $OtherBuildFolder
+        Assert-SignedByTheBuild $other "the other build of $(Split-Path $other -Leaf)"
+    }
+}
 
 Test-InstallUpgradeRemove 'perMachine'
 Test-InstallUpgradeRemove 'perUser'

@@ -39,7 +39,7 @@ stops after 15 minutes.
 | `build-and-test-linux` | The same on Linux, on `Bravo.Portable.slnf`: the projects that do not target Windows |
 | `build-web` | In `web/`: `npm ci`, then `npm test` and `npm run build:Release`, each of which generates the client of the host API first; the build checks the types of the sources and of the unit tests before webpack runs |
 | `test-window` | On Windows: `npm ci` and `npm run build:UI` in `web/`, the restore in locked mode and the build of `Bravo.Desktop`, then `npm run test:window`; when a test fails, its report; at the end, whatever happened, a step that fails if a policy of the webview is left |
-| `build-installer` | On Windows: `npm ci` and `npm run build:Release` in `web/`, the restore of the installer in locked mode, the four packages, and the two that use the installed runtime once more as the next version; the packages are kept as the artifact `installer-packages` |
+| `build-installer` | On Windows: `npm ci` and `npm run build:Release` in `web/`, the restore of the installer in locked mode, another build of the two packages that use the installed runtime, then the four packages; all six are kept as the artifact `installer-packages` |
 | `test-installer` | On Windows, after `build-installer`: its packages and the ones of 1.0.14 from the public release, then `installer/tests/Test-Packages.ps1`; when a step fails, the logs of Windows Installer as the artifact `installer-logs` |
 | `audit` | A restore of the solution and one of the installer that fail on a NuGet package with a known vulnerability, then `npm audit` on the packages that ship with the user interface, which fails on an advisory, and on all of them, which reports |
 
@@ -69,13 +69,16 @@ What a run checks beyond the commands of the table above:
 - `build-installer` compiles `Bravo.Setup.exe` ahead of time with the C++ build tools of the runner image,
   and its build validates the packages against the rules of Windows Installer. The artifact
   `installer-packages` is kept for 3 days: the packages of a run, to look at their dialogs on a machine that
-  can be thrown away. They are not signed (backlog B-2).
+  can be thrown away. They are not signed: the workflow of a release signs
+  ([Release](release.md)).
+- The packages have the version of the build, which `build-installer` reads and tells `test-installer`: the
+  semantic version, which on a work branch ends with the commit, and the file version. No workflow names a
+  version.
 - `test-installer` installs for real, on the runner alone: every run of Windows Installer is silent, and its
   log is in `artifacts/installer-logs`, kept for 3 days as `installer-logs` when a step failed. The test
   prints each check, and what it observes of 1.0.14: its removal, and a package of the other context. The
-  packages that use the installed runtime run on the .NET 10 runtimes of the runner image: a step fails,
-  and names the runtime, when the image has none. `ci.yml` names the two versions once, as `BRAVO_VERSION`
-  and `BRAVO_NEXT_VERSION`.
+  packages that use the installed runtime run on the .NET 10 runtimes of the runner image: the test stops
+  at its start, and names the runtime, when the image has none.
 
 `build-and-test` is the status check that `main` requires: do not rename the job and do not give it a matrix.
 Every action is pinned to the commit of a release, with the version in a comment on the same line.

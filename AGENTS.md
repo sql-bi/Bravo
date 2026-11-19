@@ -110,9 +110,10 @@ as a filter that matches nothing, fails with exit code 8.
 | Task | Command |
 | --- | --- |
 | Build the four packages into `artifacts/installer/en-US` | `dotnet build installer/Bravo.Installer.wixproj -c Release -t:BuildPackages` |
-| Build one package | `dotnet build installer/Bravo.Installer.wixproj -c Release -p:BravoScope=perUser -p:BravoSelfContained=false` |
-| Build the packages of another version | add `-p:BravoVersion=1.1.1` |
+| Build one package | `dotnet build installer/Bravo.Installer.wixproj -c Release -t:BuildPackage -p:BravoScope=perUser -p:BravoSelfContained=false` |
+| Build the six files of a release, not signed | `dotnet build installer/Bravo.Installer.wixproj -c Release -t:BuildRelease` |
 | Build on a machine without the C++ build tools | add `-p:BravoSetupNativeAot=false` |
+| Read the version of the build | `pwsh installer/Get-BuildVersion.ps1` |
 
 ### Continuous integration
 

@@ -21,6 +21,8 @@ A rule that a tool can check fails the build or a test, and no rule has an allow
 A package with a known vulnerability is a warning and not an error, so that an advisory published later does
 not break the build of an unchanged commit; it is an error only in the `audit` job of continuous integration.
 No project sets the C# version: it follows the target framework. Each project sets its own target framework.
+`Bravo.Desktop` also declares the runtime that it is published for, `win-x64`, so that its lock file holds
+the packages of the application that a release ships ([Installer](installer.md)).
 
 webpack bundles the user interface. The stylesheet is what Less writes, read by the CSS support of webpack
 and not minified: the minimizer of webpack drops the space between a color and an image, and the engine then

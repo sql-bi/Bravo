@@ -8,6 +8,14 @@
     <ApplicationIcon>Assets\bravo.ico</ApplicationIcon>
   </PropertyGroup>
 
+  <!--
+    The runtime that the installer packages are published for. Declared, it is in the lock file: the build of
+    the packages restores the application in locked mode, and publishes it without another restore.
+  -->
+  <PropertyGroup>
+    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
+  </PropertyGroup>
+
   <!-- The icon of the executable is also the icon of the main window, which reads it from the assembly. -->
   <ItemGroup>
     <EmbeddedResource Include="Assets\bravo.ico" LogicalName="Bravo.ico" />
