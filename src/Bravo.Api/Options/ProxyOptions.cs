@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Text.RegularExpressions;
 using Bravo.Core.Settings;
 
 namespace Bravo.Api.Options;
@@ -52,47 +50,20 @@ public sealed record ProxyOptions : IValidatableObject
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
         var address = NullIfBlank(Address);
-        if (address is not null && !IsServerAddress(address))
+        if (address is not null && !ProxySettings.IsServerAddress(address))
         {
             yield return new ValidationResult("The address is not the address of a server.", [nameof(Address)]);
         }
 
-        var patterns = BypassList?.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        foreach (var pattern in patterns ?? [])
+        foreach (var pattern in ProxySettings.FindInvalidBypassPatterns(BypassList))
         {
-            if (!IsRegularExpression(pattern))
-            {
-                var message = $"'{pattern}' is not a regular expression.";
-                yield return new ValidationResult(message, [nameof(BypassList)]);
-            }
+            var message = $"'{pattern}' is not a regular expression.";
+            yield return new ValidationResult(message, [nameof(BypassList)]);
         }
     }
 
     private static string? NullIfBlank(string? value)
     {
         return string.IsNullOrWhiteSpace(value) ? null : value;
-    }
-
-    // An address without a scheme is one of an HTTP proxy, as the system settings write it.
-    private static bool IsServerAddress(string address)
-    {
-        var absolute = address.Contains(Uri.SchemeDelimiter, StringComparison.Ordinal)
-            ? address
-            : $"{Uri.UriSchemeHttp}{Uri.SchemeDelimiter}{address}";
-
-        return Uri.TryCreate(absolute, UriKind.Absolute, out _);
-    }
-
-    private static bool IsRegularExpression(string pattern)
-    {
-        try
-        {
-            _ = new Regex(pattern, RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
-            return true;
-        }
-        catch (ArgumentException)
-        {
-            return false;
-        }
     }
 }
