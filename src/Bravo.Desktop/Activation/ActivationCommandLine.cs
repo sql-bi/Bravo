@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.CommandLine;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using Bravo.Core.Activation;
@@ -105,8 +106,7 @@ internal static class ActivationCommandLine
         }
 
         var value = result.GetValue(option);
-        var isOrigin = Uri.TryCreate(value, UriKind.Absolute, out var uri)
-            && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps)
+        var isOrigin = IsWebAddress(value, out var uri)
             && string.Equals(uri.GetLeftPart(UriPartial.Authority), value, StringComparison.OrdinalIgnoreCase);
         if (!isOrigin)
         {
@@ -125,15 +125,19 @@ internal static class ActivationCommandLine
         }
 
         var value = result.GetValue(option);
-        var isAddress = Uri.TryCreate(value, UriKind.Absolute, out var uri)
-            && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
-        if (!isAddress)
+        if (!IsWebAddress(value, out var address))
         {
             errors.Add($"The value of '{option.Name}' is not an address, such as http://127.0.0.1:8099/currentversion.json: '{value}'.");
             return null;
         }
 
-        return uri;
+        return address;
+    }
+
+    private static bool IsWebAddress(string? value, [NotNullWhen(true)] out Uri? address)
+    {
+        return Uri.TryCreate(value, UriKind.Absolute, out address)
+            && (address.Scheme == Uri.UriSchemeHttp || address.Scheme == Uri.UriSchemeHttps);
     }
 
     private static string? ReadPath(ParseResult result, Option<string> option, List<string> errors)
