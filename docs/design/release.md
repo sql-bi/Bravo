@@ -115,9 +115,9 @@ itself on a push to a work branch that changes what a release is made of, and by
 | Draft release | Created | Not created: `publish` does not run |
 
 Such a run is never a public release, on any branch: the names of its files have the commit. It proves the
-build of the six files, the order of the signatures, the installation of signed packages, of
-one over another build of its version and over 1.0.14, the list of downloads and the update feed. It does not prove the sign-in to Azure, Key Vault and AzureSignTool,
-the trust of the signature, or the creation of the draft.
+build of the six files, the order of the signatures, the installation of signed packages, of one over another
+build of its version and over 1.0.14, the list of downloads and the update feed. It does not prove the sign-in
+to Azure, Key Vault and AzureSignTool, the trust of the signature, or the creation of the draft.
 
 ## In the code
 
