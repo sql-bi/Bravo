@@ -62,7 +62,7 @@ class MachinePolicies implements WebViewSettings {
             throw new Error(`The policy ${argumentsKey} already has a value ${valueName}: the tests do not replace it.`);
 
         this.given = true;
-        await writePolicy(browserArguments);
+        await writePolicy();
         return {};
     }
 
@@ -70,8 +70,7 @@ class MachinePolicies implements WebViewSettings {
         if (!this.given) return;
 
         // give found no value: whatever has its data now was written by it
-        if (await readPolicy() === browserArguments)
-            await deletePolicy();
+        await deleteWrittenPolicy();
 
         this.given = false;
     }
@@ -95,8 +94,7 @@ export async function chooseWebViewSettings(): Promise<WebViewSettings> {
 export async function removeLeftPolicies() {
     if (!onGitHubActions() || !await isElevated()) return;
 
-    if (await readPolicy() === browserArguments)
-        await deletePolicy();
+    await deleteWrittenPolicy();
 }
 
 function onGitHubActions() {
@@ -122,10 +120,12 @@ async function readPolicy(): Promise<string | undefined> {
     return /^\s+Bravo\.exe\s+REG_\w+\s+(.*?)\s*$/im.exec(stdout)?.[1] ?? '';
 }
 
-async function writePolicy(data: string) {
-    await execFileAsync(reg, ['add', argumentsKey, '/v', valueName, '/t', 'REG_SZ', '/d', data, '/f']);
+async function writePolicy() {
+    await execFileAsync(reg, ['add', argumentsKey, '/v', valueName, '/t', 'REG_SZ', '/d', browserArguments, '/f']);
 }
 
-async function deletePolicy() {
-    await execFileAsync(reg, ['delete', argumentsKey, '/v', valueName, '/f']);
+/** Deletes the value of Bravo.exe when its data are the ones that the tests write. */
+async function deleteWrittenPolicy() {
+    if (await readPolicy() === browserArguments)
+        await execFileAsync(reg, ['delete', argumentsKey, '/v', valueName, '/f']);
 }
