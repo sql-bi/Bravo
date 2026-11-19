@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text.Json;
+using Bravo.Core.Browser;
 using Bravo.Core.Errors;
 using Bravo.Core.Updates;
 
@@ -7,7 +8,8 @@ namespace Bravo.Platform.Windows.Updates;
 
 /// <summary>
 /// The update feed as installed copies of every version read it: a JSON object whose members <c>version</c>,
-/// <c>download</c> and <c>changelog</c> are text. Other members are ignored.
+/// <c>download</c> and <c>changelog</c> are text. Other members are ignored. The two addresses open in the
+/// browser, so each one is a page of a site that the application trusts.
 /// </summary>
 internal static class ReleaseFeedDocument
 {
@@ -70,13 +72,8 @@ internal static class ReleaseFeedDocument
 
     private static Uri? ReadAddress(string? text)
     {
-        if (!Uri.TryCreate(text, UriKind.Absolute, out var address))
-        {
-            return null;
-        }
+        var isTrusted = Uri.TryCreate(text, UriKind.Absolute, out var address) && TrustedSites.Contains(address);
 
-        var isWebAddress = address.Scheme == Uri.UriSchemeHttps || address.Scheme == Uri.UriSchemeHttp;
-
-        return isWebAddress ? address : null;
+        return isTrusted ? address : null;
     }
 }

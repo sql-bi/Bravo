@@ -13,12 +13,13 @@ release writes is UTF-8 with none. Of the JSON object the host reads three membe
 | Member | What the host reads |
 | --- | --- |
 | `version` | A version of two to four numbers, as [`System.Version`](https://learn.microsoft.com/dotnet/api/system.version.tryparse) reads it |
-| `download` | An absolute `http` or `https` address, from which the host names the file of this copy |
-| `changelog` | An absolute `http` or `https` address, the release notes |
+| `download` | The address of a page of a site that the application trusts (see the browser, below), from which the host names the file of this copy |
+| `changelog` | The address of a page of a site that the application trusts, the release notes |
 
 When the feed cannot be read, the check fails with the code `UpdateCheckFailed`: whether a newer version exists
 is not known. That is an answer that is not a success, no answer within the 100 seconds that an HTTP client of
-.NET waits, as 1.0.x waits, a charset that .NET does not know, or a text without the three members.
+.NET waits, as 1.0.x waits, a charset that .NET does not know, or a text without the three members as the
+table reads them.
 
 **A newer release.** The version of the feed is newer when it is greater than the file version of the
 application, four numbers compared one by one: a preview, `1.1.0.187`, learns of the release of its version,
@@ -90,8 +91,8 @@ turns it off is not read yet (backlog B-5).
 - The members of the feed and the names of the six files are the ones of 1.0.x, and `release/Release.psm1`
   writes the feed and checks it as 1.0.x reads it. `UpdateFile`, `ReleaseFeedDocument` and that module change
   together, and the names only when no installed copy builds them.
-- `TrustedSites` is the one list of the sites. The route checks an address with it, and `DefaultBrowserLauncher`
-  checks it again, so that no other caller opens another address.
+- `TrustedSites` is the one list of the sites. The feed is read with it, the route checks an address with it,
+  and `DefaultBrowserLauncher` checks it again, so that no other caller opens another address.
 - `UpdateCheck` decides whether this copy reads a feed; `HttpReleaseFeed` only reads the one that it is given.
 - The file version is the one that Nerdbank.GitVersioning writes into the assembly. A build that carries the
   runtime, `SelfContained`, writes the assembly metadata `BravoSelfContained`.

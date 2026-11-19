@@ -37,6 +37,8 @@ public sealed class ReleaseFeedDocumentTests
     [InlineData("""{ "version": 1.1, "download": "https://github.com/a.msi", "changelog": "https://github.com/" }""")]
     [InlineData("""{ "version": "1.1.0.188", "download": "/a.msi", "changelog": "https://github.com/" }""")]
     [InlineData("""{ "version": "1.1.0.188", "download": "file:///C:/a.msi", "changelog": "https://github.com/" }""")]
+    [InlineData("""{ "version": "1.1.0.188", "download": "https://attacker.test/a.msi", "changelog": "https://github.com/" }""")]
+    [InlineData("""{ "version": "1.1.0.188", "download": "https://github.com/a.msi", "changelog": "http://127.0.0.1/" }""")]
     [InlineData("""{ "version": "1.1.0.188", "download": "https://github.com/a.msi", "changelog": null }""")]
     public void Parse_TextThatNamesNoRelease_FailsWithTheCodeOfTheCheck(string text)
     {
