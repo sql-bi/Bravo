@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Bravo.Core.Errors;
 
@@ -7,11 +8,11 @@ namespace Bravo.Core.Updates;
 public interface IReleaseFeed
 {
     /// <summary>
-    /// Reads the release that the update feed names.
+    /// Reads the release that the update feed at an address names.
     /// </summary>
     /// <exception cref="BravoException">
-    /// With <see cref="ErrorCode.UpdateCheckFailed"/>: the build has no feed, the feed cannot be read, or what
-    /// it holds names no release.
+    /// With <see cref="ErrorCode.UpdateCheckFailed"/>: the feed cannot be read, or what it holds names no
+    /// release.
     /// </exception>
-    Task<PublishedRelease> ReadAsync(CancellationToken cancellationToken);
+    Task<PublishedRelease> ReadAsync(Uri address, CancellationToken cancellationToken);
 }

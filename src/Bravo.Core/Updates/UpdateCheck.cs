@@ -25,7 +25,12 @@ public sealed class UpdateCheck(
     /// </exception>
     public async Task<UpdateCheckResult> CheckAsync(CancellationToken cancellationToken)
     {
-        var release = await _feed.ReadAsync(cancellationToken).ConfigureAwait(false);
+        if (_options.FeedAddress is not { } feedAddress)
+        {
+            throw new BravoException(ErrorCode.UpdateCheckFailed, "This build reads no update feed.");
+        }
+
+        var release = await _feed.ReadAsync(feedAddress, cancellationToken).ConfigureAwait(false);
 
         // Four numbers on both sides: a preview is older than the release of its version.
         var isNewer = release.Version > _options.FileVersion;

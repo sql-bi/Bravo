@@ -14,12 +14,9 @@ internal sealed class FeedHandler(Func<CancellationToken, Task<HttpResponseMessa
 
     public Uri? RequestedAddress { get; private set; }
 
-    public int RequestCount { get; private set; }
-
     protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
         RequestedAddress = request.RequestUri;
-        RequestCount++;
 
         return _answer(cancellationToken);
     }

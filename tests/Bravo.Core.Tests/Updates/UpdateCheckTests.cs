@@ -11,6 +11,7 @@ namespace Bravo.Core.Tests.Updates;
 
 public sealed class UpdateCheckTests
 {
+    private static readonly Uri s_feedAddress = new("https://feed.bravo.test/currentversion.json");
     private static readonly Uri s_download = new("https://github.com/sql-bi/Bravo/releases/download/v1.1.0/Bravo.1.1.0.x64.msi");
     private static readonly Uri s_releaseNotes = new("https://github.com/sql-bi/Bravo/releases/tag/v1.1.0");
 
@@ -23,7 +24,7 @@ public sealed class UpdateCheckTests
     [InlineData("1.1.0.188", "1.1.0.187", true)]
     [InlineData("1.1.0.188", "1.1.0.188", false)]
     [InlineData("1.1.0.188", "1.2.0.12", false)]
-    public async Task CheckAsync_VersionOfTheFeed_IsNewerOnlyWhenItIsGreaterInItsFourNumbers(
+    public async Task CheckAsync_VersionOfTheFeed_IsNewerAndBeepsOnlyWhenItIsGreaterInItsFourNumbers(
         string feedVersion,
         string fileVersion,
         bool isNewer)
@@ -35,28 +36,7 @@ public sealed class UpdateCheckTests
 
         Assert.Equal(isNewer, result.IsNewer);
         Assert.Equal(new Version(feedVersion), result.Version);
-    }
-
-    [Fact]
-    public async Task CheckAsync_NewerRelease_BeepsOnce()
-    {
-        var check = CreateCheck("1.0.9805.22885", includesRuntime: true);
-        GivenTheFeedNames("1.1.0.188");
-
-        await check.CheckAsync(TestContext.Current.CancellationToken);
-
-        _beep.Received(1).Play();
-    }
-
-    [Fact]
-    public async Task CheckAsync_ReleaseThatIsNotNewer_DoesNotBeep()
-    {
-        var check = CreateCheck("1.1.0.188", includesRuntime: true);
-        GivenTheFeedNames("1.1.0.188");
-
-        await check.CheckAsync(TestContext.Current.CancellationToken);
-
-        _beep.DidNotReceive().Play();
+        _beep.Received(isNewer ? 1 : 0).Play();
     }
 
     [Fact]
@@ -78,7 +58,7 @@ public sealed class UpdateCheckTests
     {
         var check = CreateCheck("1.0.9805.22885", includesRuntime: true);
         var failure = new BravoException(ErrorCode.UpdateCheckFailed, "The update feed cannot be read.");
-        _feed.ReadAsync(Arg.Any<CancellationToken>()).ThrowsAsync(failure);
+        _feed.ReadAsync(s_feedAddress, Arg.Any<CancellationToken>()).ThrowsAsync(failure);
 
         var exception = await Assert.ThrowsAsync<BravoException>(
             () => check.CheckAsync(TestContext.Current.CancellationToken));
@@ -87,11 +67,25 @@ public sealed class UpdateCheckTests
         _beep.DidNotReceive().Play();
     }
 
+    // A development build started without --dev-update-feed.
+    [Fact]
+    public async Task CheckAsync_BuildWithoutAFeed_FailsWithTheCodeOfTheCheckAndReadsNothing()
+    {
+        var options = new UpdateCheckOptions { FileVersion = new Version(1, 1, 0, 188), IncludesRuntime = true };
+        var check = new UpdateCheck(_feed, _installationReader, _beep, options);
+
+        var exception = await Assert.ThrowsAsync<BravoException>(
+            () => check.CheckAsync(TestContext.Current.CancellationToken));
+
+        Assert.Equal(ErrorCode.UpdateCheckFailed, exception.Code);
+        _ = _feed.DidNotReceiveWithAnyArgs().ReadAsync(default!, TestContext.Current.CancellationToken);
+    }
+
     private UpdateCheck CreateCheck(string fileVersion, bool includesRuntime)
     {
         var options = new UpdateCheckOptions
         {
-            FeedAddress = new Uri("https://feed.bravo.test/currentversion.json"),
+            FeedAddress = s_feedAddress,
             FileVersion = new Version(fileVersion),
             IncludesRuntime = includesRuntime,
         };
@@ -99,9 +93,10 @@ public sealed class UpdateCheckTests
         return new UpdateCheck(_feed, _installationReader, _beep, options);
     }
 
+    // Only the feed of the options names a release.
     private void GivenTheFeedNames(string version)
     {
         var release = new PublishedRelease(new Version(version), s_download, s_releaseNotes);
-        _feed.ReadAsync(Arg.Any<CancellationToken>()).Returns(release);
+        _feed.ReadAsync(s_feedAddress, Arg.Any<CancellationToken>()).Returns(release);
     }
 }

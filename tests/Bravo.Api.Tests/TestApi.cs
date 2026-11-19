@@ -64,8 +64,6 @@ internal sealed class TestApi : IAsyncDisposable
 
     public IInstallationReader InstallationReader => _app.Services.GetRequiredService<IInstallationReader>();
 
-    public ISystemBeep Beep => _app.Services.GetRequiredService<ISystemBeep>();
-
     public IBrowserLauncher BrowserLauncher => _app.Services.GetRequiredService<IBrowserLauncher>();
 
     /// <param name="mapRoutes">Adds routes that exist only for a test, after the ones of the API.</param>

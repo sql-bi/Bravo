@@ -35,32 +35,10 @@ public sealed class ReleasesEndpointsTests
               "releaseNotesAddress": "https://github.com/sql-bi/Bravo/releases/tag/v1.3.0"
             }
             """;
+        var actual = await response.ReadJsonAsync();
+        using var expectedDocument = JsonDocument.Parse(expected);
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.True(JsonElement.DeepEquals(JsonDocument.Parse(expected).RootElement, await response.ReadJsonAsync()));
-    }
-
-    [Fact]
-    public async Task GetLatestRelease_NewerRelease_Beeps()
-    {
-        await using var api = await TestApi.StartAsync();
-        GivenTheFeedNames(api, "1.3.0.25");
-
-        using var response = await api.Client.GetAsync(Route, TestContext.Current.CancellationToken);
-
-        api.Beep.Received(1).Play();
-    }
-
-    [Fact]
-    public async Task GetLatestRelease_ReleaseOfThisBuild_IsNotNewerAndDoesNotBeep()
-    {
-        await using var api = await TestApi.StartAsync();
-        GivenTheFeedNames(api, UseCasesServiceCollectionExtensions.FileVersion.ToString());
-
-        using var response = await api.Client.GetAsync(Route, TestContext.Current.CancellationToken);
-
-        var release = await response.ReadJsonAsync();
-        Assert.False(release.GetProperty("isNewer").GetBoolean());
-        api.Beep.DidNotReceive().Play();
+        Assert.True(JsonElement.DeepEquals(expectedDocument.RootElement, actual), actual.GetRawText());
     }
 
     [Fact]
@@ -68,7 +46,7 @@ public sealed class ReleasesEndpointsTests
     {
         await using var api = await TestApi.StartAsync();
         var failure = new BravoException(ErrorCode.UpdateCheckFailed, "The update feed cannot be read.");
-        api.ReleaseFeed.ReadAsync(Arg.Any<CancellationToken>()).ThrowsAsync(failure);
+        api.ReleaseFeed.ReadAsync(Arg.Any<Uri>(), Arg.Any<CancellationToken>()).ThrowsAsync(failure);
 
         using var response = await api.Client.GetAsync(Route, TestContext.Current.CancellationToken);
 
@@ -79,6 +57,6 @@ public sealed class ReleasesEndpointsTests
     private static void GivenTheFeedNames(TestApi api, string version)
     {
         var release = new PublishedRelease(new Version(version), s_download, s_releaseNotes);
-        api.ReleaseFeed.ReadAsync(Arg.Any<CancellationToken>()).Returns(release);
+        api.ReleaseFeed.ReadAsync(Arg.Any<Uri>(), Arg.Any<CancellationToken>()).Returns(release);
     }
 }

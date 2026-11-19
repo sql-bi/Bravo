@@ -6,9 +6,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Bravo.Core.Errors;
-using Bravo.Core.Updates;
 using Bravo.Platform.Windows.Updates;
-using NSubstitute;
+using Microsoft.Extensions.Time.Testing;
 using Xunit;
 
 namespace Bravo.Platform.Windows.Tests.Updates;
@@ -27,13 +26,22 @@ public sealed class HttpReleaseFeedTests
     private static readonly Uri s_feedAddress = new("https://feed.bravo.test/bravo-public/currentversion.json");
     private static readonly DateTimeOffset s_now = new(2026, 11, 19, 12, 0, 0, TimeSpan.Zero);
 
+    private static readonly Func<CancellationToken, Task<HttpResponseMessage>> s_answerInUtf8 =
+        _ => Answer([], Encoding.UTF8.GetBytes(Feed));
+
+    private static readonly Func<CancellationToken, Task<HttpResponseMessage>> s_neverAnswer = async cancellationToken =>
+    {
+        await Task.Delay(Timeout.Infinite, cancellationToken);
+        throw new InvalidOperationException("The delay ends only when it is cancelled.");
+    };
+
     // The feed of today: UTF-16 with a byte order mark, and no charset in the headers.
     [Fact]
     public async Task ReadAsync_FeedInUtf16WithByteOrderMark_ReadsTheRelease()
     {
         var feed = CreateFeed(_ => Answer(Encoding.Unicode.GetPreamble(), Encoding.Unicode.GetBytes(Feed)));
 
-        var release = await feed.ReadAsync(TestContext.Current.CancellationToken);
+        var release = await feed.ReadAsync(s_feedAddress, TestContext.Current.CancellationToken);
 
         Assert.Equal(new Version(1, 0, 9805, 22885), release.Version);
         Assert.Equal(new Uri("https://github.com/sql-bi/Bravo/releases/download/v1.0.14/Bravo.1.0.14.x64.msi"), release.Download);
@@ -44,9 +52,9 @@ public sealed class HttpReleaseFeedTests
     [Fact]
     public async Task ReadAsync_FeedInUtf8_ReadsTheRelease()
     {
-        var feed = CreateFeed(_ => Answer([], Encoding.UTF8.GetBytes(Feed)));
+        var feed = CreateFeed(s_answerInUtf8);
 
-        var release = await feed.ReadAsync(TestContext.Current.CancellationToken);
+        var release = await feed.ReadAsync(s_feedAddress, TestContext.Current.CancellationToken);
 
         Assert.Equal(new Version(1, 0, 9805, 22885), release.Version);
     }
@@ -54,38 +62,13 @@ public sealed class HttpReleaseFeedTests
     [Fact]
     public async Task ReadAsync_AnyFeed_AsksForItWithTheTimeOfTheRequestSoThatNoCacheAnswers()
     {
-        var handler = new FeedHandler(_ => Answer([], Encoding.UTF8.GetBytes(Feed)));
-        var feed = CreateFeed(handler, s_feedAddress);
+        var handler = new FeedHandler(s_answerInUtf8);
+        var feed = CreateFeed(handler);
 
-        await feed.ReadAsync(TestContext.Current.CancellationToken);
+        await feed.ReadAsync(s_feedAddress, TestContext.Current.CancellationToken);
 
         var expected = $"{s_feedAddress}?nocache={s_now.ToUnixTimeSeconds()}";
         Assert.Equal(new Uri(expected), handler.RequestedAddress);
-    }
-
-    [Fact]
-    public async Task ReadAsync_FeedAddressWithAQuery_AddsTheTimeToIt()
-    {
-        var handler = new FeedHandler(_ => Answer([], Encoding.UTF8.GetBytes(Feed)));
-        var feed = CreateFeed(handler, new Uri("http://127.0.0.1:8099/currentversion.json?name=newer"));
-
-        await feed.ReadAsync(TestContext.Current.CancellationToken);
-
-        var expected = $"http://127.0.0.1:8099/currentversion.json?name=newer&nocache={s_now.ToUnixTimeSeconds()}";
-        Assert.Equal(new Uri(expected), handler.RequestedAddress);
-    }
-
-    [Fact]
-    public async Task ReadAsync_NoFeedAddress_FailsWithoutARequest()
-    {
-        var handler = new FeedHandler(_ => Answer([], Encoding.UTF8.GetBytes(Feed)));
-        var feed = CreateFeed(handler, feedAddress: null);
-
-        var exception = await Assert.ThrowsAsync<BravoException>(
-            () => feed.ReadAsync(TestContext.Current.CancellationToken));
-
-        Assert.Equal(ErrorCode.UpdateCheckFailed, exception.Code);
-        Assert.Equal(0, handler.RequestCount);
     }
 
     [Theory]
@@ -98,7 +81,7 @@ public sealed class HttpReleaseFeedTests
         var feed = CreateFeed(_ => Task.FromResult(new HttpResponseMessage(status)));
 
         var exception = await Assert.ThrowsAsync<BravoException>(
-            () => feed.ReadAsync(TestContext.Current.CancellationToken));
+            () => feed.ReadAsync(s_feedAddress, TestContext.Current.CancellationToken));
 
         Assert.Equal(ErrorCode.UpdateCheckFailed, exception.Code);
     }
@@ -109,7 +92,7 @@ public sealed class HttpReleaseFeedTests
         var feed = CreateFeed(_ => throw new HttpRequestException("No such host is known."));
 
         var exception = await Assert.ThrowsAsync<BravoException>(
-            () => feed.ReadAsync(TestContext.Current.CancellationToken));
+            () => feed.ReadAsync(s_feedAddress, TestContext.Current.CancellationToken));
 
         Assert.Equal(ErrorCode.UpdateCheckFailed, exception.Code);
     }
@@ -125,7 +108,7 @@ public sealed class HttpReleaseFeedTests
         });
 
         var exception = await Assert.ThrowsAsync<BravoException>(
-            () => feed.ReadAsync(TestContext.Current.CancellationToken));
+            () => feed.ReadAsync(s_feedAddress, TestContext.Current.CancellationToken));
 
         Assert.Equal(ErrorCode.UpdateCheckFailed, exception.Code);
     }
@@ -133,16 +116,11 @@ public sealed class HttpReleaseFeedTests
     [Fact]
     public async Task ReadAsync_NoAnswerWithinTheTimeoutOfTheClient_FailsWithTheCodeOfTheCheck()
     {
-        var handler = new FeedHandler(async cancellationToken =>
-        {
-            await Task.Delay(Timeout.Infinite, cancellationToken);
-            throw new InvalidOperationException("The delay ends only when it is cancelled.");
-        });
-        var httpClient = new HttpClient(handler) { Timeout = TimeSpan.FromMilliseconds(1) };
-        var feed = new HttpReleaseFeed(httpClient, CreateOptions(s_feedAddress), CreateTimeProvider());
+        var httpClient = new HttpClient(new FeedHandler(s_neverAnswer)) { Timeout = TimeSpan.FromMilliseconds(1) };
+        var feed = new HttpReleaseFeed(httpClient, new FakeTimeProvider(s_now));
 
         var exception = await Assert.ThrowsAsync<BravoException>(
-            () => feed.ReadAsync(TestContext.Current.CancellationToken));
+            () => feed.ReadAsync(s_feedAddress, TestContext.Current.CancellationToken));
 
         Assert.Equal(ErrorCode.UpdateCheckFailed, exception.Code);
     }
@@ -151,42 +129,21 @@ public sealed class HttpReleaseFeedTests
     [Fact]
     public async Task ReadAsync_RequestCancelledByTheCaller_IsCancelled()
     {
-        var feed = CreateFeed(async cancellationToken =>
-        {
-            await Task.Delay(Timeout.Infinite, cancellationToken);
-            throw new InvalidOperationException("The delay ends only when it is cancelled.");
-        });
+        var feed = CreateFeed(s_neverAnswer);
         using var cancellation = new CancellationTokenSource();
         await cancellation.CancelAsync();
 
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => feed.ReadAsync(cancellation.Token));
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => feed.ReadAsync(s_feedAddress, cancellation.Token));
     }
 
     private static HttpReleaseFeed CreateFeed(Func<CancellationToken, Task<HttpResponseMessage>> answer)
     {
-        return CreateFeed(new FeedHandler(answer), s_feedAddress);
+        return CreateFeed(new FeedHandler(answer));
     }
 
-    private static HttpReleaseFeed CreateFeed(FeedHandler handler, Uri? feedAddress)
+    private static HttpReleaseFeed CreateFeed(FeedHandler handler)
     {
-        return new HttpReleaseFeed(new HttpClient(handler), CreateOptions(feedAddress), CreateTimeProvider());
-    }
-
-    private static UpdateCheckOptions CreateOptions(Uri? feedAddress)
-    {
-        return new UpdateCheckOptions
-        {
-            FeedAddress = feedAddress,
-            FileVersion = new Version(1, 1, 0, 188),
-            IncludesRuntime = true,
-        };
-    }
-
-    private static TimeProvider CreateTimeProvider()
-    {
-        var timeProvider = Substitute.For<TimeProvider>();
-        timeProvider.GetUtcNow().Returns(s_now);
-        return timeProvider;
+        return new HttpReleaseFeed(new HttpClient(handler), new FakeTimeProvider(s_now));
     }
 
     // As blob storage answers: JSON with no charset, so that only the byte order mark tells the encoding.

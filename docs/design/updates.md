@@ -92,6 +92,7 @@ turns it off is not read yet (backlog B-5).
   together, and the names only when no installed copy builds them.
 - `TrustedSites` is the one list of the sites. The route checks an address with it, and `DefaultBrowserLauncher`
   checks it again, so that no other caller opens another address.
+- `UpdateCheck` decides whether this copy reads a feed; `HttpReleaseFeed` only reads the one that it is given.
 - The file version is the one that Nerdbank.GitVersioning writes into the assembly. A build that carries the
   runtime, `SelfContained`, writes the assembly metadata `BravoSelfContained`.
 - No test reaches the real feed. The tests of the host give `HttpReleaseFeed` a handler of their own. The tests

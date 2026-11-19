@@ -10,11 +10,6 @@ namespace Bravo.Api.Tests;
 internal static class UseCasesServiceCollectionExtensions
 {
     /// <summary>
-    /// The application that the tests run as: <c>1.2.3</c>, file version four numbers.
-    /// </summary>
-    public static Version FileVersion { get; } = new(1, 2, 3, 4);
-
-    /// <summary>
     /// Adds the use cases that the routes call, as the application adds them, with substitutes for what is
     /// outside the process: no request leaves it, no sound plays and no browser opens.
     /// </summary>
@@ -26,7 +21,7 @@ internal static class UseCasesServiceCollectionExtensions
         services.AddSingleton(new UpdateCheckOptions
         {
             FeedAddress = new Uri("https://feed.bravo.test/currentversion.json"),
-            FileVersion = FileVersion,
+            FileVersion = new Version(1, 2, 3, 4),
             IncludesRuntime = true,
         });
         services.AddSingleton(Substitute.For<IReleaseFeed>());
