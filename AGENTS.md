@@ -123,7 +123,7 @@ as a filter that matches nothing, fails with exit code 8.
 | Start a release on a branch | `gh workflow run release.yml --ref <branch>` |
 | Try a release and publish nothing | `gh workflow run release.yml --ref <branch> -f dry-run=true` |
 
-A release is started by the maintainer: its steps are in [docs/guides/make-a-release.md](docs/guides/make-a-release.md).
+The steps of a release are in [docs/guides/make-a-release.md](docs/guides/make-a-release.md).
 
 ### Continuous integration
 
