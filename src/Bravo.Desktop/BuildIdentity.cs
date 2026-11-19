@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
@@ -16,6 +17,12 @@ internal sealed record BuildIdentity
     /// pipeline, which sets the build property of the same name.
     /// </summary>
     public const string ReleaseBuildMetadataName = "BravoReleaseBuild";
+
+    /// <summary>
+    /// The name of the assembly metadata in which the build writes its semantic version, such as
+    /// <c>1.1.0</c> or <c>1.1.0-beta.1</c>.
+    /// </summary>
+    public const string VersionMetadataName = "BravoVersion";
 
     // The identifier of the release stays the same from one release to the next, so that two versions are
     // one instance; a change of the messages between instances is a new protocol version.
@@ -85,8 +92,9 @@ internal sealed record BuildIdentity
     {
         ArgumentNullException.ThrowIfNull(assembly);
 
-        var version = ReadVersion(assembly);
-        var isReleaseBuild = assembly.GetCustomAttributes<AssemblyMetadataAttribute>().Any(IsReleaseBuildMark);
+        var metadata = assembly.GetCustomAttributes<AssemblyMetadataAttribute>().ToList();
+        var version = ReadVersion(assembly, metadata);
+        var isReleaseBuild = metadata.Any(IsReleaseBuildMark);
 
         return isReleaseBuild ? Release(version) : Development(version);
     }
@@ -97,9 +105,16 @@ internal sealed record BuildIdentity
             && string.Equals(metadata.Value, bool.TrueString, StringComparison.OrdinalIgnoreCase);
     }
 
-    // The informational version may end with the metadata of the build, such as the commit, after a plus sign.
-    private static string ReadVersion(Assembly assembly)
+    // An assembly that no build of the application wrote has no version in its metadata: it has its
+    // informational version, up to the plus sign where the metadata of the build begins.
+    private static string ReadVersion(Assembly assembly, List<AssemblyMetadataAttribute> metadata)
     {
+        var written = metadata.Find(entry => entry.Key == VersionMetadataName)?.Value;
+        if (!string.IsNullOrWhiteSpace(written))
+        {
+            return written;
+        }
+
         var informational = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
         if (string.IsNullOrWhiteSpace(informational))
         {

@@ -29,6 +29,17 @@
   </ItemGroup>
 
   <!--
+    The version that a user reads is the semantic version of the build. Nerdbank.GitVersioning computes it in
+    a target, so it is added here, before the attributes of the assembly are written: the informational
+    version that the package writes has the height of the commit in it.
+  -->
+  <Target Name="AddVersionToAssemblyMetadata" DependsOnTargets="GetBuildVersion" BeforeTargets="GetAssemblyAttributes">
+    <ItemGroup>
+      <AssemblyMetadata Include="BravoVersion" Value="$(NuGetPackageVersion)" />
+    </ItemGroup>
+  </Target>
+
+  <!--
     The user interface beside the executable. The build never runs npm: a development build copies web/wwwroot
     as it is, with the development bundle when "npm run build:UI" has written it there. A release build copies
     nothing: the release assembles the folder from the release bundle (backlog D-01).

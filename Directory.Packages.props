@@ -12,6 +12,14 @@
   </ItemGroup>
 
   <!--
+    The version of every build, computed from version.json and from the history of git: a build needs the whole
+    history, and fails on a shallow clone.
+  -->
+  <ItemGroup>
+    <GlobalPackageReference Include="Nerdbank.GitVersioning" Version="3.10.94" />
+  </ItemGroup>
+
+  <!--
     Tests: xUnit v3 on Microsoft.Testing.Platform, the mode of dotnet test that global.json selects. In that
     mode no project needs the Visual Studio runner or Microsoft.NET.Test.Sdk.
   -->

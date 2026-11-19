@@ -13,6 +13,7 @@ A rule that a tool can check fails the build or a test, and no rule has an allow
 | A project references only the projects that one table allows; no type or namespace is called Helper, Utils or Common; no static state can change; every project is listed in the solution, and in the filter built on Linux exactly when it does not target Windows | `tests/Bravo.Architecture.Tests` |
 | The OpenAPI document of the API is its file in the repository; no schema allows null; every route has a name, a tag and the error answers that any route can give; every type of the API that travels is public; the codes of an error answer are the ones that the host can write | `tests/Bravo.Api.Tests` |
 | The feature band of the .NET SDK; `dotnet test` in its Microsoft.Testing.Platform mode, where the tests run on xUnit v3 | `global.json` |
+| The version of every build, computed from one value and from the history of git: a build fails on a shallow clone ([Release](release.md)) | `version.json`, `Directory.Packages.props` |
 | The user interface has a text for every code of an error answer | `web/model/problem-texts.ts`, checked by every build of `web/` |
 | The Node.js line of the user interface build, the Active LTS one | `web/package.json` |
 | Text is stored with LF line endings; C# sources are checked out with CRLF on every system | `.gitattributes` |
@@ -45,6 +46,7 @@ A warning fails the build ([ADR 0009](../decisions/0009-rules-enforced-by-the-bu
 | Compiler and analyzer settings, output folders, lock files | `Directory.Build.props`; `tests/Directory.Build.props` adds what every test project needs |
 | What is changed in a project after its packages | `Directory.Build.targets` |
 | The version of every package | `Directory.Packages.props` |
+| The version of a build ([Release](release.md)) | `version.json`, read by the package that `Directory.Packages.props` adds to every project |
 | Code style and the severity of each diagnostic | `.editorconfig` |
 | The symbols no project may use | `BannedSymbols.txt` |
 | Allowed project references, catch-all names, static mutable state, the projects that the solution and its filter list | `tests/Bravo.Architecture.Tests` |

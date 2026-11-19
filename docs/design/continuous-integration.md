@@ -45,6 +45,9 @@ stops after 15 minutes.
 
 What a run checks beyond the commands of the table above:
 
+- A job that builds checks out the whole history of git (`fetch-depth: 0`): the version of a build counts
+  the commits, and the build fails on a shallow clone ([Release](release.md)). `build-web`, `test-installer`
+  and `audit` build nothing of .NET, and check out the one commit.
 - The build has `-warnaserror`. A warning in a project fails a local build as well; the switch adds the
   warnings raised outside the projects, at the level of the solution.
 - `audit` restores with `-p:AuditPipeline=true`, which turns the NuGet audit warnings into errors: a package

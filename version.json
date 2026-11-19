@@ -15,8 +15,9 @@
     "^refs/heads/main$"
   ],
   "cloudBuild": {
+    "setVersionVariables": false,
     "buildNumber": {
-      "enabled": true
+      "enabled": false
     }
   }
 }

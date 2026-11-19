@@ -56,8 +56,9 @@ before the arbitration.
 | Data folder, under the local application data of the user | `Bravo` | `Bravo.Development` |
 | Window title | `Bravo for Power BI - v<version>` | The same, followed by `[development build]` |
 
-The version is the informational version of the assembly without the metadata of the build. How it is
-computed is open (backlog B-2).
+The version is the semantic version of the build, such as `1.1.0` or `1.1.0-beta.1`, which the build
+computes and writes in the metadata of the assembly ([Release](release.md)). Outside a public release it
+ends with the commit: a development build shows `1.1.0-beta.1.g4497d5d308`.
 
 **Activations.** Every start is an activation request, the first one included. The requests go through one
 bounded channel of 16 with a single consumer, which starts when the main window is shown: a request that

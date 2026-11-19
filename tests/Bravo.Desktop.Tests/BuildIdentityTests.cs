@@ -50,7 +50,7 @@ public sealed class BuildIdentityTests
     [Fact]
     public void FromAssembly_AssemblyThatTheReleasePipelineMarked_IsAReleaseBuild()
     {
-        var assembly = DefineAssembly("1.1.0", releaseBuildMark: "true");
+        var assembly = DefineAssembly("1.1.0", releaseBuildMark: "true", version: null);
 
         var identity = BuildIdentity.FromAssembly(assembly);
 
@@ -63,7 +63,7 @@ public sealed class BuildIdentityTests
     [InlineData("")]
     public void FromAssembly_AssemblyWithoutTheMarkOfTheReleasePipeline_IsADevelopmentBuild(string? releaseBuildMark)
     {
-        var assembly = DefineAssembly("1.1.0", releaseBuildMark);
+        var assembly = DefineAssembly("1.1.0", releaseBuildMark, version: null);
 
         var identity = BuildIdentity.FromAssembly(assembly);
 
@@ -78,16 +78,38 @@ public sealed class BuildIdentityTests
         string informationalVersion,
         string expected)
     {
-        var assembly = DefineAssembly(informationalVersion, releaseBuildMark: null);
+        var assembly = DefineAssembly(informationalVersion, releaseBuildMark: null, version: null);
 
         var identity = BuildIdentity.FromAssembly(assembly);
 
         Assert.Equal(expected, identity.Version);
     }
 
+    [Theory]
+    [InlineData("1.1.0")]
+    [InlineData("1.1.0-beta.1")]
+    [InlineData("1.1.0-beta.1.g7a173c94d1")]
+    public void FromAssembly_VersionThatTheBuildWrote_IsTheVersion(string version)
+    {
+        var assembly = DefineAssembly("1.1.0.185-beta.1+7a173c94d1", releaseBuildMark: null, version);
+
+        var identity = BuildIdentity.FromAssembly(assembly);
+
+        Assert.Equal(version, identity.Version);
+    }
+
+    // The informational version of a build has four numbers: the version that a user reads has three.
+    [Fact]
+    public void FromAssembly_AssemblyOfTheApplication_HasTheSemanticVersionOfTheBuild()
+    {
+        var identity = BuildIdentity.FromAssembly(typeof(BuildIdentity).Assembly);
+
+        Assert.Matches(@"^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$", identity.Version);
+    }
+
     // An assembly in memory with the attributes that a build writes: the result does not depend on how the
     // assembly of the application was built for this run.
-    private static AssemblyBuilder DefineAssembly(string informationalVersion, string? releaseBuildMark)
+    private static AssemblyBuilder DefineAssembly(string informationalVersion, string? releaseBuildMark, string? version)
     {
         var name = new AssemblyName("Bravo.Tests.BuildIdentity");
         var assembly = AssemblyBuilder.DefineDynamicAssembly(name, AssemblyBuilderAccess.Run);
@@ -97,11 +119,21 @@ public sealed class BuildIdentityTests
 
         if (releaseBuildMark is not null)
         {
-            var metadataConstructor = typeof(AssemblyMetadataAttribute).GetConstructor([typeof(string), typeof(string)])!;
-            object[] arguments = [BuildIdentity.ReleaseBuildMetadataName, releaseBuildMark];
-            assembly.SetCustomAttribute(new CustomAttributeBuilder(metadataConstructor, arguments));
+            SetMetadata(assembly, BuildIdentity.ReleaseBuildMetadataName, releaseBuildMark);
+        }
+
+        if (version is not null)
+        {
+            SetMetadata(assembly, BuildIdentity.VersionMetadataName, version);
         }
 
         return assembly;
+    }
+
+    private static void SetMetadata(AssemblyBuilder assembly, string name, string value)
+    {
+        var metadataConstructor = typeof(AssemblyMetadataAttribute).GetConstructor([typeof(string), typeof(string)])!;
+        object[] arguments = [name, value];
+        assembly.SetCustomAttribute(new CustomAttributeBuilder(metadataConstructor, arguments));
     }
 }
