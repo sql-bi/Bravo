@@ -99,6 +99,8 @@ turns it off is not read yet (backlog B-5).
 - `UpdateCheck` decides whether this copy reads a feed; `HttpReleaseFeed` only reads the one that it is given.
 - The file version is the one that Nerdbank.GitVersioning writes into the assembly. A build that carries the
   runtime, `SelfContained`, writes the assembly metadata `BravoSelfContained`.
+- The launch profile `Bravo (update feed)` of `src/Bravo.Desktop/Properties/launchSettings.json` starts a
+  development build in the debugger with the feed of the releases, so that the whole check runs.
 - No test reaches the real feed. The tests of the host give `HttpReleaseFeed` a handler of their own. The tests
   of the window start the application with `--dev-update-feed` and a server of the test
   (`web/window-tests/update-feed.ts`) that serves the feed as the storage of the releases does, UTF-16 with a

@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "Bravo": {
+      "commandName": "Project"
+    },
+    "Bravo (update feed)": {
+      "commandName": "Project",
+      "commandLineArgs": "--dev-update-feed=https://bravorelease.blob.core.windows.net/bravo-public/currentversion.json"
+    }
+  }
+}
