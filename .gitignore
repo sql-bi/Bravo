@@ -19,10 +19,6 @@ mono_crash.*
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/
-[Rr]elease/
-[Rr]eleases/
-# The folder at the root is not a build result: it holds what the workflow of a release calls.
-!/release/
 x64/
 x86/
 [Aa][Rr][Mm]/
