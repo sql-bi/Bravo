@@ -10,13 +10,7 @@ public enum Installation
     /// </summary>
     None,
 
-    /// <summary>
-    /// The package per machine installed the folder.
-    /// </summary>
     PerMachine,
 
-    /// <summary>
-    /// The package per user installed the folder.
-    /// </summary>
     PerUser,
 }

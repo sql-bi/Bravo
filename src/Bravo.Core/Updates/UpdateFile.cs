@@ -26,10 +26,8 @@ public static class UpdateFile
         ArgumentNullException.ThrowIfNull(download);
 
         var path = download.LocalPath;
-        var folderLength = path.LastIndexOf('/') + 1;
-        var fileName = path[folderLength..];
-        var name = Path.GetFileNameWithoutExtension(fileName);
-        var extension = Path.GetExtension(fileName);
+        var extension = Path.GetExtension(path);
+        var name = path[..^extension.Length];
 
         if (!includesRuntime)
         {
@@ -46,8 +44,6 @@ public static class UpdateFile
             extension = ArchiveExtension;
         }
 
-        var address = new UriBuilder(download) { Path = path[..folderLength] + name + extension };
-
-        return address.Uri;
+        return new UriBuilder(download) { Path = name + extension }.Uri;
     }
 }
