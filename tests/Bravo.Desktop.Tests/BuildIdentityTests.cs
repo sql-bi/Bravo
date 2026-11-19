@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Reflection;
 using System.Reflection.Emit;
 using Xunit;
 
@@ -102,6 +103,57 @@ public sealed class BuildIdentityTests
         Assert.Matches(@"^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$", identity.Version);
     }
 
+    [Fact]
+    public void FromAssembly_FileVersionThatTheBuildWrote_IsTheFileVersion()
+    {
+        var assembly = DefineAssembly("1.1.0", releaseBuildMark: null);
+        SetFileVersion(assembly, "1.1.0.188");
+
+        var identity = BuildIdentity.FromAssembly(assembly);
+
+        Assert.Equal(new Version(1, 1, 0, 188), identity.FileVersion);
+    }
+
+    [Fact]
+    public void FromAssembly_AssemblyWithoutAFileVersion_HasTheFileVersionZero()
+    {
+        var assembly = DefineAssembly("1.1.0", releaseBuildMark: null);
+
+        var identity = BuildIdentity.FromAssembly(assembly);
+
+        Assert.Equal(new Version(0, 0, 0, 0), identity.FileVersion);
+    }
+
+    // The update feed is compared on four numbers: the fourth orders a preview before its release.
+    [Fact]
+    public void FromAssembly_AssemblyOfTheApplication_HasAFileVersionOfFourNumbers()
+    {
+        var identity = BuildIdentity.FromAssembly(typeof(BuildIdentity).Assembly);
+
+        Assert.True(identity.FileVersion.Revision >= 0);
+        Assert.NotEqual(new Version(0, 0, 0, 0), identity.FileVersion);
+    }
+
+    [Theory]
+    [InlineData("true", true)]
+    [InlineData("True", true)]
+    [InlineData("false", false)]
+    [InlineData(null, false)]
+    public void FromAssembly_MarkOfASelfContainedBuild_TellsWhetherTheBuildCarriesTheRuntime(
+        string? selfContainedMark,
+        bool includesRuntime)
+    {
+        var assembly = DefineAssembly("1.1.0", releaseBuildMark: "true");
+        if (selfContainedMark is not null)
+        {
+            SetMetadata(assembly, BuildIdentity.SelfContainedMetadataName, selfContainedMark);
+        }
+
+        var identity = BuildIdentity.FromAssembly(assembly);
+
+        Assert.Equal(includesRuntime, identity.IncludesRuntime);
+    }
+
     // An assembly in memory with the metadata that a build writes: the result does not depend on how the
     // assembly of the application was built for this run.
     private static AssemblyBuilder DefineAssembly(string? version, string? releaseBuildMark)
@@ -127,5 +179,12 @@ public sealed class BuildIdentityTests
         var metadataConstructor = typeof(AssemblyMetadataAttribute).GetConstructor([typeof(string), typeof(string)])!;
         object[] arguments = [name, value];
         assembly.SetCustomAttribute(new CustomAttributeBuilder(metadataConstructor, arguments));
+    }
+
+    private static void SetFileVersion(AssemblyBuilder assembly, string fileVersion)
+    {
+        var fileVersionConstructor = typeof(AssemblyFileVersionAttribute).GetConstructor([typeof(string)])!;
+        object[] arguments = [fileVersion];
+        assembly.SetCustomAttribute(new CustomAttributeBuilder(fileVersionConstructor, arguments));
     }
 }

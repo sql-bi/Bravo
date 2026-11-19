@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
@@ -23,7 +24,15 @@ internal sealed record BuildIdentity
     /// </summary>
     public const string VersionMetadataName = "BravoVersion";
 
+    /// <summary>
+    /// The name of the assembly metadata that the build writes: <c>true</c> for a build that carries the .NET
+    /// runtime, which the build property <c>SelfContained</c> asks for.
+    /// </summary>
+    public const string SelfContainedMetadataName = "BravoSelfContained";
+
     private const string UnknownVersion = "0.0.0";
+
+    private static readonly Version s_unknownFileVersion = new(0, 0, 0, 0);
 
     // The identifier of the release stays the same from one release to the next, so that two versions are
     // one instance; a change of the messages between instances is a new protocol version.
@@ -42,6 +51,16 @@ internal sealed record BuildIdentity
     /// The version of the application as a user reads it, without the metadata of the build.
     /// </summary>
     public string Version { get; }
+
+    /// <summary>
+    /// The file version of the build, four numbers, which Windows Installer and the update feed compare.
+    /// </summary>
+    public Version FileVersion { get; init; } = s_unknownFileVersion;
+
+    /// <summary>
+    /// Whether the build carries the .NET runtime, and does not use the one installed on the machine.
+    /// </summary>
+    public bool IncludesRuntime { get; init; }
 
     /// <summary>
     /// What the names of the mutex and of the pipe of the instance begin with.
@@ -86,8 +105,9 @@ internal sealed record BuildIdentity
     }
 
     /// <summary>
-    /// Reads the identity that the build wrote in the metadata of an assembly: its version, and the mark of
-    /// a release build. An assembly without the mark is a development build.
+    /// Reads the identity that the build wrote in the metadata of an assembly: its versions, the mark of a
+    /// release build and the one of a build that carries the runtime. An assembly without the first mark is a
+    /// development build.
     /// </summary>
     public static BuildIdentity FromAssembly(Assembly assembly)
     {
@@ -101,14 +121,25 @@ internal sealed record BuildIdentity
             version = UnknownVersion;
         }
 
-        var isReleaseBuild = metadata.Exists(IsReleaseBuildMark);
+        var identity = HasMark(metadata, ReleaseBuildMetadataName) ? Release(version) : Development(version);
 
-        return isReleaseBuild ? Release(version) : Development(version);
+        return identity with
+        {
+            FileVersion = ReadFileVersion(assembly),
+            IncludesRuntime = HasMark(metadata, SelfContainedMetadataName),
+        };
     }
 
-    private static bool IsReleaseBuildMark(AssemblyMetadataAttribute metadata)
+    private static bool HasMark(List<AssemblyMetadataAttribute> metadata, string name)
     {
-        return metadata.Key == ReleaseBuildMetadataName
-            && string.Equals(metadata.Value, bool.TrueString, StringComparison.OrdinalIgnoreCase);
+        return metadata.Exists(entry => entry.Key == name
+            && string.Equals(entry.Value, bool.TrueString, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static Version ReadFileVersion(Assembly assembly)
+    {
+        var value = assembly.GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version;
+
+        return System.Version.TryParse(value, out var fileVersion) ? fileVersion : s_unknownFileVersion;
     }
 }

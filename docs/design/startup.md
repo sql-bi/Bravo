@@ -58,7 +58,8 @@ before the arbitration.
 
 The version is the semantic version of the build, such as `1.1.0` or `1.1.0-beta.1`, which the build
 computes and writes in the metadata of the assembly ([Release](release.md)). Outside a public release it
-ends with the commit: a development build shows `1.1.0-beta.1.g4497d5d308`.
+ends with the commit: a development build shows `1.1.0-beta.1.g4497d5d308`. The identity also has the file
+version, four numbers, and whether the build carries the runtime.
 
 **Activations.** Every start is an activation request, the first one included. The requests go through one
 bounded channel of 16 with a single consumer, which starts when the main window is shown: a request that
@@ -102,7 +103,7 @@ this document describes above. Where each part lives:
 | What a development build is asked for a browser: one more allowed origin, the file with the address and the token | `src/Bravo.Desktop/Development/` |
 | The activation request, and the channel that every activation goes through | `src/Bravo.Core/Activation/` |
 | The single instance: ownership by mutex, hand-over by pipe, arbitration | `src/Bravo.Platform.Windows/SingleInstance/` |
-| The identity of the build: release or development, with its instance identifier, data folder and window title | `src/Bravo.Desktop/BuildIdentity.cs` |
+| The identity of the build: release or development, with its instance identifier, data folder and window title, its versions, and whether it carries the runtime | `src/Bravo.Desktop/BuildIdentity.cs` |
 | The listener as a service of the host, the message of a failed hand-over, the end of a second process | `src/Bravo.Desktop/SingleInstance/` |
 | The settings of the user and their store, in memory until backlog B-4 | `src/Bravo.Core/Settings/`, registered in `src/Bravo.Desktop/Settings/` |
 | The Windows functions of a project, listed in its `NativeMethods.txt` and wrapped by capability | `Interop/` in `Bravo.Desktop` and in `Bravo.Platform.Windows` |

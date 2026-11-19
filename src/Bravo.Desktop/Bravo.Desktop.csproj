@@ -30,10 +30,12 @@
   <!--
     A build is a development build unless the release pipeline builds it, with -p:BravoReleaseBuild=true. The
     property is not the configuration: a Release configuration built on a developer's machine is a development
-    build. The application reads what was built from this metadata: see BuildIdentity.cs.
+    build. The application reads what was built from this metadata: see BuildIdentity.cs. It also reads whether
+    the build carries the runtime, which tells the update that it asks for.
   -->
   <ItemGroup>
     <AssemblyMetadata Include="BravoReleaseBuild" Value="$(BravoReleaseBuild)" Condition="'$(BravoReleaseBuild)' == 'true'" />
+    <AssemblyMetadata Include="BravoSelfContained" Value="$(SelfContained)" Condition="'$(SelfContained)' == 'true'" />
   </ItemGroup>
 
   <!--
