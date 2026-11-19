@@ -67,6 +67,20 @@ public sealed class UpdateCheckTests
         _beep.DidNotReceive().Play();
     }
 
+    // The beep tells a newer release only to a check that answers.
+    [Fact]
+    public async Task CheckAsync_NewerReleaseWhoseFileCannotBeNamed_FailsAndDoesNotBeep()
+    {
+        var check = CreateCheck("1.0.9805.22885", includesRuntime: true);
+        GivenTheFeedNames("1.1.0.188");
+        _installationReader.Read().Throws(new InvalidOperationException("The registry cannot be read."));
+
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            () => check.CheckAsync(TestContext.Current.CancellationToken));
+
+        _beep.DidNotReceive().Play();
+    }
+
     // A development build started without --dev-update-feed.
     [Fact]
     public async Task CheckAsync_BuildWithoutAFeed_FailsWithTheCodeOfTheCheckAndReadsNothing()

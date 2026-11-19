@@ -32,15 +32,15 @@ public sealed class UpdateCheck(
 
         var release = await _feed.ReadAsync(feedAddress, cancellationToken).ConfigureAwait(false);
 
+        var installation = _installationReader.Read();
+        var downloadAddress = UpdateFile.GetAddress(release.Download, installation, _options.IncludesRuntime);
+
         // Four numbers on both sides: a preview is older than the release of its version.
         var isNewer = release.Version > _options.FileVersion;
         if (isNewer)
         {
             _beep.Play();
         }
-
-        var installation = _installationReader.Read();
-        var downloadAddress = UpdateFile.GetAddress(release.Download, installation, _options.IncludesRuntime);
 
         return new UpdateCheckResult(release.Version, isNewer, downloadAddress, release.ReleaseNotes);
     }
