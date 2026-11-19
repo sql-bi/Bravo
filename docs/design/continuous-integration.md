@@ -60,7 +60,7 @@ What a run checks beyond the commands of the table above:
   runtime is not in the list of the software of the runner image: it comes with the Windows image that the
   runner is built on.
 - The runner runs every process elevated, and an elevated webview ignores the environment variables of the
-  WebView2 runtime: `test-window` gives the webview its two values as policies of the machine, which its
+  WebView2 runtime: `test-window` gives the webview its browser argument as a policy of the machine, which its
   last step shows to be gone ([User interface](../../web/AGENTS.md)).
 - When a test of the window fails, `test-window` keeps the folder `artifacts/window-tests` as the artifact
   `window-tests-report` for 3 days: the HTML report, with the trace and a screenshot of each failed test. A

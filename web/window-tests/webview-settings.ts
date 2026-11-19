@@ -2,15 +2,15 @@ import { execFile } from 'node:child_process';
 import path from 'node:path';
 import { promisify } from 'node:util';
 
-// Where the webview of a test gets the two values that the WebView2 runtime reads when the application creates
-// its environment: the browser argument that opens the DevTools protocol, and the folder of the profile. The
-// application passes neither.
+// Where the webview of a test gets the browser argument that opens the DevTools protocol, which the WebView2
+// runtime reads when the application creates its environment and which the application does not pass. The
+// profile is not given: the application keeps it in its data folder, which the fixture names on its command line.
 //
-// A process that is not elevated gets them from the environment variables of the runtime. An elevated process
-// ignores those variables and honors the policies of the machine
+// A process that is not elevated gets the argument from an environment variable of the runtime. An elevated
+// process ignores that variable and honors the policies of the machine
 // (https://learn.microsoft.com/microsoft-edge/webview2/concepts/security#for-an-elevated-host-app-use-appropriate-override-flags).
-// On a runner of GitHub Actions the tests run elevated: there, and only there, the same two values are given as
-// policies of the machine for Bravo.exe, and taken back after each test. Elsewhere the registry is never touched.
+// On a runner of GitHub Actions the tests run elevated: there, and only there, the same value is given as a policy
+// of the machine for Bravo.exe, and taken back after each test. Elsewhere the registry is never touched.
 
 const execFileAsync = promisify(execFile);
 
@@ -22,23 +22,18 @@ const reg = path.join(system, 'reg.exe');
 /** The browser argument of every test: the engine chooses the port and writes it in the profile. */
 const browserArguments = '--remote-debugging-port=0';
 
-/** The start of the name of the folder of the profile of a test. */
-export const profilePrefix = 'bravo-window-test-';
-
-const policies = 'HKLM\\SOFTWARE\\Policies\\Microsoft\\Edge\\WebView2';
-const argumentsKey = `${policies}\\AdditionalBrowserArguments`;
-const folderKey = `${policies}\\UserDataFolder`;
+const argumentsKey = 'HKLM\\SOFTWARE\\Policies\\Microsoft\\Edge\\WebView2\\AdditionalBrowserArguments';
 
 /** The name of the value of a policy: the executable that it applies to, never the * of every application. */
 const valueName = 'Bravo.exe';
 
 export interface WebViewSettings {
 
-    /** Where the webview gets the values, for the log of the run. */
+    /** Where the webview gets the value, for the log of the run. */
     readonly source: string
 
-    /** Gives the values to the next start of Bravo.exe; returns the environment variables of that start. */
-    give(profile: string): Promise<NodeJS.ProcessEnv>
+    /** Gives the value to the next start of Bravo.exe; returns the environment variables of that start. */
+    give(): Promise<NodeJS.ProcessEnv>
 
     /** Takes back what `give` wrote, also when it failed halfway. */
     takeBack(): Promise<void>
@@ -46,10 +41,10 @@ export interface WebViewSettings {
 
 class EnvironmentVariables implements WebViewSettings {
 
-    readonly source = 'the environment variables WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS and WEBVIEW2_USER_DATA_FOLDER';
+    readonly source = 'the environment variable WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS';
 
-    async give(profile: string) {
-        return { WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS: browserArguments, WEBVIEW2_USER_DATA_FOLDER: profile };
+    async give() {
+        return { WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS: browserArguments };
     }
 
     async takeBack() { }
@@ -57,38 +52,32 @@ class EnvironmentVariables implements WebViewSettings {
 
 class MachinePolicies implements WebViewSettings {
 
-    readonly source = `the policies of the machine AdditionalBrowserArguments and UserDataFolder for ${valueName}, under ${policies}: the process is elevated, on a runner of GitHub Actions`;
+    readonly source = `the policy of the machine AdditionalBrowserArguments for ${valueName}: the process is elevated, on a runner of GitHub Actions`;
 
-    /** The folder that the policy names since `give`, until `takeBack`. */
-    private profile: string | undefined;
+    /** Whether the policy has the value of `give`, until `takeBack`. */
+    private given = false;
 
-    async give(profile: string) {
-        for (const key of [argumentsKey, folderKey]) {
-            if (await readPolicy(key) !== undefined)
-                throw new Error(`The policy ${key} already has a value ${valueName}: the tests do not replace it.`);
-        }
+    async give() {
+        if (await readPolicy() !== undefined)
+            throw new Error(`The policy ${argumentsKey} already has a value ${valueName}: the tests do not replace it.`);
 
-        this.profile = profile;
-        await writePolicy(argumentsKey, browserArguments);
-        await writePolicy(folderKey, profile);
+        this.given = true;
+        await writePolicy(browserArguments);
         return {};
     }
 
     async takeBack() {
-        const profile = this.profile;
-        if (profile === undefined) return;
+        if (!this.given) return;
 
         // give found no value: whatever has its data now was written by it
-        if (await readPolicy(argumentsKey) === browserArguments)
-            await deletePolicy(argumentsKey);
-        if (await readPolicy(folderKey) === profile)
-            await deletePolicy(folderKey);
+        if (await readPolicy() === browserArguments)
+            await deletePolicy();
 
-        this.profile = undefined;
+        this.given = false;
     }
 }
 
-/** Where the webview of the tests of a worker gets its values. */
+/** Where the webview of the tests of a worker gets its value. */
 export async function chooseWebViewSettings(): Promise<WebViewSettings> {
     if (!await isElevated())
         return new EnvironmentVariables();
@@ -101,17 +90,13 @@ export async function chooseWebViewSettings(): Promise<WebViewSettings> {
 
 /**
  * The end of a run: on a runner of GitHub Actions, no policy that a test wrote is left, also after a test that
- * failed. The data tell which values a test wrote.
+ * failed. The data tell whether a test wrote the value.
  */
 export async function removeLeftPolicies() {
     if (!onGitHubActions() || !await isElevated()) return;
 
-    if (await readPolicy(argumentsKey) === browserArguments)
-        await deletePolicy(argumentsKey);
-
-    const folder = await readPolicy(folderKey);
-    if (folder !== undefined && path.basename(folder).startsWith(profilePrefix))
-        await deletePolicy(folderKey);
+    if (await readPolicy() === browserArguments)
+        await deletePolicy();
 }
 
 function onGitHubActions() {
@@ -124,11 +109,11 @@ async function isElevated(): Promise<boolean> {
     return stdout.includes('"S-1-16-12288"');
 }
 
-/** The data of the value of Bravo.exe under a key of the policies, or undefined when there is none. */
-async function readPolicy(key: string): Promise<string | undefined> {
+/** The data of the value of Bravo.exe under the key of the policy, or undefined when there is none. */
+async function readPolicy(): Promise<string | undefined> {
     let stdout: string;
     try {
-        ({ stdout } = await execFileAsync(reg, ['query', key, '/v', valueName]));
+        ({ stdout } = await execFileAsync(reg, ['query', argumentsKey, '/v', valueName]));
     } catch {
         // reg ends with 1 when the key or the value is not there
         return undefined;
@@ -137,10 +122,10 @@ async function readPolicy(key: string): Promise<string | undefined> {
     return /^\s+Bravo\.exe\s+REG_\w+\s+(.*?)\s*$/im.exec(stdout)?.[1] ?? '';
 }
 
-async function writePolicy(key: string, data: string) {
-    await execFileAsync(reg, ['add', key, '/v', valueName, '/t', 'REG_SZ', '/d', data, '/f']);
+async function writePolicy(data: string) {
+    await execFileAsync(reg, ['add', argumentsKey, '/v', valueName, '/t', 'REG_SZ', '/d', data, '/f']);
 }
 
-async function deletePolicy(key: string) {
-    await execFileAsync(reg, ['delete', key, '/v', valueName, '/f']);
+async function deletePolicy() {
+    await execFileAsync(reg, ['delete', argumentsKey, '/v', valueName, '/f']);
 }

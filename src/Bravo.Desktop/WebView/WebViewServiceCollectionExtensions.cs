@@ -17,13 +17,13 @@ internal static class WebViewServiceCollectionExtensions
     /// Adds the webview of the main window, and lets its page call the API.
     /// </summary>
     /// <param name="services">The services of the host.</param>
-    /// <param name="identity">It tells where the data of this build is, and whether it is a development build.</param>
-    public static IServiceCollection AddWebView(this IServiceCollection services, BuildIdentity identity)
+    /// <param name="identity">It tells whether the build is a development build.</param>
+    /// <param name="dataFolder">The folder of the data of the user, which holds the one of the webview.</param>
+    public static IServiceCollection AddWebView(this IServiceCollection services, BuildIdentity identity, DataFolder dataFolder)
     {
-        var localData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
         var options = new WebViewOptions
         {
-            UserDataFolder = Path.Combine(localData, identity.DataFolderName, UserDataFolderName),
+            UserDataFolder = Path.Combine(dataFolder.Path, UserDataFolderName),
             ContentFolder = Path.Combine(AppContext.BaseDirectory, ContentFolderName),
             AreDeveloperToolsEnabled = identity.IsDevelopmentBuild,
         };

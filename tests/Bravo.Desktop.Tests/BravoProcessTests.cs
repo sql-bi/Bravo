@@ -13,7 +13,7 @@ namespace Bravo.Desktop.Tests;
 /// The executable as the build of the tests wrote it, a development build: real processes, the names of the
 /// instance of a development build, a real window.
 /// </summary>
-public sealed class BravoProcessTests
+public sealed class BravoProcessTests : IDisposable
 {
     private static readonly TimeSpan s_startTimeout = TimeSpan.FromSeconds(60);
 
@@ -25,6 +25,13 @@ public sealed class BravoProcessTests
     private const uint QueryEndSession = 0x0011;
     private const uint EndSession = 0x0016;
     private const int CloseApplication = 0x1;
+
+    private readonly TemporaryFolder _dataFolder = new();
+
+    public void Dispose()
+    {
+        _dataFolder.Dispose();
+    }
 
     [Fact]
     public async Task Start_WhileAnInstanceRuns_HandsOverAndExitsAndTheInstanceGoesOnUntilItIsClosed()
@@ -96,18 +103,19 @@ public sealed class BravoProcessTests
         }
     }
 
-    private static Process StartBravo()
+    private Process StartBravo()
     {
         return Process.Start(CreateStartInfo()) ?? throw new InvalidOperationException("Bravo did not start.");
     }
 
     // The build of the tests writes where the project of the executable built it: there it has beside it all
-    // that it loads, which the folder of the tests does not hold.
-    private static ProcessStartInfo CreateStartInfo(params string[] arguments)
+    // that it loads, which the folder of the tests does not hold. Its data goes to the folder of the test.
+    private ProcessStartInfo CreateStartInfo(params string[] arguments)
     {
         var pathFile = Path.Combine(AppContext.BaseDirectory, "BravoExecutable.txt");
         var path = File.ReadAllText(pathFile).Trim();
-        return new ProcessStartInfo(path, arguments) { UseShellExecute = false };
+        string[] allArguments = [$"--dev-data-folder={_dataFolder.Path}", .. arguments];
+        return new ProcessStartInfo(path, allArguments) { UseShellExecute = false };
     }
 
     private static async Task WaitForMainWindowAsync(Process process)

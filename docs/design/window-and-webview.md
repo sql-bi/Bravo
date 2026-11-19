@@ -43,7 +43,7 @@ The application calls no function that Windows exports by number alone.
 reserved for names that are no site ([RFC 6761](https://www.rfc-editor.org/rfc/rfc6761.html#section-6.4)). No
 other origin can read those files. The window opens `https://bravo.invalid/index.html`: the origin is the same
 at every start, so what the page stores is found again. The engine keeps its data in the folder `WebView2` of
-the data folder of the build, under the local application data of the user, and is given no browser argument.
+the data folder of the build ([Startup](startup.md)), and is given no browser argument.
 The folder that 1.0.x used, `Bravo\.temp`, is neither read nor written.
 
 **Connection.** Before any script of a document runs, the webview runs a script that defines the object
@@ -89,7 +89,7 @@ An exception of an asynchronous step that is not a failure of the engine leaves 
 application like any other. Until backlog B-8 the messages are dialogs of their own.
 
 **In a browser.** For development and tests the same page runs in an ordinary browser, against a development
-build of the host. Only a development build knows three more arguments of the command line; to a release
+build of the host. Only a development build knows four more arguments of the command line; to a release
 build they are arguments that it does not know, and so errors of the request.
 
 | Argument | What the host does |
@@ -97,6 +97,7 @@ build they are arguments that it does not know, and so errors of the request.
 | `--dev-origin=<origin>` | Allows one more origin to call the API: the one of the development server |
 | `--dev-connection-file=<path>` | Once it has started, writes the address and the token of the API to the file, a JSON object with the members `address` and `token`; deletes the file when it stops |
 | `--dev-update-feed=<address>` | Reads the update feed at the address, an absolute `http` or `https` one: without it a development build reads none ([updates](updates.md)) |
+| `--dev-data-folder=<path>` | Keeps the data of the user in the folder, the settings and the profile of the webview, in place of `Bravo.Development` under the local application data: a test starts on data of its own |
 
 A development server serves the development bundle and the static files of the page, on the loopback address
 only, rebuilds the bundle at every change, and gives the page the same object before any other script, with

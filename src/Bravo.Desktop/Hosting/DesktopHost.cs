@@ -24,12 +24,14 @@ namespace Bravo.Desktop.Hosting;
 internal static class DesktopHost
 {
     /// <param name="identity">The build that was started.</param>
+    /// <param name="dataFolder">Where the host keeps the data of the user.</param>
     /// <param name="development">What the command line of a development build asked its host for.</param>
     /// <param name="ownership">The ownership of the instance, which the caller releases after the host.</param>
     /// <param name="singleInstanceOptions">The limits that the arbitration of this process used.</param>
     /// <param name="fatalExceptionHandler">What was installed for an exception that escapes.</param>
     public static WebApplication Build(
         BuildIdentity identity,
+        DataFolder dataFolder,
         DevelopmentOptions development,
         InstanceOwnership ownership,
         SingleInstanceOptions singleInstanceOptions,
@@ -52,7 +54,7 @@ internal static class DesktopHost
         builder.Services.AddDesktopLifetime();
         builder.Services.AddApplicationInfo(identity);
         builder.Services.AddShell(identity, fatalExceptionHandler);
-        builder.Services.AddWebView(identity);
+        builder.Services.AddWebView(identity, dataFolder);
         builder.Services.AddDevelopmentOptions(development);
         builder.Services.AddActivation();
         builder.Services.AddSingleInstance(ownership, singleInstanceOptions);

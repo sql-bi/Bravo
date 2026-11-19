@@ -11,21 +11,23 @@ Two kinds of tests prove the user interface
 
 A test of the window starts the executable that the build wrote, with the development bundle beside it, and
 drives its webview through the DevTools protocol. The test opens the protocol, on a port that the engine
-chooses, and gives the webview a new profile: the application never opens the port by itself and has no
-option for it. Each test has an application of its own, which it closes as a user closes it and which must
-end with exit code 0; no process of the application or of its webview outlives the test, and neither does
-the profile.
+chooses: the application never opens the port by itself and has no option for it. Each test has an
+application of its own, with a new data folder, which holds its settings and the profile of its webview: the
+test names it with the argument `--dev-data-folder` of a development build
+([Window and webview](window-and-webview.md)), so that no test reads or writes the data of the developer. The
+test closes the application as a user closes it, and it must end with exit code 0; no process of the
+application or of its webview outlives the test, and neither does the data folder.
 
-The WebView2 runtime reads the two values from its environment variables,
-`WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS` and `WEBVIEW2_USER_DATA_FOLDER`, unless the process is elevated: an
-elevated process ignores them and honors the policies of the machine
+The WebView2 runtime reads the browser argument from its environment variable
+`WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS`, unless the process is elevated: an elevated process ignores it and
+honors the policies of the machine
 ([Microsoft](https://learn.microsoft.com/microsoft-edge/webview2/concepts/security#for-an-elevated-host-app-use-appropriate-override-flags)).
 The hosted Windows runner of GitHub Actions runs every process elevated. There, and only there, the test
-gives the same two values as policies of the machine for `Bravo.exe`, the values `Bravo.exe` of the keys
-`AdditionalBrowserArguments` and `UserDataFolder` under `HKLM\SOFTWARE\Policies\Microsoft\Edge\WebView2`,
-and removes them after the test and once more at the end of the run. A value that is already there is not
-replaced: the test fails. Elsewhere the tests never write in the registry: in an elevated terminal they fail,
-and say to run them from a terminal that is not elevated.
+gives the same value as a policy of the machine for `Bravo.exe`, the value `Bravo.exe` of the key
+`AdditionalBrowserArguments` under `HKLM\SOFTWARE\Policies\Microsoft\Edge\WebView2`, and removes it after
+the test and once more at the end of the run. A value that is already there is not replaced: the test fails.
+Elsewhere the tests never write in the registry: in an elevated terminal they fail, and say to run them from a
+terminal that is not elevated.
 
 - The page has a fixed size in every test, 1280×800, whatever the size of the window, and a test can take a
   screenshot of it. The repository keeps no reference image: the rendering changes with the machine. A

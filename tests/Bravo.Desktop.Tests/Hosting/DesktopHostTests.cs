@@ -4,6 +4,7 @@ using System.Linq;
 using Bravo.Desktop.Development;
 using Bravo.Desktop.Diagnostics;
 using Bravo.Desktop.Hosting;
+using Bravo.Desktop.WebView;
 using Bravo.Platform.Windows.SingleInstance;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Configuration.Memory;
@@ -22,6 +23,7 @@ public sealed class DesktopHostTests : IDisposable
     private static readonly BuildIdentity s_identity = BuildIdentity.Development("1.1.0");
 
     private readonly IFatalExceptionHandler _fatalExceptionHandler = Substitute.For<IFatalExceptionHandler>();
+    private readonly TemporaryFolder _dataFolder = new();
     private readonly InstanceOwnership _ownership;
     private readonly IHost _host;
 
@@ -32,13 +34,14 @@ public sealed class DesktopHostTests : IDisposable
         _ownership = InstanceOwnership.TryAcquire(names, TimeSpan.Zero)
             ?? throw new InvalidOperationException("The instance of the test already has an owner.");
 
-        _host = DesktopHost.Build(s_identity, DevelopmentOptions.None, _ownership, new SingleInstanceOptions(), _fatalExceptionHandler);
+        _host = DesktopHost.Build(s_identity, _dataFolder.AsDataFolder(), DevelopmentOptions.None, _ownership, new SingleInstanceOptions(), _fatalExceptionHandler);
     }
 
     public void Dispose()
     {
         _host.Dispose();
         _ownership.Dispose();
+        _dataFolder.Dispose();
     }
 
     [Fact]
@@ -93,6 +96,14 @@ public sealed class DesktopHostTests : IDisposable
         Assert.Same(s_identity, services.GetRequiredService<BuildIdentity>());
         Assert.Same(_fatalExceptionHandler, services.GetRequiredService<IFatalExceptionHandler>());
         Assert.Same(_ownership, services.GetRequiredService<InstanceOwnership>());
+    }
+
+    [Fact]
+    public void Build_DataOfTheWebView_IsInTheDataFolder()
+    {
+        var options = _host.Services.GetRequiredService<WebViewOptions>();
+
+        Assert.Equal(_dataFolder.Combine("WebView2"), options.UserDataFolder);
     }
 
     // The configuration of the web host is one source of the configuration of the application.

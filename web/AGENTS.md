@@ -105,9 +105,10 @@ The tests of the window are in `web/window-tests`, one file `*.spec.ts` for each
   then, at the root, `dotnet build src/Bravo.Desktop -c Release`. Without the executable or the bundle a test
   fails with these two commands. They need Windows and the WebView2 runtime, and no browser of Playwright:
   `npx playwright install` is not needed.
-- `window-tests/bravo.ts` is the fixture. For each test it starts the application with a new profile of the
-  webview, in a temporary folder, and with the DevTools protocol on a port that the engine chooses: the
-  application has no option for it. It waits until the engine lists the page, then attaches with
+- `window-tests/bravo.ts` is the fixture. For each test it starts the application with a new data folder, a
+  temporary folder that it names with `--dev-data-folder` and where the application keeps its settings and the
+  profile of its webview, and with the DevTools protocol on a port that the engine chooses: the application
+  has no option for it. It waits until the engine lists the page, then attaches with
   `connectOverCDP`, because a page that appears later is not announced to Playwright, and waits until
   Playwright tells the page at its address: the engine lists the address before the page commits it. It
   gives the page the size 1280×800, removes the light color scheme that Playwright gives a page by default,
@@ -115,15 +116,16 @@ The tests of the window are in `web/window-tests`, one file `*.spec.ts` for each
   from a server of the test, `window-tests/update-feed.ts`, through `--dev-update-feed`: the feed of 1.0.14,
   older than any build, unless the test sets the option `updateFeed`, to another feed or to `null` for none.
   At the end it closes the window as a user does, expects exit code 0, waits for the end of the processes of
-  the webview of that profile and removes the folder.
-- `window-tests/webview-settings.ts` gives the webview the two values, and the run says in its log where
-  they come from. A process that is not elevated gives them in the environment variables of the WebView2
-  runtime, `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS` and `WEBVIEW2_USER_DATA_FOLDER`. An elevated process, whose
-  integrity level is High (`S-1-16-12288` in `whoami /groups`), has its webview ignore them: the hosted runner
-  of GitHub Actions is elevated, and there, when `GITHUB_ACTIONS` is `true`, the fixture writes the same two
-  values as policies of the machine for `Bravo.exe`, under `HKLM\SOFTWARE\Policies\Microsoft\Edge\WebView2`,
-  and removes them after each test and in `window-tests/global-teardown.ts`. It fails, and replaces nothing,
-  when a value `Bravo.exe` is already there. In an elevated terminal elsewhere it writes nothing and fails.
+  the webview of that data folder and removes the folder.
+- `window-tests/webview-settings.ts` gives the webview the browser argument that opens the DevTools protocol,
+  and the run says in its log where it comes from. A process that is not elevated gives it in the environment
+  variable of the WebView2 runtime `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS`. An elevated process, whose
+  integrity level is High (`S-1-16-12288` in `whoami /groups`), has its webview ignore it: the hosted runner of
+  GitHub Actions is elevated, and there, when `GITHUB_ACTIONS` is `true`, the fixture writes the same value as
+  the policy of the machine `AdditionalBrowserArguments` for `Bravo.exe`, under
+  `HKLM\SOFTWARE\Policies\Microsoft\Edge\WebView2`, and removes it after each test and in
+  `window-tests/global-teardown.ts`. It fails, and replaces nothing, when a value `Bravo.exe` is already there.
+  In an elevated terminal elsewhere it writes nothing and fails.
 - The application has one instance, so one test runs at a time (`workers: 1`), and never while
   `dotnet test` runs: `BravoProcessTests` starts the same executable. A development build that already runs
   takes the start of a test, which fails and says to close it. The installed application does not matter.

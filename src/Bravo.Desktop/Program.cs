@@ -32,10 +32,12 @@ internal static class Program
             return SecondInstance.End(arbitration);
         }
 
+        var dataFolder = DataFolder.For(identity, start.Development);
+
         // Released last, after the host is disposed: until then no other process becomes the owner.
         using (arbitration.Ownership)
         {
-            using var host = DesktopHost.Build(identity, start.Development, arbitration.Ownership, options, fatalExceptionHandler);
+            using var host = DesktopHost.Build(identity, dataFolder, start.Development, arbitration.Ownership, options, fatalExceptionHandler);
             return DesktopHost.Run(host, start.Request);
         }
     }

@@ -32,6 +32,7 @@ public sealed class WebViewHostTests : IAsyncLifetime
     private static readonly TimeSpan s_timeout = TimeSpan.FromSeconds(60);
 
     private readonly OwnedInstance _instance = new();
+    private readonly TemporaryFolder _dataFolder = new();
     private readonly WebViewTestSite _site = new();
     private readonly WebViewTestWindow _window = new();
     private readonly WebApplication _host;
@@ -42,7 +43,7 @@ public sealed class WebViewHostTests : IAsyncLifetime
     {
         var identity = BuildIdentity.Development("1.1.0");
         var fatalExceptionHandler = Substitute.For<IFatalExceptionHandler>();
-        _host = DesktopHost.Build(identity, DevelopmentOptions.None, _instance.Ownership, new SingleInstanceOptions(), fatalExceptionHandler);
+        _host = DesktopHost.Build(identity, _dataFolder.AsDataFolder(), DevelopmentOptions.None, _instance.Ownership, new SingleInstanceOptions(), fatalExceptionHandler);
         _requests = new RequestLog(_host.Services.GetRequiredService<DiagnosticListener>());
 
         // The webview of the application, with the folders of the test in place of the ones of the installation.
@@ -66,6 +67,7 @@ public sealed class WebViewHostTests : IAsyncLifetime
         await _host.DisposeAsync();
         _instance.Dispose();
         _site.Dispose();
+        _dataFolder.Dispose();
     }
 
     [Fact]

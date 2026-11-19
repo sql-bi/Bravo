@@ -39,7 +39,7 @@ public sealed class DevelopmentHostTests : IAsyncLifetime
         };
         var identity = BuildIdentity.Development("1.1.0");
         var fatalExceptionHandler = Substitute.For<IFatalExceptionHandler>();
-        _host = DesktopHost.Build(identity, development, _instance.Ownership, new SingleInstanceOptions(), fatalExceptionHandler);
+        _host = DesktopHost.Build(identity, new DataFolder(_folder), development, _instance.Ownership, new SingleInstanceOptions(), fatalExceptionHandler);
     }
 
     // In a folder that does not exist yet: the host creates it.

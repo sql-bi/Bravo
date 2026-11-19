@@ -7,14 +7,15 @@ import { setTimeout as delay } from 'node:timers/promises';
 import { promisify } from 'node:util';
 import { type Browser, chromium, expect, type Page, test as base } from '@playwright/test';
 import { releasedFeed, UpdateFeedServer } from './update-feed';
-import { chooseWebViewSettings, profilePrefix, type WebViewSettings } from './webview-settings';
+import { chooseWebViewSettings, type WebViewSettings } from './webview-settings';
 
-// The fixture of the tests of the window: it starts the Bravo.exe that the build wrote, with a new profile of
-// the webview and the DevTools protocol on a port that the engine chooses, attaches Playwright to the page, and
-// closes the application as a user does. Nothing of the application changes for a test: the two values are read
-// by the WebView2 runtime (webview-settings.ts), and the application passes no browser argument of its own. Its
-// one argument names the update feed of the test, which a server of the test serves (update-feed.ts). A test that
-// opens a page in the default browser of the machine answers the request itself (answerBrowserRequests).
+// The fixture of the tests of the window: it starts the Bravo.exe that the build wrote, with a new data folder,
+// which holds its settings and the profile of its webview, and the DevTools protocol on a port that the engine
+// chooses, attaches Playwright to the page, and closes the application as a user does. Nothing of the
+// application changes for a test: the browser argument is read by the WebView2 runtime (webview-settings.ts),
+// and the application passes none of its own. Its arguments name the data folder of the test and the update
+// feed of the test, which a server of the test serves (update-feed.ts). A test that opens a page in the default
+// browser of the machine answers the request itself (answerBrowserRequests).
 
 const executable = path.join(__dirname, '..', '..', 'artifacts', 'bin', 'Bravo.Desktop', 'release', 'Bravo.exe');
 const bundle = path.join(path.dirname(executable), 'wwwroot', 'js', 'main.js');
@@ -185,10 +186,10 @@ async function waitFor<T>(what: string, application: BravoProcess, probe: () => 
 
 /**
  * What tells why the engine did not answer: the title of the window of the application, the command lines of
- * the browser processes of the webviews of Bravo.exe that run on the machine, and the names of what the folder
- * of the profile holds.
+ * the browser processes of the webviews of Bravo.exe that run on the machine, and the names of what the data
+ * folder of the test and the profile of the webview in it hold.
  */
-async function describeStart(application: BravoProcess, profile: string): Promise<string> {
+async function describeStart(application: BravoProcess, dataFolder: string): Promise<string> {
     const names = async (folder: string) => (await readdir(folder).catch((): string[] => [])).sort().join(', ') || 'nothing';
     const script = `
         $title = (Get-Process -Id $env:BRAVO_TEST_PID).MainWindowTitle
@@ -198,13 +199,18 @@ async function describeStart(application: BravoProcess, profile: string): Promis
         "The main window of Bravo.exe is titled '$title'. The browser processes of the webviews of Bravo.exe run as: $($browsers -join ' | ')."`;
     const { stdout } = await execFileAsync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', script],
         { env: { ...process.env, BRAVO_TEST_PID: String(application.child.pid) } }).catch(error => ({ stdout: String(error) }));
-    return `${stdout.trim().replace(/\r?\n/g, ' ')} The folder of the profile holds ${await names(profile)}; its folder EBWebView holds ${await names(path.join(profile, 'EBWebView'))}.`;
+    return `${stdout.trim().replace(/\r?\n/g, ' ')} The data folder holds ${await names(dataFolder)}; the folder EBWebView of its profile holds ${await names(engineFolder(dataFolder))}.`;
 }
 
-/** The port of the DevTools protocol, which the engine writes in its folder of the profile once it listens. */
-async function readDevToolsPort(profile: string): Promise<number | undefined> {
+/** The folder of the engine in the profile of the webview, which the application keeps in its data folder. */
+function engineFolder(dataFolder: string) {
+    return path.join(dataFolder, 'WebView2', 'EBWebView');
+}
+
+/** The port of the DevTools protocol, which the engine writes in its folder once it listens. */
+async function readDevToolsPort(dataFolder: string): Promise<number | undefined> {
     try {
-        const [port] = (await readFile(path.join(profile, 'EBWebView', 'DevToolsActivePort'), 'utf8')).split('\n');
+        const [port] = (await readFile(path.join(engineFolder(dataFolder), 'DevToolsActivePort'), 'utf8')).split('\n');
         return Number(port) || undefined;
     } catch {
         return undefined;
@@ -217,20 +223,20 @@ async function hasPage(port: number): Promise<true | undefined> {
     return targets.some(target => target.type === 'page' && target.url.startsWith(pageOrigin)) || undefined;
 }
 
-/** The processes of the webview of a profile, which end after the application. */
-async function webViewProcesses(profile: string): Promise<number[]> {
+/** The processes of the webview whose profile is in a data folder, which end after the application. */
+async function webViewProcesses(dataFolder: string): Promise<number[]> {
     const { stdout } = await execFileAsync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command',
-        "Get-CimInstance Win32_Process -Filter \"Name = 'msedgewebview2.exe'\" | Where-Object { $_.CommandLine -and $_.CommandLine.Contains($env:BRAVO_TEST_PROFILE) } | ForEach-Object { $_.ProcessId }"],
-        { env: { ...process.env, BRAVO_TEST_PROFILE: path.basename(profile) } });
+        "Get-CimInstance Win32_Process -Filter \"Name = 'msedgewebview2.exe'\" | Where-Object { $_.CommandLine -and $_.CommandLine.Contains($env:BRAVO_TEST_FOLDER) } | ForEach-Object { $_.ProcessId }"],
+        { env: { ...process.env, BRAVO_TEST_FOLDER: path.basename(dataFolder) } });
     return stdout.split(/\s+/).filter(id => id).map(Number);
 }
 
-async function waitForWebViewEnd(profile: string) {
+async function waitForWebViewEnd(dataFolder: string) {
     const limit = Date.now() + closeSeconds * 1000;
-    let left = await webViewProcesses(profile);
+    let left = await webViewProcesses(dataFolder);
     while (left.length && Date.now() < limit) {
         await delay(250);
-        left = await webViewProcesses(profile);
+        left = await webViewProcesses(dataFolder);
     }
     if (left.length) {
         await Promise.all(left.map(id => execFileAsync('taskkill', ['/PID', String(id), '/F']).catch(() => { })));
@@ -238,17 +244,17 @@ async function waitForWebViewEnd(profile: string) {
     }
 }
 
-/** Closes the application, waits for the end of its webview and removes its profile; returns the exit code. */
-async function end(application: BravoProcess | undefined, browser: Browser | undefined, profile: string): Promise<number | undefined> {
+/** Closes the application, waits for the end of its webview and removes its data folder; returns the exit code. */
+async function end(application: BravoProcess | undefined, browser: Browser | undefined, dataFolder: string): Promise<number | undefined> {
     try {
         return await application?.close();
     } finally {
         // Only now: closing a browser of the DevTools protocol would end the processes of the webview
         await browser?.close().catch(() => { });
         try {
-            await waitForWebViewEnd(profile);
+            await waitForWebViewEnd(dataFolder);
         } finally {
-            await rm(profile, { recursive: true, force: true, maxRetries: 10 });
+            await rm(dataFolder, { recursive: true, force: true, maxRetries: 10 });
         }
     }
 }
@@ -266,7 +272,7 @@ export const test = base.extend<{ bravo: Bravo, updateFeed: string | null }, { w
     // Decided once for the tests of a worker, and said in the log of the run
     webView: [async ({ }, use) => {
         const webView = await chooseWebViewSettings();
-        console.log(`The webview of Bravo.exe gets the DevTools port and the profile from ${webView.source}.`);
+        console.log(`The webview of Bravo.exe gets the DevTools port from ${webView.source}.`);
         await use(webView);
     }, { scope: 'worker' }],
 
@@ -275,7 +281,7 @@ export const test = base.extend<{ bravo: Bravo, updateFeed: string | null }, { w
         checkBuild();
 
         // The long path: the temporary folder of a runner of continuous integration is a short 8.3 path
-        const profile = await mkdtemp(path.join(realpathSync.native(os.tmpdir()), profilePrefix));
+        const dataFolder = await mkdtemp(path.join(realpathSync.native(os.tmpdir()), 'bravo-window-test-'));
 
         let feed: UpdateFeedServer | undefined;
         let application: BravoProcess | undefined;
@@ -283,11 +289,11 @@ export const test = base.extend<{ bravo: Bravo, updateFeed: string | null }, { w
         let failure: unknown;
         try {
             feed = (updateFeed === null ? undefined : await UpdateFeedServer.start(updateFeed));
-            const args = (feed ? [`--dev-update-feed=${feed.address}`] : []);
-            const started = new BravoProcess(args, await webView.give(profile));
+            const args = [`--dev-data-folder=${dataFolder}`, ...(feed ? [`--dev-update-feed=${feed.address}`] : [])];
+            const started = new BravoProcess(args, await webView.give());
             application = started;
 
-            const port = await waitFor('the DevTools protocol', started, () => readDevToolsPort(profile), () => describeStart(started, profile));
+            const port = await waitFor('the DevTools protocol', started, () => readDevToolsPort(dataFolder), () => describeStart(started, dataFolder));
             await waitFor('its page', started, () => hasPage(port));
 
             browser = await chromium.connectOverCDP(`http://127.0.0.1:${port}`);
@@ -335,7 +341,7 @@ export const test = base.extend<{ bravo: Bravo, updateFeed: string | null }, { w
 
         let code: number | undefined;
         try {
-            code = await end(application, browser, profile);
+            code = await end(application, browser, dataFolder);
         } finally {
             await feed?.close();
             await webView.takeBack();

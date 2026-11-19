@@ -114,6 +114,7 @@ public sealed class ActivationCommandLineTests
     [InlineData("--dev-origin=http://127.0.0.1:8098")]
     [InlineData("--dev-connection-file=host.json")]
     [InlineData("--dev-update-feed=http://127.0.0.1:8099/currentversion.json")]
+    [InlineData(@"--dev-data-folder=C:\Tests\data")]
     public void Parse_DevelopmentOptionInAReleaseBuild_IsAnErrorLikeAnyArgumentThatIsNotKnown(string argument)
     {
         var start = ActivationCommandLine.Parse([argument], s_release);
@@ -188,6 +189,24 @@ public sealed class ActivationCommandLineTests
 
         Assert.Null(start.Development.UpdateFeedAddress);
         Assert.Contains(start.Request.CommandLineErrors, error => error.Contains(address));
+    }
+
+    [Fact]
+    public void Parse_DataFolderInADevelopmentBuild_ReturnsItsFullPath()
+    {
+        var start = ActivationCommandLine.Parse(["--dev-data-folder", "data"], s_development);
+
+        Assert.Equal(Path.GetFullPath("data"), start.Development.DataFolderPath);
+        Assert.Same(ActivationRequest.Empty, start.Request);
+    }
+
+    [Fact]
+    public void Parse_DataFolderThatIsNotAPath_ReadsNoFolderAndReportsAnError()
+    {
+        var start = ActivationCommandLine.Parse(["--dev-data-folder", "C:\\data\0"], s_development);
+
+        Assert.Null(start.Development.DataFolderPath);
+        Assert.Contains(start.Request.CommandLineErrors, error => error.Contains("--dev-data-folder"));
     }
 
     [Fact]

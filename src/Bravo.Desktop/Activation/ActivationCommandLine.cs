@@ -12,7 +12,8 @@ namespace Bravo.Desktop.Activation;
 /// <summary>
 /// The command line of the executable, as the external tool registration of Power BI Desktop writes it:
 /// <c>--server</c> or <c>-s</c>, <c>--database</c> or <c>-d</c>, and <c>--ppid</c>. A development build also
-/// knows <c>--dev-origin</c>, <c>--dev-connection-file</c> and <c>--dev-update-feed</c>.
+/// knows <c>--dev-origin</c>, <c>--dev-connection-file</c>, <c>--dev-update-feed</c> and
+/// <c>--dev-data-folder</c>.
 /// </summary>
 internal static class ActivationCommandLine
 {
@@ -39,7 +40,8 @@ internal static class ActivationCommandLine
         var origin = new Option<string>("--dev-origin");
         var connectionFile = new Option<string>("--dev-connection-file");
         var updateFeed = new Option<string>("--dev-update-feed");
-        var command = new Command("Bravo") { origin, connectionFile, updateFeed };
+        var dataFolder = new Option<string>("--dev-data-folder");
+        var command = new Command("Bravo") { origin, connectionFile, updateFeed, dataFolder };
         command.TreatUnmatchedTokensAsErrors = false;
         var result = command.Parse(args, CreateConfiguration());
 
@@ -49,6 +51,7 @@ internal static class ActivationCommandLine
             AllowedOrigin = ReadOrigin(result, origin, errors),
             ConnectionFilePath = ReadPath(result, connectionFile, errors),
             UpdateFeedAddress = ReadAddress(result, updateFeed, errors),
+            DataFolderPath = ReadPath(result, dataFolder, errors),
         };
 
         return new StartArguments(ParseActivation([.. result.UnmatchedTokens], errors), development);
@@ -154,7 +157,7 @@ internal static class ActivationCommandLine
         }
         catch (Exception exception) when (exception is ArgumentException or NotSupportedException or PathTooLongException)
         {
-            errors.Add($"The value of '{option.Name}' is not the path of a file: '{value}'.");
+            errors.Add($"The value of '{option.Name}' is not a path: '{value}'.");
             return null;
         }
     }

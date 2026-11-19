@@ -4,7 +4,8 @@ namespace Bravo.Desktop.Development;
 
 /// <summary>
 /// What a development build is asked for on its command line: that its user interface can run in a browser,
-/// and the update feed that it checks. A release build has none of these: its command line does not know them.
+/// the update feed that it checks and the folder of its data. A release build has none of these: its command
+/// line does not know them.
 /// </summary>
 internal sealed record DevelopmentOptions
 {
@@ -29,4 +30,10 @@ internal sealed record DevelopmentOptions
     /// check.
     /// </summary>
     public Uri? UpdateFeedAddress { get; init; }
+
+    /// <summary>
+    /// The folder of the data of the build, in place of the one under the local application data of the user:
+    /// a test starts the application with settings and a profile of the webview of its own.
+    /// </summary>
+    public string? DataFolderPath { get; init; }
 }
