@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Windows.Forms;
+using Bravo.Core.Browser;
 
 namespace Bravo.Desktop.WebView;
 
@@ -9,7 +9,7 @@ namespace Bravo.Desktop.WebView;
 /// </summary>
 internal static class WebViewFailureDialog
 {
-    public static void Show(IWin32Window owner, WebViewFailureMessage message)
+    public static void Show(IWin32Window owner, WebViewFailureMessage message, IBrowserLauncher browserLauncher)
     {
         var page = new TaskDialogPage
         {
@@ -26,16 +26,9 @@ internal static class WebViewFailureDialog
             var separator = Environment.NewLine + Environment.NewLine;
             page.Text = $"{message.Text}{separator}<a href=\"{address}\">{address}</a>";
             page.EnableLinks = true;
-            page.LinkClicked += (_, _) => OpenInBrowser(address);
+            page.LinkClicked += (_, _) => browserLauncher.Open(new Uri(address));
         }
 
         _ = TaskDialog.ShowDialog(owner, page);
-    }
-
-    // The address is the one of the message, never text that came from outside.
-    private static void OpenInBrowser(string address)
-    {
-        var browser = new ProcessStartInfo(address) { UseShellExecute = true };
-        using var process = Process.Start(browser);
     }
 }

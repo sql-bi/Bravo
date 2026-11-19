@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
+using Bravo.Core.Browser;
 using Bravo.Core.Settings;
 using Bravo.Desktop.Interop;
 using Bravo.Desktop.WebView;
@@ -15,6 +16,7 @@ internal sealed class MainWindow : Form, IMainWindow
     private readonly ShellExit _exit;
     private readonly IUserSettingsStore _settings;
     private readonly ISystemAppMode _systemAppMode;
+    private readonly IBrowserLauncher _browserLauncher;
     private (Theme Theme, WindowColors Colors)? _appliedTheme;
     private volatile bool _closeRequested;
 
@@ -23,12 +25,14 @@ internal sealed class MainWindow : Form, IMainWindow
         WebViewHost webView,
         ShellExit exit,
         IUserSettingsStore settings,
-        ISystemAppMode systemAppMode)
+        ISystemAppMode systemAppMode,
+        IBrowserLauncher browserLauncher)
     {
         _webView = webView;
         _exit = exit;
         _settings = settings;
         _systemAppMode = systemAppMode;
+        _browserLauncher = browserLauncher;
 
         Text = identity.WindowTitle;
         Icon = LoadIcon();
@@ -157,7 +161,7 @@ internal sealed class MainWindow : Form, IMainWindow
     private void OnWebViewEnded(object? sender, WebViewEndedEventArgs e)
     {
         _exit.Code = e.ExitCode;
-        WebViewFailureDialog.Show(this, WebViewFailureMessage.For(e.Failure, e.Error));
+        WebViewFailureDialog.Show(this, WebViewFailureMessage.For(e.Failure, e.Error), _browserLauncher);
         Close();
     }
 

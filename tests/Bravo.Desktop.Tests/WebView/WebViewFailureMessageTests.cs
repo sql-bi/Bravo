@@ -1,4 +1,5 @@
 ﻿using System;
+using Bravo.Core.Browser;
 using Bravo.Desktop.WebView;
 using Xunit;
 
@@ -13,6 +14,15 @@ public sealed class WebViewFailureMessageTests
         var message = WebViewFailureMessage.For(WebViewFailure.RuntimeMissing, error: null);
 
         Assert.Equal("https://go.microsoft.com/fwlink/p/?LinkId=2124703", message.LinkAddress);
+    }
+
+    // The dialog opens the address through the default browser, which opens only a site that it trusts.
+    [Fact]
+    public void For_RuntimeMissing_OffersAnAddressOfATrustedSite()
+    {
+        var message = WebViewFailureMessage.For(WebViewFailure.RuntimeMissing, error: null);
+
+        Assert.True(TrustedSites.Contains(new Uri(message.LinkAddress!)));
     }
 
     // The failure travels by name: its type is not public, and a test method is.

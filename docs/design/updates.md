@@ -93,7 +93,9 @@ turns it off is not read yet (backlog B-5).
   writes the feed and checks it as 1.0.x reads it. `UpdateFile`, `ReleaseFeedDocument` and that module change
   together, and the names only when no installed copy builds them.
 - `TrustedSites` is the one list of the sites. The feed is read with it, the route checks an address with it,
-  and `DefaultBrowserLauncher` checks it again, so that no other caller opens another address.
+  and `DefaultBrowserLauncher` checks it again, so that no other caller opens another address. Every page that
+  the application opens in the browser goes through `DefaultBrowserLauncher`, the link of a failure of the
+  webview too.
 - `UpdateCheck` decides whether this copy reads a feed; `HttpReleaseFeed` only reads the one that it is given.
 - The file version is the one that Nerdbank.GitVersioning writes into the assembly. A build that carries the
   runtime, `SelfContained`, writes the assembly metadata `BravoSelfContained`.
