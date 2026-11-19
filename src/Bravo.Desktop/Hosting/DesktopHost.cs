@@ -53,6 +53,7 @@ internal static class DesktopHost
 
         builder.Services.AddDesktopLifetime();
         builder.Services.AddApplicationInfo(identity);
+        builder.Services.AddInstallation();
         builder.Services.AddShell(identity, fatalExceptionHandler);
         builder.Services.AddWebView(identity, dataFolder);
         builder.Services.AddDevelopmentOptions(development);

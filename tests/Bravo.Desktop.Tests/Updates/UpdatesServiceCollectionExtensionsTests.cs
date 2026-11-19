@@ -1,5 +1,6 @@
 ﻿using System;
 using Bravo.Core.Updates;
+using Bravo.Desktop.Hosting;
 using Bravo.Desktop.Updates;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
@@ -50,7 +51,9 @@ public sealed class UpdatesServiceCollectionExtensionsTests
     [Fact]
     public void AddUpdates_AnyBuild_CreatesTheUpdateCheck()
     {
-        var services = new ServiceCollection().AddUpdates(BuildIdentity.Release("1.1.0"), developmentFeedAddress: null);
+        var services = new ServiceCollection()
+            .AddInstallation()
+            .AddUpdates(BuildIdentity.Release("1.1.0"), developmentFeedAddress: null);
         using var provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true });
 
         var updateCheck = provider.GetService<UpdateCheck>();

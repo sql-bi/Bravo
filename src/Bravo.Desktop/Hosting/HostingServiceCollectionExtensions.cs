@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Globalization;
 using Bravo.Core.Application;
+using Bravo.Core.Updates;
+using Bravo.Platform.Windows.Updates;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
@@ -37,6 +39,17 @@ internal static class HostingServiceCollectionExtensions
             IsDevelopmentBuild = identity.IsDevelopmentBuild,
         };
         services.AddSingleton(application);
+
+        return services;
+    }
+
+    /// <summary>
+    /// Adds what the registry records of the installation of this copy: the update check names the file of its
+    /// kind from it, and the settings start from its choice of telemetry.
+    /// </summary>
+    public static IServiceCollection AddInstallation(this IServiceCollection services)
+    {
+        services.AddSingleton<IInstallationReader>(new RegistryInstallationReader(AppContext.BaseDirectory));
 
         return services;
     }

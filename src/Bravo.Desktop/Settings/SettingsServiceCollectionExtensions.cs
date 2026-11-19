@@ -1,9 +1,7 @@
 ﻿using System;
 using System.IO;
 using Bravo.Core.Settings;
-using Bravo.Core.Updates;
 using Bravo.Platform.Windows.Settings;
-using Bravo.Platform.Windows.Updates;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -22,7 +20,6 @@ internal static class SettingsServiceCollectionExtensions
         var path = Path.Combine(dataFolder.Path, FileName);
 
         services.TryAddSingleton(TimeProvider.System);
-        services.TryAddSingleton<IInstallationReader>(new RegistryInstallationReader(AppContext.BaseDirectory));
         services.AddSingleton<FileReplacer>();
         services.AddSingleton(provider => ActivatorUtilities.CreateInstance<FileUserSettingsStore>(provider, path));
         services.AddSingleton<IUserSettingsStore>(provider => provider.GetRequiredService<FileUserSettingsStore>());

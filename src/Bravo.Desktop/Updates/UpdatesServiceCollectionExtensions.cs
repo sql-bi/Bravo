@@ -34,7 +34,6 @@ internal static class UpdatesServiceCollectionExtensions
         services.TryAddSingleton(TimeProvider.System);
         services.AddSingleton(options);
         services.AddHttpClient<IReleaseFeed, HttpReleaseFeed>();
-        services.TryAddSingleton<IInstallationReader>(new RegistryInstallationReader(AppContext.BaseDirectory));
         services.AddSingleton<ISystemBeep, SystemBeep>();
         services.AddTransient<UpdateCheck>();
 
