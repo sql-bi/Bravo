@@ -550,7 +550,7 @@ function Test-UpgradeFromPrevious([string] $Scope, [string] $Properties, $Expect
     Assert-True (Test-UserData) 'the data of the user is as it was'
 
     Write-Step "$Scope`: the upgraded application starts and ends"
-    Assert-ApplicationRuns $folder$false
+    Assert-ApplicationRuns $folder $false
     Assert-True (Test-UserData) 'the data of the user is as it was'
 
     Assert-Equal 0 (Uninstall-Product $product.Code "$Scope-remove-after-upgrade") 'the exit code of the removal'
@@ -598,7 +598,7 @@ function Test-SelfContained([string] $Scope) {
     Write-Step "$Scope`: the package that carries the .NET runtime"
     Assert-Equal 0 (Install-Package (Get-PackagePath $Scope $true) "$Scope-selfcontained-install") 'the exit code of the installation'
     $product = Assert-Installed $Scope $folder $AllOn $true
-    Assert-ApplicationRuns $folder$true
+    Assert-ApplicationRuns $folder $true
     Assert-Equal 0 (Uninstall-Product $product.Code "$Scope-selfcontained-remove") 'the exit code of the removal'
     Assert-Removed $Scope $folder
     Remove-UserData
