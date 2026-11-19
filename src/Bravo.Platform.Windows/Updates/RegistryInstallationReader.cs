@@ -85,13 +85,7 @@ public sealed class RegistryInstallationReader(string applicationFolder) : IInst
         try
         {
             using var key = root.OpenSubKey(KeyName);
-            var value = key?.GetValue(valueName, defaultValue: null, RegistryValueOptions.DoNotExpandEnvironmentNames);
-            if (value is null || key!.GetValueKind(valueName) != RegistryValueKind.String)
-            {
-                return null;
-            }
-
-            return (string)value;
+            return key?.GetValue(valueName) is string text && key.GetValueKind(valueName) == RegistryValueKind.String ? text : null;
         }
         catch (Exception exception) when (exception is SecurityException or IOException or UnauthorizedAccessException)
         {

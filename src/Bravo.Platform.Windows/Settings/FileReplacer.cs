@@ -30,15 +30,14 @@ public sealed class FileReplacer(TimeProvider timeProvider)
 
         var fullPath = Path.GetFullPath(path);
         var temporaryPath = fullPath + ".tmp";
-        var replaced = false;
         try
         {
-            for (var attempt = 1; !replaced; attempt++)
+            for (var attempt = 1; ; attempt++)
             {
                 try
                 {
                     Replace(fullPath, temporaryPath, content.Span);
-                    replaced = true;
+                    return;
                 }
                 catch (Exception exception) when (attempt < Attempts && exception is IOException or UnauthorizedAccessException)
                 {
@@ -46,12 +45,10 @@ public sealed class FileReplacer(TimeProvider timeProvider)
                 }
             }
         }
-        finally
+        catch
         {
-            if (!replaced)
-            {
-                DeleteTemporaryFile(temporaryPath);
-            }
+            DeleteTemporaryFile(temporaryPath);
+            throw;
         }
     }
 
