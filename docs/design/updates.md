@@ -104,5 +104,6 @@ turns it off is not read yet (backlog B-5).
   (`web/window-tests/update-feed.ts`) that serves the feed as the storage of the releases does, UTF-16 with a
   byte order mark: by default the feed of 1.0.14, older than any build, and none for a test that sets
   `updateFeed` to `null`.
-- No test opens the browser of the machine: the fixture of the tests of the window answers `POST /browser/open`
-  for every test, with `page.route`, and keeps the addresses.
+- No test opens the browser of the machine: the test of the window that clicks the download answers
+  `POST /browser/open` itself, with `answerBrowserRequests` of `web/window-tests/bravo.ts`, and reads the
+  address.

@@ -36,6 +36,9 @@ and say to run them from a terminal that is not elevated.
 - A test reaches no service outside the machine: the application reads the update feed from a server of the
   test, and a request that would open the browser of the user is answered by the test
   ([updates](updates.md)).
+- Only a test that answers a request in place of the host routes the requests of the page. While the page has
+  a route, Playwright answers every CORS preflight in place of the host and turns off the cache: the other
+  tests keep proving the CORS of the host.
 - A test never reads the token of the host. A trace of a failed test holds the headers of its requests, and
   so the token of the host of that test, whose process has ended.
 

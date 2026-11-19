@@ -22,6 +22,7 @@ test.describe('a newer release in the update feed', () => {
         const status = bravo.page.locator('#dialog-options .update-status');
         await expect(status.locator('.pending-update')).toHaveText('New version available: 99.0.0');
 
+        await bravo.answerBrowserRequests();
         await status.locator('.button').click();
 
         await expect.poll(() => bravo.openedInBrowser).toEqual([downloadOfThisCopy]);
