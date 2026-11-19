@@ -100,6 +100,7 @@ it to both, after the draft is published and its files can be downloaded.
 - The run reads the file back as 1.0.x reads it, and fails when 1.0.x would not be told, or would ask for
   a file that the release does not have.
 - The file is UTF-8 with no byte order mark.
+- 1.1.0 reads the feed and names the file of its copy as 1.0.x does ([Updates](updates.md)).
 - A preview never reaches the feed: its release writes no such file. A run that publishes nothing always
   writes one, to prove the step.
 
@@ -155,7 +156,7 @@ to Azure, Key Vault and AzureSignTool, the trust of the signature, or the creati
   function; the run compares them with the files that the build made, and `Test-Release.ps1` holds the
   names of the files of 1.0.14.
 - `Confirm-UpdateFeed` is what an installed 1.0.x does with the feed, step by step. A change of the feed is
-  first a change of that function and of its tests.
+  first a change of that function and of its tests, then of what 1.1.0 reads ([Updates](updates.md)).
 - The button of GitHub that starts a workflow needs `release.yml` on the default branch. Until the final
   merge the workflow is started with `gh workflow run release.yml --ref <branch>`, which GitHub allows after
   the workflow has run once, as it does on a push to a work branch.

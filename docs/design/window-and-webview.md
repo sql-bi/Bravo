@@ -60,7 +60,8 @@ browser.
 
 - A navigation outside the origin of the page is cancelled, in the window and in a frame; a frame may hold a
   blank document.
-- No window opens, and no download starts (backlog B-3).
+- No window opens, and no download starts. A link of the page, and the file of an update, open in the default
+  browser of the user, through the host ([updates](updates.md)).
 - A permission that a document of another origin asks for is denied. For the origin of the page, reading the
   clipboard is allowed, and the permissions that the application knows and the page does not use are denied,
   each one by its name: microphone, camera, geolocation, notifications, other sensors, multiple automatic
@@ -88,13 +89,14 @@ An exception of an asynchronous step that is not a failure of the engine leaves 
 application like any other. Until backlog B-8 the messages are dialogs of their own.
 
 **In a browser.** For development and tests the same page runs in an ordinary browser, against a development
-build of the host. Only a development build knows two more arguments of the command line; to a release build
-they are arguments that it does not know, and so errors of the request.
+build of the host. Only a development build knows three more arguments of the command line; to a release
+build they are arguments that it does not know, and so errors of the request.
 
 | Argument | What the host does |
 | --- | --- |
 | `--dev-origin=<origin>` | Allows one more origin to call the API: the one of the development server |
 | `--dev-connection-file=<path>` | Once it has started, writes the address and the token of the API to the file, a JSON object with the members `address` and `token`; deletes the file when it stops |
+| `--dev-update-feed=<address>` | Reads the update feed at the address, an absolute `http` or `https` one: without it a development build reads none ([updates](updates.md)) |
 
 A development server serves the development bundle and the static files of the page, on the loopback address
 only, rebuilds the bundle at every change, and gives the page the same object before any other script, with

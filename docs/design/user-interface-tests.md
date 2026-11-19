@@ -33,6 +33,9 @@ and say to run them from a terminal that is not elevated.
 - The application has one instance: one test runs at a time, and the tests do not run together with the
   tests of the host, which start the same executable. A development build that already runs takes the start
   of a test: the test fails and says so.
+- A test reaches no service outside the machine: the application reads the update feed from a server of the
+  test, and a request that would open the browser of the user is answered by the test
+  ([updates](updates.md)).
 - A test never reads the token of the host. A trace of a failed test holds the headers of its requests, and
   so the token of the host of that test, whose process has ended.
 

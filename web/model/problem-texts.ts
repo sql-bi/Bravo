@@ -20,7 +20,8 @@ export const problemTexts: Record<ProblemCode, strings> = {
     MethodNotAllowed: strings.errorUnhandled,
     UnsupportedMediaType: strings.errorUnhandled,
     Unexpected: strings.errorUnhandled,
-    HttpError: strings.errorUnspecified
+    HttpError: strings.errorUnspecified,
+    UpdateCheckFailed: strings.errorCheckForUpdates
 };
 
 /**

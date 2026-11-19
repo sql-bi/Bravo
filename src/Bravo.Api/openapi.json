@@ -211,6 +211,111 @@
           }
         }
       }
+    },
+    "/releases/latest": {
+      "get": {
+        "tags": [
+          "Releases"
+        ],
+        "summary": "Reads the latest release from the update feed: whether it is newer than the application, and the address of its file for this copy. The host also tells a newer release with the beep of the system.",
+        "operationId": "GetLatestRelease",
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LatestRelease"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/browser/open": {
+      "post": {
+        "tags": [
+          "Browser"
+        ],
+        "summary": "Opens a page in the default browser of the user: only a page on a site that the application trusts.",
+        "operationId": "OpenInBrowser",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OpenInBrowserRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -376,6 +481,48 @@
           }
         }
       },
+      "LatestRelease": {
+        "required": [
+          "version",
+          "isNewer",
+          "downloadAddress",
+          "releaseNotesAddress"
+        ],
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string",
+            "description": "The version of the release as a user reads it, such as `1.1.0`."
+          },
+          "isNewer": {
+            "type": "boolean",
+            "description": "Whether the release is newer than the application that answers."
+          },
+          "downloadAddress": {
+            "type": "string",
+            "description": "The address of the file of the release for this copy of the application: the package of its kind, or the archive for a copy that no package installed. Absolute, with every character that an address cannot hold escaped."
+          },
+          "releaseNotesAddress": {
+            "type": "string",
+            "description": "The address of the page that tells what the release changes. Absolute, with every character that an address cannot hold escaped."
+          }
+        },
+        "description": "The latest release of the application, as the update feed names it, for the copy of the application that answers."
+      },
+      "OpenInBrowserRequest": {
+        "required": [
+          "address"
+        ],
+        "type": "object",
+        "properties": {
+          "address": {
+            "type": "string",
+            "description": "The address of the page: absolute, with the scheme `https` or `http`, on a site that the application trusts.",
+            "format": "uri"
+          }
+        },
+        "description": "The page to open in the default browser of the user."
+      },
       "ProblemCode": {
         "enum": [
           "InvalidRequest",
@@ -385,7 +532,8 @@
           "MethodNotAllowed",
           "UnsupportedMediaType",
           "Unexpected",
-          "HttpError"
+          "HttpError",
+          "UpdateCheckFailed"
         ],
         "type": "string",
         "description": "What went wrong, as a name that never changes meaning. No error answer has a code outside this list."
@@ -514,6 +662,12 @@
     },
     {
       "name": "Events"
+    },
+    {
+      "name": "Releases"
+    },
+    {
+      "name": "Browser"
     }
   ]
 }

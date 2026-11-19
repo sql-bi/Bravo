@@ -1,6 +1,6 @@
 import { expect, pageSize, test } from './bravo';
 
-test('the page starts with a clean console, reads the host and saves no option', async ({ bravo }) => {
+test('the page starts with a clean console, reads the host and the latest release, and saves no option', async ({ bravo }) => {
     const { page } = bravo;
 
     // The first start of the page is over before a test can attach to it: the test sees the next one, the
@@ -16,7 +16,7 @@ test('the page starts with a clean console, reads the host and saves no option',
     expect(bravo.pageErrors).toEqual([]);
     expect(bravo.console.filter(entry => entry.type === 'error' || entry.type === 'warning')).toEqual([]);
 
-    expect([...new Set(bravo.hostRequests())].sort()).toEqual(['GET /application', 'GET /events', 'GET /options']);
+    expect([...new Set(bravo.hostRequests())].sort()).toEqual(['GET /application', 'GET /events', 'GET /options', 'GET /releases/latest']);
     expect(bravo.requests.filter(request =>
         !request.url.startsWith('https://bravo.invalid/') && !request.url.startsWith(`${bravo.address}/`))).toEqual([]);
 

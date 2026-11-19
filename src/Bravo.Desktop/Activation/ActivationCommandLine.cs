@@ -11,7 +11,7 @@ namespace Bravo.Desktop.Activation;
 /// <summary>
 /// The command line of the executable, as the external tool registration of Power BI Desktop writes it:
 /// <c>--server</c> or <c>-s</c>, <c>--database</c> or <c>-d</c>, and <c>--ppid</c>. A development build also
-/// knows <c>--dev-origin</c> and <c>--dev-connection-file</c>.
+/// knows <c>--dev-origin</c>, <c>--dev-connection-file</c> and <c>--dev-update-feed</c>.
 /// </summary>
 internal static class ActivationCommandLine
 {
@@ -37,7 +37,8 @@ internal static class ActivationCommandLine
         // The development options are read first, and what is left is the command line of every build.
         var origin = new Option<string>("--dev-origin");
         var connectionFile = new Option<string>("--dev-connection-file");
-        var command = new Command("Bravo") { origin, connectionFile };
+        var updateFeed = new Option<string>("--dev-update-feed");
+        var command = new Command("Bravo") { origin, connectionFile, updateFeed };
         command.TreatUnmatchedTokensAsErrors = false;
         var result = command.Parse(args, CreateConfiguration());
 
@@ -46,6 +47,7 @@ internal static class ActivationCommandLine
         {
             AllowedOrigin = ReadOrigin(result, origin, errors),
             ConnectionFilePath = ReadPath(result, connectionFile, errors),
+            UpdateFeedAddress = ReadAddress(result, updateFeed, errors),
         };
 
         return new StartArguments(ParseActivation([.. result.UnmatchedTokens], errors), development);
@@ -113,6 +115,25 @@ internal static class ActivationCommandLine
         }
 
         return uri!.GetLeftPart(UriPartial.Authority);
+    }
+
+    private static Uri? ReadAddress(ParseResult result, Option<string> option, List<string> errors)
+    {
+        if (!HasValue(result, option))
+        {
+            return null;
+        }
+
+        var value = result.GetValue(option);
+        var isAddress = Uri.TryCreate(value, UriKind.Absolute, out var uri)
+            && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
+        if (!isAddress)
+        {
+            errors.Add($"The value of '{option.Name}' is not an address, such as http://127.0.0.1:8099/currentversion.json: '{value}'.");
+            return null;
+        }
+
+        return uri;
     }
 
     private static string? ReadPath(ParseResult result, Option<string> option, List<string> errors)

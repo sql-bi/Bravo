@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using Bravo.Api.Events;
 using Bravo.Api.Security;
 using Bravo.Core.Application;
+using Bravo.Core.Browser;
+using Bravo.Core.Updates;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.TestHost;
@@ -57,6 +59,14 @@ internal sealed class TestApi : IAsyncDisposable
     public ApiToken Token => _app.Services.GetRequiredService<ApiToken>();
 
     public IHostEventPublisher Events => _app.Services.GetRequiredService<IHostEventPublisher>();
+
+    public IReleaseFeed ReleaseFeed => _app.Services.GetRequiredService<IReleaseFeed>();
+
+    public IInstallationReader InstallationReader => _app.Services.GetRequiredService<IInstallationReader>();
+
+    public ISystemBeep Beep => _app.Services.GetRequiredService<ISystemBeep>();
+
+    public IBrowserLauncher BrowserLauncher => _app.Services.GetRequiredService<IBrowserLauncher>();
 
     /// <param name="mapRoutes">Adds routes that exist only for a test, after the ones of the API.</param>
     public static async Task<TestApi> StartAsync(Action<IEndpointRouteBuilder>? mapRoutes = null)

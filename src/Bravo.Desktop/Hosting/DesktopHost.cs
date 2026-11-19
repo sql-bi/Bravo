@@ -9,6 +9,7 @@ using Bravo.Desktop.Diagnostics;
 using Bravo.Desktop.Settings;
 using Bravo.Desktop.Shell;
 using Bravo.Desktop.SingleInstance;
+using Bravo.Desktop.Updates;
 using Bravo.Desktop.WebView;
 using Bravo.Platform.Windows.SingleInstance;
 using Microsoft.AspNetCore.Builder;
@@ -56,6 +57,7 @@ internal static class DesktopHost
         builder.Services.AddActivation();
         builder.Services.AddSingleInstance(ownership, singleInstanceOptions);
         builder.Services.AddUserSettings();
+        builder.Services.AddUpdates(identity, development.UpdateFeedAddress);
         builder.Services.AddApi();
 
         var app = builder.Build();

@@ -1,7 +1,9 @@
 ﻿using System;
 using Bravo.Api.Application;
+using Bravo.Api.Browser;
 using Bravo.Api.Events;
 using Bravo.Api.Options;
+using Bravo.Api.Releases;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -44,5 +46,7 @@ public static class ApiApplicationExtensions
         routes.MapApplication();
         routes.MapOptions();
         routes.MapEvents();
+        routes.MapReleases();
+        routes.MapBrowser();
     }
 }

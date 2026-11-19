@@ -16,9 +16,9 @@ criterion can be checked on `develop-vnext`.
 
 ## Now
 
-As of 2026-11-19: the redesign is at stage T3 Distribution. B-1, left in T2, waits for the release of
-TypeScript 7.1 and ts-loader 10; nothing blocks the next item. The first signed preview waits for the
-maintainer: the identity that signs and the four variables of the repository
+As of 2026-11-19: the redesign is at stage T3 Distribution, whose items are done; the next item is B-4. B-1,
+left in T2, waits for the release of TypeScript 7.1 and ts-loader 10. The first signed preview, the exit of
+T3, waits for the maintainer: the identity that signs and the four variables of the repository
 ([guide](guides/make-a-release.md)).
 
 ## Next
@@ -37,24 +37,7 @@ opens the options through the new API and the generated client.
 Exit: GitHub Actions produces a signed, installable preview with release notes; installed over 1.0.14 it keeps
 the four guarantees of [the specification](spec.md#guarantees-for-users-of-10x).
 
-- [ ] B-3 (was D-03) Updates. Hypothesis: a notification, as today. Explore: automatic update, if the installer
-  technology offers it. Also: the page started the download of an update in a frame of its own, and the webview
-  cancels a frame navigation outside the origin of the page and starts no download; the update check has no
-  route, so the page asks the host for nothing: at its start it tells no new version, and in the options it
-  says that the check failed. Also, from D-01: the registry value `installFolder`, under `HKLM` for a package
-  per machine and under `HKCU` for one per user, tells the application which package installed it, and so
-  which of the four files is its update; a silent installation closes a running application and does not
-  start it again. Also, from the release ([design](design/release.md)):
-  - The update feed is written for a stable release alone, and uploaded by hand. Its `version` is the file
-    version, four numbers, which orders a preview and the release of its version: what 1.1.0 compares it
-    with is its own file version, not the semantic version that it shows.
-  - `download` names the package per machine that carries the runtime, and an installed 1.0.x builds the
-    name of its own file from it. Whether 1.1.0 does the same, or the feed names each file, is open: the
-    names of the six files can change only when no installed copy builds them.
-  - A build that is not a public release has a semantic version that ends with the commit. To decide:
-    whether a development build looks for an update at all.
-  - An archive of a release is the folder of the application: a copy started from one has no registry value
-    `installFolder`.
+No item is left: the exit waits for the first signed preview.
 
 ### T4 Cross-cutting services
 
@@ -73,7 +56,10 @@ crash produces a report, telemetry runs on a supported SDK.
 - [ ] B-5 (was S-02) Policies. Hypothesis: the same keys; the templates shipped in a subfolder of the
   installation. Also: `/options` knows no policy, so an option that a policy sets is returned and replaced like
   any other; the page starts with no policy, so its options dialog locks nothing; the packages of D-01 do not
-  carry the templates of `policies/` yet.
+  carry the templates of `policies/` yet. Also, from B-3: the policy `UpdateCheckEnabled` turned off stops
+  every request to the update feed ([ADR 0022](decisions/0022-updates-read-from-the-feed-of-1-0-x-and-downloaded-by-the-browser.md)):
+  `GET /releases/latest` then reads nothing, and the page, which asks at its start and in the options, tells
+  nothing. To decide: the answer of the route, a code of its own or the one of a failed check.
 - [ ] B-6 (was S-03) Network and proxy. Hypothesis: system proxy and auto-configuration detected without
   settings, integrated credentials first, a prompt as the last resort, a connectivity check with clear messages.
   Explore: the proxy in .NET, in the webview, in the sign-in library and in the Analysis Services client
@@ -86,12 +72,17 @@ crash produces a report, telemetry runs on a supported SDK.
   turned on by feature flags ([specification](design/window-and-webview.md)): the request of the page waits,
   without reaching the host, for a prompt of the engine with Block and Allow; the application gets no permission
   request; the answer of the user is kept in the profile. In a probe outside the application, a grant through
-  the DevTools protocol (`Browser.grantPermissions`) made the same request succeed.
+  the DevTools protocol (`Browser.grantPermissions`) made the same request succeed. Also, from B-3: the update
+  feed is read by the typed client `HttpReleaseFeed` of `IHttpClientFactory`, so the proxy can be set on every
+  client in one place; behind a proxy that asks for credentials, an answer 407, the check fails with
+  `UpdateCheckFailed`.
 - [ ] B-7 (was S-04) Diagnostics and logging. Hypothesis: in-memory log shown in the user interface, plus the
   event log. Also: the host has no logging provider yet, so the warning of an owner of the instance that cannot
   create its pipe reaches no log, and neither does a request of the API that failed: the `traceId` of a problem
   matches no log entry, and an error that a use case foresaw is answered and leaves no trace. The diagnostics
-  pane of the page asks for the log of the host every 5 seconds, a call that has no route.
+  pane of the page asks for the log of the host every 5 seconds, a call that has no route. Also, from B-3: an
+  update check that fails keeps its cause, the status of the answer or the exception, in the `BravoException`,
+  and nothing writes it.
 - [ ] B-8 (was S-05) Errors and crash reporting. Material: the branch `feat/crash-reporter-process`. Explore: a
   reporter as an application of its own or as a mode of the main executable. Also: replaces the minimal
   last-chance exception handling; a service of the host that fails stops the host, which closes the window with
@@ -119,6 +110,8 @@ crash produces a report, telemetry runs on a supported SDK.
     and the file version as its build, as in 1.0.x; outside a public release the first ends with the
     commit. The workflow of a release holds no secret: a value of the telemetry that is not in the sources
     needs a variable of the repository, or a secret, which the release does not have yet.
+  - From B-3: the page raises the event `Link` also when the user downloads an update, which 1.0.x did not:
+    it downloaded the file in a frame, and raised no event.
 
 ### T5 Access to models
 

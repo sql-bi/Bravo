@@ -7,6 +7,11 @@
 /// </summary>
 public enum ErrorCode
 {
-    // No use case reports an error yet. The first member takes the value 1: zero, the value of a variable
-    // that nobody set, is no code.
+    // The first member takes the value 1: zero, the value of a variable that nobody set, is no code.
+
+    /// <summary>
+    /// The update feed cannot be read, or what it holds names no release: whether a newer version exists is
+    /// not known.
+    /// </summary>
+    UpdateCheckFailed = 1,
 }

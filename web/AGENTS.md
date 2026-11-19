@@ -4,11 +4,11 @@ Instructions for agents working on the user interface, in `web/`. They add to
 [the ones of the repository](../AGENTS.md).
 
 `web/` holds the user interface of the previous implementation: TypeScript and LESS, bundled by webpack. It
-reads what the application is, the options and the events of the host through the client generated from the
-OpenAPI document. Its other calls belong to features that have not moved: they go through `Host.apiCall`,
-which sends nothing and fails at once with an error that says that the feature is not available yet. Its
-commands run in `web/` and need Node.js 26 with npm: `package.json` pins that line in `devEngines`, and npm
-stops with an error on another one.
+reads what the application is, the options, the events and the latest release of the host, and opens links in
+the browser, through the client generated from the OpenAPI document. Its other calls belong to features that
+have not moved: they go through `Host.apiCall`, which sends nothing and fails at once with an error that says
+that the feature is not available yet. Its commands run in `web/` and need Node.js 26 with npm:
+`package.json` pins that line in `devEngines`, and npm stops with an error on another one.
 
 | Task | Command |
 | --- | --- |
@@ -111,9 +111,11 @@ The tests of the window are in `web/window-tests`, one file `*.spec.ts` for each
   `connectOverCDP`, because a page that appears later is not announced to Playwright, and waits until
   Playwright tells the page at its address: the engine lists the address before the page commits it. It
   gives the page the size 1280×800, removes the light color scheme that Playwright gives a page by default,
-  so that the page has the one of the window, and waits for its start. At the end it closes the window as a
-  user does, expects exit code 0, waits for the end of the processes of the webview of that profile and
-  removes the folder.
+  so that the page has the one of the window, and waits for its start. The application reads the update feed
+  from a server of the test, `window-tests/update-feed.ts`, through `--dev-update-feed`: the feed of 1.0.14,
+  older than any build, unless the test sets the option `updateFeed`, to another feed or to `null` for none.
+  At the end it closes the window as a user does, expects exit code 0, waits for the end of the processes of
+  the webview of that profile and removes the folder.
 - `window-tests/webview-settings.ts` gives the webview the two values, and the run says in its log where
   they come from. A process that is not elevated gives them in the environment variables of the WebView2
   runtime, `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS` and `WEBVIEW2_USER_DATA_FOLDER`. An elevated process, whose
@@ -128,7 +130,10 @@ The tests of the window are in `web/window-tests`, one file `*.spec.ts` for each
 - A test reads the requests of the page without their headers, and never the token of the host.
 - The tests: the start of the page (`start.spec.ts`), the theme and the diagnostic level in the options
   (`options.spec.ts`, through the dialog of `options.ts`), a feature that has no route yet
-  (`features.spec.ts`), a second start with the arguments of Power BI Desktop (`activation.spec.ts`).
+  (`features.spec.ts`), a second start with the arguments of Power BI Desktop (`activation.spec.ts`), a newer
+  release in the update feed and its download (`updates.spec.ts`).
+- A test never opens the browser of the machine: one that clicks a link answers `POST /browser/open` itself,
+  with `page.route`.
 - A test waits for an event or a state of the page, never for a time. Only the test of the start waits, 12
   seconds, to say that nothing else happens: longer than the 10 seconds after which the page asks for the
   list of the local reports. Its first start is over before the test can attach, so the test loads the page

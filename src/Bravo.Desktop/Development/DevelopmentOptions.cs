@@ -1,8 +1,10 @@
-﻿namespace Bravo.Desktop.Development;
+﻿using System;
+
+namespace Bravo.Desktop.Development;
 
 /// <summary>
-/// What a development build is asked for on its command line, so that its user interface can run in a
-/// browser. A release build has none of these: its command line does not know them.
+/// What a development build is asked for on its command line: that its user interface can run in a browser,
+/// and the update feed that it checks. A release build has none of these: its command line does not know them.
 /// </summary>
 internal sealed record DevelopmentOptions
 {
@@ -21,4 +23,10 @@ internal sealed record DevelopmentOptions
     /// read the file can call the API.
     /// </summary>
     public string? ConnectionFilePath { get; init; }
+
+    /// <summary>
+    /// The update feed that the build checks. A development build has no other: without this one it does not
+    /// check.
+    /// </summary>
+    public Uri? UpdateFeedAddress { get; init; }
 }

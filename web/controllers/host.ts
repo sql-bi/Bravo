@@ -168,13 +168,6 @@ export interface CreateDateTemplateRequest {
     configuration?: DateConfiguration
 }
 
-export interface BravoUpdate {
-    version?: string
-    downloadUrl?: string
-    changelogUrl?: string
-    isNewerVersion: boolean
-}
-
 export interface ApiLogSettings {
     messageLevel?: hostApi.DiagnosticLevel // Minimum diagnostic level required to log the message
     dataLevel?: hostApi.DiagnosticLevel // Minimum diagnostic level required to log the obj data
@@ -496,16 +489,18 @@ export class Host extends Dispatchable {
             .catch(ignore => false);
     }
 
+    // Its callers go on without waiting: a page that does not open is only logged.
     navigateTo(url: string) {
-        return this.apiCall("api/NavigateTo", { address: url });
+        return this.apiClientCall("OpenInBrowser", init => hostApi.openInBrowser({ address: url }, init))
+            .catch((error: AppError) => logger.logError(error));
     }
 
     getDiagnostics(after: number, max: number) {
         return <Promise<DiagnosticLogPage>>this.apiCall("api/GetDiagnostics", { after: after, max: max });
     }
 
-    getCurrentVersion() {
-        return <Promise<BravoUpdate>>this.apiCall("api/GetCurrentVersion");
+    getLatestRelease() {
+        return this.apiClientCall("GetLatestRelease", init => hostApi.getLatestRelease(init));
     }
 
     fileSystemOpen(path: string) {

@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using Bravo.Core.Activation;
 using Bravo.Desktop.Activation;
 using Bravo.Desktop.Development;
@@ -112,6 +113,7 @@ public sealed class ActivationCommandLineTests
     [Theory]
     [InlineData("--dev-origin=http://127.0.0.1:8098")]
     [InlineData("--dev-connection-file=host.json")]
+    [InlineData("--dev-update-feed=http://127.0.0.1:8099/currentversion.json")]
     public void Parse_DevelopmentOptionInAReleaseBuild_IsAnErrorLikeAnyArgumentThatIsNotKnown(string argument)
     {
         var start = ActivationCommandLine.Parse([argument], s_release);
@@ -165,6 +167,27 @@ public sealed class ActivationCommandLineTests
 
         Assert.Null(start.Development.AllowedOrigin);
         Assert.Contains(start.Request.CommandLineErrors, error => error.Contains(origin));
+    }
+
+    [Fact]
+    public void Parse_UpdateFeedInADevelopmentBuild_ReturnsItsAddress()
+    {
+        var start = ActivationCommandLine.Parse(["--dev-update-feed=http://127.0.0.1:8099/currentversion.json"], s_development);
+
+        Assert.Equal(new Uri("http://127.0.0.1:8099/currentversion.json"), start.Development.UpdateFeedAddress);
+        Assert.Same(ActivationRequest.Empty, start.Request);
+    }
+
+    [Theory]
+    [InlineData("currentversion.json")]
+    [InlineData("file:///C:/feed/currentversion.json")]
+    [InlineData("ftp://127.0.0.1/currentversion.json")]
+    public void Parse_UpdateFeedThatIsNotAWebAddress_ReadsNoFeedAndReportsAnError(string address)
+    {
+        var start = ActivationCommandLine.Parse(["--dev-update-feed", address], s_development);
+
+        Assert.Null(start.Development.UpdateFeedAddress);
+        Assert.Contains(start.Request.CommandLineErrors, error => error.Contains(address));
     }
 
     [Fact]

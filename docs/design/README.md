@@ -15,6 +15,7 @@ the part lives and the rules for changing it.
 | [`user-interface-tests.md`](user-interface-tests.md) | The two kinds of tests of the user interface and what each proves |
 | [`installer.md`](installer.md) | The Windows Installer packages and the program that they run |
 | [`release.md`](release.md) | The version of a build, the workflow that makes a release, its six files, their signature, the update feed |
+| [`updates.md`](updates.md) | How the application learns of a newer release, the file of each copy, the links that open in the browser |
 
 ## The previous implementation
 

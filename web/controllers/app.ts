@@ -29,8 +29,8 @@ import { DialogResponse } from '../view/dialog';
 
 export interface AppVersionInfo {
     version: string
-    downloadUrl?: string
-    changelogUrl?: string
+    downloadAddress?: string
+    releaseNotesAddress?: string
 }
 export class AppVersion {
     info: AppVersionInfo;
@@ -62,7 +62,6 @@ export class App {
         _(".root").insertAdjacentHTML("beforeend", `
             <div id="main-pane"></div>
             <div id="bottom-pane"></div>
-            <iframe name="downloader"></iframe>
         `);
 
         this.currentVersion = version;
@@ -167,13 +166,8 @@ export class App {
             e.preventDefault();
 
             const url = element.getAttribute("href");
-            const target = element.getAttribute("target");
-            if (target && target == "downloader") {
-                window.open(url, "downloader");
-            } else {
-                host.navigateTo(url);
-                telemetry.track("Link", { "Url": url});
-            }
+            host.navigateTo(url);
+            telemetry.track("Link", { "Url": url});
         });
 
         // Catch expandable content
@@ -399,21 +393,21 @@ export class App {
 
         if (automatic && !optionsController.getOption("updateCheckEnabled")) return;
 
-        const check = host.getCurrentVersion()
-            .then(data => {
+        const check = host.getLatestRelease()
+            .then(release => {
 
                 let newVersion = null;
-                if (data.isNewerVersion) {
+                if (release.isNewer) {
                     newVersion = new AppVersion({
-                        version: data.version,
-                        downloadUrl: data.downloadUrl,
-                        changelogUrl: data.changelogUrl
+                        version: release.version,
+                        downloadAddress: release.downloadAddress,
+                        releaseNotesAddress: release.releaseNotesAddress
                     });
                 }
                 this.newVersion = newVersion;
 
                 if (automatic && newVersion) {
-                    notificationCenter.add(new Notify(i18n(strings.updateMessage, { version: newVersion.info.version }), newVersion.info, `<span class="link" href="${newVersion.info.downloadUrl}" target="downloader">${i18n(strings.appUpdateDownload)}</span> &nbsp;&nbsp; <span class="link" href="${newVersion.info.changelogUrl}">${i18n(strings.appUpdateViewDetails)}</span>`, false, true));
+                    notificationCenter.add(new Notify(i18n(strings.updateMessage, { version: newVersion.info.version }), newVersion.info, `<span class="link" href="${newVersion.info.downloadAddress}">${i18n(strings.appUpdateDownload)}</span> &nbsp;&nbsp; <span class="link" href="${newVersion.info.releaseNotesAddress}">${i18n(strings.appUpdateViewDetails)}</span>`, false, true));
                 }
 
                 return newVersion;

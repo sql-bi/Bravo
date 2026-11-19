@@ -6,12 +6,14 @@ import path from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import { promisify } from 'node:util';
 import { type Browser, chromium, expect, type Page, test as base } from '@playwright/test';
+import { releasedFeed, UpdateFeedServer } from './update-feed';
 import { chooseWebViewSettings, profilePrefix, type WebViewSettings } from './webview-settings';
 
 // The fixture of the tests of the window: it starts the Bravo.exe that the build wrote, with a new profile of
 // the webview and the DevTools protocol on a port that the engine chooses, attaches Playwright to the page, and
 // closes the application as a user does. Nothing of the application changes for a test: the two values are read
-// by the WebView2 runtime (webview-settings.ts), and the application passes no browser argument of its own.
+// by the WebView2 runtime (webview-settings.ts), and the application passes no browser argument of its own. Its
+// one argument names the update feed of the test, which a server of the test serves (update-feed.ts).
 
 const executable = path.join(__dirname, '..', '..', 'artifacts', 'bin', 'Bravo.Desktop', 'release', 'Bravo.exe');
 const bundle = path.join(path.dirname(executable), 'wwwroot', 'js', 'main.js');
@@ -239,7 +241,11 @@ interface PageWithHost {
     bravoHost: { address: string }
 }
 
-export const test = base.extend<{ bravo: Bravo }, { webView: WebViewSettings }>({
+export const test = base.extend<{ bravo: Bravo, updateFeed: string | null }, { webView: WebViewSettings }>({
+
+    // The update feed that the application of a test reads, by default one with an older release; with null
+    // the application has none, and its update check fails
+    updateFeed: [releasedFeed, { option: true }],
 
     // Decided once for the tests of a worker, and said in the log of the run
     webView: [async ({ }, use) => {
@@ -249,17 +255,20 @@ export const test = base.extend<{ bravo: Bravo }, { webView: WebViewSettings }>(
     }, { scope: 'worker' }],
 
     // The start and the end of the application have a time of their own, which the test does not share
-    bravo: [async ({ webView }, use, testInfo) => {
+    bravo: [async ({ webView, updateFeed }, use, testInfo) => {
         checkBuild();
 
         // The long path: the temporary folder of a runner of continuous integration is a short 8.3 path
         const profile = await mkdtemp(path.join(realpathSync.native(os.tmpdir()), profilePrefix));
 
+        let feed: UpdateFeedServer | undefined;
         let application: BravoProcess | undefined;
         let browser: Browser | undefined;
         let failure: unknown;
         try {
-            const started = new BravoProcess([], await webView.give(profile));
+            feed = (updateFeed === null ? undefined : await UpdateFeedServer.start(updateFeed));
+            const args = (feed ? [`--dev-update-feed=${feed.address}`] : []);
+            const started = new BravoProcess(args, await webView.give(profile));
             application = started;
 
             const port = await waitFor('the DevTools protocol', started, () => readDevToolsPort(profile), () => describeStart(started, profile));
@@ -312,6 +321,7 @@ export const test = base.extend<{ bravo: Bravo }, { webView: WebViewSettings }>(
         try {
             code = await end(application, browser, profile);
         } finally {
+            await feed?.close();
             await webView.takeBack();
         }
 

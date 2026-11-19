@@ -10,6 +10,7 @@ vi.mock("../../main", async () => (await import("../main-mock")).createMainMock(
 
 import { Host } from '../../controllers/host';
 import { Options } from '../../controllers/options';
+import { logger } from '../../main';
 import { AppError, AppErrorType } from '../../model/exceptions';
 import en from '../../model/i18n/en';
 import { strings } from '../../model/strings';
@@ -117,6 +118,62 @@ describe("Host", () => {
             await host.getOptions();
 
             expect(Object.keys(host.requests)).toEqual([]);
+        });
+    });
+
+    describe("the latest release", () => {
+
+        const release = {
+            version: "1.1.0",
+            isNewer: true,
+            downloadAddress: "https://github.com/sql-bi/Bravo/releases/download/v1.1.0/Bravo.1.1.0.x64-portable.zip",
+            releaseNotesAddress: "https://github.com/sql-bi/Bravo/releases/tag/v1.1.0"
+        };
+
+        it("is read as the host wrote it, with the names of the host", async () => {
+            fetchMock.mockResolvedValue(answer(200, release));
+
+            const latest = await host.getLatestRelease();
+
+            const [url, init] = fetchMock.mock.calls[0];
+            expect([url, init?.method]).toEqual([`${address}/releases/latest`, "GET"]);
+            expect(latest).toEqual(release);
+        });
+
+        it("that the host cannot read fails with the text of the update check", async () => {
+            const problem = { status: 409, code: "UpdateCheckFailed", detail: "The update feed cannot be read." };
+            fetchMock.mockResolvedValue(answer(409, problem, "application/problem+json"));
+
+            const error = await failureOf(host.getLatestRelease());
+
+            expect(error.type).toBe(AppErrorType.Managed);
+            expect(error.message).toBe(en.strings[strings.errorCheckForUpdates]);
+        });
+    });
+
+    describe("a page opened in the browser", () => {
+
+        const page = "https://docs.sqlbi.com/bravo/";
+
+        it("is asked of the host with its address", async () => {
+            fetchMock.mockResolvedValue(new Response(null, { status: 204 }));
+
+            await host.navigateTo(page);
+
+            const [url, init] = fetchMock.mock.calls[0];
+            expect([url, init?.method]).toEqual([`${address}/browser/open`, "POST"]);
+            expect(JSON.parse(<string>init?.body)).toEqual({ address: page });
+        });
+
+        // Its callers do not wait for it: a failure that reached them would be an error that nobody handles
+        it("that the host refuses is logged, and the call does not fail", async () => {
+            const problem = { status: 400, code: "ValidationFailed", errors: { address: ["The address is not the one of a page on a site that the application trusts."] } };
+            fetchMock.mockResolvedValue(answer(400, problem, "application/problem+json"));
+            vi.mocked(logger.logError).mockClear();
+
+            await host.navigateTo("https://attacker.test/");
+
+            expect(logger.logError).toHaveBeenCalledOnce();
         });
     });
 

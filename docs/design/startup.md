@@ -55,6 +55,7 @@ before the arbitration.
 | Instance | The identifier of 1.1.0 | An identifier of its own: it runs beside the installed application |
 | Data folder, under the local application data of the user | `Bravo` | `Bravo.Development` |
 | Window title | `Bravo for Power BI - v<version>` | The same, followed by `[development build]` |
+| Update feed | The one of the releases | None, unless it is given `--dev-update-feed` ([Updates](updates.md)) |
 
 The version is the semantic version of the build, such as `1.1.0` or `1.1.0-beta.1`, which the build
 computes and writes in the metadata of the assembly ([Release](release.md)). Outside a public release it
@@ -100,7 +101,7 @@ this document describes above. Where each part lives:
 | The exit codes of the process | `src/Bravo.Desktop/ExitCode.cs` |
 | What is done with an exception that escapes | `src/Bravo.Desktop/Diagnostics/` |
 | The command line, and the consumer of the activations | `src/Bravo.Desktop/Activation/` |
-| What a development build is asked for a browser: one more allowed origin, the file with the address and the token | `src/Bravo.Desktop/Development/` |
+| What a development build is asked for a browser or a test: one more allowed origin, the file with the address and the token, the update feed | `src/Bravo.Desktop/Development/` |
 | The activation request, and the channel that every activation goes through | `src/Bravo.Core/Activation/` |
 | The single instance: ownership by mutex, hand-over by pipe, arbitration | `src/Bravo.Platform.Windows/SingleInstance/` |
 | The identity of the build: release or development, with its instance identifier, data folder and window title, its versions, and whether it carries the runtime | `src/Bravo.Desktop/BuildIdentity.cs` |

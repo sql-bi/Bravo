@@ -28,8 +28,7 @@ public sealed class ProblemDetailsTests
     /// </summary>
     public static TheoryData<ErrorCode> ErrorCodes => [.. Enum.GetValues<ErrorCode>()];
 
-    // Without data while no use case reports an error: the test runs for the first code that is added.
-    [Theory(SkipTestWithoutData = true)]
+    [Theory]
     [MemberData(nameof(ErrorCodes))]
     public async Task ErrorThatAUseCaseForesaw_IsAnswered409WithItsCodeAndItsMessage(ErrorCode code)
     {

@@ -35,6 +35,8 @@ other request has the 5 seconds of the stop to end.
 | `GET /options` | Reads the options of the user |
 | `PUT /options` | Replaces the options of the user, and returns them as they were kept |
 | `GET /events?after={number}` | Reads the events of the host after a number, waiting for the next one when there is none |
+| `GET /releases/latest` | Reads the latest release from the update feed: whether it is newer, and the file of this copy ([updates](updates.md)) |
+| `POST /browser/open` | Opens a page of a site that the application trusts in the default browser of the user ([updates](updates.md)) |
 
 - A route names a resource. An operation that is not create, read, update or delete is a `POST` on the
   resource with a verb as last segment. A `GET` changes no state, opens no dialog and starts no process.
@@ -72,8 +74,7 @@ of the API lists them in the schema `ProblemCode`, and no answer carries another
 
 - A use case reports a foreseen error by throwing `BravoException` with a code and a message in English,
   which becomes the `detail` of the problem. The code is a member of one list, which admits no other value.
-  No use case reports an error yet: that list is empty, and the codes of the document are the ones of the
-  table.
+  The first one is `UpdateCheckFailed` ([updates](updates.md)).
 - A route that writes a problem with a code outside the list is answered with the code of its status.
 
 **Events.** The host tells the user interface what happens through numbered events, the first of each process
@@ -116,9 +117,10 @@ named in the document, and the types that travel. The build then checks the user
   converts a name into a number: today the theme, the diagnostic level and the type of the proxy, later the
   others, each with its feature. A number in the options that only the user interface reads stays a number:
   1.0.x saved it.
-- Today the application data, the options and the events go through the client. Every other call of the user
-  interface belongs to a feature that has not moved: nothing is sent, and the call fails at once with an
-  error that says that the feature is not available yet. Each one moves to the client with its feature.
+- Today the application data, the options, the events, the update check and the links that open in the
+  browser go through the client. Every other call of the user interface belongs to a feature that has not
+  moved: nothing is sent, and the call fails at once with an error that says that the feature is not
+  available yet. Each one moves to the client with its feature.
 
 **Start of the page.** The page is the same in the window and in a browser, with no branch for either: it
 reads the address and the token of the API from `window.bravoHost`
@@ -140,10 +142,10 @@ button that loads the page again.
   the page waits before it asks again: one second, then twice as long each time, up to 30 seconds.
 - An activation without a server does nothing in the page. The errors of a command line go to the diagnostic
   log. An activation with a server is logged, and opens no report until the host can find it (backlog B-10).
-- Four calls that the page starts by itself have no route yet: the sign-in with the account that the page
-  remembers, the update check, the reading of the diagnostics of the host, and the list of the reports that
-  are open in Power BI Desktop. They fail like every call without a route, and the page shows nothing and
-  writes nothing in its console for them.
+- Three calls that the page starts by itself have no route yet: the sign-in with the account that the page
+  remembers, the reading of the diagnostics of the host, and the list of the reports that are open in Power BI
+  Desktop. They fail like every call without a route, and the page shows nothing and writes nothing in its
+  console for them.
 
 ## In the code
 
@@ -170,12 +172,12 @@ this document describes them above as they are built. Where each part lives:
   its data, and a method of `IHostEventPublisher`. The kinds are not derived types: the document that .NET 10
   produces for a list of derived types is wrong.
 - `AddApi` registers the services of the API and `UseLoopbackServer` its server. A use case that a route calls
-  is registered by `Bravo.Desktop`, and for the tests by `AddUseCasesOfTheTests`.
+  is registered by `Bravo.Desktop`, and for the tests by `AddUseCasesOfTheTests`, which replaces what a use
+  case needs from outside with substitutes.
 - Only a test produces the document, so what produces it is in the test project: `Bravo.Api` has no package
   reference, and the application ships nothing of the OpenAPI package. A rule on how the document describes
   the JSON goes in `ContractSchema` or `ContractDocument`.
 - `OpenApiDocumentTests.WriteTheFileOfTheRepository` is not a test: it writes the document, runs only when
   asked for, and shows as skipped in every other run.
-- `ErrorCode` has no member yet, so no test can throw a `BravoException`. The two tests of an error that a
-  use case foresaw, in `ProblemDetailsTests` and in `BravoExceptionTests`, take every member as their data:
-  they show as skipped until the first member exists, and run for it without a change.
+- The two tests of an error that a use case foresaw, in `ProblemDetailsTests` and in `BravoExceptionTests`,
+  take every member of `ErrorCode` as their data: a new member is tested with no change.
