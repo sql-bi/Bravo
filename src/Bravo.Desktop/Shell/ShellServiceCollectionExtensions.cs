@@ -25,6 +25,7 @@ internal static class ShellServiceCollectionExtensions
         services.AddSingleton(fatalExceptionHandler);
         services.AddSingleton<ShellExit>();
         services.AddSingleton<ISystemAppMode, RegistrySystemAppMode>();
+        services.AddSingleton<IWindowTitleSettings, RegistryWindowTitleSettings>();
         services.AddSingleton<IMainWindow, MainWindow>();
         services.AddSingleton<MainWindowRunner>();
         services.AddSingleton<IBrowserLauncher, DefaultBrowserLauncher>();

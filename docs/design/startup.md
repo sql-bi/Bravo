@@ -54,13 +54,17 @@ before the arbitration.
 | --- | --- | --- |
 | Instance | The identifier of 1.1.0 | An identifier of its own: it runs beside the installed application |
 | Data folder, under the local application data of the user | `Bravo` | `Bravo.Development`, or the folder that `--dev-data-folder` names |
-| Window title | `Bravo for Power BI - v<version>` | The same, followed by `[development build]` |
+| Window title | `Bravo for Power BI - v<version>`, or `Bravo for Power BI` for a user who hid the version | The same, followed by `[development build]` |
 | Update feed | The one of the releases | None, unless it is given `--dev-update-feed` ([Updates](updates.md)) |
 
 The version is the semantic version of the build, such as `1.1.0` or `1.1.0-beta.1`, which the build
 computes and writes in the metadata of the assembly ([Release](release.md)). Outside a public release it
 ends with the commit: a development build shows `1.1.0-beta.1.g4497d5d308`. The identity also has the file
 version, four numbers, and whether the build carries the runtime.
+
+A user hides the version in the title as in 1.0.x: with the DWORD value `applicationTitleVersionHidden` of
+`HKEY_CURRENT_USER\Software\SQLBI\Bravo` set to 1, which the window reads when it is created. Any other value,
+or a value of another kind, shows the version. No option and no package writes it.
 
 **Activations.** Every start is an activation request, the first one included. The requests go through one
 bounded channel of 16 with a single consumer, which starts when the main window is shown: a request that
@@ -106,6 +110,7 @@ this document describes above. Where each part lives:
 | The activation request, and the channel that every activation goes through | `src/Bravo.Core/Activation/` |
 | The single instance: ownership by mutex, hand-over by pipe, arbitration | `src/Bravo.Platform.Windows/SingleInstance/` |
 | The identity of the build: release or development, with its instance identifier, data folder and window title, its versions, and whether it carries the runtime | `src/Bravo.Desktop/BuildIdentity.cs` |
+| The choice of the user that hides the version in the title, read from the registry | `src/Bravo.Desktop/Shell/RegistryWindowTitleSettings.cs` |
 | The listener as a service of the host, the message of a failed hand-over, the end of a second process | `src/Bravo.Desktop/SingleInstance/` |
 | The settings of the user, kept in a file of the data folder ([Settings](settings.md)) | `src/Bravo.Core/Settings/` and `src/Bravo.Platform.Windows/Settings/`, registered in `src/Bravo.Desktop/Settings/` |
 | The Windows functions of a project, listed in its `NativeMethods.txt` and wrapped by capability | `Interop/` in `Bravo.Desktop` and in `Bravo.Platform.Windows` |

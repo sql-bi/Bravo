@@ -75,13 +75,11 @@ internal sealed record BuildIdentity
     /// <summary>
     /// The title of the main window, which tells a development build from the installed application.
     /// </summary>
-    public string WindowTitle
+    /// <param name="versionHidden">Whether the user chose a title without the version.</param>
+    public string GetWindowTitle(bool versionHidden)
     {
-        get
-        {
-            var title = $"{Product.Name} - v{Version}";
-            return IsDevelopmentBuild ? $"{title} [development build]" : title;
-        }
+        var title = versionHidden ? Product.Name : $"{Product.Name} - v{Version}";
+        return IsDevelopmentBuild ? $"{title} [development build]" : title;
     }
 
     /// <summary>

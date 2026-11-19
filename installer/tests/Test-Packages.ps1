@@ -420,6 +420,20 @@ function Remove-UserData {
     if (Test-Path $DataFolder) { Remove-Item $DataFolder -Recurse -Force }
 }
 
+# The value with which a user of 1.0.x hides the version in the title of the window. No package writes it,
+# and a removal leaves it.
+$TitleKey = Join-Path 'HKCU:' $RegistryKey
+$TitleVersionHiddenName = 'applicationTitleVersionHidden'
+
+function Set-TitleVersionHidden {
+    if (-not (Test-Path $TitleKey)) { New-Item -Path $TitleKey -Force | Out-Null }
+    New-ItemProperty -Path $TitleKey -Name $TitleVersionHiddenName -PropertyType DWord -Value 1 -Force | Out-Null
+}
+
+function Remove-TitleVersionHidden {
+    Remove-ItemProperty -Path $TitleKey -Name $TitleVersionHiddenName -ErrorAction SilentlyContinue
+}
+
 # --- The application ----------------------------------------------------------------------------------------
 
 function Start-Application([string] $InstallFolder) {
@@ -446,10 +460,10 @@ function Wait-WebViewEnd {
 }
 
 # Starts the installed application, checks which build and which runtime it is, and closes its window.
-function Assert-ApplicationRuns([string] $InstallFolder, [bool] $SelfContained) {
+function Assert-ApplicationRuns([string] $InstallFolder, [bool] $SelfContained, [string] $Title = "Bravo for Power BI - v$Version") {
     $process = Start-Application $InstallFolder
     try {
-        Assert-Equal "Bravo for Power BI - v$Version" $process.MainWindowTitle 'the title of the window, the one of a release build'
+        Assert-Equal $Title $process.MainWindowTitle 'the title of the window, the one of a release build'
         $runtime = ($process.Modules | Where-Object { $_.ModuleName -eq 'coreclr.dll' }).FileName
         $carried = $runtime.StartsWith($InstallFolder, [StringComparison]::OrdinalIgnoreCase)
         Assert-Equal $SelfContained $carried "the .NET runtime is the one of the package ($runtime)"
@@ -547,7 +561,8 @@ function Test-PublicProperties {
     Assert-Removed 'perMachine' $folder
 }
 
-# 1.0.14 installed with some choices turned off, the data of a user, then this version over it.
+# 1.0.14 installed with some choices turned off, the data of a user with the version hidden in the title, then
+# this version over it.
 function Test-UpgradeFromPrevious([string] $Scope, [string] $Properties, $ExpectedChoices) {
     $folder = $Scopes[$Scope].InstallFolder
 
@@ -559,6 +574,7 @@ function Test-UpgradeFromPrevious([string] $Scope, [string] $Properties, $Expect
     $previousChoices = Format-Choices (Get-Choices $Scope)
     Write-Host "    1.0.14: $previousChoices"
     Write-UserData
+    Set-TitleVersionHidden
 
     Write-Step "$Scope`: this version is installed over 1.0.14"
     Assert-Equal 0 (Install-Package (Get-PackagePath $Scope $false) "$Scope-upgrade-from-1.0.14") 'the exit code of the upgrade'
@@ -567,9 +583,10 @@ function Test-UpgradeFromPrevious([string] $Scope, [string] $Properties, $Expect
     Assert-Equal $previousChoices (Format-Choices (Get-Choices $Scope)) 'the choices, as 1.0.14 wrote them'
     Assert-True (Test-UserData) 'the data of the user is as it was'
 
-    Write-Step "$Scope`: the upgraded application starts and ends"
-    Assert-ApplicationRuns $folder $false
+    Write-Step "$Scope`: the upgraded application starts and ends, with the version hidden in its title"
+    Assert-ApplicationRuns $folder $false 'Bravo for Power BI'
     Assert-True (Test-UserData) 'the data of the user is as it was'
+    Remove-TitleVersionHidden
 
     Assert-Equal 0 (Uninstall-Product $product.Code "$Scope-remove-after-upgrade") 'the exit code of the removal'
     Assert-Removed $Scope $folder

@@ -158,7 +158,8 @@ validates each package against the rules of Windows Installer, and a warning fai
 **Tests.** Continuous integration builds the packages and then installs them for real, each time in
 silence, on a machine of its own that is thrown away: a first installation per machine and per user, the
 installed application, another build of the same version installed while the application runs, the public
-properties given to 1.0.14 and to this version, the upgrade from 1.0.14 with the data of a user, a package
+properties given to 1.0.14 and to this version, the upgrade from 1.0.14 with the data of a user and the
+version hidden in the title of the window ([startup](startup.md)), a package
 of the other context, the packages that carry the runtime, and every removal. Two removals more: one that
 fails after its files are removed, which leaves the installation, the data of the user and the registration
 as they were, and one with rollback disabled, which removes them. The removal fails by an action that the

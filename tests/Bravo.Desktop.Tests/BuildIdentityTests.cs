@@ -33,19 +33,36 @@ public sealed class BuildIdentityTests
     }
 
     [Fact]
-    public void Release_WindowTitle_IsTheNameOfTheProductAndTheVersion()
+    public void Release_GetWindowTitle_IsTheNameOfTheProductAndTheVersion()
     {
         var identity = BuildIdentity.Release("1.1.0-beta.1");
 
-        Assert.Equal("Bravo for Power BI - v1.1.0-beta.1", identity.WindowTitle);
+        Assert.Equal("Bravo for Power BI - v1.1.0-beta.1", identity.GetWindowTitle(versionHidden: false));
+    }
+
+    // The title of 1.0.x for a user who hid the version.
+    [Fact]
+    public void Release_GetWindowTitleWithTheVersionHidden_IsTheNameOfTheProduct()
+    {
+        var identity = BuildIdentity.Release("1.1.0");
+
+        Assert.Equal("Bravo for Power BI", identity.GetWindowTitle(versionHidden: true));
     }
 
     [Fact]
-    public void Development_WindowTitle_SaysThatTheBuildIsADevelopmentBuild()
+    public void Development_GetWindowTitle_SaysThatTheBuildIsADevelopmentBuild()
     {
         var identity = BuildIdentity.Development("1.1.0");
 
-        Assert.Equal("Bravo for Power BI - v1.1.0 [development build]", identity.WindowTitle);
+        Assert.Equal("Bravo for Power BI - v1.1.0 [development build]", identity.GetWindowTitle(versionHidden: false));
+    }
+
+    [Fact]
+    public void Development_GetWindowTitleWithTheVersionHidden_StillSaysThatTheBuildIsADevelopmentBuild()
+    {
+        var identity = BuildIdentity.Development("1.1.0");
+
+        Assert.Equal("Bravo for Power BI [development build]", identity.GetWindowTitle(versionHidden: true));
     }
 
     [Fact]

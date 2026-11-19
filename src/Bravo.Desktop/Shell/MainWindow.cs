@@ -22,6 +22,7 @@ internal sealed class MainWindow : Form, IMainWindow
 
     public MainWindow(
         BuildIdentity identity,
+        IWindowTitleSettings titleSettings,
         WebViewHost webView,
         ShellExit exit,
         IUserSettingsStore settings,
@@ -34,7 +35,7 @@ internal sealed class MainWindow : Form, IMainWindow
         _systemAppMode = systemAppMode;
         _browserLauncher = browserLauncher;
 
-        Text = identity.WindowTitle;
+        Text = identity.GetWindowTitle(titleSettings.IsVersionHidden);
         Icon = LoadIcon();
 
         // The size that Windows gives a new window, in the middle of the screen. Nothing of the window is
