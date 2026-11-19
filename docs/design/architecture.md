@@ -13,6 +13,7 @@ The top-level folders separate content by kind ([ADR 0008](../decisions/0008-rep
 | `tests/` | One test project per project of `src/` that has tests, at the mirrored path, with its own build rules |
 | `web/` | The TypeScript user interface, self-contained, with its own `package.json` and lockfile |
 | `installer/` | The installer, outside the product source |
+| `release/` | What a release needs beyond the build of its files |
 | `policies/` | The group policy templates, which the installer ships in a subfolder of the installation |
 | `docs/` | This specification, the backlog and the ADRs |
 | `artifacts/` | Build and publish output of every project, the release bundle of the user interface, the files of a release, the results of the tests of the window and the screens of the window, not versioned |
@@ -32,6 +33,7 @@ not exist yet: the table names the backlog item that creates them.
 | `tests/` | One test project per project of `src/`, at the mirrored path, created with the first test of that project, and the architecture tests | Exists |
 | `web/` | The TypeScript user interface, with its own `package.json` and lockfile | Exists |
 | `installer/` | The WiX project of the installer packages and of the archives of a release, what signs them, and the tests that install them ([Installer](installer.md)) | Exists |
+| `release/` | The functions that the workflow of a release calls, and their tests ([Release](release.md)) | Exists |
 | `policies/` | The group policy templates: `bravo.admx`, `sqlbi.admx`, `en-US/` | Exists |
 | `docs/` | Specification, backlog, ADRs, and the design of the previous implementation | Exists |
 | `artifacts/` | Build and publish output of every project, the release bundle of the user interface, the installer packages and the archives with the folders they are made from, the results of the tests of the window and the screens of the window, ignored by git | Written by the builds, the tests and the command of the screens |

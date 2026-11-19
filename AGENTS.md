@@ -21,7 +21,7 @@ its structure as a model.
 | [docs/decisions/](docs/decisions/) | One decision per file, with its reasons and rejected alternatives |
 | [docs/design/](docs/design/README.md) | How the redesigned system works, one document for each part: what was decided, where it lives in the code, the rules for changing it |
 | [docs/design/previous/](docs/design/previous/) | The behavior of the previous implementation: requirements and prior art for the component that replaces it |
-| [docs/guides/](docs/guides/) | How to do a task: add a route, see the user interface in a browser, compare the screens of two builds |
+| [docs/guides/](docs/guides/) | How to do a task: add a route, see the user interface in a browser, compare the screens of two builds, make a release |
 | [web/AGENTS.md](web/AGENTS.md) | The user interface: its commands, its rules, its tests |
 
 Before changing a part of the system, read its document in `docs/design/`: the rules for changing it are
@@ -114,6 +114,16 @@ as a filter that matches nothing, fails with exit code 8.
 | Build the six files of a release, not signed | `dotnet build installer/Bravo.Installer.wixproj -c Release -t:BuildRelease` |
 | Build on a machine without the C++ build tools | add `-p:BravoSetupNativeAot=false` |
 | Read the version of the build | `pwsh installer/Get-BuildVersion.ps1` |
+
+### Release
+
+| Task | Command |
+| --- | --- |
+| Test the functions of the release | `pwsh release/tests/Test-Release.ps1` |
+| Start a release on a branch | `gh workflow run release.yml --ref <branch>` |
+| Try a release and publish nothing | `gh workflow run release.yml --ref <branch> -f dry-run=true` |
+
+A release is started by the maintainer: its steps are in [docs/guides/make-a-release.md](docs/guides/make-a-release.md).
 
 ### Continuous integration
 

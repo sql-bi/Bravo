@@ -1,0 +1,346 @@
+name: Release
+
+# A release is started by hand, on the commit to release: the version is the one of version.json. The run
+# builds and signs the six files, installs the packages on a runner, and creates a draft release, which the
+# maintainer publishes. It does not look at continuous integration.
+#
+# A push to a work branch that changes what a release is made of starts the same jobs as a run that publishes
+# nothing: the files are signed with a certificate made on the runner, and no release is created.
+#
+# The button of GitHub that starts a workflow needs this file on the default branch. Where it is not there,
+# the workflow is started with "gh workflow run release.yml --ref <branch>", after it has run once.
+on:
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: 'Publish nothing: sign with a certificate made on the runner, and create no release'
+        type: boolean
+        default: false
+  push:
+    branches:
+      - 'vnext/**'
+    paths:
+      - .github/workflows/release.yml
+      - .config/dotnet-tools.json
+      - installer/**
+      - release/**
+      - version.json
+
+# One run at a time for each branch. A release that started is never cancelled; a newer push replaces the run
+# of an older one.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'push' }}
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: 1
+  # A run that a push started publishes nothing.
+  DRY_RUN: ${{ github.event_name != 'workflow_dispatch' || inputs.dry-run }}
+
+jobs:
+
+  # The release bundle of the user interface, built apart: the job that signs runs no package of npm.
+  build-web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: web/package.json
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Install the dependencies
+        run: npm ci
+      - name: Build the release bundle
+        run: npm run build:Release
+      - name: Keep the bundle
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: web-bundle
+          path: artifacts/web/
+          retention-days: 3
+          if-no-files-found: error
+
+  # The six files of a release, signed: the four packages and the two archives of the application.
+  build:
+    needs: build-web
+    runs-on: windows-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      # The identity that signs is asked of GitHub for this run: the repository holds no secret.
+      id-token: write
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      file-version: ${{ steps.version.outputs.file-version }}
+      prerelease: ${{ steps.version.outputs.prerelease }}
+      thumbprint: ${{ steps.signatures.outputs.thumbprint }}
+    steps:
+      # The whole history, and the tags: the version of a build counts the commits.
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Set up the .NET SDK
+        uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
+        with:
+          global-json-file: global.json
+          cache: true
+          cache-dependency-path: '**/packages.lock.json'
+      - name: Test the functions of the release
+        shell: pwsh
+        run: release/tests/Test-Release.ps1
+      - name: Get the bundle
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: web-bundle
+          path: artifacts/web
+      # AzureSignTool, in the version of the manifest of the repository.
+      - name: Restore the tools
+        run: dotnet tool restore
+      - name: Restore the installer
+        run: dotnet restore installer/Bravo.Installer.wixproj --locked-mode
+      # A release is a public release: its version has no commit after it. A version that has its tag
+      # already is released, and is not built again.
+      - name: Read the version of the build
+        id: version
+        shell: pwsh
+        run: |
+          $build = installer/Get-BuildVersion.ps1 -PublicRelease:($env:DRY_RUN -eq 'false')
+          $build | Format-List
+          if ($env:DRY_RUN -eq 'false') {
+            git rev-parse --quiet --verify "refs/tags/v$($build.Version)" | Out-Null
+            if ($LASTEXITCODE -eq 0) { throw "The tag v$($build.Version) exists: this version is released. Change version.json." }
+          }
+          "version=$($build.Version)" >> $env:GITHUB_OUTPUT
+          "file-version=$($build.FileVersion)" >> $env:GITHUB_OUTPUT
+          "prerelease=$($build.IsPrerelease.ToString().ToLowerInvariant())" >> $env:GITHUB_OUTPUT
+          exit 0
+      # A run that publishes nothing signs with a certificate that lives one day, on this runner alone.
+      - name: Make a certificate for a run that publishes nothing
+        if: ${{ env.DRY_RUN == 'true' }}
+        shell: pwsh
+        run: |
+          $certificate = New-SelfSignedCertificate -Type CodeSigningCert -Subject 'CN=Bravo, a run that publishes nothing' -CertStoreLocation Cert:\CurrentUser\My -NotAfter (Get-Date).AddDays(1)
+          "BRAVO_SIGNING_THUMBPRINT=$($certificate.Thumbprint)" >> $env:GITHUB_ENV
+      - name: Check the variables of the signature
+        if: ${{ env.DRY_RUN == 'false' }}
+        shell: pwsh
+        env:
+          SIGNING_CLIENT_ID: ${{ vars.SIGNING_CLIENT_ID }}
+          SIGNING_TENANT_ID: ${{ vars.SIGNING_TENANT_ID }}
+          SIGNING_VAULT_URL: ${{ vars.SIGNING_VAULT_URL }}
+          SIGNING_CERTIFICATE_NAME: ${{ vars.SIGNING_CERTIFICATE_NAME }}
+        run: |
+          $missing = 'SIGNING_CLIENT_ID', 'SIGNING_TENANT_ID', 'SIGNING_VAULT_URL', 'SIGNING_CERTIFICATE_NAME' |
+            Where-Object { [string]::IsNullOrWhiteSpace([Environment]::GetEnvironmentVariable($_)) }
+          if ($missing) { throw "The repository has no value for the variables: $($missing -join ', ')." }
+      # The federated credential of the identity names this repository and the branch of the run.
+      - name: Sign in to Azure
+        if: ${{ env.DRY_RUN == 'false' }}
+        uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0
+        with:
+          client-id: ${{ vars.SIGNING_CLIENT_ID }}
+          tenant-id: ${{ vars.SIGNING_TENANT_ID }}
+          allow-no-subscriptions: true
+      # The build signs the files of the host before a package holds them, and each package after it is
+      # built. The token of the vault is asked just before, lives in this step alone, and is masked in the log.
+      - name: Build and sign the six files
+        shell: pwsh
+        env:
+          BRAVO_SIGNING_VAULT_URL: ${{ vars.SIGNING_VAULT_URL }}
+          BRAVO_SIGNING_CERTIFICATE: ${{ vars.SIGNING_CERTIFICATE_NAME }}
+        run: |
+          $arguments = @('--no-restore')
+          if ($env:DRY_RUN -eq 'true') {
+            $arguments += '-p:BravoSigning=TestCertificate'
+          }
+          else {
+            $token = az account get-access-token --resource https://vault.azure.net --query accessToken --output tsv
+            if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($token)) { throw 'No access token for the vault.' }
+            "::add-mask::$token"
+            $env:BRAVO_SIGNING_TOKEN = $token
+            $arguments += '-p:BravoSigning=KeyVault', '-p:PublicRelease=true'
+          }
+
+          # First, because the build of the release that follows makes these two packages again.
+          installer/tests/New-OtherBuild.ps1 -Folder artifacts/installer-other -BuildArguments $arguments
+
+          dotnet build installer/Bravo.Installer.wixproj -c Release -warnaserror -t:BuildRelease @arguments
+          exit $LASTEXITCODE
+      # A release needs signatures that Windows trusts, with a timestamp; a run that publishes nothing, the
+      # ones of its certificate.
+      - name: Check the signatures
+        id: signatures
+        shell: pwsh
+        run: |
+          Import-Module ./release/Release.psm1
+          $hostFiles = 'Bravo.exe', 'Bravo.dll', 'Bravo.Api.dll', 'Bravo.Core.dll', 'Bravo.Platform.Windows.dll'
+          $files = @(
+            foreach ($layout in 'selfcontained', 'frameworkdependent') { $hostFiles | ForEach-Object { "artifacts/installer-stage/$layout/$_" } }
+            'artifacts/installer-stage/setup-aot/Bravo.Setup.exe'
+            (Get-ChildItem artifacts/installer/en-US/*.msi, artifacts/installer-other/*.msi).FullName
+          )
+          $thumbprint = if ($env:DRY_RUN -eq 'true') {
+            Confirm-Signature -Path $files -Thumbprint $env:BRAVO_SIGNING_THUMBPRINT
+          }
+          else {
+            Confirm-Signature -Path $files -Trusted
+          }
+          "thumbprint=$thumbprint" >> $env:GITHUB_OUTPUT
+      # The list of downloads goes above the notes that GitHub generates. The update feed is the file that an
+      # installed 1.0.x reads: it is checked against the files of the release, as 1.0.x asks for them.
+      - name: Write the list of downloads and the update feed
+        shell: pwsh
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          FILE_VERSION: ${{ steps.version.outputs.file-version }}
+        run: |
+          Import-Module ./release/Release.psm1
+          $files = @((Get-ChildItem artifacts/installer/en-US).Name | Sort-Object)
+          $expected = @(Get-ReleaseFileName $env:VERSION | Sort-Object)
+          if (Compare-Object $expected $files) { throw "The files of the release are not the six expected ones: $($files -join ', ')" }
+
+          New-Item -ItemType Directory -Force artifacts/release | Out-Null
+          New-ReleaseNotes -Version $env:VERSION -Repository $env:GITHUB_REPOSITORY | Set-Content artifacts/release/notes.md -NoNewline
+          New-UpdateFeed -Path artifacts/release/currentversion.json -Version $env:VERSION -FileVersion $env:FILE_VERSION -Repository $env:GITHUB_REPOSITORY
+          Confirm-UpdateFeed -Path artifacts/release/currentversion.json -FileName $files
+
+          @(
+            "## Bravo $env:VERSION$(if ($env:DRY_RUN -eq 'true') { ', a run that publishes nothing' })"
+            ''
+            "File version $env:FILE_VERSION. The files:"
+            ''
+            Get-ChildItem artifacts/installer/en-US | ForEach-Object { '- `{0}`, {1:N0} bytes' -f $_.Name, $_.Length }
+            ''
+            'The update feed:'
+            ''
+            '```json'
+            Get-Content artifacts/release/currentversion.json -Raw
+            '```'
+          ) >> $env:GITHUB_STEP_SUMMARY
+      # The files of the release, the other build that the tests need, the list of downloads and the feed.
+      - name: Keep the files
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release-files
+          path: |
+            artifacts/installer/en-US/
+            artifacts/installer-other/*.msi
+            artifacts/release/
+          retention-days: 7
+          if-no-files-found: error
+          # The files are compressed already.
+          compression-level: 0
+
+  # The signed packages are installed for real, as continuous integration installs the ones it builds.
+  test:
+    needs: build
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Get the files
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: release-files
+          path: artifacts/release-files
+      # The packages of the released version, from its public release: the ones that use the installed runtime.
+      - name: Get the packages of 1.0.14
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release download v1.0.14 --repo sql-bi/Bravo --pattern "Bravo.1.0.14.x64-frameworkdependent*.msi" --dir artifacts/installer-previous
+      - name: Install, upgrade and remove
+        shell: pwsh
+        run: >
+          installer/tests/Test-Packages.ps1
+          -PackagesFolder artifacts/release-files/installer/en-US
+          -OtherBuildFolder artifacts/release-files/installer-other
+          -PreviousFolder artifacts/installer-previous
+          -Version ${{ needs.build.outputs.version }}
+          -FileVersion ${{ needs.build.outputs.file-version }}
+          -SignerThumbprint ${{ needs.build.outputs.thumbprint }}
+          -LogFolder artifacts/installer-logs
+      - name: Keep the logs of Windows Installer
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: installer-logs
+          path: artifacts/installer-logs/
+          retention-days: 3
+          if-no-files-found: ignore
+
+  # The draft release, with the six files. Nothing is public until the maintainer publishes the draft, and
+  # the tag is created then.
+  publish:
+    if: ${{ github.event_name == 'workflow_dispatch' && !inputs.dry-run }}
+    needs: [build, test]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - name: Get the files
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: release-files
+          path: artifacts/release-files
+      # A release of this version, published or not, is never replaced: the maintainer deletes a draft that
+      # an earlier run left.
+      - name: Create the draft release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          VERSION: ${{ needs.build.outputs.version }}
+          PRERELEASE: ${{ needs.build.outputs.prerelease }}
+          TARGET: ${{ github.sha }}
+        run: |
+          $tag = "v$env:VERSION"
+          gh release view $tag --json isDraft 2>$null | Out-Null
+          if ($LASTEXITCODE -eq 0) { throw "A release $tag exists already. Delete it if it is a draft of an earlier run, then start the release again." }
+
+          $arguments = @($tag, '--draft', '--target', $env:TARGET, '--title', "Bravo $tag", '--notes-file', 'artifacts/release-files/release/notes.md', '--generate-notes')
+          if ($env:PRERELEASE -eq 'true') { $arguments += '--prerelease' }
+          $files = (Get-ChildItem artifacts/release-files/installer/en-US).FullName
+          gh release create @arguments @files
+          exit $LASTEXITCODE
+      # The file that tells an installed 1.0.x about a stable release: the maintainer uploads it by hand,
+      # after the draft is published and its files can be downloaded.
+      - name: Keep the update feed
+        if: ${{ needs.build.outputs.prerelease == 'false' }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: update-feed
+          path: artifacts/release-files/release/currentversion.json
+          retention-days: 30
+          if-no-files-found: error
+      - name: Say what is left to do by hand
+        shell: pwsh
+        env:
+          VERSION: ${{ needs.build.outputs.version }}
+          PRERELEASE: ${{ needs.build.outputs.prerelease }}
+        run: |
+          @(
+            "## Bravo $env:VERSION is a draft release"
+            ''
+            '1. Open the draft among the releases of the repository, correct its notes, and publish it.'
+            if ($env:PRERELEASE -eq 'false') {
+              '2. After that, download the artifact `update-feed` of this run and upload its `currentversion.json` to the two containers of the update feed, `bravo-public` and `bravo-internal`.'
+            }
+          ) >> $env:GITHUB_STEP_SUMMARY

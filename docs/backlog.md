@@ -1,6 +1,6 @@
 # Bravo: backlog
 
-Next ID: B-31
+Next ID: B-34
 
 The open work toward 1.1.0, in the order to take it ([ADR 0007](decisions/0007-redesign-on-a-development-branch.md)).
 Status: `[ ]` to do, `[~]` in progress, `[-]` dropped (say why); a done item leaves the backlog.
@@ -16,8 +16,10 @@ criterion can be checked on `develop-vnext`.
 
 ## Now
 
-As of 2026-11-18: the redesign is at stage T3 Distribution. B-1, left in T2, waits for the release of
-TypeScript 7.1 and ts-loader 10; nothing blocks the next item.
+As of 2026-11-19: the redesign is at stage T3 Distribution. B-1, left in T2, waits for the release of
+TypeScript 7.1 and ts-loader 10; nothing blocks the next item. The first signed preview waits for the
+maintainer: the identity that signs and the four variables of the repository
+([guide](guides/make-a-release.md)).
 
 ## Next
 
@@ -35,25 +37,6 @@ opens the options through the new API and the generated client.
 Exit: GitHub Actions produces a signed, installable preview with release notes; installed over 1.0.14 it keeps
 the four guarantees of [the specification](spec.md#guarantees-for-users-of-10x).
 
-- [ ] B-2 (was D-02) Release. Hypothesis: GitHub Actions builds, signs, publishes a GitHub release with
-  generated notes and changelog, and updates the feed. Explore: signing with a federated identity; changelog
-  tools; how the version is computed. Also: the title of the window and `GET /application` show the
-  informational version of the assembly, which only the build of the installer sets, to the version that it is
-  given. Also, from D-01:
-  - The build of the installer makes the four packages, unsigned, in `artifacts/installer/en-US`, with the
-    file names of 1.0.x. It takes the version as `-p:BravoVersion`, which is 1.1.0 when none is given: the
-    release computes it and passes it. Windows Installer compares the first three numbers of a version.
-  - The signature is the one of 1.0.x, the certificate of the publisher through AzureSignTool: on
-    `Bravo.exe` and the assemblies of the host in the folder that a package is made from,
-    `artifacts/installer-stage/<version>/<runtime>`, and on `Bravo.Setup.exe` in the folder of its publish
-    beside it, before the package is built, and then on each package. The build has no step between the two
-    yet.
-  - The installed 1.0.x asks for a file whose name it builds itself, adding `-frameworkdependent`,
-    `-userinstaller` or `-portable` (a `.zip`) to the name in the feed, so those files exist. The portable
-    one is the folder that a package is made from.
-  - The publishes of that build restore the packages of `win-x64` and read and write no lock file, so that
-    the committed ones do not change: the release decides whether that graph is locked.
-  - The packages of a run of continuous integration are its artifact `installer-packages`, kept for 3 days.
 - [ ] B-3 (was D-03) Updates. Hypothesis: a notification, as today. Explore: automatic update, if the installer
   technology offers it. Also: the page started the download of an update in a frame of its own, and the webview
   cancels a frame navigation outside the origin of the page and starts no download; the update check has no
@@ -61,7 +44,17 @@ the four guarantees of [the specification](spec.md#guarantees-for-users-of-10x).
   says that the check failed. Also, from D-01: the registry value `installFolder`, under `HKLM` for a package
   per machine and under `HKCU` for one per user, tells the application which package installed it, and so
   which of the four files is its update; a silent installation closes a running application and does not
-  start it again.
+  start it again. Also, from the release ([design](design/release.md)):
+  - The update feed is written for a stable release alone, and uploaded by hand. Its `version` is the file
+    version, four numbers, which orders a preview and the release of its version: what 1.1.0 compares it
+    with is its own file version, not the semantic version that it shows.
+  - `download` names the package per machine that carries the runtime, and an installed 1.0.x builds the
+    name of its own file from it. Whether 1.1.0 does the same, or the feed names each file, is open: the
+    names of the six files can change only when no installed copy builds them.
+  - A build that is not a public release has a semantic version that ends with the commit. To decide:
+    whether a development build looks for an update at all.
+  - An archive of a release is the folder of the application: a copy started from one has no registry value
+    `installFolder`.
 
 ### T4 Cross-cutting services
 
@@ -122,6 +115,10 @@ crash produces a report, telemetry runs on a supported SDK.
     account.
   - The registry value `applicationTelemetryEnabled` is the choice of who installs for the telemetry of the
     application: nothing reads it yet.
+  - From the release: an event of the installer carries the semantic version as the version of the product
+    and the file version as its build, as in 1.0.x; outside a public release the first ends with the
+    commit. The workflow of a release holds no secret: a value of the telemetry that is not in the sources
+    needs a variable of the repository, or a secret, which the release does not have yet.
 
 ### T5 Access to models
 
@@ -181,6 +178,14 @@ Exit: manual checks complete and a preview tried in the field; the final pull re
 commit; `v1.1.0` released from GitHub Actions and announced by the feed; old branches and pull requests
 removed; the Azure DevOps project retired; dependency updates configured again.
 
+- [ ] B-31 The release from `main`. After the final merge the release changes branch
+  ([guide](guides/make-a-release.md)): the federated credential of the identity that signs names a branch,
+  so `main` gets one and the one of `develop-vnext` is removed; `release.yml` is then started from the
+  button of GitHub; the first stable release needs its update feed uploaded to the two containers; the
+  pipeline of Azure DevOps and its client secret are retired with the project. Also: the dependency updates
+  cover the tool manifest `.config/dotnet-tools.json`, the package `Nerdbank.GitVersioning` and the actions
+  of the two workflows.
+
 ## Later
 
 After 1.1.0.
@@ -202,10 +207,14 @@ After 1.1.0.
   folder unless `INSTALLFOLDER` is given, as 1.0.x does.
 - B-28 A PNG image as the icon of the external tool registration: today it is the image of 1.0.x, an icon file
   under the media type `image/png`. To check in Power BI Desktop.
+- B-32 An attestation of provenance for the files of a release
+  ([artifact attestations](https://docs.github.com/en/actions/concepts/security/artifact-attestations)), which
+  ties each file to the commit and to the run that built it.
+- B-33 The name of the product in the signature of a package: Windows shows the description of a signature
+  when a package asks for administrator rights, and the signature of 1.0.x has none.
 
 ## Open decisions
 
 Each is answered by the design of the component that it names.
 
 - B-29 Is the crash reporter a mode of the main executable or an application of its own? B-8.
-- B-30 How is the version computed and how are release notes and the changelog produced? B-2.

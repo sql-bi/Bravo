@@ -82,3 +82,6 @@ What a run checks beyond the commands of the table above:
 
 `build-and-test` is the status check that `main` requires: do not rename the job and do not give it a matrix.
 Every action is pinned to the commit of a release, with the version in a comment on the same line.
+
+A release is not made here: `.github/workflows/release.yml` is a workflow of its own, started by hand, which
+does not wait for this one ([Release](release.md)).

@@ -45,6 +45,10 @@ Everything else is open to redesign: the technology of the installer, the routes
 files. Two points are already decided: the single instance has new names, and the arguments of the external
 tool registration stay as they are ([startup](design/startup.md)).
 
+What an installed 1.0.x relies on for the first two is kept as it is: the update feed, its fields and the
+names of the files of a release ([release](design/release.md)), the packages and their public properties
+([installer](design/installer.md)).
+
 ## Rules for every component
 
 - **The cycle.** A component is designed before it is written: requirements, exploration, options, decision,

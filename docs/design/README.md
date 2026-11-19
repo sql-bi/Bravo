@@ -14,7 +14,7 @@ the part lives and the rules for changing it.
 | [`api.md`](api.md) | The HTTP API through which the user interface reaches the host |
 | [`user-interface-tests.md`](user-interface-tests.md) | The two kinds of tests of the user interface and what each proves |
 | [`installer.md`](installer.md) | The Windows Installer packages and the program that they run |
-| [`release.md`](release.md) | The version of a build |
+| [`release.md`](release.md) | The version of a build, the workflow that makes a release, its six files, their signature, the update feed |
 
 ## The previous implementation
 
