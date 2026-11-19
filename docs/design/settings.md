@@ -71,4 +71,8 @@ the file.
   sets them with a `FakeTimeProvider`.
 - The tests read and write only in a folder of their own: the tests of the host build it on a temporary data
   folder. `Release1014` in the tests holds two files as 1.0.14 writes them and the reader of 1.0.14, with its
-  types and options: the proof that 1.0.14 reads what 1.1.0 writes.
+  types and options: the proof that 1.0.14 reads what 1.1.0 writes. The tests of the window
+  (`web/window-tests/settings.spec.ts`) start the application on a file as 1.0.14 writes it, and on one that
+  cannot be read, in the data folder of the test.
+- No test reads the file of an installed 1.0.14 after an upgrade: the test of the packages writes a file of its
+  own, which the upgrade and the start leave as it was ([Installer](installer.md)).

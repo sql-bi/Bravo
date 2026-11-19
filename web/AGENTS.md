@@ -115,6 +115,8 @@ The tests of the window are in `web/window-tests`, one file `*.spec.ts` for each
   so that the page has the one of the window, and waits for its start. The application reads the update feed
   from a server of the test, `window-tests/update-feed.ts`, through `--dev-update-feed`: the feed of 1.0.14,
   older than any build, unless the test sets the option `updateFeed`, to another feed or to `null` for none.
+  With the option `settingsFile` the test writes the file of the settings in the data folder before the start;
+  `bravo.readSettingsFile()` reads it again.
   At the end it closes the window as a user does, expects exit code 0, waits for the end of the processes of
   the webview of that data folder and removes the folder.
 - `window-tests/webview-settings.ts` gives the webview the browser argument that opens the DevTools protocol,
@@ -133,7 +135,8 @@ The tests of the window are in `web/window-tests`, one file `*.spec.ts` for each
 - The tests: the start of the page (`start.spec.ts`), the theme and the diagnostic level in the options
   (`options.spec.ts`, through the dialog of `options.ts`), a feature that has no route yet
   (`features.spec.ts`), a second start with the arguments of Power BI Desktop (`activation.spec.ts`), a newer
-  release in the update feed and its download (`updates.spec.ts`).
+  release in the update feed and its download (`updates.spec.ts`), the file of the settings of 1.0.14 and one
+  that cannot be read (`settings.spec.ts`).
 - A test never opens the browser of the machine: one that clicks a link first calls
   `bravo.answerBrowserRequests()`, which answers `POST /browser/open` with `page.route` and keeps the addresses
   in `bravo.openedInBrowser`. No other test sets a route: while the page has one, Playwright answers every CORS

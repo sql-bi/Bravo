@@ -1,6 +1,6 @@
 import { type ChildProcess, execFile, spawn } from 'node:child_process';
 import { existsSync, realpathSync } from 'node:fs';
-import { mkdtemp, readdir, readFile, rm } from 'node:fs/promises';
+import { mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
@@ -13,13 +13,15 @@ import { chooseWebViewSettings, type WebViewSettings } from './webview-settings'
 // which holds its settings and the profile of its webview, and the DevTools protocol on a port that the engine
 // chooses, attaches Playwright to the page, and closes the application as a user does. Nothing of the
 // application changes for a test: the browser argument is read by the WebView2 runtime (webview-settings.ts),
-// and the application passes none of its own. Its arguments name the data folder of the test and the update
-// feed of the test, which a server of the test serves (update-feed.ts). A test that opens a page in the default
-// browser of the machine answers the request itself (answerBrowserRequests).
+// and the application passes none of its own. Its arguments name the data folder of the test, where a test can
+// put the file of the settings that the application finds at its start (settingsFile), and the update feed of
+// the test, which a server of the test serves (update-feed.ts). A test that opens a page in the default browser
+// of the machine answers the request itself (answerBrowserRequests).
 
 const executable = path.join(__dirname, '..', '..', 'artifacts', 'bin', 'Bravo.Desktop', 'release', 'Bravo.exe');
 const bundle = path.join(path.dirname(executable), 'wwwroot', 'js', 'main.js');
 const pageOrigin = 'https://bravo.invalid';
+const settingsFileName = 'usersettings.json';
 
 /** The size of the page in every test, whatever the size of the window. */
 export const pageSize = { width: 1280, height: 800 };
@@ -49,7 +51,7 @@ export class Bravo {
     /** The addresses that the page asked the host to open in the default browser. */
     readonly openedInBrowser: string[] = [];
 
-    constructor(readonly page: Page, readonly address: string) {
+    constructor(readonly page: Page, readonly address: string, readonly dataFolder: string) {
         page.on('request', request => this.requests.push({ method: request.method(), url: request.url() }));
         page.on('console', message => this.console.push({ type: message.type(), text: message.text() }));
         page.on('pageerror', error => this.pageErrors.push(String(error)));
@@ -60,6 +62,11 @@ export class Bravo {
         return this.requests
             .filter(request => request.url.startsWith(`${this.address}/`) && request.method !== 'OPTIONS')
             .map(request => `${request.method} ${new URL(request.url).pathname}`);
+    }
+
+    /** The text of the file of the settings in the data folder of the application. */
+    async readSettingsFile(): Promise<string> {
+        return await readFile(path.join(this.dataFolder, settingsFileName), 'utf8');
     }
 
     /** Forgets what the page did until now. */
@@ -263,11 +270,15 @@ interface PageWithHost {
     bravoHost: { address: string }
 }
 
-export const test = base.extend<{ bravo: Bravo, updateFeed: string | null }, { webView: WebViewSettings }>({
+export const test = base.extend<{ bravo: Bravo, updateFeed: string | null, settingsFile: string | null }, { webView: WebViewSettings }>({
 
     // The update feed that the application of a test reads, by default one with an older release; with null
     // the application has none, and its update check fails
     updateFeed: [releasedFeed, { option: true }],
+
+    // The text of the file of the settings that the application finds in its data folder at its start; with
+    // null, the default, there is no file
+    settingsFile: [null, { option: true }],
 
     // Decided once for the tests of a worker, and said in the log of the run
     webView: [async ({ }, use) => {
@@ -277,7 +288,7 @@ export const test = base.extend<{ bravo: Bravo, updateFeed: string | null }, { w
     }, { scope: 'worker' }],
 
     // The start and the end of the application have a time of their own, which the test does not share
-    bravo: [async ({ webView, updateFeed }, use, testInfo) => {
+    bravo: [async ({ webView, updateFeed, settingsFile }, use, testInfo) => {
         checkBuild();
 
         // The long path: the temporary folder of a runner of continuous integration is a short 8.3 path
@@ -288,6 +299,9 @@ export const test = base.extend<{ bravo: Bravo, updateFeed: string | null }, { w
         let browser: Browser | undefined;
         let failure: unknown;
         try {
+            if (settingsFile !== null)
+                await writeFile(path.join(dataFolder, settingsFileName), settingsFile, 'utf8');
+
             feed = (updateFeed === null ? undefined : await UpdateFeedServer.start(updateFeed));
             const args = [`--dev-data-folder=${dataFolder}`, ...(feed ? [`--dev-update-feed=${feed.address}`] : [])];
             const started = new BravoProcess(args, await webView.give());
@@ -317,7 +331,7 @@ export const test = base.extend<{ bravo: Bravo, updateFeed: string | null }, { w
 
             // The address only: no test reads the token of the host
             const address = await page.evaluate(() => (<PageWithHost><unknown>window).bravoHost.address);
-            const bravo = new Bravo(page, address);
+            const bravo = new Bravo(page, address, dataFolder);
 
             await expect(page.locator('#ctrl-theme'), 'The page did not start').toBeVisible({ timeout: startSeconds * 1000 });
 
