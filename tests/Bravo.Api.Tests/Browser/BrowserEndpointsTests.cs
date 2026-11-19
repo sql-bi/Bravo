@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Net;
 using System.Net.Http;
-using System.Text;
+using System.Net.Http.Json;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using Bravo.Api.Problems;
 using NSubstitute;
@@ -20,7 +21,7 @@ public sealed class BrowserEndpointsTests
         await using var api = await TestApi.StartAsync();
         var address = "https://docs.sqlbi.com/bravo/features/format-dax";
 
-        using var response = await PostAsync(api, $$"""{ "address": "{{address}}" }""");
+        using var response = await PostAsync(api, new JsonObject { ["address"] = address });
 
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
         api.BrowserLauncher.Received(1).Open(new Uri(address));
@@ -35,7 +36,7 @@ public sealed class BrowserEndpointsTests
     {
         await using var api = await TestApi.StartAsync();
 
-        using var response = await PostAsync(api, $$"""{ "address": "{{address}}" }""");
+        using var response = await PostAsync(api, new JsonObject { ["address"] = address });
 
         var problem = await response.ReadJsonAsync();
         Assert.Equal(nameof(ApiProblemCode.ValidationFailed), problem.GetProperty("code").GetString());
@@ -48,16 +49,14 @@ public sealed class BrowserEndpointsTests
     {
         await using var api = await TestApi.StartAsync();
 
-        using var response = await PostAsync(api, "{}");
+        using var response = await PostAsync(api, new JsonObject());
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         api.BrowserLauncher.DidNotReceiveWithAnyArgs().Open(default!);
     }
 
-    private static async Task<HttpResponseMessage> PostAsync(TestApi api, string body)
+    private static Task<HttpResponseMessage> PostAsync(TestApi api, JsonObject body)
     {
-        using var content = new StringContent(body, Encoding.UTF8, "application/json");
-
-        return await api.Client.PostAsync(Route, content, TestContext.Current.CancellationToken);
+        return api.Client.PostAsJsonAsync(Route, body, TestContext.Current.CancellationToken);
     }
 }
