@@ -83,6 +83,19 @@ public sealed class FileUserSettingsStoreTests : IDisposable
         Assert.True(store.ReadFailed);
     }
 
+    // Another program that holds the file without sharing it: the read fails as for a file that is not JSON.
+    [Fact]
+    public void Current_FileHeldByAnotherProgram_IsTheDefaultsAndTheReadFailed()
+    {
+        File.WriteAllText(_path, Release1014.ThemeOnlyFile);
+        using var held = new FileStream(_path, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+        using var store = CreateStore();
+
+        Assert.Equal(UserSettings.Default, store.Current);
+        Assert.True(store.ReadFailed);
+        Assert.Equal([(LogLevel.Warning, new EventId(1, "LogReadFailed"))], _logger.Entries);
+    }
+
     [Fact]
     public void ReadFailed_NoFile_IsFalse()
     {
