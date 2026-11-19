@@ -265,6 +265,12 @@ line names. It is not a project of the solution: a build of the solution makes n
   folder.
 - The build validates a package against the rules of Windows Installer (ICE), also on a developer's
   machine, and a warning fails it. `Bravo.Installer.wixproj` says why each rule that is turned off is.
+- A package is validated where the build writes it, under `artifacts/obj`, at a path that is the root of the
+  repository and up to 143 characters more: the longest is the one of the package per user that uses the
+  installed runtime, in a build that is not a public release. When that path is too long the build stops
+  with `WIX0301`, "Failed to open the database", which does not name the cause. Measured with a root of 110
+  characters: a path of 253 characters fails, and the one of a public release, 241, does not. A clone in a
+  deep folder, such as a temporary one, needs a shorter root.
 - `Dialogs.wxs` is derived from three files of WiX, under their licence: what differs from them is marked.
 - `tests/Test-Packages.ps1` installs and removes Bravo on the machine that runs it, so it refuses to run
   outside GitHub Actions: a package is installed on a runner, or on a machine that can be thrown away. What
