@@ -41,6 +41,19 @@ public sealed class EventsEndpointsTests
     }
 
     [Fact]
+    public async Task GetEvents_SettingsThatCouldNotBeRead_ReturnsTheKindAlone()
+    {
+        await using var api = await TestApi.StartAsync();
+        api.Events.PublishSettingsReadFailed();
+
+        using var response = await api.Client.GetAsync("/events", TestContext.Current.CancellationToken);
+
+        using var expected = JsonDocument.Parse("""[{ "number": 1, "kind": "SettingsReadFailed" }]""");
+        var actual = (await response.ReadJsonAsync()).GetProperty("events");
+        Assert.True(JsonElement.DeepEquals(expected.RootElement, actual), actual.GetRawText());
+    }
+
+    [Fact]
     public async Task GetEvents_StartWithNoArgumentsAndOneWithErrors_ReturnsTheErrorsAndNoMemberWithoutAValue()
     {
         await using var api = await TestApi.StartAsync();

@@ -19,7 +19,7 @@ that starts after 1.1.0, portable or after a downgrade, reads the same file.
 | `customTemplatesEnabled` | The templates of the user | `true` |
 | `customOptions` | The options that only the user interface reads, any JSON value, kept as they are | none |
 
-**Reading.** The file is read once, when the settings are first asked for.
+**Reading.** The file is read once, when the host starts.
 
 - A member that is missing, of another type or out of range is the default of its setting; a proxy whose
   address or bypass list the API would refuse ([API](api.md)) is the default proxy, as 1.0.x reads it. Blank
@@ -30,7 +30,8 @@ that starts after 1.1.0, portable or after a downgrade, reads the same file.
   packages write ([Installer](installer.md)). A number other than zero is yes and any other text no; a value
   of another kind, a copy that is not installed and a value that cannot be read leave the default. 1.0.x
   reads it in the same way.
-- A file that cannot be opened, or that is not a JSON object, counts as no file and is logged. Nothing renames
+- A file that cannot be opened, or that is not a JSON object, counts as no file and is logged, and the page
+  tells the user in a notification, through the event `SettingsReadFailed` ([API](api.md)). Nothing renames
   it: the next save replaces it.
 
 **Saving.** Every change of the options replaces the file whole.
@@ -54,7 +55,8 @@ the file.
 | The settings, a value that is never changed, and the interface of their store | `src/Bravo.Core/Settings/` |
 | The file: its members and how each one is read, the store, the replacement of a file | `src/Bravo.Platform.Windows/Settings/` |
 | The choice of telemetry of the installation, read from the registry | `src/Bravo.Platform.Windows/Updates/RegistryInstallationReader.cs` |
-| The store, registered with the file in the data folder | `src/Bravo.Desktop/Settings/` |
+| The store, registered with the file in the data folder, and the reading at the start that tells the page of a file that cannot be read | `src/Bravo.Desktop/Settings/` |
+| The notification of a file that cannot be read | `settingsReadFailed` in `web/controllers/host-events.ts` |
 
 - `UserSettingsDocument` and `ProxySettingsDocument` hold each member of the file as it was read, a
   `JsonElement`, and the members that the application does not know in `[JsonExtensionData]`.

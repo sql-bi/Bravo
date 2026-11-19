@@ -48,6 +48,12 @@ public sealed partial class FileUserSettingsStore : IUserSettingsStore, IDisposa
 
     public UserSettings Current => Latest.Settings;
 
+    /// <summary>
+    /// Whether there was a file that could not be read: the settings started from the defaults, and the next change
+    /// replaces the file.
+    /// </summary>
+    public bool ReadFailed => _read.Value.ReadFailed;
+
     private Snapshot Latest => _replaced ?? _read.Value;
 
     public async Task ReplaceAsync(UserSettings settings, CancellationToken cancellationToken)
@@ -97,7 +103,7 @@ public sealed partial class FileUserSettingsStore : IUserSettingsStore, IDisposa
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or JsonException)
         {
             LogReadFailed(exception, _path);
-            return ReadWithoutFile();
+            return ReadWithoutFile() with { ReadFailed = true };
         }
     }
 
@@ -111,5 +117,6 @@ public sealed partial class FileUserSettingsStore : IUserSettingsStore, IDisposa
 
     /// <param name="Document">The file as it was read or last written, with the members that are no setting.</param>
     /// <param name="Settings">The settings that it holds.</param>
-    private sealed record Snapshot(UserSettingsDocument Document, UserSettings Settings);
+    /// <param name="ReadFailed">Whether there was a file and it could not be read.</param>
+    private sealed record Snapshot(UserSettingsDocument Document, UserSettings Settings, bool ReadFailed = false);
 }

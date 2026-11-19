@@ -5,7 +5,10 @@
 */
 
 import { ActivationEvent, DiagnosticLevel, getEvents, HostEvent } from '../generated/bravo';
-import { logger } from '../main';
+import { logger, notificationCenter } from '../main';
+import { i18n } from '../model/i18n';
+import { strings } from '../model/strings';
+import { Notify } from './notifications';
 
 interface EventCursor {
     address: string
@@ -82,6 +85,8 @@ export class HostEvents {
         try {
             if (event.kind == "Activation" && event.activation)
                 this.activated(event.activation);
+            else if (event.kind == "SettingsReadFailed")
+                this.settingsReadFailed();
         } catch (error) {
             // An event that the page cannot handle does not stop the reading of the next ones
             console.error(error);
@@ -99,6 +104,15 @@ export class HostEvents {
         } else if (activation.serverName) {
             logger.log("Activation", { content: activation });
         }
+    }
+
+    /**
+     * The host could not read the file of the settings and started with the defaults: the user is told, or
+     * would find the options changed with no reason. The next change of an option replaces the file.
+     */
+    settingsReadFailed() {
+        logger.log("Settings: the file cannot be read", undefined, DiagnosticLevel.Basic, 0, "errorMessage", true);
+        notificationCenter.add(new Notify(i18n(strings.errorUserSettingsReadError), null, null, true, true));
     }
 
     wait(seconds: number, signal: AbortSignal) {

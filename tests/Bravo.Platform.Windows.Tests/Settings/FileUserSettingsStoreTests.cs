@@ -75,6 +75,23 @@ public sealed class FileUserSettingsStoreTests : IDisposable
     }
 
     [Fact]
+    public void ReadFailed_FileThatIsNotJson_IsTrue()
+    {
+        File.WriteAllText(_path, "not JSON");
+        using var store = CreateStore();
+
+        Assert.True(store.ReadFailed);
+    }
+
+    [Fact]
+    public void ReadFailed_NoFile_IsFalse()
+    {
+        using var store = CreateStore();
+
+        Assert.False(store.ReadFailed);
+    }
+
+    [Fact]
     public async Task ReplaceAsync_Settings_AreWhatTheNextStartReads()
     {
         var settings = UserSettings.Default with { Theme = Theme.Light, DiagnosticLevel = DiagnosticLevel.Basic };

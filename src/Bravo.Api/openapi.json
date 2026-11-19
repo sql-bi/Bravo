@@ -447,7 +447,8 @@
       },
       "HostEventKind": {
         "enum": [
-          "Activation"
+          "Activation",
+          "SettingsReadFailed"
         ],
         "type": "string"
       },

@@ -45,9 +45,8 @@ Exit: in the installed preview the settings are migrated, the policies are honor
 crash produces a report, telemetry runs on a supported SDK.
 
 - [~] B-4 (was S-01) User settings, kept in the file of 1.0.x
-  ([ADR 0023](decisions/0023-settings-kept-in-the-file-of-1-0-x-and-replaced-whole.md)). Left: the page, which is
-  not told when the file cannot be read; the registry value of 1.0.x that hides the version in the title of the
-  window (`applicationTitleVersionHidden`), which 1.1.0 does not read; the size and the position of the window,
+  ([ADR 0023](decisions/0023-settings-kept-in-the-file-of-1-0-x-and-replaced-whole.md)). Left: the registry value
+  of 1.0.x that hides the version in the title of the window (`applicationTitleVersionHidden`), which 1.1.0 does not read; the size and the position of the window,
   which are not kept. Also, from D-01: the removal of a package removes the data folder of who removes it, with
   the settings, as in 1.0.x; the profile of the webview of 1.0.x, `%LOCALAPPDATA%\Bravo\.temp`, stays on the disk
   after an upgrade, where nothing reads it or removes it.

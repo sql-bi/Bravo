@@ -161,6 +161,7 @@ export enum strings {
     errorTryingToUpdateMeasuresWithErrors,
     errorUnhandled,
     errorUnspecified,
+    errorUserSettingsReadError,
     errorUserSettingsSaveError,
     errorVpaxFileExportError,
     errorVpaxFileImportError,

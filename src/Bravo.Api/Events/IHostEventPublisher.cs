@@ -12,4 +12,9 @@ public interface IHostEventPublisher
     /// Publishes a start of the application, with what its command line asked for.
     /// </summary>
     void PublishActivation(ActivationRequest request);
+
+    /// <summary>
+    /// Publishes that the file of the settings could not be read, and that the settings are the defaults.
+    /// </summary>
+    void PublishSettingsReadFailed();
 }

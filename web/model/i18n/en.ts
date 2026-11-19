@@ -169,6 +169,7 @@ const locale: Locale = {
         [_.errorTryingToUpdateMeasuresWithErrors]: `The requested update failed because the following measures contain errors:<br><strong>{measures}</strong>`,
         [_.errorUnhandled]: "Unhandled error - please report it and provide the trace id, if available.",
         [_.errorUnspecified]: "Unspecified error.",
+        [_.errorUserSettingsReadError]: "Unable to read the settings: the default ones are used.",
         [_.errorUserSettingsSaveError]: "Unable to save the settings.",
         [_.errorVpaxFileExportError]: "An error has occurred while exporting the VPAX file.",
         [_.errorVpaxFileImportError]: "An error occurred while importing the VPAX file.",

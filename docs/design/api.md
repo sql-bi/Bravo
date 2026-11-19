@@ -89,8 +89,9 @@ being 1. The page asks for the events after the last number it has read; the ans
   events between the two are no longer kept. A number beyond the last one is answered at once, and `next`
   brings the page back.
 - An event is one type for every kind: `kind` names the kind, and the member with the data of that kind is
-  the one present. The first kind is `Activation`, published at every start of the application, the first
-  included, with the server, the database and the errors of the command line.
+  the one present. `Activation` is published at every start of the application, the first included, with the
+  server, the database and the errors of the command line. `SettingsReadFailed`, with no data, is published
+  once, when the host starts, if the file of the settings could not be read ([settings](settings.md)).
 
 **Options.** The options are the settings of the user: theme, telemetry, update check, custom templates,
 sign-in with the system browser, diagnostic level, proxy, and the options that only the user interface reads,
@@ -143,6 +144,7 @@ button that loads the page again.
   the page waits before it asks again: one second, then twice as long each time, up to 30 seconds.
 - An activation without a server does nothing in the page. The errors of a command line go to the diagnostic
   log. An activation with a server is logged, and opens no report until the host can find it (backlog B-10).
+- Settings that the host could not read are told to the user in a notification, and go to the diagnostic log.
 - Three calls that the page starts by itself have no route yet: the sign-in with the account that the page
   remembers, the reading of the diagnostics of the host, and the list of the reports that are open in Power BI
   Desktop. They fail like every call without a route, and the page shows nothing and writes nothing in its

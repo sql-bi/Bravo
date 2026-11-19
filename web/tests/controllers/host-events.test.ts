@@ -6,8 +6,9 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-// The page as a whole is not started: the module gets a logger of the test, and a route of the test
-vi.mock("../../main", () => ({ logger: { log: vi.fn() } }));
+// The page as a whole is not started: the module gets a logger and notifications of the test, and a route of
+// the test
+vi.mock("../../main", async () => (await import("../main-mock")).createMainMock());
 vi.mock("../../generated/bravo", async importOriginal => ({
     ...(await importOriginal<typeof import('../../generated/bravo')>()),
     getEvents: vi.fn()
@@ -15,7 +16,7 @@ vi.mock("../../generated/bravo", async importOriginal => ({
 
 import { HostEvents } from '../../controllers/host-events';
 import { EventBatch, getEvents, HostEvent } from '../../generated/bravo';
-import { logger } from '../../main';
+import { logger, notificationCenter } from '../../main';
 
 const address = "http://127.0.0.1:50000";
 
@@ -36,6 +37,7 @@ describe("HostEvents", () => {
         vi.useFakeTimers();
         sessionStorage.clear();
         vi.mocked(logger.log).mockReset();
+        vi.mocked(notificationCenter.add).mockReset();
 
         requests = [];
         vi.mocked(getEvents).mockReset().mockImplementation((params, options) =>
@@ -271,6 +273,22 @@ describe("HostEvents", () => {
 
             expect(logger.log).toHaveBeenCalledTimes(2);
             expect(requests[1].after).toBe(2);
+        });
+    });
+
+    describe("settings that the host could not read", () => {
+
+        it("are told to the user in a notification, and logged as an error whatever the diagnostic level", async () => {
+            start();
+            requests[0].answer({ events: [{ number: 1, kind: "SettingsReadFailed" }], next: 1 });
+            await elapse();
+
+            expect(notificationCenter.add).toHaveBeenCalledTimes(1);
+            const [notification] = vi.mocked(notificationCenter.add).mock.calls[0];
+            expect(notification.message).toBe("Unable to read the settings: the default ones are used.");
+            const [name, , , , className, forceLogging] = vi.mocked(logger.log).mock.calls[0];
+            expect(name).toBe("Settings: the file cannot be read");
+            expect([className, forceLogging]).toEqual(["errorMessage", true]);
         });
     });
 });

@@ -19,4 +19,9 @@ internal sealed class HostEventPublisher(EventLog log) : IHostEventPublisher
             Activation = activation,
         });
     }
+
+    public void PublishSettingsReadFailed()
+    {
+        _log.Append(number => new HostEvent { Number = number, Kind = HostEventKind.SettingsReadFailed });
+    }
 }
