@@ -8,7 +8,7 @@ the engine is in one folder of `Bravo.Desktop`: a shell on another engine rewrit
 [build identity](startup.md), the size that Windows gives a new window, in the
 middle of the screen. The webview stays hidden until the first document has loaded: until then the window
 shows the background of the user interface, so nothing flashes white. Nothing of the window is kept from one
-start to the next (backlog B-4).
+start to the next (backlog B-34).
 
 **Theme.** The window has the theme of the user, at the start and whenever the options change: the settings
 tell that they were replaced, and the window reads them again on its own thread. The page tells the window
@@ -44,7 +44,8 @@ reserved for names that are no site ([RFC 6761](https://www.rfc-editor.org/rfc/r
 other origin can read those files. The window opens `https://bravo.invalid/index.html`: the origin is the same
 at every start, so what the page stores is found again. The engine keeps its data in the folder `WebView2` of
 the data folder of the build ([Startup](startup.md)), and is given no browser argument.
-The folder that 1.0.x used, `Bravo\.temp`, is neither read nor written.
+The folder that 1.0.x used, `Bravo\.temp`, is neither read nor written, nor removed after an upgrade (backlog
+B-35).
 
 **Connection.** Before any script of a document runs, the webview runs a script that defines the object
 `window.bravoHost`, with the members `address` and `token`: where the API listens, with no slash at its end,

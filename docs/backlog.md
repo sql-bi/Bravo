@@ -1,6 +1,6 @@
 # Bravo: backlog
 
-Next ID: B-34
+Next ID: B-36
 
 The open work toward 1.1.0, in the order to take it ([ADR 0007](decisions/0007-redesign-on-a-development-branch.md)).
 Status: `[ ]` to do, `[~]` in progress, `[-]` dropped (say why); a done item leaves the backlog.
@@ -16,8 +16,8 @@ criterion can be checked on `develop-vnext`.
 
 ## Now
 
-As of 2026-11-19: the redesign is at stage T3 Distribution, whose items are done; B-4 is in progress. B-1,
-left in T2, waits for the release of TypeScript 7.1 and ts-loader 10. The first signed preview, the exit of
+As of 2026-11-19: the items of stage T3 Distribution are done, and so is B-4, the first item of T4
+Cross-cutting services; B-5 is next. B-1, left in T2, waits for the release of TypeScript 7.1 and ts-loader 10. The first signed preview, the exit of
 T3, waits for the maintainer: the identity that signs and the four variables of the repository
 ([guide](guides/make-a-release.md)).
 
@@ -44,18 +44,15 @@ No item is left: the exit waits for the first signed preview.
 Exit: in the installed preview the settings are migrated, the policies are honored, the logs are visible, a
 crash produces a report, telemetry runs on a supported SDK.
 
-- [~] B-4 (was S-01) User settings, kept in the file of 1.0.x
-  ([ADR 0023](decisions/0023-settings-kept-in-the-file-of-1-0-x-and-replaced-whole.md)). Left: the size and the
-  position of the window, which are not kept. Also, from D-01: the removal of a package removes the data folder of who removes it, with
-  the settings, as in 1.0.x; the profile of the webview of 1.0.x, `%LOCALAPPDATA%\Bravo\.temp`, stays on the disk
-  after an upgrade, where nothing reads it or removes it.
 - [ ] B-5 (was S-02) Policies. Hypothesis: the same keys; the templates shipped in a subfolder of the
   installation. Also: `/options` knows no policy, so an option that a policy sets is returned and replaced like
   any other; the page starts with no policy, so its options dialog locks nothing; the packages of D-01 do not
   carry the templates of `policies/` yet. Also, from B-3: the policy `UpdateCheckEnabled` turned off stops
   every request to the update feed ([ADR 0022](decisions/0022-updates-read-from-the-feed-of-1-0-x-and-downloaded-by-the-browser.md)):
   `GET /releases/latest` then reads nothing, and the page, which asks at its start and in the options, tells
-  nothing. To decide: the answer of the route, a code of its own or the one of a failed check.
+  nothing. To decide: the answer of the route, a code of its own or the one of a failed check. Also, from B-4:
+  a policy applies over the settings of the user, which the store reads and writes without it, and is never
+  written in their file ([settings](design/settings.md)).
 - [ ] B-6 (was S-03) Network and proxy. Hypothesis: system proxy and auto-configuration detected without
   settings, integrated credentials first, a prompt as the last resort, a connectivity check with clear messages.
   Explore: the proxy in .NET, in the webview, in the sign-in library and in the Analysis Services client
@@ -71,14 +68,17 @@ crash produces a report, telemetry runs on a supported SDK.
   the DevTools protocol (`Browser.grantPermissions`) made the same request succeed. Also, from B-3: the update
   feed is read by the typed client `HttpReleaseFeed` of `IHttpClientFactory`, so the proxy can be set on every
   client in one place; behind a proxy that asks for credentials, an answer 407, the check fails with
-  `UpdateCheckFailed`.
+  `UpdateCheckFailed`. Also, from B-4: the proxy of the user is kept in the settings file as 1.0.x keeps it, and
+  one whose address or bypass list `/options` would refuse is read as the default proxy.
 - [ ] B-7 (was S-04) Diagnostics and logging. Hypothesis: in-memory log shown in the user interface, plus the
   event log. Also: the host has no logging provider yet, so the warning of an owner of the instance that cannot
   create its pipe reaches no log, and neither does a request of the API that failed: the `traceId` of a problem
   matches no log entry, and an error that a use case foresaw is answered and leaves no trace. The diagnostics
   pane of the page asks for the log of the host every 5 seconds, a call that has no route. Also, from B-3: an
   update check that fails keeps its cause, the status of the answer or the exception, in the `BravoException`,
-  and nothing writes it.
+  and nothing writes it. Also, from B-4: a settings file that cannot be read or written is a warning of
+  `FileUserSettingsStore`, which reaches no log; the page tells the user, and writes the error in its own
+  diagnostic log.
 - [ ] B-8 (was S-05) Errors and crash reporting. Material: the branch `feat/crash-reporter-process`. Explore: a
   reporter as an application of its own or as a mode of the main executable. Also: replaces the minimal
   last-chance exception handling; a service of the host that fails stops the host, which closes the window with
@@ -201,6 +201,10 @@ After 1.1.0.
   ties each file to the commit and to the run that built it.
 - B-33 The name of the product in the signature of a package: Windows shows the description of a signature
   when a package asks for administrator rights, and the signature of 1.0.x has none.
+- B-34 The size and the position of the window, kept from one start to the next: neither 1.0.x nor 1.1.0 keeps
+  them.
+- B-35 The profile of the webview of 1.0.x, `%LOCALAPPDATA%\Bravo\.temp`, removed after an upgrade: nothing
+  reads it, and it stays until the removal of the package removes the data folder.
 
 ## Open decisions
 
