@@ -39,7 +39,7 @@ stops after 15 minutes.
 | `build-and-test-linux` | The same on Linux, on `Bravo.Portable.slnf`: the projects that do not target Windows |
 | `build-web` | In `web/`: `npm ci`, then `npm test` and `npm run build:Release`, each of which generates the client of the host API first; the build checks the types of the sources and of the unit tests before webpack runs |
 | `test-window` | On Windows: `npm ci` and `npm run build:UI` in `web/`, the restore in locked mode and the build of `Bravo.Desktop`, then `npm run test:window`; when a test fails, its report; at the end, whatever happened, a step that fails if a policy of the webview is left |
-| `build-installer` | On Windows: `npm ci` and `npm run build:Release` in `web/`, the restore of the installer in locked mode, another build of the two packages that use the installed runtime, then the four packages; all six are kept as the artifact `installer-packages` |
+| `build-installer` | On Windows: `npm ci` and `npm run build:Release` in `web/`, the restore of the installer in locked mode, the four packages; the packages are kept as the artifact `installer-packages` |
 | `test-installer` | On Windows, after `build-installer`: its packages and the ones of 1.0.14 from the public release, then `installer/tests/Test-Packages.ps1`; when a step fails, the logs of Windows Installer as the artifact `installer-logs` |
 | `audit` | A restore of the solution and one of the installer that fail on a NuGet package with a known vulnerability, then `npm audit` on the packages that ship with the user interface, which fails on an advisory, and on all of them, which reports |
 

@@ -12,11 +12,6 @@
 .PARAMETER PackagesFolder
     The folder with the four packages under test.
 
-.PARAMETER OtherBuildFolder
-    The folder with another build of the two packages that use the installed runtime, per machine and per
-    user: the same version and the same files, another product code. One is installed over the other, as the
-    release of a version is installed over a preview of it.
-
 .PARAMETER PreviousFolder
     The folder with the packages of 1.0.14 that use the installed runtime, per machine and per user.
 
@@ -28,8 +23,8 @@
     The version of the files of the application, which is the version of the product, such as 1.1.0.185.
 
 .PARAMETER SignerThumbprint
-    The thumbprint of the certificate that signed the packages and the files of the host. When it is given,
-    the test checks those signatures.
+    The thumbprint of the certificate that the build signed with. When it is given, the test checks that the
+    installed files of the host carry its signature.
 
 .PARAMETER LogFolder
     Where the logs of Windows Installer go.
@@ -37,7 +32,6 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)] [string] $PackagesFolder,
-    [Parameter(Mandatory)] [string] $OtherBuildFolder,
     [Parameter(Mandatory)] [string] $PreviousFolder,
     [Parameter(Mandatory)] [string] $Version,
     [Parameter(Mandatory)] [string] $FileVersion,
@@ -51,6 +45,9 @@ $ErrorActionPreference = 'Stop'
 if ($env:GITHUB_ACTIONS -ne 'true') {
     throw 'This script installs and removes Bravo. It runs on a runner of GitHub Actions only.'
 }
+
+# The check of a signature is the one of the release.
+Import-Module (Join-Path $PSScriptRoot '..\..\release\Release.psm1')
 
 # The packages that use the installed runtime need the three runtimes of .NET 10, which the image of the
 # runner has: nothing is installed for them.
@@ -91,7 +88,6 @@ New-Item -ItemType Directory -Force $LogFolder | Out-Null
 
 # Windows Installer is given full paths.
 $PackagesFolder = (Resolve-Path $PackagesFolder).Path
-$OtherBuildFolder = (Resolve-Path $OtherBuildFolder).Path
 $PreviousFolder = (Resolve-Path $PreviousFolder).Path
 $LogFolder = (Resolve-Path $LogFolder).Path
 $script:Checks = 0
@@ -122,20 +118,11 @@ function Write-Step([string] $Text) {
 
 # --- Windows Installer --------------------------------------------------------------------------------------
 
-function Get-PackagePath([string] $Scope, [bool] $SelfContained, [string] $Folder = $PackagesFolder) {
+function Get-PackagePath([string] $Scope, [bool] $SelfContained) {
     $runtime = if ($SelfContained) { '' } else { '-frameworkdependent' }
-    $path = Join-Path $Folder "Bravo.$Version.x64$runtime$($Scopes[$Scope].Suffix).msi"
+    $path = Join-Path $PackagesFolder "Bravo.$Version.x64$runtime$($Scopes[$Scope].Suffix).msi"
     if (-not (Test-Path $path)) { throw "The package is missing: $path" }
     return $path
-}
-
-# The file carries the signature of the certificate that the build signed with, and is as it was signed. A
-# certificate that the machine does not trust, as the one of a run that publishes nothing, is not an error.
-function Assert-SignedByTheBuild([string] $Path, [string] $What) {
-    $signature = Get-AuthenticodeSignature -LiteralPath $Path
-    $signer = if ($null -ne $signature.SignerCertificate) { $signature.SignerCertificate.Thumbprint } else { '' }
-    Assert-Equal $SignerThumbprint $signer "the certificate that signed $What"
-    Assert-True ($signature.Status -notin 'NotSigned', 'HashMismatch') "$What is as it was signed ($($signature.Status))"
 }
 
 function Get-PreviousPackagePath([string] $Scope) {
@@ -228,23 +215,16 @@ function Invoke-PackageStatement($Database, [string] $Sql) {
 $FailingAction = 'FailRemoval'
 $FailRemoval = 'FAILREMOVAL=1'
 
-# A copy of a package whose removal fails when FAILREMOVAL=1 is on its command line: a program that ends with
-# an error, in the script, as the last step before the end, when the files are removed already. The action
-# is added here, to the copy: no package that the build makes has it.
-function New-PackageWithFailingRemoval([string] $Package) {
-    $copy = Join-Path ([IO.Path]::GetTempPath()) "failing-removal-$([IO.Path]::GetFileName($Package))"
+# A copy of a package, changed by the script block, which is given its tables. What a test needs of a package
+# that the package does not have is added here, to the copy: no package that the build makes has it.
+function New-ChangedPackage([string] $Package, [string] $Name, [scriptblock] $Change) {
+    $copy = Join-Path ([IO.Path]::GetTempPath()) "$Name-$([IO.Path]::GetFileName($Package))"
     Copy-Item $Package $copy -Force
 
     # 1: the tables are changed in a transaction.
     $database = Invoke-ComMethod $script:Installer 'OpenDatabase' @([string] $copy, [int] 1)
     try {
-        $end = Invoke-PackageStatement $database 'SELECT `Sequence` FROM `InstallExecuteSequence` WHERE `Action` = ''InstallFinalize'''
-
-        # 1074: a program that a property names (50), run in the script (1024) as who removes. Its exit code
-        # is not ignored. An action of the package with the same number is one of the last of the script too.
-        Invoke-PackageStatement $database ('INSERT INTO `Property` (`Property`, `Value`) VALUES (''FailRemovalProgram'', ''{0}'')' -f $env:ComSpec)
-        Invoke-PackageStatement $database ('INSERT INTO `CustomAction` (`Action`, `Type`, `Source`, `Target`) VALUES (''{0}'', 1074, ''FailRemovalProgram'', ''/c exit 1'')' -f $FailingAction)
-        Invoke-PackageStatement $database ('INSERT INTO `InstallExecuteSequence` (`Action`, `Condition`, `Sequence`) VALUES (''{0}'', ''REMOVE="ALL" AND FAILREMOVAL="1"'', {1})' -f $FailingAction, ($end - 1))
+        & $Change $database
         Invoke-ComMethod $database 'Commit' | Out-Null
     }
     finally {
@@ -254,6 +234,44 @@ function New-PackageWithFailingRemoval([string] $Package) {
         [GC]::WaitForPendingFinalizers()
     }
     return $copy
+}
+
+# A copy of a package whose removal fails when FAILREMOVAL=1 is on its command line: a program that ends with
+# an error, in the script, as the last step before the end, when the files are removed already.
+function New-PackageWithFailingRemoval([string] $Package) {
+    return New-ChangedPackage $Package 'failing-removal' {
+        param($database)
+        $end = Invoke-PackageStatement $database 'SELECT `Sequence` FROM `InstallExecuteSequence` WHERE `Action` = ''InstallFinalize'''
+
+        # 1074: a program that a property names (50), run in the script (1024) as who removes. Its exit code
+        # is not ignored. An action of the package with the same number is one of the last of the script too.
+        Invoke-PackageStatement $database ('INSERT INTO `Property` (`Property`, `Value`) VALUES (''FailRemovalProgram'', ''{0}'')' -f $env:ComSpec)
+        Invoke-PackageStatement $database ('INSERT INTO `CustomAction` (`Action`, `Type`, `Source`, `Target`) VALUES (''{0}'', 1074, ''FailRemovalProgram'', ''/c exit 1'')' -f $FailingAction)
+        Invoke-PackageStatement $database ('INSERT INTO `InstallExecuteSequence` (`Action`, `Condition`, `Sequence`) VALUES (''{0}'', ''REMOVE="ALL" AND FAILREMOVAL="1"'', {1})' -f $FailingAction, ($end - 1))
+    }
+}
+
+function New-PackageCode {
+    return "{$([guid]::NewGuid().ToString().ToUpperInvariant())}"
+}
+
+# A copy of a package as another build of the same commit makes it: the same version and the same files,
+# another product code and another package code, which are what each build gives a package.
+function New-OtherBuild([string] $Package) {
+    return New-ChangedPackage $Package 'other-build' {
+        param($database)
+        Invoke-PackageStatement $database ('UPDATE `Property` SET `Value` = ''{0}'' WHERE `Property` = ''ProductCode''' -f (New-PackageCode))
+
+        # 9: the revision number of the summary information, which is the package code. 1: one value changes.
+        $summary = $database.GetType().InvokeMember('SummaryInformation', 'GetProperty', $null, $database, @([int] 1))
+        try {
+            $summary.GetType().InvokeMember('Property', 'SetProperty', $null, $summary, @([int] 9, [string] (New-PackageCode))) | Out-Null
+            Invoke-ComMethod $summary 'Persist' | Out-Null
+        }
+        finally {
+            [Runtime.InteropServices.Marshal]::FinalReleaseComObject($summary) | Out-Null
+        }
+    }
 }
 
 # The installed products of the UpgradeCode, of both installation contexts.
@@ -337,9 +355,10 @@ function Assert-Installed([string] $Scope, [string] $InstallFolder, $ExpectedCho
         Assert-True (Test-Path (Join-Path $InstallFolder $file)) "$file is installed"
     }
     if ($SignerThumbprint -ne '') {
-        foreach ($file in 'Bravo.exe', 'Bravo.dll', 'Bravo.Api.dll', 'Bravo.Core.dll', 'Bravo.Platform.Windows.dll') {
-            Assert-SignedByTheBuild (Join-Path $InstallFolder $file) "the installed $file"
-        }
+        # The files of the host: the package holds the ones that the build signed, and not older ones.
+        $hostFiles = @($executable) + @((Get-ChildItem -Path $InstallFolder -Filter 'Bravo*.dll').FullName)
+        Confirm-Signature -Path $hostFiles -Thumbprint $SignerThumbprint | Out-Null
+        Assert-True $true "the $($hostFiles.Count) installed files of the host carry the signature of the build"
     }
     foreach ($entry in 'Bravo.Setup.exe', 'Bravo.xml', 'runtimes', 'it') {
         Assert-True (-not (Test-Path (Join-Path $InstallFolder $entry))) "$entry is not installed"
@@ -479,15 +498,17 @@ function Test-InstallUpgradeRemove([string] $Scope) {
     # the package replaces a product of its own version, as a release replaces a preview of it.
     Write-Step "$Scope`: another build of this version is installed while the application runs"
     Write-UserData
+    $other = New-OtherBuild (Get-PackagePath $Scope $false)
     $running = Start-Application $folder
     try {
-        $exitCode = Install-Package (Get-PackagePath $Scope $false $OtherBuildFolder) "$Scope-upgrade-while-running"
+        $exitCode = Install-Package $other "$Scope-upgrade-while-running"
         Assert-Equal 0 $exitCode 'the exit code of the upgrade: no restart of Windows is asked for'
     }
     catch {
         if (-not $running.HasExited) { $running.Kill() }
         throw
     }
+    Remove-Item $other
     Assert-ApplicationEnds $running 'the running application was closed'
     Assert-True (@(Get-Process Bravo -ErrorAction SilentlyContinue).Count -eq 0) 'the application is not started again'
     $product = Assert-Installed $Scope $folder $AllOn $false
@@ -630,18 +651,6 @@ function Test-RemovalThatFails([string] $Scope) {
 # --- Run ----------------------------------------------------------------------------------------------------
 
 $watch = [Diagnostics.Stopwatch]::StartNew()
-
-if ($SignerThumbprint -ne '') {
-    Write-Step 'The packages carry the signature of the build'
-    foreach ($scope in 'perMachine', 'perUser') {
-        foreach ($selfContained in $true, $false) {
-            $package = Get-PackagePath $scope $selfContained
-            Assert-SignedByTheBuild $package "the package $(Split-Path $package -Leaf)"
-        }
-        $other = Get-PackagePath $scope $false $OtherBuildFolder
-        Assert-SignedByTheBuild $other "the other build of $(Split-Path $other -Leaf)"
-    }
-}
 
 Test-InstallUpgradeRemove 'perMachine'
 Test-InstallUpgradeRemove 'perUser'

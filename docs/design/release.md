@@ -58,7 +58,8 @@ integration: that the commit is good is the maintainer's check.
   exists already, a draft as well, is never replaced: the run stops, and the maintainer deletes the draft.
 - A version with a label in `version.json` is a preview: its release is marked as a pre-release, which
   GitHub never shows as the latest one, and it has no update feed.
-- The job that signs runs no package of npm: the bundle comes from `build-web`.
+- The job that signs runs no package of npm: the bundle comes from `build-web`. No job restores a cache:
+  what a release is made of comes from its sources, with the packages that the lock files name.
 - Only `build` can ask for the identity that signs, and only `publish` can write in the repository.
 
 **Signature.** The signature is the one of 1.0.x: the certificate of the publisher, which Azure Key Vault
@@ -69,14 +70,15 @@ holds, used through AzureSignTool.
   token that GitHub gives to a run of this repository on one branch, and the repository holds no secret.
   Four variables of the repository name the identity, the vault and the certificate. No environment and no
   reviewer stand between a run and the identity: a workflow pushed to that branch can sign.
-- Signed are `Bravo.exe` and the four assemblies of the host in each of the two folders, `Bravo.Setup.exe`,
-  and each package. The files are signed before a package or an archive holds them; a package, after it is
+- Signed are `Bravo.exe` and the assemblies of the host in each of the two folders, `Bravo.Setup.exe`, and
+  each package. The files are signed before a package or an archive holds them; a package, after it is
   built and validated. An archive is not signed: its files are.
 - A signature has a timestamp
   ([RFC 3161](https://learn.microsoft.com/windows/win32/seccrypto/time-stamping-authenticode-signatures)), so
   that it stays valid after the certificate has expired.
-- The run checks every signature before it keeps a file: one certificate for all, a chain that Windows
-  trusts, a timestamp. The test then checks the signature of each package and of the five installed files.
+- The build stops when a file cannot be signed. The run then checks the signature of each package before
+  it keeps the files: one certificate for all, a chain that Windows trusts, a timestamp. The test checks
+  that the files of the host that a package installed carry the signature of that certificate.
 
 **Release notes.** The notes are the ones that GitHub generates from the pull requests merged since the
 release before, under the headings of `.github/release.yml`, which sorts them by label. Above them the run
@@ -111,8 +113,8 @@ itself on a push to a work branch that changes what a release is made of, and by
 | Timestamp | Yes | No |
 | Draft release | Created | Not created: `publish` does not run |
 
-It proves the build of the six files, the order of the signatures, the installation of signed packages, the
-list of downloads and the update feed. It does not prove the sign-in to Azure, Key Vault and AzureSignTool,
+It proves the build of the six files, the order of the signatures, the installation of signed packages, of
+one over another build of its version and over 1.0.14, the list of downloads and the update feed. It does not prove the sign-in to Azure, Key Vault and AzureSignTool,
 the trust of the signature, or the creation of the draft.
 
 ## In the code
@@ -126,7 +128,7 @@ the trust of the signature, or the creation of the draft.
 | The version of the build, read without building | `installer/Get-BuildVersion.ps1` |
 | What signs a file, with which certificate | `installer/Sign-Files.ps1` |
 | AzureSignTool, in one version | `.config/dotnet-tools.json` |
-| The six files: the targets `BuildRelease`, `BuildPackages` and `BuildArchives` | `installer/Bravo.Installer.wixproj`, `installer/Stage.targets` ([Installer](installer.md)) |
+| The six files: the target `BuildRelease` | `installer/Bravo.Installer.wixproj`, `installer/Stage.targets` ([Installer](installer.md)) |
 | The headings of the generated notes | `.github/release.yml` |
 
 - No project sets `Version`, `FileVersion` or `InformationalVersion`, and a build is not given them: the
@@ -143,8 +145,10 @@ the trust of the signature, or the creation of the draft.
   `BuildIdentity` reads it once ([Startup](startup.md)). The informational version that the package writes
   has the height in it, and is not shown.
 - The names of the six files are written twice: in `Bravo.Installer.wixproj`, which builds them, and in
-  `Get-ReleaseFileName`, which says what 1.0.x asks for. The run compares the two, and
-  `Test-Release.ps1` holds the names of the files of 1.0.14.
+  `Get-RequestedFileName` of `Release.psm1`, which is what an installed 1.0.x adds to the name of the
+  package that the feed gives it. The list of downloads, the feed and its check take the names from that
+  function; the run compares them with the files that the build made, and `Test-Release.ps1` holds the
+  names of the files of 1.0.14.
 - `Confirm-UpdateFeed` is what an installed 1.0.x does with the feed, step by step. A change of the feed is
   first a change of that function and of its tests.
 - The button of GitHub that starts a workflow needs `release.yml` on the default branch. Until the final

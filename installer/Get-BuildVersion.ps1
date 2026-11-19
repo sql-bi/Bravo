@@ -8,7 +8,6 @@
 
         Version       the semantic version, which names the files and is in the title of the window
         FileVersion   the version of the files of the application, which is the version of the product
-        IsPrerelease  whether version.json gives the version a label, as for a preview
 
     It builds nothing.
 
@@ -22,7 +21,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 $project = Join-Path $PSScriptRoot 'Bravo.Installer.wixproj'
-$arguments = @($project, '-t:GetBuildVersion', '-getProperty:NuGetPackageVersion', '-getProperty:BuildVersion', '-getProperty:PrereleaseVersion')
+$arguments = @($project, '-t:ReadBuildVersion', '-getProperty:BravoVersion', '-getProperty:BravoFileVersion')
 if ($PublicRelease) {
     $arguments += '-p:PublicRelease=true'
 }
@@ -34,7 +33,6 @@ if ($LASTEXITCODE -ne 0) {
 
 $properties = ($output | ConvertFrom-Json).Properties
 [pscustomobject]@{
-    Version      = $properties.NuGetPackageVersion
-    FileVersion  = $properties.BuildVersion
-    IsPrerelease = $properties.PrereleaseVersion -ne ''
+    Version     = $properties.BravoVersion
+    FileVersion = $properties.BravoFileVersion
 }

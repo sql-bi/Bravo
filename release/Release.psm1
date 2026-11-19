@@ -10,17 +10,26 @@ Set-StrictMode -Version Latest
 # Every 1.0.x has a file version of 1.0, a number of days and a number of seconds: all of them are below this.
 $AboveEveryFirstVersion = [version] '1.0.65535.65535'
 
-# The six files of a release, with the names that an installed 1.0.x builds to ask for its update: the
-# package per machine that carries the runtime, and what 1.0.x adds to its name.
+# The names of the files that an installed 1.0.x asks for, from the name of the package that the update feed
+# gives it: what 1.0.x adds for how it was published, then for how it was installed. Three for the copies
+# that carry the runtime, per machine, per user and unpacked from an archive, then three for the others.
+function Get-RequestedFileName([string] $PackageName) {
+    $name = [IO.Path]::GetFileNameWithoutExtension($PackageName)
+    $extension = [IO.Path]::GetExtension($PackageName)
+    foreach ($runtime in '', '-frameworkdependent') {
+        "$name$runtime$extension"
+        "$name$runtime-userinstaller$extension"
+        "$name$runtime-portable.zip"
+    }
+}
+
+# The six files of a release: the package per machine that carries the runtime, which the update feed
+# names, and the five others that an installed 1.0.x asks for.
 function Get-ReleaseFileName {
     [CmdletBinding()]
     param([Parameter(Mandatory)] [string] $Version)
 
-    foreach ($runtime in '', '-frameworkdependent') {
-        "Bravo.$Version.x64$runtime.msi"
-        "Bravo.$Version.x64$runtime-userinstaller.msi"
-        "Bravo.$Version.x64$runtime-portable.zip"
-    }
+    Get-RequestedFileName "Bravo.$Version.x64.msi"
 }
 
 function Get-ReleaseAddress([string] $Repository, [string] $Version, [string] $FileName) {
@@ -35,22 +44,26 @@ function New-ReleaseNotes {
         [Parameter(Mandatory)] [string] $Repository
     )
 
-    $link = { param($Text, $FileName) "[$Text]($(Get-ReleaseAddress $Repository $Version $FileName))" }
+    # The six files, in the order of their names: the text of each link and what follows it.
     $user = '_(installs without requiring admin rights, does not install Bravo as an External Tool)_'
     $portable = '_(unzip and run, does not install Bravo as an External Tool)_'
-    $runtime = 'https://dotnet.microsoft.com/download/dotnet/10.0'
+    $texts = @(
+        @('Self contained', '**(RECOMMENDED)**'), @('Self contained - user', $user), @('Self contained - portable', $portable)
+        @('Framework dependent', ''), @('Framework dependent - user', $user), @('Framework dependent - portable', $portable)
+    )
+    $names = @(Get-ReleaseFileName $Version)
+    $links = for ($index = 0; $index -lt $names.Count; $index++) {
+        "  - [$($texts[$index][0])]($(Get-ReleaseAddress $Repository $Version $names[$index])) $($texts[$index][1])".TrimEnd()
+    }
 
+    $runtime = 'https://dotnet.microsoft.com/download/dotnet/10.0'
     @(
         '## Download (64 bit)'
         '- Bravo self-contained'
-        "  - $(& $link 'Self contained' "Bravo.$Version.x64.msi") **(RECOMMENDED)**"
-        "  - $(& $link 'Self contained - user' "Bravo.$Version.x64-userinstaller.msi") $user"
-        "  - $(& $link 'Self contained - portable' "Bravo.$Version.x64-portable.zip") $portable"
+        $links[0..2]
         ''
         "- Bravo framework-dependent - _smaller packages that do not include the .NET runtime: you need to [install separately]($runtime) the .NET Desktop Runtime and the ASP.NET Core Runtime, version 10_"
-        "  - $(& $link 'Framework dependent' "Bravo.$Version.x64-frameworkdependent.msi")"
-        "  - $(& $link 'Framework dependent - user' "Bravo.$Version.x64-frameworkdependent-userinstaller.msi") $user"
-        "  - $(& $link 'Framework dependent - portable' "Bravo.$Version.x64-frameworkdependent-portable.zip") $portable"
+        $links[3..5]
         ''
     ) -join "`n"
 }
@@ -69,7 +82,7 @@ function New-UpdateFeed {
     $feed = [ordered]@{
         channel   = 'Stable'
         version   = $FileVersion
-        download  = Get-ReleaseAddress $Repository $Version "Bravo.$Version.x64.msi"
+        download  = Get-ReleaseAddress $Repository $Version @(Get-ReleaseFileName $Version)[0]
         changelog = "https://github.com/$Repository/releases"
     }
 
@@ -107,16 +120,10 @@ function Confirm-UpdateFeed {
         throw "The changelog of the feed is not an address: $changelog"
     }
 
-    # The name of the file that 1.0.x asks for: the one of the feed, with what 1.0.x adds for how it was
-    # published and installed.
     $address = [uri]::new($download, [UriKind]::Absolute)
-    $name = [IO.Path]::GetFileNameWithoutExtension($address.LocalPath)
-    $extension = [IO.Path]::GetExtension($address.LocalPath)
-    foreach ($runtime in '', '-frameworkdependent') {
-        foreach ($asked in "$name$runtime$extension", "$name$runtime-userinstaller$extension", "$name$runtime-portable.zip") {
-            if ($FileName -cnotcontains $asked) {
-                throw "An installed 1.0.x would ask for $asked, which is not a file of the release."
-            }
+    foreach ($asked in Get-RequestedFileName ([IO.Path]::GetFileName($address.LocalPath))) {
+        if ($FileName -cnotcontains $asked) {
+            throw "An installed 1.0.x would ask for $asked, which is not a file of the release."
         }
     }
 }

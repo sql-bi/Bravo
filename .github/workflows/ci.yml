@@ -172,8 +172,8 @@ jobs:
           }
           exit $left
 
-  # The four installer packages, and another build of two of them, which the next job installs one over the
-  # other. The program that the packages run is compiled ahead of time with the C++ build tools of the runner.
+  # The four installer packages. The program that the packages run is compiled ahead of time with the C++
+  # build tools of the runner.
   build-installer:
     runs-on: windows-latest
     timeout-minutes: 15
@@ -216,10 +216,6 @@ jobs:
           $build = installer/Get-BuildVersion.ps1
           "version=$($build.Version)" >> $env:GITHUB_OUTPUT
           "file-version=$($build.FileVersion)" >> $env:GITHUB_OUTPUT
-      # First, because the build of the four packages that follows makes these two again.
-      - name: Make another build of the two packages that the tests install one over the other
-        shell: pwsh
-        run: installer/tests/New-OtherBuild.ps1 -Folder artifacts/installer-other -BuildArguments '--no-restore'
       # The build validates each package against the rules of Windows Installer, and a warning fails it.
       - name: Build the four packages
         run: dotnet build installer/Bravo.Installer.wixproj -c Release --no-restore -t:BuildPackages -warnaserror
@@ -233,9 +229,7 @@ jobs:
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: installer-packages
-          path: |
-            artifacts/installer/en-US/*.msi
-            artifacts/installer-other/*.msi
+          path: artifacts/installer/en-US/*.msi
           retention-days: 3
           if-no-files-found: error
           # The packages are compressed already.
@@ -266,8 +260,7 @@ jobs:
         shell: pwsh
         run: >
           installer/tests/Test-Packages.ps1
-          -PackagesFolder artifacts/installer-packages/installer/en-US
-          -OtherBuildFolder artifacts/installer-packages/installer-other
+          -PackagesFolder artifacts/installer-packages
           -PreviousFolder artifacts/installer-previous
           -Version ${{ needs.build-installer.outputs.version }}
           -FileVersion ${{ needs.build-installer.outputs.file-version }}

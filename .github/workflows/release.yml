@@ -54,12 +54,11 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      # No cache here or in the job that builds: what a release is made of comes from its sources alone.
       - name: Set up Node.js
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: web/package.json
-          cache: npm
-          cache-dependency-path: web/package-lock.json
       - name: Install the dependencies
         run: npm ci
       - name: Build the release bundle
@@ -84,7 +83,6 @@ jobs:
     outputs:
       version: ${{ steps.version.outputs.version }}
       file-version: ${{ steps.version.outputs.file-version }}
-      prerelease: ${{ steps.version.outputs.prerelease }}
       thumbprint: ${{ steps.signatures.outputs.thumbprint }}
     steps:
       # The whole history, and the tags: the version of a build counts the commits.
@@ -97,8 +95,6 @@ jobs:
         uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
         with:
           global-json-file: global.json
-          cache: true
-          cache-dependency-path: '**/packages.lock.json'
       - name: Test the functions of the release
         shell: pwsh
         run: release/tests/Test-Release.ps1
@@ -126,7 +122,6 @@ jobs:
           }
           "version=$($build.Version)" >> $env:GITHUB_OUTPUT
           "file-version=$($build.FileVersion)" >> $env:GITHUB_OUTPUT
-          "prerelease=$($build.IsPrerelease.ToString().ToLowerInvariant())" >> $env:GITHUB_OUTPUT
           exit 0
       # A run that publishes nothing signs with a certificate that lives one day, on this runner alone.
       - name: Make a certificate for a run that publishes nothing
@@ -175,29 +170,22 @@ jobs:
             $arguments += '-p:BravoSigning=KeyVault', '-p:PublicRelease=true'
           }
 
-          # First, because the build of the release that follows makes these two packages again.
-          installer/tests/New-OtherBuild.ps1 -Folder artifacts/installer-other -BuildArguments $arguments
-
           dotnet build installer/Bravo.Installer.wixproj -c Release -warnaserror -t:BuildRelease @arguments
           exit $LASTEXITCODE
-      # A release needs signatures that Windows trusts, with a timestamp; a run that publishes nothing, the
-      # ones of its certificate.
-      - name: Check the signatures
+      # The packages of a release need a signature that Windows trusts, with a timestamp; the ones of a run
+      # that publishes nothing, the signature of its certificate. The files that a package installs are
+      # checked by the job that installs it, which is told the certificate.
+      - name: Check the signatures of the packages
         id: signatures
         shell: pwsh
         run: |
           Import-Module ./release/Release.psm1
-          $hostFiles = 'Bravo.exe', 'Bravo.dll', 'Bravo.Api.dll', 'Bravo.Core.dll', 'Bravo.Platform.Windows.dll'
-          $files = @(
-            foreach ($layout in 'selfcontained', 'frameworkdependent') { $hostFiles | ForEach-Object { "artifacts/installer-stage/$layout/$_" } }
-            'artifacts/installer-stage/setup-aot/Bravo.Setup.exe'
-            (Get-ChildItem artifacts/installer/en-US/*.msi, artifacts/installer-other/*.msi).FullName
-          )
+          $packages = (Get-ChildItem artifacts/installer/en-US/*.msi).FullName
           $thumbprint = if ($env:DRY_RUN -eq 'true') {
-            Confirm-Signature -Path $files -Thumbprint $env:BRAVO_SIGNING_THUMBPRINT
+            Confirm-Signature -Path $packages -Thumbprint $env:BRAVO_SIGNING_THUMBPRINT
           }
           else {
-            Confirm-Signature -Path $files -Trusted
+            Confirm-Signature -Path $packages -Trusted
           }
           "thumbprint=$thumbprint" >> $env:GITHUB_OUTPUT
       # The list of downloads goes above the notes that GitHub generates. The update feed is the file that an
@@ -231,14 +219,13 @@ jobs:
             Get-Content artifacts/release/currentversion.json -Raw
             '```'
           ) >> $env:GITHUB_STEP_SUMMARY
-      # The files of the release, the other build that the tests need, the list of downloads and the feed.
+      # The files of the release, the list of downloads and the feed.
       - name: Keep the files
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: release-files
           path: |
             artifacts/installer/en-US/
-            artifacts/installer-other/*.msi
             artifacts/release/
           retention-days: 7
           if-no-files-found: error
@@ -270,7 +257,6 @@ jobs:
         run: >
           installer/tests/Test-Packages.ps1
           -PackagesFolder artifacts/release-files/installer/en-US
-          -OtherBuildFolder artifacts/release-files/installer-other
           -PreviousFolder artifacts/installer-previous
           -Version ${{ needs.build.outputs.version }}
           -FileVersion ${{ needs.build.outputs.file-version }}
@@ -308,7 +294,6 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
           VERSION: ${{ needs.build.outputs.version }}
-          PRERELEASE: ${{ needs.build.outputs.prerelease }}
           TARGET: ${{ github.sha }}
         run: |
           $tag = "v$env:VERSION"
@@ -316,14 +301,15 @@ jobs:
           if ($LASTEXITCODE -eq 0) { throw "A release $tag exists already. Delete it if it is a draft of an earlier run, then start the release again." }
 
           $arguments = @($tag, '--draft', '--target', $env:TARGET, '--title', "Bravo $tag", '--notes-file', 'artifacts/release-files/release/notes.md', '--generate-notes')
-          if ($env:PRERELEASE -eq 'true') { $arguments += '--prerelease' }
+          # A version with a label is a preview.
+          if ($env:VERSION.Contains('-')) { $arguments += '--prerelease' }
           $files = (Get-ChildItem artifacts/release-files/installer/en-US).FullName
           gh release create @arguments @files
           exit $LASTEXITCODE
       # The file that tells an installed 1.0.x about a stable release: the maintainer uploads it by hand,
       # after the draft is published and its files can be downloaded.
       - name: Keep the update feed
-        if: ${{ needs.build.outputs.prerelease == 'false' }}
+        if: ${{ !contains(needs.build.outputs.version, '-') }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: update-feed
@@ -334,13 +320,12 @@ jobs:
         shell: pwsh
         env:
           VERSION: ${{ needs.build.outputs.version }}
-          PRERELEASE: ${{ needs.build.outputs.prerelease }}
         run: |
           @(
             "## Bravo $env:VERSION is a draft release"
             ''
             '1. Open the draft among the releases of the repository, correct its notes, and publish it.'
-            if ($env:PRERELEASE -eq 'false') {
+            if (-not $env:VERSION.Contains('-')) {
               '2. After that, download the artifact `update-feed` of this run and upload its `currentversion.json` to the two containers of the update feed, `bravo-public` and `bravo-internal`.'
             }
           ) >> $env:GITHUB_STEP_SUMMARY

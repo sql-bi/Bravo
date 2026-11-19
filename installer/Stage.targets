@@ -73,9 +73,6 @@
   <PropertyGroup>
     <SignCommand>pwsh -NoProfile -NonInteractive -File &quot;$(MSBuildThisFileDirectory)Sign-Files.ps1&quot; -Signing $(BravoSigning)</SignCommand>
   </PropertyGroup>
-  <ItemGroup>
-    <ApplicationFileToSign Include="$(StageDir)Bravo.exe;$(StageDir)Bravo.dll;$(StageDir)Bravo.Api.dll;$(StageDir)Bravo.Core.dll;$(StageDir)Bravo.Platform.Windows.dll" />
-  </ItemGroup>
 
   <!-- A change of any of these publishes the program, or lays the application out, again. -->
   <ItemGroup>
@@ -90,17 +87,17 @@
   </ItemGroup>
 
   <!--
-    A file that was deleted is newer than nothing, and the version of a build changes with every commit. The
-    names of the inputs are kept in a file with the version and the signature that were asked for, written
+    A file that was deleted is newer than nothing, and the application has the version and the commit of its
+    build in itself. The names of the inputs are kept in a file with what was asked of the build, written
     again only when it changes, which is an input as well: a file that left, one that came with an old date,
-    another commit or another signature publishes the program, or lays the application out, again.
+    another commit or another signature lays the application out again. The program is published again for
+    its files and for its signature alone: nothing reads its version.
   -->
-  <PropertyGroup>
-    <StageRequest>version=$(BravoVersion);fileVersion=$(BravoFileVersion);publicRelease=$(PublicRelease);signing=$(BravoSigning)</StageRequest>
-  </PropertyGroup>
-  <Target Name="WriteStageInputLists" BeforeTargets="PublishSetupProgram;StageApplication">
-    <WriteLinesToFile File="$(SetupInputList)" Lines="$(StageRequest);@(SetupInput)" Overwrite="true" WriteOnlyWhenDifferent="true" />
-    <WriteLinesToFile File="$(StageInputList)" Lines="$(StageRequest);@(StageInput)" Overwrite="true" WriteOnlyWhenDifferent="true" />
+  <Target Name="WriteStageInputLists" DependsOnTargets="GetBuildVersion" BeforeTargets="PublishSetupProgram;StageApplication">
+    <Error Condition="'$(BravoVersion)' == ''"
+           Text="Build with one of the targets BuildPackage, BuildPackages or BuildRelease: they give the build its version." />
+    <WriteLinesToFile File="$(SetupInputList)" Lines="signing=$(BravoSigning);@(SetupInput)" Overwrite="true" WriteOnlyWhenDifferent="true" />
+    <WriteLinesToFile File="$(StageInputList)" Lines="version=$(BravoVersion);commit=$(GitCommitId);signing=$(BravoSigning);@(StageInput)" Overwrite="true" WriteOnlyWhenDifferent="true" />
   </Target>
 
   <Target Name="PublishSetupProgram" BeforeTargets="BeforeBuild" Inputs="@(SetupInput);$(SetupInputList)" Outputs="$(SetupStamp)">
@@ -121,7 +118,11 @@
     <Copy SourceFiles="@(WebStaticFile)" DestinationFiles="@(WebStaticFile->'$(StageDir)wwwroot\%(RecursiveDir)%(Filename)%(Extension)')" />
     <Copy SourceFiles="@(WebBundleFile)" DestinationFiles="@(WebBundleFile->'$(StageDir)wwwroot\%(RecursiveDir)%(Filename)%(Extension)')" />
 
-    <Exec Condition="'$(BravoSigning)' != ''" Command="$(SignCommand) @(ApplicationFileToSign->'&quot;%(Identity)&quot;', ' ')" />
+    <!-- The executable and the assemblies of the host, by their name: the other files are not of this build. -->
+    <ItemGroup>
+      <HostFileToSign Include="$(StageDir)Bravo.exe;$(StageDir)Bravo*.dll" />
+    </ItemGroup>
+    <Exec Condition="'$(BravoSigning)' != ''" Command="$(SignCommand) @(HostFileToSign->'&quot;%(FullPath)&quot;', ' ')" />
 
     <Touch Files="$(StageStamp)" AlwaysCreate="true" />
   </Target>

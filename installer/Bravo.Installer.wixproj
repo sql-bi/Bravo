@@ -21,7 +21,7 @@
 
   <!--
     The file names are the ones of 1.0.x, which an installed 1.0.x builds by itself to ask for its update.
-    BravoVersion is the semantic version of the build, which the targets at the end of this file read.
+    BravoVersion is the semantic version of the build, which the targets at the end of this file give.
   -->
   <PropertyGroup>
     <RuntimeName Condition="'$(BravoSelfContained)' == 'true'">selfcontained</RuntimeName>
@@ -79,11 +79,6 @@
     <BindPath Include="$(RepositoryRoot)src\Bravo.Desktop\Assets" BindName="ApplicationAssets" />
   </ItemGroup>
 
-  <!-- A build that was not given its version has no name for its files: it stops before it lays anything out. -->
-  <Target Name="RequireVersion" BeforeTargets="WriteStageInputLists" Condition="'$(BravoVersion)' == '' Or '$(BravoFileVersion)' == ''">
-    <Error Text="Build with one of the targets BuildPackage, BuildPackages, BuildArchives or BuildRelease: they give the build its version." />
-  </Target>
-
   <Import Project="Stage.targets" />
 
   <!--
@@ -98,22 +93,27 @@
   </Target>
 
   <!--
-    What a build is asked for. The version is computed in a target, GetBuildVersion, after the names of the
-    files are fixed: each target below reads it, then builds this project again with it.
+    What a build is asked for. The version is computed in a target, after the names of the files are fixed:
+    each target below reads it, then builds this project again with it.
 
     - BuildPackage: one package, the one that BravoScope and BravoSelfContained name.
     - BuildPackages: the four packages.
-    - BuildArchives: the two archives of the application, one for each runtime.
-    - BuildRelease: the six files of a release.
+    - BuildRelease: the six files of a release, which are the four packages and the two archives of the
+      application, one for each runtime.
+
+    ReadBuildVersion is the one place that says which version of Nerdbank.GitVersioning is which: the semantic
+    version, which names the files, and the file version, which is the version of the product.
+    Get-BuildVersion.ps1 reads both here.
   -->
   <Target Name="ReadBuildVersion" DependsOnTargets="GetBuildVersion">
     <PropertyGroup>
-      <VersionProperties>BravoVersion=$(NuGetPackageVersion);BravoFileVersion=$(BuildVersion)</VersionProperties>
+      <BravoVersion>$(NuGetPackageVersion)</BravoVersion>
+      <BravoFileVersion>$(BuildVersion)</BravoFileVersion>
     </PropertyGroup>
   </Target>
 
   <Target Name="BuildPackage" DependsOnTargets="ReadBuildVersion">
-    <MSBuild Projects="$(MSBuildProjectFullPath)" Targets="Build" Properties="$(VersionProperties)" />
+    <MSBuild Projects="$(MSBuildProjectFullPath)" Targets="Build" Properties="BravoVersion=$(BravoVersion)" />
   </Target>
 
   <Target Name="BuildPackages" DependsOnTargets="ReadBuildVersion">
@@ -123,17 +123,15 @@
       <PackageVariant Include="perUser-selfcontained" Properties="BravoScope=perUser;BravoSelfContained=true" />
       <PackageVariant Include="perUser-frameworkdependent" Properties="BravoScope=perUser;BravoSelfContained=false" />
     </ItemGroup>
-    <MSBuild Projects="$(MSBuildProjectFullPath)" Targets="Build" Properties="%(PackageVariant.Properties);$(VersionProperties)" />
+    <MSBuild Projects="$(MSBuildProjectFullPath)" Targets="Build" Properties="%(PackageVariant.Properties);BravoVersion=$(BravoVersion)" />
   </Target>
 
-  <Target Name="BuildArchives" DependsOnTargets="ReadBuildVersion">
+  <Target Name="BuildRelease" DependsOnTargets="BuildPackages">
     <ItemGroup>
       <ArchiveVariant Include="selfcontained" Properties="BravoSelfContained=true" />
       <ArchiveVariant Include="frameworkdependent" Properties="BravoSelfContained=false" />
     </ItemGroup>
-    <MSBuild Projects="$(MSBuildProjectFullPath)" Targets="ArchiveApplication" Properties="%(ArchiveVariant.Properties);$(VersionProperties)" />
+    <MSBuild Projects="$(MSBuildProjectFullPath)" Targets="ArchiveApplication" Properties="%(ArchiveVariant.Properties);BravoVersion=$(BravoVersion)" />
   </Target>
-
-  <Target Name="BuildRelease" DependsOnTargets="BuildPackages;BuildArchives" />
 
 </Project>

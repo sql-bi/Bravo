@@ -151,8 +151,8 @@ validates each package against the rules of Windows Installer, and a warning fai
   locked mode on GitHub Actions, and published without another restore. The packages that compile the
   program ahead of time are in no lock file: the .NET SDK adds them in its own version, as it adds the .NET
   runtime that a package carries.
-- A release signs `Bravo.exe`, the four assemblies of the host and the program before a package holds
-  them, and each package after it is built and validated. Any other build signs nothing.
+- A release signs `Bravo.exe`, the assemblies of the host and the program before a package holds them,
+  and each package after it is built and validated. Any other build signs nothing.
 - The same project makes the two archives of a release: each is the folder of a runtime, as it is.
 
 **Tests.** Continuous integration builds the packages and then installs them for real, each time in
@@ -165,11 +165,12 @@ as they were, and one with rollback disabled, which removes them. The removal fa
 test adds to a copy of a package: no package has anything that exists for a test. The dialogs are checked
 by hand.
 
-- Two builds of one commit are two products with the same version and the same files: a package gets its
-  product code when it is built. Installing one over the other is what the release of a version does to a
-  preview of it.
-- The workflow of a release runs the same tests on its signed packages, and checks the signature of each
-  package and of the installed files of the host.
+- Two builds of one commit are, to Windows Installer, two products with the same version and the same
+  files: they differ by the product code and the package code that each build gives a package. The test
+  makes the other build from a copy of a package, with two new codes, and installs it over the first:
+  what the release of a version does to a preview of it.
+- The workflow of a release runs the same tests on its signed packages, and checks that the files of the
+  host that a package installed carry the signature of the build.
 
 ## In the code
 
@@ -215,13 +216,13 @@ line names. It is not a project of the solution: a build of the solution makes n
 | The texts | `Package.en-us.wxl` |
 | The licence and the two images of the dialogs | `assets/` |
 | The real installations that continuous integration runs | `tests/Test-Packages.ps1` |
-| The other build of two packages, which those installations need | `tests/New-OtherBuild.ps1` |
 
 - A build is asked for a target, which reads the version of the build and builds the project again with
   it: `BuildPackage` for the one package that `BravoScope` and `BravoSelfContained` name, `BuildPackages`
-  for the four, `BuildArchives` for the two archives, `BuildRelease` for the six files. The version is
-  computed in a target, after the names of the files are fixed: a build that is not given it stops and
-  says so.
+  for the four, `BuildRelease` for the six files, which are the four packages and the two archives. The
+  version is computed in a target, after the names of the files are fixed: a build that is not given it
+  stops and says so. `ReadBuildVersion` is the one place that says which of the versions that the package
+  computes names the files, and which is the version of the product.
 - Before a package is built, `web/` has made the release bundle: `npm ci`, then `npm run build:Release`. The
   build of the installer never runs npm, and stops with these two commands when the bundle is missing.
 - Every action of `Package.wxs` that runs the program starts it from the `Binary` table of the package: the
@@ -241,15 +242,17 @@ line names. It is not a project of the solution: a build of the solution makes n
   of the program reads and writes no lock file: `PublishAot` adds packages of the version of the SDK, which
   a lock file would hold for one patch of the SDK alone.
 - A layout is made again when a file of `src/`, of the page or of the build rules is newer than it, when
-  one was added or deleted, and when the build asks for another version or another signature: the names of
-  those files and what was asked are kept beside the layout. The version of a build changes with every
-  commit. The two packages of one runtime hold the same files: the second one takes the cabinet that the
-  first one compressed, kept beside the layout and removed with it.
+  one was added or deleted, and when the build is of another commit, or asks for another version or
+  another signature: the names of those files and what was asked are kept beside the layout. The
+  application has the version and the commit of its build in itself; the program is published again for
+  its files and its signature alone. The two packages of one runtime hold the same files: the second one
+  takes the cabinet that the first one compressed, kept beside the layout and removed with it.
 - `BravoSigning` says what a build signs with, and `Sign-Files.ps1` what each value needs: `KeyVault`, the
   certificate of the publisher, for a release; `TestCertificate`, a certificate of the current user, for a
-  run that publishes nothing. `Stage.targets` signs the files of a layout and the program as part of making
-  them; the package is signed by the target `SignMsi` of the WiX SDK, after the validation and before the
-  copy to `artifacts/installer`. Without `BravoSigning` nothing is signed.
+  run that publishes nothing. `Stage.targets` signs the program, and in a layout `Bravo.exe` and every
+  `Bravo*.dll`, as part of making them: a new assembly of the host is signed by its name. The package is
+  signed by the target `SignMsi` of the WiX SDK, after the validation and before the copy to
+  `artifacts/installer`. Without `BravoSigning` nothing is signed.
 - The archive of a layout is written beside the packages, outside the layout: everything in a layout is
   installed.
 - `Bravo.Setup.exe` is published with `PublishAot`, which needs the "Desktop development with C++" workload
@@ -267,6 +270,5 @@ line names. It is not a project of the solution: a build of the solution makes n
   a test needs of a package that the package does not have, such as a removal that fails, it adds to a copy
   of the package (`New-PackageWithFailingRemoval`): nothing in `Package.wxs` exists for a test.
 - The tests take the semantic version and the file version of the build, and no version of their own.
-  `tests/New-OtherBuild.ps1` builds the two packages that use the installed runtime, moves them aside, and
-  removes what the build keeps of them: the build that follows links them again, with other product codes.
-  It runs before the build of the packages under test, and installs nothing.
+  `New-OtherBuild` gives a copy of a package another product code and another package code, as
+  `New-PackageWithFailingRemoval` adds its action to a copy: both go through `New-ChangedPackage`.
