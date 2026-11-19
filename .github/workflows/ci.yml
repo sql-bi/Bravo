@@ -258,12 +258,15 @@ jobs:
         run: gh release download v1.0.14 --repo sql-bi/Bravo --pattern "Bravo.1.0.14.x64-frameworkdependent*.msi" --dir artifacts/installer-previous
       - name: Install, upgrade and remove
         shell: pwsh
+        env:
+          VERSION: ${{ needs.build-installer.outputs.version }}
+          FILE_VERSION: ${{ needs.build-installer.outputs.file-version }}
         run: >
           installer/tests/Test-Packages.ps1
           -PackagesFolder artifacts/installer-packages
           -PreviousFolder artifacts/installer-previous
-          -Version ${{ needs.build-installer.outputs.version }}
-          -FileVersion ${{ needs.build-installer.outputs.file-version }}
+          -Version $env:VERSION
+          -FileVersion $env:FILE_VERSION
           -LogFolder artifacts/installer-logs
       # The log of every run of Windows Installer, when a step failed.
       - name: Keep the logs of Windows Installer

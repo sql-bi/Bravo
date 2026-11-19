@@ -1,8 +1,7 @@
 <#
     What a release needs beyond the build of its files: the names of the six files, the list of downloads
-    that goes above the notes that GitHub generates, the update feed that an installed 1.0.x reads, and the
-    check of a signature. The workflow of the release calls these functions, and
-    release/tests/Test-Release.ps1 tests them.
+    that goes above the notes that GitHub generates, and the update feed that an installed 1.0.x reads. The
+    workflow of the release calls these functions, and release/tests/Test-Release.ps1 tests them.
 #>
 
 Set-StrictMode -Version Latest
@@ -97,6 +96,8 @@ function Confirm-UpdateFeed {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)] [string] $Path,
+        [Parameter(Mandatory)] [string] $Version,
+        [Parameter(Mandatory)] [string] $Repository,
         [Parameter(Mandatory)] [string[]] $FileName
     )
 
@@ -104,7 +105,7 @@ function Confirm-UpdateFeed {
     $document = [Text.Json.JsonDocument]::Parse($text)
     try {
         # 1.0.x reads these three, each as a string, and fails when one is missing.
-        $version = $document.RootElement.GetProperty('version').GetString()
+        $feedVersion = $document.RootElement.GetProperty('version').GetString()
         $download = $document.RootElement.GetProperty('download').GetString()
         $changelog = $document.RootElement.GetProperty('changelog').GetString()
     }
@@ -112,51 +113,24 @@ function Confirm-UpdateFeed {
         $document.Dispose()
     }
 
-    $parsed = [version]::Parse($version)
-    if ($parsed -le $AboveEveryFirstVersion) {
-        throw "The version of the feed, $version, is not above every 1.0.x: an installed 1.0.x would not be told."
+    if ([version]::Parse($feedVersion) -le $AboveEveryFirstVersion) {
+        throw "The version of the feed, $feedVersion, is not above every 1.0.x: an installed 1.0.x would not be told."
     }
     if (-not [uri]::IsWellFormedUriString($changelog, [UriKind]::Absolute)) {
         throw "The changelog of the feed is not an address: $changelog"
     }
 
-    $address = [uri]::new($download, [UriKind]::Absolute)
-    foreach ($asked in Get-RequestedFileName ([IO.Path]::GetFileName($address.LocalPath))) {
+    # 1.0.x asks for its file at the address of the feed, with another name: the address is the one of the
+    # files of this release.
+    $package = [IO.Path]::GetFileName([uri]::new($download, [UriKind]::Absolute).LocalPath)
+    if ($download -cne (Get-ReleaseAddress $Repository $Version $package)) {
+        throw "The download of the feed, $download, is not a file of the release $Version of $Repository."
+    }
+    foreach ($asked in Get-RequestedFileName $package) {
         if ($FileName -cnotcontains $asked) {
             throw "An installed 1.0.x would ask for $asked, which is not a file of the release."
         }
     }
 }
 
-# Checks the Authenticode signature of files: each one is signed, all by one certificate, and none was
-# changed after it was signed. Trusted asks for more, what a release must have: a chain that Windows trusts,
-# and a timestamp. Returns the thumbprint of the certificate.
-function Confirm-Signature {
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory)] [string[]] $Path,
-        [string] $Thumbprint = '',
-        [switch] $Trusted
-    )
-
-    foreach ($file in $Path) {
-        $signature = Get-AuthenticodeSignature -LiteralPath $file
-        if ($null -eq $signature.SignerCertificate -or $signature.Status -in 'NotSigned', 'HashMismatch') {
-            throw "The file is not signed, or was changed after it was signed: $file ($($signature.Status))"
-        }
-        if ($Thumbprint -eq '') {
-            $Thumbprint = $signature.SignerCertificate.Thumbprint
-        }
-        if ($signature.SignerCertificate.Thumbprint -ne $Thumbprint) {
-            throw "The file is signed by another certificate, $($signature.SignerCertificate.Subject): $file"
-        }
-        if ($Trusted -and ($signature.Status -ne 'Valid' -or $null -eq $signature.TimeStamperCertificate)) {
-            throw "The signature is not trusted, or has no timestamp: $file ($($signature.Status): $($signature.StatusMessage))"
-        }
-        Write-Host "Signed by $($signature.SignerCertificate.Subject) ($($signature.Status)): $file"
-    }
-
-    $Thumbprint
-}
-
-Export-ModuleMember -Function Get-ReleaseFileName, New-ReleaseNotes, New-UpdateFeed, Confirm-UpdateFeed, Confirm-Signature
+Export-ModuleMember -Function Get-ReleaseFileName, New-ReleaseNotes, New-UpdateFeed, Confirm-UpdateFeed

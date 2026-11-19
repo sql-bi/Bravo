@@ -76,9 +76,9 @@ holds, used through AzureSignTool.
 - A signature has a timestamp
   ([RFC 3161](https://learn.microsoft.com/windows/win32/seccrypto/time-stamping-authenticode-signatures)), so
   that it stays valid after the certificate has expired.
-- The build stops when a file cannot be signed. The run then checks the signature of each package before
-  it keeps the files: one certificate for all, a chain that Windows trusts, a timestamp. The test checks
-  that the files of the host that a package installed carry the signature of that certificate.
+- Each file is checked right after it is signed, and the build stops at one whose signature Windows does
+  not trust or that has no timestamp. The run then shows that the four packages carry one certificate, and
+  the test checks that the files of the host that a package installed carry it too.
 
 **Release notes.** The notes are the ones that GitHub generates from the pull requests merged since the
 release before, under the headings of `.github/release.yml`, which sorts them by label. Above them the run
@@ -100,7 +100,8 @@ it to both, after the draft is published and its files can be downloaded.
 - The run reads the file back as 1.0.x reads it, and fails when 1.0.x would not be told, or would ask for
   a file that the release does not have.
 - The file is UTF-8 with no byte order mark.
-- A preview never reaches the feed: 1.0.x cannot read a version with a label.
+- A preview never reaches the feed: its release writes no such file. A run that publishes nothing always
+  writes one, to prove the step.
 
 **A run that publishes nothing.** The same jobs prove the workflow without a release. Such a run starts by
 itself on a push to a work branch that changes what a release is made of, and by hand with the input
@@ -113,7 +114,8 @@ itself on a push to a work branch that changes what a release is made of, and by
 | Timestamp | Yes | No |
 | Draft release | Created | Not created: `publish` does not run |
 
-It proves the build of the six files, the order of the signatures, the installation of signed packages, of
+Such a run is never a public release, on any branch: the names of its files have the commit. It proves the
+build of the six files, the order of the signatures, the installation of signed packages, of
 one over another build of its version and over 1.0.14, the list of downloads and the update feed. It does not prove the sign-in to Azure, Key Vault and AzureSignTool,
 the trust of the signature, or the creation of the draft.
 
@@ -123,10 +125,10 @@ the trust of the signature, or the creation of the draft.
 | --- | --- |
 | The version: the one value, and the package that every project gets | `version.json`, `Directory.Packages.props` |
 | The workflow | `.github/workflows/release.yml` |
-| The names of the six files, the list of downloads, the update feed and its check, the check of a signature | `release/Release.psm1` |
-| The tests of those functions | `release/tests/Test-Release.ps1` |
+| The names of the six files, the list of downloads, the update feed and its check | `release/Release.psm1` |
+| The tests of those functions, and of the check of a signature | `release/tests/Test-Release.ps1` |
 | The version of the build, read without building | `installer/Get-BuildVersion.ps1` |
-| What signs a file, with which certificate | `installer/Sign-Files.ps1` |
+| What signs a file, with which certificate, and what checks a signature | `installer/Sign-Files.ps1`, `installer/Confirm-Signature.ps1` |
 | AzureSignTool, in one version | `.config/dotnet-tools.json` |
 | The six files: the target `BuildRelease` | `installer/Bravo.Installer.wixproj`, `installer/Stage.targets` ([Installer](installer.md)) |
 | The headings of the generated notes | `.github/release.yml` |

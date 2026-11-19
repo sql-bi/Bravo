@@ -46,6 +46,9 @@ foreach ($file in $Path) {
     }
 }
 
+# Every file is checked right after it is signed: a signature that is missing or wrong stops the build.
+$confirm = Join-Path $PSScriptRoot 'Confirm-Signature.ps1'
+
 switch ($Signing) {
     'KeyVault' {
         $vault = Get-RequiredVariable 'BRAVO_SIGNING_VAULT_URL'
@@ -64,6 +67,10 @@ switch ($Signing) {
         if ($LASTEXITCODE -ne 0) {
             throw "AzureSignTool ended with the exit code $LASTEXITCODE."
         }
+
+        # What a release ships has a signature that Windows trusts, with its timestamp: the build stops here
+        # when a file has not.
+        & $confirm -Path $Path -Trusted | Out-Null
     }
 
     'TestCertificate' {
@@ -71,14 +78,8 @@ switch ($Signing) {
         $certificate = Get-Item -LiteralPath "Cert:\CurrentUser\My\$thumbprint"
 
         foreach ($file in $Path) {
-            $signature = Set-AuthenticodeSignature -LiteralPath $file -Certificate $certificate -HashAlgorithm SHA256
-            if ($null -eq $signature.SignerCertificate -or $signature.SignerCertificate.Thumbprint -ne $thumbprint) {
-                throw "The file was not signed: $file ($($signature.Status): $($signature.StatusMessage))"
-            }
+            Set-AuthenticodeSignature -LiteralPath $file -Certificate $certificate -HashAlgorithm SHA256 | Out-Null
         }
+        & $confirm -Path $Path -Thumbprint $thumbprint | Out-Null
     }
-}
-
-foreach ($file in $Path) {
-    "Signed with ${Signing}: $file"
 }

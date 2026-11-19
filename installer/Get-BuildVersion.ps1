@@ -12,18 +12,19 @@
     It builds nothing.
 
 .PARAMETER PublicRelease
-    The version of a release: the semantic version alone. Any other build has the commit after it.
+    Whether the build is a public release, which has the semantic version alone, or not, and then has the
+    commit after it. Without the parameter the branch decides, as version.json says.
 #>
 [CmdletBinding()]
-param([switch] $PublicRelease)
+param([bool] $PublicRelease)
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 $project = Join-Path $PSScriptRoot 'Bravo.Installer.wixproj'
 $arguments = @($project, '-t:ReadBuildVersion', '-getProperty:BravoVersion', '-getProperty:BravoFileVersion')
-if ($PublicRelease) {
-    $arguments += '-p:PublicRelease=true'
+if ($PSBoundParameters.ContainsKey('PublicRelease')) {
+    $arguments += "-p:PublicRelease=$($PublicRelease.ToString().ToLowerInvariant())"
 }
 
 $output = dotnet msbuild @arguments

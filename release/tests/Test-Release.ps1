@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Tests the functions of release/Release.psm1.
+    Tests the functions of release/Release.psm1, and the check of a signature of installer/Confirm-Signature.ps1.
 
 .DESCRIPTION
     The script builds nothing, installs nothing and publishes nothing: it writes in a temporary folder of
@@ -92,7 +92,7 @@ try {
     Assert-Equal '1.1.0.188' $document.version 'the version, the one of the files'
     Assert-Equal "https://github.com/$Repository/releases/download/v1.1.0/Bravo.1.1.0.x64.msi" $document.download 'the package that 1.0.x starts from'
     Assert-Equal "https://github.com/$Repository/releases" $document.changelog 'the address of the changes'
-    Confirm-UpdateFeed -Path $feed -FileName (Get-ReleaseFileName '1.1.0')
+    Confirm-UpdateFeed -Path $feed -Version '1.1.0' -Repository $Repository -FileName (Get-ReleaseFileName '1.1.0')
     Assert-True $true 'the feed passes the check'
 
     Write-Step 'A feed that 1.0.x cannot use does not pass the check'
@@ -102,33 +102,38 @@ try {
     $changes = "https://github.com/$Repository/releases"
 
     & $write "{ `"version`": `"1.0.9999.1`", `"download`": `"$good`", `"changelog`": `"$changes`" }"
-    Assert-Fails { Confirm-UpdateFeed -Path $feed -FileName $files } 'not above every 1.0.x' 'a version of 1.0'
+    Assert-Fails { Confirm-UpdateFeed -Path $feed -Version '1.1.0' -Repository $Repository -FileName $files } 'not above every 1.0.x' 'a version of 1.0'
 
     & $write "{ `"version`": `"1.1.0-beta.1`", `"download`": `"$good`", `"changelog`": `"$changes`" }"
-    Assert-Fails { Confirm-UpdateFeed -Path $feed -FileName $files } '' 'a version that is not numbers'
+    Assert-Fails { Confirm-UpdateFeed -Path $feed -Version '1.1.0' -Repository $Repository -FileName $files } '' 'a version that is not numbers'
 
     & $write "{ `"version`": `"1.1.0.188`", `"changelog`": `"$changes`" }"
-    Assert-Fails { Confirm-UpdateFeed -Path $feed -FileName $files } '' 'a feed with no download'
+    Assert-Fails { Confirm-UpdateFeed -Path $feed -Version '1.1.0' -Repository $Repository -FileName $files } '' 'a feed with no download'
 
     & $write "{ `"version`": `"1.1.0.188`", `"download`": `"$good`", `"changelog`": `"$changes`" }"
-    Assert-Fails { Confirm-UpdateFeed -Path $feed -FileName ($files -ne 'Bravo.1.1.0.x64-frameworkdependent-portable.zip') } 'Bravo.1.1.0.x64-frameworkdependent-portable.zip' 'a release without one of the six files'
+    Assert-Fails { Confirm-UpdateFeed -Path $feed -Version '1.1.0' -Repository $Repository -FileName ($files -ne 'Bravo.1.1.0.x64-frameworkdependent-portable.zip') } 'Bravo.1.1.0.x64-frameworkdependent-portable.zip' 'a release without one of the six files'
 
     $perUser = "https://github.com/$Repository/releases/download/v1.1.0/Bravo.1.1.0.x64-userinstaller.msi"
     & $write "{ `"version`": `"1.1.0.188`", `"download`": `"$perUser`", `"changelog`": `"$changes`" }"
-    Assert-Fails { Confirm-UpdateFeed -Path $feed -FileName $files } 'is not a file of the release' 'a download that is not the package per machine that carries the runtime'
+    Assert-Fails { Confirm-UpdateFeed -Path $feed -Version '1.1.0' -Repository $Repository -FileName $files } 'is not a file of the release' 'a download that is not the package per machine that carries the runtime'
+
+    $otherTag = "https://github.com/$Repository/releases/download/v1.0.14/Bravo.1.1.0.x64.msi"
+    & $write "{ `"version`": `"1.1.0.188`", `"download`": `"$otherTag`", `"changelog`": `"$changes`" }"
+    Assert-Fails { Confirm-UpdateFeed -Path $feed -Version '1.1.0' -Repository $Repository -FileName $files } 'is not a file of the release 1.1.0' 'a download at the address of another release'
 
     if ($IsWindows) {
         Write-Step 'A signature is checked'
+        $confirm = Join-Path $PSScriptRoot '..\..\installer\Confirm-Signature.ps1'
         $unsigned = Join-Path $Folder 'unsigned.ps1'
         Set-Content -Path $unsigned -Value "'not signed'"
-        Assert-Fails { Confirm-Signature -Path $unsigned } 'is not signed' 'a file with no signature'
+        Assert-Fails { & $confirm -Path $unsigned } 'is not signed' 'a file with no signature'
 
         # PowerShell itself: a file that its publisher signed, with a timestamp, and that Windows trusts.
         $signed = (Get-Process -Id $PID).Path
-        $thumbprint = Confirm-Signature -Path $signed -Trusted
+        $thumbprint = & $confirm -Path $signed -Trusted
         Assert-True ($thumbprint -match '^[0-9A-F]{40}$') 'the check returns the thumbprint of the certificate'
-        Assert-Equal $thumbprint (Confirm-Signature -Path $signed -Thumbprint $thumbprint) 'a file signed by the certificate that is asked for'
-        Assert-Fails { Confirm-Signature -Path $signed -Thumbprint ('0' * 40) } 'another certificate' 'a file signed by another certificate'
+        Assert-Equal $thumbprint (& $confirm -Path $signed -Thumbprint $thumbprint) 'a file signed by the certificate that is asked for'
+        Assert-Fails { & $confirm -Path $signed -Thumbprint ('0' * 40) } 'another certificate' 'a file signed by another certificate'
     }
 }
 finally {

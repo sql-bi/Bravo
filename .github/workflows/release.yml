@@ -26,10 +26,10 @@ on:
       - release/**
       - version.json
 
-# One run at a time for each branch. A release that started is never cancelled; a newer push replaces the run
-# of an older one.
+# One run at a time for each branch and each way to start it. A run started by hand is never cancelled; a
+# newer push replaces the run of an older one, and never one started by hand.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'push' }}
 
 permissions:
@@ -81,6 +81,7 @@ jobs:
       # The identity that signs is asked of GitHub for this run: the repository holds no secret.
       id-token: write
     outputs:
+      dry-run: ${{ env.DRY_RUN }}
       version: ${{ steps.version.outputs.version }}
       file-version: ${{ steps.version.outputs.file-version }}
       thumbprint: ${{ steps.signatures.outputs.thumbprint }}
@@ -108,13 +109,14 @@ jobs:
         run: dotnet tool restore
       - name: Restore the installer
         run: dotnet restore installer/Bravo.Installer.wixproj --locked-mode
-      # A release is a public release: its version has no commit after it. A version that has its tag
+      # A release is a public release, whatever its branch: its version has no commit after it. A run that
+      # publishes nothing is never one: the names of its files have the commit. A version that has its tag
       # already is released, and is not built again.
       - name: Read the version of the build
         id: version
         shell: pwsh
         run: |
-          $build = installer/Get-BuildVersion.ps1 -PublicRelease:($env:DRY_RUN -eq 'false')
+          $build = installer/Get-BuildVersion.ps1 -PublicRelease ($env:DRY_RUN -eq 'false')
           $build | Format-List
           if ($env:DRY_RUN -eq 'false') {
             git rev-parse --quiet --verify "refs/tags/v$($build.Version)" | Out-Null
@@ -160,7 +162,7 @@ jobs:
         run: |
           $arguments = @('--no-restore')
           if ($env:DRY_RUN -eq 'true') {
-            $arguments += '-p:BravoSigning=TestCertificate'
+            $arguments += '-p:BravoSigning=TestCertificate', '-p:PublicRelease=false'
           }
           else {
             $token = az account get-access-token --resource https://vault.azure.net --query accessToken --output tsv
@@ -172,24 +174,18 @@ jobs:
 
           dotnet build installer/Bravo.Installer.wixproj -c Release -warnaserror -t:BuildRelease @arguments
           exit $LASTEXITCODE
-      # The packages of a release need a signature that Windows trusts, with a timestamp; the ones of a run
-      # that publishes nothing, the signature of its certificate. The files that a package installs are
-      # checked by the job that installs it, which is told the certificate.
-      - name: Check the signatures of the packages
+      # The build checked each file as it signed it. Here the four packages are shown to carry one
+      # certificate, which the job that installs them is told: it looks for it on the installed files.
+      - name: Read the certificate of the signatures
         id: signatures
         shell: pwsh
         run: |
-          Import-Module ./release/Release.psm1
           $packages = (Get-ChildItem artifacts/installer/en-US/*.msi).FullName
-          $thumbprint = if ($env:DRY_RUN -eq 'true') {
-            Confirm-Signature -Path $packages -Thumbprint $env:BRAVO_SIGNING_THUMBPRINT
-          }
-          else {
-            Confirm-Signature -Path $packages -Trusted
-          }
+          $thumbprint = installer/Confirm-Signature.ps1 -Path $packages -Trusted:($env:DRY_RUN -eq 'false')
           "thumbprint=$thumbprint" >> $env:GITHUB_OUTPUT
       # The list of downloads goes above the notes that GitHub generates. The update feed is the file that an
-      # installed 1.0.x reads: it is checked against the files of the release, as 1.0.x asks for them.
+      # installed 1.0.x reads: it is checked against the files of the release, as 1.0.x asks for them. A
+      # preview has no feed, so its release writes none; a run that publishes nothing always writes one.
       - name: Write the list of downloads and the update feed
         shell: pwsh
         env:
@@ -203,22 +199,21 @@ jobs:
 
           New-Item -ItemType Directory -Force artifacts/release | Out-Null
           New-ReleaseNotes -Version $env:VERSION -Repository $env:GITHUB_REPOSITORY | Set-Content artifacts/release/notes.md -NoNewline
-          New-UpdateFeed -Path artifacts/release/currentversion.json -Version $env:VERSION -FileVersion $env:FILE_VERSION -Repository $env:GITHUB_REPOSITORY
-          Confirm-UpdateFeed -Path artifacts/release/currentversion.json -FileName $files
 
-          @(
+          $summary = @(
             "## Bravo $env:VERSION$(if ($env:DRY_RUN -eq 'true') { ', a run that publishes nothing' })"
             ''
             "File version $env:FILE_VERSION. The files:"
             ''
             Get-ChildItem artifacts/installer/en-US | ForEach-Object { '- `{0}`, {1:N0} bytes' -f $_.Name, $_.Length }
-            ''
-            'The update feed:'
-            ''
-            '```json'
-            Get-Content artifacts/release/currentversion.json -Raw
-            '```'
-          ) >> $env:GITHUB_STEP_SUMMARY
+          )
+          if ($env:DRY_RUN -eq 'true' -or -not $env:VERSION.Contains('-')) {
+            $feed = 'artifacts/release/currentversion.json'
+            New-UpdateFeed -Path $feed -Version $env:VERSION -FileVersion $env:FILE_VERSION -Repository $env:GITHUB_REPOSITORY
+            Confirm-UpdateFeed -Path $feed -Version $env:VERSION -Repository $env:GITHUB_REPOSITORY -FileName $files
+            $summary += '', 'The update feed:', '', '```json', (Get-Content $feed -Raw), '```'
+          }
+          $summary >> $env:GITHUB_STEP_SUMMARY
       # The files of the release, the list of downloads and the feed.
       - name: Keep the files
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -254,13 +249,17 @@ jobs:
         run: gh release download v1.0.14 --repo sql-bi/Bravo --pattern "Bravo.1.0.14.x64-frameworkdependent*.msi" --dir artifacts/installer-previous
       - name: Install, upgrade and remove
         shell: pwsh
+        env:
+          VERSION: ${{ needs.build.outputs.version }}
+          FILE_VERSION: ${{ needs.build.outputs.file-version }}
+          SIGNER_THUMBPRINT: ${{ needs.build.outputs.thumbprint }}
         run: >
           installer/tests/Test-Packages.ps1
           -PackagesFolder artifacts/release-files/installer/en-US
           -PreviousFolder artifacts/installer-previous
-          -Version ${{ needs.build.outputs.version }}
-          -FileVersion ${{ needs.build.outputs.file-version }}
-          -SignerThumbprint ${{ needs.build.outputs.thumbprint }}
+          -Version $env:VERSION
+          -FileVersion $env:FILE_VERSION
+          -SignerThumbprint $env:SIGNER_THUMBPRINT
           -LogFolder artifacts/installer-logs
       - name: Keep the logs of Windows Installer
         if: ${{ failure() }}
@@ -274,7 +273,7 @@ jobs:
   # The draft release, with the six files. Nothing is public until the maintainer publishes the draft, and
   # the tag is created then.
   publish:
-    if: ${{ github.event_name == 'workflow_dispatch' && !inputs.dry-run }}
+    if: ${{ needs.build.outputs.dry-run == 'false' }}
     needs: [build, test]
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -297,8 +296,10 @@ jobs:
           TARGET: ${{ github.sha }}
         run: |
           $tag = "v$env:VERSION"
-          gh release view $tag --json isDraft 2>$null | Out-Null
-          if ($LASTEXITCODE -eq 0) { throw "A release $tag exists already. Delete it if it is a draft of an earlier run, then start the release again." }
+          $releases = gh api "repos/$env:GH_REPO/releases" --paginate --jq '.[] | "\(.tag_name) \(.html_url)"'
+          if ($LASTEXITCODE -ne 0) { throw 'The releases of the repository could not be read.' }
+          $existing = @($releases | Where-Object { $_ -clike "$tag *" })
+          if ($existing.Count -gt 0) { throw "A release $tag exists already: $existing. Delete it if it is a draft of an earlier run, then start the release again." }
 
           $arguments = @($tag, '--draft', '--target', $env:TARGET, '--title', "Bravo $tag", '--notes-file', 'artifacts/release-files/release/notes.md', '--generate-notes')
           # A version with a label is a preview.

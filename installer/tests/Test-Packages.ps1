@@ -46,9 +46,6 @@ if ($env:GITHUB_ACTIONS -ne 'true') {
     throw 'This script installs and removes Bravo. It runs on a runner of GitHub Actions only.'
 }
 
-# The check of a signature is the one of the release.
-Import-Module (Join-Path $PSScriptRoot '..\..\release\Release.psm1')
-
 # The packages that use the installed runtime need the three runtimes of .NET 10, which the image of the
 # runner has: nothing is installed for them.
 $installedRuntimes = dotnet --list-runtimes
@@ -357,7 +354,7 @@ function Assert-Installed([string] $Scope, [string] $InstallFolder, $ExpectedCho
     if ($SignerThumbprint -ne '') {
         # The files of the host: the package holds the ones that the build signed, and not older ones.
         $hostFiles = @($executable) + @((Get-ChildItem -Path $InstallFolder -Filter 'Bravo*.dll').FullName)
-        Confirm-Signature -Path $hostFiles -Thumbprint $SignerThumbprint | Out-Null
+        & (Join-Path $PSScriptRoot '..\Confirm-Signature.ps1') -Path $hostFiles -Thumbprint $SignerThumbprint | Out-Null
         Assert-True $true "the $($hostFiles.Count) installed files of the host carry the signature of the build"
     }
     foreach ($entry in 'Bravo.Setup.exe', 'Bravo.xml', 'runtimes', 'it') {

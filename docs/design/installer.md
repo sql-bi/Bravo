@@ -210,6 +210,7 @@ line names. It is not a project of the solution: a build of the solution makes n
 | Which package a build makes, its file name, the validation rules that are turned off and why, and the targets that a build is asked for | `Bravo.Installer.wixproj` |
 | The folder of the application as a package installs it, which is its publish and the files of the page, the publish of the program, and the archive of a folder | `Stage.targets` |
 | What signs a file, and with which certificate | `Sign-Files.ps1` |
+| What checks the signature of a file: after it is signed, and on the files that a package installed | `Confirm-Signature.ps1` |
 | The version that the packages of a commit get, read without building them | `Get-BuildVersion.ps1` |
 | The package: identity, upgrade, choices, folders, files, registry values, shortcuts, what it runs and when | `Package.wxs` |
 | The dialog set, which is the one of WiX with two dialogs replaced | `Dialogs.wxs` |
