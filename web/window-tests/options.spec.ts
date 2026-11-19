@@ -6,9 +6,11 @@ test('a change of the theme is saved, and the page and its color scheme follow i
     const colorSchemeIsDark = () => page.evaluate(() => matchMedia('(prefers-color-scheme: dark)').matches);
     const pageIsDark = () => page.locator('body').evaluate(body => body.classList.contains('dark'));
 
-    // The theme is Auto at the start: the page has the color scheme that the window gives it
+    // The theme is Auto at the start: the page has the color scheme that the window gives it. The fixture has
+    // just removed the light color scheme of Playwright, and the page hears of it with an event that can come
+    // after this line
     const wasDark = await colorSchemeIsDark();
-    expect(await pageIsDark()).toBe(wasDark);
+    await expect.poll(pageIsDark).toBe(wasDark);
 
     // The other theme, whatever the settings of the machine
     const theme = wasDark ? 'Light' : 'Dark';
