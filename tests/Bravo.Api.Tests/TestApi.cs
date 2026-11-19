@@ -66,6 +66,8 @@ internal sealed class TestApi : IAsyncDisposable
 
     public IBrowserLauncher BrowserLauncher => _app.Services.GetRequiredService<IBrowserLauncher>();
 
+    public InMemoryUserSettingsStore Settings => _app.Services.GetRequiredService<InMemoryUserSettingsStore>();
+
     /// <param name="mapRoutes">Adds routes that exist only for a test, after the ones of the API.</param>
     public static async Task<TestApi> StartAsync(Action<IEndpointRouteBuilder>? mapRoutes = null)
     {

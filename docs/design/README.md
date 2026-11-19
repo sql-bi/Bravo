@@ -16,6 +16,7 @@ the part lives and the rules for changing it.
 | [`installer.md`](installer.md) | The Windows Installer packages and the program that they run |
 | [`release.md`](release.md) | The version of a build, the workflow that makes a release, its six files, their signature, the update feed |
 | [`updates.md`](updates.md) | How the application learns of a newer release, the file of each copy, the links that open in the browser |
+| [`settings.md`](settings.md) | The settings of the user: the file of 1.0.x, how it is read and replaced |
 
 ## The previous implementation
 

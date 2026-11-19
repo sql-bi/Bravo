@@ -107,7 +107,7 @@ this document describes above. Where each part lives:
 | The single instance: ownership by mutex, hand-over by pipe, arbitration | `src/Bravo.Platform.Windows/SingleInstance/` |
 | The identity of the build: release or development, with its instance identifier, data folder and window title, its versions, and whether it carries the runtime | `src/Bravo.Desktop/BuildIdentity.cs` |
 | The listener as a service of the host, the message of a failed hand-over, the end of a second process | `src/Bravo.Desktop/SingleInstance/` |
-| The settings of the user and their store, in memory until backlog B-4 | `src/Bravo.Core/Settings/`, registered in `src/Bravo.Desktop/Settings/` |
+| The settings of the user, kept in a file of the data folder ([Settings](settings.md)) | `src/Bravo.Core/Settings/` and `src/Bravo.Platform.Windows/Settings/`, registered in `src/Bravo.Desktop/Settings/` |
 | The Windows functions of a project, listed in its `NativeMethods.txt` and wrapped by capability | `Interop/` in `Bravo.Desktop` and in `Bravo.Platform.Windows` |
 
 - A component registers its services in an extension method of `IServiceCollection` beside its code, and

@@ -51,10 +51,35 @@ public sealed class RegistryInstallationReaderTests
     [Fact]
     public void Read_FolderThatNoPackageInstalled_IsNoInstallation()
     {
-        var folder = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
-
-        var installation = new RegistryInstallationReader(folder).Read();
+        var installation = new RegistryInstallationReader(CreateFolderThatNoPackageInstalled()).Read();
 
         Assert.Equal(Installation.None, installation);
+    }
+
+    [Theory]
+    [InlineData("1", true)]
+    [InlineData("2", true)]
+    [InlineData("-1", true)]
+    [InlineData(" 1 ", true)]
+    [InlineData("0", false)]
+    [InlineData("", false)]
+    [InlineData("yes", false)]
+    [InlineData("true", false)]
+    public void IsTelemetryEnabled_RecordedText_IsTheChoiceAs1014ReadsIt(string text, bool enabled)
+    {
+        Assert.Equal(enabled, RegistryInstallationReader.IsTelemetryEnabled(text));
+    }
+
+    [Fact]
+    public void ReadTelemetryEnabled_FolderThatNoPackageInstalled_IsNoChoice()
+    {
+        var enabled = new RegistryInstallationReader(CreateFolderThatNoPackageInstalled()).ReadTelemetryEnabled();
+
+        Assert.Null(enabled);
+    }
+
+    private static string CreateFolderThatNoPackageInstalled()
+    {
+        return Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
     }
 }

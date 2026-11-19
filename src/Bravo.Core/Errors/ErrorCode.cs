@@ -14,4 +14,9 @@ public enum ErrorCode
     /// not known.
     /// </summary>
     UpdateCheckFailed = 1,
+
+    /// <summary>
+    /// The settings of the user could not be written: the ones before the change are still in force.
+    /// </summary>
+    SettingsSaveFailed = 2,
 }

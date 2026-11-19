@@ -6,7 +6,7 @@
 
 import { Dispatchable } from '../helpers/dispatchable';
 import { Dic, Utils } from '../helpers/utils';
-import { debug, logger } from '../main';
+import { debug, logger, notificationCenter } from '../main';
 import { DocType } from '../model/doc';
 import { AppError, AppProblem } from '../model/exceptions';
 import { PBICloudDataset, PBICloudDatasetConnectionMode } from '../model/pbi-dataset';
@@ -15,6 +15,7 @@ import { Account } from './auth';
 import * as hostApi from '../generated/bravo';
 import { connectHost } from './host-fetch';
 import { FormatDaxOptions, Options } from './options';
+import { Notify } from './notifications';
 import { PBIDesktopReport, PBIDesktopReportConnectionMode } from '../model/pbi-report';
 import { i18n } from '../model/i18n';
 import { strings } from '../model/strings';
@@ -483,10 +484,18 @@ export class Host extends Dispatchable {
             .then(userOptions => <Options>userOptions);
     }
 
+    // When the host cannot save the options it keeps the ones it had, while the dialog shows the change: the
+    // user is told
     updateOptions(options: Options) {
         return this.apiClientCall("UpdateOptions", init => hostApi.updateOptions(options, init))
             .then(() => true)
-            .catch(ignore => false);
+            .catch((error: AppError) => {
+                if (error.code === hostApi.ProblemCode.SettingsSaveFailed) {
+                    logger.logError(error);
+                    notificationCenter.add(new Notify(error.message, null, null, true, true));
+                }
+                return false;
+            });
     }
 
     // Its callers go on without waiting: a page that does not open is only logged.

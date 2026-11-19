@@ -58,7 +58,7 @@ internal static class DesktopHost
         builder.Services.AddDevelopmentOptions(development);
         builder.Services.AddActivation();
         builder.Services.AddSingleInstance(ownership, singleInstanceOptions);
-        builder.Services.AddUserSettings();
+        builder.Services.AddUserSettings(dataFolder);
         builder.Services.AddUpdates(identity, development.UpdateFeedAddress);
         builder.Services.AddApi();
 

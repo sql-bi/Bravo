@@ -10,7 +10,7 @@ vi.mock("../../main", async () => (await import("../main-mock")).createMainMock(
 
 import { Host } from '../../controllers/host';
 import { Options } from '../../controllers/options';
-import { logger } from '../../main';
+import { logger, notificationCenter } from '../../main';
 import { AppError, AppErrorType } from '../../model/exceptions';
 import en from '../../model/i18n/en';
 import { strings } from '../../model/strings';
@@ -84,6 +84,28 @@ describe("Host", () => {
             const saved = await host.updateOptions(<Options><unknown>optionsOfTheHost);
 
             expect(saved).toBe(false);
+        });
+
+        it("that the host cannot save are not saved, and the user is told with the text of the error", async () => {
+            const problem = { status: 409, code: "SettingsSaveFailed", detail: "The settings could not be saved." };
+            fetchMock.mockResolvedValue(answer(409, problem, "application/problem+json"));
+            vi.mocked(notificationCenter.add).mockClear();
+
+            const saved = await host.updateOptions(<Options><unknown>optionsOfTheHost);
+
+            expect(saved).toBe(false);
+            expect(notificationCenter.add).toHaveBeenCalledExactlyOnceWith(
+                expect.objectContaining({ message: en.strings[strings.errorUserSettingsSaveError], temporary: true }));
+        });
+
+        it("that the host refuses tell the user nothing: the options dialog shows the value that it refused", async () => {
+            const problem = { status: 400, code: "ValidationFailed", errors: { "proxy.address": ["The address is not the address of a server."] } };
+            fetchMock.mockResolvedValue(answer(400, problem, "application/problem+json"));
+            vi.mocked(notificationCenter.add).mockClear();
+
+            await host.updateOptions(<Options><unknown>optionsOfTheHost);
+
+            expect(notificationCenter.add).not.toHaveBeenCalled();
         });
     });
 

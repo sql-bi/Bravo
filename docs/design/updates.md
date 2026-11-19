@@ -38,7 +38,7 @@ file of its own kind from it, as 1.0.x names it, so that a copy gets a file of i
 | An archive, with the runtime | `Bravo.1.1.0.x64-portable.zip` |
 | An archive, without the runtime | `Bravo.1.1.0.x64-frameworkdependent-portable.zip` |
 
-- A copy is installed per machine when the registry value `installFolder` of `HKLM\Software\SQLBI\Bravo` is the
+- A copy is installed per machine when the string value `installFolder` of `HKLM\Software\SQLBI\Bravo` is the
   folder of its executable, and per user when the one of `HKCU` is. Otherwise, also when the registry cannot be
   read, it is an archive: an archive is the folder of the application, and no package wrote the value.
 - Whether a copy carries the runtime is decided by its build, which writes it into the application.

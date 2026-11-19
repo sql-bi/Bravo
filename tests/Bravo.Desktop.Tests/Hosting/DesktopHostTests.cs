@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using Bravo.Core.Settings;
 using Bravo.Desktop.Development;
 using Bravo.Desktop.Diagnostics;
 using Bravo.Desktop.Hosting;
@@ -104,6 +106,17 @@ public sealed class DesktopHostTests : IDisposable
         var options = _host.Services.GetRequiredService<WebViewOptions>();
 
         Assert.Equal(_dataFolder.Combine("WebView2"), options.UserDataFolder);
+    }
+
+    // The host reads the settings when they are first asked for: the test writes the file before.
+    [Fact]
+    public void Build_SettingsOfTheUser_AreTheFileOf1014InTheDataFolder()
+    {
+        File.WriteAllText(_dataFolder.Combine("usersettings.json"), """{ "theme": 2 }""");
+
+        var settings = _host.Services.GetRequiredService<IUserSettingsStore>().Current;
+
+        Assert.Equal(Theme.Dark, settings.Theme);
     }
 
     // The configuration of the web host is one source of the configuration of the application.

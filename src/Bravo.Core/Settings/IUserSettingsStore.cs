@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Bravo.Core.Settings;
 
@@ -16,5 +18,12 @@ public interface IUserSettingsStore
 
     UserSettings Current { get; }
 
-    void Replace(UserSettings settings);
+    /// <summary>
+    /// Keeps the settings, then makes them the current ones.
+    /// </summary>
+    /// <exception cref="Errors.BravoException">
+    /// With the code <see cref="Errors.ErrorCode.SettingsSaveFailed"/>: the settings could not be kept, and the
+    /// current ones stay as they were.
+    /// </exception>
+    Task ReplaceAsync(UserSettings settings, CancellationToken cancellationToken);
 }

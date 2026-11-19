@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.IO;
 using System.Security;
 using Bravo.Core.Updates;
@@ -14,15 +15,40 @@ namespace Bravo.Platform.Windows.Updates;
 /// <param name="applicationFolder">The folder of the copy that runs.</param>
 public sealed class RegistryInstallationReader(string applicationFolder) : IInstallationReader
 {
-    private const string MachineKeyName = @"HKEY_LOCAL_MACHINE\Software\SQLBI\Bravo";
-    private const string UserKeyName = @"HKEY_CURRENT_USER\Software\SQLBI\Bravo";
-    private const string ValueName = "installFolder";
+    private const string KeyName = @"Software\SQLBI\Bravo";
+    private const string FolderValueName = "installFolder";
+    private const string TelemetryValueName = "applicationTelemetryEnabled";
 
     private readonly string _applicationFolder = applicationFolder;
 
     public Installation Read()
     {
-        return Classify(ReadFolder(MachineKeyName), ReadFolder(UserKeyName), _applicationFolder);
+        var machineFolder = ReadText(Registry.LocalMachine, FolderValueName);
+        var userFolder = ReadText(Registry.CurrentUser, FolderValueName);
+
+        return Classify(machineFolder, userFolder, _applicationFolder);
+    }
+
+    /// <summary>
+    /// Reads the choice under the key of the installation of the copy that runs, as every earlier version
+    /// does.
+    /// </summary>
+    public bool? ReadTelemetryEnabled()
+    {
+        var root = Read() switch
+        {
+            Installation.PerMachine => Registry.LocalMachine,
+            Installation.PerUser => Registry.CurrentUser,
+            _ => null,
+        };
+        if (root is null)
+        {
+            return null;
+        }
+
+        var text = ReadText(root, TelemetryValueName);
+
+        return text is null ? null : IsTelemetryEnabled(text);
     }
 
     /// <summary>
@@ -44,11 +70,28 @@ public sealed class RegistryInstallationReader(string applicationFolder) : IInst
         return Installation.None;
     }
 
-    private static string? ReadFolder(string keyName)
+    /// <summary>
+    /// What a recorded choice says: a number other than zero is yes, and any other text is no. The packages
+    /// write "1" or nothing.
+    /// </summary>
+    internal static bool IsTelemetryEnabled(string text)
+    {
+        return int.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var number) && number != 0;
+    }
+
+    // A value that is not a string is no value, as for every earlier version: not even an expandable string.
+    private static string? ReadText(RegistryKey root, string valueName)
     {
         try
         {
-            return Registry.GetValue(keyName, ValueName, defaultValue: null) as string;
+            using var key = root.OpenSubKey(KeyName);
+            var value = key?.GetValue(valueName, defaultValue: null, RegistryValueOptions.DoNotExpandEnvironmentNames);
+            if (value is null || key!.GetValueKind(valueName) != RegistryValueKind.String)
+            {
+                return null;
+            }
+
+            return (string)value;
         }
         catch (Exception exception) when (exception is SecurityException or IOException or UnauthorizedAccessException)
         {

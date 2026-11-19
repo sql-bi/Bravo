@@ -16,7 +16,8 @@ internal static class UseCasesServiceCollectionExtensions
     public static IServiceCollection AddUseCasesOfTheTests(this IServiceCollection services)
     {
         services.AddSingleton(TestApi.Application);
-        services.AddSingleton<IUserSettingsStore, InMemoryUserSettingsStore>();
+        services.AddSingleton<InMemoryUserSettingsStore>();
+        services.AddSingleton<IUserSettingsStore>(provider => provider.GetRequiredService<InMemoryUserSettingsStore>());
 
         services.AddSingleton(new UpdateCheckOptions
         {

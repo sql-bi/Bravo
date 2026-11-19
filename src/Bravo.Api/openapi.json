@@ -91,7 +91,7 @@
         "tags": [
           "Options"
         ],
-        "summary": "Replaces the options of the user, and returns them as they were kept.",
+        "summary": "Replaces the options of the user, and returns them as they were kept. When they cannot be kept, the ones before stay.",
         "operationId": "UpdateOptions",
         "requestBody": {
           "content": {
@@ -140,6 +140,16 @@
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -533,7 +543,8 @@
           "UnsupportedMediaType",
           "Unexpected",
           "HttpError",
-          "UpdateCheckFailed"
+          "UpdateCheckFailed",
+          "SettingsSaveFailed"
         ],
         "type": "string",
         "description": "What went wrong, as a name that never changes meaning. No error answer has a code outside this list."

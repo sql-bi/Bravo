@@ -30,7 +30,7 @@ export function createMainMock(parts: Record<string, unknown> = {}) {
         host: {},
         themeController: { on: vi.fn() },
         pbiDesktop: {},
-        notificationCenter: {},
+        notificationCenter: { add: vi.fn() },
         hostEvents: {},
         ...parts
     };

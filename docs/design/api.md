@@ -74,7 +74,7 @@ of the API lists them in the schema `ProblemCode`, and no answer carries another
 
 - A use case reports a foreseen error by throwing `BravoException` with a code and a message in English,
   which becomes the `detail` of the problem. The code is a member of one list, which admits no other value.
-  The first one is `UpdateCheckFailed` ([updates](updates.md)).
+  The codes are `UpdateCheckFailed` ([updates](updates.md)) and `SettingsSaveFailed` ([settings](settings.md)).
 - A route that writes a problem with a code outside the list is answered with the code of its status.
 
 **Events.** The host tells the user interface what happens through numbered events, the first of each process
@@ -95,8 +95,9 @@ being 1. The page asks for the events after the last number it has read; the ans
 **Options.** The options are the settings of the user: theme, telemetry, update check, custom templates,
 sign-in with the system browser, diagnostic level, proxy, and the options that only the user interface reads,
 which the host keeps as any JSON value. A proxy address must be the address of a server, and each entry of the
-bypass list a regular expression; blank text is no value. Today the settings start from their defaults at every
-start: keeping them is backlog B-4, and the policies that override them backlog B-5.
+bypass list a regular expression; blank text is no value. They are kept in the file of 1.0.x
+([settings](settings.md)): when it cannot be written, the answer is the 409 `SettingsSaveFailed` and the options
+stay as they were. The policies that override them are backlog B-5.
 
 **Contract.** `src/Bravo.Api/openapi.json` is the OpenAPI 3.1 document of the API. A test produces it from the
 routes and fails when the file differs, so a change of the API is a change of the file in the same commit.

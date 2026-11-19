@@ -16,7 +16,7 @@ criterion can be checked on `develop-vnext`.
 
 ## Now
 
-As of 2026-11-19: the redesign is at stage T3 Distribution, whose items are done; the next item is B-4. B-1,
+As of 2026-11-19: the redesign is at stage T3 Distribution, whose items are done; B-4 is in progress. B-1,
 left in T2, waits for the release of TypeScript 7.1 and ts-loader 10. The first signed preview, the exit of
 T3, waits for the maintainer: the identity that signs and the four variables of the repository
 ([guide](guides/make-a-release.md)).
@@ -44,15 +44,13 @@ No item is left: the exit waits for the first signed preview.
 Exit: in the installed preview the settings are migrated, the policies are honored, the logs are visible, a
 crash produces a report, telemetry runs on a supported SDK.
 
-- [ ] B-4 (was S-01) User settings. Hypothesis: read once, immutable snapshot, atomic save, migration from
-  1.0.x. Also: the store behind `GET` and `PUT /options` is in memory, so the options start from their defaults
-  at every start; a save that fails is an error with a code of its own; the registry value of 1.0.x that hides
-  the version in the title of the window (`applicationTitleVersionHidden`), which 1.1.0 does not read; the size
-  and the position of the window, which are not kept; the tests of the user interface (H-07), which start
-  the application: once the settings are kept on disk they need a data folder of their own. Also, from D-01:
-  the removal of a package removes the data folder of who removes it, with the settings, as in 1.0.x; the
-  profile of the webview of 1.0.x, `%LOCALAPPDATA%\Bravo\.temp`, stays on the disk after an upgrade, where
-  nothing reads it or removes it.
+- [~] B-4 (was S-01) User settings, kept in the file of 1.0.x
+  ([ADR 0023](decisions/0023-settings-kept-in-the-file-of-1-0-x-and-replaced-whole.md)). Left: the page, which is
+  not told when the file cannot be read; the registry value of 1.0.x that hides the version in the title of the
+  window (`applicationTitleVersionHidden`), which 1.1.0 does not read; the size and the position of the window,
+  which are not kept. Also, from D-01: the removal of a package removes the data folder of who removes it, with
+  the settings, as in 1.0.x; the profile of the webview of 1.0.x, `%LOCALAPPDATA%\Bravo\.temp`, stays on the disk
+  after an upgrade, where nothing reads it or removes it.
 - [ ] B-5 (was S-02) Policies. Hypothesis: the same keys; the templates shipped in a subfolder of the
   installation. Also: `/options` knows no policy, so an option that a policy sets is returned and replaced like
   any other; the page starts with no policy, so its options dialog locks nothing; the packages of D-01 do not
@@ -105,7 +103,7 @@ crash produces a report, telemetry runs on a supported SDK.
     choice from the registry. To compare the counts of the removals with the ones of 1.0.x, take this into
     account.
   - The registry value `applicationTelemetryEnabled` is the choice of who installs for the telemetry of the
-    application: nothing reads it yet.
+    application: the settings start from it when there is no settings file ([settings](design/settings.md)).
   - From the release: an event of the installer carries the semantic version as the version of the product
     and the file version as its build, as in 1.0.x; outside a public release the first ends with the
     commit. The workflow of a release holds no secret: a value of the telemetry that is not in the sources

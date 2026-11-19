@@ -1,4 +1,6 @@
-﻿using Bravo.Core.Settings;
+﻿using System.Threading;
+using System.Threading.Tasks;
+using Bravo.Core.Settings;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -17,11 +19,14 @@ internal static class OptionsEndpoints
             .WithTags(Tag)
             .WithSummary("Reads the options of the user.");
 
-        routes.MapPut("/options", UpdateOptions)
-            .WithName(nameof(UpdateOptions))
+        routes.MapPut("/options", UpdateOptionsAsync)
+            .WithName("UpdateOptions")
             .WithTags(Tag)
-            .WithSummary("Replaces the options of the user, and returns them as they were kept.")
-            .ProducesValidationProblem();
+            .WithSummary(
+                "Replaces the options of the user, and returns them as they were kept. When they cannot be kept, "
+                + "the ones before stay.")
+            .ProducesValidationProblem()
+            .ProducesProblem(StatusCodes.Status409Conflict);
     }
 
     private static Ok<UserOptions> GetOptions(IUserSettingsStore store)
@@ -29,9 +34,12 @@ internal static class OptionsEndpoints
         return TypedResults.Ok(UserOptions.FromSettings(store.Current));
     }
 
-    private static Ok<UserOptions> UpdateOptions(UserOptions options, IUserSettingsStore store)
+    private static async Task<Ok<UserOptions>> UpdateOptionsAsync(
+        UserOptions options,
+        IUserSettingsStore store,
+        CancellationToken cancellationToken)
     {
-        store.Replace(options.ToSettings());
+        await store.ReplaceAsync(options.ToSettings(), cancellationToken).ConfigureAwait(false);
 
         return TypedResults.Ok(UserOptions.FromSettings(store.Current));
     }

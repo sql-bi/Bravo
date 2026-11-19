@@ -21,7 +21,8 @@ export const problemTexts: Record<ProblemCode, strings> = {
     UnsupportedMediaType: strings.errorUnhandled,
     Unexpected: strings.errorUnhandled,
     HttpError: strings.errorUnspecified,
-    UpdateCheckFailed: strings.errorCheckForUpdates
+    UpdateCheckFailed: strings.errorCheckForUpdates,
+    SettingsSaveFailed: strings.errorUserSettingsSaveError
 };
 
 /**

@@ -5,6 +5,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using Bravo.Api.Problems;
+using Bravo.Core.Errors;
 using Xunit;
 
 namespace Bravo.Api.Tests.Options;
@@ -131,6 +132,30 @@ public sealed class OptionsEndpointsTests
         var body = JsonNode.Parse(Changed)!;
         body["proxy"]!["bypassList"] = "(unclosed";
         using var update = await PutAsync(api, body);
+
+        using var response = await api.Client.GetAsync(Route, TestContext.Current.CancellationToken);
+
+        AssertJson(Defaults, await response.ReadJsonAsync());
+    }
+
+    [Fact]
+    public async Task UpdateOptions_SettingsThatCannotBeSaved_IsAnswered409WithTheCodeOfTheSave()
+    {
+        await using var api = await TestApi.StartAsync();
+        api.Settings.SaveFails = true;
+
+        using var response = await PutAsync(api, JsonNode.Parse(Changed)!);
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        Assert.Equal(nameof(ErrorCode.SettingsSaveFailed), await response.ReadProblemCodeAsync());
+    }
+
+    [Fact]
+    public async Task UpdateOptions_SettingsThatCannotBeSaved_KeepsTheOptionsAsTheyWere()
+    {
+        await using var api = await TestApi.StartAsync();
+        api.Settings.SaveFails = true;
+        using var update = await PutAsync(api, JsonNode.Parse(Changed)!);
 
         using var response = await api.Client.GetAsync(Route, TestContext.Current.CancellationToken);
 
