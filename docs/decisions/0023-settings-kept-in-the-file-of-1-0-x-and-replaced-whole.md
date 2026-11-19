@@ -18,8 +18,8 @@ same file. On this branch the settings live in memory, and the third guarantee
   No member gives a version until 1.0.x can no longer read the file.
 - **Read once, at the start**, into an immutable value. A member that is missing, of another type or
   out of range takes its default. Without a file, the defaults and, for telemetry, the registry value
-  `applicationTelemetryEnabled`, as 1.0.x reads it. A file that is not JSON is moved aside, its time in its
-  name; one that cannot be opened is left alone, and the session runs on the defaults.
+  `applicationTelemetryEnabled`, as 1.0.x reads it. A file that cannot be opened or is not JSON counts as no
+  file, with a notice on the page; the next save replaces it.
 - **Replaced whole**: written to a temporary file in the same folder, flushed, moved over the old one, retried
   briefly while another program holds it
   ([Microsoft](https://learn.microsoft.com/windows/win32/fileio/deprecation-of-txf), VS Code). The value
