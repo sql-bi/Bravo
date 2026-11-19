@@ -1,5 +1,5 @@
 import { expect, test } from './bravo';
-import { chooseOption, openOptions } from './options';
+import { chooseOption, closeOptions, openOptions } from './options';
 
 // The file of the settings as 1.0.14 writes it, with the line ends of Windows: the dark theme, the diagnostic
 // level Basic, and the update channel, a member that this version does not know.
@@ -26,9 +26,13 @@ test.describe('the file of 1.0.14', () => {
     test('gives the page its settings at the start', async ({ bravo }) => {
         const { page } = bravo;
 
-        await expect(page.locator('body')).toHaveClass(/\bdark\b/);
         await expect(page.locator('#diagnostics')).toBeVisible();
         await expect(page.locator('#notification-sidebar .item', { hasText: readFailure })).toHaveCount(0);
+
+        // The options say the theme of the file, whatever the theme of the machine
+        await openOptions(bravo, 'general');
+        await expect(page.locator('#dialog-options #theme select.listener')).toHaveValue('Dark');
+        await closeOptions(bravo);
     });
 
     test('is replaced at a change, as 1.0.14 reads it, with the member that this version does not know', async ({ bravo }) => {
