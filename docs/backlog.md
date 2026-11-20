@@ -1,6 +1,6 @@
 # Bravo: backlog
 
-Next ID: B-36
+Next ID: B-37
 
 The open work toward 1.1.0, in the order to take it ([ADR 0007](decisions/0007-redesign-on-a-development-branch.md)).
 Status: `[ ]` to do, `[~]` in progress, `[-]` dropped (say why); a done item leaves the backlog.
@@ -160,6 +160,13 @@ Exit, for each feature: the same results as `main` on the sample models; its row
     fallback policy of the API names only the scheme of the user interface. To decide, which token the routes
     that the user interface also calls accept, and the status of an error that a use case foresaw, 409
     elsewhere.
+- [ ] B-36 The videos of the help dialog. The dialog of a feature shows its video in a frame of the Vimeo
+  player (`player.vimeo.com`, `web/view/help-dialog.ts`), as 1.0.x does; the webview cancels a navigation of a
+  frame outside the origin of the page ([design](design/window-and-webview.md)), so the video does not start.
+  Hypothesis: the frame may navigate to the player alone, with the permissions that it asks for (autoplay,
+  fullscreen); or the video opens in the default browser of the user. Explore: what an embedded player needs
+  from the engine (storage and cookies of another origin, permissions), and what the window tests can prove
+  without reaching the network.
 
 ### T7 Replacement of `main`
 
