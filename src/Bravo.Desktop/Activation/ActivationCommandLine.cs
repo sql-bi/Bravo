@@ -145,7 +145,8 @@ internal static class ActivationCommandLine
             && (address.Scheme == Uri.UriSchemeHttp || address.Scheme == Uri.UriSchemeHttps);
     }
 
-    // A path under a root, as Software\Bravo.Tests\Policies: not the root itself, not empty.
+    // A path under a root, as Software\Bravo.Tests\Policies: not empty, and without a root before it, whether
+    // \, HKEY_CURRENT_USER\ or HKCU\.
     private static string? ReadKeyName(ParseResult result, Option<string> option, List<string> errors)
     {
         if (!HasValue(result, option))
@@ -154,9 +155,11 @@ internal static class ActivationCommandLine
         }
 
         var value = result.GetValue(option);
+        var first = value?.Split('\\')[0];
         var isKeyName = !string.IsNullOrWhiteSpace(value)
-            && !value.StartsWith('\\')
-            && !value.StartsWith("HKEY_", StringComparison.OrdinalIgnoreCase);
+            && first is { Length: > 0 }
+            && !first.StartsWith("HKEY_", StringComparison.OrdinalIgnoreCase)
+            && !first.Equals("HKCU", StringComparison.OrdinalIgnoreCase);
         if (!isKeyName)
         {
             errors.Add($"The value of '{option.Name}' is not a key under HKEY_CURRENT_USER, such as Software\\Bravo.Tests\\Policies: '{value}'.");

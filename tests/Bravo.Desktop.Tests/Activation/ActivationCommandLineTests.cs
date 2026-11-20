@@ -223,6 +223,7 @@ public sealed class ActivationCommandLineTests
     [InlineData(" ")]
     [InlineData(@"\Software\Bravo.Tests\Policies")]
     [InlineData(@"HKEY_CURRENT_USER\Software\Bravo.Tests\Policies")]
+    [InlineData(@"HKCU\Software\Bravo.Tests\Policies")]
     public void Parse_PolicyKeyThatIsNotAKeyUnderTheUser_ReadsNoKeyAndReportsAnError(string keyName)
     {
         var start = ActivationCommandLine.Parse(["--dev-policy-key", keyName], s_development);
