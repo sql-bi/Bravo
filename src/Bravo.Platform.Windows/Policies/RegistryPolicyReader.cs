@@ -20,13 +20,6 @@ public static class RegistryPolicyReader
     /// </summary>
     public const string KeyName = @"Software\Policies\SQLBI\Bravo\OptionSettings";
 
-    private const string TelemetryEnabledName = "TelemetryEnabled";
-    private const string UpdateCheckEnabledName = "UpdateCheckEnabled";
-    private const string UseSystemBrowserForAuthenticationName = "UseSystemBrowserForAuthentication";
-    private const string BuiltInTemplatesEnabledName = "BuiltInTemplatesEnabled";
-    private const string CustomTemplatesEnabledName = "CustomTemplatesEnabled";
-    private const string CustomTemplatesOrganizationRepositoryPathName = "CustomTemplatesOrganizationRepositoryPath";
-
     /// <summary>
     /// Where an administrator sets the policies of the application: for the computer, which wins, then for the
     /// user.
@@ -43,30 +36,33 @@ public static class RegistryPolicyReader
         var policies = ApplicationPolicies.None;
         foreach (var key in keys)
         {
-            policies = Combine(policies, ReadKey(key));
+            policies = ReadKey(key, policies);
         }
 
         return policies;
     }
 
-    private static ApplicationPolicies ReadKey(RegistryPolicyKey location)
+    // A value that a key before this one set stays; this key sets the others.
+    private static ApplicationPolicies ReadKey(RegistryPolicyKey location, ApplicationPolicies policies)
     {
         try
         {
             using var key = location.Root.OpenSubKey(location.Name);
             if (key is null)
             {
-                return ApplicationPolicies.None;
+                return policies;
             }
 
             return new ApplicationPolicies
             {
-                TelemetryEnabled = ReadSwitch(key, TelemetryEnabledName),
-                UpdateCheckEnabled = ReadSwitch(key, UpdateCheckEnabledName),
-                UseSystemBrowserForAuthentication = ReadSwitch(key, UseSystemBrowserForAuthenticationName),
-                BuiltInTemplatesEnabled = ReadSwitch(key, BuiltInTemplatesEnabledName),
-                CustomTemplatesEnabled = ReadSwitch(key, CustomTemplatesEnabledName),
-                CustomTemplatesOrganizationRepositoryPath = ReadText(key, CustomTemplatesOrganizationRepositoryPathName),
+                TelemetryEnabled = policies.TelemetryEnabled ?? ReadSwitch(key, "TelemetryEnabled"),
+                UpdateCheckEnabled = policies.UpdateCheckEnabled ?? ReadSwitch(key, "UpdateCheckEnabled"),
+                UseSystemBrowserForAuthentication =
+                    policies.UseSystemBrowserForAuthentication ?? ReadSwitch(key, "UseSystemBrowserForAuthentication"),
+                BuiltInTemplatesEnabled = policies.BuiltInTemplatesEnabled ?? ReadSwitch(key, "BuiltInTemplatesEnabled"),
+                CustomTemplatesEnabled = policies.CustomTemplatesEnabled ?? ReadSwitch(key, "CustomTemplatesEnabled"),
+                CustomTemplatesOrganizationRepositoryPath =
+                    policies.CustomTemplatesOrganizationRepositoryPath ?? ReadText(key, "CustomTemplatesOrganizationRepositoryPath"),
             };
         }
         catch (Exception exception) when (exception is SecurityException or IOException or UnauthorizedAccessException)
@@ -96,19 +92,5 @@ public static class RegistryPolicyReader
         }
 
         return key.GetValueKind(name) == RegistryValueKind.String ? text : null;
-    }
-
-    private static ApplicationPolicies Combine(ApplicationPolicies first, ApplicationPolicies then)
-    {
-        return new ApplicationPolicies
-        {
-            TelemetryEnabled = first.TelemetryEnabled ?? then.TelemetryEnabled,
-            UpdateCheckEnabled = first.UpdateCheckEnabled ?? then.UpdateCheckEnabled,
-            UseSystemBrowserForAuthentication = first.UseSystemBrowserForAuthentication ?? then.UseSystemBrowserForAuthentication,
-            BuiltInTemplatesEnabled = first.BuiltInTemplatesEnabled ?? then.BuiltInTemplatesEnabled,
-            CustomTemplatesEnabled = first.CustomTemplatesEnabled ?? then.CustomTemplatesEnabled,
-            CustomTemplatesOrganizationRepositoryPath =
-                first.CustomTemplatesOrganizationRepositoryPath ?? then.CustomTemplatesOrganizationRepositoryPath,
-        };
     }
 }
