@@ -351,6 +351,9 @@ function Assert-Installed([string] $Scope, [string] $InstallFolder, $ExpectedCho
     foreach ($file in 'Bravo.dll', 'WebView2Loader.dll', 'wwwroot\index.html', 'wwwroot\js\main.js', 'wwwroot\css\main.css') {
         Assert-True (Test-Path (Join-Path $InstallFolder $file)) "$file is installed"
     }
+    foreach ($file in 'bravo.admx', 'sqlbi.admx', 'en-US\bravo.adml', 'en-US\sqlbi.adml') {
+        Assert-True (Test-Path (Join-Path $InstallFolder "policies\$file")) "the template policies\$file is installed"
+    }
     if ($SignerThumbprint -ne '') {
         # The files of the host: the package holds the ones that the build signed, and not older ones.
         $hostFiles = @($executable) + @((Get-ChildItem -Path $InstallFolder -Filter 'Bravo*.dll').FullName)
@@ -488,6 +491,53 @@ function Assert-ApplicationEnds($Process, [string] $What) {
     Wait-WebViewEnd
 }
 
+# The key of the policies of the computer, which the runner does not have: the test writes it and removes it.
+$PolicyVendorKey = 'SOFTWARE\Policies\SQLBI'
+$PolicyKey = 'SOFTWARE\Policies\SQLBI\Bravo\OptionSettings'
+
+function New-PolicyDenyRule {
+    $user = [Security.Principal.WindowsIdentity]::GetCurrent().User
+    return [Security.AccessControl.RegistryAccessRule]::new($user, [Security.AccessControl.RegistryRights]::QueryValues, [Security.AccessControl.AccessControlType]::Deny)
+}
+
+# The rule is changed with the rights to read and change the permissions alone: opening the key to read is denied.
+function Set-PolicyDenyRule([bool] $Denied) {
+    $rights = [Security.AccessControl.RegistryRights] 'ReadPermissions, ChangePermissions'
+    $key = [Microsoft.Win32.Registry]::LocalMachine.OpenSubKey($PolicyKey, [Microsoft.Win32.RegistryKeyPermissionCheck]::ReadWriteSubTree, $rights)
+    try {
+        $security = $key.GetAccessControl()
+        if ($Denied) { $security.AddAccessRule((New-PolicyDenyRule)) } else { $security.RemoveAccessRuleSpecific((New-PolicyDenyRule)) }
+        $key.SetAccessControl($security)
+    }
+    finally {
+        $key.Dispose()
+    }
+}
+
+# Policies of the computer that the application cannot read, as permissions that an administrator set wrong
+# leave them: the installed application tells it and ends with exit code 5, before its window.
+function Assert-UnreadablePoliciesStopTheStart([string] $InstallFolder) {
+    Assert-True ($null -eq [Microsoft.Win32.Registry]::LocalMachine.OpenSubKey($PolicyVendorKey)) 'the runner has no policy of SQLBI'
+    [Microsoft.Win32.Registry]::LocalMachine.CreateSubKey($PolicyKey).Dispose()
+    try {
+        Set-PolicyDenyRule $true
+        $process = Start-Application $InstallFolder
+        try {
+            Assert-Equal 'Bravo for Power BI' $process.MainWindowTitle 'the title of the message that the policies cannot be read'
+            $process.CloseMainWindow() | Out-Null
+            Assert-True ($process.WaitForExit(15000)) 'the application ends when its message is closed'
+            Assert-Equal 5 $process.ExitCode 'the exit code of a start whose policies cannot be read'
+        }
+        finally {
+            if (-not $process.HasExited) { $process.Kill() }
+        }
+    }
+    finally {
+        Set-PolicyDenyRule $false
+        [Microsoft.Win32.Registry]::LocalMachine.DeleteSubKeyTree($PolicyVendorKey)
+    }
+}
+
 # --- Scenarios ----------------------------------------------------------------------------------------------
 
 $AllOn = New-Choices $ChoiceNames
@@ -504,6 +554,9 @@ function Test-InstallUpgradeRemove([string] $Scope) {
 
     Write-Step "$Scope`: the installed application starts and ends"
     Assert-ApplicationRuns $folder $false
+
+    Write-Step "$Scope`: the installed application does not start with policies that it cannot read"
+    Assert-UnreadablePoliciesStopTheStart $folder
 
     # The other build has the version of the installed one: Windows Installer compares three numbers, and
     # the package replaces a product of its own version, as a release replaces a preview of it.

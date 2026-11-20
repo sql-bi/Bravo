@@ -4,7 +4,8 @@
     The application as a package installs it, laid out in one folder for each runtime:
 
     - the application published for win-x64, with the identity of a release;
-    - wwwroot: the static files of web/wwwroot and the release bundle of artifacts/web.
+    - wwwroot: the static files of web/wwwroot and the release bundle of artifacts/web;
+    - policies: the templates of the policies, as policies/ holds them, for the administrators.
 
     Bravo.Setup.exe, the program that a package runs, is published in a folder of its own: a package carries
     it in itself and does not install it.
@@ -82,8 +83,9 @@
     <SetupInput Include="@(BuildRuleFile)" />
     <WebStaticFile Include="$(RepositoryRoot)web\wwwroot\**" Exclude="$(RepositoryRoot)web\wwwroot\js\**;$(RepositoryRoot)web\wwwroot\css\**" />
     <WebBundleFile Include="$(WebBundleDir)**" />
+    <PolicyTemplateFile Include="$(RepositoryRoot)policies\**" />
     <StageInput Include="$(RepositoryRoot)src\**" Exclude="$(RepositoryRoot)src\Bravo.Setup\**" />
-    <StageInput Include="@(BuildRuleFile);@(WebStaticFile);@(WebBundleFile)" />
+    <StageInput Include="@(BuildRuleFile);@(WebStaticFile);@(WebBundleFile);@(PolicyTemplateFile)" />
   </ItemGroup>
 
   <!--
@@ -117,6 +119,7 @@
 
     <Copy SourceFiles="@(WebStaticFile)" DestinationFiles="@(WebStaticFile->'$(StageDir)wwwroot\%(RecursiveDir)%(Filename)%(Extension)')" />
     <Copy SourceFiles="@(WebBundleFile)" DestinationFiles="@(WebBundleFile->'$(StageDir)wwwroot\%(RecursiveDir)%(Filename)%(Extension)')" />
+    <Copy SourceFiles="@(PolicyTemplateFile)" DestinationFiles="@(PolicyTemplateFile->'$(StageDir)policies\%(RecursiveDir)%(Filename)%(Extension)')" />
 
     <!-- The executable and the assemblies of the host, by their name: the other files are not of this build. -->
     <ItemGroup>

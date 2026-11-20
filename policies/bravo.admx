@@ -1,14 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--  (c) SQLBI Corporation  -->
-<policyDefinitions revision="1.1" schemaVersion="1.0">
+<policyDefinitions revision="1.2" schemaVersion="1.0">
 
   <policyNamespaces>
     <target prefix="bravo" namespace="SQLBI.Policies.Bravo" />
-      <using prefix="sqlbi" namespace="SQLBI.Policies" />
-      <using prefix="windows" namespace="Microsoft.Policies.Windows" />
+    <using prefix="sqlbi" namespace="SQLBI.Policies" />
   </policyNamespaces>
 
-  <resources minRequiredRevision="1.0" />
+  <resources minRequiredRevision="1.2" />
+
+  <supportedOn>
+    <definitions>
+      <definition name="SUPPORTED_Bravo_1_0" displayName="$(string.SUPPORTED_Bravo_1_0)" />
+      <definition name="SUPPORTED_Bravo_1_0_Only" displayName="$(string.SUPPORTED_Bravo_1_0_Only)" />
+    </definitions>
+  </supportedOn>
 
   <categories>
     <category name="Bravo" displayName="$(string.Bravo)">
@@ -20,34 +26,53 @@
   </categories>
 
   <policies>
-    
+
     <!-- OptionSettings -->
 
     <policy name="TelemetryEnabled" class="Both" displayName="$(string.TelemetryEnabled)" explainText="$(string.TelemetryEnabled_explanation)" key="Software\Policies\SQLBI\Bravo\OptionSettings" valueName="TelemetryEnabled">
-        <parentCategory ref="OptionSettings" />
-        <supportedOn ref="windows:SUPPORTED_Windows7" />
-        <enabledValue>
-            <decimal value="1" />
-        </enabledValue>
-        <disabledValue>
-            <decimal value="0" />
-        </disabledValue>
+      <parentCategory ref="OptionSettings" />
+      <supportedOn ref="SUPPORTED_Bravo_1_0" />
+      <enabledValue>
+        <decimal value="1" />
+      </enabledValue>
+      <disabledValue>
+        <decimal value="0" />
+      </disabledValue>
     </policy>
 
     <policy name="UseSystemBrowserForAuthentication" class="Both" displayName="$(string.UseSystemBrowserForAuthentication)" explainText="$(string.UseSystemBrowserForAuthentication_explanation)" key="Software\Policies\SQLBI\Bravo\OptionSettings" valueName="UseSystemBrowserForAuthentication">
-        <parentCategory ref="OptionSettings" />
-        <supportedOn ref="windows:SUPPORTED_Windows7" />
-        <enabledValue>
-            <decimal value="1" />
-        </enabledValue>
-        <disabledValue>
-            <decimal value="0" />
-        </disabledValue>
+      <parentCategory ref="OptionSettings" />
+      <supportedOn ref="SUPPORTED_Bravo_1_0" />
+      <enabledValue>
+        <decimal value="1" />
+      </enabledValue>
+      <disabledValue>
+        <decimal value="0" />
+      </disabledValue>
+    </policy>
+
+    <policy name="UpdateChannel" class="Both" displayName="$(string.UpdateChannel)" explainText="$(string.UpdateChannel_explanation)" key="Software\Policies\SQLBI\Bravo\OptionSettings" presentation="$(presentation.UpdateChannel)">
+      <parentCategory ref="OptionSettings" />
+      <supportedOn ref="SUPPORTED_Bravo_1_0_Only" />
+      <elements>
+        <enum id="UpdateChannel" valueName="UpdateChannel">
+          <item displayName="$(string.UpdateChannel_Stable)">
+            <value>
+              <decimal value="0"/>
+            </value>
+          </item>
+          <item displayName="$(string.UpdateChannel_Dev)">
+            <value>
+              <decimal value="2"/>
+            </value>
+          </item>
+        </enum>
+      </elements>
     </policy>
 
     <policy name="UpdateCheckEnabled" class="Both" displayName="$(string.UpdateCheckEnabled)" explainText="$(string.UpdateCheckEnabled_explanation)" key="Software\Policies\SQLBI\Bravo\OptionSettings" valueName="UpdateCheckEnabled">
       <parentCategory ref="OptionSettings" />
-      <supportedOn ref="windows:SUPPORTED_Windows7" />
+      <supportedOn ref="SUPPORTED_Bravo_1_0" />
       <enabledValue>
         <decimal value="1" />
       </enabledValue>
@@ -55,10 +80,10 @@
         <decimal value="0" />
       </disabledValue>
     </policy>
-      
+
     <policy name="CustomTemplatesEnabled" class="Both" displayName="$(string.CustomTemplatesEnabled)" explainText="$(string.CustomTemplatesEnabled_explanation)" key="Software\Policies\SQLBI\Bravo\OptionSettings" valueName="CustomTemplatesEnabled">
       <parentCategory ref="OptionSettings"/>
-      <supportedOn ref="windows:SUPPORTED_Windows7" />
+      <supportedOn ref="SUPPORTED_Bravo_1_0" />
       <enabledValue>
         <decimal value="1" />
       </enabledValue>
@@ -66,7 +91,7 @@
         <decimal value="0" />
       </disabledValue>
     </policy>
-    
+
   </policies>
 
 </policyDefinitions>

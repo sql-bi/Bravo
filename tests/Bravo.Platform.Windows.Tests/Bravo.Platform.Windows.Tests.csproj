@@ -13,4 +13,9 @@
     <PackageReference Include="Microsoft.Extensions.TimeProvider.Testing" />
   </ItemGroup>
 
+  <!-- The templates of the policies, as the packages install them: the tests read what an administrator deploys. -->
+  <ItemGroup>
+    <None Include="..\..\policies\**" LinkBase="policies" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

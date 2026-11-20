@@ -35,8 +35,9 @@ Four Windows Installer packages, built with WiX, install the application
 | External tool of Power BI Desktop | Registered | Not registered: the folder needs administrator rights |
 | Rights that the installation asks for | Administrator | None |
 
-- The files are the application published for `win-x64` with the identity of a release build, and
-  `wwwroot`: the static files of the page with the release bundle.
+- The files are the application published for `win-x64` with the identity of a release build,
+  `wwwroot`: the static files of the page with the release bundle, and `policies`: the templates of the
+  policies, for administrators ([policies](policies.md)).
 - Three things of a publish are left out, because nothing reads them when the application runs: the
   documentation files of the assemblies, the texts of System.CommandLine in other languages, so that an
   error of the command line is in English, and the second copy of the loader of WebView2, under `runtimes`:
@@ -157,14 +158,14 @@ validates each package against the rules of Windows Installer, and a warning fai
 
 **Tests.** Continuous integration builds the packages and then installs them for real, each time in
 silence, on a machine of its own that is thrown away: a first installation per machine and per user, the
-installed application, another build of the same version installed while the application runs, the public
-properties given to 1.0.14 and to this version, the upgrade from 1.0.14 with the data of a user and the
-version hidden in the title of the window ([startup](startup.md)), a package
-of the other context, the packages that carry the runtime, and every removal. Two removals more: one that
-fails after its files are removed, which leaves the installation, the data of the user and the registration
-as they were, and one with rollback disabled, which removes them. The removal fails by an action that the
-test adds to a copy of a package: no package has anything that exists for a test. The dialogs are checked
-by hand.
+installed application, the same with policies of the computer that it cannot read
+([policies](policies.md)), another build of the same version installed while the application runs, the
+public properties given to 1.0.14 and to this version, the upgrade from 1.0.14 with the data of a user and
+the version hidden in the title of the window ([startup](startup.md)), a package of the other context, the
+packages that carry the runtime, and every removal. Two removals more: one that fails after its files are
+removed, which leaves the installation, the data of the user and the registration as they were, and one with
+rollback disabled, which removes them. The removal fails by an action that the test adds to a copy of a
+package: no package has anything that exists for a test. The dialogs are checked by hand.
 
 - Two builds of one commit are, to Windows Installer, two products with the same version and the same
   files: they differ by the product code and the package code that each build gives a package. The test
@@ -243,9 +244,9 @@ line names. It is not a project of the solution: a build of the solution makes n
   `--no-restore`. A restore of the application downloads the three runtime packs of `win-x64`. The publish
   of the program reads and writes no lock file: `PublishAot` adds packages of the version of the SDK, which
   a lock file would hold for one patch of the SDK alone.
-- A layout is made again when a file of `src/`, of the page or of the build rules is newer than it, when
-  one was added or deleted, and when the build is of another commit, or asks for another version or
-  another signature: the names of those files and what was asked are kept beside the layout. The
+- A layout is made again when a file of `src/`, of the page, of `policies/` or of the build rules is newer
+  than it, when one was added or deleted, and when the build is of another commit, or asks for another
+  version or another signature: the names of those files and what was asked are kept beside the layout. The
   application has the version and the commit of its build in itself; the program is published again for
   its files and its signature alone. The two packages of one runtime hold the same files: the second one
   takes the cabinet that the first one compressed, kept beside the layout and removed with it.

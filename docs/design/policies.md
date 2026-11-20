@@ -40,6 +40,19 @@ the user the others.
 - A policy whose feature has not moved yet is read and returned all the same: telemetry (backlog B-9), the
   sign-in (backlog B-12), the templates (backlog B-16, B-17).
 
+**The templates.** `policies/` holds the administrative templates, revision 1.2: `bravo.admx` and `sqlbi.admx`,
+with their texts in `en-US/`. Every package and every archive installs them in the folder `policies` of the
+application ([installer](installer.md)).
+
+- They have the five policies of the templates of 1.0.x, with the same key, the same names and the same
+  values: a policy that an administrator deployed from the templates of 1.0.x is the one of these.
+- `UpdateChannel` stays, named obsolete, so that an administrator can set it to Not Configured and remove the
+  value that it wrote.
+- Their supported versions name Bravo for Power BI, not a version of Windows.
+- `BuiltInTemplatesEnabled` and `CustomTemplatesOrganizationRepositoryPath` have no template, as in 1.0.x: they
+  enter the templates with their features.
+- An administrator who imported an earlier revision in Intune deletes it before importing 1.2.
+
 **A development build** reads no policy. Started with `--dev-policy-key=<key>`, it reads the values of a key
 under `HKEY_CURRENT_USER`, such as `Software\Bravo.Tests\Policies`, as its policies, with the same rules. To a
 release build the argument is one that it does not know, and so an error of the request
@@ -56,16 +69,20 @@ release build the argument is one that it does not know, and so an error of the 
 | The route, and the policies as they travel | `src/Bravo.Api/Policies/` |
 | The update check that a policy turns off | `src/Bravo.Core/Updates/UpdateCheck.cs` |
 | The page: the policies of the options | `web/main.ts`, `optionPolicy` in `web/controllers/options.ts` |
+| The templates | `policies/` |
 
 - `RegistryPolicyReader` is the one code that reads the policies, and `Main` calls it once, after the
   arbitration: the host gets `ApplicationPolicies` as an instance. A use case that honors a policy takes it as a
   dependency.
 - The page finds the policy of an option by the name of the option: a policy has the name of its option in
   `/options`, which `PolicyDetails` keeps.
-- A new policy is a member of `ApplicationPolicies` and of `PolicyDetails`, read by `RegistryPolicyReader`. A
-  value of 1.0.x keeps its name, its key and its values.
+- A new policy is a member of `ApplicationPolicies` and of `PolicyDetails`, read by `RegistryPolicyReader`, with
+  a policy in `bravo.admx` and its texts in `bravo.adml`, whose revisions both go up. A value of 1.0.x keeps its
+  name, its key and its values.
 - No test reads or writes the policies of the machine that runs it. A test of the reader writes in a key of its
-  own under `HKEY_CURRENT_USER\Software\Bravo.Tests`, which it removes. One test writes the keys of the
-  application, and runs only on a runner of GitHub Actions, which is thrown away after the run.
+  own under `HKEY_CURRENT_USER\Software\Bravo.Tests`, which it removes. `PolicyTemplateTests` reads each
+  template, and the values that each policy writes, as the application reads them. One test writes the keys of
+  the application, and runs only on a runner of GitHub Actions, which is thrown away after the run.
 - The tests of the window give the application a key of the test (`policies` in `web/window-tests/bravo.ts`).
-  `BravoProcessTests` starts the application with a key of the test that cannot be read.
+  `BravoProcessTests` starts the application with a key of the test that cannot be read, and the test of the
+  packages the installed application with a key of the computer that cannot be read.

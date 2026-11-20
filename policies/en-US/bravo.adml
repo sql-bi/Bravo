@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--  (c) SQLBI Corporation  -->
-<policyDefinitionResources revision="1.1" schemaVersion="1.0">
+<policyDefinitionResources revision="1.2" schemaVersion="1.0">
   <displayName></displayName>
   <description></description>
   <resources>
@@ -9,35 +9,53 @@
       <string id="Bravo">Bravo for Power BI</string>
       <string id="OptionSettings_group">Application Options</string>
 
+      <string id="SUPPORTED_Bravo_1_0">Bravo for Power BI 1.0 and later versions</string>
+      <string id="SUPPORTED_Bravo_1_0_Only">Bravo for Power BI 1.0 only</string>
+
       <!-- OptionSettings -->
 
       <string id="TelemetryEnabled">Configure the application telemetry status</string>
       <string id="TelemetryEnabled_explanation">
         If the status is set to Not Configured, this setting is configured according to user preferences.
-      
+
         If the status is set to Enabled, the application telemetry is forcibly enabled.
-      
+
         If the status is set to Disabled, the application telemetry is forcibly disabled.
+
+        Bravo for Power BI reads this setting when it starts.
       </string>
 
       <string id="UseSystemBrowserForAuthentication">Configure how the application handles the interactive authentication, using an embedded web browser or the system default browser</string>
       <string id="UseSystemBrowserForAuthentication_explanation">
         If the status is set to Not Configured, this setting is configured according to user preferences.
-      
-        If the status is set to Enabled, the application uses the system default browser for for interactive authentication.
-      
-        If the status is set to Disabled, the application uses an embedded web browser for for interactive authentication.
+
+        If the status is set to Enabled, the application uses the system default browser for interactive authentication.
+
+        If the status is set to Disabled, the application uses an embedded web browser for interactive authentication.
+
+        Bravo for Power BI reads this setting when it starts.
       </string>
-      
+
+      <string id="UpdateChannel">Configure the release channel to be used when checking for updates (obsolete)</string>
+      <string id="UpdateChannel_Stable">STABLE - stable build release channel</string>
+      <string id="UpdateChannel_Dev">DEV - internal development build release channel</string>
+      <string id="UpdateChannel_explanation">
+        Bravo for Power BI 1.1.0 and later versions do not read this setting: they check for stable releases only.
+
+        Set this setting to Not Configured to remove the value that it wrote.
+      </string>
+
       <string id="UpdateCheckEnabled">Configure update checking and update notifications</string>
       <string id="UpdateCheckEnabled_explanation">
         If the status is set to Not Configured, this setting is configured according to user preferences.
 
-        If the status is set to Enabled, update checking and update notifications forcibly enabled.
+        If the status is set to Enabled, update checking and update notifications are forcibly enabled.
 
-        If the status is set to Disabled, update checking and update notifications are forcibly disabled.
+        If the status is set to Disabled, update checking and update notifications are forcibly disabled: the application makes no request to check for updates.
+
+        Bravo for Power BI reads this setting when it starts.
       </string>
-      
+
       <string id="CustomTemplatesEnabled">Configure the custom templates status</string>
       <string id="CustomTemplatesEnabled_explanation">
         If the status is set to Not Configured, this setting is configured according to user preferences.
@@ -45,9 +63,19 @@
         If the status is set to Enabled, custom templates usage is forcibly enabled.
 
         If the status is set to Disabled, custom templates usage is forcibly disabled.
+
+        Bravo for Power BI reads this setting when it starts.
       </string>
-      
+
     </stringTable>
+
+    <presentationTable>
+
+      <presentation id="UpdateChannel">
+        <dropdownList refId="UpdateChannel" noSort="true">Channels</dropdownList>
+      </presentation>
+
+    </presentationTable>
 
   </resources>
 </policyDefinitionResources>
