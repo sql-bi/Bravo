@@ -3,9 +3,11 @@ using System.Threading.Tasks;
 using Bravo.Api;
 using Bravo.Api.Server;
 using Bravo.Core.Activation;
+using Bravo.Core.Policies;
 using Bravo.Desktop.Activation;
 using Bravo.Desktop.Development;
 using Bravo.Desktop.Diagnostics;
+using Bravo.Desktop.Policies;
 using Bravo.Desktop.Settings;
 using Bravo.Desktop.Shell;
 using Bravo.Desktop.SingleInstance;
@@ -26,6 +28,7 @@ internal static class DesktopHost
     /// <param name="identity">The build that was started.</param>
     /// <param name="dataFolder">Where the host keeps the data of the user.</param>
     /// <param name="development">What the command line of a development build asked its host for.</param>
+    /// <param name="policies">What an administrator set for the application, read at the start.</param>
     /// <param name="ownership">The ownership of the instance, which the caller releases after the host.</param>
     /// <param name="singleInstanceOptions">The limits that the arbitration of this process used.</param>
     /// <param name="fatalExceptionHandler">What was installed for an exception that escapes.</param>
@@ -33,6 +36,7 @@ internal static class DesktopHost
         BuildIdentity identity,
         DataFolder dataFolder,
         DevelopmentOptions development,
+        ApplicationPolicies policies,
         InstanceOwnership ownership,
         SingleInstanceOptions singleInstanceOptions,
         IFatalExceptionHandler fatalExceptionHandler)
@@ -57,6 +61,7 @@ internal static class DesktopHost
         builder.Services.AddShell(identity, fatalExceptionHandler);
         builder.Services.AddWebView(identity, dataFolder);
         builder.Services.AddDevelopmentOptions(development);
+        builder.Services.AddPolicies(policies);
         builder.Services.AddActivation();
         builder.Services.AddSingleInstance(ownership, singleInstanceOptions);
         builder.Services.AddUserSettings(dataFolder);

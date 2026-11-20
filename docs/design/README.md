@@ -17,6 +17,7 @@ the part lives and the rules for changing it.
 | [`release.md`](release.md) | The version of a build, the workflow that makes a release, its six files, their signature, the update feed |
 | [`updates.md`](updates.md) | How the application learns of a newer release, the file of each copy, the links that open in the browser |
 | [`settings.md`](settings.md) | The settings of the user: the file of 1.0.x, how it is read and replaced |
+| [`policies.md`](policies.md) | The policies of administrators: the keys of 1.0.x, how they apply over the settings, the templates |
 
 ## The previous implementation
 

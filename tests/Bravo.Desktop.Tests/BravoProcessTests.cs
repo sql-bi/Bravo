@@ -86,6 +86,31 @@ public sealed class BravoProcessTests : IDisposable
         }
     }
 
+    // The message is the only window of the process: the host is never built.
+    [Fact]
+    public async Task Start_WithPoliciesThatCannotBeRead_ShowsAMessageAndEndsWithItsCode()
+    {
+        using var registry = new TemporaryRegistryKey();
+        var keyName = registry.DenyReading("Policies");
+        using var bravo = Process.Start(CreateStartInfo($"--dev-policy-key={keyName}"))
+            ?? throw new InvalidOperationException("Bravo did not start.");
+        try
+        {
+            await WaitForMainWindowAsync(bravo);
+            var title = bravo.MainWindowTitle;
+
+            bravo.CloseMainWindow();
+            var exitCode = await WaitForExitAsync(bravo, s_shutdownTimeout);
+
+            Assert.Equal("Bravo for Power BI", title);
+            Assert.Equal(ExitCode.PoliciesUnreadable, exitCode);
+        }
+        finally
+        {
+            Kill(bravo);
+        }
+    }
+
     // SendMessage returns when the window has answered, and a window that hangs never does. The wait has an
     // end: the test then fails, and the end of the process, which the test asks for, ends the call as well.
     private static async Task<nint> SendAsync(HWND window, uint message, WPARAM wParam)

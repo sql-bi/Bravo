@@ -1,8 +1,11 @@
 ﻿using System;
 using Bravo.Desktop.Activation;
 using Bravo.Desktop.Diagnostics;
+using Bravo.Core.Policies;
 using Bravo.Desktop.Hosting;
+using Bravo.Desktop.Policies;
 using Bravo.Desktop.SingleInstance;
+using Bravo.Platform.Windows.Policies;
 using Bravo.Platform.Windows.SingleInstance;
 
 namespace Bravo.Desktop;
@@ -37,7 +40,18 @@ internal static class Program
         // Released last, after the host is disposed: until then no other process becomes the owner.
         using (arbitration.Ownership)
         {
-            using var host = DesktopHost.Build(identity, dataFolder, start.Development, arbitration.Ownership, options, fatalExceptionHandler);
+            // Read once: a change made while the application runs applies at its next start.
+            ApplicationPolicies policies;
+            try
+            {
+                policies = RegistryPolicyReader.Read(PolicyKeys.For(identity, start.Development));
+            }
+            catch (PolicyReadException exception)
+            {
+                return PolicyReadFailureDialog.End(exception);
+            }
+
+            using var host = DesktopHost.Build(identity, dataFolder, start.Development, policies, arbitration.Ownership, options, fatalExceptionHandler);
             return DesktopHost.Run(host, start.Request);
         }
     }

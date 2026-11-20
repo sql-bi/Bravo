@@ -4,8 +4,8 @@ namespace Bravo.Desktop.Development;
 
 /// <summary>
 /// What a development build is asked for on its command line: that its user interface can run in a browser,
-/// the update feed that it checks and the folder of its data. A release build has none of these: its command
-/// line does not know them.
+/// the update feed that it checks, the folder of its data and the key of its policies. A release build has
+/// none of these: its command line does not know them.
 /// </summary>
 internal sealed record DevelopmentOptions
 {
@@ -36,4 +36,10 @@ internal sealed record DevelopmentOptions
     /// a test starts the application with settings and a profile of the webview of its own.
     /// </summary>
     public string? DataFolderPath { get; init; }
+
+    /// <summary>
+    /// The key under <c>HKEY_CURRENT_USER</c> where the build reads its policies. A development build has no
+    /// other: without this one it reads none, and the policies of the machine do not reach a test.
+    /// </summary>
+    public string? PolicyKeyName { get; init; }
 }

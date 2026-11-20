@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Bravo.Core.Policies;
 using Bravo.Core.Settings;
 using Bravo.Desktop.Development;
 using Bravo.Desktop.Diagnostics;
@@ -36,7 +37,7 @@ public sealed class DesktopHostTests : IDisposable
         _ownership = InstanceOwnership.TryAcquire(names, TimeSpan.Zero)
             ?? throw new InvalidOperationException("The instance of the test already has an owner.");
 
-        _host = DesktopHost.Build(s_identity, _dataFolder.AsDataFolder(), DevelopmentOptions.None, _ownership, new SingleInstanceOptions(), _fatalExceptionHandler);
+        _host = DesktopHost.Build(s_identity, _dataFolder.AsDataFolder(), DevelopmentOptions.None, ApplicationPolicies.None, _ownership, new SingleInstanceOptions(), _fatalExceptionHandler);
     }
 
     public void Dispose()

@@ -31,6 +31,12 @@ internal static class ExitCode
     public const int WebViewFailed = 4;
 
     /// <summary>
+    /// A key of the policies of the application exists and cannot be read: the application does not run without
+    /// them.
+    /// </summary>
+    public const int PoliciesUnreadable = 5;
+
+    /// <summary>
     /// The WebView2 runtime is not installed. The code is the one that 1.0.x ends with in the same case.
     /// </summary>
     public const int WebViewRuntimeMissing = 1223;

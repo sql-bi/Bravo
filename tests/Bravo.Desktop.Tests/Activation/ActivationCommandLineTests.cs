@@ -115,6 +115,7 @@ public sealed class ActivationCommandLineTests
     [InlineData("--dev-connection-file=host.json")]
     [InlineData("--dev-update-feed=http://127.0.0.1:8099/currentversion.json")]
     [InlineData(@"--dev-data-folder=C:\Tests\data")]
+    [InlineData(@"--dev-policy-key=Software\Bravo.Tests\Policies")]
     public void Parse_DevelopmentOptionInAReleaseBuild_IsAnErrorLikeAnyArgumentThatIsNotKnown(string argument)
     {
         var start = ActivationCommandLine.Parse([argument], s_release);
@@ -207,6 +208,27 @@ public sealed class ActivationCommandLineTests
 
         Assert.Null(start.Development.DataFolderPath);
         Assert.Contains(start.Request.CommandLineErrors, error => error.Contains("--dev-data-folder"));
+    }
+
+    [Fact]
+    public void Parse_PolicyKeyInADevelopmentBuild_ReturnsItsName()
+    {
+        var start = ActivationCommandLine.Parse([@"--dev-policy-key=Software\Bravo.Tests\Policies"], s_development);
+
+        Assert.Equal(@"Software\Bravo.Tests\Policies", start.Development.PolicyKeyName);
+        Assert.Same(ActivationRequest.Empty, start.Request);
+    }
+
+    [Theory]
+    [InlineData(" ")]
+    [InlineData(@"\Software\Bravo.Tests\Policies")]
+    [InlineData(@"HKEY_CURRENT_USER\Software\Bravo.Tests\Policies")]
+    public void Parse_PolicyKeyThatIsNotAKeyUnderTheUser_ReadsNoKeyAndReportsAnError(string keyName)
+    {
+        var start = ActivationCommandLine.Parse(["--dev-policy-key", keyName], s_development);
+
+        Assert.Null(start.Development.PolicyKeyName);
+        Assert.Contains(start.Request.CommandLineErrors, error => error.Contains("--dev-policy-key"));
     }
 
     [Fact]

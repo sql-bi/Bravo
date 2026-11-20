@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using Bravo.Api.Security;
 using Bravo.Api.Server;
 using Bravo.Core.Activation;
+using Bravo.Core.Policies;
 using Bravo.Desktop.Activation;
 using Bravo.Desktop.Development;
 using Bravo.Desktop.Diagnostics;
@@ -38,7 +39,7 @@ public sealed class DesktopHostApiTests : IAsyncLifetime
     {
         var fatalExceptionHandler = Substitute.For<IFatalExceptionHandler>();
         var identity = BuildIdentity.Development("1.1.0");
-        _host = DesktopHost.Build(identity, _dataFolder.AsDataFolder(), DevelopmentOptions.None, _instance.Ownership, new SingleInstanceOptions(), fatalExceptionHandler);
+        _host = DesktopHost.Build(identity, _dataFolder.AsDataFolder(), DevelopmentOptions.None, ApplicationPolicies.None, _instance.Ownership, new SingleInstanceOptions(), fatalExceptionHandler);
     }
 
     public async ValueTask InitializeAsync()

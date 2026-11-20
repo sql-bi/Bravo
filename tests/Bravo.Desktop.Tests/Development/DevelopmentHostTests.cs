@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Bravo.Api.Security;
 using Bravo.Api.Server;
+using Bravo.Core.Policies;
 using Bravo.Desktop.Development;
 using Bravo.Desktop.Diagnostics;
 using Bravo.Desktop.Hosting;
@@ -39,7 +40,7 @@ public sealed class DevelopmentHostTests : IAsyncLifetime
         };
         var identity = BuildIdentity.Development("1.1.0");
         var fatalExceptionHandler = Substitute.For<IFatalExceptionHandler>();
-        _host = DesktopHost.Build(identity, _folder.AsDataFolder(), development, _instance.Ownership, new SingleInstanceOptions(), fatalExceptionHandler);
+        _host = DesktopHost.Build(identity, _folder.AsDataFolder(), development, ApplicationPolicies.None, _instance.Ownership, new SingleInstanceOptions(), fatalExceptionHandler);
     }
 
     // In a folder that does not exist yet: the host creates it.

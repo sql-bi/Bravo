@@ -8,7 +8,7 @@
 | 1 | Windows Forms is configured; the DPI mode, per monitor, is a property of the project |
 | 2 | An exception that escapes, on any thread, reaches one handler, and the runtime ends the process. Until backlog B-8 the handler shows a message |
 | 3 | The command line becomes an activation request. The process becomes the owner of the instance, or hands the request over to the owner and ends |
-| 4 | The host is built and started. It gets as instances the handler of step 2 and the ownership of step 3 |
+| 4 | The policies are read ([Policies](policies.md)); a key that cannot be read ends the start. The host is built and started. It gets as instances the handler of step 2, the ownership of step 3 and the policies |
 | 5 | The main window, a service of the host, runs the message loop |
 | 6 | The host is stopped and disposed, then the ownership is released |
 
@@ -56,6 +56,7 @@ before the arbitration.
 | Data folder, under the local application data of the user | `Bravo` | `Bravo.Development`, or the folder that `--dev-data-folder` names |
 | Window title | `Bravo for Power BI - v<version>`, or `Bravo for Power BI` for a user who hid the version | The same, followed by `[development build]` |
 | Update feed | The one of the releases | None, unless it is given `--dev-update-feed` ([Updates](updates.md)) |
+| Policies | The keys of the policies, of the computer and of the user | None, unless it is given `--dev-policy-key` ([Policies](policies.md)) |
 
 The version is the semantic version of the build, such as `1.1.0` or `1.1.0-beta.1`, which the build
 computes and writes in the metadata of the assembly ([Release](release.md)). Outside a public release it
@@ -88,6 +89,7 @@ itself ends with one of these:
 | 2 | The files of the user interface are not beside the executable |
 | 3 | The WebView2 runtime is installed and the webview could not be created with it |
 | 4 | The processes of the webview ended more times in a row than the application recovers from |
+| 5 | A key of the policies exists and cannot be read |
 | 1223 | The WebView2 runtime is not installed: the code that 1.0.x ends with |
 
 ## In the code
@@ -105,7 +107,7 @@ this document describes above. Where each part lives:
 | The exit codes of the process | `src/Bravo.Desktop/ExitCode.cs` |
 | What is done with an exception that escapes | `src/Bravo.Desktop/Diagnostics/` |
 | The command line, and the consumer of the activations | `src/Bravo.Desktop/Activation/` |
-| What a development build is asked for a browser or a test: one more allowed origin, the file with the address and the token, the update feed, the data folder | `src/Bravo.Desktop/Development/` |
+| What a development build is asked for a browser or a test: one more allowed origin, the file with the address and the token, the update feed, the data folder, the key of its policies | `src/Bravo.Desktop/Development/` |
 | The data folder, chosen once after the arbitration and passed to `DesktopHost.Build`, which has no default for it: a test that builds the host gives it a folder of its own | `src/Bravo.Desktop/DataFolder.cs` |
 | The activation request, and the channel that every activation goes through | `src/Bravo.Core/Activation/` |
 | The single instance: ownership by mutex, hand-over by pipe, arbitration | `src/Bravo.Platform.Windows/SingleInstance/` |
@@ -113,6 +115,7 @@ this document describes above. Where each part lives:
 | The choice of the user that hides the version in the title, read from the registry | `src/Bravo.Desktop/Shell/RegistryWindowTitleSettings.cs` |
 | The listener as a service of the host, the message of a failed hand-over, the end of a second process | `src/Bravo.Desktop/SingleInstance/` |
 | The settings of the user, kept in a file of the data folder ([Settings](settings.md)) | `src/Bravo.Core/Settings/` and `src/Bravo.Platform.Windows/Settings/`, registered in `src/Bravo.Desktop/Settings/` |
+| The policies, read once before the host is built ([Policies](policies.md)) | `src/Bravo.Core/Policies/` and `src/Bravo.Platform.Windows/Policies/`, registered in `src/Bravo.Desktop/Policies/` |
 | The Windows functions of a project, listed in its `NativeMethods.txt` and wrapped by capability | `Interop/` in `Bravo.Desktop` and in `Bravo.Platform.Windows` |
 
 - A component registers its services in an extension method of `IServiceCollection` beside its code, and

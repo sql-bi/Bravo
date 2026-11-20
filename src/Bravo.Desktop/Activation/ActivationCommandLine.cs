@@ -12,8 +12,8 @@ namespace Bravo.Desktop.Activation;
 /// <summary>
 /// The command line of the executable, as the external tool registration of Power BI Desktop writes it:
 /// <c>--server</c> or <c>-s</c>, <c>--database</c> or <c>-d</c>, and <c>--ppid</c>. A development build also
-/// knows <c>--dev-origin</c>, <c>--dev-connection-file</c>, <c>--dev-update-feed</c> and
-/// <c>--dev-data-folder</c>.
+/// knows <c>--dev-origin</c>, <c>--dev-connection-file</c>, <c>--dev-update-feed</c>, <c>--dev-data-folder</c>
+/// and <c>--dev-policy-key</c>.
 /// </summary>
 internal static class ActivationCommandLine
 {
@@ -41,7 +41,8 @@ internal static class ActivationCommandLine
         var connectionFile = new Option<string>("--dev-connection-file");
         var updateFeed = new Option<string>("--dev-update-feed");
         var dataFolder = new Option<string>("--dev-data-folder");
-        var command = new Command("Bravo") { origin, connectionFile, updateFeed, dataFolder };
+        var policyKey = new Option<string>("--dev-policy-key");
+        var command = new Command("Bravo") { origin, connectionFile, updateFeed, dataFolder, policyKey };
         command.TreatUnmatchedTokensAsErrors = false;
         var result = command.Parse(args, CreateConfiguration());
 
@@ -52,6 +53,7 @@ internal static class ActivationCommandLine
             ConnectionFilePath = ReadPath(result, connectionFile, errors),
             UpdateFeedAddress = ReadAddress(result, updateFeed, errors),
             DataFolderPath = ReadPath(result, dataFolder, errors),
+            PolicyKeyName = ReadKeyName(result, policyKey, errors),
         };
 
         return new StartArguments(ParseActivation([.. result.UnmatchedTokens], errors), development);
@@ -141,6 +143,27 @@ internal static class ActivationCommandLine
     {
         return Uri.TryCreate(value, UriKind.Absolute, out address)
             && (address.Scheme == Uri.UriSchemeHttp || address.Scheme == Uri.UriSchemeHttps);
+    }
+
+    // A path under a root, as Software\Bravo.Tests\Policies: not the root itself, not empty.
+    private static string? ReadKeyName(ParseResult result, Option<string> option, List<string> errors)
+    {
+        if (!HasValue(result, option))
+        {
+            return null;
+        }
+
+        var value = result.GetValue(option);
+        var isKeyName = !string.IsNullOrWhiteSpace(value)
+            && !value.StartsWith('\\')
+            && !value.StartsWith("HKEY_", StringComparison.OrdinalIgnoreCase);
+        if (!isKeyName)
+        {
+            errors.Add($"The value of '{option.Name}' is not a key under HKEY_CURRENT_USER, such as Software\\Bravo.Tests\\Policies: '{value}'.");
+            return null;
+        }
+
+        return value;
     }
 
     private static string? ReadPath(ParseResult result, Option<string> option, List<string> errors)
