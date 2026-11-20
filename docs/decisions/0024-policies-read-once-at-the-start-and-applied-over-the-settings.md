@@ -39,7 +39,7 @@ puts a policy over the preference, shows the effective value, and never copies a
 
 ## Consequences
 
-- An administrator who imported revision 1.1 in Intune deletes it before importing 1.2.
+- An administrator who imported an earlier revision in Intune deletes it before importing 1.2.
 - `BuiltInTemplatesEnabled` and `CustomTemplatesOrganizationRepositoryPath` enter the templates with their
   features (backlog B-16, B-17).
 - The key keeps `OptionSettings`: a shorter one would make administrators deploy again.
