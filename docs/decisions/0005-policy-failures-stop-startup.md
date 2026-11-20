@@ -2,8 +2,10 @@
 
 > This ADR describes the implementation on `main`; the paths it names exist there.
 
-- Status: Accepted
-- Date: 2026-10-20
+- Status: Accepted; partly superseded by
+  [ADR 0024](0024-policies-read-once-at-the-start-and-applied-over-the-settings.md) for a policy key that cannot
+  be read
+- Date: 2026-11-20
 
 ## Context
 
