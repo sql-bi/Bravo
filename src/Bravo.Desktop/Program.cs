@@ -1,7 +1,7 @@
 ﻿using System;
+using Bravo.Core.Policies;
 using Bravo.Desktop.Activation;
 using Bravo.Desktop.Diagnostics;
-using Bravo.Core.Policies;
 using Bravo.Desktop.Hosting;
 using Bravo.Desktop.Policies;
 using Bravo.Desktop.SingleInstance;
