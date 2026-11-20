@@ -27,6 +27,8 @@ the user the others.
   ([startup](startup.md)). Starting without the policies would remove what an administrator set. The process
   gives up the instance before the message: a start meanwhile reads the policies itself and shows the same
   message, and is not handed over to a process that has no host to take it.
+- The folder is read, then its kind: a value that disappears in between, as a refresh of Group Policy can make
+  it, is not configured.
 - A policy that changes while the application runs applies at its next start.
 
 **Over the settings.** A policy is never written in the file of the settings ([settings](settings.md)), and

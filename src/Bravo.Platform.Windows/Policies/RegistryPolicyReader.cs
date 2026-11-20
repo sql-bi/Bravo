@@ -91,6 +91,14 @@ public static class RegistryPolicyReader
             return null;
         }
 
-        return key.GetValueKind(name) == RegistryValueKind.String ? text : null;
+        try
+        {
+            return key.GetValueKind(name) == RegistryValueKind.String ? text : null;
+        }
+        catch (IOException)
+        {
+            // Removed since it was read, as a refresh of Group Policy can do: not configured, as if never read.
+            return null;
+        }
     }
 }
