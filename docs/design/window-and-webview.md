@@ -90,7 +90,7 @@ An exception of an asynchronous step that is not a failure of the engine leaves 
 application like any other. Until backlog B-8 the messages are dialogs of their own.
 
 **In a browser.** For development and tests the same page runs in an ordinary browser, against a development
-build of the host. Only a development build knows four more arguments of the command line; to a release
+build of the host. Only a development build knows five more arguments of the command line; to a release
 build they are arguments that it does not know, and so errors of the request.
 
 | Argument | What the host does |
@@ -99,6 +99,7 @@ build they are arguments that it does not know, and so errors of the request.
 | `--dev-connection-file=<path>` | Once it has started, writes the address and the token of the API to the file, a JSON object with the members `address` and `token`; deletes the file when it stops |
 | `--dev-update-feed=<address>` | Reads the update feed at the address, an absolute `http` or `https` one: without it a development build reads none ([updates](updates.md)) |
 | `--dev-data-folder=<path>` | Keeps the data of the user in the folder, the settings and the profile of the webview, in place of `Bravo.Development` under the local application data: a test starts on data of its own |
+| `--dev-policy-key=<key>` | Reads its policies from the key under `HKEY_CURRENT_USER`, such as `Software\Bravo.Tests\Policies`: without it a development build reads none ([policies](policies.md)) |
 
 A development server serves the development bundle and the static files of the page, on the loopback address
 only, rebuilds the bundle at every change, and gives the page the same object before any other script, with

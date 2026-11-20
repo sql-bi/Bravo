@@ -26,8 +26,10 @@ The hosted Windows runner of GitHub Actions runs every process elevated. There, 
 gives the same value as a policy of the machine for `Bravo.exe`, the value `Bravo.exe` of the key
 `AdditionalBrowserArguments` under `HKLM\SOFTWARE\Policies\Microsoft\Edge\WebView2`, and removes it after
 the test and once more at the end of the run. A value that is already there is not replaced: the test fails.
-Elsewhere the tests never write in the registry: in an elevated terminal they fail, and say to run them from a
-terminal that is not elevated.
+Elsewhere the tests never write that policy: in an elevated terminal they fail, and say to run them from a
+terminal that is not elevated. The one key that a test writes on every machine is a key of its own under
+`HKCU\Software\Bravo.Tests`, with the policies of its application, which the application reads through
+`--dev-policy-key` and the test removes ([policies](policies.md)).
 
 - The page has a fixed size in every test, 1280×800, whatever the size of the window, and a test can take a
   screenshot of it. The repository keeps no reference image: the rendering changes with the machine. A
