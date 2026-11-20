@@ -1,6 +1,6 @@
 # Bravo: backlog
 
-Next ID: B-39
+Next ID: B-40
 
 The open work toward 1.1.0, in the order to take it ([ADR 0007](decisions/0007-redesign-on-a-development-branch.md)).
 Status: `[ ]` to do, `[~]` in progress, `[-]` dropped (say why); a done item leaves the backlog.
@@ -220,6 +220,10 @@ After 1.1.0.
   1.0.x.
 - B-38 Policies for the options that have none, such as the proxy and the diagnostic level: the page already
   locks an option by its name.
+- B-39 The policies read inside the critical section of Group Policy
+  ([`EnterCriticalPolicySection`](https://learn.microsoft.com/windows/win32/api/userenv/nf-userenv-entercriticalpolicysection)),
+  as Microsoft documents for an application that reads several policy entries: no refresh of Group Policy
+  changes them while the start reads them. To weigh: the section can hold the start for up to 10 minutes.
 
 ## Open decisions
 
