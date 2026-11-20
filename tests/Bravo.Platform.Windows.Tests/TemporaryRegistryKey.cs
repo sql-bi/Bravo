@@ -43,10 +43,11 @@ internal sealed class TemporaryRegistryKey : IDisposable
     }
 
     /// <summary>
-    /// Denies the user the reading of the values of a key under this one, as permissions that an administrator
-    /// set wrong would: opening it to read fails.
+    /// Creates a key under this one whose values the user is denied to read, as permissions that an
+    /// administrator set wrong would: opening it to read fails.
     /// </summary>
-    public void DenyReading(string subKeyName)
+    /// <returns>The path of the key under <c>HKEY_CURRENT_USER</c>.</returns>
+    public string DenyReading(string subKeyName)
     {
         var path = SubKeyPath(subKeyName);
         using var key = Registry.CurrentUser.CreateSubKey(path);
@@ -54,6 +55,8 @@ internal sealed class TemporaryRegistryKey : IDisposable
         security.AddAccessRule(CreateDenyRule());
         key.SetAccessControl(security);
         _deniedNames.Add(path);
+
+        return path;
     }
 
     public void Dispose()

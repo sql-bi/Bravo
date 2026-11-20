@@ -34,7 +34,7 @@ internal sealed class TemporaryRegistryKey : IDisposable
     /// <returns>The path of the key under <c>HKEY_CURRENT_USER</c>.</returns>
     public string DenyReading(string subKeyName)
     {
-        var path = $@"{Name}\{subKeyName}";
+        var path = SubKeyPath(subKeyName);
         using var key = Registry.CurrentUser.CreateSubKey(path);
         var security = key.GetAccessControl();
         security.AddAccessRule(CreateDenyRule());
@@ -64,8 +64,18 @@ internal sealed class TemporaryRegistryKey : IDisposable
         }
 
         Registry.CurrentUser.DeleteSubKeyTree(Name, throwOnMissingSubKey: false);
+        RemoveEmptyParent();
+    }
 
-        // Another test may add a key at the same time: the parent then stays for it to remove.
+    private static RegistryAccessRule CreateDenyRule()
+    {
+        var user = WindowsIdentity.GetCurrent().User ?? throw new InvalidOperationException("The process has no user.");
+        return new RegistryAccessRule(user, RegistryRights.QueryValues, AccessControlType.Deny);
+    }
+
+    // Another test may add a key at the same time: the parent then stays for it to remove.
+    private static void RemoveEmptyParent()
+    {
         try
         {
             Registry.CurrentUser.DeleteSubKey(ParentName, throwOnMissingSubKey: false);
@@ -75,9 +85,8 @@ internal sealed class TemporaryRegistryKey : IDisposable
         }
     }
 
-    private static RegistryAccessRule CreateDenyRule()
+    private string SubKeyPath(string subKeyName)
     {
-        var user = WindowsIdentity.GetCurrent().User ?? throw new InvalidOperationException("The process has no user.");
-        return new RegistryAccessRule(user, RegistryRights.QueryValues, AccessControlType.Deny);
+        return $@"{Name}\{subKeyName}";
     }
 }

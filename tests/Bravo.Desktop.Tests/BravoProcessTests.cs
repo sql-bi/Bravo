@@ -92,8 +92,7 @@ public sealed class BravoProcessTests : IDisposable
     {
         using var registry = new TemporaryRegistryKey();
         var keyName = registry.DenyReading("Policies");
-        using var bravo = Process.Start(CreateStartInfo($"--dev-policy-key={keyName}"))
-            ?? throw new InvalidOperationException("Bravo did not start.");
+        using var bravo = StartBravo($"--dev-policy-key={keyName}");
         try
         {
             await WaitForMainWindowAsync(bravo);
@@ -128,9 +127,9 @@ public sealed class BravoProcessTests : IDisposable
         }
     }
 
-    private Process StartBravo()
+    private Process StartBravo(params string[] arguments)
     {
-        return Process.Start(CreateStartInfo()) ?? throw new InvalidOperationException("Bravo did not start.");
+        return Process.Start(CreateStartInfo(arguments)) ?? throw new InvalidOperationException("Bravo did not start.");
     }
 
     // The build of the tests writes where the project of the executable built it: there it has beside it all

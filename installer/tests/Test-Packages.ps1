@@ -348,11 +348,10 @@ function Assert-Installed([string] $Scope, [string] $InstallFolder, $ExpectedCho
     $executable = Join-Path $InstallFolder 'Bravo.exe'
 
     Assert-Equal $FileVersion (Get-Item $executable).VersionInfo.FileVersion 'the version of the file of Bravo.exe'
-    foreach ($file in 'Bravo.dll', 'WebView2Loader.dll', 'wwwroot\index.html', 'wwwroot\js\main.js', 'wwwroot\css\main.css') {
+    $files = 'Bravo.dll', 'WebView2Loader.dll', 'wwwroot\index.html', 'wwwroot\js\main.js', 'wwwroot\css\main.css',
+        'policies\bravo.admx', 'policies\sqlbi.admx', 'policies\en-US\bravo.adml', 'policies\en-US\sqlbi.adml'
+    foreach ($file in $files) {
         Assert-True (Test-Path (Join-Path $InstallFolder $file)) "$file is installed"
-    }
-    foreach ($file in 'bravo.admx', 'sqlbi.admx', 'en-US\bravo.adml', 'en-US\sqlbi.adml') {
-        Assert-True (Test-Path (Join-Path $InstallFolder "policies\$file")) "the template policies\$file is installed"
     }
     if ($SignerThumbprint -ne '') {
         # The files of the host: the package holds the ones that the build signed, and not older ones.
@@ -479,11 +478,11 @@ function Assert-ApplicationRuns([string] $InstallFolder, [bool] $SelfContained, 
     Assert-ApplicationEnds $process 'the application ends when its window is closed'
 }
 
-# The application ends by itself, with success, and the processes of its webview with it.
-function Assert-ApplicationEnds($Process, [string] $What) {
+# The application ends by itself, with success unless told otherwise, and the processes of its webview with it.
+function Assert-ApplicationEnds($Process, [string] $What, [int] $ExitCode = 0) {
     try {
         Assert-True ($Process.WaitForExit(15000)) $What
-        Assert-Equal 0 $Process.ExitCode 'the exit code of the application'
+        Assert-Equal $ExitCode $Process.ExitCode 'the exit code of the application'
     }
     finally {
         if (-not $Process.HasExited) { $Process.Kill() }
@@ -525,12 +524,12 @@ function Assert-UnreadablePoliciesStopTheStart([string] $InstallFolder) {
         try {
             Assert-Equal 'Bravo for Power BI' $process.MainWindowTitle 'the title of the message that the policies cannot be read'
             $process.CloseMainWindow() | Out-Null
-            Assert-True ($process.WaitForExit(15000)) 'the application ends when its message is closed'
-            Assert-Equal 5 $process.ExitCode 'the exit code of a start whose policies cannot be read'
         }
-        finally {
+        catch {
             if (-not $process.HasExited) { $process.Kill() }
+            throw
         }
+        Assert-ApplicationEnds $process 'the application ends when its message is closed' 5
     }
     finally {
         Set-PolicyDenyRule $false

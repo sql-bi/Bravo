@@ -3,9 +3,16 @@ import type { Bravo } from './bravo';
 
 // The options dialog, as a user reaches it from the sidebar.
 
+export type OptionsSection = 'general' | 'telemetry' | 'dev' | 'about';
+
 /** Opens the options dialog on one of its sections. */
-export async function openOptions(bravo: Bravo, section: 'general' | 'telemetry' | 'about') {
+export async function openOptions(bravo: Bravo, section: OptionsSection) {
     await bravo.page.locator('#ctrl-options').click();
+    await showSection(bravo, section);
+}
+
+/** Shows another section of the options dialog that is open. */
+export async function showSection(bravo: Bravo, section: OptionsSection) {
     await bravo.page.locator(`#dialog-options #item-${section}`).click();
 }
 

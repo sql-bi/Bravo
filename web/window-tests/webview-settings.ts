@@ -1,5 +1,3 @@
-import { execFile } from 'node:child_process';
-import { promisify } from 'node:util';
 import { reg, whoami } from './windows-tools';
 
 // Where the webview of a test gets the browser argument that opens the DevTools protocol, which the WebView2
@@ -11,8 +9,6 @@ import { reg, whoami } from './windows-tools';
 // (https://learn.microsoft.com/microsoft-edge/webview2/concepts/security#for-an-elevated-host-app-use-appropriate-override-flags).
 // On a runner of GitHub Actions the tests run elevated: there, and only there, the same value is given as a policy
 // of the machine for Bravo.exe, and taken back after each test. Elsewhere the registry is never touched.
-
-const execFileAsync = promisify(execFile);
 
 /** The browser argument of every test: the engine chooses the port and writes it in the profile. */
 const browserArguments = '--remote-debugging-port=0';
@@ -98,7 +94,7 @@ function onGitHubActions() {
 
 /** Whether the process is elevated: its integrity level is High, S-1-16-12288, among the groups that whoami lists. */
 async function isElevated(): Promise<boolean> {
-    const { stdout } = await execFileAsync(whoami, ['/groups', '/fo', 'csv', '/nh']);
+    const { stdout } = await whoami(['/groups', '/fo', 'csv', '/nh']);
     return stdout.includes('"S-1-16-12288"');
 }
 
@@ -106,7 +102,7 @@ async function isElevated(): Promise<boolean> {
 async function readPolicy(): Promise<string | undefined> {
     let stdout: string;
     try {
-        ({ stdout } = await execFileAsync(reg, ['query', argumentsKey, '/v', valueName]));
+        ({ stdout } = await reg(['query', argumentsKey, '/v', valueName]));
     } catch {
         // reg ends with 1 when the key or the value is not there
         return undefined;
@@ -116,11 +112,11 @@ async function readPolicy(): Promise<string | undefined> {
 }
 
 async function writePolicy() {
-    await execFileAsync(reg, ['add', argumentsKey, '/v', valueName, '/t', 'REG_SZ', '/d', browserArguments, '/f']);
+    await reg(['add', argumentsKey, '/v', valueName, '/t', 'REG_SZ', '/d', browserArguments, '/f']);
 }
 
 /** Deletes the value of Bravo.exe when its data are the ones that the tests write. */
 async function deleteWrittenPolicy() {
     if (await readPolicy() === browserArguments)
-        await execFileAsync(reg, ['delete', argumentsKey, '/v', valueName, '/f']);
+        await reg(['delete', argumentsKey, '/v', valueName, '/f']);
 }
