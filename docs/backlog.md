@@ -1,6 +1,6 @@
 # Bravo: backlog
 
-Next ID: B-37
+Next ID: B-39
 
 The open work toward 1.1.0, in the order to take it ([ADR 0007](decisions/0007-redesign-on-a-development-branch.md)).
 Status: `[ ]` to do, `[~]` in progress, `[-]` dropped (say why); a done item leaves the backlog.
@@ -16,8 +16,8 @@ criterion can be checked on `develop-vnext`.
 
 ## Now
 
-As of 2026-11-19: the items of stage T3 Distribution are done, and so is B-4, the first item of T4
-Cross-cutting services; B-5 is next. B-1, left in T2, waits for the release of TypeScript 7.1 and ts-loader 10.
+As of 2026-11-20: the items of stage T3 Distribution are done, and so are B-4 and B-5, the first items of T4
+Cross-cutting services; B-6 is next. B-1, left in T2, waits for the release of TypeScript 7.1 and ts-loader 10.
 The first signed preview, the exit of T3, waits for the maintainer: the identity that signs and the four
 variables of the repository ([guide](guides/make-a-release.md)).
 
@@ -44,15 +44,6 @@ No item is left: the exit waits for the first signed preview.
 Exit: in the installed preview the settings are migrated, the policies are honored, the logs are visible, a
 crash produces a report, telemetry runs on a supported SDK.
 
-- [ ] B-5 (was S-02) Policies. Hypothesis: the same keys; the templates shipped in a subfolder of the
-  installation. Also: `/options` knows no policy, so an option that a policy sets is returned and replaced like
-  any other; the page starts with no policy, so its options dialog locks nothing; the packages of D-01 do not
-  carry the templates of `policies/` yet. Also, from B-3: the policy `UpdateCheckEnabled` turned off stops
-  every request to the update feed ([ADR 0022](decisions/0022-updates-read-from-the-feed-of-1-0-x-and-downloaded-by-the-browser.md)):
-  `GET /releases/latest` then reads nothing, and the page, which asks at its start and in the options, tells
-  nothing. To decide: the answer of the route, a code of its own or the one of a failed check. Also, from B-4:
-  a policy applies over the settings of the user, which the store reads and writes without it, and is never
-  written in their file ([settings](design/settings.md)).
 - [ ] B-6 (was S-03) Network and proxy. Hypothesis: system proxy and auto-configuration detected without
   settings, integrated credentials first, a prompt as the last resort, a connectivity check with clear messages.
   Explore: the proxy in .NET, in the webview, in the sign-in library and in the Analysis Services client
@@ -78,7 +69,8 @@ crash produces a report, telemetry runs on a supported SDK.
   update check that fails keeps its cause, the status of the answer or the exception, in the `BravoException`,
   and nothing writes it. Also, from B-4: a settings file that cannot be read or written is a warning of
   `FileUserSettingsStore`, which reaches no log; the page tells the user, and writes the error in its own
-  diagnostic log.
+  diagnostic log. Also, from B-5: a key of the policies that cannot be read is told to the user in a message,
+  and its exception reaches no log.
 - [ ] B-8 (was S-05) Errors and crash reporting. Material: the branch `feat/crash-reporter-process`. Explore: a
   reporter as an application of its own or as a mode of the main executable. Also: replaces the minimal
   last-chance exception handling; a service of the host that fails stops the host, which closes the window with
@@ -86,7 +78,9 @@ crash produces a report, telemetry runs on a supported SDK.
   fails the start of the host; the failures of the webview, which end the application with dialogs of their
   own and the exit codes 2, 3, 4 and 1223, and whose recoveries, a page loaded again or a new control, leave
   no trace. Also, from D-01: the packages install the symbols of the four assemblies of the host, so that a
-  trace names its lines; `Bravo.Setup.exe` is compiled ahead of time and has none.
+  trace names its lines; `Bravo.Setup.exe` is compiled ahead of time and has none. Also, from B-5: a key of
+  the policies that cannot be read ends the start before the host exists, with a message of its own and the
+  exit code 5 ([policies](design/policies.md)).
 - [ ] B-9 (was S-06) Telemetry. Hypothesis: a supported SDK; the classic Application Insights SDK is retired on
   2027-03-31. Explore: Application Insights 3 or OpenTelemetry; consent. Also: the page gets no telemetry
   settings, creates no telemetry client and sends nothing. Also, from D-01:
@@ -108,6 +102,8 @@ crash produces a report, telemetry runs on a supported SDK.
     needs a variable of the repository, or a secret, which the release does not have yet.
   - From B-3: the page raises the event `Link` also when the user downloads an update, which 1.0.x did not:
     it downloaded the file in a frame, and raised no event.
+  - From B-5: the policy `TelemetryEnabled` is read at the start and returned by `GET /policies`, and the page
+    locks its option; telemetry honors it over the choice of the user ([policies](design/policies.md)).
 
 ### T5 Access to models
 
@@ -127,7 +123,9 @@ Exit: sign-in, the lists of reports and datasets, a model opened from Power BI D
   remembers stays in the storage of the page, and is lost once at the upgrade from 1.0.x; an activation whose
   server is of the Power BI service opened a dataset (`App.openDataset`); a missing sign-in is an error with a
   code of its own, which the page answers with the sign-in dialog: it no longer takes a 401 for one, and at its
-  start it still tries the sign-in with the account that it remembers, a call that has no route.
+  start it still tries the sign-in with the account that it remembers, a call that has no route. Also, from
+  B-5: the policy `UseSystemBrowserForAuthentication` is read and returned by `GET /policies`, and the page
+  locks its option; the sign-in honors it ([policies](design/policies.md)).
 
 ### T6 Features
 
@@ -139,8 +137,14 @@ Exit, for each feature: the same results as `main` on the sample models; its row
   own, created, read and cancelled through its routes
   ([ADR 0014](decisions/0014-api-conventions-and-a-contract-kept-as-a-file.md)).
 - [ ] B-16 (was F-04) Manage Dates. To settle: where the date templates live; `README.md` links them at their
-  path on `main`.
-- [ ] B-17 (was F-05) Template Development. The Visual Studio Code extension as published
+  path on `main`. Also, from B-5: the policy `BuiltInTemplatesEnabled` is read and returned by
+  `GET /policies`, and has no template, as in 1.0.x: it enters `bravo.admx` with the feature, in a new
+  revision of the templates ([policies](design/policies.md)).
+- [ ] B-17 (was F-05) Template Development. From B-5: the policies `CustomTemplatesEnabled` and
+  `CustomTemplatesOrganizationRepositoryPath` are read and returned by `GET /policies`, the folder as the
+  administrator wrote it; the page locks the option of the first. The folder has no template, as in 1.0.x: it
+  enters `bravo.admx` with the feature, in a new revision of the templates ([policies](design/policies.md)).
+  The Visual Studio Code extension as published
   (`sql-bi/BravoTemplateEditor` 1.0.1, commit `31e4793`) must keep working unchanged
   ([ADR 0012](decisions/0012-http-on-loopback-between-user-interface-and-host.md)). What it expects from the host:
   - It finds the host only through `bravo-config.json` at the root of the workspace folder: a JSON object with
@@ -212,6 +216,10 @@ After 1.1.0.
   them.
 - B-35 The profile of the webview of 1.0.x, `%LOCALAPPDATA%\Bravo\.temp`, removed after an upgrade: nothing
   reads it, and it stays until the removal of the package removes the data folder.
+- B-37 The templates of the policies in the languages of the user interface: today in English alone, as in
+  1.0.x.
+- B-38 Policies for the options that have none, such as the proxy and the diagnostic level: the page already
+  locks an option by its name.
 
 ## Open decisions
 
