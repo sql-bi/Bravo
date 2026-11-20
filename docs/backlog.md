@@ -17,9 +17,9 @@ criterion can be checked on `develop-vnext`.
 ## Now
 
 As of 2026-11-19: the items of stage T3 Distribution are done, and so is B-4, the first item of T4
-Cross-cutting services; B-5 is next. B-1, left in T2, waits for the release of TypeScript 7.1 and ts-loader 10. The first signed preview, the exit of
-T3, waits for the maintainer: the identity that signs and the four variables of the repository
-([guide](guides/make-a-release.md)).
+Cross-cutting services; B-5 is next. B-1, left in T2, waits for the release of TypeScript 7.1 and ts-loader 10.
+The first signed preview, the exit of T3, waits for the maintainer: the identity that signs and the four
+variables of the repository ([guide](guides/make-a-release.md)).
 
 ## Next
 
