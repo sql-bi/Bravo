@@ -157,6 +157,47 @@
         }
       }
     },
+    "/policies": {
+      "get": {
+        "tags": [
+          "Policies"
+        ],
+        "summary": "Reads the policies that an administrator set for the application. They apply over the options of the user, which keep the choices of the user, and do not change while the application runs.",
+        "operationId": "GetPolicies",
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PolicyDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/events": {
       "get": {
         "tags": [
@@ -227,7 +268,7 @@
         "tags": [
           "Releases"
         ],
-        "summary": "Reads the latest release from the update feed: whether it is newer than the application, and the address of its file for this copy. The host also tells a newer release with the beep of the system.",
+        "summary": "Reads the latest release from the update feed: whether it is newer than the application, and the address of its file for this copy. The host also tells a newer release with the beep of the system. When a policy turned the update check off, nothing is read and the answer is the error UpdateCheckDisabled.",
         "operationId": "GetLatestRelease",
         "responses": {
           "401": {
@@ -534,6 +575,32 @@
         },
         "description": "The page to open in the default browser of the user."
       },
+      "PolicyDetails": {
+        "type": "object",
+        "properties": {
+          "telemetryEnabled": {
+            "type": "boolean"
+          },
+          "updateCheckEnabled": {
+            "type": "boolean",
+            "description": "With `false` the host makes no request to the update feed: `GET /releases/latest` answers the error `UpdateCheckDisabled`."
+          },
+          "useSystemBrowserForAuthentication": {
+            "type": "boolean"
+          },
+          "builtInTemplatesEnabled": {
+            "type": "boolean"
+          },
+          "customTemplatesEnabled": {
+            "type": "boolean"
+          },
+          "customTemplatesOrganizationRepositoryPath": {
+            "type": "string",
+            "description": "The folder of the templates of the organization, as the administrator wrote it."
+          }
+        },
+        "description": "The policies that an administrator set for the application, read when it started. A member that is absent is a policy that is not configured: the option of the user applies. A member that is present is the value of the option, which the user cannot change."
+      },
       "ProblemCode": {
         "enum": [
           "InvalidRequest",
@@ -545,7 +612,8 @@
           "Unexpected",
           "HttpError",
           "UpdateCheckFailed",
-          "SettingsSaveFailed"
+          "SettingsSaveFailed",
+          "UpdateCheckDisabled"
         ],
         "type": "string",
         "description": "What went wrong, as a name that never changes meaning. No error answer has a code outside this list."
@@ -671,6 +739,9 @@
     },
     {
       "name": "Options"
+    },
+    {
+      "name": "Policies"
     },
     {
       "name": "Events"

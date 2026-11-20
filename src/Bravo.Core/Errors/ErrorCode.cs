@@ -19,4 +19,9 @@ public enum ErrorCode
     /// The settings of the user could not be written: the ones before the change are still in force.
     /// </summary>
     SettingsSaveFailed = 2,
+
+    /// <summary>
+    /// An administrator turned the update check off with a policy: no request is made to the update feed.
+    /// </summary>
+    UpdateCheckDisabled = 3,
 }

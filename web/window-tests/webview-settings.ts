@@ -1,6 +1,6 @@
 import { execFile } from 'node:child_process';
-import path from 'node:path';
 import { promisify } from 'node:util';
+import { reg, whoami } from './windows-tools';
 
 // Where the webview of a test gets the browser argument that opens the DevTools protocol, which the WebView2
 // runtime reads when the application creates its environment and which the application does not pass. The
@@ -13,11 +13,6 @@ import { promisify } from 'node:util';
 // of the machine for Bravo.exe, and taken back after each test. Elsewhere the registry is never touched.
 
 const execFileAsync = promisify(execFile);
-
-// The tools of Windows, and not the ones of the same name that a shell such as Git Bash puts first in the path
-const system = path.join(process.env.SystemRoot ?? 'C:\\Windows', 'System32');
-const whoami = path.join(system, 'whoami.exe');
-const reg = path.join(system, 'reg.exe');
 
 /** The browser argument of every test: the engine chooses the port and writes it in the profile. */
 const browserArguments = '--remote-debugging-port=0';

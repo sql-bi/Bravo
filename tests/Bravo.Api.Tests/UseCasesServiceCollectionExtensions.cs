@@ -1,5 +1,6 @@
 ﻿using System;
 using Bravo.Core.Browser;
+using Bravo.Core.Policies;
 using Bravo.Core.Settings;
 using Bravo.Core.Updates;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,9 +14,12 @@ internal static class UseCasesServiceCollectionExtensions
     /// Adds the use cases that the routes call, as the application adds them, with substitutes for what is
     /// outside the process: no request leaves it, no sound plays and no browser opens.
     /// </summary>
-    public static IServiceCollection AddUseCasesOfTheTests(this IServiceCollection services)
+    /// <param name="services">The services of the API.</param>
+    /// <param name="policies">What an administrator set, as the application reads it at its start; none by default.</param>
+    public static IServiceCollection AddUseCasesOfTheTests(this IServiceCollection services, ApplicationPolicies? policies = null)
     {
         services.AddSingleton(TestApi.Application);
+        services.AddSingleton(policies ?? ApplicationPolicies.None);
         services.AddSingleton<InMemoryUserSettingsStore>();
         services.AddSingleton<IUserSettingsStore>(provider => provider.GetRequiredService<InMemoryUserSettingsStore>());
 

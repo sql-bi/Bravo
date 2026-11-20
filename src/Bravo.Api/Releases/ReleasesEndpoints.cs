@@ -17,7 +17,9 @@ internal static class ReleasesEndpoints
             .WithTags("Releases")
             .WithSummary(
                 "Reads the latest release from the update feed: whether it is newer than the application, and the "
-                + "address of its file for this copy. The host also tells a newer release with the beep of the system.")
+                + "address of its file for this copy. The host also tells a newer release with the beep of the system. "
+                + "When a policy turned the update check off, nothing is read and the answer is the error "
+                + "UpdateCheckDisabled.")
             .ProducesProblem(StatusCodes.Status409Conflict);
     }
 

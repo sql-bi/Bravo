@@ -1,6 +1,8 @@
 ﻿using System;
+using Bravo.Core.Policies;
 using Bravo.Core.Updates;
 using Bravo.Desktop.Hosting;
+using Bravo.Desktop.Policies;
 using Bravo.Desktop.Updates;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
@@ -53,6 +55,7 @@ public sealed class UpdatesServiceCollectionExtensionsTests
     {
         var services = new ServiceCollection()
             .AddInstallation()
+            .AddPolicies(ApplicationPolicies.None)
             .AddUpdates(BuildIdentity.Release("1.1.0"), developmentFeedAddress: null);
         using var provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true });
 

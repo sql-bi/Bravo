@@ -46,8 +46,8 @@ The page starts in `web/main.ts`, the same in the window and in a browser:
 - It reads the address and the token of the API from `window.bravoHost`, which whoever serves the page has
   set before any script: the webview ([Window and webview](../docs/design/window-and-webview.md)) or the development server.
   It has no global configuration object and no branch for where it runs.
-- `start` asks the API for the application data and the options, then creates the controllers in their
-  order. The modules import them from `main.ts`: a value that a module needs when it is loaded, and not
+- `start` asks the API for the application data, the options and the policies, then creates the controllers
+  in their order. The modules import them from `main.ts`: a value that a module needs when it is loaded, and not
   when it is called, does not exist yet.
 - A start that fails, at any point, shows `showStartFailure` (`web/view/start-failure.ts`) in place of the
   page. It has no options to read the language from: it takes the one of the browser, and the two texts it
@@ -116,7 +116,9 @@ The tests of the window are in `web/window-tests`, one file `*.spec.ts` for each
   from a server of the test, `window-tests/update-feed.ts`, through `--dev-update-feed`: the feed of 1.0.14,
   older than any build, unless the test sets the option `updateFeed`, to another feed or to `null` for none.
   With the option `settingsFile` the test writes the file of the settings in the data folder before the start;
-  `bravo.readSettingsFile()` reads it again.
+  `bravo.readSettingsFile()` reads it again. With the option `policies`, the values of the policies by their
+  names, the test writes them in a key of its own under `HKEY_CURRENT_USER\Software\Bravo.Tests`, which the
+  application reads through `--dev-policy-key`, and removes the key at the end (`window-tests/policy-key.ts`).
   At the end it closes the window as a user does, expects exit code 0, waits for the end of the processes of
   the webview of that data folder and removes the folder.
 - `window-tests/webview-settings.ts` gives the webview the browser argument that opens the DevTools protocol,
@@ -136,7 +138,8 @@ The tests of the window are in `web/window-tests`, one file `*.spec.ts` for each
   (`options.spec.ts`, through the dialog of `options.ts`), a feature that has no route yet
   (`features.spec.ts`), a second start with the arguments of Power BI Desktop (`activation.spec.ts`), a newer
   release in the update feed and its download (`updates.spec.ts`), the file of the settings of 1.0.14 and one
-  that cannot be read (`settings.spec.ts`).
+  that cannot be read (`settings.spec.ts`), the policies that lock the options and turn the update check off
+  and on (`policies.spec.ts`).
 - A test never opens the browser of the machine: one that clicks a link first calls
   `bravo.answerBrowserRequests()`, which answers `POST /browser/open` with `page.route` and keeps the addresses
   in `bravo.openedInBrowser`. No other test sets a route: while the page has one, Playwright answers every CORS

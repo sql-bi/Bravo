@@ -45,8 +45,8 @@ that starts after 1.1.0, portable or after a downgrade, reads the same file.
   and in `proxy`: `updateChannel` of 1.0.x, and what a later version adds.
 - A 1.0.x and a 1.1.x that run at once both write the file, each one all of it: the last one wins.
 
-The window is not kept, as in 1.0.x. A policy (backlog B-5) applies over the settings and is not written in
-the file.
+The window is not kept, as in 1.0.x. A policy applies over the settings and is not written in the file
+([policies](policies.md)).
 
 ## In the code
 

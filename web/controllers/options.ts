@@ -11,7 +11,7 @@ import { DateTemplate } from '../model/dates';
 import { AppError } from '../model/exceptions';
 import { DaxLineBreakStyle } from '../model/tabular';
 import { MultiViewPaneMode } from '../view/multiview-pane';
-import { DiagnosticLevel, ProxyType, Theme, UserOptions } from '../generated/bravo';
+import { DiagnosticLevel, PolicyDetails, ProxyType, Theme, UserOptions } from '../generated/bravo';
 
 /**
  * The options of the user as the host keeps them, with the names of the host. The host keeps as any value
@@ -19,15 +19,6 @@ import { DiagnosticLevel, ProxyType, Theme, UserOptions } from '../generated/bra
  */
 export interface Options extends UserOptions {
     customOptions?: ClientOptions
-}
-
-export interface Policies {
-    telemetryEnabled?: boolean | null
-    updateCheckEnabled?: boolean | null
-    useSystemBrowserForAuthentication?: boolean | null
-    builtInTemplatesEnabled?: boolean | null
-    customTemplatesEnabled?: boolean | null
-    customTemplatesOrganizationRepositoryPath?: string | null
 }
 
 export interface ClientOptions {
@@ -203,7 +194,7 @@ export class OptionsController extends OptionsStore<Options> {
         }
     };
 
-    constructor(options?: Options, public policies: Policies = {}) {
+    constructor(options?: Options, public policies: PolicyDetails = {}) {
         super(options);
 
         if (options) {

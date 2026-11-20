@@ -74,7 +74,8 @@ of the API lists them in the schema `ProblemCode`, and no answer carries another
 
 - A use case reports a foreseen error by throwing `BravoException` with a code and a message in English,
   which becomes the `detail` of the problem. The code is a member of one list, which admits no other value.
-  The codes are `UpdateCheckFailed` ([updates](updates.md)) and `SettingsSaveFailed` ([settings](settings.md)).
+  The codes are `UpdateCheckFailed` and `UpdateCheckDisabled` ([updates](updates.md)), and `SettingsSaveFailed`
+  ([settings](settings.md)).
 - A route that writes a problem with a code outside the list is answered with the code of its status.
 
 **Events.** The host tells the user interface what happens through numbered events, the first of each process
@@ -98,7 +99,11 @@ sign-in with the system browser, diagnostic level, proxy, and the options that o
 which the host keeps as any JSON value. A proxy address must be the address of a server, and each entry of the
 bypass list a regular expression; blank text is no value. They are kept in the file of 1.0.x
 ([settings](settings.md)): when it cannot be written, the answer is the 409 `SettingsSaveFailed` and the options
-stay as they were. The policies that override them are backlog B-5.
+stay as they were.
+
+**Policies.** `GET /policies` returns the policies that an administrator set, read when the application started
+([policies](policies.md)); a member that is absent is not set. A policy applies over an option and is not one:
+`/options` returns and replaces the choices of the user alone, and the page applies the policies over them.
 
 **Contract.** `src/Bravo.Api/openapi.json` is the OpenAPI 3.1 document of the API. A test produces it from the
 routes and fails when the file differs, so a change of the API is a change of the file in the same commit.
@@ -119,8 +124,8 @@ named in the document, and the types that travel. The build then checks the user
   converts a name into a number: today the theme, the diagnostic level and the type of the proxy, later the
   others, each with its feature. A number in the options that only the user interface reads stays a number:
   1.0.x saved it.
-- Today the application data, the options, the events, the update check and the links that open in the
-  browser go through the client. Every other call of the user interface belongs to a feature that has not
+- Today the application data, the options, the policies, the events, the update check and the links that open
+  in the browser go through the client. Every other call of the user interface belongs to a feature that has not
   moved: nothing is sent, and the call fails at once with an error that says that the feature is not
   available yet. Each one moves to the client with its feature.
 
@@ -131,12 +136,13 @@ missing, the host does not answer or one of its parts fails, says so in place of
 language of the browser, in English where it has no text in that language, with what went wrong below and a
 button that loads the page again.
 
-- Before any of its parts exists, the page asks the API what the application is and for the options of the
-  user. Until those answers arrive it follows the color scheme that it is told: in the window the theme of the
-  user ([window and webview](window-and-webview.md)), in a browser the color mode of the system.
+- Before any of its parts exists, the page asks the API what the application is, for the options of the user
+  and for the policies. Until those answers arrive it follows the color scheme that it is told: in the window
+  the theme of the user ([window and webview](window-and-webview.md)), in a browser the color mode of the
+  system.
 - It saves no option when it starts: what it shows is what the options that it has just read say.
-- It starts with no policy (backlog B-5) and no telemetry settings (backlog B-9): until then no option is
-  locked, and telemetry sends nothing.
+- It locks the option of each policy. It starts with no telemetry settings (backlog B-9): until then telemetry
+  sends nothing.
 - It has no message channel with the window: what the host tells it arrives as events.
 - It reads the events one request after the other. The number to ask next is kept in the session storage of
   the page, with the address of the host it belongs to: a page that is loaded again goes on from there, and

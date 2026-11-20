@@ -22,6 +22,7 @@ export const problemTexts: Record<ProblemCode, strings> = {
     Unexpected: strings.errorUnhandled,
     HttpError: strings.errorUnspecified,
     UpdateCheckFailed: strings.errorCheckForUpdates,
+    UpdateCheckDisabled: strings.optionPolicyNotice,
     SettingsSaveFailed: strings.errorUserSettingsSaveError
 };
 

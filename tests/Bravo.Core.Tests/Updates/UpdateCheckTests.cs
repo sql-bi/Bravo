@@ -2,6 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Bravo.Core.Errors;
+using Bravo.Core.Policies;
 using Bravo.Core.Updates;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -86,7 +87,7 @@ public sealed class UpdateCheckTests
     public async Task CheckAsync_BuildWithoutAFeed_FailsWithTheCodeOfTheCheckAndReadsNothing()
     {
         var options = new UpdateCheckOptions { FileVersion = new Version(1, 1, 0, 188), IncludesRuntime = true };
-        var check = new UpdateCheck(_feed, _installationReader, _beep, options);
+        var check = new UpdateCheck(_feed, _installationReader, _beep, options, ApplicationPolicies.None);
 
         var exception = await Assert.ThrowsAsync<BravoException>(
             () => check.CheckAsync(TestContext.Current.CancellationToken));
@@ -95,7 +96,34 @@ public sealed class UpdateCheckTests
         _ = _feed.DidNotReceiveWithAnyArgs().ReadAsync(default!, TestContext.Current.CancellationToken);
     }
 
-    private UpdateCheck CreateCheck(string fileVersion, bool includesRuntime)
+    [Fact]
+    public async Task CheckAsync_CheckTurnedOffByAPolicy_FailsWithItsCodeAndReadsNothing()
+    {
+        var policies = new ApplicationPolicies { UpdateCheckEnabled = false };
+        var check = CreateCheck("1.0.9805.22885", includesRuntime: true, policies);
+        GivenTheFeedNames("1.1.0.188");
+
+        var exception = await Assert.ThrowsAsync<BravoException>(
+            () => check.CheckAsync(TestContext.Current.CancellationToken));
+
+        Assert.Equal(ErrorCode.UpdateCheckDisabled, exception.Code);
+        _ = _feed.DidNotReceiveWithAnyArgs().ReadAsync(default!, TestContext.Current.CancellationToken);
+    }
+
+    // A policy that turns the check on stops nothing: the page checks at its start whatever the setting.
+    [Fact]
+    public async Task CheckAsync_CheckTurnedOnByAPolicy_ReadsTheFeed()
+    {
+        var policies = new ApplicationPolicies { UpdateCheckEnabled = true };
+        var check = CreateCheck("1.0.9805.22885", includesRuntime: true, policies);
+        GivenTheFeedNames("1.1.0.188");
+
+        var result = await check.CheckAsync(TestContext.Current.CancellationToken);
+
+        Assert.True(result.IsNewer);
+    }
+
+    private UpdateCheck CreateCheck(string fileVersion, bool includesRuntime, ApplicationPolicies? policies = null)
     {
         var options = new UpdateCheckOptions
         {
@@ -104,7 +132,7 @@ public sealed class UpdateCheckTests
             IncludesRuntime = includesRuntime,
         };
 
-        return new UpdateCheck(_feed, _installationReader, _beep, options);
+        return new UpdateCheck(_feed, _installationReader, _beep, options, policies ?? ApplicationPolicies.None);
     }
 
     // Only the feed of the options names a release.

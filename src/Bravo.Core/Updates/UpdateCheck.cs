@@ -1,6 +1,7 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 using Bravo.Core.Errors;
+using Bravo.Core.Policies;
 
 namespace Bravo.Core.Updates;
 
@@ -12,19 +13,28 @@ public sealed class UpdateCheck(
     IReleaseFeed feed,
     IInstallationReader installationReader,
     ISystemBeep beep,
-    UpdateCheckOptions options)
+    UpdateCheckOptions options,
+    ApplicationPolicies policies)
 {
     private readonly IReleaseFeed _feed = feed;
     private readonly IInstallationReader _installationReader = installationReader;
     private readonly ISystemBeep _beep = beep;
     private readonly UpdateCheckOptions _options = options;
+    private readonly ApplicationPolicies _policies = policies;
 
     /// <exception cref="BravoException">
+    /// With <see cref="ErrorCode.UpdateCheckDisabled"/>: a policy turned the check off, and nothing is read.
     /// With <see cref="ErrorCode.UpdateCheckFailed"/>: the build has no feed, the feed cannot be read, or what
     /// it holds names no release.
     /// </exception>
     public async Task<UpdateCheckResult> CheckAsync(CancellationToken cancellationToken)
     {
+        // The setting of the user only decides whether the page checks at its start: the policy stops every request.
+        if (_policies.UpdateCheckEnabled == false)
+        {
+            throw new BravoException(ErrorCode.UpdateCheckDisabled, "A policy of the administrator turned the update check off.");
+        }
+
         if (_options.FeedAddress is not { } feedAddress)
         {
             throw new BravoException(ErrorCode.UpdateCheckFailed, "This build reads no update feed.");

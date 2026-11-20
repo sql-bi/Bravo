@@ -7,6 +7,7 @@ using Bravo.Api.Events;
 using Bravo.Api.Security;
 using Bravo.Core.Application;
 using Bravo.Core.Browser;
+using Bravo.Core.Policies;
 using Bravo.Core.Updates;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
@@ -69,13 +70,16 @@ internal sealed class TestApi : IAsyncDisposable
     public InMemoryUserSettingsStore Settings => _app.Services.GetRequiredService<InMemoryUserSettingsStore>();
 
     /// <param name="mapRoutes">Adds routes that exist only for a test, after the ones of the API.</param>
-    public static async Task<TestApi> StartAsync(Action<IEndpointRouteBuilder>? mapRoutes = null)
+    /// <param name="policies">What an administrator set; none by default.</param>
+    public static async Task<TestApi> StartAsync(
+        Action<IEndpointRouteBuilder>? mapRoutes = null,
+        ApplicationPolicies? policies = null)
     {
         var time = new FakeTimeProvider();
         var builder = WebApplication.CreateEmptyBuilder(new WebApplicationOptions());
         builder.WebHost.UseTestServer();
         builder.Services.AddSingleton<TimeProvider>(time);
-        builder.Services.AddUseCasesOfTheTests();
+        builder.Services.AddUseCasesOfTheTests(policies);
         builder.Services.AddApi();
         builder.Services.Configure<ApiOptions>(options => options.AllowedOrigins.Add(AllowedOrigin));
 

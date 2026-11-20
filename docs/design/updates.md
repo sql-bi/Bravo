@@ -60,8 +60,10 @@ check failed. Started with `--dev-update-feed=<address>`, it reads the feed at t
 or `https` one. To a release build the argument is one that it does not know, and so an error of the request
 ([window and webview](window-and-webview.md)).
 
-**Turned off.** The option of the user turns off the check at the start of the page. The policy of 1.0.x that
-turns it off is not read yet (backlog B-5).
+**Turned off.** The option of the user turns off the check at the start of the page. The policy
+`UpdateCheckEnabled` of 1.0.x applies over it ([policies](policies.md)): off, it stops every request to the
+feed, the route answers the 409 `UpdateCheckDisabled` and reads nothing, and the page neither checks at its
+start nor offers the check in its options; on, the page checks at its start whatever the option.
 
 **Limits.**
 
@@ -96,7 +98,8 @@ turns it off is not read yet (backlog B-5).
   and `DefaultBrowserLauncher` checks it again, so that no other caller opens another address. Every page that
   the application opens in the browser goes through `DefaultBrowserLauncher`, the link of a failure of the
   webview too.
-- `UpdateCheck` decides whether this copy reads a feed; `HttpReleaseFeed` only reads the one that it is given.
+- `UpdateCheck` decides whether this copy reads a feed, and whether a policy lets it; `HttpReleaseFeed` only
+  reads the one that it is given.
 - The file version is the one that Nerdbank.GitVersioning writes into the assembly. A build that carries the
   runtime, `SelfContained`, writes the assembly metadata `BravoSelfContained`.
 - The launch profile `Bravo (update feed)` of `src/Bravo.Desktop/Properties/launchSettings.json` starts a

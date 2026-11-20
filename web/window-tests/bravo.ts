@@ -6,6 +6,7 @@ import path from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import { promisify } from 'node:util';
 import { type Browser, chromium, expect, type Page, test as base } from '@playwright/test';
+import { PolicyKey, type PolicyValues } from './policy-key';
 import { releasedFeed, UpdateFeedServer } from './update-feed';
 import { chooseWebViewSettings, type WebViewSettings } from './webview-settings';
 
@@ -14,9 +15,10 @@ import { chooseWebViewSettings, type WebViewSettings } from './webview-settings'
 // chooses, attaches Playwright to the page, and closes the application as a user does. Nothing of the
 // application changes for a test: the browser argument is read by the WebView2 runtime (webview-settings.ts),
 // and the application passes none of its own. Its arguments name the data folder of the test, where a test can
-// put the file of the settings that the application finds at its start (settingsFile), and the update feed of
-// the test, which a server of the test serves (update-feed.ts). A test that opens a page in the default browser
-// of the machine answers the request itself (answerBrowserRequests).
+// put the file of the settings that the application finds at its start (settingsFile), the update feed of the
+// test, which a server of the test serves (update-feed.ts), and the key of the policies of the test, which the
+// test writes (policy-key.ts). A test that opens a page in the default browser of the machine answers the request
+// itself (answerBrowserRequests).
 
 const executable = path.join(__dirname, '..', '..', 'artifacts', 'bin', 'Bravo.Desktop', 'release', 'Bravo.exe');
 const bundle = path.join(path.dirname(executable), 'wwwroot', 'js', 'main.js');
@@ -270,7 +272,7 @@ interface PageWithHost {
     bravoHost: { address: string }
 }
 
-export const test = base.extend<{ bravo: Bravo, updateFeed: string | null, settingsFile: string | null }, { webView: WebViewSettings }>({
+export const test = base.extend<{ bravo: Bravo, updateFeed: string | null, settingsFile: string | null, policies: PolicyValues | null }, { webView: WebViewSettings }>({
 
     // The update feed that the application of a test reads, by default one with an older release; with null
     // the application has none, and its update check fails
@@ -280,6 +282,10 @@ export const test = base.extend<{ bravo: Bravo, updateFeed: string | null, setti
     // null, the default, there is no file
     settingsFile: [null, { option: true }],
 
+    // The values of the policies that the application reads at its start, by their names; with null, the
+    // default, it reads no key of policies
+    policies: [null, { option: true }],
+
     // Decided once for the tests of a worker, and said in the log of the run
     webView: [async ({ }, use) => {
         const webView = await chooseWebViewSettings();
@@ -288,13 +294,14 @@ export const test = base.extend<{ bravo: Bravo, updateFeed: string | null, setti
     }, { scope: 'worker' }],
 
     // The start and the end of the application have a time of their own, which the test does not share
-    bravo: [async ({ webView, updateFeed, settingsFile }, use, testInfo) => {
+    bravo: [async ({ webView, updateFeed, settingsFile, policies }, use, testInfo) => {
         checkBuild();
 
         // The long path: the temporary folder of a runner of continuous integration is a short 8.3 path
         const dataFolder = await mkdtemp(path.join(realpathSync.native(os.tmpdir()), 'bravo-window-test-'));
 
         let feed: UpdateFeedServer | undefined;
+        let policyKey: PolicyKey | undefined;
         let application: BravoProcess | undefined;
         let browser: Browser | undefined;
         let failure: unknown;
@@ -303,7 +310,12 @@ export const test = base.extend<{ bravo: Bravo, updateFeed: string | null, setti
                 await writeFile(path.join(dataFolder, settingsFileName), settingsFile, 'utf8');
 
             feed = (updateFeed === null ? undefined : await UpdateFeedServer.start(updateFeed));
-            const args = [`--dev-data-folder=${dataFolder}`, ...(feed ? [`--dev-update-feed=${feed.address}`] : [])];
+            policyKey = (policies === null ? undefined : await PolicyKey.write(policies));
+            const args = [
+                `--dev-data-folder=${dataFolder}`,
+                ...(feed ? [`--dev-update-feed=${feed.address}`] : []),
+                ...(policyKey ? [`--dev-policy-key=${policyKey.name}`] : [])
+            ];
             const started = new BravoProcess(args, await webView.give());
             application = started;
 
@@ -358,6 +370,7 @@ export const test = base.extend<{ bravo: Bravo, updateFeed: string | null, setti
             code = await end(application, browser, dataFolder);
         } finally {
             await feed?.close();
+            await policyKey?.remove();
             await webView.takeBack();
         }
 

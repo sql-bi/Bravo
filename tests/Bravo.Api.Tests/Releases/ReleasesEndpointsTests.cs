@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Bravo.Core.Errors;
+using Bravo.Core.Policies;
 using Bravo.Core.Updates;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -52,6 +53,20 @@ public sealed class ReleasesEndpointsTests
 
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
         Assert.Equal(nameof(ErrorCode.UpdateCheckFailed), await response.ReadProblemCodeAsync());
+    }
+
+    [Fact]
+    public async Task GetLatestRelease_CheckTurnedOffByAPolicy_IsAnswered409WithItsCodeAndReadsNothing()
+    {
+        var policies = new ApplicationPolicies { UpdateCheckEnabled = false };
+        await using var api = await TestApi.StartAsync(policies: policies);
+        GivenTheFeedNames(api, "1.3.0.25");
+
+        using var response = await api.Client.GetAsync(Route, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        Assert.Equal(nameof(ErrorCode.UpdateCheckDisabled), await response.ReadProblemCodeAsync());
+        _ = api.ReleaseFeed.DidNotReceiveWithAnyArgs().ReadAsync(default!, TestContext.Current.CancellationToken);
     }
 
     private static void GivenTheFeedNames(TestApi api, string version)

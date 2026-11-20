@@ -16,7 +16,7 @@ test('the page starts with a clean console, reads the host and the latest releas
     expect(bravo.pageErrors).toEqual([]);
     expect(bravo.console.filter(entry => entry.type === 'error' || entry.type === 'warning')).toEqual([]);
 
-    expect([...new Set(bravo.hostRequests())].sort()).toEqual(['GET /application', 'GET /events', 'GET /options', 'GET /releases/latest']);
+    expect([...new Set(bravo.hostRequests())].sort()).toEqual(['GET /application', 'GET /events', 'GET /options', 'GET /policies', 'GET /releases/latest']);
     expect(bravo.requests.filter(request =>
         !request.url.startsWith('https://bravo.invalid/') && !request.url.startsWith(`${bravo.address}/`))).toEqual([]);
 
