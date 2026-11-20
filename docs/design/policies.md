@@ -24,7 +24,9 @@ the user the others.
   ([ADR 0001](../decisions/0001-releases-without-update-channels.md)).
 - A key that does not exist sets nothing. A key that exists and cannot be read stops the start: a message names
   the key and asks the user to turn to the administrator, and the application ends with exit code 5
-  ([startup](startup.md)). Starting without the policies would remove what an administrator set.
+  ([startup](startup.md)). Starting without the policies would remove what an administrator set. The process
+  gives up the instance before the message: a start meanwhile reads the policies itself and shows the same
+  message, and is not handed over to a process that has no host to take it.
 - A policy that changes while the application runs applies at its next start.
 
 **Over the settings.** A policy is never written in the file of the settings ([settings](settings.md)), and
@@ -84,5 +86,6 @@ release build the argument is one that it does not know, and so an error of the 
   template, and the values that each policy writes, as the application reads them. One test writes the keys of
   the application, and runs only on a runner of GitHub Actions, which is thrown away after the run.
 - The tests of the window give the application a key of the test (`policies` in `web/window-tests/bravo.ts`).
-  `BravoProcessTests` starts the application with a key of the test that cannot be read, and the test of the
-  packages the installed application with a key of the computer that cannot be read.
+  `BravoProcessTests` starts the application with a key of the test that cannot be read, once more while its
+  message is shown, and the test of the packages the installed application with a key of the computer that
+  cannot be read.

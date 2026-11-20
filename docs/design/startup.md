@@ -8,7 +8,7 @@
 | 1 | Windows Forms is configured; the DPI mode, per monitor, is a property of the project |
 | 2 | An exception that escapes, on any thread, reaches one handler, and the runtime ends the process. Until backlog B-8 the handler shows a message |
 | 3 | The command line becomes an activation request. The process becomes the owner of the instance, or hands the request over to the owner and ends |
-| 4 | The policies are read ([Policies](policies.md)); a key that cannot be read ends the start. The host is built and started. It gets as instances the handler of step 2, the ownership of step 3 and the policies |
+| 4 | The policies are read ([Policies](policies.md)); a key that cannot be read releases the ownership and ends the start with a message. The host is built and started. It gets as instances the handler of step 2, the ownership of step 3 and the policies |
 | 5 | The main window, a service of the host, runs the message loop |
 | 6 | The host is stopped and disposed, then the ownership is released |
 

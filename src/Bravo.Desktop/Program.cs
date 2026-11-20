@@ -48,6 +48,9 @@ internal static class Program
             }
             catch (PolicyReadException exception)
             {
+                // Released before the message: a start meanwhile reads the policies itself, and is not handed
+                // over to a process that has no host to take it.
+                arbitration.Ownership.Dispose();
                 return PolicyReadFailureDialog.End(exception);
             }
 

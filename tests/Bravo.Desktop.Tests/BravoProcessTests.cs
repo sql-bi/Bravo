@@ -110,6 +110,37 @@ public sealed class BravoProcessTests : IDisposable
         }
     }
 
+    // The instance is released before the message: a second start reads the policies itself, and is not handed
+    // over to a process that has no host to take it.
+    [Fact]
+    public async Task Start_WhileTheMessageOfPoliciesThatCannotBeReadIsShown_ShowsItsOwnMessage()
+    {
+        using var registry = new TemporaryRegistryKey();
+        var policyKey = $"--dev-policy-key={registry.DenyReading("Policies")}";
+        using var first = StartBravo(policyKey);
+        using var second = new Process();
+        try
+        {
+            await WaitForMainWindowAsync(first);
+            second.StartInfo = CreateStartInfo(policyKey);
+            second.Start();
+            await WaitForMainWindowAsync(second);
+
+            second.CloseMainWindow();
+            first.CloseMainWindow();
+            var secondExitCode = await WaitForExitAsync(second, s_shutdownTimeout);
+            var firstExitCode = await WaitForExitAsync(first, s_shutdownTimeout);
+
+            Assert.Equal(ExitCode.PoliciesUnreadable, secondExitCode);
+            Assert.Equal(ExitCode.PoliciesUnreadable, firstExitCode);
+        }
+        finally
+        {
+            Kill(second);
+            Kill(first);
+        }
+    }
+
     // SendMessage returns when the window has answered, and a window that hangs never does. The wait has an
     // end: the test then fails, and the end of the process, which the test asks for, ends the call as well.
     private static async Task<nint> SendAsync(HWND window, uint message, WPARAM wParam)
