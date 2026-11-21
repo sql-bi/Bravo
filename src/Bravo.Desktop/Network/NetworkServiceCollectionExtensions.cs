@@ -13,7 +13,7 @@ internal static class NetworkServiceCollectionExtensions
     private const string CredentialTargetName = Product.Name + "/proxy";
 
     // A development build keeps its own, and neither reads nor replaces the ones of the installed application.
-    private const string DevelopmentCredentialTargetName = Product.Name + " (development)/proxy";
+    internal const string DevelopmentCredentialTargetName = Product.Name + " (development)/proxy";
 
     /// <summary>
     /// Adds what takes the connections of the host through the proxy of the settings of the user: every HTTP

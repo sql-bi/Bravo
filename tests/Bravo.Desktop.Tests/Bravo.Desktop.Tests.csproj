@@ -2,10 +2,17 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0-windows</TargetFramework>
+    <!-- The declarations that CsWin32 generates from NativeMethods.txt use pointers. -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
+  <!--
+    CsWin32 declares the functions of Windows that only a test calls: the ones that write the Internet settings
+    of the user, on a runner. The functions that the application calls are the ones of its own assembly.
+  -->
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.TimeProvider.Testing" />
+    <PackageReference Include="Microsoft.Windows.CsWin32" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>

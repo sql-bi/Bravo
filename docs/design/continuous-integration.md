@@ -59,6 +59,11 @@ What a run checks beyond the commands of the table above:
 - The tests of `build-and-test` and of `test-window` start `Bravo.exe` and use the real WebView2 engine. The
   runtime is not in the list of the software of the runner image: it comes with the Windows image that the
   runner is built on.
+- Some tests of `build-and-test` run only on the runner, and are skipped on any other machine: they write
+  what a test must never change on the machine of a developer. They write the policies of the application
+  ([policies](policies.md)), credentials of their own in the Windows Credential Manager, and a proxy and an
+  auto-configuration script in the Internet settings of the user ([network](network.md)), and put back what
+  they found.
 - The runner runs every process elevated, and an elevated webview ignores the environment variables of the
   WebView2 runtime: `test-window` gives the webview its browser argument as a policy of the machine, which its
   last step shows to be gone ([User interface](../../web/AGENTS.md)).

@@ -99,9 +99,22 @@ user entered, when the user chose to use them and some are kept, else as the Win
   `ProxySelectionOptions.SystemProxy` the proxy that stands for the one of the system.
 - `DesktopHostNetworkTests` builds the host as the application does, with a proxy of the user in its settings
   file, and reads the update feed through it.
-- No test reads, writes or deletes a credential of the machine that runs it. The tests of the store write
-  credentials of their own, named `Bravo.Tests/<identifier>/proxy`, and run only on a runner of GitHub
-  Actions, which is thrown away after the run: elsewhere they are skipped. One of them reads a credential
-  that `cmdkey`, a program of Windows, wrote.
-- One test answers a proxy as the Windows user, with the first message of Negotiate, which holds no secret:
+- `BravoNetworkTests` starts the executable with the proxy of the system, which no test can give a host in its
+  own process: .NET takes it from the variable `HTTP_PROXY` of the process before it looks at Windows. The
+  test calls the API of the application, whose address and token it reads from the file of
+  `--dev-connection-file`.
+- No test reads, writes or deletes a credential of the machine that runs it, nor changes its Internet
+  settings. The tests that do run only on a runner of GitHub Actions, which is thrown away after the run:
+  elsewhere they are skipped.
+  - The tests of the store write credentials of their own, named `Bravo.Tests/<identifier>/proxy`, and one
+    of them reads a credential that `cmdkey`, a program of Windows, wrote.
+  - `BravoSystemProxyTests` writes the Internet settings of the user with the function of Windows for them
+    ([`InternetSetOption`](https://learn.microsoft.com/windows/win32/api/wininet/nf-wininet-internetsetoptionw)),
+    starts the executable after that, and puts back what it found: a proxy for plain HTTP addresses alone,
+    then a script that names a proxy that does not listen before the one of the test, which passes only if
+    .NET goes on to the next proxy. A third test keeps credentials under the name of a development build,
+    with `cmdkey`, and deletes them.
+- The tests answer a proxy as the Windows user only with the first message of Negotiate, which holds no secret:
   the proxy of the test keeps the name of the scheme alone.
+- The classes that start the executable are one collection of xUnit, `BravoExecutable.Collection`: the
+  application has one instance, and they run one after the other.

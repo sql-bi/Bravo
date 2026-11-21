@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.IO;
-using System.Threading;
 using System.Threading.Tasks;
 using Windows.Win32;
 using Windows.Win32.Foundation;
@@ -13,12 +11,11 @@ namespace Bravo.Desktop.Tests;
 /// The executable as the build of the tests wrote it, a development build: real processes, the names of the
 /// instance of a development build, a real window.
 /// </summary>
+[Collection(BravoExecutable.Collection)]
 public sealed class BravoProcessTests : IDisposable
 {
-    private static readonly TimeSpan s_startTimeout = TimeSpan.FromSeconds(60);
-
-    // The time the host has to stop: a closed window is an ended process within it.
-    private static readonly TimeSpan s_shutdownTimeout = TimeSpan.FromSeconds(5);
+    private static readonly TimeSpan s_startTimeout = BravoExecutable.StartTimeout;
+    private static readonly TimeSpan s_shutdownTimeout = BravoExecutable.ShutdownTimeout;
 
     // WM_QUERYENDSESSION and WM_ENDSESSION, with ENDSESSION_CLOSEAPP: the application is asked to end so
     // that its files can be replaced, and not because the session of the user ends.
@@ -163,66 +160,23 @@ public sealed class BravoProcessTests : IDisposable
         return Process.Start(CreateStartInfo(arguments)) ?? throw new InvalidOperationException("Bravo did not start.");
     }
 
-    // The build of the tests writes where the project of the executable built it: there it has beside it all
-    // that it loads, which the folder of the tests does not hold. Its data goes to the folder of the test.
     private ProcessStartInfo CreateStartInfo(params string[] arguments)
     {
-        var pathFile = Path.Combine(AppContext.BaseDirectory, "BravoExecutable.txt");
-        var path = File.ReadAllText(pathFile).Trim();
-        string[] allArguments = [$"--dev-data-folder={_dataFolder.Path}", .. arguments];
-        return new ProcessStartInfo(path, allArguments) { UseShellExecute = false };
+        return BravoExecutable.CreateStartInfo(_dataFolder.Path, arguments);
     }
 
-    private static async Task WaitForMainWindowAsync(Process process)
+    private static Task WaitForMainWindowAsync(Process process)
     {
-        var cancellationToken = TestContext.Current.CancellationToken;
-        var start = Stopwatch.GetTimestamp();
-        while (process.MainWindowHandle == nint.Zero)
-        {
-            if (process.HasExited)
-            {
-                // A start that ends at once with success handed itself over: these are the names of every
-                // development build, and one of this user already runs on this machine.
-                Assert.SkipWhen(process.ExitCode == 0, "A development build of Bravo is running.");
-                Assert.Fail($"Bravo ended with exit code {process.ExitCode} before it showed its window.");
-            }
-
-            var waited = Stopwatch.GetElapsedTime(start);
-            Assert.True(waited < s_startTimeout, "Bravo did not show its window in time.");
-            await Task.Delay(TimeSpan.FromMilliseconds(100), cancellationToken);
-            process.Refresh();
-        }
+        return BravoExecutable.WaitForMainWindowAsync(process);
     }
 
-    private static async Task<int> WaitForExitAsync(Process process, TimeSpan timeout)
+    private static Task<int> WaitForExitAsync(Process process, TimeSpan timeout)
     {
-        var cancellationToken = TestContext.Current.CancellationToken;
-        using var timeoutSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        timeoutSource.CancelAfter(timeout);
-        try
-        {
-            await process.WaitForExitAsync(timeoutSource.Token);
-        }
-        catch (OperationCanceledException)
-        {
-            Assert.Fail($"The process {process.Id} did not end within {timeout}.");
-        }
-
-        return process.ExitCode;
+        return BravoExecutable.WaitForExitAsync(process, timeout);
     }
 
     private static void Kill(Process process)
     {
-        try
-        {
-            if (!process.HasExited)
-            {
-                process.Kill(entireProcessTree: true);
-            }
-        }
-        catch (InvalidOperationException)
-        {
-            // The process was never started.
-        }
+        BravoExecutable.Kill(process);
     }
 }

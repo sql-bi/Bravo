@@ -54,6 +54,11 @@ internal sealed class TestProxy : IAsyncDisposable
     /// </summary>
     public string Body { get; init; } = "answered by the proxy of the test";
 
+    /// <summary>
+    /// The media type of <see cref="Body"/>.
+    /// </summary>
+    public string ContentType { get; init; } = "text/plain; charset=utf-8";
+
     public IReadOnlyList<TestProxyRequest> Requests
     {
         get
@@ -161,11 +166,11 @@ internal sealed class TestProxy : IAsyncDisposable
         return authorization == $"Basic {Convert.ToBase64String(pair)}";
     }
 
-    private static string Response(string status, string body, string headers = "")
+    private string Response(string status, string body, string headers = "")
     {
         var length = Encoding.UTF8.GetByteCount(body);
 
-        return $"HTTP/1.1 {status}\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Length: {length}\r\n{headers}Connection: close\r\n\r\n{body}";
+        return $"HTTP/1.1 {status}\r\nContent-Type: {ContentType}\r\nContent-Length: {length}\r\n{headers}Connection: close\r\n\r\n{body}";
     }
 
     private static async Task<string?> ReadHeadAsync(NetworkStream stream, CancellationToken cancellationToken)
