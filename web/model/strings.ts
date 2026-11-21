@@ -475,4 +475,4 @@ export enum strings {
     whitespacesTitle,
     wrappingTitle,
 
-};
+};
