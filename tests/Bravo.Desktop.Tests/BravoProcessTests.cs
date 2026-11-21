@@ -14,9 +14,6 @@ namespace Bravo.Desktop.Tests;
 [Collection(BravoExecutable.Collection)]
 public sealed class BravoProcessTests : IDisposable
 {
-    private static readonly TimeSpan s_startTimeout = BravoExecutable.StartTimeout;
-    private static readonly TimeSpan s_shutdownTimeout = BravoExecutable.ShutdownTimeout;
-
     // WM_QUERYENDSESSION and WM_ENDSESSION, with ENDSESSION_CLOSEAPP: the application is asked to end so
     // that its files can be replaced, and not because the session of the user ends.
     private const uint QueryEndSession = 0x0011;
@@ -37,15 +34,15 @@ public sealed class BravoProcessTests : IDisposable
         using var second = new Process();
         try
         {
-            await WaitForMainWindowAsync(first);
+            await BravoExecutable.WaitForMainWindowAsync(first);
 
             second.StartInfo = CreateStartInfo("--server", "localhost:12345", "--database", "db");
             second.Start();
-            var secondExitCode = await WaitForExitAsync(second, s_startTimeout);
+            var secondExitCode = await BravoExecutable.WaitForExitAsync(second, BravoExecutable.StartTimeout);
             var firstWasRunning = !first.HasExited;
 
             first.CloseMainWindow();
-            var firstExitCode = await WaitForExitAsync(first, s_shutdownTimeout);
+            var firstExitCode = await BravoExecutable.WaitForExitAsync(first, BravoExecutable.ShutdownTimeout);
 
             Assert.Equal(0, secondExitCode);
             Assert.True(firstWasRunning);
@@ -53,8 +50,8 @@ public sealed class BravoProcessTests : IDisposable
         }
         finally
         {
-            Kill(second);
-            Kill(first);
+            BravoExecutable.Kill(second);
+            BravoExecutable.Kill(first);
         }
     }
 
@@ -67,19 +64,19 @@ public sealed class BravoProcessTests : IDisposable
         using var bravo = StartBravo();
         try
         {
-            await WaitForMainWindowAsync(bravo);
+            await BravoExecutable.WaitForMainWindowAsync(bravo);
             var window = (HWND)bravo.MainWindowHandle;
 
             var answer = await SendAsync(window, QueryEndSession, default);
             await SendAsync(window, EndSession, new WPARAM(1));
-            var exitCode = await WaitForExitAsync(bravo, s_shutdownTimeout);
+            var exitCode = await BravoExecutable.WaitForExitAsync(bravo, BravoExecutable.ShutdownTimeout);
 
             Assert.Equal(1, answer);
             Assert.Equal(0, exitCode);
         }
         finally
         {
-            Kill(bravo);
+            BravoExecutable.Kill(bravo);
         }
     }
 
@@ -92,18 +89,18 @@ public sealed class BravoProcessTests : IDisposable
         using var bravo = StartBravo($"--dev-policy-key={keyName}");
         try
         {
-            await WaitForMainWindowAsync(bravo);
+            await BravoExecutable.WaitForMainWindowAsync(bravo);
             var title = bravo.MainWindowTitle;
 
             bravo.CloseMainWindow();
-            var exitCode = await WaitForExitAsync(bravo, s_shutdownTimeout);
+            var exitCode = await BravoExecutable.WaitForExitAsync(bravo, BravoExecutable.ShutdownTimeout);
 
             Assert.Equal("Bravo for Power BI", title);
             Assert.Equal(ExitCode.PoliciesUnreadable, exitCode);
         }
         finally
         {
-            Kill(bravo);
+            BravoExecutable.Kill(bravo);
         }
     }
 
@@ -118,23 +115,23 @@ public sealed class BravoProcessTests : IDisposable
         using var second = new Process();
         try
         {
-            await WaitForMainWindowAsync(first);
+            await BravoExecutable.WaitForMainWindowAsync(first);
             second.StartInfo = CreateStartInfo(policyKey);
             second.Start();
-            await WaitForMainWindowAsync(second);
+            await BravoExecutable.WaitForMainWindowAsync(second);
 
             second.CloseMainWindow();
             first.CloseMainWindow();
-            var secondExitCode = await WaitForExitAsync(second, s_shutdownTimeout);
-            var firstExitCode = await WaitForExitAsync(first, s_shutdownTimeout);
+            var secondExitCode = await BravoExecutable.WaitForExitAsync(second, BravoExecutable.ShutdownTimeout);
+            var firstExitCode = await BravoExecutable.WaitForExitAsync(first, BravoExecutable.ShutdownTimeout);
 
             Assert.Equal(ExitCode.PoliciesUnreadable, secondExitCode);
             Assert.Equal(ExitCode.PoliciesUnreadable, firstExitCode);
         }
         finally
         {
-            Kill(second);
-            Kill(first);
+            BravoExecutable.Kill(second);
+            BravoExecutable.Kill(first);
         }
     }
 
@@ -146,11 +143,11 @@ public sealed class BravoProcessTests : IDisposable
         var answer = Task.Run(() => PInvoke.SendMessage(window, message, wParam, new LPARAM(CloseApplication)).Value, cancellationToken);
         try
         {
-            return await answer.WaitAsync(s_shutdownTimeout, cancellationToken);
+            return await answer.WaitAsync(BravoExecutable.ShutdownTimeout, cancellationToken);
         }
         catch (TimeoutException)
         {
-            Assert.Fail($"The window did not answer the message 0x{message:X4} within {s_shutdownTimeout}.");
+            Assert.Fail($"The window did not answer the message 0x{message:X4} within {BravoExecutable.ShutdownTimeout}.");
             throw;
         }
     }
@@ -163,20 +160,5 @@ public sealed class BravoProcessTests : IDisposable
     private ProcessStartInfo CreateStartInfo(params string[] arguments)
     {
         return BravoExecutable.CreateStartInfo(_dataFolder.Path, arguments);
-    }
-
-    private static Task WaitForMainWindowAsync(Process process)
-    {
-        return BravoExecutable.WaitForMainWindowAsync(process);
-    }
-
-    private static Task<int> WaitForExitAsync(Process process, TimeSpan timeout)
-    {
-        return BravoExecutable.WaitForExitAsync(process, timeout);
-    }
-
-    private static void Kill(Process process)
-    {
-        BravoExecutable.Kill(process);
     }
 }

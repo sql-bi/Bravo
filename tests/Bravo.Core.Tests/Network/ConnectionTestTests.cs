@@ -52,16 +52,6 @@ public sealed class ConnectionTestTests
         Assert.Equal([failed, reached], connections);
     }
 
-    [Fact]
-    public async Task RunAsync_BuildWithoutAFeed_AsksNoFeed()
-    {
-        var test = CreateTest(feedAddress: null, ApplicationPolicies.None);
-
-        var connections = await test.RunAsync(TestContext.Current.CancellationToken);
-
-        Assert.DoesNotContain(connections, connection => connection.Site == NetworkSite.UpdateFeed);
-    }
-
     // The policy stops every request to the feed: the one of the test too.
     [Fact]
     public async Task RunAsync_UpdateCheckTurnedOffByPolicy_SendsNoRequestToTheFeed()

@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Diagnostics;
-using System.IO;
 using System.Net;
-using System.Net.Sockets;
-using System.Text.Json;
 using System.Threading.Tasks;
+using Bravo.Api.Tests;
 using Bravo.Core.Errors;
 using Bravo.Desktop.Network;
+using Bravo.Platform.Windows.Tests;
 using Bravo.Platform.Windows.Tests.Network;
 using Xunit;
 
@@ -21,6 +19,8 @@ namespace Bravo.Desktop.Tests.Network;
 [Collection(BravoExecutable.Collection)]
 public sealed class BravoSystemProxyTests : IDisposable
 {
+    private const string WhatTheTestsWrite = "the Internet settings or the credentials of the user";
+
     private const string UserName = "test-user";
     private const string Password = "test-password";
 
@@ -37,12 +37,12 @@ public sealed class BravoSystemProxyTests : IDisposable
     [Fact]
     public async Task GetLatestRelease_ProxyOfTheInternetSettings_ReadsTheFeedThroughIt()
     {
-        SkipOffTheRunner();
-        await using var proxy = new TestProxy { Body = BravoNetworkTests.Feed };
+        HostedRunner.SkipElsewhere(WhatTheTestsWrite);
+        await using var proxy = new TestProxy { Body = TestUpdateFeed.Document };
         using var settings = InternetSettings.UseProxy(proxy.Address.Port);
-        using var bravo = await StartAsync();
+        using var bravo = await BravoWithApi.StartAsync(_dataFolder);
 
-        using var response = await bravo.Client.GetAsync(BravoNetworkTests.LatestRelease, TestContext.Current.CancellationToken);
+        using var response = await bravo.Client.GetAsync(TestUpdateFeed.LatestReleaseRoute, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Contains(proxy.Requests, IsForTheFeed);
@@ -53,133 +53,51 @@ public sealed class BravoSystemProxyTests : IDisposable
     [Fact]
     public async Task GetLatestRelease_ScriptWhoseFirstProxyDoesNotListen_GoesOnToTheNextProxy()
     {
-        SkipOffTheRunner();
-        await using var proxy = new TestProxy { Body = BravoNetworkTests.Feed };
-        var proxies = $"PROXY 127.0.0.1:{ClosedPort()}; PROXY 127.0.0.1:{proxy.Address.Port}";
+        HostedRunner.SkipElsewhere(WhatTheTestsWrite);
+        await using var proxy = new TestProxy { Body = TestUpdateFeed.Document };
+        var proxies = $"PROXY {TestProxy.ClosedAddress().Authority}; PROXY {proxy.Address.Authority}";
         var script = $$"""function FindProxyForURL(url, host) { return host == "feed.bravo.test" ? "{{proxies}}" : "DIRECT"; }""";
         await using var scriptServer = new TestProxy { Body = script, ContentType = "application/x-ns-proxy-autoconfig" };
         using var settings = InternetSettings.UseScript(new Uri(scriptServer.Address, "proxy.pac"));
-        using var bravo = await StartAsync();
+        using var bravo = await BravoWithApi.StartAsync(_dataFolder);
 
-        using var response = await bravo.Client.GetAsync(BravoNetworkTests.LatestRelease, TestContext.Current.CancellationToken);
+        using var response = await bravo.Client.GetAsync(TestUpdateFeed.LatestReleaseRoute, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Contains(proxy.Requests, IsForTheFeed);
     }
 
-    // The credentials are written by a program of Windows, under the name that a development build reads.
+    // The credentials are written by a program of Windows, under the name that a development build reads. The
+    // application answers the proxy with them, and has none once it forgot them: with no start in between.
     [Fact]
-    public async Task GetLatestRelease_ProxyThatAsksAndCredentialsOfTheUser_IsAnsweredWithTheKeptCredentials()
+    public async Task GetLatestRelease_ProxyThatAsksAndCredentialsOfTheUser_IsAnsweredWithThemUntilTheyAreForgotten()
     {
-        SkipOffTheRunner();
-        await using var proxy = await UseProxyThatAsksAsync();
-        try
-        {
-            KeepCredentials();
-            using var bravo = await StartAsync();
-
-            using var response = await bravo.Client.GetAsync(BravoNetworkTests.LatestRelease, TestContext.Current.CancellationToken);
-
-            var body = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
-            Assert.True(response.StatusCode == HttpStatusCode.OK, $"{response.StatusCode}: {body}");
-            Assert.Contains(proxy.Requests, request => request.AuthorizationScheme == "Basic");
-        }
-        finally
-        {
-            RunCredentialCommand($"/delete:\"{CredentialName}\"");
-        }
-    }
-
-    // The application forgets the credentials while it runs: the next request has none to answer with.
-    [Fact]
-    public async Task DeleteProxyCredentials_KeptCredentials_AreNotSentToTheProxyAnyMore()
-    {
-        SkipOffTheRunner();
-        await using var proxy = await UseProxyThatAsksAsync();
-        try
-        {
-            KeepCredentials();
-            using var bravo = await StartAsync();
-
-            using var deleted = await bravo.Client.DeleteAsync("/network/proxy-credentials", TestContext.Current.CancellationToken);
-            using var response = await bravo.Client.GetAsync(BravoNetworkTests.LatestRelease, TestContext.Current.CancellationToken);
-
-            Assert.Equal(HttpStatusCode.NoContent, deleted.StatusCode);
-            Assert.Equal(nameof(ErrorCode.ProxyAuthenticationRequired), await BravoWithApi.ReadProblemCodeAsync(response));
-        }
-        finally
-        {
-            RunCredentialCommand($"/delete:\"{CredentialName}\"");
-        }
-    }
-
-    // A proxy of the user in the settings file, which asks for the credentials of the test, and the choice of
-    // the user to answer it with credentials of their own.
-    private async Task<TestProxy> UseProxyThatAsksAsync()
-    {
+        HostedRunner.SkipElsewhere(WhatTheTestsWrite);
         var accepted = new NetworkCredential(UserName, Password);
-        var proxy = new TestProxy { Body = BravoNetworkTests.Feed, Challenges = ["Basic realm=\"test\""], Accepts = accepted };
-        var settings = new
+        await using var proxy = new TestProxy { Body = TestUpdateFeed.Document, Challenges = ["Basic realm=\"test\""], Accepts = accepted };
+        await ProxySettingsFile.WriteAsync(_dataFolder, proxy.Address, useDefaultCredentials: false);
+        try
         {
-            proxy = new { type = 2, useDefaultCredentials = false, address = proxy.Address.AbsoluteUri, bypassOnLocal = false },
-        };
-        await File.WriteAllTextAsync(
-            _dataFolder.Combine("usersettings.json"),
-            JsonSerializer.Serialize(settings),
-            TestContext.Current.CancellationToken);
+            CredentialCommand.Write(CredentialName, UserName, Password);
+            using var bravo = await BravoWithApi.StartAsync(_dataFolder);
 
-        return proxy;
-    }
+            using var answered = await bravo.Client.GetAsync(TestUpdateFeed.LatestReleaseRoute, TestContext.Current.CancellationToken);
+            using var forgotten = await bravo.Client.DeleteAsync("/network/proxy-credentials", TestContext.Current.CancellationToken);
+            using var asked = await bravo.Client.GetAsync(TestUpdateFeed.LatestReleaseRoute, TestContext.Current.CancellationToken);
 
-    private static void KeepCredentials()
-    {
-        var written = RunCredentialCommand($"/generic:\"{CredentialName}\" /user:{UserName} /pass:{Password}");
-
-        Assert.True(written.ExitCode == 0, $"cmdkey ended with {written.ExitCode}: {written.Output}");
-    }
-
-    private static void SkipOffTheRunner()
-    {
-        Assert.SkipUnless(
-            Environment.GetEnvironmentVariable("GITHUB_ACTIONS") == "true",
-            "It writes the Internet settings or the credentials of the user: it runs on a runner of GitHub Actions only.");
-    }
-
-    private Task<BravoWithApi> StartAsync()
-    {
-        return BravoWithApi.StartAsync(_dataFolder, BravoNetworkTests.FeedAddress, _ => { });
+            var problem = await answered.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+            Assert.True(answered.StatusCode == HttpStatusCode.OK, $"{answered.StatusCode}: {problem}");
+            Assert.Equal(HttpStatusCode.NoContent, forgotten.StatusCode);
+            Assert.Equal(nameof(ErrorCode.ProxyAuthenticationRequired), await asked.ReadProblemCodeAsync());
+        }
+        finally
+        {
+            CredentialCommand.Delete(CredentialName);
+        }
     }
 
     private static bool IsForTheFeed(TestProxyRequest request)
     {
-        return request.Target.StartsWith(BravoNetworkTests.FeedAddress, StringComparison.Ordinal);
-    }
-
-    private static int ClosedPort()
-    {
-        using var listener = new TcpListener(IPAddress.Loopback, 0);
-        listener.Start();
-        var port = ((IPEndPoint)listener.LocalEndpoint).Port;
-        listener.Stop();
-
-        return port;
-    }
-
-    // cmdkey reads its command line by itself, not as a list of arguments: a name with spaces is quoted
-    // after the colon of its switch, and not as a whole argument.
-    private static (int ExitCode, string Output) RunCredentialCommand(string arguments)
-    {
-        var start = new ProcessStartInfo(Environment.ExpandEnvironmentVariables(@"%SystemRoot%\System32\cmdkey.exe"), arguments)
-        {
-            CreateNoWindow = true,
-            UseShellExecute = false,
-            RedirectStandardOutput = true,
-        };
-        using var process = Process.Start(start);
-        Assert.NotNull(process);
-        var output = process.StandardOutput.ReadToEnd();
-        process.WaitForExit();
-
-        return (process.ExitCode, output.Trim());
+        return request.Target.StartsWith(TestUpdateFeed.Address, StringComparison.Ordinal);
     }
 }

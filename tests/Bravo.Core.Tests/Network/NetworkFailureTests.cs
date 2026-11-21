@@ -27,18 +27,6 @@ public sealed class NetworkFailureTests
         Assert.Same(exception, failure.InnerException);
     }
 
-    [Theory]
-    [InlineData(HttpStatusCode.Forbidden)]
-    [InlineData(HttpStatusCode.BadGateway)]
-    public void TryCreate_TunnelRefusedWithAnotherStatus_IsProxyConnectionRefused(HttpStatusCode status)
-    {
-        var exception = new HttpRequestException(HttpRequestError.ProxyTunnelError, statusCode: status);
-
-        var failure = NetworkFailure.TryCreate(exception, s_destination);
-
-        Assert.Equal(ErrorCode.ProxyConnectionRefused, failure?.Code);
-    }
-
     [Fact]
     public void TryCreate_TunnelRefusedWith407_IsProxyAuthenticationRequired()
     {

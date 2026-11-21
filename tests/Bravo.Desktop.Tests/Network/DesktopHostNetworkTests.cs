@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -9,6 +8,7 @@ using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using Bravo.Api.Security;
 using Bravo.Api.Server;
+using Bravo.Api.Tests;
 using Bravo.Core.Errors;
 using Bravo.Core.Policies;
 using Bravo.Desktop.Development;
@@ -30,11 +30,9 @@ namespace Bravo.Desktop.Tests.Network;
 /// </summary>
 public sealed class DesktopHostNetworkTests : IAsyncDisposable
 {
-    private const string Feed = """{"version":"1.0.9805.22885","download":"https://github.com/sql-bi/Bravo/releases/download/v1.0.14/Bravo.1.0.14.x64.msi","changelog":"https://github.com/sql-bi/Bravo/releases"}""";
-    private const string LatestRelease = "/releases/latest";
     private const string ConnectionTest = "/network/test";
 
-    private static readonly Uri s_feedAddress = new("http://feed.bravo.test/currentversion.json");
+    private static readonly Uri s_feedAddress = new(TestUpdateFeed.Address);
     private static readonly DevelopmentOptions s_withFeed = DevelopmentOptions.None with { UpdateFeedAddress = s_feedAddress };
 
     private readonly OwnedInstance _instance = new();
@@ -57,10 +55,10 @@ public sealed class DesktopHostNetworkTests : IAsyncDisposable
     [Fact]
     public async Task GetLatestRelease_ProxyOfTheUserInTheSettings_ReadsTheFeedThroughIt()
     {
-        await using var proxy = new TestProxy { Body = Feed };
+        await using var proxy = new TestProxy { Body = TestUpdateFeed.Document };
         await StartHostAsync(proxy, s_withFeed);
 
-        using var response = await _client.GetAsync(LatestRelease, TestContext.Current.CancellationToken);
+        using var response = await _client.GetAsync(TestUpdateFeed.LatestReleaseRoute, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var request = Assert.Single(proxy.Requests);
@@ -73,24 +71,23 @@ public sealed class DesktopHostNetworkTests : IAsyncDisposable
         await using var proxy = new TestProxy { Challenges = ["Basic realm=\"test\""] };
         await StartHostAsync(proxy, s_withFeed);
 
-        using var response = await _client.GetAsync(LatestRelease, TestContext.Current.CancellationToken);
+        using var response = await _client.GetAsync(TestUpdateFeed.LatestReleaseRoute, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
-        var problem = await response.Content.ReadFromJsonAsync<JsonElement>(TestContext.Current.CancellationToken);
-        Assert.Equal(nameof(ErrorCode.ProxyAuthenticationRequired), problem.GetProperty("code").GetString());
+        Assert.Equal(nameof(ErrorCode.ProxyAuthenticationRequired), await response.ReadProblemCodeAsync());
     }
 
     // The proxy of a run is the one of its start: the options keep the change for the next one.
     [Fact]
     public async Task GetLatestRelease_ProxyChangedWhileTheHostRuns_StillGoesThroughTheProxyOfTheStart()
     {
-        await using var proxy = new TestProxy { Body = Feed };
+        await using var proxy = new TestProxy { Body = TestUpdateFeed.Document };
         await StartHostAsync(proxy, s_withFeed);
         var options = await _client.GetFromJsonAsync<JsonObject>("/options", TestContext.Current.CancellationToken);
         options!["proxy"]!["type"] = "None";
         using var saved = await _client.PutAsJsonAsync("/options", options, TestContext.Current.CancellationToken);
 
-        using var response = await _client.GetAsync(LatestRelease, TestContext.Current.CancellationToken);
+        using var response = await _client.GetAsync(TestUpdateFeed.LatestReleaseRoute, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, saved.StatusCode);
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -101,7 +98,7 @@ public sealed class DesktopHostNetworkTests : IAsyncDisposable
     [Fact]
     public async Task TestConnection_ProxyChangedWhileTheHostRuns_GoesThroughTheProxyOfTheSettingsAsSaved()
     {
-        await using var proxy = new TestProxy { Body = Feed };
+        await using var proxy = new TestProxy { Body = TestUpdateFeed.Document };
         await using var saved = new TestProxy();
         await StartHostAsync(proxy, s_withFeed);
         var options = await _client.GetFromJsonAsync<JsonObject>("/options", TestContext.Current.CancellationToken);
@@ -136,17 +133,9 @@ public sealed class DesktopHostNetworkTests : IAsyncDisposable
         Assert.Empty(proxy.Requests);
     }
 
-    // A file as the application keeps it: the kind of the proxy is a number there.
     private async Task StartHostAsync(TestProxy proxy, DevelopmentOptions development)
     {
-        var settings = new
-        {
-            proxy = new { type = 2, useDefaultCredentials = true, address = proxy.Address.AbsoluteUri, bypassOnLocal = false },
-        };
-        await File.WriteAllTextAsync(
-            _dataFolder.Combine("usersettings.json"),
-            JsonSerializer.Serialize(settings),
-            TestContext.Current.CancellationToken);
+        await ProxySettingsFile.WriteAsync(_dataFolder, proxy.Address, useDefaultCredentials: true);
 
         _host = DesktopHost.Build(
             BuildIdentity.Development("1.1.0"),

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net;
 using System.Threading.Tasks;
+using Bravo.Api.Tests;
 using Bravo.Core.Errors;
 using Bravo.Platform.Windows.Tests.Network;
 using Xunit;
@@ -16,10 +17,6 @@ namespace Bravo.Desktop.Tests.Network;
 [Collection(BravoExecutable.Collection)]
 public sealed class BravoNetworkTests : IDisposable
 {
-    public const string Feed = """{"version":"1.0.9805.22885","download":"https://github.com/sql-bi/Bravo/releases/download/v1.0.14/Bravo.1.0.14.x64.msi","changelog":"https://github.com/sql-bi/Bravo/releases"}""";
-    public const string FeedAddress = "http://feed.bravo.test/currentversion.json";
-    public const string LatestRelease = "/releases/latest";
-
     private readonly TemporaryFolder _dataFolder = new();
 
     public void Dispose()
@@ -30,13 +27,13 @@ public sealed class BravoNetworkTests : IDisposable
     [Fact]
     public async Task GetLatestRelease_ProxyOfTheSystem_ReadsTheFeedThroughIt()
     {
-        await using var proxy = new TestProxy { Body = Feed };
-        using var bravo = await StartAsync(proxy);
+        await using var proxy = new TestProxy { Body = TestUpdateFeed.Document };
+        using var bravo = await BravoWithApi.StartAsync(_dataFolder, proxy.Address);
 
-        using var response = await bravo.Client.GetAsync(LatestRelease, TestContext.Current.CancellationToken);
+        using var response = await bravo.Client.GetAsync(TestUpdateFeed.LatestReleaseRoute, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Contains(proxy.Requests, request => request.Target.StartsWith(FeedAddress, StringComparison.Ordinal));
+        Assert.Contains(proxy.Requests, request => request.Target.StartsWith(TestUpdateFeed.Address, StringComparison.Ordinal));
     }
 
     // The Windows user never sends a password: the proxy gets no credentials, and the user is told to enter them.
@@ -44,11 +41,11 @@ public sealed class BravoNetworkTests : IDisposable
     public async Task GetLatestRelease_ProxyOfTheSystemThatAsksWithBasic_IsAnswered409AndGetsNoCredentials()
     {
         await using var proxy = new TestProxy { Challenges = ["Basic realm=\"test\""] };
-        using var bravo = await StartAsync(proxy);
+        using var bravo = await BravoWithApi.StartAsync(_dataFolder, proxy.Address);
 
-        using var response = await bravo.Client.GetAsync(LatestRelease, TestContext.Current.CancellationToken);
+        using var response = await bravo.Client.GetAsync(TestUpdateFeed.LatestReleaseRoute, TestContext.Current.CancellationToken);
 
-        Assert.Equal(nameof(ErrorCode.ProxyAuthenticationRequired), await BravoWithApi.ReadProblemCodeAsync(response));
+        Assert.Equal(nameof(ErrorCode.ProxyAuthenticationRequired), await response.ReadProblemCodeAsync());
         Assert.All(proxy.Requests, request => Assert.Null(request.AuthorizationScheme));
     }
 
@@ -57,16 +54,11 @@ public sealed class BravoNetworkTests : IDisposable
     public async Task GetLatestRelease_ProxyOfTheSystemThatAsksWithNegotiate_IsAnsweredAsTheWindowsUser()
     {
         await using var proxy = new TestProxy { Challenges = ["Negotiate", "NTLM"] };
-        using var bravo = await StartAsync(proxy);
+        using var bravo = await BravoWithApi.StartAsync(_dataFolder, proxy.Address);
 
-        using var response = await bravo.Client.GetAsync(LatestRelease, TestContext.Current.CancellationToken);
+        using var response = await bravo.Client.GetAsync(TestUpdateFeed.LatestReleaseRoute, TestContext.Current.CancellationToken);
 
-        Assert.Equal(nameof(ErrorCode.ProxyAuthenticationRequired), await BravoWithApi.ReadProblemCodeAsync(response));
+        Assert.Equal(nameof(ErrorCode.ProxyAuthenticationRequired), await response.ReadProblemCodeAsync());
         Assert.Contains(proxy.Requests, request => request.AuthorizationScheme == "Negotiate");
-    }
-
-    private Task<BravoWithApi> StartAsync(TestProxy proxy)
-    {
-        return BravoWithApi.StartAsync(_dataFolder, FeedAddress, start => start.Environment["HTTP_PROXY"] = proxy.Address.AbsoluteUri);
     }
 }

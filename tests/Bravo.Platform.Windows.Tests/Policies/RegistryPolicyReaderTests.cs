@@ -164,9 +164,7 @@ public sealed class RegistryPolicyReaderTests : IDisposable
     [Fact]
     public void Read_ApplicationKeys_ReadsTheComputerThenTheUserValueByValue()
     {
-        Assert.SkipUnless(
-            Environment.GetEnvironmentVariable("GITHUB_ACTIONS") == "true",
-            "It writes the policies of the computer and of the user: it runs on a runner of GitHub Actions only.");
+        HostedRunner.SkipElsewhere("the policies of the computer and of the user");
         const string VendorKeyName = @"Software\Policies\SQLBI";
         Assert.Null(Registry.LocalMachine.OpenSubKey(VendorKeyName));
         Assert.Null(Registry.CurrentUser.OpenSubKey(VendorKeyName));

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Net;
 using Bravo.Platform.Windows.Interop;
 using Bravo.Platform.Windows.Network;
@@ -16,7 +15,7 @@ public sealed class WindowsProxyCredentialStoreTests
     [Fact]
     public void Write_ThenRead_GivesTheCredentialsBack()
     {
-        SkipOffTheRunner();
+        HostedRunner.SkipElsewhere("in the Windows Credential Manager");
         var targetName = NewTargetName();
         var store = CreateStore(targetName);
         try
@@ -37,7 +36,7 @@ public sealed class WindowsProxyCredentialStoreTests
     [Fact]
     public void Write_Twice_KeepsTheLastCredentials()
     {
-        SkipOffTheRunner();
+        HostedRunner.SkipElsewhere("in the Windows Credential Manager");
         var targetName = NewTargetName();
         var store = CreateStore(targetName);
         try
@@ -60,7 +59,7 @@ public sealed class WindowsProxyCredentialStoreTests
     [Fact]
     public void Write_AnyCredentials_KeepsThePasswordAsItsUtf16Characters()
     {
-        SkipOffTheRunner();
+        HostedRunner.SkipElsewhere("in the Windows Credential Manager");
         var targetName = NewTargetName();
         try
         {
@@ -80,11 +79,11 @@ public sealed class WindowsProxyCredentialStoreTests
     [Fact]
     public void Read_CredentialsThatAnotherProgramWrote_AreRead()
     {
-        SkipOffTheRunner();
+        HostedRunner.SkipElsewhere("in the Windows Credential Manager");
         var targetName = NewTargetName();
         try
         {
-            RunCredentialCommand($"/generic:{targetName}", $"/user:{UserName}", "/pass:test-password");
+            CredentialCommand.Write(targetName, UserName, "test-password");
 
             var read = CreateStore(targetName).Read();
 
@@ -99,7 +98,7 @@ public sealed class WindowsProxyCredentialStoreTests
     [Fact]
     public void Read_NoCredentials_IsNull()
     {
-        SkipOffTheRunner();
+        HostedRunner.SkipElsewhere("in the Windows Credential Manager");
         var logger = new RecordingLogger<WindowsProxyCredentialStore>();
         var store = new WindowsProxyCredentialStore(NewTargetName(), logger);
 
@@ -112,7 +111,7 @@ public sealed class WindowsProxyCredentialStoreTests
     [Fact]
     public void Delete_KeptCredentialsAndThenNone_LeavesNone()
     {
-        SkipOffTheRunner();
+        HostedRunner.SkipElsewhere("in the Windows Credential Manager");
         var targetName = NewTargetName();
         var store = CreateStore(targetName);
         try
@@ -130,15 +129,6 @@ public sealed class WindowsProxyCredentialStoreTests
         }
     }
 
-    // The Credential Manager of a developer is never read or written: these tests write credentials of their
-    // own on a runner of GitHub Actions only, which is thrown away after the run.
-    private static void SkipOffTheRunner()
-    {
-        Assert.SkipUnless(
-            Environment.GetEnvironmentVariable("GITHUB_ACTIONS") == "true",
-            "It writes in the Windows Credential Manager: it runs on a runner of GitHub Actions only.");
-    }
-
     private static string NewTargetName()
     {
         return $"Bravo.Tests/{Guid.NewGuid():N}/proxy";
@@ -147,18 +137,5 @@ public sealed class WindowsProxyCredentialStoreTests
     private static WindowsProxyCredentialStore CreateStore(string targetName)
     {
         return new WindowsProxyCredentialStore(targetName, new RecordingLogger<WindowsProxyCredentialStore>());
-    }
-
-    private static void RunCredentialCommand(params string[] arguments)
-    {
-        var start = new ProcessStartInfo(Environment.ExpandEnvironmentVariables(@"%SystemRoot%\System32\cmdkey.exe"), arguments)
-        {
-            CreateNoWindow = true,
-            UseShellExecute = false,
-        };
-        using var process = Process.Start(start);
-        Assert.NotNull(process);
-        process.WaitForExit();
-        Assert.Equal(0, process.ExitCode);
     }
 }
