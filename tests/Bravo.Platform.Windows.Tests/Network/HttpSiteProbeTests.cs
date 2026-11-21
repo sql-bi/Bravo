@@ -52,6 +52,18 @@ public sealed class HttpSiteProbeTests
         Assert.Equal(new SiteProbeResult(closed, ErrorCode.ServerUnreachable), result);
     }
 
+    // .NET sends through no proxy of this kind, and says so before it asks anything.
+    [Fact]
+    public async Task ProbeAsync_ProxyAddressOfAKindThatIsNotSupported_IsServerUnreachable()
+    {
+        var unsupported = new Uri("ftp://proxy.bravo.test/");
+        GivenTheSettingsName(unsupported);
+
+        var result = await CreateProbe().ProbeAsync(s_site, TestContext.Current.CancellationToken);
+
+        Assert.Equal(new SiteProbeResult(unsupported, ErrorCode.ServerUnreachable), result);
+    }
+
     // The settings as they are kept when the test runs, whatever they were before.
     [Fact]
     public async Task ProbeAsync_SettingsChangedSinceTheProbeWasCreated_GoesThroughTheProxyOfTheNewOnes()

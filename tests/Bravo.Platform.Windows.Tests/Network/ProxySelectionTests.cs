@@ -23,7 +23,7 @@ public sealed class ProxySelectionTests
 
         using var handler = selection.CreateHandler(_credentials);
 
-        var sockets = Assert.IsType<SocketsHttpHandler>(handler.InnerHandler);
+        var sockets = SocketsOf(handler);
         Assert.True(sockets.UseProxy);
         Assert.Null(sockets.Proxy);
         Assert.Same(_credentials, sockets.DefaultProxyCredentials);
@@ -40,8 +40,7 @@ public sealed class ProxySelectionTests
 
         using var handler = selection.CreateHandler(_credentials);
 
-        var sockets = Assert.IsType<SocketsHttpHandler>(handler.InnerHandler);
-        Assert.False(sockets.UseProxy);
+        Assert.False(SocketsOf(handler).UseProxy);
         Assert.Null(selection.FindProxy(s_destination));
     }
 
@@ -59,10 +58,8 @@ public sealed class ProxySelectionTests
 
         using var handler = selection.CreateHandler(_credentials);
 
-        var sockets = Assert.IsType<SocketsHttpHandler>(handler.InnerHandler);
-        var proxy = Assert.IsType<WebProxy>(sockets.Proxy);
-        Assert.Equal(s_server, proxy.Address);
-        Assert.True(proxy.BypassProxyOnLocal);
+        var proxy = Assert.IsType<WebProxy>(SocketsOf(handler).Proxy);
+        Assert.Equal((s_server, true), (proxy.Address, proxy.BypassProxyOnLocal));
         Assert.Equal([@".*\.contoso\.test", @"10\..*"], proxy.BypassList);
     }
 
@@ -76,7 +73,7 @@ public sealed class ProxySelectionTests
 
         using var handler = selection.CreateHandler(_credentials);
 
-        var sockets = Assert.IsType<SocketsHttpHandler>(handler.InnerHandler);
+        var sockets = SocketsOf(handler);
         Assert.Null(sockets.Proxy?.Credentials);
         Assert.Same(_credentials, sockets.DefaultProxyCredentials);
     }
@@ -99,5 +96,11 @@ public sealed class ProxySelectionTests
         var proxy = selection.FindProxy(new Uri(destination));
 
         Assert.Equal(expected is null ? null : new Uri(expected), proxy);
+    }
+
+    // The handler of the application wraps the one of .NET that holds the proxy.
+    private static SocketsHttpHandler SocketsOf(NetworkFailureHandler handler)
+    {
+        return (SocketsHttpHandler)handler.InnerHandler!;
     }
 }

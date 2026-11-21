@@ -1,4 +1,5 @@
-﻿using Bravo.Core.Errors;
+﻿using System;
+using Bravo.Core.Errors;
 using Bravo.Core.Network;
 
 namespace Bravo.Api.Network;
@@ -18,8 +19,9 @@ public sealed record SiteTestResult
     public required string Address { get; init; }
 
     /// <summary>
-    /// The address of the proxy server that the request goes through. Absent when the request goes to the site
-    /// with no proxy. Where a script names several proxy servers, it is the first one.
+    /// The address of the proxy server that the request goes through, without the user name and the password
+    /// that it may hold. Absent when the request goes to the site with no proxy. Where a script names several
+    /// proxy servers, it is the first one.
     /// </summary>
     public string? ProxyAddress { get; init; }
 
@@ -35,7 +37,7 @@ public sealed record SiteTestResult
         {
             Site = connection.Site,
             Address = connection.Address.AbsoluteUri,
-            ProxyAddress = connection.Proxy?.AbsoluteUri,
+            ProxyAddress = connection.Proxy?.GetComponents(UriComponents.HttpRequestUrl, UriFormat.UriEscaped),
             Failure = connection.Failure,
         };
     }

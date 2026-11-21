@@ -51,6 +51,19 @@ public sealed class NetworkFailureHandlerTests
         Assert.Equal(ErrorCode.ProxyAuthenticationRequired, exception.Code);
     }
 
+    // A client that sends without a task gets the same error.
+    [Fact]
+    public async Task Send_ProxyThatAsksForCredentialsItDoesNotGet_FailsWithProxyAuthenticationRequired()
+    {
+        await using var proxy = new TestProxy { Challenges = ["Basic realm=\"test\""] };
+        using var client = CreateClient(proxy.Address, WindowsUser());
+        using var request = new HttpRequestMessage(HttpMethod.Get, s_plain);
+
+        var exception = Assert.Throws<BravoException>(() => client.Send(request, TestContext.Current.CancellationToken));
+
+        Assert.Equal(ErrorCode.ProxyAuthenticationRequired, exception.Code);
+    }
+
     [Fact]
     public async Task SendAsync_ProxyThatAsksForCredentialsOnATunnel_FailsWithProxyAuthenticationRequired()
     {
@@ -183,9 +196,12 @@ public sealed class NetworkFailureHandlerTests
     // proxy.
     private static HttpClient CreateClient(Uri? proxy, ICredentials credentials)
     {
-        var settings = proxy is null
-            ? new ProxySettings { Type = ProxyType.None }
-            : new ProxySettings { Type = ProxyType.Custom, Address = proxy.AbsoluteUri, BypassOnLocal = false };
+        var settings = new ProxySettings { Type = ProxyType.None };
+        if (proxy is not null)
+        {
+            settings = new ProxySettings { Type = ProxyType.Custom, Address = proxy.AbsoluteUri, BypassOnLocal = false };
+        }
+
         var selection = ProxySelection.For(settings);
 
         return new HttpClient(selection.CreateHandler(credentials));

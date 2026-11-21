@@ -20,10 +20,10 @@ public sealed class NetworkEndpointsTests
     private static readonly Uri s_feed = new("https://feed.bravo.test/currentversion.json");
 
     [Fact]
-    public async Task TestConnection_SiteReachedThroughAProxyAndSiteThatDoesNotAnswer_ReturnsBothAsResults()
+    public async Task TestConnection_SiteReachedThroughAProxyAndSiteThatDoesNotAnswer_ReturnsBothAndNoUserOfTheProxy()
     {
         await using var api = await TestApi.StartAsync();
-        var throughProxy = new SiteProbeResult(new Uri("http://proxy.bravo.test:8080/"), Failure: null);
+        var throughProxy = new SiteProbeResult(new Uri("http://test-user:test-password@proxy.bravo.test:8080/"), Failure: null);
         var unreachable = new SiteProbeResult(Proxy: null, ErrorCode.ServerUnreachable);
         api.SiteProbe.ProbeAsync(s_service, Arg.Any<CancellationToken>()).Returns(throughProxy);
         api.SiteProbe.ProbeAsync(s_feed, Arg.Any<CancellationToken>()).Returns(unreachable);

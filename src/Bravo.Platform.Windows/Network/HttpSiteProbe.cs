@@ -51,8 +51,9 @@ public sealed class HttpSiteProbe(IUserSettingsStore settings, ProxyCredentials 
         {
             return exception.Code;
         }
-        catch (HttpRequestException)
+        catch (Exception exception) when (exception is HttpRequestException or NotSupportedException)
         {
+            // A failure that tells no cause, or a proxy address of a kind that .NET does not send through.
             return ErrorCode.ServerUnreachable;
         }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
