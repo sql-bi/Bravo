@@ -2,6 +2,7 @@
 using Bravo.Api.Application;
 using Bravo.Api.Browser;
 using Bravo.Api.Events;
+using Bravo.Api.Network;
 using Bravo.Api.Options;
 using Bravo.Api.Policies;
 using Bravo.Api.Releases;
@@ -48,6 +49,7 @@ public static class ApiApplicationExtensions
         routes.MapOptions();
         routes.MapPolicies();
         routes.MapEvents();
+        routes.MapNetwork();
         routes.MapReleases();
         routes.MapBrowser();
     }

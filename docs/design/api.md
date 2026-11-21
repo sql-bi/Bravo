@@ -37,6 +37,7 @@ other request has the 5 seconds of the stop to end.
 | `GET /events?after={number}` | Reads the events of the host after a number, waiting for the next one when there is none |
 | `GET /releases/latest` | Reads the latest release from the update feed: whether it is newer, and the file of this copy ([updates](updates.md)) |
 | `POST /browser/open` | Opens a page of a site that the application trusts in the default browser of the user ([updates](updates.md)) |
+| `POST /network/test` | Asks each site that the application needs for an answer, with the proxy settings as they are kept now ([network](network.md)) |
 
 - A route names a resource. An operation that is not create, read, update or delete is a `POST` on the
   resource with a verb as last segment. A `GET` changes no state, opens no dialog and starts no process.

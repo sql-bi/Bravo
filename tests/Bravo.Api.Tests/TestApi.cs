@@ -7,6 +7,7 @@ using Bravo.Api.Events;
 using Bravo.Api.Security;
 using Bravo.Core.Application;
 using Bravo.Core.Browser;
+using Bravo.Core.Network;
 using Bravo.Core.Policies;
 using Bravo.Core.Updates;
 using Microsoft.AspNetCore.Builder;
@@ -66,6 +67,8 @@ internal sealed class TestApi : IAsyncDisposable
     public IInstallationReader InstallationReader => _app.Services.GetRequiredService<IInstallationReader>();
 
     public IBrowserLauncher BrowserLauncher => _app.Services.GetRequiredService<IBrowserLauncher>();
+
+    public ISiteProbe SiteProbe => _app.Services.GetRequiredService<ISiteProbe>();
 
     public InMemoryUserSettingsStore Settings => _app.Services.GetRequiredService<InMemoryUserSettingsStore>();
 

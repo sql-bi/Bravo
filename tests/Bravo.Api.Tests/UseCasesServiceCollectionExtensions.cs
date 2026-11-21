@@ -1,5 +1,6 @@
 ﻿using System;
 using Bravo.Core.Browser;
+using Bravo.Core.Network;
 using Bravo.Core.Policies;
 using Bravo.Core.Settings;
 using Bravo.Core.Updates;
@@ -35,6 +36,13 @@ internal static class UseCasesServiceCollectionExtensions
         services.AddTransient<UpdateCheck>();
 
         services.AddSingleton(Substitute.For<IBrowserLauncher>());
+
+        services.AddSingleton(new ConnectionTestOptions
+        {
+            Sites = [new ConnectionTestSite(NetworkSite.PowerBIService, new Uri("https://service.bravo.test/"))],
+        });
+        services.AddSingleton(Substitute.For<ISiteProbe>());
+        services.AddTransient<ConnectionTest>();
 
         return services;
     }

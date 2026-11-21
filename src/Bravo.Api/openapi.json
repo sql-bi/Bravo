@@ -263,6 +263,47 @@
         }
       }
     },
+    "/network/test": {
+      "post": {
+        "tags": [
+          "Network"
+        ],
+        "summary": "Asks each site that the application needs for an answer, with the proxy settings as they are kept now, and tells for each one the proxy server that the request goes through and, when the site did not answer, why. A site that does not answer is a result, not an error.",
+        "operationId": "TestConnection",
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConnectionTestResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/releases/latest": {
       "get": {
         "tags": [
@@ -424,6 +465,7 @@
             "description": "The version of the application as a user reads it, such as `1.1.0` or `1.1.0-beta.1`."
           },
           "culture": {
+            "description": "The culture of the user, by which the user interface chooses its language and its formats.",
             "$ref": "#/components/schemas/ApplicationCulture"
           },
           "isDevelopmentBuild": {
@@ -433,6 +475,22 @@
         },
         "description": "What the running application is. The values do not change while the application runs."
       },
+      "ConnectionTestResult": {
+        "required": [
+          "sites"
+        ],
+        "type": "object",
+        "properties": {
+          "sites": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SiteTestResult"
+            },
+            "description": "The sites, in the order in which the user reads them. A development build has only the update feed that it was given, or none."
+          }
+        },
+        "description": "The result of the connection test: whether each site that the application needs can be reached, with the proxy settings as they are kept now."
+      },
       "DiagnosticLevel": {
         "enum": [
           "None",
@@ -441,6 +499,18 @@
         ],
         "type": "string",
         "description": "How much the diagnostics pane of the user interface shows."
+      },
+      "ErrorCode": {
+        "enum": [
+          "UpdateCheckFailed",
+          "SettingsSaveFailed",
+          "UpdateCheckDisabled",
+          "ProxyAuthenticationRequired",
+          "ProxyConnectionRefused",
+          "ServerUnreachable",
+          "SecureConnectionFailed"
+        ],
+        "type": "string"
       },
       "EventBatch": {
         "required": [
@@ -525,6 +595,7 @@
             }
           },
           "code": {
+            "description": "What went wrong, as a name that never changes meaning. No error answer has a code outside this list.",
             "$ref": "#/components/schemas/ProblemCode"
           },
           "traceId": {
@@ -560,6 +631,16 @@
           }
         },
         "description": "The latest release of the application, as the update feed names it, for the copy of the application that answers."
+      },
+      "NetworkSite": {
+        "enum": [
+          "SignIn",
+          "PowerBIService",
+          "DaxFormatter",
+          "UpdateFeed"
+        ],
+        "type": "string",
+        "description": "A site that the application needs to reach, as the connection test names it."
       },
       "OpenInBrowserRequest": {
         "required": [
@@ -645,6 +726,7 @@
             "type": "string"
           },
           "code": {
+            "description": "What went wrong, as a name that never changes meaning. No error answer has a code outside this list.",
             "$ref": "#/components/schemas/ProblemCode"
           },
           "traceId": {
@@ -688,6 +770,32 @@
         ],
         "type": "string"
       },
+      "SiteTestResult": {
+        "required": [
+          "site",
+          "address"
+        ],
+        "type": "object",
+        "properties": {
+          "site": {
+            "description": "A site that the application needs to reach, as the connection test names it.",
+            "$ref": "#/components/schemas/NetworkSite"
+          },
+          "address": {
+            "type": "string",
+            "description": "The address that was asked for. Absolute, with every character that an address cannot hold escaped."
+          },
+          "proxyAddress": {
+            "type": "string",
+            "description": "The address of the proxy server that the request goes through. Absent when the request goes to the site with no proxy. Where a script names several proxy servers, it is the first one."
+          },
+          "failure": {
+            "description": "Why the site did not answer: one of the codes of a request that does not reach its server. Absent when the site answered, with any status.",
+            "$ref": "#/components/schemas/ErrorCode"
+          }
+        },
+        "description": "What the connection test found for one site."
+      },
       "Theme": {
         "enum": [
           "Auto",
@@ -724,6 +832,7 @@
             "type": "boolean"
           },
           "diagnosticLevel": {
+            "description": "How much the diagnostics pane of the user interface shows.",
             "$ref": "#/components/schemas/DiagnosticLevel"
           },
           "proxy": {
@@ -749,6 +858,9 @@
     },
     {
       "name": "Events"
+    },
+    {
+      "name": "Network"
     },
     {
       "name": "Releases"
