@@ -41,13 +41,14 @@ internal static class ContractDocument
     }
 
     // The description of a member whose type has a schema of its own stays beside the reference to that
-    // schema, where the rules of a schema do not reach it.
+    // schema, where the rules of a schema do not reach it. Only the one written there: a reference with none
+    // reads the description of its schema, which is not copied beside it.
     private static void WriteMemberDescriptionsOnOneLine(OpenApiSchema schema)
     {
         var references = schema.Properties?.Values.OfType<OpenApiSchemaReference>() ?? [];
         foreach (var reference in references)
         {
-            reference.Description = ContractSchema.OnOneLine(reference.Description);
+            reference.Reference.Description = ContractSchema.OnOneLine(reference.Reference.Description);
         }
     }
 

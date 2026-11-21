@@ -540,7 +540,6 @@
             "description": "The version of the application as a user reads it, such as `1.1.0` or `1.1.0-beta.1`."
           },
           "culture": {
-            "description": "The culture of the user, by which the user interface chooses its language and its formats.",
             "$ref": "#/components/schemas/ApplicationCulture"
           },
           "isDevelopmentBuild": {
@@ -670,7 +669,6 @@
             }
           },
           "code": {
-            "description": "What went wrong, as a name that never changes meaning. No error answer has a code outside this list.",
             "$ref": "#/components/schemas/ProblemCode"
           },
           "traceId": {
@@ -801,7 +799,6 @@
             "type": "string"
           },
           "code": {
-            "description": "What went wrong, as a name that never changes meaning. No error answer has a code outside this list.",
             "$ref": "#/components/schemas/ProblemCode"
           },
           "traceId": {
@@ -866,7 +863,6 @@
         "type": "object",
         "properties": {
           "site": {
-            "description": "A site that the application needs to reach, as the connection test names it.",
             "$ref": "#/components/schemas/NetworkSite"
           },
           "address": {
@@ -920,7 +916,6 @@
             "type": "boolean"
           },
           "diagnosticLevel": {
-            "description": "How much the diagnostics pane of the user interface shows.",
             "$ref": "#/components/schemas/DiagnosticLevel"
           },
           "proxy": {
