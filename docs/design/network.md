@@ -57,7 +57,9 @@ user entered, when the user chose to use them and some are kept, else as the Win
   keeps it: the user name as text, where `domain\user` names a user of a domain, and the password as its UTF-16
   characters. Its name is `Bravo for Power BI/proxy`, the one of 1.0.x; a development build keeps its own
   under `Bravo for Power BI (development)/proxy`.
-- While the user has not chosen credentials of their own, nothing reads the Credential Manager.
+- While the user has not chosen credentials of their own, nothing reads the Credential Manager:
+  `ProxyCredentials` looks at the option before the store, and so no test reads it on the machine of a
+  developer.
 - Credentials that cannot be read are none: the proxy server is answered as the Windows user, and the failure
   is logged.
 - The user enters them in the dialog box of Windows for credentials (`POST /network/proxy-credentials/prompt`,
@@ -105,10 +107,11 @@ causes.
 - A request for the credentials, or to forget them, that fails is told in a notification, and leaves the
   switch as it was.
 - The connection test is a button. It saves the options of the dialog first, then shows each site with its
-  name, whether it was reached or the text of its cause, and the proxy server that the request went through.
-- At the start of the page, an update check that finds a proxy server asking for credentials tells it in a
-  notification, with a link that opens this section. In the section About, an update check that did not reach
-  the feed says its cause ([updates](updates.md)).
+  name and the host that was asked, whether it was reached or the text of its cause, and the proxy server
+  that the request went through. A test that is still running when the dialog is closed is ended, in the
+  host too.
+- What the page tells of an update check that a proxy server stops, at its start and in the section About:
+  [updates](updates.md).
 
 **Limits.**
 
@@ -147,15 +150,13 @@ causes.
   ([`ConfigureHttpClientDefaults`](https://learn.microsoft.com/dotnet/api/microsoft.extensions.dependencyinjection.httpclientfactoryservicecollectionextensions.configurehttpclientdefaults)):
   a client that a component registers has the proxy, the credentials and the codes with nothing to remember. A
   component never builds an `HttpClient` or a handler of its own.
-- `HttpSiteProbe` is the one exception: the clients of the factory have the proxy of the start, and the
-  connection test asks with the settings as they are kept now. It builds its client with `ProxySelection`, as
-  `AddNetwork` does, so its requests have the same credentials and the same codes.
+- `HttpSiteProbe` is the one exception, for the connection test. It builds its client with `ProxySelection`,
+  as `AddNetwork` does, so its requests have the same credentials and the same codes. There a failure that
+  tells no cause, and a site that does not answer in time, are `ServerUnreachable`.
 - A site of the connection test is a value of `NetworkSite` with its address in `AddNetwork`. The update feed
   is not in that list: the test takes the address from the options of the update check, the one that the
   check reads.
-- `ProxySelection` is the one place that turns the settings into a proxy. For System it gives the handler no
-  proxy object: a proxy of the application around the one of .NET would lose the changes of Windows and the
-  next proxy of a script.
+- `ProxySelection` is the one place that turns the settings into a proxy.
 - `ProxySelectionStartup` makes the host read the proxy of the settings when it starts, and not at its first
   request.
 - `NetworkFailureHandler` is the one place where a failure gets its code, through `NetworkFailure`, the one
@@ -170,29 +171,21 @@ causes.
 - The name of each site of the connection test is in a table of `options-dialog-proxy.ts`, typed by the sites
   of the generated client as the texts of the codes are: a site that the host adds stops the build of the page
   until it has a name.
-- A switch of the options that asks before it changes goes back to what it was when the answer is no, and
-  when the question fails (`web/helpers/renderer.ts`).
-- `proxy.spec.ts` gives the application a proxy server of the test, `test-proxy.ts`, on the loopback address,
-  which answers with the update feed or asks for credentials: the host reaches it as it reaches any other,
-  and the page shows what the host found. A test of the credentials answers in place of the host, with
-  `bravo.answerProxyCredentialRequests`: the host would show the dialog box of Windows, and would delete from
-  the Credential Manager of the machine. Those tests have no proxy server, so nothing asks the host for
-  credentials.
-- `ProxyCredentials` looks at the option of the user before the store: with the default settings no code reads
-  the Credential Manager, and so no test of a developer machine does.
+- The tests of the window for the section Proxy, their proxy server and the requests that they answer in
+  place of the host: [web/AGENTS.md](../../web/AGENTS.md).
 - `CredentialUserName` is the one place that knows the text `domain\user`: the store keeps it, and the dialog
   box shows it and reads it.
 - The dialog box of Windows is shown on the thread of the main window, which `ProxyCredentialDialog` reaches
   through `MainWindowDispatcher` ([startup](startup.md)). `CredentialDialogInterop` gives the dialog box the
   user name as a block that Windows packs, reads what the user entered from the block that Windows gives
-  back, and clears that block before it frees it. Its tests pack and read a block in memory: they show
-  nothing.
+  back, and clears that block before it frees it. Its tests pack and read a block in memory.
 - A test reaches no server outside the machine and asks no name to a name server: `TestProxy`, in the tests of
   `Bravo.Platform.Windows`, is a proxy on the loopback address that answers by itself, asks for the credentials
   that the test gives it and records what it was asked; the tests of `Bravo.Desktop` compile the same file.
   The addresses of the tests end in `bravo.test`, which only that proxy answers.
-- A test never depends on the proxy of the machine that runs it: it names its proxy in the settings, or gives
-  `ProxySelectionOptions.SystemProxy` the proxy that stands for the one of the system.
+- A test never depends on the proxy of the machine that runs it: it names its proxy in the settings, or in
+  the variable `HTTP_PROXY` of the executable that it starts. `BravoExecutable` takes the proxy variables of
+  the tests out of every start.
 - `DesktopHostNetworkTests` builds the host as the application does, with a proxy of the user in its settings
   file, and reads the update feed through it. It asks the connection test after a change of the options, which
   goes through the proxy that the options name while the update feed still goes through the one of the start.
@@ -202,18 +195,17 @@ causes.
   `--dev-connection-file`.
 - No test reads, writes or deletes a credential of the machine that runs it, nor changes its Internet
   settings. The tests that do run only on a runner of GitHub Actions, which is thrown away after the run:
-  elsewhere they are skipped.
+  elsewhere `HostedRunner` skips them.
   - The tests of the store write credentials of their own, named `Bravo.Tests/<identifier>/proxy`, and one
     of them reads a credential that `cmdkey`, a program of Windows, wrote.
   - `BravoSystemProxyTests` writes the Internet settings of the user with the function of Windows for them
     ([`InternetSetOption`](https://learn.microsoft.com/windows/win32/api/wininet/nf-wininet-internetsetoptionw)),
     starts the executable after that, and puts back what it found: a proxy for plain HTTP addresses alone,
     then a script that names a proxy that does not listen before the one of the test, which passes only if
-    .NET goes on to the next proxy. Two more tests keep credentials under the name of a development build,
+    .NET goes on to the next proxy. One more test keeps credentials under the name of a development build,
     with `cmdkey`: the proxy of the test is answered with them, and gets none after the route that forgets
-    them. `cmdkey` reads its command line by itself: a name with spaces is quoted after the colon of its
-    switch.
+    them.
+  - `CredentialCommand` runs `cmdkey` for both test projects. `cmdkey` reads its command line by itself: a
+    name with spaces is quoted after the colon of its switch.
 - The tests answer a proxy as the Windows user only with the first message of Negotiate, which holds no secret:
   the proxy of the test keeps the name of the scheme alone.
-- The classes that start the executable are one collection of xUnit, `BravoExecutable.Collection`: the
-  application has one instance, and they run one after the other.

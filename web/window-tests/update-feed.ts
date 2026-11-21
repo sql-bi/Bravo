@@ -1,5 +1,5 @@
 import { createServer, type Server } from 'node:http';
-import type { AddressInfo } from 'node:net';
+import { closeServer, listenOnLoopback } from './loopback-server';
 
 // The update feed of a test, which the application reads in place of the one of the releases: a development
 // build checks only the feed that its command line names.
@@ -15,7 +15,7 @@ export const releasedFeed = feedOf('1.0.9805.22885', 'https://github.com/sql-bi/
 /** Serves a feed as the storage of the releases does: UTF-16 with a byte order mark, and no charset. */
 export class UpdateFeedServer {
 
-    private constructor(private readonly server: Server) { }
+    private constructor(private readonly server: Server, private readonly port: number) { }
 
     static async start(text: string): Promise<UpdateFeedServer> {
         const body = Buffer.concat([Buffer.from([0xFF, 0xFE]), Buffer.from(text, 'utf16le')]);
@@ -24,20 +24,14 @@ export class UpdateFeedServer {
             response.end(body);
         });
 
-        await new Promise<void>((resolve, reject) => {
-            server.once('error', reject);
-            server.listen(0, '127.0.0.1', resolve);
-        });
-
-        return new UpdateFeedServer(server);
+        return new UpdateFeedServer(server, await listenOnLoopback(server));
     }
 
     get address(): string {
-        return `http://127.0.0.1:${(<AddressInfo>this.server.address()).port}/currentversion.json`;
+        return `http://127.0.0.1:${this.port}/currentversion.json`;
     }
 
     close(): Promise<void> {
-        this.server.closeAllConnections();
-        return new Promise(resolve => this.server.close(() => resolve()));
+        return closeServer(this.server);
     }
 }

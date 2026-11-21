@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import { promisify } from 'node:util';
-import { type Browser, chromium, expect, type Page, test as base } from '@playwright/test';
+import { type Browser, chromium, expect, type Page, type Request, test as base } from '@playwright/test';
 import { PolicyKey, type PolicyValues } from './policy-key';
 import { type TestProxyKind, TestProxyServer } from './test-proxy';
 import { releasedFeed, UpdateFeedServer } from './update-feed';
@@ -47,6 +47,12 @@ export interface ConsoleEntry {
     text: string
 }
 
+/** What a test answers a request with, in place of the host. */
+interface HostAnswer {
+    status: number
+    json?: unknown
+}
+
 /** The application of one test, with what its page did since the test attached to it. */
 export class Bravo {
 
@@ -55,6 +61,7 @@ export class Bravo {
     readonly pageErrors: string[] = [];
     /** The addresses that the page asked the host to open in the default browser. */
     readonly openedInBrowser: string[] = [];
+    private readonly answers = new Map<string, (request: Request) => HostAnswer>();
 
     /**
      *  proxy The proxy server of the test that the settings of the application name, when the test has one.
@@ -87,29 +94,38 @@ export class Bravo {
 
     /**
      * Answers in place of the host the requests that open a page in the default browser, and keeps their
-     * addresses in `openedInBrowser`. Only a test that opens a page calls it: while the page has a route,
-     * Playwright answers every CORS preflight of the page itself, in place of the host, and turns off the cache.
+     * addresses in `openedInBrowser`.
      */
     async answerBrowserRequests() {
-        await this.page.route(`${this.address}/browser/open`, async route => {
-            this.openedInBrowser.push((<{ address: string }>route.request().postDataJSON()).address);
-            await route.fulfill({ status: 204, headers: { 'Access-Control-Allow-Origin': pageOrigin } });
+        await this.answerInPlaceOfHost('/browser/open', request => {
+            this.openedInBrowser.push((<{ address: string }>request.postDataJSON()).address);
+            return { status: 204 };
         });
     }
 
     /**
      * Answers in place of the host the request that asks the user for the credentials of the proxy server, as a
      * user who entered them or who did not, and the one that forgets them. The host would show a dialog of
-     * Windows that no test can close, and would delete from the Credential Manager of the machine. As with
-     * `answerBrowserRequests`, the page then has a route.
+     * Windows that no test can close, and would delete from the Credential Manager of the machine.
      */
     async answerProxyCredentialRequests(entered: boolean) {
-        const headers = { 'Access-Control-Allow-Origin': pageOrigin };
-        await this.page.route(url => url.href.startsWith(`${this.address}/network/proxy-credentials`), async route => {
-            if (route.request().method() === 'DELETE')
-                await route.fulfill({ status: 204, headers });
-            else
-                await route.fulfill({ status: 200, headers, json: { entered } });
+        await this.answerInPlaceOfHost('/network/proxy-credentials', request =>
+            (request.method() === 'DELETE' ? { status: 204 } : { status: 200, json: { entered } }));
+    }
+
+    /**
+     * Answers in place of the host the requests whose path starts with a prefix; a second call for the prefix
+     * changes the answer. Only a test that needs it calls it: while the page has a route, Playwright answers
+     * every CORS preflight of the page itself, in place of the host, and turns off the cache.
+     */
+    private async answerInPlaceOfHost(prefix: string, answer: (request: Request) => HostAnswer) {
+        const isRouted = this.answers.has(prefix);
+        this.answers.set(prefix, answer);
+        if (isRouted) return;
+
+        await this.page.route(url => url.href.startsWith(`${this.address}${prefix}`), async route => {
+            const { status, json } = this.answers.get(prefix)(route.request());
+            await route.fulfill({ status, json, headers: { 'Access-Control-Allow-Origin': pageOrigin } });
         });
     }
 

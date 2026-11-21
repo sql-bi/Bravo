@@ -137,7 +137,9 @@ Exit: sign-in, the lists of reports and datasets, a model opened from Power BI D
   ([`WithHttpClientFactory`](https://learn.microsoft.com/entra/msal/dotnet/advanced/httpclient)), so that its
   requests have the proxy of the settings, its credentials and the codes of a failure; a sign-in window, of
   the library or of the system, is a browser, which follows the proxy of Windows; the connection test asks
-  the sign-in site already ([network](design/network.md)).
+  the sign-in site already ([network](design/network.md)). To decide with the design: a client reports its own
+  time-out as `ServerUnreachable`, which a library that is given a client cannot do; the handler of every
+  client could keep the time instead.
 
 ### T6 Features
 

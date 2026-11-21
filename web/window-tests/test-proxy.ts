@@ -1,5 +1,5 @@
 import { createServer, type Server } from 'node:http';
-import type { AddressInfo } from 'node:net';
+import { closeServer, listenOnLoopback } from './loopback-server';
 
 // The proxy server of a test, on the loopback address, which the settings of the application name. It forwards
 // nothing: it answers every request itself, with the update feed of the test, or asks for credentials that
@@ -13,11 +13,11 @@ export class TestProxyServer {
     /** The addresses that the proxy server was asked for. */
     readonly requests: string[] = [];
 
-    private constructor(private readonly server: Server) { }
+    private constructor(private readonly server: Server, private readonly port: number) { }
 
     static async start(kind: TestProxyKind, feed: string): Promise<TestProxyServer> {
         const server = createServer();
-        const proxy = new TestProxyServer(server);
+        const proxy = new TestProxyServer(server, await listenOnLoopback(server));
         server.on('request', (request, response) => {
             proxy.requests.push(request.url ?? '');
             if (kind === 'asks') {
@@ -29,21 +29,15 @@ export class TestProxyServer {
             }
         });
 
-        await new Promise<void>((resolve, reject) => {
-            server.once('error', reject);
-            server.listen(0, '127.0.0.1', resolve);
-        });
-
         return proxy;
     }
 
     /** The address of the proxy server, as the application writes it. */
     get address(): string {
-        return `http://127.0.0.1:${(<AddressInfo>this.server.address()).port}/`;
+        return `http://127.0.0.1:${this.port}/`;
     }
 
     close(): Promise<void> {
-        this.server.closeAllConnections();
-        return new Promise(resolve => this.server.close(() => resolve()));
+        return closeServer(this.server);
     }
 }

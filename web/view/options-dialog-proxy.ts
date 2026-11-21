@@ -170,12 +170,19 @@ export class OptionsDialogProxy {
                     `<div class="notice">${i18n(strings.optionProxyTestNoSites)}</div>`);
             })
             .catch((error: AppError) => {
+                if (error.requestAborted) return;
+
                 logger.logError(error);
                 this.testResults.innerHTML = `<div class="notice">${error.message}</div>`;
             })
             .finally(() => {
                 button.toggleAttr("disabled", false);
             });
+    }
+
+    // A test that the user no longer waits for is ended, in the host too
+    destroy() {
+        host.abortTestConnection();
     }
 
     siteHtml(site: SiteTestResult) {
@@ -185,8 +192,8 @@ export class OptionsDialogProxy {
             i18n(strings.optionProxyTestDirect));
 
         return `
-            <div class="site ${site.failure ? "failed" : "reached"}" data-site="${site.site}">
-                <div class="name">${i18n(siteNames[site.site])}</div>
+            <div class="site${site.failure ? " failed" : ""}">
+                <div class="name">${i18n(siteNames[site.site])} <span class="address">${new URL(site.address).host}</span></div>
                 <div class="result">${result}</div>
                 <div class="route">${route}</div>
             </div>

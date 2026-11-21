@@ -170,10 +170,10 @@ export class App {
             telemetry.track("Link", { "Url": url});
         });
 
-        // The action of a notification that sends the user to the proxy options
-        document.addLiveEventListener("click", ".show-proxy-options", e => {
+        // A link to a section of the options, such as the action of a notification
+        document.addLiveEventListener("click", "[data-options-section]", (e, element) => {
             e.preventDefault();
-            this.sidebar.showOptions("proxy");
+            this.sidebar.showOptions(element.dataset.optionsSection);
         });
 
         // Catch expandable content
@@ -426,7 +426,7 @@ export class App {
         // asks for credentials: the user can enter them, and is shown where
         return check.catch((error: AppError) => {
             if (error.code === ProblemCode.ProxyAuthenticationRequired) {
-                const action = `<span class="link show-proxy-options">${i18n(strings.optionProxyOpen)}</span>`;
+                const action = `<span class="link" data-options-section="proxy">${i18n(strings.optionProxyOpen)}</span>`;
                 notificationCenter.add(new Notify(error.message, null, action, true, true));
             }
             return <AppVersion>null;

@@ -77,6 +77,10 @@ The client of the host API is generated, not written:
   user interface that the host also has is replaced by the generated one when its feature moves.
 - Orval is pinned to an exact version in `package.json`: another version can write another client.
 
+The options dialog draws each option with `Renderer.Options.render` (`web/helpers/renderer.ts`). An option
+that asks before it changes, with `onBeforeChange`, goes back to the value that it had when the answer is no,
+and when the question fails: whoever asks tells the user why.
+
 The unit tests of the user interface are in `web/tests`, each at the path of the module that it tests, and
 run on [Vitest](https://vitest.dev) in a simulated browser, jsdom
 ([ADR 0016](../docs/decisions/0016-closed-error-codes-generated-types-and-tests-in-the-user-interface.md)):
@@ -136,7 +140,7 @@ The tests of the window are in `web/window-tests`, one file `*.spec.ts` for each
   `window-tests/global-teardown.ts`. It fails, and replaces nothing, when a value `Bravo.exe` is already there.
   In an elevated terminal elsewhere it writes nothing and fails.
 - The application has one instance, so one test runs at a time (`workers: 1`), and never while
-  `dotnet test` runs: `BravoProcessTests` starts the same executable. A development build that already runs
+  `dotnet test` runs: some tests of the host start the same executable. A development build that already runs
   takes the start of a test, which fails and says to close it. The installed application does not matter.
 - A test reads the requests of the page without their headers, and never the token of the host.
 - The tests: the start of the page (`start.spec.ts`), the theme and the diagnostic level in the options

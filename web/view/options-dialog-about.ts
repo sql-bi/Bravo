@@ -5,21 +5,12 @@
 */
 
 import { AppVersion } from '../controllers/app';
-import { ProblemCode } from '../generated/bravo';
 import { Loader } from '../helpers/loader';
 import {  _, __ } from '../helpers/utils';
 import { app, logger, optionsController, themeController } from '../main';
-import { AppError } from '../model/exceptions';
+import { AppError, AppErrorType } from '../model/exceptions';
 import { i18n } from '../model/i18n'; 
 import { strings } from '../model/strings';
-
-// The codes of a request that did not reach its server
-const networkFailures: unknown[] = [
-    ProblemCode.ProxyAuthenticationRequired,
-    ProblemCode.ProxyConnectionRefused,
-    ProblemCode.ServerUnreachable,
-    ProblemCode.SecureConnectionFailed
-];
 
 export class OptionsDialogAbout {
 
@@ -111,8 +102,9 @@ export class OptionsDialogAbout {
                 })
                 .catch((error: AppError) => {
 
-                    // A request that did not reach the feed has a text that tells the user what to do
-                    const text = (networkFailures.includes(error.code) ? error.message : i18n(strings.errorCheckForUpdates));
+                    // An error that the host foresaw has the text of its cause, such as a proxy that asks for
+                    // credentials: it tells the user what to do
+                    const text = (error.type == AppErrorType.Managed ? error.message : i18n(strings.errorCheckForUpdates));
                     this.updateStatusDiv.innerHTML = `<div class="notice">${text}</div>`;
  
                     try { logger.logError(error); } catch(ignore) {}

@@ -1,5 +1,5 @@
 import { type Bravo, expect, test } from './bravo';
-import { openOptions } from './options';
+import { openOptions, showSection } from './options';
 
 // The proxy options: the proxy server of the user, its credentials and the connection test. The proxy server
 // is one of the test, on the loopback address, and the host reaches it as it reaches any other. No test shows
@@ -18,9 +18,8 @@ function customCredentials(bravo: Bravo) {
     return { input: option.locator('input.listener'), slider: option.locator('.slider') };
 }
 
-/** Runs the connection test of the proxy options, and returns its one site: a development build asks its update feed alone. */
+/** Runs the connection test of the proxy options that are open; returns its one site: a development build asks its update feed alone. */
 async function testConnection(bravo: Bravo) {
-    await openOptions(bravo, 'proxy');
     await bravo.page.locator('#dialog-options #proxy-test .button').click();
     return bravo.page.locator('#dialog-options .connection-test-results .site');
 }
@@ -29,29 +28,23 @@ test.describe('a proxy server that asks for credentials', () => {
 
     test.use({ proxyServer: 'asks' });
 
-    test('is told at the start, with the way to the proxy options', async ({ bravo }) => {
+    test('is told at the start, by the connection test and by the update check of the options', async ({ bravo }) => {
         const { page } = bravo;
         const notification = page.locator('#notification-sidebar .item', { hasText: credentialsAsked });
         await expect(notification).toHaveCount(1);
 
+        // The link of the notification opens the proxy options
         await page.locator('#ctrl-notifications').click();
         await notification.locator('.actions .link').click();
-
         await expect(page.locator('#dialog-options #body-proxy')).toBeVisible();
-    });
 
-    test('is what the connection test tells, with the address of the proxy server', async ({ bravo }) => {
         const site = await testConnection(bravo);
-
-        await expect(site.locator('.name')).toHaveText('Bravo updates');
+        await expect(site.locator('.name')).toContainText('Bravo updates');
         await expect(site.locator('.result')).toHaveText(credentialsAsked);
         await expect(site.locator('.route')).toHaveText(`Through the proxy server ${bravo.proxy.address}`);
-    });
 
-    test('is the cause that the options tell for the update check that failed', async ({ bravo }) => {
-        await openOptions(bravo, 'about');
-
-        await expect(bravo.page.locator('#dialog-options .update-status .notice')).toHaveText(credentialsAsked);
+        await showSection(bravo, 'about');
+        await expect(page.locator('#dialog-options .update-status .notice')).toHaveText(credentialsAsked);
     });
 });
 
@@ -60,6 +53,7 @@ test.describe('a proxy server that answers', () => {
     test.use({ proxyServer: 'answers' });
 
     test('is the way of the connection test to the update feed, which is reached', async ({ bravo }) => {
+        await openOptions(bravo, 'proxy');
         const site = await testConnection(bravo);
 
         await expect(site.locator('.result')).toHaveText('Reached');
@@ -69,6 +63,7 @@ test.describe('a proxy server that answers', () => {
 });
 
 test('with no proxy server the connection test reaches the update feed, and the options say when a change applies', async ({ bravo }) => {
+    await openOptions(bravo, 'proxy');
     const site = await testConnection(bravo);
 
     await expect(site.locator('.result')).toHaveText('Reached');
@@ -100,11 +95,15 @@ test.describe('custom credentials that the user chose before', () => {
 
     test.use({ settingsFile: JSON.stringify({ proxy: { type: 1, useDefaultCredentials: false, bypassOnLocal: true } }) });
 
-    test('stay until the user confirms that they are removed, and are then forgotten', async ({ bravo }) => {
+    test('are asked for again by their link, stay until the user confirms, and are then forgotten', async ({ bravo }) => {
         const { input, slider } = customCredentials(bravo);
         const confirm = bravo.page.locator('#dialog-confirm-delete-proxy-cred');
         await bravo.answerProxyCredentialRequests(true);
         await openOptions(bravo, 'proxy');
+
+        await bravo.page.locator('#dialog-options .edit-proxy-credentials').click();
+        await expect.poll(() => bravo.hostRequests()).toContain(promptRequest);
+        await expect(input).toBeChecked();
 
         await slider.click();
         await confirm.locator('.button[data-action="cancel"]').click();
@@ -114,16 +113,5 @@ test.describe('custom credentials that the user chose before', () => {
         await confirm.locator('.button[data-action="ok"]').click();
         await expect.poll(() => bravo.hostRequests()).toContain(deleteRequest);
         await expect(input).not.toBeChecked();
-    });
-
-    test('are asked for again by the link that edits them, and stay on', async ({ bravo }) => {
-        const { input } = customCredentials(bravo);
-        await bravo.answerProxyCredentialRequests(true);
-        await openOptions(bravo, 'proxy');
-
-        await bravo.page.locator('#dialog-options .edit-proxy-credentials').click();
-
-        await expect.poll(() => bravo.hostRequests()).toContain(promptRequest);
-        await expect(input).toBeChecked();
     });
 });

@@ -537,6 +537,9 @@ export class Host extends Dispatchable {
     testConnection() {
         return this.apiClientCall("TestConnection", init => hostApi.testConnection(init));
     }
+    abortTestConnection() {
+        this.apiAbortByAction("TestConnection");
+    }
 
     /* Templates Development */
 

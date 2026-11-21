@@ -381,16 +381,17 @@
 		.name {
 			font-weight: 500;
 		}
-		.failed .result {
-			color: @error-color;
-
-			.dark & { color: @error-color-dark; }
-		}
-		.route {
+		.address, .route {
+			font-weight: normal;
 			color: @notice-color;
 			overflow-wrap: anywhere;
 
 			.dark & { color: @notice-color-dark; }
+		}
+		.failed .result {
+			color: @error-color;
+
+			.dark & { color: @error-color-dark; }
 		}
 	}
 
