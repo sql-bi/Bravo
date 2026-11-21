@@ -110,12 +110,12 @@ public sealed class DesktopHostNetworkTests : IAsyncDisposable
 
         using var response = await _client.PostAsync(ConnectionTest, content: null, TestContext.Current.CancellationToken);
 
-        Assert.Equal(HttpStatusCode.OK, change.StatusCode);
+        var expected = $$"""
+            { "sites": [{ "site": "UpdateFeed", "address": "{{s_feedAddress}}", "proxyAddress": "{{saved.Address}}" }] }
+            """;
         var result = await response.Content.ReadFromJsonAsync<JsonElement>(TestContext.Current.CancellationToken);
-        var site = Assert.Single(result.GetProperty("sites").EnumerateArray());
-        Assert.Equal("UpdateFeed", site.GetProperty("site").GetString());
-        Assert.Equal(saved.Address.AbsoluteUri, site.GetProperty("proxyAddress").GetString());
-        Assert.False(site.TryGetProperty("failure", out _), site.GetRawText());
+        using var expectedDocument = JsonDocument.Parse(expected);
+        Assert.True(JsonElement.DeepEquals(expectedDocument.RootElement, result), result.GetRawText());
         Assert.Single(saved.Requests);
         Assert.Empty(proxy.Requests);
     }
