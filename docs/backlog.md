@@ -1,6 +1,6 @@
 # Bravo: backlog
 
-Next ID: B-40
+Next ID: B-41
 
 The open work toward 1.1.0, in the order to take it ([ADR 0007](decisions/0007-redesign-on-a-development-branch.md)).
 Status: `[ ]` to do, `[~]` in progress, `[-]` dropped (say why); a done item leaves the backlog.
@@ -16,8 +16,9 @@ criterion can be checked on `develop-vnext`.
 
 ## Now
 
-As of 2026-11-20: the items of stage T3 Distribution are done, and so are B-4 and B-5, the first items of T4
-Cross-cutting services; B-6 is next. B-1, left in T2, waits for the release of TypeScript 7.1 and ts-loader 10.
+As of 2026-11-21: the items of stage T3 Distribution are done, and so are B-4, B-5 and B-6, the first items of
+T4 Cross-cutting services; B-7 is next. Two items of T2 wait for a release of their tools: B-1 for TypeScript
+7.1 and ts-loader 10, B-40 for a stable WebView2 SDK with the permission of Local Network Access.
 The first signed preview, the exit of T3, waits for the maintainer: the identity that signs and the four
 variables of the repository ([guide](guides/make-a-release.md)).
 
@@ -31,6 +32,16 @@ opens the options through the new API and the generated client.
 - [ ] B-1 (was H-09) TypeScript 7, the native compiler. Not before TypeScript 7.1 and ts-loader 10 are released:
   7.0 has no API, 7.1 has a new one, and ts-loader 10 requires it. Hypothesis: the check of the types moves to
   the native `tsc`, and ts-loader 10 translates.
+- [ ] B-40 Local Network Access in the webview ([announcement
+  126](https://github.com/MicrosoftEdge/WebView2Announcements/issues/126)). Not before a stable WebView2 SDK has
+  the permission of the announcement, which a prerelease SDK has: the page calls the host on the loopback
+  address, and the application then grants that permission to the origin of the page. Until then a permission
+  that the application does not know, from a later runtime or from a later SDK, is left to the prompt of the
+  engine. Measured with the checks turned on by feature flags ([specification](design/window-and-webview.md)):
+  the request of the page waits, without reaching the host, for a prompt of the engine with Block and Allow;
+  the application gets no permission request; the answer of the user is kept in the profile. In a probe outside
+  the application, a grant through the DevTools protocol (`Browser.grantPermissions`) made the same request
+  succeed. To watch: a runtime that turns the checks on before the application grants the permission.
 
 ### T3 Distribution
 
@@ -44,23 +55,6 @@ No item is left: the exit waits for the first signed preview.
 Exit: in the installed preview the settings are migrated, the policies are honored, the logs are visible, a
 crash produces a report, telemetry runs on a supported SDK.
 
-- [ ] B-6 (was S-03) Network and proxy. Hypothesis: system proxy and auto-configuration detected without
-  settings, integrated credentials first, a prompt as the last resort, a connectivity check with clear messages.
-  Explore: the proxy in .NET, in the webview, in the sign-in library and in the Analysis Services client
-  libraries. Also: the proxy options that `/options` accepts today, an address and a bypass list of regular
-  expressions, which nothing reads yet; the webview is given no browser argument, where 1.0.x passed it the
-  proxy. Also, Local Network Access ([announcement
-  126](https://github.com/MicrosoftEdge/WebView2Announcements/issues/126)): when WebView2 offers the permission,
-  the application grants it to the origin of the page; until then a permission that the application does not
-  know, from a later runtime or from a later SDK, is left to the prompt of the engine. Measured with the checks
-  turned on by feature flags ([specification](design/window-and-webview.md)): the request of the page waits,
-  without reaching the host, for a prompt of the engine with Block and Allow; the application gets no permission
-  request; the answer of the user is kept in the profile. In a probe outside the application, a grant through
-  the DevTools protocol (`Browser.grantPermissions`) made the same request succeed. Also, from B-3: the update
-  feed is read by the typed client `HttpReleaseFeed` of `IHttpClientFactory`, so the proxy can be set on every
-  client in one place; behind a proxy that asks for credentials, an answer 407, the check fails with
-  `UpdateCheckFailed`. Also, from B-4: the proxy of the user is kept in the settings file as 1.0.x keeps it, and
-  one whose address or bypass list `/options` would refuse is read as the default proxy.
 - [ ] B-7 (was S-04) Diagnostics and logging. Hypothesis: in-memory log shown in the user interface, plus the
   event log. Also: the host has no logging provider yet, so the warning of an owner of the instance that cannot
   create its pipe reaches no log, and neither does a request of the API that failed: the `traceId` of a problem
@@ -70,7 +64,10 @@ crash produces a report, telemetry runs on a supported SDK.
   and nothing writes it. Also, from B-4: a settings file that cannot be read or written is a warning of
   `FileUserSettingsStore`, which reaches no log; the page tells the user, and writes the error in its own
   diagnostic log. Also, from B-5: a key of the policies that cannot be read is told to the user in a message,
-  and its exception reaches no log.
+  and its exception reaches no log. Also, from B-6: a request that does not reach its server fails with the code of
+  its cause and a message that names the host, and nothing writes what .NET reported; credentials of the proxy
+  server that Windows cannot read are a warning of `WindowsProxyCredentialStore`, which reaches no log; the
+  connection test shows its results in the options and leaves no trace ([network](design/network.md)).
 - [ ] B-8 (was S-05) Errors and crash reporting. Material: the branch `feat/crash-reporter-process`. Explore: a
   reporter as an application of its own or as a mode of the main executable. Also: replaces the minimal
   last-chance exception handling; a service of the host that fails stops the host, which closes the window with
@@ -80,7 +77,9 @@ crash produces a report, telemetry runs on a supported SDK.
   no trace. Also, from D-01: the packages install the symbols of the four assemblies of the host, so that a
   trace names its lines; `Bravo.Setup.exe` is compiled ahead of time and has none. Also, from B-5: a key of
   the policies that cannot be read ends the start before the host exists, with a message of its own and the
-  exit code 5 ([policies](design/policies.md)).
+  exit code 5 ([policies](design/policies.md)). Also, from B-6: credentials of the proxy server that Windows does not
+  keep or forget fail their request as a defect of the host, and the user is told of an error without its
+  cause ([network](design/network.md)).
 - [ ] B-9 (was S-06) Telemetry. Hypothesis: a supported SDK; the classic Application Insights SDK is retired on
   2027-03-31. Explore: Application Insights 3 or OpenTelemetry; consent. Also: the page gets no telemetry
   settings, creates no telemetry client and sends nothing. Also, from D-01:
@@ -104,6 +103,10 @@ crash produces a report, telemetry runs on a supported SDK.
     it downloaded the file in a frame, and raised no event.
   - From B-5: the policy `TelemetryEnabled` is read at the start and returned by `GET /policies`, and the page
     locks its option; telemetry honors it over the choice of the user ([policies](design/policies.md)).
+  - From B-6: what sends the telemetry of the host has a client of its own: it gets the proxy of the settings
+    and its credentials, which every client of `IHttpClientFactory` has, and the connection test gets the
+    site that the telemetry is sent to. What the page would send by itself goes through the proxy of Windows,
+    whatever the option of the user ([network](design/network.md)).
 
 ### T5 Access to models
 
@@ -117,7 +120,11 @@ Exit: sign-in, the lists of reports and datasets, a model opened from Power BI D
   seconds; the dialog that shows it asks twice when it opens, and uses its table at the second answer, built or
   not.
 - [ ] B-11 (was M-02) Model connections. Hypothesis: a tabular session behind a port, with an in-memory model
-  for tests.
+  for tests. Also, from B-6: the Analysis Services client libraries take no proxy from the application.
+  Hypothesis: they read the default proxy of the process
+  ([`HttpClient.DefaultProxy`](https://learn.microsoft.com/dotnet/api/system.net.http.httpclient.defaultproxy)),
+  which `Main` then sets from the settings for None and Custom, before the first connection; to prove with a
+  proxy of a test ([network](design/network.md)).
 - [ ] B-12 (was M-03) Sign-in and the Power BI service. Hypothesis: interaction behind a port. Explore: the
   guidance for desktop applications; the Windows authentication broker (#879). Also: the account that the page
   remembers stays in the storage of the page, and is lost once at the upgrade from 1.0.x; an activation whose
@@ -125,14 +132,21 @@ Exit: sign-in, the lists of reports and datasets, a model opened from Power BI D
   code of its own, which the page answers with the sign-in dialog: it no longer takes a 401 for one, and at its
   start it still tries the sign-in with the account that it remembers, a call that has no route. Also, from
   B-5: the policy `UseSystemBrowserForAuthentication` is read and returned by `GET /policies`, and the page
-  locks its option; the sign-in honors it ([policies](design/policies.md)).
+  locks its option; the sign-in honors it ([policies](design/policies.md)). Also, from B-6: the sign-in library takes
+  its HTTP client from the factory of the host
+  ([`WithHttpClientFactory`](https://learn.microsoft.com/entra/msal/dotnet/advanced/httpclient)), so that its
+  requests have the proxy of the settings, its credentials and the codes of a failure; a sign-in window, of
+  the library or of the system, is a browser, which follows the proxy of Windows; the connection test asks
+  the sign-in site already ([network](design/network.md)).
 
 ### T6 Features
 
 Exit, for each feature: the same results as `main` on the sample models; its row of the manual checks ticked.
 
 - [ ] B-13 (was F-01) Analyze Model.
-- [ ] B-14 (was F-02) Format DAX.
+- [ ] B-14 (was F-02) Format DAX. From B-6: its requests go through a client of `IHttpClientFactory`, which has
+  the proxy and the codes of a failure; the connection test asks `https://www.daxformatter.com/`, to change
+  if the feature calls another address ([network](design/network.md)).
 - [ ] B-15 (was F-03) Export Data. The export is the first operation that reports progress: a resource of its
   own, created, read and cancelled through its routes
   ([ADR 0014](decisions/0014-api-conventions-and-a-contract-kept-as-a-file.md)).
@@ -170,7 +184,9 @@ Exit, for each feature: the same results as `main` on the sample models; its row
   Hypothesis: the frame may navigate to the player alone, with the permissions that it asks for (autoplay,
   fullscreen); or the video opens in the default browser of the user. Explore: what an embedded player needs
   from the engine (storage and cookies of another origin, permissions), and what the window tests can prove
-  without reaching the network.
+  without reaching the network. Also, from B-6: the webview is given no proxy of the user, so a frame that
+  loads from outside goes through the proxy of Windows whatever the option of the user, and the engine answers
+  by itself a proxy that asks for credentials ([network](design/network.md)).
 
 ### T7 Replacement of `main`
 

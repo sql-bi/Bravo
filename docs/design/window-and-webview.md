@@ -129,7 +129,7 @@ of the SDK and runtime 157.0.4341.46, the checks turned on by setting the enviro
 - A probe outside the application, on a new data folder at every run, gave the same result with both flags and
   with the second one alone, and no effect with `LocalNetworkAccessChecks` alone.
 
-What follows from this is backlog B-6.
+What follows from this is backlog B-40.
 
 ## In the code
 

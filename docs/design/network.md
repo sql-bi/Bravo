@@ -20,6 +20,14 @@ options, the setting `proxy` of 1.0.x ([settings](settings.md)):
   applies at the next start of the application: every connection of a run goes through the same proxy, also
   the ones of a library that takes no proxy from the application.
 
+**The webview.** The page and the host are on one machine: the webview loads the page from the folder of the
+application and calls the host on the loopback address, which the engine sends to no proxy
+([Chromium](https://chromium.googlesource.com/chromium/src/+/HEAD/net/docs/proxy.md#Implicit-bypass-rules)).
+The webview is given no browser argument, where 1.0.x gave it the proxy of the user: what it would load from
+outside goes through the proxy of Windows, whatever the option of the user, and the engine answers by itself
+a proxy server that asks for credentials. Today the page loads nothing from outside
+([window and webview](window-and-webview.md)).
+
 **Failures.** A request that does not get the answer of its server fails with an error that names the cause,
 one of four, the same for every connection of the application ([API](api.md)):
 
@@ -107,6 +115,10 @@ causes.
 - An address of the user with a scheme that .NET takes for no proxy fails the request as a defect of the host.
 - Credentials that Windows does not keep or forget, as where an administrator forbids kept credentials, fail
   the request as a defect of the host: the user is told of an error, and not of its cause.
+- Proxy settings of Windows that take the loopback address through the proxy, with the entry `<-loopback>`
+  among their exceptions, keep the page from reaching the host: that entry takes away the rule by which the
+  engine sends the loopback address to no proxy
+  ([Chromium](https://chromium.googlesource.com/chromium/src/+/HEAD/net/docs/proxy.md#Overriding-the-implicit-bypass-rules)).
 - No test meets a real proxy of an enterprise, a script of an organization, or a network that inspects the
   connections: those are checked by hand.
 - No test shows the dialog box of Windows for the credentials: it is checked by hand.
