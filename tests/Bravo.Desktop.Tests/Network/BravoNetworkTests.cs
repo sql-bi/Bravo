@@ -37,7 +37,6 @@ public sealed class BravoNetworkTests : IDisposable
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Contains(proxy.Requests, request => request.Target.StartsWith(FeedAddress, StringComparison.Ordinal));
-        Assert.Equal(0, await bravo.CloseAsync());
     }
 
     // The Windows user never sends a password: the proxy gets no credentials, and the user is told to enter them.

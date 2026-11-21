@@ -74,16 +74,8 @@ internal sealed class BravoWithApi : IDisposable
         return problem.GetProperty("code").GetString();
     }
 
-    /// <summary>
-    /// Closes the window as a user does, and returns the exit code of the process.
-    /// </summary>
-    public async Task<int> CloseAsync()
-    {
-        _process.CloseMainWindow();
-
-        return await BravoExecutable.WaitForExitAsync(_process, BravoExecutable.ShutdownTimeout);
-    }
-
+    // The tests of the network do not wait for the window nor for the end of the application, which other
+    // tests prove: the process is ended with the test.
     public void Dispose()
     {
         Client.Dispose();
@@ -91,14 +83,20 @@ internal sealed class BravoWithApi : IDisposable
         _process.Dispose();
     }
 
-    // The application writes the file once its host has started.
+    // The application writes the file once its host has started, before its window is shown.
     private static async Task<HttpClient> ConnectAsync(Process process, string connectionFile)
     {
-        await BravoExecutable.WaitForMainWindowAsync(process);
         var start = Stopwatch.GetTimestamp();
         while (!File.Exists(connectionFile))
         {
-            Assert.False(process.HasExited, "Bravo ended before it wrote the address of its API.");
+            if (process.HasExited)
+            {
+                // A start that ends at once with success handed itself over to a development build that
+                // already runs for this user.
+                Assert.SkipWhen(process.ExitCode == 0, "A development build of Bravo is running.");
+                Assert.Fail($"Bravo ended with exit code {process.ExitCode} before it wrote the address of its API.");
+            }
+
             var waited = Stopwatch.GetElapsedTime(start);
             Assert.True(waited < BravoExecutable.StartTimeout, "Bravo did not write the address of its API in time.");
             await Task.Delay(TimeSpan.FromMilliseconds(100), TestContext.Current.CancellationToken);
