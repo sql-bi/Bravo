@@ -139,6 +139,8 @@ export enum strings {
     errorNotFound,
     errorOperationFailedDetails,
     errorPathNotFound,
+    errorProxyAuthenticationRequired,
+    errorProxyConnectionRefused,
     errorReportConnectionUnknown,
     errorReportConnectionUnsupportedAnalysisServicesCompatibilityMode, 
     errorReportConnectionUnsupportedAnalysisServicesConnectionNotFound, 
@@ -149,6 +151,8 @@ export enum strings {
     errorReportConnectionUnsupportedProcessNotReady, 
     errorReportsEmptyListing,
     errorRetry,
+    errorSecureConnectionFailed,
+    errorServerUnreachable,
     errorSignInMsalExceptionOccurred,
     errorStart,
     errorTemplateAlreadyExists,
@@ -458,4 +462,4 @@ export enum strings {
     whitespacesTitle,
     wrappingTitle,
 
-};
+};

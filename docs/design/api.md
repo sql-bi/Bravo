@@ -74,8 +74,10 @@ of the API lists them in the schema `ProblemCode`, and no answer carries another
 
 - A use case reports a foreseen error by throwing `BravoException` with a code and a message in English,
   which becomes the `detail` of the problem. The code is a member of one list, which admits no other value.
-  The codes are `UpdateCheckFailed` and `UpdateCheckDisabled` ([updates](updates.md)), and `SettingsSaveFailed`
-  ([settings](settings.md)).
+  The codes are `UpdateCheckFailed` and `UpdateCheckDisabled` ([updates](updates.md)), `SettingsSaveFailed`
+  ([settings](settings.md)), and the four causes of a request that does not reach its server,
+  `ProxyAuthenticationRequired`, `ProxyConnectionRefused`, `ServerUnreachable` and `SecureConnectionFailed`
+  ([network](network.md)).
 - A route that writes a problem with a code outside the list is answered with the code of its status.
 
 **Events.** The host tells the user interface what happens through numbered events, the first of each process

@@ -23,7 +23,11 @@ export const problemTexts: Record<ProblemCode, strings> = {
     HttpError: strings.errorUnspecified,
     UpdateCheckFailed: strings.errorCheckForUpdates,
     UpdateCheckDisabled: strings.optionPolicyNotice,
-    SettingsSaveFailed: strings.errorUserSettingsSaveError
+    SettingsSaveFailed: strings.errorUserSettingsSaveError,
+    ProxyAuthenticationRequired: strings.errorProxyAuthenticationRequired,
+    ProxyConnectionRefused: strings.errorProxyConnectionRefused,
+    ServerUnreachable: strings.errorServerUnreachable,
+    SecureConnectionFailed: strings.errorSecureConnectionFailed
 };
 
 /**

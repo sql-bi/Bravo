@@ -613,7 +613,11 @@
           "HttpError",
           "UpdateCheckFailed",
           "SettingsSaveFailed",
-          "UpdateCheckDisabled"
+          "UpdateCheckDisabled",
+          "ProxyAuthenticationRequired",
+          "ProxyConnectionRefused",
+          "ServerUnreachable",
+          "SecureConnectionFailed"
         ],
         "type": "string",
         "description": "What went wrong, as a name that never changes meaning. No error answer has a code outside this list."

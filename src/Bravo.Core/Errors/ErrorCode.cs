@@ -24,4 +24,24 @@ public enum ErrorCode
     /// An administrator turned the update check off with a policy: no request is made to the update feed.
     /// </summary>
     UpdateCheckDisabled = 3,
+
+    /// <summary>
+    /// The proxy server asks for credentials, and the ones it was given, if any, were not accepted.
+    /// </summary>
+    ProxyAuthenticationRequired = 4,
+
+    /// <summary>
+    /// The proxy server answered, and refused the connection to the server.
+    /// </summary>
+    ProxyConnectionRefused = 5,
+
+    /// <summary>
+    /// The server did not answer: its name is not known, the connection was refused, or it took too long.
+    /// </summary>
+    ServerUnreachable = 6,
+
+    /// <summary>
+    /// The secure connection to the server could not be established: its certificate is not trusted.
+    /// </summary>
+    SecureConnectionFailed = 7,
 }
