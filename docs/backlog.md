@@ -139,7 +139,8 @@ Exit: sign-in, the lists of reports and datasets, a model opened from Power BI D
   the library or of the system, is a browser, which follows the proxy of Windows; the connection test asks
   the sign-in site already ([network](design/network.md)). To decide with the design: a client reports its own
   time-out as `ServerUnreachable`, which a library that is given a client cannot do; the handler of every
-  client could keep the time instead.
+  client could keep the time instead. Also: the connection test asks the sign-in and the service of the
+  public cloud, whatever the cloud of the account: to ask the ones of the environment that the user signs in to.
 
 ### T6 Features
 

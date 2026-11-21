@@ -1,5 +1,5 @@
 import { type Bravo, expect, test } from './bravo';
-import { openOptions, showSection } from './options';
+import { chooseOption, openOptions, showSection } from './options';
 
 // The proxy options: the proxy server of the user, its credentials and the connection test. The proxy server
 // is one of the test, on the loopback address, and the host reaches it as it reaches any other. No test shows
@@ -69,6 +69,19 @@ test('with no proxy server the connection test reaches the update feed, and the 
     await expect(site.locator('.result')).toHaveText('Reached');
     await expect(site.locator('.route')).toHaveText('No proxy server');
     await expect(bravo.page.locator('#dialog-options #body-proxy .option-notice')).toHaveText(restartNotice);
+});
+
+test('the connection test does not run on options that the host did not save', async ({ bravo }) => {
+    await openOptions(bravo, 'proxy');
+    expect((await chooseOption(bravo, 'proxy-type', 'Custom')).status()).toBe(200);
+    const address = bravo.page.locator('#dialog-options #proxy-address input.listener');
+    await address.fill('http://');
+    await address.blur();
+
+    await bravo.page.locator('#dialog-options #proxy-test .button').click();
+
+    await expect(bravo.page.locator('#dialog-options .connection-test-results .notice')).toHaveText('Unable to save the settings.');
+    expect(bravo.hostRequests()).not.toContain('POST /network/test');
 });
 
 test('custom credentials are asked for when the user turns them on, and are on once the user has entered them', async ({ bravo }) => {

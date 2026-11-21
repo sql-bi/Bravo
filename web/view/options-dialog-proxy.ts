@@ -31,6 +31,8 @@ const siteNames: Record<NetworkSite, strings> = {
 export class OptionsDialogProxy {
 
     testResults: HTMLElement;
+    credentialsAsked: Promise<boolean>;
+    closed = false;
 
     render(element: HTMLElement) {
 
@@ -130,10 +132,17 @@ export class OptionsDialogProxy {
         });
     }
 
-    // The host asks in a dialog of Windows. Whether the user entered credentials: a failure is told, and is none
+    // The host asks in a dialog of Windows. Whether the user entered credentials: a failure is told, and is none.
+    // One dialog at a time: whoever asks while it is open gets its answer
     askForCredentials() {
-        return host.promptProxyCredentials()
-            .catch((error: AppError) => this.tellFailure(error));
+        if (!this.credentialsAsked)
+            this.credentialsAsked = host.promptProxyCredentials()
+                .catch((error: AppError) => this.tellFailure(error))
+                .finally(() => {
+                    this.credentialsAsked = null;
+                });
+
+        return this.credentialsAsked;
     }
 
     confirmForgetCredentials() {
@@ -161,13 +170,21 @@ export class OptionsDialogProxy {
         this.testResults.innerHTML = Loader.html(false, false, 5);
 
         // The host tests with the options that it keeps: the ones of this dialog are saved first, also a text
-        // that the user has just left
+        // that the user has just left. Not saved, they would not be the ones that are tested
         optionsController.save()
-            .then(() => host.testConnection())
-            .then(result => {
-                this.testResults.innerHTML = (result.sites.length ?
-                    result.sites.map(site => this.siteHtml(site)).join("") :
-                    `<div class="notice">${i18n(strings.optionProxyTestNoSites)}</div>`);
+            .then(saved => {
+                if (this.closed) return;
+
+                if (!saved) {
+                    this.testResults.innerHTML = `<div class="notice">${i18n(strings.errorUserSettingsSaveError)}</div>`;
+                    return;
+                }
+
+                return host.testConnection().then(result => {
+                    this.testResults.innerHTML = (result.sites.length ?
+                        result.sites.map(site => this.siteHtml(site)).join("") :
+                        `<div class="notice">${i18n(strings.optionProxyTestNoSites)}</div>`);
+                });
             })
             .catch((error: AppError) => {
                 if (error.requestAborted) return;
@@ -180,8 +197,9 @@ export class OptionsDialogProxy {
             });
     }
 
-    // A test that the user no longer waits for is ended, in the host too
+    // A test that the user no longer waits for is not started, or is ended, in the host too
     destroy() {
+        this.closed = true;
         host.abortTestConnection();
     }
 

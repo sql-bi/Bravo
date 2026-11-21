@@ -91,7 +91,8 @@ causes.
 - A site that does not answer is a result of the test, not an error of the route. The sites are asked at the
   same time, and a site has 30 seconds to answer.
 - The proxy server of a result is the one that the settings give for the address of the site: absent when the
-  request goes to the site with no proxy, and the first one where a script names several.
+  request goes to the site with no proxy, and the first one where a script names several. It is told without
+  the user name and the password that an address may hold.
 - The update feed is not asked when a policy turned the update check off ([policies](policies.md)): the
   application sends no request there.
 - A development build asks the update feed that it was given with `--dev-update-feed` and no other site, so no
@@ -103,10 +104,12 @@ causes.
   effect at the next start of the application.
 - The switch of the custom credentials asks for them when the user turns it on, and stays off when the user
   enters none. Turned off, it asks the user to confirm, and then forgets the credentials. A link asks for them
-  again; with the switch off, the link turns it on.
+  again; with the switch off, the link turns it on. The page asks once at a time: whoever asks while the
+  dialog box is open gets its answer.
 - A request for the credentials, or to forget them, that fails is told in a notification, and leaves the
   switch as it was.
-- The connection test is a button. It saves the options of the dialog first, then shows each site with its
+- The connection test is a button. It saves the options of the dialog first, and does not run when the host
+  did not save them: it would test other options than the ones on screen. It then shows each site with its
   name and the host that was asked, whether it was reached or the text of its cause, and the proxy server
   that the request went through. A test that is still running when the dialog is closed is ended, in the
   host too.
@@ -116,6 +119,7 @@ causes.
 **Limits.**
 
 - An address of the user with a scheme that .NET takes for no proxy fails the request as a defect of the host.
+  The connection test tells it as a site that cannot be reached.
 - Credentials that Windows does not keep or forget, as where an administrator forbids kept credentials, fail
   the request as a defect of the host: the user is told of an error, and not of its cause.
 - Proxy settings of Windows that take the loopback address through the proxy, with the entry `<-loopback>`
@@ -161,7 +165,8 @@ causes.
   request.
 - `NetworkFailureHandler` is the one place where a failure gets its code, through `NetworkFailure`, the one
   table from what .NET reports
-  ([`HttpRequestError`](https://learn.microsoft.com/dotnet/api/system.net.http.httprequesterror)) to a code. A
+  ([`HttpRequestError`](https://learn.microsoft.com/dotnet/api/system.net.http.httprequesterror)) to a code, for
+  a client that sends with a task and for one that sends without. A
   time-out of an `HttpClient` is raised above its handlers, where it cannot be told from a request that the
   caller cancelled: the component that owns the client reports it, with `NetworkFailure.TimedOut`, as the
   update feed does. A component that calls a library with a client of its own gives `NetworkFailure` the
