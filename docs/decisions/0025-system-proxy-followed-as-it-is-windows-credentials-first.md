@@ -1,13 +1,13 @@
 # 0025. The system proxy followed as it is, Windows credentials first
 
 - Status: Accepted
-- Date: 2026-11-20
+- Date: 2026-11-21
 
 ## Context
 
 Every connection must work at the first attempt behind proxy servers, scripts and firewalls
 ([specification](../spec.md#rules-for-every-component)). 1.0.x keeps a proxy choice, None, System or Custom, and
-credentials in the Windows Credential Manager; here nothing reads them. .NET finds the
+credentials in the Windows Credential Manager. .NET finds the
 [system proxy](https://learn.microsoft.com/dotnet/api/system.net.http.httpclient.defaultproxy), sends
 [credentials](https://learn.microsoft.com/dotnet/api/system.net.http.socketshttphandler.defaultproxycredentials)
 only when given, and fails over among proxies only for
@@ -19,22 +19,25 @@ The webview reads the same settings and never proxies a loopback address
 
 - **One place.** One component gives every HTTP client of the host its handler: System leaves the system proxy
   of .NET in place, None uses no proxy, Custom uses the user's address and bypass list. A change applies at the
-  next request.
+  next start.
 - **Credentials.** The Windows user first, for Negotiate and NTLM only; with custom credentials, the ones kept
-  under the name of 1.0.x. Their dialog opens only on the user's request: from the options, or after a 407.
+  under the name of 1.0.x, used once entered. Their dialog opens only on request: from the options, or after a
+  407.
 - **Webview.** No browser argument: the engine follows Windows and answers a proxy itself.
 - **Failures.** One error code per cause; a proxy asking for credentials is told also at the start.
-- **Connection test.** On request, in the options: sign-in, Power BI service, DAX Formatter, update feed.
+- **Connection test.** On request, with the settings as saved: sign-in, Power BI service, DAX Formatter, update
+  feed.
 - **Names of 1.0.x.** `proxy` in the file and in `/options` is unchanged.
 - **Local Network Access.** No code until a stable WebView2 SDK has the permission of
   [announcement 126](https://github.com/MicrosoftEdge/WebView2Announcements/issues/126).
 
 ## Rejected alternatives
 
-- A proxy object of the application around the system one: .NET no longer fails over.
-- Browser arguments for None and Custom, as 1.0.x: the engine cannot change proxy while running
-  ([WebView2Feedback 2809](https://github.com/MicrosoftEdge/WebView2Feedback/issues/2809)), and the page loads
-  nothing remote.
+- An application proxy object around the system one: .NET no longer fails over.
+- A proxy changed while running: handlers replaced under requests in flight; a library's own client cannot
+  follow.
+- Browser arguments for None and Custom, as 1.0.x: the engine's bypass syntax has no regular expressions, and
+  the page loads nothing remote.
 - Windows credentials behind an administrator's switch, as
   [Power BI Desktop](https://learn.microsoft.com/power-bi/connect-data/desktop-troubleshooting-sign-in#using-default-system-credentials-for-web-proxy):
   [Chromium](https://www.chromium.org/developers/design-documents/http-authentication/) sends them to a proxy
@@ -46,6 +49,5 @@ The webview reads the same settings and never proxies a loopback address
 
 - With System, the proxy that Windows names can ask for the user's Windows identity.
 - A library with its own client reads the process default proxy, which `Main` sets for None and Custom (backlog
-  B-11); the sign-in library takes a client of the host (backlog B-12).
+  B-11); the sign-in library takes a host client (backlog B-12).
 - What the webview would load from outside ignores None and Custom (backlog B-9, B-36).
-- Scripts and the system proxy are proven only on a runner.
