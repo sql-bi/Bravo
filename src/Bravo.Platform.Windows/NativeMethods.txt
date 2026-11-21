@@ -1,3 +1,11 @@
+// Windows.Win32.Foundation
+WIN32_ERROR
+
+// Windows.Win32.Security.Credentials
+CredDeleteW
+CredReadW
+CredWriteW
+
 // Windows.Win32.System.Pipes
 GetNamedPipeServerProcessId
 
