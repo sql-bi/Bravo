@@ -269,7 +269,10 @@ export namespace Renderer {
                     struct.type == OptionType.textarea || 
                     struct.type == OptionType.number
                 ) {
-                    listener.dataset["prev"] = (<HTMLSelectElement|HTMLInputElement>listener).value;
+                    // The value of a switch is whether it is on, as revertValue reads it
+                    listener.dataset["prev"] = (struct.type == OptionType.switch ?
+                        String((<HTMLInputElement>listener).checked) :
+                        (<HTMLSelectElement|HTMLInputElement>listener).value);
                     listener.addEventListener("change", e => {
                         
                         let el = <HTMLInputElement|HTMLSelectElement>e.target; 
@@ -313,6 +316,7 @@ export namespace Renderer {
                             }
                         };
 
+                        // A change that could not be asked for is no change: whoever asks tells the user why
                         if (Utils.Obj.isSet(struct.onBeforeChange))
                             struct.onBeforeChange(e, getValue())
                                 .then(changed => {
@@ -320,7 +324,7 @@ export namespace Renderer {
                                         applyValue();
                                     else
                                         revertValue();
-                                });
+                                }, () => revertValue());
                         else
                             applyValue();
                     });
