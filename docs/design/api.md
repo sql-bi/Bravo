@@ -37,7 +37,6 @@ other request has the 5 seconds of the stop to end.
 | `GET /events?after={number}` | Reads the events of the host after a number, waiting for the next one when there is none |
 | `GET /releases/latest` | Reads the latest release from the update feed: whether it is newer, and the file of this copy ([updates](updates.md)) |
 | `POST /browser/open` | Opens a page of a site that the application trusts in the default browser of the user ([updates](updates.md)) |
-| `POST /network/test` | Asks each site that the application needs for an answer, with the proxy settings as they are kept now ([network](network.md)) |
 | `POST /network/proxy-credentials/prompt` | Asks the user for the credentials of the proxy server in a dialog of Windows, and keeps what the user enters ([network](network.md)) |
 | `DELETE /network/proxy-credentials` | Forgets the credentials of the proxy server that the user entered ([network](network.md)) |
 

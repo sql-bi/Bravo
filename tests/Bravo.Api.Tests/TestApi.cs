@@ -68,8 +68,6 @@ internal sealed class TestApi : IAsyncDisposable
 
     public IBrowserLauncher BrowserLauncher => _app.Services.GetRequiredService<IBrowserLauncher>();
 
-    public ISiteProbe SiteProbe => _app.Services.GetRequiredService<ISiteProbe>();
-
     public IProxyCredentialDialog ProxyCredentialDialog => _app.Services.GetRequiredService<IProxyCredentialDialog>();
 
     public IProxyCredentialStore ProxyCredentialStore => _app.Services.GetRequiredService<IProxyCredentialStore>();

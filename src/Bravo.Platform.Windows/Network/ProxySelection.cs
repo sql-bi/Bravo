@@ -58,31 +58,6 @@ public sealed class ProxySelection
         return new NetworkFailureHandler { InnerHandler = handler };
     }
 
-    /// <summary>
-    /// The proxy server that a request to an address goes through, or <see langword="null"/> when it goes to
-    /// its server. Where a script names several, it is the first one.
-    /// </summary>
-    public Uri? FindProxy(Uri destination)
-    {
-        ArgumentNullException.ThrowIfNull(destination);
-
-        if (!_useProxy)
-        {
-            return null;
-        }
-
-        var proxy = _proxy ?? HttpClient.DefaultProxy;
-        if (proxy.IsBypassed(destination))
-        {
-            return null;
-        }
-
-        // A proxy may answer a destination that it does not serve with the destination itself.
-        var address = proxy.GetProxy(destination);
-
-        return address == destination ? null : address;
-    }
-
     private static ProxySelection ForServer(ProxySettings settings)
     {
         if (settings.GetServerAddress() is not { } address)

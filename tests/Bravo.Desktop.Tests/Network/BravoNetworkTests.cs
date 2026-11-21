@@ -36,21 +36,6 @@ public sealed class BravoNetworkTests : IDisposable
         Assert.Contains(proxy.Requests, request => request.Target.StartsWith(TestUpdateFeed.Address, StringComparison.Ordinal));
     }
 
-    // The connection test with the default setting, System: it goes through the proxy of the system and names it.
-    [Fact]
-    public async Task TestConnection_ProxyOfTheSystem_GoesThroughItAndNamesIt()
-    {
-        await using var proxy = new TestProxy { Body = TestUpdateFeed.Document };
-        using var bravo = await BravoWithApi.StartAsync(_dataFolder, proxy.Address);
-
-        using var response = await bravo.Client.PostAsync("/network/test", content: null, TestContext.Current.CancellationToken);
-
-        var site = (await response.ReadJsonAsync()).GetProperty("sites")[0];
-        Assert.Equal(proxy.Address.AbsoluteUri, site.GetProperty("proxyAddress").GetString());
-        Assert.False(site.TryGetProperty("failure", out _), site.GetRawText());
-        Assert.Contains(proxy.Requests, request => request.Target.StartsWith(TestUpdateFeed.Address, StringComparison.Ordinal));
-    }
-
     // The Windows user never sends a password: the proxy gets no credentials, and the user is told to enter them.
     [Fact]
     public async Task GetLatestRelease_ProxyOfTheSystemThatAsksWithBasic_IsAnswered409AndGetsNoCredentials()

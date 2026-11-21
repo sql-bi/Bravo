@@ -66,8 +66,8 @@ crash produces a report, telemetry runs on a supported SDK.
   diagnostic log. Also, from B-5: a key of the policies that cannot be read is told to the user in a message,
   and its exception reaches no log. Also, from B-6: a request that does not reach its server fails with the code of
   its cause and a message that names the host, and nothing writes what .NET reported; credentials of the proxy
-  server that Windows cannot read are a warning of `WindowsProxyCredentialStore`, which reaches no log; the
-  connection test leaves no trace ([network](design/network.md)).
+  server that Windows cannot read are a warning of `WindowsProxyCredentialStore`, which reaches no log
+  ([network](design/network.md)).
 - [ ] B-8 (was S-05) Errors and crash reporting. Material: the branch `feat/crash-reporter-process`. Explore: a
   reporter as an application of its own or as a mode of the main executable. Also: replaces the minimal
   last-chance exception handling; a service of the host that fails stops the host, which closes the window with
@@ -104,9 +104,8 @@ crash produces a report, telemetry runs on a supported SDK.
   - From B-5: the policy `TelemetryEnabled` is read at the start and returned by `GET /policies`, and the page
     locks its option; telemetry honors it over the choice of the user ([policies](design/policies.md)).
   - From B-6: what sends the telemetry of the host has a client of its own: it gets the proxy of the settings
-    and its credentials, which every client of `IHttpClientFactory` has, and the connection test gets the
-    site that the telemetry is sent to. What the page would send by itself goes through the proxy of Windows,
-    whatever the option of the user ([network](design/network.md)).
+    and its credentials, which every client of `IHttpClientFactory` has. What the page would send by itself
+    goes through the proxy of Windows, whatever the option of the user ([network](design/network.md)).
 
 ### T5 Access to models
 
@@ -136,11 +135,10 @@ Exit: sign-in, the lists of reports and datasets, a model opened from Power BI D
   its HTTP client from the factory of the host
   ([`WithHttpClientFactory`](https://learn.microsoft.com/entra/msal/dotnet/advanced/httpclient)), so that its
   requests have the proxy of the settings, its credentials and the codes of a failure; a sign-in window, of
-  the library or of the system, is a browser, which follows the proxy of Windows; the connection test asks
-  the sign-in site already ([network](design/network.md)). To decide with the design: a client reports its own
-  time-out as `ServerUnreachable`, which a library that is given a client cannot do; the handler of every
-  client could keep the time instead. Also: the connection test asks the sign-in and the service of the
-  public cloud, whatever the cloud of the account: to ask the ones of the environment that the user signs in to.
+  the library or of the system, is a browser, which follows the proxy of Windows
+  ([network](design/network.md)). To decide with the design: a client reports its own time-out as
+  `ServerUnreachable`, which a library that is given a client cannot do; the handler of every client could
+  keep the time instead.
 
 ### T6 Features
 
@@ -148,8 +146,7 @@ Exit, for each feature: the same results as `main` on the sample models; its row
 
 - [ ] B-13 (was F-01) Analyze Model.
 - [ ] B-14 (was F-02) Format DAX. From B-6: its requests go through a client of `IHttpClientFactory`, which has
-  the proxy and the codes of a failure; the connection test asks `https://www.daxformatter.com/`, to change
-  if the feature calls another address ([network](design/network.md)).
+  the proxy and the codes of a failure ([network](design/network.md)).
 - [ ] B-15 (was F-03) Export Data. The export is the first operation that reports progress: a resource of its
   own, created, read and cancelled through its routes
   ([ADR 0014](decisions/0014-api-conventions-and-a-contract-kept-as-a-file.md)).
@@ -243,11 +240,13 @@ After 1.1.0.
   ([`EnterCriticalPolicySection`](https://learn.microsoft.com/windows/win32/api/userenv/nf-userenv-entercriticalpolicysection)),
   as Microsoft documents for an application that reads several policy entries: no refresh of Group Policy
   changes them while the start reads them. To weigh: the section can hold the start for up to 10 minutes.
-- B-41 A connection test in the proxy options. The host has one, `POST /network/test`, which the page does not
-  call: its button left the options before the first preview, because how it works did not convince the
-  maintainer. To decide before it returns: which sites it asks, and of which cloud; whether it tries the
-  options on screen or the ones that are kept; how long the user waits for a site that does not answer;
-  whether the route stays in the host until then ([network](design/network.md)).
+- B-41 A connection test: the user asks the application whether it reaches the sites that it needs, and reads
+  for each one the proxy server on the way and why it did not answer. A first one, a route of the host and a
+  button of the proxy options, left before the first preview, because how it works did not convince the
+  maintainer: it is at commit `5f8b931b`. To decide before it returns: which sites it asks, the ones of the
+  sign-in, of the Power BI service, of DAX Formatter, of the updates and of the telemetry, and of which
+  cloud; whether it tries the options on screen or the ones that are kept; how long the user waits for a
+  site that does not answer ([network](design/network.md)).
 
 ## Open decisions
 

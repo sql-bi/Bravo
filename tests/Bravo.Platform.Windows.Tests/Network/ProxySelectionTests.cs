@@ -9,7 +9,6 @@ namespace Bravo.Platform.Windows.Tests.Network;
 
 public sealed class ProxySelectionTests
 {
-    private static readonly Uri s_destination = new("https://service.bravo.test/models");
     private static readonly Uri s_server = new("http://proxy.bravo.test:8080/");
 
     private readonly NetworkCredential _credentials = new("test-user", "test-password");
@@ -41,7 +40,6 @@ public sealed class ProxySelectionTests
         using var handler = selection.CreateHandler(_credentials);
 
         Assert.False(SocketsOf(handler).UseProxy);
-        Assert.Null(selection.FindProxy(s_destination));
     }
 
     [Fact]
@@ -76,26 +74,6 @@ public sealed class ProxySelectionTests
         var sockets = SocketsOf(handler);
         Assert.Null(sockets.Proxy?.Credentials);
         Assert.Same(_credentials, sockets.DefaultProxyCredentials);
-    }
-
-    [Theory]
-    [InlineData("https://service.bravo.test/models", "http://proxy.bravo.test:8080/")]
-    [InlineData("https://reports.contoso.test/", null)]
-    [InlineData("http://intranet/", null)]
-    public void FindProxy_Custom_IsTheServerUnlessTheAddressIsExcluded(string destination, string? expected)
-    {
-        var settings = new ProxySettings
-        {
-            Type = ProxyType.Custom,
-            Address = "proxy.bravo.test:8080",
-            BypassOnLocal = true,
-            BypassList = @".*\.contoso\.test",
-        };
-        var selection = ProxySelection.For(settings);
-
-        var proxy = selection.FindProxy(new Uri(destination));
-
-        Assert.Equal(expected is null ? null : new Uri(expected), proxy);
     }
 
     // The handler of the application wraps the one of .NET that holds the proxy.

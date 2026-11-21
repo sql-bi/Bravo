@@ -38,13 +38,6 @@ internal static class UseCasesServiceCollectionExtensions
 
         services.AddSingleton(Substitute.For<IBrowserLauncher>());
 
-        services.AddSingleton(new ConnectionTestOptions
-        {
-            Sites = [new ConnectionTestSite(NetworkSite.PowerBIService, new Uri("https://service.bravo.test/"))],
-        });
-        services.AddSingleton(Substitute.For<ISiteProbe>());
-        services.AddTransient<ConnectionTest>();
-
         services.AddSingleton(Substitute.For<IProxyCredentialDialog>());
         services.AddSingleton(Substitute.For<IProxyCredentialStore>());
         services.AddTransient<ProxyCredentialsPrompt>();

@@ -71,34 +71,6 @@ user entered, when the user chose to use them and some are kept, else as the Win
 - `DELETE /network/proxy-credentials` forgets the credentials: the next challenge is answered as the Windows
   user.
 
-**Connection test.** The host tells whether it reaches the sites that the application needs
-(`POST /network/test`, [API](api.md)). Each site is asked for an answer over HTTP, and the result tells for
-each one the proxy server that the request goes through and, when the site did not answer, which of the four
-causes. The page does not call the route: whether the options get a connection test, and how it works for
-the user, is B-41 of the [backlog](../backlog.md).
-
-| Site | The address that is asked |
-| --- | --- |
-| `SignIn` | `https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration` |
-| `PowerBIService` | `https://api.powerbi.com/` |
-| `DaxFormatter` | `https://www.daxformatter.com/` |
-| `UpdateFeed` | The update feed of the build ([updates](updates.md)) |
-
-- The test uses the proxy settings as they are kept when it runs, not the proxy of the run: settings that
-  were changed are tried before the restart that applies them. The credentials are the ones of every
-  connection.
-- A site that answers is reached, whatever the status of its answer, which is not read. Each address answers
-  by itself, and sends the request on to no other site.
-- A site that does not answer is a result of the test, not an error of the route. The sites are asked at the
-  same time, and a site has 30 seconds to answer.
-- The proxy server of a result is the one that the settings give for the address of the site: absent when the
-  request goes to the site with no proxy, and the first one where a script names several. It is told without
-  the user name and the password that an address may hold.
-- The update feed is not asked when a policy turned the update check off ([policies](policies.md)): the
-  application sends no request there.
-- A development build asks the update feed that it was given with `--dev-update-feed` and no other site, so no
-  test of the application leaves the machine.
-
 **In the options.** The section Proxy of the options has the proxy server of the user and what goes with it.
 
 - Below the proxy server, a note says that a change of the server, of its address or of its exclusions takes
@@ -115,7 +87,9 @@ the user, is B-41 of the [backlog](../backlog.md).
 **Limits.**
 
 - An address of the user with a scheme that .NET takes for no proxy fails the request as a defect of the host.
-  The connection test tells it as a site that cannot be reached.
+- The application has no connection test: the user cannot ask it whether it reaches the sites that it needs,
+  and learns of a site that it does not reach from the feature that asks it (B-41 of the
+  [backlog](../backlog.md)).
 - Credentials that Windows does not keep or forget, as where an administrator forbids kept credentials, fail
   the request as a defect of the host: the user is told of an error, and not of its cause.
 - Proxy settings of Windows that take the loopback address through the proxy, with the entry `<-loopback>`
@@ -140,22 +114,15 @@ the user, is B-41 of the [backlog](../backlog.md).
 | The dialog box of Windows, over the main window | `src/Bravo.Desktop/Network/ProxyCredentialDialog.cs`, `src/Bravo.Desktop/Interop/CredentialDialogInterop.cs` |
 | The proxy for a value of the settings, and the handler of its requests | `src/Bravo.Platform.Windows/Network/ProxySelection.cs` |
 | The handler that gives a failure its code | `src/Bravo.Platform.Windows/Network/NetworkFailureHandler.cs` |
-| The connection test, and what asks a site for it | `src/Bravo.Core/Network/ConnectionTest.cs`, `ISiteProbe.cs`, `src/Bravo.Platform.Windows/Network/HttpSiteProbe.cs` |
 | The routes, with the types that travel | `src/Bravo.Api/Network/` |
 | The section Proxy of the options | `web/view/options-dialog-proxy.ts` |
 | The tests of the window for it, and the proxy server of a test | `web/window-tests/proxy.spec.ts`, `web/window-tests/test-proxy.ts` |
-| What `Bravo.Desktop` registers: the names of the credentials, the proxy of the start, the handler of every client, the sites of the connection test | `src/Bravo.Desktop/Network/` |
+| What `Bravo.Desktop` registers: the names of the credentials, the proxy of the start, the handler of every client | `src/Bravo.Desktop/Network/` |
 
 - `AddNetwork` gives every client of `IHttpClientFactory` its primary handler
   ([`ConfigureHttpClientDefaults`](https://learn.microsoft.com/dotnet/api/microsoft.extensions.dependencyinjection.httpclientfactoryservicecollectionextensions.configurehttpclientdefaults)):
   a client that a component registers has the proxy, the credentials and the codes with nothing to remember. A
   component never builds an `HttpClient` or a handler of its own.
-- `HttpSiteProbe` is the one exception, for the connection test. It builds its client with `ProxySelection`,
-  as `AddNetwork` does, so its requests have the same credentials and the same codes. There a failure that
-  tells no cause, and a site that does not answer in time, are `ServerUnreachable`.
-- A site of the connection test is a value of `NetworkSite` with its address in `AddNetwork`. The update feed
-  is not in that list: the test takes the address from the options of the update check, the one that the
-  check reads.
 - `ProxySelection` is the one place that turns the settings into a proxy.
 - `ProxySelectionStartup` makes the host read the proxy of the settings when it starts, and not at its first
   request.
@@ -185,8 +152,8 @@ the user, is B-41 of the [backlog](../backlog.md).
   the variable `HTTP_PROXY` of the executable that it starts. `BravoExecutable` takes the proxy variables of
   the tests out of every start.
 - `DesktopHostNetworkTests` builds the host as the application does, with a proxy of the user in its settings
-  file, and reads the update feed through it. It asks the connection test after a change of the options, which
-  goes through the proxy that the options name while the update feed still goes through the one of the start.
+  file, and reads the update feed through it, also after a change of the options: the proxy of a run is the
+  one of its start.
 - `BravoNetworkTests` starts the executable with the proxy of the system, which no test can give a host in its
   own process: .NET takes it from the variable `HTTP_PROXY` of the process before it looks at Windows. The
   test calls the API of the application, whose address and token it reads from the file of
