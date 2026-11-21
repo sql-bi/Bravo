@@ -81,17 +81,19 @@ public sealed class BravoSystemProxyTests : IDisposable
         var targetName = NetworkServiceCollectionExtensions.DevelopmentCredentialTargetName;
         try
         {
-            RunCredentialCommand($"/generic:{targetName}", $"/user:{UserName}", $"/pass:{Password}");
+            var written = RunCredentialCommand($"/generic:\"{targetName}\" /user:{UserName} /pass:{Password}");
+            Assert.True(written.ExitCode == 0, $"cmdkey ended with {written.ExitCode}: {written.Output}");
             using var bravo = await StartAsync();
 
             using var response = await bravo.Client.GetAsync(BravoNetworkTests.LatestRelease, TestContext.Current.CancellationToken);
 
-            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            var body = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+            Assert.True(response.StatusCode == HttpStatusCode.OK, $"{response.StatusCode}: {body}");
             Assert.Contains(proxy.Requests, request => request.AuthorizationScheme == "Basic");
         }
         finally
         {
-            RunCredentialCommand($"/delete:{targetName}");
+            RunCredentialCommand($"/delete:\"{targetName}\"");
         }
     }
 
@@ -122,15 +124,21 @@ public sealed class BravoSystemProxyTests : IDisposable
         return port;
     }
 
-    private static void RunCredentialCommand(params string[] arguments)
+    // cmdkey reads its command line by itself, not as a list of arguments: a name with spaces is quoted
+    // after the colon of its switch, and not as a whole argument.
+    private static (int ExitCode, string Output) RunCredentialCommand(string arguments)
     {
         var start = new ProcessStartInfo(Environment.ExpandEnvironmentVariables(@"%SystemRoot%\System32\cmdkey.exe"), arguments)
         {
             CreateNoWindow = true,
             UseShellExecute = false,
+            RedirectStandardOutput = true,
         };
         using var process = Process.Start(start);
         Assert.NotNull(process);
+        var output = process.StandardOutput.ReadToEnd();
         process.WaitForExit();
+
+        return (process.ExitCode, output.Trim());
     }
 }
