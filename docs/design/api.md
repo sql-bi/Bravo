@@ -129,10 +129,11 @@ named in the document, and the types that travel. The build then checks the user
   converts a name into a number: today the theme, the diagnostic level and the type of the proxy, later the
   others, each with its feature. A number in the options that only the user interface reads stays a number:
   1.0.x saved it.
-- Today the application data, the options, the policies, the events, the update check and the links that open
-  in the browser go through the client. Every other call of the user interface belongs to a feature that has not
-  moved: nothing is sent, and the call fails at once with an error that says that the feature is not
-  available yet. Each one moves to the client with its feature.
+- Today the application data, the options, the policies, the events, the update check, the links that open in
+  the browser, the connection test and the credentials of the proxy server go through the client. Every other
+  call of the user interface belongs to a feature that has not moved: nothing is sent, and the call fails at
+  once with an error that says that the feature is not available yet. Each one moves to the client with its
+  feature.
 
 **Start of the page.** The page is the same in the window and in a browser, with no branch for either: it
 reads the address and the token of the API from `window.bravoHost`

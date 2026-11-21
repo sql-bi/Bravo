@@ -4,8 +4,9 @@ Instructions for agents working on the user interface, in `web/`. They add to
 [the ones of the repository](../AGENTS.md).
 
 `web/` holds the user interface of the previous implementation: TypeScript and LESS, bundled by webpack. It
-reads what the application is, the options, the events and the latest release of the host, and opens links in
-the browser, through the client generated from the OpenAPI document. Its other calls belong to features that
+reads what the application is, the options, the events and the latest release of the host, opens links in the
+browser, tests the connection and asks for the credentials of the proxy server, through the client generated
+from the OpenAPI document. Its other calls belong to features that
 have not moved: they go through `Host.apiCall`, which sends nothing and fails at once with an error that says
 that the feature is not available yet. Its commands run in `web/` and need Node.js 26 with npm:
 `package.json` pins that line in `devEngines`, and npm stops with an error on another one.
@@ -116,7 +117,11 @@ The tests of the window are in `web/window-tests`, one file `*.spec.ts` for each
   from a server of the test, `window-tests/update-feed.ts`, through `--dev-update-feed`: the feed of 1.0.14,
   older than any build, unless the test sets the option `updateFeed`, to another feed or to `null` for none.
   With the option `settingsFile` the test writes the file of the settings in the data folder before the start;
-  `bravo.readSettingsFile()` reads it again. With the option `policies`, the values of the policies by their
+  `bravo.readSettingsFile()` reads it again. With the option `proxyServer`, in place of `settingsFile`, the
+  settings name a proxy server of the test, `window-tests/test-proxy.ts`, on the loopback address, which
+  answers every request with the update feed or asks for credentials: `bravo.proxy` has its address and the
+  addresses that it was asked for. The proxy variables of the environment of the tests, such as `HTTP_PROXY`,
+  do not reach the application. With the option `policies`, the values of the policies by their
   names, the test writes them in a key of its own under `HKEY_CURRENT_USER\Software\Bravo.Tests`, which the
   application reads through `--dev-policy-key`, and removes the key at the end (`window-tests/policy-key.ts`).
   At the end it closes the window as a user does, expects exit code 0, waits for the end of the processes of
@@ -139,11 +144,15 @@ The tests of the window are in `web/window-tests`, one file `*.spec.ts` for each
   (`features.spec.ts`), a second start with the arguments of Power BI Desktop (`activation.spec.ts`), a newer
   release in the update feed and its download (`updates.spec.ts`), the file of the settings of 1.0.14 and one
   that cannot be read (`settings.spec.ts`), the policies that lock the options and turn the update check off
-  and on (`policies.spec.ts`).
+  and on (`policies.spec.ts`), the proxy server of the user, its credentials and the connection test
+  (`proxy.spec.ts`).
 - A test never opens the browser of the machine: one that clicks a link first calls
   `bravo.answerBrowserRequests()`, which answers `POST /browser/open` with `page.route` and keeps the addresses
-  in `bravo.openedInBrowser`. No other test sets a route: while the page has one, Playwright answers every CORS
-  preflight in place of the host and turns off the cache.
+  in `bravo.openedInBrowser`. A test never shows the dialog of Windows for the credentials of the proxy server,
+  nor deletes from the Credential Manager of the machine: one that asks for the credentials or forgets them
+  first calls `bravo.answerProxyCredentialRequests(entered)`, which answers both requests, the first as a user
+  who entered credentials or who did not. No other test sets a route: while the page has one, Playwright
+  answers every CORS preflight in place of the host and turns off the cache.
 - A test waits for an event or a state of the page, never for a time. Only the test of the start waits, 12
   seconds, to say that nothing else happens: longer than the 10 seconds after which the page asks for the
   list of the local reports. Its first start is over before the test can attach, so the test loads the page

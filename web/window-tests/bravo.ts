@@ -7,6 +7,7 @@ import { setTimeout as delay } from 'node:timers/promises';
 import { promisify } from 'node:util';
 import { type Browser, chromium, expect, type Page, test as base } from '@playwright/test';
 import { PolicyKey, type PolicyValues } from './policy-key';
+import { type TestProxyKind, TestProxyServer } from './test-proxy';
 import { releasedFeed, UpdateFeedServer } from './update-feed';
 import { chooseWebViewSettings, type WebViewSettings } from './webview-settings';
 
@@ -18,7 +19,9 @@ import { chooseWebViewSettings, type WebViewSettings } from './webview-settings'
 // put the file of the settings that the application finds at its start (settingsFile), the update feed of the
 // test, which a server of the test serves (update-feed.ts), and the key of the policies of the test, which the
 // test writes (policy-key.ts). A test that opens a page in the default browser of the machine answers the request
-// itself (answerBrowserRequests).
+// itself (answerBrowserRequests), and so does one that asks for the credentials of the proxy server or forgets
+// them (answerProxyCredentialRequests). With the option proxyServer the settings name a proxy server of the test
+// (test-proxy.ts). The proxy variables of the environment of the tests do not reach the application.
 
 const executable = path.join(__dirname, '..', '..', 'artifacts', 'bin', 'Bravo.Desktop', 'release', 'Bravo.exe');
 const bundle = path.join(path.dirname(executable), 'wwwroot', 'js', 'main.js');
@@ -53,7 +56,10 @@ export class Bravo {
     /** The addresses that the page asked the host to open in the default browser. */
     readonly openedInBrowser: string[] = [];
 
-    constructor(readonly page: Page, readonly address: string, readonly dataFolder: string) {
+    /**
+     *  proxy The proxy server of the test that the settings of the application name, when the test has one.
+     */
+    constructor(readonly page: Page, readonly address: string, readonly dataFolder: string, readonly proxy?: TestProxyServer) {
         page.on('request', request => this.requests.push({ method: request.method(), url: request.url() }));
         page.on('console', message => this.console.push({ type: message.type(), text: message.text() }));
         page.on('pageerror', error => this.pageErrors.push(String(error)));
@@ -91,6 +97,22 @@ export class Bravo {
         });
     }
 
+    /**
+     * Answers in place of the host the request that asks the user for the credentials of the proxy server, as a
+     * user who entered them or who did not, and the one that forgets them. The host would show a dialog of
+     * Windows that no test can close, and would delete from the Credential Manager of the machine. As with
+     * `answerBrowserRequests`, the page then has a route.
+     */
+    async answerProxyCredentialRequests(entered: boolean) {
+        const headers = { 'Access-Control-Allow-Origin': pageOrigin };
+        await this.page.route(url => url.href.startsWith(`${this.address}/network/proxy-credentials`), async route => {
+            if (route.request().method() === 'DELETE')
+                await route.fulfill({ status: 204, headers });
+            else
+                await route.fulfill({ status: 200, headers, json: { entered } });
+        });
+    }
+
     /** Starts Bravo.exe once more, as a user or Power BI Desktop does, and returns the code that it ends with. */
     async startAgain(args: string[]): Promise<number> {
         const second = new BravoProcess(args, {});
@@ -113,8 +135,10 @@ class BravoProcess {
 
     constructor(args: string[], environment: NodeJS.ProcessEnv) {
 
-        // A variable of the runtime that the environment of the tests already has would reach every start
-        const inherited = Object.fromEntries(Object.entries(process.env).filter(([name]) => !name.startsWith('WEBVIEW2_')));
+        // A variable of the runtime that the environment of the tests already has would reach every start, and
+        // so would a proxy that it names: .NET reads it before the settings of Windows
+        const inherited = Object.fromEntries(Object.entries(process.env)
+            .filter(([name]) => !name.startsWith('WEBVIEW2_') && !/^(HTTP|HTTPS|ALL|NO)_PROXY$/i.test(name)));
 
         this.child = spawn(executable, args, { env: { ...inherited, ...environment }, stdio: 'ignore' });
         this.exited = new Promise((resolve, reject) => {
@@ -268,11 +292,16 @@ async function end(application: BravoProcess | undefined, browser: Browser | und
     }
 }
 
+/** The file of the settings that names a proxy server of the user, as the application keeps it: the kind of the proxy is a number there. */
+function proxySettings(address: string) {
+    return JSON.stringify({ proxy: { type: 2, useDefaultCredentials: true, address, bypassOnLocal: false } });
+}
+
 interface PageWithHost {
     bravoHost: { address: string }
 }
 
-export const test = base.extend<{ bravo: Bravo, updateFeed: string | null, settingsFile: string | null, policies: PolicyValues | null }, { webView: WebViewSettings }>({
+export const test = base.extend<{ bravo: Bravo, updateFeed: string | null, settingsFile: string | null, policies: PolicyValues | null, proxyServer: TestProxyKind | null }, { webView: WebViewSettings }>({
 
     // The update feed that the application of a test reads, by default one with an older release; with null
     // the application has none, and its update check fails
@@ -286,6 +315,11 @@ export const test = base.extend<{ bravo: Bravo, updateFeed: string | null, setti
     // default, it reads no key of policies
     policies: [null, { option: true }],
 
+    // What the proxy server of the test does, which the settings of the application then name as the proxy
+    // server of the user: it answers with the update feed, or asks for credentials. With null, the default,
+    // the test has none. A test gives this option or the file of the settings, not both
+    proxyServer: [null, { option: true }],
+
     // Decided once for the tests of a worker, and said in the log of the run
     webView: [async ({ }, use) => {
         const webView = await chooseWebViewSettings();
@@ -294,20 +328,26 @@ export const test = base.extend<{ bravo: Bravo, updateFeed: string | null, setti
     }, { scope: 'worker' }],
 
     // The start and the end of the application have a time of their own, which the test does not share
-    bravo: [async ({ webView, updateFeed, settingsFile, policies }, use, testInfo) => {
+    bravo: [async ({ webView, updateFeed, settingsFile, policies, proxyServer }, use, testInfo) => {
         checkBuild();
 
         // The long path: the temporary folder of a runner of continuous integration is a short 8.3 path
         const dataFolder = await mkdtemp(path.join(realpathSync.native(os.tmpdir()), 'bravo-window-test-'));
 
         let feed: UpdateFeedServer | undefined;
+        let testProxy: TestProxyServer | undefined;
         let policyKey: PolicyKey | undefined;
         let application: BravoProcess | undefined;
         let browser: Browser | undefined;
         let failure: unknown;
         try {
-            if (settingsFile !== null)
-                await writeFile(path.join(dataFolder, settingsFileName), settingsFile, 'utf8');
+            if (proxyServer !== null && settingsFile !== null)
+                throw new Error('A test gives the option proxyServer or the file of the settings, not both.');
+
+            testProxy = (proxyServer === null ? undefined : await TestProxyServer.start(proxyServer, updateFeed ?? releasedFeed));
+            const settings = (testProxy ? proxySettings(testProxy.address) : settingsFile);
+            if (settings !== null)
+                await writeFile(path.join(dataFolder, settingsFileName), settings, 'utf8');
 
             feed = (updateFeed === null ? undefined : await UpdateFeedServer.start(updateFeed));
             policyKey = (policies === null ? undefined : await PolicyKey.write(policies));
@@ -343,7 +383,7 @@ export const test = base.extend<{ bravo: Bravo, updateFeed: string | null, setti
 
             // The address only: no test reads the token of the host
             const address = await page.evaluate(() => (<PageWithHost><unknown>window).bravoHost.address);
-            const bravo = new Bravo(page, address, dataFolder);
+            const bravo = new Bravo(page, address, dataFolder, testProxy);
 
             await expect(page.locator('#ctrl-theme'), 'The page did not start').toBeVisible({ timeout: startSeconds * 1000 });
 
@@ -370,6 +410,7 @@ export const test = base.extend<{ bravo: Bravo, updateFeed: string | null, setti
             code = await end(application, browser, dataFolder);
         } finally {
             await feed?.close();
+            await testProxy?.close();
             await policyKey?.remove();
             await webView.takeBack();
         }

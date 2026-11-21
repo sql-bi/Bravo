@@ -122,13 +122,7 @@ export class Sidebar extends View {
 
         _("#ctrl-options", this.element).addEventListener("click", e => {
             e.preventDefault();
-            telemetry.trackPage("Options");
-            let optionsDialog = new OptionsDialog();
-            optionsDialog
-                .show()
-                .finally(()=>{
-                    telemetry.trackPreviousPage();
-                });
+            this.showOptions();
         });
 
         _("#ctrl-theme", this.element).addEventListener("click", e => {
@@ -160,6 +154,17 @@ export class Sidebar extends View {
                     el.classList.remove(`icon-theme-${name}`);
             });
         });
+    }
+
+    // The options dialog, on one of its sections or on the first one
+    showOptions(section?: string) {
+        telemetry.trackPage("Options");
+        let optionsDialog = new OptionsDialog();
+        optionsDialog
+            .show(section)
+            .finally(()=>{
+                telemetry.trackPreviousPage();
+            });
     }
 
     changeProfilePicture(title: string, picture?: string) {

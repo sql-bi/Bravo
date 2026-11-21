@@ -47,8 +47,10 @@ file of its own kind from it, as 1.0.x names it, so that a copy gets a file of i
 - Whether a copy carries the runtime is decided by its build, which writes it into the application.
 
 **When.** The page asks at its start, when the option of the update check is on, and tells a newer release in
-a notification; a failure there tells nothing. The section About of the options asks again while no newer
-release is known, and says that the check failed when it fails. Nothing asks at intervals.
+a notification. A failure there tells nothing, but for a proxy server that asks for credentials, which is told
+in a notification with a link to the proxy options ([network](network.md)). The section About of the options
+asks again while no newer release is known; when the check fails it says so, and says the cause when the
+request did not reach the feed. Nothing asks at intervals.
 
 **The browser.** The page opens the file, the release notes and every link through the route that opens an
 address in the default browser of the user. The host opens only a page of a site that the application trusts,

@@ -39,7 +39,10 @@ terminal that is not elevated. The one key that a test writes on every machine i
   of a test: the test fails and says so.
 - A test reaches no service outside the machine: the application reads the update feed from a server of the
   test, and a request that would open the browser of the user is answered by the test
-  ([updates](updates.md)).
+  ([updates](updates.md)). A proxy server of a test is on the loopback address, and the proxy variables of the
+  environment of the tests do not reach the application ([network](network.md)).
+- A test shows no dialog box of Windows and touches no credential of the machine: the requests that ask the
+  user for the credentials of a proxy server, or forget them, are answered by the test.
 - Only a test that answers a request in place of the host routes the requests of the page. While the page has
   a route, Playwright answers every CORS preflight in place of the host and turns off the cache: the other
   tests keep proving the CORS of the host.

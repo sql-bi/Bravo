@@ -24,7 +24,7 @@ import { ErrorAlert } from '../view/error-alert';
 import { AppError } from '../model/exceptions';
 import { DiagnosticPane } from '../view/diagnostic-pane';
 import Split, { SplitObject } from "split.js";
-import { DiagnosticLevel } from '../generated/bravo';
+import { DiagnosticLevel, ProblemCode } from '../generated/bravo';
 import { DialogResponse } from '../view/dialog';
 
 export interface AppVersionInfo {
@@ -168,6 +168,12 @@ export class App {
             const url = element.getAttribute("href");
             host.navigateTo(url);
             telemetry.track("Link", { "Url": url});
+        });
+
+        // The action of a notification that sends the user to the proxy options
+        document.addLiveEventListener("click", ".show-proxy-options", e => {
+            e.preventDefault();
+            this.sidebar.showOptions("proxy");
         });
 
         // Catch expandable content
@@ -413,9 +419,18 @@ export class App {
                 return newVersion;
             });
 
-        // The check that the page starts by itself tells nothing when it fails. The one that the user asks
-        // for, in the options, shows the failure there.
-        return (automatic ? check.catch(ignore => <AppVersion>null) : check);
+        // The check that the user asks for, in the options, shows the failure there
+        if (!automatic) return check;
+
+        // The check that the page starts by itself tells nothing when it fails, but for a proxy server that
+        // asks for credentials: the user can enter them, and is shown where
+        return check.catch((error: AppError) => {
+            if (error.code === ProblemCode.ProxyAuthenticationRequired) {
+                const action = `<span class="link show-proxy-options">${i18n(strings.optionProxyOpen)}</span>`;
+                notificationCenter.add(new Notify(error.message, null, action, true, true));
+            }
+            return <AppVersion>null;
+        });
     }
 
     reload() {

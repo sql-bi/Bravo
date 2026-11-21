@@ -3,7 +3,7 @@ import type { Bravo } from './bravo';
 
 // The options dialog, as a user reaches it from the sidebar.
 
-export type OptionsSection = 'general' | 'telemetry' | 'dev' | 'about';
+export type OptionsSection = 'general' | 'proxy' | 'telemetry' | 'dev' | 'about';
 
 /** Opens the options dialog on one of its sections. */
 export async function openOptions(bravo: Bravo, section: OptionsSection) {

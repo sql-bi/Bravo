@@ -87,6 +87,21 @@ causes.
 - A development build asks the update feed that it was given with `--dev-update-feed` and no other site, so no
   test of the application leaves the machine.
 
+**In the options.** The section Proxy of the options has the proxy server of the user and what goes with it.
+
+- Below the proxy server, a note says that a change of the server, of its address or of its exclusions takes
+  effect at the next start of the application.
+- The switch of the custom credentials asks for them when the user turns it on, and stays off when the user
+  enters none. Turned off, it asks the user to confirm, and then forgets the credentials. A link asks for them
+  again; with the switch off, the link turns it on.
+- A request for the credentials, or to forget them, that fails is told in a notification, and leaves the
+  switch as it was.
+- The connection test is a button. It saves the options of the dialog first, then shows each site with its
+  name, whether it was reached or the text of its cause, and the proxy server that the request went through.
+- At the start of the page, an update check that finds a proxy server asking for credentials tells it in a
+  notification, with a link that opens this section. In the section About, an update check that did not reach
+  the feed says its cause ([updates](updates.md)).
+
 **Limits.**
 
 - An address of the user with a scheme that .NET takes for no proxy fails the request as a defect of the host.
@@ -112,6 +127,8 @@ causes.
 | The handler that gives a failure its code | `src/Bravo.Platform.Windows/Network/NetworkFailureHandler.cs` |
 | The connection test, and what asks a site for it | `src/Bravo.Core/Network/ConnectionTest.cs`, `ISiteProbe.cs`, `src/Bravo.Platform.Windows/Network/HttpSiteProbe.cs` |
 | The routes, with the types that travel | `src/Bravo.Api/Network/` |
+| The section Proxy of the options | `web/view/options-dialog-proxy.ts` |
+| The tests of the window for it, and the proxy server of a test | `web/window-tests/proxy.spec.ts`, `web/window-tests/test-proxy.ts` |
 | What `Bravo.Desktop` registers: the names of the credentials, the proxy of the start, the handler of every client, the sites of the connection test | `src/Bravo.Desktop/Network/` |
 
 - `AddNetwork` gives every client of `IHttpClientFactory` its primary handler
@@ -136,7 +153,19 @@ causes.
   caller cancelled: the component that owns the client reports it, with `NetworkFailure.TimedOut`, as the
   update feed does. A component that calls a library with a client of its own gives `NetworkFailure` the
   exception that the library wraps.
-- The four texts are in English alone: the other languages of the page show the English one.
+- The four texts, and the ones of the section Proxy that are new, are in English alone: the other languages of
+  the page show the English one.
+- The name of each site of the connection test is in a table of `options-dialog-proxy.ts`, typed by the sites
+  of the generated client as the texts of the codes are: a site that the host adds stops the build of the page
+  until it has a name.
+- A switch of the options that asks before it changes goes back to what it was when the answer is no, and
+  when the question fails (`web/helpers/renderer.ts`).
+- `proxy.spec.ts` gives the application a proxy server of the test, `test-proxy.ts`, on the loopback address,
+  which answers with the update feed or asks for credentials: the host reaches it as it reaches any other,
+  and the page shows what the host found. A test of the credentials answers in place of the host, with
+  `bravo.answerProxyCredentialRequests`: the host would show the dialog box of Windows, and would delete from
+  the Credential Manager of the machine. Those tests have no proxy server, so nothing asks the host for
+  credentials.
 - `ProxyCredentials` looks at the option of the user before the store: with the default settings no code reads
   the Credential Manager, and so no test of a developer machine does.
 - `CredentialUserName` is the one place that knows the text `domain\user`: the store keeps it, and the dialog

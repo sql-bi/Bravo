@@ -523,17 +523,19 @@ export class Host extends Dispatchable {
         this.apiAbortByAction("api/PBIDesktopOpenPBIX");
     }
 
-    updateProxyCredentials() {
-        return <Promise<boolean>>this.apiCall("api/UpdateProxyCredentials")
-            .then(response => (response !== null));
-    } 
-
-    deleteProxyCredentials() {
-        this.apiCall("api/DeleteProxyCredentials");
+    // The host asks in a dialog of Windows, and answers when the user has closed it: whether credentials
+    // were entered, which it keeps
+    promptProxyCredentials() {
+        return this.apiClientCall("PromptProxyCredentials", init => hostApi.promptProxyCredentials(init))
+            .then(result => result.entered);
     }
 
-    openCredentialsManager() {
-        this.apiCall("api/OpenControlPanelItem", { canonicalName: "/name Microsoft.CredentialManager /page ?SelectedVault=CredmanVault" });
+    deleteProxyCredentials() {
+        return this.apiClientCall("DeleteProxyCredentials", init => hostApi.deleteProxyCredentials(init));
+    }
+
+    testConnection() {
+        return this.apiClientCall("TestConnection", init => hostApi.testConnection(init));
     }
 
     /* Templates Development */

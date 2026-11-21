@@ -4,17 +4,33 @@
  * https://www.sqlbi.com
 */
 
-import { ProxyType } from '../generated/bravo';
+import { Notify } from '../controllers/notifications';
+import { NetworkSite, ProxyType, SiteTestResult } from '../generated/bravo';
+import { Loader } from '../helpers/loader';
 import { OptionStruct, OptionType, Renderer } from '../helpers/renderer';
-import {  _, __ } from '../helpers/utils';
-import { app, auth, host, optionsController } from '../main';
+import { _ } from '../helpers/utils';
+import { host, logger, notificationCenter, optionsController } from '../main';
 import { AppError } from '../model/exceptions';
-import { I18n, i18n } from '../model/i18n'; 
+import { i18n } from '../model/i18n';
+import { problemTexts } from '../model/problem-texts';
 import { strings } from '../model/strings';
 import { Confirm } from './confirm';
 import { DialogResponse } from './dialog';
 
+/**
+ * The name that the user reads for each site of the connection test. The sites are a closed list of the
+ * contract: one that the host adds stops the build here until it has a name.
+ */
+const siteNames: Record<NetworkSite, strings> = {
+    SignIn: strings.networkSiteSignIn,
+    PowerBIService: strings.networkSitePowerBIService,
+    DaxFormatter: strings.networkSiteDaxFormatter,
+    UpdateFeed: strings.networkSiteUpdateFeed
+};
+
 export class OptionsDialogProxy {
+
+    testResults: HTMLElement;
 
     render(element: HTMLElement) {
 
@@ -25,6 +41,7 @@ export class OptionsDialogProxy {
                 icon: "proxy",
                 name: i18n(strings.optionProxyType),
                 description: i18n(strings.optionProxyTypeDescription),
+                additionalNotes: i18n(strings.optionProxyRestartNotice),
                 type: OptionType.select,
                 values: [
                     [ProxyType.None, i18n(strings.optionProxyTypeNone)],
@@ -78,27 +95,19 @@ export class OptionsDialogProxy {
                     value: [ProxyType.Custom, ProxyType.System]
                 },
                 name: i18n(strings.optionProxyCustomCredentials),
-                description: `${i18n(strings.optionProxyCustomCredentialsDescription)} <span class="link open-credential-manager">${i18n(strings.optionProxyCustomCredentialsEdit)}</span>`,
+                description: `${i18n(strings.optionProxyCustomCredentialsDescription)} <span class="link edit-proxy-credentials">${i18n(strings.optionProxyCustomCredentialsEdit)}</span>`,
                 type: OptionType.switch,
                 reverse: true,
-                onBeforeChange: (e, value) => {
-                    let el = <HTMLInputElement>e.target;
-                    if (value) {
-                        return host.updateProxyCredentials();
-                    } else {
-                        let dialog = new Confirm("delete-proxy-cred", false);
-                        return dialog.show(i18n(strings.optionProxyConfirmDeleteCredentials))
-                            .then((response: DialogResponse) => {
-                                let ok = (response.action == "ok");
-                                if (ok)
-                                    host.deleteProxyCredentials();
-                                else 
-                                    el.checked = true;
-
-                                return ok;
-                            });
-                    }
-                }
+                onBeforeChange: (e, value) => (value ? this.askForCredentials() : this.confirmForgetCredentials())
+            },
+            {
+                id: "proxy-test",
+                icon: "link",
+                name: i18n(strings.optionProxyTest),
+                description: i18n(strings.optionProxyTestDescription),
+                type: OptionType.button,
+                value: i18n(strings.optionProxyTestButton),
+                onClick: e => this.testConnection(<HTMLElement>e.currentTarget)
             },
         ];
 
@@ -106,9 +115,81 @@ export class OptionsDialogProxy {
             Renderer.Options.render(struct, element, optionsController);
         });
 
-        _(".open-credential-manager", element).addEventListener("click", e => {
+        _("#proxy-test .title", element).insertAdjacentHTML("beforeend", `<div class="connection-test-results"></div>`);
+        this.testResults = _(".connection-test-results", element);
+
+        // With the switch off the link turns it on, which asks for the credentials: they would not be used otherwise
+        _(".edit-proxy-credentials", element).addEventListener("click", e => {
             e.preventDefault();
-            host.openCredentialsManager();
-        })
+
+            const customCredentials = <HTMLInputElement>_("#proxy-usedefaultcredentials .listener", element);
+            if (customCredentials.checked)
+                this.askForCredentials();
+            else
+                customCredentials.click();
+        });
+    }
+
+    // The host asks in a dialog of Windows. Whether the user entered credentials: a failure is told, and is none
+    askForCredentials() {
+        return host.promptProxyCredentials()
+            .catch((error: AppError) => this.tellFailure(error));
+    }
+
+    confirmForgetCredentials() {
+        let dialog = new Confirm("delete-proxy-cred", false);
+        return dialog.show(i18n(strings.optionProxyConfirmDeleteCredentials))
+            .then((response: DialogResponse) => {
+                if (response.action != "ok") return false;
+
+                return host.deleteProxyCredentials()
+                    .then(() => true)
+                    .catch((error: AppError) => this.tellFailure(error));
+            });
+    }
+
+    tellFailure(error: AppError) {
+        logger.logError(error);
+        notificationCenter.add(new Notify(error.message, null, null, true, true));
+        return false;
+    }
+
+    testConnection(button: HTMLElement) {
+        if (button.hasAttribute("disabled")) return;
+
+        button.toggleAttr("disabled", true);
+        this.testResults.innerHTML = Loader.html(false, false, 5);
+
+        // The host tests with the options that it keeps: the ones of this dialog are saved first, also a text
+        // that the user has just left
+        optionsController.save()
+            .then(() => host.testConnection())
+            .then(result => {
+                this.testResults.innerHTML = (result.sites.length ?
+                    result.sites.map(site => this.siteHtml(site)).join("") :
+                    `<div class="notice">${i18n(strings.optionProxyTestNoSites)}</div>`);
+            })
+            .catch((error: AppError) => {
+                logger.logError(error);
+                this.testResults.innerHTML = `<div class="notice">${error.message}</div>`;
+            })
+            .finally(() => {
+                button.toggleAttr("disabled", false);
+            });
+    }
+
+    siteHtml(site: SiteTestResult) {
+        const result = i18n(site.failure ? problemTexts[site.failure] : strings.optionProxyTestReached);
+        const route = (site.proxyAddress ?
+            i18n(strings.optionProxyTestThroughProxy, { proxy: site.proxyAddress }) :
+            i18n(strings.optionProxyTestDirect));
+
+        return `
+            <div class="site ${site.failure ? "failed" : "reached"}" data-site="${site.site}">
+                <div class="name">${i18n(siteNames[site.site])}</div>
+                <div class="result">${result}</div>
+                <div class="route">${route}</div>
+            </div>
+        `;
     }
 }
